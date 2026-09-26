@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.ejemplo
+/servidor/almacenamiento/
+/servidor/almacenamiento-pruebas/
+coverage/
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+infra/respaldos/
+infra/config/*.json
+!infra/config/*.ejemplo.json

@@ -1,0 +1,40 @@
+{
+  "name": "servidor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=../.env src/principal.ts",
+    "construir": "tsc -p tsconfig.construccion.json && node scripts/copiar-migraciones.mjs",
+    "iniciar": "node --env-file-if-exists=../.env dist/principal.js",
+    "verificar": "tsc --noEmit",
+    "probar": "vitest run",
+    "bd:generar": "tsx --env-file=../.env scripts/generar-migracion.ts",
+    "bd:migrar": "tsx --env-file=../.env src/modulos/core/base-datos/migrar.ts",
+    "bd:sembrar": "tsx --env-file=../.env src/modulos/core/base-datos/sembrar.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/helmet": "^13.1.1",
+    "@fastify/multipart": "^10.1.2",
+    "@fastify/rate-limit": "^11.2.0",
+    "@fastify/static": "^10.1.5",
+    "@fastify/swagger": "^9.9.0",
+    "@fastify/swagger-ui": "^6.1.1",
+    "@node-rs/argon2": "^2.2.1",
+    "drizzle-orm": "^0.45.3",
+    "fastify": "^5.12.5",
+    "fastify-type-provider-zod": "^7.0.0",
+    "pg": "^8.23.0",
+    "sharp": "^0.35.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.11",
+    "pino-pretty": "^13.1.3",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9",
+    "vitest": "^5.0.2"
+  }
+}

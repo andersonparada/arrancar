@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.oscuro, .oscuro *));
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Identidad de la instalación (menú, encabezados, inicio de sesión). Se
+     reemplazan en tiempo de ejecución desde el panel de apariencia. */
+  --color-marca: #1f4d2c;
+  --color-marca-oscuro: #193f24;
+  --color-marca-texto: #ffffff;
+  --color-acento: #e9c46a;
+  --color-acento-texto: #1c1a16;
+
+  --color-campo-50: #f2f7ef;
+  --color-campo-100: #e0ecda;
+  --color-campo-200: #c2d9b6;
+  --color-campo-300: #9bc087;
+  --color-campo-400: #72a25c;
+  --color-campo-500: #52853e;
+  --color-campo-600: #3e6a2f;
+  --color-campo-700: #2f5326;
+  --color-campo-800: #1f4d2c;
+  --color-campo-900: #16351f;
+
+  --color-trigo-300: #f1d890;
+  --color-trigo-400: #e9c46a;
+  --color-trigo-500: #d9a93e;
+
+  --color-tierra-50: #f6f4ee;
+  --color-tierra-100: #ece8dc;
+  --color-tierra-200: #dbd4c2;
+  --color-tierra-300: #bfb59c;
+  --color-tierra-400: #9a8f76;
+  --color-tierra-500: #7a705a;
+  --color-tierra-600: #5f5645;
+  --color-tierra-700: #463f33;
+  --color-tierra-800: #2e2a23;
+  --color-tierra-900: #1c1a16;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-tierra-50 text-tierra-900 antialiased dark:bg-tierra-900 dark:text-tierra-100;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-campo-500;
+  }
+}

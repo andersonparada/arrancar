@@ -1,0 +1,1 @@
+ALTER TABLE "core"."usuarios" DROP COLUMN "nombre";

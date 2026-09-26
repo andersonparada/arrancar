@@ -1,0 +1,72 @@
+# Producción: docker compose --env-file .env up -d --build  (ejecutar dentro de infra/)
+name: arrancar
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: arrancar
+      POSTGRES_USER: arrancar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}
+      ARRANCAR_APP_PASSWORD: ${ARRANCAR_APP_PASSWORD:?Defina ARRANCAR_APP_PASSWORD}
+    volumes:
+      - datos-postgres:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "arrancar", "-d", "arrancar"]
+      interval: 10s
+      retries: 10
+
+  app:
+    build: ..
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PUERTO: 3100
+      URL_PUBLICA: https://${DOMINIO:?Defina DOMINIO}
+      DATABASE_URL: postgres://arrancar_app:${ARRANCAR_APP_PASSWORD}@postgres:5432/arrancar
+      DATABASE_URL_PROPIETARIO: postgres://arrancar:${POSTGRES_PASSWORD}@postgres:5432/arrancar
+      SUPERACCESO_USUARIO: ${SUPERACCESO_USUARIO:-}
+      SUPERACCESO_CONTRASENA: ${SUPERACCESO_CONTRASENA:-}
+      RUTA_CONFIG_INSTALACION: ${RUTA_CONFIG_INSTALACION:-}
+    volumes:
+      - archivos:/datos/archivos
+      - ./config:/config:ro
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-datos:/data
+      - caddy-config:/config
+
+  respaldo:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      DIAS_RETENCION: ${DIAS_RETENCION:-14}
+    volumes:
+      - ./respaldos:/respaldos
+      - archivos:/archivos:ro
+      - ./respaldo.sh:/respaldo.sh:ro
+    entrypoint: ["sh", "/respaldo.sh"]
+
+volumes:
+  datos-postgres:
+  archivos:
+  caddy-datos:
+  caddy-config:

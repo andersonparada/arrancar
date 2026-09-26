@@ -1,0 +1,26 @@
+{
+  "name": "arrancar",
+  "private": true,
+  "description": "Gestión de ranchos ganaderos y parcelas agrícolas como empresa.",
+  "type": "module",
+  "workspaces": [
+    "servidor",
+    "cliente"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "bd:levantar": "docker compose -f infra/docker-compose.dev.yml up -d",
+    "bd:detener": "docker compose -f infra/docker-compose.dev.yml down",
+    "dev": "npm run bd:levantar && concurrently -k -n api,web -c green,blue \"npm run dev:servidor\" \"npm run dev:cliente\"",
+    "dev:servidor": "npm run dev -w servidor",
+    "dev:cliente": "npm run dev -w cliente",
+    "construir": "npm run construir -w cliente && npm run construir -w servidor",
+    "verificar": "npm run verificar -w servidor && npm run verificar -w cliente",
+    "probar": "npm run probar -w servidor"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  }
+}
