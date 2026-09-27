@@ -2,7 +2,7 @@ import { index, integer, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { esquemaCore } from '../../../esquemas/core.esquema.js';
 import { idPrimario, politicaPorEmpresa } from '../../../base-datos/columnas.js';
 import { empresas } from '../../../esquemas/empresas.esquema.js';
-import { usuarios } from '../../../esquemas/usuarios.esquema.js';
+import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
 
 /** Imagen subida por una empresa (fotos de animales, fierro, facturas...). */
 export const archivos = esquemaCore.table(

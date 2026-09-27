@@ -8,7 +8,7 @@ import { migrarModulos } from '../../base-datos/migrador.js';
 import { accesosDatos } from '../../autorizacion/infraestructura/persistencia/accesos-datos.tablas.js';
 import { cuentas } from '../../esquemas/cuentas.esquema.js';
 import { empresas } from '../../esquemas/empresas.esquema.js';
-import { usuarios } from '../../esquemas/usuarios.esquema.js';
+import { usuarios } from '../../identidad/infraestructura/persistencia/usuarios.tablas.js';
 import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import {
   ConsultaFueraDeUnidadDeTrabajo,

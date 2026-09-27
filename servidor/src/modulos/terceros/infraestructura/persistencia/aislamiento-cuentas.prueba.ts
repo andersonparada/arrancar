@@ -13,7 +13,7 @@ import { bd, grupoConexiones } from '../../../core/base-datos/conexion.js';
 import { migrarModulos } from '../../../core/base-datos/migrador.js';
 import { cuentas } from '../../../core/esquemas/cuentas.esquema.js';
 import { empresas } from '../../../core/esquemas/empresas.esquema.js';
-import { usuarios } from '../../../core/esquemas/usuarios.esquema.js';
+import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { definicionesModulos } from '../../../indice.js';
 import { terceros } from './terceros.tablas.js';
 

@@ -1,9 +1,32 @@
-export const LONGITUD_MINIMA_USUARIO = 3;
-export const LONGITUD_MAXIMA_USUARIO = 30;
+import { DatoInvalido } from '../../compartido/dominio/errores.js';
+import { ObjetoValor } from '../../compartido/dominio/objeto-valor.js';
+
+/** Solo letras minúsculas, de 3 a 30: fácil de dictar por teléfono. */
 export const PATRON_USUARIO = /^[a-z]{3,30}$/;
 
 /** Palabras que no cuentan como nombre ni apellido ("María de los Ángeles", "de León"). */
 const PARTICULAS = new Set(['de', 'del', 'la', 'las', 'los', 'y', 'e', 'da', 'das', 'do', 'dos', 'van', 'von', 'di']);
+
+export class NombreDeUsuarioInvalido extends DatoInvalido {
+  readonly codigo = 'nombre_de_usuario_invalido';
+
+  constructor(texto: string) {
+    super(`"${texto}" no sirve como usuario: use de 3 a 30 letras, sin números, espacios ni tildes.`);
+  }
+}
+
+/** Con lo que la persona entra al sistema; es único en todo el servidor. */
+export class NombreDeUsuario extends ObjetoValor<string> {
+  private constructor(valor: string) {
+    super(valor);
+  }
+
+  static crear(texto: string): NombreDeUsuario {
+    const normalizado = texto.trim().toLowerCase();
+    if (!PATRON_USUARIO.test(normalizado)) throw new NombreDeUsuarioInvalido(texto);
+    return new NombreDeUsuario(normalizado);
+  }
+}
 
 /** Pasa a minúsculas, quita tildes y convierte la ñ en n; deja solo letras. */
 function soloLetras(texto: string): string {
@@ -29,7 +52,7 @@ function palabras(texto: string): string[] {
  * 3. Variantes con más letras si las anteriores ya existen.
  * Solo letras, entre 3 y 30 caracteres y sin repetidos.
  */
-export function generarCandidatosUsuario(nombres: string, apellidos: string): string[] {
+export function candidatosDeNombreDeUsuario(nombres: string, apellidos: string): string[] {
   const [nombre1 = '', nombre2 = ''] = palabras(nombres);
   const [apellido1 = '', apellido2 = ''] = palabras(apellidos);
   const inicial = (palabra: string) => palabra.slice(0, 1);

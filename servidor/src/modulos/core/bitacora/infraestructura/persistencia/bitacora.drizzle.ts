@@ -1,8 +1,8 @@
 import { desc, eq } from 'drizzle-orm';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
 import { empresas } from '../../../esquemas/empresas.esquema.js';
-import { usuarios } from '../../../esquemas/usuarios.esquema.js';
-import { nombreCompleto } from '../../../repositorios/usuarios.repositorio.js';
+import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
+import { nombreCompleto } from '../../../identidad/infraestructura/persistencia/consultas-usuarios.drizzle.js';
 import type { EntradaDeBitacoraDto } from '../../aplicacion/dto/entrada-de-bitacora.dto.js';
 import type { Bitacora, NuevaEntrada } from '../../aplicacion/puertos/bitacora.js';
 import { bitacoraSuperacceso } from './bitacora.tablas.js';

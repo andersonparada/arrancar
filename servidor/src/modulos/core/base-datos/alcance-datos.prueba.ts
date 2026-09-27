@@ -13,7 +13,7 @@ import { definicionesModulos } from '../../indice.js';
 import { accesosDatos } from '../autorizacion/infraestructura/persistencia/accesos-datos.tablas.js';
 import { cuentas } from '../esquemas/cuentas.esquema.js';
 import { empresas } from '../esquemas/empresas.esquema.js';
-import { usuarios } from '../esquemas/usuarios.esquema.js';
+import { usuarios } from '../identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { politicaPorAlcance } from './columnas.js';
 import { bd, grupoConexiones } from './conexion.js';
 import { ejecutarEnEmpresa } from './contexto-empresa.js';

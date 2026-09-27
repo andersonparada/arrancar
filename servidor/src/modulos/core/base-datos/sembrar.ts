@@ -7,9 +7,10 @@ import { configuracion } from '../../../configuracion.js';
 import { definicionesModulos } from '../../indice.js';
 import { establecerRegistroModulos } from '../modulos-sistema/registro-global.js';
 import { RegistroModulos } from '../modulos-sistema/registro-modulos.js';
-import { usuariosRepositorio } from '../repositorios/usuarios.repositorio.js';
+import { cifradorDeContrasenas, usuariosSinTransaccion } from '../identidad/contexto.js';
+import { NombreDeUsuario } from '../identidad/dominio/nombre-de-usuario.js';
+import { Usuario } from '../identidad/dominio/usuario.js';
 import { altaCuentaServicio } from '../servicios/alta-cuenta.servicio.js';
-import { generarHashContrasena } from '../servicios/contrasenas.servicio.js';
 import { grupoConexiones } from './conexion.js';
 
 const USUARIO_DEMO = 'demo';
@@ -21,22 +22,24 @@ async function sembrarSuperacceso(): Promise<void> {
     console.log('Sin SUPERACCESO_USUARIO/SUPERACCESO_CONTRASENA: no se crea usuario de soporte.');
     return;
   }
-  if (await usuariosRepositorio.buscarPorUsuario(usuario)) {
+  const nombreDeUsuario = NombreDeUsuario.crear(usuario);
+  if (await usuariosSinTransaccion.buscarPorNombre(nombreDeUsuario)) {
     console.log(`Usuario de soporte "${usuario}" ya existe.`);
     return;
   }
-  await usuariosRepositorio.crear({
-    usuario,
+  const soporte = Usuario.registrarSoporte({
+    nombreDeUsuario,
     nombres: 'Soporte',
     apellidos: 'Arrancar',
-    hashContrasena: await generarHashContrasena(contrasena),
-    esSuperacceso: true,
+    correo: null,
+    hashContrasena: await cifradorDeContrasenas.cifrar(contrasena),
   });
+  await usuariosSinTransaccion.agregar(soporte);
   console.log(`Usuario de soporte creado: ${usuario}`);
 }
 
 async function sembrarDemo(): Promise<void> {
-  if (await usuariosRepositorio.buscarPorUsuario(USUARIO_DEMO)) {
+  if (await usuariosSinTransaccion.buscarPorNombre(NombreDeUsuario.crear(USUARIO_DEMO))) {
     console.log('La cuenta demo ya existe.');
     return;
   }

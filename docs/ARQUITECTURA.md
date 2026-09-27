@@ -500,6 +500,19 @@ entrega como un commit propio.
     pantalla usa (sin `cuentaId` ni fechas) y los errores tienen códigos propios.
     Las guardias (`core/http/guardias.ts`) se mudan con identidad, porque dependen
     de la sesión. 256 pruebas (5 unitarias nuevas); advertencias: 31.
+  - **Identidad, parte 1: usuarios (2026-09-27):** `core/identidad/` con dominio
+    (`Usuario` con sus reglas: quien administra no se desactiva ni cambia sus
+    accesos, y a un usuario de varias cuentas solo se le cambian los accesos;
+    `NombreDeUsuario` y sus candidatos; accesos a empresas sin repetir), el
+    `AsignadorDeNombreDeUsuario`, cinco casos de uso (listar, sugerir nombre,
+    crear, actualizar y cambiar contraseña) y los puertos `RepositorioUsuarios`,
+    `AccesosAEmpresas`, `ConsultasUsuarios`, `CifradorDeContrasenas` (Argon2) y
+    `CierreDeSesiones`. Las tablas `usuarios` y `sesiones` se mudan al contexto. Los
+    repositorios reciben de dónde sacar la transacción (por omisión, la de la
+    unidad de trabajo), así el alta de cuentas y el inicio de sesión, aún sin
+    migrar, usan las mismas piezas. Los accesos se validan dentro de la misma
+    transacción que los guarda, y el correo se guarda en minúsculas (`Correo`). Los
+    errores tienen códigos propios. 263 pruebas (7 unitarias nuevas); advertencias: 29.
 
 ### Mejoras pendientes (acordadas, sin fecha)
 

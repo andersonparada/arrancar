@@ -1,7 +1,7 @@
 import { and, eq, gt, lt } from 'drizzle-orm';
 import { bd } from '../base-datos/conexion.js';
-import { sesiones, usuarios } from '../esquemas/usuarios.esquema.js';
-import { nombreCompleto } from './usuarios.repositorio.js';
+import { sesiones, usuarios } from '../identidad/infraestructura/persistencia/usuarios.tablas.js';
+import { nombreCompleto } from '../identidad/infraestructura/persistencia/consultas-usuarios.drizzle.js';
 
 export type NuevaSesion = typeof sesiones.$inferInsert;
 

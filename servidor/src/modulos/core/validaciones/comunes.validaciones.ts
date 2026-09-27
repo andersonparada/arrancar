@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { esDpiValido, normalizarDpi } from '../compartido/dominio/objetos-valor/dpi.js';
 import { esNitValido, normalizarNit } from '../compartido/dominio/objetos-valor/nit.js';
-import { PATRON_USUARIO } from '../utilidades/nombre-usuario.js';
+import { PATRON_USUARIO } from '../identidad/dominio/nombre-de-usuario.js';
 
 /** Texto opcional: recorta espacios y convierte la cadena vacía en `null`. */
 export const textoOpcional = (maximo: number) =>

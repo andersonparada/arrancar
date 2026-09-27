@@ -2,10 +2,21 @@ import { createHash, randomBytes } from 'node:crypto';
 import { configuracion } from '../../../configuracion.js';
 import { ErrorNoAutenticado } from '../errores/errores.js';
 import { sesionesRepositorio, type SesionConUsuario } from '../repositorios/sesiones.repositorio.js';
-import { usuariosRepositorio } from '../repositorios/usuarios.repositorio.js';
-import { verificarContrasena } from './contrasenas.servicio.js';
+import { cifradorDeContrasenas, usuariosSinTransaccion } from '../identidad/contexto.js';
+import { NombreDeUsuario, NombreDeUsuarioInvalido } from '../identidad/dominio/nombre-de-usuario.js';
+import type { Usuario } from '../identidad/dominio/usuario.js';
 
 const MILISEGUNDOS_POR_DIA = 86_400_000;
+
+/** Un nombre mal escrito no existe: responde igual que un usuario desconocido. */
+async function buscarUsuario(texto: string): Promise<Usuario | null> {
+  try {
+    return await usuariosSinTransaccion.buscarPorNombre(NombreDeUsuario.crear(texto));
+  } catch (error) {
+    if (error instanceof NombreDeUsuarioInvalido) return null;
+    throw error;
+  }
+}
 
 export interface DatosInicioSesion {
   usuario: string;
@@ -34,8 +45,9 @@ export const autenticacionServicio = {
    * @throws ErrorNoAutenticado con un mensaje genérico si el usuario o la contraseña no coinciden.
    */
   async iniciarSesion(datos: DatosInicioSesion): Promise<SesionCreada> {
-    const usuario = await usuariosRepositorio.buscarPorUsuario(datos.usuario);
-    const contrasenaValida = await verificarContrasena(usuario?.hashContrasena ?? null, datos.contrasena);
+    const usuario = await buscarUsuario(datos.usuario);
+    const hashGuardado = usuario?.instantanea().hashContrasena ?? null;
+    const contrasenaValida = await cifradorDeContrasenas.coincide(hashGuardado, datos.contrasena);
     if (!usuario || !contrasenaValida || !usuario.activo) {
       throw new ErrorNoAutenticado('Usuario o contraseña incorrectos.');
     }
@@ -44,12 +56,12 @@ export const autenticacionServicio = {
     const expiraEn = calcularVencimiento();
     await sesionesRepositorio.crear({
       hashToken: calcularHashToken(token),
-      usuarioId: usuario.id,
+      usuarioId: usuario.id.valor,
       direccionIp: datos.direccionIp,
       agenteUsuario: datos.agenteUsuario?.slice(0, 300) ?? null,
       expiraEn,
     });
-    await usuariosRepositorio.registrarAcceso(usuario.id);
+    await usuariosSinTransaccion.registrarAcceso(usuario.id);
     return { token, expiraEn };
   },
 

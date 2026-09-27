@@ -1,13 +1,13 @@
 import { sql } from 'drizzle-orm';
 import { boolean, check, index, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { esquemaCore } from './core.esquema.js';
-import { idPrimario, marcasDeTiempo } from '../base-datos/columnas.js';
-import { empresas } from './empresas.esquema.js';
+import { esquemaCore } from '../../../esquemas/core.esquema.js';
+import { idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
+import { empresas } from '../../../esquemas/empresas.esquema.js';
 
 /**
  * Persona que inicia sesión. Entra con `usuario`: solo letras minúsculas, único
  * en todo el servidor y generado a partir de nombres y apellidos (ver
- * `utilidades/nombre-usuario.ts`). El correo es opcional y solo sirve para
+ * `identidad/dominio/nombre-de-usuario.ts`). El correo es opcional y solo sirve para
  * enviarle informes.
  */
 export const usuarios = esquemaCore.table(

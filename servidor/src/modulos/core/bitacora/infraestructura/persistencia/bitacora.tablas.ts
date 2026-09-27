@@ -1,7 +1,7 @@
 import { index, jsonb, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { esquemaCore } from '../../../esquemas/core.esquema.js';
 import { idPrimario } from '../../../base-datos/columnas.js';
-import { usuarios } from '../../../esquemas/usuarios.esquema.js';
+import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { empresas } from '../../../esquemas/empresas.esquema.js';
 
 /** Registro de las entradas de soporte (superacceso) a empresas ajenas. */

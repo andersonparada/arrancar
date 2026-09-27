@@ -2,7 +2,7 @@ import { index, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { esquemaCore } from '../../../esquemas/core.esquema.js';
 import { idPrimario, politicaPorEmpresa } from '../../../base-datos/columnas.js';
 import { empresas } from '../../../esquemas/empresas.esquema.js';
-import { usuarios } from '../../../esquemas/usuarios.esquema.js';
+import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
 
 /**
  * Registros concretos que un usuario puede usar dentro de un recurso con alcance

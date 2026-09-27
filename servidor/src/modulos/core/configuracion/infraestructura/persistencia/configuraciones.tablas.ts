@@ -4,7 +4,7 @@ import { esquemaCore } from '../../../esquemas/core.esquema.js';
 import { idPrimario } from '../../../base-datos/columnas.js';
 import { cuentas } from '../../../esquemas/cuentas.esquema.js';
 import { empresas } from '../../../esquemas/empresas.esquema.js';
-import { usuarios } from '../../../esquemas/usuarios.esquema.js';
+import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
 
 export const NIVELES_GUARDADOS = ['instalacion', 'cuenta', 'empresa'] as const;
 
