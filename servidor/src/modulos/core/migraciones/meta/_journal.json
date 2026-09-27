@@ -36,6 +36,20 @@
       "when": 1790458913715,
       "tag": "0004_quitar_nombre_usuario",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790463109841,
+      "tag": "0005_catalogo_geografico",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790463177533,
+      "tag": "0006_datos_geografia",
+      "breakpoints": true
     }
   ]
 }

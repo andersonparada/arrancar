@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { esDpiValido, normalizarDpi } from '../utilidades/dpi.js';
 import { esNitValido, normalizarNit } from '../utilidades/nit.js';
 import { PATRON_USUARIO } from '../utilidades/nombre-usuario.js';
 
@@ -37,3 +38,10 @@ export const nitOpcional = z
   .nullish()
   .transform((v) => (v?.trim() ? normalizarNit(v) : null))
   .refine((v) => v === null || esNitValido(v), 'El NIT no es válido (revise el dígito verificador).');
+
+/** DPI (CUI) guatemalteco opcional, normalizado y con verificador y ubicación validados. */
+export const dpiOpcional = z
+  .string()
+  .nullish()
+  .transform((v) => (v?.trim() ? normalizarDpi(v) : null))
+  .refine((v) => v === null || esDpiValido(v), 'El DPI no es válido (revise los 13 dígitos).');

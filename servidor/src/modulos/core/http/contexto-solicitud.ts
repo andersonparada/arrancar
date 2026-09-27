@@ -41,8 +41,8 @@ export function contextoDe(solicitud: FastifyRequest): ContextoSolicitud {
   return solicitud.contexto;
 }
 
-/** Datos para `ejecutarEnEmpresa` más la cuenta de la empresa activa. */
-export function empresaActivaDe(solicitud: FastifyRequest): ContextoEmpresa & { cuentaId: string } {
+/** Datos para `ejecutarEnEmpresa`, con la cuenta de la empresa activa. */
+export function empresaActivaDe(solicitud: FastifyRequest): ContextoEmpresa {
   const contexto = contextoDe(solicitud);
   if (!contexto.empresa) throw new ErrorSolicitudInvalida('Seleccione una empresa para continuar.');
   return {

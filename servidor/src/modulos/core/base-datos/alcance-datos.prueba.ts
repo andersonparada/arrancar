@@ -21,6 +21,7 @@ import { migrarModulos } from './migrador.js';
 
 const RECURSO = 'prueba.cuentas';
 let empresaId: string;
+let cuentaId: string;
 let cajero: string;
 let otroUsuario: string;
 let cuentaAsignada: string;
@@ -51,7 +52,7 @@ async function crearTablaProtegida(): Promise<void> {
 }
 
 const nombresVisibles = async (usuarioId: string, recursosAlcanceTotal: string[] = []) => {
-  const filas = await ejecutarEnEmpresa({ empresaId, usuarioId, recursosAlcanceTotal }, (tx) =>
+  const filas = await ejecutarEnEmpresa({ empresaId, cuentaId, usuarioId, recursosAlcanceTotal }, (tx) =>
     tx.execute<{ nombre: string }>(sql`select nombre from prueba.cuentas order by nombre`),
   );
   return filas.rows.map((f) => f.nombre);
@@ -71,17 +72,20 @@ beforeAll(async () => {
     ])
     .returning();
   empresaId = empresa!.id;
+  cuentaId = cuenta!.id;
   cajero = a!.id;
   otroUsuario = b!.id;
 
-  const creadas = await ejecutarEnEmpresa({ empresaId, usuarioId: cajero, recursosAlcanceTotal: [RECURSO] }, (tx) =>
-    tx.execute<{ id: string; nombre: string }>(
-      sql`insert into prueba.cuentas (empresa_id, nombre) values (${empresaId}, 'Banrural GTQ'), (${empresaId}, 'Banrural USD') returning id, nombre`,
-    ),
+  const creadas = await ejecutarEnEmpresa(
+    { empresaId, cuentaId, usuarioId: cajero, recursosAlcanceTotal: [RECURSO] },
+    (tx) =>
+      tx.execute<{ id: string; nombre: string }>(
+        sql`insert into prueba.cuentas (empresa_id, nombre) values (${empresaId}, 'Banrural GTQ'), (${empresaId}, 'Banrural USD') returning id, nombre`,
+      ),
   );
   cuentaAsignada = creadas.rows.find((f) => f.nombre === 'Banrural GTQ')!.id;
 
-  await ejecutarEnEmpresa({ empresaId, usuarioId: cajero }, (tx) =>
+  await ejecutarEnEmpresa({ empresaId, cuentaId, usuarioId: cajero }, (tx) =>
     tx.insert(accesosDatos).values({ empresaId, usuarioId: cajero, recurso: RECURSO, registroId: cuentaAsignada }),
   );
 });
@@ -109,7 +113,7 @@ describe('permiso de datos por registro (RLS)', () => {
   });
 
   it('no puede modificar registros que no tiene asignados', async () => {
-    const actualizadas = await ejecutarEnEmpresa({ empresaId, usuarioId: cajero }, (tx) =>
+    const actualizadas = await ejecutarEnEmpresa({ empresaId, cuentaId, usuarioId: cajero }, (tx) =>
       tx.execute(sql`update prueba.cuentas set nombre = 'X' where nombre = 'Banrural USD' returning id`),
     );
     expect(actualizadas.rows).toHaveLength(0);

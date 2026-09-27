@@ -5,6 +5,7 @@ import { pgPolicy, pgRole, timestamp, uuid } from 'drizzle-orm/pg-core';
 export const rolAplicacion = pgRole('arrancar_app').existing();
 
 const empresaDeLaTransaccion = "nullif(current_setting('app.empresa_id', true), '')::uuid";
+const cuentaDeLaTransaccion = "nullif(current_setting('app.cuenta_id', true), '')::uuid";
 const usuarioDeLaTransaccion = "nullif(current_setting('app.usuario_id', true), '')::uuid";
 const recursosConAlcanceTotal = "string_to_array(current_setting('app.alcance_total', true), ',')";
 
@@ -30,6 +31,20 @@ export const politicaPorEmpresa = () =>
     to: rolAplicacion,
     using: sql.raw(`empresa_id = ${empresaDeLaTransaccion}`),
     withCheck: sql.raw(`empresa_id = ${empresaDeLaTransaccion}`),
+  });
+
+/**
+ * Política RLS que limita la tabla a las filas de la cuenta fijada por
+ * `ejecutarEnEmpresa` (la cuenta de la empresa activa). Para tablas compartidas
+ * por todas las empresas de una cuenta, como `terceros`.
+ */
+export const politicaPorCuenta = () =>
+  pgPolicy('aislamiento_por_cuenta', {
+    as: 'permissive',
+    for: 'all',
+    to: rolAplicacion,
+    using: sql.raw(`cuenta_id = ${cuentaDeLaTransaccion}`),
+    withCheck: sql.raw(`cuenta_id = ${cuentaDeLaTransaccion}`),
   });
 
 /**

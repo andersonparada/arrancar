@@ -177,6 +177,7 @@ su color para que la app se entienda igual en todas las instalaciones.
 |---|---|---|
 | **core** | En construcción (fase 1) | Ver sección 5 |
 | **empresas** | En construcción (fase 1) | Datos generales de ranchos y parcelas. Esencial. |
+| **terceros** | En construcción (fase 1) | Servidor y cliente listos; ver `docs/modulos/terceros.md`. |
 | Resto | **Por planificar** | Ver sección 6. No se programa nada hasta acordarlo. |
 
 ## 5. Fase 1 — Core (en curso)
@@ -208,6 +209,14 @@ Hecho:
 - [x] Docker de producción (Caddy + app + PostgreSQL + respaldo diario), probado:
       la app usa unos 72 MB de RAM.
 - [x] `CLAUDE.md` del proyecto.
+- [x] `app.cuenta_id` en `ejecutarEnEmpresa` (se fija junto a `app.empresa_id`, a partir
+      de `cuentaId` en `ContextoEmpresa`) y `politicaPorCuenta()` en `columnas.ts`, para
+      tablas compartidas por todas las empresas de una cuenta (usado por `terceros`).
+- [x] Catálogo de departamentos y municipios de Guatemala (`core.departamentos`,
+      `core.municipios`, códigos oficiales del INE) con rutas de solo lectura
+      `GET /api/geografia/departamentos` y `GET /api/geografia/departamentos/:codigo/municipios`.
+- [x] Validación de DPI (CUI) guatemalteco (`core/utilidades/dpi.ts`, `dpiOpcional`
+      en `validaciones/comunes`), junto a la de NIT.
 
 Pendiente en esta fase:
 - [ ] Guía de instalación paso a paso en un VPS (`docs/INSTALACION.md`).
@@ -222,10 +231,6 @@ Pendiente en esta fase:
 Notas recogidas en las conversaciones. Cada módulo se planifica en detalle antes
 de programarlo.
 
-- **Terceros (clientes y proveedores)**: una persona base + papeles (cliente,
-  proveedor, trabajador) en tablas propias, porque en el campo una misma persona
-  cumple varios papeles. Clientes directos o por intermediario (para medir cuánto
-  se gana vendiendo sin intermediario).
 - **Moneda extranjera**: habilita monedas distintas de la base y los tipos de
   cambio. Sin él todo funciona en GTQ.
 - **Bancos**: catálogo de bancos (Banrural, BI, G&T…); un banco puede tener varias
@@ -292,3 +297,41 @@ y `demo` / `demo-arrancar`.
     nombre); el correo pasa a ser opcional. Nombres y apellidos se guardan por
     separado. El usuario de soporte se llama `supergod`. Migraciones `0003` y
     `0004` del core. Mensajes de validación en español.
+  - Se planifica el módulo de terceros (`docs/modulos/terceros.md`): por cuenta,
+    papeles cliente, proveedor y trabajador; solo el nombre es obligatorio;
+    clases de cliente directo, intermediario, empresa y subasta. Requiere
+    `politicaPorCuenta()`, departamentos y municipios y validación de DPI en el core.
+  - Se programa el módulo de terceros siguiendo el plan aprobado:
+    - Core: `app.cuenta_id` en `ejecutarEnEmpresa` y `politicaPorCuenta()` en
+      `columnas.ts` (análoga a `politicaPorEmpresa()`); catálogo de los 22
+      departamentos y 340 municipios de Guatemala (`core.departamentos`,
+      `core.municipios`, migración `0005`/`0006`) con rutas de solo lectura;
+      validación de DPI (CUI) en `core/utilidades/dpi.ts` con su prueba, y
+      `dpiOpcional` en `validaciones/comunes`.
+    - Terceros (esquema `terceros`, migraciones `0000`/`0001`, `dependeDe: []`,
+      no esencial): tablas `terceros`, `contactos`, `clientes`, `proveedores`,
+      `categorias_proveedor` y `trabajadores`, todas con `cuenta_id` y
+      `politicaPorCuenta()`; búsqueda por nombre/NIT/DPI/teléfono con `pg_trgm`
+      sobre `nombre_mostrar` (índice GIN); aviso de posibles duplicados (mismo
+      NIT, mismo DPI o nombre parecido, `similarity() > 0.5`) al crear o editar,
+      con confirmación explícita (`confirmarDuplicado`) para guardar de todas
+      formas; inactivar un tercero inactiva también sus papeles; DPI y teléfono
+      del papel trabajador ocultos a quien no tiene `trabajadores.ver`. Prueba
+      de integración de aislamiento entre cuentas
+      (`terceros/aislamiento-cuentas.prueba.ts`).
+    - Cliente: listado con búsqueda y filtros por papel y estado, ficha con
+      datos generales, contactos y una pestaña por papel, y ventana de alta
+      rápida reutilizable (`AltaRapidaTercero.vue`).
+    - Decisiones no detalladas en el plan original: los códigos INE de
+      departamento/municipio se tomaron de fuentes públicas (INE, Wikipedia)
+      cruzadas para llegar a los 340 municipios vigentes; no se pudo verificar
+      contra la tabla oficial del INE dentro de esta sesión, así que conviene
+      revisarlos antes de depender de ellos para validar DPI reales en
+      producción. Los campos `tipo`, `clase` de cliente y `categoría` de
+      proveedor se validan con Zod (no con `CHECK` en la base de datos), igual
+      que el resto de catálogos de texto libre del proyecto. El aviso de
+      duplicados se implementó como `ErrorConflicto` (409) con la lista de
+      posibles duplicados en `detalles`, en vez de un endpoint aparte.
+  - Se aprueba la arquitectura limpia por módulo (dominio, aplicación,
+    infraestructura, http) con POO e inyección por constructor, y el plan de
+    refactor en fases (`docs/ARQUITECTURA.md`).

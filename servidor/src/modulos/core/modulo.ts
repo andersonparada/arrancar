@@ -6,6 +6,7 @@ import { rutasArchivos } from './rutas/archivos.rutas.js';
 import { esquemaColorHex } from './validaciones/apariencia.validaciones.js';
 import { rutasAutenticacion } from './rutas/autenticacion.rutas.js';
 import { rutasConfiguracion } from './rutas/configuracion.rutas.js';
+import { rutasGeografia } from './rutas/geografia.rutas.js';
 import { rutasPlataforma } from './rutas/plataforma.rutas.js';
 import { rutasRoles } from './rutas/roles.rutas.js';
 import { rutasUsuarios } from './rutas/usuarios.rutas.js';
@@ -18,6 +19,7 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(rutasArchivos);
   await app.register(rutasConfiguracion);
   await app.register(rutasApariencia);
+  await app.register(rutasGeografia);
 };
 
 export const moduloCore: DefinicionModulo = {

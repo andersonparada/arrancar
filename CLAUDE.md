@@ -62,6 +62,11 @@ base de desarrollo debe estar levantada.
 - Toda tabla de negocio lleva `empresa_id` y `politicaPorEmpresa()`.
 - Toda consulta a esas tablas se hace dentro de `ejecutarEnEmpresa(contexto, tx => ...)`
   usando `tx`; así RLS limita a la empresa activa.
+- Para tablas compartidas por **todas las empresas de una cuenta** (p. ej. `terceros`):
+  llevan `cuenta_id` y `politicaPorCuenta()` en vez de `empresa_id`/`politicaPorEmpresa()`.
+  `ejecutarEnEmpresa` ya fija `app.cuenta_id` (con `cuentaId` en `ContextoEmpresa`, que
+  siempre viene de la empresa activa), así que se sigue usando la misma función y el
+  mismo `tx`.
 - Permisos de datos por registro: `politicaPorAlcance('<recurso>')` +
   `recursosConAlcance` en el módulo + filas en `core.accesos_datos`.
 - Cada ruta usa `proteger({ permiso })` (cadena de guardias: sesión → empresa →

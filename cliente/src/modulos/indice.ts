@@ -1,9 +1,10 @@
 import type { DefinicionModuloCliente, EntradaMenu } from './core/tipos';
 import { moduloCore } from './core/modulo';
 import { moduloEmpresas } from './empresas/modulo';
+import { moduloTerceros } from './terceros/modulo';
 
 /** Módulos del frontend. Para agregar uno nuevo basta con sumarlo a esta lista. */
-export const modulosCliente: readonly DefinicionModuloCliente[] = [moduloCore, moduloEmpresas];
+export const modulosCliente: readonly DefinicionModuloCliente[] = [moduloCore, moduloEmpresas, moduloTerceros];
 
 export interface FiltroMenu {
   moduloActivo: (clave: string) => boolean;

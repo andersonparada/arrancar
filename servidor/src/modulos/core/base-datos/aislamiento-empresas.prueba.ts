@@ -19,6 +19,7 @@ import { ejecutarEnEmpresa } from './contexto-empresa.js';
 import { migrarModulos } from './migrador.js';
 
 let usuarioId: string;
+let cuentaId: string;
 let empresaA: string;
 let empresaB: string;
 
@@ -53,13 +54,14 @@ beforeAll(async () => {
     ])
     .returning();
   usuarioId = usuario!.id;
+  cuentaId = cuenta!.id;
   empresaA = a!.id;
   empresaB = b!.id;
 
-  await ejecutarEnEmpresa({ empresaId: empresaA, usuarioId }, (tx) =>
+  await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
     tx.insert(accesosDatos).values(insertarAcceso(empresaA, 'dato.de.a')),
   );
-  await ejecutarEnEmpresa({ empresaId: empresaB, usuarioId }, (tx) =>
+  await ejecutarEnEmpresa({ empresaId: empresaB, cuentaId, usuarioId }, (tx) =>
     tx.insert(accesosDatos).values(insertarAcceso(empresaB, 'dato.de.b')),
   );
 });
@@ -70,7 +72,7 @@ afterAll(async () => {
 
 describe('aislamiento entre empresas (RLS)', () => {
   it('cada empresa solo ve sus propias filas, aunque la consulta no filtre', async () => {
-    const vistasPorA = await ejecutarEnEmpresa({ empresaId: empresaA, usuarioId }, (tx) =>
+    const vistasPorA = await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
       tx.select({ recurso: accesosDatos.recurso }).from(accesosDatos),
     );
     expect(vistasPorA).toEqual([{ recurso: 'dato.de.a' }]);
@@ -82,14 +84,14 @@ describe('aislamiento entre empresas (RLS)', () => {
 
   it('no permite insertar filas a nombre de otra empresa', async () => {
     await expect(
-      ejecutarEnEmpresa({ empresaId: empresaA, usuarioId }, (tx) =>
+      ejecutarEnEmpresa({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
         tx.insert(accesosDatos).values(insertarAcceso(empresaB, 'intruso')),
       ),
     ).rejects.toThrow();
   });
 
   it('no permite modificar ni borrar filas de otra empresa', async () => {
-    const resultado = await ejecutarEnEmpresa({ empresaId: empresaA, usuarioId }, async (tx) => {
+    const resultado = await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId, usuarioId }, async (tx) => {
       const actualizadas = await tx
         .update(accesosDatos)
         .set({ recurso: 'modificado' })
