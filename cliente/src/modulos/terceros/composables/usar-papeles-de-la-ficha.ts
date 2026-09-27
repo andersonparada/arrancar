@@ -39,7 +39,8 @@ export function usarPapelesDeLaFicha(ficha: Ref<FichaTercero | null>, alCambiar:
   }
 
   async function quitarPapel(papel: PapelTercero): Promise<void> {
-    if (!ficha.value || !window.confirm(`¿Quitar el papel de ${papel}?`)) return;
+    const mensaje = `¿Quitar el papel de ${papel}? Su historial se conserva.`;
+    if (!ficha.value || !(await avisos.confirmar({ mensaje, textoConfirmar: 'Quitar', peligroso: true }))) return;
     await quitar(ficha.value.id, papel).then(alCambiar, (error: Error) => avisos.error(error.message));
   }
 

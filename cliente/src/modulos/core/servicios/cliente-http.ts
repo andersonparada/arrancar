@@ -5,14 +5,17 @@ export interface ErrorCampo {
 
 /** Error devuelto por la API con el formato `{ error: { codigo, mensaje, detalles } }`. */
 export class ErrorApi extends Error {
+  readonly codigo: string;
+  readonly detalles: unknown;
+
   constructor(
     readonly estado: number,
-    readonly codigo: string,
-    mensaje: string,
-    readonly detalles?: unknown,
+    { codigo, mensaje, detalles }: { codigo: string; mensaje: string; detalles?: unknown },
   ) {
     super(mensaje);
     this.name = 'ErrorApi';
+    this.codigo = codigo;
+    this.detalles = detalles;
   }
 
   /** Errores de validación por campo, si la API los envió. */
@@ -83,19 +86,21 @@ export class ClienteHttp {
         body: esFormulario ? cuerpo : cuerpo ? JSON.stringify(cuerpo) : undefined,
       });
     } catch {
-      throw new ErrorApi(0, 'sin_conexion', 'No hay conexión con el servidor. Revise su internet.');
+      throw new ErrorApi(0, {
+        codigo: 'sin_conexion',
+        mensaje: 'No hay conexión con el servidor. Revise su internet.',
+      });
     }
   }
 
   private errorDe(estado: number, datos: CuerpoDeError | null): ErrorApi {
     if (estado === 401) this.alPerderSesion();
     const error = datos?.error;
-    return new ErrorApi(
-      estado,
-      error?.codigo ?? 'error',
-      error?.mensaje ?? 'Ocurrió un error inesperado.',
-      error?.detalles,
-    );
+    return new ErrorApi(estado, {
+      codigo: error?.codigo ?? 'error',
+      mensaje: error?.mensaje ?? 'Ocurrió un error inesperado.',
+      detalles: error?.detalles,
+    });
   }
 
   private url(ruta: string, consulta: Consulta = {}): string {

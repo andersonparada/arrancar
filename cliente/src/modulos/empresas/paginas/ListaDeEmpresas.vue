@@ -1,0 +1,38 @@
+<script setup lang="ts">
+import { Plus } from 'lucide-vue-next';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
+import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+import TarjetaDeEmpresa from '../componentes/TarjetaDeEmpresa.vue';
+import VentanaDeEmpresa from '../componentes/VentanaDeEmpresa.vue';
+import { usarEmpresas } from '../composables/usar-empresas';
+import { VENTANAS_EMPRESAS } from '../textos';
+
+const sesion = usarSesion();
+const { empresas, edicion, enviando, errores, abrir, guardar } = usarEmpresas();
+</script>
+
+<template>
+  <div>
+    <EncabezadoPagina
+      :titulo="VENTANAS_EMPRESAS.empresas.titulo"
+      :descripcion="VENTANAS_EMPRESAS.empresas.descripcion(sesion.empresa?.cuentaNombre ?? '')"
+    >
+      <BotonBase v-permiso="'empresas.gestionar'" :icono="Plus" @click="abrir()">Nueva empresa</BotonBase>
+    </EncabezadoPagina>
+
+    <ul class="grid gap-3 md:grid-cols-2">
+      <li v-for="empresa in empresas" :key="empresa.id">
+        <TarjetaDeEmpresa :empresa="empresa" :en-uso="empresa.id === sesion.empresa?.id" @editar="abrir(empresa)" />
+      </li>
+    </ul>
+
+    <VentanaDeEmpresa
+      v-model="edicion"
+      :errores="errores"
+      :enviando="enviando"
+      @cerrar="edicion.abierta = false"
+      @guardar="guardar"
+    />
+  </div>
+</template>

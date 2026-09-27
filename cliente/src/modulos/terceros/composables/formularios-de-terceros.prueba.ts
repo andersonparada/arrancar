@@ -42,7 +42,7 @@ describe('listado por papel', () => {
 });
 
 describe('posible duplicado', () => {
-  const parecido = new ErrorApi(409, 'conflicto', 'Se parece a Ana López.');
+  const parecido = new ErrorApi(409, { codigo: 'conflicto', mensaje: 'Se parece a Ana López.' });
 
   it('si el usuario confirma, guarda de todas formas', async () => {
     const guardar = vi.fn().mockRejectedValueOnce(parecido).mockResolvedValueOnce('guardado');
@@ -61,7 +61,7 @@ describe('posible duplicado', () => {
   });
 
   it('cualquier otro error sigue su curso', async () => {
-    const otro = new ErrorApi(400, 'validacion', 'Revise los datos.');
+    const otro = new ErrorApi(400, { codigo: 'validacion', mensaje: 'Revise los datos.' });
 
     await expect(
       conConfirmacionDeDuplicado(

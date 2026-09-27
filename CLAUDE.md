@@ -27,7 +27,7 @@ npm run bd:migrar -w servidor             # aplica migraciones de todos los mód
 npm run bd:sembrar -w servidor -- --demo  # usuario de soporte + cuenta demo
 npm run dev:servidor                      # API en :3100, documentación en /api/documentacion
 npm run dev:cliente                       # PWA en :5180 (proxy de /api al :3100)
-npm run probar                            # pruebas del servidor (Vitest, base arrancar_pruebas)
+npm run probar                            # pruebas del servidor (base arrancar_pruebas) y del cliente
 npm run verificar                         # tsc del servidor y vue-tsc del cliente
 npm run revisar                           # Prettier + ESLint + verificar: correr antes de cada commit
 npm run formatear                         # aplica Prettier y las correcciones automáticas de ESLint
@@ -39,18 +39,42 @@ base de desarrollo debe estar levantada.
 
 ## Arquitectura
 
-**El código nuevo sigue `docs/ARQUITECTURA.md`** (capas dominio, aplicación,
-infraestructura y http; POO con inyección por constructor; casos de uso de una
-clase). La base está en `servidor/src/modulos/core/compartido/`: `UnidadDeTrabajo`
-en vez de `ejecutarEnEmpresa`, `ErrorEsperado` y sus familias en vez de
-`core/errores`, objetos de valor `Nit`, `Dpi`, `Correo`, `Telefono`. Lo descrito
-abajo es el estado del código aún no migrado (fases 3 a 7).
+**Todo el código sigue `docs/ARQUITECTURA.md`.** La plantilla del servidor es
+`empresas` y la del cliente, `terceros` (pantallas de Clientes); copiar su forma.
+
+### Servidor
+- Cada módulo (`servidor/src/modulos/<clave>/`) y cada contexto del core
+  (`core/identidad`, `core/autorizacion`, `core/configuracion`…) tiene las capas
+  `dominio/` (entidades, objetos de valor, errores), `aplicacion/` (un caso de uso
+  por clase, puertos, DTO), `infraestructura/` (Drizzle, tablas en
+  `persistencia/*.tablas.ts`) y `http/` (controlador, rutas, esquemas Zod). La raíz
+  de composición es `modulo.ts` (o `contexto.ts` en el core); la inyección es por
+  constructor.
+- Lo común está en `core/compartido/`: `UnidadDeTrabajo` (una transacción por caso
+  de uso, con RLS de la empresa del contexto), `ErrorEsperado` y sus familias,
+  objetos de valor (`Nit`, `Dpi`, `Correo`, `Telefono`), guardias http y dobles de
+  prueba.
+
+### Cliente
+- Cada módulo (`cliente/src/modulos/<clave>/`) tiene `servicios/` (una clase
+  `Api*` sobre `ClienteHttp` y su instancia), `composables/`, `componentes/`,
+  `paginas/`, `textos.ts` (nombres de ventanas y menú) y `modulo.ts` (rutas y
+  menú). En el core, cada área tiene su subcarpeta (`usuarios/`, `roles/`…).
+- La página solo arma: pide un composable (`usar<Pantalla>`) y pasa datos a
+  componentes. Las páginas no pasan de 120 líneas.
+- Los composables hablan con la API; la lógica pura va en archivos sin Vue
+  (`edicion-de-<entidad>.ts`) y tiene pruebas `*.prueba.ts`. Base: `usarCarga`
+  (traer datos al abrir) y `usarFormulario` (enviar y repartir errores por campo).
+- Los componentes no importan servicios (solo `import type`). Las ventanas de
+  edición reciben el objeto con `v-model` (`defineModel`) y emiten `guardar` y
+  `cerrar`. Para volver atrás, `EncabezadoPagina` acepta `volver`.
+- Avisos y confirmaciones con `usarAvisos()` (`exito`, `error`, `confirmar`);
+  `alert`/`confirm` del navegador están prohibidos por ESLint. Fechas y números se
+  muestran solo con `utilidades/formato.ts`.
 
 ### Módulos
-- Cada módulo: `servidor/src/modulos/<clave>/` y `cliente/src/modulos/<clave>/`, con
-  un `modulo.ts` que exporta su definición y se registra en `modulos/indice.ts`.
-- Carpetas por tipo: `esquemas/`, `migraciones/`, `repositorios/`, `servicios/`,
-  `controladores/`, `rutas/`, `validaciones/` (y `eventos/`, `estados/` cuando hagan falta).
+- Cada módulo tiene un `modulo.ts` en el servidor y otro en el cliente, que se
+  registran en `modulos/indice.ts`.
 - Lo que usan todos los módulos va en `core`. `empresas` es esencial (siempre activo).
 - `DefinicionModulo` declara: `dependeDe`, `permisos`, `recursosConAlcance`,
   `configuracion` y `rutas`. El registro valida las dependencias al arrancar.
@@ -61,9 +85,9 @@ abajo es el estado del código aún no migrado (fases 3 a 7).
 - **Un esquema de PostgreSQL por módulo** (`pgSchema('<clave>')`); las tablas de
   core viven en `core.*`.
 - **Migraciones por módulo** en `modulos/<clave>/migraciones`, generadas con
-  `bd:generar`; nunca editar una migración ya aplicada en producción. Las tablas de
-  los módulos migrados viven en `infraestructura/persistencia/*.tablas.ts`; las del
-  código aún no migrado, en `esquemas/*.esquema.ts` (drizzle-kit lee las dos).
+  `bd:generar`; nunca editar una migración ya aplicada en producción. Las tablas
+  viven en `infraestructura/persistencia/*.tablas.ts` (las de empresas y monedas,
+  aún en `core/esquemas/`; drizzle-kit lee las dos).
 - La app se conecta como `arrancar_app` (sin privilegios). Las migraciones usan
   `DATABASE_URL_PROPIETARIO`. El migrador da los permisos (GRANT) por esquema.
 - `casing: 'snake_case'`: en TypeScript las columnas son camelCase.
@@ -71,13 +95,11 @@ abajo es el estado del código aún no migrado (fases 3 a 7).
 
 ### Multiempresa y seguridad (no romper)
 - Toda tabla de negocio lleva `empresa_id` y `politicaPorEmpresa()`.
-- Toda consulta a esas tablas se hace dentro de `ejecutarEnEmpresa(contexto, tx => ...)`
-  usando `tx`; así RLS limita a la empresa activa.
+- Toda consulta a esas tablas corre dentro de `UnidadDeTrabajo.ejecutar(contexto, ...)`
+  con la transacción en curso; así RLS limita a la empresa activa.
 - Para tablas compartidas por **todas las empresas de una cuenta** (p. ej. `terceros`):
   llevan `cuenta_id` y `politicaPorCuenta()` en vez de `empresa_id`/`politicaPorEmpresa()`.
-  `ejecutarEnEmpresa` ya fija `app.cuenta_id` (con `cuentaId` en `ContextoEmpresa`, que
-  siempre viene de la empresa activa), así que se sigue usando la misma función y el
-  mismo `tx`.
+  La unidad de trabajo también fija `app.cuenta_id`, que siempre sale de la empresa activa.
 - Permisos de datos por registro: `politicaPorAlcance('<recurso>')` +
   `recursosConAlcance` en el módulo + filas en `core.accesos_datos`.
 - Cada ruta usa `proteger({ permiso })` (cadena de guardias: sesión → empresa →
@@ -87,7 +109,7 @@ abajo es el estado del código aún no migrado (fases 3 a 7).
 
 ### Usuarios
 Inicio de sesión con nombre de usuario (solo letras, único en el servidor), no
-con correo. Se genera con `generarCandidatosUsuario` (`core/utilidades/nombre-usuario.ts`)
+con correo. Se genera con `NombreDeUsuario` (`core/identidad/dominio/nombre-de-usuario.ts`)
 a partir de `nombres` y `apellidos`, que se guardan por separado. El correo es
 opcional (solo para informes). Usuario de soporte: `supergod`.
 
@@ -95,8 +117,8 @@ opcional (solo para informes). Usuario de soporte: `supergod`.
 Empresa → cuenta → instalación (JSON en `RUTA_CONFIG_INSTALACION`) → predeterminado.
 Las variables se declaran en el módulo con `definirConfiguracion` (clave
 `<modulo>.<grupo>.<nombre>`, esquema Zod, niveles). Se leen con
-`configuracionServicio.obtener(clave, { cuentaId, empresaId })`; las `publica: true`
-llegan al cliente en la sesión (`sesion.config(clave, predeterminado)`).
+`LectorDeConfiguracion.obtener(clave, destino)` (`core/configuracion/contexto.ts`);
+las `publica: true` llegan al cliente en la sesión (`sesion.config(clave, predeterminado)`).
 
 ### Apariencia
 Colores de marca por instalación (panel Soporte → Apariencia). En el cliente
@@ -111,7 +133,10 @@ inicio de sesión); botones y formularios usan la paleta fija (`campo`, `tierra`
 - Patrones de refactoring.guru cuando aporten (ver tabla en `docs/PLAN.md`);
   no forzarlos.
 - TSDoc en funciones públicas; sin comentarios obvios.
-- Controladores delgados; reglas en servicios; consultas en repositorios.
-- Errores: lanzar las clases de `core/errores/errores.ts`; la API responde
-  `{ error: { codigo, mensaje, detalles } }`.
+- Controladores delgados; reglas en el dominio; orquestación en casos de uso;
+  consultas en infraestructura.
+- Errores: subclases de las familias de `core/compartido` (`DatoInvalido`,
+  `RecursoNoEncontrado`, `ReglaDeNegocioInfringida`…), con código propio; la API
+  responde `{ error: { codigo, mensaje, detalles } }`.
+- Funciones de hasta 25 líneas, complejidad hasta 8 y hasta 3 parámetros (ESLint).
 - Pruebas junto al código como `*.prueba.ts`.

@@ -69,46 +69,59 @@ function distanciaTono(a: number, b: number): number {
   return d > 180 ? 360 - d : d;
 }
 
-/**
- * Sugiere un color principal y uno de acento a partir de un logo: agrupa los
- * píxeles con color (ignora transparentes, blancos, negros y grises) y toma el
- * grupo más frecuente como principal y el más frecuente de otro tono como acento.
- */
-export async function sugerirColoresDeImagen(url: string): Promise<{ principal: string; acento: string } | null> {
+const LADO_DE_MUESTRA = 64;
+const OPACIDAD_MINIMA = 200;
+const TONO_DISTINTO = 40;
+
+/** Los píxeles del logo reducido a un cuadrado pequeño (RGBA seguidos), o nada si no se puede dibujar. */
+async function pixelesDeImagen(url: string): Promise<Uint8ClampedArray | null> {
   const imagen = new Image();
   imagen.crossOrigin = 'anonymous';
   imagen.src = url;
   await imagen.decode();
-
-  const lado = 64;
-  const lienzo = document.createElement('canvas');
-  lienzo.width = lado;
-  lienzo.height = lado;
+  const lienzo = Object.assign(document.createElement('canvas'), { width: LADO_DE_MUESTRA, height: LADO_DE_MUESTRA });
   const contexto = lienzo.getContext('2d', { willReadFrequently: true });
   if (!contexto) return null;
-  contexto.drawImage(imagen, 0, 0, lado, lado);
-  const { data } = contexto.getImageData(0, 0, lado, lado);
+  contexto.drawImage(imagen, 0, 0, LADO_DE_MUESTRA, LADO_DE_MUESTRA);
+  return contexto.getImageData(0, 0, LADO_DE_MUESTRA, LADO_DE_MUESTRA).data;
+}
 
+/** Transparentes, blancos, negros y grises no cuentan como color del logo. */
+function tieneColor(rgb: Rgb, opacidad: number): boolean {
+  const [, saturacion, luz] = rgbAHsl(rgb);
+  return opacidad >= OPACIDAD_MINIMA && saturacion >= 0.2 && luz >= 0.08 && luz <= 0.92;
+}
+
+/** Agrupa los píxeles parecidos y devuelve el color medio de cada grupo, del más frecuente al menos. */
+function coloresFrecuentes(pixeles: Uint8ClampedArray): Rgb[] {
   const grupos = new Map<string, { suma: Rgb; cantidad: number }>();
-  for (let i = 0; i < data.length; i += 4) {
-    const rgb: Rgb = [data[i]!, data[i + 1]!, data[i + 2]!];
-    if (data[i + 3]! < 200) continue;
-    const [, saturacion, luz] = rgbAHsl(rgb);
-    if (saturacion < 0.2 || luz < 0.08 || luz > 0.92) continue;
+  for (let i = 0; i < pixeles.length; i += 4) {
+    const rgb: Rgb = [pixeles[i]!, pixeles[i + 1]!, pixeles[i + 2]!];
+    if (!tieneColor(rgb, pixeles[i + 3]!)) continue;
     const llave = rgb.map((c) => c >> 5).join('-');
     const grupo = grupos.get(llave) ?? { suma: [0, 0, 0], cantidad: 0 };
-    grupo.suma = [grupo.suma[0] + rgb[0], grupo.suma[1] + rgb[1], grupo.suma[2] + rgb[2]];
-    grupo.cantidad++;
-    grupos.set(llave, grupo);
+    grupos.set(llave, { suma: grupo.suma.map((c, j) => c + rgb[j]!) as Rgb, cantidad: grupo.cantidad + 1 });
   }
-
-  const colores = [...grupos.values()]
+  return [...grupos.values()]
     .sort((a, b) => b.cantidad - a.cantidad)
-    .map((g) => g.suma.map((c) => c / g.cantidad) as Rgb);
+    .map((grupo) => grupo.suma.map((c) => c / grupo.cantidad) as Rgb);
+}
+
+/** El más frecuente de otro tono; si no hay, el segundo más frecuente. */
+function acentoPara(principal: Rgb, colores: Rgb[]): Rgb {
+  const tonoPrincipal = rgbAHsl(principal)[0];
+  const deOtroTono = colores.find((c) => distanciaTono(rgbAHsl(c)[0], tonoPrincipal) > TONO_DISTINTO);
+  return deOtroTono ?? colores[1] ?? principal;
+}
+
+/**
+ * Sugiere un color principal y uno de acento a partir de un logo: el color más
+ * frecuente es el principal y el más frecuente de otro tono, el acento.
+ */
+export async function sugerirColoresDeImagen(url: string): Promise<{ principal: string; acento: string } | null> {
+  const pixeles = await pixelesDeImagen(url);
+  const colores = pixeles ? coloresFrecuentes(pixeles) : [];
   const principal = colores[0];
   if (!principal) return null;
-
-  const tonoPrincipal = rgbAHsl(principal)[0];
-  const acento = colores.find((c) => distanciaTono(rgbAHsl(c)[0], tonoPrincipal) > 40) ?? colores[1] ?? principal;
-  return { principal: rgbAHex(principal), acento: rgbAHex(acento) };
+  return { principal: rgbAHex(principal), acento: rgbAHex(acentoPara(principal, colores)) };
 }

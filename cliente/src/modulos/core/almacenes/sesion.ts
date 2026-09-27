@@ -1,81 +1,67 @@
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed, ref, type Ref } from 'vue';
 import { ErrorApi } from '../servicios/cliente-http';
 import { apiSesion, type ResumenSesion } from '../servicios/sesion.api';
 
-/** Estado de la sesión: usuario, empresa activa, módulos y permisos efectivos. */
-export const usarSesion = defineStore('sesion', () => {
-  const resumen = ref<ResumenSesion | null>(null);
-  const cargada = ref(false);
-
-  const usuario = computed(() => resumen.value?.usuario ?? null);
-  const empresa = computed(() => resumen.value?.empresa ?? null);
-  const autenticado = computed(() => resumen.value !== null);
-  const esSuperacceso = computed(() => resumen.value?.usuario.esSuperacceso ?? false);
-  const empresasDisponibles = computed(() => resumen.value?.empresasDisponibles ?? []);
+/** Lo que se lee del resumen: quién es, dónde está y qué puede hacer. */
+function lecturasDelResumen(resumen: Ref<ResumenSesion | null>) {
   const permisos = computed(() => new Set(resumen.value?.permisos ?? []));
   const modulosActivos = computed(() => new Set(resumen.value?.modulosActivos ?? []));
 
-  /** Indica si el usuario tiene el permiso en la empresa activa. */
-  function puede(permiso: string): boolean {
-    return permisos.value.has(permiso);
-  }
+  return {
+    usuario: computed(() => resumen.value?.usuario ?? null),
+    empresa: computed(() => resumen.value?.empresa ?? null),
+    autenticado: computed(() => resumen.value !== null),
+    esSuperacceso: computed(() => resumen.value?.usuario.esSuperacceso ?? false),
+    empresasDisponibles: computed(() => resumen.value?.empresasDisponibles ?? []),
+    rolNombre: computed(() => resumen.value?.rolNombre ?? null),
+    /** Indica si el usuario tiene el permiso en la empresa activa. */
+    puede: (permiso: string) => permisos.value.has(permiso),
+    moduloActivo: (clave: string) => modulosActivos.value.has(clave),
+    /** Valor efectivo de una variable de configuración pública, o `predeterminado` si no llegó. */
+    config: <T>(clave: string, predeterminado: T): T => {
+      const valor = resumen.value?.configuracion[clave];
+      return valor === undefined ? predeterminado : (valor as T);
+    },
+  };
+}
 
-  function moduloActivo(clave: string): boolean {
-    return modulosActivos.value.has(clave);
+/** El resumen del servidor, o nada si no hay sesión (401); cualquier otro error sigue su curso. */
+async function resumenDelServidor(): Promise<ResumenSesion | null> {
+  try {
+    return await apiSesion.obtener();
+  } catch (error) {
+    if (error instanceof ErrorApi && error.estado === 401) return null;
+    throw error;
   }
+}
 
-  /** Valor efectivo de una variable de configuración pública, o `predeterminado` si no llegó. */
-  function config<T>(clave: string, predeterminado: T): T {
-    const valor = resumen.value?.configuracion[clave];
-    return valor === undefined ? predeterminado : (valor as T);
-  }
+/** Lo que cambia la sesión: cargarla, entrar, salir y cambiar de empresa. */
+function accionesDeSesion(resumen: Ref<ResumenSesion | null>, cargada: Ref<boolean>) {
+  const limpiar = (): void => {
+    resumen.value = null;
+  };
 
-  /** Carga la sesión desde el servidor; si no hay sesión, queda como no autenticado. */
   async function cargar(): Promise<void> {
     try {
-      resumen.value = await apiSesion.obtener();
-    } catch (error) {
-      if (!(error instanceof ErrorApi) || error.estado !== 401) throw error;
-      resumen.value = null;
+      resumen.value = await resumenDelServidor();
     } finally {
       cargada.value = true;
     }
   }
 
-  async function iniciarSesion(usuario: string, contrasena: string): Promise<void> {
-    await apiSesion.iniciarSesion(usuario, contrasena);
-    await cargar();
-  }
-
-  async function cerrarSesion(): Promise<void> {
-    await apiSesion.cerrarSesion().catch(() => undefined);
-    limpiar();
-  }
-
-  async function cambiarEmpresa(empresaId: string): Promise<void> {
-    resumen.value = await apiSesion.cambiarEmpresa(empresaId);
-  }
-
-  function limpiar(): void {
-    resumen.value = null;
-  }
-
   return {
-    cargada,
-    usuario,
-    empresa,
-    autenticado,
-    esSuperacceso,
-    empresasDisponibles,
-    rolNombre: computed(() => resumen.value?.rolNombre ?? null),
-    puede,
-    moduloActivo,
-    config,
     cargar,
-    iniciarSesion,
-    cerrarSesion,
-    cambiarEmpresa,
     limpiar,
+    iniciarSesion: (usuario: string, contrasena: string) => apiSesion.iniciarSesion(usuario, contrasena).then(cargar),
+    cerrarSesion: () => apiSesion.cerrarSesion().then(limpiar, limpiar),
+    cambiarEmpresa: async (empresaId: string) => void (resumen.value = await apiSesion.cambiarEmpresa(empresaId)),
   };
+}
+
+/** Estado de la sesión: usuario, empresa activa, módulos y permisos efectivos. */
+export const usarSesion = defineStore('sesion', () => {
+  const resumen = ref<ResumenSesion | null>(null);
+  const cargada = ref(false);
+  return { cargada, ...lecturasDelResumen(resumen), ...accionesDeSesion(resumen, cargada) };
 });

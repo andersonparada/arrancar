@@ -588,6 +588,20 @@ entrega como un commit propio.
     compartieran el listado al pasar de una a otra: el `RouterView` principal ahora
     usa la ruta como clave. 274 pruebas del servidor y 36 del cliente; advertencias:
     10 (ninguna en las páginas del core; las del cliente pasan al 6.4).
+  - **6.4 Empresas y cierre (2026-09-27):** `ListaEmpresas` pasa a `ListaDeEmpresas`
+    con `usarEmpresas`, `edicion-de-empresa.ts`, `TarjetaDeEmpresa` y
+    `VentanaDeEmpresa`. Se limpiaron las advertencias que quedaban en el cliente:
+    las reglas del enrutador pasan a `core/acceso/reglas-de-acceso.ts` (una lista
+    ordenada, con pruebas), `ErrorApi` recibe `{ codigo, mensaje, detalles }`, los
+    almacenes de avisos y de sesión se arman con piezas (`usarMensajesEmergentes`,
+    `usarConfirmaciones`, `lecturasDelResumen`, `accionesDeSesion`) y la sugerencia
+    de colores del logo se divide en funciones con nombre. Las tres confirmaciones
+    de Clientes que usaban `window.confirm` (quitar papel, eliminar contacto,
+    posible duplicado) ahora usan `usarAvisos().confirmar`, y ESLint prohíbe
+    `alert`/`confirm` en el cliente (`no-alert`). `CLAUDE.md` describe la
+    arquitectura actual del servidor y del cliente. 274 pruebas del servidor y 41
+    del cliente; advertencias: 2, ambas del servidor (fase 7).
+- **Fase 6: hecha (2026-09-27).** El cliente no tiene advertencias de ESLint.
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 

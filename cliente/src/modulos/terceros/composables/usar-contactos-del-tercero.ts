@@ -28,7 +28,8 @@ export function usarContactosDelTercero(terceroId: string, alCambiar: () => Prom
   }
 
   async function eliminar(contacto: Contacto): Promise<void> {
-    if (!window.confirm(`¿Eliminar a ${contacto.nombre} de los contactos?`)) return;
+    const mensaje = `¿Eliminar a ${contacto.nombre} de los contactos?`;
+    if (!(await avisos.confirmar({ mensaje, textoConfirmar: 'Eliminar', peligroso: true }))) return;
     await apiTerceros
       .eliminarContacto(terceroId, contacto.id)
       .then(alCambiar, (error: Error) => avisos.error(error.message));

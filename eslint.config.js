@@ -165,6 +165,11 @@ export default tseslint.config(
     },
   },
   {
+    // Las preguntas y los avisos se ven igual en toda la app: `usarAvisos().confirmar`, no los del navegador.
+    files: ['cliente/src/**/*.{ts,vue}'],
+    rules: { 'no-alert': 'error' },
+  },
+  {
     files: ['**/*.prueba.ts', 'servidor/src/pruebas-api/**'],
     rules: {
       'max-lines-per-function': 'off',

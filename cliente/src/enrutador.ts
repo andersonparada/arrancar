@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
+import { resolverAcceso } from './modulos/core/acceso/reglas-de-acceso';
 import { usarApariencia } from './modulos/core/almacenes/apariencia';
 import { usarSesion } from './modulos/core/almacenes/sesion';
 import { clienteHttp } from './modulos/core/servicios/cliente-http';
@@ -39,26 +40,10 @@ export const enrutador = createRouter({
   ],
 });
 
-/**
- * Decide a dónde ir antes de entrar a una ruta: inicio de sesión, elegir
- * empresa o "sin permiso". Es solo navegación; la API valida lo mismo.
- */
-function resolverAcceso(destino: RouteLocationNormalized) {
-  const sesion = usarSesion();
-  const { meta } = destino;
-
-  if (meta.publica) return sesion.autenticado && destino.name === 'iniciar-sesion' ? { name: 'inicio' } : true;
-  if (!sesion.autenticado) return { name: 'iniciar-sesion', query: { volver: destino.fullPath } };
-  if (meta.soloSuperacceso && !sesion.esSuperacceso) return { name: 'sin-permiso' };
-  if ((meta.requiereEmpresa ?? true) && !sesion.empresa) return { name: 'elegir-empresa' };
-  if (meta.permiso && !sesion.puede(meta.permiso)) return { name: 'sin-permiso' };
-  return true;
-}
-
 enrutador.beforeEach(async (destino) => {
   const sesion = usarSesion();
   if (!sesion.cargada) await sesion.cargar();
-  return resolverAcceso(destino);
+  return resolverAcceso(destino, sesion);
 });
 
 enrutador.afterEach((destino) => {

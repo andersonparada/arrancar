@@ -8,7 +8,7 @@ export const moduloEmpresas: DefinicionModuloCliente = {
     {
       path: '/empresas',
       name: 'empresas',
-      component: () => import('./paginas/ListaEmpresas.vue'),
+      component: () => import('./paginas/ListaDeEmpresas.vue'),
       meta: { permiso: 'empresas.ver', titulo: VENTANAS_EMPRESAS.empresas.titulo },
     },
   ],
