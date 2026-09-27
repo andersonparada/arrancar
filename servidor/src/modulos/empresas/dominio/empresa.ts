@@ -1,5 +1,5 @@
 import { RaizAgregado } from '../../core/compartido/dominio/entidad.js';
-import { Identificador } from '../../core/compartido/dominio/identificador.js';
+import { Identificador, type CuentaId } from '../../core/compartido/dominio/identificador.js';
 import type { Correo } from '../../core/compartido/dominio/objetos-valor/correo.js';
 import type { Nit } from '../../core/compartido/dominio/objetos-valor/nit.js';
 import type { Telefono } from '../../core/compartido/dominio/objetos-valor/telefono.js';
@@ -7,7 +7,6 @@ import { NoSePuedeDesactivarLaEmpresaEnUso, NombreDeEmpresaInvalido } from './er
 import { EmpresaRegistrada } from './eventos.js';
 
 export type EmpresaId = Identificador<'Empresa'>;
-export type CuentaId = Identificador<'Cuenta'>;
 
 const LARGO_MAXIMO_DEL_NOMBRE = 120;
 const MONEDA_BASE_PREDETERMINADA = 'GTQ';

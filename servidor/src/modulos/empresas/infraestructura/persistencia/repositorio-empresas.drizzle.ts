@@ -2,7 +2,8 @@ import { and, eq } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { empresas } from '../../../core/esquemas/empresas.esquema.js';
 import type { RepositorioEmpresas } from '../../aplicacion/puertos/repositorio-empresas.js';
-import type { CuentaId, Empresa, EmpresaId } from '../../dominio/empresa.js';
+import type { CuentaId } from '../../../core/compartido/dominio/identificador.js';
+import type { Empresa, EmpresaId } from '../../dominio/empresa.js';
 import { mapeadorDeEmpresa } from './empresa.mapeador.js';
 
 /**

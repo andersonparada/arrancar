@@ -2,7 +2,7 @@ import { api } from '@/modulos/core/servicios/cliente-http';
 
 export type TipoTercero = 'individual' | 'juridica';
 export type ClaseCliente = 'directo' | 'intermediario' | 'empresa' | 'subasta';
-export type PapelTercero = 'cliente' | 'proveedor' | 'trabajador';
+export type PapelTercero = 'cliente' | 'proveedor';
 
 export interface Tercero {
   id: string;
@@ -27,7 +27,7 @@ export interface Tercero {
 }
 
 export interface TerceroEnListado extends Tercero {
-  papeles: { cliente: boolean; proveedor: boolean; trabajador: boolean };
+  papeles: { cliente: boolean; proveedor: boolean };
 }
 
 export interface Contacto {
@@ -60,20 +60,10 @@ export interface CategoriaProveedor {
   activo: boolean;
 }
 
-export interface Trabajador {
-  id: string;
-  cargo: string | null;
-  fechaIngreso: string | null;
-  fechaSalida: string | null;
-  activo: boolean;
-  notas: string | null;
-}
-
 export interface FichaTercero extends Tercero {
   contactos: Contacto[];
   cliente: Cliente | null;
   proveedor: Proveedor | null;
-  trabajador: Trabajador | null;
 }
 
 export interface DatosTercero {
@@ -136,16 +126,4 @@ export const tercerosApi = {
   asignarProveedor: (terceroId: string, datos: { categoriaId: string | null; activo: boolean; notas: string | null }) =>
     api.reemplazar<Proveedor>(`/terceros/${terceroId}/proveedor`, datos),
   quitarProveedor: (terceroId: string) => api.eliminar(`/terceros/${terceroId}/proveedor`),
-
-  asignarTrabajador: (
-    terceroId: string,
-    datos: {
-      cargo: string | null;
-      fechaIngreso: string | null;
-      fechaSalida: string | null;
-      activo: boolean;
-      notas: string | null;
-    },
-  ) => api.reemplazar<Trabajador>(`/terceros/${terceroId}/trabajador`, datos),
-  quitarTrabajador: (terceroId: string) => api.eliminar(`/terceros/${terceroId}/trabajador`),
 };

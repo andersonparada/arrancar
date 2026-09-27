@@ -1,5 +1,5 @@
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
-import { crearSiHayTexto } from '../../../core/compartido/dominio/objeto-valor.js';
+import { crearSiHayTexto, valorDe } from '../../../core/compartido/dominio/objeto-valor.js';
 import { Correo } from '../../../core/compartido/dominio/objetos-valor/correo.js';
 import { Nit } from '../../../core/compartido/dominio/objetos-valor/nit.js';
 import { Telefono } from '../../../core/compartido/dominio/objetos-valor/telefono.js';
@@ -32,9 +32,9 @@ export const mapeadorDeEmpresa = {
       ...resto,
       id: id.valor,
       cuentaId: cuentaId.valor,
-      nit: nit?.valor ?? null,
-      telefono: telefono?.valor ?? null,
-      correo: correo?.valor ?? null,
+      nit: valorDe(nit),
+      telefono: valorDe(telefono),
+      correo: valorDe(correo),
     };
   },
 

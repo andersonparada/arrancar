@@ -408,13 +408,36 @@ entrega como un commit propio.
     cliente no lo usaba).
   - Nuevo evento `empresas.registrada` (nadie lo escucha aún).
   - Se corrigió la descripción del permiso `empresas.gestionar`, que aún hablaba del fierro.
-  - Teléfono y correo de la empresa siguen como texto libre para no cambiar lo que
-    la API devuelve: normalizarlos con `Telefono` y `Correo` queda **por decidir
-    con el usuario**.
+  - Teléfono y correo de la empresa: después, con el visto bueno del usuario, se
+    normalizaron con `Telefono` y `Correo` (migración de datos `core/0007`).
   - Nuevas piezas compartidas: `Operador`, `DependenciasCompartidas`,
     `operadorDe(solicitud)` y los dobles `UnidadDeTrabajoEnMemoria`,
     `PublicadorEventosEnMemoria` y `operadorDePrueba`.
   - 209 pruebas en total; advertencias de tamaño: 41 (ninguna en empresas ni en compartido).
+- **Fase 4: hecha (2026-09-26).** `terceros` migrado completo (ver
+  `docs/modulos/terceros.md`), con los cambios funcionales acordados:
+  - Sin papel de trabajador (pasa a planilla): migración `terceros/0002` borra la
+    tabla; `0003` quita sus permisos y su configuración y normaliza teléfonos,
+    WhatsApp y correos de terceros y contactos.
+  - El módulo se llama **Clientes** para el usuario; los textos de pantalla y los
+    mensajes de error ya no dicen "tercero".
+  - El agregado `Tercero` contiene sus papeles: así garantiza que inactivarlo los
+    inactive y que no se asignen papeles a un inactivo. `Contacto` y
+    `CategoriaDeProveedor` son entidades aparte (no tienen reglas con el tercero).
+  - Asignar y quitar papel son dos casos de uso genéricos (`AsignarPapel`,
+    `QuitarPapel`) en vez de cuatro.
+  - Las tablas se mudaron a `infraestructura/persistencia/*.tablas.ts`;
+    `drizzle.config.ts` y `bd:generar` buscan tablas ahí y en `esquemas/` (código
+    aún no migrado). El cambio no generó diferencias en la base.
+  - Defectos corregidos: el filtro `activo=false` se leía como `true`
+    (`z.coerce.boolean`); se podía cambiar un contacto usando la ruta de otro
+    tercero; los eventos se publicaban dentro de la transacción; buscar por
+    teléfono con guion no encontraba nada.
+  - Las respuestas ahora solo llevan lo que la pantalla usa (sin `cuentaId`,
+    `terceroId` ni `creadoEn` en contactos, papeles y categorías).
+  - Nuevas utilidades compartidas: `crearSiHayTexto`, `valorDe` y `CuentaId`.
+  - 235 pruebas (19 unitarias nuevas de terceros y 11 de API); advertencias: 39
+    (ninguna en los módulos migrados).
 
 ### Riesgos y cómo se controlan
 

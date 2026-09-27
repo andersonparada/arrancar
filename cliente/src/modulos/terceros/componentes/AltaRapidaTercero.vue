@@ -77,13 +77,13 @@ async function guardar(confirmarDuplicado = false): Promise<void> {
   });
   if (!exito || !tercero) return;
 
-  avisos.exito('Tercero creado.');
+  avisos.exito('Registrado.');
   emit('creado', tercero);
 }
 </script>
 
 <template>
-  <VentanaModal :abierta="abierta" titulo="Nuevo tercero" @cerrar="emit('cerrar')">
+  <VentanaModal :abierta="abierta" titulo="Nuevo cliente o proveedor" @cerrar="emit('cerrar')">
     <form id="form-alta-rapida-tercero" class="space-y-4" @submit.prevent="guardar()">
       <CampoSelector
         v-model="datos.tipo"

@@ -1,5 +1,5 @@
 /**
- * Genera la migración de un módulo a partir de sus esquemas.
+ * Genera la migración de un módulo a partir de sus tablas.
  * Uso: npm run bd:generar -- <modulo> <nombre-descriptivo> [--custom]
  * Con --custom crea un archivo SQL vacío para migraciones de datos.
  */
@@ -12,8 +12,9 @@ if (!modulo || !nombre) {
   console.error('Uso: npm run bd:generar -- <modulo> <nombre-descriptivo> [--custom]');
   process.exit(1);
 }
-if (!existsSync(`src/modulos/${modulo}/esquemas`)) {
-  console.error(`El módulo "${modulo}" no tiene carpeta esquemas/.`);
+const carpetasDeTablas = [`src/modulos/${modulo}/infraestructura/persistencia`, `src/modulos/${modulo}/esquemas`];
+if (!carpetasDeTablas.some((carpeta) => existsSync(carpeta))) {
+  console.error(`El módulo "${modulo}" no tiene tablas (${carpetasDeTablas.join(' ni ')}).`);
   process.exit(1);
 }
 

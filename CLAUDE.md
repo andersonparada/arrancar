@@ -61,7 +61,9 @@ abajo es el estado del código aún no migrado (fases 3 a 7).
 - **Un esquema de PostgreSQL por módulo** (`pgSchema('<clave>')`); las tablas de
   core viven en `core.*`.
 - **Migraciones por módulo** en `modulos/<clave>/migraciones`, generadas con
-  `bd:generar`; nunca editar una migración ya aplicada en producción.
+  `bd:generar`; nunca editar una migración ya aplicada en producción. Las tablas de
+  los módulos migrados viven en `infraestructura/persistencia/*.tablas.ts`; las del
+  código aún no migrado, en `esquemas/*.esquema.ts` (drizzle-kit lee las dos).
 - La app se conecta como `arrancar_app` (sin privilegios). Las migraciones usan
   `DATABASE_URL_PROPIETARIO`. El migrador da los permisos (GRANT) por esquema.
 - `casing: 'snake_case'`: en TypeScript las columnas son camelCase.

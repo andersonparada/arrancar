@@ -1,5 +1,6 @@
 import { EventoDominio } from '../../core/compartido/dominio/evento-dominio.js';
-import type { CuentaId, EmpresaId } from './empresa.js';
+import type { CuentaId } from '../../core/compartido/dominio/identificador.js';
+import type { EmpresaId } from './empresa.js';
 
 /** Hay un rancho o parcela nuevo en la cuenta; otros módulos pueden prepararle sus datos iniciales. */
 export class EmpresaRegistrada extends EventoDominio<{ empresaId: string; cuentaId: string }> {

@@ -34,3 +34,6 @@ export class Identificador<Marca extends string = string> extends ObjetoValor<st
     return new Identificador<Marca>(texto.toLowerCase());
   }
 }
+
+/** Cuenta suscriptora (la familia o el cliente del SaaS); la usan casi todos los módulos. */
+export type CuentaId = Identificador<'Cuenta'>;

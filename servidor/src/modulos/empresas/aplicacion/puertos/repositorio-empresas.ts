@@ -1,4 +1,5 @@
-import type { CuentaId, Empresa, EmpresaId } from '../../dominio/empresa.js';
+import type { CuentaId } from '../../../core/compartido/dominio/identificador.js';
+import type { Empresa, EmpresaId } from '../../dominio/empresa.js';
 
 /** Guarda y recupera empresas completas para modificarlas. */
 export interface RepositorioEmpresas {

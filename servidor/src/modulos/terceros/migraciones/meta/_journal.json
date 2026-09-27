@@ -15,6 +15,20 @@
       "when": 1790465784596,
       "tag": "0001_indice_busqueda",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790475011634,
+      "tag": "0002_quitar_trabajadores",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790475022513,
+      "tag": "0003_normalizar_contacto_y_limpiar_trabajadores",
+      "breakpoints": true
     }
   ]
 }

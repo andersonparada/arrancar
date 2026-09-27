@@ -21,6 +21,11 @@ export abstract class ObjetoValor<Valor extends ValorPrimitivo> {
   }
 }
 
+/** El valor primitivo de un objeto de valor opcional, para guardarlo o mostrarlo. */
+export function valorDe<Valor extends ValorPrimitivo>(objeto: ObjetoValor<Valor> | null): Valor | null {
+  return objeto?.valor ?? null;
+}
+
 /** Crea el objeto de valor solo si hay texto; un dato opcional vacío queda en `null`. */
 export function crearSiHayTexto<Objeto>(texto: string | null, crear: (texto: string) => Objeto): Objeto | null {
   return texto ? crear(texto) : null;

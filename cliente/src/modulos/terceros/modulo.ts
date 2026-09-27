@@ -8,14 +8,16 @@ export const moduloTerceros: DefinicionModuloCliente = {
       path: '/terceros',
       name: 'terceros',
       component: () => import('./paginas/ListaTerceros.vue'),
-      meta: { permiso: 'terceros.ver', titulo: 'Terceros' },
+      meta: { permiso: 'terceros.ver', titulo: 'Clientes y proveedores' },
     },
     {
       path: '/terceros/:terceroId',
       name: 'terceros.ficha',
       component: () => import('./paginas/FichaTercero.vue'),
-      meta: { permiso: 'terceros.ver', titulo: 'Ficha del tercero' },
+      meta: { permiso: 'terceros.ver', titulo: 'Ficha' },
     },
   ],
-  menu: [{ titulo: 'Terceros', ruta: '/terceros', icono: Users, permiso: 'terceros.ver', grupo: 'Terceros' }],
+  menu: [
+    { titulo: 'Clientes y proveedores', ruta: '/terceros', icono: Users, permiso: 'terceros.ver', grupo: 'Clientes' },
+  ],
 };

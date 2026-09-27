@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { Briefcase, HardHat, Pencil, Plus, ShoppingCart, Trash2 } from 'lucide-vue-next';
+import { Briefcase, Pencil, Plus, ShoppingCart, Trash2 } from 'lucide-vue-next';
 import { useRoute } from 'vue-router';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
@@ -37,15 +37,13 @@ const departamentos = ref<Departamento[]>([]);
 const municipios = ref<Municipio[]>([]);
 const categoriasProveedor = ref<CategoriaProveedor[]>([]);
 
-const puedeVerTrabajador = computed(() => sesion.puede('trabajadores.ver') || sesion.puede('trabajadores.gestionar'));
-
 async function cargar(): Promise<void> {
   try {
     ficha.value = await tercerosApi.obtener(terceroId.value);
     if (ficha.value.departamentoCodigo)
       municipios.value = await geografiaApi.listarMunicipios(ficha.value.departamentoCodigo);
   } catch (error) {
-    avisos.error(error instanceof Error ? error.message : 'No se pudo cargar el tercero.');
+    avisos.error(error instanceof Error ? error.message : 'No se pudo cargar la ficha.');
   }
 }
 
@@ -117,7 +115,7 @@ async function guardarEdicion(confirmarDuplicado = false): Promise<void> {
   });
   if (!exito) return;
   edicion.abierta = false;
-  avisos.exito('Tercero actualizado.');
+  avisos.exito('Datos guardados.');
   await cargar();
 }
 
@@ -240,40 +238,6 @@ async function nuevaCategoria(): Promise<void> {
   const categoria = await tercerosApi.crearCategoriaProveedor(nombre);
   categoriasProveedor.value.push(categoria);
   proveedor.categoriaId = categoria.id;
-}
-
-// --- Papel trabajador ---
-const trabajador = reactive({ abierto: false, cargo: '', fechaIngreso: '', fechaSalida: '', activo: true, notas: '' });
-
-function abrirTrabajador(): void {
-  trabajador.abierto = true;
-  trabajador.cargo = ficha.value?.trabajador?.cargo ?? '';
-  trabajador.fechaIngreso = ficha.value?.trabajador?.fechaIngreso ?? '';
-  trabajador.fechaSalida = ficha.value?.trabajador?.fechaSalida ?? '';
-  trabajador.activo = ficha.value?.trabajador?.activo ?? true;
-  trabajador.notas = ficha.value?.trabajador?.notas ?? '';
-  formularioPapel.errores.value = {};
-}
-
-async function guardarTrabajador(): Promise<void> {
-  const exito = await formularioPapel.enviar(() =>
-    tercerosApi.asignarTrabajador(terceroId.value, {
-      cargo: trabajador.cargo || null,
-      fechaIngreso: trabajador.fechaIngreso || null,
-      fechaSalida: trabajador.fechaSalida || null,
-      activo: trabajador.activo,
-      notas: trabajador.notas || null,
-    }),
-  );
-  if (!exito) return;
-  trabajador.abierto = false;
-  await cargar();
-}
-
-async function quitarTrabajador(): Promise<void> {
-  if (!window.confirm('¿Quitar el papel de trabajador?')) return;
-  await tercerosApi.quitarTrabajador(terceroId.value);
-  await cargar();
 }
 </script>
 
@@ -398,36 +362,8 @@ async function quitarTrabajador(): Promise<void> {
       </dl>
     </TarjetaBase>
 
-    <!-- Papel trabajador -->
-    <TarjetaBase v-if="puedeVerTrabajador">
-      <div class="mb-3 flex items-center justify-between">
-        <h2 class="flex items-center gap-2 font-semibold"><HardHat class="size-4" aria-hidden="true" /> Trabajador</h2>
-        <div v-permiso="'trabajadores.gestionar'" class="flex gap-2">
-          <BotonBase variante="secundario" pequeno :icono="Pencil" @click="abrirTrabajador">{{
-            ficha.trabajador ? 'Editar' : 'Asignar'
-          }}</BotonBase>
-          <BotonBase v-if="ficha.trabajador" variante="fantasma" pequeno @click="quitarTrabajador">Quitar</BotonBase>
-        </div>
-      </div>
-      <p v-if="!ficha.trabajador" class="text-sm text-tierra-500">No tiene el papel de trabajador.</p>
-      <dl v-else class="grid gap-2 text-sm sm:grid-cols-2">
-        <div>
-          <dt class="text-tierra-500">Cargo</dt>
-          <dd>{{ ficha.trabajador.cargo ?? 'Sin registrar' }}</dd>
-        </div>
-        <div>
-          <dt class="text-tierra-500">Fecha de ingreso</dt>
-          <dd>{{ ficha.trabajador.fechaIngreso ?? 'Sin registrar' }}</dd>
-        </div>
-        <div>
-          <dt class="text-tierra-500">Estado</dt>
-          <dd>{{ ficha.trabajador.activo ? 'Activo' : 'Inactivo' }}</dd>
-        </div>
-      </dl>
-    </TarjetaBase>
-
     <!-- Modal: editar datos generales -->
-    <VentanaModal :abierta="edicion.abierta" titulo="Editar tercero" ancha @cerrar="edicion.abierta = false">
+    <VentanaModal :abierta="edicion.abierta" titulo="Editar datos generales" ancha @cerrar="edicion.abierta = false">
       <form v-if="edicion.datos" id="form-editar-tercero" class="space-y-4" @submit.prevent="guardarEdicion()">
         <CampoSelector
           v-model="edicion.datos.tipo"
@@ -517,7 +453,7 @@ async function quitarTrabajador(): Promise<void> {
         <CampoTexto v-model="edicion.datos.notas" etiqueta="Notas" multilinea :error="formulario.errores.value.notas" />
         <CampoInterruptor
           v-model="edicion.datos.activo"
-          etiqueta="Tercero activo"
+          etiqueta="Activo"
           descripcion="Al inactivarlo, se inactivan también sus papeles."
         />
       </form>
@@ -617,23 +553,6 @@ async function quitarTrabajador(): Promise<void> {
       <template #pie>
         <BotonBase variante="secundario" @click="proveedor.abierto = false">Cancelar</BotonBase>
         <BotonBase tipo="submit" form="form-proveedor" :cargando="formularioPapel.enviando.value">Guardar</BotonBase>
-      </template>
-    </VentanaModal>
-
-    <!-- Modal: papel trabajador -->
-    <VentanaModal :abierta="trabajador.abierto" titulo="Papel de trabajador" @cerrar="trabajador.abierto = false">
-      <form id="form-trabajador" class="space-y-4" @submit.prevent="guardarTrabajador">
-        <CampoTexto v-model="trabajador.cargo" etiqueta="Cargo" />
-        <div class="grid gap-4 sm:grid-cols-2">
-          <CampoTexto v-model="trabajador.fechaIngreso" etiqueta="Fecha de ingreso" placeholder="AAAA-MM-DD" />
-          <CampoTexto v-model="trabajador.fechaSalida" etiqueta="Fecha de salida" placeholder="AAAA-MM-DD" />
-        </div>
-        <CampoTexto v-model="trabajador.notas" etiqueta="Notas" multilinea />
-        <CampoInterruptor v-model="trabajador.activo" etiqueta="Papel activo" />
-      </form>
-      <template #pie>
-        <BotonBase variante="secundario" @click="trabajador.abierto = false">Cancelar</BotonBase>
-        <BotonBase tipo="submit" form="form-trabajador" :cargando="formularioPapel.enviando.value">Guardar</BotonBase>
       </template>
     </VentanaModal>
   </div>

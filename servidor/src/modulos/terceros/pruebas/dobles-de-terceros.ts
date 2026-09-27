@@ -1,0 +1,81 @@
+import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
+import type {
+  FichaDeTerceroDto,
+  PapelDeClienteDto,
+  PapelDeProveedorDto,
+  TerceroDto,
+  TerceroEnListadoDto,
+  TerceroParecidoDto,
+} from '../aplicacion/dto/tercero.dto.js';
+import type { ConsultasTerceros } from '../aplicacion/puertos/consultas.js';
+import type { RepositorioCategorias, RepositorioTerceros } from '../aplicacion/puertos/repositorios.js';
+import type { CategoriaDeProveedor, CategoriaDeProveedorId } from '../dominio/categoria-de-proveedor.js';
+import type { TipoDePapel } from '../dominio/papeles.js';
+import type { Tercero, TerceroId } from '../dominio/tercero.js';
+
+/** Terceros en memoria; responde como repositorio y, en lo que usan los casos de uso, como consultas. */
+export class TercerosEnMemoria implements RepositorioTerceros, ConsultasTerceros {
+  private readonly terceros = new Map<string, Tercero>();
+  /** Lo que devolverá la búsqueda de parecidos (en la base real la hace PostgreSQL con trigramas). */
+  parecidos: TerceroParecidoDto[] = [];
+
+  async buscar(id: TerceroId): Promise<Tercero | null> {
+    return this.terceros.get(id.valor) ?? null;
+  }
+
+  async agregar(tercero: Tercero): Promise<void> {
+    this.terceros.set(tercero.id.valor, tercero);
+  }
+
+  async guardar(tercero: Tercero): Promise<void> {
+    this.terceros.set(tercero.id.valor, tercero);
+  }
+
+  cantidad(): number {
+    return this.terceros.size;
+  }
+
+  async obtener(terceroId: string): Promise<TerceroDto> {
+    const tercero = this.terceros.get(terceroId);
+    if (!tercero) throw new RecursoNoEncontrado('El cliente o proveedor');
+    return {
+      id: terceroId,
+      nombreMostrar: tercero.nombreParaMostrar,
+      activo: tercero.instantanea().activo,
+    } as TerceroDto;
+  }
+
+  async buscarParecidos(): Promise<TerceroParecidoDto[]> {
+    return this.parecidos;
+  }
+
+  async obtenerPapel(terceroId: string, tipo: TipoDePapel): Promise<PapelDeClienteDto | PapelDeProveedorDto> {
+    const papel = this.terceros.get(terceroId)?.papel(tipo);
+    if (!papel) throw new RecursoNoEncontrado(`El papel de ${tipo}`);
+    return { id: terceroId, ...papel } as PapelDeClienteDto | PapelDeProveedorDto;
+  }
+
+  listar(): Promise<TerceroEnListadoDto[]> {
+    throw new Error('Las lecturas de pantalla se prueban contra PostgreSQL.');
+  }
+
+  obtenerFicha(): Promise<FichaDeTerceroDto> {
+    throw new Error('Las lecturas de pantalla se prueban contra PostgreSQL.');
+  }
+}
+
+export class CategoriasEnMemoria implements RepositorioCategorias {
+  private readonly categorias = new Map<string, CategoriaDeProveedor>();
+
+  async buscar(id: CategoriaDeProveedorId): Promise<CategoriaDeProveedor | null> {
+    return this.categorias.get(id.valor) ?? null;
+  }
+
+  async agregar(categoria: CategoriaDeProveedor): Promise<void> {
+    this.categorias.set(categoria.id.valor, categoria);
+  }
+
+  async guardar(categoria: CategoriaDeProveedor): Promise<void> {
+    this.categorias.set(categoria.id.valor, categoria);
+  }
+}

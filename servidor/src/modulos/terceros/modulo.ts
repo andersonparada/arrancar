@@ -1,34 +1,118 @@
 import { z } from 'zod';
+import type { DependenciasCompartidas } from '../core/compartido/aplicacion/dependencias-compartidas.js';
+import { dependenciasCompartidas } from '../core/compartido/infraestructura/dependencias-compartidas.js';
 import { definirConfiguracion, type DefinicionModulo } from '../core/modulos-sistema/definicion-modulo.js';
-import { rutasTerceros } from './rutas/terceros.rutas.js';
+import { AvisoDeParecidos } from './aplicacion/aviso-de-parecidos.js';
+import { CambiarCategoria } from './aplicacion/casos-uso/categorias/cambiar-categoria.js';
+import { CrearCategoria } from './aplicacion/casos-uso/categorias/crear-categoria.js';
+import { ListarCategorias } from './aplicacion/casos-uso/categorias/listar-categorias.js';
+import { AgregarContacto } from './aplicacion/casos-uso/contactos/agregar-contacto.js';
+import { CambiarContacto } from './aplicacion/casos-uso/contactos/cambiar-contacto.js';
+import { EliminarContacto } from './aplicacion/casos-uso/contactos/eliminar-contacto.js';
+import { ListarContactos } from './aplicacion/casos-uso/contactos/listar-contactos.js';
+import { AsignarPapel } from './aplicacion/casos-uso/papeles/asignar-papel.js';
+import { QuitarPapel } from './aplicacion/casos-uso/papeles/quitar-papel.js';
+import { ActualizarTercero } from './aplicacion/casos-uso/terceros/actualizar-tercero.js';
+import { ListarTerceros } from './aplicacion/casos-uso/terceros/listar-terceros.js';
+import { ObtenerFichaDeTercero } from './aplicacion/casos-uso/terceros/obtener-ficha-de-tercero.js';
+import { RegistrarTercero } from './aplicacion/casos-uso/terceros/registrar-tercero.js';
+import { CategoriasControlador, ContactosControlador } from './http/contactos-y-categorias.controlador.js';
+import { TercerosControlador } from './http/terceros.controlador.js';
+import { rutasTerceros, type ControladoresDeTerceros } from './http/terceros.rutas.js';
+import './infraestructura/catalogo-eventos.js';
+import {
+  ConsultasCategoriasDrizzle,
+  ConsultasContactosDrizzle,
+} from './infraestructura/persistencia/consultas-contactos-y-categorias.drizzle.js';
+import { ConsultasTercerosDrizzle } from './infraestructura/persistencia/consultas-terceros.drizzle.js';
+import {
+  RepositorioCategoriasDrizzle,
+  RepositorioContactosDrizzle,
+  RepositorioTercerosDrizzle,
+} from './infraestructura/persistencia/repositorios.drizzle.js';
 
+/** Las implementaciones concretas de los puertos del módulo. */
+function crearPiezas() {
+  const consultasContactos = new ConsultasContactosDrizzle();
+  const consultas = new ConsultasTercerosDrizzle(consultasContactos);
+  return {
+    repositorio: new RepositorioTercerosDrizzle(),
+    contactos: new RepositorioContactosDrizzle(),
+    categorias: new RepositorioCategoriasDrizzle(),
+    consultas,
+    consultasContactos,
+    consultasCategorias: new ConsultasCategoriasDrizzle(),
+    avisoDeParecidos: new AvisoDeParecidos(consultas),
+  };
+}
+
+type Piezas = ReturnType<typeof crearPiezas> & DependenciasCompartidas;
+
+function controladorDeTerceros(piezas: Piezas): TercerosControlador {
+  const { unidadDeTrabajo, publicadorEventos, repositorio, categorias, consultas, avisoDeParecidos } = piezas;
+  const paraGuardar = { unidadDeTrabajo, repositorio, consultas, avisoDeParecidos, publicadorEventos };
+  return new TercerosControlador({
+    listar: new ListarTerceros({ unidadDeTrabajo, consultas }),
+    obtenerFicha: new ObtenerFichaDeTercero({ unidadDeTrabajo, consultas }),
+    registrar: new RegistrarTercero(paraGuardar),
+    actualizar: new ActualizarTercero(paraGuardar),
+    asignarPapel: new AsignarPapel({ unidadDeTrabajo, repositorio, categorias, consultas, publicadorEventos }),
+    quitarPapel: new QuitarPapel({ unidadDeTrabajo, repositorio, publicadorEventos }),
+  });
+}
+
+function controladorDeContactos({ unidadDeTrabajo, repositorio, contactos, consultas, consultasContactos }: Piezas) {
+  return new ContactosControlador({
+    listar: new ListarContactos({ unidadDeTrabajo, terceros: consultas, contactos: consultasContactos }),
+    agregar: new AgregarContacto({ unidadDeTrabajo, terceros: repositorio, contactos, consultas: consultasContactos }),
+    cambiar: new CambiarContacto({ unidadDeTrabajo, contactos, consultas: consultasContactos }),
+    eliminar: new EliminarContacto({ unidadDeTrabajo, contactos }),
+  });
+}
+
+function controladorDeCategorias({ unidadDeTrabajo, categorias, consultasCategorias }: Piezas) {
+  const dependencias = { unidadDeTrabajo, repositorio: categorias, consultas: consultasCategorias };
+  return new CategoriasControlador({
+    listar: new ListarCategorias(dependencias),
+    crear: new CrearCategoria(dependencias),
+    cambiar: new CambiarCategoria(dependencias),
+  });
+}
+
+/** Raíz de composición: el único lugar donde se eligen las implementaciones concretas. */
+function componerControladores(compartidas: DependenciasCompartidas): ControladoresDeTerceros {
+  const piezas = { ...compartidas, ...crearPiezas() };
+  return {
+    terceros: controladorDeTerceros(piezas),
+    contactos: controladorDeContactos(piezas),
+    categorias: controladorDeCategorias(piezas),
+  };
+}
+
+/**
+ * Clientes y proveedores. La clave técnica sigue siendo `terceros` (esquema,
+ * permisos y rutas); el usuario lo ve como "Clientes".
+ */
 export const moduloTerceros: DefinicionModulo = {
   clave: 'terceros',
-  nombre: 'Terceros',
-  descripcion: 'Clientes, proveedores y trabajadores: identidad, contactos y papeles.',
+  nombre: 'Clientes',
+  descripcion: 'Clientes y proveedores de la cuenta: sus datos, contactos y papeles.',
   dependeDe: [],
   permisos: [
-    { clave: 'terceros.ver', descripcion: 'Ver el listado y la ficha de terceros (sin DPI de trabajadores)' },
-    { clave: 'terceros.gestionar', descripcion: 'Crear, editar e inactivar terceros y sus contactos' },
+    { clave: 'terceros.ver', descripcion: 'Ver clientes y proveedores' },
+    {
+      clave: 'terceros.gestionar',
+      descripcion: 'Registrar, editar e inactivar clientes y proveedores, y sus contactos',
+    },
     { clave: 'clientes.gestionar', descripcion: 'Asignar o quitar el papel de cliente' },
     { clave: 'proveedores.gestionar', descripcion: 'Asignar o quitar el papel de proveedor y editar sus categorías' },
-    { clave: 'trabajadores.ver', descripcion: 'Ver el papel de trabajador y sus datos sensibles (DPI, teléfono)' },
-    { clave: 'trabajadores.gestionar', descripcion: 'Asignar o quitar el papel de trabajador' },
   ],
   configuracion: [
     definirConfiguracion({
       clave: 'terceros.papeles.habilitados',
-      descripcion: 'Papeles de terceros disponibles en esta instalación, cuenta o empresa.',
-      esquema: z.array(z.enum(['cliente', 'proveedor', 'trabajador'])),
-      predeterminado: ['cliente', 'proveedor', 'trabajador'],
-      niveles: ['instalacion', 'cuenta', 'empresa'],
-      publica: true,
-    }),
-    definirConfiguracion({
-      clave: 'terceros.trabajadores.dpi_obligatorio',
-      descripcion: 'Exige el DPI al asignar el papel de trabajador.',
-      esquema: z.boolean(),
-      predeterminado: false,
+      descripcion: 'Papeles disponibles (cliente, proveedor) en esta instalación, cuenta o empresa.',
+      esquema: z.array(z.enum(['cliente', 'proveedor'])),
+      predeterminado: ['cliente', 'proveedor'],
       niveles: ['instalacion', 'cuenta', 'empresa'],
       publica: true,
     }),
@@ -41,5 +125,5 @@ export const moduloTerceros: DefinicionModulo = {
       publica: true,
     }),
   ],
-  rutas: rutasTerceros,
+  rutas: rutasTerceros(componerControladores(dependenciasCompartidas())),
 };

@@ -35,7 +35,7 @@ async function cargar(): Promise<void> {
       activo: filtros.activo === '' ? undefined : filtros.activo === 'true',
     });
   } catch (error) {
-    avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar los terceros.');
+    avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar los clientes y proveedores.');
   } finally {
     cargando.value = false;
   }
@@ -61,8 +61,11 @@ onMounted(cargar);
 
 <template>
   <div>
-    <EncabezadoPagina titulo="Terceros" descripcion="Clientes, proveedores y trabajadores de la cuenta.">
-      <BotonBase v-permiso="'terceros.gestionar'" :icono="Plus" @click="altaAbierta = true">Nuevo tercero</BotonBase>
+    <EncabezadoPagina
+      titulo="Clientes y proveedores"
+      descripcion="Personas y empresas a las que les vende o les compra."
+    >
+      <BotonBase v-permiso="'terceros.gestionar'" :icono="Plus" @click="altaAbierta = true">Nuevo</BotonBase>
     </EncabezadoPagina>
 
     <TarjetaBase class="mb-4">
@@ -81,7 +84,6 @@ onMounted(cargar);
             { valor: '', texto: 'Todos los papeles' },
             { valor: 'cliente', texto: 'Clientes' },
             { valor: 'proveedor', texto: 'Proveedores' },
-            { valor: 'trabajador', texto: 'Trabajadores' },
           ]"
         />
         <CampoSelector
@@ -101,7 +103,7 @@ onMounted(cargar);
       v-if="!cargando && terceros.length === 0"
       :icono="Search"
       titulo="Sin resultados"
-      descripcion="No hay terceros que coincidan con la búsqueda o los filtros."
+      descripcion="No hay clientes ni proveedores que coincidan con la búsqueda o los filtros."
     />
 
     <ul v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -122,7 +124,6 @@ onMounted(cargar);
           <div class="flex flex-wrap gap-1.5">
             <InsigniaBase v-if="tercero.papeles.cliente" tono="campo">Cliente</InsigniaBase>
             <InsigniaBase v-if="tercero.papeles.proveedor" tono="trigo">Proveedor</InsigniaBase>
-            <InsigniaBase v-if="tercero.papeles.trabajador" tono="tierra">Trabajador</InsigniaBase>
           </div>
         </TarjetaBase>
       </li>

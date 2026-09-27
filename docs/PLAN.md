@@ -177,7 +177,7 @@ su color para que la app se entienda igual en todas las instalaciones.
 |---|---|---|
 | **core** | En construcción (fase 1) | Ver sección 5 |
 | **empresas** | En construcción (fase 1) | Datos generales de ranchos y parcelas. Esencial. |
-| **terceros** | En construcción (fase 1) | Servidor y cliente listos; ver `docs/modulos/terceros.md`. |
+| **terceros** (se muestra como **Clientes**) | En arquitectura limpia | Clientes y proveedores; ver `docs/modulos/terceros.md`. |
 | Resto | **Por planificar** | Ver sección 6. No se programa nada hasta acordarlo. |
 
 ## 5. Fase 1 — Core (en curso)
@@ -335,3 +335,10 @@ y `demo` / `demo-arrancar`.
   - Se aprueba la arquitectura limpia por módulo (dominio, aplicación,
     infraestructura, http) con POO e inyección por constructor, y el plan de
     refactor en fases (`docs/ARQUITECTURA.md`).
+  - Fases 0 a 4 del refactor hechas (`docs/ARQUITECTURA.md`, sección "Avance"):
+    pruebas de caracterización de la API, ESLint y Prettier con reglas de capas,
+    núcleo compartido, y los módulos `empresas` y `terceros` migrados.
+  - `terceros` se muestra como **Clientes**; el papel de trabajador sale del
+    módulo y pasa al futuro módulo de planilla. Teléfonos y correos se guardan
+    normalizados (empresas, terceros y contactos). El menú de cada módulo se
+    organiza en **Operación**, **Administración** y **Reportes**.

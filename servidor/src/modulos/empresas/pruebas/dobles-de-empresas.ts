@@ -3,7 +3,8 @@ import type { EmpresaDto } from '../aplicacion/dto/empresa.dto.js';
 import type { AccesosAEmpresas } from '../aplicacion/puertos/accesos-a-empresas.js';
 import type { ConsultasEmpresas } from '../aplicacion/puertos/consultas-empresas.js';
 import type { RepositorioEmpresas } from '../aplicacion/puertos/repositorio-empresas.js';
-import type { CuentaId, Empresa, EmpresaId } from '../dominio/empresa.js';
+import type { CuentaId } from '../../core/compartido/dominio/identificador.js';
+import type { Empresa, EmpresaId } from '../dominio/empresa.js';
 
 /** Guarda empresas en memoria y responde tanto de repositorio como de consultas. */
 export class EmpresasEnMemoria implements RepositorioEmpresas, ConsultasEmpresas {
