@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { esDpiValido, normalizarDpi } from './dpi.js';
+import { Dpi, DpiInvalido, esDpiValido, normalizarDpi } from './dpi.js';
 
 describe('DPI (CUI) de Guatemala', () => {
   it('quita espacios y guiones', () => {
@@ -27,5 +27,19 @@ describe('DPI (CUI) de Guatemala', () => {
 
   it.each(['123456789', '', 'ABCDEFGHIJKLM', '12345678901012'])('rechaza un CUI con formato inválido: %s', (dpi) => {
     expect(esDpiValido(dpi)).toBe(false);
+  });
+});
+
+describe('objeto de valor Dpi', () => {
+  it('se crea normalizado y sabe dónde nació la persona', () => {
+    const dpi = Dpi.crear('1234 56789 0101');
+
+    expect(dpi.valor).toBe('1234567890101');
+    expect(dpi.departamentoDeNacimiento).toBe('01');
+    expect(dpi.municipioDeNacimiento).toBe('0101');
+  });
+
+  it('no se puede crear con datos inválidos', () => {
+    expect(() => Dpi.crear('1234567800101')).toThrow(DpiInvalido);
   });
 });

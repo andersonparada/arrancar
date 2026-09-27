@@ -39,6 +39,13 @@ base de desarrollo debe estar levantada.
 
 ## Arquitectura
 
+**El código nuevo sigue `docs/ARQUITECTURA.md`** (capas dominio, aplicación,
+infraestructura y http; POO con inyección por constructor; casos de uso de una
+clase). La base está en `servidor/src/modulos/core/compartido/`: `UnidadDeTrabajo`
+en vez de `ejecutarEnEmpresa`, `ErrorEsperado` y sus familias en vez de
+`core/errores`, objetos de valor `Nit`, `Dpi`, `Correo`, `Telefono`. Lo descrito
+abajo es el estado del código aún no migrado (fases 3 a 7).
+
 ### Módulos
 - Cada módulo: `servidor/src/modulos/<clave>/` y `cliente/src/modulos/<clave>/`, con
   un `modulo.ts` que exporta su definición y se registra en `modulos/indice.ts`.

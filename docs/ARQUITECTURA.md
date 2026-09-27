@@ -70,11 +70,15 @@ cada uno con las mismas cuatro capas:
 ```
 core/
   compartido/           núcleo técnico que usan todos los módulos
-    dominio/            Entidad, ObjetoValor, EventoDominio, ErrorDominio,
-                        objetos de valor comunes: Nit, Dpi, Correo, Telefono, Dinero
-    aplicacion/         puertos comunes: UnidadDeTrabajo, PublicadorEventos, Reloj
-    infraestructura/    conexión, UnidadDeTrabajoPostgres (RLS), migrador, bus, almacenamiento
-    http/               guardias, contexto de la solicitud, manejador de errores, cookie
+    dominio/            ObjetoValor, Identificador<Marca>, Entidad, RaizAgregado, EventoDominio,
+                        ErrorEsperado (DatoInvalido, ReglaDeNegocioInfringida),
+                        objetos-valor/: Nit, Dpi, Correo, Telefono (Dinero cuando llegue bancos)
+    aplicacion/         ContextoEmpresa, puertos UnidadDeTrabajo y PublicadorEventos,
+                        errores RecursoNoEncontrado, RecursoDuplicado, RecursoEnUso, AccesoDenegado
+    infraestructura/    UnidadDeTrabajoPostgres (RLS + AsyncLocalStorage), PublicadorEventosEnBus,
+                        variables de seguridad, interpretación de errores de PostgreSQL
+                        (luego: conexión, migrador, bus, almacenamiento)
+    http/               manejador de errores y estado HTTP por familia (luego: guardias, contexto, cookie)
     modulos-sistema/    DefinicionModulo, registro
   identidad/            usuarios, nombre de usuario, contraseñas, sesiones, inicio de sesión
   autorizacion/         roles, permisos, accesos a datos
@@ -241,11 +245,23 @@ export function crearModuloTerceros(compartido: DependenciasCompartidas): Defini
 
 ### 4.7 Errores
 
-- `dominio`: errores con nombre del problema (`NitInvalido`, `TerceroInactivo`,
-  `NitYaRegistrado`), que heredan de `ErrorDominio` y llevan un `codigo` estable.
-- `aplicacion`: `RecursoNoEncontrado`, `AccesoDenegado`.
-- `http`: el manejador traduce cada familia a su estado HTTP. Ninguna capa interna
-  conoce los códigos HTTP.
+Todos heredan de `ErrorEsperado` (dominio) y llevan un `codigo` estable para el cliente.
+
+| Familia | Capa | Estado HTTP | Ejemplos |
+|---|---|---|---|
+| `DatoInvalido` | dominio | 400 | `NitInvalido`, `DpiInvalido`, `IdentificadorInvalido` |
+| `AccesoDenegado` | aplicación | 403 | sin permiso para la acción |
+| `RecursoNoEncontrado` | aplicación | 404 | no existe o es de otra cuenta (misma respuesta) |
+| `RecursoDuplicado`, `RecursoEnUso` | aplicación | 409 | NIT repetido; borrar algo que otros usan |
+| `ReglaDeNegocioInfringida` | dominio | 422 | `TerceroInactivo` |
+
+- Cada error concreto se nombra por el problema y vive junto a lo que lo lanza.
+- Solo `http/estado-http-de-error.ts` conoce los códigos HTTP.
+- Los errores de PostgreSQL por restricciones (único, llave foránea) los convierte
+  la infraestructura (`interpretarErrorDePostgres`) en `RecursoDuplicado` o
+  `RecursoEnUso`; `aplicacion.ts` se lo pasa al manejador, que no conoce la base de datos.
+- Los errores de programación (consultar sin unidad de trabajo, cambiar de
+  contexto dentro de una transacción) heredan de `Error` y responden 500.
 
 ## 5. Cliente (Vue)
 
@@ -345,6 +361,22 @@ entrega como un commit propio.
   9 errores iniciales (variables sin uso, `proteger()` reescrita sin reasignaciones,
   `Tarjeta` e `Insignia` pasan a `TarjetaBase` e `InsigniaBase`). Quedan **43
   advertencias de tamaño**: la deuda que pagan las fases 3 a 6.
+- **Fase 2: hecha (2026-09-26).** Núcleo en `servidor/src/modulos/core/compartido/`
+  (ver sección 3), sin advertencias de ESLint. Decisiones:
+  - La base de los errores se llama `ErrorEsperado` (no `ErrorDominio`) porque la
+    comparten dominio y aplicación.
+  - `Identificador<Marca>` da tipos nominales: TypeScript rechaza usar el id de
+    una entidad donde se espera el de otra (hay una prueba de tipos).
+  - La unidad de trabajo guarda la transacción en `AsyncLocalStorage`; una unidad
+    anidada se une a la transacción en curso solo si el contexto es el mismo.
+  - No se agregó el puerto `Reloj` hasta que un caso de uso lo necesite.
+  - NIT y DPI se mudaron de `utilidades/` a objetos de valor (sin copias); el
+    manejador de errores se mudó a `compartido/http` y se partió en traductores.
+    La regla de capas detectó que importaba `pg`: ahora la infraestructura le
+    entrega el interpretador de errores de PostgreSQL (inversión de dependencias).
+  - `ejecutarEnEmpresa` sigue para el código viejo (marcado `@deprecated`) y usa
+    las mismas variables de seguridad que la unidad de trabajo.
+  - 40 pruebas nuevas (192 en total); advertencias de tamaño: 41.
 
 ### Riesgos y cómo se controlan
 

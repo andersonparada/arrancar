@@ -17,7 +17,8 @@ import {
 import { configuracion, esProduccion, esPrueba } from './configuracion.js';
 import { cargarConfiguracionInstalacion } from './modulos/core/configuracion/instalacion.js';
 import { ErrorSinPermiso } from './modulos/core/errores/errores.js';
-import { manejarError } from './modulos/core/errores/manejador-errores.js';
+import { interpretarErrorDePostgres } from './modulos/core/compartido/infraestructura/errores-de-postgres.js';
+import { crearManejadorDeErrores } from './modulos/core/compartido/http/manejador-errores.js';
 import { establecerRegistroModulos } from './modulos/core/modulos-sistema/registro-global.js';
 import { RegistroModulos } from './modulos/core/modulos-sistema/registro-modulos.js';
 import { definicionesModulos } from './modulos/indice.js';
@@ -55,16 +56,17 @@ async function servirCliente(app: FastifyInstance): Promise<void> {
   });
 }
 
-/**
- * Arma la aplicación: plugins de seguridad, validación con Zod, documentación y
- * las rutas de todos los módulos instalados bajo `/api`.
- */
+/** En pruebas no se registra nada; en desarrollo, todo y legible; en producción, lo importante. */
 function opcionesDeRegistro() {
   if (esPrueba) return false;
   if (esProduccion) return { level: 'info' };
   return { level: 'debug', transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss' } } };
 }
 
+/**
+ * Arma la aplicación: plugins de seguridad, validación con Zod, documentación y
+ * las rutas de todos los módulos instalados bajo `/api`.
+ */
 export async function construirAplicacion(): Promise<FastifyInstance> {
   const app = Fastify({
     logger: opcionesDeRegistro(),
@@ -74,7 +76,7 @@ export async function construirAplicacion(): Promise<FastifyInstance> {
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
-  app.setErrorHandler(manejarError);
+  app.setErrorHandler(crearManejadorDeErrores(interpretarErrorDePostgres));
   app.decorateRequest('contexto', null);
   app.decorateRequest('tokenSesion', null);
 
