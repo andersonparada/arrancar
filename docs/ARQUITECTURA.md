@@ -439,6 +439,14 @@ entrega como un commit propio.
   - 235 pruebas (19 unitarias nuevas de terceros y 11 de API); advertencias: 39
     (ninguna en los módulos migrados).
 
+### Mejoras pendientes (acordadas, sin fecha)
+
+- **Textos de pantalla en constantes por módulo** (pedido del usuario, 2026-09-26):
+  cada módulo del cliente tendrá un archivo con los nombres de sus ventanas, menús
+  y títulos (por ejemplo `terceros/textos.ts`); las páginas, el menú y las rutas
+  los usan desde ahí, así un cambio de nombre se hace en un solo lugar. Conviene
+  hacerlo junto con la fase 6.
+
 ### Riesgos y cómo se controlan
 
 - **Perder la seguridad RLS al mover consultas** → las pruebas de aislamiento
