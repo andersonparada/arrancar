@@ -1,0 +1,8 @@
+/** {{Singular}} tal como lo ve el usuario en pantalla. */
+export interface {{Entidad}}Dto {
+  id: string;
+{{camposDto}}
+}
+
+/** Lo que se recibe para registrar o cambiar {{unSingular}}, ya validado en su forma. */
+export type SolicitudDe{{Entidad}} = Omit<{{Entidad}}Dto, 'id'>;

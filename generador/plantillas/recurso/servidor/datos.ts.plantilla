@@ -1,0 +1,7 @@
+{{importacionesDeDatos}}import type { DatosDe{{Entidad}} } from '../dominio/{{entidadClave}}.js';
+import type { SolicitudDe{{Entidad}} } from './dto/{{entidadClave}}.dto.js';
+
+/** Convierte lo que llega del usuario en datos del dominio. */
+export function datosDe{{Entidad}}(solicitud: SolicitudDe{{Entidad}}): DatosDe{{Entidad}} {
+  return { ...solicitud{{conversionesDeSolicitud}} };
+}

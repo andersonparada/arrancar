@@ -1,0 +1,25 @@
+import { eq } from 'drizzle-orm';
+import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
+import type { Repositorio{{Plural}} } from '../../aplicacion/puertos/repositorio-{{pluralClave}}.js';
+import type { {{Entidad}}, {{Entidad}}Id } from '../../dominio/{{entidadClave}}.js';
+import { mapeadorDe{{Entidad}} } from './{{entidadClave}}.mapeador.js';
+import { {{plural}} } from './{{pluralClave}}.tablas.js';
+
+/** La tabla tiene seguridad por {{alcance}} (RLS): ninguna consulta necesita filtrar por {{alcance}}. */
+export class Repositorio{{Plural}}Drizzle implements Repositorio{{Plural}} {
+  async buscar(id: {{Entidad}}Id): Promise<{{Entidad}} | null> {
+    const [fila] = await transaccionEnCurso().select().from({{plural}}).where(eq({{plural}}.id, id.valor));
+    return fila ? mapeadorDe{{Entidad}}.aEntidad(fila) : null;
+  }
+
+  async agregar({{entidad}}: {{Entidad}}): Promise<void> {
+    await transaccionEnCurso().insert({{plural}}).values(mapeadorDe{{Entidad}}.aFila({{entidad}}));
+  }
+
+  async guardar({{entidad}}: {{Entidad}}): Promise<void> {
+    await transaccionEnCurso()
+      .update({{plural}})
+      .set(mapeadorDe{{Entidad}}.aFila({{entidad}}))
+      .where(eq({{plural}}.id, {{entidad}}.id.valor));
+  }
+{{eliminarEnDrizzle}}}

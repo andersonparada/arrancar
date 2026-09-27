@@ -1,0 +1,8 @@
+import type { {{Entidad}}, {{Entidad}}Id } from '../../dominio/{{entidadClave}}.js';
+
+/** Guarda y recupera {{losPlural}} para modificarlos. La seguridad por {{alcance}} (RLS) limita lo que se ve. */
+export interface Repositorio{{Plural}} {
+  buscar(id: {{Entidad}}Id): Promise<{{Entidad}} | null>;
+  agregar({{entidad}}: {{Entidad}}): Promise<void>;
+  guardar({{entidad}}: {{Entidad}}): Promise<void>;
+{{eliminarEnRepositorio}}}

@@ -1,0 +1,13 @@
+import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { {{Entidad}}Dto } from '../../dto/{{entidadClave}}.dto.js';
+import type { DependenciasDe{{Plural}} } from './dependencias-de-{{pluralClave}}.js';
+
+export class Obtener{{Entidad}} {
+  constructor(private readonly dependencias: Pick<DependenciasDe{{Plural}}, 'unidadDeTrabajo' | 'consultas'>) {}
+
+  /** @throws RecursoNoEncontrado si no existe o no es de {{laEmpresaOCuenta}}. */
+  ejecutar(operador: Operador, {{entidad}}Id: string): Promise<{{Entidad}}Dto> {
+    const { unidadDeTrabajo, consultas } = this.dependencias;
+    return unidadDeTrabajo.ejecutar(operador, () => consultas.obtener({{entidad}}Id));
+  }
+}

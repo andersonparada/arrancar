@@ -6,7 +6,7 @@ import {
   nombresDeCodigo,
   type Nombres,
 } from '../nombres.js';
-import type { Campo } from './campos.js';
+import { siNo, type Campo } from './campos.js';
 import { DefinicionInvalida } from './errores.js';
 
 /** Lo que escribe quien define un recurso. */
@@ -76,11 +76,16 @@ function problemaDelTipo(nombre: string, campo: Campo): string | undefined {
   }
 }
 
+/** Columnas que pone el generador; un campo no puede llamarse así. */
+const NOMBRES_RESERVADOS = ['id', 'empresaId', 'cuentaId', 'activo', 'creadoEn', 'actualizadoEn'];
+
+function problemaDelNombre(nombre: string): string | undefined {
+  if (NOMBRES_RESERVADOS.includes(nombre)) return `"${nombre}" lo pone el generador; use otro nombre de campo.`;
+  return FORMA_DE_CAMPO.test(nombre) ? undefined : `El campo "${nombre}" debe ir como arete o fechaDeNacimiento.`;
+}
+
 function problemasDeUnCampo(nombre: string, campo: Campo): string[] {
-  const deNombre = FORMA_DE_CAMPO.test(nombre)
-    ? undefined
-    : `El campo "${nombre}" debe ir como arete o fechaDeNacimiento.`;
-  return [deNombre, problemaDelTipo(nombre, campo)].filter((problema) => problema !== undefined);
+  return [problemaDelNombre(nombre), problemaDelTipo(nombre, campo)].filter((problema) => problema !== undefined);
 }
 
 function problemasDeCampos(entrada: EntradaDeRecurso): string[] {
@@ -104,6 +109,10 @@ const campoDefinido = ([nombre, campo]: [string, Campo]): CampoDefinido => ({
   campo,
 });
 
+/** Si la baja es por inactivación, el recurso lleva `activo`, que se trata como un campo más. */
+const conActivo = (entrada: EntradaDeRecurso): Record<string, Campo> =>
+  entrada.baja === 'inactivar' ? { ...entrada.campos, activo: siNo({ predeterminado: true }) } : entrada.campos;
+
 function completar(entrada: EntradaDeRecurso): DefinicionDeRecurso {
   const modulo = nombresDeClave(entrada.modulo);
   const plural = nombresDeCodigo(entrada.plural);
@@ -118,7 +127,7 @@ function completar(entrada: EntradaDeRecurso): DefinicionDeRecurso {
     pantalla: entrada.pantalla,
     baja: entrada.baja ?? 'eliminar',
     mostrar: entrada.mostrar ?? campoQueNombra(entrada.campos)!,
-    campos: Object.entries(entrada.campos).map(campoDefinido),
+    campos: Object.entries(conActivo(entrada)).map(campoDefinido),
     permisos: { ver: `${modulo.clave}.${plural.clave}.ver`, gestionar: `${modulo.clave}.${plural.clave}.gestionar` },
   };
 }

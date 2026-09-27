@@ -1,0 +1,20 @@
+import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
+import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
+import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import type { {{Entidad}} } from '../../../dominio/{{entidadClave}}.js';
+import type { Consultas{{Plural}} } from '../../puertos/consultas-{{pluralClave}}.js';
+import type { Repositorio{{Plural}} } from '../../puertos/repositorio-{{pluralClave}}.js';
+
+/** Lo que usan los casos de uso de {{losPlural}}. */
+export interface DependenciasDe{{Plural}} {
+  unidadDeTrabajo: UnidadDeTrabajo;
+  repositorio: Repositorio{{Plural}};
+  consultas: Consultas{{Plural}};
+}
+
+/** @throws RecursoNoEncontrado si no existe o no es de {{laEmpresaOCuenta}}. */
+export async function {{entidad}}Existente(repositorio: Repositorio{{Plural}}, id: string): Promise<{{Entidad}}> {
+  const {{entidad}} = await repositorio.buscar(Identificador.desde(id));
+  if (!{{entidad}}) throw new RecursoNoEncontrado('{{ElSingular}}');
+  return {{entidad}};
+}

@@ -24,3 +24,21 @@ export function rellenar(plantilla: string, valores: Record<string, string>): st
 
 /** Lee `plantillas/<ruta>.plantilla`: el código tal como se generará, con sus huecos. */
 export const leerPlantilla = (ruta: string) => readFileSync(join(CARPETA_DE_PLANTILLAS, `${ruta}.plantilla`), 'utf8');
+
+const ENCABEZADO_DE_FRAGMENTO = /^### (\w+)\n/gm;
+
+/**
+ * Separa un archivo de fragmentos: cada `### nombre` abre un trozo de código que
+ * va hasta el siguiente. Sirve para lo que cambia dentro de varios archivos (por
+ * ejemplo, si el recurso se elimina o se inactiva) sin duplicar plantillas.
+ */
+export function separarFragmentos(texto: string): Record<string, string> {
+  const encabezados = [...texto.matchAll(ENCABEZADO_DE_FRAGMENTO)];
+  return Object.fromEntries(
+    encabezados.map((encabezado, i) => {
+      const inicio = encabezado.index + encabezado[0].length;
+      const fin = encabezados[i + 1]?.index ?? texto.length;
+      return [encabezado[1]!, texto.slice(inicio, fin)];
+    }),
+  );
+}

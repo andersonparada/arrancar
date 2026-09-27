@@ -1,0 +1,26 @@
+import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
+import { Actualizar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/actualizar-{{entidadClave}}.js';
+import { Crear{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/crear-{{entidadClave}}.js';
+{{importacionEliminarEnComposicion}}import { Listar{{Plural}} } from '../aplicacion/casos-uso/{{pluralClave}}/listar-{{pluralClave}}.js';
+import { Obtener{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/obtener-{{entidadClave}}.js';
+import { {{Plural}}Controlador } from '../http/{{pluralClave}}.controlador.js';
+import { rutas{{Plural}} } from '../http/{{pluralClave}}.rutas.js';
+import { Consultas{{Plural}}Drizzle } from '../infraestructura/persistencia/consultas-{{pluralClave}}.drizzle.js';
+import { Repositorio{{Plural}}Drizzle } from '../infraestructura/persistencia/repositorio-{{pluralClave}}.drizzle.js';
+
+/** Raíz de composición de {{losPlural}}: el único lugar donde se eligen las implementaciones concretas. */
+export function rutasDe{{Plural}}() {
+  const dependencias = {
+    unidadDeTrabajo: dependenciasCompartidas().unidadDeTrabajo,
+    repositorio: new Repositorio{{Plural}}Drizzle(),
+    consultas: new Consultas{{Plural}}Drizzle(),
+  };
+  return rutas{{Plural}}(
+    new {{Plural}}Controlador({
+      listar: new Listar{{Plural}}(dependencias),
+      obtener: new Obtener{{Entidad}}(dependencias),
+      crear: new Crear{{Entidad}}(dependencias),
+      actualizar: new Actualizar{{Entidad}}(dependencias),
+{{eliminarEnComposicion}}    }),
+  );
+}

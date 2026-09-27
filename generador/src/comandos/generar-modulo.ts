@@ -70,9 +70,11 @@ export class GenerarModulo {
     if (!FORMA_DE_CLAVE.test(clave)) throw new ClaveDeModuloInvalida(clave);
     if (this.escritor.existe(`servidor/src/modulos/${clave}/modulo.ts`)) throw new ModuloExistente(clave);
     const valores = valoresDelModulo(opciones);
-    for (const [plantilla, destino] of ARCHIVOS_DEL_MODULO) {
-      this.escritor.crear(rellenar(destino, valores), rellenar(this.plantilla(plantilla), valores));
-    }
+    const archivos = ARCHIVOS_DEL_MODULO.map(([plantilla, destino]) => [
+      rellenar(destino, valores),
+      rellenar(this.plantilla(plantilla), valores),
+    ]);
+    for (const [destino, contenido] of archivos) this.escritor.crear(destino!, contenido!);
     this.registrar(valores);
   }
 

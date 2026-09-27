@@ -1,0 +1,24 @@
+import { definirRecurso, texto, textoLargo } from '../../src/definicion/indice.js';
+
+/**
+ * {{Singular}} del módulo {{moduloClave}}. Complete los campos y genere su código con:
+ *   npm run generar -- recurso {{moduloClave}}/{{entidadClave}}
+ *
+ * Tipos de campo: texto, textoLargo, entero, decimal, dinero, fecha, siNo, lista,
+ * correo, telefono, nit y dpi (se importan de ../../src/definicion/indice.js).
+ * Revise el plural, los textos con tildes y el género: salen en las pantallas.
+ */
+export const recurso = definirRecurso({
+  modulo: '{{moduloClave}}',
+  entidad: '{{Entidad}}',
+  plural: '{{Plural}}',
+  textos: { singular: '{{singular}}', plural: '{{pluralTexto}}' },
+  genero: 'masculino',
+  alcance: 'empresa',
+  pantalla: 'catalogo',
+  baja: 'eliminar',
+  campos: {
+    nombre: texto({ requerido: true, unico: true }),
+    notas: textoLargo(),
+  },
+});

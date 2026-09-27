@@ -1,0 +1,38 @@
+import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
+{{importacionesAPrimitivo}}import type { {{Entidad}}Dto } from '../aplicacion/dto/{{entidadClave}}.dto.js';
+import type { Consultas{{Plural}} } from '../aplicacion/puertos/consultas-{{pluralClave}}.js';
+import type { Repositorio{{Plural}} } from '../aplicacion/puertos/repositorio-{{pluralClave}}.js';
+import type { {{Entidad}}, {{Entidad}}Id } from '../dominio/{{entidadClave}}.js';
+
+function aDto({{entidad}}: {{Entidad}}): {{Entidad}}Dto {
+  const { id, {{alcance}}Id, ...datos } = {{entidad}}.instantanea();
+  return { ...datos, id: id.valor{{conversionesAPrimitivo}} };
+}
+
+/** Guarda {{losPlural}} en memoria y responde tanto de repositorio como de consultas. */
+export class {{Plural}}EnMemoria implements Repositorio{{Plural}}, Consultas{{Plural}} {
+  private readonly registros = new Map<string, {{Entidad}}>();
+
+  async buscar(id: {{Entidad}}Id): Promise<{{Entidad}} | null> {
+    return this.registros.get(id.valor) ?? null;
+  }
+
+  async agregar({{entidad}}: {{Entidad}}): Promise<void> {
+    this.registros.set({{entidad}}.id.valor, {{entidad}});
+  }
+
+  async guardar({{entidad}}: {{Entidad}}): Promise<void> {
+    this.registros.set({{entidad}}.id.valor, {{entidad}});
+  }
+{{eliminarEnDobles}}
+  async listar(): Promise<{{Entidad}}Dto[]> {
+    const porNombre = (a: {{Entidad}}Dto, b: {{Entidad}}Dto) => String(a.{{campoMostrar}}).localeCompare(String(b.{{campoMostrar}}));
+    return [...this.registros.values()].map(aDto).sort(porNombre);
+  }
+
+  async obtener({{entidad}}Id: string): Promise<{{Entidad}}Dto> {
+    const {{entidad}} = this.registros.get({{entidad}}Id);
+    if (!{{entidad}}) throw new RecursoNoEncontrado('{{ElSingular}}');
+    return aDto({{entidad}});
+  }
+}

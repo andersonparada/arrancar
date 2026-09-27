@@ -621,6 +621,32 @@ entrega como un commit propio.
     (`export const recurso = …`), porque el proyecto no usa `export default`.
     Probado de punta a punta: un módulo generado pasa `revisar` y todas las pruebas.
     274 + 2 pruebas del servidor, 41 del cliente y 13 del generador.
+  - **G2 Recurso en el servidor (2026-09-27):** `generar recurso <modulo>/<entidad>`
+    escribe, desde la definición, las cuatro capas con la forma de las plantillas:
+    entidad con sus reglas (los textos obligatorios no quedan vacíos) y su error
+    `<Entidad>Invalido`; DTO, conversión de la solicitud (objetos de valor
+    `Correo`, `Telefono`, `Nit`, `Dpi`), puertos y casos de uso listar, obtener,
+    crear, actualizar y eliminar; tabla en el esquema del módulo con su política
+    RLS, datos únicos por empresa o cuenta, mapeador, repositorio y consultas;
+    esquema Zod, controlador y rutas `/<modulo>/<plural>` protegidas con
+    `<modulo>.<plural>.ver` y `.gestionar`; la composición en
+    `composicion/<plural>.ts`; dobles en memoria, pruebas unitarias y una prueba
+    de API (registrar, listar, cambiar, eliminar o inactivar, aislamiento entre
+    cuentas y permisos). Registra permisos y rutas en `modulo.ts` y corre
+    `bd:generar` para la migración. Con `baja: 'inactivar'` el recurso lleva
+    `activo` (como un campo más) y no tiene caso de eliminar. Cada tipo de campo
+    se traduce con un Strategy (`servidor/campos-en-servidor.ts`); lo que cambia
+    según la baja vive en archivos de fragmentos (`### nombre`). El generador
+    rellena todo antes de escribir: si algo falla, no deja archivos a medias.
+    Nuevo comando `generar definicion <modulo>/<entidad>`, que deja un ejemplo
+    para completar (con el plural en español). En el core: esquemas comunes
+    `enteroObligatorio/Opcional`, `decimalObligatorio/Opcional` (viajan como
+    texto), `fechaObligatoria/Opcional` y `opcionObligatoria/Opcional`. Probado de
+    punta a punta con dos recursos (por empresa con casi todos los tipos, y por
+    cuenta con baja por inactivación): el código generado compila, pasa ESLint sin
+    advertencias y sus 18 pruebas (10 unitarias y 8 de API) pasan; volver a
+    generar no repite nada. Los campos `referencia` quedan para el G4. 280 pruebas
+    del servidor, 41 del cliente y 21 del generador.
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 

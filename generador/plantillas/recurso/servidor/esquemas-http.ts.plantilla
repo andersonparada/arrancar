@@ -1,0 +1,11 @@
+import { z } from 'zod';
+{{importacionesZod}}
+/** Forma de lo que llega al registrar o cambiar {{unSingular}}; las reglas de negocio las revisa el dominio. */
+export const esquema{{Entidad}} = z.object({
+{{camposZod}}
+});
+
+export const esquemaParams{{Entidad}} = z.object({ {{entidad}}Id: z.uuid() });
+
+export type {{Entidad}}Solicitado = z.infer<typeof esquema{{Entidad}}>;
+export type Params{{Entidad}} = z.infer<typeof esquemaParams{{Entidad}}>;

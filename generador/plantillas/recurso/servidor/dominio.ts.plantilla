@@ -1,0 +1,46 @@
+import { DatoInvalido } from '../../core/compartido/dominio/errores.js';
+import { Entidad } from '../../core/compartido/dominio/entidad.js';
+import { Identificador } from '../../core/compartido/dominio/identificador.js';
+{{importacionesDominio}}
+export type {{Entidad}}Id = Identificador<'{{Entidad}}'>;
+
+/** Lo que el usuario puede escribir de {{unSingular}}. */
+export interface DatosDe{{Entidad}} {
+{{camposDominio}}
+}
+
+export interface PropiedadesDe{{Entidad}} extends DatosDe{{Entidad}} {
+  id: {{Entidad}}Id;
+  {{alcance}}Id: Identificador<'{{Alcance}}'>;
+}
+
+/** Un dato {{delSingular}} no cumple sus reglas. */
+export class {{Entidad}}Invalido extends DatoInvalido {
+  readonly codigo = '{{entidadSerpiente}}_invalido';
+}
+
+{{reglasDeDatos}}
+
+/** {{Singular}} de {{laEmpresaOCuenta}}. Sus reglas van aquí, en el dominio. */
+export class {{Entidad}} extends Entidad<{{Entidad}}Id> {
+  private constructor(private propiedades: PropiedadesDe{{Entidad}}) {
+    super(propiedades.id);
+  }
+
+  static crear({{alcance}}Id: Identificador<'{{Alcance}}'>, datos: DatosDe{{Entidad}}): {{Entidad}} {
+    return new {{Entidad}}({ ...datosValidos(datos), {{alcance}}Id, id: Identificador.nuevo() });
+  }
+
+  static reconstruir(propiedades: PropiedadesDe{{Entidad}}): {{Entidad}} {
+    return new {{Entidad}}(propiedades);
+  }
+
+  cambiarDatos(datos: DatosDe{{Entidad}}): void {
+    this.propiedades = { ...this.propiedades, ...datosValidos(datos) };
+  }
+
+  /** Copia de solo lectura de sus propiedades, para guardarla. */
+  instantanea(): Readonly<PropiedadesDe{{Entidad}}> {
+    return { ...this.propiedades };
+  }
+}

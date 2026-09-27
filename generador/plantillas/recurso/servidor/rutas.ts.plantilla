@@ -1,0 +1,28 @@
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { proteger } from '../../core/compartido/http/guardias.js';
+import type { {{Plural}}Controlador } from './{{pluralClave}}.controlador.js';
+import { esquema{{Entidad}}, esquemaParams{{Entidad}} } from './{{pluralClave}}.esquemas-http.js';
+
+const etiquetas = ['{{nombreModulo}}'];
+const RUTA = '/{{moduloClave}}/{{pluralClave}}';
+
+export function rutas{{Plural}}(controlador: {{Plural}}Controlador): FastifyPluginAsyncZod {
+  return async (app) => {
+    const ver = proteger({ permiso: '{{permisoVer}}' });
+    const gestionar = proteger({ permiso: '{{permisoGestionar}}' });
+    const conId = { tags: etiquetas, params: esquemaParams{{Entidad}} };
+
+    app.get(RUTA, { schema: { tags: etiquetas }, preHandler: ver, handler: controlador.listar });
+    app.get(`${RUTA}/:{{entidad}}Id`, { schema: conId, preHandler: ver, handler: controlador.obtener });
+    app.post(RUTA, {
+      schema: { tags: etiquetas, body: esquema{{Entidad}} },
+      preHandler: gestionar,
+      handler: controlador.crear,
+    });
+    app.put(`${RUTA}/:{{entidad}}Id`, {
+      schema: { ...conId, body: esquema{{Entidad}} },
+      preHandler: gestionar,
+      handler: controlador.actualizar,
+    });
+{{eliminarEnRutas}}  };
+}

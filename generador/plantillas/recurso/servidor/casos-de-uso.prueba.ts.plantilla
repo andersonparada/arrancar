@@ -1,0 +1,57 @@
+import { randomUUID } from 'node:crypto';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
+import { UnidadDeTrabajoEnMemoria, operadorDePrueba } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
+{{importacionDeReglas}}import { {{Plural}}EnMemoria } from '../../../pruebas/dobles-de-{{pluralClave}}.js';
+import type { SolicitudDe{{Entidad}} } from '../../dto/{{entidadClave}}.dto.js';
+import { Actualizar{{Entidad}} } from './actualizar-{{entidadClave}}.js';
+import { Crear{{Entidad}} } from './crear-{{entidadClave}}.js';
+{{importacionEliminarEnPrueba}}import { Listar{{Plural}} } from './listar-{{pluralClave}}.js';
+import { Obtener{{Entidad}} } from './obtener-{{entidadClave}}.js';
+
+const operador = operadorDePrueba();
+
+const solicitud = (cambios: Partial<SolicitudDe{{Entidad}}> = {}): SolicitudDe{{Entidad}} => ({
+{{solicitudDePrueba}}
+  ...cambios,
+});
+
+function casosDeUso() {
+  const registros = new {{Plural}}EnMemoria();
+  const dependencias = { unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(), repositorio: registros, consultas: registros };
+  return {
+    listar: new Listar{{Plural}}(dependencias),
+    obtener: new Obtener{{Entidad}}(dependencias),
+    crear: new Crear{{Entidad}}(dependencias),
+    actualizar: new Actualizar{{Entidad}}(dependencias),
+{{eliminarEnPruebaCasos}}  };
+}
+
+let casos: ReturnType<typeof casosDeUso>;
+
+beforeEach(() => {
+  casos = casosDeUso();
+});
+
+describe('{{pluralTexto}}', () => {
+  it('registra {{unSingular}} y aparece en la lista', async () => {
+    const creado = await casos.crear.ejecutar(operador, solicitud());
+
+    expect(await casos.listar.ejecutar(operador)).toEqual([creado]);
+  });
+
+  it('cambia sus datos', async () => {
+    const creado = await casos.crear.ejecutar(operador, solicitud());
+
+    const cambiado = await casos.actualizar.ejecutar(operador, {
+      {{entidad}}Id: creado.id,
+      solicitud: solicitud({{cambioDePrueba}}),
+    });
+
+    expect(cambiado.{{campoMostrar}}).toBe({{valorCambiado}});
+  });
+
+  it('avisa si no existe o es de otra {{alcance}}', async () => {
+    await expect(casos.obtener.ejecutar(operador, randomUUID())).rejects.toThrow(RecursoNoEncontrado);
+  });
+{{pruebaDeReglas}}{{pruebaDeBaja}}});

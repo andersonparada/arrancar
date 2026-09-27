@@ -1,0 +1,26 @@
+import { Identificador } from '../../../core/compartido/dominio/identificador.js';
+{{importacionesMapeador}}import type { {{Entidad}}Dto } from '../../aplicacion/dto/{{entidadClave}}.dto.js';
+import { {{Entidad}} } from '../../dominio/{{entidadClave}}.js';
+import type { {{plural}} } from './{{pluralClave}}.tablas.js';
+
+type Fila = typeof {{plural}}.$inferSelect;
+
+/** Traduce entre la fila de la tabla, la entidad y lo que ve la pantalla. */
+export const mapeadorDe{{Entidad}} = {
+  aEntidad({ id, {{alcance}}Id, creadoEn, actualizadoEn, ...campos }: Fila): {{Entidad}} {
+    return {{Entidad}}.reconstruir({
+      ...campos,
+      id: Identificador.desde(id),
+      {{alcance}}Id: Identificador.desde({{alcance}}Id),{{conversionesAEntidad}}
+    });
+  },
+
+  aFila({{entidad}}: {{Entidad}}): typeof {{plural}}.$inferInsert {
+    const { id, {{alcance}}Id, ...datos } = {{entidad}}.instantanea();
+    return { ...datos, id: id.valor, {{alcance}}Id: {{alcance}}Id.valor{{conversionesAPrimitivo}} };
+  },
+
+  aDto({ {{alcance}}Id, creadoEn, actualizadoEn, ...dto }: Fila): {{Entidad}}Dto {
+    return dto;
+  },
+};

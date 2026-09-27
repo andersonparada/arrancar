@@ -1,0 +1,20 @@
+### pruebaDeBaja
+
+  it('se inactiva sin perder sus datos', async () => {
+    const creado = await casos.crear.ejecutar(operador, solicitud());
+
+    const inactivo = await casos.actualizar.ejecutar(operador, {
+      {{entidad}}Id: creado.id,
+      solicitud: solicitud({ activo: false }),
+    });
+
+    expect(inactivo).toEqual({ ...creado, activo: false });
+  });
+### bajaEnApi
+
+  it('se inactivan sin perder sus datos', async () => {
+    const creado = await cuenta.propietario.post(RUTA, datos());
+    const inactivo = await cuenta.propietario.put(`${RUTA}/${creado.cuerpo.id}`, datos({ activo: false }));
+
+    expect(inactivo.cuerpo).toEqual({ ...creado.cuerpo, activo: false });
+  });

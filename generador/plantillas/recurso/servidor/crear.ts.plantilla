@@ -1,0 +1,23 @@
+import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { {{Entidad}} } from '../../../dominio/{{entidadClave}}.js';
+import { datosDe{{Entidad}} } from '../../datos-de-{{entidadClave}}.js';
+import type { {{Entidad}}Dto, SolicitudDe{{Entidad}} } from '../../dto/{{entidadClave}}.dto.js';
+import type { DependenciasDe{{Plural}} } from './dependencias-de-{{pluralClave}}.js';
+
+export class Crear{{Entidad}} {
+  constructor(private readonly dependencias: DependenciasDe{{Plural}}) {}
+
+  /**
+   * @throws {{Entidad}}Invalido u otro error de datos si no cumple las reglas del dominio.
+   * @throws RecursoDuplicado si repite un dato que debe ser único.
+   */
+  async ejecutar(operador: Operador, solicitud: SolicitudDe{{Entidad}}): Promise<{{Entidad}}Dto> {
+    const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
+    const {{entidad}} = {{Entidad}}.crear(Identificador.desde(operador.{{alcance}}Id), datosDe{{Entidad}}(solicitud));
+    return unidadDeTrabajo.ejecutar(operador, async () => {
+      await repositorio.agregar({{entidad}});
+      return consultas.obtener({{entidad}}.id.valor);
+    });
+  }
+}

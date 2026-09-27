@@ -1,0 +1,35 @@
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
+import type { Actualizar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/actualizar-{{entidadClave}}.js';
+import type { Crear{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/crear-{{entidadClave}}.js';
+{{importacionEliminarEnControlador}}import type { Listar{{Plural}} } from '../aplicacion/casos-uso/{{pluralClave}}/listar-{{pluralClave}}.js';
+import type { Obtener{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/obtener-{{entidadClave}}.js';
+import type { {{Entidad}}Solicitado, Params{{Entidad}} } from './{{pluralClave}}.esquemas-http.js';
+
+export interface CasosDeUsoDe{{Plural}} {
+  listar: Listar{{Plural}};
+  obtener: Obtener{{Entidad}};
+  crear: Crear{{Entidad}};
+  actualizar: Actualizar{{Entidad}};
+{{eliminarEnCasosDeUso}}}
+
+/** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
+export class {{Plural}}Controlador {
+  constructor(private readonly casosDeUso: CasosDeUsoDe{{Plural}}) {}
+
+  listar = (solicitud: FastifyRequest) => this.casosDeUso.listar.ejecutar(operadorDe(solicitud));
+
+  obtener = (solicitud: FastifyRequest<{ Params: Params{{Entidad}} }>) =>
+    this.casosDeUso.obtener.ejecutar(operadorDe(solicitud), solicitud.params.{{entidad}}Id);
+
+  crear = async (solicitud: FastifyRequest<{ Body: {{Entidad}}Solicitado }>, respuesta: FastifyReply) => {
+    const {{entidad}} = await this.casosDeUso.crear.ejecutar(operadorDe(solicitud), solicitud.body);
+    return respuesta.status(201).send({{entidad}});
+  };
+
+  actualizar = (solicitud: FastifyRequest<{ Params: Params{{Entidad}}; Body: {{Entidad}}Solicitado }>) =>
+    this.casosDeUso.actualizar.ejecutar(operadorDe(solicitud), {
+      {{entidad}}Id: solicitud.params.{{entidad}}Id,
+      solicitud: solicitud.body,
+    });
+{{eliminarEnControlador}}}

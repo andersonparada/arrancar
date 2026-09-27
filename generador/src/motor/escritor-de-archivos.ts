@@ -57,6 +57,10 @@ export class EscritorDeArchivos {
     return this.archivos.existe(join(this.raiz, ruta));
   }
 
+  leer(ruta: string): string {
+    return this.archivos.leer(join(this.raiz, ruta));
+  }
+
   get resumen(): readonly Cambio[] {
     return this.cambios;
   }

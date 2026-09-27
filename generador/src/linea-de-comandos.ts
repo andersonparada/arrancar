@@ -23,6 +23,9 @@ export const AYUDA = `Uso:
   npm run generar -- modulo <clave> [--nombre "Nombre visible"] [--descripcion "..."] [--icono Beef]
       Esqueleto de un módulo en el servidor y en el cliente, su documento y su registro.
 
+  npm run generar -- definicion <modulo>/<entidad>
+      Crea generador/definiciones/<modulo>/<entidad>.ts con un ejemplo para completar.
+
   npm run generar -- recurso <modulo>/<entidad>
-      Todo lo de una entidad a partir de generador/definiciones/<modulo>/<entidad>.ts.
+      Todo lo de una entidad a partir de su definición, y la migración de su tabla.
 `;

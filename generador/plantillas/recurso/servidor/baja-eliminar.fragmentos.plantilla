@@ -1,0 +1,50 @@
+### eliminarEnRepositorio
+  eliminar({{entidad}}: {{Entidad}}): Promise<void>;
+### eliminarEnDrizzle
+
+  async eliminar({{entidad}}: {{Entidad}}): Promise<void> {
+    await transaccionEnCurso().delete({{plural}}).where(eq({{plural}}.id, {{entidad}}.id.valor));
+  }
+### importacionEliminarEnControlador
+import type { Eliminar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/eliminar-{{entidadClave}}.js';
+### eliminarEnCasosDeUso
+  eliminar: Eliminar{{Entidad}};
+### eliminarEnControlador
+
+  eliminar = async (solicitud: FastifyRequest<{ Params: Params{{Entidad}} }>, respuesta: FastifyReply) => {
+    await this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), solicitud.params.{{entidad}}Id);
+    return respuesta.status(204).send();
+  };
+### eliminarEnRutas
+    app.delete(`${RUTA}/:{{entidad}}Id`, { schema: conId, preHandler: gestionar, handler: controlador.eliminar });
+### importacionEliminarEnComposicion
+import { Eliminar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/eliminar-{{entidadClave}}.js';
+### eliminarEnComposicion
+      eliminar: new Eliminar{{Entidad}}(dependencias),
+### eliminarEnDobles
+
+  async eliminar({{entidad}}: {{Entidad}}): Promise<void> {
+    this.registros.delete({{entidad}}.id.valor);
+  }
+### importacionEliminarEnPrueba
+import { Eliminar{{Entidad}} } from './eliminar-{{entidadClave}}.js';
+### eliminarEnPruebaCasos
+    eliminar: new Eliminar{{Entidad}}(dependencias),
+### pruebaDeBaja
+
+  it('elimina {{unSingular}}', async () => {
+    const creado = await casos.crear.ejecutar(operador, solicitud());
+
+    await casos.eliminar.ejecutar(operador, creado.id);
+
+    expect(await casos.listar.ejecutar(operador)).toEqual([]);
+  });
+### bajaEnApi
+
+  it('se eliminan', async () => {
+    const creado = await cuenta.propietario.post(RUTA, datos());
+    const eliminado = await cuenta.propietario.delete(`${RUTA}/${creado.cuerpo.id}`);
+
+    expect(eliminado.estado).toBe(204);
+    expect((await cuenta.propietario.get(`${RUTA}/${creado.cuerpo.id}`)).estado).toBe(404);
+  });

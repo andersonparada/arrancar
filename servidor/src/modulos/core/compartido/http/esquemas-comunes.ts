@@ -37,3 +37,49 @@ export const dpiOpcional = z
   .nullish()
   .transform((v) => (v?.trim() ? normalizarDpi(v) : null))
   .refine((v) => v === null || esDpiValido(v), 'El DPI no es válido (revise los 13 dígitos).');
+
+const nuloSiFalta = <Valor>(valor: Valor | null | undefined): Valor | null => valor ?? null;
+
+export const enteroObligatorio = () => z.number().int('Escriba un número entero.');
+
+/** Número entero que puede faltar: llega como `null`. */
+export const enteroOpcional = () => enteroObligatorio().nullish().transform(nuloSiFalta);
+
+const conDecimales = (decimales: number) =>
+  z
+    .string()
+    .regex(new RegExp(`^-?\\d+(\\.\\d{1,${decimales}})?$`), `Escriba un número con hasta ${decimales} decimales.`);
+
+const textoDeNumero = (valor: string | number | null | undefined) => {
+  const texto = valor === null || valor === undefined ? '' : String(valor).trim();
+  return texto || null;
+};
+
+/**
+ * Número con decimales (montos, pesos, áreas). Viaja como texto ("1250.50") para
+ * no perder precisión; también acepta un número.
+ */
+export const decimalObligatorio = (decimales: number) =>
+  z
+    .union([z.string(), z.number()])
+    .transform((valor) => String(valor).trim())
+    .pipe(conDecimales(decimales));
+
+export const decimalOpcional = (decimales: number) =>
+  z.union([z.string(), z.number()]).nullish().transform(textoDeNumero).pipe(conDecimales(decimales).nullable());
+
+/** Fecha sin hora: `aaaa-mm-dd`. */
+export const fechaObligatoria = () => z.iso.date('Escriba una fecha válida (aaaa-mm-dd).');
+
+export const fechaOpcional = () =>
+  z
+    .union([fechaObligatoria(), z.literal('')])
+    .nullish()
+    .transform((valor) => valor || null);
+
+/** Una de las opciones de una lista fija. */
+export const opcionObligatoria = <const Opciones extends readonly [string, ...string[]]>(opciones: Opciones) =>
+  z.enum(opciones);
+
+export const opcionOpcional = <const Opciones extends readonly [string, ...string[]]>(opciones: Opciones) =>
+  z.enum(opciones).nullish().transform(nuloSiFalta);

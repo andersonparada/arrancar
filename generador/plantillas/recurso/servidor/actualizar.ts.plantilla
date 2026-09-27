@@ -1,0 +1,24 @@
+import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { datosDe{{Entidad}} } from '../../datos-de-{{entidadClave}}.js';
+import type { {{Entidad}}Dto, SolicitudDe{{Entidad}} } from '../../dto/{{entidadClave}}.dto.js';
+import { {{entidad}}Existente, type DependenciasDe{{Plural}} } from './dependencias-de-{{pluralClave}}.js';
+
+interface CambioDe{{Entidad}} {
+  {{entidad}}Id: string;
+  solicitud: SolicitudDe{{Entidad}};
+}
+
+export class Actualizar{{Entidad}} {
+  constructor(private readonly dependencias: DependenciasDe{{Plural}}) {}
+
+  /** @throws RecursoNoEncontrado si no existe o no es de {{laEmpresaOCuenta}}. */
+  ejecutar(operador: Operador, { {{entidad}}Id, solicitud }: CambioDe{{Entidad}}): Promise<{{Entidad}}Dto> {
+    const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
+    return unidadDeTrabajo.ejecutar(operador, async () => {
+      const {{entidad}} = await {{entidad}}Existente(repositorio, {{entidad}}Id);
+      {{entidad}}.cambiarDatos(datosDe{{Entidad}}(solicitud));
+      await repositorio.guardar({{entidad}});
+      return consultas.obtener({{entidad}}Id);
+    });
+  }
+}

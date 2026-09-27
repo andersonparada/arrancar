@@ -1,0 +1,13 @@
+import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { {{Entidad}}Dto } from '../../dto/{{entidadClave}}.dto.js';
+import type { DependenciasDe{{Plural}} } from './dependencias-de-{{pluralClave}}.js';
+
+/** {{LosPlural}} de {{laEmpresaOCuenta}}, ordenados por {{etiquetaMostrar}}. */
+export class Listar{{Plural}} {
+  constructor(private readonly dependencias: Pick<DependenciasDe{{Plural}}, 'unidadDeTrabajo' | 'consultas'>) {}
+
+  ejecutar(operador: Operador): Promise<{{Entidad}}Dto[]> {
+    const { unidadDeTrabajo, consultas } = this.dependencias;
+    return unidadDeTrabajo.ejecutar(operador, () => consultas.listar());
+  }
+}

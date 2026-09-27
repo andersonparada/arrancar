@@ -33,7 +33,8 @@ npm run revisar                           # Prettier + ESLint + verificar: corre
 npm run formatear                         # aplica Prettier y las correcciones automáticas de ESLint
 npm run bd:generar -w servidor -- <modulo> <nombre> [--custom]
 npm run generar -- modulo <clave> [--nombre "..."] [--descripcion "..."] [--icono Beef]
-npm run generar -- recurso <modulo>/<entidad>   # desde generador/definiciones/<modulo>/<entidad>.ts
+npm run generar -- definicion <modulo>/<entidad>   # crea generador/definiciones/<modulo>/<entidad>.ts para completar
+npm run generar -- recurso <modulo>/<entidad>      # genera el recurso desde su definición, y su migración
 ```
 
 Las pruebas de integración usan PostgreSQL real (`arrancar_pruebas`), así que la
