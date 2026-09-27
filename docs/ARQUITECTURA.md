@@ -177,71 +177,90 @@ export class Nit extends ObjetoValor<string> {
 }
 ```
 
+**El módulo `empresas` es la plantilla viva** (`servidor/src/modulos/empresas/`):
+al crear o migrar un módulo, se copia su forma. Los fragmentos siguientes salen de ahí.
+
 ### 4.4 Caso de uso
 
+Una clase por acción, con un solo método público `ejecutar`. Las dependencias
+llegan en **un objeto con nombre** (así el armado en `modulo.ts` se lee solo y no
+choca con el límite de 3 parámetros):
+
 ```ts
-export class CrearTercero {
-  constructor(
-    private readonly unidadDeTrabajo: UnidadDeTrabajo,
-    private readonly terceros: RepositorioTerceros,
-    private readonly eventos: PublicadorEventos,
-  ) {}
+interface Dependencias {
+  unidadDeTrabajo: UnidadDeTrabajo;
+  repositorio: RepositorioEmpresas;
+  consultas: ConsultasEmpresas;
+  accesos: AccesosAEmpresas;
+  publicadorEventos: PublicadorEventos;
+}
 
-  async ejecutar(solicitud: SolicitudCrearTercero): Promise<TerceroCreadoDto> {
-    const tercero = await this.unidadDeTrabajo.ejecutar(solicitud.contexto, async () => {
-      await this.exigirDocumentosLibres(solicitud.datos);
-      const nuevo = Tercero.registrar(solicitud.datos);
-      await this.terceros.guardar(nuevo);
-      return nuevo;
+export class RegistrarEmpresa {
+  constructor(private readonly dependencias: Dependencias) {}
+
+  async ejecutar(operador: Operador, solicitud: SolicitudDeEmpresa): Promise<EmpresaDto> {
+    const { unidadDeTrabajo, consultas, publicadorEventos } = this.dependencias;
+    const empresa = Empresa.registrar(Identificador.desde(operador.cuentaId), datosDeEmpresa(solicitud));
+
+    const registrada = await unidadDeTrabajo.ejecutar(operador, async () => {
+      await this.dependencias.repositorio.agregar(empresa);
+      await this.darAccesoAlCreador(operador, empresa);
+      return consultas.obtenerEnCuenta(empresa.id.valor, operador.cuentaId);
     });
-    await this.eventos.publicar(tercero.extraerEventos());
-    return { id: tercero.id.valor };
-  }
-
-  private async exigirDocumentosLibres(datos: DatosRegistroTercero): Promise<void> {
-    if (datos.nit && await this.terceros.existeConNit(datos.nit)) throw new NitYaRegistrado(datos.nit);
-    if (datos.dpi && await this.terceros.existeConDpi(datos.dpi)) throw new DpiYaRegistrado(datos.dpi);
+    await publicadorEventos.publicar(empresa.extraerEventos());
+    return registrada;
   }
 }
 ```
 
 Los eventos se publican **después** de confirmar la transacción: si falla, nadie
-se entera de algo que no ocurrió.
+se entera de algo que no ocurrió. Después de escribir, la respuesta se lee con
+las consultas (datos reales de la base, como `actualizadoEn`).
 
 ### 4.5 Controlador y rutas
 
-```ts
-export class TercerosControlador {
-  constructor(
-    private readonly crearTercero: CrearTercero,
-    private readonly inactivarTercero: InactivarTercero,
-    private readonly consultas: ConsultasTerceros,
-  ) {}
+El controlador solo traduce HTTP ⇄ caso de uso; las rutas reciben el controlador:
 
-  crear = async (solicitud: SolicitudHttp<CuerpoCrearTercero>, respuesta: FastifyReply) => {
-    const creado = await this.crearTercero.ejecutar({
-      contexto: contextoEmpresaDe(solicitud),
-      datos: aDatosRegistro(solicitud.body),
-    });
-    return respuesta.status(201).send(creado);
+```ts
+export class EmpresasControlador {
+  constructor(private readonly casosDeUso: CasosDeUsoDeEmpresas) {}
+
+  registrar = async (solicitud: FastifyRequest<{ Body: EmpresaSolicitada }>, respuesta: FastifyReply) => {
+    const empresa = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), solicitud.body);
+    return respuesta.status(201).send(empresa);
   };
 }
+
+export function rutasEmpresas(controlador: EmpresasControlador): FastifyPluginAsyncZod { … }
 ```
 
 ### 4.6 Raíz de composición (`modulo.ts`)
 
+El único lugar que conoce las clases concretas:
+
 ```ts
-export function crearModuloTerceros(compartido: DependenciasCompartidas): DefinicionModulo {
-  const repositorio = new RepositorioTercerosDrizzle();
-  const consultas = new ConsultasTercerosDrizzle();
-  const controlador = new TercerosControlador(
-    new CrearTercero(compartido.unidadDeTrabajo, repositorio, compartido.eventos),
-    new InactivarTercero(compartido.unidadDeTrabajo, repositorio, compartido.eventos),
-    consultas,
-  );
-  return definirModulo({ clave: 'terceros', /* permisos, configuración… */ rutas: rutasTerceros(controlador) });
+function componerControlador({ unidadDeTrabajo, publicadorEventos }: DependenciasCompartidas) {
+  const repositorio = new RepositorioEmpresasDrizzle();
+  const consultas = new ConsultasEmpresasDrizzle();
+  const accesos = new AccesosAEmpresasDrizzle();
+  const alcance = new AlcanceDelOperador(accesos);
+
+  return new EmpresasControlador({
+    listar: new ListarEmpresas({ unidadDeTrabajo, consultas, alcance }),
+    registrar: new RegistrarEmpresa({ unidadDeTrabajo, repositorio, consultas, accesos, publicadorEventos }),
+    // …
+  });
 }
+
+export const moduloEmpresas: DefinicionModulo = {
+  clave: 'empresas',
+  // permisos, configuración…
+  rutas: rutasEmpresas(componerControlador(dependenciasCompartidas())),
+};
 ```
+
+Las pruebas de los casos de uso arman lo mismo con dobles en memoria
+(`pruebas/dobles-de-*.ts` del módulo y `core/compartido/pruebas/dobles-compartidos.ts`).
 
 ### 4.7 Errores
 
@@ -377,6 +396,25 @@ entrega como un commit propio.
   - `ejecutarEnEmpresa` sigue para el código viejo (marcado `@deprecated`) y usa
     las mismas variables de seguridad que la unidad de trabajo.
   - 40 pruebas nuevas (192 en total); advertencias de tamaño: 41.
+- **Fase 3: hecha (2026-09-26).** `empresas` migrado completo y convertido en la
+  plantilla (sección 4). Las 90 pruebas de API siguen iguales y pasan; 17 pruebas
+  nuevas de dominio y casos de uso corren sin base de datos. Decisiones:
+  - Las tablas siguen en `core.empresas` y `core.empresa_usuarios` (el core las
+    necesita para la sesión y el alta de cuentas; moverlas cambiaría la base). Como
+    `core.empresas` no tiene RLS, el repositorio filtra siempre por cuenta.
+  - La regla "no desactivar la empresa en uso" vive en la entidad
+    (`cambiarDatos(datos, empresaEnUso)`); su código de error pasa de
+    `regla_negocio` a `empresa_en_uso` (mismo estado 422 y mismo mensaje; el
+    cliente no lo usaba).
+  - Nuevo evento `empresas.registrada` (nadie lo escucha aún).
+  - Se corrigió la descripción del permiso `empresas.gestionar`, que aún hablaba del fierro.
+  - Teléfono y correo de la empresa siguen como texto libre para no cambiar lo que
+    la API devuelve: normalizarlos con `Telefono` y `Correo` queda **por decidir
+    con el usuario**.
+  - Nuevas piezas compartidas: `Operador`, `DependenciasCompartidas`,
+    `operadorDe(solicitud)` y los dobles `UnidadDeTrabajoEnMemoria`,
+    `PublicadorEventosEnMemoria` y `operadorDePrueba`.
+  - 209 pruebas en total; advertencias de tamaño: 41 (ninguna en empresas ni en compartido).
 
 ### Riesgos y cómo se controlan
 
