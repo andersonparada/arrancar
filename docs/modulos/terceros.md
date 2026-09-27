@@ -84,23 +84,31 @@ Todas llevan `cuenta_id`, `politicaPorCuenta()` y marcas de tiempo.
 
 ## Pantallas
 
-Menú acordado (se construye en la fase 6 del refactor):
+Menú acordado (se construye en la fase 6.2 del refactor; el módulo es plegable):
 
 ```
-Clientes
-  Operación
-    Buscar contacto        búsqueda rápida de clientes y proveedores para llamar o escribir
-  Administración
-    Clientes               listado + alta de clientes (con su clase)
-    Proveedores            listado + alta de proveedores (con su categoría)
-    Categorías de proveedor
-  Reportes
-    Clientes por clase     (directo, intermediario, empresa, subasta)
-    Proveedores por categoría
+▾ Clientes
+    Operación
+      Buscar contacto        búsqueda rápida de clientes, proveedores y sus contactos para llamar o escribir
+    Administración
+      Clientes               listado con su clase; botón "Nuevo cliente"
+      Proveedores            listado con su categoría; botón "Nuevo proveedor"
+      Categorías de proveedor
+    Reportes                 (después: clientes por clase, proveedores por categoría)
 ```
 
-Las pantallas de Clientes y Proveedores comparten componentes (formulario de
-datos generales, contactos, búsqueda); cada una solo agrega lo propio de su papel.
+- **Alta y edición en página completa** (`/clientes/nuevo`, `/clientes/:id/editar`,
+  y lo mismo para proveedores): datos generales, el papel con su clase o categoría y
+  los contactos, guardados en un solo paso. El aviso de posible duplicado se
+  mantiene.
+- **Ficha** (`/clientes/:id`, `/proveedores/:id`): la misma, dividida en
+  componentes (datos generales, contactos, papel de cliente, papel de proveedor).
+  Si la persona también es proveedor (o cliente), la ficha lo muestra y permite
+  agregar o quitar el otro papel.
+- Clientes y Proveedores comparten los componentes (formulario de datos generales,
+  contactos, buscador); cada pantalla solo agrega lo propio de su papel.
+- Cambios en el servidor: el listado trae la clase del cliente y la categoría del
+  proveedor; búsqueda de contactos; alta en un paso (datos, papel y contactos).
 
 Mientras tanto sigue la primera versión: listado general "Clientes y
 proveedores", ficha con cliente y proveedor, y alta rápida.

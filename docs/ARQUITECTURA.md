@@ -360,7 +360,7 @@ entrega como un commit propio.
 | **3. Empresas** (plantilla) | Primer módulo migrado completo: dominio, casos de uso, repositorio, controlador, raíz de composición. Sirve de ejemplo para los demás. | Pruebas de API de empresas iguales; pruebas unitarias nuevas. |
 | **4. Terceros** | Migrar el módulo a la estructura, con la entidad `Tercero` y sus papeles. **Única fase con cambios funcionales acordados:** se quita el papel trabajador (pasa a planilla, migración que elimina `terceros.trabajadores` y el permiso `trabajadores.*`) y el módulo se muestra como **Clientes** con pantallas propias de clientes y proveedores. | Pruebas de API de terceros actualizadas a los cambios. |
 | **5. Core por contextos** | En este orden: geografía → archivos → apariencia → configuración → bitácora → autorización → identidad → cuentas. | Cada contexto, un commit con pruebas en verde. |
-| **6. Cliente** | Clases `Api*`, composables, dividir páginas grandes (`FichaTercero`, `UsuariosCuenta`, `PlataformaApariencia`, `PlataformaCuentas`). | vue-tsc y pruebas de composables en verde. |
+| **6. Cliente** | Clases `Api*`, composables, dividir páginas grandes (`FichaTercero`, `UsuariosCuenta`, `PlataformaApariencia`, `PlataformaCuentas`), menú por módulo, pantallas propias de Clientes y Proveedores, textos y formato configurable. Ver "Plan de la fase 6". | vue-tsc y pruebas de composables en verde. |
 | **7. Cierre** | Reglas de tamaño pasan de advertencia a error; `CLAUDE.md` y `PLAN.md` apuntan a este documento; se borran las carpetas viejas (`servicios/`, `repositorios/`, `controladores/`…). | `revisar` sin advertencias. |
 
 ### Avance
@@ -543,20 +543,35 @@ entrega como un commit propio.
   265 pruebas; advertencias: 24. En el servidor solo quedan en `aplicacion.ts` y
   en `registro-modulos.ts` (fase 7); las demás son del cliente (fase 6).
 
-### Mejoras pendientes (acordadas, sin fecha)
+### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 
-- **Textos de pantalla en constantes por módulo** (pedido del usuario, 2026-09-26):
-  cada módulo del cliente tendrá un archivo con los nombres de sus ventanas, menús
-  y títulos (por ejemplo `terceros/textos.ts`); las páginas, el menú y las rutas
-  los usan desde ahí, así un cambio de nombre se hace en un solo lugar. Conviene
-  hacerlo junto con la fase 6.
+Cuatro pasos, un commit cada uno; en cada uno, `revisar` y pruebas en verde.
 
-- **Formato de fechas y decimales configurable** (pedido del usuario, 2026-09-27):
-  claves de configuración (instalación, cuenta y empresa, públicas) para el
-  formato de fecha en pantalla (por ejemplo `dd/mm/aaaa`) y la cantidad de
-  decimales de cantidades y montos. El cliente formatea con ellas desde un solo
-  lugar. Conviene hacerlo después de migrar `configuracion` (fase 5) y usarlo en
-  la fase 6.
+| Paso | Contenido |
+|---|---|
+| **6.1 Base del cliente** | Vitest en el cliente (pruebas de composables). Reglas de ESLint del cliente: componentes sin servicios, páginas ≤ 120 líneas. `ClienteHttp` como clase y servicios como clases `Api*`. `textos.ts` por módulo. Menú nuevo. Formato de fechas y decimales. |
+| **6.2 Clientes** | Pantallas propias (ver `docs/modulos/terceros.md`, "Pantallas"): Buscar contacto, Clientes, Proveedores, Categorías de proveedor; formulario completo en página para crear y editar; la ficha se divide en componentes. En el servidor: el listado trae clase y categoría, búsqueda de contactos y alta en un paso (datos, papel y contactos). |
+| **6.3 Páginas del core** | Usuarios, Roles, Plataforma (cuentas, apariencia, bitácora) y Configuración pasan a composables + componentes. |
+| **6.4 Empresas y cierre** | Lista de empresas a composables; documentación y `CLAUDE.md` al día. |
+
+Decisiones:
+
+- **Menú: módulos plegables.** Cada módulo es un grupo que se abre y se cierra;
+  adentro, las secciones Operación, Administración y Reportes (una sección vacía
+  no se muestra). Al entrar se abre el módulo de la página actual y el navegador
+  recuerda cuáles abrió o cerró el usuario. Las opciones del core se agrupan como
+  **Cuenta** (usuarios, roles, configuración) y **Soporte** (solo superacceso).
+- **Alta de clientes y proveedores: formulario completo en página**
+  (`/clientes/nuevo`, `/clientes/:id/editar`, igual para proveedores), que guarda
+  en un solo paso los datos, el papel (con su clase o categoría) y los contactos.
+- **Formato predeterminado:** fechas `dd/mm/aaaa`; montos y cantidades con 2
+  decimales. Variables públicas `core.regional.formato_fecha`,
+  `core.regional.decimales_montos` y `core.regional.decimales_cantidades` (niveles
+  instalación, cuenta y empresa); el cliente formatea solo desde `utilidades/formato.ts`.
+- **Textos:** cada módulo del cliente tiene `textos.ts` con los nombres de sus
+  ventanas, menús y títulos; páginas, menú y rutas los toman de ahí.
+- **Reportes de Clientes** (clientes por clase, proveedores por categoría): quedan
+  para después, se planifican junto con los demás módulos.
 
 ### Riesgos y cómo se controlan
 
