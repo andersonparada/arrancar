@@ -446,6 +446,15 @@ entrega como un commit propio.
     de solo lectura, sin reglas. `drizzle.config.ts` ahora también busca tablas en
     los contextos del core (sin diferencias en la base). Las API no cambian; 235
     pruebas en verde.
+  - **Archivos (2026-09-27):** `core/archivos/` con dominio (formatos aceptados,
+    variantes, `RutasDeImagen` y los errores `FormatoDeImagenNoAceptado` e
+    `ImagenIlegible`), casos de uso `SubirImagen` y `AbrirImagen`, puertos
+    `RepositorioArchivos` y `OptimizadorDeImagenes` (sharp queda en
+    `OptimizadorSharp`, en infraestructura). Pasan a `compartido` porque apariencia
+    también los usa: el puerto `Almacenamiento` con `AlmacenamientoLocal`,
+    `ImagenSubida` y `leerImagenDeSolicitud` (con el error `FaltaLaImagen`). Los
+    códigos de error pasan de `solicitud_invalida` a códigos propios (mismo estado
+    400; el cliente no los usaba). 240 pruebas (5 unitarias nuevas); advertencias: 38.
 
 ### Mejoras pendientes (acordadas, sin fecha)
 

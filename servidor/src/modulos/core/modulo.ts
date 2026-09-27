@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { definirConfiguracion, type DefinicionModulo } from './modulos-sistema/definicion-modulo.js';
 import { rutasApariencia } from './rutas/apariencia.rutas.js';
-import { rutasArchivos } from './rutas/archivos.rutas.js';
+import { componerArchivos } from './archivos/contexto.js';
 import { esquemaColorHex } from './validaciones/apariencia.validaciones.js';
 import { rutasAutenticacion } from './rutas/autenticacion.rutas.js';
 import { rutasConfiguracion } from './rutas/configuracion.rutas.js';
@@ -17,7 +17,7 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(rutasPlataforma);
   await app.register(rutasUsuarios);
   await app.register(rutasRoles);
-  await app.register(rutasArchivos);
+  await app.register(componerArchivos(dependenciasCompartidas()));
   await app.register(rutasConfiguracion);
   await app.register(rutasApariencia);
   await app.register(componerGeografia(dependenciasCompartidas()));

@@ -1,9 +1,10 @@
 import type { Readable } from 'node:stream';
 import sharp from 'sharp';
-import { almacenamiento } from '../almacenamiento/almacenamiento.js';
+import { almacenamiento } from '../compartido/infraestructura/almacenamiento-local.js';
+import { FORMATOS_DE_IMAGEN_ACEPTADOS } from '../archivos/dominio/imagen.js';
+import type { ImagenSubida } from '../compartido/aplicacion/imagen-subida.js';
 import { ErrorNoEncontrado, ErrorSolicitudInvalida } from '../errores/errores.js';
 import type { AparienciaSolicitada } from '../validaciones/apariencia.validaciones.js';
-import { TIPOS_IMAGEN_PERMITIDOS, type ImagenSubida } from './archivos.servicio.js';
 import { configuracionServicio, DESTINO_INSTALACION } from './configuracion.servicio.js';
 
 export const CLAVES_APARIENCIA = {
@@ -15,7 +16,7 @@ export const CLAVES_APARIENCIA = {
 
 const RUTA_LOGO = 'instalacion/logo.png';
 const LADO_LOGO = 512;
-const TIPOS_LOGO = [...TIPOS_IMAGEN_PERMITIDOS, 'image/svg+xml'];
+const TIPOS_LOGO = [...FORMATOS_DE_IMAGEN_ACEPTADOS, 'image/svg+xml'];
 
 export interface Apariencia {
   nombreAplicacion: string;

@@ -2,19 +2,10 @@ import { createReadStream } from 'node:fs';
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
 import type { Readable } from 'node:stream';
-import { configuracion } from '../../../configuracion.js';
+import { configuracion } from '../../../../configuracion.js';
+import type { Almacenamiento } from '../aplicacion/almacenamiento.js';
 
-/**
- * Dónde se guardan físicamente los archivos (patrón Strategy). Hoy se usa el disco
- * local; para usar S3 o R2 basta con otra implementación de esta interfaz.
- */
-export interface EstrategiaAlmacenamiento {
-  guardar(ruta: string, contenido: Buffer): Promise<void>;
-  leer(ruta: string): Promise<Readable>;
-  eliminar(ruta: string): Promise<void>;
-}
-
-export class AlmacenamientoLocal implements EstrategiaAlmacenamiento {
+export class AlmacenamientoLocal implements Almacenamiento {
   private readonly raiz: string;
 
   constructor(raiz: string) {
@@ -45,4 +36,4 @@ export class AlmacenamientoLocal implements EstrategiaAlmacenamiento {
   }
 }
 
-export const almacenamiento: EstrategiaAlmacenamiento = new AlmacenamientoLocal(configuracion.RUTA_ALMACENAMIENTO);
+export const almacenamiento: Almacenamiento = new AlmacenamientoLocal(configuracion.RUTA_ALMACENAMIENTO);
