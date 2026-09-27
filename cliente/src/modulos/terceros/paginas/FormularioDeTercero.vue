@@ -8,7 +8,7 @@ import CamposDeDatosGenerales from '../componentes/CamposDeDatosGenerales.vue';
 import CamposDelPapel from '../componentes/CamposDelPapel.vue';
 import EditorDeContactos from '../componentes/EditorDeContactos.vue';
 import { usarFormularioDeTercero } from '../composables/usar-formulario-de-tercero';
-import { PERMISO_DEL_PAPEL, RUTAS_DEL_PAPEL } from '../papeles';
+import { PERMISO_DEL_PAPEL, RUTAS_DEL_PAPEL, volverALaFicha, volverALaLista } from '../papeles';
 import type { PapelTercero } from '../servicios/terceros.api';
 import { VENTANA_DEL_PAPEL } from '../textos';
 
@@ -22,6 +22,7 @@ const { datos, papeles, contactos, categorias, departamentos, municipios, esNuev
 const ventana = VENTANA_DEL_PAPEL[props.papel];
 const puedeGestionarElPapel = sesion.puede(PERMISO_DEL_PAPEL[props.papel]);
 const titulo = esNuevo ? ventana.nuevo : ventana.editar;
+const volver = props.terceroId ? volverALaFicha(props.papel, props.terceroId) : volverALaLista(props.papel);
 
 async function guardar(): Promise<void> {
   const id = await formulario.guardar();
@@ -31,7 +32,7 @@ async function guardar(): Promise<void> {
 
 <template>
   <form class="space-y-4" @submit.prevent="guardar">
-    <EncabezadoPagina :titulo="titulo" :descripcion="esNuevo ? undefined : nombreActual" />
+    <EncabezadoPagina :titulo="titulo" :descripcion="esNuevo ? undefined : nombreActual" :volver="volver" />
 
     <TarjetaBase>
       <h2 class="mb-4 font-semibold">Datos generales</h2>

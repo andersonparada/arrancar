@@ -574,6 +574,20 @@ entrega como un commit propio.
     contactos y alta en un paso con el permiso del papel. 274 pruebas del servidor
     (7 de API y 2 unitarias nuevas) y 22 del cliente; advertencias: 19 (ninguna en
     el módulo de clientes).
+  - **6.3 Páginas del core (2026-09-27):** Usuarios, Roles, Configuración y
+    Plataforma (cuentas, apariencia y bitácora) siguen el mismo esquema que Clientes:
+    la página solo arma componentes y composables. Cada área tiene su carpeta en
+    `core/composables/<area>/` y `core/componentes/<area>/` (`usuarios`, `roles`,
+    `configuracion`, `plataforma`). La lógica pura va en archivos sin Vue
+    (`edicion-de-usuario.ts`, `edicion-de-rol.ts`, `valores-de-configuracion.ts`,
+    `alta-de-cuenta.ts`, `paletas.ts`) y tiene pruebas. Las ventanas reciben el
+    objeto de edición con `v-model` (`defineModel`) y avisan con `guardar` y
+    `cerrar`. Nuevos en el core: `usarCarga` (trae los datos al abrir la pantalla y
+    avisa si falla) y el enlace `volver` de `EncabezadoPagina`, que la ficha y el
+    formulario de Clientes ya usan. Se corrigió que Clientes y Proveedores
+    compartieran el listado al pasar de una a otra: el `RouterView` principal ahora
+    usa la ruta como clave. 274 pruebas del servidor y 36 del cliente; advertencias:
+    10 (ninguna en las páginas del core; las del cliente pasan al 6.4).
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 

@@ -1,25 +1,12 @@
 <script setup lang="ts">
-import { VENTANAS_CORE } from '../textos';
-import { onMounted, ref } from 'vue';
 import { ScrollText } from 'lucide-vue-next';
-import { usarAvisos } from '../almacenes/avisos';
 import EncabezadoPagina from '../componentes/EncabezadoPagina.vue';
 import EstadoVacio from '../componentes/EstadoVacio.vue';
-import { apiPlataforma, type EntradaBitacora } from '../servicios/plataforma.api';
+import { nombreDeLaAccion, usarBitacora } from '../composables/plataforma/usar-bitacora';
+import { VENTANAS_CORE } from '../textos';
 import { formatearFechaHora } from '../utilidades/formato';
 
-const avisos = usarAvisos();
-const entradas = ref<EntradaBitacora[]>([]);
-
-const ACCIONES: Record<string, string> = { entrada_empresa: 'Entró a la empresa' };
-
-onMounted(async () => {
-  try {
-    entradas.value = await apiPlataforma.bitacora();
-  } catch (error) {
-    avisos.error(error instanceof Error ? error.message : 'No se pudo cargar la bitácora.');
-  }
-});
+const { entradas } = usarBitacora();
 </script>
 
 <template>
@@ -47,7 +34,7 @@ onMounted(async () => {
           <tr v-for="entrada in entradas" :key="entrada.id">
             <td class="px-4 py-3 whitespace-nowrap">{{ formatearFechaHora(entrada.creadoEn) }}</td>
             <td class="px-4 py-3">{{ entrada.usuarioNombre }}</td>
-            <td class="px-4 py-3">{{ ACCIONES[entrada.accion] ?? entrada.accion }}</td>
+            <td class="px-4 py-3">{{ nombreDeLaAccion(entrada.accion) }}</td>
             <td class="px-4 py-3">{{ entrada.empresaNombre ?? '—' }}</td>
             <td class="px-4 py-3 font-mono text-xs">{{ entrada.direccionIp ?? '—' }}</td>
           </tr>

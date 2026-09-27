@@ -14,7 +14,7 @@ import VentanaDePapel from '../componentes/VentanaDePapel.vue';
 import { usarContactosDelTercero } from '../composables/usar-contactos-del-tercero';
 import { usarFichaDeTercero } from '../composables/usar-ficha-de-tercero';
 import { usarPapelesDeLaFicha } from '../composables/usar-papeles-de-la-ficha';
-import { PERMISO_DEL_PAPEL, RUTAS_DEL_PAPEL } from '../papeles';
+import { PERMISO_DEL_PAPEL, RUTAS_DEL_PAPEL, volverALaLista } from '../papeles';
 import type { PapelTercero } from '../servicios/terceros.api';
 import { CLASES_DE_CLIENTE } from '../textos';
 
@@ -48,6 +48,7 @@ const editar = () =>
     <EncabezadoPagina
       :titulo="ficha.nombreMostrar"
       :descripcion="ficha.tipo === 'individual' ? 'Persona individual' : 'Persona jurídica'"
+      :volver="volverALaLista(papel)"
     >
       <InsigniaBase v-if="!ficha.activo" tono="rojo">Inactivo</InsigniaBase>
       <BotonBase v-if="puedeGestionar" variante="secundario" :icono="Pencil" @click="editar">Editar</BotonBase>
