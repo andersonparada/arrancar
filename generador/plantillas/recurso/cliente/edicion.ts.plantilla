@@ -1,0 +1,27 @@
+{{importacionesDeEdicion}}import type { Datos{{Entidad}}, {{Entidad}} } from '../../servicios/{{pluralClave}}.api';
+{{opcionesDeListas}}
+/** Lo que muestra cada campo de la ventana mientras se edita {{unSingular}}. */
+export interface EdicionDe{{Entidad}} {
+  abierta: boolean;
+  id: string | null;
+{{camposDeEdicion}}
+}
+
+const {{ENTIDAD}}_NUEVO: Omit<EdicionDe{{Entidad}}, 'abierta' | 'id'> = {
+{{valoresNuevos}}
+};
+
+/** La ventana abierta con los datos {{delSingular}}, o vacía si es nuevo. */
+export function edicionDe({{entidad}}?: {{Entidad}}): EdicionDe{{Entidad}} {
+  if (!{{entidad}}) return { abierta: true, id: null, ...{{ENTIDAD}}_NUEVO };
+  return {
+    abierta: true,
+    id: {{entidad}}.id,
+{{desdeElRegistro}}
+  };
+}
+
+/** Lo que se manda al servidor: lo vacío como `null` y los números como números. */
+export const datosDe{{Entidad}} = (edicion: EdicionDe{{Entidad}}): Datos{{Entidad}} => ({
+{{haciaElServidor}}
+});

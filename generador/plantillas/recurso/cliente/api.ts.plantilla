@@ -1,0 +1,29 @@
+import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
+
+/** {{Singular}} tal como lo manda el servidor. */
+export interface {{Entidad}} {
+  id: string;
+{{camposTs}}
+}
+
+export type Datos{{Entidad}} = Omit<{{Entidad}}, 'id'>;
+
+const RUTA = '/{{moduloClave}}/{{pluralClave}}';
+
+export class Api{{Plural}} {
+  constructor(private readonly http: ClienteHttp) {}
+
+  listar() {
+    return this.http.obtener<{{Entidad}}[]>(RUTA);
+  }
+
+  crear(datos: Datos{{Entidad}}) {
+    return this.http.crear<{{Entidad}}>(RUTA, datos);
+  }
+
+  actualizar(id: string, datos: Datos{{Entidad}}) {
+    return this.http.reemplazar<{{Entidad}}>(`${RUTA}/${id}`, datos);
+  }
+{{eliminarEnApi}}}
+
+export const api{{Plural}} = new Api{{Plural}}(clienteHttp);

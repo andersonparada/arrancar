@@ -82,9 +82,19 @@ describe('escritor de archivos', () => {
 
     escritor.insertarEnMarca('i.ts', 'modulos', ['b,']);
     escritor.insertarEnMarca('i.ts', 'modulos', ['b,']);
+    escritor.confirmar();
 
     expect(disco.leer('/p/i.ts')).toBe('[\n  a,\n  b,\n  // generador: modulos\n];\n');
     expect(escritor.resumen.map(({ accion }) => accion)).toEqual(['insertado', 'ya-estaba']);
+  });
+
+  it('reconoce lo que ya insertó aunque Prettier lo haya reacomodado', () => {
+    const reacomodado = "[\n  {\n    titulo: 'Animales',\n    ruta: '/animales',\n  },\n  // generador: menu\n];\n";
+    const { escritor } = escritorCon({ '/p/m.ts': reacomodado });
+
+    escritor.insertarEnMarca('m.ts', 'menu', ["{ titulo: 'Animales', ruta: '/animales' },"]);
+
+    expect(escritor.resumen.map(({ accion }) => accion)).toEqual(['ya-estaba']);
   });
 
   it('sin la marca, explica dónde falta', () => {
@@ -107,11 +117,9 @@ describe('generar un módulo', () => {
     '/p/cliente/src/modulos/indice.ts': '// generador: importaciones\n[\n  // generador: modulos\n  moduloCore,\n]\n',
   };
   const generar = (clave: string, disco = new SistemaDeArchivosEnMemoria(INDICES)) => {
-    new GenerarModulo(new EscritorDeArchivos(disco, '/p')).ejecutar({
-      clave,
-      nombre: "Ganado d'Ana",
-      fecha: '2026-09-27',
-    });
+    const escritor = new EscritorDeArchivos(disco, '/p');
+    new GenerarModulo(escritor).ejecutar({ clave, nombre: "Ganado d'Ana", fecha: '2026-09-27' });
+    escritor.confirmar();
     return disco;
   };
 

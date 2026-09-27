@@ -1,0 +1,19 @@
+import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { api{{Plural}}, type {{Entidad}} } from '../../servicios/{{pluralClave}}.api';
+
+/** Eliminar {{unSingular}}, después de confirmarlo: no se puede deshacer. */
+export function usarEliminacionDe{{Entidad}}(alEliminar: () => Promise<void>) {
+  const avisos = usarAvisos();
+  const { enviar } = usarFormulario();
+
+  async function eliminar({{entidad}}: {{Entidad}}): Promise<void> {
+    const mensaje = `¿Eliminar {{elSingular}} "${{{entidad}}.{{campoMostrar}}}"? Esta acción no se puede deshacer.`;
+    const confirmado = await avisos.confirmar({ titulo: 'Eliminar {{singular}}', mensaje, textoConfirmar: 'Eliminar', peligroso: true });
+    if (!confirmado || !(await enviar(() => api{{Plural}}.eliminar({{entidad}}.id)))) return;
+    avisos.exito('{{Singular}} eliminad{{o}}.');
+    await alEliminar();
+  }
+
+  return { eliminar };
+}

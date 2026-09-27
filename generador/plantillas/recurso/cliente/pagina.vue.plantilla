@@ -1,0 +1,43 @@
+<script setup lang="ts">
+import { Inbox, Plus } from 'lucide-vue-next';
+import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
+import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
+import VentanaDe{{Entidad}} from '../componentes/{{pluralClave}}/VentanaDe{{Entidad}}.vue';
+import { detallesDe{{Entidad}} } from '../composables/{{pluralClave}}/detalles-de-{{entidadClave}}';
+{{importacionEliminarEnPagina}}import { usar{{Plural}} } from '../composables/{{pluralClave}}/usar-{{pluralClave}}';
+import { VENTANAS_{{MODULO}} } from '../textos';
+
+const ventana = VENTANAS_{{MODULO}}.{{plural}};
+const { registros, cargando, {{cargarEnPagina}}edicion, enviando, errores, abrir, guardar } = usar{{Plural}}();
+{{eliminarEnPagina}}</script>
+
+<template>
+  <div>
+    <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion">
+      <BotonBase v-permiso="'{{permisoGestionar}}'" :icono="Plus" @click="abrir()">{{ ventana.nuevo }}</BotonBase>
+    </EncabezadoPagina>
+
+    <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
+    <EstadoVacio v-else-if="!registros.length" :icono="Inbox" titulo="Todavía no hay {{pluralTexto}}" />
+    <ul v-else class="grid gap-3 md:grid-cols-2">
+      <li v-for="registro in registros" :key="registro.id">
+        <TarjetaDeRegistro
+          :titulo="String(registro.{{campoMostrar}})"
+          :detalles="detallesDe{{Entidad}}(registro)"
+          permiso="{{permisoGestionar}}"
+{{atributosDeLaTarjeta}}          @editar="abrir(registro)"
+        />
+      </li>
+    </ul>
+
+    <VentanaDe{{Entidad}}
+      v-model="edicion"
+      :errores="errores"
+      :enviando="enviando"
+      @cerrar="edicion.abierta = false"
+      @guardar="guardar"
+    />
+  </div>
+</template>

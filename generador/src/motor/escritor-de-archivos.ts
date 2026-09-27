@@ -20,13 +20,20 @@ export class MarcaNoEncontrada extends ErrorDelGenerador {
 
 const lineaDeMarca = (marca: string) => new RegExp(`^([ \\t]*)// generador: ${marca}[ \\t]*$`, 'm');
 
+/** Sin espacios ni comas finales: así se reconoce el código aunque Prettier lo haya reacomodado. */
+const sinFormato = (codigo: string) => codigo.replace(/\s+/g, '').replace(/,(?=[}\])])/g, '');
+
 /**
  * Escribe el código generado sin pisar nada: un archivo que ya existe se deja
  * como está, y lo que se agrega a un archivo existente va justo antes de su
  * marca `// generador: <marca>`, con la misma sangría. Anota cada cambio.
+ *
+ * Es todo o nada: los cambios se guardan en memoria y solo llegan al disco con
+ * `confirmar()`. Si algo falla antes, no queda ningún archivo a medias.
  */
 export class EscritorDeArchivos {
   private readonly cambios: Cambio[] = [];
+  private readonly pendientes = new Map<string, string>();
 
   constructor(
     private readonly archivos: SistemaDeArchivos,
@@ -34,31 +41,39 @@ export class EscritorDeArchivos {
   ) {}
 
   crear(ruta: string, contenido: string): void {
-    const completa = join(this.raiz, ruta);
-    if (this.archivos.existe(completa)) return this.anotar(ruta, 'omitido');
-    this.archivos.escribir(completa, contenido);
+    if (this.existe(ruta)) return this.anotar(ruta, 'omitido');
+    this.pendientes.set(join(this.raiz, ruta), contenido);
     this.anotar(ruta, 'creado');
   }
 
   /** Si esas líneas ya están en el archivo, no las repite: se puede volver a generar. */
   insertarEnMarca(ruta: string, marca: string, lineas: string[]): void {
-    const completa = join(this.raiz, ruta);
-    const contenido = this.archivos.leer(completa);
+    const contenido = this.leer(ruta);
     const encontrada = lineaDeMarca(marca).exec(contenido);
     if (!encontrada) throw new MarcaNoEncontrada(ruta, marca);
-    if (lineas.every((linea) => contenido.includes(linea.trim()))) return this.anotar(ruta, 'ya-estaba');
+    if (sinFormato(contenido).includes(sinFormato(lineas.join('\n')))) return this.anotar(ruta, 'ya-estaba');
     const sangria = encontrada[1] ?? '';
     const nuevas = lineas.map((linea) => `${sangria}${linea}\n`).join('');
-    this.archivos.escribir(completa, contenido.slice(0, encontrada.index) + nuevas + contenido.slice(encontrada.index));
+    const antes = contenido.slice(0, encontrada.index);
+    this.pendientes.set(join(this.raiz, ruta), antes + nuevas + contenido.slice(encontrada.index));
     this.anotar(ruta, 'insertado');
   }
 
+  /** Cuenta lo que está por escribirse, como si ya estuviera en el disco. */
   existe(ruta: string): boolean {
-    return this.archivos.existe(join(this.raiz, ruta));
+    const completa = join(this.raiz, ruta);
+    return this.pendientes.has(completa) || this.archivos.existe(completa);
   }
 
   leer(ruta: string): string {
-    return this.archivos.leer(join(this.raiz, ruta));
+    const completa = join(this.raiz, ruta);
+    return this.pendientes.get(completa) ?? this.archivos.leer(completa);
+  }
+
+  /** Lleva al disco todo lo pendiente. */
+  confirmar(): void {
+    for (const [ruta, contenido] of this.pendientes) this.archivos.escribir(ruta, contenido);
+    this.pendientes.clear();
   }
 
   get resumen(): readonly Cambio[] {

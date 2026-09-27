@@ -1,0 +1,38 @@
+import { ref } from 'vue';
+import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarCarga } from '@/modulos/core/composables/usar-carga';
+import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { api{{Plural}}, type {{Entidad}} } from '../../servicios/{{pluralClave}}.api';
+import { datosDe{{Entidad}}, edicionDe, type EdicionDe{{Entidad}} } from './edicion-de-{{entidadClave}}';
+
+const guardar{{Entidad}} = (edicion: EdicionDe{{Entidad}}) =>
+  edicion.id
+    ? api{{Plural}}.actualizar(edicion.id, datosDe{{Entidad}}(edicion))
+    : api{{Plural}}.crear(datosDe{{Entidad}}(edicion));
+
+/** {{LosPlural}} de {{laEmpresaOCuenta}}: listarlos, registrarlos y editarlos en una ventana. */
+export function usar{{Plural}}() {
+  const avisos = usarAvisos();
+  const { enviando, errores, enviar } = usarFormulario();
+  const { datos: registros, cargando, cargar } = usarCarga(
+    () => api{{Plural}}.listar(),
+    [] as {{Entidad}}[],
+    'No se pudieron cargar {{losPlural}}.',
+  );
+  const edicion = ref<EdicionDe{{Entidad}}>({ ...edicionDe(), abierta: false });
+
+  function abrir({{entidad}}?: {{Entidad}}): void {
+    edicion.value = edicionDe({{entidad}});
+    errores.value = {};
+  }
+
+  async function guardar(): Promise<void> {
+    const esNuevo = edicion.value.id === null;
+    if (!(await enviar(() => guardar{{Entidad}}(edicion.value)))) return;
+    avisos.exito(esNuevo ? '{{Singular}} registrad{{o}}.' : '{{Singular}} actualizad{{o}}.');
+    edicion.value.abierta = false;
+    await cargar();
+  }
+
+  return { registros, cargando, cargar, edicion, enviando, errores, abrir, guardar };
+}

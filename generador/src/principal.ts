@@ -81,6 +81,7 @@ try {
   const escritor = new EscritorDeArchivos(new SistemaDeArchivosDeDisco(), RAIZ);
   const despues = await ejecutar(leerOrden(process.argv.slice(2)), escritor);
   if (despues) {
+    escritor.confirmar();
     darFormato(escritor.tocados.map((ruta) => relative(RAIZ, ruta)));
     informar(escritor);
     despues();

@@ -12,6 +12,10 @@ describe('fechas', () => {
     expect(guatemala.fecha('2026-09-08T03:00:00Z')).toBe('07/09/2026');
   });
 
+  it('una fecha sin hora es ese día, sin correrla por la zona horaria', () => {
+    expect(guatemala.fecha('2026-01-15')).toBe('15/01/2026');
+  });
+
   it('respetan el formato elegido', () => {
     const iso = new FormatoRegional({ ...AJUSTES_REGIONALES_PREDETERMINADOS, formatoFecha: 'aaaa-mm-dd' });
 

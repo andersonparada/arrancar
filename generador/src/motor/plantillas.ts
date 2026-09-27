@@ -15,10 +15,14 @@ export class HuecoSinValor extends ErrorDelGenerador {
   }
 }
 
+/** Algo que parece un hueco pero no lo es (`{{hacía}}`); las interpolaciones de Vue llevan espacios: `{{ valor }}`. */
+const HUECO_MAL_ESCRITO = /\{\{(?!\s)[^}]*\}\}/g;
+
 /** Cambia cada `{{hueco}}` por su valor; si falta alguno, no deja la plantilla a medias. */
 export function rellenar(plantilla: string, valores: Record<string, string>): string {
   const faltantes = [...plantilla.matchAll(HUECO)].map(([, hueco]) => hueco!).filter((hueco) => !(hueco in valores));
-  if (faltantes.length > 0) throw new HuecoSinValor([...new Set(faltantes)]);
+  const malEscritos = [...plantilla.replace(HUECO, '').matchAll(HUECO_MAL_ESCRITO)].map(([hueco]) => hueco);
+  if (faltantes.length + malEscritos.length > 0) throw new HuecoSinValor([...new Set([...faltantes, ...malEscritos])]);
   return plantilla.replace(HUECO, (_, hueco: string) => valores[hueco]!);
 }
 
@@ -32,6 +36,21 @@ const ENCABEZADO_DE_FRAGMENTO = /^### (\w+)\n/gm;
  * va hasta el siguiente. Sirve para lo que cambia dentro de varios archivos (por
  * ejemplo, si el recurso se elimina o se inactiva) sin duplicar plantillas.
  */
+/**
+ * Los fragmentos de una variante (por ejemplo, la baja por inactivación), con
+ * todos los nombres de la variante completa: los que la variante no trae quedan vacíos.
+ */
+export function fragmentosDeVariante(
+  completa: string,
+  variante: string,
+  valores: Record<string, string>,
+): Record<string, string> {
+  const elegidos = separarFragmentos(variante);
+  return Object.fromEntries(
+    Object.keys(separarFragmentos(completa)).map((nombre) => [nombre, rellenar(elegidos[nombre] ?? '', valores)]),
+  );
+}
+
 export function separarFragmentos(texto: string): Record<string, string> {
   const encabezados = [...texto.matchAll(ENCABEZADO_DE_FRAGMENTO)];
   return Object.fromEntries(

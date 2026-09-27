@@ -6,20 +6,7 @@ import { definirRecurso, type EntradaDeRecurso } from '../definicion/definir-rec
 import { ErrorDelGenerador } from '../definicion/errores.js';
 import { EscritorDeArchivos } from '../motor/escritor-de-archivos.js';
 import { SistemaDeArchivosEnMemoria } from '../motor/sistema-de-archivos.js';
-
-const MODULO = '/p/servidor/src/modulos/ganado';
-const MODULO_TS = `import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
-// generador: importaciones
-export const moduloGanado = {
-  nombre: 'Ganado bovino',
-  permisos: [
-    // generador: permisos
-  ],
-  rutas: rutasDelModulo([
-    // generador: rutas
-  ]),
-};
-`;
+import { generarEnMemoria, MODULO_GENERADO, SERVIDOR } from '../pruebas/modulo-de-prueba.js';
 
 const animal: EntradaDeRecurso = {
   modulo: 'ganado',
@@ -36,11 +23,9 @@ const animal: EntradaDeRecurso = {
   },
 };
 
-async function generar(entrada: EntradaDeRecurso, ruta = 'ganado/animal') {
-  const disco = new SistemaDeArchivosEnMemoria({ [`${MODULO}/modulo.ts`]: MODULO_TS });
-  const escritor = new EscritorDeArchivos(disco, '/p');
-  await new GenerarRecurso(escritor, async () => definirRecurso(entrada)).ejecutar(ruta);
-  return { disco, leer: (archivo: string) => disco.leer(`${MODULO}/${archivo}`) };
+async function generar(entrada: EntradaDeRecurso, ruta?: string) {
+  const disco = await generarEnMemoria(entrada, ruta);
+  return { disco, leer: (archivo: string) => disco.leer(`${SERVIDOR}/${archivo}`) };
 }
 
 describe('generar un recurso en el servidor', () => {
@@ -49,11 +34,11 @@ describe('generar un recurso en el servidor', () => {
 
     expect([...disco.archivos.keys()]).toEqual(
       expect.arrayContaining([
-        `${MODULO}/dominio/animal.ts`,
-        `${MODULO}/aplicacion/casos-uso/animales/eliminar-animal.ts`,
-        `${MODULO}/infraestructura/persistencia/animales.tablas.ts`,
-        `${MODULO}/http/animales.rutas.ts`,
-        `${MODULO}/composicion/animales.ts`,
+        `${SERVIDOR}/dominio/animal.ts`,
+        `${SERVIDOR}/aplicacion/casos-uso/animales/eliminar-animal.ts`,
+        `${SERVIDOR}/infraestructura/persistencia/animales.tablas.ts`,
+        `${SERVIDOR}/http/animales.rutas.ts`,
+        `${SERVIDOR}/composicion/animales.ts`,
         '/p/servidor/src/pruebas-api/ganado-animales.api.prueba.ts',
       ]),
     );
@@ -88,20 +73,19 @@ describe('generar un recurso en el servidor', () => {
 
     expect(leer('dominio/animal.ts')).toContain('activo: boolean;');
     expect(leer('infraestructura/persistencia/animales.tablas.ts')).toContain('politicaPorCuenta()');
-    expect(disco.existe(`${MODULO}/aplicacion/casos-uso/animales/eliminar-animal.ts`)).toBe(false);
+    expect(disco.existe(`${SERVIDOR}/aplicacion/casos-uso/animales/eliminar-animal.ts`)).toBe(false);
     expect(leer('http/animales.rutas.ts')).not.toContain('app.delete');
   });
 
   it('si algo no se puede generar, no escribe nada', async () => {
     const conReferencia = { ...animal, campos: { ...animal.campos, potrero: referencia('Potrero') } };
-    const disco = new SistemaDeArchivosEnMemoria({ [`${MODULO}/modulo.ts`]: MODULO_TS });
+    const disco = new SistemaDeArchivosEnMemoria(MODULO_GENERADO);
     const escritor = new EscritorDeArchivos(disco, '/p');
 
     const generando = new GenerarRecurso(escritor, async () => definirRecurso(conReferencia)).ejecutar('ganado/animal');
 
     await expect(generando).rejects.toThrow(ErrorDelGenerador);
-    expect([...disco.archivos.keys()]).toEqual([`${MODULO}/modulo.ts`]);
-    expect(disco.leer(`${MODULO}/modulo.ts`)).toBe(MODULO_TS);
+    expect(Object.fromEntries(disco.archivos)).toEqual(MODULO_GENERADO);
   });
 
   it('exige que el módulo exista y que la definición sea suya', async () => {
@@ -122,8 +106,10 @@ describe('crear una definición', () => {
 
   it('deja un ejemplo para completar, con el plural de la primera palabra', () => {
     const disco = new SistemaDeArchivosEnMemoria();
+    const escritor = new EscritorDeArchivos(disco, '/p');
 
-    new CrearDefinicion(new EscritorDeArchivos(disco, '/p')).ejecutar('terceros/categoria-de-proveedor');
+    new CrearDefinicion(escritor).ejecutar('terceros/categoria-de-proveedor');
+    escritor.confirmar();
 
     const definicion = disco.leer('/p/generador/definiciones/terceros/categoria-de-proveedor.ts');
     expect(definicion).toContain("entidad: 'CategoriaDeProveedor',");

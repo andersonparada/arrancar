@@ -71,6 +71,10 @@ base de desarrollo debe estar levantada.
 - Los componentes no importan servicios (solo `import type`). Las ventanas de
   edición reciben el objeto con `v-model` (`defineModel`) y emiten `guardar` y
   `cerrar`. Para volver atrás, `EncabezadoPagina` acepta `volver`.
+- Piezas comunes para que todas las pantallas se vean igual: `TarjetaDeRegistro`
+  (tarjeta de una lista), `utilidades/edicion.ts` (formulario ↔ API) y los
+  formatos de `utilidades/formato.ts`. Un recurso nuevo se genera con
+  `npm run generar -- recurso` en vez de escribirse a mano.
 - Avisos y confirmaciones con `usarAvisos()` (`exito`, `error`, `confirmar`);
   `alert`/`confirm` del navegador están prohibidos por ESLint. Fechas y números se
   muestran solo con `utilidades/formato.ts`.

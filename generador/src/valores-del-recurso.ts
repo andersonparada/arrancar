@@ -11,6 +11,7 @@ const conMayuscula = (texto: string) => texto.charAt(0).toUpperCase() + texto.sl
 function valoresDeNombres({ entidad, plural, modulo }: DefinicionDeRecurso): Record<string, string> {
   return {
     Entidad: entidad.pascal,
+    ENTIDAD: entidad.constante,
     entidad: entidad.camel,
     entidadClave: entidad.clave,
     entidadSerpiente: entidad.serpiente,
@@ -19,6 +20,7 @@ function valoresDeNombres({ entidad, plural, modulo }: DefinicionDeRecurso): Rec
     pluralClave: plural.clave,
     pluralSerpiente: plural.serpiente,
     Modulo: modulo.pascal,
+    MODULO: modulo.constante,
     moduloClave: modulo.clave,
     moduloSerpiente: modulo.serpiente,
   };
@@ -27,9 +29,17 @@ function valoresDeNombres({ entidad, plural, modulo }: DefinicionDeRecurso): Rec
 /** Lo que lee el usuario, con artículos que concuerdan: "un animal", "la categoría". */
 function valoresDeTextos({ textos, genero, alcance }: DefinicionDeRecurso): Record<string, string> {
   const articulo = ARTICULOS[genero];
+  const o = genero === 'femenino' ? 'a' : 'o';
   return {
+    /** Terminación que concuerda: "registrad{{o}}", "Nuev{{o}}". */
+    o,
+    singular: textos.singular,
     Singular: conMayuscula(textos.singular),
+    tituloNuevo: `Nuev${o} ${textos.singular}`,
+    tituloEditar: `Editar ${textos.singular}`,
+    PluralTitulo: conMayuscula(textos.plural),
     unSingular: `${articulo.un} ${textos.singular}`,
+    elSingular: `${articulo.el} ${textos.singular}`,
     ElSingular: conMayuscula(`${articulo.el} ${textos.singular}`),
     delSingular: `${articulo.del} ${textos.singular}`,
     pluralTexto: textos.plural,
@@ -51,6 +61,7 @@ export function valoresDelRecurso(definicion: DefinicionDeRecurso, nombreModulo:
     ...valoresDeNombres(definicion),
     ...valoresDeTextos(definicion),
     nombreModulo,
+    icono: definicion.icono,
     campoMostrar: definicion.mostrar,
     etiquetaMostrar: mostrar.etiqueta.toLowerCase(),
     permisoVer: definicion.permisos.ver,

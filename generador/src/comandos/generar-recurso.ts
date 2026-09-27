@@ -1,6 +1,7 @@
 import type { DefinicionDeRecurso } from '../definicion/definir-recurso.js';
 import { ErrorDelGenerador } from '../definicion/errores.js';
 import type { EscritorDeArchivos } from '../motor/escritor-de-archivos.js';
+import { GenerarRecursoEnCliente } from '../cliente/generar-recurso-en-cliente.js';
 import { GenerarRecursoEnServidor } from '../servidor/generar-recurso-en-servidor.js';
 
 /** Trae la definición de `generador/definiciones/<modulo>/<entidad>.ts`. */
@@ -44,6 +45,7 @@ export class GenerarRecurso {
 
     const nombre = nombreDelModulo(this.escritor.leer(archivoDelModulo), modulo);
     new GenerarRecursoEnServidor(this.escritor).ejecutar(definicion, nombre);
+    new GenerarRecursoEnCliente(this.escritor).ejecutar(definicion, nombre);
     return definicion;
   }
 }

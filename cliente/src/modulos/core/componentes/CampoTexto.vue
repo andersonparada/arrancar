@@ -3,7 +3,7 @@ import { useId } from 'vue';
 
 defineProps<{
   etiqueta: string;
-  tipo?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'search';
+  tipo?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'search' | 'date';
   error?: string;
   ayuda?: string;
   requerido?: boolean;
@@ -13,6 +13,8 @@ defineProps<{
   /** Desactiva la mayúscula automática y el corrector del teclado (usuarios, códigos). */
   sinCorreccion?: boolean;
   soloLectura?: boolean;
+  /** Para números: `any` acepta decimales; sin él, el navegador solo acepta enteros. */
+  paso?: string;
 }>();
 
 const modelo = defineModel<string | number | null>();
@@ -39,6 +41,7 @@ const id = useId();
       :id="id"
       v-model="modelo"
       :type="tipo ?? 'text'"
+      :step="paso"
       :required="requerido"
       :placeholder="placeholder"
       :autocomplete="autocompletar"

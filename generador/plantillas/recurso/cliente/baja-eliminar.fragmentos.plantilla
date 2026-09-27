@@ -1,0 +1,14 @@
+### eliminarEnApi
+
+  eliminar(id: string) {
+    return this.http.eliminar(`${RUTA}/${id}`);
+  }
+### importacionEliminarEnPagina
+import { usarEliminacionDe{{Entidad}} } from '../composables/{{pluralClave}}/usar-eliminacion-de-{{entidadClave}}';
+### cargarEnPagina
+cargar,
+### eliminarEnPagina
+const { eliminar } = usarEliminacionDe{{Entidad}}(cargar);
+### atributosDeLaTarjeta
+          eliminable
+          @eliminar="eliminar(registro)"

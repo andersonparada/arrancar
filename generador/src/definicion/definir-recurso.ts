@@ -28,6 +28,8 @@ export interface EntradaDeRecurso {
   baja?: 'eliminar' | 'inactivar';
   /** El campo que nombra al registro en listas y títulos; por omisión, el primer texto requerido. */
   mostrar?: string;
+  /** Ícono de lucide-vue-next para su opción del menú; por omisión, `List`. */
+  icono?: string;
   campos: Record<string, Campo>;
 }
 
@@ -48,6 +50,7 @@ export interface DefinicionDeRecurso {
   pantalla: 'catalogo' | 'completa';
   baja: 'eliminar' | 'inactivar';
   mostrar: string;
+  icono: string;
   campos: CampoDefinido[];
   permisos: { ver: string; gestionar: string };
 }
@@ -127,6 +130,7 @@ function completar(entrada: EntradaDeRecurso): DefinicionDeRecurso {
     pantalla: entrada.pantalla,
     baja: entrada.baja ?? 'eliminar',
     mostrar: entrada.mostrar ?? campoQueNombra(entrada.campos)!,
+    icono: entrada.icono ?? 'List',
     campos: Object.entries(conActivo(entrada)).map(campoDefinido),
     permisos: { ver: `${modulo.clave}.${plural.clave}.ver`, gestionar: `${modulo.clave}.${plural.clave}.gestionar` },
   };

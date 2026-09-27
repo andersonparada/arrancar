@@ -647,6 +647,29 @@ entrega como un commit propio.
     advertencias y sus 18 pruebas (10 unitarias y 8 de API) pasan; volver a
     generar no repite nada. Los campos `referencia` quedan para el G4. 280 pruebas
     del servidor, 41 del cliente y 21 del generador.
+  - **G3 Recurso en el cliente, pantalla de catálogo (2026-09-27):** `generar
+    recurso` también escribe el cliente: servicio `Api<Plural>`, la edición como
+    lógica pura (`edicion-de-<entidad>.ts`, con su prueba de ida y vuelta: lo que
+    se abre se manda igual), los detalles de la tarjeta ya con formato, el
+    composable de la pantalla, el de eliminar (si se elimina), la ventana con un
+    control por campo y la página `ListaDe<Plural>`; agrega los textos, la ruta y
+    la opción del menú (ícono en la definición: `icono`). Los textos concuerdan
+    con el género ("Nueva vaca", "Vaca registrada"). Para que todas las listas se
+    vean igual, lo común vive en el core: `TarjetaDeRegistro` (título, detalles,
+    insignia de inactivo, editar y eliminar), `utilidades/edicion.ts`
+    (`textoDeEdicion`, `textoONulo`, `numeroONulo`, `numeroRequerido`,
+    `opcionesDeLista`) y en `formato.ts` `formatearTexto`, `formatearSiNo` y
+    `formatearOpcion`; `CampoTexto` suma el tipo `date` y `paso` (decimales). Servidor
+    y cliente comparten el proceso con un Template Method
+    (`generacion-de-recurso.ts`). El escritor ahora es todo o nada de verdad:
+    guarda en memoria y solo escribe con `confirmar()`, y reconoce lo que ya
+    insertó aunque Prettier lo haya reacomodado; `rellenar` también falla con
+    huecos mal escritos. Defectos corregidos en el camino: una fecha sin hora se
+    mostraba el día anterior (la zona horaria la corría) y los campos de número no
+    aceptaban decimales. Probado de punta a punta en el navegador con dos recursos
+    generados: registrar, ver el error de un NIT inválido en su campo, editar,
+    eliminar con confirmación e inactivar con su insignia. 280 pruebas del
+    servidor, 45 del cliente y 27 del generador.
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 

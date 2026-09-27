@@ -16,6 +16,7 @@ export const AJUSTES_REGIONALES_PREDETERMINADOS: AjustesRegionales = {
 };
 
 const SIN_VALOR = '—';
+const FECHA_SIN_HORA = /^(\d{4})-(\d{2})-(\d{2})$/;
 const IDIOMA = 'es-GT';
 
 type Instante = string | Date | null | undefined;
@@ -27,7 +28,7 @@ export class FormatoRegional {
 
   fecha(valor: Instante): string {
     if (!valor) return SIN_VALOR;
-    const { dia, mes, anio } = this.partesDeLaFecha(new Date(valor));
+    const { dia, mes, anio } = this.partesDeLaFecha(valor);
     const porFormato: Record<FormatoDeFecha, string> = {
       'dd/mm/aaaa': `${dia}/${mes}/${anio}`,
       'aaaa-mm-dd': `${anio}-${mes}-${dia}`,
@@ -64,14 +65,20 @@ export class FormatoRegional {
     return unidad ? `${numero} ${unidad}` : numero;
   }
 
-  /** El día del calendario en la zona horaria de la empresa, no en la del navegador. */
-  private partesDeLaFecha(fecha: Date): { dia: string; mes: string; anio: string } {
+  /**
+   * El día del calendario en la zona horaria de la empresa, no en la del navegador.
+   * Una fecha sin hora ("2026-01-15", la que se elige en un calendario) es ese día
+   * tal cual: pasarla por la zona horaria la correría al día anterior.
+   */
+  private partesDeLaFecha(valor: string | Date): { dia: string; mes: string; anio: string } {
+    const sinHora = typeof valor === 'string' ? FECHA_SIN_HORA.exec(valor) : null;
+    if (sinHora) return { anio: sinHora[1]!, mes: sinHora[2]!, dia: sinHora[3]! };
     const partes = new Intl.DateTimeFormat('en-US', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       timeZone: this.ajustes.zonaHoraria,
-    }).formatToParts(fecha);
+    }).formatToParts(new Date(valor));
     const parte = (tipo: Intl.DateTimeFormatPartTypes) => partes.find((p) => p.type === tipo)?.value ?? '';
     return { dia: parte('day'), mes: parte('month'), anio: parte('year') };
   }

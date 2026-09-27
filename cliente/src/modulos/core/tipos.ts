@@ -44,3 +44,9 @@ declare module 'vue-router' {
     titulo?: string;
   }
 }
+
+/** Un dato de un registro tal como se muestra en su tarjeta: "Peso: 12.50". */
+export interface DetalleDeRegistro {
+  etiqueta: string;
+  valor: string;
+}

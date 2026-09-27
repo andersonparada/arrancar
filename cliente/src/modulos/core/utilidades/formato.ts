@@ -38,3 +38,15 @@ export function formatearTelefono(telefono: string | null | undefined): string {
   const esLocal = telefono.length === DIGITOS_DE_TELEFONO_LOCAL && /^\d+$/.test(telefono);
   return esLocal ? `${telefono.slice(0, 4)}-${telefono.slice(4)}` : telefono;
 }
+
+const SIN_VALOR = '—';
+
+/** Un texto o número tal cual; si falta, una raya. */
+export const formatearTexto = (valor: string | number | null | undefined) =>
+  valor === null || valor === undefined || valor === '' ? SIN_VALOR : String(valor);
+
+export const formatearSiNo = (valor: boolean) => (valor ? 'Sí' : 'No');
+
+/** El texto de una opción de lista a partir de su valor guardado. */
+export const formatearOpcion = (opciones: Record<string, string>, valor: string | null) =>
+  valor === null ? SIN_VALOR : (opciones[valor] ?? valor);

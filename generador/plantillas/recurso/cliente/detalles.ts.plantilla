@@ -1,0 +1,7 @@
+{{importacionesDeDetalles}}import type { DetalleDeRegistro } from '@/modulos/core/tipos';
+import type { {{Entidad}} } from '../../servicios/{{pluralClave}}.api';
+
+/** Lo que muestra la tarjeta {{delSingular}} además de {{etiquetaMostrar}}, ya con formato. */
+export const detallesDe{{Entidad}} = ({{parametroDeDetalles}}: {{Entidad}}): DetalleDeRegistro[] => [
+{{detalles}}
+];
