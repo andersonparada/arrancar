@@ -1,6 +1,6 @@
 import { boolean, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
-import { cuentas } from '../../../core/esquemas/cuentas.esquema.js';
+import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { esquemaTerceros, terceros } from './terceros.tablas.js';
 
 /** Papel de cliente de un tercero; cada tercero tiene a lo sumo uno. */

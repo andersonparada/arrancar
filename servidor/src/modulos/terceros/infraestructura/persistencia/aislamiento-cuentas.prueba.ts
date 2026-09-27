@@ -11,7 +11,7 @@ import { configuracion } from '../../../../configuracion.js';
 import { ejecutarEnEmpresa } from '../../../core/base-datos/contexto-empresa.js';
 import { bd, grupoConexiones } from '../../../core/base-datos/conexion.js';
 import { migrarModulos } from '../../../core/base-datos/migrador.js';
-import { cuentas } from '../../../core/esquemas/cuentas.esquema.js';
+import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas } from '../../../core/esquemas/empresas.esquema.js';
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { definicionesModulos } from '../../../indice.js';

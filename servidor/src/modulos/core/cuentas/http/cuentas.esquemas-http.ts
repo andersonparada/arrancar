@@ -3,9 +3,9 @@ import {
   correoOpcional,
   nitOpcional,
   nombresYApellidos,
-  nombreUsuario,
   textoObligatorio,
-} from './comunes.validaciones.js';
+} from '../../compartido/http/esquemas-comunes.js';
+import { nombreUsuario } from '../../identidad/http/usuarios.esquemas-http.js';
 
 export const esquemaAltaCuenta = z.object({
   nombreCuenta: textoObligatorio(120),

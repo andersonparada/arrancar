@@ -4,7 +4,7 @@ import {
   nitOpcional,
   textoObligatorio,
   textoOpcional,
-} from '../../core/validaciones/comunes.validaciones.js';
+} from '../../core/compartido/http/esquemas-comunes.js';
 
 export const esquemaEmpresa = z.object({
   nombre: textoObligatorio(120),

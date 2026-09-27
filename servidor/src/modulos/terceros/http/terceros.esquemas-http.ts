@@ -5,7 +5,7 @@ import {
   nitOpcional,
   textoObligatorio,
   textoOpcional,
-} from '../../core/validaciones/comunes.validaciones.js';
+} from '../../core/compartido/http/esquemas-comunes.js';
 import { CLASES_DE_CLIENTE } from '../dominio/papeles.js';
 
 const codigoGeografico = z

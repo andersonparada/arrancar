@@ -2,7 +2,7 @@ import { and, asc, eq } from 'drizzle-orm';
 import { roles } from '../../../autorizacion/infraestructura/persistencia/roles.tablas.js';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
 import type { EmpresaSesion } from '../../../compartido/aplicacion/contexto-de-sesion.js';
-import { cuentaModulos, cuentas } from '../../../esquemas/cuentas.esquema.js';
+import { cuentaModulos, cuentas } from '../../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas, empresaUsuarios } from '../../../esquemas/empresas.esquema.js';
 import type { AccesoDelUsuario, EmpresasDeLaSesion } from '../../aplicacion/puertos/empresas-de-la-sesion.js';
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ErrorReglaNegocio } from '../errores/errores.js';
+import { ModuloEnUso } from './errores.js';
 import type { DefinicionModulo } from './definicion-modulo.js';
 import { RegistroModulos } from './registro-modulos.js';
 
@@ -34,7 +34,7 @@ describe('RegistroModulos', () => {
   it('no permite desactivar un módulo del que depende otro activo', () => {
     const registro = crearRegistro();
     expect(() => registro.validarDesactivacion('bancos', new Set(['core', 'bancos', 'caja-chica']))).toThrow(
-      ErrorReglaNegocio,
+      ModuloEnUso,
     );
     expect(() => registro.validarDesactivacion('bancos', new Set(['core', 'bancos']))).not.toThrow();
   });

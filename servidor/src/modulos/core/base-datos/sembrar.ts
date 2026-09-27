@@ -10,7 +10,7 @@ import { RegistroModulos } from '../modulos-sistema/registro-modulos.js';
 import { cifradorDeContrasenas, usuariosSinTransaccion } from '../identidad/contexto.js';
 import { NombreDeUsuario } from '../identidad/dominio/nombre-de-usuario.js';
 import { Usuario } from '../identidad/dominio/usuario.js';
-import { altaCuentaServicio } from '../servicios/alta-cuenta.servicio.js';
+import { darDeAltaCuenta } from '../cuentas/contexto.js';
 import { grupoConexiones } from './conexion.js';
 
 const USUARIO_DEMO = 'demo';
@@ -43,7 +43,7 @@ async function sembrarDemo(): Promise<void> {
     console.log('La cuenta demo ya existe.');
     return;
   }
-  await altaCuentaServicio.darDeAlta({
+  await darDeAltaCuenta.ejecutar({
     nombreCuenta: 'Familia Demo',
     empresa: { nombre: 'Rancho El Arrancar', nit: null },
     propietario: {

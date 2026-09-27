@@ -1,7 +1,7 @@
 import { boolean, char, index, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { esquemaCore } from './core.esquema.js';
 import { idPrimario, marcasDeTiempo } from '../base-datos/columnas.js';
-import { cuentas } from './cuentas.esquema.js';
+import { cuentas } from '../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { monedas } from './monedas.esquema.js';
 import { usuarios } from '../identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { roles } from '../autorizacion/infraestructura/persistencia/roles.tablas.js';

@@ -1,6 +1,6 @@
 import { index, text, uuid } from 'drizzle-orm/pg-core';
 import { idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
-import { cuentas } from '../../../core/esquemas/cuentas.esquema.js';
+import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { esquemaTerceros, terceros } from './terceros.tablas.js';
 
 /** Persona de contacto de un tercero (normalmente jurídico). */

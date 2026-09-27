@@ -6,7 +6,7 @@ import { definicionesModulos } from '../../../indice.js';
 import { bd, grupoConexiones } from '../../base-datos/conexion.js';
 import { migrarModulos } from '../../base-datos/migrador.js';
 import { accesosDatos } from '../../autorizacion/infraestructura/persistencia/accesos-datos.tablas.js';
-import { cuentas } from '../../esquemas/cuentas.esquema.js';
+import { cuentas } from '../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas } from '../../esquemas/empresas.esquema.js';
 import { usuarios } from '../../identidad/infraestructura/persistencia/usuarios.tablas.js';
 import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';

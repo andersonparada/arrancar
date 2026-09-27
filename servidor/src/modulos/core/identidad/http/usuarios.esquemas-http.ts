@@ -1,10 +1,13 @@
 import { z } from 'zod';
-import {
-  correoOpcional,
-  nombresYApellidos,
-  nombreUsuario,
-  textoObligatorio,
-} from '../../validaciones/comunes.validaciones.js';
+import { correoOpcional, nombresYApellidos, textoObligatorio } from '../../compartido/http/esquemas-comunes.js';
+import { PATRON_USUARIO } from '../dominio/nombre-de-usuario.js';
+
+/** Nombre de usuario escrito a mano: solo letras, de 3 a 30, en minúsculas. */
+export const nombreUsuario = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(PATRON_USUARIO, 'Use de 3 a 30 letras, sin números, espacios ni tildes.');
 
 const esquemaAcceso = z.object({
   empresaId: z.uuid(),

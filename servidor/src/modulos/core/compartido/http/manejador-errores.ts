@@ -1,6 +1,5 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { hasZodFastifySchemaValidationErrors, isResponseSerializationError } from 'fastify-type-provider-zod';
-import { ErrorAplicacion } from '../../errores/errores.js';
 import { ErrorEsperado } from '../dominio/errores.js';
 import { estadoHttpDe } from './estado-http-de-error.js';
 
@@ -33,12 +32,6 @@ function traducirErrorEsperado(error: ErrorEsperado): RespuestaDeError {
   return responderCon(estadoHttpDe(error), { codigo: error.codigo, mensaje: error.message, detalles: error.detalles });
 }
 
-/** Errores del código anterior a la arquitectura por capas; se retira en la fase 7. */
-const traducirErrorDeAplicacionAnterior: Traductor = (error) =>
-  error instanceof ErrorAplicacion
-    ? responderCon(error.codigoHttp, { codigo: error.codigo, mensaje: error.message, detalles: error.detalles })
-    : null;
-
 const traducirValidacionDeEntrada: Traductor = (error) => {
   if (!hasZodFastifySchemaValidationErrors(error)) return null;
   const campos = error.validation.map((problema) => ({
@@ -67,12 +60,7 @@ export function crearManejadorDeErrores(interpretarErrorExterno: InterpretadorDe
     const esperado = error instanceof ErrorEsperado ? error : interpretarErrorExterno(error);
     return esperado ? traducirErrorEsperado(esperado) : null;
   };
-  const traductores = [
-    traducirErrorEsperadoOExterno,
-    traducirErrorDeAplicacionAnterior,
-    traducirValidacionDeEntrada,
-    traducirErrorDeFastify,
-  ];
+  const traductores = [traducirErrorEsperadoOExterno, traducirValidacionDeEntrada, traducirErrorDeFastify];
 
   function traducir(error: FastifyError, solicitud: FastifyRequest): RespuestaDeError {
     if (isResponseSerializationError(error)) {

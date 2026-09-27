@@ -524,6 +524,24 @@ entrega como un commit propio.
     (`usarValidadorDeSesion`), así el núcleo no depende de identidad. Nueva familia
     de error `NoAutenticado` (401, mismo código `no_autenticado`). 265 pruebas
     (2 unitarias nuevas); advertencias: 29.
+  - **Cuentas (2026-09-27):** `core/cuentas/` con la entidad `Cuenta`, casos de uso
+    del panel de soporte (listar y cambiar cuentas; listar, activar y desactivar
+    módulos) y `DarDeAltaCuenta` (Facade: cuenta, primera empresa, rol Propietario,
+    usuario dueño y módulos). El alta no cabe en la unidad de trabajo (exige una
+    empresa que aún no existe): usa el puerto `TransaccionDeAlta`, que entrega las
+    piezas de cuentas, autorización e identidad atadas a una misma transacción. Las
+    reglas de módulos siguen en el registro, ahora con errores de la familia nueva
+    (`ModuloDesconocido`, `FaltanDependenciasDelModulo`, `ModuloEsencial`,
+    `ModuloEnUso`). La respuesta del alta solo lleva id y nombre de la cuenta y la
+    empresa, y el listado de cuentas ya no trae `actualizadoEn`. `esquemas-comunes`
+    pasa a `compartido/http` y el esquema del nombre de usuario, a identidad.
+- **Fase 5: hecha (2026-09-27).** Se borraron las carpetas viejas del core
+  (`servicios/`, `repositorios/`, `controladores/`, `rutas/`, `validaciones/`,
+  `errores/`) y el traductor de errores anterior. En `core/` quedan los contextos,
+  `compartido/`, y la infraestructura común que aún no se muda (`base-datos/`,
+  `eventos/`, `modulos-sistema/`, `esquemas/` con las tablas de empresas y monedas).
+  265 pruebas; advertencias: 24. En el servidor solo quedan en `aplicacion.ts` y
+  en `registro-modulos.ts` (fase 7); las demás son del cliente (fase 6).
 
 ### Mejoras pendientes (acordadas, sin fecha)
 

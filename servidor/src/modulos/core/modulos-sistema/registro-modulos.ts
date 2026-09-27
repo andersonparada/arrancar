@@ -1,4 +1,4 @@
-import { ErrorReglaNegocio } from '../errores/errores.js';
+import { FaltanDependenciasDelModulo, ModuloDesconocido, ModuloEnUso, ModuloEsencial } from './errores.js';
 import type { DefinicionConfiguracion, DefinicionModulo, DefinicionPermiso } from './definicion-modulo.js';
 
 /**
@@ -76,29 +76,31 @@ export class RegistroModulos {
 
   /**
    * Comprueba que un módulo se pueda activar con los que ya están activos.
-   * @throws ErrorReglaNegocio si el módulo no existe o le falta alguna dependencia.
+   * @throws ModuloDesconocido o FaltanDependenciasDelModulo.
    */
   validarActivacion(clave: string, activos: ReadonlySet<string>): void {
     const modulo = this.obtenerObligatorio(clave);
     const faltantes = (modulo.dependeDe ?? []).filter((d) => !activos.has(d));
     if (faltantes.length > 0) {
       const nombres = faltantes.map((d) => this.modulos.get(d)?.nombre ?? d).join(', ');
-      throw new ErrorReglaNegocio(`${modulo.nombre} depende de: ${nombres}. Actívelos primero.`, { faltantes });
+      throw new FaltanDependenciasDelModulo(`${modulo.nombre} depende de: ${nombres}. Actívelos primero.`, {
+        faltantes,
+      });
     }
   }
 
   /**
    * Comprueba que un módulo se pueda desactivar sin dejar huérfano a otro activo.
-   * @throws ErrorReglaNegocio si es esencial o si otro módulo activo depende de él.
+   * @throws ModuloEsencial o ModuloEnUso.
    */
   validarDesactivacion(clave: string, activos: ReadonlySet<string>): void {
     const modulo = this.obtenerObligatorio(clave);
-    if (modulo.esencial) throw new ErrorReglaNegocio(`${modulo.nombre} es esencial y no se puede desactivar.`);
+    if (modulo.esencial) throw new ModuloEsencial(modulo.nombre);
 
     const dependientes = this.listar().filter((m) => activos.has(m.clave) && m.dependeDe?.includes(clave));
     if (dependientes.length > 0) {
       const nombres = dependientes.map((m) => m.nombre).join(', ');
-      throw new ErrorReglaNegocio(`No se puede desactivar ${modulo.nombre}: lo usan ${nombres}.`, {
+      throw new ModuloEnUso(`No se puede desactivar ${modulo.nombre}: lo usan ${nombres}.`, {
         dependientes: dependientes.map((m) => m.clave),
       });
     }
@@ -113,7 +115,7 @@ export class RegistroModulos {
 
   private obtenerObligatorio(clave: string): DefinicionModulo {
     const modulo = this.modulos.get(clave);
-    if (!modulo) throw new ErrorReglaNegocio(`El módulo "${clave}" no existe.`);
+    if (!modulo) throw new ModuloDesconocido(clave);
     return modulo;
   }
 

@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { boolean, char, foreignKey, index, pgSchema, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
 import { archivos } from '../../../core/archivos/infraestructura/persistencia/archivos.tablas.js';
-import { cuentas } from '../../../core/esquemas/cuentas.esquema.js';
+import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { municipios } from '../../../core/geografia/infraestructura/persistencia/geografia.tablas.js';
 
 /** Esquema de PostgreSQL del módulo de terceros. */
