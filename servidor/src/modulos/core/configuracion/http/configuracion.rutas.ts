@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { proteger } from '../../http/guardias.js';
+import { proteger } from '../../compartido/http/guardias.js';
 import type { ConfiguracionControlador } from './configuracion.controlador.js';
 import {
   esquemaConsultaRestablecer,

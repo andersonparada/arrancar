@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../compartido/http/operador-de-la-solicitud.js';
-import { contextoDe } from '../../http/contexto-solicitud.js';
+import { contextoDe } from '../../compartido/http/contexto-de-la-solicitud.js';
 import type { ActualizarRol } from '../aplicacion/casos-uso/actualizar-rol.js';
 import type { CrearRol } from '../aplicacion/casos-uso/crear-rol.js';
 import type { EliminarRol } from '../aplicacion/casos-uso/eliminar-rol.js';

@@ -513,6 +513,17 @@ entrega como un commit propio.
     migrar, usan las mismas piezas. Los accesos se validan dentro de la misma
     transacción que los guarda, y el correo se guarda en minúsculas (`Correo`). Los
     errores tienen códigos propios. 263 pruebas (7 unitarias nuevas); advertencias: 29.
+  - **Identidad, parte 2: sesiones y guardias (2026-09-27):** casos de uso
+    `IniciarSesion`, `CerrarSesion`, `ValidarSesion`, `CambiarEmpresaActiva`,
+    `ObtenerResumenDeSesion` y `LimpiarSesionesVencidas`; `ResolutorDeAcceso` calcula
+    rol, módulos y permisos efectivos en una empresa; `VigenciaDeSesion` (dominio)
+    decide vencimiento y renovación. Lo que la sesión necesita de autorización,
+    configuración y bitácora entra por puertos (`contextos-vecinos.ts`). Las guardias,
+    el contexto de la petición y la cookie pasan a `compartido/http`; la guardia de
+    autenticación usa el puerto `ValidadorDeSesion`, que identidad entrega al armarse
+    (`usarValidadorDeSesion`), así el núcleo no depende de identidad. Nueva familia
+    de error `NoAutenticado` (401, mismo código `no_autenticado`). 265 pruebas
+    (2 unitarias nuevas); advertencias: 29.
 
 ### Mejoras pendientes (acordadas, sin fecha)
 

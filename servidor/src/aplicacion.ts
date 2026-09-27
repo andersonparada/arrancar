@@ -16,7 +16,7 @@ import {
 } from 'fastify-type-provider-zod';
 import { configuracion, esProduccion, esPrueba } from './configuracion.js';
 import { archivoDeInstalacion } from './modulos/core/configuracion/infraestructura/archivo-de-instalacion.js';
-import { ErrorSinPermiso } from './modulos/core/errores/errores.js';
+import { AccesoDenegado } from './modulos/core/compartido/aplicacion/errores.js';
 import { interpretarErrorDePostgres } from './modulos/core/compartido/infraestructura/errores-de-postgres.js';
 import { crearManejadorDeErrores } from './modulos/core/compartido/http/manejador-errores.js';
 import { establecerRegistroModulos } from './modulos/core/modulos-sistema/registro-global.js';
@@ -35,7 +35,7 @@ function verificarOrigen(app: FastifyInstance): void {
   app.addHook('onRequest', async (solicitud) => {
     if (METODOS_SEGUROS.has(solicitud.method)) return;
     const origen = solicitud.headers.origin;
-    if (origen && origen !== origenPermitido) throw new ErrorSinPermiso('Origen no permitido.');
+    if (origen && origen !== origenPermitido) throw new AccesoDenegado('Origen no permitido.');
   });
 }
 

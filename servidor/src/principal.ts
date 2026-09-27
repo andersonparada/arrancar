@@ -1,14 +1,14 @@
 import { construirAplicacion } from './aplicacion.js';
 import { configuracion } from './configuracion.js';
 import { grupoConexiones } from './modulos/core/base-datos/conexion.js';
-import { sesionesRepositorio } from './modulos/core/repositorios/sesiones.repositorio.js';
+import { limpiarSesionesVencidas } from './modulos/core/identidad/contexto.js';
 
 const UNA_HORA = 60 * 60 * 1000;
 
 const app = await construirAplicacion();
 
 const limpiezaSesiones = setInterval(() => {
-  sesionesRepositorio.eliminarVencidas().catch((error: unknown) => app.log.error(error, 'Limpieza de sesiones'));
+  limpiarSesionesVencidas.ejecutar().catch((error: unknown) => app.log.error(error, 'Limpieza de sesiones'));
 }, UNA_HORA);
 
 async function detener(senal: string): Promise<void> {

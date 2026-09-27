@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { proteger } from '../../core/http/guardias.js';
+import { proteger } from '../../core/compartido/http/guardias.js';
 import type { EmpresasControlador } from './empresas.controlador.js';
 import { esquemaEmpresa, esquemaParamsEmpresa } from './empresas.esquemas-http.js';
 

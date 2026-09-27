@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { leerImagenDeSolicitud } from '../../compartido/http/leer-imagen.js';
-import { contextoDe } from '../../http/contexto-solicitud.js';
+import { contextoDe } from '../../compartido/http/contexto-de-la-solicitud.js';
 import type { AbrirLogo } from '../aplicacion/casos-uso/abrir-logo.js';
 import type { CambiarApariencia } from '../aplicacion/casos-uso/cambiar-apariencia.js';
 import type { CambiarLogo } from '../aplicacion/casos-uso/cambiar-logo.js';

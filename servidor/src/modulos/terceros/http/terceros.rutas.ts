@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { proteger } from '../../core/http/guardias.js';
+import { proteger } from '../../core/compartido/http/guardias.js';
 import type { CategoriasControlador, ContactosControlador } from './contactos-y-categorias.controlador.js';
 import type { TercerosControlador } from './terceros.controlador.js';
 import {

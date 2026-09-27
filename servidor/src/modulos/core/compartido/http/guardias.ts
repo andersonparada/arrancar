@@ -1,9 +1,16 @@
 import type { FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from 'fastify';
-import { ErrorNoAutenticado, ErrorSinPermiso, ErrorSolicitudInvalida } from '../errores/errores.js';
-import { obtenerRegistroModulos } from '../modulos-sistema/registro-global.js';
-import { autenticacionServicio } from '../servicios/autenticacion.servicio.js';
-import { sesionServicio } from '../servicios/sesion.servicio.js';
-import { escribirCookieSesion, leerCookieSesion } from './cookie-sesion.js';
+import { obtenerRegistroModulos } from '../../modulos-sistema/registro-global.js';
+import type { ValidadorDeSesion } from '../aplicacion/contexto-de-sesion.js';
+import { AccesoDenegado, NoAutenticado } from '../aplicacion/errores.js';
+import { FaltaLaEmpresaActiva } from './contexto-de-la-solicitud.js';
+import { escribirCookieSesion, leerCookieSesion } from './cookie-de-sesion.js';
+
+let validadorDeSesion: ValidadorDeSesion | null = null;
+
+/** Identidad lo entrega al armarse; así el núcleo no depende de cómo se guardan las sesiones. */
+export function usarValidadorDeSesion(validador: ValidadorDeSesion): void {
+  validadorDeSesion = validador;
+}
 
 /**
  * Eslabón de la cadena de verificación de una petición (patrón Chain of Responsibility).
@@ -30,26 +37,28 @@ export abstract class Guardia {
 /** Valida la cookie de sesión y deja el contexto del usuario en la petición. */
 export class GuardiaAutenticacion extends Guardia {
   protected async verificar(solicitud: FastifyRequest, respuesta: FastifyReply): Promise<void> {
+    if (!validadorDeSesion) throw new Error('Falta el validador de sesión: identidad no se armó.');
     const token = leerCookieSesion(solicitud);
-    const sesion = token ? await autenticacionServicio.validarToken(token) : undefined;
-    if (!token || !sesion) throw new ErrorNoAutenticado();
+    const sesion = token ? await validadorDeSesion.validar(token) : null;
+    if (!token || !sesion) throw new NoAutenticado();
 
-    if (sesion.renovada) escribirCookieSesion(respuesta, token, sesion.expiraEn);
+    if (sesion.renovadaHasta) escribirCookieSesion(respuesta, token, sesion.renovadaHasta);
     solicitud.tokenSesion = token;
-    solicitud.contexto = await sesionServicio.construirContexto(sesion);
+    solicitud.contexto = sesion.contexto;
   }
 }
 
 export class GuardiaSuperacceso extends Guardia {
   protected async verificar(solicitud: FastifyRequest): Promise<void> {
-    if (!solicitud.contexto?.usuario.esSuperacceso)
-      throw new ErrorSinPermiso('Solo el equipo de soporte puede hacer esto.');
+    if (!solicitud.contexto?.usuario.esSuperacceso) {
+      throw new AccesoDenegado('Solo el equipo de soporte puede hacer esto.');
+    }
   }
 }
 
 export class GuardiaEmpresaActiva extends Guardia {
   protected async verificar(solicitud: FastifyRequest): Promise<void> {
-    if (!solicitud.contexto?.empresa) throw new ErrorSolicitudInvalida('Seleccione una empresa para continuar.');
+    if (!solicitud.contexto?.empresa) throw new FaltaLaEmpresaActiva();
   }
 }
 
@@ -61,7 +70,7 @@ export class GuardiaModulo extends Guardia {
   protected async verificar(solicitud: FastifyRequest): Promise<void> {
     if (!solicitud.contexto?.modulosActivos.has(this.clave)) {
       const nombre = obtenerRegistroModulos().obtener(this.clave)?.nombre ?? this.clave;
-      throw new ErrorSinPermiso(`El módulo ${nombre} no está activo para esta cuenta.`);
+      throw new AccesoDenegado(`El módulo ${nombre} no está activo para esta cuenta.`);
     }
   }
 }
@@ -72,7 +81,7 @@ export class GuardiaPermiso extends Guardia {
   }
 
   protected async verificar(solicitud: FastifyRequest): Promise<void> {
-    if (!solicitud.contexto?.permisos.has(this.permiso)) throw new ErrorSinPermiso();
+    if (!solicitud.contexto?.permisos.has(this.permiso)) throw new AccesoDenegado();
   }
 }
 

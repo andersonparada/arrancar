@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { esProduccion } from '../../../configuracion.js';
+import { esProduccion } from '../../../../configuracion.js';
 
 const NOMBRE_COOKIE = 'arrancar_sesion';
 

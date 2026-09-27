@@ -4,7 +4,6 @@ import { definirConfiguracion, type DefinicionModulo } from './modulos-sistema/d
 import { componerApariencia } from './apariencia/contexto.js';
 import { componerArchivos } from './archivos/contexto.js';
 import { esquemaColorHex } from './apariencia/http/apariencia.esquemas-http.js';
-import { rutasAutenticacion } from './rutas/autenticacion.rutas.js';
 import { componerBitacora } from './bitacora/contexto.js';
 import { componerConfiguracion } from './configuracion/contexto.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
@@ -14,7 +13,6 @@ import { componerAutorizacion } from './autorizacion/contexto.js';
 import { componerIdentidad } from './identidad/contexto.js';
 
 const rutas: FastifyPluginAsync = async (app) => {
-  await app.register(rutasAutenticacion);
   await app.register(rutasPlataforma);
   await app.register(componerIdentidad(dependenciasCompartidas()));
   await app.register(componerAutorizacion(dependenciasCompartidas()));

@@ -1,10 +1,17 @@
-import { AccesoDenegado, RecursoDuplicado, RecursoEnUso, RecursoNoEncontrado } from '../aplicacion/errores.js';
+import {
+  AccesoDenegado,
+  NoAutenticado,
+  RecursoDuplicado,
+  RecursoEnUso,
+  RecursoNoEncontrado,
+} from '../aplicacion/errores.js';
 import { DatoInvalido, ReglaDeNegocioInfringida, type ErrorEsperado } from '../dominio/errores.js';
 
 type FamiliaDeError = abstract new (...argumentos: never[]) => ErrorEsperado;
 
 const ESTADO_POR_FAMILIA: ReadonlyArray<readonly [FamiliaDeError, number]> = [
   [DatoInvalido, 400],
+  [NoAutenticado, 401],
   [AccesoDenegado, 403],
   [RecursoNoEncontrado, 404],
   [RecursoDuplicado, 409],

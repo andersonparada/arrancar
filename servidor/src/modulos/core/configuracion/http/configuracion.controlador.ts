@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { contextoDe, empresaActivaDe } from '../../http/contexto-solicitud.js';
+import { contextoDe, empresaActivaDe } from '../../compartido/http/contexto-de-la-solicitud.js';
 import type { EstablecerValor } from '../aplicacion/casos-uso/establecer-valor.js';
 import type { ListarVariablesEditables } from '../aplicacion/casos-uso/listar-variables-editables.js';
 import type { RestablecerValor } from '../aplicacion/casos-uso/restablecer-valor.js';

@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { proteger } from '../../http/guardias.js';
+import { proteger } from '../../compartido/http/guardias.js';
 import type { RolesControlador } from './roles.controlador.js';
 import { esquemaParamsRol, esquemaRol } from './roles.esquemas-http.js';
 

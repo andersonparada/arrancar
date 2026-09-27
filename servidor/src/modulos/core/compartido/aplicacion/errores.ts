@@ -26,6 +26,15 @@ export class RecursoEnUso extends ErrorEsperado {
   }
 }
 
+/** No hay una sesión válida: el cliente vuelve a la pantalla de inicio de sesión. */
+export class NoAutenticado extends ErrorEsperado {
+  readonly codigo: string = 'no_autenticado';
+
+  constructor(mensaje = 'Debe iniciar sesión.') {
+    super(mensaje);
+  }
+}
+
 export class AccesoDenegado extends ErrorEsperado {
   readonly codigo: string = 'sin_permiso';
 

@@ -1,5 +1,5 @@
 import type { FastifyRequest } from 'fastify';
-import { contextoDe, empresaActivaDe } from '../../http/contexto-solicitud.js';
+import { contextoDe, empresaActivaDe } from './contexto-de-la-solicitud.js';
 import type { Operador } from '../aplicacion/operador.js';
 
 /** Quién hace la petición y con qué empresa trabaja; exige que haya una empresa activa. */

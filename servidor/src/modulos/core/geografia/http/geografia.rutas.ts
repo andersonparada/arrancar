@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { proteger } from '../../http/guardias.js';
+import { proteger } from '../../compartido/http/guardias.js';
 import type { GeografiaControlador } from './geografia.controlador.js';
 import { esquemaParamsDepartamento } from './geografia.esquemas-http.js';
 
