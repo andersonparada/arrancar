@@ -1,6 +1,5 @@
 import { ErrorNoEncontrado } from '../errores/errores.js';
 import { obtenerRegistroModulos } from '../modulos-sistema/registro-global.js';
-import { bitacoraRepositorio } from '../repositorios/bitacora.repositorio.js';
 import { cuentasRepositorio } from '../repositorios/cuentas.repositorio.js';
 import type { CambioCuenta } from '../validaciones/plataforma.validaciones.js';
 
@@ -61,10 +60,6 @@ export const plataformaServicio = {
     registro.validarDesactivacion(clave, activos);
     await cuentasRepositorio.desactivarModulo(cuentaId, clave);
     return this.listarModulos(cuentaId);
-  },
-
-  listarBitacora() {
-    return bitacoraRepositorio.listarRecientes();
   },
 
   async obtenerCuentaObligatoria(cuentaId: string) {

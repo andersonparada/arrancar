@@ -1,8 +1,8 @@
 import { ErrorNoEncontrado } from '../errores/errores.js';
+import { registrarEntradaDeSoporte } from '../bitacora/contexto.js';
 import { configuracion } from '../configuracion/contexto.js';
 import type { ContextoSolicitud, UsuarioSesion } from '../http/contexto-solicitud.js';
 import { obtenerRegistroModulos } from '../modulos-sistema/registro-global.js';
-import { bitacoraRepositorio } from '../repositorios/bitacora.repositorio.js';
 import { cuentasRepositorio } from '../repositorios/cuentas.repositorio.js';
 import { rolesRepositorio } from '../repositorios/roles.repositorio.js';
 import { sesionesRepositorio, type SesionConUsuario } from '../repositorios/sesiones.repositorio.js';
@@ -79,10 +79,9 @@ export const sesionServicio = {
     if (contexto.usuario.esSuperacceso) {
       const esMiembro = await empresasRepositorio.obtenerAcceso(contexto.usuario.id, empresaId);
       if (!esMiembro) {
-        await bitacoraRepositorio.registrar({
+        await registrarEntradaDeSoporte.ejecutar({
           usuarioId: contexto.usuario.id,
           empresaId,
-          accion: 'entrada_empresa',
           direccionIp,
         });
       }

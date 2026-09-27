@@ -478,6 +478,13 @@ entrega como un commit propio.
     Los errores dejan `regla_negocio`/`solicitud_invalida` por códigos propios
     (mismos estados; el cliente no los usaba). 251 pruebas (7 unitarias nuevas);
     advertencias: 33.
+  - **Bitácora (2026-09-27):** `core/bitacora/` sin dominio (no tiene reglas):
+    puerto `Bitacora`, casos de uso `RegistrarEntradaDeSoporte` (lo usa la sesión
+    cuando soporte entra a una empresa ajena) y `ListarBitacoraReciente`,
+    `BitacoraDrizzle` con la conexión inyectada (sin RLS: la usa soporte, por encima
+    de las cuentas). La ruta `/plataforma/bitacora` sale de plataforma y la registra
+    el contexto. Sin pruebas unitarias nuevas: los casos de uso solo delegan y las
+    pruebas de API cubren registro y listado. 251 pruebas; advertencias: 33.
 
 ### Mejoras pendientes (acordadas, sin fecha)
 

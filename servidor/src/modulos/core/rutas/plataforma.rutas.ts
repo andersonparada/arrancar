@@ -54,10 +54,4 @@ export const rutasPlataforma: FastifyPluginAsyncZod = async (app) => {
     preHandler: soloSoporte,
     handler: plataformaControlador.desactivarModulo,
   });
-
-  app.get('/plataforma/bitacora', {
-    schema: { tags },
-    preHandler: soloSoporte,
-    handler: plataformaControlador.listarBitacora,
-  });
 };

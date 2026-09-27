@@ -41,8 +41,4 @@ export const plataformaControlador = {
   desactivarModulo(solicitud: FastifyRequest<{ Params: ParamsModuloCuenta }>) {
     return plataformaServicio.desactivarModulo(solicitud.params.cuentaId, solicitud.params.clave);
   },
-
-  listarBitacora() {
-    return plataformaServicio.listarBitacora();
-  },
 };

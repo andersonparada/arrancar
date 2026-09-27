@@ -5,6 +5,7 @@ import { componerApariencia } from './apariencia/contexto.js';
 import { componerArchivos } from './archivos/contexto.js';
 import { esquemaColorHex } from './apariencia/http/apariencia.esquemas-http.js';
 import { rutasAutenticacion } from './rutas/autenticacion.rutas.js';
+import { componerBitacora } from './bitacora/contexto.js';
 import { componerConfiguracion } from './configuracion/contexto.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
 import { componerGeografia } from './geografia/contexto.js';
@@ -21,6 +22,7 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(componerConfiguracion());
   await app.register(componerApariencia());
   await app.register(componerGeografia(dependenciasCompartidas()));
+  await app.register(componerBitacora());
 };
 
 export const moduloCore: DefinicionModulo = {
