@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { nextTick, ref } from 'vue';
 import type { DefinicionModuloCliente } from '../tipos';
-import { construirMenu, grupoDeLaRuta, type FiltroMenu } from './construir-menu';
-import { usarGruposAbiertos, type Almacen } from './usar-grupos-abiertos';
+import { construirMenu, plegablesDeLaRuta, type FiltroMenu } from './construir-menu';
+import { usarPlegablesAbiertos, type Almacen } from './usar-plegables-abiertos';
 
 const icono = {};
 const modulos: DefinicionModuloCliente[] = [
@@ -46,6 +46,16 @@ describe('menú por módulo', () => {
     const [clientes] = construirMenu(modulos, propietario);
 
     expect(clientes?.secciones.map((s) => s.titulo)).toEqual(['Operación', 'Administración']);
+    expect(clientes?.conSecciones).toBe(true);
+  });
+
+  it('con una sola sección visible no muestra el separador', () => {
+    const soloAdministra = { ...propietario, puede: (permiso: string) => permiso === 'proveedores.gestionar' };
+
+    const [clientes] = construirMenu(modulos, soloAdministra);
+
+    expect(clientes?.conSecciones).toBe(false);
+    expect(clientes?.secciones[0]?.entradas.map((e) => e.titulo)).toEqual(['Categorías']);
   });
 
   it('oculta lo que el usuario no tiene permiso de ver', () => {
@@ -60,11 +70,11 @@ describe('menú por módulo', () => {
     expect(construirMenu(modulos, sinClientes)).toEqual([]);
   });
 
-  it('reconoce el grupo de una ruta y de sus subpáginas', () => {
+  it('reconoce el grupo y la sección de una ruta y de sus subpáginas', () => {
     const grupos = construirMenu(modulos, propietario);
 
-    expect(grupoDeLaRuta(grupos, '/proveedores/123')).toBe('clientes');
-    expect(grupoDeLaRuta(grupos, '/usuarios')).toBeNull();
+    expect(plegablesDeLaRuta(grupos, '/proveedores/123')).toEqual(['clientes', 'clientes/administracion']);
+    expect(plegablesDeLaRuta(grupos, '/usuarios')).toEqual([]);
   });
 });
 
@@ -80,17 +90,27 @@ function almacenEnMemoria(inicial: string[] = []): Almacen & { valor: string | n
   };
 }
 
-describe('grupos abiertos', () => {
-  it('abre el grupo de la página actual y recuerda lo que el usuario cierra', async () => {
+describe('grupos y secciones abiertos', () => {
+  it('abre el grupo y la sección de la página actual y recuerda lo que el usuario cierra', async () => {
     const almacen = almacenEnMemoria(['empresas']);
-    const actual = ref<string | null>('clientes');
-    const { abiertos, alternar } = usarGruposAbiertos(actual, almacen);
+    const actual = ref(['clientes', 'clientes/operacion']);
+    const { abiertos, alternar } = usarPlegablesAbiertos(actual, almacen);
 
     alternar('empresas');
     await nextTick();
 
-    expect([...abiertos.value]).toEqual(['clientes']);
-    expect(JSON.parse(almacen.valor ?? '[]')).toEqual(['clientes']);
+    expect([...abiertos.value]).toEqual(['clientes', 'clientes/operacion']);
+    expect(JSON.parse(almacen.valor ?? '[]')).toEqual(['clientes', 'clientes/operacion']);
+  });
+
+  it('al cambiar de página abre la sección nueva sin cerrar las demás', async () => {
+    const actual = ref(['clientes', 'clientes/operacion']);
+    const { abiertos } = usarPlegablesAbiertos(actual, almacenEnMemoria());
+
+    actual.value = ['clientes', 'clientes/administracion'];
+    await nextTick();
+
+    expect([...abiertos.value]).toEqual(['clientes', 'clientes/operacion', 'clientes/administracion']);
   });
 
   it('funciona aunque el navegador no permita guardar', () => {
@@ -103,7 +123,7 @@ describe('grupos abiertos', () => {
       },
     };
 
-    const { abiertos, alternar } = usarGruposAbiertos(ref('cuenta'), bloqueado);
+    const { abiertos, alternar } = usarPlegablesAbiertos(ref(['cuenta']), bloqueado);
     alternar('soporte');
 
     expect([...abiertos.value].sort()).toEqual(['cuenta', 'soporte']);

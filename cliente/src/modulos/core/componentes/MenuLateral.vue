@@ -18,8 +18,8 @@ defineEmits<{ alternar: [clave: string] }>();
       v-for="grupo in grupos"
       :key="grupo.clave"
       :grupo="grupo"
-      :abierto="abiertos.has(grupo.clave)"
-      @alternar="$emit('alternar', grupo.clave)"
+      :abiertos="abiertos"
+      @alternar="(clave) => $emit('alternar', clave)"
     />
   </nav>
 </template>

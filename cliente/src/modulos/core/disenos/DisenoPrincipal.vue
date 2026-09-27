@@ -8,8 +8,8 @@ import { usarSesion } from '../almacenes/sesion';
 import LogoAplicacion from '../componentes/LogoAplicacion.vue';
 import MenuLateral from '../componentes/MenuLateral.vue';
 import SelectorEmpresa from '../componentes/SelectorEmpresa.vue';
-import { construirMenu, grupoDeLaRuta } from '../menu/construir-menu';
-import { usarGruposAbiertos } from '../menu/usar-grupos-abiertos';
+import { construirMenu, plegablesDeLaRuta } from '../menu/construir-menu';
+import { usarPlegablesAbiertos } from '../menu/usar-plegables-abiertos';
 
 const sesion = usarSesion();
 const apariencia = usarApariencia();
@@ -24,7 +24,7 @@ const grupos = computed(() =>
     esSuperacceso: sesion.esSuperacceso,
   }),
 );
-const { abiertos, alternar } = usarGruposAbiertos(computed(() => grupoDeLaRuta(grupos.value, ruta.path)));
+const { abiertos, alternar } = usarPlegablesAbiertos(computed(() => plegablesDeLaRuta(grupos.value, ruta.path)));
 
 const iniciales = computed(() =>
   (sesion.usuario?.nombre ?? '?')

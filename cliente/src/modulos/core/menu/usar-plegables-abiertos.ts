@@ -31,24 +31,26 @@ function almacenDelNavegador(): Almacen | null {
 }
 
 /**
- * Qué grupos del menú están abiertos. Se abre solo el grupo de la página actual y
- * el navegador recuerda los que el usuario abrió o cerró.
+ * Qué grupos y secciones del menú están abiertos. Se abren solos los de la página
+ * actual y el navegador recuerda los que el usuario abrió o cerró.
  */
-export function usarGruposAbiertos(grupoActual: Ref<string | null>, almacen = almacenDelNavegador()) {
+export function usarPlegablesAbiertos(deLaPaginaActual: Ref<string[]>, almacen = almacenDelNavegador()) {
   const abiertos = ref(new Set(leer(almacen)));
 
-  function cambiar(clave: string, abrir: boolean): void {
+  function cambiar(claves: string[], abrir: boolean): void {
     const siguientes = new Set(abiertos.value);
-    if (abrir) siguientes.add(clave);
-    else siguientes.delete(clave);
+    for (const clave of claves) {
+      if (abrir) siguientes.add(clave);
+      else siguientes.delete(clave);
+    }
     abiertos.value = siguientes;
     guardar(almacen, siguientes);
   }
 
-  watch(grupoActual, (clave) => clave && cambiar(clave, true), { immediate: true });
+  watch(deLaPaginaActual, (claves) => cambiar(claves, true), { immediate: true });
 
   return {
     abiertos: readonly(abiertos),
-    alternar: (clave: string) => cambiar(clave, !abiertos.value.has(clave)),
+    alternar: (clave: string) => cambiar([clave], !abiertos.value.has(clave)),
   };
 }
