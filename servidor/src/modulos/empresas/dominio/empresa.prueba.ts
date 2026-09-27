@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { Nit } from '../../core/compartido/dominio/objetos-valor/nit.js';
+import { Telefono } from '../../core/compartido/dominio/objetos-valor/telefono.js';
 import { Empresa, type DatosDeEmpresa } from './empresa.js';
 import { NoSePuedeDesactivarLaEmpresaEnUso, NombreDeEmpresaInvalido } from './errores.js';
 
@@ -45,9 +46,11 @@ describe('cambio de datos', () => {
   it('cambia los datos generales', () => {
     const empresa = Empresa.registrar(cuentaId, datos());
 
-    empresa.cambiarDatos(datos({ nombre: 'Rancho Nuevo', telefono: '5555-1234' }), Identificador.nuevo());
+    const telefono = Telefono.crear('5555-1234');
 
-    expect(empresa.instantanea()).toMatchObject({ nombre: 'Rancho Nuevo', telefono: '5555-1234' });
+    empresa.cambiarDatos(datos({ nombre: 'Rancho Nuevo', telefono }), Identificador.nuevo());
+
+    expect(empresa.instantanea()).toMatchObject({ nombre: 'Rancho Nuevo', telefono });
   });
 
   it('puede desactivar otra empresa, pero no la que está en uso', () => {

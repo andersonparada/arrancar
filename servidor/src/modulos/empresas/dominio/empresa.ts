@@ -1,6 +1,8 @@
 import { RaizAgregado } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
+import type { Correo } from '../../core/compartido/dominio/objetos-valor/correo.js';
 import type { Nit } from '../../core/compartido/dominio/objetos-valor/nit.js';
+import type { Telefono } from '../../core/compartido/dominio/objetos-valor/telefono.js';
 import { NoSePuedeDesactivarLaEmpresaEnUso, NombreDeEmpresaInvalido } from './errores.js';
 import { EmpresaRegistrada } from './eventos.js';
 
@@ -15,8 +17,8 @@ export interface DatosDeEmpresa {
   nombre: string;
   nit: Nit | null;
   direccion: string | null;
-  telefono: string | null;
-  correo: string | null;
+  telefono: Telefono | null;
+  correo: Correo | null;
   activa: boolean;
 }
 

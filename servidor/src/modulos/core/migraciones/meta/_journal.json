@@ -50,6 +50,13 @@
       "when": 1790463177533,
       "tag": "0006_datos_geografia",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790474586495,
+      "tag": "0007_normalizar_contacto_de_empresas",
+      "breakpoints": true
     }
   ]
 }

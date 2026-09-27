@@ -15,6 +15,7 @@ import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import { geografiaApi, type Departamento, type Municipio } from '@/modulos/core/servicios/geografia.api';
+import { formatearTelefono } from '@/modulos/core/utilidades/formato';
 import {
   tercerosApi,
   type CategoriaProveedor,
@@ -301,11 +302,11 @@ async function quitarTrabajador(): Promise<void> {
         </div>
         <div>
           <dt class="text-tierra-500">Teléfono</dt>
-          <dd>{{ ficha.telefono ?? 'Sin registrar' }}</dd>
+          <dd>{{ formatearTelefono(ficha.telefono) || 'Sin registrar' }}</dd>
         </div>
         <div>
           <dt class="text-tierra-500">WhatsApp</dt>
-          <dd>{{ ficha.whatsapp ?? 'Sin registrar' }}</dd>
+          <dd>{{ formatearTelefono(ficha.whatsapp) || 'Sin registrar' }}</dd>
         </div>
         <div>
           <dt class="text-tierra-500">Correo</dt>
@@ -334,7 +335,7 @@ async function quitarTrabajador(): Promise<void> {
               {{ c.nombre }}<span v-if="c.cargo" class="text-tierra-500"> · {{ c.cargo }}</span>
             </p>
             <p class="truncate text-sm text-tierra-500">
-              {{ [c.telefono, c.correo].filter(Boolean).join(' · ') || 'Sin datos de contacto' }}
+              {{ [formatearTelefono(c.telefono), c.correo].filter(Boolean).join(' · ') || 'Sin datos de contacto' }}
             </p>
           </div>
           <div v-permiso="'terceros.gestionar'" class="flex shrink-0 gap-1">

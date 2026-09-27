@@ -1,5 +1,8 @@
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
+import { crearSiHayTexto } from '../../../core/compartido/dominio/objeto-valor.js';
+import { Correo } from '../../../core/compartido/dominio/objetos-valor/correo.js';
 import { Nit } from '../../../core/compartido/dominio/objetos-valor/nit.js';
+import { Telefono } from '../../../core/compartido/dominio/objetos-valor/telefono.js';
 import type { empresas } from '../../../core/esquemas/empresas.esquema.js';
 import type { EmpresaDto } from '../../aplicacion/dto/empresa.dto.js';
 import { Empresa } from '../../dominio/empresa.js';
@@ -14,18 +17,25 @@ export const mapeadorDeEmpresa = {
       id: Identificador.desde(fila.id),
       cuentaId: Identificador.desde(fila.cuentaId),
       nombre: fila.nombre,
-      nit: fila.nit ? Nit.crear(fila.nit) : null,
+      nit: crearSiHayTexto(fila.nit, Nit.crear),
       direccion: fila.direccion,
-      telefono: fila.telefono,
-      correo: fila.correo,
+      telefono: crearSiHayTexto(fila.telefono, Telefono.crear),
+      correo: crearSiHayTexto(fila.correo, Correo.crear),
       monedaBase: fila.monedaBase,
       activa: fila.activa,
     });
   },
 
   aFila(empresa: Empresa): FilaNuevaEmpresa {
-    const { id, cuentaId, nit, ...resto } = empresa.instantanea();
-    return { ...resto, id: id.valor, cuentaId: cuentaId.valor, nit: nit?.valor ?? null };
+    const { id, cuentaId, nit, telefono, correo, ...resto } = empresa.instantanea();
+    return {
+      ...resto,
+      id: id.valor,
+      cuentaId: cuentaId.valor,
+      nit: nit?.valor ?? null,
+      telefono: telefono?.valor ?? null,
+      correo: correo?.valor ?? null,
+    };
   },
 
   aDto(fila: FilaEmpresa): EmpresaDto {

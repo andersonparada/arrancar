@@ -11,6 +11,7 @@ import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { formatearTelefono } from '@/modulos/core/utilidades/formato';
 import { empresasApi, type Empresa } from '../servicios/empresas.api';
 
 const sesion = usarSesion();
@@ -102,7 +103,7 @@ onMounted(cargar);
               <MapPin class="size-4 shrink-0" aria-hidden="true" />{{ empresa.direccion }}
             </li>
             <li v-if="empresa.telefono" class="flex items-center gap-2">
-              <Phone class="size-4 shrink-0" aria-hidden="true" />{{ empresa.telefono }}
+              <Phone class="size-4 shrink-0" aria-hidden="true" />{{ formatearTelefono(empresa.telefono) }}
             </li>
             <li v-if="empresa.correo" class="flex items-center gap-2">
               <Mail class="size-4 shrink-0" aria-hidden="true" />{{ empresa.correo }}

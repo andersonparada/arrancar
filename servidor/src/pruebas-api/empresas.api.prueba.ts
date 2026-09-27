@@ -36,15 +36,30 @@ describe('empresas de la cuenta', () => {
     expect(respuesta.estado).toBe(400);
   });
 
-  it('obtiene y actualiza una empresa', async () => {
+  it('obtiene y actualiza una empresa, con teléfono y correo normalizados', async () => {
     const actualizada = await cuenta.propietario.put(`/api/empresas/${cuenta.empresaId}`, {
       nombre: 'Rancho El Quiroa',
       telefono: '5555-1234',
+      correo: 'Oficina@Quiroa.GT',
     });
     const obtenida = await cuenta.propietario.get(`/api/empresas/${cuenta.empresaId}`);
 
     expect(actualizada.estado).toBe(200);
-    expect(obtenida.cuerpo).toMatchObject({ nombre: 'Rancho El Quiroa', telefono: '5555-1234' });
+    expect(obtenida.cuerpo).toMatchObject({
+      nombre: 'Rancho El Quiroa',
+      telefono: '55551234',
+      correo: 'oficina@quiroa.gt',
+    });
+  });
+
+  it('rechaza un teléfono que no es un número', async () => {
+    const respuesta = await cuenta.propietario.put(`/api/empresas/${cuenta.empresaId}`, {
+      nombre: 'Rancho El Quiroa',
+      telefono: 'llamar al capataz',
+    });
+
+    expect(respuesta.estado).toBe(400);
+    expect(respuesta.cuerpo.error.codigo).toBe('telefono_invalido');
   });
 
   it('no permite desactivar la empresa con la que se está trabajando', async () => {
