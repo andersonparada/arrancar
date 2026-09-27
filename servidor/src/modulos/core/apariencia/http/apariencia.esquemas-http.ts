@@ -11,4 +11,8 @@ export const esquemaApariencia = z.object({
   colorAcento: esquemaColorHex,
 });
 
+/** `v` es la versión del logo: solo sirve para que el navegador guarde cada versión aparte. */
+export const esquemaConsultaLogo = z.object({ v: z.string().max(20).optional() });
+
 export type AparienciaSolicitada = z.infer<typeof esquemaApariencia>;
+export type ConsultaLogo = z.infer<typeof esquemaConsultaLogo>;

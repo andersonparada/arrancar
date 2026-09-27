@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RecursoNoEncontrado } from '../../../compartido/aplicacion/errores.js';
-import { operadorDePrueba, UnidadDeTrabajoEnMemoria } from '../../../compartido/pruebas/dobles-compartidos.js';
-import { FormatoDeImagenNoAceptado } from '../../dominio/imagen.js';
 import {
   AlmacenamientoEnMemoria,
-  OptimizadorFalso,
-  RepositorioArchivosEnMemoria,
-} from '../../pruebas/dobles-de-archivos.js';
+  operadorDePrueba,
+  UnidadDeTrabajoEnMemoria,
+} from '../../../compartido/pruebas/dobles-compartidos.js';
+import { FormatoDeImagenNoAceptado } from '../../dominio/imagen.js';
+import { OptimizadorFalso, RepositorioArchivosEnMemoria } from '../../pruebas/dobles-de-archivos.js';
 import { AbrirImagen } from './abrir-imagen.js';
 import { SubirImagen } from './subir-imagen.js';
 

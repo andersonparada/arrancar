@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { definirConfiguracion, type DefinicionModulo } from './modulos-sistema/definicion-modulo.js';
-import { rutasApariencia } from './rutas/apariencia.rutas.js';
+import { componerApariencia } from './apariencia/contexto.js';
 import { componerArchivos } from './archivos/contexto.js';
-import { esquemaColorHex } from './validaciones/apariencia.validaciones.js';
+import { esquemaColorHex } from './apariencia/http/apariencia.esquemas-http.js';
 import { rutasAutenticacion } from './rutas/autenticacion.rutas.js';
 import { rutasConfiguracion } from './rutas/configuracion.rutas.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
@@ -19,7 +19,7 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(rutasRoles);
   await app.register(componerArchivos(dependenciasCompartidas()));
   await app.register(rutasConfiguracion);
-  await app.register(rutasApariencia);
+  await app.register(componerApariencia());
   await app.register(componerGeografia(dependenciasCompartidas()));
 };
 

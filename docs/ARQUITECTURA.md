@@ -455,6 +455,16 @@ entrega como un commit propio.
     `ImagenSubida` y `leerImagenDeSolicitud` (con el error `FaltaLaImagen`). Los
     códigos de error pasan de `solicitud_invalida` a códigos propios (mismo estado
     400; el cliente no los usaba). 240 pruebas (5 unitarias nuevas); advertencias: 38.
+  - **Apariencia (2026-09-27):** `core/apariencia/` con dominio (`logo.ts`: formatos
+    aceptados, ruta, versión y dirección del logo, errores `FormatoDeLogoNoAceptado`
+    y `LogoIlegible`), seis casos de uso (obtener, cambiar y restablecer la
+    apariencia; abrir, cambiar y quitar el logo) y dos puertos:
+    `AjustesDeApariencia` y `ConvertidorDeLogo` (sharp en `ConvertidorDeLogoSharp`).
+    Como la configuración aún no está migrada, `AjustesEnConfiguracion` implementa
+    el puerto con el servicio viejo; al migrar configuración solo cambia ese
+    adaptador. No usa la unidad de trabajo: sus ajustes son de la instalación.
+    El doble `AlmacenamientoEnMemoria` pasa a `compartido/pruebas`. 244 pruebas
+    (4 unitarias nuevas); advertencias: 37.
 
 ### Mejoras pendientes (acordadas, sin fecha)
 

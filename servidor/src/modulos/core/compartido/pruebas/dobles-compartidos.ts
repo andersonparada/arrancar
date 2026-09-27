@@ -1,3 +1,5 @@
+import { Readable } from 'node:stream';
+import type { Almacenamiento } from '../aplicacion/almacenamiento.js';
 import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import type { Operador } from '../aplicacion/operador.js';
 import type { PublicadorEventos } from '../aplicacion/publicador-eventos.js';
@@ -36,4 +38,22 @@ export function operadorDePrueba(cambios: Partial<Operador> = {}): Operador {
     esSuperacceso: false,
     ...cambios,
   };
+}
+
+export class AlmacenamientoEnMemoria implements Almacenamiento {
+  readonly contenidos = new Map<string, Buffer>();
+
+  async guardar(ruta: string, contenido: Buffer): Promise<void> {
+    this.contenidos.set(ruta, contenido);
+  }
+
+  async leer(ruta: string): Promise<Readable> {
+    const contenido = this.contenidos.get(ruta);
+    if (!contenido) throw new Error(`No existe ${ruta}`);
+    return Readable.from(contenido);
+  }
+
+  async eliminar(ruta: string): Promise<void> {
+    this.contenidos.delete(ruta);
+  }
 }
