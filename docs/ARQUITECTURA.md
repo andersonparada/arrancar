@@ -361,7 +361,8 @@ entrega como un commit propio.
 | **4. Terceros** | Migrar el módulo a la estructura, con la entidad `Tercero` y sus papeles. **Única fase con cambios funcionales acordados:** se quita el papel trabajador (pasa a planilla, migración que elimina `terceros.trabajadores` y el permiso `trabajadores.*`) y el módulo se muestra como **Clientes** con pantallas propias de clientes y proveedores. | Pruebas de API de terceros actualizadas a los cambios. |
 | **5. Core por contextos** | En este orden: geografía → archivos → apariencia → configuración → bitácora → autorización → identidad → cuentas. | Cada contexto, un commit con pruebas en verde. |
 | **6. Cliente** | Clases `Api*`, composables, dividir páginas grandes (`FichaTercero`, `UsuariosCuenta`, `PlataformaApariencia`, `PlataformaCuentas`), menú por módulo, pantallas propias de Clientes y Proveedores, textos y formato configurable. Ver "Plan de la fase 6". | vue-tsc y pruebas de composables en verde. |
-| **7. Cierre** | Reglas de tamaño pasan de advertencia a error; `CLAUDE.md` y `PLAN.md` apuntan a este documento; se borran las carpetas viejas (`servicios/`, `repositorios/`, `controladores/`…). | `revisar` sin advertencias. |
+| **7. Generador** | `npm run generar -- modulo` y `recurso`: código del servidor y del cliente a partir de una definición. Ver "Plan de la fase 7". | El código generado pasa `revisar` y sus pruebas. |
+| **8. Cierre** | Reglas de tamaño pasan de advertencia a error; `CLAUDE.md` y `PLAN.md` apuntan a este documento; se borran las carpetas viejas (`servicios/`, `repositorios/`, `controladores/`…). | `revisar` sin advertencias. |
 
 ### Avance
 
@@ -541,7 +542,7 @@ entrega como un commit propio.
   `compartido/`, y la infraestructura común que aún no se muda (`base-datos/`,
   `eventos/`, `modulos-sistema/`, `esquemas/` con las tablas de empresas y monedas).
   265 pruebas; advertencias: 24. En el servidor solo quedan en `aplicacion.ts` y
-  en `registro-modulos.ts` (fase 7); las demás son del cliente (fase 6).
+  en `registro-modulos.ts` (fase 8, cierre); las demás son del cliente (fase 6).
 - **Fase 6: en curso.**
   - **6.1 Base del cliente (2026-09-27):** Vitest en el cliente (`npm run probar`
     corre servidor y cliente). `ClienteHttp` es una clase y cada servicio una clase
@@ -600,7 +601,7 @@ entrega como un commit propio.
     posible duplicado) ahora usan `usarAvisos().confirmar`, y ESLint prohíbe
     `alert`/`confirm` en el cliente (`no-alert`). `CLAUDE.md` describe la
     arquitectura actual del servidor y del cliente. 274 pruebas del servidor y 41
-    del cliente; advertencias: 2, ambas del servidor (fase 7).
+    del cliente; advertencias: 2, ambas del servidor (fase 8, cierre).
 - **Fase 6: hecha (2026-09-27).** El cliente no tiene advertencias de ESLint.
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
@@ -632,6 +633,80 @@ Decisiones:
   ventanas, menús y títulos; páginas, menú y rutas los toman de ahí.
 - **Reportes de Clientes** (clientes por clase, proveedores por categoría): quedan
   para después, se planifican junto con los demás módulos.
+
+### Plan de la fase 7: generador de código (acordado con el usuario, 2026-09-27)
+
+Como `php artisan make:*`: a partir de una definición corta genera el código de
+una entidad en el servidor y en el cliente, con la forma de las plantillas
+(`empresas` en el servidor, Clientes en el cliente). Así los módulos de negocio
+salen rápido y todas las ventanas se ven y se programan igual.
+
+**Comandos**
+
+```bash
+npm run generar -- modulo ganado                  # esqueleto del módulo (servidor y cliente) y su registro
+npm run generar -- recurso ganado/animal          # todo lo de la entidad, desde su definición
+```
+
+**Definición** (`generador/definiciones/<modulo>/<entidad>.ts`), con
+autocompletado y validación; queda en el repositorio y se puede volver a correr:
+
+```ts
+export default definirRecurso({
+  modulo: 'ganado',
+  entidad: 'Animal',
+  plural: 'Animales',
+  alcance: 'empresa',            // o 'cuenta': define la política RLS
+  pantalla: 'completa',          // o 'catalogo' (lista con ventana, como Categorías de proveedor)
+  baja: 'eliminar',              // por omisión; 'inactivar' para entidades con historial
+  campos: {
+    arete: texto({ requerido: true, unico: true }),
+    nacimiento: fecha(),
+    sexo: lista(['macho', 'hembra']),
+    peso: decimal({ decimales: 2 }),
+    notas: textoLargo(),
+  },
+});
+```
+
+Tipos de campo: `texto`, `textoLargo`, `entero`, `decimal`, `dinero`, `fecha`,
+`siNo`, `lista`, `correo`, `telefono`, `nit`, `dpi` y `referencia` (a otra
+entidad del mismo módulo). Cada uno sabe su columna de Drizzle, su esquema Zod, su
+objeto de valor si lo tiene, su campo de formulario y cómo se muestra.
+
+**Qué genera un recurso**
+
+- Servidor: entidad y errores (dominio); casos de uso listar, ver, crear, editar y
+  eliminar (o inactivar), puertos y DTO (aplicación); tabla con su política RLS,
+  repositorio, consultas y mapeador (infraestructura); esquemas, controlador y
+  rutas con `proteger` (http); permisos `<modulo>.<entidades>.ver` y `.gestionar`
+  en `modulo.ts`; la migración con `bd:generar`; pruebas unitarias con dobles en
+  memoria y una prueba de API.
+- Cliente: servicio `Api*`, textos, composables con su prueba de la lógica pura,
+  tarjeta, ventana o formulario en página, ficha (pantalla completa), rutas y
+  opción del menú.
+
+**Reglas del generador**
+
+- Nunca sobrescribe un archivo que ya existe (avisa y sigue); lo que agrega a
+  `modulo.ts`, `indice.ts` y el menú lo pone en marcas fijas (`// generador: …`).
+- Borrar un registro en uso responde 409 `RecursoEnUso` (llave foránea).
+- Las plantillas son funciones de TypeScript con pruebas. Una prueba del
+  generador crea un módulo de muestra en una carpeta temporal y comprueba que el
+  resultado pasa `tsc` y ESLint.
+
+**Pasos** (un commit cada uno; `revisar` y pruebas en verde):
+
+| Paso | Contenido |
+|---|---|
+| **G1 Base y módulo** | `definirRecurso` y los tipos de campo; motor (escribir sin sobrescribir, insertar en marcas); `generar modulo`. |
+| **G2 Recurso en el servidor** | Dominio, aplicación, infraestructura, http, permisos, migración y pruebas. |
+| **G3 Recurso en el cliente (catálogo)** | Servicio, textos, composables, tarjeta, ventana, página, rutas y menú. |
+| **G4 Pantalla completa y referencias** | Lista, formulario en página y ficha; campos `referencia` (selector en el cliente, llave foránea en el servidor). |
+
+La fase de cierre pasa a ser la **fase 8** (reglas de tamaño a error,
+advertencias de `aplicacion.ts` y `registro-modulos.ts`, retirar
+`ejecutarEnEmpresa`) y también revisa el código generado.
 
 ### Riesgos y cómo se controlan
 
