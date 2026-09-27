@@ -39,3 +39,5 @@ function cargarConfiguracion(): Configuracion {
 export const configuracion = cargarConfiguracion();
 
 export const esProduccion = configuracion.NODE_ENV === 'production';
+
+export const esPrueba = configuracion.NODE_ENV === 'test';

@@ -21,7 +21,9 @@ sobre la empresa).
 | Tema | Decisión |
 |---|---|
 | Alcance | **Por cuenta**: un tercero se registra una vez y lo usan todas las empresas de la cuenta. Lo que ocurre con él (ventas, saldos, jornales) es por empresa en cada módulo. |
-| Trabajadores | Son un **papel** de terceros. Planilla, cuando exista, agrega jornal, salario, prestaciones y la empresa donde trabaja. |
+| Trabajadores | ~~Son un papel de terceros.~~ **Cambio (2026-09-26): los trabajadores salen de este módulo y pasan al futuro módulo de planilla**, que dependerá de `terceros` para la identidad de la persona (nombre, DPI, teléfono) y tendrá su propia tabla de trabajadores. |
+| Nombre para el usuario | **Cambio (2026-09-26):** en el menú el módulo se llama **Clientes**. "Terceros" queda solo como nombre técnico (clave, esquema y carpetas). |
+| Pantallas | **Cambio (2026-09-26):** pantallas propias de **Clientes** y **Proveedores**, cada una con su listado y su formulario de alta, organizadas en las secciones del menú (ver abajo). |
 | Dato mínimo | **Solo el nombre.** NIT, DPI y teléfono se completan después. Ventas exigirá NIT o CF al facturar. |
 | Clases de cliente | Consumidor directo, intermediario o acopiador, empresa compradora, subasta o feria. |
 
@@ -108,6 +110,26 @@ No hay alcance por registro (`recursosConAlcance`) en esta versión.
 `terceros.papel_asignado`, `terceros.papel_quitado`.
 
 ## Pantallas
+
+**Nuevo menú (acordado el 2026-09-26, se aplica en las fases 4 y 6 del refactor):**
+
+```
+Clientes
+  Trabajo diario
+    Buscar contacto        búsqueda rápida de clientes y proveedores para llamar o escribir
+  Administración
+    Clientes               listado + alta de clientes (con su clase)
+    Proveedores            listado + alta de proveedores (con su categoría)
+    Categorías de proveedor
+  Reportes
+    Clientes por clase     (directo, intermediario, empresa, subasta)
+    Proveedores por categoría
+```
+
+Las pantallas de Clientes y Proveedores comparten componentes (formulario de
+datos generales, contactos, búsqueda); cada una solo agrega lo propio de su papel.
+
+Pantallas de la primera versión (se reemplazan con el menú anterior):
 
 - **Listado**: búsqueda, filtro por papel y por estado, chips de papeles.
 - **Ficha**: datos generales, contactos y una pestaña por papel. Los módulos que

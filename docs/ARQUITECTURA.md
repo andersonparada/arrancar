@@ -259,6 +259,19 @@ cliente/src/modulos/terceros/
   modulo.ts           rutas, menú y pestañas que aporta a otras fichas
 ```
 
+**Menú por módulo.** Cada módulo aparece como un grupo del menú con su nombre para
+el usuario (no el técnico: `terceros` se ve como **Clientes**) y, dentro, hasta
+tres secciones siempre en este orden:
+
+| Sección | Qué va | Ejemplos |
+|---|---|---|
+| **Trabajo diario** | lo que se usa todos los días para operar | registrar venta, pesaje, ordeño, buscar contacto |
+| **Administración** | catálogos y registros maestros | clientes, proveedores, categorías, potreros |
+| **Reportes** | consultas, gráficas y exportaciones | clientes por clase, producción de leche |
+
+Una sección vacía no se muestra. Cada entrada del menú declara su sección en el
+`modulo.ts` del cliente.
+
 Reglas: archivos `.vue` ≤ 200 líneas; la lógica vive en composables probados con
 Vitest; los componentes no importan servicios; Pinia solo para estado global
 (sesión, apariencia, avisos).
@@ -300,10 +313,21 @@ entrega como un commit propio.
 | **1. Herramientas** | ESLint + Prettier + boundaries, `npm run revisar`. Las reglas de tamaño empiezan como advertencia. | `revisar` corre; lista de advertencias = deuda a pagar. |
 | **2. Núcleo compartido** | `core/compartido`: `Entidad`, `ObjetoValor`, `EventoDominio`, errores por capa, `UnidadDeTrabajo` con `AsyncLocalStorage`, `PublicadorEventos`, objetos de valor `Nit`, `Dpi`, `Correo`, `Telefono`. | Pruebas unitarias; RLS sigue pasando. |
 | **3. Empresas** (plantilla) | Primer módulo migrado completo: dominio, casos de uso, repositorio, controlador, raíz de composición. Sirve de ejemplo para los demás. | Pruebas de API de empresas iguales; pruebas unitarias nuevas. |
-| **4. Terceros** | Migrar lo que está escribiendo Sonnet a la estructura, con la entidad `Tercero` y sus papeles. | Ídem. |
+| **4. Terceros** | Migrar el módulo a la estructura, con la entidad `Tercero` y sus papeles. **Única fase con cambios funcionales acordados:** se quita el papel trabajador (pasa a planilla, migración que elimina `terceros.trabajadores` y el permiso `trabajadores.*`) y el módulo se muestra como **Clientes** con pantallas propias de clientes y proveedores. | Pruebas de API de terceros actualizadas a los cambios. |
 | **5. Core por contextos** | En este orden: geografía → archivos → apariencia → configuración → bitácora → autorización → identidad → cuentas. | Cada contexto, un commit con pruebas en verde. |
 | **6. Cliente** | Clases `Api*`, composables, dividir páginas grandes (`FichaTercero`, `UsuariosCuenta`, `PlataformaApariencia`, `PlataformaCuentas`). | vue-tsc y pruebas de composables en verde. |
 | **7. Cierre** | Reglas de tamaño pasan de advertencia a error; `CLAUDE.md` y `PLAN.md` apuntan a este documento; se borran las carpetas viejas (`servicios/`, `repositorios/`, `controladores/`…). | `revisar` sin advertencias. |
+
+### Avance
+
+- **Fase 0: hecha (2026-09-26).** 90 pruebas de API en `servidor/src/pruebas-api/`
+  (un archivo por área, con un `ClienteApi` que simula el navegador y guarda la
+  cookie). El papel trabajador no se cubre porque sale en la fase 4.
+  Hallazgos para corregir durante el refactor:
+  - Terceros publica sus eventos **dentro** de la transacción: si algo falla
+    después, otros módulos se enterarían de algo que no ocurrió (se corrige con
+    la publicación después de confirmar, sección 4.4).
+  - Fastify avisa que `disableRequestLogging` quedará obsoleto en la versión 6.
 
 ### Riesgos y cómo se controlan
 

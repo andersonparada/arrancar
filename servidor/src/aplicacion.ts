@@ -14,7 +14,7 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
-import { configuracion, esProduccion } from './configuracion.js';
+import { configuracion, esProduccion, esPrueba } from './configuracion.js';
 import { cargarConfiguracionInstalacion } from './modulos/core/configuracion/instalacion.js';
 import { ErrorSinPermiso } from './modulos/core/errores/errores.js';
 import { manejarError } from './modulos/core/errores/manejador-errores.js';
@@ -59,11 +59,15 @@ async function servirCliente(app: FastifyInstance): Promise<void> {
  * Arma la aplicación: plugins de seguridad, validación con Zod, documentación y
  * las rutas de todos los módulos instalados bajo `/api`.
  */
+function opcionesDeRegistro() {
+  if (esPrueba) return false;
+  if (esProduccion) return { level: 'info' };
+  return { level: 'debug', transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss' } } };
+}
+
 export async function construirAplicacion(): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: esProduccion
-      ? { level: 'info' }
-      : { level: 'debug', transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss' } } },
+    logger: opcionesDeRegistro(),
     trustProxy: esProduccion,
     disableRequestLogging: !esProduccion,
   }).withTypeProvider<ZodTypeProvider>();
