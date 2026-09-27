@@ -1,0 +1,17 @@
+{
+  "name": "generador",
+  "private": true,
+  "type": "module",
+  "description": "Genera módulos y recursos del servidor y del cliente a partir de una definición.",
+  "scripts": {
+    "generar": "tsx src/principal.ts",
+    "verificar": "tsc --noEmit",
+    "probar": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9",
+    "vitest": "^5.0.2"
+  }
+}

@@ -1,0 +1,22 @@
+import { {{icono}} } from 'lucide-vue-next';
+import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
+import { NOMBRE_{{CONSTANTE}} } from './textos';
+// generador: importaciones
+
+/** Rutas y menú del módulo {{nombre}}. Un grupo sin opciones no se muestra. */
+export const modulo{{Pascal}}: DefinicionModuloCliente = {
+  clave: '{{clave}}',
+  rutas: [
+    // generador: rutas
+  ],
+  menu: [
+    {
+      clave: '{{clave}}',
+      titulo: NOMBRE_{{CONSTANTE}},
+      icono: {{icono}},
+      entradas: [
+        // generador: menu
+      ],
+    },
+  ],
+};

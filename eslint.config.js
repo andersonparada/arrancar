@@ -119,7 +119,7 @@ export default tseslint.config(
     languageOptions: { parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.vue'] } },
   },
   {
-    files: ['servidor/**/*.ts', '*.js', 'servidor/scripts/**'],
+    files: ['servidor/**/*.ts', '*.js', 'servidor/scripts/**', 'generador/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
   {
@@ -155,6 +155,7 @@ export default tseslint.config(
       'servidor/src/modulos/core/base-datos/migrar.ts',
       'servidor/src/modulos/core/base-datos/sembrar.ts',
       'servidor/scripts/**',
+      'generador/src/principal.ts',
     ],
     rules: { 'no-console': 'off' },
   },

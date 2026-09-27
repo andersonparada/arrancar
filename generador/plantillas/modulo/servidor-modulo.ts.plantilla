@@ -1,0 +1,17 @@
+import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo.js';
+import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
+// generador: importaciones
+
+/** {{descripcion}} Ver `docs/modulos/{{clave}}.md`. */
+export const modulo{{Pascal}}: DefinicionModulo = {
+  clave: '{{clave}}',
+  nombre: '{{nombre}}',
+  descripcion: '{{descripcion}}',
+  dependeDe: [],
+  permisos: [
+    // generador: permisos
+  ],
+  rutas: rutasDelModulo([
+    // generador: rutas
+  ]),
+};

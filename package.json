@@ -5,7 +5,8 @@
   "type": "module",
   "workspaces": [
     "servidor",
-    "cliente"
+    "cliente",
+    "generador"
   ],
   "engines": {
     "node": ">=22"
@@ -17,11 +18,12 @@
     "dev:servidor": "npm run dev -w servidor",
     "dev:cliente": "npm run dev -w cliente",
     "construir": "npm run construir -w cliente && npm run construir -w servidor",
-    "verificar": "npm run verificar -w servidor && npm run verificar -w cliente",
-    "probar": "npm run probar -w servidor && npm run probar -w cliente",
+    "verificar": "npm run verificar -w servidor && npm run verificar -w cliente && npm run verificar -w generador",
+    "probar": "npm run probar -w servidor && npm run probar -w cliente && npm run probar -w generador",
     "lint": "eslint .",
     "formatear": "prettier --write . && eslint . --fix",
-    "revisar": "prettier --check . && eslint . && npm run verificar"
+    "revisar": "prettier --check . && eslint . && npm run verificar",
+    "generar": "npm run generar -w generador --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

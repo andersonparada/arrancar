@@ -32,6 +32,8 @@ npm run verificar                         # tsc del servidor y vue-tsc del clien
 npm run revisar                           # Prettier + ESLint + verificar: correr antes de cada commit
 npm run formatear                         # aplica Prettier y las correcciones automáticas de ESLint
 npm run bd:generar -w servidor -- <modulo> <nombre> [--custom]
+npm run generar -- modulo <clave> [--nombre "..."] [--descripcion "..."] [--icono Beef]
+npm run generar -- recurso <modulo>/<entidad>   # desde generador/definiciones/<modulo>/<entidad>.ts
 ```
 
 Las pruebas de integración usan PostgreSQL real (`arrancar_pruebas`), así que la

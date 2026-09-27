@@ -2,6 +2,12 @@ import type { DefinicionModuloCliente } from './core/tipos';
 import { moduloCore } from './core/modulo';
 import { moduloEmpresas } from './empresas/modulo';
 import { moduloTerceros } from './terceros/modulo';
+// generador: importaciones
 
-/** Módulos del frontend. Para agregar uno nuevo basta con sumarlo a esta lista. */
-export const modulosCliente: readonly DefinicionModuloCliente[] = [moduloEmpresas, moduloTerceros, moduloCore];
+/** Módulos del frontend, en el orden del menú; el core va al final (Cuenta y Soporte). */
+export const modulosCliente: readonly DefinicionModuloCliente[] = [
+  moduloEmpresas,
+  moduloTerceros,
+  // generador: modulos
+  moduloCore,
+];

@@ -603,6 +603,24 @@ entrega como un commit propio.
     arquitectura actual del servidor y del cliente. 274 pruebas del servidor y 41
     del cliente; advertencias: 2, ambas del servidor (fase 8, cierre).
 - **Fase 6: hecha (2026-09-27).** El cliente no tiene advertencias de ESLint.
+- **Fase 7: en curso.**
+  - **G1 Base y módulo (2026-09-27):** workspace `generador/` (`npm run generar`,
+    con `verificar` y `probar` propios, que también corren desde la raíz).
+    `definirRecurso` valida la definición (avisa de todos los problemas juntos) y la
+    completa con nombres, textos y permisos; los tipos de campo están en
+    `definicion/campos.ts`. El motor: `EscritorDeArchivos` nunca sobrescribe y
+    agrega código antes de las marcas `// generador: <marca>` con su sangría, sin
+    repetir lo que ya está; lee y escribe por el puerto `SistemaDeArchivos` (en las
+    pruebas, en memoria). Las plantillas son archivos `plantillas/**/*.plantilla`
+    con huecos `{{nombre}}`: se leen como el código que producen, y `rellenar`
+    falla si queda un hueco sin valor. `generar modulo <clave>` crea `modulo.ts` en
+    el servidor y el cliente, `textos.ts`, `docs/modulos/<clave>.md` y lo registra
+    en los dos `indice.ts` (que ahora tienen marcas); al final le da formato con
+    Prettier. Nuevo en el core: `rutasDelModulo`, que junta las rutas de los
+    recursos de un módulo. Las definiciones exportan con nombre
+    (`export const recurso = …`), porque el proyecto no usa `export default`.
+    Probado de punta a punta: un módulo generado pasa `revisar` y todas las pruebas.
+    274 + 2 pruebas del servidor, 41 del cliente y 13 del generador.
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 
@@ -652,7 +670,9 @@ npm run generar -- recurso ganado/animal          # todo lo de la entidad, desde
 autocompletado y validación; queda en el repositorio y se puede volver a correr:
 
 ```ts
-export default definirRecurso({
+import { definirRecurso, fecha, lista, texto, textoLargo, decimal } from '../../src/definicion/indice.js';
+
+export const recurso = definirRecurso({
   modulo: 'ganado',
   entidad: 'Animal',
   plural: 'Animales',

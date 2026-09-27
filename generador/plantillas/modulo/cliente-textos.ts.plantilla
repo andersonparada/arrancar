@@ -1,0 +1,7 @@
+/** Nombres de las ventanas y del menú del módulo {{nombre}}. */
+
+export const NOMBRE_{{CONSTANTE}} = '{{nombre}}';
+
+export const VENTANAS_{{CONSTANTE}} = {
+  // generador: ventanas
+} as const;

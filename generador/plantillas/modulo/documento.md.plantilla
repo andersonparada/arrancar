@@ -1,0 +1,38 @@
+# Módulo `{{clave}}` — se muestra como **{{nombre}}**
+
+Estado: **por planificar** (esqueleto generado el {{fecha}}). Se completa con el
+usuario antes de generar sus recursos.
+
+## Propósito
+
+{{descripcion}}
+
+**Es de este módulo:** …
+**No es de este módulo:** …
+
+## Decisiones acordadas
+
+| Tema | Decisión |
+|---|---|
+| Alcance | … (por empresa o por cuenta) |
+
+## Recursos
+
+Cada recurso se describe en `generador/definiciones/{{clave}}/<entidad>.ts` y se
+genera con `npm run generar -- recurso {{clave}}/<entidad>`.
+
+| Recurso | Pantalla | Baja |
+|---|---|---|
+
+## Tablas (esquema `{{serpiente}}`)
+
+## Reglas (las garantiza el dominio)
+
+## Permisos
+
+| Permiso | Permite |
+|---|---|
+
+## Pantallas
+
+## Eventos
