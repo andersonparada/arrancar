@@ -3,7 +3,7 @@ import { boolean, char, foreignKey, index, pgSchema, text, uniqueIndex, uuid } f
 import { idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
 import { archivos } from '../../../core/esquemas/archivos.esquema.js';
 import { cuentas } from '../../../core/esquemas/cuentas.esquema.js';
-import { municipios } from '../../../core/esquemas/geografia.esquema.js';
+import { municipios } from '../../../core/geografia/infraestructura/persistencia/geografia.tablas.js';
 
 /** Esquema de PostgreSQL del módulo de terceros. */
 export const esquemaTerceros = pgSchema('terceros');

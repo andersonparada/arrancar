@@ -438,6 +438,14 @@ entrega como un commit propio.
   - Nuevas utilidades compartidas: `crearSiHayTexto`, `valorDe` y `CuentaId`.
   - 235 pruebas (19 unitarias nuevas de terceros y 11 de API); advertencias: 39
     (ninguna en los módulos migrados).
+- **Fase 5: en curso.**
+  - **Geografía (2026-09-27):** `core/geografia/` con aplicación (puerto
+    `ConsultasGeografia` y casos de uso `ListarDepartamentos` y `ListarMunicipios`),
+    infraestructura (`geografia.tablas.ts` y consultas Drizzle), http y
+    `contexto.ts` como raíz de composición del contexto. Sin dominio: es un catálogo
+    de solo lectura, sin reglas. `drizzle.config.ts` ahora también busca tablas en
+    los contextos del core (sin diferencias en la base). Las API no cambian; 235
+    pruebas en verde.
 
 ### Mejoras pendientes (acordadas, sin fecha)
 
@@ -446,6 +454,13 @@ entrega como un commit propio.
   y títulos (por ejemplo `terceros/textos.ts`); las páginas, el menú y las rutas
   los usan desde ahí, así un cambio de nombre se hace en un solo lugar. Conviene
   hacerlo junto con la fase 6.
+
+- **Formato de fechas y decimales configurable** (pedido del usuario, 2026-09-27):
+  claves de configuración (instalación, cuenta y empresa, públicas) para el
+  formato de fecha en pantalla (por ejemplo `dd/mm/aaaa`) y la cantidad de
+  decimales de cantidades y montos. El cliente formatea con ellas desde un solo
+  lugar. Conviene hacerlo después de migrar `configuracion` (fase 5) y usarlo en
+  la fase 6.
 
 ### Riesgos y cómo se controlan
 

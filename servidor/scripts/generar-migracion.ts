@@ -12,9 +12,8 @@ if (!modulo || !nombre) {
   console.error('Uso: npm run bd:generar -- <modulo> <nombre-descriptivo> [--custom]');
   process.exit(1);
 }
-const carpetasDeTablas = [`src/modulos/${modulo}/infraestructura/persistencia`, `src/modulos/${modulo}/esquemas`];
-if (!carpetasDeTablas.some((carpeta) => existsSync(carpeta))) {
-  console.error(`El módulo "${modulo}" no tiene tablas (${carpetasDeTablas.join(' ni ')}).`);
+if (!existsSync(`src/modulos/${modulo}`)) {
+  console.error(`No existe el módulo "${modulo}".`);
   process.exit(1);
 }
 
