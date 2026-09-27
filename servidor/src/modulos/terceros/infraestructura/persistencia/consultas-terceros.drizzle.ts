@@ -1,4 +1,4 @@
-import { and, eq, ilike, inArray, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, ilike, ne, or, sql, type SQL } from 'drizzle-orm';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
@@ -13,6 +13,7 @@ import type {
 import type { ConsultasContactos, ConsultasTerceros, CriteriosDeParecido } from '../../aplicacion/puertos/consultas.js';
 import type { TipoDePapel } from '../../dominio/papeles.js';
 import { clientes } from './clientes.tablas.js';
+import { papelesDe, type PapelesEnListado } from './papeles-en-listado.drizzle.js';
 import { proveedores } from './proveedores.tablas.js';
 import { mapeadorDeTercero, type FilaTercero } from './tercero.mapeador.js';
 import { terceros } from './terceros.tablas.js';
@@ -32,15 +33,15 @@ function condicionDeBusqueda(texto: string): SQL | undefined {
   );
 }
 
-async function terceroIdsConPapel(ids: string[]): Promise<Record<TipoDePapel, Set<string>>> {
-  if (ids.length === 0) return { cliente: new Set(), proveedor: new Set() };
-  const tx = transaccionEnCurso();
-  const [conCliente, conProveedor] = await Promise.all([
-    tx.select({ id: clientes.terceroId }).from(clientes).where(inArray(clientes.terceroId, ids)),
-    tx.select({ id: proveedores.terceroId }).from(proveedores).where(inArray(proveedores.terceroId, ids)),
-  ]);
-  const aConjunto = (filas: { id: string }[]) => new Set(filas.map((fila) => fila.id));
-  return { cliente: aConjunto(conCliente), proveedor: aConjunto(conProveedor) };
+function conSusPapeles(fila: FilaTercero, papeles: PapelesEnListado): TerceroEnListadoDto {
+  const cliente = papeles.clientes.get(fila.id) ?? null;
+  const proveedor = papeles.proveedores.get(fila.id) ?? null;
+  return {
+    ...mapeadorDeTercero.aDto(fila),
+    papeles: { cliente: cliente !== null, proveedor: proveedor !== null },
+    cliente,
+    proveedor,
+  };
 }
 
 export class ConsultasTercerosDrizzle implements ConsultasTerceros {
@@ -57,11 +58,8 @@ export class ConsultasTercerosDrizzle implements ConsultasTerceros {
         ),
       )
       .orderBy(terceros.nombreMostrar);
-    const papeles = await terceroIdsConPapel(filas.map((fila) => fila.id));
-    const conPapeles = filas.map((fila) => ({
-      ...mapeadorDeTercero.aDto(fila),
-      papeles: { cliente: papeles.cliente.has(fila.id), proveedor: papeles.proveedor.has(fila.id) },
-    }));
+    const papeles = await papelesDe(filas.map((fila) => fila.id));
+    const conPapeles = filas.map((fila) => conSusPapeles(fila, papeles));
     const { papel } = filtros;
     return papel ? conPapeles.filter((tercero) => tercero.papeles[papel]) : conPapeles;
   }

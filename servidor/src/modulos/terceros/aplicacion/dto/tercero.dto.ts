@@ -1,6 +1,6 @@
 import type { TipoDeTercero } from '../../dominio/identidad-de-tercero.js';
 import type { ClaseDeCliente, TipoDePapel } from '../../dominio/papeles.js';
-import type { ContactoDto } from './contacto.dto.js';
+import type { ContactoDto, SolicitudDeContacto } from './contacto.dto.js';
 
 /** Tercero tal como lo ve el usuario en pantalla. */
 export interface TerceroDto {
@@ -25,8 +25,23 @@ export interface TerceroDto {
   actualizadoEn: Date;
 }
 
+/** Lo que el listado de clientes muestra del papel. */
+export interface ClienteEnListadoDto {
+  clase: ClaseDeCliente;
+  activo: boolean;
+}
+
+/** Lo que el listado de proveedores muestra del papel. */
+export interface ProveedorEnListadoDto {
+  categoriaId: string | null;
+  categoriaNombre: string | null;
+  activo: boolean;
+}
+
 export interface TerceroEnListadoDto extends TerceroDto {
   papeles: Record<TipoDePapel, boolean>;
+  cliente: ClienteEnListadoDto | null;
+  proveedor: ProveedorEnListadoDto | null;
 }
 
 export interface PapelDeClienteDto {
@@ -84,6 +99,12 @@ export interface SolicitudDeTercero {
   activo: boolean;
   /** `true` para guardarlo aunque se parezca a otro tercero. */
   confirmarDuplicado: boolean;
+}
+
+/** El alta completa: los datos, el papel con que entra y sus primeros contactos, en un solo paso. */
+export interface SolicitudDeAltaDeTercero extends SolicitudDeTercero {
+  papel: SolicitudDePapel | null;
+  contactos: SolicitudDeContacto[];
 }
 
 export type SolicitudDePapel =

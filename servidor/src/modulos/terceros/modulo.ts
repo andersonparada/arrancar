@@ -7,6 +7,7 @@ import { CambiarCategoria } from './aplicacion/casos-uso/categorias/cambiar-cate
 import { CrearCategoria } from './aplicacion/casos-uso/categorias/crear-categoria.js';
 import { ListarCategorias } from './aplicacion/casos-uso/categorias/listar-categorias.js';
 import { AgregarContacto } from './aplicacion/casos-uso/contactos/agregar-contacto.js';
+import { BuscarContactos } from './aplicacion/casos-uso/contactos/buscar-contactos.js';
 import { CambiarContacto } from './aplicacion/casos-uso/contactos/cambiar-contacto.js';
 import { EliminarContacto } from './aplicacion/casos-uso/contactos/eliminar-contacto.js';
 import { ListarContactos } from './aplicacion/casos-uso/contactos/listar-contactos.js';
@@ -20,6 +21,7 @@ import { CategoriasControlador, ContactosControlador } from './http/contactos-y-
 import { TercerosControlador } from './http/terceros.controlador.js';
 import { rutasTerceros, type ControladoresDeTerceros } from './http/terceros.rutas.js';
 import './infraestructura/catalogo-eventos.js';
+import { BusquedaDeContactosDrizzle } from './infraestructura/persistencia/busqueda-de-contactos.drizzle.js';
 import {
   ConsultasCategoriasDrizzle,
   ConsultasContactosDrizzle,
@@ -49,12 +51,13 @@ function crearPiezas() {
 type Piezas = ReturnType<typeof crearPiezas> & DependenciasCompartidas;
 
 function controladorDeTerceros(piezas: Piezas): TercerosControlador {
-  const { unidadDeTrabajo, publicadorEventos, repositorio, categorias, consultas, avisoDeParecidos } = piezas;
+  const { unidadDeTrabajo, publicadorEventos, repositorio, categorias, contactos, consultas, avisoDeParecidos } =
+    piezas;
   const paraGuardar = { unidadDeTrabajo, repositorio, consultas, avisoDeParecidos, publicadorEventos };
   return new TercerosControlador({
     listar: new ListarTerceros({ unidadDeTrabajo, consultas }),
     obtenerFicha: new ObtenerFichaDeTercero({ unidadDeTrabajo, consultas }),
-    registrar: new RegistrarTercero(paraGuardar),
+    registrar: new RegistrarTercero({ ...paraGuardar, categorias, contactos }),
     actualizar: new ActualizarTercero(paraGuardar),
     asignarPapel: new AsignarPapel({ unidadDeTrabajo, repositorio, categorias, consultas, publicadorEventos }),
     quitarPapel: new QuitarPapel({ unidadDeTrabajo, repositorio, publicadorEventos }),
@@ -67,6 +70,7 @@ function controladorDeContactos({ unidadDeTrabajo, repositorio, contactos, consu
     agregar: new AgregarContacto({ unidadDeTrabajo, terceros: repositorio, contactos, consultas: consultasContactos }),
     cambiar: new CambiarContacto({ unidadDeTrabajo, contactos, consultas: consultasContactos }),
     eliminar: new EliminarContacto({ unidadDeTrabajo, contactos }),
+    buscar: new BuscarContactos({ unidadDeTrabajo, busqueda: new BusquedaDeContactosDrizzle() }),
   });
 }
 

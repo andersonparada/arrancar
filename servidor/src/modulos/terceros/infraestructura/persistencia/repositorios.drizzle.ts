@@ -29,8 +29,10 @@ export class RepositorioTercerosDrizzle implements RepositorioTerceros {
     return mapeadorDeTercero.aEntidad(fila, { cliente, proveedor });
   }
 
+  /** Con los papeles que traiga (el alta puede registrarlo ya como cliente o proveedor). */
   async agregar(tercero: Tercero): Promise<void> {
     await transaccionEnCurso().insert(terceros).values(mapeadorDeTercero.aFila(tercero));
+    await this.guardarPapeles(tercero);
   }
 
   async guardar(tercero: Tercero): Promise<void> {

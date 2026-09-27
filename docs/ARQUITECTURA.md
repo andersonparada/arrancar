@@ -558,6 +558,22 @@ entrega como un commit propio.
     ≤ 120 líneas (advertencia). La regla encontró que `AltaRapidaTercero` llamaba a
     la API: ahora es presentacional y la lógica vive en `usarAltaDeTercero`.
     279 pruebas (14 del cliente); advertencias: 24 (páginas que rehacen 6.2 a 6.4).
+  - **Ajuste del menú (pedido del usuario):** las secciones también se pliegan y,
+    si un grupo tiene una sola sección visible, sus opciones van directo sin el
+    separador (`conSecciones`). `usarPlegablesAbiertos` recuerda grupos y secciones.
+  - **6.2 Clientes (2026-09-27):** pantallas propias (ver `docs/modulos/terceros.md`):
+    Buscar contacto, Clientes, Proveedores, Categorías de proveedor, formulario
+    completo para crear y editar, y la ficha de 559 líneas dividida en componentes
+    (`DatosGeneralesDelTercero`, `ContactosDelTercero`, `TarjetaDePapel`,
+    `VentanaDeContacto`, `VentanaDePapel`). Una sola página por tipo de pantalla
+    sirve a los dos papeles (la ruta le pasa `papel`). Composables por pantalla;
+    lógica pura en `datos-de-tercero.ts`, `guardado-de-tercero.ts` y
+    `confirmar-duplicado.ts`. Nuevos en el core del cliente: `usarGeografia` y
+    `alDejarDeEscribir`. La regla "componentes sin servicios" ahora permite
+    `import type`. En el servidor: listado con clase y categoría, búsqueda de
+    contactos y alta en un paso con el permiso del papel. 274 pruebas del servidor
+    (7 de API y 2 unitarias nuevas) y 22 del cliente; advertencias: 19 (ninguna en
+    el módulo de clientes).
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 

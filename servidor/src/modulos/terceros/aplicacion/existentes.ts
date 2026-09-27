@@ -31,3 +31,11 @@ export async function categoriaExistente(
   if (!categoria) throw new RecursoNoEncontrado('La categoría de proveedor');
   return categoria;
 }
+
+/** Un proveedor solo puede tener una categoría que exista en la cuenta. */
+export async function exigirCategoriaDelPapel(
+  repositorio: RepositorioCategorias,
+  papel: { tipo: 'cliente' } | { tipo: 'proveedor'; categoriaId: string | null },
+): Promise<void> {
+  if (papel.tipo === 'proveedor' && papel.categoriaId) await categoriaExistente(repositorio, papel.categoriaId);
+}

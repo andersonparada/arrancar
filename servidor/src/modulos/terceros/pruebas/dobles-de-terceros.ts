@@ -8,8 +8,13 @@ import type {
   TerceroParecidoDto,
 } from '../aplicacion/dto/tercero.dto.js';
 import type { ConsultasTerceros } from '../aplicacion/puertos/consultas.js';
-import type { RepositorioCategorias, RepositorioTerceros } from '../aplicacion/puertos/repositorios.js';
+import type {
+  RepositorioCategorias,
+  RepositorioContactos,
+  RepositorioTerceros,
+} from '../aplicacion/puertos/repositorios.js';
 import type { CategoriaDeProveedor, CategoriaDeProveedorId } from '../dominio/categoria-de-proveedor.js';
+import type { Contacto, ContactoId } from '../dominio/contacto.js';
 import type { TipoDePapel } from '../dominio/papeles.js';
 import type { Tercero, TerceroId } from '../dominio/tercero.js';
 
@@ -61,6 +66,26 @@ export class TercerosEnMemoria implements RepositorioTerceros, ConsultasTerceros
 
   obtenerFicha(): Promise<FichaDeTerceroDto> {
     throw new Error('Las lecturas de pantalla se prueban contra PostgreSQL.');
+  }
+}
+
+export class ContactosEnMemoria implements RepositorioContactos {
+  readonly contactos = new Map<string, Contacto>();
+
+  async buscar(id: ContactoId): Promise<Contacto | null> {
+    return this.contactos.get(id.valor) ?? null;
+  }
+
+  async agregar(contacto: Contacto): Promise<void> {
+    this.contactos.set(contacto.id.valor, contacto);
+  }
+
+  async guardar(contacto: Contacto): Promise<void> {
+    this.contactos.set(contacto.id.valor, contacto);
+  }
+
+  async eliminar(contacto: Contacto): Promise<void> {
+    this.contactos.delete(contacto.id.valor);
   }
 }
 

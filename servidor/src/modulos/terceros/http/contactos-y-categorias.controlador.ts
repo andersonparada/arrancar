@@ -4,10 +4,12 @@ import type { CambiarCategoria } from '../aplicacion/casos-uso/categorias/cambia
 import type { CrearCategoria } from '../aplicacion/casos-uso/categorias/crear-categoria.js';
 import type { ListarCategorias } from '../aplicacion/casos-uso/categorias/listar-categorias.js';
 import type { AgregarContacto } from '../aplicacion/casos-uso/contactos/agregar-contacto.js';
+import type { BuscarContactos } from '../aplicacion/casos-uso/contactos/buscar-contactos.js';
 import type { CambiarContacto } from '../aplicacion/casos-uso/contactos/cambiar-contacto.js';
 import type { EliminarContacto } from '../aplicacion/casos-uso/contactos/eliminar-contacto.js';
 import type { ListarContactos } from '../aplicacion/casos-uso/contactos/listar-contactos.js';
 import type {
+  BusquedaDeContactosSolicitada,
   CategoriaSolicitada,
   ContactoSolicitado,
   ParamsCategoria,
@@ -20,10 +22,14 @@ export interface CasosDeUsoDeContactos {
   agregar: AgregarContacto;
   cambiar: CambiarContacto;
   eliminar: EliminarContacto;
+  buscar: BuscarContactos;
 }
 
 export class ContactosControlador {
   constructor(private readonly casosDeUso: CasosDeUsoDeContactos) {}
+
+  buscar = (solicitud: FastifyRequest<{ Querystring: BusquedaDeContactosSolicitada }>) =>
+    this.casosDeUso.buscar.ejecutar(operadorDe(solicitud), solicitud.query.texto);
 
   listar = (solicitud: FastifyRequest<{ Params: ParamsTercero }>) =>
     this.casosDeUso.listar.ejecutar(operadorDe(solicitud), solicitud.params.terceroId);

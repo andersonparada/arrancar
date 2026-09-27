@@ -2,7 +2,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import type { PapelDeClienteDto, PapelDeProveedorDto, SolicitudDePapel } from '../../dto/tercero.dto.js';
-import { categoriaExistente, terceroExistente } from '../../existentes.js';
+import { exigirCategoriaDelPapel, terceroExistente } from '../../existentes.js';
 import type { ConsultasTerceros } from '../../puertos/consultas.js';
 import type { RepositorioCategorias, RepositorioTerceros } from '../../puertos/repositorios.js';
 
@@ -26,22 +26,16 @@ export class AsignarPapel {
     operador: Operador,
     asignacion: { terceroId: string; papel: SolicitudDePapel },
   ): Promise<PapelDeClienteDto | PapelDeProveedorDto> {
-    const { unidadDeTrabajo, repositorio, consultas, publicadorEventos } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, categorias, consultas, publicadorEventos } = this.dependencias;
 
     const { tercero, asignado } = await unidadDeTrabajo.ejecutar(operador, async () => {
       const tercero = await terceroExistente(repositorio, asignacion.terceroId);
-      await this.exigirCategoriaExistente(asignacion.papel);
+      await exigirCategoriaDelPapel(categorias, asignacion.papel);
       tercero.asignarPapel(asignacion.papel);
       await repositorio.guardar(tercero);
       return { tercero, asignado: await consultas.obtenerPapel(asignacion.terceroId, asignacion.papel.tipo) };
     });
     await publicadorEventos.publicar(tercero.extraerEventos());
     return asignado;
-  }
-
-  private async exigirCategoriaExistente(papel: SolicitudDePapel): Promise<void> {
-    if (papel.tipo === 'proveedor' && papel.categoriaId) {
-      await categoriaExistente(this.dependencias.categorias, papel.categoriaId);
-    }
   }
 }

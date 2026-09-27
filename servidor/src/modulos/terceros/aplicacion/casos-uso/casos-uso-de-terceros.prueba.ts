@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
+import { Identificador } from '../../../core/compartido/dominio/identificador.js';
 import { NitInvalido } from '../../../core/compartido/dominio/objetos-valor/nit.js';
 import {
   PublicadorEventosEnMemoria,
@@ -8,9 +9,9 @@ import {
   operadorDePrueba,
 } from '../../../core/compartido/pruebas/dobles-compartidos.js';
 import { TerceroInactivo } from '../../dominio/errores.js';
-import { CategoriasEnMemoria, TercerosEnMemoria } from '../../pruebas/dobles-de-terceros.js';
+import { CategoriasEnMemoria, ContactosEnMemoria, TercerosEnMemoria } from '../../pruebas/dobles-de-terceros.js';
 import { AvisoDeParecidos } from '../aviso-de-parecidos.js';
-import type { SolicitudDeTercero } from '../dto/tercero.dto.js';
+import type { SolicitudDeAltaDeTercero } from '../dto/tercero.dto.js';
 import { HayTercerosParecidos } from '../errores.js';
 import { AsignarPapel } from './papeles/asignar-papel.js';
 import { QuitarPapel } from './papeles/quitar-papel.js';
@@ -18,11 +19,12 @@ import { ActualizarTercero } from './terceros/actualizar-tercero.js';
 import { RegistrarTercero } from './terceros/registrar-tercero.js';
 
 let terceros: TercerosEnMemoria;
+let contactos: ContactosEnMemoria;
 let publicadorEventos: PublicadorEventosEnMemoria;
 let operador: Operador;
 let casos: { registrar: RegistrarTercero; actualizar: ActualizarTercero; asignar: AsignarPapel; quitar: QuitarPapel };
 
-function solicitud(cambios: Partial<SolicitudDeTercero> = {}): SolicitudDeTercero {
+function solicitud(cambios: Partial<SolicitudDeAltaDeTercero> = {}): SolicitudDeAltaDeTercero {
   return {
     tipo: 'individual',
     nombres: 'Juan',
@@ -41,19 +43,22 @@ function solicitud(cambios: Partial<SolicitudDeTercero> = {}): SolicitudDeTercer
     notas: null,
     activo: true,
     confirmarDuplicado: false,
+    papel: null,
+    contactos: [],
     ...cambios,
   };
 }
 
 beforeEach(() => {
   terceros = new TercerosEnMemoria();
+  contactos = new ContactosEnMemoria();
   publicadorEventos = new PublicadorEventosEnMemoria();
   operador = operadorDePrueba();
   const unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   const avisoDeParecidos = new AvisoDeParecidos(terceros);
   const comunes = { unidadDeTrabajo, repositorio: terceros, consultas: terceros, publicadorEventos };
   casos = {
-    registrar: new RegistrarTercero({ ...comunes, avisoDeParecidos }),
+    registrar: new RegistrarTercero({ ...comunes, avisoDeParecidos, categorias: new CategoriasEnMemoria(), contactos }),
     actualizar: new ActualizarTercero({ ...comunes, avisoDeParecidos }),
     asignar: new AsignarPapel({ ...comunes, categorias: new CategoriasEnMemoria() }),
     quitar: new QuitarPapel(comunes),
@@ -77,6 +82,32 @@ describe('registrar un tercero', () => {
 
     await casos.registrar.ejecutar(operador, solicitud({ confirmarDuplicado: true }));
     expect(terceros.cantidad()).toBe(1);
+  });
+
+  it('puede entrar ya como cliente y con sus contactos, en un solo paso', async () => {
+    const contacto = {
+      nombre: 'Rosa',
+      cargo: 'Compras',
+      telefono: '5555-1234',
+      whatsapp: null,
+      correo: null,
+      notas: null,
+    };
+    const papel = { tipo: 'cliente' as const, clase: 'intermediario' as const, activo: true, notas: null };
+
+    const registrado = await casos.registrar.ejecutar(operador, solicitud({ papel, contactos: [contacto] }));
+
+    const tercero = await terceros.buscar(Identificador.desde(registrado.id));
+    expect(tercero?.papel('cliente')).toMatchObject({ clase: 'intermediario', activo: true });
+    expect([...contactos.contactos.values()].map((c) => c.instantanea().nombre)).toEqual(['Rosa']);
+    expect(publicadorEventos.nombres()).toEqual(['terceros.creado', 'terceros.papel_asignado']);
+  });
+
+  it('no registra a un proveedor con una categoría que no existe en la cuenta', async () => {
+    const papel = { tipo: 'proveedor' as const, categoriaId: crypto.randomUUID(), activo: true, notas: null };
+
+    await expect(casos.registrar.ejecutar(operador, solicitud({ papel }))).rejects.toThrow(RecursoNoEncontrado);
+    expect(terceros.cantidad()).toBe(0);
   });
 
   it('rechaza un NIT inválido antes de tocar la base de datos', async () => {

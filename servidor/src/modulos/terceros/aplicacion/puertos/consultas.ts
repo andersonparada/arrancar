@@ -1,6 +1,6 @@
 import type { TipoDePapel } from '../../dominio/papeles.js';
 import type { CategoriaDto } from '../dto/categoria.dto.js';
-import type { ContactoDto } from '../dto/contacto.dto.js';
+import type { ContactoDto, ContactoEncontradoDto } from '../dto/contacto.dto.js';
 import type {
   FichaDeTerceroDto,
   FiltrosDeTerceros,
@@ -37,4 +37,10 @@ export interface ConsultasContactos {
 export interface ConsultasCategorias {
   listar(): Promise<CategoriaDto[]>;
   obtener(categoriaId: string): Promise<CategoriaDto>;
+}
+
+/** "Buscar contacto": clientes, proveedores y sus contactos por nombre, teléfono o correo. */
+export interface BusquedaDeContactos {
+  /** Solo de terceros activos, con a lo sumo `limite` resultados. */
+  buscar(texto: string, limite: number): Promise<ContactoEncontradoDto[]>;
 }

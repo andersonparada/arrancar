@@ -28,6 +28,21 @@ export interface Tercero {
 
 export interface TerceroEnListado extends Tercero {
   papeles: { cliente: boolean; proveedor: boolean };
+  cliente: { clase: ClaseCliente; activo: boolean } | null;
+  proveedor: { categoriaId: string | null; categoriaNombre: string | null; activo: boolean } | null;
+}
+
+/** Un resultado de "Buscar contacto": el cliente o proveedor (`contactoNombre` nulo) o una de sus personas. */
+export interface ContactoEncontrado {
+  terceroId: string;
+  terceroNombre: string;
+  esCliente: boolean;
+  esProveedor: boolean;
+  contactoNombre: string | null;
+  cargo: string | null;
+  telefono: string | null;
+  whatsapp: string | null;
+  correo: string | null;
 }
 
 export interface Contacto {
@@ -114,6 +129,15 @@ export interface PapelDeProveedor {
   notas: string | null;
 }
 
+/** El papel con que entra alguien al registrarlo desde Clientes o Proveedores. */
+export type PapelAlRegistrar = ({ tipo: 'cliente' } & PapelDeCliente) | ({ tipo: 'proveedor' } & PapelDeProveedor);
+
+/** El alta completa: datos, papel y primeros contactos, que el servidor guarda en un solo paso. */
+export interface DatosAltaTercero extends DatosTercero {
+  papel: PapelAlRegistrar | null;
+  contactos: DatosContacto[];
+}
+
 export class ApiTerceros {
   constructor(private readonly http: ClienteHttp) {}
 
@@ -125,8 +149,16 @@ export class ApiTerceros {
     return this.http.obtener<FichaTercero>(`/terceros/${id}`);
   }
 
-  crear(datos: DatosTercero) {
+  crear(datos: DatosTercero | DatosAltaTercero) {
     return this.http.crear<Tercero>('/terceros', datos);
+  }
+
+  buscarContactos(texto: string) {
+    return this.http.obtener<ContactoEncontrado[]>('/contactos', { texto });
+  }
+
+  cambiarCategoriaProveedor(id: string, datos: { nombre: string; activo: boolean }) {
+    return this.http.reemplazar<CategoriaProveedor>(`/proveedores/categorias/${id}`, datos);
   }
 
   actualizar(id: string, datos: DatosTercero) {

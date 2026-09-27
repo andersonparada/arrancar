@@ -1,0 +1,47 @@
+import { reactive, type Ref } from 'vue';
+import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { apiTerceros, type FichaTercero, type PapelTercero } from '../servicios/terceros.api';
+import { papelesVacios, type PapelesDelFormulario } from './datos-de-tercero';
+
+/** Los papeles que ya tiene, para editarlos; los que no tiene quedan con sus valores iniciales. */
+function papelesDe(ficha: FichaTercero | null): PapelesDelFormulario {
+  const papeles = papelesVacios();
+  if (ficha?.cliente) papeles.cliente = { ...ficha.cliente };
+  if (ficha?.proveedor) papeles.proveedor = { ...ficha.proveedor };
+  return papeles;
+}
+
+function asignar(terceroId: string, papel: PapelTercero, papeles: PapelesDelFormulario) {
+  return papel === 'cliente'
+    ? apiTerceros.asignarCliente(terceroId, papeles.cliente)
+    : apiTerceros.asignarProveedor(terceroId, papeles.proveedor);
+}
+
+/** El papel queda inactivo con su historial; no se borra. */
+function quitar(terceroId: string, papel: PapelTercero) {
+  return papel === 'cliente' ? apiTerceros.quitarCliente(terceroId) : apiTerceros.quitarProveedor(terceroId);
+}
+
+/** Asignar, cambiar o quitar el papel de cliente o de proveedor desde la ficha. */
+export function usarPapelesDeLaFicha(ficha: Ref<FichaTercero | null>, alCambiar: () => Promise<void>) {
+  const avisos = usarAvisos();
+  const { enviando, errores, enviar } = usarFormulario();
+  const edicion = reactive({ abierta: null as PapelTercero | null, papeles: papelesVacios() });
+
+  const abrir = (papel: PapelTercero) => Object.assign(edicion, { abierta: papel, papeles: papelesDe(ficha.value) });
+
+  async function guardar(): Promise<void> {
+    const { abierta, papeles } = edicion;
+    if (!ficha.value || !abierta || !(await enviar(() => asignar(ficha.value!.id, abierta, papeles)))) return;
+    edicion.abierta = null;
+    await alCambiar();
+  }
+
+  async function quitarPapel(papel: PapelTercero): Promise<void> {
+    if (!ficha.value || !window.confirm(`¿Quitar el papel de ${papel}?`)) return;
+    await quitar(ficha.value.id, papel).then(alCambiar, (error: Error) => avisos.error(error.message));
+  }
+
+  return { edicion, enviando, errores, abrir, guardar, quitar: quitarPapel };
+}

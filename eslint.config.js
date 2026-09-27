@@ -67,21 +67,35 @@ function restringirImportaciones(archivos, patrones) {
 }
 
 /**
+ * Los componentes no llaman a la API: reciben datos por props y avisan con eventos.
+ * Sí pueden usar los tipos de los servicios (son el contrato de los datos).
+ */
+const COMPONENTES_SIN_SERVICIOS = {
+  files: ['cliente/src/modulos/**/componentes/**/*.vue'],
+  rules: {
+    '@typescript-eslint/no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          {
+            group: ['**/servicios/**', '**/servicios'],
+            allowTypeImports: true,
+            message:
+              'Los componentes reciben datos por props y avisan con eventos; la página o su composable llama a la API.',
+          },
+        ],
+      },
+    ],
+  },
+};
+
+/**
  * ESLint no combina dos `no-restricted-imports` sobre el mismo archivo (la última
  * gana), así que cada combinación módulo × capa lleva todas sus prohibiciones juntas.
  */
-const COMPONENTES_SIN_SERVICIOS = {
-  group: ['**/servicios/**', '**/servicios'],
-  message: 'Los componentes reciben datos por props y avisan con eventos; la página o su composable llama a la API.',
-};
-
 function reglasDeDependencias() {
   return modulos.flatMap((modulo) => [
     restringirImportaciones([`{servidor,cliente}/src/modulos/${modulo}/**/*.{ts,vue}`], prohibirOtrosModulos(modulo)),
-    restringirImportaciones(
-      [`cliente/src/modulos/${modulo}/componentes/**/*.vue`],
-      [...prohibirOtrosModulos(modulo), COMPONENTES_SIN_SERVICIOS],
-    ),
     ...Object.keys(RESTRICCIONES_POR_CAPA).map((capa) =>
       restringirImportaciones(
         [`servidor/src/modulos/${modulo}/**/${capa}/**/*.ts`],
@@ -160,6 +174,7 @@ export default tseslint.config(
   },
 
   ...reglasDeDependencias(),
+  COMPONENTES_SIN_SERVICIOS,
 
   prettier,
 );

@@ -26,6 +26,9 @@ const grupos = computed(() =>
 );
 const { abiertos, alternar } = usarPlegablesAbiertos(computed(() => plegablesDeLaRuta(grupos.value, ruta.path)));
 
+/** Cada ruta monta su página: Clientes y Proveedores comparten componente y no deben compartir su estado. */
+const clavePagina = computed(() => `${sesion.empresa?.id ?? 'sin-empresa'}:${ruta.path}`);
+
 const iniciales = computed(() =>
   (sesion.usuario?.nombre ?? '?')
     .split(' ')
@@ -118,7 +121,7 @@ async function salir(): Promise<void> {
     </aside>
 
     <main class="mx-auto max-w-6xl px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:py-8">
-      <RouterView :key="sesion.empresa?.id ?? 'sin-empresa'" />
+      <RouterView :key="clavePagina" />
     </main>
   </div>
 </template>

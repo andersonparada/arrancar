@@ -22,30 +22,33 @@ const idOpcional = z
 /** En la URL todo llega como texto: solo "true" y "false" son válidos. */
 const booleanoDeConsulta = z.enum(['true', 'false']).transform((texto) => texto === 'true');
 
-export const esquemaTercero = z
-  .object({
-    tipo: z.enum(['individual', 'juridica']),
-    nombres: textoOpcional(80),
-    apellidos: textoOpcional(80),
-    razonSocial: textoOpcional(150),
-    nombreComercial: textoOpcional(150),
-    nit: nitOpcional,
-    dpi: dpiOpcional,
-    telefono: textoOpcional(30),
-    whatsapp: textoOpcional(30),
-    correo: correoOpcional,
-    departamentoCodigo: codigoGeografico,
-    municipioCodigo: codigoGeografico,
-    direccion: textoOpcional(250),
-    fotoArchivoId: idOpcional,
-    notas: textoOpcional(1000),
-    activo: z.boolean().default(true),
-    confirmarDuplicado: z.boolean().default(false),
-  })
-  .refine((datos) => (datos.tipo === 'individual' ? !!datos.nombres : !!(datos.razonSocial || datos.nombreComercial)), {
-    message: 'Falta el nombre del tercero.',
-    path: ['nombres'],
-  });
+const camposDeTercero = z.object({
+  tipo: z.enum(['individual', 'juridica']),
+  nombres: textoOpcional(80),
+  apellidos: textoOpcional(80),
+  razonSocial: textoOpcional(150),
+  nombreComercial: textoOpcional(150),
+  nit: nitOpcional,
+  dpi: dpiOpcional,
+  telefono: textoOpcional(30),
+  whatsapp: textoOpcional(30),
+  correo: correoOpcional,
+  departamentoCodigo: codigoGeografico,
+  municipioCodigo: codigoGeografico,
+  direccion: textoOpcional(250),
+  fotoArchivoId: idOpcional,
+  notas: textoOpcional(1000),
+  activo: z.boolean().default(true),
+  confirmarDuplicado: z.boolean().default(false),
+});
+
+/** Una persona necesita nombres; una empresa, razón social o nombre comercial. */
+const tieneNombre = (datos: z.infer<typeof camposDeTercero>) =>
+  datos.tipo === 'individual' ? !!datos.nombres : !!(datos.razonSocial || datos.nombreComercial);
+
+const FALTA_EL_NOMBRE = { message: 'Falta el nombre del tercero.', path: ['nombres'] };
+
+export const esquemaTercero = camposDeTercero.refine(tieneNombre, FALTA_EL_NOMBRE);
 
 export const esquemaFiltrosDeTerceros = z.object({
   texto: z.string().trim().max(120).optional(),
@@ -92,3 +95,23 @@ export type CategoriaSolicitada = z.infer<typeof esquemaCategoria>;
 export type ParamsTercero = z.infer<typeof esquemaParamsTercero>;
 export type ParamsContacto = z.infer<typeof esquemaParamsContacto>;
 export type ParamsCategoria = z.infer<typeof esquemaParamsCategoria>;
+
+const papelAlRegistrar = z.discriminatedUnion('tipo', [
+  esquemaPapelDeCliente.extend({ tipo: z.literal('cliente') }),
+  esquemaPapelDeProveedor.extend({ tipo: z.literal('proveedor') }),
+]);
+
+/** El alta completa: datos, el papel con que entra y sus primeros contactos. */
+export const esquemaAltaDeTercero = camposDeTercero
+  .extend({
+    papel: papelAlRegistrar.nullish().transform((papel) => papel ?? null),
+    contactos: z.array(esquemaContacto).max(20).default([]),
+  })
+  .refine(tieneNombre, FALTA_EL_NOMBRE);
+
+export const esquemaBusquedaDeContactos = z.object({
+  texto: z.string().trim().min(2, 'Escriba al menos dos letras o números.').max(120),
+});
+
+export type AltaDeTerceroSolicitada = z.infer<typeof esquemaAltaDeTercero>;
+export type BusquedaDeContactosSolicitada = z.infer<typeof esquemaBusquedaDeContactos>;

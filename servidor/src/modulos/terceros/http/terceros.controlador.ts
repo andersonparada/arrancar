@@ -7,6 +7,7 @@ import type { ListarTerceros } from '../aplicacion/casos-uso/terceros/listar-ter
 import type { ObtenerFichaDeTercero } from '../aplicacion/casos-uso/terceros/obtener-ficha-de-tercero.js';
 import type { RegistrarTercero } from '../aplicacion/casos-uso/terceros/registrar-tercero.js';
 import type {
+  AltaDeTerceroSolicitada,
   FiltrosSolicitados,
   PapelDeClienteSolicitado,
   PapelDeProveedorSolicitado,
@@ -35,7 +36,7 @@ export class TercerosControlador {
   obtenerFicha = (solicitud: ConTercero) =>
     this.casosDeUso.obtenerFicha.ejecutar(operadorDe(solicitud), solicitud.params.terceroId);
 
-  registrar = async (solicitud: FastifyRequest<{ Body: TerceroSolicitado }>, respuesta: FastifyReply) => {
+  registrar = async (solicitud: FastifyRequest<{ Body: AltaDeTerceroSolicitada }>, respuesta: FastifyReply) => {
     const tercero = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), solicitud.body);
     return respuesta.status(201).send(tercero);
   };

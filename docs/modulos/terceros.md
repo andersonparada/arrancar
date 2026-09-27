@@ -84,7 +84,8 @@ Todas llevan `cuenta_id`, `politicaPorCuenta()` y marcas de tiempo.
 
 ## Pantallas
 
-Menú acordado (se construye en la fase 6.2 del refactor; el módulo es plegable):
+Construido en la fase 6.2 del refactor (2026-09-27). El módulo es plegable y, si
+el usuario solo ve una sección, sus opciones van directo sin el separador:
 
 ```
 ▾ Clientes
@@ -107,11 +108,16 @@ Menú acordado (se construye en la fase 6.2 del refactor; el módulo es plegable
   agregar o quitar el otro papel.
 - Clientes y Proveedores comparten los componentes (formulario de datos generales,
   contactos, buscador); cada pantalla solo agrega lo propio de su papel.
-- Cambios en el servidor: el listado trae la clase del cliente y la categoría del
-  proveedor; búsqueda de contactos; alta en un paso (datos, papel y contactos).
-
-Mientras tanto sigue la primera versión: listado general "Clientes y
-proveedores", ficha con cliente y proveedor, y alta rápida.
+- Rutas: `/clientes`, `/clientes/nuevo`, `/clientes/:id`, `/clientes/:id/editar`
+  (y lo mismo con `/proveedores`), `/contactos` y `/categorias-de-proveedor`. Las
+  direcciones viejas `/terceros` llevan a Clientes.
+- En el servidor: el listado trae la clase del cliente y la categoría del
+  proveedor; `GET /contactos?texto=` busca en clientes, proveedores y sus contactos
+  (nombre, correo o teléfono, activos, hasta 50); `POST /terceros` acepta `papel` y
+  `contactos` y lo guarda todo en una transacción. Registrar ya con un papel exige
+  también el permiso de ese papel.
+- `AltaRapidaTercero` (ventana con solo el nombre) queda para registrar a alguien
+  desde otros módulos, por ejemplo al vender; se usa con `usarAltaDeTercero`.
 
 ## Fuera de esta versión
 
