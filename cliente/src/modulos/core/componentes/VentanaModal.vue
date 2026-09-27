@@ -39,7 +39,11 @@ onBeforeUnmount(() => {
       enter-active-class="transition-opacity duration-150"
       leave-active-class="transition-opacity duration-150"
     >
-      <div v-if="abierta" class="fixed inset-0 z-40 flex items-end justify-center bg-tierra-900/50 sm:items-center sm:p-4" @click.self="emit('cerrar')">
+      <div
+        v-if="abierta"
+        class="fixed inset-0 z-40 flex items-end justify-center bg-tierra-900/50 sm:items-center sm:p-4"
+        @click.self="emit('cerrar')"
+      >
         <section
           role="dialog"
           aria-modal="true"
@@ -49,14 +53,22 @@ onBeforeUnmount(() => {
         >
           <header class="flex items-center justify-between border-b border-tierra-100 px-5 py-4 dark:border-tierra-800">
             <h2 class="text-lg font-semibold">{{ titulo }}</h2>
-            <button type="button" class="rounded-lg p-1.5 text-tierra-500 hover:bg-tierra-100 dark:hover:bg-tierra-800" aria-label="Cerrar" @click="emit('cerrar')">
+            <button
+              type="button"
+              class="rounded-lg p-1.5 text-tierra-500 hover:bg-tierra-100 dark:hover:bg-tierra-800"
+              aria-label="Cerrar"
+              @click="emit('cerrar')"
+            >
               <X class="size-5" />
             </button>
           </header>
           <div ref="contenido" class="overflow-y-auto px-5 py-4">
             <slot />
           </div>
-          <footer v-if="$slots.pie" class="flex flex-col-reverse gap-2 border-t border-tierra-100 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end dark:border-tierra-800">
+          <footer
+            v-if="$slots.pie"
+            class="flex flex-col-reverse gap-2 border-t border-tierra-100 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end dark:border-tierra-800"
+          >
             <slot name="pie" />
           </footer>
         </section>

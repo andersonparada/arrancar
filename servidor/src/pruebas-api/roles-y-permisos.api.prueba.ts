@@ -47,7 +47,10 @@ describe('roles', () => {
     const roles = await cuenta.propietario.get('/api/roles');
     const propietario = roles.cuerpo.find((r: { nombre: string }) => r.nombre === 'Propietario');
 
-    const respuesta = await cuenta.propietario.put(`/api/roles/${propietario.id}`, { nombre: 'Propietario', accesoTotal: false });
+    const respuesta = await cuenta.propietario.put(`/api/roles/${propietario.id}`, {
+      nombre: 'Propietario',
+      accesoTotal: false,
+    });
 
     expect(respuesta.estado).toBe(422);
   });

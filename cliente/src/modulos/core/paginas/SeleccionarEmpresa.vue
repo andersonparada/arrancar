@@ -51,7 +51,9 @@ async function elegir(empresaId: string): Promise<void> {
           class="flex w-full items-center gap-4 rounded-xl bg-white p-4 text-left ring-1 ring-tierra-200 transition hover:ring-campo-400 dark:bg-tierra-800 dark:ring-tierra-700"
           @click="elegir(empresa.id)"
         >
-          <span class="flex size-10 items-center justify-center rounded-lg bg-campo-100 text-campo-800 dark:bg-campo-900 dark:text-campo-200">
+          <span
+            class="flex size-10 items-center justify-center rounded-lg bg-campo-100 text-campo-800 dark:bg-campo-900 dark:text-campo-200"
+          >
             <Building2 class="size-5" aria-hidden="true" />
           </span>
           <span class="min-w-0 flex-1">

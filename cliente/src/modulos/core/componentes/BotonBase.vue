@@ -2,19 +2,21 @@
 import type { Component } from 'vue';
 import { LoaderCircle } from 'lucide-vue-next';
 
-const props = withDefaults(
+type Variante = 'primario' | 'secundario' | 'peligro' | 'fantasma';
+
+withDefaults(
   defineProps<{
-    variante?: 'primario' | 'secundario' | 'peligro' | 'fantasma';
+    variante?: Variante;
     tipo?: 'button' | 'submit';
     cargando?: boolean;
     deshabilitado?: boolean;
-    icono?: Component;
+    icono?: Component | null;
     pequeno?: boolean;
   }>(),
-  { variante: 'primario', tipo: 'button' },
+  { variante: 'primario', tipo: 'button', icono: null },
 );
 
-const estilosVariante: Record<NonNullable<typeof props.variante>, string> = {
+const estilosVariante: Record<Variante, string> = {
   primario: 'bg-campo-700 text-white hover:bg-campo-800 dark:bg-campo-600 dark:hover:bg-campo-500',
   secundario:
     'bg-white text-tierra-800 ring-1 ring-tierra-200 hover:bg-tierra-100 dark:bg-tierra-800 dark:text-tierra-100 dark:ring-tierra-700 dark:hover:bg-tierra-700',

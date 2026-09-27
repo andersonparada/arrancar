@@ -31,20 +31,29 @@ describe('generación del nombre de usuario', () => {
 
   it('si ya existe, usa las iniciales de los dos nombres, el primer apellido y la inicial del segundo', async () => {
     const primero = await cuenta.propietario.post('/api/usuarios', nuevoUsuario('Anderson Martín', 'Parada Alburez'));
-    const segundo = await cuenta.propietario.post('/api/usuarios', nuevoUsuario('Anderson Magdiel', 'Parada Alvizures'));
+    const segundo = await cuenta.propietario.post(
+      '/api/usuarios',
+      nuevoUsuario('Anderson Magdiel', 'Parada Alvizures'),
+    );
 
     expect(primero.cuerpo.usuario).toBe('aparada');
     expect(segundo.cuerpo.usuario).toBe('amparadaa');
   });
 
   it('rechaza un usuario escrito a mano con números', async () => {
-    const respuesta = await cuenta.propietario.post('/api/usuarios', nuevoUsuario('Pedro', 'Solís', { usuario: 'pedro2' }));
+    const respuesta = await cuenta.propietario.post(
+      '/api/usuarios',
+      nuevoUsuario('Pedro', 'Solís', { usuario: 'pedro2' }),
+    );
 
     expect(respuesta.estado).toBe(400);
   });
 
   it('rechaza un usuario escrito a mano que ya está en uso', async () => {
-    const respuesta = await cuenta.propietario.post('/api/usuarios', nuevoUsuario('Pedro', 'Solís', { usuario: 'aparada' }));
+    const respuesta = await cuenta.propietario.post(
+      '/api/usuarios',
+      nuevoUsuario('Pedro', 'Solís', { usuario: 'aparada' }),
+    );
 
     expect(respuesta.estado).toBe(409);
   });
@@ -59,7 +68,10 @@ describe('administración de usuarios', () => {
   });
 
   it('exige al menos una empresa válida de la cuenta', async () => {
-    const sinEmpresas = await cuenta.propietario.post('/api/usuarios', nuevoUsuario('Sin', 'Empresas', { accesos: [] }));
+    const sinEmpresas = await cuenta.propietario.post(
+      '/api/usuarios',
+      nuevoUsuario('Sin', 'Empresas', { accesos: [] }),
+    );
     const empresaAjena = await cuenta.propietario.post(
       '/api/usuarios',
       nuevoUsuario('Empresa', 'Ajena', { accesos: [{ empresaId: crypto.randomUUID(), rolId: rolPropietarioId }] }),
@@ -92,7 +104,10 @@ describe('administración de usuarios', () => {
   });
 
   it('rechaza contraseñas de menos de 10 caracteres', async () => {
-    const respuesta = await cuenta.propietario.post('/api/usuarios', nuevoUsuario('Corta', 'Clave', { contrasena: 'corta' }));
+    const respuesta = await cuenta.propietario.post(
+      '/api/usuarios',
+      nuevoUsuario('Corta', 'Clave', { contrasena: 'corta' }),
+    );
 
     expect(respuesta.estado).toBe(400);
   });

@@ -9,8 +9,8 @@ import CampoSelector from '../componentes/CampoSelector.vue';
 import CampoTexto from '../componentes/CampoTexto.vue';
 import EncabezadoPagina from '../componentes/EncabezadoPagina.vue';
 import EstadoVacio from '../componentes/EstadoVacio.vue';
-import Insignia from '../componentes/Insignia.vue';
-import Tarjeta from '../componentes/Tarjeta.vue';
+import InsigniaBase from '../componentes/InsigniaBase.vue';
+import TarjetaBase from '../componentes/TarjetaBase.vue';
 import VentanaModal from '../componentes/VentanaModal.vue';
 import { usarFormulario } from '../composables/usar-formulario';
 import { rolesApi, type Rol } from '../servicios/roles.api';
@@ -75,7 +75,10 @@ function abrir(usuario?: Usuario): void {
     contrasena: '',
     activo: usuario?.activo ?? true,
     rolPorEmpresa: Object.fromEntries(
-      empresasDeLaCuenta.value.map((e) => [e.id, usuario?.accesos.find((a) => a.empresaId === e.id)?.rolId ?? SIN_ACCESO]),
+      empresasDeLaCuenta.value.map((e) => [
+        e.id,
+        usuario?.accesos.find((a) => a.empresaId === e.id)?.rolId ?? SIN_ACCESO,
+      ]),
     ),
   });
   formulario.errores.value = {};
@@ -154,7 +157,10 @@ onMounted(cargar);
 
 <template>
   <div>
-    <EncabezadoPagina titulo="Usuarios" descripcion="Personas con acceso a las empresas de esta cuenta y el rol que tienen en cada una.">
+    <EncabezadoPagina
+      titulo="Usuarios"
+      descripcion="Personas con acceso a las empresas de esta cuenta y el rol que tienen en cada una."
+    >
       <BotonBase v-permiso="'usuarios.gestionar'" :icono="UserPlus" @click="abrir()">Nuevo usuario</BotonBase>
     </EncabezadoPagina>
 
@@ -162,36 +168,65 @@ onMounted(cargar);
     <EstadoVacio v-else-if="!usuarios.length" :icono="Users" titulo="Todavía no hay usuarios" />
     <ul v-else class="grid gap-3 md:grid-cols-2">
       <li v-for="usuario in usuarios" :key="usuario.id">
-        <Tarjeta class="flex h-full flex-col gap-3">
+        <TarjetaBase class="flex h-full flex-col gap-3">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <p class="truncate font-semibold">{{ nombreCompleto(usuario) }}</p>
               <p class="truncate font-mono text-sm text-tierra-500">{{ usuario.usuario }}</p>
               <p v-if="usuario.correo" class="truncate text-xs text-tierra-500">{{ usuario.correo }}</p>
             </div>
-            <Insignia :tono="usuario.activo ? 'campo' : 'rojo'">{{ usuario.activo ? 'Activo' : 'Inactivo' }}</Insignia>
+            <InsigniaBase :tono="usuario.activo ? 'campo' : 'rojo'">{{
+              usuario.activo ? 'Activo' : 'Inactivo'
+            }}</InsigniaBase>
           </div>
           <ul class="flex flex-wrap gap-1.5">
             <li v-for="acceso in usuario.accesos" :key="acceso.empresaId">
-              <Insignia>{{ acceso.empresaNombre }} · {{ acceso.rolNombre }}</Insignia>
+              <InsigniaBase>{{ acceso.empresaNombre }} · {{ acceso.rolNombre }}</InsigniaBase>
             </li>
           </ul>
           <div class="mt-auto flex items-center justify-between gap-2 pt-1">
             <p class="text-xs text-tierra-500">Último acceso: {{ formatearFechaHora(usuario.ultimoAccesoEn) }}</p>
             <div v-permiso="'usuarios.gestionar'" class="flex gap-1">
-              <BotonBase variante="fantasma" pequeno :icono="KeyRound" aria-label="Cambiar contraseña" @click="Object.assign(cambioContrasena, { abierta: true, usuario, contrasena: '' })" />
-              <BotonBase variante="fantasma" pequeno :icono="Pencil" aria-label="Editar usuario" @click="abrir(usuario)" />
+              <BotonBase
+                variante="fantasma"
+                pequeno
+                :icono="KeyRound"
+                aria-label="Cambiar contraseña"
+                @click="Object.assign(cambioContrasena, { abierta: true, usuario, contrasena: '' })"
+              />
+              <BotonBase
+                variante="fantasma"
+                pequeno
+                :icono="Pencil"
+                aria-label="Editar usuario"
+                @click="abrir(usuario)"
+              />
             </div>
           </div>
-        </Tarjeta>
+        </TarjetaBase>
       </li>
     </ul>
 
-    <VentanaModal :abierta="edicion.abierta" :titulo="edicion.usuarioId ? 'Editar usuario' : 'Nuevo usuario'" @cerrar="edicion.abierta = false">
+    <VentanaModal
+      :abierta="edicion.abierta"
+      :titulo="edicion.usuarioId ? 'Editar usuario' : 'Nuevo usuario'"
+      @cerrar="edicion.abierta = false"
+    >
       <form id="form-usuario" class="space-y-4" @submit.prevent="guardar">
         <div class="grid gap-4 sm:grid-cols-2">
-          <CampoTexto v-model="edicion.nombres" etiqueta="Nombres" placeholder="Ej. Juan Carlos" requerido :error="formulario.errores.value.nombres" />
-          <CampoTexto v-model="edicion.apellidos" etiqueta="Apellidos" placeholder="Ej. López García" :error="formulario.errores.value.apellidos" />
+          <CampoTexto
+            v-model="edicion.nombres"
+            etiqueta="Nombres"
+            placeholder="Ej. Juan Carlos"
+            requerido
+            :error="formulario.errores.value.nombres"
+          />
+          <CampoTexto
+            v-model="edicion.apellidos"
+            etiqueta="Apellidos"
+            placeholder="Ej. López García"
+            :error="formulario.errores.value.apellidos"
+          />
         </div>
         <CampoTexto
           :model-value="edicion.usuario"
@@ -224,10 +259,17 @@ onMounted(cargar);
           :error="formulario.errores.value.contrasena"
         />
         <template v-if="edicion.usuarioId !== sesion.usuario?.id">
-          <CampoInterruptor v-if="edicion.usuarioId" v-model="edicion.activo" etiqueta="Usuario activo" descripcion="Un usuario inactivo no puede iniciar sesión." />
+          <CampoInterruptor
+            v-if="edicion.usuarioId"
+            v-model="edicion.activo"
+            etiqueta="Usuario activo"
+            descripcion="Un usuario inactivo no puede iniciar sesión."
+          />
           <fieldset class="space-y-3">
             <legend class="text-sm font-semibold">Acceso por empresa</legend>
-            <p v-if="formulario.errores.value.accesos" class="text-sm text-red-700">{{ formulario.errores.value.accesos }}</p>
+            <p v-if="formulario.errores.value.accesos" class="text-sm text-red-700">
+              {{ formulario.errores.value.accesos }}
+            </p>
             <CampoSelector
               v-for="empresa in empresasDeLaCuenta"
               :key="empresa.id"
@@ -245,12 +287,25 @@ onMounted(cargar);
       </template>
     </VentanaModal>
 
-    <VentanaModal :abierta="cambioContrasena.abierta" titulo="Cambiar contraseña" @cerrar="cambioContrasena.abierta = false">
+    <VentanaModal
+      :abierta="cambioContrasena.abierta"
+      titulo="Cambiar contraseña"
+      @cerrar="cambioContrasena.abierta = false"
+    >
       <form id="form-contrasena" class="space-y-4" @submit.prevent="guardarContrasena">
         <p class="text-sm text-tierra-600">
-          Nueva contraseña para <strong>{{ cambioContrasena.usuario && nombreCompleto(cambioContrasena.usuario) }}</strong>. Se cerrarán sus sesiones abiertas.
+          Nueva contraseña para
+          <strong>{{ cambioContrasena.usuario && nombreCompleto(cambioContrasena.usuario) }}</strong
+          >. Se cerrarán sus sesiones abiertas.
         </p>
-        <CampoTexto v-model="cambioContrasena.contrasena" etiqueta="Nueva contraseña" tipo="password" autocompletar="new-password" requerido :error="formulario.errores.value.contrasena" />
+        <CampoTexto
+          v-model="cambioContrasena.contrasena"
+          etiqueta="Nueva contraseña"
+          tipo="password"
+          autocompletar="new-password"
+          requerido
+          :error="formulario.errores.value.contrasena"
+        />
       </form>
       <template #pie>
         <BotonBase variante="secundario" @click="cambioContrasena.abierta = false">Cancelar</BotonBase>

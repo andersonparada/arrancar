@@ -16,7 +16,11 @@ beforeAll(async () => {
   familiaA = await darDeAltaCuenta(entorno, { nombre: 'Familia A', usuario: 'familiaa', modulos: ['terceros'] });
   familiaB = await darDeAltaCuenta(entorno, { nombre: 'Familia B', usuario: 'familiab', modulos: ['terceros'] });
 
-  const tercero = await familiaA.propietario.post('/api/terceros', { tipo: 'individual', nombres: 'Secreto', apellidos: 'De A' });
+  const tercero = await familiaA.propietario.post('/api/terceros', {
+    tipo: 'individual',
+    nombres: 'Secreto',
+    apellidos: 'De A',
+  });
   const archivo = await familiaA.propietario.subirImagen('POST', '/api/archivos', await crearImagenPng());
   const roles = await familiaA.propietario.get('/api/roles');
   const usuarios = await familiaA.propietario.get('/api/usuarios');

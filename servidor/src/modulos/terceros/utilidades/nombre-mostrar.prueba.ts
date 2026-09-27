@@ -8,7 +8,12 @@ describe('calcularNombreMostrar', () => {
 
   it('prefiere el nombre comercial aunque sea individual', () => {
     expect(
-      calcularNombreMostrar({ tipo: 'individual', nombres: 'Juan', apellidos: 'Pérez', nombreComercial: 'Ferretería Juan' }),
+      calcularNombreMostrar({
+        tipo: 'individual',
+        nombres: 'Juan',
+        apellidos: 'Pérez',
+        nombreComercial: 'Ferretería Juan',
+      }),
     ).toBe('Ferretería Juan');
   });
 

@@ -4,7 +4,10 @@ const modelo = defineModel<boolean>({ default: false });
 </script>
 
 <template>
-  <label class="flex cursor-pointer items-start justify-between gap-4" :class="{ 'cursor-not-allowed opacity-60': deshabilitado }">
+  <label
+    class="flex cursor-pointer items-start justify-between gap-4"
+    :class="{ 'cursor-not-allowed opacity-60': deshabilitado }"
+  >
     <span class="flex flex-col">
       <span class="text-sm font-medium text-tierra-800 dark:text-tierra-100">{{ etiqueta }}</span>
       <span v-if="descripcion" class="text-xs text-tierra-500">{{ descripcion }}</span>

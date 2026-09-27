@@ -15,7 +15,10 @@ export const esquemaCliente = z.object({
 });
 
 export const esquemaProveedor = z.object({
-  categoriaId: z.uuid().nullish().transform((v) => v || null),
+  categoriaId: z
+    .uuid()
+    .nullish()
+    .transform((v) => v || null),
   activo: z.boolean().default(true),
   notas: textoOpcional(500),
 });

@@ -7,8 +7,8 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
-import Insignia from '@/modulos/core/componentes/Insignia.vue';
-import Tarjeta from '@/modulos/core/componentes/Tarjeta.vue';
+import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
+import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { empresasApi, type Empresa } from '../servicios/empresas.api';
@@ -74,46 +74,87 @@ onMounted(cargar);
 
 <template>
   <div>
-    <EncabezadoPagina titulo="Empresas" :descripcion="`Ranchos y parcelas de la cuenta ${sesion.empresa?.cuentaNombre ?? ''}.`">
+    <EncabezadoPagina
+      titulo="Empresas"
+      :descripcion="`Ranchos y parcelas de la cuenta ${sesion.empresa?.cuentaNombre ?? ''}.`"
+    >
       <BotonBase v-permiso="'empresas.gestionar'" :icono="Plus" @click="abrir()">Nueva empresa</BotonBase>
     </EncabezadoPagina>
 
     <ul class="grid gap-3 md:grid-cols-2">
       <li v-for="empresa in empresas" :key="empresa.id">
-        <Tarjeta class="flex h-full flex-col gap-3">
+        <TarjetaBase class="flex h-full flex-col gap-3">
           <div class="flex items-start gap-3">
-            <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-campo-100 text-campo-800 dark:bg-campo-900 dark:text-campo-200">
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-campo-100 text-campo-800 dark:bg-campo-900 dark:text-campo-200"
+            >
               <Building2 class="size-5" aria-hidden="true" />
             </span>
             <div class="min-w-0 flex-1">
               <p class="truncate font-semibold">{{ empresa.nombre }}</p>
               <p class="text-sm text-tierra-500">NIT {{ empresa.nit ?? 'sin registrar' }} · {{ empresa.monedaBase }}</p>
             </div>
-            <Insignia v-if="empresa.id === sesion.empresa?.id" tono="campo">Activa ahora</Insignia>
-            <Insignia v-else-if="!empresa.activa" tono="rojo">Desactivada</Insignia>
+            <InsigniaBase v-if="empresa.id === sesion.empresa?.id" tono="campo">Activa ahora</InsigniaBase>
+            <InsigniaBase v-else-if="!empresa.activa" tono="rojo">Desactivada</InsigniaBase>
           </div>
           <ul class="space-y-1 text-sm text-tierra-600 dark:text-tierra-300">
-            <li v-if="empresa.direccion" class="flex items-center gap-2"><MapPin class="size-4 shrink-0" aria-hidden="true" />{{ empresa.direccion }}</li>
-            <li v-if="empresa.telefono" class="flex items-center gap-2"><Phone class="size-4 shrink-0" aria-hidden="true" />{{ empresa.telefono }}</li>
-            <li v-if="empresa.correo" class="flex items-center gap-2"><Mail class="size-4 shrink-0" aria-hidden="true" />{{ empresa.correo }}</li>
+            <li v-if="empresa.direccion" class="flex items-center gap-2">
+              <MapPin class="size-4 shrink-0" aria-hidden="true" />{{ empresa.direccion }}
+            </li>
+            <li v-if="empresa.telefono" class="flex items-center gap-2">
+              <Phone class="size-4 shrink-0" aria-hidden="true" />{{ empresa.telefono }}
+            </li>
+            <li v-if="empresa.correo" class="flex items-center gap-2">
+              <Mail class="size-4 shrink-0" aria-hidden="true" />{{ empresa.correo }}
+            </li>
           </ul>
           <div v-permiso="'empresas.gestionar'" class="mt-auto flex justify-end">
             <BotonBase variante="fantasma" pequeno :icono="Pencil" @click="abrir(empresa)">Editar</BotonBase>
           </div>
-        </Tarjeta>
+        </TarjetaBase>
       </li>
     </ul>
 
-    <VentanaModal :abierta="edicion.abierta" :titulo="edicion.empresaId ? 'Editar empresa' : 'Nueva empresa'" @cerrar="edicion.abierta = false">
+    <VentanaModal
+      :abierta="edicion.abierta"
+      :titulo="edicion.empresaId ? 'Editar empresa' : 'Nueva empresa'"
+      @cerrar="edicion.abierta = false"
+    >
       <form id="form-empresa" class="space-y-4" @submit.prevent="guardar">
-        <CampoTexto v-model="edicion.nombre" etiqueta="Nombre" placeholder="Ej. Rancho San José" requerido :error="formulario.errores.value.nombre" />
-        <CampoTexto v-model="edicion.nit" etiqueta="NIT" placeholder="Ej. 1234567-8" :error="formulario.errores.value.nit" />
+        <CampoTexto
+          v-model="edicion.nombre"
+          etiqueta="Nombre"
+          placeholder="Ej. Rancho San José"
+          requerido
+          :error="formulario.errores.value.nombre"
+        />
+        <CampoTexto
+          v-model="edicion.nit"
+          etiqueta="NIT"
+          placeholder="Ej. 1234567-8"
+          :error="formulario.errores.value.nit"
+        />
         <CampoTexto v-model="edicion.direccion" etiqueta="Dirección" :error="formulario.errores.value.direccion" />
         <div class="grid gap-4 sm:grid-cols-2">
-          <CampoTexto v-model="edicion.telefono" etiqueta="Teléfono" tipo="tel" :error="formulario.errores.value.telefono" />
-          <CampoTexto v-model="edicion.correo" etiqueta="Correo" tipo="email" :error="formulario.errores.value.correo" />
+          <CampoTexto
+            v-model="edicion.telefono"
+            etiqueta="Teléfono"
+            tipo="tel"
+            :error="formulario.errores.value.telefono"
+          />
+          <CampoTexto
+            v-model="edicion.correo"
+            etiqueta="Correo"
+            tipo="email"
+            :error="formulario.errores.value.correo"
+          />
         </div>
-        <CampoInterruptor v-if="edicion.empresaId" v-model="edicion.activa" etiqueta="Empresa activa" descripcion="Una empresa desactivada no aparece en el selector." />
+        <CampoInterruptor
+          v-if="edicion.empresaId"
+          v-model="edicion.activa"
+          etiqueta="Empresa activa"
+          descripcion="Una empresa desactivada no aparece en el selector."
+        />
       </form>
       <template #pie>
         <BotonBase variante="secundario" @click="edicion.abierta = false">Cancelar</BotonBase>

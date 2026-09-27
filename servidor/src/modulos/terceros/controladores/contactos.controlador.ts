@@ -10,7 +10,11 @@ export const contactosControlador = {
   },
 
   async crear(solicitud: FastifyRequest<{ Params: ParamsTercero; Body: ContactoSolicitado }>, respuesta: FastifyReply) {
-    const contacto = await contactosServicio.crear(empresaActivaDe(solicitud), solicitud.params.terceroId, solicitud.body);
+    const contacto = await contactosServicio.crear(
+      empresaActivaDe(solicitud),
+      solicitud.params.terceroId,
+      solicitud.body,
+    );
     return respuesta.status(201).send(contacto);
   },
 

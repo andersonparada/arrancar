@@ -9,9 +9,9 @@ services:
       POSTGRES_USER: arrancar
       POSTGRES_PASSWORD: arrancar
       ARRANCAR_APP_PASSWORD: arrancar_app
-      CREAR_BD_PRUEBAS: "si"
+      CREAR_BD_PRUEBAS: 'si'
     ports:
-      - "5433:5432"
+      - '5433:5432'
     volumes:
       - datos-postgres:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro

@@ -29,6 +29,8 @@ npm run dev:servidor                      # API en :3100, documentación en /api
 npm run dev:cliente                       # PWA en :5180 (proxy de /api al :3100)
 npm run probar                            # pruebas del servidor (Vitest, base arrancar_pruebas)
 npm run verificar                         # tsc del servidor y vue-tsc del cliente
+npm run revisar                           # Prettier + ESLint + verificar: correr antes de cada commit
+npm run formatear                         # aplica Prettier y las correcciones automáticas de ESLint
 npm run bd:generar -w servidor -- <modulo> <nombre> [--custom]
 ```
 

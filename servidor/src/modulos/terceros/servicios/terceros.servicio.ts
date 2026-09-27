@@ -57,7 +57,10 @@ export const tercerosServicio = {
   async listar(contexto: ContextoEmpresa, filtros: FiltrosListarTerceros, opciones: OpcionesVisibilidad) {
     return ejecutarEnEmpresa(contexto, async (tx) => {
       const lista = await tercerosRepositorio.listar(tx, { texto: filtros.texto, activo: filtros.activo });
-      const papeles = await papelesDe(tx, lista.map((t) => t.id));
+      const papeles = await papelesDe(
+        tx,
+        lista.map((t) => t.id),
+      );
       const filtrada = filtros.papel ? lista.filter((t) => papeles[filtros.papel!].has(t.id)) : lista;
 
       return filtrada.map((tercero) => ({

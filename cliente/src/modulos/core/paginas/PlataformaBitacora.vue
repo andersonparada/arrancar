@@ -23,12 +23,20 @@ onMounted(async () => {
 
 <template>
   <div>
-    <EncabezadoPagina titulo="Bitácora de soporte" descripcion="Cada vez que alguien con superacceso entra a una empresa ajena queda registrado aquí." />
+    <EncabezadoPagina
+      titulo="Bitácora de soporte"
+      descripcion="Cada vez que alguien con superacceso entra a una empresa ajena queda registrado aquí."
+    />
 
     <EstadoVacio v-if="!entradas.length" :icono="ScrollText" titulo="Sin registros" />
-    <div v-else class="overflow-x-auto rounded-2xl bg-white ring-1 ring-tierra-200/70 dark:bg-tierra-800/60 dark:ring-tierra-700">
+    <div
+      v-else
+      class="overflow-x-auto rounded-2xl bg-white ring-1 ring-tierra-200/70 dark:bg-tierra-800/60 dark:ring-tierra-700"
+    >
       <table class="w-full text-left text-sm">
-        <thead class="border-b border-tierra-100 text-xs tracking-wide text-tierra-500 uppercase dark:border-tierra-700">
+        <thead
+          class="border-b border-tierra-100 text-xs tracking-wide text-tierra-500 uppercase dark:border-tierra-700"
+        >
           <tr>
             <th class="px-4 py-3 font-medium">Fecha</th>
             <th class="px-4 py-3 font-medium">Usuario</th>

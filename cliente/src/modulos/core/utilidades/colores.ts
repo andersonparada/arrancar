@@ -56,7 +56,11 @@ function rgbAHsl([r, g, b]: Rgb): [number, number, number] {
   const d = max - min;
   const saturacion = luz > 0.5 ? d / (2 - max - min) : d / (max + min);
   const tono =
-    max === rn ? ((gn - bn) / d + (gn < bn ? 6 : 0)) * 60 : max === gn ? ((bn - rn) / d + 2) * 60 : ((rn - gn) / d + 4) * 60;
+    max === rn
+      ? ((gn - bn) / d + (gn < bn ? 6 : 0)) * 60
+      : max === gn
+        ? ((bn - rn) / d + 2) * 60
+        : ((rn - gn) / d + 4) * 60;
   return [tono, saturacion, luz];
 }
 

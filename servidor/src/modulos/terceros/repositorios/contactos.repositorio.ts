@@ -4,7 +4,9 @@ import { contactos } from '../esquemas/contactos.esquema.js';
 
 export type Contacto = typeof contactos.$inferSelect;
 export type NuevoContacto = typeof contactos.$inferInsert;
-export type CambiosContacto = Partial<Omit<NuevoContacto, 'id' | 'cuentaId' | 'terceroId' | 'creadoEn' | 'actualizadoEn'>>;
+export type CambiosContacto = Partial<
+  Omit<NuevoContacto, 'id' | 'cuentaId' | 'terceroId' | 'creadoEn' | 'actualizadoEn'>
+>;
 
 export const contactosRepositorio = {
   async listarDeTercero(tx: Transaccion, terceroId: string): Promise<Contacto[]> {

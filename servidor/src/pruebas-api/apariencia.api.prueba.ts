@@ -38,12 +38,19 @@ describe('apariencia de la instalación', () => {
     });
     const restablecida = await entorno.soporte.delete('/api/plataforma/apariencia');
 
-    expect(cambiada.cuerpo).toMatchObject({ nombreAplicacion: 'Mi Rancho', colorPrincipal: '#1d3557', colorAcento: '#f1faee' });
+    expect(cambiada.cuerpo).toMatchObject({
+      nombreAplicacion: 'Mi Rancho',
+      colorPrincipal: '#1d3557',
+      colorAcento: '#f1faee',
+    });
     expect(restablecida.cuerpo).toMatchObject(APARIENCIA_ORIGINAL);
   });
 
   it('rechaza colores que no tienen el formato #RRGGBB', async () => {
-    const respuesta = await entorno.soporte.put('/api/plataforma/apariencia', { ...APARIENCIA_ORIGINAL, colorAcento: 'rojo' });
+    const respuesta = await entorno.soporte.put('/api/plataforma/apariencia', {
+      ...APARIENCIA_ORIGINAL,
+      colorAcento: 'rojo',
+    });
 
     expect(respuesta.estado).toBe(400);
   });
@@ -67,7 +74,11 @@ describe('logo de la instalación', () => {
   });
 
   it('rechaza archivos que no son imágenes', async () => {
-    const respuesta = await entorno.soporte.subirImagen('PUT', '/api/plataforma/apariencia/logo', crearArchivoDeTexto());
+    const respuesta = await entorno.soporte.subirImagen(
+      'PUT',
+      '/api/plataforma/apariencia/logo',
+      crearArchivoDeTexto(),
+    );
 
     expect(respuesta.estado).toBe(400);
   });

@@ -39,7 +39,9 @@ async function resolverAccesoEmpresa(usuario: UsuarioSesion, empresaId: string):
   const registro = obtenerRegistroModulos();
   const modulosActivos = registro.resolverActivos(await cuentasRepositorio.clavesModulos(empresa.cuentaId));
   const permisosDisponibles = new Set(registro.permisosDe(modulosActivos).map((p) => p.clave));
-  const permisos = accesoTotal ? permisosDisponibles : new Set(permisosDelRol.filter((p) => permisosDisponibles.has(p)));
+  const permisos = accesoTotal
+    ? permisosDisponibles
+    : new Set(permisosDelRol.filter((p) => permisosDisponibles.has(p)));
   const recursosAlcanceTotal = registro.recursosConAlcanceTotal(modulosActivos, permisos, accesoTotal);
 
   return { empresa, rolNombre, modulosActivos, permisos, recursosAlcanceTotal };

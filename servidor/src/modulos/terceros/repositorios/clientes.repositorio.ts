@@ -4,7 +4,9 @@ import { clientes } from '../esquemas/clientes.esquema.js';
 
 export type Cliente = typeof clientes.$inferSelect;
 export type NuevoCliente = typeof clientes.$inferInsert;
-export type CambiosCliente = Partial<Omit<NuevoCliente, 'id' | 'cuentaId' | 'terceroId' | 'creadoEn' | 'actualizadoEn'>>;
+export type CambiosCliente = Partial<
+  Omit<NuevoCliente, 'id' | 'cuentaId' | 'terceroId' | 'creadoEn' | 'actualizadoEn'>
+>;
 
 export const clientesRepositorio = {
   async buscarPorTercero(tx: Transaccion, terceroId: string): Promise<Cliente | undefined> {
@@ -15,7 +17,10 @@ export const clientesRepositorio = {
   /** Ids de terceros (de entre los indicados) que ya tienen el papel de cliente. */
   async terceroIdsConPapel(tx: Transaccion, terceroIds: string[]): Promise<Set<string>> {
     if (terceroIds.length === 0) return new Set();
-    const filas = await tx.select({ terceroId: clientes.terceroId }).from(clientes).where(inArray(clientes.terceroId, terceroIds));
+    const filas = await tx
+      .select({ terceroId: clientes.terceroId })
+      .from(clientes)
+      .where(inArray(clientes.terceroId, terceroIds));
     return new Set(filas.map((f) => f.terceroId));
   },
 

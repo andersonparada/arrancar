@@ -30,9 +30,15 @@ describe('configuración por niveles', () => {
   });
 
   it('el valor de la empresa gana al de la cuenta', async () => {
-    await cuenta.propietario.put(`/api/configuracion/${ZONA_HORARIA}`, { nivel: 'cuenta', valor: 'America/Mexico_City' });
+    await cuenta.propietario.put(`/api/configuracion/${ZONA_HORARIA}`, {
+      nivel: 'cuenta',
+      valor: 'America/Mexico_City',
+    });
     const conCuenta = await variable(ZONA_HORARIA);
-    await cuenta.propietario.put(`/api/configuracion/${ZONA_HORARIA}`, { nivel: 'empresa', valor: 'America/El_Salvador' });
+    await cuenta.propietario.put(`/api/configuracion/${ZONA_HORARIA}`, {
+      nivel: 'empresa',
+      valor: 'America/El_Salvador',
+    });
     const conEmpresa = await variable(ZONA_HORARIA);
 
     expect(conCuenta).toMatchObject({ efectivo: 'America/Mexico_City', origen: 'cuenta' });
@@ -53,7 +59,10 @@ describe('configuración por niveles', () => {
   });
 
   it('rechaza un valor con el tipo equivocado', async () => {
-    const respuesta = await cuenta.propietario.put(`/api/configuracion/${ZONA_HORARIA}`, { nivel: 'cuenta', valor: 42 });
+    const respuesta = await cuenta.propietario.put(`/api/configuracion/${ZONA_HORARIA}`, {
+      nivel: 'cuenta',
+      valor: 42,
+    });
 
     expect(respuesta.estado).toBe(400);
   });

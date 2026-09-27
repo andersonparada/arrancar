@@ -14,7 +14,7 @@ services:
       - datos-postgres:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "arrancar", "-d", "arrancar"]
+      test: ['CMD', 'pg_isready', '-U', 'arrancar', '-d', 'arrancar']
       interval: 10s
       retries: 10
 
@@ -41,8 +41,8 @@ services:
     restart: unless-stopped
     depends_on: [app]
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     environment:
       DOMINIO: ${DOMINIO}
     volumes:
@@ -63,7 +63,7 @@ services:
       - ./respaldos:/respaldos
       - archivos:/archivos:ro
       - ./respaldo.sh:/respaldo.sh:ro
-    entrypoint: ["sh", "/respaldo.sh"]
+    entrypoint: ['sh', '/respaldo.sh']
 
 volumes:
   datos-postgres:

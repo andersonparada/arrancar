@@ -4,11 +4,7 @@ import { rolesRepositorio } from '../repositorios/roles.repositorio.js';
 import { sesionesRepositorio } from '../repositorios/sesiones.repositorio.js';
 import { usuariosRepositorio } from '../repositorios/usuarios.repositorio.js';
 import { empresasRepositorio } from '../repositorios/empresas.repositorio.js';
-import type {
-  AccesoSolicitado,
-  CambioUsuario,
-  NuevoUsuarioSolicitado,
-} from '../validaciones/usuarios.validaciones.js';
+import type { AccesoSolicitado, CambioUsuario, NuevoUsuarioSolicitado } from '../validaciones/usuarios.validaciones.js';
 import { generarHashContrasena } from './contrasenas.servicio.js';
 import { nombreUsuarioServicio } from './nombre-usuario.servicio.js';
 

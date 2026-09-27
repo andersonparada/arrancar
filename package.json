@@ -18,9 +18,19 @@
     "dev:cliente": "npm run dev -w cliente",
     "construir": "npm run construir -w cliente && npm run construir -w servidor",
     "verificar": "npm run verificar -w servidor && npm run verificar -w cliente",
-    "probar": "npm run probar -w servidor"
+    "probar": "npm run probar -w servidor",
+    "lint": "eslint .",
+    "formatear": "prettier --write . && eslint . --fix",
+    "revisar": "prettier --check . && eslint . && npm run verificar"
   },
   "devDependencies": {
-    "concurrently": "^9.2.4"
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^9.2.4",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.11.1",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "typescript-eslint": "^8.70.1"
   }
 }

@@ -10,5 +10,7 @@ const tonos = {
 </script>
 
 <template>
-  <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium" :class="tonos[tono]"><slot /></span>
+  <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium" :class="tonos[tono]"
+    ><slot
+  /></span>
 </template>

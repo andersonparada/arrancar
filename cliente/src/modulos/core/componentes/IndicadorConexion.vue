@@ -16,7 +16,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="!enLinea" role="status" class="flex items-center justify-center gap-2 bg-trigo-400 px-4 py-2 text-sm font-medium text-tierra-900">
+  <div
+    v-if="!enLinea"
+    role="status"
+    class="flex items-center justify-center gap-2 bg-trigo-400 px-4 py-2 text-sm font-medium text-tierra-900"
+  >
     <WifiOff class="size-4" aria-hidden="true" />
     Sin conexión a internet. Arrancar necesita conexión para guardar y consultar datos.
   </div>

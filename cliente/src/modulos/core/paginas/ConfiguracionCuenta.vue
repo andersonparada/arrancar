@@ -8,8 +8,8 @@ import CampoInterruptor from '../componentes/CampoInterruptor.vue';
 import CampoTexto from '../componentes/CampoTexto.vue';
 import EncabezadoPagina from '../componentes/EncabezadoPagina.vue';
 import EstadoVacio from '../componentes/EstadoVacio.vue';
-import Insignia from '../componentes/Insignia.vue';
-import Tarjeta from '../componentes/Tarjeta.vue';
+import InsigniaBase from '../componentes/InsigniaBase.vue';
+import TarjetaBase from '../componentes/TarjetaBase.vue';
 import { usarFormulario } from '../composables/usar-formulario';
 import { configuracionApi, type NivelEditable, type VariableConfiguracion } from '../servicios/configuracion.api';
 
@@ -77,7 +77,7 @@ onMounted(cargar);
     <EstadoVacio v-if="!variables.length" :icono="SlidersHorizontal" titulo="Sin variables de configuración" />
     <ul v-else class="space-y-3">
       <li v-for="variable in variables" :key="variable.clave">
-        <Tarjeta class="space-y-4">
+        <TarjetaBase class="space-y-4">
           <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p class="font-medium">{{ variable.descripcion }}</p>
@@ -86,7 +86,9 @@ onMounted(cargar);
             <div class="flex items-center gap-2 text-sm">
               <span class="text-tierra-500">Valor actual:</span>
               <strong>{{ variable.efectivo }}</strong>
-              <Insignia :tono="variable.origen === 'predeterminado' ? 'tierra' : 'campo'">{{ NOMBRES_ORIGEN[variable.origen] }}</Insignia>
+              <InsigniaBase :tono="variable.origen === 'predeterminado' ? 'tierra' : 'campo'">{{
+                NOMBRES_ORIGEN[variable.origen]
+              }}</InsigniaBase>
             </div>
           </div>
 
@@ -102,13 +104,18 @@ onMounted(cargar);
               <CampoTexto
                 v-else
                 :model-value="(borradores[llave(variable, nivel)] as string | number | null) ?? null"
-                @update:model-value="borradores[llave(variable, nivel)] = $event"
                 class="flex-1"
                 :etiqueta="`Por ${nivel}`"
                 :tipo="typeof variable.predeterminado === 'number' ? 'number' : 'text'"
                 :placeholder="`Heredado: ${variable.valores.instalacion ?? variable.predeterminado}`"
+                @update:model-value="borradores[llave(variable, nivel)] = $event"
               />
-              <BotonBase variante="secundario" :icono="Save" :aria-label="`Guardar por ${nivel}`" @click="guardar(variable, nivel)" />
+              <BotonBase
+                variante="secundario"
+                :icono="Save"
+                :aria-label="`Guardar por ${nivel}`"
+                @click="guardar(variable, nivel)"
+              />
               <BotonBase
                 v-if="variable.valores[nivel] !== undefined"
                 variante="fantasma"
@@ -119,7 +126,7 @@ onMounted(cargar);
               />
             </div>
           </div>
-        </Tarjeta>
+        </TarjetaBase>
       </li>
     </ul>
   </div>

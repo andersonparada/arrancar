@@ -29,7 +29,12 @@ export async function darDeAltaCuenta(entorno: EntornoApi, datos: DatosCuenta): 
   const alta = await entorno.soporte.post('/api/plataforma/cuentas', {
     nombreCuenta: datos.nombre,
     empresa: { nombre: `Rancho de ${datos.nombre}` },
-    propietario: { nombres: 'Dueño', apellidos: datos.nombre, usuario: datos.usuario, contrasena: CONTRASENA_DE_PRUEBA },
+    propietario: {
+      nombres: 'Dueño',
+      apellidos: datos.nombre,
+      usuario: datos.usuario,
+      contrasena: CONTRASENA_DE_PRUEBA,
+    },
     modulos: datos.modulos ?? [],
   });
   expect(alta.estado).toBe(201);
@@ -49,7 +54,10 @@ export async function crearUsuarioConPermisos(
   cuenta: CuentaDePrueba,
   datos: DatosUsuario,
 ): Promise<ClienteApi> {
-  const rol = await cuenta.propietario.post('/api/roles', { nombre: `Rol de ${datos.nombres}`, permisos: datos.permisos });
+  const rol = await cuenta.propietario.post('/api/roles', {
+    nombre: `Rol de ${datos.nombres}`,
+    permisos: datos.permisos,
+  });
   expect(rol.estado).toBe(201);
 
   const creado = await cuenta.propietario.post('/api/usuarios', {

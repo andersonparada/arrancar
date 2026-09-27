@@ -51,7 +51,11 @@ async function peticion<T>(metodo: string, ruta: string, opciones: OpcionesPetic
       method: metodo,
       credentials: 'same-origin',
       headers: opciones.cuerpo && !esFormulario ? { 'Content-Type': 'application/json' } : undefined,
-      body: esFormulario ? (opciones.cuerpo as FormData) : opciones.cuerpo ? JSON.stringify(opciones.cuerpo) : undefined,
+      body: esFormulario
+        ? (opciones.cuerpo as FormData)
+        : opciones.cuerpo
+          ? JSON.stringify(opciones.cuerpo)
+          : undefined,
     });
   } catch {
     throw new ErrorApi(0, 'sin_conexion', 'No hay conexión con el servidor. Revise su internet.');

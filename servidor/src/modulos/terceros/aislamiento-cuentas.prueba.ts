@@ -22,7 +22,6 @@ let cuentaA: string;
 let cuentaB: string;
 let empresaA: string;
 let empresaB: string;
-let terceroDeA: string;
 let terceroDeB: string;
 
 async function vaciarComoPropietario(): Promise<void> {
@@ -57,19 +56,30 @@ beforeAll(async () => {
   empresaA = empresaDeA!.id;
   empresaB = empresaDeB!.id;
 
-  const [tercero1] = await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, (tx) =>
+  await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, (tx) =>
     tx
       .insert(terceros)
-      .values({ cuentaId: cuentaA, tipo: 'individual', nombres: 'Juan', apellidos: 'Pérez', nombreMostrar: 'Juan Pérez' })
+      .values({
+        cuentaId: cuentaA,
+        tipo: 'individual',
+        nombres: 'Juan',
+        apellidos: 'Pérez',
+        nombreMostrar: 'Juan Pérez',
+      })
       .returning(),
   );
   const [tercero2] = await ejecutarEnEmpresa({ empresaId: empresaB, cuentaId: cuentaB, usuarioId }, (tx) =>
     tx
       .insert(terceros)
-      .values({ cuentaId: cuentaB, tipo: 'individual', nombres: 'María', apellidos: 'López', nombreMostrar: 'María López' })
+      .values({
+        cuentaId: cuentaB,
+        tipo: 'individual',
+        nombres: 'María',
+        apellidos: 'López',
+        nombreMostrar: 'María López',
+      })
       .returning(),
   );
-  terceroDeA = tercero1!.id;
   terceroDeB = tercero2!.id;
 });
 

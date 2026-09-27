@@ -42,7 +42,11 @@ export const papelesControlador = {
   },
 
   actualizarCategoria(solicitud: FastifyRequest<{ Params: ParamsCategoria; Body: CategoriaProveedorSolicitada }>) {
-    return papelesServicio.actualizarCategoria(empresaActivaDe(solicitud), solicitud.params.categoriaId, solicitud.body);
+    return papelesServicio.actualizarCategoria(
+      empresaActivaDe(solicitud),
+      solicitud.params.categoriaId,
+      solicitud.body,
+    );
   },
 
   asignarTrabajador(solicitud: FastifyRequest<{ Params: ParamsTercero; Body: TrabajadorSolicitado }>) {

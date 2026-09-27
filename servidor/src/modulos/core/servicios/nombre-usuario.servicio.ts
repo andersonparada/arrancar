@@ -32,7 +32,9 @@ export const nombreUsuarioServicio = {
     }
     const sugerido = await this.sugerir(datos.nombres, datos.apellidos, ejecutor);
     if (!sugerido) {
-      throw new ErrorReglaNegocio('No se pudo generar un usuario libre con ese nombre; escríbalo a mano (solo letras).');
+      throw new ErrorReglaNegocio(
+        'No se pudo generar un usuario libre con ese nombre; escríbalo a mano (solo letras).',
+      );
     }
     return sugerido;
   },

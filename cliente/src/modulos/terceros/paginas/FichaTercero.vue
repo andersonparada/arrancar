@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { Briefcase, HardHat, Pencil, Plus, ShoppingCart, Trash2, Users } from 'lucide-vue-next';
+import { Briefcase, HardHat, Pencil, Plus, ShoppingCart, Trash2 } from 'lucide-vue-next';
 import { useRoute } from 'vue-router';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
@@ -9,8 +9,8 @@ import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
-import Insignia from '@/modulos/core/componentes/Insignia.vue';
-import Tarjeta from '@/modulos/core/componentes/Tarjeta.vue';
+import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
+import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
@@ -41,7 +41,8 @@ const puedeVerTrabajador = computed(() => sesion.puede('trabajadores.ver') || se
 async function cargar(): Promise<void> {
   try {
     ficha.value = await tercerosApi.obtener(terceroId.value);
-    if (ficha.value.departamentoCodigo) municipios.value = await geografiaApi.listarMunicipios(ficha.value.departamentoCodigo);
+    if (ficha.value.departamentoCodigo)
+      municipios.value = await geografiaApi.listarMunicipios(ficha.value.departamentoCodigo);
   } catch (error) {
     avisos.error(error instanceof Error ? error.message : 'No se pudo cargar el tercero.');
   }
@@ -86,7 +87,11 @@ watch(
   () => edicion.datos?.departamentoCodigo,
   async (codigo) => {
     municipios.value = codigo ? await geografiaApi.listarMunicipios(codigo) : [];
-    if (edicion.datos && edicion.datos.municipioCodigo && !municipios.value.some((m) => m.codigo === edicion.datos!.municipioCodigo)) {
+    if (
+      edicion.datos &&
+      edicion.datos.municipioCodigo &&
+      !municipios.value.some((m) => m.codigo === edicion.datos!.municipioCodigo)
+    ) {
       edicion.datos.municipioCodigo = null;
     }
   },
@@ -98,7 +103,11 @@ async function guardarEdicion(confirmarDuplicado = false): Promise<void> {
     try {
       await tercerosApi.actualizar(terceroId.value, { ...edicion.datos!, confirmarDuplicado });
     } catch (error) {
-      if (error instanceof ErrorApi && error.codigo === 'conflicto' && window.confirm(`${error.message}\n\n¿Desea guardarlo de todas formas?`)) {
+      if (
+        error instanceof ErrorApi &&
+        error.codigo === 'conflicto' &&
+        window.confirm(`${error.message}\n\n¿Desea guardarlo de todas formas?`)
+      ) {
         await tercerosApi.actualizar(terceroId.value, { ...edicion.datos!, confirmarDuplicado: true });
         return;
       }
@@ -145,7 +154,9 @@ async function guardarContacto(): Promise<void> {
     notas: contacto.notas || null,
   };
   const exito = await formularioContacto.enviar(() =>
-    contacto.id ? tercerosApi.actualizarContacto(terceroId.value, contacto.id!, datos) : tercerosApi.crearContacto(terceroId.value, datos),
+    contacto.id
+      ? tercerosApi.actualizarContacto(terceroId.value, contacto.id!, datos)
+      : tercerosApi.crearContacto(terceroId.value, datos),
   );
   if (!exito) return;
   contacto.abierto = false;
@@ -175,7 +186,11 @@ function abrirCliente(): void {
 
 async function guardarCliente(): Promise<void> {
   const exito = await formularioPapel.enviar(() =>
-    tercerosApi.asignarCliente(terceroId.value, { clase: cliente.clase, activo: cliente.activo, notas: cliente.notas || null }),
+    tercerosApi.asignarCliente(terceroId.value, {
+      clase: cliente.clase,
+      activo: cliente.activo,
+      notas: cliente.notas || null,
+    }),
   );
   if (!exito) return;
   cliente.abierto = false;
@@ -263,35 +278,64 @@ async function quitarTrabajador(): Promise<void> {
 
 <template>
   <div v-if="ficha" class="space-y-4">
-    <EncabezadoPagina :titulo="ficha.nombreMostrar" :descripcion="ficha.tipo === 'individual' ? 'Persona individual' : 'Persona jurídica'">
-      <Insignia v-if="!ficha.activo" tono="rojo">Inactivo</Insignia>
-      <BotonBase v-permiso="'terceros.gestionar'" variante="secundario" :icono="Pencil" @click="abrirEdicion">Editar</BotonBase>
+    <EncabezadoPagina
+      :titulo="ficha.nombreMostrar"
+      :descripcion="ficha.tipo === 'individual' ? 'Persona individual' : 'Persona jurídica'"
+    >
+      <InsigniaBase v-if="!ficha.activo" tono="rojo">Inactivo</InsigniaBase>
+      <BotonBase v-permiso="'terceros.gestionar'" variante="secundario" :icono="Pencil" @click="abrirEdicion"
+        >Editar</BotonBase
+      >
     </EncabezadoPagina>
 
-    <Tarjeta>
+    <TarjetaBase>
       <h2 class="mb-3 font-semibold">Datos generales</h2>
       <dl class="grid gap-3 text-sm sm:grid-cols-2">
-        <div><dt class="text-tierra-500">NIT</dt><dd>{{ ficha.nit ?? 'Sin registrar' }}</dd></div>
-        <div><dt class="text-tierra-500">DPI</dt><dd>{{ ficha.dpi ?? 'Sin registrar' }}</dd></div>
-        <div><dt class="text-tierra-500">Teléfono</dt><dd>{{ ficha.telefono ?? 'Sin registrar' }}</dd></div>
-        <div><dt class="text-tierra-500">WhatsApp</dt><dd>{{ ficha.whatsapp ?? 'Sin registrar' }}</dd></div>
-        <div><dt class="text-tierra-500">Correo</dt><dd>{{ ficha.correo ?? 'Sin registrar' }}</dd></div>
-        <div><dt class="text-tierra-500">Dirección</dt><dd>{{ ficha.direccion ?? 'Sin registrar' }}</dd></div>
+        <div>
+          <dt class="text-tierra-500">NIT</dt>
+          <dd>{{ ficha.nit ?? 'Sin registrar' }}</dd>
+        </div>
+        <div>
+          <dt class="text-tierra-500">DPI</dt>
+          <dd>{{ ficha.dpi ?? 'Sin registrar' }}</dd>
+        </div>
+        <div>
+          <dt class="text-tierra-500">Teléfono</dt>
+          <dd>{{ ficha.telefono ?? 'Sin registrar' }}</dd>
+        </div>
+        <div>
+          <dt class="text-tierra-500">WhatsApp</dt>
+          <dd>{{ ficha.whatsapp ?? 'Sin registrar' }}</dd>
+        </div>
+        <div>
+          <dt class="text-tierra-500">Correo</dt>
+          <dd>{{ ficha.correo ?? 'Sin registrar' }}</dd>
+        </div>
+        <div>
+          <dt class="text-tierra-500">Dirección</dt>
+          <dd>{{ ficha.direccion ?? 'Sin registrar' }}</dd>
+        </div>
       </dl>
       <p v-if="ficha.notas" class="mt-3 text-sm text-tierra-600 dark:text-tierra-300">{{ ficha.notas }}</p>
-    </Tarjeta>
+    </TarjetaBase>
 
-    <Tarjeta>
+    <TarjetaBase>
       <div class="mb-3 flex items-center justify-between">
         <h2 class="font-semibold">Contactos</h2>
-        <BotonBase v-permiso="'terceros.gestionar'" variante="secundario" pequeno :icono="Plus" @click="abrirContacto()">Agregar</BotonBase>
+        <BotonBase v-permiso="'terceros.gestionar'" variante="secundario" pequeno :icono="Plus" @click="abrirContacto()"
+          >Agregar</BotonBase
+        >
       </div>
       <p v-if="ficha.contactos.length === 0" class="text-sm text-tierra-500">Sin contactos registrados.</p>
       <ul v-else class="divide-y divide-tierra-100 dark:divide-tierra-800">
         <li v-for="c in ficha.contactos" :key="c.id" class="flex items-center justify-between gap-3 py-2">
           <div class="min-w-0">
-            <p class="truncate font-medium">{{ c.nombre }}<span v-if="c.cargo" class="text-tierra-500"> · {{ c.cargo }}</span></p>
-            <p class="truncate text-sm text-tierra-500">{{ [c.telefono, c.correo].filter(Boolean).join(' · ') || 'Sin datos de contacto' }}</p>
+            <p class="truncate font-medium">
+              {{ c.nombre }}<span v-if="c.cargo" class="text-tierra-500"> · {{ c.cargo }}</span>
+            </p>
+            <p class="truncate text-sm text-tierra-500">
+              {{ [c.telefono, c.correo].filter(Boolean).join(' · ') || 'Sin datos de contacto' }}
+            </p>
           </div>
           <div v-permiso="'terceros.gestionar'" class="flex shrink-0 gap-1">
             <BotonBase variante="fantasma" pequeno :icono="Pencil" @click="abrirContacto(c)" />
@@ -299,30 +343,42 @@ async function quitarTrabajador(): Promise<void> {
           </div>
         </li>
       </ul>
-    </Tarjeta>
+    </TarjetaBase>
 
     <!-- Papel cliente -->
-    <Tarjeta>
+    <TarjetaBase>
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="flex items-center gap-2 font-semibold"><ShoppingCart class="size-4" aria-hidden="true" /> Cliente</h2>
+        <h2 class="flex items-center gap-2 font-semibold">
+          <ShoppingCart class="size-4" aria-hidden="true" /> Cliente
+        </h2>
         <div v-permiso="'clientes.gestionar'" class="flex gap-2">
-          <BotonBase variante="secundario" pequeno :icono="Pencil" @click="abrirCliente">{{ ficha.cliente ? 'Editar' : 'Asignar' }}</BotonBase>
+          <BotonBase variante="secundario" pequeno :icono="Pencil" @click="abrirCliente">{{
+            ficha.cliente ? 'Editar' : 'Asignar'
+          }}</BotonBase>
           <BotonBase v-if="ficha.cliente" variante="fantasma" pequeno @click="quitarCliente">Quitar</BotonBase>
         </div>
       </div>
       <p v-if="!ficha.cliente" class="text-sm text-tierra-500">No tiene el papel de cliente.</p>
       <dl v-else class="grid gap-2 text-sm sm:grid-cols-2">
-        <div><dt class="text-tierra-500">Clase</dt><dd>{{ ficha.cliente.clase }}</dd></div>
-        <div><dt class="text-tierra-500">Estado</dt><dd>{{ ficha.cliente.activo ? 'Activo' : 'Inactivo' }}</dd></div>
+        <div>
+          <dt class="text-tierra-500">Clase</dt>
+          <dd>{{ ficha.cliente.clase }}</dd>
+        </div>
+        <div>
+          <dt class="text-tierra-500">Estado</dt>
+          <dd>{{ ficha.cliente.activo ? 'Activo' : 'Inactivo' }}</dd>
+        </div>
       </dl>
-    </Tarjeta>
+    </TarjetaBase>
 
     <!-- Papel proveedor -->
-    <Tarjeta>
+    <TarjetaBase>
       <div class="mb-3 flex items-center justify-between">
         <h2 class="flex items-center gap-2 font-semibold"><Briefcase class="size-4" aria-hidden="true" /> Proveedor</h2>
         <div v-permiso="'proveedores.gestionar'" class="flex gap-2">
-          <BotonBase variante="secundario" pequeno :icono="Pencil" @click="abrirProveedor">{{ ficha.proveedor ? 'Editar' : 'Asignar' }}</BotonBase>
+          <BotonBase variante="secundario" pequeno :icono="Pencil" @click="abrirProveedor">{{
+            ficha.proveedor ? 'Editar' : 'Asignar'
+          }}</BotonBase>
           <BotonBase v-if="ficha.proveedor" variante="fantasma" pequeno @click="quitarProveedor">Quitar</BotonBase>
         </div>
       </div>
@@ -330,28 +386,44 @@ async function quitarTrabajador(): Promise<void> {
       <dl v-else class="grid gap-2 text-sm sm:grid-cols-2">
         <div>
           <dt class="text-tierra-500">Categoría</dt>
-          <dd>{{ categoriasProveedor.find((c) => c.id === ficha!.proveedor!.categoriaId)?.nombre ?? 'Sin categoría' }}</dd>
+          <dd>
+            {{ categoriasProveedor.find((c) => c.id === ficha!.proveedor!.categoriaId)?.nombre ?? 'Sin categoría' }}
+          </dd>
         </div>
-        <div><dt class="text-tierra-500">Estado</dt><dd>{{ ficha.proveedor.activo ? 'Activo' : 'Inactivo' }}</dd></div>
+        <div>
+          <dt class="text-tierra-500">Estado</dt>
+          <dd>{{ ficha.proveedor.activo ? 'Activo' : 'Inactivo' }}</dd>
+        </div>
       </dl>
-    </Tarjeta>
+    </TarjetaBase>
 
     <!-- Papel trabajador -->
-    <Tarjeta v-if="puedeVerTrabajador">
+    <TarjetaBase v-if="puedeVerTrabajador">
       <div class="mb-3 flex items-center justify-between">
         <h2 class="flex items-center gap-2 font-semibold"><HardHat class="size-4" aria-hidden="true" /> Trabajador</h2>
         <div v-permiso="'trabajadores.gestionar'" class="flex gap-2">
-          <BotonBase variante="secundario" pequeno :icono="Pencil" @click="abrirTrabajador">{{ ficha.trabajador ? 'Editar' : 'Asignar' }}</BotonBase>
+          <BotonBase variante="secundario" pequeno :icono="Pencil" @click="abrirTrabajador">{{
+            ficha.trabajador ? 'Editar' : 'Asignar'
+          }}</BotonBase>
           <BotonBase v-if="ficha.trabajador" variante="fantasma" pequeno @click="quitarTrabajador">Quitar</BotonBase>
         </div>
       </div>
       <p v-if="!ficha.trabajador" class="text-sm text-tierra-500">No tiene el papel de trabajador.</p>
       <dl v-else class="grid gap-2 text-sm sm:grid-cols-2">
-        <div><dt class="text-tierra-500">Cargo</dt><dd>{{ ficha.trabajador.cargo ?? 'Sin registrar' }}</dd></div>
-        <div><dt class="text-tierra-500">Fecha de ingreso</dt><dd>{{ ficha.trabajador.fechaIngreso ?? 'Sin registrar' }}</dd></div>
-        <div><dt class="text-tierra-500">Estado</dt><dd>{{ ficha.trabajador.activo ? 'Activo' : 'Inactivo' }}</dd></div>
+        <div>
+          <dt class="text-tierra-500">Cargo</dt>
+          <dd>{{ ficha.trabajador.cargo ?? 'Sin registrar' }}</dd>
+        </div>
+        <div>
+          <dt class="text-tierra-500">Fecha de ingreso</dt>
+          <dd>{{ ficha.trabajador.fechaIngreso ?? 'Sin registrar' }}</dd>
+        </div>
+        <div>
+          <dt class="text-tierra-500">Estado</dt>
+          <dd>{{ ficha.trabajador.activo ? 'Activo' : 'Inactivo' }}</dd>
+        </div>
       </dl>
-    </Tarjeta>
+    </TarjetaBase>
 
     <!-- Modal: editar datos generales -->
     <VentanaModal :abierta="edicion.abierta" titulo="Editar tercero" ancha @cerrar="edicion.abierta = false">
@@ -365,35 +437,88 @@ async function quitarTrabajador(): Promise<void> {
           ]"
         />
         <template v-if="edicion.datos.tipo === 'individual'">
-          <CampoTexto v-model="edicion.datos.nombres" etiqueta="Nombres" requerido :error="formulario.errores.value.nombres" />
-          <CampoTexto v-model="edicion.datos.apellidos" etiqueta="Apellidos" :error="formulario.errores.value.apellidos" />
+          <CampoTexto
+            v-model="edicion.datos.nombres"
+            etiqueta="Nombres"
+            requerido
+            :error="formulario.errores.value.nombres"
+          />
+          <CampoTexto
+            v-model="edicion.datos.apellidos"
+            etiqueta="Apellidos"
+            :error="formulario.errores.value.apellidos"
+          />
         </template>
-        <CampoTexto v-else v-model="edicion.datos.razonSocial" etiqueta="Razón social" requerido :error="formulario.errores.value.razonSocial" />
-        <CampoTexto v-model="edicion.datos.nombreComercial" etiqueta="Nombre comercial" :error="formulario.errores.value.nombreComercial" />
+        <CampoTexto
+          v-else
+          v-model="edicion.datos.razonSocial"
+          etiqueta="Razón social"
+          requerido
+          :error="formulario.errores.value.razonSocial"
+        />
+        <CampoTexto
+          v-model="edicion.datos.nombreComercial"
+          etiqueta="Nombre comercial"
+          :error="formulario.errores.value.nombreComercial"
+        />
         <div class="grid gap-4 sm:grid-cols-2">
-          <CampoTexto v-model="edicion.datos.nit" etiqueta="NIT" placeholder="CF si no tiene" :error="formulario.errores.value.nit" />
+          <CampoTexto
+            v-model="edicion.datos.nit"
+            etiqueta="NIT"
+            placeholder="CF si no tiene"
+            :error="formulario.errores.value.nit"
+          />
           <CampoTexto v-model="edicion.datos.dpi" etiqueta="DPI" :error="formulario.errores.value.dpi" />
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
-          <CampoTexto v-model="edicion.datos.telefono" etiqueta="Teléfono" tipo="tel" :error="formulario.errores.value.telefono" />
-          <CampoTexto v-model="edicion.datos.whatsapp" etiqueta="WhatsApp" tipo="tel" :error="formulario.errores.value.whatsapp" />
+          <CampoTexto
+            v-model="edicion.datos.telefono"
+            etiqueta="Teléfono"
+            tipo="tel"
+            :error="formulario.errores.value.telefono"
+          />
+          <CampoTexto
+            v-model="edicion.datos.whatsapp"
+            etiqueta="WhatsApp"
+            tipo="tel"
+            :error="formulario.errores.value.whatsapp"
+          />
         </div>
-        <CampoTexto v-model="edicion.datos.correo" etiqueta="Correo" tipo="email" :error="formulario.errores.value.correo" />
+        <CampoTexto
+          v-model="edicion.datos.correo"
+          etiqueta="Correo"
+          tipo="email"
+          :error="formulario.errores.value.correo"
+        />
         <div class="grid gap-4 sm:grid-cols-2">
           <CampoSelector
             v-model="edicion.datos.departamentoCodigo"
             etiqueta="Departamento"
-            :opciones="[{ valor: null, texto: 'Sin registrar' }, ...departamentos.map((d) => ({ valor: d.codigo, texto: d.nombre }))]"
+            :opciones="[
+              { valor: null, texto: 'Sin registrar' },
+              ...departamentos.map((d) => ({ valor: d.codigo, texto: d.nombre })),
+            ]"
           />
           <CampoSelector
             v-model="edicion.datos.municipioCodigo"
             etiqueta="Municipio"
-            :opciones="[{ valor: null, texto: 'Sin registrar' }, ...municipios.map((m) => ({ valor: m.codigo, texto: m.nombre }))]"
+            :opciones="[
+              { valor: null, texto: 'Sin registrar' },
+              ...municipios.map((m) => ({ valor: m.codigo, texto: m.nombre })),
+            ]"
           />
         </div>
-        <CampoTexto v-model="edicion.datos.direccion" etiqueta="Dirección" :error="formulario.errores.value.direccion" />
+        <CampoTexto
+          v-model="edicion.datos.direccion"
+          etiqueta="Dirección"
+          :error="formulario.errores.value.direccion"
+        />
         <CampoTexto v-model="edicion.datos.notas" etiqueta="Notas" multilinea :error="formulario.errores.value.notas" />
-        <CampoInterruptor v-model="edicion.datos.activo" etiqueta="Tercero activo" descripcion="Al inactivarlo, se inactivan también sus papeles." />
+        <CampoInterruptor
+          v-model="edicion.datos.activo"
+          etiqueta="Tercero activo"
+          descripcion="Al inactivarlo, se inactivan también sus papeles."
+        />
       </form>
       <template #pie>
         <BotonBase variante="secundario" @click="edicion.abierta = false">Cancelar</BotonBase>
@@ -402,16 +527,45 @@ async function quitarTrabajador(): Promise<void> {
     </VentanaModal>
 
     <!-- Modal: contacto -->
-    <VentanaModal :abierta="contacto.abierto" :titulo="contacto.id ? 'Editar contacto' : 'Nuevo contacto'" @cerrar="contacto.abierto = false">
+    <VentanaModal
+      :abierta="contacto.abierto"
+      :titulo="contacto.id ? 'Editar contacto' : 'Nuevo contacto'"
+      @cerrar="contacto.abierto = false"
+    >
       <form id="form-contacto" class="space-y-4" @submit.prevent="guardarContacto">
-        <CampoTexto v-model="contacto.nombre" etiqueta="Nombre" requerido :error="formularioContacto.errores.value.nombre" />
+        <CampoTexto
+          v-model="contacto.nombre"
+          etiqueta="Nombre"
+          requerido
+          :error="formularioContacto.errores.value.nombre"
+        />
         <CampoTexto v-model="contacto.cargo" etiqueta="Cargo" :error="formularioContacto.errores.value.cargo" />
         <div class="grid gap-4 sm:grid-cols-2">
-          <CampoTexto v-model="contacto.telefono" etiqueta="Teléfono" tipo="tel" :error="formularioContacto.errores.value.telefono" />
-          <CampoTexto v-model="contacto.whatsapp" etiqueta="WhatsApp" tipo="tel" :error="formularioContacto.errores.value.whatsapp" />
+          <CampoTexto
+            v-model="contacto.telefono"
+            etiqueta="Teléfono"
+            tipo="tel"
+            :error="formularioContacto.errores.value.telefono"
+          />
+          <CampoTexto
+            v-model="contacto.whatsapp"
+            etiqueta="WhatsApp"
+            tipo="tel"
+            :error="formularioContacto.errores.value.whatsapp"
+          />
         </div>
-        <CampoTexto v-model="contacto.correo" etiqueta="Correo" tipo="email" :error="formularioContacto.errores.value.correo" />
-        <CampoTexto v-model="contacto.notas" etiqueta="Notas" multilinea :error="formularioContacto.errores.value.notas" />
+        <CampoTexto
+          v-model="contacto.correo"
+          etiqueta="Correo"
+          tipo="email"
+          :error="formularioContacto.errores.value.correo"
+        />
+        <CampoTexto
+          v-model="contacto.notas"
+          etiqueta="Notas"
+          multilinea
+          :error="formularioContacto.errores.value.notas"
+        />
       </form>
       <template #pie>
         <BotonBase variante="secundario" @click="contacto.abierto = false">Cancelar</BotonBase>
@@ -449,7 +603,10 @@ async function quitarTrabajador(): Promise<void> {
             v-model="proveedor.categoriaId"
             etiqueta="Categoría"
             class="flex-1"
-            :opciones="[{ valor: '', texto: 'Sin categoría' }, ...categoriasProveedor.map((c) => ({ valor: c.id, texto: c.nombre }))]"
+            :opciones="[
+              { valor: '', texto: 'Sin categoría' },
+              ...categoriasProveedor.map((c) => ({ valor: c.id, texto: c.nombre })),
+            ]"
           />
           <BotonBase variante="secundario" :icono="Plus" @click="nuevaCategoria" />
         </div>

@@ -23,7 +23,11 @@ export class RegistroModulos {
 
   /** Une los módulos esenciales con los contratados, ignorando claves que ya no existen. */
   resolverActivos(clavesContratadas: Iterable<string>): Set<string> {
-    const activos = new Set(this.listar().filter((m) => m.esencial).map((m) => m.clave));
+    const activos = new Set(
+      this.listar()
+        .filter((m) => m.esencial)
+        .map((m) => m.clave),
+    );
     for (const clave of clavesContratadas) {
       if (this.modulos.has(clave)) activos.add(clave);
     }
@@ -125,7 +129,9 @@ export class RegistroModulos {
       }
       for (const recurso of modulo.recursosConAlcance ?? []) {
         if (!modulo.permisos.some((p) => p.clave === recurso.permisoVerTodos)) {
-          throw new Error(`El recurso "${recurso.clave}" usa el permiso "${recurso.permisoVerTodos}", que su módulo no declara.`);
+          throw new Error(
+            `El recurso "${recurso.clave}" usa el permiso "${recurso.permisoVerTodos}", que su módulo no declara.`,
+          );
         }
       }
       for (const dependencia of modulo.dependeDe ?? []) {

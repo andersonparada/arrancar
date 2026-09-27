@@ -54,7 +54,11 @@ export const proveedoresRepositorio = {
     id: string,
     cambios: { nombre?: string; activo?: boolean },
   ): Promise<CategoriaProveedor> {
-    const [categoria] = await tx.update(categoriasProveedor).set(cambios).where(eq(categoriasProveedor.id, id)).returning();
+    const [categoria] = await tx
+      .update(categoriasProveedor)
+      .set(cambios)
+      .where(eq(categoriasProveedor.id, id))
+      .returning();
     return categoria!;
   },
 };

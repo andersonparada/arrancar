@@ -119,24 +119,33 @@ export const tercerosApi = {
   actualizar: (id: string, datos: DatosTercero) => api.reemplazar<Tercero>(`/terceros/${id}`, datos),
 
   listarContactos: (terceroId: string) => api.obtener<Contacto[]>(`/terceros/${terceroId}/contactos`),
-  crearContacto: (terceroId: string, datos: DatosContacto) => api.crear<Contacto>(`/terceros/${terceroId}/contactos`, datos),
+  crearContacto: (terceroId: string, datos: DatosContacto) =>
+    api.crear<Contacto>(`/terceros/${terceroId}/contactos`, datos),
   actualizarContacto: (terceroId: string, contactoId: string, datos: DatosContacto) =>
     api.reemplazar<Contacto>(`/terceros/${terceroId}/contactos/${contactoId}`, datos),
-  eliminarContacto: (terceroId: string, contactoId: string) => api.eliminar(`/terceros/${terceroId}/contactos/${contactoId}`),
+  eliminarContacto: (terceroId: string, contactoId: string) =>
+    api.eliminar(`/terceros/${terceroId}/contactos/${contactoId}`),
 
   asignarCliente: (terceroId: string, datos: { clase: ClaseCliente; activo: boolean; notas: string | null }) =>
     api.reemplazar<Cliente>(`/terceros/${terceroId}/cliente`, datos),
   quitarCliente: (terceroId: string) => api.eliminar(`/terceros/${terceroId}/cliente`),
 
   listarCategoriasProveedor: () => api.obtener<CategoriaProveedor[]>('/proveedores/categorias'),
-  crearCategoriaProveedor: (nombre: string) => api.crear<CategoriaProveedor>('/proveedores/categorias', { nombre, activo: true }),
+  crearCategoriaProveedor: (nombre: string) =>
+    api.crear<CategoriaProveedor>('/proveedores/categorias', { nombre, activo: true }),
   asignarProveedor: (terceroId: string, datos: { categoriaId: string | null; activo: boolean; notas: string | null }) =>
     api.reemplazar<Proveedor>(`/terceros/${terceroId}/proveedor`, datos),
   quitarProveedor: (terceroId: string) => api.eliminar(`/terceros/${terceroId}/proveedor`),
 
   asignarTrabajador: (
     terceroId: string,
-    datos: { cargo: string | null; fechaIngreso: string | null; fechaSalida: string | null; activo: boolean; notas: string | null },
+    datos: {
+      cargo: string | null;
+      fechaIngreso: string | null;
+      fechaSalida: string | null;
+      activo: boolean;
+      notas: string | null;
+    },
   ) => api.reemplazar<Trabajador>(`/terceros/${terceroId}/trabajador`, datos),
   quitarTrabajador: (terceroId: string) => api.eliminar(`/terceros/${terceroId}/trabajador`),
 };

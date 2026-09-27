@@ -66,9 +66,7 @@ async function guardar(confirmarDuplicado = false): Promise<void> {
       tercero = await tercerosApi.crear(cuerpo);
     } catch (error) {
       if (error instanceof ErrorApi && error.codigo === 'conflicto') {
-        const confirmado = window.confirm(
-          `${error.message}\n\n¿Desea crearlo de todas formas?`,
-        );
+        const confirmado = window.confirm(`${error.message}\n\n¿Desea crearlo de todas formas?`);
         if (confirmado) {
           tercero = await tercerosApi.crear({ ...cuerpo, confirmarDuplicado: true });
           return;
@@ -106,7 +104,9 @@ async function guardar(confirmarDuplicado = false): Promise<void> {
         requerido
         :error="formulario.errores.value.razonSocial"
       />
-      <p class="text-sm text-tierra-500">El NIT, el DPI, el teléfono y los papeles se completan después, desde la ficha.</p>
+      <p class="text-sm text-tierra-500">
+        El NIT, el DPI, el teléfono y los papeles se completan después, desde la ficha.
+      </p>
     </form>
     <template #pie>
       <BotonBase variante="secundario" @click="emit('cerrar')">Cancelar</BotonBase>

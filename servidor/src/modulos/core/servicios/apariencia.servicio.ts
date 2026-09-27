@@ -94,7 +94,12 @@ export const aparienciaServicio = {
 
   async quitarLogo(): Promise<Apariencia> {
     await almacenamiento.eliminar(RUTA_LOGO);
-    await configuracionServicio.restablecer(DESTINO_INSTALACION, undefined, CLAVES_APARIENCIA.versionLogo, 'instalacion');
+    await configuracionServicio.restablecer(
+      DESTINO_INSTALACION,
+      undefined,
+      CLAVES_APARIENCIA.versionLogo,
+      'instalacion',
+    );
     return this.obtener();
   },
 

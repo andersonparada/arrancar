@@ -4,7 +4,10 @@ import { contactosRepositorio } from '../repositorios/contactos.repositorio.js';
 import { tercerosRepositorio } from '../repositorios/terceros.repositorio.js';
 import type { ContactoSolicitado } from '../validaciones/contactos.validaciones.js';
 
-async function obtenerTerceroONoEncontrado(tx: Parameters<typeof tercerosRepositorio.buscarPorId>[0], terceroId: string) {
+async function obtenerTerceroONoEncontrado(
+  tx: Parameters<typeof tercerosRepositorio.buscarPorId>[0],
+  terceroId: string,
+) {
   const tercero = await tercerosRepositorio.buscarPorId(tx, terceroId);
   if (!tercero) throw new ErrorNoEncontrado('El tercero');
   return tercero;

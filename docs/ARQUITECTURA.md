@@ -51,7 +51,7 @@ servidor/src/modulos/terceros/
   modulo.ts                                  definición del módulo + raíz de composición
 ```
 
-**Reglas de dependencia** (las verifica ESLint con `eslint-plugin-boundaries`):
+**Reglas de dependencia** (las verifica ESLint con `no-restricted-imports`, ver sección 7):
 
 | Capa | Puede importar de |
 |---|---|
@@ -265,7 +265,7 @@ tres secciones siempre en este orden:
 
 | Sección | Qué va | Ejemplos |
 |---|---|---|
-| **Trabajo diario** | lo que se usa todos los días para operar | registrar venta, pesaje, ordeño, buscar contacto |
+| **Operación** | lo que se usa todos los días para operar | registrar venta, pesaje, ordeño, buscar contacto |
 | **Administración** | catálogos y registros maestros | clientes, proveedores, categorías, potreros |
 | **Reportes** | consultas, gráficas y exportaciones | clientes por clase, producción de leche |
 
@@ -291,12 +291,22 @@ Nombre de las pruebas en lenguaje de negocio:
 
 ## 7. Herramientas que lo hacen cumplir
 
-- **ESLint** (typescript-eslint estricto + vue + boundaries): `max-lines: 200`,
-  `max-lines-per-function: 25`, `complexity: 8`, `max-params: 3`,
-  `no-restricted-imports` por capa, sin `export default` (salvo `.vue`),
-  sin `any`.
-- **Prettier** para el formato (ancho 110, comillas simples).
-- `npm run revisar` = ESLint + tsc + vue-tsc; se ejecuta antes de cada commit.
+- **ESLint** (`eslint.config.js`: typescript-eslint + vue + prettier):
+  - Tamaño: `max-lines: 200`, `max-lines-per-function: 25`, `complexity: 8`,
+    `max-params: 3`, `max-depth: 3`. Las pruebas pueden tener describe largos
+    y hasta 250 líneas por archivo.
+  - Capas y módulos con `no-restricted-imports`, generado por módulo y capa: el
+    dominio no importa otras capas ni `drizzle-orm`, `pg`, `fastify`, `sharp` o
+    `zod`; la aplicación no importa infraestructura, HTTP ni esas librerías; HTTP no
+    importa infraestructura ni la base de datos; ningún módulo importa a otro
+    (servidor y cliente). Los mensajes de error explican la regla.
+  - Sin `any`, sin `export default` (salvo `.vue` y archivos `*.config.ts`),
+    `import type` obligatorio, `===` siempre, sin `console.log`.
+- **Prettier** (`.prettierrc.json`): ancho 120 (el del código existente, para no
+  reescribir todo), comillas simples, comas finales. No formatea `.md` ni migraciones.
+- `npm run revisar` = Prettier en modo verificación + ESLint + tsc + vue-tsc; se
+  ejecuta antes de cada commit. `npm run formatear` corrige formato y lo que ESLint
+  arregla solo.
 
 ---
 
@@ -310,7 +320,7 @@ entrega como un commit propio.
 | Fase | Contenido | Resultado verificable |
 |---|---|---|
 | **0. Red de seguridad** | Pruebas de API con `app.inject` que fijan el comportamiento actual: inicio y cierre de sesión, usuarios, roles, empresas, configuración, apariencia, archivos, terceros, permisos denegados y aislamiento. | Pruebas de caracterización en verde **antes** de mover código. |
-| **1. Herramientas** | ESLint + Prettier + boundaries, `npm run revisar`. Las reglas de tamaño empiezan como advertencia. | `revisar` corre; lista de advertencias = deuda a pagar. |
+| **1. Herramientas** | ESLint + Prettier + reglas de capas, `npm run revisar`. Las reglas de tamaño empiezan como advertencia. | `revisar` corre; lista de advertencias = deuda a pagar. |
 | **2. Núcleo compartido** | `core/compartido`: `Entidad`, `ObjetoValor`, `EventoDominio`, errores por capa, `UnidadDeTrabajo` con `AsyncLocalStorage`, `PublicadorEventos`, objetos de valor `Nit`, `Dpi`, `Correo`, `Telefono`. | Pruebas unitarias; RLS sigue pasando. |
 | **3. Empresas** (plantilla) | Primer módulo migrado completo: dominio, casos de uso, repositorio, controlador, raíz de composición. Sirve de ejemplo para los demás. | Pruebas de API de empresas iguales; pruebas unitarias nuevas. |
 | **4. Terceros** | Migrar el módulo a la estructura, con la entidad `Tercero` y sus papeles. **Única fase con cambios funcionales acordados:** se quita el papel trabajador (pasa a planilla, migración que elimina `terceros.trabajadores` y el permiso `trabajadores.*`) y el módulo se muestra como **Clientes** con pantallas propias de clientes y proveedores. | Pruebas de API de terceros actualizadas a los cambios. |
@@ -328,6 +338,13 @@ entrega como un commit propio.
     después, otros módulos se enterarían de algo que no ocurrió (se corrige con
     la publicación después de confirmar, sección 4.4).
   - Fastify avisa que `disableRequestLogging` quedará obsoleto en la versión 6.
+- **Fase 1: hecha (2026-09-26).** ESLint 10 + Prettier 3; todo el código
+  formateado. Se descartó `eslint-plugin-boundaries`: su versión 7 cambió por
+  completo la configuración y `no-restricted-imports` cubre lo mismo sin otra
+  dependencia (comprobado con archivos que violan cada regla). Se corrigieron los
+  9 errores iniciales (variables sin uso, `proteger()` reescrita sin reasignaciones,
+  `Tarjeta` e `Insignia` pasan a `TarjetaBase` e `InsigniaBase`). Quedan **43
+  advertencias de tamaño**: la deuda que pagan las fases 3 a 6.
 
 ### Riesgos y cómo se controlan
 

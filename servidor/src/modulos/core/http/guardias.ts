@@ -42,7 +42,8 @@ export class GuardiaAutenticacion extends Guardia {
 
 export class GuardiaSuperacceso extends Guardia {
   protected async verificar(solicitud: FastifyRequest): Promise<void> {
-    if (!solicitud.contexto?.usuario.esSuperacceso) throw new ErrorSinPermiso('Solo el equipo de soporte puede hacer esto.');
+    if (!solicitud.contexto?.usuario.esSuperacceso)
+      throw new ErrorSinPermiso('Solo el equipo de soporte puede hacer esto.');
   }
 }
 
@@ -88,16 +89,22 @@ export interface OpcionesProteccion {
  * @example { preHandler: proteger({ permiso: 'usuarios.gestionar' }) }
  */
 export function proteger(opciones: OpcionesProteccion = {}): preHandlerAsyncHookHandler {
-  const primera = new GuardiaAutenticacion();
-  let ultima: Guardia = primera;
-
-  if (opciones.soloSuperacceso) ultima = ultima.enlazar(new GuardiaSuperacceso());
-  if (opciones.requiereEmpresa ?? !opciones.soloSuperacceso) ultima = ultima.enlazar(new GuardiaEmpresaActiva());
-  if (opciones.permiso) {
-    const modulo = obtenerRegistroModulos().moduloDelPermiso(opciones.permiso);
-    if (!modulo) throw new Error(`El permiso "${opciones.permiso}" no está declarado por ningún módulo.`);
-    ultima = ultima.enlazar(new GuardiaModulo(modulo)).enlazar(new GuardiaPermiso(opciones.permiso));
-  }
-
+  const [primera, ...siguientes] = guardiasEnOrden(opciones);
+  siguientes.reduce((anterior, guardia) => anterior.enlazar(guardia), primera);
   return async (solicitud, respuesta) => primera.manejar(solicitud, respuesta);
+}
+
+function guardiasEnOrden(opciones: OpcionesProteccion): [Guardia, ...Guardia[]] {
+  const guardias: [Guardia, ...Guardia[]] = [new GuardiaAutenticacion()];
+  if (opciones.soloSuperacceso) guardias.push(new GuardiaSuperacceso());
+  if (opciones.requiereEmpresa ?? !opciones.soloSuperacceso) guardias.push(new GuardiaEmpresaActiva());
+  if (opciones.permiso) guardias.push(...guardiasDePermiso(opciones.permiso));
+  return guardias;
+}
+
+/** Un permiso exige, además, que su módulo esté activo en la cuenta. */
+function guardiasDePermiso(permiso: string): Guardia[] {
+  const modulo = obtenerRegistroModulos().moduloDelPermiso(permiso);
+  if (!modulo) throw new Error(`El permiso "${permiso}" no está declarado por ningún módulo.`);
+  return [new GuardiaModulo(modulo), new GuardiaPermiso(permiso)];
 }

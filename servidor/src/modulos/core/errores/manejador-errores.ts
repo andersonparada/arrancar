@@ -62,7 +62,9 @@ export function manejarError(error: FastifyError, solicitud: FastifyRequest, res
   }
 
   if (error.statusCode && error.statusCode < 500) {
-    return responder(error.statusCode, { error: { codigo: error.code ?? 'solicitud_invalida', mensaje: error.message } });
+    return responder(error.statusCode, {
+      error: { codigo: error.code ?? 'solicitud_invalida', mensaje: error.message },
+    });
   }
 
   solicitud.log.error({ err: error }, 'Error no controlado');

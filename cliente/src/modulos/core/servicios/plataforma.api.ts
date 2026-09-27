@@ -50,7 +50,9 @@ export const plataformaApi = {
     api.modificar<void>(`/plataforma/cuentas/${id}`, datos),
   catalogoModulos: () => api.obtener<EstadoModulo[]>('/plataforma/modulos'),
   modulosDeCuenta: (id: string) => api.obtener<EstadoModulo[]>(`/plataforma/cuentas/${id}/modulos`),
-  activarModulo: (id: string, clave: string) => api.reemplazar<EstadoModulo[]>(`/plataforma/cuentas/${id}/modulos/${clave}`),
-  desactivarModulo: (id: string, clave: string) => api.eliminar<EstadoModulo[]>(`/plataforma/cuentas/${id}/modulos/${clave}`),
+  activarModulo: (id: string, clave: string) =>
+    api.reemplazar<EstadoModulo[]>(`/plataforma/cuentas/${id}/modulos/${clave}`),
+  desactivarModulo: (id: string, clave: string) =>
+    api.eliminar<EstadoModulo[]>(`/plataforma/cuentas/${id}/modulos/${clave}`),
   bitacora: () => api.obtener<EntradaBitacora[]>('/plataforma/bitacora'),
 };

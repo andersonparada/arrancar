@@ -26,9 +26,15 @@ export const configuraciones = esquemaCore.table(
     actualizadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex('configuraciones_por_instalacion').on(t.clave).where(sql`nivel = 'instalacion'`),
-    uniqueIndex('configuraciones_por_cuenta').on(t.cuentaId, t.clave).where(sql`nivel = 'cuenta'`),
-    uniqueIndex('configuraciones_por_empresa').on(t.empresaId, t.clave).where(sql`nivel = 'empresa'`),
+    uniqueIndex('configuraciones_por_instalacion')
+      .on(t.clave)
+      .where(sql`nivel = 'instalacion'`),
+    uniqueIndex('configuraciones_por_cuenta')
+      .on(t.cuentaId, t.clave)
+      .where(sql`nivel = 'cuenta'`),
+    uniqueIndex('configuraciones_por_empresa')
+      .on(t.empresaId, t.clave)
+      .where(sql`nivel = 'empresa'`),
     check(
       'configuraciones_nivel_coherente',
       sql`(nivel = 'instalacion' and cuenta_id is null and empresa_id is null)

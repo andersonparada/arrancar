@@ -35,7 +35,10 @@ function normalizar(nombreUsuario: string): string {
 
 export const usuariosRepositorio = {
   async buscarPorUsuario(nombreUsuario: string, ejecutor: Ejecutor = bd): Promise<Usuario | undefined> {
-    const [usuario] = await ejecutor.select().from(usuarios).where(eq(usuarios.usuario, normalizar(nombreUsuario)));
+    const [usuario] = await ejecutor
+      .select()
+      .from(usuarios)
+      .where(eq(usuarios.usuario, normalizar(nombreUsuario)));
     return usuario;
   },
 

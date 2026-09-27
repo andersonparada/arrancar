@@ -13,7 +13,11 @@ export const tercerosControlador = {
   },
 
   obtener(solicitud: FastifyRequest<{ Params: ParamsTercero }>) {
-    return tercerosServicio.obtenerFicha(empresaActivaDe(solicitud), solicitud.params.terceroId, opcionesVisibilidad(solicitud));
+    return tercerosServicio.obtenerFicha(
+      empresaActivaDe(solicitud),
+      solicitud.params.terceroId,
+      opcionesVisibilidad(solicitud),
+    );
   },
 
   async crear(solicitud: FastifyRequest<{ Body: TerceroSolicitado }>, respuesta: FastifyReply) {

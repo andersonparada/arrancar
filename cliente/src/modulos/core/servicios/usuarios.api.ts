@@ -47,5 +47,6 @@ export const usuariosApi = {
     api.obtener<{ usuario: string | null }>('/usuarios/sugerencia', { nombres, apellidos }),
   crear: (datos: DatosNuevoUsuario) => api.crear<{ id: string; usuario: string }>('/usuarios', datos),
   actualizar: (id: string, datos: CambiosUsuario) => api.modificar<void>(`/usuarios/${id}`, datos),
-  cambiarContrasena: (id: string, contrasena: string) => api.reemplazar<void>(`/usuarios/${id}/contrasena`, { contrasena }),
+  cambiarContrasena: (id: string, contrasena: string) =>
+    api.reemplazar<void>(`/usuarios/${id}/contrasena`, { contrasena }),
 };

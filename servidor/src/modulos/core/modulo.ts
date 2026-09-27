@@ -71,7 +71,9 @@ export const moduloCore: DefinicionModulo = {
     definirConfiguracion({
       clave: 'core.regional.zona_horaria',
       descripcion: 'Zona horaria para fechas y recordatorios.',
-      esquema: z.string().refine((zona) => Intl.supportedValuesOf('timeZone').includes(zona), 'Zona horaria desconocida.'),
+      esquema: z
+        .string()
+        .refine((zona) => Intl.supportedValuesOf('timeZone').includes(zona), 'Zona horaria desconocida.'),
       predeterminado: 'America/Guatemala',
       niveles: ['instalacion', 'cuenta', 'empresa'],
       publica: true,

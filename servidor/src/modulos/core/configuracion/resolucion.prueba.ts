@@ -17,7 +17,10 @@ describe('resolverValor', () => {
   });
 
   it('gana el nivel más específico: empresa sobre cuenta sobre instalación', () => {
-    expect(resolverValor(diasAviso, { instalacion: 10, cuenta: 20, empresa: 5 })).toEqual({ valor: 5, origen: 'empresa' });
+    expect(resolverValor(diasAviso, { instalacion: 10, cuenta: 20, empresa: 5 })).toEqual({
+      valor: 5,
+      origen: 'empresa',
+    });
     expect(resolverValor(diasAviso, { instalacion: 10, cuenta: 20 })).toEqual({ valor: 20, origen: 'cuenta' });
     expect(resolverValor(diasAviso, { instalacion: 10 })).toEqual({ valor: 10, origen: 'instalacion' });
   });
@@ -28,6 +31,9 @@ describe('resolverValor', () => {
 
   it('ignora niveles que la variable no admite', () => {
     const soloInstalacion = { ...diasAviso, niveles: ['instalacion'] as const };
-    expect(resolverValor(soloInstalacion, { empresa: 5, instalacion: 12 })).toEqual({ valor: 12, origen: 'instalacion' });
+    expect(resolverValor(soloInstalacion, { empresa: 5, instalacion: 12 })).toEqual({
+      valor: 12,
+      origen: 'instalacion',
+    });
   });
 });

@@ -28,10 +28,7 @@ export const usuariosControlador = {
     return respuesta.status(201).send(creado);
   },
 
-  async actualizar(
-    solicitud: FastifyRequest<{ Params: ParamsUsuario; Body: CambioUsuario }>,
-    respuesta: FastifyReply,
-  ) {
+  async actualizar(solicitud: FastifyRequest<{ Params: ParamsUsuario; Body: CambioUsuario }>, respuesta: FastifyReply) {
     await usuariosServicio.actualizar(administradorDe(solicitud), solicitud.params.usuarioId, solicitud.body);
     return respuesta.status(204).send();
   },

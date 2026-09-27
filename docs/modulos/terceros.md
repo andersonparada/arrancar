@@ -115,7 +115,7 @@ No hay alcance por registro (`recursosConAlcance`) en esta versión.
 
 ```
 Clientes
-  Trabajo diario
+  Operación
     Buscar contacto        búsqueda rápida de clientes y proveedores para llamar o escribir
   Administración
     Clientes               listado + alta de clientes (con su clase)

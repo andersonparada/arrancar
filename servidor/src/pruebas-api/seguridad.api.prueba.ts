@@ -24,7 +24,11 @@ describe('seguridad general de la API', () => {
   it('rechaza cambios que vienen de otro sitio web', async () => {
     const respuesta = await entorno
       .nuevoCliente()
-      .postDesdeOtroOrigen('/api/autenticacion/iniciar-sesion', { usuario: 'x', contrasena: 'x' }, 'https://sitio-malicioso.com');
+      .postDesdeOtroOrigen(
+        '/api/autenticacion/iniciar-sesion',
+        { usuario: 'x', contrasena: 'x' },
+        'https://sitio-malicioso.com',
+      );
 
     expect(respuesta.estado).toBe(403);
   });

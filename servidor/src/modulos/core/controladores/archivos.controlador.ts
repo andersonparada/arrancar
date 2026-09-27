@@ -5,10 +5,7 @@ import { archivosServicio, type VarianteImagen } from '../servicios/archivos.ser
 import type { ConsultaArchivo, ParamsArchivo } from '../validaciones/archivos.validaciones.js';
 
 /** Envía una imagen con caché larga: el contenido de un id nunca cambia. */
-export async function enviarImagen(
-  respuesta: FastifyReply,
-  abrir: () => ReturnType<typeof archivosServicio.abrir>,
-) {
+export async function enviarImagen(respuesta: FastifyReply, abrir: () => ReturnType<typeof archivosServicio.abrir>) {
   const { archivo, contenido } = await abrir();
   return respuesta
     .header('Content-Type', archivo.tipoMime)

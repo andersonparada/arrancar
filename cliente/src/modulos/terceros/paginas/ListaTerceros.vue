@@ -8,8 +8,8 @@ import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
-import Insignia from '@/modulos/core/componentes/Insignia.vue';
-import Tarjeta from '@/modulos/core/componentes/Tarjeta.vue';
+import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
+import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import AltaRapidaTercero from '../componentes/AltaRapidaTercero.vue';
 import { tercerosApi, type PapelTercero, type Tercero, type TerceroEnListado } from '../servicios/terceros.api';
 
@@ -65,9 +65,14 @@ onMounted(cargar);
       <BotonBase v-permiso="'terceros.gestionar'" :icono="Plus" @click="altaAbierta = true">Nuevo tercero</BotonBase>
     </EncabezadoPagina>
 
-    <Tarjeta class="mb-4">
+    <TarjetaBase class="mb-4">
       <div class="grid gap-3 sm:grid-cols-3">
-        <CampoTexto v-model="filtros.texto" etiqueta="Buscar" placeholder="Nombre, NIT, DPI o teléfono" ocultar-etiqueta />
+        <CampoTexto
+          v-model="filtros.texto"
+          etiqueta="Buscar"
+          placeholder="Nombre, NIT, DPI o teléfono"
+          ocultar-etiqueta
+        />
         <CampoSelector
           v-model="filtros.papel"
           etiqueta="Papel"
@@ -90,7 +95,7 @@ onMounted(cargar);
           ]"
         />
       </div>
-    </Tarjeta>
+    </TarjetaBase>
 
     <EstadoVacio
       v-if="!cargando && terceros.length === 0"
@@ -101,23 +106,25 @@ onMounted(cargar);
 
     <ul v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <li v-for="tercero in terceros" :key="tercero.id">
-        <Tarjeta class="flex h-full cursor-pointer flex-col gap-2" @click="irAFicha(tercero)">
+        <TarjetaBase class="flex h-full cursor-pointer flex-col gap-2" @click="irAFicha(tercero)">
           <div class="flex items-start gap-3">
-            <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-campo-100 text-campo-800 dark:bg-campo-900 dark:text-campo-200">
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-campo-100 text-campo-800 dark:bg-campo-900 dark:text-campo-200"
+            >
               <Users class="size-5" aria-hidden="true" />
             </span>
             <div class="min-w-0 flex-1">
               <p class="truncate font-semibold">{{ tercero.nombreMostrar }}</p>
               <p class="text-sm text-tierra-500">{{ tercero.nit ?? 'Sin NIT' }}</p>
             </div>
-            <Insignia v-if="!tercero.activo" tono="rojo">Inactivo</Insignia>
+            <InsigniaBase v-if="!tercero.activo" tono="rojo">Inactivo</InsigniaBase>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <Insignia v-if="tercero.papeles.cliente" tono="campo">Cliente</Insignia>
-            <Insignia v-if="tercero.papeles.proveedor" tono="trigo">Proveedor</Insignia>
-            <Insignia v-if="tercero.papeles.trabajador" tono="tierra">Trabajador</Insignia>
+            <InsigniaBase v-if="tercero.papeles.cliente" tono="campo">Cliente</InsigniaBase>
+            <InsigniaBase v-if="tercero.papeles.proveedor" tono="trigo">Proveedor</InsigniaBase>
+            <InsigniaBase v-if="tercero.papeles.trabajador" tono="tierra">Trabajador</InsigniaBase>
           </div>
-        </Tarjeta>
+        </TarjetaBase>
       </li>
     </ul>
 

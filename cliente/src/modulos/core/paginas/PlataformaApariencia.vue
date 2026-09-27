@@ -7,7 +7,7 @@ import BotonBase from '../componentes/BotonBase.vue';
 import CampoColor from '../componentes/CampoColor.vue';
 import CampoTexto from '../componentes/CampoTexto.vue';
 import EncabezadoPagina from '../componentes/EncabezadoPagina.vue';
-import Tarjeta from '../componentes/Tarjeta.vue';
+import TarjetaBase from '../componentes/TarjetaBase.vue';
 import { usarFormulario } from '../composables/usar-formulario';
 import { aparienciaApi } from '../servicios/apariencia.api';
 import { contraste, sugerirColoresDeImagen, variablesTema } from '../utilidades/colores';
@@ -80,10 +80,13 @@ async function subirLogo(evento: Event): Promise<void> {
 }
 
 async function quitarLogo(): Promise<void> {
-  const aceptado = await avisos.confirmar({ mensaje: '¿Quitar el logo propio y volver al de Arrancar?', textoConfirmar: 'Quitar' });
+  const aceptado = await avisos.confirmar({
+    mensaje: '¿Quitar el logo propio y volver al de Arrancar?',
+    textoConfirmar: 'Quitar',
+  });
   if (!aceptado) return;
   let resultado: Awaited<ReturnType<typeof aparienciaApi.quitarLogo>> | undefined;
-  if (await formulario.enviar(async () => (resultado = await aparienciaApi.quitarLogo())) && resultado) {
+  if ((await formulario.enviar(async () => (resultado = await aparienciaApi.quitarLogo()))) && resultado) {
     urlLogoLocal.value = null;
     apariencia.establecer(resultado);
   }
@@ -106,7 +109,7 @@ async function restablecer(): Promise<void> {
   });
   if (!aceptado) return;
   let resultado: Awaited<ReturnType<typeof aparienciaApi.restablecer>> | undefined;
-  if (await formulario.enviar(async () => (resultado = await aparienciaApi.restablecer())) && resultado) {
+  if ((await formulario.enviar(async () => (resultado = await aparienciaApi.restablecer()))) && resultado) {
     apariencia.establecer(resultado);
     Object.assign(borrador, {
       nombreAplicacion: resultado.nombreAplicacion,
@@ -128,32 +131,63 @@ onBeforeUnmount(() => {
       descripcion="Nombre, logo y colores de esta instalación. Se aplican a todas las cuentas del servidor: menú, encabezados e inicio de sesión."
     >
       <BotonBase variante="secundario" :icono="RotateCcw" @click="restablecer">Restablecer</BotonBase>
-      <BotonBase :icono="Save" :cargando="formulario.enviando.value" :deshabilitado="!hayCambios" @click="guardar">Guardar</BotonBase>
+      <BotonBase :icono="Save" :cargando="formulario.enviando.value" :deshabilitado="!hayCambios" @click="guardar"
+        >Guardar</BotonBase
+      >
     </EncabezadoPagina>
 
     <div class="grid gap-6 lg:grid-cols-[1fr_22rem]">
       <div class="space-y-4">
-        <Tarjeta class="space-y-4">
+        <TarjetaBase class="space-y-4">
           <h2 class="font-semibold">Identidad</h2>
-          <CampoTexto v-model="borrador.nombreAplicacion" etiqueta="Nombre de la aplicación" requerido :error="formulario.errores.value.nombreAplicacion" />
+          <CampoTexto
+            v-model="borrador.nombreAplicacion"
+            etiqueta="Nombre de la aplicación"
+            requerido
+            :error="formulario.errores.value.nombreAplicacion"
+          />
 
           <div class="flex flex-wrap items-center gap-4">
-            <img :src="logoVistaPrevia" alt="Logo actual" class="size-16 rounded-xl bg-tierra-100 object-contain p-1.5 dark:bg-tierra-800" />
+            <img
+              :src="logoVistaPrevia"
+              alt="Logo actual"
+              class="size-16 rounded-xl bg-tierra-100 object-contain p-1.5 dark:bg-tierra-800"
+            />
             <div class="flex flex-wrap gap-2">
               <BotonBase variante="secundario" :icono="ImageUp" @click="selectorLogo?.click()">Subir logo</BotonBase>
-              <BotonBase v-if="apariencia.apariencia.urlLogo" variante="fantasma" :icono="Trash2" @click="quitarLogo">Quitar</BotonBase>
+              <BotonBase v-if="apariencia.apariencia.urlLogo" variante="fantasma" :icono="Trash2" @click="quitarLogo"
+                >Quitar</BotonBase
+              >
               <BotonBase variante="fantasma" :icono="Sparkles" @click="sugerirDesdeLogo">Colores del logo</BotonBase>
             </div>
-            <input ref="selectorLogo" type="file" accept="image/svg+xml,image/png,image/jpeg,image/webp" class="hidden" @change="subirLogo" />
+            <input
+              ref="selectorLogo"
+              type="file"
+              accept="image/svg+xml,image/png,image/jpeg,image/webp"
+              class="hidden"
+              @change="subirLogo"
+            />
           </div>
-          <p class="text-xs text-tierra-500">SVG o PNG con fondo transparente se ven mejor. Se ajusta a un cuadrado de 512 px.</p>
-        </Tarjeta>
+          <p class="text-xs text-tierra-500">
+            SVG o PNG con fondo transparente se ven mejor. Se ajusta a un cuadrado de 512 px.
+          </p>
+        </TarjetaBase>
 
-        <Tarjeta class="space-y-4">
-          <h2 class="flex items-center gap-2 font-semibold"><Palette class="size-5 text-tierra-500" aria-hidden="true" />Colores</h2>
+        <TarjetaBase class="space-y-4">
+          <h2 class="flex items-center gap-2 font-semibold">
+            <Palette class="size-5 text-tierra-500" aria-hidden="true" />Colores
+          </h2>
           <div class="grid gap-4 sm:grid-cols-2">
-            <CampoColor v-model="borrador.colorPrincipal" etiqueta="Color principal" ayuda="Menú lateral, encabezado y fondo del inicio de sesión." />
-            <CampoColor v-model="borrador.colorAcento" etiqueta="Color de acento" ayuda="Resaltados: opción activa del menú, iniciales del usuario." />
+            <CampoColor
+              v-model="borrador.colorPrincipal"
+              etiqueta="Color principal"
+              ayuda="Menú lateral, encabezado y fondo del inicio de sesión."
+            />
+            <CampoColor
+              v-model="borrador.colorAcento"
+              etiqueta="Color de acento"
+              ayuda="Resaltados: opción activa del menú, iniciales del usuario."
+            />
           </div>
           <p v-if="acentoPocoVisible" class="flex items-center gap-2 rounded-lg bg-trigo-300/30 px-3 py-2 text-sm">
             <TriangleAlert class="size-4 shrink-0 text-trigo-500" aria-hidden="true" />
@@ -170,37 +204,55 @@ onBeforeUnmount(() => {
                 @click="usarPaleta(paleta)"
               >
                 <span class="flex">
-                  <span class="size-5 rounded-full ring-2 ring-white dark:ring-tierra-900" :style="{ background: paleta.principal }" />
-                  <span class="-ml-1.5 size-5 rounded-full ring-2 ring-white dark:ring-tierra-900" :style="{ background: paleta.acento }" />
+                  <span
+                    class="size-5 rounded-full ring-2 ring-white dark:ring-tierra-900"
+                    :style="{ background: paleta.principal }"
+                  />
+                  <span
+                    class="-ml-1.5 size-5 rounded-full ring-2 ring-white dark:ring-tierra-900"
+                    :style="{ background: paleta.acento }"
+                  />
                 </span>
                 {{ paleta.nombre }}
               </button>
             </div>
           </div>
           <p class="text-xs text-tierra-500">
-            Los botones, avisos y formularios conservan sus colores para que la app sea igual de clara en todas las instalaciones.
+            Los botones, avisos y formularios conservan sus colores para que la app sea igual de clara en todas las
+            instalaciones.
           </p>
-        </Tarjeta>
+        </TarjetaBase>
       </div>
 
       <div class="space-y-3 lg:sticky lg:top-8 lg:self-start">
         <p class="text-sm font-semibold tracking-wider text-tierra-500 uppercase">Vista previa</p>
-        <div :style="estiloVistaPrevia" class="overflow-hidden rounded-2xl ring-1 ring-tierra-200 dark:ring-tierra-700" aria-hidden="true">
+        <div
+          :style="estiloVistaPrevia"
+          class="overflow-hidden rounded-2xl ring-1 ring-tierra-200 dark:ring-tierra-700"
+          aria-hidden="true"
+        >
           <div class="flex h-72">
             <div class="flex w-44 flex-col bg-marca p-3 text-marca-texto">
               <div class="mb-3 flex items-center gap-2">
                 <img :src="logoVistaPrevia" alt="" class="size-6 object-contain" />
                 <span class="truncate text-sm font-bold">{{ borrador.nombreAplicacion || 'Sin nombre' }}</span>
               </div>
-              <div class="mb-3 rounded-md bg-marca-oscuro/60 px-2 py-1.5 text-xs ring-1 ring-marca-texto/15">Rancho San José</div>
+              <div class="mb-3 rounded-md bg-marca-oscuro/60 px-2 py-1.5 text-xs ring-1 ring-marca-texto/15">
+                Rancho San José
+              </div>
               <p class="mb-1 text-[10px] font-semibold tracking-wider text-marca-texto/60 uppercase">General</p>
               <div class="relative mb-1 flex items-center gap-2 rounded-md bg-marca-texto/15 px-2 py-1.5 text-xs">
                 <span class="absolute inset-y-1.5 left-0 w-0.5 rounded-r-full bg-acento" />
                 <House class="size-3.5" />Inicio
               </div>
-              <div class="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-marca-texto/85"><Users class="size-3.5" />Usuarios</div>
+              <div class="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-marca-texto/85">
+                <Users class="size-3.5" />Usuarios
+              </div>
               <div class="mt-auto flex items-center gap-2 border-t border-marca-texto/10 pt-2">
-                <span class="flex size-6 items-center justify-center rounded-full bg-acento text-[10px] font-bold text-acento-texto">DD</span>
+                <span
+                  class="flex size-6 items-center justify-center rounded-full bg-acento text-[10px] font-bold text-acento-texto"
+                  >DD</span
+                >
                 <span class="truncate text-xs">Dueño Demo</span>
               </div>
             </div>

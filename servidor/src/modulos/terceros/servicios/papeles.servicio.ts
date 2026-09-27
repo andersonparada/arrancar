@@ -6,9 +6,17 @@ import { clientesRepositorio } from '../repositorios/clientes.repositorio.js';
 import { proveedoresRepositorio } from '../repositorios/proveedores.repositorio.js';
 import { tercerosRepositorio } from '../repositorios/terceros.repositorio.js';
 import { trabajadoresRepositorio } from '../repositorios/trabajadores.repositorio.js';
-import type { CategoriaProveedorSolicitada, ClienteSolicitado, ProveedorSolicitado, TrabajadorSolicitado } from '../validaciones/papeles.validaciones.js';
+import type {
+  CategoriaProveedorSolicitada,
+  ClienteSolicitado,
+  ProveedorSolicitado,
+  TrabajadorSolicitado,
+} from '../validaciones/papeles.validaciones.js';
 
-async function tercerroActivoONoEncontrado(tx: Parameters<typeof tercerosRepositorio.buscarPorId>[0], terceroId: string) {
+async function tercerroActivoONoEncontrado(
+  tx: Parameters<typeof tercerosRepositorio.buscarPorId>[0],
+  terceroId: string,
+) {
   const tercero = await tercerosRepositorio.buscarPorId(tx, terceroId);
   if (!tercero) throw new ErrorNoEncontrado('El tercero');
   if (!tercero.activo) throw new ErrorReglaNegocio('El tercero está inactivo; actívelo antes de asignarle un papel.');
@@ -23,7 +31,11 @@ export const papelesServicio = {
       const cliente = existente
         ? await clientesRepositorio.actualizar(tx, existente.id, datos)
         : await clientesRepositorio.crear(tx, { ...datos, terceroId, cuentaId: contexto.cuentaId });
-      await busEventos.publicar('terceros.papel_asignado', { terceroId, cuentaId: contexto.cuentaId, papel: 'cliente' });
+      await busEventos.publicar('terceros.papel_asignado', {
+        terceroId,
+        cuentaId: contexto.cuentaId,
+        papel: 'cliente',
+      });
       return cliente;
     });
   },
@@ -48,7 +60,11 @@ export const papelesServicio = {
       const proveedor = existente
         ? await proveedoresRepositorio.actualizar(tx, existente.id, datos)
         : await proveedoresRepositorio.crear(tx, { ...datos, terceroId, cuentaId: contexto.cuentaId });
-      await busEventos.publicar('terceros.papel_asignado', { terceroId, cuentaId: contexto.cuentaId, papel: 'proveedor' });
+      await busEventos.publicar('terceros.papel_asignado', {
+        terceroId,
+        cuentaId: contexto.cuentaId,
+        papel: 'proveedor',
+      });
       return proveedor;
     });
   },
@@ -58,7 +74,11 @@ export const papelesServicio = {
       const existente = await proveedoresRepositorio.buscarPorTercero(tx, terceroId);
       if (!existente) throw new ErrorNoEncontrado('El papel de proveedor');
       const proveedor = await proveedoresRepositorio.actualizar(tx, existente.id, { activo: false });
-      await busEventos.publicar('terceros.papel_quitado', { terceroId, cuentaId: contexto.cuentaId, papel: 'proveedor' });
+      await busEventos.publicar('terceros.papel_quitado', {
+        terceroId,
+        cuentaId: contexto.cuentaId,
+        papel: 'proveedor',
+      });
       return proveedor;
     });
   },
@@ -68,7 +88,9 @@ export const papelesServicio = {
   },
 
   crearCategoria(contexto: ContextoEmpresa, datos: CategoriaProveedorSolicitada) {
-    return ejecutarEnEmpresa(contexto, (tx) => proveedoresRepositorio.crearCategoria(tx, contexto.cuentaId, datos.nombre));
+    return ejecutarEnEmpresa(contexto, (tx) =>
+      proveedoresRepositorio.crearCategoria(tx, contexto.cuentaId, datos.nombre),
+    );
   },
 
   async actualizarCategoria(contexto: ContextoEmpresa, categoriaId: string, datos: CategoriaProveedorSolicitada) {
@@ -86,7 +108,11 @@ export const papelesServicio = {
       const trabajador = existente
         ? await trabajadoresRepositorio.actualizar(tx, existente.id, datos)
         : await trabajadoresRepositorio.crear(tx, { ...datos, terceroId, cuentaId: contexto.cuentaId });
-      await busEventos.publicar('terceros.papel_asignado', { terceroId, cuentaId: contexto.cuentaId, papel: 'trabajador' });
+      await busEventos.publicar('terceros.papel_asignado', {
+        terceroId,
+        cuentaId: contexto.cuentaId,
+        papel: 'trabajador',
+      });
       return trabajador;
     });
   },
@@ -96,7 +122,11 @@ export const papelesServicio = {
       const existente = await trabajadoresRepositorio.buscarPorTercero(tx, terceroId);
       if (!existente) throw new ErrorNoEncontrado('El papel de trabajador');
       const trabajador = await trabajadoresRepositorio.actualizar(tx, existente.id, { activo: false });
-      await busEventos.publicar('terceros.papel_quitado', { terceroId, cuentaId: contexto.cuentaId, papel: 'trabajador' });
+      await busEventos.publicar('terceros.papel_quitado', {
+        terceroId,
+        cuentaId: contexto.cuentaId,
+        papel: 'trabajador',
+      });
       return trabajador;
     });
   },

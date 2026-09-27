@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { correoOpcional, dpiOpcional, nitOpcional, textoOpcional } from '../../core/validaciones/comunes.validaciones.js';
+import {
+  correoOpcional,
+  dpiOpcional,
+  nitOpcional,
+  textoOpcional,
+} from '../../core/validaciones/comunes.validaciones.js';
 
 const codigoGeografico = z
   .string()
@@ -22,7 +27,10 @@ export const esquemaTercero = z
     departamentoCodigo: codigoGeografico,
     municipioCodigo: codigoGeografico,
     direccion: textoOpcional(250),
-    fotoArchivoId: z.uuid().nullish().transform((v) => v || null),
+    fotoArchivoId: z
+      .uuid()
+      .nullish()
+      .transform((v) => v || null),
     notas: textoOpcional(1000),
     activo: z.boolean().default(true),
     /** El cliente la manda en `true` para crear o guardar aunque haya posibles duplicados. */

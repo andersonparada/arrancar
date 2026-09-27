@@ -33,7 +33,12 @@ describe('registro de terceros', () => {
     const respuesta = await registrarPersona('Juan', 'Pérez');
 
     expect(respuesta.estado).toBe(201);
-    expect(respuesta.cuerpo).toMatchObject({ tipo: 'individual', nombreMostrar: 'Juan Pérez', nit: null, activo: true });
+    expect(respuesta.cuerpo).toMatchObject({
+      tipo: 'individual',
+      nombreMostrar: 'Juan Pérez',
+      nit: null,
+      activo: true,
+    });
   });
 
   it('muestra el nombre comercial de una empresa por encima de la razón social', async () => {
@@ -48,7 +53,10 @@ describe('registro de terceros', () => {
   });
 
   it('exige el nombre según el tipo de tercero', async () => {
-    const sinNombres = await cuenta.propietario.post('/api/terceros', { tipo: 'individual', apellidos: 'Solo Apellido' });
+    const sinNombres = await cuenta.propietario.post('/api/terceros', {
+      tipo: 'individual',
+      apellidos: 'Solo Apellido',
+    });
     const sinRazonSocial = await cuenta.propietario.post('/api/terceros', { tipo: 'juridica' });
 
     expect(sinNombres.estado).toBe(400);
@@ -97,7 +105,9 @@ describe('papeles de cliente y proveedor', () => {
   it('asigna el papel de cliente con su clase y filtra por papel', async () => {
     const tercero = await registrarPersona('Mario', 'Acopiador');
 
-    const asignado = await cuenta.propietario.put(`/api/terceros/${tercero.cuerpo.id}/cliente`, { clase: 'intermediario' });
+    const asignado = await cuenta.propietario.put(`/api/terceros/${tercero.cuerpo.id}/cliente`, {
+      clase: 'intermediario',
+    });
 
     expect(asignado.estado).toBe(200);
     expect(asignado.cuerpo).toMatchObject({ clase: 'intermediario', activo: true });
@@ -146,7 +156,10 @@ describe('papeles de cliente y proveedor', () => {
 
 describe('contactos', () => {
   it('agrega, cambia y elimina contactos de un tercero', async () => {
-    const tercero = await cuenta.propietario.post('/api/terceros', { tipo: 'juridica', razonSocial: 'Rastro Municipal' });
+    const tercero = await cuenta.propietario.post('/api/terceros', {
+      tipo: 'juridica',
+      razonSocial: 'Rastro Municipal',
+    });
     const url = `/api/terceros/${tercero.cuerpo.id}/contactos`;
 
     const creado = await cuenta.propietario.post(url, { nombre: 'Encargado de compras', telefono: '5000-0000' });
