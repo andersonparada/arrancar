@@ -1,6 +1,6 @@
 import { bd } from '../base-datos/conexion.js';
 import { ErrorNoEncontrado, ErrorReglaNegocio, ErrorSolicitudInvalida } from '../errores/errores.js';
-import { rolesRepositorio } from '../repositorios/roles.repositorio.js';
+import { consultasRoles } from '../autorizacion/contexto.js';
 import { sesionesRepositorio } from '../repositorios/sesiones.repositorio.js';
 import { usuariosRepositorio } from '../repositorios/usuarios.repositorio.js';
 import { empresasRepositorio } from '../repositorios/empresas.repositorio.js';
@@ -20,7 +20,7 @@ export interface Administrador {
  */
 async function validarAccesos(cuentaId: string, accesos: AccesoSolicitado[]): Promise<void> {
   const empresasDeCuenta = new Set((await empresasRepositorio.listarDeCuenta(cuentaId)).map((e) => e.id));
-  const rolesDeCuenta = new Set((await rolesRepositorio.listarDeCuenta(cuentaId)).map((r) => r.id));
+  const rolesDeCuenta = new Set((await consultasRoles.listarDeCuenta(cuentaId)).map((r) => r.id));
   const vistas = new Set<string>();
 
   for (const acceso of accesos) {

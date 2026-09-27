@@ -10,7 +10,7 @@ import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../../../configuracion.js';
 import { definicionesModulos } from '../../indice.js';
-import { accesosDatos } from '../esquemas/accesos-datos.esquema.js';
+import { accesosDatos } from '../autorizacion/infraestructura/persistencia/accesos-datos.tablas.js';
 import { cuentas } from '../esquemas/cuentas.esquema.js';
 import { empresas } from '../esquemas/empresas.esquema.js';
 import { usuarios } from '../esquemas/usuarios.esquema.js';

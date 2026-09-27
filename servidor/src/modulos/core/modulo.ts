@@ -10,14 +10,14 @@ import { componerConfiguracion } from './configuracion/contexto.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
 import { componerGeografia } from './geografia/contexto.js';
 import { rutasPlataforma } from './rutas/plataforma.rutas.js';
-import { rutasRoles } from './rutas/roles.rutas.js';
+import { componerAutorizacion } from './autorizacion/contexto.js';
 import { rutasUsuarios } from './rutas/usuarios.rutas.js';
 
 const rutas: FastifyPluginAsync = async (app) => {
   await app.register(rutasAutenticacion);
   await app.register(rutasPlataforma);
   await app.register(rutasUsuarios);
-  await app.register(rutasRoles);
+  await app.register(componerAutorizacion(dependenciasCompartidas()));
   await app.register(componerArchivos(dependenciasCompartidas()));
   await app.register(componerConfiguracion());
   await app.register(componerApariencia());

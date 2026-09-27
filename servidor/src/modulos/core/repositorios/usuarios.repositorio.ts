@@ -2,7 +2,7 @@ import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { bd, type Ejecutor } from '../base-datos/conexion.js';
 import { usuarios } from '../esquemas/usuarios.esquema.js';
 import { empresas, empresaUsuarios } from '../esquemas/empresas.esquema.js';
-import { roles } from '../esquemas/roles.esquema.js';
+import { roles } from '../autorizacion/infraestructura/persistencia/roles.tablas.js';
 
 export type Usuario = typeof usuarios.$inferSelect;
 export type NuevoUsuario = typeof usuarios.$inferInsert;

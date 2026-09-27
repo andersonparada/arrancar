@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { bd, type Ejecutor } from '../base-datos/conexion.js';
 import { cuentas } from '../esquemas/cuentas.esquema.js';
-import { roles } from '../esquemas/roles.esquema.js';
+import { roles } from '../autorizacion/infraestructura/persistencia/roles.tablas.js';
 import { empresas, empresaUsuarios } from '../esquemas/empresas.esquema.js';
 
 export type Empresa = typeof empresas.$inferSelect;

@@ -485,6 +485,21 @@ entrega como un commit propio.
     de las cuentas). La ruta `/plataforma/bitacora` sale de plataforma y la registra
     el contexto. Sin pruebas unitarias nuevas: los casos de uso solo delegan y las
     pruebas de API cubren registro y listado. 251 pruebas; advertencias: 33.
+  - **Autorización (2026-09-27):** `core/autorizacion/` con la entidad `Rol`
+    (limpia el nombre, no repite permisos, el acceso total no lleva permisos
+    sueltos, la cuenta no se queda sin un rol con acceso total y un rol asignado
+    no se elimina; fábrica `Rol.propietario`), cinco casos de uso (listar roles y
+    permisos asignables, crear, actualizar y eliminar) y los puertos
+    `RepositorioRoles`, `ConsultasRoles` y `CatalogoDePermisos`. Las tablas `roles`,
+    `rol_permisos` y `accesos_datos` se mudan al contexto. Las escrituras de rol
+    (`insertarRol`, `actualizarRol`) reciben el ejecutor porque el alta de cuentas,
+    aún sin migrar, crea el rol Propietario en su propia transacción. Las consultas
+    usan la conexión directa: la sesión pide los permisos del rol antes de tener
+    empresa activa. Cambiar un rol ahora es atómico (antes el nombre y los permisos
+    se guardaban por separado). La respuesta de `/roles` solo lleva lo que la
+    pantalla usa (sin `cuentaId` ni fechas) y los errores tienen códigos propios.
+    Las guardias (`core/http/guardias.ts`) se mudan con identidad, porque dependen
+    de la sesión. 256 pruebas (5 unitarias nuevas); advertencias: 31.
 
 ### Mejoras pendientes (acordadas, sin fecha)
 

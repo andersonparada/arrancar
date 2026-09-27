@@ -4,7 +4,7 @@ import { configuracion } from '../configuracion/contexto.js';
 import type { ContextoSolicitud, UsuarioSesion } from '../http/contexto-solicitud.js';
 import { obtenerRegistroModulos } from '../modulos-sistema/registro-global.js';
 import { cuentasRepositorio } from '../repositorios/cuentas.repositorio.js';
-import { rolesRepositorio } from '../repositorios/roles.repositorio.js';
+import { consultasRoles } from '../autorizacion/contexto.js';
 import { sesionesRepositorio, type SesionConUsuario } from '../repositorios/sesiones.repositorio.js';
 import { empresasRepositorio, type EmpresaDisponible } from '../repositorios/empresas.repositorio.js';
 
@@ -33,7 +33,7 @@ async function resolverAccesoEmpresa(usuario: UsuarioSesion, empresaId: string):
     if (!acceso) return null;
     accesoTotal = acceso.accesoTotal;
     rolNombre = acceso.rolNombre;
-    if (!accesoTotal) permisosDelRol = await rolesRepositorio.permisosDe(acceso.rolId);
+    if (!accesoTotal) permisosDelRol = await consultasRoles.permisosDelRol(acceso.rolId);
   }
 
   const registro = obtenerRegistroModulos();

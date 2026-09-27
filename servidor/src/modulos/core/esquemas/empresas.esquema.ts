@@ -4,7 +4,7 @@ import { idPrimario, marcasDeTiempo } from '../base-datos/columnas.js';
 import { cuentas } from './cuentas.esquema.js';
 import { monedas } from './monedas.esquema.js';
 import { usuarios } from './usuarios.esquema.js';
-import { roles } from './roles.esquema.js';
+import { roles } from '../autorizacion/infraestructura/persistencia/roles.tablas.js';
 
 export const empresas = esquemaCore.table(
   'empresas',

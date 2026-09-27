@@ -1,7 +1,7 @@
 import { boolean, primaryKey, text, unique, uuid } from 'drizzle-orm/pg-core';
-import { esquemaCore } from './core.esquema.js';
-import { idPrimario, marcasDeTiempo } from '../base-datos/columnas.js';
-import { cuentas } from './cuentas.esquema.js';
+import { esquemaCore } from '../../../esquemas/core.esquema.js';
+import { idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
+import { cuentas } from '../../../esquemas/cuentas.esquema.js';
 
 /**
  * Rol definido por cada cuenta. Con `accesoTotal` el rol recibe todos los permisos,

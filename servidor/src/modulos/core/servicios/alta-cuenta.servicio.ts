@@ -2,14 +2,14 @@ import { bd } from '../base-datos/conexion.js';
 import { ErrorSolicitudInvalida } from '../errores/errores.js';
 import { obtenerRegistroModulos } from '../modulos-sistema/registro-global.js';
 import { cuentasRepositorio } from '../repositorios/cuentas.repositorio.js';
-import { rolesRepositorio } from '../repositorios/roles.repositorio.js';
+import { Rol } from '../autorizacion/dominio/rol.js';
+import { insertarRol } from '../autorizacion/infraestructura/persistencia/escritura-de-roles.js';
+import { Identificador } from '../compartido/dominio/identificador.js';
 import { usuariosRepositorio } from '../repositorios/usuarios.repositorio.js';
 import { empresasRepositorio } from '../repositorios/empresas.repositorio.js';
 import type { AltaCuenta } from '../validaciones/plataforma.validaciones.js';
 import { generarHashContrasena } from './contrasenas.servicio.js';
 import { nombreUsuarioServicio } from './nombre-usuario.servicio.js';
-
-export const NOMBRE_ROL_PROPIETARIO = 'Propietario';
 
 /**
  * Fachada (patrón Facade) para dar de alta a un suscriptor nuevo.
@@ -45,11 +45,8 @@ export const altaCuentaServicio = {
         { cuentaId: cuenta.id, nombre: datos.empresa.nombre, nit: datos.empresa.nit },
         tx,
       );
-      const rol = await rolesRepositorio.crear(
-        cuenta.id,
-        { nombre: NOMBRE_ROL_PROPIETARIO, descripcion: 'Acceso total a la cuenta.', accesoTotal: true, permisos: [] },
-        tx,
-      );
+      const rol = Rol.propietario(Identificador.desde(cuenta.id));
+      await insertarRol(tx, rol);
 
       const propietario =
         existente ??
@@ -64,7 +61,7 @@ export const altaCuentaServicio = {
           tx,
         ));
 
-      await empresasRepositorio.asignarAcceso(empresa.id, propietario.id, rol.id, tx);
+      await empresasRepositorio.asignarAcceso(empresa.id, propietario.id, rol.id.valor, tx);
       for (const clave of datos.modulos) {
         if (!registro.obtener(clave)?.esencial) await cuentasRepositorio.activarModulo(cuenta.id, clave, tx);
       }
