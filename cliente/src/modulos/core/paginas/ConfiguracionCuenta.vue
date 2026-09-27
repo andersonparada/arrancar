@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VENTANAS_CORE } from '../textos';
 import { onMounted, reactive, ref } from 'vue';
 import { RotateCcw, Save, SlidersHorizontal } from 'lucide-vue-next';
 import { usarAvisos } from '../almacenes/avisos';
@@ -11,7 +12,7 @@ import EstadoVacio from '../componentes/EstadoVacio.vue';
 import InsigniaBase from '../componentes/InsigniaBase.vue';
 import TarjetaBase from '../componentes/TarjetaBase.vue';
 import { usarFormulario } from '../composables/usar-formulario';
-import { configuracionApi, type NivelEditable, type VariableConfiguracion } from '../servicios/configuracion.api';
+import { apiConfiguracion, type NivelEditable, type VariableConfiguracion } from '../servicios/configuracion.api';
 
 const sesion = usarSesion();
 const avisos = usarAvisos();
@@ -34,7 +35,7 @@ const llave = (variable: VariableConfiguracion, nivel: NivelEditable) => `${vari
 
 async function cargar(): Promise<void> {
   try {
-    variables.value = await configuracionApi.listar();
+    variables.value = await apiConfiguracion.listar();
     for (const variable of variables.value) {
       for (const nivel of nivelesEditables(variable)) {
         borradores[llave(variable, nivel)] = variable.valores[nivel] ?? null;
@@ -51,14 +52,14 @@ function convertir(variable: VariableConfiguracion, valor: unknown): unknown {
 
 async function guardar(variable: VariableConfiguracion, nivel: NivelEditable): Promise<void> {
   const valor = convertir(variable, borradores[llave(variable, nivel)]);
-  const exito = await formulario.enviar(() => configuracionApi.establecer(variable.clave, nivel, valor));
+  const exito = await formulario.enviar(() => apiConfiguracion.establecer(variable.clave, nivel, valor));
   if (!exito) return;
   avisos.exito('Configuración guardada.');
   await Promise.all([cargar(), sesion.cargar()]);
 }
 
 async function restablecer(variable: VariableConfiguracion, nivel: NivelEditable): Promise<void> {
-  const exito = await formulario.enviar(() => configuracionApi.restablecer(variable.clave, nivel));
+  const exito = await formulario.enviar(() => apiConfiguracion.restablecer(variable.clave, nivel));
   if (!exito) return;
   avisos.exito('Se usará el valor heredado.');
   await Promise.all([cargar(), sesion.cargar()]);
@@ -70,8 +71,8 @@ onMounted(cargar);
 <template>
   <div>
     <EncabezadoPagina
-      titulo="Configuración"
-      :descripcion="`Ajustes de la cuenta y de ${sesion.empresa?.nombre}. El valor de la empresa tiene prioridad sobre el de la cuenta, y este sobre el del servidor.`"
+      :titulo="VENTANAS_CORE.configuracion.titulo"
+      :descripcion="VENTANAS_CORE.configuracion.descripcion(sesion.empresa?.nombre ?? '')"
     />
 
     <EstadoVacio v-if="!variables.length" :icono="SlidersHorizontal" titulo="Sin variables de configuración" />

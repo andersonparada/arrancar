@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VENTANAS_CORE } from '../textos';
 import { onMounted, reactive, ref } from 'vue';
 import { Blocks, Building, Plus } from 'lucide-vue-next';
 import { usarAvisos } from '../almacenes/avisos';
@@ -12,7 +13,7 @@ import InsigniaBase from '../componentes/InsigniaBase.vue';
 import TarjetaBase from '../componentes/TarjetaBase.vue';
 import VentanaModal from '../componentes/VentanaModal.vue';
 import { usarFormulario } from '../composables/usar-formulario';
-import { plataformaApi, type CuentaPlataforma, type EstadoModulo } from '../servicios/plataforma.api';
+import { apiPlataforma, type CuentaPlataforma, type EstadoModulo } from '../servicios/plataforma.api';
 import { formatearFechaHora } from '../utilidades/formato';
 
 const sesion = usarSesion();
@@ -42,8 +43,8 @@ const nombreModulo = (clave: string) => catalogo.value.find((m) => m.clave === c
 async function cargar(): Promise<void> {
   try {
     [cuentas.value, catalogo.value] = await Promise.all([
-      plataformaApi.listarCuentas(),
-      plataformaApi.catalogoModulos(),
+      apiPlataforma.listarCuentas(),
+      apiPlataforma.catalogoModulos(),
     ]);
   } catch (error) {
     avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar las cuentas.');
@@ -67,9 +68,9 @@ function abrirAlta(): void {
 }
 
 async function darDeAlta(): Promise<void> {
-  let resultado: Awaited<ReturnType<typeof plataformaApi.crearCuenta>> | undefined;
+  let resultado: Awaited<ReturnType<typeof apiPlataforma.crearCuenta>> | undefined;
   const exito = await formulario.enviar(async () => {
-    resultado = await plataformaApi.crearCuenta({
+    resultado = await apiPlataforma.crearCuenta({
       nombreCuenta: alta.nombreCuenta,
       empresa: { nombre: alta.empresa, nit: alta.nit || undefined },
       propietario: {
@@ -95,7 +96,7 @@ async function darDeAlta(): Promise<void> {
 
 async function abrirGestion(cuenta: CuentaPlataforma): Promise<void> {
   try {
-    gestion.modulos = await plataformaApi.modulosDeCuenta(cuenta.id);
+    gestion.modulos = await apiPlataforma.modulosDeCuenta(cuenta.id);
     gestion.cuenta = cuenta;
     gestion.abierta = true;
   } catch (error) {
@@ -108,8 +109,8 @@ async function cambiarModulo(modulo: EstadoModulo, activar: boolean): Promise<vo
   if (!cuenta) return;
   await formulario.enviar(async () => {
     gestion.modulos = activar
-      ? await plataformaApi.activarModulo(cuenta.id, modulo.clave)
-      : await plataformaApi.desactivarModulo(cuenta.id, modulo.clave);
+      ? await apiPlataforma.activarModulo(cuenta.id, modulo.clave)
+      : await apiPlataforma.desactivarModulo(cuenta.id, modulo.clave);
   });
 }
 
@@ -123,7 +124,7 @@ async function cambiarEstadoCuenta(cuenta: CuentaPlataforma, activa: boolean): P
     });
     if (!aceptado) return;
   }
-  const exito = await formulario.enviar(() => plataformaApi.actualizarCuenta(cuenta.id, { activa }));
+  const exito = await formulario.enviar(() => apiPlataforma.actualizarCuenta(cuenta.id, { activa }));
   if (exito) await cargar();
 }
 
@@ -132,10 +133,7 @@ onMounted(cargar);
 
 <template>
   <div>
-    <EncabezadoPagina
-      titulo="Cuentas suscriptoras"
-      descripcion="Soporte: alta de clientes del SaaS y módulos que tiene contratados cada uno."
-    >
+    <EncabezadoPagina :titulo="VENTANAS_CORE.cuentas.titulo" :descripcion="VENTANAS_CORE.cuentas.descripcion">
       <BotonBase :icono="Plus" @click="abrirAlta">Nueva cuenta</BotonBase>
     </EncabezadoPagina>
 

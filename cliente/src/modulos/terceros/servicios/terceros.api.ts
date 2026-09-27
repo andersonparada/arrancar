@@ -1,4 +1,4 @@
-import { api } from '@/modulos/core/servicios/cliente-http';
+import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 
 export type TipoTercero = 'individual' | 'juridica';
 export type ClaseCliente = 'directo' | 'intermediario' | 'empresa' | 'subasta';
@@ -102,28 +102,76 @@ export interface FiltrosTerceros {
   [clave: string]: string | number | boolean | undefined;
 }
 
-export const tercerosApi = {
-  listar: (filtros: FiltrosTerceros = {}) => api.obtener<TerceroEnListado[]>('/terceros', filtros),
-  obtener: (id: string) => api.obtener<FichaTercero>(`/terceros/${id}`),
-  crear: (datos: DatosTercero) => api.crear<Tercero>('/terceros', datos),
-  actualizar: (id: string, datos: DatosTercero) => api.reemplazar<Tercero>(`/terceros/${id}`, datos),
+export interface PapelDeCliente {
+  clase: ClaseCliente;
+  activo: boolean;
+  notas: string | null;
+}
 
-  listarContactos: (terceroId: string) => api.obtener<Contacto[]>(`/terceros/${terceroId}/contactos`),
-  crearContacto: (terceroId: string, datos: DatosContacto) =>
-    api.crear<Contacto>(`/terceros/${terceroId}/contactos`, datos),
-  actualizarContacto: (terceroId: string, contactoId: string, datos: DatosContacto) =>
-    api.reemplazar<Contacto>(`/terceros/${terceroId}/contactos/${contactoId}`, datos),
-  eliminarContacto: (terceroId: string, contactoId: string) =>
-    api.eliminar(`/terceros/${terceroId}/contactos/${contactoId}`),
+export interface PapelDeProveedor {
+  categoriaId: string | null;
+  activo: boolean;
+  notas: string | null;
+}
 
-  asignarCliente: (terceroId: string, datos: { clase: ClaseCliente; activo: boolean; notas: string | null }) =>
-    api.reemplazar<Cliente>(`/terceros/${terceroId}/cliente`, datos),
-  quitarCliente: (terceroId: string) => api.eliminar(`/terceros/${terceroId}/cliente`),
+export class ApiTerceros {
+  constructor(private readonly http: ClienteHttp) {}
 
-  listarCategoriasProveedor: () => api.obtener<CategoriaProveedor[]>('/proveedores/categorias'),
-  crearCategoriaProveedor: (nombre: string) =>
-    api.crear<CategoriaProveedor>('/proveedores/categorias', { nombre, activo: true }),
-  asignarProveedor: (terceroId: string, datos: { categoriaId: string | null; activo: boolean; notas: string | null }) =>
-    api.reemplazar<Proveedor>(`/terceros/${terceroId}/proveedor`, datos),
-  quitarProveedor: (terceroId: string) => api.eliminar(`/terceros/${terceroId}/proveedor`),
-};
+  listar(filtros: FiltrosTerceros = {}) {
+    return this.http.obtener<TerceroEnListado[]>('/terceros', filtros);
+  }
+
+  obtener(id: string) {
+    return this.http.obtener<FichaTercero>(`/terceros/${id}`);
+  }
+
+  crear(datos: DatosTercero) {
+    return this.http.crear<Tercero>('/terceros', datos);
+  }
+
+  actualizar(id: string, datos: DatosTercero) {
+    return this.http.reemplazar<Tercero>(`/terceros/${id}`, datos);
+  }
+
+  listarContactos(terceroId: string) {
+    return this.http.obtener<Contacto[]>(`/terceros/${terceroId}/contactos`);
+  }
+
+  crearContacto(terceroId: string, datos: DatosContacto) {
+    return this.http.crear<Contacto>(`/terceros/${terceroId}/contactos`, datos);
+  }
+
+  actualizarContacto(terceroId: string, contactoId: string, datos: DatosContacto) {
+    return this.http.reemplazar<Contacto>(`/terceros/${terceroId}/contactos/${contactoId}`, datos);
+  }
+
+  eliminarContacto(terceroId: string, contactoId: string) {
+    return this.http.eliminar(`/terceros/${terceroId}/contactos/${contactoId}`);
+  }
+
+  asignarCliente(terceroId: string, datos: PapelDeCliente) {
+    return this.http.reemplazar<Cliente>(`/terceros/${terceroId}/cliente`, datos);
+  }
+
+  quitarCliente(terceroId: string) {
+    return this.http.eliminar(`/terceros/${terceroId}/cliente`);
+  }
+
+  listarCategoriasProveedor() {
+    return this.http.obtener<CategoriaProveedor[]>('/proveedores/categorias');
+  }
+
+  crearCategoriaProveedor(nombre: string) {
+    return this.http.crear<CategoriaProveedor>('/proveedores/categorias', { nombre, activo: true });
+  }
+
+  asignarProveedor(terceroId: string, datos: PapelDeProveedor) {
+    return this.http.reemplazar<Proveedor>(`/terceros/${terceroId}/proveedor`, datos);
+  }
+
+  quitarProveedor(terceroId: string) {
+    return this.http.eliminar(`/terceros/${terceroId}/proveedor`);
+  }
+}
+
+export const apiTerceros = new ApiTerceros(clienteHttp);

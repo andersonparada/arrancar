@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VENTANAS_CORE } from '../textos';
 import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 import { House, ImageUp, Palette, RotateCcw, Save, Sparkles, Trash2, TriangleAlert, Users } from 'lucide-vue-next';
 import { usarApariencia } from '../almacenes/apariencia';
@@ -9,7 +10,7 @@ import CampoTexto from '../componentes/CampoTexto.vue';
 import EncabezadoPagina from '../componentes/EncabezadoPagina.vue';
 import TarjetaBase from '../componentes/TarjetaBase.vue';
 import { usarFormulario } from '../composables/usar-formulario';
-import { aparienciaApi } from '../servicios/apariencia.api';
+import { apiApariencia } from '../servicios/apariencia.api';
 import { contraste, sugerirColoresDeImagen, variablesTema } from '../utilidades/colores';
 
 const apariencia = usarApariencia();
@@ -69,8 +70,8 @@ async function subirLogo(evento: Event): Promise<void> {
   if (urlLogoLocal.value) URL.revokeObjectURL(urlLogoLocal.value);
   urlLogoLocal.value = URL.createObjectURL(archivo);
 
-  let resultado: Awaited<ReturnType<typeof aparienciaApi.cambiarLogo>> | undefined;
-  const exito = await formulario.enviar(async () => (resultado = await aparienciaApi.cambiarLogo(archivo)));
+  let resultado: Awaited<ReturnType<typeof apiApariencia.cambiarLogo>> | undefined;
+  const exito = await formulario.enviar(async () => (resultado = await apiApariencia.cambiarLogo(archivo)));
   if (exito && resultado) {
     apariencia.establecer(resultado);
     avisos.exito('Logo actualizado.');
@@ -85,16 +86,16 @@ async function quitarLogo(): Promise<void> {
     textoConfirmar: 'Quitar',
   });
   if (!aceptado) return;
-  let resultado: Awaited<ReturnType<typeof aparienciaApi.quitarLogo>> | undefined;
-  if ((await formulario.enviar(async () => (resultado = await aparienciaApi.quitarLogo()))) && resultado) {
+  let resultado: Awaited<ReturnType<typeof apiApariencia.quitarLogo>> | undefined;
+  if ((await formulario.enviar(async () => (resultado = await apiApariencia.quitarLogo()))) && resultado) {
     urlLogoLocal.value = null;
     apariencia.establecer(resultado);
   }
 }
 
 async function guardar(): Promise<void> {
-  let resultado: Awaited<ReturnType<typeof aparienciaApi.guardar>> | undefined;
-  const exito = await formulario.enviar(async () => (resultado = await aparienciaApi.guardar({ ...borrador })));
+  let resultado: Awaited<ReturnType<typeof apiApariencia.guardar>> | undefined;
+  const exito = await formulario.enviar(async () => (resultado = await apiApariencia.guardar({ ...borrador })));
   if (exito && resultado) {
     apariencia.establecer(resultado);
     avisos.exito('Apariencia guardada para toda la instalación.');
@@ -108,8 +109,8 @@ async function restablecer(): Promise<void> {
     textoConfirmar: 'Restablecer',
   });
   if (!aceptado) return;
-  let resultado: Awaited<ReturnType<typeof aparienciaApi.restablecer>> | undefined;
-  if ((await formulario.enviar(async () => (resultado = await aparienciaApi.restablecer()))) && resultado) {
+  let resultado: Awaited<ReturnType<typeof apiApariencia.restablecer>> | undefined;
+  if ((await formulario.enviar(async () => (resultado = await apiApariencia.restablecer()))) && resultado) {
     apariencia.establecer(resultado);
     Object.assign(borrador, {
       nombreAplicacion: resultado.nombreAplicacion,
@@ -126,10 +127,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div>
-    <EncabezadoPagina
-      titulo="Apariencia"
-      descripcion="Nombre, logo y colores de esta instalación. Se aplican a todas las cuentas del servidor: menú, encabezados e inicio de sesión."
-    >
+    <EncabezadoPagina :titulo="VENTANAS_CORE.apariencia.titulo" :descripcion="VENTANAS_CORE.apariencia.descripcion">
       <BotonBase variante="secundario" :icono="RotateCcw" @click="restablecer">Restablecer</BotonBase>
       <BotonBase :icono="Save" :cargando="formulario.enviando.value" :deshabilitado="!hayCambios" @click="guardar"
         >Guardar</BotonBase

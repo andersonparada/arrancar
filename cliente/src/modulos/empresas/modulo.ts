@@ -1,5 +1,6 @@
 import { Building2 } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
+import { NOMBRE_EMPRESAS, VENTANAS_EMPRESAS } from './textos';
 
 export const moduloEmpresas: DefinicionModuloCliente = {
   clave: 'empresas',
@@ -8,8 +9,23 @@ export const moduloEmpresas: DefinicionModuloCliente = {
       path: '/empresas',
       name: 'empresas',
       component: () => import('./paginas/ListaEmpresas.vue'),
-      meta: { permiso: 'empresas.ver', titulo: 'Empresas' },
+      meta: { permiso: 'empresas.ver', titulo: VENTANAS_EMPRESAS.empresas.titulo },
     },
   ],
-  menu: [{ titulo: 'Empresas', ruta: '/empresas', icono: Building2, permiso: 'empresas.ver', grupo: 'Administración' }],
+  menu: [
+    {
+      clave: 'empresas',
+      titulo: NOMBRE_EMPRESAS,
+      icono: Building2,
+      entradas: [
+        {
+          titulo: VENTANAS_EMPRESAS.empresas.titulo,
+          ruta: '/empresas',
+          icono: Building2,
+          seccion: 'administracion',
+          permiso: 'empresas.ver',
+        },
+      ],
+    },
+  ],
 };

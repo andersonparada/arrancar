@@ -1,4 +1,4 @@
-import { api } from './cliente-http';
+import { clienteHttp, type ClienteHttp } from './cliente-http';
 
 export interface Departamento {
   codigo: string;
@@ -12,8 +12,16 @@ export interface Municipio {
 }
 
 /** Catálogo de solo lectura de departamentos y municipios de Guatemala (INE). */
-export const geografiaApi = {
-  listarDepartamentos: () => api.obtener<Departamento[]>('/geografia/departamentos'),
-  listarMunicipios: (departamentoCodigo: string) =>
-    api.obtener<Municipio[]>(`/geografia/departamentos/${departamentoCodigo}/municipios`),
-};
+export class ApiGeografia {
+  constructor(private readonly http: ClienteHttp) {}
+
+  listarDepartamentos() {
+    return this.http.obtener<Departamento[]>('/geografia/departamentos');
+  }
+
+  listarMunicipios(departamentoCodigo: string) {
+    return this.http.obtener<Municipio[]>(`/geografia/departamentos/${departamentoCodigo}/municipios`);
+  }
+}
+
+export const apiGeografia = new ApiGeografia(clienteHttp);

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VENTANAS_TERCEROS } from '../textos';
 import { onMounted, reactive, ref, watch } from 'vue';
 import { Plus, Search, Users } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
@@ -11,10 +12,12 @@ import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import AltaRapidaTercero from '../componentes/AltaRapidaTercero.vue';
-import { tercerosApi, type PapelTercero, type Tercero, type TerceroEnListado } from '../servicios/terceros.api';
+import { usarAltaDeTercero, type DatosMinimosDeTercero } from '../composables/usar-alta-de-tercero';
+import { apiTerceros, type PapelTercero, type Tercero, type TerceroEnListado } from '../servicios/terceros.api';
 
 const router = useRouter();
 const avisos = usarAvisos();
+const alta = usarAltaDeTercero();
 
 const terceros = ref<TerceroEnListado[]>([]);
 const cargando = ref(false);
@@ -29,7 +32,7 @@ const filtros = reactive({
 async function cargar(): Promise<void> {
   cargando.value = true;
   try {
-    terceros.value = await tercerosApi.listar({
+    terceros.value = await apiTerceros.listar({
       texto: filtros.texto || undefined,
       papel: filtros.papel || undefined,
       activo: filtros.activo === '' ? undefined : filtros.activo === 'true',
@@ -51,7 +54,9 @@ function irAFicha(tercero: Tercero): void {
   void router.push({ name: 'terceros.ficha', params: { terceroId: tercero.id } });
 }
 
-function alCrear(tercero: Tercero): void {
+async function registrar(datos: DatosMinimosDeTercero): Promise<void> {
+  const tercero = await alta.crear(datos);
+  if (!tercero) return;
   altaAbierta.value = false;
   irAFicha(tercero);
 }
@@ -62,8 +67,8 @@ onMounted(cargar);
 <template>
   <div>
     <EncabezadoPagina
-      titulo="Clientes y proveedores"
-      descripcion="Personas y empresas a las que les vende o les compra."
+      :titulo="VENTANAS_TERCEROS.clientesYProveedores.titulo"
+      :descripcion="VENTANAS_TERCEROS.clientesYProveedores.descripcion"
     >
       <BotonBase v-permiso="'terceros.gestionar'" :icono="Plus" @click="altaAbierta = true">Nuevo</BotonBase>
     </EncabezadoPagina>
@@ -129,6 +134,12 @@ onMounted(cargar);
       </li>
     </ul>
 
-    <AltaRapidaTercero :abierta="altaAbierta" @cerrar="altaAbierta = false" @creado="alCrear" />
+    <AltaRapidaTercero
+      :abierta="altaAbierta"
+      :enviando="alta.enviando.value"
+      :errores="alta.errores.value"
+      @cerrar="altaAbierta = false"
+      @guardar="registrar"
+    />
   </div>
 </template>

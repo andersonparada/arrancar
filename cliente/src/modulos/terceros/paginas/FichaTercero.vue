@@ -14,10 +14,10 @@ import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
-import { geografiaApi, type Departamento, type Municipio } from '@/modulos/core/servicios/geografia.api';
+import { apiGeografia, type Departamento, type Municipio } from '@/modulos/core/servicios/geografia.api';
 import { formatearTelefono } from '@/modulos/core/utilidades/formato';
 import {
-  tercerosApi,
+  apiTerceros,
   type CategoriaProveedor,
   type ClaseCliente,
   type DatosTercero,
@@ -39,18 +39,18 @@ const categoriasProveedor = ref<CategoriaProveedor[]>([]);
 
 async function cargar(): Promise<void> {
   try {
-    ficha.value = await tercerosApi.obtener(terceroId.value);
+    ficha.value = await apiTerceros.obtener(terceroId.value);
     if (ficha.value.departamentoCodigo)
-      municipios.value = await geografiaApi.listarMunicipios(ficha.value.departamentoCodigo);
+      municipios.value = await apiGeografia.listarMunicipios(ficha.value.departamentoCodigo);
   } catch (error) {
     avisos.error(error instanceof Error ? error.message : 'No se pudo cargar la ficha.');
   }
 }
 
 onMounted(async () => {
-  departamentos.value = await geografiaApi.listarDepartamentos();
+  departamentos.value = await apiGeografia.listarDepartamentos();
   if (sesion.puede('proveedores.gestionar') || sesion.puede('terceros.ver')) {
-    categoriasProveedor.value = await tercerosApi.listarCategoriasProveedor().catch(() => []);
+    categoriasProveedor.value = await apiTerceros.listarCategoriasProveedor().catch(() => []);
   }
   await cargar();
 });
@@ -85,7 +85,7 @@ function abrirEdicion(): void {
 watch(
   () => edicion.datos?.departamentoCodigo,
   async (codigo) => {
-    municipios.value = codigo ? await geografiaApi.listarMunicipios(codigo) : [];
+    municipios.value = codigo ? await apiGeografia.listarMunicipios(codigo) : [];
     if (
       edicion.datos &&
       edicion.datos.municipioCodigo &&
@@ -100,14 +100,14 @@ async function guardarEdicion(confirmarDuplicado = false): Promise<void> {
   if (!edicion.datos) return;
   const exito = await formulario.enviar(async () => {
     try {
-      await tercerosApi.actualizar(terceroId.value, { ...edicion.datos!, confirmarDuplicado });
+      await apiTerceros.actualizar(terceroId.value, { ...edicion.datos!, confirmarDuplicado });
     } catch (error) {
       if (
         error instanceof ErrorApi &&
         error.codigo === 'conflicto' &&
         window.confirm(`${error.message}\n\n¿Desea guardarlo de todas formas?`)
       ) {
-        await tercerosApi.actualizar(terceroId.value, { ...edicion.datos!, confirmarDuplicado: true });
+        await apiTerceros.actualizar(terceroId.value, { ...edicion.datos!, confirmarDuplicado: true });
         return;
       }
       throw error;
@@ -154,8 +154,8 @@ async function guardarContacto(): Promise<void> {
   };
   const exito = await formularioContacto.enviar(() =>
     contacto.id
-      ? tercerosApi.actualizarContacto(terceroId.value, contacto.id!, datos)
-      : tercerosApi.crearContacto(terceroId.value, datos),
+      ? apiTerceros.actualizarContacto(terceroId.value, contacto.id!, datos)
+      : apiTerceros.crearContacto(terceroId.value, datos),
   );
   if (!exito) return;
   contacto.abierto = false;
@@ -165,7 +165,7 @@ async function guardarContacto(): Promise<void> {
 async function eliminarContacto(contactoId: string): Promise<void> {
   if (!window.confirm('¿Eliminar este contacto?')) return;
   try {
-    await tercerosApi.eliminarContacto(terceroId.value, contactoId);
+    await apiTerceros.eliminarContacto(terceroId.value, contactoId);
     await cargar();
   } catch (error) {
     avisos.error(error instanceof Error ? error.message : 'No se pudo eliminar el contacto.');
@@ -185,7 +185,7 @@ function abrirCliente(): void {
 
 async function guardarCliente(): Promise<void> {
   const exito = await formularioPapel.enviar(() =>
-    tercerosApi.asignarCliente(terceroId.value, {
+    apiTerceros.asignarCliente(terceroId.value, {
       clase: cliente.clase,
       activo: cliente.activo,
       notas: cliente.notas || null,
@@ -198,7 +198,7 @@ async function guardarCliente(): Promise<void> {
 
 async function quitarCliente(): Promise<void> {
   if (!window.confirm('¿Quitar el papel de cliente?')) return;
-  await tercerosApi.quitarCliente(terceroId.value);
+  await apiTerceros.quitarCliente(terceroId.value);
   await cargar();
 }
 
@@ -215,7 +215,7 @@ function abrirProveedor(): void {
 
 async function guardarProveedor(): Promise<void> {
   const exito = await formularioPapel.enviar(() =>
-    tercerosApi.asignarProveedor(terceroId.value, {
+    apiTerceros.asignarProveedor(terceroId.value, {
       categoriaId: proveedor.categoriaId || null,
       activo: proveedor.activo,
       notas: proveedor.notas || null,
@@ -228,14 +228,14 @@ async function guardarProveedor(): Promise<void> {
 
 async function quitarProveedor(): Promise<void> {
   if (!window.confirm('¿Quitar el papel de proveedor?')) return;
-  await tercerosApi.quitarProveedor(terceroId.value);
+  await apiTerceros.quitarProveedor(terceroId.value);
   await cargar();
 }
 
 async function nuevaCategoria(): Promise<void> {
   const nombre = window.prompt('Nombre de la nueva categoría de proveedor:');
   if (!nombre) return;
-  const categoria = await tercerosApi.crearCategoriaProveedor(nombre);
+  const categoria = await apiTerceros.crearCategoriaProveedor(nombre);
   categoriasProveedor.value.push(categoria);
   proveedor.categoriaId = categoria.id;
 }

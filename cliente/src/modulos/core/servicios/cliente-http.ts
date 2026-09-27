@@ -21,67 +21,91 @@ export class ErrorApi extends Error {
   }
 }
 
-type OyenteNoAutenticado = () => void;
-let alPerderSesion: OyenteNoAutenticado = () => {};
+export type Consulta = Record<string, string | number | boolean | undefined | null>;
 
-/** Registra qué hacer cuando la API responde 401 (normalmente, volver al inicio de sesión). */
-export function alPerderLaSesion(oyente: OyenteNoAutenticado): void {
-  alPerderSesion = oyente;
-}
-
-interface OpcionesPeticion {
-  consulta?: Record<string, string | number | boolean | undefined | null>;
+interface Peticion {
+  metodo: string;
+  ruta: string;
+  consulta?: Consulta;
   cuerpo?: unknown;
 }
 
-function construirUrl(ruta: string, consulta?: OpcionesPeticion['consulta']): string {
-  const parametros = new URLSearchParams();
-  for (const [clave, valor] of Object.entries(consulta ?? {})) {
-    if (valor !== undefined && valor !== null && valor !== '') parametros.set(clave, String(valor));
-  }
-  const texto = parametros.toString();
-  return `/api${ruta}${texto ? `?${texto}` : ''}`;
+interface CuerpoDeError {
+  error?: { codigo?: string; mensaje?: string; detalles?: unknown };
 }
 
-async function peticion<T>(metodo: string, ruta: string, opciones: OpcionesPeticion = {}): Promise<T> {
-  const esFormulario = opciones.cuerpo instanceof FormData;
-  let respuesta: Response;
-  try {
-    respuesta = await fetch(construirUrl(ruta, opciones.consulta), {
-      method: metodo,
-      credentials: 'same-origin',
-      headers: opciones.cuerpo && !esFormulario ? { 'Content-Type': 'application/json' } : undefined,
-      body: esFormulario
-        ? (opciones.cuerpo as FormData)
-        : opciones.cuerpo
-          ? JSON.stringify(opciones.cuerpo)
-          : undefined,
-    });
-  } catch {
-    throw new ErrorApi(0, 'sin_conexion', 'No hay conexión con el servidor. Revise su internet.');
+/** Habla con la API del servidor; todas las rutas son relativas a `/api`. */
+export class ClienteHttp {
+  private alPerderSesion: () => void = () => {};
+
+  constructor(private readonly base = '/api') {}
+
+  /** Qué hacer cuando la API responde 401 (normalmente, volver al inicio de sesión). */
+  alPerderLaSesion(oyente: () => void): void {
+    this.alPerderSesion = oyente;
   }
 
-  if (respuesta.status === 204) return undefined as T;
-  const datos: unknown = await respuesta.json().catch(() => null);
+  obtener<T>(ruta: string, consulta?: Consulta): Promise<T> {
+    return this.enviar<T>({ metodo: 'GET', ruta, consulta });
+  }
 
-  if (!respuesta.ok) {
-    const error = (datos as { error?: { codigo?: string; mensaje?: string; detalles?: unknown } } | null)?.error;
-    if (respuesta.status === 401) alPerderSesion();
-    throw new ErrorApi(
-      respuesta.status,
+  crear<T>(ruta: string, cuerpo?: unknown): Promise<T> {
+    return this.enviar<T>({ metodo: 'POST', ruta, cuerpo });
+  }
+
+  reemplazar<T>(ruta: string, cuerpo?: unknown): Promise<T> {
+    return this.enviar<T>({ metodo: 'PUT', ruta, cuerpo });
+  }
+
+  modificar<T>(ruta: string, cuerpo?: unknown): Promise<T> {
+    return this.enviar<T>({ metodo: 'PATCH', ruta, cuerpo });
+  }
+
+  eliminar<T = void>(ruta: string): Promise<T> {
+    return this.enviar<T>({ metodo: 'DELETE', ruta });
+  }
+
+  private async enviar<T>(peticion: Peticion): Promise<T> {
+    const respuesta = await this.llamar(peticion);
+    if (respuesta.status === 204) return undefined as T;
+    const datos: unknown = await respuesta.json().catch(() => null);
+    if (!respuesta.ok) throw this.errorDe(respuesta.status, datos as CuerpoDeError | null);
+    return datos as T;
+  }
+
+  private async llamar({ metodo, ruta, consulta, cuerpo }: Peticion): Promise<Response> {
+    const esFormulario = cuerpo instanceof FormData;
+    try {
+      return await fetch(this.url(ruta, consulta), {
+        method: metodo,
+        credentials: 'same-origin',
+        headers: cuerpo && !esFormulario ? { 'Content-Type': 'application/json' } : undefined,
+        body: esFormulario ? cuerpo : cuerpo ? JSON.stringify(cuerpo) : undefined,
+      });
+    } catch {
+      throw new ErrorApi(0, 'sin_conexion', 'No hay conexión con el servidor. Revise su internet.');
+    }
+  }
+
+  private errorDe(estado: number, datos: CuerpoDeError | null): ErrorApi {
+    if (estado === 401) this.alPerderSesion();
+    const error = datos?.error;
+    return new ErrorApi(
+      estado,
       error?.codigo ?? 'error',
       error?.mensaje ?? 'Ocurrió un error inesperado.',
       error?.detalles,
     );
   }
-  return datos as T;
+
+  private url(ruta: string, consulta: Consulta = {}): string {
+    const parametros = new URLSearchParams();
+    for (const [clave, valor] of Object.entries(consulta)) {
+      if (valor !== undefined && valor !== null && valor !== '') parametros.set(clave, String(valor));
+    }
+    const texto = parametros.toString();
+    return `${this.base}${ruta}${texto ? `?${texto}` : ''}`;
+  }
 }
 
-/** Cliente de la API del servidor. Todas las rutas son relativas a `/api`. */
-export const api = {
-  obtener: <T>(ruta: string, consulta?: OpcionesPeticion['consulta']) => peticion<T>('GET', ruta, { consulta }),
-  crear: <T>(ruta: string, cuerpo?: unknown) => peticion<T>('POST', ruta, { cuerpo }),
-  reemplazar: <T>(ruta: string, cuerpo?: unknown) => peticion<T>('PUT', ruta, { cuerpo }),
-  modificar: <T>(ruta: string, cuerpo?: unknown) => peticion<T>('PATCH', ruta, { cuerpo }),
-  eliminar: <T = void>(ruta: string) => peticion<T>('DELETE', ruta),
-};
+export const clienteHttp = new ClienteHttp();

@@ -1,60 +1,108 @@
-import { Building, House, Palette, ScrollText, ShieldCheck, SlidersHorizontal, Users } from 'lucide-vue-next';
+import {
+  Building,
+  CircleUserRound,
+  LifeBuoy,
+  Palette,
+  ScrollText,
+  ShieldCheck,
+  SlidersHorizontal,
+  Users,
+} from 'lucide-vue-next';
+import { GRUPOS_CORE, VENTANAS_CORE } from './textos';
 import type { DefinicionModuloCliente } from './tipos';
+
+const DE_SOPORTE = { soloSuperacceso: true, requiereEmpresa: false } as const;
 
 export const moduloCore: DefinicionModuloCliente = {
   clave: 'core',
   rutas: [
-    { path: '/', name: 'inicio', component: () => import('./paginas/PanelInicio.vue'), meta: { titulo: 'Inicio' } },
+    {
+      path: '/',
+      name: 'inicio',
+      component: () => import('./paginas/PanelInicio.vue'),
+      meta: { titulo: VENTANAS_CORE.inicio.titulo },
+    },
     {
       path: '/usuarios',
       name: 'usuarios',
       component: () => import('./paginas/UsuariosCuenta.vue'),
-      meta: { permiso: 'usuarios.ver', titulo: 'Usuarios' },
+      meta: { permiso: 'usuarios.ver', titulo: VENTANAS_CORE.usuarios.titulo },
     },
     {
       path: '/roles',
       name: 'roles',
       component: () => import('./paginas/RolesCuenta.vue'),
-      meta: { permiso: 'roles.ver', titulo: 'Roles y permisos' },
+      meta: { permiso: 'roles.ver', titulo: VENTANAS_CORE.roles.titulo },
     },
     {
       path: '/configuracion',
       name: 'configuracion',
       component: () => import('./paginas/ConfiguracionCuenta.vue'),
-      meta: { permiso: 'configuracion.ver', titulo: 'Configuración' },
+      meta: { permiso: 'configuracion.ver', titulo: VENTANAS_CORE.configuracion.titulo },
     },
     {
       path: '/plataforma/cuentas',
       name: 'plataforma-cuentas',
       component: () => import('./paginas/PlataformaCuentas.vue'),
-      meta: { soloSuperacceso: true, requiereEmpresa: false, titulo: 'Cuentas' },
+      meta: { ...DE_SOPORTE, titulo: VENTANAS_CORE.cuentas.menu },
     },
     {
       path: '/plataforma/apariencia',
       name: 'plataforma-apariencia',
       component: () => import('./paginas/PlataformaApariencia.vue'),
-      meta: { soloSuperacceso: true, requiereEmpresa: false, titulo: 'Apariencia' },
+      meta: { ...DE_SOPORTE, titulo: VENTANAS_CORE.apariencia.titulo },
     },
     {
       path: '/plataforma/bitacora',
       name: 'plataforma-bitacora',
       component: () => import('./paginas/PlataformaBitacora.vue'),
-      meta: { soloSuperacceso: true, requiereEmpresa: false, titulo: 'Bitácora de soporte' },
+      meta: { ...DE_SOPORTE, titulo: VENTANAS_CORE.bitacora.titulo },
     },
   ],
   menu: [
-    { titulo: 'Inicio', ruta: '/', icono: House },
-    { titulo: 'Usuarios', ruta: '/usuarios', icono: Users, permiso: 'usuarios.ver', grupo: 'Administración' },
-    { titulo: 'Roles y permisos', ruta: '/roles', icono: ShieldCheck, permiso: 'roles.ver', grupo: 'Administración' },
     {
-      titulo: 'Configuración',
-      ruta: '/configuracion',
-      icono: SlidersHorizontal,
-      permiso: 'configuracion.ver',
-      grupo: 'Administración',
+      clave: 'cuenta',
+      titulo: GRUPOS_CORE.cuenta,
+      icono: CircleUserRound,
+      entradas: [
+        {
+          titulo: VENTANAS_CORE.usuarios.titulo,
+          ruta: '/usuarios',
+          icono: Users,
+          seccion: 'administracion',
+          permiso: 'usuarios.ver',
+        },
+        {
+          titulo: VENTANAS_CORE.roles.titulo,
+          ruta: '/roles',
+          icono: ShieldCheck,
+          seccion: 'administracion',
+          permiso: 'roles.ver',
+        },
+        {
+          titulo: VENTANAS_CORE.configuracion.titulo,
+          ruta: '/configuracion',
+          icono: SlidersHorizontal,
+          seccion: 'administracion',
+          permiso: 'configuracion.ver',
+        },
+      ],
     },
-    { titulo: 'Cuentas', ruta: '/plataforma/cuentas', icono: Building, soloSuperacceso: true, grupo: 'Soporte' },
-    { titulo: 'Apariencia', ruta: '/plataforma/apariencia', icono: Palette, soloSuperacceso: true, grupo: 'Soporte' },
-    { titulo: 'Bitácora', ruta: '/plataforma/bitacora', icono: ScrollText, soloSuperacceso: true, grupo: 'Soporte' },
+    {
+      clave: 'soporte',
+      titulo: GRUPOS_CORE.soporte,
+      icono: LifeBuoy,
+      soloSuperacceso: true,
+      entradas: [
+        { titulo: VENTANAS_CORE.cuentas.menu, ruta: '/plataforma/cuentas', icono: Building, seccion: 'administracion' },
+        {
+          titulo: VENTANAS_CORE.apariencia.titulo,
+          ruta: '/plataforma/apariencia',
+          icono: Palette,
+          seccion: 'administracion',
+        },
+        { titulo: VENTANAS_CORE.bitacora.menu, ruta: '/plataforma/bitacora', icono: ScrollText, seccion: 'reportes' },
+      ],
+    },
   ],
 };

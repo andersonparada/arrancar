@@ -1,4 +1,4 @@
-import { api } from './cliente-http';
+import { clienteHttp, type ClienteHttp } from './cliente-http';
 
 export type NivelConfiguracion = 'instalacion' | 'cuenta' | 'empresa';
 export type NivelEditable = Exclude<NivelConfiguracion, 'instalacion'>;
@@ -13,10 +13,20 @@ export interface VariableConfiguracion {
   origen: NivelConfiguracion | 'predeterminado';
 }
 
-export const configuracionApi = {
-  listar: () => api.obtener<VariableConfiguracion[]>('/configuracion'),
-  establecer: (clave: string, nivel: NivelEditable, valor: unknown) =>
-    api.reemplazar<void>(`/configuracion/${encodeURIComponent(clave)}`, { nivel, valor }),
-  restablecer: (clave: string, nivel: NivelEditable) =>
-    api.eliminar(`/configuracion/${encodeURIComponent(clave)}?nivel=${nivel}`),
-};
+export class ApiConfiguracion {
+  constructor(private readonly http: ClienteHttp) {}
+
+  listar() {
+    return this.http.obtener<VariableConfiguracion[]>('/configuracion');
+  }
+
+  establecer(clave: string, nivel: NivelEditable, valor: unknown) {
+    return this.http.reemplazar<void>(`/configuracion/${encodeURIComponent(clave)}`, { nivel, valor });
+  }
+
+  restablecer(clave: string, nivel: NivelEditable) {
+    return this.http.eliminar(`/configuracion/${encodeURIComponent(clave)}?nivel=${nivel}`);
+  }
+}
+
+export const apiConfiguracion = new ApiConfiguracion(clienteHttp);

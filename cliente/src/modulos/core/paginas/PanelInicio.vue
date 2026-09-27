@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
-import { construirMenu } from '@/modulos/indice';
+import { modulosCliente } from '@/modulos/indice';
 import { usarSesion } from '../almacenes/sesion';
+import { construirMenu } from '../menu/construir-menu';
 
 const sesion = usarSesion();
 
@@ -13,10 +14,13 @@ const saludo = computed(() => {
   return 'Buenas noches';
 });
 
+/** Las mismas opciones del menú, en tarjetas. */
 const accesos = computed(() =>
-  construirMenu({ moduloActivo: sesion.moduloActivo, puede: sesion.puede, esSuperacceso: sesion.esSuperacceso })
-    .flatMap((g) => g.entradas)
-    .filter((e) => e.ruta !== '/'),
+  construirMenu(modulosCliente, {
+    moduloActivo: sesion.moduloActivo,
+    puede: sesion.puede,
+    esSuperacceso: sesion.esSuperacceso,
+  }).flatMap((grupo) => grupo.secciones.flatMap((seccion) => seccion.entradas)),
 );
 </script>
 

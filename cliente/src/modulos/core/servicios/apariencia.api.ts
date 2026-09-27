@@ -1,4 +1,4 @@
-import { api } from './cliente-http';
+import { clienteHttp, type ClienteHttp } from './cliente-http';
 
 export interface Apariencia {
   nombreAplicacion: string;
@@ -9,14 +9,30 @@ export interface Apariencia {
 
 export type DatosApariencia = Omit<Apariencia, 'urlLogo'>;
 
-export const aparienciaApi = {
-  obtener: () => api.obtener<Apariencia>('/apariencia'),
-  guardar: (datos: DatosApariencia) => api.reemplazar<Apariencia>('/plataforma/apariencia', datos),
-  restablecer: () => api.eliminar<Apariencia>('/plataforma/apariencia'),
-  cambiarLogo: (archivo: File) => {
+export class ApiApariencia {
+  constructor(private readonly http: ClienteHttp) {}
+
+  obtener() {
+    return this.http.obtener<Apariencia>('/apariencia');
+  }
+
+  guardar(datos: DatosApariencia) {
+    return this.http.reemplazar<Apariencia>('/plataforma/apariencia', datos);
+  }
+
+  restablecer() {
+    return this.http.eliminar<Apariencia>('/plataforma/apariencia');
+  }
+
+  cambiarLogo(archivo: File) {
     const formulario = new FormData();
     formulario.append('logo', archivo);
-    return api.reemplazar<Apariencia>('/plataforma/apariencia/logo', formulario);
-  },
-  quitarLogo: () => api.eliminar<Apariencia>('/plataforma/apariencia/logo'),
-};
+    return this.http.reemplazar<Apariencia>('/plataforma/apariencia/logo', formulario);
+  }
+
+  quitarLogo() {
+    return this.http.eliminar<Apariencia>('/plataforma/apariencia/logo');
+  }
+}
+
+export const apiApariencia = new ApiApariencia(clienteHttp);

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VENTANAS_EMPRESAS } from '../textos';
 import { onMounted, reactive, ref } from 'vue';
 import { Building2, Mail, MapPin, Pencil, Phone, Plus } from 'lucide-vue-next';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
@@ -12,7 +13,7 @@ import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { formatearTelefono } from '@/modulos/core/utilidades/formato';
-import { empresasApi, type Empresa } from '../servicios/empresas.api';
+import { apiEmpresas, type Empresa } from '../servicios/empresas.api';
 
 const sesion = usarSesion();
 const avisos = usarAvisos();
@@ -32,7 +33,7 @@ const edicion = reactive({
 
 async function cargar(): Promise<void> {
   try {
-    empresas.value = await empresasApi.listar();
+    empresas.value = await apiEmpresas.listar();
   } catch (error) {
     avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar las empresas.');
   }
@@ -62,7 +63,7 @@ async function guardar(): Promise<void> {
     activa: edicion.activa,
   };
   const exito = await formulario.enviar(() =>
-    edicion.empresaId ? empresasApi.actualizar(edicion.empresaId, datos) : empresasApi.crear(datos),
+    edicion.empresaId ? apiEmpresas.actualizar(edicion.empresaId, datos) : apiEmpresas.crear(datos),
   );
   if (!exito) return;
   avisos.exito(edicion.empresaId ? 'Empresa actualizada.' : 'Empresa creada. Ya puede elegirla en el selector.');
@@ -76,8 +77,8 @@ onMounted(cargar);
 <template>
   <div>
     <EncabezadoPagina
-      titulo="Empresas"
-      :descripcion="`Ranchos y parcelas de la cuenta ${sesion.empresa?.cuentaNombre ?? ''}.`"
+      :titulo="VENTANAS_EMPRESAS.empresas.titulo"
+      :descripcion="VENTANAS_EMPRESAS.empresas.descripcion(sesion.empresa?.cuentaNombre ?? '')"
     >
       <BotonBase v-permiso="'empresas.gestionar'" :icono="Plus" @click="abrir()">Nueva empresa</BotonBase>
     </EncabezadoPagina>

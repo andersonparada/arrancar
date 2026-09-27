@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { aparienciaApi, type Apariencia } from '../servicios/apariencia.api';
+import { apiApariencia, type Apariencia } from '../servicios/apariencia.api';
 import { variablesTema } from '../utilidades/colores';
 
 const LLAVE_CACHE = 'arrancar.apariencia';
@@ -57,7 +57,7 @@ export const usarApariencia = defineStore('apariencia', () => {
   async function cargar(): Promise<void> {
     establecer(apariencia.value);
     try {
-      establecer(await aparienciaApi.obtener());
+      establecer(await apiApariencia.obtener());
     } catch {
       // Sin conexión se conserva la última apariencia conocida.
     }

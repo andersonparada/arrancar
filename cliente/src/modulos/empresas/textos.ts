@@ -1,0 +1,10 @@
+/** Nombres de las ventanas y del menú del módulo de empresas. */
+
+export const NOMBRE_EMPRESAS = 'Empresas';
+
+export const VENTANAS_EMPRESAS = {
+  empresas: {
+    titulo: 'Empresas',
+    descripcion: (cuenta: string) => `Ranchos y parcelas de la cuenta ${cuenta}.`,
+  },
+} as const;

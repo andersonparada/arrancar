@@ -18,7 +18,7 @@
     "dev:cliente": "npm run dev -w cliente",
     "construir": "npm run construir -w cliente && npm run construir -w servidor",
     "verificar": "npm run verificar -w servidor && npm run verificar -w cliente",
-    "probar": "npm run probar -w servidor",
+    "probar": "npm run probar -w servidor && npm run probar -w cliente",
     "lint": "eslint .",
     "formatear": "prettier --write . && eslint . --fix",
     "revisar": "prettier --check . && eslint . && npm run verificar"

@@ -1,4 +1,4 @@
-import { api } from './cliente-http';
+import { clienteHttp, type ClienteHttp } from './cliente-http';
 
 export interface EmpresaDisponible {
   id: string;
@@ -18,10 +18,24 @@ export interface ResumenSesion {
   empresasDisponibles: EmpresaDisponible[];
 }
 
-export const sesionApi = {
-  iniciarSesion: (usuario: string, contrasena: string) =>
-    api.crear<void>('/autenticacion/iniciar-sesion', { usuario, contrasena }),
-  cerrarSesion: () => api.crear<void>('/autenticacion/cerrar-sesion'),
-  obtener: () => api.obtener<ResumenSesion>('/sesion'),
-  cambiarEmpresa: (empresaId: string) => api.reemplazar<ResumenSesion>('/sesion/empresa-activa', { empresaId }),
-};
+export class ApiSesion {
+  constructor(private readonly http: ClienteHttp) {}
+
+  iniciarSesion(usuario: string, contrasena: string) {
+    return this.http.crear<void>('/autenticacion/iniciar-sesion', { usuario, contrasena });
+  }
+
+  cerrarSesion() {
+    return this.http.crear<void>('/autenticacion/cerrar-sesion');
+  }
+
+  obtener() {
+    return this.http.obtener<ResumenSesion>('/sesion');
+  }
+
+  cambiarEmpresa(empresaId: string) {
+    return this.http.reemplazar<ResumenSesion>('/sesion/empresa-activa', { empresaId });
+  }
+}
+
+export const apiSesion = new ApiSesion(clienteHttp);

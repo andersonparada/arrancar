@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { ErrorApi } from '../servicios/cliente-http';
-import { sesionApi, type ResumenSesion } from '../servicios/sesion.api';
+import { apiSesion, type ResumenSesion } from '../servicios/sesion.api';
 
 /** Estado de la sesión: usuario, empresa activa, módulos y permisos efectivos. */
 export const usarSesion = defineStore('sesion', () => {
@@ -34,7 +34,7 @@ export const usarSesion = defineStore('sesion', () => {
   /** Carga la sesión desde el servidor; si no hay sesión, queda como no autenticado. */
   async function cargar(): Promise<void> {
     try {
-      resumen.value = await sesionApi.obtener();
+      resumen.value = await apiSesion.obtener();
     } catch (error) {
       if (!(error instanceof ErrorApi) || error.estado !== 401) throw error;
       resumen.value = null;
@@ -44,17 +44,17 @@ export const usarSesion = defineStore('sesion', () => {
   }
 
   async function iniciarSesion(usuario: string, contrasena: string): Promise<void> {
-    await sesionApi.iniciarSesion(usuario, contrasena);
+    await apiSesion.iniciarSesion(usuario, contrasena);
     await cargar();
   }
 
   async function cerrarSesion(): Promise<void> {
-    await sesionApi.cerrarSesion().catch(() => undefined);
+    await apiSesion.cerrarSesion().catch(() => undefined);
     limpiar();
   }
 
   async function cambiarEmpresa(empresaId: string): Promise<void> {
-    resumen.value = await sesionApi.cambiarEmpresa(empresaId);
+    resumen.value = await apiSesion.cambiarEmpresa(empresaId);
   }
 
   function limpiar(): void {

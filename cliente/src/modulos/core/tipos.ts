@@ -1,15 +1,26 @@
 import type { Component } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 
-/** Entrada del menú lateral. Solo se muestra si el usuario tiene `permiso`. */
+/** Dónde va cada opción dentro de su módulo, siempre en este orden. */
+export type SeccionMenu = 'operacion' | 'administracion' | 'reportes';
+
+/** Opción del menú lateral. Solo se muestra si el usuario tiene `permiso`. */
 export interface EntradaMenu {
   titulo: string;
   ruta: string;
   icono: Component;
+  seccion: SeccionMenu;
   permiso?: string;
+}
+
+/** Grupo plegable del menú; normalmente uno por módulo, con el nombre que ve el usuario. */
+export interface GrupoMenu {
+  clave: string;
+  titulo: string;
+  icono: Component;
+  /** Solo para soporte; no depende de los módulos contratados. */
   soloSuperacceso?: boolean;
-  /** Grupo del menú en el que aparece (p. ej. "Administración"). */
-  grupo?: string;
+  entradas: EntradaMenu[];
 }
 
 /**
@@ -19,7 +30,7 @@ export interface EntradaMenu {
 export interface DefinicionModuloCliente {
   clave: string;
   rutas: RouteRecordRaw[];
-  menu: EntradaMenu[];
+  menu: GrupoMenu[];
 }
 
 declare module 'vue-router' {

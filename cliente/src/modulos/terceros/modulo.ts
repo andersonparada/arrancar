@@ -1,5 +1,6 @@
-import { Users } from 'lucide-vue-next';
+import { Contact, Users } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
+import { NOMBRE_TERCEROS, VENTANAS_TERCEROS } from './textos';
 
 export const moduloTerceros: DefinicionModuloCliente = {
   clave: 'terceros',
@@ -8,16 +9,29 @@ export const moduloTerceros: DefinicionModuloCliente = {
       path: '/terceros',
       name: 'terceros',
       component: () => import('./paginas/ListaTerceros.vue'),
-      meta: { permiso: 'terceros.ver', titulo: 'Clientes y proveedores' },
+      meta: { permiso: 'terceros.ver', titulo: VENTANAS_TERCEROS.clientesYProveedores.titulo },
     },
     {
       path: '/terceros/:terceroId',
       name: 'terceros.ficha',
       component: () => import('./paginas/FichaTercero.vue'),
-      meta: { permiso: 'terceros.ver', titulo: 'Ficha' },
+      meta: { permiso: 'terceros.ver', titulo: VENTANAS_TERCEROS.ficha.titulo },
     },
   ],
   menu: [
-    { titulo: 'Clientes y proveedores', ruta: '/terceros', icono: Users, permiso: 'terceros.ver', grupo: 'Clientes' },
+    {
+      clave: 'clientes',
+      titulo: NOMBRE_TERCEROS,
+      icono: Contact,
+      entradas: [
+        {
+          titulo: VENTANAS_TERCEROS.clientesYProveedores.titulo,
+          ruta: '/terceros',
+          icono: Users,
+          seccion: 'administracion',
+          permiso: 'terceros.ver',
+        },
+      ],
+    },
   ],
 };

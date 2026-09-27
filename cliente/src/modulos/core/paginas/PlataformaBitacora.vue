@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { VENTANAS_CORE } from '../textos';
 import { onMounted, ref } from 'vue';
 import { ScrollText } from 'lucide-vue-next';
 import { usarAvisos } from '../almacenes/avisos';
 import EncabezadoPagina from '../componentes/EncabezadoPagina.vue';
 import EstadoVacio from '../componentes/EstadoVacio.vue';
-import { plataformaApi, type EntradaBitacora } from '../servicios/plataforma.api';
+import { apiPlataforma, type EntradaBitacora } from '../servicios/plataforma.api';
 import { formatearFechaHora } from '../utilidades/formato';
 
 const avisos = usarAvisos();
@@ -14,7 +15,7 @@ const ACCIONES: Record<string, string> = { entrada_empresa: 'Entró a la empresa
 
 onMounted(async () => {
   try {
-    entradas.value = await plataformaApi.bitacora();
+    entradas.value = await apiPlataforma.bitacora();
   } catch (error) {
     avisos.error(error instanceof Error ? error.message : 'No se pudo cargar la bitácora.');
   }
@@ -23,10 +24,7 @@ onMounted(async () => {
 
 <template>
   <div>
-    <EncabezadoPagina
-      titulo="Bitácora de soporte"
-      descripcion="Cada vez que alguien con superacceso entra a una empresa ajena queda registrado aquí."
-    />
+    <EncabezadoPagina :titulo="VENTANAS_CORE.bitacora.titulo" :descripcion="VENTANAS_CORE.bitacora.descripcion" />
 
     <EstadoVacio v-if="!entradas.length" :icono="ScrollText" titulo="Sin registros" />
     <div

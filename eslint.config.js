@@ -70,9 +70,18 @@ function restringirImportaciones(archivos, patrones) {
  * ESLint no combina dos `no-restricted-imports` sobre el mismo archivo (la última
  * gana), así que cada combinación módulo × capa lleva todas sus prohibiciones juntas.
  */
+const COMPONENTES_SIN_SERVICIOS = {
+  group: ['**/servicios/**', '**/servicios'],
+  message: 'Los componentes reciben datos por props y avisan con eventos; la página o su composable llama a la API.',
+};
+
 function reglasDeDependencias() {
   return modulos.flatMap((modulo) => [
     restringirImportaciones([`{servidor,cliente}/src/modulos/${modulo}/**/*.{ts,vue}`], prohibirOtrosModulos(modulo)),
+    restringirImportaciones(
+      [`cliente/src/modulos/${modulo}/componentes/**/*.vue`],
+      [...prohibirOtrosModulos(modulo), COMPONENTES_SIN_SERVICIOS],
+    ),
     ...Object.keys(RESTRICCIONES_POR_CAPA).map((capa) =>
       restringirImportaciones(
         [`servidor/src/modulos/${modulo}/**/${capa}/**/*.ts`],
@@ -134,6 +143,12 @@ export default tseslint.config(
       'servidor/scripts/**',
     ],
     rules: { 'no-console': 'off' },
+  },
+  {
+    files: ['cliente/src/modulos/**/paginas/*.vue'],
+    rules: {
+      'max-lines': ['warn', { max: 120, skipBlankLines: true, skipComments: true }],
+    },
   },
   {
     files: ['**/*.prueba.ts', 'servidor/src/pruebas-api/**'],

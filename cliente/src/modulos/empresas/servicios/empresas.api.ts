@@ -1,4 +1,4 @@
-import { api } from '@/modulos/core/servicios/cliente-http';
+import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 
 export interface Empresa {
   id: string;
@@ -21,8 +21,20 @@ export interface DatosEmpresa {
   activa: boolean;
 }
 
-export const empresasApi = {
-  listar: () => api.obtener<Empresa[]>('/empresas'),
-  crear: (datos: DatosEmpresa) => api.crear<Empresa>('/empresas', datos),
-  actualizar: (id: string, datos: DatosEmpresa) => api.reemplazar<Empresa>(`/empresas/${id}`, datos),
-};
+export class ApiEmpresas {
+  constructor(private readonly http: ClienteHttp) {}
+
+  listar() {
+    return this.http.obtener<Empresa[]>('/empresas');
+  }
+
+  crear(datos: DatosEmpresa) {
+    return this.http.crear<Empresa>('/empresas', datos);
+  }
+
+  actualizar(id: string, datos: DatosEmpresa) {
+    return this.http.reemplazar<Empresa>(`/empresas/${id}`, datos);
+  }
+}
+
+export const apiEmpresas = new ApiEmpresas(clienteHttp);

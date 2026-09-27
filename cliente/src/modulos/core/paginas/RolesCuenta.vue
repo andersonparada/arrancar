@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VENTANAS_CORE } from '../textos';
 import { onMounted, reactive, ref } from 'vue';
 import { Pencil, Plus, ShieldCheck, Trash2 } from 'lucide-vue-next';
 import { usarAvisos } from '../almacenes/avisos';
@@ -10,7 +11,7 @@ import InsigniaBase from '../componentes/InsigniaBase.vue';
 import TarjetaBase from '../componentes/TarjetaBase.vue';
 import VentanaModal from '../componentes/VentanaModal.vue';
 import { usarFormulario } from '../composables/usar-formulario';
-import { rolesApi, type GrupoPermisos, type Rol } from '../servicios/roles.api';
+import { apiRoles, type GrupoPermisos, type Rol } from '../servicios/roles.api';
 
 const avisos = usarAvisos();
 const formulario = usarFormulario();
@@ -28,7 +29,7 @@ const edicion = reactive({
 
 async function cargar(): Promise<void> {
   try {
-    [roles.value, catalogo.value] = await Promise.all([rolesApi.listar(), rolesApi.catalogoPermisos()]);
+    [roles.value, catalogo.value] = await Promise.all([apiRoles.listar(), apiRoles.catalogoPermisos()]);
   } catch (error) {
     avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar los roles.');
   }
@@ -54,7 +55,7 @@ async function guardar(): Promise<void> {
     permisos: edicion.permisos,
   };
   const exito = await formulario.enviar(() =>
-    edicion.rolId ? rolesApi.actualizar(edicion.rolId, datos) : rolesApi.crear(datos),
+    edicion.rolId ? apiRoles.actualizar(edicion.rolId, datos) : apiRoles.crear(datos),
   );
   if (!exito) return;
   avisos.exito('Rol guardado.');
@@ -70,7 +71,7 @@ async function eliminar(rol: Rol): Promise<void> {
     peligroso: true,
   });
   if (!aceptado) return;
-  const exito = await formulario.enviar(() => rolesApi.eliminar(rol.id));
+  const exito = await formulario.enviar(() => apiRoles.eliminar(rol.id));
   if (exito) {
     avisos.exito('Rol eliminado.');
     await cargar();
@@ -82,10 +83,7 @@ onMounted(cargar);
 
 <template>
   <div>
-    <EncabezadoPagina
-      titulo="Roles y permisos"
-      descripcion="Cada rol agrupa permisos de pantallas y de acciones. Un usuario tiene un rol en cada empresa."
-    >
+    <EncabezadoPagina :titulo="VENTANAS_CORE.roles.titulo" :descripcion="VENTANAS_CORE.roles.descripcion">
       <BotonBase v-permiso="'roles.gestionar'" :icono="Plus" @click="abrir()">Nuevo rol</BotonBase>
     </EncabezadoPagina>
 

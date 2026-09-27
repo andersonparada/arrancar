@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router';
 import { usarApariencia } from './modulos/core/almacenes/apariencia';
 import { usarSesion } from './modulos/core/almacenes/sesion';
-import { alPerderLaSesion } from './modulos/core/servicios/cliente-http';
+import { clienteHttp } from './modulos/core/servicios/cliente-http';
 import DisenoPrincipal from './modulos/core/disenos/DisenoPrincipal.vue';
 import { modulosCliente } from './modulos/indice';
+import { VENTANAS_CORE } from './modulos/core/textos';
 
 export const enrutador = createRouter({
   history: createWebHistory(),
@@ -13,7 +14,7 @@ export const enrutador = createRouter({
       path: '/iniciar-sesion',
       name: 'iniciar-sesion',
       component: () => import('./modulos/core/paginas/IniciarSesion.vue'),
-      meta: { publica: true, titulo: 'Iniciar sesión' },
+      meta: { publica: true, titulo: VENTANAS_CORE.iniciarSesion.titulo },
     },
     {
       path: '/',
@@ -24,13 +25,13 @@ export const enrutador = createRouter({
           path: '/elegir-empresa',
           name: 'elegir-empresa',
           component: () => import('./modulos/core/paginas/SeleccionarEmpresa.vue'),
-          meta: { requiereEmpresa: false, titulo: 'Elegir empresa' },
+          meta: { requiereEmpresa: false, titulo: VENTANAS_CORE.elegirEmpresa.titulo },
         },
         {
           path: '/sin-permiso',
           name: 'sin-permiso',
           component: () => import('./modulos/core/paginas/SinPermiso.vue'),
-          meta: { requiereEmpresa: false, titulo: 'Sin acceso' },
+          meta: { requiereEmpresa: false, titulo: VENTANAS_CORE.sinPermiso.titulo },
         },
       ],
     },
@@ -65,7 +66,7 @@ enrutador.afterEach((destino) => {
   document.title = destino.meta.titulo ? `${destino.meta.titulo} · ${nombre}` : nombre;
 });
 
-alPerderLaSesion(() => {
+clienteHttp.alPerderLaSesion(() => {
   const sesion = usarSesion();
   if (!sesion.autenticado) return;
   sesion.limpiar();

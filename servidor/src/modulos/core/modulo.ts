@@ -6,6 +6,7 @@ import { componerArchivos } from './archivos/contexto.js';
 import { esquemaColorHex } from './apariencia/http/apariencia.esquemas-http.js';
 import { componerBitacora } from './bitacora/contexto.js';
 import { componerConfiguracion } from './configuracion/contexto.js';
+import { variablesRegionales } from './configuracion/variables-regionales.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
 import { componerGeografia } from './geografia/contexto.js';
 import { componerCuentas } from './cuentas/contexto.js';
@@ -69,16 +70,7 @@ export const moduloCore: DefinicionModulo = {
       niveles: ['instalacion'],
       publica: true,
     }),
-    definirConfiguracion({
-      clave: 'core.regional.zona_horaria',
-      descripcion: 'Zona horaria para fechas y recordatorios.',
-      esquema: z
-        .string()
-        .refine((zona) => Intl.supportedValuesOf('timeZone').includes(zona), 'Zona horaria desconocida.'),
-      predeterminado: 'America/Guatemala',
-      niveles: ['instalacion', 'cuenta', 'empresa'],
-      publica: true,
-    }),
+    ...variablesRegionales,
   ],
   rutas,
 };

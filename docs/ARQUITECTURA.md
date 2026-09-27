@@ -542,6 +542,22 @@ entrega como un commit propio.
   `eventos/`, `modulos-sistema/`, `esquemas/` con las tablas de empresas y monedas).
   265 pruebas; advertencias: 24. En el servidor solo quedan en `aplicacion.ts` y
   en `registro-modulos.ts` (fase 7); las demás son del cliente (fase 6).
+- **Fase 6: en curso.**
+  - **6.1 Base del cliente (2026-09-27):** Vitest en el cliente (`npm run probar`
+    corre servidor y cliente). `ClienteHttp` es una clase y cada servicio una clase
+    `Api*` con su instancia (`apiTerceros`, `apiUsuarios`…). Cada módulo tiene
+    `textos.ts` (`VENTANAS_*`, nombre del grupo); rutas, menú y encabezados los usan.
+    Menú plegable por módulo (`menu/construir-menu.ts`, `usar-grupos-abiertos.ts`,
+    componentes `MenuLateral`, `GrupoDelMenu`, `OpcionDelMenu`): grupos Empresas,
+    Clientes, Cuenta y Soporte, secciones en orden, se abre el grupo de la página
+    actual y el navegador recuerda los demás. Formato regional: variables
+    `core.regional.formato_fecha`, `decimales_montos` y `decimales_cantidades`
+    (servidor, `configuracion/variables-regionales.ts`) y `FormatoRegional` en el
+    cliente; las pantallas formatean solo desde `utilidades/formato.ts`. Reglas
+    nuevas de ESLint: los componentes no importan servicios (error) y las páginas
+    ≤ 120 líneas (advertencia). La regla encontró que `AltaRapidaTercero` llamaba a
+    la API: ahora es presentacional y la lógica vive en `usarAltaDeTercero`.
+    279 pruebas (14 del cliente); advertencias: 24 (páginas que rehacen 6.2 a 6.4).
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 

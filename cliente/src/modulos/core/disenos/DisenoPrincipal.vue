@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
+import { RouterView, useRoute, useRouter } from 'vue-router';
 import { LogOut, Menu, X } from 'lucide-vue-next';
-import { construirMenu } from '@/modulos/indice';
+import { modulosCliente } from '@/modulos/indice';
 import { usarApariencia } from '../almacenes/apariencia';
 import { usarSesion } from '../almacenes/sesion';
 import LogoAplicacion from '../componentes/LogoAplicacion.vue';
+import MenuLateral from '../componentes/MenuLateral.vue';
 import SelectorEmpresa from '../componentes/SelectorEmpresa.vue';
+import { construirMenu, grupoDeLaRuta } from '../menu/construir-menu';
+import { usarGruposAbiertos } from '../menu/usar-grupos-abiertos';
 
 const sesion = usarSesion();
 const apariencia = usarApariencia();
@@ -14,17 +17,14 @@ const ruta = useRoute();
 const router = useRouter();
 const menuAbierto = ref(false);
 
-/** "Inicio" (`/`) solo se marca en su propia página; las demás, también en sus subpáginas. */
-const CLASE_OPCION_ACTIVA =
-  'bg-marca-texto/15 text-marca-texto! before:absolute before:inset-y-2 before:left-0 before:w-1 before:rounded-r-full before:bg-acento';
-
-const menu = computed(() =>
-  construirMenu({
+const grupos = computed(() =>
+  construirMenu(modulosCliente, {
     moduloActivo: sesion.moduloActivo,
     puede: sesion.puede,
     esSuperacceso: sesion.esSuperacceso,
   }),
 );
+const { abiertos, alternar } = usarGruposAbiertos(computed(() => grupoDeLaRuta(grupos.value, ruta.path)));
 
 const iniciales = computed(() =>
   (sesion.usuario?.nombre ?? '?')
@@ -92,28 +92,7 @@ async function salir(): Promise<void> {
         <SelectorEmpresa />
       </div>
 
-      <nav
-        class="flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-3 pb-4 [scrollbar-color:color-mix(in_oklab,var(--color-marca-texto)_25%,transparent)_transparent] [scrollbar-width:thin]"
-      >
-        <div v-for="seccion in menu" :key="seccion.grupo">
-          <p class="px-2 pb-1.5 text-xs font-semibold tracking-wider text-marca-texto/60 uppercase">
-            {{ seccion.grupo }}
-          </p>
-          <ul class="space-y-0.5">
-            <li v-for="entrada in seccion.entradas" :key="entrada.ruta">
-              <RouterLink
-                :to="entrada.ruta"
-                class="relative flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-marca-texto/85 hover:bg-marca-texto/10"
-                :active-class="entrada.ruta === '/' ? '' : CLASE_OPCION_ACTIVA"
-                :exact-active-class="CLASE_OPCION_ACTIVA"
-              >
-                <component :is="entrada.icono" class="size-[18px] shrink-0 opacity-90" aria-hidden="true" />
-                {{ entrada.titulo }}
-              </RouterLink>
-            </li>
-          </ul>
-        </div>
-      </nav>
+      <MenuLateral :grupos="grupos" :abiertos="abiertos" @alternar="alternar" />
 
       <div
         class="flex items-center gap-3 border-t border-marca-texto/10 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"

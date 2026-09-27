@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VENTANAS_CORE } from '../textos';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { KeyRound, Pencil, UserPlus, Users } from 'lucide-vue-next';
 import { usarAvisos } from '../almacenes/avisos';
@@ -13,8 +14,8 @@ import InsigniaBase from '../componentes/InsigniaBase.vue';
 import TarjetaBase from '../componentes/TarjetaBase.vue';
 import VentanaModal from '../componentes/VentanaModal.vue';
 import { usarFormulario } from '../composables/usar-formulario';
-import { rolesApi, type Rol } from '../servicios/roles.api';
-import { usuariosApi, type Usuario } from '../servicios/usuarios.api';
+import { apiRoles, type Rol } from '../servicios/roles.api';
+import { apiUsuarios, type Usuario } from '../servicios/usuarios.api';
 import { formatearFechaHora } from '../utilidades/formato';
 
 const sesion = usarSesion();
@@ -55,7 +56,7 @@ const nombreCompleto = (usuario: Usuario) => `${usuario.nombres} ${usuario.apell
 async function cargar(): Promise<void> {
   cargando.value = true;
   try {
-    [usuarios.value, roles.value] = await Promise.all([usuariosApi.listar(), rolesApi.listar()]);
+    [usuarios.value, roles.value] = await Promise.all([apiUsuarios.listar(), apiRoles.listar()]);
   } catch (error) {
     avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar los usuarios.');
   } finally {
@@ -92,7 +93,7 @@ watch(
     if (edicion.usuarioId || edicion.usuarioEscritoAMano || !nombres?.trim()) return;
     temporizadorSugerencia = setTimeout(async () => {
       try {
-        const { usuario } = await usuariosApi.sugerirUsuario(nombres, apellidos ?? '');
+        const { usuario } = await apiUsuarios.sugerirUsuario(nombres, apellidos ?? '');
         if (!edicion.usuarioEscritoAMano) edicion.usuario = usuario ?? '';
       } catch {
         // Sin sugerencia: el administrador puede escribirlo a mano.
@@ -119,7 +120,7 @@ async function guardar(): Promise<void> {
 
   const exito = await formulario.enviar(async () => {
     if (esNuevo) {
-      const creado = await usuariosApi.crear({
+      const creado = await apiUsuarios.crear({
         nombres: edicion.nombres,
         apellidos: edicion.apellidos,
         usuario: edicion.usuario || undefined,
@@ -129,7 +130,7 @@ async function guardar(): Promise<void> {
       });
       usuarioCreado = creado.usuario;
     } else {
-      await usuariosApi.actualizar(edicion.usuarioId!, {
+      await apiUsuarios.actualizar(edicion.usuarioId!, {
         nombres: edicion.nombres,
         apellidos: edicion.apellidos,
         correo: edicion.correo || null,
@@ -146,7 +147,7 @@ async function guardar(): Promise<void> {
 async function guardarContrasena(): Promise<void> {
   const usuario = cambioContrasena.usuario;
   if (!usuario) return;
-  const exito = await formulario.enviar(() => usuariosApi.cambiarContrasena(usuario.id, cambioContrasena.contrasena));
+  const exito = await formulario.enviar(() => apiUsuarios.cambiarContrasena(usuario.id, cambioContrasena.contrasena));
   if (!exito) return;
   avisos.exito('Contraseña cambiada. El usuario deberá volver a iniciar sesión.');
   cambioContrasena.abierta = false;
@@ -157,10 +158,7 @@ onMounted(cargar);
 
 <template>
   <div>
-    <EncabezadoPagina
-      titulo="Usuarios"
-      descripcion="Personas con acceso a las empresas de esta cuenta y el rol que tienen en cada una."
-    >
+    <EncabezadoPagina :titulo="VENTANAS_CORE.usuarios.titulo" :descripcion="VENTANAS_CORE.usuarios.descripcion">
       <BotonBase v-permiso="'usuarios.gestionar'" :icono="UserPlus" @click="abrir()">Nuevo usuario</BotonBase>
     </EncabezadoPagina>
 

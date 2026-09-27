@@ -1,4 +1,4 @@
-import { api } from './cliente-http';
+import { clienteHttp, type ClienteHttp } from './cliente-http';
 
 export interface AccesoUsuario {
   empresaId: string;
@@ -41,12 +41,28 @@ export interface CambiosUsuario {
   accesos?: AccesoSolicitado[];
 }
 
-export const usuariosApi = {
-  listar: () => api.obtener<Usuario[]>('/usuarios'),
-  sugerirUsuario: (nombres: string, apellidos: string) =>
-    api.obtener<{ usuario: string | null }>('/usuarios/sugerencia', { nombres, apellidos }),
-  crear: (datos: DatosNuevoUsuario) => api.crear<{ id: string; usuario: string }>('/usuarios', datos),
-  actualizar: (id: string, datos: CambiosUsuario) => api.modificar<void>(`/usuarios/${id}`, datos),
-  cambiarContrasena: (id: string, contrasena: string) =>
-    api.reemplazar<void>(`/usuarios/${id}/contrasena`, { contrasena }),
-};
+export class ApiUsuarios {
+  constructor(private readonly http: ClienteHttp) {}
+
+  listar() {
+    return this.http.obtener<Usuario[]>('/usuarios');
+  }
+
+  sugerirUsuario(nombres: string, apellidos: string) {
+    return this.http.obtener<{ usuario: string | null }>('/usuarios/sugerencia', { nombres, apellidos });
+  }
+
+  crear(datos: DatosNuevoUsuario) {
+    return this.http.crear<{ id: string; usuario: string }>('/usuarios', datos);
+  }
+
+  actualizar(id: string, datos: CambiosUsuario) {
+    return this.http.modificar<void>(`/usuarios/${id}`, datos);
+  }
+
+  cambiarContrasena(id: string, contrasena: string) {
+    return this.http.reemplazar<void>(`/usuarios/${id}/contrasena`, { contrasena });
+  }
+}
+
+export const apiUsuarios = new ApiUsuarios(clienteHttp);
