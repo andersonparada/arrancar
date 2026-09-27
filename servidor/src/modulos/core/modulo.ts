@@ -5,7 +5,7 @@ import { componerApariencia } from './apariencia/contexto.js';
 import { componerArchivos } from './archivos/contexto.js';
 import { esquemaColorHex } from './apariencia/http/apariencia.esquemas-http.js';
 import { rutasAutenticacion } from './rutas/autenticacion.rutas.js';
-import { rutasConfiguracion } from './rutas/configuracion.rutas.js';
+import { componerConfiguracion } from './configuracion/contexto.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
 import { componerGeografia } from './geografia/contexto.js';
 import { rutasPlataforma } from './rutas/plataforma.rutas.js';
@@ -18,7 +18,7 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(rutasUsuarios);
   await app.register(rutasRoles);
   await app.register(componerArchivos(dependenciasCompartidas()));
-  await app.register(rutasConfiguracion);
+  await app.register(componerConfiguracion());
   await app.register(componerApariencia());
   await app.register(componerGeografia(dependenciasCompartidas()));
 };

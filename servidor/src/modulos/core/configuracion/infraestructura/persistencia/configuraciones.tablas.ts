@@ -1,10 +1,10 @@
 import { sql } from 'drizzle-orm';
 import { check, jsonb, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { esquemaCore } from './core.esquema.js';
-import { idPrimario } from '../base-datos/columnas.js';
-import { cuentas } from './cuentas.esquema.js';
-import { empresas } from './empresas.esquema.js';
-import { usuarios } from './usuarios.esquema.js';
+import { esquemaCore } from '../../../esquemas/core.esquema.js';
+import { idPrimario } from '../../../base-datos/columnas.js';
+import { cuentas } from '../../../esquemas/cuentas.esquema.js';
+import { empresas } from '../../../esquemas/empresas.esquema.js';
+import { usuarios } from '../../../esquemas/usuarios.esquema.js';
 
 export const NIVELES_GUARDADOS = ['instalacion', 'cuenta', 'empresa'] as const;
 

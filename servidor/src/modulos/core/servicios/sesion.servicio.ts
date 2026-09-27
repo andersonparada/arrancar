@@ -1,5 +1,5 @@
 import { ErrorNoEncontrado } from '../errores/errores.js';
-import { configuracionServicio } from './configuracion.servicio.js';
+import { configuracion } from '../configuracion/contexto.js';
 import type { ContextoSolicitud, UsuarioSesion } from '../http/contexto-solicitud.js';
 import { obtenerRegistroModulos } from '../modulos-sistema/registro-global.js';
 import { bitacoraRepositorio } from '../repositorios/bitacora.repositorio.js';
@@ -102,11 +102,11 @@ export const sesionServicio = {
         ? await this.cambiarEmpresaActiva(contexto, unica.id, direccionIp)
         : contexto;
 
-    const configuracion = contextoFinal.empresa
-      ? await configuracionServicio.valoresPublicos(
-          { cuentaId: contextoFinal.empresa.cuentaId, empresaId: contextoFinal.empresa.id },
-          contextoFinal.modulosActivos,
-        )
+    const valoresPublicos = contextoFinal.empresa
+      ? await configuracion.lector.valoresPublicos({
+          destino: { cuentaId: contextoFinal.empresa.cuentaId, empresaId: contextoFinal.empresa.id },
+          modulosActivos: contextoFinal.modulosActivos,
+        })
       : {};
 
     return {
@@ -115,7 +115,7 @@ export const sesionServicio = {
       rolNombre: contextoFinal.rolNombre,
       modulosActivos: [...contextoFinal.modulosActivos],
       permisos: [...contextoFinal.permisos],
-      configuracion,
+      configuracion: valoresPublicos,
       empresasDisponibles,
     };
   },

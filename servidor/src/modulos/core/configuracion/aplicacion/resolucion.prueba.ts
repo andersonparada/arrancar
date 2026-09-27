@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { definirConfiguracion, type DefinicionConfiguracion } from '../modulos-sistema/definicion-modulo.js';
+import { definirConfiguracion, type DefinicionConfiguracion } from '../../modulos-sistema/definicion-modulo.js';
 import { resolverValor } from './resolucion.js';
 
 const diasAviso = definirConfiguracion({

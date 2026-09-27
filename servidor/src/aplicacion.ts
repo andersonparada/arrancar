@@ -15,7 +15,7 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { configuracion, esProduccion, esPrueba } from './configuracion.js';
-import { cargarConfiguracionInstalacion } from './modulos/core/configuracion/instalacion.js';
+import { archivoDeInstalacion } from './modulos/core/configuracion/infraestructura/archivo-de-instalacion.js';
 import { ErrorSinPermiso } from './modulos/core/errores/errores.js';
 import { interpretarErrorDePostgres } from './modulos/core/compartido/infraestructura/errores-de-postgres.js';
 import { crearManejadorDeErrores } from './modulos/core/compartido/http/manejador-errores.js';
@@ -82,7 +82,7 @@ export async function construirAplicacion(): Promise<FastifyInstance> {
 
   const registro = new RegistroModulos(definicionesModulos);
   establecerRegistroModulos(registro);
-  cargarConfiguracionInstalacion(configuracion.RUTA_CONFIG_INSTALACION, registro);
+  archivoDeInstalacion.cargar(configuracion.RUTA_CONFIG_INSTALACION, registro);
 
   await app.register(helmet, {
     contentSecurityPolicy: {

@@ -1,4 +1,5 @@
 import { almacenamiento } from '../compartido/infraestructura/almacenamiento-local.js';
+import { configuracion } from '../configuracion/contexto.js';
 import { AbrirLogo } from './aplicacion/casos-uso/abrir-logo.js';
 import { CambiarApariencia } from './aplicacion/casos-uso/cambiar-apariencia.js';
 import { CambiarLogo } from './aplicacion/casos-uso/cambiar-logo.js';
@@ -15,7 +16,7 @@ import { ConvertidorDeLogoSharp } from './infraestructura/convertidor-de-logo-sh
  * sus ajustes son de la instalación, no de una cuenta o empresa.
  */
 export function componerApariencia() {
-  const ajustes = new AjustesEnConfiguracion();
+  const ajustes = new AjustesEnConfiguracion(configuracion);
   const controlador = new AparienciaControlador({
     obtener: new ObtenerApariencia({ ajustes }),
     cambiar: new CambiarApariencia({ ajustes }),

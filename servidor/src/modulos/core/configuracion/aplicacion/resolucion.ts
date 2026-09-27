@@ -1,4 +1,4 @@
-import type { DefinicionConfiguracion, NivelConfiguracion } from '../modulos-sistema/definicion-modulo.js';
+import type { DefinicionConfiguracion, NivelConfiguracion } from '../../modulos-sistema/definicion-modulo.js';
 
 export type OrigenValor = NivelConfiguracion | 'predeterminado';
 

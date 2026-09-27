@@ -465,6 +465,19 @@ entrega como un commit propio.
     adaptador. No usa la unidad de trabajo: sus ajustes son de la instalación.
     El doble `AlmacenamientoEnMemoria` pasa a `compartido/pruebas`. 244 pruebas
     (4 unitarias nuevas); advertencias: 37.
+  - **Configuración (2026-09-27):** `core/configuracion/` con dominio (destino y
+    errores `NivelNoPermitido` y `ValorDeConfiguracionInvalido`), aplicación
+    (`LectorDeConfiguracion` resuelve empresa → cuenta → instalación →
+    predeterminado; casos de uso `ListarVariablesEditables`, `EstablecerValor` y
+    `RestablecerValor`; puertos `RepositorioConfiguraciones`, `CatalogoDeVariables`
+    y `ValoresDeInstalacion`) e infraestructura (repositorio Drizzle con la conexión
+    inyectada, `CatalogoEnRegistro` y `ArchivoDeInstalacion`). La tabla no tiene RLS
+    (guarda valores de instalación), así que el repositorio no usa la unidad de
+    trabajo y filtra siempre por destino. `contexto.ts` exporta las piezas armadas:
+    la sesión y el adaptador de apariencia ya las usan en lugar del servicio viejo.
+    Los errores dejan `regla_negocio`/`solicitud_invalida` por códigos propios
+    (mismos estados; el cliente no los usaba). 251 pruebas (7 unitarias nuevas);
+    advertencias: 33.
 
 ### Mejoras pendientes (acordadas, sin fecha)
 

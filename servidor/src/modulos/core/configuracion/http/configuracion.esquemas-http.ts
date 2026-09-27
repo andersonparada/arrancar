@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+/** Desde la aplicación, la cuenta y la empresa; la instalación la cambia soporte en su panel. */
 const nivel = z.enum(['cuenta', 'empresa']);
 
 export const esquemaParamsConfiguracion = z.object({ clave: z.string().min(1).max(150) });
