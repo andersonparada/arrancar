@@ -1,0 +1,45 @@
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { proteger } from '../../core/compartido/http/guardias.js';
+import { esquemaAnulacion, esquemaParamsMovimiento } from './movimientos.esquemas-http.js';
+import type { NotasControlador } from './notas.controlador.js';
+import { esquemaFiltroDeNotas, esquemaNota } from './notas.esquemas-http.js';
+
+type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
+
+const etiquetas = ['Bancos'];
+const RUTA = '/bancos/notas';
+const conId = { tags: etiquetas, params: esquemaParamsMovimiento };
+
+function rutasDeLectura(app: Aplicacion, controlador: NotasControlador) {
+  const ver = proteger({ permiso: 'bancos.notas.ver' });
+  app.get(RUTA, {
+    schema: { tags: etiquetas, querystring: esquemaFiltroDeNotas },
+    preHandler: ver,
+    handler: controlador.listar,
+  });
+  app.get(`${RUTA}/:movimientoId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
+}
+
+/** Registrar y corregir con `gestionar`; anular tiene su propio permiso. */
+function rutasDeEscritura(app: Aplicacion, controlador: NotasControlador) {
+  const gestionar = proteger({ permiso: 'bancos.notas.gestionar' });
+  app.post(RUTA, { schema: { tags: etiquetas, body: esquemaNota }, preHandler: gestionar, handler: controlador.crear });
+  app.put(`${RUTA}/:movimientoId`, {
+    schema: { ...conId, body: esquemaNota },
+    preHandler: gestionar,
+    handler: controlador.actualizar,
+  });
+  app.post(`${RUTA}/:movimientoId/anular`, {
+    schema: { ...conId, body: esquemaAnulacion },
+    preHandler: proteger({ permiso: 'bancos.notas.anular' }),
+    handler: controlador.anular,
+  });
+}
+
+/** Notas de crédito y de débito: sin saldo inicial (se registra en la ficha de la cuenta) y sin Excel (es operación). */
+export function rutasNotas(controlador: NotasControlador): FastifyPluginAsyncZod {
+  return async (app) => {
+    rutasDeLectura(app, controlador);
+    rutasDeEscritura(app, controlador);
+  };
+}

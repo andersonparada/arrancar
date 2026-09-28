@@ -4,6 +4,8 @@ import type { FiltroDeMovimientos, MovimientoDto, SolicitudDeMovimiento } from '
 export interface ConsultasMovimientos {
   /** De la fecha más reciente a la más antigua. */
   listar(filtro: FiltroDeMovimientos): Promise<MovimientoDto[]>;
+  /** De la fecha más antigua a la más reciente, para el reporte (necesita el saldo corrido en orden). */
+  listarAscendente(filtro: FiltroDeMovimientos): Promise<MovimientoDto[]>;
   /** @throws RecursoNoEncontrado si no existe o no es de la empresa. */
   obtener(movimientoId: string): Promise<MovimientoDto>;
   /** @throws RecursoNoEncontrado si algo que se eligió no existe o es ajeno. */

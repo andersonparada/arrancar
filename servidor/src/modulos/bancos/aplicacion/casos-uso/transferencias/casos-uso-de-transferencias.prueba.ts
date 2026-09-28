@@ -22,6 +22,7 @@ import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { ActualizarMovimiento } from '../movimientos/actualizar-movimiento.js';
 import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
 import { AnularTransferencia } from './anular-transferencia.js';
+import { ListarTransferencias } from './listar-transferencias.js';
 import { ObtenerTransferencia } from './obtener-transferencia.js';
 import { RegistrarTransferencia } from './registrar-transferencia.js';
 
@@ -91,6 +92,7 @@ async function casosDeUso({ permiteSobregiro = false } = {}) {
     registrar: new RegistrarTransferencia(dependencias),
     obtener: new ObtenerTransferencia(dependencias),
     anular: new AnularTransferencia(dependencias),
+    listar: new ListarTransferencias(dependencias),
     actualizarMovimiento: new ActualizarMovimiento(dependenciasDeMovimientos),
     anularMovimiento: new AnularMovimiento(dependenciasDeMovimientos),
   };
@@ -164,10 +166,15 @@ describe('registrar', () => {
           beneficiario: null,
           observaciones: null,
         },
+        esSaldoInicial: false,
       }),
     ).rejects.toThrow(MovimientoDeTransferencia);
     await expect(
-      casos.anularMovimiento.ejecutar(operador, { movimientoId: registrada.movimientoDestinoId, motivo: 'Error' }),
+      casos.anularMovimiento.ejecutar(operador, {
+        movimientoId: registrada.movimientoDestinoId,
+        motivo: 'Error',
+        esSaldoInicial: false,
+      }),
     ).rejects.toThrow(MovimientoDeTransferencia);
   });
 });
@@ -216,5 +223,26 @@ describe('anular', () => {
 
   it('avisa si no existe', async () => {
     await expect(casos.obtener.ejecutar(operador, randomUUID())).rejects.toThrow(RecursoNoEncontrado);
+  });
+});
+
+describe('listar', () => {
+  it('de la más reciente a la más antigua, incluidas las anuladas', async () => {
+    const primera = await casos.registrar.ejecutar(operador, solicitud({ fecha: '2026-01-10' }));
+    const segunda = await casos.registrar.ejecutar(operador, solicitud({ fecha: '2026-01-20' }));
+    await casos.anular.ejecutar(operador, { transferenciaId: primera.id, motivo: 'Error' });
+
+    const listado = await casos.listar.ejecutar(operador, {});
+
+    expect(listado.map((t) => t.id)).toEqual([segunda.id, primera.id]);
+    expect(listado.find((t) => t.id === primera.id)?.anuladaEn).toEqual(expect.any(String));
+  });
+
+  it('la cuenta filtra si es origen o destino de la transferencia', async () => {
+    await casos.registrar.ejecutar(operador, solicitud());
+
+    expect(await casos.listar.ejecutar(operador, { cuentaBancariaId: ORIGEN })).toHaveLength(1);
+    expect(await casos.listar.ejecutar(operador, { cuentaBancariaId: DESTINO })).toHaveLength(1);
+    expect(await casos.listar.ejecutar(operador, { cuentaBancariaId: randomUUID() })).toHaveLength(0);
   });
 });

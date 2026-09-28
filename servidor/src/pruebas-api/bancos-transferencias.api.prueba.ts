@@ -19,14 +19,12 @@ async function crearCuentaBancaria(usuario: ClienteApi, nombre: string) {
     observaciones: null,
     activo: true,
   });
-  await usuario.post(RUTA_MOVIMIENTOS, {
+  await usuario.post('/api/bancos/saldos-iniciales', {
     cuentaBancariaId: cuentaBancaria.cuerpo.id,
     tipo: 'credito',
     fecha: '2026-01-01',
     monto: '1000.00',
-    saldoInicial: true,
     referencia: null,
-    beneficiario: null,
     observaciones: null,
   });
   return cuentaBancaria.cuerpo.id as string;
@@ -63,8 +61,8 @@ describe('transferencias por API', () => {
     expect(registrada.cuerpo.cuentaOrigenNombre).toBe('Origen');
     expect(registrada.cuerpo.cuentaDestinoNombre).toBe('Destino');
 
-    const movimientos = await cuenta.propietario.get(`${RUTA_MOVIMIENTOS}?desde=2026-02-01&hasta=2026-02-01`);
-    const ids = movimientos.cuerpo.map((m: { id: string }) => m.id);
+    const reporte = await cuenta.propietario.get(`${RUTA_MOVIMIENTOS}/reporte?desde=2026-02-01&hasta=2026-02-01`);
+    const ids = reporte.cuerpo.filas.map((m: { id: string }) => m.id);
     expect(ids).toEqual(
       expect.arrayContaining([registrada.cuerpo.movimientoOrigenId, registrada.cuerpo.movimientoDestinoId]),
     );
@@ -101,34 +99,46 @@ describe('transferencias por API', () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Solo',
       apellidos: 'Lectura',
-      permisos: ['bancos.movimientos.ver'],
+      permisos: ['bancos.transferencias.ver'],
     });
 
     expect((await lector.post(RUTA, datos())).estado).toBe(403);
     expect((await lector.post(`${RUTA}/${registrada.cuerpo.id}/anular`, { motivo: 'Sin permiso' })).estado).toBe(403);
   });
 
-  it('no se acepta una nota de transferencia por la ventana de movimientos', async () => {
+  it('no se acepta una nota de transferencia por la ventana de notas', async () => {
     const registrada = await cuenta.propietario.post(RUTA, datos());
 
-    const corregido = await cuenta.propietario.put(`${RUTA_MOVIMIENTOS}/${registrada.cuerpo.movimientoOrigenId}`, {
+    const corregido = await cuenta.propietario.put(`/api/bancos/notas/${registrada.cuerpo.movimientoOrigenId}`, {
       cuentaBancariaId: origen,
       tipo: 'debito',
       fecha: '2026-02-01',
       monto: '250.00',
-      saldoInicial: false,
       referencia: null,
       beneficiario: null,
       observaciones: null,
     });
-    const anulado = await cuenta.propietario.post(
-      `${RUTA_MOVIMIENTOS}/${registrada.cuerpo.movimientoDestinoId}/anular`,
-      {
-        motivo: 'Error',
-      },
-    );
+    const anulado = await cuenta.propietario.post(`/api/bancos/notas/${registrada.cuerpo.movimientoDestinoId}/anular`, {
+      motivo: 'Error',
+    });
 
     expect(corregido.cuerpo.error.codigo).toBe('movimiento_de_transferencia');
     expect(anulado.cuerpo.error.codigo).toBe('movimiento_de_transferencia');
+  });
+
+  it('se listan filtrando por cuenta, sea como origen o como destino', async () => {
+    const origenPropio = await crearCuentaBancaria(cuenta.propietario, 'Origen filtro');
+    const destinoPropio = await crearCuentaBancaria(cuenta.propietario, 'Destino filtro');
+    const registrada = await cuenta.propietario.post(
+      RUTA,
+      datos({ cuentaOrigenId: origenPropio, cuentaDestinoId: destinoPropio }),
+    );
+
+    const porOrigen = await cuenta.propietario.get(`${RUTA}?cuentaBancariaId=${origenPropio}`);
+    const porDestino = await cuenta.propietario.get(`${RUTA}?cuentaBancariaId=${destinoPropio}`);
+
+    expect(porOrigen.estado).toBe(200);
+    expect(porOrigen.cuerpo.map((t: { id: string }) => t.id)).toContain(registrada.cuerpo.id);
+    expect(porDestino.cuerpo.map((t: { id: string }) => t.id)).toContain(registrada.cuerpo.id);
   });
 });

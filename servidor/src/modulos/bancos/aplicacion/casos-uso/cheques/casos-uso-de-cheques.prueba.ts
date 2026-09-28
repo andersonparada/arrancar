@@ -195,10 +195,15 @@ describe('emitir', () => {
           beneficiario: null,
           observaciones: null,
         },
+        esSaldoInicial: false,
       }),
     ).rejects.toThrow(MovimientoDeCheque);
     await expect(
-      casos.anularMovimiento.ejecutar(operador, { movimientoId: movimiento.id, motivo: 'Error' }),
+      casos.anularMovimiento.ejecutar(operador, {
+        movimientoId: movimiento.id,
+        motivo: 'Error',
+        esSaldoInicial: false,
+      }),
     ).rejects.toThrow(MovimientoDeCheque);
   });
 });

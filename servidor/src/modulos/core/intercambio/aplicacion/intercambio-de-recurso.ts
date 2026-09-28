@@ -26,18 +26,19 @@ export interface ResultadoDeImportacion {
   errores: ErrorDeImportacion[];
 }
 
-/** Lo que aporta cada recurso: sus columnas y cómo se validan, se listan y se crean sus registros. */
-export interface DatosDelRecurso<Registro, Solicitud> {
+/** Lo que aporta cada recurso: sus columnas y cómo se validan, se listan y se crean sus registros.
+ * `Filtro` es lo que puede acotar `listar` al exportar (por ejemplo, cuenta y fechas de un reporte); sin él, exporta todo. */
+export interface DatosDelRecurso<Registro, Solicitud, Filtro = void> {
   /** El nombre de la hoja: `Animales`. */
   nombre: string;
   columnas: Columna[];
   validar: Validador<Solicitud>;
-  listar: (operador: Operador) => Promise<Registro[]>;
+  listar: (operador: Operador, filtro?: Filtro) => Promise<Registro[]>;
   crear: (operador: Operador, solicitud: Solicitud) => Promise<unknown>;
 }
 
 /** Lo que pone el core, igual para todos los recursos. */
-export interface Dependencias<Registro, Solicitud> extends DatosDelRecurso<Registro, Solicitud> {
+export interface Dependencias<Registro, Solicitud, Filtro = void> extends DatosDelRecurso<Registro, Solicitud, Filtro> {
   libro: LibroDeExcel;
   unidadDeTrabajo: UnidadDeTrabajo;
   /** Reconoce los errores de la base de datos que son esperados (un dato repetido). */
@@ -73,12 +74,12 @@ interface FilasPreparadas<Solicitud> {
  * Exportar e importar un recurso en Excel, con sus columnas. Importar es todo
  * o nada: si una fila tiene problemas no se guarda ninguna, y se informan todos.
  */
-export class IntercambioDeRecurso<Registro, Solicitud> {
-  constructor(private readonly dependencias: Dependencias<Registro, Solicitud>) {}
+export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
+  constructor(private readonly dependencias: Dependencias<Registro, Solicitud, Filtro>) {}
 
-  async exportar(operador: Operador): Promise<Buffer> {
+  async exportar(operador: Operador, filtro?: Filtro): Promise<Buffer> {
     const { columnas, listar } = this.dependencias;
-    const registros = await listar(operador);
+    const registros = await listar(operador, filtro);
     const filas = registros.map((registro) =>
       columnas.map((columna) => escribirCelda(registro as Record<string, unknown>, columna)),
     );

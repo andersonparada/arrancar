@@ -3,7 +3,6 @@ import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
-const RUTA_MOVIMIENTOS = '/api/bancos/movimientos';
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let cuentaBancariaId: string;
@@ -20,14 +19,12 @@ async function crearCuentaBancaria(usuario: ClienteApi, nombre: string): Promise
     observaciones: null,
     activo: true,
   });
-  await usuario.post(RUTA_MOVIMIENTOS, {
+  await usuario.post('/api/bancos/saldos-iniciales', {
     cuentaBancariaId: cuentaBancaria.cuerpo.id,
     tipo: 'credito',
     fecha: '2026-01-01',
     monto: '1000.00',
-    saldoInicial: true,
     referencia: null,
-    beneficiario: null,
     observaciones: null,
   });
   return cuentaBancaria.cuerpo.id as string;
@@ -50,12 +47,11 @@ beforeAll(async () => {
 describe('conciliaciones por API', () => {
   it('flujo completo: iniciar, marcar, terminar, autorizar, bloquear el mes, iniciar el siguiente y eliminar', async () => {
     // Otra nota de crédito de Q 200 el 15 de enero, aparte del saldo inicial.
-    const notaExtra = await cuenta.propietario.post(RUTA_MOVIMIENTOS, {
+    const notaExtra = await cuenta.propietario.post('/api/bancos/notas', {
       cuentaBancariaId,
       tipo: 'credito',
       fecha: '2026-01-15',
       monto: '200.00',
-      saldoInicial: false,
       referencia: null,
       beneficiario: null,
       observaciones: null,
@@ -107,12 +103,11 @@ describe('conciliaciones por API', () => {
     expect(autorizada.cuerpo.autorizadaPorNombre).toBe('Autoriza Conciliaciones');
 
     // La cuenta queda conciliada hasta enero: registrar ahí se rechaza.
-    const rechazado = await cuenta.propietario.post(RUTA_MOVIMIENTOS, {
+    const rechazado = await cuenta.propietario.post('/api/bancos/notas', {
       cuentaBancariaId,
       tipo: 'debito',
       fecha: '2026-01-20',
       monto: '5.00',
-      saldoInicial: false,
       referencia: null,
       beneficiario: null,
       observaciones: null,

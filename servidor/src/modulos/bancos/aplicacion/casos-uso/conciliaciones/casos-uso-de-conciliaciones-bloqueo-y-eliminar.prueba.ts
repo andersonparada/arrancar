@@ -42,7 +42,11 @@ describe('la regla del mes conciliado (se bloquea al autorizar)', () => {
     await conciliarYAutorizar(entorno, 1);
 
     await expect(
-      entorno.casos.anularMovimiento.ejecutar(operador, { movimientoId: idAntiguo, motivo: 'x' }),
+      entorno.casos.anularMovimiento.ejecutar(operador, {
+        movimientoId: idAntiguo,
+        motivo: 'x',
+        esSaldoInicial: false,
+      }),
     ).rejects.toThrow(MesConciliado);
   });
 

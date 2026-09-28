@@ -1,8 +1,8 @@
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, or } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import type { TransferenciaDto } from '../../aplicacion/dto/transferencia.dto.js';
+import type { FiltroDeTransferencias, TransferenciaDto } from '../../aplicacion/dto/transferencia.dto.js';
 import type { ConsultasTransferencias } from '../../aplicacion/puertos/consultas-transferencias.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { movimientos } from './movimientos.tablas.js';
@@ -29,10 +29,30 @@ const columnas = {
   movimientoDestinoId: movimientoDestino.id,
 };
 
+const condicionesDe = ({ cuentaBancariaId, desde, hasta }: FiltroDeTransferencias) =>
+  and(
+    cuentaBancariaId
+      ? or(eq(transferencias.cuentaOrigenId, cuentaBancariaId), eq(transferencias.cuentaDestinoId, cuentaBancariaId))
+      : undefined,
+    desde ? gte(transferencias.fecha, desde) : undefined,
+    hasta ? lte(transferencias.fecha, hasta) : undefined,
+  );
+
 /** Une la transferencia con sus dos cuentas (por nombre) y sus dos notas (por id), una vez creadas. */
 export class ConsultasTransferenciasDrizzle implements ConsultasTransferencias {
   async obtener(transferenciaId: string): Promise<TransferenciaDto> {
-    const [fila] = await transaccionEnCurso()
+    const [fila] = await this.consulta().where(eq(transferencias.id, transferenciaId));
+    if (!fila) throw new RecursoNoEncontrado('La transferencia');
+    return this.aDto(fila);
+  }
+
+  async listar(filtro: FiltroDeTransferencias): Promise<TransferenciaDto[]> {
+    const filas = await this.consulta().where(condicionesDe(filtro)).orderBy(desc(transferencias.fecha));
+    return filas.map((fila) => this.aDto(fila));
+  }
+
+  private consulta() {
+    return transaccionEnCurso()
       .select(columnas)
       .from(transferencias)
       .leftJoin(cuentaOrigen, eq(transferencias.cuentaOrigenId, cuentaOrigen.id))
@@ -44,11 +64,16 @@ export class ConsultasTransferenciasDrizzle implements ConsultasTransferencias {
       .leftJoin(
         movimientoDestino,
         and(eq(movimientoDestino.transferenciaId, transferencias.id), eq(movimientoDestino.tipo, 'credito')),
-      )
-      .where(eq(transferencias.id, transferenciaId));
-    if (!fila) throw new RecursoNoEncontrado('La transferencia');
+      );
+  }
+
+  private aDto(fila: {
+    anuladaEn: Date | null;
+    movimientoOrigenId: string | null;
+    movimientoDestinoId: string | null;
+  }): TransferenciaDto {
     return {
-      ...fila,
+      ...(fila as unknown as TransferenciaDto),
       anuladaEn: fila.anuladaEn ? fila.anuladaEn.toISOString() : null,
       movimientoOrigenId: fila.movimientoOrigenId ?? '',
       movimientoDestinoId: fila.movimientoDestinoId ?? '',

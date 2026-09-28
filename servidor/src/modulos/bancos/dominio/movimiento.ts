@@ -7,6 +7,8 @@ import {
   MovimientoAnulado,
   MovimientoDeCheque,
   MovimientoDeTransferencia,
+  NoEsUnaNota,
+  NoEsUnSaldoInicial,
 } from './errores.js';
 
 export type MovimientoId = Identificador<'Movimiento'>;
@@ -69,14 +71,24 @@ export class Movimiento extends Entidad<MovimientoId> {
   }
 
   /**
-   * Corrige sus datos; la cuenta no cambia (para eso se anula y se registra en la otra).
+   * Corrige sus datos; la cuenta y `saldoInicial` no cambian (una nota no se vuelve saldo
+   * inicial ni al revés; para cambiar de cuenta se anula y se registra en la otra).
    * @throws MovimientoAnulado si ya está anulado; MovimientoDeTransferencia si es de una transferencia.
    */
   corregir(datos: DatosDeMovimiento): void {
     this.exigirVigente();
     this.exigirSuelto();
-    const { cuentaBancariaId } = this.propiedades;
-    this.propiedades = { ...this.propiedades, ...datosValidos({ ...datos, cuentaBancariaId }) };
+    const { cuentaBancariaId, saldoInicial } = this.propiedades;
+    this.propiedades = { ...this.propiedades, ...datosValidos({ ...datos, cuentaBancariaId, saldoInicial }) };
+  }
+
+  /**
+   * Exige que el movimiento sea de la clase que espera quien lo pide (nota o saldo inicial).
+   * @throws NoEsUnaNota si se esperaba una nota y es el saldo inicial; NoEsUnSaldoInicial si es al revés.
+   */
+  exigirClase(esSaldoInicial: boolean): void {
+    if (this.propiedades.saldoInicial && !esSaldoInicial) throw new NoEsUnaNota();
+    if (!this.propiedades.saldoInicial && esSaldoInicial) throw new NoEsUnSaldoInicial();
   }
 
   /**

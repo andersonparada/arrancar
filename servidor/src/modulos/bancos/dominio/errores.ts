@@ -96,6 +96,22 @@ export class MovimientoDeCheque extends ReglaDeNegocioInfringida {
   }
 }
 
+export class NoEsUnaNota extends ReglaDeNegocioInfringida {
+  readonly codigo = 'no_es_una_nota';
+
+  constructor() {
+    super('El saldo inicial se registra y corrige desde la ficha de la cuenta.');
+  }
+}
+
+export class NoEsUnSaldoInicial extends ReglaDeNegocioInfringida {
+  readonly codigo = 'no_es_un_saldo_inicial';
+
+  constructor() {
+    super('Este movimiento no es el saldo inicial de la cuenta.');
+  }
+}
+
 export class ChequeraDemasiadoGrande extends DatoInvalido {
   readonly codigo = 'chequera_demasiado_grande';
 

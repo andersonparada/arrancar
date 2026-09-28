@@ -31,7 +31,9 @@ export interface OpcionesDeIntercambio {
    */
   permisos: { importar?: string; exportar?: string };
   /** Lo que se usa del intercambio; sus tipos de registro y solicitud no le importan a las rutas. */
-  intercambio: Pick<IntercambioDeRecurso<unknown, unknown>, 'exportar' | 'plantilla' | 'importar'>;
+  intercambio: Pick<IntercambioDeRecurso<unknown, unknown, unknown>, 'exportar' | 'plantilla' | 'importar'>;
+  /** Si se pasa, la ruta de exportar valida `?querystring` con este esquema y se lo pasa a `intercambio.exportar`. */
+  filtro?: z.ZodType;
 }
 
 /** El esquema Zod de la solicitud, como validador de filas importadas. */
@@ -71,9 +73,20 @@ export function rutasDeIntercambio(app: Aplicacion, opciones: OpcionesDeIntercam
   if (opciones.permisos.importar) rutasDeImportar(app, opciones, opciones.permisos.importar);
 }
 
-function rutaDeExportar(app: Aplicacion, { ruta, archivo, intercambio }: OpcionesDeIntercambio, permiso: string) {
-  app.get(`${ruta}/exportar`, { preHandler: proteger({ permiso }) }, async (solicitud, respuesta) =>
-    enviarExcel(respuesta, `${archivo}-${hoy()}`, await intercambio.exportar(operadorDe(solicitud))),
+function rutaDeExportar(
+  app: Aplicacion,
+  { ruta, archivo, intercambio, filtro }: OpcionesDeIntercambio,
+  permiso: string,
+) {
+  app.get(
+    `${ruta}/exportar`,
+    { schema: filtro ? { querystring: filtro } : {}, preHandler: proteger({ permiso }) },
+    async (solicitud, respuesta) =>
+      enviarExcel(
+        respuesta,
+        `${archivo}-${hoy()}`,
+        await intercambio.exportar(operadorDe(solicitud), filtro ? solicitud.query : undefined),
+      ),
   );
 }
 

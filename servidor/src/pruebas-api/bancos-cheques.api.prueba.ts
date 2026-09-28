@@ -19,14 +19,12 @@ async function crearCuentaBancaria(usuario: ClienteApi, nombre: string): Promise
     observaciones: null,
     activo: true,
   });
-  await usuario.post(RUTA_MOVIMIENTOS, {
+  await usuario.post('/api/bancos/saldos-iniciales', {
     cuentaBancariaId: cuentaBancaria.cuerpo.id,
     tipo: 'credito',
     fecha: '2026-01-01',
     monto: '1000.00',
-    saldoInicial: true,
     referencia: null,
-    beneficiario: null,
     observaciones: null,
   });
   return cuentaBancaria.cuerpo.id as string;

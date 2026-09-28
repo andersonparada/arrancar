@@ -5,6 +5,8 @@ import { movimientoExistente, type DependenciasDeMovimientos } from './dependenc
 interface CorreccionDeMovimiento {
   movimientoId: string;
   solicitud: SolicitudDeMovimiento;
+  /** Si quien pide la corrección espera que sea el saldo inicial de la cuenta (o una nota, si es `false`). */
+  esSaldoInicial: boolean;
 }
 
 /** Corrige un movimiento vigente; su cuenta no cambia. */
@@ -12,13 +14,17 @@ export class ActualizarMovimiento {
   constructor(private readonly dependencias: DependenciasDeMovimientos) {}
 
   /**
-   * @throws MovimientoAnulado si está anulado.
+   * @throws MovimientoAnulado si está anulado; NoEsUnaNota o NoEsUnSaldoInicial si no es de la clase esperada.
    * @throws SaldoInicialRepetido, SaldoInicialNoEsElPrimero, MovimientoAntesDelSaldoInicial o SaldoInsuficiente.
    */
-  ejecutar(operador: Operador, { movimientoId, solicitud }: CorreccionDeMovimiento): Promise<MovimientoDto> {
+  ejecutar(
+    operador: Operador,
+    { movimientoId, solicitud, esSaldoInicial }: CorreccionDeMovimiento,
+  ): Promise<MovimientoDto> {
     const { unidadDeTrabajo, repositorio, consultas, reglas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
+      movimiento.exigirClase(esSaldoInicial);
       const efectoAnterior = movimiento.efectoEnCentavos;
       const { fecha: fechaAnterior } = movimiento.instantanea();
       movimiento.corregir(solicitud);

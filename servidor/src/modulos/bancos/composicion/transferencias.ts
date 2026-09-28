@@ -1,5 +1,6 @@
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { AnularTransferencia } from '../aplicacion/casos-uso/transferencias/anular-transferencia.js';
+import { ListarTransferencias } from '../aplicacion/casos-uso/transferencias/listar-transferencias.js';
 import { ObtenerTransferencia } from '../aplicacion/casos-uso/transferencias/obtener-transferencia.js';
 import { RegistrarTransferencia } from '../aplicacion/casos-uso/transferencias/registrar-transferencia.js';
 import { ReglasDeLaCuenta } from '../aplicacion/reglas-de-la-cuenta.js';
@@ -35,6 +36,7 @@ export function rutasDeTransferencias() {
     registrar: new RegistrarTransferencia(dependencias),
     obtener: new ObtenerTransferencia(dependencias),
     anular: new AnularTransferencia(dependencias),
+    listar: new ListarTransferencias(dependencias),
   };
   return rutasTransferencias(new TransferenciasControlador(casos));
 }

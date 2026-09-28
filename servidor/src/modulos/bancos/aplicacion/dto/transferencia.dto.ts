@@ -26,3 +26,10 @@ export type SolicitudDeTransferencia = Omit<
   | 'movimientoOrigenId'
   | 'movimientoDestinoId'
 >;
+
+/** Qué transferencias listar: de una cuenta (como origen o como destino) y entre dos fechas (incluidas); incluye anuladas. */
+export interface FiltroDeTransferencias {
+  cuentaBancariaId?: string;
+  desde?: string;
+  hasta?: string;
+}

@@ -1,9 +1,11 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { AnularTransferencia } from '../aplicacion/casos-uso/transferencias/anular-transferencia.js';
+import type { ListarTransferencias } from '../aplicacion/casos-uso/transferencias/listar-transferencias.js';
 import type { ObtenerTransferencia } from '../aplicacion/casos-uso/transferencias/obtener-transferencia.js';
 import type { RegistrarTransferencia } from '../aplicacion/casos-uso/transferencias/registrar-transferencia.js';
 import type {
+  FiltroDeTransferenciasSolicitado,
   ParamsTransferencia,
   SolicitudDeAnulacionDeTransferencia,
   TransferenciaSolicitada,
@@ -13,11 +15,15 @@ export interface CasosDeUsoDeTransferencias {
   registrar: RegistrarTransferencia;
   obtener: ObtenerTransferencia;
   anular: AnularTransferencia;
+  listar: ListarTransferencias;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
 export class TransferenciasControlador {
   constructor(private readonly casosDeUso: CasosDeUsoDeTransferencias) {}
+
+  listar = (solicitud: FastifyRequest<{ Querystring: FiltroDeTransferenciasSolicitado }>) =>
+    this.casosDeUso.listar.ejecutar(operadorDe(solicitud), solicitud.query);
 
   registrar = async (solicitud: FastifyRequest<{ Body: TransferenciaSolicitada }>, respuesta: FastifyReply) => {
     const transferencia = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), solicitud.body);

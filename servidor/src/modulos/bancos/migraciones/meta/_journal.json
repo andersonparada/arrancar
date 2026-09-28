@@ -71,6 +71,13 @@
       "when": 1790608135833,
       "tag": "0009_agregar_estado_y_foto_de_conciliacion",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790611688572,
+      "tag": "0010_permisos_de_notas",
+      "breakpoints": true
     }
   ]
 }

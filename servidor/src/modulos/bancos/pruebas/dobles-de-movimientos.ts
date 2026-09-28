@@ -22,12 +22,19 @@ function aDto(movimiento: Movimiento): MovimientoDto {
   };
 }
 
+const cumpleLaClase = (clase: FiltroDeMovimientos['clase'], dto: MovimientoDto) => {
+  if (clase === 'saldosIniciales') return dto.saldoInicial;
+  if (clase === 'notas') return dto.tipo !== 'cheque' && !dto.saldoInicial && !dto.transferenciaId;
+  return true;
+};
+
 const cumple =
-  ({ cuentaBancariaId, desde, hasta }: FiltroDeMovimientos) =>
+  ({ cuentaBancariaId, desde, hasta, clase }: FiltroDeMovimientos) =>
   (dto: MovimientoDto) =>
     (!cuentaBancariaId || dto.cuentaBancariaId === cuentaBancariaId) &&
     (!desde || dto.fecha >= desde) &&
-    (!hasta || dto.fecha <= hasta);
+    (!hasta || dto.fecha <= hasta) &&
+    cumpleLaClase(clase, dto);
 
 /** Guarda los movimientos en memoria y responde tanto de repositorio como de consultas. */
 export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMovimientos {
@@ -54,6 +61,11 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
   async listar(filtro: FiltroDeMovimientos): Promise<MovimientoDto[]> {
     const dtos = [...this.registros.values()].map(aDto).filter(cumple(filtro));
     return dtos.sort((a, b) => b.fecha.localeCompare(a.fecha));
+  }
+
+  async listarAscendente(filtro: FiltroDeMovimientos): Promise<MovimientoDto[]> {
+    const dtos = [...this.registros.values()].map(aDto).filter(cumple(filtro));
+    return dtos.sort((a, b) => a.fecha.localeCompare(b.fecha));
   }
 
   async obtener(movimientoId: string): Promise<MovimientoDto> {

@@ -32,11 +32,23 @@ const vigentesDe = (cuentaBancariaId: string, excluir?: string, ...mas: SQL[]) =
     ...mas,
   );
 
-const condicionesDe = ({ cuentaBancariaId, desde, hasta }: FiltroDeMovimientos) =>
+const condicionDeLaClase = (clase: FiltroDeMovimientos['clase']) => {
+  if (clase === 'saldosIniciales') return eq(movimientos.saldoInicial, true);
+  if (clase === 'notas')
+    return and(
+      ne(movimientos.tipo, 'cheque'),
+      eq(movimientos.saldoInicial, false),
+      isNull(movimientos.transferenciaId),
+    );
+  return undefined;
+};
+
+const condicionesDe = ({ cuentaBancariaId, desde, hasta, clase }: FiltroDeMovimientos) =>
   and(
     cuentaBancariaId ? eq(movimientos.cuentaBancariaId, cuentaBancariaId) : undefined,
     desde ? gte(movimientos.fecha, desde) : undefined,
     hasta ? lte(movimientos.fecha, hasta) : undefined,
+    condicionDeLaClase(clase),
   );
 
 export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
@@ -44,6 +56,13 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
     const filas = await this.consulta()
       .where(condicionesDe(filtro))
       .orderBy(desc(movimientos.fecha), desc(movimientos.creadoEn));
+    return filas.map(mapeadorDeMovimiento.aDto);
+  }
+
+  async listarAscendente(filtro: FiltroDeMovimientos): Promise<MovimientoDto[]> {
+    const filas = await this.consulta()
+      .where(condicionesDe(filtro))
+      .orderBy(asc(movimientos.fecha), asc(movimientos.creadoEn));
     return filas.map(mapeadorDeMovimiento.aDto);
   }
 

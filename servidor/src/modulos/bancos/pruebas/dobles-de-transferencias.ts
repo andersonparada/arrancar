@@ -1,6 +1,6 @@
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
 import type { CuentaBancariaDto } from '../aplicacion/dto/cuenta-bancaria.dto.js';
-import type { TransferenciaDto } from '../aplicacion/dto/transferencia.dto.js';
+import type { FiltroDeTransferencias, TransferenciaDto } from '../aplicacion/dto/transferencia.dto.js';
 import type { ConsultasCuentasBancarias } from '../aplicacion/puertos/consultas-cuentas-bancarias.js';
 import type { ConsultasTransferencias } from '../aplicacion/puertos/consultas-transferencias.js';
 import type { RepositorioTransferencias } from '../aplicacion/puertos/repositorio-transferencias.js';
@@ -39,6 +39,13 @@ const nombreDe = (nombresDeCuenta: Map<string, string>, cuentaBancariaId: string
   nombresDeCuenta.get(cuentaBancariaId) ?? null;
 
 const idDeLaNota = (nota?: { id: string }): string => nota?.id ?? '';
+
+const cumple =
+  ({ cuentaBancariaId, desde, hasta }: FiltroDeTransferencias) =>
+  (dto: TransferenciaDto) =>
+    (!cuentaBancariaId || dto.cuentaOrigenId === cuentaBancariaId || dto.cuentaDestinoId === cuentaBancariaId) &&
+    (!desde || dto.fecha >= desde) &&
+    (!hasta || dto.fecha <= hasta);
 
 /** Arma el DTO con los nombres de las cuentas y los ids de las dos notas, si ya se encontraron. */
 function aDto(
@@ -88,6 +95,11 @@ export class TransferenciasEnMemoria implements RepositorioTransferencias, Consu
     if (!transferencia) throw new RecursoNoEncontrado('La transferencia');
     const [origen, destino] = await this.notasDe(transferenciaId);
     return aDto(transferencia, this.nombresDeCuenta, { origen, destino });
+  }
+
+  async listar(filtro: FiltroDeTransferencias): Promise<TransferenciaDto[]> {
+    const dtos = await Promise.all([...this.registros.keys()].map((id) => this.obtener(id)));
+    return dtos.filter(cumple(filtro)).sort((a, b) => b.fecha.localeCompare(a.fecha));
   }
 
   private async notasDe(transferenciaId: string) {

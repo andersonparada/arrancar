@@ -35,9 +35,11 @@ export type SolicitudDeMovimiento = Omit<
   | 'conciliacionId'
 > & { tipo: 'credito' | 'debito' };
 
-/** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */
+/** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra.
+ * `clase` acota a solo notas (crédito o débito sueltas) o solo saldos iniciales; sin ella, todo (para el reporte). */
 export interface FiltroDeMovimientos {
   cuentaBancariaId?: string;
   desde?: string;
   hasta?: string;
+  clase?: 'notas' | 'saldosIniciales';
 }

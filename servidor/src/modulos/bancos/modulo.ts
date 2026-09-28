@@ -7,6 +7,8 @@ import { rutasDeCheques } from './composicion/cheques.js';
 import { rutasDeConciliaciones } from './composicion/conciliaciones.js';
 import { rutasDeCuentasBancarias } from './composicion/cuentas-bancarias.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
+import { rutasDeNotas } from './composicion/notas.js';
+import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 import { rutasDeTransferencias } from './composicion/transferencias.js';
 // generador: importaciones
 
@@ -25,12 +27,20 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.cuentas-bancarias.gestionar', descripcion: 'Registrar, editar e inactivar cuentas bancarias' },
     { clave: 'bancos.cuentas-bancarias.importar', descripcion: 'Importar cuentas bancarias desde Excel' },
     { clave: 'bancos.cuentas-bancarias.exportar', descripcion: 'Exportar cuentas bancarias a Excel' },
-    { clave: 'bancos.movimientos.ver', descripcion: 'Ver movimientos' },
-    { clave: 'bancos.movimientos.gestionar', descripcion: 'Registrar y corregir movimientos' },
-    { clave: 'bancos.movimientos.anular', descripcion: 'Anular movimientos' },
-    { clave: 'bancos.movimientos.importar', descripcion: 'Importar movimientos desde Excel' },
+    { clave: 'bancos.movimientos.ver', descripcion: 'Ver el reporte de movimientos' },
+    { clave: 'bancos.movimientos.exportar', descripcion: 'Exportar el reporte de movimientos a Excel' },
+    { clave: 'bancos.notas.ver', descripcion: 'Ver notas de crédito y de débito' },
+    { clave: 'bancos.notas.gestionar', descripcion: 'Registrar y corregir notas de crédito y débito' },
+    { clave: 'bancos.notas.anular', descripcion: 'Anular notas de crédito y débito' },
+    { clave: 'bancos.transferencias.ver', descripcion: 'Ver transferencias entre cuentas propias' },
     { clave: 'bancos.transferencias.gestionar', descripcion: 'Registrar transferencias entre cuentas propias' },
     { clave: 'bancos.transferencias.anular', descripcion: 'Anular transferencias' },
+    {
+      clave: 'bancos.saldos-iniciales.gestionar',
+      descripcion: 'Registrar, corregir y anular el saldo inicial de las cuentas',
+    },
+    { clave: 'bancos.saldos-iniciales.importar', descripcion: 'Importar saldos iniciales desde Excel' },
+    { clave: 'bancos.saldos-iniciales.exportar', descripcion: 'Exportar saldos iniciales a Excel' },
     { clave: 'bancos.chequeras.ver', descripcion: 'Ver chequeras' },
     { clave: 'bancos.chequeras.gestionar', descripcion: 'Crear e inactivar chequeras' },
     { clave: 'bancos.chequeras.importar', descripcion: 'Importar chequeras desde Excel' },
@@ -66,6 +76,8 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeBancos(),
     rutasDeCuentasBancarias(),
     rutasDeMovimientos(),
+    rutasDeNotas(),
+    rutasDeSaldosIniciales(),
     rutasDeTransferencias(),
     rutasDeChequeras(),
     rutasDeCheques(),
