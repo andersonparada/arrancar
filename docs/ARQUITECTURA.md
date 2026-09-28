@@ -60,7 +60,7 @@ servidor/src/modulos/terceros/
 | `infraestructura` | `aplicacion` (para implementar puertos), `dominio`, `core/compartido/infraestructura` |
 | `http` | `aplicacion` y `core/compartido/http` |
 | `modulo.ts` | todo lo del módulo (es quien conecta las piezas) |
-| otro módulo | **nunca**; se comunican por eventos del bus |
+| otro módulo | **nunca**; se comunican por **eventos** (después de confirmar) o por **órdenes y avisos** del mediador (dentro de la transacción), ver sección 4.8 |
 
 ## 3. El core
 
@@ -281,6 +281,60 @@ Todos heredan de `ErrorEsperado` (dominio) y llevan un `codigo` estable para el 
   `RecursoEnUso`; `aplicacion.ts` se lo pasa al manejador, que no conoce la base de datos.
 - Los errores de programación (consultar sin unidad de trabajo, cambiar de
   contexto dentro de una transacción) heredan de `Error` y responden 500.
+
+### 4.8 Comunicación entre módulos: eventos, o mediador dentro de la transacción
+
+Los módulos **nunca se importan entre sí**. Tienen dos formas de comunicarse, y
+ninguna pasa por HTTP:
+
+| | **Evento** (`core/eventos/bus-eventos.ts`) | **Orden / aviso** (`core/mediador`) |
+|---|---|---|
+| Cuándo corre | **después** de confirmar la transacción | **dentro** de la misma transacción del que envía |
+| Quién lo atiende | cero o varios suscriptores (Observer) | orden: exactamente uno; aviso: cero o varios (Mediator) |
+| Si falla | no deshace nada (ya se confirmó) | deshace **toda** la transacción del que envía |
+| Para qué | reacciones que pueden ir aparte (notificar, indexar) | operaciones que deben ser atómicas con la que las origina |
+
+**Contratos** (`core/contratos/<modulo>.contratos.ts`): cada módulo que atiende
+declara la forma de sus mensajes ampliando, con `declare module`, los mapas del
+core (`core/contratos/mediador.contratos.ts`), igual que `EventosDominio`:
+
+```ts
+// core/contratos/bancos.contratos.ts
+declare module '../mediador.contratos.js' {
+  interface OrdenesEntreModulos {
+    'bancos.emitir_cheque': { datos: EmisionDeCheque; respuesta: ChequeEmitidoDto };
+  }
+  interface AvisosEntreModulos {
+    'bancos.movimiento_de_origen_anulado': { movimientoId: string };
+  }
+}
+```
+
+**El módulo que atiende** registra su manejador en su `modulo.ts` con la clave
+del módulo (para que el mediador revise si está activo en la cuenta):
+
+```ts
+mediador.atender('bancos', 'bancos.emitir_cheque', (datos, operador) => emitirCheque.ejecutar(operador, datos));
+mediador.escuchar('cuentas-por-pagar', 'bancos.movimiento_de_origen_anulado', anularProvisionSiExiste);
+```
+
+**El módulo que envía** declara su propio puerto en `aplicacion/puertos/` (no
+conoce al mediador) y lo implementa en `infraestructura/` llamando a
+`mediador.enviar(...)` o `mediador.avisar(...)`; así su dominio sigue sin conocer
+a los demás módulos. Un caso de uso que llama a `enviar` está siempre dentro de
+una `UnidadDeTrabajo.ejecutar(...)`: el manejador normalmente abre su propia
+unidad de trabajo, que **se une** a la transacción en curso si es la misma
+empresa (ver 4.1); si es de otra, es un error de programación.
+
+**Seguridad:** ninguna ruta HTTP expone una orden o un aviso; el permiso lo
+exige la ruta del módulo que origina y autoriza la operación completa (decisión
+acordada: no se pide además el permiso del módulo que atiende, para no romper
+la separación de funciones). Antes de llamar al manejador, el mediador revisa
+que su módulo esté **activo en la cuenta** del operador (puerto
+`ModulosActivosDeLaCuenta`); si no lo está, o si nadie atiende la orden, lanza
+`ModuloNoDisponible`. Los avisos simplemente no llaman a los manejadores de
+módulos inactivos. Registrar dos manejadores para la misma orden es un error de
+programación (`ManejadorDuplicadoParaLaOrden`, se detecta al registrar).
 
 ## 5. Cliente (Vue)
 

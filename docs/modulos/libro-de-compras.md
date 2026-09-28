@@ -232,8 +232,14 @@ Los módulos y sus ventanas se crean con el **generador** (`npm run generar --
 modulo`, `definicion` y `recurso`); lo que el generador no cubra se completa a
 mano sobre lo generado.
 
-1. **L0 Mediator:** órdenes y eventos con contratos en el core, revisión del módulo
-   activo, ESLint y documentación en `ARQUITECTURA.md`.
+1. **L0 Mediator: hecho (2026-09-28).** Órdenes y avisos con contratos en el core
+   (`core/mediador`, `core/contratos/mediador.contratos.ts`), revisión del módulo
+   activo y documentación en `ARQUITECTURA.md` (sección 4.8); solo el core, sin
+   contratos de negocio reales todavía. Ver la bitácora de `docs/PLAN.md`
+   (2026-09-28) para el detalle. Cuando este módulo empiece a programarse, le toca
+   crear `core/contratos/libro-de-compras.contratos.ts` con sus órdenes reales
+   (p. ej. `libro-de-compras.recibir_documento`) y registrar sus manejadores en
+   `modulo.ts`.
 2. **L1 Datos fiscales:** campos en los formularios de Empresas y Proveedores
    (visibles si el módulo está activo).
 3. **L2 Catálogos:** conceptos de gasto y combustibles con vigencias (servidor,

@@ -162,7 +162,8 @@ su color para que la app se entienda igual en todas las instalaciones.
 | Verificación de cada petición (sesión → empresa → módulo → permiso) | Chain of Responsibility | `core/http/guardias.ts` |
 | Alta de un suscriptor (cuenta + empresa + rol + usuario + módulos) | Facade | `core/servicios/alta-cuenta.servicio.ts` |
 | Dónde se guardan los archivos (disco hoy, S3/R2 mañana) | Strategy | `core/almacenamiento/almacenamiento.ts` |
-| Comunicación entre módulos | Observer | `core/eventos/bus-eventos.ts` |
+| Comunicación entre módulos, después de confirmar | Observer | `core/eventos/bus-eventos.ts` |
+| Comunicación entre módulos, dentro de la misma transacción (órdenes y avisos) | Mediator | `core/mediador` |
 | Registro único de módulos | Singleton | `core/modulos-sistema/registro-global.ts` |
 | Estados (siembra, animal, préstamo, tarea) | State | pendiente |
 | Frecuencia de recordatorios | Strategy | pendiente |
@@ -376,3 +377,25 @@ y `demo` / `demo-arrancar`.
   asignarlos (`PermisoDesconocido`, 400). Migración de datos `0010` que borra
   esas claves de `core.rol_permisos`. El menú ya ocultaba "Configuración" a
   quien no tuviera el permiso, sin cambios en el cliente.
+- **2026-09-28**: L0 del módulo `libro-de-compras` (`docs/modulos/libro-de-compras.md`):
+  mediador entre módulos (patrón Mediator), solo el core, sin que ningún módulo de
+  negocio lo use todavía. `core/mediador` (`Mediador` en `aplicacion/`, con
+  `atender`/`enviar` para órdenes y `escuchar`/`avisar` para avisos) y
+  `core/contratos/mediador.contratos.ts` con los mapas ampliables
+  `OrdenesEntreModulos` y `AvisosEntreModulos` (como `EventosDominio` del bus).
+  Antes de llamar a un manejador, el mediador comprueba con el puerto
+  `ModulosActivosDeLaCuenta` que su módulo esté activo en la cuenta del operador
+  (`ModuloNoDisponible` si no, o si nadie atiende la orden); su implementación
+  (`infraestructura/modulos-activos-de-la-cuenta-en-registro.ts`) reutiliza
+  `CatalogoDeModulos` y `RepositorioCuentas` de `cuentas` (import directo entre
+  contextos del core, como ya hacían identidad/autorización/bitácora). Instancia
+  única en `core/mediador/contexto.ts`. La unión de una unidad de trabajo anidada
+  a la transacción en curso ya existía (`UnidadDeTrabajoPostgres`, fase 2 del
+  refactor) y no necesitó cambios; se agregó una prueba de integración que la
+  ejercita a través del mediador. ESLint ya permitía importar todo `core` desde
+  cualquier módulo (`no-restricted-imports` solo prohíbe otros módulos de
+  negocio), así que `core/contratos` y `core/mediador` no necesitaron una regla
+  nueva; se comprobó con un archivo temporal que la prohibición entre módulos de
+  negocio sigue funcionando. 13 pruebas nuevas (8 unitarias con dobles en memoria
+  y 5 de integración contra PostgreSQL real, incluida la transacción anidada y el
+  deshacer completo si una orden falla o un aviso es rechazado).
