@@ -15,9 +15,14 @@ export interface Movimiento {
   cuentaBancariaNombre: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  /** La transferencia que lo creó, si es una de sus dos notas; si no, `null`. */
+  transferenciaId: string | null;
 }
 
-export type DatosMovimiento = Omit<Movimiento, 'id' | 'cuentaBancariaNombre' | 'anuladoEn' | 'motivoDeAnulacion'>;
+export type DatosMovimiento = Omit<
+  Movimiento,
+  'id' | 'cuentaBancariaNombre' | 'anuladoEn' | 'motivoDeAnulacion' | 'transferenciaId'
+>;
 
 /** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */
 export interface FiltroDeMovimientos {

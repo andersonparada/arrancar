@@ -40,4 +40,8 @@ export class CuentasBancariasEnMemoria implements RepositorioCuentasBancarias, C
   exigirReferencias(): Promise<void> {
     return Promise.resolve();
   }
+
+  async nombreDe(cuentaBancariaId: string): Promise<string> {
+    return (await this.obtener(cuentaBancariaId)).nombre;
+  }
 }

@@ -38,6 +38,15 @@ export class ConsultasCuentasBancariasDrizzle implements ConsultasCuentasBancari
     await exigirQueExista(bancos, solicitud.bancoId, 'El banco');
   }
 
+  async nombreDe(cuentaBancariaId: string): Promise<string> {
+    const [fila] = await transaccionEnCurso()
+      .select({ nombre: cuentasBancarias.nombre })
+      .from(cuentasBancarias)
+      .where(eq(cuentasBancarias.id, cuentaBancariaId));
+    if (!fila) throw new RecursoNoEncontrado('La cuenta bancaria');
+    return fila.nombre;
+  }
+
   private consulta() {
     return transaccionEnCurso()
       .select(columnas)

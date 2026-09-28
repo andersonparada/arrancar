@@ -328,6 +328,47 @@ cambiar por otro disponible. Cada paso lleva su commit al quedar en verde.
   referencia, observaciones); la tarjeta de una nota de transferencia lo dice y
   "Anular" anula la transferencia completa.
 
+**B3 hecho (2026-09-28).** Servidor y cliente, completados sobre el patrón de
+Movimientos:
+
+- Tabla `bancos.transferencias` (con sus checks de monto positivo y de cuentas
+  distintas) y `transferencia_id` en `bancos.movimientos`, con índice; migración
+  generada y aplicada.
+- Dominio `Transferencia` (`crear`/`anular`, valida monto y cuentas distintas).
+  `Movimiento` conoce su `transferenciaId`; `corregir` y `anular` lo rechazan si
+  pertenece a una transferencia (`MovimientoDeTransferencia`), y ganó
+  `anularPorTransferencia`, el único modo por el que se anula una nota enlazada.
+- `RegistrarTransferencia`: en una unidad de trabajo exige las dos cuentas
+  activas (`consultas.cuentaEstaActiva`, reutilizada de Movimientos), arma el
+  beneficiario con el nombre de la otra cuenta (`ConsultasCuentasBancarias`
+  ganó `nombreDe`) y revisa `ReglasDeLaCuenta` en las dos notas antes de
+  guardar la transferencia y sus dos movimientos.
+- `AnularTransferencia`: anula la transferencia y sus dos notas, revisa el
+  sobregiro del destino al quitar el crédito y audita
+  `{ recurso: 'bancos.transferencias', accion: 'anular' }`. `ObtenerTransferencia`
+  trae los nombres de las dos cuentas y los ids de las dos notas (unión con
+  `bancos.movimientos` por `transferencia_id` y `tipo`).
+- HTTP sin Excel: `POST /bancos/transferencias`, `GET /bancos/transferencias/:id`
+  (permiso `bancos.movimientos.ver`) y `POST .../anular`.
+- Cliente: botón "Transferencia" en Movimientos (`VentanaDeTransferencia.vue`,
+  destino sin la cuenta de origen); la tarjeta de una nota con `transferenciaId`
+  muestra la insignia "Transferencia", oculta "Editar" y su "Anular" llama a
+  `apiTransferencias.anular` con su propio permiso y un texto distinto en
+  `VentanaDeAnulacion`. `TarjetaDeRegistro` (core) ganó `sinEditar`, para ocultar
+  solo "Editar" sin perder `acciones-extra` (a diferencia de `soloLectura`).
+- Decisión propia: `Transferencia.crear` y las reglas de sobregiro se revisan
+  dentro de la unidad de trabajo (no antes), así un dato inválido rechaza la
+  promesa en vez de lanzar de forma síncrona, igual que el resto de los casos de
+  uso.
+
+Pruebas: 361 del servidor (14 nuevas: 9 de casos de uso con dobles en memoria —
+registrar, cuentas distintas, cuenta inactiva, sobregiro del origen, nota suelta
+que no se corrige ni se anula, anular ambas notas con auditoría, no anularse dos
+veces, sobregiro del destino al anular, y "no existe" — y 5 de API: registrar y
+ver en movimientos con los saldos, obtener por id, anular con las dos notas,
+403 sin permiso y nota rechazada por la ventana de movimientos), 72 del cliente
+(3 nuevas de `edicion-de-transferencia`) y 46 del generador (sin cambios).
+
 ### B4 Chequeras y cheques
 
 - `bancos.chequeras`: cuenta, serie (opcional), `desde`, `hasta`, activa,

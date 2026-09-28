@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
@@ -10,9 +11,22 @@ import {
 } from '../../composables/movimientos/detalles-de-movimiento';
 import type { Movimiento } from '../../servicios/movimientos.api';
 
-/** La tarjeta de un movimiento: monto destacado con color, y "Anular" en vez de "Eliminar". */
-defineProps<{ registro: Movimiento }>();
+/**
+ * La tarjeta de un movimiento: monto destacado con color, y "Anular" en vez de
+ * "Eliminar". Una nota de transferencia se marca y no se edita: "Anular" pide su
+ * propio permiso y anula la transferencia completa.
+ */
+const props = defineProps<{ registro: Movimiento }>();
 const emit = defineEmits<{ editar: []; anular: [] }>();
+
+const insignia = computed(() => {
+  if (props.registro.anuladoEn) return 'Anulado';
+  if (props.registro.transferenciaId) return 'Transferencia';
+  return undefined;
+});
+const permisoDeAnular = computed(() =>
+  props.registro.transferenciaId ? 'bancos.transferencias.anular' : 'bancos.movimientos.anular',
+);
 </script>
 
 <template>
@@ -20,8 +34,9 @@ const emit = defineEmits<{ editar: []; anular: [] }>();
     :titulo="tituloDeMovimiento(registro)"
     :detalles="detallesDeMovimiento(registro)"
     permiso="bancos.movimientos.gestionar"
-    :insignia="registro.anuladoEn ? 'Anulado' : undefined"
+    :insignia="insignia"
     :solo-lectura="!!registro.anuladoEn"
+    :sin-editar="!!registro.transferenciaId"
     @editar="emit('editar')"
   >
     <template #destacado>
@@ -30,9 +45,7 @@ const emit = defineEmits<{ editar: []; anular: [] }>();
       </p>
     </template>
     <template #acciones-extra>
-      <BotonBase v-permiso="'bancos.movimientos.anular'" variante="fantasma" pequeno @click="emit('anular')">
-        Anular
-      </BotonBase>
+      <BotonBase v-permiso="permisoDeAnular" variante="fantasma" pequeno @click="emit('anular')">Anular</BotonBase>
     </template>
   </TarjetaDeRegistro>
 </template>

@@ -1,7 +1,7 @@
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { aCentavos } from './centavos.js';
-import { MontoInvalido, MotivoDeAnulacionInvalido, MovimientoAnulado } from './errores.js';
+import { MontoInvalido, MotivoDeAnulacionInvalido, MovimientoAnulado, MovimientoDeTransferencia } from './errores.js';
 
 export type MovimientoId = Identificador<'Movimiento'>;
 
@@ -22,6 +22,8 @@ export interface PropiedadesDeMovimiento extends DatosDeMovimiento {
   empresaId: Identificador<'Empresa'>;
   anuladoEn: Date | null;
   motivoDeAnulacion: string | null;
+  /** La transferencia que lo creó, si es una de sus dos notas; si no, `null`. */
+  transferenciaId: string | null;
 }
 
 const MAXIMO_DEL_MOTIVO = 500;
@@ -40,13 +42,19 @@ export class Movimiento extends Entidad<MovimientoId> {
     super(propiedades.id);
   }
 
-  static crear(empresaId: Identificador<'Empresa'>, datos: DatosDeMovimiento): Movimiento {
+  /** `transferenciaId` solo lo pasa `RegistrarTransferencia`: nunca llega del usuario. */
+  static crear(
+    empresaId: Identificador<'Empresa'>,
+    datos: DatosDeMovimiento,
+    transferenciaId: string | null = null,
+  ): Movimiento {
     return new Movimiento({
       ...datosValidos(datos),
       empresaId,
       id: Identificador.nuevo(),
       anuladoEn: null,
       motivoDeAnulacion: null,
+      transferenciaId,
     });
   }
 
@@ -56,20 +64,32 @@ export class Movimiento extends Entidad<MovimientoId> {
 
   /**
    * Corrige sus datos; la cuenta no cambia (para eso se anula y se registra en la otra).
-   * @throws MovimientoAnulado si ya está anulado.
+   * @throws MovimientoAnulado si ya está anulado; MovimientoDeTransferencia si es de una transferencia.
    */
   corregir(datos: DatosDeMovimiento): void {
     this.exigirVigente();
+    this.exigirSuelto();
     const { cuentaBancariaId } = this.propiedades;
     this.propiedades = { ...this.propiedades, ...datosValidos({ ...datos, cuentaBancariaId }) };
   }
 
-  /** @throws MovimientoAnulado si ya está anulado; MotivoDeAnulacionInvalido si falta el motivo. */
+  /**
+   * Anula la nota por sí sola.
+   * @throws MovimientoAnulado si ya está anulado; MovimientoDeTransferencia si es de una transferencia;
+   *   MotivoDeAnulacionInvalido si falta el motivo.
+   */
   anular(motivo: string): void {
-    this.exigirVigente();
-    const motivoDeAnulacion = motivo.trim();
-    if (!motivoDeAnulacion || motivoDeAnulacion.length > MAXIMO_DEL_MOTIVO) throw new MotivoDeAnulacionInvalido();
-    this.propiedades = { ...this.propiedades, anuladoEn: new Date(), motivoDeAnulacion };
+    this.exigirSuelto();
+    this.anularSinRevisar(motivo);
+  }
+
+  /**
+   * Anula la nota porque se anuló su transferencia: la única forma de anular una
+   * nota que pertenece a una.
+   * @throws MovimientoAnulado si ya está anulado; MotivoDeAnulacionInvalido si falta el motivo.
+   */
+  anularPorTransferencia(motivo: string): void {
+    this.anularSinRevisar(motivo);
   }
 
   get estaAnulado(): boolean {
@@ -88,7 +108,18 @@ export class Movimiento extends Entidad<MovimientoId> {
     return { ...this.propiedades };
   }
 
+  private anularSinRevisar(motivo: string): void {
+    this.exigirVigente();
+    const motivoDeAnulacion = motivo.trim();
+    if (!motivoDeAnulacion || motivoDeAnulacion.length > MAXIMO_DEL_MOTIVO) throw new MotivoDeAnulacionInvalido();
+    this.propiedades = { ...this.propiedades, anuladoEn: new Date(), motivoDeAnulacion };
+  }
+
   private exigirVigente(): void {
     if (this.estaAnulado) throw new MovimientoAnulado();
+  }
+
+  private exigirSuelto(): void {
+    if (this.propiedades.transferenciaId) throw new MovimientoDeTransferencia();
   }
 }

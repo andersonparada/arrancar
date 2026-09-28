@@ -26,6 +26,8 @@ defineProps<{
   destino?: RouteLocationRaw;
   insignia?: string;
   soloLectura?: boolean;
+  /** Oculta solo "Editar" (y "Eliminar"), a diferencia de `soloLectura` que también oculta `acciones-extra`. */
+  sinEditar?: boolean;
 }>();
 const emit = defineEmits<{ editar: []; eliminar: [] }>();
 </script>
@@ -56,7 +58,7 @@ const emit = defineEmits<{ editar: []; eliminar: [] }>();
         </div>
       </dl>
       <div v-if="!destino && !soloLectura" class="mt-auto flex justify-end gap-1">
-        <span v-permiso="permiso" class="contents">
+        <span v-if="!sinEditar" v-permiso="permiso" class="contents">
           <BotonBase variante="fantasma" pequeno :icono="Pencil" @click="emit('editar')">Editar</BotonBase>
           <BotonBase v-if="eliminable" variante="fantasma" pequeno :icono="Trash2" @click="emit('eliminar')">
             Eliminar

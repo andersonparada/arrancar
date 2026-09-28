@@ -4,6 +4,7 @@ import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeBancos } from './composicion/bancos.js';
 import { rutasDeCuentasBancarias } from './composicion/cuentas-bancarias.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
+import { rutasDeTransferencias } from './composicion/transferencias.js';
 // generador: importaciones
 
 /** Cuentas bancarias, notas, cheques y conciliaciones de cada empresa. Ver `docs/modulos/bancos.md`. */
@@ -25,6 +26,8 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.movimientos.gestionar', descripcion: 'Registrar y corregir movimientos' },
     { clave: 'bancos.movimientos.anular', descripcion: 'Anular movimientos' },
     { clave: 'bancos.movimientos.importar', descripcion: 'Importar movimientos desde Excel' },
+    { clave: 'bancos.transferencias.gestionar', descripcion: 'Registrar transferencias entre cuentas propias' },
+    { clave: 'bancos.transferencias.anular', descripcion: 'Anular transferencias' },
     // generador: permisos
   ],
   configuracion: [
@@ -49,6 +52,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeBancos(),
     rutasDeCuentasBancarias(),
     rutasDeMovimientos(),
+    rutasDeTransferencias(),
     // generador: rutas
   ]),
 };

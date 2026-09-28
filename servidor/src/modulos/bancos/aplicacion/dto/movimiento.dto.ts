@@ -12,12 +12,14 @@ export interface MovimientoDto {
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
   cuentaBancariaNombre: string | null;
+  /** La transferencia que lo creó, si es una de sus dos notas; si no, `null`. */
+  transferenciaId: string | null;
 }
 
 /** Lo que se recibe para registrar o corregir un movimiento, ya validado en su forma. */
 export type SolicitudDeMovimiento = Omit<
   MovimientoDto,
-  'id' | 'anuladoEn' | 'motivoDeAnulacion' | 'cuentaBancariaNombre'
+  'id' | 'anuladoEn' | 'motivoDeAnulacion' | 'cuentaBancariaNombre' | 'transferenciaId'
 >;
 
 /** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */

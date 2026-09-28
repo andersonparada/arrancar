@@ -36,6 +36,13 @@
       "when": 1790573692138,
       "tag": "0004_reglas_de_movimientos",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790578365113,
+      "tag": "0005_transferencias",
+      "breakpoints": true
     }
   ]
 }

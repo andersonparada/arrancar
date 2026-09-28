@@ -15,6 +15,7 @@ import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../.
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { esquemaBancos } from './esquema.tablas.js';
+import { transferencias } from './transferencias.tablas.js';
 
 /**
  * Las notas de crédito y de débito de cada cuenta. El monto siempre es positivo
@@ -40,11 +41,14 @@ export const movimientos = esquemaBancos.table(
     observaciones: text(),
     anuladoEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
+    /** La transferencia que la creó, si es una de sus dos notas. */
+    transferenciaId: uuid().references((): AnyPgColumn => transferencias.id),
     ...marcasDeTiempo,
     ...autoria,
   },
   (t) => [
     index('movimientos_cuenta_fecha_idx').on(t.cuentaBancariaId, t.fecha),
+    index('movimientos_transferencia_idx').on(t.transferenciaId),
     uniqueIndex('movimientos_un_saldo_inicial')
       .on(t.cuentaBancariaId)
       .where(sql`${t.saldoInicial} and ${t.anuladoEn} is null`),

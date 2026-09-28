@@ -18,6 +18,7 @@ const movimiento: Movimiento = {
   cuentaBancariaNombre: null,
   anuladoEn: null,
   motivoDeAnulacion: null,
+  transferenciaId: null,
 };
 
 describe('ventana de movimientos', () => {

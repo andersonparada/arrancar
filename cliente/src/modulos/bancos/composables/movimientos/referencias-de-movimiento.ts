@@ -25,5 +25,5 @@ export function usarReferenciasDeMovimiento() {
     { valor: null, texto: 'Todas' },
     ...cuentasBancarias.value.map((cuentaBancaria) => ({ valor: cuentaBancaria.id, texto: cuentaBancaria.nombre })),
   ]);
-  return { campos, filtroDeCuenta };
+  return { campos, filtroDeCuenta, cuentasBancarias };
 }

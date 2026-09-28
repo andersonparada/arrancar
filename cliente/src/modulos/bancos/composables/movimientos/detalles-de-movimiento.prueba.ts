@@ -19,6 +19,7 @@ const base: Movimiento = {
   cuentaBancariaNombre: 'Cuenta monetaria',
   anuladoEn: null,
   motivoDeAnulacion: null,
+  transferenciaId: null,
 };
 
 describe('título del movimiento', () => {

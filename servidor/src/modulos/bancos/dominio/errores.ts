@@ -63,3 +63,27 @@ export class SaldoInsuficiente extends ReglaDeNegocioInfringida {
     super(`La cuenta quedaría con saldo de Q ${saldoQueQuedaria} y esta empresa no permite sobregiros.`);
   }
 }
+
+export class TransferenciaALaMismaCuenta extends DatoInvalido {
+  readonly codigo = 'transferencia_a_la_misma_cuenta';
+
+  constructor() {
+    super('El origen y el destino de una transferencia deben ser cuentas distintas.');
+  }
+}
+
+export class TransferenciaAnulada extends ReglaDeNegocioInfringida {
+  readonly codigo = 'transferencia_anulada';
+
+  constructor() {
+    super('Esta transferencia ya está anulada.');
+  }
+}
+
+export class MovimientoDeTransferencia extends ReglaDeNegocioInfringida {
+  readonly codigo = 'movimiento_de_transferencia';
+
+  constructor() {
+    super('Esta nota es parte de una transferencia: anule la transferencia.');
+  }
+}

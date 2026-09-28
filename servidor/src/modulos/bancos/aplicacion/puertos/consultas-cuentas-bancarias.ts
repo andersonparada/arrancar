@@ -7,4 +7,6 @@ export interface ConsultasCuentasBancarias {
   obtener(cuentaBancariaId: string): Promise<CuentaBancariaDto>;
   /** @throws RecursoNoEncontrado si algo que se eligió no existe o es ajeno. */
   exigirReferencias(solicitud: SolicitudDeCuentaBancaria): Promise<void>;
+  /** @throws RecursoNoEncontrado si no existe o no es de la empresa. */
+  nombreDe(cuentaBancariaId: string): Promise<string>;
 }
