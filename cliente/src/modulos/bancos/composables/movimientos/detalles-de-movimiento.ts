@@ -7,16 +7,20 @@ import type { Movimiento } from '../../servicios/movimientos.api';
 export const CLASE_DE_TIPO: Record<Movimiento['tipo'], string> = {
   credito: 'text-campo-700 dark:text-campo-400',
   debito: 'text-red-700 dark:text-red-400',
+  cheque: 'text-red-700 dark:text-red-400',
 };
 
 export const SIGNO_DE_TIPO: Record<Movimiento['tipo'], string> = {
   credito: '+',
   debito: '−',
+  cheque: '−',
 };
 
-/** El título de la tarjeta: el saldo inicial se distingue de una nota normal. */
-export const tituloDeMovimiento = (registro: Pick<Movimiento, 'tipo' | 'saldoInicial'>): string =>
-  registro.saldoInicial ? 'Saldo inicial' : OPCIONES_DE_TIPO[registro.tipo];
+/** El título de la tarjeta: un cheque muestra su número; el saldo inicial se distingue de una nota normal. */
+export const tituloDeMovimiento = (registro: Pick<Movimiento, 'tipo' | 'saldoInicial' | 'numeroDeCheque'>): string => {
+  if (registro.tipo === 'cheque') return `Cheque No. ${registro.numeroDeCheque ?? ''}`;
+  return registro.saldoInicial ? 'Saldo inicial' : OPCIONES_DE_TIPO[registro.tipo];
+};
 
 /** Lo que muestra la tarjeta del movimiento; el monto va aparte, destacado y con color. */
 export function detallesDeMovimiento(registro: Movimiento): DetalleDeRegistro[] {

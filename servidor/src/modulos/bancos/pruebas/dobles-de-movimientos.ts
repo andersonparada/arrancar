@@ -11,7 +11,14 @@ const copia = (movimiento: Movimiento) => Movimiento.reconstruir(movimiento.inst
 
 function aDto(movimiento: Movimiento): MovimientoDto {
   const { id, empresaId: _empresaId, anuladoEn, ...datos } = movimiento.instantanea();
-  return { ...datos, id: id.valor, anuladoEn: anuladoEn?.toISOString() ?? null, cuentaBancariaNombre: null };
+  return {
+    ...datos,
+    id: id.valor,
+    anuladoEn: anuladoEn?.toISOString() ?? null,
+    cuentaBancariaNombre: null,
+    chequeId: null,
+    numeroDeCheque: null,
+  };
 }
 
 const cumple =

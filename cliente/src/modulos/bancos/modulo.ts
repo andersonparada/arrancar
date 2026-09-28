@@ -45,6 +45,13 @@ export const moduloBancos: DefinicionModuloCliente = {
       component: () => import('./paginas/ListaDeMovimientos.vue'),
       meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.movimientos.titulo },
     },
+    {
+      path: '/bancos/chequeras/:chequeraId',
+      name: 'bancos.chequeras.ficha',
+      component: () => import('./paginas/FichaDeChequera.vue'),
+      props: true,
+      meta: { permiso: 'bancos.cuentas-bancarias.ver', titulo: 'Cheques de la chequera' },
+    },
     // generador: rutas
   ],
   menu: [

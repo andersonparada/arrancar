@@ -1,14 +1,20 @@
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { aCentavos } from './centavos.js';
-import { MontoInvalido, MotivoDeAnulacionInvalido, MovimientoAnulado, MovimientoDeTransferencia } from './errores.js';
+import {
+  MontoInvalido,
+  MotivoDeAnulacionInvalido,
+  MovimientoAnulado,
+  MovimientoDeCheque,
+  MovimientoDeTransferencia,
+} from './errores.js';
 
 export type MovimientoId = Identificador<'Movimiento'>;
 
 /** Lo que el usuario puede escribir de un movimiento. */
 export interface DatosDeMovimiento {
   cuentaBancariaId: string;
-  tipo: 'credito' | 'debito';
+  tipo: 'credito' | 'debito' | 'cheque';
   fecha: string;
   monto: string;
   saldoInicial: boolean;
@@ -92,6 +98,15 @@ export class Movimiento extends Entidad<MovimientoId> {
     this.anularSinRevisar(motivo);
   }
 
+  /**
+   * Anula la nota porque se anuló su cheque: la única forma de anular una nota
+   * que es un cheque.
+   * @throws MovimientoAnulado si ya está anulado; MotivoDeAnulacionInvalido si falta el motivo.
+   */
+  anularPorCheque(motivo: string): void {
+    this.anularSinRevisar(motivo);
+  }
+
   get estaAnulado(): boolean {
     return this.propiedades.anuladoEn !== null;
   }
@@ -121,5 +136,6 @@ export class Movimiento extends Entidad<MovimientoId> {
 
   private exigirSuelto(): void {
     if (this.propiedades.transferenciaId) throw new MovimientoDeTransferencia();
+    if (this.propiedades.tipo === 'cheque') throw new MovimientoDeCheque();
   }
 }

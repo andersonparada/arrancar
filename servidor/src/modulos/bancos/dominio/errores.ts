@@ -87,3 +87,59 @@ export class MovimientoDeTransferencia extends ReglaDeNegocioInfringida {
     super('Esta nota es parte de una transferencia: anule la transferencia.');
   }
 }
+
+export class MovimientoDeCheque extends ReglaDeNegocioInfringida {
+  readonly codigo = 'movimiento_de_cheque';
+
+  constructor() {
+    super('Este movimiento es un cheque: anule el cheque.');
+  }
+}
+
+export class ChequeraDemasiadoGrande extends DatoInvalido {
+  readonly codigo = 'chequera_demasiado_grande';
+
+  constructor(maximo: number) {
+    super(`Una chequera no puede tener más de ${maximo} cheques.`);
+  }
+}
+
+export class RangoDeChequesTraslapado extends ReglaDeNegocioInfringida {
+  readonly codigo = 'rango_de_cheques_traslapado';
+
+  constructor() {
+    super('Ese rango de cheques se traslapa con otra chequera de la misma cuenta.');
+  }
+}
+
+export class ChequeraInactiva extends ReglaDeNegocioInfringida {
+  readonly codigo = 'chequera_inactiva';
+
+  constructor() {
+    super('La chequera está inactiva: no se le pueden emitir cheques.');
+  }
+}
+
+export class ChequeNoDisponible extends ReglaDeNegocioInfringida {
+  readonly codigo = 'cheque_no_disponible';
+
+  constructor() {
+    super('Este cheque no está disponible.');
+  }
+}
+
+export class ChequeAnulado extends ReglaDeNegocioInfringida {
+  readonly codigo = 'cheque_anulado';
+
+  constructor() {
+    super('Este cheque ya está anulado.');
+  }
+}
+
+export class BeneficiarioObligatorio extends DatoInvalido {
+  readonly codigo = 'beneficiario_obligatorio';
+
+  constructor() {
+    super('Escriba el beneficiario del cheque.');
+  }
+}

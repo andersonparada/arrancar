@@ -24,9 +24,12 @@ const insignia = computed(() => {
   if (props.registro.transferenciaId) return 'Transferencia';
   return undefined;
 });
-const permisoDeAnular = computed(() =>
-  props.registro.transferenciaId ? 'bancos.transferencias.anular' : 'bancos.movimientos.anular',
-);
+const permisoDeAnular = computed(() => {
+  if (props.registro.transferenciaId) return 'bancos.transferencias.anular';
+  if (props.registro.tipo === 'cheque') return 'bancos.cheques.anular';
+  return 'bancos.movimientos.anular';
+});
+const sinEditar = computed(() => !!props.registro.transferenciaId || props.registro.tipo === 'cheque');
 </script>
 
 <template>
@@ -36,7 +39,7 @@ const permisoDeAnular = computed(() =>
     permiso="bancos.movimientos.gestionar"
     :insignia="insignia"
     :solo-lectura="!!registro.anuladoEn"
-    :sin-editar="!!registro.transferenciaId"
+    :sin-editar="sinEditar"
     @editar="emit('editar')"
   >
     <template #destacado>

@@ -43,6 +43,13 @@
       "when": 1790578365113,
       "tag": "0005_transferencias",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790588133981,
+      "tag": "0006_chequeras_y_cheques",
+      "breakpoints": true
     }
   ]
 }

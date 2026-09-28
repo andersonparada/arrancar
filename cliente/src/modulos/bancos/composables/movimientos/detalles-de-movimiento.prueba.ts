@@ -20,16 +20,22 @@ const base: Movimiento = {
   anuladoEn: null,
   motivoDeAnulacion: null,
   transferenciaId: null,
+  chequeId: null,
+  numeroDeCheque: null,
 };
 
 describe('título del movimiento', () => {
   it('es "Nota de crédito" o "Nota de débito" según el tipo', () => {
-    expect(tituloDeMovimiento({ tipo: 'credito', saldoInicial: false })).toBe('Nota de crédito');
-    expect(tituloDeMovimiento({ tipo: 'debito', saldoInicial: false })).toBe('Nota de débito');
+    expect(tituloDeMovimiento({ tipo: 'credito', saldoInicial: false, numeroDeCheque: null })).toBe('Nota de crédito');
+    expect(tituloDeMovimiento({ tipo: 'debito', saldoInicial: false, numeroDeCheque: null })).toBe('Nota de débito');
   });
 
   it('es "Saldo inicial" cuando lo es, sin importar el tipo', () => {
-    expect(tituloDeMovimiento({ tipo: 'credito', saldoInicial: true })).toBe('Saldo inicial');
+    expect(tituloDeMovimiento({ tipo: 'credito', saldoInicial: true, numeroDeCheque: null })).toBe('Saldo inicial');
+  });
+
+  it('es "Cheque No. <número>" cuando el tipo es cheque', () => {
+    expect(tituloDeMovimiento({ tipo: 'cheque', saldoInicial: false, numeroDeCheque: 7 })).toBe('Cheque No. 7');
   });
 });
 

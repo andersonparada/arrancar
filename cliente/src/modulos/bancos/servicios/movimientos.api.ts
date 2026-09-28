@@ -5,7 +5,7 @@ import { intercambioDe } from '@/modulos/core/servicios/intercambio';
 export interface Movimiento {
   id: string;
   cuentaBancariaId: string;
-  tipo: 'credito' | 'debito';
+  tipo: 'credito' | 'debito' | 'cheque';
   fecha: string;
   monto: string;
   saldoInicial: boolean;
@@ -17,12 +17,16 @@ export interface Movimiento {
   motivoDeAnulacion: string | null;
   /** La transferencia que lo creó, si es una de sus dos notas; si no, `null`. */
   transferenciaId: string | null;
+  /** El cheque que lo creó, si es tipo `cheque`; si no, `null`. */
+  chequeId: string | null;
+  numeroDeCheque: number | null;
 }
 
+/** La API nunca acepta `tipo: 'cheque'`: un cheque se registra desde la ventana de emitir. */
 export type DatosMovimiento = Omit<
   Movimiento,
-  'id' | 'cuentaBancariaNombre' | 'anuladoEn' | 'motivoDeAnulacion' | 'transferenciaId'
->;
+  'id' | 'cuentaBancariaNombre' | 'anuladoEn' | 'motivoDeAnulacion' | 'transferenciaId' | 'chequeId' | 'numeroDeCheque'
+> & { tipo: 'credito' | 'debito' };
 
 /** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */
 export interface FiltroDeMovimientos {

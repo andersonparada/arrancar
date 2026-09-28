@@ -5,14 +5,21 @@ import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { FiltroDeMovimientos, MovimientoDto, SolicitudDeMovimiento } from '../../aplicacion/dto/movimiento.dto.js';
 import type { ConsultasMovimientos } from '../../aplicacion/puertos/consultas-movimientos.js';
+import { cheques } from './cheques.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { mapeadorDeMovimiento } from './movimiento.mapeador.js';
 import { movimientos } from './movimientos.tablas.js';
 import { saldoVigente } from './saldo-vigente.js';
 
 const cuentaBancaria = alias(cuentasBancarias, 'cuenta_bancaria');
+const chequeDelMovimiento = alias(cheques, 'cheque_del_movimiento');
 
-const columnas = { ...getTableColumns(movimientos), cuentaBancariaNombre: cuentaBancaria.nombre };
+const columnas = {
+  ...getTableColumns(movimientos),
+  cuentaBancariaNombre: cuentaBancaria.nombre,
+  chequeId: chequeDelMovimiento.id,
+  numeroDeCheque: chequeDelMovimiento.numero,
+};
 
 /** Los movimientos vigentes de una cuenta, sin contar uno (el que se corrige). */
 const vigentesDe = (cuentaBancariaId: string, excluir?: string, ...mas: SQL[]) =>
@@ -88,6 +95,7 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
     return transaccionEnCurso()
       .select(columnas)
       .from(movimientos)
-      .leftJoin(cuentaBancaria, eq(movimientos.cuentaBancariaId, cuentaBancaria.id));
+      .leftJoin(cuentaBancaria, eq(movimientos.cuentaBancariaId, cuentaBancaria.id))
+      .leftJoin(chequeDelMovimiento, eq(chequeDelMovimiento.movimientoId, movimientos.id));
   }
 }

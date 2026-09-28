@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { definirConfiguracion, type DefinicionModulo } from '../core/modulos-sistema/definicion-modulo.js';
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeBancos } from './composicion/bancos.js';
+import { rutasDeChequeras } from './composicion/chequeras.js';
+import { rutasDeCheques } from './composicion/cheques.js';
 import { rutasDeCuentasBancarias } from './composicion/cuentas-bancarias.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { rutasDeTransferencias } from './composicion/transferencias.js';
@@ -28,6 +30,9 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.movimientos.importar', descripcion: 'Importar movimientos desde Excel' },
     { clave: 'bancos.transferencias.gestionar', descripcion: 'Registrar transferencias entre cuentas propias' },
     { clave: 'bancos.transferencias.anular', descripcion: 'Anular transferencias' },
+    { clave: 'bancos.chequeras.gestionar', descripcion: 'Crear e inactivar chequeras' },
+    { clave: 'bancos.cheques.emitir', descripcion: 'Emitir cheques' },
+    { clave: 'bancos.cheques.anular', descripcion: 'Anular cheques' },
     // generador: permisos
   ],
   configuracion: [
@@ -53,6 +58,8 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeCuentasBancarias(),
     rutasDeMovimientos(),
     rutasDeTransferencias(),
+    rutasDeChequeras(),
+    rutasDeCheques(),
     // generador: rutas
   ]),
 };

@@ -392,6 +392,64 @@ ver en movimientos con los saldos, obtener por id, anular con las dos notas,
   (operación). Permisos `bancos.chequeras.gestionar`, `bancos.cheques.emitir` y
   `bancos.cheques.anular`. La impresión del cheque queda para después.
 
+**B4 hecho (2026-09-28).** Servidor y cliente, completados sobre el patrón de
+Movimientos y Transferencias:
+
+- Tablas `bancos.chequeras` (serie, `desde`, `hasta`, `activa`, autoría; checks
+  `desde > 0` y `hasta >= desde`) y `bancos.cheques` (chequera, número, estado,
+  `no_negociable`, `movimiento_id` opcional, `anulado_en`, `motivo_de_anulacion`;
+  único `(chequera_id, numero)`); `bancos.movimientos` gana el tipo `cheque` en su
+  check y en el tipo TS. **Decisión:** en vez de una columna `cheque_id` en
+  `movimientos` (que habría obligado a un import circular entre
+  `movimientos.tablas.ts` y `cheques.tablas.ts`), el dominio distingue una nota de
+  cheque por `tipo === 'cheque'` y `MovimientoDto.chequeId`/`numeroDeCheque` salen
+  de un `LEFT JOIN` con `cheques.movimiento_id` en `ConsultasMovimientosDrizzle`.
+  Migración `0006_chequeras_y_cheques.sql`, generada con `bd:generar` y aplicada.
+- Dominio: `Chequera` (rango, `ChequeraDemasiadoGrande` contra
+  `bancos.chequeras.maximo_cheques` vía el puerto `LimiteDeChequera`,
+  inactivar/reactivar) y `Cheque` (`emitir`, `anular`, con `ChequeNoDisponible` y
+  `ChequeAnulado`). `Movimiento.corregir`/`anular` rechazan un movimiento
+  `tipo === 'cheque'` con `MovimientoDeCheque`, igual que una nota de
+  transferencia; `anularPorCheque` es el modo interno que sí lo anula.
+- Casos de uso: `CrearChequera` (cuenta activa, sin traslape por cuenta y serie,
+  inserción masiva de sus cheques con `RepositorioCheques.agregarVarios`),
+  `CambiarEstadoDeChequera` (con `auditarCambioDeEstado`), `ListarChequeras`,
+  `ListarCheques`, `SiguienteChequeDisponible` (menor número disponible por serie
+  y número entre las chequeras activas de la cuenta), `EmitirCheque` (una unidad
+  de trabajo: cheque disponible + chequera activa + cuenta activa +
+  `ReglasDeLaCuenta`; referencia por omisión `"Cheque <serie><número>"`;
+  beneficiario obligatorio con `BeneficiarioObligatorio`) y `AnularCheque` (si
+  estaba emitido, también anula su movimiento revisando `ReglasDeLaCuenta`).
+- HTTP: `GET/POST /bancos/cuentas-bancarias/:id/chequeras`, `POST
+  /bancos/chequeras/:id/inactivar|reactivar`, `GET /bancos/chequeras/:id/cheques`,
+  `GET /bancos/cuentas-bancarias/:id/siguiente-cheque`, `POST
+  /bancos/cheques/:id/emitir` y `POST /bancos/cheques/:id/anular`; sin Excel. El
+  esquema Zod de movimientos sigue aceptando solo `credito|debito`.
+- Pruebas del servidor: 21 unitarias con dobles (`ChequerasEnMemoria` y
+  `ChequesEnMemoria`, vinculadas entre sí para `siguienteDisponible` y los
+  conteos por estado) — 9 de chequeras y 12 de cheques — más 5 de API en
+  `bancos-cheques.api.prueba.ts` (crear chequera de 1 a 50, ver cheques, siguiente
+  disponible, emitir y verlo en movimientos con el saldo, anular, 403 sin
+  permisos). `npm run probar -w servidor`: 387 pruebas, todas en verde.
+- Cliente: sección "Chequeras" en la ficha de la cuenta (`SeccionDeChequeras.vue`,
+  `TarjetaDeChequera.vue`, `VentanaDeChequera.vue`) con "Nueva chequera" e
+  inactivar/reactivar (confirmación con `usarAvisos().confirmar`, sin ventana de
+  motivo: no es una anulación); página `/bancos/chequeras/:chequeraId`
+  (`FichaDeChequera.vue`) con filtro por estado y "Anular" reusando
+  `VentanaDeAnulacion.vue`. En Movimientos, botón "Emitir cheque"
+  (`AccionesDeMovimientos.vue`, extraído para no pasar de 120 líneas en la
+  página) abre `VentanaDeCheque.vue`: al elegir la cuenta se cargan los cheques
+  disponibles de sus chequeras activas (`usarSeleccionDeCheque`) y se propone el
+  siguiente; el usuario puede elegir otro de la lista. La tarjeta de un
+  movimiento tipo cheque dice "Cheque No. <número>", no ofrece "Editar" y
+  "Anular" llama a `apiCheques.anular`. `npm run probar -w cliente`: 79 pruebas
+  (6 nuevas de `edicion-de-chequera` y `edicion-de-cheque`), todas en verde.
+- `npm run revisar` (Prettier + ESLint + `tsc`/`vue-tsc` de los tres paquetes) y
+  `npm run probar` (servidor, cliente y generador): los dos en verde.
+- Pendiente: impresión del cheque (fuera de alcance, como dice la especificación)
+  y una prueba de API específica del máximo de 5,000 cheques (no se crean
+  chequeras de esa magnitud en las pruebas de API, por instrucción explícita).
+
 ### B5 Conciliación mensual (operación, sin Excel)
 
 - `bancos.conciliaciones`: cuenta, año, mes (única por cuenta y mes),

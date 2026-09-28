@@ -1,16 +1,24 @@
 import { ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { apiCheques } from '../../servicios/cheques.api';
 import { apiMovimientos, type Movimiento } from '../../servicios/movimientos.api';
 import { apiTransferencias } from '../../servicios/transferencias.api';
 
-/** Anula un movimiento con un motivo; si es una nota de transferencia, anula la transferencia completa. */
-const anular = (movimiento: Movimiento, motivo: string) =>
-  movimiento.transferenciaId
-    ? apiTransferencias.anular(movimiento.transferenciaId, motivo)
-    : apiMovimientos.anular(movimiento.id, motivo);
+/** Anula un movimiento con un motivo; una nota de transferencia anula la transferencia y un cheque, el cheque. */
+function anular(movimiento: Movimiento, motivo: string) {
+  if (movimiento.transferenciaId) return apiTransferencias.anular(movimiento.transferenciaId, motivo);
+  if (movimiento.chequeId) return apiCheques.anular(movimiento.chequeId, motivo);
+  return apiMovimientos.anular(movimiento.id, motivo);
+}
 
-/** Anula un movimiento (o su transferencia) en su propia ventana; no se puede deshacer. */
+function mensajeDeExito(movimiento: Movimiento): string {
+  if (movimiento.transferenciaId) return 'Transferencia anulada.';
+  if (movimiento.chequeId) return 'Cheque anulado.';
+  return 'Movimiento anulado.';
+}
+
+/** Anula un movimiento (o su transferencia, o su cheque) en su propia ventana; no se puede deshacer. */
 export function usarAnulacionDeMovimiento(alAnular: () => Promise<void>) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
@@ -31,7 +39,7 @@ export function usarAnulacionDeMovimiento(alAnular: () => Promise<void>) {
     const movimiento = registro.value;
     if (!movimiento) return;
     if (!(await enviar(() => anular(movimiento, motivo.value)))) return;
-    avisos.exito(movimiento.transferenciaId ? 'Transferencia anulada.' : 'Movimiento anulado.');
+    avisos.exito(mensajeDeExito(movimiento));
     cerrar();
     await alAnular();
   }

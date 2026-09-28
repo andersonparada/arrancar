@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { ArrowLeftRight, Inbox, Plus } from 'lucide-vue-next';
-import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+import { Inbox } from 'lucide-vue-next';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/AccionesDeIntercambio.vue';
 import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
-import { computed } from 'vue';
 import VentanaDeAnulacion from '../componentes/VentanaDeAnulacion.vue';
+import AccionesDeMovimientos from '../componentes/movimientos/AccionesDeMovimientos.vue';
 import FiltrosDeMovimientos from '../componentes/movimientos/FiltrosDeMovimientos.vue';
 import TarjetaDeMovimiento from '../componentes/movimientos/TarjetaDeMovimiento.vue';
 import VentanaDeMovimiento from '../componentes/movimientos/VentanaDeMovimiento.vue';
+import VentanaDeCheque from '../componentes/cheques/VentanaDeCheque.vue';
 import VentanaDeTransferencia from '../componentes/transferencias/VentanaDeTransferencia.vue';
 import { usarAnulacionDeMovimiento } from '../composables/movimientos/usar-anulacion-de-movimiento';
+import { textoDeAnulacion, tituloDeAnulacion } from '../composables/movimientos/textos-de-anulacion';
 import { usarMovimientos } from '../composables/movimientos/usar-movimientos';
 import { VENTANAS_BANCOS } from '../textos';
 
@@ -33,6 +34,7 @@ const {
   cargar,
   transferencia,
   referenciasDeTransferencia,
+  cheque,
 } = usarMovimientos();
 const {
   registro: movimientoAAnular,
@@ -43,37 +45,18 @@ const {
   cerrar: cerrarAnulacion,
   confirmar: confirmarAnulacion,
 } = usarAnulacionDeMovimiento(cargar);
-
-const textoDeAnulacion = computed(() =>
-  movimientoAAnular.value?.transferenciaId
-    ? '¿Anular esta transferencia? Se anulan sus dos notas. Esta acción no se puede deshacer.'
-    : `¿Anular el movimiento «${movimientoAAnular.value?.referencia ?? ''}»? Esta acción no se puede deshacer.`,
-);
 </script>
 
 <template>
   <div>
     <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion">
       <AccionesDeIntercambio :permisos="PERMISOS_DE_INTERCAMBIO" @importar="intercambio.abrir" />
-      <BotonBase
-        v-permiso="'bancos.movimientos.gestionar'"
-        variante="secundario"
-        :icono="Plus"
-        @click="nuevo('credito')"
-      >
-        Nota de crédito
-      </BotonBase>
-      <BotonBase v-permiso="'bancos.movimientos.gestionar'" :icono="Plus" @click="nuevo('debito')">
-        Nota de débito
-      </BotonBase>
-      <BotonBase
-        v-permiso="'bancos.transferencias.gestionar'"
-        variante="secundario"
-        :icono="ArrowLeftRight"
-        @click="transferencia.nueva()"
-      >
-        Transferencia
-      </BotonBase>
+      <AccionesDeMovimientos
+        @credito="nuevo('credito')"
+        @debito="nuevo('debito')"
+        @transferencia="transferencia.nueva()"
+        @cheque="cheque.nueva()"
+      />
     </EncabezadoPagina>
 
     <FiltrosDeMovimientos v-model="filtros" :opciones-de-cuenta="opcionesDeCuenta" />
@@ -97,8 +80,8 @@ const textoDeAnulacion = computed(() =>
     <VentanaDeAnulacion
       v-model:motivo="motivoDeAnulacion"
       :abierta="!!movimientoAAnular"
-      :titulo="movimientoAAnular?.transferenciaId ? 'Anular transferencia' : 'Anular movimiento'"
-      :texto="textoDeAnulacion"
+      :titulo="tituloDeAnulacion(movimientoAAnular)"
+      :texto="textoDeAnulacion(movimientoAAnular)"
       :errores="erroresDeAnulacion"
       :enviando="anulando"
       @cerrar="cerrarAnulacion"
@@ -111,6 +94,15 @@ const textoDeAnulacion = computed(() =>
       :enviando="transferencia.enviando.value"
       @cerrar="transferencia.edicion.value.abierta = false"
       @guardar="transferencia.guardar"
+    />
+    <VentanaDeCheque
+      v-model="cheque.edicion.value"
+      :referencias="referencias"
+      :opciones-de-cheque="cheque.opcionesDeCheque.value"
+      :errores="cheque.errores.value"
+      :enviando="cheque.enviando.value"
+      @cerrar="cheque.edicion.value.abierta = false"
+      @guardar="cheque.guardar"
     />
     <VentanaDeImportacion
       :estado="intercambio.estado"

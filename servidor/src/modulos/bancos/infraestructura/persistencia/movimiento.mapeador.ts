@@ -28,7 +28,7 @@ export const mapeadorDeMovimiento = {
     actualizadoPor,
     anuladoEn,
     ...dto
-  }: Fila & Pick<MovimientoDto, 'cuentaBancariaNombre'>): MovimientoDto {
+  }: Fila & Pick<MovimientoDto, 'cuentaBancariaNombre' | 'chequeId' | 'numeroDeCheque'>): MovimientoDto {
     return {
       ...dto,
       anuladoEn: anuladoEn ? anuladoEn.toISOString() : null,

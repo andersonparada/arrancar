@@ -19,6 +19,8 @@ const movimiento: Movimiento = {
   anuladoEn: null,
   motivoDeAnulacion: null,
   transferenciaId: null,
+  chequeId: null,
+  numeroDeCheque: null,
 };
 
 describe('ventana de movimientos', () => {

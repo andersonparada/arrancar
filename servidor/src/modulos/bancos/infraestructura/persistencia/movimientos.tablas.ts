@@ -32,7 +32,7 @@ export const movimientos = esquemaBancos.table(
     cuentaBancariaId: uuid()
       .references((): AnyPgColumn => cuentasBancarias.id)
       .notNull(),
-    tipo: text().$type<'credito' | 'debito'>().notNull(),
+    tipo: text().$type<'credito' | 'debito' | 'cheque'>().notNull(),
     fecha: date().notNull(),
     monto: numeric({ precision: 14, scale: 2 }).notNull(),
     saldoInicial: boolean().default(false).notNull(),
@@ -53,7 +53,7 @@ export const movimientos = esquemaBancos.table(
       .on(t.cuentaBancariaId)
       .where(sql`${t.saldoInicial} and ${t.anuladoEn} is null`),
     check('movimientos_monto_positivo', sql`${t.monto} > 0`),
-    check('movimientos_tipo_valido', sql`${t.tipo} in ('credito', 'debito')`),
+    check('movimientos_tipo_valido', sql`${t.tipo} in ('credito', 'debito', 'cheque')`),
     politicaPorEmpresa(),
   ],
 );

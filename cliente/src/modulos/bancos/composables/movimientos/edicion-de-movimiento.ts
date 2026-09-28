@@ -28,14 +28,17 @@ const MOVIMIENTO_NUEVO: Omit<EdicionDeMovimiento, 'abierta' | 'id'> = {
   observaciones: '',
 };
 
-/** La ventana abierta con los datos del movimiento, o vacía (con `tipo`) si es nuevo. */
+/**
+ * La ventana abierta con los datos del movimiento, o vacía (con `tipo`) si es
+ * nuevo. Un cheque nunca llega aquí: su tarjeta no ofrece "Editar".
+ */
 export function edicionDe(movimiento?: Movimiento, tipo: 'credito' | 'debito' = 'credito'): EdicionDeMovimiento {
   if (!movimiento) return { abierta: true, id: null, ...MOVIMIENTO_NUEVO, tipo };
   return {
     abierta: true,
     id: movimiento.id,
     cuentaBancariaId: movimiento.cuentaBancariaId,
-    tipo: movimiento.tipo,
+    tipo: movimiento.tipo === 'credito' ? 'credito' : 'debito',
     fecha: textoDeEdicion(movimiento.fecha),
     monto: textoDeEdicion(movimiento.monto),
     saldoInicial: movimiento.saldoInicial,
