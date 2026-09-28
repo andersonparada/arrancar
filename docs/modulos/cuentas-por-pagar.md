@@ -65,18 +65,19 @@ Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte 
 | Órdenes de compra | No hacen falta. Cuando exista *Compras*, la factura podrá apuntar a una orden. |
 | Permisos entre módulos | El permiso de pagar de este módulo basta para crear el cheque o la nota en *Bancos*; no se pide el permiso de Bancos. |
 
-## Propuestas a confirmar
+## Reglas de contraseñas, pagos y anulaciones
 
-| Tema | Propuesta |
+| Tema | Decisión |
 |---|---|
 | Número de contraseña | Correlativo **por empresa**, lo asigna el sistema. |
 | Contenido de la contraseña | Solo documentos autorizados, del mismo proveedor, que no estén en otra contraseña vigente. |
-| Reparto de los pagos | Un pago de la contraseña se reparte entre sus facturas **por vencimiento** (la más antigua primero), para que la antigüedad de saldos sea exacta por factura. |
+| Qué cubre cada pago | El **usuario elige** qué facturas de la contraseña paga (una o varias) y cuánto a cada una. |
 | Retenciones en el pago | Se descuentan del saldo de la contraseña, así que el proveedor recibe el neto. |
 | Anular una factura | Solo si no está en una contraseña vigente. Si estaba autorizada y hay *Contabilidad*, se publica el evento para revertir la partida. Libera el número del documento. |
 | Anular una contraseña | Solo si no tiene pagos vigentes; libera sus documentos. |
-| Anular un pago | Desde **Cuentas por pagar**: anula el cheque o la nota de débito en *Bancos* en la misma transacción. En *Bancos*, esos movimientos se ven con su origen y **no se anulan desde allá** (mensaje: «anúlelo desde el pago en Cuentas por pagar»). |
-| Mes conciliado | Un pago no se anula si su movimiento está en un mes conciliado de *Bancos* (ya lo impide Bancos). |
+| Anular un pago desde Cuentas por pagar | Anula también el cheque o la nota de débito en *Bancos*, en la misma transacción. |
+| Anular el cheque o la nota desde Bancos | **Se permite.** En la misma transacción, *Bancos* avisa al módulo que lo emitió y ese módulo **revierte lo suyo** (aquí: anula el pago y devuelve el saldo a las facturas). Si ese módulo no está activo, se anula solo en *Bancos* y queda en la auditoría. |
+| Mes conciliado | No se anula un movimiento de un mes conciliado de *Bancos* (ya lo impide Bancos), venga de donde venga. |
 
 ## Tablas (esquema `cuentas_por_pagar`)
 
@@ -107,6 +108,9 @@ Los días de crédito los guarda el módulo *Clientes* con el proveedor.
   deja el documento en la bandeja.
 - Envía a *Bancos* las órdenes `EmitirCheque`, `RegistrarNotaDeDebito` y
   `AnularMovimientoDeOrigen`.
+- Escucha, **dentro de la transacción**, el aviso de *Bancos*
+  `MovimientoDeOrigenAnulado` (origen = este módulo): anula el pago y devuelve el
+  saldo a sus facturas.
 - Publica: `…factura_autorizada`, `…factura_anulada`,
   `…nota_de_credito_autorizada`, `…nota_de_credito_anulada`, `…pago_emitido` y
   `…pago_anulado`, con lo que necesite *Contabilidad*.
@@ -129,14 +133,17 @@ Los días de crédito los guarda el módulo *Clientes* con el proveedor.
 
 ## Pasos (un commit cada uno)
 
-*Libro de compras* L0 a L3 van primero (ver su documento).
+*Libro de compras* L0 a L3 van primero (ver su documento). El módulo y sus
+ventanas se crean con el **generador** (`npm run generar -- modulo`, `definicion` y
+`recurso`) y se completan a mano.
 
 1. **CP1 Bandeja y facturas**: días de crédito en Proveedores, recibir documentos,
    completar, autorizar con separación de funciones y anular.
 2. **CP2 Notas de crédito**.
 3. **CP3 Contraseñas**: crear, imprimir y anular.
 4. **CP4 Pagos**: órdenes a *Bancos* para emitir y anular cheques y notas de débito
-   con origen, más el bloqueo de anulación desde Bancos. Reparto por vencimiento.
+   con origen; el aviso de Bancos cuando se anulan desde allá. El usuario elige las
+   facturas y montos de cada pago.
 5. **CP5 Reportes**.
 
 ## Fuera de esta versión

@@ -104,9 +104,10 @@ editar empresas:
 
 Campos que se ven **solo si Libro de compras está activo**:
 
-- **Régimen de IVA:** general o pequeño contribuyente.
-- **Régimen de ISR:** sobre utilidades, opcional simplificado, pequeño
-  contribuyente o no domiciliado.
+- **Es pequeño contribuyente** (sí o no). Los reportes (Libro de compras y
+  retenciones) **desglosan** lo comprado a pequeños contribuyentes.
+- **Régimen de ISR:** sobre utilidades, opcional simplificado o no domiciliado (el
+  pequeño contribuyente no tiene régimen de ISR aparte).
 - **Es agente de retención de IVA** (entre agentes no se retiene).
 - **Se le retiene IVA** (sí o no; por omisión según su régimen).
 - **Se le retiene ISR** (sí o no; por omisión según su régimen).
@@ -207,7 +208,11 @@ con **contratos** (mensajes con su forma y su respuesta) en `core/contratos/`:
 - **Orden** (p. ej. `RecibirDocumentoEnCuentasPorPagar`): la atiende **un solo**
   módulo, en la **misma transacción**, y devuelve un resultado. Si falla, se deshace
   todo.
-- **Evento** (p. ej. `DocumentoAnulado`): lo escuchan cero o varios módulos.
+- **Aviso** (p. ej. `MovimientoDeOrigenAnulado`): lo escuchan cero o varios
+  módulos **dentro de la misma transacción**, para revertir lo suyo; si uno falla,
+  se deshace todo. Solo lo reciben los módulos activos.
+- **Evento** (los de siempre, p. ej. `DocumentoAnulado`): se publican **después**
+  de confirmar la transacción, para reacciones que pueden ir aparte.
 - Antes de pasar una orden, el mediador revisa que el **módulo destino esté
   activo** para la cuenta.
 - La orden corre con el **mismo usuario y la misma empresa** (la seguridad por
@@ -222,6 +227,10 @@ con **contratos** (mensajes con su forma y su respuesta) en `core/contratos/`:
 - ESLint prohíbe importar otro módulo; solo `core/contratos`.
 
 ## Pasos (un commit cada uno)
+
+Los módulos y sus ventanas se crean con el **generador** (`npm run generar --
+modulo`, `definicion` y `recurso`); lo que el generador no cubra se completa a
+mano sobre lo generado.
 
 1. **L0 Mediator:** órdenes y eventos con contratos en el core, revisión del módulo
    activo, ESLint y documentación en `ARQUITECTURA.md`.
