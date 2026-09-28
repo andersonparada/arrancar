@@ -1,0 +1,12 @@
+import { usarCarga } from '@/modulos/core/composables/usar-carga';
+import { api{{Plural}}, type {{Entidad}} } from '../../servicios/{{pluralClave}}.api';
+
+/** {{LosPlural}} de {{laEmpresaOCuenta}} para la lista; cada un{{o}} lleva a su ficha. */
+export function usarListaDe{{Plural}}() {
+  const { datos: registros, cargando } = usarCarga(
+    () => api{{Plural}}.listar(),
+    [] as {{Entidad}}[],
+    'No se pudieron cargar {{losPlural}}.',
+  );
+  return { registros, cargando };
+}

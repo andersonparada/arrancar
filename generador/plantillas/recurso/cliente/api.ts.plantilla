@@ -17,6 +17,10 @@ export class Api{{Plural}} {
     return this.http.obtener<{{Entidad}}[]>(RUTA);
   }
 
+  obtener(id: string) {
+    return this.http.obtener<{{Entidad}}>(`${RUTA}/${id}`);
+  }
+
   crear(datos: Datos{{Entidad}}) {
     return this.http.crear<{{Entidad}}>(RUTA, datos);
   }

@@ -14,5 +14,5 @@ export const {{plural}} = esquema{{Modulo}}.table(
 {{columnas}}
     ...marcasDeTiempo,
   },
-  (t) => [{{indices}}politicaPor{{Alcance}}()],
+  ({{parametroDeIndices}}) => [{{indices}}politicaPor{{Alcance}}()],
 );

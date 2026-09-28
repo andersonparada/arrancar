@@ -1,0 +1,31 @@
+import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarCarga } from '@/modulos/core/composables/usar-carga';
+import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { api{{Plural}}, type Datos{{Entidad}}, type {{Entidad}} } from '../../servicios/{{pluralClave}}.api';
+import { datosDe{{Entidad}}, edicionDe } from './edicion-de-{{entidadClave}}';
+{{importacionDeReferencias}}
+const guardar{{Entidad}} = (id: string | null, datos: Datos{{Entidad}}) =>
+  id ? api{{Plural}}.actualizar(id, datos) : api{{Plural}}.crear(datos);
+
+/** Registrar {{unSingular}} o editarl{{o}} en página completa; sin id es nuev{{o}}. */
+export function usarFormularioDe{{Entidad}}({{entidad}}Id: string | null) {
+  const avisos = usarAvisos();
+  const { enviando, errores, enviar } = usarFormulario();
+  const { datos: edicion, cargando } = usarCarga(
+    async () => edicionDe({{entidad}}Id ? await api{{Plural}}.obtener({{entidad}}Id) : undefined),
+    edicionDe(),
+    'No se pudo cargar {{elSingular}}.',
+  );
+{{registrosParaReferencias}}{{cargaDeReferencias}}
+  /** @returns {{ElSingular}} guardad{{o}}, o `null` si el servidor no lo aceptó. */
+  async function guardar(): Promise<{{Entidad}} | null> {
+    let guardado: {{Entidad}} | null = null;
+    const aceptado = await enviar(async () => {
+      guardado = await guardar{{Entidad}}({{entidad}}Id, datosDe{{Entidad}}(edicion.value));
+    });
+    if (aceptado) avisos.exito({{entidad}}Id ? '{{Singular}} actualizad{{o}}.' : '{{Singular}} registrad{{o}}.');
+    return guardado;
+  }
+
+  return { edicion, cargando, enviando, errores, {{referenciasEnRetorno}}guardar };
+}

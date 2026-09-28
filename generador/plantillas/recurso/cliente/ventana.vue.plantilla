@@ -1,7 +1,8 @@
 <script setup lang="ts">
-{{importacionesDeLaVentana}}{{importacionDeOpcionesEnVentana}}import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+{{importacionDeOpcionesEnVentana}}import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import type { EdicionDe{{Entidad}} } from '../../composables/{{pluralClave}}/edicion-de-{{entidadClave}}';
+import CamposDe{{Entidad}} from './CamposDe{{Entidad}}.vue';
 
 defineProps<{ errores: Record<string, string>; enviando: boolean{{propDeReferencias}} }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
@@ -14,8 +15,8 @@ const edicion = defineModel<EdicionDe{{Entidad}}>({ required: true });
     :titulo="edicion.id ? '{{tituloEditar}}' : '{{tituloNuevo}}'"
     @cerrar="emit('cerrar')"
   >
-    <form id="form-{{entidadClave}}" class="space-y-4" @submit.prevent="emit('guardar')">
-{{controles}}
+    <form id="form-{{entidadClave}}" @submit.prevent="emit('guardar')">
+      <CamposDe{{Entidad}} v-model="edicion" :errores="errores"{{referenciasEnCampos}} />
     </form>
     <template #pie>
       <BotonBase variante="secundario" @click="emit('cerrar')">Cancelar</BotonBase>

@@ -88,7 +88,7 @@ describe('referencias en el cliente', () => {
   it('se eligen en un selector con los registros por su nombre, y la tarjeta muestra ese nombre', async () => {
     const { cliente } = await generar();
 
-    expect(cliente('componentes/animales/VentanaDeAnimal.vue')).toContain(
+    expect(cliente('componentes/animales/CamposDeAnimal.vue')).toContain(
       '<CampoSelector v-model="edicion.potreroId" etiqueta="Potrero" :opciones="referencias.potreroId" requerido',
     );
     expect(cliente('composables/animales/referencias-de-animal.ts')).toContain(

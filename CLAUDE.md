@@ -72,9 +72,12 @@ base de desarrollo debe estar levantada.
   edición reciben el objeto con `v-model` (`defineModel`) y emiten `guardar` y
   `cerrar`. Para volver atrás, `EncabezadoPagina` acepta `volver`.
 - Piezas comunes para que todas las pantallas se vean igual: `TarjetaDeRegistro`
-  (tarjeta de una lista), `utilidades/edicion.ts` (formulario ↔ API) y los
-  formatos de `utilidades/formato.ts`. Un recurso nuevo se genera con
-  `npm run generar -- recurso` en vez de escribirse a mano.
+  (tarjeta de una lista; con `destino` lleva a la ficha), `DatosDelRegistro`
+  (datos de una ficha), `utilidades/edicion.ts` (formulario ↔ API, opciones de
+  selectores) y los formatos de `utilidades/formato.ts`. Un recurso nuevo se
+  genera con `npm run generar -- recurso` en vez de escribirse a mano: de
+  catálogo (lista y ventana) o completo (lista, formulario en página y ficha);
+  sus campos viven en un solo componente `CamposDe<Entidad>`.
 - Avisos y confirmaciones con `usarAvisos()` (`exito`, `error`, `confirmar`);
   `alert`/`confirm` del navegador están prohibidos por ESLint. Fechas y números se
   muestran solo con `utilidades/formato.ts`.

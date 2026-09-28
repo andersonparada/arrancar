@@ -603,7 +603,7 @@ entrega como un commit propio.
     arquitectura actual del servidor y del cliente. 274 pruebas del servidor y 41
     del cliente; advertencias: 2, ambas del servidor (fase 8, cierre).
 - **Fase 6: hecha (2026-09-27).** El cliente no tiene advertencias de ESLint.
-- **Fase 7: en curso.**
+- **Fase 7: hecha (2026-09-27).**
   - **G1 Base y módulo (2026-09-27):** workspace `generador/` (`npm run generar`,
     con `verificar` y `probar` propios, que también corren desde la raíz).
     `definirRecurso` valida la definición (avisa de todos los problemas juntos) y la
@@ -692,6 +692,29 @@ entrega como un commit propio.
     opción." en su campo; con potrero y madre, la tarjeta los muestra por su
     nombre; eliminar un potrero en uso no lo borra y avisa. 299 pruebas del
     servidor, 51 del cliente y 34 del generador.
+  - **G4.2 Pantalla completa (2026-09-27):** con `pantalla: 'completa'` el
+    cliente lleva lista, formulario en página y ficha, en cuatro rutas
+    (`<modulo>.<plural>`, `.nuevo`, `.ficha` y `.editar`; la ficha y la edición
+    reciben el id como propiedad). La tarjeta de la lista lleva a la ficha
+    (`TarjetaDeRegistro` acepta `destino`); la ficha muestra los datos con
+    `DatosDelRegistro` (core) y trae editar y eliminar, o la insignia de
+    inactivo; guardar el formulario lleva a la ficha y eliminar vuelve a la
+    lista. Los campos de un recurso viven en un solo componente,
+    `CamposDe<Entidad>`, que usan la ventana del catálogo y el formulario en
+    página: las dos pantallas se ven igual. El servicio suma `obtener(id)`. En
+    el formulario, una referencia a la misma entidad no ofrece el registro que
+    se edita. Corregido de paso (venía del G2): una tabla sin índices propios
+    dejaba sin usar el parámetro `t` y no pasaba ESLint. Probado en el navegador
+    con tres recursos: registrar en página, ver la ficha, editar, volver,
+    eliminar con confirmación e inactivar con su insignia en la ficha y en la
+    lista; la ventana del catálogo sigue igual. 308 pruebas del servidor, 54 del
+    cliente y 38 del generador.
+  - **Pendientes que salieron en el G4:**
+    - **Moneda.** El tipo `dinero` guarda solo el monto (`numeric(14,2)`), sin
+      decir en qué moneda está, y aún no hay tabla de monedas. Se decide al
+      planificar los módulos de negocio.
+    - En la ventana del catálogo, una referencia a la misma entidad todavía
+      ofrece el registro que se edita (el formulario en página ya no).
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 

@@ -12,3 +12,20 @@ const { eliminar } = usarEliminacionDe{{Entidad}}(cargar);
 ### atributosDeLaTarjeta
           eliminable
           @eliminar="eliminar(registro)"
+### inactivoEnTarjeta
+### importacionEliminarEnFicha
+import { usarEliminacionDe{{Entidad}} } from './usar-eliminacion-de-{{entidadClave}}';
+### eliminarEnFicha
+  const { eliminar } = usarEliminacionDe{{Entidad}}(async () => {
+    await router.push({ name: '{{rutaNombre}}' });
+  });
+### eliminarEnRetornoDeFicha
+, eliminar
+### iconoEliminarEnFicha
+, Trash2
+### botonEliminarEnFicha
+      <BotonBase v-permiso="'{{permisoGestionar}}'" variante="peligro" :icono="Trash2" @click="eliminar(registro)">
+        Eliminar
+      </BotonBase>
+### importacionInsigniaEnFicha
+### insigniaEnFicha

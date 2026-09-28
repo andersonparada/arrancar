@@ -1,0 +1,28 @@
+<script setup lang="ts">
+import { Pencil{{iconoEliminarEnFicha}} } from 'lucide-vue-next';
+import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
+import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+{{importacionInsigniaEnFicha}}import { detallesDe{{Entidad}} } from '../composables/{{pluralClave}}/detalles-de-{{entidadClave}}';
+import { usarFichaDe{{Entidad}} } from '../composables/{{pluralClave}}/usar-ficha-de-{{entidadClave}}';
+import { VENTANAS_{{MODULO}} } from '../textos';
+
+const props = defineProps<{ {{entidad}}Id: string }>();
+
+const ventana = VENTANAS_{{MODULO}}.{{plural}};
+const { registro, cargando, editar{{eliminarEnRetornoDeFicha}} } = usarFichaDe{{Entidad}}(props.{{entidad}}Id);
+const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: '{{rutaNombre}}' } };
+</script>
+
+<template>
+  <div v-if="registro" class="space-y-4">
+    <EncabezadoPagina :titulo="String(registro.{{campoMostrar}})" descripcion="{{Singular}}" :volver="volver">
+{{insigniaEnFicha}}      <BotonBase v-permiso="'{{permisoGestionar}}'" variante="secundario" :icono="Pencil" @click="editar">
+        Editar
+      </BotonBase>
+{{botonEliminarEnFicha}}    </EncabezadoPagina>
+
+    <DatosDelRegistro :detalles="detallesDe{{Entidad}}(registro)" />
+  </div>
+  <p v-else-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
+</template>

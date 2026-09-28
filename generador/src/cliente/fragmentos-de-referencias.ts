@@ -68,6 +68,8 @@ const SIN_REFERENCIAS = {
   referenciasEnVentana: '',
   importacionDeOpcionesEnVentana: '',
   propDeReferencias: '',
+  referenciasEnCampos: '',
+  registrosParaReferencias: '',
 };
 
 /** Huecos del composable de la pantalla, la página y la ventana: pedir lo elegible y pasarlo al selector. */
@@ -85,7 +87,23 @@ export function fragmentosDeReferenciasEnCliente(definicion: DefinicionDeRecurso
     referenciasEnVentana: '      :referencias="referencias"\n',
     importacionDeOpcionesEnVentana: "import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';\n",
     propDeReferencias: `; referencias: Record<${nombres}, OpcionDeRegistro[]>`,
+    referenciasEnCampos: ' :referencias="referencias"',
+    registrosParaReferencias: apuntaASiMismo(definicion) ? registrosPropios(definicion) : '',
   };
+}
+
+/**
+ * En el formulario en página no hay lista: si apunta a sí misma, la trae para
+ * el selector, sin el registro que se edita (no puede elegirse a sí mismo).
+ */
+function registrosPropios(definicion: DefinicionDeRecurso): string {
+  const { Plural, Entidad, losPlural, entidad } = valoresDelRecurso(definicion, '');
+  return `  const { datos: registros } = usarCarga(
+    async () => (await api${Plural}.listar()).filter((registro) => registro.id !== ${entidad}Id),
+    [] as ${Entidad}[],
+    'No se pudieron cargar ${losPlural}.',
+  );
+`;
 }
 
 /** En la prueba de la edición, el registro trae el nombre de lo elegido, que no se manda de vuelta. */

@@ -49,12 +49,15 @@ function importacionesZod(campos: CampoDelServidor[]): string {
 /** Huecos de la tabla de Drizzle y del esquema Zod de la solicitud. */
 export function fragmentosDeTablaYHttp(campos: CampoDelServidor[], definicion: DefinicionDeRecurso) {
   const alcance = TABLA_DEL_ALCANCE[definicion.alcance];
+  const indices = indicesUnicos(campos, definicion) + indicesDeReferencias(campos, definicion);
   return {
     importacionesPg: funcionesPg(campos),
     importacionTablaDelAlcance: `import { ${alcance.tabla} } from '${alcance.ruta}';`,
     tablaDelAlcance: alcance.tabla,
     columnas: lineas(campos.map(columna), '    '),
-    indices: indicesUnicos(campos, definicion) + indicesDeReferencias(campos, definicion),
+    indices,
+    // Sin índices propios la tabla no usa sus columnas: el guion bajo lo dice.
+    parametroDeIndices: indices ? 't' : '_t',
     importacionesZod: importacionesZod(campos),
     camposZod: lineas(campos.map((campo) => `${campo.nombreEnCodigo}: ${zodDe(campo)},`)),
   };

@@ -1,0 +1,13 @@
+<script setup lang="ts">
+{{importacionesDeLaVentana}}{{importacionDeOpcionesEnVentana}}import type { EdicionDe{{Entidad}} } from '../../composables/{{pluralClave}}/edicion-de-{{entidadClave}}';
+
+/** Los campos {{delSingular}}; los usan la ventana y el formulario en página, así se ven igual. */
+defineProps<{ errores: Record<string, string>{{propDeReferencias}} }>();
+const edicion = defineModel<EdicionDe{{Entidad}}>({ required: true });
+</script>
+
+<template>
+  <div class="space-y-4">
+{{controles}}
+  </div>
+</template>

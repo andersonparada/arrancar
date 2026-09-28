@@ -1,2 +1,8 @@
 ### atributosDeLaTarjeta
           :inactivo="!registro.activo"
+### importacionInsigniaEnFicha
+import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
+### insigniaEnFicha
+      <InsigniaBase v-if="!registro.activo" tono="rojo">Inactivo</InsigniaBase>
+### inactivoEnTarjeta
+          :inactivo="!registro.activo"

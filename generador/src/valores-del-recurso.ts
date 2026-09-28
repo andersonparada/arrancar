@@ -23,6 +23,8 @@ function valoresDeNombres({ entidad, plural, modulo }: DefinicionDeRecurso): Rec
     MODULO: modulo.constante,
     moduloClave: modulo.clave,
     moduloSerpiente: modulo.serpiente,
+    /** Nombre de la ruta de la lista; las demás le agregan `.nuevo`, `.ficha` o `.editar`. */
+    rutaNombre: `${modulo.clave}.${plural.clave}`,
   };
 }
 
