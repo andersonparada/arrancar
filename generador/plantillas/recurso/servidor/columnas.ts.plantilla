@@ -1,0 +1,6 @@
+import type { Columna{{importacionDeOpcionDeReferencia}} } from '../../core/intercambio/aplicacion/columnas.js';
+
+/** Las columnas del Excel de {{losPlural}}: los mismos datos del formulario, en el mismo orden. */
+export const columnasDe{{Plural}} = ({{parametroDeOpciones}}): Columna[] => [
+{{columnasDeIntercambio}}
+];

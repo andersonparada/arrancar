@@ -26,6 +26,12 @@ export class ErrorApi extends Error {
 
 export type Consulta = Record<string, string | number | boolean | undefined | null>;
 
+/** Un archivo que mandó el servidor, listo para guardar. */
+export interface ArchivoDescargado {
+  contenido: Blob;
+  nombre: string;
+}
+
 interface Peticion {
   metodo: string;
   ruta: string;
@@ -66,6 +72,23 @@ export class ClienteHttp {
 
   eliminar<T = void>(ruta: string): Promise<T> {
     return this.enviar<T>({ metodo: 'DELETE', ruta });
+  }
+
+  /** Sube un archivo como `multipart/form-data`. */
+  subir<T>(ruta: string, archivo: File, consulta?: Consulta): Promise<T> {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo);
+    return this.enviar<T>({ metodo: 'POST', ruta, consulta, cuerpo: formulario });
+  }
+
+  /** Baja un archivo (un Excel, por ejemplo) con el nombre que le da el servidor. */
+  async descargar(ruta: string): Promise<ArchivoDescargado> {
+    const respuesta = await this.llamar({ metodo: 'GET', ruta });
+    if (!respuesta.ok) {
+      throw this.errorDe(respuesta.status, (await respuesta.json().catch(() => null)) as CuerpoDeError | null);
+    }
+    const nombre = /filename="([^"]+)"/.exec(respuesta.headers.get('Content-Disposition') ?? '')?.[1] ?? 'archivo';
+    return { contenido: await respuesta.blob(), nombre };
   }
 
   private async enviar<T>(peticion: Peticion): Promise<T> {

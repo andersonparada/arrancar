@@ -43,7 +43,12 @@ describe('definición de un recurso', () => {
   it('completa nombres, textos, permisos y el campo que nombra al registro', () => {
     const definicion = definirRecurso(animal);
 
-    expect(definicion.permisos).toEqual({ ver: 'ganado.animales.ver', gestionar: 'ganado.animales.gestionar' });
+    expect(definicion.permisos).toEqual({
+      ver: 'ganado.animales.ver',
+      gestionar: 'ganado.animales.gestionar',
+      importar: 'ganado.animales.importar',
+      exportar: 'ganado.animales.exportar',
+    });
     expect(definicion.textos).toEqual({ singular: 'animal', plural: 'animales' });
     expect(definicion.mostrar).toBe('arete');
     expect(definicion.baja).toBe('eliminar');

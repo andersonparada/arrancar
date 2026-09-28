@@ -68,5 +68,7 @@ export function valoresDelRecurso(definicion: DefinicionDeRecurso, nombreModulo:
     etiquetaMostrar: mostrar.etiqueta.toLowerCase(),
     permisoVer: definicion.permisos.ver,
     permisoGestionar: definicion.permisos.gestionar,
+    permisoImportar: definicion.permisos.importar,
+    permisoExportar: definicion.permisos.exportar,
   };
 }

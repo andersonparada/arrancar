@@ -56,7 +56,7 @@ export interface DefinicionDeRecurso {
   mostrar: string;
   icono: string;
   campos: CampoDefinido[];
-  permisos: { ver: string; gestionar: string };
+  permisos: { ver: string; gestionar: string; importar: string; exportar: string };
 }
 
 function problemasDeNombres(entrada: EntradaDeRecurso): string[] {
@@ -138,6 +138,14 @@ const campoDefinido = ([nombre, campo]: [string, Campo]): CampoDefinido => ({
 const conActivo = (entrada: EntradaDeRecurso): Record<string, Campo> =>
   entrada.baja === 'inactivar' ? { ...entrada.campos, activo: siNo({ predeterminado: true }) } : entrada.campos;
 
+/** Ver y gestionar, y aparte importar y exportar: ver una lista no da derecho a llevársela entera. */
+const permisosDe = (prefijo: string) => ({
+  ver: `${prefijo}.ver`,
+  gestionar: `${prefijo}.gestionar`,
+  importar: `${prefijo}.importar`,
+  exportar: `${prefijo}.exportar`,
+});
+
 function completar(entrada: EntradaDeRecurso): DefinicionDeRecurso {
   const modulo = nombresDeClave(entrada.modulo);
   const plural = nombresDeCodigo(entrada.plural);
@@ -154,7 +162,7 @@ function completar(entrada: EntradaDeRecurso): DefinicionDeRecurso {
     mostrar: entrada.mostrar ?? campoQueNombra(entrada.campos)!,
     icono: entrada.icono ?? 'List',
     campos: Object.entries(conActivo(entrada)).map(campoDefinido),
-    permisos: { ver: `${modulo.clave}.${plural.clave}.ver`, gestionar: `${modulo.clave}.${plural.clave}.gestionar` },
+    permisos: permisosDe(`${modulo.clave}.${plural.clave}`),
   };
 }
 

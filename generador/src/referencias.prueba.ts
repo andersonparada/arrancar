@@ -50,6 +50,17 @@ async function generar({ entrada = animal, referida = potrero, potrerosGenerados
 }
 
 describe('referencias en el servidor', () => {
+  it('en el Excel se escriben por su nombre, y las opciones salen de las consultas de cada recurso', async () => {
+    const { servidor } = await generar();
+
+    expect(servidor('http/animales.columnas.ts')).toContain(
+      "tipo: 'referencia', campoDeNombre: 'potreroNombre', opciones: opciones.potreroId },",
+    );
+    const composicion = servidor('composicion/animales.ts');
+    expect(composicion).toContain("potreroId: opcionesDe(new ConsultasPotrerosDrizzle(), 'nombre')");
+    expect(composicion).toContain("madreId: opcionesDe(dependencias.consultas, 'arete')");
+  });
+
   it('cada una es una llave foránea con su índice, también hacia la misma tabla', async () => {
     const tabla = (await generar()).servidor('infraestructura/persistencia/animales.tablas.ts');
 

@@ -68,6 +68,22 @@ describe('generar un recurso en el servidor', () => {
     expect(leer('modulo.ts')).toContain('rutasDeAnimales(),');
   });
 
+  it('el Excel lleva las columnas del formulario y cada acción su permiso', async () => {
+    const { leer } = await generar(animal);
+
+    const columnas = leer('http/animales.columnas.ts');
+    expect(columnas).toContain("{ clave: 'arete', titulo: 'Arete', requerido: true, tipo: 'texto' },");
+    expect(columnas).toContain("tipo: 'lista', opciones: { macho: 'Macho', hembra: 'Hembra' } },");
+    expect(columnas).toContain("{ clave: 'peso', titulo: 'Peso', requerido: false, tipo: 'decimal' },");
+    expect(leer('modulo.ts')).toContain(
+      "{ clave: 'ganado.animales.importar', descripcion: 'Importar animales desde Excel' },",
+    );
+    expect(leer('modulo.ts')).toContain(
+      "{ clave: 'ganado.animales.exportar', descripcion: 'Exportar animales a Excel' },",
+    );
+    expect(leer('http/animales.rutas.ts')).toContain('rutasDeIntercambio(');
+  });
+
   it('con baja por inactivación lleva "activo" y no el caso de eliminar', async () => {
     const { disco, leer } = await generar({ ...animal, baja: 'inactivar', alcance: 'cuenta' });
 

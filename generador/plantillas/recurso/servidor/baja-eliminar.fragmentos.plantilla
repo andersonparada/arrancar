@@ -20,7 +20,7 @@ import type { Eliminar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}
 ### importacionEliminarEnComposicion
 import { Eliminar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/eliminar-{{entidadClave}}.js';
 ### eliminarEnComposicion
-      eliminar: new Eliminar{{Entidad}}(dependencias),
+  eliminar: new Eliminar{{Entidad}}(dependencias),
 ### eliminarEnDobles
 
   async eliminar({{entidad}}: {{Entidad}}): Promise<void> {

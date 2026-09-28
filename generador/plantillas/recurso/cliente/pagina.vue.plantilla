@@ -2,6 +2,8 @@
 import { Inbox, Plus } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/AccionesDeIntercambio.vue';
+import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import VentanaDe{{Entidad}} from '../componentes/{{pluralClave}}/VentanaDe{{Entidad}}.vue';
@@ -10,12 +12,14 @@ import { detallesDe{{Entidad}} } from '../composables/{{pluralClave}}/detalles-d
 import { VENTANAS_{{MODULO}} } from '../textos';
 
 const ventana = VENTANAS_{{MODULO}}.{{plural}};
-const { registros, cargando, {{cargarEnPagina}}{{referenciasEnPagina}}edicion, enviando, errores, abrir, guardar } = usar{{Plural}}();
+const PERMISOS_DE_INTERCAMBIO = { importar: '{{permisoImportar}}', exportar: '{{permisoExportar}}' };
+const { registros, cargando, intercambio, {{cargarEnPagina}}{{referenciasEnPagina}}edicion, enviando, errores, abrir, guardar } = usar{{Plural}}();
 {{eliminarEnPagina}}</script>
 
 <template>
   <div>
     <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion">
+      <AccionesDeIntercambio :permisos="PERMISOS_DE_INTERCAMBIO" @exportar="intercambio.exportar" @importar="intercambio.abrir" />
       <BotonBase v-permiso="'{{permisoGestionar}}'" :icono="Plus" @click="abrir()">{{ ventana.nuevo }}</BotonBase>
     </EncabezadoPagina>
 
@@ -38,6 +42,14 @@ const { registros, cargando, {{cargarEnPagina}}{{referenciasEnPagina}}edicion, e
       :enviando="enviando"
       @cerrar="edicion.abierta = false"
       @guardar="guardar"
+    />
+    <VentanaDeImportacion
+      :estado="intercambio.estado"
+      titulo="Importar {{pluralTexto}}"
+      @elegir="intercambio.elegir"
+      @plantilla="intercambio.bajarPlantilla"
+      @importar="intercambio.importar"
+      @cerrar="intercambio.cerrar"
     />
   </div>
 </template>

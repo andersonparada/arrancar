@@ -3,6 +3,7 @@ import { GeneracionDeRecurso, type Archivo } from '../generacion-de-recurso.js';
 import { rellenar } from '../motor/plantillas.js';
 import { camposDelServidor } from './campos-del-recurso.js';
 import { fragmentosDeDominio } from './fragmentos-de-dominio.js';
+import { fragmentosDeIntercambio } from './fragmentos-de-intercambio.js';
 import { fragmentosDePruebas } from './fragmentos-de-pruebas.js';
 import { fragmentosDeReferencias } from './fragmentos-de-referencias.js';
 import { fragmentosDeTablaYHttp } from './fragmentos-de-tabla-y-http.js';
@@ -32,6 +33,7 @@ const ARCHIVOS: Archivo[] = [
   ['esquemas-http.ts', `${MODULO}/http/{{pluralClave}}.esquemas-http.ts`],
   ['controlador.ts', `${MODULO}/http/{{pluralClave}}.controlador.ts`],
   ['rutas.ts', `${MODULO}/http/{{pluralClave}}.rutas.ts`],
+  ['columnas.ts', `${MODULO}/http/{{pluralClave}}.columnas.ts`],
   ['composicion.ts', `${MODULO}/composicion/{{pluralClave}}.ts`],
   ['dobles.ts', `${MODULO}/pruebas/dobles-de-{{pluralClave}}.ts`],
   ['api.prueba.ts', 'servidor/src/pruebas-api/{{moduloClave}}-{{pluralClave}}.api.prueba.ts'],
@@ -54,19 +56,23 @@ export class GenerarRecursoEnServidor extends GeneracionDeRecurso {
       ...fragmentosDeTablaYHttp(campos, definicion),
       ...fragmentosDePruebas(campos, definicion),
       ...fragmentosDeReferencias(definicion),
+      ...fragmentosDeIntercambio(campos, definicion),
     };
   }
 
   protected registrar(definicion: DefinicionDeRecurso, valores: Record<string, string>): void {
     const modulo = rellenar(`${MODULO}/modulo.ts`, valores);
     const accion = definicion.baja === 'eliminar' ? 'y eliminar' : 'e inactivar';
-    const { Plural, pluralClave, pluralTexto, permisoVer, permisoGestionar } = valores;
+    const { Plural, pluralClave, pluralTexto, permisoVer, permisoGestionar, permisoImportar, permisoExportar } =
+      valores;
     this.escritor.insertarEnMarca(modulo, 'importaciones', [
       `import { rutasDe${Plural} } from './composicion/${pluralClave}.js';`,
     ]);
     this.escritor.insertarEnMarca(modulo, 'permisos', [
       `{ clave: '${permisoVer}', descripcion: 'Ver ${pluralTexto}' },`,
       `{ clave: '${permisoGestionar}', descripcion: 'Registrar, editar ${accion} ${pluralTexto}' },`,
+      `{ clave: '${permisoImportar}', descripcion: 'Importar ${pluralTexto} desde Excel' },`,
+      `{ clave: '${permisoExportar}', descripcion: 'Exportar ${pluralTexto} a Excel' },`,
     ]);
     this.escritor.insertarEnMarca(modulo, 'rutas', [`rutasDe${Plural}(),`]);
   }

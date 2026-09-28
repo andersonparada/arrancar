@@ -1,12 +1,21 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
+import { rutasDeIntercambio, type OpcionesDeIntercambio } from '../../core/intercambio/http/rutas-de-intercambio.js';
 import type { {{Plural}}Controlador } from './{{pluralClave}}.controlador.js';
 import { esquema{{Entidad}}, esquemaParams{{Entidad}} } from './{{pluralClave}}.esquemas-http.js';
 
 const etiquetas = ['{{nombreModulo}}'];
 const RUTA = '/{{moduloClave}}/{{pluralClave}}';
+const EN_EXCEL = {
+  ruta: RUTA,
+  archivo: '{{pluralClave}}',
+  permisos: { importar: '{{permisoImportar}}', exportar: '{{permisoExportar}}' },
+};
 
-export function rutas{{Plural}}(controlador: {{Plural}}Controlador): FastifyPluginAsyncZod {
+export function rutas{{Plural}}(
+  controlador: {{Plural}}Controlador,
+  intercambio: OpcionesDeIntercambio['intercambio'],
+): FastifyPluginAsyncZod {
   return async (app) => {
     const ver = proteger({ permiso: '{{permisoVer}}' });
     const gestionar = proteger({ permiso: '{{permisoGestionar}}' });
@@ -24,5 +33,6 @@ export function rutas{{Plural}}(controlador: {{Plural}}Controlador): FastifyPlug
       preHandler: gestionar,
       handler: controlador.actualizar,
     });
-{{eliminarEnRutas}}  };
+{{eliminarEnRutas}}    rutasDeIntercambio(app, { ...EN_EXCEL, intercambio });
+  };
 }

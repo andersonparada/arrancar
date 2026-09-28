@@ -1,27 +1,48 @@
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
-import { Actualizar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/actualizar-{{entidadClave}}.js';
+import { crearIntercambio } from '../../core/intercambio/contexto.js';
+import { validadorDeZod } from '../../core/intercambio/http/rutas-de-intercambio.js';
+{{importacionesDeOpciones}}import { Actualizar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/actualizar-{{entidadClave}}.js';
 import { Crear{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/crear-{{entidadClave}}.js';
 {{importacionEliminarEnComposicion}}import { Listar{{Plural}} } from '../aplicacion/casos-uso/{{pluralClave}}/listar-{{pluralClave}}.js';
 import { Obtener{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/obtener-{{entidadClave}}.js';
+import type { {{Entidad}}Dto, SolicitudDe{{Entidad}} } from '../aplicacion/dto/{{entidadClave}}.dto.js';
+import { columnasDe{{Plural}} } from '../http/{{pluralClave}}.columnas.js';
 import { {{Plural}}Controlador } from '../http/{{pluralClave}}.controlador.js';
+import { esquema{{Entidad}} } from '../http/{{pluralClave}}.esquemas-http.js';
 import { rutas{{Plural}} } from '../http/{{pluralClave}}.rutas.js';
 import { Consultas{{Plural}}Drizzle } from '../infraestructura/persistencia/consultas-{{pluralClave}}.drizzle.js';
 import { Repositorio{{Plural}}Drizzle } from '../infraestructura/persistencia/repositorio-{{pluralClave}}.drizzle.js';
 
+const dependenciasDe{{Plural}} = () => ({
+  unidadDeTrabajo: dependenciasCompartidas().unidadDeTrabajo,
+  auditoria: dependenciasCompartidas().auditoria,
+  repositorio: new Repositorio{{Plural}}Drizzle(),
+  consultas: new Consultas{{Plural}}Drizzle(),
+});
+
+type Dependencias = ReturnType<typeof dependenciasDe{{Plural}}>;
+
+const casosDeUso = (dependencias: Dependencias) => ({
+  listar: new Listar{{Plural}}(dependencias),
+  obtener: new Obtener{{Entidad}}(dependencias),
+  crear: new Crear{{Entidad}}(dependencias),
+  actualizar: new Actualizar{{Entidad}}(dependencias),
+{{eliminarEnComposicion}}});
+
+/** Exportar e importar en Excel; cada fila importada pasa por las mismas reglas que el formulario. */
+function intercambioDe{{Plural}}(casos: ReturnType<typeof casosDeUso>, {{dependenciasEnIntercambio}}: Dependencias) {
+  return crearIntercambio<{{Entidad}}Dto, SolicitudDe{{Entidad}}>({
+    nombre: '{{PluralTitulo}}',
+    columnas: columnasDe{{Plural}}({{argumentoDeOpciones}}),
+    validar: validadorDeZod(esquema{{Entidad}}),
+    listar: (operador) => casos.listar.ejecutar(operador),
+    crear: (operador, solicitud) => casos.crear.ejecutar(operador, solicitud),
+  });
+}
+
 /** Raíz de composición de {{losPlural}}: el único lugar donde se eligen las implementaciones concretas. */
 export function rutasDe{{Plural}}() {
-  const dependencias = {
-    unidadDeTrabajo: dependenciasCompartidas().unidadDeTrabajo,
-    auditoria: dependenciasCompartidas().auditoria,
-    repositorio: new Repositorio{{Plural}}Drizzle(),
-    consultas: new Consultas{{Plural}}Drizzle(),
-  };
-  return rutas{{Plural}}(
-    new {{Plural}}Controlador({
-      listar: new Listar{{Plural}}(dependencias),
-      obtener: new Obtener{{Entidad}}(dependencias),
-      crear: new Crear{{Entidad}}(dependencias),
-      actualizar: new Actualizar{{Entidad}}(dependencias),
-{{eliminarEnComposicion}}    }),
-  );
+  const dependencias = dependenciasDe{{Plural}}();
+  const casos = casosDeUso(dependencias);
+  return rutas{{Plural}}(new {{Plural}}Controlador(casos), intercambioDe{{Plural}}(casos, dependencias));
 }

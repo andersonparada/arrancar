@@ -91,6 +91,23 @@ base de desarrollo debe estar levantada.
 - Los módulos no se importan entre sí para colaborar: usan eventos
   (`core/eventos/bus-eventos.ts`). Un módulo sí puede importar de `core`.
 
+### Importar y exportar (Excel)
+- Motor en `core/intercambio` (servidor): cada recurso da sus columnas
+  (`http/<plural>.columnas.ts`, tipo `Columna`), cómo validar (`validadorDeZod`
+  con el esquema del formulario), listar y crear; `crearIntercambio` pone el resto
+  y `rutasDeIntercambio` registra `GET …/exportar`, `GET …/plantilla` y
+  `POST …/importar?ensayo=true|false`.
+- Importar es **todo o nada**, en una sola transacción, con máximo 5,000 filas:
+  cada fila pasa por el mismo caso de uso que el formulario y los problemas se
+  informan por fila y columna. El ensayo crea todo y lo deshace (así también
+  revisa los datos repetidos). Las referencias se escriben por su nombre.
+- Permisos propios: `<modulo>.<plural>.importar` (también para bajar la
+  plantilla) y `<modulo>.<plural>.exportar`. Ver una lista no da derecho a
+  llevársela entera.
+- Cliente: `AccionesDeIntercambio` (botones) y `VentanaDeImportacion` (revisar y
+  confirmar), con `usarIntercambio` y `intercambioDe(ruta)`. El generador lo
+  incluye en cada recurso.
+
 ### Base de datos
 - **Un esquema de PostgreSQL por módulo** (`pgSchema('<clave>')`); las tablas de
   core viven en `core.*`.
