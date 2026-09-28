@@ -1,7 +1,6 @@
 # Módulo `bancos`
 
-Estado: **en planificación** (2026-09-27). No se programa hasta cerrar los puntos
-de "Por confirmar".
+Estado: **en construcción** (2026-09-27). Plan acordado; hechos B0 y B0.2.
 
 ## Propósito
 
@@ -101,6 +100,15 @@ Acordado el 2026-09-27: cada ventana de lista ofrece **Exportar** e **Importar**
 - El generador los agrega a cada recurso. Es el paso **B0.2**, antes de B1; los
   saldos iniciales de bancos se importan con este mismo motor.
 
+**B0.2 hecho (2026-09-27).** Motor en `core/intercambio` (exceljs): exportar,
+plantilla con una hoja de instrucciones, e importar todo o nada (máximo 5,000
+filas) con ensayo previo que crea y deshace, así también detecta los datos
+repetidos. Cada fila pasa por el mismo caso de uso que el formulario. En el
+cliente, los botones y la ventana de revisión. El generador lo incluye en cada
+recurso. Probado de punta a punta con un módulo de prueba (ya borrado). Clientes y
+Empresas no salen del generador: su importar y exportar queda como paso aparte.
+304 pruebas del servidor, 48 del cliente y 40 del generador.
+
 ## Configuración
 
 Las variables nuevas usan solo los niveles **empresa** e **instalación**. Las que
@@ -125,3 +133,18 @@ ya existen (por ejemplo, las de Clientes) conservan también el de cuenta.
 | **B3 Transferencias** | Transferencia entre cuentas propias (débito y crédito enlazados). |
 | **B4 Chequeras y cheques** | Chequeras por rango, emisión y anulación de cheques. |
 | **B5 Conciliación** | Conciliación mensual, bloqueo de movimientos y bitácora. |
+
+**B1 hecho (2026-09-27).** Recursos Banco (catálogo) y CuentaBancaria (ficha
+completa), definiciones en `generador/definiciones/bancos/`, pantallas Vue en
+`cliente/src/modulos/bancos/paginas/` (Bancos e índice y fichas de Cuentas
+Bancarias), composables para edición e importar/exportar. Variables de
+configuración en `servidor/src/modulos/bancos/modulo.ts`:
+`bancos.cuentas.permitir_sobregiro` (boolean, false por omisión) y
+`bancos.chequeras.maximo_cheques` (entero, 5000 por omisión), niveles empresa e
+instalación. Migraciones aplicadas y módulo activado en la cuenta demo. Pruebas:
+325 del servidor (nuevas: 11 de API de Bancos y Cuentas), 54 del cliente (nuevas:
+6 del módulo), 40 del generador. Corregido en el generador: con un plural largo
+(`cuentas-bancarias`) Prettier partía la llamada al intercambio y la función de
+rutas pasaba de 25 líneas; ahora sus opciones van en la constante `EN_EXCEL`.
+Pendiente para B2: el alcance por cuenta (`recursosConAlcance`, que un usuario vea
+solo ciertas cuentas) y la moneda de la cuenta (hoy todo es GTQ).

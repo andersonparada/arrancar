@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790569939477,
+      "tag": "0000_bancos",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790569945895,
+      "tag": "0001_cuentas_bancarias",
+      "breakpoints": true
+    }
+  ]
+}
