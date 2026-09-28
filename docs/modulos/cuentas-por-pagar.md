@@ -73,11 +73,12 @@ Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte 
 | Contenido de la contraseña | Solo documentos autorizados, del mismo proveedor, que no estén en otra contraseña vigente. |
 | Qué cubre cada pago | El **usuario elige** qué facturas de la contraseña paga (una o varias) y cuánto a cada una. |
 | Retenciones en el pago | Se descuentan del saldo de la contraseña, así que el proveedor recibe el neto. |
-| Anular una factura | Solo si no está en una contraseña vigente. Si estaba autorizada y hay *Contabilidad*, se publica el evento para revertir la partida. Libera el número del documento. |
-| Anular una contraseña | Solo si no tiene pagos vigentes; libera sus documentos. |
+| Eliminar una factura | Solo si **no está autorizada (provisionada)** y **no está en una contraseña**. Se borra de verdad (queda en la auditoría) y libera el número del documento. |
+| Anular una factura | Si ya está autorizada: genera su **reversión** (con *Contabilidad*, la partida inversa). No se puede si está en una contraseña vigente. Libera el número del documento. |
+| Eliminar una contraseña | Solo si **no tiene pagos emitidos** (vigentes). Se borra (queda en la auditoría) y **suelta sus facturas**, que vuelven a estar disponibles para otra contraseña. |
 | Anular un pago desde Cuentas por pagar | Anula también el cheque o la nota de débito en *Bancos*, en la misma transacción. |
 | Anular el cheque o la nota desde Bancos | **Se permite.** En la misma transacción, *Bancos* avisa al módulo que lo emitió y ese módulo **revierte lo suyo** (aquí: anula el pago y devuelve el saldo a las facturas). Antes, ese módulo **revisa sus reglas**: si algo lo bloquea (p. ej. un período cerrado), rechaza y **no se anula nada**. Si ese módulo no está activo, se anula solo en *Bancos* y queda en la auditoría. |
-| Mes conciliado | No se anula un movimiento de un mes conciliado de *Bancos* (ya lo impide Bancos), venga de donde venga. |
+| Mes conciliado | Un movimiento conciliado **no se elimina**, pero **sí se anula** con su movimiento inverso, fechado en un mes no conciliado (ver B7 en `bancos.md`). |
 
 ## Tablas (esquema `cuentas_por_pagar`)
 

@@ -969,3 +969,67 @@ del saldo inicial usa el mismo `bancos.movimientos` por la misma razón. La
 excepción de importar de Movimientos que mencionaba la memoria del usuario
 ("Movimientos conserva importar para saldos iniciales") ya no existe: se
 avisa en el informe final, sin tocar archivos fuera de este repositorio.
+
+## B7 Anular con movimiento inverso y eliminar (acordado el 2026-09-28)
+
+Hasta el B6, anular solo marcaba el movimiento y lo sacaba del saldo. Desde el B7 se
+separan dos operaciones, como en contabilidad:
+
+| Operación | Qué hace | Cuándo se puede |
+|---|---|---|
+| **Eliminar** | Borra el registro de verdad, para no dejar basura. Queda en la auditoría tal como estaba. | Solo si está «limpio»: no está marcado en ninguna conciliación, su fecha no está en un mes conciliado, no revierte ni fue revertido, y el módulo que lo originó (si hay) no lo bloquea. Con *Contabilidad*, además, que su partida no esté en un período cerrado (lo decide Contabilidad por aviso). |
+| **Anular** | Crea el **movimiento inverso**, enlazado al original, y el original queda marcado «revertido por…». Nada se borra. | Siempre que la **fecha del inverso** no caiga en un mes conciliado. Un movimiento conciliado **no se elimina, pero sí se anula**. |
+
+### Reglas del movimiento inverso
+
+- **Tipo**: una nota de crédito se revierte con una de débito; una nota de débito y un
+  cheque, con una nota de crédito. Misma cuenta, mismo monto, mismo beneficiario y la
+  referencia «Reversión de…».
+- **Fecha**: por omisión, la **fecha de la anulación** (la escribe el usuario; no puede
+  ser anterior al original). Variable por empresa
+  `bancos.anulaciones.misma_fecha` (por omisión `false`): si está activa y el mes del
+  original no está conciliado, el inverso lleva **la misma fecha del original**.
+- **Saldo**: el original y su inverso se cancelan; el saldo ya no excluye nada.
+- **Transferencia**: anularla crea los dos inversos (uno en cada cuenta).
+- **Cheque**: anularlo crea su nota inversa y el cheque queda **anulado** en la chequera
+  (su número no se reutiliza). Los cheques **no se eliminan**: su número ya se consumió.
+- **Motivo**: obligatorio, en el original y en la auditoría.
+- **Conciliación**: si el original y su inverso **nunca pasaron por el banco** (ninguno
+  marcado) y los dos tienen fecha hasta el fin del mes que se concilia, se marcan
+  **juntos** como compensados y no aparecen como partidas en tránsito. Si el original
+  ya estaba conciliado, el inverso es un movimiento normal que debe aparecer en el
+  estado de cuenta.
+- **Origen en otro módulo**: al anular o eliminar un movimiento emitido por otro módulo
+  (p. ej. el pago de *Cuentas por pagar*), *Bancos* le avisa por el mediador dentro de
+  la transacción; ese módulo revisa sus reglas y revierte lo suyo, o rechaza y no se
+  hace nada.
+
+### Qué se elimina y qué no
+
+| Registro | Eliminar | Anular (inverso) |
+|---|---|---|
+| Nota de crédito o débito | Sí, si está limpia | Sí |
+| Transferencia | Sí, si sus dos notas están limpias | Sí (dos inversos) |
+| Cheque | No | Sí |
+| Saldo inicial | Sí, si la cuenta no tiene conciliaciones | No (se corrige o se elimina) |
+| Movimiento inverso | No | No (si la anulación fue un error, se registra de nuevo el movimiento) |
+
+### Funciones de reversión
+
+Cada registro que se puede revertir sabe **crear su propio inverso** en su dominio
+(`Movimiento.revertir(...)`; más adelante `Partida.revertir(...)` en Contabilidad y
+lo equivalente en otros módulos). El detalle del patrón común (p. ej. una interfaz
+`Reversible` en `core/compartido/dominio`) se discute antes de programarlo.
+
+### Datos existentes
+
+Una migración convierte los movimientos anulados de hoy en pares original + inverso
+(el inverso con la fecha de anulación), para que el saldo siga igual.
+
+### Permisos
+
+Se agregan `bancos.notas.eliminar` y `bancos.transferencias.eliminar`; anular sigue
+con `.anular`. El saldo inicial se elimina con `bancos.saldos-iniciales.gestionar`.
+
+Pendiente de investigar con *Contabilidad*: en qué otros casos se permite eliminar
+(p. ej. registros aún no contabilizados de un período abierto).
