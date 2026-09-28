@@ -12,11 +12,11 @@ import { configuracion } from '../../../configuracion.js';
 import { definicionesModulos } from '../../indice.js';
 import { accesosDatos } from '../autorizacion/infraestructura/persistencia/accesos-datos.tablas.js';
 import { cuentas } from '../cuentas/infraestructura/persistencia/cuentas.tablas.js';
-import { empresas } from '../esquemas/empresas.esquema.js';
+import { empresas } from '../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { politicaPorAlcance } from './columnas.js';
 import { bd, grupoConexiones } from './conexion.js';
-import { ejecutarEnEmpresa } from './contexto-empresa.js';
+import { enTransaccionSegura } from '../compartido/pruebas/en-transaccion-segura.js';
 import { migrarModulos } from './migrador.js';
 
 const RECURSO = 'prueba.cuentas';
@@ -52,7 +52,7 @@ async function crearTablaProtegida(): Promise<void> {
 }
 
 const nombresVisibles = async (usuarioId: string, recursosAlcanceTotal: string[] = []) => {
-  const filas = await ejecutarEnEmpresa({ empresaId, cuentaId, usuarioId, recursosAlcanceTotal }, (tx) =>
+  const filas = await enTransaccionSegura({ empresaId, cuentaId, usuarioId, recursosAlcanceTotal }, (tx) =>
     tx.execute<{ nombre: string }>(sql`select nombre from prueba.cuentas order by nombre`),
   );
   return filas.rows.map((f) => f.nombre);
@@ -76,7 +76,7 @@ beforeAll(async () => {
   cajero = a!.id;
   otroUsuario = b!.id;
 
-  const creadas = await ejecutarEnEmpresa(
+  const creadas = await enTransaccionSegura(
     { empresaId, cuentaId, usuarioId: cajero, recursosAlcanceTotal: [RECURSO] },
     (tx) =>
       tx.execute<{ id: string; nombre: string }>(
@@ -85,7 +85,7 @@ beforeAll(async () => {
   );
   cuentaAsignada = creadas.rows.find((f) => f.nombre === 'Banrural GTQ')!.id;
 
-  await ejecutarEnEmpresa({ empresaId, cuentaId, usuarioId: cajero }, (tx) =>
+  await enTransaccionSegura({ empresaId, cuentaId, usuarioId: cajero }, (tx) =>
     tx.insert(accesosDatos).values({ empresaId, usuarioId: cajero, recurso: RECURSO, registroId: cuentaAsignada }),
   );
 });
@@ -113,7 +113,7 @@ describe('permiso de datos por registro (RLS)', () => {
   });
 
   it('no puede modificar registros que no tiene asignados', async () => {
-    const actualizadas = await ejecutarEnEmpresa({ empresaId, cuentaId, usuarioId: cajero }, (tx) =>
+    const actualizadas = await enTransaccionSegura({ empresaId, cuentaId, usuarioId: cajero }, (tx) =>
       tx.execute(sql`update prueba.cuentas set nombre = 'X' where nombre = 'Banrural USD' returning id`),
     );
     expect(actualizadas.rows).toHaveLength(0);

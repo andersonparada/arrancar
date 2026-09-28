@@ -1,5 +1,5 @@
 import { char, smallint, text } from 'drizzle-orm/pg-core';
-import { esquemaCore } from './core.esquema.js';
+import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 
 /** Catálogo global de monedas (ISO 4217). */
 export const monedas = esquemaCore.table('monedas', {

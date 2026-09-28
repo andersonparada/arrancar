@@ -711,10 +711,39 @@ entrega como un commit propio.
     cliente y 38 del generador.
   - **Pendientes que salieron en el G4:**
     - **Moneda.** El tipo `dinero` guarda solo el monto (`numeric(14,2)`), sin
-      decir en qué moneda está, y aún no hay tabla de monedas. Se decide al
-      planificar los módulos de negocio.
+      decir en qué moneda está. Ya existe el catálogo `core.monedas` (ISO 4217:
+      código, nombre, símbolo y decimales) y cada empresa tiene su
+      `monedaBase` (GTQ por omisión), pero ningún monto apunta a una moneda. Se
+      decide al planificar los módulos de negocio.
     - En la ventana del catálogo, una referencia a la misma entidad todavía
       ofrece el registro que se edita (el formulario en página ya no).
+- **Fase 8: hecha (2026-09-27).** Cierre del refactor:
+  - Las reglas de tamaño de ESLint (líneas por archivo y por función,
+    complejidad, parámetros y profundidad) pasan de advertencia a **error**:
+    `revisar` falla si alguien se pasa. `revisar` queda sin advertencias.
+  - `construirAplicacion` se parte en pasos con nombre (`prepararPeticiones`,
+    `cargarModulos`, `registrarSeguridad`, `registrarDocumentacion`,
+    `registrarRutas`), en el mismo orden de antes. Las revisiones de lo que
+    declara un módulo salen de `RegistroModulos` a
+    `modulos-sistema/declaracion-de-modulos.ts`, una función por revisión y con
+    los mismos mensajes.
+  - Se retira `ejecutarEnEmpresa`. Las tres pruebas de aislamiento (empresas,
+    cuentas y alcance) no cambian lo que comprueban; ahora pasan por la
+    `UnidadDeTrabajoPostgres` real con el ayudante
+    `compartido/pruebas/en-transaccion-segura.ts`.
+  - Se borra la última carpeta vieja del servidor, `core/esquemas/`: el esquema
+    `core` pasa a `compartido/infraestructura/persistencia/esquema-core.tablas.ts`,
+    las empresas a `cuentas/infraestructura/persistencia/empresas.tablas.ts` (una
+    cuenta tiene empresas) y las monedas a su propio contexto,
+    `core/monedas/infraestructura/persistencia/monedas.tablas.ts`. drizzle-kit
+    ya lee solo `*.tablas.ts` y confirma que la base no cambia ("No schema
+    changes" en `core` y `terceros`). El generador apunta a la nueva ruta de
+    empresas.
+  - En el cliente, `servicios/` y `utilidades/` no son carpetas viejas: son
+    parte de la arquitectura actual (clases `Api*` y utilidades puras).
+  - Comprobado con un módulo generado (catálogo, y pantalla completa con
+    referencias e inactivación): pasa `revisar` con las reglas estrictas y sus
+    pruebas. 280 pruebas del servidor, 45 del cliente y 38 del generador.
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 

@@ -3,7 +3,7 @@ import { crearSiHayTexto, valorDe } from '../../../core/compartido/dominio/objet
 import { Correo } from '../../../core/compartido/dominio/objetos-valor/correo.js';
 import { Nit } from '../../../core/compartido/dominio/objetos-valor/nit.js';
 import { Telefono } from '../../../core/compartido/dominio/objetos-valor/telefono.js';
-import type { empresas } from '../../../core/esquemas/empresas.esquema.js';
+import type { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { EmpresaDto } from '../../aplicacion/dto/empresa.dto.js';
 import { Empresa } from '../../dominio/empresa.js';
 

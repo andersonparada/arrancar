@@ -1,7 +1,7 @@
 import { index, integer, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { esquemaCore } from '../../../esquemas/core.esquema.js';
+import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 import { idPrimario, politicaPorEmpresa } from '../../../base-datos/columnas.js';
-import { empresas } from '../../../esquemas/empresas.esquema.js';
+import { empresas } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
 
 /** Imagen subida por una empresa (fotos de animales, fierro, facturas...). */

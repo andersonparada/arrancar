@@ -21,8 +21,8 @@ export const marcasDeTiempo = {
 };
 
 /**
- * Política RLS que limita la tabla a las filas de la empresa fijada por
- * `ejecutarEnEmpresa`. Sin empresa en la transacción no se ve ninguna fila.
+ * Política RLS que limita la tabla a las filas de la empresa que fija la
+ * unidad de trabajo. Sin empresa en la transacción no se ve ninguna fila.
  */
 export const politicaPorEmpresa = () =>
   pgPolicy('aislamiento_por_empresa', {
@@ -34,8 +34,8 @@ export const politicaPorEmpresa = () =>
   });
 
 /**
- * Política RLS que limita la tabla a las filas de la cuenta fijada por
- * `ejecutarEnEmpresa` (la cuenta de la empresa activa). Para tablas compartidas
+ * Política RLS que limita la tabla a las filas de la cuenta que fija la
+ * unidad de trabajo (la cuenta de la empresa activa). Para tablas compartidas
  * por todas las empresas de una cuenta, como `terceros`.
  */
 export const politicaPorCuenta = () =>

@@ -63,6 +63,67 @@ function opcionesDeRegistro() {
   return { level: 'debug', transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss' } } };
 }
 
+/** Solo lo propio de la app: nada de otros sitios, salvo imágenes en línea y estilos de Vue. */
+const POLITICA_DE_CONTENIDO = {
+  directives: {
+    defaultSrc: ["'self'"],
+    imgSrc: ["'self'", 'data:', 'blob:'],
+    styleSrc: ["'self'", "'unsafe-inline'"],
+    scriptSrc: ["'self'"],
+    connectSrc: ["'self'"],
+    workerSrc: ["'self'"],
+    manifestSrc: ["'self'"],
+  },
+};
+
+/** Validación y respuesta con Zod, errores en un solo formato y el contexto de cada petición. */
+function prepararPeticiones(app: FastifyInstance): void {
+  app.setValidatorCompiler(validatorCompiler);
+  app.setSerializerCompiler(serializerCompiler);
+  app.setErrorHandler(crearManejadorDeErrores(interpretarErrorDePostgres));
+  app.decorateRequest('contexto', null);
+  app.decorateRequest('tokenSesion', null);
+}
+
+/** Registra los módulos instalados (valida lo que declaran) y lee la configuración de la instalación. */
+function cargarModulos(): void {
+  const registro = new RegistroModulos(definicionesModulos);
+  establecerRegistroModulos(registro);
+  archivoDeInstalacion.cargar(configuracion.RUTA_CONFIG_INSTALACION, registro);
+}
+
+/** Cabeceras de seguridad, límite de peticiones, cookies, subida de imágenes y defensa CSRF. */
+async function registrarSeguridad(app: FastifyInstance): Promise<void> {
+  await app.register(helmet, { contentSecurityPolicy: POLITICA_DE_CONTENIDO });
+  await app.register(rateLimit, { global: false });
+  await app.register(cookie);
+  await app.register(multipart, { limits: { fileSize: TAMANO_MAXIMO_IMAGEN, files: 1 } });
+  verificarOrigen(app);
+}
+
+/** La documentación de la API en `/api/documentacion`, fuera de producción. */
+async function registrarDocumentacion(app: FastifyInstance): Promise<void> {
+  if (esProduccion) return;
+  await app.register(swagger, {
+    openapi: { info: { title: 'Arrancar API', version: '0.1.0' } },
+    transform: jsonSchemaTransform,
+  });
+  await app.register(swaggerUi, { routePrefix: '/api/documentacion' });
+}
+
+/** Las rutas de todos los módulos instalados, bajo `/api`. */
+async function registrarRutas(app: FastifyInstance): Promise<void> {
+  await app.register(
+    async (api) => {
+      for (const modulo of definicionesModulos) {
+        if (modulo.rutas) await api.register(modulo.rutas);
+      }
+      api.get('/salud', async () => ({ estado: 'ok' }));
+    },
+    { prefix: '/api' },
+  );
+}
+
 /**
  * Arma la aplicación: plugins de seguridad, validación con Zod, documentación y
  * las rutas de todos los módulos instalados bajo `/api`.
@@ -74,52 +135,11 @@ export async function construirAplicacion(): Promise<FastifyInstance> {
     disableRequestLogging: !esProduccion,
   }).withTypeProvider<ZodTypeProvider>();
 
-  app.setValidatorCompiler(validatorCompiler);
-  app.setSerializerCompiler(serializerCompiler);
-  app.setErrorHandler(crearManejadorDeErrores(interpretarErrorDePostgres));
-  app.decorateRequest('contexto', null);
-  app.decorateRequest('tokenSesion', null);
-
-  const registro = new RegistroModulos(definicionesModulos);
-  establecerRegistroModulos(registro);
-  archivoDeInstalacion.cargar(configuracion.RUTA_CONFIG_INSTALACION, registro);
-
-  await app.register(helmet, {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'blob:'],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        connectSrc: ["'self'"],
-        workerSrc: ["'self'"],
-        manifestSrc: ["'self'"],
-      },
-    },
-  });
-  await app.register(rateLimit, { global: false });
-  await app.register(cookie);
-  await app.register(multipart, { limits: { fileSize: TAMANO_MAXIMO_IMAGEN, files: 1 } });
-  verificarOrigen(app);
-
-  if (!esProduccion) {
-    await app.register(swagger, {
-      openapi: { info: { title: 'Arrancar API', version: '0.1.0' } },
-      transform: jsonSchemaTransform,
-    });
-    await app.register(swaggerUi, { routePrefix: '/api/documentacion' });
-  }
-
-  await app.register(
-    async (api) => {
-      for (const modulo of definicionesModulos) {
-        if (modulo.rutas) await api.register(modulo.rutas);
-      }
-      api.get('/salud', async () => ({ estado: 'ok' }));
-    },
-    { prefix: '/api' },
-  );
-
+  prepararPeticiones(app);
+  cargarModulos();
+  await registrarSeguridad(app);
+  await registrarDocumentacion(app);
+  await registrarRutas(app);
   await servirCliente(app);
   return app;
 }

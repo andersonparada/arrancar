@@ -1,8 +1,8 @@
 import { sql } from 'drizzle-orm';
 import { boolean, check, index, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { esquemaCore } from '../../../esquemas/core.esquema.js';
+import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 import { idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
-import { empresas } from '../../../esquemas/empresas.esquema.js';
+import { empresas } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 
 /**
  * Persona que inicia sesión. Entra con `usuario`: solo letras minúsculas, único

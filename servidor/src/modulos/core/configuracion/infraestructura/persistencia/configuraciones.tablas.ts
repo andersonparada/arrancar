@@ -1,9 +1,9 @@
 import { sql } from 'drizzle-orm';
 import { check, jsonb, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { esquemaCore } from '../../../esquemas/core.esquema.js';
+import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 import { idPrimario } from '../../../base-datos/columnas.js';
 import { cuentas } from '../../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
-import { empresas } from '../../../esquemas/empresas.esquema.js';
+import { empresas } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
 
 export const NIVELES_GUARDADOS = ['instalacion', 'cuenta', 'empresa'] as const;

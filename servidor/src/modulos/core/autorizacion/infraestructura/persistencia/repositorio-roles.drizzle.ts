@@ -1,7 +1,7 @@
 import { and, count, eq } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { Identificador, type CuentaId } from '../../../compartido/dominio/identificador.js';
-import { empresaUsuarios } from '../../../esquemas/empresas.esquema.js';
+import { empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { RepositorioRoles } from '../../aplicacion/puertos/repositorio-roles.js';
 import { Rol, type RolId, type UsoDelRol } from '../../dominio/rol.js';
 import { actualizarRol, insertarRol } from './escritura-de-roles.js';

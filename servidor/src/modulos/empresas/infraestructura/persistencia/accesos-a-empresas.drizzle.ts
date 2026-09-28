@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import { empresaUsuarios } from '../../../core/esquemas/empresas.esquema.js';
+import { empresaUsuarios } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { AccesosAEmpresas } from '../../aplicacion/puertos/accesos-a-empresas.js';
 
 export class AccesosAEmpresasDrizzle implements AccesosAEmpresas {

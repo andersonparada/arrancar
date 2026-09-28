@@ -5,12 +5,13 @@ import vue from 'eslint-plugin-vue';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+/** Código pequeño que se explica solo: pasarse de estos límites no deja hacer commit (`revisar` falla). */
 const LIMITES_DE_TAMANO = {
-  'max-lines': ['warn', { max: 200, skipBlankLines: true, skipComments: true }],
-  'max-lines-per-function': ['warn', { max: 25, skipBlankLines: true, skipComments: true, IIFEs: true }],
-  complexity: ['warn', 8],
-  'max-params': ['warn', 3],
-  'max-depth': ['warn', 3],
+  'max-lines': ['error', { max: 200, skipBlankLines: true, skipComments: true }],
+  'max-lines-per-function': ['error', { max: 25, skipBlankLines: true, skipComments: true, IIFEs: true }],
+  complexity: ['error', 8],
+  'max-params': ['error', 3],
+  'max-depth': ['error', 3],
 };
 
 const LIBRERIAS_DE_INFRAESTRUCTURA = ['drizzle-orm', 'drizzle-orm/*', 'pg', 'fastify', '@fastify/*', 'sharp'];
@@ -162,7 +163,7 @@ export default tseslint.config(
   {
     files: ['cliente/src/modulos/**/paginas/*.vue'],
     rules: {
-      'max-lines': ['warn', { max: 120, skipBlankLines: true, skipComments: true }],
+      'max-lines': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
     },
   },
   {
@@ -174,7 +175,7 @@ export default tseslint.config(
     files: ['**/*.prueba.ts', 'servidor/src/pruebas-api/**'],
     rules: {
       'max-lines-per-function': 'off',
-      'max-lines': ['warn', { max: 250, skipBlankLines: true, skipComments: true }],
+      'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }],
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },

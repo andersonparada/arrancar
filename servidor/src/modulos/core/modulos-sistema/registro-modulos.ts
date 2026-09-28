@@ -1,4 +1,5 @@
 import { FaltanDependenciasDelModulo, ModuloDesconocido, ModuloEnUso, ModuloEsencial } from './errores.js';
+import { verificarDeclaracion } from './declaracion-de-modulos.js';
 import type { DefinicionConfiguracion, DefinicionModulo, DefinicionPermiso } from './definicion-modulo.js';
 
 /**
@@ -10,7 +11,7 @@ export class RegistroModulos {
 
   constructor(definiciones: readonly DefinicionModulo[]) {
     for (const definicion of definiciones) this.registrar(definicion);
-    this.verificarDependenciasDeclaradas();
+    this.verificarDeclaraciones();
   }
 
   listar(): DefinicionModulo[] {
@@ -119,28 +120,8 @@ export class RegistroModulos {
     return modulo;
   }
 
-  private verificarDependenciasDeclaradas(): void {
-    for (const modulo of this.modulos.values()) {
-      for (const variable of modulo.configuracion ?? []) {
-        if (!variable.clave.startsWith(`${modulo.clave}.`)) {
-          throw new Error(`La configuración "${variable.clave}" debe empezar con "${modulo.clave}.".`);
-        }
-        if (!variable.esquema.safeParse(variable.predeterminado).success) {
-          throw new Error(`El valor predeterminado de "${variable.clave}" no cumple su esquema.`);
-        }
-      }
-      for (const recurso of modulo.recursosConAlcance ?? []) {
-        if (!modulo.permisos.some((p) => p.clave === recurso.permisoVerTodos)) {
-          throw new Error(
-            `El recurso "${recurso.clave}" usa el permiso "${recurso.permisoVerTodos}", que su módulo no declara.`,
-          );
-        }
-      }
-      for (const dependencia of modulo.dependeDe ?? []) {
-        if (!this.modulos.has(dependencia)) {
-          throw new Error(`El módulo "${modulo.clave}" depende de "${dependencia}", que no está registrado.`);
-        }
-      }
-    }
+  private verificarDeclaraciones(): void {
+    const instalados = new Set(this.modulos.keys());
+    for (const modulo of this.modulos.values()) verificarDeclaracion(modulo, instalados);
   }
 }

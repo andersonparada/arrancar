@@ -1,5 +1,5 @@
 import { char, primaryKey, text } from 'drizzle-orm/pg-core';
-import { esquemaCore } from '../../../esquemas/core.esquema.js';
+import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 
 /** Departamento de Guatemala; el código de 2 dígitos es el oficial del INE. */
 export const departamentos = esquemaCore.table('departamentos', {

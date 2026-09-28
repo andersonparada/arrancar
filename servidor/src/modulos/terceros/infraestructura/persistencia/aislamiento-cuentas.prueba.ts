@@ -8,11 +8,11 @@ import { eq } from 'drizzle-orm';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../../../../configuracion.js';
-import { ejecutarEnEmpresa } from '../../../core/base-datos/contexto-empresa.js';
+import { enTransaccionSegura } from '../../../core/compartido/pruebas/en-transaccion-segura.js';
 import { bd, grupoConexiones } from '../../../core/base-datos/conexion.js';
 import { migrarModulos } from '../../../core/base-datos/migrador.js';
 import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
-import { empresas } from '../../../core/esquemas/empresas.esquema.js';
+import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { definicionesModulos } from '../../../indice.js';
 import { terceros } from './terceros.tablas.js';
@@ -56,7 +56,7 @@ beforeAll(async () => {
   empresaA = empresaDeA!.id;
   empresaB = empresaDeB!.id;
 
-  await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, (tx) =>
+  await enTransaccionSegura({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, (tx) =>
     tx
       .insert(terceros)
       .values({
@@ -68,7 +68,7 @@ beforeAll(async () => {
       })
       .returning(),
   );
-  const [tercero2] = await ejecutarEnEmpresa({ empresaId: empresaB, cuentaId: cuentaB, usuarioId }, (tx) =>
+  const [tercero2] = await enTransaccionSegura({ empresaId: empresaB, cuentaId: cuentaB, usuarioId }, (tx) =>
     tx
       .insert(terceros)
       .values({
@@ -89,7 +89,7 @@ afterAll(async () => {
 
 describe('aislamiento entre cuentas (RLS de politicaPorCuenta)', () => {
   it('cada cuenta solo ve sus propios terceros, aunque la consulta no filtre', async () => {
-    const vistosPorA = await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, (tx) =>
+    const vistosPorA = await enTransaccionSegura({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, (tx) =>
       tx.select({ nombreMostrar: terceros.nombreMostrar }).from(terceros),
     );
     expect(vistosPorA).toEqual([{ nombreMostrar: 'Juan Pérez' }]);
@@ -100,7 +100,7 @@ describe('aislamiento entre cuentas (RLS de politicaPorCuenta)', () => {
   });
 
   it('no permite modificar ni borrar terceros de otra cuenta', async () => {
-    const resultado = await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, async (tx) => {
+    const resultado = await enTransaccionSegura({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, async (tx) => {
       const actualizados = await tx
         .update(terceros)
         .set({ notas: 'intento de modificación' })
@@ -113,7 +113,7 @@ describe('aislamiento entre cuentas (RLS de politicaPorCuenta)', () => {
   });
 
   it('no permite leer un tercero de otra cuenta por su id', async () => {
-    const filas = await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, (tx) =>
+    const filas = await enTransaccionSegura({ empresaId: empresaA, cuentaId: cuentaA, usuarioId }, (tx) =>
       tx.select().from(terceros).where(eq(terceros.id, terceroDeB)),
     );
     expect(filas).toEqual([]);

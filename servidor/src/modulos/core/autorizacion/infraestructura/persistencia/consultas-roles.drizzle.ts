@@ -1,6 +1,6 @@
 import { asc, count, eq } from 'drizzle-orm';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
-import { empresaUsuarios } from '../../../esquemas/empresas.esquema.js';
+import { empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { RolDto } from '../../aplicacion/dto/rol.dto.js';
 import type { ConsultasRoles } from '../../aplicacion/puertos/consultas-roles.js';
 import { rolPermisos, roles } from './roles.tablas.js';

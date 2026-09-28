@@ -1,7 +1,7 @@
 import { and, asc, eq } from 'drizzle-orm';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import { empresas } from '../../../core/esquemas/empresas.esquema.js';
+import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { EmpresaDto } from '../../aplicacion/dto/empresa.dto.js';
 import type { ConsultasEmpresas } from '../../aplicacion/puertos/consultas-empresas.js';
 import { mapeadorDeEmpresa } from './empresa.mapeador.js';

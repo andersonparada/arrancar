@@ -1,6 +1,6 @@
 import { asc, count, eq } from 'drizzle-orm';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
-import { empresas } from '../../../esquemas/empresas.esquema.js';
+import { empresas } from './empresas.tablas.js';
 import type { CuentaDto } from '../../aplicacion/dto/cuenta.dto.js';
 import type { ConsultasCuentas } from '../../aplicacion/puertos/repositorio-cuentas.js';
 import { cuentas } from './cuentas.tablas.js';

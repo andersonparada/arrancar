@@ -2,7 +2,7 @@ import type { DefinicionDeRecurso } from '../definicion/definir-recurso.js';
 import { lineas, type CampoDelServidor } from './campos-del-recurso.js';
 
 const TABLA_DEL_ALCANCE = {
-  empresa: { tabla: 'empresas', ruta: '../../../core/esquemas/empresas.esquema.js' },
+  empresa: { tabla: 'empresas', ruta: '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js' },
   cuenta: { tabla: 'cuentas', ruta: '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js' },
 } as const;
 

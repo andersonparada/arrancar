@@ -1,5 +1,5 @@
 import { boolean, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { esquemaCore } from '../../../esquemas/core.esquema.js';
+import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 import { idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
 
 /** Suscriptor del SaaS. Agrupa empresas y define qué módulos tiene contratados. */

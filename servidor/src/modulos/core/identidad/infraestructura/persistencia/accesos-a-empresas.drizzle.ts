@@ -2,7 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { Ejecutor } from '../../../base-datos/conexion.js';
 import { roles } from '../../../autorizacion/infraestructura/persistencia/roles.tablas.js';
 import { transaccionEnCurso } from '../../../compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import { empresas, empresaUsuarios } from '../../../esquemas/empresas.esquema.js';
+import { empresas, empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { AccesosAEmpresas } from '../../aplicacion/puertos/accesos-a-empresas.js';
 import type { AccesoAEmpresa } from '../../dominio/acceso-a-empresa.js';
 

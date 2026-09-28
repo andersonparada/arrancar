@@ -3,7 +3,7 @@ import { roles } from '../../../autorizacion/infraestructura/persistencia/roles.
 import type { BaseDatos } from '../../../base-datos/conexion.js';
 import type { EmpresaSesion } from '../../../compartido/aplicacion/contexto-de-sesion.js';
 import { cuentaModulos, cuentas } from '../../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
-import { empresas, empresaUsuarios } from '../../../esquemas/empresas.esquema.js';
+import { empresas, empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { AccesoDelUsuario, EmpresasDeLaSesion } from '../../aplicacion/puertos/empresas-de-la-sesion.js';
 
 const columnasDeEmpresa = {

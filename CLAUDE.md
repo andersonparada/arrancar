@@ -96,8 +96,8 @@ base de desarrollo debe estar levantada.
   core viven en `core.*`.
 - **Migraciones por módulo** en `modulos/<clave>/migraciones`, generadas con
   `bd:generar`; nunca editar una migración ya aplicada en producción. Las tablas
-  viven en `infraestructura/persistencia/*.tablas.ts` (las de empresas y monedas,
-  aún en `core/esquemas/`; drizzle-kit lee las dos).
+  viven en `infraestructura/persistencia/*.tablas.ts` (en el core, dentro de cada
+  contexto: empresas en `cuentas`, monedas en `monedas`); drizzle-kit solo lee esos.
 - La app se conecta como `arrancar_app` (sin privilegios). Las migraciones usan
   `DATABASE_URL_PROPIETARIO`. El migrador da los permisos (GRANT) por esquema.
 - `casing: 'snake_case'`: en TypeScript las columnas son camelCase.
@@ -148,5 +148,6 @@ inicio de sesión); botones y formularios usan la paleta fija (`campo`, `tierra`
 - Errores: subclases de las familias de `core/compartido` (`DatoInvalido`,
   `RecursoNoEncontrado`, `ReglaDeNegocioInfringida`…), con código propio; la API
   responde `{ error: { codigo, mensaje, detalles } }`.
-- Funciones de hasta 25 líneas, complejidad hasta 8 y hasta 3 parámetros (ESLint).
+- Funciones de hasta 25 líneas, complejidad hasta 8, hasta 3 parámetros y
+  archivos de hasta 200 líneas (páginas, 120): ESLint lo marca como error.
 - Pruebas junto al código como `*.prueba.ts`.

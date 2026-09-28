@@ -1,10 +1,10 @@
 import { boolean, char, index, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { esquemaCore } from './core.esquema.js';
-import { idPrimario, marcasDeTiempo } from '../base-datos/columnas.js';
-import { cuentas } from '../cuentas/infraestructura/persistencia/cuentas.tablas.js';
-import { monedas } from './monedas.esquema.js';
-import { usuarios } from '../identidad/infraestructura/persistencia/usuarios.tablas.js';
-import { roles } from '../autorizacion/infraestructura/persistencia/roles.tablas.js';
+import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
+import { idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
+import { cuentas } from './cuentas.tablas.js';
+import { monedas } from '../../../monedas/infraestructura/persistencia/monedas.tablas.js';
+import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
+import { roles } from '../../../autorizacion/infraestructura/persistencia/roles.tablas.js';
 
 export const empresas = esquemaCore.table(
   'empresas',

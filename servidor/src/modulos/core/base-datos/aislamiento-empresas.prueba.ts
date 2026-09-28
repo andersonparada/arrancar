@@ -12,10 +12,10 @@ import { configuracion } from '../../../configuracion.js';
 import { definicionesModulos } from '../../indice.js';
 import { accesosDatos } from '../autorizacion/infraestructura/persistencia/accesos-datos.tablas.js';
 import { cuentas } from '../cuentas/infraestructura/persistencia/cuentas.tablas.js';
-import { empresas } from '../esquemas/empresas.esquema.js';
+import { empresas } from '../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { bd, grupoConexiones } from './conexion.js';
-import { ejecutarEnEmpresa } from './contexto-empresa.js';
+import { enTransaccionSegura } from '../compartido/pruebas/en-transaccion-segura.js';
 import { migrarModulos } from './migrador.js';
 
 let usuarioId: string;
@@ -58,10 +58,10 @@ beforeAll(async () => {
   empresaA = a!.id;
   empresaB = b!.id;
 
-  await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
+  await enTransaccionSegura({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
     tx.insert(accesosDatos).values(insertarAcceso(empresaA, 'dato.de.a')),
   );
-  await ejecutarEnEmpresa({ empresaId: empresaB, cuentaId, usuarioId }, (tx) =>
+  await enTransaccionSegura({ empresaId: empresaB, cuentaId, usuarioId }, (tx) =>
     tx.insert(accesosDatos).values(insertarAcceso(empresaB, 'dato.de.b')),
   );
 });
@@ -72,7 +72,7 @@ afterAll(async () => {
 
 describe('aislamiento entre empresas (RLS)', () => {
   it('cada empresa solo ve sus propias filas, aunque la consulta no filtre', async () => {
-    const vistasPorA = await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
+    const vistasPorA = await enTransaccionSegura({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
       tx.select({ recurso: accesosDatos.recurso }).from(accesosDatos),
     );
     expect(vistasPorA).toEqual([{ recurso: 'dato.de.a' }]);
@@ -84,14 +84,14 @@ describe('aislamiento entre empresas (RLS)', () => {
 
   it('no permite insertar filas a nombre de otra empresa', async () => {
     await expect(
-      ejecutarEnEmpresa({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
+      enTransaccionSegura({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
         tx.insert(accesosDatos).values(insertarAcceso(empresaB, 'intruso')),
       ),
     ).rejects.toThrow();
   });
 
   it('no permite modificar ni borrar filas de otra empresa', async () => {
-    const resultado = await ejecutarEnEmpresa({ empresaId: empresaA, cuentaId, usuarioId }, async (tx) => {
+    const resultado = await enTransaccionSegura({ empresaId: empresaA, cuentaId, usuarioId }, async (tx) => {
       const actualizadas = await tx
         .update(accesosDatos)
         .set({ recurso: 'modificado' })

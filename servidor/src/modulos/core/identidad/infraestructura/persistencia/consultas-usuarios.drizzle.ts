@@ -1,7 +1,7 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { roles } from '../../../autorizacion/infraestructura/persistencia/roles.tablas.js';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
-import { empresas, empresaUsuarios } from '../../../esquemas/empresas.esquema.js';
+import { empresas, empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { UsuarioDto } from '../../aplicacion/dto/usuario.dto.js';
 import type { ConsultasUsuarios } from '../../aplicacion/puertos/consultas-usuarios.js';
 import { usuarios } from './usuarios.tablas.js';

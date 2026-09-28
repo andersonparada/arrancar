@@ -1,7 +1,7 @@
 import { eq, inArray } from 'drizzle-orm';
 import type { Ejecutor } from '../../../base-datos/conexion.js';
 import { transaccionEnCurso } from '../../../compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import { empresas, empresaUsuarios } from '../../../esquemas/empresas.esquema.js';
+import { empresas, empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { RepositorioUsuarios } from '../../aplicacion/puertos/repositorio-usuarios.js';
 import type { NombreDeUsuario } from '../../dominio/nombre-de-usuario.js';
 import type { Usuario, UsuarioId } from '../../dominio/usuario.js';

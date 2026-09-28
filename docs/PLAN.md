@@ -342,3 +342,8 @@ y `demo` / `demo-arrancar`.
     módulo y pasa al futuro módulo de planilla. Teléfonos y correos se guardan
     normalizados (empresas, terceros y contactos). El menú de cada módulo se
     organiza en **Operación**, **Administración** y **Reportes**.
+  - Fases 5 a 8 hechas: core del servidor y del cliente con la arquitectura,
+    generador de código (`npm run generar`) y cierre con las reglas de tamaño
+    como error. **El refactor terminó**; lo siguiente es planificar los módulos
+    de negocio. Pendiente a decidir entonces: en qué moneda está cada monto
+    (existe `core.monedas`, pero el tipo `dinero` no apunta a ella).

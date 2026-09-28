@@ -1,5 +1,5 @@
 import type { Ejecutor } from '../../../base-datos/conexion.js';
-import { empresas, empresaUsuarios } from '../../../esquemas/empresas.esquema.js';
+import { empresas, empresaUsuarios } from './empresas.tablas.js';
 import type { EmpresaInicial } from '../../aplicacion/puertos/transaccion-de-alta.js';
 
 /**

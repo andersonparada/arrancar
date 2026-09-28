@@ -1,5 +1,5 @@
 import { boolean, primaryKey, text, unique, uuid } from 'drizzle-orm/pg-core';
-import { esquemaCore } from '../../../esquemas/core.esquema.js';
+import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 import { idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
 import { cuentas } from '../../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 
