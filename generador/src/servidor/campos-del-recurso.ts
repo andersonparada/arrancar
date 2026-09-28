@@ -4,15 +4,13 @@ import { enServidor, type CampoEnServidor } from './campos-en-servidor.js';
 /** Un campo de la definición junto con cómo se escribe en el servidor. */
 export interface CampoDelServidor extends CampoDefinido {
   servidor: CampoEnServidor;
-  nombreEnCodigo: string;
   requerido: boolean;
 }
 
 export const camposDelServidor = (definicion: DefinicionDeRecurso): CampoDelServidor[] =>
   definicion.campos.map((campo) => ({
     ...campo,
-    servidor: enServidor(campo.campo),
-    nombreEnCodigo: campo.nombre.camel,
+    servidor: enServidor(campo.campo, campo.referida),
     requerido: campo.campo.requerido,
   }));
 

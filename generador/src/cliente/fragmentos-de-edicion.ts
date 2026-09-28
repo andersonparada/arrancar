@@ -1,10 +1,18 @@
+import type { DefinicionDeRecurso } from '../definicion/definir-recurso.js';
+import { nombresDeReferencias, omitirReferencias } from '../referencias.js';
 import { lineas } from '../servidor/campos-del-recurso.js';
 import { conValor } from './campos-en-cliente.js';
 import { esLista, funcionesUsadas, importacion, type CampoDelCliente } from './campos-del-cliente.js';
+import { nombresEnRegistroDePrueba } from './fragmentos-de-referencias.js';
 
 const conNulo = (tipo: string, requerido: boolean) => (requerido ? tipo : `${tipo} | null`);
 
-const TIPO_EN_FORMULARIO = { texto: 'string', numero: 'string | number', siNo: 'boolean' } as const;
+const TIPO_EN_FORMULARIO = {
+  texto: 'string',
+  numero: 'string | number',
+  siNo: 'boolean',
+  referencia: 'string | null',
+} as const;
 
 function tipoEnFormulario(campo: CampoDelCliente): string {
   const { forma } = campo.cliente;
@@ -14,6 +22,7 @@ function tipoEnFormulario(campo: CampoDelCliente): string {
 /** Cómo empieza un registro nuevo: vacío, con el valor predeterminado o con la primera opción. */
 function valorNuevo({ campo, cliente, requerido }: CampoDelCliente): string {
   if (campo.tipo === 'siNo') return String(campo.predeterminado);
+  if (cliente.forma === 'referencia') return 'null';
   if (cliente.forma !== 'lista') return "''";
   return requerido && campo.tipo === 'lista' ? `'${Object.keys(campo.opciones)[0]}'` : 'null';
 }
@@ -49,11 +58,15 @@ function pruebaDeOpcionales(campos: CampoDelCliente[], entidad: string): string 
 }
 
 /** Huecos del servicio, la edición y su prueba. */
-export function fragmentosDeEdicion(campos: CampoDelCliente[], entidad: { pascal: string; camel: string }) {
+export function fragmentosDeEdicion(campos: CampoDelCliente[], definicion: DefinicionDeRecurso) {
+  const { entidad } = definicion;
   const desde = campos.map((campo) => desdeElRegistro(campo, entidad.camel));
   const hacia = campos.map(haciaElServidor);
   return {
     camposTs: lineas(campos.map((c) => `${c.nombreEnCodigo}: ${conNulo(c.tipoPrimitivo, c.requerido)};`)),
+    camposDeReferenciasEnTs: nombresDeReferencias(definicion),
+    omitirReferencias: omitirReferencias(definicion),
+    nombresEnRegistroDePrueba: nombresEnRegistroDePrueba(definicion),
     camposDeEdicion: lineas(campos.map((c) => `${c.nombreEnCodigo}: ${tipoEnFormulario(c)};`)),
     valoresNuevos: lineas(campos.map((c) => `${c.nombreEnCodigo}: ${valorNuevo(c)},`)),
     desdeElRegistro: lineas(desde, '    '),

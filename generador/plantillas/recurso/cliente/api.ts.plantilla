@@ -3,10 +3,10 @@ import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-
 /** {{Singular}} tal como lo manda el servidor. */
 export interface {{Entidad}} {
   id: string;
-{{camposTs}}
+{{camposTs}}{{camposDeReferenciasEnTs}}
 }
 
-export type Datos{{Entidad}} = Omit<{{Entidad}}, 'id'>;
+export type Datos{{Entidad}} = Omit<{{Entidad}}, 'id'{{omitirReferencias}}>;
 
 const RUTA = '/{{moduloClave}}/{{pluralClave}}';
 

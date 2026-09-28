@@ -6,7 +6,7 @@ import type { {{Entidad}}, {{Entidad}}Id } from '../dominio/{{entidadClave}}.js'
 
 function aDto({{entidad}}: {{Entidad}}): {{Entidad}}Dto {
   const { id, {{alcance}}Id, ...datos } = {{entidad}}.instantanea();
-  return { ...datos, id: id.valor{{conversionesAPrimitivo}} };
+  return { ...datos, id: id.valor{{conversionesAPrimitivo}}{{nombresNulosEnDobles}} };
 }
 
 /** Guarda {{losPlural}} en memoria y responde tanto de repositorio como de consultas. */
@@ -35,4 +35,4 @@ export class {{Plural}}EnMemoria implements Repositorio{{Plural}}, Consultas{{Pl
     if (!{{entidad}}) throw new RecursoNoEncontrado('{{ElSingular}}');
     return aDto({{entidad}});
   }
-}
+{{exigirReferenciasEnDobles}}}

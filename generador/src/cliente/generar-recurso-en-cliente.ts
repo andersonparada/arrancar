@@ -1,9 +1,11 @@
 import type { DefinicionDeRecurso } from '../definicion/definir-recurso.js';
 import { GeneracionDeRecurso, type Archivo } from '../generacion-de-recurso.js';
 import { rellenar } from '../motor/plantillas.js';
+import { referenciasDe } from '../referencias.js';
 import { camposDelCliente } from './campos-del-cliente.js';
 import { fragmentosDeEdicion } from './fragmentos-de-edicion.js';
 import { fragmentosDePantalla } from './fragmentos-de-pantalla.js';
+import { fragmentosDeReferenciasEnCliente } from './fragmentos-de-referencias.js';
 
 const MODULO = 'cliente/src/modulos/{{moduloClave}}';
 const COMPOSABLES = `${MODULO}/composables/{{pluralClave}}`;
@@ -22,6 +24,8 @@ const SOLO_SI_SE_ELIMINA: Archivo[] = [
   ['usar-eliminacion.ts', `${COMPOSABLES}/usar-eliminacion-de-{{entidadClave}}.ts`],
 ];
 
+const SOLO_SI_ELIGE_OTROS: Archivo[] = [['referencias.ts', `${COMPOSABLES}/referencias-de-{{entidadClave}}.ts`]];
+
 /**
  * La pantalla de catálogo de un recurso (lista con tarjetas y ventana para
  * registrar y editar), y su lugar en las rutas, el menú y los textos del módulo.
@@ -30,12 +34,20 @@ export class GenerarRecursoEnCliente extends GeneracionDeRecurso {
   protected readonly carpeta = 'recurso/cliente';
 
   protected archivos(definicion: DefinicionDeRecurso): Archivo[] {
-    return definicion.baja === 'eliminar' ? [...ARCHIVOS, ...SOLO_SI_SE_ELIMINA] : ARCHIVOS;
+    return [
+      ...ARCHIVOS,
+      ...(definicion.baja === 'eliminar' ? SOLO_SI_SE_ELIMINA : []),
+      ...(referenciasDe(definicion).length ? SOLO_SI_ELIGE_OTROS : []),
+    ];
   }
 
   protected fragmentos(definicion: DefinicionDeRecurso): Record<string, string> {
     const campos = camposDelCliente(definicion);
-    return { ...fragmentosDeEdicion(campos, definicion.entidad), ...fragmentosDePantalla(campos, definicion) };
+    return {
+      ...fragmentosDeEdicion(campos, definicion),
+      ...fragmentosDePantalla(campos, definicion),
+      ...fragmentosDeReferenciasEnCliente(definicion),
+    };
   }
 
   protected registrar(_definicion: DefinicionDeRecurso, valores: Record<string, string>): void {

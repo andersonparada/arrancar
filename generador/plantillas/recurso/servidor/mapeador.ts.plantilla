@@ -20,7 +20,7 @@ export const mapeadorDe{{Entidad}} = {
     return { ...datos, id: id.valor, {{alcance}}Id: {{alcance}}Id.valor{{conversionesAPrimitivo}} };
   },
 
-  aDto({ {{alcance}}Id, creadoEn, actualizadoEn, ...dto }: Fila): {{Entidad}}Dto {
+  aDto({ {{alcance}}Id, creadoEn, actualizadoEn, ...dto }: Fila{{tipoDeReferenciasEnFila}}): {{Entidad}}Dto {
     return dto;
   },
 };

@@ -4,7 +4,7 @@ import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { api{{Plural}}, type {{Entidad}} } from '../../servicios/{{pluralClave}}.api';
 import { datosDe{{Entidad}}, edicionDe, type EdicionDe{{Entidad}} } from './edicion-de-{{entidadClave}}';
-
+{{importacionDeReferencias}}
 const guardar{{Entidad}} = (edicion: EdicionDe{{Entidad}}) =>
   edicion.id
     ? api{{Plural}}.actualizar(edicion.id, datosDe{{Entidad}}(edicion))
@@ -19,7 +19,7 @@ export function usar{{Plural}}() {
     [] as {{Entidad}}[],
     'No se pudieron cargar {{losPlural}}.',
   );
-  const edicion = ref<EdicionDe{{Entidad}}>({ ...edicionDe(), abierta: false });
+{{cargaDeReferencias}}  const edicion = ref<EdicionDe{{Entidad}}>({ ...edicionDe(), abierta: false });
 
   function abrir({{entidad}}?: {{Entidad}}): void {
     edicion.value = edicionDe({{entidad}});
@@ -34,5 +34,5 @@ export function usar{{Plural}}() {
     await cargar();
   }
 
-  return { registros, cargando, cargar, edicion, enviando, errores, abrir, guardar };
+  return { registros, cargando, cargar, {{referenciasEnRetorno}}edicion, enviando, errores, abrir, guardar };
 }

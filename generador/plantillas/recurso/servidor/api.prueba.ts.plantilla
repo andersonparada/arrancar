@@ -1,22 +1,22 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { usarEntornoApi } from './soporte/entorno-api.js';
+{{importacionClienteApi}}import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const RUTA = '/api/{{moduloClave}}/{{pluralClave}}';
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let otraCuenta: CuentaDePrueba;
-
+{{referenciasEnApi}}
 const datos = (cambios: Record<string, unknown> = {}) => ({
-{{solicitudDePrueba}}
-  ...cambios,
+{{solicitudEnApi}}
+{{referenciasEnDatos}}  ...cambios,
 });
 
 beforeAll(async () => {
   const modulos = ['{{moduloClave}}'];
   cuenta = await darDeAltaCuenta(entorno, { nombre: 'Generada', usuario: 'propietariogenerado', modulos });
   otraCuenta = await darDeAltaCuenta(entorno, { nombre: 'Ajena', usuario: 'propietarioajeno', modulos });
-});
+{{crearReferenciasEnApi}}});
 
 describe('{{pluralTexto}} por API', () => {
   it('se registran, se listan y se cambian', async () => {
@@ -29,9 +29,9 @@ describe('{{pluralTexto}} por API', () => {
     expect((await cuenta.propietario.get(RUTA)).cuerpo).toEqual([cambiado.cuerpo]);
     expect(cambiado.cuerpo.{{campoMostrar}}).toBe({{valorCambiado}});
   });
-{{bajaEnApi}}
+{{bajaEnApi}}{{pruebaDeReferenciaAjena}}
   it('otra cuenta no los ve', async () => {
-    const ajeno = await otraCuenta.propietario.post(RUTA, datos());
+    const ajeno = await otraCuenta.propietario.post(RUTA, datos({{datosAjenos}}));
 
     expect((await cuenta.propietario.get(`${RUTA}/${ajeno.cuerpo.id}`)).estado).toBe(404);
     expect((await otraCuenta.propietario.get(RUTA)).cuerpo).toEqual([ajeno.cuerpo]);

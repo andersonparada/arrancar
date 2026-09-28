@@ -23,6 +23,13 @@ function indicesUnicos(campos: CampoDelServidor[], { plural, alcance }: Definici
     .join('');
 }
 
+/** Cada llave foránea con su índice: sin él, borrar o buscar por el registro elegido recorre toda la tabla. */
+const indicesDeReferencias = (campos: CampoDelServidor[], { plural }: DefinicionDeRecurso) =>
+  campos
+    .filter(({ campo }) => campo.tipo === 'referencia')
+    .map((campo) => `index('${plural.serpiente}_${campo.nombre.serpiente}_idx').on(t.${campo.nombreEnCodigo}), `)
+    .join('');
+
 function funcionesPg(campos: CampoDelServidor[]): string {
   const funciones = new Set(['uuid', ...campos.flatMap((campo) => campo.servidor.funcionesPg)]);
   if (campos.some(esUnico)) funciones.add('unique');
@@ -47,7 +54,7 @@ export function fragmentosDeTablaYHttp(campos: CampoDelServidor[], definicion: D
     importacionTablaDelAlcance: `import { ${alcance.tabla} } from '${alcance.ruta}';`,
     tablaDelAlcance: alcance.tabla,
     columnas: lineas(campos.map(columna), '    '),
-    indices: indicesUnicos(campos, definicion),
+    indices: indicesUnicos(campos, definicion) + indicesDeReferencias(campos, definicion),
     importacionesZod: importacionesZod(campos),
     camposZod: lineas(campos.map((campo) => `${campo.nombreEnCodigo}: ${zodDe(campo)},`)),
   };

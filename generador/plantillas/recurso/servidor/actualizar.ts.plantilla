@@ -16,7 +16,7 @@ export class Actualizar{{Entidad}} {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const {{entidad}} = await {{entidad}}Existente(repositorio, {{entidad}}Id);
-      {{entidad}}.cambiarDatos(datosDe{{Entidad}}(solicitud));
+{{exigirReferencias}}      {{entidad}}.cambiarDatos(datosDe{{Entidad}}(solicitud));
       await repositorio.guardar({{entidad}});
       return consultas.obtener({{entidad}}Id);
     });

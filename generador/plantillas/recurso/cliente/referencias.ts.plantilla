@@ -1,0 +1,8 @@
+{{importacionesEnReferencias}}
+/** Lo que se puede elegir en los selectores de la ventana {{delSingular}}. */
+export function usarReferenciasDe{{Entidad}}({{parametroDeRegistros}}) {
+{{cargasEnReferencias}}
+  return computed(() => ({
+{{opcionesDeReferencias}}
+  }));
+}

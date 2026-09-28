@@ -30,3 +30,22 @@ export function opcionesDeLista<Valor extends string>(
   const deLaLista = (Object.entries(opciones) as [Valor, string][]).map(([valor, texto]) => ({ valor, texto }));
   return opcional ? [{ valor: null, texto: 'Sin elegir' }, ...deLaLista] : deLaLista;
 }
+
+/** Una opción de un selector que apunta a otro registro: su id y cómo se llama. */
+export interface OpcionDeRegistro {
+  valor: string | null;
+  texto: string;
+}
+
+/**
+ * Los registros que se pueden elegir en un selector, por su nombre. Siempre
+ * empieza vacío: un registro nuevo todavía no ha elegido nada.
+ */
+export function opcionesDeRegistros<Registro extends { id: string }>(
+  registros: Registro[],
+  nombre: (registro: Registro) => string,
+  requerido: boolean,
+): OpcionDeRegistro[] {
+  const vacia = { valor: null, texto: requerido ? 'Elija una opción' : 'Sin elegir' };
+  return [vacia, ...registros.map((registro) => ({ valor: registro.id, texto: nombre(registro) }))];
+}

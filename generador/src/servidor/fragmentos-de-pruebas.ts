@@ -49,11 +49,16 @@ function pruebaDeReglas(campos: CampoDelServidor[], definicion: DefinicionDeRecu
   };
 }
 
+const solicitudDe = (campos: CampoDelServidor[]) =>
+  lineas(campos.map((campo) => `${campo.nombreEnCodigo}: ${campo.servidor.valoresDePrueba[0]},`));
+
 /** Huecos de las pruebas unitarias y de API: datos válidos, el cambio y la regla a comprobar. */
 export function fragmentosDePruebas(campos: CampoDelServidor[], definicion: DefinicionDeRecurso) {
   const mostrar = campos.find((campo) => campo.nombreEnCodigo === definicion.mostrar)!;
   return {
-    solicitudDePrueba: lineas(campos.map((campo) => `${campo.nombreEnCodigo}: ${campo.servidor.valoresDePrueba[0]},`)),
+    solicitudDePrueba: solicitudDe(campos),
+    // En la API, lo que se elige lo pone cada prueba: debe existir en la cuenta.
+    solicitudEnApi: solicitudDe(campos.filter(({ campo }) => campo.tipo !== 'referencia')),
     cambioDePrueba: cambioDePrueba(campos, definicion.mostrar),
     valorCambiado: mostrar.servidor.valoresDePrueba[1],
     ...pruebaDeReglas(campos, definicion),

@@ -77,6 +77,16 @@ export const fechaOpcional = () =>
     .nullish()
     .transform((valor) => valor || null);
 
+/** El id de otro registro que se eligió en un selector. */
+export const idObligatorio = () => z.uuid('Elija una opción.');
+
+/** El id de otro registro, si se eligió; sin elegir llega como `null`. */
+export const idOpcional = () =>
+  z
+    .union([idObligatorio(), z.literal('')])
+    .nullish()
+    .transform((valor) => valor || null);
+
 /** Una de las opciones de una lista fija. */
 export const opcionObligatoria = <const Opciones extends readonly [string, ...string[]]>(opciones: Opciones) =>
   z.enum(opciones);

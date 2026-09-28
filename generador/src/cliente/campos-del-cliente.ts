@@ -5,7 +5,6 @@ import { enCliente, type CampoEnCliente } from './campos-en-cliente.js';
 /** Un campo de la definición junto con cómo se escribe en el cliente. */
 export interface CampoDelCliente extends CampoDefinido {
   cliente: CampoEnCliente;
-  nombreEnCodigo: string;
   requerido: boolean;
   /** El tipo que manda el servidor, sin `| null` (el mismo del DTO). */
   tipoPrimitivo: string;
@@ -17,11 +16,10 @@ export interface CampoDelCliente extends CampoDefinido {
 
 export const camposDelCliente = (definicion: DefinicionDeRecurso): CampoDelCliente[] =>
   definicion.campos.map((campo) => {
-    const servidor = enServidor(campo.campo);
+    const servidor = enServidor(campo.campo, campo.referida);
     return {
       ...campo,
       cliente: enCliente(campo.campo),
-      nombreEnCodigo: campo.nombre.camel,
       requerido: campo.campo.requerido,
       tipoPrimitivo: servidor.tipoPrimitivo,
       valorDePrueba: servidor.valoresDePrueba[0],

@@ -670,6 +670,28 @@ entrega como un commit propio.
     generados: registrar, ver el error de un NIT inválido en su campo, editar,
     eliminar con confirmación e inactivar con su insignia. 280 pruebas del
     servidor, 45 del cliente y 27 del generador.
+  - **G4.1 Campos de referencia (2026-09-27):** el G4 se partió en dos entregas;
+    esta trae `referencia('Potrero')`. El campo se escribe sin "Id"
+    (`potrero`) y el generador lo llama `potreroId`. El comando carga la
+    definición del recurso referido (del mismo módulo) y exige que ya esté
+    generado; un recurso de toda la cuenta no puede apuntar a uno de cada
+    empresa, y una referencia a la misma entidad (la madre de un animal) debe ser
+    opcional. Servidor: llave foránea con índice (sin borrado en cascada: borrar
+    lo que está en uso responde 409), la consulta une cada tabla referida con un
+    alias y trae `potreroNombre` (el campo que nombra al referido), y los casos
+    de uso crear y actualizar llaman a `exigirReferencias` dentro de la unidad de
+    trabajo. Esa comprobación usa `exigirQueExista` (core), que consulta con RLS:
+    **la llave foránea sola no basta**, porque PostgreSQL la revisa sin RLS y
+    aceptaría el id de un registro de otra empresa. La prueba de API registra
+    antes lo que se elige (en cadena, si el referido también elige) y comprueba
+    que elegir un registro de otra cuenta responde 404. Cliente: selector con
+    los registros por su nombre (`opcionesDeRegistros`, siempre con la opción
+    vacía), cargados por un composable propio (`referencias-de-<entidad>.ts`),
+    y la tarjeta muestra el nombre de lo elegido. Core: `idObligatorio` e
+    `idOpcional` (Zod). Probado en el navegador: sin potrero avisa "Elija una
+    opción." en su campo; con potrero y madre, la tarjeta los muestra por su
+    nombre; eliminar un potrero en uso no lo borra y avisa. 299 pruebas del
+    servidor, 51 del cliente y 34 del generador.
 
 ### Plan de la fase 6 (acordado con el usuario, 2026-09-27)
 
@@ -771,7 +793,8 @@ objeto de valor si lo tiene, su campo de formulario y cómo se muestra.
 | **G1 Base y módulo** | `definirRecurso` y los tipos de campo; motor (escribir sin sobrescribir, insertar en marcas); `generar modulo`. |
 | **G2 Recurso en el servidor** | Dominio, aplicación, infraestructura, http, permisos, migración y pruebas. |
 | **G3 Recurso en el cliente (catálogo)** | Servicio, textos, composables, tarjeta, ventana, página, rutas y menú. |
-| **G4 Pantalla completa y referencias** | Lista, formulario en página y ficha; campos `referencia` (selector en el cliente, llave foránea en el servidor). |
+| **G4.1 Referencias** | Campos `referencia`: llave foránea, nombre de lo elegido y comprobación con RLS en el servidor; selector en el cliente. |
+| **G4.2 Pantalla completa** | Lista, formulario en página y ficha para `pantalla: 'completa'`. |
 
 La fase de cierre pasa a ser la **fase 8** (reglas de tamaño a error,
 advertencias de `aplicacion.ts` y `registro-modulos.ts`, retirar

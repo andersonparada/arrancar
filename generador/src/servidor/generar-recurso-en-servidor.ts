@@ -4,6 +4,7 @@ import { rellenar } from '../motor/plantillas.js';
 import { camposDelServidor } from './campos-del-recurso.js';
 import { fragmentosDeDominio } from './fragmentos-de-dominio.js';
 import { fragmentosDePruebas } from './fragmentos-de-pruebas.js';
+import { fragmentosDeReferencias } from './fragmentos-de-referencias.js';
 import { fragmentosDeTablaYHttp } from './fragmentos-de-tabla-y-http.js';
 
 const MODULO = 'servidor/src/modulos/{{moduloClave}}';
@@ -52,6 +53,7 @@ export class GenerarRecursoEnServidor extends GeneracionDeRecurso {
       ...fragmentosDeDominio(campos, definicion.entidad.pascal),
       ...fragmentosDeTablaYHttp(campos, definicion),
       ...fragmentosDePruebas(campos, definicion),
+      ...fragmentosDeReferencias(definicion),
     };
   }
 

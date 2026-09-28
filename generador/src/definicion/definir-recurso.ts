@@ -35,8 +35,12 @@ export interface EntradaDeRecurso {
 
 export interface CampoDefinido {
   nombre: Nombres;
+  /** Como se llama en el código: el nombre, o `potreroId` si apunta a otra entidad. */
+  nombreEnCodigo: string;
   etiqueta: string;
   campo: Campo;
+  /** A qué recurso apunta un campo de referencia; lo completa el comando al cargar las definiciones. */
+  referida?: DefinicionDeRecurso;
 }
 
 /** La definición validada y con todos los nombres que necesitan las plantillas. */
@@ -73,10 +77,17 @@ function problemaDelTipo(nombre: string, campo: Campo): string | undefined {
     case 'decimal':
       return campo.decimales >= 1 && campo.decimales <= 4 ? undefined : `"${nombre}" lleva de 1 a 4 decimales.`;
     case 'referencia':
-      return FORMA_DE_ENTIDAD.test(campo.entidad) ? undefined : `"${nombre}" apunta a una entidad mal escrita.`;
+      return problemaDeReferencia(nombre, campo.entidad);
     default:
       return undefined;
   }
+}
+
+function problemaDeReferencia(nombre: string, entidad: string): string | undefined {
+  if (!FORMA_DE_ENTIDAD.test(entidad)) return `"${nombre}" apunta a una entidad mal escrita.`;
+  if (nombre.endsWith('Id'))
+    return `"${nombre}" va sin "Id": el generador lo agrega (${nombre.slice(0, -2)} → ${nombre}).`;
+  return undefined;
 }
 
 /** Columnas que pone el generador; un campo no puede llamarse así. */
@@ -95,12 +106,22 @@ function problemasDeCampos(entrada: EntradaDeRecurso): string[] {
   const nombres = Object.keys(entrada.campos);
   if (nombres.length === 0) return ['El recurso no tiene campos.'];
   const problemas = nombres.flatMap((nombre) => problemasDeUnCampo(nombre, entrada.campos[nombre]!));
-  if (entrada.mostrar && !nombres.includes(entrada.mostrar))
-    problemas.push(`"mostrar" nombra un campo que no existe: ${entrada.mostrar}.`);
-  if (!entrada.mostrar && !campoQueNombra(entrada.campos))
-    problemas.push('Indique en "mostrar" qué campo nombra al registro.');
-  return problemas;
+  return [...problemas, ...problemasDeReferenciasAsiMisma(entrada), ...problemasDeMostrar(entrada)];
 }
+
+/** El campo que nombra al registro: debe existir y ser un dato propio, no una referencia. */
+function problemasDeMostrar({ mostrar, campos }: EntradaDeRecurso): string[] {
+  if (!mostrar) return campoQueNombra(campos) ? [] : ['Indique en "mostrar" qué campo nombra al registro.'];
+  if (!campos[mostrar]) return [`"mostrar" nombra un campo que no existe: ${mostrar}.`];
+  if (campos[mostrar].tipo === 'referencia') return [`"mostrar" no puede ser una referencia: ${mostrar}.`];
+  return [];
+}
+
+/** Una entidad que apunta a sí misma (la madre de un animal) no puede exigirlo: el primero no tendría a quién. */
+const problemasDeReferenciasAsiMisma = ({ entidad, campos }: EntradaDeRecurso) =>
+  Object.entries(campos)
+    .filter(([, campo]) => campo.tipo === 'referencia' && campo.entidad === entidad && campo.requerido)
+    .map(([nombre]) => `"${nombre}" apunta a la misma entidad: debe ser opcional.`);
 
 /** El primer texto requerido: suele ser el nombre, el arete o el código. */
 const campoQueNombra = (campos: Record<string, Campo>) =>
@@ -108,6 +129,7 @@ const campoQueNombra = (campos: Record<string, Campo>) =>
 
 const campoDefinido = ([nombre, campo]: [string, Campo]): CampoDefinido => ({
   nombre: nombresDeCodigo(nombre),
+  nombreEnCodigo: campo.tipo === 'referencia' ? `${nombre}Id` : nombre,
   etiqueta: campo.etiqueta ?? nombresDeCodigo(nombre).legible,
   campo,
 });

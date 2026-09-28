@@ -1,8 +1,8 @@
-import type { {{Entidad}}Dto } from '../dto/{{entidadClave}}.dto.js';
+import type { {{Entidad}}Dto{{importarSolicitudEnConsultas}} } from '../dto/{{entidadClave}}.dto.js';
 
 /** Lecturas para pantallas: devuelven datos planos, sin reconstruir entidades. */
 export interface Consultas{{Plural}} {
   listar(): Promise<{{Entidad}}Dto[]>;
   /** @throws RecursoNoEncontrado si no existe o no es de {{laEmpresaOCuenta}}. */
-  obtener({{entidad}}Id: string): Promise<{{Entidad}}Dto>;
+  obtener({{entidad}}Id: string): Promise<{{Entidad}}Dto>;{{exigirReferenciasEnPuerto}}
 }

@@ -16,7 +16,7 @@ export class Crear{{Entidad}} {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
     const {{entidad}} = {{Entidad}}.crear(Identificador.desde(operador.{{alcance}}Id), datosDe{{Entidad}}(solicitud));
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      await repositorio.agregar({{entidad}});
+{{exigirReferencias}}      await repositorio.agregar({{entidad}});
       return consultas.obtener({{entidad}}.id.valor);
     });
   }

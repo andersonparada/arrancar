@@ -1,4 +1,5 @@
 import type { Campo, TipoDeCampo } from '../definicion/campos.js';
+import type { DefinicionDeRecurso } from '../definicion/definir-recurso.js';
 import { ErrorDelGenerador } from '../definicion/errores.js';
 
 /** Un objeto de valor del core: `Correo` en `objetos-valor/correo.js`. */
@@ -24,7 +25,7 @@ export interface CampoEnServidor {
   valoresDePrueba: [string, string];
 }
 
-type Traductor = (campo: Campo) => CampoEnServidor;
+type Traductor = (campo: Campo, referida?: DefinicionDeRecurso) => CampoEnServidor;
 
 const LARGO_DE_TEXTO_LARGO = 2000;
 const comillas = (texto: string) => `'${texto.replaceAll("'", "\\'")}'`;
@@ -122,9 +123,22 @@ const TRADUCTORES: Record<TipoDeCampo, Traductor> = {
   telefono: () => conObjetoDeValor('Telefono', 'textoOpcional(30)', ["'55551234'", "'55559876'"]),
   nit: () => conObjetoDeValor('Nit', 'nitOpcional', ["'576937K'", "'12345679'"]),
   dpi: () => conObjetoDeValor('Dpi', 'dpiOpcional', ["'1234567890101'", "'0000000002217'"]),
-  referencia: () => {
-    throw new ErrorDelGenerador('Los campos de referencia llegan en el paso G4 del plan.');
-  },
+  referencia,
 };
 
-export const enServidor = (campo: Campo): CampoEnServidor => TRADUCTORES[campo.tipo](campo);
+/** El id de otro registro: llave foránea a su tabla (que puede ser la misma). */
+function referencia(campo: Campo, referida?: DefinicionDeRecurso): CampoEnServidor {
+  if (!referida) throw new ErrorDelGenerador(`Falta cargar la entidad a la que apunta un campo de ${campo.tipo}.`);
+  return {
+    tipoDominio: 'string',
+    tipoPrimitivo: 'string',
+    columna: `uuid().references((): AnyPgColumn => ${referida.plural.camel}.id)`,
+    funcionesPg: ['uuid', 'index', 'type AnyPgColumn'],
+    zodObligatorio: 'idObligatorio()',
+    zodOpcional: 'idOpcional()',
+    valoresDePrueba: ["'00000000-0000-4000-8000-000000000001'", "'00000000-0000-4000-8000-000000000002'"],
+  };
+}
+
+export const enServidor = (campo: Campo, referida?: DefinicionDeRecurso): CampoEnServidor =>
+  TRADUCTORES[campo.tipo](campo, referida);

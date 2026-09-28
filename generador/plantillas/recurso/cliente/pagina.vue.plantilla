@@ -10,7 +10,7 @@ import { detallesDe{{Entidad}} } from '../composables/{{pluralClave}}/detalles-d
 import { VENTANAS_{{MODULO}} } from '../textos';
 
 const ventana = VENTANAS_{{MODULO}}.{{plural}};
-const { registros, cargando, {{cargarEnPagina}}edicion, enviando, errores, abrir, guardar } = usar{{Plural}}();
+const { registros, cargando, {{cargarEnPagina}}{{referenciasEnPagina}}edicion, enviando, errores, abrir, guardar } = usar{{Plural}}();
 {{eliminarEnPagina}}</script>
 
 <template>
@@ -34,7 +34,7 @@ const { registros, cargando, {{cargarEnPagina}}edicion, enviando, errores, abrir
 
     <VentanaDe{{Entidad}}
       v-model="edicion"
-      :errores="errores"
+{{referenciasEnVentana}}      :errores="errores"
       :enviando="enviando"
       @cerrar="edicion.abierta = false"
       @guardar="guardar"

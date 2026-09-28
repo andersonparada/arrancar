@@ -3,6 +3,7 @@ import { ErrorDelGenerador } from '../definicion/errores.js';
 import type { EscritorDeArchivos } from '../motor/escritor-de-archivos.js';
 import { GenerarRecursoEnCliente } from '../cliente/generar-recurso-en-cliente.js';
 import { GenerarRecursoEnServidor } from '../servidor/generar-recurso-en-servidor.js';
+import { ResolverReferencias } from './resolver-referencias.js';
 
 /** Trae la definición de `generador/definiciones/<modulo>/<entidad>.ts`. */
 export type CargadorDeDefiniciones = (ruta: string) => Promise<DefinicionDeRecurso>;
@@ -40,8 +41,9 @@ export class GenerarRecurso {
     if (!modulo || !entidad || sobra.length > 0) throw new RutaDeRecursoInvalida(ruta);
     const archivoDelModulo = `servidor/src/modulos/${modulo}/modulo.ts`;
     if (!this.escritor.existe(archivoDelModulo)) throw new ModuloInexistente(modulo);
-    const definicion = await this.cargar(ruta);
-    if (definicion.modulo.clave !== modulo) throw new DefinicionDeOtroModulo(ruta, definicion.modulo.clave);
+    const cargada = await this.cargar(ruta);
+    if (cargada.modulo.clave !== modulo) throw new DefinicionDeOtroModulo(ruta, cargada.modulo.clave);
+    const definicion = await new ResolverReferencias(this.escritor, this.cargar).resolver(cargada);
 
     const nombre = nombreDelModulo(this.escritor.leer(archivoDelModulo), modulo);
     new GenerarRecursoEnServidor(this.escritor).ejecutar(definicion, nombre);

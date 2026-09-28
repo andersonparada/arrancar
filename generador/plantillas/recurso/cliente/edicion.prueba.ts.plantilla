@@ -1,18 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { {{Entidad}} } from '../../servicios/{{pluralClave}}.api';
+import type { Datos{{Entidad}}, {{Entidad}} } from '../../servicios/{{pluralClave}}.api';
 import { datosDe{{Entidad}}, edicionDe } from './edicion-de-{{entidadClave}}';
 
-const {{entidad}}: {{Entidad}} = {
-  id: 'registro-1',
+const datos: Datos{{Entidad}} = {
 {{registroDePrueba}}
 };
+const {{entidad}}: {{Entidad}} = { id: 'registro-1', ...datos{{nombresEnRegistroDePrueba}} };
 
 describe('ventana de {{pluralTexto}}', () => {
   it('lo que se abre para editar se manda igual si no se cambia nada', () => {
-    const { id, ...datos } = {{entidad}};
-
     expect(datosDe{{Entidad}}(edicionDe({{entidad}}))).toEqual(datos);
-    expect(edicionDe({{entidad}}).id).toBe(id);
+    expect(edicionDe({{entidad}}).id).toBe({{entidad}}.id);
   });
 
   it('un registro nuevo empieza sin id', () => {

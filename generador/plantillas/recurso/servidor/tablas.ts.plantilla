@@ -2,7 +2,7 @@ import { {{importacionesPg}} } from 'drizzle-orm/pg-core';
 import { idPrimario, marcasDeTiempo, politicaPor{{Alcance}} } from '../../../core/base-datos/columnas.js';
 {{importacionTablaDelAlcance}}
 import { esquema{{Modulo}} } from './esquema.tablas.js';
-
+{{importacionesDeTablasReferidas}}
 /** {{LosPlural}} de cada {{alcance}}; la seguridad por {{alcance}} (RLS) oculta las de otras. */
 export const {{plural}} = esquema{{Modulo}}.table(
   '{{pluralSerpiente}}',

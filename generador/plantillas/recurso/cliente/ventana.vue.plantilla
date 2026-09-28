@@ -1,9 +1,9 @@
 <script setup lang="ts">
-{{importacionesDeLaVentana}}import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+{{importacionesDeLaVentana}}{{importacionDeOpcionesEnVentana}}import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import type { EdicionDe{{Entidad}} } from '../../composables/{{pluralClave}}/edicion-de-{{entidadClave}}';
 
-defineProps<{ errores: Record<string, string>; enviando: boolean }>();
+defineProps<{ errores: Record<string, string>; enviando: boolean{{propDeReferencias}} }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const edicion = defineModel<EdicionDe{{Entidad}}>({ required: true });
 </script>

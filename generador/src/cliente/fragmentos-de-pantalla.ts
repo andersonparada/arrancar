@@ -1,4 +1,5 @@
 import type { DefinicionDeRecurso } from '../definicion/definir-recurso.js';
+import { nombreDeLaReferencia } from '../referencias.js';
 import { conValor } from './campos-en-cliente.js';
 import { esLista, funcionesUsadas, importacion, type CampoDelCliente } from './campos-del-cliente.js';
 
@@ -7,6 +8,7 @@ const COMPONENTES_DE_CAMPO = {
   numero: 'CampoTexto',
   siNo: 'CampoInterruptor',
   lista: 'CampoSelector',
+  referencia: 'CampoSelector',
 };
 
 /** El control de la ventana para un campo, con su etiqueta, si es obligatorio y su error. */
@@ -15,6 +17,7 @@ function control(campo: CampoDelCliente): string {
   const modelo = `v-model="edicion.${nombre}" etiqueta="${etiqueta}"`;
   const error = `${requerido ? ' requerido' : ''} :error="errores.${nombre}"`;
   if (cliente.forma === 'siNo') return `<CampoInterruptor ${modelo} />`;
+  if (cliente.forma === 'referencia') return `<CampoSelector ${modelo} :opciones="referencias.${nombre}"${error} />`;
   if (cliente.forma === 'lista') {
     const opciones = `:opciones="opcionesDeLista(${campo.constanteDeOpciones}, ${!requerido})"`;
     return `<CampoSelector ${modelo} ${opciones}${error} />`;
@@ -35,10 +38,12 @@ function importacionesDeLaVentana(campos: CampoDelCliente[], entidadClave: strin
   ].join('');
 }
 
-const valorEnTarjeta = (campo: CampoDelCliente) =>
-  esLista(campo)
-    ? `formatearOpcion(${campo.constanteDeOpciones}, registro.${campo.nombreEnCodigo})`
-    : conValor(campo.cliente.detalle, `registro.${campo.nombreEnCodigo}`);
+/** Lo que muestra la tarjeta: la opción con su texto, el nombre de lo elegido o el valor con su formato. */
+function valorEnTarjeta(campo: CampoDelCliente): string {
+  if (esLista(campo)) return `formatearOpcion(${campo.constanteDeOpciones}, registro.${campo.nombreEnCodigo})`;
+  const dato = campo.cliente.forma === 'referencia' ? nombreDeLaReferencia(campo) : campo.nombreEnCodigo;
+  return conValor(campo.cliente.detalle, `registro.${dato}`);
+}
 
 /** La tarjeta muestra todo menos el campo que la titula y el estado (que va como insignia). */
 function fragmentosDeDetalles(campos: CampoDelCliente[], { mostrar, entidad }: DefinicionDeRecurso) {

@@ -2,9 +2,9 @@ import type { Campo, TipoDeCampo } from '../definicion/campos.js';
 
 /**
  * Cómo trabaja el formulario con el campo: como texto (también números y fechas,
- * que el campo devuelve así), como sí/no o como una opción de lista.
+ * que el campo devuelve así), como sí/no, como una opción de lista o como el id de otro registro.
  */
-export type FormaEnFormulario = 'texto' | 'numero' | 'siNo' | 'lista';
+export type FormaEnFormulario = 'texto' | 'numero' | 'siNo' | 'lista' | 'referencia';
 
 /** Cómo se escribe un tipo de campo en el cliente. */
 export interface CampoEnCliente {
@@ -35,7 +35,7 @@ const numero = (detalle: string, alServidor: [string, string], conDecimales: boo
   alServidor,
 });
 
-const TRADUCTORES: Record<Exclude<TipoDeCampo, 'referencia'>, CampoEnCliente> = {
+const TRADUCTORES: Record<TipoDeCampo, CampoEnCliente> = {
   texto: texto(),
   textoLargo: texto('multilinea'),
   entero: numero('formatearTexto({})', ['numeroRequerido({})', 'numeroONulo({})'], false),
@@ -56,11 +56,11 @@ const TRADUCTORES: Record<Exclude<TipoDeCampo, 'referencia'>, CampoEnCliente> = 
   },
   nit: texto('sin-correccion'),
   dpi: texto('sin-correccion'),
+  // Sin elegir, uno obligatorio se manda vacío para que el servidor diga "Elija una opción".
+  referencia: { forma: 'referencia', atributos: '', detalle: 'formatearTexto({})', alServidor: ["{} ?? ''", '{}'] },
 };
 
-/** Los campos de referencia no llegan aquí: el servidor ya los rechaza hasta el paso G4. */
-export const enCliente = (campo: Campo): CampoEnCliente =>
-  TRADUCTORES[campo.tipo as Exclude<TipoDeCampo, 'referencia'>];
+export const enCliente = (campo: Campo): CampoEnCliente => TRADUCTORES[campo.tipo];
 
 /** Pone el valor en el lugar de `{}`. */
 export const conValor = (molde: string, valor: string) => molde.replaceAll('{}', valor);

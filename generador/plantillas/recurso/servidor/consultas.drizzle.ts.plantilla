@@ -1,20 +1,26 @@
-import { asc, eq } from 'drizzle-orm';
-import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
+import { asc, eq, getTableColumns } from 'drizzle-orm';
+{{importacionesDeConsultas}}import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import type { {{Entidad}}Dto } from '../../aplicacion/dto/{{entidadClave}}.dto.js';
+import type { {{Entidad}}Dto{{importarSolicitudEnConsultas}} } from '../../aplicacion/dto/{{entidadClave}}.dto.js';
 import type { Consultas{{Plural}} } from '../../aplicacion/puertos/consultas-{{pluralClave}}.js';
 import { mapeadorDe{{Entidad}} } from './{{entidadClave}}.mapeador.js';
 import { {{plural}} } from './{{pluralClave}}.tablas.js';
+{{importacionesDeTablasReferidas}}{{aliasDeReferencias}}
+const columnas = { ...getTableColumns({{plural}}){{columnasDeReferencias}} };
 
 export class Consultas{{Plural}}Drizzle implements Consultas{{Plural}} {
   async listar(): Promise<{{Entidad}}Dto[]> {
-    const filas = await transaccionEnCurso().select().from({{plural}}).orderBy(asc({{plural}}.{{campoMostrar}}));
+    const filas = await this.consulta().orderBy(asc({{plural}}.{{campoMostrar}}));
     return filas.map(mapeadorDe{{Entidad}}.aDto);
   }
 
   async obtener({{entidad}}Id: string): Promise<{{Entidad}}Dto> {
-    const [fila] = await transaccionEnCurso().select().from({{plural}}).where(eq({{plural}}.id, {{entidad}}Id));
+    const [fila] = await this.consulta().where(eq({{plural}}.id, {{entidad}}Id));
     if (!fila) throw new RecursoNoEncontrado('{{ElSingular}}');
     return mapeadorDe{{Entidad}}.aDto(fila);
+  }
+{{exigirReferenciasEnDrizzle}}
+  private consulta() {
+    return transaccionEnCurso().select(columnas).from({{plural}}){{unionesDeReferencias}};
   }
 }
