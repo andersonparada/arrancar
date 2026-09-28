@@ -14,6 +14,7 @@ const potrero: EntradaDeRecurso = {
   plural: 'Potreros',
   alcance: 'empresa',
   pantalla: 'catalogo',
+  seccion: 'administracion',
   campos: { nombre: texto({ requerido: true }) },
 };
 
@@ -23,6 +24,7 @@ const animal: EntradaDeRecurso = {
   plural: 'Animales',
   alcance: 'empresa',
   pantalla: 'catalogo',
+  seccion: 'administracion',
   campos: {
     arete: texto({ requerido: true }),
     potrero: referencia('Potrero', { requerido: true }),

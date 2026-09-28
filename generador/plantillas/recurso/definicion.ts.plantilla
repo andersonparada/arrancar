@@ -7,6 +7,8 @@ import { definirRecurso, texto, textoLargo } from '../../src/definicion/indice.j
  * Tipos de campo: texto, textoLargo, entero, decimal, dinero, fecha, siNo, lista,
  * correo, telefono, nit y dpi (se importan de ../../src/definicion/indice.js).
  * Revise el plural, los textos con tildes y el género: salen en las pantallas.
+ * Sección del menú: 'operacion' (el trabajo del día), 'administracion'
+ * (catálogos y datos maestros) o 'reportes'.
  */
 export const recurso = definirRecurso({
   modulo: '{{moduloClave}}',
@@ -16,6 +18,7 @@ export const recurso = definirRecurso({
   genero: 'masculino',
   alcance: 'empresa',
   pantalla: 'catalogo',
+  seccion: 'administracion',
   baja: 'eliminar',
   campos: {
     nombre: texto({ requerido: true, unico: true }),

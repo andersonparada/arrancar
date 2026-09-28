@@ -96,7 +96,7 @@ export class GenerarRecursoEnCliente extends GeneracionDeRecurso {
     const rutas = rutasDelRecurso(definicion, valores).map((linea) => rellenar(linea, valores));
     this.escritor.insertarEnMarca(modulo, 'rutas', rutas);
     this.escritor.insertarEnMarca(modulo, 'menu', [
-      `{ titulo: ${titulo}, ruta: '/${moduloClave}/${pluralClave}', icono: ${icono}, seccion: 'administracion', permiso: '${permisoVer}' },`,
+      `{ titulo: ${titulo}, ruta: '/${moduloClave}/${pluralClave}', icono: ${icono}, seccion: '${definicion.seccion}', permiso: '${permisoVer}' },`,
     ]);
   }
 }

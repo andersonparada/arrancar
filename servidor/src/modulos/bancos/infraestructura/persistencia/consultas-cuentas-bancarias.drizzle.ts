@@ -1,4 +1,4 @@
-import { asc, eq, getTableColumns } from 'drizzle-orm';
+import { asc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir-que-exista.js';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
@@ -8,10 +8,18 @@ import type { ConsultasCuentasBancarias } from '../../aplicacion/puertos/consult
 import { mapeadorDeCuentaBancaria } from './cuenta-bancaria.mapeador.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { bancos } from './bancos.tablas.js';
+import { movimientos } from './movimientos.tablas.js';
+import { saldoVigente } from './saldo-vigente.js';
 
 const banco = alias(bancos, 'banco');
 
-const columnas = { ...getTableColumns(cuentasBancarias), bancoNombre: banco.nombre };
+/** El saldo de cada cuenta con sus movimientos vigentes, calculado en la base de datos. */
+const saldo = sql<string>`(
+  select (${saldoVigente})::text from ${movimientos}
+  where ${movimientos.cuentaBancariaId} = ${cuentasBancarias.id} and ${movimientos.anuladoEn} is null
+)`;
+
+const columnas = { ...getTableColumns(cuentasBancarias), bancoNombre: banco.nombre, saldo };
 
 export class ConsultasCuentasBancariasDrizzle implements ConsultasCuentasBancarias {
   async listar(): Promise<CuentaBancariaDto[]> {

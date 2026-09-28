@@ -16,6 +16,8 @@ export const recurso = definirRecurso({
   genero: 'femenino',
   alcance: 'empresa',
   pantalla: 'completa',
+  seccion: 'administracion',
+  icono: 'WalletCards',
   baja: 'inactivar',
   campos: {
     nombre: texto({ requerido: true, unico: true, etiqueta: 'Nombre corto' }),

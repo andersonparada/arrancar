@@ -1,8 +1,6 @@
-import { Landmark } from 'lucide-vue-next';
+import { ArrowLeftRight, Building2, Landmark, WalletCards } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
-import { NOMBRE_BANCOS } from './textos';
-import { List } from 'lucide-vue-next';
-import { VENTANAS_BANCOS } from './textos';
+import { NOMBRE_BANCOS, VENTANAS_BANCOS } from './textos';
 // generador: importaciones
 
 /** Rutas y menú del módulo Bancos. Un grupo sin opciones no se muestra. */
@@ -41,6 +39,12 @@ export const moduloBancos: DefinicionModuloCliente = {
       props: true,
       meta: { permiso: 'bancos.cuentas-bancarias.gestionar', titulo: VENTANAS_BANCOS.cuentasBancarias.editar },
     },
+    {
+      path: '/bancos/movimientos',
+      name: 'bancos.movimientos',
+      component: () => import('./paginas/ListaDeMovimientos.vue'),
+      meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.movimientos.titulo },
+    },
     // generador: rutas
   ],
   menu: [
@@ -52,16 +56,23 @@ export const moduloBancos: DefinicionModuloCliente = {
         {
           titulo: VENTANAS_BANCOS.bancos.titulo,
           ruta: '/bancos/bancos',
-          icono: List,
+          icono: Building2,
           seccion: 'administracion',
           permiso: 'bancos.bancos.ver',
         },
         {
           titulo: VENTANAS_BANCOS.cuentasBancarias.titulo,
           ruta: '/bancos/cuentas-bancarias',
-          icono: List,
+          icono: WalletCards,
           seccion: 'administracion',
           permiso: 'bancos.cuentas-bancarias.ver',
+        },
+        {
+          titulo: VENTANAS_BANCOS.movimientos.titulo,
+          ruta: '/bancos/movimientos',
+          icono: ArrowLeftRight,
+          seccion: 'operacion',
+          permiso: 'bancos.movimientos.ver',
         },
         // generador: menu
       ],

@@ -10,6 +10,7 @@ const vaca: EntradaDeRecurso = {
   genero: 'femenino',
   alcance: 'empresa',
   pantalla: 'catalogo',
+  seccion: 'administracion',
   icono: 'Beef',
   campos: {
     nombre: texto({ requerido: true }),
@@ -69,6 +70,12 @@ describe('generar un recurso en el cliente', () => {
     expect(modulo.match(/import \{ Beef \}/g)).toHaveLength(1);
     expect(modulo).toContain("path: '/ganado/vacas',");
     expect(modulo).toContain("seccion: 'administracion', permiso: 'ganado.vacas.ver'");
+  });
+
+  it('la opción del menú va en la sección que dice la definición', async () => {
+    const { leer } = await generar({ ...vaca, seccion: 'operacion' });
+
+    expect(leer('modulo.ts')).toContain("seccion: 'operacion', permiso: 'ganado.vacas.ver'");
   });
 
   it('con baja por inactivación muestra la insignia y no elimina', async () => {

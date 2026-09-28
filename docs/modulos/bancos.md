@@ -40,7 +40,7 @@ terceros. Arrancar no es una app de banco: solo registra el dinero que se mueve.
 | Referencia | **Un solo campo**: número de boleta o de autorización, opcional. |
 | Bitácora | Regla de **toda la app** (ver "Bitácora de auditoría"): cada borrado, inactivación, reactivación o anulación queda registrado. En Bancos: anular movimientos y cheques, inactivar bancos y cuentas, y borrar conciliaciones. |
 | Chequeras | Máximo de cheques por chequera en la variable `bancos.chequeras.maximo_cheques` (5,000 por omisión), niveles empresa e instalación. Cada módulo declara sus variables en su `modulo.ts`. |
-| Fechas cerradas | Dos niveles. **Bancos**: no se registra ni se anula nada con fecha dentro de un mes conciliado de esa cuenta. **Core**: *fecha de cierre* por empresa ("cerrado hasta el 31/08"); antes de guardar, cualquier módulo pregunta si la fecha está abierta. Hoy la mueve el dueño a mano; Contabilidad la moverá al cerrar sus períodos. Se construye en el paso B2. |
+| Fechas cerradas | Dos niveles. **Bancos**: no se registra ni se anula nada con fecha dentro de un mes conciliado de esa cuenta. **General**: la *fecha de cierre* llega con Contabilidad (sus períodos contables); el core solo ofrecerá la pregunta "¿esta fecha está abierta?" a los demás módulos. Descartada por ahora (ver "Diseño del B2"). |
 
 ## Bitácora de auditoría (core)
 
@@ -129,7 +129,7 @@ ya existen (por ejemplo, las de Clientes) conservan también el de cuenta.
 | **B0 Bitácora y autoría** | Bitácora de auditoría (tabla y puerto en el core) y columnas `creado_por` / `actualizado_por`; en el generador y en lo existente (clientes, proveedores, contactos y empresas). |
 | **B0.2 Importar y exportar** | Motor en el core (Excel), botones y plantillas generados para cada recurso. |
 | **B1 Bancos y cuentas** | Recursos Banco y CuentaBancaria con `npm run generar -- recurso`; variables de sobregiro y de máximo de cheques. |
-| **B2 Notas** | Movimientos (base generada, dominio a mano): saldo inicial, notas de crédito y débito, anulación, saldo de la cuenta y bitácora. En el core, la fecha de cierre por empresa. |
+| **B2 Notas** | Movimientos (base generada, dominio a mano): saldo inicial, notas de crédito y débito, anulación, saldo de la cuenta y bitácora. |
 | **B3 Transferencias** | Transferencia entre cuentas propias (débito y crédito enlazados). |
 | **B4 Chequeras y cheques** | Chequeras por rango, emisión y anulación de cheques. |
 | **B5 Conciliación** | Conciliación mensual, bloqueo de movimientos y bitácora. |
@@ -148,3 +148,94 @@ instalación. Migraciones aplicadas y módulo activado en la cuenta demo. Prueba
 rutas pasaba de 25 líneas; ahora sus opciones van en la constante `EN_EXCEL`.
 Pendiente para B2: el alcance por cuenta (`recursosConAlcance`, que un usuario vea
 solo ciertas cuentas) y la moneda de la cuenta (hoy todo es GTQ).
+
+## Diseño del B2 (2026-09-27)
+
+Se entrega en dos partes (servidor y cliente), cada una revisada antes de seguir.
+
+**Fecha de cierre general: descartada por ahora (2026-09-27).** Se llegó a
+programar en el core (columna en `core.empresas`) y se descartó sin commit: el
+cierre no es un dato de la empresa, y sin Contabilidad lo único que cierra es la
+conciliación. Bancos se protege solo con sus meses conciliados (B5). Cuando exista
+Contabilidad, sus períodos contables serán suyos y el core ofrecerá la pregunta
+común "¿esta fecha está abierta?", que Contabilidad responde y los demás módulos
+consultan.
+
+### B2b Movimientos en el servidor
+
+Base generada (`generador/definiciones/bancos/movimiento.ts`, catálogo, baja
+`eliminar` que luego se cambia por anular), tabla `bancos.movimientos`:
+
+| Campo | Tipo | Nota |
+|---|---|---|
+| `cuenta_bancaria_id` | referencia | requerida; no cambia al corregir |
+| `tipo` | `credito` \| `debito` | el cheque llega en B4 |
+| `fecha` | fecha | requerida |
+| `monto` | dinero | requerido, mayor que cero (check en la base) |
+| `saldo_inicial` | sí/no | por omisión no |
+| `referencia` | texto | boleta o autorización |
+| `beneficiario` | texto | beneficiario u origen, escrito a mano |
+| `observaciones` | texto largo | |
+| `anulado_en`, `motivo_de_anulacion` | a mano | nada se borra: se anula |
+
+Reglas (en el dominio y los casos de uso):
+- (En B5, registrar, corregir y anular exigirán que la fecha no caiga en un mes
+  conciliado de la cuenta; al corregir, la fecha anterior y la nueva.)
+- La cuenta debe estar activa para registrar.
+- Un movimiento anulado no se corrige ni se anula otra vez.
+- Saldo inicial: uno vigente por cuenta (índice único parcial en la base), y es el
+  primero por fecha: no se registra un saldo inicial con fecha posterior a otro
+  movimiento, ni un movimiento con fecha anterior al saldo inicial.
+- Sobregiro: si `bancos.cuentas.permitir_sobregiro` es falso, no se acepta un
+  débito (ni corregirlo, ni anular un crédito) que deje el **saldo actual** de la
+  cuenta negativo. Se revisa contra el saldo total, no día por día.
+- Anular pide motivo y queda en la auditoría (`anular`, con el movimiento como
+  estaba).
+- Saldo de la cuenta = créditos − débitos vigentes; `CuentaBancariaDto` lleva
+  `saldo`.
+- Listar filtra por cuenta y por rango de fechas; los anulados se muestran
+  marcados.
+- Importar crea movimientos con las mismas reglas: así se cargan los saldos
+  iniciales desde Excel.
+
+**B2b hecho (2026-09-27).** Movimiento generado (catálogo, sección Operación) y
+completado a mano:
+
+- Tabla con `anulado_en` y `motivo_de_anulacion`, checks de monto positivo y tipo
+  válido, índice único parcial de un saldo inicial vigente por cuenta e índice por
+  cuenta y fecha.
+- Dominio: `corregir` (conserva la cuenta), `anular` (motivo de 1 a 500
+  caracteres) y `efectoEnCentavos`. El dinero se suma en **centavos enteros**
+  (`dominio/centavos.ts`), nunca en punto flotante.
+- `ReglasDeLaCuenta` (aplicación) reúne las reglas que cruzan movimientos: saldo
+  inicial único y primero por fecha, y sobregiro. Registrar, corregir y anular le
+  pasan la **diferencia** que causan en el saldo; así corregir cuenta solo lo que
+  cambia y anular un crédito también se revisa.
+- La variable de sobregiro se lee con el puerto `PoliticaDeSobregiro`
+  (`PoliticaDeSobregiroEnConfiguracion`).
+- Anular: `POST /bancos/movimientos/:id/anular` con permiso propio
+  `bancos.movimientos.anular`, y auditoría con el movimiento como estaba. No hay
+  ruta para borrar.
+- Listar filtra por `cuentaBancariaId`, `desde` y `hasta`. `CuentaBancariaDto` trae
+  el `saldo`, calculado en la base de datos (`saldo-vigente.ts`).
+- El generador pide ahora la `seccion` del menú en cada definición (antes todo
+  caía en Administración); Bancos y Cuentas bancarias van en Administración y
+  Movimientos en Operación, cada uno con su ícono.
+- Nota: la primera versión la escribió un modelo más barato y tenía errores
+  (sobregiro mal calculado al corregir, sumas en punto flotante, sin reglas del
+  saldo inicial al corregir, sin filtros ni saldo en la cuenta); se rehízo la
+  aplicación antes de cerrar el paso.
+
+Pruebas: 347 del servidor (reglas de saldo inicial, sobregiro al registrar,
+corregir y anular, centavos, y API de filtros, saldo, sobregiro y permiso de
+anular), 57 del cliente y 41 del generador.
+
+### B2c Movimientos en el cliente
+
+- Lista de movimientos (filtros de cuenta y fechas), tarjeta con tipo, fecha,
+  monto (entradas y salidas en colores distintos) y marca de anulado.
+- Ventana para registrar o corregir; "Anular" pide el motivo en su ventana.
+- La ficha de la cuenta muestra el saldo y enlaza a sus movimientos.
+
+**Queda para después:** la foto del comprobante (con `core/archivos`), elegir el
+beneficiario de Clientes, el alcance por cuenta y la moneda.

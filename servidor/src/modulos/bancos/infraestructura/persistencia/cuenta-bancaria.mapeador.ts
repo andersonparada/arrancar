@@ -27,7 +27,7 @@ export const mapeadorDeCuentaBancaria = {
     creadoPor,
     actualizadoPor,
     ...dto
-  }: Fila & Pick<CuentaBancariaDto, 'bancoNombre'>): CuentaBancariaDto {
+  }: Fila & Pick<CuentaBancariaDto, 'bancoNombre' | 'saldo'>): CuentaBancariaDto {
     return dto;
   },
 };

@@ -801,6 +801,7 @@ export const recurso = definirRecurso({
   plural: 'Animales',
   alcance: 'empresa',            // o 'cuenta': define la política RLS
   pantalla: 'completa',          // o 'catalogo' (lista con ventana, como Categorías de proveedor)
+  seccion: 'operacion',          // del menú: 'operacion' (el día a día), 'administracion' (catálogos) o 'reportes'
   baja: 'eliminar',              // por omisión; 'inactivar' para entidades con historial
   campos: {
     arete: texto({ requerido: true, unico: true }),

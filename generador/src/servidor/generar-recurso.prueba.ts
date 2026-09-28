@@ -14,6 +14,7 @@ const animal: EntradaDeRecurso = {
   plural: 'Animales',
   alcance: 'empresa',
   pantalla: 'catalogo',
+  seccion: 'administracion',
   campos: {
     arete: texto({ requerido: true, unico: true }),
     sexo: lista(['macho', 'hembra']),

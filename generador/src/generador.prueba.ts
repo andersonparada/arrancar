@@ -37,6 +37,7 @@ describe('definición de un recurso', () => {
     plural: 'Animales',
     alcance: 'empresa',
     pantalla: 'completa',
+    seccion: 'administracion',
     campos: { arete: texto({ requerido: true, unico: true }), sexo: lista(['macho', 'hembra']) },
   };
 

@@ -6,7 +6,7 @@ import type { CuentaBancaria, CuentaBancariaId } from '../dominio/cuenta-bancari
 
 function aDto(cuentaBancaria: CuentaBancaria): CuentaBancariaDto {
   const { id, empresaId, ...datos } = cuentaBancaria.instantanea();
-  return { ...datos, id: id.valor, bancoNombre: null };
+  return { ...datos, id: id.valor, bancoNombre: null, saldo: '0.00' };
 }
 
 /** Guarda las cuentas bancarias en memoria y responde tanto de repositorio como de consultas. */

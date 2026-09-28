@@ -16,6 +16,8 @@ export const recurso = definirRecurso({
   genero: 'masculino',
   alcance: 'empresa',
   pantalla: 'catalogo',
+  seccion: 'administracion',
+  icono: 'Building2',
   baja: 'inactivar',
   campos: {
     nombre: texto({ requerido: true, unico: true }),

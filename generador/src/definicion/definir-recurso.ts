@@ -9,6 +9,9 @@ import {
 import { siNo, type Campo } from './campos.js';
 import { DefinicionInvalida } from './errores.js';
 
+/** Las secciones del menú de cada módulo, en el orden en que se muestran. */
+export type SeccionDelMenu = 'operacion' | 'administracion' | 'reportes';
+
 /** Lo que escribe quien define un recurso. */
 export interface EntradaDeRecurso {
   modulo: string;
@@ -24,6 +27,12 @@ export interface EntradaDeRecurso {
   alcance: 'empresa' | 'cuenta';
   /** `catalogo`: lista con ventana. `completa`: lista, formulario en página y ficha. */
   pantalla: 'catalogo' | 'completa';
+  /**
+   * En qué sección del menú de su módulo va la pantalla: `operacion` para el
+   * trabajo del día (movimientos, registros), `administracion` para catálogos y
+   * datos maestros, `reportes` para consultar.
+   */
+  seccion: SeccionDelMenu;
   /** `eliminar` borra de verdad; `inactivar` conserva el historial. */
   baja?: 'eliminar' | 'inactivar';
   /** El campo que nombra al registro en listas y títulos; por omisión, el primer texto requerido. */
@@ -52,6 +61,7 @@ export interface DefinicionDeRecurso {
   genero: 'masculino' | 'femenino';
   alcance: 'empresa' | 'cuenta';
   pantalla: 'catalogo' | 'completa';
+  seccion: SeccionDelMenu;
   baja: 'eliminar' | 'inactivar';
   mostrar: string;
   icono: string;
@@ -158,6 +168,7 @@ function completar(entrada: EntradaDeRecurso): DefinicionDeRecurso {
     genero: entrada.genero ?? 'masculino',
     alcance: entrada.alcance,
     pantalla: entrada.pantalla,
+    seccion: entrada.seccion,
     baja: entrada.baja ?? 'eliminar',
     mostrar: entrada.mostrar ?? campoQueNombra(entrada.campos)!,
     icono: entrada.icono ?? 'List',

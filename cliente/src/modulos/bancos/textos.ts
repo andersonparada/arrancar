@@ -15,5 +15,11 @@ export const VENTANAS_BANCOS = {
     nuevo: 'Nueva cuenta bancaria',
     editar: 'Editar cuenta bancaria',
   },
+  movimientos: {
+    titulo: 'Movimientos',
+    descripcion: 'Los movimientos de la empresa.',
+    nuevo: 'Nuevo movimiento',
+    editar: 'Editar movimiento',
+  },
   // generador: ventanas
 } as const;

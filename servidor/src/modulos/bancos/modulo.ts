@@ -3,6 +3,7 @@ import { definirConfiguracion, type DefinicionModulo } from '../core/modulos-sis
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeBancos } from './composicion/bancos.js';
 import { rutasDeCuentasBancarias } from './composicion/cuentas-bancarias.js';
+import { rutasDeMovimientos } from './composicion/movimientos.js';
 // generador: importaciones
 
 /** Cuentas bancarias, notas, cheques y conciliaciones de cada empresa. Ver `docs/modulos/bancos.md`. */
@@ -20,6 +21,11 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.cuentas-bancarias.gestionar', descripcion: 'Registrar, editar e inactivar cuentas bancarias' },
     { clave: 'bancos.cuentas-bancarias.importar', descripcion: 'Importar cuentas bancarias desde Excel' },
     { clave: 'bancos.cuentas-bancarias.exportar', descripcion: 'Exportar cuentas bancarias a Excel' },
+    { clave: 'bancos.movimientos.ver', descripcion: 'Ver movimientos' },
+    { clave: 'bancos.movimientos.gestionar', descripcion: 'Registrar y corregir movimientos' },
+    { clave: 'bancos.movimientos.anular', descripcion: 'Anular movimientos' },
+    { clave: 'bancos.movimientos.importar', descripcion: 'Importar movimientos desde Excel' },
+    { clave: 'bancos.movimientos.exportar', descripcion: 'Exportar movimientos a Excel' },
     // generador: permisos
   ],
   configuracion: [
@@ -43,6 +49,7 @@ export const moduloBancos: DefinicionModulo = {
   rutas: rutasDelModulo([
     rutasDeBancos(),
     rutasDeCuentasBancarias(),
+    rutasDeMovimientos(),
     // generador: rutas
   ]),
 };
