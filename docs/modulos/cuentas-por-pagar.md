@@ -75,8 +75,7 @@ Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte 
 | Retenciones en el pago | Se descuentan del saldo de la contraseña, así que el proveedor recibe el neto. |
 | Eliminar una factura | Solo si **no está autorizada (provisionada)** y **no está en una contraseña**. Se borra de verdad (queda en la auditoría) y libera el número del documento. |
 | Anular una factura | Si ya está autorizada: genera su **reversión** (con *Contabilidad*, la partida inversa). No se puede si está en una contraseña vigente. Libera el número del documento. |
-| Eliminar una contraseña | Solo si **no tiene pagos emitidos** (vigentes). Se borra (queda en la auditoría) y **suelta sus facturas**, que vuelven a estar disponibles para otra contraseña. |
-| Anular una contraseña | **No genera reversión**: solo queda marcada como anulada, con su motivo y en la auditoría (conserva su número correlativo). Solo si **no tiene pagos emitidos ni facturas relacionadas**. |
+| Anular una contraseña | **No se eliminan**, para no perder el correlativo. Anularla **no genera reversión**: queda marcada como anulada, con su motivo y en la auditoría, y **suelta sus facturas**, que vuelven a estar disponibles para otra contraseña. Solo si **no tiene pagos emitidos** (vigentes). |
 | Anular un pago desde Cuentas por pagar | Anula también el cheque o la nota de débito en *Bancos*, en la misma transacción. |
 | Anular el cheque o la nota desde Bancos | **Se permite.** En la misma transacción, *Bancos* avisa al módulo que lo emitió y ese módulo **revierte lo suyo** (aquí: anula el pago y devuelve el saldo a las facturas). Antes, ese módulo **revisa sus reglas**: si algo lo bloquea (p. ej. un período cerrado), rechaza y **no se anula nada**. Si ese módulo no está activo, se anula solo en *Bancos* y queda en la auditoría. |
 | Mes conciliado | Un movimiento conciliado **no se elimina**, pero **sí se anula** con su movimiento inverso, fechado en un mes no conciliado (ver B7 en `bancos.md`). |
