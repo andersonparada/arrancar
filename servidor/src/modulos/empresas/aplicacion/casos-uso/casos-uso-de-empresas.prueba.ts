@@ -3,6 +3,7 @@ import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores
 import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import { NitInvalido } from '../../../core/compartido/dominio/objetos-valor/nit.js';
 import {
+  AuditoriaEnMemoria,
   PublicadorEventosEnMemoria,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
@@ -22,6 +23,7 @@ let empresas: EmpresasEnMemoria;
 let accesos: AccesosEnMemoria;
 let publicadorEventos: PublicadorEventosEnMemoria;
 let unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
+let auditoria: AuditoriaEnMemoria;
 let propietario: Operador;
 let casos: {
   registrar: RegistrarEmpresa;
@@ -47,13 +49,14 @@ beforeEach(async () => {
   accesos = new AccesosEnMemoria();
   publicadorEventos = new PublicadorEventosEnMemoria();
   unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
+  auditoria = new AuditoriaEnMemoria();
   const alcance = new AlcanceDelOperador(accesos);
   const consultas = empresas;
   casos = {
     registrar: new RegistrarEmpresa({ unidadDeTrabajo, repositorio: empresas, consultas, accesos, publicadorEventos }),
     listar: new ListarEmpresas({ unidadDeTrabajo, consultas, alcance }),
     obtener: new ObtenerEmpresa({ unidadDeTrabajo, consultas, alcance }),
-    actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio: empresas, consultas, alcance }),
+    actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio: empresas, consultas, alcance, auditoria }),
   };
   propietario = operadorDePrueba();
   await accesos.darAcceso({
@@ -126,6 +129,18 @@ describe('actualizar una empresa', () => {
     });
 
     expect(actualizada).toMatchObject({ nombre: 'Parcela El Mirador', nit: '12345679' });
+    expect(auditoria.entradas).toEqual([]);
+  });
+
+  it('desactivarla y reactivarla quedan en la auditoría', async () => {
+    const empresa = await casos.registrar.ejecutar(propietario, solicitud());
+    const cambiar = (activa: boolean) =>
+      casos.actualizar.ejecutar(propietario, { empresaId: empresa.id, solicitud: solicitud({ activa }) });
+
+    await cambiar(false);
+    await cambiar(true);
+
+    expect(auditoria.acciones()).toEqual(['empresas.empresas:inactivar', 'empresas.empresas:reactivar']);
   });
 
   it('no deja desactivar la empresa con la que el operador está trabajando', async () => {

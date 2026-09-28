@@ -1,3 +1,15 @@
+### importacionAuditoriaEnActualizar
+import { auditarCambioDeEstado } from '../../../../core/compartido/aplicacion/auditoria.js';
+### anteriorEnActualizar
+      const anterior = await consultas.obtener({{entidad}}Id);
+### auditarEnActualizar
+      await auditarCambioDeEstado(this.dependencias.auditoria, {
+        recurso: '{{moduloClave}}.{{pluralClave}}',
+        registroId: {{entidad}}Id,
+        anterior,
+        activoAntes: anterior.activo,
+        activoDespues: solicitud.activo,
+      });
 ### pruebaDeBaja
 
   it('se inactiva sin perder sus datos', async () => {
@@ -9,6 +21,7 @@
     });
 
     expect(inactivo).toEqual({ ...creado, activo: false });
+    expect(auditoria.acciones()).toEqual(['{{moduloClave}}.{{pluralClave}}:inactivar']);
   });
 ### bajaEnApi
 

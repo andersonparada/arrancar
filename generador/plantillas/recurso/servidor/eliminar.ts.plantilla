@@ -2,16 +2,20 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import { {{entidad}}Existente, type DependenciasDe{{Plural}} } from './dependencias-de-{{pluralClave}}.js';
 
 export class Eliminar{{Entidad}} {
-  constructor(private readonly dependencias: Pick<DependenciasDe{{Plural}}, 'unidadDeTrabajo' | 'repositorio'>) {}
+  constructor(private readonly dependencias: DependenciasDe{{Plural}}) {}
 
   /**
+   * Queda en la auditoría con cómo estaba.
    * @throws RecursoNoEncontrado si no existe o no es de {{laEmpresaOCuenta}}.
    * @throws RecursoEnUso si otros datos lo usan (la base de datos lo impide).
    */
   ejecutar(operador: Operador, {{entidad}}Id: string): Promise<void> {
-    const { unidadDeTrabajo, repositorio } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, consultas, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      await repositorio.eliminar(await {{entidad}}Existente(repositorio, {{entidad}}Id));
+      const {{entidad}} = await {{entidad}}Existente(repositorio, {{entidad}}Id);
+      const anterior = await consultas.obtener({{entidad}}Id);
+      await repositorio.eliminar({{entidad}});
+      await auditoria.registrar({ recurso: '{{moduloClave}}.{{pluralClave}}', registroId: {{entidad}}Id, accion: 'eliminar', anterior });
     });
   }
 }

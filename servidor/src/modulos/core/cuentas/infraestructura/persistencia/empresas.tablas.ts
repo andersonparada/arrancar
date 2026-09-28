@@ -1,6 +1,6 @@
 import { boolean, char, index, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
-import { idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
+import { autoria, idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
 import { cuentas } from './cuentas.tablas.js';
 import { monedas } from '../../../monedas/infraestructura/persistencia/monedas.tablas.js';
 import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
@@ -24,6 +24,7 @@ export const empresas = esquemaCore.table(
       .references(() => monedas.codigo),
     activa: boolean().notNull().default(true),
     ...marcasDeTiempo,
+    ...autoria,
   },
   (t) => [index('empresas_cuenta_idx').on(t.cuentaId)],
 );

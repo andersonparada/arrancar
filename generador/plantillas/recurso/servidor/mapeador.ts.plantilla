@@ -7,7 +7,7 @@ type Fila = typeof {{plural}}.$inferSelect;
 
 /** Traduce entre la fila de la tabla, la entidad y lo que ve la pantalla. */
 export const mapeadorDe{{Entidad}} = {
-  aEntidad({ id, {{alcance}}Id, creadoEn, actualizadoEn, ...campos }: Fila): {{Entidad}} {
+  aEntidad({ id, {{alcance}}Id, creadoEn, actualizadoEn, creadoPor, actualizadoPor, ...campos }: Fila): {{Entidad}} {
     return {{Entidad}}.reconstruir({
       ...campos,
       id: Identificador.desde(id),
@@ -20,7 +20,7 @@ export const mapeadorDe{{Entidad}} = {
     return { ...datos, id: id.valor, {{alcance}}Id: {{alcance}}Id.valor{{conversionesAPrimitivo}} };
   },
 
-  aDto({ {{alcance}}Id, creadoEn, actualizadoEn, ...dto }: Fila{{tipoDeReferenciasEnFila}}): {{Entidad}}Dto {
+  aDto({ {{alcance}}Id, creadoEn, actualizadoEn, creadoPor, actualizadoPor, ...dto }: Fila{{tipoDeReferenciasEnFila}}): {{Entidad}}Dto {
     return dto;
   },
 };

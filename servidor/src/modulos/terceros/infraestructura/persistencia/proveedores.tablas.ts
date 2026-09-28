@@ -1,5 +1,5 @@
 import { boolean, index, text, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
+import { autoria, idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
 import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { esquemaTerceros, terceros } from './terceros.tablas.js';
 
@@ -14,6 +14,7 @@ export const categoriasProveedor = esquemaTerceros.table(
     nombre: text().notNull(),
     activo: boolean().notNull().default(true),
     ...marcasDeTiempo,
+    ...autoria,
   },
   (t) => [unique('categorias_proveedor_nombre_por_cuenta').on(t.cuentaId, t.nombre), politicaPorCuenta()],
 );
@@ -33,6 +34,7 @@ export const proveedores = esquemaTerceros.table(
     activo: boolean().notNull().default(true),
     notas: text(),
     ...marcasDeTiempo,
+    ...autoria,
   },
   (t) => [
     uniqueIndex('proveedores_tercero_idx').on(t.terceroId),

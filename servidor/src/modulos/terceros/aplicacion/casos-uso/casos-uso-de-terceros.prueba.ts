@@ -4,6 +4,7 @@ import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
 import { NitInvalido } from '../../../core/compartido/dominio/objetos-valor/nit.js';
 import {
+  AuditoriaEnMemoria,
   PublicadorEventosEnMemoria,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
@@ -21,6 +22,7 @@ import { RegistrarTercero } from './terceros/registrar-tercero.js';
 let terceros: TercerosEnMemoria;
 let contactos: ContactosEnMemoria;
 let publicadorEventos: PublicadorEventosEnMemoria;
+let auditoria: AuditoriaEnMemoria;
 let operador: Operador;
 let casos: { registrar: RegistrarTercero; actualizar: ActualizarTercero; asignar: AsignarPapel; quitar: QuitarPapel };
 
@@ -53,10 +55,11 @@ beforeEach(() => {
   terceros = new TercerosEnMemoria();
   contactos = new ContactosEnMemoria();
   publicadorEventos = new PublicadorEventosEnMemoria();
+  auditoria = new AuditoriaEnMemoria();
   operador = operadorDePrueba();
   const unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   const avisoDeParecidos = new AvisoDeParecidos(terceros);
-  const comunes = { unidadDeTrabajo, repositorio: terceros, consultas: terceros, publicadorEventos };
+  const comunes = { unidadDeTrabajo, repositorio: terceros, consultas: terceros, publicadorEventos, auditoria };
   casos = {
     registrar: new RegistrarTercero({ ...comunes, avisoDeParecidos, categorias: new CategoriasEnMemoria(), contactos }),
     actualizar: new ActualizarTercero({ ...comunes, avisoDeParecidos }),
@@ -125,6 +128,19 @@ describe('cambiar un tercero', () => {
     expect(publicadorEventos.nombres()).toEqual(['terceros.creado', 'terceros.inactivado']);
   });
 
+  it('inactivarlo y reactivarlo quedan en la auditoría con cómo estaba antes; otros cambios no', async () => {
+    const tercero = await casos.registrar.ejecutar(operador, solicitud());
+    const cambiar = (cambios: Partial<SolicitudDeAltaDeTercero>) =>
+      casos.actualizar.ejecutar(operador, { terceroId: tercero.id, solicitud: solicitud(cambios) });
+
+    await cambiar({ notas: 'Vecino' });
+    await cambiar({ activo: false });
+    await cambiar({ activo: true });
+
+    expect(auditoria.acciones()).toEqual(['terceros.terceros:inactivar', 'terceros.terceros:reactivar']);
+    expect(auditoria.entradas[0]).toMatchObject({ registroId: tercero.id, anterior: { activo: true } });
+  });
+
   it('no encuentra terceros que no existen', async () => {
     const cambio = casos.actualizar.ejecutar(operador, { terceroId: crypto.randomUUID(), solicitud: solicitud() });
 
@@ -175,5 +191,16 @@ describe('papeles', () => {
       'terceros.papel_asignado',
       'terceros.papel_quitado',
     ]);
+  });
+
+  it('quitar un papel lo inactiva en la auditoría, y volver a asignarlo lo reactiva', async () => {
+    const tercero = await casos.registrar.ejecutar(operador, solicitud());
+    const papel = { tipo: 'proveedor', categoriaId: null, activo: true, notas: null } as const;
+
+    await casos.asignar.ejecutar(operador, { terceroId: tercero.id, papel });
+    await casos.quitar.ejecutar(operador, { terceroId: tercero.id, tipo: 'proveedor' });
+    await casos.asignar.ejecutar(operador, { terceroId: tercero.id, papel });
+
+    expect(auditoria.acciones()).toEqual(['terceros.proveedores:inactivar', 'terceros.proveedores:reactivar']);
   });
 });

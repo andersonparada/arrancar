@@ -1,5 +1,6 @@
 import { Readable } from 'node:stream';
 import type { Almacenamiento } from '../aplicacion/almacenamiento.js';
+import type { Auditoria, EntradaDeAuditoria } from '../aplicacion/auditoria.js';
 import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import type { Operador } from '../aplicacion/operador.js';
 import type { PublicadorEventos } from '../aplicacion/publicador-eventos.js';
@@ -26,6 +27,19 @@ export class PublicadorEventosEnMemoria implements PublicadorEventos {
 
   nombres(): string[] {
     return this.publicados.map((evento) => evento.nombre);
+  }
+}
+
+/** Guarda lo auditado para comprobarlo en las pruebas. */
+export class AuditoriaEnMemoria implements Auditoria {
+  readonly entradas: EntradaDeAuditoria[] = [];
+
+  async registrar(entrada: EntradaDeAuditoria): Promise<void> {
+    this.entradas.push(entrada);
+  }
+
+  acciones(): string[] {
+    return this.entradas.map(({ recurso, accion }) => `${recurso}:${accion}`);
   }
 }
 

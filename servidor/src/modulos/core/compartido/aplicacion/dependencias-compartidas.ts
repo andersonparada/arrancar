@@ -1,3 +1,4 @@
+import type { Auditoria } from './auditoria.js';
 import type { PublicadorEventos } from './publicador-eventos.js';
 import type { UnidadDeTrabajo } from './unidad-de-trabajo.js';
 
@@ -5,4 +6,5 @@ import type { UnidadDeTrabajo } from './unidad-de-trabajo.js';
 export interface DependenciasCompartidas {
   unidadDeTrabajo: UnidadDeTrabajo;
   publicadorEventos: PublicadorEventos;
+  auditoria: Auditoria;
 }

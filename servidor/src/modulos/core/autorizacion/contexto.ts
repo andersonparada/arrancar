@@ -15,7 +15,7 @@ import { RepositorioRolesDrizzle } from './infraestructura/persistencia/reposito
 export const consultasRoles = new ConsultasRolesDrizzle(bd);
 
 /** Raíz de composición del contexto de autorización. */
-export function componerAutorizacion({ unidadDeTrabajo }: DependenciasCompartidas) {
+export function componerAutorizacion({ unidadDeTrabajo, auditoria }: DependenciasCompartidas) {
   const repositorio = new RepositorioRolesDrizzle();
   const catalogo = new CatalogoDePermisosEnRegistro();
   const controlador = new RolesControlador({
@@ -23,7 +23,7 @@ export function componerAutorizacion({ unidadDeTrabajo }: DependenciasCompartida
     listarPermisos: new ListarPermisosAsignables({ catalogo }),
     crear: new CrearRol({ unidadDeTrabajo, repositorio, catalogo }),
     actualizar: new ActualizarRol({ unidadDeTrabajo, repositorio, catalogo }),
-    eliminar: new EliminarRol({ unidadDeTrabajo, repositorio }),
+    eliminar: new EliminarRol({ unidadDeTrabajo, repositorio, auditoria }),
   });
   return rutasRoles(controlador);
 }

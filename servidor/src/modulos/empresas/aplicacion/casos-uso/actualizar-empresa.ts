@@ -1,3 +1,4 @@
+import { auditarCambioDeEstado, type Auditoria } from '../../../core/compartido/aplicacion/auditoria.js';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../core/compartido/aplicacion/unidad-de-trabajo.js';
@@ -13,6 +14,7 @@ interface Dependencias {
   repositorio: RepositorioEmpresas;
   consultas: ConsultasEmpresas;
   alcance: AlcanceDelOperador;
+  auditoria: Auditoria;
 }
 
 interface CambioDeEmpresa {
@@ -36,10 +38,22 @@ export class ActualizarEmpresa {
       );
       if (!empresa) throw new RecursoNoEncontrado('La empresa');
       await alcance.exigirAcceso(operador, empresaId);
+      const anterior = await consultas.obtenerEnCuenta(empresaId, operador.cuentaId);
 
       empresa.cambiarDatos(datosDeEmpresa(solicitud), Identificador.desde(operador.empresaId));
       await repositorio.actualizar(empresa);
+      await this.auditar(anterior, solicitud.activa);
       return consultas.obtenerEnCuenta(empresaId, operador.cuentaId);
+    });
+  }
+
+  private auditar(anterior: EmpresaDto, activaDespues: boolean): Promise<void> {
+    return auditarCambioDeEstado(this.dependencias.auditoria, {
+      recurso: 'empresas.empresas',
+      registroId: anterior.id,
+      anterior,
+      activoAntes: anterior.activa,
+      activoDespues: activaDespues,
     });
   }
 }

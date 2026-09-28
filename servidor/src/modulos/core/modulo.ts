@@ -4,6 +4,7 @@ import { definirConfiguracion, type DefinicionModulo } from './modulos-sistema/d
 import { componerApariencia } from './apariencia/contexto.js';
 import { componerArchivos } from './archivos/contexto.js';
 import { esquemaColorHex } from './apariencia/http/apariencia.esquemas-http.js';
+import { MESES_DE_AUDITORIA } from './bitacora/aplicacion/casos-uso/depurar-auditoria.js';
 import { componerBitacora } from './bitacora/contexto.js';
 import { componerConfiguracion } from './configuracion/contexto.js';
 import { variablesRegionales } from './configuracion/variables-regionales.js';
@@ -69,6 +70,14 @@ export const moduloCore: DefinicionModulo = {
       predeterminado: null,
       niveles: ['instalacion'],
       publica: true,
+    }),
+    definirConfiguracion({
+      clave: MESES_DE_AUDITORIA,
+      descripcion:
+        'Meses que se conserva la auditoría (borrados, inactivaciones, anulaciones); lo anterior queda en los respaldos.',
+      esquema: z.number().int().min(1).max(120),
+      predeterminado: 12,
+      niveles: ['instalacion'],
     }),
     ...variablesRegionales,
   ],

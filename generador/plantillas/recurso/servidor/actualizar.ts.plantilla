@@ -1,4 +1,4 @@
-import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+{{importacionAuditoriaEnActualizar}}import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { datosDe{{Entidad}} } from '../../datos-de-{{entidadClave}}.js';
 import type { {{Entidad}}Dto, SolicitudDe{{Entidad}} } from '../../dto/{{entidadClave}}.dto.js';
 import { {{entidad}}Existente, type DependenciasDe{{Plural}} } from './dependencias-de-{{pluralClave}}.js';
@@ -16,9 +16,9 @@ export class Actualizar{{Entidad}} {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const {{entidad}} = await {{entidad}}Existente(repositorio, {{entidad}}Id);
-{{exigirReferencias}}      {{entidad}}.cambiarDatos(datosDe{{Entidad}}(solicitud));
+{{exigirReferencias}}{{anteriorEnActualizar}}      {{entidad}}.cambiarDatos(datosDe{{Entidad}}(solicitud));
       await repositorio.guardar({{entidad}});
-      return consultas.obtener({{entidad}}Id);
+{{auditarEnActualizar}}      return consultas.obtener({{entidad}}Id);
     });
   }
 }

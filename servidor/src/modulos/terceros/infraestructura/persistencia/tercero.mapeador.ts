@@ -82,7 +82,7 @@ export const mapeadorDeTercero = {
   },
 
   aDto(fila: FilaTercero): TerceroDto {
-    const { cuentaId, creadoEn, ...visibles } = fila;
+    const { cuentaId, creadoEn, creadoPor, actualizadoPor, ...visibles } = fila;
     return { ...visibles, tipo: fila.tipo as TipoDeTercero };
   },
 

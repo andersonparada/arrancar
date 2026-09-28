@@ -1,3 +1,4 @@
+import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
@@ -10,6 +11,7 @@ export interface DependenciasDe{{Plural}} {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: Repositorio{{Plural}};
   consultas: Consultas{{Plural}};
+  auditoria: Auditoria;
 }
 
 /** @throws RecursoNoEncontrado si no existe o no es de {{laEmpresaOCuenta}}. */

@@ -100,7 +100,11 @@ base de desarrollo debe estar levantada.
   contexto: empresas en `cuentas`, monedas en `monedas`); drizzle-kit solo lee esos.
 - La app se conecta como `arrancar_app` (sin privilegios). Las migraciones usan
   `DATABASE_URL_PROPIETARIO`. El migrador da los permisos (GRANT) por esquema.
-- `casing: 'snake_case'`: en TypeScript las columnas son camelCase.
+- `casing: 'snake_case'`: en la base las columnas van en snake_case (`creado_por`) y en
+  TypeScript en camelCase (`creadoPor`); Drizzle convierte solo.
+- Toda tabla de negocio lleva `...marcasDeTiempo` y `...autoria` (`creado_por`,
+  `actualizado_por`), que se llenan solos con el usuario de la transacción. Los
+  mapeadores los dejan fuera de la entidad y del DTO.
 - Dinero: `numeric(14,2)`, viaja como texto en la API.
 
 ### Multiempresa y seguridad (no romper)
@@ -116,6 +120,12 @@ base de desarrollo debe estar levantada.
   módulo → permiso). El permiso debe estar declarado por un módulo.
 - En el cliente, `v-permiso` y `sesion.puede()` solo ocultan; el servidor valida siempre.
 - Superacceso: puede entrar a cualquier empresa; se registra en `core.bitacora_superacceso`.
+- **Auditoría:** todo caso de uso que elimine, inactive, reactive o anule un registro
+  llama a `auditoria.registrar` (o `auditarCambioDeEstado`) dentro de su unidad de
+  trabajo, con `recurso` `<modulo>.<plural>` y el registro como estaba antes (el
+  DTO, nunca contraseñas). `core.auditoria` solo se agrega y se lee (RLS); la
+  depura una vez al día `core.depurar_auditoria` según
+  `core.auditoria.meses_de_conservacion` (12 por omisión).
 
 ### Usuarios
 Inicio de sesión con nombre de usuario (solo letras, único en el servidor), no

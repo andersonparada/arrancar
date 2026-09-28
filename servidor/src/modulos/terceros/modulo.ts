@@ -51,31 +51,40 @@ function crearPiezas() {
 type Piezas = ReturnType<typeof crearPiezas> & DependenciasCompartidas;
 
 function controladorDeTerceros(piezas: Piezas): TercerosControlador {
-  const { unidadDeTrabajo, publicadorEventos, repositorio, categorias, contactos, consultas, avisoDeParecidos } =
-    piezas;
-  const paraGuardar = { unidadDeTrabajo, repositorio, consultas, avisoDeParecidos, publicadorEventos };
+  const {
+    unidadDeTrabajo,
+    publicadorEventos,
+    auditoria,
+    repositorio,
+    categorias,
+    contactos,
+    consultas,
+    avisoDeParecidos,
+  } = piezas;
+  const paraGuardar = { unidadDeTrabajo, repositorio, consultas, avisoDeParecidos, publicadorEventos, auditoria };
   return new TercerosControlador({
     listar: new ListarTerceros({ unidadDeTrabajo, consultas }),
     obtenerFicha: new ObtenerFichaDeTercero({ unidadDeTrabajo, consultas }),
     registrar: new RegistrarTercero({ ...paraGuardar, categorias, contactos }),
     actualizar: new ActualizarTercero(paraGuardar),
-    asignarPapel: new AsignarPapel({ unidadDeTrabajo, repositorio, categorias, consultas, publicadorEventos }),
-    quitarPapel: new QuitarPapel({ unidadDeTrabajo, repositorio, publicadorEventos }),
+    asignarPapel: new AsignarPapel({ ...paraGuardar, categorias }),
+    quitarPapel: new QuitarPapel(paraGuardar),
   });
 }
 
-function controladorDeContactos({ unidadDeTrabajo, repositorio, contactos, consultas, consultasContactos }: Piezas) {
+function controladorDeContactos(piezas: Piezas) {
+  const { unidadDeTrabajo, auditoria, repositorio, contactos, consultas, consultasContactos } = piezas;
   return new ContactosControlador({
     listar: new ListarContactos({ unidadDeTrabajo, terceros: consultas, contactos: consultasContactos }),
     agregar: new AgregarContacto({ unidadDeTrabajo, terceros: repositorio, contactos, consultas: consultasContactos }),
     cambiar: new CambiarContacto({ unidadDeTrabajo, contactos, consultas: consultasContactos }),
-    eliminar: new EliminarContacto({ unidadDeTrabajo, contactos }),
+    eliminar: new EliminarContacto({ unidadDeTrabajo, contactos, consultas: consultasContactos, auditoria }),
     buscar: new BuscarContactos({ unidadDeTrabajo, busqueda: new BusquedaDeContactosDrizzle() }),
   });
 }
 
-function controladorDeCategorias({ unidadDeTrabajo, categorias, consultasCategorias }: Piezas) {
-  const dependencias = { unidadDeTrabajo, repositorio: categorias, consultas: consultasCategorias };
+function controladorDeCategorias({ unidadDeTrabajo, auditoria, categorias, consultasCategorias }: Piezas) {
+  const dependencias = { unidadDeTrabajo, auditoria, repositorio: categorias, consultas: consultasCategorias };
   return new CategoriasControlador({
     listar: new ListarCategorias(dependencias),
     crear: new CrearCategoria(dependencias),

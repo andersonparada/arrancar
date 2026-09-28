@@ -97,11 +97,13 @@ const registroPrevio = (referida: DefinicionDeRecurso) =>
 /** Crea lo que se elige, en orden, y devuelve el id de cada referencia. */
 function crearReferencias(definicion: DefinicionDeRecurso, campos: CampoDeReferencia[]): string {
   const devueltas = campos.map((campo) => `${campo.nombreEnCodigo}: ${valorEnApi(campo, definicion)}`);
+  const previos = registrosPrevios(definicion).map(registroPrevio);
+  // Si solo apunta a sí mismo no hay nada que crear antes, y el usuario no se usa.
+  const usuario = previos.length ? 'usuario' : '_usuario';
   return `
 /** Lo que el registro necesita elegir, registrado en la cuenta del usuario. */
-async function crearReferencias(usuario: ClienteApi) {
-${registrosPrevios(definicion).map(registroPrevio).join('\n')}
-  return { ${devueltas.join(', ')} };
+async function crearReferencias(${usuario}: ClienteApi) {
+${previos.map((linea) => `${linea}\n`).join('')}  return { ${devueltas.join(', ')} };
 }
 
 let referencias: Awaited<ReturnType<typeof crearReferencias>>;

@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
-import { UnidadDeTrabajoEnMemoria, operadorDePrueba } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
+import {
+  AuditoriaEnMemoria,
+  UnidadDeTrabajoEnMemoria,
+  operadorDePrueba,
+} from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 {{importacionDeReglas}}import { {{Plural}}EnMemoria } from '../../../pruebas/dobles-de-{{pluralClave}}.js';
 import type { SolicitudDe{{Entidad}} } from '../../dto/{{entidadClave}}.dto.js';
 import { Actualizar{{Entidad}} } from './actualizar-{{entidadClave}}.js';
@@ -16,9 +20,17 @@ const solicitud = (cambios: Partial<SolicitudDe{{Entidad}}> = {}): SolicitudDe{{
   ...cambios,
 });
 
+let auditoria: AuditoriaEnMemoria;
+
 function casosDeUso() {
   const registros = new {{Plural}}EnMemoria();
-  const dependencias = { unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(), repositorio: registros, consultas: registros };
+  auditoria = new AuditoriaEnMemoria();
+  const dependencias = {
+    unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
+    repositorio: registros,
+    consultas: registros,
+    auditoria,
+  };
   return {
     listar: new Listar{{Plural}}(dependencias),
     obtener: new Obtener{{Entidad}}(dependencias),

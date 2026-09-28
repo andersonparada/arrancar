@@ -49,7 +49,7 @@ export function usuariosEn(tx: Ejecutor) {
 /** El servidor la ejecuta cada hora. */
 export const limpiarSesionesVencidas = new LimpiarSesionesVencidas({ sesiones });
 
-function controladorDeUsuarios({ unidadDeTrabajo }: DependenciasCompartidas): UsuariosControlador {
+function controladorDeUsuarios({ unidadDeTrabajo, auditoria }: DependenciasCompartidas): UsuariosControlador {
   const repositorio = new RepositorioUsuariosDrizzle();
   const accesos = new AccesosAEmpresasDrizzle();
   const asignador = new AsignadorDeNombreDeUsuario({ usuarios: repositorio });
@@ -58,7 +58,7 @@ function controladorDeUsuarios({ unidadDeTrabajo }: DependenciasCompartidas): Us
     listar: new ListarUsuarios({ consultas: new ConsultasUsuariosDrizzle(bd) }),
     sugerirNombre: new SugerirNombreDeUsuario({ unidadDeTrabajo, asignador }),
     crear: new CrearUsuario({ unidadDeTrabajo, repositorio, accesos, asignador, cifrador }),
-    actualizar: new ActualizarUsuario({ unidadDeTrabajo, repositorio, accesos, sesiones }),
+    actualizar: new ActualizarUsuario({ unidadDeTrabajo, repositorio, accesos, sesiones, auditoria }),
     cambiarContrasena: new CambiarContrasena({ unidadDeTrabajo, repositorio, cifrador, sesiones }),
   });
 }

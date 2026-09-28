@@ -1,5 +1,5 @@
 import { {{importacionesPg}} } from 'drizzle-orm/pg-core';
-import { idPrimario, marcasDeTiempo, politicaPor{{Alcance}} } from '../../../core/base-datos/columnas.js';
+import { autoria, idPrimario, marcasDeTiempo, politicaPor{{Alcance}} } from '../../../core/base-datos/columnas.js';
 {{importacionTablaDelAlcance}}
 import { esquema{{Modulo}} } from './esquema.tablas.js';
 {{importacionesDeTablasReferidas}}
@@ -13,6 +13,7 @@ export const {{plural}} = esquema{{Modulo}}.table(
       .references(() => {{tablaDelAlcance}}.id, { onDelete: 'cascade' }),
 {{columnas}}
     ...marcasDeTiempo,
+    ...autoria,
   },
   ({{parametroDeIndices}}) => [{{indices}}politicaPor{{Alcance}}()],
 );

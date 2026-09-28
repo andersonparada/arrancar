@@ -30,6 +30,9 @@ import { Eliminar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/eli
 import { Eliminar{{Entidad}} } from './eliminar-{{entidadClave}}.js';
 ### eliminarEnPruebaCasos
     eliminar: new Eliminar{{Entidad}}(dependencias),
+### importacionAuditoriaEnActualizar
+### anteriorEnActualizar
+### auditarEnActualizar
 ### pruebaDeBaja
 
   it('elimina {{unSingular}}', async () => {
@@ -38,6 +41,9 @@ import { Eliminar{{Entidad}} } from './eliminar-{{entidadClave}}.js';
     await casos.eliminar.ejecutar(operador, creado.id);
 
     expect(await casos.listar.ejecutar(operador)).toEqual([]);
+    expect(auditoria.entradas).toEqual([
+      { recurso: '{{moduloClave}}.{{pluralClave}}', registroId: creado.id, accion: 'eliminar', anterior: creado },
+    ]);
   });
 ### bajaEnApi
 

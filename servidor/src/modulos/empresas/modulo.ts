@@ -14,7 +14,11 @@ import { ConsultasEmpresasDrizzle } from './infraestructura/persistencia/consult
 import { RepositorioEmpresasDrizzle } from './infraestructura/persistencia/repositorio-empresas.drizzle.js';
 
 /** Raíz de composición: el único lugar donde se eligen las implementaciones concretas. */
-function componerControlador({ unidadDeTrabajo, publicadorEventos }: DependenciasCompartidas): EmpresasControlador {
+function componerControlador({
+  unidadDeTrabajo,
+  publicadorEventos,
+  auditoria,
+}: DependenciasCompartidas): EmpresasControlador {
   const repositorio = new RepositorioEmpresasDrizzle();
   const consultas = new ConsultasEmpresasDrizzle();
   const accesos = new AccesosAEmpresasDrizzle();
@@ -24,7 +28,7 @@ function componerControlador({ unidadDeTrabajo, publicadorEventos }: Dependencia
     listar: new ListarEmpresas({ unidadDeTrabajo, consultas, alcance }),
     obtener: new ObtenerEmpresa({ unidadDeTrabajo, consultas, alcance }),
     registrar: new RegistrarEmpresa({ unidadDeTrabajo, repositorio, consultas, accesos, publicadorEventos }),
-    actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio, consultas, alcance }),
+    actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio, consultas, alcance, auditoria }),
   });
 }
 

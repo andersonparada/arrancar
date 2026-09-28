@@ -12,6 +12,7 @@ import { Repositorio{{Plural}}Drizzle } from '../infraestructura/persistencia/re
 export function rutasDe{{Plural}}() {
   const dependencias = {
     unidadDeTrabajo: dependenciasCompartidas().unidadDeTrabajo,
+    auditoria: dependenciasCompartidas().auditoria,
     repositorio: new Repositorio{{Plural}}Drizzle(),
     consultas: new Consultas{{Plural}}Drizzle(),
   };
