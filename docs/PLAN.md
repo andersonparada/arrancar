@@ -110,6 +110,14 @@ clientes y proveedores, con un panel de recordatorios diarios.
 Roles por cuenta; el rol con **acceso total** recibe también los permisos de
 módulos que se activen después. Siempre debe quedar al menos un rol con acceso total.
 
+Un permiso puede declararse `soloSuperacceso: true` (ver `DefinicionPermiso`): es
+configuración de servidor/instalación, así que **solo** lo recibe el superacceso
+(soporte); ningún rol de cuenta lo recibe, ni siquiera uno con acceso total o al
+que se lo hayan asignado a mano, y el catálogo de permisos asignables (API y
+pantalla de roles) no lo ofrece. Es el caso de `configuracion.ver` y
+`configuracion.gestionar` (sección 3.6): la configuración la ve y la cambia solo
+soporte, no el rol Propietario.
+
 ### 3.6 Configuración por niveles
 
 Para que un cliente (o un servidor dedicado) tenga un comportamiento distinto sin
@@ -358,3 +366,13 @@ y `demo` / `demo-arrancar`.
   los roles existentes; el core de intercambio (`core/intercambio`) gana un
   filtro opcional al exportar, reutilizable por cualquier reporte futuro.
   Commits `B6a` (servidor) y `B6b` (cliente y documentación).
+- **2026-09-28**: La configuración (cuenta/empresa/instalación) pasa a verla y
+  cambiarla solo el superacceso (soporte); ni el rol Propietario (acceso total)
+  ni ningún otro rol, aunque se les asigne el permiso. Se agrega la marca
+  `soloSuperacceso` a `DefinicionPermiso` (sección 3.5) y se pone en
+  `configuracion.ver` y `configuracion.gestionar`: `ResolutorDeAcceso` ya no se
+  los da a un rol con acceso total salvo al de soporte, y `CatalogoDePermisos`
+  (API `/api/permisos` y la pantalla de roles) deja de ofrecerlos y rechaza
+  asignarlos (`PermisoDesconocido`, 400). Migración de datos `0010` que borra
+  esas claves de `core.rol_permisos`. El menú ya ocultaba "Configuración" a
+  quien no tuviera el permiso, sin cambios en el cliente.

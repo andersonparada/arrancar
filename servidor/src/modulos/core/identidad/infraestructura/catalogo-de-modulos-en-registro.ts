@@ -15,6 +15,14 @@ export class CatalogoDeModulosEnRegistro implements CatalogoDeModulos {
     );
   }
 
+  permisosDeSuperacceso(modulosActivos: ReadonlySet<string>): ReadonlySet<string> {
+    return new Set(
+      obtenerRegistroModulos()
+        .permisosDeSuperacceso(modulosActivos)
+        .map((permiso) => permiso.clave),
+    );
+  }
+
   recursosConAlcanceTotal(
     modulosActivos: ReadonlySet<string>,
     permisos: ReadonlySet<string>,

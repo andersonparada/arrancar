@@ -75,6 +75,23 @@ describe('catálogo de permisos', () => {
     expect(modulos(antes.cuerpo)).not.toContain('terceros');
     expect(modulos(despues.cuerpo)).toContain('terceros');
   });
+
+  it('no ofrece los permisos de configuración: son solo del superacceso', async () => {
+    const respuesta = await cuenta.propietario.get('/api/permisos');
+
+    const claves = respuesta.cuerpo.flatMap((g: { permisos: { clave: string }[] }) => g.permisos.map((p) => p.clave));
+    expect(claves).not.toContain('configuracion.ver');
+    expect(claves).not.toContain('configuracion.gestionar');
+  });
+
+  it('rechaza asignar a un rol un permiso de configuración', async () => {
+    const respuesta = await cuenta.propietario.post('/api/roles', {
+      nombre: 'Casi todo',
+      permisos: ['usuarios.ver', 'configuracion.ver'],
+    });
+
+    expect(respuesta.estado).toBe(400);
+  });
 });
 
 describe('permisos por acción', () => {

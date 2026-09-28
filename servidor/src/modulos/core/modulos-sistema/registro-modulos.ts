@@ -42,6 +42,11 @@ export class RegistroModulos {
     return permisos;
   }
 
+  /** De los permisos de esos módulos, los que solo puede tener el superacceso (soporte). */
+  permisosDeSuperacceso(clavesModulos: Iterable<string>): DefinicionPermiso[] {
+    return this.permisosDe(clavesModulos).filter((permiso) => permiso.soloSuperacceso);
+  }
+
   /**
    * Recursos con alcance de los módulos activos que el usuario ve completos:
    * todos si tiene acceso total, o aquellos cuyo permiso "ver todos" posee.
@@ -73,6 +78,15 @@ export class RegistroModulos {
   /** Módulo al que pertenece un permiso, o `undefined` si ningún módulo lo declara. */
   moduloDelPermiso(permiso: string): string | undefined {
     return this.listar().find((m) => m.permisos.some((p) => p.clave === permiso))?.clave;
+  }
+
+  /** Definición completa de un permiso (esté o no su módulo activo), o `undefined` si no existe. */
+  definicionDePermiso(clave: string): DefinicionPermiso | undefined {
+    for (const modulo of this.modulos.values()) {
+      const permiso = modulo.permisos.find((p) => p.clave === clave);
+      if (permiso) return permiso;
+    }
+    return undefined;
   }
 
   /**

@@ -135,6 +135,10 @@ base de desarrollo debe estar levantada.
   `recursosConAlcance` en el módulo + filas en `core.accesos_datos`.
 - Cada ruta usa `proteger({ permiso })` (cadena de guardias: sesión → empresa →
   módulo → permiso). El permiso debe estar declarado por un módulo.
+- Un permiso de configuración de servidor/instalación se declara con
+  `soloSuperacceso: true` (`DefinicionPermiso`): ningún rol de cuenta lo recibe,
+  ni con acceso total ni asignado a mano (`ResolutorDeAcceso`), y el catálogo de
+  permisos asignables no lo ofrece (`configuracion.ver`/`configuracion.gestionar`).
 - En el cliente, `v-permiso` y `sesion.puede()` solo ocultan; el servidor valida siempre.
 - Superacceso: puede entrar a cualquier empresa; se registra en `core.bitacora_superacceso`.
 - **Auditoría:** todo caso de uso que elimine, inactive, reactive o anule un registro

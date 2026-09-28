@@ -17,10 +17,12 @@ interface Rol {
   nombre: string;
   accesoTotal: boolean;
   permisos: readonly string[];
+  /** Solo el superacceso (soporte) recibe los permisos marcados `soloSuperacceso`. */
+  soloSuperacceso: boolean;
 }
 
 /** Soporte entra a cualquier empresa como si tuviera un rol con acceso total. */
-const ROL_DE_SOPORTE: Rol = { nombre: 'Superacceso', accesoTotal: true, permisos: [] };
+const ROL_DE_SOPORTE: Rol = { nombre: 'Superacceso', accesoTotal: true, permisos: [], soloSuperacceso: true };
 
 /**
  * Con qué rol, módulos y permisos trabaja un usuario en una empresa. Los permisos
@@ -38,7 +40,10 @@ export class ResolutorDeAcceso {
     const { modulos } = this.dependencias;
     const modulosActivos = modulos.activos(await this.dependencias.empresas.modulosContratados(empresa.cuentaId));
     const disponibles = modulos.permisosDe(modulosActivos);
-    const permisos = rol.accesoTotal ? disponibles : new Set(rol.permisos.filter((p) => disponibles.has(p)));
+    const permisosDelRol = rol.accesoTotal ? disponibles : new Set(rol.permisos.filter((p) => disponibles.has(p)));
+    const permisos = rol.soloSuperacceso
+      ? permisosDelRol
+      : this.sinPermisosDeSuperacceso(permisosDelRol, modulosActivos);
     const recursosAlcanceTotal = modulos.recursosConAlcanceTotal(modulosActivos, permisos, rol.accesoTotal);
     return { empresa, rolNombre: rol.nombre, modulosActivos, permisos, recursosAlcanceTotal };
   }
@@ -48,6 +53,15 @@ export class ResolutorDeAcceso {
     const acceso = await this.dependencias.empresas.accesoDe(usuario.id, empresaId);
     if (!acceso) return null;
     const permisos = acceso.accesoTotal ? [] : await this.dependencias.roles.permisosDelRol(acceso.rolId);
-    return { nombre: acceso.rolNombre, accesoTotal: acceso.accesoTotal, permisos };
+    return { nombre: acceso.rolNombre, accesoTotal: acceso.accesoTotal, permisos, soloSuperacceso: false };
+  }
+
+  /**
+   * Ningún rol de la cuenta recibe los permisos marcados `soloSuperacceso`, ni
+   * siquiera uno con acceso total o al que se los hayan asignado a mano.
+   */
+  private sinPermisosDeSuperacceso(permisos: ReadonlySet<string>, modulosActivos: ReadonlySet<string>): Set<string> {
+    const restringidos = this.dependencias.modulos.permisosDeSuperacceso(modulosActivos);
+    return new Set([...permisos].filter((permiso) => !restringidos.has(permiso)));
   }
 }

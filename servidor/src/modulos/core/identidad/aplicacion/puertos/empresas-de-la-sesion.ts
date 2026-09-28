@@ -23,6 +23,8 @@ export interface CatalogoDeModulos {
   /** Los contratados más los esenciales y sus dependencias. */
   activos(contratados: string[]): ReadonlySet<string>;
   permisosDe(modulosActivos: ReadonlySet<string>): ReadonlySet<string>;
+  /** De esos permisos, los que solo puede tener el superacceso (soporte). */
+  permisosDeSuperacceso(modulosActivos: ReadonlySet<string>): ReadonlySet<string>;
   recursosConAlcanceTotal(
     modulosActivos: ReadonlySet<string>,
     permisos: ReadonlySet<string>,

@@ -71,6 +71,13 @@
       "when": 1790559033123,
       "tag": "0009_depurar_auditoria",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790629247078,
+      "tag": "0010_quitar_permisos_configuracion",
+      "breakpoints": true
     }
   ]
 }

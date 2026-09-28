@@ -5,6 +5,12 @@ export interface DefinicionPermiso {
   /** Clave con forma `<modulo>.<recurso>.<accion>` o `<modulo>.<accion>`. */
   clave: string;
   descripcion: string;
+  /**
+   * Configuración de servidor/instalación: solo la ve y la cambia el superacceso
+   * (soporte). Ningún rol, ni siquiera uno con `accesoTotal`, lo recibe ni lo
+   * puede asignar.
+   */
+  soloSuperacceso?: boolean;
 }
 
 /**

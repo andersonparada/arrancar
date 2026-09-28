@@ -48,6 +48,21 @@ describe('RegistroModulos', () => {
     expect(crearRegistro().moduloDelPermiso('no.existe')).toBeUndefined();
   });
 
+  it('separa los permisos que solo puede tener el superacceso', () => {
+    const registro = new RegistroModulos([
+      modulo('core', {
+        esencial: true,
+        permisos: [
+          { clave: 'core.usuarios.ver', descripcion: '' },
+          { clave: 'core.configuracion.ver', descripcion: '', soloSuperacceso: true },
+        ],
+      }),
+    ]);
+
+    const restringidos = registro.permisosDeSuperacceso(['core']);
+    expect(restringidos.map((p) => p.clave)).toEqual(['core.configuracion.ver']);
+  });
+
   it('falla al arrancar si un módulo depende de otro que no está instalado', () => {
     expect(() => new RegistroModulos([modulo('caja-chica', { dependeDe: ['bancos'] })])).toThrow(/no está registrado/);
   });

@@ -35,8 +35,16 @@ export const moduloCore: DefinicionModulo = {
     { clave: 'usuarios.gestionar', descripcion: 'Crear usuarios y asignarles empresas y roles' },
     { clave: 'roles.ver', descripcion: 'Ver roles y permisos' },
     { clave: 'roles.gestionar', descripcion: 'Crear, editar y eliminar roles' },
-    { clave: 'configuracion.ver', descripcion: 'Ver la configuración de la cuenta y la empresa' },
-    { clave: 'configuracion.gestionar', descripcion: 'Cambiar la configuración de la cuenta y la empresa' },
+    {
+      clave: 'configuracion.ver',
+      descripcion: 'Ver la configuración de la cuenta y la empresa',
+      soloSuperacceso: true,
+    },
+    {
+      clave: 'configuracion.gestionar',
+      descripcion: 'Cambiar la configuración de la cuenta y la empresa',
+      soloSuperacceso: true,
+    },
   ],
   configuracion: [
     definirConfiguracion({
