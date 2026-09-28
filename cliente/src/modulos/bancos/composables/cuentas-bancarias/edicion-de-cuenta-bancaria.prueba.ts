@@ -10,7 +10,7 @@ const datos: DatosCuentaBancaria = {
   observaciones: 'Una nota de prueba.',
   activo: true,
 };
-const cuentaBancaria: CuentaBancaria = { id: 'registro-1', ...datos, bancoNombre: null };
+const cuentaBancaria: CuentaBancaria = { id: 'registro-1', ...datos, bancoNombre: null, saldo: '0.00' };
 
 describe('ventana de cuentas bancarias', () => {
   it('lo que se abre para editar se manda igual si no se cambia nada', () => {

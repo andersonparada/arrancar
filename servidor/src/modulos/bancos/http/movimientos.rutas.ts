@@ -14,11 +14,8 @@ type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
 const etiquetas = ['Bancos'];
 const RUTA = '/bancos/movimientos';
 const conId = { tags: etiquetas, params: esquemaParamsMovimiento };
-const EN_EXCEL = {
-  ruta: RUTA,
-  archivo: 'movimientos',
-  permisos: { importar: 'bancos.movimientos.importar', exportar: 'bancos.movimientos.exportar' },
-};
+/** Solo importar (así se cargan los saldos iniciales): lo registrado se consulta en los reportes. */
+const EN_EXCEL = { ruta: RUTA, archivo: 'movimientos', permisos: { importar: 'bancos.movimientos.importar' } };
 
 function rutasDeLectura(app: Aplicacion, controlador: MovimientosControlador) {
   const ver = proteger({ permiso: 'bancos.movimientos.ver' });

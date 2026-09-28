@@ -7,6 +7,7 @@ import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/Accion
 import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
+import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { detallesDeCuentaBancaria } from '../composables/cuentas-bancarias/detalles-de-cuenta-bancaria';
 import { usarListaDeCuentasBancarias } from '../composables/cuentas-bancarias/usar-lista-de-cuentas-bancarias';
 import { VENTANAS_BANCOS } from '../textos';
@@ -47,7 +48,13 @@ const { registros, cargando, intercambio } = usarListaDeCuentasBancarias();
           permiso="bancos.cuentas-bancarias.gestionar"
           :inactivo="!registro.activo"
           :destino="{ name: 'bancos.cuentas-bancarias.ficha', params: { cuentaBancariaId: registro.id } }"
-        />
+        >
+          <template #destacado>
+            <p class="text-sm font-semibold text-tierra-700 dark:text-tierra-200">
+              {{ formatearMonto(registro.saldo) }}
+            </p>
+          </template>
+        </TarjetaDeRegistro>
       </li>
     </ul>
     <VentanaDeImportacion

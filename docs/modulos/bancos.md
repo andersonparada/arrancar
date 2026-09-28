@@ -236,6 +236,124 @@ anular), 57 del cliente y 41 del generador.
   monto (entradas y salidas en colores distintos) y marca de anulado.
 - Ventana para registrar o corregir; "Anular" pide el motivo en su ventana.
 - La ficha de la cuenta muestra el saldo y enlaza a sus movimientos.
+- Sin Exportar (2026-09-27): las pantallas de operación no exportan; lo registrado
+  se consulta en reportes. Importar se conserva para los saldos iniciales. En el
+  core, `permisos.exportar` es opcional en `rutasDeIntercambio` y en
+  `AccionesDeIntercambio`.
+
+**B2c hecho (2026-09-27).** Filtros, tarjeta, ventanas de registrar/corregir y de
+anular, y saldo en la cuenta, completados a mano sobre lo generado:
+
+- Filtros arriba de la lista (cuenta, con "Todas", y desde/hasta); recargan solos
+  al cambiar. Por omisión van del primer día del mes actual a hoy
+  (`filtros-de-movimientos.ts`, lógica pura con prueba); si la ruta trae
+  `?cuenta=<id>` (desde "Ver movimientos" de la ficha), arrancan filtrados por
+  esa cuenta.
+- Encabezado con "Nota de crédito" y "Nota de débito" (abren la ventana con el
+  tipo elegido) en vez de un solo "Nuevo"; sin Exportar, solo "Importar".
+- Tarjeta (`TarjetaDeMovimiento.vue`): título "Nota de crédito"/"Nota de
+  débito"/"Saldo inicial" según corresponda; monto destacado con "+" en verde
+  (crédito) o "−" en rojo (débito); anulados atenuados, con insignia "Anulado" y
+  su motivo, sin editar ni anular.
+- Ventana de registrar/corregir: al corregir, la cuenta se ve pero no se cambia.
+  "Es el saldo inicial de la cuenta" y "Referencia (boleta o autorización)" como
+  etiquetas.
+- Anular en su propia ventana (`VentanaDeAnulacion.vue`, con motivo obligatorio),
+  genérica por `titulo`/`texto` para reutilizarla en transferencias y cheques.
+  Ya no hay eliminar: se quitó `usar-eliminacion-de-movimiento.ts` y `eliminable`
+  de la tarjeta.
+- Ficha de la cuenta: saldo destacado y enlace "Ver movimientos"; la tarjeta de
+  la lista de cuentas también lo muestra. `CuentaBancariaDto`/`CuentaBancaria`
+  del cliente llevan `saldo`.
+- Core: `AccionesDeIntercambio` oculta "Exportar" si no llega el permiso;
+  `TarjetaDeRegistro` gana `insignia`, `soloLectura` y los slots `destacado` y
+  `acciones-extra` (genéricos, para no duplicar la tarjeta en cada módulo); y
+  `CampoSelector` gana `deshabilitado`.
+
+Pruebas: 347 del servidor (sin cambios en este paso), 69 del cliente (57 + 12
+nuevas: filtros por omisión y título/color/detalles de la tarjeta) y 41 del
+generador.
 
 **Queda para después:** la foto del comprobante (con `core/archivos`), elegir el
 beneficiario de Clientes, el alcance por cuenta y la moneda.
+
+## Excel según la sección del menú (generador, 2026-09-27)
+
+Regla del dueño del producto: **administración** importa y exporta; **operación**
+no importa ni exporta (lo registrado se consulta en reportes); **reportes** se
+imprimen y se exportan. El generador decide por la `seccion` de la definición:
+administración genera importar y exportar con sus permisos; operación, nada de
+Excel. La única excepción hoy es Movimientos, que importa a mano (saldos
+iniciales). Los reportes se diseñarán aparte (no son un CRUD).
+
+## Diseño de B3 a B5 (2026-09-27)
+
+Decisiones del dueño: la conciliación solo cierra con **diferencia cero**; al
+emitir un cheque se propone **el siguiente número disponible**, que se puede
+cambiar por otro disponible. Cada paso lleva su commit al quedar en verde.
+
+### B3 Transferencias entre cuentas propias (operación, sin Excel)
+
+- Tabla `bancos.transferencias`: fecha, monto, `cuenta_origen_id`,
+  `cuenta_destino_id`, referencia, observaciones, `anulada_en`,
+  `motivo_de_anulacion`, autoría. `bancos.movimientos` gana `transferencia_id`
+  (opcional, llave foránea).
+- Registrar crea en **una transacción** la transferencia, una nota de débito en
+  el origen y una de crédito en el destino (misma fecha y monto; beneficiario u
+  origen: "Transferencia a/desde <cuenta>"). Reglas: cuentas distintas y activas,
+  monto mayor que cero, `ReglasDeLaCuenta` en ambas (saldo inicial y sobregiro del
+  origen).
+- Una transferencia no se corrige: se anula y se registra otra. Anular la
+  transferencia anula sus dos notas (revisando el sobregiro del destino) y queda
+  en la auditoría (`bancos.transferencias`). Sus notas no se corrigen ni se anulan
+  sueltas (`MovimientoDeTransferencia`).
+- Permisos `bancos.transferencias.gestionar` y `.anular`. Sin pantalla propia: en
+  Movimientos, botón "Transferencia" (ventana: origen, destino, fecha, monto,
+  referencia, observaciones); la tarjeta de una nota de transferencia lo dice y
+  "Anular" anula la transferencia completa.
+
+### B4 Chequeras y cheques
+
+- `bancos.chequeras`: cuenta, serie (opcional), `desde`, `hasta`, activa,
+  autoría. `hasta >= desde`; cantidad hasta `bancos.chequeras.maximo_cheques`; los
+  rangos de una cuenta (misma serie) no se traslapan. Al crearla se insertan todos
+  sus cheques como **disponibles**. Se inactiva (con auditoría), no se borra.
+- `bancos.cheques`: chequera, número (único por chequera), estado (`disponible`,
+  `emitido`, `anulado`), `no_negociable`, `movimiento_id` (opcional),
+  `anulado_en`, `motivo_de_anulacion`.
+- Movimiento gana el tipo `cheque` (sale dinero). **Emitir**: cuenta, número
+  (propuesto el menor disponible de sus chequeras activas; se puede elegir otro
+  disponible), fecha, monto, beneficiario, no negociable, referencia y
+  observaciones; crea el movimiento `cheque` con `ReglasDeLaCuenta` (sobregiro) y
+  marca el cheque emitido. Un cheque no se registra ni se corrige por la ventana
+  de notas: se anula y se emite otro.
+- **Anular** un cheque: si está emitido anula también su movimiento; si está
+  disponible (roto, perdido) solo el cheque. Siempre con motivo y auditoría;
+  conserva su número.
+- Pantallas: chequeras en la ficha de la cuenta (administración de la cuenta:
+  "Nueva chequera", ver sus cheques por estado); "Emitir cheque" en Movimientos
+  (operación). Permisos `bancos.chequeras.gestionar`, `bancos.cheques.emitir` y
+  `bancos.cheques.anular`. La impresión del cheque queda para después.
+
+### B5 Conciliación mensual (operación, sin Excel)
+
+- `bancos.conciliaciones`: cuenta, año, mes (única por cuenta y mes),
+  `saldo_segun_banco`, `cerrada_en`, autoría. `bancos.movimientos` gana
+  `conciliacion_id` (opcional).
+- En orden: la primera conciliación de una cuenta puede ser de cualquier mes; las
+  siguientes, del mes siguiente a la última. Solo una abierta por cuenta.
+- Conciliar: se escribe el saldo del estado de cuenta y se marcan los movimientos
+  vigentes con fecha hasta el fin del mes que aparecen en él (incluye los que
+  quedaron pendientes de meses anteriores). Saldo conciliado = saldo según banco de
+  la conciliación anterior (0 si es la primera) + efecto de los marcados.
+  Diferencia = saldo según banco − saldo conciliado. **Cerrar exige diferencia
+  cero.**
+- Cerrada la conciliación, la cuenta queda **conciliada hasta el fin de ese mes**:
+  `ReglasDeLaCuenta` rechaza registrar, corregir o anular (notas, transferencias y
+  cheques) con fecha en ese mes o antes (`MesConciliado`). Un cheque viejo que no
+  se cobrará se revierte con una nota de crédito del mes abierto.
+- Borrar: solo la última (abierta o cerrada), con motivo; suelta sus movimientos y
+  queda en la auditoría (`eliminar`). Así se reabre un mes.
+- Pantalla (operación): lista por cuenta; la de conciliar muestra saldo según
+  banco, los movimientos para marcar, saldo conciliado y diferencia en vivo.
+  Permisos `bancos.conciliaciones.ver`, `.conciliar` y `.eliminar`.

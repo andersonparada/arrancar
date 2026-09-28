@@ -28,9 +28,9 @@ const MOVIMIENTO_NUEVO: Omit<EdicionDeMovimiento, 'abierta' | 'id'> = {
   observaciones: '',
 };
 
-/** La ventana abierta con los datos del movimiento, o vacía si es nuevo. */
-export function edicionDe(movimiento?: Movimiento): EdicionDeMovimiento {
-  if (!movimiento) return { abierta: true, id: null, ...MOVIMIENTO_NUEVO };
+/** La ventana abierta con los datos del movimiento, o vacía (con `tipo`) si es nuevo. */
+export function edicionDe(movimiento?: Movimiento, tipo: 'credito' | 'debito' = 'credito'): EdicionDeMovimiento {
+  if (!movimiento) return { abierta: true, id: null, ...MOVIMIENTO_NUEVO, tipo };
   return {
     abierta: true,
     id: movimiento.id,

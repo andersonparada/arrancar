@@ -12,7 +12,13 @@ const datos: DatosMovimiento = {
   beneficiario: 'Registro de prueba',
   observaciones: 'Una nota de prueba.',
 };
-const movimiento: Movimiento = { id: 'registro-1', ...datos, cuentaBancariaNombre: null };
+const movimiento: Movimiento = {
+  id: 'registro-1',
+  ...datos,
+  cuentaBancariaNombre: null,
+  anuladoEn: null,
+  motivoDeAnulacion: null,
+};
 
 describe('ventana de movimientos', () => {
   it('lo que se abre para editar se manda igual si no se cambia nada', () => {
@@ -20,8 +26,9 @@ describe('ventana de movimientos', () => {
     expect(edicionDe(movimiento).id).toBe(movimiento.id);
   });
 
-  it('un registro nuevo empieza sin id', () => {
-    expect(edicionDe()).toMatchObject({ abierta: true, id: null });
+  it('un registro nuevo empieza sin id, con el tipo elegido en el encabezado', () => {
+    expect(edicionDe()).toMatchObject({ abierta: true, id: null, tipo: 'credito' });
+    expect(edicionDe(undefined, 'debito')).toMatchObject({ abierta: true, id: null, tipo: 'debito' });
   });
 
   it('lo que no se llena se manda como null', () => {

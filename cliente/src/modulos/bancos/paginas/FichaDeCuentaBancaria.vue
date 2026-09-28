@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { Pencil } from 'lucide-vue-next';
+import { RouterLink } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
+import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
+import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { detallesDeCuentaBancaria } from '../composables/cuentas-bancarias/detalles-de-cuenta-bancaria';
 import { usarFichaDeCuentaBancaria } from '../composables/cuentas-bancarias/usar-ficha-de-cuenta-bancaria';
 import { VENTANAS_BANCOS } from '../textos';
@@ -23,6 +26,20 @@ const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: 'bancos.cuen
         Editar
       </BotonBase>
     </EncabezadoPagina>
+
+    <TarjetaBase class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="text-xs text-tierra-500">Saldo</p>
+        <p class="text-2xl font-semibold">{{ formatearMonto(registro.saldo) }}</p>
+      </div>
+      <RouterLink
+        v-permiso="'bancos.movimientos.ver'"
+        :to="{ name: 'bancos.movimientos', query: { cuenta: cuentaBancariaId } }"
+        class="text-sm font-medium text-campo-700 hover:underline dark:text-campo-400"
+      >
+        Ver movimientos
+      </RouterLink>
+    </TarjetaBase>
 
     <DatosDelRegistro :detalles="detallesDeCuentaBancaria(registro)" />
   </div>

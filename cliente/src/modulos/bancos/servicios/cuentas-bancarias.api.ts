@@ -11,9 +11,11 @@ export interface CuentaBancaria {
   observaciones: string | null;
   activo: boolean;
   bancoNombre: string | null;
+  /** Créditos menos débitos vigentes, con dos decimales. */
+  saldo: string;
 }
 
-export type DatosCuentaBancaria = Omit<CuentaBancaria, 'id' | 'bancoNombre'>;
+export type DatosCuentaBancaria = Omit<CuentaBancaria, 'id' | 'bancoNombre' | 'saldo'>;
 
 const RUTA = '/bancos/cuentas-bancarias';
 

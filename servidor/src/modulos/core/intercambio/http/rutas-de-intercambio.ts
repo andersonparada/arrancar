@@ -24,7 +24,11 @@ export interface OpcionesDeIntercambio {
   ruta: string;
   /** Para el nombre del archivo: `animales` → `animales-2026-09-28.xlsx`. */
   archivo: string;
-  permisos: { importar: string; exportar: string };
+  /**
+   * Sin `exportar` no hay ruta para exportar: las pantallas de operación diaria
+   * solo importan, y lo registrado se consulta en los reportes.
+   */
+  permisos: { importar: string; exportar?: string };
   /** Lo que se usa del intercambio; sus tipos de registro y solicitud no le importan a las rutas. */
   intercambio: Pick<IntercambioDeRecurso<unknown, unknown>, 'exportar' | 'plantilla' | 'importar'>;
 }
@@ -61,12 +65,19 @@ const esquemaDeImportacion = z.object({ ensayo: z.enum(['true', 'false']).defaul
  * Las rutas para exportar, bajar la plantilla e importar un recurso, cada una
  * con su permiso: ver una lista no da derecho a llevársela entera.
  */
-export function rutasDeIntercambio(app: Aplicacion, { ruta, archivo, permisos, intercambio }: OpcionesDeIntercambio) {
-  const exportar = proteger({ permiso: permisos.exportar });
-  const importar = proteger({ permiso: permisos.importar });
-  app.get(`${ruta}/exportar`, { preHandler: exportar }, async (solicitud, respuesta) =>
+export function rutasDeIntercambio(app: Aplicacion, opciones: OpcionesDeIntercambio) {
+  if (opciones.permisos.exportar) rutaDeExportar(app, opciones, opciones.permisos.exportar);
+  rutasDeImportar(app, opciones);
+}
+
+function rutaDeExportar(app: Aplicacion, { ruta, archivo, intercambio }: OpcionesDeIntercambio, permiso: string) {
+  app.get(`${ruta}/exportar`, { preHandler: proteger({ permiso }) }, async (solicitud, respuesta) =>
     enviarExcel(respuesta, `${archivo}-${hoy()}`, await intercambio.exportar(operadorDe(solicitud))),
   );
+}
+
+function rutasDeImportar(app: Aplicacion, { ruta, archivo, permisos, intercambio }: OpcionesDeIntercambio) {
+  const importar = proteger({ permiso: permisos.importar });
   app.get(`${ruta}/plantilla`, { preHandler: importar }, async (_solicitud, respuesta) =>
     enviarExcel(respuesta, `plantilla-${archivo}`, await intercambio.plantilla()),
   );

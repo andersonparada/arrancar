@@ -127,18 +127,12 @@ describe('movimientos por API', () => {
     expect((await otraCuenta.propietario.get(RUTA)).cuerpo).toEqual([ajeno.cuerpo]);
   });
 
-  it('lo exportado se puede revisar para importarlo de nuevo', async () => {
-    await cuenta.propietario.post(RUTA, datos());
-    const exportado = await cuenta.propietario.get(`${RUTA}/exportar`);
+  it('se importan desde Excel, pero no se exportan: se consultan en los reportes', async () => {
+    const plantilla = await cuenta.propietario.get(`${RUTA}/plantilla`);
 
-    const revision = await cuenta.propietario.subirImagen('POST', `${RUTA}/importar?ensayo=true`, {
-      nombreArchivo: 'movimientos.xlsx',
-      tipoMime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      contenido: exportado.cuerpo,
-    });
-
-    expect(exportado.estado).toBe(200);
-    expect(revision.cuerpo).toMatchObject({ guardado: false, filas: expect.any(Number) });
+    expect(plantilla.estado).toBe(200);
+    // Sin ruta de exportar, "exportar" se lee como el id de un movimiento y no es válido.
+    expect((await cuenta.propietario.get(`${RUTA}/exportar`)).estado).toBe(400);
   });
 
   it('para registrar hace falta el permiso de gestionar', async () => {
@@ -150,7 +144,6 @@ describe('movimientos por API', () => {
 
     expect((await lector.get(RUTA)).estado).toBe(200);
     expect((await lector.post(RUTA, datos())).estado).toBe(403);
-    expect((await lector.get(`${RUTA}/exportar`)).estado).toBe(403);
     expect((await lector.get(`${RUTA}/plantilla`)).estado).toBe(403);
   });
 });

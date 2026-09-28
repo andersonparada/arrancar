@@ -13,22 +13,32 @@ export interface Movimiento {
   beneficiario: string | null;
   observaciones: string | null;
   cuentaBancariaNombre: string | null;
+  anuladoEn: string | null;
+  motivoDeAnulacion: string | null;
 }
 
-export type DatosMovimiento = Omit<Movimiento, 'id' | 'cuentaBancariaNombre'>;
+export type DatosMovimiento = Omit<Movimiento, 'id' | 'cuentaBancariaNombre' | 'anuladoEn' | 'motivoDeAnulacion'>;
+
+/** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */
+export interface FiltroDeMovimientos {
+  cuentaBancariaId?: string;
+  desde?: string;
+  hasta?: string;
+  [clave: string]: string | undefined;
+}
 
 const RUTA = '/bancos/movimientos';
 
 export class ApiMovimientos {
   constructor(private readonly http: ClienteHttp) {}
 
-  /** Exportar e importar en Excel. */
+  /** Importar en Excel (los saldos iniciales); sin exportar: lo registrado se consulta en los reportes. */
   get intercambio() {
     return intercambioDe(this.http, RUTA);
   }
 
-  listar() {
-    return this.http.obtener<Movimiento[]>(RUTA);
+  listar(filtro: FiltroDeMovimientos = {}) {
+    return this.http.obtener<Movimiento[]>(RUTA, filtro);
   }
 
   obtener(id: string) {
@@ -43,8 +53,9 @@ export class ApiMovimientos {
     return this.http.reemplazar<Movimiento>(`${RUTA}/${id}`, datos);
   }
 
-  eliminar(id: string) {
-    return this.http.eliminar(`${RUTA}/${id}`);
+  /** Anula el movimiento con un motivo; no se puede deshacer y no hay ruta para eliminar. */
+  anular(id: string, motivo: string) {
+    return this.http.crear<Movimiento>(`${RUTA}/${id}/anular`, { motivo });
   }
 }
 

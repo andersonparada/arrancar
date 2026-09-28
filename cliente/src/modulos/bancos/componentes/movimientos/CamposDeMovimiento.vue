@@ -7,7 +7,10 @@ import { OPCIONES_DE_TIPO } from '../../composables/movimientos/edicion-de-movim
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { EdicionDeMovimiento } from '../../composables/movimientos/edicion-de-movimiento';
 
-/** Los campos del movimiento; los usan la ventana y el formulario en página, así se ven igual. */
+/**
+ * Los campos del movimiento; los usan la ventana y el formulario en página, así
+ * se ven igual. Al corregir (con `id`) la cuenta se ve pero no se cambia.
+ */
 defineProps<{ errores: Record<string, string>; referencias: Record<'cuentaBancariaId', OpcionDeRegistro[]> }>();
 const edicion = defineModel<EdicionDeMovimiento>({ required: true });
 </script>
@@ -19,6 +22,7 @@ const edicion = defineModel<EdicionDeMovimiento>({ required: true });
       etiqueta="Cuenta"
       :opciones="referencias.cuentaBancariaId"
       requerido
+      :deshabilitado="!!edicion.id"
       :error="errores.cuentaBancariaId"
     />
     <CampoSelector
@@ -30,8 +34,12 @@ const edicion = defineModel<EdicionDeMovimiento>({ required: true });
     />
     <CampoTexto v-model="edicion.fecha" etiqueta="Fecha" tipo="date" requerido :error="errores.fecha" />
     <CampoTexto v-model="edicion.monto" etiqueta="Monto" tipo="number" paso="any" requerido :error="errores.monto" />
-    <CampoInterruptor v-model="edicion.saldoInicial" etiqueta="Saldo inicial" />
-    <CampoTexto v-model="edicion.referencia" etiqueta="Referencia" :error="errores.referencia" />
+    <CampoInterruptor v-model="edicion.saldoInicial" etiqueta="Es el saldo inicial de la cuenta" />
+    <CampoTexto
+      v-model="edicion.referencia"
+      etiqueta="Referencia (boleta o autorización)"
+      :error="errores.referencia"
+    />
     <CampoTexto v-model="edicion.beneficiario" etiqueta="Beneficiario u origen" :error="errores.beneficiario" />
     <CampoTexto v-model="edicion.observaciones" etiqueta="Observaciones" multilinea :error="errores.observaciones" />
   </div>

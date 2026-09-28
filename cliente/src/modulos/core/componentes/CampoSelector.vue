@@ -7,6 +7,8 @@ defineProps<{
   error?: string;
   requerido?: boolean;
   ocultarEtiqueta?: boolean;
+  /** Se ve pero no se puede cambiar (p. ej. la cuenta de un movimiento al corregirlo). */
+  deshabilitado?: boolean;
 }>();
 
 const modelo = defineModel<T>();
@@ -21,8 +23,9 @@ const id = useId();
     <select
       :id="id"
       v-model="modelo"
+      :disabled="deshabilitado"
       :aria-invalid="!!error"
-      class="rounded-lg border-0 bg-white px-3 py-2.5 text-base ring-1 ring-tierra-200 focus:ring-2 focus:ring-campo-500 aria-invalid:ring-red-500 sm:text-sm dark:bg-tierra-800 dark:ring-tierra-700"
+      class="rounded-lg border-0 bg-white px-3 py-2.5 text-base ring-1 ring-tierra-200 focus:ring-2 focus:ring-campo-500 aria-invalid:ring-red-500 disabled:cursor-not-allowed disabled:bg-tierra-100 disabled:text-tierra-600 sm:text-sm dark:bg-tierra-800 dark:ring-tierra-700 dark:disabled:bg-tierra-900"
     >
       <option v-for="opcion in opciones" :key="String(opcion.valor)" :value="opcion.valor">{{ opcion.texto }}</option>
     </select>

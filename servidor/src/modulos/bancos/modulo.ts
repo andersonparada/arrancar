@@ -25,7 +25,6 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.movimientos.gestionar', descripcion: 'Registrar y corregir movimientos' },
     { clave: 'bancos.movimientos.anular', descripcion: 'Anular movimientos' },
     { clave: 'bancos.movimientos.importar', descripcion: 'Importar movimientos desde Excel' },
-    { clave: 'bancos.movimientos.exportar', descripcion: 'Exportar movimientos a Excel' },
     // generador: permisos
   ],
   configuracion: [
