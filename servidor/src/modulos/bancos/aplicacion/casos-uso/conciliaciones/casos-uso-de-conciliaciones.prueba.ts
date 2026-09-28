@@ -148,6 +148,16 @@ describe('terminar y autorizar', () => {
     await expect(entorno.casos.autorizar.ejecutar(operador, conciliacion.id)).rejects.toThrow(AutorizaQuienElaboro);
   });
 
+  it('el superacceso (soporte) sí puede autorizar lo que él mismo elaboró', async () => {
+    const soporte = { ...operador, esSuperacceso: true };
+    const conciliacion = await entorno.casos.iniciar.ejecutar(soporte, inicio());
+    await entorno.casos.terminar.ejecutar(soporte, conciliacion.id);
+
+    const autorizada = await entorno.casos.autorizar.ejecutar(soporte, conciliacion.id);
+
+    expect(autorizada.estado).toBe('autorizada');
+  });
+
   it('otra persona sí la puede autorizar: congela la foto y queda autorizada', async () => {
     const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
     const idSaldoInicial = conciliacion.candidatos[0]!.id;

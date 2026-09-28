@@ -26,14 +26,14 @@ export class AutorizarConciliacion {
 
   /**
    * @throws ConciliacionNoEstaElaborada si no está elaborada.
-   * @throws AutorizaQuienElaboro si autoriza quien la elaboró.
+   * @throws AutorizaQuienElaboro si autoriza quien la elaboró (el superacceso sí puede).
    */
   ejecutar(operador: Operador, conciliacionId: string): Promise<ConciliacionDto> {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const conciliacion = await conciliacionExistente(repositorio, conciliacionId);
       const dto = await consultas.obtener(conciliacionId);
-      conciliacion.autorizar(operador.usuarioId, fotoDe(dto));
+      conciliacion.autorizar(operador, fotoDe(dto));
       await repositorio.guardar(conciliacion);
       return consultas.obtener(conciliacionId);
     });

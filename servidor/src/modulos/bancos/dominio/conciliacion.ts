@@ -28,6 +28,12 @@ export interface FotoDelCalculo {
   totalCreditosEnTransito: string;
 }
 
+/** Quien autoriza: el superacceso no queda sujeto a la separación de funciones. */
+export interface QuienAutoriza {
+  usuarioId: string;
+  esSuperacceso: boolean;
+}
+
 export interface PropiedadesDeConciliacion extends DatosDeConciliacion {
   id: ConciliacionId;
   empresaId: Identificador<'Empresa'>;
@@ -117,11 +123,12 @@ export class Conciliacion extends Entidad<ConciliacionId> {
   /**
    * Congela la foto del cálculo y bloquea el mes.
    * @throws ConciliacionNoEstaElaborada si no está elaborada.
-   * @throws AutorizaQuienElaboro si autoriza quien la elaboró.
+   * @throws AutorizaQuienElaboro si autoriza quien la elaboró, salvo que sea de
+   *   superacceso (soporte), que puede hacerlo todo.
    */
-  autorizar(usuarioId: string, foto: FotoDelCalculo): void {
+  autorizar({ usuarioId, esSuperacceso }: QuienAutoriza, foto: FotoDelCalculo): void {
     this.exigirElaborada();
-    if (this.propiedades.elaboradaPor === usuarioId) throw new AutorizaQuienElaboro();
+    if (!esSuperacceso && this.propiedades.elaboradaPor === usuarioId) throw new AutorizaQuienElaboro();
     this.propiedades = {
       ...this.propiedades,
       estado: 'autorizada',
