@@ -45,9 +45,11 @@ export class AnularCheque {
     const { repositorioMovimientos, reglas } = this.dependencias;
     const movimiento = await movimientoExistente(repositorioMovimientos, movimientoId);
     const efectoAnterior = movimiento.efectoEnCentavos;
+    const { fecha } = movimiento.instantanea();
     movimiento.anularPorCheque(motivo);
     await reglas.revisar(operador, {
       cuentaBancariaId: movimiento.instantanea().cuentaBancariaId,
+      fechas: [fecha],
       diferencia: -efectoAnterior,
     });
     await repositorioMovimientos.guardar(movimiento);

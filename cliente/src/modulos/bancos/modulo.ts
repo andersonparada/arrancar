@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Building2, Landmark, WalletCards } from 'lucide-vue-next';
+import { ArrowLeftRight, Building2, CheckCheck, Landmark, WalletCards } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_BANCOS, VENTANAS_BANCOS } from './textos';
 // generador: importaciones
@@ -52,6 +52,19 @@ export const moduloBancos: DefinicionModuloCliente = {
       props: true,
       meta: { permiso: 'bancos.cuentas-bancarias.ver', titulo: 'Cheques de la chequera' },
     },
+    {
+      path: '/bancos/conciliaciones',
+      name: 'bancos.conciliaciones',
+      component: () => import('./paginas/ListaDeConciliaciones.vue'),
+      meta: { permiso: 'bancos.conciliaciones.ver', titulo: VENTANAS_BANCOS.conciliaciones.titulo },
+    },
+    {
+      path: '/bancos/conciliaciones/:conciliacionId',
+      name: 'bancos.conciliaciones.conciliar',
+      component: () => import('./paginas/ConciliarCuenta.vue'),
+      props: true,
+      meta: { permiso: 'bancos.conciliaciones.ver', titulo: 'Conciliar' },
+    },
     // generador: rutas
   ],
   menu: [
@@ -80,6 +93,13 @@ export const moduloBancos: DefinicionModuloCliente = {
           icono: ArrowLeftRight,
           seccion: 'operacion',
           permiso: 'bancos.movimientos.ver',
+        },
+        {
+          titulo: VENTANAS_BANCOS.conciliaciones.titulo,
+          ruta: '/bancos/conciliaciones',
+          icono: CheckCheck,
+          seccion: 'operacion',
+          permiso: 'bancos.conciliaciones.ver',
         },
         // generador: menu
       ],

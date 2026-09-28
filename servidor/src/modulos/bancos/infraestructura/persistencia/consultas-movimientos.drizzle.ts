@@ -1,11 +1,13 @@
-import { and, asc, desc, eq, getTableColumns, gte, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, gte, isNotNull, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir-que-exista.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { FiltroDeMovimientos, MovimientoDto, SolicitudDeMovimiento } from '../../aplicacion/dto/movimiento.dto.js';
 import type { ConsultasMovimientos } from '../../aplicacion/puertos/consultas-movimientos.js';
+import { finDelMesDe } from '../../dominio/conciliacion.js';
 import { cheques } from './cheques.tablas.js';
+import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { mapeadorDeMovimiento } from './movimiento.mapeador.js';
 import { movimientos } from './movimientos.tablas.js';
@@ -79,6 +81,16 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
 
   fechaMasAntigua(cuentaBancariaId: string, excluir?: string): Promise<string | null> {
     return this.primeraFecha(vigentesDe(cuentaBancariaId, excluir));
+  }
+
+  async conciliadaHasta(cuentaBancariaId: string): Promise<string | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ anio: conciliaciones.anio, mes: conciliaciones.mes })
+      .from(conciliaciones)
+      .where(and(eq(conciliaciones.cuentaBancariaId, cuentaBancariaId), isNotNull(conciliaciones.cerradaEn)))
+      .orderBy(desc(conciliaciones.anio), desc(conciliaciones.mes))
+      .limit(1);
+    return fila ? finDelMesDe(fila) : null;
   }
 
   private async primeraFecha(condicion: SQL | undefined): Promise<string | null> {

@@ -50,6 +50,13 @@
       "when": 1790588133981,
       "tag": "0006_chequeras_y_cheques",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790590315073,
+      "tag": "0007_conciliaciones",
+      "breakpoints": true
     }
   ]
 }

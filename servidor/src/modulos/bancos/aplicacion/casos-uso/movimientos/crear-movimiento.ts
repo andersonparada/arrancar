@@ -22,6 +22,7 @@ export class CrearMovimiento {
       await reglas.revisar(operador, {
         cuentaBancariaId: solicitud.cuentaBancariaId,
         queda: solicitud,
+        fechas: [solicitud.fecha],
         diferencia: movimiento.efectoEnCentavos,
       });
       await repositorio.agregar(movimiento);

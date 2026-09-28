@@ -4,6 +4,7 @@ import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeBancos } from './composicion/bancos.js';
 import { rutasDeChequeras } from './composicion/chequeras.js';
 import { rutasDeCheques } from './composicion/cheques.js';
+import { rutasDeConciliaciones } from './composicion/conciliaciones.js';
 import { rutasDeCuentasBancarias } from './composicion/cuentas-bancarias.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { rutasDeTransferencias } from './composicion/transferencias.js';
@@ -33,6 +34,9 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.chequeras.gestionar', descripcion: 'Crear e inactivar chequeras' },
     { clave: 'bancos.cheques.emitir', descripcion: 'Emitir cheques' },
     { clave: 'bancos.cheques.anular', descripcion: 'Anular cheques' },
+    { clave: 'bancos.conciliaciones.ver', descripcion: 'Ver conciliaciones' },
+    { clave: 'bancos.conciliaciones.conciliar', descripcion: 'Conciliar cuentas' },
+    { clave: 'bancos.conciliaciones.eliminar', descripcion: 'Eliminar conciliaciones' },
     // generador: permisos
   ],
   configuracion: [
@@ -60,6 +64,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeTransferencias(),
     rutasDeChequeras(),
     rutasDeCheques(),
+    rutasDeConciliaciones(),
     // generador: rutas
   ]),
 };

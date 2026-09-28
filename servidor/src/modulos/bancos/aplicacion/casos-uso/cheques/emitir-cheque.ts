@@ -34,6 +34,7 @@ export class EmitirCheque {
       await reglas.revisar(operador, {
         cuentaBancariaId,
         queda: { fecha: solicitud.fecha, saldoInicial: false },
+        fechas: [solicitud.fecha],
         diferencia: movimiento.efectoEnCentavos,
       });
 

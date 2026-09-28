@@ -143,3 +143,62 @@ export class BeneficiarioObligatorio extends DatoInvalido {
     super('Escriba el beneficiario del cheque.');
   }
 }
+
+export class MesConciliado extends ReglaDeNegocioInfringida {
+  readonly codigo = 'mes_conciliado';
+
+  constructor(fechaConciliada: string) {
+    const [anio, mes, dia] = fechaConciliada.split('-');
+    super(
+      `La cuenta está conciliada hasta el ${dia}/${mes}/${anio}: no se puede registrar, corregir ni anular nada con fecha anterior o igual.`,
+    );
+  }
+}
+
+export class ConciliacionConDiferencia extends ReglaDeNegocioInfringida {
+  readonly codigo = 'conciliacion_con_diferencia';
+
+  constructor(diferenciaEnQ: string) {
+    super(`No se puede cerrar la conciliación: hay una diferencia de Q ${diferenciaEnQ}.`);
+  }
+}
+
+export class ConciliacionCerrada extends ReglaDeNegocioInfringida {
+  readonly codigo = 'conciliacion_cerrada';
+
+  constructor() {
+    super('Esta conciliación ya está cerrada y no se puede modificar.');
+  }
+}
+
+export class ConciliacionFueraDeOrden extends ReglaDeNegocioInfringida {
+  readonly codigo = 'conciliacion_fuera_de_orden';
+
+  constructor(esperado: { anio: number; mes: number }) {
+    super(`Debe conciliar primero ${String(esperado.mes).padStart(2, '0')}/${esperado.anio}.`);
+  }
+}
+
+export class HayUnaConciliacionAbierta extends ReglaDeNegocioInfringida {
+  readonly codigo = 'hay_una_conciliacion_abierta';
+
+  constructor() {
+    super('Esta cuenta ya tiene una conciliación abierta: ciérrela antes de iniciar otra.');
+  }
+}
+
+export class MovimientoNoConciliable extends ReglaDeNegocioInfringida {
+  readonly codigo = 'movimiento_no_conciliable';
+
+  constructor() {
+    super('Alguno de los movimientos elegidos no se puede marcar en esta conciliación.');
+  }
+}
+
+export class SoloSeEliminaLaUltima extends ReglaDeNegocioInfringida {
+  readonly codigo = 'solo_se_elimina_la_ultima';
+
+  constructor() {
+    super('Solo se puede eliminar la última conciliación de la cuenta.');
+  }
+}

@@ -15,3 +15,9 @@ export function deCentavos(centavos: number): string {
   const absoluto = Math.abs(centavos);
   return `${signo}${Math.trunc(absoluto / 100)}.${String(absoluto % 100).padStart(2, '0')}`;
 }
+
+/** Cuánto mueve el saldo un movimiento, en centavos: positivo si entra (crédito), negativo si sale. */
+export function efectoEnCentavos(tipo: 'credito' | 'debito' | 'cheque', monto: string): number {
+  const centavos = aCentavos(monto);
+  return tipo === 'credito' ? centavos : -centavos;
+}

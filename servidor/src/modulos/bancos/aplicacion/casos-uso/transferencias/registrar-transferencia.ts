@@ -97,14 +97,17 @@ export class RegistrarTransferencia {
   ): Promise<void> {
     const { reglas } = this.dependencias;
     const queda = { fecha: solicitud.fecha, saldoInicial: false };
+    const fechas = [solicitud.fecha];
     await reglas.revisar(operador, {
       cuentaBancariaId: solicitud.cuentaOrigenId,
       queda,
+      fechas,
       diferencia: debito.efectoEnCentavos,
     });
     await reglas.revisar(operador, {
       cuentaBancariaId: solicitud.cuentaDestinoId,
       queda,
+      fechas,
       diferencia: credito.efectoEnCentavos,
     });
   }

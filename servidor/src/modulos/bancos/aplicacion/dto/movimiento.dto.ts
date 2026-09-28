@@ -18,12 +18,21 @@ export interface MovimientoDto {
   chequeId: string | null;
   /** El número del cheque que lo creó; si no, `null`. */
   numeroDeCheque: number | null;
+  /** La conciliación donde quedó marcado; si no, `null`. */
+  conciliacionId: string | null;
 }
 
 /** Lo que se recibe para registrar o corregir un movimiento, ya validado en su forma. La API nunca acepta `tipo: 'cheque'`. */
 export type SolicitudDeMovimiento = Omit<
   MovimientoDto,
-  'id' | 'anuladoEn' | 'motivoDeAnulacion' | 'cuentaBancariaNombre' | 'transferenciaId' | 'chequeId' | 'numeroDeCheque'
+  | 'id'
+  | 'anuladoEn'
+  | 'motivoDeAnulacion'
+  | 'cuentaBancariaNombre'
+  | 'transferenciaId'
+  | 'chequeId'
+  | 'numeroDeCheque'
+  | 'conciliacionId'
 > & { tipo: 'credito' | 'debito' };
 
 /** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */

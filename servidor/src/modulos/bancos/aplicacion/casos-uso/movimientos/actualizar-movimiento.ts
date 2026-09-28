@@ -20,12 +20,14 @@ export class ActualizarMovimiento {
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
       const efectoAnterior = movimiento.efectoEnCentavos;
+      const { fecha: fechaAnterior } = movimiento.instantanea();
       movimiento.corregir(solicitud);
       const { cuentaBancariaId, fecha, saldoInicial } = movimiento.instantanea();
       await reglas.revisar(operador, {
         cuentaBancariaId,
         movimientoId,
         queda: { fecha, saldoInicial },
+        fechas: [fechaAnterior, fecha],
         diferencia: movimiento.efectoEnCentavos - efectoAnterior,
       });
       await repositorio.guardar(movimiento);

@@ -1,6 +1,8 @@
 # Módulo `bancos`
 
-Estado: **en construcción** (2026-09-27). Plan acordado; hechos B0 y B0.2.
+Estado: **B0 a B5 hechos** (2026-09-28). Queda para después: la foto del
+comprobante, elegir el beneficiario de Clientes, el alcance por cuenta, la
+moneda extranjera y la impresión de cheques y de vouchers.
 
 ## Propósito
 
@@ -472,3 +474,71 @@ Movimientos y Transferencias:
 - Pantalla (operación): lista por cuenta; la de conciliar muestra saldo según
   banco, los movimientos para marcar, saldo conciliado y diferencia en vivo.
   Permisos `bancos.conciliaciones.ver`, `.conciliar` y `.eliminar`.
+
+**B5 hecho (2026-09-28).** Tabla `bancos.conciliaciones` (cuenta, año, mes con
+`check` 1 a 12, única por cuenta y mes, saldo según banco, `cerrada_en`,
+autoría) y columna `conciliacion_id` (opcional, con índice) en
+`bancos.movimientos`; `movimientos → conciliaciones → cuentas_bancarias`, sin
+ciclo. Dominio `Conciliacion` (`crear`, `cambiarSaldoSegunBanco`, `cerrar` con
+la diferencia en centavos, `estaCerrada`, `finDelMes`) más `periodoSiguiente` y
+`finDelMesDe` como funciones sueltas del módulo. Siete casos de uso
+(`IniciarConciliacion`, `ObtenerConciliacion`, `MarcarMovimientos`,
+`CambiarSaldoSegunBanco`, `CerrarConciliacion`, `EliminarConciliacion`,
+`ListarConciliaciones`); "guardar marcas" recibe la lista completa de
+marcados y reemplaza las anteriores en una sola sentencia (evita un
+caso `MarcarMovimientos`/`DesmarcarMovimientos` separado). El saldo conciliado
+y la diferencia se calculan con las mismas funciones puras en centavos
+(`calculo-de-conciliacion.ts`) tanto en la consulta de Postgres como en el
+doble en memoria, así que un caso de uso nunca ve las dos fórmulas por
+separado.
+
+`ReglasDeLaCuenta.revisar` ganó `fechas: string[]` (todas las fechas que toca
+el cambio) y una regla nueva, `revisarMesConciliado`, que consulta
+`conciliadaHasta` (fin de mes de la última conciliación **cerrada** de la
+cuenta) y lanza `MesConciliado` si alguna fecha cae ahí o antes. Se ajustaron
+los siete llamadores existentes (movimientos crear/actualizar/anular,
+transferencias registrar/anular, cheques emitir/anular). De paso se corrigió
+un hueco real: `AnularTransferencia` solo revisaba las reglas de la cuenta
+destino (por el sobregiro); ahora revisa también el origen, así que anular con
+fecha en un mes conciliado también se bloquea ahí.
+
+HTTP: `GET /bancos/cuentas-bancarias/:id/conciliaciones`,
+`GET /bancos/conciliaciones/:id` (`ver`); `POST /bancos/conciliaciones`,
+`PUT .../marcas`, `PUT .../saldo`, `POST .../cerrar` (`conciliar`);
+`POST .../eliminar` con `{ motivo }` (`eliminar`, 204 sin cuerpo). Permisos
+agregados a `modulo.ts`.
+
+Cliente: entrada "Conciliaciones" en `operacion` (ícono `CheckCheck`), rutas
+`/bancos/conciliaciones` (elige cuenta, lista sus conciliaciones, "Nueva
+conciliación" con el periodo propuesto por `periodoPropuesto` — mes siguiente
+a la última, o el mes anterior al actual si no hay ninguna — y "Eliminar" solo
+en la primera de la lista, con `VentanaDeAnulacion.vue`) y
+`/bancos/conciliaciones/:id` (`ConciliarCuenta.vue`: saldo según banco
+editable mientras está abierta, lista de candidatos con casilla, resumen en
+vivo en verde/rojo según la diferencia, "Cerrar conciliación" deshabilitado
+hasta que sea cero). El cálculo en vivo es una réplica en el cliente de
+`aCentavos`/`efectoEnCentavos`/`calcularSaldoConciliado` (no se pudo compartir
+el archivo del servidor: son paquetes npm separados). Por el límite de
+ESLint de 25 líneas por función, la pantalla de conciliar no usa un solo
+composable orquestador: llama directamente a `usarCarga`,
+`usarMarcadoDeMovimientos` y `usarGuardadoDeConciliacion` en su
+`<script setup>`, como ya hacían otras páginas del módulo con varios
+composables pequeños.
+
+Pruebas nuevas: 15 del servidor (13 unitarias con dobles — orden de los
+meses, una abierta a la vez, candidatos que incluyen pendientes de meses
+anteriores y excluyen los de otra conciliación, saldo conciliado y diferencia,
+no cierra con diferencia, cierra con cero, `MesConciliado` bloquea registrar y
+anular, eliminar solo la última y suelta sus movimientos y audita — y 2 de
+API: flujo completo iniciar/marcar/cerrar/bloqueo del mes/iniciar el
+siguiente/eliminar, y 403 sin permisos) y 14 del cliente (`conAlternado`,
+`idsMarcados`, `calcularResumen`, `efectoEnCentavos` y `periodoPropuesto`).
+Total: 402 pruebas del servidor, 93 del cliente y 46 del generador.
+
+Decisiones propias al implementar: `conciliacion_id` vive solo en la fila de
+`bancos.movimientos` (no en la entidad `Movimiento`), porque ninguna regla de
+negocio depende de a qué conciliación pertenece un movimiento — solo de su
+fecha frente a `conciliadaHasta`; así `RepositorioConciliaciones.guardarMarcas`
+lo actualiza con una sentencia de SQL directa, sin cargar cada `Movimiento`.
+`EliminarConciliacion` reutiliza `guardarMarcas(id, [])` para soltar todos los
+movimientos de la conciliación que se borra.

@@ -20,12 +20,21 @@ export interface Movimiento {
   /** El cheque que lo creó, si es tipo `cheque`; si no, `null`. */
   chequeId: string | null;
   numeroDeCheque: number | null;
+  /** La conciliación donde quedó marcado; si no, `null`. */
+  conciliacionId: string | null;
 }
 
 /** La API nunca acepta `tipo: 'cheque'`: un cheque se registra desde la ventana de emitir. */
 export type DatosMovimiento = Omit<
   Movimiento,
-  'id' | 'cuentaBancariaNombre' | 'anuladoEn' | 'motivoDeAnulacion' | 'transferenciaId' | 'chequeId' | 'numeroDeCheque'
+  | 'id'
+  | 'cuentaBancariaNombre'
+  | 'anuladoEn'
+  | 'motivoDeAnulacion'
+  | 'transferenciaId'
+  | 'chequeId'
+  | 'numeroDeCheque'
+  | 'conciliacionId'
 > & { tipo: 'credito' | 'debito' };
 
 /** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */

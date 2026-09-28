@@ -1,6 +1,7 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import { aCentavos, deCentavos } from '../dominio/centavos.js';
 import {
+  MesConciliado,
   MovimientoAntesDelSaldoInicial,
   SaldoInicialNoEsElPrimero,
   SaldoInicialRepetido,
@@ -16,6 +17,8 @@ export interface CambioEnLaCuenta {
   movimientoId?: string;
   /** Cómo queda el movimiento; una anulación no tiene fecha que revisar. */
   queda?: { fecha: string; saldoInicial: boolean };
+  /** Todas las fechas que toca el cambio (la anterior y la nueva al corregir); se revisan contra el mes conciliado. */
+  fechas: string[];
   /** Cuánto cambia el saldo, en centavos (negativo si baja). */
   diferencia: number;
 }
@@ -34,6 +37,7 @@ export class ReglasDeLaCuenta {
 
   async revisar(operador: Operador, cambio: CambioEnLaCuenta): Promise<void> {
     if (cambio.queda) await this.revisarSaldoInicial(cambio, cambio.queda);
+    await this.revisarMesConciliado(cambio);
     await this.revisarSobregiro(operador, cambio);
   }
 
@@ -50,6 +54,14 @@ export class ReglasDeLaCuenta {
     if (fechaDelInicial) throw new SaldoInicialRepetido();
     const masAntigua = await consultas.fechaMasAntigua(cuentaBancariaId, movimientoId);
     if (masAntigua && fecha > masAntigua) throw new SaldoInicialNoEsElPrimero();
+  }
+
+  /** Nada se toca con fecha en un mes ya conciliado (o antes) de la cuenta. */
+  private async revisarMesConciliado({ cuentaBancariaId, fechas }: CambioEnLaCuenta): Promise<void> {
+    const { consultas } = this.dependencias;
+    const fechaConciliada = await consultas.conciliadaHasta(cuentaBancariaId);
+    if (!fechaConciliada) return;
+    if (fechas.some((fecha) => fecha <= fechaConciliada)) throw new MesConciliado(fechaConciliada);
   }
 
   private async revisarSobregiro(operador: Operador, { cuentaBancariaId, diferencia }: CambioEnLaCuenta) {

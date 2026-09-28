@@ -18,6 +18,7 @@ function aDto(movimiento: Movimiento): MovimientoDto {
     cuentaBancariaNombre: null,
     chequeId: null,
     numeroDeCheque: null,
+    conciliacionId: null,
   };
 }
 
@@ -33,6 +34,8 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
   private readonly registros = new Map<string, Movimiento>();
   /** Las cuentas que las pruebas dan por inactivas; las demás existen y están activas. */
   readonly cuentasInactivas = new Set<string>();
+  /** Fecha fija que las pruebas dan como conciliada hasta; `null` si ninguna cuenta tiene conciliaciones cerradas. */
+  fechaConciliadaHasta: string | null = null;
 
   /** Una copia, como la base de datos: lo que el caso de uso cambie no cuenta hasta que lo guarde. */
   async buscar(id: MovimientoId): Promise<Movimiento | null> {
@@ -82,6 +85,10 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
         .map((dto) => dto.fecha)
         .sort()[0] ?? null
     );
+  }
+
+  async conciliadaHasta(_cuentaBancariaId: string): Promise<string | null> {
+    return this.fechaConciliadaHasta;
   }
 
   private deLaCuenta(cuentaBancariaId: string): Movimiento[] {

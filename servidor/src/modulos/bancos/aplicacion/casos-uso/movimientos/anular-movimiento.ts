@@ -21,9 +21,10 @@ export class AnularMovimiento {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
       const anterior = await consultas.obtener(movimientoId);
       const efectoAnterior = movimiento.efectoEnCentavos;
+      const { fecha } = movimiento.instantanea();
       movimiento.anular(motivo);
       const { cuentaBancariaId, motivoDeAnulacion } = movimiento.instantanea();
-      await reglas.revisar(operador, { cuentaBancariaId, diferencia: -efectoAnterior });
+      await reglas.revisar(operador, { cuentaBancariaId, fechas: [fecha], diferencia: -efectoAnterior });
       await repositorio.guardar(movimiento);
       await auditoria.registrar({
         recurso: 'bancos.movimientos',

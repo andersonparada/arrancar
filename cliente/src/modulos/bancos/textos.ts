@@ -21,5 +21,11 @@ export const VENTANAS_BANCOS = {
     nuevo: 'Nuevo movimiento',
     editar: 'Editar movimiento',
   },
+  conciliaciones: {
+    titulo: 'Conciliaciones',
+    descripcion: 'Conciliación mensual de cada cuenta con su estado de cuenta.',
+    nuevo: 'Nueva conciliación',
+    editar: 'Conciliar',
+  },
   // generador: ventanas
 } as const;

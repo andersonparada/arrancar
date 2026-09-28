@@ -22,6 +22,7 @@ const base: Movimiento = {
   transferenciaId: null,
   chequeId: null,
   numeroDeCheque: null,
+  conciliacionId: null,
 };
 
 describe('título del movimiento', () => {

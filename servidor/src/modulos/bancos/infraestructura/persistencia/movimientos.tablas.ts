@@ -13,6 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
+import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { esquemaBancos } from './esquema.tablas.js';
 import { transferencias } from './transferencias.tablas.js';
@@ -43,12 +44,15 @@ export const movimientos = esquemaBancos.table(
     motivoDeAnulacion: text(),
     /** La transferencia que la creó, si es una de sus dos notas. */
     transferenciaId: uuid().references((): AnyPgColumn => transferencias.id),
+    /** La conciliación donde quedó marcado; null si sigue pendiente. */
+    conciliacionId: uuid().references((): AnyPgColumn => conciliaciones.id),
     ...marcasDeTiempo,
     ...autoria,
   },
   (t) => [
     index('movimientos_cuenta_fecha_idx').on(t.cuentaBancariaId, t.fecha),
     index('movimientos_transferencia_idx').on(t.transferenciaId),
+    index('movimientos_conciliacion_idx').on(t.conciliacionId),
     uniqueIndex('movimientos_un_saldo_inicial')
       .on(t.cuentaBancariaId)
       .where(sql`${t.saldoInicial} and ${t.anuladoEn} is null`),

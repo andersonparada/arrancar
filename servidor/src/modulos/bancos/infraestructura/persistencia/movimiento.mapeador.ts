@@ -7,7 +7,16 @@ type Fila = typeof movimientos.$inferSelect;
 
 /** Traduce entre la fila de la tabla, la entidad y lo que ve la pantalla. */
 export const mapeadorDeMovimiento = {
-  aEntidad({ id, empresaId, creadoEn, actualizadoEn, creadoPor, actualizadoPor, ...campos }: Fila): Movimiento {
+  aEntidad({
+    id,
+    empresaId,
+    creadoEn,
+    actualizadoEn,
+    creadoPor,
+    actualizadoPor,
+    conciliacionId: _conciliacionId,
+    ...campos
+  }: Fila): Movimiento {
     return Movimiento.reconstruir({
       ...campos,
       id: Identificador.desde(id),

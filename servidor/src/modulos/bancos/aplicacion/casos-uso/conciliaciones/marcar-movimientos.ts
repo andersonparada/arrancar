@@ -1,0 +1,36 @@
+import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { ConciliacionCerrada, MovimientoNoConciliable } from '../../../dominio/errores.js';
+import type { ConciliacionDto } from '../../dto/conciliacion.dto.js';
+import { conciliacionExistente, type DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
+
+interface SolicitudDeMarcas {
+  conciliacionId: string;
+  /** La lista completa de movimientos marcados: reemplaza las marcas anteriores. */
+  movimientoIds: string[];
+}
+
+/** Guarda las marcas de la conciliación (qué movimientos aparecen en el estado de cuenta del banco). */
+export class MarcarMovimientos {
+  constructor(private readonly dependencias: DependenciasDeConciliaciones) {}
+
+  /**
+   * @throws ConciliacionCerrada si ya está cerrada.
+   * @throws MovimientoNoConciliable si algún id no es un candidato válido (otra cuenta, anulado, fecha
+   *   posterior al fin de mes, o marcado en otra conciliación).
+   */
+  ejecutar(operador: Operador, { conciliacionId, movimientoIds }: SolicitudDeMarcas): Promise<ConciliacionDto> {
+    const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
+    return unidadDeTrabajo.ejecutar(operador, async () => {
+      const conciliacion = await conciliacionExistente(repositorio, conciliacionId);
+      if (conciliacion.estaCerrada) throw new ConciliacionCerrada();
+
+      const { cuentaBancariaId } = conciliacion.instantanea();
+      const idsValidos = await consultas.idsDeCandidatos(cuentaBancariaId, conciliacion.finDelMes(), conciliacionId);
+      const validos = new Set(idsValidos);
+      if (movimientoIds.some((id) => !validos.has(id))) throw new MovimientoNoConciliable();
+
+      await repositorio.guardarMarcas(conciliacionId, movimientoIds);
+      return consultas.obtener(conciliacionId);
+    });
+  }
+}
