@@ -7,8 +7,10 @@ import { definirRecurso, texto, textoLargo } from '../../src/definicion/indice.j
  * Tipos de campo: texto, textoLargo, entero, decimal, dinero, fecha, siNo, lista,
  * correo, telefono, nit y dpi (se importan de ../../src/definicion/indice.js).
  * Revise el plural, los textos con tildes y el género: salen en las pantallas.
- * Sección del menú: 'operacion' (el trabajo del día), 'administracion'
- * (catálogos y datos maestros) o 'reportes'.
+ * Sección del menú, y lo que trae de Excel (lo decide la sección, no se elige aparte):
+ *   'administracion' (catálogos y datos maestros) importa y exporta;
+ *   'operacion' (el trabajo del día) no importa ni exporta, se consulta en los reportes;
+ *   'reportes' (se consultan e imprimen) solo exporta, sin importar ni plantilla.
  */
 export const recurso = definirRecurso({
   modulo: '{{moduloClave}}',

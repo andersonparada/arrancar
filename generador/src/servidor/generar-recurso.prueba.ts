@@ -85,6 +85,42 @@ describe('generar un recurso en el servidor', () => {
     expect(leer('http/animales.rutas.ts')).toContain('rutasDeIntercambio(');
   });
 
+  it('operación no genera nada de Excel: ni columnas, ni permisos, ni rutas ni pruebas', async () => {
+    const { disco, leer } = await generar({ ...animal, seccion: 'operacion' });
+
+    expect(disco.existe(`${SERVIDOR}/http/animales.columnas.ts`)).toBe(false);
+    const modulo = leer('modulo.ts');
+    expect(modulo).not.toContain('animales.importar');
+    expect(modulo).not.toContain('animales.exportar');
+    const rutas = leer('http/animales.rutas.ts');
+    expect(rutas).not.toContain('rutasDeIntercambio');
+    expect(rutas).not.toContain('OpcionesDeIntercambio');
+    const composicion = leer('composicion/animales.ts');
+    expect(composicion).not.toContain('intercambioDeAnimales');
+    expect(composicion).not.toContain('crearIntercambio');
+    const prueba = disco.leer('/p/servidor/src/pruebas-api/ganado-animales.api.prueba.ts');
+    expect(prueba).not.toContain('/exportar');
+    expect(prueba).not.toContain('/plantilla');
+    expect(prueba).not.toContain('/importar');
+  });
+
+  it('reportes solo exporta: sin permiso de importar, sin plantilla ni prueba de revisar', async () => {
+    const { disco, leer } = await generar({ ...animal, seccion: 'reportes' });
+
+    expect(disco.existe(`${SERVIDOR}/http/animales.columnas.ts`)).toBe(true);
+    const modulo = leer('modulo.ts');
+    expect(modulo).not.toContain('animales.importar');
+    expect(modulo).toContain("{ clave: 'ganado.animales.exportar', descripcion: 'Exportar animales a Excel' },");
+    const rutas = leer('http/animales.rutas.ts');
+    expect(rutas).toContain('rutasDeIntercambio(');
+    expect(rutas).toContain("permisos: { exportar: 'ganado.animales.exportar' }");
+    expect(rutas).not.toContain('importar:');
+    const prueba = disco.leer('/p/servidor/src/pruebas-api/ganado-animales.api.prueba.ts');
+    expect(prueba).toContain('get(`${RUTA}/exportar`)');
+    expect(prueba).not.toContain('/plantilla');
+    expect(prueba).not.toContain('/importar');
+  });
+
   it('con baja por inactivación lleva "activo" y no el caso de eliminar', async () => {
     const { disco, leer } = await generar({ ...animal, baja: 'inactivar', alcance: 'cuenta' });
 

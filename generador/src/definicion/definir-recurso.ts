@@ -12,6 +12,24 @@ import { DefinicionInvalida } from './errores.js';
 /** Las secciones del menú de cada módulo, en el orden en que se muestran. */
 export type SeccionDelMenu = 'operacion' | 'administracion' | 'reportes';
 
+/** Si el recurso importa y/o exporta en Excel; lo decide la sección, ver `EXCEL_POR_SECCION`. */
+export interface ExcelDelRecurso {
+  importar: boolean;
+  exportar: boolean;
+}
+
+/**
+ * Regla del dueño del producto: administración importa y exporta (catálogos y
+ * datos maestros se cargan y se revisan en lote); operación no importa ni
+ * exporta (lo que se registra a diario se consulta luego en los reportes);
+ * reportes solo exporta (se consultan e imprimen, no se cargan por Excel).
+ */
+const EXCEL_POR_SECCION: Record<SeccionDelMenu, ExcelDelRecurso> = {
+  administracion: { importar: true, exportar: true },
+  operacion: { importar: false, exportar: false },
+  reportes: { importar: false, exportar: true },
+};
+
 /** Lo que escribe quien define un recurso. */
 export interface EntradaDeRecurso {
   modulo: string;
@@ -66,7 +84,8 @@ export interface DefinicionDeRecurso {
   mostrar: string;
   icono: string;
   campos: CampoDefinido[];
-  permisos: { ver: string; gestionar: string; importar: string; exportar: string };
+  excel: ExcelDelRecurso;
+  permisos: { ver: string; gestionar: string; importar?: string; exportar?: string };
 }
 
 function problemasDeNombres(entrada: EntradaDeRecurso): string[] {
@@ -148,18 +167,22 @@ const campoDefinido = ([nombre, campo]: [string, Campo]): CampoDefinido => ({
 const conActivo = (entrada: EntradaDeRecurso): Record<string, Campo> =>
   entrada.baja === 'inactivar' ? { ...entrada.campos, activo: siNo({ predeterminado: true }) } : entrada.campos;
 
-/** Ver y gestionar, y aparte importar y exportar: ver una lista no da derecho a llevársela entera. */
-const permisosDe = (prefijo: string) => ({
+/**
+ * Ver y gestionar, y aparte importar y exportar (ver una lista no da derecho a
+ * llevársela entera): solo los que la sección permite, ver `EXCEL_POR_SECCION`.
+ */
+const permisosDe = (prefijo: string, excel: ExcelDelRecurso) => ({
   ver: `${prefijo}.ver`,
   gestionar: `${prefijo}.gestionar`,
-  importar: `${prefijo}.importar`,
-  exportar: `${prefijo}.exportar`,
+  ...(excel.importar ? { importar: `${prefijo}.importar` } : {}),
+  ...(excel.exportar ? { exportar: `${prefijo}.exportar` } : {}),
 });
 
 function completar(entrada: EntradaDeRecurso): DefinicionDeRecurso {
   const modulo = nombresDeClave(entrada.modulo);
   const plural = nombresDeCodigo(entrada.plural);
   const entidad = nombresDeCodigo(entrada.entidad);
+  const excel = EXCEL_POR_SECCION[entrada.seccion];
   return {
     modulo,
     entidad,
@@ -173,7 +196,8 @@ function completar(entrada: EntradaDeRecurso): DefinicionDeRecurso {
     mostrar: entrada.mostrar ?? campoQueNombra(entrada.campos)!,
     icono: entrada.icono ?? 'List',
     campos: Object.entries(conActivo(entrada)).map(campoDefinido),
-    permisos: permisosDe(`${modulo.clave}.${plural.clave}`),
+    excel,
+    permisos: permisosDe(`${modulo.clave}.${plural.clave}`, excel),
   };
 }
 

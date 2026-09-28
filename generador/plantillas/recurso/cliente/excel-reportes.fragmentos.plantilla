@@ -1,0 +1,32 @@
+### importacionIntercambioEnApi
+import { intercambioDe } from '@/modulos/core/servicios/intercambio';
+### getterDeIntercambioEnApi
+
+  /** Exportar en Excel; sin importar (reportes solo se consultan). */
+  get intercambio() {
+    return intercambioDe(this.http, RUTA);
+  }
+### importacionIntercambioEnUsar
+import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
+### intercambioEnUsar
+
+  const intercambio = usarIntercambio(api{{Plural}}.intercambio, cargar);
+### intercambioEnRetornoDeUsar
+intercambio,
+### importacionIntercambioEnUsarLista
+import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
+### cargarEnUsarLista
+, cargar
+### intercambioEnRetornoDeUsarLista
+, intercambio: usarIntercambio(api{{Plural}}.intercambio, cargar)
+### importacionesDeIntercambioEnPagina
+import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/AccionesDeIntercambio.vue';
+### constantePermisosDeIntercambioEnPagina
+const PERMISOS_DE_INTERCAMBIO = { exportar: '{{permisoExportar}}' };
+### intercambioEnRetornoDePagina
+intercambio,
+### accionesDeIntercambioEnPagina
+      <AccionesDeIntercambio :permisos="PERMISOS_DE_INTERCAMBIO" @exportar="intercambio.exportar" />
+### ventanaDeImportacionEnPagina
+### intercambioEnRetornoDeLista
+, intercambio

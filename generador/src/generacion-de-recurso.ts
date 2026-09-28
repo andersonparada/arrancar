@@ -38,11 +38,30 @@ export abstract class GeneracionDeRecurso {
 
   protected abstract registrar(definicion: DefinicionDeRecurso, valores: Record<string, string>): void;
 
-  /** Lo que cambia según la baja sale de `baja-<eliminar|inactivar>.fragmentos`. */
+  /** Une los huecos de una variante (los que la variante no trae, del par `<prefijo>-<nombre>.fragmentos`). */
+  private conVariante(
+    variante: { prefijo: string; nombre: string; completa: string },
+    valores: Record<string, string>,
+  ) {
+    const { prefijo, nombre, completa } = variante;
+    const contenido = this.plantilla(`${this.carpeta}/${prefijo}-${nombre}.fragmentos`);
+    return fragmentosDeVariante(
+      this.plantilla(`${this.carpeta}/${prefijo}-${completa}.fragmentos`),
+      contenido,
+      valores,
+    );
+  }
+
+  /**
+   * Lo que cambia según la baja (`baja-<eliminar|inactivar>.fragmentos`) y
+   * según el Excel de la sección (`excel-<administracion|operacion|reportes>.fragmentos`).
+   */
   private valores(definicion: DefinicionDeRecurso, nombreModulo: string): Record<string, string> {
     const valores = { ...valoresDelRecurso(definicion, nombreModulo), ...this.fragmentos(definicion) };
-    const completa = this.plantilla(`${this.carpeta}/baja-eliminar.fragmentos`);
-    const variante = this.plantilla(`${this.carpeta}/baja-${definicion.baja}.fragmentos`);
-    return { ...valores, ...fragmentosDeVariante(completa, variante, valores) };
+    return {
+      ...valores,
+      ...this.conVariante({ prefijo: 'baja', nombre: definicion.baja, completa: 'eliminar' }, valores),
+      ...this.conVariante({ prefijo: 'excel', nombre: definicion.seccion, completa: 'administracion' }, valores),
+    };
   }
 }

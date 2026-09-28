@@ -1,0 +1,41 @@
+### importacionesExcelEnComposicion
+import { crearIntercambio } from '../../core/intercambio/contexto.js';
+import { validadorDeZod } from '../../core/intercambio/http/rutas-de-intercambio.js';
+{{importacionesDeOpciones}}import type { {{Entidad}}Dto, SolicitudDe{{Entidad}} } from '../aplicacion/dto/{{entidadClave}}.dto.js';
+import { columnasDe{{Plural}} } from '../http/{{pluralClave}}.columnas.js';
+import { esquema{{Entidad}} } from '../http/{{pluralClave}}.esquemas-http.js';
+### funcionDeIntercambioEnComposicion
+/** Exportar en Excel; sin importar (reportes solo se consultan), pero la fila validada sirve igual. */
+function intercambioDe{{Plural}}(casos: ReturnType<typeof casosDeUso>, {{dependenciasEnIntercambio}}: Dependencias) {
+  return crearIntercambio<{{Entidad}}Dto, SolicitudDe{{Entidad}}>({
+    nombre: '{{PluralTitulo}}',
+    columnas: columnasDe{{Plural}}({{argumentoDeOpciones}}),
+    validar: validadorDeZod(esquema{{Entidad}}),
+    listar: (operador) => casos.listar.ejecutar(operador),
+    crear: (operador, solicitud) => casos.crear.ejecutar(operador, solicitud),
+  });
+}
+
+### argumentoDeIntercambioEnComposicion
+, intercambioDe{{Plural}}(casos, dependencias)
+### importacionDeIntercambioEnRutas
+import { rutasDeIntercambio, type OpcionesDeIntercambio } from '../../core/intercambio/http/rutas-de-intercambio.js';
+### constanteDeIntercambioEnRutas
+const EN_EXCEL = {
+  ruta: RUTA,
+  archivo: '{{pluralClave}}',
+  permisos: { exportar: '{{permisoExportar}}' },
+};
+### parametroDeIntercambioEnRutas
+  intercambio: OpcionesDeIntercambio['intercambio'],
+### llamadaDeIntercambioEnRutas
+    rutasDeIntercambio(app, { ...EN_EXCEL, intercambio });
+### pruebasDeExcelEnApi
+  it('se puede exportar a Excel', async () => {
+    await cuenta.propietario.post(RUTA, datos());
+    const exportado = await cuenta.propietario.get(`${RUTA}/exportar`);
+
+    expect(exportado.estado).toBe(200);
+  });
+### aserciones403DeExcelEnApi
+    expect((await lector.get(`${RUTA}/exportar`)).estado).toBe(403);

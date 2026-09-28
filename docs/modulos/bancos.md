@@ -286,6 +286,22 @@ administración genera importar y exportar con sus permisos; operación, nada de
 Excel. La única excepción hoy es Movimientos, que importa a mano (saldos
 iniciales). Los reportes se diseñarán aparte (no son un CRUD).
 
+**Hecho (2026-09-28).** El generador (`generador/`) ya aplica la regla completa,
+incluido un CRUD de reportes (solo exporta, sin importar ni plantilla), aunque
+sea un caso raro. `EXCEL_POR_SECCION` en `definir-recurso.ts` decide sola;
+`permisos.importar`/`.exportar` solo existen si la sección los trae, y las
+plantillas usan un tercer par de fragmentos (`excel-administracion` la
+completa, `excel-operacion` y `excel-reportes` las variantes) al estilo de
+`baja-eliminar`/`baja-inactivar`, sin duplicar plantillas enteras. En el core,
+`rutasDeIntercambio` y `AccionesDeIntercambio.vue` ya aceptaban
+`permisos.exportar` opcional; ahora `permisos.importar` también lo es. Probado
+con un módulo desechable (dos recursos, uno de administración y uno de
+operación): el código generado pasa `revisar` (Prettier, ESLint, tsc y
+vue-tsc) y sus pruebas. Pruebas nuevas: 2 en `generador/src/servidor/` (nada de
+Excel en operación; solo exportar en reportes) y 3 en
+`generador/src/cliente/` (una por sección), sobre 347 pruebas del servidor, 69
+del cliente y 46 del generador en total.
+
 ## Diseño de B3 a B5 (2026-09-27)
 
 Decisiones del dueño: la conciliación solo cierra con **diferencia cero**; al

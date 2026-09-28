@@ -25,10 +25,11 @@ export interface OpcionesDeIntercambio {
   /** Para el nombre del archivo: `animales` → `animales-2026-09-28.xlsx`. */
   archivo: string;
   /**
-   * Sin `exportar` no hay ruta para exportar: las pantallas de operación diaria
-   * solo importan, y lo registrado se consulta en los reportes.
+   * Sin `exportar` no hay ruta para exportar (operación no las trae: lo
+   * registrado se consulta en los reportes); sin `importar` no hay ni plantilla
+   * ni importar (reportes solo exporta: se consulta e imprime, no se carga).
    */
-  permisos: { importar: string; exportar?: string };
+  permisos: { importar?: string; exportar?: string };
   /** Lo que se usa del intercambio; sus tipos de registro y solicitud no le importan a las rutas. */
   intercambio: Pick<IntercambioDeRecurso<unknown, unknown>, 'exportar' | 'plantilla' | 'importar'>;
 }
@@ -67,7 +68,7 @@ const esquemaDeImportacion = z.object({ ensayo: z.enum(['true', 'false']).defaul
  */
 export function rutasDeIntercambio(app: Aplicacion, opciones: OpcionesDeIntercambio) {
   if (opciones.permisos.exportar) rutaDeExportar(app, opciones, opciones.permisos.exportar);
-  rutasDeImportar(app, opciones);
+  if (opciones.permisos.importar) rutasDeImportar(app, opciones, opciones.permisos.importar);
 }
 
 function rutaDeExportar(app: Aplicacion, { ruta, archivo, intercambio }: OpcionesDeIntercambio, permiso: string) {
@@ -76,8 +77,8 @@ function rutaDeExportar(app: Aplicacion, { ruta, archivo, intercambio }: Opcione
   );
 }
 
-function rutasDeImportar(app: Aplicacion, { ruta, archivo, permisos, intercambio }: OpcionesDeIntercambio) {
-  const importar = proteger({ permiso: permisos.importar });
+function rutasDeImportar(app: Aplicacion, { ruta, archivo, intercambio }: OpcionesDeIntercambio, permiso: string) {
+  const importar = proteger({ permiso });
   app.get(`${ruta}/plantilla`, { preHandler: importar }, async (_solicitud, respuesta) =>
     enviarExcel(respuesta, `plantilla-${archivo}`, await intercambio.plantilla()),
   );

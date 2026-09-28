@@ -86,6 +86,57 @@ describe('generar un recurso en el cliente', () => {
   });
 });
 
+describe('Excel según la sección del menú', () => {
+  it('administración importa y exporta: botones, ventana y el getter de la API', async () => {
+    const { leer } = await generar(vaca);
+
+    const api = leer('servicios/vacas.api.ts');
+    expect(api).toContain("import { intercambioDe } from '@/modulos/core/servicios/intercambio';");
+    expect(api).toContain('get intercambio()');
+
+    const usar = leer('composables/vacas/usar-vacas.ts');
+    expect(usar).toContain('usarIntercambio(apiVacas.intercambio, cargar)');
+    expect(usar).toContain('intercambio,');
+
+    const pagina = leer('paginas/ListaDeVacas.vue');
+    expect(pagina).toContain("importar: 'ganado.vacas.importar', exportar: 'ganado.vacas.exportar'");
+    expect(pagina).toContain('<AccionesDeIntercambio');
+    expect(pagina).toContain('@importar="intercambio.abrir"');
+    expect(pagina).toContain('<VentanaDeImportacion');
+  });
+
+  it('operación no genera nada de Excel: ni el getter, ni el composable, ni los botones', async () => {
+    const { disco, leer } = await generar({ ...vaca, seccion: 'operacion' });
+
+    const api = leer('servicios/vacas.api.ts');
+    expect(api).not.toContain('intercambioDe');
+    expect(api).not.toContain('intercambio');
+
+    const usar = leer('composables/vacas/usar-vacas.ts');
+    expect(usar).not.toContain('usarIntercambio');
+    expect(usar).not.toContain('intercambio');
+
+    const pagina = leer('paginas/ListaDeVacas.vue');
+    expect(pagina).not.toContain('AccionesDeIntercambio');
+    expect(pagina).not.toContain('VentanaDeImportacion');
+    expect(pagina).not.toContain('PERMISOS_DE_INTERCAMBIO');
+    expect(disco.existe(`${CLIENTE}/paginas/ListaDeVacas.vue`)).toBe(true);
+  });
+
+  it('reportes solo exporta: sin botón ni ventana de importar', async () => {
+    const { leer } = await generar({ ...vaca, seccion: 'reportes' });
+
+    const api = leer('servicios/vacas.api.ts');
+    expect(api).toContain('get intercambio()');
+
+    const pagina = leer('paginas/ListaDeVacas.vue');
+    expect(pagina).toContain("PERMISOS_DE_INTERCAMBIO = { exportar: 'ganado.vacas.exportar' }");
+    expect(pagina).toContain('<AccionesDeIntercambio');
+    expect(pagina).not.toContain('@importar="intercambio.abrir"');
+    expect(pagina).not.toContain('<VentanaDeImportacion');
+  });
+});
+
 describe('pantalla completa', () => {
   const completa = { ...vaca, pantalla: 'completa' } as const;
 

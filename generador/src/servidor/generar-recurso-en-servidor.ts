@@ -33,7 +33,6 @@ const ARCHIVOS: Archivo[] = [
   ['esquemas-http.ts', `${MODULO}/http/{{pluralClave}}.esquemas-http.ts`],
   ['controlador.ts', `${MODULO}/http/{{pluralClave}}.controlador.ts`],
   ['rutas.ts', `${MODULO}/http/{{pluralClave}}.rutas.ts`],
-  ['columnas.ts', `${MODULO}/http/{{pluralClave}}.columnas.ts`],
   ['composicion.ts', `${MODULO}/composicion/{{pluralClave}}.ts`],
   ['dobles.ts', `${MODULO}/pruebas/dobles-de-{{pluralClave}}.ts`],
   ['api.prueba.ts', 'servidor/src/pruebas-api/{{moduloClave}}-{{pluralClave}}.api.prueba.ts'],
@@ -41,12 +40,20 @@ const ARCHIVOS: Archivo[] = [
 
 const SOLO_SI_SE_ELIMINA: Archivo[] = [['eliminar.ts', `${CASOS}/eliminar-{{entidadClave}}.ts`]];
 
+/** Sin Excel (operación) no hay columnas que exportar ni que importar. */
+const SOLO_SI_HAY_EXCEL: Archivo[] = [['columnas.ts', `${MODULO}/http/{{pluralClave}}.columnas.ts`]];
+
 /** Todo el código de un recurso en el servidor, en las capas del módulo, y su registro en `modulo.ts`. */
 export class GenerarRecursoEnServidor extends GeneracionDeRecurso {
   protected readonly carpeta = 'recurso/servidor';
 
   protected archivos(definicion: DefinicionDeRecurso): Archivo[] {
-    return definicion.baja === 'eliminar' ? [...ARCHIVOS, ...SOLO_SI_SE_ELIMINA] : ARCHIVOS;
+    const hayExcel = definicion.excel.importar || definicion.excel.exportar;
+    return [
+      ...ARCHIVOS,
+      ...(definicion.baja === 'eliminar' ? SOLO_SI_SE_ELIMINA : []),
+      ...(hayExcel ? SOLO_SI_HAY_EXCEL : []),
+    ];
   }
 
   protected fragmentos(definicion: DefinicionDeRecurso): Record<string, string> {
@@ -60,19 +67,30 @@ export class GenerarRecursoEnServidor extends GeneracionDeRecurso {
     };
   }
 
+  /** Solo hay permiso de importar o de exportar si la sección lo trae (ver `EXCEL_POR_SECCION`). */
+  private permisosDeExcel(definicion: DefinicionDeRecurso, valores: Record<string, string>): string[] {
+    const { pluralTexto, permisoImportar, permisoExportar } = valores;
+    return [
+      ...(definicion.excel.importar
+        ? [`{ clave: '${permisoImportar}', descripcion: 'Importar ${pluralTexto} desde Excel' },`]
+        : []),
+      ...(definicion.excel.exportar
+        ? [`{ clave: '${permisoExportar}', descripcion: 'Exportar ${pluralTexto} a Excel' },`]
+        : []),
+    ];
+  }
+
   protected registrar(definicion: DefinicionDeRecurso, valores: Record<string, string>): void {
     const modulo = rellenar(`${MODULO}/modulo.ts`, valores);
     const accion = definicion.baja === 'eliminar' ? 'y eliminar' : 'e inactivar';
-    const { Plural, pluralClave, pluralTexto, permisoVer, permisoGestionar, permisoImportar, permisoExportar } =
-      valores;
+    const { Plural, pluralClave, pluralTexto, permisoVer, permisoGestionar } = valores;
     this.escritor.insertarEnMarca(modulo, 'importaciones', [
       `import { rutasDe${Plural} } from './composicion/${pluralClave}.js';`,
     ]);
     this.escritor.insertarEnMarca(modulo, 'permisos', [
       `{ clave: '${permisoVer}', descripcion: 'Ver ${pluralTexto}' },`,
       `{ clave: '${permisoGestionar}', descripcion: 'Registrar, editar ${accion} ${pluralTexto}' },`,
-      `{ clave: '${permisoImportar}', descripcion: 'Importar ${pluralTexto} desde Excel' },`,
-      `{ clave: '${permisoExportar}', descripcion: 'Exportar ${pluralTexto} a Excel' },`,
+      ...this.permisosDeExcel(definicion, valores),
     ]);
     this.escritor.insertarEnMarca(modulo, 'rutas', [`rutasDe${Plural}(),`]);
   }

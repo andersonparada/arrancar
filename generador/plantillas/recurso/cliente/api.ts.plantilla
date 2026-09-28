@@ -1,6 +1,5 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
-import { intercambioDe } from '@/modulos/core/servicios/intercambio';
-
+{{importacionIntercambioEnApi}}
 /** {{Singular}} tal como lo manda el servidor. */
 export interface {{Entidad}} {
   id: string;
@@ -13,12 +12,7 @@ const RUTA = '/{{moduloClave}}/{{pluralClave}}';
 
 export class Api{{Plural}} {
   constructor(private readonly http: ClienteHttp) {}
-
-  /** Exportar e importar en Excel. */
-  get intercambio() {
-    return intercambioDe(this.http, RUTA);
-  }
-
+{{getterDeIntercambioEnApi}}
   listar() {
     return this.http.obtener<{{Entidad}}[]>(RUTA);
   }

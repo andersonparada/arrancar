@@ -1,0 +1,41 @@
+### importacionIntercambioEnApi
+import { intercambioDe } from '@/modulos/core/servicios/intercambio';
+### getterDeIntercambioEnApi
+
+  /** Exportar e importar en Excel. */
+  get intercambio() {
+    return intercambioDe(this.http, RUTA);
+  }
+### importacionIntercambioEnUsar
+import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
+### intercambioEnUsar
+
+  const intercambio = usarIntercambio(api{{Plural}}.intercambio, cargar);
+### intercambioEnRetornoDeUsar
+intercambio,
+### importacionIntercambioEnUsarLista
+import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
+### cargarEnUsarLista
+, cargar
+### intercambioEnRetornoDeUsarLista
+, intercambio: usarIntercambio(api{{Plural}}.intercambio, cargar)
+### importacionesDeIntercambioEnPagina
+import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/AccionesDeIntercambio.vue';
+import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
+### constantePermisosDeIntercambioEnPagina
+const PERMISOS_DE_INTERCAMBIO = { importar: '{{permisoImportar}}', exportar: '{{permisoExportar}}' };
+### intercambioEnRetornoDePagina
+intercambio,
+### accionesDeIntercambioEnPagina
+      <AccionesDeIntercambio :permisos="PERMISOS_DE_INTERCAMBIO" @exportar="intercambio.exportar" @importar="intercambio.abrir" />
+### ventanaDeImportacionEnPagina
+    <VentanaDeImportacion
+      :estado="intercambio.estado"
+      titulo="Importar {{pluralTexto}}"
+      @elegir="intercambio.elegir"
+      @plantilla="intercambio.bajarPlantilla"
+      @importar="intercambio.importar"
+      @cerrar="intercambio.cerrar"
+    />
+### intercambioEnRetornoDeLista
+, intercambio

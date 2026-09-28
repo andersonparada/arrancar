@@ -4,10 +4,11 @@ import BotonBase from '../BotonBase.vue';
 
 /**
  * Exportar e importar en Excel: cada botón solo aparece con su permiso. Sin
- * `exportar` no hay botón de exportar: las pantallas de operación diaria solo
- * importan (lo registrado se consulta en los reportes).
+ * `exportar` no hay botón de exportar (operación no las trae: lo registrado se
+ * consulta en los reportes); sin `importar` no hay botón de importar (reportes
+ * solo exporta: se consulta e imprime, no se carga).
  */
-defineProps<{ permisos: { importar: string; exportar?: string } }>();
+defineProps<{ permisos: { importar?: string; exportar?: string } }>();
 const emit = defineEmits<{ exportar: []; importar: [] }>();
 </script>
 
@@ -21,7 +22,13 @@ const emit = defineEmits<{ exportar: []; importar: [] }>();
   >
     Exportar
   </BotonBase>
-  <BotonBase v-permiso="permisos.importar" variante="secundario" :icono="Upload" @click="emit('importar')">
+  <BotonBase
+    v-if="permisos.importar"
+    v-permiso="permisos.importar"
+    variante="secundario"
+    :icono="Upload"
+    @click="emit('importar')"
+  >
     Importar
   </BotonBase>
 </template>

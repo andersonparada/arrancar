@@ -1,0 +1,5 @@
+Operación no importa ni exporta (ver `EXCEL_POR_SECCION` en definir-recurso.ts): lo que se
+registra a diario se consulta después en los reportes. Por eso ningún fragmento de este
+archivo trae contenido: no hay `Api*.intercambio`, ni `usarIntercambio` en los composables, ni
+`AccionesDeIntercambio` ni `VentanaDeImportacion` en la página. Los nombres salen de
+excel-administracion.fragmentos, que es la variante completa.

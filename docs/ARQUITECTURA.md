@@ -717,6 +717,29 @@ entrega como un commit propio.
       decide al planificar los módulos de negocio.
     - En la ventana del catálogo, una referencia a la misma entidad todavía
       ofrece el registro que se edita (el formulario en página ya no).
+  - **G5 Excel según la sección del menú (2026-09-28):** hasta aquí, todo
+    recurso generaba importar y exportar en Excel sin importar su `seccion`.
+    Regla del dueño del producto (ver `docs/modulos/bancos.md`, "Excel según la
+    sección del menú"): **administración** importa y exporta; **operación** no
+    importa ni exporta (se consulta en los reportes); **reportes** solo
+    exporta (sin importar ni plantilla). La decisión queda en un solo lugar:
+    `EXCEL_POR_SECCION` en `definir-recurso.ts` completa la definición con
+    `excel: { importar, exportar }` y con `permisos.importar`/`.exportar`
+    **presentes solo si aplican** (el objeto ya no los trae siempre). Las
+    plantillas no se duplican: lo que cambia según la sección sale de un tercer
+    par de fragmentos, al estilo de `baja-eliminar`/`baja-inactivar`, pero con
+    tres variantes (`excel-administracion.fragmentos`, la completa, y
+    `excel-operacion`/`excel-reportes`) que `GeneracionDeRecurso.valores()` une
+    igual que la baja. Sin Excel (operación), el generador ni siquiera escribe
+    `<plural>.columnas.ts`; con Excel pero sin importar (reportes), sí lo
+    escribe pero la composición no expone la ruta de importar. En el core,
+    `rutasDeIntercambio` y `AccionesDeIntercambio.vue` ya aceptaban
+    `permisos.exportar` opcional; ahora `permisos.importar` también es
+    opcional (sin él, ni `/plantilla` ni `/importar` se registran, y el botón
+    de importar no aparece). Probado de punta a punta con un módulo desechable
+    y dos recursos (administración y operación): el código generado pasa
+    `revisar` y sus pruebas de API. 347 pruebas del servidor, 69 del cliente y
+    46 del generador.
 - **Fase 8: hecha (2026-09-27).** Cierre del refactor:
   - Las reglas de tamaño de ESLint (líneas por archivo y por función,
     complejidad, parámetros y profundidad) pasan de advertencia a **error**:
