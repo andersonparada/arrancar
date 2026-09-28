@@ -25,10 +25,13 @@ const selector = usarSelectorConBusqueda(opcionesRef, modelo);
 const boton = ref<HTMLButtonElement | null>(null);
 const raiz = ref<HTMLElement | null>(null);
 const campoBusqueda = ref<HTMLInputElement | null>(null);
+const panel = ref<HTMLElement | null>(null);
 const { estilo: estiloDelPanel } = usarPosicionFlotante(boton, selector.abierto);
 
 function alHacerClicFuera(evento: MouseEvent): void {
-  if (!selector.abierto.value || raiz.value?.contains(evento.target as Node)) return;
+  const destino = evento.target as Node;
+  // El panel se teletransporta a `body`: no está dentro de `raiz`.
+  if (!selector.abierto.value || raiz.value?.contains(destino) || panel.value?.contains(destino)) return;
   selector.cerrar();
 }
 
@@ -80,6 +83,7 @@ function elegir(opcion: { valor: T; texto: string }): void {
       <Teleport to="body">
         <div
           v-if="selector.abierto.value"
+          ref="panel"
           :style="estiloDelPanel ?? undefined"
           class="z-50 flex max-h-72 flex-col overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-tierra-200 dark:bg-tierra-800 dark:ring-tierra-700"
         >
