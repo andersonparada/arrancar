@@ -21,6 +21,18 @@ export const VENTANAS_BANCOS = {
     nuevo: 'Nuevo movimiento',
     editar: 'Editar movimiento',
   },
+  chequeras: {
+    titulo: 'Chequeras',
+    descripcion: 'Las chequeras de las cuentas bancarias de la empresa.',
+    nuevo: 'Nueva chequera',
+    editar: 'Editar chequera',
+  },
+  cheques: {
+    titulo: 'Cheques',
+    descripcion: 'Los cheques emitidos y anulados de la empresa.',
+    nuevo: 'Emitir cheque',
+    editar: 'Editar cheque',
+  },
   conciliaciones: {
     titulo: 'Conciliaciones',
     descripcion: 'Conciliación mensual de cada cuenta con su estado de cuenta.',

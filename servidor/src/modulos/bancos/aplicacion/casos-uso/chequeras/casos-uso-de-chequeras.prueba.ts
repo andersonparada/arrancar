@@ -15,9 +15,11 @@ import type { SolicitudDeChequera } from '../../dto/chequera.dto.js';
 import { CambiarEstadoDeChequera } from './cambiar-estado-de-chequera.js';
 import { CrearChequera } from './crear-chequera.js';
 import { ListarChequeras } from './listar-chequeras.js';
+import { ListarChequerasDeLaEmpresa } from './listar-chequeras-de-la-empresa.js';
 
 const operador = operadorDePrueba();
 const CUENTA = '00000000-0000-4000-8000-000000000001';
+const OTRA_CUENTA = '00000000-0000-4000-8000-000000000002';
 
 const solicitud = (cambios: Partial<SolicitudDeChequera> = {}): SolicitudDeChequera => ({
   cuentaBancariaId: CUENTA,
@@ -51,6 +53,7 @@ async function casosDeUso({ maximo = 5000 } = {}) {
     crear: new CrearChequera(dependencias),
     cambiarEstado: new CambiarEstadoDeChequera(dependencias),
     listar: new ListarChequeras(dependencias),
+    listarTodas: new ListarChequerasDeLaEmpresa(dependencias),
   };
 }
 
@@ -132,5 +135,28 @@ describe('cambiar estado', () => {
     await expect(casos.cambiarEstado.ejecutar(operador, { chequeraId: randomUUID(), activa: false })).rejects.toThrow(
       RecursoNoEncontrado,
     );
+  });
+});
+
+describe('listar todas', () => {
+  it('trae las chequeras de todas las cuentas, ordenadas por cuenta, serie y desde', async () => {
+    chequeras.nombrarCuenta(CUENTA, 'Cuenta B');
+    chequeras.nombrarCuenta(OTRA_CUENTA, 'Cuenta A');
+    await casos.crear.ejecutar(operador, solicitud({ desde: 1, hasta: 10 }));
+    await casos.crear.ejecutar(operador, solicitud({ cuentaBancariaId: OTRA_CUENTA, desde: 1, hasta: 5 }));
+
+    const todas = await casos.listarTodas.ejecutar(operador, {});
+
+    expect(todas.map((c) => c.cuentaBancariaNombre)).toEqual(['Cuenta A', 'Cuenta B']);
+  });
+
+  it('filtra por cuenta', async () => {
+    await casos.crear.ejecutar(operador, solicitud({ desde: 1, hasta: 10 }));
+    await casos.crear.ejecutar(operador, solicitud({ cuentaBancariaId: OTRA_CUENTA, desde: 1, hasta: 5 }));
+
+    const deLaCuenta = await casos.listarTodas.ejecutar(operador, { cuentaBancariaId: OTRA_CUENTA });
+
+    expect(deLaCuenta).toHaveLength(1);
+    expect(deLaCuenta[0]?.cuentaBancariaId).toBe(OTRA_CUENTA);
   });
 });

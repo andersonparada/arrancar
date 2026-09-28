@@ -3,16 +3,19 @@ import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.
 import type { CambiarEstadoDeChequera } from '../aplicacion/casos-uso/chequeras/cambiar-estado-de-chequera.js';
 import type { CrearChequera } from '../aplicacion/casos-uso/chequeras/crear-chequera.js';
 import type { ListarChequeras } from '../aplicacion/casos-uso/chequeras/listar-chequeras.js';
+import type { ListarChequerasDeLaEmpresa } from '../aplicacion/casos-uso/chequeras/listar-chequeras-de-la-empresa.js';
 import type { ListarCheques } from '../aplicacion/casos-uso/cheques/listar-cheques.js';
 import type {
   ChequeraSolicitada,
   ParamsChequera,
   ParamsCuentaBancariaDeChequeras,
   FiltroDeChequesSolicitado,
+  FiltroDeChequerasSolicitado,
 } from './chequeras.esquemas-http.js';
 
 export interface CasosDeUsoDeChequeras {
   listar: ListarChequeras;
+  listarTodas: ListarChequerasDeLaEmpresa;
   crear: CrearChequera;
   cambiarEstado: CambiarEstadoDeChequera;
   listarCheques: ListarCheques;
@@ -24,6 +27,9 @@ export class ChequerasControlador {
 
   listar = (solicitud: FastifyRequest<{ Params: ParamsCuentaBancariaDeChequeras }>) =>
     this.casosDeUso.listar.ejecutar(operadorDe(solicitud), solicitud.params.cuentaBancariaId);
+
+  listarTodas = (solicitud: FastifyRequest<{ Querystring: FiltroDeChequerasSolicitado }>) =>
+    this.casosDeUso.listarTodas.ejecutar(operadorDe(solicitud), solicitud.query);
 
   crear = async (
     solicitud: FastifyRequest<{ Params: ParamsCuentaBancariaDeChequeras; Body: ChequeraSolicitada }>,

@@ -1,6 +1,7 @@
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque.js';
 import { EmitirCheque } from '../aplicacion/casos-uso/cheques/emitir-cheque.js';
+import { ListarChequesDeLaEmpresa } from '../aplicacion/casos-uso/cheques/listar-cheques-de-la-empresa.js';
 import { SiguienteChequeDisponible } from '../aplicacion/casos-uso/cheques/siguiente-cheque-disponible.js';
 import { ReglasDeLaCuenta } from '../aplicacion/reglas-de-la-cuenta.js';
 import { ChequesControlador } from '../http/cheques.controlador.js';
@@ -32,6 +33,7 @@ function dependenciasDeCheques() {
 export function rutasDeCheques() {
   const dependencias = dependenciasDeCheques();
   const casos = {
+    listar: new ListarChequesDeLaEmpresa(dependencias),
     siguienteDisponible: new SiguienteChequeDisponible(dependencias),
     emitir: new EmitirCheque(dependencias),
     anular: new AnularCheque(dependencias),

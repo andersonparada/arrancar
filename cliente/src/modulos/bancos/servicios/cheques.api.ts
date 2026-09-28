@@ -24,9 +24,44 @@ export interface DatosDeEmisionDeCheque {
   observaciones: string | null;
 }
 
-/** Emitir y anular cheques: desde Movimientos (operación); sin Excel. */
+/** Un cheque emitido o anulado en la lista de la empresa, con los datos de su movimiento si llegó a emitirse. */
+export interface ChequeListado {
+  id: string;
+  numero: number;
+  serie: string | null;
+  cuentaBancariaId: string;
+  cuentaBancariaNombre: string;
+  estado: 'emitido' | 'anulado';
+  noNegociable: boolean;
+  fecha: string;
+  monto: string | null;
+  beneficiario: string | null;
+  referencia: string | null;
+  anuladoEn: string | null;
+  motivoDeAnulacion: string | null;
+}
+
+export interface FiltroDeChequesDeLaEmpresa {
+  cuentaBancariaId?: string | null;
+  estado?: 'emitido' | 'anulado' | null;
+  desde?: string;
+  hasta?: string;
+}
+
+/** Ver, emitir y anular cheques: la lista es operación (los emitidos y anulados); sin Excel. */
 export class ApiCheques {
   constructor(private readonly http: ClienteHttp) {}
+
+  /** Los cheques emitidos y anulados de la empresa; los disponibles se ven en su chequera. */
+  listar(filtro: FiltroDeChequesDeLaEmpresa) {
+    const { cuentaBancariaId, estado, desde, hasta } = filtro;
+    return this.http.obtener<ChequeListado[]>('/bancos/cheques', {
+      ...(cuentaBancariaId ? { cuentaBancariaId } : {}),
+      ...(estado ? { estado } : {}),
+      ...(desde ? { desde } : {}),
+      ...(hasta ? { hasta } : {}),
+    });
+  }
 
   listarDeLaChequera(chequeraId: string, estado?: EstadoDelCheque) {
     return this.http.obtener<Cheque[]>(`/bancos/chequeras/${chequeraId}/cheques`, estado ? { estado } : undefined);

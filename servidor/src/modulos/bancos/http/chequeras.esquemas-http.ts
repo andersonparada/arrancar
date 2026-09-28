@@ -15,7 +15,17 @@ export const esquemaFiltroDeCheques = z.object({
   estado: z.enum(['disponible', 'emitido', 'anulado']).optional(),
 });
 
+/** Lo que se elige en el filtro de la lista de chequeras de la empresa. */
+export const esquemaFiltroDeChequeras = z.object({
+  cuentaBancariaId: z.uuid().optional(),
+});
+
+/** Forma de una fila importada: la chequera trae su cuenta por referencia. */
+export const esquemaChequeraImportada = esquemaChequera.extend({ cuentaBancariaId: z.uuid() });
+
 export type ChequeraSolicitada = z.infer<typeof esquemaChequera>;
+export type ChequeraImportada = z.infer<typeof esquemaChequeraImportada>;
 export type ParamsCuentaBancariaDeChequeras = z.infer<typeof esquemaParamsCuentaBancariaDeChequeras>;
 export type ParamsChequera = z.infer<typeof esquemaParamsChequera>;
 export type FiltroDeChequesSolicitado = z.infer<typeof esquemaFiltroDeCheques>;
+export type FiltroDeChequerasSolicitado = z.infer<typeof esquemaFiltroDeChequeras>;

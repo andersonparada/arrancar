@@ -4,7 +4,7 @@ import { Chequera } from '../../dominio/chequera.js';
 import type { chequeras } from './chequeras.tablas.js';
 
 type Fila = typeof chequeras.$inferSelect;
-type Conteos = Pick<ChequeraDto, 'disponibles' | 'emitidos' | 'anulados'>;
+type Conteos = Pick<ChequeraDto, 'cuentaBancariaNombre' | 'disponibles' | 'emitidos' | 'anulados'>;
 
 /** Traduce entre la fila de la tabla, la entidad y lo que ve la pantalla. */
 export const mapeadorDeChequera = {

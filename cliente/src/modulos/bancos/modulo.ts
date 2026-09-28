@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Building2, CheckCheck, Landmark, WalletCards } from 'lucide-vue-next';
+import { ArrowLeftRight, Banknote, Building2, CheckCheck, Landmark, NotebookTabs, WalletCards } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_BANCOS, VENTANAS_BANCOS } from './textos';
 // generador: importaciones
@@ -46,11 +46,23 @@ export const moduloBancos: DefinicionModuloCliente = {
       meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.movimientos.titulo },
     },
     {
+      path: '/bancos/chequeras',
+      name: 'bancos.chequeras',
+      component: () => import('./paginas/ListaDeChequeras.vue'),
+      meta: { permiso: 'bancos.chequeras.ver', titulo: VENTANAS_BANCOS.chequeras.titulo },
+    },
+    {
       path: '/bancos/chequeras/:chequeraId',
       name: 'bancos.chequeras.ficha',
       component: () => import('./paginas/FichaDeChequera.vue'),
       props: true,
-      meta: { permiso: 'bancos.cuentas-bancarias.ver', titulo: 'Cheques de la chequera' },
+      meta: { permiso: 'bancos.chequeras.ver', titulo: 'Cheques de la chequera' },
+    },
+    {
+      path: '/bancos/cheques',
+      name: 'bancos.cheques',
+      component: () => import('./paginas/ListaDeCheques.vue'),
+      meta: { permiso: 'bancos.cheques.ver', titulo: VENTANAS_BANCOS.cheques.titulo },
     },
     {
       path: '/bancos/conciliaciones',
@@ -88,11 +100,25 @@ export const moduloBancos: DefinicionModuloCliente = {
           permiso: 'bancos.cuentas-bancarias.ver',
         },
         {
+          titulo: VENTANAS_BANCOS.chequeras.titulo,
+          ruta: '/bancos/chequeras',
+          icono: NotebookTabs,
+          seccion: 'administracion',
+          permiso: 'bancos.chequeras.ver',
+        },
+        {
           titulo: VENTANAS_BANCOS.movimientos.titulo,
           ruta: '/bancos/movimientos',
           icono: ArrowLeftRight,
           seccion: 'operacion',
           permiso: 'bancos.movimientos.ver',
+        },
+        {
+          titulo: VENTANAS_BANCOS.cheques.titulo,
+          ruta: '/bancos/cheques',
+          icono: Banknote,
+          seccion: 'operacion',
+          permiso: 'bancos.cheques.ver',
         },
         {
           titulo: VENTANAS_BANCOS.conciliaciones.titulo,

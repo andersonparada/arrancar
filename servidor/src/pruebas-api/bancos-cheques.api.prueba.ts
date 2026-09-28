@@ -132,6 +132,8 @@ describe('chequeras y cheques por API', () => {
     );
 
     expect((await sinPermisos.get(`/api/bancos/chequeras/${chequeraId}/cheques`)).estado).toBe(403);
+    expect((await sinPermisos.get('/api/bancos/chequeras')).estado).toBe(403);
+    expect((await sinPermisos.get('/api/bancos/cheques')).estado).toBe(403);
     expect(
       (
         await sinPermisos.post(`/api/bancos/cuentas-bancarias/${cuentaBancariaId}/chequeras`, {
@@ -156,5 +158,134 @@ describe('chequeras y cheques por API', () => {
     expect((await sinPermisos.post(`/api/bancos/cheques/${siguiente.cuerpo.id}/anular`, { motivo: 'X' })).estado).toBe(
       403,
     );
+  });
+});
+
+describe('la pantalla de chequeras (administración) por API', () => {
+  let cuentaChequeras: CuentaDePrueba;
+  let cuentaBancariaDeLaLista: string;
+
+  beforeAll(async () => {
+    cuentaChequeras = await darDeAltaCuenta(entorno, {
+      nombre: 'Pantalla de chequeras',
+      usuario: 'propietariopantallachequeras',
+      modulos: ['bancos'],
+    });
+    cuentaBancariaDeLaLista = await crearCuentaBancaria(cuentaChequeras.propietario, 'Cuenta de la lista');
+    await cuentaChequeras.propietario.post(`/api/bancos/cuentas-bancarias/${cuentaBancariaDeLaLista}/chequeras`, {
+      serie: 'A',
+      desde: 1,
+      hasta: 20,
+    });
+  });
+
+  it('lista todas las chequeras de la empresa, con el nombre de su cuenta', async () => {
+    const listado = await cuentaChequeras.propietario.get('/api/bancos/chequeras');
+
+    expect(listado.estado).toBe(200);
+    expect(listado.cuerpo).toMatchObject([
+      { cuentaBancariaId: cuentaBancariaDeLaLista, cuentaBancariaNombre: 'Cuenta de la lista', serie: 'A' },
+    ]);
+  });
+
+  it('filtra por cuenta', async () => {
+    const otraCuenta = await crearCuentaBancaria(cuentaChequeras.propietario, 'Otra cuenta');
+
+    const listado = await cuentaChequeras.propietario.get(`/api/bancos/chequeras?cuentaBancariaId=${otraCuenta}`);
+
+    expect(listado.cuerpo).toHaveLength(0);
+  });
+
+  it('lo exportado se puede revisar para importarlo de nuevo', async () => {
+    const exportado = await cuentaChequeras.propietario.get('/api/bancos/chequeras/exportar');
+
+    const revision = await cuentaChequeras.propietario.subirImagen(
+      'POST',
+      '/api/bancos/chequeras/importar?ensayo=true',
+      {
+        nombreArchivo: 'chequeras.xlsx',
+        tipoMime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        contenido: exportado.cuerpo,
+      },
+    );
+
+    expect(exportado.estado).toBe(200);
+    expect(revision.cuerpo).toMatchObject({ guardado: false, filas: expect.any(Number) });
+  });
+
+  it('sin bancos.chequeras.importar ni bancos.chequeras.exportar responde 403', async () => {
+    const sinPermisos = await crearUsuarioConPermisos(entorno, cuentaChequeras, {
+      nombres: 'Sin',
+      apellidos: 'ExcelDeChequeras',
+      permisos: ['bancos.chequeras.ver'],
+    });
+
+    expect((await sinPermisos.get('/api/bancos/chequeras/exportar')).estado).toBe(403);
+    expect((await sinPermisos.get('/api/bancos/chequeras/plantilla')).estado).toBe(403);
+  });
+});
+
+describe('la pantalla de cheques (operación) por API', () => {
+  let cuentaCheques: CuentaDePrueba;
+  let cuentaBancariaDeCheques: string;
+
+  beforeAll(async () => {
+    cuentaCheques = await darDeAltaCuenta(entorno, {
+      nombre: 'Pantalla de cheques',
+      usuario: 'propietariopantallacheques',
+      modulos: ['bancos'],
+    });
+    cuentaBancariaDeCheques = await crearCuentaBancaria(cuentaCheques.propietario, 'Cuenta de cheques 2');
+    await cuentaCheques.propietario.post(`/api/bancos/cuentas-bancarias/${cuentaBancariaDeCheques}/chequeras`, {
+      serie: null,
+      desde: 1,
+      hasta: 5,
+    });
+  });
+
+  it('no incluye los cheques disponibles', async () => {
+    const listado = await cuentaCheques.propietario.get('/api/bancos/cheques');
+
+    expect(listado.cuerpo).toHaveLength(0);
+  });
+
+  it('lista los emitidos y anulados, más recientes primero, con los datos del movimiento', async () => {
+    const siguiente = await cuentaCheques.propietario.get(
+      `/api/bancos/cuentas-bancarias/${cuentaBancariaDeCheques}/siguiente-cheque`,
+    );
+    const emitido = await cuentaCheques.propietario.post(`/api/bancos/cheques/${siguiente.cuerpo.id}/emitir`, {
+      fecha: '2026-03-01',
+      monto: '75.00',
+      beneficiario: 'Beneficiario de prueba',
+      noNegociable: true,
+      referencia: null,
+      observaciones: null,
+    });
+    expect(emitido.estado).toBe(200);
+
+    const listado = await cuentaCheques.propietario.get(
+      `/api/bancos/cheques?cuentaBancariaId=${cuentaBancariaDeCheques}`,
+    );
+
+    expect(listado.cuerpo).toMatchObject([
+      { estado: 'emitido', monto: '75.00', beneficiario: 'Beneficiario de prueba', fecha: '2026-03-01' },
+    ]);
+  });
+
+  it('filtra por estado y por fecha', async () => {
+    expect((await cuentaCheques.propietario.get('/api/bancos/cheques?estado=anulado')).cuerpo).toHaveLength(0);
+    expect(
+      (await cuentaCheques.propietario.get('/api/bancos/cheques?desde=2026-01-01&hasta=2026-01-31')).cuerpo,
+    ).toHaveLength(0);
+  });
+
+  it('sin bancos.cheques.ver responde 403', async () => {
+    const sinPermisos = await crearUsuarioConPermisos(entorno, cuentaCheques, {
+      nombres: 'Sin',
+      apellidos: 'VerCheques',
+      permisos: [],
+    });
+
+    expect((await sinPermisos.get('/api/bancos/cheques')).estado).toBe(403);
   });
 });

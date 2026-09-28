@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
+import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { EdicionDeChequera } from '../../composables/chequeras/edicion-de-chequera';
 import CamposDeChequera from './CamposDeChequera.vue';
 
-defineProps<{ errores: Record<string, string>; enviando: boolean }>();
+defineProps<{ errores: Record<string, string>; enviando: boolean; opcionesDeCuenta?: OpcionDeRegistro[] }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const edicion = defineModel<EdicionDeChequera>({ required: true });
 </script>
@@ -12,7 +13,7 @@ const edicion = defineModel<EdicionDeChequera>({ required: true });
 <template>
   <VentanaModal :abierta="edicion.abierta" titulo="Nueva chequera" @cerrar="emit('cerrar')">
     <form id="form-chequera" @submit.prevent="emit('guardar')">
-      <CamposDeChequera v-model="edicion" :errores="errores" />
+      <CamposDeChequera v-model="edicion" :errores="errores" :opciones-de-cuenta="opcionesDeCuenta" />
     </form>
     <template #pie>
       <BotonBase variante="secundario" @click="emit('cerrar')">Cancelar</BotonBase>

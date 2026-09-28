@@ -452,6 +452,76 @@ Movimientos y Transferencias:
   y una prueba de API específica del máximo de 5,000 cheques (no se crean
   chequeras de esa magnitud en las pruebas de API, por instrucción explícita).
 
+**Pantallas de chequeras y cheques (2026-09-28).** El dueño del producto no
+encontraba dónde ver las chequeras ni los cheques (antes solo vivían dentro de
+la ficha de la cuenta y del botón "Emitir cheque" de Movimientos): se agregaron
+sus propias pantallas de menú.
+
+- Servidor: `GET /bancos/chequeras?cuentaBancariaId=` (`ListarChequerasDeLaEmpresa`,
+  nuevo) lista todas las chequeras de la empresa, opcionalmente de una cuenta,
+  con el nombre de su cuenta (`ChequeraDto.cuentaBancariaNombre`, columna nueva
+  con `INNER JOIN` a `cuentas_bancarias`) y ordenadas por cuenta, serie y desde.
+  Permiso nuevo `bancos.chequeras.ver`: reemplaza a `bancos.cuentas-bancarias.ver`
+  en las rutas de lectura de chequeras (`GET .../cuentas-bancarias/:id/chequeras`,
+  `GET .../chequeras/:id/cheques`) y en la ruta del cliente de la ficha de una
+  chequera. `bancos.chequeras.gestionar` (crear, inactivar, reactivar) no cambió.
+  Excel de chequeras (es administración): `bancos.chequeras.importar` y
+  `bancos.chequeras.exportar`, con el motor de `core/intercambio`
+  (`chequeras.columnas.ts`: cuenta por referencia a nombre, serie, desde, hasta);
+  importar valida con `esquemaChequeraImportada` (el esquema del formulario más
+  `cuentaBancariaId`, que llega resuelto por nombre) y crea con `CrearChequera`,
+  así que respeta sus reglas (máximo configurado, traslape, cuenta activa).
+- `GET /bancos/cheques?cuentaBancariaId=&estado=&desde=&hasta=`
+  (`ListarChequesDeLaEmpresa`, nuevo puerto `ConsultasCheques.listarDeLaEmpresa`)
+  lista los cheques **emitidos y anulados** de la empresa (los disponibles no:
+  se ven en su chequera), con número, serie, cuenta, estado, no negociable y,
+  del movimiento si llegó a emitirse, fecha, monto, beneficiario y referencia;
+  un cheque anulado que nunca se emitió no tiene movimiento, así que la fecha
+  con la que filtra y ordena es la de su anulación
+  (`coalesce(movimientos.fecha, cheques.anulado_en::date)`). Más reciente
+  primero. Permiso nuevo `bancos.cheques.ver`; sin Excel. Sin migración: no
+  cambió ninguna tabla, solo las consultas y los permisos.
+- Cliente: en Administración, `ListaDeChequeras.vue` (ruta `/bancos/chequeras`,
+  ícono `NotebookTabs`) con filtro por cuenta, tarjetas (reusa
+  `TarjetaDeChequera.vue`, cuyos detalles ahora también muestran la cuenta),
+  "Nueva chequera" con selector de cuenta (`CamposDeChequera.vue` gana un
+  `CampoSelector` opcional, solo cuando llega `opcionesDeCuenta`: la sección de
+  la ficha de la cuenta sigue sin pedirlo, porque ya la conoce) y
+  Exportar/Importar. En Operación, `ListaDeCheques.vue` (ruta `/bancos/cheques`,
+  ícono `Banknote`) con filtros (cuenta, estado, desde, hasta; por omisión el
+  mes actual, patrón de `filtros-de-movimientos.ts`), `TarjetaDeChequeListado.vue`
+  ("Cheque No. `<serie><número>`", monto en rojo con "−", insignia "Anulado" con
+  su motivo entre los detalles), "Emitir cheque" (reusa `VentanaDeCheque.vue`,
+  que se queda también en Movimientos) y "Anular" en los emitidos (reusa
+  `VentanaDeAnulacion.vue`). Menú: Operación ahora es Movimientos, Cheques,
+  Conciliaciones; Administración, Bancos, Cuentas bancarias, Chequeras.
+- El rol `Propietario` tiene `accesoTotal: true` (`Rol.propietario`): sus
+  permisos efectivos son todos los del catálogo de módulos activos
+  (`ResolutorDeAcceso`, `modulos.permisosDe(...)`), calculados en cada petición
+  a partir del registro en código (`DefinicionModulo.permisos`), no de una tabla
+  en la base de datos (Arrancar no tiene tabla `permisos`, a diferencia de otros
+  proyectos). Así que ve las pantallas nuevas sin ningún paso manual, con solo
+  desplegar el código; para otros roles (no `accesoTotal`), los permisos nuevos
+  ya aparecen para elegirlos en la pantalla de Roles apenas el servidor arranca
+  con este cambio.
+- Pruebas del servidor: unitarias `ListarChequerasDeLaEmpresa` (orden por
+  cuenta/serie/desde, filtro por cuenta) y `ListarChequesDeLaEmpresa` (sin
+  disponibles, con los datos del movimiento, anulado sin movimiento con la
+  fecha de su anulación, filtros); de API en `bancos-cheques.api.prueba.ts`:
+  listar y filtrar chequeras, exportar/re-importar en ensayo, listar y filtrar
+  cheques, 403 sin `bancos.chequeras.ver`/`bancos.cheques.ver`. `npm run probar`:
+  servidor 60 archivos / 416 pruebas, cliente 21 archivos / 102 pruebas,
+  generador 4 archivos / 46 pruebas, todo en verde.
+- Cliente: pruebas nuevas de la lógica pura (`filtros-de-cheques.prueba.ts`,
+  `detalles-de-cheque-listado.prueba.ts`).
+- `npm run revisar` (Prettier + ESLint + `tsc`/`vue-tsc` de los tres paquetes):
+  en verde.
+- Decisión: se creó `usar-anulacion-de-cheque-listado.ts` en vez de reusar
+  `usar-anulacion-de-cheque.ts` porque este último está tipado sobre `Cheque`
+  (con `chequeraId`, `movimientoId`...) y la lista de la empresa trabaja con
+  `ChequeListado` (otra forma, del nuevo endpoint); ambos llaman a la misma
+  `apiCheques.anular`.
+
 ### B5 Conciliación mensual (operación, sin Excel)
 
 - `bancos.conciliaciones`: cuenta, año, mes (única por cuenta y mes),

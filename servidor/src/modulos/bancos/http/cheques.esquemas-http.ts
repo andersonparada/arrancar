@@ -21,7 +21,16 @@ export const esquemaAnulacionDeCheque = z.object({ motivo: z.string().trim().min
 export const esquemaParamsCuentaBancariaDeCheques = z.object({ cuentaBancariaId: z.uuid() });
 export const esquemaParamsCheque = z.object({ chequeId: z.uuid() });
 
+/** Lo que se elige en el filtro de la lista de cheques de la empresa. */
+export const esquemaFiltroDeChequesDeLaEmpresa = z.object({
+  cuentaBancariaId: z.uuid().optional(),
+  estado: z.enum(['emitido', 'anulado']).optional(),
+  desde: z.iso.date().optional(),
+  hasta: z.iso.date().optional(),
+});
+
 export type EmisionDeChequeSolicitada = z.infer<typeof esquemaEmisionDeCheque>;
 export type SolicitudDeAnulacionDeCheque = z.infer<typeof esquemaAnulacionDeCheque>;
 export type ParamsCuentaBancariaDeCheques = z.infer<typeof esquemaParamsCuentaBancariaDeCheques>;
 export type ParamsCheque = z.infer<typeof esquemaParamsCheque>;
+export type FiltroDeChequesDeLaEmpresaSolicitado = z.infer<typeof esquemaFiltroDeChequesDeLaEmpresa>;

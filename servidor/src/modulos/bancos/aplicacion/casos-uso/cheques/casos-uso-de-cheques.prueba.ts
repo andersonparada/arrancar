@@ -24,6 +24,7 @@ import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
 import { CrearChequera } from '../chequeras/crear-chequera.js';
 import { AnularCheque } from './anular-cheque.js';
 import { EmitirCheque } from './emitir-cheque.js';
+import { ListarChequesDeLaEmpresa } from './listar-cheques-de-la-empresa.js';
 import { SiguienteChequeDisponible } from './siguiente-cheque-disponible.js';
 
 const operador = operadorDePrueba();
@@ -57,6 +58,8 @@ async function casosDeUso({ permiteSobregiro = false } = {}) {
   cheques = new ChequesEnMemoria();
   chequeras = new ChequerasEnMemoria(cheques);
   cheques.vincularChequeras(chequeras);
+  cheques.vincularMovimientos(movimientos);
+  chequeras.nombrarCuenta(CUENTA, 'Cuenta de prueba');
   auditoria = new AuditoriaEnMemoria();
   const politicaDeSobregiro = new PoliticaDeSobregiroFija(permiteSobregiro);
   const reglas = new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro });
@@ -100,6 +103,7 @@ async function casosDeUso({ permiteSobregiro = false } = {}) {
     emitir: new EmitirCheque(dependenciasDeCheques),
     anular: new AnularCheque(dependenciasDeCheques),
     siguiente: new SiguienteChequeDisponible(dependenciasDeCheques),
+    listar: new ListarChequesDeLaEmpresa(dependenciasDeCheques),
     actualizarMovimiento: new ActualizarMovimiento(dependenciasDeMovimientos),
     anularMovimiento: new AnularMovimiento(dependenciasDeMovimientos),
   };
@@ -233,5 +237,40 @@ describe('anular', () => {
     await expect(casos.anular.ejecutar(operador, { chequeId: randomUUID(), motivo: 'Error' })).rejects.toThrow(
       RecursoNoEncontrado,
     );
+  });
+});
+
+describe('listar (de la empresa)', () => {
+  it('no incluye los cheques disponibles', async () => {
+    const listado = await casos.listar.ejecutar(operador, {});
+
+    expect(listado).toHaveLength(0);
+  });
+
+  it('trae los emitidos con los datos de su movimiento', async () => {
+    await casos.emitir.ejecutar(operador, emision());
+
+    const listado = await casos.listar.ejecutar(operador, {});
+
+    expect(listado).toMatchObject([
+      { numero: 1, estado: 'emitido', monto: '100.00', beneficiario: 'Proveedor S.A.', cuentaBancariaId: CUENTA },
+    ]);
+  });
+
+  it('trae los anulados sin haberse emitido, con la fecha de su anulación', async () => {
+    await casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Roto' });
+
+    const listado = await casos.listar.ejecutar(operador, {});
+
+    expect(listado).toMatchObject([{ numero: 1, estado: 'anulado', monto: null, beneficiario: null }]);
+    expect(listado[0]?.fecha).toEqual(expect.any(String));
+  });
+
+  it('filtra por estado y por cuenta', async () => {
+    await casos.emitir.ejecutar(operador, emision());
+
+    expect(await casos.listar.ejecutar(operador, { estado: 'anulado' })).toHaveLength(0);
+    expect(await casos.listar.ejecutar(operador, { cuentaBancariaId: CUENTA })).toHaveLength(1);
+    expect(await casos.listar.ejecutar(operador, { cuentaBancariaId: randomUUID() })).toHaveLength(0);
   });
 });

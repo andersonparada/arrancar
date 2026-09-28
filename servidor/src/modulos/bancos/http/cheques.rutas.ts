@@ -4,15 +4,21 @@ import type { ChequesControlador } from './cheques.controlador.js';
 import {
   esquemaAnulacionDeCheque,
   esquemaEmisionDeCheque,
+  esquemaFiltroDeChequesDeLaEmpresa,
   esquemaParamsCheque,
   esquemaParamsCuentaBancariaDeCheques,
 } from './cheques.esquemas-http.js';
 
 const etiquetas = ['Bancos'];
 
-/** Emitir y anular cheques: desde Movimientos (operación); sin Excel. */
+/** Ver, emitir y anular cheques: la lista es operación (los emitidos y anulados); sin Excel. */
 export function rutasCheques(controlador: ChequesControlador): FastifyPluginAsyncZod {
   return async (app) => {
+    app.get('/bancos/cheques', {
+      schema: { tags: etiquetas, querystring: esquemaFiltroDeChequesDeLaEmpresa },
+      preHandler: proteger({ permiso: 'bancos.cheques.ver' }),
+      handler: controlador.listar,
+    });
     app.get('/bancos/cuentas-bancarias/:cuentaBancariaId/siguiente-cheque', {
       schema: { tags: etiquetas, params: esquemaParamsCuentaBancariaDeCheques },
       preHandler: proteger({ permiso: 'bancos.cheques.emitir' }),
