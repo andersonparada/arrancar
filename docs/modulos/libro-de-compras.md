@@ -65,7 +65,7 @@ El combustible es un **bien**; el Libro de compras lo lleva en su propia columna
 porque el **IDP no forma parte de la base del IVA**.
 
 **Ventana de Administración «Combustibles»** (configuración del usuario, no del
-sistema; con Excel), por cuenta:
+sistema; con Excel), **por empresa** (una empresa puede haber comprado en una gasolinera que todavía no vendía con etanol):
 
 | Campo | Ejemplo |
 |---|---|
@@ -102,7 +102,7 @@ editar empresas:
 
 ## Datos fiscales del proveedor (formulario de Proveedores)
 
-Campos que se ven **solo si Libro de compras está activo**:
+Campos que se ven **solo si Libro de compras está activo**, en el formulario y también en la **ficha del proveedor**:
 
 - **Es pequeño contribuyente** (sí o no). Los reportes (Libro de compras y
   retenciones) **desglosan** lo comprado a pequeños contribuyentes.
@@ -163,7 +163,7 @@ solo las aplica.
 
 ## Conceptos de gasto
 
-Catálogo **por cuenta** (compartido por sus empresas, como los proveedores):
+Catálogo **por empresa** (cada empresa tiene su propia nomenclatura contable):
 nombre, tipo por omisión (bien o servicio), si es producto agropecuario (para la
 retención de exportadores) y activo o inactivo. Contabilidad, cuando exista, ligará
 cada concepto con su cuenta contable por empresa.

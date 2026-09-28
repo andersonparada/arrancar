@@ -76,7 +76,7 @@ Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte 
 | Anular una factura | Solo si no está en una contraseña vigente. Si estaba autorizada y hay *Contabilidad*, se publica el evento para revertir la partida. Libera el número del documento. |
 | Anular una contraseña | Solo si no tiene pagos vigentes; libera sus documentos. |
 | Anular un pago desde Cuentas por pagar | Anula también el cheque o la nota de débito en *Bancos*, en la misma transacción. |
-| Anular el cheque o la nota desde Bancos | **Se permite.** En la misma transacción, *Bancos* avisa al módulo que lo emitió y ese módulo **revierte lo suyo** (aquí: anula el pago y devuelve el saldo a las facturas). Si ese módulo no está activo, se anula solo en *Bancos* y queda en la auditoría. |
+| Anular el cheque o la nota desde Bancos | **Se permite.** En la misma transacción, *Bancos* avisa al módulo que lo emitió y ese módulo **revierte lo suyo** (aquí: anula el pago y devuelve el saldo a las facturas). Antes, ese módulo **revisa sus reglas**: si algo lo bloquea (p. ej. un período cerrado), rechaza y **no se anula nada**. Si ese módulo no está activo, se anula solo en *Bancos* y queda en la auditoría. |
 | Mes conciliado | No se anula un movimiento de un mes conciliado de *Bancos* (ya lo impide Bancos), venga de donde venga. |
 
 ## Tablas (esquema `cuentas_por_pagar`)
