@@ -39,7 +39,8 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.cheques.emitir', descripcion: 'Emitir cheques' },
     { clave: 'bancos.cheques.anular', descripcion: 'Anular cheques' },
     { clave: 'bancos.conciliaciones.ver', descripcion: 'Ver conciliaciones' },
-    { clave: 'bancos.conciliaciones.conciliar', descripcion: 'Conciliar cuentas' },
+    { clave: 'bancos.conciliaciones.conciliar', descripcion: 'Marcar documentos y terminar conciliaciones' },
+    { clave: 'bancos.conciliaciones.autorizar', descripcion: 'Autorizar o devolver conciliaciones' },
     { clave: 'bancos.conciliaciones.eliminar', descripcion: 'Eliminar conciliaciones' },
     // generador: permisos
   ],

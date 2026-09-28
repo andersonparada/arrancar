@@ -1,6 +1,6 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
-import { formatearMonto } from '@/modulos/core/utilidades/formato';
-import type { ConciliacionResumen } from '../../servicios/conciliaciones.api';
+import { formatearFecha } from '@/modulos/core/utilidades/formato';
+import type { ConciliacionResumen, EstadoDeConciliacion } from '../../servicios/conciliaciones.api';
 
 const NOMBRE_DEL_MES = [
   'enero',
@@ -17,6 +17,12 @@ const NOMBRE_DEL_MES = [
   'diciembre',
 ];
 
+export const TEXTO_DEL_ESTADO: Record<EstadoDeConciliacion, string> = {
+  en_proceso: 'En proceso',
+  elaborada: 'Elaborada',
+  autorizada: 'Autorizada',
+};
+
 /** El periodo legible de una conciliación: "Enero 2026". */
 export function periodoDeConciliacion(registro: Pick<ConciliacionResumen, 'anio' | 'mes'>): string {
   const nombre = NOMBRE_DEL_MES[registro.mes - 1] ?? String(registro.mes);
@@ -25,5 +31,8 @@ export function periodoDeConciliacion(registro: Pick<ConciliacionResumen, 'anio'
 
 /** Lo que muestra la tarjeta de una conciliación en la lista de la cuenta. */
 export function detallesDeConciliacion(registro: ConciliacionResumen): DetalleDeRegistro[] {
-  return [{ etiqueta: 'Saldo según banco', valor: formatearMonto(registro.saldoSegunBanco) }];
+  const detalles: DetalleDeRegistro[] = [];
+  if (registro.elaboradaEn) detalles.push({ etiqueta: 'Elaborada', valor: formatearFecha(registro.elaboradaEn) });
+  if (registro.autorizadaEn) detalles.push({ etiqueta: 'Autorizada', valor: formatearFecha(registro.autorizadaEn) });
+  return detalles;
 }

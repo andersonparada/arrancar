@@ -155,19 +155,35 @@ export class MesConciliado extends ReglaDeNegocioInfringida {
   }
 }
 
-export class ConciliacionConDiferencia extends ReglaDeNegocioInfringida {
-  readonly codigo = 'conciliacion_con_diferencia';
+export class ConciliacionNoEstaEnProceso extends ReglaDeNegocioInfringida {
+  readonly codigo = 'conciliacion_no_esta_en_proceso';
 
-  constructor(diferenciaEnQ: string) {
-    super(`No se puede cerrar la conciliación: hay una diferencia de Q ${diferenciaEnQ}.`);
+  constructor() {
+    super('Esta conciliación ya no está en proceso: no se le pueden cambiar las marcas.');
   }
 }
 
-export class ConciliacionCerrada extends ReglaDeNegocioInfringida {
-  readonly codigo = 'conciliacion_cerrada';
+export class ConciliacionNoEstaElaborada extends ReglaDeNegocioInfringida {
+  readonly codigo = 'conciliacion_no_esta_elaborada';
 
   constructor() {
-    super('Esta conciliación ya está cerrada y no se puede modificar.');
+    super('Esta conciliación no está elaborada: no se puede autorizar ni devolver.');
+  }
+}
+
+export class AutorizaQuienElaboro extends ReglaDeNegocioInfringida {
+  readonly codigo = 'autoriza_quien_elaboro';
+
+  constructor() {
+    super('Quien elaboró la conciliación no la puede autorizar: debe hacerlo otra persona.');
+  }
+}
+
+export class MesNoHaTerminado extends ReglaDeNegocioInfringida {
+  readonly codigo = 'mes_no_ha_terminado';
+
+  constructor() {
+    super('Solo se pueden conciliar meses que ya terminaron.');
   }
 }
 
@@ -183,7 +199,7 @@ export class HayUnaConciliacionAbierta extends ReglaDeNegocioInfringida {
   readonly codigo = 'hay_una_conciliacion_abierta';
 
   constructor() {
-    super('Esta cuenta ya tiene una conciliación abierta: ciérrela antes de iniciar otra.');
+    super('Esta cuenta ya tiene una conciliación sin autorizar: termínela y autorícela antes de iniciar otra.');
   }
 }
 

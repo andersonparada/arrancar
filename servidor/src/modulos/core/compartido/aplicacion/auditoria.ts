@@ -1,4 +1,5 @@
-export type AccionAuditada = 'eliminar' | 'inactivar' | 'reactivar' | 'anular';
+/** `devolver`: regresa un documento elaborado a en proceso (por ahora, solo conciliaciones). */
+export type AccionAuditada = 'eliminar' | 'inactivar' | 'reactivar' | 'anular' | 'devolver';
 
 /** Una baja (o su reversa): qué registro, qué se hizo, por qué y cómo estaba antes. */
 export interface EntradaDeAuditoria {

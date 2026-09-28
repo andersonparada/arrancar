@@ -3,7 +3,7 @@ import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiConciliaciones, type Conciliacion } from '../../servicios/conciliaciones.api';
 
-/** Guarda las marcas, el saldo y el cierre en el servidor; cada acción reemplaza la conciliación cargada. */
+/** Guarda las marcas, termina y autoriza en el servidor; cada acción reemplaza el documento cargado. */
 export function usarGuardadoDeConciliacion(conciliacion: Ref<Conciliacion | null>) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
@@ -14,17 +14,17 @@ export function usarGuardadoDeConciliacion(conciliacion: Ref<Conciliacion | null
     return enviar(async () => (conciliacion.value = await apiConciliaciones.guardarMarcas(id, [...marcados])));
   }
 
-  function guardarSaldo(saldoSegunBanco: string): Promise<boolean> {
+  async function terminar(): Promise<void> {
     const id = conciliacion.value?.id;
-    if (!id) return Promise.resolve(false);
-    return enviar(async () => (conciliacion.value = await apiConciliaciones.cambiarSaldo(id, saldoSegunBanco)));
+    if (!id || !(await enviar(async () => (conciliacion.value = await apiConciliaciones.terminar(id))))) return;
+    avisos.exito('Conciliación terminada: queda elaborada, a la espera de autorización.');
   }
 
-  async function cerrar(): Promise<void> {
+  async function autorizar(): Promise<void> {
     const id = conciliacion.value?.id;
-    if (!id || !(await enviar(async () => (conciliacion.value = await apiConciliaciones.cerrar(id))))) return;
-    avisos.exito('Conciliación cerrada.');
+    if (!id || !(await enviar(async () => (conciliacion.value = await apiConciliaciones.autorizar(id))))) return;
+    avisos.exito('Conciliación autorizada: el mes queda bloqueado.');
   }
 
-  return { guardando: enviando, errores, guardarMarcas, guardarSaldo, cerrar };
+  return { guardando: enviando, errores, guardarMarcas, terminar, autorizar };
 }

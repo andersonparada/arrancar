@@ -8,8 +8,9 @@ interface SolicitudDeEliminacion {
 }
 
 /**
- * Elimina la última conciliación de su cuenta (abierta o cerrada) y suelta sus
- * movimientos, así se reabre el mes; queda en la auditoría con el motivo.
+ * Elimina la última conciliación de su cuenta (en cualquier estado, incluso
+ * autorizada) y suelta sus movimientos, así se reabre el mes; queda en la
+ * auditoría con el motivo.
  */
 export class EliminarConciliacion {
   constructor(private readonly dependencias: DependenciasDeConciliaciones) {}

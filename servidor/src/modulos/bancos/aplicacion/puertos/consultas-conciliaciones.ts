@@ -1,6 +1,6 @@
 import type { ConciliacionDto, ConciliacionResumenDto } from '../dto/conciliacion.dto.js';
 
-/** Lecturas para las pantallas de conciliación; el cálculo en vivo ya viene resuelto. */
+/** Lecturas para las pantallas de conciliación; el cálculo del documento ya viene resuelto. */
 export interface ConsultasConciliaciones {
   /** De la más reciente a la más antigua. */
   listar(cuentaBancariaId: string): Promise<ConciliacionResumenDto[]>;

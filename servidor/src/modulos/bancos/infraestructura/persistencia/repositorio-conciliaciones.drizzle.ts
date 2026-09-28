@@ -37,13 +37,20 @@ export class RepositorioConciliacionesDrizzle implements RepositorioConciliacion
         id: conciliaciones.id,
         anio: conciliaciones.anio,
         mes: conciliaciones.mes,
-        cerradaEn: conciliaciones.cerradaEn,
+        estado: conciliaciones.estado,
       })
       .from(conciliaciones)
       .where(eq(conciliaciones.cuentaBancariaId, cuentaBancariaId))
       .orderBy(desc(conciliaciones.anio), desc(conciliaciones.mes))
       .limit(1);
-    return fila ? { id: fila.id, anio: fila.anio, mes: fila.mes, cerrada: fila.cerradaEn !== null } : null;
+    return fila
+      ? {
+          id: fila.id,
+          anio: fila.anio,
+          mes: fila.mes,
+          estado: fila.estado as 'en_proceso' | 'elaborada' | 'autorizada',
+        }
+      : null;
   }
 
   async guardarMarcas(conciliacionId: string, movimientoIds: string[]): Promise<void> {

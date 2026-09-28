@@ -1,11 +1,11 @@
-import type { Conciliacion, ConciliacionId } from '../../dominio/conciliacion.js';
+import type { Conciliacion, ConciliacionId, EstadoDeConciliacion } from '../../dominio/conciliacion.js';
 
-/** Resumen de la última conciliación de una cuenta, para revisar el orden de los meses. */
+/** Resumen de la última conciliación de una cuenta, para revisar el orden de los meses y si hay una sin autorizar. */
 export interface ResumenDeLaUltimaConciliacion {
   id: string;
   anio: number;
   mes: number;
-  cerrada: boolean;
+  estado: EstadoDeConciliacion;
 }
 
 export interface RepositorioConciliaciones {

@@ -1,12 +1,18 @@
+import type { Cuadratica, Partida, PartidasDeConciliacion } from '../calculo-de-conciliacion.js';
 import type { MovimientoDto } from './movimiento.dto.js';
+
+export type { Cuadratica, Partida, PartidasDeConciliacion };
+
+export type EstadoDeConciliacionDto = 'en_proceso' | 'elaborada' | 'autorizada';
 
 /** Una conciliación en la lista de una cuenta. */
 export interface ConciliacionResumenDto {
   id: string;
   anio: number;
   mes: number;
-  saldoSegunBanco: string;
-  cerrada: boolean;
+  estado: EstadoDeConciliacionDto;
+  elaboradaEn: string | null;
+  autorizadaEn: string | null;
 }
 
 /** Un movimiento candidato de la pantalla de conciliar, con si está marcado. */
@@ -14,26 +20,31 @@ export interface MovimientoConMarcaDto extends MovimientoDto {
   marcado: boolean;
 }
 
-/** La conciliación tal como la ve la pantalla de conciliar, con el cálculo en vivo ya resuelto. */
+/** El documento de conciliación completo: encabezado, cuadro cuadrático, partidas y candidatos. */
 export interface ConciliacionDto {
   id: string;
   cuentaBancariaId: string;
   cuentaBancariaNombre: string | null;
+  bancoNombre: string | null;
+  numeroDeCuenta: string | null;
+  empresaNombre: string | null;
   anio: number;
   mes: number;
-  saldoSegunBanco: string;
-  /** Saldo según banco de la conciliación anterior; `"0.00"` si es la primera. */
-  saldoAnterior: string;
-  movimientos: MovimientoConMarcaDto[];
-  saldoConciliado: string;
-  diferencia: string;
-  cerrada: boolean;
+  estado: EstadoDeConciliacionDto;
+  elaboradaPorNombre: string | null;
+  elaboradaEn: string | null;
+  autorizadaPorNombre: string | null;
+  autorizadaEn: string | null;
+  /** Los movimientos que se pueden marcar (o desmarcar) en esta conciliación. */
+  candidatos: MovimientoConMarcaDto[];
+  cuadratica: { libros: Cuadratica; banco: Cuadratica };
+  partidas: PartidasDeConciliacion;
+  saldoQueDebeMostrarElEstadoDeCuenta: string;
 }
 
-/** Lo que se recibe para iniciar una conciliación. */
+/** Lo que se recibe para iniciar una conciliación: ya no se escribe ningún saldo. */
 export interface SolicitudDeInicioDeConciliacion {
   cuentaBancariaId: string;
   anio: number;
   mes: number;
-  saldoSegunBanco: string;
 }

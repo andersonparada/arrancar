@@ -7,6 +7,7 @@ const RUTA_MOVIMIENTOS = '/api/bancos/movimientos';
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let cuentaBancariaId: string;
+let autoriza: ClienteApi;
 
 /** Un banco y una cuenta bancaria activa, con saldo inicial de Q 1,000.00 el 2026-01-01. */
 async function crearCuentaBancaria(usuario: ClienteApi, nombre: string): Promise<string> {
@@ -39,10 +40,15 @@ beforeAll(async () => {
     modulos: ['bancos'],
   });
   cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Cuenta a conciliar');
+  autoriza = await crearUsuarioConPermisos(entorno, cuenta, {
+    nombres: 'Autoriza',
+    apellidos: 'Conciliaciones',
+    permisos: ['bancos.conciliaciones.ver', 'bancos.conciliaciones.autorizar'],
+  });
 });
 
 describe('conciliaciones por API', () => {
-  it('flujo completo: iniciar, marcar, diferencia, cerrar, bloquear el mes, iniciar el siguiente y eliminar la última', async () => {
+  it('flujo completo: iniciar, marcar, terminar, autorizar, bloquear el mes, iniciar el siguiente y eliminar', async () => {
     // Otra nota de crédito de Q 200 el 15 de enero, aparte del saldo inicial.
     const notaExtra = await cuenta.propietario.post(RUTA_MOVIMIENTOS, {
       cuentaBancariaId,
@@ -59,36 +65,46 @@ describe('conciliaciones por API', () => {
       cuentaBancariaId,
       anio: 2026,
       mes: 1,
-      saldoSegunBanco: '1000.00',
     });
     expect(iniciada.estado).toBe(201);
-    expect(iniciada.cuerpo).toMatchObject({ anio: 2026, mes: 1, cerrada: false, saldoAnterior: '0.00' });
+    expect(iniciada.cuerpo).toMatchObject({ anio: 2026, mes: 1, estado: 'en_proceso' });
     const conciliacionId = iniciada.cuerpo.id as string;
-    const idSaldoInicial = (iniciada.cuerpo.movimientos as Array<{ id: string; saldoInicial: boolean }>).find(
+    const idSaldoInicial = (iniciada.cuerpo.candidatos as Array<{ id: string; saldoInicial: boolean }>).find(
       (m) => m.saldoInicial,
     )!.id;
 
-    // Sin marcar nada, la diferencia es el saldo completo.
+    // Sin marcar nada, todo (saldo inicial y nota extra) queda como crédito en tránsito: el banco no ha visto nada.
     const sinMarcar = await cuenta.propietario.get(`/api/bancos/conciliaciones/${conciliacionId}`);
-    expect(sinMarcar.cuerpo.diferencia).toBe('1000.00');
+    expect(sinMarcar.cuerpo.saldoQueDebeMostrarElEstadoDeCuenta).toBe('0.00');
 
-    // Se marca solo el saldo inicial: la nota de 200 queda pendiente y la diferencia sigue sin ser cero.
+    // Se marcan ambos: el saldo calculado coincide con el saldo según libros.
     const marcado = await cuenta.propietario.put(`/api/bancos/conciliaciones/${conciliacionId}/marcas`, {
-      movimientoIds: [idSaldoInicial],
+      movimientoIds: [idSaldoInicial, notaExtra.cuerpo.id],
     });
-    expect(marcado.cuerpo.saldoConciliado).toBe('1000.00');
-    expect(marcado.cuerpo.diferencia).toBe('0.00');
+    expect(marcado.cuerpo.saldoQueDebeMostrarElEstadoDeCuenta).toBe('1200.00');
+    expect(marcado.cuerpo.partidas).toEqual({
+      chequesEnCirculacion: [],
+      otrosDebitosEnTransito: [],
+      creditosEnTransito: [],
+    });
 
-    // No se cierra con diferencia si se sube el saldo según banco.
-    await cuenta.propietario.put(`/api/bancos/conciliaciones/${conciliacionId}/saldo`, { saldoSegunBanco: '1200.00' });
-    const conDiferencia = await cuenta.propietario.post(`/api/bancos/conciliaciones/${conciliacionId}/cerrar`, {});
-    expect(conDiferencia.estado).toBe(422);
+    // Termina el propietario: pasa a elaborada.
+    const terminada = await cuenta.propietario.post(`/api/bancos/conciliaciones/${conciliacionId}/terminar`, {});
+    expect(terminada.estado).toBe(200);
+    expect(terminada.cuerpo.estado).toBe('elaborada');
 
-    // Se vuelve al saldo correcto y se cierra.
-    await cuenta.propietario.put(`/api/bancos/conciliaciones/${conciliacionId}/saldo`, { saldoSegunBanco: '1000.00' });
-    const cerrada = await cuenta.propietario.post(`/api/bancos/conciliaciones/${conciliacionId}/cerrar`, {});
-    expect(cerrada.estado).toBe(200);
-    expect(cerrada.cuerpo.cerrada).toBe(true);
+    // Quien la elaboró (el propietario) no la puede autorizar.
+    const rechazaAutopropia = await cuenta.propietario.post(
+      `/api/bancos/conciliaciones/${conciliacionId}/autorizar`,
+      {},
+    );
+    expect(rechazaAutopropia.estado).toBe(422);
+
+    // Otra persona sí la autoriza.
+    const autorizada = await autoriza.post(`/api/bancos/conciliaciones/${conciliacionId}/autorizar`, {});
+    expect(autorizada.estado).toBe(200);
+    expect(autorizada.cuerpo.estado).toBe('autorizada');
+    expect(autorizada.cuerpo.autorizadaPorNombre).toBe('Autoriza Conciliaciones');
 
     // La cuenta queda conciliada hasta enero: registrar ahí se rechaza.
     const rechazado = await cuenta.propietario.post(RUTA_MOVIMIENTOS, {
@@ -102,48 +118,69 @@ describe('conciliaciones por API', () => {
       observaciones: null,
     });
     expect(rechazado.estado).toBe(422);
-    // Y anular la nota extra (fecha de enero) también.
-    const anulacionRechazada = await cuenta.propietario.post(`${RUTA_MOVIMIENTOS}/${notaExtra.cuerpo.id}/anular`, {
-      motivo: 'Prueba',
-    });
-    expect(anulacionRechazada.estado).toBe(422);
 
-    // Se inicia febrero: incluye la nota de 200 pendiente de enero.
+    // Se inicia febrero.
     const febrero = await cuenta.propietario.post('/api/bancos/conciliaciones', {
       cuentaBancariaId,
       anio: 2026,
       mes: 2,
-      saldoSegunBanco: '1200.00',
     });
     expect(febrero.estado).toBe(201);
-    expect(febrero.cuerpo.saldoAnterior).toBe('1000.00');
-    expect(febrero.cuerpo.movimientos).toHaveLength(1);
-    expect(febrero.cuerpo.movimientos[0]).toMatchObject({ id: notaExtra.cuerpo.id, monto: '200.00' });
+    expect(febrero.cuerpo.candidatos).toHaveLength(0);
 
     const lista = await cuenta.propietario.get(`/api/bancos/cuentas-bancarias/${cuentaBancariaId}/conciliaciones`);
     expect(lista.cuerpo).toHaveLength(2);
 
-    // Se elimina la última (febrero): reabre el mes y suelta sus movimientos.
+    // Se elimina la última (febrero): reabre el mes.
     const eliminada = await cuenta.propietario.post(`/api/bancos/conciliaciones/${febrero.cuerpo.id}/eliminar`, {
-      motivo: 'Me equivoqué de saldo',
+      motivo: 'Me equivoqué de mes',
     });
     expect(eliminada.estado).toBe(204);
-    const listaFinal = await cuenta.propietario.get(`/api/bancos/cuentas-bancarias/${cuentaBancariaId}/conciliaciones`);
-    expect(listaFinal.cuerpo).toHaveLength(1);
 
-    // No se puede eliminar enero (ya no es la última... y sí lo es ahora, pero probamos que sí se puede).
+    // Ahora enero (autorizada) vuelve a ser la última: también se puede eliminar.
     const eliminaEnero = await cuenta.propietario.post(`/api/bancos/conciliaciones/${conciliacionId}/eliminar`, {
       motivo: 'Reabrir enero',
     });
     expect(eliminaEnero.estado).toBe(204);
   });
 
-  it('sin permisos, ver, iniciar, marcar, cerrar y eliminar responden 403', async () => {
+  it('se puede devolver una conciliación elaborada, con motivo', async () => {
     const iniciada = await cuenta.propietario.post('/api/bancos/conciliaciones', {
       cuentaBancariaId,
       anio: 2026,
-      mes: 1,
-      saldoSegunBanco: '1000.00',
+      mes: 3,
+    });
+    const conciliacionId = iniciada.cuerpo.id as string;
+    await cuenta.propietario.post(`/api/bancos/conciliaciones/${conciliacionId}/terminar`, {});
+
+    const devuelta = await autoriza.post(`/api/bancos/conciliaciones/${conciliacionId}/devolver`, {
+      motivo: 'Revisar',
+    });
+    expect(devuelta.estado).toBe(200);
+    expect(devuelta.cuerpo.estado).toBe('en_proceso');
+
+    // Se puede volver a marcar y terminar.
+    expect(
+      (await cuenta.propietario.put(`/api/bancos/conciliaciones/${conciliacionId}/marcas`, { movimientoIds: [] }))
+        .estado,
+    ).toBe(200);
+    await cuenta.propietario.post(`/api/bancos/conciliaciones/${conciliacionId}/eliminar`, { motivo: 'limpiar' });
+  });
+
+  it('no se concilia un mes que todavía no terminó', async () => {
+    const rechazado = await cuenta.propietario.post('/api/bancos/conciliaciones', {
+      cuentaBancariaId,
+      anio: 2026,
+      mes: 12,
+    });
+    expect(rechazado.estado).toBe(422);
+  });
+
+  it('sin permisos, ver, iniciar, marcar, terminar, autorizar y eliminar responden 403', async () => {
+    const iniciada = await cuenta.propietario.post('/api/bancos/conciliaciones', {
+      cuentaBancariaId,
+      anio: 2026,
+      mes: 4,
     });
     const conciliacionId = iniciada.cuerpo.id as string;
     const sinPermisos = await crearUsuarioConPermisos(entorno, cuenta, {
@@ -157,21 +194,20 @@ describe('conciliaciones por API', () => {
     );
     expect((await sinPermisos.get(`/api/bancos/conciliaciones/${conciliacionId}`)).estado).toBe(403);
     expect(
-      (
-        await sinPermisos.post('/api/bancos/conciliaciones', {
-          cuentaBancariaId,
-          anio: 2026,
-          mes: 2,
-          saldoSegunBanco: '0.00',
-        })
-      ).estado,
+      (await sinPermisos.post('/api/bancos/conciliaciones', { cuentaBancariaId, anio: 2026, mes: 5 })).estado,
     ).toBe(403);
     expect(
       (await sinPermisos.put(`/api/bancos/conciliaciones/${conciliacionId}/marcas`, { movimientoIds: [] })).estado,
     ).toBe(403);
-    expect((await sinPermisos.post(`/api/bancos/conciliaciones/${conciliacionId}/cerrar`, {})).estado).toBe(403);
+    expect((await sinPermisos.post(`/api/bancos/conciliaciones/${conciliacionId}/terminar`, {})).estado).toBe(403);
+    expect((await sinPermisos.post(`/api/bancos/conciliaciones/${conciliacionId}/autorizar`, {})).estado).toBe(403);
+    expect(
+      (await sinPermisos.post(`/api/bancos/conciliaciones/${conciliacionId}/devolver`, { motivo: 'x' })).estado,
+    ).toBe(403);
     expect(
       (await sinPermisos.post(`/api/bancos/conciliaciones/${conciliacionId}/eliminar`, { motivo: 'x' })).estado,
     ).toBe(403);
+
+    await cuenta.propietario.post(`/api/bancos/conciliaciones/${conciliacionId}/eliminar`, { motivo: 'limpiar' });
   });
 });

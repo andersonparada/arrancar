@@ -1,5 +1,5 @@
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
-import { calcularDiferencia, calcularSaldoConciliado } from '../aplicacion/calculo-de-conciliacion.js';
+import { calcularConciliacion, type MovimientoParaConciliar } from '../aplicacion/calculo-de-conciliacion.js';
 import type {
   ConciliacionDto,
   ConciliacionResumenDto,
@@ -10,8 +10,14 @@ import type {
   RepositorioConciliaciones,
   ResumenDeLaUltimaConciliacion,
 } from '../aplicacion/puertos/repositorio-conciliaciones.js';
-import { aCentavos, deCentavos, efectoEnCentavos } from '../dominio/centavos.js';
-import { Conciliacion, type ConciliacionId, finDelMesDe } from '../dominio/conciliacion.js';
+import { aCentavos } from '../dominio/centavos.js';
+import {
+  Conciliacion,
+  finDelMesDe,
+  inicioDelMesDe,
+  periodoAnterior,
+  type ConciliacionId,
+} from '../dominio/conciliacion.js';
 import type { MovimientosEnMemoria } from './dobles-de-movimientos.js';
 
 const copia = (conciliacion: Conciliacion) => Conciliacion.reconstruir(conciliacion.instantanea());
@@ -20,11 +26,16 @@ function ordenDescendente(a: { anio: number; mes: number }, b: { anio: number; m
   return b.anio - a.anio || b.mes - a.mes;
 }
 
+function aMovimientoParaConciliar(m: MovimientoConMarcaDto): MovimientoParaConciliar {
+  const { id, tipo, fecha, monto, numeroDeCheque, beneficiario, referencia, marcado } = m;
+  return { id, tipo, fecha, monto, numeroDeCheque, beneficiario, referencia, marcado };
+}
+
 /**
  * Guarda las conciliaciones en memoria y responde tanto de repositorio como de
  * consultas; las marcas se guardan aparte (no tocan la entidad Movimiento) y
- * necesita los movimientos de la cuenta para calcular los candidatos: se
- * vincula con `vincularMovimientos` después de crear las dos.
+ * necesita los movimientos de la cuenta para armar el documento: se vincula
+ * con `vincularMovimientos` después de crear las dos.
  */
 export class ConciliacionesEnMemoria implements RepositorioConciliaciones, ConsultasConciliaciones {
   readonly registros = new Map<string, Conciliacion>();
@@ -59,8 +70,8 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
       ordenDescendente(a.instantanea(), b.instantanea()),
     )[0];
     if (!ultima) return null;
-    const { id, anio, mes, cerradaEn } = ultima.instantanea();
-    return { id: id.valor, anio, mes, cerrada: cerradaEn !== null };
+    const { id, anio, mes, estado } = ultima.instantanea();
+    return { id: id.valor, anio, mes, estado };
   }
 
   async guardarMarcas(conciliacionId: string, movimientoIds: string[]): Promise<void> {
@@ -76,31 +87,7 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
   async obtener(conciliacionId: string): Promise<ConciliacionDto> {
     const conciliacion = this.registros.get(conciliacionId);
     if (!conciliacion) throw new RecursoNoEncontrado('La conciliación');
-    const { cuentaBancariaId, anio, mes, saldoSegunBanco, cerradaEn } = conciliacion.instantanea();
-    const saldoAnterior = this.saldoAnteriorDe(cuentaBancariaId, anio, mes);
-    const movimientos = await this.candidatosConMarca(cuentaBancariaId, finDelMesDe({ anio, mes }), conciliacionId);
-    const resumen = this.calcularResumen(saldoAnterior, saldoSegunBanco, movimientos);
-    return {
-      id: conciliacionId,
-      cuentaBancariaId,
-      cuentaBancariaNombre: null,
-      anio,
-      mes,
-      saldoSegunBanco,
-      saldoAnterior,
-      movimientos,
-      cerrada: cerradaEn !== null,
-      ...resumen,
-    };
-  }
-
-  private calcularResumen(saldoAnterior: string, saldoSegunBanco: string, movimientos: MovimientoConMarcaDto[]) {
-    const saldoConciliadoEnCentavos = calcularSaldoConciliado(
-      aCentavos(saldoAnterior),
-      movimientos.map((m) => ({ efectoEnCentavos: efectoEnCentavos(m.tipo, m.monto), marcado: m.marcado })),
-    );
-    const diferenciaEnCentavos = calcularDiferencia(aCentavos(saldoSegunBanco), saldoConciliadoEnCentavos);
-    return { saldoConciliado: deCentavos(saldoConciliadoEnCentavos), diferencia: deCentavos(diferenciaEnCentavos) };
+    return this.armarDto(conciliacion);
   }
 
   async idsDeCandidatos(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]> {
@@ -108,31 +95,99 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     return candidatos.map((c) => c.id);
   }
 
+  private async calcularDocumento(conciliacion: Conciliacion) {
+    const { id, cuentaBancariaId, anio, mes } = conciliacion.instantanea();
+    const periodo = { anio, mes };
+    const finDelMes = finDelMesDe(periodo);
+    const candidatos = await this.candidatosConMarca(cuentaBancariaId, finDelMes, id.valor);
+    const { librosEnCentavos, bancoEnCentavos } = await this.saldosIniciales(cuentaBancariaId, periodo);
+    const movimientosDelMes = await this.movimientosDelMes(cuentaBancariaId, periodo);
+    const resultado = calcularConciliacion({
+      saldoInicialLibrosEnCentavos: librosEnCentavos,
+      saldoInicialBancoEnCentavos: bancoEnCentavos,
+      movimientosDelMes,
+      candidatos: candidatos.map(aMovimientoParaConciliar),
+    });
+    return { candidatos, resultado };
+  }
+
+  private aEncabezado(conciliacion: Conciliacion) {
+    const { id, cuentaBancariaId, anio, mes, estado } = conciliacion.instantanea();
+    return {
+      id: id.valor,
+      cuentaBancariaId,
+      cuentaBancariaNombre: null,
+      bancoNombre: null,
+      numeroDeCuenta: null,
+      empresaNombre: null,
+      anio,
+      mes,
+      estado,
+      elaboradaPorNombre: null,
+      elaboradaEn: null,
+      autorizadaPorNombre: null,
+      autorizadaEn: null,
+    };
+  }
+
+  private async armarDto(conciliacion: Conciliacion): Promise<ConciliacionDto> {
+    const { estado, foto } = conciliacion.instantanea();
+    const { candidatos, resultado } = await this.calcularDocumento(conciliacion);
+    const saldoQueDebeMostrarElEstadoDeCuenta =
+      estado === 'autorizada' && foto
+        ? foto.saldoCalculadoEstadoDeCuenta
+        : resultado.saldoQueDebeMostrarElEstadoDeCuenta;
+    return {
+      ...this.aEncabezado(conciliacion),
+      candidatos,
+      cuadratica: { libros: resultado.libros, banco: resultado.banco },
+      partidas: resultado.partidas,
+      saldoQueDebeMostrarElEstadoDeCuenta,
+    };
+  }
+
   private deLaCuenta(cuentaBancariaId: string): Conciliacion[] {
     return [...this.registros.values()].filter((c) => c.instantanea().cuentaBancariaId === cuentaBancariaId);
   }
 
   private aResumen(conciliacion: Conciliacion): ConciliacionResumenDto {
-    const { id, anio, mes, saldoSegunBanco, cerradaEn } = conciliacion.instantanea();
-    return { id: id.valor, anio, mes, saldoSegunBanco, cerrada: cerradaEn !== null };
+    const { id, anio, mes, estado } = conciliacion.instantanea();
+    return { id: id.valor, anio, mes, estado, elaboradaEn: null, autorizadaEn: null };
   }
 
-  private saldoAnteriorDe(cuentaBancariaId: string, anio: number, mes: number): string {
-    const anteriores = this.deLaCuenta(cuentaBancariaId)
+  private async saldosIniciales(cuentaBancariaId: string, periodo: { anio: number; mes: number }) {
+    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
+    const finDelMesAnterior = finDelMesDe(periodoAnterior(periodo));
+    const librosEnCentavos = aCentavos(await this.movimientos.saldoAlFinDe(cuentaBancariaId, finDelMesAnterior));
+    const anterior = periodoAnterior(periodo);
+    const previa = this.deLaCuenta(cuentaBancariaId)
       .map((c) => c.instantanea())
-      .filter((p) => p.anio < anio || (p.anio === anio && p.mes < mes))
-      .sort(ordenDescendente);
-    return anteriores[0]?.saldoSegunBanco ?? '0.00';
+      .find((p) => p.anio === anterior.anio && p.mes === anterior.mes);
+    const bancoEnCentavos = previa?.foto ? aCentavos(previa.foto.saldoCalculadoEstadoDeCuenta) : librosEnCentavos;
+    return { librosEnCentavos, bancoEnCentavos };
   }
 
-  /** Ids marcados en OTRA conciliación: no son candidatos aquí. */
-  private marcadosEnOtra(conciliacionId: string): Set<string> {
-    const otros = new Set<string>();
+  private async movimientosDelMes(
+    cuentaBancariaId: string,
+    periodo: { anio: number; mes: number },
+  ): Promise<MovimientoParaConciliar[]> {
+    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
+    const filas = await this.movimientos.vigentesEntre(cuentaBancariaId, inicioDelMesDe(periodo), finDelMesDe(periodo));
+    return filas.map((m) => aMovimientoParaConciliar({ ...m, marcado: false }));
+  }
+
+  /**
+   * Ids marcados en una conciliación de un mes ANTERIOR: no son candidatos aquí.
+   * Lo marcado en un mes posterior seguía pendiente en este, como en Postgres.
+   */
+  private marcadosAntesDe(finDelMes: string): Set<string> {
+    const anteriores = new Set<string>();
     for (const [id, movimientoIds] of this.marcas) {
-      if (id === conciliacionId) continue;
-      for (const movimientoId of movimientoIds) otros.add(movimientoId);
+      const conciliacion = this.registros.get(id);
+      if (!conciliacion || conciliacion.finDelMes() >= finDelMes) continue;
+      for (const movimientoId of movimientoIds) anteriores.add(movimientoId);
     }
-    return otros;
+    return anteriores;
   }
 
   private async candidatosConMarca(
@@ -142,10 +197,10 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
   ): Promise<MovimientoConMarcaDto[]> {
     if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
     const marcados = this.marcas.get(conciliacionId) ?? new Set<string>();
-    const marcadosEnOtra = this.marcadosEnOtra(conciliacionId);
+    const marcadosAntes = this.marcadosAntesDe(finDelMes);
     const todos = await this.movimientos.listar({ cuentaBancariaId });
     return todos
-      .filter((m) => !m.anuladoEn && m.fecha <= finDelMes && !marcadosEnOtra.has(m.id))
+      .filter((m) => !m.anuladoEn && m.fecha <= finDelMes && !marcadosAntes.has(m.id))
       .map((m) => ({ ...m, marcado: marcados.has(m.id) }))
       .sort((a, b) => a.fecha.localeCompare(b.fecha));
   }

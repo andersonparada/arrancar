@@ -1,42 +1,72 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import type { Movimiento } from './movimientos.api';
 
+export type EstadoDeConciliacion = 'en_proceso' | 'elaborada' | 'autorizada';
+
 /** Conciliación en la lista de una cuenta. */
 export interface ConciliacionResumen {
   id: string;
   anio: number;
   mes: number;
-  saldoSegunBanco: string;
-  cerrada: boolean;
+  estado: EstadoDeConciliacion;
+  elaboradaEn: string | null;
+  autorizadaEn: string | null;
 }
 
 export interface MovimientoConMarca extends Movimiento {
   marcado: boolean;
 }
 
-/** La conciliación con sus movimientos candidatos y el cálculo ya resuelto por el servidor. */
+export interface Cuadratica {
+  saldoInicial: string;
+  ingresos: string;
+  egresos: string;
+  saldoFinal: string;
+}
+
+export interface Partida {
+  movimientoId: string;
+  fecha: string;
+  monto: string;
+  numeroDeCheque: number | null;
+  beneficiario: string | null;
+  referencia: string | null;
+}
+
+export interface PartidasDeConciliacion {
+  chequesEnCirculacion: Partida[];
+  otrosDebitosEnTransito: Partida[];
+  creditosEnTransito: Partida[];
+}
+
+/** El documento de conciliación completo: encabezado, cuadro cuadrático, partidas y candidatos, ya resuelto por el servidor. */
 export interface Conciliacion {
   id: string;
   cuentaBancariaId: string;
   cuentaBancariaNombre: string | null;
+  bancoNombre: string | null;
+  numeroDeCuenta: string | null;
+  empresaNombre: string | null;
   anio: number;
   mes: number;
-  saldoSegunBanco: string;
-  saldoAnterior: string;
-  movimientos: MovimientoConMarca[];
-  saldoConciliado: string;
-  diferencia: string;
-  cerrada: boolean;
+  estado: EstadoDeConciliacion;
+  elaboradaPorNombre: string | null;
+  elaboradaEn: string | null;
+  autorizadaPorNombre: string | null;
+  autorizadaEn: string | null;
+  candidatos: MovimientoConMarca[];
+  cuadratica: { libros: Cuadratica; banco: Cuadratica };
+  partidas: PartidasDeConciliacion;
+  saldoQueDebeMostrarElEstadoDeCuenta: string;
 }
 
 export interface DatosDeInicioDeConciliacion {
   cuentaBancariaId: string;
   anio: number;
   mes: number;
-  saldoSegunBanco: string;
 }
 
-/** Conciliación mensual por cuenta: sin Excel, todo desde la pantalla de conciliar. */
+/** Conciliación mensual por cuenta: sin Excel, todo desde la pantalla de conciliar; el usuario no escribe ningún saldo. */
 export class ApiConciliaciones {
   constructor(private readonly http: ClienteHttp) {}
 
@@ -56,12 +86,19 @@ export class ApiConciliaciones {
     return this.http.reemplazar<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/marcas`, { movimientoIds });
   }
 
-  cambiarSaldo(conciliacionId: string, saldoSegunBanco: string) {
-    return this.http.reemplazar<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/saldo`, { saldoSegunBanco });
+  /** Termina la conciliación: pasa de en proceso a elaborada. */
+  terminar(conciliacionId: string) {
+    return this.http.crear<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/terminar`);
   }
 
-  cerrar(conciliacionId: string) {
-    return this.http.crear<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/cerrar`);
+  /** Autoriza la conciliación elaborada (no puede hacerlo quien la elaboró): congela el documento y bloquea el mes. */
+  autorizar(conciliacionId: string) {
+    return this.http.crear<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/autorizar`);
+  }
+
+  /** Devuelve una conciliación elaborada a en proceso, con motivo. */
+  devolver(conciliacionId: string, motivo: string) {
+    return this.http.crear<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/devolver`, { motivo });
   }
 
   /** Elimina la conciliación (solo la última de su cuenta); no se puede deshacer. */

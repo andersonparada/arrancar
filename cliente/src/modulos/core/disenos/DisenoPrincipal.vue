@@ -50,9 +50,9 @@ async function salir(): Promise<void> {
 </script>
 
 <template>
-  <div class="min-h-dvh lg:pl-72">
+  <div class="min-h-dvh lg:pl-72 print:pl-0">
     <header
-      class="sticky top-0 z-20 flex items-center gap-3 bg-marca px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] text-marca-texto lg:hidden"
+      class="sticky top-0 z-20 flex items-center gap-3 bg-marca px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] text-marca-texto lg:hidden print:hidden"
     >
       <button
         type="button"
@@ -74,7 +74,7 @@ async function salir(): Promise<void> {
     />
 
     <aside
-      class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-marca text-marca-texto transition-transform lg:translate-x-0"
+      class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-marca text-marca-texto transition-transform lg:translate-x-0 print:hidden"
       :class="menuAbierto ? 'translate-x-0' : '-translate-x-full'"
       aria-label="Menú principal"
     >

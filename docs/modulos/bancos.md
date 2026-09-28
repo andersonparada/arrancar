@@ -612,3 +612,145 @@ fecha frente a `conciliadaHasta`; así `RepositorioConciliaciones.guardarMarcas`
 lo actualiza con una sentencia de SQL directa, sin cargar cada `Movimiento`.
 `EliminarConciliacion` reutiliza `guardarMarcas(id, [])` para soltar todos los
 movimientos de la conciliación que se borra.
+
+### B5.1 Rediseño de la conciliación (acordado el 2026-09-28)
+
+El dueño del producto revisó el B5 y lo corrigió: **el usuario no escribe ningún
+monto** (no decide cuánto dinero hay) y necesita **ver qué documentos integran la
+conciliación**, para dar seguridad. Método estándar (y conciliación cuadrática
+que la SAT pide a contribuyentes especiales):
+
+- Lado banco: saldo del estado de cuenta + depósitos en tránsito − cheques en
+  circulación. Lado libros: saldo según libros + notas de crédito del banco no
+  registradas − notas de débito del banco no registradas. Ambos dan el saldo
+  ajustado. Las notas no registradas se registran en libros (en Arrancar: como
+  notas del mes, antes de cerrar).
+- Cuadrática: cuatro columnas —saldo inicial, ingresos, egresos, saldo final—
+  para el banco y para los libros.
+
+Flujo acordado:
+
+1. **La crea el usuario cuando lo decida** ("Conciliar agosto"), aunque sea
+   meses después; solo de meses ya terminados y en orden. Sin saldo que escribir.
+2. **El usuario solo marca** qué documentos aparecen en el estado de cuenta
+   (cheques cobrados, depósitos acreditados, notas).
+3. **El sistema arma el documento de conciliación**, con cada partida detallada:
+   saldo según libros al fin de mes; (+) cheques en circulación (número, fecha,
+   beneficiario, monto); (+) otros débitos en tránsito; (−) depósitos y créditos
+   en tránsito (fecha, referencia, monto); (=) **saldo que debe mostrar el
+   estado de cuenta**, calculado. Además, el cuadro cuadrático: banco (saldo
+   inicial = el calculado del mes anterior, ingresos y egresos = lo marcado este
+   mes, saldo final) y libros (saldo inicial, ingresos y egresos del mes, saldo
+   final).
+4. El usuario compara el saldo calculado con su estado de cuenta en papel. Si no
+   coincide, le falta registrar algo (comisión, interés, cargo): lo registra como
+   nota con fecha de ese mes y el documento se recalcula solo.
+5. **Elabora uno, autoriza otro:** estados *en proceso* → *elaborada* (quien
+   concilia la da por terminada; ya no se cambian marcas, salvo que se devuelva)
+   → *autorizada* (otra persona con permiso aparte; aquí se cierra el mes). La
+   autorización no la puede hacer quien la elaboró. Se puede devolver de
+   elaborada a en proceso, con motivo.
+6. Al autorizar se guarda la foto del cálculo (saldos y totales) y el mes queda
+   bloqueado (`MesConciliado`, como en el B5). Los documentos no marcados pasan
+   al mes siguiente como pendientes.
+7. **Documento imprimible**: encabezado (empresa, cuenta, banco, mes), cuadro
+   cuadrático, partidas detalladas, y quién la elaboró y autorizó, con fechas.
+8. Eliminar: solo la última, con motivo y auditoría (sin cambios).
+
+**B5.1 hecho (2026-09-28).** `bancos.conciliaciones` cambió de saldo escrito +
+cierre a estado + foto: se quitaron `saldo_segun_banco` y `cerrada_en`
+(migración `0008_quitar_saldo_y_cierre_de_conciliacion.sql`) y se agregaron
+`estado` (`en_proceso`/`elaborada`/`autorizada`, con `check`), `elaborada_por`,
+`elaborada_en`, `autorizada_por`, `autorizada_en` y cinco columnas
+`numeric(14,2)` de la foto —`foto_saldo_segun_libros`,
+`foto_saldo_calculado_estado_de_cuenta` y los tres totales de partidas—
+(migración `0009_agregar_estado_y_foto_de_conciliacion.sql`; se generaron en
+dos pasos, uno de solo quitar y otro de solo agregar, porque `drizzle-kit
+generate` pide confirmar interactivamente cualquier posible renombrado y no
+hay TTY en este flujo).
+
+Dominio `Conciliacion`: `elaborar(usuarioId)`, `autorizar(usuarioId, foto)`
+(`AutorizaQuienElaboro` si autoriza quien elaboró), `devolver()`; `FotoDelCalculo`
+son los cinco campos de la foto. Cálculo puro nuevo en
+`aplicacion/calculo-de-conciliacion.ts` (`calcularConciliacion`): arma el
+cuadro cuadrático de libros y de banco, las partidas pendientes por grupo
+(cheques en circulación, otros débitos en tránsito, créditos en tránsito) y el
+saldo que debe mostrar el estado de cuenta, todo en centavos; siete pruebas
+unitarias, incluida la identidad banco.saldoFinal ==
+saldoQueDebeMostrarElEstadoDeCuenta cuando todo está marcado.
+
+Ocho casos de uso: `IniciarConciliacion` (ya no recibe saldo; `MesNoHaTerminado`
+si el fin de mes no es anterior a hoy), `MarcarMovimientos`, `TerminarConciliacion`
+(en proceso → elaborada), `AutorizarConciliacion` (elaborada → autorizada;
+calcula la foto a partir del mismo documento que ve la pantalla y llama
+`Conciliacion.autorizar`), `DevolverConciliacion` (elaborada → en proceso, con
+motivo, auditoría `devolver` — acción nueva en `AccionAuditada`),
+`ObtenerConciliacion`, `ListarConciliaciones`, `EliminarConciliacion` (sin
+cambios de fondo). Se quitaron `CambiarSaldoSegunBanco` y `CerrarConciliacion`.
+
+HTTP: `POST .../terminar`, `.../autorizar` y `.../devolver` reemplazan
+`.../saldo` y `.../cerrar`; `autorizar` y `devolver` comparten el permiso nuevo
+`bancos.conciliaciones.autorizar` (agregado a `modulo.ts`), distinto del que
+usan iniciar/marcar/terminar (`bancos.conciliaciones.conciliar`).
+
+Persistencia: `ConsultasConciliacionesDrizzle.obtener` arma el documento
+completo (encabezado con nombres de cuenta/banco/empresa y de quién elaboró y
+autorizó, vía `leftJoin` a `usuarios` con dos alias) y llama al cálculo puro
+con los saldos iniciales de libros y de banco que resuelve
+`infraestructura/persistencia/conciliacion-candidatos.drizzle.ts`. Consultas
+nuevas en `ConsultasMovimientos`: `saldoAlFinDe` (saldo vigente hasta una
+fecha) y `vigentesEntre` (movimientos vigentes de un rango), que también
+implementa el doble en memoria.
+
+Decisión: **saldo inicial de banco de la primera conciliación de una cuenta**
+= el mismo saldo inicial de libros al fin del mes anterior (sin ajuste),
+porque antes de la primera conciliación el sistema no tiene manera de saber
+qué partidas ya "vio" el banco; se documenta como caso especial en
+`saldosInicialesDe`. Para las siguientes, es el `saldoCalculadoEstadoDeCuenta`
+congelado en la foto de la conciliación autorizada del mes exactamente
+anterior (el orden obligatorio garantiza que sea autorizada).
+
+Decisión: **la foto solo congela los saldos y totales** (`numeric(14,2)`),
+tal como pide la especificación; el detalle de partidas (la lista de cheques,
+débitos y créditos pendientes) se sigue calculando en vivo, incluso para una
+conciliación ya autorizada, sobre los movimientos vigentes con
+`conciliacion_id` nulo o igual a esa conciliación. Si un documento pendiente
+finalmente se marca en un mes posterior, la lista impresa de una conciliación
+autorizada más antigua puede mostrar menos partidas que cuando se autorizó,
+pero `saldoQueDebeMostrarElEstadoDeCuenta` no cambia: `obtener` lo sustituye
+por `fotoSaldoCalculadoEstadoDeCuenta` cuando el estado es `autorizada`.
+
+Cliente: se quitó el cálculo en vivo duplicado del servidor
+(`calculo-de-conciliacion.ts` del cliente y su prueba) — la especificación
+permitía "lógica pura en centavos o recargando del servidor" y se eligió
+recargar del servidor, más simple: cada acción (guardar marcas, terminar,
+autorizar, devolver) reemplaza el documento completo que devuelve la API.
+`ConciliarCuenta.vue` muestra `EncabezadoDeConciliacion` (empresa, cuenta,
+banco, número, periodo, estado, quién elaboró/autorizó), `CuadroCuadratico`
+(libros y banco), `SaldoDelEstadoDeCuenta` (destacado, con el texto de "compare
+con su estado de cuenta…") y `PartidasDeConciliacion` (los tres grupos);
+los botones Guardar marcas/Terminar exigen `en_proceso` y el permiso
+`conciliar`, Autorizar/Devolver exigen `elaborada` y el permiso `autorizar`
+(con `VentanaDeDevolucion` para el motivo), e Imprimir llama a
+`window.print()`: `DisenoPrincipal.vue` oculta el menú lateral y el
+encabezado móvil con `print:hidden` (Tailwind 4 trae la variante `print:` sin
+configuración adicional).
+
+Pruebas nuevas: 428 del servidor (62 archivos; suma neta +26 sobre el B5,
+repartidas entre el cálculo puro, los ocho casos de uso —dos archivos,
+`casos-uso-de-conciliaciones.prueba.ts` y
+`casos-uso-de-conciliaciones-bloqueo-y-eliminar.prueba.ts`, más
+`soporte-de-pruebas-de-conciliaciones.ts` con la fábrica de dobles compartida,
+por el límite de 250 líneas de los archivos de prueba— y el flujo de API:
+iniciar → marcar → terminar → autorizar por otra persona → mes bloqueado →
+iniciar el siguiente → eliminar; devolver con motivo; mismo usuario no se
+autoriza a sí mismo; 403 sin permiso, incluidos `autorizar` y `devolver`; no
+se concilia un mes que no ha terminado) y 96 del cliente (20 archivos; baja
+neta frente al B5 porque se quitó la prueba del cálculo en vivo duplicado).
+`npm run revisar` (formato, ESLint y TypeScript de los tres paquetes) y
+`npm run probar` (servidor, cliente y generador) quedan en verde.
+
+Pendiente: no se hizo una vista impresa separada por ruta (`/imprimir`), solo
+`window.print()` con estilos `@media print`; tampoco hay pruebas end-to-end de
+la vista de impresión en sí (solo que el documento que ve `ConciliarCuenta.vue`
+trae los datos correctos).

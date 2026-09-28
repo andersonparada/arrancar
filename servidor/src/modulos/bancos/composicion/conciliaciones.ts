@@ -1,11 +1,12 @@
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
-import { CambiarSaldoSegunBanco } from '../aplicacion/casos-uso/conciliaciones/cambiar-saldo-segun-banco.js';
-import { CerrarConciliacion } from '../aplicacion/casos-uso/conciliaciones/cerrar-conciliacion.js';
+import { AutorizarConciliacion } from '../aplicacion/casos-uso/conciliaciones/autorizar-conciliacion.js';
+import { DevolverConciliacion } from '../aplicacion/casos-uso/conciliaciones/devolver-conciliacion.js';
 import { EliminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/eliminar-conciliacion.js';
 import { IniciarConciliacion } from '../aplicacion/casos-uso/conciliaciones/iniciar-conciliacion.js';
 import { ListarConciliaciones } from '../aplicacion/casos-uso/conciliaciones/listar-conciliaciones.js';
 import { MarcarMovimientos } from '../aplicacion/casos-uso/conciliaciones/marcar-movimientos.js';
 import { ObtenerConciliacion } from '../aplicacion/casos-uso/conciliaciones/obtener-conciliacion.js';
+import { TerminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/terminar-conciliacion.js';
 import { ConciliacionesControlador } from '../http/conciliaciones.controlador.js';
 import { rutasConciliaciones } from '../http/conciliaciones.rutas.js';
 import { ConsultasConciliacionesDrizzle } from '../infraestructura/persistencia/consultas-conciliaciones.drizzle.js';
@@ -31,8 +32,9 @@ export function rutasDeConciliaciones() {
     obtener: new ObtenerConciliacion(dependencias),
     iniciar: new IniciarConciliacion(dependencias),
     marcar: new MarcarMovimientos(dependencias),
-    cambiarSaldo: new CambiarSaldoSegunBanco(dependencias),
-    cerrar: new CerrarConciliacion(dependencias),
+    terminar: new TerminarConciliacion(dependencias),
+    autorizar: new AutorizarConciliacion(dependencias),
+    devolver: new DevolverConciliacion(dependencias),
     eliminar: new EliminarConciliacion(dependencias),
   };
   return rutasConciliaciones(new ConciliacionesControlador(casos));

@@ -16,6 +16,10 @@ export interface ConsultasMovimientos {
   fechaDelSaldoInicial(cuentaBancariaId: string, excluir?: string): Promise<string | null>;
   /** La fecha del movimiento vigente más antiguo, sin contar `excluir`; null si no hay. */
   fechaMasAntigua(cuentaBancariaId: string, excluir?: string): Promise<string | null>;
-  /** Fin de mes de la última conciliación CERRADA de la cuenta; `null` si no tiene ninguna. */
+  /** Fin de mes de la última conciliación AUTORIZADA de la cuenta; `null` si no tiene ninguna. */
   conciliadaHasta(cuentaBancariaId: string): Promise<string | null>;
+  /** Créditos menos débitos vigentes con fecha hasta (incluida) `fecha`, como texto con dos decimales. */
+  saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string>;
+  /** Los movimientos vigentes de la cuenta con fecha entre `desde` y `hasta`, ambas incluidas. */
+  vigentesEntre(cuentaBancariaId: string, desde: string, hasta: string): Promise<MovimientoDto[]>;
 }

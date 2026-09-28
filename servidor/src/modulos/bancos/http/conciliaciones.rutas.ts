@@ -2,12 +2,11 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import type { ConciliacionesControlador } from './conciliaciones.controlador.js';
 import {
-  esquemaEliminacionDeConciliacion,
   esquemaInicioDeConciliacion,
   esquemaMarcas,
+  esquemaMotivo,
   esquemaParamsConciliacion,
   esquemaParamsCuentaBancariaDeConciliaciones,
-  esquemaSaldoSegunBanco,
 } from './conciliaciones.esquemas-http.js';
 
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
@@ -28,7 +27,7 @@ function rutasDeLectura(app: Aplicacion, controlador: ConciliacionesControlador)
   });
 }
 
-/** Iniciar, marcar, cambiar el saldo y cerrar comparten el permiso `conciliar`. */
+/** Iniciar, marcar y terminar comparten el permiso `conciliar`: es quien elabora el documento. */
 function rutasDeConciliar(app: Aplicacion, controlador: ConciliacionesControlador) {
   const conciliar = proteger({ permiso: 'bancos.conciliaciones.conciliar' });
   app.post('/bancos/conciliaciones', {
@@ -41,22 +40,32 @@ function rutasDeConciliar(app: Aplicacion, controlador: ConciliacionesControlado
     preHandler: conciliar,
     handler: controlador.guardarMarcas,
   });
-  app.put('/bancos/conciliaciones/:conciliacionId/saldo', {
-    schema: { tags: etiquetas, params: esquemaParamsConciliacion, body: esquemaSaldoSegunBanco },
-    preHandler: conciliar,
-    handler: controlador.cambiarSaldo,
-  });
-  app.post('/bancos/conciliaciones/:conciliacionId/cerrar', {
+  app.post('/bancos/conciliaciones/:conciliacionId/terminar', {
     schema: { tags: etiquetas, params: esquemaParamsConciliacion },
     preHandler: conciliar,
-    handler: controlador.cerrar,
+    handler: controlador.terminar,
+  });
+}
+
+/** Autorizar y devolver comparten permiso: es otra persona, distinta de quien elaboró, la que decide. */
+function rutasDeAutorizar(app: Aplicacion, controlador: ConciliacionesControlador) {
+  const autorizar = proteger({ permiso: 'bancos.conciliaciones.autorizar' });
+  app.post('/bancos/conciliaciones/:conciliacionId/autorizar', {
+    schema: { tags: etiquetas, params: esquemaParamsConciliacion },
+    preHandler: autorizar,
+    handler: controlador.autorizar,
+  });
+  app.post('/bancos/conciliaciones/:conciliacionId/devolver', {
+    schema: { tags: etiquetas, params: esquemaParamsConciliacion, body: esquemaMotivo },
+    preHandler: autorizar,
+    handler: controlador.devolver,
   });
 }
 
 /** Eliminar tiene su propio permiso: solo la última de la cuenta, con motivo. */
 function rutasDeEliminar(app: Aplicacion, controlador: ConciliacionesControlador) {
   app.post('/bancos/conciliaciones/:conciliacionId/eliminar', {
-    schema: { tags: etiquetas, params: esquemaParamsConciliacion, body: esquemaEliminacionDeConciliacion },
+    schema: { tags: etiquetas, params: esquemaParamsConciliacion, body: esquemaMotivo },
     preHandler: proteger({ permiso: 'bancos.conciliaciones.eliminar' }),
     handler: controlador.eliminar,
   });
@@ -67,6 +76,7 @@ export function rutasConciliaciones(controlador: ConciliacionesControlador): Fas
   return async (app) => {
     rutasDeLectura(app, controlador);
     rutasDeConciliar(app, controlador);
+    rutasDeAutorizar(app, controlador);
     rutasDeEliminar(app, controlador);
   };
 }

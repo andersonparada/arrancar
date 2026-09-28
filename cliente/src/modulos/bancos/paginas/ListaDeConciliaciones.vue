@@ -21,7 +21,6 @@ const {
   abierta,
   anio,
   mes,
-  saldoSegunBanco,
   enviando,
   errores,
   abrir: abrirInicio,
@@ -84,7 +83,6 @@ const ultimaId = computed(() => conciliaciones.value[0]?.id ?? null);
     <VentanaDeInicioDeConciliacion
       v-model:anio="anio"
       v-model:mes="mes"
-      v-model:saldo-segun-banco="saldoSegunBanco"
       :abierta="abierta"
       :enviando="enviando"
       :errores="errores"

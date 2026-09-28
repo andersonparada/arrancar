@@ -91,6 +91,17 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
     return this.fechaConciliadaHasta;
   }
 
+  async saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string> {
+    const efectos = this.vigentes(cuentaBancariaId)
+      .filter((dto) => dto.fecha <= fecha)
+      .map((dto) => this.registros.get(dto.id)!.efectoEnCentavos);
+    return deCentavos(efectos.reduce((suma, efecto) => suma + efecto, 0));
+  }
+
+  async vigentesEntre(cuentaBancariaId: string, desde: string, hasta: string): Promise<MovimientoDto[]> {
+    return this.vigentes(cuentaBancariaId).filter((dto) => dto.fecha >= desde && dto.fecha <= hasta);
+  }
+
   private deLaCuenta(cuentaBancariaId: string): Movimiento[] {
     return [...this.registros.values()].filter((m) => m.instantanea().cuentaBancariaId === cuentaBancariaId);
   }

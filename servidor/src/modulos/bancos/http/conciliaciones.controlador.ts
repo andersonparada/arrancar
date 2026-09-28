@@ -1,19 +1,19 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
-import type { CambiarSaldoSegunBanco } from '../aplicacion/casos-uso/conciliaciones/cambiar-saldo-segun-banco.js';
-import type { CerrarConciliacion } from '../aplicacion/casos-uso/conciliaciones/cerrar-conciliacion.js';
+import type { AutorizarConciliacion } from '../aplicacion/casos-uso/conciliaciones/autorizar-conciliacion.js';
+import type { DevolverConciliacion } from '../aplicacion/casos-uso/conciliaciones/devolver-conciliacion.js';
 import type { EliminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/eliminar-conciliacion.js';
 import type { IniciarConciliacion } from '../aplicacion/casos-uso/conciliaciones/iniciar-conciliacion.js';
 import type { ListarConciliaciones } from '../aplicacion/casos-uso/conciliaciones/listar-conciliaciones.js';
 import type { MarcarMovimientos } from '../aplicacion/casos-uso/conciliaciones/marcar-movimientos.js';
 import type { ObtenerConciliacion } from '../aplicacion/casos-uso/conciliaciones/obtener-conciliacion.js';
+import type { TerminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/terminar-conciliacion.js';
 import type {
   InicioDeConciliacionSolicitado,
   MarcasSolicitadas,
   ParamsConciliacion,
   ParamsCuentaBancariaDeConciliaciones,
-  SaldoSegunBancoSolicitado,
-  SolicitudDeEliminacionDeConciliacion,
+  SolicitudConMotivo,
 } from './conciliaciones.esquemas-http.js';
 
 export interface CasosDeUsoDeConciliaciones {
@@ -21,8 +21,9 @@ export interface CasosDeUsoDeConciliaciones {
   obtener: ObtenerConciliacion;
   iniciar: IniciarConciliacion;
   marcar: MarcarMovimientos;
-  cambiarSaldo: CambiarSaldoSegunBanco;
-  cerrar: CerrarConciliacion;
+  terminar: TerminarConciliacion;
+  autorizar: AutorizarConciliacion;
+  devolver: DevolverConciliacion;
   eliminar: EliminarConciliacion;
 }
 
@@ -47,17 +48,20 @@ export class ConciliacionesControlador {
       movimientoIds: solicitud.body.movimientoIds,
     });
 
-  cambiarSaldo = (solicitud: FastifyRequest<{ Params: ParamsConciliacion; Body: SaldoSegunBancoSolicitado }>) =>
-    this.casosDeUso.cambiarSaldo.ejecutar(operadorDe(solicitud), {
+  terminar = (solicitud: FastifyRequest<{ Params: ParamsConciliacion }>) =>
+    this.casosDeUso.terminar.ejecutar(operadorDe(solicitud), solicitud.params.conciliacionId);
+
+  autorizar = (solicitud: FastifyRequest<{ Params: ParamsConciliacion }>) =>
+    this.casosDeUso.autorizar.ejecutar(operadorDe(solicitud), solicitud.params.conciliacionId);
+
+  devolver = (solicitud: FastifyRequest<{ Params: ParamsConciliacion; Body: SolicitudConMotivo }>) =>
+    this.casosDeUso.devolver.ejecutar(operadorDe(solicitud), {
       conciliacionId: solicitud.params.conciliacionId,
-      saldoSegunBanco: solicitud.body.saldoSegunBanco,
+      motivo: solicitud.body.motivo,
     });
 
-  cerrar = (solicitud: FastifyRequest<{ Params: ParamsConciliacion }>) =>
-    this.casosDeUso.cerrar.ejecutar(operadorDe(solicitud), solicitud.params.conciliacionId);
-
   eliminar = async (
-    solicitud: FastifyRequest<{ Params: ParamsConciliacion; Body: SolicitudDeEliminacionDeConciliacion }>,
+    solicitud: FastifyRequest<{ Params: ParamsConciliacion; Body: SolicitudConMotivo }>,
     respuesta: FastifyReply,
   ) => {
     await this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), {

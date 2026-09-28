@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, getTableColumns, gte, isNotNull, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, gte, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir-que-exista.js';
@@ -87,10 +87,25 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
     const [fila] = await transaccionEnCurso()
       .select({ anio: conciliaciones.anio, mes: conciliaciones.mes })
       .from(conciliaciones)
-      .where(and(eq(conciliaciones.cuentaBancariaId, cuentaBancariaId), isNotNull(conciliaciones.cerradaEn)))
+      .where(and(eq(conciliaciones.cuentaBancariaId, cuentaBancariaId), eq(conciliaciones.estado, 'autorizada')))
       .orderBy(desc(conciliaciones.anio), desc(conciliaciones.mes))
       .limit(1);
     return fila ? finDelMesDe(fila) : null;
+  }
+
+  async saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string> {
+    const [fila] = await transaccionEnCurso()
+      .select({ saldo: sql<string>`(${saldoVigente})::text` })
+      .from(movimientos)
+      .where(vigentesDe(cuentaBancariaId, undefined, lte(movimientos.fecha, fecha)));
+    return fila?.saldo ?? '0.00';
+  }
+
+  async vigentesEntre(cuentaBancariaId: string, desde: string, hasta: string): Promise<MovimientoDto[]> {
+    const filas = await this.consulta().where(
+      vigentesDe(cuentaBancariaId, undefined, gte(movimientos.fecha, desde), lte(movimientos.fecha, hasta)),
+    );
+    return filas.map(mapeadorDeMovimiento.aDto);
   }
 
   private async primeraFecha(condicion: SQL | undefined): Promise<string | null> {

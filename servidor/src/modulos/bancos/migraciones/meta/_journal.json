@@ -57,6 +57,20 @@
       "when": 1790590315073,
       "tag": "0007_conciliaciones",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790608122069,
+      "tag": "0008_quitar_saldo_y_cierre_de_conciliacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790608135833,
+      "tag": "0009_agregar_estado_y_foto_de_conciliacion",
+      "breakpoints": true
     }
   ]
 }

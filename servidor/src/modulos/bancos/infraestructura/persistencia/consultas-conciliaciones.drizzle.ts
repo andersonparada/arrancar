@@ -1,54 +1,101 @@
-import { and, desc, eq, getTableColumns, isNull, lt, lte, or } from 'drizzle-orm';
+import { desc, eq, getTableColumns, sql } from 'drizzle-orm';
+import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import { calcularDiferencia, calcularSaldoConciliado } from '../../aplicacion/calculo-de-conciliacion.js';
+import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
+import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
+import { calcularConciliacion } from '../../aplicacion/calculo-de-conciliacion.js';
 import type {
   ConciliacionDto,
   ConciliacionResumenDto,
-  MovimientoConMarcaDto,
+  EstadoDeConciliacionDto,
 } from '../../aplicacion/dto/conciliacion.dto.js';
 import type { ConsultasConciliaciones } from '../../aplicacion/puertos/consultas-conciliaciones.js';
-import { aCentavos, deCentavos, efectoEnCentavos } from '../../dominio/centavos.js';
 import { finDelMesDe } from '../../dominio/conciliacion.js';
+import { bancos } from './bancos.tablas.js';
+import {
+  aMovimientoParaConciliar,
+  candidatosConMarcaDe,
+  idsDeCandidatosDe,
+  movimientosDelMesDe,
+  saldosInicialesDe,
+} from './conciliacion-candidatos.drizzle.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
-import { movimientos } from './movimientos.tablas.js';
 
-type FilaDeMovimiento = typeof movimientos.$inferSelect;
+const elaboro = alias(usuarios, 'usuario_elaboro');
+const autorizo = alias(usuarios, 'usuario_autorizo');
+const nombreDe = (nombres: AnyPgColumn, apellidos: AnyPgColumn) =>
+  sql<string | null>`trim(${nombres} || ' ' || ${apellidos})`;
 
-const columnasDeMovimiento = getTableColumns(movimientos);
+type FilaEncabezado = Awaited<ReturnType<typeof filaDeLaConciliacion>>;
 
-/** Los movimientos candidatos de la conciliación: vigentes, de la cuenta, hasta el fin de mes y sin otra conciliación. */
-const candidatosDe = (cuentaBancariaId: string, finDelMes: string, conciliacionId: string) =>
-  and(
-    eq(movimientos.cuentaBancariaId, cuentaBancariaId),
-    isNull(movimientos.anuladoEn),
-    lte(movimientos.fecha, finDelMes),
-    or(isNull(movimientos.conciliacionId), eq(movimientos.conciliacionId, conciliacionId)),
-  );
-
-function aMovimientoConMarca(fila: FilaDeMovimiento, conciliacionId: string): MovimientoConMarcaDto {
-  const {
-    empresaId: _empresaId,
-    creadoEn: _creadoEn,
-    actualizadoEn: _actualizadoEn,
-    creadoPor: _creadoPor,
-    actualizadoPor: _actualizadoPor,
-    anuladoEn,
-    conciliacionId: marcadaEn,
-    ...dto
-  } = fila;
+function aResumen(fila: {
+  id: string;
+  anio: number;
+  mes: number;
+  estado: string;
+  elaboradaEn: Date | null;
+  autorizadaEn: Date | null;
+}): ConciliacionResumenDto {
   return {
-    ...dto,
-    anuladoEn: anuladoEn ? anuladoEn.toISOString() : null,
-    conciliacionId: marcadaEn,
-    cuentaBancariaNombre: null,
-    chequeId: null,
-    numeroDeCheque: null,
-    marcado: marcadaEn === conciliacionId,
+    id: fila.id,
+    anio: fila.anio,
+    mes: fila.mes,
+    estado: fila.estado as EstadoDeConciliacionDto,
+    elaboradaEn: fila.elaboradaEn ? fila.elaboradaEn.toISOString() : null,
+    autorizadaEn: fila.autorizadaEn ? fila.autorizadaEn.toISOString() : null,
   };
 }
 
+function aEncabezado(fila: FilaEncabezado) {
+  return {
+    id: fila.id,
+    cuentaBancariaId: fila.cuentaBancariaId,
+    cuentaBancariaNombre: fila.cuentaBancariaNombre,
+    bancoNombre: fila.bancoNombre,
+    numeroDeCuenta: fila.numeroDeCuenta,
+    empresaNombre: fila.empresaNombre,
+    anio: fila.anio,
+    mes: fila.mes,
+    estado: fila.estado as EstadoDeConciliacionDto,
+    elaboradaPorNombre: fila.elaboradaPorNombre,
+    elaboradaEn: fila.elaboradaEn ? fila.elaboradaEn.toISOString() : null,
+    autorizadaPorNombre: fila.autorizadaPorNombre,
+    autorizadaEn: fila.autorizadaEn ? fila.autorizadaEn.toISOString() : null,
+  };
+}
+
+/** El saldo del estado de cuenta ya autorizado no se recalcula: queda fijo en la foto. */
+function saldoDelEstadoDeCuentaDe(fila: FilaEncabezado, calculado: string): string {
+  return fila.estado === 'autorizada' && fila.fotoSaldoCalculadoEstadoDeCuenta
+    ? fila.fotoSaldoCalculadoEstadoDeCuenta
+    : calculado;
+}
+
+async function filaDeLaConciliacion(conciliacionId: string) {
+  const [fila] = await transaccionEnCurso()
+    .select({
+      ...getTableColumns(conciliaciones),
+      cuentaBancariaNombre: cuentasBancarias.nombre,
+      numeroDeCuenta: cuentasBancarias.numero,
+      bancoNombre: bancos.nombre,
+      empresaNombre: empresas.nombre,
+      elaboradaPorNombre: nombreDe(elaboro.nombres, elaboro.apellidos),
+      autorizadaPorNombre: nombreDe(autorizo.nombres, autorizo.apellidos),
+    })
+    .from(conciliaciones)
+    .leftJoin(cuentasBancarias, eq(conciliaciones.cuentaBancariaId, cuentasBancarias.id))
+    .leftJoin(bancos, eq(cuentasBancarias.bancoId, bancos.id))
+    .leftJoin(empresas, eq(conciliaciones.empresaId, empresas.id))
+    .leftJoin(elaboro, eq(elaboro.id, conciliaciones.elaboradaPor))
+    .leftJoin(autorizo, eq(autorizo.id, conciliaciones.autorizadaPor))
+    .where(eq(conciliaciones.id, conciliacionId));
+  if (!fila) throw new RecursoNoEncontrado('La conciliación');
+  return fila;
+}
+
+/** Lecturas de las conciliaciones: arma el documento completo con el cálculo puro de `calculo-de-conciliacion.js`. */
 export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
   async listar(cuentaBancariaId: string): Promise<ConciliacionResumenDto[]> {
     const filas = await transaccionEnCurso()
@@ -56,98 +103,42 @@ export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
         id: conciliaciones.id,
         anio: conciliaciones.anio,
         mes: conciliaciones.mes,
-        saldoSegunBanco: conciliaciones.saldoSegunBanco,
-        cerradaEn: conciliaciones.cerradaEn,
+        estado: conciliaciones.estado,
+        elaboradaEn: conciliaciones.elaboradaEn,
+        autorizadaEn: conciliaciones.autorizadaEn,
       })
       .from(conciliaciones)
       .where(eq(conciliaciones.cuentaBancariaId, cuentaBancariaId))
       .orderBy(desc(conciliaciones.anio), desc(conciliaciones.mes));
-    return filas.map((fila) => ({
-      id: fila.id,
-      anio: fila.anio,
-      mes: fila.mes,
-      saldoSegunBanco: fila.saldoSegunBanco,
-      cerrada: fila.cerradaEn !== null,
-    }));
+    return filas.map(aResumen);
   }
 
   async obtener(conciliacionId: string): Promise<ConciliacionDto> {
-    const fila = await this.filaDe(conciliacionId);
-    const finDelMes = finDelMesDe({ anio: fila.anio, mes: fila.mes });
-    const saldoAnterior = await this.saldoAnteriorDe(fila.cuentaBancariaId, fila.anio, fila.mes);
-    const movimientos = await this.candidatosConMarca(fila.cuentaBancariaId, finDelMes, conciliacionId);
-    return this.armarDto(fila, saldoAnterior, movimientos);
-  }
-
-  private async filaDe(conciliacionId: string) {
-    const [fila] = await transaccionEnCurso()
-      .select({ ...getTableColumns(conciliaciones), cuentaBancariaNombre: cuentasBancarias.nombre })
-      .from(conciliaciones)
-      .leftJoin(cuentasBancarias, eq(conciliaciones.cuentaBancariaId, cuentasBancarias.id))
-      .where(eq(conciliaciones.id, conciliacionId));
-    if (!fila) throw new RecursoNoEncontrado('La conciliación');
-    return fila;
-  }
-
-  private armarDto(
-    fila: Awaited<ReturnType<ConsultasConciliacionesDrizzle['filaDe']>>,
-    saldoAnterior: string,
-    movimientos: MovimientoConMarcaDto[],
-  ): ConciliacionDto {
-    const saldoConciliadoEnCentavos = calcularSaldoConciliado(
-      aCentavos(saldoAnterior),
-      movimientos.map((m) => ({ efectoEnCentavos: efectoEnCentavos(m.tipo, m.monto), marcado: m.marcado })),
-    );
-    const diferenciaEnCentavos = calcularDiferencia(aCentavos(fila.saldoSegunBanco), saldoConciliadoEnCentavos);
+    const fila = await filaDeLaConciliacion(conciliacionId);
+    const periodo = { anio: fila.anio, mes: fila.mes };
+    const finDelMes = finDelMesDe(periodo);
+    const candidatos = await candidatosConMarcaDe(fila.cuentaBancariaId, finDelMes, conciliacionId);
+    const { librosEnCentavos, bancoEnCentavos } = await saldosInicialesDe(fila.cuentaBancariaId, periodo);
+    const movimientosDelMes = await movimientosDelMesDe(fila.cuentaBancariaId, periodo);
+    const resultado = calcularConciliacion({
+      saldoInicialLibrosEnCentavos: librosEnCentavos,
+      saldoInicialBancoEnCentavos: bancoEnCentavos,
+      movimientosDelMes,
+      candidatos: candidatos.map(aMovimientoParaConciliar),
+    });
     return {
-      id: fila.id,
-      cuentaBancariaId: fila.cuentaBancariaId,
-      cuentaBancariaNombre: fila.cuentaBancariaNombre,
-      anio: fila.anio,
-      mes: fila.mes,
-      saldoSegunBanco: fila.saldoSegunBanco,
-      saldoAnterior,
-      movimientos,
-      saldoConciliado: deCentavos(saldoConciliadoEnCentavos),
-      diferencia: deCentavos(diferenciaEnCentavos),
-      cerrada: fila.cerradaEn !== null,
+      ...aEncabezado(fila),
+      candidatos,
+      cuadratica: { libros: resultado.libros, banco: resultado.banco },
+      partidas: resultado.partidas,
+      saldoQueDebeMostrarElEstadoDeCuenta: saldoDelEstadoDeCuentaDe(
+        fila,
+        resultado.saldoQueDebeMostrarElEstadoDeCuenta,
+      ),
     };
   }
 
-  async idsDeCandidatos(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]> {
-    const filas = await transaccionEnCurso()
-      .select({ id: movimientos.id })
-      .from(movimientos)
-      .where(candidatosDe(cuentaBancariaId, finDelMes, conciliacionId));
-    return filas.map((fila) => fila.id);
-  }
-
-  /** El saldo según banco de la conciliación inmediata anterior (por año y mes) de la cuenta; `"0.00"` si es la primera. */
-  private async saldoAnteriorDe(cuentaBancariaId: string, anio: number, mes: number): Promise<string> {
-    const [anterior] = await transaccionEnCurso()
-      .select({ saldoSegunBanco: conciliaciones.saldoSegunBanco })
-      .from(conciliaciones)
-      .where(
-        and(
-          eq(conciliaciones.cuentaBancariaId, cuentaBancariaId),
-          or(lt(conciliaciones.anio, anio), and(eq(conciliaciones.anio, anio), lt(conciliaciones.mes, mes))),
-        ),
-      )
-      .orderBy(desc(conciliaciones.anio), desc(conciliaciones.mes))
-      .limit(1);
-    return anterior?.saldoSegunBanco ?? '0.00';
-  }
-
-  private async candidatosConMarca(
-    cuentaBancariaId: string,
-    finDelMes: string,
-    conciliacionId: string,
-  ): Promise<MovimientoConMarcaDto[]> {
-    const filas = await transaccionEnCurso()
-      .select(columnasDeMovimiento)
-      .from(movimientos)
-      .where(candidatosDe(cuentaBancariaId, finDelMes, conciliacionId))
-      .orderBy(movimientos.fecha);
-    return filas.map((fila) => aMovimientoConMarca(fila, conciliacionId));
+  idsDeCandidatos(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]> {
+    return idsDeCandidatosDe(cuentaBancariaId, finDelMes, conciliacionId);
   }
 }
