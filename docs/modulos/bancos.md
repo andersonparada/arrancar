@@ -120,7 +120,9 @@ ya existen (por ejemplo, las de Clientes) conservan también el de cuenta.
 
 - **Bancos**: catálogo con ventana (generado).
 - **Cuentas bancarias**: lista, formulario y ficha (generado). La ficha muestra el saldo, sus chequeras y sus últimos movimientos.
-- **Movimientos**: lista por cuenta y por fechas, con ventanas para nota de crédito, nota de débito, transferencia entre cuentas y emisión de cheque.
+- **Notas**, **Transferencias** y **Movimientos** (reporte): desde B6, ver la
+  sección "B6 Separación de Movimientos" — esta lista original se dividió por
+  sección del menú (operación captura, reportes solo consulta).
 - **Chequeras**: en la ficha de la cuenta; ver los cheques disponibles, emitidos y anulados.
 - **Conciliaciones**: por cuenta, un mes tras otro; la pantalla de conciliar marca los movimientos y muestra la diferencia.
 
@@ -285,8 +287,13 @@ Regla del dueño del producto: **administración** importa y exporta; **operaci�
 no importa ni exporta (lo registrado se consulta en reportes); **reportes** se
 imprimen y se exportan. El generador decide por la `seccion` de la definición:
 administración genera importar y exportar con sus permisos; operación, nada de
-Excel. La única excepción hoy es Movimientos, que importa a mano (saldos
-iniciales). Los reportes se diseñarán aparte (no son un CRUD).
+Excel. Los reportes se diseñarán aparte (no son un CRUD).
+
+**Nota (B6, 2026-09-28):** la excepción original ("Movimientos importa a mano
+los saldos iniciales") ya no existe. Desde la separación de Movimientos (ver
+"B6 Separación de Movimientos"), el saldo inicial se registra e importa/exporta
+desde **Saldo inicial**, en la ficha de la cuenta y en la lista de cuentas
+bancarias (administración); Movimientos quedó como reporte, solo exporta.
 
 **Hecho (2026-09-28).** El generador (`generador/`) ya aplica la regla completa,
 incluido un CRUD de reportes (solo exporta, sin importar ni plantilla), aunque
@@ -754,3 +761,211 @@ Pendiente: no se hizo una vista impresa separada por ruta (`/imprimir`), solo
 `window.print()` con estilos `@media print`; tampoco hay pruebas end-to-end de
 la vista de impresión en sí (solo que el documento que ve `ConciliarCuenta.vue`
 trae los datos correctos).
+
+## B6 Separación de Movimientos (2026-09-28)
+
+La pantalla **Movimientos** original mezclaba captura y consulta: registraba
+notas de crédito/débito, transferencias, cheques y el saldo inicial, e
+importaba Excel. Se separó en cuatro pantallas, cada una en la sección del
+menú que le corresponde:
+
+| Pantalla | Sección | Qué hace | Excel |
+|---|---|---|---|
+| **Notas** | Operación | Crear, corregir y anular notas de crédito y débito (no saldos iniciales, no notas de transferencia, no cheques) | Ninguno |
+| **Transferencias** | Operación | Registrar y anular transferencias entre cuentas propias, con su propia lista (antes vivían dentro de Movimientos, sin pantalla propia) | Ninguno |
+| **Movimientos** (reporte) | Reportes | Solo consulta: filtros, saldo anterior, saldo corrido y saldo final; imprimir y exportar | Solo exportar (con los filtros) |
+| **Saldo inicial** | Administración (ficha de la cuenta y lista de cuentas) | Registrar, corregir y anular el saldo inicial de una cuenta; importar/exportar saldos iniciales | Importar y exportar |
+
+### Servidor
+
+- **Dominio**: `Movimiento.corregir` ahora conserva también `saldoInicial`
+  (antes solo conservaba la cuenta): una nota no se vuelve saldo inicial ni al
+  revés. Nuevo método `Movimiento.exigirClase(esSaldoInicial: boolean)`, que
+  lanza `NoEsUnaNota` (si se esperaba una nota y es el saldo inicial: "El saldo
+  inicial se registra y corrige desde la ficha de la cuenta.") o
+  `NoEsUnSaldoInicial` (al revés: "Este movimiento no es el saldo inicial de
+  la cuenta."), ambos en la misma familia que `MovimientoDeTransferencia` y
+  `MovimientoDeCheque` (409).
+- **Aplicación**: `ActualizarMovimiento` y `AnularMovimiento` reciben
+  `esSaldoInicial: boolean` en su entrada y llaman a `exigirClase` antes de
+  todo; así el mismo caso de uso sirve para Notas (`esSaldoInicial: false`) y
+  para Saldo inicial (`esSaldoInicial: true`), y cada uno rechaza tocar lo del
+  otro. `CrearMovimiento` no cambió (el controlador fija `saldoInicial`).
+  `FiltroDeMovimientos` suma `clase?: 'notas' | 'saldosIniciales'` (`notas` =
+  crédito o débito, sin `transferenciaId`, `saldoInicial` falso;
+  `saldosIniciales` = `saldoInicial` verdadero; sin `clase`, todo, para el
+  reporte), implementado en `ConsultasMovimientosDrizzle` y en el doble en
+  memoria.
+- **`ReporteDeMovimientos`** (caso de uso nuevo,
+  `casos-uso/movimientos/reporte-de-movimientos.ts`): con filtro
+  `{cuentaBancariaId?, desde?, hasta?}` devuelve `{saldoAnterior, filas,
+  saldoFinal}`, filas en orden **ascendente**. Solo si se eligió una cuenta:
+  `saldoAnterior` = saldo vigente al día anterior a `desde` (o `'0.00'` sin
+  `desde`), `saldo` de cada fila = saldo corrido (los anulados no lo mueven y
+  llevan el saldo que había), `saldoFinal` = el de la última fila o el
+  anterior; sin cuenta, los tres saldos son `null`. El cálculo del saldo
+  corrido es una función pura nueva,
+  `aplicacion/calculo-de-reporte-de-movimientos.ts`
+  (`calcularSaldoCorrido`, en centavos, con `diaAnteriorA` para el día previo
+  a `desde`), con pruebas unitarias. Se agregó
+  `ConsultasMovimientos.listarAscendente` (Drizzle y doble en memoria) para no
+  reordenar en memoria lo que ya viene de la base.
+- **Transferencias**: `ConsultasTransferencias.listar(filtro:
+  {cuentaBancariaId?, desde?, hasta?})` — la cuenta filtra si es **origen o
+  destino**, de la más reciente a la más antigua, incluidas las anuladas.
+  Caso de uso `ListarTransferencias`, implementado en Drizzle (con `or` sobre
+  las dos columnas de cuenta) y en el doble en memoria.
+- **HTTP**:
+  - `/bancos/notas`: `GET` (filtros cuenta/desde/hasta, `clase: 'notas'` fija)
+    y `GET /:movimientoId` con `bancos.notas.ver`; `POST`/`PUT` con
+    `bancos.notas.gestionar`; `POST /:movimientoId/anular` con
+    `bancos.notas.anular`. El cuerpo nunca lleva `saldoInicial` (el
+    controlador manda `false` al crear y `esSaldoInicial: false` al corregir y
+    anular). Sin Excel.
+  - `/bancos/saldos-iniciales`: `GET` (filtro `cuentaBancariaId`, `clase:
+    'saldosIniciales'` fija) con `bancos.cuentas-bancarias.ver` (se ve en la
+    ficha de la cuenta); `POST`/`PUT`/`anular` con
+    `bancos.saldos-iniciales.gestionar`. Cuerpo: `cuentaBancariaId, tipo
+    ('credito'|'debito', por omisión 'credito'), fecha, monto, referencia,
+    observaciones` (sin `beneficiario`, no aplica); el controlador fija
+    `saldoInicial: true` / `esSaldoInicial: true`. Excel con
+    `permisos: {importar: 'bancos.saldos-iniciales.importar', exportar:
+    'bancos.saldos-iniciales.exportar'}`, columnas Cuenta, Tipo, Fecha, Monto,
+    Referencia, Observaciones.
+  - `/bancos/movimientos` queda de solo lectura: `GET /reporte` (el reporte
+    con `bancos.movimientos.ver`) y `GET /:movimientoId` (sin cambios de
+    permiso); se quitaron `POST`, `PUT`, `.../anular`, `plantilla` e
+    `importar` (nada los usaba fuera de este módulo). Nuevo
+    `GET /bancos/movimientos/exportar?cuentaBancariaId&desde&hasta` con
+    `bancos.movimientos.exportar`, columnas Fecha, Cuenta, Tipo (Nota de
+    crédito/Nota de débito/Cheque), Número de cheque, Referencia,
+    Beneficiario u origen, Débito, Crédito, Saldo, Anulado — se mapean las
+    filas del reporte (`movimientos.columnas.ts`,
+    `aFilaExportadaDelReporte`) porque débito y crédito van en columnas
+    separadas.
+  - `/bancos/transferencias`: `GET` (lista con filtros) con
+    `bancos.transferencias.ver`; `GET /:id` pasó de `bancos.movimientos.ver` a
+    `bancos.transferencias.ver` (ya tiene pantalla propia, así que ese
+    comentario del archivo de rutas también se corrigió).
+  - **Core, `core/intercambio`**: para que `/bancos/movimientos/exportar`
+    reciba los mismos filtros que la pantalla, `IntercambioDeRecurso` ganó un
+    tercer genérico `Filtro` (por omisión `void`); `DatosDelRecurso.listar` y
+    `exportar` ahora aceptan `filtro?: Filtro`. `OpcionesDeIntercambio` ganó
+    `filtro?: z.ZodType` opcional: si viene, la ruta de exportar valida
+    `solicitud.query` con él y se lo pasa a `intercambio.exportar`. Todo lo
+    existente (sin `filtro`) sigue igual.
+- **Permisos** (`modulo.ts`): quedan `bancos.movimientos.ver` ("Ver el
+  reporte de movimientos") y nuevo `bancos.movimientos.exportar`; se quitan
+  `bancos.movimientos.gestionar`, `.anular` e `.importar`. Nuevos:
+  `bancos.notas.ver`, `.gestionar`, `.anular`; `bancos.transferencias.ver`
+  (se conservan `.gestionar` y `.anular`); `bancos.saldos-iniciales.gestionar`,
+  `.importar`, `.exportar`.
+- **Migración** `0010_permisos_de_notas.sql` (datos, `--custom`): traduce los
+  permisos de los roles existentes con `insert ... select ... on conflict do
+  nothing` y borra las claves viejas — quien tenía `bancos.movimientos.gestionar`
+  recibe `bancos.notas.ver`, `.gestionar` y `bancos.saldos-iniciales.gestionar`;
+  `.anular` → `bancos.notas.anular`; `.importar` → `bancos.saldos-iniciales
+  .importar` y `.exportar`; quien tenía `bancos.transferencias.gestionar`
+  recibe además `bancos.transferencias.ver`. El rol Propietario
+  (`accesoTotal`) se calcula en vivo y no necesitó nada.
+
+### Cliente
+
+- **Servicios**: `notas.api.ts` y `saldos-iniciales.api.ts` nuevos
+  (listar/crear/actualizar/anular, y en saldos iniciales también
+  `intercambio` e `deLaCuenta`); `movimientos.api.ts` quedó con `reporte(filtro)`,
+  `obtener` y el `intercambio` (solo exportar, con filtros); `transferencias.api.ts`
+  sumó `listar(filtro)`. En el core, `ClienteHttp.descargar` y
+  `IntercambioDeDatos.exportar` ganaron un parámetro `consulta?` opcional, y
+  `usarIntercambio().exportar` lo reenvía — así el reporte exporta con sus
+  filtros sin un mecanismo aparte.
+- **Página Notas** (`ListaDeNotas.vue`, `/bancos/notas`,
+  `bancos.notas.ver`): filtros cuenta/desde/hasta (reutiliza
+  `FiltrosDeMovimientos.vue` y `filtros-de-movimientos.ts`, generalizado para
+  que no dependa del tipo de `movimientos.api.ts`), botones "Nota de
+  crédito"/"Nota de débito" (`AccionesDeNotas.vue`, `bancos.notas.gestionar`),
+  tarjetas (`TarjetaDeNota.vue`) con Editar y Anular
+  (`bancos.notas.anular`), `VentanaDeNota.vue`/`CamposDeNota.vue` (como los de
+  movimientos, sin el interruptor de saldo inicial). Sin Excel.
+- **Página Transferencias** (`ListaDeTransferencias.vue`,
+  `/bancos/transferencias`, `bancos.transferencias.ver`): filtros
+  cuenta/desde/hasta, botón "Nueva transferencia"
+  (`bancos.transferencias.gestionar`) con la `VentanaDeTransferencia`
+  existente, `TarjetaDeTransferencia.vue` (cuenta origen → destino, fecha,
+  monto, referencia; insignia "Anulada" y opacidad si lo está), Anular con
+  `bancos.transferencias.anular`. Sin Excel.
+- **Reporte de Movimientos** (`ReporteDeMovimientos.vue`, reemplaza
+  `ListaDeMovimientos.vue`, misma ruta `/bancos/movimientos`,
+  `bancos.movimientos.ver`): filtros cuenta/desde/hasta; tabla
+  (`TablaDelReporte.vue`, con desplazamiento horizontal dentro de la tabla
+  para que no rompa el ancho en celular) con Fecha, Cuenta, Documento (tipo,
+  número de cheque o referencia — `fila-del-reporte.ts`, función pura
+  `documentoDeFila`), Beneficiario u origen, Débito, Crédito y, si hay cuenta
+  elegida, Saldo; fila de "Saldo anterior" al inicio y "Saldo final" al final
+  cuando hay cuenta; anulados en gris y tachados, con "Anulado", sin mover el
+  saldo. Botones "Imprimir" (`window.print()`, encabezado de impresión con
+  empresa, cuenta y periodo, como en `ConciliarCuenta.vue`) y "Exportar"
+  (`AccionesDeIntercambio` con `permisos: {exportar:
+  'bancos.movimientos.exportar'}`, pasando los filtros actuales). Sin botones
+  de crear ni de editar.
+- **Saldo inicial en la ficha de la cuenta**
+  (`SeccionDeSaldoInicial.vue`, en `FichaDeCuentaBancaria.vue`, antes de
+  Chequeras): si hay saldo inicial vigente, muestra fecha, tipo y monto con
+  "Corregir" y "Anular" (`bancos.saldos-iniciales.gestionar`); si no, un
+  texto y "Registrar saldo inicial". Ventana propia
+  (`VentanaDeSaldoInicial.vue`/`CamposDeSaldoInicial.vue`) con la cuenta fija
+  (no se muestra: viene de la ficha), tipo (crédito por omisión), fecha,
+  monto, referencia, observaciones.
+- **Lista de cuentas bancarias**: además del Excel de cuentas, un segundo
+  `AccionesDeIntercambio` para importar/exportar saldos iniciales. Para
+  distinguir los botones, `AccionesDeIntercambio` ganó una prop opcional
+  `nombre` (p. ej. `"saldos iniciales"` → "Exportar saldos iniciales"/
+  "Importar saldos iniciales"); sin ella se ve igual que siempre. Su
+  `VentanaDeImportacion` con título "Importar saldos iniciales".
+- **Menú y rutas** (`modulo.ts`, `textos.ts`): Operación ahora es Notas
+  (ícono `FileText`), Transferencias (`ArrowLeftRight`, heredado de la
+  Movimientos original), Cheques, Conciliaciones; Reportes gana Movimientos
+  (`ScrollText`, `seccion: 'reportes'`). Administración no cambió (el saldo
+  inicial vive dentro de Cuentas bancarias, sin entrada propia). El enlace
+  "Ver movimientos" de la ficha de la cuenta sigue apuntando a la misma ruta
+  con `?cuenta=`, porque el nombre de la ruta (`bancos.movimientos`) y su
+  permiso no cambiaron: solo cambió qué componente sirve.
+- **Limpieza**: se borraron `ListaDeMovimientos.vue`,
+  `AccionesDeMovimientos.vue`, `CamposDeMovimiento.vue`,
+  `TarjetaDeMovimiento.vue`, `VentanaDeMovimiento.vue` y los composables
+  `usar-movimientos.ts`, `usar-lista-de-movimientos.ts`,
+  `usar-formulario-de-movimiento.ts`, `usar-anulacion-de-movimiento.ts`,
+  `textos-de-anulacion.ts`, `edicion-de-movimiento.ts` y
+  `detalles-de-movimiento.ts` (con sus pruebas). El botón "Emitir cheque" que
+  vivía en Movimientos se quitó de ahí porque Cheques ya tenía el suyo
+  (`usar-formulario-de-cheque.ts` seguía sirviendo a los dos). Lo que sí se
+  reutilizó entre pantallas se movió a un lugar neutral:
+  `composables/cuentas-bancarias/referencias-de-cuenta.ts` (antes
+  `movimientos/referencias-de-movimiento.ts`, usado también por Cheques y
+  Chequeras) y `composables/movimientos/estilo-de-tipo.ts` (colores y signos
+  de crédito/débito/cheque, usado también por
+  `ListaDeMovimientosConciliables.vue`). Verificado con `grep` que nada
+  quedó apuntando a lo borrado.
+
+### Pruebas
+
+Servidor: 450 pruebas (63 archivos), incluidas las nuevas de `exigirClase`
+(nota vs. saldo inicial, en ambos sentidos), el filtro por `clase`, el
+reporte (con y sin cuenta, saldo anterior y corrido), `ListarTransferencias`
+(por origen y por destino, incluidas anuladas), y de API: notas (crear,
+corregir, anular, no acepta tocar un saldo inicial), saldos iniciales (crear,
+corregir, no acepta tocar una nota, Excel), reporte y su exportar con
+filtros, permisos nuevos con 403. Cliente: 105 pruebas (23 archivos),
+incluidas las nuevas de `edicion-de-nota.ts`, `detalles-de-nota.ts`,
+`edicion-de-saldo-inicial.ts`, `detalles-de-transferencia.ts` y
+`fila-del-reporte.ts`. Generador: 46 pruebas, sin cambios (B6 no tocó el
+generador). `npm run revisar` (formato, ESLint y TypeScript de los tres
+paquetes) y `npm run probar` quedan en verde.
+
+Decisiones propias: el recurso de auditoría de anular una nota se dejó como
+`bancos.movimientos` (ya existía y sigue siendo el más claro: "algo pasó con
+un movimiento", sin crear un recurso `bancos.notas` de auditoría aparte); el
+del saldo inicial usa el mismo `bancos.movimientos` por la misma razón. La
+excepción de importar de Movimientos que mencionaba la memoria del usuario
+("Movimientos conserva importar para saldos iniciales") ya no existe: se
+avisa en el informe final, sin tocar archivos fuera de este repositorio.

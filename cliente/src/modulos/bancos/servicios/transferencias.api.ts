@@ -28,11 +28,23 @@ export type DatosTransferencia = Omit<
   | 'movimientoDestinoId'
 >;
 
+/** Qué transferencias listar: de una cuenta (como origen o destino) y entre dos fechas (incluidas); incluye anuladas. */
+export interface FiltroDeTransferencias {
+  cuentaBancariaId?: string;
+  desde?: string;
+  hasta?: string;
+  [clave: string]: string | undefined;
+}
+
 const RUTA = '/bancos/transferencias';
 
-/** Sin listar ni exportar: las transferencias se registran y se anulan desde la lista de movimientos. */
+/** Sin Excel (es operación): tiene su propia pantalla para listar, registrar y anular. */
 export class ApiTransferencias {
   constructor(private readonly http: ClienteHttp) {}
+
+  listar(filtro: FiltroDeTransferencias = {}) {
+    return this.http.obtener<Transferencia[]>(RUTA, filtro);
+  }
 
   obtener(id: string) {
     return this.http.obtener<Transferencia>(`${RUTA}/${id}`);

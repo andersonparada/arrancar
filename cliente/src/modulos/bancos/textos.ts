@@ -15,9 +15,21 @@ export const VENTANAS_BANCOS = {
     nuevo: 'Nueva cuenta bancaria',
     editar: 'Editar cuenta bancaria',
   },
+  notas: {
+    titulo: 'Notas',
+    descripcion: 'Notas de crédito y de débito de la empresa.',
+    nuevo: 'Nueva nota',
+    editar: 'Editar nota',
+  },
+  transferencias: {
+    titulo: 'Transferencias',
+    descripcion: 'Transferencias entre cuentas propias de la empresa.',
+    nuevo: 'Nueva transferencia',
+    editar: 'Editar transferencia',
+  },
   movimientos: {
     titulo: 'Movimientos',
-    descripcion: 'Los movimientos de la empresa.',
+    descripcion: 'Reporte de movimientos de la empresa: notas, transferencias, cheques y saldos iniciales.',
     nuevo: 'Nuevo movimiento',
     editar: 'Editar movimiento',
   },

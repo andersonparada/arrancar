@@ -1,4 +1,4 @@
-import type { ArchivoDescargado, ClienteHttp } from './cliente-http';
+import type { ArchivoDescargado, ClienteHttp, Consulta } from './cliente-http';
 
 /** Un problema de una fila del Excel; sin columna, es de la fila entera. */
 export interface ErrorDeImportacion {
@@ -16,7 +16,8 @@ export interface ResultadoDeImportacion {
 
 /** Exportar e importar un recurso en Excel; cada `Api*` generada trae el suyo. */
 export interface IntercambioDeDatos {
-  exportar(): Promise<ArchivoDescargado>;
+  /** `consulta` filtra lo que se exporta (p. ej. un reporte con los mismos filtros que la pantalla). */
+  exportar(consulta?: Consulta): Promise<ArchivoDescargado>;
   plantilla(): Promise<ArchivoDescargado>;
   /** Con `ensayo` el servidor revisa todo y no guarda nada. */
   importar(archivo: File, ensayo: boolean): Promise<ResultadoDeImportacion>;
@@ -24,7 +25,7 @@ export interface IntercambioDeDatos {
 
 /** Las tres rutas de intercambio de un recurso: `<ruta>/exportar`, `/plantilla` e `/importar`. */
 export const intercambioDe = (http: ClienteHttp, ruta: string): IntercambioDeDatos => ({
-  exportar: () => http.descargar(`${ruta}/exportar`),
+  exportar: (consulta) => http.descargar(`${ruta}/exportar`, consulta),
   plantilla: () => http.descargar(`${ruta}/plantilla`),
   importar: (archivo, ensayo) => http.subir<ResultadoDeImportacion>(`${ruta}/importar`, archivo, { ensayo }),
 });

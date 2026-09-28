@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { usarAvisos } from '../../almacenes/avisos';
-import type { ArchivoDescargado } from '../../servicios/cliente-http';
+import type { ArchivoDescargado, Consulta } from '../../servicios/cliente-http';
 import type { IntercambioDeDatos, ResultadoDeImportacion } from '../../servicios/intercambio';
 import { guardarArchivo } from '../../utilidades/archivos';
 
@@ -81,7 +81,8 @@ export function usarIntercambio(intercambio: IntercambioDeDatos, alImportar: () 
     estado,
     abrir: () => Object.assign(estado, { ...ESTADO_INICIAL, abierta: true }),
     cerrar: () => Object.assign(estado, ESTADO_INICIAL),
-    exportar: () => descargar(intercambio.exportar, avisos),
+    /** `consulta` filtra lo que se exporta (p. ej. los filtros de un reporte). */
+    exportar: (consulta?: Consulta) => descargar(() => intercambio.exportar(consulta), avisos),
     bajarPlantilla: () => descargar(intercambio.plantilla, avisos),
     elegir: (archivo: File) => revisar(contexto, archivo),
     importar: () => guardar(contexto),

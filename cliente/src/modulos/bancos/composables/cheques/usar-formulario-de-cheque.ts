@@ -5,7 +5,7 @@ import { apiCheques } from '../../servicios/cheques.api';
 import { datosDeEmisionDeCheque, edicionDeCheque, type EdicionDeCheque } from './edicion-de-cheque';
 import { usarSeleccionDeCheque } from './usar-seleccion-de-cheque';
 
-/** La ventana de emitir un cheque desde Movimientos: elegir cuenta y número, y guardarlo. */
+/** La ventana de emitir un cheque desde Cheques: elegir cuenta y número, y guardarlo. */
 export function usarFormularioDeCheque(alGuardar: () => Promise<void>) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();

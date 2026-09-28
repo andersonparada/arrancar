@@ -1,9 +1,9 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Movimiento } from '../../servicios/movimientos.api';
-import { CLASE_DE_TIPO, SIGNO_DE_TIPO, detallesDeMovimiento, tituloDeMovimiento } from './detalles-de-movimiento';
+import { CLASE_DE_TIPO, SIGNO_DE_TIPO, detallesDeNota, tituloDeNota } from './detalles-de-nota';
 
-// `detallesDeMovimiento` da formato con `formatearFecha`, que lee la sesión (Pinia).
+// `detallesDeNota` da formato con `formatearFecha`, que lee la sesión (Pinia).
 beforeEach(() => setActivePinia(createPinia()));
 
 const base: Movimiento = {
@@ -25,18 +25,10 @@ const base: Movimiento = {
   conciliacionId: null,
 };
 
-describe('título del movimiento', () => {
+describe('título de la nota', () => {
   it('es "Nota de crédito" o "Nota de débito" según el tipo', () => {
-    expect(tituloDeMovimiento({ tipo: 'credito', saldoInicial: false, numeroDeCheque: null })).toBe('Nota de crédito');
-    expect(tituloDeMovimiento({ tipo: 'debito', saldoInicial: false, numeroDeCheque: null })).toBe('Nota de débito');
-  });
-
-  it('es "Saldo inicial" cuando lo es, sin importar el tipo', () => {
-    expect(tituloDeMovimiento({ tipo: 'credito', saldoInicial: true, numeroDeCheque: null })).toBe('Saldo inicial');
-  });
-
-  it('es "Cheque No. <número>" cuando el tipo es cheque', () => {
-    expect(tituloDeMovimiento({ tipo: 'cheque', saldoInicial: false, numeroDeCheque: 7 })).toBe('Cheque No. 7');
+    expect(tituloDeNota({ tipo: 'credito' })).toBe('Nota de crédito');
+    expect(tituloDeNota({ tipo: 'debito' })).toBe('Nota de débito');
   });
 });
 
@@ -52,23 +44,23 @@ describe('color y signo del monto', () => {
   });
 });
 
-describe('detalles del movimiento', () => {
+describe('detalles de la nota', () => {
   it('lleva cuenta, fecha, referencia y beneficiario', () => {
-    const detalles = detallesDeMovimiento(base);
+    const detalles = detallesDeNota(base);
     expect(detalles.map((d) => d.etiqueta)).toEqual(['Cuenta', 'Fecha', 'Referencia', 'Beneficiario u origen']);
   });
 
   it('agrega las observaciones solo si hay', () => {
-    const detalles = detallesDeMovimiento({ ...base, observaciones: 'Una nota.' });
+    const detalles = detallesDeNota({ ...base, observaciones: 'Una nota.' });
     expect(detalles.map((d) => d.etiqueta)).toContain('Observaciones');
   });
 
-  it('agrega el motivo de anulación cuando está anulado', () => {
-    const detalles = detallesDeMovimiento({
+  it('agrega el motivo de anulación cuando está anulada', () => {
+    const detalles = detallesDeNota({
       ...base,
       anuladoEn: '2026-09-27T10:00:00.000Z',
-      motivoDeAnulacion: 'Registrado por error',
+      motivoDeAnulacion: 'Registrada por error',
     });
-    expect(detalles).toContainEqual({ etiqueta: 'Motivo de anulación', valor: 'Registrado por error' });
+    expect(detalles).toContainEqual({ etiqueta: 'Motivo de anulación', valor: 'Registrada por error' });
   });
 });

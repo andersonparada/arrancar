@@ -1,4 +1,14 @@
-import { ArrowLeftRight, Banknote, Building2, CheckCheck, Landmark, NotebookTabs, WalletCards } from 'lucide-vue-next';
+import {
+  ArrowLeftRight,
+  Banknote,
+  Building2,
+  CheckCheck,
+  FileText,
+  Landmark,
+  NotebookTabs,
+  ScrollText,
+  WalletCards,
+} from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_BANCOS, VENTANAS_BANCOS } from './textos';
 // generador: importaciones
@@ -40,9 +50,21 @@ export const moduloBancos: DefinicionModuloCliente = {
       meta: { permiso: 'bancos.cuentas-bancarias.gestionar', titulo: VENTANAS_BANCOS.cuentasBancarias.editar },
     },
     {
+      path: '/bancos/notas',
+      name: 'bancos.notas',
+      component: () => import('./paginas/ListaDeNotas.vue'),
+      meta: { permiso: 'bancos.notas.ver', titulo: VENTANAS_BANCOS.notas.titulo },
+    },
+    {
+      path: '/bancos/transferencias',
+      name: 'bancos.transferencias',
+      component: () => import('./paginas/ListaDeTransferencias.vue'),
+      meta: { permiso: 'bancos.transferencias.ver', titulo: VENTANAS_BANCOS.transferencias.titulo },
+    },
+    {
       path: '/bancos/movimientos',
       name: 'bancos.movimientos',
-      component: () => import('./paginas/ListaDeMovimientos.vue'),
+      component: () => import('./paginas/ReporteDeMovimientos.vue'),
       meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.movimientos.titulo },
     },
     {
@@ -107,11 +129,18 @@ export const moduloBancos: DefinicionModuloCliente = {
           permiso: 'bancos.chequeras.ver',
         },
         {
-          titulo: VENTANAS_BANCOS.movimientos.titulo,
-          ruta: '/bancos/movimientos',
+          titulo: VENTANAS_BANCOS.notas.titulo,
+          ruta: '/bancos/notas',
+          icono: FileText,
+          seccion: 'operacion',
+          permiso: 'bancos.notas.ver',
+        },
+        {
+          titulo: VENTANAS_BANCOS.transferencias.titulo,
+          ruta: '/bancos/transferencias',
           icono: ArrowLeftRight,
           seccion: 'operacion',
-          permiso: 'bancos.movimientos.ver',
+          permiso: 'bancos.transferencias.ver',
         },
         {
           titulo: VENTANAS_BANCOS.cheques.titulo,
@@ -126,6 +155,13 @@ export const moduloBancos: DefinicionModuloCliente = {
           icono: CheckCheck,
           seccion: 'operacion',
           permiso: 'bancos.conciliaciones.ver',
+        },
+        {
+          titulo: VENTANAS_BANCOS.movimientos.titulo,
+          ruta: '/bancos/movimientos',
+          icono: ScrollText,
+          seccion: 'reportes',
+          permiso: 'bancos.movimientos.ver',
         },
         // generador: menu
       ],

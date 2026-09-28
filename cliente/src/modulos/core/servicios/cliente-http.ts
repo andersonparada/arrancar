@@ -82,8 +82,8 @@ export class ClienteHttp {
   }
 
   /** Baja un archivo (un Excel, por ejemplo) con el nombre que le da el servidor. */
-  async descargar(ruta: string): Promise<ArchivoDescargado> {
-    const respuesta = await this.llamar({ metodo: 'GET', ruta });
+  async descargar(ruta: string, consulta?: Consulta): Promise<ArchivoDescargado> {
+    const respuesta = await this.llamar({ metodo: 'GET', ruta, consulta });
     if (!respuesta.ok) {
       throw this.errorDe(respuesta.status, (await respuesta.json().catch(() => null)) as CuerpoDeError | null);
     }

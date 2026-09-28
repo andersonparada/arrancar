@@ -1,18 +1,14 @@
 <script setup lang="ts">
-import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import { opcionesDeLista } from '@/modulos/core/utilidades/edicion';
-import { OPCIONES_DE_TIPO } from '../../composables/movimientos/edicion-de-movimiento';
+import { OPCIONES_DE_TIPO } from '../../composables/notas/edicion-de-nota';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
-import type { EdicionDeMovimiento } from '../../composables/movimientos/edicion-de-movimiento';
+import type { EdicionDeNota } from '../../composables/notas/edicion-de-nota';
 
-/**
- * Los campos del movimiento; los usan la ventana y el formulario en página, así
- * se ven igual. Al corregir (con `id`) la cuenta se ve pero no se cambia.
- */
+/** Los campos de la nota; al corregir (con `id`) la cuenta se ve pero no se cambia. */
 defineProps<{ errores: Record<string, string>; referencias: Record<'cuentaBancariaId', OpcionDeRegistro[]> }>();
-const edicion = defineModel<EdicionDeMovimiento>({ required: true });
+const edicion = defineModel<EdicionDeNota>({ required: true });
 </script>
 
 <template>
@@ -34,7 +30,6 @@ const edicion = defineModel<EdicionDeMovimiento>({ required: true });
     />
     <CampoTexto v-model="edicion.fecha" etiqueta="Fecha" tipo="date" requerido :error="errores.fecha" />
     <CampoTexto v-model="edicion.monto" etiqueta="Monto" tipo="number" paso="any" requerido :error="errores.monto" />
-    <CampoInterruptor v-model="edicion.saldoInicial" etiqueta="Es el saldo inicial de la cuenta" />
     <CampoTexto
       v-model="edicion.referencia"
       etiqueta="Referencia (boleta o autorización)"

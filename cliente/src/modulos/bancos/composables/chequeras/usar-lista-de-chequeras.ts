@@ -4,7 +4,7 @@ import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
 import { apiChequeras, type Chequera } from '../../servicios/chequeras.api';
-import { usarReferenciasDeMovimiento } from '../movimientos/referencias-de-movimiento';
+import { usarReferenciasDeCuenta } from '../cuentas-bancarias/referencias-de-cuenta';
 import { rangoDeChequera } from './detalles-de-chequera';
 import { usarFormularioDeChequeraDeLaEmpresa } from './usar-formulario-de-chequera-de-la-empresa';
 
@@ -56,7 +56,7 @@ function usarCargaDeChequeras() {
  */
 export function usarListaDeChequeras() {
   const { chequeras, cargando, cargar, cuentaBancariaId } = usarCargaDeChequeras();
-  const { campos: referencias, filtroDeCuenta } = usarReferenciasDeMovimiento();
+  const { campos: referencias, filtroDeCuenta } = usarReferenciasDeCuenta();
   const formulario = usarFormularioDeChequeraDeLaEmpresa(cargar);
   const intercambio = usarIntercambio(apiChequeras.intercambio, cargar);
   const cambiarEstado = usarCambioDeEstadoDeChequera(cargar);

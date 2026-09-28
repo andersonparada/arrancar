@@ -347,3 +347,14 @@ y `demo` / `demo-arrancar`.
     como error. **El refactor terminó**; lo siguiente es planificar los módulos
     de negocio. Pendiente a decidir entonces: en qué moneda está cada monto
     (existe `core.monedas`, pero el tipo `dinero` no apunta a ella).
+- **2026-09-28**: B6 del módulo de bancos (`docs/modulos/bancos.md`, sección
+  "B6 Separación de Movimientos"): la pantalla Movimientos, que mezclaba
+  captura y consulta, se separa en **Notas** y **Transferencias** (operación,
+  sin Excel, cada una con su pantalla y sus permisos propios), **Movimientos**
+  (queda como reporte en Reportes: solo consulta, imprime y exporta con
+  filtros) y **Saldo inicial** (se registra, corrige, anula, importa y
+  exporta desde la ficha de la cuenta y la lista de cuentas, en
+  Administración). Nuevos permisos con migración de datos que traduce los de
+  los roles existentes; el core de intercambio (`core/intercambio`) gana un
+  filtro opcional al exportar, reutilizable por cualquier reporte futuro.
+  Commits `B6a` (servidor) y `B6b` (cliente y documentación).

@@ -1,7 +1,7 @@
 import { reactive, watch } from 'vue';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiCheques, type ChequeListado } from '../../servicios/cheques.api';
-import { usarReferenciasDeMovimiento } from '../movimientos/referencias-de-movimiento';
+import { usarReferenciasDeCuenta } from '../cuentas-bancarias/referencias-de-cuenta';
 import { filtroDeLaConsulta, filtrosPorOmision, type FiltrosDeCheques } from './filtros-de-cheques';
 import { usarFormularioDeCheque } from './usar-formulario-de-cheque';
 
@@ -22,7 +22,7 @@ export function usarListaDeChequesDeLaEmpresa() {
   );
   watch(filtros, cargar);
 
-  const { campos: referencias, filtroDeCuenta: opcionesDeCuenta } = usarReferenciasDeMovimiento();
+  const { campos: referencias, filtroDeCuenta: opcionesDeCuenta } = usarReferenciasDeCuenta();
   const emision = usarFormularioDeCheque(cargar);
 
   return { cheques, cargando, cargar, filtros, opcionesDeCuenta, referencias, emision };

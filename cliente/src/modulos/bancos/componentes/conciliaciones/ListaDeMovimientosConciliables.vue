@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CLASE_DE_TIPO, SIGNO_DE_TIPO } from '../../composables/movimientos/detalles-de-movimiento';
+import { CLASE_DE_TIPO, SIGNO_DE_TIPO } from '../../composables/movimientos/estilo-de-tipo';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import { Inbox } from 'lucide-vue-next';

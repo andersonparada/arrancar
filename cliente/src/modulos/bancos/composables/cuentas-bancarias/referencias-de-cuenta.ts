@@ -4,11 +4,11 @@ import { opcionesDeRegistros } from '@/modulos/core/utilidades/edicion';
 import { apiCuentasBancarias, type CuentaBancaria } from '../../servicios/cuentas-bancarias.api';
 
 /**
- * Las cuentas bancarias para elegir: en la ventana de registrar (`campos`,
- * obligatoria) y en el filtro de la lista (`filtroDeCuenta`, con "Todas"), a
- * partir de la misma carga.
+ * Las cuentas bancarias para elegir: en un formulario (`campos`, obligatoria) y
+ * en el filtro de una lista (`filtroDeCuenta`, con "Todas"), a partir de la
+ * misma carga. La usan notas, transferencias, cheques, chequeras y el reporte.
  */
-export function usarReferenciasDeMovimiento() {
+export function usarReferenciasDeCuenta() {
   const { datos: cuentasBancarias } = usarCarga(
     () => apiCuentasBancarias.listar(),
     [] as CuentaBancaria[],

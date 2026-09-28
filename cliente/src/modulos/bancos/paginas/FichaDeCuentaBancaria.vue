@@ -8,6 +8,7 @@ import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import SeccionDeChequeras from '../componentes/chequeras/SeccionDeChequeras.vue';
+import SeccionDeSaldoInicial from '../componentes/cuentas-bancarias/SeccionDeSaldoInicial.vue';
 import { detallesDeCuentaBancaria } from '../composables/cuentas-bancarias/detalles-de-cuenta-bancaria';
 import { usarFichaDeCuentaBancaria } from '../composables/cuentas-bancarias/usar-ficha-de-cuenta-bancaria';
 import { VENTANAS_BANCOS } from '../textos';
@@ -43,6 +44,8 @@ const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: 'bancos.cuen
     </TarjetaBase>
 
     <DatosDelRegistro :detalles="detallesDeCuentaBancaria(registro)" />
+
+    <SeccionDeSaldoInicial :cuenta-bancaria-id="cuentaBancariaId" />
 
     <SeccionDeChequeras :cuenta-bancaria-id="cuentaBancariaId" />
   </div>

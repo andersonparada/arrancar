@@ -1,7 +1,7 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import { intercambioDe } from '@/modulos/core/servicios/intercambio';
 
-/** Movimiento tal como lo manda el servidor. */
+/** Movimiento tal como lo manda el servidor: una nota, un saldo inicial o un cheque. */
 export interface Movimiento {
   id: string;
   cuentaBancariaId: string;
@@ -24,20 +24,16 @@ export interface Movimiento {
   conciliacionId: string | null;
 }
 
-/** La API nunca acepta `tipo: 'cheque'`: un cheque se registra desde la ventana de emitir. */
-export type DatosMovimiento = Omit<
-  Movimiento,
-  | 'id'
-  | 'cuentaBancariaNombre'
-  | 'anuladoEn'
-  | 'motivoDeAnulacion'
-  | 'transferenciaId'
-  | 'chequeId'
-  | 'numeroDeCheque'
-  | 'conciliacionId'
-> & { tipo: 'credito' | 'debito' };
+/** Una fila del reporte, con su saldo corrido (`null` si el reporte no eligió una cuenta). */
+export type FilaDelReporte = Movimiento & { saldo: string | null };
 
-/** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */
+export interface ReporteDeMovimientos {
+  saldoAnterior: string | null;
+  filas: FilaDelReporte[];
+  saldoFinal: string | null;
+}
+
+/** Qué movimientos consultar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */
 export interface FiltroDeMovimientos {
   cuentaBancariaId?: string;
   desde?: string;
@@ -47,33 +43,21 @@ export interface FiltroDeMovimientos {
 
 const RUTA = '/bancos/movimientos';
 
+/** Movimientos queda de solo lectura: el reporte (con su saldo corrido) y una nota o un saldo inicial por id. */
 export class ApiMovimientos {
   constructor(private readonly http: ClienteHttp) {}
 
-  /** Importar en Excel (los saldos iniciales); sin exportar: lo registrado se consulta en los reportes. */
+  /** Solo exportar (es reporte); lo registrado se captura en Notas, Transferencias y el saldo inicial de la cuenta. */
   get intercambio() {
     return intercambioDe(this.http, RUTA);
   }
 
-  listar(filtro: FiltroDeMovimientos = {}) {
-    return this.http.obtener<Movimiento[]>(RUTA, filtro);
+  reporte(filtro: FiltroDeMovimientos = {}) {
+    return this.http.obtener<ReporteDeMovimientos>(`${RUTA}/reporte`, filtro);
   }
 
   obtener(id: string) {
     return this.http.obtener<Movimiento>(`${RUTA}/${id}`);
-  }
-
-  crear(datos: DatosMovimiento) {
-    return this.http.crear<Movimiento>(RUTA, datos);
-  }
-
-  actualizar(id: string, datos: DatosMovimiento) {
-    return this.http.reemplazar<Movimiento>(`${RUTA}/${id}`, datos);
-  }
-
-  /** Anula el movimiento con un motivo; no se puede deshacer y no hay ruta para eliminar. */
-  anular(id: string, motivo: string) {
-    return this.http.crear<Movimiento>(`${RUTA}/${id}/anular`, { motivo });
   }
 }
 

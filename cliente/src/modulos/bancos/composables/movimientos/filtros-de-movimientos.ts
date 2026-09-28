@@ -1,10 +1,16 @@
-import type { FiltroDeMovimientos } from '../../servicios/movimientos.api';
-
-/** Lo que se elige en los filtros de la lista de movimientos. */
+/** Lo que se elige en los filtros de una lista o de un reporte: cuenta y rango de fechas. */
 export interface FiltrosDeMovimientos {
   cuentaBancariaId: string | null;
   desde: string;
   hasta: string;
+}
+
+/** Lo que se manda al servidor como filtro de cuenta y fechas; lo usan notas, transferencias y el reporte. */
+export interface FiltroConsultado {
+  cuentaBancariaId?: string;
+  desde?: string;
+  hasta?: string;
+  [clave: string]: string | undefined;
 }
 
 const dosDigitos = (numero: number): string => String(numero).padStart(2, '0');
@@ -26,7 +32,7 @@ export function filtrosPorOmision(
 }
 
 /** Lo que se manda al servidor: solo lo que se eligió filtra. */
-export function filtroDeLaConsulta(filtros: FiltrosDeMovimientos): FiltroDeMovimientos {
+export function filtroDeLaConsulta(filtros: FiltrosDeMovimientos): FiltroConsultado {
   return {
     cuentaBancariaId: filtros.cuentaBancariaId ?? undefined,
     desde: filtros.desde || undefined,
