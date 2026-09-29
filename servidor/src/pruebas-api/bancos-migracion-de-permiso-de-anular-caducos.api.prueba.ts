@@ -5,7 +5,7 @@ import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta } from './soporte/escenarios.js';
 
 const MIGRACION = new URL(
-  '../modulos/bancos/migraciones/0027_h6b_permiso_de_anular_cheques_caducos.sql',
+  '../modulos/bancos/migraciones/0028_h6b_permiso_de_anular_cheques_caducos.sql',
   import.meta.url,
 );
 const entorno = usarEntornoApi();

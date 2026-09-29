@@ -1,6 +1,6 @@
 {
-  "id": "54498fc1-ca6b-4661-aa24-1412e675af23",
-  "prevId": "c11195fb-745c-4acf-8770-218e6922324b",
+  "id": "4e59d83f-826a-42fc-8bf1-16017ce3ce96",
+  "prevId": "54498fc1-ca6b-4661-aa24-1412e675af23",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -74,27 +74,27 @@
         "bancos_empresa_id_empresas_id_fk": {
           "name": "bancos_empresa_id_empresas_id_fk",
           "tableFrom": "bancos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "bancos_nombre_unico": {
           "name": "bancos_nombre_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "empresa_id",
             "nombre"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -201,39 +201,39 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "chequeras_empresa_id_empresas_id_fk": {
           "name": "chequeras_empresa_id_empresas_id_fk",
           "tableFrom": "chequeras",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "chequeras_cuenta_bancaria_id_cuentas_bancarias_id_fk": {
           "name": "chequeras_cuenta_bancaria_id_cuentas_bancarias_id_fk",
           "tableFrom": "chequeras",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "cuenta_bancaria_id"
           ],
-          "tableTo": "cuentas_bancarias",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -363,55 +363,55 @@
         "cheques_empresa_id_empresas_id_fk": {
           "name": "cheques_empresa_id_empresas_id_fk",
           "tableFrom": "cheques",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "cheques_chequera_id_chequeras_id_fk": {
           "name": "cheques_chequera_id_chequeras_id_fk",
           "tableFrom": "cheques",
+          "tableTo": "chequeras",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "chequera_id"
           ],
-          "tableTo": "chequeras",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "cheques_movimiento_id_movimientos_id_fk": {
           "name": "cheques_movimiento_id_movimientos_id_fk",
           "tableFrom": "cheques",
+          "tableTo": "movimientos",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "movimiento_id"
           ],
-          "tableTo": "movimientos",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "cheques_chequera_numero_unico": {
           "name": "cheques_chequera_numero_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "chequera_id",
             "numero"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -560,45 +560,45 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"bancos\".\"conceptos\".\"clave_de_sistema\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "conceptos_empresa_id_empresas_id_fk": {
           "name": "conceptos_empresa_id_empresas_id_fk",
           "tableFrom": "conceptos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "conceptos_nombre_unico": {
           "name": "conceptos_nombre_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "empresa_id",
             "nombre"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "conceptos_id_empresa_unico": {
           "name": "conceptos_id_empresa_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -746,42 +746,42 @@
         "conciliaciones_empresa_id_empresas_id_fk": {
           "name": "conciliaciones_empresa_id_empresas_id_fk",
           "tableFrom": "conciliaciones",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "conciliaciones_cuenta_bancaria_id_cuentas_bancarias_id_fk": {
           "name": "conciliaciones_cuenta_bancaria_id_cuentas_bancarias_id_fk",
           "tableFrom": "conciliaciones",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "cuenta_bancaria_id"
           ],
-          "tableTo": "cuentas_bancarias",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "conciliaciones_cuenta_mes_unico": {
           "name": "conciliaciones_cuenta_mes_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "cuenta_bancaria_id",
             "anio",
             "mes"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -909,59 +909,59 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "cuentas_bancarias_empresa_id_empresas_id_fk": {
           "name": "cuentas_bancarias_empresa_id_empresas_id_fk",
           "tableFrom": "cuentas_bancarias",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "cuentas_bancarias_banco_id_bancos_id_fk": {
           "name": "cuentas_bancarias_banco_id_bancos_id_fk",
           "tableFrom": "cuentas_bancarias",
+          "tableTo": "bancos",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "banco_id"
           ],
-          "tableTo": "bancos",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "cuentas_bancarias_nombre_unico": {
           "name": "cuentas_bancarias_nombre_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "empresa_id",
             "nombre"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "cuentas_bancarias_numero_por_banco_unico": {
           "name": "cuentas_bancarias_numero_por_banco_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "empresa_id",
             "banco_id",
             "numero_normalizado"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -1045,8 +1045,8 @@
           "primaryKey": false,
           "notNull": false,
           "generated": {
-            "type": "stored",
-            "as": "bancos.nombre_para_comparar(beneficiario)"
+            "as": "bancos.nombre_para_comparar(beneficiario)",
+            "type": "stored"
           }
         },
         "observaciones": {
@@ -1070,6 +1070,18 @@
         "documento_de_origen_id": {
           "name": "documento_de_origen_id",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interes_bruto": {
+          "name": "interes_bruto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isr_retenido": {
+          "name": "isr_retenido",
+          "type": "numeric(14, 2)",
           "primaryKey": false,
           "notNull": false
         },
@@ -1175,9 +1187,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "movimientos_beneficiario_para_comparar_idx": {
           "name": "movimientos_beneficiario_para_comparar_idx",
@@ -1202,10 +1214,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"bancos\".\"movimientos\".\"beneficiario_para_comparar\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "movimientos_transferencia_idx": {
           "name": "movimientos_transferencia_idx",
@@ -1218,9 +1230,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "movimientos_conciliacion_idx": {
           "name": "movimientos_conciliacion_idx",
@@ -1233,9 +1245,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "movimientos_revierte_a_idx": {
           "name": "movimientos_revierte_a_idx",
@@ -1248,9 +1260,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "movimientos_concepto_fecha_idx": {
           "name": "movimientos_concepto_fecha_idx",
@@ -1275,9 +1287,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "movimientos_cheques_en_circulacion_idx": {
           "name": "movimientos_cheques_en_circulacion_idx",
@@ -1296,10 +1308,32 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"bancos\".\"movimientos\".\"tipo\" = 'cheque' and \"bancos\".\"movimientos\".\"conciliacion_id\" is null and \"bancos\".\"movimientos\".\"revertido_en\" is null and \"bancos\".\"movimientos\".\"anulado_en\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_intereses_idx": {
+          "name": "movimientos_intereses_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"bancos\".\"movimientos\".\"interes_bruto\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "movimientos_un_saldo_inicial": {
           "name": "movimientos_un_saldo_inicial",
@@ -1312,10 +1346,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"bancos\".\"movimientos\".\"saldo_inicial\" and \"bancos\".\"movimientos\".\"anulado_en\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "movimientos_numero_unico": {
           "name": "movimientos_numero_unico",
@@ -1346,98 +1380,98 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"bancos\".\"movimientos\".\"numero\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "movimientos_empresa_id_empresas_id_fk": {
           "name": "movimientos_empresa_id_empresas_id_fk",
           "tableFrom": "movimientos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "movimientos_cuenta_bancaria_id_cuentas_bancarias_id_fk": {
           "name": "movimientos_cuenta_bancaria_id_cuentas_bancarias_id_fk",
           "tableFrom": "movimientos",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "cuenta_bancaria_id"
           ],
-          "tableTo": "cuentas_bancarias",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "movimientos_transferencia_id_transferencias_id_fk": {
           "name": "movimientos_transferencia_id_transferencias_id_fk",
           "tableFrom": "movimientos",
+          "tableTo": "transferencias",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "transferencia_id"
           ],
-          "tableTo": "transferencias",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "movimientos_conciliacion_id_conciliaciones_id_fk": {
           "name": "movimientos_conciliacion_id_conciliaciones_id_fk",
           "tableFrom": "movimientos",
+          "tableTo": "conciliaciones",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "conciliacion_id"
           ],
-          "tableTo": "conciliaciones",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "movimientos_revierte_a_id_movimientos_id_fk": {
           "name": "movimientos_revierte_a_id_movimientos_id_fk",
           "tableFrom": "movimientos",
+          "tableTo": "movimientos",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "revierte_a_id"
           ],
-          "tableTo": "movimientos",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "movimientos_concepto_de_la_empresa_fk": {
           "name": "movimientos_concepto_de_la_empresa_fk",
           "tableFrom": "movimientos",
+          "tableTo": "conceptos",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "concepto_id",
             "empresa_id"
           ],
-          "tableTo": "conceptos",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1455,6 +1489,10 @@
         }
       },
       "checkConstraints": {
+        "movimientos_intereses_cuadran": {
+          "name": "movimientos_intereses_cuadran",
+          "value": "(\"bancos\".\"movimientos\".\"interes_bruto\" is null and \"bancos\".\"movimientos\".\"isr_retenido\" is null)\n        or (\"bancos\".\"movimientos\".\"interes_bruto\" is not null and \"bancos\".\"movimientos\".\"isr_retenido\" is not null and \"bancos\".\"movimientos\".\"tipo\" = 'credito'\n          and \"bancos\".\"movimientos\".\"isr_retenido\" >= 0 and \"bancos\".\"movimientos\".\"interes_bruto\" = \"bancos\".\"movimientos\".\"monto\" + \"bancos\".\"movimientos\".\"isr_retenido\")"
+        },
         "movimientos_monto_positivo": {
           "name": "movimientos_monto_positivo",
           "value": "\"bancos\".\"movimientos\".\"monto\" > 0"
@@ -1589,9 +1627,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "transferencias_destino_idx": {
           "name": "transferencias_destino_idx",
@@ -1604,9 +1642,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "transferencias_numero_unico": {
           "name": "transferencias_numero_unico",
@@ -1631,54 +1669,54 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"bancos\".\"transferencias\".\"numero\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "transferencias_empresa_id_empresas_id_fk": {
           "name": "transferencias_empresa_id_empresas_id_fk",
           "tableFrom": "transferencias",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "transferencias_cuenta_origen_id_cuentas_bancarias_id_fk": {
           "name": "transferencias_cuenta_origen_id_cuentas_bancarias_id_fk",
           "tableFrom": "transferencias",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "cuenta_origen_id"
           ],
-          "tableTo": "cuentas_bancarias",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "transferencias_cuenta_destino_id_cuentas_bancarias_id_fk": {
           "name": "transferencias_cuenta_destino_id_cuentas_bancarias_id_fk",
           "tableFrom": "transferencias",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
           "columnsFrom": [
             "cuenta_destino_id"
           ],
-          "tableTo": "cuentas_bancarias",
-          "schemaTo": "bancos",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1712,10 +1750,10 @@
   "schemas": {
     "bancos": "bancos"
   },
-  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},
