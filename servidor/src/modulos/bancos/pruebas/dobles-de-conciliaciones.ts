@@ -189,7 +189,7 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     const previa = this.deLaCuenta(cuentaBancariaId)
       .map((c) => c.instantanea())
       .find((p) => p.anio === anterior.anio && p.mes === anterior.mes);
-    const bancoEnCentavos = previa?.foto ? aCentavos(previa.foto.saldoCalculadoEstadoDeCuenta) : librosEnCentavos;
+    const bancoEnCentavos = previa?.foto ? aCentavos(previa.foto.saldoCalculadoEstadoDeCuenta) : 0;
     return { librosEnCentavos, bancoEnCentavos };
   }
 

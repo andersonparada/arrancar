@@ -153,12 +153,13 @@ async function fotoDelPeriodoAnterior(cuentaBancariaId: string, periodo: Periodo
  * Saldo inicial de libros = saldo vigente al fin del mes anterior. Saldo
  * inicial de banco = saldo calculado del estado de cuenta de la conciliación
  * autorizada del mes anterior; si no hay ninguna (es la primera), se toma
- * igual al de libros: no hay partidas pendientes previas que el sistema conozca.
+ * cero: el banco todavía no ha "visto" nada, y el saldo inicial de la cuenta es un documento
+ * más que se marca (o queda como crédito en tránsito); sumarlo aquí lo contaría dos veces.
  */
 export async function saldosInicialesDe(cuentaBancariaId: string, periodo: Periodo) {
   const librosEnCentavos = await saldoDeLibrosAlFinDe(cuentaBancariaId, finDelMesDe(periodoAnterior(periodo)));
   const foto = await fotoDelPeriodoAnterior(cuentaBancariaId, periodo);
-  const bancoEnCentavos = foto ? aCentavos(foto) : librosEnCentavos;
+  const bancoEnCentavos = foto ? aCentavos(foto) : 0;
   return { librosEnCentavos, bancoEnCentavos };
 }
 

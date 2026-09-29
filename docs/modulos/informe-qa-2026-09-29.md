@@ -42,8 +42,8 @@ reporte y a la conciliación de libros). Flujo de efectivo: saldos iniciales 10,
    accesos usaban el mismo `z-40` y la de accesos, abierta después, la tapaba: «Guardar accesos» se quedaba
    esperando sin mostrar nada. Aplica a cualquier confirmación abierta sobre una ventana. Arreglo:
    `VentanaModal` acepta `encima` (`z-[60]`) y `CapaAvisos` lo usa.
-3. **Conciliación: el cuadro del banco cuenta dos veces el saldo inicial** (sin corregir; es regla de
-   negocio). Pasos: cuenta con saldo inicial 10,000.00 (01/01) y un mes con movimientos; iniciar la
+3. **Conciliación: el cuadro del banco cuenta dos veces el saldo inicial** (CORREGIDO 2026-09-29: el saldo inicial
+   de banco de la primera conciliación es 0). Pasos: cuenta con saldo inicial 10,000.00 (01/01) y un mes con movimientos; iniciar la
    conciliación de febrero como primera de la cuenta (el sistema deja empezar en cualquier mes), marcar el
    saldo inicial y el cheque 1, terminar. Esperado: «Según banco» saldo final = «Saldo que debe mostrar»
    (9,750.00), como pide `bancos.md` B5.1. Pasó: Saldo inicial banco 10,000.00 + ingresos 12,500.50 −
@@ -52,7 +52,7 @@ reporte y a la conciliación de libros). Flujo de efectivo: saldos iniciales 10,
    movimiento «Saldo inicial» para marcar (o darlo por conciliado en la primera conciliación).
 
 ### Media
-4. **500 con un monto enorme.** `POST /bancos/notas` con `monto: "1000000000000.00"` responde 500
+4. **500 con un monto enorme** (CORREGIDO 2026-09-29: 400 desde el esquema común de decimales). `POST /bancos/notas` con `monto: "1000000000000.00"` responde 500
    `error_interno` (numeric(14,2)). Esperado: 400 «monto demasiado grande». Revisar en todos los montos.
 5. **Nombres repetidos que difieren solo en mayúsculas** se aceptan: localidad «  LOCALIDAD 1 » junto a
    «Localidad 1» (201) y concepto «planilla» junto a «Planilla» (201; «Planílla» también). El exacto sí avisa.

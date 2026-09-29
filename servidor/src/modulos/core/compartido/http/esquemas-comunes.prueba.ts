@@ -14,6 +14,8 @@ describe('esquemas comunes', () => {
     expect(decimalObligatorio(2).parse(' 12.25 ')).toBe('12.25');
     expect(decimalObligatorio(2).safeParse('12.255').success).toBe(false);
     expect(decimalObligatorio(2).safeParse('doce').success).toBe(false);
+    expect(decimalObligatorio(2).safeParse('999999999999.99').success).toBe(true);
+    expect(decimalObligatorio(2).safeParse('1000000000000.00').success).toBe(false);
   });
 
   it('lo opcional que llega vacío queda como null', () => {

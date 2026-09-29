@@ -45,10 +45,22 @@ export const enteroObligatorio = () => z.number().int('Escriba un número entero
 /** Número entero que puede faltar: llega como `null`. */
 export const enteroOpcional = () => enteroObligatorio().nullish().transform(nuloSiFalta);
 
+/** Dígitos totales de las columnas `numeric(14, n)`: la parte entera admite 14 menos los decimales. */
+const DIGITOS_TOTALES = 14;
+
 const conDecimales = (decimales: number) =>
   z
     .string()
-    .regex(new RegExp(`^-?\\d+(\\.\\d{1,${decimales}})?$`), `Escriba un número con hasta ${decimales} decimales.`);
+    .regex(new RegExp(`^-?\\d+(\\.\\d{1,${decimales}})?$`), `Escriba un número con hasta ${decimales} decimales.`)
+    .refine(
+      (texto) =>
+        texto
+          .replace(/^-/, '')
+          .split('.')[0]!
+          .replace(/^0+(?=\d)/, '').length <=
+        DIGITOS_TOTALES - decimales,
+      'El número es demasiado grande.',
+    );
 
 const textoDeNumero = (valor: string | number | null | undefined) => {
   const texto = valor === null || valor === undefined ? '' : String(valor).trim();
