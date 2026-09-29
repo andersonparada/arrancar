@@ -58,7 +58,7 @@ const { anulacion, eliminacion } = usarBajasDeNota(cargar);
       con-fecha
       :abierta="!!anulacion.registro"
       titulo="Anular nota"
-      :texto="`Se creará el movimiento inverso de la nota «${anulacion.registro?.referencia ?? ''}»; nada se borra.`"
+      :texto="`Se creará el movimiento inverso de la nota${anulacion.registro?.referencia ? ` «${anulacion.registro.referencia}»` : ''}; nada se borra.`"
       :errores="anulacion.errores"
       :enviando="anulacion.enviando"
       @cerrar="anulacion.cerrar"
@@ -69,7 +69,7 @@ const { anulacion, eliminacion } = usarBajasDeNota(cargar);
       :abierta="!!eliminacion.registro"
       titulo="Eliminar nota"
       accion="Eliminar"
-      :texto="`¿Eliminar la nota «${eliminacion.registro?.referencia ?? ''}»? Se borra de verdad y queda en la auditoría.`"
+      :texto="`¿Eliminar la nota${eliminacion.registro?.referencia ? ` «${eliminacion.registro.referencia}»` : ''}? Se borra de verdad y queda en la auditoría.`"
       :errores="eliminacion.errores"
       :enviando="eliminacion.enviando"
       @cerrar="eliminacion.cerrar"

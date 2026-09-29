@@ -26,5 +26,7 @@ export const datosDelRol = ({ nombre, descripcion, accesoTotal, permisos }: Edic
   permisos,
 });
 
+const conteo = (n: number, singular: string, plural: string) => `${n} ${n === 1 ? singular : plural}`;
+
 export const resumenDePermisos = (rol: Rol) =>
-  `${rol.accesoTotal ? 'Todos los permisos' : `${rol.permisos.length} permisos`} · ${rol.totalUsuarios} asignaciones`;
+  `${rol.accesoTotal ? 'Todos los permisos' : conteo(rol.permisos.length, 'permiso', 'permisos')} · ${conteo(rol.totalUsuarios, 'asignación', 'asignaciones')}`;

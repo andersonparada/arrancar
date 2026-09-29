@@ -41,9 +41,8 @@ export class ApiAccesosALocalidades {
   }
 
   /** Los ids de todas las localidades del usuario. */
-  async obtenerDeUsuario(usuarioId: string): Promise<string[]> {
-    const respuesta = await this.http.obtener<{ localidadIds: string[] }>(`${RUTA}/accesos/${usuarioId}`);
-    return respuesta.localidadIds;
+  obtenerDeUsuario(usuarioId: string) {
+    return this.http.obtener<string[]>(`${RUTA}/accesos/${usuarioId}`);
   }
 
   /** Deja al usuario con exactamente estas localidades. */

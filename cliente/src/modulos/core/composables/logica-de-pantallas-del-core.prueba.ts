@@ -28,7 +28,7 @@ describe('roles', () => {
   });
 
   it('resume sus permisos y a cuántos usuarios se asignó', () => {
-    expect(resumenDePermisos(encargado)).toBe('1 permisos · 2 asignaciones');
+    expect(resumenDePermisos(encargado)).toBe('1 permiso · 2 asignaciones');
     expect(resumenDePermisos({ ...encargado, accesoTotal: true })).toMatch(/^Todos los permisos/);
   });
 });

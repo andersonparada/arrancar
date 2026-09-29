@@ -48,6 +48,7 @@ const colores = {
   <VentanaModal
     :abierta="avisos.confirmacion !== null"
     :titulo="avisos.confirmacion?.titulo ?? ''"
+    encima
     @cerrar="avisos.responderConfirmacion(false)"
   >
     <p class="text-sm text-tierra-700 dark:text-tierra-200">{{ avisos.confirmacion?.mensaje }}</p>

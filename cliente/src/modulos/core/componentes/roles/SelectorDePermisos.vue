@@ -31,7 +31,7 @@ const permisos = defineModel<string[]>({ required: true });
           />
           <span class="text-sm">
             {{ permiso.descripcion }}
-            <span class="block font-mono text-xs text-tierra-400">{{ permiso.clave }}</span>
+            <span class="block font-mono text-xs break-all text-tierra-400">{{ permiso.clave }}</span>
           </span>
         </label>
       </div>
