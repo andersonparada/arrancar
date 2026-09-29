@@ -71,9 +71,11 @@ clientes y proveedores, con un panel de recordatorios diarios.
 
 ### 3.3 Multiempresa y acceso a datos (a nivel de base de datos)
 
-- Jerarquía: **Plataforma → Cuenta (suscriptor) → Empresas → Usuarios con rol por empresa**.
+- Jerarquía: **Plataforma → Cuenta (suscriptor) → Empresas → Usuarios con permisos por cuenta y acceso por empresa**
+  (`core.empresa_usuarios` solo dice en qué empresas entra; roles y permisos directos son de la cuenta).
 - Cada petición corre en `ejecutarEnEmpresa(...)`, que fija `app.empresa_id`,
-  `app.usuario_id` y `app.alcance_total` en la transacción.
+  `app.usuario_id`, `app.alcance_total`, `app.alcance_para_asignar` y `app.sin_asignar_al_crear`
+  en la transacción.
 - **Aislamiento por empresa**: toda tabla de negocio lleva `empresa_id` y la
   política `politicaPorEmpresa()`. PostgreSQL oculta filas de otras empresas aunque
   el código olvide filtrar (probado en `aislamiento-empresas.prueba.ts`).
@@ -130,12 +132,24 @@ cuenta).
      `docs/modulos/diseno-accesos-por-modulo.md`).
    - Con el permiso "ver todos" del recurso, o con un rol de acceso total, se
      ven todos los registros.
+   - **Ventana de asignación:** quien tiene el `permisoAsignar` del recurso ve todos
+     los registros **solo** en los casos de uso que arman su operador con
+     `operadorParaAsignar` (fija `app.alcance_para_asignar`): abre la lectura de la
+     tabla protegida y la escritura de su tabla de accesos, nunca cambiar ni eliminar
+     registros. Importar desde Excel no asigna al que importa (`sinAsignarAlCrear`).
    - Tener acceso a los datos de una cuenta **no** da acceso a las pantallas de
      administración (eso es el nivel 1).
    - Probado en `alcance-datos.prueba.ts`.
 
-Roles por cuenta; el rol con **acceso total** recibe también los permisos de
-módulos que se activen después. Siempre debe quedar al menos un rol con acceso total.
+Roles por cuenta; un usuario puede tener varios roles y además permisos directos
+(`core.usuario_roles`, `core.usuario_permisos`): los permisos efectivos son la unión,
+válida en todas las empresas donde es miembro (`core.empresa_usuarios`, que ya no lleva
+rol). El rol con **acceso total** recibe también los permisos de módulos que se activen
+después. Siempre debe quedar al menos un rol con acceso total.
+
+**Regla para migraciones de permisos:** «quien tenía X recibe Y» se escribe para
+`core.rol_permisos` **y** `core.usuario_permisos` (con `(cuenta_id, usuario_id)`), y un
+permiso que se elimina se borra de las dos.
 
 Un permiso puede declararse `soloSuperacceso: true` (ver `DefinicionPermiso`): es
 configuración de servidor/instalación, así que **solo** lo recibe el superacceso
@@ -517,6 +531,16 @@ y `demo` / `demo-arrancar`.
   /usuarios/:id/permisos` con el origen de cada permiso; quien tiene el permiso da cualquier permiso
   asignable, sin mínimo de acceso total. Se auditan roles, permisos directos y empresas de un usuario,
   y los permisos de un rol (`core.roles-de-usuario`, `core.permisos-de-usuario`,
-  `core.empresas-de-usuario`, `core.permisos-de-rol`). Falta P3 (cliente) y P4 (quitar `rol_id`);
-  mientras, la ventana de usuarios del cliente sigue mandando `accesos` y el servidor la rechaza.
+  `core.empresas-de-usuario`, `core.permisos-de-rol`). P3 (cliente) hecho después.
+- **2026-09-29 (permisos por usuario P4 y alcance «para asignar» L1)**: migración `core 0018` quita
+  `core.empresa_usuarios.rol_id` (con guarda: aborta si algún rol de empresa no está en
+  `usuario_roles`) y el código que lo leía. L1: `DefinicionRecursoConAlcance.permisoAsignar`,
+  `RegistroModulos.recursosParaAsignar`, `recursosParaAsignar` en la sesión y `ContextoEmpresa`
+  (vacío por omisión), `operadorParaAsignar` (`core/compartido/http`, lanza `AccesoDenegado` sin el
+  permiso), variable `app.alcance_para_asignar`. Políticas de `alcance.ts`: `select` de la tabla
+  protegida abierto en la ventana; la tabla de accesos solo se escribe en la ventana
+  (`asignar/cambiar/quitar_para_asignar`), ya no por «lo que ve» ni por alcance total; cambiar y
+  eliminar registros siguen cerrados. Migración `core 0019` hace que el disparador
+  `core.asignar_registro_al_creador` respete `app.sin_asignar_al_crear` (`ContextoEmpresa.sinAsignarAlCrear`,
+  para la importación de Excel del paso 5). Ver `docs/modulos/diseno-permisos-por-usuario.md`.
 

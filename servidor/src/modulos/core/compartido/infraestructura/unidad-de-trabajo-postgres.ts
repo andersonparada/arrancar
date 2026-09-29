@@ -26,9 +26,14 @@ export class ContextoDistintoEnLaTransaccion extends Error {
 }
 
 function mismoContexto(a: ContextoEmpresa, b: ContextoEmpresa): boolean {
-  const alcance = (contexto: ContextoEmpresa) => [...(contexto.recursosAlcanceTotal ?? [])].sort().join(',');
+  const lista = (recursos?: readonly string[]) => [...(recursos ?? [])].sort().join(',');
   return (
-    a.empresaId === b.empresaId && a.cuentaId === b.cuentaId && a.usuarioId === b.usuarioId && alcance(a) === alcance(b)
+    a.empresaId === b.empresaId &&
+    a.cuentaId === b.cuentaId &&
+    a.usuarioId === b.usuarioId &&
+    lista(a.recursosAlcanceTotal) === lista(b.recursosAlcanceTotal) &&
+    lista(a.recursosParaAsignar) === lista(b.recursosParaAsignar) &&
+    Boolean(a.sinAsignarAlCrear) === Boolean(b.sinAsignarAlCrear)
   );
 }
 

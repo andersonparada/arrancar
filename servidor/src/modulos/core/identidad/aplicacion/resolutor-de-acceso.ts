@@ -5,7 +5,7 @@ import { permisosEfectivos, type AsignacionesDelUsuario } from './permisos-efect
 
 export type AccesoAEmpresaDeSesion = Pick<
   ContextoDeSesion,
-  'empresa' | 'roles' | 'modulosActivos' | 'permisos' | 'recursosAlcanceTotal'
+  'empresa' | 'roles' | 'modulosActivos' | 'permisos' | 'recursosAlcanceTotal' | 'recursosParaAsignar'
 >;
 
 interface Dependencias {
@@ -43,8 +43,9 @@ export class ResolutorDeAcceso {
       restringidos,
     });
     const recursosAlcanceTotal = modulos.recursosConAlcanceTotal(modulosActivos, permisos, accesoTotal);
+    const recursosParaAsignar = modulos.recursosParaAsignar(modulosActivos, permisos);
     const nombres = asignaciones.roles.map((rol) => rol.nombre).sort((a, b) => a.localeCompare(b, 'es'));
-    return { empresa, roles: nombres, modulosActivos, permisos, recursosAlcanceTotal };
+    return { empresa, roles: nombres, modulosActivos, permisos, recursosAlcanceTotal, recursosParaAsignar };
   }
 
   /** Los roles y permisos del usuario en la cuenta de la empresa; `null` si no es miembro de ella. */

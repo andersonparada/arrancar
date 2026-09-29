@@ -145,6 +145,12 @@ base de desarrollo debe estar levantada.
   nunca lleva política de `select` con subconsulta (recursión). El disparador
   `core.asignar_registro_al_creador` asigna el registro nuevo a quien lo crea.
   Diseño: `docs/modulos/diseno-accesos-por-modulo.md`.
+  La ventana de asignación abre lectura de la tabla protegida y escritura de sus accesos
+  solo con `operadorParaAsignar(solicitud, recurso)` (`app.alcance_para_asignar`, exige el
+  `permisoAsignar` del recurso); importar desde Excel usa `sinAsignarAlCrear` para no asignar.
+- Roles y permisos directos son de la cuenta (`core.usuario_roles`, `core.usuario_permisos`);
+  `core.empresa_usuarios` solo dice en qué empresas entra el usuario. Una migración de permisos
+  («quien tenía X recibe Y») cubre `core.rol_permisos` **y** `core.usuario_permisos`.
 - Cada ruta usa `proteger({ permiso })` (cadena de guardias: sesión → empresa →
   módulo → permiso). El permiso debe estar declarado por un módulo.
 - **Permisos por acción** (`docs/PLAN.md` §3.5): cada recurso declara `<modulo>.<plural>.ver`,

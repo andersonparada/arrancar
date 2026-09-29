@@ -24,4 +24,6 @@ export interface CatalogoDeModulos {
     permisos: ReadonlySet<string>,
     accesoTotal: boolean,
   ): readonly string[];
+  /** Recursos con alcance cuyo permiso de asignar está en `permisos`. */
+  recursosParaAsignar(modulosActivos: ReadonlySet<string>, permisos: ReadonlySet<string>): readonly string[];
 }

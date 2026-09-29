@@ -63,6 +63,49 @@ describe('RegistroModulos', () => {
     expect(restringidos.map((p) => p.clave)).toEqual(['core.configuracion.ver']);
   });
 
+  it('calcula los recursos que el usuario puede asignar según su permiso', () => {
+    const alcance = { recurso: 'ganado.lotes', tablaDeAccesos: 'a.b', tablaDelRegistro: 'a.c', columna: 'lote_id' };
+    const registro = new RegistroModulos([
+      modulo('ganado', {
+        permisos: [
+          { clave: 'ganado.ver-todos', descripcion: '' },
+          { clave: 'ganado.asignar', descripcion: '' },
+        ],
+        recursosConAlcance: [
+          {
+            clave: 'ganado.lotes',
+            descripcion: '',
+            permisoVerTodos: 'ganado.ver-todos',
+            permisoAsignar: 'ganado.asignar',
+            alcance,
+          },
+        ],
+      }),
+    ]);
+
+    expect(registro.recursosParaAsignar(['ganado'], new Set(['ganado.asignar']))).toEqual(['ganado.lotes']);
+    expect(registro.recursosParaAsignar(['ganado'], new Set(['ganado.ver-todos']))).toEqual([]);
+    expect(registro.recursosParaAsignar([], new Set(['ganado.asignar']))).toEqual([]);
+  });
+
+  it('falla al arrancar si el permiso de asignar de un recurso no lo declara su módulo', () => {
+    const alcance = { recurso: 'ganado.lotes', tablaDeAccesos: 'a.b', tablaDelRegistro: 'a.c', columna: 'lote_id' };
+    const definicion = modulo('ganado', {
+      permisos: [{ clave: 'ganado.ver-todos', descripcion: '' }],
+      recursosConAlcance: [
+        {
+          clave: 'ganado.lotes',
+          descripcion: '',
+          permisoVerTodos: 'ganado.ver-todos',
+          permisoAsignar: 'ganado.asignar',
+          alcance,
+        },
+      ],
+    });
+
+    expect(() => new RegistroModulos([definicion])).toThrow(/ganado\.asignar/);
+  });
+
   it('falla al arrancar si un módulo depende de otro que no está instalado', () => {
     expect(() => new RegistroModulos([modulo('caja-chica', { dependeDe: ['bancos'] })])).toThrow(/no está registrado/);
   });

@@ -205,7 +205,7 @@ export default tseslint.config(
     rules: { 'no-alert': 'error' },
   },
   {
-    files: ['**/*.prueba.ts', 'servidor/src/pruebas-api/**'],
+    files: ['**/*.prueba.ts', '**/*.soporte.ts', 'servidor/src/pruebas-api/**'],
     rules: {
       'max-lines-per-function': 'off',
       'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }],

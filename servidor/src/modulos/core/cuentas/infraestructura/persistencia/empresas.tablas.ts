@@ -4,7 +4,6 @@ import { autoria, idPrimario, marcasDeTiempo } from '../../../base-datos/columna
 import { cuentas } from './cuentas.tablas.js';
 import { monedas } from '../../../monedas/infraestructura/persistencia/monedas.tablas.js';
 import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
-import { roles } from '../../../autorizacion/infraestructura/persistencia/roles.tablas.js';
 
 export const empresas = esquemaCore.table(
   'empresas',
@@ -39,8 +38,6 @@ export const empresaUsuarios = esquemaCore.table(
     usuarioId: uuid()
       .notNull()
       .references(() => usuarios.id, { onDelete: 'cascade' }),
-    /** En desuso: los roles viven en `usuario_roles`. Se elimina en la migración 0018. */
-    rolId: uuid().references(() => roles.id, { onDelete: 'restrict' }),
     creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.empresaId, t.usuarioId] }), index('empresa_usuarios_usuario_idx').on(t.usuarioId)],

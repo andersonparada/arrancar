@@ -45,6 +45,7 @@ function crearResolutor({ esMiembro = true, asignaciones, consultas = [] }: Esce
     permisosDe: () => PERMISOS_DISPONIBLES,
     permisosDeSuperacceso: () => PERMISOS_DE_SUPERACCESO,
     recursosConAlcanceTotal: () => [],
+    recursosParaAsignar: (_activos, permisos) => (permisos.has('usuarios.ver') ? ['prueba.recurso'] : []),
   };
   const permisosDeUsuario: PermisosDeUsuario = {
     enCuenta: async (_usuarioId, cuentaId) => {
@@ -115,6 +116,14 @@ describe('ResolutorDeAcceso', () => {
     const asignaciones = { roles: [PROPIETARIO], directos: ['usuarios.ver'] };
 
     expect(await resolver({ esMiembro: false, asignaciones })).toBeNull();
+  });
+
+  it('calcula los recursos para asignar con los permisos efectivos', async () => {
+    const con = await resolver({ asignaciones: { roles: [], directos: ['usuarios.ver'] } });
+    const sin = await resolver({ asignaciones: { roles: [], directos: [] } });
+
+    expect(con?.recursosParaAsignar).toEqual(['prueba.recurso']);
+    expect(sin?.recursosParaAsignar).toEqual([]);
   });
 
   it('pide los permisos de la cuenta de la empresa', async () => {

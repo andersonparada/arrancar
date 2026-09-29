@@ -30,4 +30,8 @@ export class CatalogoDeModulosEnRegistro implements CatalogoDeModulos {
   ): readonly string[] {
     return obtenerRegistroModulos().recursosConAlcanceTotal(modulosActivos, permisos, accesoTotal);
   }
+
+  recursosParaAsignar(modulosActivos: ReadonlySet<string>, permisos: ReadonlySet<string>): readonly string[] {
+    return obtenerRegistroModulos().recursosParaAsignar(modulosActivos, permisos);
+  }
 }

@@ -127,6 +127,20 @@
       "when": 1790704040741,
       "tag": "0017_roles_de_la_empresa_a_la_cuenta",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790706621407,
+      "tag": "0018_quitar_rol_de_empresa_usuarios",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790706704538,
+      "tag": "0019_no_asignar_al_crear_en_importaciones",
+      "breakpoints": true
     }
   ]
 }

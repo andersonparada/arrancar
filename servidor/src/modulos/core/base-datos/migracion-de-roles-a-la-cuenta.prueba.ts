@@ -28,7 +28,12 @@ const id = async (consulta: string, parametros: unknown[] = []): Promise<string>
   return rows[0]!.id;
 };
 
+/** La 0018 quitó `rol_id`: se devuelve solo para cargar la forma antigua, y se quita al terminar. */
+const RESTAURAR_COLUMNA = 'alter table core.empresa_usuarios add column if not exists rol_id uuid';
+const QUITAR_COLUMNA = 'alter table core.empresa_usuarios drop column if exists rol_id';
+
 async function cargarDatosAntiguos(): Promise<void> {
+  await conexion.query(RESTAURAR_COLUMNA);
   cuentaId = await id(`insert into core.cuentas (nombre) values ('Migración de roles') returning id`);
   const e1 = await id(`insert into core.empresas (cuenta_id, nombre) values ($1, 'Finca A') returning id`, [cuentaId]);
   const e2 = await id(`insert into core.empresas (cuenta_id, nombre) values ($1, 'Finca B') returning id`, [cuentaId]);
@@ -74,6 +79,7 @@ async function limpiar(): Promise<void> {
   await conexion.query('delete from core.auditoria where cuenta_id = $1', [cuentaId]);
   await conexion.query('delete from core.usuario_roles where cuenta_id = $1', [cuentaId]);
   await conexion.query('delete from core.cuentas where id = $1', [cuentaId]);
+  await conexion.query(QUITAR_COLUMNA);
   await conexion.query(`delete from core.usuarios where usuario like 'migracion%'`);
 }
 

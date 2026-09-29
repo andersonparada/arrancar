@@ -473,13 +473,13 @@ Permisos por usuario:
    de permisos de rol), prueba de claves huérfanas.
 3. **P3 (cliente, core) Usuarios, permisos y sesión. [HECHO 2026-09-29]** Ventana de usuario con empresas, página de
    permisos con origen, tarjetas, roles en el menú e inicio.
-4. **P4 (servidor, core) Quitar `rol_id`.** Migración #3 con guarda, código muerto, y documentos:
+4. **P4 (servidor, core) Quitar `rol_id`. [HECHO 2026-09-29]** Migración #3 con guarda, código muerto, y documentos:
    `PLAN.md` §3.3 («usuarios con permisos por cuenta y acceso por empresa»), §3.5 (roles por
    usuario, permisos directos, regla de migraciones), `CLAUDE.md`, `ARQUITECTURA.md`, bitácora.
 
 Ventana de localidades (antes del paso 5 de `diseno-accesos-por-modulo.md`):
 
-5. **L1 (servidor, core) Alcance para asignar.** `permisoAsignar`, `recursosParaAsignar`
+5. **L1 (servidor, core) Alcance para asignar. [HECHO 2026-09-29]** `permisoAsignar`, `recursosParaAsignar`
    (registro, resolutor, sesión, contexto), `app.alcance_para_asignar`, `operadorParaAsignar`,
    políticas de 3.3 en `alcance.ts`, pruebas. Sin migración (ninguna tabla usa aún estas
    políticas). Puede ir en paralelo a P1–P4; si va antes de P1, el resolutor calcula
@@ -584,3 +584,19 @@ Mandan sobre las preguntas de arriba.
   (peligrosa si se agrega un rol con acceso total). Los orígenes se previsualizan en el cliente con
   la lista de roles; el servidor decide al guardar. Sin `roles.ver` se arma todo con lo que responde
   `GET /usuarios/:id/permisos`.
+
+## Decisiones al programar P4 y L1 (2026-09-29)
+
+- **P4:** `core 0018_quitar_rol_de_empresa_usuarios` (generada, con la guarda de la sección 4 al inicio).
+  Las tablas y el código ya no conocen `rol_id`. La prueba de la migración 0017 devuelve la columna
+  antes de cargar los datos antiguos y la quita al terminar.
+- **L1:** nombres como en 3.3 (`permisoAsignar`, `recursosParaAsignar`, `app.alcance_para_asignar`,
+  `operadorParaAsignar`). `verificarDeclaracion` exige que el módulo declare `permisoAsignar`.
+  `mismoContexto` compara también `recursosParaAsignar` y `sinAsignarAlCrear`. Las políticas de la
+  tabla de accesos se llaman `asignar_para_asignar`, `cambiar_para_asignar` y `quitar_para_asignar`.
+- **Importar no asigna (resuelto aquí, para el paso 5):** `core 0019` reemplaza la función del disparador
+  para que no haga nada si `app.sin_asignar_al_crear = 'on'`. Se fija con
+  `ContextoEmpresa.sinAsignarAlCrear` (unidad de trabajo). El paso 5 debe poner
+  `sinAsignarAlCrear: true` en el operador del caso de uso de importar (y del ensayo). El
+  cliente no la ve nunca.
+- La tabla dependiente sigue filtrada por lo que el usuario ve normalmente, también dentro de la ventana.

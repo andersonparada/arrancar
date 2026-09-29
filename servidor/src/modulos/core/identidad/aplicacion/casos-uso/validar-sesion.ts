@@ -40,6 +40,7 @@ export class ValidarSesion {
       modulosActivos: new Set(),
       permisos: new Set(),
       recursosAlcanceTotal: [],
+      recursosParaAsignar: [],
     };
     const acceso = empresaActivaId && (await this.dependencias.resolutor.resolver(usuario, empresaActivaId));
     return acceso ? { ...sinEmpresa, ...acceso } : sinEmpresa;

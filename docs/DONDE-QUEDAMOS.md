@@ -116,18 +116,16 @@ decisiones e investigación con Opus).
   a un usuario; **solo suman**. Un permiso vale para **toda la cuenta** (lo que el
   usuario puede hacer); **qué datos ve** lo decide aparte el acceso a cada empresa y
   el alcance por registro (p. ej. puede abrir la ventana de cheques, pero solo anula
-  cheques de las empresas y cuentas bancarias a las que tiene acceso). Hoy el rol se
-  asigna **por empresa** (`core.empresa_usuarios.rol_id`), así que esto cambia el
-  modelo: **lo diseña el arquitecto** y se confirma con el usuario antes de programar.
+  cheques de las empresas y cuentas bancarias a las que tiene acceso). El rol ya no se
+  asigna por empresa (`empresa_usuarios.rol_id` se eliminó en `core 0018`).
 
-- **Permisos directos a usuarios:** P1–P3 **hechos** (diseño en
+- **Permisos directos a usuarios:** P1–P4 y L1 **hechos** (diseño en
   `docs/modulos/diseno-permisos-por-usuario.md`): varios roles por usuario en la
   cuenta más permisos directos (solo suman), la empresa solo decide dónde entra,
   permiso `usuarios.asignar-permisos`, auditoría, ventana de usuarios con empresas y
   roles, y página «Permisos de <usuario>» con el origen de cada permiso. Pruebas:
-  servidor 948, cliente 252, generador 46. Sin probar en el navegador. Faltan **P4**
-  (quitar `empresa_usuarios.rol_id`) y **L1** (alcance «para asignar» de la ventana de
-  localidades), y después los pasos 4–11 de H5b.
+  servidor 948, cliente 252, generador 46. Sin probar en el navegador. Faltan
+  los pasos 5 a 11 de H5b (localidades con `permisoAsignar` y la ventana).
 - **No hay nada en producción** (dicho por el usuario el 2026-09-29): las migraciones
   de datos no necesitan cuidar casos reales, solo no romper la base de desarrollo.
 

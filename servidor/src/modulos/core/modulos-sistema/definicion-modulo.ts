@@ -26,6 +26,11 @@ export interface DefinicionRecursoConAlcance {
   descripcion: string;
   /** Permiso del mismo módulo que da acceso a todos los registros del recurso. */
   permisoVerTodos: string;
+  /**
+   * Permiso del mismo módulo que abre la ventana de asignación: quien lo tiene ve todos los
+   * registros del recurso solo en esa ventana y puede asignarlos a cualquier miembro de la empresa.
+   */
+  permisoAsignar: string;
   /** Dónde están las asignaciones; `alcance.recurso` debe ser igual a `clave`. */
   alcance: AlcanceDeRegistros;
 }

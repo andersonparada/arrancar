@@ -106,4 +106,16 @@ describe('unidad de trabajo sobre PostgreSQL', () => {
 
     await expect(cambioDeEmpresa).rejects.toThrow(ContextoDistintoEnLaTransaccion);
   });
+
+  it('una unidad anidada no puede ampliar los recursos para asignar ni el alcance', async () => {
+    const paraAsignar = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
+      unidadDeTrabajo.ejecutar({ ...enEmpresaA, recursosParaAsignar: ['prueba.registros'] }, recursosVisibles),
+    );
+    const sinAsignar = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
+      unidadDeTrabajo.ejecutar({ ...enEmpresaA, sinAsignarAlCrear: true }, recursosVisibles),
+    );
+
+    await expect(paraAsignar).rejects.toThrow(ContextoDistintoEnLaTransaccion);
+    await expect(sinAsignar).rejects.toThrow(ContextoDistintoEnLaTransaccion);
+  });
 });

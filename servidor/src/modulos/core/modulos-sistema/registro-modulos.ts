@@ -65,6 +65,20 @@ export class RegistroModulos {
     return recursos;
   }
 
+  /**
+   * Recursos con alcance de los módulos activos cuyo permiso de asignar posee el usuario
+   * (el acceso total y el superacceso los tienen todos, porque tienen todos los permisos).
+   */
+  recursosParaAsignar(modulosActivos: Iterable<string>, permisos: ReadonlySet<string>): string[] {
+    const recursos: string[] = [];
+    for (const clave of modulosActivos) {
+      for (const recurso of this.modulos.get(clave)?.recursosConAlcance ?? []) {
+        if (permisos.has(recurso.permisoAsignar)) recursos.push(recurso.clave);
+      }
+    }
+    return recursos;
+  }
+
   /** Variables de configuración de los módulos indicados (todos los instalados si se omite). */
   configuracionesDe(clavesModulos?: Iterable<string>): DefinicionConfiguracion[] {
     const claves = clavesModulos ? [...clavesModulos] : [...this.modulos.keys()];

@@ -23,6 +23,8 @@ export interface ContextoDeSesion {
   permisos: ReadonlySet<string>;
   /** Recursos con alcance que el usuario ve completos (ver `politicaPorAlcance`). */
   recursosAlcanceTotal: readonly string[];
+  /** Recursos con alcance cuyo permiso de asignar tiene el usuario (ver `operadorParaAsignar`). */
+  recursosParaAsignar: readonly string[];
 }
 
 export interface SesionValidada {

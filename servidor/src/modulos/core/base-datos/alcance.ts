@@ -17,6 +17,9 @@ export interface AlcanceDeRegistros {
 const alcanceTotalDelRecurso = (recurso: string) =>
   `'${recurso}' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))`;
 
+const paraAsignarDelRecurso = (recurso: string) =>
+  `'${recurso}' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ','))`;
+
 /** Los datos van dentro de SQL crudo: solo se aceptan nombres simples. */
 function validar(alcance: AlcanceDeRegistros, columnaDeLaTabla?: string): void {
   const tabla = /^[a-z_]+(\.[a-z_]+)?$/;
@@ -43,16 +46,18 @@ const nombreDePolitica = (alcance: AlcanceDeRegistros) => `alcance_${alcance.rec
 
 /**
  * Políticas restrictivas de la tabla protegida (p. ej. `empresas.localidades`): ver, cambiar
- * y eliminar solo lo asignado al usuario (o con alcance total). **No** hay política de
+ * y eliminar solo lo asignado al usuario (o con alcance total). Solo `select` se abre además
+ * en la ventana de asignación (`app.alcance_para_asignar`); cambiar y eliminar nunca. **No** hay política de
  * `insert`: el registro nuevo aún no está asignado a nadie; crear lo limitan el permiso de
  * la ruta y la RLS por empresa, y el disparador `core.asignar_registro_al_creador` lo asigna.
  */
 export const politicasDelRegistroConAlcance = (alcance: AlcanceDeRegistros) => {
   validar(alcance);
   const condicion = sql.raw(condicionDeAlcance(alcance, 'id'));
+  const paraVer = sql.raw(`${paraAsignarDelRecurso(alcance.recurso)} or ${condicionDeAlcance(alcance, 'id')}`);
   const base = { as: 'restrictive', to: rolAplicacion } as const;
   return [
-    pgPolicy('alcance_ver', { ...base, for: 'select', using: condicion }),
+    pgPolicy('alcance_ver', { ...base, for: 'select', using: paraVer }),
     pgPolicy('alcance_cambiar', { ...base, for: 'update', using: condicion, withCheck: condicion }),
     pgPolicy('alcance_eliminar', { ...base, for: 'delete', using: condicion }),
   ];
@@ -84,23 +89,23 @@ export const politicaPorAlcanceOpcional = (alcance: AlcanceDeRegistros, columna:
 
 /**
  * Políticas de la tabla de accesos: `aislamiento_por_empresa` y las de escritura, que solo
- * dejan asignar, cambiar o quitar registros que el usuario ve (los que consulta la tabla
- * protegida con su propia RLS) o todos si tiene alcance total.
+ * se abren en la ventana de asignación (`app.alcance_para_asignar` con el recurso, que fija
+ * `operadorParaAsignar` cuando el operador tiene el permiso de asignar). Ya no dependen de lo
+ * que el usuario ve ni de su alcance total: quien asigna puede asignar cualquier registro de
+ * la empresa activa (también a sí mismo). Sin la ventana, la tabla solo la escriben el
+ * disparador `core.asignar_registro_al_creador` y las cascadas, que no pasan por RLS.
  *
  * **Regla que no se puede romper:** una tabla de accesos nunca lleva una política de `select`
  * con subconsulta; PostgreSQL detectaría recursión infinita (accesos → registro → accesos).
  */
 export const politicasDeTablaDeAccesos = (alcance: AlcanceDeRegistros) => {
   validar(alcance);
-  const condicion = sql.raw(
-    `${alcanceTotalDelRecurso(alcance.recurso)}
-    or ${alcance.columna} in (select r.id from ${alcance.tablaDelRegistro} r)`,
-  );
+  const condicion = sql.raw(paraAsignarDelRecurso(alcance.recurso));
   const base = { as: 'restrictive', to: rolAplicacion } as const;
   return [
     politicaPorEmpresa(),
-    pgPolicy('asignar_con_alcance', { ...base, for: 'insert', withCheck: condicion }),
-    pgPolicy('cambiar_con_alcance', { ...base, for: 'update', using: condicion, withCheck: condicion }),
-    pgPolicy('quitar_con_alcance', { ...base, for: 'delete', using: condicion }),
+    pgPolicy('asignar_para_asignar', { ...base, for: 'insert', withCheck: condicion }),
+    pgPolicy('cambiar_para_asignar', { ...base, for: 'update', using: condicion, withCheck: condicion }),
+    pgPolicy('quitar_para_asignar', { ...base, for: 'delete', using: condicion }),
   ];
 };
