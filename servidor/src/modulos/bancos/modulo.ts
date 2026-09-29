@@ -18,6 +18,7 @@ import { rutasDeNotas } from './composicion/notas.js';
 import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 import { rutasDeTransferencias } from './composicion/transferencias.js';
 import { rutasDeConceptos } from './composicion/conceptos.js';
+import { rutasDeReportesPorConcepto } from './composicion/reportes-por-concepto.js';
 // generador: importaciones
 
 /** Cuentas bancarias, notas, cheques y conciliaciones de cada empresa. Ver `docs/modulos/bancos.md`. */
@@ -69,6 +70,8 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.conceptos.gestionar', descripcion: 'Registrar, editar, inactivar y eliminar conceptos' },
     { clave: 'bancos.conceptos.importar', descripcion: 'Importar conceptos desde Excel' },
     { clave: 'bancos.conceptos.exportar', descripcion: 'Exportar conceptos a Excel' },
+    { clave: 'bancos.flujo-de-efectivo.ver', descripcion: 'Ver el reporte de flujo de efectivo' },
+    { clave: 'bancos.flujo-de-efectivo.exportar', descripcion: 'Exportar el reporte de flujo de efectivo a Excel' },
     // generador: permisos
   ],
   configuracion: [
@@ -120,6 +123,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeCorrelativos(),
     rutasDeChequesCaducos(),
     rutasDeConceptos(),
+    rutasDeReportesPorConcepto(),
     // generador: rutas
   ]),
 };

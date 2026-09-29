@@ -1369,3 +1369,48 @@ conceptos nuevos en la semilla.
   da `bancos.conceptos.ver` a los roles que ya tenían `bancos.notas.gestionar`, `bancos.cheques.emitir` o `bancos.movimientos.ver`
   (solo ver; administrar sigue siendo `bancos.conceptos.gestionar`).
 - Lógica pura con pruebas: `opciones-de-concepto`, `seleccion-de-pendientes`, `centavos`, filtros y detalles de nota.
+
+## H3c Flujo de efectivo y Movimientos por concepto (servidor hecho el 2026-09-29)
+
+Dos reportes de **solo lectura** en Reportes de Bancos (imprimir y Excel). Manda `concepto-de-notas-y-cheques.md`
+(sección «Flujo de efectivo (H3c)» y la tabla de anular) sobre el plan.
+
+- **Una sola lectura agregada** (`ConsultasDeTotalesPorConceptoDrizzle.totalesPorConcepto`): agrupa en la base por
+  concepto, sin traer movimientos. Solo movimientos **vigentes** (`anulado_en is null`, igual que el saldo), en el rango
+  y la cuenta. **El inverso** (`revierte_a_id` no nulo) se suma en el concepto de su **original** (unión consigo misma) y
+  en el mismo sentido del original, restando: `entradas` = créditos originales − débitos inversos; `salidas` = débitos y
+  cheques originales − créditos inversos. Así un cheque caduco o una anulación deja su línea en cero aunque el inverso
+  caiga en otro mes (en el mes del inverso las salidas salen negativas). `cantidad` cuenta originales y
+  `cantidadDeInversos` los inversos. El saldo al inicio y al final sale de otra consulta (`saldosDelRango`).
+- **Flujo de efectivo** `GET /api/bancos/flujo-de-efectivo?desde=&hasta=&cuentaBancariaId=` (ambas fechas obligatorias,
+  `desde <= hasta`; sin cuenta son todas). Permisos **nuevos** `bancos.flujo-de-efectivo.ver` y `.exportar`
+  (migración `0020_h3c_permisos_del_flujo`, `when` 1790700800000: los reciben los roles que ya tenían
+  `bancos.movimientos.ver` / `.exportar`). Devuelve `actividades` (siempre operación, inversión y financiamiento, cada una
+  con sus líneas por `grupo_de_flujo` o, si no tiene, por nombre del concepto, más sus totales), `lineasAparte` y
+  `control`. Reglas de ubicación (`calculo-de-flujo-de-efectivo.ts`, puro y con pruebas):
+  - `saldo_inicial` es apertura, no flujo: entra solo al control (`saldosInicialesDelRango`).
+  - `transferencia`: con **todas** las cuentas se anulan entre sí y la línea se oculta (si por algún motivo no se
+    anularan, se muestra para que se note); con **una cuenta** sale la línea «Transferencias entre cuentas propias».
+  - Actividad `ninguna` que no sea transferencia ni saldo inicial: «Otros movimientos sin actividad» (solo si tiene algo).
+  - `sin_clasificar`: «Sin clasificar (pendiente)», **siempre visible** (aun en cero); la pantalla enlaza a
+    `/bancos/sin-clasificar`.
+  - **Control de cuadre**: saldo al inicio + saldos iniciales del rango + flujo neto = saldo calculado, que se compara con el
+    saldo al final en libros; `diferencia` y `cuadra`. La apertura va aparte porque el saldo al inicio del rango no puede
+    incluir lo que ocurre dentro de él.
+  - **Moneda:** hoy las cuentas no tienen moneda (ni el reporte de movimientos la trata), así que no hay nada que separar;
+    cuando exista multimoneda habrá que filtrar por una o agrupar por moneda.
+- **Movimientos por concepto** `GET /api/bancos/movimientos-por-concepto?desde=&hasta=&cuentaBancariaId=&conceptoIds=`
+  (`conceptoIds` separados por coma, hasta 50). Reutiliza `bancos.movimientos.ver` y `.exportar`. Devuelve, por nombre,
+  `entradas`, `salidas`, `neto`, `cantidad` y `cantidadDeInversos` de cada concepto (con `esDeSistema`) y el total. Incluye
+  todos los conceptos (también transferencias y saldo inicial), porque quien filtra elige. El **detalle** de un concepto
+  se pide con el reporte de movimientos que ya existe (`/bancos/movimientos/reporte?conceptoId=&desde=&hasta=&cuentaBancariaId=`):
+  el inverso hereda siempre el concepto de su original, así que coincide con estos totales (ese reporte también lista los
+  anulados a la antigua, marcados).
+- **Excel**: `GET .../exportar` de cada uno con el mismo filtro. Flujo: filas sección/línea/entradas/salidas/neto con el total de
+  cada actividad, las líneas aparte y el control de cuadre (con «NO CUADRA» si es el caso). Por concepto: una fila por concepto y
+  el total. Nunca se importan.
+- **Pruebas**: cálculo puro (`calculo-de-flujo-de-efectivo.prueba.ts`), casos de uso
+  (`casos-uso-de-reportes-por-concepto.prueba.ts`) y API (`bancos-flujo-de-efectivo` y `bancos-movimientos-por-concepto`, con el
+  escenario compartido `soporte/escenario-de-flujo.ts`: dos cuentas, notas de las tres actividades, sin actividad, sin clasificar,
+  una nota anulada, una transferencia y un cheque de enero conciliado que se anula en marzo con su inverso). Cuadran febrero de la
+  empresa, febrero de una cuenta, enero, marzo (solo el inverso) y el año completo contra el saldo de las cuentas.

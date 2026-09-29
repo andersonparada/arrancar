@@ -141,6 +141,13 @@
       "when": 1790700700000,
       "tag": "0019_h3b_ver_conceptos_al_registrar",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790700800000,
+      "tag": "0020_h3c_permisos_del_flujo",
+      "breakpoints": true
     }
   ]
 }
