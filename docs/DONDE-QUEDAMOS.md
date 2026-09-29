@@ -90,6 +90,11 @@ decisiones e investigación con Opus).
   ventana de accesos y departamentos); los pasos 5, 7 y 8 esperan respuestas del
   usuario.
 
+- **Permisos por acción** (PLAN §3.5, decidido el 2026-09-29): separar `gestionar` en
+  `crear`, `editar` y `eliminar` en todos los módulos, el generador y el cliente, con
+  migración de los roles; quitar `soloAccesoTotal`. Se programa al terminar el paso 3
+  de H5b (la base de pruebas es una sola).
+
 Forma de trabajo: cada avance va en commit a la rama; a `main` solo entra lo terminado
 y probado (pruebas del servidor, ESLint y `tsc` en verde).
 
@@ -123,9 +128,8 @@ Todas las preguntas están respondidas (ver «Respuestas del usuario (2026-09-29
 Las del plan de hallazgos se respondieron el 2026-09-29 (ver «Respuestas del usuario
 (2026-09-29)» al final de `docs/modulos/plan-hallazgos-contables.md`). Nuevas:
 
-1. `soloAccesoTotal` y `soloSuperacceso` **no** son lo mismo (el Propietario recibe el
-   primero, no el segundo). Propuesta: un solo campo `reservado: 'superacceso' |
-   'accesoTotal'` sin cambiar el comportamiento. ¿O «reabrir» debe ser solo de soporte?
+1. ~~`soloAccesoTotal`~~: resuelto por el principio de permisos (PLAN §3.5): se elimina
+   y `reabrir` pasa a ser un permiso asignable.
 2. HEIC: ¿se acepta que las fotos del iPhone lleguen como JPEG (sin HEIC en el
    servidor)?
 3. Libro de compras y Cuentas por pagar: ver «Preguntas para el usuario» en

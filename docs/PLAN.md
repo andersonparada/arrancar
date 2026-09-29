@@ -92,6 +92,21 @@ clientes y proveedores, con un panel de recordatorios diarios.
 
 ### 3.5 Permisos (tres niveles)
 
+**Principio (decisión del usuario, 2026-09-29):** toda acción importante exige un
+**permiso**; lo que decide es el permiso, nunca el nombre ni el tipo del rol. Un rol
+solo es un conjunto de permisos (`core.rol_permisos`: rol + clave). Por recurso hay
+cuatro permisos básicos (`<modulo>.<plural>.ver`, `.crear`, `.editar`, `.eliminar`;
+inactivar y reactivar van con `editar`) y las acciones especiales llevan el suyo en la
+misma tabla (`.aprobar`, `.rechazar`, `.anular`, `.autorizar`, `.emitir`, `.importar`,
+`.exportar`, `.reabrir`…). El permiso `gestionar`, que juntaba crear, editar e
+inactivar/eliminar, se reemplaza por `crear` + `editar` + `eliminar` con una migración
+que se los da a los roles que tenían `gestionar` (nadie pierde nada). Ninguna regla
+dice «solo roles de acceso total»: `soloAccesoTotal` se elimina y
+`empresas.carga-inicial.reabrir` pasa a ser un permiso asignable como cualquier otro.
+El **acceso total** de un rol solo significa «todos los permisos asignables», y
+`soloSuperacceso` se mantiene para la configuración de la instalación (no es de la
+cuenta).
+
 1. **Pantalla / módulo**: p. ej. `bancos.cuentas.administrar`.
 2. **Acción / botón**: p. ej. `bancos.pagos.registrar`, `bancos.cheques.emitir`.
    El servidor valida con `proteger({ permiso })` y el cliente oculta el botón con
@@ -457,3 +472,9 @@ y `demo` / `demo-arrancar`.
   `core.asignar_registro_al_creador`, `core.accesos_datos` eliminada con su guarda, 42501 →
   no encontrado, acciones `asignar` y `quitar`) y excepción de ESLint del módulo base
   `empresas`. Detalle en `docs/modulos/diseno-accesos-por-modulo.md`.
+- **2026-09-29**: Principio de permisos (sección 3.5): toda acción importante exige un
+  permiso, sin importar el rol. `gestionar` se separa en `crear`, `editar` (incluye
+  inactivar y reactivar) y `eliminar`, con migración de los roles existentes; las
+  acciones especiales (aprobar, rechazar, anular…) siguen con permiso propio en
+  `core.rol_permisos`. Se elimina `soloAccesoTotal`: `empresas.carga-inicial.reabrir`
+  se vuelve asignable.
