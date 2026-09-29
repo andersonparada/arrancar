@@ -1253,7 +1253,7 @@ emitieron no tienen movimiento y no entran). La anulación en lote es H6b y aún
   `tipo = 'cheque'`, sin `conciliacion_id`, sin `revertido_en`, sin `anulado_en` y con
   `fecha < fecha de corte`. La fecha de corte es hoy menos los meses (día recortado al fin de mes, como
   `make_interval`), la calcula el caso de uso (`fechaDeCorteDeCheques`), no la base. Orden: más antiguo primero.
-  «Hoy» es la fecha UTC del servidor, como en `AnularCheque`.
+  «Hoy» lo da `Reloj.hoy` (ver «Fecha de hoy» al final).
 - **Índice parcial** `movimientos_cheques_en_circulacion_idx (cuenta_bancaria_id, fecha)` donde
   `tipo = 'cheque'` y no está conciliado, revertido ni anulado. Migración `0017_h6_cheques_en_circulacion`
   (su `when` es 1790700500000, mayor que el de 0016, o el migrador la salta); además da los permisos nuevos a
@@ -1288,3 +1288,15 @@ En **Reportes** de Bancos (`/bancos/cheques-caducos`, permiso `bancos.cheques-ca
   es un componente aparte (`FilaDeChequeCaduco`) para que H6b le agregue la casilla al inicio y la barra fija de
   «Anular seleccionados» sin tocar la tabla. Aún no hay casillas ni anulación.
 - Pruebas de la lógica pura: `filtros-de-cheques-caducos.prueba.ts` y `antiguedad-de-cheques.prueba.ts`.
+
+## Fecha de hoy en la hora de la empresa (2026-09-29)
+
+Antes «hoy» se calculaba con `new Date().toISOString()`, es decir en UTC: entre las 18:00 y la medianoche en
+Guatemala contaba como el día siguiente. Ahora el puerto `Reloj` (`core/compartido/aplicacion/reloj.ts`,
+`hoy(contexto)`) devuelve la fecha `AAAA-MM-DD` en la zona horaria de la empresa: variable
+`core.regional.zona_horaria` (empresa, cuenta o instalación; `America/Guatemala` por omisión). La cuenta pura
+es `fechaLocalEn` (`core/compartido/dominio/fecha-local.ts`); `RelojEnZonaHoraria` la une con la configuración y
+viene en `dependenciasCompartidas().reloj`. Lo usan `AnularCheque`, `AnularMovimiento`, `AnularTransferencia`,
+`IniciarConciliacion` y el reporte de cheques caducos. Las pruebas usan `RelojFijo` o un `RelojEnZonaHoraria`
+con la hora fija a las 20:00 de Guatemala. Excepción: el nombre de los archivos Excel exportados usa la zona por
+omisión (la capa HTTP no puede llegar a la configuración). No hay más usos de `toISOString()` para «hoy».

@@ -14,10 +14,11 @@ import { ConsultasMovimientosDrizzle } from '../infraestructura/persistencia/con
 import { RepositorioConciliacionesDrizzle } from '../infraestructura/persistencia/repositorio-conciliaciones.drizzle.js';
 
 function dependenciasDeConciliaciones() {
-  const { unidadDeTrabajo, auditoria } = dependenciasCompartidas();
+  const { unidadDeTrabajo, auditoria, reloj } = dependenciasCompartidas();
   return {
     unidadDeTrabajo,
     auditoria,
+    reloj,
     repositorio: new RepositorioConciliacionesDrizzle(),
     consultas: new ConsultasConciliacionesDrizzle(),
     consultasMovimientos: new ConsultasMovimientosDrizzle(),

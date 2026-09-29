@@ -1,4 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { aCentavos, deCentavos } from '../../../dominio/centavos.js';
 import { diasDeAntiguedad, fechaDeCorteDeCheques } from '../../../dominio/cheques-en-circulacion.js';
@@ -17,11 +18,8 @@ export interface DependenciasDelReporteDeChequesCaducos {
   unidadDeTrabajo: UnidadDeTrabajo;
   consultas: ConsultasDeChequesEnCirculacion;
   politicaDeVencimiento: PoliticaDeVencimientoDeCheques;
-  /** La fecha de hoy (`Y-m-d`); las pruebas la fijan. */
-  hoy?: () => string;
+  reloj: Reloj;
 }
-
-const hoyPorOmision = (): string => new Date().toISOString().slice(0, 10);
 
 const conAntiguedad =
   (hoy: string) =>
@@ -48,10 +46,10 @@ export class ReporteDeChequesCaducos {
   constructor(private readonly dependencias: DependenciasDelReporteDeChequesCaducos) {}
 
   ejecutar(operador: Operador, filtro: FiltroDeChequesCaducos = {}): Promise<ReporteDeChequesCaducosDto> {
-    const { unidadDeTrabajo, consultas, politicaDeVencimiento, hoy = hoyPorOmision } = this.dependencias;
+    const { unidadDeTrabajo, consultas, politicaDeVencimiento, reloj } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const mesesDeAntiguedad = filtro.meses ?? (await politicaDeVencimiento.mesesDeVencimiento(operador));
-      const fechaDeHoy = hoy();
+      const fechaDeHoy = await reloj.hoy(operador);
       const fechaDeCorte = fechaDeCorteDeCheques(fechaDeHoy, mesesDeAntiguedad);
       const { cuentaBancariaId, beneficiario } = filtro;
       const crudos = await consultas.listar({ fechaDeCorte, cuentaBancariaId, beneficiario });

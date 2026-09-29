@@ -1,6 +1,7 @@
 import {
   AuditoriaEnMemoria,
   CorrelativosEnMemoria,
+  RelojFijo,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
@@ -40,20 +41,25 @@ interface Opciones {
   mismaFecha?: boolean;
 }
 
-/** Los casos de uso de movimientos armados con dobles en memoria, y los dobles para preparar y revisar. */
-export function armarEntorno({ permiteSobregiro = false, mismaFecha = false }: Opciones = {}) {
-  const registros = new MovimientosEnMemoria();
-  const auditoria = new AuditoriaEnMemoria();
-  const politicaDeSobregiro = new PoliticaDeSobregiroFija(permiteSobregiro);
-  const dependencias = {
+function dependenciasDe(registros: MovimientosEnMemoria, auditoria: AuditoriaEnMemoria, opciones: Opciones) {
+  const politicaDeSobregiro = new PoliticaDeSobregiroFija(opciones.permiteSobregiro ?? false);
+  return {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     repositorio: registros,
     consultas: registros,
     auditoria,
     correlativos: new CorrelativosEnMemoria(),
+    reloj: new RelojFijo(),
     reglas: new ReglasDeLaCuenta({ consultas: registros, politicaDeSobregiro }),
-    politicaDeMismaFecha: new PoliticaDeMismaFechaFija(mismaFecha),
+    politicaDeMismaFecha: new PoliticaDeMismaFechaFija(opciones.mismaFecha),
   };
+}
+
+/** Los casos de uso de movimientos armados con dobles en memoria, y los dobles para preparar y revisar. */
+export function armarEntorno({ permiteSobregiro = false, mismaFecha = false }: Opciones = {}) {
+  const registros = new MovimientosEnMemoria();
+  const auditoria = new AuditoriaEnMemoria();
+  const dependencias = dependenciasDe(registros, auditoria, { permiteSobregiro, mismaFecha });
   return {
     registros,
     auditoria,

@@ -1,4 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
 import type { MovimientoDto } from '../../dto/movimiento.dto.js';
 import type { PoliticaDeMismaFechaEnAnulacion } from '../../puertos/politica-de-misma-fecha-en-anulacion.js';
@@ -7,6 +8,7 @@ import { movimientoExistente, type DependenciasDeMovimientos } from './dependenc
 /** Lo que usa `AnularMovimiento`: lo de los movimientos, más la política de misma fecha. */
 export interface DependenciasDeAnularMovimiento extends DependenciasDeMovimientos {
   politicaDeMismaFecha: PoliticaDeMismaFechaEnAnulacion;
+  reloj: Reloj;
 }
 
 interface AnulacionDeMovimiento {
@@ -17,8 +19,6 @@ interface AnulacionDeMovimiento {
 }
 
 const AUDITORIA = { recurso: 'bancos.movimientos', accion: 'anular' } as const;
-
-const hoy = (): string => new Date().toISOString().slice(0, 10);
 
 /**
  * Anula una nota suelta: crea su movimiento inverso (crédito ↔ débito), enlazado al original, que
@@ -65,6 +65,6 @@ export class AnularMovimiento {
     const conciliadaHasta = await consultas.conciliadaHasta(original.cuentaBancariaId);
     const mesDelOriginalConciliado = conciliadaHasta !== null && original.fecha <= conciliadaHasta;
     if (!mesDelOriginalConciliado && (await politicaDeMismaFecha.aplica(operador))) return original.fecha;
-    return fechaEscrita ?? hoy();
+    return fechaEscrita ?? (await this.dependencias.reloj.hoy(operador));
   }
 }

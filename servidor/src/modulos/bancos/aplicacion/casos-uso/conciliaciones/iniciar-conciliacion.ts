@@ -33,7 +33,7 @@ export class IniciarConciliacion {
       if (!(await consultasMovimientos.cuentaEstaActiva(solicitud.cuentaBancariaId))) {
         throw new CuentaBancariaInactiva();
       }
-      this.exigirMesTerminado(solicitud);
+      await this.exigirMesTerminado(operador, solicitud);
       await this.revisarOrden(solicitud);
       const conciliacion = Conciliacion.crear(empresaId, solicitud);
       await repositorio.agregar(conciliacion);
@@ -57,8 +57,8 @@ export class IniciarConciliacion {
     if (compensados.length > 0) await repositorio.guardarMarcas(conciliacion.id.valor, compensados);
   }
 
-  private exigirMesTerminado(periodo: { anio: number; mes: number }): void {
-    const hoy = new Date().toISOString().slice(0, 10);
+  private async exigirMesTerminado(operador: Operador, periodo: { anio: number; mes: number }): Promise<void> {
+    const hoy = await this.dependencias.reloj.hoy(operador);
     if (finDelMesDe(periodo) >= hoy) throw new MesNoHaTerminado();
   }
 

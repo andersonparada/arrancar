@@ -1,6 +1,7 @@
 import {
   AuditoriaEnMemoria,
   CorrelativosEnMemoria,
+  RelojFijo,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
@@ -61,6 +62,7 @@ interface Base {
   auditoria: AuditoriaEnMemoria;
   unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
   correlativos: CorrelativosEnMemoria;
+  reloj: RelojFijo;
   reglas: ReglasDeLaCuenta;
 }
 
@@ -76,6 +78,7 @@ function armarBase(movimientos: MovimientosEnMemoria, permiteSobregiro: boolean)
     nombres,
     auditoria: new AuditoriaEnMemoria(),
     correlativos: new CorrelativosEnMemoria(),
+    reloj: new RelojFijo(),
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     reglas: new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro }),
   };

@@ -1,5 +1,6 @@
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
+import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Conciliacion } from '../../../dominio/conciliacion.js';
@@ -14,6 +15,7 @@ export interface DependenciasDeConciliaciones {
   consultas: ConsultasConciliaciones;
   consultasMovimientos: ConsultasMovimientos;
   auditoria: Auditoria;
+  reloj: Reloj;
 }
 
 /** @throws RecursoNoEncontrado si no existe o no es de la empresa. */

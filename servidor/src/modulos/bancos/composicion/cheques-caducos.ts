@@ -28,9 +28,10 @@ function intercambioDelReporte(reporte: ReporteDeChequesCaducos) {
 
 /** Raíz de composición del reporte de cheques caducos: el único lugar donde se eligen las implementaciones concretas. */
 export function rutasDeChequesCaducos() {
-  const { unidadDeTrabajo } = dependenciasCompartidas();
+  const { unidadDeTrabajo, reloj } = dependenciasCompartidas();
   const reporte = new ReporteDeChequesCaducos({
     unidadDeTrabajo,
+    reloj,
     consultas: new ConsultasDeChequesEnCirculacionDrizzle(),
     politicaDeVencimiento: new PoliticaDeVencimientoDeChequesEnConfiguracion(),
   });

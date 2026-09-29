@@ -1,4 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
 import type { Transferencia } from '../../../dominio/transferencia.js';
 import { movimientoExistente } from '../movimientos/dependencias-de-movimientos.js';
@@ -9,6 +10,7 @@ import { transferenciaExistente, type DependenciasDeTransferencias } from './dep
 /** Lo que usa `AnularTransferencia`: lo de las transferencias, más la política de misma fecha. */
 export interface DependenciasDeAnularTransferencia extends DependenciasDeTransferencias {
   politicaDeMismaFecha: PoliticaDeMismaFechaEnAnulacion;
+  reloj: Reloj;
 }
 
 interface AnulacionDeTransferencia {
@@ -27,8 +29,6 @@ interface Inversos {
   origen: Movimiento;
   destino: Movimiento;
 }
-
-const hoy = (): string => new Date().toISOString().slice(0, 10);
 
 /**
  * Anula la transferencia: crea los dos inversos (uno en cada cuenta), enlazados a sus originales, y
@@ -75,7 +75,7 @@ export class AnularTransferencia {
       (conciliadaOrigen !== null && anterior.fecha <= conciliadaOrigen) ||
       (conciliadaDestino !== null && anterior.fecha <= conciliadaDestino);
     if (!mesConciliado && (await politicaDeMismaFecha.aplica(operador))) return anterior.fecha;
-    return fechaEscrita ?? hoy();
+    return fechaEscrita ?? (await this.dependencias.reloj.hoy(operador));
   }
 
   private revertirEntidades(

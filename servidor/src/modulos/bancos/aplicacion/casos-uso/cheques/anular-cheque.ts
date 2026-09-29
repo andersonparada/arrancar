@@ -8,11 +8,9 @@ import { chequeExistente, type DependenciasDeCheques } from './dependencias-de-c
 interface AnulacionDeCheque {
   chequeId: string;
   motivo: string;
-  /** Solo se usa si el mes del cheque ya está conciliado: la fecha de su nota inversa. Por omisión, hoy. */
+  /** Solo se usa si el mes del cheque ya está conciliado: la fecha de su nota inversa. Por omisión, hoy en la zona horaria de la empresa. */
   fecha?: string;
 }
-
-const hoy = (): string => new Date().toISOString().slice(0, 10);
 
 /**
  * Anula el cheque, disponible o emitido; conserva su número: no se vuelve a usar. Si estaba emitido
@@ -60,7 +58,11 @@ export class AnularCheque {
     const { fecha: fechaDelCheque, cuentaBancariaId } = movimiento.instantanea();
     const conciliadaHasta = await consultasMovimientos.conciliadaHasta(cuentaBancariaId);
     const mesConciliado = conciliadaHasta !== null && fechaDelCheque <= conciliadaHasta;
-    if (mesConciliado) await this.revertir(operador, movimiento, { motivo, fecha: fecha ?? hoy() });
+    if (mesConciliado)
+      await this.revertir(operador, movimiento, {
+        motivo,
+        fecha: fecha ?? (await this.dependencias.reloj.hoy(operador)),
+      });
     else await this.anularALaAntigua(operador, movimiento, motivo);
   }
 

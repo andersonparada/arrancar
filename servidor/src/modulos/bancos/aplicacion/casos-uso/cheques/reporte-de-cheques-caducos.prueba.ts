@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { UnidadDeTrabajoEnMemoria, operadorDePrueba } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
+import {
+  RelojFijo,
+  UnidadDeTrabajoEnMemoria,
+  operadorDePrueba,
+} from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 import {
   ConsultasDeChequesEnCirculacionFijas,
   PoliticaDeVencimientoFija,
@@ -29,7 +33,7 @@ function armar(cheques: ChequeEnCirculacionCrudo[], mesesDeLaVariable = 7) {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     consultas,
     politicaDeVencimiento: new PoliticaDeVencimientoFija(mesesDeLaVariable),
-    hoy: () => '2026-09-29',
+    reloj: new RelojFijo('2026-09-29'),
   });
   return { consultas, reporte };
 }

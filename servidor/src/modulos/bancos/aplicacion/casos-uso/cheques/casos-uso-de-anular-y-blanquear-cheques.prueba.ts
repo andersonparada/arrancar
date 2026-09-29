@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
+import { RelojEnZonaHoraria } from '../../../../core/compartido/infraestructura/reloj-en-zona-horaria.js';
 import { ChequeAnulado, MesConciliado, MovimientoMarcadoEnConciliacion } from '../../../dominio/errores.js';
 import { CUENTA, armarEntorno, emisionDe, operador } from './soporte-de-pruebas-de-cheques.js';
 
@@ -120,7 +121,22 @@ describe('con el mes conciliado, el inverso tampoco puede caer en un mes concili
     const inverso = (await casos.movimientos.listar({ cuentaBancariaId: CUENTA })).find(
       (m) => m.revierteAId === movimiento.id,
     )!;
-    expect(inverso.fecha).toBe(new Date().toISOString().slice(0, 10));
+    expect(inverso.fecha).toBe('2026-09-29');
+  });
+
+  it('a las 20:00 de Guatemala, hoy sigue siendo el mismo día aunque en UTC ya sea el siguiente', async () => {
+    const veinteHoras = () => new Date('2026-09-30T02:00:00Z');
+    const reloj = new RelojEnZonaHoraria({ zonaHoraria: async () => 'America/Guatemala' }, veinteHoras);
+    casos = await armarEntorno({ reloj });
+    const movimiento = await casos.emitir.ejecutar(operador, emision({ fecha: '2026-01-10' }));
+    casos.movimientos.fechaConciliadaHasta = '2026-01-31';
+
+    await casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Nunca se cobró' });
+
+    const inverso = (await casos.movimientos.listar({ cuentaBancariaId: CUENTA })).find(
+      (m) => m.revierteAId === movimiento.id,
+    )!;
+    expect(inverso.fecha).toBe('2026-09-29');
   });
 });
 

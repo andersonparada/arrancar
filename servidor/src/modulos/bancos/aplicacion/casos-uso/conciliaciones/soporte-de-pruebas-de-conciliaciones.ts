@@ -1,6 +1,7 @@
 import {
   AuditoriaEnMemoria,
   CorrelativosEnMemoria,
+  RelojFijo,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
@@ -50,19 +51,18 @@ function dependenciasDePrueba(
 ) {
   const unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   const reglas = new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro: SIN_SOBREGIRO });
+  const comunes = { unidadDeTrabajo, auditoria, reloj: new RelojFijo() };
   const deConciliaciones = {
-    unidadDeTrabajo,
+    ...comunes,
     repositorio: conciliaciones,
     consultas: conciliaciones,
     consultasMovimientos: movimientos,
-    auditoria,
   };
   const deMovimientos = {
-    unidadDeTrabajo,
+    ...comunes,
     repositorio: movimientos,
     consultas: movimientos,
     reglas,
-    auditoria,
     correlativos: new CorrelativosEnMemoria(),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(),
   };

@@ -5,6 +5,7 @@ import type { Correlativos, NumeroAsignado } from '../aplicacion/correlativos.js
 import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import type { Operador } from '../aplicacion/operador.js';
 import type { PublicadorEventos } from '../aplicacion/publicador-eventos.js';
+import type { Reloj } from '../aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../aplicacion/unidad-de-trabajo.js';
 import type { EventoDominio } from '../dominio/evento-dominio.js';
 
@@ -88,5 +89,14 @@ export class AlmacenamientoEnMemoria implements Almacenamiento {
 
   async eliminar(ruta: string): Promise<void> {
     this.contenidos.delete(ruta);
+  }
+}
+
+/** Un reloj parado en una fecha (`AAAA-MM-DD`) para que las pruebas no dependan del día en que corren. */
+export class RelojFijo implements Reloj {
+  constructor(public fecha = '2026-09-29') {}
+
+  async hoy(_contexto: ContextoEmpresa): Promise<string> {
+    return this.fecha;
   }
 }

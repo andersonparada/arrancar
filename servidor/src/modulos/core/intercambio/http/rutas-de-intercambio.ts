@@ -1,6 +1,7 @@
 import type { FastifyReply } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { fechaLocalEn, ZONA_HORARIA_POR_OMISION } from '../../compartido/dominio/fecha-local.js';
 import { proteger } from '../../compartido/http/guardias.js';
 import { operadorDe } from '../../compartido/http/operador-de-la-solicitud.js';
 import type { IntercambioDeRecurso } from '../aplicacion/intercambio-de-recurso.js';
@@ -40,8 +41,6 @@ export const validadorDeZod =
     };
   };
 
-const hoy = () => new Date().toISOString().slice(0, 10);
-
 function enviarExcel(respuesta: FastifyReply, nombre: string, contenido: Buffer) {
   return respuesta
     .header('Content-Type', TIPO_EXCEL)
@@ -68,12 +67,12 @@ function rutaDeExportar(
   app.get(
     `${ruta}/exportar`,
     { schema: filtro ? { querystring: filtro } : {}, preHandler: proteger({ permiso }) },
-    async (solicitud, respuesta) =>
-      enviarExcel(
-        respuesta,
-        `${archivo}-${hoy()}`,
-        await intercambio.exportar(operadorDe(solicitud), filtro ? solicitud.query : undefined),
-      ),
+    async (solicitud, respuesta) => {
+      const operador = operadorDe(solicitud);
+      const fecha = fechaLocalEn(new Date(), ZONA_HORARIA_POR_OMISION);
+      const contenido = await intercambio.exportar(operador, filtro ? solicitud.query : undefined);
+      return enviarExcel(respuesta, `${archivo}-${fecha}`, contenido);
+    },
   );
 }
 
