@@ -471,7 +471,7 @@ Permisos por usuario:
 2. **P2 (servidor, core) API de usuarios y permisos directos. [HECHO 2026-09-29]** `empresaIds`, `GET`/`PUT
    /usuarios/:id/permisos` con origen, reglas 1 a 4, auditoría (2.6, incluida la de empresas y la
    de permisos de rol), prueba de claves huérfanas.
-3. **P3 (cliente, core) Usuarios, permisos y sesión.** Ventana de usuario con empresas, página de
+3. **P3 (cliente, core) Usuarios, permisos y sesión. [HECHO 2026-09-29]** Ventana de usuario con empresas, página de
    permisos con origen, tarjetas, roles en el menú e inicio.
 4. **P4 (servidor, core) Quitar `rol_id`.** Migración #3 con guarda, código muerto, y documentos:
    `PLAN.md` §3.3 («usuarios con permisos por cuenta y acceso por empresa»), §3.5 (roles por
@@ -571,3 +571,16 @@ Mandan sobre las preguntas de arriba.
   nombres unidos por coma («Permisos personalizados» si no hay roles).
 - Quitar la última empresa de un usuario no borra sus roles y permisos: la API sigue exigiendo al
   menos una empresa, así que no ocurre.
+
+## Decisiones al programar P3 (2026-09-29)
+
+- Ventana de usuario: casillas de empresas (`empresaIds`, con la empresa activa marcada al crear);
+  al crear, si el operador tiene `usuarios.asignar-permisos`, roles y permisos directos iniciales
+  (`AsignacionInicialDeUsuario`). Al editar ya no se tocan roles: se hace en la página de permisos.
+- Página `/usuarios/:usuarioId/permisos` (`usuario-permisos`, `usuarios.ver`; editar con
+  `usuarios.asignar-permisos`, oculto y bloqueado para uno mismo): roles con casillas y permisos por
+  módulo con insignias de origen (rol, acceso total, directo), «marcar todos» por módulo, filtro
+  «Solo los que tiene», contador, barra fija de guardar con confirmación que resume los cambios
+  (peligrosa si se agrega un rol con acceso total). Los orígenes se previsualizan en el cliente con
+  la lista de roles; el servidor decide al guardar. Sin `roles.ver` se arma todo con lo que responde
+  `GET /usuarios/:id/permisos`.

@@ -21,11 +21,13 @@ export const VENTANAS_CORE = {
   sinPermiso: { titulo: 'Sin acceso' },
   usuarios: {
     titulo: 'Usuarios',
-    descripcion: 'Personas con acceso a las empresas de esta cuenta y el rol que tienen en cada una.',
+    descripcion: 'Personas de esta cuenta: a qué empresas entran y, con sus roles y permisos, qué pueden hacer.',
   },
+  permisosDeUsuario: { titulo: 'Roles y permisos' },
   roles: {
     titulo: 'Roles y permisos',
-    descripcion: 'Cada rol agrupa permisos de pantallas y de acciones. Un usuario tiene un rol en cada empresa.',
+    descripcion:
+      'Cada rol agrupa permisos de pantallas y de acciones. Un usuario puede tener varios roles y sus permisos valen en todas las empresas a las que entra.',
   },
   configuracion: {
     titulo: 'Configuración',

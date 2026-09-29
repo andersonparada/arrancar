@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { UserPlus, Users } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { usarSesion } from '../almacenes/sesion';
 import BotonBase from '../componentes/BotonBase.vue';
 import EncabezadoPagina from '../componentes/EncabezadoPagina.vue';
 import EstadoVacio from '../componentes/EstadoVacio.vue';
@@ -12,11 +14,11 @@ import { usarEdicionDeUsuario } from '../composables/usuarios/usar-edicion-de-us
 import { usarUsuarios } from '../composables/usuarios/usar-usuarios';
 import { VENTANAS_CORE } from '../textos';
 
-const { usuarios, roles, cargando, cargar } = usarUsuarios();
-const { edicion, empresas, opcionesRol, esElMismo, errores, enviando, ...ventana } = usarEdicionDeUsuario(
-  roles,
-  cargar,
-);
+const router = useRouter();
+const sesion = usarSesion();
+const { usuarios, roles, catalogo, cargando, cargar } = usarUsuarios();
+const { edicion, empresas, puedeAsignar, esElMismo, errores, enviando, ...ventana } = usarEdicionDeUsuario(cargar);
+const verPermisos = (id: string) => router.push({ name: 'usuario-permisos', params: { usuarioId: id } });
 const contrasena = usarCambioDeContrasena();
 const { cambio } = contrasena;
 </script>
@@ -34,7 +36,9 @@ const { cambio } = contrasena;
         <TarjetaDeUsuario
           :usuario="usuario"
           :nombre="nombreCompleto(usuario)"
+          :es-el-mismo="usuario.id === sesion.usuario?.id"
           @editar="ventana.abrir(usuario)"
+          @permisos="verPermisos(usuario.id)"
           @cambiar-contrasena="contrasena.abrir(usuario)"
         />
       </li>
@@ -43,7 +47,9 @@ const { cambio } = contrasena;
     <VentanaDeUsuario
       v-model="edicion"
       :empresas="empresas"
-      :opciones-rol="opcionesRol"
+      :roles="roles"
+      :catalogo="catalogo"
+      :puede-asignar="puedeAsignar"
       :es-el-mismo="esElMismo"
       :errores="errores"
       :enviando="enviando"

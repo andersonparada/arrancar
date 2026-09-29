@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import type { EdicionDeUsuario } from '../../composables/usuarios/edicion-de-usuario';
+import type { GrupoPermisos, Rol } from '../../servicios/roles.api';
 import BotonBase from '../BotonBase.vue';
 import CampoInterruptor from '../CampoInterruptor.vue';
-import CampoSelector from '../CampoSelector.vue';
 import CampoTexto from '../CampoTexto.vue';
 import VentanaModal from '../VentanaModal.vue';
+import AsignacionInicialDeUsuario from './AsignacionInicialDeUsuario.vue';
 
 defineProps<{
   empresas: { id: string; nombre: string }[];
-  opcionesRol: { valor: string; texto: string }[];
+  /** Roles y catálogo para dar al crear; solo se muestran si `puedeAsignar`. */
+  roles: Rol[];
+  catalogo: GrupoPermisos[];
+  puedeAsignar: boolean;
   esElMismo: boolean;
   errores: Record<string, string>;
   enviando: boolean;
@@ -69,7 +73,7 @@ const edicion = defineModel<EdicionDeUsuario>({ required: true });
         requerido
         :error="errores.contrasena"
       />
-      <p v-if="esElMismo" class="text-sm text-tierra-500">No puede cambiar sus propios accesos.</p>
+      <p v-if="esElMismo" class="text-sm text-tierra-500">No puede cambiar sus propias empresas ni su estado.</p>
       <template v-else>
         <CampoInterruptor
           v-if="edicion.usuarioId"
@@ -77,17 +81,33 @@ const edicion = defineModel<EdicionDeUsuario>({ required: true });
           etiqueta="Usuario activo"
           descripcion="Un usuario inactivo no puede iniciar sesión."
         />
-        <fieldset class="space-y-3">
-          <legend class="text-sm font-semibold">Acceso por empresa</legend>
-          <p v-if="errores.accesos" class="text-sm text-red-700">{{ errores.accesos }}</p>
-          <CampoSelector
+        <fieldset class="space-y-2">
+          <legend class="text-sm font-semibold">Empresas a las que entra</legend>
+          <p class="text-xs text-tierra-500">Lo que puede hacer se define en sus roles y permisos.</p>
+          <p v-if="errores.empresaIds" class="text-sm text-red-700 dark:text-red-400" role="alert">
+            {{ errores.empresaIds }}
+          </p>
+          <label
             v-for="empresa in empresas"
             :key="empresa.id"
-            v-model="edicion.rolPorEmpresa[empresa.id]"
-            :etiqueta="empresa.nombre"
-            :opciones="opcionesRol"
-          />
+            class="flex cursor-pointer items-center gap-2.5 rounded-lg p-2 hover:bg-tierra-50 dark:hover:bg-tierra-800"
+          >
+            <input
+              v-model="edicion.empresaIds"
+              type="checkbox"
+              :value="empresa.id"
+              class="size-4 rounded accent-campo-700"
+            />
+            <span class="text-sm">{{ empresa.nombre }}</span>
+          </label>
         </fieldset>
+        <AsignacionInicialDeUsuario
+          v-if="!edicion.usuarioId && puedeAsignar"
+          v-model:rol-ids="edicion.rolIds"
+          v-model:permisos="edicion.permisos"
+          :roles="roles"
+          :catalogo="catalogo"
+        />
       </template>
     </form>
     <template #pie>

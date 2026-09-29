@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Usuario } from '../../servicios/usuarios.api';
-import { cambiosDelUsuario, datosDelNuevoUsuario, edicionDe, SIN_ACCESO, usuarioLimpio } from './edicion-de-usuario';
+import { cambiosDelUsuario, datosDelNuevoUsuario, edicionDe, usuarioLimpio } from './edicion-de-usuario';
 
 const ana: Usuario = {
   id: 'u1',
@@ -10,33 +10,43 @@ const ana: Usuario = {
   correo: null,
   activo: true,
   ultimoAccesoEn: null,
-  accesos: [{ empresaId: 'e1', empresaNombre: 'Finca', rolId: 'r1', rolNombre: 'Encargado' }],
+  empresas: [{ empresaId: 'e1', empresaNombre: 'Finca' }],
+  roles: [{ rolId: 'r1', rolNombre: 'Encargado', accesoTotal: false }],
+  totalPermisosDirectos: 0,
 };
 
 describe('edición de usuario', () => {
-  it('pone un selector por empresa, sin acceso donde el usuario no entra', () => {
-    expect(edicionDe(['e1', 'e2'], ana).rolPorEmpresa).toEqual({ e1: 'r1', e2: SIN_ACCESO });
+  it('al editar marca las empresas donde el usuario entra', () => {
+    expect(edicionDe('e2', ana).empresaIds).toEqual(['e1']);
   });
 
-  it('un usuario nuevo empieza vacío y activo', () => {
-    expect(edicionDe(['e1'])).toMatchObject({ usuarioId: null, nombres: '', activo: true, rolPorEmpresa: { e1: '' } });
+  it('un usuario nuevo empieza vacío, activo y entrando a la empresa activa', () => {
+    expect(edicionDe('e1')).toMatchObject({ usuarioId: null, nombres: '', activo: true, empresaIds: ['e1'] });
+    expect(edicionDe(null).empresaIds).toEqual([]);
   });
 
-  it('al crear solo manda las empresas con rol y omite el usuario si no se escribió', () => {
-    const edicion = { ...edicionDe(['e1', 'e2']), nombres: 'Luis', rolPorEmpresa: { e1: 'r1', e2: SIN_ACCESO } };
+  it('al crear manda las empresas y omite usuario, roles y permisos si no hay nada que mandar', () => {
+    const datos = datosDelNuevoUsuario({ ...edicionDe('e1'), nombres: 'Luis', rolIds: ['r1'] }, false);
 
-    const datos = datosDelNuevoUsuario(edicion);
-
-    expect(datos.accesos).toEqual([{ empresaId: 'e1', rolId: 'r1' }]);
+    expect(datos.empresaIds).toEqual(['e1']);
     expect(datos.usuario).toBeUndefined();
     expect(datos.correo).toBeNull();
+    expect(datos).not.toHaveProperty('rolIds');
+    expect(datos).not.toHaveProperty('permisos');
+  });
+
+  it('quien puede asignar permisos manda los roles y permisos que eligió', () => {
+    const edicion = { ...edicionDe('e1'), rolIds: ['r1'], permisos: ['terceros.ver'] };
+
+    expect(datosDelNuevoUsuario(edicion, true)).toMatchObject({ rolIds: ['r1'], permisos: ['terceros.ver'] });
+    expect(datosDelNuevoUsuario({ ...edicion, permisos: [] }, true)).not.toHaveProperty('permisos');
   });
 
   it('quien se edita a sí mismo no manda su estado ni sus accesos', () => {
-    const edicion = edicionDe(['e1'], ana);
+    const edicion = edicionDe('e1', ana);
 
-    expect(cambiosDelUsuario(edicion, true)).not.toHaveProperty('accesos');
-    expect(cambiosDelUsuario(edicion, false)).toMatchObject({ activo: true, accesos: [{ empresaId: 'e1' }] });
+    expect(cambiosDelUsuario(edicion, true)).not.toHaveProperty('empresaIds');
+    expect(cambiosDelUsuario(edicion, false)).toMatchObject({ activo: true, empresaIds: ['e1'] });
   });
 
   it('el usuario para iniciar sesión solo lleva letras minúsculas sin tilde', () => {

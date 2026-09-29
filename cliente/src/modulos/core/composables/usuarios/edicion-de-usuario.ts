@@ -1,7 +1,4 @@
-import type { AccesoSolicitado, CambiosUsuario, DatosNuevoUsuario, Usuario } from '../../servicios/usuarios.api';
-
-/** Valor del selector de rol cuando el usuario no entra a esa empresa. */
-export const SIN_ACCESO = '';
+import type { CambiosUsuario, DatosNuevoUsuario, Usuario } from '../../servicios/usuarios.api';
 
 export interface EdicionDeUsuario {
   abierta: boolean;
@@ -14,14 +11,15 @@ export interface EdicionDeUsuario {
   correo: string;
   contrasena: string;
   activo: boolean;
-  rolPorEmpresa: Record<string, string>;
+  /** Las empresas a las que entra. */
+  empresaIds: string[];
+  /** Solo al crear: roles y permisos directos iniciales (después se cambian en la página de permisos). */
+  rolIds: string[];
+  permisos: string[];
 }
 
 export const nombreCompleto = ({ nombres, apellidos }: Pick<Usuario, 'nombres' | 'apellidos'>) =>
   `${nombres} ${apellidos}`.trim();
-
-const rolEn = (empresaId: string, usuario?: Usuario) =>
-  usuario?.accesos.find((acceso) => acceso.empresaId === empresaId)?.rolId ?? SIN_ACCESO;
 
 const USUARIO_NUEVO = { usuarioId: null, nombres: '', apellidos: '', usuario: '', correo: '', activo: true };
 
@@ -34,35 +32,46 @@ const datosDe = (usuario: Usuario) => ({
   activo: usuario.activo,
 });
 
-/** La ventana abierta con los datos del usuario, o vacía si es nuevo; un selector de rol por empresa. */
-export function edicionDe(empresaIds: string[], usuario?: Usuario): EdicionDeUsuario {
+/**
+ * La ventana abierta con los datos del usuario, o vacía si es nuevo (entrando a la empresa activa,
+ * que es lo más común).
+ */
+export function edicionDe(empresaActivaId: string | null, usuario?: Usuario): EdicionDeUsuario {
+  const nuevas = empresaActivaId ? [empresaActivaId] : [];
   return {
     ...(usuario ? datosDe(usuario) : USUARIO_NUEVO),
     abierta: true,
     usuarioEscritoAMano: false,
     contrasena: '',
-    rolPorEmpresa: Object.fromEntries(empresaIds.map((id) => [id, rolEn(id, usuario)])),
+    empresaIds: usuario ? usuario.empresas.map((empresa) => empresa.empresaId) : nuevas,
+    rolIds: [],
+    permisos: [],
   };
 }
 
-export const accesosElegidos = (rolPorEmpresa: Record<string, string>): AccesoSolicitado[] =>
-  Object.entries(rolPorEmpresa)
-    .filter(([, rolId]) => rolId !== SIN_ACCESO)
-    .map(([empresaId, rolId]) => ({ empresaId, rolId }));
+/** Los roles y permisos iniciales solo van si el operador puede asignarlos y eligió alguno. */
+const asignacionesIniciales = (edicion: EdicionDeUsuario, puedeAsignar: boolean) =>
+  puedeAsignar
+    ? {
+        ...(edicion.rolIds.length ? { rolIds: edicion.rolIds } : {}),
+        ...(edicion.permisos.length ? { permisos: edicion.permisos } : {}),
+      }
+    : {};
 
-export const datosDelNuevoUsuario = (edicion: EdicionDeUsuario): DatosNuevoUsuario => ({
+export const datosDelNuevoUsuario = (edicion: EdicionDeUsuario, puedeAsignar: boolean): DatosNuevoUsuario => ({
   nombres: edicion.nombres,
   apellidos: edicion.apellidos,
   usuario: edicion.usuario || undefined,
   correo: edicion.correo || null,
   contrasena: edicion.contrasena,
-  accesos: accesosElegidos(edicion.rolPorEmpresa),
+  empresaIds: edicion.empresaIds,
+  ...asignacionesIniciales(edicion, puedeAsignar),
 });
 
-/** Nadie cambia su propio estado ni sus accesos: al editarse a sí mismo solo van sus datos. */
+/** Nadie cambia su propio estado ni sus empresas: al editarse a sí mismo solo van sus datos. */
 export function cambiosDelUsuario(edicion: EdicionDeUsuario, esElMismo: boolean): CambiosUsuario {
   const datos = { nombres: edicion.nombres, apellidos: edicion.apellidos, correo: edicion.correo || null };
-  return esElMismo ? datos : { ...datos, activo: edicion.activo, accesos: accesosElegidos(edicion.rolPorEmpresa) };
+  return esElMismo ? datos : { ...datos, activo: edicion.activo, empresaIds: edicion.empresaIds };
 }
 
 /** El usuario para iniciar sesión solo lleva letras minúsculas sin tilde. */

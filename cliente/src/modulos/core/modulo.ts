@@ -29,6 +29,13 @@ export const moduloCore: DefinicionModuloCliente = {
       meta: { permiso: 'usuarios.ver', titulo: VENTANAS_CORE.usuarios.titulo },
     },
     {
+      path: '/usuarios/:usuarioId/permisos',
+      name: 'usuario-permisos',
+      component: () => import('./paginas/PermisosDeUsuario.vue'),
+      props: (ruta) => ({ usuarioId: ruta.params.usuarioId }),
+      meta: { permiso: 'usuarios.ver', titulo: VENTANAS_CORE.permisosDeUsuario.titulo },
+    },
+    {
       path: '/roles',
       name: 'roles',
       component: () => import('./paginas/RolesCuenta.vue'),

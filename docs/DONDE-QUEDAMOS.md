@@ -120,9 +120,14 @@ decisiones e investigación con Opus).
   asigna **por empresa** (`core.empresa_usuarios.rol_id`), así que esto cambia el
   modelo: **lo diseña el arquitecto** y se confirma con el usuario antes de programar.
 
-- **Permisos directos a usuarios:** diseñado en
-  `docs/modulos/diseno-permisos-por-usuario.md` (pasos P1–P4 y L1) con las respuestas
-  del usuario; se programa P1.
+- **Permisos directos a usuarios:** P1–P3 **hechos** (diseño en
+  `docs/modulos/diseno-permisos-por-usuario.md`): varios roles por usuario en la
+  cuenta más permisos directos (solo suman), la empresa solo decide dónde entra,
+  permiso `usuarios.asignar-permisos`, auditoría, ventana de usuarios con empresas y
+  roles, y página «Permisos de <usuario>» con el origen de cada permiso. Pruebas:
+  servidor 948, cliente 252, generador 46. Sin probar en el navegador. Faltan **P4**
+  (quitar `empresa_usuarios.rol_id`) y **L1** (alcance «para asignar» de la ventana de
+  localidades), y después los pasos 4–11 de H5b.
 - **No hay nada en producción** (dicho por el usuario el 2026-09-29): las migraciones
   de datos no necesitan cuidar casos reales, solo no romper la base de desarrollo.
 
