@@ -151,14 +151,26 @@ pruebas, sin errores de ESLint ni de tipos.
   «Reclasificar» en el reporte de Movimientos). Pruebas: servidor 1110, cliente 300,
   generador 46. Las pantallas de P7 no se han visto en el navegador.
 
+## Avance (2026-09-29, tarde-noche, agentes en paralelo)
+
+- **Errores medios y bajos de QA** (`4f3dfb1`): nombres únicos sin mayúsculas ni acentos
+  (`core.nombre_normalizado` en roles, localidades, tipos, departamentos, bancos, cuentas,
+  conceptos y categorías), inversos de transferencia fuera de «Notas», número de la
+  transferencia en el reporte, mensajes de validación claros, limitador en español,
+  **contraseña actual al cambiar la propia**. Sin cambiar (falta decisión): la primera
+  conciliación en cualquier mes (B5 lo permite a propósito) y las fechas futuras.
+- **Archivos X1 y F1** (`b720266`, `f035cac`): fórmulas de Excel sin valor o con error
+  se informan por celda; fotos por su formato real (JPEG, PNG, WebP), HEIC rechazado con
+  ayuda, 100 MP, 30 subidas por minuto.
+- **Planes nuevos:** `docs/modulos/plan-archivos-y-h2.md` (con respuestas del usuario) y
+  `docs/modulos/diseno-datos-libro-de-compras.md` (preguntas en su §16).
+- Pruebas: servidor 1145, cliente 300, generador 46. Cada agente que programa usa su
+  propia copia (worktree) y su base de pruebas (`BD_PRUEBAS`).
+
 ## Siguiente
 
-1. **Errores medios de QA:** nombres repetidos que solo cambian en
-   mayúsculas o acentos (localidades y conceptos); inversos de una transferencia
-   anulada en «Notas»; la primera conciliación puede empezar en cualquier mes.
-2. **Errores bajos de QA** en un solo paso (mensajes técnicos, limitador en inglés,
-   cambiar la propia contraseña sin pedir la actual, fechas futuras, número de la
-   transferencia en el reporte).
+1. **H6b y H8**: en curso (agente Sonnet).
+2. **Archivos F2, F3 y H2a–H2d** según `plan-archivos-y-h2.md`.
 3. **H6b** anulación en lote de cheques caducos.
 4. **H8** interés bruto e ISR retenido en las notas de intereses.
 5. **Archivos** (JPEG, PNG y WebP; HEIC se rechaza y iOS entrega JPEG; PDF con qpdf) y
