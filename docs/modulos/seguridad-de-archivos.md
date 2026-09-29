@@ -26,7 +26,7 @@ librsvg 2.62.91, libheif 1.23.2), exceljs 4.4.0 (jszip 3.10.2),
 
 | # | Gravedad | Hallazgo | Corrección |
 |---|---|---|---|
-| A1 | **Alta** | Bomba zip en importar Excel (sin límite descomprimido) | Pre-validar el zip, límite 5 MB, límite de tasa |
+| A1 | **Alta** | Bomba zip en importar Excel (sin límite descomprimido) | **Corregido en `1cb46c3`**: zip pre-validado (`ValidadorDeXlsx`, código propio con `node:zlib`, tope de 25 MB por parte y 50 MB en total, máximo 100 entradas, sin macros, `externalLinks` ni `embeddings`), 5 MB por archivo (413) y 5 importaciones por minuto por usuario (429) |
 | A2 | Media | MIME del cliente; sharp acepta cualquier formato | `metadata()` y exigir `jpeg/png/webp` |
 | A3 | Media | `limitInputPixels` por omisión (268 MP), dos decodificaciones, sin cola | 50–100 MP, `.clone()`, cola de 1–2, `sharp.concurrency(1)` |
 | A4 | Media | Sin límite de tasa en subir e importar | Límite por usuario y cuota por cuenta |
