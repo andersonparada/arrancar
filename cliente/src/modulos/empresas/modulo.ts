@@ -1,4 +1,4 @@
-import { Building2, MapPin, MapPinned } from 'lucide-vue-next';
+import { Building2, MapPin, MapPinned, Network } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_EMPRESAS, VENTANAS_EMPRESAS } from './textos';
 // generador: importaciones
@@ -44,6 +44,12 @@ export const moduloEmpresas: DefinicionModuloCliente = {
       props: true,
       meta: { permiso: 'empresas.localidades.editar', titulo: VENTANAS_EMPRESAS.localidades.editar },
     },
+    {
+      path: '/empresas/departamentos',
+      name: 'empresas.departamentos',
+      component: () => import('./paginas/ListaDeDepartamentos.vue'),
+      meta: { permiso: 'empresas.departamentos.ver', titulo: VENTANAS_EMPRESAS.departamentos.titulo },
+    },
     // generador: rutas
   ],
   menu: [
@@ -72,6 +78,13 @@ export const moduloEmpresas: DefinicionModuloCliente = {
           icono: MapPin,
           seccion: 'administracion',
           permiso: 'empresas.localidades.ver',
+        },
+        {
+          titulo: VENTANAS_EMPRESAS.departamentos.titulo,
+          ruta: '/empresas/departamentos',
+          icono: Network,
+          seccion: 'administracion',
+          permiso: 'empresas.departamentos.ver',
         },
         // generador: menu
       ],

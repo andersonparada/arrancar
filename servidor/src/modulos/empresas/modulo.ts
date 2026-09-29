@@ -20,6 +20,7 @@ import { RepositorioTiposDeLocalidadDrizzle } from './infraestructura/persistenc
 import { rutasDeLocalidades } from './composicion/localidades.js';
 import { rutasDeAccesosALocalidades } from './composicion/accesos-a-localidades.js';
 import { ALCANCE_DE_LOCALIDADES } from './infraestructura/persistencia/accesos-a-localidades.tablas.js';
+import { rutasDeDepartamentos } from './composicion/departamentos.js';
 // generador: importaciones
 
 /** El controlador de empresas con sus casos de uso, y lo que comparten las demás rutas del módulo. */
@@ -55,6 +56,7 @@ function componerRutas(compartidas: DependenciasCompartidas) {
     rutasDeTiposDeLocalidad(),
     rutasDeLocalidades(),
     rutasDeAccesosALocalidades(),
+    rutasDeDepartamentos(),
     // generador: rutas
   ]);
 }
@@ -93,6 +95,15 @@ export const moduloEmpresas: DefinicionModulo = {
     },
     { clave: 'empresas.localidades.importar', descripcion: 'Importar localidades desde Excel' },
     { clave: 'empresas.localidades.exportar', descripcion: 'Exportar localidades a Excel' },
+    {
+      clave: 'empresas.departamentos.ver',
+      descripcion: 'Ver los departamentos de toda la empresa y los de las localidades que ve',
+    },
+    { clave: 'empresas.departamentos.crear', descripcion: 'Registrar departamentos' },
+    { clave: 'empresas.departamentos.editar', descripcion: 'Editar, inactivar y reactivar departamentos' },
+    { clave: 'empresas.departamentos.eliminar', descripcion: 'Eliminar departamentos' },
+    { clave: 'empresas.departamentos.importar', descripcion: 'Importar departamentos desde Excel' },
+    { clave: 'empresas.departamentos.exportar', descripcion: 'Exportar departamentos a Excel' },
     // generador: permisos
   ],
   recursosConAlcance: [

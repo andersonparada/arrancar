@@ -1,7 +1,11 @@
-/** Un registro que se elige en una columna de referencia: su id y el nombre que se escribe en Excel. */
+/**
+ * Un registro que se elige en una columna de referencia: su id y el nombre que se escribe en Excel
+ * (o su código, si lo tiene).
+ */
 export interface OpcionDeReferencia {
   id: string;
   nombre: string;
+  codigo?: string;
 }
 
 interface ComunDeColumna {
@@ -23,6 +27,8 @@ export type Columna =
       tipo: 'referencia';
       /** El campo del registro con el nombre de lo elegido: `potreroNombre`. */
       campoDeNombre: string;
+      /** Si las opciones traen `codigo`, en Excel también se puede escribir; la hoja de instrucciones lo dice. */
+      tambienPorCodigo?: boolean;
       /** Lo que se puede elegir; se consulta una vez por importación, dentro de su transacción. */
       opciones: () => Promise<OpcionDeReferencia[]>;
     });
@@ -35,10 +41,20 @@ export const normalizar = (texto: string) =>
 
 /**
  * Las opciones de una columna de referencia a partir de las consultas del
- * recurso referido: su id y el campo que lo nombra.
+ * recurso referido: su id y el campo que lo nombra. Con `campoDeCodigo`, en Excel también
+ * se puede escribir su código.
  * @example opcionesDe(new ConsultasPotrerosDrizzle(), 'nombre')
+ * @example opcionesDe(new ConsultasLocalidadesDrizzle(), 'nombre', 'codigo')
  */
 export const opcionesDe =
-  <Registro extends { id: string }>(consultas: { listar(): Promise<Registro[]> }, campo: keyof Registro) =>
+  <Registro extends { id: string }>(
+    consultas: { listar(): Promise<Registro[]> },
+    campo: keyof Registro,
+    campoDeCodigo?: keyof Registro,
+  ) =>
   async (): Promise<OpcionDeReferencia[]> =>
-    (await consultas.listar()).map((registro) => ({ id: registro.id, nombre: String(registro[campo]) }));
+    (await consultas.listar()).map((registro) => ({
+      id: registro.id,
+      nombre: String(registro[campo]),
+      ...(campoDeCodigo ? { codigo: String(registro[campoDeCodigo]) } : {}),
+    }));

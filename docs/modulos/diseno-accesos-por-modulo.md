@@ -560,7 +560,7 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
    lista y «Usuarios con acceso» en la ficha. Elegir usuario (selector con buscador), casillas con «marcar/desmarcar
    todas», resumen de cambios, aviso y confirmación al asignarse a sí mismo, casillas informativas si `veTodas`,
    inactivas marcadas. Nombre de departamento/municipio en lista y ficha: no se hizo (sigue el código).
-9. **H5c (servidor) Departamentos.** Tabla con alcance opcional, casos de uso, Excel,
+9. **[HECHO] H5c (servidor) Departamentos.** Tabla con alcance opcional, casos de uso, Excel,
    permisos (migración 7).
 10. **H5c (cliente) Departamentos.** Pantalla de catálogo con selector de localidad.
 11. **Docs.** `DONDE-QUEDAMOS.md`, bitácora de `PLAN.md`, marcar H5b/H5c en el plan de
@@ -648,6 +648,23 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
   `PUT` acepta el propio usuario del operador y audita `asignar`/`quitar` con `aSiMismo`.
 - La ficha exige `asignar` (no `ver`), pero usa el operador normal: solo abre localidades que el usuario ve.
 - Composición: `composicion/accesos-a-localidades.ts`, registrada en `modulo.ts`.
+
+## 16. Notas de implementación del paso 9 (2026-09-29)
+
+- Generado con `npm run generar -- recurso empresas/departamento` (`generador/definiciones/empresas/departamento.ts`, catálogo,
+  `baja: 'inactivar'`, ícono `Network`) y completado a mano. La tabla se editó **antes** de generar la migración:
+  `0008_departamentos` (llave compuesta `(localidad_id, empresa_id)` no action, únicos de código y nombre en la empresa,
+  `(id, empresa_id)`, checks de código y nombre, y `politicaPorAlcanceOpcional(ALCANCE_DE_LOCALIDADES, 'localidad_id')`).
+  **Sin permisos para roles** (igual que el paso 5): solo el acceso total recibe los nuevos; por eso no hay migración custom.
+- Permisos: `.ver`, `.crear`, `.editar`, `.eliminar`, `.importar`, `.exportar`. `EliminarDepartamento` (y `DELETE`) se agregó a mano,
+  con auditoría `eliminar`; inactivar y reactivar audita con `auditarCambioDeEstado`. El código va en mayúsculas (dominio).
+- Mensajes de duplicado por código y por nombre (sin la sugerencia de pedir acceso: los departamentos que no se ven son
+  solo los de localidades ajenas y el aviso normal basta).
+- Excel: la localidad se escribe por **nombre o código**. `OpcionDeReferencia` suma `codigo` opcional, `opcionesDe` un tercer
+  parámetro (`campoDeCodigo`) y la columna `tambienPorCodigo` (hoja de instrucciones). Una localidad que el usuario no ve
+  se informa como inexistente.
+- El cliente quedó generado sin ajustar (salvo el arreglo mecánico de importaciones): es del paso 10; falta el selector de
+  localidad opcional y el botón de eliminar.
 
 ## 11. Preguntas para el usuario
 

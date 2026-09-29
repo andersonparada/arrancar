@@ -44,6 +44,16 @@ describe('leer una celda', () => {
     expect(leerCelda('Las Flores', POTRERO, opciones)).toEqual({ error: 'No existe "Las Flores" en Dato.' });
   });
 
+  it('las referencias con código también se buscan por su código', () => {
+    const opciones = [
+      { id: 'l1', nombre: 'Finca Norte', codigo: 'FN' },
+      { id: 'l2', nombre: 'Planta', codigo: 'PL-1' },
+    ];
+
+    expect(leerCelda('fn', POTRERO, opciones)).toEqual({ valor: 'l1' });
+    expect(leerCelda('Planta', POTRERO, opciones)).toEqual({ valor: 'l2' });
+  });
+
   it('una celda vacía es nula, salvo que el dato sea obligatorio', () => {
     expect(leerCelda('  ', columna('texto'))).toEqual({ valor: null });
     expect(leerCelda(null, { ...columna('texto'), requerido: true })).toEqual({ error: 'Falta este dato.' });

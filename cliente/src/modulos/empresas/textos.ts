@@ -19,5 +19,11 @@ export const VENTANAS_EMPRESAS = {
     nuevo: 'Nueva localidad',
     editar: 'Editar localidad',
   },
+  departamentos: {
+    titulo: 'Departamentos',
+    descripcion: 'Los departamentos de la empresa.',
+    nuevo: 'Nuevo departamento',
+    editar: 'Editar departamento',
+  },
   // generador: ventanas
 } as const;

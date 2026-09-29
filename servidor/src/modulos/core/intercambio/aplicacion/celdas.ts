@@ -60,7 +60,9 @@ function leerOpcion(celda: unknown, opciones: Readonly<Record<string, string>>):
 
 function leerReferencia(celda: unknown, opciones: OpcionDeReferencia[], titulo: string): Lectura {
   const buscado = normalizar(textoDe(celda));
-  const encontradas = opciones.filter((opcion) => normalizar(opcion.nombre) === buscado);
+  const encontradas = opciones.filter((opcion) =>
+    [opcion.nombre, opcion.codigo].some((texto) => texto !== undefined && normalizar(texto) === buscado),
+  );
   if (encontradas.length === 1) return valor(encontradas[0]!.id);
   if (encontradas.length > 1) return error(`Hay varios con el nombre "${textoDe(celda)}" en ${titulo}.`);
   return error(`No existe "${textoDe(celda)}" en ${titulo}.`);
