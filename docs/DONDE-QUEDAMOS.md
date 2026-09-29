@@ -172,19 +172,40 @@ pruebas, sin errores de ESLint ni de tipos.
 - Pruebas: servidor 1178, cliente 313, generador 46. Cada agente que programa usa su
   propia copia (worktree) y su base de pruebas (`BD_PRUEBAS`).
 
-## Siguiente
+## Cierre del 2026-09-29 (consolidado sin correr pruebas, a pedido del usuario)
 
-1. **Archivos F2, F3 y H2a–H2d** según `plan-archivos-y-h2.md`.
-3. **H6b** anulación en lote de cheques caducos.
-4. **H8** interés bruto e ISR retenido en las notas de intereses.
-5. **Archivos** (JPEG, PNG y WebP; HEIC se rechaza y iOS entrega JPEG; PDF con qpdf) y
-   luego **H2** (estado de cuenta junto a la conciliación).
-6. **Libro de compras** (L1–L5) y **Cuentas por pagar** (CP1–CP5), con la nota de débito
-   marcada para Cuentas por pagar en Bancos: todas sus preguntas están respondidas.
+En `main`, además de lo anterior:
+- **H6b y H8** (anular en lote cheques caducos; intereses con ISR retenido y su reporte).
+- **Aviso de fecha futura** en notas, transferencias y saldos iniciales, y «Cheque
+  posfechado» en cheques (`b5f3c6f`).
+- **Archivos F2 y F3** (`a59fd50`, `90ee390`, migración core `0021`): `core.archivos`
+  con documentos y dueño, `/archivos/:id` solo imágenes sin dueño, foto de Clientes
+  verificada, PDF inspeccionado con qpdf (`InspectorQpdf`, `DocumentosProtegidos`,
+  `prlimit`), qpdf en el `Dockerfile` y `RUTA_QPDF`. El agente lo probó en su copia
+  (servidor 1246, cliente 313, generador 46); tras unirlo a `main` no se volvió a correr.
+- Decisiones del contador y del usuario sobre retenciones en
+  `docs/modulos/validacion-h7-h11-retenciones.md` (casilla SAT desmarcada no calcula
+  retenciones, riesgo aceptado; IDP en la base del ISR configurable por empresa).
 
-**Entorno:** en la nube no hay Docker; se usó un PostgreSQL 16 local en el puerto 5433
-con los mismos roles que `infra/postgres/init/01-roles.sh`. En una sesión nueva hay que
-levantarlo otra vez (o usar `npm run bd:levantar` en WSL).
+Solo en la rama `claude/serene-mayer-picg8x` (**no en `main`**, pantallas a medias):
+- **Libro de compras L1** (`b1bb5f4` … `9b03716`): L1-1 a L1-4 del servidor completos
+  (unique en `terceros.proveedores`, módulo `libro-de-compras`, secciones aportadas a
+  Empresas y Proveedores con avisos del mediador, datos fiscales de empresa y proveedor
+  con auditoría; migraciones terceros `0007` y libro-de-compras `0000`–`0001`; opción
+  `modulo` en `proteger()`). **L1-5 WIP y L1-6 pendiente**: falta poner
+  `SeccionesAportadas` en `VentanaDeEmpresa.vue`, `FormularioDeTercero.vue` y
+  `FichaDeTercero.vue`, y todo el cliente del módulo (servicio, componentes de sección y
+  ficha, `secciones` en su `modulo.ts`), correr pruebas y marcar L1 en los planes.
+
+## Siguiente (mañana)
+
+1. **Terminar L1** (pantallas), correr todas las pruebas y subirlo a `main`.
+2. **H2a–H2d**: saldo transcrito y estado de cuenta en la conciliación
+   (`plan-archivos-y-h2.md`; la ruta de subida debe usar `limitarSubidas`). Pedir al
+   usuario un PDF real de banco con datos tachados.
+3. **Libro de compras L2 y L3**, aplicando los ajustes del contador, y luego **Cuentas
+   por pagar CP1**.
+4. Probar en el navegador lo nuevo (P7, H6b, H8, avisos de fecha, Archivos).
 
 ## Preguntas abiertas para el usuario
 
