@@ -68,14 +68,18 @@ decisiones e investigación con Opus).
 
 ## En curso (2026-09-29)
 
-- **Ajustes de conceptos, servidor** (punto 3): agente programador; avance guardado en
-  la rama `claude/serene-mayer-picg8x` (commit WIP `674cdac`), sin probar todavía.
-  Migraciones `0021` y `0022` de bancos.
+- **Ajustes de conceptos, servidor** (punto 3): **hecho** (`a49021e`): origen en
+  movimientos (P6), `causa_de_anulacion` del cheque y sin `cheque_caduco` (P1), 8
+  sugeridos nuevos y «Cheque rechazado» en «Cobros a clientes» (P8, P5), «Pago a
+  proveedores» solo sin Cuentas por pagar (P3). Migraciones `0021` y `0022` de bancos.
+  Pruebas del servidor: 883. **P7** (sugerencias en «Sin clasificar») queda sin hacer:
+  falta definir cómo normalizar el beneficiario (propuesta: último concepto activo y
+  compatible del mismo beneficiario, sin mayúsculas ni acentos).
+- **Ajustes de conceptos, cliente**: agente frontend en curso.
 - **Diseño de H5b/H5c** (punto 2): **hecho** en `docs/modulos/diseno-accesos-por-modulo.md`
-  (11 pasos). Hallazgo: `core.accesos_datos` está vacía y nada la usa (el alcance por
-  cuenta bancaria nunca se programó), así que se elimina sin migrar datos. Los pasos 1
-  (alcance nuevo en el core) y 2 (excepción de ESLint) no esperan respuestas; se
-  programan cuando termine el agente de conceptos (la base de pruebas es una sola).
+  (11 pasos). `core.accesos_datos` está vacía y nada la usa: se elimina sin migrar datos.
+- **H5b pasos 1 y 2** (alcance nuevo en el core y excepción de ESLint): agente backend en
+  curso.
 
 Forma de trabajo: cada avance va en commit a la rama; a `main` solo entra lo terminado
 y probado (pruebas del servidor, ESLint y `tsc` en verde).
