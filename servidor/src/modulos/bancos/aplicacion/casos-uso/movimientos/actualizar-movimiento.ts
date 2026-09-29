@@ -1,5 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { MovimientoDto, SolicitudDeMovimiento } from '../../dto/movimiento.dto.js';
+import type { Movimiento } from '../../../dominio/movimiento.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
 
 interface CorreccionDeMovimiento {
@@ -9,7 +10,7 @@ interface CorreccionDeMovimiento {
   esSaldoInicial: boolean;
 }
 
-/** Corrige un movimiento vigente; su cuenta no cambia. */
+/** Corrige un movimiento vigente; su cuenta no cambia. Deja en la auditoría cómo estaba antes. */
 export class ActualizarMovimiento {
   constructor(private readonly dependencias: DependenciasDeMovimientos) {}
 
@@ -21,23 +22,35 @@ export class ActualizarMovimiento {
     operador: Operador,
     { movimientoId, solicitud, esSaldoInicial }: CorreccionDeMovimiento,
   ): Promise<MovimientoDto> {
-    const { unidadDeTrabajo, repositorio, consultas, reglas } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, consultas, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
       movimiento.exigirClase(esSaldoInicial);
-      const efectoAnterior = movimiento.efectoEnCentavos;
-      const { fecha: fechaAnterior } = movimiento.instantanea();
-      movimiento.corregir(solicitud);
-      const { cuentaBancariaId, fecha, saldoInicial } = movimiento.instantanea();
-      await reglas.revisar(operador, {
-        cuentaBancariaId,
-        movimientoId,
-        queda: { fecha, saldoInicial },
-        fechas: [fechaAnterior, fecha],
-        diferencia: movimiento.efectoEnCentavos - efectoAnterior,
+      const anterior = await consultas.obtener(movimientoId);
+      await this.corregirYGuardar(operador, movimiento, solicitud);
+      await auditoria.registrar({
+        recurso: 'bancos.movimientos',
+        registroId: movimientoId,
+        accion: 'corregir',
+        anterior,
       });
-      await repositorio.guardar(movimiento);
       return consultas.obtener(movimientoId);
     });
+  }
+
+  private async corregirYGuardar(operador: Operador, movimiento: Movimiento, solicitud: SolicitudDeMovimiento) {
+    const { repositorio, reglas } = this.dependencias;
+    const efectoAnterior = movimiento.efectoEnCentavos;
+    const { fecha: fechaAnterior } = movimiento.instantanea();
+    movimiento.corregir(solicitud);
+    const { cuentaBancariaId, fecha, saldoInicial } = movimiento.instantanea();
+    await reglas.revisar(operador, {
+      cuentaBancariaId,
+      movimientoId: movimiento.id.valor,
+      queda: { fecha, saldoInicial },
+      fechas: [fechaAnterior, fecha],
+      diferencia: movimiento.efectoEnCentavos - efectoAnterior,
+    });
+    await repositorio.guardar(movimiento);
   }
 }

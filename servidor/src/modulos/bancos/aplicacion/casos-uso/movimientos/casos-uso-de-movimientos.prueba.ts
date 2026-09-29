@@ -33,6 +33,47 @@ describe('registrar y corregir', () => {
     expect(corregido).toMatchObject({ referencia: 'Boleta 124', cuentaBancariaId: CUENTA });
   });
 
+  it('audita la corrección de una nota con cómo estaba antes', async () => {
+    const creada = await casos.crear.ejecutar(operador, nota());
+
+    await casos.actualizar.ejecutar(operador, {
+      movimientoId: creada.id,
+      solicitud: nota({ monto: '250.00', fecha: '2026-01-20' }),
+      esSaldoInicial: false,
+    });
+
+    expect(casos.auditoria.entradas).toEqual([
+      expect.objectContaining({
+        recurso: 'bancos.movimientos',
+        registroId: creada.id,
+        accion: 'corregir',
+        anterior: expect.objectContaining({ monto: creada.monto, fecha: '2026-01-15' }),
+      }),
+    ]);
+  });
+
+  it('audita la corrección del saldo inicial', async () => {
+    const inicial = await casos.crear.ejecutar(operador, nota({ saldoInicial: true, fecha: '2026-01-01' }));
+
+    await casos.actualizar.ejecutar(operador, {
+      movimientoId: inicial.id,
+      solicitud: nota({ saldoInicial: true, fecha: '2026-01-01', monto: '500.00' }),
+      esSaldoInicial: true,
+    });
+
+    expect(casos.auditoria.acciones()).toEqual(['bancos.movimientos:corregir']);
+  });
+
+  it('si la corrección se rechaza no deja rastro', async () => {
+    const inicial = await casos.crear.ejecutar(operador, nota({ saldoInicial: true, fecha: '2026-01-01' }));
+
+    await expect(
+      casos.actualizar.ejecutar(operador, { movimientoId: inicial.id, solicitud: nota(), esSaldoInicial: false }),
+    ).rejects.toThrow(NoEsUnaNota);
+
+    expect(casos.auditoria.entradas).toEqual([]);
+  });
+
   it('no registra en una cuenta inactiva', async () => {
     casos.registros.cuentasInactivas.add(CUENTA);
 

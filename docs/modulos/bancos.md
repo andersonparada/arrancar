@@ -56,7 +56,8 @@ rastro para auditoría.
 - El **generador** la incluye en todo recurso con baja `eliminar` o `inactivar`.
 - Se ajusta lo existente: inactivar clientes, proveedores y empresas, quitar un
   papel y eliminar contactos.
-- Registra también las **reactivaciones**.
+- Registra también las **reactivaciones** y las **correcciones** de dinero o fechas (acción
+  `corregir`, con el estado `anterior`, sin motivo obligatorio): notas y saldo inicial.
 - **Se conservan 5 años** (variable de instalación
   `core.auditoria.meses_de_conservacion`, 60 por omisión y mínimo 60); lo anterior se borra
   una vez al día y se consulta en los respaldos. Como la app no puede borrar la
