@@ -146,7 +146,7 @@ base de desarrollo debe estar levantada.
   trabajo, con `recurso` `<modulo>.<plural>` y el registro como estaba antes (el
   DTO, nunca contraseñas). `core.auditoria` solo se agrega y se lee (RLS); la
   depura una vez al día `core.depurar_auditoria` según
-  `core.auditoria.meses_de_conservacion` (12 por omisión).
+  `core.auditoria.meses_de_conservacion` (60 por omisión, mínimo 60).
 
 ### Usuarios
 Inicio de sesión con nombre de usuario (solo letras, único en el servidor), no

@@ -82,9 +82,9 @@ export const moduloCore: DefinicionModulo = {
     definirConfiguracion({
       clave: MESES_DE_AUDITORIA,
       descripcion:
-        'Meses que se conserva la auditoría (borrados, inactivaciones, anulaciones); lo anterior queda en los respaldos.',
-      esquema: z.number().int().min(1).max(120),
-      predeterminado: 12,
+        'Meses que se conserva la auditoría (bajas y correcciones); mínimo 60 (5 años, Código de Comercio art. 382). Lo anterior queda en los respaldos.',
+      esquema: z.number().int().min(60).max(240),
+      predeterminado: 60,
       niveles: ['instalacion'],
     }),
     ...variablesRegionales,

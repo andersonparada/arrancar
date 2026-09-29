@@ -9,6 +9,11 @@ import { esquemaCore } from './esquema-core.tablas.js';
  * Bitácora de auditoría de la cuenta: borrados, inactivaciones, reactivaciones y
  * anulaciones. Solo se agrega y se lee (RLS no deja cambiarla ni borrarla). La
  * cuenta, la empresa y el usuario salen de la transacción.
+ *
+ * La llave hacia la cuenta es `restrict` a propósito: la única vía para borrar la
+ * auditoría de una cuenta es el proceso de baja de cliente, que la borrará
+ * explícitamente antes de borrar la cuenta. Nunca por un `cascade` accidental.
+ * La llave a la empresa es `set null`: borrar una empresa conserva la evidencia.
  */
 export const auditoria = esquemaCore.table(
   'auditoria',
@@ -17,7 +22,7 @@ export const auditoria = esquemaCore.table(
     cuentaId: uuid()
       .notNull()
       .default(deLaTransaccion.cuenta())
-      .references(() => cuentas.id, { onDelete: 'cascade' }),
+      .references(() => cuentas.id, { onDelete: 'restrict' }),
     empresaId: uuid()
       .default(deLaTransaccion.empresa())
       .references(() => empresas.id, { onDelete: 'set null' }),

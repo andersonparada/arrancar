@@ -102,22 +102,37 @@ describe('auditoría', () => {
   });
 });
 
-describe('depuración de la auditoría', () => {
-  it('borra solo lo que pasa de los meses indicados, aunque se pidan cero', async () => {
-    const haceTreceMeses = new Date();
-    haceTreceMeses.setMonth(haceTreceMeses.getMonth() - 13);
+function haceMeses(meses: number): Date {
+  const fecha = new Date();
+  fecha.setMonth(fecha.getMonth() - meses);
+  return fecha;
+}
+
+describe('conservación de la auditoría', () => {
+  it('nunca borra lo de menos de 60 meses, aunque se pidan cero o doce', async () => {
     await enTransaccionSegura(enA, (tx) =>
-      tx
-        .insert(auditoria)
-        .values({ recurso: 'x.y', registroId: 'viejo', accion: 'eliminar', creadoEn: haceTreceMeses }),
+      tx.insert(auditoria).values([
+        { recurso: 'x.y', registroId: 'reciente', accion: 'eliminar', creadoEn: haceMeses(13) },
+        { recurso: 'x.y', registroId: 'vencido', accion: 'eliminar', creadoEn: haceMeses(61) },
+      ]),
     );
     const depurador = new DepuradorDeAuditoriaDrizzle(bd);
 
     const conCero = await depurador.borrarAnterioresA(0);
     const conDoce = await depurador.borrarAnterioresA(12);
+    const conSesenta = await depurador.borrarAnterioresA(60);
 
-    expect({ conCero, conDoce }).toEqual({ conCero: 1, conDoce: 0 });
-    expect((await leerAuditoria(enA)).map((entrada) => entrada.registroId)).toEqual(['contacto-1']);
+    expect({ conCero, conDoce, conSesenta }).toEqual({ conCero: 1, conDoce: 0, conSesenta: 0 });
+    const conservados = (await leerAuditoria(enA)).map((entrada) => entrada.registroId).sort();
+    expect(conservados).toEqual(['contacto-1', 'reciente']);
+  });
+
+  it('no deja borrar una cuenta que tiene auditoría', async () => {
+    const conexion = new pg.Client({ connectionString: configuracion.DATABASE_URL_PROPIETARIO });
+    await conexion.connect();
+    const intento = conexion.query('delete from core.cuentas where id = $1', [enA.cuentaId]);
+    await expect(intento).rejects.toThrow(/auditoria_cuenta_id_cuentas_id_fk/);
+    await conexion.end();
   });
 });
 

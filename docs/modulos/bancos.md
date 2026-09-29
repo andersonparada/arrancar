@@ -57,11 +57,11 @@ rastro para auditoría.
 - Se ajusta lo existente: inactivar clientes, proveedores y empresas, quitar un
   papel y eliminar contactos.
 - Registra también las **reactivaciones**.
-- **Se conserva un año** (variable de instalación
-  `core.auditoria.meses_de_conservacion`, 12 por omisión); lo anterior se borra
+- **Se conservan 5 años** (variable de instalación
+  `core.auditoria.meses_de_conservacion`, 60 por omisión y mínimo 60); lo anterior se borra
   una vez al día y se consulta en los respaldos. Como la app no puede borrar la
   auditoría, lo hace la función `core.depurar_auditoria` (con los permisos del
-  dueño de la tabla, y nunca menos de un mes).
+  dueño de la tabla, y nunca menos de 60 meses).
 - Es un paso propio, **B0**, antes de B1.
 
 **B0 hecho (2026-09-27).** Tabla `core.auditoria` (solo agregar y leer, por

@@ -78,6 +78,13 @@
       "when": 1790629247078,
       "tag": "0010_quitar_permisos_configuracion",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790660966464,
+      "tag": "0011_conservar_auditoria_cinco_anios",
+      "breakpoints": true
     }
   ]
 }
