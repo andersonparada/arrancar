@@ -141,7 +141,14 @@ function reglasDeDependencias() {
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/dev-dist/**', 'servidor/almacenamiento*/**', 'infra/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/dev-dist/**',
+      'servidor/almacenamiento*/**',
+      'infra/**',
+      '.claude/**',
+    ],
   },
 
   js.configs.recommended,
