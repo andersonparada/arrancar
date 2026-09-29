@@ -745,7 +745,14 @@ Pasos (un commit cada uno, con sus pruebas):
 ### Pendiente de investigar
 
 1. **Seguridad de archivos**: lista blanca (imágenes JPG/PNG/WebP, PDF, Excel para importar), verificación por firma real del contenido, límites de tamaño, re-codificar imágenes (ya se convierten a WebP: eso elimina la mayoría de datos ocultos por esteganografía), sanear o rechazar PDF con JavaScript, formularios o archivos incrustados, antivirus (p. ej. ClamAV), servir siempre como descarga con su tipo y sin ejecutar, bibliotecas al día.
+   **Investigado (2026-09-28):** `docs/modulos/seguridad-de-archivos.md` (A1 bomba zip
+   de prioridad alta; PDF con qpdf; ClamAV descartado por memoria; 10 preguntas).
 2. **H7 y H11**: confirmación del experto contable (ley del IVA, práctica en Guatemala).
+   **Validado (2026-09-29):** `docs/modulos/validacion-h7-h11-retenciones.md`. H7 como
+   está es **incorrecto** (servicios bancarios exentos, art. 7.4 Ley del IVA; lo que sí
+   trae IVA son seguros y débitos automáticos de terceros). H11 correcto con ajustes
+   (motivo de IVA no acreditable, notas de crédito del proveedor). Las retenciones se
+   fijan **al registrar la factura**, no al autorizar. Seis preguntas para el usuario.
 3. **Concepto de los cheques** según su origen.
 4. **Esquema `empresas`**: qué se mueve del core y cómo afecta RLS, sesión y el módulo `empresas` que ya existe.
 
