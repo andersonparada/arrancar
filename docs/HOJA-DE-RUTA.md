@@ -141,6 +141,9 @@ contra la práctica contable y la ley de Guatemala.
 | H10 | **Proveedores sin NIT** o con «CF» | En el Libro de compras cada factura necesita el NIT del emisor; a quien no tiene NIT se le hace factura especial. | Exigir NIT (distinto de CF) al usar un proveedor en Libro de compras. | Baja |
 | H11 | **Crédito fiscal fuera de plazo** | El crédito fiscal se puede reportar a más tardar en los **dos meses siguientes** al período de la factura. | En Libro de compras: guardar el **mes del libro** y avisar o impedir registrar facturas fuera de ese plazo. | Media (plan) |
 
+Plan de base de datos, opciones, recomendaciones y preguntas de cada hallazgo:
+[`docs/modulos/plan-hallazgos-contables.md`](modulos/plan-hallazgos-contables.md).
+
 ### Libro de compras y Cuentas por pagar (planificados): corregir en el plan
 
 1. **Momento de la retención**: la ley manda retener al **pagar o acreditar en
