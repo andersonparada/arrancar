@@ -55,6 +55,27 @@ decisiones e investigación con Opus).
   - `docs/modulos/seguridad-de-archivos.md` (agente de seguridad).
   - `docs/modulos/validacion-h7-h11-retenciones.md` (contador).
   - `docs/modulos/concepto-de-notas-y-cheques.md` (contador, para H3b).
+  - HEIC de iPhone con sharp (`c091a8d`, al final de `seguridad-de-archivos.md`): los
+    binarios de sharp **no** decodifican HEVC; se recomienda aceptar solo JPEG, PNG y
+    WebP y que iOS entregue JPEG (sin `image/heic` en `accept`). Falta que el usuario
+    lo confirme.
+  - Mínimo de la retención del 5 % (`e97c5e4`, al final de
+    `validacion-h7-h11-retenciones.md`): solo facturas **mayores a Q2,500.00** (art. 49
+    del AG 5-2013). Falta leer el texto oficial del Minfin para descartar reformas.
+- **Planes corregidos** (`a540ca9`): Libro de compras, Cuentas por pagar y la «Revisión
+  contable» de `docs/HOJA-DE-RUTA.md`, con la validación del contador y las respuestas
+  del 2026-09-29 (punto 7 de «Siguiente», salvo programar).
+
+## En curso (2026-09-29)
+
+- **Ajustes de conceptos, servidor** (punto 3): agente programador; avance guardado en
+  la rama `claude/serene-mayer-picg8x` (commit WIP `674cdac`), sin probar todavía.
+  Migraciones `0021` y `0022` de bancos.
+- **Diseño de H5b/H5c** (punto 2): agente arquitecto de datos, en
+  `docs/modulos/diseno-accesos-por-modulo.md`.
+
+Forma de trabajo: cada avance va en commit a la rama; a `main` solo entra lo terminado
+y probado (pruebas del servidor, ESLint y `tsc` en verde).
 
 ## Siguiente
 
@@ -76,18 +97,25 @@ Todas las preguntas están respondidas (ver «Respuestas del usuario (2026-09-29
 5. **H8** interés bruto e ISR retenido en las notas de intereses.
 6. **Archivos** (imágenes con HEIC de iPhone, PDF con qpdf, límites por archivo y por
    minuto, sin cuota) y luego **H2** (estado de cuenta junto a la conciliación, sha256).
-7. Corregir los planes de Libro de compras, Cuentas por pagar y la «Revisión
-   contable» de `docs/HOJA-DE-RUTA.md` con la validación del contador y las respuestas
-   (retenciones al registrar, casilla «Se muestra en reportes SAT», comisiones exentas,
-   IVA fuera de plazo configurable, liga por contraseña) y programar **Libro de
-   compras** (H10, H11, H7) y **Cuentas por pagar**.
+7. Programar **Libro de compras** (H10, H11, H7) y **Cuentas por pagar** según sus
+   planes ya corregidos (`a540ca9`), cuando se respondan sus preguntas abiertas.
 8. Probar en el navegador lo de Bancos (B6, B7, H3, H6, H9) y rehacer la conciliación
    demo; ninguna pantalla nueva se ha visto aún en el navegador.
 
 ## Preguntas abiertas para el usuario
 
-Respondidas el 2026-09-29: ver «Respuestas del usuario (2026-09-29)» al final de
-`docs/modulos/plan-hallazgos-contables.md`. No quedan preguntas abiertas.
+Las del plan de hallazgos se respondieron el 2026-09-29 (ver «Respuestas del usuario
+(2026-09-29)» al final de `docs/modulos/plan-hallazgos-contables.md`). Nuevas:
 
-Pendiente de investigar (sin decisión del usuario): el mínimo de Q2,500.01 de la
-retención del 5 % (AG 5-2013) y si sharp decodifica HEIC.
+1. `soloAccesoTotal` y `soloSuperacceso` **no** son lo mismo (el Propietario recibe el
+   primero, no el segundo). Propuesta: un solo campo `reservado: 'superacceso' |
+   'accesoTotal'` sin cambiar el comportamiento. ¿O «reabrir» debe ser solo de soporte?
+2. HEIC: ¿se acepta que las fotos del iPhone lleguen como JPEG (sin HEIC en el
+   servidor)?
+3. Libro de compras y Cuentas por pagar: ver «Preguntas para el usuario» en
+   `docs/modulos/libro-de-compras.md` y `docs/modulos/cuentas-por-pagar.md` (casilla SAT
+   y NIT/UUID, destino de la FEL exenta del banco, IVA fuera de plazo deducible o no,
+   datos fiscales del proveedor por cuenta o empresa, nota de crédito que baja la
+   factura del mínimo del 5 %, ligar una nota de débito existente, pagos mixtos
+   gasto/activo, documentos en bandeja dentro de la contraseña, dónde van los días de
+   crédito).
