@@ -9,7 +9,7 @@ import {
   operadorDePrueba,
 } from '../../../core/compartido/pruebas/dobles-compartidos.js';
 import { NoSePuedeDesactivarLaEmpresaEnUso } from '../../dominio/errores.js';
-import { AccesosEnMemoria, EmpresasEnMemoria } from '../../pruebas/dobles-de-empresas.js';
+import { AccesosEnMemoria, AvisosDeEmpresaEnMemoria, EmpresasEnMemoria } from '../../pruebas/dobles-de-empresas.js';
 import { TiposDeLocalidadEnMemoria } from '../../pruebas/dobles-de-tipos-de-localidad.js';
 import { TIPOS_DE_LOCALIDAD_INICIALES } from '../../dominio/tipos-de-localidad-iniciales.js';
 import { AlcanceDelOperador } from '../alcance-del-operador.js';
@@ -26,6 +26,7 @@ let tiposDeLocalidad: TiposDeLocalidadEnMemoria;
 let publicadorEventos: PublicadorEventosEnMemoria;
 let unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
 let auditoria: AuditoriaEnMemoria;
+let avisos: AvisosDeEmpresaEnMemoria;
 let propietario: Operador;
 let casos: {
   registrar: RegistrarEmpresa;
@@ -53,6 +54,7 @@ beforeEach(async () => {
   publicadorEventos = new PublicadorEventosEnMemoria();
   unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   auditoria = new AuditoriaEnMemoria();
+  avisos = new AvisosDeEmpresaEnMemoria();
   const alcance = new AlcanceDelOperador(accesos);
   const consultas = empresas;
   casos = {
@@ -63,10 +65,18 @@ beforeEach(async () => {
       accesos,
       publicadorEventos,
       tiposDeLocalidad: new SembrarTiposDeLocalidad(tiposDeLocalidad),
+      avisos,
     }),
     listar: new ListarEmpresas({ unidadDeTrabajo, consultas, alcance }),
     obtener: new ObtenerEmpresa({ unidadDeTrabajo, consultas, alcance }),
-    actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio: empresas, consultas, alcance, auditoria }),
+    actualizar: new ActualizarEmpresa({
+      unidadDeTrabajo,
+      repositorio: empresas,
+      consultas,
+      alcance,
+      auditoria,
+      avisos,
+    }),
   };
   propietario = operadorDePrueba();
   await accesos.darAcceso({
@@ -90,13 +100,30 @@ describe('registrar una empresa', () => {
     expect((await accesos.empresasDelUsuario(soporte.usuarioId)).has(empresa.id)).toBe(false);
   });
 
-  it('la registra con el contexto del operador y siembra sus tipos de localidad con la empresa nueva como activa', async () => {
+  it('la registra y siembra sus tipos de localidad en una sola transacción, con la empresa nueva como activa', async () => {
     const empresa = await casos.registrar.ejecutar(propietario, solicitud());
 
-    expect(unidadDeTrabajo.contextos).toEqual([propietario, { ...propietario, empresaId: empresa.id }]);
+    expect(unidadDeTrabajo.contextos).toEqual([{ ...propietario, empresaId: empresa.id }]);
     expect((await tiposDeLocalidad.listar()).map((tipo) => tipo.nombre).sort()).toEqual(
       [...TIPOS_DE_LOCALIDAD_INICIALES].sort(),
     );
+  });
+
+  it('avisa a los demás módulos con las secciones del formulario y la empresa nueva como empresa del operador', async () => {
+    const secciones = { 'libro-de-compras': { regimenIva: 'general' } };
+
+    const empresa = await casos.registrar.ejecutar(propietario, solicitud(), secciones);
+
+    expect(avisos.avisos).toEqual([
+      { operador: { ...propietario, empresaId: empresa.id }, aviso: { empresaId: empresa.id, secciones } },
+    ]);
+  });
+
+  it('si un módulo rechaza su sección no se publica nada', async () => {
+    avisos.rechazarCon = new Error('sección inválida');
+
+    await expect(casos.registrar.ejecutar(propietario, solicitud(), { x: {} })).rejects.toThrow('sección inválida');
+    expect(publicadorEventos.nombres()).toEqual([]);
   });
 
   it('publica que se registró, después de guardarla', async () => {
@@ -142,6 +169,18 @@ describe('actualizar una empresa', () => {
 
     expect(actualizada).toMatchObject({ nombre: 'Parcela El Mirador', nit: '12345679' });
     expect(auditoria.entradas).toEqual([]);
+  });
+
+  it('avisa a los demás módulos con las secciones, con la empresa editada como empresa del operador', async () => {
+    const empresa = await casos.registrar.ejecutar(propietario, solicitud());
+    avisos.avisos.length = 0;
+    const secciones = { 'libro-de-compras': { regimenIva: 'general' } };
+
+    await casos.actualizar.ejecutar(propietario, { empresaId: empresa.id, solicitud: solicitud(), secciones });
+
+    expect(avisos.avisos).toEqual([
+      { operador: { ...propietario, empresaId: empresa.id }, aviso: { empresaId: empresa.id, secciones } },
+    ]);
   });
 
   it('desactivarla y reactivarla quedan en la auditoría', async () => {

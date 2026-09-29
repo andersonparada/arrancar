@@ -10,7 +10,12 @@ import {
   operadorDePrueba,
 } from '../../../core/compartido/pruebas/dobles-compartidos.js';
 import { TerceroInactivo } from '../../dominio/errores.js';
-import { CategoriasEnMemoria, ContactosEnMemoria, TercerosEnMemoria } from '../../pruebas/dobles-de-terceros.js';
+import {
+  AvisosDeProveedorEnMemoria,
+  CategoriasEnMemoria,
+  ContactosEnMemoria,
+  TercerosEnMemoria,
+} from '../../pruebas/dobles-de-terceros.js';
 import { AvisoDeParecidos } from '../aviso-de-parecidos.js';
 import type { SolicitudDeAltaDeTercero } from '../dto/tercero.dto.js';
 import { HayTercerosParecidos } from '../errores.js';
@@ -23,6 +28,7 @@ let terceros: TercerosEnMemoria;
 let contactos: ContactosEnMemoria;
 let publicadorEventos: PublicadorEventosEnMemoria;
 let auditoria: AuditoriaEnMemoria;
+let avisos: AvisosDeProveedorEnMemoria;
 let operador: Operador;
 let casos: { registrar: RegistrarTercero; actualizar: ActualizarTercero; asignar: AsignarPapel; quitar: QuitarPapel };
 
@@ -56,14 +62,21 @@ beforeEach(() => {
   contactos = new ContactosEnMemoria();
   publicadorEventos = new PublicadorEventosEnMemoria();
   auditoria = new AuditoriaEnMemoria();
+  avisos = new AvisosDeProveedorEnMemoria();
   operador = operadorDePrueba();
   const unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   const avisoDeParecidos = new AvisoDeParecidos(terceros);
   const comunes = { unidadDeTrabajo, repositorio: terceros, consultas: terceros, publicadorEventos, auditoria };
   casos = {
-    registrar: new RegistrarTercero({ ...comunes, avisoDeParecidos, categorias: new CategoriasEnMemoria(), contactos }),
+    registrar: new RegistrarTercero({
+      ...comunes,
+      avisoDeParecidos,
+      categorias: new CategoriasEnMemoria(),
+      contactos,
+      avisos,
+    }),
     actualizar: new ActualizarTercero({ ...comunes, avisoDeParecidos }),
-    asignar: new AsignarPapel({ ...comunes, categorias: new CategoriasEnMemoria() }),
+    asignar: new AsignarPapel({ ...comunes, categorias: new CategoriasEnMemoria(), avisos }),
     quitar: new QuitarPapel(comunes),
   };
 });
@@ -104,6 +117,34 @@ describe('registrar un tercero', () => {
     expect(tercero?.papel('cliente')).toMatchObject({ clase: 'intermediario', activo: true });
     expect([...contactos.contactos.values()].map((c) => c.instantanea().nombre)).toEqual(['Rosa']);
     expect(publicadorEventos.nombres()).toEqual(['terceros.creado', 'terceros.papel_asignado']);
+  });
+
+  it('si entra como proveedor, avisa a los demás módulos con las secciones del formulario', async () => {
+    const papel = { tipo: 'proveedor' as const, categoriaId: null, activo: true, notas: null };
+    const secciones = { 'libro-de-compras': { esPequenoContribuyente: false } };
+
+    const registrado = await casos.registrar.ejecutar(operador, solicitud({ papel }), secciones);
+
+    expect(avisos.avisos).toEqual([{ proveedorId: registrado.id, terceroId: registrado.id, secciones }]);
+  });
+
+  it('si entra como cliente o sin papel, no avisa nada de proveedores', async () => {
+    const papel = { tipo: 'cliente' as const, clase: 'directo' as const, activo: true, notas: null };
+
+    await casos.registrar.ejecutar(operador, solicitud({ papel }), { x: {} });
+    await casos.registrar.ejecutar(operador, solicitud({ nombres: 'Otro' }), { x: {} });
+
+    expect(avisos.avisos).toEqual([]);
+  });
+
+  it('si un módulo rechaza su sección, el registro falla y no se publica nada', async () => {
+    avisos.rechazarCon = new Error('sección inválida');
+    const papel = { tipo: 'proveedor' as const, categoriaId: null, activo: true, notas: null };
+
+    await expect(casos.registrar.ejecutar(operador, solicitud({ papel }), { x: {} })).rejects.toThrow(
+      'sección inválida',
+    );
+    expect(publicadorEventos.publicados).toEqual([]);
   });
 
   it('no registra a un proveedor con una categoría que no existe en la cuenta', async () => {
@@ -169,6 +210,24 @@ describe('papeles', () => {
     });
 
     await expect(asignar).rejects.toThrow(RecursoNoEncontrado);
+  });
+
+  it('asignar el papel de proveedor avisa con sus secciones; el de cliente no', async () => {
+    const tercero = await casos.registrar.ejecutar(operador, solicitud());
+    const secciones = { 'libro-de-compras': { esPequenoContribuyente: true } };
+
+    await casos.asignar.ejecutar(operador, {
+      terceroId: tercero.id,
+      papel: { tipo: 'cliente', clase: 'directo', activo: true, notas: null },
+      secciones,
+    });
+    await casos.asignar.ejecutar(operador, {
+      terceroId: tercero.id,
+      papel: { tipo: 'proveedor', categoriaId: null, activo: true, notas: null },
+      secciones,
+    });
+
+    expect(avisos.avisos).toEqual([{ proveedorId: tercero.id, terceroId: tercero.id, secciones }]);
   });
 
   it('no quita un papel que el tercero nunca tuvo', async () => {

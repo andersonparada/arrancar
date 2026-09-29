@@ -23,13 +23,17 @@ export class EmpresasControlador {
     this.casosDeUso.obtener.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
 
   registrar = async (solicitud: FastifyRequest<{ Body: EmpresaSolicitada }>, respuesta: FastifyReply) => {
-    const empresa = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), solicitud.body);
+    const { secciones, ...datos } = solicitud.body;
+    const empresa = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), datos, secciones);
     return respuesta.status(201).send(empresa);
   };
 
-  actualizar = (solicitud: FastifyRequest<{ Params: ParamsEmpresa; Body: EmpresaSolicitada }>) =>
-    this.casosDeUso.actualizar.ejecutar(operadorDe(solicitud), {
+  actualizar = (solicitud: FastifyRequest<{ Params: ParamsEmpresa; Body: EmpresaSolicitada }>) => {
+    const { secciones, ...datos } = solicitud.body;
+    return this.casosDeUso.actualizar.ejecutar(operadorDe(solicitud), {
       empresaId: solicitud.params.empresaId,
-      solicitud: solicitud.body,
+      solicitud: datos,
+      secciones,
     });
+  };
 }

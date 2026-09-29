@@ -1,4 +1,6 @@
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
+import type { Operador } from '../../core/compartido/aplicacion/operador.js';
+import type { AvisosDeProveedor, ProveedorGuardado } from '../aplicacion/puertos/avisos-de-proveedor.js';
 import type {
   FichaDeTerceroDto,
   PapelDeClienteDto,
@@ -102,5 +104,16 @@ export class CategoriasEnMemoria implements RepositorioCategorias {
 
   async guardar(categoria: CategoriaDeProveedor): Promise<void> {
     this.categorias.set(categoria.id.valor, categoria);
+  }
+}
+
+/** Recuerda los avisos de proveedor guardado y puede rechazarlos, como un módulo cuya sección es inválida. */
+export class AvisosDeProveedorEnMemoria implements AvisosDeProveedor {
+  readonly avisos: ProveedorGuardado[] = [];
+  rechazarCon: Error | null = null;
+
+  async proveedorGuardado(_operador: Operador, aviso: ProveedorGuardado): Promise<void> {
+    this.avisos.push(aviso);
+    if (this.rechazarCon) throw this.rechazarCon;
   }
 }

@@ -1,4 +1,6 @@
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
+import type { Operador } from '../../core/compartido/aplicacion/operador.js';
+import type { AvisosDeEmpresa, EmpresaGuardada } from '../aplicacion/puertos/avisos-de-empresa.js';
 import type { EmpresaDto } from '../aplicacion/dto/empresa.dto.js';
 import type { AccesosAEmpresas } from '../aplicacion/puertos/accesos-a-empresas.js';
 import type { ConsultasEmpresas } from '../aplicacion/puertos/consultas-empresas.js';
@@ -64,5 +66,16 @@ export class AccesosEnMemoria implements AccesosAEmpresas {
     const delUsuario = this.empresas.get(usuarioId) ?? new Set<string>();
     delUsuario.add(empresaId);
     this.empresas.set(usuarioId, delUsuario);
+  }
+}
+
+/** Recuerda los avisos de empresa guardada y puede rechazarlos, como un módulo cuya sección es inválida. */
+export class AvisosDeEmpresaEnMemoria implements AvisosDeEmpresa {
+  readonly avisos: Array<{ operador: Operador; aviso: EmpresaGuardada }> = [];
+  rechazarCon: Error | null = null;
+
+  async empresaGuardada(operador: Operador, aviso: EmpresaGuardada): Promise<void> {
+    this.avisos.push({ operador, aviso });
+    if (this.rechazarCon) throw this.rechazarCon;
   }
 }

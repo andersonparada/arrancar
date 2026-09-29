@@ -37,7 +37,8 @@ export class TercerosControlador {
     this.casosDeUso.obtenerFicha.ejecutar(operadorDe(solicitud), solicitud.params.terceroId);
 
   registrar = async (solicitud: FastifyRequest<{ Body: AltaDeTerceroSolicitada }>, respuesta: FastifyReply) => {
-    const tercero = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), solicitud.body);
+    const { secciones, ...alta } = solicitud.body;
+    const tercero = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), alta, secciones);
     return respuesta.status(201).send(tercero);
   };
 
@@ -53,11 +54,14 @@ export class TercerosControlador {
       papel: { tipo: 'cliente', ...solicitud.body },
     });
 
-  asignarProveedor = (solicitud: ConTercero<PapelDeProveedorSolicitado>) =>
-    this.casosDeUso.asignarPapel.ejecutar(operadorDe(solicitud), {
+  asignarProveedor = (solicitud: ConTercero<PapelDeProveedorSolicitado>) => {
+    const { secciones, ...papel } = solicitud.body;
+    return this.casosDeUso.asignarPapel.ejecutar(operadorDe(solicitud), {
       terceroId: solicitud.params.terceroId,
-      papel: { tipo: 'proveedor', ...solicitud.body },
+      papel: { tipo: 'proveedor', ...papel },
+      secciones,
     });
+  };
 
   quitarCliente = (solicitud: ConTercero, respuesta: FastifyReply) => this.quitar('cliente', solicitud, respuesta);
 

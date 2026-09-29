@@ -10,6 +10,7 @@ import { RegistrarEmpresa } from './aplicacion/casos-uso/registrar-empresa.js';
 import { rutasDeDatosDeEmpresaComponidas } from './composicion/datos-de-empresa.js';
 import { EmpresasControlador } from './http/empresas.controlador.js';
 import { rutasEmpresas } from './http/empresas.rutas.js';
+import { AvisosDeEmpresaEnMediador } from './infraestructura/avisos-de-empresa-en-mediador.js';
 import './infraestructura/catalogo-eventos.js';
 import { AccesosAEmpresasDrizzle } from './infraestructura/persistencia/accesos-a-empresas.drizzle.js';
 import { ConsultasEmpresasDrizzle } from './infraestructura/persistencia/consultas-empresas.drizzle.js';
@@ -30,6 +31,7 @@ function componerEmpresas(compartidas: DependenciasCompartidas) {
   const consultas = new ConsultasEmpresasDrizzle();
   const accesos = new AccesosAEmpresasDrizzle();
   const alcance = new AlcanceDelOperador(accesos);
+  const avisos = new AvisosDeEmpresaEnMediador();
 
   const controlador = new EmpresasControlador({
     listar: new ListarEmpresas({ unidadDeTrabajo, consultas, alcance }),
@@ -41,8 +43,9 @@ function componerEmpresas(compartidas: DependenciasCompartidas) {
       accesos,
       publicadorEventos,
       tiposDeLocalidad: new SembrarTiposDeLocalidad(new RepositorioTiposDeLocalidadDrizzle()),
+      avisos,
     }),
-    actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio, consultas, alcance, auditoria }),
+    actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio, consultas, alcance, auditoria, avisos }),
   });
   return { controlador, consultas, alcance };
 }
