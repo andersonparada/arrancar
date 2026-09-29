@@ -6,7 +6,11 @@ import {
   UnidadDeTrabajoEnMemoria,
 } from '../../../compartido/pruebas/dobles-compartidos.js';
 import { FormatoDeImagenNoAceptado } from '../../dominio/imagen.js';
-import { OptimizadorFalso, RepositorioArchivosEnMemoria } from '../../pruebas/dobles-de-archivos.js';
+import {
+  OptimizadorFalso,
+  OptimizadorQueRechaza,
+  RepositorioArchivosEnMemoria,
+} from '../../pruebas/dobles-de-archivos.js';
 import { AbrirImagen } from './abrir-imagen.js';
 import { SubirImagen } from './subir-imagen.js';
 
@@ -51,9 +55,9 @@ describe('subir una imagen', () => {
   });
 
   it('rechaza lo que no es una imagen sin guardar nada', async () => {
-    const texto = { ...foto, tipoMime: 'text/plain' };
+    const rechazador = { unidadDeTrabajo, repositorio, almacenamiento, optimizador: new OptimizadorQueRechaza() };
 
-    await expect(subir.ejecutar(operador, texto)).rejects.toThrow(FormatoDeImagenNoAceptado);
+    await expect(new SubirImagen(rechazador).ejecutar(operador, foto)).rejects.toThrow(FormatoDeImagenNoAceptado);
     expect(almacenamiento.contenidos.size).toBe(0);
   });
 });

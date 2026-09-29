@@ -548,3 +548,11 @@ y `demo` / `demo-arrancar`.
   localidad, eliminar con confirmación (409 en uso), aviso de código o nombre repetido, código en
   mayúsculas. Localidades muestran el nombre de departamento y municipio. Diseño cerrado en
   `docs/modulos/diseno-accesos-por-modulo.md` §17.
+
+- **2026-09-29 (X1 y F1 de `docs/modulos/plan-archivos-y-h2.md`).** Excel: una fórmula sin valor
+  calculado o con error se informa en su celda (`CeldaConProblema`). Fotos: el formato se decide por
+  el contenido (solo JPEG, PNG y WebP; HEIC por su cabecera `ftyp` o compresión `hevc`, con la ayuda
+  para convertirla), 100 MP (`LIMITE_DE_PIXELES`, también en el logo), una sola lectura con `clone()`,
+  `Semaforo` de 2 trabajos, `sharp.concurrency(1)` y 30 subidas por minuto por usuario (429
+  `demasiadas_subidas`). Se queda `failOn: 'error'`: no hubo 10 fotos reales de Android e iPhone
+  para probar `'warning'`. El `accept` del cliente ya no ofrecía HEIC, AVIF ni GIF.

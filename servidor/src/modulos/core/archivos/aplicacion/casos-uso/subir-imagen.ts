@@ -2,10 +2,9 @@ import type { Almacenamiento } from '../../../compartido/aplicacion/almacenamien
 import type { ImagenSubida } from '../../../compartido/aplicacion/imagen-subida.js';
 import type { Operador } from '../../../compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../compartido/aplicacion/unidad-de-trabajo.js';
-import { exigirFormatoAceptado } from '../../dominio/imagen.js';
 import { RutasDeImagen } from '../../dominio/rutas-de-imagen.js';
 import type { ArchivoDto } from '../dto/archivo.dto.js';
-import type { ImagenOptimizada, OptimizadorDeImagenes } from '../puertos/optimizador-de-imagenes.js';
+import type { ImagenOptimizada, MedidasDeImagen, OptimizadorDeImagenes } from '../puertos/optimizador-de-imagenes.js';
 import type { ArchivoGuardado, RepositorioArchivos } from '../puertos/repositorio-archivos.js';
 
 interface Dependencias {
@@ -21,8 +20,10 @@ interface ImagenGuardada {
   rutas: RutasDeImagen;
 }
 
-const MEDIDA_ORIGINAL = { ladoMaximo: 1600, calidad: 80 };
-const MEDIDA_MINIATURA = { ladoMaximo: 400, calidad: 70 };
+const MEDIDAS: MedidasDeImagen = {
+  original: { ladoMaximo: 1600, calidad: 80 },
+  miniatura: { ladoMaximo: 400, calidad: 70 },
+};
 const LARGO_MAXIMO_DEL_NOMBRE = 200;
 
 /**
@@ -32,14 +33,12 @@ const LARGO_MAXIMO_DEL_NOMBRE = 200;
 export class SubirImagen {
   constructor(private readonly dependencias: Dependencias) {}
 
-  /** @throws FormatoDeImagenNoAceptado o ImagenIlegible si no es una imagen válida. */
+  /**
+   * El formato se decide por el contenido, nunca por el tipo que diga el cliente.
+   * @throws FotoHeicNoAceptada, FormatoDeImagenNoAceptado, ImagenDemasiadoGrande o ImagenIlegible.
+   */
   async ejecutar(operador: Operador, imagen: ImagenSubida): Promise<ArchivoDto> {
-    exigirFormatoAceptado(imagen.tipoMime);
-    const { optimizador } = this.dependencias;
-    const [original, miniatura] = await Promise.all([
-      optimizador.optimizar(imagen.contenido, MEDIDA_ORIGINAL),
-      optimizador.optimizar(imagen.contenido, MEDIDA_MINIATURA),
-    ]);
+    const { original, miniatura } = await this.dependencias.optimizador.optimizar(imagen.contenido, MEDIDAS);
     const rutas = RutasDeImagen.nuevas(operador.empresaId, new Date(), crypto.randomUUID());
     await this.dependencias.almacenamiento.guardar(rutas.original, original.contenido);
     await this.dependencias.almacenamiento.guardar(rutas.miniatura, miniatura.contenido);

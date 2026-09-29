@@ -10,8 +10,23 @@ export interface ImagenOptimizada {
   alto: number;
 }
 
-/** Reduce la imagen a la medida pedida y la convierte a WebP. */
+export interface MedidasDeImagen {
+  original: MedidaDeImagen;
+  miniatura: MedidaDeImagen;
+}
+
+export interface ImagenesOptimizadas {
+  original: ImagenOptimizada;
+  miniatura: ImagenOptimizada;
+}
+
+/** Revisa la imagen y la reduce a las dos medidas pedidas, convertida a WebP. */
 export interface OptimizadorDeImagenes {
-  /** @throws ImagenIlegible si el contenido no es una imagen válida. */
-  optimizar(contenido: Buffer, medida: MedidaDeImagen): Promise<ImagenOptimizada>;
+  /**
+   * @throws FotoHeicNoAceptada si es una foto HEIC.
+   * @throws FormatoDeImagenNoAceptado si su formato real no es JPEG, PNG ni WebP.
+   * @throws ImagenDemasiadoGrande si pasa de 100 megapíxeles.
+   * @throws ImagenIlegible si no se puede leer.
+   */
+  optimizar(contenido: Buffer, medidas: MedidasDeImagen): Promise<ImagenesOptimizadas>;
 }

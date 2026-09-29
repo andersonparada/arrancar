@@ -1,5 +1,6 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../compartido/http/guardias.js';
+import { limitarSubidas } from './limite-de-subidas.js';
 import type { ArchivosControlador } from './archivos.controlador.js';
 import { esquemaConsultaArchivo, esquemaParamsArchivo } from './archivos.esquemas-http.js';
 
@@ -9,7 +10,7 @@ export function rutasArchivos(archivos: ArchivosControlador): FastifyPluginAsync
     const tags = ['Archivos'];
     app.post('/archivos', {
       schema: { tags, consumes: ['multipart/form-data'] },
-      preHandler: proteger(),
+      preHandler: [proteger(), limitarSubidas(app)],
       handler: archivos.subir,
     });
     app.get('/archivos/:archivoId', {
