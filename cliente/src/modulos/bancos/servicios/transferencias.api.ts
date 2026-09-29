@@ -1,4 +1,5 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
+import type { DatosDeBaja } from './datos-de-baja';
 
 /** Transferencia tal como la manda el servidor, con el nombre de sus dos cuentas y sus dos notas. */
 export interface Transferencia {
@@ -15,6 +16,13 @@ export interface Transferencia {
   motivoDeAnulacion: string | null;
   movimientoOrigenId: string;
   movimientoDestinoId: string;
+  /** La conciliación donde quedó marcada cada nota; `null` si sigue pendiente. */
+  conciliacionOrigenId: string | null;
+  conciliacionDestinoId: string | null;
+  /** Lo calcula el servidor: si se puede anular (crea los dos inversos). */
+  puedeAnular: boolean;
+  /** Lo calcula el servidor: si se puede eliminar de verdad (sus dos notas están limpias). */
+  puedeEliminar: boolean;
 }
 
 export type DatosTransferencia = Omit<
@@ -26,6 +34,10 @@ export type DatosTransferencia = Omit<
   | 'motivoDeAnulacion'
   | 'movimientoOrigenId'
   | 'movimientoDestinoId'
+  | 'conciliacionOrigenId'
+  | 'conciliacionDestinoId'
+  | 'puedeAnular'
+  | 'puedeEliminar'
 >;
 
 /** Qué transferencias listar: de una cuenta (como origen o destino) y entre dos fechas (incluidas); incluye anuladas. */
@@ -38,7 +50,7 @@ export interface FiltroDeTransferencias {
 
 const RUTA = '/bancos/transferencias';
 
-/** Sin Excel (es operación): tiene su propia pantalla para listar, registrar y anular. */
+/** Sin Excel (es operación): tiene su propia pantalla para listar, registrar, anular y eliminar. */
 export class ApiTransferencias {
   constructor(private readonly http: ClienteHttp) {}
 
@@ -54,9 +66,14 @@ export class ApiTransferencias {
     return this.http.crear<Transferencia>(RUTA, datos);
   }
 
-  /** Anula la transferencia y sus dos notas; no se puede deshacer y no hay ruta para eliminar. */
-  anular(id: string, motivo: string) {
-    return this.http.crear<Transferencia>(`${RUTA}/${id}/anular`, { motivo });
+  /** Anula la transferencia: crea los dos inversos con la fecha escrita. Nada se borra. */
+  anular(id: string, { motivo, fecha }: DatosDeBaja) {
+    return this.http.crear<Transferencia>(`${RUTA}/${id}/anular`, { motivo, fecha });
+  }
+
+  /** Elimina de verdad la transferencia y sus dos notas si están limpias; el motivo queda en la auditoría. */
+  eliminar(id: string, motivo: string) {
+    return this.http.eliminar(`${RUTA}/${id}`, { motivo });
   }
 }
 

@@ -1,10 +1,10 @@
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiSaldosIniciales } from '../../servicios/saldos-iniciales.api';
 import type { Movimiento } from '../../servicios/movimientos.api';
-import { usarAnulacionDeSaldoInicial } from './usar-anulacion-de-saldo-inicial';
+import { usarEliminacionDeSaldoInicial } from './usar-eliminacion-de-saldo-inicial';
 import { usarFormularioDeSaldoInicial } from './usar-formulario-de-saldo-inicial';
 
-/** El saldo inicial vigente de una cuenta bancaria, en su ficha: verlo, registrarlo, corregirlo y anularlo. */
+/** El saldo inicial vigente de una cuenta bancaria, en su ficha: verlo, registrarlo, corregirlo y eliminarlo. */
 export function usarSaldoInicial(cuentaBancariaId: string) {
   const {
     datos: saldoInicial,
@@ -16,7 +16,7 @@ export function usarSaldoInicial(cuentaBancariaId: string) {
     'No se pudo cargar el saldo inicial.',
   );
   const formulario = usarFormularioDeSaldoInicial(cuentaBancariaId, cargar);
-  const anulacion = usarAnulacionDeSaldoInicial(cargar);
+  const eliminacion = usarEliminacionDeSaldoInicial(cargar);
 
-  return { saldoInicial, cargando, formulario, anulacion };
+  return { saldoInicial, cargando, formulario, eliminacion };
 }

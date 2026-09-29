@@ -20,6 +20,8 @@ const base: ChequeListado = {
   referencia: 'Cheque A7',
   anuladoEn: null,
   motivoDeAnulacion: null,
+  puedeAnular: true,
+  puedeBlanquear: true,
 };
 
 describe('título del cheque listado', () => {

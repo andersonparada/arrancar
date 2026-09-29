@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
+import { marcaDeReversion } from '../../composables/movimientos/estado-de-reversion';
 import { creditoDeFila, debitoDeFila, documentoDeFila } from '../../composables/movimientos/fila-del-reporte';
 import type { ReporteDeMovimientos } from '../../servicios/movimientos.api';
 
 /**
  * La tabla del reporte: fila de "Saldo anterior" al inicio y "Saldo final" al
- * final cuando hay una cuenta elegida (si no, ninguna columna de saldo). Los
- * anulados van en gris, tachados y con "Anulado", sin mover el saldo.
+ * final cuando hay una cuenta elegida (si no, ninguna columna de saldo). Un movimiento
+ * revertido y su inverso se ven juntos, con su marca, y se cancelan en el saldo; solo un
+ * cheque anulado a la antigua (mes abierto) va en gris, tachado y sin mover el saldo.
  */
 defineProps<{ reporte: ReporteDeMovimientos; conCuenta: boolean }>();
+
+const CLASE_DE_MARCA = {
+  Anulado: 'text-red-500',
+  Revertido: 'text-amber-600 dark:text-amber-400',
+  Reversión: 'text-amber-600 dark:text-amber-400',
+};
 </script>
 
 <template>
@@ -44,7 +52,13 @@ defineProps<{ reporte: ReporteDeMovimientos; conCuenta: boolean }>();
             <p v-if="documentoDeFila(fila).subtitulo" class="text-xs text-tierra-500">
               {{ documentoDeFila(fila).subtitulo }}
             </p>
-            <p v-if="fila.anuladoEn" class="text-xs text-red-500 no-underline">Anulado</p>
+            <p
+              v-if="marcaDeReversion(fila)"
+              class="text-xs no-underline"
+              :class="CLASE_DE_MARCA[marcaDeReversion(fila)!]"
+            >
+              {{ marcaDeReversion(fila) }}
+            </p>
           </td>
           <td class="px-4 py-2.5">{{ formatearTexto(fila.beneficiario) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(debitoDeFila(fila)) }}</td>

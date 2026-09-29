@@ -23,6 +23,11 @@ const base: Movimiento = {
   chequeId: null,
   numeroDeCheque: null,
   conciliacionId: null,
+  revertidoEn: null,
+  motivoDeReversion: null,
+  revierteAId: null,
+  puedeAnular: true,
+  puedeEliminar: true,
 };
 
 describe('título de la nota', () => {
@@ -62,5 +67,14 @@ describe('detalles de la nota', () => {
       motivoDeAnulacion: 'Registrada por error',
     });
     expect(detalles).toContainEqual({ etiqueta: 'Motivo de anulación', valor: 'Registrada por error' });
+  });
+
+  it('agrega el motivo de la anulación cuando ya se revirtió con su inverso', () => {
+    const detalles = detallesDeNota({
+      ...base,
+      revertidoEn: '2026-09-28T10:00:00.000Z',
+      motivoDeReversion: 'Boleta duplicada',
+    });
+    expect(detalles).toContainEqual({ etiqueta: 'Motivo de anulación', valor: 'Boleta duplicada' });
   });
 });

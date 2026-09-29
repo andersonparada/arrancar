@@ -18,6 +18,11 @@ function fila(datos: Partial<FilaDelReporte> & Pick<FilaDelReporte, 'tipo' | 'mo
     chequeId: null,
     numeroDeCheque: null,
     conciliacionId: null,
+    revertidoEn: null,
+    motivoDeReversion: null,
+    revierteAId: null,
+    puedeAnular: false,
+    puedeEliminar: false,
     saldo: null,
     ...datos,
   };

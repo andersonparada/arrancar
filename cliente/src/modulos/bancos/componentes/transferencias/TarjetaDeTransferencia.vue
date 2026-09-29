@@ -9,9 +9,12 @@ import {
 } from '../../composables/transferencias/detalles-de-transferencia';
 import type { Transferencia } from '../../servicios/transferencias.api';
 
-/** La tarjeta de una transferencia: cuenta de origen → cuenta de destino, con el monto destacado; nunca se corrige. */
+/**
+ * La tarjeta de una transferencia: cuenta de origen → cuenta de destino, con el monto destacado; nunca se
+ * corrige. «Anular» y «Eliminar» aparecen solo si el servidor dice que se puede.
+ */
 const props = defineProps<{ registro: Transferencia }>();
-defineEmits<{ anular: [] }>();
+defineEmits<{ anular: []; eliminar: [] }>();
 
 const insignia = computed(() => (props.registro.anuladaEn ? 'Anulada' : undefined));
 </script>
@@ -29,8 +32,23 @@ const insignia = computed(() => (props.registro.anuladaEn ? 'Anulada' : undefine
       <p class="text-sm font-semibold text-campo-700 dark:text-campo-400">{{ formatearMonto(registro.monto) }}</p>
     </template>
     <template #acciones-extra>
-      <BotonBase v-permiso="'bancos.transferencias.anular'" variante="fantasma" pequeno @click="$emit('anular')">
+      <BotonBase
+        v-if="registro.puedeAnular"
+        v-permiso="'bancos.transferencias.anular'"
+        variante="fantasma"
+        pequeno
+        @click="$emit('anular')"
+      >
         Anular
+      </BotonBase>
+      <BotonBase
+        v-if="registro.puedeEliminar"
+        v-permiso="'bancos.transferencias.eliminar'"
+        variante="fantasma"
+        pequeno
+        @click="$emit('eliminar')"
+      >
+        Eliminar
       </BotonBase>
     </template>
   </TarjetaDeRegistro>

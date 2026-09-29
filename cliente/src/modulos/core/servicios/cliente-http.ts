@@ -70,8 +70,9 @@ export class ClienteHttp {
     return this.enviar<T>({ metodo: 'PATCH', ruta, cuerpo });
   }
 
-  eliminar<T = void>(ruta: string): Promise<T> {
-    return this.enviar<T>({ metodo: 'DELETE', ruta });
+  /** `cuerpo` es opcional: hay recursos que piden el motivo al eliminar (p. ej. en Bancos). */
+  eliminar<T = void>(ruta: string, cuerpo?: unknown): Promise<T> {
+    return this.enviar<T>({ metodo: 'DELETE', ruta, cuerpo });
   }
 
   /** Sube un archivo como `multipart/form-data`. */

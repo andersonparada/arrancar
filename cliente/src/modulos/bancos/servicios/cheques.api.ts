@@ -1,4 +1,5 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
+import type { DatosDeBaja } from './datos-de-baja';
 import type { Movimiento } from './movimientos.api';
 
 export type EstadoDelCheque = 'disponible' | 'emitido' | 'anulado';
@@ -13,6 +14,10 @@ export interface Cheque {
   movimientoId: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  /** Lo calcula el servidor: si se puede anular. */
+  puedeAnular: boolean;
+  /** Lo calcula el servidor: si se puede blanquear (emitido, con su movimiento limpio). */
+  puedeBlanquear: boolean;
 }
 
 export interface DatosDeEmisionDeCheque {
@@ -39,6 +44,8 @@ export interface ChequeListado {
   referencia: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  puedeAnular: boolean;
+  puedeBlanquear: boolean;
 }
 
 export interface FiltroDeChequesDeLaEmpresa {
@@ -48,7 +55,7 @@ export interface FiltroDeChequesDeLaEmpresa {
   hasta?: string;
 }
 
-/** Ver, emitir y anular cheques: la lista es operación (los emitidos y anulados); sin Excel. */
+/** Ver, emitir, anular y blanquear cheques (nunca se eliminan): la lista es operación (los emitidos y anulados); sin Excel. */
 export class ApiCheques {
   constructor(private readonly http: ClienteHttp) {}
 
@@ -75,9 +82,17 @@ export class ApiCheques {
     return this.http.crear<Movimiento>(`/bancos/cheques/${chequeId}/emitir`, datos);
   }
 
-  /** Anula el cheque (disponible o emitido) con un motivo; no se puede deshacer. */
-  anular(chequeId: string, motivo: string) {
-    return this.http.crear<Cheque>(`/bancos/cheques/${chequeId}/anular`, { motivo });
+  /**
+   * Anula el cheque (disponible o emitido). `fecha` solo cuenta si el mes del cheque ya está conciliado:
+   * es la de su nota de crédito inversa; si no, se anula sin nota inversa.
+   */
+  anular(chequeId: string, { motivo, fecha }: DatosDeBaja) {
+    return this.http.crear<Cheque>(`/bancos/cheques/${chequeId}/anular`, { motivo, fecha });
+  }
+
+  /** Blanquea un cheque emitido por error: vuelve a disponible y su movimiento se elimina. */
+  blanquear(chequeId: string, motivo: string) {
+    return this.http.crear<Cheque>(`/bancos/cheques/${chequeId}/blanquear`, { motivo });
   }
 }
 

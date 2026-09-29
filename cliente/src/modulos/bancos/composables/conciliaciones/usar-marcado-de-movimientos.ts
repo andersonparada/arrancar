@@ -1,6 +1,6 @@
 import { computed, ref, watch, type Ref } from 'vue';
 import type { Conciliacion, MovimientoConMarca } from '../../servicios/conciliaciones.api';
-import { conAlternado, idsMarcados } from './marcas';
+import { conAlternadoConPareja, idsMarcados } from './marcas';
 
 /** El estado local de qué documentos están marcados, antes de guardarlo en el servidor; solo se edita en proceso. */
 export function usarMarcadoDeMovimientos(conciliacion: Ref<Conciliacion | null>) {
@@ -19,7 +19,8 @@ export function usarMarcadoDeMovimientos(conciliacion: Ref<Conciliacion | null>)
   );
 
   function alternar(movimientoId: string): void {
-    if (conciliacion.value?.estado === 'en_proceso') marcados.value = conAlternado(marcados.value, movimientoId);
+    if (conciliacion.value?.estado === 'en_proceso')
+      marcados.value = conAlternadoConPareja(marcados.value, movimientoId, conciliacion.value.candidatos);
   }
 
   return { marcados, candidatosConMarca, alternar };

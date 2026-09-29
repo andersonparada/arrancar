@@ -1,4 +1,5 @@
 import { formatearFecha, formatearTexto } from '@/modulos/core/utilidades/formato';
+import { motivoDeLaBaja } from '../movimientos/estado-de-reversion';
 import { CLASE_DE_TIPO, SIGNO_DE_TIPO } from '../movimientos/estilo-de-tipo';
 import { OPCIONES_DE_TIPO } from './edicion-de-nota';
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
@@ -18,6 +19,7 @@ export function detallesDeNota(nota: Movimiento): DetalleDeRegistro[] {
     { etiqueta: 'Beneficiario u origen', valor: formatearTexto(nota.beneficiario) },
   ];
   if (nota.observaciones) detalles.push({ etiqueta: 'Observaciones', valor: nota.observaciones });
-  if (nota.anuladoEn) detalles.push({ etiqueta: 'Motivo de anulación', valor: formatearTexto(nota.motivoDeAnulacion) });
+  const motivo = motivoDeLaBaja(nota);
+  if (motivo) detalles.push(motivo);
   return detalles;
 }

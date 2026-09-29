@@ -13,7 +13,7 @@ export interface ConciliacionResumen {
   autorizadaEn: string | null;
 }
 
-export interface MovimientoConMarca extends Movimiento {
+export interface MovimientoConMarca extends Omit<Movimiento, 'puedeAnular' | 'puedeEliminar'> {
   marcado: boolean;
 }
 

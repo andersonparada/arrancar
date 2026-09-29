@@ -3,12 +3,12 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import { usarSaldoInicial } from '../../composables/cuentas-bancarias/usar-saldo-inicial';
-import VentanaDeAnulacion from '../VentanaDeAnulacion.vue';
+import VentanaDeMotivo from '../VentanaDeMotivo.vue';
 import VentanaDeSaldoInicial from './VentanaDeSaldoInicial.vue';
 
-/** La sección del saldo inicial en la ficha de la cuenta bancaria: verlo, registrarlo, corregirlo y anularlo. */
+/** La sección del saldo inicial en la ficha de la cuenta bancaria: verlo, registrarlo, corregirlo y eliminarlo (no se anula). */
 const props = defineProps<{ cuentaBancariaId: string }>();
-const { saldoInicial, cargando, formulario, anulacion } = usarSaldoInicial(props.cuentaBancariaId);
+const { saldoInicial, cargando, formulario, eliminacion } = usarSaldoInicial(props.cuentaBancariaId);
 </script>
 
 <template>
@@ -40,12 +40,13 @@ const { saldoInicial, cargando, formulario, anulacion } = usarSaldoInicial(props
           Corregir
         </BotonBase>
         <BotonBase
+          v-if="saldoInicial.puedeEliminar"
           v-permiso="'bancos.saldos-iniciales.gestionar'"
           variante="fantasma"
           pequeno
-          @click="anulacion.abrir(saldoInicial)"
+          @click="eliminacion.abrir(saldoInicial)"
         >
-          Anular
+          Eliminar
         </BotonBase>
       </div>
     </TarjetaBase>
@@ -63,15 +64,16 @@ const { saldoInicial, cargando, formulario, anulacion } = usarSaldoInicial(props
       @cerrar="formulario.edicion.value.abierta = false"
       @guardar="formulario.guardar"
     />
-    <VentanaDeAnulacion
-      v-model:motivo="anulacion.motivo.value"
-      :abierta="!!anulacion.registro.value"
-      titulo="Anular saldo inicial"
-      texto="¿Anular el saldo inicial de esta cuenta? Esta acción no se puede deshacer."
-      :errores="anulacion.errores.value"
-      :enviando="anulacion.enviando.value"
-      @cerrar="anulacion.cerrar"
-      @anular="anulacion.confirmar"
+    <VentanaDeMotivo
+      v-model:motivo="eliminacion.motivo"
+      :abierta="!!eliminacion.registro"
+      titulo="Eliminar saldo inicial"
+      accion="Eliminar"
+      texto="¿Eliminar el saldo inicial de esta cuenta? Solo se puede mientras la cuenta no tenga conciliaciones. Se borra de verdad y queda en la auditoría."
+      :errores="eliminacion.errores"
+      :enviando="eliminacion.enviando"
+      @cerrar="eliminacion.cerrar"
+      @confirmar="eliminacion.confirmar"
     />
   </div>
 </template>

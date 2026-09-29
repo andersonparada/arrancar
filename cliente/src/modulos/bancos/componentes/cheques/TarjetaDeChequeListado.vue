@@ -5,9 +5,12 @@ import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { detallesDeChequeListado, tituloDeChequeListado } from '../../composables/cheques/detalles-de-cheque-listado';
 import type { ChequeListado } from '../../servicios/cheques.api';
 
-/** Un cheque de la lista de la empresa: monto con color (siempre sale dinero) e "Anular" si sigue emitido. */
+/**
+ * Un cheque de la lista de la empresa: monto con color (siempre sale dinero). «Anular» y «Blanquear»
+ * aparecen solo si el servidor dice que se puede; los cheques no se eliminan.
+ */
 const props = defineProps<{ registro: ChequeListado }>();
-const emit = defineEmits<{ anular: [] }>();
+const emit = defineEmits<{ anular: []; blanquear: [] }>();
 
 const insignia = () => (props.registro.estado === 'anulado' ? 'Anulado' : undefined);
 </script>
@@ -27,13 +30,22 @@ const insignia = () => (props.registro.estado === 'anulado' ? 'Anulado' : undefi
     </template>
     <template #acciones-extra>
       <BotonBase
-        v-if="registro.estado === 'emitido'"
+        v-if="registro.puedeAnular"
         v-permiso="'bancos.cheques.anular'"
         variante="fantasma"
         pequeno
         @click="emit('anular')"
       >
         Anular
+      </BotonBase>
+      <BotonBase
+        v-if="registro.puedeBlanquear"
+        v-permiso="'bancos.cheques.blanquear'"
+        variante="fantasma"
+        pequeno
+        @click="emit('blanquear')"
+      >
+        Blanquear
       </BotonBase>
     </template>
   </TarjetaDeRegistro>

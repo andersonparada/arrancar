@@ -4,12 +4,17 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { CLASE_DE_TIPO, SIGNO_DE_TIPO, detallesDeNota, tituloDeNota } from '../../composables/notas/detalles-de-nota';
+import { esDeSoloLectura, marcaDeReversion } from '../../composables/movimientos/estado-de-reversion';
 import type { Movimiento } from '../../servicios/movimientos.api';
 
+/**
+ * La tarjeta de una nota. «Anular» y «Eliminar» aparecen solo si el servidor dice que se puede; lo
+ * revertido y los inversos se ven, con su marca, pero ya no se tocan.
+ */
 const props = defineProps<{ registro: Movimiento }>();
-const emit = defineEmits<{ editar: []; anular: [] }>();
+const emit = defineEmits<{ editar: []; anular: []; eliminar: [] }>();
 
-const insignia = computed(() => (props.registro.anuladoEn ? 'Anulado' : undefined));
+const insignia = computed(() => marcaDeReversion(props.registro));
 </script>
 
 <template>
@@ -18,7 +23,7 @@ const insignia = computed(() => (props.registro.anuladoEn ? 'Anulado' : undefine
     :detalles="detallesDeNota(registro)"
     permiso="bancos.notas.gestionar"
     :insignia="insignia"
-    :solo-lectura="!!registro.anuladoEn"
+    :solo-lectura="esDeSoloLectura(registro)"
     @editar="emit('editar')"
   >
     <template #destacado>
@@ -27,8 +32,23 @@ const insignia = computed(() => (props.registro.anuladoEn ? 'Anulado' : undefine
       </p>
     </template>
     <template #acciones-extra>
-      <BotonBase v-permiso="'bancos.notas.anular'" variante="fantasma" pequeno @click="emit('anular')">
+      <BotonBase
+        v-if="registro.puedeAnular"
+        v-permiso="'bancos.notas.anular'"
+        variante="fantasma"
+        pequeno
+        @click="emit('anular')"
+      >
         Anular
+      </BotonBase>
+      <BotonBase
+        v-if="registro.puedeEliminar"
+        v-permiso="'bancos.notas.eliminar'"
+        variante="fantasma"
+        pequeno
+        @click="emit('eliminar')"
+      >
+        Eliminar
       </BotonBase>
     </template>
   </TarjetaDeRegistro>

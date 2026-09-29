@@ -20,6 +20,10 @@ const base: Transferencia = {
   motivoDeAnulacion: null,
   movimientoOrigenId: 'origen-mov',
   movimientoDestinoId: 'destino-mov',
+  conciliacionOrigenId: null,
+  conciliacionDestinoId: null,
+  puedeAnular: true,
+  puedeEliminar: true,
 };
 
 describe('título de la transferencia', () => {

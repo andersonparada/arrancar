@@ -14,7 +14,7 @@ export interface DatosSaldoInicial {
 
 const RUTA = '/bancos/saldos-iniciales';
 
-/** El saldo inicial de las cuentas bancarias: registrarlo, corregirlo, anularlo e importarlo/exportarlo en Excel. */
+/** El saldo inicial de las cuentas bancarias: registrarlo, corregirlo, eliminarlo e importarlo/exportarlo en Excel. */
 export class ApiSaldosIniciales {
   constructor(private readonly http: ClienteHttp) {}
 
@@ -37,9 +37,9 @@ export class ApiSaldosIniciales {
     return this.http.reemplazar<Movimiento>(`${RUTA}/${id}`, datos);
   }
 
-  /** Anula el saldo inicial con un motivo; no se puede deshacer y no hay ruta para eliminar. */
-  anular(id: string, motivo: string) {
-    return this.http.crear<Movimiento>(`${RUTA}/${id}/anular`, { motivo });
+  /** Elimina de verdad el saldo inicial (solo si la cuenta nunca se concilió); el motivo queda en la auditoría. */
+  eliminar(id: string, motivo: string) {
+    return this.http.eliminar(`${RUTA}/${id}`, { motivo });
   }
 }
 

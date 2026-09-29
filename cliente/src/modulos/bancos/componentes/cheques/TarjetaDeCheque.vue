@@ -6,7 +6,8 @@ import { formatearTexto } from '@/modulos/core/utilidades/formato';
 import type { Cheque } from '../../servicios/cheques.api';
 
 const props = defineProps<{ registro: Cheque }>();
-const emit = defineEmits<{ anular: [] }>();
+/** Un cheque de su chequera. «Anular» y «Blanquear» aparecen solo si el servidor dice que se puede. */
+const emit = defineEmits<{ anular: []; blanquear: [] }>();
 
 const INSIGNIA_DE_ESTADO: Record<Cheque['estado'], string | undefined> = {
   disponible: undefined,
@@ -31,13 +32,22 @@ const detalles = computed(() => {
   >
     <template #acciones-extra>
       <BotonBase
-        v-if="registro.estado !== 'anulado'"
+        v-if="registro.puedeAnular"
         v-permiso="'bancos.cheques.anular'"
         variante="fantasma"
         pequeno
         @click="emit('anular')"
       >
         Anular
+      </BotonBase>
+      <BotonBase
+        v-if="registro.puedeBlanquear"
+        v-permiso="'bancos.cheques.blanquear'"
+        variante="fantasma"
+        pequeno
+        @click="emit('blanquear')"
+      >
+        Blanquear
       </BotonBase>
     </template>
   </TarjetaDeRegistro>

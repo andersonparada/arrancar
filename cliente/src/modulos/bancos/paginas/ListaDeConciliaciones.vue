@@ -5,7 +5,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
-import VentanaDeAnulacion from '../componentes/VentanaDeAnulacion.vue';
+import VentanaDeMotivo from '../componentes/VentanaDeMotivo.vue';
 import TarjetaDeConciliacion from '../componentes/conciliaciones/TarjetaDeConciliacion.vue';
 import VentanaDeInicioDeConciliacion from '../componentes/conciliaciones/VentanaDeInicioDeConciliacion.vue';
 import { usarEliminacionDeConciliacion } from '../composables/conciliaciones/usar-eliminacion-de-conciliacion';
@@ -89,15 +89,16 @@ const ultimaId = computed(() => conciliaciones.value[0]?.id ?? null);
       @cerrar="cerrarInicio"
       @iniciar="confirmarInicio"
     />
-    <VentanaDeAnulacion
+    <VentanaDeMotivo
       v-model:motivo="motivo"
       :abierta="!!conciliacionAEliminar"
       titulo="Eliminar conciliación"
+      accion="Eliminar"
       texto="Solo se elimina la última: el mes vuelve a estar abierto. Esta acción no se puede deshacer."
       :errores="erroresDeEliminar"
       :enviando="eliminando"
       @cerrar="cerrarEliminar"
-      @anular="confirmarEliminar"
+      @confirmar="confirmarEliminar"
     />
   </div>
 </template>

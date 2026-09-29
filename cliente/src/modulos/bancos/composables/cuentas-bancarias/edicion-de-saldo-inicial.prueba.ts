@@ -25,6 +25,11 @@ const saldoInicial: Movimiento = {
   chequeId: null,
   numeroDeCheque: null,
   conciliacionId: null,
+  revertidoEn: null,
+  motivoDeReversion: null,
+  revierteAId: null,
+  puedeAnular: true,
+  puedeEliminar: true,
 };
 
 describe('ventana del saldo inicial', () => {

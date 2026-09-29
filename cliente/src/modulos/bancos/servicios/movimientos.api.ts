@@ -22,6 +22,15 @@ export interface Movimiento {
   numeroDeCheque: number | null;
   /** La conciliación donde quedó marcado; si no, `null`. */
   conciliacionId: string | null;
+  /** Cuándo se revirtió (se le creó su inverso); `null` si nunca se revirtió. */
+  revertidoEn: string | null;
+  motivoDeReversion: string | null;
+  /** El movimiento original que revierte, si este es un inverso; si no, `null`. */
+  revierteAId: string | null;
+  /** Lo calcula el servidor: si se puede anular (crear su inverso). */
+  puedeAnular: boolean;
+  /** Lo calcula el servidor: si se puede eliminar de verdad (está limpio). */
+  puedeEliminar: boolean;
 }
 
 /** Una fila del reporte, con su saldo corrido (`null` si el reporte no eligió una cuenta). */
