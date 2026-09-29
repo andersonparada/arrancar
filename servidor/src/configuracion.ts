@@ -10,6 +10,8 @@ const esquemaConfiguracion = z.object({
   DATABASE_URL: z.string().min(1),
   DATABASE_URL_PROPIETARIO: z.string().min(1).optional(),
   RUTA_ALMACENAMIENTO: z.string().default('./almacenamiento'),
+  /** Programa qpdf (versión 11 o posterior) con que se revisan los PDF; ruta absoluta. */
+  RUTA_QPDF: z.string().default('/usr/bin/qpdf'),
   RUTA_CLIENTE: z.string().optional(),
   /** Archivo JSON con la configuración propia de este servidor (nivel instalación). */
   RUTA_CONFIG_INSTALACION: z.string().optional(),

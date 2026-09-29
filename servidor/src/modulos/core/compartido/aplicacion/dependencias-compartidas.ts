@@ -1,5 +1,6 @@
 import type { Auditoria } from './auditoria.js';
 import type { Correlativos } from './correlativos.js';
+import type { DocumentosProtegidos } from './documentos-protegidos.js';
 import type { PublicadorEventos } from './publicador-eventos.js';
 import type { Reloj } from './reloj.js';
 import type { UnidadDeTrabajo } from './unidad-de-trabajo.js';
@@ -13,4 +14,5 @@ export interface DependenciasCompartidas {
   correlativos: Correlativos;
   reloj: Reloj;
   fotos: VerificadorDeFotos;
+  documentos: DocumentosProtegidos;
 }

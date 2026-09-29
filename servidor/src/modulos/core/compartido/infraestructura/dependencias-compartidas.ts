@@ -1,6 +1,7 @@
 import { bd } from '../../base-datos/conexion.js';
 import { busEventos } from '../../eventos/bus-eventos.js';
 import type { DependenciasCompartidas } from '../aplicacion/dependencias-compartidas.js';
+import { crearDocumentosProtegidos } from '../../archivos/infraestructura/documentos-protegidos.js';
 import { VerificadorDeFotosDrizzle } from '../../archivos/infraestructura/verificador-de-fotos.drizzle.js';
 import { AuditoriaPostgres } from './auditoria-postgres.js';
 import { CorrelativosPostgres } from './correlativos-postgres.js';
@@ -21,6 +22,7 @@ export function dependenciasCompartidas(): DependenciasCompartidas {
     correlativos: new CorrelativosPostgres(new PoliticaDeReinicioAnualEnConfiguracion()),
     reloj: new RelojEnZonaHoraria(new PoliticaDeZonaHorariaEnConfiguracion()),
     fotos: new VerificadorDeFotosDrizzle(),
+    documentos: crearDocumentosProtegidos(),
   };
   return dependencias;
 }

@@ -5,6 +5,7 @@ import type {
   OptimizadorDeImagenes,
 } from '../aplicacion/puertos/optimizador-de-imagenes.js';
 import { FormatoDeImagenNoAceptado } from '../dominio/imagen.js';
+import type { InspectorDePdf, PdfInspeccionado } from '../aplicacion/puertos/inspector-de-pdf.js';
 import type { ArchivoGuardado, NuevoArchivo, RepositorioArchivos } from '../aplicacion/puertos/repositorio-archivos.js';
 
 /** Devuelve la imagen como si ya midiera el lado máximo pedido. */
@@ -58,5 +59,19 @@ export class VerificadorDeFotosEnMemoria implements VerificadorDeFotos {
 
   async exigir(archivoId: string | null): Promise<void> {
     if (archivoId !== null && !this.validas.has(archivoId)) throw new FotoNoValida();
+  }
+}
+
+/** Devuelve el PDF tal cual con las páginas indicadas, o lanza el error que se le programe. */
+export class InspectorDePdfFalso implements InspectorDePdf {
+  readonly inspeccionados: Buffer[] = [];
+  /** Si se indica, se lanza en vez de aceptar. */
+  error: Error | null = null;
+  paginas = 3;
+
+  async inspeccionar(contenido: Buffer): Promise<PdfInspeccionado> {
+    this.inspeccionados.push(contenido);
+    if (this.error) throw this.error;
+    return { contenido: Buffer.concat([contenido, Buffer.from('\n%limpio')]), paginas: this.paginas };
   }
 }
