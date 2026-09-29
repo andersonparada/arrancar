@@ -1405,6 +1405,14 @@ Manda la tabla «Respuestas del usuario (2026-09-29)» de `plan-hallazgos-contab
 - **P7 Sugerencias de «Sin clasificar»: NO implementado en el servidor.** El plan solo dice «sí, con confirmación» y el informe
   «último concepto del beneficiario o por texto»; el cálculo (normalizar el beneficiario, qué hacer con «por texto», descartar
   conceptos inactivos o incompatibles) no está definido. Hoy el cliente sugiere con lo que ya tiene cargado.
+- **Cliente (hecho el 2026-09-29)**: `causaDeAnulacion` («Manual» / «Por caducidad») como dato «Causa de anulación» en la
+  tarjeta del cheque (ficha de chequera) y en la de la lista de cheques; `moduloDeOrigen` como dato «Origen» en las tarjetas
+  de notas y bajo el concepto en la tabla del reporte de movimientos (lógica en `composables/movimientos/origen-y-causa.ts`).
+  Con origen no se ofrece reclasificar porque el cliente sigue `puedeReclasificar`. En el cheque manual, el selector suma
+  «Pago a proveedores» (clave `pago_a_proveedor`, `opcionesDeConceptoDeCheque`) solo si `sesion.moduloActivo('cuentas-por-pagar')`
+  es falso (la sesión ya trae `modulosActivos`; no hizo falta tocar el servidor). Los 422 nuevos
+  (`no_se_reclasifica_lo_de_otro_modulo`, `pago_a_proveedores_lo_fija_cuentas_por_pagar`) se muestran con el mensaje del
+  servidor en el aviso de error del formulario. P7 no se hizo.
 - **Pruebas**: dominio (`asignacion-de-concepto`, `cheque`, `movimiento-y-concepto`, `conceptos-iniciales`,
   `acciones-posibles`), casos de uso (`casos-uso-de-conceptos-en-cheques`: P3 y causa) y API
   (`bancos-conceptos-ajustes.api.prueba.ts`: migración 0022 repetible, restricciones, origen, P3 y causa).

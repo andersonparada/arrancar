@@ -27,6 +27,9 @@ export interface Movimiento {
   numero: number | null;
   /** El año del número si la empresa reinicia por año; 0 si no. */
   anioDeNumero: number;
+  /** El módulo que generó el movimiento y su documento; `null` si nació en Bancos. */
+  moduloDeOrigen: string | null;
+  documentoDeOrigenId: string | null;
   /** La conciliación donde quedó marcado; si no, `null`. */
   conciliacionId: string | null;
   /** Cuándo se revirtió (se le creó su inverso); `null` si nunca se revirtió. */

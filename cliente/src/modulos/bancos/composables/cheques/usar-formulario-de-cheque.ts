@@ -2,7 +2,8 @@ import { computed, ref, watch } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiCheques } from '../../servicios/cheques.api';
-import { opcionesDeConcepto } from '../conceptos/opciones-de-concepto';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
+import { opcionesDeConceptoDeCheque } from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
 import { datosDeEmisionDeCheque, edicionDeCheque, type EdicionDeCheque } from './edicion-de-cheque';
 import { usarSeleccionDeCheque } from './usar-seleccion-de-cheque';
@@ -15,7 +16,9 @@ export function usarFormularioDeCheque(alGuardar: () => Promise<void>) {
   const cuentaElegida = computed(() => edicion.value.cuentaBancariaId);
   const { opciones: opcionesDeCheque, sugerido } = usarSeleccionDeCheque(cuentaElegida);
   const { conceptos } = usarCatalogoDeConceptos();
-  const opcionesDeConceptos = computed(() => opcionesDeConcepto(conceptos.value, ['cheque']));
+  const opcionesDeConceptos = computed(() =>
+    opcionesDeConceptoDeCheque(conceptos.value, usarSesion().moduloActivo('cuentas-por-pagar')),
+  );
 
   watch(sugerido, (chequeId) => (edicion.value.chequeId = chequeId));
 

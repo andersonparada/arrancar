@@ -75,7 +75,10 @@ decisiones e investigación con Opus).
   Pruebas del servidor: 883. **P7** (sugerencias en «Sin clasificar») queda sin hacer:
   falta definir cómo normalizar el beneficiario (propuesta: último concepto activo y
   compatible del mismo beneficiario, sin mayúsculas ni acentos).
-- **Ajustes de conceptos, cliente**: agente frontend en curso.
+- **Ajustes de conceptos, cliente**: **hecho**: causa de anulación en cheques, origen
+  en notas y en el reporte de movimientos, «Pago a proveedores» en el cheque manual solo
+  sin Cuentas por pagar (con `sesion.moduloActivo`). Pruebas del cliente: 238. El Excel y
+  la impresión del reporte aún no llevan el origen.
 - **Diseño de H5b/H5c** (punto 2): **hecho** en `docs/modulos/diseno-accesos-por-modulo.md`
   (11 pasos). `core.accesos_datos` está vacía y nada la usa: se elimina sin migrar datos.
 - **H5b pasos 1 y 2** (alcance nuevo en el core y excepción de ESLint): agente backend en

@@ -2,6 +2,7 @@
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import { formatearNumeroDeComprobante } from '../../composables/comunes/numero-de-comprobante';
 import { marcaDeReversion } from '../../composables/movimientos/estado-de-reversion';
+import { textoDeOrigen } from '../../composables/movimientos/origen-y-causa';
 import { creditoDeFila, debitoDeFila, documentoDeFila } from '../../composables/movimientos/fila-del-reporte';
 import type { ReporteDeMovimientos } from '../../servicios/movimientos.api';
 
@@ -64,7 +65,10 @@ const CLASE_DE_MARCA = {
               {{ marcaDeReversion(fila) }}
             </p>
           </td>
-          <td class="px-4 py-2.5">{{ formatearTexto(fila.conceptoNombre) }}</td>
+          <td class="px-4 py-2.5">
+            <p>{{ formatearTexto(fila.conceptoNombre) }}</p>
+            <p v-if="textoDeOrigen(fila)" class="text-xs text-tierra-500 no-underline">{{ textoDeOrigen(fila) }}</p>
+          </td>
           <td class="px-4 py-2.5">{{ formatearTexto(fila.beneficiario) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(debitoDeFila(fila)) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(creditoDeFila(fila)) }}</td>

@@ -24,6 +24,8 @@ const base: Movimiento = {
   numeroDeCheque: null,
   numero: null,
   anioDeNumero: 0,
+  moduloDeOrigen: null,
+  documentoDeOrigenId: null,
   conciliacionId: null,
   revertidoEn: null,
   motivoDeReversion: null,
@@ -95,5 +97,11 @@ describe('detalles de la nota', () => {
       motivoDeReversion: 'Boleta duplicada',
     });
     expect(detalles).toContainEqual({ etiqueta: 'Motivo de anulación', valor: 'Boleta duplicada' });
+  });
+
+  it('muestra el origen solo si lo generó otro módulo', () => {
+    const conOrigen = detallesDeNota({ ...base, moduloDeOrigen: 'cuentas-por-pagar', documentoDeOrigenId: 'doc-1' });
+    expect(conOrigen).toContainEqual({ etiqueta: 'Origen', valor: 'Cuentas por pagar' });
+    expect(detallesDeNota(base).map((d) => d.etiqueta)).not.toContain('Origen');
   });
 });

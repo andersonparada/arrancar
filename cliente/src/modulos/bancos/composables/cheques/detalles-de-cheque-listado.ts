@@ -1,5 +1,6 @@
 import { formatearFecha, formatearTexto } from '@/modulos/core/utilidades/formato';
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
+import { textoDeCausaDeAnulacion } from '../movimientos/origen-y-causa';
 import type { ChequeListado } from '../../servicios/cheques.api';
 
 /** "Cheque No. <serie><número>": igual que en el movimiento que lo emitió. */
@@ -15,6 +16,8 @@ export function detallesDeChequeListado(registro: ChequeListado): DetalleDeRegis
     { etiqueta: 'Referencia', valor: formatearTexto(registro.referencia) },
     { etiqueta: 'No negociable', valor: registro.noNegociable ? 'Sí' : 'No' },
   ];
+  const causa = textoDeCausaDeAnulacion(registro.causaDeAnulacion);
+  if (causa) detalles.push({ etiqueta: 'Causa de anulación', valor: causa });
   if (registro.motivoDeAnulacion) detalles.push({ etiqueta: 'Motivo de anulación', valor: registro.motivoDeAnulacion });
   return detalles;
 }

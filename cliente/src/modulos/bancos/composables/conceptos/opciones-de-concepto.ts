@@ -32,6 +32,24 @@ export function opcionesDeConcepto(
   return [{ valor: null, texto: 'Elija un concepto' }, ...elegibles.sort(porNombre).map(comoOpcion)];
 }
 
+/** La clave del concepto de sistema «Pago a proveedores» (lo fija Cuentas por pagar cuando está activo). */
+export const CLAVE_DE_PAGO_A_PROVEEDORES = 'pago_a_proveedor';
+
+/**
+ * Las opciones de un cheque emitido a mano: las de siempre y, solo si Cuentas por pagar **no** está activo,
+ * también «Pago a proveedores». Con Cuentas por pagar activo el servidor lo rechazaría (422).
+ */
+export function opcionesDeConceptoDeCheque(
+  conceptos: readonly Concepto[],
+  cuentasPorPagarActivo: boolean,
+): OpcionDeRegistro[] {
+  const base = opcionesDeConcepto(conceptos, ['cheque']);
+  const pago = conceptos.find((c) => c.claveDeSistema === CLAVE_DE_PAGO_A_PROVEEDORES && c.activo);
+  if (cuentasPorPagarActivo || !pago) return base;
+  const [primera, ...resto] = base;
+  return [primera!, ...[...resto, comoOpcion(pago)].sort((a, b) => a.texto.localeCompare(b.texto, 'es'))];
+}
+
 /** Las opciones del filtro del reporte: todos los conceptos (también los de sistema), por nombre, y «Todos». */
 export function opcionesDeFiltroDeConcepto(conceptos: readonly Concepto[]): OpcionDeRegistro[] {
   return [{ valor: null, texto: 'Todos' }, ...[...conceptos].sort(porNombre).map(comoOpcion)];

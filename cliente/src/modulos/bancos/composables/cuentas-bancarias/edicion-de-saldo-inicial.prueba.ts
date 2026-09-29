@@ -26,6 +26,8 @@ const saldoInicial: Movimiento = {
   numeroDeCheque: null,
   numero: null,
   anioDeNumero: 0,
+  moduloDeOrigen: null,
+  documentoDeOrigenId: null,
   conciliacionId: null,
   revertidoEn: null,
   motivoDeReversion: null,

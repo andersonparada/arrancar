@@ -20,6 +20,7 @@ const base: ChequeListado = {
   referencia: 'Cheque A7',
   anuladoEn: null,
   motivoDeAnulacion: null,
+  causaDeAnulacion: null,
   puedeAnular: true,
   puedeBlanquear: true,
 };
@@ -46,8 +47,10 @@ describe('detalles del cheque listado', () => {
       estado: 'anulado',
       anuladoEn: '2026-09-27T10:00:00.000Z',
       motivoDeAnulacion: 'Se perdió',
+      causaDeAnulacion: 'caducidad',
     });
     expect(detalles).toContainEqual({ etiqueta: 'Motivo de anulación', valor: 'Se perdió' });
+    expect(detalles).toContainEqual({ etiqueta: 'Causa de anulación', valor: 'Por caducidad' });
   });
 
   it('sin motivo de anulación no lo agrega', () => {

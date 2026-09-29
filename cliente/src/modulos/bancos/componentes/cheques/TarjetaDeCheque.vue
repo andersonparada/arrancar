@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import { formatearTexto } from '@/modulos/core/utilidades/formato';
+import { textoDeCausaDeAnulacion } from '../../composables/movimientos/origen-y-causa';
 import type { Cheque } from '../../servicios/cheques.api';
 
 const props = defineProps<{ registro: Cheque }>();
@@ -18,7 +19,9 @@ const INSIGNIA_DE_ESTADO: Record<Cheque['estado'], string | undefined> = {
 const detalles = computed(() => {
   const base = [{ etiqueta: 'No negociable', valor: props.registro.noNegociable ? 'Sí' : 'No' }];
   if (!props.registro.anuladoEn) return base;
-  return [...base, { etiqueta: 'Motivo de anulación', valor: formatearTexto(props.registro.motivoDeAnulacion) }];
+  const causa = textoDeCausaDeAnulacion(props.registro.causaDeAnulacion);
+  const conCausa = causa ? [...base, { etiqueta: 'Causa de anulación', valor: causa }] : base;
+  return [...conCausa, { etiqueta: 'Motivo de anulación', valor: formatearTexto(props.registro.motivoDeAnulacion) }];
 });
 </script>
 

@@ -2,6 +2,9 @@ import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-
 import type { DatosDeBaja } from './datos-de-baja';
 import type { Movimiento } from './movimientos.api';
 
+/** Por qué se anuló un cheque (nulo si no está anulado). */
+export type CausaDeAnulacion = 'manual' | 'caducidad';
+
 export type EstadoDelCheque = 'disponible' | 'emitido' | 'anulado';
 
 /** Cheque tal como lo manda el servidor. */
@@ -14,6 +17,7 @@ export interface Cheque {
   movimientoId: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  causaDeAnulacion: CausaDeAnulacion | null;
   /** Lo calcula el servidor: si se puede anular. */
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede blanquear (emitido, con su movimiento limpio). */
@@ -46,6 +50,7 @@ export interface ChequeListado {
   referencia: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  causaDeAnulacion: CausaDeAnulacion | null;
   puedeAnular: boolean;
   puedeBlanquear: boolean;
 }

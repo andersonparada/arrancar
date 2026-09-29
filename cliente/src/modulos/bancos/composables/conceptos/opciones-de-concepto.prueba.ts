@@ -4,6 +4,7 @@ import {
   conceptoSinClasificar,
   conceptoVigente,
   opcionesDeConcepto,
+  opcionesDeConceptoDeCheque,
   opcionesDeFiltroDeConcepto,
   sugerirConcepto,
 } from './opciones-de-concepto';
@@ -119,5 +120,34 @@ describe('sugerirConcepto', () => {
     const deCredito = opcionesDeConcepto(catalogo, ['credito']);
 
     expect(sugerirConcepto(movimientos, 'Banco Industrial', deCredito)).toBeNull();
+  });
+});
+
+describe('opcionesDeConceptoDeCheque', () => {
+  const pago = concepto({
+    id: 'pago',
+    nombre: 'Pago a proveedores',
+    aplicaA: 'debito',
+    claveDeSistema: 'pago_a_proveedor',
+  });
+  const conPago = [...catalogo, pago];
+
+  it('sin Cuentas por pagar activo incluye «Pago a proveedores», por nombre', () => {
+    expect(textos(opcionesDeConceptoDeCheque(conPago, false))).toEqual([
+      'Elija un concepto',
+      'Impuestos',
+      'Pago a proveedores',
+      'Planilla',
+      'Varios',
+    ]);
+  });
+
+  it('con Cuentas por pagar activo no lo ofrece', () => {
+    expect(textos(opcionesDeConceptoDeCheque(conPago, true))).not.toContain('Pago a proveedores');
+  });
+
+  it('si el catálogo no lo trae o está inactivo, no aparece', () => {
+    expect(textos(opcionesDeConceptoDeCheque(catalogo, false))).not.toContain('Pago a proveedores');
+    expect(textos(opcionesDeConceptoDeCheque([{ ...pago, activo: false }], false))).toEqual(['Elija un concepto']);
   });
 });
