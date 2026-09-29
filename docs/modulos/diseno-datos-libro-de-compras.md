@@ -1,6 +1,6 @@
 # Diseño de datos de Libro de compras (L1 a L3) — arquitecto de datos, 2026-09-29
 
-Estado: **propuesta para aprobar**. Aterriza en tablas, reglas y pasos lo decidido en
+Estado: **propuesta para aprobar** (L1, pasos L1-1 a L1-6, **hecho** el 2026-09-29). Aterriza en tablas, reglas y pasos lo decidido en
 `libro-de-compras.md` (incluidas las «Respuestas del usuario (2026-09-29, tarde)»),
 `validacion-h7-h11-retenciones.md` (con las decisiones del usuario al final), lo que
 `cuentas-por-pagar.md` espera recibir, H5a (`diseno-esquema-empresas.md`), `PLAN.md` §3.2 y
@@ -641,7 +641,7 @@ agregar datos fiscales y algunos conceptos a la cuenta demo (commit del paso que
 Cada commit corre `npm run revisar` y las pruebas de su parte, y actualiza la bitácora de
 `PLAN.md` y, si cambia algo acordado, `libro-de-compras.md`.
 
-### L1 Datos fiscales
+### L1 Datos fiscales (hecho, 2026-09-29)
 
 1. **L1-1 (servidor, terceros):** migración `unique (id, cuenta_id)` en `terceros.proveedores`
    y su declaración en `proveedores.tablas.ts`.

@@ -361,7 +361,7 @@ mano sobre lo generado.
    crear `core/contratos/libro-de-compras.contratos.ts` con sus órdenes reales
    (p. ej. `libro-de-compras.recibir_documento`) y registrar sus manejadores en
    `modulo.ts`.
-2. **L1 Datos fiscales:** razón social, nombre comercial y fecha de inicio **ya
+2. **L1 Datos fiscales (hecho, 2026-09-29; sin menú):** razón social, nombre comercial y fecha de inicio **ya
    existen** (H5a); no se vuelven a crear. Falta: el «espacio» para que un módulo
    aporte su sección a los formularios de Empresas y Proveedores (visible si el
    módulo está activo); `libro_de_compras.datos_fiscales_de_empresa` (regímenes y

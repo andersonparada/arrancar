@@ -187,25 +187,24 @@ En `main`, además de lo anterior:
   `docs/modulos/validacion-h7-h11-retenciones.md` (casilla SAT desmarcada no calcula
   retenciones, riesgo aceptado; IDP en la base del ISR configurable por empresa).
 
-También en `main`, **a medias y sin correr pruebas tras unirlo** (el usuario pidió pasarlo a `main` y borrar la rama):
-- **Libro de compras L1** (`b1bb5f4` … `9b03716`): L1-1 a L1-4 del servidor completos
-  (unique en `terceros.proveedores`, módulo `libro-de-compras`, secciones aportadas a
-  Empresas y Proveedores con avisos del mediador, datos fiscales de empresa y proveedor
-  con auditoría; migraciones terceros `0007` y libro-de-compras `0000`–`0001`; opción
-  `modulo` en `proteger()`). **L1-5 WIP y L1-6 pendiente**: falta poner
-  `SeccionesAportadas` en `VentanaDeEmpresa.vue`, `FormularioDeTercero.vue` y
-  `FichaDeTercero.vue`, y todo el cliente del módulo (servicio, componentes de sección y
-  ficha, `secciones` en su `modulo.ts`), correr pruebas y marcar L1 en los planes.
+- **Libro de compras L1 hecho** (`b1bb5f4` … L1-6): servidor (L1-1 a L1-4: unique en
+  `terceros.proveedores`, módulo `libro-de-compras`, secciones aportadas a Empresas y
+  Proveedores con avisos del mediador, datos fiscales de empresa y proveedor con
+  auditoría; migraciones terceros `0007` y libro-de-compras `0000`–`0001`; opción `modulo`
+  en `proteger()`) y cliente (L1-5: `SeccionesAportadas` en Empresas y Proveedores,
+  `SeccionesEnLaFicha` en el proveedor; L1-6: servicio de lectura, secciones de empresa y
+  de proveedor con su ficha, valores por omisión en `datos-fiscales-de-*.ts` con pruebas).
+  Pruebas tras la unión: servidor 1286, cliente 343, generador 46. **Sin menú todavía**: L2
+  agrega las pantallas del módulo. Pendiente de probar en el navegador.
 
 ## Siguiente (mañana)
 
-1. **Terminar L1** (pantallas) y correr todas las pruebas: `main` tiene L1 a medias.
-2. **H2a–H2d**: saldo transcrito y estado de cuenta en la conciliación
+1. **H2a–H2d**: saldo transcrito y estado de cuenta en la conciliación
    (`plan-archivos-y-h2.md`; la ruta de subida debe usar `limitarSubidas`). Pedir al
    usuario un PDF real de banco con datos tachados.
-3. **Libro de compras L2 y L3**, aplicando los ajustes del contador, y luego **Cuentas
+2. **Libro de compras L2 y L3**, aplicando los ajustes del contador, y luego **Cuentas
    por pagar CP1**.
-4. Probar en el navegador lo nuevo (P7, H6b, H8, avisos de fecha, Archivos).
+3. Probar en el navegador lo nuevo (L1: sección fiscal en Empresas y Proveedores; P7, H6b, H8, avisos de fecha, Archivos).
 
 ## Preguntas abiertas para el usuario
 

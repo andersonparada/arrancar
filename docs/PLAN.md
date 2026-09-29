@@ -556,3 +556,11 @@ y `demo` / `demo-arrancar`.
   `Semaforo` de 2 trabajos, `sharp.concurrency(1)` y 30 subidas por minuto por usuario (429
   `demasiadas_subidas`). Se queda `failOn: 'error'`: no hubo 10 fotos reales de Android e iPhone
   para probar `'warning'`. El `accept` del cliente ya no ofrecía HEIC, AVIF ni GIF.
+
+- **2026-09-29 (Libro de compras L1-5 y L1-6, cliente).** `SeccionesAportadas` en la ventana de
+  Empresas (con `secciones` en el guardado) y en el formulario de Proveedores (solo cuando es o será
+  proveedor y el usuario puede gestionar el papel); `SeccionesEnLaFicha` en la ficha del proveedor. El
+  cliente de `libro-de-compras` aporta las secciones fiscales de empresa y proveedor (formulario y ficha)
+  sin menú; la lógica de los valores por omisión y de lo que se propone según el régimen está en
+  `composables/datos-fiscales-de-*.ts` con pruebas; si falla la lectura de lo guardado, la sección no se
+  envía (no pisa datos). Pruebas: servidor 1286, cliente 343, generador 46.
