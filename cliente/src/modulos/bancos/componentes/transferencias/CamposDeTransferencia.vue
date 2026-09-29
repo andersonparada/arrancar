@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import AvisoDeFecha from '../comunes/AvisoDeFecha.vue';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { EdicionDeTransferencia } from '../../composables/transferencias/edicion-de-transferencia';
 
@@ -29,6 +30,7 @@ const edicion = defineModel<EdicionDeTransferencia>({ required: true });
       :error="errores.cuentaDestinoId"
     />
     <CampoTexto v-model="edicion.fecha" etiqueta="Fecha" tipo="date" requerido :error="errores.fecha" />
+    <AvisoDeFecha :fecha="edicion.fecha" />
     <CampoTexto v-model="edicion.monto" etiqueta="Monto" tipo="number" paso="any" requerido :error="errores.monto" />
     <CampoTexto
       v-model="edicion.referencia"

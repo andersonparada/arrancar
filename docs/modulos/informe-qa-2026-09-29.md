@@ -109,3 +109,4 @@ reporte y a la conciliación de libros). Flujo de efectivo: saldos iniciales 10,
   propósito para cuentas con historia). No es un error.
 - **Fechas futuras** en notas, transferencias y saldos iniciales: **se permiten con
   aviso** en pantalla (los cheques posfechados ya estaban permitidos).
+  **Hecho:** aviso naranja junto a la fecha (en cheques, aviso azul de posfechado) con la fecha de hoy de la zona horaria de la empresa (`AvisoDeFecha.vue`).

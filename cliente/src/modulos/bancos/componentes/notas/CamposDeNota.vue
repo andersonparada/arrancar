@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import AvisoDeFecha from '../comunes/AvisoDeFecha.vue';
 import CamposDeIntereses from './CamposDeIntereses.vue';
 import SugerenciaAlCapturar from '../sugerencias/SugerenciaAlCapturar.vue';
 import { opcionesDeLista } from '@/modulos/core/utilidades/edicion';
@@ -39,6 +40,7 @@ const edicion = defineModel<EdicionDeNota>({ required: true });
       :error="errores.tipo"
     />
     <CampoTexto v-model="edicion.fecha" etiqueta="Fecha" tipo="date" requerido :error="errores.fecha" />
+    <AvisoDeFecha :fecha="edicion.fecha" />
     <CampoTexto
       v-model="edicion.monto"
       :etiqueta="pideIntereses ? 'Monto acreditado (neto)' : 'Monto'"

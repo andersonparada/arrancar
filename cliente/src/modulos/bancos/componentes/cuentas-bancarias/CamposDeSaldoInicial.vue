@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import AvisoDeFecha from '../comunes/AvisoDeFecha.vue';
 import { opcionesDeLista } from '@/modulos/core/utilidades/edicion';
 import type { EdicionDeSaldoInicial } from '../../composables/cuentas-bancarias/edicion-de-saldo-inicial';
 
@@ -21,6 +22,7 @@ const edicion = defineModel<EdicionDeSaldoInicial>({ required: true });
       :error="errores.tipo"
     />
     <CampoTexto v-model="edicion.fecha" etiqueta="Fecha" tipo="date" requerido :error="errores.fecha" />
+    <AvisoDeFecha :fecha="edicion.fecha" />
     <CampoTexto v-model="edicion.monto" etiqueta="Monto" tipo="number" paso="any" requerido :error="errores.monto" />
     <CampoTexto
       v-model="edicion.referencia"

@@ -2,6 +2,7 @@
 import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import AvisoDeFecha from '../comunes/AvisoDeFecha.vue';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { SugerenciaDeMovimiento } from '../../servicios/sugerencias.api';
 import SugerenciaAlCapturar from '../sugerencias/SugerenciaAlCapturar.vue';
@@ -36,6 +37,7 @@ const edicion = defineModel<EdicionDeCheque>({ required: true });
       :error="errores.chequeId"
     />
     <CampoTexto v-model="edicion.fecha" etiqueta="Fecha" tipo="date" requerido :error="errores.fecha" />
+    <AvisoDeFecha :fecha="edicion.fecha" cheque />
     <CampoTexto v-model="edicion.monto" etiqueta="Monto" tipo="number" paso="any" requerido :error="errores.monto" />
     <CampoTexto v-model="edicion.beneficiario" etiqueta="Beneficiario" requerido :error="errores.beneficiario" />
     <CampoSelector
