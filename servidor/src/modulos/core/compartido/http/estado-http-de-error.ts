@@ -5,7 +5,13 @@ import {
   RecursoEnUso,
   RecursoNoEncontrado,
 } from '../aplicacion/errores.js';
-import { DatoInvalido, ReglaDeNegocioInfringida, type ErrorEsperado } from '../dominio/errores.js';
+import {
+  CargaDemasiadoGrande,
+  DatoInvalido,
+  DemasiadasSolicitudes,
+  ReglaDeNegocioInfringida,
+  type ErrorEsperado,
+} from '../dominio/errores.js';
 
 type FamiliaDeError = abstract new (...argumentos: never[]) => ErrorEsperado;
 
@@ -17,6 +23,8 @@ const ESTADO_POR_FAMILIA: ReadonlyArray<readonly [FamiliaDeError, number]> = [
   [RecursoDuplicado, 409],
   [RecursoEnUso, 409],
   [ReglaDeNegocioInfringida, 422],
+  [CargaDemasiadoGrande, 413],
+  [DemasiadasSolicitudes, 429],
 ];
 
 const ESTADO_SI_NO_HAY_FAMILIA = 400;

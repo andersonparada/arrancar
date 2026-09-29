@@ -1,23 +1,16 @@
-import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyReply } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { DatoInvalido } from '../../compartido/dominio/errores.js';
 import { proteger } from '../../compartido/http/guardias.js';
 import { operadorDe } from '../../compartido/http/operador-de-la-solicitud.js';
 import type { IntercambioDeRecurso } from '../aplicacion/intercambio-de-recurso.js';
 import type { Validador } from '../aplicacion/lectura-de-filas.js';
+import { leerArchivoDeExcel } from './leer-archivo-de-excel.js';
+import { limitarImportaciones } from './limite-de-importaciones.js';
 
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
 
 const TIPO_EXCEL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-
-export class FaltaElArchivo extends DatoInvalido {
-  readonly codigo = 'falta_el_archivo';
-
-  constructor() {
-    super('Adjunte el archivo de Excel.');
-  }
-}
 
 export interface OpcionesDeIntercambio {
   /** La ruta del recurso: `/ganado/animales`. */
@@ -56,12 +49,6 @@ function enviarExcel(respuesta: FastifyReply, nombre: string, contenido: Buffer)
     .send(contenido);
 }
 
-async function leerArchivo(solicitud: FastifyRequest): Promise<Buffer> {
-  const parte = await solicitud.file();
-  if (!parte) throw new FaltaElArchivo();
-  return parte.toBuffer();
-}
-
 const esquemaDeImportacion = z.object({ ensayo: z.enum(['true', 'false']).default('true') });
 
 /**
@@ -97,10 +84,10 @@ function rutasDeImportar(app: Aplicacion, { ruta, archivo, intercambio }: Opcion
   );
   app.post(
     `${ruta}/importar`,
-    { schema: { querystring: esquemaDeImportacion }, preHandler: importar },
+    { schema: { querystring: esquemaDeImportacion }, preHandler: [importar, limitarImportaciones(app)] },
     async (solicitud) =>
       intercambio.importar(operadorDe(solicitud), {
-        contenido: await leerArchivo(solicitud),
+        contenido: await leerArchivoDeExcel(solicitud),
         ensayo: solicitud.query.ensayo === 'true',
       }),
   );

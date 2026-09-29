@@ -20,3 +20,9 @@ export abstract class DatoInvalido extends ErrorEsperado {}
 
 /** La operación contradice una regla del negocio, por ejemplo asignar un papel a un tercero inactivo. */
 export abstract class ReglaDeNegocioInfringida extends ErrorEsperado {}
+
+/** El archivo o la carga enviada supera el tamaño permitido (HTTP 413). */
+export abstract class CargaDemasiadoGrande extends ErrorEsperado {}
+
+/** Se pidió la misma operación demasiadas veces en poco tiempo (HTTP 429). */
+export abstract class DemasiadasSolicitudes extends ErrorEsperado {}

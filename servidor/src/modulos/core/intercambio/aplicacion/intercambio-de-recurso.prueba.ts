@@ -7,7 +7,7 @@ import { operadorDePrueba } from '../../compartido/pruebas/dobles-compartidos.js
 import { validadorDeZod } from '../http/rutas-de-intercambio.js';
 import { LibroDeExcelJs } from '../infraestructura/libro-de-excel.exceljs.js';
 import type { Columna } from './columnas.js';
-import { ArchivoNoLegible } from './errores.js';
+import { ArchivoNoEsExcel } from './errores.js';
 import { IntercambioDeRecurso } from './intercambio-de-recurso.js';
 
 interface Animal {
@@ -138,7 +138,7 @@ describe('importar', () => {
       { fila: 1, columna: 'Arete', mensaje: 'Falta esta columna.' },
     ]);
     await expect(intercambio.importar(operador, { contenido: Buffer.from('hola'), ensayo: true })).rejects.toThrow(
-      ArchivoNoLegible,
+      ArchivoNoEsExcel,
     );
   });
 });

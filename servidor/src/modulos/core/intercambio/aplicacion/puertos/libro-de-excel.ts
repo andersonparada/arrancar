@@ -22,6 +22,10 @@ export interface HojaLeida {
 /** Lee y escribe archivos de Excel; la aplicación no sabe con qué librería. */
 export interface LibroDeExcel {
   escribir(hoja: HojaParaEscribir): Promise<Buffer>;
-  /** @throws ArchivoNoLegible si no es un Excel o no tiene hojas. */
+  /**
+   * @throws ArchivoNoEsExcel, ExcelConContenidoNoPermitido o ExcelDemasiadoGrandeAlDescomprimir
+   * si el archivo no es un Excel normal o infla más de lo permitido.
+   * @throws ArchivoNoLegible si no tiene hojas o no se puede leer.
+   */
   leer(contenido: Buffer): Promise<HojaLeida>;
 }

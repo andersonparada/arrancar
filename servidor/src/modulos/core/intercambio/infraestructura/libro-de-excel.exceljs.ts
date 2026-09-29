@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { ArchivoNoLegible } from '../aplicacion/errores.js';
+import { ValidadorDeXlsx } from './zip/validador-de-xlsx.js';
 import type { FilaLeida, HojaLeida, HojaParaEscribir, LibroDeExcel } from '../aplicacion/puertos/libro-de-excel.js';
 
 const ANCHO_DE_COLUMNA = 22;
@@ -35,6 +36,8 @@ function agregarHoja(libro: ExcelJS.Workbook, nombre: string, filas: unknown[][]
 
 /** Excel con la librería exceljs: la primera hoja lleva los datos y la segunda, las instrucciones. */
 export class LibroDeExcelJs implements LibroDeExcel {
+  constructor(private readonly validador = new ValidadorDeXlsx()) {}
+
   async escribir({ nombre, encabezados, filas, instrucciones }: HojaParaEscribir): Promise<Buffer> {
     const libro = new ExcelJS.Workbook();
     agregarHoja(libro, nombre, [encabezados, ...filas]);
@@ -43,8 +46,9 @@ export class LibroDeExcelJs implements LibroDeExcel {
   }
 
   async leer(contenido: Buffer): Promise<HojaLeida> {
+    const seguro = this.validador.sanear(contenido);
     const libro = new ExcelJS.Workbook();
-    await libro.xlsx.load(contenido as unknown as ArrayBuffer).catch(() => {
+    await libro.xlsx.load(seguro as unknown as ArrayBuffer).catch(() => {
       throw new ArchivoNoLegible();
     });
     const hoja = libro.worksheets[0];
