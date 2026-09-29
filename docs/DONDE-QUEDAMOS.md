@@ -95,6 +95,11 @@ decisiones e investigación con Opus).
   migración de los roles; quitar `soloAccesoTotal`. Se programa al terminar el paso 3
   de H5b (la base de pruebas es una sola).
 
+- **Llaves entre esquemas** (PLAN §3.2, decidido el 2026-09-29): generalizar la
+  excepción de ESLint del módulo base a los `*.tablas.js` de cualquier módulo (solo
+  desde `infraestructura/`) y agregar una prueba que revise que cada llave entre
+  esquemas apunte a `core` o a un módulo de `dependeDe`. Va junto con los permisos.
+
 Forma de trabajo: cada avance va en commit a la rama; a `main` solo entra lo terminado
 y probado (pruebas del servidor, ESLint y `tsc` en verde).
 

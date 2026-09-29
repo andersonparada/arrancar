@@ -88,8 +88,9 @@ base de desarrollo debe estar levantada.
 - Lo que usan todos los módulos va en `core`. `empresas` es esencial (siempre activo).
 - `DefinicionModulo` declara: `dependeDe`, `permisos`, `recursosConAlcance`,
   `configuracion` y `rutas`. El registro valida las dependencias al arrancar.
-- Los módulos no se importan entre sí para colaborar (salvo las tablas del módulo
-  base `empresas`, solo desde `infraestructura`): usan eventos
+- Los módulos no se importan entre sí para colaborar (salvo los `*.tablas.js` de un
+  módulo de su `dependeDe` o del módulo base `empresas`, solo desde `infraestructura`,
+  para leer y poner llaves foráneas entre esquemas; `docs/PLAN.md` §3.2): usan eventos
   (`core/eventos/bus-eventos.ts`). Un módulo sí puede importar de `core`.
 
 ### Importar y exportar (Excel)

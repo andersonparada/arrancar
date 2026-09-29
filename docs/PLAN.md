@@ -58,6 +58,16 @@ clientes y proveedores, con un panel de recordatorios diarios.
 - Dos roles de PostgreSQL: `arrancar` (dueño, solo migraciones) y
   `arrancar_app` (la aplicación, sin privilegios; las políticas RLS se aplican).
 - Dinero en `numeric(14,2)`; en la API viaja como texto para no perder precisión.
+- **Llaves foráneas entre esquemas (decisión del usuario, 2026-09-29):** una
+  instalación crea las tablas de **todos** los módulos, se usen o no, así que una
+  tabla puede apuntar con llave foránea (e índice) a la de otro módulo, siempre que
+  ese módulo esté en su `dependeDe` (el migrador ya aplica en ese orden y una prueba
+  lo comprueba). Da integridad en la base; la velocidad la dan los índices de esas
+  columnas. El código solo importa los `*.tablas.js` del otro módulo y solo desde su
+  `infraestructura/` (leer y referenciar; escribir en esas tablas solo lo hace su
+  módulo). Una referencia a «un documento de cualquier módulo» (p. ej.
+  `bancos.movimientos.documento_de_origen_id`) no puede llevar llave. La llave no
+  sustituye la comprobación con RLS: PostgreSQL la revisa sin políticas.
 
 ### 3.3 Multiempresa y acceso a datos (a nivel de base de datos)
 
@@ -478,3 +488,8 @@ y `demo` / `demo-arrancar`.
   acciones especiales (aprobar, rechazar, anular…) siguen con permiso propio en
   `core.rol_permisos`. Se elimina `soloAccesoTotal`: `empresas.carga-inicial.reabrir`
   se vuelve asignable.
+- **2026-09-29**: Llaves foráneas entre esquemas de módulos (sección 3.2): se permiten
+  hacia los módulos de `dependeDe` (todas las tablas existen en toda instalación). La
+  excepción de ESLint del módulo base `empresas` se generaliza a los `*.tablas.js` de
+  cualquier módulo, solo desde `infraestructura/`, con una prueba que revisa que cada
+  llave entre esquemas apunte a `core` o a un módulo de `dependeDe`.

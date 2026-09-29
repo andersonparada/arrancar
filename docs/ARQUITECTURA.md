@@ -60,7 +60,7 @@ servidor/src/modulos/terceros/
 | `infraestructura` | `aplicacion` (para implementar puertos), `dominio`, `core/compartido/infraestructura` |
 | `http` | `aplicacion` y `core/compartido/http` |
 | `modulo.ts` | todo lo del módulo (es quien conecta las piezas) |
-| otro módulo | **nunca**, salvo los `*.tablas.js` de un módulo base (`empresas`) y solo desde `infraestructura` (leer y poner llaves foráneas; escribir en esas tablas solo lo hace su módulo; regla `MODULOS_BASE` de `eslint.config.js`); se comunican por **eventos** (después de confirmar) o por **órdenes y avisos** del mediador (dentro de la transacción), ver sección 4.8 |
+| otro módulo | **nunca**, salvo los `*.tablas.js` de un módulo de su `dependeDe` (o del módulo base `empresas`) y solo desde `infraestructura` (leer y poner llaves foráneas; escribir en esas tablas solo lo hace su módulo; ver `docs/PLAN.md` §3.2); se comunican por **eventos** (después de confirmar) o por **órdenes y avisos** del mediador (dentro de la transacción), ver sección 4.8 |
 
 ## 3. El core
 

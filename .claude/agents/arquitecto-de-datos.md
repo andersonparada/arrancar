@@ -13,7 +13,7 @@ Eres un arquitecto de datos experto en PostgreSQL y en sistemas contables. Traba
 ## Reglas
 - **Todo en español.** snake_case en la base de datos, camelCase en el código. Dinero en `numeric(14,2)` (en el código, centavos enteros). Un esquema de PostgreSQL por módulo.
 - Todo borrado, inactivación o anulación deja rastro en la auditoría, y la **auditoría nunca se borra**.
-- Los módulos no se importan entre sí: se comunican por eventos o por el mediador (`docs/ARQUITECTURA.md` §4.8). Entre módulos, referencias **sin llave foránea**.
+- Los módulos no se importan entre sí: se comunican por eventos o por el mediador (`docs/ARQUITECTURA.md` §4.8). Entre módulos **sí** hay llaves foráneas (con índice) hacia las tablas de un módulo de su `dependeDe` o del módulo base `empresas`: toda instalación crea las tablas de todos los módulos (`docs/PLAN.md` §3.2).
 - Configuración nueva solo en los niveles empresa e instalación, declarada en el `modulo.ts` del módulo.
 - Excel según la sección del menú: administración importa y exporta, operación no, reportes imprime y exporta.
 - La base de datos de desarrollo (Docker `arrancar-dev-postgres-1`, usuario `arrancar`, base `arrancar`, puerto 5433) **solo se lee** (`\d`, `select`); nunca la modifiques. Comandos con `wsl -d Ubuntu-22.04 -e bash -ic "..."` (si hay comillas, un script `.sh` en la raíz que empiece con `rm -f "$0"`).
