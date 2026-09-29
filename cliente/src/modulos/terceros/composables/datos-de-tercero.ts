@@ -6,6 +6,7 @@ import type {
   PapelDeCliente,
   PapelDeProveedor,
   PapelTercero,
+  SeccionesDelFormulario,
 } from '../servicios/terceros.api';
 
 /** Un cliente o proveedor sin nada escrito: solo el tipo y activo. */
@@ -60,14 +61,19 @@ export function papelesVacios(): PapelesDelFormulario {
   };
 }
 
-/** Lo que se envía al registrar desde Clientes o Proveedores: entra con ese papel. */
+/** Lo que se envía al registrar desde Clientes o Proveedores: entra con ese papel (y, de proveedor, con sus secciones). */
 export function altaCompleta(
   datos: DatosTercero,
   papel: PapelTercero,
-  { papeles, contactos }: { papeles: PapelesDelFormulario; contactos: DatosContacto[] },
+  {
+    papeles,
+    contactos,
+    secciones,
+  }: { papeles: PapelesDelFormulario; contactos: DatosContacto[]; secciones?: SeccionesDelFormulario },
 ): DatosAltaTercero {
   const papelAlRegistrar =
     papel === 'cliente' ? { tipo: papel, ...papeles.cliente } : { tipo: papel, ...papeles.proveedor };
   const conNombre = contactos.filter((contacto) => contacto.nombre.trim());
-  return { ...datos, papel: papelAlRegistrar, contactos: conNombre };
+  const deProveedor = papel === 'proveedor' && secciones ? { secciones } : {};
+  return { ...datos, papel: papelAlRegistrar, contactos: conNombre, ...deProveedor };
 }

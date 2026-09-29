@@ -1,5 +1,7 @@
+import type { SeccionesAportadas } from './secciones.contratos.js';
+
 /**
- * Órdenes que atiende el módulo `empresas` para los demás módulos (ver `mediador.contratos.ts`).
+ * Órdenes y avisos que da el módulo `empresas` para los demás módulos (ver `mediador.contratos.ts`).
  * Corren dentro de la transacción de quien pregunta, con la empresa de su operador.
  */
 declare module './mediador.contratos.js' {
@@ -19,6 +21,13 @@ declare module './mediador.contratos.js' {
         nombreComercial: string | null;
       };
     };
+  }
+  interface AvisosEntreModulos {
+    /**
+     * Se guardó una empresa (nueva o editada). Cada módulo activo guarda su sección de `secciones`, si trae la
+     * suya. El operador del aviso lleva `empresaId` = la empresa guardada, aunque no sea la activa.
+     */
+    'empresas.empresa_guardada': { empresaId: string; secciones: SeccionesAportadas };
   }
 }
 

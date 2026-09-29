@@ -20,6 +20,7 @@ import { RegistrarTercero } from './aplicacion/casos-uso/terceros/registrar-terc
 import { CategoriasControlador, ContactosControlador } from './http/contactos-y-categorias.controlador.js';
 import { TercerosControlador } from './http/terceros.controlador.js';
 import { rutasTerceros, type ControladoresDeTerceros } from './http/terceros.rutas.js';
+import { AvisosDeProveedorEnMediador } from './infraestructura/avisos-de-proveedor-en-mediador.js';
 import './infraestructura/catalogo-eventos.js';
 import { BusquedaDeContactosDrizzle } from './infraestructura/persistencia/busqueda-de-contactos.drizzle.js';
 import {
@@ -45,20 +46,32 @@ function crearPiezas() {
     consultasContactos,
     consultasCategorias: new ConsultasCategoriasDrizzle(),
     avisoDeParecidos: new AvisoDeParecidos(consultas),
+    avisos: new AvisosDeProveedorEnMediador(),
   };
 }
 
 type Piezas = ReturnType<typeof crearPiezas> & DependenciasCompartidas;
 
 function controladorDeTerceros(piezas: Piezas): TercerosControlador {
-  const { unidadDeTrabajo, categorias, contactos, consultas } = piezas;
-  const paraGuardar = piezas;
+  const {
+    unidadDeTrabajo,
+    publicadorEventos,
+    auditoria,
+    repositorio,
+    categorias,
+    contactos,
+    consultas,
+    avisoDeParecidos,
+    avisos,
+    fotos,
+  } = piezas;
+  const paraGuardar = { unidadDeTrabajo, repositorio, consultas, avisoDeParecidos, publicadorEventos, auditoria, fotos };
   return new TercerosControlador({
     listar: new ListarTerceros({ unidadDeTrabajo, consultas }),
     obtenerFicha: new ObtenerFichaDeTercero({ unidadDeTrabajo, consultas }),
-    registrar: new RegistrarTercero({ ...paraGuardar, categorias, contactos }),
+    registrar: new RegistrarTercero({ ...paraGuardar, categorias, contactos, avisos }),
     actualizar: new ActualizarTercero(paraGuardar),
-    asignarPapel: new AsignarPapel({ ...paraGuardar, categorias }),
+    asignarPapel: new AsignarPapel({ ...paraGuardar, categorias, avisos }),
     quitarPapel: new QuitarPapel(paraGuardar),
   });
 }

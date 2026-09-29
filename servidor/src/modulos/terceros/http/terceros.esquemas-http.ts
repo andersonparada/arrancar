@@ -6,6 +6,7 @@ import {
   textoObligatorio,
   textoOpcional,
 } from '../../core/compartido/http/esquemas-comunes.js';
+import { seccionesAportadas } from '../../core/compartido/http/secciones-aportadas.js';
 import { CLASES_DE_CLIENTE } from '../dominio/papeles.js';
 
 const codigoGeografico = z
@@ -75,6 +76,8 @@ export const esquemaPapelDeProveedor = z.object({
   categoriaId: idOpcional,
   activo: z.boolean().default(true),
   notas: textoOpcional(500),
+  /** Lo que los módulos activos aportan al formulario (por ejemplo, los datos fiscales de Libro de compras). */
+  secciones: seccionesAportadas,
 });
 
 export const esquemaCategoria = z.object({
@@ -98,7 +101,7 @@ export type ParamsCategoria = z.infer<typeof esquemaParamsCategoria>;
 
 const papelAlRegistrar = z.discriminatedUnion('tipo', [
   esquemaPapelDeCliente.extend({ tipo: z.literal('cliente') }),
-  esquemaPapelDeProveedor.extend({ tipo: z.literal('proveedor') }),
+  esquemaPapelDeProveedor.omit({ secciones: true }).extend({ tipo: z.literal('proveedor') }),
 ]);
 
 /** El alta completa: datos, el papel con que entra y sus primeros contactos. */
@@ -106,6 +109,8 @@ export const esquemaAltaDeTercero = camposDeTercero
   .extend({
     papel: papelAlRegistrar.nullish().transform((papel) => papel ?? null),
     contactos: z.array(esquemaContacto).max(20).default([]),
+    /** Solo se guardan si entra como proveedor. */
+    secciones: seccionesAportadas,
   })
   .refine(tieneNombre, FALTA_EL_NOMBRE);
 

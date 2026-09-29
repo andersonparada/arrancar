@@ -1,13 +1,18 @@
+import { seccionesParaEnviar } from '@/modulos/core/secciones/secciones-aportadas';
 import { apiTerceros, type PapelTercero } from '../servicios/terceros.api';
 import { conConfirmacionDeDuplicado, DESISTIO } from './confirmar-duplicado';
 import { altaCompleta } from './datos-de-tercero';
 import type { DatosDelFormulario } from './usar-datos-del-formulario';
 
-type Formulario = Pick<DatosDelFormulario, 'datos' | 'papeles' | 'contactos'>;
+type Formulario = Pick<DatosDelFormulario, 'datos' | 'papeles' | 'contactos' | 'secciones'>;
 
 /** Lo registra con el papel de la pantalla y sus contactos, en un solo paso. */
-export async function registrarTercero(papel: PapelTercero, { datos, papeles, contactos }: Formulario) {
-  const alta = altaCompleta(datos.value, papel, { papeles: papeles.value, contactos: contactos.value });
+export async function registrarTercero(papel: PapelTercero, { datos, papeles, contactos, secciones }: Formulario) {
+  const alta = altaCompleta(datos.value, papel, {
+    papeles: papeles.value,
+    contactos: contactos.value,
+    secciones: seccionesParaEnviar(secciones.value),
+  });
   const creado = await conConfirmacionDeDuplicado((confirmarDuplicado) =>
     apiTerceros.crear({ ...alta, confirmarDuplicado }),
   );
@@ -20,7 +25,7 @@ export async function registrarTercero(papel: PapelTercero, { datos, papeles, co
  */
 export async function editarTercero(
   id: string,
-  { datos, papeles }: Formulario,
+  { datos, papeles, secciones }: Formulario,
   papelQueCambia: PapelTercero | null,
 ): Promise<string | null> {
   const guardado = await conConfirmacionDeDuplicado((confirmarDuplicado) =>
@@ -28,6 +33,8 @@ export async function editarTercero(
   );
   if (guardado === DESISTIO) return null;
   if (papelQueCambia === 'cliente') await apiTerceros.asignarCliente(id, papeles.value.cliente);
-  if (papelQueCambia === 'proveedor') await apiTerceros.asignarProveedor(id, papeles.value.proveedor);
+  if (papelQueCambia === 'proveedor') {
+    await apiTerceros.asignarProveedor(id, papeles.value.proveedor, seccionesParaEnviar(secciones.value));
+  }
   return id;
 }

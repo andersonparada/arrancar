@@ -1,4 +1,4 @@
-import { boolean, index, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, text, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
 import { nombreNormalizado } from '../../../core/base-datos/nombre-normalizado.js';
 import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
@@ -42,6 +42,8 @@ export const proveedores = esquemaTerceros.table(
   },
   (t) => [
     uniqueIndex('proveedores_tercero_idx').on(t.terceroId),
+    /** Destino de la llave compuesta de otros módulos: garantiza que el proveedor es de la misma cuenta. */
+    unique('proveedores_id_cuenta_unico').on(t.id, t.cuentaId),
     index('proveedores_categoria_idx').on(t.categoriaId),
     politicaPorCuenta(),
   ],
