@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, isNull, lt } from 'drizzle-orm';
+import { and, asc, eq, ilike, inArray, isNull, lt } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   ChequeEnCirculacionCrudo,
@@ -18,7 +18,12 @@ const comoTextoLiteral = (texto: string): string => texto.replace(/[\\%_]/g, (ca
  * Las condiciones del índice parcial `movimientos_cheques_en_circulacion_idx` (cheque sin cobrar, sin
  * revertir y sin anular), más el cheque en estado emitido y el corte de fecha y los filtros.
  */
-const condicionesDeCirculacion = ({ fechaDeCorte, cuentaBancariaId, beneficiario }: CondicionesDeCirculacion) =>
+const condicionesDeCirculacion = ({
+  fechaDeCorte,
+  cuentaBancariaId,
+  beneficiario,
+  chequeIds,
+}: CondicionesDeCirculacion) =>
   and(
     eq(cheques.estado, 'emitido'),
     eq(movimientos.tipo, 'cheque'),
@@ -27,6 +32,7 @@ const condicionesDeCirculacion = ({ fechaDeCorte, cuentaBancariaId, beneficiario
     isNull(movimientos.anuladoEn),
     lt(movimientos.fecha, fechaDeCorte),
     cuentaBancariaId ? eq(movimientos.cuentaBancariaId, cuentaBancariaId) : undefined,
+    chequeIds ? inArray(cheques.id, chequeIds) : undefined,
     beneficiario ? ilike(movimientos.beneficiario, `%${comoTextoLiteral(beneficiario)}%`) : undefined,
   );
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { errorDeRango, rangoDelMesActual } from './rango-de-fechas';
+import { errorDeRango, rangoDelAnioActual, rangoDelMesActual } from './rango-de-fechas';
 
 describe('rango del mes actual', () => {
   it('va del primer día del mes a hoy', () => {
@@ -8,6 +8,12 @@ describe('rango del mes actual', () => {
 
   it('el primer día del mes el rango es de un solo día', () => {
     expect(rangoDelMesActual(new Date(2026, 0, 1))).toEqual({ desde: '2026-01-01', hasta: '2026-01-01' });
+  });
+});
+
+describe('rango del año actual', () => {
+  it('va del primero de enero a hoy', () => {
+    expect(rangoDelAnioActual(new Date(2026, 8, 29))).toEqual({ desde: '2026-01-01', hasta: '2026-09-29' });
   });
 });
 

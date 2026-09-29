@@ -8,6 +8,8 @@ export interface CondicionesDeCirculacion {
   fechaDeCorte: string;
   cuentaBancariaId?: string;
   beneficiario?: string;
+  /** Solo estos cheques (la anulación en lote comprueba así que sigan caducos). */
+  chequeIds?: string[];
 }
 
 /** Lectura de los cheques emitidos, sin cobrar, sin revertir y sin anular; se llama dentro de la unidad de trabajo. */

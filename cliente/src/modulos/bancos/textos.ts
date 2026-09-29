@@ -71,6 +71,11 @@ export const VENTANAS_BANCOS = {
     descripcion:
       'Notas y cheques que todavía no tienen concepto: márquelos y clasifíquelos de una vez. Solo cambia el concepto, no el dinero.',
   },
+  intereses: {
+    titulo: 'Intereses y retenciones',
+    descripcion:
+      'El interés bruto, el ISR que retuvo el banco y el neto acreditado de las notas de intereses, por cuenta y en total: para la declaración.',
+  },
   flujoDeEfectivo: {
     titulo: 'Flujo de efectivo',
     descripcion:

@@ -16,7 +16,7 @@ import { VENTANAS_BANCOS } from '../textos';
 const ventana = VENTANAS_BANCOS.notas;
 const { registros, cargando, filtros, cargar } = usarListaDeNotas();
 const { campos: referencias, filtroDeCuenta: opcionesDeCuenta } = usarReferenciasDeCuenta();
-const { edicion, enviando, errores, opcionesDeConceptos, sugerencia, nueva, editar, guardar } =
+const { edicion, enviando, errores, opcionesDeConceptos, pideIntereses, sugerencia, nueva, editar, guardar } =
   usarFormularioDeNota(cargar);
 const { anulacion, eliminacion } = usarBajasDeNota(cargar);
 </script>
@@ -46,6 +46,7 @@ const { anulacion, eliminacion } = usarBajasDeNota(cargar);
       v-model="edicion"
       :referencias="referencias"
       :opciones-de-concepto="opcionesDeConceptos"
+      :pide-intereses="pideIntereses"
       :sugerencia="sugerencia"
       :errores="errores"
       :enviando="enviando"

@@ -24,13 +24,14 @@ import {
   NoSeEliminaUnMovimientoRevertido,
   NoSeRevierteUnInverso,
 } from './errores.js';
+import type { DatosDeIntereses, PropiedadesDeIntereses } from './intereses.js';
 import type { Numeracion } from './numeracion.js';
 import type { OrigenDeMovimiento } from './origen-de-movimiento.js';
 
 export type MovimientoId = Identificador<'Movimiento'>;
 
 /** Lo que el usuario puede escribir de un movimiento. */
-export interface DatosDeMovimiento {
+export interface DatosDeMovimiento extends DatosDeIntereses {
   cuentaBancariaId: string;
   tipo: 'credito' | 'debito' | 'cheque';
   fecha: string;
@@ -43,7 +44,8 @@ export interface DatosDeMovimiento {
   conceptoId: string;
 }
 
-export interface PropiedadesDeMovimiento extends DatosDeMovimiento {
+export interface PropiedadesDeMovimiento
+  extends Omit<DatosDeMovimiento, keyof DatosDeIntereses>, PropiedadesDeIntereses {
   id: MovimientoId;
   empresaId: Identificador<'Empresa'>;
   /** Anulación a la antigua: solo la usan los cheques en un mes abierto (sin inverso, fuera del saldo). */
@@ -68,9 +70,9 @@ export interface PropiedadesDeMovimiento extends DatosDeMovimiento {
 
 const MAXIMO_DEL_MOTIVO = 500;
 
-function datosValidos(datos: DatosDeMovimiento): DatosDeMovimiento {
+function datosValidos(datos: DatosDeMovimiento): DatosDeMovimiento & Required<DatosDeIntereses> {
   if (aCentavos(datos.monto) <= 0) throw new MontoInvalido();
-  return datos;
+  return { ...datos, interesBruto: datos.interesBruto ?? null, isrRetenido: datos.isrRetenido ?? null };
 }
 
 function motivoValido(motivo: string): string {

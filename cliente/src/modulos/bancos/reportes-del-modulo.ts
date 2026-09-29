@@ -1,4 +1,4 @@
-import { Hourglass, ListOrdered, Sigma, Waves, ScrollText } from 'lucide-vue-next';
+import { Hourglass, ListOrdered, Percent, Sigma, Waves, ScrollText } from 'lucide-vue-next';
 import type { RouteRecordRaw } from 'vue-router';
 import type { EntradaMenu } from '@/modulos/core/tipos';
 import { VENTANAS_BANCOS } from './textos';
@@ -40,6 +40,13 @@ export const ENTRADAS_DE_REPORTES: EntradaMenu[] = [
     seccion: 'reportes',
     permiso: 'bancos.movimientos.ver',
   },
+  {
+    titulo: VENTANAS_BANCOS.intereses.titulo,
+    ruta: '/bancos/intereses-y-retenciones',
+    icono: Percent,
+    seccion: 'reportes',
+    permiso: 'bancos.intereses.ver',
+  },
 ];
 
 /** Las rutas de los reportes que se abren en su propia página. */
@@ -55,5 +62,11 @@ export const RUTAS_DE_REPORTES: RouteRecordRaw[] = [
     name: 'bancos.movimientos-por-concepto',
     component: () => import('./paginas/ReporteDeMovimientosPorConcepto.vue'),
     meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.movimientosPorConcepto.titulo },
+  },
+  {
+    path: '/bancos/intereses-y-retenciones',
+    name: 'bancos.intereses-y-retenciones',
+    component: () => import('./paginas/ReporteDeIntereses.vue'),
+    meta: { permiso: 'bancos.intereses.ver', titulo: VENTANAS_BANCOS.intereses.titulo },
   },
 ];

@@ -5,15 +5,18 @@ import { conceptoVigente, opcionesDeConcepto } from '../conceptos/opciones-de-co
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
 import { usarSugerenciaAlCapturar } from '../sugerencias/usar-sugerencia-al-capturar';
 import type { EdicionDeNota } from './edicion-de-nota';
+import { usarInteresesDeNota } from './usar-intereses-de-nota';
 
 /**
  * El concepto en la ventana de la nota: ofrece los que caben según el tipo (más el que ya tenía la nota, aunque hoy
  * esté inactivo), limpia la elección si al cambiar de tipo deja de servir y, al registrar una nota nueva, propone
- * el concepto que calcula el servidor con el beneficiario o la referencia (sin pisar lo ya elegido).
+ * el concepto que calcula el servidor con el beneficiario o la referencia (sin pisar lo ya elegido). Si el concepto
+ * pide datos de intereses (H8), `pideIntereses` lo dice para mostrar el bruto y el ISR.
  */
 export function usarConceptosDeNota(edicion: Ref<EdicionDeNota>, conceptoGuardado: Ref<string | null>) {
   const sesion = usarSesion();
   const { conceptos } = usarCatalogoDeConceptos();
+  const { pideIntereses } = usarInteresesDeNota(edicion, conceptos);
   const paraElegir = computed(() => opcionesDeConcepto(conceptos.value, [edicion.value.tipo]));
   const opcionesDeConceptos = computed(() =>
     opcionesDeConcepto(conceptos.value, [edicion.value.tipo], conceptoGuardado.value),
@@ -30,5 +33,5 @@ export function usarConceptosDeNota(edicion: Ref<EdicionDeNota>, conceptoGuardad
     () => (edicion.value.conceptoId = conceptoVigente(paraElegir.value, edicion.value.conceptoId)),
   );
 
-  return { opcionesDeConceptos, sugerencia };
+  return { opcionesDeConceptos, sugerencia, pideIntereses };
 }

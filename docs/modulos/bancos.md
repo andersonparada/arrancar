@@ -1557,3 +1557,68 @@ la parte de servidor de dos respuestas más; falta solo S5 (`pg_trgm`, «despué
   `puedeReclasificar`, no está anulado y el usuario tiene `bancos.notas.editar` (notas) o `bancos.cheques.reclasificar`
   (cheques); ventana con el movimiento, el concepto nuevo (sin el actual) y el resumen del cambio; usa `POST /notas/reclasificar`
   o `POST /cheques/reclasificar` con un solo id.
+
+## H6b Anulación en lote de cheques caducos (servidor y cliente hechos el 2026-09-29)
+
+Plan: `plan-hallazgos-contables.md`, H6 («Anulación en lote» e «Interfaz»). Desde la pantalla de Cheques caducos.
+
+- **Endpoint** `POST /api/bancos/cheques/anular-en-lote`, cuerpo `{ chequeIds (1 a 200 uuid), motivo (1 a 500), fecha? }`.
+  Permiso **propio** `bancos.cheques-caducos.anular` (PLAN §3.5: anular cheques sueltos, `bancos.cheques.anular`, no basta). La migración
+  `0027_h6b_permiso_de_anular_cheques_caducos` lo da, por rol y por usuario, a quien ya tenía `bancos.cheques.anular`.
+  Responde `{ totalDeCheques, montoTotal, fecha }`.
+- **Caso de uso** `AnularChequesCaducos`: una sola transacción, todo o nada. Calcula la fecha de corte con la variable de meses de la
+  empresa y pide al reporte solo esos cheques (`ConsultasDeChequesEnCirculacion.listar({ chequeIds })`): un cheque que ya no aparece
+  (cobrado, anulado, revertido, reciente o disponible) es un problema `cheque_no_es_caduco`. Cada cheque pasa por `AnularCheque` con
+  `causa: 'caducidad'` y el nuevo modo `conInversoSiempre`: **siempre** nota de crédito inversa, aunque el mes del cheque siga abierto (así
+  no cambia el saldo de meses pasados). El inverso hereda el concepto del cheque, lleva el número correlativo de H9 y la fecha común.
+  Auditoría: una entrada `anular` por cheque con el mismo motivo (la escribe `AnularCheque`, en la misma transacción).
+- **Fecha común**: por omisión hoy (zona de la empresa); una fecha posterior a hoy se rechaza (400 `fecha_de_anulacion_futura`);
+  las reglas de siempre siguen: no anterior a la del cheque ni dentro de un mes conciliado de su cuenta (esos cheques salen como problema).
+- **Si algo falla** no se anula ninguno: 422 `anulacion_en_lote_con_problemas` con `detalles: [{ chequeId, codigo, mensaje }]` (como el
+  importar de Excel). Solo se atrapan errores esperados; un fallo de programa o de base de datos sube tal cual y deshace todo.
+- **Cliente**: casilla por fila y «seleccionar todo lo filtrado» (solo con el permiso; no se imprimen), barra fija abajo «N cheques · Q total ·
+  Anular seleccionados» (suma en centavos) y una ventana única con fecha, motivo (sugerido «Cheque caduco: más de 7 meses sin cobrar», con
+  el plazo de la empresa), el resumen «Se crearán N notas de crédito por Q en la fecha D» y una **casilla de confirmación** que habilita el
+  botón. Los problemas del servidor se listan por cheque dentro de la ventana. Al terminar se recarga el reporte y se limpia la selección; si
+  el reporte cambia, se olvida lo seleccionado que ya no está.
+- **Decisiones**: el resumen no dice cuántos cheques pagaban facturas de proveedores porque hoy todos son sueltos (Cuentas por pagar aún no
+  existe; cuando exista, el aviso `bancos.movimiento_de_origen_anulado` y ese dato se suman). El aviso del tablero queda para cuando haya panel.
+- **Pruebas**: caso de uso (`anular-cheques-caducos.prueba.ts`), API (`bancos-anular-cheques-caducos.api.prueba.ts`: todo o nada, inversos
+  a la fecha común con mes abierto, causa, auditoría, validaciones y permiso propio; `bancos-migracion-de-permiso-de-anular-caducos`) y cliente
+  (`seleccion-de-cheques-caducos.prueba.ts`).
+
+## H8 Interés bruto e ISR retenido en las notas de intereses (servidor y cliente hechos el 2026-09-29)
+
+Plan: `plan-hallazgos-contables.md`, H8, y la respuesta del usuario: la nota de intereses pide el interés bruto y el ISR retenido
+(bruto - ISR = neto, que es el **monto** del movimiento); el concepto con `pide_datos_de_intereses` (H3a) lo activa.
+
+- **Migración `0028_h8_interes_bruto_e_isr_retenido`**: `bancos.movimientos.interes_bruto` e `isr_retenido` (`numeric(14,2)`, nulables), el
+  `check` `movimientos_intereses_cuadran` (los dos nulos, o los dos presentes en una nota de crédito con ISR >= 0 y bruto = monto + ISR) y el
+  índice parcial `movimientos_intereses_idx (empresa_id, fecha)` donde el bruto no es nulo. Los datos existentes quedan nulos. **Ajuste al plan:**
+  el `check` del plan dejaba pasar «uno solo de los dos» porque la comparación daba `NULL`; se exige que los dos sean no nulos. También da
+  `bancos.intereses.ver` y `.exportar` (por rol y por usuario) a quien tenía `bancos.movimientos.ver` y `.exportar`.
+- **Regla** (`dominio/intereses.ts`, `exigirInteresesCoherentes`), al registrar (`CrearMovimiento`) y al corregir (`ActualizarMovimiento`) una
+  nota: si el concepto pide intereses, vienen **los dos** (`datos_de_intereses_obligatorios`; el ISR puede ser 0.00) y cuadran en centavos
+  (`intereses_no_cuadran`, 400); si no los pide, no viene ninguno (`datos_de_intereses_no_aplican`, 400). El saldo inicial nunca los lleva.
+  El cuerpo de `POST`/`PUT /api/bancos/notas` gana `interesBruto` e `isrRetenido` (texto con dos decimales, opcionales) y el `MovimientoDto` los trae.
+- **El inverso NO copia los datos** (el plan decía que sí): el inverso de un crédito es un débito y el `check` exige crédito. Lo que se evita es
+  contar dos veces: el reporte solo toma las notas **vigentes** (sin `revertido_en`, sin `anulado_en`, no inversos), así una nota de intereses
+  anulada sale del reporte con su bruto y su ISR.
+- **Reclasificar** (P7) no toca estos datos ni los exige: una nota reclasificada hacia «Intereses ganados» queda sin bruto ni ISR y el reporte
+  lo avisa (`notasSinDatos`: notas vigentes de un concepto de intereses sin datos) para que el usuario la corrija; una nota con datos que se
+  reclasifica a otro concepto conserva los datos y sigue en el reporte (manda `interes_bruto`, no el concepto). Decisión conservadora para no
+  frenar la clasificación masiva.
+- **Configuración** `bancos.intereses.tasa_isr` (empresa e instalación, pública, 0 a 1, **0.10** por omisión): la tasa con que el cliente
+  propone el ISR. El servidor no la aplica: lo que llega es lo que dijo el banco (redondea a su manera).
+- **Reporte «Intereses y retenciones»** `GET /api/bancos/intereses-y-retenciones?desde=&hasta=&cuentaBancariaId=` (rango obligatorio, sin cuenta
+  son todas; 404 si la cuenta no es de la empresa) con permiso `bancos.intereses.ver`, y su Excel `GET .../exportar` con `bancos.intereses.exportar`
+  (nunca se importa). Devuelve `{ desde, hasta, cuentaBancariaId, totalDeNotas, interesBruto, isrRetenido, neto, notasSinDatos, porCuenta[], intereses[] }`;
+  cada nota trae fecha, cuenta, número de la nota (H9), referencia, bruto, ISR y neto; todo se suma en centavos enteros (`calculo-de-intereses.ts`).
+- **Cliente**: en la ventana de nota, si el concepto elegido pide intereses aparecen «Interés bruto» e «ISR retenido»; el ISR se **propone** con la tasa
+  (`isrPropuesto`, centavos enteros, medio hacia arriba) al escribir el bruto mientras no se haya cambiado a mano, y el monto pasa a ser el **neto**,
+  de solo lectura (`netoDeIntereses`). Si el concepto deja de pedirlos, se borran. La tarjeta de la nota muestra bruto e ISR. El reporte está en
+  Reportes (`/bancos/intereses-y-retenciones`; cuenta y rango, por omisión el año en curso; totales, tabla por cuenta si hay más de una, aviso
+  de notas sin datos, imprimir y Excel).
+- **Pruebas**: dominio (`intereses.prueba.ts`), casos de uso (`casos-uso-de-intereses-en-notas.prueba.ts`, `calculo-de-intereses.prueba.ts`), API
+  (`bancos-intereses.api.prueba.ts`: guardar, cuadre, `check` de la base, corregir, reporte, notas sin datos, permisos, Excel y aislamiento;
+  `bancos-migracion-de-permisos-de-intereses`) y cliente (`intereses-de-nota.prueba.ts`, `edicion-de-nota.prueba.ts`).

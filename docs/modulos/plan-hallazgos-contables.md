@@ -664,11 +664,11 @@ Pasos (un commit cada uno, con sus pruebas):
 7. **H3a** `bancos.conceptos` (servidor, cliente, Excel) y semilla. **Servidor hecho (2026-09-29); falta el cliente.** Ver `bancos.md`, sección H3a.
 8. **H3b** `concepto_id` obligatorio en notas y cheques; migración de datos.
 9. **H3c** Reportes Flujo de efectivo y Movimientos por concepto. **Hecho (2026-09-29)**: ver `bancos.md`, sección H3c.
-10. **H8** Interés bruto e ISR retenido.
+10. **H8** Interés bruto e ISR retenido. **Hecho (2026-09-29)**, servidor y cliente: ver `bancos.md`, sección H8.
 11. **Archivos PDF** en `core/archivos`.
 12. **H2** Saldo del estado de cuenta y archivo en la conciliación.
 13. **H6a** Reporte de cheques caducos (índice, filtros, imprimir, exportar).
-14. **H6b** Anulación en lote.
+14. **H6b** Anulación en lote. **Hecho (2026-09-29)**, servidor y cliente: ver `bancos.md`, sección H6b.
 15. **H5a** Datos fiscales de la empresa, fecha de inicio y carga inicial.
 16. **H5b** [HECHO] localidades (esquema `empresas`) con accesos en `empresas.accesos_a_localidades` y `politicaPorAlcanceOpcional`; ver `diseno-accesos-por-modulo.md`.
 17. **H5c** [HECHO] departamentos (`empresas.departamentos`, localidad opcional) en lugar de `core.areas`.

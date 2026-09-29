@@ -12,6 +12,7 @@ defineProps<{
   enviando: boolean;
   referencias: Record<'cuentaBancariaId', OpcionDeRegistro[]>;
   opcionesDeConcepto: OpcionDeRegistro[];
+  pideIntereses: boolean;
   sugerencia: SugerenciaDeMovimiento | null;
 }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
@@ -31,6 +32,7 @@ const titulo = computed(() =>
         :errores="errores"
         :referencias="referencias"
         :opciones-de-concepto="opcionesDeConcepto"
+        :pide-intereses="pideIntereses"
         :sugerencia="sugerencia"
       />
     </form>

@@ -36,9 +36,22 @@ export interface FiltroDeChequesCaducos {
   [clave: string]: string | number | undefined;
 }
 
+/** Lo que se manda al anular en lote: `fecha` es la de todas las notas inversas. */
+export interface AnulacionEnLote {
+  chequeIds: string[];
+  motivo: string;
+  fecha: string;
+}
+
+export interface ResultadoDeAnulacionEnLote {
+  totalDeCheques: number;
+  montoTotal: string;
+  fecha: string;
+}
+
 const RUTA = '/bancos/cheques-caducos';
 
-/** Cheques caducos es de solo lectura: el reporte y su Excel (la anulación en lote llega después). */
+/** El reporte de cheques caducos, su Excel y su anulación en lote (todo o nada, con nota inversa). */
 export class ApiChequesCaducos {
   constructor(private readonly http: ClienteHttp) {}
 
@@ -49,6 +62,10 @@ export class ApiChequesCaducos {
 
   reporte(filtro: FiltroDeChequesCaducos = {}) {
     return this.http.obtener<ReporteDeChequesCaducos>(RUTA, filtro);
+  }
+
+  anularEnLote(datos: AnulacionEnLote) {
+    return this.http.crear<ResultadoDeAnulacionEnLote>('/bancos/cheques/anular-en-lote', datos);
   }
 }
 

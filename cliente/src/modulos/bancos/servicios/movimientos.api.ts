@@ -15,6 +15,9 @@ export interface Movimiento {
   /** Cómo se clasifica el dinero (H3b): el concepto y su nombre. */
   conceptoId: string;
   conceptoNombre: string;
+  /** Intereses (H8): el bruto y el ISR retenido de una nota con un concepto que los pide; el `monto` es el neto. */
+  interesBruto: string | null;
+  isrRetenido: string | null;
   cuentaBancariaNombre: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;

@@ -12,6 +12,9 @@ export interface EdicionDeNota {
   tipo: 'credito' | 'debito';
   fecha: string;
   monto: string | number;
+  /** Solo con un concepto que pide datos de intereses (H8): el monto es entonces el neto (bruto - ISR). */
+  interesBruto: string | number;
+  isrRetenido: string | number;
   conceptoId: string | null;
   referencia: string;
   beneficiario: string;
@@ -23,6 +26,8 @@ const NOTA_NUEVA: Omit<EdicionDeNota, 'abierta' | 'id'> = {
   tipo: 'credito',
   fecha: '',
   monto: '',
+  interesBruto: '',
+  isrRetenido: '',
   conceptoId: null,
   referencia: '',
   beneficiario: '',
@@ -39,6 +44,8 @@ export function edicionDe(nota?: Movimiento, tipo: 'credito' | 'debito' = 'credi
     tipo: nota.tipo === 'credito' ? 'credito' : 'debito',
     fecha: textoDeEdicion(nota.fecha),
     monto: textoDeEdicion(nota.monto),
+    interesBruto: textoDeEdicion(nota.interesBruto),
+    isrRetenido: textoDeEdicion(nota.isrRetenido),
     conceptoId: nota.conceptoId,
     referencia: textoDeEdicion(nota.referencia),
     beneficiario: textoDeEdicion(nota.beneficiario),
@@ -52,6 +59,8 @@ export const datosDeNota = (edicion: EdicionDeNota): DatosNota => ({
   tipo: edicion.tipo,
   fecha: edicion.fecha,
   monto: textoDeEdicion(edicion.monto),
+  interesBruto: textoONulo(edicion.interesBruto),
+  isrRetenido: textoONulo(edicion.isrRetenido),
   conceptoId: edicion.conceptoId ?? '',
   referencia: textoONulo(edicion.referencia),
   beneficiario: textoONulo(edicion.beneficiario),

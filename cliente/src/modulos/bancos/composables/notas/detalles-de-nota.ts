@@ -1,4 +1,4 @@
-import { formatearFecha, formatearTexto } from '@/modulos/core/utilidades/formato';
+import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import { formatearNumeroDeComprobante } from '../comunes/numero-de-comprobante';
 import { motivoDeLaBaja } from '../movimientos/estado-de-reversion';
 import { textoDeOrigen } from '../movimientos/origen-y-causa';
@@ -23,6 +23,10 @@ export function detallesDeNota(nota: Movimiento): DetalleDeRegistro[] {
     { etiqueta: 'Referencia', valor: formatearTexto(nota.referencia) },
     { etiqueta: 'Beneficiario u origen', valor: formatearTexto(nota.beneficiario) },
   ];
+  if (nota.interesBruto !== null) {
+    detalles.push({ etiqueta: 'Interés bruto', valor: formatearMonto(nota.interesBruto) });
+    detalles.push({ etiqueta: 'ISR retenido', valor: formatearMonto(nota.isrRetenido) });
+  }
   const origen = textoDeOrigen(nota);
   if (origen) detalles.push({ etiqueta: 'Origen', valor: origen.replace('Origen: ', '') });
   if (nota.observaciones) detalles.push({ etiqueta: 'Observaciones', valor: nota.observaciones });

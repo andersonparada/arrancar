@@ -12,6 +12,9 @@ export interface MovimientoDto {
   /** Cómo se clasifica el dinero (H3b): el concepto y su nombre. */
   conceptoId: string;
   conceptoNombre: string;
+  /** Intereses (H8): el bruto y el ISR retenido de una nota con un concepto que los pide; el `monto` es el neto. */
+  interesBruto: string | null;
+  isrRetenido: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
   cuentaBancariaNombre: string | null;
@@ -66,8 +69,13 @@ export type SolicitudDeMovimiento = Omit<
   | 'puedeReclasificar'
   | 'conceptoId'
   | 'conceptoNombre'
+  | 'interesBruto'
+  | 'isrRetenido'
 > & {
   tipo: 'credito' | 'debito';
+  /** Solo con un concepto que pide datos de intereses (H8); si no, van vacíos. */
+  interesBruto?: string | null;
+  isrRetenido?: string | null;
   /** Lo elige el usuario en una nota; el saldo inicial no lo trae: lo asigna el sistema. */
   conceptoId?: string;
 };

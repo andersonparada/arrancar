@@ -13,6 +13,8 @@ interface AnulacionDeCheque {
   causa?: CausaDeAnulacion;
   /** Solo se usa si el mes del cheque ya está conciliado: la fecha de su nota inversa. Por omisión, hoy en la zona horaria de la empresa. */
   fecha?: string;
+  /** La anulación en lote de caducos (H6b): siempre nota inversa, aunque el mes del cheque siga abierto. */
+  conInversoSiempre?: boolean;
 }
 
 /**
@@ -29,7 +31,8 @@ export class AnularCheque {
    * @throws ChequeAnulado si ya estaba anulado; MotivoDeAnulacionInvalido si falta el motivo.
    * @throws SaldoInsuficiente si al anularlo o revertirlo la cuenta queda en negativo sin sobregiro permitido.
    */
-  ejecutar(operador: Operador, { chequeId, motivo, causa, fecha }: AnulacionDeCheque): Promise<ChequeDto> {
+  ejecutar(operador: Operador, solicitud: AnulacionDeCheque): Promise<ChequeDto> {
+    const { chequeId, motivo, causa } = solicitud;
     const { unidadDeTrabajo, repositorio, consultas, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const cheque = await chequeExistente(repositorio, chequeId);
@@ -37,7 +40,7 @@ export class AnularCheque {
       const { movimientoId } = cheque.instantanea();
 
       cheque.anular(motivo, causa);
-      if (movimientoId) await this.anularOrevertirSuMovimiento(operador, movimientoId, { motivo, fecha });
+      if (movimientoId) await this.anularOrevertirSuMovimiento(operador, movimientoId, solicitud);
       await repositorio.guardar(cheque);
 
       await auditoria.registrar({
@@ -54,14 +57,14 @@ export class AnularCheque {
   private async anularOrevertirSuMovimiento(
     operador: Operador,
     movimientoId: string,
-    { motivo, fecha }: { motivo: string; fecha?: string },
+    { motivo, fecha, conInversoSiempre }: AnulacionDeCheque,
   ): Promise<void> {
     const { repositorioMovimientos, consultasMovimientos } = this.dependencias;
     const movimiento = await movimientoExistente(repositorioMovimientos, movimientoId);
     const { fecha: fechaDelCheque, cuentaBancariaId } = movimiento.instantanea();
     const conciliadaHasta = await consultasMovimientos.conciliadaHasta(cuentaBancariaId);
     const mesConciliado = conciliadaHasta !== null && fechaDelCheque <= conciliadaHasta;
-    if (mesConciliado)
+    if (mesConciliado || conInversoSiempre)
       await this.revertir(operador, movimiento, {
         motivo,
         fecha: fecha ?? (await this.dependencias.reloj.hoy(operador)),

@@ -20,7 +20,8 @@ import { CuentasPorPagarActivoEnModulosActivos } from '../infraestructura/cuenta
 import { ModulosActivosDeLaCuentaEnRegistro } from '../../core/mediador/infraestructura/modulos-activos-de-la-cuenta-en-registro.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 
-function dependenciasDeCheques() {
+/** Las dependencias de los casos de uso de cheques; también las usa la anulación en lote de caducos. */
+export function dependenciasDeCheques() {
   const { unidadDeTrabajo, auditoria, correlativos, reloj } = dependenciasCompartidas();
   const consultasMovimientos = new ConsultasMovimientosDrizzle();
   const politicaDeSobregiro = new PoliticaDeSobregiroEnConfiguracion();

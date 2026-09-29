@@ -12,6 +12,8 @@ const datos: DatosNota = {
   beneficiario: 'Registro de prueba',
   observaciones: 'Una nota de prueba.',
   conceptoId: 'concepto-1',
+  interesBruto: null,
+  isrRetenido: null,
 };
 const nota: Movimiento = {
   id: 'registro-1',
@@ -56,5 +58,13 @@ describe('ventana de notas', () => {
 
   it('lo que no se llena se manda como null', () => {
     expect(datosDeNota(edicionDe())).toMatchObject({ referencia: null, beneficiario: null, observaciones: null });
+  });
+
+  it('los intereses viajan como texto, o como null si la nota no los lleva', () => {
+    const conIntereses = { ...nota, monto: '90.00', interesBruto: '100.00', isrRetenido: '10.00' };
+
+    expect(edicionDe(conIntereses)).toMatchObject({ interesBruto: '100.00', isrRetenido: '10.00' });
+    expect(datosDeNota(edicionDe(conIntereses))).toMatchObject({ interesBruto: '100.00', isrRetenido: '10.00' });
+    expect(datosDeNota(edicionDe())).toMatchObject({ interesBruto: null, isrRetenido: null });
   });
 });

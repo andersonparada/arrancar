@@ -16,6 +16,7 @@ export class ConsultasDeChequesEnCirculacionFijas implements ConsultasDeChequesE
     this.consultadas.push(condiciones);
     return this.cheques
       .filter((c) => c.fecha < condiciones.fechaDeCorte)
+      .filter((c) => !condiciones.chequeIds || condiciones.chequeIds.includes(c.chequeId))
       .filter((c) => !condiciones.cuentaBancariaId || c.cuentaBancariaId === condiciones.cuentaBancariaId);
   }
 }

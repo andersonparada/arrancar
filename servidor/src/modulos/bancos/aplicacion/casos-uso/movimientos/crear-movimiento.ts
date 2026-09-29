@@ -1,6 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { CuentaBancariaInactiva } from '../../../dominio/errores.js';
+import { exigirInteresesCoherentes } from '../../../dominio/intereses.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
 import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
 import type { MovimientoDto, SolicitudDeMovimiento } from '../../dto/movimiento.dto.js';
@@ -13,6 +14,7 @@ export class CrearMovimiento {
   /**
    * @throws CuentaBancariaInactiva si la cuenta está inactiva.
    * @throws ConceptoObligatorio, ConceptoDeSistemaNoSeElige, ConceptoInactivo o ConceptoIncompatible si el concepto no sirve.
+   * @throws DatosDeInteresesObligatorios, DatosDeInteresesNoAplican o InteresesNoCuadran si los intereses no van con el concepto.
    * @throws SaldoInicialRepetido, SaldoInicialNoEsElPrimero, MovimientoAntesDelSaldoInicial o SaldoInsuficiente.
    */
   ejecutar(operador: Operador, solicitud: SolicitudDeMovimiento): Promise<MovimientoDto> {
@@ -39,6 +41,7 @@ export class CrearMovimiento {
     const concepto = solicitud.saldoInicial
       ? await conceptos.deSistema(operador, 'saldo_inicial')
       : await conceptos.elegido(solicitud.conceptoId, solicitud.tipo);
+    exigirInteresesCoherentes(solicitud, concepto.instantanea().pideDatosDeIntereses);
     return Movimiento.crear(Identificador.desde(operador.empresaId), { ...solicitud, conceptoId: concepto.id.valor });
   }
 }
