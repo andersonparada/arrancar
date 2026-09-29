@@ -84,3 +84,77 @@ pasó (multa e intereses).
 
 Ley del IVA (Decreto 27-92) con reformas; Decreto 10-2012 con reformas del 19-2013; Decreto 20-2006; AG 425-2006;
 AG 213-2013; AG 311-97; vescco.tax (crédito fiscal después de dos meses).
+
+## Mínimo de la retención del 5 % a pequeños contribuyentes (2026-09-29)
+
+**Conclusión: el mínimo existe y viene del reglamento.** El art. 48 de la Ley del IVA no trae monto mínimo;
+lo pone el **AG 5-2013 (Reglamento de la Ley del IVA), art. 49, «No obligatoriedad de retener»**: los agentes de
+retención practican la retención a pequeños contribuyentes **únicamente cuando paguen bienes y servicios cuyo
+valor sea mayor a Q2,500.00**. El «Q2,500.01» del plan es la misma regla escrita como la escribe la SAT en su
+portal (RetenIVA): **mayor que Q2,500.00**, no «desde Q2,500». El art. 59 (transitorio) del mismo acuerdo condonó
+multas y recargos a los agentes que antes no retuvieron en compras **iguales o menores** a Q2,500.00, lo que
+confirma que Q2,500.00 exactos no se retienen.
+
+Limitación: el proxy bloqueó la descarga del texto íntegro (Minfin, SAT, leyes compiladas). Lo anterior sale de
+extractos de buscador de esas mismas fuentes, coincidentes entre sí. Antes de cerrar H-retenciones, alguien con
+acceso debe leer el art. 49 y el art. 59 en el .doc del Minfin (enlace abajo) y confirmar que no hubo reforma
+posterior al AG 5-2013 sobre este punto.
+
+### Qué está confirmado por norma y qué no
+
+| Punto | Respuesta | Fuente | Grado |
+|---|---|---|---|
+| Monto mínimo | Se retiene solo si el valor es **mayor a Q2,500.00** | AG 5-2013 art. 49; art. 59 (transitorio) | Norma (reglamento) |
+| Quién retiene | **No cualquier contribuyente**: los **agentes de retención del IVA** (calificados por la SAT, Decreto 20-2006) y quienes **lleven contabilidad completa y la SAT designe** | Ley del IVA art. 48 (texto del Decreto 4-2012) | Norma (ley) |
+| Tasa y carácter | 5 %, **pago definitivo** del impuesto del pequeño contribuyente | Ley del IVA arts. 47 y 48 | Norma (ley) |
+| Base | El **total de los ingresos consignados en la factura** de pequeño contribuyente (la factura no desglosa IVA, así que es el total) | Ley del IVA art. 48 | Norma (ley) |
+| Momento | Al **pagar o acreditar en cuenta**, lo que ocurra primero; el entero es dentro de los 15 días del mes siguiente al pago o acreditamiento, con constancia | Ley del IVA art. 48 | Norma (ley) |
+| ¿Mínimo por factura o por pago? | La ley calcula sobre la factura y el reglamento habla del «valor» de los bienes y servicios; la SAT lo presenta como el monto de la factura. **Por factura**, no por pago ni por suma de facturas del mes | AG 5-2013 art. 49; portal SAT RetenIVA | **Inferencia** razonable y práctica general; no hay criterio SAT expreso |
+| Pagos parciales de una factura mayor a Q2,500 | Se retiene el 5 % del **total de la factura**, en el **primer** pago o acreditamiento | Ley del IVA art. 48 (base = total de la factura; momento = primer evento) | **Inferencia**; algunos practican la retención proporcional en cada pago, pero no concuerda con «total de la factura» |
+| Excepciones al mínimo (sector público, operadoras de tarjeta, combustible pagado con tarjeta) | Aparecen en guías (p. ej. Tigo) y vienen del régimen general del Decreto 20-2006 / AG 425-2006 | Fuentes secundarias | **No confirmado** para pequeños contribuyentes; no aplica a una finca privada: no programarlo |
+| Relación con el mínimo del ISR (Q2,500 **sin IVA**, Decreto 10-2012 art. 48) | Es otra retención, otra base y otra norma; no mezclar | Decreto 10-2012 art. 48 | Norma |
+
+### Correcciones al plan de Libro de compras (sección «Retenciones»)
+
+1. La fila «Cualquier agente, compra a pequeño contribuyente» está bien en tasa y base, pero «cualquier agente» debe
+   leerse como «empresa que es agente de retención del IVA o designada por la SAT (contabilidad completa)»: una
+   empresa que no es agente **no** retiene a pequeños contribuyentes.
+2. «facturas desde Q2,500.01» es correcto en efecto, pero conviene expresarlo como **total > Q2,500.00** (así lo
+   dice la norma y evita errores de redondeo). El número va en configuración de instalación, con Q2,500.00 como
+   umbral por omisión.
+3. La excepción «no se retiene si el proveedor también es agente» no juega aquí en la práctica (un pequeño
+   contribuyente no es agente), pero no estorba.
+
+### Regla que debe programarse
+
+```
+Retener 5 % a pequeño contribuyente  SI Y SOLO SI
+    la empresa es agente de retención del IVA (calificada o designada por la SAT)
+  Y el proveedor está en el Régimen de Pequeño Contribuyente
+  Y el documento es una factura de pequeño contribuyente (FPEQ)
+  Y total de ESA factura (con todo, sin desglosar IVA) > umbral        [umbral por omisión Q2,500.00]
+Monto   = redondear(total de la factura × 5 %, 2)
+Fecha   = la primera entre: acreditamiento en cuenta (registro de la cuenta por pagar) y el pago
+Entero  = dentro de los 15 días del mes siguiente a esa fecha
+```
+
+- El umbral se evalúa **por factura**; no se suman facturas del mismo proveedor ni se evalúa cada pago.
+- Q2,500.00 exactos: **no** se retiene. Q2,500.01: sí.
+- Con pagos parciales, la retención completa se aplica en el primer pago o acreditamiento (inferencia; dejar que el
+  usuario la ajuste, como ya prevé el plan, y que quede en la auditoría).
+- Pregunta abierta para el usuario y su contador: si una nota de crédito deja la factura en Q2,500.00 o menos
+  después de retenida, ¿se revierte la retención o se ajusta en proporción? No hay norma expresa; la recomendación es
+  ajustar en proporción, como el plan ya hace con las demás retenciones.
+
+### Fuentes
+
+- Ley del IVA, Decreto 27-92, arts. 47 y 48 (texto del Decreto 4-2012):
+  [Decreto 4-2012](https://extranet.who.int/fctcapps/sites/default/files/2023-04/guatemala_2018_annex-15_Decree_4-2012.pdf).
+- Reglamento de la Ley del IVA, AG 5-2013, arts. 49 y 59:
+  [Minfin (.doc)](https://www.minfin.gob.gt/images/leyes%20solicitadas/Leyes%20tributarias/ACUERDO%20GUBERNATIVO%205-2013%20(Reglamento%20ley%20del%20IVA).doc),
+  [Leyes Tributarias Guatemala](https://www.leyestributariasguatemala.com/leyes/reglamento-de-la-ley-del-iva-acuerdo-gubernativo-5-2013),
+  [INFILE](https://leyes.infile.com/index.php?id=181&id_publicacion=182&id_publicacion=67231).
+- SAT, Sistema Retenciones Web IVA (5 % a pequeño contribuyente, monto ≥ Q2,500.01; entre agentes no se retiene):
+  [portal SAT](https://portal.sat.gob.gt/portal/sistemas-web/retencioneswebiva/).
+- Práctica (secundarias): [Tigo, «Agentes de Retención»](https://pos.tigo.com.gt/assets/descargas/Agentes_de_Retencion.pdf),
+  [Vescco, régimen de pequeño contribuyente 2026](https://vescco.tax/blog/regimen-pequeno-contribuyente-actualizado-2026/).
