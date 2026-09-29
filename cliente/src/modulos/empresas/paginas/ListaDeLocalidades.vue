@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Inbox, Plus } from 'lucide-vue-next';
+import { Inbox, Plus, UsersRound } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
@@ -7,6 +7,8 @@ import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/Accion
 import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
+import VentanaDeAccesosALocalidades from '../componentes/localidades/VentanaDeAccesosALocalidades.vue';
+import { usarAccesosALocalidades } from '../composables/localidades/usar-accesos-a-localidades';
 import { detallesDeLocalidad } from '../composables/localidades/detalles-de-localidad';
 import { usarListaDeLocalidades } from '../composables/localidades/usar-lista-de-localidades';
 import { VENTANAS_EMPRESAS } from '../textos';
@@ -18,6 +20,8 @@ const PERMISOS_DE_INTERCAMBIO = {
 };
 const router = useRouter();
 const { registros, cargando, intercambio } = usarListaDeLocalidades();
+const accesos = usarAccesosALocalidades();
+const usuarioId = accesos.usuarioId;
 </script>
 
 <template>
@@ -28,6 +32,15 @@ const { registros, cargando, intercambio } = usarListaDeLocalidades();
         @exportar="intercambio.exportar"
         @importar="intercambio.abrir"
       />
+      <BotonBase
+        v-permiso="'empresas.localidades.asignar'"
+        variante="secundario"
+        :icono="UsersRound"
+        :cargando="accesos.cargando.value"
+        @click="accesos.abrir"
+      >
+        Accesos
+      </BotonBase>
       <BotonBase
         v-permiso="'empresas.localidades.crear'"
         :icono="Plus"
@@ -50,6 +63,22 @@ const { registros, cargando, intercambio } = usarListaDeLocalidades();
         />
       </li>
     </ul>
+    <VentanaDeAccesosALocalidades
+      v-model:usuario-id="usuarioId"
+      :abierta="accesos.abierta.value"
+      :cargando="accesos.cargando.value"
+      :enviando="accesos.enviando.value"
+      :usuario="accesos.usuario.value"
+      :opciones="accesos.opciones.value"
+      :localidades="accesos.localidades.value"
+      :seleccion="accesos.seleccion.value"
+      :resumen="accesos.resumen.value"
+      :es-propio="accesos.esPropio.value"
+      @cerrar="accesos.cerrar"
+      @alternar="accesos.alternar"
+      @marcar="accesos.marcar"
+      @guardar="accesos.guardar"
+    />
     <VentanaDeImportacion
       :estado="intercambio.estado"
       titulo="Importar localidades"

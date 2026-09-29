@@ -556,8 +556,10 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
 7. **[HECHO] H5b-5 (servidor) Accesos a localidades.** Las cuatro rutas de accesos, casos de uso
    `ListarUsuariosParaAccesos`, `ObtenerAccesosDeUsuario`, `ReemplazarAccesosDeUsuario`
    (diferencia, auditoría por cambio), `ListarUsuariosDeLocalidad`.
-8. **H5b-5 (cliente) Ventana de accesos.** `VentanaDeAccesosALocalidades`, botón en la
-   lista y «Usuarios con acceso» en la ficha.
+8. **[HECHO] H5b-5 (cliente) Ventana de accesos.** `VentanaDeAccesosALocalidades`, botón en la
+   lista y «Usuarios con acceso» en la ficha. Elegir usuario (selector con buscador), casillas con «marcar/desmarcar
+   todas», resumen de cambios, aviso y confirmación al asignarse a sí mismo, casillas informativas si `veTodas`,
+   inactivas marcadas. Nombre de departamento/municipio en lista y ficha: no se hizo (sigue el código).
 9. **H5c (servidor) Departamentos.** Tabla con alcance opcional, casos de uso, Excel,
    permisos (migración 7).
 10. **H5c (cliente) Departamentos.** Pantalla de catálogo con selector de localidad.
