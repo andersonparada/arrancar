@@ -64,9 +64,9 @@ async function etiquetarLoDemas(etiquetas: Map<string, string>, notaAnuladaId: s
   const deTransferencia = new Set(filas.filter((f) => f.transferenciaId).map((f) => f.id as string));
   for (const fila of filas) {
     if (fila.saldoInicial) etiquetas.set(fila.id, `saldoInicial:${fila.cuentaBancariaId === origen}`);
-    else if (fila.transferenciaId) etiquetas.set(fila.id, `transferencia:${fila.tipo}`);
     else if (fila.revierteAId === notaAnuladaId) etiquetas.set(fila.id, 'inversoDeLaNotaAnulada');
     else if (deTransferencia.has(fila.revierteAId)) etiquetas.set(fila.id, `inversoDeTransferencia:${fila.tipo}`);
+    else if (fila.transferenciaId) etiquetas.set(fila.id, `transferencia:${fila.tipo}`);
   }
 }
 

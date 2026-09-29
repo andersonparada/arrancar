@@ -32,7 +32,11 @@ const puedeGuardar = computed(() => !!props.usuario && !informativas.value && !!
     <div class="space-y-4">
       <CampoSelector v-model="usuarioId" etiqueta="Usuario" :opciones="opciones" />
 
-      <p v-if="esPropio" class="rounded-lg bg-trigo-300/30 px-3 py-2 text-sm dark:bg-trigo-500/20" role="status">
+      <p
+        v-if="esPropio && !informativas"
+        class="rounded-lg bg-trigo-300/30 px-3 py-2 text-sm dark:bg-trigo-500/20"
+        role="status"
+      >
         Es usted: al guardar se está dando acceso a sí mismo. Queda registrado en la auditoría.
       </p>
       <p

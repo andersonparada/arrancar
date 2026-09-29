@@ -92,7 +92,8 @@ export class Movimiento extends Entidad<MovimientoId> {
   }
 
   /**
-   * `vinculos.transferenciaId` solo lo pasa `RegistrarTransferencia`; `vinculos.revierteAId` solo lo
+   * `vinculos.transferenciaId` solo lo pasa `RegistrarTransferencia` (o lo hereda el inverso de una de sus notas);
+   * `vinculos.revierteAId` solo lo
    * arma `revertirSinRevisar` al crear el inverso; `vinculos.origen` solo lo pasa el módulo que genera el
    * movimiento (P6). Ninguno de los tres llega del usuario. El inverso no hereda el origen.
    */
@@ -290,7 +291,7 @@ export class Movimiento extends Entidad<MovimientoId> {
         observaciones: this.propiedades.observaciones,
         conceptoId: this.propiedades.conceptoId,
       },
-      { revierteAId: this.id.valor },
+      { revierteAId: this.id.valor, transferenciaId: this.propiedades.transferenciaId },
     );
     this.propiedades = { ...this.propiedades, revertidoEn: new Date(), motivoDeReversion };
     return inverso;

@@ -106,6 +106,19 @@ describe('transferencias por API', () => {
     expect(cuentaDestinoDespues.cuerpo.saldo).toBe(cuentaDestinoAntes.cuerpo.saldo);
   });
 
+  it('los inversos de una transferencia anulada no salen en Notas y las dos notas llevan el número de la transferencia', async () => {
+    const notasAntes = await cuenta.propietario.get('/api/bancos/notas');
+    const registrada = await cuenta.propietario.post(RUTA, datos({ fecha: '2026-02-02' }));
+    await cuenta.propietario.post(`${RUTA}/${registrada.cuerpo.id}/anular`, { motivo: 'Duplicada' });
+
+    const notasDespues = await cuenta.propietario.get('/api/bancos/notas');
+    const reporte = await cuenta.propietario.get(`${RUTA_MOVIMIENTOS}/reporte?desde=2026-02-02&hasta=2026-02-02`);
+
+    expect(notasDespues.cuerpo).toHaveLength(notasAntes.cuerpo.length);
+    expect(reporte.cuerpo.filas.length).toBeGreaterThanOrEqual(2);
+    for (const fila of reporte.cuerpo.filas) expect(fila.numero).toBe(registrada.cuerpo.numero);
+  });
+
   it('sin permisos, registrar y anular responden 403', async () => {
     const registrada = await cuenta.propietario.post(RUTA, datos());
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {

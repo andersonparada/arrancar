@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { boolean, text, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
+import { nombreNormalizado } from '../../../core/base-datos/nombre-normalizado.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { esquemaBancos } from './esquema.tablas.js';
 
@@ -25,7 +26,7 @@ export const conceptos = esquemaBancos.table(
     ...autoria,
   },
   (t) => [
-    unique('conceptos_nombre_unico').on(t.empresaId, t.nombre),
+    uniqueIndex('conceptos_nombre_unico').on(t.empresaId, nombreNormalizado(t.nombre)),
     /** Permite la llave foránea compuesta de `movimientos` (mismo concepto, misma empresa). */
     unique('conceptos_id_empresa_unico').on(t.id, t.empresaId),
     uniqueIndex('conceptos_clave_de_sistema_unica')

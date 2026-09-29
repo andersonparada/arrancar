@@ -141,6 +141,13 @@
       "when": 1790706704538,
       "tag": "0019_no_asignar_al_crear_en_importaciones",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790717785293,
+      "tag": "0020_nombres_sin_mayusculas_ni_acentos",
+      "breakpoints": true
     }
   ]
 }

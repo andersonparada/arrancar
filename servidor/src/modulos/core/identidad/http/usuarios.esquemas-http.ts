@@ -43,7 +43,7 @@ export const esquemaAsignaciones = z.object({
 
 export const esquemaSugerenciaUsuario = z.object(nombresYApellidos);
 
-export const esquemaCambioContrasena = z.object({ contrasena });
+export const esquemaCambioContrasena = z.object({ contrasena, contrasenaActual: z.string().max(200).optional() });
 
 export const esquemaParamsUsuario = z.object({ usuarioId: z.uuid() });
 

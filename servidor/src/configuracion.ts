@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { configurarMensajesDeValidacion } from './modulos/core/compartido/http/mensajes-de-validacion.js';
 
-z.config(z.locales.es());
+configurarMensajesDeValidacion();
 
 const esquemaConfiguracion = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

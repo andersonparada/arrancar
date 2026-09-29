@@ -190,6 +190,13 @@
       "when": 1790714854726,
       "tag": "0026_permiso_de_reclasificar_cheques",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1790717788584,
+      "tag": "0027_nombres_sin_mayusculas_ni_acentos",
+      "breakpoints": true
     }
   ]
 }

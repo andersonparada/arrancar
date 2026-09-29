@@ -54,30 +54,30 @@ reporte y a la conciliación de libros). Flujo de efectivo: saldos iniciales 10,
 ### Media
 4. **500 con un monto enorme** (CORREGIDO 2026-09-29: 400 desde el esquema común de decimales). `POST /bancos/notas` con `monto: "1000000000000.00"` responde 500
    `error_interno` (numeric(14,2)). Esperado: 400 «monto demasiado grande». Revisar en todos los montos.
-5. **Nombres repetidos que difieren solo en mayúsculas** se aceptan: localidad «  LOCALIDAD 1 » junto a
+5. **Nombres repetidos que difieren solo en mayúsculas** (CORREGIDO 2026-09-29: índices únicos sobre `core.nombre_normalizado(nombre)` en roles, localidades, tipos de localidad, departamentos, bancos, cuentas bancarias, conceptos y categorías de proveedor; migraciones core 0020, empresas 0009, bancos 0027, terceros 0006, que fallan con mensaje claro si hay repetidos) se aceptan: localidad «  LOCALIDAD 1 » junto a
    «Localidad 1» (201) y concepto «planilla» junto a «Planilla» (201; «Planílla» también). El exacto sí avisa.
    Esperado: comparar sin mayúsculas ni acentos, como ya hace `nombre_para_comparar` (migraciones 0024/0025
    en curso).
-6. **Los dos inversos de una transferencia anulada aparecen en «Notas»** como notas de crédito/débito
+6. **Los dos inversos de una transferencia anulada aparecen en «Notas»** (CORREGIDO 2026-09-29: el inverso hereda la `transferencia_id` de su original, así ni sale en Notas ni lleva número; la migración bancos 0027 corrige los existentes) como notas de crédito/débito
    «Reversión de TR-1», mientras que sus originales no aparecen. La consulta excluye por
    `transferencia_id` y los inversos lo llevan nulo
    (`consultas-movimientos.drizzle.ts`, `condicionDeLaClase`). Aparecen también en la cuenta de notas del
    correlativo (sí llevan número solo los de notas).
-7. **La conciliación deja iniciar cualquier mes** si la cuenta no tiene ninguna (febrero sin haber hecho
+7. **La conciliación deja iniciar cualquier mes** (NO SE CAMBIÓ: `bancos.md` B5 dice expresamente que la primera conciliación de una cuenta puede ser de cualquier mes; queda pendiente si el dueño quiere exigir el mes del saldo inicial) si la cuenta no tiene ninguna (febrero sin haber hecho
    enero) y luego enero ya no se puede iniciar. Confirmar si es lo acordado («meses en orden»).
 
 ### Baja
-8. **Mensajes técnicos de validación** en pantalla: «Demasiado pequeño: se esperaba que texto tuviera >=1
+8. **Mensajes técnicos de validación** (CORREGIDO 2026-09-29: `mensajes-de-validacion.ts`: «Campo obligatorio.», «Escriba como máximo N caracteres.», etc.) en pantalla: «Demasiado pequeño: se esperaba que texto tuviera >=1
    caracteres» (motivo vacío al anular) y «Demasiado grande… <=150 caracteres». Mejor «Escriba el motivo.».
-9. **Limitador de inicio de sesión responde en inglés**: «Rate limit exceeded, retry in 2 seconds».
-10. **Cambiar la propia contraseña no pide la actual** (`PUT /usuarios/:id/contrasena`; además cierra todas las
+9. **Limitador de inicio de sesión responde en inglés** (CORREGIDO 2026-09-29: código `demasiadas_solicitudes`, en español): «Rate limit exceeded, retry in 2 seconds».
+10. **Cambiar la propia contraseña no pide la actual** (CORREGIDO 2026-09-29: `contrasenaActual` obligatoria cuando el usuario cambia la suya; no se pide al administrador que cambia la de otro) (`PUT /usuarios/:id/contrasena`; además cierra todas las
     sesiones, incluida la actual). Decidir si se exige.
-11. **Fecha futura aceptada** en notas (2030-01-01 devolvió 201) sin aviso.
-12. **La transferencia lleva No. 1** en su lista pero sus dos movimientos salen con «—» en No. del reporte
+11. **Fecha futura aceptada** (NO SE CAMBIÓ: los planes no dicen nada de bloquear fechas futuras en notas, transferencias o saldos iniciales; los cheques posfechados sí están permitidos. Requiere decisión del dueño) en notas (2030-01-01 devolvió 201) sin aviso.
+12. **La transferencia lleva No. 1** (CORREGIDO 2026-09-29: el reporte y el Excel muestran el número de la transferencia en sus notas e inversos) en su lista pero sus dos movimientos salen con «—» en No. del reporte
     Movimientos y en el Excel.
-13. Ventana Accesos: el aviso «Es usted: al guardar se está dando acceso a sí mismo» sale también para quien
+13. Ventana Accesos (CORREGIDO 2026-09-29): el aviso «Es usted: al guardar se está dando acceso a sí mismo» sale también para quien
     ve todas las localidades (ahí no se puede guardar).
-14. Reporte Movimientos en 1280 px: la columna Crédito queda cortada (hay que desplazar la tabla).
+14. (Sin cambios: no se pudo ver en el navegador) Reporte Movimientos en 1280 px: la columna Crédito queda cortada (hay que desplazar la tabla).
 15. «1 permisos · 1 asignaciones» (corregido). Aviso «nota «»» al anular/eliminar sin referencia (corregido).
     Claves de permisos que desbordaban su columna (corregido, `break-all`).
 

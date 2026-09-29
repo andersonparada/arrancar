@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, or } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull, lte, or } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
@@ -54,11 +54,19 @@ const consultaBase = () =>
     .leftJoin(cuentaDestino, eq(transferencias.cuentaDestinoId, cuentaDestino.id))
     .leftJoin(
       movimientoOrigen,
-      and(eq(movimientoOrigen.transferenciaId, transferencias.id), eq(movimientoOrigen.tipo, 'debito')),
+      and(
+        eq(movimientoOrigen.transferenciaId, transferencias.id),
+        eq(movimientoOrigen.tipo, 'debito'),
+        isNull(movimientoOrigen.revierteAId),
+      ),
     )
     .leftJoin(
       movimientoDestino,
-      and(eq(movimientoDestino.transferenciaId, transferencias.id), eq(movimientoDestino.tipo, 'credito')),
+      and(
+        eq(movimientoDestino.transferenciaId, transferencias.id),
+        eq(movimientoDestino.tipo, 'credito'),
+        isNull(movimientoDestino.revierteAId),
+      ),
     );
 
 type FilaDeTransferencia = Awaited<ReturnType<typeof consultaBase>>[number];

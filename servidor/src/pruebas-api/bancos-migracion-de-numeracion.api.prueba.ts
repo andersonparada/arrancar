@@ -82,8 +82,9 @@ describe('migración que numera los datos existentes', () => {
     await cuenta.propietario.post(`${RUTA_NOTAS}/${febreroA.id}/anular`, { motivo: 'Error', fecha: '2026-04-01' });
     const reporte = await cuenta.propietario.get(`/api/bancos/movimientos/reporte?cuentaBancariaId=${origen}`);
     for (const fila of [...reporte.cuerpo.filas]) {
-      if (fila.revierteAId) etiquetas.set(fila.id, 'inversoDelCreditoDeFebreroA');
-      if (fila.transferenciaId) etiquetas.set(fila.id, `notaDeTransferencia:${fila.tipo}:${fila.fecha}`);
+      if (fila.revierteAId && !fila.transferenciaId) etiquetas.set(fila.id, 'inversoDelCreditoDeFebreroA');
+      if (fila.transferenciaId && !fila.revierteAId)
+        etiquetas.set(fila.id, `notaDeTransferencia:${fila.tipo}:${fila.fecha}`);
       if (fila.saldoInicial) etiquetas.set(fila.id, `saldoInicial:${fila.cuentaBancariaId === origen}`);
     }
 
@@ -97,8 +98,9 @@ describe('migración que numera los datos existentes', () => {
       debito: 1,
       inversoDelCreditoDeFebreroA: 2,
       'saldoInicial:true': null,
-      'notaDeTransferencia:debito:2026-03-10': null,
-      'notaDeTransferencia:debito:2026-02-10': null,
+      // Sin número propio: el reporte muestra el de su transferencia.
+      'notaDeTransferencia:debito:2026-03-10': 2,
+      'notaDeTransferencia:debito:2026-02-10': 1,
     });
     const transferencias = await cuenta.propietario.get(RUTA_TRANSFERENCIAS);
     const porFecha = Object.fromEntries(

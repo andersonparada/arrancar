@@ -45,6 +45,15 @@ describe('conceptos por API', () => {
     expect(segunda).toEqual(primera);
   });
 
+  it('un nombre que solo cambia en mayúsculas o acentos se rechaza como repetido', async () => {
+    await cuenta.propietario.post(RUTA, datos({ nombre: 'Planilla quincenal', grupoDeFlujo: 'Planilla' }));
+
+    const variante = await cuenta.propietario.post(RUTA, datos({ nombre: 'PLANÍLLA  Quincenal' }));
+
+    expect(variante.estado).toBe(409);
+    expect(variante.cuerpo.error.mensaje).toContain('Ya existe un concepto con ese nombre');
+  });
+
   it('se registran y se cambian', async () => {
     const creado = await cuenta.propietario.post(RUTA, datos());
     const id = creado.cuerpo.id;

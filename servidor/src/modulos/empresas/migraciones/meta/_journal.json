@@ -64,6 +64,13 @@
       "when": 1790711229438,
       "tag": "0008_departamentos",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790717786876,
+      "tag": "0009_nombres_sin_mayusculas_ni_acentos",
+      "breakpoints": true
     }
   ]
 }

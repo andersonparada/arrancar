@@ -57,6 +57,18 @@ describe('localidades por API', () => {
     expect(cambiado.cuerpo.nombre).toBe('Finca Nueva');
   });
 
+  it('un nombre que solo cambia en mayúsculas, acentos o espacios también avisa con 409', async () => {
+    await cuenta.propietario.post(RUTA, datos({ codigo: 'NOR-1', nombre: 'Finca Peñón', codigoEstablecimientoSat: 7 }));
+
+    const variante = await cuenta.propietario.post(
+      RUTA,
+      datos({ codigo: 'NOR-2', nombre: '  FINCA   PENON ', codigoEstablecimientoSat: 8 }),
+    );
+
+    expect(variante.estado).toBe(409);
+    expect(variante.cuerpo.error.mensaje).toContain('Ya existe una localidad con ese nombre');
+  });
+
   it('un código, nombre o establecimiento repetido avisa con 409', async () => {
     await cuenta.propietario.post(RUTA, datos({ codigo: 'REP-1', nombre: 'Repetida', codigoEstablecimientoSat: 5 }));
     const otra = { codigo: 'REP-2', nombre: 'Otra', codigoEstablecimientoSat: 6 };

@@ -1,6 +1,11 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { CONTRASENA_DE_PRUEBA, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
+import {
+  CONTRASENA_DE_PRUEBA,
+  crearUsuarioConPermisos,
+  darDeAltaCuenta,
+  type CuentaDePrueba,
+} from './soporte/escenarios.js';
 
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
@@ -98,6 +103,29 @@ describe('administración de usuarios', () => {
 
     expect(cambio.estado).toBe(204);
     expect(conLaNueva.estado).toBe(204);
+  });
+
+  it('quien cambia su propia contraseña debe escribir la actual', async () => {
+    const usuario = await crearUsuarioConPermisos(entorno, cuenta, {
+      nombres: 'Propia',
+      apellidos: 'Clave',
+      permisos: ['usuarios.editar'],
+    });
+    const yo = (await usuario.get('/api/sesion')).cuerpo.usuario;
+    const ruta = `/api/usuarios/${yo.id}/contrasena`;
+
+    const sinActual = await usuario.put(ruta, { contrasena: 'contrasena-nueva-segura' });
+    const equivocada = await usuario.put(ruta, { contrasena: 'contrasena-nueva-segura', contrasenaActual: 'otra' });
+    const correcta = await usuario.put(ruta, {
+      contrasena: 'contrasena-nueva-segura',
+      contrasenaActual: CONTRASENA_DE_PRUEBA,
+    });
+
+    expect(sinActual.estado).toBe(400);
+    expect(sinActual.cuerpo.error.codigo).toBe('contrasena_actual_incorrecta');
+    expect(equivocada.estado).toBe(400);
+    expect(correcta.estado).toBe(204);
+    expect((await entorno.nuevoCliente().iniciarSesion(yo.usuario, 'contrasena-nueva-segura')).estado).toBe(204);
   });
 
   it('rechaza contraseñas de menos de 10 caracteres', async () => {

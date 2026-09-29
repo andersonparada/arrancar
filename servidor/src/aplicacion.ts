@@ -19,6 +19,7 @@ import { archivoDeInstalacion } from './modulos/core/configuracion/infraestructu
 import { AccesoDenegado } from './modulos/core/compartido/aplicacion/errores.js';
 import { interpretarErrorDePostgres } from './modulos/core/compartido/infraestructura/errores-de-postgres.js';
 import { crearManejadorDeErrores } from './modulos/core/compartido/http/manejador-errores.js';
+import { respuestaDeLimiteExcedido } from './modulos/core/compartido/http/limite-de-solicitudes.js';
 import { establecerRegistroModulos } from './modulos/core/modulos-sistema/registro-global.js';
 import { RegistroModulos } from './modulos/core/modulos-sistema/registro-modulos.js';
 import { definicionesModulos } from './modulos/indice.js';
@@ -95,7 +96,7 @@ function cargarModulos(): void {
 /** Cabeceras de seguridad, límite de peticiones, cookies, subida de imágenes y defensa CSRF. */
 async function registrarSeguridad(app: FastifyInstance): Promise<void> {
   await app.register(helmet, { contentSecurityPolicy: POLITICA_DE_CONTENIDO });
-  await app.register(rateLimit, { global: false });
+  await app.register(rateLimit, { global: false, errorResponseBuilder: respuestaDeLimiteExcedido });
   await app.register(cookie);
   await app.register(multipart, { limits: { fileSize: TAMANO_MAXIMO_IMAGEN, files: 1 } });
   verificarOrigen(app);

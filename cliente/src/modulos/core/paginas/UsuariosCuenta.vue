@@ -59,6 +59,8 @@ const { cambio } = contrasena;
     />
     <VentanaDeContrasena
       v-model:contrasena="cambio.contrasena"
+      v-model:contrasena-actual="cambio.contrasenaActual"
+      :pide-la-actual="contrasena.esLaPropia.value"
       :abierta="cambio.abierta"
       :nombre="cambio.usuario ? nombreCompleto(cambio.usuario) : ''"
       :errores="contrasena.errores.value"
