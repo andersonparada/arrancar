@@ -58,7 +58,7 @@ Sin esperar decisiones: **X1, F1, F2, F3 y H2a**. **H2b y H2c** esperan las preg
   salida no trae EXIF); PNG con zip al final (la salida no lo trae); la petición 31 del
   minuto responde 429.
 
-### F2 · servidor: `core.archivos` admite documentos y dueño (revisar con `arquitecto-de-datos`)
+### F2 · servidor: `core.archivos` admite documentos y dueño (revisar con `arquitecto-de-datos`) — HECHO
 
 - Migración de core: `clase text not null default 'imagen'` (`imagen`/`documento`);
   `ruta_miniatura`, `ancho` y `alto` nulables con `check` para imágenes; `sha256`

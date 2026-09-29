@@ -1,3 +1,4 @@
+import { FotoNoValida, type VerificadorDeFotos } from '../../compartido/aplicacion/verificador-de-fotos.js';
 import type {
   ImagenesOptimizadas,
   MedidasDeImagen,
@@ -36,7 +37,26 @@ export class RepositorioArchivosEnMemoria implements RepositorioArchivos {
     return guardado;
   }
 
-  async buscar(archivoId: string): Promise<ArchivoGuardado | null> {
-    return this.porId.get(archivoId) ?? null;
+  async buscarImagenLibre(archivoId: string): Promise<ArchivoGuardado | null> {
+    const archivo = this.porId.get(archivoId);
+    return archivo?.clase === 'imagen' && archivo.recursoDueno === null ? archivo : null;
+  }
+
+  async buscarDocumento(archivoId: string, recursoDueno: string): Promise<ArchivoGuardado | null> {
+    const archivo = this.porId.get(archivoId);
+    return archivo?.clase === 'documento' && archivo.recursoDueno === recursoDueno ? archivo : null;
+  }
+
+  async eliminar(archivoId: string): Promise<void> {
+    this.porId.delete(archivoId);
+  }
+}
+
+/** Acepta las fotos que se le indiquen; rechaza el resto como lo haría el verificador real. */
+export class VerificadorDeFotosEnMemoria implements VerificadorDeFotos {
+  readonly validas = new Set<string>();
+
+  async exigir(archivoId: string | null): Promise<void> {
+    if (archivoId !== null && !this.validas.has(archivoId)) throw new FotoNoValida();
   }
 }

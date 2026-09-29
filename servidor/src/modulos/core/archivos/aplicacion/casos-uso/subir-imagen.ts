@@ -2,7 +2,7 @@ import type { Almacenamiento } from '../../../compartido/aplicacion/almacenamien
 import type { ImagenSubida } from '../../../compartido/aplicacion/imagen-subida.js';
 import type { Operador } from '../../../compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../compartido/aplicacion/unidad-de-trabajo.js';
-import { RutasDeImagen } from '../../dominio/rutas-de-imagen.js';
+import { RutasDeArchivo } from '../../dominio/rutas-de-archivo.js';
 import type { ArchivoDto } from '../dto/archivo.dto.js';
 import type { ImagenOptimizada, MedidasDeImagen, OptimizadorDeImagenes } from '../puertos/optimizador-de-imagenes.js';
 import type { ArchivoGuardado, RepositorioArchivos } from '../puertos/repositorio-archivos.js';
@@ -17,7 +17,7 @@ interface Dependencias {
 interface ImagenGuardada {
   imagen: ImagenSubida;
   original: ImagenOptimizada;
-  rutas: RutasDeImagen;
+  rutas: RutasDeArchivo;
 }
 
 const MEDIDAS: MedidasDeImagen = {
@@ -39,11 +39,11 @@ export class SubirImagen {
    */
   async ejecutar(operador: Operador, imagen: ImagenSubida): Promise<ArchivoDto> {
     const { original, miniatura } = await this.dependencias.optimizador.optimizar(imagen.contenido, MEDIDAS);
-    const rutas = RutasDeImagen.nuevas(operador.empresaId, new Date(), crypto.randomUUID());
+    const rutas = RutasDeArchivo.deImagen(operador.empresaId, new Date(), crypto.randomUUID());
     await this.dependencias.almacenamiento.guardar(rutas.original, original.contenido);
-    await this.dependencias.almacenamiento.guardar(rutas.miniatura, miniatura.contenido);
+    await this.dependencias.almacenamiento.guardar(rutas.miniatura!, miniatura.contenido);
     const archivo = await this.registrar(operador, { imagen, original, rutas });
-    return { id: archivo.id, ancho: archivo.ancho, alto: archivo.alto, tamanoBytes: archivo.tamanoBytes };
+    return { id: archivo.id, ancho: original.ancho, alto: original.alto, tamanoBytes: archivo.tamanoBytes };
   }
 
   private registrar(operador: Operador, { imagen, original, rutas }: ImagenGuardada): Promise<ArchivoGuardado> {
@@ -51,12 +51,17 @@ export class SubirImagen {
     return unidadDeTrabajo.ejecutar(operador, () =>
       repositorio.guardar({
         empresaId: operador.empresaId,
+        clase: 'imagen',
         rutaOriginal: rutas.original,
         rutaMiniatura: rutas.miniatura,
         tipoMime: 'image/webp',
         tamanoBytes: original.contenido.length,
         ancho: original.ancho,
         alto: original.alto,
+        sha256: null,
+        sha256Recibido: null,
+        paginas: null,
+        recursoDueno: null,
         nombreOriginal: imagen.nombreOriginal?.slice(0, LARGO_MAXIMO_DEL_NOMBRE) ?? null,
         subidoPor: operador.usuarioId,
       }),

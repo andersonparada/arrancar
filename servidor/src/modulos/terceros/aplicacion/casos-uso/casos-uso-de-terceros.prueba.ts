@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { FotoNoValida } from '../../../core/compartido/aplicacion/verificador-de-fotos.js';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
@@ -10,6 +11,7 @@ import {
   operadorDePrueba,
 } from '../../../core/compartido/pruebas/dobles-compartidos.js';
 import { TerceroInactivo } from '../../dominio/errores.js';
+import { VerificadorDeFotosEnMemoria } from '../../../core/archivos/pruebas/dobles-de-archivos.js';
 import { CategoriasEnMemoria, ContactosEnMemoria, TercerosEnMemoria } from '../../pruebas/dobles-de-terceros.js';
 import { AvisoDeParecidos } from '../aviso-de-parecidos.js';
 import type { SolicitudDeAltaDeTercero } from '../dto/tercero.dto.js';
@@ -23,6 +25,7 @@ let terceros: TercerosEnMemoria;
 let contactos: ContactosEnMemoria;
 let publicadorEventos: PublicadorEventosEnMemoria;
 let auditoria: AuditoriaEnMemoria;
+let fotos: VerificadorDeFotosEnMemoria;
 let operador: Operador;
 let casos: { registrar: RegistrarTercero; actualizar: ActualizarTercero; asignar: AsignarPapel; quitar: QuitarPapel };
 
@@ -56,10 +59,11 @@ beforeEach(() => {
   contactos = new ContactosEnMemoria();
   publicadorEventos = new PublicadorEventosEnMemoria();
   auditoria = new AuditoriaEnMemoria();
+  fotos = new VerificadorDeFotosEnMemoria();
   operador = operadorDePrueba();
   const unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   const avisoDeParecidos = new AvisoDeParecidos(terceros);
-  const comunes = { unidadDeTrabajo, repositorio: terceros, consultas: terceros, publicadorEventos, auditoria };
+  const comunes = { unidadDeTrabajo, repositorio: terceros, consultas: terceros, publicadorEventos, auditoria, fotos };
   casos = {
     registrar: new RegistrarTercero({ ...comunes, avisoDeParecidos, categorias: new CategoriasEnMemoria(), contactos }),
     actualizar: new ActualizarTercero({ ...comunes, avisoDeParecidos }),
@@ -111,6 +115,18 @@ describe('registrar un tercero', () => {
 
     await expect(casos.registrar.ejecutar(operador, solicitud({ papel }))).rejects.toThrow(RecursoNoEncontrado);
     expect(terceros.cantidad()).toBe(0);
+  });
+
+  it('no registra con una foto que no es válida y sí con una válida', async () => {
+    const id = crypto.randomUUID();
+
+    await expect(casos.registrar.ejecutar(operador, solicitud({ fotoArchivoId: id }))).rejects.toBeInstanceOf(
+      FotoNoValida,
+    );
+    fotos.validas.add(id);
+    const registrado = await casos.registrar.ejecutar(operador, solicitud({ fotoArchivoId: id }));
+
+    expect(registrado.nombreMostrar).toBe('Juan Pérez');
   });
 
   it('rechaza un NIT inválido antes de tocar la base de datos', async () => {

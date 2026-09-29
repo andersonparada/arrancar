@@ -1,6 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
+import type { VerificadorDeFotos } from '../../../../core/compartido/aplicacion/verificador-de-fotos.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { Contacto } from '../../../dominio/contacto.js';
 import { Tercero } from '../../../dominio/tercero.js';
@@ -20,6 +21,7 @@ interface Dependencias {
   consultas: ConsultasTerceros;
   avisoDeParecidos: AvisoDeParecidos;
   publicadorEventos: PublicadorEventos;
+  fotos: VerificadorDeFotos;
 }
 
 /** Registra a alguien con sus datos, el papel con que entra y sus contactos, todo o nada. */
@@ -28,6 +30,7 @@ export class RegistrarTercero {
 
   /**
    * @throws HayTercerosParecidos si se parece a otro y no se confirmó.
+   * @throws FotoNoValida si la foto no existe, no es imagen o tiene dueño.
    * @throws RecursoNoEncontrado si la categoría del proveedor no existe.
    */
   async ejecutar(operador: Operador, solicitud: SolicitudDeAltaDeTercero): Promise<TerceroDto> {
@@ -36,6 +39,7 @@ export class RegistrarTercero {
     if (solicitud.papel) tercero.asignarPapel(solicitud.papel);
 
     const registrado = await unidadDeTrabajo.ejecutar(operador, async () => {
+      await this.dependencias.fotos.exigir(solicitud.fotoArchivoId);
       if (solicitud.papel) await exigirCategoriaDelPapel(categorias, solicitud.papel);
       await avisoDeParecidos.exigirQueNoHaya(tercero, solicitud.confirmarDuplicado);
       await repositorio.agregar(tercero);
