@@ -388,6 +388,18 @@ mano sobre lo generado.
 Factura especial, DUCA, no domiciliados en pantalla, generar las constancias en la
 SAT, leer el XML de la FEL y traer los DTE directo de la SAT.
 
+## Respuestas del usuario (2026-09-29, tarde)
+
+Mandan sobre las preguntas de abajo.
+
+| Tema | Decisión |
+|---|---|
+| Casilla SAT desmarcada | NIT y UUID **opcionales**; se sigue exigiendo que el documento no se repita (mismo proveedor, serie y número). |
+| Datos fiscales del proveedor | **De la cuenta** (se capturan una vez para todas las empresas). |
+| FEL exenta del banco | **Pendiente del contador**: a qué destino va. |
+| IVA fuera de plazo | **Pendiente del contador**: gasto deducible o no deducible por omisión (la cuenta sigue configurable por empresa). |
+| Nota de crédito bajo el mínimo del 5 % | **Pendiente del contador**: qué pasa con la retención ya practicada. |
+
 ## Preguntas para el usuario
 
 Contradicciones o huecos que quedan tras las respuestas del 2026-09-29:

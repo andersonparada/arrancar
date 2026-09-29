@@ -181,6 +181,17 @@ ventanas se crean con el **generador** (`npm run generar -- modulo`, `definicion
 *Inventario*), anticipos a proveedores, moneda extranjera, pagos programados en
 lote de varios proveedores y descuentos por pronto pago.
 
+## Respuestas del usuario (2026-09-29, tarde)
+
+Mandan sobre las preguntas de abajo.
+
+| Tema | Decisión |
+|---|---|
+| Nota de débito existente | **Sí**: forma de pago que liga una nota de débito ya registrada en Bancos (seguros, débitos automáticos) a las facturas de la contraseña, para no pagar dos veces. |
+| Pago mixto gasto/activo | Un solo pago con varias líneas; el flujo de efectivo reparte por el concepto de cada factura. |
+| Factura dentro de una contraseña | **No se puede eliminar**: primero se saca de la contraseña. Si los documentos de la bandeja (sin completar) entran a la contraseña queda por confirmar. |
+| Días de crédito | En el esquema de **Cuentas por pagar**, con llave foránea al proveedor. |
+
 ## Preguntas para el usuario
 
 Contradicciones o huecos que quedan tras las respuestas del 2026-09-29:

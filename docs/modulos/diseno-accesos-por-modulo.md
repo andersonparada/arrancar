@@ -628,6 +628,15 @@ Ninguna bloquea el paso 1 ni el 2. Si no hay respuesta, se sigue con lo recomend
    seguridad; confirmar que está bien que al importar 200 localidades todas queden
    asignadas a quien importa (y 200 entradas de auditoría `asignar`).
 
+> **Nota (2026-09-29): pasos 5, 7 y 8 rediseñados en `diseno-permisos-por-usuario.md` §3 y §8.**
+> Antes del paso 5 va el paso L1 (alcance «para asignar»): `permisoAsignar` en
+> `recursosConAlcance`, variable `app.alcance_para_asignar` que solo fijan los casos de uso de la
+> ventana, `alcance_ver` la lee y las políticas de la tabla de accesos ya no exigen «lo que ve»
+> sino estar en la ventana con el permiso. El paso 5 no da permisos de localidades a ningún rol.
+> El paso 7 usa las rutas de §3.4 (todas las localidades, asignarse a sí mismo, `aSiMismo` en la
+> auditoría) y calcula «ya ve todas» con los permisos efectivos (roles y permisos directos). El
+> paso 8, la ventana de §3.5. Las preguntas 1 y 2 de la sección 11 quedan respondidas.
+
 ## Respuestas del usuario (2026-09-29, tarde)
 
 - **Ventana de asignación:** quien tiene el permiso de asignar ve **todas** las
@@ -639,3 +648,9 @@ Ninguna bloquea el paso 1 ni el 2. Si no hay respuesta, se sigue con lo recomend
 - **Roles que reciben los permisos nuevos:** ninguno en automático salvo el acceso
   total; el usuario quiere poder **asignar permisos directamente a un usuario**, no
   solo a roles (ver `docs/DONDE-QUEDAMOS.md`, «Permisos directos a usuarios»).
+
+- **Importar localidades desde Excel:** **no** se asignan a quien importa; quedan sin
+  asignar y se reparten desde la ventana de accesos (el disparador de asignar al
+  creador no debe actuar en la importación).
+- **Ventana de accesos:** se abre **solo desde Localidades** (en la ficha de la
+  localidad se ven sus usuarios).
