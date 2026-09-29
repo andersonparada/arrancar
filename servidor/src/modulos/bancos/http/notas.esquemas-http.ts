@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   decimalObligatorio,
+  decimalOpcional,
   fechaObligatoria,
   idObligatorio,
   opcionObligatoria,
@@ -18,6 +19,9 @@ export const esquemaNota = z.object({
   beneficiario: textoOpcional(150),
   observaciones: textoOpcional(2000),
   conceptoId: idObligatorio(),
+  /** Solo con un concepto que pide datos de intereses (H8): el bruto y el ISR retenido; `monto` es el neto. */
+  interesBruto: decimalOpcional(2),
+  isrRetenido: decimalOpcional(2),
 });
 
 /** Filtros de la lista: de una cuenta y entre dos fechas (`AAAA-MM-DD`, incluidas). */

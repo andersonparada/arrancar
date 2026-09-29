@@ -197,6 +197,13 @@
       "when": 1790717816233,
       "tag": "0027_h6b_permiso_de_anular_cheques_caducos",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1790719213166,
+      "tag": "0028_h8_interes_bruto_e_isr_retenido",
+      "breakpoints": true
     }
   ]
 }

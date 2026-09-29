@@ -31,6 +31,45 @@ const restriccionesDelConcepto = (t: { conceptoId: AnyPgColumn; empresaId: AnyPg
   }),
 ];
 
+/** Los cheques en circulación (reporte de cheques caducos): pocos y siempre los mismos filtros. */
+const indicesDeChequesEnCirculacion = (t: {
+  cuentaBancariaId: AnyPgColumn;
+  fecha: AnyPgColumn;
+  tipo: AnyPgColumn;
+  conciliacionId: AnyPgColumn;
+  revertidoEn: AnyPgColumn;
+  anuladoEn: AnyPgColumn;
+}) => [
+  index('movimientos_cheques_en_circulacion_idx')
+    .on(t.cuentaBancariaId, t.fecha)
+    .where(
+      sql`${t.tipo} = 'cheque' and ${t.conciliacionId} is null and ${t.revertidoEn} is null and ${t.anuladoEn} is null`,
+    ),
+];
+
+/**
+ * Intereses con ISR (H8): el índice parcial del reporte «Intereses y retenciones» (son pocos frente al total) y el
+ * cuadre: los dos datos juntos o ninguno, solo en notas de crédito, con bruto = monto (neto) + ISR.
+ */
+const restriccionesDeIntereses = (t: {
+  empresaId: AnyPgColumn;
+  fecha: AnyPgColumn;
+  tipo: AnyPgColumn;
+  monto: AnyPgColumn;
+  interesBruto: AnyPgColumn;
+  isrRetenido: AnyPgColumn;
+}) => [
+  index('movimientos_intereses_idx')
+    .on(t.empresaId, t.fecha)
+    .where(sql`${t.interesBruto} is not null`),
+  check(
+    'movimientos_intereses_cuadran',
+    sql`(${t.interesBruto} is null and ${t.isrRetenido} is null)
+        or (${t.interesBruto} is not null and ${t.isrRetenido} is not null and ${t.tipo} = 'credito'
+          and ${t.isrRetenido} >= 0 and ${t.interesBruto} = ${t.monto} + ${t.isrRetenido})`,
+  ),
+];
+
 /**
  * Las notas de crédito y de débito de cada cuenta. El monto siempre es positivo
  * (el tipo dice la dirección) y nada se borra: se anula. Una sola nota de saldo
@@ -71,6 +110,13 @@ export const movimientos = esquemaBancos.table(
      */
     moduloDeOrigen: text(),
     documentoDeOrigenId: uuid(),
+    /**
+     * Intereses acreditados (H8): el interés bruto y el ISR que el banco retuvo; el `monto` es el neto (bruto - ISR).
+     * Los dos juntos o ninguno, solo en notas de crédito. El inverso (un débito) no los copia: sale del reporte
+     * porque su original queda revertido.
+     */
+    interesBruto: numeric({ precision: 14, scale: 2 }),
+    isrRetenido: numeric({ precision: 14, scale: 2 }),
     /** Anulación a la antigua: solo la usan los cheques en un mes abierto (sin inverso, fuera del saldo). */
     anuladoEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
@@ -101,12 +147,8 @@ export const movimientos = esquemaBancos.table(
     index('movimientos_conciliacion_idx').on(t.conciliacionId),
     index('movimientos_revierte_a_idx').on(t.revierteAId),
     ...restriccionesDelConcepto(t),
-    /** Los cheques en circulación (reporte de cheques caducos): pocos y siempre los mismos filtros. */
-    index('movimientos_cheques_en_circulacion_idx')
-      .on(t.cuentaBancariaId, t.fecha)
-      .where(
-        sql`${t.tipo} = 'cheque' and ${t.conciliacionId} is null and ${t.revertidoEn} is null and ${t.anuladoEn} is null`,
-      ),
+    ...indicesDeChequesEnCirculacion(t),
+    ...restriccionesDeIntereses(t),
     uniqueIndex('movimientos_un_saldo_inicial')
       .on(t.cuentaBancariaId)
       .where(sql`${t.saldoInicial} and ${t.anuladoEn} is null`),

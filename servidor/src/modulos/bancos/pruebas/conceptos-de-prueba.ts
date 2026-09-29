@@ -11,6 +11,8 @@ export const CONCEPTO_GENERAL = idDe(1);
 export const CONCEPTO_DE_CREDITO = idDe(2);
 export const CONCEPTO_DE_DEBITO = idDe(3);
 export const CONCEPTO_INACTIVO = idDe(4);
+/** Un concepto de crédito que pide interés bruto e ISR retenido (H8). */
+export const CONCEPTO_DE_INTERESES = idDe(5);
 const PRIMERO_DE_SISTEMA = 10;
 
 const EMPRESA = Identificador.desde<'Empresa'>('00000000-0000-4000-8000-0000000000aa');
@@ -49,13 +51,18 @@ function deSistema(indice: number): Concepto {
   });
 }
 
-/** Un catálogo ya sembrado: los de sistema y cuatro del usuario (general, de crédito, de débito e inactivo). */
+/** Un catálogo ya sembrado: los de sistema y cinco del usuario (general, de crédito, de débito, inactivo e intereses). */
 export function conceptosSembrados(): ConceptosEnMemoria {
   const propios = [
     delUsuario(CONCEPTO_GENERAL, { nombre: 'General' }),
     delUsuario(CONCEPTO_DE_CREDITO, { nombre: 'Depósito de ventas', aplicaA: 'credito' }),
     delUsuario(CONCEPTO_DE_DEBITO, { nombre: 'Comisiones bancarias', aplicaA: 'debito' }),
     delUsuario(CONCEPTO_INACTIVO, { nombre: 'Viejo', activo: false }),
+    delUsuario(CONCEPTO_DE_INTERESES, {
+      nombre: 'Intereses ganados',
+      aplicaA: 'credito',
+      pideDatosDeIntereses: true,
+    }),
   ];
   return new ConceptosEnMemoria().precargar(...propios, ...CONCEPTOS_DE_SISTEMA.map((_, i) => deSistema(i)));
 }

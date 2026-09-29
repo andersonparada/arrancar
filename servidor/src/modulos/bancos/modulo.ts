@@ -18,6 +18,7 @@ import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { rutasDeNotas } from './composicion/notas.js';
 import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 import { rutasDeTransferencias } from './composicion/transferencias.js';
+import { rutasDeIntereses } from './composicion/intereses.js';
 import { rutasDeConceptos } from './composicion/conceptos.js';
 import { rutasDeReportesPorConcepto } from './composicion/reportes-por-concepto.js';
 // generador: importaciones
@@ -80,6 +81,8 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.conceptos.exportar', descripcion: 'Exportar conceptos a Excel' },
     { clave: 'bancos.flujo-de-efectivo.ver', descripcion: 'Ver el reporte de flujo de efectivo' },
     { clave: 'bancos.flujo-de-efectivo.exportar', descripcion: 'Exportar el reporte de flujo de efectivo a Excel' },
+    { clave: 'bancos.intereses.ver', descripcion: 'Ver el reporte de intereses y retenciones' },
+    { clave: 'bancos.intereses.exportar', descripcion: 'Exportar el reporte de intereses y retenciones a Excel' },
     // generador: permisos
   ],
   configuracion: [
@@ -118,6 +121,14 @@ export const moduloBancos: DefinicionModulo = {
       publica: true,
     }),
     definirConfiguracion({
+      clave: 'bancos.intereses.tasa_isr',
+      descripcion: 'Tasa de ISR que se propone al registrar una nota de intereses (el usuario puede cambiar el monto).',
+      esquema: z.number().min(0).max(1),
+      predeterminado: 0.1,
+      niveles: ['instalacion', 'empresa'],
+      publica: true,
+    }),
+    definirConfiguracion({
       clave: 'bancos.sugerencias.vida_media_dias',
       descripcion: 'Días tras los cuales un movimiento clasificado pesa la mitad al sugerir el concepto de otro.',
       esquema: z.number().int().min(30).max(1095),
@@ -148,6 +159,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeChequesCaducos(),
     rutasDeConceptos(),
     rutasDeReportesPorConcepto(),
+    rutasDeIntereses(),
     // generador: rutas
   ]),
 };

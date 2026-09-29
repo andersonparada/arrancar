@@ -1,6 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { MovimientoDto, SolicitudDeMovimiento } from '../../dto/movimiento.dto.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
+import { exigirInteresesCoherentes } from '../../../dominio/intereses.js';
 import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
 
@@ -47,7 +48,8 @@ export class ActualizarMovimiento {
     const { repositorio, reglas } = this.dependencias;
     const efectoAnterior = movimiento.efectoEnCentavos;
     const { fecha: fechaAnterior, tipo: tipoAnterior } = movimiento.instantanea();
-    const conceptoId = await this.conceptoDeLaCorreccion(movimiento, solicitud);
+    const { conceptoId, pideIntereses } = await this.conceptoDeLaCorreccion(movimiento, solicitud);
+    exigirInteresesCoherentes(solicitud, pideIntereses);
     movimiento.corregir({ ...solicitud, conceptoId });
     if (solicitud.tipo !== tipoAnterior) await numerarSiCorresponde(this.dependencias.correlativos, movimiento);
     const { cuentaBancariaId, fecha, saldoInicial } = movimiento.instantanea();
@@ -62,10 +64,13 @@ export class ActualizarMovimiento {
   }
 
   /** El saldo inicial conserva su concepto de sistema; una nota lleva el elegido, que se revisa con su nuevo tipo. */
-  private async conceptoDeLaCorreccion(movimiento: Movimiento, solicitud: SolicitudDeMovimiento): Promise<string> {
+  private async conceptoDeLaCorreccion(
+    movimiento: Movimiento,
+    solicitud: SolicitudDeMovimiento,
+  ): Promise<{ conceptoId: string; pideIntereses: boolean }> {
     const { conceptoId: actual, saldoInicial } = movimiento.instantanea();
-    if (saldoInicial) return actual;
+    if (saldoInicial) return { conceptoId: actual, pideIntereses: false };
     const elegido = await this.dependencias.conceptos.elegido(solicitud.conceptoId, solicitud.tipo, { actual });
-    return elegido.id.valor;
+    return { conceptoId: elegido.id.valor, pideIntereses: elegido.instantanea().pideDatosDeIntereses };
   }
 }

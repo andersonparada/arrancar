@@ -13,6 +13,8 @@ function movimiento(datos: Partial<MovimientoDto> & Pick<MovimientoDto, 'tipo' |
     observaciones: null,
     conceptoId: 'concepto-general',
     conceptoNombre: 'General',
+    interesBruto: null,
+    isrRetenido: null,
     puedeReclasificar: true,
     anuladoEn: null,
     motivoDeAnulacion: null,

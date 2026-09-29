@@ -1586,3 +1586,39 @@ Plan: `plan-hallazgos-contables.md`, H6 («Anulación en lote» e «Interfaz»).
 - **Pruebas**: caso de uso (`anular-cheques-caducos.prueba.ts`), API (`bancos-anular-cheques-caducos.api.prueba.ts`: todo o nada, inversos
   a la fecha común con mes abierto, causa, auditoría, validaciones y permiso propio; `bancos-migracion-de-permiso-de-anular-caducos`) y cliente
   (`seleccion-de-cheques-caducos.prueba.ts`).
+
+## H8 Interés bruto e ISR retenido en las notas de intereses (servidor y cliente hechos el 2026-09-29)
+
+Plan: `plan-hallazgos-contables.md`, H8, y la respuesta del usuario: la nota de intereses pide el interés bruto y el ISR retenido
+(bruto - ISR = neto, que es el **monto** del movimiento); el concepto con `pide_datos_de_intereses` (H3a) lo activa.
+
+- **Migración `0028_h8_interes_bruto_e_isr_retenido`**: `bancos.movimientos.interes_bruto` e `isr_retenido` (`numeric(14,2)`, nulables), el
+  `check` `movimientos_intereses_cuadran` (los dos nulos, o los dos presentes en una nota de crédito con ISR >= 0 y bruto = monto + ISR) y el
+  índice parcial `movimientos_intereses_idx (empresa_id, fecha)` donde el bruto no es nulo. Los datos existentes quedan nulos. **Ajuste al plan:**
+  el `check` del plan dejaba pasar «uno solo de los dos» porque la comparación daba `NULL`; se exige que los dos sean no nulos. También da
+  `bancos.intereses.ver` y `.exportar` (por rol y por usuario) a quien tenía `bancos.movimientos.ver` y `.exportar`.
+- **Regla** (`dominio/intereses.ts`, `exigirInteresesCoherentes`), al registrar (`CrearMovimiento`) y al corregir (`ActualizarMovimiento`) una
+  nota: si el concepto pide intereses, vienen **los dos** (`datos_de_intereses_obligatorios`; el ISR puede ser 0.00) y cuadran en centavos
+  (`intereses_no_cuadran`, 400); si no los pide, no viene ninguno (`datos_de_intereses_no_aplican`, 400). El saldo inicial nunca los lleva.
+  El cuerpo de `POST`/`PUT /api/bancos/notas` gana `interesBruto` e `isrRetenido` (texto con dos decimales, opcionales) y el `MovimientoDto` los trae.
+- **El inverso NO copia los datos** (el plan decía que sí): el inverso de un crédito es un débito y el `check` exige crédito. Lo que se evita es
+  contar dos veces: el reporte solo toma las notas **vigentes** (sin `revertido_en`, sin `anulado_en`, no inversos), así una nota de intereses
+  anulada sale del reporte con su bruto y su ISR.
+- **Reclasificar** (P7) no toca estos datos ni los exige: una nota reclasificada hacia «Intereses ganados» queda sin bruto ni ISR y el reporte
+  lo avisa (`notasSinDatos`: notas vigentes de un concepto de intereses sin datos) para que el usuario la corrija; una nota con datos que se
+  reclasifica a otro concepto conserva los datos y sigue en el reporte (manda `interes_bruto`, no el concepto). Decisión conservadora para no
+  frenar la clasificación masiva.
+- **Configuración** `bancos.intereses.tasa_isr` (empresa e instalación, pública, 0 a 1, **0.10** por omisión): la tasa con que el cliente
+  propone el ISR. El servidor no la aplica: lo que llega es lo que dijo el banco (redondea a su manera).
+- **Reporte «Intereses y retenciones»** `GET /api/bancos/intereses-y-retenciones?desde=&hasta=&cuentaBancariaId=` (rango obligatorio, sin cuenta
+  son todas; 404 si la cuenta no es de la empresa) con permiso `bancos.intereses.ver`, y su Excel `GET .../exportar` con `bancos.intereses.exportar`
+  (nunca se importa). Devuelve `{ desde, hasta, cuentaBancariaId, totalDeNotas, interesBruto, isrRetenido, neto, notasSinDatos, porCuenta[], intereses[] }`;
+  cada nota trae fecha, cuenta, número de la nota (H9), referencia, bruto, ISR y neto; todo se suma en centavos enteros (`calculo-de-intereses.ts`).
+- **Cliente**: en la ventana de nota, si el concepto elegido pide intereses aparecen «Interés bruto» e «ISR retenido»; el ISR se **propone** con la tasa
+  (`isrPropuesto`, centavos enteros, medio hacia arriba) al escribir el bruto mientras no se haya cambiado a mano, y el monto pasa a ser el **neto**,
+  de solo lectura (`netoDeIntereses`). Si el concepto deja de pedirlos, se borran. La tarjeta de la nota muestra bruto e ISR. El reporte está en
+  Reportes (`/bancos/intereses-y-retenciones`; cuenta y rango, por omisión el año en curso; totales, tabla por cuenta si hay más de una, aviso
+  de notas sin datos, imprimir y Excel).
+- **Pruebas**: dominio (`intereses.prueba.ts`), casos de uso (`casos-uso-de-intereses-en-notas.prueba.ts`, `calculo-de-intereses.prueba.ts`), API
+  (`bancos-intereses.api.prueba.ts`: guardar, cuadre, `check` de la base, corregir, reporte, notas sin datos, permisos, Excel y aislamiento;
+  `bancos-migracion-de-permisos-de-intereses`) y cliente (`intereses-de-nota.prueba.ts`, `edicion-de-nota.prueba.ts`).

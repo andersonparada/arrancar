@@ -36,6 +36,8 @@ const saldoInicial: Movimiento = {
   puedeEliminar: true,
   conceptoId: 'concepto-1',
   conceptoNombre: 'Concepto de prueba',
+  interesBruto: null,
+  isrRetenido: null,
   puedeReclasificar: true,
 };
 

@@ -14,6 +14,11 @@ export function rangoDelMesActual(hoy: Date = new Date()): RangoDeFechas {
   return { desde: aTexto(new Date(hoy.getFullYear(), hoy.getMonth(), 1)), hasta: aTexto(hoy) };
 }
 
+/** Del primero de enero del año actual a hoy (la declaración anual). */
+export function rangoDelAnioActual(hoy: Date = new Date()): RangoDeFechas {
+  return { desde: aTexto(new Date(hoy.getFullYear(), 0, 1)), hasta: aTexto(hoy) };
+}
+
 /** Un mensaje que dice cómo corregir si el rango no sirve (las dos fechas son obligatorias y en orden); si sirve, `undefined`. */
 export function errorDeRango({ desde, hasta }: RangoDeFechas): string | undefined {
   if (!desde || !hasta) return 'Escribe la fecha inicial y la final.';
