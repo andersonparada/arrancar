@@ -44,7 +44,13 @@ decisiones e investigación con Opus).
   `cheque_caduco`, columnas de origen, `causa_de_anulacion` y conceptos nuevos.
 - **H3c** (`92a08f0`, `0431b0c`): reportes Flujo de efectivo (método directo, control
   de cuadre) y Movimientos por concepto.
-- Pruebas: servidor 793, cliente 224, generador 46.
+- **H5a** (`7f24d18`, `14de3ca`): esquema propio `empresas` (el migrador aplica los
+  esenciales antes que los demás); `empresas.datos_fiscales` y
+  `empresas.cargas_iniciales` con cerrar y reabrir (motivo y auditoría), órdenes del
+  mediador `empresas.obtener_carga_inicial` y `empresas.obtener_datos_de_empresa`, y
+  secciones en el formulario de Empresas. **Revisar:** el agente creó la bandera
+  `soloAccesoTotal` para `reabrir`, que parece duplicar `soloSuperacceso`; unificarlas.
+- Pruebas: servidor 851, cliente 231, generador 46.
 - Investigaciones cerradas:
   - `docs/modulos/seguridad-de-archivos.md` (agente de seguridad).
   - `docs/modulos/validacion-h7-h11-retenciones.md` (contador).
@@ -55,9 +61,7 @@ decisiones e investigación con Opus).
 Todas las preguntas están respondidas (ver «Respuestas del usuario (2026-09-29)» en
 `docs/modulos/plan-hallazgos-contables.md`). En orden:
 
-1. **H5a-2** datos fiscales y carga inicial del esquema `empresas`: un agente lo
-   dejó en curso al cierre del 2026-09-29; revisar si quedó el commit o cambios sin
-   commit en el árbol de WSL (formulario de Empresas, auditoría `reabrir`, permisos).
+1. Unificar `soloAccesoTotal` con `soloSuperacceso` (ver arriba).
 2. **H5b/H5c** con los accesos en el esquema de cada módulo
    (`empresas.accesos_a_localidades`): rediseñar `politicaPorAlcance` para leer la
    tabla del módulo (pedirle el diseño al `arquitecto-de-datos`), excepción de ESLint
