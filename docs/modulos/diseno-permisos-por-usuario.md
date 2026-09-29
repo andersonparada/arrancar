@@ -531,3 +531,19 @@ Ventana de localidades (antes del paso 5 de `diseno-accesos-por-modulo.md`):
 7. **Más auditoría.** Recomiendo que también queden en la auditoría: a qué empresas se le da o
    quita acceso a una persona, y qué permisos se agregan o quitan a un rol (cambia lo que pueden
    hacer todos los que lo tienen). ¿De acuerdo? (No bloquea: se decide en P2.)
+
+## Respuestas del usuario (2026-09-29)
+
+Mandan sobre las preguntas de arriba.
+
+1. **Roles distintos por empresa al migrar:** no importa; **no hay nada en
+   producción** (todo es desarrollo). Se usa la unión, sin más cuidado.
+2. **Varios roles por persona:** sí.
+3. **Permiso propio para asignar permisos** (`usuarios.asignar-permisos`): sí.
+4. **¿Solo se dan los permisos que uno tiene?:** **no**; quien tiene
+   `usuarios.asignar-permisos` puede dar cualquier permiso asignable (nunca los
+   `soloSuperacceso`). Queda en la auditoría.
+5. **¿Siempre al menos una persona con acceso total?:** **no es necesario** (soporte
+   siempre puede entrar).
+6. **Persona sin roles, solo con permisos directos:** sí.
+7. **Auditar** los cambios de empresas de un usuario y de permisos de un rol: sí.
