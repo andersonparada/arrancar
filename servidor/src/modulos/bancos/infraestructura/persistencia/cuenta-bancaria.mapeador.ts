@@ -22,6 +22,7 @@ export const mapeadorDeCuentaBancaria = {
 
   aDto({
     empresaId,
+    numeroNormalizado,
     creadoEn,
     actualizadoEn,
     creadoPor,

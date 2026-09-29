@@ -17,6 +17,8 @@ export const cuentasBancarias = esquemaBancos.table(
       .references((): AnyPgColumn => bancos.id)
       .notNull(),
     numero: text().notNull(),
+    /** Sin separadores y en mayúsculas; lo llena el repositorio y solo sirve para la unicidad. */
+    numeroNormalizado: text().notNull(),
     tipo: text().$type<'monetaria' | 'ahorro'>().notNull(),
     observaciones: text(),
     activo: boolean().default(true).notNull(),
@@ -25,7 +27,7 @@ export const cuentasBancarias = esquemaBancos.table(
   },
   (t) => [
     unique('cuentas_bancarias_nombre_unico').on(t.empresaId, t.nombre),
-    unique('cuentas_bancarias_numero_unico').on(t.empresaId, t.numero),
+    unique('cuentas_bancarias_numero_por_banco_unico').on(t.empresaId, t.bancoId, t.numeroNormalizado),
     index('cuentas_bancarias_banco_idx').on(t.bancoId),
     politicaPorEmpresa(),
   ],

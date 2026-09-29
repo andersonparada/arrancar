@@ -5,7 +5,7 @@ import type { RepositorioCuentasBancarias } from '../aplicacion/puertos/reposito
 import type { CuentaBancaria, CuentaBancariaId } from '../dominio/cuenta-bancaria.js';
 
 function aDto(cuentaBancaria: CuentaBancaria): CuentaBancariaDto {
-  const { id, empresaId, ...datos } = cuentaBancaria.instantanea();
+  const { id, empresaId, numeroNormalizado, ...datos } = cuentaBancaria.instantanea();
   return { ...datos, id: id.valor, bancoNombre: null, saldo: '0.00' };
 }
 
