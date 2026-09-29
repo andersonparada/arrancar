@@ -264,3 +264,60 @@ Fuentes adicionales: [Odoo, reparto de impuestos](https://www.odoo.com/documenta
 - **Varias notas por contraseña y aplicaciones parciales:** sí.
 - **Notas marcadas sin ligar:** se listan **al cierre de cada mes** para desmarcarlas y
   pasarlas a gasto (con auditoría).
+
+## Cuatro dudas del diseño de datos (2026-09-29)
+
+Informe del contador sobre `diseno-datos-libro-de-compras.md` §4.3, §6 y pregunta 12.
+Los artículos salen de fragmentos coincidentes (el proxy bloqueó los textos íntegros):
+leer el texto vigente de los marcados «confirmar» antes de cerrar L3-3.
+
+### 1. Mínimo de Q2,500 de los agentes de retención del IVA: «desde»
+
+No procede en compras **menores de** Q2,500.00 (Decreto 20-2006, art. 10; confirmar
+número y reforma): **Q2,500.00 exactos sí se retienen**. Excepciones al mínimo: sector
+público (su propio mínimo, no retiene si es **menor de** Q30,000.00, art. 2), operadoras
+de tarjetas y combustible con tarjeta. Exportador, contribuyente especial y «otro
+agente» usan el mismo mínimo. Se mide por factura sobre el total (con IVA). Contraste:
+el 5 % a pequeño contribuyente es **mayor a** Q2,500.00 (AG 5-2013, art. 49). **Regla:**
+`total >= retenciones_iva.minimo`. Certeza media-alta.
+
+### 2. Base de la retención del ISR (régimen opcional simplificado)
+
+Mínimo: no se retiene si el valor es **menor de** Q2,500.00 sin IVA (AG 213-2013, art.
+35): el diseño usa `>` y debe ser **`>=`**. Base: lo pagado o acreditado **sin IVA**
+(Decreto 10-2012, arts. 47 y 48). Lo exento **se incluye** (la exención de IVA no es renta
+exenta de ISR, art. 11). El IDP: la norma solo excluye el IVA; el IDP forma parte del
+precio del vendedor al por menor (inferencia, sin criterio SAT). Tabla: 5 % hasta
+Q30,000 y 7 % sobre el excedente, por factura. **Regla:** `base_isr = total − iva`
+(= base + exento + idp); se retiene si `base_isr >= 2,500.00`. Certeza alta en IVA,
+exento y mínimo; media en el IDP.
+
+### 3. ¿Se retiene IVA en documentos sin crédito fiscal?
+
+Fuera de plazo o no vinculado: **sí** (la retención es sobre el IVA de la venta del
+proveedor, no sobre el crédito del comprador; no están entre los casos en que no procede).
+Exento (`iva = 0`): nada que retener. **Casilla SAT desmarcada:** en una **FEL con IVA**
+no exime de retener (la SAT ve el DTE); solo es correcto desactivar retenciones en
+documentos que no son factura (recibos). **Regla:** la retención depende del tipo de
+documento, del IVA y de los datos de empresa y proveedor, nunca de
+`motivo_sin_credito`. Opciones: (A, recomendada) no dejar desmarcar la casilla en una
+factura con IVA de proveedor con NIT; (B) dejar desmarcar pero calcular igual.
+
+### 4. Agente «otro» con 15 %: existe, con otra definición
+
+Son los contribuyentes que **solicitan a la SAT** ser agentes de retención del IVA y ella
+los califica (Decreto 20-2006, art. 6); retienen el 15 % del IVA, con el mismo mínimo
+(`>=` Q2,500.00) y sin retener a otro agente. El diseño lo definía como «designado por
+la SAT o con contabilidad completa»: la contabilidad completa (Ley del IVA, art. 48) solo
+aplica al 5 % a pequeños contribuyentes. **Regla:** `otro` = «calificado por la SAT como
+agente de retención del IVA (Decreto 20-2006, art. 6)».
+
+**Veredicto:** correcto con ajustes: (1) mínimo del ISR `>=`; (2) `base_isr = total −
+iva` con IDP; (3) desmarcar la casilla no suprime retenciones en FEL con IVA; (4)
+corregir la definición de `otro`.
+
+Fuentes: [Decreto 20-2006](http://ww2.oj.gob.gt/es/QueEsOJ/EstructuraOJ/UnidadesAdministrativas/CentroAnalisisDocumentacionJudicial/cds/CDs%20de%20leyes/2006/pdfs/decretos/D020-2006.pdf),
+[AG 425-2006](https://portal.sat.gob.gt/portal/descarga/1899/legislacion-tributaria/18288/acuerdo-gubernativo-no-425-2006-reglamento-de-la-ley-denominada-disposiciones-legales-para-el-fortalecimiento-de-la-administracion-tributaria.pdf),
+[AG 213-2013, art. 35](http://leydeguatemala.com/acuerdo-gubernativo-numero-213-2013/base-minima-para-practicar-retencion/12328/),
+[Decreto 10-2012](https://www.congreso.gob.gt/assets/uploads/info_legislativo/decretos/2012/010-2012.pdf),
+[Retenciones Web IVA](https://portal.sat.gob.gt/portal/sistemas-web/retencioneswebiva/).
