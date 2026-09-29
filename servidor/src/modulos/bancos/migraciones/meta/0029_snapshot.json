@@ -69,7 +69,29 @@
           "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "bancos_nombre_unico": {
+          "name": "bancos_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "bancos_empresa_id_empresas_id_fk": {
           "name": "bancos_empresa_id_empresas_id_fk",
@@ -87,16 +109,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "bancos_nombre_unico": {
-          "name": "bancos_nombre_unico",
-          "nullsNotDistinct": false,
-          "columns": [
-            "empresa_id",
-            "nombre"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {
         "aislamiento_por_empresa": {
           "name": "aislamiento_por_empresa",
@@ -543,6 +556,27 @@
         }
       },
       "indexes": {
+        "conceptos_nombre_unico": {
+          "name": "conceptos_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "conceptos_clave_de_sistema_unica": {
           "name": "conceptos_clave_de_sistema_unica",
           "columns": [
@@ -584,14 +618,6 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "conceptos_nombre_unico": {
-          "name": "conceptos_nombre_unico",
-          "nullsNotDistinct": false,
-          "columns": [
-            "empresa_id",
-            "nombre"
-          ]
-        },
         "conceptos_id_empresa_unico": {
           "name": "conceptos_id_empresa_unico",
           "nullsNotDistinct": false,
@@ -898,6 +924,27 @@
         }
       },
       "indexes": {
+        "cuentas_bancarias_nombre_unico": {
+          "name": "cuentas_bancarias_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "cuentas_bancarias_banco_idx": {
           "name": "cuentas_bancarias_banco_idx",
           "columns": [
@@ -946,14 +993,6 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "cuentas_bancarias_nombre_unico": {
-          "name": "cuentas_bancarias_nombre_unico",
-          "nullsNotDistinct": false,
-          "columns": [
-            "empresa_id",
-            "nombre"
-          ]
-        },
         "cuentas_bancarias_numero_por_banco_unico": {
           "name": "cuentas_bancarias_numero_por_banco_unico",
           "nullsNotDistinct": false,

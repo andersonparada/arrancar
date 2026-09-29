@@ -162,15 +162,19 @@ pruebas, sin errores de ESLint ni de tipos.
 - **Archivos X1 y F1** (`b720266`, `f035cac`): fórmulas de Excel sin valor o con error
   se informan por celda; fotos por su formato real (JPEG, PNG, WebP), HEIC rechazado con
   ayuda, 100 MP, 30 subidas por minuto.
+- **H6b y H8** (`b826aba`, `a3c17d6`, migraciones de bancos renumeradas a `0028` y
+  `0029`): anular en lote cheques caducos (`bancos.cheques-caducos.anular`, todo o nada,
+  nota inversa a fecha común, causa `caducidad`); notas de intereses con interés bruto e
+  ISR retenido (ISR propuesto al 10 %, `bancos.intereses.tasa_isr`) y reporte «Intereses
+  y retenciones» con Excel.
 - **Planes nuevos:** `docs/modulos/plan-archivos-y-h2.md` (con respuestas del usuario) y
   `docs/modulos/diseno-datos-libro-de-compras.md` (preguntas en su §16).
-- Pruebas: servidor 1145, cliente 300, generador 46. Cada agente que programa usa su
+- Pruebas: servidor 1178, cliente 313, generador 46. Cada agente que programa usa su
   propia copia (worktree) y su base de pruebas (`BD_PRUEBAS`).
 
 ## Siguiente
 
-1. **H6b y H8**: en curso (agente Sonnet).
-2. **Archivos F2, F3 y H2a–H2d** según `plan-archivos-y-h2.md`.
+1. **Archivos F2, F3 y H2a–H2d** según `plan-archivos-y-h2.md`.
 3. **H6b** anulación en lote de cheques caducos.
 4. **H8** interés bruto e ISR retenido en las notas de intereses.
 5. **Archivos** (JPEG, PNG y WebP; HEIC se rechaza y iOS entrega JPEG; PDF con qpdf) y

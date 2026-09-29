@@ -751,3 +751,29 @@ cuenta contable por proveedor o concepto (con Contabilidad).
     (designado por la SAT) retiene 15 %?
 13. **Auditar cambios de datos fiscales** de empresa y proveedor como `corregir` (cambian
     retenciones futuras). Recomendación: sí.
+
+## Respuestas del usuario (2026-09-29)
+
+Mandan sobre las preguntas de la §16.
+
+1. **Sección fiscal** en los formularios de Empresas y Proveedores: se guarda **junto con
+   el formulario, todo o nada**.
+2. **Tipo «Recibo»:** sí, solo con la casilla «Se muestra en reportes SAT» desmarcada.
+3. **Documentos con la casilla desmarcada:** únicos **solo dentro de la empresa** (no en
+   toda la cuenta).
+4. **Notas de crédito y retenciones:** manda la decisión del usuario del 2026-09-29: la
+   retención se **fija al registrar** y una nota posterior **no la cambia** (corregir
+   «ajusta en proporción» en el plan y en Cuentas por pagar).
+5. **Editar documentos:** **sí, mientras no estén en una contraseña** de Cuentas por
+   pagar; al editar se recalcula todo (con auditoría).
+6. **Permiso `libro-de-compras.retenciones.ajustar`** con motivo obligatorio y auditoría:
+   sí.
+7. **Corregir el IVA hasta ±Q0.05** para cuadrar con la FEL: sí.
+8. Nombre de la orden `<destino>.recibir_documento`: se acepta (decisión técnica).
+9. **Orden:** Libro de compras se puede activar solo (registro fiscal) y **Cuentas por
+   pagar CP1 va justo después de L3**.
+10. **Agente de retención:** se **exigen** los datos fiscales del proveedor antes de
+    registrarle una factura.
+11. Conceptos de gasto sugeridos y 13. auditar cambios de datos fiscales: pendientes de
+    responder (no bloquean L1). 12. Preguntas para el contador: pendientes.
+
