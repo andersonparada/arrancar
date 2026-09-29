@@ -748,3 +748,27 @@ Pasos (un commit cada uno, con sus pruebas):
 2. **H7 y H11**: confirmación del experto contable (ley del IVA, práctica en Guatemala).
 3. **Concepto de los cheques** según su origen.
 4. **Esquema `empresas`**: qué se mueve del core y cómo afecta RLS, sesión y el módulo `empresas` que ya existe.
+
+### Baja de un cliente (decisión del 2026-09-28, posterior)
+
+Si un cliente (cuenta) deja el servicio, **sus datos se eliminan**; no se guardan para
+siempre. La obligación legal de conservar libros y documentos (4 a 5 años) es **del
+cliente**, no de Arrancar: se le entrega su información antes de borrar.
+
+1. **Solicitud de baja**: la cuenta pasa a `en_baja` (nadie entra, salvo el
+   superacceso). Se le entrega una **exportación completa** de sus datos (respaldo
+   solo de su cuenta y/o Excel de cada módulo).
+2. **Plazo de gracia** configurable (p. ej. 60 días) por si se arrepiente.
+3. **Eliminación definitiva** por el superacceso, con confirmación: se borran todas
+   las filas de la cuenta en todos los esquemas, **incluida su auditoría** (esta es la
+   única vía que la borra; por eso la llave de la auditoría hacia la cuenta se
+   mantiene con borrado controlado por este proceso y no por un `cascade` accidental).
+4. Queda un registro mínimo en la **bitácora de plataforma** (qué cuenta, quién, cuándo,
+   sin datos del cliente).
+5. Los **respaldos** ya hechos conservan esos datos hasta que venzan (diarios 14 días,
+   mensuales según su retención); se informa al cliente en el contrato. Si después
+   pide algo, se le puede entregar desde un respaldo vigente.
+
+Fuera de esta baja, las cuentas y la auditoría **no se eliminan**; las empresas solo
+si no tienen datos. Pendiente para el `arquitecto-de-datos`: el orden de borrado entre
+esquemas y la exportación de una sola cuenta.
