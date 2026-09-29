@@ -90,7 +90,13 @@ core/
   bitacora/             registro del superacceso
 ```
 
-`empresas` sigue siendo su propio módulo esencial.
+`empresas` sigue siendo su propio módulo esencial y, desde H5, **tiene esquema propio**
+(`pgSchema('empresas')` en `infraestructura/persistencia/esquema.tablas.ts`, migraciones en
+`empresas/migraciones/`, control en `drizzle.migraciones_empresas`). `core.empresas` y
+`core.empresa_usuarios` siguen en el core; en `empresas.*` van los datos propios de la
+empresa (datos fiscales, carga inicial y, más adelante, localidades). El migrador aplica
+primero `core`, luego los módulos esenciales (`empresas`) y después los demás según
+`dependeDe`, así que todo módulo de negocio encuentra `empresas` ya migrado.
 
 ## 4. Piezas clave (cómo se ve el código)
 

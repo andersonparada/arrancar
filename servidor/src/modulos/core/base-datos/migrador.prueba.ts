@@ -24,6 +24,24 @@ describe('ordenarPorDependencias', () => {
     expect(orden.indexOf('bancos')).toBeLessThan(orden.indexOf('caja-chica'));
   });
 
+  it('migra los módulos esenciales antes que los que no lo son, aunque no los declaren', () => {
+    const orden = ordenarPorDependencias([
+      modulo('bancos'),
+      { ...modulo('empresas'), esencial: true },
+      modulo('terceros'),
+      modulo('core'),
+    ]).map((m) => m.clave);
+
+    expect(orden[0]).toBe('core');
+    expect(orden.indexOf('empresas')).toBeLessThan(orden.indexOf('bancos'));
+    expect(orden.indexOf('empresas')).toBeLessThan(orden.indexOf('terceros'));
+  });
+
+  it('los módulos esenciales no dependen entre sí', () => {
+    const esencial = (clave: string) => ({ ...modulo(clave), esencial: true });
+    expect(() => ordenarPorDependencias([modulo('core'), esencial('a'), esencial('b')])).not.toThrow();
+  });
+
   it('detecta dependencias circulares', () => {
     expect(() => ordenarPorDependencias([modulo('core'), modulo('a', ['b']), modulo('b', ['a'])])).toThrow(/circular/);
   });

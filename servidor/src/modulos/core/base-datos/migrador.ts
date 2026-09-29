@@ -30,8 +30,18 @@ async function otorgarPermisosAplicacion(conexion: pg.Client, esquema: string): 
 }
 
 /**
+ * Claves de los módulos que se migran antes que `modulo`: el núcleo y, si el módulo
+ * no es esencial, también los esenciales (que siempre están activos) y su `dependeDe`.
+ */
+function dependenciasDeMigracion(modulo: DefinicionModulo, modulos: readonly DefinicionModulo[]): string[] {
+  if (modulo.clave === 'core') return [];
+  const esenciales = modulo.esencial ? [] : modulos.filter((m) => m.esencial).map((m) => m.clave);
+  return ['core', ...esenciales, ...(modulo.dependeDe ?? [])].filter((clave) => clave !== modulo.clave);
+}
+
+/**
  * Ordena los módulos para que cada uno se migre después de los que necesita:
- * primero el núcleo y luego según `dependeDe` (orden topológico).
+ * primero el núcleo, luego los esenciales y después según `dependeDe` (orden topológico).
  */
 export function ordenarPorDependencias(modulos: readonly DefinicionModulo[]): DefinicionModulo[] {
   const porClave = new Map(modulos.map((m) => [m.clave, m]));
@@ -43,8 +53,7 @@ export function ordenarPorDependencias(modulos: readonly DefinicionModulo[]): De
     if (visitados.has(modulo.clave)) return;
     if (enCurso.has(modulo.clave)) throw new Error(`Dependencia circular en el módulo "${modulo.clave}".`);
     enCurso.add(modulo.clave);
-    const dependencias = modulo.clave === 'core' ? [] : ['core', ...(modulo.dependeDe ?? [])];
-    for (const clave of dependencias) {
+    for (const clave of dependenciasDeMigracion(modulo, modulos)) {
       const dependencia = porClave.get(clave);
       if (dependencia) visitar(dependencia);
     }
