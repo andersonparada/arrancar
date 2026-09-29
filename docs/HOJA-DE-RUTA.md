@@ -7,8 +7,8 @@ resuelva el trabajo diario de verdad, no pantallas vacías.
 
 ## Orden acordado
 
-1. **Bancos B7** (en curso, rama `b7-en-curso`): anular con movimiento inverso,
-   eliminar lo limpio y blanquear cheques.
+1. **Bancos B7** (hecho): anular con movimiento inverso, eliminar lo limpio y
+   blanquear cheques.
 2. **Libro de compras** (`docs/modulos/libro-de-compras.md`; L0 hecho).
 3. **Cuentas por pagar** (`docs/modulos/cuentas-por-pagar.md`).
 4. **Bancos, segunda parte** (abajo).

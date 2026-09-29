@@ -970,66 +970,165 @@ excepción de importar de Movimientos que mencionaba la memoria del usuario
 ("Movimientos conserva importar para saldos iniciales") ya no existe: se
 avisa en el informe final, sin tocar archivos fuera de este repositorio.
 
-## B7 Anular con movimiento inverso y eliminar (acordado el 2026-09-28)
+## B7 Anular con movimiento inverso y eliminar (acordado y hecho el 2026-09-28)
 
 Hasta el B6, anular solo marcaba el movimiento y lo sacaba del saldo. Desde el B7 se
 separan dos operaciones, como en contabilidad:
 
 | Operación | Qué hace | Cuándo se puede |
 |---|---|---|
-| **Eliminar** | Borra el registro de verdad, para no dejar basura. Queda en la auditoría tal como estaba. | Solo si está «limpio»: no está marcado en ninguna conciliación, su fecha no está en un mes conciliado, no revierte ni fue revertido, y el módulo que lo originó (si hay) no lo bloquea. Con *Contabilidad*, además, que su partida no esté en un período cerrado (lo decide Contabilidad por aviso). |
-| **Anular** | Crea el **movimiento inverso**, enlazado al original, y el original queda marcado «revertido por…». Nada se borra. | Siempre que la **fecha del inverso** no caiga en un mes conciliado. Un movimiento conciliado **no se elimina, pero sí se anula**. |
+| **Eliminar** | Borra el registro de verdad, para no dejar basura. Queda en la auditoría (`eliminar`) tal como estaba. | Solo si está «limpio»: no está marcado en ninguna conciliación, su fecha no está en un mes conciliado, no revierte ni fue revertido, y no está anulado. Con *Contabilidad*, además, que su partida no esté en un período cerrado (lo decidirá Contabilidad por aviso). |
+| **Anular** | Crea el **movimiento inverso**, enlazado al original, y el original queda marcado «revertido». Nada se borra. | Siempre que la **fecha del inverso** no caiga en un mes conciliado. Un movimiento conciliado **no se elimina, pero sí se anula**. |
 
 ### Reglas del movimiento inverso
 
 - **Tipo**: una nota de crédito se revierte con una de débito; una nota de débito y un
   cheque, con una nota de crédito. Misma cuenta, mismo monto, mismo beneficiario y la
-  referencia «Reversión de…».
-- **Fecha**: por omisión, la **fecha de la anulación** (la escribe el usuario; no puede
-  ser anterior al original). Variable por empresa
-  `bancos.anulaciones.misma_fecha` (por omisión `false`): si está activa y el mes del
-  original no está conciliado, el inverso lleva **la misma fecha del original**.
-- **Saldo**: el original y su inverso se cancelan; el saldo ya no excluye nada.
-- **Transferencia**: anularla crea los dos inversos (uno en cada cuenta).
-- **Cheque**: anularlo crea su nota inversa y el cheque queda **anulado** en la chequera
-  (su número no se reutiliza). Los cheques **no se eliminan**: su número ya se consumió.
-- **Motivo**: obligatorio, en el original y en la auditoría.
-- **Conciliación**: si el original y su inverso **nunca pasaron por el banco** (ninguno
-  marcado) y los dos tienen fecha hasta el fin del mes que se concilia, se marcan
-  **juntos** como compensados y no aparecen como partidas en tránsito. Si el original
-  ya estaba conciliado, el inverso es un movimiento normal que debe aparecer en el
-  estado de cuenta.
+  referencia «Reversión de…» (si el original no tenía referencia, «Reversión de movimiento
+  del AAAA-MM-DD»).
+- **Fecha**: la escribe el usuario en la ventana de anular (por omisión, hoy); no puede ser
+  anterior a la del original (`FechaDeReversionAnterior`) ni caer en un mes conciliado
+  (`MesConciliado`). Variable por empresa `bancos.anulaciones.misma_fecha` (por omisión
+  `false`): si está activa y el mes del original no está conciliado, el inverso lleva
+  **la misma fecha del original** en vez de la escrita.
+- **Saldo**: el original y su inverso cuentan los dos y se cancelan; el saldo ya no excluye
+  nada (salvo el cheque anulado a la antigua, ver abajo).
+- **Un inverso ni se corrige, ni se revierte, ni se elimina** (`NoSeCorrigeUnInverso`,
+  `NoSeRevierteUnInverso`, `NoSeEliminaUnInverso`); un original revertido tampoco
+  (`MovimientoYaRevertido`, `NoSeEliminaUnMovimientoRevertido`). Si la anulación fue un
+  error, se registra de nuevo el movimiento.
+- **Transferencia**: anularla crea los dos inversos (uno en cada cuenta) con la misma fecha;
+  la fecha no puede caer en un mes conciliado de ninguna de las dos cuentas.
+- **Motivo**: obligatorio (1 a 500 caracteres), en el original y en la auditoría.
 - **Origen en otro módulo**: al anular o eliminar un movimiento emitido por otro módulo
-  (p. ej. el pago de *Cuentas por pagar*), *Bancos* le avisa por el mediador dentro de
-  la transacción; ese módulo revisa sus reglas y revierte lo suyo, o rechaza y no se
-  hace nada.
+  (p. ej. el pago de *Cuentas por pagar*), *Bancos* le avisará por el mediador dentro de la
+  transacción; ese módulo revisa sus reglas y revierte lo suyo, o rechaza y no se hace
+  nada. (Pendiente: llega con esos módulos.)
+
+### Cheques
+
+Los cheques **no se eliminan**: su número ya se consumió. Tienen dos salidas distintas:
+
+| Caso | Qué pasa |
+|---|---|
+| **Anular** un cheque cuyo mes **no** está conciliado | Se marca anulado el cheque y su movimiento (`anuladoEn`), **sin nota inversa**; el movimiento **no cuenta** en el saldo ni en los movimientos, como antes del B7. |
+| **Anular** un cheque cuyo mes **ya está conciliado** (quedó en circulación y nunca se cobró) | Se crea una **nota de crédito inversa** con la fecha escrita (no en un mes conciliado, no anterior al cheque). El cheque queda anulado en la chequera; su movimiento original **sigue contando** y el inverso lo compensa, así ninguna conciliación autorizada cambia. |
+| **Blanquear** (`POST /bancos/cheques/:id/blanquear`, permiso `bancos.cheques.blanquear`, motivo obligatorio) | Solo un cheque emitido cuyo movimiento está limpio (no marcado en conciliación, mes no conciliado, no anulado): el cheque vuelve a **disponible** (sin beneficiario, fecha ni monto; su número se puede reutilizar) y su movimiento se **elimina** con auditoría (`blanquear`, con el cheque como estaba). Pendiente: cuando exista la impresión de cheques, no se blanquea si ya se imprimió (hay un `TODO` en `Cheque.blanquear` y en `BlanquearCheque`). |
+
+Un cheque anulado no se puede blanquear, ni uno disponible.
 
 ### Qué se elimina y qué no
 
 | Registro | Eliminar | Anular (inverso) |
 |---|---|---|
-| Nota de crédito o débito | Sí, si está limpia | Sí |
-| Transferencia | Sí, si sus dos notas están limpias | Sí (dos inversos) |
-| Cheque | No | Sí |
-| Saldo inicial | Sí, si la cuenta no tiene conciliaciones | No (se corrige o se elimina) |
-| Movimiento inverso | No | No (si la anulación fue un error, se registra de nuevo el movimiento) |
+| Nota de crédito o débito | Sí, si está limpia (`bancos.notas.eliminar`) | Sí (`bancos.notas.anular`) |
+| Transferencia | Sí, si sus dos notas están limpias (`bancos.transferencias.eliminar`) | Sí, dos inversos (`bancos.transferencias.anular`) |
+| Cheque | No (se puede blanquear) | Sí (`bancos.cheques.anular`) |
+| Saldo inicial | Sí, si la cuenta nunca tuvo una conciliación (`bancos.saldos-iniciales.gestionar`) | No (se corrige o se elimina) |
+| Movimiento inverso | No | No |
+| Movimiento ya revertido | No | No |
+
+Las notas de una transferencia y los movimientos de un cheque no se tocan sueltos: se
+anulan o eliminan desde su transferencia o su cheque (`MovimientoDeTransferencia`,
+`MovimientoDeCheque`).
+
+### Conciliación
+
+Un original y su inverso que **nunca pasaron por el banco** (ninguno marcado en otra
+conciliación) y con fecha hasta el fin del mes que se concilia se marcan **juntos**,
+compensados, y no quedan como partidas en tránsito:
+
+- al **iniciar** la conciliación ya arrancan marcados (`IniciarConciliacion` →
+  `paresCompensadosPendientes`), así aparecen en la lista de marcados;
+- al **guardar las marcas** (`MarcarMovimientos`) se vuelven a incorporar aunque el usuario
+  no los incluya, así no se pueden dejar a medias;
+- en la pantalla de conciliar, marcar o desmarcar uno marca o desmarca su pareja
+  (`conAlternadoConPareja`).
+
+Si el original ya estaba conciliado, el inverso es un movimiento normal: aparece
+desmarcado y, mientras el banco no lo muestre, es una partida en tránsito. La regla de que
+el documento de un mes autorizado no cambia sigue igual.
+
+### Qué se puede hacer: lo dice el servidor
+
+Para que el cliente no adivine, los DTO traen campos calculados con las reglas de arriba
+(`aplicacion/acciones-posibles.ts`, pura y con pruebas; las consultas SQL solo traen los
+hechos: marcado en conciliación, mes conciliado, historia de reversión):
+
+- `MovimientoDto`: `puedeAnular`, `puedeEliminar`;
+- `TransferenciaDto`: `puedeAnular`, `puedeEliminar`;
+- `ChequeDto` y `ChequeListadoDto`: `puedeAnular`, `puedeBlanquear`.
+
+La fecha del inverso no entra en `puedeAnular` (la escribe el usuario después): el servidor
+la valida al anular.
 
 ### Funciones de reversión
 
-Cada registro que se puede revertir sabe **crear su propio inverso** en su dominio
-(`Movimiento.revertir(...)`; más adelante `Partida.revertir(...)` en Contabilidad y
-lo equivalente en otros módulos). El detalle del patrón común (p. ej. una interfaz
-`Reversible` en `core/compartido/dominio`) se discute antes de programarlo.
+Cada registro que se puede revertir sabe **crear su propio inverso** en su dominio:
+`Movimiento.revertir` (nota suelta), `revertirPorTransferencia` y `revertirPorCheque` (los
+dos modos internos, para las notas de una transferencia y el movimiento de un cheque en mes
+conciliado) y `anularPorCheque` (la anulación a la antigua, sin inverso). El patrón común
+(p. ej. una interfaz `Reversible` en `core/compartido/dominio`) se discutirá cuando llegue
+`Partida.revertir` en Contabilidad.
 
-### Datos existentes
+### Datos existentes (migración `0011_b7_revertir_movimientos`)
 
-Una migración convierte los movimientos anulados de hoy en pares original + inverso
-(el inverso con la fecha de anulación), para que el saldo siga igual.
+Además de las columnas nuevas (`revertido_en`, `motivo_de_reversion`, `revierte_a_id` y su
+índice), la migración convierte los movimientos anulados de hoy en pares original + inverso
+para que el saldo de ninguna cuenta cambie: el original pasa a «revertido» (su anulación se
+copia a la reversión) y se inserta el inverso con la fecha de la anulación (nunca anterior a
+la del original). Quedan como estaban (solo anulados, fuera del saldo) los cheques cuyo mes
+sigue abierto y los saldos iniciales anulados. Verificado en la base de desarrollo: los
+saldos por cuenta antes y después son idénticos.
 
-### Permisos
+### Servidor
 
-Se agregan `bancos.notas.eliminar` y `bancos.transferencias.eliminar`; anular sigue
-con `.anular`. El saldo inicial se elimina con `bancos.saldos-iniciales.gestionar`.
+- Dominio: `Movimiento` (`revertir`, `revertirPorTransferencia`, `revertirPorCheque`,
+  `anularPorCheque`, `exigirEliminable`, `exigirNoMarcadoEnConciliacion`; el efecto en el
+  saldo sigue contando al revertido y solo excluye al anulado a la antigua), `Cheque.blanquear`
+  y los errores de reversión en `dominio/errores-de-reversion.ts`.
+- Casos de uso: `AnularMovimiento`, `EliminarMovimiento`, `EliminarSaldoInicial`,
+  `AnularTransferencia`, `EliminarTransferencia`, `AnularCheque` (decide entre las dos
+  formas según el mes) y `BlanquearCheque`. `PoliticaDeMismaFechaEnAnulacion` es el puerto
+  de `bancos.anulaciones.misma_fecha`.
+- API: `POST .../anular` con `{ motivo, fecha? }` (notas, transferencias, cheques);
+  `DELETE /bancos/notas/:id`, `/bancos/transferencias/:id` y `/bancos/saldos-iniciales/:id`
+  con `{ motivo }`; `POST /bancos/cheques/:id/blanquear`. El saldo inicial ya no tiene
+  `anular`. La auditoría admite la acción `blanquear` (`core.auditoria`).
+
+### Cliente
+
+- `VentanaDeMotivo` reemplaza a `VentanaDeAnulacion`: explica lo que pasará, pide el motivo
+  y, al anular, la fecha del inverso (hoy por omisión). También sirve para eliminar,
+  blanquear y eliminar la última conciliación.
+- `usarBajaDeRegistro` (composable común) arma cada ventana; cada pantalla tiene su par:
+  `usarBajasDeNota`, `usarBajasDeTransferencia`, `usarBajasDeCheque` (anular y blanquear,
+  para la lista de la empresa y para la chequera) y `usarEliminacionDeSaldoInicial`.
+- Las tarjetas muestran «Anular», «Eliminar» y «Blanquear» solo si el servidor dice que se
+  puede y el usuario tiene el permiso; el original lleva la marca «Revertido» y el inverso
+  «Reversión» (`marcaDeReversion`), y ya no se editan. El reporte de Movimientos muestra
+  original e inverso con su marca, y el saldo corrido los cancela.
+- `ClienteHttp.eliminar` acepta un cuerpo (el motivo).
+- Lógica pura con pruebas: `baja-de-registro.ts`, `estado-de-reversion.ts`, `marcas.ts`.
+
+### Pruebas
+
+Servidor: 565 pruebas (76 archivos). Dominio (`movimiento.prueba.ts`, `cheque.prueba.ts`),
+las reglas de qué se puede hacer (`acciones-posibles.prueba.ts`), casos de uso (anular y
+eliminar notas, transferencias, cheques y saldo inicial; fechas; mes abierto frente a mes
+conciliado; blanquear; conciliación con pares compensados) y API (`bancos-anulaciones`,
+`bancos-anulaciones-de-cheques` y `bancos-conciliaciones-compensadas`: DELETE y blanquear con
+y sin permiso → 403, anular con fecha, cheque de mes abierto frente a conciliado). Cliente:
+130 pruebas (26 archivos). Generador: 46, sin cambios.
+
+**Hecho (2026-09-28).** Decisiones propias: (1) un movimiento inverso tampoco se corrige
+(error propio `NoSeCorrigeUnInverso`), porque compensa a su original tal como está; (2) los
+saldos iniciales anulados de antes del B7 no se convierten en par (siguen anulados): un
+original con `saldo_inicial` revertido chocaría con el índice de un solo saldo inicial vigente;
+(3) el saldo inicial se elimina si la cuenta no tiene **ninguna** conciliación, de cualquier
+estado; (4) blanquear se rechaza también si el movimiento está anulado (`MovimientoAnulado`) o es
+de un mes conciliado (`MesConciliado`); (5) el dinero sigue en centavos
+enteros, ningún cálculo nuevo usa `parseFloat`.
 
 Pendiente de investigar con *Contabilidad*: en qué otros casos se permite eliminar
 (p. ej. registros aún no contabilizados de un período abierto).

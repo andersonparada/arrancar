@@ -406,5 +406,20 @@ y `demo` / `demo-arrancar`.
   pagar (saldos iniciales, reportes), Bancos (aprobaciones, solicitudes, formato
   de cheques, saldos iniciales con notas y cheques, tarjeta de crédito, reportes,
   diferencial cambiario), Empresas (localidades, departamentos y accesos) y
-  Multimoneda en `docs/HOJA-DE-RUTA.md`. El B7 queda a medias en la rama
-  `b7-en-curso` (ver `docs/DONDE-QUEDAMOS.md`).
+  Multimoneda en `docs/HOJA-DE-RUTA.md`. El B7 quedó a medias en una rama y
+  se terminó después (ver la entrada siguiente y `docs/DONDE-QUEDAMOS.md`).
+- **2026-09-28** (B7): Bancos deja de sacar del saldo lo que se anula; anular crea el
+  **movimiento inverso** enlazado y **eliminar** borra solo lo limpio
+  (`docs/modulos/bancos.md`, sección B7). Notas y transferencias se anulan con la fecha
+  que escribe el usuario (`bancos.anulaciones.misma_fecha` decide si se usa la del
+  original mientras su mes esté abierto); un cheque de un mes abierto se anula sin
+  inverso y fuera del saldo, y el de un mes conciliado con una nota de crédito inversa;
+  **blanquear** devuelve un cheque emitido por error a disponible y elimina su
+  movimiento. Permisos nuevos `bancos.notas.eliminar`, `bancos.transferencias.eliminar`
+  y `bancos.cheques.blanquear`; el saldo inicial ya no se anula, se elimina si la cuenta
+  nunca se concilió. En la conciliación, un original y su inverso que nunca pasaron por
+  el banco arrancan marcados juntos. Los DTO informan `puedeAnular`, `puedeEliminar` y
+  `puedeBlanquear` (reglas en `aplicacion/acciones-posibles.ts`). La migración `0011`
+  convierte los anulados existentes en pares sin cambiar el saldo de ninguna cuenta
+  (verificado en la base de desarrollo). Un inverso tampoco se corrige. Commits `B7a`
+  (servidor) y `B7b` (cliente); la documentación va en el commit siguiente.
