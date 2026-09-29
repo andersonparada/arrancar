@@ -40,18 +40,29 @@ sección «B7» de `docs/modulos/bancos.md`):
   (Cuentas por pagar) al anular o eliminar, y bloquear el blanqueo si el cheque ya se
   imprimió (`TODO` en `Cheque.blanquear`).
 
+No hay trabajo de código a medias: todo está en `main` y subido. Lo que sigue es
+planificación.
+
 ## Siguiente
 
-1. **Libro de compras** L1 a L5 (con el generador: `npm run generar -- modulo`,
+1. **Investigar a fondo** los puntos de «Revisión contable» de
+   `docs/HOJA-DE-RUTA.md` (momento de la retención, plazo del crédito fiscal,
+   práctica de la contraseña) y **corregir los planes** de Libro de compras y
+   Cuentas por pagar.
+2. **Libro de compras** L1 a L5 (con el generador: `npm run generar -- modulo`,
    `definicion`, `recurso`).
-2. **Cuentas por pagar**, incluidos los agregados de `docs/HOJA-DE-RUTA.md`
-   (saldos iniciales y reportes).
+3. **Cuentas por pagar**, con los agregados de la hoja de ruta (saldos iniciales
+   con sus dos formas de pago extra, fecha de inicio y carga inicial, reportes).
+4. Probar en el navegador lo del B6 y el B7 (no se ha visto en pantalla) y rehacer la
+   conciliación demo de septiembre.
 
 ## Preguntas abiertas para el usuario
 
-- Saldos iniciales de Cuentas por pagar: ¿quedan pendientes para pagarse por
-  contraseña, o entran pagados? (ver `HOJA-DE-RUTA.md`).
-- Saldo inicial del banco en la primera conciliación de una cuenta: se toma igual al
-  saldo de libros al cierre del mes anterior (sin confirmar); se revisa con la
-  ventana de saldos iniciales con notas y cheques.
+- Contraseña de pago: ¿puede incluir facturas registradas aún sin autorizar
+  (práctica de Guatemala), pagando solo lo autorizado?
+- Cheques posfechados: ¿se permiten y desde cuándo cuentan en el saldo?
 - Patrón común de reversión (`Reversible`): se discute antes de programarlo.
+
+Resueltas hoy (detalle en la hoja de ruta): saldos iniciales de Cuentas por pagar
+(hacen su proceso, con dos formas de pago extra) y fecha de inicio con carga inicial
+por empresa (resuelve el saldo del banco en la primera conciliación).

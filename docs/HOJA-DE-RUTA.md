@@ -25,14 +25,42 @@ diferencial cambiario).
 
 ### Saldos iniciales de cuentas por pagar
 
-- Ventana para cargar las facturas que ya se debían al empezar a usar el sistema.
-- Es **una sola carga por empresa** (no se repite como hoy se puede con las notas
-  de saldo inicial en Bancos).
-- **Por investigar y confirmar:** el usuario dijo «quedarán pagados con la
-  nota/partida inicial». Hay que definir si son facturas **pendientes** que se
-  pagan después por contraseña (lo normal: la deuda viene de antes y se paga ahora)
-  y la partida inicial solo evita que se registren como gasto del período, o si
-  entran ya pagadas.
+Acordado el 2026-09-28, después de investigar cómo se hace:
+
+- Ventana de **Administración** «Saldos iniciales» (con Excel) para cargar,
+  **factura por factura**, las que **siguen pendientes** a la fecha de inicio, con
+  su fecha y vencimiento reales (así la antigüedad de saldos sale bien). No se carga
+  un saldo global por proveedor.
+- Se marcan **«de saldo inicial»**: no piden concepto de gasto ni entran al Libro de
+  compras del período (son de meses anteriores). Su contrapartida contable es una
+  **cuenta puente de apertura**, no gasto. Sus retenciones, si las hubo, se hicieron
+  con el sistema anterior: solo se consultan, no se recalculan.
+- Hacen **todo su proceso** (autorizar, contraseña, pago). En la contraseña tienen
+  **dos formas de pago extra**, con permiso propio:
+  - **Ligar al cheque o nota de saldo inicial de Bancos**: una factura vieja que se
+    pagó con un cheque emitido antes de empezar y todavía en circulación. No se
+    emite un cheque nuevo ni se duplica la salida de dinero.
+  - **Aplicar a la cuenta de apertura** (sin banco): para lo que ya estaba pagado y
+    se cargó por historial o por error. Es la excepción.
+
+### Fecha de inicio y carga inicial (por empresa)
+
+Así lo recomiendan los contadores: todos los saldos iniciales se toman a **una sola
+fecha de corte por empresa** y deben cuadrar entre sí y con el balance de apertura.
+
+- **Fecha de inicio** de la empresa en el sistema: campo en Empresas.
+- **Carga inicial** por empresa, **abierta** o **cerrada**. La usan Bancos y Cuentas
+  por pagar (después Cuentas por cobrar, Inventario y Activos fijos). Abierta, se
+  corrige libremente; al **cerrarla** ya no se agregan saldos iniciales.
+- **Reabrirla** pide un permiso propio, motivo y queda en la auditoría. Lo
+  olvidado también puede entrar como ajuste del período (con Contabilidad).
+- **Bancos**: un saldo inicial por cuenta bancaria, con fecha igual o anterior a la
+  fecha de inicio, solo con la carga abierta; con **notas y cheques** (cheques en
+  circulación y depósitos en tránsito al empezar). Una cuenta abierta **después** de
+  la fecha de inicio **no lleva saldo inicial**: empieza en cero y su primer
+  depósito es un movimiento normal.
+- La **primera conciliación** de cada cuenta es la del mes de la fecha de inicio
+  (o del mes en que se abrió la cuenta, si es posterior).
 
 ### Reportes (imprimir y exportar)
 
@@ -79,6 +107,46 @@ realizados.
 - Por investigar: qué tipo de cambio usa cada operación (compra, venta,
   referencia), cuentas bancarias en USD, facturas en USD, pagos cruzados y el
   diferencial cambiario.
+
+## Revisión contable: puntos por definir (2026-09-28)
+
+Repaso de lo hecho y lo planificado. Nada de esto rompe lo programado, pero hay que
+resolverlo antes de seguir.
+
+### Bancos (programado)
+
+| Tema | Estado | Qué falta |
+|---|---|---|
+| Cargos del banco no registrados en libros (comisiones, intereses, cheques rechazados) | Funciona: se registra la nota antes de conciliar | Poder marcar esas notas como **ajuste de conciliación** para que el documento las muestre en su propia sección. |
+| Primera conciliación | Incompleto | Se resuelve con la fecha de inicio y la carga inicial (arriba). |
+| Cheques posfechados | Sin definir | ¿Se permiten? ¿Cuentan en el saldo desde su fecha o desde que se emiten? |
+| Cheque impreso o entregado | Sin definir | Lo necesita la regla de blanquear; llega con la impresión de cheques. |
+
+### Libro de compras y Cuentas por pagar (planificados): corregir en el plan
+
+1. **Momento de la retención**: la ley manda retener al **pagar o acreditar en
+   cuenta**, lo que ocurra primero. Con provisión, acreditar en cuenta es
+   **autorizar**. La retención nace al autorizar (o al pagar si no hay provisión),
+   no al registrar; la constancia y el reporte mensual van por esa fecha.
+   **Investigar a fondo** y ajustar el plan.
+2. **Contraseña de pago en la práctica**: en Guatemala se entrega **cuando el
+   proveedor trae la factura** (comprobante de recibido con fecha de pago), antes de
+   aprobarla. Propuesta: la contraseña puede tener facturas **registradas**; solo se
+   **paga** lo autorizado. **Confirmar con el usuario.**
+3. **Período del crédito fiscal**: el IVA va en el Libro de compras del mes que
+   corresponde y la ley da un plazo para facturas atrasadas. Investigar el plazo y
+   guardar el **mes del libro** además de la fecha de emisión.
+4. **Pagos parciales con retención**: la retención se aplica una sola vez (al
+   provisionar o en el primer pago), no en cada pago.
+5. **Notas de crédito del proveedor**: restan del IVA crédito fiscal del mes en que
+   se reciben (confirmar en la investigación).
+
+### Módulos grandes que faltan planificar
+
+- **Contabilidad**: nomenclatura por empresa, partidas de provisión, reversión y
+  apertura, períodos cerrados y en qué casos se permite eliminar.
+- **Cuentas por cobrar / Ventas**: incluye las **retenciones que les hacen** a las
+  empresas (p. ej. en la venta de tabaco) y sus constancias.
 
 ## Otros pendientes anotados
 
