@@ -7,6 +7,11 @@ export interface HojaParaEscribir {
   instrucciones: string[][];
 }
 
+/** Una celda que no se puede leer (fórmula sin valor o con error): el mensaje sale en su columna. */
+export class CeldaConProblema {
+  constructor(readonly mensaje: string) {}
+}
+
 /** Una fila leída, con su número en Excel (la primera de datos es la 2). */
 export interface FilaLeida {
   numero: number;

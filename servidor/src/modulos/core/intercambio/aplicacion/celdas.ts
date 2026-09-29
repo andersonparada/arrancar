@@ -1,3 +1,4 @@
+import { CeldaConProblema } from './puertos/libro-de-excel.js';
 import { normalizar, type Columna, type OpcionDeReferencia, type TipoDeColumna } from './columnas.js';
 
 /** El valor que va a la solicitud, o el problema que tiene la celda. */
@@ -92,7 +93,11 @@ const leerVacia = (columna: Columna): Lectura => {
  * referencias necesitan sus opciones ya consultadas.
  */
 export const leerCelda = (celda: unknown, columna: Columna, opciones: OpcionDeReferencia[] = []): Lectura =>
-  esVacia(celda) ? leerVacia(columna) : LECTORES[columna.tipo](celda, columna, opciones);
+  celda instanceof CeldaConProblema
+    ? error(celda.mensaje)
+    : esVacia(celda)
+      ? leerVacia(columna)
+      : LECTORES[columna.tipo](celda, columna, opciones);
 
 type Escritor = (dato: unknown, columna: Columna) => unknown;
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { escribirCelda, leerCelda } from './celdas.js';
 import type { Columna } from './columnas.js';
+import { CeldaConProblema } from './puertos/libro-de-excel.js';
 
 const columna = <Tipo extends Columna['tipo']>(tipo: Tipo, extra: object = {}) =>
   ({ clave: 'dato', titulo: 'Dato', requerido: false, tipo, ...extra }) as Columna;
@@ -68,5 +69,13 @@ describe('escribir una celda', () => {
     expect(escribirCelda(registro, POTRERO)).toBe('La Ceiba');
     expect(escribirCelda({ dato: true }, columna('siNo'))).toBe('Sí');
     expect(escribirCelda({ dato: '2024-03-15' }, columna('fecha'))).toEqual(new Date(Date.UTC(2024, 2, 15)));
+  });
+});
+
+describe('celdas con problema del Excel', () => {
+  it('el mensaje de la celda sale como error de su columna', () => {
+    const celda = new CeldaConProblema('La celda tiene un error (#REF!).');
+
+    expect(leerCelda(celda, columna('texto'))).toEqual({ error: 'La celda tiene un error (#REF!).' });
   });
 });
