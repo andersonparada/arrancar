@@ -102,6 +102,24 @@ decisiones e investigación con Opus).
   generalizada a los `*.tablas.js` de cualquier módulo (solo desde `infraestructura/`) y
   prueba `core/base-datos/llaves-entre-esquemas.prueba.ts`.
 
+- **Permisos por acción y llaves entre esquemas**: **hecho** (`9f830c2`). Pruebas:
+  servidor 918, cliente 240, generador 46.
+
+### Respuestas del usuario (2026-09-29, tarde)
+
+- **HEIC:** llegan como JPEG (sin HEIC en el servidor ni en `accept`).
+- **P7:** sugerir con un cálculo estadístico mejor que «el último concepto» (frecuencia
+  por beneficiario, ponderada…): **lo diseña el arquitecto** con alternativas.
+- **Asignar localidades:** la ventana de asignación muestra todas las localidades solo
+  ahí, sin dar acceso a ellas; quien asigna puede asignarse a sí mismo.
+- **Permisos directos a usuarios:** además de los del rol, se pueden asignar permisos
+  a un usuario; **solo suman**. Un permiso vale para **toda la cuenta** (lo que el
+  usuario puede hacer); **qué datos ve** lo decide aparte el acceso a cada empresa y
+  el alcance por registro (p. ej. puede abrir la ventana de cheques, pero solo anula
+  cheques de las empresas y cuentas bancarias a las que tiene acceso). Hoy el rol se
+  asigna **por empresa** (`core.empresa_usuarios.rol_id`), así que esto cambia el
+  modelo: **lo diseña el arquitecto** y se confirma con el usuario antes de programar.
+
 Forma de trabajo: cada avance va en commit a la rama; a `main` solo entra lo terminado
 y probado (pruebas del servidor, ESLint y `tsc` en verde).
 

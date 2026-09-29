@@ -166,3 +166,7 @@ de iPhone usa HEVC (H.265) y falla al decodificar.
 - heic-convert: https://www.npmjs.com/package/heic-convert · heic-decode:
   https://www.npmjs.com/package/heic-decode · heic2any: https://www.npmjs.com/package/heic2any ·
   libheif-js: https://www.npmjs.com/package/libheif-js
+
+**Decisión del usuario (2026-09-29):** las fotos del iPhone llegan como JPEG. El
+servidor acepta solo JPEG, PNG y WebP y rechaza HEIC con un mensaje claro; el selector
+de archivos del cliente no ofrece `image/heic`.

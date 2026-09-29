@@ -627,3 +627,15 @@ Ninguna bloquea el paso 1 ni el 2. Si no hay respuesta, se sigue con lo recomend
    aplicación lo audite. Es la única forma de cumplirlo sin abrir un hueco en la
    seguridad; confirmar que está bien que al importar 200 localidades todas queden
    asignadas a quien importa (y 200 entradas de auditoría `asignar`).
+
+## Respuestas del usuario (2026-09-29, tarde)
+
+- **Ventana de asignación:** quien tiene el permiso de asignar ve **todas** las
+  localidades **solo en esa ventana**, aunque no tenga acceso a ellas en el resto del
+  sistema (esto reemplaza «solo reparte lo que ve»). Puede asignarse también a sí
+  mismo; todo queda en la auditoría. Cambia las políticas de la tabla de accesos
+  (sección de «asignar o quitar solo lo visible»): hay que rediseñarlas con el
+  arquitecto antes del paso 7.
+- **Roles que reciben los permisos nuevos:** ninguno en automático salvo el acceso
+  total; el usuario quiere poder **asignar permisos directamente a un usuario**, no
+  solo a roles (ver `docs/DONDE-QUEDAMOS.md`, «Permisos directos a usuarios»).
