@@ -1,0 +1,43 @@
+import { ref } from 'vue';
+import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarCarga } from '@/modulos/core/composables/usar-carga';
+import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
+import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { apiTiposDeLocalidad, type TipoDeLocalidad } from '../../servicios/tipos-de-localidad.api';
+import { datosDeTipoDeLocalidad, edicionDe, type EdicionDeTipoDeLocalidad } from './edicion-de-tipo-de-localidad';
+
+const SIN_REGISTROS: TipoDeLocalidad[] = [];
+
+const guardarTipoDeLocalidad = (edicion: EdicionDeTipoDeLocalidad) =>
+  edicion.id
+    ? apiTiposDeLocalidad.actualizar(edicion.id, datosDeTipoDeLocalidad(edicion))
+    : apiTiposDeLocalidad.crear(datosDeTipoDeLocalidad(edicion));
+
+/** Los tipos de localidad de la empresa: listarlos, registrarlos y editarlos en una ventana. */
+export function usarTiposDeLocalidad() {
+  const avisos = usarAvisos();
+  const { enviando, errores, enviar } = usarFormulario();
+  const {
+    datos: registros,
+    cargando,
+    cargar,
+  } = usarCarga(() => apiTiposDeLocalidad.listar(), SIN_REGISTROS, 'No se pudieron cargar los tipos de localidad.');
+  const edicion = ref<EdicionDeTipoDeLocalidad>({ ...edicionDe(), abierta: false });
+
+  function abrir(tipoDeLocalidad?: TipoDeLocalidad): void {
+    edicion.value = edicionDe(tipoDeLocalidad);
+    errores.value = {};
+  }
+
+  async function guardar(): Promise<void> {
+    const esNuevo = edicion.value.id === null;
+    if (!(await enviar(() => guardarTipoDeLocalidad(edicion.value)))) return;
+    avisos.exito(esNuevo ? 'Tipo de localidad registrado.' : 'Tipo de localidad actualizado.');
+    edicion.value.abierta = false;
+    await cargar();
+  }
+
+  const intercambio = usarIntercambio(apiTiposDeLocalidad.intercambio, cargar);
+
+  return { registros, cargando, cargar, intercambio, edicion, enviando, errores, abrir, guardar };
+}

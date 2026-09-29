@@ -14,6 +14,10 @@ import './infraestructura/catalogo-eventos.js';
 import { AccesosAEmpresasDrizzle } from './infraestructura/persistencia/accesos-a-empresas.drizzle.js';
 import { ConsultasEmpresasDrizzle } from './infraestructura/persistencia/consultas-empresas.drizzle.js';
 import { RepositorioEmpresasDrizzle } from './infraestructura/persistencia/repositorio-empresas.drizzle.js';
+import { rutasDeTiposDeLocalidad } from './composicion/tipos-de-localidad.js';
+import { SembrarTiposDeLocalidad } from './aplicacion/casos-uso/tipos-de-localidad/sembrar-tipos-de-localidad.js';
+import { RepositorioTiposDeLocalidadDrizzle } from './infraestructura/persistencia/repositorio-tipos-de-localidad.drizzle.js';
+// generador: importaciones
 
 /** Raíz de composición: el único lugar donde se eligen las implementaciones concretas. */
 function componerRutas(compartidas: DependenciasCompartidas) {
@@ -26,12 +30,21 @@ function componerRutas(compartidas: DependenciasCompartidas) {
   const controlador = new EmpresasControlador({
     listar: new ListarEmpresas({ unidadDeTrabajo, consultas, alcance }),
     obtener: new ObtenerEmpresa({ unidadDeTrabajo, consultas, alcance }),
-    registrar: new RegistrarEmpresa({ unidadDeTrabajo, repositorio, consultas, accesos, publicadorEventos }),
+    registrar: new RegistrarEmpresa({
+      unidadDeTrabajo,
+      repositorio,
+      consultas,
+      accesos,
+      publicadorEventos,
+      tiposDeLocalidad: new SembrarTiposDeLocalidad(new RepositorioTiposDeLocalidadDrizzle()),
+    }),
     actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio, consultas, alcance, auditoria }),
   });
   return rutasDelModulo([
     rutasEmpresas(controlador),
     rutasDeDatosDeEmpresaComponidas(compartidas, { consultas, alcance }),
+    rutasDeTiposDeLocalidad(),
+    // generador: rutas
   ]);
 }
 
@@ -52,6 +65,14 @@ export const moduloEmpresas: DefinicionModulo = {
       descripcion: 'Reabrir la carga inicial cerrada de una empresa, con su motivo (solo roles con acceso total)',
       soloAccesoTotal: true,
     },
+    { clave: 'empresas.tipos-de-localidad.ver', descripcion: 'Ver tipos de localidad' },
+    {
+      clave: 'empresas.tipos-de-localidad.gestionar',
+      descripcion: 'Registrar, editar, inactivar y eliminar tipos de localidad',
+    },
+    { clave: 'empresas.tipos-de-localidad.importar', descripcion: 'Importar tipos de localidad desde Excel' },
+    { clave: 'empresas.tipos-de-localidad.exportar', descripcion: 'Exportar tipos de localidad a Excel' },
+    // generador: permisos
   ],
   rutas: componerRutas(dependenciasCompartidas()),
 };

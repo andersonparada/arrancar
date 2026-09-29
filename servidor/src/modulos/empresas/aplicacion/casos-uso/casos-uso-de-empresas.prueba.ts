@@ -10,17 +10,21 @@ import {
 } from '../../../core/compartido/pruebas/dobles-compartidos.js';
 import { NoSePuedeDesactivarLaEmpresaEnUso } from '../../dominio/errores.js';
 import { AccesosEnMemoria, EmpresasEnMemoria } from '../../pruebas/dobles-de-empresas.js';
+import { TiposDeLocalidadEnMemoria } from '../../pruebas/dobles-de-tipos-de-localidad.js';
+import { TIPOS_DE_LOCALIDAD_INICIALES } from '../../dominio/tipos-de-localidad-iniciales.js';
 import { AlcanceDelOperador } from '../alcance-del-operador.js';
 import type { SolicitudDeEmpresa } from '../dto/empresa.dto.js';
 import { ActualizarEmpresa } from './actualizar-empresa.js';
 import { ListarEmpresas } from './listar-empresas.js';
 import { ObtenerEmpresa } from './obtener-empresa.js';
 import { RegistrarEmpresa } from './registrar-empresa.js';
+import { SembrarTiposDeLocalidad } from './tipos-de-localidad/sembrar-tipos-de-localidad.js';
 
 const ROL_PROPIETARIO = 'rol-propietario';
 
 let empresas: EmpresasEnMemoria;
 let accesos: AccesosEnMemoria;
+let tiposDeLocalidad: TiposDeLocalidadEnMemoria;
 let publicadorEventos: PublicadorEventosEnMemoria;
 let unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
 let auditoria: AuditoriaEnMemoria;
@@ -47,13 +51,21 @@ function solicitud(cambios: Partial<SolicitudDeEmpresa> = {}): SolicitudDeEmpres
 beforeEach(async () => {
   empresas = new EmpresasEnMemoria();
   accesos = new AccesosEnMemoria();
+  tiposDeLocalidad = new TiposDeLocalidadEnMemoria();
   publicadorEventos = new PublicadorEventosEnMemoria();
   unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   auditoria = new AuditoriaEnMemoria();
   const alcance = new AlcanceDelOperador(accesos);
   const consultas = empresas;
   casos = {
-    registrar: new RegistrarEmpresa({ unidadDeTrabajo, repositorio: empresas, consultas, accesos, publicadorEventos }),
+    registrar: new RegistrarEmpresa({
+      unidadDeTrabajo,
+      repositorio: empresas,
+      consultas,
+      accesos,
+      publicadorEventos,
+      tiposDeLocalidad: new SembrarTiposDeLocalidad(tiposDeLocalidad),
+    }),
     listar: new ListarEmpresas({ unidadDeTrabajo, consultas, alcance }),
     obtener: new ObtenerEmpresa({ unidadDeTrabajo, consultas, alcance }),
     actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio: empresas, consultas, alcance, auditoria }),
@@ -81,10 +93,13 @@ describe('registrar una empresa', () => {
     expect(await accesos.rolEnEmpresa(soporte.usuarioId, empresa.id)).toBeNull();
   });
 
-  it('trabaja dentro de una unidad de trabajo con el contexto del operador', async () => {
-    await casos.registrar.ejecutar(propietario, solicitud());
+  it('la registra con el contexto del operador y siembra sus tipos de localidad con la empresa nueva como activa', async () => {
+    const empresa = await casos.registrar.ejecutar(propietario, solicitud());
 
-    expect(unidadDeTrabajo.contextos).toEqual([propietario]);
+    expect(unidadDeTrabajo.contextos).toEqual([propietario, { ...propietario, empresaId: empresa.id }]);
+    expect((await tiposDeLocalidad.listar()).map((tipo) => tipo.nombre).sort()).toEqual(
+      [...TIPOS_DE_LOCALIDAD_INICIALES].sort(),
+    );
   });
 
   it('publica que se registró, después de guardarla', async () => {

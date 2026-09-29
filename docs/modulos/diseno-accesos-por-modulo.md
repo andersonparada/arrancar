@@ -539,7 +539,7 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
 2. **[HECHO] H5b-2 (herramientas) Excepción de ESLint del módulo base.** Sección 5, con su
    documentación en `ARQUITECTURA.md` §2 y la enmienda de «sin llave foránea entre
    módulos».
-3. **H5b-3 (servidor) Tipos de localidad.** Tabla, semilla (migración, `RegistrarEmpresa`
+3. **[HECHO] H5b-3 (servidor) Tipos de localidad.** Tabla, semilla (migración, `RegistrarEmpresa`
    y catálogo vacío), casos de uso, rutas, Excel, permisos (migraciones 3 y 4).
 4. **H5b-3 (cliente) Tipos de localidad.** Pantalla de catálogo y menú.
 5. **H5b-4 (servidor) Localidades.** Tablas `localidades` y `accesos_a_localidades`,
@@ -579,6 +579,28 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
   `empresas/infraestructura/persistencia/*.tablas.js`; fallan otros archivos de `empresas`
   (repositorios, aplicación, `modulo.ts`), subcarpetas de persistencia, `terceros` y cualquier
   importación desde `aplicacion`, `http` o la raíz del módulo.
+
+## 13. Notas de implementación del paso 3 (2026-09-29)
+
+- Generado con `npm run generar -- recurso empresas/tipo-de-localidad` (definición en
+  `generador/definiciones/empresas/tipo-de-localidad.ts`, `baja: 'inactivar'`, ícono `MapPinned`). Hubo que poner
+  las marcas `// generador:` en `empresas/modulo.ts` (servidor y cliente) y `textos.ts` (cliente).
+- Migraciones: `0003_h5b_tipos_de_localidad` (generada; suma a lo generado el único `(id, empresa_id)` y el `check`
+  de nombre 1 a 60) y `0004_h5b_sembrar_tipos_y_permisos` (`--custom`: semilla para empresas sin tipos y permisos:
+  `empresas.ver` da `.ver`; `empresas.gestionar` da `gestionar`, `importar` y `exportar`).
+- El generador con `baja: 'inactivar'` no crea eliminar; se agregó a mano `EliminarTipoDeLocalidad` y
+  `DELETE /api/empresas/tipos-de-localidad/:id` (permiso `gestionar`, auditoría `eliminar`, sin motivo). Que «esté en
+  uso» lo decide la llave foránea de localidades (H5b-4) traducida a `RecursoEnUso`; no hay `estaEnUso` aparte.
+  **El cliente generado no tiene botón de eliminar: es del paso 4.**
+- Semilla: `SembrarTiposDeLocalidad` (solo si la empresa no tiene ninguno). Corre al listar y en `RegistrarEmpresa`,
+  en una segunda transacción con la empresa nueva como activa (la RLS solo deja escribir en la activa). Consecuencia
+  aceptada: si una empresa borra todos sus tipos, al abrir el catálogo reaparece la lista sugerida.
+- El nombre se recorta y no pasa de 60 caracteres (dominio, Zod y `check`); el mensaje del único es «Ya existe un
+  tipo de localidad con ese nombre.» (`MENSAJES_POR_RESTRICCION`). Sin auditoría al crear ni al editar (solo cambios de
+  estado y eliminar, como el resto de catálogos).
+- Cliente generado sin ajustes salvo dos arreglos mecánicos para que compile y pase ESLint: importaciones duplicadas en
+  `modulo.ts` y `SIN_REGISTROS` en `usar-tipos-de-localidad.ts` (la plantilla `usar` genera 27 líneas con nombres
+  largos, y el máximo es 25; conviene corregir la plantilla). Su campo `nombre` aún permite 150 caracteres: el paso 4 lo baja a 60.
 
 ## 11. Preguntas para el usuario
 

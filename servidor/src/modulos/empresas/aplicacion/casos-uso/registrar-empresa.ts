@@ -8,6 +8,7 @@ import type { EmpresaDto, SolicitudDeEmpresa } from '../dto/empresa.dto.js';
 import type { AccesosAEmpresas } from '../puertos/accesos-a-empresas.js';
 import type { ConsultasEmpresas } from '../puertos/consultas-empresas.js';
 import type { RepositorioEmpresas } from '../puertos/repositorio-empresas.js';
+import type { SembrarTiposDeLocalidad } from './tipos-de-localidad/sembrar-tipos-de-localidad.js';
 
 interface Dependencias {
   unidadDeTrabajo: UnidadDeTrabajo;
@@ -15,6 +16,7 @@ interface Dependencias {
   consultas: ConsultasEmpresas;
   accesos: AccesosAEmpresas;
   publicadorEventos: PublicadorEventos;
+  tiposDeLocalidad: SembrarTiposDeLocalidad;
 }
 
 /**
@@ -34,8 +36,17 @@ export class RegistrarEmpresa {
       await this.darAccesoAlCreador(operador, empresa);
       return consultas.obtenerEnCuenta(empresa.id.valor, operador.cuentaId);
     });
+    await this.sembrarTiposDeLocalidad(operador, empresa);
     await publicadorEventos.publicar(empresa.extraerEventos());
     return registrada;
+  }
+
+  /** En su propia transacción: la seguridad por filas solo deja escribir en la empresa activa, y la nueva no lo es. */
+  private sembrarTiposDeLocalidad(operador: Operador, empresa: Empresa): Promise<void> {
+    const enLaNueva = { ...operador, empresaId: empresa.id.valor };
+    return this.dependencias.unidadDeTrabajo.ejecutar(enLaNueva, () =>
+      this.dependencias.tiposDeLocalidad.ejecutar(enLaNueva),
+    );
   }
 
   private async darAccesoAlCreador(operador: Operador, empresa: Empresa): Promise<void> {

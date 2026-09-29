@@ -7,4 +7,11 @@ export const VENTANAS_EMPRESAS = {
     titulo: 'Empresas',
     descripcion: (cuenta: string) => `Ranchos y parcelas de la cuenta ${cuenta}.`,
   },
+  tiposDeLocalidad: {
+    titulo: 'Tipos de localidad',
+    descripcion: 'Los tipos de localidad de la empresa.',
+    nuevo: 'Nuevo tipo de localidad',
+    editar: 'Editar tipo de localidad',
+  },
+  // generador: ventanas
 } as const;

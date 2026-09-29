@@ -86,7 +86,11 @@ decisiones e investigación con Opus).
   `core.asignar_registro_al_creador`, se quitó `core.accesos_datos` (migraciones `0013` y
   `0014` de core), acciones `asignar` y `quitar` en la auditoría, y excepción de ESLint:
   de `empresas` solo se importan `*.tablas.js` y solo desde `infraestructura/`. Pruebas
-  del servidor: 896. Siguen los pasos 3 a 11 del diseño (tipos de localidad, localidades,
+  del servidor: 896. **Paso 3 hecho** (tipos de localidad, servidor, con el generador): catálogo
+  `empresas.tipos_de_localidad` con Excel, eliminar con auditoría, semilla al crear la
+  empresa o al abrir el catálogo vacío; migraciones `0003` y `0004` de empresas. Pruebas
+  del servidor: 916. El cliente quedó generado sin ajustar (paso 4: botón eliminar y
+  nombre a 60). Siguen los pasos 4 a 11 del diseño (tipos de localidad, localidades,
   ventana de accesos y departamentos); los pasos 5, 7 y 8 esperan respuestas del
   usuario.
 
