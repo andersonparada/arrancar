@@ -92,6 +92,20 @@
       "when": 1790664992135,
       "tag": "0012_correlativos",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790690747375,
+      "tag": "0013_quitar_accesos_datos",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790690758640,
+      "tag": "0014_asignar_registro_al_creador",
+      "breakpoints": true
     }
   ]
 }

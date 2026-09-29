@@ -528,7 +528,7 @@ declarado en `recursosConAlcance` tiene su tabla de accesos con las cuatro polí
 Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
 `soloSuperacceso`) puede ir antes o después; no se cruzan.
 
-1. **H5b-1 (servidor, core) Alcance con tablas de cada módulo.** `core/base-datos/alcance.ts`
+1. **[HECHO] H5b-1 (servidor, core) Alcance con tablas de cada módulo.** `core/base-datos/alcance.ts`
    con `AlcanceDeRegistros`, `politicasDelRegistroConAlcance`, `politicaPorAlcance`,
    `politicaPorAlcanceOpcional` y `politicasDeTablaDeAccesos`; quitar la vieja de
    `columnas.ts`; `alcance` en `DefinicionRecursoConAlcance`; `'asignar' | 'quitar'` en
@@ -536,7 +536,7 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
    (migraciones 1 y 2 de la sección 8, función del disparador incluida); reescribir
    `alcance-datos.prueba.ts` y pasar las otras tres pruebas a `core.correlativos`;
    actualizar `CLAUDE.md`, `PLAN.md` §3.3/§3.5 y bitácora, `ARQUITECTURA.md`.
-2. **H5b-2 (herramientas) Excepción de ESLint del módulo base.** Sección 5, con su
+2. **[HECHO] H5b-2 (herramientas) Excepción de ESLint del módulo base.** Sección 5, con su
    documentación en `ARQUITECTURA.md` §2 y la enmienda de «sin llave foránea entre
    módulos».
 3. **H5b-3 (servidor) Tipos de localidad.** Tabla, semilla (migración, `RegistrarEmpresa`
@@ -559,6 +559,26 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
 11. **Docs.** `DONDE-QUEDAMOS.md`, bitácora de `PLAN.md`, marcar H5b/H5c en el plan de
     hallazgos y en `diseno-esquema-empresas.md` («reemplazado por
     `diseno-accesos-por-modulo.md`» en su sección de accesos).
+
+## 12. Notas de implementación de los pasos 1 y 2 (2026-09-29)
+
+- La condición de alcance total del diseño (`= any ((select string_to_array(...)))`) falla en
+  PostgreSQL (`malformed array literal`: lo lee como subconsulta). Quedó
+  `= any (string_to_array((select current_setting('app.alcance_total', true)), ','))`, que
+  conserva el initplan de la variable.
+- `0013_quitar_accesos_datos` se generó con drizzle-kit y se le antepuso la guarda a mano (aún no
+  estaba aplicada en producción); `0014_asignar_registro_al_creador` es `--custom`. Los `when`
+  quedan por encima del último de core.
+- `AccionAuditada` suma `asignar` y `quitar`; el 42501 se traduce a `RecursoNoEncontrado('El registro')`.
+- `DefinicionRecursoConAlcance` suma `alcance`; `verificarDeclaracion` exige que `alcance.recurso`
+  sea igual a `clave`. `usuarioDeLaTransaccion` y `empresaDeLaTransaccion` se exportan de `columnas.ts`.
+- La prueba «toda tabla de módulo tiene RLS / cada recurso con alcance tiene su tabla de accesos»
+  de la sección 9 no se escribió: hoy ningún módulo declara alcance; se agrega en H5b-4.
+- ESLint: `MODULOS_BASE` y `excepcionDelModuloBase` en `eslint.config.js`; no se aplica a `core`.
+  Comprobado con archivos temporales (ya borrados): desde `bancos/infraestructura` pasa
+  `empresas/infraestructura/persistencia/*.tablas.js`; fallan otros archivos de `empresas`
+  (repositorios, aplicación, `modulo.ts`), subcarpetas de persistencia, `terceros` y cualquier
+  importación desde `aplicacion`, `http` o la raíz del módulo.
 
 ## 11. Preguntas para el usuario
 

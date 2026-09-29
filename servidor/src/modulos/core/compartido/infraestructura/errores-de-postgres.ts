@@ -1,9 +1,10 @@
 import { DatabaseError } from 'pg';
-import { RecursoDuplicado, RecursoEnUso } from '../aplicacion/errores.js';
+import { RecursoDuplicado, RecursoEnUso, RecursoNoEncontrado } from '../aplicacion/errores.js';
 import type { ErrorEsperado } from '../dominio/errores.js';
 
 const VIOLACION_DE_UNICIDAD = '23505';
 const VIOLACION_DE_LLAVE_FORANEA = '23503';
+const VIOLACION_DE_POLITICA_RLS = '42501';
 const PROFUNDIDAD_MAXIMA_DE_CAUSAS = 5;
 
 const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
@@ -30,15 +31,18 @@ function buscarErrorDePostgres(error: unknown): DatabaseError | null {
 
 /**
  * Convierte en error esperado lo que la base de datos rechaza por sus
- * restricciones (valores únicos y llaves foráneas); cualquier otro error sigue
+ * restricciones (valores únicos y llaves foráneas) o por las políticas RLS
+ * (fila fuera del alcance: se responde como no encontrada, sin revelar nada); cualquier otro error sigue
  * siendo un fallo inesperado.
  */
 export function interpretarErrorDePostgres(error: unknown): ErrorEsperado | null {
   const errorDePostgres = buscarErrorDePostgres(error);
-  if (errorDePostgres?.code === VIOLACION_DE_UNICIDAD) {
+  if (!errorDePostgres) return null;
+  if (errorDePostgres.code === VIOLACION_DE_UNICIDAD) {
     const mensaje = MENSAJES_POR_RESTRICCION[errorDePostgres.constraint ?? ''] ?? 'El registro ya existe.';
     return new ValorUnicoRepetido(mensaje);
   }
-  if (errorDePostgres?.code === VIOLACION_DE_LLAVE_FORANEA) return new RecursoEnUso();
+  if (errorDePostgres.code === VIOLACION_DE_LLAVE_FORANEA) return new RecursoEnUso();
+  if (errorDePostgres.code === VIOLACION_DE_POLITICA_RLS) return new RecursoNoEncontrado('El registro');
   return null;
 }

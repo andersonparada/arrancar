@@ -5,7 +5,16 @@
  * `reabrir`: se reabrió algo que estaba cerrado, con su motivo (Empresas: la carga inicial).
  */
 export type AccionAuditada =
-  'eliminar' | 'inactivar' | 'reactivar' | 'anular' | 'devolver' | 'blanquear' | 'corregir' | 'reabrir';
+  | 'eliminar'
+  | 'inactivar'
+  | 'reactivar'
+  | 'anular'
+  | 'devolver'
+  | 'blanquear'
+  | 'corregir'
+  | 'reabrir'
+  | 'asignar'
+  | 'quitar';
 
 /** Una baja (o su reversa): qué registro, qué se hizo, por qué y cómo estaba antes. */
 export interface EntradaDeAuditoria {

@@ -1,16 +1,15 @@
 /**
  * Prueba de integración contra PostgreSQL (base `arrancar_pruebas`): comprueba que
  * las políticas RLS impiden leer o escribir datos de otra empresa, aunque la
- * consulta no filtre por empresa. Usa `core.accesos_datos`, que tiene la misma
+ * consulta no filtre por empresa. Usa `core.correlativos`, que tiene la misma
  * política que tendrán todas las tablas de negocio.
  */
-import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../../../configuracion.js';
 import { definicionesModulos } from '../../indice.js';
-import { accesosDatos } from '../autorizacion/infraestructura/persistencia/accesos-datos.tablas.js';
+import { correlativos } from '../compartido/infraestructura/persistencia/correlativos.tablas.js';
 import { cuentas } from '../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas } from '../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../identidad/infraestructura/persistencia/usuarios.tablas.js';
@@ -30,12 +29,7 @@ async function vaciarComoPropietario(): Promise<void> {
   await conexion.end();
 }
 
-const insertarAcceso = (empresaDeLaFila: string, recurso: string) => ({
-  empresaId: empresaDeLaFila,
-  usuarioId,
-  recurso,
-  registroId: randomUUID(),
-});
+const insertarCorrelativo = (empresaDeLaFila: string, clave: string) => ({ empresaId: empresaDeLaFila, clave });
 
 beforeAll(async () => {
   await migrarModulos(configuracion.DATABASE_URL_PROPIETARIO!, definicionesModulos);
@@ -59,10 +53,10 @@ beforeAll(async () => {
   empresaB = b!.id;
 
   await enTransaccionSegura({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
-    tx.insert(accesosDatos).values(insertarAcceso(empresaA, 'dato.de.a')),
+    tx.insert(correlativos).values(insertarCorrelativo(empresaA, 'dato.de.a')),
   );
   await enTransaccionSegura({ empresaId: empresaB, cuentaId, usuarioId }, (tx) =>
-    tx.insert(accesosDatos).values(insertarAcceso(empresaB, 'dato.de.b')),
+    tx.insert(correlativos).values(insertarCorrelativo(empresaB, 'dato.de.b')),
   );
 });
 
@@ -73,19 +67,19 @@ afterAll(async () => {
 describe('aislamiento entre empresas (RLS)', () => {
   it('cada empresa solo ve sus propias filas, aunque la consulta no filtre', async () => {
     const vistasPorA = await enTransaccionSegura({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
-      tx.select({ recurso: accesosDatos.recurso }).from(accesosDatos),
+      tx.select({ clave: correlativos.clave }).from(correlativos),
     );
-    expect(vistasPorA).toEqual([{ recurso: 'dato.de.a' }]);
+    expect(vistasPorA).toEqual([{ clave: 'dato.de.a' }]);
   });
 
   it('sin empresa en la transacción no se ve ninguna fila', async () => {
-    expect(await bd.select().from(accesosDatos)).toEqual([]);
+    expect(await bd.select().from(correlativos)).toEqual([]);
   });
 
   it('no permite insertar filas a nombre de otra empresa', async () => {
     await expect(
       enTransaccionSegura({ empresaId: empresaA, cuentaId, usuarioId }, (tx) =>
-        tx.insert(accesosDatos).values(insertarAcceso(empresaB, 'intruso')),
+        tx.insert(correlativos).values(insertarCorrelativo(empresaB, 'intruso')),
       ),
     ).rejects.toThrow();
   });
@@ -93,11 +87,11 @@ describe('aislamiento entre empresas (RLS)', () => {
   it('no permite modificar ni borrar filas de otra empresa', async () => {
     const resultado = await enTransaccionSegura({ empresaId: empresaA, cuentaId, usuarioId }, async (tx) => {
       const actualizadas = await tx
-        .update(accesosDatos)
-        .set({ recurso: 'modificado' })
-        .where(eq(accesosDatos.recurso, 'dato.de.b'))
+        .update(correlativos)
+        .set({ clave: 'modificado' })
+        .where(eq(correlativos.clave, 'dato.de.b'))
         .returning();
-      const borradas = await tx.delete(accesosDatos).where(eq(accesosDatos.recurso, 'dato.de.b')).returning();
+      const borradas = await tx.delete(correlativos).where(eq(correlativos.clave, 'dato.de.b')).returning();
       return { actualizadas: actualizadas.length, borradas: borradas.length };
     });
     expect(resultado).toEqual({ actualizadas: 0, borradas: 0 });

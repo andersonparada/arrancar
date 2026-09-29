@@ -4,10 +4,10 @@ import { pgPolicy, pgRole, timestamp, uuid } from 'drizzle-orm/pg-core';
 /** Rol de PostgreSQL con el que se conecta la aplicación; lo crea `infra/postgres/init`. */
 export const rolAplicacion = pgRole('arrancar_app').existing();
 
-const empresaDeLaTransaccion = "nullif(current_setting('app.empresa_id', true), '')::uuid";
+/** SQL de las variables de la transacción; también las usa `alcance.ts`. */
+export const empresaDeLaTransaccion = "nullif(current_setting('app.empresa_id', true), '')::uuid";
 const cuentaDeLaTransaccion = "nullif(current_setting('app.cuenta_id', true), '')::uuid";
-const usuarioDeLaTransaccion = "nullif(current_setting('app.usuario_id', true), '')::uuid";
-const recursosConAlcanceTotal = "string_to_array(current_setting('app.alcance_total', true), ',')";
+export const usuarioDeLaTransaccion = "nullif(current_setting('app.usuario_id', true), '')::uuid";
 
 /** Clave primaria UUID generada por la base de datos. */
 export const idPrimario = () => uuid().primaryKey().defaultRandom();
@@ -81,33 +81,3 @@ export const politicasDeSoloAgregar = () => [
     using: sql.raw(`cuenta_id = ${cuentaDeLaTransaccion}`),
   }),
 ];
-
-/**
- * Política RLS restrictiva (se suma con AND a la de empresa) que limita las filas
- * a los registros asignados al usuario en `core.accesos_datos`.
- *
- * Quien tiene alcance total sobre el recurso (rol con acceso total, superacceso o
- * el permiso "ver todos" que declara el módulo) ve todas las filas de la empresa.
- *
- * @param recurso clave del recurso, p. ej. `bancos.cuentas`; debe coincidir con la
- *   declarada en `recursosConAlcance` del módulo.
- * @param columnaId columna con el id del registro protegido.
- */
-export const politicaPorAlcance = (recurso: string, columnaId = 'id') => {
-  if (!/^[a-z0-9_.-]+$/.test(recurso) || !/^[a-z_]+$/.test(columnaId)) {
-    throw new Error(`Recurso o columna inválidos para la política de alcance: ${recurso}.${columnaId}`);
-  }
-  const condicion = `'${recurso}' = any(${recursosConAlcanceTotal})
-    or ${columnaId} in (
-      select a.registro_id from core.accesos_datos a
-      where a.recurso = '${recurso}'
-        and a.usuario_id = ${usuarioDeLaTransaccion}
-    )`;
-  return pgPolicy('alcance_por_usuario', {
-    as: 'restrictive',
-    for: 'all',
-    to: rolAplicacion,
-    using: sql.raw(condicion),
-    withCheck: sql.raw(condicion),
-  });
-};

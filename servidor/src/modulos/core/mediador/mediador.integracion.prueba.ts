@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../../../configuracion.js';
@@ -7,7 +6,7 @@ import { bd, grupoConexiones } from '../base-datos/conexion.js';
 import { migrarModulos } from '../base-datos/migrador.js';
 import { RegistroModulos } from '../modulos-sistema/registro-modulos.js';
 import { establecerRegistroModulos } from '../modulos-sistema/registro-global.js';
-import { accesosDatos } from '../autorizacion/infraestructura/persistencia/accesos-datos.tablas.js';
+import { correlativos } from '../compartido/infraestructura/persistencia/correlativos.tablas.js';
 import type { ContextoEmpresa } from '../compartido/aplicacion/contexto-empresa.js';
 import type { Operador } from '../compartido/aplicacion/operador.js';
 import {
@@ -37,15 +36,13 @@ class FalloProvocado extends Error {}
 let operador: Operador;
 
 function registrarAcceso(contexto: ContextoEmpresa, recurso: string) {
-  return transaccionEnCurso()
-    .insert(accesosDatos)
-    .values({ empresaId: contexto.empresaId, usuarioId: contexto.usuarioId, recurso, registroId: randomUUID() });
+  return transaccionEnCurso().insert(correlativos).values({ empresaId: contexto.empresaId, clave: recurso });
 }
 
 function recursosGuardados(): Promise<string[]> {
   return transaccionEnCurso()
-    .select({ recurso: accesosDatos.recurso })
-    .from(accesosDatos)
+    .select({ recurso: correlativos.clave })
+    .from(correlativos)
     .then((filas) => filas.map((fila) => fila.recurso).sort());
 }
 

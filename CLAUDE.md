@@ -88,7 +88,8 @@ base de desarrollo debe estar levantada.
 - Lo que usan todos los módulos va en `core`. `empresas` es esencial (siempre activo).
 - `DefinicionModulo` declara: `dependeDe`, `permisos`, `recursosConAlcance`,
   `configuracion` y `rutas`. El registro valida las dependencias al arrancar.
-- Los módulos no se importan entre sí para colaborar: usan eventos
+- Los módulos no se importan entre sí para colaborar (salvo las tablas del módulo
+  base `empresas`, solo desde `infraestructura`): usan eventos
   (`core/eventos/bus-eventos.ts`). Un módulo sí puede importar de `core`.
 
 ### Importar y exportar (Excel)
@@ -135,8 +136,14 @@ base de desarrollo debe estar levantada.
 - Para tablas compartidas por **todas las empresas de una cuenta** (p. ej. `terceros`):
   llevan `cuenta_id` y `politicaPorCuenta()` en vez de `empresa_id`/`politicaPorEmpresa()`.
   La unidad de trabajo también fija `app.cuenta_id`, que siempre sale de la empresa activa.
-- Permisos de datos por registro: `politicaPorAlcance('<recurso>')` +
-  `recursosConAlcance` en el módulo + filas en `core.accesos_datos`.
+- Permisos de datos por registro: cada módulo guarda las asignaciones en su propia
+  tabla `<esquema>.accesos_a_<plural>` y declara un `AlcanceDeRegistros`
+  (`core/base-datos/alcance.ts`) en `recursosConAlcance`; con él construye las
+  políticas (`politicasDelRegistroConAlcance`, `politicaPorAlcance`,
+  `politicaPorAlcanceOpcional`, `politicasDeTablaDeAccesos`). Una tabla de accesos
+  nunca lleva política de `select` con subconsulta (recursión). El disparador
+  `core.asignar_registro_al_creador` asigna el registro nuevo a quien lo crea.
+  Diseño: `docs/modulos/diseno-accesos-por-modulo.md`.
 - Cada ruta usa `proteger({ permiso })` (cadena de guardias: sesión → empresa →
   módulo → permiso). El permiso debe estar declarado por un módulo.
 - Un permiso de configuración de servidor/instalación se declara con

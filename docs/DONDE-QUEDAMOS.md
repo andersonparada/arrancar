@@ -81,8 +81,14 @@ decisiones e investigación con Opus).
   la impresión del reporte aún no llevan el origen.
 - **Diseño de H5b/H5c** (punto 2): **hecho** en `docs/modulos/diseno-accesos-por-modulo.md`
   (11 pasos). `core.accesos_datos` está vacía y nada la usa: se elimina sin migrar datos.
-- **H5b pasos 1 y 2** (alcance nuevo en el core y excepción de ESLint): agente backend en
-  curso.
+- **H5b pasos 1 y 2**: **hechos**. `core/base-datos/alcance.ts` (`AlcanceDeRegistros` y
+  las políticas que arma el core con la tabla de accesos de cada módulo), disparador
+  `core.asignar_registro_al_creador`, se quitó `core.accesos_datos` (migraciones `0013` y
+  `0014` de core), acciones `asignar` y `quitar` en la auditoría, y excepción de ESLint:
+  de `empresas` solo se importan `*.tablas.js` y solo desde `infraestructura/`. Pruebas
+  del servidor: 896. Siguen los pasos 3 a 11 del diseño (tipos de localidad, localidades,
+  ventana de accesos y departamentos); los pasos 5, 7 y 8 esperan respuestas del
+  usuario.
 
 Forma de trabajo: cada avance va en commit a la rama; a `main` solo entra lo terminado
 y probado (pruebas del servidor, ESLint y `tsc` en verde).

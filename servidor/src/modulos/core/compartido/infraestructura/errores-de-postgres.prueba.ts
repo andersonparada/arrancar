@@ -1,6 +1,6 @@
 import { DatabaseError } from 'pg';
 import { describe, expect, it } from 'vitest';
-import { RecursoDuplicado, RecursoEnUso } from '../aplicacion/errores.js';
+import { RecursoDuplicado, RecursoEnUso, RecursoNoEncontrado } from '../aplicacion/errores.js';
 import { interpretarErrorDePostgres } from './errores-de-postgres.js';
 
 function errorDePostgres(codigo: string, restriccion?: string): DatabaseError {
@@ -25,6 +25,10 @@ describe('errores de PostgreSQL que en realidad son esperados', () => {
 
   it('borrar algo que otros datos usan es un recurso en uso', () => {
     expect(interpretarErrorDePostgres(errorDePostgres('23503'))).toBeInstanceOf(RecursoEnUso);
+  });
+
+  it('una fila fuera del alcance (política RLS) se responde como no encontrada', () => {
+    expect(interpretarErrorDePostgres(errorDePostgres('42501'))).toBeInstanceOf(RecursoNoEncontrado);
   });
 
   it('cualquier otro error no se interpreta', () => {

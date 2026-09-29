@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { ZodType } from 'zod';
+import type { AlcanceDeRegistros } from '../base-datos/alcance.js';
 
 export interface DefinicionPermiso {
   /** Clave con forma `<modulo>.<recurso>.<accion>` o `<modulo>.<accion>`. */
@@ -20,8 +21,9 @@ export interface DefinicionPermiso {
 
 /**
  * Recurso cuyos registros se asignan uno por uno a los usuarios (permiso de datos).
- * Sus tablas llevan `politicaPorAlcance(clave)`, así que PostgreSQL oculta los
- * registros no asignados.
+ * El módulo dueño guarda las asignaciones en su propia tabla `accesos_a_<plural>` y sus
+ * tablas llevan las políticas de `core/base-datos/alcance.ts` construidas con `alcance`;
+ * así PostgreSQL oculta los registros no asignados.
  */
 export interface DefinicionRecursoConAlcance {
   /** Clave del recurso, p. ej. `bancos.cuentas`. */
@@ -29,6 +31,8 @@ export interface DefinicionRecursoConAlcance {
   descripcion: string;
   /** Permiso del mismo módulo que da acceso a todos los registros del recurso. */
   permisoVerTodos: string;
+  /** Dónde están las asignaciones; `alcance.recurso` debe ser igual a `clave`. */
+  alcance: AlcanceDeRegistros;
 }
 
 /** Dónde se puede fijar una variable de configuración. */

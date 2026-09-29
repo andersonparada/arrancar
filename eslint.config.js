@@ -42,13 +42,29 @@ const modulos = readdirSync('servidor/src/modulos', { withFileTypes: true })
   .filter((entrada) => entrada.isDirectory())
   .map((entrada) => entrada.name);
 
-function prohibirOtrosModulos(modulo) {
+/**
+ * Módulos base: otros módulos pueden leer sus tablas (y poner llaves foráneas hacia ellas)
+ * solo desde su `infraestructura`, importando únicamente sus `*.tablas.js`.
+ */
+const MODULOS_BASE = ['empresas'];
+
+/** Cualquier importación de `otro` salvo `infraestructura/persistencia/<archivo>.tablas.js`. */
+const SOLO_TABLAS_DEL_MODULO_BASE = (otro) => `(^|/)${otro}(/(?!infraestructura/persistencia/[^/]+\\.tablas\\.js$)|$)`;
+
+function prohibirOtrosModulos(modulo, { permitirTablasBase = false } = {}) {
   return modulos
     .filter((otro) => otro !== modulo && otro !== 'core')
-    .map((otro) => ({
-      group: [`**/modulos/${otro}/**`, `../${otro}/**`, `../../${otro}/**`, `../../../${otro}/**`],
-      message: `Los módulos no se importan entre sí: ${modulo} se comunica con ${otro} por eventos o a través del core.`,
-    }));
+    .map((otro) =>
+      permitirTablasBase && MODULOS_BASE.includes(otro)
+        ? {
+            regex: SOLO_TABLAS_DEL_MODULO_BASE(otro),
+            message: `De ${otro} (módulo base) solo se importan sus *.tablas.js, y solo desde infraestructura.`,
+          }
+        : {
+            group: [`**/modulos/${otro}/**`, `../${otro}/**`, `../../${otro}/**`, `../../../${otro}/**`],
+            message: `Los módulos no se importan entre sí: ${modulo} se comunica con ${otro} por eventos o a través del core.`,
+          },
+    );
 }
 
 function prohibirCapa(nombreCapa) {
@@ -91,6 +107,20 @@ const COMPONENTES_SIN_SERVICIOS = {
 };
 
 /**
+ * Excepción del módulo base: la `infraestructura` de un módulo de negocio puede importar las
+ * tablas de `empresas`. Va después de las reglas por capa (en flat config gana la última).
+ */
+function excepcionDelModuloBase(modulo) {
+  if (modulo === 'core' || MODULOS_BASE.includes(modulo)) return [];
+  return [
+    restringirImportaciones(
+      [`servidor/src/modulos/${modulo}/infraestructura/**/*.ts`],
+      prohibirOtrosModulos(modulo, { permitirTablasBase: true }),
+    ),
+  ];
+}
+
+/**
  * ESLint no combina dos `no-restricted-imports` sobre el mismo archivo (la última
  * gana), así que cada combinación módulo × capa lleva todas sus prohibiciones juntas.
  */
@@ -103,6 +133,7 @@ function reglasDeDependencias() {
         [...prohibirOtrosModulos(modulo), ...prohibirCapa(capa)],
       ),
     ),
+    ...excepcionDelModuloBase(modulo),
   ]);
 }
 

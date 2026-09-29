@@ -1,11 +1,10 @@
-import { randomUUID } from 'node:crypto';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../../../../configuracion.js';
 import { definicionesModulos } from '../../../indice.js';
 import { bd, grupoConexiones } from '../../base-datos/conexion.js';
 import { migrarModulos } from '../../base-datos/migrador.js';
-import { accesosDatos } from '../../autorizacion/infraestructura/persistencia/accesos-datos.tablas.js';
+import { correlativos } from './persistencia/correlativos.tablas.js';
 import { cuentas } from '../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas } from '../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../../identidad/infraestructura/persistencia/usuarios.tablas.js';
@@ -31,15 +30,13 @@ async function vaciarComoPropietario(): Promise<void> {
 }
 
 function registrarAcceso(contexto: ContextoEmpresa, recurso: string) {
-  return transaccionEnCurso()
-    .insert(accesosDatos)
-    .values({ empresaId: contexto.empresaId, usuarioId: contexto.usuarioId, recurso, registroId: randomUUID() });
+  return transaccionEnCurso().insert(correlativos).values({ empresaId: contexto.empresaId, clave: recurso });
 }
 
 function recursosVisibles(): Promise<string[]> {
   return transaccionEnCurso()
-    .select({ recurso: accesosDatos.recurso })
-    .from(accesosDatos)
+    .select({ recurso: correlativos.clave })
+    .from(correlativos)
     .then((filas) => filas.map((fila) => fila.recurso).sort());
 }
 

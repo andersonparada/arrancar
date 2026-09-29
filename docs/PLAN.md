@@ -98,9 +98,11 @@ clientes y proveedores, con un panel de recordatorios diarios.
    `v-permiso`.
 3. **Datos (alcance por registro)**: qué registros concretos puede usar el
    usuario (p. ej. solo las cuentas bancarias 1 y 3).
-   - El módulo declara `recursosConAlcance` y protege la tabla con
-     `politicaPorAlcance('bancos.cuentas')` (política RLS restrictiva).
-   - Las asignaciones viven en `core.accesos_datos`.
+   - El módulo declara `recursosConAlcance` con un `AlcanceDeRegistros` y protege
+     sus tablas con las políticas RLS restrictivas de `core/base-datos/alcance.ts`.
+   - Las asignaciones viven en la tabla `<esquema>.accesos_a_<plural>` del propio
+     módulo (`core.accesos_datos` se eliminó; ver
+     `docs/modulos/diseno-accesos-por-modulo.md`).
    - Con el permiso "ver todos" del recurso, o con un rol de acceso total, se
      ven todos los registros.
    - Tener acceso a los datos de una cuenta **no** da acceso a las pantallas de
@@ -451,3 +453,7 @@ y `demo` / `demo-arrancar`.
   convierte los anulados existentes en pares sin cambiar el saldo de ninguna cuenta
   (verificado en la base de desarrollo). Un inverso tampoco se corrige. Commits `B7a`
   (servidor) y `B7b` (cliente); la documentación va en el commit siguiente.
+- **H5b pasos 1 y 2 (2026-09-29).** Alcance nuevo en el core (`alcance.ts`, disparador
+  `core.asignar_registro_al_creador`, `core.accesos_datos` eliminada con su guarda, 42501 →
+  no encontrado, acciones `asignar` y `quitar`) y excepción de ESLint del módulo base
+  `empresas`. Detalle en `docs/modulos/diseno-accesos-por-modulo.md`.

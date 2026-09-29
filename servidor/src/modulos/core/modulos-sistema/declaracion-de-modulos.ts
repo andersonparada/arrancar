@@ -26,6 +26,12 @@ function verificarRecursosConAlcance(modulo: DefinicionModulo): void {
       `El recurso "${sinPermiso.clave}" usa el permiso "${sinPermiso.permisoVerTodos}", que su módulo no declara.`,
     );
   }
+  const incoherente = (modulo.recursosConAlcance ?? []).find((recurso) => recurso.alcance.recurso !== recurso.clave);
+  if (incoherente) {
+    throw new Error(
+      `El alcance del recurso "${incoherente.clave}" declara otra clave: "${incoherente.alcance.recurso}".`,
+    );
+  }
 }
 
 /** Los módulos de los que depende están instalados. */
