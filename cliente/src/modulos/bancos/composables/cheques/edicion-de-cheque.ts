@@ -10,6 +10,7 @@ export interface EdicionDeCheque {
   monto: string | number;
   beneficiario: string;
   noNegociable: boolean;
+  conceptoId: string | null;
   referencia: string;
   observaciones: string;
 }
@@ -24,6 +25,7 @@ export function edicionDeCheque(): EdicionDeCheque {
     monto: '',
     beneficiario: '',
     noNegociable: true,
+    conceptoId: null,
     referencia: '',
     observaciones: '',
   };
@@ -35,6 +37,7 @@ export const datosDeEmisionDeCheque = (edicion: EdicionDeCheque): DatosDeEmision
   monto: textoDeEdicion(edicion.monto),
   beneficiario: edicion.beneficiario.trim(),
   noNegociable: edicion.noNegociable,
+  conceptoId: edicion.conceptoId ?? '',
   referencia: textoONulo(edicion.referencia),
   observaciones: textoONulo(edicion.observaciones),
 });

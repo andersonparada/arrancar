@@ -10,6 +10,7 @@ defineProps<{
   errores: Record<string, string>;
   referencias: { cuentaBancariaId: OpcionDeRegistro[] };
   opcionesDeCheque: OpcionDeRegistro[];
+  opcionesDeConcepto: OpcionDeRegistro[];
 }>();
 const edicion = defineModel<EdicionDeCheque>({ required: true });
 </script>
@@ -34,6 +35,13 @@ const edicion = defineModel<EdicionDeCheque>({ required: true });
     <CampoTexto v-model="edicion.fecha" etiqueta="Fecha" tipo="date" requerido :error="errores.fecha" />
     <CampoTexto v-model="edicion.monto" etiqueta="Monto" tipo="number" paso="any" requerido :error="errores.monto" />
     <CampoTexto v-model="edicion.beneficiario" etiqueta="Beneficiario" requerido :error="errores.beneficiario" />
+    <CampoSelector
+      v-model="edicion.conceptoId"
+      etiqueta="Concepto"
+      :opciones="opcionesDeConcepto"
+      requerido
+      :error="errores.conceptoId"
+    />
     <CampoInterruptor v-model="edicion.noNegociable" etiqueta="No negociable" />
     <CampoTexto v-model="edicion.referencia" etiqueta="Referencia" :error="errores.referencia" />
     <CampoTexto v-model="edicion.observaciones" etiqueta="Observaciones" multilinea :error="errores.observaciones" />

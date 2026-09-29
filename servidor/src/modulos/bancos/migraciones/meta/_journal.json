@@ -134,6 +134,13 @@
       "when": 1790700600000,
       "tag": "0018_h3b_concepto_en_movimientos",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790700700000,
+      "tag": "0019_h3b_ver_conceptos_al_registrar",
+      "breakpoints": true
     }
   ]
 }

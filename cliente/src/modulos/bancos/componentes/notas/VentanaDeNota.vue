@@ -10,6 +10,8 @@ defineProps<{
   errores: Record<string, string>;
   enviando: boolean;
   referencias: Record<'cuentaBancariaId', OpcionDeRegistro[]>;
+  opcionesDeConcepto: OpcionDeRegistro[];
+  conceptoSugerido: OpcionDeRegistro | null;
 }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const edicion = defineModel<EdicionDeNota>({ required: true });
@@ -23,7 +25,13 @@ const titulo = computed(() =>
 <template>
   <VentanaModal :abierta="edicion.abierta" :titulo="titulo" @cerrar="emit('cerrar')">
     <form id="form-nota" @submit.prevent="emit('guardar')">
-      <CamposDeNota v-model="edicion" :errores="errores" :referencias="referencias" />
+      <CamposDeNota
+        v-model="edicion"
+        :errores="errores"
+        :referencias="referencias"
+        :opciones-de-concepto="opcionesDeConcepto"
+        :concepto-sugerido="conceptoSugerido"
+      />
     </form>
     <template #pie>
       <BotonBase variante="secundario" @click="emit('cerrar')">Cancelar</BotonBase>

@@ -30,6 +30,9 @@ const base: Movimiento = {
   revierteAId: null,
   puedeAnular: true,
   puedeEliminar: true,
+  conceptoId: 'concepto-1',
+  conceptoNombre: 'Concepto de prueba',
+  puedeReclasificar: true,
 };
 
 describe('título de la nota', () => {
@@ -52,9 +55,15 @@ describe('color y signo del monto', () => {
 });
 
 describe('detalles de la nota', () => {
-  it('lleva cuenta, fecha, referencia y beneficiario', () => {
+  it('lleva cuenta, fecha, concepto, referencia y beneficiario', () => {
     const detalles = detallesDeNota(base);
-    expect(detalles.map((d) => d.etiqueta)).toEqual(['Cuenta', 'Fecha', 'Referencia', 'Beneficiario u origen']);
+    expect(detalles.map((d) => d.etiqueta)).toEqual([
+      'Cuenta',
+      'Fecha',
+      'Concepto',
+      'Referencia',
+      'Beneficiario u origen',
+    ]);
   });
 
   it('muestra el número primero, con el año si la empresa reinicia por año', () => {

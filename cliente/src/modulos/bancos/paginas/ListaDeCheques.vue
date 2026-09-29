@@ -42,6 +42,7 @@ const { anulacion, blanqueo } = usarBajasDeCheque<ChequeListado>(cargar);
       v-model="emision.edicion.value"
       :referencias="referencias"
       :opciones-de-cheque="emision.opcionesDeCheque.value"
+      :opciones-de-concepto="emision.opcionesDeConcepto.value"
       :errores="emision.errores.value"
       :enviando="emision.enviando.value"
       @cerrar="emision.edicion.value.abierta = false"

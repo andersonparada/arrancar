@@ -2,16 +2,20 @@ import { computed, ref, watch } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiCheques } from '../../servicios/cheques.api';
+import { opcionesDeConcepto } from '../conceptos/opciones-de-concepto';
+import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
 import { datosDeEmisionDeCheque, edicionDeCheque, type EdicionDeCheque } from './edicion-de-cheque';
 import { usarSeleccionDeCheque } from './usar-seleccion-de-cheque';
 
-/** La ventana de emitir un cheque desde Cheques: elegir cuenta y número, y guardarlo. */
+/** La ventana de emitir un cheque desde Cheques: elegir cuenta, número y concepto, y guardarlo. */
 export function usarFormularioDeCheque(alGuardar: () => Promise<void>) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
   const edicion = ref<EdicionDeCheque>({ ...edicionDeCheque(), abierta: false });
   const cuentaElegida = computed(() => edicion.value.cuentaBancariaId);
   const { opciones: opcionesDeCheque, sugerido } = usarSeleccionDeCheque(cuentaElegida);
+  const { conceptos } = usarCatalogoDeConceptos();
+  const opcionesDeConceptos = computed(() => opcionesDeConcepto(conceptos.value, ['cheque']));
 
   watch(sugerido, (chequeId) => (edicion.value.chequeId = chequeId));
 
@@ -29,5 +33,5 @@ export function usarFormularioDeCheque(alGuardar: () => Promise<void>) {
     await alGuardar();
   }
 
-  return { edicion, enviando, errores, opcionesDeCheque, nueva, guardar };
+  return { edicion, enviando, errores, opcionesDeCheque, opcionesDeConcepto: opcionesDeConceptos, nueva, guardar };
 }

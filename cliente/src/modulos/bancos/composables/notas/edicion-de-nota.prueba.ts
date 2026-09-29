@@ -11,6 +11,7 @@ const datos: DatosNota = {
   referencia: 'Registro de prueba',
   beneficiario: 'Registro de prueba',
   observaciones: 'Una nota de prueba.',
+  conceptoId: 'concepto-1',
 };
 const nota: Movimiento = {
   id: 'registro-1',
@@ -30,9 +31,17 @@ const nota: Movimiento = {
   revierteAId: null,
   puedeAnular: true,
   puedeEliminar: true,
+  conceptoNombre: 'Concepto de prueba',
+  puedeReclasificar: true,
 };
 
 describe('ventana de notas', () => {
+  it('el concepto viaja con la nota y una nota nueva empieza sin concepto', () => {
+    expect(edicionDe(nota).conceptoId).toBe('concepto-1');
+    expect(edicionDe().conceptoId).toBeNull();
+    expect(datosDeNota(edicionDe()).conceptoId).toBe('');
+  });
+
   it('lo que se abre para editar se manda igual si no se cambia nada', () => {
     expect(datosDeNota(edicionDe(nota))).toEqual(datos);
     expect(edicionDe(nota).id).toBe(nota.id);

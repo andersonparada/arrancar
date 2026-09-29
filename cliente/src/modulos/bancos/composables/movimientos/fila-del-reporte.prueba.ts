@@ -25,6 +25,9 @@ function fila(datos: Partial<FilaDelReporte> & Pick<FilaDelReporte, 'tipo' | 'mo
     revierteAId: null,
     puedeAnular: false,
     puedeEliminar: false,
+    conceptoId: 'concepto-1',
+    conceptoNombre: 'Concepto de prueba',
+    puedeReclasificar: true,
     saldo: null,
     ...datos,
   };

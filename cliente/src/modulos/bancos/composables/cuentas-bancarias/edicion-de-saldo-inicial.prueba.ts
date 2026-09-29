@@ -32,6 +32,9 @@ const saldoInicial: Movimiento = {
   revierteAId: null,
   puedeAnular: true,
   puedeEliminar: true,
+  conceptoId: 'concepto-1',
+  conceptoNombre: 'Concepto de prueba',
+  puedeReclasificar: true,
 };
 
 describe('ventana del saldo inicial', () => {

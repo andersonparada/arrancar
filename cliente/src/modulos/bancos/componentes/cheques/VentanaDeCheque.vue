@@ -10,6 +10,7 @@ defineProps<{
   enviando: boolean;
   referencias: { cuentaBancariaId: OpcionDeRegistro[] };
   opcionesDeCheque: OpcionDeRegistro[];
+  opcionesDeConcepto: OpcionDeRegistro[];
 }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const edicion = defineModel<EdicionDeCheque>({ required: true });
@@ -23,6 +24,7 @@ const edicion = defineModel<EdicionDeCheque>({ required: true });
         :errores="errores"
         :referencias="referencias"
         :opciones-de-cheque="opcionesDeCheque"
+        :opciones-de-concepto="opcionesDeConcepto"
       />
     </form>
     <template #pie>

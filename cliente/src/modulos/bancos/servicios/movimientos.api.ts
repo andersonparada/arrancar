@@ -12,6 +12,9 @@ export interface Movimiento {
   referencia: string | null;
   beneficiario: string | null;
   observaciones: string | null;
+  /** Cómo se clasifica el dinero (H3b): el concepto y su nombre. */
+  conceptoId: string;
+  conceptoNombre: string;
   cuentaBancariaNombre: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
@@ -35,15 +38,25 @@ export interface Movimiento {
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede eliminar de verdad (está limpio). */
   puedeEliminar: boolean;
+  /** Lo calcula el servidor: si se le puede cambiar solo el concepto (no un inverso, una transferencia ni el saldo inicial). */
+  puedeReclasificar: boolean;
 }
 
 /** Una fila del reporte, con su saldo corrido (`null` si el reporte no eligió una cuenta). */
 export type FilaDelReporte = Movimiento & { saldo: string | null };
 
+/** Lo que falta clasificar (concepto «Sin clasificar»), sin contar los inversos. */
+export interface ResumenDeSinClasificar {
+  cantidad: number;
+  montoDeEntradas: string;
+  montoDeSalidas: string;
+}
+
 export interface ReporteDeMovimientos {
   saldoAnterior: string | null;
   filas: FilaDelReporte[];
   saldoFinal: string | null;
+  sinClasificar: ResumenDeSinClasificar;
 }
 
 /** Qué movimientos consultar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra. */
@@ -51,6 +64,7 @@ export interface FiltroDeMovimientos {
   cuentaBancariaId?: string;
   desde?: string;
   hasta?: string;
+  conceptoId?: string;
   [clave: string]: string | undefined;
 }
 

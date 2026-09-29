@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import SugerenciaDeConcepto from './SugerenciaDeConcepto.vue';
 import { opcionesDeLista } from '@/modulos/core/utilidades/edicion';
 import { OPCIONES_DE_TIPO } from '../../composables/notas/edicion-de-nota';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { EdicionDeNota } from '../../composables/notas/edicion-de-nota';
 
 /** Los campos de la nota; al corregir (con `id`) la cuenta se ve pero no se cambia. */
-defineProps<{ errores: Record<string, string>; referencias: Record<'cuentaBancariaId', OpcionDeRegistro[]> }>();
+defineProps<{
+  errores: Record<string, string>;
+  referencias: Record<'cuentaBancariaId', OpcionDeRegistro[]>;
+  opcionesDeConcepto: OpcionDeRegistro[];
+  conceptoSugerido: OpcionDeRegistro | null;
+}>();
 const edicion = defineModel<EdicionDeNota>({ required: true });
 </script>
 
@@ -36,6 +42,14 @@ const edicion = defineModel<EdicionDeNota>({ required: true });
       :error="errores.referencia"
     />
     <CampoTexto v-model="edicion.beneficiario" etiqueta="Beneficiario u origen" :error="errores.beneficiario" />
+    <CampoSelector
+      v-model="edicion.conceptoId"
+      etiqueta="Concepto"
+      :opciones="opcionesDeConcepto"
+      requerido
+      :error="errores.conceptoId"
+    />
+    <SugerenciaDeConcepto :sugerencia="conceptoSugerido" @usar="edicion.conceptoId = $event" />
     <CampoTexto v-model="edicion.observaciones" etiqueta="Observaciones" multilinea :error="errores.observaciones" />
   </div>
 </template>

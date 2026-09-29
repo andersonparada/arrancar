@@ -1343,3 +1343,29 @@ conceptos nuevos en la semilla.
   `conceptos-de-movimientos`) y API (`bancos-conceptos-en-movimientos`: rechazos con su código, inverso de débito
   heredado, `estaEnUso` real, reclasificar con auditoría y arrastre, 403, reporte por concepto; y
   `bancos-migracion-de-conceptos`). Los dobles usan un catálogo con ids fijos (`pruebas/conceptos-de-prueba.ts`).
+
+### H3b en el cliente (2026-09-29)
+
+- **Selector de concepto** (`CampoSelector`, requerido) en la ventana de la **nota** (después del beneficiario) y en
+  **emitir cheque**. Las opciones salen de `opcionesDeConcepto` (lógica pura, con pruebas): solo conceptos **activos** y
+  **propios** (no de sistema, así «Sin clasificar» nunca aparece), compatibles con el tipo (el cheque cuenta como débito),
+  por nombre. Al cambiar el tipo de la nota se limpia el concepto si ya no sirve. Al corregir una nota se conserva a la
+  vista el concepto que ya tenía, aunque hoy esté inactivo (el servidor no le exige seguir activo).
+- **Sugerencia por beneficiario** (solo notas): con el beneficiario escrito y sin concepto elegido, se ofrece «Último
+  concepto con este beneficiario: X (usar)», calculado con las notas que la pantalla ya tiene cargadas (las del periodo del
+  filtro). Solo sugiere, nunca elige. **Pendiente:** para cheques y para historia de otros periodos haría falta un
+  endpoint (último concepto por beneficiario) o traer `conceptoId` en la lista de cheques; no se hizo.
+- **Tarjetas de notas** y **reporte de movimientos** muestran el concepto (el reporte, en pantalla, impresión y Excel:
+  columna «Concepto»). El reporte gana el filtro «Concepto» (con todos, también los de sistema; con uno elegido no hay saldo
+  corrido) y un aviso «N movimientos sin clasificar: Q de entradas y Q de salidas» con enlace a la bandeja.
+- **Bandeja «Sin clasificar»** (`/bancos/sin-clasificar`, sección Operación del menú, `BandejaDeSinClasificar.vue`): lista
+  los originales sin concepto (según el servidor, `puedeReclasificar`; sin inversos, transferencias ni saldo inicial),
+  filtrables por cuenta y fechas, con casilla por tarjeta y «Marcar todo lo que se ve» (tope de 200 por lote), y una barra
+  fija con lo marcado (entradas y salidas en centavos exactos), el selector «Clasificar como…» (solo conceptos que sirven a
+  **todo** lo marcado: con créditos y débitos juntos, únicamente los «ambos») y el botón. Confirma con un resumen y usa
+  `POST /bancos/notas/reclasificar`. Para verla hace falta `bancos.movimientos.ver` (lee el reporte); marcar y clasificar,
+  `bancos.notas.gestionar`.
+- **Permiso para ver conceptos:** elegir un concepto exige poder listarlos, así que la migración `0019_h3b_ver_conceptos_al_registrar`
+  da `bancos.conceptos.ver` a los roles que ya tenían `bancos.notas.gestionar`, `bancos.cheques.emitir` o `bancos.movimientos.ver`
+  (solo ver; administrar sigue siendo `bancos.conceptos.gestionar`).
+- Lógica pura con pruebas: `opciones-de-concepto`, `seleccion-de-pendientes`, `centavos`, filtros y detalles de nota.

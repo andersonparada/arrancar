@@ -18,6 +18,7 @@ export function detallesDeNota(nota: Movimiento): DetalleDeRegistro[] {
     ...(numero ? [{ etiqueta: 'No.', valor: numero }] : []),
     { etiqueta: 'Cuenta', valor: formatearTexto(nota.cuentaBancariaNombre) },
     { etiqueta: 'Fecha', valor: formatearFecha(nota.fecha) },
+    { etiqueta: 'Concepto', valor: formatearTexto(nota.conceptoNombre) },
     { etiqueta: 'Referencia', valor: formatearTexto(nota.referencia) },
     { etiqueta: 'Beneficiario u origen', valor: formatearTexto(nota.beneficiario) },
   ];

@@ -3,6 +3,8 @@ export interface FiltrosDeMovimientos {
   cuentaBancariaId: string | null;
   desde: string;
   hasta: string;
+  /** Solo los movimientos de este concepto (el reporte lo ofrece; las listas de notas y transferencias no). */
+  conceptoId: string | null;
 }
 
 /** Lo que se manda al servidor como filtro de cuenta y fechas; lo usan notas, transferencias y el reporte. */
@@ -10,6 +12,7 @@ export interface FiltroConsultado {
   cuentaBancariaId?: string;
   desde?: string;
   hasta?: string;
+  conceptoId?: string;
   [clave: string]: string | undefined;
 }
 
@@ -28,7 +31,7 @@ export function filtrosPorOmision(
   hoy: Date = new Date(),
 ): FiltrosDeMovimientos {
   const primerDiaDelMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-  return { cuentaBancariaId, desde: aTexto(primerDiaDelMes), hasta: aTexto(hoy) };
+  return { cuentaBancariaId, desde: aTexto(primerDiaDelMes), hasta: aTexto(hoy), conceptoId: null };
 }
 
 /** Lo que se manda al servidor: solo lo que se eligió filtra. */
@@ -37,5 +40,6 @@ export function filtroDeLaConsulta(filtros: FiltrosDeMovimientos): FiltroConsult
     cuentaBancariaId: filtros.cuentaBancariaId ?? undefined,
     desde: filtros.desde || undefined,
     hasta: filtros.hasta || undefined,
+    conceptoId: filtros.conceptoId ?? undefined,
   };
 }

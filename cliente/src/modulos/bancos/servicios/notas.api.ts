@@ -21,7 +21,21 @@ export type DatosNota = Omit<
   | 'revierteAId'
   | 'puedeAnular'
   | 'puedeEliminar'
+  | 'puedeReclasificar'
+  | 'conceptoNombre'
 > & { tipo: 'credito' | 'debito' };
+
+/** Cambiar solo el concepto de hasta 200 movimientos a la vez (todo o nada). */
+export interface DatosDeReclasificacion {
+  movimientoIds: string[];
+  conceptoId: string;
+}
+
+/** Cuántos cambiaron de concepto y cuántos ya lo tenían. */
+export interface ResultadoDeReclasificacion {
+  reclasificados: number;
+  sinCambio: number;
+}
 
 const RUTA = '/bancos/notas';
 
@@ -48,6 +62,11 @@ export class ApiNotas {
   /** Anula la nota: crea su movimiento inverso con la fecha escrita. Nada se borra. */
   anular(id: string, { motivo, fecha }: DatosDeBaja) {
     return this.http.crear<Movimiento>(`${RUTA}/${id}/anular`, { motivo, fecha });
+  }
+
+  /** Clasifica varios movimientos (notas o cheques) con un concepto; procede también en meses conciliados. */
+  reclasificar(datos: DatosDeReclasificacion) {
+    return this.http.crear<ResultadoDeReclasificacion>(`${RUTA}/reclasificar`, datos);
   }
 
   /** Elimina de verdad una nota limpia; el motivo queda en la auditoría. */

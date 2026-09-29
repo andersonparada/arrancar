@@ -66,5 +66,10 @@ export const VENTANAS_BANCOS = {
     nuevo: 'Nuevo concepto',
     editar: 'Editar concepto',
   },
+  sinClasificar: {
+    titulo: 'Sin clasificar',
+    descripcion:
+      'Notas y cheques que todavía no tienen concepto: márquelos y clasifíquelos de una vez. Solo cambia el concepto, no el dinero.',
+  },
   // generador: ventanas
 } as const;

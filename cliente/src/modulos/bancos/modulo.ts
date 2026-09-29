@@ -5,6 +5,7 @@ import {
   CheckCheck,
   FileText,
   Landmark,
+  ListChecks,
   NotebookTabs,
   Tags,
   WalletCards,
@@ -113,6 +114,12 @@ export const moduloBancos: DefinicionModuloCliente = {
       meta: { permiso: 'bancos.cheques-caducos.ver', titulo: VENTANAS_BANCOS.chequesCaducos.titulo },
     },
     {
+      path: '/bancos/sin-clasificar',
+      name: 'bancos.sin-clasificar',
+      component: () => import('./paginas/BandejaDeSinClasificar.vue'),
+      meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.sinClasificar.titulo },
+    },
+    {
       path: '/bancos/conceptos',
       name: 'bancos.conceptos',
       component: () => import('./paginas/ListaDeConceptos.vue'),
@@ -167,6 +174,13 @@ export const moduloBancos: DefinicionModuloCliente = {
           icono: Banknote,
           seccion: 'operacion',
           permiso: 'bancos.cheques.ver',
+        },
+        {
+          titulo: VENTANAS_BANCOS.sinClasificar.titulo,
+          ruta: '/bancos/sin-clasificar',
+          icono: ListChecks,
+          seccion: 'operacion',
+          permiso: 'bancos.movimientos.ver',
         },
         {
           titulo: VENTANAS_BANCOS.conciliaciones.titulo,

@@ -7,6 +7,7 @@ describe('filtros de movimientos por omisión', () => {
       cuentaBancariaId: null,
       desde: '2026-09-01',
       hasta: '2026-09-27',
+      conceptoId: null,
     });
   });
 
@@ -15,6 +16,7 @@ describe('filtros de movimientos por omisión', () => {
       cuentaBancariaId: null,
       desde: '2026-01-01',
       hasta: '2026-01-05',
+      conceptoId: null,
     });
   });
 
@@ -25,18 +27,28 @@ describe('filtros de movimientos por omisión', () => {
 
 describe('filtro de movimientos para el servidor', () => {
   it('manda solo lo que se eligió', () => {
-    expect(filtroDeLaConsulta({ cuentaBancariaId: null, desde: '', hasta: '' })).toEqual({
+    expect(filtroDeLaConsulta({ cuentaBancariaId: null, desde: '', hasta: '', conceptoId: null })).toEqual({
       cuentaBancariaId: undefined,
       desde: undefined,
       hasta: undefined,
+      conceptoId: undefined,
     });
   });
 
+  it('manda el concepto cuando se eligió uno', () => {
+    const filtros = { cuentaBancariaId: null, desde: '', hasta: '', conceptoId: 'concepto-1' };
+
+    expect(filtroDeLaConsulta(filtros).conceptoId).toBe('concepto-1');
+  });
+
   it('manda la cuenta y las fechas cuando se eligieron', () => {
-    expect(filtroDeLaConsulta({ cuentaBancariaId: 'cuenta-1', desde: '2026-09-01', hasta: '2026-09-27' })).toEqual({
+    expect(
+      filtroDeLaConsulta({ cuentaBancariaId: 'cuenta-1', desde: '2026-09-01', hasta: '2026-09-27', conceptoId: null }),
+    ).toEqual({
       cuentaBancariaId: 'cuenta-1',
       desde: '2026-09-01',
       hasta: '2026-09-27',
+      conceptoId: undefined,
     });
   });
 });

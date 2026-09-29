@@ -24,13 +24,14 @@ const CLASE_DE_MARCA = {
   <div
     class="overflow-x-auto rounded-2xl bg-white ring-1 ring-tierra-200/70 print:overflow-visible print:shadow-none print:ring-0 dark:bg-tierra-800/60 dark:ring-tierra-700"
   >
-    <table class="w-full min-w-[52rem] text-left text-sm">
+    <table class="w-full min-w-[60rem] text-left text-sm">
       <thead class="border-b border-tierra-100 text-xs tracking-wide text-tierra-500 uppercase dark:border-tierra-700">
         <tr>
           <th class="px-4 py-3 font-medium">Fecha</th>
           <th class="px-4 py-3 font-medium">Cuenta</th>
           <th class="px-4 py-3 font-medium">No.</th>
           <th class="px-4 py-3 font-medium">Documento</th>
+          <th class="px-4 py-3 font-medium">Concepto</th>
           <th class="px-4 py-3 font-medium">Beneficiario u origen</th>
           <th class="px-4 py-3 text-right font-medium">Débito</th>
           <th class="px-4 py-3 text-right font-medium">Crédito</th>
@@ -39,7 +40,7 @@ const CLASE_DE_MARCA = {
       </thead>
       <tbody class="divide-y divide-tierra-100 dark:divide-tierra-700">
         <tr v-if="conCuenta" class="bg-tierra-50/60 font-medium dark:bg-tierra-900/40">
-          <td class="px-4 py-2.5" colspan="7">Saldo anterior</td>
+          <td class="px-4 py-2.5" colspan="8">Saldo anterior</td>
           <td class="px-4 py-2.5 text-right">{{ formatearMonto(reporte.saldoAnterior) }}</td>
         </tr>
         <tr
@@ -63,18 +64,19 @@ const CLASE_DE_MARCA = {
               {{ marcaDeReversion(fila) }}
             </p>
           </td>
+          <td class="px-4 py-2.5">{{ formatearTexto(fila.conceptoNombre) }}</td>
           <td class="px-4 py-2.5">{{ formatearTexto(fila.beneficiario) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(debitoDeFila(fila)) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(creditoDeFila(fila)) }}</td>
           <td v-if="conCuenta" class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(fila.saldo) }}</td>
         </tr>
         <tr v-if="!reporte.filas.length">
-          <td class="px-4 py-6 text-center text-tierra-500" :colspan="conCuenta ? 8 : 7">
+          <td class="px-4 py-6 text-center text-tierra-500" :colspan="conCuenta ? 9 : 8">
             No hay movimientos con ese filtro.
           </td>
         </tr>
         <tr v-if="conCuenta" class="bg-tierra-50/60 font-medium dark:bg-tierra-900/40">
-          <td class="px-4 py-2.5" colspan="7">Saldo final</td>
+          <td class="px-4 py-2.5" colspan="8">Saldo final</td>
           <td class="px-4 py-2.5 text-right">{{ formatearMonto(reporte.saldoFinal) }}</td>
         </tr>
       </tbody>

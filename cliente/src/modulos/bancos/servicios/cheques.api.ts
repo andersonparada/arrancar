@@ -25,6 +25,8 @@ export interface DatosDeEmisionDeCheque {
   monto: string;
   beneficiario: string;
   noNegociable: boolean;
+  /** El concepto que clasifica el pago (un cheque cuenta como débito). */
+  conceptoId: string;
   referencia: string | null;
   observaciones: string | null;
 }

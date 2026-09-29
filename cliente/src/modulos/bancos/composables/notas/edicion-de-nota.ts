@@ -12,6 +12,7 @@ export interface EdicionDeNota {
   tipo: 'credito' | 'debito';
   fecha: string;
   monto: string | number;
+  conceptoId: string | null;
   referencia: string;
   beneficiario: string;
   observaciones: string;
@@ -22,6 +23,7 @@ const NOTA_NUEVA: Omit<EdicionDeNota, 'abierta' | 'id'> = {
   tipo: 'credito',
   fecha: '',
   monto: '',
+  conceptoId: null,
   referencia: '',
   beneficiario: '',
   observaciones: '',
@@ -37,6 +39,7 @@ export function edicionDe(nota?: Movimiento, tipo: 'credito' | 'debito' = 'credi
     tipo: nota.tipo === 'credito' ? 'credito' : 'debito',
     fecha: textoDeEdicion(nota.fecha),
     monto: textoDeEdicion(nota.monto),
+    conceptoId: nota.conceptoId,
     referencia: textoDeEdicion(nota.referencia),
     beneficiario: textoDeEdicion(nota.beneficiario),
     observaciones: textoDeEdicion(nota.observaciones),
@@ -49,6 +52,7 @@ export const datosDeNota = (edicion: EdicionDeNota): DatosNota => ({
   tipo: edicion.tipo,
   fecha: edicion.fecha,
   monto: textoDeEdicion(edicion.monto),
+  conceptoId: edicion.conceptoId ?? '',
   referencia: textoONulo(edicion.referencia),
   beneficiario: textoONulo(edicion.beneficiario),
   observaciones: textoONulo(edicion.observaciones),

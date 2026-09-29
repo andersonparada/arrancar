@@ -7,6 +7,7 @@ describe('ventana de emisión de cheque', () => {
       abierta: true,
       cuentaBancariaId: null,
       chequeId: null,
+      conceptoId: null,
       noNegociable: true,
     });
   });
@@ -21,6 +22,7 @@ describe('ventana de emisión de cheque', () => {
       fecha: '2026-02-01',
       monto: '150.00',
       beneficiario: '  Proveedor S.A.  ',
+      conceptoId: 'concepto-1',
       noNegociable: false,
       referencia: 'Pago de servicios',
       observaciones: 'Una nota.',
@@ -31,6 +33,7 @@ describe('ventana de emisión de cheque', () => {
       monto: '150.00',
       beneficiario: 'Proveedor S.A.',
       noNegociable: false,
+      conceptoId: 'concepto-1',
       referencia: 'Pago de servicios',
       observaciones: 'Una nota.',
     });
