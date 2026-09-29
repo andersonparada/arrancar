@@ -392,3 +392,17 @@ Al terminar: actualizar `bancos.md`, `concepto-de-notas-y-cheques.md` (fila del 
    antes de habilitar aceptar en lote.
 6. **Beneficiarios mal escritos** (paso S5): ¿se hace ya o después de ver cuánto se usa? **Recomiendo
    después.**
+
+## Respuestas del usuario (2026-09-29)
+
+Mandan sobre las preguntas de arriba; todas con lo recomendado.
+
+1. **Mismo cálculo al capturar** notas y cheques: sí (pasos S6 y C3).
+2. **«Pago a proveedores» en la bandeja** para cheques: sí, con la misma regla de P3
+   (solo si Cuentas por pagar no está activo).
+3. **Desde 2 casos iguales** se muestra «Sugerido» (mínimo configurable).
+4. **«Usar» confirma** un movimiento; el **lote** pide una ventana con el resumen por
+   concepto y casilla de confirmación.
+5. **«Reclasificar»** en el reporte de movimientos (notas y cheques, con permiso y
+   auditoría): sí, antes de aceptar en lote.
+6. **Beneficiarios mal escritos** (`pg_trgm`, S5): después, con datos reales.
