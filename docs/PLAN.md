@@ -235,6 +235,34 @@ Pendiente en esta fase:
 - [ ] Revisar con el usuario: roles sugeridos de fábrica, datos de la empresa para
       la FEL, política de contraseñas.
 
+### Respaldos y copia fuera del servidor
+
+El contenedor `respaldo` (`infra/respaldo.sh`) hace cada día un `pg_dump` y un
+`tar.gz` de las fotos en `infra/respaldos/`:
+
+- **Diarios**: se conservan `DIAS_RETENCION` días (14 por omisión).
+- **Mensuales**: el respaldo del día 1 de cada mes (si ese día no se hizo, el primero
+  del mes) se copia a `infra/respaldos/mensuales/` y se conserva
+  `MESES_RETENCION_MENSUAL` meses (60 = 5 años, por omisión). Sirven para recuperarse
+  de un desastre y como evidencia histórica; la auditoría de la app se conserva
+  además 60 meses como mínimo en la base (`core.depurar_auditoria`).
+
+Ambas variables van en `infra/.env` (ver `infra/.env.ejemplo`). **Un respaldo que solo
+está en el servidor no sirve si el servidor se pierde**, así que los archivos deben
+copiarse fuera. Lo mínimo es copiar `mensuales/` cada mes (los diarios, si se puede):
+
+1. **Otro servidor de la red o VPS**, con `rsync` desde una tarea programada (cron)
+   del anfitrión: `rsync -a --ignore-existing /ruta/infra/respaldos/mensuales/ usuario@otro-servidor:/copias/arrancar/`.
+   Sin `--delete`, para que la copia externa conserve lo que el servidor ya depuró.
+2. **Un disco externo o una carpeta de red** en la oficina: mismo `rsync` hacia el
+   punto de montaje, o copiar la carpeta a mano cada mes.
+3. **Un drive en la nube** (S3/R2, Drive, etc.) con `rclone copy /ruta/infra/respaldos/mensuales remoto:arrancar`
+   desde cron; desde ahí el usuario los descarga y los graba en disco.
+
+Cada cierto tiempo hay que **probar una restauración**
+(`pg_restore -d <base> archivo.dump`) y comprobar que la copia externa abre.
+La ubicación elegida por cliente queda pendiente de decidir con el usuario.
+
 ## 6. Ideas por planificar (no programar todavía)
 
 **Orden y detalle actualizados en `docs/HOJA-DE-RUTA.md`** (2026-09-28). Cómo quedó la

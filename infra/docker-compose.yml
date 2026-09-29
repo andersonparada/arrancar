@@ -59,6 +59,7 @@ services:
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
       DIAS_RETENCION: ${DIAS_RETENCION:-14}
+      MESES_RETENCION_MENSUAL: ${MESES_RETENCION_MENSUAL:-60}
     volumes:
       - ./respaldos:/respaldos
       - archivos:/archivos:ro
