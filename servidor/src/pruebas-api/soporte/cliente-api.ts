@@ -56,8 +56,8 @@ export class ClienteApi {
     return this.enviar({ metodo: 'PATCH', url, cuerpo });
   }
 
-  delete<Cuerpo = any>(url: string): Promise<Respuesta<Cuerpo>> {
-    return this.enviar({ metodo: 'DELETE', url });
+  delete<Cuerpo = any>(url: string, cuerpo?: unknown): Promise<Respuesta<Cuerpo>> {
+    return this.enviar({ metodo: 'DELETE', url, cuerpo });
   }
 
   subirImagen<Cuerpo = any>(metodo: 'POST' | 'PUT', url: string, imagen: Imagen): Promise<Respuesta<Cuerpo>> {

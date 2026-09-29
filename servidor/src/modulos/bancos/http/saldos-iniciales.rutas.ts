@@ -1,7 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import { rutasDeIntercambio, type OpcionesDeIntercambio } from '../../core/intercambio/http/rutas-de-intercambio.js';
-import { esquemaAnulacion, esquemaParamsMovimiento } from './movimientos.esquemas-http.js';
+import { esquemaEliminacion, esquemaParamsMovimiento } from './movimientos.esquemas-http.js';
 import type { SaldosInicialesControlador } from './saldos-iniciales.controlador.js';
 import { esquemaFiltroDeSaldosIniciales, esquemaSaldoInicial } from './saldos-iniciales.esquemas-http.js';
 
@@ -17,6 +17,7 @@ const EN_EXCEL = {
   permisos: { importar: 'bancos.saldos-iniciales.importar', exportar: 'bancos.saldos-iniciales.exportar' },
 };
 
+/** No se anula (no aplica el inverso a un saldo inicial): se corrige o, si la cuenta sigue sin conciliaciones, se elimina. */
 function rutasDeEscritura(app: Aplicacion, controlador: SaldosInicialesControlador) {
   const gestionar = proteger({ permiso: 'bancos.saldos-iniciales.gestionar' });
   app.post(RUTA, {
@@ -29,14 +30,14 @@ function rutasDeEscritura(app: Aplicacion, controlador: SaldosInicialesControlad
     preHandler: gestionar,
     handler: controlador.actualizar,
   });
-  app.post(`${RUTA}/:movimientoId/anular`, {
-    schema: { ...conId, body: esquemaAnulacion },
+  app.delete(`${RUTA}/:movimientoId`, {
+    schema: { ...conId, body: esquemaEliminacion },
     preHandler: gestionar,
-    handler: controlador.anular,
+    handler: controlador.eliminar,
   });
 }
 
-/** Se ve con `bancos.cuentas-bancarias.ver` (aparece en la ficha de la cuenta); registrar, corregir y anular con `gestionar`. */
+/** Se ve con `bancos.cuentas-bancarias.ver` (aparece en la ficha de la cuenta); registrar, corregir y eliminar con `gestionar`. */
 export function rutasSaldosIniciales(
   controlador: SaldosInicialesControlador,
   intercambio: OpcionesDeIntercambio['intercambio'],

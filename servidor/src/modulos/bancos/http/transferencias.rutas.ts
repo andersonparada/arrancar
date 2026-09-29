@@ -3,6 +3,7 @@ import { proteger } from '../../core/compartido/http/guardias.js';
 import type { TransferenciasControlador } from './transferencias.controlador.js';
 import {
   esquemaAnulacionDeTransferencia,
+  esquemaEliminacionDeTransferencia,
   esquemaFiltroDeTransferencias,
   esquemaParamsTransferencia,
   esquemaTransferencia,
@@ -11,29 +12,43 @@ import {
 const etiquetas = ['Bancos'];
 const RUTA = '/bancos/transferencias';
 
-/** Sin Excel (es operación): su pantalla propia lista, registra y anula. */
+type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
+
+const conId = { tags: etiquetas, params: esquemaParamsTransferencia };
+
+function rutasDeLectura(app: Aplicacion, controlador: TransferenciasControlador) {
+  const ver = proteger({ permiso: 'bancos.transferencias.ver' });
+  app.get(RUTA, {
+    schema: { tags: etiquetas, querystring: esquemaFiltroDeTransferencias },
+    preHandler: ver,
+    handler: controlador.listar,
+  });
+  app.get(`${RUTA}/:transferenciaId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
+}
+
+/** Registrar con `gestionar`; anular y eliminar tienen su propio permiso. */
+function rutasDeEscritura(app: Aplicacion, controlador: TransferenciasControlador) {
+  app.post(RUTA, {
+    schema: { tags: etiquetas, body: esquemaTransferencia },
+    preHandler: proteger({ permiso: 'bancos.transferencias.gestionar' }),
+    handler: controlador.registrar,
+  });
+  app.post(`${RUTA}/:transferenciaId/anular`, {
+    schema: { ...conId, body: esquemaAnulacionDeTransferencia },
+    preHandler: proteger({ permiso: 'bancos.transferencias.anular' }),
+    handler: controlador.anular,
+  });
+  app.delete(`${RUTA}/:transferenciaId`, {
+    schema: { ...conId, body: esquemaEliminacionDeTransferencia },
+    preHandler: proteger({ permiso: 'bancos.transferencias.eliminar' }),
+    handler: controlador.eliminar,
+  });
+}
+
+/** Sin Excel (es operación): su pantalla propia lista, registra, anula y elimina. */
 export function rutasTransferencias(controlador: TransferenciasControlador): FastifyPluginAsyncZod {
   return async (app) => {
-    const conId = { tags: etiquetas, params: esquemaParamsTransferencia };
-    app.get(RUTA, {
-      schema: { tags: etiquetas, querystring: esquemaFiltroDeTransferencias },
-      preHandler: proteger({ permiso: 'bancos.transferencias.ver' }),
-      handler: controlador.listar,
-    });
-    app.post(RUTA, {
-      schema: { tags: etiquetas, body: esquemaTransferencia },
-      preHandler: proteger({ permiso: 'bancos.transferencias.gestionar' }),
-      handler: controlador.registrar,
-    });
-    app.get(`${RUTA}/:transferenciaId`, {
-      schema: conId,
-      preHandler: proteger({ permiso: 'bancos.transferencias.ver' }),
-      handler: controlador.obtener,
-    });
-    app.post(`${RUTA}/:transferenciaId/anular`, {
-      schema: { ...conId, body: esquemaAnulacionDeTransferencia },
-      preHandler: proteger({ permiso: 'bancos.transferencias.anular' }),
-      handler: controlador.anular,
-    });
+    rutasDeLectura(app, controlador);
+    rutasDeEscritura(app, controlador);
   };
 }

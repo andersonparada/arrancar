@@ -1,20 +1,23 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { ActualizarMovimiento } from '../aplicacion/casos-uso/movimientos/actualizar-movimiento.js';
-import type { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anular-movimiento.js';
 import type { CrearMovimiento } from '../aplicacion/casos-uso/movimientos/crear-movimiento.js';
+import type { EliminarSaldoInicial } from '../aplicacion/casos-uso/movimientos/eliminar-saldo-inicial.js';
 import type { ListarMovimientos } from '../aplicacion/casos-uso/movimientos/listar-movimientos.js';
-import type { ParamsMovimiento, SolicitudDeAnulacion } from './movimientos.esquemas-http.js';
+import type { ParamsMovimiento, SolicitudDeEliminacion } from './movimientos.esquemas-http.js';
 import type { FiltroDeSaldosInicialesSolicitado, SaldoInicialSolicitado } from './saldos-iniciales.esquemas-http.js';
 
 export interface CasosDeUsoDeSaldosIniciales {
   listar: ListarMovimientos;
   crear: CrearMovimiento;
   actualizar: ActualizarMovimiento;
-  anular: AnularMovimiento;
+  eliminar: EliminarSaldoInicial;
 }
 
-/** Traduce las peticiones HTTP a casos de uso; siempre como el saldo inicial (`saldoInicial: true`), nunca como nota. */
+/**
+ * Traduce las peticiones HTTP a casos de uso; siempre como el saldo inicial (`saldoInicial: true`),
+ * nunca como nota. No se anula (no aplica el inverso): se corrige o se elimina.
+ */
 export class SaldosInicialesControlador {
   constructor(private readonly casosDeUso: CasosDeUsoDeSaldosIniciales) {}
 
@@ -37,10 +40,14 @@ export class SaldosInicialesControlador {
       esSaldoInicial: true,
     });
 
-  anular = (solicitud: FastifyRequest<{ Params: ParamsMovimiento; Body: SolicitudDeAnulacion }>) =>
-    this.casosDeUso.anular.ejecutar(operadorDe(solicitud), {
+  eliminar = async (
+    solicitud: FastifyRequest<{ Params: ParamsMovimiento; Body: SolicitudDeEliminacion }>,
+    respuesta: FastifyReply,
+  ) => {
+    await this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), {
       movimientoId: solicitud.params.movimientoId,
       motivo: solicitud.body.motivo,
-      esSaldoInicial: true,
     });
+    return respuesta.status(204).send();
+  };
 }

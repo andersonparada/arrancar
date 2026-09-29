@@ -18,7 +18,9 @@ import {
   candidatosConMarcaDe,
   idsDeCandidatosDe,
   movimientosDelMesDe,
+  paresCompensadosPendientesDe,
   saldosInicialesDe,
+  tieneAlgunaConciliacionDe,
 } from './conciliacion-candidatos.drizzle.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
@@ -140,5 +142,13 @@ export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
 
   idsDeCandidatos(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]> {
     return idsDeCandidatosDe(cuentaBancariaId, finDelMes, conciliacionId);
+  }
+
+  tieneAlguna(cuentaBancariaId: string): Promise<boolean> {
+    return tieneAlgunaConciliacionDe(cuentaBancariaId);
+  }
+
+  paresCompensadosPendientes(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]> {
+    return paresCompensadosPendientesDe(cuentaBancariaId, finDelMes, conciliacionId);
   }
 }

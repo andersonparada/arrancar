@@ -112,6 +112,14 @@ export class NoEsUnSaldoInicial extends ReglaDeNegocioInfringida {
   }
 }
 
+export class ChequeNoEmitido extends ReglaDeNegocioInfringida {
+  readonly codigo = 'cheque_no_emitido';
+
+  constructor() {
+    super('Solo se puede blanquear un cheque emitido.');
+  }
+}
+
 export class ChequeraDemasiadoGrande extends DatoInvalido {
   readonly codigo = 'chequera_demasiado_grande';
 
@@ -234,3 +242,5 @@ export class SoloSeEliminaLaUltima extends ReglaDeNegocioInfringida {
     super('Solo se puede eliminar la última conciliación de la cuenta.');
   }
 }
+
+export * from './errores-de-reversion.js';

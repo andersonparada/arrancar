@@ -16,7 +16,13 @@ export const esquemaEmisionDeCheque = z.object({
   observaciones: textoOpcional(2000),
 });
 
-export const esquemaAnulacionDeCheque = z.object({ motivo: z.string().trim().min(1).max(500) });
+/** `fecha` solo aplica si el mes del cheque ya está conciliado (nota inversa); por omisión, hoy. */
+export const esquemaAnulacionDeCheque = z.object({
+  motivo: z.string().trim().min(1).max(500),
+  fecha: z.iso.date().optional(),
+});
+
+export const esquemaBlanqueoDeCheque = z.object({ motivo: z.string().trim().min(1).max(500) });
 
 export const esquemaParamsCuentaBancariaDeCheques = z.object({ cuentaBancariaId: z.uuid() });
 export const esquemaParamsCheque = z.object({ chequeId: z.uuid() });
@@ -31,6 +37,7 @@ export const esquemaFiltroDeChequesDeLaEmpresa = z.object({
 
 export type EmisionDeChequeSolicitada = z.infer<typeof esquemaEmisionDeCheque>;
 export type SolicitudDeAnulacionDeCheque = z.infer<typeof esquemaAnulacionDeCheque>;
+export type SolicitudDeBlanqueoDeCheque = z.infer<typeof esquemaBlanqueoDeCheque>;
 export type ParamsCuentaBancariaDeCheques = z.infer<typeof esquemaParamsCuentaBancariaDeCheques>;
 export type ParamsCheque = z.infer<typeof esquemaParamsCheque>;
 export type FiltroDeChequesDeLaEmpresaSolicitado = z.infer<typeof esquemaFiltroDeChequesDeLaEmpresa>;

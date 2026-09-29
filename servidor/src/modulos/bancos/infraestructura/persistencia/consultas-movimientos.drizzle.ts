@@ -9,6 +9,7 @@ import { finDelMesDe } from '../../dominio/conciliacion.js';
 import { cheques } from './cheques.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
+import { cuentaConConciliacionesDe, mesConciliadoDe } from './hechos-de-movimiento.js';
 import { mapeadorDeMovimiento } from './movimiento.mapeador.js';
 import { movimientos } from './movimientos.tablas.js';
 import { saldoVigente } from './saldo-vigente.js';
@@ -21,6 +22,8 @@ const columnas = {
   cuentaBancariaNombre: cuentaBancaria.nombre,
   chequeId: chequeDelMovimiento.id,
   numeroDeCheque: chequeDelMovimiento.numero,
+  mesConciliado: mesConciliadoDe(movimientos.cuentaBancariaId, movimientos.fecha),
+  cuentaConConciliaciones: cuentaConConciliacionesDe(movimientos.cuentaBancariaId),
 };
 
 /** Los movimientos vigentes de una cuenta, sin contar uno (el que se corrige). */

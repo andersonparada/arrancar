@@ -81,17 +81,26 @@ describe('transferencias por API', () => {
     expect(obtenida.cuerpo).toEqual(registrada.cuerpo);
   });
 
-  it('se anula con motivo y deja ambas notas anuladas', async () => {
+  it('se anula con motivo y crea los dos inversos, dejando las notas originales revertidas', async () => {
+    const cuentaOrigenAntes = await cuenta.propietario.get(`/api/bancos/cuentas-bancarias/${origen}`);
+    const cuentaDestinoAntes = await cuenta.propietario.get(`/api/bancos/cuentas-bancarias/${destino}`);
     const registrada = await cuenta.propietario.post(RUTA, datos());
 
     const anulada = await cuenta.propietario.post(`${RUTA}/${registrada.cuerpo.id}/anular`, { motivo: 'Duplicada' });
 
     expect(anulada.estado).toBe(200);
     expect(anulada.cuerpo.anuladaEn).toEqual(expect.any(String));
-    const origenAnulado = await cuenta.propietario.get(`${RUTA_MOVIMIENTOS}/${registrada.cuerpo.movimientoOrigenId}`);
-    const destinoAnulado = await cuenta.propietario.get(`${RUTA_MOVIMIENTOS}/${registrada.cuerpo.movimientoDestinoId}`);
-    expect(origenAnulado.cuerpo.anuladoEn).toEqual(expect.any(String));
-    expect(destinoAnulado.cuerpo.anuladoEn).toEqual(expect.any(String));
+    const origenRevertido = await cuenta.propietario.get(`${RUTA_MOVIMIENTOS}/${registrada.cuerpo.movimientoOrigenId}`);
+    const destinoRevertido = await cuenta.propietario.get(
+      `${RUTA_MOVIMIENTOS}/${registrada.cuerpo.movimientoDestinoId}`,
+    );
+    expect(origenRevertido.cuerpo.revertidoEn).toEqual(expect.any(String));
+    expect(destinoRevertido.cuerpo.revertidoEn).toEqual(expect.any(String));
+    // El saldo queda igual que antes: cada inverso compensa su nota.
+    const cuentaOrigenDespues = await cuenta.propietario.get(`/api/bancos/cuentas-bancarias/${origen}`);
+    const cuentaDestinoDespues = await cuenta.propietario.get(`/api/bancos/cuentas-bancarias/${destino}`);
+    expect(cuentaOrigenDespues.cuerpo.saldo).toBe(cuentaOrigenAntes.cuerpo.saldo);
+    expect(cuentaDestinoDespues.cuerpo.saldo).toBe(cuentaDestinoAntes.cuerpo.saldo);
   });
 
   it('sin permisos, registrar y anular responden 403', async () => {

@@ -1,3 +1,4 @@
+import { accionesDeCheque, type AccionesDeCheque } from '../aplicacion/acciones-posibles.js';
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
 import type { ChequeDto, ChequeListadoDto, FiltroDeChequesDeLaEmpresa } from '../aplicacion/dto/cheque.dto.js';
 import type { MovimientoDto } from '../aplicacion/dto/movimiento.dto.js';
@@ -10,9 +11,9 @@ import type { MovimientosEnMemoria } from './dobles-de-movimientos.js';
 
 const copia = (cheque: Cheque) => Cheque.reconstruir(cheque.instantanea());
 
-function aDto(cheque: Cheque): ChequeDto {
+function aDto(cheque: Cheque, acciones: AccionesDeCheque): ChequeDto {
   const { id, empresaId: _empresaId, anuladoEn, ...datos } = cheque.instantanea();
-  return { ...datos, id: id.valor, anuladoEn: anuladoEn?.toISOString() ?? null };
+  return { ...datos, id: id.valor, anuladoEn: anuladoEn?.toISOString() ?? null, ...acciones };
 }
 
 const cumpleFiltro =
@@ -70,6 +71,13 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
     this.movimientos = movimientos;
   }
 
+  /** Qué se puede hacer con el cheque, como lo calcularía la consulta real. */
+  private accionesDe(cheque: Cheque): AccionesDeCheque {
+    const { estado, movimientoId } = cheque.instantanea();
+    const hechos = movimientoId && this.movimientos ? this.movimientos.hechosDe(movimientoId) : null;
+    return accionesDeCheque(estado, hechos);
+  }
+
   async buscar(id: ChequeId): Promise<Cheque | null> {
     const guardado = this.registros.get(id.valor);
     return guardado ? copia(guardado) : null;
@@ -87,14 +95,14 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
     return [...this.registros.values()]
       .filter((c) => c.instantanea().chequeraId === chequeraId)
       .filter((c) => !estado || c.instantanea().estado === estado)
-      .map(aDto)
+      .map((c) => aDto(c, this.accionesDe(c)))
       .sort((a, b) => a.numero - b.numero);
   }
 
   async obtener(chequeId: string): Promise<ChequeDto> {
     const cheque = this.registros.get(chequeId);
     if (!cheque) throw new RecursoNoEncontrado('El cheque');
-    return aDto(cheque);
+    return aDto(cheque, this.accionesDe(cheque));
   }
 
   /** Los cheques emitidos y anulados, opcionalmente filtrados; los disponibles no se incluyen. */
@@ -122,6 +130,7 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
       ...datosDelChequeEmitido(movimiento),
       anuladoEn: anuladoEn?.toISOString() ?? null,
       motivoDeAnulacion,
+      ...this.accionesDe(cheque),
     };
   }
 
@@ -136,7 +145,7 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
           (a.chequera.serie ?? '').localeCompare(b.chequera.serie ?? '') ||
           a.cheque.instantanea().numero - b.cheque.instantanea().numero,
       );
-    return candidatos[0] ? aDto(candidatos[0].cheque) : null;
+    return candidatos[0] ? aDto(candidatos[0].cheque, this.accionesDe(candidatos[0].cheque)) : null;
   }
 }
 

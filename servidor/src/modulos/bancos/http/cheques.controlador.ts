@@ -1,6 +1,7 @@
 import type { FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque.js';
+import type { BlanquearCheque } from '../aplicacion/casos-uso/cheques/blanquear-cheque.js';
 import type { EmitirCheque } from '../aplicacion/casos-uso/cheques/emitir-cheque.js';
 import type { ListarChequesDeLaEmpresa } from '../aplicacion/casos-uso/cheques/listar-cheques-de-la-empresa.js';
 import type { SiguienteChequeDisponible } from '../aplicacion/casos-uso/cheques/siguiente-cheque-disponible.js';
@@ -10,6 +11,7 @@ import type {
   ParamsCheque,
   ParamsCuentaBancariaDeCheques,
   SolicitudDeAnulacionDeCheque,
+  SolicitudDeBlanqueoDeCheque,
 } from './cheques.esquemas-http.js';
 
 export interface CasosDeUsoDeCheques {
@@ -17,6 +19,7 @@ export interface CasosDeUsoDeCheques {
   siguienteDisponible: SiguienteChequeDisponible;
   emitir: EmitirCheque;
   anular: AnularCheque;
+  blanquear: BlanquearCheque;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
@@ -37,6 +40,13 @@ export class ChequesControlador {
 
   anular = (solicitud: FastifyRequest<{ Params: ParamsCheque; Body: SolicitudDeAnulacionDeCheque }>) =>
     this.casosDeUso.anular.ejecutar(operadorDe(solicitud), {
+      chequeId: solicitud.params.chequeId,
+      motivo: solicitud.body.motivo,
+      fecha: solicitud.body.fecha,
+    });
+
+  blanquear = (solicitud: FastifyRequest<{ Params: ParamsCheque; Body: SolicitudDeBlanqueoDeCheque }>) =>
+    this.casosDeUso.blanquear.ejecutar(operadorDe(solicitud), {
       chequeId: solicitud.params.chequeId,
       motivo: solicitud.body.motivo,
     });

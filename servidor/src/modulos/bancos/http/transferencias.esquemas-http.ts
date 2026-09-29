@@ -18,7 +18,13 @@ export const esquemaTransferencia = z.object({
 
 export const esquemaParamsTransferencia = z.object({ transferenciaId: z.uuid() });
 
-export const esquemaAnulacionDeTransferencia = z.object({ motivo: z.string().trim().min(1).max(500) });
+/** `fecha` es la de los dos inversos: la escribe el usuario; por omisión, hoy. */
+export const esquemaAnulacionDeTransferencia = z.object({
+  motivo: z.string().trim().min(1).max(500),
+  fecha: z.iso.date().optional(),
+});
+
+export const esquemaEliminacionDeTransferencia = z.object({ motivo: z.string().trim().min(1).max(500) });
 
 /** Filtros de la lista: de una cuenta (como origen o destino) y entre dos fechas (`AAAA-MM-DD`, incluidas). */
 export const esquemaFiltroDeTransferencias = z.object({
@@ -30,4 +36,5 @@ export const esquemaFiltroDeTransferencias = z.object({
 export type TransferenciaSolicitada = z.infer<typeof esquemaTransferencia>;
 export type ParamsTransferencia = z.infer<typeof esquemaParamsTransferencia>;
 export type SolicitudDeAnulacionDeTransferencia = z.infer<typeof esquemaAnulacionDeTransferencia>;
+export type SolicitudDeEliminacionDeTransferencia = z.infer<typeof esquemaEliminacionDeTransferencia>;
 export type FiltroDeTransferenciasSolicitado = z.infer<typeof esquemaFiltroDeTransferencias>;

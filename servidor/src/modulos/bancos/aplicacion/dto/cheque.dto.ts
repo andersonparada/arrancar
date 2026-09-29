@@ -10,6 +10,10 @@ export interface ChequeDto {
   movimientoId: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  /** Lo calcula el servidor (ver `accionesDeCheque`): si se puede anular. */
+  puedeAnular: boolean;
+  /** Lo calcula el servidor: si se puede blanquear (emitido, con movimiento limpio). */
+  puedeBlanquear: boolean;
 }
 
 /** Lo que se recibe para emitir un cheque, ya validado en su forma. */
@@ -43,6 +47,8 @@ export interface ChequeListadoDto {
   referencia: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  puedeAnular: boolean;
+  puedeBlanquear: boolean;
 }
 
 /** Qué cheques listar: emitidos o anulados de una cuenta, entre dos fechas; lo que falte no filtra. */

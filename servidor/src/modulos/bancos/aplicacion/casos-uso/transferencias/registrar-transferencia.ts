@@ -64,8 +64,8 @@ export class RegistrarTransferencia {
       beneficiario: `Transferencia desde ${nombreOrigen}`,
     };
     return {
-      debito: Movimiento.crear(empresaId, debito, transferenciaId),
-      credito: Movimiento.crear(empresaId, credito, transferenciaId),
+      debito: Movimiento.crear(empresaId, debito, { transferenciaId }),
+      credito: Movimiento.crear(empresaId, credito, { transferenciaId }),
     };
   }
 

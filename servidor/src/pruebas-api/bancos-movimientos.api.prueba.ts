@@ -76,7 +76,7 @@ describe('notas por API', () => {
     expect(cambiada.cuerpo.referencia).toBe('Registro cambiado');
   });
 
-  it('se anulan con motivo', async () => {
+  it('se anulan con motivo: crea el inverso y deja la original revertida', async () => {
     const creada = await cuenta.propietario.post(RUTA_NOTAS, notaDatos());
     const anulada = await cuenta.propietario.post(`${RUTA_NOTAS}/${creada.cuerpo.id}/anular`, {
       motivo: 'Cancelación de prueba',
@@ -85,9 +85,12 @@ describe('notas por API', () => {
     expect(anulada.estado).toBe(200);
     expect(anulada.cuerpo).toMatchObject({
       id: creada.cuerpo.id,
-      anuladoEn: expect.any(String),
-      motivoDeAnulacion: 'Cancelación de prueba',
+      revertidoEn: expect.any(String),
+      motivoDeReversion: 'Cancelación de prueba',
     });
+    const notas = (await cuenta.propietario.get(RUTA_NOTAS)).cuerpo;
+    const inversa = notas.find((n: { revierteAId: string | null }) => n.revierteAId === creada.cuerpo.id);
+    expect(inversa).toMatchObject({ tipo: 'debito', monto: creada.cuerpo.monto });
   });
 
   it('no acepta tocar el saldo inicial de la cuenta', async () => {
@@ -147,6 +150,21 @@ describe('notas por API', () => {
 
     expect(anulada.estado).toBe(403);
   });
+
+  it('se elimina de verdad una nota limpia; eliminar pide su propio permiso', async () => {
+    const creada = await cuenta.propietario.post(RUTA_NOTAS, notaDatos());
+    const gestor = await crearUsuarioConPermisos(entorno, cuenta, {
+      nombres: 'RegistraSinEliminar',
+      apellidos: 'Prueba',
+      permisos: ['bancos.notas.ver', 'bancos.notas.gestionar'],
+    });
+
+    expect((await gestor.delete(`${RUTA_NOTAS}/${creada.cuerpo.id}`, { motivo: 'Sin permiso' })).estado).toBe(403);
+    const eliminada = await cuenta.propietario.delete(`${RUTA_NOTAS}/${creada.cuerpo.id}`, { motivo: 'Duplicada' });
+
+    expect(eliminada.estado).toBe(204);
+    expect((await cuenta.propietario.get(`${RUTA_NOTAS}/${creada.cuerpo.id}`)).estado).toBe(404);
+  });
 });
 
 describe('saldos iniciales por API', () => {
@@ -170,28 +188,33 @@ describe('saldos iniciales por API', () => {
     expect(exportado.cabeceras['content-type']).toBe(TIPO_EXCEL);
   });
 
-  it('se anulan con motivo', async () => {
-    const nueva = await crearReferencias(cuenta.propietario, 'Saldo a anular');
+  it('se elimina si la cuenta no tiene conciliaciones (no se anula: no aplica el inverso)', async () => {
+    const nueva = await crearReferencias(cuenta.propietario, 'Saldo a eliminar');
     const creado = await cuenta.propietario.post(RUTA_SALDOS_INICIALES, saldoInicialDatos({ ...nueva }));
 
-    const anulado = await cuenta.propietario.post(`${RUTA_SALDOS_INICIALES}/${creado.cuerpo.id}/anular`, {
+    expect(
+      (await cuenta.propietario.post(`${RUTA_SALDOS_INICIALES}/${creado.cuerpo.id}/anular`, { motivo: 'x' })).estado,
+    ).toBe(404);
+    const eliminado = await cuenta.propietario.delete(`${RUTA_SALDOS_INICIALES}/${creado.cuerpo.id}`, {
       motivo: 'Error de captura',
     });
 
-    expect(anulado.estado).toBe(200);
-    expect(anulado.cuerpo.anuladoEn).toEqual(expect.any(String));
+    expect(eliminado.estado).toBe(204);
+    expect(
+      (await cuenta.propietario.get(`${RUTA_SALDOS_INICIALES}?cuentaBancariaId=${nueva.cuentaBancariaId}`)).cuerpo,
+    ).toHaveLength(0);
   });
 
   it('no acepta tocar una nota suelta', async () => {
     const creada = await cuenta.propietario.post(RUTA_NOTAS, notaDatos({ fecha: '2026-06-01' }));
 
     const corregido = await cuenta.propietario.put(`${RUTA_SALDOS_INICIALES}/${creada.cuerpo.id}`, saldoInicialDatos());
-    const anulado = await cuenta.propietario.post(`${RUTA_SALDOS_INICIALES}/${creada.cuerpo.id}/anular`, {
+    const eliminado = await cuenta.propietario.delete(`${RUTA_SALDOS_INICIALES}/${creada.cuerpo.id}`, {
       motivo: 'x',
     });
 
     expect(corregido.cuerpo.error.codigo).toBe('no_es_un_saldo_inicial');
-    expect(anulado.cuerpo.error.codigo).toBe('no_es_un_saldo_inicial');
+    expect(eliminado.cuerpo.error.codigo).toBe('no_es_un_saldo_inicial');
   });
 
   it('para gestionar hace falta bancos.saldos-iniciales.gestionar; ver usa el permiso de cuentas bancarias', async () => {

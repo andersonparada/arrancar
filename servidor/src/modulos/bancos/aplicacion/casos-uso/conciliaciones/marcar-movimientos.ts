@@ -25,11 +25,17 @@ export class MarcarMovimientos {
       if (!conciliacion.estaEnProceso) throw new ConciliacionNoEstaEnProceso();
 
       const { cuentaBancariaId } = conciliacion.instantanea();
-      const idsValidos = await consultas.idsDeCandidatos(cuentaBancariaId, conciliacion.finDelMes(), conciliacionId);
+      const finDelMes = conciliacion.finDelMes();
+      const idsValidos = await consultas.idsDeCandidatos(cuentaBancariaId, finDelMes, conciliacionId);
       const validos = new Set(idsValidos);
       if (movimientoIds.some((id) => !validos.has(id))) throw new MovimientoNoConciliable();
 
-      await repositorio.guardarMarcas(conciliacionId, movimientoIds);
+      // Un original y su inverso que nunca pasaron por el banco se marcan juntos, compensados:
+      // no son partidas en tránsito, aunque el usuario no los haya elegido a mano.
+      const compensados = await consultas.paresCompensadosPendientes(cuentaBancariaId, finDelMes, conciliacionId);
+      const marcados = [...new Set([...movimientoIds, ...compensados])];
+
+      await repositorio.guardarMarcas(conciliacionId, marcados);
       return consultas.obtener(conciliacionId);
     });
   }

@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { AnularTransferencia } from '../aplicacion/casos-uso/transferencias/anular-transferencia.js';
+import type { EliminarTransferencia } from '../aplicacion/casos-uso/transferencias/eliminar-transferencia.js';
 import type { ListarTransferencias } from '../aplicacion/casos-uso/transferencias/listar-transferencias.js';
 import type { ObtenerTransferencia } from '../aplicacion/casos-uso/transferencias/obtener-transferencia.js';
 import type { RegistrarTransferencia } from '../aplicacion/casos-uso/transferencias/registrar-transferencia.js';
@@ -8,6 +9,7 @@ import type {
   FiltroDeTransferenciasSolicitado,
   ParamsTransferencia,
   SolicitudDeAnulacionDeTransferencia,
+  SolicitudDeEliminacionDeTransferencia,
   TransferenciaSolicitada,
 } from './transferencias.esquemas-http.js';
 
@@ -15,6 +17,7 @@ export interface CasosDeUsoDeTransferencias {
   registrar: RegistrarTransferencia;
   obtener: ObtenerTransferencia;
   anular: AnularTransferencia;
+  eliminar: EliminarTransferencia;
   listar: ListarTransferencias;
 }
 
@@ -37,5 +40,17 @@ export class TransferenciasControlador {
     this.casosDeUso.anular.ejecutar(operadorDe(solicitud), {
       transferenciaId: solicitud.params.transferenciaId,
       motivo: solicitud.body.motivo,
+      fecha: solicitud.body.fecha,
     });
+
+  eliminar = async (
+    solicitud: FastifyRequest<{ Params: ParamsTransferencia; Body: SolicitudDeEliminacionDeTransferencia }>,
+    respuesta: FastifyReply,
+  ) => {
+    await this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), {
+      transferenciaId: solicitud.params.transferenciaId,
+      motivo: solicitud.body.motivo,
+    });
+    return respuesta.status(204).send();
+  };
 }

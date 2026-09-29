@@ -3,9 +3,10 @@ import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.
 import type { ActualizarMovimiento } from '../aplicacion/casos-uso/movimientos/actualizar-movimiento.js';
 import type { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anular-movimiento.js';
 import type { CrearMovimiento } from '../aplicacion/casos-uso/movimientos/crear-movimiento.js';
+import type { EliminarMovimiento } from '../aplicacion/casos-uso/movimientos/eliminar-movimiento.js';
 import type { ListarMovimientos } from '../aplicacion/casos-uso/movimientos/listar-movimientos.js';
 import type { ObtenerMovimiento } from '../aplicacion/casos-uso/movimientos/obtener-movimiento.js';
-import type { ParamsMovimiento, SolicitudDeAnulacion } from './movimientos.esquemas-http.js';
+import type { ParamsMovimiento, SolicitudDeAnulacion, SolicitudDeEliminacion } from './movimientos.esquemas-http.js';
 import type { FiltroDeNotasSolicitado, NotaSolicitada } from './notas.esquemas-http.js';
 
 export interface CasosDeUsoDeNotas {
@@ -14,6 +15,7 @@ export interface CasosDeUsoDeNotas {
   crear: CrearMovimiento;
   actualizar: ActualizarMovimiento;
   anular: AnularMovimiento;
+  eliminar: EliminarMovimiento;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; siempre como nota (`saldoInicial: false`), nunca como el saldo inicial. */
@@ -45,6 +47,17 @@ export class NotasControlador {
     this.casosDeUso.anular.ejecutar(operadorDe(solicitud), {
       movimientoId: solicitud.params.movimientoId,
       motivo: solicitud.body.motivo,
-      esSaldoInicial: false,
+      fecha: solicitud.body.fecha,
     });
+
+  eliminar = async (
+    solicitud: FastifyRequest<{ Params: ParamsMovimiento; Body: SolicitudDeEliminacion }>,
+    respuesta: FastifyReply,
+  ) => {
+    await this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), {
+      movimientoId: solicitud.params.movimientoId,
+      motivo: solicitud.body.motivo,
+    });
+    return respuesta.status(204).send();
+  };
 }

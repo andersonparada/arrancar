@@ -40,12 +40,18 @@ export const movimientos = esquemaBancos.table(
     referencia: text(),
     beneficiario: text(),
     observaciones: text(),
+    /** Anulación a la antigua: solo la usan los cheques en un mes abierto (sin inverso, fuera del saldo). */
     anuladoEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
     /** La transferencia que la creó, si es una de sus dos notas. */
     transferenciaId: uuid().references((): AnyPgColumn => transferencias.id),
     /** La conciliación donde quedó marcado; null si sigue pendiente. */
     conciliacionId: uuid().references((): AnyPgColumn => conciliaciones.id),
+    /** Cuándo y por qué se revirtió (creó su inverso); null si nunca se revirtió. */
+    revertidoEn: timestamp({ withTimezone: true }),
+    motivoDeReversion: text(),
+    /** El movimiento original que revierte, si este es un inverso. */
+    revierteAId: uuid().references((): AnyPgColumn => movimientos.id),
     ...marcasDeTiempo,
     ...autoria,
   },
@@ -53,6 +59,7 @@ export const movimientos = esquemaBancos.table(
     index('movimientos_cuenta_fecha_idx').on(t.cuentaBancariaId, t.fecha),
     index('movimientos_transferencia_idx').on(t.transferenciaId),
     index('movimientos_conciliacion_idx').on(t.conciliacionId),
+    index('movimientos_revierte_a_idx').on(t.revierteAId),
     uniqueIndex('movimientos_un_saldo_inicial')
       .on(t.cuentaBancariaId)
       .where(sql`${t.saldoInicial} and ${t.anuladoEn} is null`),

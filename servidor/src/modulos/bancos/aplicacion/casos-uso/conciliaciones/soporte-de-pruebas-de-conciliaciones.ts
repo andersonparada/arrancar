@@ -6,7 +6,11 @@ import {
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
 import { ConciliacionesEnMemoria } from '../../../pruebas/dobles-de-conciliaciones.js';
-import { MovimientosEnMemoria, PoliticaDeSobregiroFija } from '../../../pruebas/dobles-de-movimientos.js';
+import {
+  MovimientosEnMemoria,
+  PoliticaDeMismaFechaFija,
+  PoliticaDeSobregiroFija,
+} from '../../../pruebas/dobles-de-movimientos.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
 import { CrearMovimiento } from '../movimientos/crear-movimiento.js';
@@ -51,7 +55,14 @@ function dependenciasDePrueba(
     consultasMovimientos: movimientos,
     auditoria,
   };
-  const deMovimientos = { unidadDeTrabajo, repositorio: movimientos, consultas: movimientos, reglas, auditoria };
+  const deMovimientos = {
+    unidadDeTrabajo,
+    repositorio: movimientos,
+    consultas: movimientos,
+    reglas,
+    auditoria,
+    politicaDeMismaFecha: new PoliticaDeMismaFechaFija(),
+  };
   return { deConciliaciones, deMovimientos };
 }
 

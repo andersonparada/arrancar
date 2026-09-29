@@ -16,7 +16,7 @@ export interface ConciliacionResumenDto {
 }
 
 /** Un movimiento candidato de la pantalla de conciliar, con si está marcado. */
-export interface MovimientoConMarcaDto extends MovimientoDto {
+export interface MovimientoConMarcaDto extends Omit<MovimientoDto, 'puedeAnular' | 'puedeEliminar'> {
   marcado: boolean;
 }
 

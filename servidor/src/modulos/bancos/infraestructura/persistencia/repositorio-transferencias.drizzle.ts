@@ -22,4 +22,8 @@ export class RepositorioTransferenciasDrizzle implements RepositorioTransferenci
       .set(mapeadorDeTransferencia.aFila(transferencia))
       .where(eq(transferencias.id, transferencia.id.valor));
   }
+
+  async eliminar(id: TransferenciaId): Promise<void> {
+    await transaccionEnCurso().delete(transferencias).where(eq(transferencias.id, id.valor));
+  }
 }

@@ -1,9 +1,17 @@
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
+import { accionesDeMovimiento } from '../../aplicacion/acciones-posibles.js';
 import type { MovimientoDto } from '../../aplicacion/dto/movimiento.dto.js';
 import { Movimiento } from '../../dominio/movimiento.js';
+import { hechosDeLaFila } from './hechos-de-movimiento.js';
 import type { movimientos } from './movimientos.tablas.js';
 
 type Fila = typeof movimientos.$inferSelect;
+
+/** Lo que trae la consulta además de la fila: para saber qué se puede hacer con el movimiento. */
+interface DatosDeLaConsulta extends Pick<MovimientoDto, 'cuentaBancariaNombre' | 'chequeId' | 'numeroDeCheque'> {
+  mesConciliado: boolean;
+  cuentaConConciliaciones: boolean;
+}
 
 /** Traduce entre la fila de la tabla, la entidad y lo que ve la pantalla. */
 export const mapeadorDeMovimiento = {
@@ -29,18 +37,24 @@ export const mapeadorDeMovimiento = {
     return { ...datos, id: id.valor, empresaId: empresaId.valor };
   },
 
-  aDto({
-    empresaId,
-    creadoEn,
-    actualizadoEn,
-    creadoPor,
-    actualizadoPor,
-    anuladoEn,
-    ...dto
-  }: Fila & Pick<MovimientoDto, 'cuentaBancariaNombre' | 'chequeId' | 'numeroDeCheque'>): MovimientoDto {
+  aDto(fila: Fila & DatosDeLaConsulta): MovimientoDto {
+    const {
+      empresaId: _empresaId,
+      creadoEn: _creadoEn,
+      actualizadoEn: _actualizadoEn,
+      creadoPor: _creadoPor,
+      actualizadoPor: _actualizadoPor,
+      mesConciliado: _mesConciliado,
+      cuentaConConciliaciones: _cuentaConConciliaciones,
+      anuladoEn,
+      revertidoEn,
+      ...dto
+    } = fila;
     return {
       ...dto,
       anuladoEn: anuladoEn ? anuladoEn.toISOString() : null,
+      revertidoEn: revertidoEn ? revertidoEn.toISOString() : null,
+      ...accionesDeMovimiento(hechosDeLaFila(fila)),
     };
   },
 };

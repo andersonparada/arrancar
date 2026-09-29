@@ -1,6 +1,6 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
-import { esquemaAnulacion, esquemaParamsMovimiento } from './movimientos.esquemas-http.js';
+import { esquemaAnulacion, esquemaEliminacion, esquemaParamsMovimiento } from './movimientos.esquemas-http.js';
 import type { NotasControlador } from './notas.controlador.js';
 import { esquemaFiltroDeNotas, esquemaNota } from './notas.esquemas-http.js';
 
@@ -33,6 +33,11 @@ function rutasDeEscritura(app: Aplicacion, controlador: NotasControlador) {
     schema: { ...conId, body: esquemaAnulacion },
     preHandler: proteger({ permiso: 'bancos.notas.anular' }),
     handler: controlador.anular,
+  });
+  app.delete(`${RUTA}/:movimientoId`, {
+    schema: { ...conId, body: esquemaEliminacion },
+    preHandler: proteger({ permiso: 'bancos.notas.eliminar' }),
+    handler: controlador.eliminar,
   });
 }
 

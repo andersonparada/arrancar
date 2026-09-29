@@ -121,6 +121,28 @@ describe('marcar: candidatos, partidas y saldo calculado', () => {
     ).rejects.toThrow(MovimientoNoConciliable);
   });
 
+  it('un original y su inverso que nunca pasaron por el banco se marcan juntos, compensados', async () => {
+    const idNota = await agregarMovimiento(entorno.movimientos, { fecha: '2026-01-10', monto: '75.00' });
+    await entorno.casos.anularMovimiento.ejecutar(operador, {
+      movimientoId: idNota,
+      motivo: 'Error',
+      fecha: '2026-01-12',
+    });
+    const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
+    const idSaldoInicial = conciliacion.candidatos.find((m) => m.saldoInicial)!.id;
+
+    const marcado = await entorno.casos.marcar.ejecutar(operador, {
+      conciliacionId: conciliacion.id,
+      movimientoIds: [idSaldoInicial],
+    });
+
+    const marcados = marcado.candidatos.filter((c) => c.marcado);
+    expect(marcados.map((c) => c.id)).toEqual(expect.arrayContaining([idNota]));
+    expect(marcados).toHaveLength(3); // saldo inicial + la nota revertida + su inverso
+    expect(marcado.partidas.otrosDebitosEnTransito).toHaveLength(0);
+    expect(marcado.partidas.creditosEnTransito).toHaveLength(0);
+  });
+
   it('no se pueden cambiar las marcas si ya no está en proceso', async () => {
     const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
     await entorno.casos.terminar.ejecutar(operador, conciliacion.id);
@@ -207,5 +229,60 @@ describe('devolver', () => {
       movimientoIds: [idSaldoInicial],
     });
     expect(remarcada.saldoQueDebeMostrarElEstadoDeCuenta).toBe('1000.00');
+  });
+});
+
+describe('un original conciliado y su inverso', () => {
+  it('el inverso es un movimiento normal: no se marca solo y queda como partida en tránsito', async () => {
+    const idNota = await agregarMovimiento(entorno.movimientos, { fecha: '2026-01-10', monto: '75.00' });
+    await conciliarYAutorizar(entorno, 1, (candidatos) => candidatos.map((c) => c.id));
+    await entorno.casos.anularMovimiento.ejecutar(operador, {
+      movimientoId: idNota,
+      motivo: 'Error',
+      fecha: '2026-02-05',
+    });
+
+    const febrero = await entorno.casos.iniciar.ejecutar(operador, inicio({ mes: 2 }));
+    const marcado = await entorno.casos.marcar.ejecutar(operador, { conciliacionId: febrero.id, movimientoIds: [] });
+
+    expect(marcado.candidatos).toHaveLength(1);
+    expect(marcado.candidatos[0]).toMatchObject({ tipo: 'debito', monto: '75.00', marcado: false });
+    expect(marcado.partidas.otrosDebitosEnTransito).toHaveLength(1);
+  });
+});
+
+describe('iniciar con pares compensados', () => {
+  it('un original y su inverso que nunca pasaron por el banco arrancan marcados juntos', async () => {
+    const idNota = await agregarMovimiento(entorno.movimientos, { fecha: '2026-01-10', monto: '75.00' });
+    await entorno.casos.anularMovimiento.ejecutar(operador, {
+      movimientoId: idNota,
+      motivo: 'Error',
+      fecha: '2026-01-12',
+    });
+
+    const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
+
+    const marcados = conciliacion.candidatos.filter((c) => c.marcado);
+    expect(marcados).toHaveLength(2);
+    expect(marcados.map((c) => c.id)).toContain(idNota);
+    expect(conciliacion.partidas.creditosEnTransito).toHaveLength(1); // solo el saldo inicial, que nadie marcó
+    expect(conciliacion.partidas.otrosDebitosEnTransito).toHaveLength(0);
+  });
+
+  it('si el usuario los desmarca no vuelven solos hasta que guarde las marcas (marcar los reincorpora)', async () => {
+    const idNota = await agregarMovimiento(entorno.movimientos, { fecha: '2026-01-10', monto: '75.00' });
+    await entorno.casos.anularMovimiento.ejecutar(operador, {
+      movimientoId: idNota,
+      motivo: 'Error',
+      fecha: '2026-01-12',
+    });
+    const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
+
+    const marcada = await entorno.casos.marcar.ejecutar(operador, {
+      conciliacionId: conciliacion.id,
+      movimientoIds: [],
+    });
+
+    expect(marcada.candidatos.filter((c) => c.marcado)).toHaveLength(2);
   });
 });

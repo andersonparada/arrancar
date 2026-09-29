@@ -12,4 +12,12 @@ export interface ConsultasConciliaciones {
    * marcados en esta).
    */
   idsDeCandidatos(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]>;
+  /** Si la cuenta ya tiene alguna conciliación (de cualquier estado). */
+  tieneAlguna(cuentaBancariaId: string): Promise<boolean>;
+  /**
+   * Ids de los pares original + inverso que nunca pasaron por el banco (ninguno de los dos marcado
+   * en otra conciliación; en `conciliacionId` no cuenta, es la que se está haciendo) y tienen fecha
+   * hasta `finDelMes`: se marcan juntos, compensados, sin aparecer como partidas en tránsito.
+   */
+  paresCompensadosPendientes(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]>;
 }

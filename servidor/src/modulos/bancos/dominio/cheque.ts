@@ -1,6 +1,6 @@
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
-import { ChequeAnulado, ChequeNoDisponible, MotivoDeAnulacionInvalido } from './errores.js';
+import { ChequeAnulado, ChequeNoDisponible, ChequeNoEmitido, MotivoDeAnulacionInvalido } from './errores.js';
 
 export type ChequeId = Identificador<'Cheque'>;
 export type EstadoDelCheque = 'disponible' | 'emitido' | 'anulado';
@@ -59,6 +59,18 @@ export class Cheque extends Entidad<ChequeId> {
     const motivoDeAnulacion = motivo.trim();
     if (!motivoDeAnulacion || motivoDeAnulacion.length > MAXIMO_DEL_MOTIVO) throw new MotivoDeAnulacionInvalido();
     this.propiedades = { ...this.propiedades, estado: 'anulado', anuladoEn: new Date(), motivoDeAnulacion };
+  }
+
+  /**
+   * Lo blanquea: se registró por error y nunca se imprimió ni se entregó. Vuelve a `disponible`
+   * (se olvida su beneficiario, fecha y monto, y su número se puede volver a usar); el movimiento
+   * lo elimina de verdad quien llama, en la misma transacción.
+   * TODO: cuando exista la impresión de cheques, bloquear el blanqueo si ya se imprimió.
+   * @throws ChequeNoEmitido si no está emitido.
+   */
+  blanquear(): void {
+    if (this.propiedades.estado !== 'emitido') throw new ChequeNoEmitido();
+    this.propiedades = { ...this.propiedades, estado: 'disponible', movimientoId: null, noNegociable: true };
   }
 
   get estaDisponible(): boolean {

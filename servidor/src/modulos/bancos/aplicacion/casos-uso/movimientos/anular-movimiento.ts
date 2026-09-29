@@ -1,46 +1,68 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { MovimientoDto } from '../../dto/movimiento.dto.js';
+import type { PoliticaDeMismaFechaEnAnulacion } from '../../puertos/politica-de-misma-fecha-en-anulacion.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
+
+/** Lo que usa `AnularMovimiento`: lo de los movimientos, más la política de misma fecha. */
+export interface DependenciasDeAnularMovimiento extends DependenciasDeMovimientos {
+  politicaDeMismaFecha: PoliticaDeMismaFechaEnAnulacion;
+}
 
 interface AnulacionDeMovimiento {
   movimientoId: string;
   motivo: string;
-  /** Si quien pide la anulación espera que sea el saldo inicial de la cuenta (o una nota, si es `false`). */
-  esSaldoInicial: boolean;
+  /** La fecha del inverso; la escribe el usuario, por omisión hoy. No puede ser anterior a la del original. */
+  fecha?: string;
 }
 
-/** Anula un movimiento con su motivo; queda en la auditoría tal como estaba. */
+const AUDITORIA = { recurso: 'bancos.movimientos', accion: 'anular' } as const;
+
+const hoy = (): string => new Date().toISOString().slice(0, 10);
+
+/**
+ * Anula una nota suelta: crea su movimiento inverso (crédito ↔ débito), enlazado al original, que
+ * queda marcado «revertido». Nada se borra. Queda en la auditoría tal como estaba.
+ */
 export class AnularMovimiento {
-  constructor(private readonly dependencias: DependenciasDeMovimientos) {}
+  constructor(private readonly dependencias: DependenciasDeAnularMovimiento) {}
 
   /**
-   * @throws MovimientoAnulado si ya estaba anulado; MotivoDeAnulacionInvalido si falta el motivo.
-   * @throws NoEsUnaNota o NoEsUnSaldoInicial si no es de la clase esperada.
-   * @throws SaldoInsuficiente si al quitar un crédito la cuenta queda en negativo sin sobregiro permitido.
+   * @throws MovimientoAnulado o MovimientoYaRevertido si ya no estaba vigente; MotivoDeAnulacionInvalido si falta el motivo.
+   * @throws MovimientoDeTransferencia o MovimientoDeCheque si no es una nota suelta; NoEsUnaNota si es el saldo inicial.
+   * @throws FechaDeReversionAnterior si la fecha del inverso es anterior a la del original.
+   * @throws SaldoInsuficiente si el inverso deja la cuenta en negativo sin sobregiro permitido.
    */
-  ejecutar(
-    operador: Operador,
-    { movimientoId, motivo, esSaldoInicial }: AnulacionDeMovimiento,
-  ): Promise<MovimientoDto> {
+  ejecutar(operador: Operador, { movimientoId, motivo, fecha }: AnulacionDeMovimiento): Promise<MovimientoDto> {
     const { unidadDeTrabajo, repositorio, consultas, reglas, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
-      movimiento.exigirClase(esSaldoInicial);
+      movimiento.exigirClase(false);
       const anterior = await consultas.obtener(movimientoId);
-      const efectoAnterior = movimiento.efectoEnCentavos;
-      const { fecha } = movimiento.instantanea();
-      movimiento.anular(motivo);
-      const { cuentaBancariaId, motivoDeAnulacion } = movimiento.instantanea();
-      await reglas.revisar(operador, { cuentaBancariaId, fechas: [fecha], diferencia: -efectoAnterior });
-      await repositorio.guardar(movimiento);
-      await auditoria.registrar({
-        recurso: 'bancos.movimientos',
-        registroId: movimientoId,
-        accion: 'anular',
-        anterior,
-        motivo: motivoDeAnulacion,
+      const fechaDelInverso = await this.fechaDelInverso(operador, anterior, fecha);
+      const inverso = movimiento.revertir(fechaDelInverso, motivo);
+      const { cuentaBancariaId, motivoDeReversion } = movimiento.instantanea();
+      await reglas.revisar(operador, {
+        cuentaBancariaId,
+        fechas: [fechaDelInverso],
+        diferencia: inverso.efectoEnCentavos,
       });
+      await repositorio.guardar(movimiento);
+      await repositorio.agregar(inverso);
+      await auditoria.registrar({ ...AUDITORIA, registroId: movimientoId, anterior, motivo: motivoDeReversion });
       return consultas.obtener(movimientoId);
     });
+  }
+
+  /**
+   * Por omisión, la fecha del inverso es la que escribió el usuario (hoy si no escribió ninguna).
+   * Con `bancos.anulaciones.misma_fecha` activa y el mes del original sin conciliar, se usa la
+   * fecha del original en su lugar.
+   */
+  private async fechaDelInverso(operador: Operador, original: MovimientoDto, fechaEscrita?: string): Promise<string> {
+    const { consultas, politicaDeMismaFecha } = this.dependencias;
+    const conciliadaHasta = await consultas.conciliadaHasta(original.cuentaBancariaId);
+    const mesDelOriginalConciliado = conciliadaHasta !== null && original.fecha <= conciliadaHasta;
+    if (!mesDelOriginalConciliado && (await politicaDeMismaFecha.aplica(operador))) return original.fecha;
+    return fechaEscrita ?? hoy();
   }
 }

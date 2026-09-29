@@ -37,7 +37,7 @@ describe('la regla del mes conciliado (se bloquea al autorizar)', () => {
     ).rejects.toThrow(MesConciliado);
   });
 
-  it('bloquea anular un movimiento cuya fecha quedó conciliada', async () => {
+  it('un movimiento conciliado sí se anula, pero el inverso no puede caer en el mes conciliado', async () => {
     const idAntiguo = await agregarMovimiento(entorno.movimientos, { fecha: '2026-01-05', monto: '20.00' });
     await conciliarYAutorizar(entorno, 1);
 
@@ -45,9 +45,16 @@ describe('la regla del mes conciliado (se bloquea al autorizar)', () => {
       entorno.casos.anularMovimiento.ejecutar(operador, {
         movimientoId: idAntiguo,
         motivo: 'x',
-        esSaldoInicial: false,
+        fecha: '2026-01-20',
       }),
     ).rejects.toThrow(MesConciliado);
+
+    const original = await entorno.casos.anularMovimiento.ejecutar(operador, {
+      movimientoId: idAntiguo,
+      motivo: 'x',
+      fecha: '2026-02-01',
+    });
+    expect(original.revertidoEn).toEqual(expect.any(String));
   });
 
   it('no bloquea con fecha posterior al mes autorizado', async () => {

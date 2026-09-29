@@ -13,7 +13,8 @@ import type { DependenciasDeConciliaciones } from './dependencias-de-conciliacio
 /**
  * Inicia una conciliación sin ningún saldo que escribir: la primera de la
  * cuenta puede ser de cualquier mes ya terminado; las siguientes, del mes
- * siguiente a la última, y solo si esa ya está autorizada.
+ * siguiente a la última, y solo si esa ya está autorizada. Los pares original +
+ * inverso que nunca pasaron por el banco arrancan ya marcados.
  */
 export class IniciarConciliacion {
   constructor(private readonly dependencias: DependenciasDeConciliaciones) {}
@@ -36,8 +37,24 @@ export class IniciarConciliacion {
       await this.revisarOrden(solicitud);
       const conciliacion = Conciliacion.crear(empresaId, solicitud);
       await repositorio.agregar(conciliacion);
+      await this.marcarCompensados(conciliacion);
       return consultas.obtener(conciliacion.id.valor);
     });
+  }
+
+  /**
+   * Un original y su inverso que nunca pasaron por el banco arrancan marcados juntos: no son partidas en
+   * tránsito, y así aparecen ya en la lista de marcados.
+   */
+  private async marcarCompensados(conciliacion: Conciliacion): Promise<void> {
+    const { repositorio, consultas } = this.dependencias;
+    const { cuentaBancariaId } = conciliacion.instantanea();
+    const compensados = await consultas.paresCompensadosPendientes(
+      cuentaBancariaId,
+      conciliacion.finDelMes(),
+      conciliacion.id.valor,
+    );
+    if (compensados.length > 0) await repositorio.guardarMarcas(conciliacion.id.valor, compensados);
   }
 
   private exigirMesTerminado(periodo: { anio: number; mes: number }): void {

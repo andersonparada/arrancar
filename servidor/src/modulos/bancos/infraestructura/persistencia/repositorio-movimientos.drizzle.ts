@@ -22,4 +22,8 @@ export class RepositorioMovimientosDrizzle implements RepositorioMovimientos {
       .set(mapeadorDeMovimiento.aFila(movimiento))
       .where(eq(movimientos.id, movimiento.id.valor));
   }
+
+  async eliminar(id: MovimientoId): Promise<void> {
+    await transaccionEnCurso().delete(movimientos).where(eq(movimientos.id, id.valor));
+  }
 }

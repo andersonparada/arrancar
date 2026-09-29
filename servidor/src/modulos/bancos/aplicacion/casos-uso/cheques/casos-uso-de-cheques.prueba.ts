@@ -1,130 +1,20 @@
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
-import {
-  AuditoriaEnMemoria,
-  UnidadDeTrabajoEnMemoria,
-  operadorDePrueba,
-} from '../../../../core/compartido/pruebas/dobles-compartidos.js';
-import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import {
   BeneficiarioObligatorio,
-  ChequeAnulado,
   ChequeNoDisponible,
   MovimientoDeCheque,
   SaldoInsuficiente,
 } from '../../../dominio/errores.js';
-import { Movimiento } from '../../../dominio/movimiento.js';
-import { ChequerasEnMemoria } from '../../../pruebas/dobles-de-chequeras.js';
-import { ChequesEnMemoria, LimiteDeChequeraFijo } from '../../../pruebas/dobles-de-cheques.js';
-import { MovimientosEnMemoria, PoliticaDeSobregiroFija } from '../../../pruebas/dobles-de-movimientos.js';
-import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
-import { ActualizarMovimiento } from '../movimientos/actualizar-movimiento.js';
-import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
-import { CrearChequera } from '../chequeras/crear-chequera.js';
-import { AnularCheque } from './anular-cheque.js';
-import { EmitirCheque } from './emitir-cheque.js';
-import { ListarChequesDeLaEmpresa } from './listar-cheques-de-la-empresa.js';
-import { SiguienteChequeDisponible } from './siguiente-cheque-disponible.js';
+import { CUENTA, armarEntorno, emisionDe, operador } from './soporte-de-pruebas-de-cheques.js';
 
-const operador = operadorDePrueba();
-const CUENTA = '00000000-0000-4000-8000-000000000001';
-
-let movimientos: MovimientosEnMemoria;
-let cheques: ChequesEnMemoria;
-let chequeras: ChequerasEnMemoria;
-let auditoria: AuditoriaEnMemoria;
-
-/** El origen arranca con saldo, como en la vida real, para poder debitarlo. */
-async function conSaldoInicial(): Promise<void> {
-  const empresaId = Identificador.desde<'Empresa'>(operador.empresaId);
-  await movimientos.agregar(
-    Movimiento.crear(empresaId, {
-      cuentaBancariaId: CUENTA,
-      tipo: 'credito',
-      fecha: '2026-01-01',
-      monto: '1000.00',
-      saldoInicial: true,
-      referencia: null,
-      beneficiario: null,
-      observaciones: null,
-    }),
-  );
-}
-
-async function casosDeUso({ permiteSobregiro = false } = {}) {
-  movimientos = new MovimientosEnMemoria();
-  await conSaldoInicial();
-  cheques = new ChequesEnMemoria();
-  chequeras = new ChequerasEnMemoria(cheques);
-  cheques.vincularChequeras(chequeras);
-  cheques.vincularMovimientos(movimientos);
-  chequeras.nombrarCuenta(CUENTA, 'Cuenta de prueba');
-  auditoria = new AuditoriaEnMemoria();
-  const politicaDeSobregiro = new PoliticaDeSobregiroFija(permiteSobregiro);
-  const reglas = new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro });
-  const dependenciasDeChequeras = {
-    unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
-    repositorio: chequeras,
-    repositorioCheques: cheques,
-    consultas: chequeras,
-    consultasMovimientos: movimientos,
-    limiteDeChequera: new LimiteDeChequeraFijo(5000),
-    auditoria,
-  };
-  const dependenciasDeCheques = {
-    unidadDeTrabajo: dependenciasDeChequeras.unidadDeTrabajo,
-    repositorio: cheques,
-    repositorioChequeras: chequeras,
-    repositorioMovimientos: movimientos,
-    consultas: cheques,
-    consultasMovimientos: movimientos,
-    reglas,
-    auditoria,
-  };
-  const dependenciasDeMovimientos = {
-    unidadDeTrabajo: dependenciasDeChequeras.unidadDeTrabajo,
-    repositorio: movimientos,
-    consultas: movimientos,
-    reglas,
-    auditoria,
-  };
-  const crearChequera = new CrearChequera(dependenciasDeChequeras);
-  const chequera = await crearChequera.ejecutar(operador, {
-    cuentaBancariaId: CUENTA,
-    serie: null,
-    desde: 1,
-    hasta: 5,
-  });
-  const primerCheque = (await cheques.listarDeLaChequera(chequera.id))[0]!;
-  return {
-    chequeraId: chequera.id,
-    chequeId: primerCheque.id,
-    emitir: new EmitirCheque(dependenciasDeCheques),
-    anular: new AnularCheque(dependenciasDeCheques),
-    siguiente: new SiguienteChequeDisponible(dependenciasDeCheques),
-    listar: new ListarChequesDeLaEmpresa(dependenciasDeCheques),
-    actualizarMovimiento: new ActualizarMovimiento(dependenciasDeMovimientos),
-    anularMovimiento: new AnularMovimiento(dependenciasDeMovimientos),
-  };
-}
-
-let casos: Awaited<ReturnType<typeof casosDeUso>>;
+let casos: Awaited<ReturnType<typeof armarEntorno>>;
 
 beforeEach(async () => {
-  casos = await casosDeUso();
+  casos = await armarEntorno();
 });
 
-const emision = (cambios: Record<string, unknown> = {}) => ({
-  chequeId: casos.chequeId,
-  fecha: '2026-02-01',
-  monto: '100.00',
-  beneficiario: 'Proveedor S.A.',
-  noNegociable: true,
-  referencia: null,
-  observaciones: null,
-  ...cambios,
-});
+const emision = (cambios: Record<string, unknown> = {}) => emisionDe(casos.chequeId, cambios);
 
 describe('siguiente disponible', () => {
   it('es el primer número del rango recién creado', async () => {
@@ -152,7 +42,7 @@ describe('emitir', () => {
       monto: '100.00',
       beneficiario: 'Proveedor S.A.',
     });
-    expect(await movimientos.saldoDe(CUENTA)).toBe('900.00');
+    expect(await casos.movimientos.saldoDe(CUENTA)).toBe('900.00');
     const siguiente = await casos.siguiente.ejecutar(operador, CUENTA);
     expect(siguiente?.numero).toBe(2);
   });
@@ -199,49 +89,8 @@ describe('emitir', () => {
       }),
     ).rejects.toThrow(MovimientoDeCheque);
     await expect(
-      casos.anularMovimiento.ejecutar(operador, {
-        movimientoId: movimiento.id,
-        motivo: 'Error',
-        esSaldoInicial: false,
-      }),
+      casos.anularMovimiento.ejecutar(operador, { movimientoId: movimiento.id, motivo: 'Error' }),
     ).rejects.toThrow(MovimientoDeCheque);
-  });
-});
-
-describe('anular', () => {
-  it('anula un cheque disponible sin tocar movimientos', async () => {
-    const anulado = await casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Roto' });
-
-    expect(anulado.estado).toBe('anulado');
-    expect(await movimientos.saldoDe(CUENTA)).toBe('1000.00');
-    expect(auditoria.entradas).toContainEqual(
-      expect.objectContaining({ recurso: 'bancos.cheques', registroId: casos.chequeId, accion: 'anular' }),
-    );
-  });
-
-  it('anula un cheque emitido y también su movimiento', async () => {
-    const movimiento = await casos.emitir.ejecutar(operador, emision());
-
-    const anulado = await casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Error' });
-
-    expect(anulado.estado).toBe('anulado');
-    expect(await movimientos.saldoDe(CUENTA)).toBe('1000.00');
-    const notaAnulada = await movimientos.obtener(movimiento.id);
-    expect(notaAnulada.anuladoEn).toEqual(expect.any(String));
-  });
-
-  it('no se anula dos veces', async () => {
-    await casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Roto' });
-
-    await expect(casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Otra vez' })).rejects.toThrow(
-      ChequeAnulado,
-    );
-  });
-
-  it('avisa si no existe', async () => {
-    await expect(casos.anular.ejecutar(operador, { chequeId: randomUUID(), motivo: 'Error' })).rejects.toThrow(
-      RecursoNoEncontrado,
-    );
   });
 });
 

@@ -1,5 +1,8 @@
-/** `devolver`: regresa un documento elaborado a en proceso (por ahora, solo conciliaciones). */
-export type AccionAuditada = 'eliminar' | 'inactivar' | 'reactivar' | 'anular' | 'devolver';
+/**
+ * `devolver`: regresa un documento elaborado a en proceso (por ahora, solo conciliaciones).
+ * `blanquear`: un cheque emitido por error vuelve a disponible y su movimiento se elimina (Bancos).
+ */
+export type AccionAuditada = 'eliminar' | 'inactivar' | 'reactivar' | 'anular' | 'devolver' | 'blanquear';
 
 /** Una baja (o su reversa): qué registro, qué se hizo, por qué y cómo estaba antes. */
 export interface EntradaDeAuditoria {

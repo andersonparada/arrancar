@@ -1,3 +1,4 @@
+import { accionesDeTransferencia, type AccionesDeTransferencia } from '../aplicacion/acciones-posibles.js';
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
 import type { CuentaBancariaDto } from '../aplicacion/dto/cuenta-bancaria.dto.js';
 import type { FiltroDeTransferencias, TransferenciaDto } from '../aplicacion/dto/transferencia.dto.js';
@@ -30,15 +31,20 @@ export class NombresDeCuentaEnMemoria implements ConsultasCuentasBancarias {
 
 const copia = (transferencia: Transferencia) => Transferencia.reconstruir(transferencia.instantanea());
 
+interface NotaEncontrada {
+  id: string;
+  conciliacionId: string | null;
+}
+
 interface NotasEncontradas {
-  origen?: { id: string };
-  destino?: { id: string };
+  origen?: NotaEncontrada;
+  destino?: NotaEncontrada;
 }
 
 const nombreDe = (nombresDeCuenta: Map<string, string>, cuentaBancariaId: string): string | null =>
   nombresDeCuenta.get(cuentaBancariaId) ?? null;
 
-const idDeLaNota = (nota?: { id: string }): string => nota?.id ?? '';
+const idDeLaNota = (nota?: NotaEncontrada): string => nota?.id ?? '';
 
 const cumple =
   ({ cuentaBancariaId, desde, hasta }: FiltroDeTransferencias) =>
@@ -47,12 +53,14 @@ const cumple =
     (!desde || dto.fecha >= desde) &&
     (!hasta || dto.fecha <= hasta);
 
+interface ContextoDelDto {
+  nombresDeCuenta: Map<string, string>;
+  notas: NotasEncontradas;
+  acciones: AccionesDeTransferencia;
+}
+
 /** Arma el DTO con los nombres de las cuentas y los ids de las dos notas, si ya se encontraron. */
-function aDto(
-  transferencia: Transferencia,
-  nombresDeCuenta: Map<string, string>,
-  notas: NotasEncontradas,
-): TransferenciaDto {
+function aDto(transferencia: Transferencia, { nombresDeCuenta, notas, acciones }: ContextoDelDto): TransferenciaDto {
   const { id, empresaId: _empresaId, anuladaEn, ...datos } = transferencia.instantanea();
   return {
     ...datos,
@@ -62,6 +70,9 @@ function aDto(
     anuladaEn: anuladaEn?.toISOString() ?? null,
     movimientoOrigenId: idDeLaNota(notas.origen),
     movimientoDestinoId: idDeLaNota(notas.destino),
+    conciliacionOrigenId: notas.origen?.conciliacionId ?? null,
+    conciliacionDestinoId: notas.destino?.conciliacionId ?? null,
+    ...acciones,
   };
 }
 
@@ -90,11 +101,19 @@ export class TransferenciasEnMemoria implements RepositorioTransferencias, Consu
     this.registros.set(transferencia.id.valor, copia(transferencia));
   }
 
+  async eliminar(id: TransferenciaId): Promise<void> {
+    this.registros.delete(id.valor);
+  }
+
   async obtener(transferenciaId: string): Promise<TransferenciaDto> {
     const transferencia = this.registros.get(transferenciaId);
     if (!transferencia) throw new RecursoNoEncontrado('La transferencia');
     const [origen, destino] = await this.notasDe(transferenciaId);
-    return aDto(transferencia, this.nombresDeCuenta, { origen, destino });
+    const acciones = accionesDeTransferencia(transferencia.estaAnulada, {
+      origen: this.movimientos.hechosDe(idDeLaNota(origen)),
+      destino: this.movimientos.hechosDe(idDeLaNota(destino)),
+    });
+    return aDto(transferencia, { nombresDeCuenta: this.nombresDeCuenta, notas: { origen, destino }, acciones });
   }
 
   async listar(filtro: FiltroDeTransferencias): Promise<TransferenciaDto[]> {

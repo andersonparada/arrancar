@@ -1,5 +1,6 @@
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { AnularTransferencia } from '../aplicacion/casos-uso/transferencias/anular-transferencia.js';
+import { EliminarTransferencia } from '../aplicacion/casos-uso/transferencias/eliminar-transferencia.js';
 import { ListarTransferencias } from '../aplicacion/casos-uso/transferencias/listar-transferencias.js';
 import { ObtenerTransferencia } from '../aplicacion/casos-uso/transferencias/obtener-transferencia.js';
 import { RegistrarTransferencia } from '../aplicacion/casos-uso/transferencias/registrar-transferencia.js';
@@ -11,6 +12,7 @@ import { ConsultasMovimientosDrizzle } from '../infraestructura/persistencia/con
 import { ConsultasTransferenciasDrizzle } from '../infraestructura/persistencia/consultas-transferencias.drizzle.js';
 import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/repositorio-movimientos.drizzle.js';
 import { RepositorioTransferenciasDrizzle } from '../infraestructura/persistencia/repositorio-transferencias.drizzle.js';
+import { PoliticaDeMismaFechaEnAnulacionEnConfiguracion } from '../infraestructura/politica-de-misma-fecha-en-anulacion.configuracion.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 
 function dependenciasDeTransferencias() {
@@ -26,6 +28,7 @@ function dependenciasDeTransferencias() {
     consultasMovimientos,
     consultasCuentasBancarias: new ConsultasCuentasBancariasDrizzle(),
     reglas: new ReglasDeLaCuenta({ consultas: consultasMovimientos, politicaDeSobregiro }),
+    politicaDeMismaFecha: new PoliticaDeMismaFechaEnAnulacionEnConfiguracion(),
   };
 }
 
@@ -36,6 +39,7 @@ export function rutasDeTransferencias() {
     registrar: new RegistrarTransferencia(dependencias),
     obtener: new ObtenerTransferencia(dependencias),
     anular: new AnularTransferencia(dependencias),
+    eliminar: new EliminarTransferencia(dependencias),
     listar: new ListarTransferencias(dependencias),
   };
   return rutasTransferencias(new TransferenciasControlador(casos));

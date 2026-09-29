@@ -20,6 +20,15 @@ export interface MovimientoDto {
   numeroDeCheque: number | null;
   /** La conciliación donde quedó marcado; si no, `null`. */
   conciliacionId: string | null;
+  /** Cuándo se revirtió (se le creó un inverso); `null` si nunca se revirtió. */
+  revertidoEn: string | null;
+  motivoDeReversion: string | null;
+  /** El movimiento original que revierte, si este es un inverso; si no, `null`. */
+  revierteAId: string | null;
+  /** Lo calcula el servidor (ver `accionesDeMovimiento`): si se puede anular con un movimiento inverso. */
+  puedeAnular: boolean;
+  /** Lo calcula el servidor: si se puede eliminar de verdad (está limpio). */
+  puedeEliminar: boolean;
 }
 
 /** Lo que se recibe para registrar o corregir un movimiento, ya validado en su forma. La API nunca acepta `tipo: 'cheque'`. */
@@ -33,6 +42,11 @@ export type SolicitudDeMovimiento = Omit<
   | 'chequeId'
   | 'numeroDeCheque'
   | 'conciliacionId'
+  | 'revertidoEn'
+  | 'motivoDeReversion'
+  | 'revierteAId'
+  | 'puedeAnular'
+  | 'puedeEliminar'
 > & { tipo: 'credito' | 'debito' };
 
 /** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra.

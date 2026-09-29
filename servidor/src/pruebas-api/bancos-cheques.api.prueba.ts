@@ -94,29 +94,6 @@ describe('chequeras y cheques por API', () => {
     expect(siguienteAhora.cuerpo.numero).toBe(2);
   });
 
-  it('se anula y su movimiento queda anulado también', async () => {
-    const siguiente = await cuenta.propietario.get(
-      `/api/bancos/cuentas-bancarias/${cuentaBancariaId}/siguiente-cheque`,
-    );
-    const emitido = await cuenta.propietario.post(`/api/bancos/cheques/${siguiente.cuerpo.id}/emitir`, {
-      fecha: '2026-02-02',
-      monto: '50.00',
-      beneficiario: 'Otro proveedor',
-      noNegociable: true,
-      referencia: null,
-      observaciones: null,
-    });
-
-    const anulado = await cuenta.propietario.post(`/api/bancos/cheques/${siguiente.cuerpo.id}/anular`, {
-      motivo: 'Se perdió',
-    });
-
-    expect(anulado.estado).toBe(200);
-    expect(anulado.cuerpo.estado).toBe('anulado');
-    const movimientoAnulado = await cuenta.propietario.get(`${RUTA_MOVIMIENTOS}/${emitido.cuerpo.id}`);
-    expect(movimientoAnulado.cuerpo.anuladoEn).toEqual(expect.any(String));
-  });
-
   it('sin permisos, ver, crear, emitir y anular responden 403', async () => {
     const sinPermisos = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Sin',

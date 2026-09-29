@@ -1,4 +1,4 @@
-import { and, eq, getTableColumns, gte, isNull, lte, or, sql } from 'drizzle-orm';
+import { and, eq, getTableColumns, gte, isNull, lte, or, sql, type AnyColumn } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { MovimientoParaConciliar } from '../../aplicacion/calculo-de-conciliacion.js';
@@ -53,12 +53,14 @@ function aMovimientoConMarca(fila: FilaDeMovimiento, conciliacionId: string): Mo
     creadoPor: _creadoPor,
     actualizadoPor: _actualizadoPor,
     anuladoEn,
+    revertidoEn,
     conciliacionId: marcadaEn,
     ...dto
   } = fila;
   return {
     ...dto,
     anuladoEn: anuladoEn ? anuladoEn.toISOString() : null,
+    revertidoEn: revertidoEn ? revertidoEn.toISOString() : null,
     conciliacionId: marcadaEn,
     cuentaBancariaNombre: null,
     marcado: marcadaEn === conciliacionId,
@@ -158,4 +160,45 @@ export async function saldosInicialesDe(cuentaBancariaId: string, periodo: Perio
   const foto = await fotoDelPeriodoAnterior(cuentaBancariaId, periodo);
   const bancoEnCentavos = foto ? aCentavos(foto) : librosEnCentavos;
   return { librosEnCentavos, bancoEnCentavos };
+}
+
+/** Si la cuenta ya tiene alguna conciliación, de cualquier estado. */
+export async function tieneAlgunaConciliacionDe(cuentaBancariaId: string): Promise<boolean> {
+  const [fila] = await transaccionEnCurso()
+    .select({ id: conciliaciones.id })
+    .from(conciliaciones)
+    .where(eq(conciliaciones.cuentaBancariaId, cuentaBancariaId))
+    .limit(1);
+  return fila !== undefined;
+}
+
+/** Que no haya pasado por el banco: sin marca, o marcado en la conciliación que se está haciendo. */
+const sinPasarPorElBanco = (marca: AnyColumn, conciliacionId: string) => or(isNull(marca), eq(marca, conciliacionId));
+
+/**
+ * Ids de los pares original + inverso que nunca pasaron por el banco (ninguno de los dos marcado en
+ * otra conciliación) y tienen fecha hasta `finDelMes`: se marcan juntos, compensados, y así no
+ * aparecen como partidas en tránsito.
+ */
+export async function paresCompensadosPendientesDe(
+  cuentaBancariaId: string,
+  finDelMes: string,
+  conciliacionId: string,
+): Promise<string[]> {
+  const original = alias(movimientos, 'original_compensado');
+  const inverso = alias(movimientos, 'inverso_compensado');
+  const filas = await transaccionEnCurso()
+    .select({ idOriginal: original.id, idInverso: inverso.id })
+    .from(inverso)
+    .innerJoin(original, eq(inverso.revierteAId, original.id))
+    .where(
+      and(
+        eq(inverso.cuentaBancariaId, cuentaBancariaId),
+        sinPasarPorElBanco(inverso.conciliacionId, conciliacionId),
+        sinPasarPorElBanco(original.conciliacionId, conciliacionId),
+        lte(inverso.fecha, finDelMes),
+        lte(original.fecha, finDelMes),
+      ),
+    );
+  return filas.flatMap((fila) => [fila.idOriginal, fila.idInverso]);
 }

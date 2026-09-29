@@ -13,6 +13,13 @@ export interface TransferenciaDto {
   motivoDeAnulacion: string | null;
   movimientoOrigenId: string;
   movimientoDestinoId: string;
+  /** La conciliación donde quedó marcada cada nota; `null` si sigue pendiente. */
+  conciliacionOrigenId: string | null;
+  conciliacionDestinoId: string | null;
+  /** Lo calcula el servidor (ver `accionesDeTransferencia`): si se puede anular con sus dos inversos. */
+  puedeAnular: boolean;
+  /** Lo calcula el servidor: si se puede eliminar de verdad (sus dos notas están limpias). */
+  puedeEliminar: boolean;
 }
 
 /** Lo que se recibe para registrar una transferencia, ya validado en su forma. */
@@ -25,6 +32,10 @@ export type SolicitudDeTransferencia = Omit<
   | 'motivoDeAnulacion'
   | 'movimientoOrigenId'
   | 'movimientoDestinoId'
+  | 'conciliacionOrigenId'
+  | 'conciliacionDestinoId'
+  | 'puedeAnular'
+  | 'puedeEliminar'
 >;
 
 /** Qué transferencias listar: de una cuenta (como origen o como destino) y entre dos fechas (incluidas); incluye anuladas. */

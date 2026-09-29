@@ -18,6 +18,11 @@ function movimiento(datos: Partial<MovimientoDto> & Pick<MovimientoDto, 'tipo' |
     chequeId: null,
     numeroDeCheque: null,
     conciliacionId: null,
+    revertidoEn: null,
+    motivoDeReversion: null,
+    revierteAId: null,
+    puedeAnular: false,
+    puedeEliminar: false,
     ...datos,
   };
 }

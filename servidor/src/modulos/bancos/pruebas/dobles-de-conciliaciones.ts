@@ -95,6 +95,32 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     return candidatos.map((c) => c.id);
   }
 
+  async tieneAlguna(cuentaBancariaId: string): Promise<boolean> {
+    return this.deLaCuenta(cuentaBancariaId).length > 0;
+  }
+
+  /** Como en Postgres: pares original + inverso donde ninguno se marcó en otra conciliación, con fecha hasta `finDelMes`. */
+  async paresCompensadosPendientes(
+    cuentaBancariaId: string,
+    finDelMes: string,
+    conciliacionId: string,
+  ): Promise<string[]> {
+    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
+    const deOtras = [...this.marcas.entries()].filter(([id]) => id !== conciliacionId);
+    const marcadosAlgunaVez = new Set(deOtras.flatMap(([, ids]) => [...ids]));
+    const todos = await this.movimientos.listar({ cuentaBancariaId });
+    const pendientes = todos.filter((m) => !marcadosAlgunaVez.has(m.id) && m.fecha <= finDelMes);
+    const idsPendientes = new Set(pendientes.map((m) => m.id));
+    const resultado = new Set<string>();
+    for (const m of pendientes) {
+      if (m.revierteAId && idsPendientes.has(m.revierteAId)) {
+        resultado.add(m.id);
+        resultado.add(m.revierteAId);
+      }
+    }
+    return [...resultado];
+  }
+
   private async calcularDocumento(conciliacion: Conciliacion) {
     const { id, cuentaBancariaId, anio, mes } = conciliacion.instantanea();
     const periodo = { anio, mes };
