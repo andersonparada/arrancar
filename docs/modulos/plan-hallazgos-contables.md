@@ -714,3 +714,37 @@ Pasos (un commit cada uno, con sus pruebas):
     (recomendado) o impedir el registro?
 19. **H11** ¿Manejamos el estado **declarado** de cada mes del libro para bloquear
     cambios después de presentar la declaración?
+
+---
+
+## Decisiones del usuario (2026-09-28)
+
+| # | Decisión |
+|---|---|
+| Auditoría | **Nunca se borra**: se quita el `on delete cascade` de `core.auditoria` (llave `restrict` o sin llave). Conservación mínima de 5 años. El crecimiento escala con el uso (1,000 usuarios ≫ 1); como casi no se consulta, se acepta; si crece, se particiona por año. También se **auditan las correcciones**. |
+| Cuentas (suscriptores) | Las **cuentas de la instalación nunca se eliminan**, solo se inactivan. |
+| Empresas | Se **eliminan solo si no tienen datos**; con datos, solo se inactivan. |
+| Respaldos | Copia mensual fuera del servidor: disco o servidor distinto en la misma red, o un drive desde donde el usuario la descarga y la graba en disco. Conservar 5 años. |
+| Archivos | **Lista blanca** de tipos permitidos y verificación real del contenido (no confiar en la extensión). Investigar malware y **esteganografía** antes de planificar (ver «Pendiente de investigar»). |
+| H2 | De acuerdo: saldo del estado de cuenta transcrito, siempre obligatorio, y archivo configurable. El **saldo calculado** sale de los documentos que el usuario marca (así funciona hoy); el transcrito solo se compara. |
+| H3 | De acuerdo con el catálogo `bancos.conceptos`, **editable por el usuario** (la lista sugerida de la semilla es solo un punto de partida). |
+| H3 cheques | El concepto del cheque lo manda el **módulo de origen** (p. ej. Cuentas por pagar); en un cheque emitido desde la ventana de Cheques lo elige el usuario. Investigar más. |
+| H4 | Se **guarda el número tal como se escribe** (`varchar`, con guiones, porque así lo reconocen los usuarios en los selectores) y se agrega una **columna normalizada** (sin guiones ni espacios) solo para la unicidad por empresa y banco y para reportes. |
+| H5 / esquema | Crear un **esquema `empresas`** (en la misma base de datos) para localidades, **departamentos**, accesos y datos fiscales de la empresa, separado del core: así «departamentos» no choca con `core.departamentos` (los de Guatemala). `core.empresas` se queda en el core (lo necesitan la sesión y la RLS). Se conserva el nombre **departamentos**. |
+| H5 bancos | Las cuentas bancarias **no** se filtran por localidad, solo por empresa. En los selectores se **agrupan por banco** (p. ej. «BI» y debajo sus cuentas) y **siempre se ordena por nombre**. El `CampoSelector` necesitará grupos. |
+| H5 tipos | Soportar **todos** los tipos de localidad (catálogo editable: finca, planta, oficina, bodega…). **No confundir** con terrenos o parcelas (módulo propio más adelante). |
+| H6 | De acuerdo con el reporte y la anulación en lote. Antigüedad **configurable, 7 meses por omisión**. El reporte solo muestra cheques **emitidos y no cobrados**; esos se anulan con **nota inversa**. Los cheques **disponibles** que nunca se emitieron no tienen movimiento: no entran al reporte (se resuelven inactivando la chequera). |
+| H7 | **Validar al 100 %** con el experto contable antes de programar. |
+| H8 | Se sigue platicando (ver explicación en la conversación: intereses que el banco paga en la cuenta, con 10 % de ISR ya retenido; no es retención de facturas). |
+| H9 | Correlativo **por empresa**; por omisión **no se reinicia cada año**, pero se soporta que un cliente lo pida (configurable). Hueco al eliminar: permitido y explicado por la auditoría (que ahora nunca se borra). |
+| H10 | De acuerdo: el NIT lo exige Libro de compras; en Clientes sigue opcional (un cliente puede pedir CF). |
+| H10 NIT distinto | Si el NIT del DTE no coincide con el del proveedor elegido: **se rechaza**. |
+| H11 | Fuera de plazo: **se registra con aviso** (IVA al costo). **Validar al 100 %** la solución con el experto contable. |
+| H11 declarado | Pendiente: recomendación en la conversación (opcional por empresa). |
+
+### Pendiente de investigar
+
+1. **Seguridad de archivos**: lista blanca (imágenes JPG/PNG/WebP, PDF, Excel para importar), verificación por firma real del contenido, límites de tamaño, re-codificar imágenes (ya se convierten a WebP: eso elimina la mayoría de datos ocultos por esteganografía), sanear o rechazar PDF con JavaScript, formularios o archivos incrustados, antivirus (p. ej. ClamAV), servir siempre como descarga con su tipo y sin ejecutar, bibliotecas al día.
+2. **H7 y H11**: confirmación del experto contable (ley del IVA, práctica en Guatemala).
+3. **Concepto de los cheques** según su origen.
+4. **Esquema `empresas`**: qué se mueve del core y cómo afecta RLS, sesión y el módulo `empresas` que ya existe.
