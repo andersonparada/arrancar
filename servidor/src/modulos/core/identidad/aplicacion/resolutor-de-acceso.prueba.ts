@@ -5,8 +5,14 @@ import type { AccesoDelUsuario, CatalogoDeModulos, EmpresasDeLaSesion } from './
 import { ResolutorDeAcceso } from './resolutor-de-acceso.js';
 
 const EMPRESA: EmpresaSesion = { id: 'empresa-1', nombre: 'Rancho', cuentaId: 'cuenta-1', cuentaNombre: 'Cuenta' };
-const PERMISOS_DISPONIBLES = new Set(['usuarios.ver', 'configuracion.ver', 'configuracion.gestionar']);
+const PERMISOS_DISPONIBLES = new Set([
+  'usuarios.ver',
+  'configuracion.ver',
+  'configuracion.gestionar',
+  'empresas.carga-inicial.reabrir',
+]);
 const PERMISOS_DE_SUPERACCESO = new Set(['configuracion.ver', 'configuracion.gestionar']);
+const PERMISOS_DE_ACCESO_TOTAL = new Set(['empresas.carga-inicial.reabrir']);
 
 function usuario(esSuperacceso: boolean): UsuarioSesion {
   return { id: 'usuario-1', usuario: 'u', nombre: 'Usuario', esSuperacceso };
@@ -25,6 +31,7 @@ function crearResolutor(acceso: AccesoDelUsuario | null, permisosDelRol: string[
     activos: () => new Set(['core']),
     permisosDe: () => PERMISOS_DISPONIBLES,
     permisosDeSuperacceso: () => PERMISOS_DE_SUPERACCESO,
+    permisosDeAccesoTotal: () => PERMISOS_DE_ACCESO_TOTAL,
     recursosConAlcanceTotal: () => [],
   };
   const roles: PermisosDeRoles = { permisosDelRol: async () => permisosDelRol };
@@ -61,5 +68,29 @@ describe('ResolutorDeAcceso', () => {
 
     expect(resultado?.permisos.has('usuarios.ver')).toBe(true);
     expect(resultado?.permisos.has('configuracion.ver')).toBe(false);
+  });
+
+  it('un rol con acceso total recibe el permiso que exige acceso total', async () => {
+    const acceso: AccesoDelUsuario = { rolId: 'rol-1', rolNombre: 'Propietario', accesoTotal: true };
+
+    const resultado = await crearResolutor(acceso).resolver(usuario(false), EMPRESA.id);
+
+    expect(resultado?.permisos.has('empresas.carga-inicial.reabrir')).toBe(true);
+  });
+
+  it('un rol común no lo recibe aunque se lo hayan asignado a mano', async () => {
+    const acceso: AccesoDelUsuario = { rolId: 'rol-2', rolNombre: 'Contador', accesoTotal: false };
+    const resolutor = crearResolutor(acceso, ['usuarios.ver', 'empresas.carga-inicial.reabrir']);
+
+    const resultado = await resolutor.resolver(usuario(false), EMPRESA.id);
+
+    expect(resultado?.permisos.has('usuarios.ver')).toBe(true);
+    expect(resultado?.permisos.has('empresas.carga-inicial.reabrir')).toBe(false);
+  });
+
+  it('el superacceso también lo recibe', async () => {
+    const resultado = await crearResolutor(null).resolver(usuario(true), EMPRESA.id);
+
+    expect(resultado?.permisos.has('empresas.carga-inicial.reabrir')).toBe(true);
   });
 });

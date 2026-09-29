@@ -11,6 +11,11 @@ export interface DefinicionPermiso {
    * puede asignar.
    */
   soloSuperacceso?: boolean;
+  /**
+   * Solo lo reciben los roles con acceso total (y el superacceso): no aparece entre los
+   * permisos que se asignan a mano y un rol común no lo tiene aunque se lo hayan guardado.
+   */
+  soloAccesoTotal?: boolean;
 }
 
 /**

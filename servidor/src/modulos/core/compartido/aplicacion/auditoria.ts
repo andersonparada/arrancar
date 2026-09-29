@@ -2,8 +2,10 @@
  * `devolver`: regresa un documento elaborado a en proceso (por ahora, solo conciliaciones).
  * `blanquear`: un cheque emitido por error vuelve a disponible y su movimiento se elimina (Bancos).
  * `corregir`: se cambió dinero o fechas de un registro; `anterior` guarda cómo estaba (Bancos: notas y saldo inicial).
+ * `reabrir`: se reabrió algo que estaba cerrado, con su motivo (Empresas: la carga inicial).
  */
-export type AccionAuditada = 'eliminar' | 'inactivar' | 'reactivar' | 'anular' | 'devolver' | 'blanquear' | 'corregir';
+export type AccionAuditada =
+  'eliminar' | 'inactivar' | 'reactivar' | 'anular' | 'devolver' | 'blanquear' | 'corregir' | 'reabrir';
 
 /** Una baja (o su reversa): qué registro, qué se hizo, por qué y cómo estaba antes. */
 export interface EntradaDeAuditoria {

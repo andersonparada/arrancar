@@ -8,6 +8,20 @@
       "when": 1790682722968,
       "tag": "0000_esquema_empresas",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790683468727,
+      "tag": "0001_h5a_datos_fiscales_y_cargas_iniciales",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790683469516,
+      "tag": "0002_h5a_permisos_de_carga_inicial",
+      "breakpoints": true
     }
   ]
 }

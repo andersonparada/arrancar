@@ -98,6 +98,16 @@ empresa (datos fiscales, carga inicial y, más adelante, localidades). El migrad
 primero `core`, luego los módulos esenciales (`empresas`) y después los demás según
 `dependeDe`, así que todo módulo de negocio encuentra `empresas` ya migrado.
 
+Datos de la empresa (H5a): `empresas.datos_fiscales` (razón social y nombre comercial) y
+`empresas.cargas_iniciales` (fecha de inicio y cierre de la carga inicial), ambas con RLS por
+empresa. Como el formulario de Empresas edita cualquier empresa de la cuenta, `EjecutorEnEmpresa`
+abre la transacción con la empresa pedida como contexto (tras validar cuenta y acceso). Otros módulos
+la consultan solo por el mediador: `empresas.obtener_carga_inicial` (con `for share`, para que
+cerrar la carga espere) y `empresas.obtener_datos_de_empresa` (contratos en
+`core/contratos/empresas.contratos.ts`). Reabrir la carga (`empresas.carga-inicial.reabrir`) usa
+`soloAccesoTotal` en `DefinicionPermiso`: solo lo reciben los roles con acceso total y no se puede
+asignar a mano. La reapertura queda en la auditoría con la acción `reabrir`.
+
 ## 4. Piezas clave (cómo se ve el código)
 
 ### 4.1 Transacción y RLS: `UnidadDeTrabajo`

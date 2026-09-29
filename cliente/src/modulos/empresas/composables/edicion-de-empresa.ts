@@ -1,6 +1,7 @@
 import type { DatosEmpresa, Empresa } from '../servicios/empresas.api';
+import { DATOS_DE_EMPRESA_VACIOS, type CamposDeDatosDeEmpresa } from './datos-de-empresa';
 
-export interface EdicionDeEmpresa {
+export interface EdicionDeEmpresa extends CamposDeDatosDeEmpresa {
   abierta: boolean;
   empresaId: string | null;
   nombre: string;
@@ -11,9 +12,19 @@ export interface EdicionDeEmpresa {
   activa: boolean;
 }
 
-const EMPRESA_NUEVA = { empresaId: null, nombre: '', nit: '', direccion: '', telefono: '', correo: '', activa: true };
+const EMPRESA_NUEVA = {
+  ...DATOS_DE_EMPRESA_VACIOS,
+  empresaId: null,
+  nombre: '',
+  nit: '',
+  direccion: '',
+  telefono: '',
+  correo: '',
+  activa: true,
+};
 
 const datosDe = (empresa: Empresa) => ({
+  ...DATOS_DE_EMPRESA_VACIOS,
   empresaId: empresa.id,
   nombre: empresa.nombre,
   nit: empresa.nit ?? '',
