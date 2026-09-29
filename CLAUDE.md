@@ -101,7 +101,7 @@ base de desarrollo debe estar levantada.
   cada fila pasa por el mismo caso de uso que el formulario y los problemas se
   informan por fila y columna. El ensayo crea todo y lo deshace (así también
   revisa los datos repetidos). Las referencias se escriben por su nombre.
-- Seguridad del `.xlsx` importado: máximo 5 MB, 5 importaciones por minuto por usuario (429) y
+- Seguridad del `.xlsx` importado: máximo 5 MB, 10 solicitudes por minuto por usuario, es decir 5 importaciones con su ensayo (429) y
   `ValidadorDeXlsx` (`infraestructura/zip/`) revisa el zip antes de exceljs: firma, máximo 100 entradas,
   sin macros, `externalLinks` ni `embeddings`, e infla con tope (25 MB por parte, 50 MB en total); a
   exceljs solo le llega un zip nuevo sin compresión con lo ya revisado.

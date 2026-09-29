@@ -2,8 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import { contextoDe } from '../../compartido/http/contexto-de-la-solicitud.js';
 import { DemasiadasImportaciones } from '../aplicacion/errores.js';
 
-/** Cinco importaciones por minuto por usuario: cada una es pesada y tumbarla afecta a todas las empresas. */
-const IMPORTACIONES_POR_MINUTO = 5;
+/** Diez solicitudes por minuto por usuario (5 importaciones completas, cada una con su ensayo): son pesadas y tumbarlas afecta a todas las empresas. */
+const SOLICITUDES_DE_IMPORTAR_POR_MINUTO = 10;
 
 /**
  * Guardia que limita las importaciones por usuario de la sesión. Va después de la
@@ -12,7 +12,7 @@ const IMPORTACIONES_POR_MINUTO = 5;
  */
 export function limitarImportaciones(app: FastifyInstance) {
   return app.rateLimit({
-    max: IMPORTACIONES_POR_MINUTO,
+    max: SOLICITUDES_DE_IMPORTAR_POR_MINUTO,
     timeWindow: '1 minute',
     keyGenerator: (solicitud) => `importar:${contextoDe(solicitud).usuario.id}`,
     errorResponseBuilder: () => new DemasiadasImportaciones(),

@@ -52,7 +52,7 @@ describe('seguridad de la importación de Excel por API', () => {
     expect(respuesta.cuerpo.error.codigo).toBe('archivo_demasiado_grande');
   });
 
-  it('la sexta importación en un minuto recibe 429', async () => {
+  it('la solicitud 11 de importar en un minuto recibe 429', async () => {
     const otra = await darDeAltaCuenta(entorno, { nombre: 'Tasa', usuario: 'propietariotasa', modulos: ['bancos'] });
     const importar = () =>
       otra.propietario.subirImagen('POST', RUTA, {
@@ -62,9 +62,9 @@ describe('seguridad de la importación de Excel por API', () => {
       });
 
     const estados = [];
-    for (let i = 0; i < 6; i++) estados.push((await importar()).estado);
+    for (let i = 0; i < 11; i++) estados.push((await importar()).estado);
 
-    expect(estados).toEqual([400, 400, 400, 400, 400, 429]);
+    expect(estados).toEqual([...Array(10).fill(400), 429]);
     expect((await importar()).cuerpo.error.codigo).toBe('demasiadas_importaciones');
   });
 });
