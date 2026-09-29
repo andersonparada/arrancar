@@ -20,18 +20,27 @@ decisiones e investigación con Opus).
   (`corregir`, con el estado anterior).
 - **H1c** (`943d9fc`): respaldo mensual conservado 60 meses (`MESES_RETENCION_MENSUAL`)
   y guía para copiarlo fuera del servidor en `docs/PLAN.md`.
-- Pruebas: servidor 572, cliente 130, generador 46.
+- **A1** (`1cb46c3`, `1c8299c`): importar Excel valida el zip antes de exceljs (tope
+  50 MB descomprimido, 5 MB por archivo, sin macros) y limita a 10 solicitudes por
+  minuto por usuario (5 importaciones con su ensayo).
+- **H4** (`edd157d`): número de cuenta único por empresa, banco y número normalizado.
+- **H9a/H9b** (`fbe62d9`, `6356d78`, solo servidor): `core.correlativos` sin huecos
+  por rollback, reinicio anual configurable por empresa
+  (`core.correlativos.reinicio_anual`, apagado); número en notas, inversos y
+  transferencias; datos existentes numerados; `GET /api/bancos/correlativos` con los
+  huecos explicados por la auditoría. **Cuidado:** el journal de migraciones de
+  bancos tiene `when` hasta 1790700200000 (2026-09-29 16:43 UTC); una migración nueva
+  de bancos debe llevar un `when` mayor o el migrador la salta.
+- Pruebas: servidor 663, cliente 130, generador 46.
 - Investigaciones cerradas:
   - `docs/modulos/seguridad-de-archivos.md` (agente de seguridad).
   - `docs/modulos/validacion-h7-h11-retenciones.md` (contador).
 
 ## Siguiente
 
-1. **Seguridad A1 (prioridad alta):** un `.xlsx` de 405 KB sube 1.27 GB de RAM al
-   importar (bomba zip). Pre-validar el zip antes de exceljs, límite 5 MB y límite de
-   tasa. No necesita decisión.
-2. **H4** número de cuenta bancaria normalizado para la unicidad.
-3. **H9a/H9b**, **H3a–c**, **H8**, archivos PDF, **H2**, **H6**, **H5** (esquema
+1. **H9 en el cliente**: número en las listas de notas y transferencias y pantalla
+   del reporte de correlativos.
+2. **H3a–c**, **H8**, archivos PDF, **H2**, **H6**, **H5** (esquema
    `empresas`, falta el diseño del arquitecto de datos), y H10/H11/H7 dentro de Libro
    de compras.
 4. Corregir los planes de Libro de compras, Cuentas por pagar y la «Revisión
