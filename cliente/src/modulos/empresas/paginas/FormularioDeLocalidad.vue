@@ -12,7 +12,7 @@ const props = defineProps<{ localidadId?: string }>();
 
 const router = useRouter();
 const ventana = VENTANAS_EMPRESAS.localidades;
-const { edicion, cargando, enviando, errores, referencias, guardar } = usarFormularioDeLocalidad(
+const { edicion, cargando, enviando, errores, referencias, conflicto, guardar } = usarFormularioDeLocalidad(
   props.localidadId ?? null,
 );
 const volver = props.localidadId
@@ -32,6 +32,13 @@ async function guardarYVerFicha(): Promise<void> {
   <form class="space-y-4" @submit.prevent="guardarYVerFicha">
     <EncabezadoPagina :titulo="localidadId ? ventana.editar : ventana.nuevo" :volver="volver" />
 
+    <p
+      v-if="conflicto"
+      role="alert"
+      class="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200"
+    >
+      {{ conflicto }}
+    </p>
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
     <TarjetaBase v-else>
       <CamposDeLocalidad v-model="edicion" :errores="errores" :referencias="referencias" />

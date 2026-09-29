@@ -43,6 +43,11 @@ export class ApiLocalidades {
   actualizar(id: string, datos: DatosLocalidad) {
     return this.http.reemplazar<Localidad>(`${RUTA}/${id}`, datos);
   }
+
+  /** Falla con 409 si la localidad ya se usa en otros registros. */
+  eliminar(id: string) {
+    return this.http.eliminar(`${RUTA}/${id}`);
+  }
 }
 
 export const apiLocalidades = new ApiLocalidades(clienteHttp);

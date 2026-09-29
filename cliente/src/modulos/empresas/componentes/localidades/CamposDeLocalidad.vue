@@ -6,7 +6,10 @@ import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { EdicionDeLocalidad } from '../../composables/localidades/edicion-de-localidad';
 
 /** Los campos de la localidad; los usan la ventana y el formulario en página, así se ven igual. */
-defineProps<{ errores: Record<string, string>; referencias: Record<'tipoId', OpcionDeRegistro[]> }>();
+defineProps<{
+  errores: Record<string, string>;
+  referencias: Record<'tipoId' | 'departamentoCodigo' | 'municipioCodigo', OpcionDeRegistro[]>;
+}>();
 const edicion = defineModel<EdicionDeLocalidad>({ required: true });
 </script>
 
@@ -32,9 +35,21 @@ const edicion = defineModel<EdicionDeLocalidad>({ required: true });
       etiqueta="Nombre comercial SAT"
       :error="errores.nombreComercialSat"
     />
-    <CampoTexto v-model="edicion.departamentoCodigo" etiqueta="Departamento" :error="errores.departamentoCodigo" />
-    <CampoTexto v-model="edicion.municipioCodigo" etiqueta="Municipio" :error="errores.municipioCodigo" />
-    <CampoTexto v-model="edicion.direccion" etiqueta="Direccion" :error="errores.direccion" />
+    <div class="grid gap-4 sm:grid-cols-2">
+      <CampoSelector
+        v-model="edicion.departamentoCodigo"
+        etiqueta="Departamento"
+        :opciones="referencias.departamentoCodigo"
+        :error="errores.departamentoCodigo"
+      />
+      <CampoSelector
+        v-model="edicion.municipioCodigo"
+        etiqueta="Municipio"
+        :opciones="referencias.municipioCodigo"
+        :error="errores.municipioCodigo"
+      />
+    </div>
+    <CampoTexto v-model="edicion.direccion" etiqueta="Dirección" :error="errores.direccion" />
     <CampoInterruptor v-model="edicion.activo" etiqueta="Activo" />
   </div>
 </template>

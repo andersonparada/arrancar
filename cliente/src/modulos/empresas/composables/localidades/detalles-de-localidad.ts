@@ -10,5 +10,5 @@ export const detallesDeLocalidad = (registro: Localidad): DetalleDeRegistro[] =>
   { etiqueta: 'Nombre comercial SAT', valor: formatearTexto(registro.nombreComercialSat) },
   { etiqueta: 'Departamento', valor: formatearTexto(registro.departamentoCodigo) },
   { etiqueta: 'Municipio', valor: formatearTexto(registro.municipioCodigo) },
-  { etiqueta: 'Direccion', valor: formatearTexto(registro.direccion) },
+  { etiqueta: 'Dirección', valor: formatearTexto(registro.direccion) },
 ];

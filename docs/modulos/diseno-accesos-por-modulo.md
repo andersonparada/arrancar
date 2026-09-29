@@ -552,7 +552,7 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
    auditoría de la asignación, editar, inactivar, eliminar con usuarios con acceso en la
    auditoría), mensajes de duplicado, Excel, permisos (migraciones 5 y 6). Pruebas de
    API con un usuario sin `ver-todas`.
-6. **H5b-4 (cliente) Localidades.** Lista, formulario (tipo, SAT, municipio), ficha.
+6. **[HECHO] H5b-4 (cliente) Localidades.** Lista, formulario (tipo, SAT, municipio), ficha. Selector de tipo (solo activos, por nombre; conserva el actual si se inactivó), departamento/municipio como en Clientes, botón eliminar en la ficha (`.eliminar`, confirmación peligrosa, 409 con el aviso del servidor), franja de alerta en el formulario si el servidor responde 409 por duplicado. Pendiente para el paso 8: sección «Usuarios con acceso» en la ficha (el servidor aún no expone `GET …/localidades/:id/usuarios`).
 7. **H5b-5 (servidor) Accesos a localidades.** Las cuatro rutas de accesos, casos de uso
    `ListarUsuariosParaAccesos`, `ObtenerAccesosDeUsuario`, `ReemplazarAccesosDeUsuario`
    (diferencia, auditoría por cambio), `ListarUsuariosDeLocalidad`.

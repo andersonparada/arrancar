@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DatosLocalidad, Localidad } from '../../servicios/localidades.api';
-import { datosDeLocalidad, edicionDe } from './edicion-de-localidad';
+import { datosDeLocalidad, edicionDe, mensajeDeEliminacion } from './edicion-de-localidad';
 
 const datos: DatosLocalidad = {
   codigo: 'Registro de prueba',
@@ -8,8 +8,8 @@ const datos: DatosLocalidad = {
   tipoId: '00000000-0000-4000-8000-000000000001',
   codigoEstablecimientoSat: 7,
   nombreComercialSat: 'Registro de prueba',
-  departamentoCodigo: 'Registro de prueba',
-  municipioCodigo: 'Registro de prueba',
+  departamentoCodigo: '01',
+  municipioCodigo: '0101',
   direccion: 'Registro de prueba',
   activo: true,
 };
@@ -33,5 +33,11 @@ describe('ventana de localidades', () => {
       municipioCodigo: null,
       direccion: null,
     });
+  });
+
+  it('el mensaje de eliminar dice qué localidad y qué pasa si está en uso', () => {
+    const mensaje = mensajeDeEliminacion('Finca Norte');
+    expect(mensaje).toContain('«Finca Norte»');
+    expect(mensaje).toContain('inactívela');
   });
 });

@@ -10,8 +10,8 @@ export interface EdicionDeLocalidad {
   tipoId: string | null;
   codigoEstablecimientoSat: string | number;
   nombreComercialSat: string;
-  departamentoCodigo: string;
-  municipioCodigo: string;
+  departamentoCodigo: string | null;
+  municipioCodigo: string | null;
   direccion: string;
   activo: boolean;
 }
@@ -22,8 +22,8 @@ const LOCALIDAD_NUEVO: Omit<EdicionDeLocalidad, 'abierta' | 'id'> = {
   tipoId: null,
   codigoEstablecimientoSat: '',
   nombreComercialSat: '',
-  departamentoCodigo: '',
-  municipioCodigo: '',
+  departamentoCodigo: null,
+  municipioCodigo: null,
   direccion: '',
   activo: true,
 };
@@ -39,8 +39,8 @@ export function edicionDe(localidad?: Localidad): EdicionDeLocalidad {
     tipoId: localidad.tipoId,
     codigoEstablecimientoSat: textoDeEdicion(localidad.codigoEstablecimientoSat),
     nombreComercialSat: textoDeEdicion(localidad.nombreComercialSat),
-    departamentoCodigo: textoDeEdicion(localidad.departamentoCodigo),
-    municipioCodigo: textoDeEdicion(localidad.municipioCodigo),
+    departamentoCodigo: localidad.departamentoCodigo,
+    municipioCodigo: localidad.municipioCodigo,
     direccion: textoDeEdicion(localidad.direccion),
     activo: localidad.activo,
   };
@@ -53,8 +53,12 @@ export const datosDeLocalidad = (edicion: EdicionDeLocalidad): DatosLocalidad =>
   tipoId: edicion.tipoId ?? '',
   codigoEstablecimientoSat: numeroONulo(edicion.codigoEstablecimientoSat),
   nombreComercialSat: textoONulo(edicion.nombreComercialSat),
-  departamentoCodigo: textoONulo(edicion.departamentoCodigo),
-  municipioCodigo: textoONulo(edicion.municipioCodigo),
+  departamentoCodigo: edicion.departamentoCodigo,
+  municipioCodigo: edicion.municipioCodigo,
   direccion: textoONulo(edicion.direccion),
   activo: edicion.activo,
 });
+
+/** Lo que se le pregunta al operador antes de eliminar. */
+export const mensajeDeEliminacion = (nombre: string): string =>
+  `Se eliminará la localidad «${nombre}» y se quitará el acceso de los usuarios que la tienen asignada. Si ya tiene registros no se podrá eliminar; en ese caso inactívela desde Editar. Esta acción no se puede deshacer.`;
