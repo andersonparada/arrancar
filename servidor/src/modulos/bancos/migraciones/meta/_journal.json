@@ -120,6 +120,13 @@
       "when": 1790700400000,
       "tag": "0016_h3_sembrar_conceptos",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790700500000,
+      "tag": "0017_h6_cheques_en_circulacion",
+      "breakpoints": true
     }
   ]
 }

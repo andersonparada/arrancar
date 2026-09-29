@@ -4,6 +4,12 @@ import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeBancos } from './composicion/bancos.js';
 import { rutasDeChequeras } from './composicion/chequeras.js';
 import { rutasDeCheques } from './composicion/cheques.js';
+import { rutasDeChequesCaducos } from './composicion/cheques-caducos.js';
+import {
+  MESES_DE_VENCIMIENTO_POR_OMISION,
+  MESES_MAXIMOS_DE_VENCIMIENTO,
+  MESES_MINIMOS_DE_VENCIMIENTO,
+} from './dominio/cheques-en-circulacion.js';
 import { rutasDeConciliaciones } from './composicion/conciliaciones.js';
 import { rutasDeCorrelativos } from './composicion/correlativos.js';
 import { rutasDeCuentasBancarias } from './composicion/cuentas-bancarias.js';
@@ -53,6 +59,8 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.cheques.emitir', descripcion: 'Emitir cheques' },
     { clave: 'bancos.cheques.anular', descripcion: 'Anular cheques' },
     { clave: 'bancos.cheques.blanquear', descripcion: 'Blanquear cheques emitidos por error' },
+    { clave: 'bancos.cheques-caducos.ver', descripcion: 'Ver el reporte de cheques caducos' },
+    { clave: 'bancos.cheques-caducos.exportar', descripcion: 'Exportar el reporte de cheques caducos a Excel' },
     { clave: 'bancos.conciliaciones.ver', descripcion: 'Ver conciliaciones' },
     { clave: 'bancos.conciliaciones.conciliar', descripcion: 'Marcar documentos y terminar conciliaciones' },
     { clave: 'bancos.conciliaciones.autorizar', descripcion: 'Autorizar o devolver conciliaciones' },
@@ -89,6 +97,15 @@ export const moduloBancos: DefinicionModulo = {
       niveles: ['instalacion', 'empresa'],
       publica: true,
     }),
+    definirConfiguracion({
+      clave: 'bancos.cheques.meses_de_vencimiento',
+      descripcion:
+        'Meses que debe tener un cheque emitido y sin cobrar para aparecer en el reporte de cheques caducos.',
+      esquema: z.number().int().min(MESES_MINIMOS_DE_VENCIMIENTO).max(MESES_MAXIMOS_DE_VENCIMIENTO),
+      predeterminado: MESES_DE_VENCIMIENTO_POR_OMISION,
+      niveles: ['instalacion', 'empresa'],
+      publica: true,
+    }),
   ],
   rutas: rutasDelModulo([
     rutasDeBancos(),
@@ -101,6 +118,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeCheques(),
     rutasDeConciliaciones(),
     rutasDeCorrelativos(),
+    rutasDeChequesCaducos(),
     rutasDeConceptos(),
     // generador: rutas
   ]),

@@ -67,6 +67,12 @@ export const movimientos = esquemaBancos.table(
     index('movimientos_transferencia_idx').on(t.transferenciaId),
     index('movimientos_conciliacion_idx').on(t.conciliacionId),
     index('movimientos_revierte_a_idx').on(t.revierteAId),
+    /** Los cheques en circulación (reporte de cheques caducos): pocos y siempre los mismos filtros. */
+    index('movimientos_cheques_en_circulacion_idx')
+      .on(t.cuentaBancariaId, t.fecha)
+      .where(
+        sql`${t.tipo} = 'cheque' and ${t.conciliacionId} is null and ${t.revertidoEn} is null and ${t.anuladoEn} is null`,
+      ),
     uniqueIndex('movimientos_un_saldo_inicial')
       .on(t.cuentaBancariaId)
       .where(sql`${t.saldoInicial} and ${t.anuladoEn} is null`),

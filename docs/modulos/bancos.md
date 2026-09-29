@@ -1240,3 +1240,33 @@ en notas y cheques).
   columnas sin `claveDeSistema`.
 - **Pruebas**: dominio (`conceptos-iniciales.prueba.ts`), casos de uso (`casos-uso-de-conceptos.prueba.ts`) y
   API (`bancos-conceptos.api.prueba.ts`: semilla única, duplicados, sistema, eliminar, permisos, Excel).
+
+## H6a Cheques caducos: solo el reporte (servidor hecho el 2026-09-29)
+
+Plan: `plan-hallazgos-contables.md`, sección H6 y fila H6 de «Decisiones del usuario» (que manda: antigüedad
+configurable, **7 meses por omisión**, solo cheques **emitidos y no cobrados**; los disponibles que nunca se
+emitieron no tienen movimiento y no entran). La anulación en lote es H6b y aún no existe.
+
+- **Variable** `bancos.cheques.meses_de_vencimiento` (empresa e instalación, pública): entero de 1 a 120,
+  7 por omisión (`dominio/cheques-en-circulacion.ts`). Un valor fuera de rango se rechaza al guardarla.
+- **Consulta** (`ConsultasDeChequesEnCirculacionDrizzle`): `cheques.estado = 'emitido'` con su movimiento
+  `tipo = 'cheque'`, sin `conciliacion_id`, sin `revertido_en`, sin `anulado_en` y con
+  `fecha < fecha de corte`. La fecha de corte es hoy menos los meses (día recortado al fin de mes, como
+  `make_interval`), la calcula el caso de uso (`fechaDeCorteDeCheques`), no la base. Orden: más antiguo primero.
+  «Hoy» es la fecha UTC del servidor, como en `AnularCheque`.
+- **Índice parcial** `movimientos_cheques_en_circulacion_idx (cuenta_bancaria_id, fecha)` donde
+  `tipo = 'cheque'` y no está conciliado, revertido ni anulado. Migración `0017_h6_cheques_en_circulacion`
+  (su `when` es 1790700500000, mayor que el de 0016, o el migrador la salta); además da los permisos nuevos a
+  los roles que ya tenían `bancos.movimientos.ver` y `.exportar`.
+- **Endpoint** `GET /api/bancos/cheques-caducos?cuentaBancariaId=&beneficiario=&meses=` (permiso
+  `bancos.cheques-caducos.ver`; `meses` de 1 a 120, por omisión la variable; `beneficiario` busca por
+  contenido sin distinguir mayúsculas y toma `%` y `_` como texto). Devuelve
+  `{ mesesDeAntiguedad, fechaDeCorte, totalDeCheques, montoTotal, cheques }`; cada cheque trae `chequeId`,
+  `movimientoId`, `cuentaBancariaId`, `cuentaBancariaNombre`, `serie`, `numero`, `fecha`, `diasDeAntiguedad`,
+  `beneficiario`, `monto`, `mesConciliado` (el mes del cheque ya está autorizado: anularlo exigirá nota
+  inversa en H6b) y `origen` (`suelto` o `cuentas_por_pagar`; hoy siempre `suelto`).
+- **Excel** `GET /api/bancos/cheques-caducos/exportar` con los mismos filtros y el permiso
+  `bancos.cheques-caducos.exportar`. Nunca se importa (es reporte).
+- **Pruebas**: dominio (`cheques-en-circulacion.prueba.ts`), caso de uso (`reporte-de-cheques-caducos.prueba.ts`)
+  y API (`bancos-cheques-caducos.api.prueba.ts`: entra el viejo emitido; no entran el cobrado, el anulado, el
+  revertido, el reciente ni el disponible; filtros, variable de la empresa, permisos, Excel y aislamiento).
