@@ -119,7 +119,7 @@ resolverlo antes de seguir.
 |---|---|---|
 | Cargos del banco no registrados en libros (comisiones, intereses, cheques rechazados) | Funciona: se registra la nota antes de conciliar | Poder marcar esas notas como **ajuste de conciliación** para que el documento las muestre en su propia sección. |
 | Primera conciliación | Incompleto | Se resuelve con la fecha de inicio y la carga inicial (arriba). |
-| Cheques posfechados | Sin definir | ¿Se permiten? ¿Cuentan en el saldo desde su fecha o desde que se emiten? |
+| Cheques posfechados | **Decidido (2026-09-29)** | Se permiten y cuentan en el saldo **en su fecha** (también los que emite Cuentas por pagar). |
 | Cheque impreso o entregado | Sin definir | Lo necesita la regla de blanquear; llega con la impresión de cheques. |
 
 ### Revisión a fondo de lo programado (2026-09-28): hallazgos por decidir
@@ -133,35 +133,45 @@ contra la práctica contable y la ley de Guatemala.
 | H2 | La conciliación **no guarda el saldo del estado de cuenta** del banco | Es la evidencia externa de que cuadró: el sistema calcula «lo que debería decir el banco», pero no queda registrado lo que el banco **sí** dijo. Un auditor lo pide. | El usuario **no decide** ningún saldo de libros; solo **transcribe** el saldo final del estado de cuenta (y adjunta su foto o PDF). Se autoriza solo si es igual al calculado. | Alta |
 | H3 | Las notas **no tienen concepto** (comisión, intereses, depósito de ventas, planilla…) | Sin clasificación no salen el **flujo de efectivo**, ni el gasto por comisiones, ni la partida contable. | Catálogo de **conceptos bancarios** por empresa, obligatorio en cada nota (y en cheques y transferencias según el caso). | Alta |
 | H4 | **Número de cuenta único por empresa**, no por banco | Dos bancos pueden usar el mismo número de cuenta; hoy se rechazaría la segunda. | Único por empresa **y banco**. | Media |
-| H5 | **Empresas** sin razón social, NIT obligatorio, régimen, fecha de inicio ni establecimientos | Libro de compras, retenciones y FEL los necesitan. Los **establecimientos** de la SAT (cada uno con su código) son justamente las **localidades** planificadas. | Agregar razón social, nombre comercial, NIT obligatorio (si hay módulos fiscales), régimen, fecha de inicio y **localidades = establecimientos SAT** (con su código). | Media |
+| H5 | **Empresas** sin razón social, NIT obligatorio, régimen, fecha de inicio ni establecimientos | Libro de compras, retenciones y FEL los necesitan. Los **establecimientos** de la SAT (cada uno con su código) son justamente las **localidades** planificadas. | Agregar razón social, nombre comercial, NIT obligatorio (si hay módulos fiscales), régimen, fecha de inicio y **localidades = establecimientos SAT** (con su código). **H5a hecho** (razón social, nombre comercial, fecha de inicio y carga inicial en el esquema `empresas`); régimen y agentes de retención, en Libro de compras L1; localidades, en H5b/H5c. | Media |
 | H6 | **Cheques en circulación viejos** | El banco no está obligado a pagar un cheque presentado **después de seis meses** de su fecha. Quedan como pendientes para siempre. | Reporte y alerta de cheques en circulación con más de 6 meses, para revisarlos y anularlos (con su inverso si el mes ya se concilió). | Media |
-| H7 | **Comisiones bancarias con IVA** | Las comisiones y la venta de chequeras llevan IVA y el banco emite factura: es **crédito fiscal**. Hoy la nota de débito no llega al Libro de compras. | Cuando exista Libro de compras: la nota de débito por comisión puede ligarse a su factura (destino «Bancos» en Ingreso de facturas). | Media |
+| H7 | **Comisiones bancarias** | *Corregido por el contador (2026-09-29):* los servicios de entidades fiscalizadas por la SIB están **exentos** de IVA (Ley del IVA art. 7.4): no hay crédito fiscal que perder. Sí traen IVA los seguros y los débitos automáticos de terceros. | La comisión se registra en Bancos; la FEL exenta del banco, opcional en Libro de compras como compra exenta. Las facturas con IVA pagadas por nota de débito se ligan por la **contraseña** de Cuentas por pagar. Sin destino «Bancos» ni tabla factura ↔ nota. | Baja |
 | H8 | **Intereses con ISR retenido** | El banco acredita el interés **neto**; el 10 % de ISR sobre rentas de capital ya va retenido. Para contabilidad y el ISR anual hay que conocer el bruto y la retención. | En la nota de crédito por intereses, campos opcionales de **interés bruto** y **ISR retenido** (el neto es el monto). | Baja |
 | H9 | Las notas **no tienen correlativo interno** | Práctica de control: cada comprobante (voucher) lleva número interno consecutivo para detectar faltantes. | Correlativo por empresa y tipo, asignado por el sistema (independiente de la referencia del banco). | Baja |
-| H10 | **Proveedores sin NIT** o con «CF» | En el Libro de compras cada factura necesita el NIT del emisor; a quien no tiene NIT se le hace factura especial. | Exigir NIT (distinto de CF) al usar un proveedor en Libro de compras. | Baja |
-| H11 | **Crédito fiscal fuera de plazo** | El crédito fiscal se puede reportar a más tardar en los **dos meses siguientes** al período de la factura. | En Libro de compras: guardar el **mes del libro** y avisar o impedir registrar facturas fuera de ese plazo. | Media (plan) |
+| H10 | **Proveedores sin NIT** o con «CF» | En el Libro de compras cada factura necesita el NIT del emisor; a quien no tiene NIT se le hace factura especial. | Exigir NIT (distinto de CF) al usar un proveedor en Libro de compras. Manda el del DTE: si no coincide con el del proveedor, **se rechaza** (decidido). | Baja |
+| H11 | **Crédito fiscal fuera de plazo** | El crédito fiscal se puede reportar a más tardar en los **dos meses siguientes** al período de la factura. | En Libro de compras: guardar el **mes del libro**; fuera de plazo **se registra con aviso** y el IVA va al costo, a una cuenta **configurable por empresa** (validado con ajustes por el contador). Estado «declarado» opcional por empresa, apagado por omisión. | Media (plan) |
 
 Plan de base de datos, opciones, recomendaciones y preguntas de cada hallazgo:
 [`docs/modulos/plan-hallazgos-contables.md`](modulos/plan-hallazgos-contables.md).
 
-### Libro de compras y Cuentas por pagar (planificados): corregir en el plan
+### Libro de compras y Cuentas por pagar (planificados): corregido en el plan
 
-1. **Momento de la retención**: la ley manda retener al **pagar o acreditar en
-   cuenta**, lo que ocurra primero. Con provisión, acreditar en cuenta es
-   **autorizar**. La retención nace al autorizar (o al pagar si no hay provisión),
-   no al registrar; la constancia y el reporte mensual van por esa fecha.
-   **Investigar a fondo** y ajustar el plan.
-2. **Contraseña de pago en la práctica**: en Guatemala se entrega **cuando el
-   proveedor trae la factura** (comprobante de recibido con fecha de pago), antes de
-   aprobarla. Propuesta: la contraseña puede tener facturas **registradas**; solo se
-   **paga** lo autorizado. **Confirmar con el usuario.**
-3. **Período del crédito fiscal**: el IVA va en el Libro de compras del mes que
-   corresponde y la ley da un plazo para facturas atrasadas. Investigar el plazo y
-   guardar el **mes del libro** además de la fecha de emisión.
-4. **Pagos parciales con retención**: la retención se aplica una sola vez (al
-   provisionar o en el primer pago), no en cada pago.
-5. **Notas de crédito del proveedor**: restan del IVA crédito fiscal del mes en que
-   se reciben (confirmar en la investigación).
+Resuelto el 2026-09-29 con `docs/modulos/validacion-h7-h11-retenciones.md` y las
+respuestas del usuario; ya está en `libro-de-compras.md` y `cuentas-por-pagar.md`.
+
+1. **Momento de la retención**: lo que decía este punto («nace al autorizar») era
+   **incorrecto**. Las retenciones se calculan y **fijan al registrar** la factura en
+   Libro de compras: ISR con la **fecha de la factura**, IVA con la de **recepción**
+   y el 5 % a pequeño contribuyente **al autorizar o pagar** (lo primero). Cuentas por
+   pagar solo las descuenta. El mínimo del 5 %: solo facturas **mayores a Q2,500.00**
+   (art. 49 del AG 5-2013; ver `validacion-h7-h11-retenciones.md`).
+2. **Contraseña de pago**: **confirmado**. Puede incluir facturas sin autorizar; solo
+   se **paga** lo autorizado. También liga las facturas con las notas de débito que
+   las pagaron (H7).
+3. **Período del crédito fiscal**: plazo de dos meses después del de emisión (Ley del
+   IVA art. 20); se guarda el **período** y, si no da crédito, el **motivo**. Ver H11.
+4. **Pagos parciales con retención**: la retención se descuenta una sola vez, en el
+   **primer pago**.
+5. **Notas de crédito del proveedor**: **confirmado**, rebajan el crédito del mes en
+   que se reciben, sin los dos meses de gracia; si su factura no dio crédito, rebajan
+   el costo.
+6. **Casilla «Se muestra en reportes SAT»** (nueva, sí por omisión): desmarcada (recibo
+   o documento no FEL), sin crédito fiscal ni retenciones; todo al costo, solo para el
+   control de pagos.
+7. **Activos fijos (P2)**: la línea de la factura dice si es activo fijo; su pago va a
+   un concepto de Inversión en Bancos.
+
+Quedan preguntas abiertas en la sección «Preguntas para el usuario» de cada plan.
 
 ### Módulos grandes que faltan planificar
 
