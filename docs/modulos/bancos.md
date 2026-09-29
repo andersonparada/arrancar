@@ -1200,7 +1200,7 @@ concurrencia y reinicio anual) y API (`bancos-correlativos`, `bancos-numeracion-
 
 Ver el diseño en `plan-hallazgos-contables.md` (H3). Decisión del usuario: el catálogo
 `bancos.conceptos` lo **edita el usuario**; la semilla es solo un punto de partida. Es una
-pantalla de **Administración** (importa y exporta Excel). Falta el cliente y H3b (`concepto_id`
+pantalla de **Administración** (importa y exporta Excel). Cliente hecho (ListaDeConceptos: tarjetas por nombre, «Del sistema», inactivar/reactivar por PUT, eliminar con motivo). Falta H3b (`concepto_id`
 en notas y cheques).
 
 - **Tabla `bancos.conceptos`** (migración `0015_conceptos`, por empresa con RLS): `nombre` (único

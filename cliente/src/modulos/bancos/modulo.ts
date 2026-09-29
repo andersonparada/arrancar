@@ -8,6 +8,7 @@ import {
   ListOrdered,
   NotebookTabs,
   ScrollText,
+  Tags,
   WalletCards,
 } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
@@ -106,6 +107,12 @@ export const moduloBancos: DefinicionModuloCliente = {
       component: () => import('./paginas/ReporteDeCorrelativos.vue'),
       meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.correlativos.titulo },
     },
+    {
+      path: '/bancos/conceptos',
+      name: 'bancos.conceptos',
+      component: () => import('./paginas/ListaDeConceptos.vue'),
+      meta: { permiso: 'bancos.conceptos.ver', titulo: VENTANAS_BANCOS.conceptos.titulo },
+    },
     // generador: rutas
   ],
   menu: [
@@ -176,6 +183,13 @@ export const moduloBancos: DefinicionModuloCliente = {
           icono: ListOrdered,
           seccion: 'reportes',
           permiso: 'bancos.movimientos.ver',
+        },
+        {
+          titulo: VENTANAS_BANCOS.conceptos.titulo,
+          ruta: '/bancos/conceptos',
+          icono: Tags,
+          seccion: 'administracion',
+          permiso: 'bancos.conceptos.ver',
         },
         // generador: menu
       ],

@@ -56,5 +56,11 @@ export const VENTANAS_BANCOS = {
     descripcion:
       'Numeración de notas y transferencias: último número, emitidos y los huecos explicados con la auditoría.',
   },
+  conceptos: {
+    titulo: 'Conceptos',
+    descripcion: 'Los conceptos que clasifican las notas y los cheques: por qué se mueve el dinero del banco.',
+    nuevo: 'Nuevo concepto',
+    editar: 'Editar concepto',
+  },
   // generador: ventanas
 } as const;
