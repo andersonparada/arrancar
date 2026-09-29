@@ -16,8 +16,19 @@ const PERMISOS_DE_INTERCAMBIO = {
   importar: 'empresas.departamentos.importar',
   exportar: 'empresas.departamentos.exportar',
 };
-const { registros, cargando, intercambio, referencias, edicion, enviando, errores, abrir, guardar } =
-  usarDepartamentos();
+const {
+  registros,
+  cargando,
+  intercambio,
+  referencias,
+  edicion,
+  enviando,
+  errores,
+  conflicto,
+  eliminar,
+  abrir,
+  guardar,
+} = usarDepartamentos();
 </script>
 
 <template>
@@ -34,7 +45,12 @@ const { registros, cargando, intercambio, referencias, edicion, enviando, errore
     </EncabezadoPagina>
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
-    <EstadoVacio v-else-if="!registros.length" :icono="Inbox" titulo="Todavía no hay departamentos" />
+    <EstadoVacio
+      v-else-if="!registros.length"
+      :icono="Inbox"
+      titulo="Todavía no hay departamentos"
+      descripcion="Cree el primero (ventas, administración, producción…) o impórtelos desde Excel."
+    />
     <ul v-else class="grid gap-3 md:grid-cols-2">
       <li v-for="registro in registros" :key="registro.id">
         <TarjetaDeRegistro
@@ -42,7 +58,10 @@ const { registros, cargando, intercambio, referencias, edicion, enviando, errore
           :detalles="detallesDeDepartamento(registro)"
           permiso="empresas.departamentos.editar"
           :inactivo="!registro.activo"
+          permiso-eliminar="empresas.departamentos.eliminar"
+          eliminable
           @editar="abrir(registro)"
+          @eliminar="eliminar(registro)"
         />
       </li>
     </ul>
@@ -51,6 +70,7 @@ const { registros, cargando, intercambio, referencias, edicion, enviando, errore
       v-model="edicion"
       :referencias="referencias"
       :errores="errores"
+      :conflicto="conflicto"
       :enviando="enviando"
       @cerrar="edicion.abierta = false"
       @guardar="guardar"

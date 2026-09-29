@@ -19,7 +19,7 @@ const PERMISOS_DE_INTERCAMBIO = {
   exportar: 'empresas.localidades.exportar',
 };
 const router = useRouter();
-const { registros, cargando, intercambio } = usarListaDeLocalidades();
+const { registros, cargando, nombres, intercambio } = usarListaDeLocalidades();
 const accesos = usarAccesosALocalidades();
 const usuarioId = accesos.usuarioId;
 </script>
@@ -56,7 +56,7 @@ const usuarioId = accesos.usuarioId;
       <li v-for="registro in registros" :key="registro.id">
         <TarjetaDeRegistro
           :titulo="String(registro.nombre)"
-          :detalles="detallesDeLocalidad(registro)"
+          :detalles="detallesDeLocalidad(registro, nombres)"
           permiso="empresas.localidades.editar"
           :inactivo="!registro.activo"
           :destino="{ name: 'empresas.localidades.ficha', params: { localidadId: registro.id } }"

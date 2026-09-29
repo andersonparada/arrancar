@@ -8,6 +8,7 @@ import CamposDeDepartamento from './CamposDeDepartamento.vue';
 defineProps<{
   errores: Record<string, string>;
   enviando: boolean;
+  conflicto?: string;
   referencias: Record<'localidadId', OpcionDeRegistro[]>;
 }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
@@ -21,6 +22,13 @@ const edicion = defineModel<EdicionDeDepartamento>({ required: true });
     @cerrar="emit('cerrar')"
   >
     <form id="form-departamento" @submit.prevent="emit('guardar')">
+      <p
+        v-if="conflicto"
+        role="alert"
+        class="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200"
+      >
+        {{ conflicto }}
+      </p>
       <CamposDeDepartamento v-model="edicion" :errores="errores" :referencias="referencias" />
     </form>
     <template #pie>

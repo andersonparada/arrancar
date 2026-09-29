@@ -544,3 +544,7 @@ y `demo` / `demo-arrancar`.
   `core.asignar_registro_al_creador` respete `app.sin_asignar_al_crear` (`ContextoEmpresa.sinAsignarAlCrear`,
   para la importación de Excel del paso 5). Ver `docs/modulos/diseno-permisos-por-usuario.md`.
 
+- **2026-09-29 (H5b/H5c cerrados, pasos 10 y 11).** Cliente de departamentos: selector opcional de
+  localidad, eliminar con confirmación (409 en uso), aviso de código o nombre repetido, código en
+  mayúsculas. Localidades muestran el nombre de departamento y municipio. Diseño cerrado en
+  `docs/modulos/diseno-accesos-por-modulo.md` §17.

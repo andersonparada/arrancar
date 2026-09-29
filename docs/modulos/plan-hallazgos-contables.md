@@ -670,8 +670,8 @@ Pasos (un commit cada uno, con sus pruebas):
 13. **H6a** Reporte de cheques caducos (índice, filtros, imprimir, exportar).
 14. **H6b** Anulación en lote.
 15. **H5a** Datos fiscales de la empresa, fecha de inicio y carga inicial.
-16. **H5b** `core.localidades` con acceso por `core.accesos_datos` y `politicaPorAlcanceOpcional`.
-17. **H5c** `core.areas`.
+16. **H5b** [HECHO] localidades (esquema `empresas`) con accesos en `empresas.accesos_a_localidades` y `politicaPorAlcanceOpcional`; ver `diseno-accesos-por-modulo.md`.
+17. **H5c** [HECHO] departamentos (`empresas.departamentos`, localidad opcional) en lugar de `core.areas`.
 18. **H10, H11, H7**: dentro de los pasos L1 y L3 de Libro de compras (corregir su plan
     antes) y un paso **H7** en Bancos después de L3.
 

@@ -38,6 +38,11 @@ export class ApiDepartamentos {
   actualizar(id: string, datos: DatosDepartamento) {
     return this.http.reemplazar<Departamento>(`${RUTA}/${id}`, datos);
   }
+
+  /** Falla con 409 si el departamento ya se usa en otros registros. */
+  eliminar(id: string) {
+    return this.http.eliminar(`${RUTA}/${id}`);
+  }
 }
 
 export const apiDepartamentos = new ApiDepartamentos(clienteHttp);

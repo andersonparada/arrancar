@@ -562,8 +562,8 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
    inactivas marcadas. Nombre de departamento/municipio en lista y ficha: no se hizo (sigue el código).
 9. **[HECHO] H5c (servidor) Departamentos.** Tabla con alcance opcional, casos de uso, Excel,
    permisos (migración 7).
-10. **H5c (cliente) Departamentos.** Pantalla de catálogo con selector de localidad.
-11. **Docs.** `DONDE-QUEDAMOS.md`, bitácora de `PLAN.md`, marcar H5b/H5c en el plan de
+10. **[HECHO] H5c (cliente) Departamentos.** Pantalla de catálogo con selector opcional de localidad (activas que el usuario ve, por nombre, «Sin localidad»; conserva la actual si se inactivó), eliminar con confirmación peligrosa y `.eliminar`, franja de alerta ante 409 (código o nombre repetido), código en mayúsculas al escribir. Lista y ficha de Localidades muestran el nombre del departamento y del municipio (`usarNombresDeUbicacion`).
+11. **[HECHO] Docs.** `DONDE-QUEDAMOS.md`, bitácora de `PLAN.md`, marcar H5b/H5c en el plan de
     hallazgos y en `diseno-esquema-empresas.md` («reemplazado por
     `diseno-accesos-por-modulo.md`» en su sección de accesos).
 
@@ -714,3 +714,9 @@ Ninguna bloquea el paso 1 ni el 2. Si no hay respuesta, se sigue con lo recomend
   creador no debe actuar en la importación).
 - **Ventana de accesos:** se abre **solo desde Localidades** (en la ficha de la
   localidad se ven sus usuarios).
+
+## 17. Notas de implementación de los pasos 10 y 11 (2026-09-29) y resumen final
+
+- Cliente de departamentos completado: `opcionesDeLocalidades` (pura, con pruebas), `usarEliminacionDeDepartamento`, conflicto 409 en la ventana (`conflicto`), `codigoEnMayusculas` (máximo 12) y permisos por acción en cada botón. Sin ficha: es catálogo; la tarjeta muestra el nombre de la localidad o «Sin localidad».
+- Localidades: `detallesDeLocalidad(registro, nombres)` con nombres de departamento y municipio (caen al código mientras cargan); se piden a `apiGeografia` una vez por departamento.
+- **Resumen de H5b/H5c:** los accesos viven en el esquema de cada módulo (`<esquema>.accesos_a_<plural>`) con `AlcanceDeRegistros` del core; `core.accesos_datos` desapareció. `empresas` tiene tipos de localidad, localidades con accesos por usuario (ventana de asignación y «Usuarios con acceso» en la ficha) y departamentos con localidad opcional, todos con auditoría, Excel y permisos propios. Roles sin permisos nuevos por omisión: solo el acceso total, el resto se asigna a mano.

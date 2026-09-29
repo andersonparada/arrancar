@@ -85,6 +85,8 @@ la cascada al borrar una empresa se verifique al final del comando.
 
 ## Accesos a localidades
 
+> **Reemplazado por `diseno-accesos-por-modulo.md`** (2026-09-29): los accesos van en `empresas.accesos_a_localidades`, no en `core.accesos_datos`, y la asignación tiene su ventana. Lo de abajo queda como historia.
+
 - Reusa `core.accesos_datos` con el recurso `empresas.localidades`; `empresas/modulo.ts`
   declara `recursosConAlcance` con `permisoVerTodos: 'empresas.localidades.ver-todas'`.
 - Crear o importar localidades exige `ver-todas` (la política rechaza el `insert` de un id

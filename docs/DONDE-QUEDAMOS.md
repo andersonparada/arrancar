@@ -134,45 +134,34 @@ y probado (pruebas del servidor, ESLint y `tsc` en verde).
 
 ## Siguiente
 
-Todas las preguntas están respondidas (ver «Respuestas del usuario (2026-09-29)» en
-`docs/modulos/plan-hallazgos-contables.md`). En orden:
+Hecho de la lista anterior: `soloAccesoTotal` (eliminado), **H5b/H5c completo** (pasos
+1–11 de `docs/modulos/diseno-accesos-por-modulo.md`: tipos de localidad, localidades,
+ventana de accesos y departamentos, servidor y cliente; pruebas: servidor 1045, cliente
+275, generador 46), permisos por acción, llaves entre esquemas, permisos directos a
+usuarios (P1–P4 y L1) y ajustes de conceptos (salvo P7). En orden:
 
-1. ~~Unificar `soloAccesoTotal` con `soloSuperacceso`~~: hecho al eliminar `soloAccesoTotal`.
-2. **H5b/H5c** con los accesos en el esquema de cada módulo
-   (`empresas.accesos_a_localidades`): rediseñar `politicaPorAlcance` para leer la
-   tabla del módulo (pedirle el diseño al `arquitecto-de-datos`), excepción de ESLint
-   del módulo base, tipos de localidad, localidades (se asignan al creador) y
-   departamentos, y la ventana de asignación de accesos.
-3. **Ajustes de conceptos**: columnas `modulo_de_origen` y `documento_de_origen_id`
-   (P6), `causa_de_anulacion` y dejar de usar `cheque_caduco` (P1), conceptos
-   sugeridos nuevos y «Cheque rechazado» en «Cobros a clientes» (P8), «Pago a
-   proveedores» bloqueado con Cuentas por pagar activo (P3), sugerencias en la bandeja
-   «Sin clasificar» (P7).
-4. **H6b** anulación en lote de cheques caducos (inverso con el concepto heredado).
-5. **H8** interés bruto e ISR retenido en las notas de intereses.
-6. **Archivos** (imágenes con HEIC de iPhone, PDF con qpdf, límites por archivo y por
-   minuto, sin cuota) y luego **H2** (estado de cuenta junto a la conciliación, sha256).
-7. Programar **Libro de compras** (H10, H11, H7) y **Cuentas por pagar** según sus
-   planes ya corregidos (`a540ca9`), cuando se respondan sus preguntas abiertas.
-8. Probar en el navegador lo de Bancos (B6, B7, H3, H6, H9) y rehacer la conciliación
-   demo; ninguna pantalla nueva se ha visto aún en el navegador.
+1. **Probar en el navegador** (agente `pruebas-qa`) lo hecho sin verlo: Bancos (B6, B7,
+   H3, H6, H9, ajustes de conceptos), permisos de usuarios, localidades, ventana de
+   accesos y departamentos; rehacer la conciliación demo.
+2. **P7** (sugerencias en «Sin clasificar»): el usuario pidió un cálculo estadístico
+   mejor que «el último concepto»; **lo diseña el arquitecto** con alternativas.
+3. **H6b** anulación en lote de cheques caducos (inverso con el concepto heredado,
+   `causa_de_anulacion = 'caducidad'`).
+4. **H8** interés bruto e ISR retenido en las notas de intereses.
+5. **Archivos** (JPEG, PNG y WebP; HEIC se rechaza y iOS entrega JPEG; PDF con qpdf;
+   límites por archivo y por minuto, sin cuota) y luego **H2** (estado de cuenta junto a
+   la conciliación, sha256).
+6. **Bancos: nota de débito marcada para Cuentas por pagar** (concepto «Pago a
+   proveedores» contra «Pagos a proveedores por aplicar», reporte de marcadas sin ligar
+   al cierre del mes) cuando se programe Cuentas por pagar.
+7. Programar **Libro de compras** (L1–L5) y **Cuentas por pagar** (CP1–CP5): sus
+   preguntas están todas respondidas (ver sus planes y
+   `docs/modulos/validacion-h7-h11-retenciones.md`).
 
 ## Preguntas abiertas para el usuario
 
-Las del plan de hallazgos se respondieron el 2026-09-29 (ver «Respuestas del usuario
-(2026-09-29)» al final de `docs/modulos/plan-hallazgos-contables.md`). Nuevas:
-
-1. ~~`soloAccesoTotal`~~: resuelto por el principio de permisos (PLAN §3.5): se elimina
-   y `reabrir` pasa a ser un permiso asignable.
-2. HEIC: ¿se acepta que las fotos del iPhone lleguen como JPEG (sin HEIC en el
-   servidor)?
-3. Libro de compras y Cuentas por pagar: ver «Preguntas para el usuario» en
-   `docs/modulos/libro-de-compras.md` y `docs/modulos/cuentas-por-pagar.md` (casilla SAT
-   y NIT/UUID, destino de la FEL exenta del banco, IVA fuera de plazo deducible o no,
-   datos fiscales del proveedor por cuenta o empresa, nota de crédito que baja la
-   factura del mínimo del 5 %, ligar una nota de débito existente, pagos mixtos
-   gasto/activo, documentos en bandeja dentro de la contraseña, dónde van los días de
-   crédito).
-4. H5b/H5c: ver «Preguntas para el usuario» en `docs/modulos/diseno-accesos-por-modulo.md`
-   (asignar solo lo que se ve, qué roles reciben `ver-todas` y `asignar`, desde dónde se
-   abre la ventana de accesos, asignar al que importa desde Excel).
+Ninguna que bloquee. Todas las del 2026-09-29 están respondidas y registradas en los
+planes de cada módulo, `diseno-accesos-por-modulo.md`, `diseno-permisos-por-usuario.md`
+y `validacion-h7-h11-retenciones.md`. Queda anotado un riesgo aceptado por el usuario:
+la retención del 5 % se fija al registrar la factura, aunque el momento legal de
+practicarla sea el pago o el acreditamiento (art. 48 de la Ley del IVA).
