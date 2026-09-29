@@ -71,8 +71,11 @@ decisiones e investigación con Opus).
 - **Ajustes de conceptos, servidor** (punto 3): agente programador; avance guardado en
   la rama `claude/serene-mayer-picg8x` (commit WIP `674cdac`), sin probar todavía.
   Migraciones `0021` y `0022` de bancos.
-- **Diseño de H5b/H5c** (punto 2): agente arquitecto de datos, en
-  `docs/modulos/diseno-accesos-por-modulo.md`.
+- **Diseño de H5b/H5c** (punto 2): **hecho** en `docs/modulos/diseno-accesos-por-modulo.md`
+  (11 pasos). Hallazgo: `core.accesos_datos` está vacía y nada la usa (el alcance por
+  cuenta bancaria nunca se programó), así que se elimina sin migrar datos. Los pasos 1
+  (alcance nuevo en el core) y 2 (excepción de ESLint) no esperan respuestas; se
+  programan cuando termine el agente de conceptos (la base de pruebas es una sola).
 
 Forma de trabajo: cada avance va en commit a la rama; a `main` solo entra lo terminado
 y probado (pruebas del servidor, ESLint y `tsc` en verde).
@@ -119,3 +122,6 @@ Las del plan de hallazgos se respondieron el 2026-09-29 (ver «Respuestas del us
    factura del mínimo del 5 %, ligar una nota de débito existente, pagos mixtos
    gasto/activo, documentos en bandeja dentro de la contraseña, dónde van los días de
    crédito).
+4. H5b/H5c: ver «Preguntas para el usuario» en `docs/modulos/diseno-accesos-por-modulo.md`
+   (asignar solo lo que se ve, qué roles reciben `ver-todas` y `asignar`, desde dónde se
+   abre la ventana de accesos, asignar al que importa desde Excel).
