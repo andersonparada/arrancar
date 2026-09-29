@@ -64,57 +64,8 @@ decisiones e investigación con Opus).
 
 ## Preguntas abiertas para el usuario
 
-**Contables (validación de H7, H11 y retenciones):**
-1. ¿Los bancos le emiten FEL por comisiones o chequeras (ver «DTE recibidos» en la
-   SAT)? ¿Con IVA o exentas?
-2. ¿Qué cargos debitados en las cuentas sí traen factura (seguros, servicios,
-   arrendamiento)?
-3. ¿Ligar varias facturas por nota y varias notas por factura, con monto aplicado?
-4. IVA fuera de plazo: ¿a gasto deducible o no deducible? (recomendado: configurable).
-5. ¿Las retenciones se fijan al registrar la factura (ISR con la fecha de la factura) y
-   no al autorizar?
-6. El mínimo de Q2,500.01 para la retención del 5 % a pequeños contribuyentes no está
-   en el art. 48 de la Ley del IVA: confirmar en el AG 5-2013.
+Respondidas el 2026-09-29: ver «Respuestas del usuario (2026-09-29)» al final de
+`docs/modulos/plan-hallazgos-contables.md`. No quedan preguntas abiertas.
 
-**Seguridad de archivos** (detalle en `seguridad-de-archivos.md`):
-7. ¿Solo JPEG, PNG y WebP (sin AVIF ni GIF; HEIC rechazado)?
-8. ¿Límite de 50 o 100 megapíxeles?
-9. PDF con contenido activo: ¿rechazar (recomendado) o sanear? ¿Se permiten enlaces?
-10. PDF con contraseña: ¿rechazar pidiendo «imprimir a PDF» o pedir la contraseña?
-11. ¿El estado de cuenta se ve junto a la conciliación o se descarga? ¿Solo desde la
-    conciliación, con el permiso y el alcance de Bancos?
-12. ¿ClamAV descartado por ahora?
-13. ¿Cuota por cuenta y tamaños máximos?
-14. Importar Excel: ¿rechazar celdas con fórmula o tomar el valor calculado?
-15. ¿Guardar el `sha256` del estado de cuenta como evidencia?
-
-**Otras:**
-16. H8 (intereses que paga el banco con ISR retenido): se sigue platicando.
-17. Estado «declarado» del Libro de compras: se recomendó opcional por empresa y
-    apagado por omisión.
-18. Contraseña de pago: ¿puede incluir facturas registradas aún sin autorizar?
-19. Cheques posfechados: ¿se permiten y desde cuándo cuentan en el saldo?
-20. Patrón común de reversión (`Reversible`): se discute antes de programarlo.
-
-**Concepto de notas y cheques** (detalle en `concepto-de-notas-y-cheques.md`):
-21. P1 Cheque caduco: ¿el inverso hereda el concepto y la caducidad es una causa del
-    cheque (recomendado) o se conserva el concepto `cheque_caduco`?
-22. P2 ¿Cuentas por pagar clasifica como inversión los pagos de activos? ¿De dónde sale
-    el dato?
-23. P3 ¿Un cheque manual puede usar «Pago a proveedores»? (recomendado: solo sin
-    Cuentas por pagar activo).
-24. P4 Préstamos a empleados: ¿inversión u operación si es anticipo de sueldo?
-25. P5 Dividendos y retiros: ¿uno o dos conceptos, siempre financiamiento?
-26. P6 Columnas de módulo y documento de origen: ¿en H3b o en Cuentas por pagar?
-27. P7 ¿Sugerencias de concepto en la bandeja «Sin clasificar», con confirmación?
-28. P8 ¿Se agregan los conceptos sugeridos nuevos a la semilla?
-
-**Esquema `empresas`** (detalle en `diseno-esquema-empresas.md`):
-29. ¿`empresas` como **módulo base**, del que otros módulos pueden poner llaves foráneas
-    y leer sus tablas en SQL? (excepción a «entre módulos, sin llave foránea»).
-30. ¿Accesos a localidades en `core.accesos_datos` y `core.empresa_usuarios` en el core?
-31. ¿Tipos de localidad por empresa (propuesto) o por cuenta?
-32. ¿Código interno de localidad y departamento obligatorio?
-33. ¿Nombre de departamento único en toda la empresa?
-34. ¿Crear localidades exige ver todas las localidades?
-35. ¿Una empresa con localidades cuenta como «con datos» (no se elimina, se inactiva)?
+Pendiente de investigar (sin decisión del usuario): el mínimo de Q2,500.01 de la
+retención del 5 % (AG 5-2013) y si sharp decodifica HEIC.

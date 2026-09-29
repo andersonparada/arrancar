@@ -787,3 +787,39 @@ cliente**, no de Arrancar: se le entrega su información antes de borrar.
 Fuera de esta baja, las cuentas y la auditoría **no se eliminan**; las empresas solo
 si no tienen datos. Pendiente para el `arquitecto-de-datos`: el orden de borrado entre
 esquemas y la exportación de una sola cuenta.
+
+## Respuestas del usuario (2026-09-29)
+
+Mandan sobre el plan y sobre los informes `validacion-h7-h11-retenciones.md`,
+`seguridad-de-archivos.md`, `concepto-de-notas-y-cheques.md` y
+`diseno-esquema-empresas.md`.
+
+| Tema | Decisión |
+|---|---|
+| Módulo base | **Aprobado**: `empresas` es módulo base; otros módulos pueden poner llave foránea a sus tablas y leerlas en SQL (solo desde su infraestructura). |
+| Accesos a registros | **En el esquema de cada módulo** (p. ej. `empresas.accesos_a_localidades` con llave foránea a la localidad), no en `core.accesos_datos`. La regla de seguridad del core se rediseña para leer la tabla del módulo; la pantalla de asignación es otra ventana y asigna a través del módulo. `core.empresa_usuarios` se queda en el core. |
+| Crear localidades | Cualquiera con permiso de gestionar puede crear (no exige ver todas); si ya existe, alerta. Al crearla se le asigna al creador, con auditoría. |
+| Localidades y departamentos | Tipos de localidad **por empresa**; código interno **obligatorio**; nombre de departamento **único en la empresa**; localidades, departamentos y tipos son configuración: una empresa con ellos y sin movimientos **se puede eliminar**. |
+| P1 Cheque caduco | El inverso **hereda el concepto** del cheque; la caducidad queda como causa de anulación en el cheque. Se deja de usar el concepto de sistema `cheque_caduco`. |
+| P2 Pagos de activos | Según la factura: Libro de compras la marca como activo fijo (o por su concepto de gasto) y el pago va a Inversión. |
+| P3 Pago manual | «Pago a proveedores» en un cheque manual solo si Cuentas por pagar **no** está activo. |
+| P4 Préstamos a empleados | Se dejan para cuando exista Planilla, en pantalla aparte. |
+| P5 Dividendos | Dos conceptos (Dividendos pagados y Retiro de socios), ambos Financiamiento. |
+| P6 Origen | Agregar ya `modulo_de_origen` y `documento_de_origen_id` a los movimientos de Bancos. |
+| P7 Sugerencias | Sí, en la bandeja «Sin clasificar», siempre con confirmación. |
+| P8 Semilla | Agregar todos los sugeridos nuevos (menos préstamos a empleados); «Cheque rechazado» al grupo «Cobros a clientes». |
+| H8 Intereses | La nota de intereses pide interés bruto e ISR retenido (bruto − ISR = neto). |
+| Retenciones | Se fijan **al registrar** la factura en Libro de compras (ISR con la fecha de la factura, IVA con la de recepción; 5 % a pequeño contribuyente al autorizar o pagar); Cuentas por pagar las descuenta en el primer pago. |
+| Casilla SAT | Nueva casilla «Se muestra en reportes SAT» (sí por omisión) en Libro de compras: desmarcada (factura no FEL, recibo) no da crédito fiscal ni retenciones; todo el monto al costo y solo sirve para el control de pagos. |
+| Comisiones bancarias | Los bancos emiten FEL **exenta**: se puede registrar como compra exenta (opcional); la comisión se registra en Bancos. |
+| Liga factura ↔ notas | Se resuelve con la **contraseña** de Cuentas por pagar (N facturas pagadas con N documentos); no se hace tabla N a N en Libro de compras. |
+| IVA fuera de plazo | Cuenta **configurable** por empresa. |
+| Contraseña | Puede incluir facturas sin autorizar; se paga solo lo autorizado. |
+| Cheques posfechados | Se permiten y cuentan en su fecha. |
+| Estado «declarado» | Opcional por empresa, apagado por omisión. |
+| Reversible | Se extrae del código de Bancos cuando se programe Cuentas por pagar. |
+| Archivos | Imágenes JPEG, PNG, WebP **y los de iPhone (HEIC/HEIF)**; 100 MP; PDF con contenido activo se rechaza (enlaces permitidos); PDF con contraseña se rechaza con ayuda; estado de cuenta junto a la conciliación, con permiso y alcance de Bancos; ClamAV descartado; **sin cuota por cuenta** (solo límites por archivo y por minuto); sha256 del estado de cuenta; Excel con fórmulas toma el valor calculado. |
+
+Pendiente de investigar: el mínimo de Q2,500.01 de la retención del 5 % a pequeños
+contribuyentes (no está en el art. 48 de la Ley del IVA; confirmar en el AG 5-2013) y
+si sharp decodifica HEIC con sus binarios (si no, convertir en el navegador).
