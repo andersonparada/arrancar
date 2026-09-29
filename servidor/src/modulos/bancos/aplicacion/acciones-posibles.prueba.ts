@@ -15,6 +15,7 @@ const limpia = (cambios: Partial<HechosDeUnMovimiento> = {}): HechosDeUnMovimien
   anulado: false,
   revertido: false,
   esInverso: false,
+  esDeOtroModulo: false,
   mesConciliado: false,
   cuentaConConciliaciones: false,
   ...cambios,
@@ -60,6 +61,11 @@ describe('accionesDeMovimiento', () => {
 
     expect(accionesDeMovimiento(limpia({ esDeTransferencia: true }))).toMatchObject(esperado);
     expect(accionesDeMovimiento(limpia({ tipo: 'cheque' }))).toMatchObject(esperado);
+  });
+
+  it('lo que generó otro módulo no se reclasifica en Bancos (P6)', () => {
+    expect(accionesDeMovimiento(limpia())).toMatchObject({ puedeReclasificar: true });
+    expect(accionesDeMovimiento(limpia({ esDeOtroModulo: true }))).toMatchObject({ puedeReclasificar: false });
   });
 
   it('el saldo inicial no se anula, y se elimina solo si la cuenta nunca se concilió', () => {

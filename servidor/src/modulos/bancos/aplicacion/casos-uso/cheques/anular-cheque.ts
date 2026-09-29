@@ -1,3 +1,4 @@
+import type { CausaDeAnulacion } from '../../../dominio/cheque.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
 import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
@@ -8,6 +9,8 @@ import { chequeExistente, type DependenciasDeCheques } from './dependencias-de-c
 interface AnulacionDeCheque {
   chequeId: string;
   motivo: string;
+  /** Por omisión `manual`; el proceso de cheques caducos (H6b) pasa `caducidad`. El inverso hereda el concepto del cheque en ambos casos. */
+  causa?: CausaDeAnulacion;
   /** Solo se usa si el mes del cheque ya está conciliado: la fecha de su nota inversa. Por omisión, hoy en la zona horaria de la empresa. */
   fecha?: string;
 }
@@ -26,14 +29,14 @@ export class AnularCheque {
    * @throws ChequeAnulado si ya estaba anulado; MotivoDeAnulacionInvalido si falta el motivo.
    * @throws SaldoInsuficiente si al anularlo o revertirlo la cuenta queda en negativo sin sobregiro permitido.
    */
-  ejecutar(operador: Operador, { chequeId, motivo, fecha }: AnulacionDeCheque): Promise<ChequeDto> {
+  ejecutar(operador: Operador, { chequeId, motivo, causa, fecha }: AnulacionDeCheque): Promise<ChequeDto> {
     const { unidadDeTrabajo, repositorio, consultas, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const cheque = await chequeExistente(repositorio, chequeId);
       const anterior = await consultas.obtener(chequeId);
       const { movimientoId } = cheque.instantanea();
 
-      cheque.anular(motivo);
+      cheque.anular(motivo, causa);
       if (movimientoId) await this.anularOrevertirSuMovimiento(operador, movimientoId, { motivo, fecha });
       await repositorio.guardar(cheque);
 

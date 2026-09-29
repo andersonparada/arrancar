@@ -10,7 +10,7 @@ import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/uni
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
 import { ChequerasEnMemoria } from '../../../pruebas/dobles-de-chequeras.js';
-import { ChequesEnMemoria, LimiteDeChequeraFijo } from '../../../pruebas/dobles-de-cheques.js';
+import { ChequesEnMemoria, CuentasPorPagarFijo, LimiteDeChequeraFijo } from '../../../pruebas/dobles-de-cheques.js';
 import {
   MovimientosEnMemoria,
   PoliticaDeMismaFechaFija,
@@ -56,6 +56,8 @@ async function conSaldoInicial(movimientos: MovimientosEnMemoria): Promise<void>
 interface OpcionesDelEntorno {
   permiteSobregiro: boolean;
   reloj: Reloj;
+  /** Si el módulo Cuentas por pagar está activo en la cuenta de la prueba (P3). */
+  cuentasPorPagarActivo: boolean;
 }
 
 interface Dobles {
@@ -91,9 +93,17 @@ function dependenciasDeChequeras(
   };
 }
 
+/** Lo que cambia según la prueba y arma las dependencias de los cheques. */
+interface EntornoDeCheques {
+  unidadDeTrabajo: UnidadDeTrabajo;
+  reglas: ReglasDeLaCuenta;
+  reloj: Reloj;
+  cuentasPorPagarActivo: boolean;
+}
+
 function dependenciasDeCheques(
   { movimientos, cheques, chequeras, auditoria }: Dobles,
-  { unidadDeTrabajo, reglas, reloj }: { unidadDeTrabajo: UnidadDeTrabajo; reglas: ReglasDeLaCuenta; reloj: Reloj },
+  { unidadDeTrabajo, reglas, reloj, cuentasPorPagarActivo }: EntornoDeCheques,
 ) {
   return {
     unidadDeTrabajo,
@@ -106,6 +116,7 @@ function dependenciasDeCheques(
     auditoria,
     correlativos: new CorrelativosEnMemoria(),
     reloj,
+    cuentasPorPagar: new CuentasPorPagarFijo(cuentasPorPagarActivo),
     conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
   };
 }
@@ -127,13 +138,13 @@ function dependenciasDeMovimientos(
   };
 }
 
-function dependenciasDe(dobles: Dobles, { permiteSobregiro, reloj }: OpcionesDelEntorno) {
+function dependenciasDe(dobles: Dobles, { permiteSobregiro, reloj, cuentasPorPagarActivo }: OpcionesDelEntorno) {
   const unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   const politicaDeSobregiro = new PoliticaDeSobregiroFija(permiteSobregiro);
   const reglas = new ReglasDeLaCuenta({ consultas: dobles.movimientos, politicaDeSobregiro });
   return {
     deChequeras: dependenciasDeChequeras(dobles, unidadDeTrabajo),
-    deCheques: dependenciasDeCheques(dobles, { unidadDeTrabajo, reglas, reloj }),
+    deCheques: dependenciasDeCheques(dobles, { unidadDeTrabajo, reglas, reloj, cuentasPorPagarActivo }),
     deMovimientos: dependenciasDeMovimientos(dobles, { unidadDeTrabajo, reglas, reloj }),
   };
 }
@@ -141,8 +152,12 @@ function dependenciasDe(dobles: Dobles, { permiteSobregiro, reloj }: OpcionesDel
 /** Todo lo que las pruebas de cheques necesitan: los casos de uso y los dobles con que se armaron. */
 export async function armarEntorno(opciones: Partial<OpcionesDelEntorno> = {}) {
   const dobles = await armarDobles();
-  const { permiteSobregiro = false, reloj = new RelojFijo() } = opciones;
-  const { deChequeras, deCheques, deMovimientos } = dependenciasDe(dobles, { permiteSobregiro, reloj });
+  const { permiteSobregiro = false, reloj = new RelojFijo(), cuentasPorPagarActivo = false } = opciones;
+  const { deChequeras, deCheques, deMovimientos } = dependenciasDe(dobles, {
+    permiteSobregiro,
+    reloj,
+    cuentasPorPagarActivo,
+  });
   const datosDeChequera = { cuentaBancariaId: CUENTA, serie: null, desde: 1, hasta: 5 };
   const chequera = await new CrearChequera(deChequeras).ejecutar(operador, datosDeChequera);
   const primerCheque = (await dobles.cheques.listarDeLaChequera(chequera.id))[0]!;

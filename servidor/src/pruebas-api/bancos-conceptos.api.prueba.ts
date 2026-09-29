@@ -3,8 +3,8 @@ import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const RUTA = '/api/bancos/conceptos';
-const CONCEPTOS_DE_SISTEMA = 5;
-const CONCEPTOS_SUGERIDOS = 11;
+const CONCEPTOS_DE_SISTEMA = 4;
+const CONCEPTOS_SUGERIDOS = 19;
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let otraCuenta: CuentaDePrueba;
@@ -40,7 +40,7 @@ describe('conceptos por API', () => {
         .filter((c) => c.claveDeSistema)
         .map((c) => c.claveDeSistema)
         .sort(),
-    ).toEqual(['cheque_caduco', 'pago_a_proveedor', 'saldo_inicial', 'sin_clasificar', 'transferencia']);
+    ).toEqual(['pago_a_proveedor', 'saldo_inicial', 'sin_clasificar', 'transferencia']);
     expect(primera.every((c) => c.admiteFactura === false)).toBe(true);
     expect(segunda).toEqual(primera);
   });

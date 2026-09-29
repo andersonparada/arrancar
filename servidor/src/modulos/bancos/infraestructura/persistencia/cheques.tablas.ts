@@ -27,11 +27,17 @@ export const cheques = esquemaBancos.table(
     movimientoId: uuid().references((): AnyPgColumn => movimientos.id),
     anuladoEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
+    /** Por qué se anuló (P1): a mano o por caducidad. Nulo mientras no esté anulado. La caducidad no cambia el concepto del cheque. */
+    causaDeAnulacion: text().$type<'manual' | 'caducidad'>(),
     ...marcasDeTiempo,
     ...autoria,
   },
   (t) => [
     unique('cheques_chequera_numero_unico').on(t.chequeraId, t.numero),
+    check(
+      'cheques_causa_de_anulacion_valida',
+      sql`${t.causaDeAnulacion} is null or ${t.causaDeAnulacion} in ('manual', 'caducidad')`,
+    ),
     check('cheques_estado_valido', sql`${t.estado} in ('disponible', 'emitido', 'anulado')`),
     politicaPorEmpresa(),
   ],

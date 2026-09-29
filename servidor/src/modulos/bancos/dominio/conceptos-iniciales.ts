@@ -20,13 +20,15 @@ const operacion = (grupoDeFlujo: string) => ({ actividadDeFlujo: 'operacion', gr
 const inversion = (grupoDeFlujo: string) => ({ actividadDeFlujo: 'inversion', grupoDeFlujo }) as const;
 const financiamiento = (grupoDeFlujo: string) => ({ actividadDeFlujo: 'financiamiento', grupoDeFlujo }) as const;
 
-/** Los conceptos que el sistema usa por su cuenta (H3): no se editan, inactivan ni eliminan. */
+/**
+ * Los conceptos que el sistema usa por su cuenta (H3): no se editan, inactivan ni eliminan. `cheque_caduco` ya no
+ * existe (P1): el inverso de un cheque caduco hereda el concepto del cheque.
+ */
 export const CONCEPTOS_DE_SISTEMA: readonly ConceptoInicial[] = [
   concepto('transferencia', 'Transferencia entre cuentas', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('pago_a_proveedor', 'Pago a proveedores', { aplicaA: 'debito', ...operacion('Pagos a proveedores') }),
   concepto('saldo_inicial', 'Saldo inicial', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('sin_clasificar', 'Sin clasificar', { aplicaA: 'ambos', ...sinFlujo }),
-  concepto('cheque_caduco', 'Cheque caduco', { aplicaA: 'credito', ...sinFlujo }),
 ];
 
 /** La lista sugerida: un punto de partida que cada empresa edita, inactiva o amplía. */
@@ -45,7 +47,7 @@ export const CONCEPTOS_SUGERIDOS: readonly ConceptoInicial[] = [
   }),
   concepto(null, 'Cheque rechazado', {
     aplicaA: 'debito',
-    ...operacion('Cheques rechazados'),
+    ...operacion('Cobros a clientes'),
     esCargoBancario: true,
   }),
   concepto(null, 'Planilla', { aplicaA: 'debito', ...operacion('Pagos de planilla') }),
@@ -55,6 +57,21 @@ export const CONCEPTOS_SUGERIDOS: readonly ConceptoInicial[] = [
   concepto(null, 'Aporte de socios', { aplicaA: 'credito', ...financiamiento('Aportes de socios') }),
   concepto(null, 'Retiro de socios', { aplicaA: 'debito', ...financiamiento('Retiros de socios') }),
   concepto(null, 'Impuestos', { aplicaA: 'debito', ...operacion('Pago de impuestos') }),
+  // Agregados con P5 y P8 (las empresas ya sembradas los reciben con la migración 0022).
+  concepto(null, 'Anticipo a proveedores', { aplicaA: 'debito', ...operacion('Anticipos a proveedores') }),
+  concepto(null, 'Fondo de caja chica', { aplicaA: 'debito', ...sinFlujo }),
+  concepto(null, 'Reintegro de caja chica', { aplicaA: 'debito', ...operacion('Reintegros de caja chica') }),
+  concepto(null, 'IGSS, IRTRA e INTECAP', { aplicaA: 'debito', ...operacion('Cuotas de IGSS, IRTRA e INTECAP') }),
+  concepto(null, 'Dividendos pagados', { aplicaA: 'debito', ...financiamiento('Dividendos pagados') }),
+  concepto(null, 'Venta de activo', { aplicaA: 'credito', ...inversion('Venta de activos') }),
+  concepto(null, 'Préstamo a empresa relacionada', {
+    aplicaA: 'debito',
+    ...inversion('Préstamos a empresas relacionadas'),
+  }),
+  concepto(null, 'Préstamo de empresa relacionada', {
+    aplicaA: 'credito',
+    ...financiamiento('Préstamos de empresas relacionadas'),
+  }),
 ];
 
 export const CONCEPTOS_INICIALES: readonly ConceptoInicial[] = [...CONCEPTOS_DE_SISTEMA, ...CONCEPTOS_SUGERIDOS];

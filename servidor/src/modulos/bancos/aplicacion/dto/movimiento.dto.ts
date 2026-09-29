@@ -32,6 +32,9 @@ export interface MovimientoDto {
   numero: number | null;
   /** Año del correlativo si la empresa lo reinicia cada año; 0 si no (lo normal). */
   anioDeNumero: number;
+  /** El módulo que generó el movimiento (P6) y su documento; `null` si nació en Bancos. */
+  moduloDeOrigen: string | null;
+  documentoDeOrigenId: string | null;
   /** Lo calcula el servidor (ver `accionesDeMovimiento`): si se puede anular con un movimiento inverso. */
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede eliminar de verdad (está limpio). */
@@ -56,6 +59,8 @@ export type SolicitudDeMovimiento = Omit<
   | 'revierteAId'
   | 'numero'
   | 'anioDeNumero'
+  | 'moduloDeOrigen'
+  | 'documentoDeOrigenId'
   | 'puedeAnular'
   | 'puedeEliminar'
   | 'puedeReclasificar'

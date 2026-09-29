@@ -4,12 +4,14 @@ import {
   ConceptoInactivo,
   ConceptoIncompatible,
   ConceptoObligatorio,
+  PagoAProveedoresLoFijaCuentasPorPagar,
 } from '../../../dominio/errores-de-conceptos.js';
 import {
   CONCEPTO_DE_CREDITO,
   CONCEPTO_DE_DEBITO,
   CONCEPTO_INACTIVO,
   CONCEPTO_SIN_CLASIFICAR,
+  idDeSistema,
 } from '../../../pruebas/conceptos-de-prueba.js';
 import { CUENTA, armarEntorno, emisionDe, operador } from './soporte-de-pruebas-de-cheques.js';
 
@@ -56,5 +58,68 @@ describe('el concepto de un cheque', () => {
     await casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Error' });
 
     expect(await casos.movimientos.obtener(movimiento.id)).toMatchObject({ conceptoId: CONCEPTO_DE_DEBITO });
+  });
+});
+
+describe('«Pago a proveedores» en un cheque manual (P3)', () => {
+  const PAGO_A_PROVEEDOR = idDeSistema('pago_a_proveedor');
+
+  it('sin Cuentas por pagar activo, se puede elegir', async () => {
+    const movimiento = await casos.emitir.ejecutar(operador, emision({ conceptoId: PAGO_A_PROVEEDOR }));
+
+    expect(movimiento).toMatchObject({ conceptoId: PAGO_A_PROVEEDOR, conceptoNombre: 'Pago a proveedores' });
+  });
+
+  it('con Cuentas por pagar activo, lo fija ese módulo y el cheque manual lo rechaza', async () => {
+    const conModulo = await armarEntorno({ cuentasPorPagarActivo: true });
+
+    await expect(
+      conModulo.emitir.ejecutar(operador, emisionDe(conModulo.chequeId, { conceptoId: PAGO_A_PROVEEDOR })),
+    ).rejects.toThrow(PagoAProveedoresLoFijaCuentasPorPagar);
+    const conConceptoPropio = await conModulo.emitir.ejecutar(
+      operador,
+      emisionDe(conModulo.chequeId, { conceptoId: CONCEPTO_DE_DEBITO }),
+    );
+    expect(conConceptoPropio.conceptoId).toBe(CONCEPTO_DE_DEBITO);
+  });
+
+  it('el resto de los de sistema sigue sin poder elegirse aunque no haya Cuentas por pagar', async () => {
+    await expect(casos.emitir.ejecutar(operador, emision({ conceptoId: CONCEPTO_SIN_CLASIFICAR }))).rejects.toThrow(
+      ConceptoDeSistemaNoSeElige,
+    );
+  });
+});
+
+describe('la causa de anulación de un cheque (P1)', () => {
+  it('anular a mano deja la causa manual', async () => {
+    await casos.emitir.ejecutar(operador, emision({ conceptoId: CONCEPTO_DE_DEBITO }));
+
+    const anulado = await casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Error' });
+
+    expect(anulado).toMatchObject({ estado: 'anulado', causaDeAnulacion: 'manual' });
+  });
+
+  it('por caducidad queda la causa en el cheque y el inverso hereda su concepto, sin concepto propio', async () => {
+    const movimiento = await casos.emitir.ejecutar(operador, emision({ conceptoId: CONCEPTO_DE_DEBITO }));
+    casos.movimientos.fechaConciliadaHasta = '2026-02-28';
+
+    const anulado = await casos.anular.ejecutar(operador, {
+      chequeId: casos.chequeId,
+      motivo: 'Caducó a los 7 meses',
+      causa: 'caducidad',
+      fecha: '2026-09-10',
+    });
+
+    const inverso = (await casos.movimientos.listar({ cuentaBancariaId: CUENTA })).find(
+      (m) => m.revierteAId === movimiento.id,
+    )!;
+    expect(anulado).toMatchObject({ estado: 'anulado', causaDeAnulacion: 'caducidad' });
+    expect(inverso).toMatchObject({ tipo: 'credito', conceptoId: CONCEPTO_DE_DEBITO });
+  });
+
+  it('un cheque disponible o emitido no tiene causa', async () => {
+    const [disponible] = await casos.cheques.listarDeLaChequera(casos.chequeraId);
+
+    expect(disponible).toMatchObject({ estado: 'disponible', causaDeAnulacion: null });
   });
 });

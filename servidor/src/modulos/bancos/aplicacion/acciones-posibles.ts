@@ -9,6 +9,8 @@ export interface HechosDeUnMovimiento {
   anulado: boolean;
   revertido: boolean;
   esInverso: boolean;
+  /** Lo generó otro módulo (P6): su concepto lo fija ese módulo. */
+  esDeOtroModulo: boolean;
   /** Su fecha cae en un mes ya conciliado (autorizado) de su cuenta. */
   mesConciliado: boolean;
   /** Su cuenta tiene alguna conciliación, de cualquier estado. */
@@ -43,9 +45,13 @@ export function accionesDeMovimiento(hechos: HechosDeUnMovimiento): AccionesDeMo
   }
   const suelto = !hechos.esDeTransferencia && hechos.tipo !== 'cheque';
   const vigente = !hechos.anulado && !hechos.revertido && !hechos.esInverso;
-  const puedeReclasificar = !hechos.esDeTransferencia && !hechos.esInverso;
+  const puedeReclasificar = sePuedeReclasificar(hechos);
   return { puedeAnular: suelto && vigente, puedeEliminar: suelto && estaLimpio(hechos), puedeReclasificar };
 }
+
+/** Solo un original de Bancos: ni las notas de una transferencia, ni un inverso, ni lo que generó otro módulo. */
+const sePuedeReclasificar = (hechos: HechosDeUnMovimiento): boolean =>
+  !hechos.esDeTransferencia && !hechos.esInverso && !hechos.esDeOtroModulo;
 
 /** Lo que la pantalla puede ofrecer de una transferencia. */
 export interface AccionesDeTransferencia {

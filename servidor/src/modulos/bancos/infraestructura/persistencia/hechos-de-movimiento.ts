@@ -29,6 +29,7 @@ interface FilaConHechos {
   anuladoEn: Date | null;
   revertidoEn: Date | null;
   revierteAId: string | null;
+  moduloDeOrigen: string | null;
   mesConciliado: boolean;
   cuentaConConciliaciones: boolean;
 }
@@ -42,6 +43,7 @@ export const columnasDeHechos = (movimiento: AliasDeMovimientos) => ({
   anuladoEn: movimiento.anuladoEn,
   revertidoEn: movimiento.revertidoEn,
   revierteAId: movimiento.revierteAId,
+  moduloDeOrigen: movimiento.moduloDeOrigen,
   mesConciliado: mesConciliadoDe(movimiento.cuentaBancariaId, movimiento.fecha),
   cuentaConConciliaciones: cuentaConConciliacionesDe(movimiento.cuentaBancariaId),
 });
@@ -57,6 +59,7 @@ export function hechosDeLaFila(fila: FilaConHechos | null): HechosDeUnMovimiento
     anulado: fila.anuladoEn !== null,
     revertido: fila.revertidoEn !== null,
     esInverso: fila.revierteAId !== null,
+    esDeOtroModulo: fila.moduloDeOrigen !== null,
     mesConciliado: fila.mesConciliado,
     cuentaConConciliaciones: fila.cuentaConConciliaciones,
   };

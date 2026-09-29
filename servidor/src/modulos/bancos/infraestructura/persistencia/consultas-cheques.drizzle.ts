@@ -43,6 +43,7 @@ const columnasDeLaEmpresa = {
   referencia: movimientos.referencia,
   anuladoEn: cheques.anuladoEn,
   motivoDeAnulacion: cheques.motivoDeAnulacion,
+  causaDeAnulacion: cheques.causaDeAnulacion,
   movimientoId: cheques.movimientoId,
   hechosDelMovimiento: columnasDeHechos(movimientos),
 };

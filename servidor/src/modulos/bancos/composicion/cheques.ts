@@ -14,6 +14,8 @@ import { ConsultasMovimientosDrizzle } from '../infraestructura/persistencia/con
 import { RepositorioChequerasDrizzle } from '../infraestructura/persistencia/repositorio-chequeras.drizzle.js';
 import { RepositorioChequesDrizzle } from '../infraestructura/persistencia/repositorio-cheques.drizzle.js';
 import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/repositorio-movimientos.drizzle.js';
+import { CuentasPorPagarActivoEnModulosActivos } from '../infraestructura/cuentas-por-pagar-activo-en-modulos-activos.js';
+import { ModulosActivosDeLaCuentaEnRegistro } from '../../core/mediador/infraestructura/modulos-activos-de-la-cuenta-en-registro.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 
 function dependenciasDeCheques() {
@@ -25,6 +27,7 @@ function dependenciasDeCheques() {
     auditoria,
     correlativos,
     reloj,
+    cuentasPorPagar: new CuentasPorPagarActivoEnModulosActivos(new ModulosActivosDeLaCuentaEnRegistro()),
     conceptos: new ConceptosDeMovimientos(new RepositorioConceptosDrizzle()),
     repositorio: new RepositorioChequesDrizzle(),
     repositorioChequeras: new RepositorioChequerasDrizzle(),

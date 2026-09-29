@@ -33,6 +33,7 @@ function hechosDe(
     anulado: movimiento.estaAnulado,
     revertido: movimiento.estaRevertido,
     esInverso: movimiento.esInverso,
+    esDeOtroModulo: movimiento.instantanea().moduloDeOrigen !== null,
     ...cuenta,
   };
 }

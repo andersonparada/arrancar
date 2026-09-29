@@ -1,4 +1,4 @@
-import type { EstadoDelCheque } from '../../dominio/cheque.js';
+import type { CausaDeAnulacion, EstadoDelCheque } from '../../dominio/cheque.js';
 
 /** Cheque tal como lo ve el usuario en pantalla. */
 export interface ChequeDto {
@@ -10,6 +10,8 @@ export interface ChequeDto {
   movimientoId: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
+  causaDeAnulacion: CausaDeAnulacion | null;
   /** Lo calcula el servidor (ver `accionesDeCheque`): si se puede anular. */
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede blanquear (emitido, con movimiento limpio). */
@@ -49,6 +51,8 @@ export interface ChequeListadoDto {
   referencia: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
+  /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
+  causaDeAnulacion: CausaDeAnulacion | null;
   puedeAnular: boolean;
   puedeBlanquear: boolean;
 }

@@ -1305,7 +1305,7 @@ omisión (la capa HTTP no puede llegar a la configuración). No hay más usos de
 
 Manda `concepto-de-notas-y-cheques.md` (informe del contador). Aquí solo lo que **no** depende de las preguntas
 P1 a P8: no cambia `cheque_caduco`, ni hay columnas de origen (`modulo_de_origen`), `causa_de_anulacion` ni
-conceptos nuevos en la semilla.
+conceptos nuevos en la semilla (quedaron hechos en «Ajustes de conceptos», más abajo).
 
 - **Columna** `bancos.movimientos.concepto_id uuid not null`, con llave foránea **compuesta** `(concepto_id, empresa_id)`
   → `bancos.conceptos (id, empresa_id)` (por eso `conceptos` gana `unique (id, empresa_id)`): el concepto es siempre de
@@ -1369,6 +1369,45 @@ conceptos nuevos en la semilla.
   da `bancos.conceptos.ver` a los roles que ya tenían `bancos.notas.gestionar`, `bancos.cheques.emitir` o `bancos.movimientos.ver`
   (solo ver; administrar sigue siendo `bancos.conceptos.gestionar`).
 - Lógica pura con pruebas: `opciones-de-concepto`, `seleccion-de-pendientes`, `centavos`, filtros y detalles de nota.
+
+## Ajustes de conceptos (P1, P3, P5, P6 y P8; servidor hecho el 2026-09-29)
+
+Manda la tabla «Respuestas del usuario (2026-09-29)» de `plan-hallazgos-contables.md`. Migraciones
+`0021_h3_origen_y_causa_de_anulacion` (`when` 1790700900000) y `0022_h3_conceptos_nuevos_y_sin_cheque_caduco`
+(`when` 1790701000000). La API no cambia de rutas; los DTO ganan campos de solo lectura.
+
+- **P6 Origen** (`movimientos.modulo_de_origen text`, `documento_de_origen_id uuid`, ambos nulables, sin llave foránea, con
+  `check` de que van juntos o ninguno). Van **solo en `bancos.movimientos`** porque ahí viven las notas, los cheques emitidos y
+  las notas de una transferencia (`cheques` y `transferencias` apuntan a sus movimientos, no llevan dinero propio); un origen en
+  esas otras tablas duplicaría el dato. `Movimiento.crear(..., { origen: { modulo, documentoId } })` es la única puerta: la API
+  de notas y cheques nunca lo acepta. `MovimientoDto` trae `moduloDeOrigen` y `documentoDeOrigenId`; con origen,
+  `puedeReclasificar` es falso y reclasificar responde 422 `no_se_reclasifica_lo_de_otro_modulo` (el concepto lo fija el módulo de
+  origen). El inverso **no** hereda el origen (no estaba decidido; se dejó nulo).
+- **P1 Cheque caduco**: `bancos.cheques.causa_de_anulacion` (`manual` | `caducidad`, nula si no está anulado, con `check`).
+  `Cheque.anular(motivo, causa = 'manual')` y `AnularCheque` aceptan `causa`; la API no la expone (H6b llamará al caso de uso con
+  `caducidad`). El inverso hereda el concepto del cheque (como ya hacía). `ChequeDto` y `ChequeListadoDto` traen
+  `causaDeAnulacion`. La migración 0021 marca `manual` los cheques ya anulados. **Se deja de usar `cheque_caduco`**: ya no está en
+  `CONCEPTOS_DE_SISTEMA` (quedan 4) y la migración 0022 lo elimina en cada empresa; si algún movimiento lo referenciara (nada lo
+  asigna), se conserva **inactivo**.
+- **P8 y P5 Semilla** (`conceptos-iniciales.ts`, 19 sugeridos): «Cheque rechazado» pasa al grupo «Cobros a clientes»; nuevos
+  Anticipo a proveedores, Fondo de caja chica (sin flujo), Reintegro de caja chica, IGSS, IRTRA e INTECAP, Dividendos pagados
+  (financiamiento), Venta de activo (inversión), Préstamo a empresa relacionada (inversión) y Préstamo de empresa relacionada
+  (financiamiento); «Retiro de socios» ya estaba (financiamiento). Sin préstamos a empleados (P4). **Empresas existentes**: la
+  migración 0022 agrega los nuevos donde ya hay catálogo (sin tocar lo que tenga ese nombre) y cambia el grupo de «Cheque
+  rechazado» solo si sigue en el original «Cheques rechazados». Las empresas sin catálogo lo reciben completo al abrir Conceptos
+  (`SembrarConceptos`). Si cambia la lista, cambiar también el SQL de 0022 (y el de 0016/0018 no se toca).
+- **P3 «Pago a proveedores» en un cheque manual**: es de sistema y no se elige (regla de H3b), con una excepción solo para el
+  cheque: `exigirConceptoElegible(..., { pagoAProveedores })` lo acepta si Cuentas por pagar **no** está activo (`'permitido'`) y
+  lo rechaza con 422 `pago_a_proveedores_lo_fija_cuentas_por_pagar` si lo está (`'reservado'`). Las notas siguen sin poder
+  elegirlo. El puerto `CuentasPorPagarActivo` (`aplicacion/puertos`) lo implementa
+  `CuentasPorPagarActivoEnModulosActivos` sobre `ModulosActivosDeLaCuenta` del mediador, con la clave `cuentas-por-pagar`
+  (hoy no existe: siempre `permitido`).
+- **P7 Sugerencias de «Sin clasificar»: NO implementado en el servidor.** El plan solo dice «sí, con confirmación» y el informe
+  «último concepto del beneficiario o por texto»; el cálculo (normalizar el beneficiario, qué hacer con «por texto», descartar
+  conceptos inactivos o incompatibles) no está definido. Hoy el cliente sugiere con lo que ya tiene cargado.
+- **Pruebas**: dominio (`asignacion-de-concepto`, `cheque`, `movimiento-y-concepto`, `conceptos-iniciales`,
+  `acciones-posibles`), casos de uso (`casos-uso-de-conceptos-en-cheques`: P3 y causa) y API
+  (`bancos-conceptos-ajustes.api.prueba.ts`: migración 0022 repetible, restricciones, origen, P3 y causa).
 
 ## H3c Flujo de efectivo y Movimientos por concepto (servidor y cliente hechos el 2026-09-29)
 

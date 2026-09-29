@@ -148,6 +148,20 @@
       "when": 1790700800000,
       "tag": "0020_h3c_permisos_del_flujo",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790700900000,
+      "tag": "0021_h3_origen_y_causa_de_anulacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790701000000,
+      "tag": "0022_h3_conceptos_nuevos_y_sin_cheque_caduco",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import {
   NoSeReclasificaElSaldoInicial,
+  NoSeReclasificaLoDeOtroModulo,
   NoSeReclasificaUnInverso,
   NoSeReclasificaUnaTransferencia,
 } from './errores-de-conceptos.js';
@@ -67,5 +68,34 @@ describe('el concepto de un movimiento', () => {
     expect(() => nota({ saldoInicial: true, tipo: 'credito' }).reclasificar('otro')).toThrow(
       NoSeReclasificaElSaldoInicial,
     );
+  });
+});
+
+describe('el origen de un movimiento (P6)', () => {
+  const origen = { modulo: 'cuentas-por-pagar', documentoId: '00000000-0000-4000-8000-0000000000d1' };
+
+  it('una nota de Bancos nace sin origen', () => {
+    expect(nota().instantanea()).toMatchObject({ moduloDeOrigen: null, documentoDeOrigenId: null });
+  });
+
+  it('el módulo que lo genera deja su clave y su documento', () => {
+    const generado = Movimiento.crear(empresaId, datos(), { origen });
+
+    expect(generado.instantanea()).toMatchObject({
+      moduloDeOrigen: 'cuentas-por-pagar',
+      documentoDeOrigenId: origen.documentoId,
+    });
+  });
+
+  it('lo de otro módulo no se reclasifica en Bancos: lo corrige su módulo', () => {
+    const generado = Movimiento.crear(empresaId, datos(), { origen });
+
+    expect(() => generado.reclasificar('otro')).toThrow(NoSeReclasificaLoDeOtroModulo);
+  });
+
+  it('el inverso no hereda el origen', () => {
+    const inverso = Movimiento.crear(empresaId, datos(), { origen }).revertir('2026-01-20', 'Error');
+
+    expect(inverso.instantanea()).toMatchObject({ moduloDeOrigen: null, documentoDeOrigenId: null });
   });
 });

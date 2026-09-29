@@ -6,6 +6,7 @@ import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Cheque } from '../../../dominio/cheque.js';
+import type { CuentasPorPagarActivo } from '../../puertos/cuentas-por-pagar-activo.js';
 import type { ConsultasCheques } from '../../puertos/consultas-cheques.js';
 import type { ConsultasMovimientos } from '../../puertos/consultas-movimientos.js';
 import type { RepositorioCheques } from '../../puertos/repositorio-cheques.js';
@@ -26,6 +27,7 @@ export interface DependenciasDeCheques {
   correlativos: Correlativos;
   conceptos: ConceptosDeMovimientos;
   reloj: Reloj;
+  cuentasPorPagar: CuentasPorPagarActivo;
 }
 
 /** @throws RecursoNoEncontrado si no existe o no es de la empresa. */

@@ -2,6 +2,8 @@ import { accionesDeCheque, type AccionesDeCheque } from '../aplicacion/acciones-
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
 import type { ChequeDto, ChequeListadoDto, FiltroDeChequesDeLaEmpresa } from '../aplicacion/dto/cheque.dto.js';
 import type { MovimientoDto } from '../aplicacion/dto/movimiento.dto.js';
+import type { Operador } from '../../core/compartido/aplicacion/operador.js';
+import type { CuentasPorPagarActivo } from '../aplicacion/puertos/cuentas-por-pagar-activo.js';
 import type { ConsultasCheques } from '../aplicacion/puertos/consultas-cheques.js';
 import type { LimiteDeChequera } from '../aplicacion/puertos/limite-de-chequera.js';
 import type { RepositorioCheques } from '../aplicacion/puertos/repositorio-cheques.js';
@@ -114,8 +116,8 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
 
   /** Junta el cheque con su chequera (serie, cuenta) y su movimiento, si llegó a emitirse. */
   private async aListado(cheque: Cheque): Promise<ChequeListadoDto> {
-    const { id, chequeraId, numero, estado, noNegociable, movimientoId, anuladoEn, motivoDeAnulacion } =
-      cheque.instantanea();
+    const propiedades = cheque.instantanea();
+    const { id, chequeraId, numero, estado, movimientoId, anuladoEn } = propiedades;
     const { serie, cuentaBancariaId, cuentaBancariaNombre } = datosDeLaChequera(this.chequeras, chequeraId);
     const movimiento = await datosDelMovimiento(this.movimientos, movimientoId);
     return {
@@ -125,11 +127,12 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
       cuentaBancariaId,
       cuentaBancariaNombre,
       estado: estado as ChequeListadoDto['estado'],
-      noNegociable,
+      noNegociable: propiedades.noNegociable,
       fecha: fechaDelListado(movimiento, anuladoEn),
       ...datosDelChequeEmitido(movimiento),
       anuladoEn: anuladoEn?.toISOString() ?? null,
-      motivoDeAnulacion,
+      motivoDeAnulacion: propiedades.motivoDeAnulacion,
+      causaDeAnulacion: propiedades.causaDeAnulacion,
       ...this.accionesDe(cheque),
     };
   }
@@ -155,5 +158,14 @@ export class LimiteDeChequeraFijo implements LimiteDeChequera {
 
   async maximoDeCheques(): Promise<number> {
     return this.maximo;
+  }
+}
+
+/** Un Cuentas por pagar que está activo o no, según se le diga (P3). */
+export class CuentasPorPagarFijo implements CuentasPorPagarActivo {
+  constructor(private readonly activo: boolean) {}
+
+  async estaActivo(_operador: Operador): Promise<boolean> {
+    return this.activo;
   }
 }

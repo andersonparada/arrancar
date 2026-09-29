@@ -10,6 +10,8 @@ import type { RepositorioConceptos } from './puertos/repositorio-conceptos.js';
 interface EleccionOpcional {
   /** El concepto que el movimiento ya tenía (al corregirlo): no se le exige que siga activo. */
   actual?: string;
+  /** Solo en los cheques manuales (P3): si «Pago a proveedores» se puede elegir o lo reserva Cuentas por pagar. */
+  pagoAProveedores?: 'permitido' | 'reservado';
 }
 
 /**
@@ -34,16 +36,16 @@ export class ConceptosDeMovimientos {
   /**
    * El concepto que eligió el usuario para una nota o un cheque original.
    * @throws ConceptoObligatorio si no eligió; RecursoNoEncontrado si no existe o es de otra empresa.
-   * @throws ConceptoDeSistemaNoSeElige, ConceptoInactivo o ConceptoIncompatible.
+   * @throws ConceptoDeSistemaNoSeElige, PagoAProveedoresLoFijaCuentasPorPagar, ConceptoInactivo o ConceptoIncompatible.
    */
   async elegido(
     conceptoId: string | undefined,
     tipo: TipoDeMovimiento,
-    { actual }: EleccionOpcional = {},
+    { actual, pagoAProveedores }: EleccionOpcional = {},
   ): Promise<Concepto> {
     if (!conceptoId) throw new ConceptoObligatorio();
     const concepto = await this.existente(conceptoId);
-    exigirConceptoElegible(concepto.instantanea(), tipo, { yaAsignado: actual === conceptoId });
+    exigirConceptoElegible(concepto.instantanea(), tipo, { yaAsignado: actual === conceptoId, pagoAProveedores });
     return concepto;
   }
 

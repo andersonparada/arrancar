@@ -68,3 +68,29 @@ describe('Cheque.anular', () => {
     expect(() => cheque.anular('Otra vez')).toThrow(ChequeAnulado);
   });
 });
+
+describe('Cheque.anular: causa de la anulación (P1)', () => {
+  it('por omisión es manual y queda nula mientras no se anula', () => {
+    const cheque = chequeEmitido();
+    expect(cheque.instantanea().causaDeAnulacion).toBeNull();
+
+    cheque.anular('Error de captura');
+
+    expect(cheque.instantanea()).toMatchObject({ estado: 'anulado', causaDeAnulacion: 'manual' });
+  });
+
+  it('la caducidad queda como causa del cheque', () => {
+    const cheque = chequeEmitido();
+
+    cheque.anular('Caducó a los 7 meses', 'caducidad');
+
+    expect(cheque.instantanea()).toMatchObject({ estado: 'anulado', causaDeAnulacion: 'caducidad' });
+  });
+
+  it('un cheque anulado no se vuelve a anular', () => {
+    const cheque = chequeEmitido();
+    cheque.anular('Uno', 'caducidad');
+
+    expect(() => cheque.anular('Dos')).toThrow(ChequeAnulado);
+  });
+});

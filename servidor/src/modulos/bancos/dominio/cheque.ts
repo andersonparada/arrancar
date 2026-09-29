@@ -4,6 +4,8 @@ import { ChequeAnulado, ChequeNoDisponible, ChequeNoEmitido, MotivoDeAnulacionIn
 
 export type ChequeId = Identificador<'Cheque'>;
 export type EstadoDelCheque = 'disponible' | 'emitido' | 'anulado';
+/** Por qué se anuló un cheque (P1): a mano o por caducidad. La caducidad no cambia su concepto. */
+export type CausaDeAnulacion = 'manual' | 'caducidad';
 
 export interface PropiedadesDeCheque {
   id: ChequeId;
@@ -15,6 +17,8 @@ export interface PropiedadesDeCheque {
   movimientoId: string | null;
   anuladoEn: Date | null;
   motivoDeAnulacion: string | null;
+  /** Nula mientras no esté anulado. */
+  causaDeAnulacion: CausaDeAnulacion | null;
 }
 
 const MAXIMO_DEL_MOTIVO = 500;
@@ -40,6 +44,7 @@ export class Cheque extends Entidad<ChequeId> {
       movimientoId: null,
       anuladoEn: null,
       motivoDeAnulacion: null,
+      causaDeAnulacion: null,
     });
   }
 
@@ -53,12 +58,21 @@ export class Cheque extends Entidad<ChequeId> {
     this.propiedades = { ...this.propiedades, estado: 'emitido', movimientoId, noNegociable };
   }
 
-  /** @throws ChequeAnulado si ya está anulado; MotivoDeAnulacionInvalido si falta el motivo. */
-  anular(motivo: string): void {
+  /**
+   * `causa` es `manual` salvo que lo anule el proceso de cheques caducos (H6b).
+   * @throws ChequeAnulado si ya está anulado; MotivoDeAnulacionInvalido si falta el motivo.
+   */
+  anular(motivo: string, causa: CausaDeAnulacion = 'manual'): void {
     if (this.propiedades.estado === 'anulado') throw new ChequeAnulado();
     const motivoDeAnulacion = motivo.trim();
     if (!motivoDeAnulacion || motivoDeAnulacion.length > MAXIMO_DEL_MOTIVO) throw new MotivoDeAnulacionInvalido();
-    this.propiedades = { ...this.propiedades, estado: 'anulado', anuladoEn: new Date(), motivoDeAnulacion };
+    this.propiedades = {
+      ...this.propiedades,
+      estado: 'anulado',
+      anuladoEn: new Date(),
+      motivoDeAnulacion,
+      causaDeAnulacion: causa,
+    };
   }
 
   /**

@@ -85,6 +85,15 @@ export class NoSeReclasificaElSaldoInicial extends ReglaDeNegocioInfringida {
   }
 }
 
+/** Lo que generó otro módulo lleva el concepto que ese módulo fijó: se corrige allá (informe del contador, C4). */
+export class NoSeReclasificaLoDeOtroModulo extends ReglaDeNegocioInfringida {
+  readonly codigo = 'no_se_reclasifica_lo_de_otro_modulo';
+
+  constructor() {
+    super('Este movimiento lo generó otro módulo, que fijó su concepto: corríjalo allá.');
+  }
+}
+
 /** Tope de movimientos por reclasificación: todo o nada, así que no conviene una transacción enorme. */
 export const MAXIMO_DE_MOVIMIENTOS_A_RECLASIFICAR = 200;
 
@@ -93,5 +102,14 @@ export class CantidadInvalidaParaReclasificar extends DatoInvalido {
 
   constructor() {
     super(`Elija entre 1 y ${MAXIMO_DE_MOVIMIENTOS_A_RECLASIFICAR} movimientos para clasificar a la vez.`);
+  }
+}
+
+/** Con Cuentas por pagar activo, «Pago a proveedores» lo fija ese módulo al pagar: no se elige en un cheque manual (P3). */
+export class PagoAProveedoresLoFijaCuentasPorPagar extends ReglaDeNegocioInfringida {
+  readonly codigo = 'pago_a_proveedores_lo_fija_cuentas_por_pagar';
+
+  constructor() {
+    super('«Pago a proveedores» lo asigna Cuentas por pagar al pagar una contraseña: elija otro concepto.');
   }
 }

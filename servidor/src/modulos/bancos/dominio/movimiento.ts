@@ -3,6 +3,7 @@ import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { aCentavos } from './centavos.js';
 import {
   NoSeReclasificaElSaldoInicial,
+  NoSeReclasificaLoDeOtroModulo,
   NoSeReclasificaUnInverso,
   NoSeReclasificaUnaTransferencia,
 } from './errores-de-conceptos.js';
@@ -24,6 +25,7 @@ import {
   NoSeRevierteUnInverso,
 } from './errores.js';
 import type { Numeracion } from './numeracion.js';
+import type { OrigenDeMovimiento } from './origen-de-movimiento.js';
 
 export type MovimientoId = Identificador<'Movimiento'>;
 
@@ -58,6 +60,10 @@ export interface PropiedadesDeMovimiento extends DatosDeMovimiento {
   numero: number | null;
   /** Año del correlativo si la empresa lo reinicia cada año; 0 si no. */
   anioDeNumero: number;
+  /** El módulo que lo generó (P6), si no nació en Bancos; va junto con `documentoDeOrigenId` o ambos son `null`. */
+  moduloDeOrigen: string | null;
+  /** El documento de ese módulo que lo generó (sin llave foránea: vive en otro esquema). */
+  documentoDeOrigenId: string | null;
 }
 
 const MAXIMO_DEL_MOTIVO = 500;
@@ -87,12 +93,13 @@ export class Movimiento extends Entidad<MovimientoId> {
 
   /**
    * `vinculos.transferenciaId` solo lo pasa `RegistrarTransferencia`; `vinculos.revierteAId` solo lo
-   * arma `revertirSinRevisar` al crear el inverso. Ninguno de los dos llega del usuario.
+   * arma `revertirSinRevisar` al crear el inverso; `vinculos.origen` solo lo pasa el módulo que genera el
+   * movimiento (P6). Ninguno de los tres llega del usuario. El inverso no hereda el origen.
    */
   static crear(
     empresaId: Identificador<'Empresa'>,
     datos: DatosDeMovimiento,
-    vinculos: { transferenciaId?: string | null; revierteAId?: string | null } = {},
+    vinculos: { transferenciaId?: string | null; revierteAId?: string | null; origen?: OrigenDeMovimiento } = {},
   ): Movimiento {
     return new Movimiento({
       ...datosValidos(datos),
@@ -106,6 +113,8 @@ export class Movimiento extends Entidad<MovimientoId> {
       revierteAId: vinculos.revierteAId ?? null,
       numero: null,
       anioDeNumero: 0,
+      moduloDeOrigen: vinculos.origen?.modulo ?? null,
+      documentoDeOrigenId: vinculos.origen?.documentoId ?? null,
     });
   }
 
@@ -131,12 +140,14 @@ export class Movimiento extends Entidad<MovimientoId> {
    * Cambia solo el concepto (reclasificar): no toca dinero ni fechas, así que procede aunque el mes esté
    * conciliado. Un inverso, las notas de una transferencia y el saldo inicial no se reclasifican.
    * @returns el concepto que tenía antes.
-   * @throws NoSeReclasificaUnInverso, NoSeReclasificaUnaTransferencia o NoSeReclasificaElSaldoInicial.
+   * @throws NoSeReclasificaUnInverso, NoSeReclasificaUnaTransferencia, NoSeReclasificaElSaldoInicial o
+   *   NoSeReclasificaLoDeOtroModulo (lo corrige su módulo de origen).
    */
   reclasificar(conceptoId: string): string {
     if (this.esInverso) throw new NoSeReclasificaUnInverso();
     if (this.propiedades.transferenciaId) throw new NoSeReclasificaUnaTransferencia();
     if (this.propiedades.saldoInicial) throw new NoSeReclasificaElSaldoInicial();
+    if (this.propiedades.moduloDeOrigen !== null) throw new NoSeReclasificaLoDeOtroModulo();
     const anterior = this.propiedades.conceptoId;
     this.propiedades = { ...this.propiedades, conceptoId };
     return anterior;

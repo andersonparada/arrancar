@@ -59,6 +59,13 @@ export const movimientos = esquemaBancos.table(
      * concepto siempre es de la misma empresa.
      */
     conceptoId: uuid().notNull(),
+    /**
+     * De qué módulo viene el movimiento y con qué documento se pagó o cobró (P6): los dos juntos o ninguno.
+     * Sin llave foránea: el documento vive en el esquema de otro módulo. Un movimiento con origen lo fija el
+     * módulo de origen, así que Bancos no lo reclasifica.
+     */
+    moduloDeOrigen: text(),
+    documentoDeOrigenId: uuid(),
     /** Anulación a la antigua: solo la usan los cheques en un mes abierto (sin inverso, fuera del saldo). */
     anuladoEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
@@ -99,6 +106,7 @@ export const movimientos = esquemaBancos.table(
       .on(t.empresaId, t.tipo, t.anioDeNumero, t.numero)
       .where(sql`${t.numero} is not null`),
     check('movimientos_monto_positivo', sql`${t.monto} > 0`),
+    check('movimientos_origen_completo', sql`(${t.moduloDeOrigen} is null) = (${t.documentoDeOrigenId} is null)`),
     check('movimientos_tipo_valido', sql`${t.tipo} in ('credito', 'debito', 'cheque')`),
     politicaPorEmpresa(),
   ],

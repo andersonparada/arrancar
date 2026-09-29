@@ -17,7 +17,7 @@ export class EmitirCheque {
    * @throws ChequeNoDisponible si el cheque no está disponible.
    * @throws ChequeraInactiva si su chequera está inactiva; CuentaBancariaInactiva si la cuenta está inactiva.
    * @throws BeneficiarioObligatorio si no se escribió el beneficiario.
-   * @throws ConceptoObligatorio, ConceptoDeSistemaNoSeElige, ConceptoInactivo o ConceptoIncompatible si el concepto no sirve.
+   * @throws ConceptoObligatorio, ConceptoDeSistemaNoSeElige, PagoAProveedoresLoFijaCuentasPorPagar, ConceptoInactivo o ConceptoIncompatible.
    * @throws SaldoInicialNoEsElPrimero, MovimientoAntesDelSaldoInicial o SaldoInsuficiente.
    */
   ejecutar(operador: Operador, solicitud: SolicitudDeEmisionDeCheque): Promise<MovimientoDto> {
@@ -44,7 +44,8 @@ export class EmitirCheque {
     solicitud: SolicitudDeEmisionDeCheque,
     { chequera, cheque }: { chequera: Chequera; cheque: Cheque },
   ): Promise<Movimiento> {
-    const concepto = await this.dependencias.conceptos.elegido(solicitud.conceptoId, 'cheque');
+    const pagoAProveedores = (await this.dependencias.cuentasPorPagar.estaActivo(operador)) ? 'reservado' : 'permitido';
+    const concepto = await this.dependencias.conceptos.elegido(solicitud.conceptoId, 'cheque', { pagoAProveedores });
     const movimiento = this.nuevoMovimiento(operador, solicitud, {
       chequera,
       numeroDeCheque: cheque.instantanea().numero,
