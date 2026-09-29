@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+import SeccionesAportadas from '@/modulos/core/componentes/SeccionesAportadas.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import CamposDeDatosGenerales from '../componentes/CamposDeDatosGenerales.vue';
 import CamposDelPapel from '../componentes/CamposDelPapel.vue';
@@ -18,7 +19,18 @@ const props = defineProps<{ papel: PapelTercero; terceroId?: string }>();
 const router = useRouter();
 const sesion = usarSesion();
 const formulario = usarFormularioDeTercero(props.papel, props.terceroId ?? null);
-const { datos, papeles, contactos, categorias, departamentos, municipios, esNuevo, nombreActual } = formulario;
+const {
+  datos,
+  papeles,
+  contactos,
+  categorias,
+  departamentos,
+  municipios,
+  esNuevo,
+  nombreActual,
+  secciones,
+  proveedorId,
+} = formulario;
 const ventana = VENTANA_DEL_PAPEL[props.papel];
 const permisosDelPapel = PERMISOS_DEL_PAPEL[props.papel];
 const puedeGestionarElPapel = sesion.puede(esNuevo ? permisosDelPapel.crear : permisosDelPapel.editar);
@@ -49,6 +61,15 @@ async function guardar(): Promise<void> {
       <h2 class="mb-4 font-semibold">Como {{ papel }}</h2>
       <CamposDelPapel v-model="papeles" :papel="papel" :categorias="categorias" />
     </TarjetaBase>
+
+    <SeccionesAportadas
+      v-if="papel === 'proveedor' && puedeGestionarElPapel"
+      v-model="secciones"
+      en="proveedor"
+      :registro-id="proveedorId"
+      :errores="formulario.errores.value"
+      tarjetas
+    />
 
     <TarjetaBase v-if="esNuevo">
       <h2 class="mb-4 font-semibold">Contactos</h2>

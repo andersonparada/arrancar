@@ -19,6 +19,8 @@ export interface DatosEmpresa {
   telefono: string | null;
   correo: string | null;
   activa: boolean;
+  /** Lo que los módulos activos aportan al formulario (`secciones[<módulo>]`). */
+  secciones?: Record<string, unknown>;
 }
 
 export class ApiEmpresas {

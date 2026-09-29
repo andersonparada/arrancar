@@ -1,3 +1,4 @@
+import { seccionesParaEnviar } from '@/modulos/core/secciones/secciones-aportadas';
 import type { DatosEmpresa, Empresa } from '../servicios/empresas.api';
 import { DATOS_DE_EMPRESA_VACIOS, type CamposDeDatosDeEmpresa } from './datos-de-empresa';
 
@@ -10,6 +11,8 @@ export interface EdicionDeEmpresa extends CamposDeDatosDeEmpresa {
   telefono: string;
   correo: string;
   activa: boolean;
+  /** Lo que los módulos activos aportan al formulario; cada sección lo llena sola. */
+  secciones: Record<string, unknown>;
 }
 
 const EMPRESA_NUEVA = {
@@ -21,6 +24,7 @@ const EMPRESA_NUEVA = {
   telefono: '',
   correo: '',
   activa: true,
+  secciones: {},
 };
 
 const datosDe = (empresa: Empresa) => ({
@@ -32,6 +36,7 @@ const datosDe = (empresa: Empresa) => ({
   telefono: empresa.telefono ?? '',
   correo: empresa.correo ?? '',
   activa: empresa.activa,
+  secciones: {},
 });
 
 /** La ventana abierta con los datos de la empresa, o vacía si es nueva. */
@@ -48,4 +53,5 @@ export const datosDeLaEmpresa = (edicion: EdicionDeEmpresa): DatosEmpresa => ({
   telefono: edicion.telefono || null,
   correo: edicion.correo || null,
   activa: edicion.activa,
+  secciones: seccionesParaEnviar(edicion.secciones),
 });

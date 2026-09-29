@@ -6,6 +6,7 @@ import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
+import SeccionesEnLaFicha from '@/modulos/core/componentes/SeccionesEnLaFicha.vue';
 import ContactosDelTercero from '../componentes/ContactosDelTercero.vue';
 import DatosGeneralesDelTercero from '../componentes/DatosGeneralesDelTercero.vue';
 import TarjetaDePapel from '../componentes/TarjetaDePapel.vue';
@@ -82,6 +83,7 @@ const editar = () =>
       @editar="papeles.abrir('proveedor')"
       @quitar="papeles.quitar('proveedor')"
     />
+    <SeccionesEnLaFicha v-if="ficha.proveedor" en="proveedor" :registro-id="ficha.proveedor.id" />
 
     <VentanaDeContacto
       :abierta="contactos.edicion.abierta"

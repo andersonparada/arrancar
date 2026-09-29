@@ -44,10 +44,7 @@ describe('secciones que un módulo aporta', () => {
   });
 
   it('con el mismo orden, respeta el del índice de módulos', () => {
-    const empatados = [
-      modulo('primero', [seccion({ titulo: 'A' })]),
-      modulo('segundo', [seccion({ titulo: 'B' })]),
-    ];
+    const empatados = [modulo('primero', [seccion({ titulo: 'A' })]), modulo('segundo', [seccion({ titulo: 'B' })])];
 
     expect(seccionesDe(empatados, 'proveedor', () => true).map(({ modulo: m }) => m)).toEqual(['primero', 'segundo']);
   });

@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, useId } from 'vue';
 import { modulosCliente } from '@/modulos/indice';
 import { usarSesion } from '../almacenes/sesion';
 import { seccionesDe } from '../secciones/secciones-aportadas';
 import type { DondeSeAporta } from '../tipos';
-import TarjetaBase from './TarjetaBase.vue';
 
-/** Las secciones que los módulos activos aportan a la ficha de una empresa o de un proveedor (solo lectura). */
+/**
+ * Las secciones que los módulos activos aportan a la ficha de una empresa o de un proveedor (solo lectura). Cada
+ * una pone su título y sus datos con `DatosDelRegistro`, que ya es una tarjeta.
+ */
 const props = defineProps<{ en: DondeSeAporta; registroId: string }>();
 const sesion = usarSesion();
+const id = useId();
 
 const secciones = computed(() =>
   seccionesDe(modulosCliente, props.en, sesion.moduloActivo)
@@ -22,8 +25,10 @@ const secciones = computed(() =>
 </script>
 
 <template>
-  <TarjetaBase v-for="seccion in secciones" :key="seccion.modulo">
-    <h2 class="mb-4 font-semibold text-tierra-800 dark:text-tierra-100">{{ seccion.titulo }}</h2>
+  <section v-for="seccion in secciones" :key="seccion.modulo" :aria-labelledby="`${id}-${seccion.modulo}`">
+    <h2 :id="`${id}-${seccion.modulo}`" class="mb-2 font-semibold text-tierra-800 dark:text-tierra-100">
+      {{ seccion.titulo }}
+    </h2>
     <component :is="seccion.componente" :registro-id="registroId" />
-  </TarjetaBase>
+  </section>
 </template>

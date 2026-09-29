@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import SeccionesAportadas from '@/modulos/core/componentes/SeccionesAportadas.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { puedeCerrarLaCarga } from '../composables/datos-de-empresa';
 import type { EdicionDeEmpresa } from '../composables/edicion-de-empresa';
@@ -56,6 +57,12 @@ const cerrarVentana = () => (props.reaperturaAbierta ? undefined : emit('cerrar'
         <CampoTexto v-model="edicion.telefono" etiqueta="Teléfono" tipo="tel" :error="errores.telefono" />
         <CampoTexto v-model="edicion.correo" etiqueta="Correo" tipo="email" :error="errores.correo" />
       </div>
+      <SeccionesAportadas
+        v-model="edicion.secciones"
+        en="empresa"
+        :registro-id="edicion.empresaId"
+        :errores="errores"
+      />
       <template v-if="edicion.empresaId">
         <SeccionDeDatosFiscales
           v-model:razon-social="edicion.razonSocial"

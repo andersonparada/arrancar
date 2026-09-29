@@ -53,19 +53,17 @@ function crearPiezas() {
 type Piezas = ReturnType<typeof crearPiezas> & DependenciasCompartidas;
 
 function controladorDeTerceros(piezas: Piezas): TercerosControlador {
-  const {
+  const { unidadDeTrabajo, categorias, contactos, consultas, avisos } = piezas;
+  const { repositorio, avisoDeParecidos, publicadorEventos, auditoria, fotos } = piezas;
+  const paraGuardar = {
     unidadDeTrabajo,
-    publicadorEventos,
-    auditoria,
     repositorio,
-    categorias,
-    contactos,
     consultas,
     avisoDeParecidos,
-    avisos,
+    publicadorEventos,
+    auditoria,
     fotos,
-  } = piezas;
-  const paraGuardar = { unidadDeTrabajo, repositorio, consultas, avisoDeParecidos, publicadorEventos, auditoria, fotos };
+  };
   return new TercerosControlador({
     listar: new ListarTerceros({ unidadDeTrabajo, consultas }),
     obtenerFicha: new ObtenerFichaDeTercero({ unidadDeTrabajo, consultas }),
