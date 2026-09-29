@@ -23,6 +23,27 @@ export interface GrupoMenu {
   entradas: EntradaMenu[];
 }
 
+/** El formulario o la ficha que recibe la sección: el de una empresa o el de un proveedor. */
+export type DondeSeAporta = 'empresa' | 'proveedor';
+
+/**
+ * Sección que un módulo aporta al formulario de Empresas o al de Proveedores (y a la ficha del proveedor). Solo se
+ * muestra si el módulo está activo. Su valor viaja en `secciones[<clave del módulo>]` del cuerpo del formulario y
+ * el servidor lo guarda con el formulario, todo o nada.
+ *
+ * El componente del formulario recibe `registroId` (`null` si el registro es nuevo) y `errores` (por campo, sin
+ * prefijo) y lleva su valor en `v-model`: empieza en `undefined` y la propia sección lo llena (con lo guardado o
+ * con sus valores por omisión). Un valor `undefined` no se envía. El de la ficha solo recibe `registroId`.
+ */
+export interface SeccionAportada {
+  en: DondeSeAporta;
+  titulo: string;
+  /** Menor primero; entre módulos con el mismo número, el orden del índice de módulos. */
+  orden: number;
+  formulario: () => Promise<{ default: Component }>;
+  ficha?: () => Promise<{ default: Component }>;
+}
+
 /**
  * Contrato de un módulo del frontend. Su `clave` coincide con la del módulo del
  * servidor: si el módulo no está activo en la cuenta, sus menús no se muestran.
@@ -31,6 +52,8 @@ export interface DefinicionModuloCliente {
   clave: string;
   rutas: RouteRecordRaw[];
   menu: GrupoMenu[];
+  /** Secciones que aporta a formularios y fichas de otros módulos. */
+  secciones?: SeccionAportada[];
 }
 
 declare module 'vue-router' {
