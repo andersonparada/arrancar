@@ -31,22 +31,27 @@ decisiones e investigación con Opus).
   huecos explicados por la auditoría. **Cuidado:** el journal de migraciones de
   bancos tiene `when` hasta 1790700200000 (2026-09-29 16:43 UTC); una migración nueva
   de bancos debe llevar un `when` mayor o el migrador la salta.
-- Pruebas: servidor 663, cliente 130, generador 46.
+- **H9 cliente** (`0426398`): número en Notas, Transferencias y Movimientos; reporte
+  de Correlativos (imprimir y exportar).
+- **H3a** (`38ac358`, `77c478b`): catálogo `bancos.conceptos` editable, semilla con 5
+  de sistema y 11 sugeridos, Excel, pantalla en Administración de Bancos.
+- Pruebas: servidor 686, cliente 151, generador 46.
 - Investigaciones cerradas:
   - `docs/modulos/seguridad-de-archivos.md` (agente de seguridad).
   - `docs/modulos/validacion-h7-h11-retenciones.md` (contador).
+  - `docs/modulos/concepto-de-notas-y-cheques.md` (contador, para H3b).
 
 ## Siguiente
 
-1. **H9 en el cliente**: número en las listas de notas y transferencias y pantalla
-   del reporte de correlativos.
-2. **H3a–c**, **H8**, archivos PDF, **H2**, **H6**, **H5** (esquema
+1. **H6a** reporte de cheques caducos (en curso).
+2. **H3b** concepto obligatorio en notas y cheques con lo que no depende de P1–P8;
+   luego **H3c**, **H8**, archivos PDF, **H2**, **H6**, **H5** (esquema
    `empresas`, falta el diseño del arquitecto de datos), y H10/H11/H7 dentro de Libro
    de compras.
-4. Corregir los planes de Libro de compras, Cuentas por pagar y la «Revisión
+3. Corregir los planes de Libro de compras, Cuentas por pagar y la «Revisión
    contable» de `docs/HOJA-DE-RUTA.md` con la validación del contador (H7 exento, las
    retenciones se fijan al registrar la factura) cuando el usuario responda.
-5. Probar en el navegador lo del B6 y el B7 y rehacer la conciliación demo.
+4. Probar en el navegador lo del B6 y el B7 y rehacer la conciliación demo.
 
 ## Preguntas abiertas para el usuario
 
@@ -81,3 +86,16 @@ decisiones e investigación con Opus).
 18. Contraseña de pago: ¿puede incluir facturas registradas aún sin autorizar?
 19. Cheques posfechados: ¿se permiten y desde cuándo cuentan en el saldo?
 20. Patrón común de reversión (`Reversible`): se discute antes de programarlo.
+
+**Concepto de notas y cheques** (detalle en `concepto-de-notas-y-cheques.md`):
+21. P1 Cheque caduco: ¿el inverso hereda el concepto y la caducidad es una causa del
+    cheque (recomendado) o se conserva el concepto `cheque_caduco`?
+22. P2 ¿Cuentas por pagar clasifica como inversión los pagos de activos? ¿De dónde sale
+    el dato?
+23. P3 ¿Un cheque manual puede usar «Pago a proveedores»? (recomendado: solo sin
+    Cuentas por pagar activo).
+24. P4 Préstamos a empleados: ¿inversión u operación si es anticipo de sueldo?
+25. P5 Dividendos y retiros: ¿uno o dos conceptos, siempre financiamiento?
+26. P6 Columnas de módulo y documento de origen: ¿en H3b o en Cuentas por pagar?
+27. P7 ¿Sugerencias de concepto en la bandeja «Sin clasificar», con confirmación?
+28. P8 ¿Se agregan los conceptos sugeridos nuevos a la semilla?

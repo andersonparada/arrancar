@@ -754,6 +754,10 @@ Pasos (un commit cada uno, con sus pruebas):
    (motivo de IVA no acreditable, notas de crédito del proveedor). Las retenciones se
    fijan **al registrar la factura**, no al autorizar. Seis preguntas para el usuario.
 3. **Concepto de los cheques** según su origen.
+   **Investigado (2026-09-29):** `docs/modulos/concepto-de-notas-y-cheques.md`. H3 y H6
+   correctos con ajustes C1–C5 (el inverso hereda el concepto y resta en la línea del
+   original; `sin_clasificar` solo por migración; el origen fija el concepto). Ocho
+   preguntas (P1–P8) para el usuario.
 4. **Esquema `empresas`**: qué se mueve del core y cómo afecta RLS, sesión y el módulo `empresas` que ya existe.
 
 ### Baja de un cliente (decisión del 2026-09-28, posterior)
