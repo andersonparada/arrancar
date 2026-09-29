@@ -35,7 +35,14 @@ decisiones e investigación con Opus).
   de Correlativos (imprimir y exportar).
 - **H3a** (`38ac358`, `77c478b`): catálogo `bancos.conceptos` editable, semilla con 5
   de sistema y 11 sugeridos, Excel, pantalla en Administración de Bancos.
-- Pruebas: servidor 686, cliente 151, generador 46.
+- **H6a** (`a7f217d`, `6b1deb1`): reporte de cheques caducos (7 meses configurable).
+- **Fecha de hoy en la hora de Guatemala** (`c8f2a59`): puerto `Reloj` con
+  `core.regional.zona_horaria`.
+- **H3b** (`9abdbdb`, `f04b9c7`): concepto obligatorio en notas y cheques, migración
+  determinista (lo demás a «Sin clasificar»), inversos heredan, reclasificar en lote
+  con auditoría, bandeja `/bancos/sin-clasificar`. Pendiente por P1, P6 y P8:
+  `cheque_caduco`, columnas de origen, `causa_de_anulacion` y conceptos nuevos.
+- Pruebas: servidor 769, cliente 206, generador 46.
 - Investigaciones cerradas:
   - `docs/modulos/seguridad-de-archivos.md` (agente de seguridad).
   - `docs/modulos/validacion-h7-h11-retenciones.md` (contador).
@@ -43,9 +50,8 @@ decisiones e investigación con Opus).
 
 ## Siguiente
 
-1. **H6a** reporte de cheques caducos (en curso).
-2. **H3b** concepto obligatorio en notas y cheques con lo que no depende de P1–P8;
-   luego **H3c**, **H8**, archivos PDF, **H2**, **H6**, **H5** (esquema
+1. **H3c** reportes Flujo de efectivo y Movimientos por concepto (en curso).
+2. **H6b** anulación en lote (el concepto del inverso depende de P1), **H8**, archivos PDF, **H2**, **H6**, **H5** (esquema
    `empresas`, falta el diseño del arquitecto de datos), y H10/H11/H7 dentro de Libro
    de compras.
 3. Corregir los planes de Libro de compras, Cuentas por pagar y la «Revisión
