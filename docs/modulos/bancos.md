@@ -1370,7 +1370,7 @@ conceptos nuevos en la semilla.
   (solo ver; administrar sigue siendo `bancos.conceptos.gestionar`).
 - Lógica pura con pruebas: `opciones-de-concepto`, `seleccion-de-pendientes`, `centavos`, filtros y detalles de nota.
 
-## H3c Flujo de efectivo y Movimientos por concepto (servidor hecho el 2026-09-29)
+## H3c Flujo de efectivo y Movimientos por concepto (servidor y cliente hechos el 2026-09-29)
 
 Dos reportes de **solo lectura** en Reportes de Bancos (imprimir y Excel). Manda `concepto-de-notas-y-cheques.md`
 (sección «Flujo de efectivo (H3c)» y la tabla de anular) sobre el plan.
@@ -1414,3 +1414,26 @@ Dos reportes de **solo lectura** en Reportes de Bancos (imprimir y Excel). Manda
   escenario compartido `soporte/escenario-de-flujo.ts`: dos cuentas, notas de las tres actividades, sin actividad, sin clasificar,
   una nota anulada, una transferencia y un cheque de enero conciliado que se anula en marzo con su inverso). Cuadran febrero de la
   empresa, febrero de una cuenta, enero, marzo (solo el inverso) y el año completo contra el saldo de las cuentas.
+
+### H3c en el cliente (2026-09-29)
+
+Los dos reportes están en **Reportes** de Bancos (imprimir con `window.print()` y Excel con `AccionesDeIntercambio`; nada de
+importar). Rutas y entradas del menú en `reportes-del-modulo.ts` (antes `menu-de-reportes.ts`, para que `modulo.ts` no pase de
+200 líneas).
+
+- **Flujo de efectivo** (`/bancos/flujo-de-efectivo`, permiso `bancos.flujo-de-efectivo.ver`; Excel con `.exportar`). Página
+  `ReporteDeFlujoDeEfectivo.vue`; componentes en `componentes/flujo-de-efectivo/`: `FiltrosDelFlujo` (cuenta o todas y rango; el
+  rango se valida antes de llamar y dice cómo corregir), `SeccionDeActividad` (una tarjeta por actividad, con sus líneas y su
+  total, y «Sin movimientos en este rango» si no hay), `LineasAparteDelFlujo` («Otras líneas del período»: transferencias con una
+  sola cuenta, sin actividad y **Sin clasificar (pendiente)** con el enlace «Clasificar (N)» a `/bancos/sin-clasificar`, que solo se
+  ve con `bancos.movimientos.ver`) y `ControlDeCuadre` (verde si cuadra; si no, tarjeta roja con `role="alert"` y la diferencia).
+  Los montos que restan se ven en rojo y con su signo (`MontoDelFlujo`). Sin desplazamiento horizontal de la página en el
+  celular: cada tabla se desliza dentro de su tarjeta; al imprimir se ve completa, con un encabezado de empresa, cuenta y periodo.
+- **Movimientos por concepto** (`/bancos/movimientos-por-concepto`, `bancos.movimientos.ver` y `.exportar`). Página
+  `ReporteDeMovimientosPorConcepto.vue`; componentes en `componentes/movimientos-por-concepto/`: filtros con **selector de varios
+  conceptos** (`SelectorDeConceptos`: lista con casillas en un `details`, sin selección = todos, tope de 50), tabla con totales y
+  cada concepto **desplegable** (`FilaDeConceptoDelReporte` con `aria-expanded`): el detalle pide el reporte de movimientos ya
+  existente con ese concepto, el rango y la cuenta, y muestra los anulados a la antigua tachados y los inversos con su marca.
+  Al cambiar un filtro se cierran los detalles.
+- **Lógica pura con pruebas**: `rango-de-fechas` (mes actual y errores del rango), `filtros-del-flujo` y `textos-del-flujo`,
+  `filtros-por-concepto` (conceptos como lista separada por comas, filtro del detalle, marcar y desmarcar con tope).

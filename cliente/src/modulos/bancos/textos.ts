@@ -71,5 +71,15 @@ export const VENTANAS_BANCOS = {
     descripcion:
       'Notas y cheques que todavía no tienen concepto: márquelos y clasifíquelos de una vez. Solo cambia el concepto, no el dinero.',
   },
+  flujoDeEfectivo: {
+    titulo: 'Flujo de efectivo',
+    descripcion:
+      'Método directo: lo que entró y salió de las cuentas por actividad (operación, inversión y financiamiento), con su control de cuadre.',
+  },
+  movimientosPorConcepto: {
+    titulo: 'Movimientos por concepto',
+    descripcion:
+      'Total de entradas, salidas y cantidad por concepto en un rango de fechas, con el detalle de cada uno.',
+  },
   // generador: ventanas
 } as const;

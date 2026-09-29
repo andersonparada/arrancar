@@ -11,7 +11,7 @@ import {
   WalletCards,
 } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
-import { ENTRADAS_DE_REPORTES } from './menu-de-reportes';
+import { ENTRADAS_DE_REPORTES, RUTAS_DE_REPORTES } from './reportes-del-modulo';
 import { NOMBRE_BANCOS, VENTANAS_BANCOS } from './textos';
 // generador: importaciones
 
@@ -125,6 +125,7 @@ export const moduloBancos: DefinicionModuloCliente = {
       component: () => import('./paginas/ListaDeConceptos.vue'),
       meta: { permiso: 'bancos.conceptos.ver', titulo: VENTANAS_BANCOS.conceptos.titulo },
     },
+    ...RUTAS_DE_REPORTES,
     // generador: rutas
   ],
   menu: [
