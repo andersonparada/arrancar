@@ -5,13 +5,12 @@ import {
   CheckCheck,
   FileText,
   Landmark,
-  ListOrdered,
   NotebookTabs,
-  ScrollText,
   Tags,
   WalletCards,
 } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
+import { ENTRADAS_DE_REPORTES } from './menu-de-reportes';
 import { NOMBRE_BANCOS, VENTANAS_BANCOS } from './textos';
 // generador: importaciones
 
@@ -108,6 +107,12 @@ export const moduloBancos: DefinicionModuloCliente = {
       meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.correlativos.titulo },
     },
     {
+      path: '/bancos/cheques-caducos',
+      name: 'bancos.cheques-caducos',
+      component: () => import('./paginas/ReporteDeChequesCaducos.vue'),
+      meta: { permiso: 'bancos.cheques-caducos.ver', titulo: VENTANAS_BANCOS.chequesCaducos.titulo },
+    },
+    {
       path: '/bancos/conceptos',
       name: 'bancos.conceptos',
       component: () => import('./paginas/ListaDeConceptos.vue'),
@@ -170,20 +175,7 @@ export const moduloBancos: DefinicionModuloCliente = {
           seccion: 'operacion',
           permiso: 'bancos.conciliaciones.ver',
         },
-        {
-          titulo: VENTANAS_BANCOS.movimientos.titulo,
-          ruta: '/bancos/movimientos',
-          icono: ScrollText,
-          seccion: 'reportes',
-          permiso: 'bancos.movimientos.ver',
-        },
-        {
-          titulo: VENTANAS_BANCOS.correlativos.titulo,
-          ruta: '/bancos/correlativos',
-          icono: ListOrdered,
-          seccion: 'reportes',
-          permiso: 'bancos.movimientos.ver',
-        },
+        ...ENTRADAS_DE_REPORTES,
         {
           titulo: VENTANAS_BANCOS.conceptos.titulo,
           ruta: '/bancos/conceptos',

@@ -56,6 +56,10 @@ export const VENTANAS_BANCOS = {
     descripcion:
       'Numeración de notas y transferencias: último número, emitidos y los huecos explicados con la auditoría.',
   },
+  chequesCaducos: {
+    titulo: 'Cheques caducos',
+    descripcion: 'Cheques emitidos que el banco no ha cobrado y ya pasaron el plazo de vencimiento.',
+  },
   conceptos: {
     titulo: 'Conceptos',
     descripcion: 'Los conceptos que clasifican las notas y los cheques: por qué se mueve el dinero del banco.',

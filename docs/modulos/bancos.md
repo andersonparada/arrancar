@@ -1270,3 +1270,21 @@ emitieron no tienen movimiento y no entran). La anulación en lote es H6b y aún
 - **Pruebas**: dominio (`cheques-en-circulacion.prueba.ts`), caso de uso (`reporte-de-cheques-caducos.prueba.ts`)
   y API (`bancos-cheques-caducos.api.prueba.ts`: entra el viejo emitido; no entran el cobrado, el anulado, el
   revertido, el reciente ni el disponible; filtros, variable de la empresa, permisos, Excel y aislamiento).
+
+### H6a en el cliente: pantalla «Cheques caducos» (2026-09-29)
+
+En **Reportes** de Bancos (`/bancos/cheques-caducos`, permiso `bancos.cheques-caducos.ver`; Excel con
+`.exportar`; botón Imprimir). Página `ReporteDeChequesCaducos.vue`; componentes en
+`componentes/cheques-caducos/` (`FiltrosDeChequesCaducos`, `ResumenDeChequesCaducos`,
+`TablaDeChequesCaducos` y `FilaDeChequeCaduco`); composables en `composables/cheques-caducos/`.
+
+- Filtros: cuenta, beneficiario y antigüedad mínima en meses (vacío = plazo de la empresa, que se muestra
+  como sugerencia; valida 1 a 120 con un mensaje que dice cómo corregir). La consulta espera 350 ms
+  después de escribir para no llamar al servidor por letra.
+- Resumen: «N cheques · Q total» y con qué plazo y fecha de corte se armó. Los totales los calcula el servidor.
+- Los días de antigüedad se destacan con una insignia: amarilla al pasar el plazo y roja pasado un año
+  (`nivelDeAntiguedad`), con los meses completos al lado. «Mes» dice si está conciliado o abierto.
+- La tabla se desliza dentro de su tarjeta en el celular (la página no); al imprimir se ve completa. Cada fila
+  es un componente aparte (`FilaDeChequeCaduco`) para que H6b le agregue la casilla al inicio y la barra fija de
+  «Anular seleccionados» sin tocar la tabla. Aún no hay casillas ni anulación.
+- Pruebas de la lógica pura: `filtros-de-cheques-caducos.prueba.ts` y `antiguedad-de-cheques.prueba.ts`.
