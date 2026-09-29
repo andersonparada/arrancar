@@ -1407,9 +1407,9 @@ Manda la tabla «Respuestas del usuario (2026-09-29)» de `plan-hallazgos-contab
   elegirlo. El puerto `CuentasPorPagarActivo` (`aplicacion/puertos`) lo implementa
   `CuentasPorPagarActivoEnModulosActivos` sobre `ModulosActivosDeLaCuenta` del mediador, con la clave `cuentas-por-pagar`
   (hoy no existe: siempre `permitido`).
-- **P7 Sugerencias de «Sin clasificar»: NO implementado en el servidor.** El plan solo dice «sí, con confirmación» y el informe
-  «último concepto del beneficiario o por texto»; el cálculo (normalizar el beneficiario, qué hacer con «por texto», descartar
-  conceptos inactivos o incompatibles) no está definido. Hoy el cliente sugiere con lo que ya tiene cargado.
+- **P7 Sugerencias de «Sin clasificar»**: el servidor se hizo después con el diseño de
+  `docs/modulos/diseno-sugerencias-de-concepto.md` (ver la sección «P7: sugerencias de concepto (servidor hecho el 2026-09-29)»
+  al final de este archivo). Hoy el cliente todavía sugiere con lo que ya tiene cargado (pasos C1 a C3 pendientes).
 - **Cliente (hecho el 2026-09-29)**: `causaDeAnulacion` («Manual» / «Por caducidad») como dato «Causa de anulación» en la
   tarjeta del cheque (ficha de chequera) y en la de la lista de cheques; `moduloDeOrigen` como dato «Origen» en las tarjetas
   de notas y bajo el concepto en la tabla del reporte de movimientos (lógica en `composables/movimientos/origen-y-causa.ts`).
@@ -1417,7 +1417,7 @@ Manda la tabla «Respuestas del usuario (2026-09-29)» de `plan-hallazgos-contab
   «Pago a proveedores» (clave `pago_a_proveedor`, `opcionesDeConceptoDeCheque`) solo si `sesion.moduloActivo('cuentas-por-pagar')`
   es falso (la sesión ya trae `modulosActivos`; no hizo falta tocar el servidor). Los 422 nuevos
   (`no_se_reclasifica_lo_de_otro_modulo`, `pago_a_proveedores_lo_fija_cuentas_por_pagar`) se muestran con el mensaje del
-  servidor en el aviso de error del formulario. P7 no se hizo.
+  servidor en el aviso de error del formulario.
 - **Pruebas**: dominio (`asignacion-de-concepto`, `cheque`, `movimiento-y-concepto`, `conceptos-iniciales`,
   `acciones-posibles`), casos de uso (`casos-uso-de-conceptos-en-cheques`: P3 y causa) y API
   (`bancos-conceptos-ajustes.api.prueba.ts`: migración 0022 repetible, restricciones, origen, P3 y causa).
@@ -1489,3 +1489,39 @@ importar). Rutas y entradas del menú en `reportes-del-modulo.ts` (antes `menu-d
   Al cambiar un filtro se cierran los detalles.
 - **Lógica pura con pruebas**: `rango-de-fechas` (mes actual y errores del rango), `filtros-del-flujo` y `textos-del-flujo`,
   `filtros-por-concepto` (conceptos como lista separada por comas, filtro del detalle, marcar y desmarcar con tope).
+
+## P7: sugerencias de concepto (servidor hecho el 2026-09-29)
+
+Manda `docs/modulos/diseno-sugerencias-de-concepto.md` (con sus respuestas del usuario). Servidor: pasos S1, S2, S3, S4 y S6 y
+la parte de servidor de dos respuestas más; falta S5 (`pg_trgm`, «después, con datos reales») y todo el cliente (C1 a C3).
+
+- **S1 (migraciones `0024` y `0025`)**: función `bancos.nombre_para_comparar(text)` (`immutable`, `strict`, `parallel safe`,
+  `search_path = pg_catalog`; sin acentos, mayúsculas ni signos; quita formas jurídicas y conectores como palabras completas) y la
+  columna generada `movimientos.beneficiario_para_comparar` con el índice `(empresa_id, beneficiario_para_comparar, fecha)`. Los
+  mapeadores la dejan fuera de la entidad y del DTO. Si la regla de la función cambia, hay que quitar y volver a agregar la columna.
+- **S2 dominio puro** (`dominio/sugerencias/`): `pesos` (recencia, monto, Jaccard), `casos-de-votacion` (qué ejemplos votan),
+  `votacion` (confianza `S / (W + α)`, sugerido y alternativas), `conceptos-ofrecibles` (las reglas de `exigirConceptoElegible`),
+  `constantes` y `tipos`. Prueba de calidad con un año sintético (`calidad-de-la-sugerencia.prueba.ts`: precisión ≥ 90 % y cobertura ≥ 60 %).
+- **S3**: puerto `ConsultasDeSugerencias` (Drizzle, con las tablas vivas y sin caché), `MotorDeSugerencias` (un solo cálculo para la
+  bandeja y la captura), `SugerirConceptosDeSinClasificar`, `esPendienteDeClasificar` compartido con el reporte
+  (`condiciones-de-clasificacion.ts`). Variables `bancos.sugerencias.vida_media_dias` (180, 30 a 1095) y
+  `bancos.sugerencias.confianza_minima` (60, 30 a 95), niveles instalación y empresa, no públicas.
+  `GET /api/bancos/notas/sugerencias-de-concepto?cuentaBancariaId=&desde=&hasta=` (permiso `bancos.notas.editar`; hasta 2,000
+  pendientes, con `truncado`).
+- **S4**: `ReclasificarVarios` y `POST /api/bancos/notas/reclasificar-varios` (permiso `bancos.notas.editar`; 1 a 200 asignaciones sin
+  repetir movimiento, todo o nada; con `porSugerencia` el motivo de la auditoría termina en « (sugerencia aceptada)»). El paso por
+  movimiento se extrajo a `ReclasificadorDeUnMovimiento`, que comparten los dos casos de uso.
+- **«Pago a proveedores» en la bandeja**: al reclasificar un **cheque** rige la regla de P3 (se acepta si Cuentas por pagar no está
+  activo; si lo está, 422 `pago_a_proveedores_lo_fija_cuentas_por_pagar`). Una nota nunca lo recibe.
+- **Reclasificar un cheque desde el reporte**: `POST /api/bancos/cheques/reclasificar` con el permiso nuevo
+  `bancos.cheques.reclasificar` (migración `0026`: lo reciben los roles que ya tenían `bancos.notas.editar`), auditoría `corregir`
+  con el concepto anterior y arrastre al inverso. Las rutas de notas aceptan notas y cheques **pendientes** (la bandeja), pero
+  rechazan un cheque ya clasificado (422 `un_cheque_se_reclasifica_como_cheque`); la de cheques rechaza una nota
+  (422 `no_es_un_cheque_para_reclasificar`). Para una nota suelta basta `POST /notas/reclasificar` con un solo id.
+- **S6**: `POST /api/bancos/notas/sugerir-concepto` (permiso `bancos.notas.crear`; `tipo` credito o debito obligatorio) y
+  `POST /api/bancos/cheques/sugerir-concepto` (permiso `bancos.cheques.emitir`; tipo fijo cheque). Cuerpo:
+  `{ cuentaBancariaId, fecha?, monto?, beneficiario?, referencia?, observaciones? }`; sin fecha, hoy de la empresa; sin monto, el monto
+  no distingue. Responde `{ sugerido, alternativas, casosComparados }` sin `movimientoId` y no guarda ni audita nada.
+- **Pruebas**: dominio (pesos, votación, casos, ofrecibles, calidad), casos de uso (`casos-uso-de-sugerencias`,
+  `reclasificar-cheques-y-varios`) y API (`bancos-nombre-para-comparar`, `bancos-sugerencias-de-concepto`,
+  `bancos-migracion-de-permiso-de-reclasificar`).

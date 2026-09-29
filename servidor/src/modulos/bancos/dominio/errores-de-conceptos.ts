@@ -113,3 +113,21 @@ export class PagoAProveedoresLoFijaCuentasPorPagar extends ReglaDeNegocioInfring
     super('«Pago a proveedores» lo asigna Cuentas por pagar al pagar una contraseña: elija otro concepto.');
   }
 }
+
+/** Un cheque ya clasificado se reclasifica con el permiso de los cheques, no con el de las notas. */
+export class UnChequeSeReclasificaComoCheque extends ReglaDeNegocioInfringida {
+  readonly codigo = 'un_cheque_se_reclasifica_como_cheque';
+
+  constructor() {
+    super('Este movimiento es un cheque ya clasificado: se reclasifica desde los cheques.');
+  }
+}
+
+/** La reclasificación de cheques solo acepta cheques. */
+export class NoEsUnChequeParaReclasificar extends ReglaDeNegocioInfringida {
+  readonly codigo = 'no_es_un_cheque_para_reclasificar';
+
+  constructor() {
+    super('Este movimiento no es un cheque: se reclasifica desde las notas.');
+  }
+}

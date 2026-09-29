@@ -12,6 +12,7 @@ import type {
 import type { ConsultasMovimientos } from '../../aplicacion/puertos/consultas-movimientos.js';
 import { finDelMesDe } from '../../dominio/conciliacion.js';
 import { cheques } from './cheques.tablas.js';
+import { esPendienteDeClasificar } from './condiciones-de-clasificacion.js';
 import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
@@ -149,14 +150,7 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
       })
       .from(movimientos)
       .innerJoin(conceptos, eq(conceptos.id, movimientos.conceptoId))
-      .where(
-        and(
-          eq(conceptos.claveDeSistema, 'sin_clasificar'),
-          isNull(movimientos.revierteAId),
-          isNull(movimientos.anuladoEn),
-          condicionesDe({ ...filtro, conceptoId: undefined, clase: undefined }),
-        ),
-      );
+      .where(and(esPendienteDeClasificar, condicionesDe({ ...filtro, conceptoId: undefined, clase: undefined })));
     return {
       cantidad: fila?.cantidad ?? 0,
       montoDeEntradas: fila?.entradas ?? '0.00',

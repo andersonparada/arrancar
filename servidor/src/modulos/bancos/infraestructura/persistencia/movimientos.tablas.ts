@@ -52,6 +52,11 @@ export const movimientos = esquemaBancos.table(
     saldoInicial: boolean().default(false).notNull(),
     referencia: text(),
     beneficiario: text(),
+    /**
+     * El beneficiario normalizado por `bancos.nombre_para_comparar` (sin acentos, mayúsculas ni «S.A.»): la clave
+     * de las sugerencias de concepto (P7). La calcula la base; nunca se escribe.
+     */
+    beneficiarioParaComparar: text().generatedAlwaysAs(sql`bancos.nombre_para_comparar(beneficiario)`),
     observaciones: text(),
     /**
      * Cómo se clasifica el dinero (H3b). Un original lo elige el usuario; transferencias, saldo inicial e
@@ -89,6 +94,9 @@ export const movimientos = esquemaBancos.table(
   },
   (t) => [
     index('movimientos_cuenta_fecha_idx').on(t.cuentaBancariaId, t.fecha),
+    index('movimientos_beneficiario_para_comparar_idx')
+      .on(t.empresaId, t.beneficiarioParaComparar, t.fecha)
+      .where(sql`${t.beneficiarioParaComparar} is not null`),
     index('movimientos_transferencia_idx').on(t.transferenciaId),
     index('movimientos_conciliacion_idx').on(t.conciliacionId),
     index('movimientos_revierte_a_idx').on(t.revierteAId),

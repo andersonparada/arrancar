@@ -1,0 +1,2 @@
+ALTER TABLE "bancos"."movimientos" ADD COLUMN "beneficiario_para_comparar" text GENERATED ALWAYS AS (bancos.nombre_para_comparar(beneficiario)) STORED;--> statement-breakpoint
+CREATE INDEX "movimientos_beneficiario_para_comparar_idx" ON "bancos"."movimientos" USING btree ("empresa_id","beneficiario_para_comparar","fecha") WHERE "bancos"."movimientos"."beneficiario_para_comparar" is not null;

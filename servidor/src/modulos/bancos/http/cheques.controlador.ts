@@ -4,7 +4,11 @@ import type { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque
 import type { BlanquearCheque } from '../aplicacion/casos-uso/cheques/blanquear-cheque.js';
 import type { EmitirCheque } from '../aplicacion/casos-uso/cheques/emitir-cheque.js';
 import type { ListarChequesDeLaEmpresa } from '../aplicacion/casos-uso/cheques/listar-cheques-de-la-empresa.js';
+import type { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
+import type { SugerirConceptoAlCapturar } from '../aplicacion/casos-uso/sugerencias/sugerir-concepto-al-capturar.js';
 import type { SiguienteChequeDisponible } from '../aplicacion/casos-uso/cheques/siguiente-cheque-disponible.js';
+import type { ReclasificacionSolicitada } from './notas.esquemas-http.js';
+import type { SugerenciaDeChequeSolicitada } from './sugerencias.esquemas-http.js';
 import type {
   EmisionDeChequeSolicitada,
   FiltroDeChequesDeLaEmpresaSolicitado,
@@ -20,6 +24,8 @@ export interface CasosDeUsoDeCheques {
   emitir: EmitirCheque;
   anular: AnularCheque;
   blanquear: BlanquearCheque;
+  reclasificar: ReclasificarMovimientos;
+  sugerirAlCapturar: SugerirConceptoAlCapturar;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
@@ -50,4 +56,11 @@ export class ChequesControlador {
       chequeId: solicitud.params.chequeId,
       motivo: solicitud.body.motivo,
     });
+
+  /** Los cheques ya clasificados o pendientes: siempre solo cheques (`ReclasificarMovimientos` con clase `cheques`). */
+  reclasificar = (solicitud: FastifyRequest<{ Body: ReclasificacionSolicitada }>) =>
+    this.casosDeUso.reclasificar.ejecutar(operadorDe(solicitud), solicitud.body);
+
+  sugerirConcepto = (solicitud: FastifyRequest<{ Body: SugerenciaDeChequeSolicitada }>) =>
+    this.casosDeUso.sugerirAlCapturar.ejecutar(operadorDe(solicitud), { ...solicitud.body, tipo: 'cheque' });
 }

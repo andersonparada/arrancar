@@ -6,9 +6,18 @@ import type { CrearMovimiento } from '../aplicacion/casos-uso/movimientos/crear-
 import type { EliminarMovimiento } from '../aplicacion/casos-uso/movimientos/eliminar-movimiento.js';
 import type { ListarMovimientos } from '../aplicacion/casos-uso/movimientos/listar-movimientos.js';
 import type { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
+import type { ReclasificarVarios } from '../aplicacion/casos-uso/movimientos/reclasificar-varios.js';
+import type { SugerirConceptoAlCapturar } from '../aplicacion/casos-uso/sugerencias/sugerir-concepto-al-capturar.js';
+import type { SugerirConceptosDeSinClasificar } from '../aplicacion/casos-uso/sugerencias/sugerir-conceptos-de-sin-clasificar.js';
 import type { ObtenerMovimiento } from '../aplicacion/casos-uso/movimientos/obtener-movimiento.js';
 import type { ParamsMovimiento, SolicitudDeAnulacion, SolicitudDeEliminacion } from './movimientos.esquemas-http.js';
-import type { FiltroDeNotasSolicitado, NotaSolicitada, ReclasificacionSolicitada } from './notas.esquemas-http.js';
+import type {
+  FiltroDeNotasSolicitado,
+  NotaSolicitada,
+  ReclasificacionSolicitada,
+  ReclasificacionVariosSolicitada,
+} from './notas.esquemas-http.js';
+import type { FiltroDeSugerenciasSolicitado, SugerenciaDeNotaSolicitada } from './sugerencias.esquemas-http.js';
 
 export interface CasosDeUsoDeNotas {
   listar: ListarMovimientos;
@@ -18,6 +27,9 @@ export interface CasosDeUsoDeNotas {
   anular: AnularMovimiento;
   eliminar: EliminarMovimiento;
   reclasificar: ReclasificarMovimientos;
+  reclasificarVarios: ReclasificarVarios;
+  sugerirDeSinClasificar: SugerirConceptosDeSinClasificar;
+  sugerirAlCapturar: SugerirConceptoAlCapturar;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; siempre como nota (`saldoInicial: false`), nunca como el saldo inicial. */
@@ -47,6 +59,15 @@ export class NotasControlador {
 
   reclasificar = (solicitud: FastifyRequest<{ Body: ReclasificacionSolicitada }>) =>
     this.casosDeUso.reclasificar.ejecutar(operadorDe(solicitud), solicitud.body);
+
+  reclasificarVarios = (solicitud: FastifyRequest<{ Body: ReclasificacionVariosSolicitada }>) =>
+    this.casosDeUso.reclasificarVarios.ejecutar(operadorDe(solicitud), solicitud.body);
+
+  sugerenciasDeSinClasificar = (solicitud: FastifyRequest<{ Querystring: FiltroDeSugerenciasSolicitado }>) =>
+    this.casosDeUso.sugerirDeSinClasificar.ejecutar(operadorDe(solicitud), solicitud.query);
+
+  sugerirConcepto = (solicitud: FastifyRequest<{ Body: SugerenciaDeNotaSolicitada }>) =>
+    this.casosDeUso.sugerirAlCapturar.ejecutar(operadorDe(solicitud), solicitud.body);
 
   anular = (solicitud: FastifyRequest<{ Params: ParamsMovimiento; Body: SolicitudDeAnulacion }>) =>
     this.casosDeUso.anular.ejecutar(operadorDe(solicitud), {

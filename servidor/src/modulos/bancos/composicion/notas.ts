@@ -4,8 +4,12 @@ import { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anular-mov
 import { CrearMovimiento } from '../aplicacion/casos-uso/movimientos/crear-movimiento.js';
 import { EliminarMovimiento } from '../aplicacion/casos-uso/movimientos/eliminar-movimiento.js';
 import { ListarMovimientos } from '../aplicacion/casos-uso/movimientos/listar-movimientos.js';
+import { ReclasificarVarios } from '../aplicacion/casos-uso/movimientos/reclasificar-varios.js';
 import { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
 import { ObtenerMovimiento } from '../aplicacion/casos-uso/movimientos/obtener-movimiento.js';
+import { CuentasPorPagarActivoEnModulosActivos } from '../infraestructura/cuentas-por-pagar-activo-en-modulos-activos.js';
+import { ModulosActivosDeLaCuentaEnRegistro } from '../../core/mediador/infraestructura/modulos-activos-de-la-cuenta-en-registro.js';
+import { casosDeSugerencias } from './sugerencias.js';
 import { ReglasDeLaCuenta } from '../aplicacion/reglas-de-la-cuenta.js';
 import { NotasControlador } from '../http/notas.controlador.js';
 import { rutasNotas } from '../http/notas.rutas.js';
@@ -28,6 +32,7 @@ function dependenciasDeNotas() {
     consultas,
     repositorio: new RepositorioMovimientosDrizzle(),
     conceptos: new ConceptosDeMovimientos(new RepositorioConceptosDrizzle()),
+    cuentasPorPagar: new CuentasPorPagarActivoEnModulosActivos(new ModulosActivosDeLaCuentaEnRegistro()),
     reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro }),
     politicaDeMismaFecha: new PoliticaDeMismaFechaEnAnulacionEnConfiguracion(),
   };
@@ -44,6 +49,8 @@ export function rutasDeNotas() {
     anular: new AnularMovimiento(dependencias),
     eliminar: new EliminarMovimiento(dependencias),
     reclasificar: new ReclasificarMovimientos(dependencias),
+    reclasificarVarios: new ReclasificarVarios(dependencias),
+    ...casosDeSugerencias(dependencias),
   };
   return rutasNotas(new NotasControlador(casos));
 }

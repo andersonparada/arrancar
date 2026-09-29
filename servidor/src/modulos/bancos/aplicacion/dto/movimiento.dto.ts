@@ -100,6 +100,13 @@ export interface SolicitudDeReclasificacion {
   conceptoId: string;
 }
 
+/** Aceptar sugerencias: cada movimiento con su concepto (todo o nada). */
+export interface SolicitudDeReclasificacionVarios {
+  asignaciones: Array<{ movimientoId: string; conceptoId: string }>;
+  /** Los conceptos vienen de sugerencias aceptadas: queda dicho en el motivo de la auditoría. */
+  porSugerencia: boolean;
+}
+
 /** Cuántos cambiaron de concepto y cuántos ya lo tenían (no se tocan ni se auditan). */
 export interface ResultadoDeReclasificacion {
   reclasificados: number;

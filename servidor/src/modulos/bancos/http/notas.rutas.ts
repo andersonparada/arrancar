@@ -2,7 +2,13 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import { esquemaAnulacion, esquemaEliminacion, esquemaParamsMovimiento } from './movimientos.esquemas-http.js';
 import type { NotasControlador } from './notas.controlador.js';
-import { esquemaFiltroDeNotas, esquemaNota, esquemaReclasificacion } from './notas.esquemas-http.js';
+import {
+  esquemaFiltroDeNotas,
+  esquemaNota,
+  esquemaReclasificacion,
+  esquemaReclasificacionVarios,
+} from './notas.esquemas-http.js';
+import { esquemaFiltroDeSugerencias, esquemaSugerenciaDeNota } from './sugerencias.esquemas-http.js';
 
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
 
@@ -20,16 +26,40 @@ function rutasDeLectura(app: Aplicacion, controlador: NotasControlador) {
   app.get(`${RUTA}/:movimientoId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
 }
 
-/** Registrar, corregir y reclasificar (solo el concepto) con `crear` y `editar`; anular y eliminar tienen su propio permiso. */
-function rutasDeEscritura(app: Aplicacion, controlador: NotasControlador) {
-  const crear = proteger({ permiso: 'bancos.notas.crear' });
+/** Sugerencias de concepto (P7): la bandeja con los filtros de la bandeja y la captura de una nota. */
+function rutasDeSugerencias(app: Aplicacion, controlador: NotasControlador) {
+  app.get(`${RUTA}/sugerencias-de-concepto`, {
+    schema: { tags: etiquetas, querystring: esquemaFiltroDeSugerencias },
+    preHandler: proteger({ permiso: 'bancos.notas.editar' }),
+    handler: controlador.sugerenciasDeSinClasificar,
+  });
+  app.post(`${RUTA}/sugerir-concepto`, {
+    schema: { tags: etiquetas, body: esquemaSugerenciaDeNota },
+    preHandler: proteger({ permiso: 'bancos.notas.crear' }),
+    handler: controlador.sugerirConcepto,
+  });
+}
+
+/** Reclasificar (solo el concepto): de uno o varios a un concepto, o cada uno al suyo (sugerencias aceptadas). */
+function rutasDeReclasificacion(app: Aplicacion, controlador: NotasControlador) {
   const editar = proteger({ permiso: 'bancos.notas.editar' });
-  app.post(RUTA, { schema: { tags: etiquetas, body: esquemaNota }, preHandler: crear, handler: controlador.crear });
   app.post(`${RUTA}/reclasificar`, {
     schema: { tags: etiquetas, body: esquemaReclasificacion },
     preHandler: editar,
     handler: controlador.reclasificar,
   });
+  app.post(`${RUTA}/reclasificar-varios`, {
+    schema: { tags: etiquetas, body: esquemaReclasificacionVarios },
+    preHandler: editar,
+    handler: controlador.reclasificarVarios,
+  });
+}
+
+/** Registrar y corregir con `crear` y `editar`; anular y eliminar tienen su propio permiso. */
+function rutasDeEscritura(app: Aplicacion, controlador: NotasControlador) {
+  const crear = proteger({ permiso: 'bancos.notas.crear' });
+  const editar = proteger({ permiso: 'bancos.notas.editar' });
+  app.post(RUTA, { schema: { tags: etiquetas, body: esquemaNota }, preHandler: crear, handler: controlador.crear });
   app.put(`${RUTA}/:movimientoId`, {
     schema: { ...conId, body: esquemaNota },
     preHandler: editar,
@@ -51,6 +81,8 @@ function rutasDeEscritura(app: Aplicacion, controlador: NotasControlador) {
 export function rutasNotas(controlador: NotasControlador): FastifyPluginAsyncZod {
   return async (app) => {
     rutasDeLectura(app, controlador);
+    rutasDeSugerencias(app, controlador);
+    rutasDeReclasificacion(app, controlador);
     rutasDeEscritura(app, controlador);
   };
 }

@@ -26,6 +26,7 @@ export const mapeadorDeMovimiento = {
     creadoPor,
     actualizadoPor,
     conciliacionId: _conciliacionId,
+    beneficiarioParaComparar: _beneficiarioParaComparar,
     ...campos
   }: Fila): Movimiento {
     return Movimiento.reconstruir({
@@ -47,6 +48,7 @@ export const mapeadorDeMovimiento = {
       actualizadoEn: _actualizadoEn,
       creadoPor: _creadoPor,
       actualizadoPor: _actualizadoPor,
+      beneficiarioParaComparar: _beneficiarioParaComparar,
       mesConciliado: _mesConciliado,
       cuentaConConciliaciones: _cuentaConConciliaciones,
       anuladoEn,

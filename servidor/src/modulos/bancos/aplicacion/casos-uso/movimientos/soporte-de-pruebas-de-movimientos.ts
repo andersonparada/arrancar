@@ -16,6 +16,7 @@ import {
   conceptosDeMovimientosDe,
   conceptosSembrados,
 } from '../../../pruebas/conceptos-de-prueba.js';
+import { CuentasPorPagarFijo } from '../../../pruebas/dobles-de-cheques.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { ActualizarMovimiento } from './actualizar-movimiento.js';
 import { AnularMovimiento } from './anular-movimiento.js';
@@ -23,6 +24,7 @@ import { CrearMovimiento } from './crear-movimiento.js';
 import { EliminarMovimiento } from './eliminar-movimiento.js';
 import { ListarMovimientos } from './listar-movimientos.js';
 import { ObtenerMovimiento } from './obtener-movimiento.js';
+import { ReclasificarVarios } from './reclasificar-varios.js';
 import { ReclasificarMovimientos } from './reclasificar-movimientos.js';
 import { ReporteDeMovimientos } from './reporte-de-movimientos.js';
 
@@ -46,11 +48,14 @@ export const nota = (cambios: Partial<SolicitudDeMovimiento> = {}): SolicitudDeM
 interface Opciones {
   permiteSobregiro?: boolean;
   mismaFecha?: boolean;
+  /** Cuentas por pagar activo: reserva «Pago a proveedores» a ese módulo (P3). */
+  cuentasPorPagar?: boolean;
 }
 
 function dependenciasDe(registros: MovimientosEnMemoria, auditoria: AuditoriaEnMemoria, opciones: Opciones) {
   const politicaDeSobregiro = new PoliticaDeSobregiroFija(opciones.permiteSobregiro ?? false);
   return {
+    cuentasPorPagar: new CuentasPorPagarFijo(opciones.cuentasPorPagar ?? false),
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     repositorio: registros,
     consultas: registros,
@@ -64,10 +69,10 @@ function dependenciasDe(registros: MovimientosEnMemoria, auditoria: AuditoriaEnM
 }
 
 /** Los casos de uso de movimientos armados con dobles en memoria, y los dobles para preparar y revisar. */
-export function armarEntorno({ permiteSobregiro = false, mismaFecha = false }: Opciones = {}) {
+export function armarEntorno({ permiteSobregiro = false, mismaFecha = false, cuentasPorPagar = false }: Opciones = {}) {
   const registros = new MovimientosEnMemoria();
   const auditoria = new AuditoriaEnMemoria();
-  const dependencias = dependenciasDe(registros, auditoria, { permiteSobregiro, mismaFecha });
+  const dependencias = dependenciasDe(registros, auditoria, { permiteSobregiro, mismaFecha, cuentasPorPagar });
   return {
     registros,
     auditoria,
@@ -78,6 +83,8 @@ export function armarEntorno({ permiteSobregiro = false, mismaFecha = false }: O
     anular: new AnularMovimiento(dependencias),
     eliminar: new EliminarMovimiento(dependencias),
     reclasificar: new ReclasificarMovimientos(dependencias),
+    reclasificarCheques: new ReclasificarMovimientos(dependencias, 'cheques'),
+    reclasificarVarios: new ReclasificarVarios(dependencias),
     reporte: new ReporteDeMovimientos(dependencias),
   };
 }

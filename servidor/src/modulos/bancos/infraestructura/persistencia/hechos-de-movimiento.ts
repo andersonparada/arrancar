@@ -4,8 +4,23 @@ import type { HechosDeUnMovimiento } from '../../aplicacion/acciones-posibles.js
 import { conciliaciones } from './conciliaciones.tablas.js';
 import type { movimientos } from './movimientos.tablas.js';
 
-/** La tabla de movimientos, o un alias suyo (una misma consulta puede unirla dos veces). */
-type AliasDeMovimientos = ReturnType<typeof alias<typeof movimientos, string>>;
+/**
+ * La tabla de movimientos, o un alias suyo (una misma consulta puede unirla dos veces). Solo las columnas que
+ * hacen falta: con la columna generada completa, TypeScript no acepta la tabla donde se espera su alias.
+ */
+type AliasDeMovimientos = Pick<
+  ReturnType<typeof alias<typeof movimientos, string>>,
+  | 'tipo'
+  | 'saldoInicial'
+  | 'transferenciaId'
+  | 'conciliacionId'
+  | 'anuladoEn'
+  | 'revertidoEn'
+  | 'revierteAId'
+  | 'moduloDeOrigen'
+  | 'cuentaBancariaId'
+  | 'fecha'
+>;
 
 /** Si `fecha` cae en un mes ya conciliado (autorizado) de la cuenta. */
 export const mesConciliadoDe = (cuentaBancariaId: AnyColumn, fecha: AnyColumn) =>

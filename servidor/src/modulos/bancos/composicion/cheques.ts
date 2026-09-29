@@ -6,6 +6,8 @@ import { BlanquearCheque } from '../aplicacion/casos-uso/cheques/blanquear-chequ
 import { EmitirCheque } from '../aplicacion/casos-uso/cheques/emitir-cheque.js';
 import { ListarChequesDeLaEmpresa } from '../aplicacion/casos-uso/cheques/listar-cheques-de-la-empresa.js';
 import { SiguienteChequeDisponible } from '../aplicacion/casos-uso/cheques/siguiente-cheque-disponible.js';
+import { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
+import { casosDeSugerencias } from './sugerencias.js';
 import { ReglasDeLaCuenta } from '../aplicacion/reglas-de-la-cuenta.js';
 import { ChequesControlador } from '../http/cheques.controlador.js';
 import { rutasCheques } from '../http/cheques.rutas.js';
@@ -47,6 +49,18 @@ export function rutasDeCheques() {
     emitir: new EmitirCheque(dependencias),
     anular: new AnularCheque(dependencias),
     blanquear: new BlanquearCheque(dependencias),
+    reclasificar: new ReclasificarMovimientos(
+      {
+        unidadDeTrabajo: dependencias.unidadDeTrabajo,
+        repositorio: dependencias.repositorioMovimientos,
+        consultas: dependencias.consultasMovimientos,
+        auditoria: dependencias.auditoria,
+        conceptos: dependencias.conceptos,
+        cuentasPorPagar: dependencias.cuentasPorPagar,
+      },
+      'cheques',
+    ),
+    sugerirAlCapturar: casosDeSugerencias(dependencias).sugerirAlCapturar,
   };
   return rutasCheques(new ChequesControlador(casos));
 }

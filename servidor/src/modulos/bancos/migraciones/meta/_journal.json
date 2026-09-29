@@ -169,6 +169,27 @@
       "when": 1790701982970,
       "tag": "0023_permisos_por_accion",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790714419222,
+      "tag": "0024_nombre_para_comparar",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790714457289,
+      "tag": "0025_beneficiario_para_comparar",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790714854726,
+      "tag": "0026_permiso_de_reclasificar_cheques",
+      "breakpoints": true
     }
   ]
 }

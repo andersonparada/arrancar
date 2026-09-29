@@ -10,6 +10,7 @@ import {
   MESES_MAXIMOS_DE_VENCIMIENTO,
   MESES_MINIMOS_DE_VENCIMIENTO,
 } from './dominio/cheques-en-circulacion.js';
+import { CONFIANZA_MINIMA_POR_OMISION, VIDA_MEDIA_POR_OMISION } from './dominio/sugerencias/constantes.js';
 import { rutasDeConciliaciones } from './composicion/conciliaciones.js';
 import { rutasDeCorrelativos } from './composicion/correlativos.js';
 import { rutasDeCuentasBancarias } from './composicion/cuentas-bancarias.js';
@@ -62,6 +63,7 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.cheques.ver', descripcion: 'Ver cheques' },
     { clave: 'bancos.cheques.emitir', descripcion: 'Emitir cheques' },
     { clave: 'bancos.cheques.anular', descripcion: 'Anular cheques' },
+    { clave: 'bancos.cheques.reclasificar', descripcion: 'Reclasificar el concepto de cheques ya emitidos' },
     { clave: 'bancos.cheques.blanquear', descripcion: 'Blanquear cheques emitidos por error' },
     { clave: 'bancos.cheques-caducos.ver', descripcion: 'Ver el reporte de cheques caducos' },
     { clave: 'bancos.cheques-caducos.exportar', descripcion: 'Exportar el reporte de cheques caducos a Excel' },
@@ -113,6 +115,22 @@ export const moduloBancos: DefinicionModulo = {
       predeterminado: MESES_DE_VENCIMIENTO_POR_OMISION,
       niveles: ['instalacion', 'empresa'],
       publica: true,
+    }),
+    definirConfiguracion({
+      clave: 'bancos.sugerencias.vida_media_dias',
+      descripcion: 'Días tras los cuales un movimiento clasificado pesa la mitad al sugerir el concepto de otro.',
+      esquema: z.number().int().min(30).max(1095),
+      predeterminado: VIDA_MEDIA_POR_OMISION,
+      niveles: ['instalacion', 'empresa'],
+      publica: false,
+    }),
+    definirConfiguracion({
+      clave: 'bancos.sugerencias.confianza_minima',
+      descripcion: 'Confianza (en %) desde la que un concepto se muestra como sugerido.',
+      esquema: z.number().int().min(30).max(95),
+      predeterminado: CONFIANZA_MINIMA_POR_OMISION,
+      niveles: ['instalacion', 'empresa'],
+      publica: false,
     }),
   ],
   rutas: rutasDelModulo([

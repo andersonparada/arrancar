@@ -349,19 +349,19 @@ Cuerpo `{ tipo?, cuentaBancariaId, fecha?, monto?, beneficiario?, referencia?, o
 
 ## 9. Pasos de implementación (un commit cada uno)
 
-**Servidor**
+**Servidor** (S1, S2, S3, S4 y S6 hechos el 2026-09-29; falta S5, que el usuario dejó para después)
 
-1. **S1** Migración `--custom`: función `bancos.nombre_para_comparar`; luego la generada por
+1. **S1** (hecho) Migración `--custom`: función `bancos.nombre_para_comparar`; luego la generada por
    `bd:generar`: columna `beneficiario_para_comparar` e índice. `when` mayor que 1790701982970 (la
    `0023`). Prueba API de la función.
-2. **S2** Dominio puro `dominio/sugerencias/` con sus pruebas y la de calidad sintética.
-3. **S3** Puerto, consultas Drizzle, caso de uso, las dos variables en `modulo.ts`,
+2. **S2** (hecho) Dominio puro `dominio/sugerencias/` con sus pruebas y la de calidad sintética.
+3. **S3** (hecho) Puerto, consultas Drizzle, caso de uso, las dos variables en `modulo.ts`,
    `GET /bancos/notas/sugerencias-de-concepto` y pruebas de casos de uso y API.
-4. **S4** `ReclasificarVarios` y `POST /bancos/notas/reclasificar-varios`; si la pregunta 2 es sí,
+4. **S4** (hecho) `ReclasificarVarios` y `POST /bancos/notas/reclasificar-varios`; si la pregunta 2 es sí,
    tolerancia de P3 en ambos reclasificar. Pruebas.
 5. **S5** (opcional) Beneficiarios parecidos: `create extension if not exists pg_trgm` en la migración
    de bancos (no depende del orden de terceros), índice GIN `gin_trgm_ops` y consulta con `lateral`.
-6. **S6** (si la pregunta 1 es sí) Las dos rutas de captura y sus pruebas.
+6. **S6** (hecho) (si la pregunta 1 es sí) Las dos rutas de captura y sus pruebas.
 
 **Cliente**
 
@@ -406,3 +406,10 @@ Mandan sobre las preguntas de arriba; todas con lo recomendado.
 5. **«Reclasificar»** en el reporte de movimientos (notas y cheques, con permiso y
    auditoría): sí, antes de aceptar en lote.
 6. **Beneficiarios mal escritos** (`pg_trgm`, S5): después, con datos reales.
+
+## Hecho en el servidor (2026-09-29)
+
+S1, S2, S3, S4 y S6 están hechos; el detalle y las decisiones están en `bancos.md` (sección «P7: sugerencias de concepto»). También
+la parte de servidor de dos respuestas: «Pago a proveedores» en la bandeja para cheques (misma regla de P3) y **Reclasificar** un
+cheque (`POST /bancos/cheques/reclasificar`, permiso `bancos.cheques.reclasificar`). Pendiente: S5 y el cliente (C1 a C3, más el
+«Reclasificar» del reporte con estos permisos).

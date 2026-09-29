@@ -1,6 +1,8 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import type { ChequesControlador } from './cheques.controlador.js';
+import { esquemaReclasificacion } from './notas.esquemas-http.js';
+import { esquemaSugerenciaDeCheque } from './sugerencias.esquemas-http.js';
 import {
   esquemaAnulacionDeCheque,
   esquemaBlanqueoDeCheque,
@@ -27,6 +29,20 @@ function rutasDeLectura(app: Aplicacion, controlador: ChequesControlador) {
   });
 }
 
+/** Sugerir el concepto al capturar un cheque (con el permiso de emitir) y reclasificarlo (con el suyo). */
+function rutasDeConcepto(app: Aplicacion, controlador: ChequesControlador) {
+  app.post('/bancos/cheques/sugerir-concepto', {
+    schema: { tags: etiquetas, body: esquemaSugerenciaDeCheque },
+    preHandler: proteger({ permiso: 'bancos.cheques.emitir' }),
+    handler: controlador.sugerirConcepto,
+  });
+  app.post('/bancos/cheques/reclasificar', {
+    schema: { tags: etiquetas, body: esquemaReclasificacion },
+    preHandler: proteger({ permiso: 'bancos.cheques.reclasificar' }),
+    handler: controlador.reclasificar,
+  });
+}
+
 /** Emitir, anular y blanquear: cada uno con su permiso. */
 function rutasDeEscritura(app: Aplicacion, controlador: ChequesControlador) {
   app.post('/bancos/cheques/:chequeId/emitir', {
@@ -46,10 +62,11 @@ function rutasDeEscritura(app: Aplicacion, controlador: ChequesControlador) {
   });
 }
 
-/** Ver, emitir, anular y blanquear cheques: la lista es operación (los emitidos y anulados); sin Excel. */
+/** Ver, emitir, anular, blanquear y reclasificar cheques: la lista es operación (los emitidos y anulados); sin Excel. */
 export function rutasCheques(controlador: ChequesControlador): FastifyPluginAsyncZod {
   return async (app) => {
     rutasDeLectura(app, controlador);
+    rutasDeConcepto(app, controlador);
     rutasDeEscritura(app, controlador);
   };
 }
