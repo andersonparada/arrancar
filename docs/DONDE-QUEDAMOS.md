@@ -42,7 +42,9 @@ decisiones e investigación con Opus).
   determinista (lo demás a «Sin clasificar»), inversos heredan, reclasificar en lote
   con auditoría, bandeja `/bancos/sin-clasificar`. Pendiente por P1, P6 y P8:
   `cheque_caduco`, columnas de origen, `causa_de_anulacion` y conceptos nuevos.
-- Pruebas: servidor 769, cliente 206, generador 46.
+- **H3c** (`92a08f0`, `0431b0c`): reportes Flujo de efectivo (método directo, control
+  de cuadre) y Movimientos por concepto.
+- Pruebas: servidor 793, cliente 224, generador 46.
 - Investigaciones cerradas:
   - `docs/modulos/seguridad-de-archivos.md` (agente de seguridad).
   - `docs/modulos/validacion-h7-h11-retenciones.md` (contador).
@@ -50,7 +52,8 @@ decisiones e investigación con Opus).
 
 ## Siguiente
 
-1. **H3c** reportes Flujo de efectivo y Movimientos por concepto (en curso).
+1. **H5** esquema `empresas`: datos fiscales, carga inicial y política de alcance
+   opcional (no dependen de las preguntas 29–35); lo demás espera la pregunta 29.
 2. **H6b** anulación en lote (el concepto del inverso depende de P1), **H8**, archivos PDF, **H2**, **H6**, **H5** (esquema
    `empresas`, falta el diseño del arquitecto de datos), y H10/H11/H7 dentro de Libro
    de compras.
@@ -105,3 +108,13 @@ decisiones e investigación con Opus).
 26. P6 Columnas de módulo y documento de origen: ¿en H3b o en Cuentas por pagar?
 27. P7 ¿Sugerencias de concepto en la bandeja «Sin clasificar», con confirmación?
 28. P8 ¿Se agregan los conceptos sugeridos nuevos a la semilla?
+
+**Esquema `empresas`** (detalle en `diseno-esquema-empresas.md`):
+29. ¿`empresas` como **módulo base**, del que otros módulos pueden poner llaves foráneas
+    y leer sus tablas en SQL? (excepción a «entre módulos, sin llave foránea»).
+30. ¿Accesos a localidades en `core.accesos_datos` y `core.empresa_usuarios` en el core?
+31. ¿Tipos de localidad por empresa (propuesto) o por cuenta?
+32. ¿Código interno de localidad y departamento obligatorio?
+33. ¿Nombre de departamento único en toda la empresa?
+34. ¿Crear localidades exige ver todas las localidades?
+35. ¿Una empresa con localidades cuenta como «con datos» (no se elimina, se inactiva)?

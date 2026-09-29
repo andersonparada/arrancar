@@ -759,6 +759,10 @@ Pasos (un commit cada uno, con sus pruebas):
    original; `sin_clasificar` solo por migración; el origen fija el concepto). Ocho
    preguntas (P1–P8) para el usuario.
 4. **Esquema `empresas`**: qué se mueve del core y cómo afecta RLS, sesión y el módulo `empresas` que ya existe.
+   **Diseñado (2026-09-29):** `docs/modulos/diseno-esquema-empresas.md` (reemplaza
+   `core.localidades` y `core.areas` de la sección H5 y de los pasos 15–17). Siete
+   preguntas para el usuario; la 1 (módulo base con FK desde otros módulos) es la que
+   bloquea.
 
 ### Baja de un cliente (decisión del 2026-09-28, posterior)
 
