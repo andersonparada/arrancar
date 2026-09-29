@@ -774,6 +774,9 @@ Mandan sobre las preguntas de la §16.
    pagar CP1 va justo después de L3**.
 10. **Agente de retención:** se **exigen** los datos fiscales del proveedor antes de
     registrarle una factura.
-11. Conceptos de gasto sugeridos y 13. auditar cambios de datos fiscales: pendientes de
-    responder (no bloquean L1). 12. Preguntas para el contador: pendientes.
+11. **Conceptos de gasto sugeridos:** sí, una lista sugerida editable al activar el
+    módulo (como los conceptos de Bancos).
+12. Preguntas para el contador: pendientes.
+13. **Auditar cambios de datos fiscales** (régimen, agente de retención) de empresas y
+    proveedores: sí.
 

@@ -102,3 +102,10 @@ reporte y a la conciliación de libros). Flujo de efectivo: saldos iniciales 10,
 - `cliente/src/modulos/core/componentes/roles/SelectorDePermisos.vue`
 - `cliente/src/modulos/core/composables/roles/edicion-de-rol.ts` y `logica-de-pantallas-del-core.prueba.ts`
 - `cliente/src/modulos/bancos/paginas/ListaDeNotas.vue`
+
+## Decisiones del usuario (2026-09-29)
+
+- **Primera conciliación en cualquier mes:** se deja como está (B5 lo permite a
+  propósito para cuentas con historia). No es un error.
+- **Fechas futuras** en notas, transferencias y saldos iniciales: **se permiten con
+  aviso** en pantalla (los cheques posfechados ya estaban permitidos).
