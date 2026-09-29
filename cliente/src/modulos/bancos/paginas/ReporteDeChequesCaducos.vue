@@ -11,8 +11,11 @@ import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { formatearTexto } from '@/modulos/core/utilidades/formato';
 import FiltrosDeChequesCaducos from '../componentes/cheques-caducos/FiltrosDeChequesCaducos.vue';
 import ResumenDeChequesCaducos from '../componentes/cheques-caducos/ResumenDeChequesCaducos.vue';
+import BarraDeAnulacionEnLote from '../componentes/cheques-caducos/BarraDeAnulacionEnLote.vue';
 import TablaDeChequesCaducos from '../componentes/cheques-caducos/TablaDeChequesCaducos.vue';
 import { filtroDeLaConsulta } from '../composables/cheques-caducos/filtros-de-cheques-caducos';
+import VentanaDeAnulacionEnLote from '../componentes/cheques-caducos/VentanaDeAnulacionEnLote.vue';
+import { usarAnulacionDeChequesCaducos } from '../composables/cheques-caducos/usar-anulacion-de-cheques-caducos';
 import { usarReporteDeChequesCaducos } from '../composables/cheques-caducos/usar-reporte-de-cheques-caducos';
 import { apiChequesCaducos } from '../servicios/cheques-caducos.api';
 import { VENTANAS_BANCOS } from '../textos';
@@ -20,7 +23,9 @@ import { VENTANAS_BANCOS } from '../textos';
 const PERMISOS_DE_INTERCAMBIO = { exportar: 'bancos.cheques-caducos.exportar' };
 const ventana = VENTANAS_BANCOS.chequesCaducos;
 const sesion = usarSesion();
-const { filtros, reporte, cargando, opcionesDeCuenta, mesesDeLaEmpresa } = usarReporteDeChequesCaducos();
+const { filtros, reporte, cargando, cargar, opcionesDeCuenta, mesesDeLaEmpresa } = usarReporteDeChequesCaducos();
+const anulacion = usarAnulacionDeChequesCaducos({ reporte, mesesDeLaEmpresa, alTerminar: cargar });
+const puedeAnular = computed(() => sesion.puede('bancos.cheques-caducos.anular'));
 const intercambio = usarIntercambio(apiChequesCaducos.intercambio, async () => {});
 
 const cuentaElegida = computed(() => opcionesDeCuenta.value.find((o) => o.valor === filtros.cuentaBancariaId)?.texto);
@@ -59,7 +64,34 @@ const exportar = (): Promise<void> => intercambio.exportar(filtroDeLaConsulta(fi
     />
     <template v-else>
       <ResumenDeChequesCaducos :reporte="reporte" />
-      <TablaDeChequesCaducos :cheques="reporte.cheques" />
+      <TablaDeChequesCaducos
+        :cheques="reporte.cheques"
+        :seleccionable="puedeAnular"
+        :seleccion="anulacion.seleccion.value"
+        :todos-marcados="anulacion.todosMarcados.value"
+        @marcar="anulacion.marcar"
+        @marcar-todos="anulacion.marcarTodos"
+      />
     </template>
+    <BarraDeAnulacionEnLote
+      v-if="puedeAnular"
+      :cantidad="anulacion.total.value.cantidad"
+      :monto="anulacion.total.value.monto"
+      @anular="anulacion.ventana.abrir"
+      @limpiar="anulacion.marcarTodos(false)"
+    />
+    <VentanaDeAnulacionEnLote
+      v-model:motivo="anulacion.ventana.motivo.value"
+      v-model:fecha="anulacion.ventana.fecha.value"
+      v-model:confirmado="anulacion.ventana.confirmado.value"
+      :abierta="anulacion.ventana.abierta.value"
+      :cantidad="anulacion.total.value.cantidad"
+      :monto="anulacion.total.value.monto"
+      :errores="anulacion.ventana.errores.value"
+      :problemas="anulacion.ventana.problemas.value"
+      :enviando="anulacion.ventana.enviando.value"
+      @cerrar="anulacion.ventana.abierta.value = false"
+      @confirmar="anulacion.ventana.anular"
+    />
   </div>
 </template>

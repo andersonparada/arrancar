@@ -1557,3 +1557,32 @@ la parte de servidor de dos respuestas más; falta solo S5 (`pg_trgm`, «despué
   `puedeReclasificar`, no está anulado y el usuario tiene `bancos.notas.editar` (notas) o `bancos.cheques.reclasificar`
   (cheques); ventana con el movimiento, el concepto nuevo (sin el actual) y el resumen del cambio; usa `POST /notas/reclasificar`
   o `POST /cheques/reclasificar` con un solo id.
+
+## H6b Anulación en lote de cheques caducos (servidor y cliente hechos el 2026-09-29)
+
+Plan: `plan-hallazgos-contables.md`, H6 («Anulación en lote» e «Interfaz»). Desde la pantalla de Cheques caducos.
+
+- **Endpoint** `POST /api/bancos/cheques/anular-en-lote`, cuerpo `{ chequeIds (1 a 200 uuid), motivo (1 a 500), fecha? }`.
+  Permiso **propio** `bancos.cheques-caducos.anular` (PLAN §3.5: anular cheques sueltos, `bancos.cheques.anular`, no basta). La migración
+  `0027_h6b_permiso_de_anular_cheques_caducos` lo da, por rol y por usuario, a quien ya tenía `bancos.cheques.anular`.
+  Responde `{ totalDeCheques, montoTotal, fecha }`.
+- **Caso de uso** `AnularChequesCaducos`: una sola transacción, todo o nada. Calcula la fecha de corte con la variable de meses de la
+  empresa y pide al reporte solo esos cheques (`ConsultasDeChequesEnCirculacion.listar({ chequeIds })`): un cheque que ya no aparece
+  (cobrado, anulado, revertido, reciente o disponible) es un problema `cheque_no_es_caduco`. Cada cheque pasa por `AnularCheque` con
+  `causa: 'caducidad'` y el nuevo modo `conInversoSiempre`: **siempre** nota de crédito inversa, aunque el mes del cheque siga abierto (así
+  no cambia el saldo de meses pasados). El inverso hereda el concepto del cheque, lleva el número correlativo de H9 y la fecha común.
+  Auditoría: una entrada `anular` por cheque con el mismo motivo (la escribe `AnularCheque`, en la misma transacción).
+- **Fecha común**: por omisión hoy (zona de la empresa); una fecha posterior a hoy se rechaza (400 `fecha_de_anulacion_futura`);
+  las reglas de siempre siguen: no anterior a la del cheque ni dentro de un mes conciliado de su cuenta (esos cheques salen como problema).
+- **Si algo falla** no se anula ninguno: 422 `anulacion_en_lote_con_problemas` con `detalles: [{ chequeId, codigo, mensaje }]` (como el
+  importar de Excel). Solo se atrapan errores esperados; un fallo de programa o de base de datos sube tal cual y deshace todo.
+- **Cliente**: casilla por fila y «seleccionar todo lo filtrado» (solo con el permiso; no se imprimen), barra fija abajo «N cheques · Q total ·
+  Anular seleccionados» (suma en centavos) y una ventana única con fecha, motivo (sugerido «Cheque caduco: más de 7 meses sin cobrar», con
+  el plazo de la empresa), el resumen «Se crearán N notas de crédito por Q en la fecha D» y una **casilla de confirmación** que habilita el
+  botón. Los problemas del servidor se listan por cheque dentro de la ventana. Al terminar se recarga el reporte y se limpia la selección; si
+  el reporte cambia, se olvida lo seleccionado que ya no está.
+- **Decisiones**: el resumen no dice cuántos cheques pagaban facturas de proveedores porque hoy todos son sueltos (Cuentas por pagar aún no
+  existe; cuando exista, el aviso `bancos.movimiento_de_origen_anulado` y ese dato se suman). El aviso del tablero queda para cuando haya panel.
+- **Pruebas**: caso de uso (`anular-cheques-caducos.prueba.ts`), API (`bancos-anular-cheques-caducos.api.prueba.ts`: todo o nada, inversos
+  a la fecha común con mes abierto, causa, auditoría, validaciones y permiso propio; `bancos-migracion-de-permiso-de-anular-caducos`) y cliente
+  (`seleccion-de-cheques-caducos.prueba.ts`).

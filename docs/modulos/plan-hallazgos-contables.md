@@ -668,7 +668,7 @@ Pasos (un commit cada uno, con sus pruebas):
 11. **Archivos PDF** en `core/archivos`.
 12. **H2** Saldo del estado de cuenta y archivo en la conciliación.
 13. **H6a** Reporte de cheques caducos (índice, filtros, imprimir, exportar).
-14. **H6b** Anulación en lote.
+14. **H6b** Anulación en lote. **Hecho (2026-09-29)**, servidor y cliente: ver `bancos.md`, sección H6b.
 15. **H5a** Datos fiscales de la empresa, fecha de inicio y carga inicial.
 16. **H5b** [HECHO] localidades (esquema `empresas`) con accesos en `empresas.accesos_a_localidades` y `politicaPorAlcanceOpcional`; ver `diseno-accesos-por-modulo.md`.
 17. **H5c** [HECHO] departamentos (`empresas.departamentos`, localidad opcional) en lugar de `core.areas`.

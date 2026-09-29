@@ -9,3 +9,12 @@ export const esquemaFiltroDeChequesCaducos = z.object({
 });
 
 export type FiltroDeChequesCaducosSolicitado = z.infer<typeof esquemaFiltroDeChequesCaducos>;
+
+/** Anulación en lote: 1 a 200 cheques; `fecha` es la de todas las notas inversas (por omisión, hoy). */
+export const esquemaAnulacionEnLoteDeChequesCaducos = z.object({
+  chequeIds: z.array(z.uuid()).min(1).max(200),
+  motivo: z.string().trim().min(1).max(500),
+  fecha: z.iso.date().optional(),
+});
+
+export type AnulacionEnLoteSolicitada = z.infer<typeof esquemaAnulacionEnLoteDeChequesCaducos>;

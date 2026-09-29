@@ -12,9 +12,11 @@ import type { ChequeCaduco } from '../../servicios/cheques-caducos.api';
 
 /**
  * Una fila del reporte. Los días de antigüedad van destacados: en amarillo al pasar el plazo y en rojo
- * pasado un año. Es una fila aparte para que la anulación en lote le agregue su casilla al inicio.
+ * pasado un año. Con `seleccionable` lleva la casilla de la anulación en lote al inicio (no se imprime).
  */
-const props = defineProps<{ cheque: ChequeCaduco }>();
+const props = defineProps<{ cheque: ChequeCaduco; seleccionable: boolean; marcado: boolean }>();
+const emit = defineEmits<{ marcar: [marcado: boolean] }>();
+const alMarcar = (evento: Event): void => emit('marcar', (evento.target as HTMLInputElement).checked);
 
 const TONO = { vencido: 'trigo', 'muy-vencido': 'rojo' } as const;
 const antiguedad = computed(() => textoDeAntiguedad(props.cheque.diasDeAntiguedad));
@@ -22,7 +24,16 @@ const tono = computed(() => TONO[nivelDeAntiguedad(props.cheque.diasDeAntiguedad
 </script>
 
 <template>
-  <tr>
+  <tr :class="{ 'bg-campo-50 dark:bg-campo-900/20': marcado }">
+    <td v-if="seleccionable" class="px-4 py-2.5 print:hidden">
+      <input
+        type="checkbox"
+        class="size-4 rounded"
+        :aria-label="`Seleccionar el cheque ${numeroDeChequeConSerie(cheque)} de ${cheque.cuentaBancariaNombre}`"
+        :checked="marcado"
+        @change="alMarcar"
+      />
+    </td>
     <td class="px-4 py-2.5">{{ cheque.cuentaBancariaNombre }}</td>
     <td class="px-4 py-2.5 whitespace-nowrap">{{ numeroDeChequeConSerie(cheque) }}</td>
     <td class="px-4 py-2.5 whitespace-nowrap">{{ formatearFecha(cheque.fecha) }}</td>

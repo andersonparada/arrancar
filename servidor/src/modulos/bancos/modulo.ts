@@ -67,6 +67,7 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.cheques.blanquear', descripcion: 'Blanquear cheques emitidos por error' },
     { clave: 'bancos.cheques-caducos.ver', descripcion: 'Ver el reporte de cheques caducos' },
     { clave: 'bancos.cheques-caducos.exportar', descripcion: 'Exportar el reporte de cheques caducos a Excel' },
+    { clave: 'bancos.cheques-caducos.anular', descripcion: 'Anular cheques caducos en lote (crea sus notas inversas)' },
     { clave: 'bancos.conciliaciones.ver', descripcion: 'Ver conciliaciones' },
     { clave: 'bancos.conciliaciones.conciliar', descripcion: 'Marcar documentos y terminar conciliaciones' },
     { clave: 'bancos.conciliaciones.autorizar', descripcion: 'Autorizar o devolver conciliaciones' },
