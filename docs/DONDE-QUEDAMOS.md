@@ -187,7 +187,7 @@ En `main`, además de lo anterior:
   `docs/modulos/validacion-h7-h11-retenciones.md` (casilla SAT desmarcada no calcula
   retenciones, riesgo aceptado; IDP en la base del ISR configurable por empresa).
 
-Solo en la rama `claude/serene-mayer-picg8x` (**no en `main`**, pantallas a medias):
+También en `main`, **a medias y sin correr pruebas tras unirlo** (el usuario pidió pasarlo a `main` y borrar la rama):
 - **Libro de compras L1** (`b1bb5f4` … `9b03716`): L1-1 a L1-4 del servidor completos
   (unique en `terceros.proveedores`, módulo `libro-de-compras`, secciones aportadas a
   Empresas y Proveedores con avisos del mediador, datos fiscales de empresa y proveedor
@@ -199,7 +199,7 @@ Solo en la rama `claude/serene-mayer-picg8x` (**no en `main`**, pantallas a medi
 
 ## Siguiente (mañana)
 
-1. **Terminar L1** (pantallas), correr todas las pruebas y subirlo a `main`.
+1. **Terminar L1** (pantallas) y correr todas las pruebas: `main` tiene L1 a medias.
 2. **H2a–H2d**: saldo transcrito y estado de cuenta en la conciliación
    (`plan-archivos-y-h2.md`; la ruta de subida debe usar `limitarSubidas`). Pedir al
    usuario un PDF real de banco con datos tachados.
