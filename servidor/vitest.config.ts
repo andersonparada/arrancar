@@ -1,5 +1,7 @@
 import { defineConfig } from 'vitest/config';
 
+const basePruebas = process.env.BD_PRUEBAS ?? 'arrancar_pruebas';
+
 export default defineConfig({
   test: {
     include: ['src/**/*.prueba.ts'],
@@ -8,8 +10,8 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       URL_PUBLICA: 'http://localhost:5180',
-      DATABASE_URL: 'postgres://arrancar_app:arrancar_app@localhost:5433/arrancar_pruebas',
-      DATABASE_URL_PROPIETARIO: 'postgres://arrancar:arrancar@localhost:5433/arrancar_pruebas',
+      DATABASE_URL: `postgres://arrancar_app:arrancar_app@localhost:5433/${basePruebas}`,
+      DATABASE_URL_PROPIETARIO: `postgres://arrancar:arrancar@localhost:5433/${basePruebas}`,
       RUTA_ALMACENAMIENTO: './almacenamiento-pruebas',
     },
   },
