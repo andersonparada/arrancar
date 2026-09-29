@@ -9,10 +9,14 @@ import { RolesControlador } from './http/roles.controlador.js';
 import { rutasRoles } from './http/roles.rutas.js';
 import { CatalogoDePermisosEnRegistro } from './infraestructura/catalogo-de-permisos-en-registro.js';
 import { ConsultasRolesDrizzle } from './infraestructura/persistencia/consultas-roles.drizzle.js';
+import { PermisosDeUsuarioDrizzle } from './infraestructura/persistencia/permisos-de-usuario.drizzle.js';
 import { RepositorioRolesDrizzle } from './infraestructura/persistencia/repositorio-roles.drizzle.js';
 
 /** La sesión y los usuarios también consultan los roles con esta pieza. */
 export const consultasRoles = new ConsultasRolesDrizzle(bd);
+
+/** La sesión calcula con esta pieza los permisos efectivos de cada usuario. */
+export const permisosDeUsuario = new PermisosDeUsuarioDrizzle(bd);
 
 /** Raíz de composición del contexto de autorización. */
 export function componerAutorizacion({ unidadDeTrabajo, auditoria }: DependenciasCompartidas) {
@@ -22,7 +26,7 @@ export function componerAutorizacion({ unidadDeTrabajo, auditoria }: Dependencia
     listar: new ListarRoles({ consultas: consultasRoles }),
     listarPermisos: new ListarPermisosAsignables({ catalogo }),
     crear: new CrearRol({ unidadDeTrabajo, repositorio, catalogo }),
-    actualizar: new ActualizarRol({ unidadDeTrabajo, repositorio, catalogo }),
+    actualizar: new ActualizarRol({ unidadDeTrabajo, repositorio, catalogo, auditoria }),
     eliminar: new EliminarRol({ unidadDeTrabajo, repositorio, auditoria }),
   });
   return rutasRoles(controlador);

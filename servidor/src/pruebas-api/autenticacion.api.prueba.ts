@@ -57,7 +57,7 @@ describe('sesión', () => {
     expect(sesion.cuerpo).toMatchObject({
       usuario: { usuario: 'jlopez', esSuperacceso: false },
       empresa: { id: cuenta.empresaId },
-      rolNombre: 'Propietario',
+      roles: ['Propietario'],
     });
     expect(sesion.cuerpo.permisos).toContain('usuarios.crear');
     expect(sesion.cuerpo.empresasDisponibles).toHaveLength(1);

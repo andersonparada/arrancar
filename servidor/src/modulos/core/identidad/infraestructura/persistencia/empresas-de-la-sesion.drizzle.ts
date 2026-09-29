@@ -1,10 +1,9 @@
 import { and, asc, eq } from 'drizzle-orm';
-import { roles } from '../../../autorizacion/infraestructura/persistencia/roles.tablas.js';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
 import type { EmpresaSesion } from '../../../compartido/aplicacion/contexto-de-sesion.js';
 import { cuentaModulos, cuentas } from '../../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas, empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
-import type { AccesoDelUsuario, EmpresasDeLaSesion } from '../../aplicacion/puertos/empresas-de-la-sesion.js';
+import type { EmpresasDeLaSesion } from '../../aplicacion/puertos/empresas-de-la-sesion.js';
 
 const columnasDeEmpresa = {
   id: empresas.id,
@@ -28,17 +27,16 @@ export class EmpresasDeLaSesionDrizzle implements EmpresasDeLaSesion {
     return empresa ?? null;
   }
 
-  async accesoDe(usuarioId: string, empresaId: string): Promise<AccesoDelUsuario | null> {
-    const [acceso] = await this.bd
-      .select({ rolId: roles.id, rolNombre: roles.nombre, accesoTotal: roles.accesoTotal })
+  async esMiembro(usuarioId: string, empresaId: string): Promise<boolean> {
+    const [fila] = await this.bd
+      .select({ usuarioId: empresaUsuarios.usuarioId })
       .from(empresaUsuarios)
-      .innerJoin(roles, eq(roles.id, empresaUsuarios.rolId))
       .innerJoin(empresas, eq(empresas.id, empresaUsuarios.empresaId))
       .innerJoin(cuentas, eq(cuentas.id, empresas.cuentaId))
       .where(
         and(eq(empresaUsuarios.usuarioId, usuarioId), eq(empresaUsuarios.empresaId, empresaId), empresaYCuentaActivas),
       );
-    return acceso ?? null;
+    return fila !== undefined;
   }
 
   disponiblesPara(usuarioId: string): Promise<EmpresaSesion[]> {

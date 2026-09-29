@@ -17,7 +17,8 @@ export interface ContextoDeSesion {
   sesionId: string;
   usuario: UsuarioSesion;
   empresa: EmpresaSesion | null;
-  rolNombre: string | null;
+  /** Nombres de los roles del usuario en la cuenta (vacío si solo tiene permisos directos). */
+  roles: readonly string[];
   modulosActivos: ReadonlySet<string>;
   permisos: ReadonlySet<string>;
   /** Recursos con alcance que el usuario ve completos (ver `politicaPorAlcance`). */

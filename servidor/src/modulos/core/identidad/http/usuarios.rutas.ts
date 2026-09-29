@@ -2,6 +2,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../compartido/http/guardias.js';
 import type { UsuariosControlador } from './usuarios.controlador.js';
 import {
+  esquemaAsignaciones,
   esquemaCambioContrasena,
   esquemaCambioUsuario,
   esquemaNuevoUsuario,
@@ -41,6 +42,19 @@ function rutasDeCambio(app: Aplicacion, usuarios: UsuariosControlador): void {
   });
 }
 
+function rutasDePermisos(app: Aplicacion, usuarios: UsuariosControlador): void {
+  app.get('/usuarios/:usuarioId/permisos', {
+    schema: { tags, params: esquemaParamsUsuario },
+    preHandler: proteger({ permiso: 'usuarios.ver' }),
+    handler: usuarios.permisos,
+  });
+  app.put('/usuarios/:usuarioId/permisos', {
+    schema: { tags, params: esquemaParamsUsuario, body: esquemaAsignaciones },
+    preHandler: proteger({ permiso: 'usuarios.asignar-permisos' }),
+    handler: usuarios.asignarPermisos,
+  });
+}
+
 export function rutasUsuarios(usuarios: UsuariosControlador): FastifyPluginAsyncZod {
   return async (app) => {
     app.get('/usuarios', {
@@ -50,5 +64,6 @@ export function rutasUsuarios(usuarios: UsuariosControlador): FastifyPluginAsync
     });
     rutasDeAlta(app, usuarios);
     rutasDeCambio(app, usuarios);
+    rutasDePermisos(app, usuarios);
   };
 }

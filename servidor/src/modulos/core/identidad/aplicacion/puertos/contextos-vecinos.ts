@@ -3,8 +3,11 @@
  * piezas (autorización, configuración y bitácora); identidad no conoce su código.
  */
 
-export interface PermisosDeRoles {
-  permisosDelRol(rolId: string): Promise<string[]>;
+import type { AsignacionesDelUsuario } from '../permisos-efectivos.js';
+
+export interface PermisosDeUsuario {
+  /** Roles (con sus permisos) y permisos directos del usuario en la cuenta. */
+  enCuenta(usuarioId: string, cuentaId: string): Promise<AsignacionesDelUsuario>;
 }
 
 export interface ConfiguracionPublica {

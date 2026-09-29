@@ -1,9 +1,9 @@
 import { and, count, eq } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { Identificador, type CuentaId } from '../../../compartido/dominio/identificador.js';
-import { empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { RepositorioRoles } from '../../aplicacion/puertos/repositorio-roles.js';
 import { Rol, type RolId, type UsoDelRol } from '../../dominio/rol.js';
+import { usuarioRoles } from './permisos-de-usuario.tablas.js';
 import { actualizarRol, insertarRol } from './escritura-de-roles.js';
 import { rolPermisos, roles } from './roles.tablas.js';
 
@@ -32,8 +32,8 @@ export class RepositorioRolesDrizzle implements RepositorioRoles {
     const tx = transaccionEnCurso();
     const [asignados] = await tx
       .select({ total: count() })
-      .from(empresaUsuarios)
-      .where(eq(empresaUsuarios.rolId, rol.id.valor));
+      .from(usuarioRoles)
+      .where(eq(usuarioRoles.rolId, rol.id.valor));
     const [conAccesoTotal] = await tx
       .select({ total: count() })
       .from(roles)

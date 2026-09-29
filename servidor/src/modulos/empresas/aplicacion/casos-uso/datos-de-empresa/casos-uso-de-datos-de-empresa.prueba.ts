@@ -56,7 +56,7 @@ beforeEach(async () => {
   });
   empresaId = empresa.id.valor;
   await empresas.agregar(empresa);
-  await accesos.darAcceso({ empresaId, usuarioId: operador.usuarioId, rolId: 'rol-propietario' });
+  await accesos.darAcceso({ empresaId, usuarioId: operador.usuarioId });
 
   const fiscales = new DatosFiscalesEnMemoria();
   const cargas = new CargasInicialesEnMemoria();

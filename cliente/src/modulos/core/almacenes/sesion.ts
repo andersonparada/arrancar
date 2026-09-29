@@ -14,7 +14,11 @@ function lecturasDelResumen(resumen: Ref<ResumenSesion | null>) {
     autenticado: computed(() => resumen.value !== null),
     esSuperacceso: computed(() => resumen.value?.usuario.esSuperacceso ?? false),
     empresasDisponibles: computed(() => resumen.value?.empresasDisponibles ?? []),
-    rolNombre: computed(() => resumen.value?.rolNombre ?? null),
+    /** Los roles del usuario en una sola línea, o `null` si no hay empresa activa. */
+    rolNombre: computed(() => {
+      if (!resumen.value?.empresa) return null;
+      return resumen.value.roles.join(', ') || 'Permisos personalizados';
+    }),
     /** Indica si el usuario tiene el permiso en la empresa activa. */
     puede: (permiso: string) => permisos.value.has(permiso),
     moduloActivo: (clave: string) => modulosActivos.value.has(clave),

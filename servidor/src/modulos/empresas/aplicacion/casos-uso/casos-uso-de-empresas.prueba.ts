@@ -20,8 +20,6 @@ import { ObtenerEmpresa } from './obtener-empresa.js';
 import { RegistrarEmpresa } from './registrar-empresa.js';
 import { SembrarTiposDeLocalidad } from './tipos-de-localidad/sembrar-tipos-de-localidad.js';
 
-const ROL_PROPIETARIO = 'rol-propietario';
-
 let empresas: EmpresasEnMemoria;
 let accesos: AccesosEnMemoria;
 let tiposDeLocalidad: TiposDeLocalidadEnMemoria;
@@ -74,15 +72,14 @@ beforeEach(async () => {
   await accesos.darAcceso({
     empresaId: propietario.empresaId,
     usuarioId: propietario.usuarioId,
-    rolId: ROL_PROPIETARIO,
   });
 });
 
 describe('registrar una empresa', () => {
-  it('quien la registra entra a ella con el mismo rol que tiene donde está trabajando', async () => {
+  it('quien la registra entra a ella, porque ya es miembro de la empresa donde está trabajando', async () => {
     const empresa = await casos.registrar.ejecutar(propietario, solicitud());
 
-    expect(await accesos.rolEnEmpresa(propietario.usuarioId, empresa.id)).toBe(ROL_PROPIETARIO);
+    expect((await accesos.empresasDelUsuario(propietario.usuarioId)).has(empresa.id)).toBe(true);
   });
 
   it('soporte la registra sin volverse miembro', async () => {
@@ -90,7 +87,7 @@ describe('registrar una empresa', () => {
 
     const empresa = await casos.registrar.ejecutar(soporte, solicitud());
 
-    expect(await accesos.rolEnEmpresa(soporte.usuarioId, empresa.id)).toBeNull();
+    expect((await accesos.empresasDelUsuario(soporte.usuarioId)).has(empresa.id)).toBe(false);
   });
 
   it('la registra con el contexto del operador y siembra sus tipos de localidad con la empresa nueva como activa', async () => {

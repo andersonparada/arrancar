@@ -1,11 +1,11 @@
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../compartido/dominio/errores.js';
 
-/** Quien administra no puede quitarse el acceso: se quedaría fuera de la cuenta. */
+/** Quien administra no puede quitarse el acceso ni cambiarse sus roles y permisos: se daría poder a través de sí mismo. */
 export class NoPuedeCambiarseASiMismo extends ReglaDeNegocioInfringida {
   readonly codigo = 'no_puede_cambiarse_a_si_mismo';
 
   constructor() {
-    super('No puede cambiar sus propios accesos ni desactivarse.');
+    super('No puede cambiar sus propias empresas, roles ni permisos, ni desactivarse.');
   }
 }
 

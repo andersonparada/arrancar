@@ -1,6 +1,7 @@
 import type { Ejecutor } from '../../../base-datos/conexion.js';
+import { usuarioRoles } from '../../../autorizacion/infraestructura/persistencia/permisos-de-usuario.tablas.js';
 import { empresas, empresaUsuarios } from './empresas.tablas.js';
-import type { EmpresaInicial } from '../../aplicacion/puertos/transaccion-de-alta.js';
+import type { AccesoDelPropietario, EmpresaInicial } from '../../aplicacion/puertos/transaccion-de-alta.js';
 
 /**
  * Escribe directo en las tablas de empresas (viven en el núcleo): el núcleo no
@@ -17,7 +18,9 @@ export class EmpresaInicialDrizzle implements EmpresaInicial {
     return empresa!;
   }
 
-  async darAccesoAlPropietario(acceso: { empresaId: string; usuarioId: string; rolId: string }): Promise<void> {
-    await this.ejecutor.insert(empresaUsuarios).values(acceso);
+  /** Lo hace miembro de la empresa y le da, en toda la cuenta, el rol Propietario. */
+  async darAccesoAlPropietario({ cuentaId, empresaId, usuarioId, rolId }: AccesoDelPropietario): Promise<void> {
+    await this.ejecutor.insert(empresaUsuarios).values({ empresaId, usuarioId });
+    await this.ejecutor.insert(usuarioRoles).values({ cuentaId, usuarioId, rolId });
   }
 }

@@ -17,7 +17,7 @@ interface Dependencias {
 export interface ResumenDeSesionDto {
   usuario: UsuarioSesion;
   empresa: EmpresaSesion | null;
-  rolNombre: string | null;
+  roles: string[];
   modulosActivos: string[];
   permisos: string[];
   configuracion: Record<string, unknown>;
@@ -42,7 +42,7 @@ export class ObtenerResumenDeSesion {
     return {
       usuario: final.usuario,
       empresa: final.empresa,
-      rolNombre: final.rolNombre,
+      roles: [...final.roles],
       modulosActivos: [...final.modulosActivos],
       permisos: [...final.permisos],
       configuracion: await this.configuracionPublica(final),

@@ -10,7 +10,8 @@ export interface EmpresaDisponible {
 export interface ResumenSesion {
   usuario: { id: string; usuario: string; nombre: string; esSuperacceso: boolean };
   empresa: EmpresaDisponible | null;
-  rolNombre: string | null;
+  /** Nombres de los roles del usuario en la cuenta; vacío si solo tiene permisos directos. */
+  roles: string[];
   modulosActivos: string[];
   permisos: string[];
   /** Valores efectivos de las variables de configuración públicas. */

@@ -1,11 +1,17 @@
-import type { AccesoAEmpresa } from '../../dominio/acceso-a-empresa.js';
+import type { OrigenDelPermiso } from '../permisos-efectivos.js';
 
-export interface AccesoDto extends AccesoAEmpresa {
+export interface EmpresaDeUsuarioDto {
+  empresaId: string;
   empresaNombre: string;
-  rolNombre: string;
 }
 
-/** Un usuario de la cuenta con las empresas donde trabaja. */
+export interface RolDeUsuarioDto {
+  rolId: string;
+  rolNombre: string;
+  accesoTotal: boolean;
+}
+
+/** Un usuario de la cuenta con las empresas donde trabaja y lo que puede hacer. */
 export interface UsuarioDto {
   id: string;
   usuario: string;
@@ -14,7 +20,9 @@ export interface UsuarioDto {
   correo: string | null;
   activo: boolean;
   ultimoAccesoEn: Date | null;
-  accesos: AccesoDto[];
+  empresas: EmpresaDeUsuarioDto[];
+  roles: RolDeUsuarioDto[];
+  totalPermisosDirectos: number;
 }
 
 export interface NombresDePersona {
@@ -27,7 +35,12 @@ export interface NombresDePersona {
 export interface SolicitudDeUsuario extends NombresDePersona {
   correo: string | null;
   contrasena: string;
-  accesos: AccesoAEmpresa[];
+  empresaIds: string[];
+  /** Solo los recibe quien tiene `usuarios.asignar-permisos`. */
+  rolIds?: string[] | undefined;
+  permisos?: string[] | undefined;
+  /** Si quien crea tiene `usuarios.asignar-permisos`. */
+  puedeAsignarPermisos: boolean;
 }
 
 export interface SolicitudDeCambioDeUsuario {
@@ -35,5 +48,26 @@ export interface SolicitudDeCambioDeUsuario {
   apellidos?: string | undefined;
   correo?: string | null | undefined;
   activo?: boolean | undefined;
-  accesos?: AccesoAEmpresa[] | undefined;
+  empresaIds?: string[] | undefined;
+}
+
+export interface PermisoEfectivoDto {
+  clave: string;
+  descripcion: string;
+  modulo: string;
+  origenes: OrigenDelPermiso[];
+  /** Si el módulo del permiso está activo en la cuenta; si no, el permiso no vale por ahora. */
+  moduloActivo: boolean;
+}
+
+/** Los roles y permisos directos de un usuario y de dónde viene cada permiso que tiene. */
+export interface PermisosDeUsuarioDto {
+  roles: RolDeUsuarioDto[];
+  directos: string[];
+  efectivos: PermisoEfectivoDto[];
+}
+
+export interface SolicitudDeAsignaciones {
+  rolIds: string[];
+  permisos: string[];
 }

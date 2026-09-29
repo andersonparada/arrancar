@@ -3,10 +3,17 @@ import type { AsignadorDeNombreDeUsuario } from '../../../identidad/aplicacion/a
 import type { RepositorioUsuarios } from '../../../identidad/aplicacion/puertos/repositorio-usuarios.js';
 import type { RepositorioCuentas } from './repositorio-cuentas.js';
 
+export interface AccesoDelPropietario {
+  cuentaId: string;
+  empresaId: string;
+  usuarioId: string;
+  rolId: string;
+}
+
 /** La primera empresa de la cuenta y el acceso de su dueño. */
 export interface EmpresaInicial {
   registrar(cuentaId: string, datos: { nombre: string; nit: string | null }): Promise<{ id: string; nombre: string }>;
-  darAccesoAlPropietario(acceso: { empresaId: string; usuarioId: string; rolId: string }): Promise<void>;
+  darAccesoAlPropietario(acceso: AccesoDelPropietario): Promise<void>;
 }
 
 /** Todo lo que el alta escribe, atado a una misma transacción. */

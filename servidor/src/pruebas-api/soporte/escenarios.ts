@@ -64,7 +64,8 @@ export async function crearUsuarioConPermisos(
     nombres: datos.nombres,
     apellidos: datos.apellidos,
     contrasena: CONTRASENA_DE_PRUEBA,
-    accesos: [{ empresaId: cuenta.empresaId, rolId: rol.cuerpo.id }],
+    empresaIds: [cuenta.empresaId],
+    rolIds: [rol.cuerpo.id],
   });
   expect(creado.estado).toBe(201);
 

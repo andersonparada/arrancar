@@ -33,7 +33,7 @@ function datosValidos(datos: DatosDeRol): DatosDeRol {
   return { ...datos, nombre, permisos };
 }
 
-/** Conjunto de permisos que la cuenta asigna a sus usuarios en cada empresa. */
+/** Conjunto de permisos que la cuenta asigna a sus usuarios; vale en todas las empresas donde trabajan. */
 export class Rol extends RaizAgregado<RolId> {
   private constructor(private propiedades: PropiedadesDeRol) {
     super(propiedades.id);

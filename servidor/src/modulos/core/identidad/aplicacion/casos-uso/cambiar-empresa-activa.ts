@@ -34,7 +34,7 @@ export class CambiarEmpresaActiva {
   private async anotarSiEsSoporteEnEmpresaAjena(contexto: ContextoDeSesion, eleccion: EmpresaElegida): Promise<void> {
     const { usuario } = contexto;
     if (!usuario.esSuperacceso) return;
-    const esMiembro = await this.dependencias.empresas.accesoDe(usuario.id, eleccion.empresaId);
+    const esMiembro = await this.dependencias.empresas.esMiembro(usuario.id, eleccion.empresaId);
     if (!esMiembro) await this.dependencias.bitacora.registrarEntrada({ usuarioId: usuario.id, ...eleccion });
   }
 }

@@ -9,12 +9,9 @@ export const nombreUsuario = z
   .toLowerCase()
   .regex(PATRON_USUARIO, 'Use de 3 a 30 letras, sin números, espacios ni tildes.');
 
-const esquemaAcceso = z.object({
-  empresaId: z.uuid(),
-  rolId: z.uuid(),
-});
+const empresaIds = z.array(z.uuid()).min(1, 'Asigne al menos una empresa.');
 
-const accesos = z.array(esquemaAcceso).min(1, 'Asigne al menos una empresa.');
+const clavesDePermisos = z.array(z.string().trim().min(1).max(100)).max(500);
 
 const contrasena = z.string().min(10, 'Use al menos 10 caracteres.').max(200);
 
@@ -24,7 +21,10 @@ export const esquemaNuevoUsuario = z.object({
   usuario: nombreUsuario.optional(),
   correo: correoOpcional,
   contrasena,
-  accesos,
+  empresaIds,
+  /** Solo los acepta quien tiene `usuarios.asignar-permisos`. */
+  rolIds: z.array(z.uuid()).optional(),
+  permisos: clavesDePermisos.optional(),
 });
 
 export const esquemaCambioUsuario = z.object({
@@ -32,7 +32,13 @@ export const esquemaCambioUsuario = z.object({
   apellidos: z.string().trim().max(80).optional(),
   correo: correoOpcional.optional(),
   activo: z.boolean().optional(),
-  accesos: accesos.optional(),
+  empresaIds: empresaIds.optional(),
+});
+
+/** Reemplaza todos los roles y los permisos directos del usuario. */
+export const esquemaAsignaciones = z.object({
+  rolIds: z.array(z.uuid()).max(100),
+  permisos: clavesDePermisos,
 });
 
 export const esquemaSugerenciaUsuario = z.object(nombresYApellidos);
@@ -43,6 +49,7 @@ export const esquemaParamsUsuario = z.object({ usuarioId: z.uuid() });
 
 export type NuevoUsuarioSolicitado = z.infer<typeof esquemaNuevoUsuario>;
 export type CambioUsuario = z.infer<typeof esquemaCambioUsuario>;
+export type AsignacionesSolicitadas = z.infer<typeof esquemaAsignaciones>;
 export type SugerenciaUsuario = z.infer<typeof esquemaSugerenciaUsuario>;
 export type CambioContrasena = z.infer<typeof esquemaCambioContrasena>;
 export type ParamsUsuario = z.infer<typeof esquemaParamsUsuario>;

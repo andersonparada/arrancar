@@ -1,15 +1,11 @@
 import { asc, count, eq } from 'drizzle-orm';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
-import { empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { RolDto } from '../../aplicacion/dto/rol.dto.js';
 import type { ConsultasRoles } from '../../aplicacion/puertos/consultas-roles.js';
+import { usuarioRoles } from './permisos-de-usuario.tablas.js';
 import { rolPermisos, roles } from './roles.tablas.js';
 
-/**
- * Usa la conexión directa y no la unidad de trabajo: la sesión pide los permisos
- * del rol antes de saber con qué empresa trabaja el usuario. Las tablas no tienen
- * seguridad por filas, así que siempre se filtra por cuenta o por rol.
- */
+/** Las tablas no tienen seguridad por filas, así que siempre se filtra por cuenta o por rol. */
 export class ConsultasRolesDrizzle implements ConsultasRoles {
   constructor(private readonly bd: BaseDatos) {}
 
@@ -21,14 +17,6 @@ export class ConsultasRolesDrizzle implements ConsultasRoles {
     }));
   }
 
-  async permisosDelRol(rolId: string): Promise<string[]> {
-    const filas = await this.bd
-      .select({ permiso: rolPermisos.permiso })
-      .from(rolPermisos)
-      .where(eq(rolPermisos.rolId, rolId));
-    return filas.map((fila) => fila.permiso);
-  }
-
   private rolesDe(cuentaId: string) {
     return this.bd
       .select({
@@ -36,10 +24,10 @@ export class ConsultasRolesDrizzle implements ConsultasRoles {
         nombre: roles.nombre,
         descripcion: roles.descripcion,
         accesoTotal: roles.accesoTotal,
-        totalUsuarios: count(empresaUsuarios.usuarioId),
+        totalUsuarios: count(usuarioRoles.usuarioId),
       })
       .from(roles)
-      .leftJoin(empresaUsuarios, eq(empresaUsuarios.rolId, roles.id))
+      .leftJoin(usuarioRoles, eq(usuarioRoles.rolId, roles.id))
       .where(eq(roles.cuentaId, cuentaId))
       .groupBy(roles.id)
       .orderBy(asc(roles.nombre));

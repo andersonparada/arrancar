@@ -461,14 +461,14 @@ enviar), ventana de usuario con casillas de empresas, sesión con `roles`.
 
 Permisos por usuario:
 
-1. **P1 (servidor, core) Roles y permisos en la cuenta.** Tablas y migraciones #1 y #2;
+1. **P1 (servidor, core) Roles y permisos en la cuenta. [HECHO 2026-09-29]** Tablas y migraciones #1 y #2;
    `PermisosDeUsuario` y `permisosEfectivos`; resolutor y sesión (`roles`); todas las escrituras
    (crear y editar usuario, alta de cuenta, `RegistrarEmpresa`, semilla) mantienen
    `usuario_roles` y dejan de leer `rol_id` (la API de usuarios **aún** recibe
    `accesos: [{ empresaId, rolId }]` y guarda la unión de sus roles en la cuenta); `usoDe` y
    `totalUsuarios` desde `usuario_roles`; permiso `usuarios.asignar-permisos`. Pruebas del
    resolutor, de la migración y de roles.
-2. **P2 (servidor, core) API de usuarios y permisos directos.** `empresaIds`, `GET`/`PUT
+2. **P2 (servidor, core) API de usuarios y permisos directos. [HECHO 2026-09-29]** `empresaIds`, `GET`/`PUT
    /usuarios/:id/permisos` con origen, reglas 1 a 4, auditoría (2.6, incluida la de empresas y la
    de permisos de rol), prueba de claves huérfanas.
 3. **P3 (cliente, core) Usuarios, permisos y sesión.** Ventana de usuario con empresas, página de
@@ -547,3 +547,27 @@ Mandan sobre las preguntas de arriba.
    siempre puede entrar).
 6. **Persona sin roles, solo con permisos directos:** sí.
 7. **Auditar** los cambios de empresas de un usuario y de permisos de un rol: sí.
+
+## Decisiones al programar P1 y P2 (2026-09-29)
+
+- **Migraciones:** la `0016` (generada) incluye también `ALTER COLUMN rol_id DROP NOT NULL` porque
+  `empresa_usuarios.rolId` se declaró nulable en las tablas; la `0017` (`--custom`) solo lleva los
+  datos (unión de roles, auditoría de la migración y permiso nuevo). La `0018` sigue siendo P4.
+  Se ordenó a mano el `UNIQUE (id, cuenta_id)` de `roles` antes de la fk que lo usa.
+- **P1 ya cambia la API de usuarios** (no se dejó `accesos: [{ empresaId, rolId }]` un paso más):
+  crear y editar reciben `empresaIds` de una vez, porque P2 va en el mismo bloque. La ventana de
+  usuarios del cliente queda rota hasta P3.
+- **Sin las reglas 3 y 4** del diseño (no dar lo que no se tiene; siempre un acceso total), por las
+  respuestas del usuario. Quedan: no a sí mismo, rol de la cuenta, permiso existente y asignable.
+- `CrearUsuario` recibe `puedeAsignarPermisos` (lo calcula el controlador con los permisos de la
+  sesión) y responde `AccesoDenegado` si piden `rolIds` o `permisos` sin él.
+- `PermisosDeUsuario.enCuenta` usa dos consultas en paralelo (roles con sus permisos, y directos) en
+  vez de una sola con `union all`: más simple y también por llave primaria.
+- `EmpresasDeLaSesion.accesoDe` pasó a `esMiembro` (booleano); `AccesosAEmpresas` de `empresas`
+  pierde `rolEnEmpresa`; `RegistrarEmpresa` da acceso al creador solo si es miembro de la activa.
+- La lista de usuarios (`GET /usuarios`) ordena los roles por nombre y `GET /usuarios/:id/permisos`
+  también (el orden de los orígenes sigue el de los roles, y luego el directo).
+- Cliente (mínimo): `ResumenSesion.roles`; la tienda de sesión sigue exponiendo `rolNombre` como los
+  nombres unidos por coma («Permisos personalizados» si no hay roles).
+- Quitar la última empresa de un usuario no borra sus roles y permisos: la API sigue exigiendo al
+  menos una empresa, así que no ocurre.

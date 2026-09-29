@@ -4,16 +4,16 @@ import type { UnidadDeTrabajo } from '../../../compartido/aplicacion/unidad-de-t
 import { crearSiHayTexto } from '../../../compartido/dominio/objeto-valor.js';
 import { Correo } from '../../../compartido/dominio/objetos-valor/correo.js';
 import type { CambiosDeUsuario, Usuario } from '../../dominio/usuario.js';
+import type { AsignadorDeEmpresas } from '../asignador-de-empresas.js';
 import type { SolicitudDeCambioDeUsuario } from '../dto/usuario.dto.js';
-import type { AccesosAEmpresas } from '../puertos/accesos-a-empresas.js';
 import type { CierreDeSesiones } from '../puertos/cierre-de-sesiones.js';
 import type { RepositorioUsuarios } from '../puertos/repositorio-usuarios.js';
-import { exigirAccesosDeLaCuenta, usuarioDeLaCuenta, type UsuarioAdministrado } from '../usuario-de-la-cuenta.js';
+import { usuarioDeLaCuenta, type UsuarioAdministrado } from '../usuario-de-la-cuenta.js';
 
 interface Dependencias {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioUsuarios;
-  accesos: AccesosAEmpresas;
+  empresas: AsignadorDeEmpresas;
   sesiones: CierreDeSesiones;
   auditoria: Auditoria;
 }
@@ -23,7 +23,7 @@ export interface CambioDeUsuario {
   solicitud: SolicitudDeCambioDeUsuario;
 }
 
-function cambiosDe({ accesos: _accesos, correo, ...datos }: SolicitudDeCambioDeUsuario): CambiosDeUsuario {
+function cambiosDe({ empresaIds: _empresaIds, correo, ...datos }: SolicitudDeCambioDeUsuario): CambiosDeUsuario {
   return correo === undefined ? datos : { ...datos, correo: crearSiHayTexto(correo, Correo.crear) };
 }
 
@@ -55,18 +55,22 @@ export class ActualizarUsuario {
         activoAntes: anterior.activo,
         activoDespues: administrado.usuario.activo,
       });
-      if (solicitud.accesos) await this.cambiarAccesos(operador, administrado, solicitud.accesos);
+      if (solicitud.empresaIds) await this.cambiarEmpresas(operador, administrado, solicitud.empresaIds);
     });
     if (solicitud.activo === false) await this.dependencias.sesiones.cerrarTodasDe(usuarioId);
   }
 
-  private async cambiarAccesos(
+  private async cambiarEmpresas(
     operador: Operador,
     { usuario, pertenencia }: UsuarioAdministrado,
-    solicitados: NonNullable<SolicitudDeCambioDeUsuario['accesos']>,
+    empresaIds: readonly string[],
   ): Promise<void> {
     usuario.exigirQueSePuedanCambiarSusAccesos(pertenencia);
-    await exigirAccesosDeLaCuenta(this.dependencias.accesos, operador.cuentaId, solicitados);
-    await this.dependencias.accesos.reemplazarEnCuenta(usuario.id.valor, operador.cuentaId, solicitados);
+    const persona = {
+      usuarioId: usuario.id.valor,
+      usuario: usuario.instantanea().nombreDeUsuario.valor,
+      cuentaId: operador.cuentaId,
+    };
+    await this.dependencias.empresas.reemplazar(persona, empresaIds);
   }
 }

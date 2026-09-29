@@ -4,22 +4,19 @@ import { CONTRASENA_DE_PRUEBA, darDeAltaCuenta, type CuentaDePrueba } from './so
 
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
-let rolPropietarioId: string;
 
 function nuevoUsuario(nombres: string, apellidos: string, extra: Record<string, unknown> = {}) {
   return {
     nombres,
     apellidos,
     contrasena: CONTRASENA_DE_PRUEBA,
-    accesos: [{ empresaId: cuenta.empresaId, rolId: rolPropietarioId }],
+    empresaIds: [cuenta.empresaId],
     ...extra,
   };
 }
 
 beforeAll(async () => {
   cuenta = await darDeAltaCuenta(entorno, { nombre: 'Castillo', usuario: 'acastillo' });
-  const roles = await cuenta.propietario.get('/api/roles');
-  rolPropietarioId = roles.cuerpo.find((r: { nombre: string }) => r.nombre === 'Propietario').id;
 });
 
 describe('generación del nombre de usuario', () => {
@@ -70,11 +67,11 @@ describe('administración de usuarios', () => {
   it('exige al menos una empresa válida de la cuenta', async () => {
     const sinEmpresas = await cuenta.propietario.post(
       '/api/usuarios',
-      nuevoUsuario('Sin', 'Empresas', { accesos: [] }),
+      nuevoUsuario('Sin', 'Empresas', { empresaIds: [] }),
     );
     const empresaAjena = await cuenta.propietario.post(
       '/api/usuarios',
-      nuevoUsuario('Empresa', 'Ajena', { accesos: [{ empresaId: crypto.randomUUID(), rolId: rolPropietarioId }] }),
+      nuevoUsuario('Empresa', 'Ajena', { empresaIds: [crypto.randomUUID()] }),
     );
 
     expect(sinEmpresas.estado).toBe(400);

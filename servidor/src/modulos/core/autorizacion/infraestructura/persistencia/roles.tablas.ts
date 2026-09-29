@@ -19,7 +19,11 @@ export const roles = esquemaCore.table(
     accesoTotal: boolean().notNull().default(false),
     ...marcasDeTiempo,
   },
-  (t) => [unique('roles_nombre_por_cuenta').on(t.cuentaId, t.nombre)],
+  (t) => [
+    unique('roles_nombre_por_cuenta').on(t.cuentaId, t.nombre),
+    /** Destino de la llave compuesta de `usuario_roles`: un usuario solo recibe roles de su cuenta. */
+    unique('roles_id_cuenta_unico').on(t.id, t.cuentaId),
+  ],
 );
 
 export const rolPermisos = esquemaCore.table(

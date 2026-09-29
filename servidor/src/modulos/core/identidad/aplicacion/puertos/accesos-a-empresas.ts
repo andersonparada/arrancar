@@ -1,9 +1,10 @@
-import type { AccesoAEmpresa } from '../../dominio/acceso-a-empresa.js';
-
-/** En qué empresas de una cuenta trabaja cada usuario, y con qué rol. */
+/** En qué empresas de una cuenta trabaja cada usuario. */
 export interface AccesosAEmpresas {
-  empresasDeLaCuenta(cuentaId: string): Promise<Set<string>>;
-  rolesDeLaCuenta(cuentaId: string): Promise<Set<string>>;
-  /** Sustituye los accesos del usuario a las empresas de la cuenta; no toca los de otras cuentas. */
-  reemplazarEnCuenta(usuarioId: string, cuentaId: string, accesos: readonly AccesoAEmpresa[]): Promise<void>;
+  /** Las empresas de la cuenta: id → nombre. */
+  empresasDeLaCuenta(cuentaId: string): Promise<Map<string, string>>;
+  /** Ids de las empresas de la cuenta donde trabaja el usuario. */
+  empresasDelUsuario(usuarioId: string, cuentaId: string): Promise<Set<string>>;
+  agregar(usuarioId: string, empresaIds: readonly string[]): Promise<void>;
+  /** Solo quita las indicadas; los accesos a otras cuentas no se tocan. */
+  quitar(usuarioId: string, empresaIds: readonly string[]): Promise<void>;
 }

@@ -20,9 +20,9 @@ interface Dependencias {
 }
 
 /**
- * Registra una empresa en la cuenta del operador. Quien la crea entra a ella con
- * el mismo rol que tiene en la empresa donde está trabajando (soporte no, porque
- * no es miembro de ninguna).
+ * Registra una empresa en la cuenta del operador. Quien la crea entra a ella; sus
+ * roles y permisos ya valen porque son de la cuenta (soporte no entra, porque no es
+ * miembro de ninguna).
  */
 export class RegistrarEmpresa {
   constructor(private readonly dependencias: Dependencias) {}
@@ -51,7 +51,7 @@ export class RegistrarEmpresa {
 
   private async darAccesoAlCreador(operador: Operador, empresa: Empresa): Promise<void> {
     const { accesos } = this.dependencias;
-    const rolId = await accesos.rolEnEmpresa(operador.usuarioId, operador.empresaId);
-    if (rolId) await accesos.darAcceso({ empresaId: empresa.id.valor, usuarioId: operador.usuarioId, rolId });
+    const esMiembro = (await accesos.empresasDelUsuario(operador.usuarioId)).has(operador.empresaId);
+    if (esMiembro) await accesos.darAcceso({ empresaId: empresa.id.valor, usuarioId: operador.usuarioId });
   }
 }

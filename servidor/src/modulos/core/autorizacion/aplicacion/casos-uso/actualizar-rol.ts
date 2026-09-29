@@ -1,5 +1,7 @@
+import type { Auditoria } from '../../../compartido/aplicacion/auditoria.js';
 import type { Operador } from '../../../compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../compartido/aplicacion/unidad-de-trabajo.js';
+import { auditarPermisosDeRol } from '../auditoria-de-permisos-de-rol.js';
 import { datosDeRol } from '../datos-de-rol.js';
 import type { SolicitudDeRol } from '../dto/rol.dto.js';
 import type { CatalogoDePermisos } from '../puertos/catalogo-de-permisos.js';
@@ -10,6 +12,7 @@ interface Dependencias {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioRoles;
   catalogo: CatalogoDePermisos;
+  auditoria: Auditoria;
 }
 
 export interface CambioDeRol {
@@ -30,8 +33,10 @@ export class ActualizarRol {
     const datos = datosDeRol(solicitud, catalogo);
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const rol = await rolDeLaCuenta(repositorio, rolId, operador);
+      const antes = rol.instantanea();
       rol.cambiar(datos, await repositorio.usoDe(rol));
       await repositorio.actualizar(rol);
+      await auditarPermisosDeRol(this.dependencias.auditoria, rolId, { antes, despues: rol.instantanea() });
     });
   }
 }

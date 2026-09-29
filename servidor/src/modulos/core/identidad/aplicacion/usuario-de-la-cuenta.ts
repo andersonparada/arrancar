@@ -1,10 +1,7 @@
 import { RecursoNoEncontrado } from '../../compartido/aplicacion/errores.js';
 import type { Operador } from '../../compartido/aplicacion/operador.js';
 import { Identificador } from '../../compartido/dominio/identificador.js';
-import { exigirEmpresasSinRepetir, type AccesoAEmpresa } from '../dominio/acceso-a-empresa.js';
-import { EmpresaAjena, RolAjeno } from '../dominio/errores.js';
 import type { Pertenencia, Usuario } from '../dominio/usuario.js';
-import type { AccesosAEmpresas } from './puertos/accesos-a-empresas.js';
 import type { RepositorioUsuarios } from './puertos/repositorio-usuarios.js';
 
 export interface UsuarioAdministrado {
@@ -32,17 +29,10 @@ export async function usuarioDeLaCuenta(
   };
 }
 
-/** @throws EmpresaRepetida, EmpresaAjena o RolAjeno si algún acceso no es válido para la cuenta. */
-export async function exigirAccesosDeLaCuenta(
-  accesos: AccesosAEmpresas,
-  cuentaId: string,
-  solicitados: readonly AccesoAEmpresa[],
-): Promise<void> {
-  exigirEmpresasSinRepetir(solicitados);
-  const [empresas, roles] = await Promise.all([
-    accesos.empresasDeLaCuenta(cuentaId),
-    accesos.rolesDeLaCuenta(cuentaId),
-  ]);
-  if (solicitados.some((acceso) => !empresas.has(acceso.empresaId))) throw new EmpresaAjena();
-  if (solicitados.some((acceso) => !roles.has(acceso.rolId))) throw new RolAjeno();
+/** El usuario al que se le cambian empresas, roles o permisos, tal como queda en la auditoría. */
+export interface PersonaAdministrada {
+  usuarioId: string;
+  /** Nombre de usuario. */
+  usuario: string;
+  cuentaId: string;
 }

@@ -113,6 +113,20 @@
       "when": 1790701976622,
       "tag": "0015_permisos_por_accion",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790704024915,
+      "tag": "0016_roles_y_permisos_por_usuario",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790704040741,
+      "tag": "0017_roles_de_la_empresa_a_la_cuenta",
+      "breakpoints": true
     }
   ]
 }

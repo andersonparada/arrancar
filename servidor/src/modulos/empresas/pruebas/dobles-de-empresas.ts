@@ -52,21 +52,17 @@ function aDto(empresa: Empresa): EmpresaDto {
   };
 }
 
-/** Accesos en memoria: `usuarioId → (empresaId → rolId)`. */
+/** Accesos en memoria: `usuarioId → empresas donde trabaja`. */
 export class AccesosEnMemoria implements AccesosAEmpresas {
-  private readonly roles = new Map<string, Map<string, string>>();
+  private readonly empresas = new Map<string, Set<string>>();
 
   async empresasDelUsuario(usuarioId: string): Promise<ReadonlySet<string>> {
-    return new Set(this.roles.get(usuarioId)?.keys());
+    return new Set(this.empresas.get(usuarioId));
   }
 
-  async rolEnEmpresa(usuarioId: string, empresaId: string): Promise<string | null> {
-    return this.roles.get(usuarioId)?.get(empresaId) ?? null;
-  }
-
-  async darAcceso({ empresaId, usuarioId, rolId }: { empresaId: string; usuarioId: string; rolId: string }) {
-    const delUsuario = this.roles.get(usuarioId) ?? new Map<string, string>();
-    delUsuario.set(empresaId, rolId);
-    this.roles.set(usuarioId, delUsuario);
+  async darAcceso({ empresaId, usuarioId }: { empresaId: string; usuarioId: string }) {
+    const delUsuario = this.empresas.get(usuarioId) ?? new Set<string>();
+    delUsuario.add(empresaId);
+    this.empresas.set(usuarioId, delUsuario);
   }
 }

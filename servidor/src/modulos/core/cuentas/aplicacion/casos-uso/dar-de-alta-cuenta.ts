@@ -86,6 +86,7 @@ export class DarDeAltaCuenta {
     const dueno =
       'existente' in propietario ? propietario.existente : await this.crearDueno(piezas, solicitud, propietario);
     await piezas.empresa.darAccesoAlPropietario({
+      cuentaId: cuenta.id.valor,
       empresaId: empresa.id,
       usuarioId: dueno.id.valor,
       rolId: rol.id.valor,

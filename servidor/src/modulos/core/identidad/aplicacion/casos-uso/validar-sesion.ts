@@ -36,7 +36,7 @@ export class ValidarSesion {
       sesionId,
       usuario,
       empresa: null,
-      rolNombre: null,
+      roles: [],
       modulosActivos: new Set(),
       permisos: new Set(),
       recursosAlcanceTotal: [],

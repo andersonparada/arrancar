@@ -1,13 +1,16 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { configuracion as ajustesDelServidor } from '../../../configuracion.js';
-import { consultasRoles } from '../autorizacion/contexto.js';
+import { permisosDeUsuario } from '../autorizacion/contexto.js';
 import { bd, type Ejecutor } from '../base-datos/conexion.js';
 import { registrarEntradaDeSoporte } from '../bitacora/contexto.js';
 import type { DependenciasCompartidas } from '../compartido/aplicacion/dependencias-compartidas.js';
 import { usarValidadorDeSesion } from '../compartido/http/guardias.js';
 import { configuracion } from '../configuracion/contexto.js';
+import { AsignadorDeEmpresas } from './aplicacion/asignador-de-empresas.js';
 import { AsignadorDeNombreDeUsuario } from './aplicacion/asignador-de-nombre-de-usuario.js';
 import { ActualizarUsuario } from './aplicacion/casos-uso/actualizar-usuario.js';
+import { AsignadorDePermisos } from './aplicacion/asignador-de-permisos.js';
+import { AsignarPermisosAUsuario } from './aplicacion/casos-uso/asignar-permisos-a-usuario.js';
 import { CambiarContrasena } from './aplicacion/casos-uso/cambiar-contrasena.js';
 import { CambiarEmpresaActiva } from './aplicacion/casos-uso/cambiar-empresa-activa.js';
 import { CerrarSesion } from './aplicacion/casos-uso/cerrar-sesion.js';
@@ -15,6 +18,7 @@ import { CrearUsuario } from './aplicacion/casos-uso/crear-usuario.js';
 import { IniciarSesion } from './aplicacion/casos-uso/iniciar-sesion.js';
 import { LimpiarSesionesVencidas } from './aplicacion/casos-uso/limpiar-sesiones-vencidas.js';
 import { ListarUsuarios } from './aplicacion/casos-uso/listar-usuarios.js';
+import { ObtenerPermisosDeUsuario } from './aplicacion/casos-uso/obtener-permisos-de-usuario.js';
 import { ObtenerResumenDeSesion } from './aplicacion/casos-uso/obtener-resumen-de-sesion.js';
 import { SugerirNombreDeUsuario } from './aplicacion/casos-uso/sugerir-nombre-de-usuario.js';
 import { ValidarSesion } from './aplicacion/casos-uso/validar-sesion.js';
@@ -25,7 +29,9 @@ import { rutasSesion } from './http/sesion.rutas.js';
 import { UsuariosControlador } from './http/usuarios.controlador.js';
 import { rutasUsuarios } from './http/usuarios.rutas.js';
 import { CatalogoDeModulosEnRegistro } from './infraestructura/catalogo-de-modulos-en-registro.js';
+import { CatalogoDePermisosAsignablesEnRegistro } from './infraestructura/catalogo-de-permisos-asignables-en-registro.js';
 import { cifradorDeContrasenas } from './infraestructura/cifrador-argon2.js';
+import { AsignacionesDeUsuarioDrizzle } from './infraestructura/persistencia/asignaciones-de-usuario.drizzle.js';
 import { AccesosAEmpresasDrizzle } from './infraestructura/persistencia/accesos-a-empresas.drizzle.js';
 import { ConsultasUsuariosDrizzle } from './infraestructura/persistencia/consultas-usuarios.drizzle.js';
 import { EmpresasDeLaSesionDrizzle } from './infraestructura/persistencia/empresas-de-la-sesion.drizzle.js';
@@ -51,15 +57,27 @@ export const limpiarSesionesVencidas = new LimpiarSesionesVencidas({ sesiones })
 
 function controladorDeUsuarios({ unidadDeTrabajo, auditoria }: DependenciasCompartidas): UsuariosControlador {
   const repositorio = new RepositorioUsuariosDrizzle();
-  const accesos = new AccesosAEmpresasDrizzle();
   const asignador = new AsignadorDeNombreDeUsuario({ usuarios: repositorio });
   const cifrador = cifradorDeContrasenas;
+  const empresas = new AsignadorDeEmpresas({ accesos: new AccesosAEmpresasDrizzle(), auditoria });
+  const asignaciones = new AsignacionesDeUsuarioDrizzle();
+  const catalogo = new CatalogoDePermisosAsignablesEnRegistro();
+  const permisos = new AsignadorDePermisos({ asignaciones, catalogo, auditoria });
   return new UsuariosControlador({
     listar: new ListarUsuarios({ consultas: new ConsultasUsuariosDrizzle(bd) }),
     sugerirNombre: new SugerirNombreDeUsuario({ unidadDeTrabajo, asignador }),
-    crear: new CrearUsuario({ unidadDeTrabajo, repositorio, accesos, asignador, cifrador }),
-    actualizar: new ActualizarUsuario({ unidadDeTrabajo, repositorio, accesos, sesiones, auditoria }),
+    crear: new CrearUsuario({ unidadDeTrabajo, repositorio, empresas, permisos, asignador, cifrador }),
+    actualizar: new ActualizarUsuario({ unidadDeTrabajo, repositorio, empresas, sesiones, auditoria }),
     cambiarContrasena: new CambiarContrasena({ unidadDeTrabajo, repositorio, cifrador, sesiones }),
+    obtenerPermisos: new ObtenerPermisosDeUsuario({
+      unidadDeTrabajo,
+      repositorio,
+      asignaciones,
+      catalogo,
+      empresas: new EmpresasDeLaSesionDrizzle(bd),
+      modulos: new CatalogoDeModulosEnRegistro(),
+    }),
+    asignarPermisos: new AsignarPermisosAUsuario({ unidadDeTrabajo, repositorio, asignador: permisos }),
   });
 }
 
@@ -69,7 +87,7 @@ function piezasDeSesion() {
     tokens: new TokensAleatorios(),
     vigencia: new VigenciaDeSesion(ajustesDelServidor.DURACION_SESION_DIAS),
     empresas,
-    resolutor: new ResolutorDeAcceso({ empresas, modulos: new CatalogoDeModulosEnRegistro(), roles: consultasRoles }),
+    resolutor: new ResolutorDeAcceso({ empresas, modulos: new CatalogoDeModulosEnRegistro(), permisosDeUsuario }),
     bitacora: { registrarEntrada: registrarEntradaDeSoporte.ejecutar.bind(registrarEntradaDeSoporte) },
   };
 }

@@ -77,7 +77,8 @@ describe('una cuenta nunca ve ni toca los datos de otra', () => {
       nombres: 'Intruso',
       apellidos: 'Prueba',
       contrasena: 'contrasena-de-prueba',
-      accesos: [{ empresaId: familiaA.empresaId, rolId: roles.cuerpo[0].id }],
+      empresaIds: [familiaA.empresaId],
+      rolIds: [roles.cuerpo[0].id],
     });
 
     expect(respuesta.estado).toBe(400);

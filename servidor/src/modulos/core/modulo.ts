@@ -33,8 +33,9 @@ export const moduloCore: DefinicionModulo = {
   esencial: true,
   permisos: [
     { clave: 'usuarios.ver', descripcion: 'Ver usuarios de la cuenta' },
-    { clave: 'usuarios.crear', descripcion: 'Crear usuarios y asignarles empresas y roles' },
+    { clave: 'usuarios.crear', descripcion: 'Crear usuarios y asignarles empresas' },
     { clave: 'usuarios.editar', descripcion: 'Editar usuarios, inactivarlos, reactivarlos y cambiar sus contraseñas' },
+    { clave: 'usuarios.asignar-permisos', descripcion: 'Asignar roles y permisos directos a los usuarios' },
     { clave: 'roles.ver', descripcion: 'Ver roles y permisos' },
     { clave: 'roles.crear', descripcion: 'Crear roles' },
     { clave: 'roles.editar', descripcion: 'Editar los permisos y datos de los roles' },

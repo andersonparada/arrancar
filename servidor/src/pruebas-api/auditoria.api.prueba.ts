@@ -58,7 +58,8 @@ describe('auditoría de bajas', () => {
       nombres: 'Rosa',
       apellidos: 'Tzul',
       contrasena: CONTRASENA_DE_PRUEBA,
-      accesos: [{ empresaId: cuenta.empresaId, rolId: rol.cuerpo.id }],
+      empresaIds: [cuenta.empresaId],
+      rolIds: [rol.cuerpo.id],
     });
 
     await cuenta.propietario.patch(`/api/usuarios/${usuario.cuerpo.id}`, { activo: false });

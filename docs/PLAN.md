@@ -506,3 +506,17 @@ y `demo` / `demo-arrancar`.
   en dos funciones (cumple las 25 líneas sin `SIN_REGISTROS` parchado). ESLint: `MODULOS_BASE`
   pasa a `MODULOS_ESENCIALES` y todo módulo puede importar los `*.tablas.js` de otro desde su
   infraestructura; prueba `llaves-entre-esquemas.prueba.ts` sobre `pg_constraint`.
+- **2026-09-29 (permisos por usuario, P1 y P2 del servidor)**: `docs/modulos/diseno-permisos-por-usuario.md`
+  con las respuestas del usuario. Roles y permisos pasan de la empresa a la cuenta: tablas
+  `core.usuario_roles` y `core.usuario_permisos` (sin RLS, fk compuesta `(rol_id, cuenta_id)`),
+  migraciones `core 0016` (tablas y `rol_id` nulable) y `0017` (unión de roles, auditoría de quien
+  tenía roles distintos, permiso `usuarios.asignar-permisos` para quien tenía `usuarios.crear` o
+  `editar`). Resolutor con `permisosEfectivos` (unión de roles y directos, módulos activos, sin
+  `soloSuperacceso`); la sesión trae `roles: string[]`. API: `empresaIds` en crear y editar usuario
+  (`rolIds` y `permisos` opcionales al crear, solo con el permiso propio), `GET`/`PUT
+  /usuarios/:id/permisos` con el origen de cada permiso; quien tiene el permiso da cualquier permiso
+  asignable, sin mínimo de acceso total. Se auditan roles, permisos directos y empresas de un usuario,
+  y los permisos de un rol (`core.roles-de-usuario`, `core.permisos-de-usuario`,
+  `core.empresas-de-usuario`, `core.permisos-de-rol`). Falta P3 (cliente) y P4 (quitar `rol_id`);
+  mientras, la ventana de usuarios del cliente sigue mandando `accesos` y el servidor la rechaza.
+

@@ -29,7 +29,7 @@ export const empresas = esquemaCore.table(
   (t) => [index('empresas_cuenta_idx').on(t.cuentaId)],
 );
 
-/** Acceso de un usuario a una empresa, con el rol que tiene en ella. */
+/** En qué empresas trabaja un usuario. Sus roles y permisos son de la cuenta (`usuario_roles`, `usuario_permisos`). */
 export const empresaUsuarios = esquemaCore.table(
   'empresa_usuarios',
   {
@@ -39,9 +39,8 @@ export const empresaUsuarios = esquemaCore.table(
     usuarioId: uuid()
       .notNull()
       .references(() => usuarios.id, { onDelete: 'cascade' }),
-    rolId: uuid()
-      .notNull()
-      .references(() => roles.id, { onDelete: 'restrict' }),
+    /** En desuso: los roles viven en `usuario_roles`. Se elimina en la migración 0018. */
+    rolId: uuid().references(() => roles.id, { onDelete: 'restrict' }),
     creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.empresaId, t.usuarioId] }), index('empresa_usuarios_usuario_idx').on(t.usuarioId)],
