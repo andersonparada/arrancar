@@ -18,6 +18,7 @@ import { rutasDeTiposDeLocalidad } from './composicion/tipos-de-localidad.js';
 import { SembrarTiposDeLocalidad } from './aplicacion/casos-uso/tipos-de-localidad/sembrar-tipos-de-localidad.js';
 import { RepositorioTiposDeLocalidadDrizzle } from './infraestructura/persistencia/repositorio-tipos-de-localidad.drizzle.js';
 import { rutasDeLocalidades } from './composicion/localidades.js';
+import { rutasDeAccesosALocalidades } from './composicion/accesos-a-localidades.js';
 import { ALCANCE_DE_LOCALIDADES } from './infraestructura/persistencia/accesos-a-localidades.tablas.js';
 // generador: importaciones
 
@@ -53,6 +54,7 @@ function componerRutas(compartidas: DependenciasCompartidas) {
     rutasDeDatosDeEmpresaComponidas(compartidas, { consultas, alcance }),
     rutasDeTiposDeLocalidad(),
     rutasDeLocalidades(),
+    rutasDeAccesosALocalidades(),
     // generador: rutas
   ]);
 }

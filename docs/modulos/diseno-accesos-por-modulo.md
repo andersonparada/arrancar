@@ -553,7 +553,7 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
    auditoría), mensajes de duplicado, Excel, permisos (migraciones 5 y 6). Pruebas de
    API con un usuario sin `ver-todas`.
 6. **[HECHO] H5b-4 (cliente) Localidades.** Lista, formulario (tipo, SAT, municipio), ficha. Selector de tipo (solo activos, por nombre; conserva el actual si se inactivó), departamento/municipio como en Clientes, botón eliminar en la ficha (`.eliminar`, confirmación peligrosa, 409 con el aviso del servidor), franja de alerta en el formulario si el servidor responde 409 por duplicado. Pendiente para el paso 8: sección «Usuarios con acceso» en la ficha (el servidor aún no expone `GET …/localidades/:id/usuarios`).
-7. **H5b-5 (servidor) Accesos a localidades.** Las cuatro rutas de accesos, casos de uso
+7. **[HECHO] H5b-5 (servidor) Accesos a localidades.** Las cuatro rutas de accesos, casos de uso
    `ListarUsuariosParaAccesos`, `ObtenerAccesosDeUsuario`, `ReemplazarAccesosDeUsuario`
    (diferencia, auditoría por cambio), `ListarUsuariosDeLocalidad`.
 8. **H5b-5 (cliente) Ventana de accesos.** `VentanaDeAccesosALocalidades`, botón en la
@@ -629,6 +629,23 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
   alerta de duplicado, importar sin asignar, borrar una empresa con localidades).
 - El cliente quedó generado sin ajustar (lista, formulario y ficha de Localidades; sin tipo ni municipio en selectores,
   sin botón de eliminar): es del paso 6.
+
+## 15. Notas de implementación del paso 7 (2026-09-29)
+
+- Rutas (todas con `empresas.localidades.asignar`; las cuatro primeras con `operadorParaAsignar`, la última con el
+  operador normal): `GET /api/empresas/localidades/accesos/localidades` (todas, también inactivas, con `usuarioIds`),
+  `GET .../accesos/usuarios` (miembros con `roles` y `veTodas`), `GET .../accesos/:usuarioId` (ids de todas sus
+  localidades) y `PUT .../accesos/:usuarioId` `{ localidadIds }` (conjunto final; responde `{ localidadIds }`),
+  y `GET /api/empresas/localidades/:localidadId/usuarios` (ficha).
+- Casos de uso en `aplicacion/casos-uso/accesos/`: `ListarLocalidadesParaAsignar`, `ListarUsuariosParaAccesos`,
+  `ObtenerAccesosDeUsuario`, `ReemplazarAccesosDeUsuario` y `ListarUsuariosDeLocalidad`. Puerto nuevo
+  `AsignacionesDeLocalidades` (Drizzle: miembros, accesos, asignar, quitar).
+- `veTodas` sale de `PermisosDeUsuario.enCuenta` (core) y la función pura `veTodasLasLocalidades` (acceso total o
+  `ver-todas` de rol o directo).
+- `PUT` con usuario que no es miembro o localidad inexistente (o de otra empresa) responde 404 antes de escribir; el
+  `PUT` acepta el propio usuario del operador y audita `asignar`/`quitar` con `aSiMismo`.
+- La ficha exige `asignar` (no `ver`), pero usa el operador normal: solo abre localidades que el usuario ve.
+- Composición: `composicion/accesos-a-localidades.ts`, registrada en `modulo.ts`.
 
 ## 11. Preguntas para el usuario
 
