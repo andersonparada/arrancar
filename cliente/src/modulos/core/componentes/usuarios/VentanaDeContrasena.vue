@@ -3,9 +3,16 @@ import BotonBase from '../BotonBase.vue';
 import CampoTexto from '../CampoTexto.vue';
 import VentanaModal from '../VentanaModal.vue';
 
-defineProps<{ abierta: boolean; nombre: string; errores: Record<string, string>; enviando: boolean }>();
+defineProps<{
+  abierta: boolean;
+  nombre: string;
+  pideLaActual: boolean;
+  errores: Record<string, string>;
+  enviando: boolean;
+}>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const contrasena = defineModel<string>('contrasena', { required: true });
+const contrasenaActual = defineModel<string>('contrasenaActual', { required: true });
 </script>
 
 <template>
@@ -15,6 +22,15 @@ const contrasena = defineModel<string>('contrasena', { required: true });
         Nueva contraseña para <strong>{{ nombre }}</strong
         >. Se cerrarán sus sesiones abiertas.
       </p>
+      <CampoTexto
+        v-if="pideLaActual"
+        v-model="contrasenaActual"
+        etiqueta="Contraseña actual"
+        tipo="password"
+        autocompletar="current-password"
+        requerido
+        :error="errores.contrasenaActual"
+      />
       <CampoTexto
         v-model="contrasena"
         etiqueta="Nueva contraseña"

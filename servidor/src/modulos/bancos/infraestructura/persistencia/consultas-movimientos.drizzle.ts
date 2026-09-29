@@ -20,6 +20,7 @@ import { cuentaConConciliacionesDe, mesConciliadoDe } from './hechos-de-movimien
 import { mapeadorDeMovimiento } from './movimiento.mapeador.js';
 import { movimientos } from './movimientos.tablas.js';
 import { saldoVigente } from './saldo-vigente.js';
+import { transferencias } from './transferencias.tablas.js';
 
 const cuentaBancaria = alias(cuentasBancarias, 'cuenta_bancaria');
 const chequeDelMovimiento = alias(cheques, 'cheque_del_movimiento');
@@ -30,6 +31,9 @@ const columnas = {
   chequeId: chequeDelMovimiento.id,
   numeroDeCheque: chequeDelMovimiento.numero,
   conceptoNombre: conceptos.nombre,
+  // Las notas de una transferencia (y sus inversos) muestran el número de la transferencia.
+  numero: sql<number | null>`coalesce(${movimientos.numero}, ${transferencias.numero})`,
+  anioDeNumero: sql<number>`case when ${movimientos.numero} is null and ${transferencias.numero} is not null then ${transferencias.anioDeNumero} else ${movimientos.anioDeNumero} end`,
   mesConciliado: mesConciliadoDe(movimientos.cuentaBancariaId, movimientos.fecha),
   cuentaConConciliaciones: cuentaConConciliacionesDe(movimientos.cuentaBancariaId),
 };
@@ -174,6 +178,7 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
       .from(movimientos)
       .leftJoin(cuentaBancaria, eq(movimientos.cuentaBancariaId, cuentaBancaria.id))
       .innerJoin(conceptos, eq(conceptos.id, movimientos.conceptoId))
-      .leftJoin(chequeDelMovimiento, eq(chequeDelMovimiento.movimientoId, movimientos.id));
+      .leftJoin(chequeDelMovimiento, eq(chequeDelMovimiento.movimientoId, movimientos.id))
+      .leftJoin(transferencias, eq(transferencias.id, movimientos.transferenciaId));
   }
 }

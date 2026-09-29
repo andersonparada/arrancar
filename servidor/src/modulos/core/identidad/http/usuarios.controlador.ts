@@ -58,6 +58,7 @@ export class UsuariosControlador {
     await this.casosDeUso.cambiarContrasena.ejecutar(operadorDe(solicitud), {
       usuarioId: solicitud.params.usuarioId,
       contrasena: solicitud.body.contrasena,
+      contrasenaActual: solicitud.body.contrasenaActual,
     });
     return respuesta.status(204).send();
   };

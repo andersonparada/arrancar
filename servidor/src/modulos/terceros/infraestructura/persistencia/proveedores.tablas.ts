@@ -1,5 +1,6 @@
-import { boolean, index, text, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
+import { nombreNormalizado } from '../../../core/base-datos/nombre-normalizado.js';
 import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { esquemaTerceros, terceros } from './terceros.tablas.js';
 
@@ -16,7 +17,10 @@ export const categoriasProveedor = esquemaTerceros.table(
     ...marcasDeTiempo,
     ...autoria,
   },
-  (t) => [unique('categorias_proveedor_nombre_por_cuenta').on(t.cuentaId, t.nombre), politicaPorCuenta()],
+  (t) => [
+    uniqueIndex('categorias_proveedor_nombre_por_cuenta').on(t.cuentaId, nombreNormalizado(t.nombre)),
+    politicaPorCuenta(),
+  ],
 );
 
 /** Papel de proveedor de un tercero; cada tercero tiene a lo sumo uno. */

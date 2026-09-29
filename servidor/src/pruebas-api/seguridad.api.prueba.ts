@@ -51,5 +51,7 @@ describe('seguridad general de la API', () => {
 
     expect(ultimoPermitido.estado).toBe(401);
     expect(bloqueado.estado).toBe(429);
+    expect(bloqueado.cuerpo.error.codigo).toBe('demasiadas_solicitudes');
+    expect(bloqueado.cuerpo.error.mensaje).toContain('demasiados intentos');
   });
 });

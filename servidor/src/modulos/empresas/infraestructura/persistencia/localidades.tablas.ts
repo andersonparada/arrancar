@@ -14,6 +14,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { politicasDelRegistroConAlcance } from '../../../core/base-datos/alcance.js';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
+import { nombreNormalizado } from '../../../core/base-datos/nombre-normalizado.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { municipios } from '../../../core/geografia/infraestructura/persistencia/geografia.tablas.js';
 import { ALCANCE_DE_LOCALIDADES } from './alcance-de-localidades.js';
@@ -87,7 +88,7 @@ export const localidades = esquemaEmpresas.table(
       foreignColumns: [municipios.departamentoCodigo, municipios.codigo],
     }),
     unique('localidades_codigo_unico').on(t.empresaId, t.codigo),
-    unique('localidades_nombre_unico').on(t.empresaId, t.nombre),
+    uniqueIndex('localidades_nombre_unico').on(t.empresaId, nombreNormalizado(t.nombre)),
     // Destino de las llaves compuestas de los accesos y de lo que apunte a una localidad.
     unique('localidades_id_empresa_unico').on(t.id, t.empresaId),
     uniqueIndex('localidades_establecimiento_sat_unico')

@@ -113,7 +113,10 @@ describe('números de notas por API', () => {
     const reporte = await cuenta.propietario.get(`/api/bancos/movimientos/reporte?cuentaBancariaId=${destino}`);
     const deTransferencia = reporte.cuerpo.filas.filter((m: { saldoInicial: boolean }) => !m.saldoInicial);
     expect(deTransferencia).toHaveLength(3); // sus dos notas y el inverso de la anulada
-    expect(deTransferencia.map((m: { numero: number | null }) => m.numero)).toEqual([null, null, null]);
+    // No llevan número propio: el reporte muestra el de su transferencia (el inverso, el de la anulada).
+    expect(deTransferencia.map((m: { numero: number | null }) => m.numero)).toEqual([1, 2, 2]);
+    const notas = await cuenta.propietario.get(RUTA_NOTAS);
+    expect(notas.cuerpo.filter((n: { transferenciaId: string | null }) => n.transferenciaId)).toHaveLength(0);
   });
 
   it('al corregir una nota y cambiar su tipo toma el siguiente de su nuevo tipo', async () => {

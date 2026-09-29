@@ -1,6 +1,7 @@
-import { boolean, primaryKey, text, unique, uuid } from 'drizzle-orm/pg-core';
+import { boolean, primaryKey, text, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
 import { idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
+import { nombreNormalizado } from '../../../base-datos/nombre-normalizado.js';
 import { cuentas } from '../../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 
 /**
@@ -20,7 +21,7 @@ export const roles = esquemaCore.table(
     ...marcasDeTiempo,
   },
   (t) => [
-    unique('roles_nombre_por_cuenta').on(t.cuentaId, t.nombre),
+    uniqueIndex('roles_nombre_por_cuenta').on(t.cuentaId, nombreNormalizado(t.nombre)),
     /** Destino de la llave compuesta de `usuario_roles`: un usuario solo recibe roles de su cuenta. */
     unique('roles_id_cuenta_unico').on(t.id, t.cuentaId),
   ],

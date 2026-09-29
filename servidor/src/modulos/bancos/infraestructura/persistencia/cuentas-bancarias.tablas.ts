@@ -1,5 +1,6 @@
-import { boolean, index, text, type AnyPgColumn, unique, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, text, type AnyPgColumn, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
+import { nombreNormalizado } from '../../../core/base-datos/nombre-normalizado.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { esquemaBancos } from './esquema.tablas.js';
 import { bancos } from './bancos.tablas.js';
@@ -26,7 +27,7 @@ export const cuentasBancarias = esquemaBancos.table(
     ...autoria,
   },
   (t) => [
-    unique('cuentas_bancarias_nombre_unico').on(t.empresaId, t.nombre),
+    uniqueIndex('cuentas_bancarias_nombre_unico').on(t.empresaId, nombreNormalizado(t.nombre)),
     unique('cuentas_bancarias_numero_por_banco_unico').on(t.empresaId, t.bancoId, t.numeroNormalizado),
     index('cuentas_bancarias_banco_idx').on(t.bancoId),
     politicaPorEmpresa(),

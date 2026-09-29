@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, foreignKey, index, text, unique, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, foreignKey, index, text, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { nombreNormalizado } from '../../../core/base-datos/nombre-normalizado.js';
 import { politicaPorAlcanceOpcional } from '../../../core/base-datos/alcance.js';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
@@ -35,7 +36,7 @@ export const departamentos = esquemaEmpresas.table(
     }),
     unique('departamentos_codigo_unico').on(t.empresaId, t.codigo),
     // Único en la empresa aunque los departamentos sean de localidades distintas.
-    unique('departamentos_nombre_unico').on(t.empresaId, t.nombre),
+    uniqueIndex('departamentos_nombre_unico').on(t.empresaId, nombreNormalizado(t.nombre)),
     // Destino de las llaves compuestas de lo que apunte a un departamento.
     unique('departamentos_id_empresa_unico').on(t.id, t.empresaId),
     index('departamentos_localidad_idx').on(t.localidadId),

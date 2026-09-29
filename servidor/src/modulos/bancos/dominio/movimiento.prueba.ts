@@ -105,7 +105,8 @@ describe('las otras dos formas de revertir', () => {
     const inverso = deTransferencia.revertirPorTransferencia('2026-01-20', 'Duplicada');
 
     expect(inverso.instantanea()).toMatchObject({ tipo: 'credito', revierteAId: deTransferencia.id.valor });
-    expect(inverso.instantanea().transferenciaId).toBeNull();
+    expect(inverso.instantanea().transferenciaId).toBe('una-transferencia');
+    expect(inverso.llevaNumero).toBe(false);
     expect(deTransferencia.estaRevertido).toBe(true);
   });
 

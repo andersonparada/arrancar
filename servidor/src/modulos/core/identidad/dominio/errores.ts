@@ -48,3 +48,12 @@ export class SinNombreDeUsuarioLibre extends ReglaDeNegocioInfringida {
     super('No se pudo generar un usuario libre con ese nombre; escríbalo a mano (solo letras).');
   }
 }
+
+/** Quien cambia su propia contraseña debe escribir la actual. */
+export class ContrasenaActualIncorrecta extends DatoInvalido {
+  readonly codigo = 'contrasena_actual_incorrecta';
+
+  constructor() {
+    super('La contraseña actual no es correcta.');
+  }
+}

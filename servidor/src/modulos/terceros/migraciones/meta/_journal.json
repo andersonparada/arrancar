@@ -43,6 +43,13 @@
       "when": 1790701981185,
       "tag": "0005_permisos_por_accion",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790717790148,
+      "tag": "0006_nombres_sin_mayusculas_ni_acentos",
+      "breakpoints": true
     }
   ]
 }

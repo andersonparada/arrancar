@@ -95,8 +95,9 @@ export class ApiUsuarios {
     return this.http.reemplazar<void>(`/usuarios/${id}/permisos`, datos);
   }
 
-  cambiarContrasena(id: string, contrasena: string) {
-    return this.http.reemplazar<void>(`/usuarios/${id}/contrasena`, { contrasena });
+  /** `contrasenaActual` solo se manda cuando el usuario cambia la suya. */
+  cambiarContrasena(id: string, contrasena: string, contrasenaActual?: string) {
+    return this.http.reemplazar<void>(`/usuarios/${id}/contrasena`, { contrasena, contrasenaActual });
   }
 }
 
