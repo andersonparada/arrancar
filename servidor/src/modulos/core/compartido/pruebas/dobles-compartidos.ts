@@ -1,6 +1,7 @@
 import { Readable } from 'node:stream';
 import type { Almacenamiento } from '../aplicacion/almacenamiento.js';
 import type { Auditoria, EntradaDeAuditoria } from '../aplicacion/auditoria.js';
+import type { Correlativos, NumeroAsignado } from '../aplicacion/correlativos.js';
 import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import type { Operador } from '../aplicacion/operador.js';
 import type { PublicadorEventos } from '../aplicacion/publicador-eventos.js';
@@ -40,6 +41,24 @@ export class AuditoriaEnMemoria implements Auditoria {
 
   acciones(): string[] {
     return this.entradas.map(({ recurso, accion }) => `${recurso}:${accion}`);
+  }
+}
+
+/**
+ * Correlativos en memoria: un contador por clave (y por año, si `reiniciaCadaAnio`). No modela empresas
+ * distintas ni el rollback: eso lo prueba `correlativos-postgres.prueba.ts` contra la base real.
+ */
+export class CorrelativosEnMemoria implements Correlativos {
+  private readonly contadores = new Map<string, number>();
+
+  constructor(private readonly reiniciaCadaAnio = false) {}
+
+  async siguiente(clave: string, fecha: string): Promise<NumeroAsignado> {
+    const anio = this.reiniciaCadaAnio ? Number(fecha.slice(0, 4)) : 0;
+    const llave = `${clave}|${anio}`;
+    const numero = (this.contadores.get(llave) ?? 0) + 1;
+    this.contadores.set(llave, numero);
+    return { numero, anio };
   }
 }
 

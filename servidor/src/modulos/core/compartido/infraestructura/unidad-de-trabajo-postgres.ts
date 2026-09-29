@@ -66,3 +66,10 @@ export function transaccionEnCurso(): Transaccion {
   if (!enCurso) throw new ConsultaFueraDeUnidadDeTrabajo();
   return enCurso.transaccion;
 }
+
+/** El contexto (empresa, cuenta y usuario) de la unidad de trabajo actual; falla si no hay ninguna. */
+export function contextoEnCurso(): ContextoEmpresa {
+  const enCurso = trabajoEnCurso.getStore();
+  if (!enCurso) throw new ConsultaFueraDeUnidadDeTrabajo();
+  return enCurso.contexto;
+}

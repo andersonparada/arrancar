@@ -9,6 +9,7 @@ import { componerBitacora } from './bitacora/contexto.js';
 import { componerConfiguracion } from './configuracion/contexto.js';
 import { variablesRegionales } from './configuracion/variables-regionales.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
+import { REINICIO_ANUAL_DE_CORRELATIVOS } from './compartido/infraestructura/politica-de-reinicio-anual.configuracion.js';
 import { componerGeografia } from './geografia/contexto.js';
 import { componerCuentas } from './cuentas/contexto.js';
 import { componerAutorizacion } from './autorizacion/contexto.js';
@@ -86,6 +87,14 @@ export const moduloCore: DefinicionModulo = {
       esquema: z.number().int().min(60).max(240),
       predeterminado: 60,
       niveles: ['instalacion'],
+    }),
+    definirConfiguracion({
+      clave: REINICIO_ANUAL_DE_CORRELATIVOS,
+      descripcion:
+        'Reinicia en 1 cada año los correlativos internos de comprobantes (notas, transferencias). Por omisión no se reinician.',
+      esquema: z.boolean(),
+      predeterminado: false,
+      niveles: ['instalacion', 'empresa'],
     }),
     ...variablesRegionales,
   ],

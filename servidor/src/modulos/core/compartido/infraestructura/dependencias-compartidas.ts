@@ -2,6 +2,8 @@ import { bd } from '../../base-datos/conexion.js';
 import { busEventos } from '../../eventos/bus-eventos.js';
 import type { DependenciasCompartidas } from '../aplicacion/dependencias-compartidas.js';
 import { AuditoriaPostgres } from './auditoria-postgres.js';
+import { CorrelativosPostgres } from './correlativos-postgres.js';
+import { PoliticaDeReinicioAnualEnConfiguracion } from './politica-de-reinicio-anual.configuracion.js';
 import { PublicadorEventosEnBus } from './publicador-eventos-en-bus.js';
 import { UnidadDeTrabajoPostgres } from './unidad-de-trabajo-postgres.js';
 
@@ -13,6 +15,7 @@ export function dependenciasCompartidas(): DependenciasCompartidas {
     unidadDeTrabajo: new UnidadDeTrabajoPostgres(bd),
     publicadorEventos: new PublicadorEventosEnBus(busEventos),
     auditoria: new AuditoriaPostgres(),
+    correlativos: new CorrelativosPostgres(new PoliticaDeReinicioAnualEnConfiguracion()),
   };
   return dependencias;
 }
