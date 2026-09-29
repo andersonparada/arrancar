@@ -5,6 +5,7 @@ import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-int
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiTiposDeLocalidad, type TipoDeLocalidad } from '../../servicios/tipos-de-localidad.api';
 import { datosDeTipoDeLocalidad, edicionDe, type EdicionDeTipoDeLocalidad } from './edicion-de-tipo-de-localidad';
+import { usarEliminacionDeTipoDeLocalidad } from './usar-eliminacion-de-tipo-de-localidad';
 
 const SIN_REGISTROS: TipoDeLocalidad[] = [];
 
@@ -45,5 +46,7 @@ export function usarTiposDeLocalidad() {
   const ventana = usarVentanaDeTiposDeLocalidad(cargar);
   const intercambio = usarIntercambio(apiTiposDeLocalidad.intercambio, cargar);
 
-  return { registros, cargando, cargar, intercambio, ...ventana };
+  const { eliminar } = usarEliminacionDeTipoDeLocalidad(cargar);
+
+  return { registros, cargando, cargar, intercambio, eliminar, ...ventana };
 }

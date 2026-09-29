@@ -1,4 +1,4 @@
-import { Building2, MapPinned } from 'lucide-vue-next';
+import { Building2, MapPin, MapPinned } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_EMPRESAS, VENTANAS_EMPRESAS } from './textos';
 // generador: importaciones
@@ -17,6 +17,32 @@ export const moduloEmpresas: DefinicionModuloCliente = {
       name: 'empresas.tipos-de-localidad',
       component: () => import('./paginas/ListaDeTiposDeLocalidad.vue'),
       meta: { permiso: 'empresas.tipos-de-localidad.ver', titulo: VENTANAS_EMPRESAS.tiposDeLocalidad.titulo },
+    },
+    {
+      path: '/empresas/localidades',
+      name: 'empresas.localidades',
+      component: () => import('./paginas/ListaDeLocalidades.vue'),
+      meta: { permiso: 'empresas.localidades.ver', titulo: VENTANAS_EMPRESAS.localidades.titulo },
+    },
+    {
+      path: '/empresas/localidades/nuevo',
+      name: 'empresas.localidades.nuevo',
+      component: () => import('./paginas/FormularioDeLocalidad.vue'),
+      meta: { permiso: 'empresas.localidades.crear', titulo: VENTANAS_EMPRESAS.localidades.nuevo },
+    },
+    {
+      path: '/empresas/localidades/:localidadId',
+      name: 'empresas.localidades.ficha',
+      component: () => import('./paginas/FichaDeLocalidad.vue'),
+      props: true,
+      meta: { permiso: 'empresas.localidades.ver', titulo: VENTANAS_EMPRESAS.localidades.titulo },
+    },
+    {
+      path: '/empresas/localidades/:localidadId/editar',
+      name: 'empresas.localidades.editar',
+      component: () => import('./paginas/FormularioDeLocalidad.vue'),
+      props: true,
+      meta: { permiso: 'empresas.localidades.editar', titulo: VENTANAS_EMPRESAS.localidades.editar },
     },
     // generador: rutas
   ],
@@ -39,6 +65,13 @@ export const moduloEmpresas: DefinicionModuloCliente = {
           icono: MapPinned,
           seccion: 'administracion',
           permiso: 'empresas.tipos-de-localidad.ver',
+        },
+        {
+          titulo: VENTANAS_EMPRESAS.localidades.titulo,
+          ruta: '/empresas/localidades',
+          icono: MapPin,
+          seccion: 'administracion',
+          permiso: 'empresas.localidades.ver',
         },
         // generador: menu
       ],

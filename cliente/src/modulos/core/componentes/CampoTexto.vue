@@ -15,6 +15,8 @@ defineProps<{
   soloLectura?: boolean;
   /** Para números: `any` acepta decimales; sin él, el navegador solo acepta enteros. */
   paso?: string;
+  /** Tope de caracteres que deja escribir el navegador (el servidor lo valida igual). */
+  longitudMaxima?: number;
 }>();
 
 const modelo = defineModel<string | number | null>();
@@ -49,6 +51,7 @@ const id = useId();
       :autocorrect="sinCorreccion ? 'off' : undefined"
       :spellcheck="sinCorreccion ? false : undefined"
       :readonly="soloLectura"
+      :maxlength="longitudMaxima"
       :aria-invalid="!!error"
       :aria-describedby="error || ayuda ? `${id}-nota` : undefined"
       class="rounded-lg border-0 bg-white px-3 py-2.5 text-base ring-1 ring-tierra-200 placeholder:text-tierra-400 read-only:bg-tierra-100 read-only:text-tierra-600 focus:ring-2 focus:ring-campo-500 aria-invalid:ring-red-500 sm:text-sm dark:bg-tierra-800 dark:ring-tierra-700 dark:read-only:bg-tierra-900"

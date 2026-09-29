@@ -9,6 +9,13 @@ export interface EdicionDeTipoDeLocalidad {
   activo: boolean;
 }
 
+/** Lo máximo que admite el servidor para el nombre. */
+export const LARGO_MAXIMO_DEL_NOMBRE = 60;
+
+/** Lo que se le pregunta al operador antes de eliminar. */
+export const mensajeDeEliminacion = (nombre: string): string =>
+  `Se eliminará el tipo de localidad «${nombre}». Si alguna localidad ya lo usa no se podrá eliminar; en ese caso inactívelo desde Editar.`;
+
 const TIPO_DE_LOCALIDAD_NUEVO: Omit<EdicionDeTipoDeLocalidad, 'abierta' | 'id'> = {
   nombre: '',
   activo: true,
@@ -27,6 +34,6 @@ export function edicionDe(tipoDeLocalidad?: TipoDeLocalidad): EdicionDeTipoDeLoc
 
 /** Lo que se manda al servidor: lo vacío como `null` y los números como números. */
 export const datosDeTipoDeLocalidad = (edicion: EdicionDeTipoDeLocalidad): DatosTipoDeLocalidad => ({
-  nombre: edicion.nombre,
+  nombre: edicion.nombre.trim().slice(0, LARGO_MAXIMO_DEL_NOMBRE),
   activo: edicion.activo,
 });

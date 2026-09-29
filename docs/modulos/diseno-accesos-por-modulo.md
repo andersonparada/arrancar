@@ -545,8 +545,9 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
    módulos».
 3. **[HECHO] H5b-3 (servidor) Tipos de localidad.** Tabla, semilla (migración, `RegistrarEmpresa`
    y catálogo vacío), casos de uso, rutas, Excel, permisos (migraciones 3 y 4).
-4. **H5b-3 (cliente) Tipos de localidad.** Pantalla de catálogo y menú.
-5. **H5b-4 (servidor) Localidades.** Tablas `localidades` y `accesos_a_localidades`,
+4. **[HECHO] H5b-3 (cliente) Tipos de localidad.** Pantalla de catálogo y menú; botón eliminar con confirmación
+   (409 `RecursoEnUso` se muestra con el aviso del servidor), nombre limitado a 60 (`longitudMaxima` en `CampoTexto`).
+5. **[HECHO] H5b-4 (servidor) Localidades.** Tablas `localidades` y `accesos_a_localidades`,
    `ALCANCE_DE_LOCALIDADES`, `recursosConAlcance`, disparador, casos de uso (crear con
    auditoría de la asignación, editar, inactivar, eliminar con usuarios con acceso en la
    auditoría), mensajes de duplicado, Excel, permisos (migraciones 5 y 6). Pruebas de
@@ -605,6 +606,29 @@ Requisito previo: el punto 1 de «Siguiente» (unificar `soloAccesoTotal` con
 - Cliente generado sin ajustes salvo dos arreglos mecánicos para que compile y pase ESLint: importaciones duplicadas en
   `modulo.ts` y `SIN_REGISTROS` en `usar-tipos-de-localidad.ts` (la plantilla `usar` genera 27 líneas con nombres
   largos, y el máximo es 25; conviene corregir la plantilla). Su campo `nombre` aún permite 150 caracteres: el paso 4 lo baja a 60.
+
+## 14. Notas de implementación del paso 5 (2026-09-29)
+
+- Generado con `npm run generar -- recurso empresas/localidad` (`generador/definiciones/empresas/localidad.ts`) y completado a
+  mano: llave compuesta `(tipo_id, empresa_id)`, `checks` del diseño, llave a `core.municipios`, `ALCANCE_DE_LOCALIDADES`
+  (en `alcance-de-localidades.ts`, reexportado por `accesos-a-localidades.tablas.ts`, para no importar las tablas en círculo)
+  y las políticas del core. La columna de estado se llama `activo` (no `activa`) para no salirse del generador.
+- Migraciones de `empresas`: `0006_localidades_y_accesos` (generada) y `0007_asignar_localidad_al_creador` (`--custom`: el
+  disparador). **Sin permisos para roles** (decisión del usuario): solo el acceso total recibe los nuevos.
+- Permisos: `.ver`, `.ver-todas`, `.crear`, `.editar`, `.eliminar`, `.asignar`, `.importar`, `.exportar`;
+  `recursosConAlcance` con `permisoVerTodos` y `permisoAsignar`. Rutas: CRUD, `DELETE` y Excel (las de la ventana de accesos
+  son del paso 7).
+- `CrearLocalidad` audita `asignar` (recurso `empresas.accesos-a-localidades`, `aSiMismo: true`) si el disparador dejó la
+  asignación (puerto `ConsultasDeAccesosALocalidades`). `EliminarLocalidad` guarda en la auditoría el DTO y `usuariosConAcceso`.
+- **Importar no asigna:** `DatosDelRecurso.sinAsignarAlCrear` (core) hace que `IntercambioDeRecurso.importar` (ensayo y
+  guardado) use un operador con `sinAsignarAlCrear`; las localidades lo activan. En ese caso `CrearLocalidad` no vuelve a
+  leer la localidad (quien importa no la ve) y responde con el DTO armado desde la entidad.
+- Mensajes de duplicado por código, nombre y establecimiento SAT en `MENSAJES_POR_RESTRICCION` (sugieren pedir acceso).
+- Prueba nueva del core `politicas-de-los-modulos.prueba.ts` (toda tabla de módulo con RLS; cada recurso con alcance con su
+  tabla de accesos y políticas). Pruebas de API con un usuario sin `ver-todas` (crear, quedar asignado, no ver lo ajeno,
+  alerta de duplicado, importar sin asignar, borrar una empresa con localidades).
+- El cliente quedó generado sin ajustar (lista, formulario y ficha de Localidades; sin tipo ni municipio en selectores,
+  sin botón de eliminar): es del paso 6.
 
 ## 11. Preguntas para el usuario
 

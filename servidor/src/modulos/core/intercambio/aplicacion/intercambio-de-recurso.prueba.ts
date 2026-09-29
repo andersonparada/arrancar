@@ -154,3 +154,39 @@ describe('exportar', () => {
     expect(guardados).toEqual([{ arete: 'GT-07', nacimiento: '2024-03-15', potreroId: 'p1' }]);
   });
 });
+
+describe('recursos con alcance por registro', () => {
+  const operadores: boolean[] = [];
+
+  function intercambioQueRecuerda(sinAsignarAlCrear?: boolean) {
+    operadores.splice(0);
+    return new IntercambioDeRecurso<Animal, Animal>({
+      nombre: 'Animales',
+      columnas: COLUMNAS,
+      libro,
+      unidadDeTrabajo: new UnidadQueDeshace(guardados),
+      validar: validadorDeZod(esquema),
+      listar: async () => guardados,
+      crear: async (quien) => void operadores.push(Boolean(quien.sinAsignarAlCrear)),
+      interpretarError: () => null,
+      sinAsignarAlCrear,
+    });
+  }
+
+  it('al importar y al ensayar, el operador lleva sinAsignarAlCrear si el recurso lo pide', async () => {
+    const contenido = await excelCon([['GT-01', null, null]]);
+
+    await intercambioQueRecuerda(true).importar(operador, { contenido, ensayo: true });
+    await intercambioQueRecuerda(true).importar(operador, { contenido, ensayo: false });
+
+    expect(operadores).toEqual([true]);
+  });
+
+  it('sin pedirlo, el operador queda como llegó', async () => {
+    const contenido = await excelCon([['GT-01', null, null]]);
+
+    await intercambioQueRecuerda().importar(operador, { contenido, ensayo: false });
+
+    expect(operadores).toEqual([false]);
+  });
+});

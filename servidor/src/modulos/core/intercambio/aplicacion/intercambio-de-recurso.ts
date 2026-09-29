@@ -35,6 +35,11 @@ export interface DatosDelRecurso<Registro, Solicitud, Filtro = void> {
   validar: Validador<Solicitud>;
   listar: (operador: Operador, filtro?: Filtro) => Promise<Registro[]>;
   crear: (operador: Operador, solicitud: Solicitud) => Promise<unknown>;
+  /**
+   * Los registros importados (y los del ensayo) no se asignan a quien importa: para los recursos con
+   * alcance por registro, que se reparten luego desde su ventana de accesos.
+   */
+  sinAsignarAlCrear?: boolean;
 }
 
 /** Lo que pone el core, igual para todos los recursos. */
@@ -91,7 +96,10 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
   }
 
   /** Con `ensayo` revisa todo y no guarda nada. */
-  async importar(operador: Operador, { contenido, ensayo }: { contenido: Buffer; ensayo: boolean }) {
+  async importar(operadorDeLaSolicitud: Operador, { contenido, ensayo }: { contenido: Buffer; ensayo: boolean }) {
+    const operador = this.dependencias.sinAsignarAlCrear
+      ? { ...operadorDeLaSolicitud, sinAsignarAlCrear: true }
+      : operadorDeLaSolicitud;
     const hoja = await this.dependencias.libro.leer(contenido);
     if (hoja.filas.length === 0) throw new ArchivoSinFilas();
     if (hoja.filas.length > MAXIMO_DE_FILAS) throw new DemasiadasFilas(MAXIMO_DE_FILAS);

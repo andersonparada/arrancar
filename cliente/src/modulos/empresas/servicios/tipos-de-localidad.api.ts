@@ -35,6 +35,11 @@ export class ApiTiposDeLocalidad {
   actualizar(id: string, datos: DatosTipoDeLocalidad) {
     return this.http.reemplazar<TipoDeLocalidad>(`${RUTA}/${id}`, datos);
   }
+
+  /** Falla con 409 si el tipo ya lo usa alguna localidad. */
+  eliminar(id: string) {
+    return this.http.eliminar(`${RUTA}/${id}`);
+  }
 }
 
 export const apiTiposDeLocalidad = new ApiTiposDeLocalidad(clienteHttp);

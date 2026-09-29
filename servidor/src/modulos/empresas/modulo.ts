@@ -17,10 +17,12 @@ import { RepositorioEmpresasDrizzle } from './infraestructura/persistencia/repos
 import { rutasDeTiposDeLocalidad } from './composicion/tipos-de-localidad.js';
 import { SembrarTiposDeLocalidad } from './aplicacion/casos-uso/tipos-de-localidad/sembrar-tipos-de-localidad.js';
 import { RepositorioTiposDeLocalidadDrizzle } from './infraestructura/persistencia/repositorio-tipos-de-localidad.drizzle.js';
+import { rutasDeLocalidades } from './composicion/localidades.js';
+import { ALCANCE_DE_LOCALIDADES } from './infraestructura/persistencia/accesos-a-localidades.tablas.js';
 // generador: importaciones
 
-/** Raíz de composición: el único lugar donde se eligen las implementaciones concretas. */
-function componerRutas(compartidas: DependenciasCompartidas) {
+/** El controlador de empresas con sus casos de uso, y lo que comparten las demás rutas del módulo. */
+function componerEmpresas(compartidas: DependenciasCompartidas) {
   const { unidadDeTrabajo, publicadorEventos, auditoria } = compartidas;
   const repositorio = new RepositorioEmpresasDrizzle();
   const consultas = new ConsultasEmpresasDrizzle();
@@ -40,10 +42,17 @@ function componerRutas(compartidas: DependenciasCompartidas) {
     }),
     actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio, consultas, alcance, auditoria }),
   });
+  return { controlador, consultas, alcance };
+}
+
+/** Raíz de composición: el único lugar donde se eligen las implementaciones concretas. */
+function componerRutas(compartidas: DependenciasCompartidas) {
+  const { controlador, consultas, alcance } = componerEmpresas(compartidas);
   return rutasDelModulo([
     rutasEmpresas(controlador),
     rutasDeDatosDeEmpresaComponidas(compartidas, { consultas, alcance }),
     rutasDeTiposDeLocalidad(),
+    rutasDeLocalidades(),
     // generador: rutas
   ]);
 }
@@ -71,7 +80,27 @@ export const moduloEmpresas: DefinicionModulo = {
     { clave: 'empresas.tipos-de-localidad.eliminar', descripcion: 'Eliminar tipos de localidad' },
     { clave: 'empresas.tipos-de-localidad.importar', descripcion: 'Importar tipos de localidad desde Excel' },
     { clave: 'empresas.tipos-de-localidad.exportar', descripcion: 'Exportar tipos de localidad a Excel' },
+    { clave: 'empresas.localidades.ver', descripcion: 'Ver las localidades que se le asignaron' },
+    { clave: 'empresas.localidades.ver-todas', descripcion: 'Ver y usar todas las localidades de la empresa' },
+    { clave: 'empresas.localidades.crear', descripcion: 'Registrar localidades' },
+    { clave: 'empresas.localidades.editar', descripcion: 'Editar, inactivar y reactivar localidades' },
+    { clave: 'empresas.localidades.eliminar', descripcion: 'Eliminar localidades' },
+    {
+      clave: 'empresas.localidades.asignar',
+      descripcion: 'Dar y quitar a los usuarios el acceso a las localidades (ve todas en esa ventana)',
+    },
+    { clave: 'empresas.localidades.importar', descripcion: 'Importar localidades desde Excel' },
+    { clave: 'empresas.localidades.exportar', descripcion: 'Exportar localidades a Excel' },
     // generador: permisos
+  ],
+  recursosConAlcance: [
+    {
+      clave: 'empresas.localidades',
+      descripcion: 'Localidades',
+      permisoVerTodos: 'empresas.localidades.ver-todas',
+      permisoAsignar: 'empresas.localidades.asignar',
+      alcance: ALCANCE_DE_LOCALIDADES,
+    },
   ],
   rutas: componerRutas(dependenciasCompartidas()),
 };

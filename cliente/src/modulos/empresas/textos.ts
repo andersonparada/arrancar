@@ -9,9 +9,15 @@ export const VENTANAS_EMPRESAS = {
   },
   tiposDeLocalidad: {
     titulo: 'Tipos de localidad',
-    descripcion: 'Los tipos de localidad de la empresa.',
+    descripcion: 'Finca, planta, oficina…: las clases de localidad que usa la empresa.',
     nuevo: 'Nuevo tipo de localidad',
     editar: 'Editar tipo de localidad',
+  },
+  localidades: {
+    titulo: 'Localidades',
+    descripcion: 'Las localidades de la empresa.',
+    nuevo: 'Nueva localidad',
+    editar: 'Editar localidad',
   },
   // generador: ventanas
 } as const;
