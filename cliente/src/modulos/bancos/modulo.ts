@@ -5,6 +5,7 @@ import {
   CheckCheck,
   FileText,
   Landmark,
+  ListOrdered,
   NotebookTabs,
   ScrollText,
   WalletCards,
@@ -99,6 +100,12 @@ export const moduloBancos: DefinicionModuloCliente = {
       props: true,
       meta: { permiso: 'bancos.conciliaciones.ver', titulo: 'Conciliar' },
     },
+    {
+      path: '/bancos/correlativos',
+      name: 'bancos.correlativos',
+      component: () => import('./paginas/ReporteDeCorrelativos.vue'),
+      meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.correlativos.titulo },
+    },
     // generador: rutas
   ],
   menu: [
@@ -160,6 +167,13 @@ export const moduloBancos: DefinicionModuloCliente = {
           titulo: VENTANAS_BANCOS.movimientos.titulo,
           ruta: '/bancos/movimientos',
           icono: ScrollText,
+          seccion: 'reportes',
+          permiso: 'bancos.movimientos.ver',
+        },
+        {
+          titulo: VENTANAS_BANCOS.correlativos.titulo,
+          ruta: '/bancos/correlativos',
+          icono: ListOrdered,
           seccion: 'reportes',
           permiso: 'bancos.movimientos.ver',
         },

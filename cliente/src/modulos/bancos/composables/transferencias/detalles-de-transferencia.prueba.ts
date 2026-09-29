@@ -20,6 +20,8 @@ const base: Transferencia = {
   motivoDeAnulacion: null,
   movimientoOrigenId: 'origen-mov',
   movimientoDestinoId: 'destino-mov',
+  numero: null,
+  anioDeNumero: 0,
   conciliacionOrigenId: null,
   conciliacionDestinoId: null,
   puedeAnular: true,
@@ -35,6 +37,14 @@ describe('título de la transferencia', () => {
 describe('detalles de la transferencia', () => {
   it('lleva fecha, monto y referencia', () => {
     expect(detallesDeTransferencia(base).map((d) => d.etiqueta)).toEqual(['Fecha', 'Monto', 'Referencia']);
+  });
+
+  it('muestra el número primero, con el año si la empresa reinicia por año', () => {
+    expect(detallesDeTransferencia({ ...base, numero: 3, anioDeNumero: 0 })[0]).toEqual({
+      etiqueta: 'No.',
+      valor: '3',
+    });
+    expect(detallesDeTransferencia({ ...base, numero: 3, anioDeNumero: 2026 })[0]?.valor).toBe('2026-3');
   });
 
   it('agrega el motivo de anulación cuando está anulada', () => {

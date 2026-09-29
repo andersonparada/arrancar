@@ -1,4 +1,5 @@
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
+import { formatearNumeroDeComprobante } from '../comunes/numero-de-comprobante';
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import type { Transferencia } from '../../servicios/transferencias.api';
 
@@ -8,7 +9,9 @@ export const tituloDeTransferencia = (transferencia: Transferencia): string =>
 
 /** Lo que muestra la tarjeta de la transferencia; el monto va aparte, destacado. */
 export function detallesDeTransferencia(transferencia: Transferencia): DetalleDeRegistro[] {
+  const numero = formatearNumeroDeComprobante(transferencia);
   const detalles: DetalleDeRegistro[] = [
+    ...(numero ? [{ etiqueta: 'No.', valor: numero }] : []),
     { etiqueta: 'Fecha', valor: formatearFecha(transferencia.fecha) },
     { etiqueta: 'Monto', valor: formatearMonto(transferencia.monto) },
     { etiqueta: 'Referencia', valor: formatearTexto(transferencia.referencia) },

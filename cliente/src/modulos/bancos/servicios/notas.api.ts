@@ -13,6 +13,8 @@ export type DatosNota = Omit<
   | 'transferenciaId'
   | 'chequeId'
   | 'numeroDeCheque'
+  | 'numero'
+  | 'anioDeNumero'
   | 'conciliacionId'
   | 'revertidoEn'
   | 'motivoDeReversion'

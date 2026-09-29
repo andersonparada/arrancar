@@ -6,6 +6,7 @@ export interface FilaExportadaDelReporte {
   fecha: string;
   cuentaBancariaNombre: string | null;
   tipoTexto: string;
+  numeroDeNota: string | null;
   numeroDeCheque: number | null;
   referencia: string | null;
   beneficiario: string | null;
@@ -21,11 +22,21 @@ const TEXTO_DEL_TIPO: Record<FilaDelReporte['tipo'], string> = {
   cheque: 'Cheque',
 };
 
+/** El número del comprobante como se ve en pantalla: `2026-15` si se reinicia por año y `15` si no; `null` si no lleva. */
+export function numeroEnTexto({
+  numero,
+  anioDeNumero,
+}: Pick<FilaDelReporte, 'numero' | 'anioDeNumero'>): string | null {
+  if (numero === null) return null;
+  return anioDeNumero > 0 ? `${anioDeNumero}-${numero}` : String(numero);
+}
+
 /** El reporte solo exporta (es lectura): débito y crédito en columnas separadas, como se ve en pantalla. */
 export const aFilaExportadaDelReporte = (fila: FilaDelReporte): FilaExportadaDelReporte => ({
   fecha: fila.fecha,
   cuentaBancariaNombre: fila.cuentaBancariaNombre,
   tipoTexto: TEXTO_DEL_TIPO[fila.tipo],
+  numeroDeNota: numeroEnTexto(fila),
   numeroDeCheque: fila.numeroDeCheque,
   referencia: fila.referencia,
   beneficiario: fila.beneficiario,
@@ -40,6 +51,7 @@ export const columnasDelReporteDeMovimientos: Columna[] = [
   { clave: 'fecha', titulo: 'Fecha', requerido: true, tipo: 'fecha' },
   { clave: 'cuentaBancariaNombre', titulo: 'Cuenta', requerido: false, tipo: 'texto' },
   { clave: 'tipoTexto', titulo: 'Tipo', requerido: true, tipo: 'texto' },
+  { clave: 'numeroDeNota', titulo: 'No.', requerido: false, tipo: 'texto' },
   { clave: 'numeroDeCheque', titulo: 'Número de cheque', requerido: false, tipo: 'entero' },
   { clave: 'referencia', titulo: 'Referencia', requerido: false, tipo: 'texto' },
   { clave: 'beneficiario', titulo: 'Beneficiario u origen', requerido: false, tipo: 'texto' },

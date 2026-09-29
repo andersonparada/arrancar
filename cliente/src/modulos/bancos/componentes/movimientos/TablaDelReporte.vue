@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
+import { formatearNumeroDeComprobante } from '../../composables/comunes/numero-de-comprobante';
 import { marcaDeReversion } from '../../composables/movimientos/estado-de-reversion';
 import { creditoDeFila, debitoDeFila, documentoDeFila } from '../../composables/movimientos/fila-del-reporte';
 import type { ReporteDeMovimientos } from '../../servicios/movimientos.api';
@@ -23,11 +24,12 @@ const CLASE_DE_MARCA = {
   <div
     class="overflow-x-auto rounded-2xl bg-white ring-1 ring-tierra-200/70 print:overflow-visible print:shadow-none print:ring-0 dark:bg-tierra-800/60 dark:ring-tierra-700"
   >
-    <table class="w-full min-w-[48rem] text-left text-sm">
+    <table class="w-full min-w-[52rem] text-left text-sm">
       <thead class="border-b border-tierra-100 text-xs tracking-wide text-tierra-500 uppercase dark:border-tierra-700">
         <tr>
           <th class="px-4 py-3 font-medium">Fecha</th>
           <th class="px-4 py-3 font-medium">Cuenta</th>
+          <th class="px-4 py-3 font-medium">No.</th>
           <th class="px-4 py-3 font-medium">Documento</th>
           <th class="px-4 py-3 font-medium">Beneficiario u origen</th>
           <th class="px-4 py-3 text-right font-medium">Débito</th>
@@ -37,7 +39,7 @@ const CLASE_DE_MARCA = {
       </thead>
       <tbody class="divide-y divide-tierra-100 dark:divide-tierra-700">
         <tr v-if="conCuenta" class="bg-tierra-50/60 font-medium dark:bg-tierra-900/40">
-          <td class="px-4 py-2.5" colspan="6">Saldo anterior</td>
+          <td class="px-4 py-2.5" colspan="7">Saldo anterior</td>
           <td class="px-4 py-2.5 text-right">{{ formatearMonto(reporte.saldoAnterior) }}</td>
         </tr>
         <tr
@@ -47,6 +49,7 @@ const CLASE_DE_MARCA = {
         >
           <td class="px-4 py-2.5 whitespace-nowrap">{{ formatearFecha(fila.fecha) }}</td>
           <td class="px-4 py-2.5">{{ formatearTexto(fila.cuentaBancariaNombre) }}</td>
+          <td class="px-4 py-2.5 whitespace-nowrap">{{ formatearTexto(formatearNumeroDeComprobante(fila)) }}</td>
           <td class="px-4 py-2.5">
             <p>{{ documentoDeFila(fila).titulo }}</p>
             <p v-if="documentoDeFila(fila).subtitulo" class="text-xs text-tierra-500">
@@ -66,12 +69,12 @@ const CLASE_DE_MARCA = {
           <td v-if="conCuenta" class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(fila.saldo) }}</td>
         </tr>
         <tr v-if="!reporte.filas.length">
-          <td class="px-4 py-6 text-center text-tierra-500" :colspan="conCuenta ? 7 : 6">
+          <td class="px-4 py-6 text-center text-tierra-500" :colspan="conCuenta ? 8 : 7">
             No hay movimientos con ese filtro.
           </td>
         </tr>
         <tr v-if="conCuenta" class="bg-tierra-50/60 font-medium dark:bg-tierra-900/40">
-          <td class="px-4 py-2.5" colspan="6">Saldo final</td>
+          <td class="px-4 py-2.5" colspan="7">Saldo final</td>
           <td class="px-4 py-2.5 text-right">{{ formatearMonto(reporte.saldoFinal) }}</td>
         </tr>
       </tbody>

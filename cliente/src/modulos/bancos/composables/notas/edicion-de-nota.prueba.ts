@@ -22,6 +22,8 @@ const nota: Movimiento = {
   transferenciaId: null,
   chequeId: null,
   numeroDeCheque: null,
+  numero: null,
+  anioDeNumero: 0,
   conciliacionId: null,
   revertidoEn: null,
   motivoDeReversion: null,

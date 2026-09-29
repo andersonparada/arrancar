@@ -20,6 +20,10 @@ export interface Movimiento {
   /** El cheque que lo creó, si es tipo `cheque`; si no, `null`. */
   chequeId: string | null;
   numeroDeCheque: number | null;
+  /** El número correlativo interno del comprobante; `null` si no lleva (cheques, saldo inicial, notas de una transferencia). */
+  numero: number | null;
+  /** El año del número si la empresa reinicia por año; 0 si no. */
+  anioDeNumero: number;
   /** La conciliación donde quedó marcado; si no, `null`. */
   conciliacionId: string | null;
   /** Cuándo se revirtió (se le creó su inverso); `null` si nunca se revirtió. */

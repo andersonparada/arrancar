@@ -22,6 +22,8 @@ const base: Movimiento = {
   transferenciaId: null,
   chequeId: null,
   numeroDeCheque: null,
+  numero: null,
+  anioDeNumero: 0,
   conciliacionId: null,
   revertidoEn: null,
   motivoDeReversion: null,
@@ -53,6 +55,14 @@ describe('detalles de la nota', () => {
   it('lleva cuenta, fecha, referencia y beneficiario', () => {
     const detalles = detallesDeNota(base);
     expect(detalles.map((d) => d.etiqueta)).toEqual(['Cuenta', 'Fecha', 'Referencia', 'Beneficiario u origen']);
+  });
+
+  it('muestra el número primero, con el año si la empresa reinicia por año', () => {
+    expect(detallesDeNota({ ...base, numero: 15, anioDeNumero: 0 })[0]).toEqual({ etiqueta: 'No.', valor: '15' });
+    expect(detallesDeNota({ ...base, numero: 15, anioDeNumero: 2026 })[0]).toEqual({
+      etiqueta: 'No.',
+      valor: '2026-15',
+    });
   });
 
   it('agrega las observaciones solo si hay', () => {

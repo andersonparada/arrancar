@@ -51,5 +51,10 @@ export const VENTANAS_BANCOS = {
     nuevo: 'Nueva conciliación',
     editar: 'Conciliar',
   },
+  correlativos: {
+    titulo: 'Correlativos',
+    descripcion:
+      'Numeración de notas y transferencias: último número, emitidos y los huecos explicados con la auditoría.',
+  },
   // generador: ventanas
 } as const;
