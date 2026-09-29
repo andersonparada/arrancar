@@ -182,3 +182,16 @@ inicio de sesión); botones y formularios usan la paleta fija (`campo`, `tierra`
 - Funciones de hasta 25 líneas, complejidad hasta 8, hasta 3 parámetros y
   archivos de hasta 200 líneas (páginas, 120): ESLint lo marca como error.
 - Pruebas junto al código como `*.prueba.ts`.
+
+## Agentes del proyecto (`.claude/agents/`)
+
+| Agente | Modelo | Para |
+|---|---|---|
+| `contador-guatemala` | Opus | Investigar y validar al 100 % lo contable y fiscal (no escribe código) |
+| `arquitecto-de-datos` | Opus | Planificar tablas, RLS, índices y migraciones (no escribe código) |
+| `seguridad` | Opus | Planificar y revisar seguridad: archivos, permisos, OWASP (no escribe código) |
+| `programador-backend` | Sonnet | Programar el servidor de un paso aprobado |
+| `programador-frontend` | Sonnet | Programar las pantallas de un paso aprobado, con buena experiencia de usuario |
+| `pruebas-qa` | Sonnet | Probar de punta a punta en el navegador y escribir las pruebas que falten |
+
+Regla: **el código lo escribe Sonnet; las decisiones y la planificación, Opus**.
