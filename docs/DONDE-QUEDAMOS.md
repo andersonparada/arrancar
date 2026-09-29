@@ -52,15 +52,33 @@ decisiones e investigación con Opus).
 
 ## Siguiente
 
-1. **H5** esquema `empresas`: datos fiscales, carga inicial y política de alcance
-   opcional (no dependen de las preguntas 29–35); lo demás espera la pregunta 29.
-2. **H6b** anulación en lote (el concepto del inverso depende de P1), **H8**, archivos PDF, **H2**, **H6**, **H5** (esquema
-   `empresas`, falta el diseño del arquitecto de datos), y H10/H11/H7 dentro de Libro
-   de compras.
-3. Corregir los planes de Libro de compras, Cuentas por pagar y la «Revisión
-   contable» de `docs/HOJA-DE-RUTA.md` con la validación del contador (H7 exento, las
-   retenciones se fijan al registrar la factura) cuando el usuario responda.
-4. Probar en el navegador lo del B6 y el B7 y rehacer la conciliación demo.
+Todas las preguntas están respondidas (ver «Respuestas del usuario (2026-09-29)» en
+`docs/modulos/plan-hallazgos-contables.md`). En orden:
+
+1. **H5a-2** datos fiscales y carga inicial del esquema `empresas`: un agente lo
+   dejó en curso al cierre del 2026-09-29; revisar si quedó el commit o cambios sin
+   commit en el árbol de WSL (formulario de Empresas, auditoría `reabrir`, permisos).
+2. **H5b/H5c** con los accesos en el esquema de cada módulo
+   (`empresas.accesos_a_localidades`): rediseñar `politicaPorAlcance` para leer la
+   tabla del módulo (pedirle el diseño al `arquitecto-de-datos`), excepción de ESLint
+   del módulo base, tipos de localidad, localidades (se asignan al creador) y
+   departamentos, y la ventana de asignación de accesos.
+3. **Ajustes de conceptos**: columnas `modulo_de_origen` y `documento_de_origen_id`
+   (P6), `causa_de_anulacion` y dejar de usar `cheque_caduco` (P1), conceptos
+   sugeridos nuevos y «Cheque rechazado» en «Cobros a clientes» (P8), «Pago a
+   proveedores» bloqueado con Cuentas por pagar activo (P3), sugerencias en la bandeja
+   «Sin clasificar» (P7).
+4. **H6b** anulación en lote de cheques caducos (inverso con el concepto heredado).
+5. **H8** interés bruto e ISR retenido en las notas de intereses.
+6. **Archivos** (imágenes con HEIC de iPhone, PDF con qpdf, límites por archivo y por
+   minuto, sin cuota) y luego **H2** (estado de cuenta junto a la conciliación, sha256).
+7. Corregir los planes de Libro de compras, Cuentas por pagar y la «Revisión
+   contable» de `docs/HOJA-DE-RUTA.md` con la validación del contador y las respuestas
+   (retenciones al registrar, casilla «Se muestra en reportes SAT», comisiones exentas,
+   IVA fuera de plazo configurable, liga por contraseña) y programar **Libro de
+   compras** (H10, H11, H7) y **Cuentas por pagar**.
+8. Probar en el navegador lo de Bancos (B6, B7, H3, H6, H9) y rehacer la conciliación
+   demo; ninguna pantalla nueva se ha visto aún en el navegador.
 
 ## Preguntas abiertas para el usuario
 
