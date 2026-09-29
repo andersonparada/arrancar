@@ -244,3 +244,11 @@ export class SoloSeEliminaLaUltima extends ReglaDeNegocioInfringida {
 }
 
 export * from './errores-de-reversion.js';
+
+export class MovimientoSinNumero extends ReglaDeNegocioInfringida {
+  readonly codigo = 'movimiento_sin_numero';
+
+  constructor() {
+    super('Los cheques, el saldo inicial y las notas de una transferencia no llevan número propio.');
+  }
+}

@@ -1,3 +1,4 @@
+import type { Correlativos } from '../../../../core/compartido/aplicacion/correlativos.js';
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
@@ -20,6 +21,7 @@ export interface DependenciasDeTransferencias {
   consultasCuentasBancarias: ConsultasCuentasBancarias;
   reglas: ReglasDeLaCuenta;
   auditoria: Auditoria;
+  correlativos: Correlativos;
 }
 
 /** @throws RecursoNoEncontrado si no existe o no es de la empresa. */

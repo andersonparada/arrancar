@@ -4,6 +4,7 @@ import {
   check,
   date,
   index,
+  integer,
   numeric,
   text,
   timestamp,
@@ -52,6 +53,12 @@ export const movimientos = esquemaBancos.table(
     motivoDeReversion: text(),
     /** El movimiento original que revierte, si este es un inverso. */
     revierteAId: uuid().references((): AnyPgColumn => movimientos.id),
+    /**
+     * Número correlativo de su tipo (nota de crédito o de débito), con `anio_de_numero` si la empresa reinicia
+     * cada año. Nulo en cheques, saldo inicial y las dos notas de una transferencia (esas llevan el de la transferencia).
+     */
+    numero: integer(),
+    anioDeNumero: integer().notNull().default(0),
     ...marcasDeTiempo,
     ...autoria,
   },
@@ -63,6 +70,9 @@ export const movimientos = esquemaBancos.table(
     uniqueIndex('movimientos_un_saldo_inicial')
       .on(t.cuentaBancariaId)
       .where(sql`${t.saldoInicial} and ${t.anuladoEn} is null`),
+    uniqueIndex('movimientos_numero_unico')
+      .on(t.empresaId, t.tipo, t.anioDeNumero, t.numero)
+      .where(sql`${t.numero} is not null`),
     check('movimientos_monto_positivo', sql`${t.monto} > 0`),
     check('movimientos_tipo_valido', sql`${t.tipo} in ('credito', 'debito', 'cheque')`),
     politicaPorEmpresa(),

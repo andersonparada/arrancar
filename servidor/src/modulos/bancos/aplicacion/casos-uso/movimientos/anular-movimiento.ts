@@ -1,4 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
 import type { MovimientoDto } from '../../dto/movimiento.dto.js';
 import type { PoliticaDeMismaFechaEnAnulacion } from '../../puertos/politica-de-misma-fecha-en-anulacion.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
@@ -33,7 +34,7 @@ export class AnularMovimiento {
    * @throws SaldoInsuficiente si el inverso deja la cuenta en negativo sin sobregiro permitido.
    */
   ejecutar(operador: Operador, { movimientoId, motivo, fecha }: AnulacionDeMovimiento): Promise<MovimientoDto> {
-    const { unidadDeTrabajo, repositorio, consultas, reglas, auditoria } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, consultas, reglas, auditoria, correlativos } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
       movimiento.exigirClase(false);
@@ -46,6 +47,7 @@ export class AnularMovimiento {
         fechas: [fechaDelInverso],
         diferencia: inverso.efectoEnCentavos,
       });
+      await numerarSiCorresponde(correlativos, inverso);
       await repositorio.guardar(movimiento);
       await repositorio.agregar(inverso);
       await auditoria.registrar({ ...AUDITORIA, registroId: movimientoId, anterior, motivo: motivoDeReversion });

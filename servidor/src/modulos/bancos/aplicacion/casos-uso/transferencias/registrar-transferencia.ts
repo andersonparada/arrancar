@@ -3,6 +3,7 @@ import { Identificador } from '../../../../core/compartido/dominio/identificador
 import { CuentaBancariaInactiva } from '../../../dominio/errores.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
 import { Transferencia } from '../../../dominio/transferencia.js';
+import { CLAVE_DE_TRANSFERENCIAS } from '../../numeracion-de-comprobantes.js';
 import type { SolicitudDeTransferencia, TransferenciaDto } from '../../dto/transferencia.dto.js';
 import type { DependenciasDeTransferencias } from './dependencias-de-transferencias.js';
 
@@ -21,13 +22,14 @@ export class RegistrarTransferencia {
    * @throws SaldoInicialNoEsElPrimero, MovimientoAntesDelSaldoInicial o SaldoInsuficiente (del origen).
    */
   ejecutar(operador: Operador, solicitud: SolicitudDeTransferencia): Promise<TransferenciaDto> {
-    const { unidadDeTrabajo, repositorio, repositorioMovimientos, consultas } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, repositorioMovimientos, consultas, correlativos } = this.dependencias;
     const empresaId = Identificador.desde<'Empresa'>(operador.empresaId);
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const transferencia = Transferencia.crear(empresaId, solicitud);
       await this.exigirCuentasActivas(solicitud);
       const notas = await this.crearNotas(empresaId, transferencia.id.valor, solicitud);
       await this.revisarReglas(operador, solicitud, notas);
+      transferencia.numerar(await correlativos.siguiente(CLAVE_DE_TRANSFERENCIAS, solicitud.fecha));
       await repositorio.agregar(transferencia);
       await repositorioMovimientos.agregar(notas.debito);
       await repositorioMovimientos.agregar(notas.credito);

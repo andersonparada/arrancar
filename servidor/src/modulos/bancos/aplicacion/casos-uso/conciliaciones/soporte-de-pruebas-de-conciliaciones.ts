@@ -1,5 +1,6 @@
 import {
   AuditoriaEnMemoria,
+  CorrelativosEnMemoria,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
@@ -40,14 +41,15 @@ export const marcarSaldoInicial = (candidatos: { id: string; saldoInicial: boole
   candidatos.find((m) => m.saldoInicial)!.id,
 ];
 
+const SIN_SOBREGIRO = new PoliticaDeSobregiroFija(false);
+
 function dependenciasDePrueba(
   movimientos: MovimientosEnMemoria,
   conciliaciones: ConciliacionesEnMemoria,
   auditoria: AuditoriaEnMemoria,
 ) {
   const unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
-  const politicaDeSobregiro = new PoliticaDeSobregiroFija(false);
-  const reglas = new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro });
+  const reglas = new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro: SIN_SOBREGIRO });
   const deConciliaciones = {
     unidadDeTrabajo,
     repositorio: conciliaciones,
@@ -61,6 +63,7 @@ function dependenciasDePrueba(
     consultas: movimientos,
     reglas,
     auditoria,
+    correlativos: new CorrelativosEnMemoria(),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(),
   };
   return { deConciliaciones, deMovimientos };

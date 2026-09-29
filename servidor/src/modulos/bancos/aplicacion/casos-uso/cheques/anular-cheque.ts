@@ -1,5 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
+import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
 import type { ChequeDto } from '../../dto/cheque.dto.js';
 import { movimientoExistente } from '../movimientos/dependencias-de-movimientos.js';
 import { chequeExistente, type DependenciasDeCheques } from './dependencias-de-cheques.js';
@@ -77,10 +78,11 @@ export class AnularCheque {
     movimiento: Movimiento,
     { motivo, fecha }: { motivo: string; fecha: string },
   ): Promise<void> {
-    const { repositorioMovimientos, reglas } = this.dependencias;
+    const { repositorioMovimientos, reglas, correlativos } = this.dependencias;
     const inverso = movimiento.revertirPorCheque(fecha, motivo);
     const { cuentaBancariaId } = movimiento.instantanea();
     await reglas.revisar(operador, { cuentaBancariaId, fechas: [fecha], diferencia: inverso.efectoEnCentavos });
+    await numerarSiCorresponde(correlativos, inverso);
     await repositorioMovimientos.guardar(movimiento);
     await repositorioMovimientos.agregar(inverso);
   }

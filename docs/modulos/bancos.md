@@ -1133,3 +1133,65 @@ enteros, ningún cálculo nuevo usa `parseFloat`.
 
 Pendiente de investigar con *Contabilidad*: en qué otros casos se permite eliminar
 (p. ej. registros aún no contabilizados de un período abierto).
+
+## H9 Correlativo interno de comprobantes (servidor hecho el 2026-09-29)
+
+Plan y decisiones: `plan-hallazgos-contables.md`, sección H9 y fila H9 de «Decisiones del usuario».
+
+### Core (H9a)
+
+- Tabla `core.correlativos` (`empresa_id`, `clave`, `anio` por omisión 0, `siguiente` > 0; llave
+  primaria `(empresa_id, clave, anio)`; RLS por empresa) y puerto `Correlativos.siguiente(clave, fecha)`,
+  que devuelve `{ numero, anio }`. `CorrelativosPostgres` usa un solo
+  `insert … on conflict do update … returning` dentro de la unidad de trabajo en curso: la fila
+  queda bloqueada hasta el `commit` (dos operaciones de la misma empresa y clave se esperan) y un
+  `rollback` deshace también el número, así que un error de validación no deja huecos.
+- **Por empresa.** Por omisión **no se reinicia cada año** (`anio` = 0). La variable de empresa
+  `core.correlativos.reinicio_anual` (booleana, `false` por omisión, niveles empresa e instalación)
+  activa el reinicio: entonces `anio` es el año de la fecha del documento y cada año vuelve a empezar en 1.
+- Doble para pruebas: `CorrelativosEnMemoria` (`core/compartido/pruebas/dobles-compartidos.ts`).
+
+### Bancos (H9b)
+
+- Claves: `bancos.notas_de_credito`, `bancos.notas_de_debito` y `bancos.transferencias`.
+- `bancos.movimientos.numero integer null` y `anio_de_numero integer not null default 0`;
+  `bancos.transferencias.numero` y `anio_de_numero`. Únicos parciales
+  `movimientos_numero_unico (empresa_id, tipo, anio_de_numero, numero) where numero is not null` y
+  `transferencias_numero_unico (empresa_id, anio_de_numero, numero) where numero is not null`.
+  **Por qué el año va en el índice:** con el reinicio anual el mismo número se repite cada año; sin
+  `anio_de_numero` el índice del plan (`empresa, tipo, numero`) lo impediría. `anio_de_numero` no
+  cambia si después se corrige la fecha de la nota, así que el número no «salta» de año.
+- **Quién lleva número:** las notas sueltas y **sus inversos** (del tipo del inverso: el inverso de una
+  nota de crédito es de débito y toma el siguiente número de débito), y también el inverso de un cheque
+  anulado con el mes conciliado (es una nota de crédito real). **No lo llevan:** los cheques (su número es
+  el de la chequera), el saldo inicial, las dos notas de una transferencia ni los inversos de esas dos notas
+  (el número va en la transferencia). Lo decide `Movimiento.llevaNumero` y lo asigna
+  `numerarSiCorresponde` (`aplicacion/numeracion-de-comprobantes.ts`) dentro de la unidad de trabajo,
+  cuando ya pasaron las validaciones.
+- Corregir una nota conserva su número, salvo que cambie de tipo (crédito ↔ débito): toma el siguiente de
+  su nuevo tipo y el anterior queda como hueco, explicado por la auditoría `corregir` (`anterior.numero`).
+- **Eliminar deja un hueco**, que es lo esperado: la auditoría guarda `anterior.numero` con quién, cuándo
+  y por qué. Ningún número se reasigna.
+- DTO de notas (`MovimientoDto`) y de transferencias (`TransferenciaDto`): `numero` (`null` si no lleva)
+  y `anioDeNumero` (0 si la empresa no reinicia por año).
+- Migraciones: `0013_h9_numero_de_comprobantes` (columnas e índices) y
+  `0014_h9_numerar_datos_existentes` (datos): numera por empresa y tipo en orden `(fecha, creado_en, id)`,
+  con la misma regla de arriba, y deja `core.correlativos.siguiente` en el último + 1 (anio 0).
+
+### Reporte de correlativos (solo servidor)
+
+`GET /api/bancos/correlativos?clave=` (permiso `bancos.movimientos.ver`; `clave` opcional, una de las
+tres). Devuelve `{ correlativos: [{ clave, nombre, anio, ultimo, emitidos, huecos }] }`, un elemento por
+clave y año (`anio` 0 si no se reinicia). Cada hueco es `{ numero, estado, explicaciones }`: `estado` es
+`explicado` si `core.auditoria` de la empresa tiene una baja (`eliminar`) o un cambio de tipo (`corregir`)
+con ese `anterior.numero` (y mismo tipo y año), con `accion`, `usuarioId`, `usuarioNombre`, `fecha` y
+`motivo`; y `alerta` si no hay rastro (por ejemplo, un borrado directo en la base). Los huecos salen de
+comparar `1..siguiente-1` con lo que hay en la tabla (`generate_series`), así incluye los del final.
+
+### Pruebas
+
+Dominio (`numeracion-de-movimientos.prueba.ts`), casos de uso (`numeracion-de-notas`,
+`numeracion-de-transferencias`, `numeracion-de-cheques` y `reporte-de-correlativos`), Postgres real
+(`correlativos-postgres.prueba.ts`: consecutivos, por empresa, por clave, rollback sin hueco,
+concurrencia y reinicio anual) y API (`bancos-correlativos`, `bancos-numeracion-anual` y
+`bancos-migracion-de-numeracion`, que corre el SQL de la migración sobre datos ya creados).

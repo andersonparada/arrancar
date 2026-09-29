@@ -13,6 +13,10 @@ export interface TransferenciaDto {
   motivoDeAnulacion: string | null;
   movimientoOrigenId: string;
   movimientoDestinoId: string;
+  /** Número correlativo de la transferencia (sus dos notas no llevan número propio); `null` solo en datos anteriores a la numeración. */
+  numero: number | null;
+  /** Año del correlativo si la empresa lo reinicia cada año; 0 si no (lo normal). */
+  anioDeNumero: number;
   /** La conciliación donde quedó marcada cada nota; `null` si sigue pendiente. */
   conciliacionOrigenId: string | null;
   conciliacionDestinoId: string | null;
@@ -32,6 +36,8 @@ export type SolicitudDeTransferencia = Omit<
   | 'motivoDeAnulacion'
   | 'movimientoOrigenId'
   | 'movimientoDestinoId'
+  | 'numero'
+  | 'anioDeNumero'
   | 'conciliacionOrigenId'
   | 'conciliacionDestinoId'
   | 'puedeAnular'

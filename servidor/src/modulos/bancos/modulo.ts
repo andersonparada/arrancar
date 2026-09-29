@@ -5,6 +5,7 @@ import { rutasDeBancos } from './composicion/bancos.js';
 import { rutasDeChequeras } from './composicion/chequeras.js';
 import { rutasDeCheques } from './composicion/cheques.js';
 import { rutasDeConciliaciones } from './composicion/conciliaciones.js';
+import { rutasDeCorrelativos } from './composicion/correlativos.js';
 import { rutasDeCuentasBancarias } from './composicion/cuentas-bancarias.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { rutasDeNotas } from './composicion/notas.js';
@@ -94,6 +95,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeChequeras(),
     rutasDeCheques(),
     rutasDeConciliaciones(),
+    rutasDeCorrelativos(),
     // generador: rutas
   ]),
 };

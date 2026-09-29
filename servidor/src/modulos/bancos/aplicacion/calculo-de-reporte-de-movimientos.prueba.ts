@@ -21,6 +21,8 @@ function movimiento(datos: Partial<MovimientoDto> & Pick<MovimientoDto, 'tipo' |
     revertidoEn: null,
     motivoDeReversion: null,
     revierteAId: null,
+    numero: null,
+    anioDeNumero: 0,
     puedeAnular: false,
     puedeEliminar: false,
     ...datos,

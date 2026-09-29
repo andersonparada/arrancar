@@ -1,5 +1,16 @@
 import { sql } from 'drizzle-orm';
-import { check, date, index, numeric, text, timestamp, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import {
+  check,
+  date,
+  index,
+  integer,
+  numeric,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  type AnyPgColumn,
+} from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
@@ -26,6 +37,9 @@ export const transferencias = esquemaBancos.table(
     monto: numeric({ precision: 14, scale: 2 }).notNull(),
     referencia: text(),
     observaciones: text(),
+    /** Número correlativo de la empresa, con `anio_de_numero` si reinicia cada año. */
+    numero: integer(),
+    anioDeNumero: integer().notNull().default(0),
     anuladaEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
     ...marcasDeTiempo,
@@ -34,6 +48,9 @@ export const transferencias = esquemaBancos.table(
   (t) => [
     index('transferencias_origen_idx').on(t.cuentaOrigenId),
     index('transferencias_destino_idx').on(t.cuentaDestinoId),
+    uniqueIndex('transferencias_numero_unico')
+      .on(t.empresaId, t.anioDeNumero, t.numero)
+      .where(sql`${t.numero} is not null`),
     check('transferencias_monto_positivo', sql`${t.monto} > 0`),
     check('transferencias_cuentas_distintas', sql`${t.cuentaOrigenId} <> ${t.cuentaDestinoId}`),
     politicaPorEmpresa(),

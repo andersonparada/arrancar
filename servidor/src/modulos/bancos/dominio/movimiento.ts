@@ -9,6 +9,7 @@ import {
   MovimientoDeCheque,
   MovimientoDeTransferencia,
   MovimientoMarcadoEnConciliacion,
+  MovimientoSinNumero,
   MovimientoYaRevertido,
   NoEsUnaNota,
   NoEsUnSaldoInicial,
@@ -17,6 +18,7 @@ import {
   NoSeEliminaUnMovimientoRevertido,
   NoSeRevierteUnInverso,
 } from './errores.js';
+import type { Numeracion } from './numeracion.js';
 
 export type MovimientoId = Identificador<'Movimiento'>;
 
@@ -45,6 +47,10 @@ export interface PropiedadesDeMovimiento extends DatosDeMovimiento {
   motivoDeReversion: string | null;
   /** El movimiento original que revierte, si este es un inverso; si no, `null`. */
   revierteAId: string | null;
+  /** Número correlativo de su tipo (nota de crédito o de débito); `null` en cheques, saldo inicial y notas de transferencia. */
+  numero: number | null;
+  /** Año del correlativo si la empresa lo reinicia cada año; 0 si no. */
+  anioDeNumero: number;
 }
 
 const MAXIMO_DEL_MOTIVO = 500;
@@ -91,6 +97,8 @@ export class Movimiento extends Entidad<MovimientoId> {
       revertidoEn: null,
       motivoDeReversion: null,
       revierteAId: vinculos.revierteAId ?? null,
+      numero: null,
+      anioDeNumero: 0,
     });
   }
 
@@ -175,6 +183,25 @@ export class Movimiento extends Entidad<MovimientoId> {
   /** @throws MovimientoMarcadoEnConciliacion si `conciliacionId` no es nulo. */
   exigirNoMarcadoEnConciliacion(conciliacionId: string | null): void {
     if (conciliacionId) throw new MovimientoMarcadoEnConciliacion();
+  }
+
+  /**
+   * Si le corresponde un número propio: las notas sueltas y los inversos que las revierten. No lo llevan
+   * los cheques (tienen el de su chequera), el saldo inicial ni las dos notas de una transferencia (el
+   * número va en la transferencia).
+   */
+  get llevaNumero(): boolean {
+    const { tipo, saldoInicial, transferenciaId } = this.propiedades;
+    return tipo !== 'cheque' && !saldoInicial && transferenciaId === null;
+  }
+
+  /**
+   * Le asigna su número correlativo (o uno nuevo, si al corregirla cambió de tipo).
+   * @throws MovimientoSinNumero si no le corresponde número.
+   */
+  numerar({ numero, anio }: Numeracion): void {
+    if (!this.llevaNumero) throw new MovimientoSinNumero();
+    this.propiedades = { ...this.propiedades, numero, anioDeNumero: anio };
   }
 
   get estaAnulado(): boolean {

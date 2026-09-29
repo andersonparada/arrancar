@@ -92,6 +92,20 @@
       "when": 1790700000000,
       "tag": "0012_h4_numero_normalizado",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790700100000,
+      "tag": "0013_h9_numero_de_comprobantes",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790700200000,
+      "tag": "0014_h9_numerar_datos_existentes",
+      "breakpoints": true
     }
   ]
 }

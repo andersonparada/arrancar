@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   AuditoriaEnMemoria,
+  CorrelativosEnMemoria,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
@@ -59,6 +60,7 @@ beforeEach(() => {
     consultas: registros,
     reglas,
     auditoria,
+    correlativos: new CorrelativosEnMemoria(),
   };
   crear = new CrearMovimiento(dependencias);
   eliminar = new EliminarSaldoInicial({

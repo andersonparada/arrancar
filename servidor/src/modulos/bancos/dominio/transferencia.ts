@@ -7,6 +7,7 @@ import {
   TransferenciaAnulada,
   TransferenciaALaMismaCuenta,
 } from './errores.js';
+import type { Numeracion } from './numeracion.js';
 
 export type TransferenciaId = Identificador<'Transferencia'>;
 
@@ -25,6 +26,10 @@ export interface PropiedadesDeTransferencia extends DatosDeTransferencia {
   empresaId: Identificador<'Empresa'>;
   anuladaEn: Date | null;
   motivoDeAnulacion: string | null;
+  /** Número correlativo de la empresa; `null` solo en datos anteriores a la numeración. */
+  numero: number | null;
+  /** Año del correlativo si la empresa lo reinicia cada año; 0 si no. */
+  anioDeNumero: number;
 }
 
 const MAXIMO_DEL_MOTIVO = 500;
@@ -53,11 +58,18 @@ export class Transferencia extends Entidad<TransferenciaId> {
       id: Identificador.nuevo(),
       anuladaEn: null,
       motivoDeAnulacion: null,
+      numero: null,
+      anioDeNumero: 0,
     });
   }
 
   static reconstruir(propiedades: PropiedadesDeTransferencia): Transferencia {
     return new Transferencia(propiedades);
+  }
+
+  /** Le asigna su número correlativo; lo pide quien la registra, junto con sus dos notas. */
+  numerar({ numero, anio }: Numeracion): void {
+    this.propiedades = { ...this.propiedades, numero, anioDeNumero: anio };
   }
 
   /** @throws TransferenciaAnulada si ya está anulada; MotivoDeAnulacionInvalido si falta el motivo. */

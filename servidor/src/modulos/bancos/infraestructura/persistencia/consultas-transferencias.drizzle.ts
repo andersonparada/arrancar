@@ -23,6 +23,8 @@ const columnas = {
   cuentaDestinoNombre: cuentaDestino.nombre,
   fecha: transferencias.fecha,
   monto: transferencias.monto,
+  numero: transferencias.numero,
+  anioDeNumero: transferencias.anioDeNumero,
   referencia: transferencias.referencia,
   observaciones: transferencias.observaciones,
   anuladaEn: transferencias.anuladaEn,

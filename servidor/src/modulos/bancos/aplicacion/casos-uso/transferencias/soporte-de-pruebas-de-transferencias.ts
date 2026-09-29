@@ -1,5 +1,6 @@
 import {
   AuditoriaEnMemoria,
+  CorrelativosEnMemoria,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
@@ -59,6 +60,7 @@ interface Base {
   nombres: Map<string, string>;
   auditoria: AuditoriaEnMemoria;
   unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
+  correlativos: CorrelativosEnMemoria;
   reglas: ReglasDeLaCuenta;
 }
 
@@ -73,6 +75,7 @@ function armarBase(movimientos: MovimientosEnMemoria, permiteSobregiro: boolean)
     transferencias: new TransferenciasEnMemoria(movimientos, nombres),
     nombres,
     auditoria: new AuditoriaEnMemoria(),
+    correlativos: new CorrelativosEnMemoria(),
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     reglas: new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro }),
   };

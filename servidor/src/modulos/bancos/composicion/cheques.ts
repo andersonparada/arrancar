@@ -15,12 +15,13 @@ import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/r
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 
 function dependenciasDeCheques() {
-  const { unidadDeTrabajo, auditoria } = dependenciasCompartidas();
+  const { unidadDeTrabajo, auditoria, correlativos } = dependenciasCompartidas();
   const consultasMovimientos = new ConsultasMovimientosDrizzle();
   const politicaDeSobregiro = new PoliticaDeSobregiroEnConfiguracion();
   return {
     unidadDeTrabajo,
     auditoria,
+    correlativos,
     repositorio: new RepositorioChequesDrizzle(),
     repositorioChequeras: new RepositorioChequerasDrizzle(),
     repositorioMovimientos: new RepositorioMovimientosDrizzle(),

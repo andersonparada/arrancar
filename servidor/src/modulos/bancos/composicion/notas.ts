@@ -14,12 +14,13 @@ import { PoliticaDeMismaFechaEnAnulacionEnConfiguracion } from '../infraestructu
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 
 function dependenciasDeNotas() {
-  const { unidadDeTrabajo, auditoria } = dependenciasCompartidas();
+  const { unidadDeTrabajo, auditoria, correlativos } = dependenciasCompartidas();
   const consultas = new ConsultasMovimientosDrizzle();
   const politicaDeSobregiro = new PoliticaDeSobregiroEnConfiguracion();
   return {
     unidadDeTrabajo,
     auditoria,
+    correlativos,
     consultas,
     repositorio: new RepositorioMovimientosDrizzle(),
     reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro }),

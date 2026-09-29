@@ -2,6 +2,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { CuentaBancariaInactiva } from '../../../dominio/errores.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
+import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
 import type { MovimientoDto, SolicitudDeMovimiento } from '../../dto/movimiento.dto.js';
 import type { DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
 
@@ -14,7 +15,7 @@ export class CrearMovimiento {
    * @throws SaldoInicialRepetido, SaldoInicialNoEsElPrimero, MovimientoAntesDelSaldoInicial o SaldoInsuficiente.
    */
   ejecutar(operador: Operador, solicitud: SolicitudDeMovimiento): Promise<MovimientoDto> {
-    const { unidadDeTrabajo, repositorio, consultas, reglas } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, consultas, reglas, correlativos } = this.dependencias;
     const movimiento = Movimiento.crear(Identificador.desde(operador.empresaId), solicitud);
     return unidadDeTrabajo.ejecutar(operador, async () => {
       await consultas.exigirReferencias(solicitud);
@@ -25,6 +26,7 @@ export class CrearMovimiento {
         fechas: [solicitud.fecha],
         diferencia: movimiento.efectoEnCentavos,
       });
+      await numerarSiCorresponde(correlativos, movimiento);
       await repositorio.agregar(movimiento);
       return consultas.obtener(movimiento.id.valor);
     });

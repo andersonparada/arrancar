@@ -1,6 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { MovimientoDto, SolicitudDeMovimiento } from '../../dto/movimiento.dto.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
+import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
 
 interface CorreccionDeMovimiento {
@@ -10,7 +11,11 @@ interface CorreccionDeMovimiento {
   esSaldoInicial: boolean;
 }
 
-/** Corrige un movimiento vigente; su cuenta no cambia. Deja en la auditoría cómo estaba antes. */
+/**
+ * Corrige un movimiento vigente; su cuenta no cambia. Deja en la auditoría cómo estaba antes. Conserva su
+ * número, salvo que la nota cambie de tipo (crédito ↔ débito): entonces toma el siguiente de su nuevo tipo y
+ * el número anterior queda como hueco, que la auditoría explica.
+ */
 export class ActualizarMovimiento {
   constructor(private readonly dependencias: DependenciasDeMovimientos) {}
 
@@ -41,8 +46,9 @@ export class ActualizarMovimiento {
   private async corregirYGuardar(operador: Operador, movimiento: Movimiento, solicitud: SolicitudDeMovimiento) {
     const { repositorio, reglas } = this.dependencias;
     const efectoAnterior = movimiento.efectoEnCentavos;
-    const { fecha: fechaAnterior } = movimiento.instantanea();
+    const { fecha: fechaAnterior, tipo: tipoAnterior } = movimiento.instantanea();
     movimiento.corregir(solicitud);
+    if (solicitud.tipo !== tipoAnterior) await numerarSiCorresponde(this.dependencias.correlativos, movimiento);
     const { cuentaBancariaId, fecha, saldoInicial } = movimiento.instantanea();
     await reglas.revisar(operador, {
       cuentaBancariaId,

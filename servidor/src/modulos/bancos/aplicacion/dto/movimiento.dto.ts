@@ -25,6 +25,10 @@ export interface MovimientoDto {
   motivoDeReversion: string | null;
   /** El movimiento original que revierte, si este es un inverso; si no, `null`. */
   revierteAId: string | null;
+  /** Número correlativo de su tipo (nota de crédito o de débito, inversos incluidos); `null` en cheques, saldo inicial y notas de transferencia. */
+  numero: number | null;
+  /** Año del correlativo si la empresa lo reinicia cada año; 0 si no (lo normal). */
+  anioDeNumero: number;
   /** Lo calcula el servidor (ver `accionesDeMovimiento`): si se puede anular con un movimiento inverso. */
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede eliminar de verdad (está limpio). */
@@ -45,6 +49,8 @@ export type SolicitudDeMovimiento = Omit<
   | 'revertidoEn'
   | 'motivoDeReversion'
   | 'revierteAId'
+  | 'numero'
+  | 'anioDeNumero'
   | 'puedeAnular'
   | 'puedeEliminar'
 > & { tipo: 'credito' | 'debito' };

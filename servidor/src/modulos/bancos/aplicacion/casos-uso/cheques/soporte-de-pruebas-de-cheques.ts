@@ -1,5 +1,6 @@
 import {
   AuditoriaEnMemoria,
+  CorrelativosEnMemoria,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
@@ -89,6 +90,7 @@ function dependenciasDeCheques(
     consultasMovimientos: movimientos,
     reglas,
     auditoria,
+    correlativos: new CorrelativosEnMemoria(),
   };
 }
 
@@ -102,6 +104,7 @@ function dependenciasDeMovimientos(
     consultas: movimientos,
     reglas,
     auditoria,
+    correlativos: new CorrelativosEnMemoria(),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(),
   };
 }

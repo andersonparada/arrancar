@@ -1,5 +1,6 @@
 import {
   AuditoriaEnMemoria,
+  CorrelativosEnMemoria,
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
@@ -49,6 +50,7 @@ export function armarEntorno({ permiteSobregiro = false, mismaFecha = false }: O
     repositorio: registros,
     consultas: registros,
     auditoria,
+    correlativos: new CorrelativosEnMemoria(),
     reglas: new ReglasDeLaCuenta({ consultas: registros, politicaDeSobregiro }),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(mismaFecha),
   };
