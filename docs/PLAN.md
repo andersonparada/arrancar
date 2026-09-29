@@ -237,6 +237,9 @@ Pendiente en esta fase:
 
 ## 6. Ideas por planificar (no programar todavía)
 
+**Orden y detalle actualizados en `docs/HOJA-DE-RUTA.md`** (2026-09-28). Cómo quedó la
+última sesión y qué sigue: `docs/DONDE-QUEDAMOS.md`.
+
 Notas recogidas en las conversaciones. Cada módulo se planifica en detalle antes
 de programarlo.
 
@@ -399,3 +402,9 @@ y `demo` / `demo-arrancar`.
   negocio sigue funcionando. 13 pruebas nuevas (8 unitarias con dobles en memoria
   y 5 de integración contra PostgreSQL real, incluida la transacción anidada y el
   deshacer completo si una orden falla o un aviso es rechazado).
+- 2026-09-28 (cierre): se recogen con el usuario los agregados de Cuentas por
+  pagar (saldos iniciales, reportes), Bancos (aprobaciones, solicitudes, formato
+  de cheques, saldos iniciales con notas y cheques, tarjeta de crédito, reportes,
+  diferencial cambiario), Empresas (localidades, departamentos y accesos) y
+  Multimoneda en `docs/HOJA-DE-RUTA.md`. El B7 queda a medias en la rama
+  `b7-en-curso` (ver `docs/DONDE-QUEDAMOS.md`).
