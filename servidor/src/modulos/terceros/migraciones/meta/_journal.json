@@ -50,6 +50,13 @@
       "when": 1790717790148,
       "tag": "0006_nombres_sin_mayusculas_ni_acentos",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790720865356,
+      "tag": "0007_proveedores_id_cuenta_unico",
+      "breakpoints": true
     }
   ]
 }
