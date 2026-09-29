@@ -73,6 +73,8 @@ Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte 
 | Notas de crédito | Ventana aparte; con retenciones si aplica; rebajan la factura a la que apuntan. |
 | Aprobación | Toda factura se autoriza (provisiona). Con *Contabilidad* genera partida; sin ella, solo se autoriza. |
 | Separación de funciones | Permisos distintos para registrar, autorizar y pagar. Quien registra no autoriza, salvo Propietario y superacceso. |
+| FEL exenta del banco | Va a Cuentas por pagar: la nota de débito de Bancos se **marca para uso de Cuentas por pagar** y se liga en la contraseña como forma de pago, sin emitir otro pago (el contador valida el concepto para no duplicar el gasto). |
+| Nota marcada | Al marcarla lleva el concepto «Pago a proveedores» contra la transitoria «Pagos a proveedores por aplicar»; varias notas por contraseña y aplicaciones parciales; al cierre de cada mes se listan las marcadas sin ligar para desmarcarlas (con auditoría); una nota ligada no se desmarca ni se anula sin anular antes la contraseña. |
 | Días de crédito | Campo en el **formulario de Proveedores**, visible **solo si este módulo está activo**. Proponen el vencimiento. |
 | Documento único | En toda la instalación (lo hace cumplir *Libro de compras*). |
 | Órdenes de compra | No hacen falta. Cuando exista *Compras*, la factura podrá apuntar a una orden. |
@@ -189,7 +191,9 @@ Mandan sobre las preguntas de abajo.
 |---|---|
 | Nota de débito existente | **Sí**: forma de pago que liga una nota de débito ya registrada en Bancos (seguros, débitos automáticos) a las facturas de la contraseña, para no pagar dos veces. |
 | Pago mixto gasto/activo | Un solo pago con varias líneas; el flujo de efectivo reparte por el concepto de cada factura. |
-| Factura dentro de una contraseña | **No se puede eliminar**: primero se saca de la contraseña. Si los documentos de la bandeja (sin completar) entran a la contraseña queda por confirmar. |
+| Factura dentro de una contraseña | **No se puede eliminar**: primero se saca de la contraseña. Los documentos de la **bandeja** (sin vencimiento) **también** pueden entrar a la contraseña; el vencimiento se completa después. |
+| FEL exenta del banco | Va a Cuentas por pagar: la nota de débito de Bancos se **marca para uso de Cuentas por pagar** y se liga en la contraseña como forma de pago, sin emitir otro pago (el contador valida el concepto para no duplicar el gasto). |
+| Nota marcada | Al marcarla lleva el concepto «Pago a proveedores» contra la transitoria «Pagos a proveedores por aplicar»; varias notas por contraseña y aplicaciones parciales; al cierre de cada mes se listan las marcadas sin ligar para desmarcarlas (con auditoría); una nota ligada no se desmarca ni se anula sin anular antes la contraseña. |
 | Días de crédito | En el esquema de **Cuentas por pagar**, con llave foránea al proveedor. |
 
 ## Preguntas para el usuario

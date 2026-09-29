@@ -396,9 +396,9 @@ Mandan sobre las preguntas de abajo.
 |---|---|
 | Casilla SAT desmarcada | NIT y UUID **opcionales**; se sigue exigiendo que el documento no se repita (mismo proveedor, serie y número). |
 | Datos fiscales del proveedor | **De la cuenta** (se capturan una vez para todas las empresas). |
-| FEL exenta del banco | **Pendiente del contador**: a qué destino va. |
-| IVA fuera de plazo | **Pendiente del contador**: gasto deducible o no deducible por omisión (la cuenta sigue configurable por empresa). |
-| Nota de crédito bajo el mínimo del 5 % | **Pendiente del contador**: qué pasa con la retención ya practicada. |
+| FEL exenta del banco | Destino **Cuentas por pagar**; se paga ligando la nota de débito de Bancos marcada para Cuentas por pagar. |
+| IVA fuera de plazo | Se suma **al costo de cada línea** y hereda su deducibilidad (gasto, activo fijo, inventario); sin cuenta aparte. Plazo: art. **20** de la Ley del IVA (no el 18). Ver `validacion-h7-h11-retenciones.md`. |
+| Nota de crédito bajo el mínimo del 5 % | La retención se **fija al registrar** y una nota posterior no la cambia (decisión del usuario, con el riesgo anotado en `validacion-h7-h11-retenciones.md`). |
 
 ## Preguntas para el usuario
 

@@ -158,3 +158,109 @@ Entero  = dentro de los 15 días del mes siguiente a esa fecha
   [portal SAT](https://portal.sat.gob.gt/portal/sistemas-web/retencioneswebiva/).
 - Práctica (secundarias): [Tigo, «Agentes de Retención»](https://pos.tigo.com.gt/assets/descargas/Agentes_de_Retencion.pdf),
   [Vescco, régimen de pequeño contribuyente 2026](https://vescco.tax/blog/regimen-pequeno-contribuyente-actualizado-2026/).
+
+## Tres dudas de Libro de compras (2026-09-29)
+
+Informe del contador. El proxy bloqueó los textos íntegros; los artículos se confirmaron con buscador y fragmentos. **Norma** = texto legal; **Práctica** = cómo se hace; **Inferencia** = opinión sin criterio de la SAT.
+
+**Corrección previa:** el plazo para acreditar el IVA está en el **art. 20** de la Ley del IVA (el mes de la factura o, como máximo, los dos siguientes), no en el art. 18. Donde el plan o las pantallas digan «art. 18», debe decir «art. 20».
+
+### 1. FEL exenta del banco por comisiones
+
+| Punto | Respuesta | Fuente | Grado |
+|---|---|---|---|
+| ¿Es exenta? | Sí: servicios de entidades fiscalizadas por la SIB. | Ley del IVA art. 7 num. 4 | Norma |
+| ¿Va en el libro de compras? | Sí, como compra exenta de servicio, sin crédito fiscal, con la casilla SAT marcada (la SAT cruza los DTE recibidos con el libro). | Ley del IVA art. 37; AG 5-2013 | Norma en lo general; incluir exentas es Práctica |
+| Retenciones | Ninguna (sin IVA; el banco está en el régimen sobre utilidades). | Decreto 20-2006; Decreto 10-2012 art. 48 | Norma |
+| ¿Deducible para ISR? | Sí, gasto útil y necesario. Si la FEL es por intereses, rigen los límites de deducción de intereses. | Decreto 10-2012 arts. 21 y 22 num. 4 lit. e | Norma |
+| ¿Destino? | El gasto ya está en Bancos; provisionarlo también en Cuentas por pagar lo duplica. | NIIF para pymes 2.36 | Norma contable |
+
+Regla: **el gasto de una comisión bancaria se reconoce una sola vez.** (A) Cuentas por pagar: provisiona y la nota de débito de Bancos paga la contraseña, sin tocar otra vez el gasto. (B) **Solo fiscal (informativa)**: entra al libro sin asiento ni pendiente en otro módulo. **Recomendación: (B).**
+
+### 2. IVA de una factura recibida fuera de plazo (art. 20)
+
+| Punto | Respuesta | Fuente | Grado |
+|---|---|---|---|
+| ¿Deducible para ISR? | El IVA se excluye solo cuando no es costo; el que ya no se acredita sí es costo, así que es deducible. | Decreto 10-2012 art. 21 num. 15 | Norma + Inferencia |
+| Contable | Un impuesto no recuperable forma parte del costo. | NIIF para pymes 13.6 y 17.10 | Norma contable |
+| Analogía | La SAT aceptó como deducible el ISO que ya no se podía acreditar. | Criterio SAT 2-2021 | Analogía |
+| Riesgo | Sin criterio SAT sobre el IVA; un auditor podría alegar negligencia. | — | Bajo o medio |
+
+Por omisión es **deducible porque sigue a su línea**: depende del régimen de ISR (solo importa en utilidades), de que el gasto de la línea sea deducible, de si la línea es activo fijo (va al costo del activo y se deprecia) y de si es no vinculada (art. 16).
+
+Regla: si `periodo > mes de emisión + 2` → `iva_acreditable = false`, motivo `fuera_de_plazo`, y **el IVA se suma al monto de cada línea** en proporción a su parte gravada (hereda concepto, activo fijo y deducibilidad). La cuenta configurable por empresa queda como alternativa para verlo aparte.
+
+### 3. Nota de crédito que deja una factura de pequeño contribuyente en Q2,500.00 o menos
+
+Norma: la retención es sobre el total, al pagar o acreditar en cuenta (lo primero), y es pago definitivo (Ley del IVA art. 48); solo si el valor es mayor a Q2,500.00 (AG 5-2013 art. 49). No hay norma para la nota posterior. Lectura (inferencia): el mínimo se mide cuando se practica la retención.
+
+| Caso | Regla | Certeza |
+|---|---|---|
+| Nota **antes** de practicar la retención | Se recalcula sobre el neto (factura − notas): si es ≤ umbral, 0; si no, 5 % del neto. | Media |
+| Nota **después** de practicarla | **Se mantiene**; no se devuelve ni se ajusta (no hay retención negativa). A pagar = factura − nota − retención. El proveedor reclama a la SAT si pagó de más. | Media-alta |
+| Constancia emitida sin enterar, en el mismo mes | Solo por decisión del contador: anular en RetenIVA y recalcular, manual, con motivo y auditoría. | Baja |
+
+Choca con el diseño: «fijar al registrar» no es «practicar». El momento legal es la **provisión en Cuentas por pagar o el pago**: la retención se **congela al provisionar o pagar**; antes, una nota de crédito la recalcula. Se corrige la recomendación anterior de «ajustar en proporción» (sirve solo antes de retener).
+
+### Fuentes
+
+- Ley del IVA, Decreto 27-92: [TSE](https://tse.org.gt/images/UECFFPP/leyes/decreto_27-92-iva.pdf), [art. 20](http://leydeguatemala.com/ley-del-iva-de-guatemala/reporte-del-credito-fiscal-iva-guatemala/294/), [Vescco](https://vescco.tax/blog/credito-fiscal-iva-en-guatemala-despues-de-dos-meses/)
+- Decreto 10-2012: [Congreso](https://www.congreso.gob.gt/assets/uploads/info_legislativo/decretos/2012/010-2012.pdf), [TSE](https://tse.org.gt/images/UECFFPP/leyes/decreto_10-2012_Ley_actualizacion_tributaria.pdf)
+- AG 5-2013: [Minfin](<https://www.minfin.gob.gt/images/leyes%20solicitadas/Leyes%20tributarias/ACUERDO%20GUBERNATIVO%205-2013%20(Reglamento%20ley%20del%20IVA).doc>)
+- [Criterio SAT 2-2021](https://portal.sat.gob.gt/portal/descarga/15417/criterios-2021/49597/criterio-tributario-institucional-2-2021-acreditamiento-del-impuesto-de-solidaridad-pagado-ante-la-administracion-tributaria-en-forma-extempora-2.pdf)
+- [Retenciones Web IVA](https://portal.sat.gob.gt/portal/sistemas-web/retencioneswebiva/)
+- [Consortium Legal, deducibilidad de intereses](https://consortiumlegal.com/2023/02/08/guatemala-cambio-en-la-deducibilidad-de-los-intereses/)
+
+### Decisiones del usuario sobre estas tres dudas (2026-09-29)
+
+1. **FEL exenta del banco:** va a **Cuentas por pagar**. En Bancos, la nota de débito
+   se **marca para uso de Cuentas por pagar**; al crear la contraseña se liga
+   directamente esa nota como forma de pago, sin emitir otro pago. Pendiente del
+   contador: cómo evitar que el gasto se reconozca dos veces (la nota marcada no
+   debería llevar un concepto de gasto).
+2. **IVA fuera de plazo:** el usuario pide que el contador **investigue a fondo** la
+   forma correcta antes de decidir (sumarlo a cada línea o a una cuenta aparte).
+3. **Retención:** se **fija al registrar** la factura, como ya estaba en el plan (el
+   usuario no acepta congelarla al provisionar o pagar). Por lo tanto, una nota de
+   crédito posterior al registro **no** cambia la retención. Riesgo anotado: el momento
+   legal de practicarla es el pago o el acreditamiento en cuenta (art. 48).
+4. **Anular constancias en RetenIVA:** no se ofrece.
+
+### Seguimiento del contador (2026-09-29)
+
+No hay criterio de la SAT, del TAT ni doctrina publicada sobre el IVA no acreditado por extemporáneo; lo que sigue es norma donde se indica y, si no, práctica o analogía.
+
+#### IVA fuera de plazo: forma correcta
+
+| Fuente | Qué dice o hace | Grado |
+|---|---|---|
+| Ley del IVA art. 20 | Pasados dos meses no hay compensación ni devolución; nada sobre ISR. | Norma |
+| Decreto 10-2012 art. 21 num. 15 | Impuestos pagados deducibles, salvo ISR e IVA «cuando no constituyan costo»; el IVA irrecuperable sí es costo. | Norma (redacción por fragmento) |
+| Criterio SAT 2-2021 | Aceptó como deducible el ISO que ya no se podía acreditar. | Analogía |
+| NIIF para pymes 13.6 y 17.10 | Impuestos no recuperables forman parte del costo. | Norma contable |
+| SAP Business One, Odoo | El IVA no deducible va a la cuenta de gasto, activo o inventario de la línea; la cuenta aparte es opcional. | Práctica de ERP |
+
+**Regla única:** si `periodo > mes de emisión + 2`: (1) el documento va al libro sin crédito fiscal, motivo `fuera_de_plazo`; (2) el IVA se suma al monto de cada línea gravada, en proporción a su base; (3) cada línea conserva su concepto, cuenta y bandera de activo fijo (gasto deducible → IVA deducible; activo fijo → al costo del activo y se deprecia; inventario o activo biológico → a ese costo; línea no deducible → IVA no deducible); (4) en el régimen opcional simplificado no afecta; (5) **sin cuenta aparte** de «IVA fuera de plazo». Guardar por línea `iva_no_acreditable` separado de la base (para el `arquitecto-de-datos`). Riesgo: el ISR se deduce en el período del gasto (fecha de la factura); una factura de diciembre registrada en marzo cae en un año que puede estar cerrado: avisar al contador. Certeza: alta en lo contable, media-alta en la deducibilidad.
+
+#### FEL exenta del banco ligada a una nota de débito marcada
+
+Correcto si **la nota marcada no lleva concepto de gasto**:
+
+| Momento | Asiento | Regla |
+|---|---|---|
+| Nota marcada en Bancos | Debe «Pagos a proveedores por aplicar» (transitoria) / Haber Bancos | Al marcarla se impone el concepto «Pago a proveedores». |
+| FEL registrada y provisionada en Cuentas por pagar | Debe Gasto / Haber Proveedores | Aquí se reconoce el gasto, una sola vez. |
+| Contraseña con la nota ligada | Debe Proveedores / Haber transitoria | Sin otro pago; lo ligado no pasa del saldo libre de la nota. |
+
+Riesgos y reglas: (1) la FEL puede no llegar (para ISR basta la nota): reporte de «notas marcadas sin ligar» con antigüedad y opción de **desmarcar** al cierre y pasarla a un concepto de gasto, con auditoría; (2) una FEL puede cubrir varias notas o al revés: varias notas por contraseña y aplicaciones parciales, diferencias ajustadas a mano con auditoría; (3) nota de diciembre y FEL de enero: avisar por el cambio de año; (4) una nota ligada no se desmarca ni se anula sin anular antes la contraseña; sin retenciones a una factura exenta del banco; la conciliación no cambia; (5) una comisión que nunca tendrá FEL no se marca: va con «Comisiones bancarias». Sirve igual para débitos automáticos de terceros con FEL gravada. Certeza: alta.
+
+Fuentes adicionales: [Odoo, reparto de impuestos](https://www.odoo.com/documentation/19.0/developer/reference/standard_modules/account/account_tax_repartition.html), [SAP B1](https://sap-b1-blog.com/en/glossary/non-deductible-pre-tax/), [Consortium Legal](https://consortiumlegal.com/2024/04/02/robo-legal-del-credito-fiscal-en-el-iva-en-guatemala/).
+
+#### Decisiones del usuario sobre el seguimiento (2026-09-29)
+
+- **IVA fuera de plazo:** aprobado **al costo de cada línea**, sin cuenta aparte (se
+  guarda por línea `iva_no_acreditable`; aviso si la factura es de un año cerrado).
+- **Nota marcada:** contra la transitoria **«Pagos a proveedores por aplicar»**.
+- **Varias notas por contraseña y aplicaciones parciales:** sí.
+- **Notas marcadas sin ligar:** se listan **al cierre de cada mes** para desmarcarlas y
+  pasarlas a gasto (con auditoría).
