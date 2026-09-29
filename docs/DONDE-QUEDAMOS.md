@@ -132,31 +132,46 @@ decisiones e investigación con Opus).
 Forma de trabajo: cada avance va en commit a la rama; a `main` solo entra lo terminado
 y probado (pruebas del servidor, ESLint y `tsc` en verde).
 
+## Cierre de la sesión (2026-09-29, noche)
+
+Todo lo terminado y probado está en `main`: servidor 1108, cliente 275 y generador 46
+pruebas, sin errores de ESLint ni de tipos.
+
+- **P7 servidor hecho** (`8a81b6d`): sugerencias de concepto por votos ponderados
+  (diseño en `docs/modulos/diseno-sugerencias-de-concepto.md`), aceptar en lote,
+  sugerir al capturar y reclasificar cheques (`bancos.cheques.reclasificar`).
+- **QA en el navegador hecho** (`8d35f98`): informe en
+  `docs/modulos/informe-qa-2026-09-29.md`; los dos errores altos de la ventana de
+  accesos quedaron corregidos.
+- **Detenidos por el usuario**, con su avance guardado solo en la rama
+  `claude/serene-mayer-picg8x` (commit WIP `053e8b5`, sin probar):
+  - Pantallas de P7 (C1–C3 y «Reclasificar» en el reporte): empezada la bandeja con
+    sugerencias y la ventana de aceptar en lote.
+  - Arreglo de la conciliación: solo una prueba nueva que intenta reproducir el error
+    (`servidor/src/pruebas-api/bancos-conciliaciones-primera.api.prueba.ts`).
+  Para retomarlos: traer esos archivos de la rama a `main`, terminarlos y probarlos.
+
 ## Siguiente
 
-Hecho de la lista anterior: `soloAccesoTotal` (eliminado), **H5b/H5c completo** (pasos
-1–11 de `docs/modulos/diseno-accesos-por-modulo.md`: tipos de localidad, localidades,
-ventana de accesos y departamentos, servidor y cliente; pruebas: servidor 1045, cliente
-275, generador 46), permisos por acción, llaves entre esquemas, permisos directos a
-usuarios (P1–P4 y L1) y ajustes de conceptos (salvo P7). En orden:
+1. **Conciliación (error alto de QA):** el cuadro «Según banco» cuenta dos veces el
+   saldo inicial (ver el informe de QA y B5.1 en `docs/modulos/bancos.md`).
+2. **Pantallas de P7** (C1–C3 y «Reclasificar» en el reporte de movimientos).
+3. **Errores medios de QA:** monto enorme da 500; nombres repetidos que solo cambian en
+   mayúsculas o acentos (localidades y conceptos); inversos de una transferencia
+   anulada en «Notas»; la primera conciliación puede empezar en cualquier mes.
+4. **Errores bajos de QA** en un solo paso (mensajes técnicos, limitador en inglés,
+   cambiar la propia contraseña sin pedir la actual, fechas futuras, número de la
+   transferencia en el reporte).
+5. **H6b** anulación en lote de cheques caducos.
+6. **H8** interés bruto e ISR retenido en las notas de intereses.
+7. **Archivos** (JPEG, PNG y WebP; HEIC se rechaza y iOS entrega JPEG; PDF con qpdf) y
+   luego **H2** (estado de cuenta junto a la conciliación).
+8. **Libro de compras** (L1–L5) y **Cuentas por pagar** (CP1–CP5), con la nota de débito
+   marcada para Cuentas por pagar en Bancos: todas sus preguntas están respondidas.
 
-1. **Probar en el navegador** (agente `pruebas-qa`) lo hecho sin verlo: Bancos (B6, B7,
-   H3, H6, H9, ajustes de conceptos), permisos de usuarios, localidades, ventana de
-   accesos y departamentos; rehacer la conciliación demo.
-2. **P7** (sugerencias en «Sin clasificar»): el usuario pidió un cálculo estadístico
-   mejor que «el último concepto»; **lo diseña el arquitecto** con alternativas.
-3. **H6b** anulación en lote de cheques caducos (inverso con el concepto heredado,
-   `causa_de_anulacion = 'caducidad'`).
-4. **H8** interés bruto e ISR retenido en las notas de intereses.
-5. **Archivos** (JPEG, PNG y WebP; HEIC se rechaza y iOS entrega JPEG; PDF con qpdf;
-   límites por archivo y por minuto, sin cuota) y luego **H2** (estado de cuenta junto a
-   la conciliación, sha256).
-6. **Bancos: nota de débito marcada para Cuentas por pagar** (concepto «Pago a
-   proveedores» contra «Pagos a proveedores por aplicar», reporte de marcadas sin ligar
-   al cierre del mes) cuando se programe Cuentas por pagar.
-7. Programar **Libro de compras** (L1–L5) y **Cuentas por pagar** (CP1–CP5): sus
-   preguntas están todas respondidas (ver sus planes y
-   `docs/modulos/validacion-h7-h11-retenciones.md`).
+**Entorno:** en la nube no hay Docker; se usó un PostgreSQL 16 local en el puerto 5433
+con los mismos roles que `infra/postgres/init/01-roles.sh`. En una sesión nueva hay que
+levantarlo otra vez (o usar `npm run bd:levantar` en WSL).
 
 ## Preguntas abiertas para el usuario
 
