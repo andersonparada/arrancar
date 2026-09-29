@@ -91,6 +91,11 @@ export interface OpcionesProteccion {
   soloSuperacceso?: boolean;
   /** Permiso requerido; el módulo se deduce del permiso. */
   permiso?: string;
+  /**
+   * Módulo que además debe estar activo, para la ruta de un módulo que pide el permiso de otro (por ejemplo, la
+   * sección fiscal de Empresas, que es de Libro de compras pero se lee con `empresas.ver`).
+   */
+  modulo?: string;
 }
 
 /**
@@ -107,6 +112,7 @@ function guardiasEnOrden(opciones: OpcionesProteccion): [Guardia, ...Guardia[]] 
   const guardias: [Guardia, ...Guardia[]] = [new GuardiaAutenticacion()];
   if (opciones.soloSuperacceso) guardias.push(new GuardiaSuperacceso());
   if (opciones.requiereEmpresa ?? !opciones.soloSuperacceso) guardias.push(new GuardiaEmpresaActiva());
+  if (opciones.modulo) guardias.push(new GuardiaModulo(opciones.modulo));
   if (opciones.permiso) guardias.push(...guardiasDePermiso(opciones.permiso));
   return guardias;
 }

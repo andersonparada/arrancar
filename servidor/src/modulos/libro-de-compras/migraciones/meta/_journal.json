@@ -8,6 +8,13 @@
       "when": 1790720915975,
       "tag": "0000_esquema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790721443328,
+      "tag": "0001_l1_datos_fiscales",
+      "breakpoints": true
     }
   ]
 }
