@@ -29,7 +29,7 @@ Sin esperar decisiones: **X1, F1, F2, F3 y H2a**. **H2b y H2c** esperan las preg
 
 ## 2. Pasos (un commit cada uno)
 
-### X1 · servidor: fórmulas de Excel sin valor calculado o con error
+### X1 · servidor: fórmulas de Excel sin valor calculado o con error — HECHO
 
 - `libro-de-excel.exceljs.ts` → `valorVisible`: fórmula sin `result` → error por celda
   «La celda tiene una fórmula sin valor calculado: abra el archivo en Excel y
@@ -38,7 +38,7 @@ Sin esperar decisiones: **X1, F1, F2, F3 y H2a**. **H2b y H2c** esperan las preg
 - Pruebas: fórmula con resultado, sin resultado, `#DIV/0!`; exportar un texto que
   empieza con `=cmd|...` sale como texto.
 
-### F1 · servidor: fotos endurecidas
+### F1 · servidor: fotos endurecidas — HECHO
 
 - Una sola lectura: `sharp(buf, { limitInputPixels: 100_000_000, failOn: 'error' })`,
   `metadata()` y `.clone()` para foto y miniatura.

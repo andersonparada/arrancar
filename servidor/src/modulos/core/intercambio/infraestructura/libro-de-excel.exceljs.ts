@@ -1,16 +1,31 @@
 import ExcelJS from 'exceljs';
 import { ArchivoNoLegible } from '../aplicacion/errores.js';
 import { ValidadorDeXlsx } from './zip/validador-de-xlsx.js';
+import { CeldaConProblema } from '../aplicacion/puertos/libro-de-excel.js';
 import type { FilaLeida, HojaLeida, HojaParaEscribir, LibroDeExcel } from '../aplicacion/puertos/libro-de-excel.js';
 
 const ANCHO_DE_COLUMNA = 22;
 /** Excel no acepta nombres de hoja de más de 31 caracteres. */
 const LARGO_DE_NOMBRE_DE_HOJA = 31;
 
+const FORMULA_SIN_VALOR = 'La celda tiene una fórmula sin valor calculado: abra el archivo en Excel y guárdelo.';
+
+/** El valor guardado de una fórmula, o el problema si no tiene valor o dio error. */
+function resultadoDeFormula(resultado: unknown): unknown {
+  if (resultado === undefined || resultado === null) return new CeldaConProblema(FORMULA_SIN_VALOR);
+  if (typeof resultado === 'object' && 'error' in resultado) {
+    return new CeldaConProblema(`La celda tiene un error (${String(resultado.error)}).`);
+  }
+  return valorVisible(resultado as ExcelJS.CellValue);
+}
+
+const esFormula = (valor: object) => 'formula' in valor || 'sharedFormula' in valor;
+
 /** Una celda puede traer texto enriquecido, fórmulas o enlaces: se queda con lo que se ve. */
 function valorVisible(valor: ExcelJS.CellValue): unknown {
   if (valor === null || typeof valor !== 'object' || valor instanceof Date) return valor;
-  if ('result' in valor) return valor.result ?? null;
+  if (esFormula(valor)) return resultadoDeFormula((valor as { result?: unknown }).result);
+  if ('error' in valor) return new CeldaConProblema(`La celda tiene un error (${String(valor.error)}).`);
   if ('richText' in valor) return valor.richText.map((parte) => parte.text).join('');
   if ('text' in valor) return valor.text;
   return null;

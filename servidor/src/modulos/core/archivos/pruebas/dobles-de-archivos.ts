@@ -1,14 +1,27 @@
 import type {
-  ImagenOptimizada,
-  MedidaDeImagen,
+  ImagenesOptimizadas,
+  MedidasDeImagen,
   OptimizadorDeImagenes,
 } from '../aplicacion/puertos/optimizador-de-imagenes.js';
+import { FormatoDeImagenNoAceptado } from '../dominio/imagen.js';
 import type { ArchivoGuardado, NuevoArchivo, RepositorioArchivos } from '../aplicacion/puertos/repositorio-archivos.js';
 
 /** Devuelve la imagen como si ya midiera el lado máximo pedido. */
 export class OptimizadorFalso implements OptimizadorDeImagenes {
-  async optimizar(_contenido: Buffer, { ladoMaximo }: MedidaDeImagen): Promise<ImagenOptimizada> {
-    return { contenido: Buffer.from(`imagen de ${ladoMaximo}`), ancho: ladoMaximo, alto: ladoMaximo / 2 };
+  async optimizar(_contenido: Buffer, { original, miniatura }: MedidasDeImagen): Promise<ImagenesOptimizadas> {
+    const hecha = ({ ladoMaximo }: { ladoMaximo: number }) => ({
+      contenido: Buffer.from(`imagen de ${ladoMaximo}`),
+      ancho: ladoMaximo,
+      alto: ladoMaximo / 2,
+    });
+    return { original: hecha(original), miniatura: hecha(miniatura) };
+  }
+}
+
+/** Rechaza todo como lo haría el optimizador real con un archivo que no es una foto aceptada. */
+export class OptimizadorQueRechaza implements OptimizadorDeImagenes {
+  async optimizar(): Promise<ImagenesOptimizadas> {
+    throw new FormatoDeImagenNoAceptado();
   }
 }
 
