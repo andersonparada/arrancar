@@ -122,6 +122,25 @@ resolverlo antes de seguir.
 | Cheques posfechados | Sin definir | ¿Se permiten? ¿Cuentan en el saldo desde su fecha o desde que se emiten? |
 | Cheque impreso o entregado | Sin definir | Lo necesita la regla de blanquear; llega con la impresión de cheques. |
 
+### Revisión a fondo de lo programado (2026-09-28): hallazgos por decidir
+
+Revisadas las tablas y reglas reales de Bancos, Empresas y Clientes/Proveedores
+contra la práctica contable y la ley de Guatemala.
+
+| # | Hallazgo | Por qué importa | Solución propuesta | Gravedad |
+|---|---|---|---|---|
+| H1 | La **auditoría se conserva un año** | El Código Tributario pide conservar registros 4 años (prescripción) y el Código de Comercio 5. Lo eliminado o anulado solo queda en la auditoría: a los 12 meses se pierde la evidencia. | Conservación por omisión de **5 años**, y nunca purgar lo de módulos financieros (Bancos, Libro de compras, Cuentas por pagar) mientras no prescriba. | Alta |
+| H2 | La conciliación **no guarda el saldo del estado de cuenta** del banco | Es la evidencia externa de que cuadró: el sistema calcula «lo que debería decir el banco», pero no queda registrado lo que el banco **sí** dijo. Un auditor lo pide. | El usuario **no decide** ningún saldo de libros; solo **transcribe** el saldo final del estado de cuenta (y adjunta su foto o PDF). Se autoriza solo si es igual al calculado. | Alta |
+| H3 | Las notas **no tienen concepto** (comisión, intereses, depósito de ventas, planilla…) | Sin clasificación no salen el **flujo de efectivo**, ni el gasto por comisiones, ni la partida contable. | Catálogo de **conceptos bancarios** por empresa, obligatorio en cada nota (y en cheques y transferencias según el caso). | Alta |
+| H4 | **Número de cuenta único por empresa**, no por banco | Dos bancos pueden usar el mismo número de cuenta; hoy se rechazaría la segunda. | Único por empresa **y banco**. | Media |
+| H5 | **Empresas** sin razón social, NIT obligatorio, régimen, fecha de inicio ni establecimientos | Libro de compras, retenciones y FEL los necesitan. Los **establecimientos** de la SAT (cada uno con su código) son justamente las **localidades** planificadas. | Agregar razón social, nombre comercial, NIT obligatorio (si hay módulos fiscales), régimen, fecha de inicio y **localidades = establecimientos SAT** (con su código). | Media |
+| H6 | **Cheques en circulación viejos** | El banco no está obligado a pagar un cheque presentado **después de seis meses** de su fecha. Quedan como pendientes para siempre. | Reporte y alerta de cheques en circulación con más de 6 meses, para revisarlos y anularlos (con su inverso si el mes ya se concilió). | Media |
+| H7 | **Comisiones bancarias con IVA** | Las comisiones y la venta de chequeras llevan IVA y el banco emite factura: es **crédito fiscal**. Hoy la nota de débito no llega al Libro de compras. | Cuando exista Libro de compras: la nota de débito por comisión puede ligarse a su factura (destino «Bancos» en Ingreso de facturas). | Media |
+| H8 | **Intereses con ISR retenido** | El banco acredita el interés **neto**; el 10 % de ISR sobre rentas de capital ya va retenido. Para contabilidad y el ISR anual hay que conocer el bruto y la retención. | En la nota de crédito por intereses, campos opcionales de **interés bruto** y **ISR retenido** (el neto es el monto). | Baja |
+| H9 | Las notas **no tienen correlativo interno** | Práctica de control: cada comprobante (voucher) lleva número interno consecutivo para detectar faltantes. | Correlativo por empresa y tipo, asignado por el sistema (independiente de la referencia del banco). | Baja |
+| H10 | **Proveedores sin NIT** o con «CF» | En el Libro de compras cada factura necesita el NIT del emisor; a quien no tiene NIT se le hace factura especial. | Exigir NIT (distinto de CF) al usar un proveedor en Libro de compras. | Baja |
+| H11 | **Crédito fiscal fuera de plazo** | El crédito fiscal se puede reportar a más tardar en los **dos meses siguientes** al período de la factura. | En Libro de compras: guardar el **mes del libro** y avisar o impedir registrar facturas fuera de ese plazo. | Media (plan) |
+
 ### Libro de compras y Cuentas por pagar (planificados): corregir en el plan
 
 1. **Momento de la retención**: la ley manda retener al **pagar o acreditar en
