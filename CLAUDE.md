@@ -37,6 +37,10 @@ npm run generar -- definicion <modulo>/<entidad>   # crea generador/definiciones
 npm run generar -- recurso <modulo>/<entidad>      # genera el recurso desde su definición, y su migración
 ```
 
+Los PDF subidos se revisan con **qpdf 11+** (`RUTA_QPDF`, `/usr/bin/qpdf` por omisión; en producción lo instala el
+`Dockerfile` y la app no arranca sin él). Si `apt` da la 10, baje el binario oficial de
+`github.com/qpdf/qpdf/releases` (verifique su sha256). Sin qpdf se saltan las pruebas que lo necesitan.
+
 Las pruebas de integración usan PostgreSQL real (`arrancar_pruebas`), así que la
 base de desarrollo debe estar levantada.
 

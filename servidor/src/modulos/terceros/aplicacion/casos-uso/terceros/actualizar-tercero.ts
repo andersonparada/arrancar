@@ -2,6 +2,7 @@ import { auditarCambioDeEstado, type Auditoria } from '../../../../core/comparti
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
+import type { VerificadorDeFotos } from '../../../../core/compartido/aplicacion/verificador-de-fotos.js';
 import type { AvisoDeParecidos } from '../../aviso-de-parecidos.js';
 import { datosDeTercero } from '../../conversiones.js';
 import type { SolicitudDeTercero, TerceroDto } from '../../dto/tercero.dto.js';
@@ -16,6 +17,7 @@ interface Dependencias {
   avisoDeParecidos: AvisoDeParecidos;
   publicadorEventos: PublicadorEventos;
   auditoria: Auditoria;
+  fotos: VerificadorDeFotos;
 }
 
 export class ActualizarTercero {
@@ -24,6 +26,7 @@ export class ActualizarTercero {
   /**
    * Si con el cambio queda inactivo, también se inactivan sus papeles.
    * @throws RecursoNoEncontrado si no existe en la cuenta.
+   * @throws FotoNoValida si la foto no existe, no es imagen o tiene dueño.
    * @throws HayTercerosParecidos si se parece a otro y no se confirmó.
    */
   async ejecutar(
@@ -34,6 +37,7 @@ export class ActualizarTercero {
     const datos = datosDeTercero(cambio.solicitud);
 
     const { tercero, actualizado } = await unidadDeTrabajo.ejecutar(operador, async () => {
+      await this.dependencias.fotos.exigir(datos.fotoArchivoId);
       const tercero = await terceroExistente(repositorio, cambio.terceroId);
       const anterior = await consultas.obtener(cambio.terceroId);
       tercero.cambiarDatos(datos);

@@ -1,9 +1,11 @@
+import { FotoNoValida, type VerificadorDeFotos } from '../../compartido/aplicacion/verificador-de-fotos.js';
 import type {
   ImagenesOptimizadas,
   MedidasDeImagen,
   OptimizadorDeImagenes,
 } from '../aplicacion/puertos/optimizador-de-imagenes.js';
 import { FormatoDeImagenNoAceptado } from '../dominio/imagen.js';
+import type { InspectorDePdf, PdfInspeccionado } from '../aplicacion/puertos/inspector-de-pdf.js';
 import type { ArchivoGuardado, NuevoArchivo, RepositorioArchivos } from '../aplicacion/puertos/repositorio-archivos.js';
 
 /** Devuelve la imagen como si ya midiera el lado máximo pedido. */
@@ -36,7 +38,40 @@ export class RepositorioArchivosEnMemoria implements RepositorioArchivos {
     return guardado;
   }
 
-  async buscar(archivoId: string): Promise<ArchivoGuardado | null> {
-    return this.porId.get(archivoId) ?? null;
+  async buscarImagenLibre(archivoId: string): Promise<ArchivoGuardado | null> {
+    const archivo = this.porId.get(archivoId);
+    return archivo?.clase === 'imagen' && archivo.recursoDueno === null ? archivo : null;
+  }
+
+  async buscarDocumento(archivoId: string, recursoDueno: string): Promise<ArchivoGuardado | null> {
+    const archivo = this.porId.get(archivoId);
+    return archivo?.clase === 'documento' && archivo.recursoDueno === recursoDueno ? archivo : null;
+  }
+
+  async eliminar(archivoId: string): Promise<void> {
+    this.porId.delete(archivoId);
+  }
+}
+
+/** Acepta las fotos que se le indiquen; rechaza el resto como lo haría el verificador real. */
+export class VerificadorDeFotosEnMemoria implements VerificadorDeFotos {
+  readonly validas = new Set<string>();
+
+  async exigir(archivoId: string | null): Promise<void> {
+    if (archivoId !== null && !this.validas.has(archivoId)) throw new FotoNoValida();
+  }
+}
+
+/** Devuelve el PDF tal cual con las páginas indicadas, o lanza el error que se le programe. */
+export class InspectorDePdfFalso implements InspectorDePdf {
+  readonly inspeccionados: Buffer[] = [];
+  /** Si se indica, se lanza en vez de aceptar. */
+  error: Error | null = null;
+  paginas = 3;
+
+  async inspeccionar(contenido: Buffer): Promise<PdfInspeccionado> {
+    this.inspeccionados.push(contenido);
+    if (this.error) throw this.error;
+    return { contenido: Buffer.concat([contenido, Buffer.from('\n%limpio')]), paginas: this.paginas };
   }
 }

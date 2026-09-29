@@ -58,7 +58,7 @@ Sin esperar decisiones: **X1, F1, F2, F3 y H2a**. **H2b y H2c** esperan las preg
   salida no trae EXIF); PNG con zip al final (la salida no lo trae); la petición 31 del
   minuto responde 429.
 
-### F2 · servidor: `core.archivos` admite documentos y dueño (revisar con `arquitecto-de-datos`)
+### F2 · servidor: `core.archivos` admite documentos y dueño (revisar con `arquitecto-de-datos`) — HECHO
 
 - Migración de core: `clase text not null default 'imagen'` (`imagen`/`documento`);
   `ruta_miniatura`, `ancho` y `alto` nulables con `check` para imágenes; `sha256`
@@ -74,7 +74,7 @@ Sin esperar decisiones: **X1, F1, F2, F3 y H2a**. **H2b y H2c** esperan las preg
 - Pruebas: otra empresa 404; archivo con dueño 404 en `/archivos/:id`; tercero con foto
   que apunta a un documento 400.
 
-### F3 · servidor + Dockerfile: PDF inspeccionado con qpdf
+### F3 · servidor + Dockerfile: PDF inspeccionado con qpdf — HECHO
 
 - Dependencia `qpdf` (Apache-2.0). Producción: `apt-get install -y
   --no-install-recommends qpdf` en la etapa final del `Dockerfile` (Bookworm: 11.3.0),

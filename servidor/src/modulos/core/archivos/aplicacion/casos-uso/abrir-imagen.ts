@@ -24,9 +24,9 @@ export class AbrirImagen {
   /** @throws RecursoNoEncontrado si no existe, es de otra empresa o falta en el almacenamiento. */
   async ejecutar(operador: Operador, { archivoId, variante }: ImagenPedida): Promise<ImagenAbierta> {
     const { unidadDeTrabajo, repositorio, almacenamiento } = this.dependencias;
-    const archivo = await unidadDeTrabajo.ejecutar(operador, () => repositorio.buscar(archivoId));
+    const archivo = await unidadDeTrabajo.ejecutar(operador, () => repositorio.buscarImagenLibre(archivoId));
     if (!archivo) throw new RecursoNoEncontrado('El archivo');
-    const ruta = variante === 'miniatura' ? archivo.rutaMiniatura : archivo.rutaOriginal;
+    const ruta = (variante === 'miniatura' && archivo.rutaMiniatura) || archivo.rutaOriginal;
     try {
       return { tipoMime: archivo.tipoMime, contenido: await almacenamiento.leer(ruta) };
     } catch {
