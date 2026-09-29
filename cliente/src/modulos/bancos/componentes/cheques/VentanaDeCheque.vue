@@ -2,6 +2,7 @@
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
+import type { SugerenciaDeMovimiento } from '../../servicios/sugerencias.api';
 import type { EdicionDeCheque } from '../../composables/cheques/edicion-de-cheque';
 import CamposDeCheque from './CamposDeCheque.vue';
 
@@ -11,6 +12,7 @@ defineProps<{
   referencias: { cuentaBancariaId: OpcionDeRegistro[] };
   opcionesDeCheque: OpcionDeRegistro[];
   opcionesDeConcepto: OpcionDeRegistro[];
+  sugerencia: SugerenciaDeMovimiento | null;
 }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const edicion = defineModel<EdicionDeCheque>({ required: true });
@@ -25,6 +27,7 @@ const edicion = defineModel<EdicionDeCheque>({ required: true });
         :referencias="referencias"
         :opciones-de-cheque="opcionesDeCheque"
         :opciones-de-concepto="opcionesDeConcepto"
+        :sugerencia="sugerencia"
       />
     </form>
     <template #pie>

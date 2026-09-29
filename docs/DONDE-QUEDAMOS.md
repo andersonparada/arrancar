@@ -143,30 +143,27 @@ pruebas, sin errores de ESLint ni de tipos.
 - **QA en el navegador hecho** (`8d35f98`): informe en
   `docs/modulos/informe-qa-2026-09-29.md`; los dos errores altos de la ventana de
   accesos quedaron corregidos.
-- **Detenidos por el usuario**, con su avance guardado solo en la rama
-  `claude/serene-mayer-picg8x` (commit WIP `053e8b5`, sin probar):
-  - Pantallas de P7 (C1–C3 y «Reclasificar» en el reporte): empezada la bandeja con
-    sugerencias y la ventana de aceptar en lote.
-  - Arreglo de la conciliación: solo una prueba nueva que intenta reproducir el error
-    (`servidor/src/pruebas-api/bancos-conciliaciones-primera.api.prueba.ts`).
-  Para retomarlos: traer esos archivos de la rama a `main`, terminarlos y probarlos.
+- **Retomados y terminados** (a pedido del usuario): **arreglo de la conciliación** (la
+  primera conciliación de una cuenta ya no cuenta dos veces el saldo inicial: el saldo
+  inicial del banco es 0 y el «Saldo inicial» es un documento más que se marca) y monto
+  que no cabe en `numeric(14,2)` responde 400; **pantallas de P7** (bandeja con %, «por
+  qué», «Usar» y aceptar en lote con casilla; sugerencia al capturar notas y cheques;
+  «Reclasificar» en el reporte de Movimientos). Pruebas: servidor 1110, cliente 300,
+  generador 46. Las pantallas de P7 no se han visto en el navegador.
 
 ## Siguiente
 
-1. **Conciliación (error alto de QA):** el cuadro «Según banco» cuenta dos veces el
-   saldo inicial (ver el informe de QA y B5.1 en `docs/modulos/bancos.md`).
-2. **Pantallas de P7** (C1–C3 y «Reclasificar» en el reporte de movimientos).
-3. **Errores medios de QA:** monto enorme da 500; nombres repetidos que solo cambian en
+1. **Errores medios de QA:** nombres repetidos que solo cambian en
    mayúsculas o acentos (localidades y conceptos); inversos de una transferencia
    anulada en «Notas»; la primera conciliación puede empezar en cualquier mes.
-4. **Errores bajos de QA** en un solo paso (mensajes técnicos, limitador en inglés,
+2. **Errores bajos de QA** en un solo paso (mensajes técnicos, limitador en inglés,
    cambiar la propia contraseña sin pedir la actual, fechas futuras, número de la
    transferencia en el reporte).
-5. **H6b** anulación en lote de cheques caducos.
-6. **H8** interés bruto e ISR retenido en las notas de intereses.
-7. **Archivos** (JPEG, PNG y WebP; HEIC se rechaza y iOS entrega JPEG; PDF con qpdf) y
+3. **H6b** anulación en lote de cheques caducos.
+4. **H8** interés bruto e ISR retenido en las notas de intereses.
+5. **Archivos** (JPEG, PNG y WebP; HEIC se rechaza y iOS entrega JPEG; PDF con qpdf) y
    luego **H2** (estado de cuenta junto a la conciliación).
-8. **Libro de compras** (L1–L5) y **Cuentas por pagar** (CP1–CP5), con la nota de débito
+6. **Libro de compras** (L1–L5) y **Cuentas por pagar** (CP1–CP5), con la nota de débito
    marcada para Cuentas por pagar en Bancos: todas sus preguntas están respondidas.
 
 **Entorno:** en la nube no hay Docker; se usó un PostgreSQL 16 local en el puerto 5433

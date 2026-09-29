@@ -12,6 +12,20 @@ export function pendientesDeClasificar<Fila extends Pendiente>(filas: readonly F
   return filas.filter((fila) => fila.puedeReclasificar && !fila.anuladoEn);
 }
 
+/**
+ * Ordena por beneficiario (sin él, al final) y, dentro de cada uno, por fecha: así clasificar uno a mano ayuda a
+ * sus vecinos, que quedan juntos y con su sugerencia recalculada.
+ */
+export function ordenadosPorBeneficiario<Fila extends { beneficiario: string | null; fecha: string }>(
+  filas: readonly Fila[],
+): Fila[] {
+  const clave = (fila: Fila): string => (fila.beneficiario ?? '').trim();
+  return [...filas].sort((a, b) => {
+    if (!clave(a) !== !clave(b)) return clave(a) ? -1 : 1;
+    return clave(a).localeCompare(clave(b), 'es', { sensitivity: 'base' }) || a.fecha.localeCompare(b.fecha);
+  });
+}
+
 /** Marca o desmarca uno; con el tope de un lote lleno, no deja marcar otro (los ya marcados sí se pueden quitar). */
 export function conAlternado(seleccion: ReadonlySet<string>, id: string): Set<string> {
   const copia = new Set(seleccion);

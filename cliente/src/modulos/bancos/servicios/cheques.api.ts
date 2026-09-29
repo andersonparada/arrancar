@@ -1,6 +1,7 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import type { DatosDeBaja } from './datos-de-baja';
 import type { Movimiento } from './movimientos.api';
+import type { DatosDeReclasificacion, ResultadoDeReclasificacion } from './notas.api';
 
 /** Por qué se anuló un cheque (nulo si no está anulado). */
 export type CausaDeAnulacion = 'manual' | 'caducidad';
@@ -95,6 +96,11 @@ export class ApiCheques {
    */
   anular(chequeId: string, { motivo, fecha }: DatosDeBaja) {
     return this.http.crear<Cheque>(`/bancos/cheques/${chequeId}/anular`, { motivo, fecha });
+  }
+
+  /** Cambia solo el concepto de cheques ya emitidos (pide `bancos.cheques.reclasificar`); queda en la auditoría. */
+  reclasificar(datos: DatosDeReclasificacion) {
+    return this.http.crear<ResultadoDeReclasificacion>('/bancos/cheques/reclasificar', datos);
   }
 
   /** Blanquea un cheque emitido por error: vuelve a disponible y su movimiento se elimina. */

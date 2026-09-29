@@ -27,12 +27,12 @@ function usarGuardadoDeNota(edicion: Ref<EdicionDeNota>, alGuardar: () => Promis
 
 /**
  * La ventana de registrar o corregir una nota: abrirla (nueva, de un tipo, o para editar) y guardarla, con su
- * concepto (`notasConocidas` alimenta la sugerencia por beneficiario).
+ * concepto (y la sugerencia que propone el servidor).
  */
-export function usarFormularioDeNota(alGuardar: () => Promise<void>, notasConocidas: () => Movimiento[]) {
+export function usarFormularioDeNota(alGuardar: () => Promise<void>) {
   const edicion = ref<EdicionDeNota>({ ...edicionDe(), abierta: false });
   const conceptoGuardado = ref<string | null>(null);
-  const conceptos = usarConceptosDeNota(edicion, conceptoGuardado, notasConocidas);
+  const conceptos = usarConceptosDeNota(edicion, conceptoGuardado);
   const guardado = usarGuardadoDeNota(edicion, alGuardar);
 
   function abrir(nota: Movimiento | undefined, tipo: 'credito' | 'debito'): void {

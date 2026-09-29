@@ -39,6 +39,12 @@ export interface ResultadoDeReclasificacion {
   sinCambio: number;
 }
 
+/** Aceptar sugerencias: cada movimiento con su concepto (hasta 200, sin repetir). Con `porSugerencia` queda anotado en la auditoría. */
+export interface DatosDeReclasificacionVarios {
+  asignaciones: { movimientoId: string; conceptoId: string }[];
+  porSugerencia: boolean;
+}
+
 const RUTA = '/bancos/notas';
 
 /** Notas de crédito y de débito: registrarlas, corregirlas, anularlas (con su inverso) y eliminarlas. Sin Excel (es operación). */
@@ -69,6 +75,11 @@ export class ApiNotas {
   /** Clasifica varios movimientos (notas o cheques) con un concepto; procede también en meses conciliados. */
   reclasificar(datos: DatosDeReclasificacion) {
     return this.http.crear<ResultadoDeReclasificacion>(`${RUTA}/reclasificar`, datos);
+  }
+
+  /** Clasifica cada movimiento pendiente con su propio concepto (todo o nada); es lo que hace «Usar» y «Aceptar lo sugerido». */
+  reclasificarVarios(datos: DatosDeReclasificacionVarios) {
+    return this.http.crear<ResultadoDeReclasificacion>(`${RUTA}/reclasificar-varios`, datos);
   }
 
   /** Elimina de verdad una nota limpia; el motivo queda en la auditoría. */

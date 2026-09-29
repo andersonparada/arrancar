@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
-import SugerenciaDeConcepto from './SugerenciaDeConcepto.vue';
+import SugerenciaAlCapturar from '../sugerencias/SugerenciaAlCapturar.vue';
 import { opcionesDeLista } from '@/modulos/core/utilidades/edicion';
 import { OPCIONES_DE_TIPO } from '../../composables/notas/edicion-de-nota';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
+import type { SugerenciaDeMovimiento } from '../../servicios/sugerencias.api';
 import type { EdicionDeNota } from '../../composables/notas/edicion-de-nota';
 
 /** Los campos de la nota; al corregir (con `id`) la cuenta se ve pero no se cambia. */
@@ -12,7 +13,7 @@ defineProps<{
   errores: Record<string, string>;
   referencias: Record<'cuentaBancariaId', OpcionDeRegistro[]>;
   opcionesDeConcepto: OpcionDeRegistro[];
-  conceptoSugerido: OpcionDeRegistro | null;
+  sugerencia: SugerenciaDeMovimiento | null;
 }>();
 const edicion = defineModel<EdicionDeNota>({ required: true });
 </script>
@@ -49,7 +50,7 @@ const edicion = defineModel<EdicionDeNota>({ required: true });
       requerido
       :error="errores.conceptoId"
     />
-    <SugerenciaDeConcepto :sugerencia="conceptoSugerido" @usar="edicion.conceptoId = $event" />
+    <SugerenciaAlCapturar :sugerencia="sugerencia" @usar="edicion.conceptoId = $event" />
     <CampoTexto v-model="edicion.observaciones" etiqueta="Observaciones" multilinea :error="errores.observaciones" />
   </div>
 </template>

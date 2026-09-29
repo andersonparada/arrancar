@@ -9,11 +9,13 @@ import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { formatearFecha, formatearTexto } from '@/modulos/core/utilidades/formato';
 import FiltrosDeMovimientos from '../componentes/movimientos/FiltrosDeMovimientos.vue';
 import ResumenDeSinClasificar from '../componentes/movimientos/ResumenDeSinClasificar.vue';
+import VentanaDeReclasificar from '../componentes/movimientos/VentanaDeReclasificar.vue';
 import TablaDelReporte from '../componentes/movimientos/TablaDelReporte.vue';
 import { opcionesDeFiltroDeConcepto } from '../composables/conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../composables/conceptos/usar-catalogo-de-conceptos';
 import { usarReferenciasDeCuenta } from '../composables/cuentas-bancarias/referencias-de-cuenta';
 import { filtroDeLaConsulta } from '../composables/movimientos/filtros-de-movimientos';
+import { usarReclasificacionDeFila } from '../composables/movimientos/usar-reclasificacion-de-fila';
 import { usarReporteDeMovimientos } from '../composables/movimientos/usar-reporte-de-movimientos';
 import { apiMovimientos } from '../servicios/movimientos.api';
 import { VENTANAS_BANCOS } from '../textos';
@@ -21,7 +23,8 @@ import { VENTANAS_BANCOS } from '../textos';
 const PERMISOS_DE_INTERCAMBIO = { exportar: 'bancos.movimientos.exportar' };
 const ventana = VENTANAS_BANCOS.movimientos;
 const sesion = usarSesion();
-const { filtros, reporte, cargando } = usarReporteDeMovimientos();
+const { filtros, reporte, cargando, cargar } = usarReporteDeMovimientos();
+const reclasificacion = usarReclasificacionDeFila(cargar);
 const { filtroDeCuenta: opcionesDeCuenta, cuentasBancarias } = usarReferenciasDeCuenta();
 const { conceptos } = usarCatalogoDeConceptos();
 const opcionesDeConcepto = computed(() => opcionesDeFiltroDeConcepto(conceptos.value));
@@ -77,6 +80,22 @@ const exportar = (): Promise<void> => intercambio.exportar(filtroDeLaConsulta(fi
     </TarjetaBase>
 
     <p v-if="cargando" class="text-sm text-tierra-500 print:hidden">Cargando…</p>
-    <TablaDelReporte v-else :reporte="reporte" :con-cuenta="conCuenta" />
+    <TablaDelReporte
+      v-else
+      :reporte="reporte"
+      :con-cuenta="conCuenta"
+      :puede-reclasificar="reclasificacion.puede"
+      @reclasificar="reclasificacion.abrir"
+    />
+    <VentanaDeReclasificar
+      v-model:concepto="reclasificacion.conceptoId.value"
+      :fila="reclasificacion.fila.value"
+      :opciones="reclasificacion.opciones.value"
+      :nombre-elegido="reclasificacion.nombreElegido.value"
+      :errores="reclasificacion.errores.value"
+      :enviando="reclasificacion.enviando.value"
+      @cerrar="reclasificacion.cerrar"
+      @confirmar="reclasificacion.confirmar"
+    />
   </div>
 </template>

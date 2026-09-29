@@ -716,12 +716,24 @@ fecha) y `vigentesEntre` (movimientos vigentes de un rango), que también
 implementa el doble en memoria.
 
 Decisión: **saldo inicial de banco de la primera conciliación de una cuenta**
-= el mismo saldo inicial de libros al fin del mes anterior (sin ajuste),
+= cero (corregido el 2026-09-29, ver abajo; antes era el saldo inicial de libros),
 porque antes de la primera conciliación el sistema no tiene manera de saber
 qué partidas ya "vio" el banco; se documenta como caso especial en
 `saldosInicialesDe`. Para las siguientes, es el `saldoCalculadoEstadoDeCuenta`
 congelado en la foto de la conciliación autorizada del mes exactamente
 anterior (el orden obligatorio garantiza que sea autorizada).
+
+Corrección (2026-09-29, informe de QA, error alto): el saldo inicial de banco de
+la **primera** conciliación pasó de "el de libros" a **cero**. El movimiento
+"Saldo inicial" es un documento más que se marca (o queda como crédito en
+tránsito); con el saldo de libros arrastrado se contaba dos veces (banco final
+Q 19,750.00 contra Q 9,750.00 esperados). Regla contable estándar: saldo anterior
+\+ créditos − débitos = saldo final, y el saldo anterior de banco es 0 mientras
+el banco no haya "visto" nada. Con todo marcado, banco.saldoFinal ==
+saldoQueDebeMostrarElEstadoDeCuenta también en una primera conciliación de un
+mes posterior al saldo inicial. Prueba: `bancos-conciliaciones-primera.api.prueba.ts`.
+Aparte, `decimalObligatorio`/`decimalOpcional` rechazan con 400 los montos que no
+caben en `numeric(14,2)` (antes, 500).
 
 Decisión: **la foto solo congela los saldos y totales** (`numeric(14,2)`),
 tal como pide la especificación; el detalle de partidas (la lista de cheques,
@@ -1409,7 +1421,7 @@ Manda la tabla «Respuestas del usuario (2026-09-29)» de `plan-hallazgos-contab
   (hoy no existe: siempre `permitido`).
 - **P7 Sugerencias de «Sin clasificar»**: el servidor se hizo después con el diseño de
   `docs/modulos/diseno-sugerencias-de-concepto.md` (ver la sección «P7: sugerencias de concepto (servidor hecho el 2026-09-29)»
-  al final de este archivo). Hoy el cliente todavía sugiere con lo que ya tiene cargado (pasos C1 a C3 pendientes).
+  al final de este archivo). El cliente (C1 a C3 y «Reclasificar» del reporte) se hizo el 2026-09-29: ver «Cliente de P7» al final.
 - **Cliente (hecho el 2026-09-29)**: `causaDeAnulacion` («Manual» / «Por caducidad») como dato «Causa de anulación» en la
   tarjeta del cheque (ficha de chequera) y en la de la lista de cheques; `moduloDeOrigen` como dato «Origen» en las tarjetas
   de notas y bajo el concepto en la tabla del reporte de movimientos (lógica en `composables/movimientos/origen-y-causa.ts`).
@@ -1490,10 +1502,10 @@ importar). Rutas y entradas del menú en `reportes-del-modulo.ts` (antes `menu-d
 - **Lógica pura con pruebas**: `rango-de-fechas` (mes actual y errores del rango), `filtros-del-flujo` y `textos-del-flujo`,
   `filtros-por-concepto` (conceptos como lista separada por comas, filtro del detalle, marcar y desmarcar con tope).
 
-## P7: sugerencias de concepto (servidor hecho el 2026-09-29)
+## P7: sugerencias de concepto (servidor y cliente hechos el 2026-09-29)
 
 Manda `docs/modulos/diseno-sugerencias-de-concepto.md` (con sus respuestas del usuario). Servidor: pasos S1, S2, S3, S4 y S6 y
-la parte de servidor de dos respuestas más; falta S5 (`pg_trgm`, «después, con datos reales») y todo el cliente (C1 a C3).
+la parte de servidor de dos respuestas más; falta solo S5 (`pg_trgm`, «después, con datos reales»). Cliente: C1 a C3 y «Reclasificar» (ver el final).
 
 - **S1 (migraciones `0024` y `0025`)**: función `bancos.nombre_para_comparar(text)` (`immutable`, `strict`, `parallel safe`,
   `search_path = pg_catalog`; sin acentos, mayúsculas ni signos; quita formas jurídicas y conectores como palabras completas) y la
@@ -1525,3 +1537,23 @@ la parte de servidor de dos respuestas más; falta S5 (`pg_trgm`, «después, co
 - **Pruebas**: dominio (pesos, votación, casos, ofrecibles, calidad), casos de uso (`casos-uso-de-sugerencias`,
   `reclasificar-cheques-y-varios`) y API (`bancos-nombre-para-comparar`, `bancos-sugerencias-de-concepto`,
   `bancos-migracion-de-permiso-de-reclasificar`).
+
+### Cliente de P7 (hecho el 2026-09-29)
+
+- **C1**: `servicios/sugerencias.api.ts` (tipos y `ApiSugerencias`), y lógica pura con pruebas: `frase-de-sugerencia` («4 de 5
+  movimientos de este beneficiario, de Q150.00 a Q1,200.00; el último el 12/08/2026»), `lote-de-sugerencias` (agrupa por concepto,
+  tope 200, solo lo marcado con sugerido) y `sugerencia-al-capturar`.
+- **C2, bandeja «Sin clasificar»**: cada tarjeta muestra «Sugerido: X · 85 %» con «¿Por qué?», «Usar» (un clic clasifica y queda
+  en la auditoría como sugerencia aceptada) y las otras opciones como botones (sin sugerido, «Posibles»). Filtro «Solo con
+  sugerencia»; «Aceptar lo sugerido (N)» abre una ventana con el resumen por concepto (cantidad y monto) y una **casilla de
+  confirmación** obligatoria; lo marcado sin sugerido no entra. Tras clasificar se recargan pendientes y sugerencias. Si el
+  servidor dice `truncado`, se pide acotar fechas. «Pago a proveedores» solo se ofrece al clasificar cheques sin Cuentas por
+  pagar activo.
+- **C3, captura**: en la ventana de nota nueva y en la de emitir cheque, unos 300 ms después de dejar de escribir (beneficiario,
+  referencia, monto…; hace falta la cuenta y texto en beneficiario o referencia) se consulta al servidor y bajo el selector sale
+  «Sugerido: X · 85 % (usar)» con su «¿Por qué?». Nunca pisa un concepto ya elegido, solo ofrece conceptos que la pantalla
+  ofrece y, si la consulta falla, no muestra nada. Se quitó `sugerirConcepto` local.
+- **Reclasificar en el reporte de Movimientos**: botón por fila (columna que no se imprime) solo si el servidor dice
+  `puedeReclasificar`, no está anulado y el usuario tiene `bancos.notas.editar` (notas) o `bancos.cheques.reclasificar`
+  (cheques); ventana con el movimiento, el concepto nuevo (sin el actual) y el resumen del cambio; usa `POST /notas/reclasificar`
+  o `POST /cheques/reclasificar` con un solo id.

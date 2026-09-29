@@ -50,6 +50,22 @@ export function opcionesDeConceptoDeCheque(
   return [primera!, ...[...resto, comoOpcion(pago)].sort((a, b) => a.texto.localeCompare(b.texto, 'es'))];
 }
 
+/**
+ * Con qué conceptos se puede clasificar lo marcado en la bandeja: si son solo cheques, los de un cheque (que suman
+ * «Pago a proveedores» cuando Cuentas por pagar no está activo); si no, los de siempre. Nunca lo adivina el cliente:
+ * el servidor valida igual.
+ */
+export function opcionesParaClasificar(
+  conceptos: readonly Concepto[],
+  tipos: readonly TipoDeMovimiento[],
+  cuentasPorPagarActivo: boolean,
+): OpcionDeRegistro[] {
+  const soloCheques = tipos.length > 0 && tipos.every((tipo) => tipo === 'cheque');
+  return soloCheques
+    ? opcionesDeConceptoDeCheque(conceptos, cuentasPorPagarActivo)
+    : opcionesDeConcepto(conceptos, tipos);
+}
+
 /** Las opciones del filtro del reporte: todos los conceptos (también los de sistema), por nombre, y «Todos». */
 export function opcionesDeFiltroDeConcepto(conceptos: readonly Concepto[]): OpcionDeRegistro[] {
   return [{ valor: null, texto: 'Todos' }, ...[...conceptos].sort(porNombre).map(comoOpcion)];
@@ -63,27 +79,3 @@ export function conceptoVigente(opciones: readonly OpcionDeRegistro[], elegido: 
 /** El concepto de sistema «Sin clasificar», si el catálogo ya lo trae. */
 export const conceptoSinClasificar = (conceptos: readonly Concepto[]): Concepto | null =>
   conceptos.find((concepto) => concepto.claveDeSistema === 'sin_clasificar') ?? null;
-
-interface MovimientoConBeneficiario {
-  beneficiario: string | null;
-  conceptoId: string;
-  fecha: string;
-}
-
-const normalizado = (texto: string | null): string => (texto ?? '').trim().toLocaleLowerCase('es');
-
-/**
- * El último concepto usado con ese beneficiario entre los movimientos que la pantalla ya tiene, si todavía se
- * puede elegir (`opciones`). Solo sugiere: quien registra decide. Sin beneficiario, no sugiere nada.
- */
-export function sugerirConcepto(
-  movimientos: readonly MovimientoConBeneficiario[],
-  beneficiario: string,
-  opciones: readonly OpcionDeRegistro[],
-): string | null {
-  const buscado = normalizado(beneficiario);
-  if (!buscado) return null;
-  const delMismo = movimientos.filter((movimiento) => normalizado(movimiento.beneficiario) === buscado);
-  const masReciente = [...delMismo].sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
-  return masReciente ? conceptoVigente(opciones, masReciente.conceptoId) : null;
-}

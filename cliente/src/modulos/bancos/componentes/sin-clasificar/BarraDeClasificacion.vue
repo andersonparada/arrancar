@@ -6,12 +6,19 @@ import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { ResumenDeSeleccion } from '../../composables/movimientos/seleccion-de-pendientes';
 
 /**
- * La barra fija de abajo: cuánto hay marcado, con qué concepto clasificarlo y el botón. Solo ofrece los conceptos que
+ * La barra fija de abajo: cuánto hay marcado, con qué concepto clasificarlo y el botón; y, si lo marcado tiene
+ * sugerencias, «Aceptar lo sugerido» (pide confirmar con un resumen). Solo ofrece los conceptos que
  * sirven a todo lo marcado (si hay créditos y débitos juntos, únicamente los que valen para ambos).
  */
-defineProps<{ resumen: ResumenDeSeleccion; opciones: OpcionDeRegistro[]; puedeClasificar: boolean }>();
+defineProps<{
+  resumen: ResumenDeSeleccion;
+  opciones: OpcionDeRegistro[];
+  puedeClasificar: boolean;
+  /** Cuántos de lo marcado tienen un concepto sugerido. */
+  cantidadSugerida: number;
+}>();
 const concepto = defineModel<string | null>('concepto', { required: true });
-const emit = defineEmits<{ clasificar: [] }>();
+const emit = defineEmits<{ clasificar: []; aceptarSugerido: [] }>();
 </script>
 
 <template>
@@ -32,6 +39,14 @@ const emit = defineEmits<{ clasificar: [] }>();
         <CampoSelector v-model="concepto" etiqueta="Clasificar como…" :opciones="opciones" />
       </div>
       <BotonBase :deshabilitado="!puedeClasificar" @click="emit('clasificar')">Clasificar</BotonBase>
+      <BotonBase
+        v-if="cantidadSugerida"
+        variante="secundario"
+        title="Clasifica cada marcado con el concepto que se le sugiere; antes muestra un resumen para confirmar"
+        @click="emit('aceptarSugerido')"
+      >
+        Aceptar lo sugerido ({{ cantidadSugerida }})
+      </BotonBase>
     </div>
   </div>
 </template>

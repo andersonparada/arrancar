@@ -3,6 +3,8 @@ import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
+import type { SugerenciaDeMovimiento } from '../../servicios/sugerencias.api';
+import SugerenciaAlCapturar from '../sugerencias/SugerenciaAlCapturar.vue';
 import type { EdicionDeCheque } from '../../composables/cheques/edicion-de-cheque';
 
 /** Los campos para emitir un cheque: cuenta, número (propuesto), fecha, monto, beneficiario y observaciones. */
@@ -11,6 +13,7 @@ defineProps<{
   referencias: { cuentaBancariaId: OpcionDeRegistro[] };
   opcionesDeCheque: OpcionDeRegistro[];
   opcionesDeConcepto: OpcionDeRegistro[];
+  sugerencia: SugerenciaDeMovimiento | null;
 }>();
 const edicion = defineModel<EdicionDeCheque>({ required: true });
 </script>
@@ -42,6 +45,7 @@ const edicion = defineModel<EdicionDeCheque>({ required: true });
       requerido
       :error="errores.conceptoId"
     />
+    <SugerenciaAlCapturar :sugerencia="sugerencia" @usar="edicion.conceptoId = $event" />
     <CampoInterruptor v-model="edicion.noNegociable" etiqueta="No negociable" />
     <CampoTexto v-model="edicion.referencia" etiqueta="Referencia" :error="errores.referencia" />
     <CampoTexto v-model="edicion.observaciones" etiqueta="Observaciones" multilinea :error="errores.observaciones" />

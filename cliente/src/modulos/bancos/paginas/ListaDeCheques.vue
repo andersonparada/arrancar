@@ -43,6 +43,7 @@ const { anulacion, blanqueo } = usarBajasDeCheque<ChequeListado>(cargar);
       :referencias="referencias"
       :opciones-de-cheque="emision.opcionesDeCheque.value"
       :opciones-de-concepto="emision.opcionesDeConcepto.value"
+      :sugerencia="emision.sugerencia.value"
       :errores="emision.errores.value"
       :enviando="emision.enviando.value"
       @cerrar="emision.edicion.value.abierta = false"

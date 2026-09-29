@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import { formatearNumeroDeComprobante } from '../../composables/comunes/numero-de-comprobante';
 import { marcaDeReversion } from '../../composables/movimientos/estado-de-reversion';
 import { textoDeOrigen } from '../../composables/movimientos/origen-y-causa';
 import { creditoDeFila, debitoDeFila, documentoDeFila } from '../../composables/movimientos/fila-del-reporte';
-import type { ReporteDeMovimientos } from '../../servicios/movimientos.api';
+import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+import type { FilaDelReporte, ReporteDeMovimientos } from '../../servicios/movimientos.api';
 
 /**
  * La tabla del reporte: fila de "Saldo anterior" al inicio y "Saldo final" al
@@ -12,7 +14,14 @@ import type { ReporteDeMovimientos } from '../../servicios/movimientos.api';
  * revertido y su inverso se ven juntos, con su marca, y se cancelan en el saldo; solo un
  * cheque anulado a la antigua (mes abierto) va en gris, tachado y sin mover el saldo.
  */
-defineProps<{ reporte: ReporteDeMovimientos; conCuenta: boolean }>();
+const props = defineProps<{
+  reporte: ReporteDeMovimientos;
+  conCuenta: boolean;
+  /** Si el usuario puede y el servidor permite reclasificar esa fila; sin ninguna, no hay columna de acciones. */
+  puedeReclasificar: (fila: FilaDelReporte) => boolean;
+}>();
+const emit = defineEmits<{ reclasificar: [fila: FilaDelReporte] }>();
+const conAcciones = computed(() => props.reporte.filas.some(props.puedeReclasificar));
 
 const CLASE_DE_MARCA = {
   Anulado: 'text-red-500',
@@ -37,12 +46,14 @@ const CLASE_DE_MARCA = {
           <th class="px-4 py-3 text-right font-medium">Débito</th>
           <th class="px-4 py-3 text-right font-medium">Crédito</th>
           <th v-if="conCuenta" class="px-4 py-3 text-right font-medium">Saldo</th>
+          <th v-if="conAcciones" class="px-4 py-3 font-medium print:hidden"><span class="sr-only">Acciones</span></th>
         </tr>
       </thead>
       <tbody class="divide-y divide-tierra-100 dark:divide-tierra-700">
         <tr v-if="conCuenta" class="bg-tierra-50/60 font-medium dark:bg-tierra-900/40">
           <td class="px-4 py-2.5" colspan="8">Saldo anterior</td>
           <td class="px-4 py-2.5 text-right">{{ formatearMonto(reporte.saldoAnterior) }}</td>
+          <td v-if="conAcciones" class="print:hidden"></td>
         </tr>
         <tr
           v-for="fila in reporte.filas"
@@ -73,15 +84,27 @@ const CLASE_DE_MARCA = {
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(debitoDeFila(fila)) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(creditoDeFila(fila)) }}</td>
           <td v-if="conCuenta" class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(fila.saldo) }}</td>
+          <td v-if="conAcciones" class="px-4 py-2.5 text-right whitespace-nowrap no-underline print:hidden">
+            <BotonBase
+              v-if="puedeReclasificar(fila)"
+              variante="secundario"
+              pequeno
+              :aria-label="`Reclasificar ${documentoDeFila(fila).titulo} del ${formatearFecha(fila.fecha)}`"
+              @click="emit('reclasificar', fila)"
+            >
+              Reclasificar
+            </BotonBase>
+          </td>
         </tr>
         <tr v-if="!reporte.filas.length">
-          <td class="px-4 py-6 text-center text-tierra-500" :colspan="conCuenta ? 9 : 8">
+          <td class="px-4 py-6 text-center text-tierra-500" :colspan="8 + Number(conCuenta) + Number(conAcciones)">
             No hay movimientos con ese filtro.
           </td>
         </tr>
         <tr v-if="conCuenta" class="bg-tierra-50/60 font-medium dark:bg-tierra-900/40">
           <td class="px-4 py-2.5" colspan="8">Saldo final</td>
           <td class="px-4 py-2.5 text-right">{{ formatearMonto(reporte.saldoFinal) }}</td>
+          <td v-if="conAcciones" class="print:hidden"></td>
         </tr>
       </tbody>
     </table>

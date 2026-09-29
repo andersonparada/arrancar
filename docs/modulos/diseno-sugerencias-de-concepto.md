@@ -363,12 +363,12 @@ Cuerpo `{ tipo?, cuentaBancariaId, fecha?, monto?, beneficiario?, referencia?, o
    de bancos (no depende del orden de terceros), índice GIN `gin_trgm_ops` y consulta con `lateral`.
 6. **S6** (hecho) (si la pregunta 1 es sí) Las dos rutas de captura y sus pruebas.
 
-**Cliente**
+**Cliente** (C1, C2 y C3 hechos el 2026-09-29, junto con «Reclasificar» en el reporte de Movimientos)
 
-7. **C1** Servicio y tipos; lógica pura `frase-de-sugerencia` y `lote-de-sugerencias` con pruebas.
-8. **C2** Bandeja: insignia, «¿Por qué?», «Usar», filtro, «Aceptar lo sugerido» con confirmación
+7. **C1** (hecho) Servicio y tipos; lógica pura `frase-de-sugerencia` y `lote-de-sugerencias` con pruebas.
+8. **C2** (hecho) Bandeja: insignia, «¿Por qué?», «Usar», filtro, «Aceptar lo sugerido» con confirmación
    agrupada, recarga y orden por beneficiario.
-9. **C3** (si la pregunta 1 es sí) Sugerencia en la nota y el cheque desde el servidor; quitar
+9. **C3** (hecho) (si la pregunta 1 es sí) Sugerencia en la nota y el cheque desde el servidor; quitar
    `sugerirConcepto` local.
 
 Al terminar: actualizar `bancos.md`, `concepto-de-notas-y-cheques.md` (fila del cheque manual),
@@ -411,5 +411,4 @@ Mandan sobre las preguntas de arriba; todas con lo recomendado.
 
 S1, S2, S3, S4 y S6 están hechos; el detalle y las decisiones están en `bancos.md` (sección «P7: sugerencias de concepto»). También
 la parte de servidor de dos respuestas: «Pago a proveedores» en la bandeja para cheques (misma regla de P3) y **Reclasificar** un
-cheque (`POST /bancos/cheques/reclasificar`, permiso `bancos.cheques.reclasificar`). Pendiente: S5 y el cliente (C1 a C3, más el
-«Reclasificar» del reporte con estos permisos).
+cheque (`POST /bancos/cheques/reclasificar`, permiso `bancos.cheques.reclasificar`). Cliente (C1 a C3 y «Reclasificar» del reporte) hecho después el mismo día; pendiente solo S5.

@@ -6,7 +6,7 @@ import {
   opcionesDeConcepto,
   opcionesDeConceptoDeCheque,
   opcionesDeFiltroDeConcepto,
-  sugerirConcepto,
+  opcionesParaClasificar,
 } from './opciones-de-concepto';
 
 const concepto = (cambios: Partial<Concepto>): Concepto => ({
@@ -99,30 +99,6 @@ describe('conceptoSinClasificar', () => {
   });
 });
 
-describe('sugerirConcepto', () => {
-  const opciones = opcionesDeConcepto(catalogo, ['debito']);
-  const movimientos = [
-    { beneficiario: 'Banco Industrial', conceptoId: 'impuestos', fecha: '2026-01-10' },
-    { beneficiario: 'banco industrial ', conceptoId: 'planilla', fecha: '2026-02-10' },
-    { beneficiario: 'Otro', conceptoId: 'varios', fecha: '2026-03-01' },
-  ];
-
-  it('sugiere el último concepto usado con ese beneficiario, sin distinguir mayúsculas ni espacios', () => {
-    expect(sugerirConcepto(movimientos, ' BANCO INDUSTRIAL', opciones)).toBe('planilla');
-  });
-
-  it('no sugiere sin beneficiario ni si nunca se usó con él', () => {
-    expect(sugerirConcepto(movimientos, '', opciones)).toBeNull();
-    expect(sugerirConcepto(movimientos, 'Desconocido', opciones)).toBeNull();
-  });
-
-  it('no sugiere un concepto que ya no se puede elegir (incompatible o inactivo)', () => {
-    const deCredito = opcionesDeConcepto(catalogo, ['credito']);
-
-    expect(sugerirConcepto(movimientos, 'Banco Industrial', deCredito)).toBeNull();
-  });
-});
-
 describe('opcionesDeConceptoDeCheque', () => {
   const pago = concepto({
     id: 'pago',
@@ -149,5 +125,25 @@ describe('opcionesDeConceptoDeCheque', () => {
   it('si el catálogo no lo trae o está inactivo, no aparece', () => {
     expect(textos(opcionesDeConceptoDeCheque(catalogo, false))).not.toContain('Pago a proveedores');
     expect(textos(opcionesDeConceptoDeCheque([{ ...pago, activo: false }], false))).toEqual(['Elija un concepto']);
+  });
+});
+
+describe('opcionesParaClasificar', () => {
+  const pago = concepto({
+    id: 'pago',
+    nombre: 'Pago a proveedores',
+    aplicaA: 'debito',
+    claveDeSistema: 'pago_a_proveedor',
+  });
+  const conPago = [...catalogo, pago];
+
+  it('solo con cheques ofrece «Pago a proveedores» si Cuentas por pagar no está activo', () => {
+    expect(textos(opcionesParaClasificar(conPago, ['cheque'], false))).toContain('Pago a proveedores');
+    expect(textos(opcionesParaClasificar(conPago, ['cheque', 'cheque'], true))).not.toContain('Pago a proveedores');
+  });
+
+  it('con notas, o notas y cheques juntos, nunca lo ofrece', () => {
+    expect(textos(opcionesParaClasificar(conPago, ['debito'], false))).not.toContain('Pago a proveedores');
+    expect(textos(opcionesParaClasificar(conPago, ['cheque', 'debito'], false))).not.toContain('Pago a proveedores');
   });
 });

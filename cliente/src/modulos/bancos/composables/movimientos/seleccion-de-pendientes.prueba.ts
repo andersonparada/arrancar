@@ -4,6 +4,7 @@ import {
   conAlternado,
   conTodosAlternados,
   marcasVigentes,
+  ordenadosPorBeneficiario,
   pendientesDeClasificar,
   resumenDeSeleccion,
   tiposDeSeleccion,
@@ -92,5 +93,19 @@ describe('tiposDeSeleccion', () => {
   it('trae los tipos distintos de lo marcado', () => {
     expect(tiposDeSeleccion(filas, new Set(['a', 'c']))).toEqual(['credito', 'cheque']);
     expect(tiposDeSeleccion(filas, new Set())).toEqual([]);
+  });
+});
+
+describe('ordenadosPorBeneficiario', () => {
+  it('junta los del mismo beneficiario (sin distinguir mayúsculas), por fecha, y deja al final los que no tienen', () => {
+    const lista = [
+      { id: '1', beneficiario: null, fecha: '2026-01-01' },
+      { id: '2', beneficiario: 'Zeta', fecha: '2026-01-05' },
+      { id: '3', beneficiario: 'álamo', fecha: '2026-03-01' },
+      { id: '4', beneficiario: 'ÁLAMO', fecha: '2026-02-01' },
+      { id: '5', beneficiario: '  ', fecha: '2026-01-02' },
+    ];
+
+    expect(ordenadosPorBeneficiario(lista).map((f) => f.id)).toEqual(['4', '3', '2', '1', '5']);
   });
 });

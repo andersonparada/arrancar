@@ -4,6 +4,7 @@ import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { OPCIONES_DE_TIPO, type EdicionDeNota } from '../../composables/notas/edicion-de-nota';
+import type { SugerenciaDeMovimiento } from '../../servicios/sugerencias.api';
 import CamposDeNota from './CamposDeNota.vue';
 
 defineProps<{
@@ -11,7 +12,7 @@ defineProps<{
   enviando: boolean;
   referencias: Record<'cuentaBancariaId', OpcionDeRegistro[]>;
   opcionesDeConcepto: OpcionDeRegistro[];
-  conceptoSugerido: OpcionDeRegistro | null;
+  sugerencia: SugerenciaDeMovimiento | null;
 }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const edicion = defineModel<EdicionDeNota>({ required: true });
@@ -30,7 +31,7 @@ const titulo = computed(() =>
         :errores="errores"
         :referencias="referencias"
         :opciones-de-concepto="opcionesDeConcepto"
-        :concepto-sugerido="conceptoSugerido"
+        :sugerencia="sugerencia"
       />
     </form>
     <template #pie>
