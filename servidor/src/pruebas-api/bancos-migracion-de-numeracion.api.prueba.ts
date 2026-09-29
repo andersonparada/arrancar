@@ -3,7 +3,7 @@ import pg from 'pg';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../configuracion.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
+import { conceptoGeneral, crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
 import { darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const MIGRACION = new URL('../modulos/bancos/migraciones/0014_h9_numerar_datos_existentes.sql', import.meta.url);
@@ -13,6 +13,7 @@ const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let origen: string;
 let destino: string;
+let conceptoId = '';
 
 const nota = (tipo: string, fecha: string) => ({
   cuentaBancariaId: origen,
@@ -22,6 +23,7 @@ const nota = (tipo: string, fecha: string) => ({
   referencia: null,
   beneficiario: null,
   observaciones: null,
+  conceptoId,
 });
 
 const transferencia = (fecha: string) => ({
@@ -60,6 +62,7 @@ beforeAll(async () => {
   cuenta = await darDeAltaCuenta(entorno, { nombre: 'Migrada', usuario: 'propietariomigrado', modulos: ['bancos'] });
   origen = await crearCuentaBancaria(cuenta.propietario, 'Migrada origen');
   destino = await crearCuentaBancaria(cuenta.propietario, 'Migrada destino');
+  conceptoId = await conceptoGeneral(cuenta.propietario);
 });
 
 describe('migración que numera los datos existentes', () => {

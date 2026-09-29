@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
+import { conceptoGeneral, crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const RUTA_CHEQUES = '/api/bancos/cheques';
@@ -12,6 +12,7 @@ let cuenta: CuentaDePrueba;
 let autoriza: ClienteApi;
 let cuentaPrincipalId: string;
 let cuentaAparteId: string;
+let conceptoId = '';
 
 interface FilaDelReporte {
   numero: number;
@@ -39,6 +40,7 @@ async function emitir(cuentaBancariaId: string, datos: { fecha: string; benefici
     monto: datos.monto ?? '10.00',
     beneficiario: datos.beneficiario,
     noNegociable: true,
+    conceptoId,
     referencia: null,
     observaciones: null,
   });
@@ -86,6 +88,7 @@ beforeAll(async () => {
     apellidos: 'Caducos',
     permisos: ['bancos.conciliaciones.ver', 'bancos.conciliaciones.autorizar'],
   });
+  conceptoId = await conceptoGeneral(cuenta.propietario);
   cuentaPrincipalId = await crearCuentaBancaria(cuenta.propietario, 'Caducos principal');
   cuentaAparteId = await crearCuentaBancaria(cuenta.propietario, 'Caducos aparte');
   for (const id of [cuentaPrincipalId, cuentaAparteId]) {

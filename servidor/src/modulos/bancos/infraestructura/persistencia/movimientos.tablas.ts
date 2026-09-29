@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   date,
+  foreignKey,
   index,
   integer,
   numeric,
@@ -14,10 +15,21 @@ import {
 } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
+import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { esquemaBancos } from './esquema.tablas.js';
 import { transferencias } from './transferencias.tablas.js';
+
+/** El índice del flujo por concepto y la llave compuesta con la empresa: el concepto es siempre de la misma empresa. */
+const restriccionesDelConcepto = (t: { conceptoId: AnyPgColumn; empresaId: AnyPgColumn; fecha: AnyPgColumn }) => [
+  index('movimientos_concepto_fecha_idx').on(t.empresaId, t.conceptoId, t.fecha),
+  foreignKey({
+    name: 'movimientos_concepto_de_la_empresa_fk',
+    columns: [t.conceptoId, t.empresaId],
+    foreignColumns: [conceptos.id, conceptos.empresaId],
+  }),
+];
 
 /**
  * Las notas de crédito y de débito de cada cuenta. El monto siempre es positivo
@@ -41,6 +53,12 @@ export const movimientos = esquemaBancos.table(
     referencia: text(),
     beneficiario: text(),
     observaciones: text(),
+    /**
+     * Cómo se clasifica el dinero (H3b). Un original lo elige el usuario; transferencias, saldo inicial e
+     * inversos los asigna el sistema (el inverso hereda). La llave foránea es compuesta con `empresa_id`: el
+     * concepto siempre es de la misma empresa.
+     */
+    conceptoId: uuid().notNull(),
     /** Anulación a la antigua: solo la usan los cheques en un mes abierto (sin inverso, fuera del saldo). */
     anuladoEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
@@ -67,6 +85,7 @@ export const movimientos = esquemaBancos.table(
     index('movimientos_transferencia_idx').on(t.transferenciaId),
     index('movimientos_conciliacion_idx').on(t.conciliacionId),
     index('movimientos_revierte_a_idx').on(t.revierteAId),
+    ...restriccionesDelConcepto(t),
     /** Los cheques en circulación (reporte de cheques caducos): pocos y siempre los mismos filtros. */
     index('movimientos_cheques_en_circulacion_idx')
       .on(t.cuentaBancariaId, t.fecha)

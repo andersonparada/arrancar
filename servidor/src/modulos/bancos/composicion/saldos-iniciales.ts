@@ -1,3 +1,5 @@
+import { ConceptosDeMovimientos } from '../aplicacion/conceptos-de-movimientos.js';
+import { RepositorioConceptosDrizzle } from '../infraestructura/persistencia/repositorio-conceptos.drizzle.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { opcionesDe } from '../../core/intercambio/aplicacion/columnas.js';
 import { crearIntercambio } from '../../core/intercambio/contexto.js';
@@ -19,13 +21,15 @@ import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/r
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 
 function dependenciasDeSaldosIniciales() {
-  const { unidadDeTrabajo, auditoria, correlativos } = dependenciasCompartidas();
+  const { unidadDeTrabajo, auditoria, correlativos, reloj } = dependenciasCompartidas();
   const consultas = new ConsultasMovimientosDrizzle();
   const politicaDeSobregiro = new PoliticaDeSobregiroEnConfiguracion();
   return {
     unidadDeTrabajo,
     auditoria,
     correlativos,
+    reloj,
+    conceptos: new ConceptosDeMovimientos(new RepositorioConceptosDrizzle()),
     consultas,
     repositorio: new RepositorioMovimientosDrizzle(),
     reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro }),

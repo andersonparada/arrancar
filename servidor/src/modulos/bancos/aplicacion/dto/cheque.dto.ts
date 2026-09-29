@@ -25,6 +25,8 @@ export interface SolicitudDeEmisionDeCheque {
   noNegociable: boolean;
   referencia: string | null;
   observaciones: string | null;
+  /** El concepto que clasifica el pago; un cheque cuenta como débito. */
+  conceptoId: string;
 }
 
 /**

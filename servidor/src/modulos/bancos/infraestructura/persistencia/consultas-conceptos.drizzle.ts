@@ -5,6 +5,7 @@ import type { ConceptoDto } from '../../aplicacion/dto/concepto.dto.js';
 import type { ConsultasConceptos } from '../../aplicacion/puertos/consultas-conceptos.js';
 import { mapeadorDeConcepto } from './concepto.mapeador.js';
 import { conceptos } from './conceptos.tablas.js';
+import { movimientos } from './movimientos.tablas.js';
 
 const columnas = { ...getTableColumns(conceptos) };
 
@@ -20,9 +21,14 @@ export class ConsultasConceptosDrizzle implements ConsultasConceptos {
     return mapeadorDeConcepto.aDto(fila);
   }
 
-  /** Todavía ninguna nota ni cheque lleva concepto (`concepto_id` llega en H3b, que amplía esta consulta). */
-  async estaEnUso(_conceptoId: string): Promise<boolean> {
-    return false;
+  /** ¿Alguna nota, cheque o inverso de la empresa usa este concepto? */
+  async estaEnUso(conceptoId: string): Promise<boolean> {
+    const [fila] = await transaccionEnCurso()
+      .select({ id: movimientos.id })
+      .from(movimientos)
+      .where(eq(movimientos.conceptoId, conceptoId))
+      .limit(1);
+    return fila !== undefined;
   }
 
   private consulta() {

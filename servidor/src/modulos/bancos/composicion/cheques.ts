@@ -1,3 +1,5 @@
+import { ConceptosDeMovimientos } from '../aplicacion/conceptos-de-movimientos.js';
+import { RepositorioConceptosDrizzle } from '../infraestructura/persistencia/repositorio-conceptos.drizzle.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque.js';
 import { BlanquearCheque } from '../aplicacion/casos-uso/cheques/blanquear-cheque.js';
@@ -23,6 +25,7 @@ function dependenciasDeCheques() {
     auditoria,
     correlativos,
     reloj,
+    conceptos: new ConceptosDeMovimientos(new RepositorioConceptosDrizzle()),
     repositorio: new RepositorioChequesDrizzle(),
     repositorioChequeras: new RepositorioChequerasDrizzle(),
     repositorioMovimientos: new RepositorioMovimientosDrizzle(),

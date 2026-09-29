@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
+import { conceptoGeneral } from './soporte/escenarios-de-bancos.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const RUTA = '/api/bancos/transferencias';
@@ -32,6 +33,7 @@ async function crearCuentaBancaria(usuario: ClienteApi, nombre: string) {
 
 let origen: string;
 let destino: string;
+let conceptoId = '';
 
 const datos = (cambios: Record<string, unknown> = {}) => ({
   cuentaOrigenId: origen,
@@ -51,6 +53,7 @@ beforeAll(async () => {
   });
   origen = await crearCuentaBancaria(cuenta.propietario, 'Origen');
   destino = await crearCuentaBancaria(cuenta.propietario, 'Destino');
+  conceptoId = await conceptoGeneral(cuenta.propietario);
 });
 
 describe('transferencias por API', () => {
@@ -121,6 +124,7 @@ describe('transferencias por API', () => {
     const corregido = await cuenta.propietario.put(`/api/bancos/notas/${registrada.cuerpo.movimientoOrigenId}`, {
       cuentaBancariaId: origen,
       tipo: 'debito',
+      conceptoId,
       fecha: '2026-02-01',
       monto: '250.00',
       referencia: null,

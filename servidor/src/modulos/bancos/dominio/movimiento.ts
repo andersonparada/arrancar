@@ -2,6 +2,11 @@ import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { aCentavos } from './centavos.js';
 import {
+  NoSeReclasificaElSaldoInicial,
+  NoSeReclasificaUnInverso,
+  NoSeReclasificaUnaTransferencia,
+} from './errores-de-conceptos.js';
+import {
   FechaDeReversionAnterior,
   MontoInvalido,
   MotivoDeAnulacionInvalido,
@@ -32,6 +37,8 @@ export interface DatosDeMovimiento {
   referencia: string | null;
   beneficiario: string | null;
   observaciones: string | null;
+  /** Cómo se clasifica el dinero (H3b). Un original lo elige el usuario; los demás los asigna el sistema. */
+  conceptoId: string;
 }
 
 export interface PropiedadesDeMovimiento extends DatosDeMovimiento {
@@ -118,6 +125,27 @@ export class Movimiento extends Entidad<MovimientoId> {
     this.exigirSuelto();
     const { cuentaBancariaId, saldoInicial } = this.propiedades;
     this.propiedades = { ...this.propiedades, ...datosValidos({ ...datos, cuentaBancariaId, saldoInicial }) };
+  }
+
+  /**
+   * Cambia solo el concepto (reclasificar): no toca dinero ni fechas, así que procede aunque el mes esté
+   * conciliado. Un inverso, las notas de una transferencia y el saldo inicial no se reclasifican.
+   * @returns el concepto que tenía antes.
+   * @throws NoSeReclasificaUnInverso, NoSeReclasificaUnaTransferencia o NoSeReclasificaElSaldoInicial.
+   */
+  reclasificar(conceptoId: string): string {
+    if (this.esInverso) throw new NoSeReclasificaUnInverso();
+    if (this.propiedades.transferenciaId) throw new NoSeReclasificaUnaTransferencia();
+    if (this.propiedades.saldoInicial) throw new NoSeReclasificaElSaldoInicial();
+    const anterior = this.propiedades.conceptoId;
+    this.propiedades = { ...this.propiedades, conceptoId };
+    return anterior;
+  }
+
+  /** El inverso sigue a su original cuando este se reclasifica (hereda el concepto, sin validar nada, C2). */
+  seguirAlOriginal(conceptoId: string): void {
+    if (!this.esInverso) throw new Error('Solo un movimiento inverso sigue a su original.');
+    this.propiedades = { ...this.propiedades, conceptoId };
   }
 
   /**
@@ -249,6 +277,7 @@ export class Movimiento extends Entidad<MovimientoId> {
         referencia: this.referenciaDeLaReversion(),
         beneficiario: this.propiedades.beneficiario,
         observaciones: this.propiedades.observaciones,
+        conceptoId: this.propiedades.conceptoId,
       },
       { revierteAId: this.id.valor },
     );

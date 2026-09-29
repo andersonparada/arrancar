@@ -1,3 +1,4 @@
+import { CONCEPTO_GENERAL } from '../../../pruebas/conceptos-de-prueba.js';
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
@@ -33,6 +34,7 @@ describe('la regla del mes conciliado (se bloquea al autorizar)', () => {
         referencia: null,
         beneficiario: null,
         observaciones: null,
+        conceptoId: CONCEPTO_GENERAL,
       }),
     ).rejects.toThrow(MesConciliado);
   });
@@ -69,6 +71,7 @@ describe('la regla del mes conciliado (se bloquea al autorizar)', () => {
       referencia: null,
       beneficiario: null,
       observaciones: null,
+      conceptoId: CONCEPTO_GENERAL,
     });
     expect(movimiento.fecha).toBe('2026-02-01');
   });

@@ -6,6 +6,7 @@ export interface FilaExportadaDelReporte {
   fecha: string;
   cuentaBancariaNombre: string | null;
   tipoTexto: string;
+  conceptoNombre: string;
   numeroDeNota: string | null;
   numeroDeCheque: number | null;
   referencia: string | null;
@@ -36,6 +37,7 @@ export const aFilaExportadaDelReporte = (fila: FilaDelReporte): FilaExportadaDel
   fecha: fila.fecha,
   cuentaBancariaNombre: fila.cuentaBancariaNombre,
   tipoTexto: TEXTO_DEL_TIPO[fila.tipo],
+  conceptoNombre: fila.conceptoNombre,
   numeroDeNota: numeroEnTexto(fila),
   numeroDeCheque: fila.numeroDeCheque,
   referencia: fila.referencia,
@@ -51,6 +53,7 @@ export const columnasDelReporteDeMovimientos: Columna[] = [
   { clave: 'fecha', titulo: 'Fecha', requerido: true, tipo: 'fecha' },
   { clave: 'cuentaBancariaNombre', titulo: 'Cuenta', requerido: false, tipo: 'texto' },
   { clave: 'tipoTexto', titulo: 'Tipo', requerido: true, tipo: 'texto' },
+  { clave: 'conceptoNombre', titulo: 'Concepto', requerido: false, tipo: 'texto' },
   { clave: 'numeroDeNota', titulo: 'No.', requerido: false, tipo: 'texto' },
   { clave: 'numeroDeCheque', titulo: 'Número de cheque', requerido: false, tipo: 'entero' },
   { clave: 'referencia', titulo: 'Referencia', requerido: false, tipo: 'texto' },

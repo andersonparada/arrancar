@@ -16,6 +16,12 @@ import {
   PoliticaDeMismaFechaFija,
   PoliticaDeSobregiroFija,
 } from '../../../pruebas/dobles-de-movimientos.js';
+import {
+  CONCEPTO_GENERAL,
+  CONCEPTO_SALDO_INICIAL,
+  conceptosDeMovimientosDe,
+  conceptosSembrados,
+} from '../../../pruebas/conceptos-de-prueba.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { CrearChequera } from '../chequeras/crear-chequera.js';
 import { ActualizarMovimiento } from '../movimientos/actualizar-movimiento.js';
@@ -42,6 +48,7 @@ async function conSaldoInicial(movimientos: MovimientosEnMemoria): Promise<void>
       referencia: null,
       beneficiario: null,
       observaciones: null,
+      conceptoId: CONCEPTO_SALDO_INICIAL,
     }),
   );
 }
@@ -99,6 +106,7 @@ function dependenciasDeCheques(
     auditoria,
     correlativos: new CorrelativosEnMemoria(),
     reloj,
+    conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
   };
 }
 
@@ -114,6 +122,7 @@ function dependenciasDeMovimientos(
     auditoria,
     correlativos: new CorrelativosEnMemoria(),
     reloj,
+    conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(),
   };
 }
@@ -158,6 +167,7 @@ export const emisionDe = (chequeId: string, cambios: Record<string, unknown> = {
   monto: '100.00',
   beneficiario: 'Proveedor S.A.',
   noNegociable: true,
+  conceptoId: CONCEPTO_GENERAL,
   referencia: null,
   observaciones: null,
   ...cambios,

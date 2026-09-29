@@ -1,4 +1,5 @@
 import type { Correlativos } from '../../../../core/compartido/aplicacion/correlativos.js';
+import type { ConceptosDeMovimientos } from '../../conceptos-de-movimientos.js';
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
@@ -23,6 +24,7 @@ export interface DependenciasDeCheques {
   reglas: ReglasDeLaCuenta;
   auditoria: Auditoria;
   correlativos: Correlativos;
+  conceptos: ConceptosDeMovimientos;
   reloj: Reloj;
 }
 

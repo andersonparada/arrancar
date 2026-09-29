@@ -26,6 +26,7 @@ const datos = (cambios: Partial<DatosDeMovimiento> = {}): DatosDeMovimiento => (
   referencia: 'Boleta 123',
   beneficiario: 'Proveedor',
   observaciones: 'Una observación',
+  conceptoId: 'concepto-general',
   ...cambios,
 });
 

@@ -127,6 +127,13 @@
       "when": 1790700500000,
       "tag": "0017_h6_cheques_en_circulacion",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790700600000,
+      "tag": "0018_h3b_concepto_en_movimientos",
+      "breakpoints": true
     }
   ]
 }

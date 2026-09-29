@@ -2,13 +2,14 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
-import { crearCuentaBancaria, inversosDe, saldoDe } from './soporte/escenarios-de-bancos.js';
+import { conceptoGeneral, crearCuentaBancaria, inversosDe, saldoDe } from './soporte/escenarios-de-bancos.js';
 
 const RUTA_MOVIMIENTOS = '/api/bancos/movimientos';
 const RUTA_CHEQUES = '/api/bancos/cheques';
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let autoriza: ClienteApi;
+let conceptoId = '';
 
 beforeAll(async () => {
   cuenta = await darDeAltaCuenta(entorno, {
@@ -21,6 +22,7 @@ beforeAll(async () => {
     apellidos: 'Cheques',
     permisos: ['bancos.conciliaciones.ver', 'bancos.conciliaciones.autorizar'],
   });
+  conceptoId = await conceptoGeneral(cuenta.propietario);
 });
 
 describe('cheques: anular en mes abierto o conciliado, y blanquear, por API', () => {
@@ -35,6 +37,7 @@ describe('cheques: anular en mes abierto o conciliado, y blanquear, por API', ()
       monto,
       beneficiario: 'Proveedor',
       noNegociable: true,
+      conceptoId,
       referencia: null,
       observaciones: null,
     });

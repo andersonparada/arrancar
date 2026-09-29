@@ -12,6 +12,11 @@ export class RepositorioMovimientosDrizzle implements RepositorioMovimientos {
     return fila ? mapeadorDeMovimiento.aEntidad(fila) : null;
   }
 
+  async buscarInversoDe(id: MovimientoId): Promise<Movimiento | null> {
+    const [fila] = await transaccionEnCurso().select().from(movimientos).where(eq(movimientos.revierteAId, id.valor));
+    return fila ? mapeadorDeMovimiento.aEntidad(fila) : null;
+  }
+
   async agregar(movimiento: Movimiento): Promise<void> {
     await transaccionEnCurso().insert(movimientos).values(mapeadorDeMovimiento.aFila(movimiento));
   }

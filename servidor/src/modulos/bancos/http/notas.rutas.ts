@@ -2,7 +2,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import { esquemaAnulacion, esquemaEliminacion, esquemaParamsMovimiento } from './movimientos.esquemas-http.js';
 import type { NotasControlador } from './notas.controlador.js';
-import { esquemaFiltroDeNotas, esquemaNota } from './notas.esquemas-http.js';
+import { esquemaFiltroDeNotas, esquemaNota, esquemaReclasificacion } from './notas.esquemas-http.js';
 
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
 
@@ -20,10 +20,15 @@ function rutasDeLectura(app: Aplicacion, controlador: NotasControlador) {
   app.get(`${RUTA}/:movimientoId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
 }
 
-/** Registrar y corregir con `gestionar`; anular tiene su propio permiso. */
+/** Registrar, corregir y reclasificar (solo el concepto) con `gestionar`; anular y eliminar tienen su propio permiso. */
 function rutasDeEscritura(app: Aplicacion, controlador: NotasControlador) {
   const gestionar = proteger({ permiso: 'bancos.notas.gestionar' });
   app.post(RUTA, { schema: { tags: etiquetas, body: esquemaNota }, preHandler: gestionar, handler: controlador.crear });
+  app.post(`${RUTA}/reclasificar`, {
+    schema: { tags: etiquetas, body: esquemaReclasificacion },
+    preHandler: gestionar,
+    handler: controlador.reclasificar,
+  });
   app.put(`${RUTA}/:movimientoId`, {
     schema: { ...conId, body: esquemaNota },
     preHandler: gestionar,

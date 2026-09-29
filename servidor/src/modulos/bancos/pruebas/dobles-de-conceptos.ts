@@ -19,6 +19,16 @@ export class ConceptosEnMemoria implements RepositorioConceptos, ConsultasConcep
     return this.registros.get(id.valor) ?? null;
   }
 
+  async buscarDeSistema(clave: string): Promise<Concepto | null> {
+    return [...this.registros.values()].find((c) => c.instantanea().claveDeSistema === clave) ?? null;
+  }
+
+  /** Deja conceptos ya guardados, sin esperar (para armar el entorno de una prueba). */
+  precargar(...conceptos: Concepto[]): this {
+    for (const concepto of conceptos) this.registros.set(concepto.id.valor, concepto);
+    return this;
+  }
+
   async agregar(concepto: Concepto): Promise<void> {
     this.registros.set(concepto.id.valor, concepto);
   }

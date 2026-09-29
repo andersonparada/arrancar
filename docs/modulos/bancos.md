@@ -1300,3 +1300,46 @@ viene en `dependenciasCompartidas().reloj`. Lo usan `AnularCheque`, `AnularMovim
 `IniciarConciliacion` y el reporte de cheques caducos. Las pruebas usan `RelojFijo` o un `RelojEnZonaHoraria`
 con la hora fija a las 20:00 de Guatemala. Excepción: el nombre de los archivos Excel exportados usa la zona por
 omisión (la capa HTTP no puede llegar a la configuración). No hay más usos de `toISOString()` para «hoy».
+
+## H3b Concepto en notas y cheques (servidor hecho el 2026-09-29)
+
+Manda `concepto-de-notas-y-cheques.md` (informe del contador). Aquí solo lo que **no** depende de las preguntas
+P1 a P8: no cambia `cheque_caduco`, ni hay columnas de origen (`modulo_de_origen`), `causa_de_anulacion` ni
+conceptos nuevos en la semilla.
+
+- **Columna** `bancos.movimientos.concepto_id uuid not null`, con llave foránea **compuesta** `(concepto_id, empresa_id)`
+  → `bancos.conceptos (id, empresa_id)` (por eso `conceptos` gana `unique (id, empresa_id)`): el concepto es siempre de
+  la misma empresa. Índice `movimientos_concepto_fecha_idx (empresa_id, concepto_id, fecha)`.
+- **Migración `0018_h3b_concepto_en_movimientos`** (`when` 1790700600000): la columna nace nulable; siembra el catálogo
+  (mismos conceptos que `0016`) en las empresas con movimientos y sin conceptos, y agrega los tres de sistema que el
+  relleno usa si faltan; rellena con reglas deterministas: notas de transferencia → `transferencia`; saldo inicial →
+  `saldo_inicial`; el resto de los originales (notas y cheques, también los anulados a la antigua) → `sin_clasificar`;
+  los inversos (incluidos los de transferencias) heredan el de su original, ya clasificado; recién entonces `not null`
+  y la llave. Nada se infiere. Probada sobre datos reales (`bancos-migracion-de-conceptos.api.prueba.ts`).
+- **Reglas** (`dominio/asignacion-de-concepto.ts`, pura): una nota o un cheque **original** exige un concepto activo,
+  compatible con `aplica_a` (el cheque cuenta como débito) y **no de sistema** (así `sin_clasificar` nunca se elige,
+  C5). Errores 422: `concepto_de_sistema_no_se_elige`, `concepto_inactivo`, `concepto_incompatible`; `concepto_obligatorio`
+  si falta. Transferencias, saldo inicial e inversos los asigna el sistema (`ConceptosDeMovimientos.deSistema`, que
+  antes llama a `SembrarConceptos`, como pedía H3a); el inverso **hereda** el concepto sin validar `aplica_a` ni si
+  está activo (C2). Al **corregir** una nota se vuelve a validar (con su tipo nuevo); si el concepto es el mismo que ya
+  tenía no se le exige seguir activo. Corregir el saldo inicial conserva su concepto de sistema.
+- **Emitir cheque** y **registrar o corregir nota** reciben `conceptoId` (obligatorio en el cuerpo); el saldo inicial
+  no lo recibe. `ConsultasConceptos.estaEnUso` revisa `bancos.movimientos`: un concepto que clasifica algo no se elimina
+  (`concepto_en_uso`), se inactiva.
+- **Reclasificar** (`ReclasificarMovimientos`): `POST /api/bancos/notas/reclasificar` con `{ movimientoIds (1 a 200),
+  conceptoId }`, todo o nada en una transacción; responde `{ reclasificados, sinCambio }`. Cambia solo el concepto:
+  procede en meses conciliados; audita `corregir` por movimiento (`anterior` con el concepto anterior y `motivo`
+  «Reclasificado de «X» a «Y»») y **arrastra al inverso** de un movimiento revertido (también auditado). Prohibido en
+  inversos, notas de transferencia y saldo inicial. **Permiso:** se reutiliza `bancos.notas.gestionar` (registrar y
+  corregir notas); cubre también los cheques (un cheque «sin clasificar» se reclasifica igual).
+- **DTO** `MovimientoDto`: `conceptoId`, `conceptoNombre` y `puedeReclasificar` (lo calcula el servidor:
+  falso en inversos, notas de transferencia y saldo inicial). Filtro `conceptoId` en `GET /bancos/notas`,
+  `GET /bancos/movimientos/reporte` y su Excel (que gana la columna «Concepto»).
+- **Reporte de movimientos**: `sinClasificar { cantidad, montoDeEntradas, montoDeSalidas }` con los originales vigentes
+  «Sin clasificar» de la cuenta y fechas del filtro, sin importar el filtro de concepto (los inversos no se cuentan
+  dos veces). Con `conceptoId` el reporte no trae saldo corrido (un saldo de solo algunas filas no significa nada).
+- **Pruebas**: dominio (`asignacion-de-concepto`, `movimiento-y-concepto`, `acciones-posibles`), casos de uso
+  (`casos-uso-de-conceptos-en-notas`, `-en-cheques`, `-en-transferencias`, `reclasificar-movimientos`,
+  `conceptos-de-movimientos`) y API (`bancos-conceptos-en-movimientos`: rechazos con su código, inverso de débito
+  heredado, `estaEnUso` real, reclasificar con auditoría y arrastre, 403, reporte por concepto; y
+  `bancos-migracion-de-conceptos`). Los dobles usan un catálogo con ids fijos (`pruebas/conceptos-de-prueba.ts`).

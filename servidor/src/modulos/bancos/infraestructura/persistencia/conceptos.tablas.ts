@@ -26,6 +26,8 @@ export const conceptos = esquemaBancos.table(
   },
   (t) => [
     unique('conceptos_nombre_unico').on(t.empresaId, t.nombre),
+    /** Permite la llave foránea compuesta de `movimientos` (mismo concepto, misma empresa). */
+    unique('conceptos_id_empresa_unico').on(t.id, t.empresaId),
     uniqueIndex('conceptos_clave_de_sistema_unica')
       .on(t.empresaId, t.claveDeSistema)
       .where(sql`${t.claveDeSistema} is not null`),

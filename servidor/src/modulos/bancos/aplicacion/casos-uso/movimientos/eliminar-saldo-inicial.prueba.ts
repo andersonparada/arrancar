@@ -1,3 +1,8 @@
+import {
+  CONCEPTO_GENERAL,
+  conceptosDeMovimientosDe,
+  conceptosSembrados,
+} from '../../../pruebas/conceptos-de-prueba.js';
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -61,6 +66,7 @@ beforeEach(() => {
     reglas,
     auditoria,
     correlativos: new CorrelativosEnMemoria(),
+    conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
   };
   crear = new CrearMovimiento(dependencias);
   eliminar = new EliminarSaldoInicial({
@@ -94,7 +100,12 @@ describe('EliminarSaldoInicial', () => {
   });
 
   it('no elimina una nota desde el endpoint de saldos iniciales', async () => {
-    const nota = await crear.ejecutar(operador, { ...saldoInicial(), saldoInicial: false, fecha: '2026-01-05' });
+    const nota = await crear.ejecutar(operador, {
+      ...saldoInicial(),
+      saldoInicial: false,
+      fecha: '2026-01-05',
+      conceptoId: CONCEPTO_GENERAL,
+    });
 
     await expect(eliminar.ejecutar(operador, { movimientoId: nota.id, motivo: 'x' })).rejects.toThrow(
       NoEsUnSaldoInicial,

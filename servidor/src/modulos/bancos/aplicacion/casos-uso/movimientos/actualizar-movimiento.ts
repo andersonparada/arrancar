@@ -47,7 +47,8 @@ export class ActualizarMovimiento {
     const { repositorio, reglas } = this.dependencias;
     const efectoAnterior = movimiento.efectoEnCentavos;
     const { fecha: fechaAnterior, tipo: tipoAnterior } = movimiento.instantanea();
-    movimiento.corregir(solicitud);
+    const conceptoId = await this.conceptoDeLaCorreccion(movimiento, solicitud);
+    movimiento.corregir({ ...solicitud, conceptoId });
     if (solicitud.tipo !== tipoAnterior) await numerarSiCorresponde(this.dependencias.correlativos, movimiento);
     const { cuentaBancariaId, fecha, saldoInicial } = movimiento.instantanea();
     await reglas.revisar(operador, {
@@ -58,5 +59,13 @@ export class ActualizarMovimiento {
       diferencia: movimiento.efectoEnCentavos - efectoAnterior,
     });
     await repositorio.guardar(movimiento);
+  }
+
+  /** El saldo inicial conserva su concepto de sistema; una nota lleva el elegido, que se revisa con su nuevo tipo. */
+  private async conceptoDeLaCorreccion(movimiento: Movimiento, solicitud: SolicitudDeMovimiento): Promise<string> {
+    const { conceptoId: actual, saldoInicial } = movimiento.instantanea();
+    if (saldoInicial) return actual;
+    const elegido = await this.dependencias.conceptos.elegido(solicitud.conceptoId, solicitud.tipo, { actual });
+    return elegido.id.valor;
   }
 }

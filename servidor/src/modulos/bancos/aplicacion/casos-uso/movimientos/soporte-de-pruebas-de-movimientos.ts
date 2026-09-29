@@ -11,6 +11,11 @@ import {
   PoliticaDeSobregiroFija,
 } from '../../../pruebas/dobles-de-movimientos.js';
 import type { SolicitudDeMovimiento } from '../../dto/movimiento.dto.js';
+import {
+  CONCEPTO_GENERAL,
+  conceptosDeMovimientosDe,
+  conceptosSembrados,
+} from '../../../pruebas/conceptos-de-prueba.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { ActualizarMovimiento } from './actualizar-movimiento.js';
 import { AnularMovimiento } from './anular-movimiento.js';
@@ -18,6 +23,7 @@ import { CrearMovimiento } from './crear-movimiento.js';
 import { EliminarMovimiento } from './eliminar-movimiento.js';
 import { ListarMovimientos } from './listar-movimientos.js';
 import { ObtenerMovimiento } from './obtener-movimiento.js';
+import { ReclasificarMovimientos } from './reclasificar-movimientos.js';
 import { ReporteDeMovimientos } from './reporte-de-movimientos.js';
 
 export const operador = operadorDePrueba();
@@ -33,6 +39,7 @@ export const nota = (cambios: Partial<SolicitudDeMovimiento> = {}): SolicitudDeM
   referencia: 'Boleta 123',
   beneficiario: null,
   observaciones: null,
+  conceptoId: CONCEPTO_GENERAL,
   ...cambios,
 });
 
@@ -50,6 +57,7 @@ function dependenciasDe(registros: MovimientosEnMemoria, auditoria: AuditoriaEnM
     auditoria,
     correlativos: new CorrelativosEnMemoria(),
     reloj: new RelojFijo(),
+    conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
     reglas: new ReglasDeLaCuenta({ consultas: registros, politicaDeSobregiro }),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(opciones.mismaFecha),
   };
@@ -69,6 +77,7 @@ export function armarEntorno({ permiteSobregiro = false, mismaFecha = false }: O
     actualizar: new ActualizarMovimiento(dependencias),
     anular: new AnularMovimiento(dependencias),
     eliminar: new EliminarMovimiento(dependencias),
+    reclasificar: new ReclasificarMovimientos(dependencias),
     reporte: new ReporteDeMovimientos(dependencias),
   };
 }

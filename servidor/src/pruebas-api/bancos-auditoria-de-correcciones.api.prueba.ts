@@ -3,12 +3,14 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../configuracion.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
+import { conceptoGeneral } from './soporte/escenarios-de-bancos.js';
 
 const RUTA_NOTAS = '/api/bancos/notas';
 const RUTA_SALDOS_INICIALES = '/api/bancos/saldos-iniciales';
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let cuentaBancariaId: string;
+let conceptoId = '';
 
 interface Correccion {
   recurso: string;
@@ -36,6 +38,7 @@ const datos = (cambios: Record<string, unknown> = {}) => ({
   beneficiario: null,
   observaciones: null,
   cuentaBancariaId,
+  conceptoId,
   ...cambios,
 });
 
@@ -59,6 +62,7 @@ beforeAll(async () => {
     activo: true,
   });
   cuentaBancariaId = cuentaBancaria.cuerpo.id as string;
+  conceptoId = await conceptoGeneral(cuenta.propietario);
 });
 
 describe('auditoría de correcciones de Bancos', () => {

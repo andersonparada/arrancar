@@ -12,12 +12,13 @@ export class CrearMovimiento {
 
   /**
    * @throws CuentaBancariaInactiva si la cuenta está inactiva.
+   * @throws ConceptoObligatorio, ConceptoDeSistemaNoSeElige, ConceptoInactivo o ConceptoIncompatible si el concepto no sirve.
    * @throws SaldoInicialRepetido, SaldoInicialNoEsElPrimero, MovimientoAntesDelSaldoInicial o SaldoInsuficiente.
    */
   ejecutar(operador: Operador, solicitud: SolicitudDeMovimiento): Promise<MovimientoDto> {
     const { unidadDeTrabajo, repositorio, consultas, reglas, correlativos } = this.dependencias;
-    const movimiento = Movimiento.crear(Identificador.desde(operador.empresaId), solicitud);
     return unidadDeTrabajo.ejecutar(operador, async () => {
+      const movimiento = await this.nuevoMovimiento(operador, solicitud);
       await consultas.exigirReferencias(solicitud);
       if (!(await consultas.cuentaEstaActiva(solicitud.cuentaBancariaId))) throw new CuentaBancariaInactiva();
       await reglas.revisar(operador, {
@@ -30,5 +31,14 @@ export class CrearMovimiento {
       await repositorio.agregar(movimiento);
       return consultas.obtener(movimiento.id.valor);
     });
+  }
+
+  /** El saldo inicial lleva su concepto de sistema; una nota, el que el usuario eligió. */
+  private async nuevoMovimiento(operador: Operador, solicitud: SolicitudDeMovimiento): Promise<Movimiento> {
+    const { conceptos } = this.dependencias;
+    const concepto = solicitud.saldoInicial
+      ? await conceptos.deSistema(operador, 'saldo_inicial')
+      : await conceptos.elegido(solicitud.conceptoId, solicitud.tipo);
+    return Movimiento.crear(Identificador.desde(operador.empresaId), { ...solicitud, conceptoId: concepto.id.valor });
   }
 }

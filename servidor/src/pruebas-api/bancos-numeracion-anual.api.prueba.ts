@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
+import { conceptoGeneral, crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
 import { darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const RUTA_NOTAS = '/api/bancos/notas';
@@ -10,6 +10,7 @@ const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let cuentaBancariaId: string;
 let destinoId: string;
+let conceptoId = '';
 
 const nota = (fecha: string) => ({
   cuentaBancariaId,
@@ -19,6 +20,7 @@ const nota = (fecha: string) => ({
   referencia: null,
   beneficiario: null,
   observaciones: null,
+  conceptoId,
 });
 
 const transferencia = (fecha: string) => ({
@@ -43,6 +45,7 @@ beforeAll(async () => {
   cuenta = await darDeAltaCuenta(entorno, { nombre: 'Anual', usuario: 'propietarioanual', modulos: ['bancos'] });
   cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Anual');
   destinoId = await crearCuentaBancaria(cuenta.propietario, 'Anual destino');
+  conceptoId = await conceptoGeneral(cuenta.propietario);
   await entorno.soporte.put('/api/sesion/empresa-activa', { empresaId: cuenta.empresaId });
 });
 

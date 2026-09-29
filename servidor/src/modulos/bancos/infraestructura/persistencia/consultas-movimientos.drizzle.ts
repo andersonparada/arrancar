@@ -3,10 +3,16 @@ import { alias } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir-que-exista.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import type { FiltroDeMovimientos, MovimientoDto, SolicitudDeMovimiento } from '../../aplicacion/dto/movimiento.dto.js';
+import type {
+  FiltroDeMovimientos,
+  MovimientoDto,
+  ResumenDeSinClasificar,
+  SolicitudDeMovimiento,
+} from '../../aplicacion/dto/movimiento.dto.js';
 import type { ConsultasMovimientos } from '../../aplicacion/puertos/consultas-movimientos.js';
 import { finDelMesDe } from '../../dominio/conciliacion.js';
 import { cheques } from './cheques.tablas.js';
+import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { cuentaConConciliacionesDe, mesConciliadoDe } from './hechos-de-movimiento.js';
@@ -22,6 +28,7 @@ const columnas = {
   cuentaBancariaNombre: cuentaBancaria.nombre,
   chequeId: chequeDelMovimiento.id,
   numeroDeCheque: chequeDelMovimiento.numero,
+  conceptoNombre: conceptos.nombre,
   mesConciliado: mesConciliadoDe(movimientos.cuentaBancariaId, movimientos.fecha),
   cuentaConConciliaciones: cuentaConConciliacionesDe(movimientos.cuentaBancariaId),
 };
@@ -46,8 +53,9 @@ const condicionDeLaClase = (clase: FiltroDeMovimientos['clase']) => {
   return undefined;
 };
 
-const condicionesDe = ({ cuentaBancariaId, desde, hasta, clase }: FiltroDeMovimientos) =>
+const condicionesDe = ({ cuentaBancariaId, desde, hasta, clase, conceptoId }: FiltroDeMovimientos) =>
   and(
+    conceptoId ? eq(movimientos.conceptoId, conceptoId) : undefined,
     cuentaBancariaId ? eq(movimientos.cuentaBancariaId, cuentaBancariaId) : undefined,
     desde ? gte(movimientos.fecha, desde) : undefined,
     hasta ? lte(movimientos.fecha, hasta) : undefined,
@@ -130,6 +138,32 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
     return filas.map(mapeadorDeMovimiento.aDto);
   }
 
+  async resumenDeSinClasificar(filtro: FiltroDeMovimientos): Promise<ResumenDeSinClasificar> {
+    const suma = (tipo: string) =>
+      sql<string>`(coalesce(sum(${movimientos.monto}) filter (where ${movimientos.tipo} = ${tipo}), 0))::numeric(14,2)::text`;
+    const [fila] = await transaccionEnCurso()
+      .select({
+        cantidad: sql<number>`count(*)::int`,
+        entradas: suma('credito'),
+        salidas: sql<string>`(coalesce(sum(${movimientos.monto}) filter (where ${movimientos.tipo} <> 'credito'), 0))::numeric(14,2)::text`,
+      })
+      .from(movimientos)
+      .innerJoin(conceptos, eq(conceptos.id, movimientos.conceptoId))
+      .where(
+        and(
+          eq(conceptos.claveDeSistema, 'sin_clasificar'),
+          isNull(movimientos.revierteAId),
+          isNull(movimientos.anuladoEn),
+          condicionesDe({ ...filtro, conceptoId: undefined, clase: undefined }),
+        ),
+      );
+    return {
+      cantidad: fila?.cantidad ?? 0,
+      montoDeEntradas: fila?.entradas ?? '0.00',
+      montoDeSalidas: fila?.salidas ?? '0.00',
+    };
+  }
+
   private async primeraFecha(condicion: SQL | undefined): Promise<string | null> {
     const [fila] = await transaccionEnCurso()
       .select({ fecha: movimientos.fecha })
@@ -145,6 +179,7 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
       .select(columnas)
       .from(movimientos)
       .leftJoin(cuentaBancaria, eq(movimientos.cuentaBancariaId, cuentaBancaria.id))
+      .innerJoin(conceptos, eq(conceptos.id, movimientos.conceptoId))
       .leftJoin(chequeDelMovimiento, eq(chequeDelMovimiento.movimientoId, movimientos.id));
   }
 }

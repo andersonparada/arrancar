@@ -1,13 +1,15 @@
 import { accionesDeMovimiento, type HechosDeUnMovimiento } from '../aplicacion/acciones-posibles.js';
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
-import type { FiltroDeMovimientos, MovimientoDto } from '../aplicacion/dto/movimiento.dto.js';
+import { resumirSinClasificar } from '../aplicacion/calculo-de-reporte-de-movimientos.js';
+import type { FiltroDeMovimientos, MovimientoDto, ResumenDeSinClasificar } from '../aplicacion/dto/movimiento.dto.js';
 import type { ConsultasMovimientos } from '../aplicacion/puertos/consultas-movimientos.js';
 import type { PoliticaDeMismaFechaEnAnulacion } from '../aplicacion/puertos/politica-de-misma-fecha-en-anulacion.js';
 import type { PoliticaDeSobregiro } from '../aplicacion/puertos/politica-de-sobregiro.js';
 import type { RepositorioMovimientos } from '../aplicacion/puertos/repositorio-movimientos.js';
 import { deCentavos } from '../dominio/centavos.js';
 import { Movimiento, type MovimientoId } from '../dominio/movimiento.js';
+import { CONCEPTO_SIN_CLASIFICAR, nombreDelConceptoDePrueba } from './conceptos-de-prueba.js';
 
 const copia = (movimiento: Movimiento) => Movimiento.reconstruir(movimiento.instantanea());
 
@@ -43,6 +45,7 @@ function aDto(movimiento: Movimiento, conciliacionId: string | null, cuenta: Hec
     anuladoEn: anuladoEn?.toISOString() ?? null,
     revertidoEn: revertidoEn?.toISOString() ?? null,
     revierteAId: revierteAId ?? null,
+    conceptoNombre: nombreDelConceptoDePrueba(datos.conceptoId),
     cuentaBancariaNombre: null,
     chequeId: null,
     numeroDeCheque: null,
@@ -57,9 +60,13 @@ const cumpleLaClase = (clase: FiltroDeMovimientos['clase'], dto: MovimientoDto) 
   return true;
 };
 
+const cumpleElConcepto = (conceptoId: string | undefined, dto: MovimientoDto) =>
+  !conceptoId || dto.conceptoId === conceptoId;
+
 const cumple =
-  ({ cuentaBancariaId, desde, hasta, clase }: FiltroDeMovimientos) =>
+  ({ cuentaBancariaId, desde, hasta, clase, conceptoId }: FiltroDeMovimientos) =>
   (dto: MovimientoDto) =>
+    cumpleElConcepto(conceptoId, dto) &&
     (!cuentaBancariaId || dto.cuentaBancariaId === cuentaBancariaId) &&
     (!desde || dto.fecha >= desde) &&
     (!hasta || dto.fecha <= hasta) &&
@@ -81,6 +88,11 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
   async buscar(id: MovimientoId): Promise<Movimiento | null> {
     const guardado = this.registros.get(id.valor);
     return guardado ? copia(guardado) : null;
+  }
+
+  async buscarInversoDe(id: MovimientoId): Promise<Movimiento | null> {
+    const inverso = [...this.registros.values()].find((m) => m.instantanea().revierteAId === id.valor);
+    return inverso ? copia(inverso) : null;
   }
 
   async agregar(movimiento: Movimiento): Promise<void> {
@@ -145,6 +157,14 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
       .filter((dto) => dto.fecha <= fecha)
       .map((dto) => this.registros.get(dto.id)!.efectoEnCentavos);
     return deCentavos(efectos.reduce((suma, efecto) => suma + efecto, 0));
+  }
+
+  async resumenDeSinClasificar(filtro: FiltroDeMovimientos): Promise<ResumenDeSinClasificar> {
+    const pendientes = [...this.registros.values()]
+      .map((m) => this.aDtoMarcado(m))
+      .filter(cumple({ ...filtro, conceptoId: undefined }))
+      .filter((dto) => dto.conceptoId === CONCEPTO_SIN_CLASIFICAR && !dto.revierteAId && !dto.anuladoEn);
+    return resumirSinClasificar(pendientes);
   }
 
   async vigentesEntre(cuentaBancariaId: string, desde: string, hasta: string): Promise<MovimientoDto[]> {

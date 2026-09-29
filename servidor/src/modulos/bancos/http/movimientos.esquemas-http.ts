@@ -15,6 +15,7 @@ export const esquemaFiltroDeMovimientos = z.object({
   cuentaBancariaId: z.uuid().optional(),
   desde: z.iso.date().optional(),
   hasta: z.iso.date().optional(),
+  conceptoId: z.uuid().optional(),
 });
 
 export type ParamsMovimiento = z.infer<typeof esquemaParamsMovimiento>;

@@ -4,11 +4,14 @@ import { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anular-mov
 import { CrearMovimiento } from '../aplicacion/casos-uso/movimientos/crear-movimiento.js';
 import { EliminarMovimiento } from '../aplicacion/casos-uso/movimientos/eliminar-movimiento.js';
 import { ListarMovimientos } from '../aplicacion/casos-uso/movimientos/listar-movimientos.js';
+import { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
 import { ObtenerMovimiento } from '../aplicacion/casos-uso/movimientos/obtener-movimiento.js';
 import { ReglasDeLaCuenta } from '../aplicacion/reglas-de-la-cuenta.js';
 import { NotasControlador } from '../http/notas.controlador.js';
 import { rutasNotas } from '../http/notas.rutas.js';
 import { ConsultasMovimientosDrizzle } from '../infraestructura/persistencia/consultas-movimientos.drizzle.js';
+import { ConceptosDeMovimientos } from '../aplicacion/conceptos-de-movimientos.js';
+import { RepositorioConceptosDrizzle } from '../infraestructura/persistencia/repositorio-conceptos.drizzle.js';
 import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/repositorio-movimientos.drizzle.js';
 import { PoliticaDeMismaFechaEnAnulacionEnConfiguracion } from '../infraestructura/politica-de-misma-fecha-en-anulacion.configuracion.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
@@ -24,6 +27,7 @@ function dependenciasDeNotas() {
     reloj,
     consultas,
     repositorio: new RepositorioMovimientosDrizzle(),
+    conceptos: new ConceptosDeMovimientos(new RepositorioConceptosDrizzle()),
     reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro }),
     politicaDeMismaFecha: new PoliticaDeMismaFechaEnAnulacionEnConfiguracion(),
   };
@@ -39,6 +43,7 @@ export function rutasDeNotas() {
     actualizar: new ActualizarMovimiento(dependencias),
     anular: new AnularMovimiento(dependencias),
     eliminar: new EliminarMovimiento(dependencias),
+    reclasificar: new ReclasificarMovimientos(dependencias),
   };
   return rutasNotas(new NotasControlador(casos));
 }

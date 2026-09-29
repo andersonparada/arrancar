@@ -1,11 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
-import { crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
+import { conceptoGeneral, crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
 
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let cuentaBancariaId: string;
+let conceptoId = '';
 
 const nota = (cambios: Record<string, unknown>) => ({
   cuentaBancariaId,
@@ -15,6 +16,7 @@ const nota = (cambios: Record<string, unknown>) => ({
   referencia: null,
   beneficiario: null,
   observaciones: null,
+  conceptoId,
   ...cambios,
 });
 
@@ -25,6 +27,7 @@ beforeAll(async () => {
     modulos: ['bancos'],
   });
   cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Cuenta con anulaciones');
+  conceptoId = await conceptoGeneral(cuenta.propietario);
 });
 
 describe('conciliar un original y su inverso que nunca pasaron por el banco, por API', () => {

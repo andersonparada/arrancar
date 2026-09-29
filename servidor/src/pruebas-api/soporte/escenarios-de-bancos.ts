@@ -35,3 +35,36 @@ export async function inversosDe(
   const reporte = await usuario.get(`/api/bancos/movimientos/reporte?cuentaBancariaId=${cuentaBancariaId}`);
   return reporte.cuerpo.filas.filter((m: { revierteAId: string | null }) => m.revierteAId !== null);
 }
+
+const NOMBRE_DEL_CONCEPTO_GENERAL = 'General de prueba';
+
+/**
+ * Un concepto propio de la empresa del usuario que sirve para créditos, débitos y cheques (H3b): lo busca por
+ * nombre y, si no está, lo crea. Sembrar el catálogo ocurre solo al listar.
+ */
+export async function conceptoGeneral(usuario: ClienteApi): Promise<string> {
+  const lista = await usuario.get('/api/bancos/conceptos');
+  const existente = (lista.cuerpo as Array<{ id: string; nombre: string }>).find(
+    (concepto) => concepto.nombre === NOMBRE_DEL_CONCEPTO_GENERAL,
+  );
+  if (existente) return existente.id;
+  const creado = await usuario.post('/api/bancos/conceptos', {
+    nombre: NOMBRE_DEL_CONCEPTO_GENERAL,
+    aplicaA: 'ambos',
+    actividadDeFlujo: 'operacion',
+    grupoDeFlujo: null,
+    esCargoBancario: false,
+    pideDatosDeIntereses: false,
+    admiteFactura: false,
+    activo: true,
+  });
+  return creado.cuerpo.id as string;
+}
+
+/** El id del concepto de sistema con esa clave (`sin_clasificar`, `transferencia`, `saldo_inicial`…). */
+export async function conceptoDeSistema(usuario: ClienteApi, clave: string): Promise<{ id: string; nombre: string }> {
+  const lista = await usuario.get('/api/bancos/conceptos');
+  return (lista.cuerpo as Array<{ id: string; nombre: string; claveDeSistema: string | null }>).find(
+    (concepto) => concepto.claveDeSistema === clave,
+  )!;
+}

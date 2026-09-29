@@ -27,7 +27,12 @@ export class RegistrarTransferencia {
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const transferencia = Transferencia.crear(empresaId, solicitud);
       await this.exigirCuentasActivas(solicitud);
-      const notas = await this.crearNotas(empresaId, transferencia.id.valor, solicitud);
+      const concepto = await this.dependencias.conceptos.deSistema(operador, 'transferencia');
+      const notas = await this.crearNotas(
+        empresaId,
+        { transferenciaId: transferencia.id.valor, conceptoId: concepto.id.valor },
+        solicitud,
+      );
       await this.revisarReglas(operador, solicitud, notas);
       transferencia.numerar(await correlativos.siguiente(CLAVE_DE_TRANSFERENCIAS, solicitud.fecha));
       await repositorio.agregar(transferencia);
@@ -48,11 +53,11 @@ export class RegistrarTransferencia {
 
   private async crearNotas(
     empresaId: Identificador<'Empresa'>,
-    transferenciaId: string,
+    { transferenciaId, conceptoId }: { transferenciaId: string; conceptoId: string },
     solicitud: SolicitudDeTransferencia,
   ): Promise<NotasDeLaTransferencia> {
     const { nombreOrigen, nombreDestino } = await this.nombresDeLasCuentas(solicitud);
-    const comunes = this.datosComunes(solicitud);
+    const comunes = { ...this.datosComunes(solicitud), conceptoId };
     const debito = {
       ...comunes,
       cuentaBancariaId: solicitud.cuentaOrigenId,

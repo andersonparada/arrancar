@@ -1,5 +1,5 @@
-import { deCentavos, efectoEnCentavos } from '../dominio/centavos.js';
-import type { MovimientoDto } from './dto/movimiento.dto.js';
+import { aCentavos, deCentavos, efectoEnCentavos } from '../dominio/centavos.js';
+import type { MovimientoDto, ResumenDeSinClasificar } from './dto/movimiento.dto.js';
 
 /** Una fila del reporte de movimientos, con su saldo corrido (`null` si el reporte no eligió una cuenta). */
 export type FilaDelReporte = MovimientoDto & { saldo: string | null };
@@ -25,4 +25,17 @@ export function calcularSaldoCorrido(
     if (!movimiento.anuladoEn) saldoEnCentavos += efectoEnCentavos(movimiento.tipo, movimiento.monto);
     return { ...movimiento, saldo: deCentavos(saldoEnCentavos) };
   });
+}
+
+/** Cuenta y suma, en centavos enteros, lo que todavía no tiene concepto (ya filtrado: originales vigentes). */
+export function resumirSinClasificar(pendientes: readonly MovimientoDto[]): ResumenDeSinClasificar {
+  const suma = (esEntrada: boolean) =>
+    pendientes
+      .filter(({ tipo }) => (tipo === 'credito') === esEntrada)
+      .reduce((total, { monto }) => total + aCentavos(monto), 0);
+  return {
+    cantidad: pendientes.length,
+    montoDeEntradas: deCentavos(suma(true)),
+    montoDeSalidas: deCentavos(suma(false)),
+  };
 }

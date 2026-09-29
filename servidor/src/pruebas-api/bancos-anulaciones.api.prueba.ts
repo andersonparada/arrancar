@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
-import { crearCuentaBancaria, inversosDe } from './soporte/escenarios-de-bancos.js';
+import { conceptoGeneral, crearCuentaBancaria, inversosDe } from './soporte/escenarios-de-bancos.js';
 
 const RUTA_NOTAS = '/api/bancos/notas';
 const RUTA_TRANSFERENCIAS = '/api/bancos/transferencias';
@@ -9,8 +9,11 @@ const RUTA_MOVIMIENTOS = '/api/bancos/movimientos';
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 
+let conceptoId = '';
+
 const nota = (cuentaBancariaId: string, cambios: Record<string, unknown> = {}) => ({
   cuentaBancariaId,
+  conceptoId,
   tipo: 'credito',
   fecha: '2026-02-01',
   monto: '100.00',
@@ -26,6 +29,7 @@ beforeAll(async () => {
     usuario: 'propietarioanulaciones',
     modulos: ['bancos'],
   });
+  conceptoId = await conceptoGeneral(cuenta.propietario);
 });
 
 describe('anular notas con fecha y eliminar lo limpio, por API', () => {

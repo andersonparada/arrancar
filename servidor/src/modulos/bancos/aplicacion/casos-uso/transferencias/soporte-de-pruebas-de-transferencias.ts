@@ -14,6 +14,12 @@ import {
 } from '../../../pruebas/dobles-de-movimientos.js';
 import { NombresDeCuentaEnMemoria, TransferenciasEnMemoria } from '../../../pruebas/dobles-de-transferencias.js';
 import type { SolicitudDeTransferencia } from '../../dto/transferencia.dto.js';
+import {
+  CONCEPTO_SALDO_INICIAL,
+  conceptosDeMovimientosDe,
+  conceptosSembrados,
+} from '../../../pruebas/conceptos-de-prueba.js';
+import type { ConceptosDeMovimientos } from '../../conceptos-de-movimientos.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { ActualizarMovimiento } from '../movimientos/actualizar-movimiento.js';
 import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
@@ -51,6 +57,7 @@ async function conSaldoInicial(destino: MovimientosEnMemoria): Promise<void> {
       referencia: null,
       beneficiario: null,
       observaciones: null,
+      conceptoId: CONCEPTO_SALDO_INICIAL,
     }),
   );
 }
@@ -63,6 +70,7 @@ interface Base {
   unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
   correlativos: CorrelativosEnMemoria;
   reloj: RelojFijo;
+  conceptos: ConceptosDeMovimientos;
   reglas: ReglasDeLaCuenta;
 }
 
@@ -79,6 +87,7 @@ function armarBase(movimientos: MovimientosEnMemoria, permiteSobregiro: boolean)
     auditoria: new AuditoriaEnMemoria(),
     correlativos: new CorrelativosEnMemoria(),
     reloj: new RelojFijo(),
+    conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     reglas: new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro }),
   };

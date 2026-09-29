@@ -1,0 +1,1660 @@
+{
+  "id": "091a6c4f-01c6-4adb-85f6-b5c9956a8484",
+  "prevId": "f642b5c0-6bbd-4ddc-a87e-75c9d7ac4ca0",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "bancos.bancos": {
+      "name": "bancos",
+      "schema": "bancos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bancos_empresa_id_empresas_id_fk": {
+          "name": "bancos_empresa_id_empresas_id_fk",
+          "tableFrom": "bancos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "bancos_nombre_unico": {
+          "name": "bancos_nombre_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "empresa_id",
+            "nombre"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "bancos.chequeras": {
+      "name": "chequeras",
+      "schema": "bancos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cuenta_bancaria_id": {
+          "name": "cuenta_bancaria_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "serie": {
+          "name": "serie",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "desde": {
+          "name": "desde",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hasta": {
+          "name": "hasta",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "chequeras_cuenta_idx": {
+          "name": "chequeras_cuenta_idx",
+          "columns": [
+            {
+              "expression": "cuenta_bancaria_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "chequeras_empresa_id_empresas_id_fk": {
+          "name": "chequeras_empresa_id_empresas_id_fk",
+          "tableFrom": "chequeras",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "chequeras_cuenta_bancaria_id_cuentas_bancarias_id_fk": {
+          "name": "chequeras_cuenta_bancaria_id_cuentas_bancarias_id_fk",
+          "tableFrom": "chequeras",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "cuenta_bancaria_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "chequeras_desde_positivo": {
+          "name": "chequeras_desde_positivo",
+          "value": "\"bancos\".\"chequeras\".\"desde\" > 0"
+        },
+        "chequeras_hasta_valido": {
+          "name": "chequeras_hasta_valido",
+          "value": "\"bancos\".\"chequeras\".\"hasta\" >= \"bancos\".\"chequeras\".\"desde\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "bancos.cheques": {
+      "name": "cheques",
+      "schema": "bancos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chequera_id": {
+          "name": "chequera_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'disponible'"
+        },
+        "no_negociable": {
+          "name": "no_negociable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "movimiento_id": {
+          "name": "movimiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "cheques_empresa_id_empresas_id_fk": {
+          "name": "cheques_empresa_id_empresas_id_fk",
+          "tableFrom": "cheques",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "cheques_chequera_id_chequeras_id_fk": {
+          "name": "cheques_chequera_id_chequeras_id_fk",
+          "tableFrom": "cheques",
+          "tableTo": "chequeras",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "chequera_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "cheques_movimiento_id_movimientos_id_fk": {
+          "name": "cheques_movimiento_id_movimientos_id_fk",
+          "tableFrom": "cheques",
+          "tableTo": "movimientos",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "movimiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cheques_chequera_numero_unico": {
+          "name": "cheques_chequera_numero_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "chequera_id",
+            "numero"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "cheques_estado_valido": {
+          "name": "cheques_estado_valido",
+          "value": "\"bancos\".\"cheques\".\"estado\" in ('disponible', 'emitido', 'anulado')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "bancos.conceptos": {
+      "name": "conceptos",
+      "schema": "bancos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aplica_a": {
+          "name": "aplica_a",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actividad_de_flujo": {
+          "name": "actividad_de_flujo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "grupo_de_flujo": {
+          "name": "grupo_de_flujo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "es_cargo_bancario": {
+          "name": "es_cargo_bancario",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "pide_datos_de_intereses": {
+          "name": "pide_datos_de_intereses",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "admite_factura": {
+          "name": "admite_factura",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "clave_de_sistema": {
+          "name": "clave_de_sistema",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "conceptos_clave_de_sistema_unica": {
+          "name": "conceptos_clave_de_sistema_unica",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "clave_de_sistema",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"bancos\".\"conceptos\".\"clave_de_sistema\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "conceptos_empresa_id_empresas_id_fk": {
+          "name": "conceptos_empresa_id_empresas_id_fk",
+          "tableFrom": "conceptos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "conceptos_nombre_unico": {
+          "name": "conceptos_nombre_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "empresa_id",
+            "nombre"
+          ]
+        },
+        "conceptos_id_empresa_unico": {
+          "name": "conceptos_id_empresa_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "bancos.conciliaciones": {
+      "name": "conciliaciones",
+      "schema": "bancos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cuenta_bancaria_id": {
+          "name": "cuenta_bancaria_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anio": {
+          "name": "anio",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mes": {
+          "name": "mes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'en_proceso'"
+        },
+        "elaborada_por": {
+          "name": "elaborada_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "elaborada_en": {
+          "name": "elaborada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "autorizada_por": {
+          "name": "autorizada_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "autorizada_en": {
+          "name": "autorizada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_saldo_segun_libros": {
+          "name": "foto_saldo_segun_libros",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_saldo_calculado_estado_de_cuenta": {
+          "name": "foto_saldo_calculado_estado_de_cuenta",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_total_cheques_en_circulacion": {
+          "name": "foto_total_cheques_en_circulacion",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_total_otros_debitos_en_transito": {
+          "name": "foto_total_otros_debitos_en_transito",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_total_creditos_en_transito": {
+          "name": "foto_total_creditos_en_transito",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "conciliaciones_empresa_id_empresas_id_fk": {
+          "name": "conciliaciones_empresa_id_empresas_id_fk",
+          "tableFrom": "conciliaciones",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "conciliaciones_cuenta_bancaria_id_cuentas_bancarias_id_fk": {
+          "name": "conciliaciones_cuenta_bancaria_id_cuentas_bancarias_id_fk",
+          "tableFrom": "conciliaciones",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "cuenta_bancaria_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "conciliaciones_cuenta_mes_unico": {
+          "name": "conciliaciones_cuenta_mes_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "cuenta_bancaria_id",
+            "anio",
+            "mes"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "conciliaciones_mes_valido": {
+          "name": "conciliaciones_mes_valido",
+          "value": "\"bancos\".\"conciliaciones\".\"mes\" between 1 and 12"
+        },
+        "conciliaciones_estado_valido": {
+          "name": "conciliaciones_estado_valido",
+          "value": "\"bancos\".\"conciliaciones\".\"estado\" in ('en_proceso', 'elaborada', 'autorizada')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "bancos.cuentas_bancarias": {
+      "name": "cuentas_bancarias",
+      "schema": "bancos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "banco_id": {
+          "name": "banco_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero": {
+          "name": "numero",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero_normalizado": {
+          "name": "numero_normalizado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "cuentas_bancarias_banco_idx": {
+          "name": "cuentas_bancarias_banco_idx",
+          "columns": [
+            {
+              "expression": "banco_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "cuentas_bancarias_empresa_id_empresas_id_fk": {
+          "name": "cuentas_bancarias_empresa_id_empresas_id_fk",
+          "tableFrom": "cuentas_bancarias",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "cuentas_bancarias_banco_id_bancos_id_fk": {
+          "name": "cuentas_bancarias_banco_id_bancos_id_fk",
+          "tableFrom": "cuentas_bancarias",
+          "tableTo": "bancos",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "banco_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cuentas_bancarias_nombre_unico": {
+          "name": "cuentas_bancarias_nombre_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "empresa_id",
+            "nombre"
+          ]
+        },
+        "cuentas_bancarias_numero_por_banco_unico": {
+          "name": "cuentas_bancarias_numero_por_banco_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "empresa_id",
+            "banco_id",
+            "numero_normalizado"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "bancos.movimientos": {
+      "name": "movimientos",
+      "schema": "bancos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cuenta_bancaria_id": {
+          "name": "cuenta_bancaria_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "saldo_inicial": {
+          "name": "saldo_inicial",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "referencia": {
+          "name": "referencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "beneficiario": {
+          "name": "beneficiario",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "concepto_id": {
+          "name": "concepto_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transferencia_id": {
+          "name": "transferencia_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "conciliacion_id": {
+          "name": "conciliacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revertido_en": {
+          "name": "revertido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_reversion": {
+          "name": "motivo_de_reversion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revierte_a_id": {
+          "name": "revierte_a_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anio_de_numero": {
+          "name": "anio_de_numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "movimientos_cuenta_fecha_idx": {
+          "name": "movimientos_cuenta_fecha_idx",
+          "columns": [
+            {
+              "expression": "cuenta_bancaria_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_transferencia_idx": {
+          "name": "movimientos_transferencia_idx",
+          "columns": [
+            {
+              "expression": "transferencia_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_conciliacion_idx": {
+          "name": "movimientos_conciliacion_idx",
+          "columns": [
+            {
+              "expression": "conciliacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_revierte_a_idx": {
+          "name": "movimientos_revierte_a_idx",
+          "columns": [
+            {
+              "expression": "revierte_a_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_concepto_fecha_idx": {
+          "name": "movimientos_concepto_fecha_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "concepto_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_cheques_en_circulacion_idx": {
+          "name": "movimientos_cheques_en_circulacion_idx",
+          "columns": [
+            {
+              "expression": "cuenta_bancaria_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"bancos\".\"movimientos\".\"tipo\" = 'cheque' and \"bancos\".\"movimientos\".\"conciliacion_id\" is null and \"bancos\".\"movimientos\".\"revertido_en\" is null and \"bancos\".\"movimientos\".\"anulado_en\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_un_saldo_inicial": {
+          "name": "movimientos_un_saldo_inicial",
+          "columns": [
+            {
+              "expression": "cuenta_bancaria_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"bancos\".\"movimientos\".\"saldo_inicial\" and \"bancos\".\"movimientos\".\"anulado_en\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_numero_unico": {
+          "name": "movimientos_numero_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "tipo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "anio_de_numero",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "numero",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"bancos\".\"movimientos\".\"numero\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "movimientos_empresa_id_empresas_id_fk": {
+          "name": "movimientos_empresa_id_empresas_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "movimientos_cuenta_bancaria_id_cuentas_bancarias_id_fk": {
+          "name": "movimientos_cuenta_bancaria_id_cuentas_bancarias_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "cuenta_bancaria_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_transferencia_id_transferencias_id_fk": {
+          "name": "movimientos_transferencia_id_transferencias_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "transferencias",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "transferencia_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_conciliacion_id_conciliaciones_id_fk": {
+          "name": "movimientos_conciliacion_id_conciliaciones_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "conciliaciones",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "conciliacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_revierte_a_id_movimientos_id_fk": {
+          "name": "movimientos_revierte_a_id_movimientos_id_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "movimientos",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "revierte_a_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_concepto_de_la_empresa_fk": {
+          "name": "movimientos_concepto_de_la_empresa_fk",
+          "tableFrom": "movimientos",
+          "tableTo": "conceptos",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "concepto_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "movimientos_monto_positivo": {
+          "name": "movimientos_monto_positivo",
+          "value": "\"bancos\".\"movimientos\".\"monto\" > 0"
+        },
+        "movimientos_tipo_valido": {
+          "name": "movimientos_tipo_valido",
+          "value": "\"bancos\".\"movimientos\".\"tipo\" in ('credito', 'debito', 'cheque')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "bancos.transferencias": {
+      "name": "transferencias",
+      "schema": "bancos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cuenta_origen_id": {
+          "name": "cuenta_origen_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cuenta_destino_id": {
+          "name": "cuenta_destino_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referencia": {
+          "name": "referencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anio_de_numero": {
+          "name": "anio_de_numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "anulada_en": {
+          "name": "anulada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "transferencias_origen_idx": {
+          "name": "transferencias_origen_idx",
+          "columns": [
+            {
+              "expression": "cuenta_origen_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transferencias_destino_idx": {
+          "name": "transferencias_destino_idx",
+          "columns": [
+            {
+              "expression": "cuenta_destino_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transferencias_numero_unico": {
+          "name": "transferencias_numero_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "anio_de_numero",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "numero",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"bancos\".\"transferencias\".\"numero\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "transferencias_empresa_id_empresas_id_fk": {
+          "name": "transferencias_empresa_id_empresas_id_fk",
+          "tableFrom": "transferencias",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "transferencias_cuenta_origen_id_cuentas_bancarias_id_fk": {
+          "name": "transferencias_cuenta_origen_id_cuentas_bancarias_id_fk",
+          "tableFrom": "transferencias",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "cuenta_origen_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "transferencias_cuenta_destino_id_cuentas_bancarias_id_fk": {
+          "name": "transferencias_cuenta_destino_id_cuentas_bancarias_id_fk",
+          "tableFrom": "transferencias",
+          "tableTo": "cuentas_bancarias",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "cuenta_destino_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "transferencias_monto_positivo": {
+          "name": "transferencias_monto_positivo",
+          "value": "\"bancos\".\"transferencias\".\"monto\" > 0"
+        },
+        "transferencias_cuentas_distintas": {
+          "name": "transferencias_cuentas_distintas",
+          "value": "\"bancos\".\"transferencias\".\"cuenta_origen_id\" <> \"bancos\".\"transferencias\".\"cuenta_destino_id\""
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "bancos": "bancos"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

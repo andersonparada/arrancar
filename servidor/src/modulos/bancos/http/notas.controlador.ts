@@ -5,9 +5,10 @@ import type { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anula
 import type { CrearMovimiento } from '../aplicacion/casos-uso/movimientos/crear-movimiento.js';
 import type { EliminarMovimiento } from '../aplicacion/casos-uso/movimientos/eliminar-movimiento.js';
 import type { ListarMovimientos } from '../aplicacion/casos-uso/movimientos/listar-movimientos.js';
+import type { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
 import type { ObtenerMovimiento } from '../aplicacion/casos-uso/movimientos/obtener-movimiento.js';
 import type { ParamsMovimiento, SolicitudDeAnulacion, SolicitudDeEliminacion } from './movimientos.esquemas-http.js';
-import type { FiltroDeNotasSolicitado, NotaSolicitada } from './notas.esquemas-http.js';
+import type { FiltroDeNotasSolicitado, NotaSolicitada, ReclasificacionSolicitada } from './notas.esquemas-http.js';
 
 export interface CasosDeUsoDeNotas {
   listar: ListarMovimientos;
@@ -16,6 +17,7 @@ export interface CasosDeUsoDeNotas {
   actualizar: ActualizarMovimiento;
   anular: AnularMovimiento;
   eliminar: EliminarMovimiento;
+  reclasificar: ReclasificarMovimientos;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; siempre como nota (`saldoInicial: false`), nunca como el saldo inicial. */
@@ -42,6 +44,9 @@ export class NotasControlador {
       solicitud: { ...solicitud.body, saldoInicial: false },
       esSaldoInicial: false,
     });
+
+  reclasificar = (solicitud: FastifyRequest<{ Body: ReclasificacionSolicitada }>) =>
+    this.casosDeUso.reclasificar.ejecutar(operadorDe(solicitud), solicitud.body);
 
   anular = (solicitud: FastifyRequest<{ Params: ParamsMovimiento; Body: SolicitudDeAnulacion }>) =>
     this.casosDeUso.anular.ejecutar(operadorDe(solicitud), {

@@ -1,3 +1,4 @@
+import { CONCEPTO_GENERAL } from '../../../pruebas/conceptos-de-prueba.js';
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
@@ -52,6 +53,7 @@ describe('anular', () => {
       referencia: null,
       beneficiario: null,
       observaciones: null,
+      conceptoId: CONCEPTO_GENERAL,
     });
     await casos.movimientos.agregar(salidaEnElDestino);
 

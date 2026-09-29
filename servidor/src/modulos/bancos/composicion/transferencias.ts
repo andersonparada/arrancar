@@ -1,3 +1,5 @@
+import { ConceptosDeMovimientos } from '../aplicacion/conceptos-de-movimientos.js';
+import { RepositorioConceptosDrizzle } from '../infraestructura/persistencia/repositorio-conceptos.drizzle.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { AnularTransferencia } from '../aplicacion/casos-uso/transferencias/anular-transferencia.js';
 import { EliminarTransferencia } from '../aplicacion/casos-uso/transferencias/eliminar-transferencia.js';
@@ -24,6 +26,7 @@ function dependenciasDeTransferencias() {
     auditoria,
     correlativos,
     reloj,
+    conceptos: new ConceptosDeMovimientos(new RepositorioConceptosDrizzle()),
     repositorio: new RepositorioTransferenciasDrizzle(),
     repositorioMovimientos: new RepositorioMovimientosDrizzle(),
     consultas: new ConsultasTransferenciasDrizzle(),

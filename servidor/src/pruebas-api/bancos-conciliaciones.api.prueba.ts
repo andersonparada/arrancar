@@ -2,11 +2,13 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
+import { conceptoGeneral } from './soporte/escenarios-de-bancos.js';
 
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let cuentaBancariaId: string;
 let autoriza: ClienteApi;
+let conceptoId = '';
 
 /** Un banco y una cuenta bancaria activa, con saldo inicial de Q 1,000.00 el 2026-01-01. */
 async function crearCuentaBancaria(usuario: ClienteApi, nombre: string): Promise<string> {
@@ -37,6 +39,7 @@ beforeAll(async () => {
     modulos: ['bancos'],
   });
   cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Cuenta a conciliar');
+  conceptoId = await conceptoGeneral(cuenta.propietario);
   autoriza = await crearUsuarioConPermisos(entorno, cuenta, {
     nombres: 'Autoriza',
     apellidos: 'Conciliaciones',
@@ -50,6 +53,7 @@ describe('conciliaciones por API', () => {
     const notaExtra = await cuenta.propietario.post('/api/bancos/notas', {
       cuentaBancariaId,
       tipo: 'credito',
+      conceptoId,
       fecha: '2026-01-15',
       monto: '200.00',
       referencia: null,
@@ -106,6 +110,7 @@ describe('conciliaciones por API', () => {
     const rechazado = await cuenta.propietario.post('/api/bancos/notas', {
       cuentaBancariaId,
       tipo: 'debito',
+      conceptoId,
       fecha: '2026-01-20',
       monto: '5.00',
       referencia: null,

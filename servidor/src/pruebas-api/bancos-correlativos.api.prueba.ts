@@ -2,7 +2,7 @@ import pg from 'pg';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../configuracion.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
+import { conceptoGeneral, crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const RUTA_NOTAS = '/api/bancos/notas';
@@ -14,6 +14,7 @@ const TRANSFERENCIAS = 'bancos.transferencias';
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let cuentaBancariaId: string;
+let conceptoId = '';
 
 interface Hueco {
   numero: number;
@@ -29,6 +30,7 @@ const nota = (cambios: Record<string, unknown> = {}) => ({
   referencia: 'Boleta',
   beneficiario: null,
   observaciones: null,
+  conceptoId,
   ...cambios,
 });
 
@@ -50,6 +52,7 @@ async function comoPropietario(instruccion: string, valores: unknown[]): Promise
 beforeAll(async () => {
   cuenta = await darDeAltaCuenta(entorno, { nombre: 'Numerada', usuario: 'propietarionumerado', modulos: ['bancos'] });
   cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Numerada');
+  conceptoId = await conceptoGeneral(cuenta.propietario);
 });
 
 describe('números de notas por API', () => {
@@ -217,6 +220,7 @@ describe('correlativos por empresa', () => {
       modulos: ['bancos'],
     });
     cuentaBancariaId = await crearCuentaBancaria(otra.propietario, 'Otra');
+    conceptoId = await conceptoGeneral(otra.propietario);
 
     const primera = await otra.propietario.post(RUTA_NOTAS, nota());
 

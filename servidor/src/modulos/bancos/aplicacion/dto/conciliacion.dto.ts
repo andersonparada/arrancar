@@ -16,7 +16,10 @@ export interface ConciliacionResumenDto {
 }
 
 /** Un movimiento candidato de la pantalla de conciliar, con si está marcado. */
-export interface MovimientoConMarcaDto extends Omit<MovimientoDto, 'puedeAnular' | 'puedeEliminar'> {
+export interface MovimientoConMarcaDto extends Omit<
+  MovimientoDto,
+  'puedeAnular' | 'puedeEliminar' | 'puedeReclasificar' | 'conceptoNombre'
+> {
   marcado: boolean;
 }
 

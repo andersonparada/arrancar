@@ -1,3 +1,4 @@
+import { CONCEPTO_GENERAL } from '../../../pruebas/conceptos-de-prueba.js';
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -75,6 +76,7 @@ describe('registrar', () => {
           referencia: null,
           beneficiario: null,
           observaciones: null,
+          conceptoId: CONCEPTO_GENERAL,
         },
         esSaldoInicial: false,
       }),

@@ -1,12 +1,15 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
+import { conceptoGeneral } from './soporte/escenarios-de-bancos.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const RUTA_MOVIMIENTOS = '/api/bancos/movimientos';
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let cuentaBancariaId: string;
+let conceptoId = '';
+let conceptoDeCheques = '';
 
 /** Un banco y una cuenta bancaria activa, con saldo inicial de Q 1,000.00. */
 async function crearCuentaBancaria(usuario: ClienteApi, nombre: string): Promise<string> {
@@ -33,6 +36,7 @@ async function crearCuentaBancaria(usuario: ClienteApi, nombre: string): Promise
 beforeAll(async () => {
   cuenta = await darDeAltaCuenta(entorno, { nombre: 'Cheques', usuario: 'propietariocheques', modulos: ['bancos'] });
   cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Cuenta de cheques');
+  conceptoId = await conceptoGeneral(cuenta.propietario);
 });
 
 describe('chequeras y cheques por API', () => {
@@ -75,6 +79,7 @@ describe('chequeras y cheques por API', () => {
       monto: '150.00',
       beneficiario: 'Proveedor de prueba',
       noNegociable: true,
+      conceptoId,
       referencia: null,
       observaciones: null,
     });
@@ -125,6 +130,7 @@ describe('chequeras y cheques por API', () => {
           monto: '10.00',
           beneficiario: 'X',
           noNegociable: true,
+          conceptoId,
           referencia: null,
           observaciones: null,
         })
@@ -211,6 +217,7 @@ describe('la pantalla de cheques (operación) por API', () => {
       modulos: ['bancos'],
     });
     cuentaBancariaDeCheques = await crearCuentaBancaria(cuentaCheques.propietario, 'Cuenta de cheques 2');
+    conceptoDeCheques = await conceptoGeneral(cuentaCheques.propietario);
     await cuentaCheques.propietario.post(`/api/bancos/cuentas-bancarias/${cuentaBancariaDeCheques}/chequeras`, {
       serie: null,
       desde: 1,
@@ -233,6 +240,7 @@ describe('la pantalla de cheques (operación) por API', () => {
       monto: '75.00',
       beneficiario: 'Beneficiario de prueba',
       noNegociable: true,
+      conceptoId: conceptoDeCheques,
       referencia: null,
       observaciones: null,
     });

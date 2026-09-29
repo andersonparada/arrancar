@@ -12,6 +12,11 @@ export class RepositorioConceptosDrizzle implements RepositorioConceptos {
     return fila ? mapeadorDeConcepto.aEntidad(fila) : null;
   }
 
+  async buscarDeSistema(clave: string): Promise<Concepto | null> {
+    const [fila] = await transaccionEnCurso().select().from(conceptos).where(eq(conceptos.claveDeSistema, clave));
+    return fila ? mapeadorDeConcepto.aEntidad(fila) : null;
+  }
+
   async agregar(concepto: Concepto): Promise<void> {
     await transaccionEnCurso().insert(conceptos).values(mapeadorDeConcepto.aFila(concepto));
   }

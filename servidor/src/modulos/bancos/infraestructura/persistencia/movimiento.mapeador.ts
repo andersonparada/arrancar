@@ -8,7 +8,10 @@ import type { movimientos } from './movimientos.tablas.js';
 type Fila = typeof movimientos.$inferSelect;
 
 /** Lo que trae la consulta además de la fila: para saber qué se puede hacer con el movimiento. */
-interface DatosDeLaConsulta extends Pick<MovimientoDto, 'cuentaBancariaNombre' | 'chequeId' | 'numeroDeCheque'> {
+interface DatosDeLaConsulta extends Pick<
+  MovimientoDto,
+  'cuentaBancariaNombre' | 'chequeId' | 'numeroDeCheque' | 'conceptoNombre'
+> {
   mesConciliado: boolean;
   cuentaConConciliaciones: boolean;
 }

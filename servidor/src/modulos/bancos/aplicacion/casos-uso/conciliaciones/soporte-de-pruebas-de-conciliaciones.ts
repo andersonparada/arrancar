@@ -13,6 +13,11 @@ import {
   PoliticaDeMismaFechaFija,
   PoliticaDeSobregiroFija,
 } from '../../../pruebas/dobles-de-movimientos.js';
+import {
+  CONCEPTO_GENERAL,
+  conceptosDeMovimientosDe,
+  conceptosSembrados,
+} from '../../../pruebas/conceptos-de-prueba.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
 import { CrearMovimiento } from '../movimientos/crear-movimiento.js';
@@ -44,14 +49,22 @@ export const marcarSaldoInicial = (candidatos: { id: string; saldoInicial: boole
 
 const SIN_SOBREGIRO = new PoliticaDeSobregiroFija(false);
 
+function dependenciasComunes(auditoria: AuditoriaEnMemoria) {
+  return {
+    unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
+    auditoria,
+    reloj: new RelojFijo(),
+    conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
+  };
+}
+
 function dependenciasDePrueba(
   movimientos: MovimientosEnMemoria,
   conciliaciones: ConciliacionesEnMemoria,
   auditoria: AuditoriaEnMemoria,
 ) {
-  const unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   const reglas = new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro: SIN_SOBREGIRO });
-  const comunes = { unidadDeTrabajo, auditoria, reloj: new RelojFijo() };
+  const comunes = dependenciasComunes(auditoria);
   const deConciliaciones = {
     ...comunes,
     repositorio: conciliaciones,
@@ -117,6 +130,7 @@ export async function agregarMovimiento(
     referencia: null,
     beneficiario: datos.beneficiario ?? null,
     observaciones: null,
+    conceptoId: CONCEPTO_GENERAL,
   });
   await movimientos.agregar(movimiento);
   return movimiento.id.valor;

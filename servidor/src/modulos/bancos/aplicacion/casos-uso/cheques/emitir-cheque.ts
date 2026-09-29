@@ -2,6 +2,7 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { BeneficiarioObligatorio, ChequeraInactiva, CuentaBancariaInactiva } from '../../../dominio/errores.js';
+import type { Cheque } from '../../../dominio/cheque.js';
 import type { Chequera } from '../../../dominio/chequera.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
 import type { SolicitudDeEmisionDeCheque } from '../../dto/cheque.dto.js';
@@ -16,10 +17,11 @@ export class EmitirCheque {
    * @throws ChequeNoDisponible si el cheque no está disponible.
    * @throws ChequeraInactiva si su chequera está inactiva; CuentaBancariaInactiva si la cuenta está inactiva.
    * @throws BeneficiarioObligatorio si no se escribió el beneficiario.
+   * @throws ConceptoObligatorio, ConceptoDeSistemaNoSeElige, ConceptoInactivo o ConceptoIncompatible si el concepto no sirve.
    * @throws SaldoInicialNoEsElPrimero, MovimientoAntesDelSaldoInicial o SaldoInsuficiente.
    */
   ejecutar(operador: Operador, solicitud: SolicitudDeEmisionDeCheque): Promise<MovimientoDto> {
-    const { unidadDeTrabajo, repositorio, repositorioMovimientos, consultasMovimientos, reglas } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, repositorioMovimientos, consultasMovimientos } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       if (!solicitud.beneficiario.trim()) throw new BeneficiarioObligatorio();
       const cheque = await chequeExistente(repositorio, solicitud.chequeId);
@@ -27,22 +29,35 @@ export class EmitirCheque {
       const { cuentaBancariaId } = chequera.instantanea();
       if (!(await consultasMovimientos.cuentaEstaActiva(cuentaBancariaId))) throw new CuentaBancariaInactiva();
 
-      const movimiento = this.nuevoMovimiento(operador, solicitud, {
-        chequera,
-        numeroDeCheque: cheque.instantanea().numero,
-      });
-      await reglas.revisar(operador, {
-        cuentaBancariaId,
-        queda: { fecha: solicitud.fecha, saldoInicial: false },
-        fechas: [solicitud.fecha],
-        diferencia: movimiento.efectoEnCentavos,
-      });
+      const movimiento = await this.nuevoMovimientoRevisado(operador, solicitud, { chequera, cheque });
 
       cheque.emitir(movimiento.id.valor, solicitud.noNegociable);
       await repositorioMovimientos.agregar(movimiento);
       await repositorio.guardar(cheque);
       return consultasMovimientos.obtener(movimiento.id.valor);
     });
+  }
+
+  /** Elige el concepto, arma el movimiento del cheque y revisa las reglas de la cuenta. */
+  private async nuevoMovimientoRevisado(
+    operador: Operador,
+    solicitud: SolicitudDeEmisionDeCheque,
+    { chequera, cheque }: { chequera: Chequera; cheque: Cheque },
+  ): Promise<Movimiento> {
+    const concepto = await this.dependencias.conceptos.elegido(solicitud.conceptoId, 'cheque');
+    const movimiento = this.nuevoMovimiento(operador, solicitud, {
+      chequera,
+      numeroDeCheque: cheque.instantanea().numero,
+      conceptoId: concepto.id.valor,
+    });
+    const { cuentaBancariaId } = chequera.instantanea();
+    await this.dependencias.reglas.revisar(operador, {
+      cuentaBancariaId,
+      queda: { fecha: solicitud.fecha, saldoInicial: false },
+      fechas: [solicitud.fecha],
+      diferencia: movimiento.efectoEnCentavos,
+    });
+    return movimiento;
   }
 
   /** @throws RecursoNoEncontrado si la chequera no existe; ChequeraInactiva si está inactiva. */
@@ -56,7 +71,7 @@ export class EmitirCheque {
   private nuevoMovimiento(
     operador: Operador,
     solicitud: SolicitudDeEmisionDeCheque,
-    { chequera, numeroDeCheque }: { chequera: Chequera; numeroDeCheque: number },
+    { chequera, numeroDeCheque, conceptoId }: { chequera: Chequera; numeroDeCheque: number; conceptoId: string },
   ): Movimiento {
     const { cuentaBancariaId, serie } = chequera.instantanea();
     const referencia = solicitud.referencia?.trim() || `Cheque ${serie ?? ''}${numeroDeCheque}`;
@@ -69,6 +84,7 @@ export class EmitirCheque {
       referencia,
       beneficiario: solicitud.beneficiario.trim(),
       observaciones: solicitud.observaciones,
+      conceptoId,
     });
   }
 }

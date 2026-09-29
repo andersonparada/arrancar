@@ -7,6 +7,8 @@ import type { Movimiento, MovimientoId } from '../../dominio/movimiento.js';
  */
 export interface RepositorioMovimientos {
   buscar(id: MovimientoId): Promise<Movimiento | null>;
+  /** El movimiento inverso de este (el que lo revierte), si lo tiene. */
+  buscarInversoDe(id: MovimientoId): Promise<Movimiento | null>;
   agregar(movimiento: Movimiento): Promise<void>;
   guardar(movimiento: Movimiento): Promise<void>;
   eliminar(id: MovimientoId): Promise<void>;

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
+import { conceptoGeneral } from './soporte/escenarios-de-bancos.js';
 
 const RUTA_NOTAS = '/api/bancos/notas';
 const RUTA_SALDOS_INICIALES = '/api/bancos/saldos-iniciales';
@@ -26,7 +27,7 @@ async function crearReferencias(usuario: ClienteApi, nombre = 'Principal') {
     observaciones: 'Una nota de prueba.',
     activo: true,
   });
-  return { cuentaBancariaId: cuentaBancaria.cuerpo.id as string };
+  return { cuentaBancariaId: cuentaBancaria.cuerpo.id as string, conceptoId: await conceptoGeneral(usuario) };
 }
 
 let referencias: Awaited<ReturnType<typeof crearReferencias>>;

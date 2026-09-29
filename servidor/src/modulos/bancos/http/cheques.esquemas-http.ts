@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   decimalObligatorio,
   fechaObligatoria,
+  idObligatorio,
   textoObligatorio,
   textoOpcional,
 } from '../../core/compartido/http/esquemas-comunes.js';
@@ -12,6 +13,7 @@ export const esquemaEmisionDeCheque = z.object({
   monto: decimalObligatorio(2),
   beneficiario: textoObligatorio(150),
   noNegociable: z.boolean().default(true),
+  conceptoId: idObligatorio(),
   referencia: textoOpcional(150),
   observaciones: textoOpcional(2000),
 });

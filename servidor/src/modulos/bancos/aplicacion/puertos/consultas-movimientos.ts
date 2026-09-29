@@ -1,4 +1,9 @@
-import type { FiltroDeMovimientos, MovimientoDto, SolicitudDeMovimiento } from '../dto/movimiento.dto.js';
+import type {
+  FiltroDeMovimientos,
+  MovimientoDto,
+  ResumenDeSinClasificar,
+  SolicitudDeMovimiento,
+} from '../dto/movimiento.dto.js';
 
 /** Lecturas para pantallas y para las reglas de la cuenta; solo cuentan los movimientos vigentes (sin anular). */
 export interface ConsultasMovimientos {
@@ -22,6 +27,8 @@ export interface ConsultasMovimientos {
   conciliadaHasta(cuentaBancariaId: string): Promise<string | null>;
   /** Créditos menos débitos vigentes con fecha hasta (incluida) `fecha`, como texto con dos decimales. */
   saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string>;
+  /** Los originales vigentes con el concepto de sistema «Sin clasificar», en la cuenta y fechas del filtro. */
+  resumenDeSinClasificar(filtro: FiltroDeMovimientos): Promise<ResumenDeSinClasificar>;
   /** Los movimientos vigentes de la cuenta con fecha entre `desde` y `hasta`, ambas incluidas. */
   vigentesEntre(cuentaBancariaId: string, desde: string, hasta: string): Promise<MovimientoDto[]>;
 }

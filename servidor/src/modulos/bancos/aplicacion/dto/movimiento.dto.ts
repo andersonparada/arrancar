@@ -9,6 +9,9 @@ export interface MovimientoDto {
   referencia: string | null;
   beneficiario: string | null;
   observaciones: string | null;
+  /** Cómo se clasifica el dinero (H3b): el concepto y su nombre. */
+  conceptoId: string;
+  conceptoNombre: string;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
   cuentaBancariaNombre: string | null;
@@ -33,6 +36,8 @@ export interface MovimientoDto {
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede eliminar de verdad (está limpio). */
   puedeEliminar: boolean;
+  /** Lo calcula el servidor: si se le puede cambiar solo el concepto (no un inverso, ni una transferencia, ni el saldo inicial). */
+  puedeReclasificar: boolean;
 }
 
 /** Lo que se recibe para registrar o corregir un movimiento, ya validado en su forma. La API nunca acepta `tipo: 'cheque'`. */
@@ -53,7 +58,14 @@ export type SolicitudDeMovimiento = Omit<
   | 'anioDeNumero'
   | 'puedeAnular'
   | 'puedeEliminar'
-> & { tipo: 'credito' | 'debito' };
+  | 'puedeReclasificar'
+  | 'conceptoId'
+  | 'conceptoNombre'
+> & {
+  tipo: 'credito' | 'debito';
+  /** Lo elige el usuario en una nota; el saldo inicial no lo trae: lo asigna el sistema. */
+  conceptoId?: string;
+};
 
 /** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra.
  * `clase` acota a solo notas (crédito o débito sueltas) o solo saldos iniciales; sin ella, todo (para el reporte). */
@@ -61,5 +73,30 @@ export interface FiltroDeMovimientos {
   cuentaBancariaId?: string;
   desde?: string;
   hasta?: string;
+  /** Solo los movimientos con este concepto (para «Sin clasificar», el de sistema `sin_clasificar`). */
+  conceptoId?: string;
   clase?: 'notas' | 'saldosIniciales';
+}
+
+/**
+ * Lo que falta clasificar (concepto «Sin clasificar») en un periodo y cuenta: solo los originales vigentes
+ * (un inverso sigue a su original y no se cuenta dos veces). Los montos son la suma de los créditos y la de los
+ * débitos y cheques, por separado, para no mezclar entradas con salidas.
+ */
+export interface ResumenDeSinClasificar {
+  cantidad: number;
+  montoDeEntradas: string;
+  montoDeSalidas: string;
+}
+
+/** Cambiar solo el concepto de varios movimientos a la vez (todo o nada). */
+export interface SolicitudDeReclasificacion {
+  movimientoIds: string[];
+  conceptoId: string;
+}
+
+/** Cuántos cambiaron de concepto y cuántos ya lo tenían (no se tocan ni se auditan). */
+export interface ResultadoDeReclasificacion {
+  reclasificados: number;
+  sinCambio: number;
 }

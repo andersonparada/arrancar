@@ -19,6 +19,7 @@ export interface HechosDeUnMovimiento {
 export interface AccionesDeMovimiento {
   puedeAnular: boolean;
   puedeEliminar: boolean;
+  puedeReclasificar: boolean;
 }
 
 /**
@@ -37,10 +38,13 @@ export function estaLimpio(hechos: HechosDeUnMovimiento): boolean {
  * se anula: se corrige o, si la cuenta nunca se concilió, se elimina.
  */
 export function accionesDeMovimiento(hechos: HechosDeUnMovimiento): AccionesDeMovimiento {
-  if (hechos.saldoInicial) return { puedeAnular: false, puedeEliminar: !hechos.cuentaConConciliaciones };
+  if (hechos.saldoInicial) {
+    return { puedeAnular: false, puedeEliminar: !hechos.cuentaConConciliaciones, puedeReclasificar: false };
+  }
   const suelto = !hechos.esDeTransferencia && hechos.tipo !== 'cheque';
   const vigente = !hechos.anulado && !hechos.revertido && !hechos.esInverso;
-  return { puedeAnular: suelto && vigente, puedeEliminar: suelto && estaLimpio(hechos) };
+  const puedeReclasificar = !hechos.esDeTransferencia && !hechos.esInverso;
+  return { puedeAnular: suelto && vigente, puedeEliminar: suelto && estaLimpio(hechos), puedeReclasificar };
 }
 
 /** Lo que la pantalla puede ofrecer de una transferencia. */

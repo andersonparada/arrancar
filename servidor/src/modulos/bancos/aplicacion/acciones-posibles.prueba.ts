@@ -38,11 +38,11 @@ describe('estaLimpio', () => {
 
 describe('accionesDeMovimiento', () => {
   it('una nota limpia se anula y se elimina', () => {
-    expect(accionesDeMovimiento(limpia())).toEqual({ puedeAnular: true, puedeEliminar: true });
+    expect(accionesDeMovimiento(limpia())).toMatchObject({ puedeAnular: true, puedeEliminar: true });
   });
 
   it('una nota conciliada se anula pero no se elimina', () => {
-    expect(accionesDeMovimiento(limpia({ marcadoEnConciliacion: true, mesConciliado: true }))).toEqual({
+    expect(accionesDeMovimiento(limpia({ marcadoEnConciliacion: true, mesConciliado: true }))).toMatchObject({
       puedeAnular: true,
       puedeEliminar: false,
     });
@@ -51,23 +51,43 @@ describe('accionesDeMovimiento', () => {
   it('una nota revertida y su inverso no se anulan ni se eliminan', () => {
     const esperado = { puedeAnular: false, puedeEliminar: false };
 
-    expect(accionesDeMovimiento(limpia({ revertido: true }))).toEqual(esperado);
-    expect(accionesDeMovimiento(limpia({ esInverso: true }))).toEqual(esperado);
+    expect(accionesDeMovimiento(limpia({ revertido: true }))).toMatchObject(esperado);
+    expect(accionesDeMovimiento(limpia({ esInverso: true }))).toMatchObject(esperado);
   });
 
   it('las notas de una transferencia y los movimientos de cheque no se tocan sueltos', () => {
     const esperado = { puedeAnular: false, puedeEliminar: false };
 
-    expect(accionesDeMovimiento(limpia({ esDeTransferencia: true }))).toEqual(esperado);
-    expect(accionesDeMovimiento(limpia({ tipo: 'cheque' }))).toEqual(esperado);
+    expect(accionesDeMovimiento(limpia({ esDeTransferencia: true }))).toMatchObject(esperado);
+    expect(accionesDeMovimiento(limpia({ tipo: 'cheque' }))).toMatchObject(esperado);
   });
 
   it('el saldo inicial no se anula, y se elimina solo si la cuenta nunca se concilió', () => {
-    expect(accionesDeMovimiento(limpia({ saldoInicial: true }))).toEqual({ puedeAnular: false, puedeEliminar: true });
-    expect(accionesDeMovimiento(limpia({ saldoInicial: true, cuentaConConciliaciones: true }))).toEqual({
+    expect(accionesDeMovimiento(limpia({ saldoInicial: true }))).toMatchObject({
+      puedeAnular: false,
+      puedeEliminar: true,
+    });
+    expect(accionesDeMovimiento(limpia({ saldoInicial: true, cuentaConConciliaciones: true }))).toMatchObject({
       puedeAnular: false,
       puedeEliminar: false,
     });
+  });
+});
+
+describe('puedeReclasificar', () => {
+  it('una nota o un cheque original se reclasifica, aunque el mes esté conciliado o ya esté revertido', () => {
+    expect(accionesDeMovimiento(limpia()).puedeReclasificar).toBe(true);
+    expect(accionesDeMovimiento(limpia({ tipo: 'cheque' })).puedeReclasificar).toBe(true);
+    expect(accionesDeMovimiento(limpia({ marcadoEnConciliacion: true, mesConciliado: true })).puedeReclasificar).toBe(
+      true,
+    );
+    expect(accionesDeMovimiento(limpia({ revertido: true })).puedeReclasificar).toBe(true);
+  });
+
+  it('un inverso, las notas de una transferencia y el saldo inicial no se reclasifican', () => {
+    expect(accionesDeMovimiento(limpia({ esInverso: true })).puedeReclasificar).toBe(false);
+    expect(accionesDeMovimiento(limpia({ esDeTransferencia: true })).puedeReclasificar).toBe(false);
+    expect(accionesDeMovimiento(limpia({ saldoInicial: true })).puedeReclasificar).toBe(false);
   });
 });
 
