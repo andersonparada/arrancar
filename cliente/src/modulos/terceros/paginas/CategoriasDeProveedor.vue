@@ -8,10 +8,12 @@ import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import VentanaDeCategoria from '../componentes/VentanaDeCategoria.vue';
 import { usarCategoriasDeProveedor } from '../composables/usar-categorias-de-proveedor';
-import { PERMISO_DEL_PAPEL } from '../papeles';
+import { PERMISOS_DEL_PAPEL } from '../papeles';
 import { VENTANAS_TERCEROS } from '../textos';
 
-const puedeGestionar = usarSesion().puede(PERMISO_DEL_PAPEL.proveedor);
+const sesion = usarSesion();
+const puedeCrear = sesion.puede(PERMISOS_DEL_PAPEL.proveedor.crear);
+const puedeEditar = sesion.puede(PERMISOS_DEL_PAPEL.proveedor.editar);
 const { categorias, edicion, enviando, errores, abrir, guardar } = usarCategoriasDeProveedor();
 </script>
 
@@ -21,7 +23,7 @@ const { categorias, edicion, enviando, errores, abrir, guardar } = usarCategoria
       :titulo="VENTANAS_TERCEROS.categorias.titulo"
       :descripcion="VENTANAS_TERCEROS.categorias.descripcion"
     >
-      <BotonBase v-if="puedeGestionar" :icono="Plus" @click="abrir()">Nueva categoría</BotonBase>
+      <BotonBase v-if="puedeCrear" :icono="Plus" @click="abrir()">Nueva categoría</BotonBase>
     </EncabezadoPagina>
 
     <EstadoVacio
@@ -38,7 +40,7 @@ const { categorias, edicion, enviando, errores, abrir, guardar } = usarCategoria
             <InsigniaBase v-if="!categoria.activo" tono="rojo">Inactiva</InsigniaBase>
           </span>
           <BotonBase
-            v-if="puedeGestionar"
+            v-if="puedeEditar"
             variante="fantasma"
             pequeno
             :icono="Pencil"

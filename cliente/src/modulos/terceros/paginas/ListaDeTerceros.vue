@@ -9,7 +9,7 @@ import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import FiltrosDelListado from '../componentes/FiltrosDelListado.vue';
 import TarjetaDeTercero from '../componentes/TarjetaDeTercero.vue';
 import { usarListadoDeTerceros } from '../composables/usar-listado-de-terceros';
-import { PERMISO_DEL_PAPEL, RUTAS_DEL_PAPEL } from '../papeles';
+import { PERMISOS_DEL_PAPEL, RUTAS_DEL_PAPEL } from '../papeles';
 import type { PapelTercero, TerceroEnListado } from '../servicios/terceros.api';
 import { CLASES_DE_CLIENTE, VENTANA_DEL_PAPEL } from '../textos';
 
@@ -23,7 +23,7 @@ const ventana = VENTANA_DEL_PAPEL[props.papel];
 const rutas = RUTAS_DEL_PAPEL[props.papel];
 const icono = props.papel === 'cliente' ? ShoppingCart : Briefcase;
 const puedeRegistrar = computed(
-  () => sesion.puede('terceros.gestionar') && sesion.puede(PERMISO_DEL_PAPEL[props.papel]),
+  () => sesion.puede('terceros.crear') && sesion.puede(PERMISOS_DEL_PAPEL[props.papel].crear),
 );
 
 /** Lo propio del papel: la clase del cliente o la categoría del proveedor. */

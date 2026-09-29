@@ -16,7 +16,7 @@ const ventana = VENTANAS_{{MODULO}}.{{plural}};
 <template>
   <div>
     <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion">
-{{accionesDeIntercambioEnPagina}}      <BotonBase v-permiso="'{{permisoGestionar}}'" :icono="Plus" @click="abrir()">{{ ventana.nuevo }}</BotonBase>
+{{accionesDeIntercambioEnPagina}}      <BotonBase v-permiso="'{{permisoCrear}}'" :icono="Plus" @click="abrir()">{{ ventana.nuevo }}</BotonBase>
     </EncabezadoPagina>
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
@@ -26,7 +26,7 @@ const ventana = VENTANAS_{{MODULO}}.{{plural}};
         <TarjetaDeRegistro
           :titulo="String(registro.{{campoMostrar}})"
           :detalles="detallesDe{{Entidad}}(registro)"
-          permiso="{{permisoGestionar}}"
+          permiso="{{permisoEditar}}"
 {{atributosDeLaTarjeta}}          @editar="abrir(registro)"
         />
       </li>

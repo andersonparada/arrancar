@@ -1,7 +1,7 @@
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
-import { PERMISO_DEL_PAPEL } from '../papeles';
+import { PERMISOS_DEL_PAPEL } from '../papeles';
 import type { PapelTercero } from '../servicios/terceros.api';
 import { editarTercero, registrarTercero } from './guardado-de-tercero';
 import { usarDatosDelFormulario } from './usar-datos-del-formulario';
@@ -15,7 +15,7 @@ export function usarFormularioDeTercero(papel: PapelTercero, terceroId: string |
   const sesion = usarSesion();
   const { enviando, errores, enviar } = usarFormulario();
   const formulario = usarDatosDelFormulario(terceroId);
-  const papelQueCambia = sesion.puede(PERMISO_DEL_PAPEL[papel]) ? papel : null;
+  const papelQueCambia = sesion.puede(PERMISOS_DEL_PAPEL[papel].editar) ? papel : null;
 
   /** @returns el id del cliente o proveedor guardado, o `null` si no se guardó. */
   async function guardar(): Promise<string | null> {

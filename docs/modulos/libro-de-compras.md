@@ -5,6 +5,8 @@ Estado: **en planificación** (2026-09-28; corregido el 2026-09-29 con
 `plan-hallazgos-contables.md`, que mandan sobre este documento). No se programa hasta
 que el usuario apruebe este documento.
 
+> **Nota (2026-09-29, PLAN §3.5):** donde este documento dice `gestionar` léase `crear`, `editar` y `eliminar` (el que corresponda a cada acción; inactivar y reactivar van con `editar`), y `reabrir` ya no es solo de acceso total: `soloAccesoTotal` se eliminó.
+
 ## Propósito
 
 Ser el **registro único de los documentos fiscales de compra** de cada empresa:

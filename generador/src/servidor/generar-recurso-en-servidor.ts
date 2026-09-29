@@ -80,16 +80,21 @@ export class GenerarRecursoEnServidor extends GeneracionDeRecurso {
     ];
   }
 
+  private permisoDeEliminar({ permisoEliminar, pluralTexto }: Record<string, string>): string[] {
+    return permisoEliminar ? [`{ clave: '${permisoEliminar}', descripcion: 'Eliminar ${pluralTexto}' },`] : [];
+  }
+
   protected registrar(definicion: DefinicionDeRecurso, valores: Record<string, string>): void {
     const modulo = rellenar(`${MODULO}/modulo.ts`, valores);
-    const accion = definicion.baja === 'eliminar' ? 'y eliminar' : 'e inactivar';
-    const { Plural, pluralClave, pluralTexto, permisoVer, permisoGestionar } = valores;
+    const { Plural, pluralClave, pluralTexto, permisoVer, permisoCrear, permisoEditar } = valores;
     this.escritor.insertarEnMarca(modulo, 'importaciones', [
       `import { rutasDe${Plural} } from './composicion/${pluralClave}.js';`,
     ]);
     this.escritor.insertarEnMarca(modulo, 'permisos', [
       `{ clave: '${permisoVer}', descripcion: 'Ver ${pluralTexto}' },`,
-      `{ clave: '${permisoGestionar}', descripcion: 'Registrar, editar ${accion} ${pluralTexto}' },`,
+      `{ clave: '${permisoCrear}', descripcion: 'Registrar ${pluralTexto}' },`,
+      `{ clave: '${permisoEditar}', descripcion: '${definicion.baja === 'eliminar' ? 'Editar' : 'Editar, inactivar y reactivar'} ${pluralTexto}' },`,
+      ...this.permisoDeEliminar(valores),
       ...this.permisosDeExcel(definicion, valores),
     ]);
     this.escritor.insertarEnMarca(modulo, 'rutas', [`rutasDe${Plural}(),`]);

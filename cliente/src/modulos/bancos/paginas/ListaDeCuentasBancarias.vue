@@ -40,7 +40,7 @@ const { registros, cargando, intercambio, intercambioDeSaldosIniciales } = usarL
         @importar="intercambioDeSaldosIniciales.abrir"
       />
       <BotonBase
-        v-permiso="'bancos.cuentas-bancarias.gestionar'"
+        v-permiso="'bancos.cuentas-bancarias.crear'"
         :icono="Plus"
         @click="router.push({ name: 'bancos.cuentas-bancarias.nuevo' })"
       >
@@ -55,7 +55,7 @@ const { registros, cargando, intercambio, intercambioDeSaldosIniciales } = usarL
         <TarjetaDeRegistro
           :titulo="String(registro.nombre)"
           :detalles="detallesDeCuentaBancaria(registro)"
-          permiso="bancos.cuentas-bancarias.gestionar"
+          permiso="bancos.cuentas-bancarias.editar"
           :inactivo="!registro.activo"
           :destino="{ name: 'bancos.cuentas-bancarias.ficha', params: { cuentaBancariaId: registro.id } }"
         >

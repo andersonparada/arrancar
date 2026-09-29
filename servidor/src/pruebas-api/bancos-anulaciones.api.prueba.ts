@@ -146,7 +146,7 @@ describe('transferencias: anular con fecha y eliminar, por API', () => {
     const gestor = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Registra',
       apellidos: 'Sin eliminar',
-      permisos: ['bancos.transferencias.ver', 'bancos.transferencias.gestionar', 'bancos.transferencias.anular'],
+      permisos: ['bancos.transferencias.ver', 'bancos.transferencias.crear', 'bancos.transferencias.anular'],
     });
 
     const respuesta = await gestor.delete(`${RUTA_TRANSFERENCIAS}/${registrada.cuerpo.id}`, { motivo: 'Sin permiso' });

@@ -27,7 +27,7 @@ const { registros, cargando, intercambio, edicion, enviando, errores, abrir, gua
         @exportar="intercambio.exportar"
         @importar="intercambio.abrir"
       />
-      <BotonBase v-permiso="'empresas.tipos-de-localidad.gestionar'" :icono="Plus" @click="abrir()">{{
+      <BotonBase v-permiso="'empresas.tipos-de-localidad.crear'" :icono="Plus" @click="abrir()">{{
         ventana.nuevo
       }}</BotonBase>
     </EncabezadoPagina>
@@ -39,7 +39,7 @@ const { registros, cargando, intercambio, edicion, enviando, errores, abrir, gua
         <TarjetaDeRegistro
           :titulo="String(registro.nombre)"
           :detalles="detallesDeTipoDeLocalidad(registro)"
-          permiso="empresas.tipos-de-localidad.gestionar"
+          permiso="empresas.tipos-de-localidad.editar"
           :inactivo="!registro.activo"
           @editar="abrir(registro)"
         />

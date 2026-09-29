@@ -26,11 +26,11 @@ function rutasDeLectura(app: Aplicacion, controlador: TransferenciasControlador)
   app.get(`${RUTA}/:transferenciaId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
 }
 
-/** Registrar con `gestionar`; anular y eliminar tienen su propio permiso. */
+/** Registrar con `crear`; anular y eliminar tienen su propio permiso. */
 function rutasDeEscritura(app: Aplicacion, controlador: TransferenciasControlador) {
   app.post(RUTA, {
     schema: { tags: etiquetas, body: esquemaTransferencia },
-    preHandler: proteger({ permiso: 'bancos.transferencias.gestionar' }),
+    preHandler: proteger({ permiso: 'bancos.transferencias.crear' }),
     handler: controlador.registrar,
   });
   app.post(`${RUTA}/:transferenciaId/anular`, {

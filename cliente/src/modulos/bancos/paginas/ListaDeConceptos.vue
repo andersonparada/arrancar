@@ -25,7 +25,7 @@ const { registros, cargando, intercambio, edicion, enviando, errores, abrir, gua
         @exportar="intercambio.exportar"
         @importar="intercambio.abrir"
       />
-      <BotonBase v-permiso="'bancos.conceptos.gestionar'" :icono="Plus" @click="abrir()">{{ ventana.nuevo }}</BotonBase>
+      <BotonBase v-permiso="'bancos.conceptos.crear'" :icono="Plus" @click="abrir()">{{ ventana.nuevo }}</BotonBase>
     </EncabezadoPagina>
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>

@@ -21,7 +21,7 @@ const insignia = computed(() => marcaDeReversion(props.registro));
   <TarjetaDeRegistro
     :titulo="tituloDeNota(registro)"
     :detalles="detallesDeNota(registro)"
-    permiso="bancos.notas.gestionar"
+    permiso="bancos.notas.editar"
     :insignia="insignia"
     :solo-lectura="esDeSoloLectura(registro)"
     @editar="emit('editar')"

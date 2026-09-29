@@ -1,0 +1,846 @@
+{
+  "id": "fc4c663d-1635-4311-ae61-a2655bc8173e",
+  "prevId": "0815f066-b547-4ab0-a358-4fefbfd10cfd",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "terceros.clientes": {
+      "name": "clientes",
+      "schema": "terceros",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tercero_id": {
+          "name": "tercero_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clase": {
+          "name": "clase",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "notas": {
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "clientes_tercero_idx": {
+          "name": "clientes_tercero_idx",
+          "columns": [
+            {
+              "expression": "tercero_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "clientes_cuenta_id_cuentas_id_fk": {
+          "name": "clientes_cuenta_id_cuentas_id_fk",
+          "tableFrom": "clientes",
+          "columnsFrom": [
+            "cuenta_id"
+          ],
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "clientes_tercero_id_terceros_id_fk": {
+          "name": "clientes_tercero_id_terceros_id_fk",
+          "tableFrom": "clientes",
+          "columnsFrom": [
+            "tercero_id"
+          ],
+          "tableTo": "terceros",
+          "schemaTo": "terceros",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_cuenta": {
+          "name": "aislamiento_por_cuenta",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
+          "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "terceros.contactos": {
+      "name": "contactos",
+      "schema": "terceros",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tercero_id": {
+          "name": "tercero_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cargo": {
+          "name": "cargo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefono": {
+          "name": "telefono",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "whatsapp": {
+          "name": "whatsapp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "correo": {
+          "name": "correo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "contactos_tercero_idx": {
+          "name": "contactos_tercero_idx",
+          "columns": [
+            {
+              "expression": "tercero_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "contactos_cuenta_id_cuentas_id_fk": {
+          "name": "contactos_cuenta_id_cuentas_id_fk",
+          "tableFrom": "contactos",
+          "columnsFrom": [
+            "cuenta_id"
+          ],
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "contactos_tercero_id_terceros_id_fk": {
+          "name": "contactos_tercero_id_terceros_id_fk",
+          "tableFrom": "contactos",
+          "columnsFrom": [
+            "tercero_id"
+          ],
+          "tableTo": "terceros",
+          "schemaTo": "terceros",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_cuenta": {
+          "name": "aislamiento_por_cuenta",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
+          "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "terceros.categorias_proveedor": {
+      "name": "categorias_proveedor",
+      "schema": "terceros",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "categorias_proveedor_cuenta_id_cuentas_id_fk": {
+          "name": "categorias_proveedor_cuenta_id_cuentas_id_fk",
+          "tableFrom": "categorias_proveedor",
+          "columnsFrom": [
+            "cuenta_id"
+          ],
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "categorias_proveedor_nombre_por_cuenta": {
+          "name": "categorias_proveedor_nombre_por_cuenta",
+          "columns": [
+            "cuenta_id",
+            "nombre"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "aislamiento_por_cuenta": {
+          "name": "aislamiento_por_cuenta",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
+          "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "terceros.proveedores": {
+      "name": "proveedores",
+      "schema": "terceros",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tercero_id": {
+          "name": "tercero_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categoria_id": {
+          "name": "categoria_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "notas": {
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "proveedores_tercero_idx": {
+          "name": "proveedores_tercero_idx",
+          "columns": [
+            {
+              "expression": "tercero_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "proveedores_categoria_idx": {
+          "name": "proveedores_categoria_idx",
+          "columns": [
+            {
+              "expression": "categoria_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "proveedores_cuenta_id_cuentas_id_fk": {
+          "name": "proveedores_cuenta_id_cuentas_id_fk",
+          "tableFrom": "proveedores",
+          "columnsFrom": [
+            "cuenta_id"
+          ],
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "proveedores_tercero_id_terceros_id_fk": {
+          "name": "proveedores_tercero_id_terceros_id_fk",
+          "tableFrom": "proveedores",
+          "columnsFrom": [
+            "tercero_id"
+          ],
+          "tableTo": "terceros",
+          "schemaTo": "terceros",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "proveedores_categoria_id_categorias_proveedor_id_fk": {
+          "name": "proveedores_categoria_id_categorias_proveedor_id_fk",
+          "tableFrom": "proveedores",
+          "columnsFrom": [
+            "categoria_id"
+          ],
+          "tableTo": "categorias_proveedor",
+          "schemaTo": "terceros",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_cuenta": {
+          "name": "aislamiento_por_cuenta",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
+          "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "terceros.terceros": {
+      "name": "terceros",
+      "schema": "terceros",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombres": {
+          "name": "nombres",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "apellidos": {
+          "name": "apellidos",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "razon_social": {
+          "name": "razon_social",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_comercial": {
+          "name": "nombre_comercial",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_mostrar": {
+          "name": "nombre_mostrar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nit": {
+          "name": "nit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dpi": {
+          "name": "dpi",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefono": {
+          "name": "telefono",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "whatsapp": {
+          "name": "whatsapp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "correo": {
+          "name": "correo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "departamento_codigo": {
+          "name": "departamento_codigo",
+          "type": "char(2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "municipio_codigo": {
+          "name": "municipio_codigo",
+          "type": "char(2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "direccion": {
+          "name": "direccion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_archivo_id": {
+          "name": "foto_archivo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notas": {
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "terceros_cuenta_idx": {
+          "name": "terceros_cuenta_idx",
+          "columns": [
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "terceros_nit_por_cuenta_idx": {
+          "name": "terceros_nit_por_cuenta_idx",
+          "columns": [
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "nit",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "where": "nit <> 'CF'",
+          "concurrently": false
+        },
+        "terceros_dpi_por_cuenta_idx": {
+          "name": "terceros_dpi_por_cuenta_idx",
+          "columns": [
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "dpi",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "terceros_cuenta_id_cuentas_id_fk": {
+          "name": "terceros_cuenta_id_cuentas_id_fk",
+          "tableFrom": "terceros",
+          "columnsFrom": [
+            "cuenta_id"
+          ],
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "terceros_foto_archivo_id_archivos_id_fk": {
+          "name": "terceros_foto_archivo_id_archivos_id_fk",
+          "tableFrom": "terceros",
+          "columnsFrom": [
+            "foto_archivo_id"
+          ],
+          "tableTo": "archivos",
+          "schemaTo": "core",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "set null"
+        },
+        "terceros_departamento_codigo_municipio_codigo_municipios_departamento_codigo_codigo_fk": {
+          "name": "terceros_departamento_codigo_municipio_codigo_municipios_departamento_codigo_codigo_fk",
+          "tableFrom": "terceros",
+          "columnsFrom": [
+            "departamento_codigo",
+            "municipio_codigo"
+          ],
+          "tableTo": "municipios",
+          "schemaTo": "core",
+          "columnsTo": [
+            "departamento_codigo",
+            "codigo"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_cuenta": {
+          "name": "aislamiento_por_cuenta",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
+          "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "terceros": "terceros"
+  },
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

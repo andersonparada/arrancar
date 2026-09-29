@@ -38,11 +38,12 @@ async function exigirPermisoDelPapel(solicitud: FastifyRequest<{ Body: AltaDeTer
   if (papel && !contextoDe(solicitud).permisos.has(PERMISO_DEL_PAPEL[papel.tipo])) throw new AccesoDenegado();
 }
 
-const PERMISO_DEL_PAPEL = { cliente: 'clientes.gestionar', proveedor: 'proveedores.gestionar' } as const;
+const PERMISO_DEL_PAPEL = { cliente: 'clientes.crear', proveedor: 'proveedores.crear' } as const;
 
 function rutasDeDatosGenerales(app: Aplicacion, terceros: TercerosControlador): void {
   const ver = proteger({ permiso: 'terceros.ver' });
-  const gestionar = proteger({ permiso: 'terceros.gestionar' });
+  const crear = proteger({ permiso: 'terceros.crear' });
+  const editar = proteger({ permiso: 'terceros.editar' });
   app.get('/terceros', {
     schema: { tags: etiquetas, querystring: esquemaFiltrosDeTerceros },
     preHandler: ver,
@@ -51,56 +52,61 @@ function rutasDeDatosGenerales(app: Aplicacion, terceros: TercerosControlador): 
   app.get('/terceros/:terceroId', { schema: conTercero, preHandler: ver, handler: terceros.obtenerFicha });
   app.post('/terceros', {
     schema: { tags: etiquetas, body: esquemaAltaDeTercero },
-    preHandler: [gestionar, exigirPermisoDelPapel],
+    preHandler: [crear, exigirPermisoDelPapel],
     handler: terceros.registrar,
   });
   app.put('/terceros/:terceroId', {
     schema: { ...conTercero, body: esquemaTercero },
-    preHandler: gestionar,
+    preHandler: editar,
     handler: terceros.actualizar,
   });
 }
 
-function rutasDePapeles(app: Aplicacion, terceros: TercerosControlador): void {
-  const clientes = proteger({ permiso: 'clientes.gestionar' });
-  const proveedores = proteger({ permiso: 'proveedores.gestionar' });
-  app.put('/terceros/:terceroId/cliente', {
+function rutasDelPapelDeCliente(app: Aplicacion, terceros: TercerosControlador): void {
+  const url = '/terceros/:terceroId/cliente';
+  app.put(url, {
     schema: { ...conTercero, body: esquemaPapelDeCliente },
-    preHandler: clientes,
+    preHandler: proteger({ permiso: 'clientes.editar' }),
     handler: terceros.asignarCliente,
   });
-  app.delete('/terceros/:terceroId/cliente', {
+  app.delete(url, {
     schema: conTercero,
-    preHandler: clientes,
+    preHandler: proteger({ permiso: 'clientes.eliminar' }),
     handler: terceros.quitarCliente,
   });
-  app.put('/terceros/:terceroId/proveedor', {
+}
+
+function rutasDelPapelDeProveedor(app: Aplicacion, terceros: TercerosControlador): void {
+  const url = '/terceros/:terceroId/proveedor';
+  app.put(url, {
     schema: { ...conTercero, body: esquemaPapelDeProveedor },
-    preHandler: proveedores,
+    preHandler: proteger({ permiso: 'proveedores.editar' }),
     handler: terceros.asignarProveedor,
   });
-  app.delete('/terceros/:terceroId/proveedor', {
+  app.delete(url, {
     schema: conTercero,
-    preHandler: proveedores,
+    preHandler: proteger({ permiso: 'proveedores.eliminar' }),
     handler: terceros.quitarProveedor,
   });
 }
 
 function rutasDeContactos(app: Aplicacion, contactos: ContactosControlador): void {
-  const gestionar = proteger({ permiso: 'terceros.gestionar' });
+  const crear = proteger({ permiso: 'terceros.crear' });
+  const editar = proteger({ permiso: 'terceros.editar' });
+  const eliminar = proteger({ permiso: 'terceros.eliminar' });
   const url = '/terceros/:terceroId/contactos';
   app.get(url, { schema: conTercero, preHandler: proteger({ permiso: 'terceros.ver' }), handler: contactos.listar });
   app.post(url, {
     schema: { ...conTercero, body: esquemaContacto },
-    preHandler: gestionar,
+    preHandler: crear,
     handler: contactos.agregar,
   });
   app.put(`${url}/:contactoId`, {
     schema: { ...conContacto, body: esquemaContacto },
-    preHandler: gestionar,
+    preHandler: editar,
     handler: contactos.cambiar,
   });
-  app.delete(`${url}/:contactoId`, { schema: conContacto, preHandler: gestionar, handler: contactos.eliminar });
+  app.delete(`${url}/:contactoId`, { schema: conContacto, preHandler: eliminar, handler: contactos.eliminar });
   app.get('/contactos', {
     schema: { tags: etiquetas, querystring: esquemaBusquedaDeContactos },
     preHandler: proteger({ permiso: 'terceros.ver' }),
@@ -109,7 +115,8 @@ function rutasDeContactos(app: Aplicacion, contactos: ContactosControlador): voi
 }
 
 function rutasDeCategorias(app: Aplicacion, categorias: CategoriasControlador): void {
-  const gestionar = proteger({ permiso: 'proveedores.gestionar' });
+  const crear = proteger({ permiso: 'proveedores.crear' });
+  const editar = proteger({ permiso: 'proveedores.editar' });
   const url = '/proveedores/categorias';
   app.get(url, {
     schema: { tags: etiquetas },
@@ -118,12 +125,12 @@ function rutasDeCategorias(app: Aplicacion, categorias: CategoriasControlador): 
   });
   app.post(url, {
     schema: { tags: etiquetas, body: esquemaCategoria },
-    preHandler: gestionar,
+    preHandler: crear,
     handler: categorias.crear,
   });
   app.put(`${url}/:categoriaId`, {
     schema: { tags: etiquetas, params: esquemaParamsCategoria, body: esquemaCategoria },
-    preHandler: gestionar,
+    preHandler: editar,
     handler: categorias.cambiar,
   });
 }
@@ -131,7 +138,8 @@ function rutasDeCategorias(app: Aplicacion, categorias: CategoriasControlador): 
 export function rutasTerceros(controladores: ControladoresDeTerceros): FastifyPluginAsyncZod {
   return async (app) => {
     rutasDeDatosGenerales(app, controladores.terceros);
-    rutasDePapeles(app, controladores.terceros);
+    rutasDelPapelDeCliente(app, controladores.terceros);
+    rutasDelPapelDeProveedor(app, controladores.terceros);
     rutasDeContactos(app, controladores.contactos);
     rutasDeCategorias(app, controladores.categorias);
   };

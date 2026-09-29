@@ -41,7 +41,7 @@ const {
         @exportar="intercambio.exportar"
         @importar="intercambio.abrir"
       />
-      <BotonBase v-permiso="'bancos.chequeras.gestionar'" :icono="Plus" @click="nueva">
+      <BotonBase v-permiso="'bancos.chequeras.crear'" :icono="Plus" @click="nueva">
         {{ ventana.nuevo }}
       </BotonBase>
     </EncabezadoPagina>

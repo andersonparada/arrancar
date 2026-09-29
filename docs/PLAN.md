@@ -493,3 +493,16 @@ y `demo` / `demo-arrancar`.
   excepción de ESLint del módulo base `empresas` se generaliza a los `*.tablas.js` de
   cualquier módulo, solo desde `infraestructura/`, con una prueba que revisa que cada
   llave entre esquemas apunte a `core` o a un módulo de `dependeDe`.
+- **2026-09-29 (implementación de los dos acuerdos anteriores)**: `gestionar` reemplazado por
+  `crear`/`editar`/`eliminar` en core (usuarios, roles), empresas (empresas, tipos de localidad),
+  terceros (terceros, clientes, proveedores) y bancos (bancos, cuentas, notas, transferencias,
+  saldos iniciales, chequeras, conceptos); rutas, cliente y generador con las claves nuevas
+  (`TarjetaDeRegistro` acepta `permisoEliminar`). Una migración de datos por módulo
+  (`core 0015`, `empresas 0005`, `terceros 0005`, `bancos 0023`, todas `*_permisos_por_accion`),
+  en cada módulo y no solo en core para que corra después de las migraciones anteriores del mismo
+  módulo que aún asignan `gestionar` (el core se migra primero). `notas.eliminar` y
+  `transferencias.eliminar`, que ya existían, no se reparten. `soloAccesoTotal` eliminado
+  (`empresas.carga-inicial.reabrir` es asignable). Plantilla `usar<Plural>` del generador partida
+  en dos funciones (cumple las 25 líneas sin `SIN_REGISTROS` parchado). ESLint: `MODULOS_BASE`
+  pasa a `MODULOS_ESENCIALES` y todo módulo puede importar los `*.tablas.js` de otro desde su
+  infraestructura; prueba `llaves-entre-esquemas.prueba.ts` sobre `pg_constraint`.

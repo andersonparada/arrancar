@@ -25,8 +25,6 @@ export interface CatalogoDeModulos {
   permisosDe(modulosActivos: ReadonlySet<string>): ReadonlySet<string>;
   /** De esos permisos, los que solo puede tener el superacceso (soporte). */
   permisosDeSuperacceso(modulosActivos: ReadonlySet<string>): ReadonlySet<string>;
-  /** De esos permisos, los que solo reciben los roles con acceso total. */
-  permisosDeAccesoTotal(modulosActivos: ReadonlySet<string>): ReadonlySet<string>;
   recursosConAlcanceTotal(
     modulosActivos: ReadonlySet<string>,
     permisos: ReadonlySet<string>,

@@ -9,7 +9,8 @@ defineProps<{
   titulo: string;
   icono: Component;
   detalles: { etiqueta: string; valor: string }[] | null;
-  puedeGestionar: boolean;
+  puedeEditar: boolean;
+  puedeQuitar: boolean;
 }>();
 defineEmits<{ editar: []; quitar: [] }>();
 </script>
@@ -20,11 +21,13 @@ defineEmits<{ editar: []; quitar: [] }>();
       <h2 class="flex items-center gap-2 font-semibold">
         <component :is="icono" class="size-4" aria-hidden="true" /> {{ titulo }}
       </h2>
-      <div v-if="puedeGestionar" class="flex gap-2">
-        <BotonBase variante="secundario" pequeno :icono="Pencil" @click="$emit('editar')">
+      <div class="flex gap-2">
+        <BotonBase v-if="puedeEditar" variante="secundario" pequeno :icono="Pencil" @click="$emit('editar')">
           {{ detalles ? 'Editar' : 'Asignar' }}
         </BotonBase>
-        <BotonBase v-if="detalles" variante="fantasma" pequeno @click="$emit('quitar')">Quitar</BotonBase>
+        <BotonBase v-if="detalles && puedeQuitar" variante="fantasma" pequeno @click="$emit('quitar')"
+          >Quitar</BotonBase
+        >
       </div>
     </div>
     <p v-if="!detalles" class="text-sm text-tierra-500">No tiene el papel de {{ titulo.toLowerCase() }}.</p>

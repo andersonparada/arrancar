@@ -4,6 +4,8 @@ Estado: **propuesta para revisar con el usuario** (2026-09-28). No se programa n
 hasta contestar las preguntas del final. Origen: tabla «Revisión a fondo de lo
 programado» de `docs/HOJA-DE-RUTA.md`.
 
+> **Nota (2026-09-29, PLAN §3.5):** donde este documento dice `gestionar` léase `crear`, `editar` y `eliminar` (el que corresponda a cada acción; inactivar y reactivar van con `editar`), y `reabrir` ya no es solo de acceso total: `soloAccesoTotal` se eliminó.
+
 Se revisaron las tablas reales (`*.tablas.ts`, migraciones de `core` y `bancos`) y la
 base de desarrollo (solo lectura). Convenciones que respeta todo el plan: un esquema
 por módulo, `snake_case` en la base, dinero `numeric(14,2)`, `...marcasDeTiempo` y

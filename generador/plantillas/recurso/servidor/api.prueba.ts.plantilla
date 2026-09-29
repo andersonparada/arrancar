@@ -38,7 +38,7 @@ describe('{{pluralTexto}} por API', () => {
   });
 
 {{pruebasDeExcelEnApi}}
-  it('para registrar hace falta el permiso de gestionar', async () => {
+  it('para registrar hace falta el permiso de crear', async () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Solo',
       apellidos: 'Lectura',

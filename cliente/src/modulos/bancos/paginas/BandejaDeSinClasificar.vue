@@ -28,7 +28,7 @@ const bandeja = usarBandejaDeSinClasificar();
       descripcion="Todas las notas y cheques de este filtro ya tienen su concepto."
     />
     <template v-else>
-      <label v-permiso="'bancos.notas.gestionar'" class="mb-3 flex items-center gap-2 text-sm">
+      <label v-permiso="'bancos.notas.editar'" class="mb-3 flex items-center gap-2 text-sm">
         <input
           type="checkbox"
           class="size-5 rounded border-tierra-300 text-campo-600 focus:ring-campo-500"

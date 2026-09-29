@@ -24,7 +24,7 @@ const { registros, cargando, intercambio, edicion, enviando, errores, abrir, gua
         @exportar="intercambio.exportar"
         @importar="intercambio.abrir"
       />
-      <BotonBase v-permiso="'bancos.bancos.gestionar'" :icono="Plus" @click="abrir()">{{ ventana.nuevo }}</BotonBase>
+      <BotonBase v-permiso="'bancos.bancos.crear'" :icono="Plus" @click="abrir()">{{ ventana.nuevo }}</BotonBase>
     </EncabezadoPagina>
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
@@ -34,7 +34,7 @@ const { registros, cargando, intercambio, edicion, enviando, errores, abrir, gua
         <TarjetaDeRegistro
           :titulo="String(registro.nombre)"
           :detalles="detallesDeBanco(registro)"
-          permiso="bancos.bancos.gestionar"
+          permiso="bancos.bancos.editar"
           :inactivo="!registro.activo"
           @editar="abrir(registro)"
         />

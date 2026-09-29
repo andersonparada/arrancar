@@ -8,7 +8,7 @@ function aplicar(elemento: HTMLElement, permiso: string): void {
 /**
  * Oculta el elemento si el usuario no tiene el permiso.
  * Es solo presentación: el servidor valida el mismo permiso en cada acción.
- * @example <BotonBase v-permiso="'usuarios.gestionar'">Eliminar</BotonBase>
+ * @example <BotonBase v-permiso="'usuarios.eliminar'">Eliminar</BotonBase>
  */
 export const vPermiso: Directive<HTMLElement, string> = {
   mounted: (elemento, { value }) => aplicar(elemento, value),

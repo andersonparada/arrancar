@@ -19,25 +19,27 @@ const EN_EXCEL = {
 
 /** No se anula (no aplica el inverso a un saldo inicial): se corrige o, si la cuenta sigue sin conciliaciones, se elimina. */
 function rutasDeEscritura(app: Aplicacion, controlador: SaldosInicialesControlador) {
-  const gestionar = proteger({ permiso: 'bancos.saldos-iniciales.gestionar' });
+  const crear = proteger({ permiso: 'bancos.saldos-iniciales.crear' });
+  const editar = proteger({ permiso: 'bancos.saldos-iniciales.editar' });
+  const eliminar = proteger({ permiso: 'bancos.saldos-iniciales.eliminar' });
   app.post(RUTA, {
     schema: { tags: etiquetas, body: esquemaSaldoInicial },
-    preHandler: gestionar,
+    preHandler: crear,
     handler: controlador.crear,
   });
   app.put(`${RUTA}/:movimientoId`, {
     schema: { ...conId, body: esquemaSaldoInicial },
-    preHandler: gestionar,
+    preHandler: editar,
     handler: controlador.actualizar,
   });
   app.delete(`${RUTA}/:movimientoId`, {
     schema: { ...conId, body: esquemaEliminacion },
-    preHandler: gestionar,
+    preHandler: eliminar,
     handler: controlador.eliminar,
   });
 }
 
-/** Se ve con `bancos.cuentas-bancarias.ver` (aparece en la ficha de la cuenta); registrar, corregir y eliminar con `gestionar`. */
+/** Se ve con `bancos.cuentas-bancarias.ver` (aparece en la ficha de la cuenta); registrar, corregir y eliminar con `crear`, `editar` y `eliminar`. */
 export function rutasSaldosIniciales(
   controlador: SaldosInicialesControlador,
   intercambio: OpcionesDeIntercambio['intercambio'],

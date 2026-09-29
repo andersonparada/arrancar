@@ -212,7 +212,7 @@ describe('reclasificar por API', () => {
     expect((await cuenta.propietario.get(`${RUTA_NOTAS}/${credito}`)).cuerpo.conceptoId).toBe(sinClasificar);
   });
 
-  it('pide uno a 200 movimientos y el permiso de gestionar notas', async () => {
+  it('pide uno a 200 movimientos y el permiso de editar notas', async () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Solo',
       apellidos: 'Lectura de notas',

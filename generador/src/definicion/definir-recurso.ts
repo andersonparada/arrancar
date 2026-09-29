@@ -85,7 +85,7 @@ export interface DefinicionDeRecurso {
   icono: string;
   campos: CampoDefinido[];
   excel: ExcelDelRecurso;
-  permisos: { ver: string; gestionar: string; importar?: string; exportar?: string };
+  permisos: { ver: string; crear: string; editar: string; eliminar?: string; importar?: string; exportar?: string };
 }
 
 function problemasDeNombres(entrada: EntradaDeRecurso): string[] {
@@ -168,12 +168,15 @@ const conActivo = (entrada: EntradaDeRecurso): Record<string, Campo> =>
   entrada.baja === 'inactivar' ? { ...entrada.campos, activo: siNo({ predeterminado: true }) } : entrada.campos;
 
 /**
- * Ver y gestionar, y aparte importar y exportar (ver una lista no da derecho a
- * llevársela entera): solo los que la sección permite, ver `EXCEL_POR_SECCION`.
+ * Ver, crear y editar (inactivar y reactivar van con editar), eliminar solo si la baja es
+ * por eliminación, y aparte importar y exportar (ver una lista no da derecho a llevársela
+ * entera): solo los que la sección permite, ver `EXCEL_POR_SECCION`.
  */
-const permisosDe = (prefijo: string, excel: ExcelDelRecurso) => ({
+const permisosDe = (prefijo: string, excel: ExcelDelRecurso, baja: 'eliminar' | 'inactivar') => ({
   ver: `${prefijo}.ver`,
-  gestionar: `${prefijo}.gestionar`,
+  crear: `${prefijo}.crear`,
+  editar: `${prefijo}.editar`,
+  ...(baja === 'eliminar' ? { eliminar: `${prefijo}.eliminar` } : {}),
   ...(excel.importar ? { importar: `${prefijo}.importar` } : {}),
   ...(excel.exportar ? { exportar: `${prefijo}.exportar` } : {}),
 });
@@ -197,7 +200,7 @@ function completar(entrada: EntradaDeRecurso): DefinicionDeRecurso {
     icono: entrada.icono ?? 'List',
     campos: Object.entries(conActivo(entrada)).map(campoDefinido),
     excel,
-    permisos: permisosDe(`${modulo.clave}.${plural.clave}`, excel),
+    permisos: permisosDe(`${modulo.clave}.${plural.clave}`, excel, entrada.baja ?? 'eliminar'),
   };
 }
 

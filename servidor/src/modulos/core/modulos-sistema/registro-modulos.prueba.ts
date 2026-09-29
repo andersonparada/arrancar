@@ -63,22 +63,6 @@ describe('RegistroModulos', () => {
     expect(restringidos.map((p) => p.clave)).toEqual(['core.configuracion.ver']);
   });
 
-  it('separa los permisos que solo reciben los roles con acceso total', () => {
-    const registro = new RegistroModulos([
-      modulo('empresas', {
-        esencial: true,
-        permisos: [
-          { clave: 'empresas.ver', descripcion: '' },
-          { clave: 'empresas.carga-inicial.reabrir', descripcion: '', soloAccesoTotal: true },
-        ],
-      }),
-    ]);
-
-    expect(registro.permisosDeAccesoTotal(['empresas']).map((p) => p.clave)).toEqual([
-      'empresas.carga-inicial.reabrir',
-    ]);
-  });
-
   it('falla al arrancar si un módulo depende de otro que no está instalado', () => {
     expect(() => new RegistroModulos([modulo('caja-chica', { dependeDe: ['bancos'] })])).toThrow(/no está registrado/);
   });

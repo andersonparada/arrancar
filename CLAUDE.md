@@ -88,9 +88,9 @@ base de desarrollo debe estar levantada.
 - Lo que usan todos los módulos va en `core`. `empresas` es esencial (siempre activo).
 - `DefinicionModulo` declara: `dependeDe`, `permisos`, `recursosConAlcance`,
   `configuracion` y `rutas`. El registro valida las dependencias al arrancar.
-- Los módulos no se importan entre sí para colaborar (salvo los `*.tablas.js` de un
-  módulo de su `dependeDe` o del módulo base `empresas`, solo desde `infraestructura`,
-  para leer y poner llaves foráneas entre esquemas; `docs/PLAN.md` §3.2): usan eventos
+- Los módulos no se importan entre sí para colaborar (salvo los `*.tablas.js` de otro
+  módulo, solo desde `infraestructura`, para leer y poner llaves foráneas entre esquemas
+  hacia `core` o su `dependeDe`, que una prueba revisa; `docs/PLAN.md` §3.2): usan eventos
   (`core/eventos/bus-eventos.ts`). Un módulo sí puede importar de `core`.
 
 ### Importar y exportar (Excel)
@@ -147,6 +147,11 @@ base de desarrollo debe estar levantada.
   Diseño: `docs/modulos/diseno-accesos-por-modulo.md`.
 - Cada ruta usa `proteger({ permiso })` (cadena de guardias: sesión → empresa →
   módulo → permiso). El permiso debe estar declarado por un módulo.
+- **Permisos por acción** (`docs/PLAN.md` §3.5): cada recurso declara `<modulo>.<plural>.ver`,
+  `.crear`, `.editar` (incluye inactivar y reactivar) y `.eliminar` (solo si se puede eliminar);
+  cada ruta exige el de su acción real. No existe `gestionar` (salvo `configuracion.gestionar`).
+  Las acciones especiales (`.anular`, `.emitir`, `.importar`…) llevan su propio permiso. Nada
+  depende del tipo de rol: el acceso total solo significa «todos los permisos asignables».
 - Un permiso de configuración de servidor/instalación se declara con
   `soloSuperacceso: true` (`DefinicionPermiso`): ningún rol de cuenta lo recibe,
   ni con acceso total ni asignado a mano (`ResolutorDeAcceso`), y el catálogo de

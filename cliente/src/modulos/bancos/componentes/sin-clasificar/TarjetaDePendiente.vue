@@ -6,7 +6,7 @@ import { CLASE_DE_TIPO, SIGNO_DE_TIPO } from '../../composables/movimientos/esti
 import type { FilaDelReporte } from '../../servicios/movimientos.api';
 
 /**
- * Un movimiento sin clasificar. Quien puede clasificar (`bancos.notas.gestionar`) lo marca con la casilla; toda la
+ * Un movimiento sin clasificar. Quien puede clasificar (`bancos.notas.editar`) lo marca con la casilla; toda la
  * tarjeta es el área para tocar, cómoda en el celular.
  */
 const props = defineProps<{ fila: FilaDelReporte; marcada: boolean }>();
@@ -20,7 +20,7 @@ const documento = () => documentoDeFila(props.fila);
     class="flex cursor-pointer items-start gap-3 rounded-2xl bg-white p-4 ring-1 ring-tierra-200/70 has-[:checked]:ring-2 has-[:checked]:ring-campo-500 dark:bg-tierra-800/60 dark:ring-tierra-700"
   >
     <input
-      v-permiso="'bancos.notas.gestionar'"
+      v-permiso="'bancos.notas.editar'"
       type="checkbox"
       class="mt-1 size-5 rounded border-tierra-300 text-campo-600 focus:ring-campo-500"
       :checked="marcada"

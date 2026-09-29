@@ -17,7 +17,7 @@ const { chequeras, cargando, cambiarEstado, edicion, enviando, errores, nueva, g
   <div class="space-y-3">
     <div class="flex items-center justify-between">
       <h2 class="text-sm font-semibold text-tierra-700 dark:text-tierra-200">Chequeras</h2>
-      <BotonBase v-permiso="'bancos.chequeras.gestionar'" variante="secundario" :icono="Plus" pequeno @click="nueva">
+      <BotonBase v-permiso="'bancos.chequeras.crear'" variante="secundario" :icono="Plus" pequeno @click="nueva">
         Nueva chequera
       </BotonBase>
     </div>

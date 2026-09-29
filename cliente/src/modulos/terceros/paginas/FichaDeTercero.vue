@@ -14,7 +14,7 @@ import VentanaDePapel from '../componentes/VentanaDePapel.vue';
 import { usarContactosDelTercero } from '../composables/usar-contactos-del-tercero';
 import { usarFichaDeTercero } from '../composables/usar-ficha-de-tercero';
 import { usarPapelesDeLaFicha } from '../composables/usar-papeles-de-la-ficha';
-import { PERMISO_DEL_PAPEL, RUTAS_DEL_PAPEL, volverALaLista } from '../papeles';
+import { PERMISOS_DEL_PAPEL, RUTAS_DEL_PAPEL, volverALaLista } from '../papeles';
 import type { PapelTercero } from '../servicios/terceros.api';
 import { CLASES_DE_CLIENTE } from '../textos';
 
@@ -26,7 +26,7 @@ const sesion = usarSesion();
 const { ficha, categorias, cargar, nombreDeCategoria } = usarFichaDeTercero(props.terceroId);
 const contactos = usarContactosDelTercero(props.terceroId, cargar);
 const papeles = usarPapelesDeLaFicha(ficha, cargar);
-const puedeGestionar = sesion.puede('terceros.gestionar');
+const puedeEditar = sesion.puede('terceros.editar');
 const estado = (activo: boolean) => ({ etiqueta: 'Estado', valor: activo ? 'Activo' : 'Inactivo' });
 
 const comoCliente = computed(() => {
@@ -51,13 +51,15 @@ const editar = () =>
       :volver="volverALaLista(papel)"
     >
       <InsigniaBase v-if="!ficha.activo" tono="rojo">Inactivo</InsigniaBase>
-      <BotonBase v-if="puedeGestionar" variante="secundario" :icono="Pencil" @click="editar">Editar</BotonBase>
+      <BotonBase v-if="puedeEditar" variante="secundario" :icono="Pencil" @click="editar">Editar</BotonBase>
     </EncabezadoPagina>
 
     <DatosGeneralesDelTercero :ficha="ficha" />
     <ContactosDelTercero
       :contactos="ficha.contactos"
-      :puede-gestionar="puedeGestionar"
+      :puede-agregar="sesion.puede('terceros.crear')"
+      :puede-editar="puedeEditar"
+      :puede-eliminar="sesion.puede('terceros.eliminar')"
       @agregar="contactos.abrir()"
       @editar="contactos.abrir"
       @eliminar="contactos.eliminar"
@@ -66,7 +68,8 @@ const editar = () =>
       titulo="Cliente"
       :icono="ShoppingCart"
       :detalles="comoCliente"
-      :puede-gestionar="sesion.puede(PERMISO_DEL_PAPEL.cliente)"
+      :puede-editar="sesion.puede(PERMISOS_DEL_PAPEL.cliente.editar)"
+      :puede-quitar="sesion.puede(PERMISOS_DEL_PAPEL.cliente.eliminar)"
       @editar="papeles.abrir('cliente')"
       @quitar="papeles.quitar('cliente')"
     />
@@ -74,7 +77,8 @@ const editar = () =>
       titulo="Proveedor"
       :icono="Briefcase"
       :detalles="comoProveedor"
-      :puede-gestionar="sesion.puede(PERMISO_DEL_PAPEL.proveedor)"
+      :puede-editar="sesion.puede(PERMISOS_DEL_PAPEL.proveedor.editar)"
+      :puede-quitar="sesion.puede(PERMISOS_DEL_PAPEL.proveedor.eliminar)"
       @editar="papeles.abrir('proveedor')"
       @quitar="papeles.quitar('proveedor')"
     />

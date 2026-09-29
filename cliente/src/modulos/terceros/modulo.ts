@@ -1,7 +1,7 @@
 import { Briefcase, Contact, Search, ShoppingCart, Tags } from 'lucide-vue-next';
 import type { RouteRecordRaw } from 'vue-router';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
-import { PERMISO_DEL_PAPEL, RUTAS_DEL_PAPEL } from './papeles';
+import { PERMISOS_DEL_PAPEL, RUTAS_DEL_PAPEL } from './papeles';
 import type { PapelTercero } from './servicios/terceros.api';
 import { NOMBRE_TERCEROS, VENTANA_DEL_PAPEL, VENTANAS_TERCEROS } from './textos';
 
@@ -25,7 +25,7 @@ function listaYAlta(papel: PapelTercero): RouteRecordRaw[] {
       name: `${nombre}.nuevo`,
       component: FormularioDeTercero,
       props: { papel },
-      meta: { permiso: PERMISO_DEL_PAPEL[papel], titulo: ventana.nuevo },
+      meta: { permiso: PERMISOS_DEL_PAPEL[papel].crear, titulo: ventana.nuevo },
     },
   ];
 }
@@ -46,7 +46,7 @@ function fichaYEdicion(papel: PapelTercero): RouteRecordRaw[] {
       name: `${nombre}.editar`,
       component: FormularioDeTercero,
       props: conId,
-      meta: { permiso: 'terceros.gestionar', titulo: VENTANA_DEL_PAPEL[papel].editar },
+      meta: { permiso: 'terceros.editar', titulo: VENTANA_DEL_PAPEL[papel].editar },
     },
   ];
 }

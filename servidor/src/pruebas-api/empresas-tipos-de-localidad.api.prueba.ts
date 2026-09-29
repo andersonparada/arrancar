@@ -124,7 +124,7 @@ describe('tipos de localidad por API', () => {
     expect(revision.cuerpo).toMatchObject({ guardado: false, filas: expect.any(Number) });
   });
 
-  it('para registrar y eliminar hace falta el permiso de gestionar', async () => {
+  it('para registrar y eliminar hacen falta los permisos de crear y eliminar', async () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Solo',
       apellidos: 'Lectura',

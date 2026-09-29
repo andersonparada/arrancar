@@ -95,7 +95,7 @@ export interface OpcionesProteccion {
 
 /**
  * Arma la cadena de guardias de una ruta: autenticación → superacceso → empresa → módulo → permiso.
- * @example { preHandler: proteger({ permiso: 'usuarios.gestionar' }) }
+ * @example { preHandler: proteger({ permiso: 'usuarios.crear' }) }
  */
 export function proteger(opciones: OpcionesProteccion = {}): preHandlerAsyncHookHandler {
   const [primera, ...siguientes] = guardiasEnOrden(opciones);

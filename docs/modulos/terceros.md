@@ -66,9 +66,13 @@ Todas llevan `cuenta_id`, `politicaPorCuenta()` y marcas de tiempo.
 | Permiso | Permite |
 |---|---|
 | `terceros.ver` | Ver clientes y proveedores, sus fichas, contactos y categorías. |
-| `terceros.gestionar` | Registrar, editar e inactivar; agregar y cambiar contactos. |
-| `clientes.gestionar` | Asignar o quitar el papel de cliente. |
-| `proveedores.gestionar` | Asignar o quitar el papel de proveedor y editar sus categorías. |
+| `terceros.crear` | Registrar clientes y proveedores; agregar contactos. |
+| `terceros.editar` | Editar, inactivar y reactivar; cambiar contactos. |
+| `terceros.eliminar` | Eliminar contactos. |
+| `clientes.crear` / `.editar` / `.eliminar` | Registrar a alguien ya como cliente; asignar o cambiar el papel; quitarlo. |
+| `proveedores.crear` / `.editar` / `.eliminar` | Lo mismo para el papel de proveedor; `crear` y `editar` también sirven para las categorías. |
+
+(Antes eran `terceros.gestionar`, `clientes.gestionar` y `proveedores.gestionar`; PLAN §3.5.)
 
 ## Configuración (por instalación, cuenta o empresa)
 

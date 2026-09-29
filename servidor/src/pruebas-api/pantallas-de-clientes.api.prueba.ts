@@ -40,7 +40,7 @@ describe('alta completa de un cliente o proveedor', () => {
     const vendedor = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Solo',
       apellidos: 'Clientes',
-      permisos: ['terceros.ver', 'terceros.gestionar', 'clientes.gestionar'],
+      permisos: ['terceros.ver', 'terceros.crear', 'terceros.editar', 'clientes.crear'],
     });
 
     const comoCliente = await vendedor.post('/api/terceros', {

@@ -24,7 +24,8 @@ const EN_EXCEL = {
 /** Ver todas las chequeras de la empresa y las de una cuenta, y crear, inactivar o reactivar una. */
 function rutasDeLectura(app: Aplicacion, controlador: ChequerasControlador) {
   const ver = proteger({ permiso: 'bancos.chequeras.ver' });
-  const gestionar = proteger({ permiso: 'bancos.chequeras.gestionar' });
+  const crear = proteger({ permiso: 'bancos.chequeras.crear' });
+  const editar = proteger({ permiso: 'bancos.chequeras.editar' });
   const conCuenta = { tags: etiquetas, params: esquemaParamsCuentaBancariaDeChequeras };
   const conId = { tags: etiquetas, params: esquemaParamsChequera };
 
@@ -36,11 +37,11 @@ function rutasDeLectura(app: Aplicacion, controlador: ChequerasControlador) {
   app.get(RUTA_CUENTA, { schema: conCuenta, preHandler: ver, handler: controlador.listar });
   app.post(RUTA_CUENTA, {
     schema: { ...conCuenta, body: esquemaChequera },
-    preHandler: gestionar,
+    preHandler: crear,
     handler: controlador.crear,
   });
-  app.post(`${RUTA}/:chequeraId/inactivar`, { schema: conId, preHandler: gestionar, handler: controlador.inactivar });
-  app.post(`${RUTA}/:chequeraId/reactivar`, { schema: conId, preHandler: gestionar, handler: controlador.reactivar });
+  app.post(`${RUTA}/:chequeraId/inactivar`, { schema: conId, preHandler: editar, handler: controlador.inactivar });
+  app.post(`${RUTA}/:chequeraId/reactivar`, { schema: conId, preHandler: editar, handler: controlador.reactivar });
   app.get(`${RUTA}/:chequeraId/cheques`, {
     schema: { ...conId, querystring: esquemaFiltroDeCheques },
     preHandler: ver,

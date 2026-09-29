@@ -16,7 +16,7 @@ const { edicion, errores, enviando, abrir, guardar } = usarEdicionDeRol(cargar);
 <template>
   <div>
     <EncabezadoPagina :titulo="VENTANAS_CORE.roles.titulo" :descripcion="VENTANAS_CORE.roles.descripcion">
-      <BotonBase v-permiso="'roles.gestionar'" :icono="Plus" @click="abrir()">Nuevo rol</BotonBase>
+      <BotonBase v-permiso="'roles.crear'" :icono="Plus" @click="abrir()">Nuevo rol</BotonBase>
     </EncabezadoPagina>
 
     <ul class="grid gap-3 md:grid-cols-2">

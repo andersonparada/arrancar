@@ -7,6 +7,8 @@ reemplaza** todo lo que usaba `core.accesos_datos` (sección «Accesos a localid
 pasos H5b-1 y H5b-2, `AccesosADatos.quitarRegistro`, ruta
 `PUT /usuarios/:id/accesos-a-datos/:recurso` y `listarOpciones`).
 
+> **Nota (2026-09-29, PLAN §3.5):** donde este documento dice `gestionar` léase `crear`, `editar` y `eliminar` (el que corresponda a cada acción; inactivar y reactivar van con `editar`), y `reabrir` ya no es solo de acceso total: `soloAccesoTotal` se eliminó.
+
 ## 1. Lo encontrado
 
 1. **Nadie usa hoy `core.accesos_datos`.** Ninguna tabla real lleva
@@ -361,6 +363,8 @@ otros módulos, no la configuración.
   alcance total para su recurso.
 
 ## 5. Excepción de ESLint del módulo base
+
+> Generalizada el 2026-09-29 (PLAN §3.2): la excepción vale para los `*.tablas.js` de cualquier módulo (`MODULOS_ESENCIALES` en `eslint.config.js` solo excluye a `empresas` como importador).
 
 Hoy `reglasDeDependencias()` aplica `prohibirOtrosModulos(modulo)` a todo el módulo y,
 por capa, a `dominio`, `aplicacion` y `http`; `infraestructura` solo recibe la regla

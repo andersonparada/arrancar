@@ -162,6 +162,13 @@
       "when": 1790701000000,
       "tag": "0022_h3_conceptos_nuevos_y_sin_cheque_caduco",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790701982970,
+      "tag": "0023_permisos_por_accion",
+      "breakpoints": true
     }
   ]
 }

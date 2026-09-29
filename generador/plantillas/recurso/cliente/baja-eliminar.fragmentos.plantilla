@@ -11,6 +11,7 @@ cargar,
 const { eliminar } = usarEliminacionDe{{Entidad}}(cargar);
 ### atributosDeLaTarjeta
           eliminable
+          permiso-eliminar="{{permisoEliminar}}"
           @eliminar="eliminar(registro)"
 ### inactivoEnTarjeta
 ### importacionEliminarEnFicha
@@ -24,7 +25,7 @@ import { usarEliminacionDe{{Entidad}} } from './usar-eliminacion-de-{{entidadCla
 ### iconoEliminarEnFicha
 , Trash2
 ### botonEliminarEnFicha
-      <BotonBase v-permiso="'{{permisoGestionar}}'" variante="peligro" :icono="Trash2" @click="eliminar(registro)">
+      <BotonBase v-permiso="'{{permisoEliminar}}'" variante="peligro" :icono="Trash2" @click="eliminar(registro)">
         Eliminar
       </BotonBase>
 ### importacionInsigniaEnFicha

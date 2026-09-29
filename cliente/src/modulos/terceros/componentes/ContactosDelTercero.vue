@@ -5,7 +5,7 @@ import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import { formatearTelefono } from '@/modulos/core/utilidades/formato';
 import type { Contacto } from '../servicios/terceros.api';
 
-defineProps<{ contactos: Contacto[]; puedeGestionar: boolean }>();
+defineProps<{ contactos: Contacto[]; puedeAgregar: boolean; puedeEditar: boolean; puedeEliminar: boolean }>();
 defineEmits<{ agregar: []; editar: [contacto: Contacto]; eliminar: [contacto: Contacto] }>();
 
 const comoLlegarle = (contacto: Contacto) =>
@@ -16,7 +16,7 @@ const comoLlegarle = (contacto: Contacto) =>
   <TarjetaBase>
     <div class="mb-3 flex items-center justify-between">
       <h2 class="font-semibold">Contactos</h2>
-      <BotonBase v-if="puedeGestionar" variante="secundario" pequeno :icono="Plus" @click="$emit('agregar')">
+      <BotonBase v-if="puedeAgregar" variante="secundario" pequeno :icono="Plus" @click="$emit('agregar')">
         Agregar
       </BotonBase>
     </div>
@@ -29,8 +29,9 @@ const comoLlegarle = (contacto: Contacto) =>
           </p>
           <p class="truncate text-sm text-tierra-500">{{ comoLlegarle(contacto) }}</p>
         </div>
-        <div v-if="puedeGestionar" class="flex shrink-0 gap-1">
+        <div class="flex shrink-0 gap-1">
           <BotonBase
+            v-if="puedeEditar"
             variante="fantasma"
             pequeno
             :icono="Pencil"
@@ -38,6 +39,7 @@ const comoLlegarle = (contacto: Contacto) =>
             @click="$emit('editar', contacto)"
           />
           <BotonBase
+            v-if="puedeEliminar"
             variante="fantasma"
             pequeno
             :icono="Trash2"

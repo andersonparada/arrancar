@@ -17,7 +17,7 @@ const { registros, cargando{{intercambioEnRetornoDeLista}} } = usarListaDe{{Plur
 <template>
   <div>
     <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion">
-{{accionesDeIntercambioEnPagina}}      <BotonBase v-permiso="'{{permisoGestionar}}'" :icono="Plus" @click="router.push({ name: '{{rutaNombre}}.nuevo' })">
+{{accionesDeIntercambioEnPagina}}      <BotonBase v-permiso="'{{permisoCrear}}'" :icono="Plus" @click="router.push({ name: '{{rutaNombre}}.nuevo' })">
         {{ ventana.nuevo }}
       </BotonBase>
     </EncabezadoPagina>
@@ -29,7 +29,7 @@ const { registros, cargando{{intercambioEnRetornoDeLista}} } = usarListaDe{{Plur
         <TarjetaDeRegistro
           :titulo="String(registro.{{campoMostrar}})"
           :detalles="detallesDe{{Entidad}}(registro)"
-          permiso="{{permisoGestionar}}"
+          permiso="{{permisoEditar}}"
 {{inactivoEnTarjeta}}          :destino="{ name: '{{rutaNombre}}.ficha', params: { {{entidad}}Id: registro.id } }"
         />
       </li>

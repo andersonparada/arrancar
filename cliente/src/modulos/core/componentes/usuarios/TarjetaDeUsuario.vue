@@ -29,7 +29,7 @@ const emit = defineEmits<{ editar: []; cambiarContrasena: [] }>();
     </ul>
     <div class="mt-auto flex items-center justify-between gap-2 pt-1">
       <p class="text-xs text-tierra-500">Último acceso: {{ formatearFechaHora(usuario.ultimoAccesoEn) }}</p>
-      <div v-permiso="'usuarios.gestionar'" class="flex gap-1">
+      <div v-permiso="'usuarios.editar'" class="flex gap-1">
         <BotonBase
           variante="fantasma"
           pequeno

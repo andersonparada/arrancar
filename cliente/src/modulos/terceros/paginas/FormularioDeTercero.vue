@@ -8,7 +8,7 @@ import CamposDeDatosGenerales from '../componentes/CamposDeDatosGenerales.vue';
 import CamposDelPapel from '../componentes/CamposDelPapel.vue';
 import EditorDeContactos from '../componentes/EditorDeContactos.vue';
 import { usarFormularioDeTercero } from '../composables/usar-formulario-de-tercero';
-import { PERMISO_DEL_PAPEL, RUTAS_DEL_PAPEL, volverALaFicha, volverALaLista } from '../papeles';
+import { PERMISOS_DEL_PAPEL, RUTAS_DEL_PAPEL, volverALaFicha, volverALaLista } from '../papeles';
 import type { PapelTercero } from '../servicios/terceros.api';
 import { VENTANA_DEL_PAPEL } from '../textos';
 
@@ -20,7 +20,8 @@ const sesion = usarSesion();
 const formulario = usarFormularioDeTercero(props.papel, props.terceroId ?? null);
 const { datos, papeles, contactos, categorias, departamentos, municipios, esNuevo, nombreActual } = formulario;
 const ventana = VENTANA_DEL_PAPEL[props.papel];
-const puedeGestionarElPapel = sesion.puede(PERMISO_DEL_PAPEL[props.papel]);
+const permisosDelPapel = PERMISOS_DEL_PAPEL[props.papel];
+const puedeGestionarElPapel = sesion.puede(esNuevo ? permisosDelPapel.crear : permisosDelPapel.editar);
 const titulo = esNuevo ? ventana.nuevo : ventana.editar;
 const volver = props.terceroId ? volverALaFicha(props.papel, props.terceroId) : volverALaLista(props.papel);
 

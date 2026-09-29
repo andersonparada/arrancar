@@ -1,10 +1,17 @@
 import type { PapelTercero } from './servicios/terceros.api';
 import { VENTANA_DEL_PAPEL } from './textos';
 
-/** Asignar, cambiar o quitar un papel exige su propio permiso, además de `terceros.gestionar`. */
-export const PERMISO_DEL_PAPEL: Record<PapelTercero, string> = {
-  cliente: 'clientes.gestionar',
-  proveedor: 'proveedores.gestionar',
+/** Los permisos de un papel: registrar con él (`crear`), asignarlo o cambiarlo (`editar`) y quitarlo (`eliminar`). */
+interface PermisosDelPapel {
+  crear: string;
+  editar: string;
+  eliminar: string;
+}
+
+/** Cada acción sobre un papel exige su propio permiso, además del de `terceros` que le corresponda. */
+export const PERMISOS_DEL_PAPEL: Record<PapelTercero, PermisosDelPapel> = {
+  cliente: { crear: 'clientes.crear', editar: 'clientes.editar', eliminar: 'clientes.eliminar' },
+  proveedor: { crear: 'proveedores.crear', editar: 'proveedores.editar', eliminar: 'proveedores.eliminar' },
 };
 
 /** Cada papel tiene su pantalla: `clientes`, `clientes.nuevo`, `clientes.ficha`, `clientes.editar`… */

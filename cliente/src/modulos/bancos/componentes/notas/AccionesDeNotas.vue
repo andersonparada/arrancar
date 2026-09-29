@@ -7,8 +7,8 @@ defineEmits<{ credito: []; debito: [] }>();
 </script>
 
 <template>
-  <BotonBase v-permiso="'bancos.notas.gestionar'" variante="secundario" :icono="Plus" @click="$emit('credito')">
+  <BotonBase v-permiso="'bancos.notas.crear'" variante="secundario" :icono="Plus" @click="$emit('credito')">
     Nota de crédito
   </BotonBase>
-  <BotonBase v-permiso="'bancos.notas.gestionar'" :icono="Plus" @click="$emit('debito')">Nota de débito</BotonBase>
+  <BotonBase v-permiso="'bancos.notas.crear'" :icono="Plus" @click="$emit('debito')">Nota de débito</BotonBase>
 </template>

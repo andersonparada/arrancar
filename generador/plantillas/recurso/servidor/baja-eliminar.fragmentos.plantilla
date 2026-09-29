@@ -16,7 +16,11 @@ import type { Eliminar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}
     return respuesta.status(204).send();
   };
 ### eliminarEnRutas
-    app.delete(`${RUTA}/:{{entidad}}Id`, { schema: conId, preHandler: gestionar, handler: controlador.eliminar });
+  app.delete(`${RUTA}/:{{entidad}}Id`, {
+    schema: conId,
+    preHandler: proteger({ permiso: '{{permisoEliminar}}' }),
+    handler: controlador.eliminar,
+  });
 ### importacionEliminarEnComposicion
 import { Eliminar{{Entidad}} } from '../aplicacion/casos-uso/{{pluralClave}}/eliminar-{{entidadClave}}.js';
 ### eliminarEnComposicion

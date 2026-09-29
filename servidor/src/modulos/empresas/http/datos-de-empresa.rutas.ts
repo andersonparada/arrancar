@@ -20,7 +20,7 @@ function rutasDeDatosFiscales(app: Aplicacion, controlador: DatosDeEmpresaContro
   });
   app.put('/empresas/:empresaId/datos-fiscales', {
     schema: { tags, params, body: esquemaDatosFiscales },
-    preHandler: proteger({ permiso: 'empresas.gestionar' }),
+    preHandler: proteger({ permiso: 'empresas.editar' }),
     handler: controlador.guardarDatosFiscales,
   });
 }
@@ -33,7 +33,7 @@ function rutasDeLaCargaInicial(app: Aplicacion, controlador: DatosDeEmpresaContr
   });
   app.put('/empresas/:empresaId/carga-inicial', {
     schema: { tags, params, body: esquemaFechaDeInicio },
-    preHandler: proteger({ permiso: 'empresas.gestionar' }),
+    preHandler: proteger({ permiso: 'empresas.editar' }),
     handler: controlador.establecerFechaDeInicio,
   });
   app.post('/empresas/:empresaId/carga-inicial/cerrar', {

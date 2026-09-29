@@ -8,7 +8,7 @@ import TarjetaBase from './TarjetaBase.vue';
 
 /**
  * La tarjeta de un registro en una lista: su nombre, sus datos y las acciones
- * de quien tiene `permiso`. Todas las listas generadas se ven así. Con `destino`
+ * de quien tiene `permiso` (editar) y, para eliminar, `permisoEliminar` (por omisión, el mismo). Todas las listas generadas se ven así. Con `destino`
  * toda la tarjeta lleva a su ficha, y editar o eliminar se hacen allí.
  *
  * `destacado` (slot) muestra algo propio del registro junto al título (p. ej. un
@@ -20,7 +20,10 @@ import TarjetaBase from './TarjetaBase.vue';
 defineProps<{
   titulo: string;
   detalles: DetalleDeRegistro[];
+  /** Permiso de editar. */
   permiso: string;
+  /** Permiso de eliminar, si es distinto del de editar. */
+  permisoEliminar?: string;
   inactivo?: boolean;
   eliminable?: boolean;
   destino?: RouteLocationRaw;
@@ -58,12 +61,14 @@ const emit = defineEmits<{ editar: []; eliminar: [] }>();
         </div>
       </dl>
       <div v-if="!destino && !soloLectura" class="mt-auto flex justify-end gap-1">
-        <span v-if="!sinEditar" v-permiso="permiso" class="contents">
-          <BotonBase variante="fantasma" pequeno :icono="Pencil" @click="emit('editar')">Editar</BotonBase>
-          <BotonBase v-if="eliminable" variante="fantasma" pequeno :icono="Trash2" @click="emit('eliminar')">
-            Eliminar
-          </BotonBase>
-        </span>
+        <template v-if="!sinEditar">
+          <span v-permiso="permiso" class="contents">
+            <BotonBase variante="fantasma" pequeno :icono="Pencil" @click="emit('editar')">Editar</BotonBase>
+          </span>
+          <span v-if="eliminable" v-permiso="permisoEliminar ?? permiso" class="contents">
+            <BotonBase variante="fantasma" pequeno :icono="Trash2" @click="emit('eliminar')">Eliminar</BotonBase>
+          </span>
+        </template>
         <slot name="acciones-extra" />
       </div>
     </TarjetaBase>

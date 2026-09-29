@@ -4,6 +4,8 @@ Reemplaza a `core.localidades` y `core.areas` del plan de hallazgos, según la d
 del usuario (esquema `empresas`, nombre «departamentos», Bancos sin filtro por localidad,
 tipos de localidad editables).
 
+> **Nota (2026-09-29, PLAN §3.5):** donde este documento dice `gestionar` léase `crear`, `editar` y `eliminar` (el que corresponda a cada acción; inactivar y reactivar van con `editar`), y `reabrir` ya no es solo de acceso total: `soloAccesoTotal` se eliminó.
+
 ## Lo encontrado
 
 1. El módulo `empresas` es de negocio y **esencial**, sin tablas propias: administra

@@ -59,7 +59,7 @@ describe('sesión', () => {
       empresa: { id: cuenta.empresaId },
       rolNombre: 'Propietario',
     });
-    expect(sesion.cuerpo.permisos).toContain('usuarios.gestionar');
+    expect(sesion.cuerpo.permisos).toContain('usuarios.crear');
     expect(sesion.cuerpo.empresasDisponibles).toHaveLength(1);
   });
 

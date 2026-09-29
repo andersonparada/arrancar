@@ -4,6 +4,8 @@ import { rutasDeIntercambio, type OpcionesDeIntercambio } from '../../core/inter
 import type { TiposDeLocalidadControlador } from './tipos-de-localidad.controlador.js';
 import { esquemaTipoDeLocalidad, esquemaParamsTipoDeLocalidad } from './tipos-de-localidad.esquemas-http.js';
 
+type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
+
 const etiquetas = ['Empresas'];
 const RUTA = '/empresas/tipos-de-localidad';
 const EN_EXCEL = {
@@ -11,6 +13,29 @@ const EN_EXCEL = {
   archivo: 'tipos-de-localidad',
   permisos: { importar: 'empresas.tipos-de-localidad.importar', exportar: 'empresas.tipos-de-localidad.exportar' },
 };
+const conId = { tags: etiquetas, params: esquemaParamsTipoDeLocalidad };
+
+/** Cada acción de escritura exige su propio permiso. */
+function rutasDeEscritura(app: Aplicacion, controlador: TiposDeLocalidadControlador) {
+  const crear = proteger({ permiso: 'empresas.tipos-de-localidad.crear' });
+  const editar = proteger({ permiso: 'empresas.tipos-de-localidad.editar' });
+
+  app.post(RUTA, {
+    schema: { tags: etiquetas, body: esquemaTipoDeLocalidad },
+    preHandler: crear,
+    handler: controlador.crear,
+  });
+  app.put(`${RUTA}/:tipoDeLocalidadId`, {
+    schema: { ...conId, body: esquemaTipoDeLocalidad },
+    preHandler: editar,
+    handler: controlador.actualizar,
+  });
+  app.delete(`${RUTA}/:tipoDeLocalidadId`, {
+    schema: conId,
+    preHandler: proteger({ permiso: 'empresas.tipos-de-localidad.eliminar' }),
+    handler: controlador.eliminar,
+  });
+}
 
 export function rutasTiposDeLocalidad(
   controlador: TiposDeLocalidadControlador,
@@ -18,22 +43,10 @@ export function rutasTiposDeLocalidad(
 ): FastifyPluginAsyncZod {
   return async (app) => {
     const ver = proteger({ permiso: 'empresas.tipos-de-localidad.ver' });
-    const gestionar = proteger({ permiso: 'empresas.tipos-de-localidad.gestionar' });
-    const conId = { tags: etiquetas, params: esquemaParamsTipoDeLocalidad };
 
     app.get(RUTA, { schema: { tags: etiquetas }, preHandler: ver, handler: controlador.listar });
     app.get(`${RUTA}/:tipoDeLocalidadId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
-    app.post(RUTA, {
-      schema: { tags: etiquetas, body: esquemaTipoDeLocalidad },
-      preHandler: gestionar,
-      handler: controlador.crear,
-    });
-    app.put(`${RUTA}/:tipoDeLocalidadId`, {
-      schema: { ...conId, body: esquemaTipoDeLocalidad },
-      preHandler: gestionar,
-      handler: controlador.actualizar,
-    });
-    app.delete(`${RUTA}/:tipoDeLocalidadId`, { schema: conId, preHandler: gestionar, handler: controlador.eliminar });
+    rutasDeEscritura(app, controlador);
     rutasDeIntercambio(app, { ...EN_EXCEL, intercambio });
   };
 }

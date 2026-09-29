@@ -113,12 +113,21 @@ export const moduloTerceros: DefinicionModulo = {
   dependeDe: [],
   permisos: [
     { clave: 'terceros.ver', descripcion: 'Ver clientes y proveedores' },
+    { clave: 'terceros.crear', descripcion: 'Registrar clientes y proveedores, y agregar sus contactos' },
     {
-      clave: 'terceros.gestionar',
-      descripcion: 'Registrar, editar e inactivar clientes y proveedores, y sus contactos',
+      clave: 'terceros.editar',
+      descripcion: 'Editar, inactivar y reactivar clientes y proveedores, y editar sus contactos',
     },
-    { clave: 'clientes.gestionar', descripcion: 'Asignar o quitar el papel de cliente' },
-    { clave: 'proveedores.gestionar', descripcion: 'Asignar o quitar el papel de proveedor y editar sus categorías' },
+    { clave: 'terceros.eliminar', descripcion: 'Eliminar contactos de clientes y proveedores' },
+    { clave: 'clientes.crear', descripcion: 'Registrar a alguien ya como cliente' },
+    { clave: 'clientes.editar', descripcion: 'Asignar o cambiar el papel de cliente' },
+    { clave: 'clientes.eliminar', descripcion: 'Quitar el papel de cliente' },
+    {
+      clave: 'proveedores.crear',
+      descripcion: 'Registrar a alguien ya como proveedor y crear categorías de proveedores',
+    },
+    { clave: 'proveedores.editar', descripcion: 'Asignar o cambiar el papel de proveedor y editar sus categorías' },
+    { clave: 'proveedores.eliminar', descripcion: 'Quitar el papel de proveedor' },
   ],
   configuracion: [
     definirConfiguracion({

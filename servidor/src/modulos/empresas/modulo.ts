@@ -55,21 +55,20 @@ export const moduloEmpresas: DefinicionModulo = {
   esencial: true,
   permisos: [
     { clave: 'empresas.ver', descripcion: 'Ver las empresas de la cuenta' },
-    { clave: 'empresas.gestionar', descripcion: 'Crear y editar empresas, sus datos fiscales y su fecha de inicio' },
+    { clave: 'empresas.crear', descripcion: 'Crear empresas' },
+    { clave: 'empresas.editar', descripcion: 'Editar empresas, sus datos fiscales y su fecha de inicio' },
     {
       clave: 'empresas.carga-inicial.cerrar',
       descripcion: 'Cerrar la carga inicial de una empresa (deja fija su fecha de inicio)',
     },
     {
       clave: 'empresas.carga-inicial.reabrir',
-      descripcion: 'Reabrir la carga inicial cerrada de una empresa, con su motivo (solo roles con acceso total)',
-      soloAccesoTotal: true,
+      descripcion: 'Reabrir la carga inicial cerrada de una empresa, con su motivo',
     },
     { clave: 'empresas.tipos-de-localidad.ver', descripcion: 'Ver tipos de localidad' },
-    {
-      clave: 'empresas.tipos-de-localidad.gestionar',
-      descripcion: 'Registrar, editar, inactivar y eliminar tipos de localidad',
-    },
+    { clave: 'empresas.tipos-de-localidad.crear', descripcion: 'Registrar tipos de localidad' },
+    { clave: 'empresas.tipos-de-localidad.editar', descripcion: 'Editar, inactivar y reactivar tipos de localidad' },
+    { clave: 'empresas.tipos-de-localidad.eliminar', descripcion: 'Eliminar tipos de localidad' },
     { clave: 'empresas.tipos-de-localidad.importar', descripcion: 'Importar tipos de localidad desde Excel' },
     { clave: 'empresas.tipos-de-localidad.exportar', descripcion: 'Exportar tipos de localidad a Excel' },
     // generador: permisos

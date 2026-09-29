@@ -63,9 +63,10 @@ describe('generar un recurso en el servidor', () => {
     const { leer } = await generar(animal);
 
     expect(leer('modulo.ts')).toContain("import { rutasDeAnimales } from './composicion/animales.js';");
-    expect(leer('modulo.ts')).toContain(
-      "{ clave: 'ganado.animales.gestionar', descripcion: 'Registrar, editar y eliminar animales' },",
-    );
+    expect(leer('modulo.ts')).toContain("{ clave: 'ganado.animales.crear', descripcion: 'Registrar animales' },");
+    expect(leer('modulo.ts')).toContain("{ clave: 'ganado.animales.editar', descripcion: 'Editar animales' },");
+    expect(leer('modulo.ts')).toContain("{ clave: 'ganado.animales.eliminar', descripcion: 'Eliminar animales' },");
+    expect(leer('http/animales.rutas.ts')).toContain("proteger({ permiso: 'ganado.animales.eliminar' })");
     expect(leer('modulo.ts')).toContain('rutasDeAnimales(),');
   });
 

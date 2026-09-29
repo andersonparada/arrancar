@@ -13,15 +13,10 @@ const guardarTipoDeLocalidad = (edicion: EdicionDeTipoDeLocalidad) =>
     ? apiTiposDeLocalidad.actualizar(edicion.id, datosDeTipoDeLocalidad(edicion))
     : apiTiposDeLocalidad.crear(datosDeTipoDeLocalidad(edicion));
 
-/** Los tipos de localidad de la empresa: listarlos, registrarlos y editarlos en una ventana. */
-export function usarTiposDeLocalidad() {
+/** La ventana de tipos de localidad: abrirla y guardar lo escrito, avisando y recargando la lista. */
+function usarVentanaDeTiposDeLocalidad(cargar: () => Promise<void>) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
-  const {
-    datos: registros,
-    cargando,
-    cargar,
-  } = usarCarga(() => apiTiposDeLocalidad.listar(), SIN_REGISTROS, 'No se pudieron cargar los tipos de localidad.');
   const edicion = ref<EdicionDeTipoDeLocalidad>({ ...edicionDe(), abierta: false });
 
   function abrir(tipoDeLocalidad?: TipoDeLocalidad): void {
@@ -37,7 +32,18 @@ export function usarTiposDeLocalidad() {
     await cargar();
   }
 
+  return { edicion, enviando, errores, abrir, guardar };
+}
+
+/** Los tipos de localidad de la empresa: listarlos, registrarlos y editarlos en una ventana. */
+export function usarTiposDeLocalidad() {
+  const {
+    datos: registros,
+    cargando,
+    cargar,
+  } = usarCarga(() => apiTiposDeLocalidad.listar(), SIN_REGISTROS, 'No se pudieron cargar los tipos de localidad.');
+  const ventana = usarVentanaDeTiposDeLocalidad(cargar);
   const intercambio = usarIntercambio(apiTiposDeLocalidad.intercambio, cargar);
 
-  return { registros, cargando, cargar, intercambio, edicion, enviando, errores, abrir, guardar };
+  return { registros, cargando, cargar, intercambio, ...ventana };
 }

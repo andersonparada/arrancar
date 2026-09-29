@@ -128,7 +128,7 @@ describe('notas por API', () => {
     expect((await otraCuenta.propietario.get(RUTA_NOTAS)).cuerpo).toContainEqual(ajena.cuerpo);
   });
 
-  it('para registrar hace falta el permiso de gestionar', async () => {
+  it('para registrar hace falta el permiso de crear', async () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'SoloNotas',
       apellidos: 'Lectura',
@@ -144,7 +144,7 @@ describe('notas por API', () => {
     const gestor = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Registra',
       apellidos: 'Sin anular',
-      permisos: ['bancos.notas.ver', 'bancos.notas.gestionar'],
+      permisos: ['bancos.notas.ver', 'bancos.notas.crear', 'bancos.notas.editar'],
     });
 
     const anulada = await gestor.post(`${RUTA_NOTAS}/${creada.cuerpo.id}/anular`, { motivo: 'Sin permiso' });
@@ -157,7 +157,7 @@ describe('notas por API', () => {
     const gestor = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'RegistraSinEliminar',
       apellidos: 'Prueba',
-      permisos: ['bancos.notas.ver', 'bancos.notas.gestionar'],
+      permisos: ['bancos.notas.ver', 'bancos.notas.crear', 'bancos.notas.editar'],
     });
 
     expect((await gestor.delete(`${RUTA_NOTAS}/${creada.cuerpo.id}`, { motivo: 'Sin permiso' })).estado).toBe(403);
@@ -218,7 +218,7 @@ describe('saldos iniciales por API', () => {
     expect(eliminado.cuerpo.error.codigo).toBe('no_es_un_saldo_inicial');
   });
 
-  it('para gestionar hace falta bancos.saldos-iniciales.gestionar; ver usa el permiso de cuentas bancarias', async () => {
+  it('para escribir hacen falta los permisos bancos.saldos-iniciales.*; ver usa el permiso de cuentas bancarias', async () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'SoloCuentas',
       apellidos: 'VeCuentas',

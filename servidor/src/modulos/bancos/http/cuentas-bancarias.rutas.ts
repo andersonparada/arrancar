@@ -18,19 +18,20 @@ export function rutasCuentasBancarias(
 ): FastifyPluginAsyncZod {
   return async (app) => {
     const ver = proteger({ permiso: 'bancos.cuentas-bancarias.ver' });
-    const gestionar = proteger({ permiso: 'bancos.cuentas-bancarias.gestionar' });
+    const crear = proteger({ permiso: 'bancos.cuentas-bancarias.crear' });
+    const editar = proteger({ permiso: 'bancos.cuentas-bancarias.editar' });
     const conId = { tags: etiquetas, params: esquemaParamsCuentaBancaria };
 
     app.get(RUTA, { schema: { tags: etiquetas }, preHandler: ver, handler: controlador.listar });
     app.get(`${RUTA}/:cuentaBancariaId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
     app.post(RUTA, {
       schema: { tags: etiquetas, body: esquemaCuentaBancaria },
-      preHandler: gestionar,
+      preHandler: crear,
       handler: controlador.crear,
     });
     app.put(`${RUTA}/:cuentaBancariaId`, {
       schema: { ...conId, body: esquemaCuentaBancaria },
-      preHandler: gestionar,
+      preHandler: editar,
       handler: controlador.actualizar,
     });
     rutasDeIntercambio(app, { ...EN_EXCEL, intercambio });

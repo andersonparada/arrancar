@@ -34,7 +34,7 @@ const {
       :titulo="VENTANAS_EMPRESAS.empresas.titulo"
       :descripcion="VENTANAS_EMPRESAS.empresas.descripcion(sesion.empresa?.cuentaNombre ?? '')"
     >
-      <BotonBase v-permiso="'empresas.gestionar'" :icono="Plus" @click="abrir()">Nueva empresa</BotonBase>
+      <BotonBase v-permiso="'empresas.crear'" :icono="Plus" @click="abrir()">Nueva empresa</BotonBase>
     </EncabezadoPagina>
 
     <ul class="grid gap-3 md:grid-cols-2">

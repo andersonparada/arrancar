@@ -22,7 +22,7 @@ const modulos: DefinicionModuloCliente[] = [
             ruta: '/categorias',
             icono,
             seccion: 'administracion',
-            permiso: 'proveedores.gestionar',
+            permiso: 'proveedores.editar',
           },
         ],
       },
@@ -50,7 +50,7 @@ describe('menú por módulo', () => {
   });
 
   it('con una sola sección visible no muestra el separador', () => {
-    const soloAdministra = { ...propietario, puede: (permiso: string) => permiso === 'proveedores.gestionar' };
+    const soloAdministra = { ...propietario, puede: (permiso: string) => permiso === 'proveedores.editar' };
 
     const [clientes] = construirMenu(modulos, soloAdministra);
 

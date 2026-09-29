@@ -14,18 +14,20 @@ const EN_EXCEL = {
   permisos: { importar: 'bancos.conceptos.importar', exportar: 'bancos.conceptos.exportar' },
 };
 
-/** Registrar, cambiar, inactivar (con el cambio) y eliminar: todo con el permiso de gestionar. */
+/** Registrar (`crear`), cambiar e inactivar con el cambio (`editar`) y eliminar (`eliminar`). */
 function rutasDeEscritura(app: FastifyInstance, controlador: ConceptosControlador): void {
-  const preHandler = proteger({ permiso: 'bancos.conceptos.gestionar' });
-  app.post(RUTA, { schema: { tags: etiquetas, body: esquemaConcepto }, preHandler, handler: controlador.crear });
+  const crear = proteger({ permiso: 'bancos.conceptos.crear' });
+  const editar = proteger({ permiso: 'bancos.conceptos.editar' });
+  const eliminar = proteger({ permiso: 'bancos.conceptos.eliminar' });
+  app.post(RUTA, { schema: { tags: etiquetas, body: esquemaConcepto }, preHandler: crear, handler: controlador.crear });
   app.put(`${RUTA}/:conceptoId`, {
     schema: { ...conId, body: esquemaConcepto },
-    preHandler,
+    preHandler: editar,
     handler: controlador.actualizar,
   });
   app.delete(`${RUTA}/:conceptoId`, {
     schema: { ...conId, body: esquemaEliminacionDeConcepto },
-    preHandler,
+    preHandler: eliminar,
     handler: controlador.eliminar,
   });
 }

@@ -17,7 +17,7 @@ const textoDeEstado = computed(() => (props.registro.activa ? 'Inactivar' : 'Rea
   <TarjetaDeRegistro
     :titulo="`Chequera ${rangoDeChequera(registro)}`"
     :detalles="detallesDeChequera(registro)"
-    permiso="bancos.chequeras.gestionar"
+    permiso="bancos.chequeras.editar"
     :inactivo="!registro.activa"
     sin-editar
   >
@@ -28,7 +28,7 @@ const textoDeEstado = computed(() => (props.registro.activa ? 'Inactivar' : 'Rea
       >
         Ver cheques
       </RouterLink>
-      <BotonBase v-permiso="'bancos.chequeras.gestionar'" variante="fantasma" pequeno @click="emit('cambiar-estado')">
+      <BotonBase v-permiso="'bancos.chequeras.editar'" variante="fantasma" pequeno @click="emit('cambiar-estado')">
         {{ textoDeEstado }}
       </BotonBase>
     </template>

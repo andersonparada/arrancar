@@ -4,10 +4,10 @@ import type { CatalogoDePermisos } from '../aplicacion/puertos/catalogo-de-permi
 
 /** Lee el registro al consultar: los módulos se registran después de armar las rutas. */
 export class CatalogoDePermisosEnRegistro implements CatalogoDePermisos {
-  /** No asignable si ningún módulo lo declara, si es de configuración de solo superacceso o si solo lo reciben los roles con acceso total. */
+  /** No asignable si ningún módulo lo declara o si es de configuración de solo superacceso. */
   existe(permiso: string): boolean {
     const definicion = obtenerRegistroModulos().definicionDePermiso(permiso);
-    return definicion !== undefined && !definicion.soloSuperacceso && !definicion.soloAccesoTotal;
+    return definicion !== undefined && !definicion.soloSuperacceso;
   }
 
   gruposDe(modulosActivos: ReadonlySet<string>): GrupoDePermisosDto[] {
@@ -18,7 +18,7 @@ export class CatalogoDePermisosEnRegistro implements CatalogoDePermisos {
         modulo: modulo.clave,
         nombre: modulo.nombre,
         permisos: modulo.permisos
-          .filter((permiso) => !permiso.soloSuperacceso && !permiso.soloAccesoTotal)
+          .filter((permiso) => !permiso.soloSuperacceso)
           .map(({ clave, descripcion }) => ({ clave, descripcion })),
       }))
       .filter((grupo) => grupo.permisos.length > 0);

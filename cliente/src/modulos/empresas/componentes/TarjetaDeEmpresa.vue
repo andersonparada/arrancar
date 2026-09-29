@@ -36,7 +36,7 @@ const emit = defineEmits<{ editar: [] }>();
         <Mail class="size-4 shrink-0" aria-hidden="true" />{{ empresa.correo }}
       </li>
     </ul>
-    <div v-permiso="'empresas.gestionar'" class="mt-auto flex justify-end">
+    <div v-permiso="'empresas.editar'" class="mt-auto flex justify-end">
       <BotonBase variante="fantasma" pequeno :icono="Pencil" @click="emit('editar')">Editar</BotonBase>
     </div>
   </TarjetaBase>

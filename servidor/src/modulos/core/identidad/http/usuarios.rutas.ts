@@ -14,29 +14,29 @@ type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
 const tags = ['Usuarios'];
 
 function rutasDeAlta(app: Aplicacion, usuarios: UsuariosControlador): void {
-  const gestionar = proteger({ permiso: 'usuarios.gestionar' });
+  const crear = proteger({ permiso: 'usuarios.crear' });
   app.get('/usuarios/sugerencia', {
     schema: { tags, querystring: esquemaSugerenciaUsuario },
-    preHandler: gestionar,
+    preHandler: crear,
     handler: usuarios.sugerirNombre,
   });
   app.post('/usuarios', {
     schema: { tags, body: esquemaNuevoUsuario },
-    preHandler: gestionar,
+    preHandler: crear,
     handler: usuarios.crear,
   });
 }
 
 function rutasDeCambio(app: Aplicacion, usuarios: UsuariosControlador): void {
-  const gestionar = proteger({ permiso: 'usuarios.gestionar' });
+  const editar = proteger({ permiso: 'usuarios.editar' });
   app.patch('/usuarios/:usuarioId', {
     schema: { tags, params: esquemaParamsUsuario, body: esquemaCambioUsuario },
-    preHandler: gestionar,
+    preHandler: editar,
     handler: usuarios.actualizar,
   });
   app.put('/usuarios/:usuarioId/contrasena', {
     schema: { tags, params: esquemaParamsUsuario, body: esquemaCambioContrasena },
-    preHandler: gestionar,
+    preHandler: editar,
     handler: usuarios.cambiarContrasena,
   });
 }

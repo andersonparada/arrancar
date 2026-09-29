@@ -32,7 +32,7 @@ const { saldoInicial, cargando, formulario, eliminacion } = usarSaldoInicial(pro
       </dl>
       <div class="flex gap-2">
         <BotonBase
-          v-permiso="'bancos.saldos-iniciales.gestionar'"
+          v-permiso="'bancos.saldos-iniciales.editar'"
           variante="secundario"
           pequeno
           @click="formulario.corregir(saldoInicial)"
@@ -41,7 +41,7 @@ const { saldoInicial, cargando, formulario, eliminacion } = usarSaldoInicial(pro
         </BotonBase>
         <BotonBase
           v-if="saldoInicial.puedeEliminar"
-          v-permiso="'bancos.saldos-iniciales.gestionar'"
+          v-permiso="'bancos.saldos-iniciales.eliminar'"
           variante="fantasma"
           pequeno
           @click="eliminacion.abrir(saldoInicial)"
@@ -52,7 +52,7 @@ const { saldoInicial, cargando, formulario, eliminacion } = usarSaldoInicial(pro
     </TarjetaBase>
     <TarjetaBase v-else class="flex flex-wrap items-center justify-between gap-3">
       <p class="text-sm text-tierra-500">Esta cuenta todavía no tiene saldo inicial.</p>
-      <BotonBase v-permiso="'bancos.saldos-iniciales.gestionar'" variante="secundario" @click="formulario.registrar">
+      <BotonBase v-permiso="'bancos.saldos-iniciales.crear'" variante="secundario" @click="formulario.registrar">
         Registrar saldo inicial
       </BotonBase>
     </TarjetaBase>

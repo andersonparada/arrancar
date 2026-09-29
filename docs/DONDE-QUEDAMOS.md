@@ -49,7 +49,7 @@ decisiones e investigación con Opus).
   `empresas.cargas_iniciales` con cerrar y reabrir (motivo y auditoría), órdenes del
   mediador `empresas.obtener_carga_inicial` y `empresas.obtener_datos_de_empresa`, y
   secciones en el formulario de Empresas. **Revisar:** el agente creó la bandera
-  `soloAccesoTotal` para `reabrir`, que parece duplicar `soloSuperacceso`; unificarlas.
+  `soloAccesoTotal` para `reabrir` (eliminada después, ver «Permisos por acción»).
 - Pruebas: servidor 851, cliente 231, generador 46.
 - Investigaciones cerradas:
   - `docs/modulos/seguridad-de-archivos.md` (agente de seguridad).
@@ -94,15 +94,13 @@ decisiones e investigación con Opus).
   ventana de accesos y departamentos); los pasos 5, 7 y 8 esperan respuestas del
   usuario.
 
-- **Permisos por acción** (PLAN §3.5, decidido el 2026-09-29): separar `gestionar` en
-  `crear`, `editar` y `eliminar` en todos los módulos, el generador y el cliente, con
-  migración de los roles; quitar `soloAccesoTotal`. Se programa al terminar el paso 3
-  de H5b (la base de pruebas es una sola).
+- **Permisos por acción** (PLAN §3.5): hecho el 2026-09-29. `gestionar` quedó separado en
+  `crear`, `editar` y `eliminar` en todos los módulos, el generador y el cliente, con una
+  migración por módulo para los roles; `soloAccesoTotal` se eliminó.
 
-- **Llaves entre esquemas** (PLAN §3.2, decidido el 2026-09-29): generalizar la
-  excepción de ESLint del módulo base a los `*.tablas.js` de cualquier módulo (solo
-  desde `infraestructura/`) y agregar una prueba que revise que cada llave entre
-  esquemas apunte a `core` o a un módulo de `dependeDe`. Va junto con los permisos.
+- **Llaves entre esquemas** (PLAN §3.2): hecho el 2026-09-29. Excepción de ESLint
+  generalizada a los `*.tablas.js` de cualquier módulo (solo desde `infraestructura/`) y
+  prueba `core/base-datos/llaves-entre-esquemas.prueba.ts`.
 
 Forma de trabajo: cada avance va en commit a la rama; a `main` solo entra lo terminado
 y probado (pruebas del servidor, ESLint y `tsc` en verde).
@@ -112,7 +110,7 @@ y probado (pruebas del servidor, ESLint y `tsc` en verde).
 Todas las preguntas están respondidas (ver «Respuestas del usuario (2026-09-29)» en
 `docs/modulos/plan-hallazgos-contables.md`). En orden:
 
-1. Unificar `soloAccesoTotal` con `soloSuperacceso` (ver arriba).
+1. ~~Unificar `soloAccesoTotal` con `soloSuperacceso`~~: hecho al eliminar `soloAccesoTotal`.
 2. **H5b/H5c** con los accesos en el esquema de cada módulo
    (`empresas.accesos_a_localidades`): rediseñar `politicaPorAlcance` para leer la
    tabla del módulo (pedirle el diseño al `arquitecto-de-datos`), excepción de ESLint

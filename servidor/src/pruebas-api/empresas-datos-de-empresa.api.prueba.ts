@@ -32,7 +32,7 @@ beforeAll(async () => {
   contable = await crearUsuarioConPermisos(entorno, cuenta, {
     nombres: 'Conta',
     apellidos: 'Ble',
-    permisos: ['empresas.ver', 'empresas.gestionar', 'empresas.carga-inicial.cerrar'],
+    permisos: ['empresas.ver', 'empresas.crear', 'empresas.editar', 'empresas.carga-inicial.cerrar'],
   });
 });
 
@@ -152,11 +152,11 @@ describe('carga inicial', () => {
 });
 
 describe('permisos de la carga inicial', () => {
-  it('quien gestiona empresas pero no tiene el permiso de cerrar recibe 403', async () => {
+  it('quien crea y edita empresas pero no tiene el permiso de cerrar recibe 403', async () => {
     const sinCerrar = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Sin',
       apellidos: 'Cierre',
-      permisos: ['empresas.ver', 'empresas.gestionar'],
+      permisos: ['empresas.ver', 'empresas.crear', 'empresas.editar'],
     });
 
     const respuesta = await sinCerrar.post(ruta(cuenta.empresaId, 'carga-inicial/cerrar'), {});
@@ -175,17 +175,15 @@ describe('permisos de la carga inicial', () => {
     expect(reabierta.estado).toBe(403);
   });
 
-  it('el permiso de reabrir no se puede asignar a mano ni aparece entre los asignables', async () => {
+  it('el permiso de reabrir se asigna como cualquier otro y con él se reabre', async () => {
     const rol = await cuenta.propietario.post('/api/roles', {
-      nombre: 'Intento',
+      nombre: 'Reabre cargas',
       permisos: ['empresas.ver', 'empresas.carga-inicial.reabrir'],
     });
     const asignables = await cuenta.propietario.get('/api/permisos');
 
-    expect(rol.estado).toBe(400);
-    expect(rol.cuerpo.error.codigo).toBe('permiso_desconocido');
-    expect(JSON.stringify(asignables.cuerpo)).toContain('empresas.carga-inicial.cerrar');
-    expect(JSON.stringify(asignables.cuerpo)).not.toContain('empresas.carga-inicial.reabrir');
+    expect(rol.estado).toBe(201);
+    expect(JSON.stringify(asignables.cuerpo)).toContain('empresas.carga-inicial.reabrir');
   });
 });
 

@@ -24,7 +24,7 @@ const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: 'bancos.cuen
   <div v-if="registro" class="space-y-4">
     <EncabezadoPagina :titulo="String(registro.nombre)" descripcion="Cuenta bancaria" :volver="volver">
       <InsigniaBase v-if="!registro.activo" tono="rojo">Inactivo</InsigniaBase>
-      <BotonBase v-permiso="'bancos.cuentas-bancarias.gestionar'" variante="secundario" :icono="Pencil" @click="editar">
+      <BotonBase v-permiso="'bancos.cuentas-bancarias.editar'" variante="secundario" :icono="Pencil" @click="editar">
         Editar
       </BotonBase>
     </EncabezadoPagina>

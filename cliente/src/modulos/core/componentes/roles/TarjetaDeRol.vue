@@ -19,9 +19,12 @@ const emit = defineEmits<{ editar: []; eliminar: [] }>();
       <InsigniaBase v-if="rol.accesoTotal" tono="trigo">Acceso total</InsigniaBase>
     </div>
     <p class="text-sm text-tierra-500">{{ resumen }}</p>
-    <div v-permiso="'roles.gestionar'" class="mt-auto flex justify-end gap-1">
-      <BotonBase variante="fantasma" pequeno :icono="Pencil" @click="emit('editar')">Editar</BotonBase>
+    <div class="mt-auto flex justify-end gap-1">
+      <BotonBase v-permiso="'roles.editar'" variante="fantasma" pequeno :icono="Pencil" @click="emit('editar')"
+        >Editar</BotonBase
+      >
       <BotonBase
+        v-permiso="'roles.eliminar'"
         variante="fantasma"
         pequeno
         :icono="Trash2"

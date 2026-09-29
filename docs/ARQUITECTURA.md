@@ -60,7 +60,7 @@ servidor/src/modulos/terceros/
 | `infraestructura` | `aplicacion` (para implementar puertos), `dominio`, `core/compartido/infraestructura` |
 | `http` | `aplicacion` y `core/compartido/http` |
 | `modulo.ts` | todo lo del módulo (es quien conecta las piezas) |
-| otro módulo | **nunca**, salvo los `*.tablas.js` de un módulo de su `dependeDe` (o del módulo base `empresas`) y solo desde `infraestructura` (leer y poner llaves foráneas; escribir en esas tablas solo lo hace su módulo; ver `docs/PLAN.md` §3.2); se comunican por **eventos** (después de confirmar) o por **órdenes y avisos** del mediador (dentro de la transacción), ver sección 4.8 |
+| otro módulo | **nunca**, salvo los `*.tablas.js` de un módulo de cualquier otro módulo (hacia `core` o su `dependeDe`, lo revisa una prueba) y solo desde `infraestructura` (leer y poner llaves foráneas; escribir en esas tablas solo lo hace su módulo; ver `docs/PLAN.md` §3.2); se comunican por **eventos** (después de confirmar) o por **órdenes y avisos** del mediador (dentro de la transacción), ver sección 4.8 |
 
 ## 3. El core
 
@@ -105,8 +105,8 @@ abre la transacción con la empresa pedida como contexto (tras validar cuenta y 
 la consultan solo por el mediador: `empresas.obtener_carga_inicial` (con `for share`, para que
 cerrar la carga espere) y `empresas.obtener_datos_de_empresa` (contratos en
 `core/contratos/empresas.contratos.ts`). Reabrir la carga (`empresas.carga-inicial.reabrir`) usa
-`soloAccesoTotal` en `DefinicionPermiso`: solo lo reciben los roles con acceso total y no se puede
-asignar a mano. La reapertura queda en la auditoría con la acción `reabrir`.
+un permiso propio y asignable como cualquier otro (`soloAccesoTotal` se eliminó: lo que decide es el
+permiso, no el tipo de rol). La reapertura queda en la auditoría con la acción `reabrir`.
 
 ## 4. Piezas clave (cómo se ve el código)
 
@@ -478,7 +478,7 @@ entrega como un commit propio.
     `regla_negocio` a `empresa_en_uso` (mismo estado 422 y mismo mensaje; el
     cliente no lo usaba).
   - Nuevo evento `empresas.registrada` (nadie lo escucha aún).
-  - Se corrigió la descripción del permiso `empresas.gestionar`, que aún hablaba del fierro.
+  - Se corrigió la descripción del permiso `empresas.gestionar` (hoy `empresas.crear` y `empresas.editar`), que aún hablaba del fierro.
   - Teléfono y correo de la empresa: después, con el visto bueno del usuario, se
     normalizaron con `Telefono` y `Correo` (migración de datos `core/0007`).
   - Nuevas piezas compartidas: `Operador`, `DependenciasCompartidas`,
@@ -699,7 +699,7 @@ entrega como un commit propio.
     crear, actualizar y eliminar; tabla en el esquema del módulo con su política
     RLS, datos únicos por empresa o cuenta, mapeador, repositorio y consultas;
     esquema Zod, controlador y rutas `/<modulo>/<plural>` protegidas con
-    `<modulo>.<plural>.ver` y `.gestionar`; la composición en
+    `<modulo>.<plural>.ver`, `.crear`, `.editar` y (si elimina) `.eliminar`; la composición en
     `composicion/<plural>.ts`; dobles en memoria, pruebas unitarias y una prueba
     de API (registrar, listar, cambiar, eliminar o inactivar, aislamiento entre
     cuentas y permisos). Registra permisos y rutas en `modulo.ts` y corre
@@ -916,7 +916,7 @@ objeto de valor si lo tiene, su campo de formulario y cómo se muestra.
 - Servidor: entidad y errores (dominio); casos de uso listar, ver, crear, editar y
   eliminar (o inactivar), puertos y DTO (aplicación); tabla con su política RLS,
   repositorio, consultas y mapeador (infraestructura); esquemas, controlador y
-  rutas con `proteger` (http); permisos `<modulo>.<entidades>.ver` y `.gestionar`
+  rutas con `proteger` (http); permisos `<modulo>.<entidades>.ver`, `.crear`, `.editar` y `.eliminar`
   en `modulo.ts`; la migración con `bd:generar`; pruebas unitarias con dobles en
   memoria y una prueba de API.
 - Cliente: servicio `Api*`, textos, composables con su prueba de la lógica pura,

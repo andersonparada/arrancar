@@ -8,7 +8,8 @@ const etiquetas = ['Empresas'];
 export function rutasEmpresas(controlador: EmpresasControlador): FastifyPluginAsyncZod {
   return async (app) => {
     const ver = proteger({ permiso: 'empresas.ver' });
-    const gestionar = proteger({ permiso: 'empresas.gestionar' });
+    const crear = proteger({ permiso: 'empresas.crear' });
+    const editar = proteger({ permiso: 'empresas.editar' });
 
     app.get('/empresas', { schema: { tags: etiquetas }, preHandler: ver, handler: controlador.listar });
     app.get('/empresas/:empresaId', {
@@ -18,12 +19,12 @@ export function rutasEmpresas(controlador: EmpresasControlador): FastifyPluginAs
     });
     app.post('/empresas', {
       schema: { tags: etiquetas, body: esquemaEmpresa },
-      preHandler: gestionar,
+      preHandler: crear,
       handler: controlador.registrar,
     });
     app.put('/empresas/:empresaId', {
       schema: { tags: etiquetas, params: esquemaParamsEmpresa, body: esquemaEmpresa },
-      preHandler: gestionar,
+      preHandler: editar,
       handler: controlador.actualizar,
     });
   };

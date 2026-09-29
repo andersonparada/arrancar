@@ -46,10 +46,13 @@ describe('definición de un recurso', () => {
 
     expect(definicion.permisos).toEqual({
       ver: 'ganado.animales.ver',
-      gestionar: 'ganado.animales.gestionar',
+      crear: 'ganado.animales.crear',
+      editar: 'ganado.animales.editar',
+      eliminar: 'ganado.animales.eliminar',
       importar: 'ganado.animales.importar',
       exportar: 'ganado.animales.exportar',
     });
+    expect(definirRecurso({ ...animal, baja: 'inactivar' }).permisos).not.toHaveProperty('eliminar');
     expect(definicion.textos).toEqual({ singular: 'animal', plural: 'animales' });
     expect(definicion.mostrar).toBe('arete');
     expect(definicion.baja).toBe('eliminar');

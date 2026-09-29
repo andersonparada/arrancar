@@ -47,11 +47,6 @@ export class RegistroModulos {
     return this.permisosDe(clavesModulos).filter((permiso) => permiso.soloSuperacceso);
   }
 
-  /** De los permisos de esos módulos, los que solo reciben los roles con acceso total. */
-  permisosDeAccesoTotal(clavesModulos: Iterable<string>): DefinicionPermiso[] {
-    return this.permisosDe(clavesModulos).filter((permiso) => permiso.soloAccesoTotal);
-  }
-
   /**
    * Recursos con alcance de los módulos activos que el usuario ve completos:
    * todos si tiene acceso total, o aquellos cuyo permiso "ver todos" posee.

@@ -24,7 +24,7 @@ const { cambio } = contrasena;
 <template>
   <div>
     <EncabezadoPagina :titulo="VENTANAS_CORE.usuarios.titulo" :descripcion="VENTANAS_CORE.usuarios.descripcion">
-      <BotonBase v-permiso="'usuarios.gestionar'" :icono="UserPlus" @click="ventana.abrir()">Nuevo usuario</BotonBase>
+      <BotonBase v-permiso="'usuarios.crear'" :icono="UserPlus" @click="ventana.abrir()">Nuevo usuario</BotonBase>
     </EncabezadoPagina>
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>

@@ -27,7 +27,7 @@ const { anulacion, eliminacion } = usarBajasDeTransferencia(cargar);
 <template>
   <div>
     <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion">
-      <BotonBase v-permiso="'bancos.transferencias.gestionar'" :icono="ArrowLeftRight" @click="nueva()">
+      <BotonBase v-permiso="'bancos.transferencias.crear'" :icono="ArrowLeftRight" @click="nueva()">
         Nueva transferencia
       </BotonBase>
     </EncabezadoPagina>

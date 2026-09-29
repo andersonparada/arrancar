@@ -16,7 +16,7 @@ const emit = defineEmits<{ clasificar: [] }>();
 
 <template>
   <div
-    v-permiso="'bancos.notas.gestionar'"
+    v-permiso="'bancos.notas.editar'"
     class="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-tierra-200 bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:px-5 dark:border-tierra-700 dark:bg-tierra-900/95"
   >
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end">

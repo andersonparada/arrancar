@@ -67,7 +67,9 @@ export function valoresDelRecurso(definicion: DefinicionDeRecurso, nombreModulo:
     campoMostrar: definicion.mostrar,
     etiquetaMostrar: mostrar.etiqueta.toLowerCase(),
     permisoVer: definicion.permisos.ver,
-    permisoGestionar: definicion.permisos.gestionar,
+    permisoCrear: definicion.permisos.crear,
+    permisoEditar: definicion.permisos.editar,
+    ...(definicion.permisos.eliminar ? { permisoEliminar: definicion.permisos.eliminar } : {}),
     // Sin permiso de importar o exportar (ver `EXCEL_POR_SECCION`), el hueco no existe: si una
     // plantilla lo usara fuera de su fragmento de Excel, `rellenar` avisa con `HuecoSinValor`.
     ...(definicion.permisos.importar ? { permisoImportar: definicion.permisos.importar } : {}),

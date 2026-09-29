@@ -93,7 +93,7 @@ describe('cuentas bancarias por API', () => {
     expect(revision.cuerpo).toMatchObject({ guardado: false, filas: expect.any(Number) });
   });
 
-  it('para registrar hace falta el permiso de gestionar', async () => {
+  it('para registrar hace falta el permiso de crear', async () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {
       nombres: 'Solo',
       apellidos: 'Lectura',

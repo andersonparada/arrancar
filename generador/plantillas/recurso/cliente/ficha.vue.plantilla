@@ -17,7 +17,7 @@ const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: '{{rutaNombr
 <template>
   <div v-if="registro" class="space-y-4">
     <EncabezadoPagina :titulo="String(registro.{{campoMostrar}})" descripcion="{{Singular}}" :volver="volver">
-{{insigniaEnFicha}}      <BotonBase v-permiso="'{{permisoGestionar}}'" variante="secundario" :icono="Pencil" @click="editar">
+{{insigniaEnFicha}}      <BotonBase v-permiso="'{{permisoEditar}}'" variante="secundario" :icono="Pencil" @click="editar">
         Editar
       </BotonBase>
 {{botonEliminarEnFicha}}    </EncabezadoPagina>

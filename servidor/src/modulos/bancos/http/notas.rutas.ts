@@ -20,18 +20,19 @@ function rutasDeLectura(app: Aplicacion, controlador: NotasControlador) {
   app.get(`${RUTA}/:movimientoId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
 }
 
-/** Registrar, corregir y reclasificar (solo el concepto) con `gestionar`; anular y eliminar tienen su propio permiso. */
+/** Registrar, corregir y reclasificar (solo el concepto) con `crear` y `editar`; anular y eliminar tienen su propio permiso. */
 function rutasDeEscritura(app: Aplicacion, controlador: NotasControlador) {
-  const gestionar = proteger({ permiso: 'bancos.notas.gestionar' });
-  app.post(RUTA, { schema: { tags: etiquetas, body: esquemaNota }, preHandler: gestionar, handler: controlador.crear });
+  const crear = proteger({ permiso: 'bancos.notas.crear' });
+  const editar = proteger({ permiso: 'bancos.notas.editar' });
+  app.post(RUTA, { schema: { tags: etiquetas, body: esquemaNota }, preHandler: crear, handler: controlador.crear });
   app.post(`${RUTA}/reclasificar`, {
     schema: { tags: etiquetas, body: esquemaReclasificacion },
-    preHandler: gestionar,
+    preHandler: editar,
     handler: controlador.reclasificar,
   });
   app.put(`${RUTA}/:movimientoId`, {
     schema: { ...conId, body: esquemaNota },
-    preHandler: gestionar,
+    preHandler: editar,
     handler: controlador.actualizar,
   });
   app.post(`${RUTA}/:movimientoId/anular`, {

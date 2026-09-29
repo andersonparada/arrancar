@@ -35,7 +35,7 @@ export const moduloBancos: DefinicionModuloCliente = {
       path: '/bancos/cuentas-bancarias/nuevo',
       name: 'bancos.cuentas-bancarias.nuevo',
       component: () => import('./paginas/FormularioDeCuentaBancaria.vue'),
-      meta: { permiso: 'bancos.cuentas-bancarias.gestionar', titulo: VENTANAS_BANCOS.cuentasBancarias.nuevo },
+      meta: { permiso: 'bancos.cuentas-bancarias.crear', titulo: VENTANAS_BANCOS.cuentasBancarias.nuevo },
     },
     {
       path: '/bancos/cuentas-bancarias/:cuentaBancariaId',
@@ -49,7 +49,7 @@ export const moduloBancos: DefinicionModuloCliente = {
       name: 'bancos.cuentas-bancarias.editar',
       component: () => import('./paginas/FormularioDeCuentaBancaria.vue'),
       props: true,
-      meta: { permiso: 'bancos.cuentas-bancarias.gestionar', titulo: VENTANAS_BANCOS.cuentasBancarias.editar },
+      meta: { permiso: 'bancos.cuentas-bancarias.editar', titulo: VENTANAS_BANCOS.cuentasBancarias.editar },
     },
     {
       path: '/bancos/notas',

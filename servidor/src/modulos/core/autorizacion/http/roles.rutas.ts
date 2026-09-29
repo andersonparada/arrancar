@@ -7,18 +7,20 @@ export function rutasRoles(roles: RolesControlador): FastifyPluginAsyncZod {
   return async (app) => {
     const tags = ['Roles'];
     const ver = proteger({ permiso: 'roles.ver' });
-    const gestionar = proteger({ permiso: 'roles.gestionar' });
+    const crear = proteger({ permiso: 'roles.crear' });
+    const editar = proteger({ permiso: 'roles.editar' });
+    const eliminar = proteger({ permiso: 'roles.eliminar' });
     app.get('/roles', { schema: { tags }, preHandler: ver, handler: roles.listar });
     app.get('/permisos', { schema: { tags }, preHandler: ver, handler: roles.listarPermisos });
-    app.post('/roles', { schema: { tags, body: esquemaRol }, preHandler: gestionar, handler: roles.crear });
+    app.post('/roles', { schema: { tags, body: esquemaRol }, preHandler: crear, handler: roles.crear });
     app.put('/roles/:rolId', {
       schema: { tags, params: esquemaParamsRol, body: esquemaRol },
-      preHandler: gestionar,
+      preHandler: editar,
       handler: roles.actualizar,
     });
     app.delete('/roles/:rolId', {
       schema: { tags, params: esquemaParamsRol },
-      preHandler: gestionar,
+      preHandler: eliminar,
       handler: roles.eliminar,
     });
   };

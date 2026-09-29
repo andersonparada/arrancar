@@ -40,7 +40,7 @@ export class ResolutorDeAcceso {
     const { modulos } = this.dependencias;
     const modulosActivos = modulos.activos(await this.dependencias.empresas.modulosContratados(empresa.cuentaId));
     const disponibles = modulos.permisosDe(modulosActivos);
-    const permisosDelRol = rol.accesoTotal ? disponibles : this.permisosAsignados(rol, disponibles, modulosActivos);
+    const permisosDelRol = rol.accesoTotal ? disponibles : this.permisosAsignados(rol, disponibles);
     const permisos = rol.soloSuperacceso
       ? permisosDelRol
       : this.sinPermisosDeSuperacceso(permisosDelRol, modulosActivos);
@@ -56,14 +56,9 @@ export class ResolutorDeAcceso {
     return { nombre: acceso.rolNombre, accesoTotal: acceso.accesoTotal, permisos, soloSuperacceso: false };
   }
 
-  /** Los permisos que un rol común tiene asignados y siguen disponibles; sin los que exigen acceso total. */
-  private permisosAsignados(
-    rol: Rol,
-    disponibles: ReadonlySet<string>,
-    modulosActivos: ReadonlySet<string>,
-  ): Set<string> {
-    const soloAccesoTotal = this.dependencias.modulos.permisosDeAccesoTotal(modulosActivos);
-    return new Set(rol.permisos.filter((permiso) => disponibles.has(permiso) && !soloAccesoTotal.has(permiso)));
+  /** Los permisos que un rol común tiene asignados y siguen disponibles. */
+  private permisosAsignados(rol: Rol, disponibles: ReadonlySet<string>): Set<string> {
+    return new Set(rol.permisos.filter((permiso) => disponibles.has(permiso)));
   }
 
   /**

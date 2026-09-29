@@ -43,22 +43,22 @@ const modulos = readdirSync('servidor/src/modulos', { withFileTypes: true })
   .map((entrada) => entrada.name);
 
 /**
- * Módulos base: otros módulos pueden leer sus tablas (y poner llaves foráneas hacia ellas)
- * solo desde su `infraestructura`, importando únicamente sus `*.tablas.js`.
+ * Módulos esenciales (siempre activos): no dependen de módulos de negocio, así que no
+ * importan tablas de otros. Los demás sí pueden (ver `excepcionDeTablas`).
  */
-const MODULOS_BASE = ['empresas'];
+const MODULOS_ESENCIALES = ['empresas'];
 
 /** Cualquier importación de `otro` salvo `infraestructura/persistencia/<archivo>.tablas.js`. */
-const SOLO_TABLAS_DEL_MODULO_BASE = (otro) => `(^|/)${otro}(/(?!infraestructura/persistencia/[^/]+\\.tablas\\.js$)|$)`;
+const SOLO_TABLAS_DEL_MODULO = (otro) => `(^|/)${otro}(/(?!infraestructura/persistencia/[^/]+\\.tablas\\.js$)|$)`;
 
-function prohibirOtrosModulos(modulo, { permitirTablasBase = false } = {}) {
+function prohibirOtrosModulos(modulo, { permitirTablas = false } = {}) {
   return modulos
     .filter((otro) => otro !== modulo && otro !== 'core')
     .map((otro) =>
-      permitirTablasBase && MODULOS_BASE.includes(otro)
+      permitirTablas
         ? {
-            regex: SOLO_TABLAS_DEL_MODULO_BASE(otro),
-            message: `De ${otro} (módulo base) solo se importan sus *.tablas.js, y solo desde infraestructura.`,
+            regex: SOLO_TABLAS_DEL_MODULO(otro),
+            message: `De ${otro} solo se importan sus *.tablas.js (llaves foráneas entre esquemas), y solo desde infraestructura.`,
           }
         : {
             group: [`**/modulos/${otro}/**`, `../${otro}/**`, `../../${otro}/**`, `../../../${otro}/**`],
@@ -107,15 +107,17 @@ const COMPONENTES_SIN_SERVICIOS = {
 };
 
 /**
- * Excepción del módulo base: la `infraestructura` de un módulo de negocio puede importar las
- * tablas de `empresas`. Va después de las reglas por capa (en flat config gana la última).
+ * Excepción de las tablas: la `infraestructura` de un módulo de negocio puede importar los
+ * `*.tablas.js` de cualquier otro módulo (leerlas y ponerles llaves foráneas; una prueba revisa
+ * que solo apunten a `core` o a su `dependeDe`). Va después de las reglas por capa (en flat
+ * config gana la última).
  */
-function excepcionDelModuloBase(modulo) {
-  if (modulo === 'core' || MODULOS_BASE.includes(modulo)) return [];
+function excepcionDeTablas(modulo) {
+  if (modulo === 'core' || MODULOS_ESENCIALES.includes(modulo)) return [];
   return [
     restringirImportaciones(
       [`servidor/src/modulos/${modulo}/infraestructura/**/*.ts`],
-      prohibirOtrosModulos(modulo, { permitirTablasBase: true }),
+      prohibirOtrosModulos(modulo, { permitirTablas: true }),
     ),
   ];
 }
@@ -133,7 +135,7 @@ function reglasDeDependencias() {
         [...prohibirOtrosModulos(modulo), ...prohibirCapa(capa)],
       ),
     ),
-    ...excepcionDelModuloBase(modulo),
+    ...excepcionDeTablas(modulo),
   ]);
 }
 

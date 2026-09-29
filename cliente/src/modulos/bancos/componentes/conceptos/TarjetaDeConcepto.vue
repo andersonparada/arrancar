@@ -20,7 +20,8 @@ const acciones = computed(() => accionesDeConcepto(props.registro));
   <TarjetaDeRegistro
     :titulo="registro.nombre"
     :detalles="detallesDeConcepto(registro)"
-    permiso="bancos.conceptos.gestionar"
+    permiso="bancos.conceptos.editar"
+    permiso-eliminar="bancos.conceptos.eliminar"
     :inactivo="!registro.activo"
     :insignia="esDeSistema(registro) ? 'Del sistema' : undefined"
     :sin-editar="!acciones.editar"
@@ -29,7 +30,7 @@ const acciones = computed(() => accionesDeConcepto(props.registro));
     @eliminar="emit('eliminar')"
   >
     <template v-if="acciones.cambiarEstado" #acciones-extra>
-      <BotonBase v-permiso="'bancos.conceptos.gestionar'" variante="fantasma" pequeno @click="emit('cambiar-estado')">
+      <BotonBase v-permiso="'bancos.conceptos.editar'" variante="fantasma" pequeno @click="emit('cambiar-estado')">
         {{ registro.activo ? 'Inactivar' : 'Reactivar' }}
       </BotonBase>
     </template>

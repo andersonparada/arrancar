@@ -1,5 +1,10 @@
 # Módulo `bancos`
 
+> **Nota (2026-09-29, PLAN §3.5):** los permisos `<recurso>.gestionar` que se nombran más
+> abajo (y en los pasos ya ejecutados) hoy son `.crear`, `.editar` y, si eliminaba,
+> `.eliminar` (`notas` y `transferencias` ya tenían `.eliminar` propio); ver la migración
+> `0023_permisos_por_accion`.
+
 Estado: **B0 a B5 hechos** (2026-09-28). Queda para después: la foto del
 comprobante, elegir el beneficiario de Clientes, el alcance por cuenta, la
 moneda extranjera y la impresión de cheques y de vouchers.

@@ -36,6 +36,13 @@
       "when": 1790558609324,
       "tag": "0004_auditoria_y_autoria",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790701981185,
+      "tag": "0005_permisos_por_accion",
+      "breakpoints": true
     }
   ]
 }

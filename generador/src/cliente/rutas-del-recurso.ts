@@ -6,7 +6,7 @@ interface Ruta {
   /** Lo que se agrega al nombre de la lista: `.nuevo`, `.ficha`. */
   nombre: string;
   pagina: string;
-  permiso: 'permisoVer' | 'permisoGestionar';
+  permiso: 'permisoVer' | 'permisoCrear' | 'permisoEditar';
   /** La clave de la ventana en `textos.ts` que da el título. */
   titulo: 'titulo' | 'nuevo' | 'editar';
 }
@@ -22,7 +22,7 @@ const COMPLETA: Ruta[] = [
     sufijo: '/nuevo',
     nombre: '.nuevo',
     pagina: 'FormularioDe{{Entidad}}',
-    permiso: 'permisoGestionar',
+    permiso: 'permisoCrear',
     titulo: 'nuevo',
   },
   {
@@ -36,7 +36,7 @@ const COMPLETA: Ruta[] = [
     sufijo: '/:{{entidad}}Id/editar',
     nombre: '.editar',
     pagina: 'FormularioDe{{Entidad}}',
-    permiso: 'permisoGestionar',
+    permiso: 'permisoEditar',
     titulo: 'editar',
   },
 ];
