@@ -106,6 +106,20 @@
       "when": 1790700200000,
       "tag": "0014_h9_numerar_datos_existentes",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790700300000,
+      "tag": "0015_conceptos",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790700400000,
+      "tag": "0016_h3_sembrar_conceptos",
+      "breakpoints": true
     }
   ]
 }

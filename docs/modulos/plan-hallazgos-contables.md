@@ -659,7 +659,7 @@ Pasos (un commit cada uno, con sus pruebas):
 4. **H4** Único por empresa + banco + número normalizado.
 5. **H9a** `core.correlativos` y puerto `Correlativos`. **Hecho (2026-09-29).**
 6. **H9b** Número en notas, inversos y transferencias; migración de datos; reporte de correlativos. **Servidor hecho (2026-09-29); falta el cliente.** Ver `bancos.md`, sección H9.
-7. **H3a** `bancos.conceptos` (servidor, cliente, Excel) y semilla.
+7. **H3a** `bancos.conceptos` (servidor, cliente, Excel) y semilla. **Servidor hecho (2026-09-29); falta el cliente.** Ver `bancos.md`, sección H3a.
 8. **H3b** `concepto_id` obligatorio en notas y cheques; migración de datos.
 9. **H3c** Reportes Flujo de efectivo y Movimientos por concepto.
 10. **H8** Interés bruto e ISR retenido.

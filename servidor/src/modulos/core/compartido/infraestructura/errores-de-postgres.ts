@@ -10,6 +10,7 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   usuarios_usuario_unico: 'Ese nombre de usuario ya está en uso.',
   roles_nombre_por_cuenta: 'Ya existe un rol con ese nombre.',
   cuentas_bancarias_numero_por_banco_unico: 'Ya existe una cuenta con ese número en ese banco.',
+  conceptos_nombre_unico: 'Ya existe un concepto con ese nombre.',
 };
 
 /** La base de datos rechazó un valor repetido en una columna única. */

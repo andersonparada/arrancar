@@ -1195,3 +1195,48 @@ Dominio (`numeracion-de-movimientos.prueba.ts`), casos de uso (`numeracion-de-no
 (`correlativos-postgres.prueba.ts`: consecutivos, por empresa, por clave, rollback sin hueco,
 concurrencia y reinicio anual) y API (`bancos-correlativos`, `bancos-numeracion-anual` y
 `bancos-migracion-de-numeracion`, que corre el SQL de la migración sobre datos ya creados).
+
+## H3a Catálogo de conceptos bancarios (servidor hecho el 2026-09-29)
+
+Ver el diseño en `plan-hallazgos-contables.md` (H3). Decisión del usuario: el catálogo
+`bancos.conceptos` lo **edita el usuario**; la semilla es solo un punto de partida. Es una
+pantalla de **Administración** (importa y exporta Excel). Falta el cliente y H3b (`concepto_id`
+en notas y cheques).
+
+- **Tabla `bancos.conceptos`** (migración `0015_conceptos`, por empresa con RLS): `nombre` (único
+  por empresa), `aplica_a` (`credito`, `debito`, `ambos`), `actividad_de_flujo` (`operacion`,
+  `inversion`, `financiamiento`, `ninguna`), `grupo_de_flujo` (texto opcional), `es_cargo_bancario`,
+  `pide_datos_de_intereses` (H8), `admite_factura` (H7; **apagada** por omisión y en toda la semilla),
+  `clave_de_sistema` (nula, única por empresa cuando existe) y `activo`. Las banderas de H7 y H8 ya
+  están para no migrar dos veces.
+- **Reglas del dominio** (`dominio/concepto.ts`): nombre obligatorio y recortado; un grupo en blanco se
+  guarda como nulo; `pide_datos_de_intereses` no se acepta con `aplica_a = debito` (los intereses de
+  H8 se acreditan en una nota de crédito). Un concepto con `clave_de_sistema` **no se edita, inactiva
+  ni elimina** (`ConceptoDeSistema`, 422).
+- **Casos de uso**: listar, obtener, crear, actualizar (con él se inactiva y se reactiva; la
+  inactivación queda en `core.auditoria` como `bancos.conceptos:inactivar`) y **eliminar** (motivo
+  obligatorio, auditoría `eliminar`; solo si nadie lo usa: `ConsultasConceptos.estaEnUso`, hoy siempre
+  falso porque ninguna nota ni cheque lleva concepto, y H3b lo amplía; si está en uso, `ConceptoEnUso`, 422).
+- **Semilla** (`dominio/conceptos-iniciales.ts`): 5 conceptos de sistema (`transferencia`,
+  `pago_a_proveedor`, `saldo_inicial`, `sin_clasificar`, `cheque_caduco`) y 11 sugeridos (depósito de
+  ventas, comisiones bancarias, intereses ganados, cheque rechazado, planilla, préstamo recibido, pago
+  de préstamo, compra de activo, aporte de socios, retiro de socios, impuestos). Se aplica:
+  1. **Empresas existentes**: la migración `0016_h3_sembrar_conceptos` la crea en cada empresa cuya
+     cuenta contrató Bancos (el SQL repite la lista; si cambia una, cambiar la otra).
+  2. **Empresas nuevas o que contratan Bancos después**: `SembrarConceptos` corre dentro de la
+     unidad de trabajo de **listar** y de **crear** cuando la empresa no tiene ningún concepto (una
+     vez sembrado, nunca más). No se usó el evento `empresas.registrada` porque el alta de cuenta y la
+     activación de módulos no publican eventos. H3b debe llamar a `SembrarConceptos` antes de buscar
+     un concepto de sistema por su clave.
+- La migración `0016` también da `bancos.conceptos.ver|gestionar|importar|exportar` a los roles que ya
+  tenían el permiso equivalente de `bancos.bancos.*`.
+- **Endpoints** (`/api/bancos/conceptos`): `GET` (lista), `GET /:conceptoId`, `POST`, `PUT /:conceptoId`,
+  `DELETE /:conceptoId` (cuerpo `{ motivo }`, 204), `GET /exportar`, `GET /plantilla` y
+  `POST /importar?ensayo=true|false`. Permisos: `ver` (leer), `gestionar` (crear, actualizar, eliminar),
+  `importar` (plantilla e importación) y `exportar`.
+- **DTO** `ConceptoDto`: `id`, `nombre`, `aplicaA`, `actividadDeFlujo`, `grupoDeFlujo`, `esCargoBancario`,
+  `pideDatosDeIntereses`, `admiteFactura`, `activo` y `claveDeSistema` (solo lectura; nulo en los del
+  usuario). El cuerpo de `POST`/`PUT` es el mismo sin `id` ni `claveDeSistema`. El Excel lleva las mismas
+  columnas sin `claveDeSistema`.
+- **Pruebas**: dominio (`conceptos-iniciales.prueba.ts`), casos de uso (`casos-uso-de-conceptos.prueba.ts`) y
+  API (`bancos-conceptos.api.prueba.ts`: semilla única, duplicados, sistema, eliminar, permisos, Excel).
