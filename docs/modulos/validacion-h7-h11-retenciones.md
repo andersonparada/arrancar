@@ -321,3 +321,15 @@ Fuentes: [Decreto 20-2006](http://ww2.oj.gob.gt/es/QueEsOJ/EstructuraOJ/Unidades
 [AG 213-2013, art. 35](http://leydeguatemala.com/acuerdo-gubernativo-numero-213-2013/base-minima-para-practicar-retencion/12328/),
 [Decreto 10-2012](https://www.congreso.gob.gt/assets/uploads/info_legislativo/decretos/2012/010-2012.pdf),
 [Retenciones Web IVA](https://portal.sat.gob.gt/portal/sistemas-web/retencioneswebiva/).
+
+### Decisiones del usuario sobre las cuatro dudas (2026-09-29)
+
+- **Casilla «Se muestra en reportes SAT»:** se puede desmarcar también en una factura
+  FEL con IVA, y entonces **no** se calculan retenciones (como estaba en el plan).
+  **Riesgo aceptado por el usuario:** según el contador, la SAT ve esa FEL y la
+  obligación de retener no depende de la casilla.
+- **IDP en la base del ISR:** **configurable por empresa**, incluido por omisión.
+- Se aplican los demás ajustes del contador: mínimo del IVA de agentes `>=` Q2,500.00,
+  mínimo del ISR `>=` Q2,500.00 sin IVA, lo exento dentro de la base del ISR, retención
+  de IVA también en facturas fuera de plazo o no vinculadas, y el agente `otro` definido
+  como «calificado por la SAT (Decreto 20-2006, art. 6)».
