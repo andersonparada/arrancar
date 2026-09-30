@@ -29,7 +29,10 @@ export function pdfDePrueba({ catalogo = '', pagina = '', objetos = [], paginas 
   return Buffer.from(partes.join('\n'), 'latin1');
 }
 
-/** Un objeto de PDF (sin flujo) para pasar en `objetos`. */
+/**
+ * Un objeto de PDF (sin flujo) para pasar en `objetos`. Numérelo seguido de las páginas (4, 5… con una
+ * página): al reconstruir la tabla, qpdf 12 descarta los objetos con número «imposiblemente grande».
+ */
 export function objetoDePdf(numero: number, contenido: string): string {
   return `${numero} 0 obj\n${contenido}\nendobj`;
 }

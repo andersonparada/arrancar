@@ -50,9 +50,9 @@ describe('PDF con contenido activo (qpdf real)', () => {
   });
 
   cuando('rechaza un OpenAction que apunta por referencia a una acción con JavaScript', async () => {
-    const accion = objetoDePdf(100, '<< /S /JavaScript /JS (x) >>');
+    const accion = objetoDePdf(4, '<< /S /JavaScript /JS (x) >>');
 
-    expect(await hallazgosDe(pdfDePrueba({ catalogo: '/OpenAction 100 0 R', objetos: [accion] }))).toContain(
+    expect(await hallazgosDe(pdfDePrueba({ catalogo: '/OpenAction 4 0 R', objetos: [accion] }))).toContain(
       '/OpenAction',
     );
   });
@@ -71,9 +71,9 @@ describe('PDF con contenido activo (qpdf real)', () => {
   });
 
   cuando('rechaza un archivo adjunto (/EmbeddedFiles)', async () => {
-    const especificacion = objetoDePdf(100, '<< /Type /Filespec /F (a.txt) /EF << /F 101 0 R >> >>');
-    const adjunto = '101 0 obj\n<< /Type /EmbeddedFile /Length 3 >>\nstream\nabc\nendstream\nendobj';
-    const catalogo = '/Names << /EmbeddedFiles << /Names [(a.txt) 100 0 R] >> >>';
+    const especificacion = objetoDePdf(4, '<< /Type /Filespec /F (a.txt) /EF << /F 5 0 R >> >>');
+    const adjunto = '5 0 obj\n<< /Type /EmbeddedFile /Length 3 >>\nstream\nabc\nendstream\nendobj';
+    const catalogo = '/Names << /EmbeddedFiles << /Names [(a.txt) 4 0 R] >> >>';
 
     const hallazgos = await hallazgosDe(pdfDePrueba({ catalogo, objetos: [especificacion, adjunto] }));
 
