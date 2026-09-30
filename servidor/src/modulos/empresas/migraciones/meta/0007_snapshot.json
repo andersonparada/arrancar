@@ -76,46 +76,30 @@
         "accesos_a_localidades_empresa_id_empresas_id_fk": {
           "name": "accesos_a_localidades_empresa_id_empresas_id_fk",
           "tableFrom": "accesos_a_localidades",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "accesos_a_localidades_localidad_fk": {
           "name": "accesos_a_localidades_localidad_fk",
           "tableFrom": "accesos_a_localidades",
-          "columnsFrom": [
-            "localidad_id",
-            "empresa_id"
-          ],
+          "columnsFrom": ["localidad_id", "empresa_id"],
           "tableTo": "localidades",
           "schemaTo": "empresas",
-          "columnsTo": [
-            "id",
-            "empresa_id"
-          ],
+          "columnsTo": ["id", "empresa_id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "accesos_a_localidades_miembro_fk": {
           "name": "accesos_a_localidades_miembro_fk",
           "tableFrom": "accesos_a_localidades",
-          "columnsFrom": [
-            "empresa_id",
-            "usuario_id"
-          ],
+          "columnsFrom": ["empresa_id", "usuario_id"],
           "tableTo": "empresa_usuarios",
           "schemaTo": "core",
-          "columnsTo": [
-            "empresa_id",
-            "usuario_id"
-          ],
+          "columnsTo": ["empresa_id", "usuario_id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -123,11 +107,7 @@
       "compositePrimaryKeys": {
         "accesos_a_localidades_empresa_id_usuario_id_localidad_id_pk": {
           "name": "accesos_a_localidades_empresa_id_usuario_id_localidad_id_pk",
-          "columns": [
-            "empresa_id",
-            "usuario_id",
-            "localidad_id"
-          ]
+          "columns": ["empresa_id", "usuario_id", "localidad_id"]
         }
       },
       "uniqueConstraints": {},
@@ -136,9 +116,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         },
@@ -146,18 +124,14 @@
           "name": "asignar_para_asignar",
           "as": "RESTRICTIVE",
           "for": "INSERT",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "withCheck": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ','))"
         },
         "cambiar_para_asignar": {
           "name": "cambiar_para_asignar",
           "as": "RESTRICTIVE",
           "for": "UPDATE",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ','))",
           "withCheck": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ','))"
         },
@@ -165,9 +139,7 @@
           "name": "quitar_para_asignar",
           "as": "RESTRICTIVE",
           "for": "DELETE",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ','))"
         }
       },
@@ -236,14 +208,10 @@
         "cargas_iniciales_empresa_id_empresas_id_fk": {
           "name": "cargas_iniciales_empresa_id_empresas_id_fk",
           "tableFrom": "cargas_iniciales",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -255,9 +223,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -326,14 +292,10 @@
         "datos_fiscales_empresa_id_empresas_id_fk": {
           "name": "datos_fiscales_empresa_id_empresas_id_fk",
           "tableFrom": "datos_fiscales",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -345,9 +307,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -508,46 +468,30 @@
         "localidades_empresa_id_empresas_id_fk": {
           "name": "localidades_empresa_id_empresas_id_fk",
           "tableFrom": "localidades",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "localidades_tipo_fk": {
           "name": "localidades_tipo_fk",
           "tableFrom": "localidades",
-          "columnsFrom": [
-            "tipo_id",
-            "empresa_id"
-          ],
+          "columnsFrom": ["tipo_id", "empresa_id"],
           "tableTo": "tipos_de_localidad",
           "schemaTo": "empresas",
-          "columnsTo": [
-            "id",
-            "empresa_id"
-          ],
+          "columnsTo": ["id", "empresa_id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "localidades_municipio_fk": {
           "name": "localidades_municipio_fk",
           "tableFrom": "localidades",
-          "columnsFrom": [
-            "departamento_codigo",
-            "municipio_codigo"
-          ],
+          "columnsFrom": ["departamento_codigo", "municipio_codigo"],
           "tableTo": "municipios",
           "schemaTo": "core",
-          "columnsTo": [
-            "departamento_codigo",
-            "codigo"
-          ],
+          "columnsTo": ["departamento_codigo", "codigo"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -556,26 +500,17 @@
       "uniqueConstraints": {
         "localidades_codigo_unico": {
           "name": "localidades_codigo_unico",
-          "columns": [
-            "empresa_id",
-            "codigo"
-          ],
+          "columns": ["empresa_id", "codigo"],
           "nullsNotDistinct": false
         },
         "localidades_nombre_unico": {
           "name": "localidades_nombre_unico",
-          "columns": [
-            "empresa_id",
-            "nombre"
-          ],
+          "columns": ["empresa_id", "nombre"],
           "nullsNotDistinct": false
         },
         "localidades_id_empresa_unico": {
           "name": "localidades_id_empresa_unico",
-          "columns": [
-            "id",
-            "empresa_id"
-          ],
+          "columns": ["id", "empresa_id"],
           "nullsNotDistinct": false
         }
       },
@@ -584,9 +519,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         },
@@ -594,18 +527,14 @@
           "name": "alcance_ver",
           "as": "RESTRICTIVE",
           "for": "SELECT",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_para_asignar', true)), ',')) or 'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or id in (\n      select a.localidad_id from empresas.accesos_a_localidades a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
         },
         "alcance_cambiar": {
           "name": "alcance_cambiar",
           "as": "RESTRICTIVE",
           "for": "UPDATE",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or id in (\n      select a.localidad_id from empresas.accesos_a_localidades a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )",
           "withCheck": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or id in (\n      select a.localidad_id from empresas.accesos_a_localidades a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
         },
@@ -613,9 +542,7 @@
           "name": "alcance_eliminar",
           "as": "RESTRICTIVE",
           "for": "DELETE",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "'empresas.localidades' = any (string_to_array((select current_setting('app.alcance_total', true)), ','))\n    or id in (\n      select a.localidad_id from empresas.accesos_a_localidades a\n      where a.empresa_id = (select nullif(current_setting('app.empresa_id', true), '')::uuid)\n        and a.usuario_id = (select nullif(current_setting('app.usuario_id', true), '')::uuid)\n    )"
         }
       },
@@ -715,14 +642,10 @@
         "tipos_de_localidad_empresa_id_empresas_id_fk": {
           "name": "tipos_de_localidad_empresa_id_empresas_id_fk",
           "tableFrom": "tipos_de_localidad",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -731,18 +654,12 @@
       "uniqueConstraints": {
         "tipos_de_localidad_nombre_unico": {
           "name": "tipos_de_localidad_nombre_unico",
-          "columns": [
-            "empresa_id",
-            "nombre"
-          ],
+          "columns": ["empresa_id", "nombre"],
           "nullsNotDistinct": false
         },
         "tipos_de_localidad_id_empresa_unico": {
           "name": "tipos_de_localidad_id_empresa_unico",
-          "columns": [
-            "id",
-            "empresa_id"
-          ],
+          "columns": ["id", "empresa_id"],
           "nullsNotDistinct": false
         }
       },
@@ -751,9 +668,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }

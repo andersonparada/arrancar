@@ -1,10 +1,11 @@
 import { DatabaseError } from 'pg';
 import { RecursoDuplicado, RecursoEnUso, RecursoNoEncontrado } from '../aplicacion/errores.js';
-import type { ErrorEsperado } from '../dominio/errores.js';
+import { ReglaDeNegocioInfringida, type ErrorEsperado } from '../dominio/errores.js';
 
 const VIOLACION_DE_UNICIDAD = '23505';
 const VIOLACION_DE_LLAVE_FORANEA = '23503';
 const VIOLACION_DE_POLITICA_RLS = '42501';
+const VIOLACION_DE_EXCLUSION = '23P01';
 const PROFUNDIDAD_MAXIMA_DE_CAUSAS = 5;
 
 const PEDIR_ACCESO_A_LOCALIDADES = 'Si no la ve, pida acceso a quien administra las localidades.';
@@ -22,6 +23,16 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   localidades_establecimiento_sat_unico: `Ya existe una localidad con ese código de establecimiento SAT. ${PEDIR_ACCESO_A_LOCALIDADES}`,
 };
 
+/** Restricciones de exclusión (rangos que no pueden traslaparse) y lo que se le dice al usuario. */
+const MENSAJES_DE_EXCLUSION: Readonly<Record<string, string>> = {
+  vigencias_de_combustible_sin_traslape: 'Esa vigencia se traslapa con otra del mismo combustible.',
+};
+
+/** La base de datos rechazó un registro cuyo rango se traslapa con el de otro. */
+class RangoTraslapado extends ReglaDeNegocioInfringida {
+  readonly codigo = 'traslape';
+}
+
 /** La base de datos rechazó un valor repetido en una columna única. */
 class ValorUnicoRepetido extends RecursoDuplicado {
   override readonly codigo = 'duplicado';
@@ -37,20 +48,24 @@ function buscarErrorDePostgres(error: unknown): DatabaseError | null {
   return null;
 }
 
+/** Cómo se traduce cada código de error de PostgreSQL, según la restricción que lo causó. */
+const INTERPRETES_POR_CODIGO: Readonly<Record<string, (restriccion: string) => ErrorEsperado>> = {
+  [VIOLACION_DE_UNICIDAD]: (restriccion) =>
+    new ValorUnicoRepetido(MENSAJES_POR_RESTRICCION[restriccion] ?? 'El registro ya existe.'),
+  [VIOLACION_DE_LLAVE_FORANEA]: () => new RecursoEnUso(),
+  [VIOLACION_DE_EXCLUSION]: (restriccion) =>
+    new RangoTraslapado(MENSAJES_DE_EXCLUSION[restriccion] ?? 'El registro se traslapa con otro.'),
+  [VIOLACION_DE_POLITICA_RLS]: () => new RecursoNoEncontrado('El registro'),
+};
+
 /**
  * Convierte en error esperado lo que la base de datos rechaza por sus
- * restricciones (valores únicos y llaves foráneas) o por las políticas RLS
+ * restricciones (valores únicos, llaves foráneas y rangos traslapados) o por las políticas RLS
  * (fila fuera del alcance: se responde como no encontrada, sin revelar nada); cualquier otro error sigue
  * siendo un fallo inesperado.
  */
 export function interpretarErrorDePostgres(error: unknown): ErrorEsperado | null {
   const errorDePostgres = buscarErrorDePostgres(error);
   if (!errorDePostgres) return null;
-  if (errorDePostgres.code === VIOLACION_DE_UNICIDAD) {
-    const mensaje = MENSAJES_POR_RESTRICCION[errorDePostgres.constraint ?? ''] ?? 'El registro ya existe.';
-    return new ValorUnicoRepetido(mensaje);
-  }
-  if (errorDePostgres.code === VIOLACION_DE_LLAVE_FORANEA) return new RecursoEnUso();
-  if (errorDePostgres.code === VIOLACION_DE_POLITICA_RLS) return new RecursoNoEncontrado('El registro');
-  return null;
+  return INTERPRETES_POR_CODIGO[errorDePostgres.code ?? '']?.(errorDePostgres.constraint ?? '') ?? null;
 }

@@ -9,6 +9,18 @@ export const VENTANAS_LIBRO_DE_COMPRAS = {
     nuevo: 'Nuevo concepto de gasto',
     editar: 'Editar concepto de gasto',
   },
+  combustibles: {
+    titulo: 'Combustibles',
+    descripcion: 'Los combustibles de la empresa.',
+    nuevo: 'Nuevo combustible',
+    editar: 'Editar combustible',
+  },
+  vigenciasDeCombustible: {
+    titulo: 'Vigencias de combustible',
+    descripcion: 'Las vigencias de combustible de la empresa.',
+    nuevo: 'Nueva vigencia de combustible',
+    editar: 'Editar vigencia de combustible',
+  },
   // generador: ventanas
 } as const;
 

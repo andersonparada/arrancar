@@ -22,6 +22,20 @@
       "when": 1790737951429,
       "tag": "0002_l2_conceptos_de_gasto",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790738412480,
+      "tag": "0003_l2_combustibles",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790738413303,
+      "tag": "0004_l2_vigencias_sin_traslape",
+      "breakpoints": true
     }
   ]
 }

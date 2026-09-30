@@ -98,12 +98,8 @@
           "tableFrom": "clientes",
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -112,12 +108,8 @@
           "tableFrom": "clientes",
           "tableTo": "terceros",
           "schemaTo": "terceros",
-          "columnsFrom": [
-            "tercero_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tercero_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -129,9 +121,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
@@ -250,12 +240,8 @@
           "tableFrom": "contactos",
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -264,12 +250,8 @@
           "tableFrom": "contactos",
           "tableTo": "terceros",
           "schemaTo": "terceros",
-          "columnsFrom": [
-            "tercero_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tercero_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -281,9 +263,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
@@ -379,12 +359,8 @@
           "tableFrom": "categorias_proveedor",
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -396,9 +372,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
@@ -515,12 +489,8 @@
           "tableFrom": "proveedores",
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -529,12 +499,8 @@
           "tableFrom": "proveedores",
           "tableTo": "terceros",
           "schemaTo": "terceros",
-          "columnsFrom": [
-            "tercero_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tercero_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -543,12 +509,8 @@
           "tableFrom": "proveedores",
           "tableTo": "categorias_proveedor",
           "schemaTo": "terceros",
-          "columnsFrom": [
-            "categoria_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["categoria_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -558,10 +520,7 @@
         "proveedores_id_cuenta_unico": {
           "name": "proveedores_id_cuenta_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "cuenta_id"
-          ]
+          "columns": ["id", "cuenta_id"]
         }
       },
       "policies": {
@@ -569,9 +528,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
@@ -794,12 +751,8 @@
           "tableFrom": "terceros",
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -808,12 +761,8 @@
           "tableFrom": "terceros",
           "tableTo": "archivos",
           "schemaTo": "core",
-          "columnsFrom": [
-            "foto_archivo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["foto_archivo_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -822,14 +771,8 @@
           "tableFrom": "terceros",
           "tableTo": "municipios",
           "schemaTo": "core",
-          "columnsFrom": [
-            "departamento_codigo",
-            "municipio_codigo"
-          ],
-          "columnsTo": [
-            "departamento_codigo",
-            "codigo"
-          ],
+          "columnsFrom": ["departamento_codigo", "municipio_codigo"],
+          "columnsTo": ["departamento_codigo", "codigo"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -841,9 +784,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }

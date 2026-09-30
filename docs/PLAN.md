@@ -564,3 +564,13 @@ y `demo` / `demo-arrancar`.
   sin menú; la lógica de los valores por omisión y de lo que se propone según el régimen está en
   `composables/datos-fiscales-de-*.ts` con pruebas; si falla la lectura de lo guardado, la sección no se
   envía (no pisa datos). Pruebas: servidor 1286, cliente 343, generador 46.
+
+- **2026-09-29 (Libro de compras L2-1 y L2-3, servidor).** Conceptos de gasto (catálogo por empresa, baja
+  por inactivar con auditoría, `check` de activo fijo implica bien, permisos `ver/crear/editar/importar/exportar`,
+  Excel) y Combustibles (catálogo, inactivar) con Vigencias de combustible (catálogo, baja `eliminar`).
+  Migraciones `0002`, `0003` y `0004` (esta última `--custom`: `btree_gist` y la exclusión
+  `vigencias_de_combustible_sin_traslape`). `interpretarErrorDePostgres` mapea `23P01` a `422 traslape`.
+  Una vigencia nueva cierra la abierta el día anterior con el combustible bloqueado (`for update`); cambiar
+  tasa, etanol o fechas se audita como `corregir`; `enUso` queda listo para L3 (hoy devuelve `null`).
+  El generador de recursos no se tocó. Sin sembrar conceptos sugeridos (pendiente). Cliente de L2 (L2-2 y L2-4)
+  sale del generador y está sin pulir. Pruebas: ver el commit.

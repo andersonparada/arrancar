@@ -663,19 +663,27 @@ Cada commit corre `npm run revisar` y las pruebas de su parte, y actualiza la bi
    y de proveedor (formulario y ficha), composables de lectura y lógica pura de los valores por
    omisión con pruebas.
 
-### L2 Catálogos
+### L2 Catálogos (servidor hecho, 2026-09-29; cliente pendiente)
 
-7. **L2-1 (servidor):** `generar -- definicion libro-de-compras/concepto-de-gasto` (catálogo,
+7. **L2-1 (servidor, hecho):** `generar -- definicion libro-de-compras/concepto-de-gasto` (catálogo,
    empresa, administración, baja `inactivar`, campos 3.3), `generar -- recurso`; ajustar el
    `check` de activo fijo; permisos; Excel; auditoría de inactivar/reactivar.
 8. **L2-2 (cliente):** pantalla de Conceptos de gasto (lo generado) y menú Administración.
-9. **L2-3 (servidor):** combustibles (catálogo, baja `inactivar`) y vigencias (catálogo con
+9. **L2-3 (servidor, hecho):** combustibles (catálogo, baja `inactivar`) y vigencias (catálogo con
    referencia a combustible, baja `eliminar`); migración con `btree_gist` y exclusión;
    `23P01` en `interpretarErrorDePostgres`; cierre de la vigencia anterior con bloqueo; reglas
    de vigencia usada (se completan en L3 cuando existan líneas: dejar la consulta `enUso` lista);
    auditoría `corregir` al cambiar la tasa.
 10. **L2-4 (cliente):** Combustibles y sus vigencias (ventana del combustible con su historia de
     tasas; la nueva cierra la anterior), Excel.
+
+Notas de L2 (servidor): la exclusión de vigencias va en una migración `--custom` aparte
+(`0004_l2_vigencias_sin_traslape`, con `btree_gist`), porque drizzle-kit no escribe restricciones de
+exclusión; `0003_l2_combustibles` trae las dos tablas. La vigencia nueva sin fecha de cierre cierra la
+abierta solo si empieza después que ella; una con cierre propio se inserta tal cual y la base rechaza el
+traslape (`422 traslape`). `RepositorioVigenciasDeCombustible.enUso` devuelve hoy siempre `null`: **L3 debe
+consultar `lineas_de_documento`** (fecha de emisión más reciente que usa la vigencia) y poner la FK `no action`.
+La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda para un paso propio.
 
 ### L3 Documentos
 

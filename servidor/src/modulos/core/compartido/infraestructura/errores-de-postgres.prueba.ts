@@ -1,6 +1,7 @@
 import { DatabaseError } from 'pg';
 import { describe, expect, it } from 'vitest';
 import { RecursoDuplicado, RecursoEnUso, RecursoNoEncontrado } from '../aplicacion/errores.js';
+import { ReglaDeNegocioInfringida } from '../dominio/errores.js';
 import { interpretarErrorDePostgres } from './errores-de-postgres.js';
 
 function errorDePostgres(codigo: string, restriccion?: string): DatabaseError {
@@ -25,6 +26,17 @@ describe('errores de PostgreSQL que en realidad son esperados', () => {
 
   it('borrar algo que otros datos usan es un recurso en uso', () => {
     expect(interpretarErrorDePostgres(errorDePostgres('23503'))).toBeInstanceOf(RecursoEnUso);
+  });
+
+  it('un rango que se traslapa es una regla de negocio infringida, con mensaje propio si se conoce la restricción', () => {
+    const error = interpretarErrorDePostgres(errorDePostgres('23P01', 'vigencias_de_combustible_sin_traslape'));
+
+    expect(error).toBeInstanceOf(ReglaDeNegocioInfringida);
+    expect(error).toMatchObject({
+      codigo: 'traslape',
+      message: 'Esa vigencia se traslapa con otra del mismo combustible.',
+    });
+    expect(interpretarErrorDePostgres(errorDePostgres('23P01'))).toMatchObject({ codigo: 'traslape' });
   });
 
   it('una fila fuera del alcance (política RLS) se responde como no encontrada', () => {

@@ -98,28 +98,20 @@
         "archivos_empresa_id_empresas_id_fk": {
           "name": "archivos_empresa_id_empresas_id_fk",
           "tableFrom": "archivos",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "archivos_subido_por_usuarios_id_fk": {
           "name": "archivos_subido_por_usuarios_id_fk",
           "tableFrom": "archivos",
-          "columnsFrom": [
-            "subido_por"
-          ],
+          "columnsFrom": ["subido_por"],
           "tableTo": "usuarios",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -131,9 +123,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -213,28 +203,20 @@
         "usuario_permisos_cuenta_id_cuentas_id_fk": {
           "name": "usuario_permisos_cuenta_id_cuentas_id_fk",
           "tableFrom": "usuario_permisos",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "usuario_permisos_usuario_id_usuarios_id_fk": {
           "name": "usuario_permisos_usuario_id_usuarios_id_fk",
           "tableFrom": "usuario_permisos",
-          "columnsFrom": [
-            "usuario_id"
-          ],
+          "columnsFrom": ["usuario_id"],
           "tableTo": "usuarios",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -242,11 +224,7 @@
       "compositePrimaryKeys": {
         "usuario_permisos_cuenta_id_usuario_id_permiso_pk": {
           "name": "usuario_permisos_cuenta_id_usuario_id_permiso_pk",
-          "columns": [
-            "cuenta_id",
-            "usuario_id",
-            "permiso"
-          ]
+          "columns": ["cuenta_id", "usuario_id", "permiso"]
         }
       },
       "uniqueConstraints": {},
@@ -331,44 +309,30 @@
         "usuario_roles_cuenta_id_cuentas_id_fk": {
           "name": "usuario_roles_cuenta_id_cuentas_id_fk",
           "tableFrom": "usuario_roles",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "usuario_roles_usuario_id_usuarios_id_fk": {
           "name": "usuario_roles_usuario_id_usuarios_id_fk",
           "tableFrom": "usuario_roles",
-          "columnsFrom": [
-            "usuario_id"
-          ],
+          "columnsFrom": ["usuario_id"],
           "tableTo": "usuarios",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "usuario_roles_rol_de_la_cuenta_fk": {
           "name": "usuario_roles_rol_de_la_cuenta_fk",
           "tableFrom": "usuario_roles",
-          "columnsFrom": [
-            "rol_id",
-            "cuenta_id"
-          ],
+          "columnsFrom": ["rol_id", "cuenta_id"],
           "tableTo": "roles",
           "schemaTo": "core",
-          "columnsTo": [
-            "id",
-            "cuenta_id"
-          ],
+          "columnsTo": ["id", "cuenta_id"],
           "onUpdate": "no action",
           "onDelete": "restrict"
         }
@@ -376,11 +340,7 @@
       "compositePrimaryKeys": {
         "usuario_roles_cuenta_id_usuario_id_rol_id_pk": {
           "name": "usuario_roles_cuenta_id_usuario_id_rol_id_pk",
-          "columns": [
-            "cuenta_id",
-            "usuario_id",
-            "rol_id"
-          ]
+          "columns": ["cuenta_id", "usuario_id", "rol_id"]
         }
       },
       "uniqueConstraints": {},
@@ -410,14 +370,10 @@
         "rol_permisos_rol_id_roles_id_fk": {
           "name": "rol_permisos_rol_id_roles_id_fk",
           "tableFrom": "rol_permisos",
-          "columnsFrom": [
-            "rol_id"
-          ],
+          "columnsFrom": ["rol_id"],
           "tableTo": "roles",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -425,10 +381,7 @@
       "compositePrimaryKeys": {
         "rol_permisos_rol_id_permiso_pk": {
           "name": "rol_permisos_rol_id_permiso_pk",
-          "columns": [
-            "rol_id",
-            "permiso"
-          ]
+          "columns": ["rol_id", "permiso"]
         }
       },
       "uniqueConstraints": {},
@@ -492,14 +445,10 @@
         "roles_cuenta_id_cuentas_id_fk": {
           "name": "roles_cuenta_id_cuentas_id_fk",
           "tableFrom": "roles",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -508,18 +457,12 @@
       "uniqueConstraints": {
         "roles_nombre_por_cuenta": {
           "name": "roles_nombre_por_cuenta",
-          "columns": [
-            "cuenta_id",
-            "nombre"
-          ],
+          "columns": ["cuenta_id", "nombre"],
           "nullsNotDistinct": false
         },
         "roles_id_cuenta_unico": {
           "name": "roles_id_cuenta_unico",
-          "columns": [
-            "id",
-            "cuenta_id"
-          ],
+          "columns": ["id", "cuenta_id"],
           "nullsNotDistinct": false
         }
       },
@@ -597,28 +540,20 @@
         "bitacora_superacceso_usuario_id_usuarios_id_fk": {
           "name": "bitacora_superacceso_usuario_id_usuarios_id_fk",
           "tableFrom": "bitacora_superacceso",
-          "columnsFrom": [
-            "usuario_id"
-          ],
+          "columnsFrom": ["usuario_id"],
           "tableTo": "usuarios",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "bitacora_superacceso_empresa_id_empresas_id_fk": {
           "name": "bitacora_superacceso_empresa_id_empresas_id_fk",
           "tableFrom": "bitacora_superacceso",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -747,28 +682,20 @@
         "auditoria_cuenta_id_cuentas_id_fk": {
           "name": "auditoria_cuenta_id_cuentas_id_fk",
           "tableFrom": "auditoria",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "restrict"
         },
         "auditoria_empresa_id_empresas_id_fk": {
           "name": "auditoria_empresa_id_empresas_id_fk",
           "tableFrom": "auditoria",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -780,18 +707,14 @@
           "name": "agregar_en_la_cuenta",
           "as": "PERMISSIVE",
           "for": "INSERT",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         },
         "leer_en_la_cuenta": {
           "name": "leer_en_la_cuenta",
           "as": "PERMISSIVE",
           "for": "SELECT",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
       },
@@ -834,14 +757,10 @@
         "correlativos_empresa_id_empresas_id_fk": {
           "name": "correlativos_empresa_id_empresas_id_fk",
           "tableFrom": "correlativos",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -849,11 +768,7 @@
       "compositePrimaryKeys": {
         "correlativos_empresa_id_clave_anio_pk": {
           "name": "correlativos_empresa_id_clave_anio_pk",
-          "columns": [
-            "empresa_id",
-            "clave",
-            "anio"
-          ]
+          "columns": ["empresa_id", "clave", "anio"]
         }
       },
       "uniqueConstraints": {},
@@ -862,9 +777,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -998,42 +911,30 @@
         "configuraciones_cuenta_id_cuentas_id_fk": {
           "name": "configuraciones_cuenta_id_cuentas_id_fk",
           "tableFrom": "configuraciones",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "configuraciones_empresa_id_empresas_id_fk": {
           "name": "configuraciones_empresa_id_empresas_id_fk",
           "tableFrom": "configuraciones",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "configuraciones_actualizado_por_usuarios_id_fk": {
           "name": "configuraciones_actualizado_por_usuarios_id_fk",
           "tableFrom": "configuraciones",
-          "columnsFrom": [
-            "actualizado_por"
-          ],
+          "columnsFrom": ["actualizado_por"],
           "tableTo": "usuarios",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -1078,14 +979,10 @@
         "cuenta_modulos_cuenta_id_cuentas_id_fk": {
           "name": "cuenta_modulos_cuenta_id_cuentas_id_fk",
           "tableFrom": "cuenta_modulos",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1093,10 +990,7 @@
       "compositePrimaryKeys": {
         "cuenta_modulos_cuenta_id_modulo_clave_pk": {
           "name": "cuenta_modulos_cuenta_id_modulo_clave_pk",
-          "columns": [
-            "cuenta_id",
-            "modulo_clave"
-          ]
+          "columns": ["cuenta_id", "modulo_clave"]
         }
       },
       "uniqueConstraints": {},
@@ -1196,28 +1090,20 @@
         "empresa_usuarios_empresa_id_empresas_id_fk": {
           "name": "empresa_usuarios_empresa_id_empresas_id_fk",
           "tableFrom": "empresa_usuarios",
-          "columnsFrom": [
-            "empresa_id"
-          ],
+          "columnsFrom": ["empresa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "empresa_usuarios_usuario_id_usuarios_id_fk": {
           "name": "empresa_usuarios_usuario_id_usuarios_id_fk",
           "tableFrom": "empresa_usuarios",
-          "columnsFrom": [
-            "usuario_id"
-          ],
+          "columnsFrom": ["usuario_id"],
           "tableTo": "usuarios",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1225,10 +1111,7 @@
       "compositePrimaryKeys": {
         "empresa_usuarios_empresa_id_usuario_id_pk": {
           "name": "empresa_usuarios_empresa_id_usuario_id_pk",
-          "columns": [
-            "empresa_id",
-            "usuario_id"
-          ]
+          "columns": ["empresa_id", "usuario_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1347,28 +1230,20 @@
         "empresas_cuenta_id_cuentas_id_fk": {
           "name": "empresas_cuenta_id_cuentas_id_fk",
           "tableFrom": "empresas",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "empresas_moneda_base_monedas_codigo_fk": {
           "name": "empresas_moneda_base_monedas_codigo_fk",
           "tableFrom": "empresas",
-          "columnsFrom": [
-            "moneda_base"
-          ],
+          "columnsFrom": ["moneda_base"],
           "tableTo": "monedas",
           "schemaTo": "core",
-          "columnsTo": [
-            "codigo"
-          ],
+          "columnsTo": ["codigo"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1432,14 +1307,10 @@
         "municipios_departamento_codigo_departamentos_codigo_fk": {
           "name": "municipios_departamento_codigo_departamentos_codigo_fk",
           "tableFrom": "municipios",
-          "columnsFrom": [
-            "departamento_codigo"
-          ],
+          "columnsFrom": ["departamento_codigo"],
           "tableTo": "departamentos",
           "schemaTo": "core",
-          "columnsTo": [
-            "codigo"
-          ],
+          "columnsTo": ["codigo"],
           "onUpdate": "no action",
           "onDelete": "restrict"
         }
@@ -1447,10 +1318,7 @@
       "compositePrimaryKeys": {
         "municipios_departamento_codigo_codigo_pk": {
           "name": "municipios_departamento_codigo_codigo_pk",
-          "columns": [
-            "departamento_codigo",
-            "codigo"
-          ]
+          "columns": ["departamento_codigo", "codigo"]
         }
       },
       "uniqueConstraints": {},
@@ -1534,28 +1402,20 @@
         "sesiones_usuario_id_usuarios_id_fk": {
           "name": "sesiones_usuario_id_usuarios_id_fk",
           "tableFrom": "sesiones",
-          "columnsFrom": [
-            "usuario_id"
-          ],
+          "columnsFrom": ["usuario_id"],
           "tableTo": "usuarios",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "sesiones_empresa_activa_id_empresas_id_fk": {
           "name": "sesiones_empresa_activa_id_empresas_id_fk",
           "tableFrom": "sesiones",
-          "columnsFrom": [
-            "empresa_activa_id"
-          ],
+          "columnsFrom": ["empresa_activa_id"],
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -1564,9 +1424,7 @@
       "uniqueConstraints": {
         "sesiones_hashToken_unique": {
           "name": "sesiones_hashToken_unique",
-          "columns": [
-            "hash_token"
-          ],
+          "columns": ["hash_token"],
           "nullsNotDistinct": false
         }
       },

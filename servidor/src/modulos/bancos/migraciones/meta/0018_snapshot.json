@@ -76,12 +76,8 @@
           "tableFrom": "bancos",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -91,10 +87,7 @@
         "bancos_nombre_unico": {
           "name": "bancos_nombre_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "empresa_id",
-            "nombre"
-          ]
+          "columns": ["empresa_id", "nombre"]
         }
       },
       "policies": {
@@ -102,9 +95,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -212,12 +203,8 @@
           "tableFrom": "chequeras",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -226,12 +213,8 @@
           "tableFrom": "chequeras",
           "tableTo": "cuentas_bancarias",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "cuenta_bancaria_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_bancaria_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -243,9 +226,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -359,12 +340,8 @@
           "tableFrom": "cheques",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -373,12 +350,8 @@
           "tableFrom": "cheques",
           "tableTo": "chequeras",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "chequera_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chequera_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -387,12 +360,8 @@
           "tableFrom": "cheques",
           "tableTo": "movimientos",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "movimiento_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["movimiento_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -402,10 +371,7 @@
         "cheques_chequera_numero_unico": {
           "name": "cheques_chequera_numero_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "chequera_id",
-            "numero"
-          ]
+          "columns": ["chequera_id", "numero"]
         }
       },
       "policies": {
@@ -413,9 +379,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -562,12 +526,8 @@
           "tableFrom": "conceptos",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -577,18 +537,12 @@
         "conceptos_nombre_unico": {
           "name": "conceptos_nombre_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "empresa_id",
-            "nombre"
-          ]
+          "columns": ["empresa_id", "nombre"]
         },
         "conceptos_id_empresa_unico": {
           "name": "conceptos_id_empresa_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "empresa_id"
-          ]
+          "columns": ["id", "empresa_id"]
         }
       },
       "policies": {
@@ -596,9 +550,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -738,12 +690,8 @@
           "tableFrom": "conciliaciones",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -752,12 +700,8 @@
           "tableFrom": "conciliaciones",
           "tableTo": "cuentas_bancarias",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "cuenta_bancaria_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_bancaria_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -767,11 +711,7 @@
         "conciliaciones_cuenta_mes_unico": {
           "name": "conciliaciones_cuenta_mes_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "cuenta_bancaria_id",
-            "anio",
-            "mes"
-          ]
+          "columns": ["cuenta_bancaria_id", "anio", "mes"]
         }
       },
       "policies": {
@@ -779,9 +719,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -910,12 +848,8 @@
           "tableFrom": "cuentas_bancarias",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -924,12 +858,8 @@
           "tableFrom": "cuentas_bancarias",
           "tableTo": "bancos",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "banco_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["banco_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -939,19 +869,12 @@
         "cuentas_bancarias_nombre_unico": {
           "name": "cuentas_bancarias_nombre_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "empresa_id",
-            "nombre"
-          ]
+          "columns": ["empresa_id", "nombre"]
         },
         "cuentas_bancarias_numero_por_banco_unico": {
           "name": "cuentas_bancarias_numero_por_banco_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "empresa_id",
-            "banco_id",
-            "numero_normalizado"
-          ]
+          "columns": ["empresa_id", "banco_id", "numero_normalizado"]
         }
       },
       "policies": {
@@ -959,9 +882,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -1298,12 +1219,8 @@
           "tableFrom": "movimientos",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1312,12 +1229,8 @@
           "tableFrom": "movimientos",
           "tableTo": "cuentas_bancarias",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "cuenta_bancaria_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_bancaria_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1326,12 +1239,8 @@
           "tableFrom": "movimientos",
           "tableTo": "transferencias",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "transferencia_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["transferencia_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1340,12 +1249,8 @@
           "tableFrom": "movimientos",
           "tableTo": "conciliaciones",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "conciliacion_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["conciliacion_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1354,12 +1259,8 @@
           "tableFrom": "movimientos",
           "tableTo": "movimientos",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "revierte_a_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["revierte_a_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1368,14 +1269,8 @@
           "tableFrom": "movimientos",
           "tableTo": "conceptos",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "concepto_id",
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id",
-            "empresa_id"
-          ],
+          "columnsFrom": ["concepto_id", "empresa_id"],
+          "columnsTo": ["id", "empresa_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1387,9 +1282,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -1579,12 +1472,8 @@
           "tableFrom": "transferencias",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1593,12 +1482,8 @@
           "tableFrom": "transferencias",
           "tableTo": "cuentas_bancarias",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "cuenta_origen_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_origen_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1607,12 +1492,8 @@
           "tableFrom": "transferencias",
           "tableTo": "cuentas_bancarias",
           "schemaTo": "bancos",
-          "columnsFrom": [
-            "cuenta_destino_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_destino_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1624,9 +1505,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }

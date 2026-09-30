@@ -1,0 +1,664 @@
+{
+  "id": "8331445b-28b4-4062-bfc2-6499e81fee49",
+  "prevId": "00693dad-b059-43f4-a29c-ad4763b6f03b",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "libro_de_compras.combustibles": {
+      "name": "combustibles",
+      "schema": "libro_de_compras",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "combustibles_empresa_id_empresas_id_fk": {
+          "name": "combustibles_empresa_id_empresas_id_fk",
+          "tableFrom": "combustibles",
+          "columnsFrom": ["empresa_id"],
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "combustibles_nombre_unico": {
+          "name": "combustibles_nombre_unico",
+          "columns": ["empresa_id", "nombre"],
+          "nullsNotDistinct": false
+        },
+        "combustibles_id_empresa_unico": {
+          "name": "combustibles_id_empresa_unico",
+          "columns": ["id", "empresa_id"],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "combustibles_nombre_largo": {
+          "name": "combustibles_nombre_largo",
+          "value": "char_length(btrim(\"libro_de_compras\".\"combustibles\".\"nombre\")) between 1 and 80"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "libro_de_compras.conceptos_de_gasto": {
+      "name": "conceptos_de_gasto",
+      "schema": "libro_de_compras",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_por_omision": {
+          "name": "tipo_por_omision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "es_producto_agropecuario": {
+          "name": "es_producto_agropecuario",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "es_activo_fijo": {
+          "name": "es_activo_fijo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "conceptos_de_gasto_empresa_id_empresas_id_fk": {
+          "name": "conceptos_de_gasto_empresa_id_empresas_id_fk",
+          "tableFrom": "conceptos_de_gasto",
+          "columnsFrom": ["empresa_id"],
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "conceptos_de_gasto_nombre_unico": {
+          "name": "conceptos_de_gasto_nombre_unico",
+          "columns": ["empresa_id", "nombre"],
+          "nullsNotDistinct": false
+        },
+        "conceptos_de_gasto_id_empresa_unico": {
+          "name": "conceptos_de_gasto_id_empresa_unico",
+          "columns": ["id", "empresa_id"],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "conceptos_de_gasto_nombre_largo": {
+          "name": "conceptos_de_gasto_nombre_largo",
+          "value": "char_length(btrim(\"libro_de_compras\".\"conceptos_de_gasto\".\"nombre\")) between 1 and 120"
+        },
+        "conceptos_de_gasto_tipo": {
+          "name": "conceptos_de_gasto_tipo",
+          "value": "\"libro_de_compras\".\"conceptos_de_gasto\".\"tipo_por_omision\" in ('bien', 'servicio')"
+        },
+        "conceptos_de_gasto_activo_fijo_es_bien": {
+          "name": "conceptos_de_gasto_activo_fijo_es_bien",
+          "value": "not \"libro_de_compras\".\"conceptos_de_gasto\".\"es_activo_fijo\" or \"libro_de_compras\".\"conceptos_de_gasto\".\"tipo_por_omision\" = 'bien'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "libro_de_compras.datos_fiscales_de_empresa": {
+      "name": "datos_fiscales_de_empresa",
+      "schema": "libro_de_compras",
+      "columns": {
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "regimen_iva": {
+          "name": "regimen_iva",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'general'"
+        },
+        "regimen_isr": {
+          "name": "regimen_isr",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'utilidades'"
+        },
+        "agente_de_retencion_iva": {
+          "name": "agente_de_retencion_iva",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ninguno'"
+        },
+        "es_agente_de_retencion_isr": {
+          "name": "es_agente_de_retencion_isr",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "datos_fiscales_de_empresa_empresa_id_empresas_id_fk": {
+          "name": "datos_fiscales_de_empresa_empresa_id_empresas_id_fk",
+          "tableFrom": "datos_fiscales_de_empresa",
+          "columnsFrom": ["empresa_id"],
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "datos_fiscales_de_empresa_regimen_iva": {
+          "name": "datos_fiscales_de_empresa_regimen_iva",
+          "value": "\"libro_de_compras\".\"datos_fiscales_de_empresa\".\"regimen_iva\" in ('general', 'pequeno_contribuyente')"
+        },
+        "datos_fiscales_de_empresa_regimen_isr": {
+          "name": "datos_fiscales_de_empresa_regimen_isr",
+          "value": "\"libro_de_compras\".\"datos_fiscales_de_empresa\".\"regimen_isr\" in ('utilidades', 'opcional_simplificado')"
+        },
+        "datos_fiscales_de_empresa_agente_de_iva": {
+          "name": "datos_fiscales_de_empresa_agente_de_iva",
+          "value": "\"libro_de_compras\".\"datos_fiscales_de_empresa\".\"agente_de_retencion_iva\" in ('ninguno', 'exportador', 'contribuyente_especial', 'sector_publico', 'otro')"
+        },
+        "datos_fiscales_de_empresa_pequeno_no_retiene": {
+          "name": "datos_fiscales_de_empresa_pequeno_no_retiene",
+          "value": "\"libro_de_compras\".\"datos_fiscales_de_empresa\".\"regimen_iva\" <> 'pequeno_contribuyente' or \"libro_de_compras\".\"datos_fiscales_de_empresa\".\"agente_de_retencion_iva\" = 'ninguno'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "libro_de_compras.datos_fiscales_de_proveedor": {
+      "name": "datos_fiscales_de_proveedor",
+      "schema": "libro_de_compras",
+      "columns": {
+        "proveedor_id": {
+          "name": "proveedor_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        },
+        "es_pequeno_contribuyente": {
+          "name": "es_pequeno_contribuyente",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "regimen_isr": {
+          "name": "regimen_isr",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "es_agente_de_retencion_iva": {
+          "name": "es_agente_de_retencion_iva",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "se_le_retiene_iva": {
+          "name": "se_le_retiene_iva",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "se_le_retiene_isr": {
+          "name": "se_le_retiene_isr",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "se_le_retiene_iva_pequeno_contribuyente": {
+          "name": "se_le_retiene_iva_pequeno_contribuyente",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "datos_fiscales_de_proveedor_cuenta_idx": {
+          "name": "datos_fiscales_de_proveedor_cuenta_idx",
+          "columns": [
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "datos_fiscales_de_proveedor_cuenta_id_cuentas_id_fk": {
+          "name": "datos_fiscales_de_proveedor_cuenta_id_cuentas_id_fk",
+          "tableFrom": "datos_fiscales_de_proveedor",
+          "columnsFrom": ["cuenta_id"],
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "datos_fiscales_de_proveedor_proveedor_fk": {
+          "name": "datos_fiscales_de_proveedor_proveedor_fk",
+          "tableFrom": "datos_fiscales_de_proveedor",
+          "columnsFrom": ["proveedor_id", "cuenta_id"],
+          "tableTo": "proveedores",
+          "schemaTo": "terceros",
+          "columnsTo": ["id", "cuenta_id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_cuenta": {
+          "name": "aislamiento_por_cuenta",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
+          "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "datos_fiscales_de_proveedor_regimen_isr_valido": {
+          "name": "datos_fiscales_de_proveedor_regimen_isr_valido",
+          "value": "\"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"regimen_isr\" is null or \"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"regimen_isr\" in ('utilidades', 'opcional_simplificado', 'no_domiciliado')"
+        },
+        "datos_fiscales_de_proveedor_regimen_isr": {
+          "name": "datos_fiscales_de_proveedor_regimen_isr",
+          "value": "(\"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"es_pequeno_contribuyente\" and \"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"regimen_isr\" is null) or (not \"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"es_pequeno_contribuyente\" and \"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"regimen_isr\" is not null)"
+        },
+        "datos_fiscales_de_proveedor_pequeno_no_es_agente": {
+          "name": "datos_fiscales_de_proveedor_pequeno_no_es_agente",
+          "value": "not (\"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"es_pequeno_contribuyente\" and \"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"es_agente_de_retencion_iva\")"
+        },
+        "datos_fiscales_de_proveedor_retencion_iva_pequeno": {
+          "name": "datos_fiscales_de_proveedor_retencion_iva_pequeno",
+          "value": "not \"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"se_le_retiene_iva_pequeno_contribuyente\" or \"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"es_pequeno_contribuyente\""
+        },
+        "datos_fiscales_de_proveedor_retencion_iva_general": {
+          "name": "datos_fiscales_de_proveedor_retencion_iva_general",
+          "value": "not (\"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"se_le_retiene_iva\" and \"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"es_pequeno_contribuyente\")"
+        },
+        "datos_fiscales_de_proveedor_retencion_isr": {
+          "name": "datos_fiscales_de_proveedor_retencion_isr",
+          "value": "not (\"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"se_le_retiene_isr\" and \"libro_de_compras\".\"datos_fiscales_de_proveedor\".\"es_pequeno_contribuyente\")"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "libro_de_compras.vigencias_de_combustible": {
+      "name": "vigencias_de_combustible",
+      "schema": "libro_de_compras",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "combustible_id": {
+          "name": "combustible_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idp_por_galon": {
+          "name": "idp_por_galon",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "porcentaje_de_etanol": {
+          "name": "porcentaje_de_etanol",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "vigente_desde": {
+          "name": "vigente_desde",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vigente_hasta": {
+          "name": "vigente_hasta",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "vigencias_de_combustible_empresa_id_empresas_id_fk": {
+          "name": "vigencias_de_combustible_empresa_id_empresas_id_fk",
+          "tableFrom": "vigencias_de_combustible",
+          "columnsFrom": ["empresa_id"],
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "vigencias_de_combustible_combustible_fk": {
+          "name": "vigencias_de_combustible_combustible_fk",
+          "tableFrom": "vigencias_de_combustible",
+          "columnsFrom": ["combustible_id", "empresa_id"],
+          "tableTo": "combustibles",
+          "schemaTo": "libro_de_compras",
+          "columnsTo": ["id", "empresa_id"],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "vigencias_de_combustible_id_empresa_unico": {
+          "name": "vigencias_de_combustible_id_empresa_unico",
+          "columns": ["id", "empresa_id"],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "vigencias_de_combustible_idp_no_negativo": {
+          "name": "vigencias_de_combustible_idp_no_negativo",
+          "value": "\"libro_de_compras\".\"vigencias_de_combustible\".\"idp_por_galon\" >= 0"
+        },
+        "vigencias_de_combustible_etanol_valido": {
+          "name": "vigencias_de_combustible_etanol_valido",
+          "value": "\"libro_de_compras\".\"vigencias_de_combustible\".\"porcentaje_de_etanol\" between 0 and 100"
+        },
+        "vigencias_de_combustible_fechas_ordenadas": {
+          "name": "vigencias_de_combustible_fechas_ordenadas",
+          "value": "\"libro_de_compras\".\"vigencias_de_combustible\".\"vigente_hasta\" is null or \"libro_de_compras\".\"vigencias_de_combustible\".\"vigente_hasta\" >= \"libro_de_compras\".\"vigencias_de_combustible\".\"vigente_desde\""
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "libro_de_compras": "libro_de_compras"
+  },
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

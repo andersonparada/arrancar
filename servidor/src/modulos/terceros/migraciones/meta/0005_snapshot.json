@@ -96,28 +96,20 @@
         "clientes_cuenta_id_cuentas_id_fk": {
           "name": "clientes_cuenta_id_cuentas_id_fk",
           "tableFrom": "clientes",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "clientes_tercero_id_terceros_id_fk": {
           "name": "clientes_tercero_id_terceros_id_fk",
           "tableFrom": "clientes",
-          "columnsFrom": [
-            "tercero_id"
-          ],
+          "columnsFrom": ["tercero_id"],
           "tableTo": "terceros",
           "schemaTo": "terceros",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -129,9 +121,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
@@ -248,28 +238,20 @@
         "contactos_cuenta_id_cuentas_id_fk": {
           "name": "contactos_cuenta_id_cuentas_id_fk",
           "tableFrom": "contactos",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "contactos_tercero_id_terceros_id_fk": {
           "name": "contactos_tercero_id_terceros_id_fk",
           "tableFrom": "contactos",
-          "columnsFrom": [
-            "tercero_id"
-          ],
+          "columnsFrom": ["tercero_id"],
           "tableTo": "terceros",
           "schemaTo": "terceros",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -281,9 +263,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
@@ -355,14 +335,10 @@
         "categorias_proveedor_cuenta_id_cuentas_id_fk": {
           "name": "categorias_proveedor_cuenta_id_cuentas_id_fk",
           "tableFrom": "categorias_proveedor",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -371,10 +347,7 @@
       "uniqueConstraints": {
         "categorias_proveedor_nombre_por_cuenta": {
           "name": "categorias_proveedor_nombre_por_cuenta",
-          "columns": [
-            "cuenta_id",
-            "nombre"
-          ],
+          "columns": ["cuenta_id", "nombre"],
           "nullsNotDistinct": false
         }
       },
@@ -383,9 +356,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
@@ -500,42 +471,30 @@
         "proveedores_cuenta_id_cuentas_id_fk": {
           "name": "proveedores_cuenta_id_cuentas_id_fk",
           "tableFrom": "proveedores",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "proveedores_tercero_id_terceros_id_fk": {
           "name": "proveedores_tercero_id_terceros_id_fk",
           "tableFrom": "proveedores",
-          "columnsFrom": [
-            "tercero_id"
-          ],
+          "columnsFrom": ["tercero_id"],
           "tableTo": "terceros",
           "schemaTo": "terceros",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "proveedores_categoria_id_categorias_proveedor_id_fk": {
           "name": "proveedores_categoria_id_categorias_proveedor_id_fk",
           "tableFrom": "proveedores",
-          "columnsFrom": [
-            "categoria_id"
-          ],
+          "columnsFrom": ["categoria_id"],
           "tableTo": "categorias_proveedor",
           "schemaTo": "terceros",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -547,9 +506,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
@@ -770,44 +727,30 @@
         "terceros_cuenta_id_cuentas_id_fk": {
           "name": "terceros_cuenta_id_cuentas_id_fk",
           "tableFrom": "terceros",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
+          "columnsFrom": ["cuenta_id"],
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "terceros_foto_archivo_id_archivos_id_fk": {
           "name": "terceros_foto_archivo_id_archivos_id_fk",
           "tableFrom": "terceros",
-          "columnsFrom": [
-            "foto_archivo_id"
-          ],
+          "columnsFrom": ["foto_archivo_id"],
           "tableTo": "archivos",
           "schemaTo": "core",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "terceros_departamento_codigo_municipio_codigo_municipios_departamento_codigo_codigo_fk": {
           "name": "terceros_departamento_codigo_municipio_codigo_municipios_departamento_codigo_codigo_fk",
           "tableFrom": "terceros",
-          "columnsFrom": [
-            "departamento_codigo",
-            "municipio_codigo"
-          ],
+          "columnsFrom": ["departamento_codigo", "municipio_codigo"],
           "tableTo": "municipios",
           "schemaTo": "core",
-          "columnsTo": [
-            "departamento_codigo",
-            "codigo"
-          ],
+          "columnsTo": ["departamento_codigo", "codigo"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -819,9 +762,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
