@@ -574,3 +574,12 @@ y `demo` / `demo-arrancar`.
   tasa, etanol o fechas se audita como `corregir`; `enUso` queda listo para L3 (hoy devuelve `null`).
   El generador de recursos no se tocó. Sin sembrar conceptos sugeridos (pendiente). Cliente de L2 (L2-2 y L2-4)
   sale del generador y está sin pulir. Pruebas: ver el commit.
+
+- **2026-09-29 (Libro de compras L2-2 y L2-4, cliente).** Conceptos de gasto en Administración: etiquetas
+  «Tipo por omisión», «Producto agropecuario» y «Activo fijo»; al marcar activo fijo el tipo pasa a Bien y se
+  bloquea con su explicación; inactivar y reactivar con confirmación (`composables/comunes/`, compartido con
+  Combustibles); estado vacío con acción; Excel. Combustibles con su historia de tasas: cada tarjeta muestra la
+  tasa vigente y abre «Tasas de IDP» (IDP por galón, % de etanol, desde, hasta o «Vigente»), con registrar tasa
+  nueva (avisa que cerrará la vigente el día anterior), corregir y eliminar con confirmación. Las vigencias
+  **no tienen menú ni ruta propios**; su Excel (importar y exportar) está en la misma pantalla. Sin permiso de
+  ver tasas no se piden ni se muestran. Pruebas: servidor 1391, cliente 368, generador 46.

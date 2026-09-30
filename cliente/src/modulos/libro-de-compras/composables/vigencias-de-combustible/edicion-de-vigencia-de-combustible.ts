@@ -34,6 +34,12 @@ export function edicionDe(vigenciaDeCombustible?: VigenciaDeCombustible): Edicio
   };
 }
 
+/** La ventana de una tasa nueva del combustible dado. */
+export const edicionNuevaDe = (combustibleId: string): EdicionDeVigenciaDeCombustible => ({
+  ...edicionDe(),
+  combustibleId,
+});
+
 /** Lo que se manda al servidor: lo vacío como `null` y los números como números. */
 export const datosDeVigenciaDeCombustible = (edicion: EdicionDeVigenciaDeCombustible): DatosVigenciaDeCombustible => ({
   combustibleId: edicion.combustibleId ?? '',

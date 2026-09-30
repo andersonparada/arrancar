@@ -199,12 +199,19 @@ En `main`, además de lo anterior:
 
 ## Siguiente (mañana)
 
-1. **H2a–H2d**: saldo transcrito y estado de cuenta en la conciliación
-   (`plan-archivos-y-h2.md`; la ruta de subida debe usar `limitarSubidas`). Pedir al
-   usuario un PDF real de banco con datos tachados.
-2. **Libro de compras L2 y L3**, aplicando los ajustes del contador, y luego **Cuentas
-   por pagar CP1**.
-3. Probar en el navegador lo nuevo (L1: sección fiscal en Empresas y Proveedores; P7, H6b, H8, avisos de fecha, Archivos).
+L2 (catálogos del Libro de compras) quedó terminado en servidor y cliente: Conceptos de gasto y Combustibles
+con su historia de tasas de IDP (las vigencias viven dentro de Combustibles, sin menú propio). Pendiente:
+
+1. **Semilla de conceptos de gasto sugeridos** (respuesta 11 del usuario, `diseno-datos-libro-de-compras.md`).
+2. **Nombres únicos sin mayúsculas ni acentos** en conceptos de gasto y combustibles: hoy el único distingue
+   mayúsculas, a diferencia de bancos, que usa `core.nombre_normalizado`. Un nombre repetido (409) hoy sale como
+   aviso general, no debajo del campo.
+3. **L3** (documentos del Libro de compras, `diseno-datos-libro-de-compras.md` §14).
+4. **H2**: saldo transcrito y estado de cuenta en la conciliación (`plan-archivos-y-h2.md`; la ruta de subida
+   debe usar `limitarSubidas`). Pedir al usuario el PDF del banco con datos tachados.
+5. **Cuentas por pagar CP1**.
+6. Probar en el navegador lo nuevo (L1 y L2 en Empresas, Proveedores, Conceptos de gasto y Combustibles; P7,
+   H6b, H8, avisos de fecha, Archivos). Ojo: con «decimales de montos» en 0 la tasa de IDP se vería redondeada.
 
 ## Preguntas abiertas para el usuario
 

@@ -663,19 +663,19 @@ Cada commit corre `npm run revisar` y las pruebas de su parte, y actualiza la bi
    y de proveedor (formulario y ficha), composables de lectura y lógica pura de los valores por
    omisión con pruebas.
 
-### L2 Catálogos (servidor hecho, 2026-09-29; cliente pendiente)
+### L2 Catálogos (hecho, 2026-09-29)
 
 7. **L2-1 (servidor, hecho):** `generar -- definicion libro-de-compras/concepto-de-gasto` (catálogo,
    empresa, administración, baja `inactivar`, campos 3.3), `generar -- recurso`; ajustar el
    `check` de activo fijo; permisos; Excel; auditoría de inactivar/reactivar.
-8. **L2-2 (cliente):** pantalla de Conceptos de gasto (lo generado) y menú Administración.
+8. **L2-2 (cliente, hecho):** pantalla de Conceptos de gasto (lo generado) y menú Administración.
 9. **L2-3 (servidor, hecho):** combustibles (catálogo, baja `inactivar`) y vigencias (catálogo con
    referencia a combustible, baja `eliminar`); migración con `btree_gist` y exclusión;
    `23P01` en `interpretarErrorDePostgres`; cierre de la vigencia anterior con bloqueo; reglas
    de vigencia usada (se completan en L3 cuando existan líneas: dejar la consulta `enUso` lista);
    auditoría `corregir` al cambiar la tasa.
-10. **L2-4 (cliente):** Combustibles y sus vigencias (ventana del combustible con su historia de
-    tasas; la nueva cierra la anterior), Excel.
+10. **L2-4 (cliente, hecho):** Combustibles y sus vigencias (ventana del combustible con su historia de
+    tasas; la nueva cierra la anterior), Excel. Las vigencias no llevan menú propio: viven dentro de Combustibles.
 
 Notas de L2 (servidor): la exclusión de vigencias va en una migración `--custom` aparte
 (`0004_l2_vigencias_sin_traslape`, con `btree_gist`), porque drizzle-kit no escribe restricciones de

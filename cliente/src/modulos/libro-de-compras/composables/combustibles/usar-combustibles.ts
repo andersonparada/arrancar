@@ -1,10 +1,13 @@
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiCombustibles, type Combustible } from '../../servicios/combustibles.api';
+import { ordenarPorNombre } from '../comunes/cambio-de-estado';
+import { usarCambioDeEstado } from '../comunes/usar-cambio-de-estado';
 import { datosDeCombustible, edicionDe, type EdicionDeCombustible } from './edicion-de-combustible';
+import { NOMBRE_DE_COMBUSTIBLE, datosParaCambiarEstado } from './reglas-de-combustible';
 
 const SIN_REGISTROS: Combustible[] = [];
 
@@ -35,16 +38,21 @@ function usarVentanaDeCombustibles(cargar: () => Promise<void>) {
   return { edicion, enviando, errores, abrir, guardar };
 }
 
-/** Los combustibles de la empresa: listarlos, registrarlos y editarlos en una ventana. */
+/** Los combustibles de la empresa por nombre: listarlos, registrarlos, editarlos e inactivarlos. */
 export function usarCombustibles() {
   const {
-    datos: registros,
+    datos: recibidos,
     cargando,
     cargar,
   } = usarCarga(() => apiCombustibles.listar(), SIN_REGISTROS, 'No se pudieron cargar los combustibles.');
+  const registros = computed(() => ordenarPorNombre(recibidos.value));
   const ventana = usarVentanaDeCombustibles(cargar);
-
+  const { cambiarEstado } = usarCambioDeEstado(
+    NOMBRE_DE_COMBUSTIBLE,
+    (combustible: Combustible) => apiCombustibles.actualizar(combustible.id, datosParaCambiarEstado(combustible)),
+    cargar,
+  );
   const intercambio = usarIntercambio(apiCombustibles.intercambio, cargar);
 
-  return { registros, cargando, cargar, intercambio, ...ventana };
+  return { registros, cargando, cargar, intercambio, cambiarEstado, ...ventana };
 }
