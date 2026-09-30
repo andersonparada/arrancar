@@ -3,6 +3,12 @@
 export const NOMBRE_LIBRO_DE_COMPRAS = 'Libro de compras';
 
 export const VENTANAS_LIBRO_DE_COMPRAS = {
+  conceptosDeGasto: {
+    titulo: 'Conceptos de gasto',
+    descripcion: 'Los conceptos de gasto de la empresa.',
+    nuevo: 'Nuevo concepto de gasto',
+    editar: 'Editar concepto de gasto',
+  },
   // generador: ventanas
 } as const;
 
