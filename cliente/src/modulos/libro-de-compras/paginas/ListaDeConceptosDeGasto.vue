@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { Inbox, Plus } from 'lucide-vue-next';
+import { Plus, Tags } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/AccionesDeIntercambio.vue';
 import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
-import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
+import TarjetaDeConceptoDeGasto from '../componentes/conceptos-de-gasto/TarjetaDeConceptoDeGasto.vue';
 import VentanaDeConceptoDeGasto from '../componentes/conceptos-de-gasto/VentanaDeConceptoDeGasto.vue';
-import { detallesDeConceptoDeGasto } from '../composables/conceptos-de-gasto/detalles-de-concepto-de-gasto';
 import { usarConceptosDeGasto } from '../composables/conceptos-de-gasto/usar-conceptos-de-gasto';
 import { VENTANAS_LIBRO_DE_COMPRAS } from '../textos';
 
@@ -16,7 +15,8 @@ const PERMISOS_DE_INTERCAMBIO = {
   importar: 'libro-de-compras.conceptos-de-gasto.importar',
   exportar: 'libro-de-compras.conceptos-de-gasto.exportar',
 };
-const { registros, cargando, intercambio, edicion, enviando, errores, abrir, guardar } = usarConceptosDeGasto();
+const { registros, cargando, intercambio, edicion, enviando, errores, abrir, guardar, cambiarEstado } =
+  usarConceptosDeGasto();
 </script>
 
 <template>
@@ -33,15 +33,22 @@ const { registros, cargando, intercambio, edicion, enviando, errores, abrir, gua
     </EncabezadoPagina>
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
-    <EstadoVacio v-else-if="!registros.length" :icono="Inbox" titulo="Todavía no hay conceptos de gasto" />
+    <EstadoVacio
+      v-else-if="!registros.length"
+      :icono="Tags"
+      titulo="Todavía no hay conceptos de gasto"
+      descripcion="Son los rubros en que se clasifican las compras: alimento, veterinaria, combustible, maquinaria… Cree uno o impórtelos desde Excel."
+    >
+      <BotonBase v-permiso="'libro-de-compras.conceptos-de-gasto.crear'" :icono="Plus" @click="abrir()">{{
+        ventana.nuevo
+      }}</BotonBase>
+    </EstadoVacio>
     <ul v-else class="grid gap-3 md:grid-cols-2">
       <li v-for="registro in registros" :key="registro.id">
-        <TarjetaDeRegistro
-          :titulo="String(registro.nombre)"
-          :detalles="detallesDeConceptoDeGasto(registro)"
-          permiso="libro-de-compras.conceptos-de-gasto.editar"
-          :inactivo="!registro.activo"
+        <TarjetaDeConceptoDeGasto
+          :registro="registro"
           @editar="abrir(registro)"
+          @cambiar-estado="cambiarEstado(registro)"
         />
       </li>
     </ul>
