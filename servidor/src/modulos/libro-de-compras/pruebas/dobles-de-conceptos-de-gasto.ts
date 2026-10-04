@@ -25,6 +25,14 @@ export class ConceptosDeGastoEnMemoria implements RepositorioConceptosDeGasto, C
     this.registros.set(conceptoDeGasto.id.valor, conceptoDeGasto);
   }
 
+  async hayAlguno(): Promise<boolean> {
+    return this.registros.size > 0;
+  }
+
+  async sembrar(conceptos: readonly ConceptoDeGasto[]): Promise<void> {
+    conceptos.forEach((conceptoDeGasto) => this.registros.set(conceptoDeGasto.id.valor, conceptoDeGasto));
+  }
+
   async listar(): Promise<ConceptoDeGastoDto[]> {
     const porNombre = (a: ConceptoDeGastoDto, b: ConceptoDeGastoDto) =>
       String(a.nombre).localeCompare(String(b.nombre));

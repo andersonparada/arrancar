@@ -22,4 +22,15 @@ export class RepositorioConceptosDeGastoDrizzle implements RepositorioConceptosD
       .set(mapeadorDeConceptoDeGasto.aFila(conceptoDeGasto))
       .where(eq(conceptosDeGasto.id, conceptoDeGasto.id.valor));
   }
+
+  async hayAlguno(): Promise<boolean> {
+    const [fila] = await transaccionEnCurso().select({ id: conceptosDeGasto.id }).from(conceptosDeGasto).limit(1);
+    return fila !== undefined;
+  }
+
+  async sembrar(nuevos: readonly ConceptoDeGasto[]): Promise<void> {
+    if (nuevos.length === 0) return;
+    const filas = nuevos.map((conceptoDeGasto) => mapeadorDeConceptoDeGasto.aFila(conceptoDeGasto));
+    await transaccionEnCurso().insert(conceptosDeGasto).values(filas).onConflictDoNothing();
+  }
 }

@@ -109,4 +109,30 @@ describe('conceptos de gasto', () => {
     expect(inactivo).toEqual({ ...creado, activo: false });
     expect(auditoria.acciones()).toEqual(['libro-de-compras.conceptos-de-gasto:inactivar']);
   });
+
+  it('siembra la lista sugerida al abrir el catálogo vacío', async () => {
+    const listado = await casos.listar.ejecutar(operador);
+
+    expect(listado).toHaveLength(8);
+    expect(listado.map((conceptoDeGasto) => conceptoDeGasto.nombre)).toEqual(
+      expect.arrayContaining([
+        'Combustibles',
+        'Insumos agrícolas',
+        'Alimento para ganado',
+        'Medicinas veterinarias',
+        'Reparaciones',
+        'Servicios profesionales',
+        'Energía eléctrica',
+        'Maquinaria y equipo',
+      ]),
+    );
+  });
+
+  it('no vuelve a sembrar si ya tiene conceptos', async () => {
+    await casos.crear.ejecutar(operador, solicitud());
+
+    const listado = await casos.listar.ejecutar(operador);
+
+    expect(listado).toHaveLength(1);
+  });
 });

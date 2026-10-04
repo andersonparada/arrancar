@@ -36,6 +36,13 @@
       "when": 1790738413303,
       "tag": "0004_l2_vigencias_sin_traslape",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791152590270,
+      "tag": "0005_nombres_sin_mayusculas_ni_acentos",
+      "breakpoints": true
     }
   ]
 }

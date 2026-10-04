@@ -583,3 +583,14 @@ y `demo` / `demo-arrancar`.
   nueva (avisa que cerrará la vigente el día anterior), corregir y eliminar con confirmación. Las vigencias
   **no tienen menú ni ruta propios**; su Excel (importar y exportar) está en la misma pantalla. Sin permiso de
   ver tasas no se piden ni se muestran. Pruebas: servidor 1391, cliente 368, generador 46.
+
+- **2026-10-04 (Libro de compras, cierre de L2)**:
+  - **Nombres únicos sin mayúsculas ni acentos** en conceptos de gasto y combustibles: los
+    únicos de `nombre` pasan de `UNIQUE` a un índice sobre `core.nombre_normalizado(nombre)`,
+    como Bancos y Empresas; migración `0005` con la guarda de duplicados.
+  - **Semilla de conceptos de gasto sugeridos** (respuesta 11 del usuario): al abrir el
+    catálogo vacío se siembra la lista sugerida (Combustibles, Insumos agrícolas, Alimento
+    para ganado, Medicinas veterinarias, Reparaciones, Servicios profesionales, Energía
+    eléctrica y Maquinaria y equipo como activo fijo), como los conceptos de Bancos (H3) y
+    editable por el usuario. `SembrarConceptosDeGasto` en `ListarConceptosDeGasto`, con
+    `hayAlguno` y `sembrar` en el repositorio. Pruebas: servidor 1393.

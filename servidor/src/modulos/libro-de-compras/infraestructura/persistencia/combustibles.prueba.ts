@@ -117,6 +117,12 @@ describe('combustibles: seguridad por empresa y restricciones', () => {
     await expect(crearCombustible(en(empresaA2, cuentaA), 'Gasolina')).resolves.toBeTruthy();
   });
 
+  it('el nombre repetido se reconoce sin mayúsculas, acentos ni espacios de más', async () => {
+    const repetido = await errorDePostgres(crearCombustible(enA1(), '  GASOLÍNA '));
+
+    expect(repetido?.constraint).toBe('combustibles_nombre_unico');
+  });
+
   it('el nombre no puede quedar vacío ni pasar de 80 letras (check)', async () => {
     const vacio = await errorDePostgres(crearCombustible(enA1(), '   '));
     const largo = await errorDePostgres(crearCombustible(enA1(), 'x'.repeat(81)));

@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, text, unique, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, text, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
+import { nombreNormalizado } from '../../../core/base-datos/nombre-normalizado.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { esquemaLibroDeCompras } from './esquema.tablas.js';
 
@@ -21,7 +22,7 @@ export const conceptosDeGasto = esquemaLibroDeCompras.table(
     ...autoria,
   },
   (t) => [
-    unique('conceptos_de_gasto_nombre_unico').on(t.empresaId, t.nombre),
+    uniqueIndex('conceptos_de_gasto_nombre_unico').on(t.empresaId, nombreNormalizado(t.nombre)),
     unique('conceptos_de_gasto_id_empresa_unico').on(t.id, t.empresaId),
     check('conceptos_de_gasto_nombre_largo', sql`char_length(btrim(${t.nombre})) between 1 and 120`),
     check('conceptos_de_gasto_tipo', sql`${t.tipoPorOmision} in ('bien', 'servicio')`),
