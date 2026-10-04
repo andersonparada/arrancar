@@ -690,7 +690,7 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
 11. **L3-1 (servidor, hecho 2026-10-04):** tablas 3.5 a 3.7, migraciones 0006 y 0007 (esta `--custom`: la FK de la nota; la 0004 y la 0005 fueron de L2) (y `--custom` para índices
     parciales o con expresión), mensajes de los únicos, pruebas de checks, FK y unicidad entre
     empresas y cuentas.
-12. **L3-2 (servidor, dominio):** cálculo de líneas, IVA repartido, IDP, motivo y período
+12. **L3-2 (servidor, dominio, hecho):** cálculo de líneas, IVA repartido, IDP, motivo y período
     (funciones puras con pruebas) y la configuración de la sección 8.
 13. **L3-3 (servidor, dominio):** estrategias de retención con su tabla de casos límite
     (depende de las preguntas 4 y 12).

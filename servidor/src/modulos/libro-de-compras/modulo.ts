@@ -4,6 +4,7 @@ import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeDatosFiscalesComponidas } from './composicion/datos-fiscales.js';
 import { rutasDeConceptosDeGasto } from './composicion/conceptos-de-gasto.js';
 import { rutasDeCombustibles } from './composicion/combustibles.js';
+import { configuracionDelLibroDeCompras } from './configuracion.js';
 import { rutasDeVigenciasDeCombustible } from './composicion/vigencias-de-combustible.js';
 // generador: importaciones
 
@@ -53,5 +54,6 @@ export const moduloLibroDeCompras: DefinicionModulo = {
     },
     // generador: permisos
   ],
+  configuracion: configuracionDelLibroDeCompras,
   rutas: componerRutas(),
 };

@@ -605,3 +605,15 @@ y `demo` / `demo-arrancar`.
   la FK sin acción impide eliminarla aunque el documento esté anulado. Pruebas de integración: RLS, cada
   `check`, llaves de la nota y del proveedor, unicidad entre empresas y cuentas. Pruebas: servidor 1475,
   cliente 368, generador 46.
+
+- **2026-10-04 (Libro de compras L3-2, servidor, dominio).** Funciones puras en `libro-de-compras/dominio/`,
+  todo en centavos enteros (con `bigint` en los productos intermedios): `calcularIdp` (exacto como el `check`
+  `lineas_idp_calculado`), `calcularLineas` (IDP, gravado, IVA repartido por resto mayor con el IVA calculado
+  sobre el total del documento, corrección de la FEL hasta Q0.05 en la línea de mayor gravado, IVA al costo),
+  `totalesDelDocumento`, `determinarMotivoSinCredito`, el período (`periodoPropuesto`, `exigirPeriodoValido`,
+  `esFueraDePlazo`, plazo del art. 20 de dos meses; la nota de crédito en su mes de recepción) y
+  `calcularDocumento`, que las junta para `POST …/documentos/calcular` y `RegistrarDocumento` (L3-5). La
+  configuración de la §8 (16 variables de instalación) está en `libro-de-compras/configuracion.ts`. `centavos.ts`
+  se movió de Bancos a `core/compartido/dominio` (Bancos lo reexporta). Decisiones: la nota hereda el motivo de su
+  factura, pero `fuera_de_plazo` (si la nota está reciente) y `exento` (si trae IVA) pasan a `no_vinculado` porque
+  los `check` de §3.5 no aceptan otra cosa; el período propuesto es el mes de recepción. Sin tablas ni rutas.

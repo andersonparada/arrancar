@@ -1,0 +1,66 @@
+import { esFueraDePlazo } from './periodo-del-libro.js';
+import type { MotivoSinCredito, TipoDeDocumento } from './tipos-de-documento.js';
+
+/** Lo que el dominio necesita para decidir si el documento da crédito fiscal. Montos en centavos. */
+export interface DatosParaElMotivo {
+  tipo: TipoDeDocumento;
+  muestraEnReportesSat: boolean;
+  /** El usuario marcó «no vinculado» (la compra no es de la actividad gravada). */
+  noVinculado: boolean;
+  total: number;
+  exento: number;
+  iva: number;
+  periodo: string;
+  fechaDeEmision: string;
+  /** Solo en la nota de crédito: el motivo de la factura que rebaja. */
+  motivoDeLaFactura?: MotivoSinCredito | null;
+}
+
+export interface ResultadoDelMotivo {
+  motivo: MotivoSinCredito | null;
+  avisos: string[];
+}
+
+const AVISO_FUERA_DE_PLAZO =
+  'La factura está fuera del plazo para el crédito fiscal (art. 20 de la Ley del IVA): el IVA se suma al costo de cada línea.';
+const AVISO_DE_ANIO_ANTERIOR = 'El gasto cae en un año que puede estar cerrado; consulte a su contador.';
+
+/**
+ * La nota hereda el motivo de su factura. Como los `check` solo aceptan `fuera_de_plazo` cuando
+ * ese documento mismo está fuera de plazo y `exento` sin IVA, en esos dos casos la nota usa
+ * `no_vinculado` (el IVA al costo) y así sigue rebajando el costo y no el crédito.
+ */
+function motivoHeredado(datos: DatosParaElMotivo): MotivoSinCredito | null {
+  const heredado = datos.motivoDeLaFactura ?? null;
+  if (heredado === 'fuera_de_plazo') {
+    return esFueraDePlazo(datos.periodo, datos.fechaDeEmision) ? heredado : 'no_vinculado';
+  }
+  if (heredado === 'exento') return datos.iva === 0 ? heredado : 'no_vinculado';
+  return heredado;
+}
+
+function motivoDeUnaFactura(datos: DatosParaElMotivo): MotivoSinCredito | null {
+  if (datos.iva === 0 && datos.exento === datos.total) return 'exento';
+  if (datos.noVinculado) return 'no_vinculado';
+  return esFueraDePlazo(datos.periodo, datos.fechaDeEmision) ? 'fuera_de_plazo' : null;
+}
+
+function avisosDe(motivo: MotivoSinCredito | null, datos: DatosParaElMotivo): string[] {
+  if (motivo !== 'fuera_de_plazo' || datos.tipo === 'nota_de_credito') return [];
+  const anioAnterior = Number(datos.fechaDeEmision.slice(0, 4)) < Number(datos.periodo.slice(0, 4));
+  return anioAnterior ? [AVISO_FUERA_DE_PLAZO, AVISO_DE_ANIO_ANTERIOR] : [AVISO_FUERA_DE_PLAZO];
+}
+
+/**
+ * Decide el motivo sin crédito fiscal, en este orden: casilla SAT desmarcada, ninguno; pequeño
+ * contribuyente; nota de crédito, el de su factura; todo exento con IVA cero, `exento`; el usuario
+ * marcó no vinculado; período pasado de emisión + 2 meses, `fuera_de_plazo` (con avisos).
+ */
+export function determinarMotivoSinCredito(datos: DatosParaElMotivo): ResultadoDelMotivo {
+  let motivo: MotivoSinCredito | null;
+  if (!datos.muestraEnReportesSat) motivo = null;
+  else if (datos.tipo === 'factura_pequeno_contribuyente') motivo = 'pequeno_contribuyente';
+  else if (datos.tipo === 'nota_de_credito') motivo = motivoHeredado(datos);
+  else motivo = motivoDeUnaFactura(datos);
+  return { motivo, avisos: avisosDe(motivo, datos) };
+}
