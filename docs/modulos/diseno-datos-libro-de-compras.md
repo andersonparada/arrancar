@@ -237,7 +237,7 @@ Checks (nombres `documentos_<regla>`):
 | `documentos_nota_factura_fk` | FK `(documento_afectado_id, empresa_id, proveedor_id, destino) → documentos (id, empresa_id, proveedor_id, destino)` MATCH SIMPLE, no action | la nota es del mismo proveedor y va al mismo destino, garantizado en la base |
 | `documentos_sat_unico` | unique `(nit_emisor, tipo, serie, numero) where estado = 'vigente' and muestra_en_reportes_sat` | **toda la instalación** |
 | `documentos_autorizacion_fel_unica` | unique `(autorizacion_fel) where estado = 'vigente' and autorizacion_fel is not null` | **toda la instalación** |
-| `documentos_del_proveedor_unico` | unique `(proveedor_id, tipo, coalesce(serie, ''), numero) where estado = 'vigente'` | marcados y desmarcados; el proveedor es de la cuenta, así que vale en **todas las empresas de la cuenta** |
+| `documentos_del_proveedor_unico` | unique `(empresa_id, proveedor_id, tipo, coalesce(serie, ''), numero) where estado = 'vigente'` | marcados y desmarcados, **solo dentro de la empresa** (respuesta 3; los marcados ya son únicos en toda la instalación) |
 | `documentos_libro_idx` | `(empresa_id, periodo)` | Libro de compras (L5) y listas |
 | `documentos_proveedor_reciente_idx` | `(empresa_id, proveedor_id, creado_en desc)` | destino sugerido y filtro por proveedor |
 | `documentos_emision_idx` | `(empresa_id, fecha_emision)` | listas por fecha |
@@ -687,7 +687,7 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
 
 ### L3 Documentos
 
-11. **L3-1 (servidor):** tablas 3.5 a 3.7, migraciones 0004 (y `--custom` para índices
+11. **L3-1 (servidor, hecho 2026-10-04):** tablas 3.5 a 3.7, migraciones 0006 y 0007 (esta `--custom`: la FK de la nota; la 0004 y la 0005 fueron de L2) (y `--custom` para índices
     parciales o con expresión), mensajes de los únicos, pruebas de checks, FK y unicidad entre
     empresas y cuentas.
 12. **L3-2 (servidor, dominio):** cálculo de líneas, IVA repartido, IDP, motivo y período

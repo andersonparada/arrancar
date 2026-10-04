@@ -21,6 +21,9 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   departamentos_codigo_unico: 'Ya existe un departamento con ese código.',
   departamentos_nombre_unico: 'Ya existe un departamento con ese nombre.',
   localidades_establecimiento_sat_unico: `Ya existe una localidad con ese código de establecimiento SAT. ${PEDIR_ACCESO_A_LOCALIDADES}`,
+  documentos_sat_unico: 'Ese documento ya está registrado.',
+  documentos_autorizacion_fel_unica: 'Ese documento ya está registrado.',
+  documentos_del_proveedor_unico: 'Ese documento ya está registrado.',
 };
 
 /** Restricciones de exclusión (rangos que no pueden traslaparse) y lo que se le dice al usuario. */

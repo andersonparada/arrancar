@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, max } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { RepositorioVigenciasDeCombustible } from '../../aplicacion/puertos/repositorio-vigencias-de-combustible.js';
 import type {
@@ -7,6 +7,8 @@ import type {
   VigenciaDeCombustibleId,
 } from '../../dominio/vigencia-de-combustible.js';
 import { combustibles } from './combustibles.tablas.js';
+import { documentos } from './documentos.tablas.js';
+import { lineasDeDocumento } from './lineas-de-documento.tablas.js';
 import { mapeadorDeVigenciaDeCombustible } from './vigencia-de-combustible.mapeador.js';
 import { vigenciasDeCombustible } from './vigencias-de-combustible.tablas.js';
 
@@ -36,9 +38,14 @@ export class RepositorioVigenciasDeCombustibleDrizzle implements RepositorioVige
       .for('update');
   }
 
-  /** Hasta L3 no existen las líneas de documento que aplican una vigencia: nada la usa todavía. */
-  async enUso(_id: VigenciaDeCombustibleId): Promise<UsoDeVigencia | null> {
-    return null;
+  /** Los documentos anulados no cuentan: la vigencia solo está en uso si la aplica un documento vigente. */
+  async enUso(id: VigenciaDeCombustibleId): Promise<UsoDeVigencia | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ ultimaFechaDeEmision: max(documentos.fechaEmision) })
+      .from(lineasDeDocumento)
+      .innerJoin(documentos, eq(documentos.id, lineasDeDocumento.documentoId))
+      .where(and(eq(lineasDeDocumento.vigenciaDeCombustibleId, id.valor), eq(documentos.estado, 'vigente')));
+    return fila?.ultimaFechaDeEmision ? { ultimaFechaDeEmision: fila.ultimaFechaDeEmision } : null;
   }
 
   async agregar(vigenciaDeCombustible: VigenciaDeCombustible): Promise<void> {

@@ -200,17 +200,15 @@ En `main`, además de lo anterior:
 ## Siguiente (mañana)
 
 L2 (catálogos del Libro de compras) quedó terminado en servidor y cliente: Conceptos de gasto y Combustibles
-con su historia de tasas de IDP (las vigencias viven dentro de Combustibles, sin menú propio). Pendiente:
+con su historia de tasas de IDP (las vigencias viven dentro de Combustibles, sin menú propio). Los dos pendientes
+de L2 ya están hechos (2026-10-04): semilla de conceptos de gasto sugeridos y nombres únicos sin mayúsculas ni
+acentos (detalle en la bitácora de `docs/PLAN.md`). Pendiente:
 
-1. **Semilla de conceptos de gasto sugeridos** (respuesta 11 del usuario, `diseno-datos-libro-de-compras.md`).
-2. **Nombres únicos sin mayúsculas ni acentos** en conceptos de gasto y combustibles: hoy el único distingue
-   mayúsculas, a diferencia de bancos, que usa `core.nombre_normalizado`. Un nombre repetido (409) hoy sale como
-   aviso general, no debajo del campo.
-3. **L3** (documentos del Libro de compras, `diseno-datos-libro-de-compras.md` §14).
-4. **H2**: saldo transcrito y estado de cuenta en la conciliación (`plan-archivos-y-h2.md`; la ruta de subida
+1. **L3** (documentos del Libro de compras, `diseno-datos-libro-de-compras.md` §14).
+2. **H2**: saldo transcrito y estado de cuenta en la conciliación (`plan-archivos-y-h2.md`; la ruta de subida
    debe usar `limitarSubidas`). Pedir al usuario el PDF del banco con datos tachados.
-5. **Cuentas por pagar CP1**.
-6. Probar en el navegador lo nuevo (L1 y L2 en Empresas, Proveedores, Conceptos de gasto y Combustibles; P7,
+3. **Cuentas por pagar CP1**.
+4. Probar en el navegador lo nuevo (L1 y L2 en Empresas, Proveedores, Conceptos de gasto y Combustibles; P7,
    H6b, H8, avisos de fecha, Archivos). Ojo: con «decimales de montos» en 0 la tasa de IDP se vería redondeada.
 
 ## Preguntas abiertas para el usuario

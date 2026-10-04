@@ -594,3 +594,14 @@ y `demo` / `demo-arrancar`.
     eléctrica y Maquinaria y equipo como activo fijo), como los conceptos de Bancos (H3) y
     editable por el usuario. `SembrarConceptosDeGasto` en `ListarConceptosDeGasto`, con
     `hayAlguno` y `sembrar` en el repositorio. Pruebas: servidor 1393.
+
+- **2026-10-04 (Libro de compras L3-1, servidor).** Tablas `documentos`, `lineas_de_documento` y `retenciones`
+  (migraciones `0006_l3_documentos` y `0007_l3_documentos_nota_factura_fk`, esta última `--custom` porque
+  drizzle-kit no escribe la llave autorreferente de la nota a su factura). Las restricciones de `documentos`
+  viven en `documentos.restricciones.ts` (funciones por tema, por el tope de 25 líneas). Los tres únicos de
+  documentos dan «Ese documento ya está registrado.». `documentos_del_proveedor_unico` lleva `empresa_id`:
+  los desmarcados son únicos solo dentro de la empresa (respuesta 3). `RepositorioVigenciasDeCombustible.enUso`
+  ya consulta las líneas: la fecha de emisión más reciente de los documentos vigentes que usan la vigencia;
+  la FK sin acción impide eliminarla aunque el documento esté anulado. Pruebas de integración: RLS, cada
+  `check`, llaves de la nota y del proveedor, unicidad entre empresas y cuentas. Pruebas: servidor 1475,
+  cliente 368, generador 46.
