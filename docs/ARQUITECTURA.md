@@ -863,6 +863,8 @@ Decisiones:
   decimales. Variables públicas `core.regional.formato_fecha`,
   `core.regional.decimales_montos` y `core.regional.decimales_cantidades` (niveles
   instalación, cuenta y empresa); el cliente formatea solo desde `utilidades/formato.ts`.
+  **Los montos llevan como mínimo 2 decimales** (regla del usuario, 2026-10-04):
+  `decimales_montos` acepta de 2 a 4 y `FormatoRegional.monto` nunca muestra menos de 2.
 - **Textos:** cada módulo del cliente tiene `textos.ts` con los nombres de sus
   ventanas, menús y títulos; páginas, menú y rutas los toman de ahí.
 - **Reportes de Clientes** (clientes por clase, proveedores por categoría): quedan

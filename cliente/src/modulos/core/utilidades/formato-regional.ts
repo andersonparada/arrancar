@@ -16,6 +16,8 @@ export const AJUSTES_REGIONALES_PREDETERMINADOS: AjustesRegionales = {
 };
 
 const SIN_VALOR = '—';
+/** Un monto nunca se muestra con menos de dos decimales, aunque la configuración diga menos. */
+export const DECIMALES_MINIMOS_DE_MONTOS = 2;
 const FECHA_SIN_HORA = /^(\d{4})-(\d{2})-(\d{2})$/;
 const IDIOMA = 'es-GT';
 
@@ -46,7 +48,7 @@ export class FormatoRegional {
   /** Recibe texto para no perder precisión en los decimales que manda el servidor. */
   monto(valor: Numero, moneda = 'GTQ'): string {
     if (!hayNumero(valor)) return SIN_VALOR;
-    const decimales = this.ajustes.decimalesMontos;
+    const decimales = Math.max(DECIMALES_MINIMOS_DE_MONTOS, this.ajustes.decimalesMontos);
     return new Intl.NumberFormat(IDIOMA, {
       style: 'currency',
       currency: moneda,

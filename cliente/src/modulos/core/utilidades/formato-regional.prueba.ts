@@ -33,11 +33,13 @@ describe('fechas', () => {
 });
 
 describe('números', () => {
-  it('los montos llevan quetzales y los decimales configurados', () => {
+  it('los montos llevan quetzales y los decimales configurados, nunca menos de dos', () => {
+    const conCuatro = new FormatoRegional({ ...AJUSTES_REGIONALES_PREDETERMINADOS, decimalesMontos: 4 });
     const sinCentavos = new FormatoRegional({ ...AJUSTES_REGIONALES_PREDETERMINADOS, decimalesMontos: 0 });
 
     expect(guatemala.monto('1250.5')).toMatch(/^Q\s?1,250\.50$/);
-    expect(sinCentavos.monto(1250.5)).toMatch(/^Q\s?1,251$/);
+    expect(conCuatro.monto('4.7')).toMatch(/^Q\s?4\.7000$/);
+    expect(sinCentavos.monto('4.70')).toMatch(/^Q\s?4\.70$/);
   });
 
   it('las cantidades pueden llevar su unidad', () => {
