@@ -8,7 +8,7 @@
 /** Los módulos a donde puede ir un documento del libro. */
 export type DestinoDeDocumento = 'cuentas-por-pagar' | 'caja-chica' | 'cuentas-por-liquidar';
 
-export type TipoDeDocumentoDeCompra = 'factura' | 'factura_pequeno_contribuyente' | 'nota_de_credito';
+export type TipoDeDocumentoDeCompra = 'factura' | 'factura_pequeno_contribuyente' | 'nota_de_credito' | 'recibo';
 
 /** Lo que recibe cada destino en su orden `<destino>.recibir_documento`. */
 export interface DocumentoParaDestino {
