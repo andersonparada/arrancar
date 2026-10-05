@@ -450,3 +450,25 @@ Artículos de extractos coincidentes; confirmar en el texto vigente los que se m
 - **A3:** la retención del 5 % a pequeño contribuyente lleva la fecha de recepción; `retenciones.fecha` es obligatoria
   para todas las reglas, y se quitan `retenciones_por_fechar_idx` y la orden `libro-de-compras.fechar_retencion`.
   Desaparece el riesgo 3 del diseño (§13) para esta regla.
+
+## Registro de documentos L3-5 (contador-guatemala, 2026-10-04) — pendiente de decisión del usuario
+
+Veredicto: correcto con ajustes. Recomendaciones del contador (el usuario aún no responde):
+1. Entero del ISR contado desde la **fecha de la factura** (`retencion.fecha`, Decreto 10-2012 art. 48), no desde la
+   recepción (corrige su ajuste 6 de L3-3). Feriados: tabla nacional en `core` o, mientras tanto, texto suavizado.
+2. Aviso de responsabilidad solidaria también al **rebajar** una retención, citando Código Tributario art. 29 (y
+   Decreto 10-2012 art. 22 en el ISR).
+3. Proveedor sin datos fiscales: **opción C**, pedir en el mismo documento el régimen de ISR y si es agente de IVA
+   (como dice la FEL) y guardarlos con auditoría; sin aviso en recibos, fuera del libro y notas.
+4. No domiciliado: aviso que nombre el ISR de no residentes (Decreto 10-2012, rentas de no residentes).
+5. Nota tardía: contar de fecha a fecha y agregar «aun así, rebaje en el período en que la recibe».
+6. Aceptar **CUI** como receptor de FEL a otra persona; aviso (no error) en FEL a CF desde Q2,500; `sin_fel` con
+   `nit_receptor` vacío.
+7. Factura de un régimen distinto al guardado: dejar pasar con confirmación y auditoría si el proveedor cambió de
+   régimen.
+8. Retención de no residentes, DUCA y factura especial: planificar después de CP1.
+Confirmar en texto vigente: Decreto 10-2012 arts. 22 y 48, Código Tributario arts. 29 y 45, Ley del IVA arts. 17 y 48,
+catálogo de frases FEL.
+
+Preguntas de L3-6 para el contador: ¿un anulado puede eliminarse si el período no está declarado? ¿Una nota anulada
+debe seguir impidiendo eliminar su factura? ¿El período declarado (L5) bloquea también eliminar?

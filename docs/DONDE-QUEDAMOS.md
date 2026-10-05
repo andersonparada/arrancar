@@ -197,19 +197,17 @@ En `main`, además de lo anterior:
   Pruebas tras la unión: servidor 1286, cliente 343, generador 46. **Sin menú todavía**: L2
   agrega las pantallas del módulo. Pendiente de probar en el navegador.
 
-## Siguiente (mañana)
+## Siguiente (actualizado 2026-10-04)
 
-L2 (catálogos del Libro de compras) quedó terminado en servidor y cliente: Conceptos de gasto y Combustibles
-con su historia de tasas de IDP (las vigencias viven dentro de Combustibles, sin menú propio). Los dos pendientes
-de L2 ya están hechos (2026-10-04): semilla de conceptos de gasto sugeridos y nombres únicos sin mayúsculas ni
-acentos (detalle en la bitácora de `docs/PLAN.md`). Pendiente:
+En `main`, todo en verde (servidor 1795, cliente 369, generador 46): L1, L2 y L3-1 a L3-6 del Libro de compras
+(servidor), con las decisiones del contador y del usuario en `validacion-h7-h11-retenciones.md`.
 
-1. **L3** (documentos del Libro de compras, `diseno-datos-libro-de-compras.md` §14).
-2. **H2**: saldo transcrito y estado de cuenta en la conciliación (`plan-archivos-y-h2.md`; la ruta de subida
-   debe usar `limitarSubidas`). Pedir al usuario el PDF del banco con datos tachados.
-3. **Cuentas por pagar CP1**.
-4. Probar en el navegador lo nuevo (L1 y L2 en Empresas, Proveedores, Conceptos de gasto y Combustibles; P7,
-   H6b, H8, avisos de fecha, Archivos). Ojo: con «decimales de montos» en 0 la tasa de IDP se vería redondeada.
+1. **Preguntar al usuario** (con AskUserQuestion) las 8 recomendaciones del contador sobre L3-5 (última sección de
+   `validacion-h7-h11-retenciones.md`) y aplicar lo aprobado (agente backend).
+2. Pasar al contador las 3 preguntas de L3-6 (anulados, notas anuladas, período declarado).
+3. **L3-7** (cliente): Ingreso de facturas, lista con filtros, ficha, anular y eliminar; formulario con vista previa
+   (`POST …/documentos/calcular`).
+4. H2 (pedir PDF del banco), CP1, probar en el navegador lo nuevo.
 
 ## Preguntas abiertas para el usuario
 
