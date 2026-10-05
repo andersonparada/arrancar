@@ -43,12 +43,8 @@ const restriccionesDeMontos = (t: Columnas) => [
 
 /** La fecha de la retención y su constancia. */
 const restriccionesDeFechas = (t: Columnas) => [
-  check('retenciones_fecha_obligatoria', sql`${t.regla} = 'iva_pequeno_contribuyente' or ${t.fecha} is not null`),
   check('retenciones_constancia_completa', sql`(${t.constanciaNumero} is null) = (${t.constanciaFecha} is null)`),
   index('retenciones_mes_idx').on(t.empresaId, t.fecha),
-  index('retenciones_por_fechar_idx')
-    .on(t.empresaId)
-    .where(sql`${t.fecha} is null`),
 ];
 
 /** Una retención ya calculada y fijada al registrar el documento; se guarda aunque el usuario la quite. */
@@ -67,7 +63,7 @@ export const retenciones = esquemaLibroDeCompras.table(
     montoPropuesto: numeric({ precision: 14, scale: 2 }).notNull(),
     monto: numeric({ precision: 14, scale: 2 }).notNull(),
     motivoDelAjuste: text(),
-    fecha: date(),
+    fecha: date().notNull(),
     constanciaNumero: text(),
     constanciaFecha: date(),
     ...marcasDeTiempo,

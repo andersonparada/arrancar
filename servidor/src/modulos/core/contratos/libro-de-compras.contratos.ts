@@ -26,8 +26,6 @@ export interface DocumentoParaDestino {
 
 declare module './mediador.contratos.js' {
   interface OrdenesEntreModulos {
-    /** El destino fecha la retención del 5 % a pequeño contribuyente (al autorizar o pagar). `fecha` es `AAAA-MM-DD`. */
-    'libro-de-compras.fechar_retencion': { datos: { documentoId: string; fecha: string }; respuesta: void };
     /** El destino marca el documento como procesado (`true`) o lo devuelve a pendiente (`false`). */
     'libro-de-compras.marcar_procesado': { datos: { documentoId: string; procesado: boolean }; respuesta: void };
     /** El destino anula o elimina desde su pantalla; Libro de compras aplica sus reglas. */

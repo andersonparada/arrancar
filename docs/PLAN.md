@@ -663,3 +663,15 @@ contabilidad completa (agente de retención del ISR)», marcada por omisión, co
 aviso no bloqueante al desmarcarla; el agente de retención del IVA aclara que lo califica la SAT; «Se le retiene el
 ISR» menciona «Sujeto a pago directo ISR»; «Producto agropecuario» explica qué cuenta como estado natural y que
 afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
+
+
+- **2026-10-04 · Libro de compras L3-3, decisiones A1, B2 y A3 del usuario (servidor).** **A1:** la casilla «Se muestra
+  en reportes SAT» solo se desmarca para documentos sin FEL a nombre de la empresa: columna
+  `documentos.motivo_fuera_del_libro` (`sin_fel`, `fel_a_consumidor_final`, `fel_a_otro_nit`) y checks
+  `muestra_segun_motivo`, `sin_fel_sin_autorizacion` y `fel_con_autorizacion`; la regla pura
+  `evaluarFueraDelLibro` (`dominio/fuera-del-libro.ts`) da `FelAlNitDeLaEmpresaNoSeDesmarca` y
+  `MotivoFueraDelLibroIncoherente`, y los avisos de gasto no deducible del ISR y de factura especial (Ley del IVA
+  art. 52, persona individual sin NIT). **B2:** `es_agente_de_retencion_isr` vale `true` por omisión (tabla y
+  `DatosFiscalesDeEmpresa.porOmision`). **A3:** la retención del 5 % a pequeño contribuyente se fecha con la
+  recepción: `retenciones.fecha` es `not null`, sin `retenciones_por_fechar_idx` ni la orden `fechar_retencion`.
+  Migración `0009` (con la reclasificación de filas existentes). Diseño actualizado (§3.1, 3.5, 3.7, 4.3, 7 y 13).

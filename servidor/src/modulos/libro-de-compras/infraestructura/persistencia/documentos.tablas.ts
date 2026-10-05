@@ -11,6 +11,7 @@ import { empresas } from '../../../core/cuentas/infraestructura/persistencia/emp
 import {
   indicesDeDocumento,
   llavesDeDocumento,
+  restriccionesDeFueraDelLibro,
   restriccionesDeMontos,
   restriccionesDeTextos,
   restriccionesDePeriodo,
@@ -48,6 +49,7 @@ export const documentos = esquemaLibroDeCompras.table(
     fechaRecepcion: date().notNull(),
     periodo: date().notNull(),
     muestraEnReportesSat: boolean().default(true).notNull(),
+    motivoFueraDelLibro: text().$type<'sin_fel' | 'fel_a_consumidor_final' | 'fel_a_otro_nit'>(),
     motivoSinCredito: text(),
     documentoAfectadoId: uuid(),
     destino: text().$type<'cuentas-por-pagar' | 'caja-chica' | 'cuentas-por-liquidar'>().notNull(),
@@ -72,6 +74,7 @@ export const documentos = esquemaLibroDeCompras.table(
     ...restriccionesDeMontos(t),
     ...restriccionesDePeriodo(t),
     ...restriccionesDeTipo(t),
+    ...restriccionesDeFueraDelLibro(t),
     ...llavesDeDocumento(t),
     ...indicesDeDocumento(t),
     politicaPorEmpresa(),

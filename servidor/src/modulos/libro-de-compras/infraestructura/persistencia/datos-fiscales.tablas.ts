@@ -26,7 +26,7 @@ export const datosFiscalesDeEmpresa = esquemaLibroDeCompras.table(
     regimenIva: text().notNull().default('general'),
     regimenIsr: text().notNull().default('utilidades'),
     agenteDeRetencionIva: text().notNull().default('ninguno'),
-    esAgenteDeRetencionIsr: boolean().notNull().default(false),
+    esAgenteDeRetencionIsr: boolean().notNull().default(true),
     ...marcasDeTiempo,
     ...autoria,
   },

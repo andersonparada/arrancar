@@ -4,6 +4,7 @@ import { proveedores } from '../../../terceros/infraestructura/persistencia/prov
 
 const TIPOS = "'factura', 'factura_pequeno_contribuyente', 'nota_de_credito', 'recibo'";
 const DESTINOS = "'cuentas-por-pagar', 'caja-chica', 'cuentas-por-liquidar'";
+const MOTIVOS_FUERA = "'sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit'";
 const MOTIVOS = "'fuera_de_plazo', 'no_vinculado', 'pequeno_contribuyente', 'exento'";
 
 /** Las columnas de `documentos` que usan las restricciones (la tabla las pasa desde su callback). */
@@ -22,6 +23,7 @@ export type ColumnasDeDocumento = Record<
   | 'fechaRecepcion'
   | 'periodo'
   | 'muestraEnReportesSat'
+  | 'motivoFueraDelLibro'
   | 'motivoSinCredito'
   | 'documentoAfectadoId'
   | 'destino'
@@ -49,6 +51,10 @@ export const restriccionesDeValores = (t: T) => [
   check(
     'documentos_motivo_sin_credito_valido',
     sql`${t.motivoSinCredito} is null or ${t.motivoSinCredito} in (${sql.raw(MOTIVOS)})`,
+  ),
+  check(
+    'documentos_motivo_fuera_del_libro_valido',
+    sql`${t.motivoFueraDelLibro} is null or ${t.motivoFueraDelLibro} in (${sql.raw(MOTIVOS_FUERA)})`,
   ),
   check('documentos_estado_valido', sql`${t.estado} in ('vigente', 'anulado')`),
   check('documentos_nit_emisor_valido', sql`${t.nitEmisor} is null or ${t.nitEmisor} ~ '^[0-9]{1,12}[0-9K]$'`),
@@ -135,6 +141,19 @@ export const restriccionesDeTipo = (t: T) => [
     sql`(${t.estado} = 'anulado') = (${t.anuladoEn} is not null and ${t.anuladoPor} is not null and ${t.motivoDeAnulacion} is not null)`,
   ),
   check('documentos_recibo_desmarcado', sql`${t.tipo} <> 'recibo' or not ${t.muestraEnReportesSat}`),
+];
+
+/** La casilla «Se muestra en reportes SAT» sigue al motivo de dejar el documento fuera del libro. */
+export const restriccionesDeFueraDelLibro = (t: T) => [
+  check('documentos_muestra_segun_motivo', sql`${t.muestraEnReportesSat} = (${t.motivoFueraDelLibro} is null)`),
+  check(
+    'documentos_sin_fel_sin_autorizacion',
+    sql`${t.motivoFueraDelLibro} is distinct from 'sin_fel' or ${t.autorizacionFel} is null`,
+  ),
+  check(
+    'documentos_fel_con_autorizacion',
+    sql`${t.motivoFueraDelLibro} not in ('fel_a_consumidor_final', 'fel_a_otro_nit') or ${t.autorizacionFel} is not null`,
+  ),
 ];
 
 /** Llaves únicas y foráneas: los documentos vigentes no se repiten. */

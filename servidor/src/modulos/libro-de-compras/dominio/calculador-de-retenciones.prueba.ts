@@ -167,11 +167,11 @@ describe('IVA de pequeño contribuyente: el total debe ser mayor al umbral', () 
     );
   });
 
-  it('la fecha la pone el destino', () => {
+  it('se fecha con la recepción del documento', () => {
     const [retencion] = calcularRetenciones(
       entrada({ total: 500000, tipo: 'factura_pequeno_contribuyente', empresa: agente, proveedor: pequeno }),
     );
-    expect(retencion).toMatchObject({ porcentaje: 500, origenDeLaFecha: 'destino' });
+    expect(retencion).toMatchObject({ porcentaje: 500, origenDeLaFecha: 'recepcion' });
   });
 
   it('una empresa que no es agente no retiene', () => {

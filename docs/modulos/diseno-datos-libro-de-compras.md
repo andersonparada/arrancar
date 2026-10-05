@@ -63,7 +63,7 @@ ella).
 ### 3.1 `libro_de_compras.datos_fiscales_de_empresa` (L1)
 
 Una fila por empresa, creada al guardar la sección por primera vez. Sin fila = valores por
-omisión (general, utilidades, no agente).
+omisión (general, utilidades, agente de ISR, agente de IVA ninguno).
 
 | Columna | Tipo | Nulo | Por omisión / regla |
 |---|---|---|---|
@@ -71,7 +71,7 @@ omisión (general, utilidades, no agente).
 | `regimen_iva` | text | no | `'general'`; check `in ('general','pequeno_contribuyente')` |
 | `regimen_isr` | text | no | `'utilidades'`; check `in ('utilidades','opcional_simplificado')` |
 | `agente_de_retencion_iva` | text | no | `'ninguno'`; check `in ('ninguno','exportador','contribuyente_especial','sector_publico','otro')` |
-| `es_agente_de_retencion_isr` | boolean | no | `false` |
+| `es_agente_de_retencion_isr` | boolean | no | **`true`** (decisión del usuario 2026-10-04: por ley retiene quien lleva contabilidad completa; el cambio se audita como `corregir`) |
 
 Checks: `datos_fiscales_de_empresa_pequeno_no_retiene`: `regimen_iva <> 'pequeno_contribuyente'
 or agente_de_retencion_iva = 'ninguno'`. RLS: `politicaPorEmpresa()`.
@@ -186,7 +186,8 @@ transacción).
 | `fecha_emision` | date | no | |
 | `fecha_recepcion` | date | no | check `>= fecha_emision` (fecha de la retención de IVA por agente) |
 | `periodo` | date | no | primer día del mes del libro |
-| `muestra_en_reportes_sat` | boolean | no | `true` |
+| `muestra_en_reportes_sat` | boolean | no | `true`; solo es `false` con `motivo_fuera_del_libro` (derivado de él) |
+| `motivo_fuera_del_libro` | text | sí | check `in ('sin_fel','fel_a_consumidor_final','fel_a_otro_nit')`; solo se desmarcan documentos sin FEL a nombre de la empresa |
 | `motivo_sin_credito` | text | sí | check `in ('fuera_de_plazo','no_vinculado','pequeno_contribuyente','exento')` |
 | `documento_afectado_id` | uuid | sí | la factura que rebaja una nota de crédito |
 | `destino` | text | no | clave del módulo: check `in ('cuentas-por-pagar','caja-chica','cuentas-por-liquidar')` |
@@ -214,6 +215,11 @@ Checks (nombres `documentos_<regla>`):
 - `nota_en_su_mes`: `tipo <> 'nota_de_credito' or periodo = date_trunc('month',
   fecha_recepcion)::date` (rebaja el crédito del período en que se recibe, sin gracia).
 - `nota_con_factura`: `(tipo = 'nota_de_credito') = (documento_afectado_id is not null)`.
+- `muestra_segun_motivo`: `muestra_en_reportes_sat = (motivo_fuera_del_libro is null)`.
+- `sin_fel_sin_autorizacion`: `motivo_fuera_del_libro is distinct from 'sin_fel' or autorizacion_fel is null`.
+- `fel_con_autorizacion`: `motivo_fuera_del_libro not in ('fel_a_consumidor_final','fel_a_otro_nit') or
+  autorizacion_fel is not null`. Que `nit_receptor` sea nulo o distinto del NIT de la empresa lo valida el
+  dominio (`fuera-del-libro.ts`): el check no ve la empresa.
 - `datos_sat`: `not muestra_en_reportes_sat or (nit_emisor is not null and serie is not null
   and autorizacion_fel is not null)`.
 - `sin_sat_sin_credito`: `muestra_en_reportes_sat or (iva = 0 and motivo_sin_credito is null)`
@@ -307,12 +313,11 @@ Una fila por regla aplicada; se crean al registrar y quedan **fijas**.
 | `monto_propuesto` | numeric(14,2) | no | `>= 0`; lo que calculó el sistema |
 | `monto` | numeric(14,2) | no | `between 0 and base`; lo que queda (0 = quitada) |
 | `motivo_del_ajuste` | text | sí | check `monto = monto_propuesto or motivo_del_ajuste is not null` |
-| `fecha` | date | sí | check `regla = 'iva_pequeno_contribuyente' or fecha is not null` |
+| `fecha` | date | no | siempre se conoce al registrar (recepción o emisión, §4.3) |
 | `constancia_numero`, `constancia_fecha` | text, date | sí | L5; check los dos o ninguno |
 
 Únicos e índices: unique `(documento_id, regla)` (también cubre la FK);
-`retenciones_mes_idx (empresa_id, fecha)` para el reporte (L5);
-`retenciones_por_fechar_idx (empresa_id) where fecha is null`. RLS: `politicaPorEmpresa()`.
+`retenciones_mes_idx (empresa_id, fecha)` para el reporte (L5). RLS: `politicaPorEmpresa()`.
 
 Se guarda la fila aunque el usuario la quite (monto 0 y motivo): así queda el rastro de la
 propuesta. Neto a pagar (derivado) = `documentos.total − sum(retenciones.monto)`.
@@ -351,7 +356,7 @@ que responde.
    su concepto, activo fijo y deducibilidad; sin cuenta aparte).
 
 Factura de pequeño contribuyente: `iva = 0`, `base = total − idp − exento`, motivo
-`pequeno_contribuyente`. Casilla SAT desmarcada: `iva = 0`, `base = total − idp − exento`,
+`pequeno_contribuyente`. Casilla SAT desmarcada (solo sin FEL a nombre de la empresa, con `motivo_fuera_del_libro`; avisos de no deducible del ISR y de factura especial): `iva = 0`, `base = total − idp − exento`,
 motivo nulo, sin retenciones (todo al costo). Nota de crédito: mismas fórmulas sobre sus
 líneas; montos positivos (el tipo da el signo en los reportes) y hereda el motivo de su
 factura (si la factura quedó sin crédito, la nota rebaja el costo y no el crédito).
@@ -376,7 +381,7 @@ porcentaje, monto, fecha }`.
 | `iva_exportador_agropecuario` / `iva_exportador` | empresa `exportador`; proveedor `se_le_retiene_iva` y no agente; `factura`; `total >= iva.minimo` | IVA de las líneas cuyo concepto es agropecuario / de las demás | 65 % / 15 % | recepción |
 | `iva_contribuyente_especial`, `iva_otro_agente` | empresa de ese tipo; mismas condiciones | IVA del documento | 15 % | recepción |
 | `iva_sector_publico` | empresa `sector_publico`; `total >= iva.minimo_sector_publico` | IVA | 25 % | recepción |
-| `iva_pequeno_contribuyente` | empresa con `agente_de_retencion_iva <> 'ninguno'`; proveedor `se_le_retiene_iva_pequeno_contribuyente`; `factura_pequeno_contribuyente`; **`total > umbral`** (estrictamente mayor, Q2,500.00) | total | 5 % | **nula**: la pone el destino (`fechar_retencion`) |
+| `iva_pequeno_contribuyente` | empresa con `agente_de_retencion_iva <> 'ninguno'`; proveedor `se_le_retiene_iva_pequeno_contribuyente`; `factura_pequeno_contribuyente`; **`total > umbral`** (estrictamente mayor, Q2,500.00) | total | 5 % | recepción (acreditar en cuenta, Ley del IVA art. 48; `recibir_documento` corre en la misma transacción) |
 | `isr_opcional_simplificado` | empresa `es_agente_de_retencion_isr`; proveedor `opcional_simplificado` y `se_le_retiene_isr`; `factura`; `base_isr >= isr.minimo` | `base_isr = total − iva` (= base + exento, más el IDP si `isr.incluye_idp`; pregunta 12)  | 5 % hasta Q30,000 + 7 % del excedente | emisión |
 
 - El usuario puede **quitar** (monto 0) o **ajustar** cada propuesta con motivo (pregunta 6):
@@ -472,8 +477,6 @@ el cambio como `corregir` con los valores anteriores (pregunta 13).
 ```ts
 declare module './mediador.contratos.js' {
   interface OrdenesEntreModulos {
-    /** El destino fecha la retención del 5 % a pequeño contribuyente (al autorizar o pagar). */
-    'libro-de-compras.fechar_retencion': { datos: { documentoId: string; fecha: string }; respuesta: void };
     /** El destino marca el documento como procesado (true) o lo devuelve a pendiente (false). */
     'libro-de-compras.marcar_procesado': { datos: { documentoId: string; procesado: boolean }; respuesta: void };
     /** El destino anula o elimina desde su pantalla; Libro de compras aplica sus reglas. */
@@ -500,8 +503,7 @@ export interface DocumentoParaDestino {
   atiende. Cada destino declara `'<destino>.recibir_documento': { datos: DocumentoParaDestino;
   respuesta: void }`; L3 crea `core/contratos/cuentas-por-pagar.contratos.ts` con esa sola
   orden (CP1 la atiende). El adaptador de Libro de compras arma el nombre con el destino.
-- `fechar_retencion`: solo para `iva_pequeno_contribuyente`; si ya tiene fecha, la misma es
-  idempotente y otra da `RetencionYaFechada`; `fecha >= fecha_emision`.
+- Sin `fechar_retencion`: la retención del 5 % se fecha al registrar con la fecha de recepción.
 - `anular_documento` / `eliminar_documento`: corren las mismas reglas de la sección 5 y también
   envían el aviso; el destino que originó lo ignora porque ya hizo lo suyo (manejador
   idempotente).
@@ -603,7 +605,7 @@ agregar datos fiscales y algunos conceptos a la cuenta demo (commit del paso que
 - **Casos de uso (dobles):** H10 (sin NIT → orden; NIT distinto → error; desmarcado sin NIT),
   destino inactivo, nota que supera la factura, retención ajustada sin motivo, ajuste sin
   permiso, anular con notas vigentes, eliminar procesado, aviso vetado por el destino (se
-  deshace todo), `fechar_retencion` idempotente y con otra fecha.
+  deshace todo); la retención del 5 % lleva la fecha de recepción; fuera del libro (`evaluarFueraDelLibro`).
 - **Infraestructura (PostgreSQL real):** RLS por empresa y por cuenta de cada tabla (otra
   empresa no ve; otra empresa de la **misma cuenta sí** ve los datos fiscales del proveedor);
   **unicidad entre empresas y entre cuentas** (mismo NIT+serie+número en otra cuenta → mensaje
@@ -629,7 +631,9 @@ agregar datos fiscales y algunos conceptos a la cuenta demo (commit del paso que
    centavos en el libro frente a los DTE de la SAT (pregunta 7; L4 lo resolverá trayendo el IVA
    del DTE).
 3. **Retención fijada al registrar** mientras la ley la hace nacer al pagar o acreditar: una
-   nota posterior no la corrige (decisión del usuario; riesgo anotado por el contador).
+   nota posterior no la corrige (decisión del usuario; riesgo anotado por el contador). Para el 5 %
+   a pequeño contribuyente el riesgo desaparece: se fecha con la recepción, que es acreditar en
+   cuenta (2026-10-04); queda para las demás reglas.
 4. **Sin destino instalado** (CxP aún no existe): L3 no puede registrar en uso real hasta CP1.
 5. **Operador de otra empresa** en el aviso de `empresas.empresa_guardada`: si se pasa el de
    la empresa activa en vez de la editada, la unidad de trabajo de Libro de compras no se une a
@@ -709,7 +713,7 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
     auditoría de retenciones ajustadas, evento; pruebas de API con un manejador falso de
     `cuentas-por-pagar.recibir_documento`.
 16. **L3-6 (servidor):** listar y ficha, `AnularDocumento`, `EliminarDocumento`, órdenes
-    atendidas (`fechar_retencion`, `marcar_procesado`, `anular_documento`,
+    atendidas (`marcar_procesado`, `anular_documento`,
     `eliminar_documento`), avisos al destino, vigencia usada (L2-3) conectada.
 17. **L3-7 (cliente):** Ingreso de facturas: lista con filtros (período, proveedor, estado,
     destino) y ficha con anular y eliminar (menú Operación).

@@ -31,6 +31,7 @@ const MARCADO = { nitEmisor: '7654321', serie: 'F', numero: '100' };
 const DESMARCADO = {
   tipo: 'recibo',
   muestraEnReportesSat: false,
+  motivoFueraDelLibro: 'sin_fel',
   nitEmisor: null,
   serie: null,
   autorizacionFel: null,

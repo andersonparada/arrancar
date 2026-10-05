@@ -171,7 +171,6 @@ describe('retenciones: seguridad por empresa, llaves y check', () => {
     ['monto_propuesto_no_negativo', { montoPropuesto: '-1', motivoDelAjuste: 'x' }],
     ['monto_rango', { regla: 'iva_otro_agente', monto: '101', montoPropuesto: '101' }],
     ['motivo_del_ajuste', { regla: 'iva_otro_agente', monto: '5' }],
-    ['fecha_obligatoria', { regla: 'iva_otro_agente', fecha: null }],
     ['constancia_completa', { regla: 'iva_otro_agente', constanciaNumero: 'C1' }],
   ])('rechaza %s', async (regla, cambios) => {
     expect(await restriccionDeRetencion(cambios)).toBe(`retenciones_${regla}`);
@@ -185,11 +184,22 @@ describe('retenciones: seguridad por empresa, llaves y check', () => {
     expect(regla).toMatch(/^retenciones_(regla_valida|impuesto_valido)$/);
   });
 
-  it('el IVA de pequeño contribuyente puede quedar sin fecha, y el ISR sin porcentaje', async () => {
-    const sinFecha = { regla: 'iva_pequeno_contribuyente', fecha: null };
+  it('la fecha es obligatoria para todas las reglas, también la del pequeño contribuyente', async () => {
+    const pequeno = { regla: 'iva_pequeno_contribuyente', fecha: null };
+    const otra = { regla: 'iva_otro_agente', fecha: null };
+
+    for (const cambios of [pequeno, otra]) {
+      const error = await errorDePostgres(insertarRetencion(cambios));
+      expect(error?.code).toBe('23502');
+      expect(error?.column).toBe('fecha');
+    }
+  });
+
+  it('el IVA de pequeño contribuyente con fecha y el ISR sin porcentaje se aceptan', async () => {
+    const pequeno = { regla: 'iva_pequeno_contribuyente', porcentaje: '5' };
     const escalonado = { impuesto: 'isr', regla: 'isr_opcional_simplificado', porcentaje: null };
 
-    await expect(insertarRetencion(sinFecha)).resolves.toBeTruthy();
+    await expect(insertarRetencion(pequeno)).resolves.toBeTruthy();
     await expect(insertarRetencion(escalonado)).resolves.toBeTruthy();
   });
 

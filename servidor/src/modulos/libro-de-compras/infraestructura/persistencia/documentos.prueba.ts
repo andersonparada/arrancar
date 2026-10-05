@@ -49,6 +49,17 @@ describe('documentos: seguridad por empresa', () => {
   });
 });
 
+/** Un documento fuera del libro con todo en regla: sin FEL, sin IVA y con su motivo. */
+const FUERA = {
+  muestraEnReportesSat: false,
+  motivoFueraDelLibro: 'sin_fel',
+  nitEmisor: null,
+  serie: null,
+  autorizacionFel: null,
+  iva: '0',
+  base: '112',
+};
+
 const NOTA = { tipo: 'nota_de_credito', fechaRecepcion: '2026-04-10', periodo: '2026-04-01' };
 
 describe('documentos: cada check', () => {
@@ -74,7 +85,12 @@ describe('documentos: cada check', () => {
     ['fuera_de_plazo_real', { motivoSinCredito: 'fuera_de_plazo', ivaNoAcreditable: '12' }],
     ['nota_con_factura', { ...NOTA }],
     ['datos_sat', { serie: null }],
-    ['sin_sat_sin_credito', { muestraEnReportesSat: false }],
+    ['motivo_fuera_del_libro_valido', { motivoFueraDelLibro: 'otro' }],
+    ['muestra_segun_motivo', { muestraEnReportesSat: false }],
+    ['muestra_segun_motivo', { motivoFueraDelLibro: 'fel_a_otro_nit' }],
+    ['sin_fel_sin_autorizacion', { ...FUERA, autorizacionFel: crypto.randomUUID() }],
+    ['fel_con_autorizacion', { ...FUERA, motivoFueraDelLibro: 'fel_a_otro_nit', autorizacionFel: null }],
+    ['sin_sat_sin_credito', { ...FUERA, base: '100', iva: '12' }],
     ['pequeno_contribuyente', { tipo: 'factura_pequeno_contribuyente', iva: '0', base: '112' }],
     [
       'pequeno_contribuyente_sin_iva',
@@ -119,11 +135,13 @@ describe('documentos: cada check', () => {
   it('acepta una nota bien formada, una factura de pequeño contribuyente y un recibo desmarcado', async () => {
     const factura = await crear();
     const pequeno = { tipo: 'factura_pequeno_contribuyente', motivoSinCredito: 'pequeno_contribuyente' };
-    const recibo = { tipo: 'recibo', muestraEnReportesSat: false, nitEmisor: null, serie: null, autorizacionFel: null };
+    const recibo = { ...FUERA, tipo: 'recibo' };
+    const felAOtroNit = { ...FUERA, motivoFueraDelLibro: 'fel_a_otro_nit', autorizacionFel: crypto.randomUUID() };
 
     await expect(crear({ ...NOTA, documentoAfectadoId: factura })).resolves.toBeTruthy();
     await expect(crear({ ...pequeno, iva: '0', base: '112', ivaNoAcreditable: '0' })).resolves.toBeTruthy();
-    await expect(crear({ ...recibo, iva: '0', base: '112' })).resolves.toBeTruthy();
+    await expect(crear(recibo)).resolves.toBeTruthy();
+    await expect(crear(felAOtroNit)).resolves.toBeTruthy();
   });
 });
 

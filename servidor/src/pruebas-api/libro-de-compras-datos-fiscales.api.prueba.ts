@@ -165,7 +165,7 @@ describe('datos fiscales con el formulario de Empresas', () => {
       regimenIva: 'general',
       regimenIsr: 'utilidades',
       agenteDeRetencionIva: 'ninguno',
-      esAgenteDeRetencionIsr: false,
+      esAgenteDeRetencionIsr: true,
       guardado: false,
     });
   });

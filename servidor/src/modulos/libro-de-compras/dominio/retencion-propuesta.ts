@@ -16,8 +16,8 @@ export const REGLAS_DE_RETENCION = [
 ] as const;
 export type ReglaDeRetencion = (typeof REGLAS_DE_RETENCION)[number];
 
-/** De dónde sale la fecha de la retención; `destino` es la que pone el destino (`fechar_retencion`). */
-export type OrigenDeLaFecha = 'recepcion' | 'emision' | 'destino';
+/** De dónde sale la fecha de la retención: siempre se conoce al registrar el documento. */
+export type OrigenDeLaFecha = 'recepcion' | 'emision';
 
 /** Lo que propone una estrategia; cumple los `check` de la tabla `retenciones` (§3.7). Todo en centavos. */
 export interface RetencionPropuesta {

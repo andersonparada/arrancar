@@ -26,7 +26,7 @@ const datosDeEmpresa = (cambios: Partial<PropiedadesFiscalesDeEmpresa> = {}): Pr
   regimenIva: 'general',
   regimenIsr: 'utilidades',
   agenteDeRetencionIva: 'ninguno',
-  esAgenteDeRetencionIsr: false,
+  esAgenteDeRetencionIsr: true,
   ...cambios,
 });
 
@@ -76,12 +76,12 @@ describe('guardar los datos fiscales de la empresa', () => {
   });
 
   it('cada cambio posterior audita cómo estaba antes', async () => {
-    await guardar().ejecutar(operador, { empresaId, datos: datosDeEmpresa({ esAgenteDeRetencionIsr: true }) });
+    await guardar().ejecutar(operador, { empresaId, datos: datosDeEmpresa({ esAgenteDeRetencionIsr: false }) });
     await guardar().ejecutar(operador, { empresaId, datos: datosDeEmpresa({ regimenIsr: 'opcional_simplificado' }) });
 
     expect(auditoria.entradas[1]).toMatchObject({
       accion: 'corregir',
-      anterior: { esAgenteDeRetencionIsr: true, guardado: true },
+      anterior: { esAgenteDeRetencionIsr: false, guardado: true },
     });
   });
 

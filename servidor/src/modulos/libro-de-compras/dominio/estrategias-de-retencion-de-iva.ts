@@ -86,7 +86,7 @@ export class EstrategiaDeSectorPublico implements EstrategiaDeRetencion {
 
 /**
  * 5 % del total de la factura de pequeño contribuyente, solo si es **mayor** que el umbral (AG 5-2013 art. 49)
- * y la empresa es agente de retención del IVA. La fecha la pone el destino.
+ * y la empresa es agente de retención del IVA. Se fecha con la recepción del documento (acreditar en cuenta, Ley del IVA art. 48).
  */
 export class EstrategiaDePequenoContribuyente implements EstrategiaDeRetencion {
   proponer(entrada: EntradaDeRetenciones): RetencionPropuesta[] {
@@ -107,7 +107,7 @@ export class EstrategiaDePequenoContribuyente implements EstrategiaDeRetencion {
         base,
         porcentaje,
         montoPropuesto,
-        origenDeLaFecha: 'destino',
+        origenDeLaFecha: 'recepcion',
       },
     ];
   }

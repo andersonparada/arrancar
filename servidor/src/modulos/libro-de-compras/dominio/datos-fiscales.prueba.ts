@@ -9,12 +9,12 @@ const proveedor = (cambios: Partial<PropiedadesFiscalesDeProveedor> = {}): Propi
 });
 
 describe('datos fiscales de la empresa', () => {
-  it('sin datos guardados: régimen general, sobre utilidades y sin agentes de retención', () => {
+  it('sin datos guardados: régimen general, sobre utilidades, agente de retención del ISR y ninguno del IVA', () => {
     expect(DatosFiscalesDeEmpresa.porOmision().instantanea()).toEqual({
       regimenIva: 'general',
       regimenIsr: 'utilidades',
       agenteDeRetencionIva: 'ninguno',
-      esAgenteDeRetencionIsr: false,
+      esAgenteDeRetencionIsr: true,
     });
   });
 
@@ -43,7 +43,7 @@ describe('datos fiscales de la empresa', () => {
 
   it('sabe si dos datos son iguales', () => {
     const base = DatosFiscalesDeEmpresa.porOmision();
-    const otros = DatosFiscalesDeEmpresa.crear({ ...base.instantanea(), esAgenteDeRetencionIsr: true });
+    const otros = DatosFiscalesDeEmpresa.crear({ ...base.instantanea(), esAgenteDeRetencionIsr: false });
 
     expect(base.esIgualA(DatosFiscalesDeEmpresa.porOmision())).toBe(true);
     expect(base.esIgualA(otros)).toBe(false);

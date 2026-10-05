@@ -26,7 +26,7 @@ const POR_OMISION: PropiedadesFiscalesDeEmpresa = {
   regimenIva: 'general',
   regimenIsr: 'utilidades',
   agenteDeRetencionIva: 'ninguno',
-  esAgenteDeRetencionIsr: false,
+  esAgenteDeRetencionIsr: true,
 };
 
 /**
@@ -47,7 +47,7 @@ export function problemasFiscalesDeEmpresa(datos: PropiedadesFiscalesDeEmpresa):
 
 /**
  * Datos fiscales de una empresa: su régimen de IVA y de ISR y si es agente de retención. Sin fila guardada,
- * la empresa tiene los valores por omisión (régimen general, sobre utilidades, sin agente).
+ * la empresa tiene los valores por omisión (régimen general, sobre utilidades, agente de retención del ISR y del IVA ninguno).
  */
 export class DatosFiscalesDeEmpresa {
   private constructor(private readonly propiedades: PropiedadesFiscalesDeEmpresa) {}

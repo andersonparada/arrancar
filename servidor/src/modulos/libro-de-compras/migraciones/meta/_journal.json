@@ -64,6 +64,13 @@
       "when": 1791165269129,
       "tag": "0008_nota_hereda_motivo_de_su_factura",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791169504093,
+      "tag": "0009_l3_fuera_del_libro_agente_isr_y_retencion_con_fecha",
+      "breakpoints": true
     }
   ]
 }
