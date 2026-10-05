@@ -79,6 +79,320 @@ or agente_de_retencion_iva = 'ninguno'`. RLS: `politicaPorEmpresa()`.
 `otro` = designado por la SAT o con contabilidad completa (validación del contador, 15 %); ver
 pregunta 12. El NIT de la empresa **no** se copia aquí: sigue en `core.empresas` y L3 lo exige.
 
+> **R1 (2026-10-05):** esta tabla pasa a ser un **historial con vigencia por período** (seis regímenes de IVA,
+> `exento` en el ISR, tipo de persona). Manda la §3.1b; lo de arriba queda como estaba en L1.
+
+### 3.1b Régimen de la empresa con vigencia (R1) — arquitecto de datos, 2026-10-05
+
+Estado: **propuesta para aprobar**. Aterriza las decisiones 1 a 8 del usuario (2026-10-05) de «Libro de compras
+según el régimen de la empresa» en `validacion-h7-h11-retenciones.md`. Las decisiones 5 (libro simplificado, L5),
+6 (prorrata, después de L5) y 7 (compras a proveedores agropecuarios, primario y pecuario y pequeño contribuyente
+electrónico, paso propio) **no** entran en R1; R1 solo deja el dato que necesitan (la foto del régimen).
+
+#### 3.1b.1 Lo encontrado
+
+1. `datos_fiscales_de_empresa` tiene PK `empresa_id` (una fila por empresa), `regimen_isr` no nulo, dos regímenes de
+   IVA y el check `pequeno_no_retiene`. En desarrollo hay **una** fila y **ningún** documento (consulta de solo
+   lectura del 2026-10-05). `btree_gist` ya está instalada (migración `0004`).
+2. La fila se guarda con un *upsert* desde el aviso `empresas.empresa_guardada` (`composicion/datos-fiscales.ts` →
+   `GuardarDatosFiscalesDeEmpresa`), con la empresa editada como empresa del operador; un cambio se audita como
+   `corregir` con `registroId = empresaId`. Sin fila valen `DatosFiscalesDeEmpresa.porOmision()`.
+3. `CargadorDeContextoFiscal` lee los datos de la empresa **de hoy** (no del período del documento), antes de
+   conocer el período; `resolverDatosFiscalesDelProveedor` y las estrategias de retención los usan. Ese es el hueco
+   que encontró el contador, junto con `determinarMotivoSinCredito`, que no mira la empresa.
+4. `AccionAuditada` no tiene «crear»: los cambios de datos fiscales se auditan como `corregir` (decisión 13) y una
+   baja como `eliminar`.
+
+#### 3.1b.2 Decisiones
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Tabla | **Se convierte** `datos_fiscales_de_empresa` en el historial (cada fila = una vigencia), sin cambiar su nombre | Es el mismo dato con una dimensión más. Conserva el recurso de auditoría `libro-de-compras.datos-fiscales-de-empresa`, la RLS, la escucha del mediador, el repositorio y la FK. Una tabla nueva dejaría la vieja muerta o pediría copiar y borrar, sin ganar nada (no hay producción). |
+| Forma de la vigencia | Solo `vigente_desde` (**escalones**): cada fila rige desde su mes hasta el mes anterior a la siguiente. Sin `vigente_hasta` | Una empresa **siempre** tiene un régimen: no puede haber huecos. Con escalones, traslapes y huecos son imposibles por construcción; con `vigente_hasta` habría que impedir las dos cosas y cerrar la anterior en cada alta (como en combustibles, donde un hueco sí tiene sentido: no hay tasa). |
+| Sin traslape | `unique nulls not distinct (empresa_id, vigente_desde)`, **no** exclusión con `btree_gist` | Con escalones basta que dos filas no empiecen el mismo mes. La exclusión solo sirve con rangos explícitos; aquí sería una restricción más cara que no protege nada adicional. |
+| Primera fila | `vigente_desde` **nulo = «desde el inicio»** (la fila base). Las demás, el primer día de un mes | Un documento de un período anterior a cualquier fecha que se escoja (rectificaciones, carga atrasada) siempre encuentra régimen, sin fechas ficticias (`1900-01-01`) ni la regla implícita «la primera cubre hacia atrás». `nulls not distinct` (PG 15+) impide dos bases. Ver pregunta R1-a. |
+| Fila actual | Se vuelve la **base** (`vigente_desde = null`) con `tipo_de_persona = 'juridica'` | Decisión 8: no hay nada instalado; la de desarrollo es de prueba. |
+| Qué datos tienen historia | `regimen_iva`, `regimen_isr`, `agente_de_retencion_iva`, `es_agente_de_retencion_isr` y `tipo_de_persona` | Pedido del usuario. El tipo de persona no cambia con el tiempo (otro tipo es otro NIT): vive en cada fila (lo necesita el check del agropecuario) pero el dominio lo mantiene **igual en todas** las filas de la empresa; ver 3.1b.5. |
+| Foto en el documento | `documentos.regimen_iva_de_la_empresa`, copiada al registrar | Decisión 4. No se pone FK del documento a la vigencia: al partir un escalón en dos con los mismos datos, la FK apuntaría a una fila que ya no cubre su período; la foto más la regla de «vigencia en uso» bastan. Solo se copia el régimen de IVA: las retenciones ya quedan fijas en `retenciones` y el ISR solo cambia avisos. |
+| Sin datos guardados | El documento **exige** datos fiscales guardados de la empresa (error `empresa_sin_datos_fiscales`, con enlace al formulario de Empresas), como ya exige el NIT | Suponer «general» fue el hueco que encontró el contador: en una empresa sin crédito el IVA salía como crédito. Además, sin fila no hay qué bloquear contra un cambio simultáneo. Ver pregunta R1-b. `porOmision()` queda solo para mostrar el formulario vacío. |
+
+#### 3.1b.3 Tabla `libro_de_compras.datos_fiscales_de_empresa` (nueva forma)
+
+| Columna | Tipo | Nulo | Por omisión / regla |
+|---|---|---|---|
+| `id` | uuid | no | **PK** nueva (`idPrimario()`, `gen_random_uuid()`) |
+| `empresa_id` | uuid | no | FK `core.empresas(id)` on delete cascade (deja de ser la PK) |
+| `vigente_desde` | date | **sí** | `null` = desde el inicio (una sola por empresa); si no, primer día de un mes |
+| `tipo_de_persona` | text | no | **sin** valor por omisión en la base: lo manda siempre el dominio |
+| `regimen_iva` | text | no | `'general'` |
+| `regimen_isr` | text | **sí** | `'utilidades'` (se queda: con el régimen por omisión, `general`, es coherente; con otro régimen el check obliga a mandarlo nulo) |
+| `agente_de_retencion_iva` | text | no | `'ninguno'` |
+| `es_agente_de_retencion_isr` | boolean | no | `true` (B2) |
+| `creado_en`, `actualizado_en`, `creado_por`, `actualizado_por` | | | `...marcasDeTiempo`, `...autoria` |
+
+Restricciones (nombres `datos_fiscales_de_empresa_<regla>`):
+
+| Nombre | Expresión | Estado |
+|---|---|---|
+| `regimen_iva` | `regimen_iva in ('general', 'pequeno_contribuyente', 'pequeno_contribuyente_electronico', 'contribuyente_agropecuario', 'primario_pecuario', 'no_afiliado')` | se reemplaza |
+| `regimen_isr` | `regimen_isr is null or regimen_isr in ('utilidades', 'opcional_simplificado', 'exento')` | se reemplaza |
+| `regimen_isr_segun_iva` | `(regimen_iva in ('general', 'no_afiliado')) = (regimen_isr is not null)` | nueva: «no aplica» (nulo) fuera de general y no afiliado, y obligatorio en esos dos |
+| `agente_de_iva` | igual que hoy (cinco valores) | se queda |
+| `agente_de_iva_solo_general` | `regimen_iva = 'general' or agente_de_retencion_iva = 'ninguno'` | **reemplaza** `pequeno_no_retiene` (cooperativa, contribuyente especial y exportador son régimen general) |
+| `tipo_de_persona` | `tipo_de_persona in ('individual', 'juridica')` | nueva |
+| `agropecuario_individual` | `regimen_iva <> 'contribuyente_agropecuario' or tipo_de_persona = 'individual'` | nueva (Decreto 7-2019) |
+| `vigente_desde_primer_dia` | `vigente_desde is null or extract(day from vigente_desde) = 1` | nueva |
+| `vigencia_unica` | `unique nulls not distinct (empresa_id, vigente_desde)` | nueva; también es el índice de la FK de `empresa_id` (empieza por ella) |
+
+El agente de ISR no lleva check: lo decide el usuario (la propuesta está en 3.1b.6). Que la base exista cuando hay
+más filas lo garantiza el dominio (la base nunca se elimina); no hay forma de escribirlo como check. El `23505` de
+`vigencia_unica` se agrega a `MENSAJES_POR_RESTRICCION`: «Ya hay un régimen registrado desde ese mes.»
+
+RLS: `politicaPorEmpresa()` (sin cambio). Toda escritura llega por la escucha de `empresas.empresa_guardada` (operador
+con la empresa editada) o por la ruta de quitar una vigencia (ejecutor en la empresa pedida, como la lectura).
+
+#### 3.1b.4 Leer «el régimen vigente en el período X»
+
+```sql
+select * from libro_de_compras.datos_fiscales_de_empresa
+where empresa_id = $empresa and (vigente_desde is null or vigente_desde <= $periodo)
+order by vigente_desde desc nulls last
+limit 1;
+```
+
+Con RLS y dentro de la unidad de trabajo. Hay pocas filas por empresa (una por cambio de régimen), así que el
+único `(empresa_id, vigente_desde)` alcanza; no hace falta otro índice. Lo «vigente hoy» es el período del mes de
+hoy según el reloj de la empresa (`Reloj.hoy(operador)`). Para mostrar el historial, el repositorio deriva el fin de
+cada escalón con `lead(vigente_desde) over (partition by empresa_id order by vigente_desde nulls first)`. No se crea
+vista: una vista corre con los permisos de su dueño salvo `security_invoker`, y no la necesita nadie fuera del
+repositorio.
+
+En el dominio: `HistorialFiscalDeEmpresa` (función pura, sin Vue ni base) con `vigenteEn(periodo)`,
+`aplicar(cambio)` y `rangosAfectados(antes, despues)`; con pruebas.
+
+#### 3.1b.5 Cómo edita el usuario (formulario de Empresas)
+
+La sección `secciones['libro-de-compras']` agrega dos campos: `tipoDePersona` y **`vigenteDesde`** (`'aaaa-mm-01'`
+o `null` = desde el inicio). Su significado es uno solo: **«estos datos rigen desde `vigenteDesde` hasta la
+siguiente vigencia que ya exista»**. El servidor decide el caso comparando con el historial:
+
+| # | Caso | Qué hace el servidor | Auditoría |
+|---|---|---|---|
+| 1 | Primera vez (sin filas) | Inserta la base (`vigente_desde = null`), sea cual sea `vigenteDesde` | Ninguna: es un alta y ningún documento pudo usar otra cosa (se exige la fila, 3.1b.2) |
+| 2 | Mismos datos que la vigencia que ya rige en `vigenteDesde` | Nada (guardar la empresa por otra razón no toca la historia) | Ninguna |
+| 3 | `vigenteDesde` coincide con una fila (`null` = la base) y los datos cambian: **corregir** | `update` de esa fila | `corregir`, `anterior` = historial antes del cambio |
+| 4 | `vigenteDesde` cae dentro de un escalón y los datos cambian: **cambió a partir de ese mes** | `insert` de una fila nueva desde ese mes | `corregir`, `anterior` = historial antes del cambio |
+| 5 | Fila nueva igual a la que la precede | Nada (no se crean escalones repetidos) | Ninguna |
+| 6 | Cambia solo `tipoDePersona` | `update` de **todas** las filas de la empresa (no cambia ningún documento: la foto es el régimen de IVA) | `corregir`, `anterior` = historial |
+| 7 | **Quitar** una vigencia (no la base) desde la ficha: `DELETE /api/libro-de-compras/empresas/:empresaId/datos-fiscales/vigencias/:id` (permiso `empresas.editar`) | `delete`; su escalón pasa a la vigencia anterior | `eliminar`, `anterior` = la fila quitada y el historial (pregunta R1-c) |
+
+- **Auditoría:** `recurso = 'libro-de-compras.datos-fiscales-de-empresa'`, `registroId = empresaId` (como hoy), una
+  entrada por guardado. Guardar el historial completo en `anterior` es barato (pocas filas) y deja reconstruir
+  cualquier estado; lo nuevo es lo que queda en la tabla.
+- **Una vigencia usada no cambia.** Toda escritura (casos 3, 4, 6 y 7) calcula con `rangosAfectados` los períodos
+  donde cambia **alguno de los cuatro datos fiscales** (`regimen_iva`, `regimen_isr`, `agente_de_retencion_iva`,
+  `es_agente_de_retencion_isr`; el tipo de persona no cuenta) y, si hay un documento **vigente** con `periodo` en
+  esos rangos, rechaza con `VigenciaFiscalEnUso` (subclase de `RecursoEnUso`, código `vigencia_fiscal_en_uso`, 409,
+  `detalles: { campo: 'secciones.libro-de-compras.vigenteDesde', periodo }` con el primer período con documentos y el
+  mensaje «Hay documentos registrados en <mes> con el régimen anterior: escoja un mes posterior o anúlelos»). Así:
+  - partir un escalón en dos con los mismos datos se permite aunque tenga documentos (no cambia nada para ellos);
+  - un cambio «a partir de noviembre» se permite con documentos de octubre;
+  - corregir la base con documentos registrados no se permite: hay que registrar el cambio a partir del mes que
+    corresponde.
+  Los documentos **anulados** no cuentan (como en las vigencias de combustible, y por la decisión 8: lo registrado en
+  pruebas se anula); su foto queda como estaba (pregunta R1-d). La consulta es `exists` sobre
+  `documentos (empresa_id, periodo)` con `estado = 'vigente'` y la cubre `documentos_libro_idx`.
+- **Concurrencia:** guardar empieza con `select … from datos_fiscales_de_empresa where empresa_id = $1 for update`
+  (todas las filas de la empresa), luego revisa documentos y escribe. Registrar un documento empieza con el mismo
+  `select … for share` y **después**, en otra sentencia, lee la vigencia del período: si un guardado estaba en curso,
+  el `for share` espera, y la lectura siguiente (otra foto en `read committed`) ya ve la historia nueva; si el
+  documento llegó primero, el guardado espera y luego ve el documento y rechaza. `for share` exige permiso de `update`,
+  que `arrancar_app` tiene sobre las tablas del módulo.
+- **`vigenteDesde`:** primer día de un mes, no antes de `2000-01-01` y como máximo doce meses después del mes actual
+  (atrapa errores de tecleo y deja programar un cambio anunciado). Si no llega, vale el `vigente_desde` de la
+  vigencia de hoy (caso 3 o 2): así un cliente que no lo mande nunca crea escalones por accidente.
+- **Validación** con el mismo `problemasFiscalesDeEmpresa` del dominio (errores por campo bajo
+  `secciones.libro-de-compras.<campo>`), que ahora también revisa las reglas de 3.1b.3.
+- **Lectura** (`GET /api/libro-de-compras/empresas/:empresaId/datos-fiscales`, `empresas.ver`): el DTO trae los datos
+  de la vigencia de hoy y su `vigenteDesde`, `guardado` y `historial: [{ id, vigenteDesde, vigenteHasta (último mes
+  incluido o null), tipoDePersona, regimenIva, regimenIsr, agenteDeRetencionIva, esAgenteDeRetencionIsr,
+  conDocumentos }]` ordenado del más antiguo al más nuevo. `conDocumentos` sirve para mostrar u ocultar «Quitar» y
+  para que el formulario proponga el mes.
+
+#### 3.1b.6 Valores que se proponen según el régimen y el tipo de persona
+
+Función pura del dominio `datosPropuestos(regimenIva, tipoDePersona)` (servidor) y su copia en
+`composables/datos-fiscales-de-empresa.ts` (cliente), las dos con pruebas, como `retencionesPropuestas` del
+proveedor. **Proponen y no imponen:** el cliente los aplica al cambiar el régimen o el tipo de persona; el esquema
+Zod los usa para completar lo que no llegue; la base solo revisa la coherencia (no puede tener un valor por omisión
+que dependa de otra columna). Lo que exige la ley lo rechazan los checks y `problemasFiscalesDeEmpresa`; lo que el
+usuario puede decidir, no.
+
+| Régimen de IVA | `regimen_isr` | `agente_de_retencion_iva` | `es_agente_de_retencion_isr` (jurídica / individual) |
+|---|---|---|---|
+| `general` | `utilidades` (también `opcional_simplificado` o `exento`) | `ninguno` (el usuario escoge si la SAT lo calificó) | `true` / `true` (pregunta R1-e) |
+| `pequeno_contribuyente` | nulo, forzado | `ninguno`, forzado | `true` / `false` |
+| `pequeno_contribuyente_electronico` | nulo, forzado | `ninguno`, forzado | `true` / `false` |
+| `contribuyente_agropecuario` | nulo, forzado | `ninguno`, forzado | no aplica (la jurídica la rechaza el check) / `false` |
+| `primario_pecuario` | nulo, forzado | `ninguno`, forzado | `true` / `false` (pregunta R1-e) |
+| `no_afiliado` | `exento` (también `utilidades` u `opcional_simplificado`) | `ninguno`, forzado | `true` / `true` (art. 47 las nombra) |
+
+Al cambiar el régimen fuera de general, el cliente quita el agente de IVA y el régimen de ISR (como hoy hace
+`conRegimenDeIva`); desmarcar el agente de ISR sigue mostrando el aviso de B2.
+
+#### 3.1b.7 Cambios en `libro_de_compras.documentos`
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `regimen_iva_de_la_empresa` | text | no | **sin** valor por omisión: la copia el caso de uso, de la vigencia del `periodo` del documento (también en recibos, fuera del libro y notas); check `documentos_regimen_de_la_empresa_valido` con los seis valores |
+
+Checks (todos con `coalesce`: un check con `null` pasa, y `motivo_sin_credito` es nulo casi siempre):
+
+| Nombre | Expresión | Estado |
+|---|---|---|
+| `motivo_sin_credito_valido` | lista con **`'empresa_sin_credito'`** agregado | se reemplaza |
+| `iva_no_acreditable_por_motivo` | `(motivo in ('fuera_de_plazo','no_vinculado','empresa_sin_credito') and iva_no_acreditable = iva) or (coalesce(motivo,'') not in ('fuera_de_plazo','no_vinculado','empresa_sin_credito') and iva_no_acreditable = 0)` | se reemplaza |
+| `empresa_sin_credito` | `not muestra_en_reportes_sat or iva = 0 or regimen_iva_de_la_empresa = 'general' or coalesce(motivo_sin_credito,'') = 'empresa_sin_credito'` | **nueva**: con IVA, en un período sin crédito, el motivo es obligatorio |
+| `empresa_sin_credito_real` | `tipo = 'nota_de_credito' or coalesce(motivo_sin_credito,'') <> 'empresa_sin_credito' or regimen_iva_de_la_empresa <> 'general'` | **nueva**: el motivo solo en períodos sin crédito, salvo la nota, que lo hereda de una factura de un período sin crédito aunque ella caiga en uno general |
+| `sin_credito_sin_art_20` | `tipo = 'nota_de_credito' or regimen_iva_de_la_empresa = 'general' or coalesce(motivo_sin_credito,'') not in ('fuera_de_plazo','no_vinculado')` | **nueva** (decisión 1: en empresas sin crédito no se evalúan `no_vinculado` ni el art. 20) |
+
+Por qué el check obligatorio es seguro en todos los casos:
+- **Fuera del libro y recibos:** `not muestra_en_reportes_sat` los deja pasar, y `sin_sat_sin_credito` ya les exige
+  `iva = 0` y motivo nulo.
+- **Factura de pequeño contribuyente:** `iva = 0` la deja pasar y conserva `pequeno_contribuyente`, que exige
+  `documentos_pequeno_contribuyente` (sin cambio).
+- **Nota de crédito** (su `periodo` es el mes de recepción): si su período no da crédito y lleva IVA, debe llevar
+  `empresa_sin_credito` aunque su factura haya dado crédito (decisión 4, con aviso); si su período da crédito, hereda
+  el motivo de la factura, y `empresa_sin_credito_real` la excluye para que pueda heredarlo.
+- **Factura con IVA cero en una empresa sin crédito** (todo exento, o solo IDP y exento): el check la deja pasar, pero
+  el dominio igual le pone `empresa_sin_credito` (3.1b.8), así `plazo_del_credito` tampoco la exige fuera de plazo.
+
+**Checks del art. 20 revisados:** `plazo_del_credito` pasa con cualquier motivo no nulo, así que
+`empresa_sin_credito` lo cumple sin evaluar el plazo (correcto: no hay crédito que perder); `fuera_de_plazo_real` y
+`nota_en_su_mes` no cambian; `sin_credito_sin_art_20` impide que el dominio produzca por error `fuera_de_plazo` o
+`no_vinculado` en un período sin crédito. `exento_sin_iva`, `sin_sat_sin_credito` y `pequeno_contribuyente` siguen
+iguales.
+
+Líneas: no cambian; con `empresa_sin_credito`, cada línea lleva `iva_no_acreditable = iva` (el IVA al costo de cada
+línea, §3.6). Si en el futuro se edita un documento (respuesta 5 del 2026-09-29) y cambia su período, la foto se
+vuelve a copiar con el mismo bloqueo.
+
+#### 3.1b.8 Dominio y caso de uso de documentos
+
+- `determinarMotivoSinCredito` recibe `regimenDeLaEmpresa` (del período). Orden nuevo: desmarcado → nulo;
+  `factura_pequeno_contribuyente` → `pequeno_contribuyente`; nota → `empresa_sin_credito` si su período no da crédito
+  y tiene IVA (aviso «La factura dio crédito y esta nota cae en un período sin crédito: …» si la factura no tenía
+  motivo), si no, el de su factura tal cual; régimen sin crédito → `empresa_sin_credito` (aunque el IVA sea cero);
+  luego `exento`, `no_vinculado` y `fuera_de_plazo` como hoy. «Da crédito» = `regimen_iva === 'general'` en una sola
+  función (`daCreditoFiscal`).
+- Avisos (decisión 1): sin aviso de fuera de plazo ni de «tendrá que rectificar» en empresas sin crédito; en empresas
+  sin ISR sobre utilidades los de deducibilidad dicen solo la parte contable; el de factura especial queda siempre.
+- `CargadorDeContextoFiscal`: calcula primero el período y después lee la vigencia de ese período (no la de hoy);
+  al registrar, antes, el `for share` de 3.1b.5. Sin fila → `EmpresaSinDatosFiscales` (422,
+  `empresa_sin_datos_fiscales`, con enlace como `EmpresaSinNit`). `calcular` (vista previa) lee igual, sin bloquear.
+- `RegistrarDocumento` copia `regimen_iva_de_la_empresa`; el DTO de la ficha y de la lista lo devuelve (L5 lo usará
+  para el libro simplificado).
+
+#### 3.1b.9 Migraciones
+
+Dos, generadas con `npm run bd:generar -w servidor -- libro-de-compras <nombre>` (sin `--custom`: drizzle-kit
+escribe checks, `unique … nulls not distinct` y columnas) y **revisadas a mano antes de aplicarlas por primera vez**
+(precedente: la `0009` lleva `update` agregados), porque drizzle-kit agrega columnas `not null` sin llenarlas y puede
+escribir mal el cambio de PK. Cada una, en su paso:
+
+1. **`0011_r1_regimen_de_empresa_con_vigencia`** (paso R1-1), en este orden:
+   `drop constraint "datos_fiscales_de_empresa_pkey"`; `add column "id" uuid default gen_random_uuid() not null` y
+   `add primary key ("id")`; `add column "vigente_desde" date` (la fila actual queda nula: es la base);
+   `add column "tipo_de_persona" text`, `update … set "tipo_de_persona" = 'juridica'`, `set not null`;
+   `alter column "regimen_isr" drop not null`; `drop constraint` de `pequeno_no_retiene`, `regimen_iva` y
+   `regimen_isr`; `add constraint` de las de 3.1b.3 (incluido `vigencia_unica`). La FK a `core.empresas` se queda.
+2. **`0012_r1_foto_del_regimen_en_documentos`** (paso R1-4): `add column "regimen_iva_de_la_empresa" text`;
+   `update documentos d set … = (vigencia del período de d, con la consulta de 3.1b.4 y 'general' si la empresa no
+   tiene filas)` (en desarrollo no hay documentos; la sentencia queda para cualquier otra base de desarrollo con
+   documentos de prueba); `set not null`; `drop`/`add` de `motivo_sin_credito_valido` e
+   `iva_no_acreditable_por_motivo`; `add` de los cuatro checks nuevos de 3.1b.7.
+
+El `when` de cada entrada del `_journal.json` debe ser mayor que el de `0010` (`1791225580111`); drizzle-kit usa
+`Date.now()` y ya lo es, pero se revisa al generar. Los `meta/*_snapshot.json` deben quedar iguales a las tablas
+(volver a correr `bd:generar` no debe proponer nada). Ninguna migración de permisos: no hay permisos nuevos
+(`empresas.ver` y `empresas.editar` ya existen).
+
+#### 3.1b.10 Pruebas de integración (PostgreSQL real)
+
+- **Checks de `datos_fiscales_de_empresa`**, un caso que viola cada uno: agente de IVA en `pequeno_contribuyente` y en
+  `no_afiliado`; `regimen_isr` nulo en `general` y no nulo en `primario_pecuario`; `exento` válido en `no_afiliado`;
+  agropecuario jurídica; `vigente_desde` el día 2; dos bases de la misma empresa y dos filas del mismo mes (`23505`
+  con su mensaje); la base de **otra** empresa no choca.
+- **Lectura por período:** solo base (cualquier período); base y noviembre (octubre → base, noviembre y diciembre →
+  noviembre); cambio programado a futuro.
+- **RLS:** otra empresa no ve ni inserta (`with check`), también por la escucha del mediador con el operador de la
+  empresa editada (riesgo 5 de §13).
+- **Checks de `documentos`:** sin `regimen_iva_de_la_empresa` (`23502`) y con un valor inválido; factura con IVA en
+  período sin crédito sin motivo; `empresa_sin_credito` en una factura de período general; nota con
+  `empresa_sin_credito` en período general (pasa); `iva_no_acreditable` distinto del IVA con `empresa_sin_credito`;
+  factura de pequeño contribuyente en empresa sin crédito (pasa con `pequeno_contribuyente`); desmarcado en empresa
+  sin crédito (pasa con motivo nulo); `fuera_de_plazo` y `no_vinculado` en período sin crédito (fallan); factura sin
+  crédito fuera de plazo con `empresa_sin_credito` (pasa `plazo_del_credito`).
+- **Casos de uso con base real (API con `app.inject`):** los siete casos de 3.1b.5 con su auditoría; vigencia en uso
+  (corregir la base con un documento vigente → 409; con el documento anulado → pasa; partir un escalón igual → pasa;
+  quitar una vigencia con documentos en su escalón y datos distintos de la anterior → 409); la base no se quita;
+  registrar sin datos fiscales → `empresa_sin_datos_fiscales`; el documento copia el régimen de **su período**, no el
+  de hoy; la nota en período sin crédito de una factura con crédito lleva `empresa_sin_credito` y su aviso.
+- **Concurrencia** (opcional, con dos conexiones): un guardado que espera al `for share` de un registro en curso y
+  luego rechaza.
+- `politicas-de-los-modulos` y `llaves-entre-esquemas` siguen pasando; las semillas de prueba de documentos
+  (`documentos.soporte.ts`) agregan la columna nueva y una vigencia.
+
+#### 3.1b.11 Pasos (un commit cada uno; servidor y cliente por separado)
+
+Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`.
+
+1. **R1-1 (servidor, datos):** tabla de 3.1b.3 en `datos-fiscales.tablas.ts`, migración `0011`; dominio:
+   `DatosFiscalesDeEmpresa` con `tipoDePersona` y los seis regímenes, `problemasFiscalesDeEmpresa` con las reglas
+   nuevas, `datosPropuestos` (3.1b.6) y `HistorialFiscalDeEmpresa` (`vigenteEn`, `aplicar`, `rangosAfectados`) con
+   pruebas puras; repositorio (`historial`, `vigenteEn`, `bloquear(modo)`, `insertar`, `actualizar`,
+   `actualizarTipoDePersona`, `eliminar`); mensaje del `23505`; pruebas de checks, lectura y RLS. El caso de uso
+   de guardar se adapta lo mínimo para seguir funcionando (corrige la vigencia de hoy).
+2. **R1-2 (servidor, guardar y leer):** `GuardarDatosFiscalesDeEmpresa` con los siete casos, `vigenteDesde` y
+   `tipoDePersona` en `esquemaSeccionFiscalDeEmpresa` (completando con `datosPropuestos`), `VigenciaFiscalEnUso`
+   (consulta de documentos vigentes por rango), bloqueo `for update`, auditoría; DTO con historial y `conDocumentos`;
+   ruta `DELETE …/datos-fiscales/vigencias/:id` (si se aprueba R1-c); pruebas de API.
+3. **R1-3 (servidor, dominio de documentos):** `daCreditoFiscal`, motivo `empresa_sin_credito` y su orden, regla de la
+   nota, avisos de la decisión 1; pruebas puras (sin base).
+4. **R1-4 (servidor, documentos):** columna y checks de 3.1b.7, migración `0012`; el cargador lee la vigencia del
+   período con `for share`, `EmpresaSinDatosFiscales`, copia de la foto, DTO; pruebas de checks y de API de 3.1b.10.
+5. **R1-5 (cliente, sección de Empresa):** tipo de persona (obligatorio la primera vez, pregunta R1-f), los seis
+   regímenes, ISR con «No aplica» y «Exento», agente de IVA deshabilitado fuera de general, propuestas al cambiar
+   régimen o tipo de persona (lógica pura con pruebas), y «¿Desde cuándo?» al cambiar un dato fiscal: «Corregir lo
+   registrado (desde <mes>)» o «Cambió a partir de [mes]» (propone el mes siguiente al último con documentos);
+   errores por campo, incluido `vigenteDesde`.
+6. **R1-6 (cliente, ficha de Empresa):** historial de vigencias (desde, hasta, régimen) y «Quitar» con confirmación en
+   las que se pueden quitar; textos del motivo `empresa_sin_credito` para la lista y la ficha de documentos (L3-7 y
+   L3-8 los usarán).
+7. **R1-7 (QA):** de punta a punta: cambiar el régimen a partir de un mes, registrar una factura en cada lado del
+   cambio y ver el IVA al costo en el período sin crédito.
+
+#### 3.1b.12 Preguntas para el usuario (con recomendación)
+
+- **R1-a. Primera vigencia:** ¿«desde el inicio» (nula; cubre cualquier período anterior) o un mes que el usuario
+  escoge, y antes de él no se puede registrar? Recomendación: desde el inicio.
+- **R1-b. Sin datos fiscales guardados:** ¿se exige guardarlos (en el formulario de Empresas) antes del primer
+  documento, o se sigue suponiendo régimen general? Recomendación: exigirlos (el supuesto fue el hueco encontrado).
+- **R1-c. Quitar una vigencia** (un cambio programado o registrado por error), sin documentos afectados, desde la
+  ficha de la empresa. Recomendación: sí; sin esto, un error solo se tapa con otra vigencia.
+- **R1-d. Documentos anulados** no impiden cambiar una vigencia (como en combustibles). Recomendación: sí.
+- **R1-e. Para el contador:** (1) ¿persona individual en régimen general lleva contabilidad completa (agente de ISR)
+  por omisión? (2) ¿el primario y pecuario individual, no? (3) el agropecuario, ¿de verdad no tiene régimen de ISR?
+  La tabla del contador dice que «la compra de ganado sirve para su impuesto sobre utilidad», y la decisión 2 lo deja
+  en «no aplica»; (4) ¿el primario y pecuario es solo para personas individuales, como el agropecuario?; (5) ¿el no
+  afiliado propone `exento`? Recomendación: llevarlas a `contador-guatemala` antes de R1-1 (solo cambian propuestas
+  y, en (3) y (4), un check).
+- **R1-f. Tipo de persona:** ¿se pide sin valor por omisión (el formulario de Empresas no guarda hasta escogerlo) o se
+  propone «jurídica»? Recomendación: pedirlo; muchos ganaderos son personas individuales y el tipo cambia lo que se
+  propone. ¿Y vive en cada vigencia, sincronizado (como aquí), o en `empresas.datos_fiscales` (su lugar natural, pero
+  entonces el check del agropecuario solo lo haría el dominio)? Recomendación: en cada vigencia por ahora; se muda a
+  Empresas cuando otro módulo lo necesite.
+
 ### 3.2 `libro_de_compras.datos_fiscales_de_proveedor` (L1)
 
 Una fila por proveedor, **compartida por todas las empresas de la cuenta**.
@@ -169,6 +483,9 @@ semilla).
 
 Encabezado del documento con sus totales (suma de sus líneas, calculada en la misma
 transacción).
+
+> **R1:** se agregan `regimen_iva_de_la_empresa` (foto del régimen del período), el motivo `empresa_sin_credito` y
+> cuatro checks; ver §3.1b.7.
 
 | Columna | Tipo | Nulo | Regla |
 |---|---|---|---|
@@ -363,6 +680,8 @@ líneas; montos positivos (el tipo da el signo en los reportes) y hereda el moti
 factura (si la factura quedó sin crédito, la nota rebaja el costo y no el crédito).
 
 ### 4.2 Motivo sin crédito fiscal (lo decide el dominio; el usuario solo elige `no_vinculado`)
+
+> **R1:** con el régimen de la empresa del período entra `empresa_sin_credito` antes de `exento`; orden nuevo en §3.1b.8.
 
 Orden: desmarcado → nulo; `factura_pequeno_contribuyente` → `pequeno_contribuyente`; `iva = 0`
 con todo exento → `exento`; el usuario marcó no vinculado → `no_vinculado`; `periodo >
@@ -611,6 +930,8 @@ solo). `core.rol_permisos` y `core.usuario_permisos` no se tocan.
 | L2-1 | `0002_l2_conceptos_de_gasto.sql` | tabla |
 | L2-3 | `0003_l2_combustibles.sql` | `create extension if not exists btree_gist;` + las dos tablas + exclusión |
 | L3-1 | `0004_l3_documentos.sql` | documentos, líneas y retenciones con sus checks e índices (los índices con `coalesce` o `where` que drizzle-kit no escriba bien, en una `--custom` aparte) |
+| R1-1 | `0011_r1_regimen_de_empresa_con_vigencia.sql` | historial de datos fiscales de la empresa (§3.1b.9) |
+| R1-4 | `0012_r1_foto_del_regimen_en_documentos.sql` | `regimen_iva_de_la_empresa`, motivo `empresa_sin_credito` y checks (§3.1b.9) |
 | L5 | `…_periodos.sql` | `periodos` |
 
 Datos existentes: ninguno (módulo nuevo, ninguna cuenta lo tiene activo). Semillas: ninguna
@@ -770,6 +1091,10 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
     combustible con galones), totales y avisos que devuelve `calcular`, panel de retenciones
     (quitar o ajustar con motivo, con `v-permiso`); lógica en `edicion-de-documento.ts` con
     pruebas; ningún archivo pasa de 200 líneas ni la página de 120.
+
+### R1 Régimen de la empresa con vigencia
+
+Pasos R1-1 a R1-7 en §3.1b.11 (antes de L3-7 y L3-8, que ya deben mostrar el motivo `empresa_sin_credito`).
 
 ## 15. Fuera de L1 a L3
 
