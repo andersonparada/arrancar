@@ -373,3 +373,9 @@ Fuentes: [Ley del IVA, TSE](https://tse.org.gt/images/UECFFPP/leyes/decreto_27-9
 [art. 20](http://leydeguatemala.com/ley-del-iva-de-guatemala/reporte-del-credito-fiscal-iva-guatemala/294/),
 [AG 5-2013](https://cgab.org.gt/wp-content/uploads/2023/10/Reglamento-de-la-Ley-del-IVA-Acuerdo-Gubernativo-5-2013_3.pdf),
 [Consortium Legal, crédito fiscal](https://consortiumlegal.com/2024/04/02/robo-legal-del-credito-fiscal-en-el-iva-en-guatemala/).
+
+**Decisiones del usuario (2026-10-04), iguales a lo recomendado por el contador:** la nota hereda tal cual el
+motivo de su factura (se cambia `documentos_fuera_de_plazo_real`); la nota con IVA contra una factura exenta
+se bloquea (`NotaConIvaDeFacturaExenta`); la suma del IVA de las notas vigentes no pasa del IVA de la factura
+(error); la corrección contra la FEL acepta hasta `max(5, número de líneas)` centavos. Se aplican también los
+avisos de los puntos 3 (período anterior al mes actual) y 6 (año anterior para todo documento).
