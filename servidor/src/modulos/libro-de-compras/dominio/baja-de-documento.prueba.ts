@@ -98,8 +98,14 @@ describe('causa de anulación y aviso de período', () => {
   });
 
   it('avisa de un período anterior al mes actual, y del actual no', () => {
-    expect(avisosDeBajaPorPeriodo('2026-09-01', '2026-10-05')).toEqual([AVISO_DE_PERIODO_PASADO]);
-    expect(avisosDeBajaPorPeriodo('2026-10-01', '2026-10-05')).toEqual([]);
-    expect(avisosDeBajaPorPeriodo('2026-10-01', '2026-10-31')).toEqual([]);
+    const baja = (periodo: string, empresaConCreditoFiscal = true) => ({ periodo, empresaConCreditoFiscal });
+    expect(avisosDeBajaPorPeriodo(baja('2026-09-01'), '2026-10-05')).toEqual([AVISO_DE_PERIODO_PASADO]);
+    expect(avisosDeBajaPorPeriodo(baja('2026-10-01'), '2026-10-05')).toEqual([]);
+    expect(avisosDeBajaPorPeriodo(baja('2026-10-01'), '2026-10-31')).toEqual([]);
+  });
+
+  it('en una empresa sin crédito fiscal no hay nada que rectificar', () => {
+    const baja = { periodo: '2026-09-01', empresaConCreditoFiscal: false };
+    expect(avisosDeBajaPorPeriodo(baja, '2026-10-05')).toEqual([]);
   });
 });

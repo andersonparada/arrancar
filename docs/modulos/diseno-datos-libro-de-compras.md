@@ -383,8 +383,14 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    `tipoDePersona` en `esquemaSeccionFiscalDeEmpresa` (completando con `datosPropuestos`), `VigenciaFiscalEnUso`
    (consulta de documentos vigentes por rango), bloqueo `for update`, auditoría; DTO con historial y `conDocumentos`;
    ruta `DELETE …/datos-fiscales/vigencias/:id` (si se aprueba R1-c); pruebas de API.
-3. **R1-3 (servidor, dominio de documentos):** `daCreditoFiscal`, motivo `empresa_sin_credito` y su orden, regla de la
-   nota, avisos de la decisión 1; pruebas puras (sin base).
+3. **R1-3 (servidor, dominio de documentos) — HECHO (2026-10-05):** `daCreditoFiscal` y `tieneIsrSobreUtilidades`, motivo
+   `empresa_sin_credito` y su orden, regla de la nota, avisos de la decisión 1; pruebas puras. Se adelantó la parte de
+   la migración que solo amplía los checks de `motivo_sin_credito` e `iva_no_acreditable_por_motivo` (migración
+   `r1_motivo_empresa_sin_credito`, que tomó el número `0011` en esa rama: quien integre debe renumerar la de R1-1
+   y la de R1-4 y quitar de esta última esos dos checks, que ya existen). Se conectó el calendario de feriados del
+   core (`CalendarioDeFeriados`, que precarga los años de las fechas y el siguiente) y se quitó del aviso de entero el
+   texto «o vence en los próximos días si hubo feriados». El caso de uso toma `daCreditoFiscal()` de los datos de hoy
+   de la empresa (también las bajas); R1-4 lo cambia por la vigencia del período del documento.
 4. **R1-4 (servidor, documentos):** columna y checks de 3.1b.7, migración `0012`; el cargador lee la vigencia del
    período con `for share`, `EmpresaSinDatosFiscales`, copia de la foto, DTO; pruebas de checks y de API de 3.1b.10.
 5. **R1-5 (cliente, sección de Empresa):** tipo de persona (obligatorio la primera vez, pregunta R1-f), los seis
@@ -957,6 +963,7 @@ solo). `core.rol_permisos` y `core.usuario_permisos` no se tocan.
 | L2-3 | `0003_l2_combustibles.sql` | `create extension if not exists btree_gist;` + las dos tablas + exclusión |
 | L3-1 | `0004_l3_documentos.sql` | documentos, líneas y retenciones con sus checks e índices (los índices con `coalesce` o `where` que drizzle-kit no escriba bien, en una `--custom` aparte) |
 | R1-1 | `0011_r1_regimen_de_empresa_con_vigencia.sql` | historial de datos fiscales de la empresa (§3.1b.9) |
+| R1-3 | `0011_r1_motivo_empresa_sin_credito.sql` | solo amplía el check del motivo y el de `iva_no_acreditable_por_motivo` (número a renumerar al integrar con R1-1) |
 | R1-4 | `0012_r1_foto_del_regimen_en_documentos.sql` | `regimen_iva_de_la_empresa`, motivo `empresa_sin_credito` y checks (§3.1b.9) |
 | L5 | `…_periodos.sql` | `periodos` |
 

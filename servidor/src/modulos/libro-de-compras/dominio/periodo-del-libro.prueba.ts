@@ -106,7 +106,13 @@ describe('exigirPeriodoValido', () => {
 });
 
 describe('avisosDelPeriodo', () => {
-  const base = { periodo: '2026-03-01', fechaDeEmision: '2026-03-10', mesActual: '2026-03-01' };
+  const base = {
+    periodo: '2026-03-01',
+    fechaDeEmision: '2026-03-10',
+    mesActual: '2026-03-01',
+    empresaConCreditoFiscal: true,
+    empresaConIsrSobreUtilidades: true,
+  };
 
   it('sin avisos en el mes actual y en el mismo año', () => {
     expect(avisosDelPeriodo(base)).toEqual([]);

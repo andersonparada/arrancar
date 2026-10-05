@@ -40,6 +40,8 @@ export interface DatosDeFueraDelLibro {
   /** NIT de la empresa activa, normalizado. */
   nitDeLaEmpresa: string | null;
   proveedor: ProveedorParaFueraDelLibro;
+  /** Sin ISR sobre utilidades los avisos de deducibilidad quedan sin la parte del ISR. */
+  empresaConIsrSobreUtilidades: boolean;
 }
 
 export interface ResultadoFueraDelLibro {
@@ -50,6 +52,7 @@ export interface ResultadoFueraDelLibro {
 }
 
 export const AVISO_NO_DEDUCIBLE = 'Sin un documento válido, este gasto no es deducible del ISR.';
+export const AVISO_NO_DEDUCIBLE_SIN_ISR = 'Sin un documento válido, este gasto no queda respaldado en la contabilidad.';
 export const AVISO_FACTURA_ESPECIAL =
   'La ley obliga a emitir factura especial (Ley del IVA art. 52); sin ella el gasto no es deducible del ISR.';
 
@@ -57,6 +60,8 @@ export const AVISO_FACTURA_ESPECIAL =
 export const UMBRAL_DE_CONSUMIDOR_FINAL = 250000;
 export const AVISO_DE_CONSUMIDOR_FINAL_GRANDE =
   'La FEL a consumidor final es de Q2,500.00 o más: desde ese monto la factura debe llevar el NIT del comprador. Pídale al proveedor que la emita a nombre de la empresa; si no, el gasto puede no ser deducible. Consulte a su contador.';
+export const AVISO_DE_CONSUMIDOR_FINAL_GRANDE_SIN_ISR =
+  'La FEL a consumidor final es de Q2,500.00 o más: desde ese monto la factura debe llevar el NIT del comprador. Pídale al proveedor que la emita a nombre de la empresa. Consulte a su contador.';
 
 function exigirCoherenciaConLaFel(datos: DatosDeFueraDelLibro): void {
   const tieneFel = datos.autorizacionFel !== null;
@@ -83,14 +88,16 @@ export function evaluarFueraDelLibro(datos: DatosDeFueraDelLibro): ResultadoFuer
   exigirCoherenciaConLaFel(datos);
   const esAlNitDeLaEmpresa = datos.nitReceptor !== null && datos.nitReceptor === datos.nitDeLaEmpresa;
   if (datos.motivo !== 'sin_fel' && esAlNitDeLaEmpresa) throw new FelAlNitDeLaEmpresaNoSeDesmarca();
-  const avisos = [AVISO_NO_DEDUCIBLE];
+  const avisos = [datos.empresaConIsrSobreUtilidades ? AVISO_NO_DEDUCIBLE : AVISO_NO_DEDUCIBLE_SIN_ISR];
   if (seSugiereFacturaEspecial(datos.proveedor)) avisos.push(AVISO_FACTURA_ESPECIAL);
   return { muestraEnReportesSat: false, avisos };
 }
 
 /** Aviso (no error) de una FEL a consumidor final de Q2,500.00 o más; `total` en centavos. */
-export function avisosDeConsumidorFinal(motivo: MotivoFueraDelLibro | null, total: number): string[] {
-  return motivo === 'fel_a_consumidor_final' && total >= UMBRAL_DE_CONSUMIDOR_FINAL
-    ? [AVISO_DE_CONSUMIDOR_FINAL_GRANDE]
-    : [];
+export function avisosDeConsumidorFinal(
+  { motivo, total }: { motivo: MotivoFueraDelLibro | null; total: number },
+  empresaConIsrSobreUtilidades: boolean,
+): string[] {
+  if (motivo !== 'fel_a_consumidor_final' || total < UMBRAL_DE_CONSUMIDOR_FINAL) return [];
+  return [empresaConIsrSobreUtilidades ? AVISO_DE_CONSUMIDOR_FINAL_GRANDE : AVISO_DE_CONSUMIDOR_FINAL_GRANDE_SIN_ISR];
 }

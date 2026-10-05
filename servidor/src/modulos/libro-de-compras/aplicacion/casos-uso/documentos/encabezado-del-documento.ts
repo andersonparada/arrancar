@@ -43,6 +43,7 @@ function evaluarCasilla(solicitud: SolicitudDeDocumento, contexto: ContextoFisca
     nitReceptor,
     nitDeLaEmpresa: contexto.nitDeLaEmpresa,
     proveedor: { tipoDePersona: contexto.proveedor.tipoDePersona, nit: contexto.proveedor.nit },
+    empresaConIsrSobreUtilidades: contexto.datosDeLaEmpresa.tieneIsrSobreUtilidades(),
   });
 }
 

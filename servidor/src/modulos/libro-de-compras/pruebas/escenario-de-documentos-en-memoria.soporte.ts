@@ -5,7 +5,7 @@ import {
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../core/compartido/pruebas/dobles-compartidos.js';
-import { CalendarioDeLunesAViernes } from '../dominio/calendario-laboral.js';
+import { FuenteDeLunesAViernes } from '../dominio/calendario-laboral.js';
 import type { DependenciasDelPreparador } from '../aplicacion/casos-uso/documentos/preparador-de-documento.js';
 import type { SolicitudDeDocumento } from '../aplicacion/dto/solicitud-de-documento.js';
 import type { CompletadorDeNit, RepositorioDeDocumentos } from '../aplicacion/puertos/puertos-de-documentos.js';
@@ -109,7 +109,7 @@ export function crearEscenario() {
     datosFiscalesDeEmpresa: datosDeEmpresa,
     datosFiscalesDeProveedor: datosDeProveedor,
     configuracion: new ConfiguracionFiscalEnMemoria(),
-    calendario: new CalendarioDeLunesAViernes(),
+    calendario: new FuenteDeLunesAViernes(),
     catalogos,
     consultas,
     destinos,

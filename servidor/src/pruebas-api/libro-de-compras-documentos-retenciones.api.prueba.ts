@@ -140,7 +140,7 @@ describe('retenciones al registrar', () => {
     const respuesta = await registrar(escenario.proveedorId, { fechaEmision: vieja, fechaRecepcion: vieja });
 
     expect(respuesta.cuerpo.avisos.join(' ')).toContain('venció');
-    expect(respuesta.cuerpo.avisos.join(' ')).toContain('o vence en los próximos días si hubo feriados');
+    expect(respuesta.cuerpo.avisos.join(' ')).not.toContain('feriados');
   });
 });
 

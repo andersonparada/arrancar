@@ -756,3 +756,13 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   - **Textos y semilla neutros (Arrancar sirve a cualquier rubro).** La semilla de conceptos de gasto pasa a
     una lista general de 16 (12 gastos y 4 activos fijos, ninguno agropecuario); los textos de Empresas, el lema del inicio
     de sesión, la vista previa de apariencia y la empresa demo ya no hablan de ranchos ni parcelas. Sin cambios de lógica.
+
+- **2026-10-05 (R1-3, dominio de documentos y feriados).** Motivo `empresa_sin_credito` en `libro-de-compras`:
+  `calcularDocumento` recibe `empresaConCreditoFiscal` y `empresaConIsrSobreUtilidades`; el motivo va después de
+  `exento` (y antes de `no_vinculado` y del art. 20); la nota lleva el de su factura y, si la factura dio crédito y
+  la empresa ya no lo tiene, `empresa_sin_credito` con aviso. El IVA se calcula y va al costo de cada línea. Sin
+  crédito no salen los avisos de fuera de plazo ni de rectificar (registrar, anular y eliminar); sin ISR sobre
+  utilidades los avisos de deducibilidad quitan la parte del ISR (el de factura especial queda). Migración con
+  los dos checks ampliados. Calendario: `CalendarioDeFeriados` (infraestructura) precarga del core los días no
+  hábiles y el dominio sigue síncrono; el entero de septiembre de 2026 vence el 22 de octubre (el 20 es feriado).
+  Pendiente de R1-1 a R1-4: renumerar migraciones al integrar, tabla con historial y régimen por período.

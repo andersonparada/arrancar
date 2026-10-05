@@ -16,6 +16,8 @@ import { DocumentoAnulado } from '../../../dominio/eventos.js';
 import type { AnulacionDeDocumentoDto } from '../../dto/documento-ficha.dto.js';
 import type { RepositorioDeDocumentosGuardados } from '../../puertos/puertos-de-baja-de-documentos.js';
 import type { ControlDePeriodos, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
+import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
+import { empresaConCreditoFiscal } from './credito-de-la-empresa.js';
 import { dtoDeFicha, hechosDe } from './dto-de-ficha.js';
 
 interface Dependencias {
@@ -26,6 +28,7 @@ interface Dependencias {
   auditoria: Auditoria;
   publicadorEventos: PublicadorEventos;
   reloj: Reloj;
+  datosFiscalesDeEmpresa: RepositorioDeDatosFiscalesDeEmpresa;
 }
 
 export interface PeticionDeAnulacion {
@@ -86,6 +89,8 @@ export class AnularDocumento {
     });
     const hoy = await this.dependencias.reloj.hoy(operador);
     const anulado = (await repositorio.buscar(documentoId, false)) ?? guardado;
-    return { documento: dtoDeFicha(anulado), avisos: avisosDeBajaPorPeriodo(guardado.documento.periodo, hoy) };
+    const conCredito = await empresaConCreditoFiscal(this.dependencias.datosFiscalesDeEmpresa, operador.empresaId);
+    const baja = { periodo: guardado.documento.periodo, empresaConCreditoFiscal: conCredito };
+    return { documento: dtoDeFicha(anulado), avisos: avisosDeBajaPorPeriodo(baja, hoy) };
   }
 }

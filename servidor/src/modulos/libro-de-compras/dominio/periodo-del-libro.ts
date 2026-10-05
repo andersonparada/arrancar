@@ -59,22 +59,32 @@ export function periodoPropuesto(fechas: FechasDelDocumento): string {
 
 export const AVISO_DE_PERIODO_PASADO = 'Ese período puede estar declarado: si ya lo presentó, tendrá que rectificar.';
 const AVISO_DE_ANIO_ANTERIOR = 'El gasto cae en un año que puede estar cerrado; consulte a su contador.';
+export const AVISO_DE_ANIO_ANTERIOR_SIN_ISR =
+  'El gasto corresponde a un año que puede estar cerrado en la contabilidad.';
 
 export interface DatosDeAvisosDelPeriodo {
   periodo: string;
   fechaDeEmision: string;
   /** Primer día del mes actual; lo da quien llama, el dominio no lee el reloj. */
   mesActual: string;
+  /** Sin crédito fiscal no hay IVA que declarar, así que no se avisa de rectificar. */
+  empresaConCreditoFiscal: boolean;
+  /** Sin ISR sobre utilidades el aviso del año anterior habla solo de la contabilidad. */
+  empresaConIsrSobreUtilidades: boolean;
 }
 
 /**
  * Avisos del período, para cualquier documento: período anterior al mes actual (puede estar
- * declarado) y emisión de un año anterior al del período (el gasto del ISR cae en otro año).
+ * declarado; solo si la empresa tiene crédito fiscal) y emisión de un año anterior al del período (el gasto cae en otro año).
  */
 export function avisosDelPeriodo(datos: DatosDeAvisosDelPeriodo): string[] {
   const avisos: string[] = [];
-  if (Number(datos.fechaDeEmision.slice(0, 4)) < Number(datos.periodo.slice(0, 4))) avisos.push(AVISO_DE_ANIO_ANTERIOR);
-  if (datos.periodo < primerDiaDelMes(datos.mesActual)) avisos.push(AVISO_DE_PERIODO_PASADO);
+  if (Number(datos.fechaDeEmision.slice(0, 4)) < Number(datos.periodo.slice(0, 4))) {
+    avisos.push(datos.empresaConIsrSobreUtilidades ? AVISO_DE_ANIO_ANTERIOR : AVISO_DE_ANIO_ANTERIOR_SIN_ISR);
+  }
+  if (datos.empresaConCreditoFiscal && datos.periodo < primerDiaDelMes(datos.mesActual)) {
+    avisos.push(AVISO_DE_PERIODO_PASADO);
+  }
   return avisos;
 }
 

@@ -16,6 +16,7 @@ const datos = (cambios: Partial<DatosDeFueraDelLibro> = {}): DatosDeFueraDelLibr
   nitReceptor: null,
   nitDeLaEmpresa: '1234567',
   proveedor: { tipoDePersona: 'juridica', nit: '7654321' },
+  empresaConIsrSobreUtilidades: true,
   ...cambios,
 });
 

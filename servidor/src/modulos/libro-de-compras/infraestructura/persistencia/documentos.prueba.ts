@@ -112,6 +112,14 @@ describe('documentos: cada check', () => {
     expect(fueraDeRango).toMatch(/^documentos_iva_no_acreditable_(rango|por_motivo)$/);
   });
 
+  it('empresa_sin_credito exige que el IVA vaya entero al costo, y solo con ese IVA se acepta', async () => {
+    const sinAcreditar = await restriccionDe({ motivoSinCredito: 'empresa_sin_credito', ivaNoAcreditable: '0' });
+    const alCosto = await errorDePostgres(crear({ motivoSinCredito: 'empresa_sin_credito', ivaNoAcreditable: '12' }));
+
+    expect(sinAcreditar).toBe('documentos_iva_no_acreditable_por_motivo');
+    expect(alCosto).toBeUndefined();
+  });
+
   it('un anulado sin causa, o una causa que no es de la lista, se rechazan', async () => {
     const anulado = { estado: 'anulado', anuladoEn: new Date(), anuladoPor: e.usuarioId, motivoDeAnulacion: 'Error' };
 

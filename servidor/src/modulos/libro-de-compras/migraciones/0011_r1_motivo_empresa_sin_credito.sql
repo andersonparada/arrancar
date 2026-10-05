@@ -1,0 +1,5 @@
+ALTER TABLE "libro_de_compras"."documentos" DROP CONSTRAINT "documentos_motivo_sin_credito_valido";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."documentos" DROP CONSTRAINT "documentos_iva_no_acreditable_por_motivo";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."documentos" ADD CONSTRAINT "documentos_motivo_sin_credito_valido" CHECK ("libro_de_compras"."documentos"."motivo_sin_credito" is null or "libro_de_compras"."documentos"."motivo_sin_credito" in ('fuera_de_plazo', 'no_vinculado', 'pequeno_contribuyente', 'exento', 'empresa_sin_credito'));--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."documentos" ADD CONSTRAINT "documentos_iva_no_acreditable_por_motivo" CHECK (("libro_de_compras"."documentos"."motivo_sin_credito" in ('fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito') and "libro_de_compras"."documentos"."iva_no_acreditable" = "libro_de_compras"."documentos"."iva")
+        or (coalesce("libro_de_compras"."documentos"."motivo_sin_credito", '') not in ('fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito') and "libro_de_compras"."documentos"."iva_no_acreditable" = 0));

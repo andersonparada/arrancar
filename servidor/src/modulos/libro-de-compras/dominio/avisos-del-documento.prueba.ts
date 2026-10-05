@@ -4,7 +4,11 @@ import { AVISO_DE_PROVEEDOR_NO_DOMICILIADO, avisosDelProveedor } from './avisos-
 import { CalendarioDeLunesAViernes, type CalendarioLaboral } from './calendario-laboral.js';
 import { DatosFiscalesDeProveedor } from './datos-fiscales-de-proveedor.js';
 import type { RetencionDeDocumento } from './documento-de-compra.js';
-import { AVISO_DE_CONSUMIDOR_FINAL_GRANDE, avisosDeConsumidorFinal } from './fuera-del-libro.js';
+import {
+  AVISO_DE_CONSUMIDOR_FINAL_GRANDE,
+  avisosDeConsumidorFinal,
+  type MotivoFueraDelLibro,
+} from './fuera-del-libro.js';
 import { sumarMesesALaFecha } from './periodo-del-libro.js';
 import { AVISO_DE_NOTA_TARDIA, avisosDeNotaTardia } from './reglas-de-notas-de-credito.js';
 
@@ -26,6 +30,7 @@ const entero = {
   diasHabilesIva: 15,
   diasHabilesIsr: 10,
   calendario: new CalendarioDeLunesAViernes(),
+  empresaConIsrSobreUtilidades: true,
 };
 
 describe('avisos del entero de las retenciones', () => {
@@ -33,8 +38,8 @@ describe('avisos del entero de las retenciones', () => {
     const avisos = avisosDeRetenciones([retencion(), retencion({ regla: 'iva_exportador' })], entero);
 
     expect(avisos).toHaveLength(1);
-    expect(avisos[0]).toContain('retención de IVA venció el 21/07/2026, o vence en los próximos días si hubo feriados');
-    expect(avisos[0]).toContain('confírmelo');
+    expect(avisos[0]).toContain('retención de IVA venció el 21/07/2026.');
+    expect(avisos[0]).not.toContain('feriados');
     expect(avisosDeRetenciones([retencion()], { ...entero, hoy: '2026-07-21' })).toEqual([]);
   });
 
@@ -112,9 +117,11 @@ describe('otros avisos del documento', () => {
   });
 
   it('una FEL a consumidor final de Q2,500.00 o más avisa; con menos, o con otro motivo, no', () => {
-    expect(avisosDeConsumidorFinal('fel_a_consumidor_final', 250000)).toEqual([AVISO_DE_CONSUMIDOR_FINAL_GRANDE]);
-    expect(avisosDeConsumidorFinal('fel_a_consumidor_final', 249999)).toEqual([]);
-    expect(avisosDeConsumidorFinal('fel_a_otro_nit', 900000)).toEqual([]);
-    expect(avisosDeConsumidorFinal(null, 900000)).toEqual([]);
+    const aviso = (motivo: MotivoFueraDelLibro | null, total: number) =>
+      avisosDeConsumidorFinal({ motivo, total }, true);
+    expect(aviso('fel_a_consumidor_final', 250000)).toEqual([AVISO_DE_CONSUMIDOR_FINAL_GRANDE]);
+    expect(aviso('fel_a_consumidor_final', 249999)).toEqual([]);
+    expect(aviso('fel_a_otro_nit', 900000)).toEqual([]);
+    expect(aviso(null, 900000)).toEqual([]);
   });
 });

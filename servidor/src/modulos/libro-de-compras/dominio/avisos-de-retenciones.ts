@@ -5,6 +5,8 @@ import type { ImpuestoRetenido } from './retencion-propuesta.js';
 
 export const AVISO_DE_RETENCION_QUITADA =
   'Quitó o rebajó una retención que la ley manda hacer: la empresa responde solidariamente por el impuesto no retenido (Código Tributario art. 29) y, si es ISR, el gasto puede no ser deducible (Decreto 10-2012 art. 22). Consulte a su contador.';
+export const AVISO_DE_RETENCION_QUITADA_SIN_ISR =
+  'Quitó o rebajó una retención que la ley manda hacer: la empresa responde solidariamente por el impuesto no retenido (Código Tributario art. 29). Consulte a su contador.';
 
 /** Lo que hace falta para saber si el plazo de entero ya venció. */
 export interface ContextoDeEntero {
@@ -13,6 +15,8 @@ export interface ContextoDeEntero {
   diasHabilesIva: number;
   diasHabilesIsr: number;
   calendario: CalendarioLaboral;
+  /** Sin ISR sobre utilidades el aviso de la retención rebajada no habla de deducibilidad. */
+  empresaConIsrSobreUtilidades: boolean;
 }
 
 const DESCRIPCION_DEL_IMPUESTO: Record<ImpuestoRetenido, string> = {
@@ -25,7 +29,7 @@ const diasDelImpuesto = (impuesto: ImpuestoRetenido, contexto: ContextoDeEntero)
 
 function avisoDeEnteroVencido(impuesto: ImpuestoRetenido, limite: string): string {
   const [anio, mes, dia] = limite.split('-');
-  return `El plazo para enterar la retención de ${DESCRIPCION_DEL_IMPUESTO[impuesto]} venció el ${dia}/${mes}/${anio}, o vence en los próximos días si hubo feriados; confírmelo.`;
+  return `El plazo para enterar la retención de ${DESCRIPCION_DEL_IMPUESTO[impuesto]} venció el ${dia}/${mes}/${anio}.`;
 }
 
 const plazoDe = (retencion: RetencionDeDocumento, contexto: ContextoDeEntero): PlazoDeEntero => ({
@@ -56,5 +60,8 @@ export function avisosDeRetenciones(
   contexto: ContextoDeEntero,
 ): string[] {
   const rebajada = retenciones.some((retencion) => retencion.monto < retencion.montoPropuesto);
-  return [...(rebajada ? [AVISO_DE_RETENCION_QUITADA] : []), ...avisosDeEnteroVencido(retenciones, contexto)];
+  const avisoDeRebaja = contexto.empresaConIsrSobreUtilidades
+    ? AVISO_DE_RETENCION_QUITADA
+    : AVISO_DE_RETENCION_QUITADA_SIN_ISR;
+  return [...(rebajada ? [avisoDeRebaja] : []), ...avisosDeEnteroVencido(retenciones, contexto)];
 }

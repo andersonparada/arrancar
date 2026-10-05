@@ -81,8 +81,11 @@ export function causaDeAnulacionValida(causa: string): CausaDeAnulacion {
 
 /**
  * Aviso de anular o eliminar un documento de un período anterior al mes actual: puede estar declarado y habrá que
- * rectificar. `hoy` lo da quien llama (el dominio no lee el reloj).
+ * rectificar (si la empresa no tiene crédito fiscal no hay nada que rectificar). `hoy` lo da quien llama (el dominio no lee el reloj).
  */
-export function avisosDeBajaPorPeriodo(periodo: string, hoy: string): string[] {
-  return periodo < primerDiaDelMes(hoy) ? [AVISO_DE_PERIODO_PASADO] : [];
+export function avisosDeBajaPorPeriodo(
+  { periodo, empresaConCreditoFiscal }: { periodo: string; empresaConCreditoFiscal: boolean },
+  hoy: string,
+): string[] {
+  return empresaConCreditoFiscal && periodo < primerDiaDelMes(hoy) ? [AVISO_DE_PERIODO_PASADO] : [];
 }

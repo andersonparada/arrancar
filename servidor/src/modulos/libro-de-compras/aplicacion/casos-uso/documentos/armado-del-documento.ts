@@ -27,6 +27,12 @@ export interface DocumentoResuelto {
   practicada: Pick<RetencionesConPracticada, 'enCero' | 'avisos'>;
 }
 
+/** Lo que el cálculo necesita saber del régimen de la empresa: solo dos booleanos. */
+const regimenDeLaEmpresa = (contexto: ContextoFiscal) => ({
+  empresaConCreditoFiscal: contexto.datosDeLaEmpresa.daCreditoFiscal(),
+  empresaConIsrSobreUtilidades: contexto.datosDeLaEmpresa.tieneIsrSobreUtilidades(),
+});
+
 /** Calcula líneas, IVA y motivo del documento con lo que ya se resolvió (reglas de `calcularDocumento`). */
 export function calcularElDocumento(
   solicitud: SolicitudDeDocumento,
@@ -38,6 +44,7 @@ export function calcularElDocumento(
     tipo: solicitud.tipo,
     muestraEnReportesSat: resuelto.encabezado.muestraEnReportesSat,
     noVinculado: solicitud.noVinculado,
+    ...regimenDeLaEmpresa(contexto),
     fechaDeEmision: solicitud.fechaEmision,
     fechaDeRecepcion: contexto.fechaDeRecepcion,
     periodo: contexto.periodo,

@@ -68,6 +68,19 @@ export class DatosFiscalesDeEmpresa {
     return { ...this.propiedades };
   }
 
+  /**
+   * `true` si la empresa acredita el IVA de sus compras. Hoy solo el régimen general; cuando existan los seis
+   * regímenes, se amplía aquí (y solo aquí).
+   */
+  daCreditoFiscal(): boolean {
+    return this.propiedades.regimenIva === 'general';
+  }
+
+  /** `true` si la empresa paga el ISR sobre sus utilidades (y por eso importa la deducibilidad de sus gastos). */
+  tieneIsrSobreUtilidades(): boolean {
+    return this.propiedades.regimenIsr === 'utilidades';
+  }
+
   esIgualA(otros: DatosFiscalesDeEmpresa): boolean {
     const mias = this.propiedades;
     const suyas = otros.propiedades;

@@ -2,7 +2,7 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import { normalizarNit } from '../../../../core/compartido/dominio/objetos-valor/nit.js';
-import type { CalendarioLaboral } from '../../../dominio/calendario-laboral.js';
+import type { CalendarioLaboral, FuenteDeCalendario } from '../../../dominio/calendario-laboral.js';
 import { DatosFiscalesDeEmpresa } from '../../../dominio/datos-fiscales-de-empresa.js';
 import type { DatosFiscalesDeProveedor } from '../../../dominio/datos-fiscales-de-proveedor.js';
 import { resolverDatosFiscalesDelProveedor } from '../../../dominio/datos-fiscales-del-documento.js';
@@ -44,7 +44,7 @@ export interface DependenciasDelCargador {
   datosFiscalesDeEmpresa: RepositorioDeDatosFiscalesDeEmpresa;
   datosFiscalesDeProveedor: RepositorioDeDatosFiscalesDeProveedor;
   configuracion: LectorDeConfiguracionFiscal;
-  calendario: CalendarioLaboral;
+  calendario: FuenteDeCalendario;
 }
 
 /**
@@ -78,9 +78,15 @@ export class CargadorDeContextoFiscal {
       datosDeLaEmpresa,
       datosDelProveedor: delProveedor.vigentes,
       datosDelProveedorPorGuardar: delProveedor.porGuardar,
-      calendario: this.dependencias.calendario,
+      calendario: await this.calendario({ hoy, fechaDeRecepcion, fechaDeEmision: solicitud.fechaEmision }),
       configuracion: await this.dependencias.configuracion.paraEmpresa(operador),
     };
+  }
+
+  /** Precarga los años de las fechas y el siguiente a cada una: el entero cae en el mes que sigue a la retención. */
+  private calendario(fechas: { hoy: string; fechaDeRecepcion: string; fechaDeEmision: string }) {
+    const anios = Object.values(fechas).flatMap((fecha) => [Number(fecha.slice(0, 4)), Number(fecha.slice(0, 4)) + 1]);
+    return this.dependencias.calendario.paraAnios([...new Set(anios)]);
   }
 
   private async datosDeLaEmpresa(operador: Operador): Promise<DatosFiscalesDeEmpresa> {

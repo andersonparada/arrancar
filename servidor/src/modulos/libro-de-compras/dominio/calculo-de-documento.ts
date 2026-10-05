@@ -10,6 +10,10 @@ export interface DatosParaCalcular extends DatosDeLaFacturaAfectada {
   tipo: TipoDeDocumento;
   muestraEnReportesSat: boolean;
   noVinculado: boolean;
+  /** La empresa acredita el IVA de sus compras en el período (`DatosFiscalesDeEmpresa.daCreditoFiscal()`). */
+  empresaConCreditoFiscal: boolean;
+  /** La empresa paga el ISR sobre utilidades (`tieneIsrSobreUtilidades()`): cambia el texto de los avisos. */
+  empresaConIsrSobreUtilidades: boolean;
   fechaDeEmision: string;
   fechaDeRecepcion: string;
   /** Primer día del mes del libro. */
@@ -30,7 +34,7 @@ export interface DocumentoCalculado {
   avisos: string[];
 }
 
-const IVA_AL_COSTO: readonly (MotivoSinCredito | null)[] = ['fuera_de_plazo', 'no_vinculado'];
+const IVA_AL_COSTO: readonly (MotivoSinCredito | null)[] = ['fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito'];
 
 /** Sin IVA: casilla SAT desmarcada, factura de pequeño contribuyente (o nota de una) y recibos. */
 function cobraIva(datos: DatosParaCalcular): boolean {
@@ -44,7 +48,7 @@ function cobraIva(datos: DatosParaCalcular): boolean {
 /**
  * Calcula el documento completo: valida el período, calcula y reparte el IVA entre las
  * líneas, decide el motivo sin crédito fiscal con los totales resultantes y, si el IVA va
- * al costo (`fuera_de_plazo` o `no_vinculado`), lo pasa a `ivaNoAcreditable` en cada línea.
+ * al costo (`fuera_de_plazo`, `no_vinculado` o `empresa_sin_credito`), lo pasa a `ivaNoAcreditable` en cada línea.
  * La nota de crédito hereda el motivo de su factura y se valida contra ella (exenta, IVA acumulado).
  * Es lo que usan `POST …/documentos/calcular` y `RegistrarDocumento`.
  */

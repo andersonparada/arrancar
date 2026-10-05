@@ -6,7 +6,7 @@ const TIPOS = "'factura', 'factura_pequeno_contribuyente', 'nota_de_credito', 'r
 const DESTINOS = "'cuentas-por-pagar', 'caja-chica', 'cuentas-por-liquidar'";
 const MOTIVOS_FUERA = "'sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit'";
 const CAUSAS_DE_ANULACION = "'error_de_captura', 'fel_anulada_por_el_emisor', 'no_corresponde_a_la_empresa'";
-const MOTIVOS = "'fuera_de_plazo', 'no_vinculado', 'pequeno_contribuyente', 'exento'";
+const MOTIVOS = "'fuera_de_plazo', 'no_vinculado', 'pequeno_contribuyente', 'exento', 'empresa_sin_credito'";
 
 /** Las columnas de `documentos` que usan las restricciones (la tabla las pasa desde su callback). */
 export type ColumnasDeDocumento = Record<
@@ -103,8 +103,8 @@ export const restriccionesDeMontos = (t: T) => [
   check('documentos_pequeno_contribuyente_sin_iva', sql`${t.tipo} <> 'factura_pequeno_contribuyente' or ${t.iva} = 0`),
   check(
     'documentos_iva_no_acreditable_por_motivo',
-    sql`(${t.motivoSinCredito} in ('fuera_de_plazo', 'no_vinculado') and ${t.ivaNoAcreditable} = ${t.iva})
-        or (coalesce(${t.motivoSinCredito}, '') not in ('fuera_de_plazo', 'no_vinculado') and ${t.ivaNoAcreditable} = 0)`,
+    sql`(${t.motivoSinCredito} in ('fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito') and ${t.ivaNoAcreditable} = ${t.iva})
+        or (coalesce(${t.motivoSinCredito}, '') not in ('fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito') and ${t.ivaNoAcreditable} = 0)`,
   ),
   check('documentos_exento_sin_iva', sql`coalesce(${t.motivoSinCredito}, '') <> 'exento' or ${t.iva} = 0`),
 ];
