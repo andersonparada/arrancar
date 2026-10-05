@@ -379,3 +379,39 @@ motivo de su factura (se cambia `documentos_fuera_de_plazo_real`); la nota con I
 se bloquea (`NotaConIvaDeFacturaExenta`); la suma del IVA de las notas vigentes no pasa del IVA de la factura
 (error); la corrección contra la FEL acepta hasta `max(5, número de líneas)` centavos. Se aplican también los
 avisos de los puntos 3 (período anterior al mes actual) y 6 (año anterior para todo documento).
+
+## Retenciones de L3-3 (contador-guatemala, 2026-10-04)
+
+Revisión de `calculador-de-retenciones.ts`, `estrategias-de-retencion-de-iva.ts`, `estrategia-de-retencion-de-isr.ts`
+y `configuracion-de-retenciones.ts`. Artículos de extractos coincidentes: confirmar en el texto vigente el Código
+Tributario art. 28, el Decreto 10-2012 art. 22 (numeral de haber retenido) y art. 48 (plazo de entero), y la lista
+de productos agropecuarios del Decreto 20-2006 art. 1.
+
+| # | Decisión | Veredicto |
+|---|---|---|
+| 1 | Casilla SAT desmarcada o nota de crédito: ninguna retención (ISR incluido) | Notas: correcto (respuesta 4 del usuario). Casilla: incorrecto por ley, riesgo aceptado; falta un aviso |
+| 2 | El motivo sin crédito no influye en la retención | Correcto (Decreto 20-2006 arts. 1–3, 9 y 10) |
+| 3 | Toda estrategia de IVA exige `factura`, `seLeRetieneIva` y proveedor no agente (sector público incluido, `>=` Q30,000) | Correcto (Decreto 20-2006 arts. 2 y 9; AG 425-2006 art. 11) |
+| 4 | Exportador: mínimo sobre el total; dos bases (65 % agropecuario, 15 % lo demás); nada si la base es 0 | Correcto con ajustes |
+| 5 | ISR opcional: 5 % hasta Q30,000 + 7 % del excedente, un redondeo, base `total − iva`, mínimo `>=` Q2,500 | Correcto (Decreto 10-2012 arts. 44, 47, 48; AG 213-2013 art. 35) |
+| 6 | Fechas: recepción (IVA), emisión (ISR), destino (pequeño contribuyente) | Correcto con ajustes |
+
+**Ajustes:**
+1. Con la casilla desmarcada, calcular igual y mostrar un aviso que no bloquea: lo que se habría retenido de IVA e
+   ISR, la responsabilidad solidaria del agente y que en el ISR el gasto puede no ser deducible. No se guarda nada.
+4. El 65 % es solo para **bienes**: una línea es agropecuaria si su concepto lo es **y** `tipo = 'bien'`. Los
+   sugeridos «Insumos agrícolas», «Alimento para ganado» y «Medicinas veterinarias» son industrializados: van con
+   `es_producto_agropecuario = false`; la casilla del concepto lleva de ayuda los ejemplos del art. 1.
+5. Observaciones: toda persona jurídica o con contabilidad completa es agente de ISR por ley (art. 47) sin
+   calificación; a los no domiciliados conviene un aviso «revise la retención con su contador».
+6. El aviso de entero del ISR se cuenta desde el mes de **registro** (acreditamiento), no el de emisión; la
+   constancia sigue con la fecha de la factura. Las retenciones a pequeño contribuyente sin fecha necesitan un
+   reporte de «por fechar» y una salida manual con auditoría.
+
+**Veredicto:** correcto con ajustes (1, 4 y 6). Estrategias, bases, mínimos y redondeo están bien.
+
+Fuentes: [Decreto 20-2006 (OJ)](http://ww2.oj.gob.gt/es/QueEsOJ/EstructuraOJ/UnidadesAdministrativas/CentroAnalisisDocumentacionJudicial/cds/CDs%20de%20leyes/2006/pdfs/decretos/D020-2006.pdf),
+[AG 425-2006 (SAT)](https://portal.sat.gob.gt/portal/descarga/1899/legislacion-tributaria/18288/acuerdo-gubernativo-no-425-2006-reglamento-de-la-ley-denominada-disposiciones-legales-para-el-fortalecimiento-de-la-administracion-tributaria.pdf),
+[Decreto 10-2012 (Congreso)](https://www.congreso.gob.gt/assets/uploads/info_legislativo/decretos/2012/010-2012.pdf),
+[AG 213-2013 art. 35](http://leydeguatemala.com/acuerdo-gubernativo-numero-213-2013/base-minima-para-practicar-retencion/12328/),
+[Vescco, régimen opcional](https://vescco.tax/blog/detalles-de-la-retencion-en-el-regimen-opcional/).
