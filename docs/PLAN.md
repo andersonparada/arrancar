@@ -5,15 +5,19 @@ planificar. Se actualiza en cada iteración (ver la bitácora al final).
 
 ## 1. Visión
 
-Convertir un rancho ganadero y una parcela con varias siembras en una empresa
-ordenada: ganado, siembras, dinero, inventario, maquinaria, trabajadores,
-clientes y proveedores, con un panel de recordatorios diarios.
+Sistema administrativo y contable para empresas de Guatemala **de cualquier rubro**
+(una concretera, una lotificadora, un comercio, un rancho…): dinero, compras, cuentas
+por pagar y cobrar, inventario, maquinaria, trabajadores, clientes y proveedores, con un
+panel de recordatorios diarios. Los módulos generales no asumen un rubro ni un régimen
+fiscal (sirven a cualquier régimen de IVA e ISR, sea o no agente de retención); lo propio
+de un rubro va en **módulos de rubro** activables (Ganado, Siembras…). Decisión del usuario
+del 2026-10-05; nació para ranchos ganaderos y parcelas.
 
 - Aplicación web instalable (PWA). **Solo funciona con internet**: el service
   worker guarda la estructura de la app, nunca los datos.
-- Multiempresa: varias personas (familia) tienen ranchos; nadie ve los datos de
-  otro. Un usuario puede tener acceso a 1 o N empresas.
-- Pensada como **SaaS** (venderla a otros ganaderos) y también para instalarse
+- Multiempresa: una cuenta tiene varias empresas; nadie ve los datos de otra
+  cuenta. Un usuario puede tener acceso a 1 o N empresas.
+- Pensada como **SaaS** (venderla a empresas de cualquier rubro) y también para instalarse
   en un servidor dedicado de un cliente.
 - País: **Guatemala** (quetzales, con cuentas en dólares; NIT; FEL de la SAT).
 
@@ -743,3 +747,6 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
     que retuvo algo; las mismas reglas se proponen en 0 con «Practicada en el documento anulado X» y un aviso con lo ya
     retenido; no exige `retenciones.ajustar` (lo hace el sistema; se audita), pero si el usuario lo cambia, sí.
   - Pruebas: servidor 1861, cliente 369, generador 46.
+- **2026-10-05 (visión general).** El usuario pide que la app sirva a cualquier rubro (concreto, venta de terrenos…)
+  y a cualquier régimen fiscal, no solo a ganaderos ni a agentes retenedores: visión (§1) y `CLAUDE.md` actualizados;
+  semillas y textos de los módulos generales pasan a ser neutros; lo ganadero queda en módulos de rubro.

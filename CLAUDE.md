@@ -6,9 +6,11 @@ bitácora) cuando cambie algo acordado.
 
 ## Proyecto
 
-Arrancar: PWA multiempresa para administrar ranchos ganaderos y parcelas
-(Guatemala). SaaS con cuentas suscriptoras, empresas por cuenta y módulos
-activables. Solo funciona con conexión: el service worker no guarda datos.
+Arrancar: PWA multiempresa administrativa y contable para empresas de Guatemala
+**de cualquier rubro y régimen fiscal** (nació para ranchos; lo ganadero y agrícola va en
+módulos de rubro). SaaS con cuentas suscriptoras, empresas por cuenta y módulos
+activables. Los módulos generales no asumen rubro, régimen de IVA/ISR ni que la empresa
+sea agente de retención. Solo funciona con conexión: el service worker no guarda datos.
 
 - `servidor/`: Node 22 + TypeScript + Fastify 5 + Drizzle ORM + Zod + PostgreSQL 16.
 - `cliente/`: Vue 3 + Vite + Tailwind 4 + Pinia + vue-router + vite-plugin-pwa.
