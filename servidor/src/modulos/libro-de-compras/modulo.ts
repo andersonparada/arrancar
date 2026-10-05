@@ -2,6 +2,7 @@ import { dependenciasCompartidas } from '../core/compartido/infraestructura/depe
 import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo.js';
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeDatosFiscalesComponidas } from './composicion/datos-fiscales.js';
+import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { rutasDeConceptosDeGasto } from './composicion/conceptos-de-gasto.js';
 import { rutasDeCombustibles } from './composicion/combustibles.js';
 import { configuracionDelLibroDeCompras } from './configuracion.js';
@@ -16,6 +17,7 @@ function componerRutas() {
     rutasDeConceptosDeGasto(),
     rutasDeCombustibles(),
     rutasDeVigenciasDeCombustible(),
+    rutasDeDocumentosComponidas(),
     // generador: rutas
   ]);
 }
@@ -51,6 +53,15 @@ export const moduloLibroDeCompras: DefinicionModulo = {
     {
       clave: 'libro-de-compras.vigencias-de-combustible.exportar',
       descripcion: 'Exportar vigencias de combustible a Excel',
+    },
+    { clave: 'libro-de-compras.documentos.ver', descripcion: 'Ver los documentos del libro de compras' },
+    {
+      clave: 'libro-de-compras.documentos.crear',
+      descripcion: 'Registrar documentos de compra (facturas, notas de crédito y recibos)',
+    },
+    {
+      clave: 'libro-de-compras.retenciones.ajustar',
+      descripcion: 'Cambiar o quitar las retenciones que el sistema propone al registrar un documento',
     },
     // generador: permisos
   ],

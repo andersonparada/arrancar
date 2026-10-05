@@ -708,10 +708,17 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
 14. **L3-4 (servidor, contratos y terceros, hecho 2026-10-04):** `libro-de-compras.contratos.ts`,
     `cuentas-por-pagar.contratos.ts` (solo `recibir_documento`), orden `terceros.completar_nit`
     atendida en `terceros` con pruebas.
-15. **L3-5 (servidor):** `RegistrarDocumento`, `POST …/documentos/calcular`,
+15. **L3-5 (servidor, hecho 2026-10-04):** `RegistrarDocumento`, `POST …/documentos/calcular`,
     `GET …/proveedores/:id/destino-sugerido`, `GET …/destinos` (activos), rutas y permisos,
     auditoría de retenciones ajustadas, evento; pruebas de API con un manejador falso de
     `cuentas-por-pagar.recibir_documento`.
+    Notas de L3-5: las cuatro rutas exigen `documentos.crear` (calcular, destinos y destino sugerido son parte del
+    formulario) y cambiar o quitar una retención propuesta exige además `retenciones.ajustar`, que comprueba el caso de uso;
+    `documentos.ver` queda declarado para la lista de L3-6. El destino sugerido es `null` si el último destino ya no está
+    activo. Una FEL que queda fuera del libro por `fel_a_otro_nit` o `fel_a_consumidor_final` exige `nitReceptor`
+    (`CF` solo en la segunda), y así la regla de «FEL al NIT de la empresa» no se evade omitiéndolo. El tipo `recibo` se
+    suma a `DocumentoParaDestino`. Si el proveedor no tiene datos fiscales se usan los valores por omisión con un aviso
+    (el diseño pedía exigirlos; ver el informe de L3-5).
 16. **L3-6 (servidor):** listar y ficha, `AnularDocumento`, `EliminarDocumento`, órdenes
     atendidas (`marcar_procesado`, `anular_documento`,
     `eliminar_documento`), avisos al destino, vigencia usada (L2-3) conectada.

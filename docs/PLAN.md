@@ -675,3 +675,16 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `DatosFiscalesDeEmpresa.porOmision`). **A3:** la retención del 5 % a pequeño contribuyente se fecha con la
   recepción: `retenciones.fecha` es `not null`, sin `retenciones_por_fechar_idx` ni la orden `fechar_retencion`.
   Migración `0009` (con la reclasificación de filas existentes). Diseño actualizado (§3.1, 3.5, 3.7, 4.3, 7 y 13).
+
+- **2026-10-04 · Libro de compras L3-5: registrar documentos (servidor).** Caso de uso `RegistrarDocumento` en una sola
+  `UnidadDeTrabajo` (proveedor activo de la cuenta y NIT de la empresa; datos fiscales con `porOmision` si no hay fila;
+  conceptos y vigencia de combustible a la fecha de emisión; factura de la nota con su IVA ya rebajado; `calcularDocumento`,
+  `evaluarFueraDelLibro` y `calcularRetenciones` con la configuración de la empresa; ajustes de retenciones con
+  motivo y auditoría `corregir`; búsqueda del repetido en la empresa; `terceros.completar_nit`; inserción;
+  `<destino>.recibir_documento` por el mediador) y evento `libro-de-compras.documento_registrado` solo tras confirmar.
+  La vista previa `POST …/documentos/calcular` comparte con él `PreparadorDeDocumento`. Rutas `POST /documentos/calcular`,
+  `POST /documentos`, `GET /proveedores/:id/destino-sugerido` y `GET /destinos` (los cuatro con `documentos.crear`);
+  permisos `documentos.ver`, `documentos.crear` y `retenciones.ajustar`. Decisiones: el tipo `recibo` se suma al contrato
+  `DocumentoParaDestino`; el aviso de entero del ISR cuenta desde el mes de recepción; sin datos fiscales del proveedor se usan
+  los valores por omisión con aviso (no se exigen); una FEL fuera del libro exige el NIT del receptor. Pruebas de API con
+  un manejador falso de `cuentas-por-pagar.recibir_documento`.
