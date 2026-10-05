@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+import { Identificador } from '../../../core/compartido/dominio/identificador.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   RepositorioCategorias,
@@ -27,6 +28,14 @@ export class RepositorioTercerosDrizzle implements RepositorioTerceros {
       tx.select().from(proveedores).where(eq(proveedores.terceroId, id.valor)),
     ]);
     return mapeadorDeTercero.aEntidad(fila, { cliente, proveedor });
+  }
+
+  async buscarDeProveedor(proveedorId: string): Promise<Tercero | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ terceroId: proveedores.terceroId })
+      .from(proveedores)
+      .where(eq(proveedores.id, proveedorId));
+    return fila ? this.buscar(Identificador.desde(fila.terceroId)) : null;
   }
 
   /** Con los papeles que traiga (el alta puede registrarlo ya como cliente o proveedor). */

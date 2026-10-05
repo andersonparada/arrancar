@@ -30,6 +30,17 @@ export class TercerosEnMemoria implements RepositorioTerceros, ConsultasTerceros
     return this.terceros.get(id.valor) ?? null;
   }
 
+  /** En memoria el papel no tiene id propio: el id del proveedor es el del tercero (igual que en `obtenerPapel`). */
+  async buscarDeProveedor(proveedorId: string): Promise<Tercero | null> {
+    const tercero = this.terceros.get(proveedorId);
+    return tercero?.tienePapel('proveedor') ? tercero : null;
+  }
+
+  async nombreDelOtroConNit(nit: string, excepto: string): Promise<string | null> {
+    const otro = [...this.terceros.values()].find((t) => t.id.valor !== excepto && t.instantanea().nit?.valor === nit);
+    return otro?.nombreParaMostrar ?? null;
+  }
+
   async agregar(tercero: Tercero): Promise<void> {
     this.terceros.set(tercero.id.valor, tercero);
   }

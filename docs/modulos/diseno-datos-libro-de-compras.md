@@ -701,7 +701,7 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
 13. **L3-3 (servidor, dominio, hecho 2026-10-04):** estrategias de retención con su tabla de casos límite
     (depende de las preguntas 4 y 12); `calcularRetenciones` y la variable de empresa
     `libro-de-compras.retenciones_isr.incluye_idp` (§8).
-14. **L3-4 (servidor, contratos y terceros):** `libro-de-compras.contratos.ts`,
+14. **L3-4 (servidor, contratos y terceros, hecho 2026-10-04):** `libro-de-compras.contratos.ts`,
     `cuentas-por-pagar.contratos.ts` (solo `recibir_documento`), orden `terceros.completar_nit`
     atendida en `terceros` con pruebas.
 15. **L3-5 (servidor):** `RegistrarDocumento`, `POST …/documentos/calcular`,

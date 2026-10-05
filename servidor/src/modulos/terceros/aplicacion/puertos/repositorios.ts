@@ -9,6 +9,8 @@ import type { Tercero, TerceroId } from '../../dominio/tercero.js';
 export interface RepositorioTerceros {
   /** Con sus papeles. */
   buscar(id: TerceroId): Promise<Tercero | null>;
+  /** El tercero dueño de ese papel de proveedor (`proveedorId` es el id del papel, no del tercero). */
+  buscarDeProveedor(proveedorId: string): Promise<Tercero | null>;
   agregar(tercero: Tercero): Promise<void>;
   guardar(tercero: Tercero): Promise<void>;
 }

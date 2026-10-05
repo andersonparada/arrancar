@@ -90,6 +90,15 @@ export class ConsultasTercerosDrizzle implements ConsultasTerceros {
       .where(and(or(...coincidencias), criterios.excepto ? ne(terceros.id, criterios.excepto) : undefined));
   }
 
+  async nombreDelOtroConNit(nit: string, excepto: string): Promise<string | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ nombreMostrar: terceros.nombreMostrar })
+      .from(terceros)
+      .where(and(eq(terceros.nit, nit), ne(terceros.id, excepto)))
+      .limit(1);
+    return fila?.nombreMostrar ?? null;
+  }
+
   async obtenerPapel(terceroId: string, tipo: TipoDePapel): Promise<PapelDeClienteDto | PapelDeProveedorDto> {
     const papel = tipo === 'cliente' ? await this.papelDeCliente(terceroId) : await this.papelDeProveedor(terceroId);
     if (!papel) throw new RecursoNoEncontrado(`El papel de ${tipo}`);

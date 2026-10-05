@@ -27,6 +27,8 @@ export interface ConsultasTerceros {
   obtenerFicha(terceroId: string): Promise<FichaDeTerceroDto>;
   buscarParecidos(criterios: CriteriosDeParecido): Promise<TerceroParecidoDto[]>;
   obtenerPapel(terceroId: string, tipo: TipoDePapel): Promise<PapelDeClienteDto | PapelDeProveedorDto>;
+  /** El nombre del otro tercero de la cuenta que ya tiene ese NIT, o `null` si está libre. */
+  nombreDelOtroConNit(nit: string, excepto: string): Promise<string | null>;
 }
 
 export interface ConsultasContactos {

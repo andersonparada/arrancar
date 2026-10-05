@@ -11,7 +11,10 @@ import { BuscarContactos } from './aplicacion/casos-uso/contactos/buscar-contact
 import { CambiarContacto } from './aplicacion/casos-uso/contactos/cambiar-contacto.js';
 import { EliminarContacto } from './aplicacion/casos-uso/contactos/eliminar-contacto.js';
 import { ListarContactos } from './aplicacion/casos-uso/contactos/listar-contactos.js';
+import '../core/contratos/terceros.contratos.js';
+import { mediador } from '../core/mediador/contexto.js';
 import { AsignarPapel } from './aplicacion/casos-uso/papeles/asignar-papel.js';
+import { CompletarNitDeProveedor } from './aplicacion/casos-uso/papeles/completar-nit-de-proveedor.js';
 import { QuitarPapel } from './aplicacion/casos-uso/papeles/quitar-papel.js';
 import { ActualizarTercero } from './aplicacion/casos-uso/terceros/actualizar-tercero.js';
 import { ListarTerceros } from './aplicacion/casos-uso/terceros/listar-terceros.js';
@@ -74,6 +77,12 @@ function controladorDeTerceros(piezas: Piezas): TercerosControlador {
   });
 }
 
+/** Atiende por el mediador la orden de completar el NIT de un proveedor; el permiso lo exige la ruta que origina. */
+function atenderOrdenes({ unidadDeTrabajo, repositorio, consultas }: Piezas): void {
+  const completarNit = new CompletarNitDeProveedor({ unidadDeTrabajo, repositorio, consultas });
+  mediador.atender('terceros', 'terceros.completar_nit', (datos, operador) => completarNit.ejecutar(operador, datos));
+}
+
 function controladorDeContactos(piezas: Piezas) {
   const { unidadDeTrabajo, auditoria, repositorio, contactos, consultas, consultasContactos } = piezas;
   return new ContactosControlador({
@@ -97,6 +106,7 @@ function controladorDeCategorias({ unidadDeTrabajo, auditoria, categorias, consu
 /** Raíz de composición: el único lugar donde se eligen las implementaciones concretas. */
 function componerControladores(compartidas: DependenciasCompartidas): ControladoresDeTerceros {
   const piezas = { ...compartidas, ...crearPiezas() };
+  atenderOrdenes(piezas);
   return {
     terceros: controladorDeTerceros(piezas),
     contactos: controladorDeContactos(piezas),

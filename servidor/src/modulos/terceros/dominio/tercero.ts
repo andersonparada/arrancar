@@ -4,7 +4,7 @@ import type { Correo } from '../../core/compartido/dominio/objetos-valor/correo.
 import type { Dpi } from '../../core/compartido/dominio/objetos-valor/dpi.js';
 import type { Nit } from '../../core/compartido/dominio/objetos-valor/nit.js';
 import type { Telefono } from '../../core/compartido/dominio/objetos-valor/telefono.js';
-import { TerceroInactivo } from './errores.js';
+import { NitDeProveedorSinNumero, ProveedorYaTieneOtroNit, TerceroInactivo } from './errores.js';
 import { PapelAsignado, PapelQuitado, TerceroActualizado, TerceroCreado, TerceroInactivado } from './eventos.js';
 import type { IdentidadDeTercero } from './identidad-de-tercero.js';
 import type { Papel, PapelSegunTipo, TipoDePapel } from './papeles.js';
@@ -68,6 +68,20 @@ export class Tercero extends RaizAgregado<TerceroId> {
     } else {
       this.registrarEvento(new TerceroActualizado(this.id, this.cuentaId));
     }
+  }
+
+  /**
+   * Pone el NIT si no tiene; con el mismo NIT no hace nada. Devuelve si lo cambió.
+   * @throws NitDeProveedorSinNumero si el NIT es consumidor final.
+   * @throws ProveedorYaTieneOtroNit si ya tiene uno distinto.
+   */
+  completarNit(nit: Nit): boolean {
+    if (nit.esConsumidorFinal()) throw new NitDeProveedorSinNumero();
+    const actual = this.propiedades.nit;
+    if (actual?.esIgualA(nit)) return false;
+    if (actual) throw new ProveedorYaTieneOtroNit(actual.valor);
+    this.propiedades = { ...this.propiedades, nit };
+    return true;
   }
 
   /** Asigna el papel o reemplaza sus datos si ya lo tenía. */

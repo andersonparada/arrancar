@@ -648,3 +648,13 @@ y `demo` / `demo-arrancar`.
   `esLineaAgropecuaria` (`retencion-propuesta.ts`) que usa la estrategia; una línea de servicio con concepto
   agropecuario retiene al 15 %. La semilla de conceptos deja «Insumos agrícolas», «Alimento para ganado» y
   «Medicinas veterinarias» con `esProductoAgropecuario = false` (industrializados); sin migración de datos.
+
+- **2026-10-04 (Libro de compras L3-4, servidor).** Contratos del mediador: `libro-de-compras.contratos.ts` (órdenes
+  `fechar_retencion`, `marcar_procesado`, `anular_documento`, `eliminar_documento`; avisos `documento_por_anular` y
+  `documento_por_eliminar`; eventos del bus `documento_registrado`, `documento_anulado` y `documento_eliminado`;
+  `DocumentoParaDestino` con el dinero en centavos) y `cuentas-por-pagar.contratos.ts` (solo
+  `cuentas-por-pagar.recibir_documento`). Sus manejadores son de L3-5 y L3-6 y de CP1. Terceros atiende
+  `terceros.completar_nit` (`CompletarNitDeProveedor`, el `proveedorId` es el id del papel): valida con `Nit`,
+  rechaza CF, es idempotente con el mismo NIT, `ProveedorYaTieneOtroNit` si tiene otro y `NitYaRegistrado` si es de
+  otro tercero de la cuenta. No se audita (no es baja ni corrección de dinero o fechas) ni publica eventos (correría
+  antes de confirmar la transacción de quien llama). Pruebas: servidor 1488, cliente 368, generador 46.
