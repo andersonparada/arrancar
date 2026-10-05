@@ -451,9 +451,9 @@ Artículos de extractos coincidentes; confirmar en el texto vigente los que se m
   para todas las reglas, y se quitan `retenciones_por_fechar_idx` y la orden `libro-de-compras.fechar_retencion`.
   Desaparece el riesgo 3 del diseño (§13) para esta regla.
 
-## Registro de documentos L3-5 (contador-guatemala, 2026-10-04) — pendiente de decisión del usuario
+## Registro de documentos L3-5 (contador-guatemala, 2026-10-04)
 
-Veredicto: correcto con ajustes. Recomendaciones del contador (el usuario aún no responde):
+Veredicto: correcto con ajustes. **El usuario aprobó las 8 recomendaciones el 2026-10-05:**
 1. Entero del ISR contado desde la **fecha de la factura** (`retencion.fecha`, Decreto 10-2012 art. 48), no desde la
    recepción (corrige su ajuste 6 de L3-3). Feriados: tabla nacional en `core` o, mientras tanto, texto suavizado.
 2. Aviso de responsabilidad solidaria también al **rebajar** una retención, citando Código Tributario art. 29 (y
@@ -470,5 +470,25 @@ Veredicto: correcto con ajustes. Recomendaciones del contador (el usuario aún n
 Confirmar en texto vigente: Decreto 10-2012 arts. 22 y 48, Código Tributario arts. 29 y 45, Ley del IVA arts. 17 y 48,
 catálogo de frases FEL.
 
-Preguntas de L3-6 para el contador: ¿un anulado puede eliminarse si el período no está declarado? ¿Una nota anulada
-debe seguir impidiendo eliminar su factura? ¿El período declarado (L5) bloquea también eliminar?
+
+## Bajas de documentos L3-6 (contador-guatemala, 2026-10-05)
+
+En Arrancar «anular» anula el **registro**, no la FEL (solo su emisor la anula en la SAT, hasta el vencimiento de la
+declaración del IVA del mes del documento). Error de captura → eliminar si se puede; FEL anulada por el emisor →
+anular el registro; devolución o descuento → nota de crédito (Ley del IVA art. 17).
+
+| # | Regla | Veredicto |
+|---|---|---|
+| 1 | Un anulado nunca se elimina | Correcto (Ley del IVA art. 37; Código de Comercio arts. 373 y 382) |
+| 2 | Una nota anulada impide eliminar su factura | Correcto |
+| 3 | Período declarado (L5) bloquea anular y eliminar | Correcto con ajustes: reabrir con permiso propio y rectificar; nunca reverso en el mes actual |
+| 4 | Retenciones del anulado quedan guardadas | Correcto hoy; en L5 manejar constancia emitida (anularla en la SAT) y enterada (rectificar y devolver), sin bloquear la anulación |
+
+**Decisiones del usuario (2026-10-05), todas las recomendadas:** mantener 1 y 2 (la pantalla sugiere eliminar cuando
+aún se puede y la lista oculta anulados por omisión); en L5, el período declarado bloquea anular y eliminar, con
+reapertura (`libro-de-compras.periodos.reabrir`) y rectificación, y una retención enterada no bloquea anular (aviso y
+reporte «por resolver»); **causa de anulación** de una lista (`error_de_captura`, `fel_anulada_por_el_emisor`,
+`no_corresponde_a_la_empresa`) además del motivo, botón «Anular el registro (no anula la factura en la SAT)» y aviso de
+período anterior al mes actual al anular y eliminar; **protección contra la retención doble ya en L3**: al registrar,
+si hay un anulado con la misma autorización FEL (o NIT, serie y número), mostrar sus retenciones y proponer la nueva en
+0 con el motivo «practicada en el documento anulado X».
