@@ -62,6 +62,23 @@ fecha de corte por empresa** y deben cuadrar entre sí y con el balance de apert
 - La **primera conciliación** de cada cuenta es la del mes de la fecha de inicio
   (o del mes en que se abrió la cuenta, si es posterior).
 
+### Aviso de pago por correo (pedido del usuario, 2026-10-04)
+
+- Al **pagar una factura** (y, por simetría, al cobrar una de Cuentas por cobrar) se puede **enviar
+  el aviso por correo** al proveedor o cliente.
+- Un tercero puede tener **n correos**: hoy hay uno en `terceros.terceros.correo` y uno por contacto
+  (`terceros.contactos.correo`). Por planificar: elegir a cuáles se envía (marcar contactos «recibe
+  avisos de pago»), copia a la empresa, plantilla del correo, adjuntos (constancia de retención,
+  comprobante), servidor de correo por instalación (SMTP en la configuración, solo superacceso),
+  bitácora de envíos y reintentos. Relacionado: el correo de usuarios es opcional (solo informes).
+
+### Plazo de crédito del proveedor (2026-10-04)
+
+- El usuario pidió que la **fecha de pago estimada** salga de lo configurado en el proveedor (días de
+  crédito) y, si no tiene, a **un mes como máximo**. Hoy `terceros.proveedores` no tiene ese dato.
+  Sirve para fechar las retenciones a pequeño contribuyente (L3) y para los vencimientos de CP1;
+  pendiente de validar con el contador.
+
 ### Reportes (imprimir y exportar)
 
 | Idea del usuario | Nombre propuesto | Módulo |
