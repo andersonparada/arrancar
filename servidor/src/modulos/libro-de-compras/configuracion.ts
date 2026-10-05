@@ -115,4 +115,14 @@ const filas: Fila[] = [
 ];
 
 /** Tasas, mínimos y plazos fiscales del libro de compras (`docs/modulos/diseno-datos-libro-de-compras.md` §8). */
-export const configuracionDelLibroDeCompras: DefinicionConfiguracion[] = filas.map(deInstalacion);
+export const configuracionDelLibroDeCompras: DefinicionConfiguracion[] = [
+  ...filas.map(deInstalacion),
+  definirConfiguracion({
+    clave: 'libro-de-compras.retenciones_isr.incluye_idp',
+    descripcion: 'Incluye el IDP de las compras de combustible en la base de la retención de ISR.',
+    esquema: z.boolean(),
+    predeterminado: true,
+    niveles: ['instalacion', 'empresa'],
+    publica: false,
+  }),
+];

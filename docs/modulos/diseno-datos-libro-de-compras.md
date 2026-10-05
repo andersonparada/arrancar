@@ -377,7 +377,7 @@ porcentaje, monto, fecha }`.
 | `iva_contribuyente_especial`, `iva_otro_agente` | empresa de ese tipo; mismas condiciones | IVA del documento | 15 % | recepción |
 | `iva_sector_publico` | empresa `sector_publico`; `total >= iva.minimo_sector_publico` | IVA | 25 % | recepción |
 | `iva_pequeno_contribuyente` | empresa con `agente_de_retencion_iva <> 'ninguno'`; proveedor `se_le_retiene_iva_pequeno_contribuyente`; `factura_pequeno_contribuyente`; **`total > umbral`** (estrictamente mayor, Q2,500.00) | total | 5 % | **nula**: la pone el destino (`fechar_retencion`) |
-| `isr_opcional_simplificado` | empresa `es_agente_de_retencion_isr`; proveedor `opcional_simplificado` y `se_le_retiene_isr`; `factura`; `base_isr > isr.minimo` | `base_isr = base + exento` (sin IVA ni IDP; pregunta 12) | 5 % hasta Q30,000 + 7 % del excedente | emisión |
+| `isr_opcional_simplificado` | empresa `es_agente_de_retencion_isr`; proveedor `opcional_simplificado` y `se_le_retiene_isr`; `factura`; `base_isr >= isr.minimo` | `base_isr = total − iva` (= base + exento, más el IDP si `isr.incluye_idp`; pregunta 12)  | 5 % hasta Q30,000 + 7 % del excedente | emisión |
 
 - El usuario puede **quitar** (monto 0) o **ajustar** cada propuesta con motivo (pregunta 6):
   se guarda `monto_propuesto`, `monto` y `motivo_del_ajuste`, y se audita `corregir` con
@@ -533,7 +533,8 @@ Todas `niveles: ['instalacion']` (la ley es igual para todas; solo soporte las c
 | `libro-de-compras.retenciones_isr.tasa_primer_tramo` | 5 |
 | `libro-de-compras.retenciones_isr.limite_primer_tramo` | 30000 |
 | `libro-de-compras.retenciones_isr.tasa_excedente` | 7 |
-| `libro-de-compras.retenciones_isr.minimo` | 2500 (se retiene si la base es **mayor**) |
+| `libro-de-compras.retenciones_isr.minimo` | 2500 (se retiene si la base es **mayor o igual**) |
+| `libro-de-compras.retenciones_isr.incluye_idp` | `true`; boolean, `niveles: ['instalacion','empresa']`: el IDP entra en la base del ISR |
 | `libro-de-compras.plazos.dias_habiles_entero_iva` | 15 |
 | `libro-de-compras.plazos.dias_habiles_entero_isr` | 10 |
 
@@ -692,8 +693,9 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
     empresas y cuentas.
 12. **L3-2 (servidor, dominio, hecho):** cálculo de líneas, IVA repartido, IDP, motivo y período
     (funciones puras con pruebas) y la configuración de la sección 8.
-13. **L3-3 (servidor, dominio):** estrategias de retención con su tabla de casos límite
-    (depende de las preguntas 4 y 12).
+13. **L3-3 (servidor, dominio, hecho 2026-10-04):** estrategias de retención con su tabla de casos límite
+    (depende de las preguntas 4 y 12); `calcularRetenciones` y la variable de empresa
+    `libro-de-compras.retenciones_isr.incluye_idp` (§8).
 14. **L3-4 (servidor, contratos y terceros):** `libro-de-compras.contratos.ts`,
     `cuentas-por-pagar.contratos.ts` (solo `recibir_documento`), orden `terceros.completar_nit`
     atendida en `terceros` con pruebas.

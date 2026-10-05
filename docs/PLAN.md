@@ -617,3 +617,13 @@ y `demo` / `demo-arrancar`.
   se movió de Bancos a `core/compartido/dominio` (Bancos lo reexporta). Decisiones: la nota hereda el motivo de su
   factura, pero `fuera_de_plazo` (si la nota está reciente) y `exento` (si trae IVA) pasan a `no_vinculado` porque
   los `check` de §3.5 no aceptan otra cosa; el período propuesto es el mes de recepción. Sin tablas ni rutas.
+
+- **2026-10-04 (Libro de compras L3-3, servidor, dominio).** Patrón Strategy en `libro-de-compras/dominio/`:
+  `calcularRetenciones(entrada)` (`calculador-de-retenciones.ts`) recorre una estrategia por regla
+  (`estrategias-de-retencion-de-iva.ts`, `estrategia-de-retencion-de-isr.ts`) y devuelve
+  `{ impuesto, regla, base, porcentaje | null, montoPropuesto, origenDeLaFecha }` en centavos y centésimas;
+  `configuracionDeRetenciones(valor)` convierte la configuración. Manda la validación del contador: mínimo del
+  IVA de agentes `>=`, pequeño contribuyente `>` Q2,500.00, mínimo del ISR `>=` sobre `total − iva` (lo exento
+  dentro), casilla SAT desmarcada y nota de crédito sin retenciones, IVA al costo también se retiene. Variable
+  nueva de empresa `libro-de-compras.retenciones_isr.incluye_idp` (`true`). ISR por escalones redondeado una sola
+  vez. Sin tablas ni rutas.
