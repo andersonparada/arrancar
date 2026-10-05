@@ -24,7 +24,7 @@ const nombreVisible = computed(() => props.nombre || 'Sin nombre');
             <span class="truncate text-sm font-bold">{{ nombreVisible }}</span>
           </div>
           <div class="mb-3 rounded-md bg-marca-oscuro/60 px-2 py-1.5 text-xs ring-1 ring-marca-texto/15">
-            Rancho San José
+            Empresa Ejemplo
           </div>
           <p class="mb-1 text-[10px] font-semibold tracking-wider text-marca-texto/60 uppercase">General</p>
           <div class="relative mb-1 flex items-center gap-2 rounded-md bg-marca-texto/15 px-2 py-1.5 text-xs">

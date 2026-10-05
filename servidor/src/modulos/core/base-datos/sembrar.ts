@@ -45,7 +45,7 @@ async function sembrarDemo(): Promise<void> {
   }
   await darDeAltaCuenta.ejecutar({
     nombreCuenta: 'Familia Demo',
-    empresa: { nombre: 'Rancho El Arrancar', nit: null },
+    empresa: { nombre: 'Empresa Demo', nit: null },
     propietario: {
       nombres: 'Dueño',
       apellidos: 'Demo',

@@ -113,25 +113,39 @@ describe('conceptos de gasto', () => {
   it('siembra la lista sugerida al abrir el catálogo vacío', async () => {
     const listado = await casos.listar.ejecutar(operador);
 
-    expect(listado).toHaveLength(8);
+    expect(listado).toHaveLength(16);
     expect(listado.map((conceptoDeGasto) => conceptoDeGasto.nombre)).toEqual(
       expect.arrayContaining([
         'Combustibles',
-        'Insumos agrícolas',
-        'Alimento para ganado',
-        'Medicinas veterinarias',
-        'Reparaciones',
+        'Reparaciones y mantenimiento',
         'Servicios profesionales',
         'Energía eléctrica',
+        'Agua',
+        'Teléfono e internet',
+        'Alquileres',
+        'Papelería y útiles',
+        'Fletes y transporte',
+        'Publicidad',
+        'Seguros',
+        'Materiales y suministros',
         'Maquinaria y equipo',
+        'Vehículos',
+        'Mobiliario y equipo de oficina',
+        'Equipo de cómputo',
       ]),
     );
   });
 
-  it('la lista sugerida no marca ningún concepto como agropecuario (los insumos son industrializados)', async () => {
+  it('la lista sugerida no marca ningún concepto como agropecuario y sus activos fijos son bienes', async () => {
     const listado = await casos.listar.ejecutar(operador);
 
     expect(listado.some((conceptoDeGasto) => conceptoDeGasto.esProductoAgropecuario)).toBe(false);
+    expect(listado.filter((conceptoDeGasto) => conceptoDeGasto.esActivoFijo)).toHaveLength(4);
+    expect(
+      listado
+        .filter((conceptoDeGasto) => conceptoDeGasto.esActivoFijo)
+        .every((conceptoDeGasto) => conceptoDeGasto.tipoPorOmision === 'bien'),
+    ).toBe(true);
   });
 
   it('no vuelve a sembrar si ya tiene conceptos', async () => {

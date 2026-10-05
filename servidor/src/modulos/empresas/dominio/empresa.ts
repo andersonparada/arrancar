@@ -34,7 +34,7 @@ function nombreValido(nombre: string): string {
   return limpio;
 }
 
-/** Rancho o parcela que la cuenta administra como una empresa, con su propio NIT. */
+/** Empresa que la cuenta administra, con su propio NIT. */
 export class Empresa extends RaizAgregado<EmpresaId> {
   private constructor(private propiedades: PropiedadesDeEmpresa) {
     super(propiedades.id);

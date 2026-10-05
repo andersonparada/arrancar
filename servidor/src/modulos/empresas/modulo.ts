@@ -67,7 +67,7 @@ function componerRutas(compartidas: DependenciasCompartidas) {
 export const moduloEmpresas: DefinicionModulo = {
   clave: 'empresas',
   nombre: 'Empresas',
-  descripcion: 'Ranchos y parcelas de la cuenta y sus datos generales.',
+  descripcion: 'Empresas de la cuenta y sus datos generales.',
   esencial: true,
   permisos: [
     { clave: 'empresas.ver', descripcion: 'Ver las empresas de la cuenta' },

@@ -5,7 +5,7 @@ export const NOMBRE_EMPRESAS = 'Empresas';
 export const VENTANAS_EMPRESAS = {
   empresas: {
     titulo: 'Empresas',
-    descripcion: (cuenta: string) => `Ranchos y parcelas de la cuenta ${cuenta}.`,
+    descripcion: (cuenta: string) => `Empresas de la cuenta ${cuenta}.`,
   },
   tiposDeLocalidad: {
     titulo: 'Tipos de localidad',

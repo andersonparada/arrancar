@@ -5,7 +5,7 @@ import { ajustarTipoSegunActivoFijo, datosParaCambiarEstado, tipoBloqueado } fro
 
 const concepto: ConceptoDeGasto = {
   id: 'c-1',
-  nombre: 'Alimento para ganado',
+  nombre: 'Combustibles',
   tipoPorOmision: 'servicio',
   esProductoAgropecuario: true,
   esActivoFijo: false,

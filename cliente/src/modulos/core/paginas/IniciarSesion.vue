@@ -32,7 +32,7 @@ async function entrar(): Promise<void> {
       <div class="mb-8 flex flex-col items-center text-center text-marca-texto">
         <LogoAplicacion class="size-20 drop-shadow" />
         <h1 class="mt-4 text-3xl font-bold tracking-tight">{{ apariencia.nombreAplicacion }}</h1>
-        <p class="mt-1 text-sm text-marca-texto/75">Tu rancho y tus siembras, en orden.</p>
+        <p class="mt-1 text-sm text-marca-texto/75">Tu empresa, en orden.</p>
       </div>
 
       <form class="space-y-4 rounded-2xl bg-white p-6 shadow-xl dark:bg-tierra-900" @submit.prevent="entrar">

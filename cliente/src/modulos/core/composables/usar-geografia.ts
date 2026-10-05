@@ -1,7 +1,7 @@
 import { onMounted, ref, watch, type Ref } from 'vue';
 import { apiGeografia, type Departamento, type Municipio } from '../servicios/geografia.api';
 
-/** Cualquier dato que tenga ubicación en Guatemala (un cliente, una finca…). */
+/** Cualquier dato que tenga ubicación en Guatemala (un cliente, una sucursal…). */
 export interface Ubicacion {
   departamentoCodigo: string | null;
   municipioCodigo: string | null;

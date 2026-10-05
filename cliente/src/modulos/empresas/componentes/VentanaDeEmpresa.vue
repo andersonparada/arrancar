@@ -47,7 +47,7 @@ const cerrarVentana = () => (props.reaperturaAbierta ? undefined : emit('cerrar'
       <CampoTexto
         v-model="edicion.nombre"
         etiqueta="Nombre"
-        placeholder="Ej. Rancho San José"
+        placeholder="Ej. Comercial San José"
         requerido
         :error="errores.nombre"
       />

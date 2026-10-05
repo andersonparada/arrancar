@@ -750,3 +750,9 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
 - **2026-10-05 (visión general).** El usuario pide que la app sirva a cualquier rubro (concreto, venta de terrenos…)
   y a cualquier régimen fiscal, no solo a ganaderos ni a agentes retenedores: visión (§1) y `CLAUDE.md` actualizados;
   semillas y textos de los módulos generales pasan a ser neutros; lo ganadero queda en módulos de rubro.
+
+
+- **2026-10-05**:
+  - **Textos y semilla neutros (Arrancar sirve a cualquier rubro).** La semilla de conceptos de gasto pasa a
+    una lista general de 16 (12 gastos y 4 activos fijos, ninguno agropecuario); los textos de Empresas, el lema del inicio
+    de sesión, la vista previa de apariencia y la empresa demo ya no hablan de ranchos ni parcelas. Sin cambios de lógica.
