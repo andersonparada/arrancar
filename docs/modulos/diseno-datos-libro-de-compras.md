@@ -89,6 +89,12 @@ según el régimen de la empresa» en `validacion-h7-h11-retenciones.md`. Las de
 6 (prorrata, después de L5) y 7 (compras a proveedores agropecuarios, primario y pecuario y pequeño contribuyente
 electrónico, paso propio) **no** entran en R1; R1 solo deja el dato que necesitan (la foto del régimen).
 
+**Respuestas del usuario (2026-10-05), las recomendadas:** R1-a la primera vigencia vale «desde el inicio»; R1-b se
+exigen los datos fiscales de la empresa antes de su primer documento (sin suponer régimen general; el error lleva a la
+sección fiscal de la empresa); R1-c/R1-d una vigencia se corrige o se quita libremente si no tiene documentos vigentes
+(los anulados no bloquean), con auditoría; R1-f el tipo de persona es obligatorio y sin valor por omisión, guardado en
+cada vigencia e igual en todas. R1-e: pendiente del contador.
+
 #### 3.1b.1 Lo encontrado
 
 1. `datos_fiscales_de_empresa` tiene PK `empresa_id` (una fila por empresa), `regimen_isr` no nulo, dos regímenes de
