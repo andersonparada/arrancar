@@ -716,3 +716,30 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   asueto se audita. **Pendiente:** la pantalla en el panel de Soporte, y conectar el puerto de días hábiles en
   libro-de-compras. **Dudas legales** (no implementadas): el 15 de agosto (solo municipio de Guatemala) y el posible
   traslado de feriados que reformas recientes al art. 127 permitirían por acuerdo; no se verificó el texto vigente.
+
+
+- **2026-10-05 · Libro de compras, ajustes de L3-5 y L3-6 (servidor).** Se aplican las decisiones del usuario sobre
+  el veredicto del contador (`validacion-h7-h11-retenciones.md`, secciones de L3-5 y L3-6); el diseño
+  (`diseno-datos-libro-de-compras.md`, secciones 4 y 5 y la nota de los pasos 15 y 16) quedó al día.
+  - **Entero:** el plazo se cuenta siempre desde `retencion.fecha` (recepción en el IVA, fecha de la factura en el
+    ISR, Decreto 10-2012 art. 48); se quitan `fechaBaseDelEntero` y `ContextoDeEntero.fechaDeRecepcion`. Los días
+    hábiles van detrás del puerto `CalendarioLaboral.esHabil(fecha)` (`dominio/calendario-laboral.ts`, implementación
+    `CalendarioDeLunesAViernes`; la tabla de feriados de `core` se conectará después).
+  - **Avisos:** retención quitada **o rebajada** (Código Tributario art. 29 y Decreto 10-2012 art. 22); no domiciliado
+    (ISR de no residentes); nota tardía de fecha a fecha; FEL a consumidor final de Q2,500.00 o más; cambio de
+    régimen confirmado. Se quita el aviso de «proveedor sin datos».
+  - **Proveedor sin datos fiscales (opción C):** `datosFiscalesDelProveedor { regimenIsr, esAgenteDeRetencionIva }`
+    obligatorio en una factura del libro si la empresa es agente y no hay fila (error 422
+    `faltan_datos_fiscales_del_proveedor` con `detalles.preguntas`, también al calcular); se guarda con el documento
+    (`GuardarDatosFiscalesDeProveedor`, con su auditoría); la factura de pequeño contribuyente lo deduce de su tipo.
+  - **Receptor:** `nitReceptor` acepta NIT o CUI; `sin_fel` lo deja `null`. **Cambio de régimen:**
+    `confirmarCambioDeRegimen` deja pasar la factura con aviso y auditoría `corregir`.
+  - **Bajas:** `causa_de_anulacion` (migración `0010`, con check y `documentos_anulacion_completa` ajustado; los
+    anulados que ya existían quedan como `error_de_captura`); anular recibe `{ causa, motivo }`, responde
+    `{ documento, avisos }` y audita `"<causa>: <motivo>"`; la orden `anular_documento` lleva `causa`. Anular y eliminar
+    avisan si el período es anterior al mes actual; **eliminar responde 200 `{ avisos }`** (antes 204), para que las dos
+    bajas avisen igual. La lista usa `estado=vigente` por omisión (`anulado` o `todos` para ver los demás).
+  - **Retención doble:** al calcular y registrar se busca un anulado con la misma FEL (o NIT, tipo, serie y número)
+    que retuvo algo; las mismas reglas se proponen en 0 con «Practicada en el documento anulado X» y un aviso con lo ya
+    retenido; no exige `retenciones.ajustar` (lo hace el sistema; se audita), pero si el usuario lo cambia, sí.
+  - Pruebas: servidor 1861, cliente 369, generador 46.

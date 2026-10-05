@@ -179,7 +179,7 @@ transacción).
 | `proveedor_id` | uuid | no | FK `(proveedor_id, cuenta_id) → terceros.proveedores (id, cuenta_id)` no action |
 | `nit_emisor` | text | sí | normalizado (`Nit`); check `nit_emisor is null or nit_emisor ~ '^[0-9]{1,12}[0-9K]$'` (nunca `CF`) |
 | `nombre_emisor` | text | no | nombre del proveedor como estaba al registrar, 1–200 |
-| `nit_receptor` | text | sí | NIT de la empresa al registrar (para L4: el DTE debe ser a ese NIT) |
+| `nit_receptor` | text | sí | NIT de la empresa si va en el libro (para L4: el DTE debe ser a ese NIT); en una FEL fuera del libro, el NIT **o CUI** al que se emitió (`CF` si es a consumidor final); `null` en `sin_fel` |
 | `serie` | text | sí | mayúsculas y sin espacios; 1–40 |
 | `numero` | text | no | mayúsculas y sin espacios; 1–40 |
 | `autorizacion_fel` | uuid | sí | UUID de la FEL |
@@ -202,6 +202,7 @@ transacción).
 | `estado` | text | no | `'vigente'`; check `in ('vigente','anulado')` |
 | `anulado_en`, `anulado_por` | timestamptz, uuid | sí | |
 | `motivo_de_anulacion` | text | sí | 1–300 |
+| `causa_de_anulacion` | text | sí | `error_de_captura`, `fel_anulada_por_el_emisor` o `no_corresponde_a_la_empresa` (check `causa_de_anulacion_valida`); migración `0010` |
 
 Checks (nombres `documentos_<regla>`):
 - `totales_cuadran`: `total = base + iva + idp + exento`.
@@ -232,7 +233,7 @@ Checks (nombres `documentos_<regla>`):
   ('fuera_de_plazo','no_vinculado') and iva_no_acreditable = 0)`.
 - `exento_sin_iva`: `coalesce(motivo_sin_credito,'') <> 'exento' or iva = 0`.
 - `anulacion_completa`: `(estado = 'anulado') = (anulado_en is not null and anulado_por is not
-  null and motivo_de_anulacion is not null)`.
+  null and motivo_de_anulacion is not null and causa_de_anulacion is not null)`.
 
 Únicos e índices:
 
@@ -389,24 +390,42 @@ porcentaje, monto, fecha }`.
   `recurso = 'libro-de-compras.retenciones'`, `anterior` = la propuesta.
 - **Fijada al registrar**: nada la recalcula después (ni el destino ni una nota de crédito;
   decisión del usuario con el riesgo anotado en `validacion-h7-h11-retenciones.md`).
-- Aviso de entero vencido: si hoy pasa del plazo de entero del mes de la fecha de la retención
-  (`libro-de-compras.plazos.dias_habiles_entero_iva` = 15, `…_isr` = 10; días hábiles lunes a
-  viernes, sin feriados), aviso de multa e intereses; no bloquea.
-- Aviso de responsabilidad solidaria (H7; Decreto 20-2006 art. 7): si la empresa es agente y
-  el usuario quita una retención propuesta. Una FEL exenta del banco no genera propuestas
+- Aviso de entero vencido: si hoy pasa del plazo de entero del mes de `retencion.fecha` (la recepción en el
+  IVA; la fecha de la factura en el ISR, Decreto 10-2012 art. 48; sin caso especial)
+  (`libro-de-compras.plazos.dias_habiles_entero_iva` = 15, `…_isr` = 10). Los días hábiles se cuentan detrás
+  del puerto `CalendarioLaboral.esHabil(fecha)` (`dominio/calendario-laboral.ts`), hoy de lunes a viernes sin
+  feriados (cuando exista la tabla de feriados de `core`, solo cambia la implementación), y por eso el aviso
+  dice «venció el dd/mm/aaaa, o vence en los próximos días si hubo feriados; confírmelo»; no bloquea.
+- Aviso de responsabilidad solidaria (H7; Código Tributario art. 29 y, en el ISR, Decreto 10-2012 art. 22): si
+  el usuario **quita o rebaja** una retención propuesta (monto final menor que el propuesto).
+- **Retención doble:** al calcular y registrar se busca en la empresa un documento **anulado** con la misma
+  `autorizacion_fel` (o el mismo NIT del emisor, tipo, serie y número) que retuvo algo (monto > 0): la propuesta
+  de esas mismas reglas queda en 0 (`monto_propuesto = monto = 0`) con `motivo_del_ajuste` «Practicada en el
+  documento anulado <serie>-<número>» y un aviso con lo ya retenido. Lo hace el sistema, así que no exige
+  `retenciones.ajustar` (se audita como `corregir`, con lo que habría propuesto); si el usuario la cambia, sí lo
+  exige y necesita su propio motivo. Una FEL exenta del banco no genera propuestas
   (`iva = 0` y el banco es agente), así que no avisa.
 
 ## 5. Reglas del caso de uso `RegistrarDocumento` (L3)
 
 1. Empresa: NIT en `core.empresas` obligatorio (orden `empresas.obtener_datos_de_empresa`;
-   `EmpresaSinNit` con enlace al formulario). Se copia a `nit_receptor`.
+   `EmpresaSinNit` con enlace al formulario). Se copia a `nit_receptor` si el documento va en el libro.
 2. Proveedor activo de la cuenta (lectura de `terceros.*.tablas.js` desde `infraestructura`,
-   con RLS por cuenta) y sus datos fiscales (sin fila → por omisión; pregunta 10).
+   con RLS por cuenta) y sus datos fiscales. **Sin fila guardada (opción C):** en una factura del libro, si la
+   empresa es agente (de IVA o de ISR), el cuerpo debe traer `datosFiscalesDelProveedor { regimenIsr,
+   esAgenteDeRetencionIva }`; si falta, error `faltan_datos_fiscales_del_proveedor` (422) con `detalles`
+   `{ campo, preguntas: [{ campo, pregunta, opciones }] }` (también al calcular, que usa lo que llegue sin guardarlo).
+   Se guardan al registrar, en la misma transacción, con `DatosFiscalesDeProveedor.crear` y la auditoría de los datos
+   fiscales. En `factura_pequeno_contribuyente` el régimen se deduce del tipo; en recibos, documentos fuera del libro
+   y notas valen los valores por omisión sin aviso. Lo guardado manda: si ya hay fila, lo que llegue se ignora.
 3. H10 (marcado): `nit_emisor` válido y distinto de `CF`. Si el proveedor no tiene NIT → orden
    `terceros.completar_nit` en la misma transacción; si tiene otro → `NitDelEmisorNoCoincide`.
    Desmarcado: `nit_emisor` = NIT del proveedor (puede ser nulo) y UUID opcional.
 4. Tipo coherente con el proveedor: `factura_pequeno_contribuyente` exige proveedor pequeño
-   contribuyente y al revés (`TipoNoCorrespondeAlProveedor`).
+   contribuyente y al revés (`TipoNoCorrespondeAlProveedor`, cuyo mensaje agrega «si el proveedor cambió de
+   régimen, actualice sus datos fiscales o confirme»). Con `confirmarCambioDeRegimen: true` pasa, avisa «El
+   proveedor cambió de régimen: confirme que la factura es anterior al cambio» y se audita (`corregir` en
+   `libro-de-compras.documentos`, con el motivo).
 5. Destino en `DESTINOS` **y activo en la cuenta** (puerto `ModulosActivosDeLaCuenta` del core).
 6. Período: se propone el mes de recepción (no el «mes actual»); `>=` mes de emisión; aviso «Ese período
    puede estar declarado: si ya lo presentó, tendrá que rectificar.» si es anterior al mes actual (dato de
@@ -414,7 +433,7 @@ porcentaje, monto, fecha }`.
 7. Líneas: al menos una; concepto activo; combustible activo con vigencia; cálculo de 4.1.
 8. Nota de crédito: su factura vigente, del mismo proveedor y destino (la FK lo repite), de
    tipo factura; se bloquea la factura `for update` y `Σ notas vigentes + esta <= total de la
-   factura` (`NotaSuperaLaFactura`); aviso si la nota es más de dos meses posterior.
+   factura` (`NotaSuperaLaFactura`); aviso si la nota se emitió más de dos meses (de fecha a fecha) después de la factura («aun así, rebájela en el período en que la recibe»).
    La nota hereda tal cual el motivo sin crédito de su factura (su antigüedad nunca le da motivo); con IVA
    contra una factura `exento` es error (`NotaConIvaDeFacturaExenta`); Σ IVA de notas vigentes + la nueva
    `<=` IVA de la factura (`IvaDeNotasExcedeElDeLaFactura`).
@@ -422,12 +441,17 @@ porcentaje, monto, fecha }`.
 10. Orden `<destino>.recibir_documento` (sección 7) en la misma transacción.
 11. Después de confirmar, evento `libro-de-compras.documento_registrado`. La respuesta trae el
     DTO y la lista de **avisos** (fuera de plazo, año distinto, entero vencido, nota tardía,
-    retención quitada).
+    retención quitada o rebajada, retención ya practicada, no domiciliado, FEL a consumidor final de Q2,500.00 o más).
+    `nitReceptor` acepta NIT o CUI (`Dpi`) en `fel_a_otro_nit`; en `sin_fel` queda `null`.
 
-**Anular** (`documentos.anular`, motivo obligatorio): vigente; sin notas vigentes que la
+**Anular** (`documentos.anular`, `{ causa, motivo }` obligatorios; anula el registro, no la FEL): vigente; sin notas vigentes que la
 rebajen; aviso `libro-de-compras.documento_por_anular` al destino **antes** de cambiar (el
 destino revierte lo suyo o lanza su error y no se anula nada); período abierto (L5); estado
-`anulado`; auditoría `anular` con el DTO completo (líneas y retenciones). Libera el número.
+`anulado`; auditoría `anular` con el DTO completo (líneas y retenciones) y `motivo = "<causa>: <motivo>"`. Libera el número.
+Responde `{ documento, avisos }`; si el período es anterior al mes actual, aviso «Ese período puede estar declarado:
+si ya lo presentó, tendrá que rectificar.» (igual al eliminar, que responde 200 `{ avisos }` en vez de 204).
+La lista (`GET …/documentos`) oculta los anulados por omisión: `estado` es `vigente` si no se pide, y también
+`anulado` o `todos`.
 
 **Eliminar** (`documentos.eliminar`): solo si `procesado_en_destino_en is null` y sin notas;
 aviso `libro-de-compras.documento_por_eliminar` (el destino borra su fila, que apunta con FK
@@ -717,8 +741,8 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
     `documentos.ver` queda declarado para la lista de L3-6. El destino sugerido es `null` si el último destino ya no está
     activo. Una FEL que queda fuera del libro por `fel_a_otro_nit` o `fel_a_consumidor_final` exige `nitReceptor`
     (`CF` solo en la segunda), y así la regla de «FEL al NIT de la empresa» no se evade omitiéndolo. El tipo `recibo` se
-    suma a `DocumentoParaDestino`. Si el proveedor no tiene datos fiscales se usan los valores por omisión con un aviso
-    (el diseño pedía exigirlos; ver el informe de L3-5).
+    suma a `DocumentoParaDestino`. (Los ajustes del 2026-10-05 sobre este paso y el siguiente están en la nota
+    «Ajustes de L3-5 y L3-6» más abajo.)
 16. **L3-6 (servidor, hecho 2026-10-04):** listar y ficha, `AnularDocumento`, `EliminarDocumento`, órdenes
     atendidas (`marcar_procesado`, `anular_documento`,
     `eliminar_documento`), avisos al destino, vigencia usada (L2-3) conectada.
@@ -731,6 +755,14 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
     `origen` opcional: el destino que pide ya hizo lo suyo y no recibe el aviso (así no hay ciclo). `marcar_procesado`
     no se audita y rechaza marcar uno anulado. Una vigencia de combustible usada solo por documentos anulados deja de
     contar como en uso (se puede cambiar su tasa), pero no se elimina: la línea anulada la sigue apuntando (llave foránea).
+    **Ajustes de L3-5 y L3-6 (servidor, hechos 2026-10-05, decisiones del usuario sobre el veredicto del contador):**
+    entero del ISR contado desde `retencion.fecha` (sin caso especial) con el puerto `CalendarioLaboral`; aviso de
+    retención quitada **o rebajada** (Código Tributario art. 29); proveedor sin datos fiscales por la opción C
+    (`datosFiscalesDelProveedor`, error `faltan_datos_fiscales_del_proveedor`); aviso de no domiciliado con el ISR de
+    no residentes; nota tardía de fecha a fecha; `nitReceptor` acepta CUI, aviso de FEL a consumidor final de Q2,500.00
+    o más y `sin_fel` sin receptor; `confirmarCambioDeRegimen`; `causa_de_anulacion` (migración `0010`); aviso de
+    período anterior al mes actual al anular y eliminar (eliminar responde 200 `{ avisos }`); protección contra la
+    retención doble; la lista oculta los anulados por omisión. Ver las secciones 4 y 5.
 17. **L3-7 (cliente):** Ingreso de facturas: lista con filtros (período, proveedor, estado,
     destino) y ficha con anular y eliminar (menú Operación).
 18. **L3-8 (cliente):** formulario en página: encabezado (proveedor con destino sugerido, NIT
@@ -773,8 +805,8 @@ cuenta contable por proveedor o concepto (con Contabilidad).
    Recomendación: sí; y ¿Libro de compras se puede activar solo en el panel de módulos o solo
    al activar un destino? Recomendación: por ahora solo, como cualquier módulo.
 10. **Proveedor sin datos fiscales** cuando la empresa es agente de retención: ¿se exige
-    capturarlos antes de registrar o se usan los valores por omisión con aviso? Recomendación:
-    exigirlos solo si la empresa es agente (IVA o ISR).
+    capturarlos antes de registrar o se usan los valores por omisión con aviso? **Resuelta (2026-10-05, opción C):**
+    se piden en el mismo documento y se guardan (ver la sección 5, regla 2).
 11. **Conceptos de gasto:** ¿se siembra una lista sugerida (p. ej. Combustibles, Insumos
     agrícolas, Alimento para ganado, Medicinas veterinarias, Reparaciones, Servicios
     profesionales, Energía eléctrica, Maquinaria y equipo como activo fijo) o empieza vacío?
