@@ -4,6 +4,7 @@ import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import { opcionesDeLista } from '@/modulos/core/utilidades/edicion';
+import { TEXTOS_FISCALES } from '../../textos';
 import { OPCIONES_DE_TIPO_POR_OMISION } from '../../composables/conceptos-de-gasto/edicion-de-concepto-de-gasto';
 import type { EdicionDeConceptoDeGasto } from '../../composables/conceptos-de-gasto/edicion-de-concepto-de-gasto';
 import {
@@ -45,7 +46,7 @@ watch(
     <CampoInterruptor
       v-model="edicion.esProductoAgropecuario"
       etiqueta="Producto agropecuario"
-      descripcion="Al comprárselo a un exportador se le retiene el 65 % del IVA."
+      :descripcion="TEXTOS_FISCALES.productoAgropecuarioAyuda"
     />
     <CampoInterruptor
       v-model="edicion.esActivoFijo"

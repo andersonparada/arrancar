@@ -658,3 +658,8 @@ y `demo` / `demo-arrancar`.
   rechaza CF, es idempotente con el mismo NIT, `ProveedorYaTieneOtroNit` si tiene otro y `NitYaRegistrado` si es de
   otro tercero de la cuenta. No se audita (no es baja ni corrección de dinero o fechas) ni publica eventos (correría
   antes de confirmar la transacción de quien llama). Pruebas: servidor 1488, cliente 368, generador 46.
+- 2026-10-04 · Libro de compras (cliente), textos fiscales según el contador y el usuario: la casilla pasa a «Lleva
+contabilidad completa (agente de retención del ISR)», marcada por omisión, con ayuda (Decreto 10-2012, art. 47) y
+aviso no bloqueante al desmarcarla; el agente de retención del IVA aclara que lo califica la SAT; «Se le retiene el
+ISR» menciona «Sujeto a pago directo ISR»; «Producto agropecuario» explica qué cuenta como estado natural y que
+afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.

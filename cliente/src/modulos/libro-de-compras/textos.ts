@@ -45,3 +45,15 @@ export const AGENTES_DE_RETENCION_DE_IVA = {
   otro: 'Otro (designado por la SAT o con contabilidad completa)',
   sector_publico: 'Sector público',
 } as const;
+
+/** Textos y avisos de los datos fiscales. */
+export const TEXTOS_FISCALES = {
+  agenteIsrEtiqueta: 'Lleva contabilidad completa (agente de retención del ISR)',
+  agenteIsrAyuda:
+    'Por ley (Decreto 10-2012, art. 47), quien lleva contabilidad completa —toda sociedad— retiene ISR a los proveedores del régimen opcional simplificado. No requiere calificación de la SAT.',
+  agenteIsrAviso: 'Desmárquela solo si su contador lo confirma.',
+  agenteIvaAyuda: 'Ninguno por omisión: el agente de retención del IVA lo califica la SAT.',
+  seLeRetieneIsrAyuda: 'No se retiene si la factura dice «Sujeto a pago directo ISR».',
+  productoAgropecuarioAyuda:
+    'Solo productos en estado natural (café sin tostar, azúcar sin refinar, banano, cardamomo, leche, ganado…). Los insumos industrializados (concentrados, fertilizantes, medicinas) no lo son. Afecta la retención del 65 % de los exportadores.',
+} as const;

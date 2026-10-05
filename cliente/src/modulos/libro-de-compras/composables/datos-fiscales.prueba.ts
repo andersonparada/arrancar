@@ -21,7 +21,7 @@ describe('datos fiscales de la empresa', () => {
       regimenIva: 'general',
       regimenIsr: 'utilidades',
       agenteDeRetencionIva: 'ninguno',
-      esAgenteDeRetencionIsr: false,
+      esAgenteDeRetencionIsr: true,
     });
   });
 
@@ -39,6 +39,11 @@ describe('datos fiscales de la empresa', () => {
   it('la ficha usa nombres legibles', () => {
     const detalles = detallesDeEmpresa({ ...fiscalesDeEmpresaPorOmision(), esAgenteDeRetencionIsr: true });
     expect(detalles.map((d) => d.valor)).toEqual(['General', 'Sobre las utilidades', 'Ninguno', 'Sí']);
+  });
+
+  it('desmarcada, la ficha dice que no es agente del ISR', () => {
+    const detalles = detallesDeEmpresa({ ...fiscalesDeEmpresaPorOmision(), esAgenteDeRetencionIsr: false });
+    expect(detalles[3]?.valor).toBe('No');
   });
 });
 

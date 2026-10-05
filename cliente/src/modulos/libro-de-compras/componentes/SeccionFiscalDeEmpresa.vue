@@ -6,7 +6,12 @@ import { opcionesDeLista } from '@/modulos/core/utilidades/edicion';
 import { conRegimenDeIva, type FiscalesDeEmpresa } from '../composables/datos-fiscales-de-empresa';
 import { usarFiscalesDeEmpresa } from '../composables/usar-datos-fiscales';
 import type { AgenteDeRetencionDeIva, RegimenDeIsrDeEmpresa, RegimenDeIva } from '../servicios/libro-de-compras.api';
-import { AGENTES_DE_RETENCION_DE_IVA, REGIMENES_DE_ISR_DE_EMPRESA, REGIMENES_DE_IVA } from '../textos';
+import {
+  AGENTES_DE_RETENCION_DE_IVA,
+  REGIMENES_DE_ISR_DE_EMPRESA,
+  REGIMENES_DE_IVA,
+  TEXTOS_FISCALES as T,
+} from '../textos';
 import EstadoDeLaSeccionFiscal from './EstadoDeLaSeccionFiscal.vue';
 
 /** Datos fiscales de la empresa para el libro de compras; se guardan con el formulario de Empresas. */
@@ -51,12 +56,16 @@ const cambiar = (cambio: Partial<FiscalesDeEmpresa>): void => {
       @update:model-value="cambiar({ agenteDeRetencionIva: $event as AgenteDeRetencionDeIva })"
     />
     <p v-if="esPequeno" class="text-xs text-tierra-500">Un pequeño contribuyente no es agente de retención del IVA.</p>
+    <p v-else class="text-xs text-tierra-500">{{ T.agenteIvaAyuda }}</p>
     <CampoInterruptor
       :model-value="modelo.esAgenteDeRetencionIsr"
-      etiqueta="Es agente de retención del ISR"
-      descripcion="Actívelo si la empresa debe retener ISR a sus proveedores."
+      :etiqueta="T.agenteIsrEtiqueta"
+      :descripcion="T.agenteIsrAyuda"
       @update:model-value="cambiar({ esAgenteDeRetencionIsr: $event })"
     />
+    <p v-if="!modelo.esAgenteDeRetencionIsr" class="text-sm text-amber-700 dark:text-amber-400" role="status">
+      {{ T.agenteIsrAviso }}
+    </p>
     <p v-if="errores.esAgenteDeRetencionIsr" class="text-sm text-red-600" role="alert">
       {{ errores.esAgenteDeRetencionIsr }}
     </p>

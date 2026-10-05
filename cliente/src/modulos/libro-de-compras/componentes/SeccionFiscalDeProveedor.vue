@@ -12,7 +12,7 @@ import {
   type FiscalesDeProveedor,
 } from '../composables/datos-fiscales-de-proveedor';
 import { usarFiscalesDeProveedor } from '../composables/usar-datos-fiscales';
-import { REGIMENES_DE_ISR_DE_PROVEEDOR } from '../textos';
+import { REGIMENES_DE_ISR_DE_PROVEEDOR, TEXTOS_FISCALES as T } from '../textos';
 import EstadoDeLaSeccionFiscal from './EstadoDeLaSeccionFiscal.vue';
 
 /** Datos fiscales del proveedor para el libro de compras (iguales para todas las empresas de la cuenta). */
@@ -79,6 +79,7 @@ const restablecer = (): void => {
         <CampoInterruptor
           :model-value="modelo.seLeRetieneIsr"
           etiqueta="Se le retiene el ISR"
+          :descripcion="T.seLeRetieneIsrAyuda"
           @update:model-value="cambiar({ seLeRetieneIsr: $event })"
         />
       </template>

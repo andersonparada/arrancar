@@ -8,12 +8,12 @@ export type FiscalesDeEmpresa = Pick<
   'regimenIva' | 'regimenIsr' | 'agenteDeRetencionIva' | 'esAgenteDeRetencionIsr'
 >;
 
-/** Sin datos guardados, la empresa es de régimen general, sobre utilidades y no es agente de retención. */
+/** Sin datos guardados, la empresa es de régimen general, sobre utilidades y lleva contabilidad completa (agente de retención del ISR). */
 export const fiscalesDeEmpresaPorOmision = (): FiscalesDeEmpresa => ({
   regimenIva: 'general',
   regimenIsr: 'utilidades',
   agenteDeRetencionIva: 'ninguno',
-  esAgenteDeRetencionIsr: false,
+  esAgenteDeRetencionIsr: true,
 });
 
 /** Lo guardado (o los valores por omisión que devuelve el servidor) pasa al formulario, sin el resto del DTO. */
@@ -36,6 +36,9 @@ export function detallesDeEmpresa(fiscales: FiscalesDeEmpresa): DetalleDeRegistr
     { etiqueta: 'Régimen de IVA', valor: REGIMENES_DE_IVA[fiscales.regimenIva] },
     { etiqueta: 'Régimen de ISR', valor: REGIMENES_DE_ISR_DE_EMPRESA[fiscales.regimenIsr] },
     { etiqueta: 'Agente de retención del IVA', valor: AGENTES_DE_RETENCION_DE_IVA[fiscales.agenteDeRetencionIva] },
-    { etiqueta: 'Agente de retención del ISR', valor: fiscales.esAgenteDeRetencionIsr ? 'Sí' : 'No' },
+    {
+      etiqueta: 'Lleva contabilidad completa (agente de retención del ISR)',
+      valor: fiscales.esAgenteDeRetencionIsr ? 'Sí' : 'No',
+    },
   ];
 }
