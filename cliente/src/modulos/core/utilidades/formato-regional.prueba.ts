@@ -45,7 +45,7 @@ describe('números', () => {
   it('las cantidades pueden llevar su unidad', () => {
     expect(guatemala.cantidad(12.5, 'qq')).toBe('12.50 qq');
     expect(new FormatoRegional({ ...AJUSTES_REGIONALES_PREDETERMINADOS, decimalesCantidades: 0 }).cantidad(40)).toBe(
-      '40',
+      '40.00',
     );
   });
 

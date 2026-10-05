@@ -333,3 +333,43 @@ Fuentes: [Decreto 20-2006](http://ww2.oj.gob.gt/es/QueEsOJ/EstructuraOJ/Unidades
   mínimo del ISR `>=` Q2,500.00 sin IVA, lo exento dentro de la base del ISR, retención
   de IVA también en facturas fuera de plazo o no vinculadas, y el agente `otro` definido
   como «calificado por la SAT (Decreto 20-2006, art. 6)».
+
+## Notas de crédito de facturas sin crédito (L3-2) (contador-guatemala, 2026-10-04)
+
+Revisión de `motivo-sin-credito.ts`, `calculo-de-documento.ts`, `periodo-del-libro.ts` y `reparto-de-iva.ts`.
+Artículos tomados de extractos coincidentes (no se pudo leer el texto íntegro): confirmarlos en el texto vigente.
+
+| # | Decisión | Veredicto |
+|---|---|---|
+| 1 | La nota de una factura sin crédito rebaja el costo y no el crédito (`iva_no_acreditable = iva`) | Correcto |
+| 2 | Etiquetarla `no_vinculado` cuando la factura era `fuera_de_plazo` o `exento` | Incorrecto |
+| 3 | Período propuesto = mes de recepción, no antes del mes de emisión | Correcto con ajustes |
+| 4 | Nota en el mes en que se recibe | Correcto |
+| 5 | IVA por resto mayor; corrección contra la FEL de ±Q0.05 a la línea de mayor gravado | Correcto con ajustes |
+| 6 | `exento` solo con IVA 0 y todo exento | Correcto (el aviso de año anterior debe ampliarse) |
+
+1. **Base:** Ley del IVA art. 17 (se deduce del crédito «calculado conforme al art. 15»; las notas, en el
+   período en que se reciben), art. 16 (solo da crédito lo vinculado) y art. 20 (pasados dos meses no hay
+   compensación). Si la factura no entró al crédito, la nota no tiene crédito que rebajar; su IVA rebaja
+   el costo (NIIF para pymes 13.6 y 17.10). Interpretación sin criterio de la SAT; certeza media-alta.
+2. `no_vinculado` tiene significado propio (art. 16) y sugiere un gasto discutible para el ISR; mezcla
+   reportes y rompe el rastro con la factura. **Corregir:** la nota hereda tal cual el motivo de su
+   factura; el check `documentos_fuera_de_plazo_real` se cambia a `tipo = 'nota_de_credito' or …`
+   (migración `--custom`); la antigüedad de la nota nunca le da motivo. Nota con IVA contra una factura
+   `exento`: **error** (`NotaConIvaDeFacturaExenta`, el art. 29 exige referirse a la factura original);
+   `documentos_exento_sin_iva` no cambia. Se recomienda validar Σ IVA de notas ≤ IVA de la factura.
+3. Legal por el art. 20, pero el diseño decía «mes actual». Avisar si el período propuesto es anterior al
+   mes actual (puede estar declarado); con el control de L5, proponer el primer período abierto.
+4. Art. 17. El plazo de dos meses del tercer párrafo es para que el emisor registre la nota (de ahí el aviso).
+5. El crédito es el IVA de la FEL (art. 15). Con muchas líneas redondeadas por el proveedor, Q0.05 se
+   queda corto: tope `max(5, número de líneas)` centavos o permitir más con confirmación.
+6. El aviso de «año anterior» debe salir siempre que el año de emisión sea anterior al año del período,
+   no solo con `fuera_de_plazo` (el gasto del ISR va en el período en que se causa).
+
+**Veredicto:** correcto con ajustes (puntos 2, 3, 5 y 6).
+
+Fuentes: [Ley del IVA, TSE](https://tse.org.gt/images/UECFFPP/leyes/decreto_27-92-iva.pdf),
+[art. 16](http://leydeguatemala.com/ley-del-iva-de-guatemala/procedencia-del-credito-fiscal-iva-guatemala/289/),
+[art. 20](http://leydeguatemala.com/ley-del-iva-de-guatemala/reporte-del-credito-fiscal-iva-guatemala/294/),
+[AG 5-2013](https://cgab.org.gt/wp-content/uploads/2023/10/Reglamento-de-la-Ley-del-IVA-Acuerdo-Gubernativo-5-2013_3.pdf),
+[Consortium Legal, crédito fiscal](https://consortiumlegal.com/2024/04/02/robo-legal-del-credito-fiscal-en-el-iva-en-guatemala/).
