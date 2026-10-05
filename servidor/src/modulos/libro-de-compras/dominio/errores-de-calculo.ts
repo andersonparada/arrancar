@@ -23,3 +23,21 @@ export class CombustibleSinTasaVigente extends ReglaDeNegocioInfringida {
     super(`El combustible "${combustible}" no tiene tasa de IDP vigente el ${fechaEmision}.`);
   }
 }
+
+/** Una nota de crédito con IVA contra una factura exenta: el IVA que rebaja no existe en la factura (art. 29). */
+export class NotaConIvaDeFacturaExenta extends ReglaDeNegocioInfringida {
+  readonly codigo = 'nota_con_iva_de_factura_exenta';
+
+  constructor() {
+    super('La factura es exenta: la nota de crédito no puede traer IVA. Pida al proveedor que la corrija.');
+  }
+}
+
+/** El IVA de las notas vigentes de una factura, con el de la nueva, pasa del IVA de la propia factura. */
+export class IvaDeNotasExcedeElDeLaFactura extends ReglaDeNegocioInfringida {
+  readonly codigo = 'iva_de_notas_excede_el_de_la_factura';
+
+  constructor() {
+    super('El IVA de las notas de crédito no puede pasar del IVA de la factura que rebajan.');
+  }
+}

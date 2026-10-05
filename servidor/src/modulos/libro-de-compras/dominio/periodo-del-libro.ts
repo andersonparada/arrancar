@@ -40,7 +40,7 @@ export interface FechasDelDocumento {
 }
 
 /**
- * Período que se propone en el formulario: el mes de recepción (el «mes actual abierto»), que
+ * Período que se propone en el formulario: el mes de recepción (no el «mes actual»: con una recepción atrasada puede ser anterior y entonces `avisosDelPeriodo` avisa), que
  * nunca queda antes del mes de emisión. La nota de crédito siempre va en el mes en que se recibe.
  */
 export function periodoPropuesto(fechas: FechasDelDocumento): string {
@@ -48,6 +48,27 @@ export function periodoPropuesto(fechas: FechasDelDocumento): string {
   if (fechas.tipo === 'nota_de_credito') return recepcion;
   const emision = primerDiaDelMes(fechas.fechaDeEmision);
   return recepcion > emision ? recepcion : emision;
+}
+
+const AVISO_DE_PERIODO_PASADO = 'Ese período puede estar declarado: si ya lo presentó, tendrá que rectificar.';
+const AVISO_DE_ANIO_ANTERIOR = 'El gasto cae en un año que puede estar cerrado; consulte a su contador.';
+
+export interface DatosDeAvisosDelPeriodo {
+  periodo: string;
+  fechaDeEmision: string;
+  /** Primer día del mes actual; lo da quien llama, el dominio no lee el reloj. */
+  mesActual: string;
+}
+
+/**
+ * Avisos del período, para cualquier documento: período anterior al mes actual (puede estar
+ * declarado) y emisión de un año anterior al del período (el gasto del ISR cae en otro año).
+ */
+export function avisosDelPeriodo(datos: DatosDeAvisosDelPeriodo): string[] {
+  const avisos: string[] = [];
+  if (Number(datos.fechaDeEmision.slice(0, 4)) < Number(datos.periodo.slice(0, 4))) avisos.push(AVISO_DE_ANIO_ANTERIOR);
+  if (datos.periodo < primerDiaDelMes(datos.mesActual)) avisos.push(AVISO_DE_PERIODO_PASADO);
+  return avisos;
 }
 
 /**

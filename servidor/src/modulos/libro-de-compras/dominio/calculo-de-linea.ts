@@ -34,7 +34,7 @@ export interface OpcionesDeCalculo {
   tasaDeIva: number;
   /** `true` con motivo `fuera_de_plazo` o `no_vinculado`: el IVA de cada línea va a su costo. */
   ivaNoAcreditable: boolean;
-  /** IVA total de la FEL, en centavos, si el usuario lo corrige (hasta Q0.05 de diferencia). */
+  /** IVA total de la FEL, en centavos, si el usuario lo corrige (hasta `max(5, líneas)` centavos de diferencia). */
   ivaDeLaFel?: number | null;
 }
 

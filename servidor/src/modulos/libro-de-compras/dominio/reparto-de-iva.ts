@@ -1,8 +1,16 @@
 import { CorreccionDeIvaExcedida } from './errores-de-calculo.js';
 import { dividirRedondeando, repartirProporcional } from './aritmetica-fiscal.js';
 
-/** Lo que se puede apartar el IVA de la FEL del calculado: Q0.05 (respuesta 7 del usuario). */
-export const TOLERANCIA_DE_IVA_EN_CENTAVOS = 5;
+/** Piso de lo que se puede apartar el IVA de la FEL del calculado: Q0.05 (respuesta 7 del usuario). */
+export const TOLERANCIA_MINIMA_DE_IVA_EN_CENTAVOS = 5;
+
+/**
+ * Lo que se puede apartar el IVA de la FEL del calculado: `max(5, número de líneas)` centavos, porque
+ * el proveedor redondea cada línea y con muchas líneas Q0.05 se queda corto (validación del contador).
+ */
+export function toleranciaDeIvaEnCentavos(numeroDeLineas: number): number {
+  return Math.max(TOLERANCIA_MINIMA_DE_IVA_EN_CENTAVOS, numeroDeLineas);
+}
 
 /**
  * IVA de un documento: `G − redondear(G / (1 + tasa))`, con `G` el gravado total en
@@ -21,8 +29,11 @@ function indiceDelMayor(gravados: readonly number[]): number {
 /** Aplica la diferencia con el IVA de la FEL a la línea de mayor gravado, sin salirse de `0..gravado`. */
 function corregir(ivas: number[], gravados: readonly number[], deseado: number): number[] {
   const diferencia = deseado - ivas.reduce((suma, iva) => suma + iva, 0);
-  if (Math.abs(diferencia) > TOLERANCIA_DE_IVA_EN_CENTAVOS) {
-    throw new CorreccionDeIvaExcedida('El IVA del documento se aparta más de Q0.05 del calculado.');
+  const tolerancia = toleranciaDeIvaEnCentavos(gravados.length);
+  if (Math.abs(diferencia) > tolerancia) {
+    throw new CorreccionDeIvaExcedida(
+      `El IVA del documento se aparta más de Q${(tolerancia / 100).toFixed(2)} del calculado.`,
+    );
   }
   const mayor = indiceDelMayor(gravados);
   const corregido = (ivas[mayor] ?? 0) + diferencia;
@@ -35,7 +46,7 @@ function corregir(ivas: number[], gravados: readonly number[], deseado: number):
 /**
  * IVA de cada línea: el del documento repartido en proporción al gravado de cada una
  * (resto mayor), de modo que la suma es exactamente el IVA del documento. Si el usuario
- * trae el IVA de la FEL (`ivaDeLaFel`, en centavos), la diferencia, de hasta Q0.05, va a la
+ * trae el IVA de la FEL (`ivaDeLaFel`, en centavos), la diferencia, de hasta `max(5, líneas)` centavos, va a la
  * línea de mayor gravado.
  */
 export function repartirIva(

@@ -97,7 +97,7 @@ export const restriccionesDeMontos = (t: T) => [
   check('documentos_exento_sin_iva', sql`coalesce(${t.motivoSinCredito}, '') <> 'exento' or ${t.iva} = 0`),
 ];
 
-/** Fechas, periodo y plazo del crédito fiscal. */
+/** Fechas, periodo y plazo del crédito fiscal. La nota de crédito hereda el motivo de su factura, así que no se revisa su plazo. */
 export const restriccionesDePeriodo = (t: T) => [
   check('documentos_fechas_ordenadas', sql`${t.fechaRecepcion} >= ${t.fechaEmision}`),
   check('documentos_periodo_primer_dia', sql`extract(day from ${t.periodo}) = 1`),
@@ -109,7 +109,7 @@ export const restriccionesDePeriodo = (t: T) => [
   ),
   check(
     'documentos_fuera_de_plazo_real',
-    sql`coalesce(${t.motivoSinCredito}, '') <> 'fuera_de_plazo'
+    sql`${t.tipo} = 'nota_de_credito' or coalesce(${t.motivoSinCredito}, '') <> 'fuera_de_plazo'
         or ${t.periodo} > (date_trunc('month', ${t.fechaEmision}) + interval '2 months')::date`,
   ),
   check(

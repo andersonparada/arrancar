@@ -98,7 +98,7 @@ Ley del IVA, art. 20: la factura se reporta en el período de su **emisión** o,
 tardar, en los **dos meses siguientes** (factura de enero: período de enero, febrero
 o marzo; el de marzo se declara en abril). Después no da derecho a crédito.
 
-- `periodo` (primer día del mes) ≥ mes de emisión; se propone el mes actual abierto.
+- `periodo` (primer día del mes) ≥ mes de emisión; se propone el mes de recepción, con aviso si es anterior al mes actual (puede estar declarado).
 - **Motivo sin crédito fiscal** (en vez de un sí o no): `fuera_de_plazo`,
   `no_vinculado`, `pequeno_contribuyente` o `exento`. Con motivo `fuera_de_plazo` el
   período puede pasar de emisión + 2; sin motivo, no (`check`).

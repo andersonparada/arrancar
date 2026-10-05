@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PeriodoInvalido } from './errores-de-calculo.js';
 import {
+  avisosDelPeriodo,
   esFueraDePlazo,
   exigirPeriodoValido,
   periodoPropuesto,
@@ -101,5 +102,27 @@ describe('exigirPeriodoValido', () => {
         periodo: '2026-05-01',
       }),
     ).not.toThrow();
+  });
+});
+
+describe('avisosDelPeriodo', () => {
+  const base = { periodo: '2026-03-01', fechaDeEmision: '2026-03-10', mesActual: '2026-03-01' };
+
+  it('sin avisos en el mes actual y en el mismo año', () => {
+    expect(avisosDelPeriodo(base)).toEqual([]);
+    expect(avisosDelPeriodo({ ...base, mesActual: '2026-02-15' })).toEqual([]);
+  });
+
+  it('avisa que puede estar declarado si el período es anterior al mes actual', () => {
+    expect(avisosDelPeriodo({ ...base, mesActual: '2026-04-01' })).toEqual([
+      'Ese período puede estar declarado: si ya lo presentó, tendrá que rectificar.',
+    ]);
+    expect(avisosDelPeriodo({ ...base, mesActual: '2026-04-20' })).toHaveLength(1);
+  });
+
+  it('avisa del año anterior cuando la emisión es de otro año que el período', () => {
+    const avisos = avisosDelPeriodo({ ...base, fechaDeEmision: '2025-12-31' });
+    expect(avisos).toHaveLength(1);
+    expect(avisos[0]).toMatch(/año/);
   });
 });

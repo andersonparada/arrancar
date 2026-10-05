@@ -57,6 +57,13 @@
       "when": 1791153471977,
       "tag": "0007_l3_documentos_nota_factura_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791165269129,
+      "tag": "0008_nota_hereda_motivo_de_su_factura",
+      "breakpoints": true
     }
   ]
 }

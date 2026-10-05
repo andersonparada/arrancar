@@ -627,3 +627,11 @@ y `demo` / `demo-arrancar`.
   dentro), casilla SAT desmarcada y nota de crédito sin retenciones, IVA al costo también se retiene. Variable
   nueva de empresa `libro-de-compras.retenciones_isr.incluye_idp` (`true`). ISR por escalones redondeado una sola
   vez. Sin tablas ni rutas.
+- **2026-10-04 (Libro de compras L3-2, ajustes del contador, servidor).** La nota de crédito hereda tal cual el
+  motivo sin crédito de su factura (se quita `no_vinculado`; su antigüedad nunca le da motivo). Migración `0008`
+  cambia `documentos_fuera_de_plazo_real` a `tipo = 'nota_de_credito' or …`. Nota con IVA contra factura
+  `exento`: `NotaConIvaDeFacturaExenta`; Σ IVA de notas vigentes + la nueva `<=` IVA de la factura:
+  `IvaDeNotasExcedeElDeLaFactura` (datos `ivaDeLaFactura` e `ivaRebajadoPorOtrasNotas`, los consulta L3-5).
+  Tope de la corrección contra la FEL: `toleranciaDeIvaEnCentavos(líneas) = max(5, líneas)`. Avisos con
+  `avisosDelPeriodo` (`mesActual` como dato): período anterior al mes actual y año de emisión anterior al del
+  período, para todo documento. El período propuesto es el mes de recepción.

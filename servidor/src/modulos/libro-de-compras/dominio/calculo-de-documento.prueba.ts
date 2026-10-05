@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calcularDocumento, type DatosParaCalcular } from './calculo-de-documento.js';
-import { PeriodoInvalido } from './errores-de-calculo.js';
+import { IvaDeNotasExcedeElDeLaFactura, NotaConIvaDeFacturaExenta, PeriodoInvalido } from './errores-de-calculo.js';
 import { determinarMotivoSinCredito } from './motivo-sin-credito.js';
 
 const datos = (cambios: Partial<DatosParaCalcular> = {}): DatosParaCalcular => ({
@@ -12,6 +12,7 @@ const datos = (cambios: Partial<DatosParaCalcular> = {}): DatosParaCalcular => (
   periodo: '2026-01-01',
   lineas: [{ total: 11200, exento: 0 }],
   tasaDeIva: 1200,
+  mesActual: '2026-01-01',
   ...cambios,
 });
 
@@ -135,14 +136,17 @@ describe('calcularDocumento: nota de crédito', () => {
     expect(documento.totales.ivaNoAcreditable).toBe(1200);
   });
 
-  it('la factura fuera de plazo pasa a la nota como no_vinculado si la nota es reciente (los check lo exigen)', () => {
-    expect(calcularDocumento(nota({ motivoDeLaFactura: 'fuera_de_plazo' })).motivoSinCredito).toBe('no_vinculado');
+  it('hereda fuera_de_plazo tal cual aunque la nota sea reciente, con el IVA al costo y sin aviso propio', () => {
+    const documento = calcularDocumento(nota({ motivoDeLaFactura: 'fuera_de_plazo' }));
+    expect(documento.motivoSinCredito).toBe('fuera_de_plazo');
+    expect(documento.totales.ivaNoAcreditable).toBe(1200);
+    expect(documento.avisos).toEqual([]);
   });
 
-  it('la factura fuera de plazo pasa tal cual si la propia nota está fuera de plazo', () => {
-    const documento = calcularDocumento(nota({ fechaDeEmision: '2026-01-15', motivoDeLaFactura: 'fuera_de_plazo' }));
-    expect(documento.motivoSinCredito).toBe('fuera_de_plazo');
-    expect(documento.avisos).toEqual([]);
+  it('la antigüedad de la propia nota nunca le da motivo: sin motivo en la factura rebaja el crédito aunque llegue tarde', () => {
+    const documento = calcularDocumento(nota({ fechaDeEmision: '2026-01-15', motivoDeLaFactura: null }));
+    expect(documento.motivoSinCredito).toBeNull();
+    expect(documento.totales.ivaNoAcreditable).toBe(0);
   });
 
   it('la nota de una factura de pequeño contribuyente no lleva IVA', () => {
@@ -151,14 +155,74 @@ describe('calcularDocumento: nota de crédito', () => {
     expect(documento.totales.iva).toBe(0);
   });
 
-  it('la nota de una factura exenta es exenta solo si no trae IVA', () => {
+  it('la nota de una factura exenta, sin IVA, hereda exento', () => {
     const exenta = calcularDocumento(nota({ motivoDeLaFactura: 'exento', lineas: [{ total: 5000, exento: 5000 }] }));
     expect(exenta.motivoSinCredito).toBe('exento');
-    expect(calcularDocumento(nota({ motivoDeLaFactura: 'exento' })).motivoSinCredito).toBe('no_vinculado');
+  });
+
+  it('una nota con IVA contra una factura exenta es un error', () => {
+    expect(() => calcularDocumento(nota({ motivoDeLaFactura: 'exento' }))).toThrow(NotaConIvaDeFacturaExenta);
+    expect(() => calcularDocumento(nota({ motivoDeLaFactura: 'exento' }))).toThrow(/factura es exenta/);
   });
 
   it('rechaza una nota que no va en su mes de recepción', () => {
     expect(() => calcularDocumento(nota({ periodo: '2026-06-01' }))).toThrow(PeriodoInvalido);
+  });
+});
+
+describe('calcularDocumento: IVA de las notas contra el de la factura', () => {
+  it('acepta que las notas lleguen justo al IVA de la factura', () => {
+    expect(() => calcularDocumento(nota({ ivaDeLaFactura: 1500, ivaRebajadoPorOtrasNotas: 300 }))).not.toThrow();
+    expect(() => calcularDocumento(nota({ ivaDeLaFactura: 1200 }))).not.toThrow();
+  });
+
+  it('rechaza un centavo de más sumando las otras notas vigentes', () => {
+    expect(() => calcularDocumento(nota({ ivaDeLaFactura: 1500, ivaRebajadoPorOtrasNotas: 301 }))).toThrow(
+      IvaDeNotasExcedeElDeLaFactura,
+    );
+    expect(() => calcularDocumento(nota({ ivaDeLaFactura: 1199 }))).toThrow(IvaDeNotasExcedeElDeLaFactura);
+  });
+
+  it('sin el IVA de la factura no compara', () => {
+    expect(() => calcularDocumento(nota({ ivaRebajadoPorOtrasNotas: 99999 }))).not.toThrow();
+  });
+});
+
+describe('calcularDocumento: avisos del período', () => {
+  it('avisa si el período es anterior al mes actual', () => {
+    const documento = calcularDocumento(datos({ mesActual: '2026-02-01' }));
+    expect(documento.avisos).toEqual([expect.stringMatching(/rectificar/)]);
+  });
+
+  it('no avisa si el período es el mes actual ni si es posterior', () => {
+    expect(calcularDocumento(datos({ mesActual: '2026-01-01' })).avisos).toEqual([]);
+    expect(calcularDocumento(datos({ mesActual: '2025-12-01' })).avisos).toEqual([]);
+  });
+
+  it('avisa del año anterior en cualquier documento, también en el plazo y en las notas', () => {
+    const factura = calcularDocumento(
+      datos({ fechaDeEmision: '2025-12-20', fechaDeRecepcion: '2026-01-05', mesActual: '2026-01-01' }),
+    );
+    expect(factura.motivoSinCredito).toBeNull();
+    expect(factura.avisos).toEqual([expect.stringMatching(/año/)]);
+    const laNota = calcularDocumento(
+      nota({ fechaDeEmision: '2025-12-20', fechaDeRecepcion: '2026-05-10', mesActual: '2026-05-01' }),
+    );
+    expect(laNota.avisos).toEqual([expect.stringMatching(/año/)]);
+  });
+
+  it('suma año anterior y período pasado, y fuera de plazo va primero', () => {
+    const documento = calcularDocumento(
+      datos({
+        fechaDeEmision: '2025-11-10',
+        fechaDeRecepcion: '2026-02-02',
+        periodo: '2026-02-01',
+        mesActual: '2026-03-01',
+      }),
+    );
+    expect(documento.avisos).toHaveLength(3);
+    expect(documento.avisos[0]).toMatch(/plazo/);
+    expect(documento.avisos[2]).toMatch(/rectificar/);
   });
 });
 

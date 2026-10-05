@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { aEscala, dividirRedondeando, porcentajeDe, repartirProporcional } from './aritmetica-fiscal.js';
 import { CorreccionDeIvaExcedida } from './errores-de-calculo.js';
-import { ivaDelDocumento, repartirIva } from './reparto-de-iva.js';
+import { ivaDelDocumento, repartirIva, toleranciaDeIvaEnCentavos } from './reparto-de-iva.js';
 
 const suma = (valores: readonly number[]) => valores.reduce((a, b) => a + b, 0);
 
@@ -104,6 +104,21 @@ describe('repartirIva', () => {
 
   it('rechaza una diferencia de 6 centavos', () => {
     expect(() => repartirIva([5000, 5000], 1200, 1077)).toThrow(CorreccionDeIvaExcedida);
+  });
+
+  it('con más de 5 líneas el tope sube a una por línea', () => {
+    const gravados = Array.from({ length: 8 }, () => 1000);
+    const calculado = suma(repartirIva(gravados, 1200));
+    expect(suma(repartirIva(gravados, 1200, calculado + 8))).toBe(calculado + 8);
+    expect(suma(repartirIva(gravados, 1200, calculado - 8))).toBe(calculado - 8);
+    expect(() => repartirIva(gravados, 1200, calculado + 9)).toThrow(CorreccionDeIvaExcedida);
+  });
+
+  it('el tope nunca baja de 5 centavos', () => {
+    expect(toleranciaDeIvaEnCentavos(1)).toBe(5);
+    expect(toleranciaDeIvaEnCentavos(5)).toBe(5);
+    expect(toleranciaDeIvaEnCentavos(6)).toBe(6);
+    expect(toleranciaDeIvaEnCentavos(40)).toBe(40);
   });
 
   it('rechaza una corrección que saca el IVA de una línea de su gravado', () => {

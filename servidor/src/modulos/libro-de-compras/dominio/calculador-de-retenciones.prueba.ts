@@ -52,6 +52,7 @@ function entrada(caso: Caso): EntradaDeRetenciones {
     periodo: '2026-01-01',
     lineas,
     tasaDeIva: 1200,
+    mesActual: '2026-01-01',
   });
   return {
     tipo,
@@ -98,6 +99,7 @@ describe('IVA de agentes: mínimo con >= sobre el total', () => {
       periodo: '2026-06-01',
       lineas: [{ total: 300000, exento: 0 }],
       tasaDeIva: 1200,
+      mesActual: '2026-01-01',
     });
     expect(fueraDePlazo.motivoSinCredito).toBe('fuera_de_plazo');
     expect(calcularRetenciones({ ...base, documento: fueraDePlazo })).toHaveLength(1);

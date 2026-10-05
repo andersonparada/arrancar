@@ -109,6 +109,13 @@ describe('documentos: cada check', () => {
     expect(await restriccionDe(nota)).toBe('documentos_nota_en_su_mes');
   });
 
+  it('acepta una nota que hereda fuera_de_plazo aunque ella misma llegue dentro del plazo', async () => {
+    const factura = await crear();
+    const nota = { ...NOTA, documentoAfectadoId: factura, motivoSinCredito: 'fuera_de_plazo', ivaNoAcreditable: '12' };
+
+    await expect(crear(nota)).resolves.toBeTruthy();
+  });
+
   it('acepta una nota bien formada, una factura de pequeño contribuyente y un recibo desmarcado', async () => {
     const factura = await crear();
     const pequeno = { tipo: 'factura_pequeno_contribuyente', motivoSinCredito: 'pequeno_contribuyente' };

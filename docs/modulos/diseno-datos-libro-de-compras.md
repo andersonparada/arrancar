@@ -403,11 +403,16 @@ porcentaje, monto, fecha }`.
 4. Tipo coherente con el proveedor: `factura_pequeno_contribuyente` exige proveedor pequeño
    contribuyente y al revés (`TipoNoCorrespondeAlProveedor`).
 5. Destino en `DESTINOS` **y activo en la cuenta** (puerto `ModulosActivosDeLaCuenta` del core).
-6. Período: por omisión el mes actual; `>=` mes de emisión; `ControlDePeriodos.exigirAbierto`.
+6. Período: se propone el mes de recepción (no el «mes actual»); `>=` mes de emisión; aviso «Ese período
+   puede estar declarado: si ya lo presentó, tendrá que rectificar.» si es anterior al mes actual (dato de
+   entrada, sin reloj en el dominio); aviso de año anterior si la emisión es de un año anterior al del período; `ControlDePeriodos.exigirAbierto`.
 7. Líneas: al menos una; concepto activo; combustible activo con vigencia; cálculo de 4.1.
 8. Nota de crédito: su factura vigente, del mismo proveedor y destino (la FK lo repite), de
    tipo factura; se bloquea la factura `for update` y `Σ notas vigentes + esta <= total de la
    factura` (`NotaSuperaLaFactura`); aviso si la nota es más de dos meses posterior.
+   La nota hereda tal cual el motivo sin crédito de su factura (su antigüedad nunca le da motivo); con IVA
+   contra una factura `exento` es error (`NotaConIvaDeFacturaExenta`); Σ IVA de notas vigentes + la nueva
+   `<=` IVA de la factura (`IvaDeNotasExcedeElDeLaFactura`).
 9. Unicidad (3.5), inserción de encabezado, líneas y retenciones.
 10. Orden `<destino>.recibir_documento` (sección 7) en la misma transacción.
 11. Después de confirmar, evento `libro-de-compras.documento_registrado`. La respuesta trae el
