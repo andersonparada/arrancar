@@ -102,3 +102,24 @@ export class MotivoDelAjusteObligatorio extends DatoInvalido {
     super('Escriba el motivo de cambiar el monto de la retención.');
   }
 }
+
+/** Hay que saber el régimen de ISR y si es agente del IVA de un proveedor sin datos fiscales para calcular lo que se retiene. */
+export class FaltanDatosFiscalesDelProveedor extends ReglaDeNegocioInfringida {
+  readonly codigo = 'faltan_datos_fiscales_del_proveedor';
+
+  constructor(preguntas: unknown) {
+    super(
+      'El proveedor no tiene datos fiscales guardados y la empresa retiene impuestos: conteste en qué régimen de ISR está y si es agente de retención del IVA.',
+      preguntas,
+    );
+  }
+}
+
+/** El receptor de la FEL (a otra persona) no es un NIT ni un CUI válido. */
+export class ReceptorInvalido extends DatoInvalido {
+  readonly codigo = 'receptor_invalido';
+
+  constructor(texto: string) {
+    super(`"${texto}" no es un NIT ni un CUI válido (revise el dígito verificador).`);
+  }
+}

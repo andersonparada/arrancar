@@ -23,6 +23,7 @@ import { aCentesimasDeConfiguracion } from '../dominio/aritmetica-fiscal.js';
 import { configuracionDeRetenciones } from '../dominio/configuracion-de-retenciones.js';
 import type { DestinoDeDocumento } from '../dominio/destinos-de-documento.js';
 import type { DocumentoDeCompra } from '../dominio/documento-de-compra.js';
+import type { DocumentoAnuladoConRetenciones } from '../dominio/retencion-practicada.js';
 
 export class ProveedoresEnMemoria implements ProveedoresParaDocumentos {
   readonly filas = new Map<string, ProveedorParaDocumento>();
@@ -48,6 +49,9 @@ export class CatalogosEnMemoria implements CatalogosParaDocumentos {
 export class ConsultasDeDocumentosEnMemoria implements ConsultasDeDocumentos {
   readonly facturas = new Map<string, FacturaParaNota>();
   ultimoDestino: DestinoDeDocumento | null = null;
+  /** El documento anulado con la misma FEL que ya retuvo algo; `null`: ninguno. */
+  anuladoConRetenciones: DocumentoAnuladoConRetenciones | null = null;
+  readonly clavesBuscadas: ClaveDeDocumento[] = [];
 
   async buscarFacturaParaNota(id: string, _bloquear: boolean): Promise<FacturaParaNota | null> {
     return this.facturas.get(id) ?? null;
@@ -55,6 +59,11 @@ export class ConsultasDeDocumentosEnMemoria implements ConsultasDeDocumentos {
 
   async ultimoDestinoDelProveedor(_proveedorId: string): Promise<DestinoDeDocumento | null> {
     return this.ultimoDestino;
+  }
+
+  async buscarAnuladoConRetenciones(clave: ClaveDeDocumento): Promise<DocumentoAnuladoConRetenciones | null> {
+    this.clavesBuscadas.push(clave);
+    return this.anuladoConRetenciones;
   }
 }
 

@@ -149,6 +149,8 @@ export function documentoDePrueba(escenario: EscenarioDeDocumentos, cambios: Rec
     fechaEmision: HOY,
     fechaRecepcion: HOY,
     lineas: [{ conceptoId: escenario.conceptoId, total: '1120.00' }],
+    // Se guarda con la primera factura del proveedor; los demás documentos usan lo guardado.
+    datosFiscalesDelProveedor: { regimenIsr: 'utilidades', esAgenteDeRetencionIva: false },
     ...cambios,
   };
 }

@@ -30,6 +30,8 @@ export interface RetencionPropuesta {
   /** Entre 0 y la base. */
   montoPropuesto: number;
   origenDeLaFecha: OrigenDeLaFecha;
+  /** Si el sistema la dejó en cero por una retención ya practicada (anulado): el motivo que se guarda. */
+  motivoAutomatico?: string;
 }
 
 /** Tasas en centésimas y montos en centavos, ya convertidos de la configuración. */

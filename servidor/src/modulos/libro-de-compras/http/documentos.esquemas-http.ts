@@ -12,6 +12,7 @@ import {
   textoObligatorio,
   textoOpcional,
 } from '../../core/compartido/http/esquemas-comunes.js';
+import { REGIMENES_DE_ISR_DE_PROVEEDOR } from '../dominio/datos-fiscales-de-proveedor.js';
 import { DESTINOS_DE_DOCUMENTO } from '../dominio/destinos-de-documento.js';
 import { MOTIVOS_FUERA_DEL_LIBRO } from '../dominio/fuera-del-libro.js';
 import { REGLAS_DE_RETENCION } from '../dominio/retencion-propuesta.js';
@@ -39,6 +40,15 @@ const esquemaAjusteDeRetencion = z.object({
   motivo: textoOpcional(300),
 });
 
+/** Lo que el usuario contesta de un proveedor sin datos fiscales guardados (opción C). */
+const esquemaDatosFiscalesDelProveedor = z
+  .object({
+    regimenIsr: opcionObligatoria(REGIMENES_DE_ISR_DE_PROVEEDOR),
+    esAgenteDeRetencionIva: z.boolean(),
+  })
+  .nullish()
+  .transform((valor) => valor ?? null);
+
 /**
  * Forma de lo que llega al calcular o registrar un documento: el montos viaja como texto y nada viene calculado.
  * Las reglas fiscales las revisa el dominio.
@@ -51,7 +61,8 @@ export const esquemaDocumento = z.object({
   serie: textoOpcional(40),
   numero: textoObligatorio(40),
   autorizacionFel: idOpcional(),
-  nitReceptor: nitOpcional,
+  /** NIT o CUI al que se emitió la FEL; el dominio lo valida y lo normaliza. */
+  nitReceptor: textoOpcional(30),
   motivoFueraDelLibro: opcionOpcional(MOTIVOS_FUERA_DEL_LIBRO),
   noVinculado: z.boolean().default(false),
   fechaEmision: fechaObligatoria(),
@@ -62,6 +73,8 @@ export const esquemaDocumento = z.object({
   observaciones: textoOpcional(500),
   lineas: z.array(esquemaLinea).min(1).max(MAXIMO_DE_LINEAS),
   ajustesDeRetenciones: z.array(esquemaAjusteDeRetencion).max(10).default([]),
+  datosFiscalesDelProveedor: esquemaDatosFiscalesDelProveedor,
+  confirmarCambioDeRegimen: z.boolean().default(false),
 });
 
 export const esquemaParamsDeProveedor = z.object({ proveedorId: z.uuid() });

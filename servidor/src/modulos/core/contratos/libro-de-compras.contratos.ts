@@ -8,6 +8,10 @@
 /** Los módulos a donde puede ir un documento del libro. */
 export type DestinoDeDocumento = 'cuentas-por-pagar' | 'caja-chica' | 'cuentas-por-liquidar';
 
+/** Por qué se anula el registro de un documento (no la FEL: solo su emisor la anula en la SAT). */
+export type CausaDeAnulacionDeDocumento =
+  'error_de_captura' | 'fel_anulada_por_el_emisor' | 'no_corresponde_a_la_empresa';
+
 export type TipoDeDocumentoDeCompra = 'factura' | 'factura_pequeno_contribuyente' | 'nota_de_credito' | 'recibo';
 
 /** Lo que recibe cada destino en su orden `<destino>.recibir_documento`. */
@@ -33,7 +37,7 @@ declare module './mediador.contratos.js' {
      * pide: como ya hizo lo suyo, Libro de compras no le devuelve el aviso (así no hay ciclo de avisos).
      */
     'libro-de-compras.anular_documento': {
-      datos: { documentoId: string; motivo: string; origen?: DestinoDeDocumento };
+      datos: { documentoId: string; causa: CausaDeAnulacionDeDocumento; motivo: string; origen?: DestinoDeDocumento };
       respuesta: void;
     };
     'libro-de-compras.eliminar_documento': {

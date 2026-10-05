@@ -74,7 +74,10 @@ describe('vigencia de combustible usada por documentos reales', () => {
     const cambio = { ...DATOS_DE_LA_VIGENCIA(escenario), idpPorGalon: '5.00' };
     expect((await propietario().put(`${RUTA_VIGENCIAS}/${vigenciaId}`, cambio)).estado).toBeGreaterThanOrEqual(400);
 
-    await propietario().post(`${RUTA_DOCUMENTOS}/${documentoId}/anular`, { motivo: 'Factura equivocada' });
+    await propietario().post(`${RUTA_DOCUMENTOS}/${documentoId}/anular`, {
+      causa: 'error_de_captura',
+      motivo: 'Factura equivocada',
+    });
     const cambiada = await propietario().put(`${RUTA_VIGENCIAS}/${vigenciaId}`, cambio);
     const eliminada = await propietario().delete(`${RUTA_VIGENCIAS}/${vigenciaId}`);
 

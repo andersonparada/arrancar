@@ -1,0 +1,8 @@
+ALTER TABLE "libro_de_compras"."documentos" DROP CONSTRAINT "documentos_anulacion_completa";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."documentos" ADD COLUMN "causa_de_anulacion" text;--> statement-breakpoint
+-- Los documentos ya anulados quedan con la causa más común; sin ella no cumplirían el check de anulación completa.
+UPDATE "libro_de_compras"."documentos" SET "causa_de_anulacion" = 'error_de_captura' WHERE "estado" = 'anulado';--> statement-breakpoint
+-- Sin FEL no hay a quién se emitió: el receptor queda vacío (antes llevaba el NIT de la empresa).
+UPDATE "libro_de_compras"."documentos" SET "nit_receptor" = NULL WHERE "motivo_fuera_del_libro" = 'sin_fel';--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."documentos" ADD CONSTRAINT "documentos_causa_de_anulacion_valida" CHECK ("libro_de_compras"."documentos"."causa_de_anulacion" is null or "libro_de_compras"."documentos"."causa_de_anulacion" in ('error_de_captura', 'fel_anulada_por_el_emisor', 'no_corresponde_a_la_empresa'));--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."documentos" ADD CONSTRAINT "documentos_anulacion_completa" CHECK (("libro_de_compras"."documentos"."estado" = 'anulado') = ("libro_de_compras"."documentos"."anulado_en" is not null and "libro_de_compras"."documentos"."anulado_por" is not null and "libro_de_compras"."documentos"."motivo_de_anulacion" is not null and "libro_de_compras"."documentos"."causa_de_anulacion" is not null));

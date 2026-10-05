@@ -9,6 +9,17 @@ export class MotivoDeAnulacionInvalido extends DatoInvalido {
   }
 }
 
+/** La causa de anulación no es una de la lista (error de captura, FEL anulada por el emisor, no corresponde a la empresa). */
+export class CausaDeAnulacionInvalida extends DatoInvalido {
+  readonly codigo = 'causa_de_anulacion_invalida';
+
+  constructor() {
+    super(
+      'Escoja la causa de la anulación: error de captura, FEL anulada por el emisor o no corresponde a la empresa.',
+    );
+  }
+}
+
 /** El documento ya está anulado: no se vuelve a anular, ni se elimina, ni se marca como procesado. */
 export class DocumentoYaAnulado extends ReglaDeNegocioInfringida {
   readonly codigo = 'documento_ya_anulado';

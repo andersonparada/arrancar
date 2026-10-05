@@ -1,27 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { NitInvalido } from '../../core/compartido/dominio/objetos-valor/nit.js';
-import { AVISO_DE_RETENCION_QUITADA, avisosDeRetenciones } from './avisos-de-retenciones.js';
-import {
-  AVISO_DE_PROVEEDOR_NO_DOMICILIADO,
-  AVISO_DE_PROVEEDOR_SIN_DATOS_FISCALES,
-  avisosDelProveedor,
-} from './avisos-del-proveedor.js';
-import { DatosFiscalesDeEmpresa } from './datos-fiscales-de-empresa.js';
-import { DatosFiscalesDeProveedor } from './datos-fiscales-de-proveedor.js';
-import type { RetencionDeDocumento } from './documento-de-compra.js';
 import {
   DatosDeLaFelIncompletos,
   NitDelEmisorInvalido,
   NitDelEmisorNoCoincide,
+  ReceptorInvalido,
   ReciboDebeQuedarFueraDelLibro,
   TipoNoCorrespondeAlProveedor,
 } from './errores-de-documento.js';
 import { MotivoFueraDelLibroIncoherente } from './fuera-del-libro.js';
-import { AVISO_DE_NOTA_TARDIA, avisosDeNotaTardia } from './reglas-de-notas-de-credito.js';
 import {
   exigirReceptorCoherente,
   exigirReciboFueraDelLibro,
+  AVISO_DE_CAMBIO_DE_REGIMEN,
   exigirTipoDelProveedor,
+  receptorDelDocumento,
   resolverEmisor,
   type DatosDelEmisor,
 } from './reglas-del-encabezado.js';
@@ -83,6 +76,21 @@ describe('tipo, recibo y receptor', () => {
     expect(() => exigirTipoDelProveedor('recibo', true)).not.toThrow();
   });
 
+  it('el error del tipo sugiere actualizar los datos fiscales o confirmar el cambio de régimen', () => {
+    expect(() => exigirTipoDelProveedor('factura', true)).toThrow(
+      /Si el proveedor cambió de régimen, actualice sus datos fiscales o confirme\./,
+    );
+  });
+
+  it('con la confirmación del cambio de régimen deja pasar el tipo y lo señala; sin cambio no señala nada', () => {
+    expect(exigirTipoDelProveedor('factura', true, true)).toBe(true);
+    expect(exigirTipoDelProveedor('factura_pequeno_contribuyente', false, true)).toBe(true);
+    expect(exigirTipoDelProveedor('factura', false, true)).toBe(false);
+    expect(AVISO_DE_CAMBIO_DE_REGIMEN).toBe(
+      'El proveedor cambió de régimen: confirme que la factura es anterior al cambio.',
+    );
+  });
+
   it('el recibo solo va con la casilla desmarcada', () => {
     expect(() => exigirReciboFueraDelLibro('recibo', true)).toThrow(ReciboDebeQuedarFueraDelLibro);
     expect(() => exigirReciboFueraDelLibro('recibo', false)).not.toThrow();
@@ -99,59 +107,24 @@ describe('tipo, recibo y receptor', () => {
   });
 });
 
-describe('avisos', () => {
-  const retencion = (cambios: Partial<RetencionDeDocumento> = {}): RetencionDeDocumento => ({
-    impuesto: 'iva',
-    regla: 'iva_contribuyente_especial',
-    base: 60000,
-    porcentaje: 1500,
-    montoPropuesto: 9000,
-    monto: 9000,
-    motivoDelAjuste: null,
-    fecha: '2026-06-10',
-    ...cambios,
-  });
-  const entero = { hoy: '2026-10-04', fechaDeRecepcion: '2026-06-10', diasHabilesIva: 15, diasHabilesIsr: 10 };
-
-  it('avisa el entero vencido de cada impuesto una sola vez, y nada si el plazo no pasó', () => {
-    const avisos = avisosDeRetenciones([retencion(), retencion({ regla: 'iva_exportador' })], entero);
-
-    expect(avisos).toHaveLength(1);
-    expect(avisos[0]).toContain('retención de IVA venció el 21/07/2026');
-    expect(avisosDeRetenciones([retencion()], { ...entero, hoy: '2026-07-21' })).toEqual([]);
+describe('el receptor de la FEL', () => {
+  it('acepta un NIT (también consumidor final) o un CUI, normalizados', () => {
+    expect(receptorDelDocumento('576937-k')).toBe('576937K');
+    expect(receptorDelDocumento('cf')).toBe('CF');
+    expect(receptorDelDocumento('1234 56789 0101')).toBe('1234567890101');
   });
 
-  it('el entero del ISR se cuenta desde la recepción, no desde la emisión', () => {
-    const isr = retencion({ impuesto: 'isr', regla: 'isr_opcional_simplificado', fecha: '2026-01-05' });
-
-    const avisos = avisosDeRetenciones([isr], { ...entero, hoy: '2026-07-14', fechaDeRecepcion: '2026-06-30' });
-
-    expect(avisos).toEqual([]);
+  it('sin texto queda vacío, y un dato que no es NIT ni CUI se rechaza', () => {
+    expect(receptorDelDocumento(null)).toBeNull();
+    expect(receptorDelDocumento('  ')).toBeNull();
+    expect(() => receptorDelDocumento('5769370')).toThrow(ReceptorInvalido);
+    expect(() => receptorDelDocumento('1234567890100')).toThrow(ReceptorInvalido);
   });
 
-  it('una retención quitada avisa la responsabilidad solidaria y no cuenta para el entero', () => {
-    const quitada = retencion({ monto: 0, motivoDelAjuste: 'Exento' });
-
-    expect(avisosDeRetenciones([quitada], entero)).toEqual([AVISO_DE_RETENCION_QUITADA]);
-  });
-
-  it('avisa la nota emitida más de dos meses después de su factura', () => {
-    expect(avisosDeNotaTardia('2027-01-05', '2026-10-01')).toEqual([AVISO_DE_NOTA_TARDIA]);
-    expect(avisosDeNotaTardia('2026-12-01', '2026-10-31')).toEqual([]);
-  });
-
-  it('avisa un proveedor sin datos fiscales si la empresa retiene, y un no domiciliado', () => {
-    const empresa = DatosFiscalesDeEmpresa.porOmision();
-    const sinAgente = DatosFiscalesDeEmpresa.crear({ ...empresa.instantanea(), esAgenteDeRetencionIsr: false });
-    const proveedor = DatosFiscalesDeProveedor.porOmision();
-    const extranjero = DatosFiscalesDeProveedor.porOmision({ regimenIsr: 'no_domiciliado' });
-
-    expect(avisosDelProveedor({ empresa, proveedor, proveedorSinDatosFiscales: true })).toEqual([
-      AVISO_DE_PROVEEDOR_SIN_DATOS_FISCALES,
-    ]);
-    expect(avisosDelProveedor({ empresa: sinAgente, proveedor, proveedorSinDatosFiscales: true })).toEqual([]);
-    expect(avisosDelProveedor({ empresa, proveedor: extranjero, proveedorSinDatosFiscales: false })).toEqual([
-      AVISO_DE_PROVEEDOR_NO_DOMICILIADO,
-    ]);
+  it('un CUI concuerda con una FEL a otro NIT, no con una a consumidor final', () => {
+    expect(() => exigirReceptorCoherente('fel_a_otro_nit', '1234567890101')).not.toThrow();
+    expect(() => exigirReceptorCoherente('fel_a_consumidor_final', '1234567890101')).toThrow(
+      MotivoFueraDelLibroIncoherente,
+    );
   });
 });

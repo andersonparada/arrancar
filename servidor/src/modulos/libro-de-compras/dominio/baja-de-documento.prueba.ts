@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
   accionesDeDocumento,
+  avisosDeBajaPorPeriodo,
+  causaDeAnulacionValida,
   exigirAnulable,
   exigirEliminable,
   motivoDeAnulacionValido,
   type HechosDeUnDocumento,
 } from './baja-de-documento.js';
+import { AVISO_DE_PERIODO_PASADO } from './periodo-del-libro.js';
 import {
+  CausaDeAnulacionInvalida,
   DocumentoConNotas,
   DocumentoConNotasVigentes,
   DocumentoProcesadoEnElDestino,
@@ -77,5 +81,25 @@ describe('motivo de la anulación', () => {
   it('vacío o de más de 300 caracteres se rechaza', () => {
     expect(() => motivoDeAnulacionValido('   ')).toThrow(MotivoDeAnulacionInvalido);
     expect(() => motivoDeAnulacionValido('a'.repeat(301))).toThrow(MotivoDeAnulacionInvalido);
+  });
+});
+
+describe('causa de anulación y aviso de período', () => {
+  it.each(['error_de_captura', 'fel_anulada_por_el_emisor', 'no_corresponde_a_la_empresa'])(
+    'acepta la causa %s',
+    (causa) => {
+      expect(causaDeAnulacionValida(causa)).toBe(causa);
+    },
+  );
+
+  it('rechaza una causa que no es de la lista', () => {
+    expect(() => causaDeAnulacionValida('otra')).toThrow(CausaDeAnulacionInvalida);
+    expect(() => causaDeAnulacionValida('')).toThrow(CausaDeAnulacionInvalida);
+  });
+
+  it('avisa de un período anterior al mes actual, y del actual no', () => {
+    expect(avisosDeBajaPorPeriodo('2026-09-01', '2026-10-05')).toEqual([AVISO_DE_PERIODO_PASADO]);
+    expect(avisosDeBajaPorPeriodo('2026-10-01', '2026-10-05')).toEqual([]);
+    expect(avisosDeBajaPorPeriodo('2026-10-01', '2026-10-31')).toEqual([]);
   });
 });

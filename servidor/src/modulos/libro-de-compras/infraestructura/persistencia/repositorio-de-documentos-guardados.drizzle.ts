@@ -27,10 +27,10 @@ export class RepositorioDeDocumentosGuardadosDrizzle implements RepositorioDeDoc
     return mapeadorDeDocumentoGuardado.aDominio({ documento, lineas, retenciones: retenidas, notas });
   }
 
-  async anular(id: string, { anuladoPor, motivo }: AnulacionDeDocumento): Promise<void> {
+  async anular(id: string, { anuladoPor, motivo, causa }: AnulacionDeDocumento): Promise<void> {
     await transaccionEnCurso()
       .update(documentos)
-      .set({ estado: 'anulado', anuladoEn: sql`now()`, anuladoPor, motivoDeAnulacion: motivo })
+      .set({ estado: 'anulado', anuladoEn: sql`now()`, anuladoPor, motivoDeAnulacion: motivo, causaDeAnulacion: causa })
       .where(eq(documentos.id, id));
   }
 

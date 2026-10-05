@@ -6,7 +6,8 @@ export interface FiltroDeDocumentos {
   /** Cualquier fecha del mes del libro (`AAAA-MM-DD`): se filtra por ese mes. */
   periodo?: string;
   proveedorId?: string;
-  estado?: 'vigente' | 'anulado';
+  /** `vigente` oculta los anulados, `anulado` solo los anulados y `todos` no filtra; sin dato, no filtra. */
+  estado?: 'vigente' | 'anulado' | 'todos';
   destino?: DestinoDeDocumento;
   tipo?: TipoDeDocumento;
 }

@@ -5,6 +5,7 @@ import {
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../core/compartido/pruebas/dobles-compartidos.js';
+import { CalendarioDeLunesAViernes } from '../dominio/calendario-laboral.js';
 import type { DependenciasDelPreparador } from '../aplicacion/casos-uso/documentos/preparador-de-documento.js';
 import type { SolicitudDeDocumento } from '../aplicacion/dto/solicitud-de-documento.js';
 import type { CompletadorDeNit, RepositorioDeDocumentos } from '../aplicacion/puertos/puertos-de-documentos.js';
@@ -58,6 +59,9 @@ export const solicitud = (cambios: Partial<SolicitudDeDocumento> = {}): Solicitu
     },
   ],
   ajustesDeRetenciones: [],
+  /** Por omisión el proveedor contesta lo de siempre; las pruebas de «faltan datos» pasan `null`. */
+  datosFiscalesDelProveedor: { regimenIsr: 'utilidades', esAgenteDeRetencionIva: false },
+  confirmarCambioDeRegimen: false,
   ...cambios,
 });
 
@@ -86,6 +90,7 @@ export function crearEscenario() {
   const empresa = new DatosDeLaEmpresaEnMemoria();
   const completadorDeNit = new CompletadorDeNitEnMemoria();
   const datosDeEmpresa = new DatosFiscalesDeEmpresaEnMemoria();
+  const datosDeProveedor = new DatosFiscalesDeProveedorEnMemoria();
   const publicadorEventos = new PublicadorEventosEnMemoria();
   const auditoria = new AuditoriaEnMemoria();
   const control = new ControlDePeriodosEnMemoria();
@@ -102,8 +107,9 @@ export function crearEscenario() {
     empresa,
     proveedores,
     datosFiscalesDeEmpresa: datosDeEmpresa,
-    datosFiscalesDeProveedor: new DatosFiscalesDeProveedorEnMemoria(),
+    datosFiscalesDeProveedor: datosDeProveedor,
     configuracion: new ConfiguracionFiscalEnMemoria(),
+    calendario: new CalendarioDeLunesAViernes(),
     catalogos,
     consultas,
     destinos,
@@ -122,6 +128,7 @@ export function crearEscenario() {
     empresa,
     completadorDeNit,
     datosDeEmpresa,
+    datosDeProveedor,
     publicadorEventos,
     auditoria,
     control,

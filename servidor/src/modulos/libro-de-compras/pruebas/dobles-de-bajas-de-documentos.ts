@@ -20,6 +20,7 @@ export class DocumentosGuardadosEnMemoria implements RepositorioDeDocumentosGuar
       anuladoEn: null,
       anuladoPor: null,
       motivoDeAnulacion: null,
+      causaDeAnulacion: null,
       procesadoEnDestinoEn: null,
       notas: [],
       ...cambios,
@@ -39,10 +40,16 @@ export class DocumentosGuardadosEnMemoria implements RepositorioDeDocumentosGuar
     return this.filas.get(id) ?? null;
   }
 
-  async anular(id: string, { anuladoPor, motivo }: AnulacionDeDocumento): Promise<void> {
+  async anular(id: string, { anuladoPor, motivo, causa }: AnulacionDeDocumento): Promise<void> {
     const guardado = this.filas.get(id);
     if (!guardado) return;
-    const anulado = { estado: 'anulado' as const, anuladoEn: new Date(), anuladoPor, motivoDeAnulacion: motivo };
+    const anulado = {
+      estado: 'anulado' as const,
+      anuladoEn: new Date(),
+      anuladoPor,
+      motivoDeAnulacion: motivo,
+      causaDeAnulacion: causa,
+    };
     this.filas.set(id, { ...guardado, ...anulado });
   }
 

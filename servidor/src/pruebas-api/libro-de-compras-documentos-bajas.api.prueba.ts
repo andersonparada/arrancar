@@ -24,7 +24,7 @@ const registrar = async (cambios: Record<string, unknown> = {}) => {
   return respuesta.cuerpo.documento.id as string;
 };
 const anular = (id: string, motivo = 'Se registró por error') =>
-  propietario().post(`${RUTA_DOCUMENTOS}/${id}/anular`, { motivo });
+  propietario().post(`${RUTA_DOCUMENTOS}/${id}/anular`, { causa: 'error_de_captura', motivo });
 const eliminar = (id: string) => propietario().delete(`${RUTA_DOCUMENTOS}/${id}`);
 const filasDe = (tabla: string, id: string) =>
   consultar(`select 1 from libro_de_compras.${tabla} where documento_id = $1`, [id]);
@@ -59,10 +59,12 @@ describe('anular un documento', () => {
     const respuesta = await anular(id, '  Factura duplicada  ');
 
     expect(respuesta.estado).toBe(200);
-    expect(respuesta.cuerpo).toMatchObject({
+    expect(respuesta.cuerpo.avisos).toEqual([]);
+    expect(respuesta.cuerpo.documento).toMatchObject({
       id,
       estado: 'anulado',
       motivoDeAnulacion: 'Factura duplicada',
+      causaDeAnulacion: 'error_de_captura',
       puedeAnular: false,
       puedeEliminar: false,
     });
@@ -79,7 +81,10 @@ describe('anular un documento', () => {
   it('exige el motivo y no se anula dos veces', async () => {
     const id = await registrar();
 
-    const sinMotivo = await propietario().post(`${RUTA_DOCUMENTOS}/${id}/anular`, { motivo: '   ' });
+    const sinMotivo = await propietario().post(`${RUTA_DOCUMENTOS}/${id}/anular`, {
+      causa: 'error_de_captura',
+      motivo: '   ',
+    });
     const muyLargo = await anular(id, 'x'.repeat(301));
     await anular(id);
     const otraVez = await anular(id);
@@ -108,7 +113,7 @@ describe('anular un documento', () => {
     await anular(id, 'Error de digitación');
 
     const [entrada] = await auditados(id);
-    expect(entrada).toMatchObject({ accion: 'anular', motivo: 'Error de digitación' });
+    expect(entrada).toMatchObject({ accion: 'anular', motivo: 'error_de_captura: Error de digitación' });
     expect(entrada?.anterior).toMatchObject({ estado: 'vigente', numero: 'AUDITADO-1' });
     expect(entrada?.anterior.lineas).toHaveLength(1);
   });
@@ -156,7 +161,8 @@ describe('eliminar un documento', () => {
 
     const respuesta = await eliminar(id);
 
-    expect(respuesta.estado).toBe(204);
+    expect(respuesta.estado).toBe(200);
+    expect(respuesta.cuerpo).toEqual({ avisos: [] });
     expect(await estadoEnLaBase(id)).toBeNull();
     expect(await filasDe('lineas_de_documento', id)).toHaveLength(0);
     expect(await filasDe('retenciones', id)).toHaveLength(0);

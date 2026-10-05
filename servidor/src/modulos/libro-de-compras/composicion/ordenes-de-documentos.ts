@@ -23,7 +23,7 @@ export function atenderOrdenesDeDocumentos({ marcarProcesado, anular, eliminar }
   mediador.atender(modulo, 'libro-de-compras.anular_documento', async (datos, operador) => {
     await anular.ejecutar(operador, datos);
   });
-  mediador.atender(modulo, 'libro-de-compras.eliminar_documento', (datos, operador) =>
-    eliminar.ejecutar(operador, datos),
-  );
+  mediador.atender(modulo, 'libro-de-compras.eliminar_documento', async (datos, operador) => {
+    await eliminar.ejecutar(operador, datos);
+  });
 }

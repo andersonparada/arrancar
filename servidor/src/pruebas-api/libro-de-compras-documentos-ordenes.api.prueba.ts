@@ -52,7 +52,10 @@ describe('permisos de anular y eliminar', () => {
   it('quien solo puede ver no anula ni elimina', async () => {
     const id = await registrar();
 
-    const anulacion = await soloVer.post(`${RUTA_DOCUMENTOS}/${id}/anular`, { motivo: 'Prueba' });
+    const anulacion = await soloVer.post(`${RUTA_DOCUMENTOS}/${id}/anular`, {
+      causa: 'error_de_captura',
+      motivo: 'Prueba',
+    });
     const eliminacion = await soloVer.delete(`${RUTA_DOCUMENTOS}/${id}`);
 
     expect([anulacion.estado, eliminacion.estado]).toEqual([403, 403]);
@@ -64,14 +67,20 @@ describe('permisos de anular y eliminar', () => {
     const paraAnular = await registrar();
     const paraEliminar = await registrar();
 
-    const anulaElAnulador = await anulador.post(`${RUTA_DOCUMENTOS}/${paraAnular}/anular`, { motivo: 'Prueba' });
+    const anulaElAnulador = await anulador.post(`${RUTA_DOCUMENTOS}/${paraAnular}/anular`, {
+      causa: 'error_de_captura',
+      motivo: 'Prueba',
+    });
     const eliminaElAnulador = await anulador.delete(`${RUTA_DOCUMENTOS}/${paraEliminar}`);
     const eliminaElEliminador = await eliminador.delete(`${RUTA_DOCUMENTOS}/${paraEliminar}`);
-    const anulaElEliminador = await eliminador.post(`${RUTA_DOCUMENTOS}/${paraAnular}/anular`, { motivo: 'Prueba' });
+    const anulaElEliminador = await eliminador.post(`${RUTA_DOCUMENTOS}/${paraAnular}/anular`, {
+      causa: 'error_de_captura',
+      motivo: 'Prueba',
+    });
 
     expect(anulaElAnulador.estado).toBe(200);
     expect(eliminaElAnulador.estado).toBe(403);
-    expect(eliminaElEliminador.estado).toBe(204);
+    expect(eliminaElEliminador.estado).toBe(200);
     expect(anulaElEliminador.estado).toBe(403);
   });
 
@@ -98,7 +107,11 @@ describe('orden libro-de-compras.marcar_procesado', () => {
 
   it('un documento que no existe o es anulado no se marca como procesado', async () => {
     const id = await registrar();
-    await mediador.enviar(operador, 'libro-de-compras.anular_documento', { documentoId: id, motivo: 'Prueba' });
+    await mediador.enviar(operador, 'libro-de-compras.anular_documento', {
+      documentoId: id,
+      causa: 'error_de_captura',
+      motivo: 'Prueba',
+    });
 
     const marcar = (documentoId: string) =>
       mediador.enviar(operador, 'libro-de-compras.marcar_procesado', { documentoId, procesado: true });
@@ -114,10 +127,15 @@ describe('órdenes de anular y eliminar que manda el destino', () => {
 
     await mediador.enviar(operador, 'libro-de-compras.anular_documento', {
       documentoId: id,
+      causa: 'no_corresponde_a_la_empresa',
       motivo: 'Lo pidió Compras',
     });
 
-    expect(await ficha(id)).toMatchObject({ estado: 'anulado', motivoDeAnulacion: 'Lo pidió Compras' });
+    expect(await ficha(id)).toMatchObject({
+      estado: 'anulado',
+      motivoDeAnulacion: 'Lo pidió Compras',
+      causaDeAnulacion: 'no_corresponde_a_la_empresa',
+    });
     expect(destino.avisosDeBaja.at(-1)).toEqual({ aviso: 'anular', documentoId: id, motivo: 'Lo pidió Compras' });
   });
 
@@ -128,6 +146,7 @@ describe('órdenes de anular y eliminar que manda el destino', () => {
 
     await mediador.enviar(operador, 'libro-de-compras.anular_documento', {
       documentoId: id,
+      causa: 'error_de_captura',
       motivo: 'Lo anuló el destino',
       origen: 'cuentas-por-pagar',
     });
@@ -144,6 +163,7 @@ describe('órdenes de anular y eliminar que manda el destino', () => {
     await expect(
       mediador.enviar(operador, 'libro-de-compras.anular_documento', {
         documentoId: factura,
+        causa: 'error_de_captura',
         motivo: 'Prueba',
         origen: 'cuentas-por-pagar',
       }),

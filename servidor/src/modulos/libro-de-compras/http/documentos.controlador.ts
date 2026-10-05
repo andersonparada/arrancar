@@ -58,13 +58,13 @@ export class DocumentosControlador {
   anular = (solicitud: FastifyRequest<{ Params: ParamsDeDocumento; Body: AnulacionDeDocumentoSolicitada }>) =>
     this.casosDeUso.anular.ejecutar(operadorDe(solicitud), {
       documentoId: solicitud.params.documentoId,
+      causa: solicitud.body.causa,
       motivo: solicitud.body.motivo,
     });
 
-  eliminar = async (solicitud: FastifyRequest<{ Params: ParamsDeDocumento }>, respuesta: FastifyReply) => {
-    await this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), { documentoId: solicitud.params.documentoId });
-    return respuesta.status(204).send();
-  };
+  /** Responde 200 con `{ avisos }` (no 204) para poder avisar que el período puede estar declarado. */
+  eliminar = (solicitud: FastifyRequest<{ Params: ParamsDeDocumento }>) =>
+    this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), { documentoId: solicitud.params.documentoId });
 }
 
 function peticionDe(solicitud: FastifyRequest<{ Body: DocumentoSolicitado }>): PeticionDeRegistro {

@@ -77,15 +77,6 @@ describe('vista previa y consultas del formulario', () => {
     ]).toEqual([[], [], [], []]);
   });
 
-  it('avisa si el proveedor no tiene datos fiscales guardados', async () => {
-    const { avisos } = await new PrevisualizarDocumento(dependencias).ejecutar(operador, {
-      solicitud: solicitud(),
-      puedeAjustarRetenciones: false,
-    });
-
-    expect(avisos.join(' ')).toContain('no tiene datos fiscales guardados');
-  });
-
   it('lista los destinos activos y sugiere el último solo si sigue activo', async () => {
     const sugerir = () => new ObtenerDestinoSugerido(dependencias).ejecutar(operador, proveedorId);
     consultas.ultimoDestino = 'cuentas-por-pagar';

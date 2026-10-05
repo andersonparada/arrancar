@@ -1,13 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import { ReglaDeNegocioInfringida } from '../../../../core/compartido/dominio/errores.js';
+import { AVISO_DE_PERIODO_PASADO } from '../../../dominio/periodo-del-libro.js';
 import {
+  CausaDeAnulacionInvalida,
   DocumentoConNotas,
   DocumentoConNotasVigentes,
   DocumentoProcesadoEnElDestino,
   DocumentoYaAnulado,
   MotivoDeAnulacionInvalido,
 } from '../../../dominio/errores-de-baja.js';
+import { RelojFijo } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 import { crearEscenario, operador, solicitud } from '../../../pruebas/escenario-de-documentos-en-memoria.soporte.js';
 import { AnularDocumento } from './anular-documento.js';
 import { EliminarDocumento } from './eliminar-documento.js';
@@ -23,9 +26,13 @@ let e = crearEscenario();
 let documentoId = '';
 const bajas = () => ({ ...e.dependencias, repositorio: e.guardados });
 const anular = (motivo = 'Se registró dos veces', origen?: 'cuentas-por-pagar') =>
-  new AnularDocumento(bajas()).ejecutar(operador, { documentoId, motivo, origen });
+  new AnularDocumento(bajas()).ejecutar(operador, { documentoId, causa: 'error_de_captura', motivo, origen });
 const eliminar = (origen?: 'cuentas-por-pagar') =>
   new EliminarDocumento(bajas()).ejecutar(operador, { documentoId, origen });
+/** Un mes después del período del documento: ya puede estar declarado. */
+const enNoviembre = () => {
+  e.dependencias.reloj = new RelojFijo('2026-11-02');
+};
 
 beforeEach(async () => {
   e = crearEscenario();
@@ -41,7 +48,7 @@ beforeEach(async () => {
 
 describe('anular un documento', () => {
   it('avisa al destino antes, lo deja anulado con su motivo y usuario, lo audita y publica el evento', async () => {
-    const ficha = await anular('  Se registró dos veces ');
+    const { documento: ficha, avisos } = await anular('  Se registró dos veces ');
 
     expect(e.destinos.avisosDeAnular).toEqual([
       { documentoId, destino: 'cuentas-por-pagar', motivo: 'Se registró dos veces' },
@@ -49,16 +56,18 @@ describe('anular un documento', () => {
     expect(ficha).toMatchObject({
       estado: 'anulado',
       motivoDeAnulacion: 'Se registró dos veces',
+      causaDeAnulacion: 'error_de_captura',
       anuladoPor: operador.usuarioId,
       puedeAnular: false,
       puedeEliminar: false,
     });
     expect(ficha.anuladoEn).not.toBeNull();
     expect(e.control.consultados.at(-1)).toBe(ficha.periodo);
+    expect(avisos).toEqual([]);
     expect(e.publicadorEventos.nombres()).toEqual(['libro-de-compras.documento_anulado']);
   });
 
-  it('audita la anulación con la ficha tal como estaba y el motivo', async () => {
+  it('audita la anulación con la ficha tal como estaba, la causa y el motivo', async () => {
     await anular('Duplicada');
 
     expect(e.auditoria.entradas).toHaveLength(1);
@@ -66,9 +75,37 @@ describe('anular un documento', () => {
       recurso: 'libro-de-compras.documentos',
       registroId: documentoId,
       accion: 'anular',
-      motivo: 'Duplicada',
+      motivo: 'error_de_captura: Duplicada',
       anterior: { id: documentoId, estado: 'vigente', numero: '1', lineas: [expect.anything()] },
     });
+  });
+
+  it('la causa debe ser de la lista: con otra no se anula ni se avisa', async () => {
+    const otra = { documentoId, causa: 'porque_si' as never, motivo: 'Duplicada' };
+
+    await expect(new AnularDocumento(bajas()).ejecutar(operador, otra)).rejects.toBeInstanceOf(
+      CausaDeAnulacionInvalida,
+    );
+
+    expect(e.destinos.avisosDeAnular).toHaveLength(0);
+    expect(e.guardados.filas.get(documentoId)?.estado).toBe('vigente');
+  });
+
+  it('guarda cada causa de la lista', async () => {
+    const peticion = { documentoId, causa: 'fel_anulada_por_el_emisor' as const, motivo: 'Anulada en la SAT' };
+
+    const { documento } = await new AnularDocumento(bajas()).ejecutar(operador, peticion);
+
+    expect(documento.causaDeAnulacion).toBe('fel_anulada_por_el_emisor');
+    expect(e.auditoria.entradas[0]?.motivo).toBe('fel_anulada_por_el_emisor: Anulada en la SAT');
+  });
+
+  it('de un período anterior al mes actual avisa que puede estar declarado', async () => {
+    enNoviembre();
+
+    const { avisos } = await anular();
+
+    expect(avisos).toEqual([AVISO_DE_PERIODO_PASADO]);
   });
 
   it('sin motivo no se anula ni se avisa', async () => {
@@ -96,7 +133,7 @@ describe('anular un documento', () => {
     expect(e.destinos.avisosDeAnular).toHaveLength(0);
 
     e.guardados.filas.get(documentoId)!.notas[0]!.estado = 'anulado';
-    expect((await anular()).estado).toBe('anulado');
+    expect((await anular()).documento.estado).toBe('anulado');
   });
 
   it('si el destino lo rechaza, no cambia nada, no audita y no publica', async () => {
@@ -120,7 +157,7 @@ describe('anular un documento', () => {
   it('un procesado en el destino también se anula', async () => {
     e.guardados.filas.get(documentoId)!.procesadoEnDestinoEn = new Date();
 
-    expect((await anular()).estado).toBe('anulado');
+    expect((await anular()).documento.estado).toBe('anulado');
   });
 });
 
@@ -135,6 +172,19 @@ describe('eliminar un documento', () => {
     ]);
     expect(e.auditoria.entradas[0]?.anterior).toMatchObject({ id: documentoId, estado: 'vigente' });
     expect(e.publicadorEventos.nombres()).toEqual(['libro-de-compras.documento_eliminado']);
+  });
+
+  it('de un período anterior al mes actual avisa que puede estar declarado; del actual, no', async () => {
+    expect(await eliminar()).toEqual({ avisos: [] });
+    await new RegistrarDocumento(e.dependencias).ejecutar(operador, {
+      solicitud: solicitud({ numero: '2' }),
+      puedeAjustarRetenciones: false,
+    });
+    documentoId = e.repositorio.agregados[1]!.id;
+    e.guardados.sembrar(e.repositorio.agregados[1]!);
+    enNoviembre();
+
+    expect(await eliminar()).toEqual({ avisos: [AVISO_DE_PERIODO_PASADO] });
   });
 
   it('uno procesado en el destino no se elimina', async () => {

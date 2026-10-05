@@ -1,6 +1,7 @@
 import { AccesoDenegado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { retencionesAjustadas } from '../../../dominio/ajuste-de-retenciones.js';
+import type { DatosFiscalesDeProveedor } from '../../../dominio/datos-fiscales-de-proveedor.js';
 import type { DestinoDeDocumento } from '../../../dominio/destinos-de-documento.js';
 import {
   normalizarSerieONumero,
@@ -8,6 +9,7 @@ import {
   type RetencionDeDocumento,
 } from '../../../dominio/documento-de-compra.js';
 import { DestinoNoDisponible } from '../../../dominio/errores-de-documento.js';
+import type { PropuestaEnCero } from '../../../dominio/retencion-practicada.js';
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
 import type {
   CatalogosParaDocumentos,
@@ -27,7 +29,7 @@ import {
   type ContextoFiscal,
   type DependenciasDelCargador,
 } from './cargador-de-contexto-fiscal.js';
-import { resolverEncabezado } from './encabezado-del-documento.js';
+import { resolverEncabezado, type EncabezadoResuelto } from './encabezado-del-documento.js';
 import { exigirQueLaNotaNoSupereLaFactura, ResolutorDeFactura } from './resolutor-de-factura.js';
 import { ResolutorDeLineas } from './resolutor-de-lineas.js';
 
@@ -51,6 +53,12 @@ export interface DocumentoPreparado {
   avisos: string[];
   /** El proveedor no tiene NIT: hay que mandarle `terceros.completar_nit` con este. */
   nitParaCompletar: string | null;
+  /** El proveedor no tenía datos fiscales y llegaron (o se dedujeron) unos: se guardan con el documento. */
+  datosFiscalesPorGuardar: DatosFiscalesDeProveedor | null;
+  /** El usuario confirmó que el proveedor cambió de régimen: se audita al registrar. */
+  cambioDeRegimenConfirmado: boolean;
+  /** Retenciones que el sistema dejó en cero por una ya practicada en un documento anulado: se auditan al registrar. */
+  retencionesEnCero: PropuestaEnCero[];
 }
 
 /**
@@ -89,6 +97,9 @@ export class PreparadorDeDocumento {
       documento,
       avisos: avisosDelDocumento(solicitud, contexto, resuelto),
       nitParaCompletar: resuelto.encabezado.emisor.nitParaCompletar,
+      datosFiscalesPorGuardar: contexto.datosDelProveedorPorGuardar,
+      cambioDeRegimenConfirmado: resuelto.encabezado.cambioDeRegimenConfirmado,
+      retencionesEnCero: resuelto.practicada.enCero,
     };
   }
 
@@ -103,9 +114,29 @@ export class PreparadorDeDocumento {
     const factura = await this.facturas.resolver(solicitud, opciones.bloquearFactura);
     const calculado = calcularElDocumento(solicitud, contexto, { encabezado, lineas, factura });
     if (factura) exigirQueLaNotaNoSupereLaFactura(factura, calculado.totales.total);
-    const retenciones = retencionesDelDocumento(solicitud, contexto, { encabezado, lineas, calculado });
+    const anulado = await this.buscarAnulado(solicitud, encabezado);
+    const { retenciones, practicada } = retencionesDelDocumento(solicitud, contexto, {
+      encabezado,
+      lineas,
+      calculado,
+      anulado,
+    });
     exigirPermisoDeAjuste(retenciones, opciones);
-    return { encabezado, lineas, factura, calculado, retenciones };
+    return { encabezado, lineas, factura, calculado, retenciones, practicada };
+  }
+
+  /** El documento anulado con la misma FEL (o NIT, tipo, serie y número) que ya retuvo algo; las notas no retienen. */
+  private async buscarAnulado(solicitud: SolicitudDeDocumento, encabezado: EncabezadoResuelto) {
+    if (solicitud.tipo === 'nota_de_credito') return null;
+    return this.dependencias.consultas.buscarAnuladoConRetenciones({
+      tipo: solicitud.tipo,
+      proveedorId: solicitud.proveedorId,
+      muestraEnReportesSat: encabezado.muestraEnReportesSat,
+      nitEmisor: encabezado.emisor.nitEmisor,
+      serie: solicitud.serie,
+      numero: solicitud.numero,
+      autorizacionFel: solicitud.autorizacionFel,
+    });
   }
 
   private async exigirDestinoActivo(operador: Operador, destino: DestinoDeDocumento): Promise<void> {

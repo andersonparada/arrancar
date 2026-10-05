@@ -140,7 +140,7 @@ describe('retenciones al registrar', () => {
     const respuesta = await registrar(escenario.proveedorId, { fechaEmision: vieja, fechaRecepcion: vieja });
 
     expect(respuesta.cuerpo.avisos.join(' ')).toContain('venció');
-    expect(respuesta.cuerpo.avisos.join(' ')).toContain('multa e intereses');
+    expect(respuesta.cuerpo.avisos.join(' ')).toContain('o vence en los próximos días si hubo feriados');
   });
 });
 
@@ -153,7 +153,7 @@ describe('retenciones ajustadas', () => {
     const respuesta = await registrar(escenario.proveedorId, ajuste('0', 'Proveedor exento por resolución'));
 
     expect(respuesta.estado).toBe(201);
-    expect(respuesta.cuerpo.avisos.join(' ')).toContain('responde de forma solidaria');
+    expect(respuesta.cuerpo.avisos.join(' ')).toContain('responde solidariamente');
     const id = respuesta.cuerpo.documento.id as string;
     expect(await retencionesGuardadas(id)).toEqual([
       expect.objectContaining({

@@ -5,6 +5,7 @@ import { proveedores } from '../../../terceros/infraestructura/persistencia/prov
 const TIPOS = "'factura', 'factura_pequeno_contribuyente', 'nota_de_credito', 'recibo'";
 const DESTINOS = "'cuentas-por-pagar', 'caja-chica', 'cuentas-por-liquidar'";
 const MOTIVOS_FUERA = "'sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit'";
+const CAUSAS_DE_ANULACION = "'error_de_captura', 'fel_anulada_por_el_emisor', 'no_corresponde_a_la_empresa'";
 const MOTIVOS = "'fuera_de_plazo', 'no_vinculado', 'pequeno_contribuyente', 'exento'";
 
 /** Las columnas de `documentos` que usan las restricciones (la tabla las pasa desde su callback). */
@@ -38,6 +39,7 @@ export type ColumnasDeDocumento = Record<
   | 'anuladoEn'
   | 'anuladoPor'
   | 'motivoDeAnulacion'
+  | 'causaDeAnulacion'
   | 'creadoEn',
   AnyPgColumn
 >;
@@ -57,6 +59,10 @@ export const restriccionesDeValores = (t: T) => [
     sql`${t.motivoFueraDelLibro} is null or ${t.motivoFueraDelLibro} in (${sql.raw(MOTIVOS_FUERA)})`,
   ),
   check('documentos_estado_valido', sql`${t.estado} in ('vigente', 'anulado')`),
+  check(
+    'documentos_causa_de_anulacion_valida',
+    sql`${t.causaDeAnulacion} is null or ${t.causaDeAnulacion} in (${sql.raw(CAUSAS_DE_ANULACION)})`,
+  ),
   check('documentos_nit_emisor_valido', sql`${t.nitEmisor} is null or ${t.nitEmisor} ~ '^[0-9]{1,12}[0-9K]$'`),
 ];
 
@@ -138,7 +144,7 @@ export const restriccionesDeTipo = (t: T) => [
   ),
   check(
     'documentos_anulacion_completa',
-    sql`(${t.estado} = 'anulado') = (${t.anuladoEn} is not null and ${t.anuladoPor} is not null and ${t.motivoDeAnulacion} is not null)`,
+    sql`(${t.estado} = 'anulado') = (${t.anuladoEn} is not null and ${t.anuladoPor} is not null and ${t.motivoDeAnulacion} is not null and ${t.causaDeAnulacion} is not null)`,
   ),
   check('documentos_recibo_desmarcado', sql`${t.tipo} <> 'recibo' or not ${t.muestraEnReportesSat}`),
 ];

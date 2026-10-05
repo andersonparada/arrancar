@@ -112,8 +112,21 @@ describe('documentos: cada check', () => {
     expect(fueraDeRango).toMatch(/^documentos_iva_no_acreditable_(rango|por_motivo)$/);
   });
 
+  it('un anulado sin causa, o una causa que no es de la lista, se rechazan', async () => {
+    const anulado = { estado: 'anulado', anuladoEn: new Date(), anuladoPor: e.usuarioId, motivoDeAnulacion: 'Error' };
+
+    expect(await restriccionDe(anulado)).toBe('documentos_anulacion_completa');
+    expect(await restriccionDe({ ...anulado, causaDeAnulacion: 'otra' })).toBe('documentos_causa_de_anulacion_valida');
+  });
+
   it('rechaza un motivo de anulación vacío', async () => {
-    const anulado = { estado: 'anulado', anuladoEn: new Date(), anuladoPor: e.usuarioId, motivoDeAnulacion: ' ' };
+    const anulado = {
+      estado: 'anulado',
+      anuladoEn: new Date(),
+      anuladoPor: e.usuarioId,
+      motivoDeAnulacion: ' ',
+      causaDeAnulacion: 'error_de_captura',
+    };
 
     expect(await restriccionDe(anulado)).toBe('documentos_motivo_de_anulacion_largo');
   });

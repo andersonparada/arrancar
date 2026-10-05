@@ -26,7 +26,7 @@ function condiciones(filtro: FiltroDeDocumentos): SQL | undefined {
   return and(
     filtro.periodo ? eq(documentos.periodo, primerDiaDelMes(filtro.periodo)) : undefined,
     filtro.proveedorId ? eq(documentos.proveedorId, filtro.proveedorId) : undefined,
-    filtro.estado ? eq(documentos.estado, filtro.estado) : undefined,
+    filtro.estado && filtro.estado !== 'todos' ? eq(documentos.estado, filtro.estado) : undefined,
     filtro.destino ? eq(documentos.destino, filtro.destino) : undefined,
     filtro.tipo ? eq(documentos.tipo, filtro.tipo) : undefined,
   );

@@ -1,3 +1,4 @@
+import type { CausaDeAnulacion } from '../../dominio/baja-de-documento.js';
 import type { DocumentoDeCompra } from '../../dominio/documento-de-compra.js';
 import type {
   FiltroDeDocumentos,
@@ -22,6 +23,7 @@ export interface DocumentoGuardado {
   anuladoEn: Date | null;
   anuladoPor: string | null;
   motivoDeAnulacion: string | null;
+  causaDeAnulacion: CausaDeAnulacion | null;
   procesadoEnDestinoEn: Date | null;
   notas: NotaDeFactura[];
 }
@@ -29,13 +31,14 @@ export interface DocumentoGuardado {
 export interface AnulacionDeDocumento {
   anuladoPor: string;
   motivo: string;
+  causa: CausaDeAnulacion;
 }
 
 /** Lee y cambia el estado de documentos ya guardados; RLS limita todo a la empresa de la transacción. */
 export interface RepositorioDeDocumentosGuardados {
   /** Con `bloquear`, la fila queda bloqueada hasta el fin de la transacción (anular, eliminar, procesar). */
   buscar(id: string, bloquear: boolean): Promise<DocumentoGuardado | null>;
-  /** Pasa a `anulado` con su fecha, usuario y motivo; sus únicos quedan libres (índices parciales). */
+  /** Pasa a `anulado` con su fecha, usuario, causa y motivo; sus únicos quedan libres (índices parciales). */
   anular(id: string, anulacion: AnulacionDeDocumento): Promise<void>;
   /** Borra el documento; sus líneas y retenciones se van en cascada. */
   eliminar(id: string): Promise<void>;

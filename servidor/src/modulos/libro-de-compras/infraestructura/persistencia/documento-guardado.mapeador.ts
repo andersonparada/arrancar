@@ -121,6 +121,7 @@ export const mapeadorDeDocumentoGuardado = {
       anuladoEn: documento.anuladoEn,
       anuladoPor: documento.anuladoPor,
       motivoDeAnulacion: documento.motivoDeAnulacion,
+      causaDeAnulacion: documento.causaDeAnulacion,
       procesadoEnDestinoEn: documento.procesadoEnDestinoEn,
       notas: notas.map(notaDeFactura),
     };

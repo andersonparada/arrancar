@@ -39,7 +39,7 @@ function montoFinal(propuesta: RetencionPropuesta, ajuste: AjusteDeRetencion | u
 }
 
 function motivoDelAjuste(monto: number, propuesta: RetencionPropuesta, ajuste?: AjusteDeRetencion): string | null {
-  if (monto === propuesta.montoPropuesto) return null;
+  if (monto === propuesta.montoPropuesto) return propuesta.motivoAutomatico ?? null;
   const motivo = ajuste?.motivo?.trim();
   if (!motivo) throw new MotivoDelAjusteObligatorio();
   return motivo;

@@ -1,5 +1,5 @@
 import { IvaDeNotasExcedeElDeLaFactura, NotaConIvaDeFacturaExenta } from './errores-de-calculo.js';
-import { esFueraDePlazo, primerDiaDelMes } from './periodo-del-libro.js';
+import { MESES_DE_PLAZO_DEL_CREDITO, sumarMesesALaFecha } from './periodo-del-libro.js';
 import type { MotivoSinCredito } from './tipos-de-documento.js';
 
 /** Lo que la nota de crédito debe respetar de la factura que rebaja. Montos en centavos. */
@@ -25,10 +25,10 @@ export function exigirNotaCoherenteConLaFactura(datos: DatosDeLaFacturaAfectada,
 }
 
 export const AVISO_DE_NOTA_TARDIA =
-  'La nota de crédito se emitió más de dos meses después de la factura: el emisor debió registrarla dentro de ese plazo (art. 17 de la Ley del IVA). Confírmelo con su proveedor.';
+  'La nota de crédito se emitió más de dos meses después de la factura: el emisor debió registrarla dentro de ese plazo (art. 17 de la Ley del IVA). Confírmelo con su proveedor. Aun así, rebájela en el período en que la recibe.';
 
-/** Avisa si la nota se emitió más de dos meses después de la factura que rebaja (no bloquea). */
+/** Avisa si la nota se emitió más de dos meses después de la factura que rebaja, de fecha a fecha (no bloquea). */
 export function avisosDeNotaTardia(fechaDeEmisionDeLaNota: string, fechaDeEmisionDeLaFactura: string): string[] {
-  const tardia = esFueraDePlazo(primerDiaDelMes(fechaDeEmisionDeLaNota), fechaDeEmisionDeLaFactura);
-  return tardia ? [AVISO_DE_NOTA_TARDIA] : [];
+  const limite = sumarMesesALaFecha(fechaDeEmisionDeLaFactura, MESES_DE_PLAZO_DEL_CREDITO);
+  return fechaDeEmisionDeLaNota > limite ? [AVISO_DE_NOTA_TARDIA] : [];
 }

@@ -1,8 +1,10 @@
-import { Nit } from '../../core/compartido/dominio/objetos-valor/nit.js';
+import { Dpi, DpiInvalido } from '../../core/compartido/dominio/objetos-valor/dpi.js';
+import { Nit, NitInvalido } from '../../core/compartido/dominio/objetos-valor/nit.js';
 import {
   DatosDeLaFelIncompletos,
   NitDelEmisorInvalido,
   NitDelEmisorNoCoincide,
+  ReceptorInvalido,
   ReciboDebeQuedarFueraDelLibro,
   TipoNoCorrespondeAlProveedor,
 } from './errores-de-documento.js';
@@ -61,17 +63,37 @@ export function resolverEmisor(datos: DatosDelEmisor): EmisorResuelto {
   return { nitEmisor, nitParaCompletar: null };
 }
 
-/** Una factura de pequeño contribuyente es de un proveedor de ese régimen, y las facturas generales no. */
-export function exigirTipoDelProveedor(tipo: TipoDeDocumento, proveedorEsPequeno: boolean): void {
+const AYUDA_DE_REGIMEN = ' Si el proveedor cambió de régimen, actualice sus datos fiscales o confirme.';
+
+function tipoIncoherente(tipo: TipoDeDocumento, proveedorEsPequeno: boolean): string | null {
   if (tipo === 'factura_pequeno_contribuyente' && !proveedorEsPequeno) {
-    throw new TipoNoCorrespondeAlProveedor('El proveedor no es pequeño contribuyente: registre una factura normal.');
+    return 'El proveedor no es pequeño contribuyente: registre una factura normal.';
   }
   if (tipo === 'factura' && proveedorEsPequeno) {
-    throw new TipoNoCorrespondeAlProveedor(
-      'El proveedor es pequeño contribuyente: registre una factura de pequeño contribuyente.',
-    );
+    return 'El proveedor es pequeño contribuyente: registre una factura de pequeño contribuyente.';
   }
+  return null;
 }
+
+/**
+ * Una factura de pequeño contribuyente es de un proveedor de ese régimen, y las facturas generales no. Si no
+ * corresponde, es un error, salvo que el usuario confirme que el proveedor cambió de régimen (la factura es
+ * anterior al cambio): entonces pasa y devuelve `true`, para avisar y auditar.
+ * @throws TipoNoCorrespondeAlProveedor si no corresponde y no se confirmó.
+ */
+export function exigirTipoDelProveedor(
+  tipo: TipoDeDocumento,
+  proveedorEsPequeno: boolean,
+  confirmarCambioDeRegimen = false,
+): boolean {
+  const mensaje = tipoIncoherente(tipo, proveedorEsPequeno);
+  if (mensaje === null) return false;
+  if (confirmarCambioDeRegimen) return true;
+  throw new TipoNoCorrespondeAlProveedor(`${mensaje}${AYUDA_DE_REGIMEN}`, { confirmarCon: 'confirmarCambioDeRegimen' });
+}
+
+export const AVISO_DE_CAMBIO_DE_REGIMEN =
+  'El proveedor cambió de régimen: confirme que la factura es anterior al cambio.';
 
 /** El recibo solo va con la casilla «Se muestra en reportes SAT» desmarcada. */
 export function exigirReciboFueraDelLibro(tipo: TipoDeDocumento, muestraEnReportesSat: boolean): void {
@@ -85,10 +107,29 @@ export function exigirReciboFueraDelLibro(tipo: TipoDeDocumento, muestraEnReport
  */
 export function exigirReceptorCoherente(motivo: MotivoFueraDelLibro | null, nitReceptor: string | null): void {
   if (motivo !== 'fel_a_consumidor_final' && motivo !== 'fel_a_otro_nit') return;
-  if (nitReceptor === null) throw new MotivoFueraDelLibroIncoherente('Escriba el NIT al que se emitió la FEL.');
+  if (nitReceptor === null) throw new MotivoFueraDelLibroIncoherente('Escriba el NIT o CUI al que se emitió la FEL.');
   if ((nitReceptor === 'CF') !== (motivo === 'fel_a_consumidor_final')) {
     throw new MotivoFueraDelLibroIncoherente(
-      'El NIT del receptor no concuerda con el motivo de dejarla fuera del libro.',
+      'El NIT o CUI del receptor no concuerda con el motivo de dejarla fuera del libro.',
     );
+  }
+}
+
+/**
+ * El NIT o CUI al que dice el documento que se emitió la FEL, normalizado; sin texto es `null`.
+ * @throws ReceptorInvalido si no es un NIT ni un CUI válido.
+ */
+export function receptorDelDocumento(texto: string | null): string | null {
+  if (!texto?.trim()) return null;
+  try {
+    return Nit.crear(texto).valor;
+  } catch (error) {
+    if (!(error instanceof NitInvalido)) throw error;
+  }
+  try {
+    return Dpi.crear(texto).valor;
+  } catch (error) {
+    if (error instanceof DpiInvalido) throw new ReceptorInvalido(texto);
+    throw error;
   }
 }

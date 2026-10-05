@@ -65,6 +65,7 @@ export const documentos = esquemaLibroDeCompras.table(
     anuladoEn: timestamp({ withTimezone: true }),
     anuladoPor: uuid(),
     motivoDeAnulacion: text(),
+    causaDeAnulacion: text().$type<'error_de_captura' | 'fel_anulada_por_el_emisor' | 'no_corresponde_a_la_empresa'>(),
     ...marcasDeTiempo,
     ...autoria,
   },

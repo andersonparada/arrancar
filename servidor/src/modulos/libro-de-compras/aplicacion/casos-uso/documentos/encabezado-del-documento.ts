@@ -1,9 +1,10 @@
-import { Nit } from '../../../../core/compartido/dominio/objetos-valor/nit.js';
 import { evaluarFueraDelLibro } from '../../../dominio/fuera-del-libro.js';
 import {
+  AVISO_DE_CAMBIO_DE_REGIMEN,
   exigirReceptorCoherente,
   exigirReciboFueraDelLibro,
   exigirTipoDelProveedor,
+  receptorDelDocumento,
   resolverEmisor,
   type EmisorResuelto,
 } from '../../../dominio/reglas-del-encabezado.js';
@@ -15,20 +16,21 @@ export interface EncabezadoResuelto {
   muestraEnReportesSat: boolean;
   emisor: EmisorResuelto;
   nitReceptor: string | null;
+  /** El tipo no correspondía al régimen guardado del proveedor y el usuario confirmó el cambio: hay que auditarlo. */
+  cambioDeRegimenConfirmado: boolean;
   avisos: string[];
 }
 
-/** El NIT al que dice el documento que se emitió; sin NIT queda `null`. */
-const receptorEscrito = (solicitud: SolicitudDeDocumento): string | null =>
-  solicitud.nitReceptor?.trim() ? Nit.crear(solicitud.nitReceptor).valor : null;
+/** El NIT o CUI al que dice el documento que se emitió; sin dato queda `null`. */
+const receptorEscrito = (solicitud: SolicitudDeDocumento): string | null => receptorDelDocumento(solicitud.nitReceptor);
 
 /**
- * Lo que se guarda en `nit_receptor`: el NIT de la empresa si el documento va en el libro o no tiene FEL; si es
- * una FEL a otro NIT o a consumidor final, el que dice el documento.
+ * Lo que se guarda en `nit_receptor`: el NIT de la empresa si el documento va en el libro; nada si no tiene FEL; y
+ * si es una FEL a otro NIT (o CUI) o a consumidor final, el que dice el documento.
  */
 function receptorGuardado(solicitud: SolicitudDeDocumento, contexto: ContextoFiscal): string | null {
-  const dicho = solicitud.motivoFueraDelLibro === null || solicitud.motivoFueraDelLibro === 'sin_fel';
-  return dicho ? contexto.nitDeLaEmpresa : receptorEscrito(solicitud);
+  if (solicitud.motivoFueraDelLibro === null) return contexto.nitDeLaEmpresa;
+  return solicitud.motivoFueraDelLibro === 'sin_fel' ? null : receptorEscrito(solicitud);
 }
 
 /** La casilla «Se muestra en reportes SAT» con sus avisos; una FEL a la empresa no se desmarca. */
@@ -52,7 +54,11 @@ function evaluarCasilla(solicitud: SolicitudDeDocumento, contexto: ContextoFisca
 export function resolverEncabezado(solicitud: SolicitudDeDocumento, contexto: ContextoFiscal): EncabezadoResuelto {
   const fuera = evaluarCasilla(solicitud, contexto);
   exigirReciboFueraDelLibro(solicitud.tipo, fuera.muestraEnReportesSat);
-  exigirTipoDelProveedor(solicitud.tipo, contexto.datosDelProveedor.instantanea().esPequenoContribuyente);
+  const cambioDeRegimen = exigirTipoDelProveedor(
+    solicitud.tipo,
+    contexto.datosDelProveedor.instantanea().esPequenoContribuyente,
+    solicitud.confirmarCambioDeRegimen,
+  );
   const emisor = resolverEmisor({
     muestraEnReportesSat: fuera.muestraEnReportesSat,
     nitEmisor: solicitud.nitEmisor,
@@ -64,6 +70,7 @@ export function resolverEncabezado(solicitud: SolicitudDeDocumento, contexto: Co
     muestraEnReportesSat: fuera.muestraEnReportesSat,
     emisor,
     nitReceptor: receptorGuardado(solicitud, contexto),
-    avisos: fuera.avisos,
+    cambioDeRegimenConfirmado: cambioDeRegimen,
+    avisos: [...fuera.avisos, ...(cambioDeRegimen ? [AVISO_DE_CAMBIO_DE_REGIMEN] : [])],
   };
 }

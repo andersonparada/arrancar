@@ -5,6 +5,11 @@ import { calcularDocumento, type DocumentoCalculado } from '../../../dominio/cal
 import { calcularRetenciones } from '../../../dominio/calculador-de-retenciones.js';
 import type { DocumentoDeCompra, RetencionDeDocumento } from '../../../dominio/documento-de-compra.js';
 import { primerDiaDelMes } from '../../../dominio/periodo-del-libro.js';
+import {
+  aplicarRetencionPracticada,
+  type DocumentoAnuladoConRetenciones,
+  type RetencionesConPracticada,
+} from '../../../dominio/retencion-practicada.js';
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
 import type { FacturaParaNota } from '../../puertos/puertos-de-documentos.js';
 import type { ContextoFiscal } from './cargador-de-contexto-fiscal.js';
@@ -18,6 +23,8 @@ export interface DocumentoResuelto {
   factura: FacturaParaNota | null;
   calculado: DocumentoCalculado;
   retenciones: RetencionDeDocumento[];
+  /** Lo que el sistema dejó en cero por una retención ya practicada en un documento anulado, y su aviso. */
+  practicada: Pick<RetencionesConPracticada, 'enCero' | 'avisos'>;
 }
 
 /** Calcula líneas, IVA y motivo del documento con lo que ya se resolvió (reglas de `calcularDocumento`). */
@@ -46,13 +53,18 @@ export function calcularElDocumento(
   });
 }
 
-/** Las retenciones que propone el sistema, con los ajustes del usuario ya aplicados (fijadas con su fecha). */
+/**
+ * Las retenciones que propone el sistema (en cero las ya practicadas en un documento anulado), con los ajustes del
+ * usuario ya aplicados y fijadas con su fecha.
+ */
 export function retencionesDelDocumento(
   solicitud: SolicitudDeDocumento,
   contexto: ContextoFiscal,
-  resuelto: Pick<DocumentoResuelto, 'encabezado' | 'lineas' | 'calculado'>,
-): RetencionDeDocumento[] {
-  const propuestas = calcularRetenciones({
+  resuelto: Pick<DocumentoResuelto, 'encabezado' | 'lineas' | 'calculado'> & {
+    anulado: DocumentoAnuladoConRetenciones | null;
+  },
+): Pick<DocumentoResuelto, 'retenciones' | 'practicada'> {
+  const calculadas = calcularRetenciones({
     tipo: solicitud.tipo,
     muestraEnReportesSat: resuelto.encabezado.muestraEnReportesSat,
     documento: resuelto.calculado,
@@ -61,15 +73,14 @@ export function retencionesDelDocumento(
     proveedor: contexto.datosDelProveedor,
     configuracion: contexto.configuracion.retenciones,
   });
+  const { propuestas, ...practicada } = aplicarRetencionPracticada(calculadas, resuelto.anulado);
   const ajustes = solicitud.ajustesDeRetenciones.map((ajuste) => ({
     regla: ajuste.regla,
     monto: aCentavos(ajuste.monto),
     motivo: ajuste.motivo,
   }));
-  return fijarRetenciones(propuestas, ajustes, {
-    emision: solicitud.fechaEmision,
-    recepcion: contexto.fechaDeRecepcion,
-  });
+  const fechas = { emision: solicitud.fechaEmision, recepcion: contexto.fechaDeRecepcion };
+  return { retenciones: fijarRetenciones(propuestas, ajustes, fechas), practicada };
 }
 
 type EncabezadoDeDocumento = Omit<DocumentoDeCompra, 'totales' | 'lineas' | 'retenciones'>;

@@ -82,7 +82,7 @@ describe('registrar un documento: el proveedor y su NIT (H10)', () => {
       autorizacionFel: null,
     });
 
-    expect(documento).toMatchObject({ nitEmisor: null, muestraEnReportesSat: false, nitReceptor: '12345679' });
+    expect(documento).toMatchObject({ nitEmisor: null, muestraEnReportesSat: false, nitReceptor: null });
     expect(completadorDeNit.llamadas).toEqual([]);
   });
 

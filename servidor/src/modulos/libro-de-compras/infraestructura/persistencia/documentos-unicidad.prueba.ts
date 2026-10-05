@@ -83,6 +83,7 @@ describe('documentos marcados: únicos en toda la instalación', () => {
       anuladoEn: new Date(),
       anuladoPor: e.usuarioId,
       motivoDeAnulacion: 'Error',
+      causaDeAnulacion: 'error_de_captura' as const,
     };
     await enTransaccionSegura(enA1(), (tx) => tx.update(documentos).set(anulacion).where(eq(documentos.id, original)));
 
@@ -112,6 +113,7 @@ describe('documentos desmarcados: únicos por proveedor dentro de la empresa', (
       anuladoEn: new Date(),
       anuladoPor: e.usuarioId,
       motivoDeAnulacion: 'Error',
+      causaDeAnulacion: 'error_de_captura' as const,
     };
     await enTransaccionSegura(enA1(), (tx) => tx.update(documentos).set(anulacion).where(eq(documentos.id, original)));
 

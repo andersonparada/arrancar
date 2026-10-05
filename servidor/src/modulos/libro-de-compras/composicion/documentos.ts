@@ -9,6 +9,7 @@ import { PrevisualizarDocumento } from '../aplicacion/casos-uso/documentos/previ
 import { RegistrarDocumento } from '../aplicacion/casos-uso/documentos/registrar-documento.js';
 import { DocumentosControlador } from '../http/documentos.controlador.js';
 import { rutasDeDocumentos } from '../http/documentos.rutas.js';
+import { CalendarioDeLunesAViernes } from '../dominio/calendario-laboral.js';
 import { ConfiguracionFiscalEnConfiguracion } from '../infraestructura/configuracion-fiscal-en-configuracion.js';
 import { ControlDePeriodosSinBloqueo } from '../infraestructura/control-de-periodos-sin-bloqueo.js';
 import { DestinosDeDocumentosEnMediador } from '../infraestructura/destinos-de-documentos-en-mediador.js';
@@ -37,6 +38,7 @@ function dependenciasDeDocumentos() {
     datosFiscalesDeEmpresa: new RepositorioDeDatosFiscalesDeEmpresaDrizzle(),
     datosFiscalesDeProveedor: new RepositorioDeDatosFiscalesDeProveedorDrizzle(),
     configuracion: new ConfiguracionFiscalEnConfiguracion(),
+    calendario: new CalendarioDeLunesAViernes(),
     catalogos: new CatalogosParaDocumentosDrizzle(),
     consultas: new ConsultasDeDocumentosDrizzle(),
     destinos: new DestinosDeDocumentosEnMediador(new ModulosActivosDeLaCuentaEnRegistro()),

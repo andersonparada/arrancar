@@ -1,4 +1,6 @@
+import { AVISO_DE_PERIODO_PASADO, primerDiaDelMes } from './periodo-del-libro.js';
 import {
+  CausaDeAnulacionInvalida,
   DocumentoConNotas,
   DocumentoConNotasVigentes,
   DocumentoProcesadoEnElDestino,
@@ -7,6 +9,14 @@ import {
 } from './errores-de-baja.js';
 
 const MAXIMO_DEL_MOTIVO = 300;
+
+/** Por qué se anula el registro (no la FEL: solo su emisor la anula en la SAT). */
+export const CAUSAS_DE_ANULACION = [
+  'error_de_captura',
+  'fel_anulada_por_el_emisor',
+  'no_corresponde_a_la_empresa',
+] as const;
+export type CausaDeAnulacion = (typeof CAUSAS_DE_ANULACION)[number];
 
 /** Lo que se sabe de un documento para decidir si se anula o se elimina. */
 export interface HechosDeUnDocumento {
@@ -60,4 +70,19 @@ export function motivoDeAnulacionValido(motivo: string): string {
   const limpio = motivo.trim();
   if (limpio.length === 0 || limpio.length > MAXIMO_DEL_MOTIVO) throw new MotivoDeAnulacionInvalido();
   return limpio;
+}
+
+/** @throws CausaDeAnulacionInvalida si no es una de `CAUSAS_DE_ANULACION`. */
+export function causaDeAnulacionValida(causa: string): CausaDeAnulacion {
+  const conocida = CAUSAS_DE_ANULACION.find((posible) => posible === causa);
+  if (!conocida) throw new CausaDeAnulacionInvalida();
+  return conocida;
+}
+
+/**
+ * Aviso de anular o eliminar un documento de un período anterior al mes actual: puede estar declarado y habrá que
+ * rectificar. `hoy` lo da quien llama (el dominio no lee el reloj).
+ */
+export function avisosDeBajaPorPeriodo(periodo: string, hoy: string): string[] {
+  return periodo < primerDiaDelMes(hoy) ? [AVISO_DE_PERIODO_PASADO] : [];
 }

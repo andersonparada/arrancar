@@ -23,6 +23,13 @@ export function sumarMeses(fecha: string, meses: number): string {
   return `${Math.floor(indice / 12)}-${String((indice % 12) + 1).padStart(2, '0')}-01`;
 }
 
+/** La misma fecha `meses` después, o el último día de ese mes si no existe: `2026-12-31` + 2 → `2027-02-28`. */
+export function sumarMesesALaFecha(fecha: string, meses: number): string {
+  const primero = sumarMeses(fecha, meses);
+  const ultimoDia = new Date(Date.UTC(Number(primero.slice(0, 4)), Number(primero.slice(5, 7)), 0)).getUTCDate();
+  return `${primero.slice(0, 8)}${String(Math.min(Number(fecha.slice(8, 10)), ultimoDia)).padStart(2, '0')}`;
+}
+
 /** Último período en que la factura aún da crédito: el mes de emisión más dos. */
 export function ultimoPeriodoConCredito(fechaDeEmision: string): string {
   return sumarMeses(fechaDeEmision, MESES_DE_PLAZO_DEL_CREDITO);
@@ -50,7 +57,7 @@ export function periodoPropuesto(fechas: FechasDelDocumento): string {
   return recepcion > emision ? recepcion : emision;
 }
 
-const AVISO_DE_PERIODO_PASADO = 'Ese período puede estar declarado: si ya lo presentó, tendrá que rectificar.';
+export const AVISO_DE_PERIODO_PASADO = 'Ese período puede estar declarado: si ya lo presentó, tendrá que rectificar.';
 const AVISO_DE_ANIO_ANTERIOR = 'El gasto cae en un año que puede estar cerrado; consulte a su contador.';
 
 export interface DatosDeAvisosDelPeriodo {

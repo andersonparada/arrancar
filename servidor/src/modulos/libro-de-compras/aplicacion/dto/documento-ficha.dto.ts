@@ -1,3 +1,4 @@
+import type { CausaDeAnulacion } from '../../dominio/baja-de-documento.js';
 import type { DocumentoDto } from './documento.dto.js';
 
 /** Una nota de crédito que rebaja la factura de la ficha; el dinero, como texto con dos decimales. */
@@ -18,6 +19,8 @@ export interface DocumentoFichaDto extends DocumentoDto {
   anuladoEn: string | null;
   anuladoPor: string | null;
   motivoDeAnulacion: string | null;
+  /** Por qué se anuló el registro; `null` si está vigente. */
+  causaDeAnulacion: CausaDeAnulacion | null;
   /** Cuándo lo procesó el destino (ISO 8601); `null` si sigue pendiente. */
   procesadoEnDestinoEn: string | null;
   /** Lo calcula el servidor (ver `accionesDeDocumento`): vigente y sin notas de crédito vigentes. */
@@ -26,4 +29,15 @@ export interface DocumentoFichaDto extends DocumentoDto {
   puedeEliminar: boolean;
   /** Las notas de crédito que rebajan esta factura, también las anuladas; vacío si no es una factura. */
   notas: NotaDeFacturaDto[];
+}
+
+/** Lo que responde anular: la ficha del documento anulado y los avisos que no bloquean (período que puede estar declarado). */
+export interface AnulacionDeDocumentoDto {
+  documento: DocumentoFichaDto;
+  avisos: string[];
+}
+
+/** Lo que responde eliminar: solo los avisos que no bloquean (período que puede estar declarado). */
+export interface EliminacionDeDocumentoDto {
+  avisos: string[];
 }

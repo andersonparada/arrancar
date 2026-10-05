@@ -54,7 +54,10 @@ beforeAll(async () => {
   await registrar('anterior', { numero: 'C-3', fechaEmision: haceDias(70), fechaRecepcion: haceDias(65) });
   await registrar('otro', { numero: 'C-4', proveedorId: otroProveedorId, nitEmisor: nitValido('9988771') });
   await registrar('nota', { numero: 'C-5', tipo: 'nota_de_credito', documentoAfectadoId: ids.uno, serie: 'N' });
-  await propietario().post(`${RUTA_DOCUMENTOS}/${ids.anterior}/anular`, { motivo: 'Error de captura' });
+  await propietario().post(`${RUTA_DOCUMENTOS}/${ids.anterior}/anular`, {
+    causa: 'error_de_captura',
+    motivo: 'Error de captura',
+  });
 });
 
 afterAll(() => vi.restoreAllMocks());
@@ -64,7 +67,7 @@ describe('lista de documentos', () => {
     const respuesta = await listar();
 
     expect(respuesta.estado).toBe(200);
-    expect(respuesta.cuerpo).toMatchObject({ total: 5, pagina: 1, limite: 50 });
+    expect(respuesta.cuerpo).toMatchObject({ total: 4, pagina: 1, limite: 50 });
     const retenido = respuesta.cuerpo.elementos.find((fila: { id: string }) => fila.id === ids.retenido);
     expect(retenido).toMatchObject({
       tipo: 'factura',
@@ -80,7 +83,7 @@ describe('lista de documentos', () => {
   });
 
   it('una factura con una nota vigente no ofrece anular ni eliminar, y uno anulado tampoco', async () => {
-    const filas = (await listar()).cuerpo.elementos;
+    const filas = (await listar('?estado=todos')).cuerpo.elementos;
 
     const poId = (id: string | undefined) => filas.find((fila: { id: string }) => fila.id === id);
     expect(poId(ids.uno)).toMatchObject({ puedeAnular: false, puedeEliminar: false });
@@ -89,7 +92,7 @@ describe('lista de documentos', () => {
   });
 
   it('filtra por período, proveedor, estado, destino y tipo', async () => {
-    const delMesAnterior = await listar(`?periodo=${haceDias(65)}`);
+    const delMesAnterior = await listar(`?periodo=${haceDias(65)}&estado=todos`);
     const delMesActual = await listar(`?periodo=${HOY}`);
     const delOtroProveedor = await listar(`?proveedorId=${otroProveedorId}`);
     const anulados = await listar('?estado=anulado');
@@ -98,6 +101,7 @@ describe('lista de documentos', () => {
     const aCuentasPorPagar = await listar('?destino=cuentas-por-pagar&estado=vigente');
 
     expect(numeros(delMesAnterior)).toEqual(['C-3']);
+    expect(numeros(await listar(`?periodo=${haceDias(65)}`))).toEqual([]);
     expect(numeros(delMesActual)).toEqual(['C-1', 'C-2', 'C-4', 'C-5']);
     expect(numeros(delOtroProveedor)).toEqual(['C-4']);
     expect(numeros(anulados)).toEqual(['C-3']);
@@ -107,8 +111,8 @@ describe('lista de documentos', () => {
   });
 
   it('pagina: ordena del período más reciente al más antiguo y dice cuántos hay en total', async () => {
-    const primera = await listar('?limite=2&pagina=1');
-    const ultima = await listar('?limite=2&pagina=3');
+    const primera = await listar('?limite=2&pagina=1&estado=todos');
+    const ultima = await listar('?limite=2&pagina=3&estado=todos');
 
     expect(primera.cuerpo).toMatchObject({ total: 5, pagina: 1, limite: 2 });
     expect(primera.cuerpo.elementos).toHaveLength(2);
@@ -129,7 +133,7 @@ describe('lista de documentos', () => {
     const propia = await listar();
 
     expect(ajena.cuerpo.total).toBe(1);
-    expect(propia.cuerpo.total).toBe(5);
+    expect(propia.cuerpo.total).toBe(4);
     expect((await ajeno.cuenta.propietario.get(`${RUTA_DOCUMENTOS}/${ids.uno}`)).estado).toBe(404);
   });
 });

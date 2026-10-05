@@ -3,6 +3,7 @@ import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import type { DocumentoParaDestino } from '../../../core/contratos/libro-de-compras.contratos.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { DocumentoDeCompra } from '../../dominio/documento-de-compra.js';
+import type { DocumentoAnuladoConRetenciones } from '../../dominio/retencion-practicada.js';
 import type { ConfiguracionDeRetenciones } from '../../dominio/retencion-propuesta.js';
 import type { MotivoSinCredito, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
@@ -84,6 +85,11 @@ export interface ConsultasDeDocumentos {
   buscarFacturaParaNota(id: string, bloquear: boolean): Promise<FacturaParaNota | null>;
   /** El destino del último documento que la empresa registró con ese proveedor. */
   ultimoDestinoDelProveedor(proveedorId: string): Promise<DestinoDeDocumento | null>;
+  /**
+   * El documento anulado más reciente de la empresa con la misma autorización FEL (o el mismo NIT del emisor, tipo,
+   * serie y número) que retuvo algo; `null` si no hay. Solo trae las retenciones con monto mayor que cero.
+   */
+  buscarAnuladoConRetenciones(clave: ClaveDeDocumento): Promise<DocumentoAnuladoConRetenciones | null>;
 }
 
 /** Destinos de los documentos: Cuentas por pagar y los demás módulos que los reciben (por el mediador). */

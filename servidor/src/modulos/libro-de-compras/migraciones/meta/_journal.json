@@ -71,6 +71,13 @@
       "when": 1791169504093,
       "tag": "0009_l3_fuera_del_libro_agente_isr_y_retencion_con_fecha",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791225580111,
+      "tag": "0010_l3_causa_de_anulacion",
+      "breakpoints": true
     }
   ]
 }

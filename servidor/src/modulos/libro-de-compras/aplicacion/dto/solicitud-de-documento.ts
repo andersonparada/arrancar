@@ -1,3 +1,4 @@
+import type { DatosFiscalesPedidos } from '../../dominio/datos-fiscales-del-documento.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { MotivoFueraDelLibro } from '../../dominio/fuera-del-libro.js';
 import type { ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
@@ -53,4 +54,11 @@ export interface SolicitudDeDocumento {
   observaciones: string | null;
   lineas: SolicitudDeLinea[];
   ajustesDeRetenciones: AjusteDeRetencionSolicitado[];
+  /**
+   * Régimen de ISR y si es agente del IVA, para un proveedor sin datos fiscales guardados: obligatorios en una
+   * factura del libro si la empresa retiene algo; se guardan con el documento. `null`: no vino.
+   */
+  datosFiscalesDelProveedor: DatosFiscalesPedidos | null;
+  /** El tipo no corresponde al régimen guardado del proveedor, pero el usuario confirma que cambió de régimen. */
+  confirmarCambioDeRegimen: boolean;
 }
