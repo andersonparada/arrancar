@@ -492,3 +492,43 @@ reporte «por resolver»); **causa de anulación** de una lista (`error_de_captu
 período anterior al mes actual al anular y eliminar; **protección contra la retención doble ya en L3**: al registrar,
 si hay un anulado con la misma autorización FEL (o NIT, serie y número), mostrar sus retenciones y proponer la nueva en
 0 con el motivo «practicada en el documento anulado X».
+
+## Libro de compras según el régimen de la empresa (contador-guatemala, 2026-10-05)
+
+Pedido del usuario: la app sirve a empresas de cualquier régimen, no solo al agente retenedor. Artículos de extractos
+coincidentes: confirmar en el texto vigente la Ley del IVA arts. 47, 49 y 54 «A» a «F», el Decreto 31-2024 y el AG 54-2026,
+el AG 5-2013 art. 10 y el paso del pequeño contribuyente al régimen general al superar Q150,000.
+
+| Régimen de la empresa | IVA de compras | Libro | Retenciones que practica |
+|---|---|---|---|
+| General, ISR sobre utilidades | Crédito (salvo motivos) | Completo con crédito | ISR art. 47; IVA solo si la SAT lo califica |
+| General, ISR opcional simplificado | Crédito | Completo | Igual; sin avisos de deducibilidad del ISR |
+| Pequeño contribuyente con contabilidad (S.A. o comerciante) | **Costo** (arts. 47 y 49) | Simplificado, sin crédito; las compras no se declaran | IVA no; 5 % no; ISR sí por art. 47 num. 1 (opinión: si es sociedad, retener) |
+| Pequeño contribuyente sin contabilidad / electrónico | **Costo** | Simplificado | Ninguna |
+| Agropecuario (Decreto 7-2019; solo personas individuales) | **Costo** | Simplificado; la compra de ganado sirve para su impuesto sobre utilidad | Ninguna, por lo general |
+| Primario y pecuario (Decreto 31-2024, desde abril de 2025) | **Costo** (inferencia, confirmar) | Electrónico habilitado | IVA no; ISR si es sociedad (confirmar) |
+| No afiliado (asociación o fundación sin ventas gravadas) | **Costo** (art. 16) | Registro interno | ISR sí (art. 47 las nombra) |
+| Cooperativa | Crédito (art. 7 num. 5) | Completo | Como el general |
+| Contribuyente especial, exportador | Crédito | Completo | Ya programado |
+
+Hueco encontrado: `calcularDocumento` no miraba el régimen de la **empresa**; en una empresa sin crédito el IVA salía como
+crédito.
+
+**Decisiones del usuario (2026-10-05), todas las recomendadas:**
+1. Motivo nuevo **`empresa_sin_credito`**: en empresas sin crédito todo el IVA va al costo de cada línea (se sigue
+   calculando y mostrando); no se evalúan `no_vinculado` ni el art. 20; sin avisos de fuera de plazo ni de rectificar.
+   En empresas sin ISR sobre utilidades los avisos de deducibilidad dicen solo la parte contable; el de factura especial
+   queda siempre (art. 52).
+2. **Seis regímenes de IVA de la empresa:** `general`, `pequeno_contribuyente`, `pequeno_contribuyente_electronico`,
+   `contribuyente_agropecuario`, `primario_pecuario`, `no_afiliado`. Agente de IVA distinto de «ninguno» solo en general.
+   `regimen_isr` nulo («no aplica») fuera de general y no afiliado; valor `exento` para entidades del art. 11.
+3. **Tipo de persona de la empresa** (`individual` o `juridica`): propone el agente de ISR (sociedad sí; individual
+   pequeño contribuyente o agropecuario no) y valida que agropecuario sea solo individual.
+4. **Foto del régimen en cada documento** (`regimen_iva_de_la_empresa`) e **historial con vigencia por período** de los
+   datos fiscales de la empresa: un documento usa el régimen de su período. Si la factura dio crédito y la nota cae en un
+   período sin crédito, la nota lleva `empresa_sin_credito` con aviso.
+5. Libro simplificado (sin columna de crédito, IVA informativo) para empresas sin crédito (L5).
+6. Prorrata (ventas gravadas y exentas): después de L5; por ahora `no_vinculado` por documento.
+7. **Paso propio, antes de producción**, para las compras a proveedores agropecuarios, primario y pecuario y pequeño
+   contribuyente electrónico (tipos de documento y retenciones; hoy se les propondría el 5 %, que no procede).
+8. Nada está instalado (fase de desarrollo): lo registrado en pruebas se anula, sin migraciones de corrección.
