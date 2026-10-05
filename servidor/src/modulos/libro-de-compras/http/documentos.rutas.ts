@@ -1,6 +1,11 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import type { DocumentosControlador } from './documentos.controlador.js';
+import {
+  esquemaAnulacionDeDocumento,
+  esquemaFiltroDeDocumentos,
+  esquemaParamsDeDocumento,
+} from './documentos.bajas.esquemas-http.js';
 import { esquemaDocumento, esquemaParamsDeProveedor } from './documentos.esquemas-http.js';
 
 const tags = ['Libro de compras'];
@@ -14,6 +19,7 @@ const RUTA = '/libro-de-compras/documentos';
 export function rutasDeDocumentos(controlador: DocumentosControlador): FastifyPluginAsyncZod {
   return async (app) => {
     const crear = proteger({ permiso: 'libro-de-compras.documentos.crear' });
+    rutasDeConsultaYBaja(app, controlador);
 
     app.post(`${RUTA}/calcular`, {
       schema: { tags, body: esquemaDocumento },
@@ -28,4 +34,26 @@ export function rutasDeDocumentos(controlador: DocumentosControlador): FastifyPl
       handler: controlador.destinoSugerido,
     });
   };
+}
+
+/** La lista y la ficha exigen `documentos.ver`; anular, `documentos.anular`; eliminar, `documentos.eliminar`. */
+function rutasDeConsultaYBaja(app: Parameters<FastifyPluginAsyncZod>[0], controlador: DocumentosControlador): void {
+  const params = esquemaParamsDeDocumento;
+  const ver = proteger({ permiso: 'libro-de-compras.documentos.ver' });
+  app.get(RUTA, {
+    schema: { tags, querystring: esquemaFiltroDeDocumentos },
+    preHandler: ver,
+    handler: controlador.listar,
+  });
+  app.get(`${RUTA}/:documentoId`, { schema: { tags, params }, preHandler: ver, handler: controlador.obtener });
+  app.post(`${RUTA}/:documentoId/anular`, {
+    schema: { tags, params, body: esquemaAnulacionDeDocumento },
+    preHandler: proteger({ permiso: 'libro-de-compras.documentos.anular' }),
+    handler: controlador.anular,
+  });
+  app.delete(`${RUTA}/:documentoId`, {
+    schema: { tags, params },
+    preHandler: proteger({ permiso: 'libro-de-compras.documentos.eliminar' }),
+    handler: controlador.eliminar,
+  });
 }

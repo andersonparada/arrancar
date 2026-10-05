@@ -719,9 +719,18 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
     (`CF` solo en la segunda), y así la regla de «FEL al NIT de la empresa» no se evade omitiéndolo. El tipo `recibo` se
     suma a `DocumentoParaDestino`. Si el proveedor no tiene datos fiscales se usan los valores por omisión con un aviso
     (el diseño pedía exigirlos; ver el informe de L3-5).
-16. **L3-6 (servidor):** listar y ficha, `AnularDocumento`, `EliminarDocumento`, órdenes
+16. **L3-6 (servidor, hecho 2026-10-04):** listar y ficha, `AnularDocumento`, `EliminarDocumento`, órdenes
     atendidas (`marcar_procesado`, `anular_documento`,
     `eliminar_documento`), avisos al destino, vigencia usada (L2-3) conectada.
+    Notas de L3-6: `GET …/documentos` (filtros `periodo`, `proveedorId`, `estado`, `destino`, `tipo`; `pagina` y `limite`,
+    50 por omisión y 200 como máximo; responde `{ elementos, total, pagina, limite }`) y `GET …/documentos/:id` exigen
+    `documentos.ver`; `POST …/documentos/:id/anular` (`{ motivo }`), `documentos.anular`; `DELETE …/documentos/:id`,
+    `documentos.eliminar`. Se elimina solo lo **vigente**, pendiente en el destino y **sin ninguna nota** (también las
+    anuladas cuentan, porque la llave foránea las ve); lo anulado se queda como rastro. Anular y eliminar piden
+    `ControlDePeriodos.exigirAbierto` (hoy sin bloqueo). Las órdenes `anular_documento` y `eliminar_documento` traen un
+    `origen` opcional: el destino que pide ya hizo lo suyo y no recibe el aviso (así no hay ciclo). `marcar_procesado`
+    no se audita y rechaza marcar uno anulado. Una vigencia de combustible usada solo por documentos anulados deja de
+    contar como en uso (se puede cambiar su tasa), pero no se elimina: la línea anulada la sigue apuntando (llave foránea).
 17. **L3-7 (cliente):** Ingreso de facturas: lista con filtros (período, proveedor, estado,
     destino) y ficha con anular y eliminar (menú Operación).
 18. **L3-8 (cliente):** formulario en página: encabezado (proveedor con destino sugerido, NIT

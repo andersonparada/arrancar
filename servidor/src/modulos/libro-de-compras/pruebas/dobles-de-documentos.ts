@@ -1,6 +1,7 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import type { DocumentoParaDestino } from '../../core/contratos/libro-de-compras.contratos.js';
 import type {
+  AvisoDeBaja,
   CatalogosParaDocumentos,
   ClaveDeDocumento,
   CombustibleConTasa,
@@ -82,6 +83,10 @@ export class DestinosEnMemoria implements DestinosDeDocumentos {
   readonly recibidos: DocumentoParaDestino[] = [];
   instalados: DestinoDeDocumento[] = ['cuentas-por-pagar'];
   fallo: Error | null = null;
+  readonly avisosDeAnular: Array<AvisoDeBaja & { motivo: string }> = [];
+  readonly avisosDeEliminar: AvisoDeBaja[] = [];
+  falloAlAnular: Error | null = null;
+  falloAlEliminar: Error | null = null;
 
   async activos(_operador: Operador): Promise<DestinoDeDocumento[]> {
     return this.instalados;
@@ -90,6 +95,16 @@ export class DestinosEnMemoria implements DestinosDeDocumentos {
   async recibir(_operador: Operador, _destino: DestinoDeDocumento, documento: DocumentoParaDestino): Promise<void> {
     if (this.fallo) throw this.fallo;
     this.recibidos.push(documento);
+  }
+
+  async avisarPorAnular(_operador: Operador, aviso: AvisoDeBaja & { motivo: string }): Promise<void> {
+    if (this.falloAlAnular) throw this.falloAlAnular;
+    this.avisosDeAnular.push(aviso);
+  }
+
+  async avisarPorEliminar(_operador: Operador, aviso: AvisoDeBaja): Promise<void> {
+    if (this.falloAlEliminar) throw this.falloAlEliminar;
+    this.avisosDeEliminar.push(aviso);
   }
 }
 

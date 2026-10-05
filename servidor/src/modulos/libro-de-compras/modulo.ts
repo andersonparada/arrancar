@@ -60,6 +60,14 @@ export const moduloLibroDeCompras: DefinicionModulo = {
       descripcion: 'Registrar documentos de compra (facturas, notas de crédito y recibos)',
     },
     {
+      clave: 'libro-de-compras.documentos.anular',
+      descripcion: 'Anular documentos de compra (el número queda libre y el destino revierte lo suyo)',
+    },
+    {
+      clave: 'libro-de-compras.documentos.eliminar',
+      descripcion: 'Eliminar documentos de compra que no se han procesado en su destino',
+    },
+    {
       clave: 'libro-de-compras.retenciones.ajustar',
       descripcion: 'Cambiar o quitar las retenciones que el sistema propone al registrar un documento',
     },

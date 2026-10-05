@@ -28,9 +28,18 @@ declare module './mediador.contratos.js' {
   interface OrdenesEntreModulos {
     /** El destino marca el documento como procesado (`true`) o lo devuelve a pendiente (`false`). */
     'libro-de-compras.marcar_procesado': { datos: { documentoId: string; procesado: boolean }; respuesta: void };
-    /** El destino anula o elimina desde su pantalla; Libro de compras aplica sus reglas. */
-    'libro-de-compras.anular_documento': { datos: { documentoId: string; motivo: string }; respuesta: void };
-    'libro-de-compras.eliminar_documento': { datos: { documentoId: string }; respuesta: void };
+    /**
+     * El destino anula o elimina desde su pantalla; Libro de compras aplica sus reglas. `origen` es el destino que
+     * pide: como ya hizo lo suyo, Libro de compras no le devuelve el aviso (así no hay ciclo de avisos).
+     */
+    'libro-de-compras.anular_documento': {
+      datos: { documentoId: string; motivo: string; origen?: DestinoDeDocumento };
+      respuesta: void;
+    };
+    'libro-de-compras.eliminar_documento': {
+      datos: { documentoId: string; origen?: DestinoDeDocumento };
+      respuesta: void;
+    };
   }
   interface AvisosEntreModulos {
     /** Antes de anular: el destino revierte lo suyo o lanza su error (se deshace todo). Su manejador es idempotente. */

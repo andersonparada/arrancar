@@ -12,3 +12,27 @@ export class DocumentoRegistrado extends EventoDominio<DatosDelDocumentoRegistra
     super(datos);
   }
 }
+
+export interface DatosDeBajaDeDocumento {
+  documentoId: string;
+  empresaId: string;
+  destino: DestinoDeDocumento;
+}
+
+/** Un documento quedó anulado (sigue en el libro como rastro, sin su número). Se publica tras confirmar. */
+export class DocumentoAnulado extends EventoDominio<DatosDeBajaDeDocumento> {
+  readonly nombre = 'libro-de-compras.documento_anulado';
+
+  constructor(datos: DatosDeBajaDeDocumento) {
+    super(datos);
+  }
+}
+
+/** Un documento se eliminó del libro. Se publica tras confirmar. */
+export class DocumentoEliminado extends EventoDominio<DatosDeBajaDeDocumento> {
+  readonly nombre = 'libro-de-compras.documento_eliminado';
+
+  constructor(datos: DatosDeBajaDeDocumento) {
+    super(datos);
+  }
+}

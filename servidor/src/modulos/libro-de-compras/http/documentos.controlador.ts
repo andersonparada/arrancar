@@ -5,8 +5,16 @@ import type {
   ListarDestinos,
   ObtenerDestinoSugerido,
 } from '../aplicacion/casos-uso/documentos/consultas-del-formulario.js';
+import type { AnularDocumento } from '../aplicacion/casos-uso/documentos/anular-documento.js';
+import type { ListarDocumentos, ObtenerDocumento } from '../aplicacion/casos-uso/documentos/consultar-documentos.js';
+import type { EliminarDocumento } from '../aplicacion/casos-uso/documentos/eliminar-documento.js';
 import type { PrevisualizarDocumento } from '../aplicacion/casos-uso/documentos/previsualizar-documento.js';
 import type { PeticionDeRegistro, RegistrarDocumento } from '../aplicacion/casos-uso/documentos/registrar-documento.js';
+import type {
+  AnulacionDeDocumentoSolicitada,
+  FiltroDeDocumentosSolicitado,
+  ParamsDeDocumento,
+} from './documentos.bajas.esquemas-http.js';
 import type { DocumentoSolicitado, ParamsDeProveedorDeDocumento } from './documentos.esquemas-http.js';
 
 export interface CasosDeUsoDeDocumentos {
@@ -14,6 +22,10 @@ export interface CasosDeUsoDeDocumentos {
   registrar: RegistrarDocumento;
   destinoSugerido: ObtenerDestinoSugerido;
   destinos: ListarDestinos;
+  listar: ListarDocumentos;
+  obtener: ObtenerDocumento;
+  anular: AnularDocumento;
+  eliminar: EliminarDocumento;
 }
 
 const PERMISO_DE_AJUSTAR = 'libro-de-compras.retenciones.ajustar';
@@ -34,6 +46,25 @@ export class DocumentosControlador {
     this.casosDeUso.destinoSugerido.ejecutar(operadorDe(solicitud), solicitud.params.proveedorId);
 
   destinos = (solicitud: FastifyRequest) => this.casosDeUso.destinos.ejecutar(operadorDe(solicitud));
+
+  listar = (solicitud: FastifyRequest<{ Querystring: FiltroDeDocumentosSolicitado }>) => {
+    const { pagina, limite, ...filtro } = solicitud.query;
+    return this.casosDeUso.listar.ejecutar(operadorDe(solicitud), filtro, { pagina, limite });
+  };
+
+  obtener = (solicitud: FastifyRequest<{ Params: ParamsDeDocumento }>) =>
+    this.casosDeUso.obtener.ejecutar(operadorDe(solicitud), solicitud.params.documentoId);
+
+  anular = (solicitud: FastifyRequest<{ Params: ParamsDeDocumento; Body: AnulacionDeDocumentoSolicitada }>) =>
+    this.casosDeUso.anular.ejecutar(operadorDe(solicitud), {
+      documentoId: solicitud.params.documentoId,
+      motivo: solicitud.body.motivo,
+    });
+
+  eliminar = async (solicitud: FastifyRequest<{ Params: ParamsDeDocumento }>, respuesta: FastifyReply) => {
+    await this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), { documentoId: solicitud.params.documentoId });
+    return respuesta.status(204).send();
+  };
 }
 
 function peticionDe(solicitud: FastifyRequest<{ Body: DocumentoSolicitado }>): PeticionDeRegistro {

@@ -92,6 +92,16 @@ export interface DestinosDeDocumentos {
   activos(operador: Operador): Promise<DestinoDeDocumento[]>;
   /** Orden `<destino>.recibir_documento`, dentro de la transacción en curso. */
   recibir(operador: Operador, destino: DestinoDeDocumento, documento: DocumentoParaDestino): Promise<void>;
+  /** Aviso `documento_por_anular`, antes de anular: el destino revierte lo suyo o lanza su error. */
+  avisarPorAnular(operador: Operador, aviso: AvisoDeBaja & { motivo: string }): Promise<void>;
+  /** Aviso `documento_por_eliminar`, antes de eliminar: el destino borra lo suyo o lanza su error. */
+  avisarPorEliminar(operador: Operador, aviso: AvisoDeBaja): Promise<void>;
+}
+
+/** A qué destino y de qué documento se avisa una baja. */
+export interface AvisoDeBaja {
+  documentoId: string;
+  destino: DestinoDeDocumento;
 }
 
 /** Datos de la empresa activa que guarda el módulo de Empresas. */

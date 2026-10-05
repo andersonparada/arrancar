@@ -3,6 +3,7 @@ import { expect, vi } from 'vitest';
 import { configuracion } from '../../configuracion.js';
 import { ReglaDeNegocioInfringida } from '../../modulos/core/compartido/dominio/errores.js';
 import '../../modulos/core/contratos/cuentas-por-pagar.contratos.js';
+import '../../modulos/core/contratos/libro-de-compras.contratos.js';
 import type { DocumentoParaDestino } from '../../modulos/core/contratos/libro-de-compras.contratos.js';
 import { mediador } from '../../modulos/core/mediador/contexto.js';
 import { ModulosActivosDeLaCuentaEnRegistro } from '../../modulos/core/mediador/infraestructura/modulos-activos-de-la-cuenta-en-registro.js';
@@ -26,11 +27,35 @@ export interface DestinoFalso {
   recibidos: DocumentoParaDestino[];
   rechazar: boolean;
   instalado: boolean;
+  /** Los avisos `documento_por_anular` y `documento_por_eliminar` que recibió, en orden. */
+  avisosDeBaja: Array<{ aviso: 'anular' | 'eliminar'; documentoId: string; motivo?: string }>;
+  /** Rechaza las bajas (anular y eliminar) lanzando su error, como un destino que ya pagó el documento. */
+  rechazarBajas: boolean;
+}
+
+function escucharBajas(destino: DestinoFalso): void {
+  const registrar = (aviso: 'anular' | 'eliminar', documentoId: string, motivo?: string) => {
+    destino.avisosDeBaja.push({ aviso, documentoId, motivo });
+    if (destino.rechazarBajas) throw new DestinoRechaza('El destino no acepta la baja del documento.');
+  };
+  mediador.escuchar('cuentas-por-pagar', 'libro-de-compras.documento_por_anular', async (datos) =>
+    registrar('anular', datos.documentoId, datos.motivo),
+  );
+  mediador.escuchar('cuentas-por-pagar', 'libro-de-compras.documento_por_eliminar', async (datos) =>
+    registrar('eliminar', datos.documentoId),
+  );
 }
 
 /** Registra el manejador de `cuentas-por-pagar.recibir_documento` y hace que el módulo figure como activo. */
 export function instalarDestinoFalso(): DestinoFalso {
-  const destino: DestinoFalso = { recibidos: [], rechazar: false, instalado: true };
+  const destino: DestinoFalso = {
+    recibidos: [],
+    rechazar: false,
+    instalado: true,
+    avisosDeBaja: [],
+    rechazarBajas: false,
+  };
+  escucharBajas(destino);
   mediador.atender('cuentas-por-pagar', 'cuentas-por-pagar.recibir_documento', async (documento) => {
     destino.recibidos.push(documento);
     if (destino.rechazar) throw new DestinoRechaza('El destino rechazó el documento.');

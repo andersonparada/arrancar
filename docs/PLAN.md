@@ -688,3 +688,17 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `DocumentoParaDestino`; el aviso de entero del ISR cuenta desde el mes de recepción; sin datos fiscales del proveedor se usan
   los valores por omisión con aviso (no se exigen); una FEL fuera del libro exige el NIT del receptor. Pruebas de API con
   un manejador falso de `cuentas-por-pagar.recibir_documento`.
+
+- **2026-10-04 · Libro de compras L3-6: lista, ficha, anular y eliminar documentos (servidor).** Casos de uso
+  `ListarDocumentos`, `ObtenerDocumento`, `AnularDocumento` (motivo de 1 a 300; aviso `documento_por_anular` antes de
+  cambiar; estado `anulado` con fecha y usuario; libera el número por los índices parciales; auditoría `anular` con la
+  ficha anterior; no se anula una factura con notas vigentes; evento `documento_anulado` tras confirmar),
+  `EliminarDocumento` (solo lo vigente, sin procesar en el destino y sin notas; aviso `documento_por_eliminar`; auditoría
+  `eliminar`; borrado en cascada; evento `documento_eliminado`) y `MarcarDocumentoProcesado`. Las tres órdenes
+  (`marcar_procesado`, `anular_documento`, `eliminar_documento`) las atiende Libro de compras con esos mismos casos de
+  uso; las dos bajas aceptan `origen` (el destino que pide no recibe su propio aviso). Rutas `GET /documentos` (filtros
+  y paginación), `GET /documentos/:id`, `POST /documentos/:id/anular` y `DELETE /documentos/:id`; permisos nuevos
+  `documentos.anular` y `documentos.eliminar`. La lista y la ficha informan `puedeAnular` y `puedeEliminar`. Decisiones:
+  Bancos no pagina sus listas, así que la paginación (`pagina`, `limite`) es nueva; un documento anulado no se elimina;
+  eliminar también revisa el período abierto. Pruebas de API con el destino falso (permisos, filtros, anular, eliminar,
+  órdenes, auditoría, eventos tras confirmar y vigencia de combustible).

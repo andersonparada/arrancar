@@ -8,6 +8,7 @@ import {
 import type { DependenciasDelPreparador } from '../aplicacion/casos-uso/documentos/preparador-de-documento.js';
 import type { SolicitudDeDocumento } from '../aplicacion/dto/solicitud-de-documento.js';
 import type { CompletadorDeNit, RepositorioDeDocumentos } from '../aplicacion/puertos/puertos-de-documentos.js';
+import { DocumentosGuardadosEnMemoria } from './dobles-de-bajas-de-documentos.js';
 import { DatosFiscalesDeEmpresaEnMemoria, DatosFiscalesDeProveedorEnMemoria } from './dobles-de-datos-fiscales.js';
 import {
   CatalogosEnMemoria,
@@ -87,6 +88,8 @@ export function crearEscenario() {
   const datosDeEmpresa = new DatosFiscalesDeEmpresaEnMemoria();
   const publicadorEventos = new PublicadorEventosEnMemoria();
   const auditoria = new AuditoriaEnMemoria();
+  const control = new ControlDePeriodosEnMemoria();
+  const guardados = new DocumentosGuardadosEnMemoria();
   const dependencias: DependenciasDelPreparador & {
     unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
     repositorio: RepositorioDeDocumentos;
@@ -104,7 +107,7 @@ export function crearEscenario() {
     catalogos,
     consultas,
     destinos,
-    control: new ControlDePeriodosEnMemoria(),
+    control,
     repositorio,
     completadorDeNit,
     auditoria,
@@ -121,6 +124,8 @@ export function crearEscenario() {
     datosDeEmpresa,
     publicadorEventos,
     auditoria,
+    control,
+    guardados,
     dependencias,
   };
 }
