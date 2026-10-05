@@ -635,3 +635,9 @@ y `demo` / `demo-arrancar`.
   Tope de la corrección contra la FEL: `toleranciaDeIvaEnCentavos(líneas) = max(5, líneas)`. Avisos con
   `avisosDelPeriodo` (`mesActual` como dato): período anterior al mes actual y año de emisión anterior al del
   período, para todo documento. El período propuesto es el mes de recepción.
+
+
+- **2026-10-04 · Cliente (terceros): secciones aportadas en la ventana del papel de proveedor.** `VentanaDePapel`
+  (ficha del tercero) muestra, solo para proveedor, las secciones de los módulos activos (hoy «Datos fiscales»)
+  bajo el papel, separadas por una línea; usa el id del proveedor si ya existe o `null`. Al guardar manda
+  `secciones` (`seccionesParaEnviar`) y reparte los errores con prefijo `secciones.<módulo>.<campo>`.

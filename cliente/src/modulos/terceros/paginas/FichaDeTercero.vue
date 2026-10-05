@@ -96,6 +96,9 @@ const editar = () =>
     />
     <VentanaDePapel
       v-model="papeles.edicion.papeles"
+      v-model:secciones="papeles.edicion.secciones"
+      :proveedor-id="ficha?.proveedor?.id ?? null"
+      :errores="papeles.errores.value"
       :papel="papeles.edicion.abierta"
       :categorias="categorias"
       :enviando="papeles.enviando.value"

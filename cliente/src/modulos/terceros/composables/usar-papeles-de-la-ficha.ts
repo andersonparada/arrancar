@@ -1,6 +1,7 @@
 import { reactive, type Ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { seccionesParaEnviar } from '@/modulos/core/secciones/secciones-aportadas';
 import { apiTerceros, type FichaTercero, type PapelTercero } from '../servicios/terceros.api';
 import { papelesVacios, type PapelesDelFormulario } from './datos-de-tercero';
 
@@ -12,11 +13,13 @@ function papelesDe(ficha: FichaTercero | null): PapelesDelFormulario {
   return papeles;
 }
 
-function asignar(terceroId: string, papel: PapelTercero, papeles: PapelesDelFormulario) {
+function asignar(terceroId: string, papel: PapelTercero, { papeles, secciones }: Edicion) {
   return papel === 'cliente'
     ? apiTerceros.asignarCliente(terceroId, papeles.cliente)
-    : apiTerceros.asignarProveedor(terceroId, papeles.proveedor);
+    : apiTerceros.asignarProveedor(terceroId, papeles.proveedor, seccionesParaEnviar(secciones));
 }
+
+type Edicion = { papeles: PapelesDelFormulario; secciones: Record<string, unknown> };
 
 /** El papel queda inactivo con su historial; no se borra. */
 function quitar(terceroId: string, papel: PapelTercero) {
@@ -27,13 +30,18 @@ function quitar(terceroId: string, papel: PapelTercero) {
 export function usarPapelesDeLaFicha(ficha: Ref<FichaTercero | null>, alCambiar: () => Promise<void>) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
-  const edicion = reactive({ abierta: null as PapelTercero | null, papeles: papelesVacios() });
+  const edicion = reactive({
+    abierta: null as PapelTercero | null,
+    papeles: papelesVacios(),
+    secciones: {} as Record<string, unknown>,
+  });
 
-  const abrir = (papel: PapelTercero) => Object.assign(edicion, { abierta: papel, papeles: papelesDe(ficha.value) });
+  const abrir = (papel: PapelTercero) =>
+    Object.assign(edicion, { abierta: papel, papeles: papelesDe(ficha.value), secciones: {} });
 
   async function guardar(): Promise<void> {
-    const { abierta, papeles } = edicion;
-    if (!ficha.value || !abierta || !(await enviar(() => asignar(ficha.value!.id, abierta, papeles)))) return;
+    const { abierta } = edicion;
+    if (!ficha.value || !abierta || !(await enviar(() => asignar(ficha.value!.id, abierta, edicion)))) return;
     edicion.abierta = null;
     await alCambiar();
   }
