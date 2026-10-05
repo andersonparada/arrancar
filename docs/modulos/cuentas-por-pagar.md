@@ -41,9 +41,8 @@ Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte 
    salvo el **Propietario** y el **superacceso**. Si *Contabilidad* está activa, se
    publica un evento con las líneas para que genere la partida de provisión; si no,
    solo cambia el estado. Las retenciones **ya vienen fijadas** de *Libro de compras*
-   (al registrar); autorizar no las recalcula. Si hay retención del 5 % a pequeño
-   contribuyente, autorizar le pone su fecha (orden `libro-de-compras.fechar_retencion`,
-   en la misma transacción).
+   (al registrar, todas con fecha, incluida la del 5 % a pequeño contribuyente, que lleva
+   la de recepción: decisión del 2026-10-04); autorizar no las recalcula ni las fecha.
 4. **Notas de crédito del proveedor**: se ingresan igual (en su propia ventana de
    ingreso), siempre sobre una factura del mismo proveedor, con sus retenciones
    ajustadas. También se registran y se autorizan.
@@ -131,8 +130,6 @@ Los días de crédito los guarda el módulo *Clientes* con el proveedor.
   `AnularMovimientoDeOrigen`, con el concepto fijado y el origen
   (`modulo_de_origen`, `documento_de_origen_id`, P6; columnas en el paso de ajustes
   de conceptos de Bancos, antes de CP4).
-- Envía a *Libro de compras* `libro-de-compras.fechar_retencion` al autorizar una
-  factura con retención del 5 % a pequeño contribuyente.
 - Escucha, **dentro de la transacción**, el aviso de *Bancos*
   `MovimientoDeOrigenAnulado` (origen = este módulo): anula el pago y devuelve el
   saldo a sus facturas.

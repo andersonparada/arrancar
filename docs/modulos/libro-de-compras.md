@@ -254,7 +254,7 @@ en configuración de instalación; el código solo las aplica.
   |---|---|
   | ISR (régimen opcional simplificado) | **Fecha de la factura** (Decreto 10-2012 art. 48) |
   | IVA por agente (exportador, especial, otro, sector público) | **Fecha de recepción** (Decreto 20-2006; AG 425-2006 art. 10) |
-  | IVA 5 % a pequeño contribuyente | **Al autorizar o pagar**, lo primero (Ley del IVA art. 48). El monto se fija al registrar; la fecha la informa el destino (orden `libro-de-compras.fechar_retencion`). En Cuentas por pagar siempre es la de autorizar, porque solo se paga lo autorizado. |
+  | IVA 5 % a pequeño contribuyente | **Fecha de recepción** (2026-10-04): acreditar en cuenta es registrar la deuda, y eso ocurre al registrar (Ley del IVA art. 48; ver `validacion-h7-h11-retenciones.md`). Ya no existe la orden `fechar_retencion`. |
 
 - Si el plazo de entero de ese mes ya pasó (15 días hábiles del mes siguiente para
   IVA; 10 días para ISR), **aviso** de multa e intereses; no se impide.
@@ -319,8 +319,7 @@ editar empresas y proveedores.
 ## Comunicación con otros módulos (patrón Mediator; L0 hecho)
 
 Órdenes que este plan ya prevé: `libro-de-compras.recibir_documento` hacia el destino
-(p. ej. Cuentas por pagar), `libro-de-compras.fechar_retencion` desde el destino (fecha
-del 5 % a pequeño contribuyente), `terceros.completar_nit` (H10) y
+(p. ej. Cuentas por pagar), `terceros.completar_nit` (H10) y
 `empresas.obtener_datos_de_empresa` (ya existe, H5a).
 
 Los módulos **no se importan entre sí**. Se comunican por un **mediador** del core
@@ -376,8 +375,8 @@ mano sobre lo generado.
    investigación del mínimo**, ver `validacion-h7-h11-retenciones.md`), casilla «Se
    muestra en reportes SAT», NIT de la empresa y del emisor (**H10**), período,
    motivo sin crédito fiscal y cuenta de fuera de plazo (**H11**), unicidad en la
-   instalación, destino sugerido y órdenes al destino (`recibir_documento`,
-   `fechar_retencion`). **H7** no pide nada más: la FEL exenta del banco es una compra
+   instalación, destino sugerido y órdenes al destino (`recibir_documento`;
+   `fechar_retencion` se quitó el 2026-10-04). **H7** no pide nada más: la FEL exenta del banco es una compra
    exenta; ya no hay paso H7 en Bancos después de L3.
 5. **L4 Excel de DTE recibidos:** investigar el formato de la SAT e importarlo.
 6. **L5 Reportes y períodos:** Libro de compras y retenciones, con constancias; el
