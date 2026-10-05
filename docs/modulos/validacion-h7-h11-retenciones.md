@@ -415,3 +415,38 @@ Fuentes: [Decreto 20-2006 (OJ)](http://ww2.oj.gob.gt/es/QueEsOJ/EstructuraOJ/Uni
 [Decreto 10-2012 (Congreso)](https://www.congreso.gob.gt/assets/uploads/info_legislativo/decretos/2012/010-2012.pdf),
 [AG 213-2013 art. 35](http://leydeguatemala.com/acuerdo-gubernativo-numero-213-2013/base-minima-para-practicar-retencion/12328/),
 [Vescco, régimen opcional](https://vescco.tax/blog/detalles-de-la-retencion-en-el-regimen-opcional/).
+
+## Aclaraciones del usuario sobre L3-3 (contador-guatemala, 2026-10-04)
+
+Artículos de extractos coincidentes; confirmar en el texto vigente los que se marcan.
+
+1. **Casilla «Se muestra en reportes SAT».** Su propósito (usuario): registrar compras a informales sin FEL, solo
+   para la empresa. Una FEL emitida al NIT de la empresa está en sus DTE recibidos y la SAT la cruza con el libro:
+   debe ir marcada (si no da crédito, como no vinculada). Sin FEL no hay IVA facturado que retener. La ley obliga
+   a emitir **factura especial** al comprar a una persona individual que no factura (Ley del IVA art. 52); sin
+   documento válido el gasto **no es deducible** del ISR (Decreto 10-2012 arts. 21 y 22, confirmar numerales).
+   Pagos por trabajo (jornales) suelen ser relación laboral: van por planilla (Código de Trabajo art. 18, confirmar).
+2. **Agente de retención del ISR.** Es por ley (Decreto 10-2012 art. 47; Código Tributario art. 28), sin
+   calificación de la SAT: retiene quien lleva contabilidad completa, y toda sociedad la lleva (Código de Comercio
+   arts. 3 y 368, confirmar), sea cual sea su régimen; también las exentas que nombra el art. 47. La calificación
+   de la SAT es del **agente de IVA** (Decreto 20-2006). Las excepciones son del proveedor (régimen sobre
+   utilidades, pago directo, pequeño contribuyente, agropecuario, base menor de Q2,500), ya cubiertas por
+   `regimen_isr` y `se_le_retiene_isr` (su ayuda debe mencionar «Sujeto a pago directo ISR»).
+3. **Fecha del 5 % a pequeño contribuyente.** La ley la fecha al pagar o acreditar en cuenta (Ley del IVA art. 48),
+   y acreditar en cuenta es el registro de la deuda (inferencia, certeza media-alta: el art. 105 del Decreto
+   10-2012 dice «cuenta bancaria» cuando quiere lo bancario). En Arrancar el registro manda `recibir_documento` en
+   la misma transacción: la fecha es la de **recepción**. Una fecha estimada no tiene base legal y puede atrasar el
+   entero (mora y multa). Los días de crédito del proveedor sirven para los vencimientos de CP1, no para esto.
+
+**Decisiones del usuario (2026-10-04), las recomendadas:**
+- **A1:** solo se desmarcan documentos sin FEL a nombre de la empresa (recibo de informal, FEL a CF o a otro NIT);
+  toda FEL al NIT de la empresa va en el libro. Al desmarcar: aviso de no deducible y, si el tercero es persona
+  individual no inscrita, sugerencia de factura especial. Se quita el aviso de «lo que se habría retenido».
+  Reemplaza la decisión del 2026-09-29 de poder desmarcar una FEL con IVA. Datos: `motivo_fuera_del_libro`
+  (`sin_fel`, `fel_a_consumidor_final`, `fel_a_otro_nit`), check de motivo obligatorio al desmarcar y `sin_fel`
+  sin autorización.
+- **B2:** «Lleva contabilidad completa (agente de retención del ISR)» marcada por omisión en la empresa, con aviso al
+  desmarcar y auditoría. La del IVA sigue en «Ninguno».
+- **A3:** la retención del 5 % a pequeño contribuyente lleva la fecha de recepción; `retenciones.fecha` es obligatoria
+  para todas las reglas, y se quitan `retenciones_por_fechar_idx` y la orden `libro-de-compras.fechar_retencion`.
+  Desaparece el riesgo 3 del diseño (§13) para esta regla.

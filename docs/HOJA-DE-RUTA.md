@@ -76,8 +76,8 @@ fecha de corte por empresa** y deben cuadrar entre sí y con el balance de apert
 
 - El usuario pidió que la **fecha de pago estimada** salga de lo configurado en el proveedor (días de
   crédito) y, si no tiene, a **un mes como máximo**. Hoy `terceros.proveedores` no tiene ese dato.
-  Sirve para fechar las retenciones a pequeño contribuyente (L3) y para los vencimientos de CP1;
-  pendiente de validar con el contador.
+  Sirve para los vencimientos de CP1. **No** fecha las retenciones a pequeño contribuyente: esas llevan la
+  fecha de recepción (contador y usuario, 2026-10-04).
 
 ### Reportes (imprimir y exportar)
 
