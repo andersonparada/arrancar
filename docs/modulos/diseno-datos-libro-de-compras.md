@@ -93,7 +93,27 @@ electrónico, paso propio) **no** entran en R1; R1 solo deja el dato que necesit
 exigen los datos fiscales de la empresa antes de su primer documento (sin suponer régimen general; el error lleva a la
 sección fiscal de la empresa); R1-c/R1-d una vigencia se corrige o se quita libremente si no tiene documentos vigentes
 (los anulados no bloquean), con auditoría; R1-f el tipo de persona es obligatorio y sin valor por omisión, guardado en
-cada vigencia e igual en todas. R1-e: pendiente del contador.
+cada vigencia e igual en todas.
+
+**R1-e resuelto (contador y usuario, 2026-10-05). Esta tabla reemplaza la de §3.1b.6:**
+
+| Régimen de IVA | Persona | `regimen_isr` | Agente de IVA | Agente de ISR |
+|---|---|---|---|---|
+| `general` | jurídica | `utilidades` (o `opcional_simplificado`, o `exento` si es entidad del art. 11) | `ninguno` (el usuario escoge si la SAT lo calificó) | `true` |
+| `general` | individual | `utilidades` (o `opcional_simplificado`; nunca `exento`) | `ninguno` (escoge) | con `utilidades` `true`; con `opcional_simplificado` **sin propuesta**: el usuario contesta «¿Lleva contabilidad completa?» |
+| `pequeno_contribuyente` y `_electronico` | jurídica | nulo, forzado | `ninguno`, forzado | `true` |
+| `pequeno_contribuyente` y `_electronico` | individual | nulo, forzado | `ninguno`, forzado | `false` (ayuda: comerciante con activo > Q25,000 → sí) |
+| `contribuyente_agropecuario` | individual (jurídica la rechaza el check) | nulo, forzado (relevado del ISR) | `ninguno`, forzado | `false`; **solo vigencias anteriores a su derogación** por el Decreto 31-2024 (≈ julio de 2025, confirmar fecha): una vigencia nueva posterior se rechaza en el dominio |
+| `primario_pecuario` | jurídica | nulo, forzado | `ninguno`, forzado | `true` (confirmar AG 54-2026) |
+| `primario_pecuario` | individual | nulo, forzado | `ninguno`, forzado | `false` (ayuda: intermediario con contabilidad → sí) |
+| `no_afiliado` | jurídica | `exento` (o `utilidades`/`opcional_simplificado` si tiene rentas lucrativas) | `ninguno`, forzado | `true` (art. 47) |
+| `no_afiliado` | individual (permitido) | sin propuesta (`utilidades` u `opcional_simplificado`; nunca `exento`) | `ninguno`, forzado | `false` |
+
+Cambios de datos: check nuevo `exento_solo_juridica` (`regimen_isr is distinct from 'exento' or tipo_de_persona =
+'juridica'`); sin check de persona en `primario_pecuario` (admite individuales y jurídicas); `agropecuario_individual` se
+queda. Firma `datosPropuestos(regimenIva, tipoDePersona, regimenIsr)`, que puede devolver «sin propuesta» en el agente
+de ISR. El 5 % sobre utilidad del agropecuario es IVA en régimen especial, no ISR. Confirmar en el texto oficial: la
+derogación de los arts. 54 «A» a «F» (artículo y fecha), el AG 54-2026 y los arts. 11 y 47 del Decreto 10-2012.
 
 #### 3.1b.1 Lo encontrado
 
