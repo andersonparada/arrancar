@@ -28,7 +28,7 @@ export const esquemaSeccionFiscalDeEmpresa = z
     regimenIva: z.enum(REGIMENES_DE_IVA).default('general'),
     regimenIsr: z.enum(REGIMENES_DE_ISR_DE_EMPRESA).default('utilidades'),
     agenteDeRetencionIva: z.enum(AGENTES_DE_RETENCION_DE_IVA).default('ninguno'),
-    esAgenteDeRetencionIsr: z.boolean().default(false),
+    esAgenteDeRetencionIsr: z.boolean().default(true),
   })
   .superRefine((datos, ctx) => señalar(ctx, problemasFiscalesDeEmpresa(datos)));
 
