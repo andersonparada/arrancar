@@ -155,6 +155,13 @@
       "when": 1790720808751,
       "tag": "0021_archivos_documentos_y_dueno",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791225219582,
+      "tag": "0022_calendario_de_feriados",
+      "breakpoints": true
     }
   ]
 }

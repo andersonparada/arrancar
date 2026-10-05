@@ -18,6 +18,7 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   tipos_de_localidad_nombre_unico: 'Ya existe un tipo de localidad con ese nombre.',
   localidades_codigo_unico: `Ya existe una localidad con ese código. ${PEDIR_ACCESO_A_LOCALIDADES}`,
   localidades_nombre_unico: `Ya existe una localidad con ese nombre. ${PEDIR_ACCESO_A_LOCALIDADES}`,
+  feriados_fecha_unica: 'Ya hay un asueto en esa fecha.',
   departamentos_codigo_unico: 'Ya existe un departamento con ese código.',
   departamentos_nombre_unico: 'Ya existe un departamento con ese nombre.',
   localidades_establecimiento_sat_unico: `Ya existe una localidad con ese código de establecimiento SAT. ${PEDIR_ACCESO_A_LOCALIDADES}`,

@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { definirConfiguracion, type DefinicionModulo } from './modulos-sistema/definicion-modulo.js';
 import { componerApariencia } from './apariencia/contexto.js';
+import { componerCalendario } from './calendario/contexto.js';
 import { componerArchivos } from './archivos/contexto.js';
 import { esquemaColorHex } from './apariencia/http/apariencia.esquemas-http.js';
 import { MESES_DE_AUDITORIA } from './bitacora/aplicacion/casos-uso/depurar-auditoria.js';
@@ -23,6 +24,7 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(componerConfiguracion());
   await app.register(componerApariencia());
   await app.register(componerGeografia(dependenciasCompartidas()));
+  await app.register(componerCalendario(dependenciasCompartidas()));
   await app.register(componerBitacora());
 };
 
@@ -48,6 +50,16 @@ export const moduloCore: DefinicionModulo = {
     {
       clave: 'configuracion.gestionar',
       descripcion: 'Cambiar la configuración de la cuenta y la empresa',
+      soloSuperacceso: true,
+    },
+    {
+      clave: 'configuracion.feriados.crear',
+      descripcion: 'Agregar asuetos nacionales al calendario de feriados',
+      soloSuperacceso: true,
+    },
+    {
+      clave: 'configuracion.feriados.eliminar',
+      descripcion: 'Quitar asuetos nacionales del calendario de feriados',
       soloSuperacceso: true,
     },
   ],

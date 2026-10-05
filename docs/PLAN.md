@@ -702,3 +702,17 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   Bancos no pagina sus listas, así que la paginación (`pagina`, `limite`) es nueva; un documento anulado no se elimina;
   eliminar también revisa el período abierto. Pruebas de API con el destino falso (permisos, filtros, anular, eliminar,
   órdenes, auditoría, eventos tras confirmar y vigencia de combustible).
+- **2026-10-05 · Calendario de feriados de Guatemala (core, servidor).** Contexto `core/calendario`. Los feriados fijos
+  del Código de Trabajo art. 127 (1 de enero, 1 de mayo, 30 de junio, 15 de septiembre, 20 de octubre, 1 de noviembre,
+  24 y 25 de diciembre, 31 de diciembre) y Jueves, Viernes y Sábado Santo (domingo de Pascua por Meeus/Jones/Butcher)
+  **se calculan** (`dominio/feriados-calculados.ts`) y no se guardan; la tabla `core.feriados` (migración 0022; sin
+  empresa ni cuenta, única por fecha) guarda solo los **asuetos** que soporte carga cuando la SAT o el gobierno los
+  declaran (`origen` `asueto_sat`). `CalendarioLaboral` (`esHabil`, `sumarDiasHabiles`, `diaHabilNumero`) cuenta de
+  lunes a viernes sin feriados ni asuetos; los medios días (24 y 31 de diciembre) cuentan como hábiles. Guarda en
+  memoria las fechas no hábiles de cada año y las renueva al agregar o quitar un asueto; se obtiene de
+  `core/calendario/contexto.ts` (`calendarioLaboral`). API: `GET /api/feriados?anio=` (cualquier sesión),
+  `POST /api/feriados` y `DELETE /api/feriados/:id` con los permisos `configuracion.feriados.crear` y
+  `configuracion.feriados.eliminar` (solo superacceso; por acción, como pide §3.5, en vez de `gestionar`). Quitar un
+  asueto se audita. **Pendiente:** la pantalla en el panel de Soporte, y conectar el puerto de días hábiles en
+  libro-de-compras. **Dudas legales** (no implementadas): el 15 de agosto (solo municipio de Guatemala) y el posible
+  traslado de feriados que reformas recientes al art. 127 permitirían por acuerdo; no se verificó el texto vigente.
