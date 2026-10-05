@@ -31,6 +31,7 @@ interface Caso {
   config?: Partial<ConfiguracionDeRetenciones>;
   lineas?: LineaEscrita[];
   agropecuarias?: boolean[];
+  tipos?: Array<'bien' | 'servicio'>;
 }
 
 /** Arma la entrada; `idp` se simula con combustible a Q1.00 por galón (1 galón = Q1.00 de IDP). */
@@ -58,7 +59,10 @@ function entrada(caso: Caso): EntradaDeRetenciones {
     tipo,
     muestraEnReportesSat: caso.casilla ?? true,
     documento,
-    lineasAgropecuarias: caso.agropecuarias ?? lineas.map(() => false),
+    datosDeLineas: lineas.map((_, i) => ({
+      esProductoAgropecuario: caso.agropecuarias?.[i] ?? false,
+      tipo: caso.tipos?.[i] ?? 'bien',
+    })),
     empresa: empresa(caso.empresa),
     proveedor: DatosFiscalesDeProveedor.porOmision(caso.proveedor),
     configuracion: configuracion(caso.config),
@@ -120,6 +124,12 @@ describe('IVA del exportador', () => {
     expect(montos({ total: 0, lineas, agropecuarias: [true, false], empresa: exportador })).toEqual([
       ['iva_exportador_agropecuario', 12000, 7800],
       ['iva_exportador', 24000, 3600],
+    ]);
+  });
+
+  it('una línea de servicio con concepto agropecuario retiene al 15 %, no al 65 %', () => {
+    expect(montos({ total: 1120000, agropecuarias: [true], tipos: ['servicio'], empresa: exportador })).toEqual([
+      ['iva_exportador', 120000, 18000],
     ]);
   });
 

@@ -50,13 +50,24 @@ export interface ConfiguracionDeRetenciones {
   incluyeIdpEnBaseIsr: boolean;
 }
 
+/** Lo que la retención necesita saber de cada línea: la casilla de su concepto y su tipo. */
+export interface DatosDeLineaParaRetencion {
+  esProductoAgropecuario: boolean;
+  tipo: 'bien' | 'servicio';
+}
+
+/** El 65 % del exportador es solo para bienes: concepto agropecuario **y** línea de tipo `bien` (cdr. L3-3, ajuste 4). */
+export function esLineaAgropecuaria(linea: DatosDeLineaParaRetencion): boolean {
+  return linea.esProductoAgropecuario && linea.tipo === 'bien';
+}
+
 /** Lo que recibe cada estrategia. */
 export interface EntradaDeRetenciones {
   tipo: TipoDeDocumento;
   muestraEnReportesSat: boolean;
   documento: DocumentoCalculado;
-  /** Una casilla por línea de `documento.lineas`: `true` si su concepto es un producto agropecuario. */
-  lineasAgropecuarias: readonly boolean[];
+  /** Un elemento por línea de `documento.lineas`, en el mismo orden. */
+  datosDeLineas: readonly DatosDeLineaParaRetencion[];
   empresa: DatosFiscalesDeEmpresa;
   proveedor: DatosFiscalesDeProveedor;
   configuracion: ConfiguracionDeRetenciones;

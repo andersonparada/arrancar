@@ -1,11 +1,12 @@
 import { porcentajeDe } from './aritmetica-fiscal.js';
 import type { AgenteDeRetencionDeIva } from './datos-fiscales-de-empresa.js';
-import type {
-  ConfiguracionDeRetenciones,
-  EntradaDeRetenciones,
-  EstrategiaDeRetencion,
-  ReglaDeRetencion,
-  RetencionPropuesta,
+import {
+  esLineaAgropecuaria,
+  type ConfiguracionDeRetenciones,
+  type EntradaDeRetenciones,
+  type EstrategiaDeRetencion,
+  type ReglaDeRetencion,
+  type RetencionPropuesta,
 } from './retencion-propuesta.js';
 
 /** Una propuesta de IVA con fecha de recepción; ninguna si no hay base. */
@@ -28,12 +29,13 @@ function esAgente(entrada: EntradaDeRetenciones, agente: AgenteDeRetencionDeIva)
   return entrada.empresa.instantanea().agenteDeRetencionIva === agente;
 }
 
-/** IVA de las líneas agropecuarias (o de las demás) del documento. */
+/** IVA de las líneas agropecuarias (concepto agropecuario y tipo bien) o de las demás del documento. */
 function ivaDeLasLineas(entrada: EntradaDeRetenciones, agropecuarias: boolean): number {
-  return entrada.documento.lineas.reduce(
-    (suma, linea, indice) => (entrada.lineasAgropecuarias[indice] === agropecuarias ? suma + linea.iva : suma),
-    0,
-  );
+  return entrada.documento.lineas.reduce((suma, linea, indice) => {
+    const datos = entrada.datosDeLineas[indice];
+    const esAgropecuaria = datos !== undefined && esLineaAgropecuaria(datos);
+    return esAgropecuaria === agropecuarias ? suma + linea.iva : suma;
+  }, 0);
 }
 
 /** Exportador: 65 % del IVA de lo agropecuario y 15 % del de lo demás, con el mínimo sobre el total. */

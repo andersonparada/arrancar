@@ -128,6 +128,12 @@ describe('conceptos de gasto', () => {
     );
   });
 
+  it('la lista sugerida no marca ningún concepto como agropecuario (los insumos son industrializados)', async () => {
+    const listado = await casos.listar.ejecutar(operador);
+
+    expect(listado.some((conceptoDeGasto) => conceptoDeGasto.esProductoAgropecuario)).toBe(false);
+  });
+
   it('no vuelve a sembrar si ya tiene conceptos', async () => {
     await casos.crear.ejecutar(operador, solicitud());
 

@@ -641,3 +641,10 @@ y `demo` / `demo-arrancar`.
   (ficha del tercero) muestra, solo para proveedor, las secciones de los módulos activos (hoy «Datos fiscales»)
   bajo el papel, separadas por una línea; usa el id del proveedor si ya existe o `null`. Al guardar manda
   `secciones` (`seccionesParaEnviar`) y reparte los errores con prefijo `secciones.<módulo>.<campo>`.
+
+- **2026-10-04 · Libro de compras L3-3, ajuste 4 del contador (servidor).** La retención del exportador al 65 % solo
+  alcanza a la línea cuyo concepto es agropecuario **y** de tipo `bien`: `EntradaDeRetenciones.datosDeLineas`
+  (`{ esProductoAgropecuario, tipo }` por línea, reemplaza a `lineasAgropecuarias: boolean[]`) y la función pura
+  `esLineaAgropecuaria` (`retencion-propuesta.ts`) que usa la estrategia; una línea de servicio con concepto
+  agropecuario retiene al 15 %. La semilla de conceptos deja «Insumos agrícolas», «Alimento para ganado» y
+  «Medicinas veterinarias» con `esProductoAgropecuario = false` (industrializados); sin migración de datos.
