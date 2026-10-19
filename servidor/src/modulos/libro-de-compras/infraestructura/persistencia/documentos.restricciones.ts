@@ -1,12 +1,13 @@
 import { sql } from 'drizzle-orm';
 import { check, foreignKey, index, unique, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { MOTIVOS_SIN_CREDITO, TIPOS_DE_DOCUMENTO } from '../../dominio/tipos-de-documento.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 
-const TIPOS = "'factura', 'factura_pequeno_contribuyente', 'nota_de_credito', 'recibo'";
+const TIPOS = TIPOS_DE_DOCUMENTO.map((tipo) => `'${tipo}'`).join(', ');
 const DESTINOS = "'cuentas-por-pagar', 'caja-chica', 'cuentas-por-liquidar'";
 const MOTIVOS_FUERA = "'sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit'";
 const CAUSAS_DE_ANULACION = "'error_de_captura', 'fel_anulada_por_el_emisor', 'no_corresponde_a_la_empresa'";
-const MOTIVOS = "'fuera_de_plazo', 'no_vinculado', 'pequeno_contribuyente', 'exento', 'empresa_sin_credito'";
+const MOTIVOS = MOTIVOS_SIN_CREDITO.map((motivo) => `'${motivo}'`).join(', ');
 
 /** Las columnas de `documentos` que usan las restricciones (la tabla las pasa desde su callback). */
 export type ColumnasDeDocumento = Record<
@@ -16,6 +17,8 @@ export type ColumnasDeDocumento = Record<
   | 'tipo'
   | 'proveedorId'
   | 'nitEmisor'
+  | 'nitReceptor'
+  | 'tipoDte'
   | 'nombreEmisor'
   | 'serie'
   | 'numero'
@@ -100,7 +103,6 @@ export const restriccionesDeMontos = (t: T) => [
     'documentos_sin_sat_sin_credito',
     sql`${t.muestraEnReportesSat} or (${t.iva} = 0 and ${t.motivoSinCredito} is null)`,
   ),
-  check('documentos_pequeno_contribuyente_sin_iva', sql`${t.tipo} <> 'factura_pequeno_contribuyente' or ${t.iva} = 0`),
   check(
     'documentos_iva_no_acreditable_por_motivo',
     sql`(${t.motivoSinCredito} in ('fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito') and ${t.ivaNoAcreditable} = ${t.iva})
@@ -136,11 +138,6 @@ export const restriccionesDeTipo = (t: T) => [
   check(
     'documentos_datos_sat',
     sql`not ${t.muestraEnReportesSat} or (${t.nitEmisor} is not null and ${t.serie} is not null and ${t.autorizacionFel} is not null)`,
-  ),
-  check(
-    'documentos_pequeno_contribuyente',
-    sql`${t.tipo} = 'nota_de_credito' or not ${t.muestraEnReportesSat}
-        or ((${t.tipo} = 'factura_pequeno_contribuyente') = (coalesce(${t.motivoSinCredito}, '') = 'pequeno_contribuyente'))`,
   ),
   check(
     'documentos_anulacion_completa',

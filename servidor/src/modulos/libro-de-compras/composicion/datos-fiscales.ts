@@ -17,6 +17,7 @@ import {
   seccionFiscalDeProveedor,
 } from '../http/datos-fiscales.esquemas-http.js';
 import { rutasDeDatosFiscales } from '../http/datos-fiscales.rutas.js';
+import { ConfiguracionFiscalEnConfiguracion } from '../infraestructura/configuracion-fiscal-en-configuracion.js';
 import { AccesoAEmpresasDrizzle } from '../infraestructura/persistencia/acceso-a-empresas.drizzle.js';
 import { ConsultaDePeriodosConDocumentosDrizzle } from '../infraestructura/persistencia/consulta-de-periodos-con-documentos.drizzle.js';
 import { RepositorioDeDatosFiscalesDeEmpresaDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales-de-empresa.drizzle.js';
@@ -64,7 +65,14 @@ function casosDeUsoDeEmpresa({ unidadDeTrabajo, auditoria, reloj }: Dependencias
   const acceso = new AccesoAEmpresasDrizzle();
   const cambios = new CambiosAlHistorialFiscal({ repositorio, documentos });
   return {
-    guardar: new GuardarDatosFiscalesDeEmpresa({ unidadDeTrabajo, repositorio, cambios, auditoria, reloj }),
+    guardar: new GuardarDatosFiscalesDeEmpresa({
+      unidadDeTrabajo,
+      repositorio,
+      cambios,
+      auditoria,
+      reloj,
+      configuracion: new ConfiguracionFiscalEnConfiguracion(),
+    }),
     obtener: new ObtenerDatosFiscalesDeEmpresa({ unidadDeTrabajo, repositorio, documentos, acceso, reloj }),
     quitar: new QuitarVigenciaFiscalDeEmpresa({ unidadDeTrabajo, repositorio, cambios, acceso, auditoria }),
   };

@@ -1,8 +1,6 @@
 import { ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
 import type { DatosFiscalesDeEmpresa, TipoDePersona } from './datos-fiscales-de-empresa.js';
-import { DatosFiscalesInvalidos } from './errores.js';
 import { sumarMeses } from './periodo-del-libro.js';
-import { problemasDeLaDerogacion } from './vigencia-fiscal-de-empresa.js';
 
 /** La vigencia «desde el inicio» (la base) no se quita: la empresa siempre tiene un régimen. */
 export class VigenciaBaseNoSeQuita extends ReglaDeNegocioInfringida {
@@ -95,11 +93,8 @@ export class HistorialFiscalDeEmpresa {
    * Aplica «estos datos rigen desde tal mes»: sin historial, crea la base; si el mes es el de una vigencia, la
    * corrige; si cae dentro de un escalón y cambia algo, parte el escalón desde ese mes; si no cambia nada, no
    * hace nada. Siempre deja el mismo tipo de persona en todas y ningún escalón repetido.
-   * @throws DatosFiscalesInvalidos si el régimen agropecuario empezaría después de su derogación.
    */
   aplicar({ vigenteDesde, datos }: CambioDeVigencia): HistorialFiscalDeEmpresa {
-    const problemas = problemasDeLaDerogacion(datos.instantanea().regimenIva, vigenteDesde);
-    if (problemas.length > 0) throw new DatosFiscalesInvalidos(problemas);
     if (this.estaVacio()) return new HistorialFiscalDeEmpresa([{ id: null, vigenteDesde: null, datos }]);
     const conElCambio = new HistorialFiscalDeEmpresa(this.conElCambio({ vigenteDesde, datos }));
     const mismaPersona = conElCambio.conTipoDePersona(datos.instantanea().tipoDePersona);

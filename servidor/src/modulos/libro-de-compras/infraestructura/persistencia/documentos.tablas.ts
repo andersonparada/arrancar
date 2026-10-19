@@ -18,8 +18,10 @@ import {
   restriccionesDeTipo,
   restriccionesDeValores,
 } from './documentos.restricciones.js';
+import { restriccionesDeFamilia } from './documentos.restricciones-de-familia.js';
 import { restriccionesDeRegimen } from './documentos.restricciones-de-regimen.js';
 import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
+import type { TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
 import { esquemaLibroDeCompras } from './esquema.tablas.js';
 
 /**
@@ -39,7 +41,9 @@ export const documentos = esquemaLibroDeCompras.table(
       .notNull()
       .default(deLaTransaccion.cuenta())
       .references(() => cuentas.id, { onDelete: 'cascade' }),
-    tipo: text().$type<'factura' | 'factura_pequeno_contribuyente' | 'nota_de_credito' | 'recibo'>().notNull(),
+    tipo: text().$type<TipoDeDocumento>().notNull(),
+    /** Código SAT del DTE (FACT, FPEQ, FESP…); nulo si el documento no tiene FEL. */
+    tipoDte: text().$type<TipoDte>(),
     proveedorId: uuid().notNull(),
     nitEmisor: text(),
     nombreEmisor: text().notNull(),
@@ -80,6 +84,7 @@ export const documentos = esquemaLibroDeCompras.table(
     ...restriccionesDePeriodo(t),
     ...restriccionesDeTipo(t),
     ...restriccionesDeFueraDelLibro(t),
+    ...restriccionesDeFamilia(t),
     ...restriccionesDeRegimen(t),
     ...llavesDeDocumento(t),
     ...indicesDeDocumento(t),

@@ -3,7 +3,7 @@ import { RegistroModulos } from '../core/modulos-sistema/registro-modulos.js';
 import { configuracionDelLibroDeCompras } from './configuracion.js';
 import { moduloLibroDeCompras } from './modulo.js';
 
-const PREDETERMINADOS: Record<string, number | boolean> = {
+const PREDETERMINADOS: Record<string, number | boolean | string> = {
   'libro-de-compras.iva.tasa': 12,
   'libro-de-compras.retenciones_iva.exportador_agropecuario': 65,
   'libro-de-compras.retenciones_iva.exportador': 15,
@@ -21,10 +21,11 @@ const PREDETERMINADOS: Record<string, number | boolean> = {
   'libro-de-compras.retenciones_isr.incluye_idp': true,
   'libro-de-compras.plazos.dias_habiles_entero_iva': 15,
   'libro-de-compras.plazos.dias_habiles_entero_isr': 10,
+  'libro-de-compras.regimenes.fecha_de_derogacion': '2025-07-09',
 };
 
 describe('configuración del libro de compras (§8)', () => {
-  it('declara las 16 variables de la sección 8 y la del IDP en la base del ISR con sus valores por omisión', () => {
+  it('declara las 16 variables de la sección 8, la del IDP en la base del ISR y la fecha de derogación con sus valores por omisión', () => {
     const declaradas = Object.fromEntries(configuracionDelLibroDeCompras.map((c) => [c.clave, c.predeterminado]));
     expect(declaradas).toEqual(PREDETERMINADOS);
   });
@@ -43,7 +44,7 @@ describe('configuración del libro de compras (§8)', () => {
       moduloLibroDeCompras,
       { clave: 'terceros', nombre: 'T', descripcion: '', permisos: [] },
     ]);
-    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(17);
+    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(18);
     expect(registro.definicionConfiguracion('libro-de-compras.iva.tasa')?.predeterminado).toBe(12);
   });
 
@@ -58,5 +59,18 @@ describe('configuración del libro de compras (§8)', () => {
       (c) => c.clave === 'libro-de-compras.plazos.dias_habiles_entero_iva',
     );
     expect([plazo?.esquema.safeParse(0).success, plazo?.esquema.safeParse(2.5).success]).toEqual([false, false]);
+  });
+
+  it('la fecha de derogación es una fecha aaaa-mm-dd que existe', () => {
+    const fecha = configuracionDelLibroDeCompras.find(
+      (c) => c.clave === 'libro-de-compras.regimenes.fecha_de_derogacion',
+    );
+    expect(['2025-07-09', '2026-02-28'].map((v) => fecha?.esquema.safeParse(v).success)).toEqual([true, true]);
+    expect(['2025-02-30', '09/07/2025', '2025-7-9', 20250709].map((v) => fecha?.esquema.safeParse(v).success)).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ]);
   });
 });

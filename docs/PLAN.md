@@ -855,3 +855,19 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   las retenciones que no aplican se muestran bloqueadas con su razón. Opción C (L3-8): `datosFiscalesContestados` envía
   `regimenIva` si el servidor lo pregunta y, con un régimen especial, no pide ISR ni agente (completa lo que el servidor
   exige y luego ignora). Pendiente de servidor: agregar la pregunta `regimenIva` en `preguntasDeDatosFiscales`.
+
+- **2026-10-19 (R2-3, datos de documentos para las familias nuevas, servidor).** Migración
+  `0015_r2_familias_y_tipo_dte` (`when` 1792399371292): `documentos.tipo_dte` (con el `update` de los documentos con FEL),
+  `tipo` suma `factura_pequeno_contribuyente_electronico`, `factura_contribuyente_agropecuario`,
+  `factura_primario_pecuario` y `factura_especial`; motivos nuevos `contribuyente_agropecuario` y `primario_pecuario`.
+  Checks nuevos: `tipo_dte_valido`, `tipo_dte_con_fel`, `tipo_dte_de_la_familia`, `familia_sin_iva` y
+  `motivo_de_la_familia` (reemplazan a `pequeno_contribuyente_sin_iva` y `pequeno_contribuyente`),
+  `primario_pecuario_desde` (2025-04-09), `factura_especial_en_el_libro` y `factura_especial_vendedor`; se reemplazan
+  `tipo_valido` y `motivo_sin_credito_valido`. Los SQL de familias y motivos salen de `tipos-de-documento.ts`
+  (`CODIGOS_DTE_DE_LA_FAMILIA`, `TIPOS_DTE`, `FAMILIA_DEL_TIPO_DTE`, `MOTIVO_DE_LA_FAMILIA`); `factura_especifica`,
+  `duca` e `ict` quedan fuera (R2-b). R2-a: la constante `FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019` del servidor
+  desaparece; la variable de instalación `libro-de-compras.regimenes.fecha_de_derogacion` (`'2025-07-09'`) llega en
+  `ConfiguracionFiscal.fechaDeDerogacion` y `problemasDeLaDerogacion` la recibe como parámetro (la llama
+  `GuardarDatosFiscalesDeEmpresa`, ya no `HistorialFiscalDeEmpresa.aplicar`); la base no la revisa. La constante del
+  cliente sigue hasta su paso. Decisión provisional: hasta R2-4 el mapeador guarda como `tipo_dte` el primer código de
+  la familia cuando el documento tiene FEL (`tipoDteProvisional`), para que el registro actual siga funcionando.

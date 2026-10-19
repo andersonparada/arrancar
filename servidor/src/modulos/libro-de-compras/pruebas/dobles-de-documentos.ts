@@ -136,7 +136,10 @@ export class CompletadorDeNitEnMemoria implements CompletadorDeNit {
 /** La configuración por omisión del módulo, como la resolvería el panel sin ningún cambio. */
 export class ConfiguracionFiscalEnMemoria implements LectorDeConfiguracionFiscal {
   private readonly valores = new Map(
-    configuracionDelLibroDeCompras.map((variable) => [variable.clave, variable.predeterminado as number | boolean]),
+    configuracionDelLibroDeCompras.map((variable) => [
+      variable.clave,
+      variable.predeterminado as number | boolean | string,
+    ]),
   );
 
   async paraEmpresa(): Promise<ConfiguracionFiscal> {
@@ -146,6 +149,7 @@ export class ConfiguracionFiscalEnMemoria implements LectorDeConfiguracionFiscal
       retenciones: configuracionDeRetenciones(valor),
       diasHabilesIva: Number(valor('libro-de-compras.plazos.dias_habiles_entero_iva')),
       diasHabilesIsr: Number(valor('libro-de-compras.plazos.dias_habiles_entero_isr')),
+      fechaDeDerogacion: String(valor('libro-de-compras.regimenes.fecha_de_derogacion')),
     };
   }
 }

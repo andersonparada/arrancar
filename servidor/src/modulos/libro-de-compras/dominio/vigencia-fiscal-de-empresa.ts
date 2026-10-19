@@ -2,12 +2,6 @@ import type { RegimenDeIva } from './datos-fiscales-de-empresa.js';
 import type { ProblemaDeDatosFiscales } from './errores.js';
 import { primerDiaDelMes, sumarMeses } from './periodo-del-libro.js';
 
-/**
- * Fecha en que el Decreto 31-2024 derogó los arts. 54 «A» a «F» de la Ley del IVA (régimen agropecuario y pequeño
- * contribuyente electrónico); confirmar en el texto oficial.
- */
-export const FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019 = '2025-07-09';
-
 /** Regímenes de IVA que el Decreto 31-2024 derogó: una vigencia nueva desde la fecha ya no puede usarlos. */
 const REGIMENES_DEROGADOS: readonly RegimenDeIva[] = [
   'contribuyente_agropecuario',
@@ -37,12 +31,16 @@ export function problemasDeLaFechaDeVigencia(vigenteDesde: string | null, hoy: s
   return [];
 }
 
-/** Los regímenes derogados solo pueden iniciar antes de la fecha de derogación («desde el inicio» vale). */
+/**
+ * Los regímenes derogados solo pueden iniciar antes de la fecha de derogación («desde el inicio» vale). La fecha es
+ * la variable de instalación `libro-de-compras.regimenes.fecha_de_derogacion` (Decreto 31-2024, 2025-07-09).
+ */
 export function problemasDeLaDerogacion(
   regimenIva: RegimenDeIva,
   vigenteDesde: string | null,
+  fechaDeDerogacion: string,
 ): ProblemaDeDatosFiscales[] {
-  const iniciaTarde = vigenteDesde !== null && vigenteDesde >= FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019;
+  const iniciaTarde = vigenteDesde !== null && vigenteDesde >= fechaDeDerogacion;
   if (!REGIMENES_DEROGADOS.includes(regimenIva) || !iniciaTarde) return [];
   return [{ campo: CAMPO, mensaje: 'Ese régimen ya no existe a partir de julio de 2025 (Decreto 31-2024).' }];
 }

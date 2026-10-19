@@ -131,6 +131,8 @@ export interface ConfiguracionFiscal {
   retenciones: ConfiguracionDeRetenciones;
   diasHabilesIva: number;
   diasHabilesIsr: number;
+  /** Primer día en que ya no se aceptan los regímenes ni las familias derogadas (`aaaa-mm-dd`). */
+  fechaDeDerogacion: string;
 }
 
 export interface LectorDeConfiguracionFiscal {

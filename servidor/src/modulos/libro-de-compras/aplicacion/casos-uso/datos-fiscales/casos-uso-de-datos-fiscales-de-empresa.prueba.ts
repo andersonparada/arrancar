@@ -17,6 +17,7 @@ import {
   DatosFiscalesDeEmpresaEnMemoria,
   PeriodosConDocumentosEnMemoria,
 } from '../../../pruebas/dobles-de-datos-fiscales.js';
+import { ConfiguracionFiscalEnMemoria } from '../../../pruebas/dobles-de-documentos.js';
 import { VigenciaFiscalEnUso } from '../../errores.js';
 import { CambiosAlHistorialFiscal } from './cambios-al-historial-fiscal.js';
 import { GuardarDatosFiscalesDeEmpresa, type CambioDeDatosFiscales } from './guardar-datos-fiscales-de-empresa.js';
@@ -55,6 +56,7 @@ const guardar = (cambio: Omit<CambioDeDatosFiscales, 'empresaId'>) =>
     cambios,
     auditoria,
     reloj: new RelojFijo('2026-10-04'),
+    configuracion: new ConfiguracionFiscalEnMemoria(),
   }).ejecutar(operador, { empresaId, ...cambio });
 
 const vigencias = () => repositorio.vigencias.get(empresaId) ?? [];

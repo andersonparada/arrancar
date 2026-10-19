@@ -768,7 +768,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 2. **R2-2 (cliente, sección del proveedor) — HECHO (2026-10-19):** selector de régimen de IVA (los derogados solo se muestran si ya estaban
    guardados, con «(derogado)»), régimen de ISR con «No aplica» y «Exento», propuestas al cambiar (lógica pura con
    pruebas), ficha. **No depende de L3-8.**
-3. **R2-3 (servidor, datos de documentos):** migración `0015`; `tipos-de-documento.ts` con las familias,
+3. **R2-3 (servidor, datos de documentos) — HECHO (2026-10-19):** migración `0015`; `tipos-de-documento.ts` con las familias,
    `TIPOS_DTE`, `FAMILIA_DEL_TIPO_DTE`, `MOTIVO_DE_LA_FAMILIA` y las reservadas en comentario; tipo de la tabla y del
    contrato; pruebas de checks.
 4. **R2-4 (servidor, dominio y registro de las familias sin crédito):** motivo por familia, IVA 0 en el cálculo (como la
@@ -1600,7 +1600,7 @@ solo). `core.rol_permisos` y `core.usuario_permisos` no se tocan.
 | R1-3 | `0011_r1_motivo_empresa_sin_credito.sql` | solo amplía el check del motivo y el de `iva_no_acreditable_por_motivo` (ya integrada: tiene el número `0011`) |
 | R1-4 | `0013_r1_foto_del_regimen_en_documentos.sql` | `regimen_iva_de_la_empresa`, motivo `empresa_sin_credito` y checks (§3.1b.9) |
 | R2-1 | `0014_r2_regimen_iva_del_proveedor.sql` | `regimen_iva` del proveedor (§3.2b.8) |
-| R2-3 | `0015_r2_familias_y_tipo_dte.sql` | familias, `tipo_dte` y sus checks (§3.2b.8) |
+| R2-3 | `0015_r2_familias_y_tipo_dte.sql` (hecha) | familias, `tipo_dte` y sus checks (§3.2b.8) |
 | R2-6 | `0016_r2_retenciones_de_factura_especial.sql` | reglas de la factura especial (§3.2b.8) |
 | L5 | `…_periodos.sql` | `periodos` |
 

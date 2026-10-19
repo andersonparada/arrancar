@@ -12,7 +12,15 @@ export type DestinoDeDocumento = 'cuentas-por-pagar' | 'caja-chica' | 'cuentas-p
 export type CausaDeAnulacionDeDocumento =
   'error_de_captura' | 'fel_anulada_por_el_emisor' | 'no_corresponde_a_la_empresa';
 
-export type TipoDeDocumentoDeCompra = 'factura' | 'factura_pequeno_contribuyente' | 'nota_de_credito' | 'recibo';
+export type TipoDeDocumentoDeCompra =
+  | 'factura'
+  | 'factura_pequeno_contribuyente'
+  | 'factura_pequeno_contribuyente_electronico'
+  | 'factura_contribuyente_agropecuario'
+  | 'factura_primario_pecuario'
+  | 'factura_especial'
+  | 'nota_de_credito'
+  | 'recibo';
 
 /** Lo que recibe cada destino en su orden `<destino>.recibir_documento`. */
 export interface DocumentoParaDestino {

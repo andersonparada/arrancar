@@ -8,7 +8,9 @@ const RAIZ_ISR = 'libro-de-compras.retenciones_isr';
  * Convierte las variables de configuración (porcentajes y quetzales como números) en centésimas y
  * centavos enteros. `valor` lee una variable ya resuelta por niveles (para la empresa que registra).
  */
-export function configuracionDeRetenciones(valor: (clave: string) => number | boolean): ConfiguracionDeRetenciones {
+export function configuracionDeRetenciones(
+  valor: (clave: string) => number | boolean | string,
+): ConfiguracionDeRetenciones {
   const porcentaje = (clave: string): number => aCentesimasDeConfiguracion(Number(valor(clave)));
   const monto = (clave: string): number => quetzalesACentavos(Number(valor(clave)));
   return {

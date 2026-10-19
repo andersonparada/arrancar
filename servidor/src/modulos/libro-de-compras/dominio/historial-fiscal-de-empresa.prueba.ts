@@ -184,27 +184,6 @@ describe('HistorialFiscalDeEmpresa.aplicar', () => {
       regimenIva: 'general',
     });
   });
-
-  it('el régimen agropecuario no puede iniciar desde su derogación, pero sí antes', () => {
-    const agropecuario = datos({
-      tipoDePersona: 'individual',
-      regimenIva: 'contribuyente_agropecuario',
-      regimenIsr: null,
-      esAgenteDeRetencionIsr: false,
-    });
-    const historial = new HistorialFiscalDeEmpresa([vigencia('base', null, datos({ tipoDePersona: 'individual' }))]);
-
-    expect(() => historial.aplicar({ vigenteDesde: '2025-08-01', datos: agropecuario })).toThrow(
-      DatosFiscalesInvalidos,
-    );
-    expect(() => new HistorialFiscalDeEmpresa().aplicar({ vigenteDesde: '2026-01-01', datos: agropecuario })).toThrow(
-      DatosFiscalesInvalidos,
-    );
-    expect(regimenes(historial.aplicar({ vigenteDesde: '2025-06-01', datos: agropecuario }))[1]).toEqual([
-      '2025-06-01',
-      'contribuyente_agropecuario',
-    ]);
-  });
 });
 
 describe('HistorialFiscalDeEmpresa.quitar', () => {

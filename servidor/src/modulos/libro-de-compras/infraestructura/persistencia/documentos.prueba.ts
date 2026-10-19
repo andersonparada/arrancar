@@ -64,7 +64,7 @@ const NOTA = { tipo: 'nota_de_credito', fechaRecepcion: '2026-04-10', periodo: '
 
 describe('documentos: cada check', () => {
   it.each([
-    ['tipo_valido', { tipo: 'otro' }],
+    ['tipo_valido', { ...FUERA, tipo: 'otro' }],
     ['destino_valido', { destino: 'banco' }],
     ['motivo_sin_credito_valido', { motivoSinCredito: 'otro' }],
     ['estado_valido', { estado: 'otro' }],
@@ -91,11 +91,8 @@ describe('documentos: cada check', () => {
     ['sin_fel_sin_autorizacion', { ...FUERA, autorizacionFel: crypto.randomUUID() }],
     ['fel_con_autorizacion', { ...FUERA, motivoFueraDelLibro: 'fel_a_otro_nit', autorizacionFel: null }],
     ['sin_sat_sin_credito', { ...FUERA, base: '100', iva: '12' }],
-    ['pequeno_contribuyente', { tipo: 'factura_pequeno_contribuyente', iva: '0', base: '112' }],
-    [
-      'pequeno_contribuyente_sin_iva',
-      { tipo: 'factura_pequeno_contribuyente', motivoSinCredito: 'pequeno_contribuyente' },
-    ],
+    ['motivo_de_la_familia', { tipo: 'factura_pequeno_contribuyente', iva: '0', base: '112' }],
+    ['familia_sin_iva', { tipo: 'factura_pequeno_contribuyente', motivoSinCredito: 'pequeno_contribuyente' }],
     ['iva_no_acreditable_por_motivo', { ivaNoAcreditable: '5' }],
     ['exento_sin_iva', { motivoSinCredito: 'exento' }],
     ['anulacion_completa', { estado: 'anulado' }],

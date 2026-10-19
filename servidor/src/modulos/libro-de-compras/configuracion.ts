@@ -4,6 +4,15 @@ import { definirConfiguracion, type DefinicionConfiguracion } from '../core/modu
 const porcentaje = z.number().min(0).max(100).multipleOf(0.01);
 const monto = z.number().nonnegative().multipleOf(0.01);
 const dias = z.number().int().positive();
+/** Una fecha `aaaa-mm-dd` que existe en el calendario (no acepta el 30 de febrero). */
+const esFechaReal = (texto: string): boolean => {
+  const fecha = new Date(`${texto}T00:00:00Z`);
+  return !Number.isNaN(fecha.getTime()) && fecha.toISOString().startsWith(texto);
+};
+const fechaValida = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine(esFechaReal, 'Fecha inexistente.');
 
 /** Una variable: clave, descripción, esquema y valor por omisión. */
 type Fila = [clave: string, descripcion: string, esquema: z.ZodType<number>, predeterminado: number];
@@ -123,6 +132,15 @@ export const configuracionDelLibroDeCompras: DefinicionConfiguracion[] = [
     esquema: z.boolean(),
     predeterminado: true,
     niveles: ['instalacion', 'empresa'],
+    publica: false,
+  }),
+  definirConfiguracion({
+    clave: 'libro-de-compras.regimenes.fecha_de_derogacion',
+    descripcion:
+      'Primer día (aaaa-mm-dd) en que ya no se aceptan los regímenes ni los documentos derogados por el Decreto 31-2024 (pequeño contribuyente electrónico y agropecuario).',
+    esquema: fechaValida,
+    predeterminado: '2025-07-09',
+    niveles: ['instalacion'],
     publica: false,
   }),
 ];

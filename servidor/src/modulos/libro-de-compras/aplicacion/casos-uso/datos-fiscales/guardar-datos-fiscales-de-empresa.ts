@@ -8,7 +8,8 @@ import {
 } from '../../../dominio/datos-fiscales-de-empresa.js';
 import { DatosFiscalesInvalidos } from '../../../dominio/errores.js';
 import type { HistorialFiscalDeEmpresa } from '../../../dominio/historial-fiscal-de-empresa.js';
-import { problemasDeLaFechaDeVigencia } from '../../../dominio/vigencia-fiscal-de-empresa.js';
+import { problemasDeLaDerogacion, problemasDeLaFechaDeVigencia } from '../../../dominio/vigencia-fiscal-de-empresa.js';
+import type { LectorDeConfiguracionFiscal } from '../../puertos/puertos-de-documentos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 import type { CambiosAlHistorialFiscal } from './cambios-al-historial-fiscal.js';
 import { historialParaAuditoria } from './dtos-de-datos-fiscales.js';
@@ -19,6 +20,7 @@ interface Dependencias {
   cambios: CambiosAlHistorialFiscal;
   auditoria: Auditoria;
   reloj: Reloj;
+  configuracion: LectorDeConfiguracionFiscal;
 }
 
 export interface CambioDeDatosFiscales {
@@ -46,13 +48,15 @@ export class GuardarDatosFiscalesDeEmpresa {
    * @throws VigenciaFiscalEnUso si el cambio tocaría meses con documentos vigentes.
    */
   async ejecutar(operador: Operador, cambio: CambioDeDatosFiscales): Promise<void> {
-    const { unidadDeTrabajo, repositorio, cambios, auditoria, reloj } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, cambios, auditoria, reloj, configuracion } = this.dependencias;
     const { empresaId } = cambio;
     const datos = DatosFiscalesDeEmpresa.crear(cambio.datos);
     await unidadDeTrabajo.ejecutar(operador, async () => {
       await repositorio.bloquear(empresaId, 'actualizar');
       const antes = await repositorio.historial(empresaId);
       const vigenteDesde = this.vigenteDesde(cambio, antes, await reloj.hoy(operador));
+      const { fechaDeDerogacion } = await configuracion.paraEmpresa(operador);
+      this.exigirSinRegimenDerogado({ datos, vigenteDesde, fechaDeDerogacion });
       const despues = antes.aplicar({ vigenteDesde, datos });
       if (antes.esIgualA(despues)) return;
       if (!antes.estaVacio()) await cambios.exigirSinDocumentosAfectados(empresaId, antes, despues);
@@ -65,6 +69,16 @@ export class GuardarDatosFiscalesDeEmpresa {
         anterior: historialParaAuditoria(empresaId, antes),
       });
     });
+  }
+
+  private exigirSinRegimenDerogado(cambio: {
+    datos: DatosFiscalesDeEmpresa;
+    vigenteDesde: string | null;
+    fechaDeDerogacion: string;
+  }): void {
+    const { datos, vigenteDesde, fechaDeDerogacion } = cambio;
+    const problemas = problemasDeLaDerogacion(datos.instantanea().regimenIva, vigenteDesde, fechaDeDerogacion);
+    if (problemas.length > 0) throw new DatosFiscalesInvalidos(problemas);
   }
 
   private vigenteDesde(cambio: CambioDeDatosFiscales, historial: HistorialFiscalDeEmpresa, hoy: string) {

@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019,
-  problemasDeLaDerogacion,
-  problemasDeLaFechaDeVigencia,
-} from './vigencia-fiscal-de-empresa.js';
+import { problemasDeLaDerogacion, problemasDeLaFechaDeVigencia } from './vigencia-fiscal-de-empresa.js';
 
 const HOY = '2026-10-05';
 
@@ -30,16 +26,14 @@ describe('la fecha desde la que rigen unos datos', () => {
   });
 });
 
-describe('la derogación de los regímenes del Decreto 7-2019', () => {
-  it('la fecha es el 9 de julio de 2025 (confirmar en el texto oficial del Decreto 31-2024)', () => {
-    expect(FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019).toBe('2025-07-09');
-  });
+const DEROGACION = '2025-07-09';
 
+describe('la derogación de los regímenes del Decreto 7-2019', () => {
   it.each(['contribuyente_agropecuario', 'pequeno_contribuyente_electronico'] as const)(
     'el régimen %s vale antes de la derogación o «desde el inicio»',
     (regimen) => {
-      expect(problemasDeLaDerogacion(regimen, null)).toEqual([]);
-      expect(problemasDeLaDerogacion(regimen, '2025-07-01')).toEqual([]);
+      expect(problemasDeLaDerogacion(regimen, null, DEROGACION)).toEqual([]);
+      expect(problemasDeLaDerogacion(regimen, '2025-07-01', DEROGACION)).toEqual([]);
     },
   );
 
@@ -47,14 +41,19 @@ describe('la derogación de los regímenes del Decreto 7-2019', () => {
     'el régimen %s no puede iniciar después de la derogación',
     (regimen) => {
       for (const desde of ['2025-08-01', '2026-01-01']) {
-        expect(problemasDeLaDerogacion(regimen, desde)).toEqual([
+        expect(problemasDeLaDerogacion(regimen, desde, DEROGACION)).toEqual([
           expect.objectContaining({ campo: 'vigenteDesde', mensaje: expect.stringContaining('Decreto 31-2024') }),
         ]);
       }
     },
   );
 
+  it('la fecha es un parámetro: con otra fecha cambia el límite', () => {
+    expect(problemasDeLaDerogacion('contribuyente_agropecuario', '2025-08-01', '2025-09-01')).toEqual([]);
+    expect(problemasDeLaDerogacion('contribuyente_agropecuario', '2025-09-01', '2025-09-01')).toHaveLength(1);
+  });
+
   it('los demás regímenes no tienen esa regla', () => {
-    expect(problemasDeLaDerogacion('general', '2026-01-01')).toEqual([]);
+    expect(problemasDeLaDerogacion('general', '2026-01-01', DEROGACION)).toEqual([]);
   });
 });

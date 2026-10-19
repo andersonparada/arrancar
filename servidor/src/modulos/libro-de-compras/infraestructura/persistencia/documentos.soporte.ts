@@ -14,6 +14,7 @@ import { usuarios } from '../../../core/identidad/infraestructura/persistencia/u
 import { definicionesModulos } from '../../../indice.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
+import { CODIGOS_DTE_DE_LA_FAMILIA, type TipoDte } from '../../dominio/tipos-de-documento.js';
 import { combustibles } from './combustibles.tablas.js';
 import { conceptosDeGasto } from './conceptos-de-gasto.tablas.js';
 import { documentos } from './documentos.tablas.js';
@@ -131,7 +132,7 @@ let secuencia = 0;
 /** Una factura SAT válida (régimen general, Q112 con IVA) con número y autorización propios; se cambia lo que cada caso necesite. */
 export function documentoValido(escenario: Escenario, cambios: Record<string, unknown> = {}) {
   secuencia += 1;
-  return {
+  const valores = {
     empresaId: escenario.empresaA1,
     tipo: 'factura',
     proveedorId: escenario.proveedorA,
@@ -153,6 +154,13 @@ export function documentoValido(escenario: Escenario, cambios: Record<string, un
     exento: '0',
     ...cambios,
   } as typeof documentos.$inferInsert;
+  return { tipoDte: tipoDteDe(valores), ...valores };
+}
+
+/** El primer código DTE de la familia si el documento tiene FEL (`documentos_tipo_dte_con_fel`); nulo si no. */
+function tipoDteDe({ tipo, autorizacionFel }: typeof documentos.$inferInsert): TipoDte | null {
+  const codigos = (CODIGOS_DTE_DE_LA_FAMILIA as Record<string, readonly TipoDte[]>)[tipo];
+  return autorizacionFel ? (codigos?.[0] ?? null) : null;
 }
 
 /** Una línea válida de Q112 con IVA, sin combustible. */
