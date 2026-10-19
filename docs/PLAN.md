@@ -871,3 +871,14 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `GuardarDatosFiscalesDeEmpresa`, ya no `HistorialFiscalDeEmpresa.aplicar`); la base no la revisa. La constante del
   cliente sigue hasta su paso. Decisión provisional: hasta R2-4 el mapeador guarda como `tipo_dte` el primer código de
   la familia cuando el documento tiene FEL (`tipoDteProvisional`), para que el registro actual siga funcionando.
+
+- **2026-10-19 (R2-7, textos de las familias nuevas, cliente).** `TIPOS_DE_DOCUMENTO` suma `factura_pequeno_contribuyente_electronico`
+  («…electrónico (régimen derogado)»), `factura_contribuyente_agropecuario` («…agropecuario (régimen derogado)»),
+  `factura_primario_pecuario` («Factura de productor primario o pecuario») y `factura_especial` («Factura especial (emitida por
+  la empresa)»); el tipo TypeScript las incluye. Los filtros de la lista las ofrecen solos (orden por nombre). La ficha muestra
+  «Código SAT» (`tipoDte`, opcional) y «Motivo de la factura» de una nota (`motivoDeLaFactura`, opcional, con el texto de
+  `MOTIVOS_SIN_CREDITO`); se omiten si no vienen, porque el servidor aún no los envía en la lista y la ficha (R2-4).
+  Los motivos `contribuyente_agropecuario` y `primario_pecuario` ya tenían texto y se verifican en las pruebas.
+  Decisión de interfaz: el formulario de registro sigue ofreciendo solo las cuatro familias de hoy (`TIPOS_QUE_SE_REGISTRAN`);
+  las nuevas entran en R2-8, con su propia regla de emisor y de régimen. Pruebas: `textos-de-documentos.prueba.ts` y
+  `detalles-de-documento.prueba.ts` (nuevo).

@@ -779,7 +779,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 6. **R2-6 (servidor, factura especial):** migración `0016`; encabezado de la FESP (emisor = empresa, vendedor por NIT o
    CUI), las dos estrategias y la configuración nueva, plazo de entero por regla, avisos, regla de la nota (R2-e);
    pruebas puras y de API.
-7. **R2-7 (cliente, lista y ficha):** textos de las familias, del código DTE («Factura cambiaria», «Factura especial»…)
+7. **R2-7 (cliente, lista y ficha) — HECHO (2026-10-19):** textos de las familias, del código DTE («Factura cambiaria», «Factura especial»…)
    y de los motivos nuevos (revisados por el contador) en Ingreso de facturas (L3-7). **No depende de L3-8.**
 8. **R2-8 (cliente, formulario):** selector «Tipo de documento como dice el encabezado de la factura» (lista de
    códigos con su nombre; oculta los derogados si la emisión es posterior a la fecha y propone según el régimen del

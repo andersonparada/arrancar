@@ -5,9 +5,12 @@ import {
   FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019,
   MOTIVOS_SIN_CREDITO,
   REGLAS_DE_RETENCION,
+  TIPOS_DE_DOCUMENTO,
+  TIPOS_QUE_SE_REGISTRAN,
   mesDeFecha,
   textoFueraDelLibro,
 } from './textos-de-documentos';
+import type { TipoDeDocumento } from './servicios/documentos.api';
 
 describe('mes de la derogación', () => {
   it('se escribe en español a partir de la fecha AAAA-MM-DD', () => {
@@ -59,5 +62,53 @@ describe('reglas de retención', () => {
   it('cada regla nueva tiene su texto', () => {
     expect(REGLAS_DE_RETENCION.iva_factura_especial).toBe('Retención del 100 % del IVA: factura especial');
     expect(REGLAS_DE_RETENCION.isr_factura_especial).toBe('Retención de ISR (pago único): factura especial');
+  });
+});
+
+describe('familias de documento', () => {
+  it('cada familia nueva tiene su nombre en la lista y la ficha', () => {
+    expect(TIPOS_DE_DOCUMENTO.factura_pequeno_contribuyente_electronico).toBe(
+      'Factura de pequeño contribuyente electrónico (régimen derogado)',
+    );
+    expect(TIPOS_DE_DOCUMENTO.factura_contribuyente_agropecuario).toBe(
+      'Factura de contribuyente agropecuario (régimen derogado)',
+    );
+    expect(TIPOS_DE_DOCUMENTO.factura_primario_pecuario).toBe('Factura de productor primario o pecuario');
+    expect(TIPOS_DE_DOCUMENTO.factura_especial).toBe('Factura especial (emitida por la empresa)');
+  });
+
+  it('las familias de antes conservan su texto', () => {
+    expect(TIPOS_DE_DOCUMENTO.factura).toBe('Factura');
+    expect(TIPOS_DE_DOCUMENTO.factura_pequeno_contribuyente).toBe('Factura de pequeño contribuyente');
+    expect(TIPOS_DE_DOCUMENTO.nota_de_credito).toBe('Nota de crédito');
+    expect(TIPOS_DE_DOCUMENTO.recibo).toBe('Recibo');
+  });
+
+  it('el formulario de registro solo ofrece las familias de hoy, todas con texto', () => {
+    expect(TIPOS_QUE_SE_REGISTRAN).toEqual(['factura', 'factura_pequeno_contribuyente', 'nota_de_credito', 'recibo']);
+    for (const tipo of TIPOS_QUE_SE_REGISTRAN) expect(TIPOS_DE_DOCUMENTO[tipo]).toBeTruthy();
+  });
+
+  it('todas las familias del tipo tienen texto', () => {
+    const familias: TipoDeDocumento[] = [
+      'factura',
+      'factura_pequeno_contribuyente',
+      'factura_pequeno_contribuyente_electronico',
+      'factura_contribuyente_agropecuario',
+      'factura_primario_pecuario',
+      'factura_especial',
+      'nota_de_credito',
+      'recibo',
+    ];
+    expect(Object.keys(TIPOS_DE_DOCUMENTO).sort()).toEqual([...familias].sort());
+  });
+});
+
+describe('motivos de los regímenes que dan nombre propio', () => {
+  it('el agropecuario y el primario y pecuario usan su texto revisado', () => {
+    expect(MOTIVOS_SIN_CREDITO.contribuyente_agropecuario).toBe(
+      'Factura de un contribuyente agropecuario, régimen eliminado en julio de 2025 (Decreto 31-2024): no da crédito fiscal. El total se registra como costo o gasto.',
+    );
+    expect(MOTIVOS_SIN_CREDITO.primario_pecuario).toContain('no da crédito fiscal');
   });
 });

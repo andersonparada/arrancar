@@ -11,7 +11,7 @@ import {
 } from '../../composables/documentos/reglas-del-formulario-de-documento';
 import type { DestinoDeDocumento, DocumentoEnLista } from '../../servicios/documentos.api';
 import type { ProveedorParaRegistro } from '../../servicios/registro-de-documentos.api';
-import { TIPOS_DE_DOCUMENTO } from '../../textos-de-documentos';
+import { TIPOS_DE_DOCUMENTO, TIPOS_QUE_SE_REGISTRAN } from '../../textos-de-documentos';
 
 /** Quién, qué y cuándo: tipo, proveedor, destino, factura que rebaja la nota, número, fechas y período. */
 const props = defineProps<{
@@ -24,9 +24,9 @@ const props = defineProps<{
 }>();
 const edicion = defineModel<EdicionDeDocumento>({ required: true });
 
-const tipos = Object.entries(TIPOS_DE_DOCUMENTO)
-  .map(([valor, texto]) => ({ valor: valor as EdicionDeDocumento['tipo'], texto }))
-  .sort((a, b) => a.texto.localeCompare(b.texto, 'es'));
+const tipos = TIPOS_QUE_SE_REGISTRAN.map((valor) => ({ valor, texto: TIPOS_DE_DOCUMENTO[valor] })).sort((a, b) =>
+  a.texto.localeCompare(b.texto, 'es'),
+);
 const opcionesDeProveedor = computed(() => [
   { valor: null, texto: 'Elija un proveedor' },
   ...opcionesDeProveedores(props.proveedores),

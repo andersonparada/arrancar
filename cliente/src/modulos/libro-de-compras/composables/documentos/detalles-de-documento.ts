@@ -13,7 +13,12 @@ import type {
   FichaDeDocumento,
   LineaDeDocumento,
 } from '../../servicios/documentos.api';
-import { CAUSAS_DE_ANULACION, DESTINOS_DE_DOCUMENTO, TIPOS_DE_DOCUMENTO } from '../../textos-de-documentos';
+import {
+  CAUSAS_DE_ANULACION,
+  DESTINOS_DE_DOCUMENTO,
+  MOTIVOS_SIN_CREDITO,
+  TIPOS_DE_DOCUMENTO,
+} from '../../textos-de-documentos';
 import { etiquetaDePeriodo } from './filtros-de-documentos';
 
 type Identificable = { tipo: DocumentoEnLista['tipo']; serie: string | null; numero: string };
@@ -39,10 +44,12 @@ export function detallesDeTarjeta(documento: DocumentoEnLista): DetalleDeRegistr
 
 /** Los datos del encabezado de la ficha; lo que no se llenó se omite. */
 export function detallesDeEncabezado(ficha: FichaDeDocumento): DetalleDeRegistro[] {
+  const motivoDeLaFactura = ficha.motivoDeLaFactura ? MOTIVOS_SIN_CREDITO[ficha.motivoDeLaFactura] : null;
   const detalles: [string, string | null][] = [
     ['Emisor', ficha.nombreEmisor],
     ['NIT del emisor', ficha.nitEmisor],
     ['Tipo', TIPOS_DE_DOCUMENTO[ficha.tipo]],
+    ['Código SAT', ficha.tipoDte ?? null],
     ['Serie', ficha.serie],
     ['Número', ficha.numero],
     ['Autorización FEL', ficha.autorizacionFel],
@@ -52,6 +59,7 @@ export function detallesDeEncabezado(ficha: FichaDeDocumento): DetalleDeRegistro
     ['Período del libro', etiquetaDePeriodo(ficha.periodo)],
     ['Destino', formatearOpcion(DESTINOS_DE_DOCUMENTO, ficha.destino)],
     ['Se muestra en reportes SAT', formatearSiNo(ficha.muestraEnReportesSat)],
+    ['Motivo de la factura', motivoDeLaFactura],
     ['Observaciones', ficha.observaciones],
   ];
   return detalles

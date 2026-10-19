@@ -40,12 +40,25 @@ export const VENTANA_DE_DOCUMENTOS = {
   ficha: 'Factura',
 } as const;
 
+/** Las familias de documento: las de régimen derogado se marcan así para que el operador no las confunda con las vigentes. */
 export const TIPOS_DE_DOCUMENTO: Record<TipoDeDocumento, string> = {
   factura: 'Factura',
   factura_pequeno_contribuyente: 'Factura de pequeño contribuyente',
+  factura_pequeno_contribuyente_electronico: 'Factura de pequeño contribuyente electrónico (régimen derogado)',
+  factura_contribuyente_agropecuario: 'Factura de contribuyente agropecuario (régimen derogado)',
+  factura_primario_pecuario: 'Factura de productor primario o pecuario',
+  factura_especial: 'Factura especial (emitida por la empresa)',
   nota_de_credito: 'Nota de crédito',
   recibo: 'Recibo',
 };
+
+/** Las familias que el formulario de registro ofrece hoy; las de factura especial y de régimen primario se suman en R2-8. */
+export const TIPOS_QUE_SE_REGISTRAN: TipoDeDocumento[] = [
+  'factura',
+  'factura_pequeno_contribuyente',
+  'nota_de_credito',
+  'recibo',
+];
 
 export const DESTINOS_DE_DOCUMENTO: Record<DestinoDeDocumento, string> = {
   'caja-chica': 'Caja chica',

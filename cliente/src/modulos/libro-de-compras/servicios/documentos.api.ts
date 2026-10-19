@@ -1,6 +1,14 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 
-export type TipoDeDocumento = 'factura' | 'factura_pequeno_contribuyente' | 'nota_de_credito' | 'recibo';
+export type TipoDeDocumento =
+  | 'factura'
+  | 'factura_pequeno_contribuyente'
+  | 'factura_pequeno_contribuyente_electronico'
+  | 'factura_contribuyente_agropecuario'
+  | 'factura_primario_pecuario'
+  | 'factura_especial'
+  | 'nota_de_credito'
+  | 'recibo';
 export type DestinoDeDocumento = 'cuentas-por-pagar' | 'caja-chica' | 'cuentas-por-liquidar';
 export type EstadoDeDocumento = 'vigente' | 'anulado';
 export type EstadoBuscado = EstadoDeDocumento | 'todos';
@@ -19,6 +27,8 @@ export type MotivoFueraDelLibro = 'sin_fel' | 'fel_a_consumidor_final' | 'fel_a_
 export interface DocumentoEnLista {
   id: string;
   tipo: TipoDeDocumento;
+  /** El código DTE de la FEL («FACT», «FAPE»…); opcional mientras el servidor no lo envíe en la lista. */
+  tipoDte?: string | null;
   proveedorId: string;
   nombreEmisor: string;
   serie: string | null;
@@ -106,6 +116,8 @@ export interface NotaDeFactura {
 export interface FichaDeDocumento {
   id: string;
   tipo: TipoDeDocumento;
+  /** El código DTE de la FEL; si viene, la ficha lo muestra como «Código SAT». */
+  tipoDte?: string | null;
   proveedorId: string;
   nitEmisor: string | null;
   nombreEmisor: string;
@@ -119,6 +131,8 @@ export interface FichaDeDocumento {
   muestraEnReportesSat: boolean;
   motivoFueraDelLibro: MotivoFueraDelLibro | null;
   motivoSinCredito: MotivoSinCredito | null;
+  /** Solo en notas de crédito: el motivo sin crédito de la factura que rebajan (opcional hasta que el servidor lo envíe). */
+  motivoDeLaFactura?: MotivoSinCredito | null;
   documentoAfectadoId: string | null;
   destino: DestinoDeDocumento;
   observaciones: string | null;
