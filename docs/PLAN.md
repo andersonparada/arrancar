@@ -846,3 +846,12 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `exigirTipoDelProveedor` recibe el régimen. Opción C: `datosFiscalesDelProveedor` acepta `regimenIva` opcional (si no
   llega: `no_domiciliado` si el ISR lo es, `general` en los demás). Decisión: `factura` sigue aceptada para `general` y
   `no_domiciliado` (hoy lo era; evita pedir confirmación a quien ya funcionaba). Rompe la sección del cliente hasta R2-2.
+- **2026-10-19 (R2-2, sección fiscal del proveedor, cliente).** `SeccionFiscalDeProveedor` y la ficha usan `regimenIva`
+  (ya no `esPequenoContribuyente`). Selector de régimen de IVA en orden de nombre con una línea de ayuda por régimen; los
+  derogados (pequeño contribuyente electrónico y contribuyente agropecuario) solo se ofrecen si el proveedor ya los
+  tiene, con aviso. Propuestas replicadas del servidor en `datos-fiscales-de-proveedor.ts` (`regimenIsrPropuesto`,
+  `retencionesPropuestas`, `conCambioDeRegimen`) con pruebas: al cambiar de régimen se reponen ISR, agente y retenciones;
+  el ISR solo se escoge en el general (utilidades, opcional simplificado, exento) y el agente solo existe en el general;
+  las retenciones que no aplican se muestran bloqueadas con su razón. Opción C (L3-8): `datosFiscalesContestados` envía
+  `regimenIva` si el servidor lo pregunta y, con un régimen especial, no pide ISR ni agente (completa lo que el servidor
+  exige y luego ignora). Pendiente de servidor: agregar la pregunta `regimenIva` en `preguntasDeDatosFiscales`.

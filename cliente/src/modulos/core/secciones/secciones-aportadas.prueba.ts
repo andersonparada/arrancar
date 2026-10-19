@@ -68,9 +68,9 @@ describe('errores de una sección', () => {
 
 describe('secciones que se envían', () => {
   it('omite las que aún no tienen valor', () => {
-    const valores = { 'libro-de-compras': { esPequenoContribuyente: false }, otro: undefined };
+    const valores = { 'libro-de-compras': { regimenIva: 'general' }, otro: undefined };
 
-    expect(seccionesParaEnviar(valores)).toEqual({ 'libro-de-compras': { esPequenoContribuyente: false } });
+    expect(seccionesParaEnviar(valores)).toEqual({ 'libro-de-compras': { regimenIva: 'general' } });
   });
 
   it('sin secciones, un objeto vacío', () => {

@@ -20,7 +20,11 @@ import {
   detallesDeProveedor,
   fiscalesDeProveedorDesde,
   fiscalesDeProveedorPorOmision,
+  REGIMENES_DEROGADOS,
+  regimenesDeIsrPosibles,
+  regimenIsrPropuesto,
   retencionesPropuestas,
+  retencionesQueAplican,
   retencionesSonLasPropuestas,
 } from './datos-fiscales-de-proveedor';
 
@@ -114,9 +118,11 @@ describe('datos fiscales de la empresa', () => {
 });
 
 describe('datos fiscales del proveedor', () => {
-  it('sin datos guardados se le retiene el IVA y no el ISR', () => {
-    expect(fiscalesDeProveedorPorOmision()).toEqual({
-      esPequenoContribuyente: false,
+  const omision = fiscalesDeProveedorPorOmision();
+
+  it('sin datos guardados es general sobre utilidades y se le retiene el IVA', () => {
+    expect(omision).toEqual({
+      regimenIva: 'general',
       regimenIsr: 'utilidades',
       esAgenteDeRetencionIva: false,
       seLeRetieneIva: true,
@@ -126,11 +132,7 @@ describe('datos fiscales del proveedor', () => {
   });
 
   it('propone las retenciones según el régimen', () => {
-    const base = {
-      esPequenoContribuyente: false,
-      esAgenteDeRetencionIva: true,
-      regimenIsr: 'opcional_simplificado' as const,
-    };
+    const base = { regimenIva: 'general', esAgenteDeRetencionIva: true, regimenIsr: 'opcional_simplificado' } as const;
     expect(retencionesPropuestas(base)).toEqual({
       seLeRetieneIva: false,
       seLeRetieneIsr: true,
@@ -138,10 +140,17 @@ describe('datos fiscales del proveedor', () => {
     });
   });
 
-  it('al ser pequeño contribuyente quita el régimen de ISR y el agente, y propone su retención', () => {
-    const agente = { ...fiscalesDeProveedorPorOmision(), esAgenteDeRetencionIva: true, seLeRetieneIva: false };
-    expect(conCambioDeRegimen(agente, { esPequenoContribuyente: true })).toEqual({
-      esPequenoContribuyente: true,
+  it('el régimen de ISR propuesto sigue al de IVA', () => {
+    expect(regimenIsrPropuesto('general')).toBe('utilidades');
+    expect(regimenIsrPropuesto('general', 'exento')).toBe('exento');
+    expect(regimenIsrPropuesto('no_domiciliado')).toBe('no_domiciliado');
+    expect(regimenIsrPropuesto('primario', 'utilidades')).toBeNull();
+  });
+
+  it('al ser pequeño contribuyente quita el ISR y el agente, y propone su retención', () => {
+    const agente = { ...omision, esAgenteDeRetencionIva: true, seLeRetieneIva: false };
+    expect(conCambioDeRegimen(agente, { regimenIva: 'pequeno_contribuyente' })).toEqual({
+      regimenIva: 'pequeno_contribuyente',
       regimenIsr: null,
       esAgenteDeRetencionIva: false,
       seLeRetieneIva: false,
@@ -150,39 +159,73 @@ describe('datos fiscales del proveedor', () => {
     });
   });
 
-  it('quien deja de ser pequeño contribuyente vuelve a «sobre las utilidades»', () => {
-    const pequeno = conCambioDeRegimen(fiscalesDeProveedorPorOmision(), { esPequenoContribuyente: true });
-    expect(conCambioDeRegimen(pequeno, { esPequenoContribuyente: false })).toEqual(fiscalesDeProveedorPorOmision());
+  it.each(['primario', 'pecuario', 'sin_inscripcion', 'pequeno_contribuyente_electronico'] as const)(
+    '%s no tiene ISR aparte ni se le retiene nada',
+    (regimenIva) => {
+      const cambiado = conCambioDeRegimen(omision, { regimenIva });
+      expect(cambiado).toMatchObject({ regimenIsr: null, seLeRetieneIva: false, seLeRetieneIsr: false });
+      expect(cambiado.seLeRetieneIvaPequenoContribuyente).toBe(false);
+    },
+  );
+
+  it('el no domiciliado lleva su régimen de ISR', () => {
+    expect(conCambioDeRegimen(omision, { regimenIva: 'no_domiciliado' })).toMatchObject({
+      regimenIsr: 'no_domiciliado',
+      seLeRetieneIva: false,
+    });
+  });
+
+  it('quien vuelve al régimen general regresa a «sobre las utilidades»', () => {
+    const pequeno = conCambioDeRegimen(omision, { regimenIva: 'pequeno_contribuyente' });
+    expect(conCambioDeRegimen(pequeno, { regimenIva: 'general' })).toEqual(omision);
   });
 
   it('cambiar el régimen de ISR vuelve a proponer la retención del ISR', () => {
-    const simplificado = conCambioDeRegimen(fiscalesDeProveedorPorOmision(), { regimenIsr: 'opcional_simplificado' });
+    const simplificado = conCambioDeRegimen(omision, { regimenIsr: 'opcional_simplificado' });
     expect(simplificado.seLeRetieneIsr).toBe(true);
-    expect(conCambioDeRegimen(simplificado, { regimenIsr: 'no_domiciliado' }).seLeRetieneIsr).toBe(false);
+    expect(conCambioDeRegimen(simplificado, { regimenIsr: 'exento' }).seLeRetieneIsr).toBe(false);
   });
 
-  it('marcar agente de retención propone no retenerle el IVA', () => {
-    expect(conCambioDeRegimen(fiscalesDeProveedorPorOmision(), { esAgenteDeRetencionIva: true }).seLeRetieneIva).toBe(
-      false,
-    );
+  it('marcar agente de retención propone no retenerle el IVA, y solo el general puede serlo', () => {
+    expect(conCambioDeRegimen(omision, { esAgenteDeRetencionIva: true }).seLeRetieneIva).toBe(false);
+    expect(conCambioDeRegimen(omision, { regimenIva: 'primario', esAgenteDeRetencionIva: true })).toMatchObject({
+      esAgenteDeRetencionIva: false,
+    });
+  });
+
+  it('solo el régimen general escoge el ISR', () => {
+    expect(regimenesDeIsrPosibles('general')).toEqual(['exento', 'opcional_simplificado', 'utilidades']);
+    expect(regimenesDeIsrPosibles('no_domiciliado')).toEqual(['no_domiciliado']);
+    expect(regimenesDeIsrPosibles('pecuario')).toEqual([null]);
+  });
+
+  it('dice qué retenciones aplican y cuáles se bloquean', () => {
+    expect(retencionesQueAplican(omision)).toEqual({ iva: true, isr: true, ivaPequenoContribuyente: false });
+    const primario = conCambioDeRegimen(omision, { regimenIva: 'primario' });
+    expect(retencionesQueAplican(primario)).toEqual({ iva: false, isr: false, ivaPequenoContribuyente: false });
   });
 
   it('detecta las retenciones que el usuario ajustó a mano', () => {
-    const porOmision = fiscalesDeProveedorPorOmision();
-    expect(retencionesSonLasPropuestas(porOmision)).toBe(true);
-    expect(retencionesSonLasPropuestas({ ...porOmision, seLeRetieneIva: false })).toBe(false);
+    expect(retencionesSonLasPropuestas(omision)).toBe(true);
+    expect(retencionesSonLasPropuestas({ ...omision, seLeRetieneIva: false })).toBe(false);
   });
 
   it('al pasar del servidor al formulario deja fuera el id y la marca de guardado', () => {
-    const dto: DatosFiscalesDeProveedor = { proveedorId: 'p1', guardado: true, ...fiscalesDeProveedorPorOmision() };
-    expect(fiscalesDeProveedorDesde(dto)).toEqual(fiscalesDeProveedorPorOmision());
+    const dto: DatosFiscalesDeProveedor = { proveedorId: 'p1', guardado: true, ...omision };
+    expect(fiscalesDeProveedorDesde(dto)).toEqual(omision);
   });
 
-  it('la ficha de un pequeño contribuyente solo muestra su retención', () => {
-    const pequeno = conCambioDeRegimen(fiscalesDeProveedorPorOmision(), { esPequenoContribuyente: true });
+  it('la ficha muestra el régimen y solo las retenciones que aplican', () => {
+    const pequeno = conCambioDeRegimen(omision, { regimenIva: 'pequeno_contribuyente' });
     const etiquetas = detallesDeProveedor(pequeno).map((d) => d.etiqueta);
+    expect(detallesDeProveedor(pequeno)[0]).toEqual({ etiqueta: 'Régimen de IVA', valor: 'Pequeño contribuyente' });
     expect(etiquetas).toContain('Se le retiene el IVA de pequeño contribuyente');
     expect(etiquetas).not.toContain('Se le retiene el ISR');
-    expect(detallesDeProveedor(pequeno).find((d) => d.etiqueta === 'Régimen de ISR')?.valor).toContain('No aplica');
+    expect(detallesDeProveedor(pequeno).find((d) => d.etiqueta === 'Régimen de ISR')?.valor).toBe('No aplica');
+  });
+
+  it('los regímenes derogados se reconocen', () => {
+    expect(REGIMENES_DEROGADOS).toContain('contribuyente_agropecuario');
+    expect(REGIMENES_DEROGADOS).not.toContain('general');
   });
 });

@@ -18,6 +18,10 @@ export type RespuestasFiscales = Record<string, string>;
 
 const CAMPO_DEL_REGIMEN = 'regimenIsr';
 const CAMPO_DEL_AGENTE = 'esAgenteDeRetencionIva';
+const CAMPO_DEL_REGIMEN_DE_IVA = 'regimenIva';
+
+/** Solo el régimen general escoge su ISR y puede ser agente: con otro régimen de IVA esas preguntas no aplican. */
+const dependeDelRegimenGeneral = (campo: string): boolean => campo === CAMPO_DEL_REGIMEN || campo === CAMPO_DEL_AGENTE;
 
 const esOpcion = (valor: unknown): valor is OpcionDePregunta =>
   typeof valor === 'object' &&
@@ -41,14 +45,26 @@ export function preguntasDelError(detalles: unknown): PreguntaFiscal[] {
   return Array.isArray(preguntas) ? preguntas.filter(esPregunta) : [];
 }
 
+/** Las preguntas que todavía hay que contestar: con un régimen de IVA especial ya no se pregunta ISR ni agente. */
+export function preguntasVisibles(preguntas: PreguntaFiscal[], respuestas: RespuestasFiscales): PreguntaFiscal[] {
+  const regimenIva = respuestas[CAMPO_DEL_REGIMEN_DE_IVA];
+  const soloGeneral = !!regimenIva && regimenIva !== 'general';
+  return soloGeneral ? preguntas.filter(({ campo }) => !dependeDelRegimenGeneral(campo)) : preguntas;
+}
+
 /** Falta contestar alguna de las preguntas planteadas. */
 export const faltaContestar = (preguntas: PreguntaFiscal[], respuestas: RespuestasFiscales): boolean =>
-  preguntas.some(({ campo }) => !respuestas[campo]);
+  preguntasVisibles(preguntas, respuestas).some(({ campo }) => !respuestas[campo]);
 
-/** Las respuestas como las espera el servidor; `null` mientras falte alguna. */
+/**
+ * Las respuestas como las espera el servidor; `null` mientras falte alguna. Con un régimen de IVA especial el
+ * servidor ignora el ISR y el agente (los fuerza a «no aplica» y falso), pero igual los pide en el cuerpo.
+ */
 export function datosFiscalesContestados(respuestas: RespuestasFiscales): DatosFiscalesContestados | null {
-  const regimen = respuestas[CAMPO_DEL_REGIMEN];
-  const agente = respuestas[CAMPO_DEL_AGENTE];
+  const regimenIva = respuestas[CAMPO_DEL_REGIMEN_DE_IVA];
+  const especial = !!regimenIva && regimenIva !== 'general';
+  const regimen = respuestas[CAMPO_DEL_REGIMEN] ?? (especial ? 'utilidades' : undefined);
+  const agente = especial ? 'false' : respuestas[CAMPO_DEL_AGENTE];
   if (!regimen || !agente) return null;
-  return { regimenIsr: regimen, esAgenteDeRetencionIva: agente === 'true' };
+  return { ...(regimenIva ? { regimenIva } : {}), regimenIsr: regimen, esAgenteDeRetencionIva: agente === 'true' };
 }

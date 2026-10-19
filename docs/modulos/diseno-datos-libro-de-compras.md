@@ -765,7 +765,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    `problemasFiscalesDeProveedor` según 3.2b.5; esquema estricto de la sección; DTO, mapeador, repositorio y auditoría;
    `resolverDatosFiscalesDelProveedor` y `exigirTipoDelProveedor` con `regimenIva` (aún con las familias de hoy);
    pruebas puras, de checks y de API. Rompe la sección del cliente hasta R2-2: van seguidos.
-2. **R2-2 (cliente, sección del proveedor):** selector de régimen de IVA (los derogados solo se muestran si ya estaban
+2. **R2-2 (cliente, sección del proveedor) — HECHO (2026-10-19):** selector de régimen de IVA (los derogados solo se muestran si ya estaban
    guardados, con «(derogado)»), régimen de ISR con «No aplica» y «Exento», propuestas al cambiar (lógica pura con
    pruebas), ficha. **No depende de L3-8.**
 3. **R2-3 (servidor, datos de documentos):** migración `0015`; `tipos-de-documento.ts` con las familias,

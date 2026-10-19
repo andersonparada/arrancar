@@ -10,7 +10,16 @@ export type RegimenDeIva =
   | 'no_afiliado';
 export type RegimenDeIsrDeEmpresa = 'utilidades' | 'opcional_simplificado' | 'exento';
 export type AgenteDeRetencionDeIva = 'ninguno' | 'exportador' | 'contribuyente_especial' | 'sector_publico' | 'otro';
-export type RegimenDeIsrDeProveedor = 'utilidades' | 'opcional_simplificado' | 'no_domiciliado';
+export type RegimenDeIvaDeProveedor =
+  | 'general'
+  | 'pequeno_contribuyente'
+  | 'primario'
+  | 'pecuario'
+  | 'sin_inscripcion'
+  | 'no_domiciliado'
+  | 'pequeno_contribuyente_electronico'
+  | 'contribuyente_agropecuario';
+export type RegimenDeIsrDeProveedor = 'utilidades' | 'opcional_simplificado' | 'no_domiciliado' | 'exento';
 
 /** Una vigencia del historial fiscal de la empresa; `vigenteHasta` es el último mes incluido (nulo: sigue vigente). */
 export interface VigenciaFiscal {
@@ -43,7 +52,7 @@ export interface DatosFiscalesDeEmpresa {
 /** Datos fiscales de un proveedor; `guardado` es falso si el servidor devuelve los valores por omisión. */
 export interface DatosFiscalesDeProveedor {
   proveedorId: string;
-  esPequenoContribuyente: boolean;
+  regimenIva: RegimenDeIvaDeProveedor;
   regimenIsr: RegimenDeIsrDeProveedor | null;
   esAgenteDeRetencionIva: boolean;
   seLeRetieneIva: boolean;

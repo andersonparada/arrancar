@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import { erroresDeLineas, erroresDelEncabezado, problemaDeError } from './errores-del-registro';
 import { lineaVacia } from './lineas-del-documento';
-import { datosFiscalesContestados, faltaContestar, preguntasDelError, type PreguntaFiscal } from './preguntas-fiscales';
+import {
+  datosFiscalesContestados,
+  faltaContestar,
+  preguntasDelError,
+  preguntasVisibles,
+  type PreguntaFiscal,
+} from './preguntas-fiscales';
 
 const error = (estado: number, codigo: string, ...resto: [mensaje: string, detalles?: unknown]) =>
   new ErrorApi(estado, { codigo, mensaje: resto[0], detalles: resto[1] });
@@ -129,5 +135,32 @@ describe('preguntas fiscales', () => {
       regimenIsr: 'general',
       esAgenteDeRetencionIva: false,
     });
+  });
+
+  it('con un régimen de IVA especial ya no pregunta ISR ni agente', () => {
+    const conIva: PreguntaFiscal[] = [
+      { campo: 'regimenIva', pregunta: '¿Régimen de IVA?', opciones: [] },
+      ...preguntas,
+    ];
+    expect(preguntasVisibles(conIva, {}).map((p) => p.campo)).toEqual([
+      'regimenIva',
+      'regimenIsr',
+      'esAgenteDeRetencionIva',
+    ]);
+    expect(preguntasVisibles(conIva, { regimenIva: 'general' })).toHaveLength(3);
+    expect(preguntasVisibles(conIva, { regimenIva: 'primario' }).map((p) => p.campo)).toEqual(['regimenIva']);
+    expect(faltaContestar(conIva, { regimenIva: 'primario' })).toBe(false);
+  });
+
+  it('envía el régimen de IVA y completa lo que el servidor ignora en un régimen especial', () => {
+    expect(datosFiscalesContestados({ regimenIva: 'sin_inscripcion' })).toEqual({
+      regimenIva: 'sin_inscripcion',
+      regimenIsr: 'utilidades',
+      esAgenteDeRetencionIva: false,
+    });
+    expect(
+      datosFiscalesContestados({ regimenIva: 'general', regimenIsr: 'exento', esAgenteDeRetencionIva: 'true' }),
+    ).toEqual({ regimenIva: 'general', regimenIsr: 'exento', esAgenteDeRetencionIva: true });
+    expect(datosFiscalesContestados({ regimenIva: 'general' })).toBeNull();
   });
 });

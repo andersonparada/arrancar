@@ -1,18 +1,23 @@
 <script setup lang="ts">
-import { useId } from 'vue';
-import type { PreguntaFiscal, RespuestasFiscales } from '../../composables/documentos/preguntas-fiscales';
+import { computed, useId } from 'vue';
+import {
+  preguntasVisibles,
+  type PreguntaFiscal,
+  type RespuestasFiscales,
+} from '../../composables/documentos/preguntas-fiscales';
 
 /** Las preguntas que hace el servidor sobre el proveedor; lo contestado viaja con el documento y se guarda en el proveedor. */
-defineProps<{ preguntas: PreguntaFiscal[] }>();
+const props = defineProps<{ preguntas: PreguntaFiscal[] }>();
 const respuestas = defineModel<RespuestasFiscales>({ required: true });
 const id = useId();
+const visibles = computed(() => preguntasVisibles(props.preguntas, respuestas.value));
 
 const contestar = (campo: string, valor: string) => (respuestas.value = { ...respuestas.value, [campo]: valor });
 </script>
 
 <template>
   <div class="space-y-4">
-    <fieldset v-for="pregunta in preguntas" :key="pregunta.campo" class="space-y-2">
+    <fieldset v-for="pregunta in visibles" :key="pregunta.campo" class="space-y-2">
       <legend class="text-sm font-medium text-tierra-800 dark:text-tierra-100">{{ pregunta.pregunta }}</legend>
       <div class="flex flex-wrap gap-2">
         <label

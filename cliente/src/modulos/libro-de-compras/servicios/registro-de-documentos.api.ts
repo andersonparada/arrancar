@@ -27,6 +27,8 @@ export interface AjusteSolicitado {
 
 /** Lo que se contestó de un proveedor sin datos fiscales guardados. */
 export interface DatosFiscalesContestados {
+  /** Si no llega, el servidor lo deduce (no domiciliado o general). */
+  regimenIva?: string;
   regimenIsr: string;
   esAgenteDeRetencionIva: boolean;
 }
