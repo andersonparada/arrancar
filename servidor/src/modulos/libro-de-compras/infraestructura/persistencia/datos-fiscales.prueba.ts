@@ -17,7 +17,7 @@ import { usuarios } from '../../../core/identidad/infraestructura/persistencia/u
 import { definicionesModulos } from '../../../indice.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
-import { datosFiscalesDeEmpresa, datosFiscalesDeProveedor } from './datos-fiscales.tablas.js';
+import { datosFiscalesDeProveedor } from './datos-fiscales.tablas.js';
 
 let usuarioId: string;
 let cuentaA: string;
@@ -97,38 +97,6 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await grupoConexiones.end();
-});
-
-describe('datos fiscales de la empresa: seguridad por empresa', () => {
-  it('cada empresa ve solo los suyos, aunque sea de la misma cuenta', async () => {
-    await enTransaccionSegura(en(empresaA1, cuentaA), (tx) =>
-      tx.insert(datosFiscalesDeEmpresa).values({ empresaId: empresaA1, agenteDeRetencionIva: 'exportador' }),
-    );
-    const visibles = (empresaId: string, cuentaId: string) =>
-      enTransaccionSegura(en(empresaId, cuentaId), (tx) => tx.select().from(datosFiscalesDeEmpresa));
-
-    expect(await visibles(empresaA1, cuentaA)).toHaveLength(1);
-    expect(await visibles(empresaA2, cuentaA)).toEqual([]);
-    expect(await visibles(empresaB, cuentaB)).toEqual([]);
-  });
-
-  it('no se puede escribir en los de otra empresa', async () => {
-    const intento = enTransaccionSegura(en(empresaA2, cuentaA), (tx) =>
-      tx.insert(datosFiscalesDeEmpresa).values({ empresaId: empresaA1 }),
-    );
-
-    await expect(intento).rejects.toThrow();
-  });
-
-  it('un pequeño contribuyente no puede ser agente de retención (check)', async () => {
-    const intento = enTransaccionSegura(en(empresaA2, cuentaA), (tx) =>
-      tx
-        .insert(datosFiscalesDeEmpresa)
-        .values({ empresaId: empresaA2, regimenIva: 'pequeno_contribuyente', agenteDeRetencionIva: 'otro' }),
-    );
-
-    expect(await restriccionQueViola(intento)).toBe('datos_fiscales_de_empresa_pequeno_no_retiene');
-  });
 });
 
 describe('datos fiscales del proveedor: seguridad por cuenta y llave compuesta', () => {

@@ -777,3 +777,14 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `puedeEliminar`; eliminar pide confirmación; los `avisos` de las respuestas se muestran con `usarAvisos`. El botón
   «Registrar factura» queda deshabilitado hasta L3-8. Lógica pura con pruebas en `composables/documentos/`.
   Pruebas del cliente: 400.
+- **2026-10-18 (R1-1 y R1-2, historial fiscal de la empresa).** `libro_de_compras.datos_fiscales_de_empresa` es un
+  historial de escalones: PK `id`, `vigente_desde` (nulo = «desde el inicio», la base), `tipo_de_persona`, seis
+  regímenes de IVA, `regimen_isr` nulo («no aplica») o con `exento`, y los checks del diseño; migración
+  `0012_r1_regimen_de_empresa_con_vigencia` (a mano, tras la `0011` de R1-3). Dominio: `HistorialFiscalDeEmpresa`
+  (`vigenteEn`, `aplicar`, `quitar`, `rangosAfectados`, `diferenciasCon`), `datosPropuestos` (tabla R1-e) y
+  `FECHA_DE_DEROGACION_AGROPECUARIO` (por confirmar). La sección fiscal de Empresas lleva `tipoDePersona`
+  (obligatorio) y `vigenteDesde`; `GuardarDatosFiscalesDeEmpresa` resuelve los siete casos con bloqueo `for update`,
+  auditoría `corregir`/`eliminar` con el historial anterior y 409 `vigencia_fiscal_en_uso` si hay documentos vigentes
+  en los meses afectados. `GET …/datos-fiscales` trae lo de hoy y el historial; `DELETE …/vigencias/:id` quita una
+  vigencia. Sin datos fiscales, registrar o calcular un documento responde 422 `empresa_sin_datos_fiscales`; el
+  cargador lee el régimen del período del documento. Pendiente: R1-4 (foto del régimen, `for share`), R1-5 a R1-7.

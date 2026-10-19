@@ -5,6 +5,7 @@ import {
   UnidadDeTrabajoEnMemoria,
   operadorDePrueba,
 } from '../../core/compartido/pruebas/dobles-compartidos.js';
+import { DatosFiscalesDeEmpresa } from '../dominio/datos-fiscales-de-empresa.js';
 import { FuenteDeLunesAViernes } from '../dominio/calendario-laboral.js';
 import type { DependenciasDelPreparador } from '../aplicacion/casos-uso/documentos/preparador-de-documento.js';
 import type { SolicitudDeDocumento } from '../aplicacion/dto/solicitud-de-documento.js';
@@ -89,7 +90,7 @@ export function crearEscenario() {
   const destinos = new DestinosEnMemoria();
   const empresa = new DatosDeLaEmpresaEnMemoria();
   const completadorDeNit = new CompletadorDeNitEnMemoria();
-  const datosDeEmpresa = new DatosFiscalesDeEmpresaEnMemoria();
+  const datosDeEmpresa = new DatosFiscalesDeEmpresaEnMemoria(DatosFiscalesDeEmpresa.porOmision());
   const datosDeProveedor = new DatosFiscalesDeProveedorEnMemoria();
   const publicadorEventos = new PublicadorEventosEnMemoria();
   const auditoria = new AuditoriaEnMemoria();

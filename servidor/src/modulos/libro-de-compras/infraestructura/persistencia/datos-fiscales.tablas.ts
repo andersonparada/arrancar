@@ -1,8 +1,9 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, foreignKey, index, text, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { boolean, check, date, foreignKey, index, text, unique, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import {
   autoria,
   deLaTransaccion,
+  idPrimario,
   marcasDeTiempo,
   politicaPorCuenta,
   politicaPorEmpresa,
@@ -12,35 +13,82 @@ import { empresas } from '../../../core/cuentas/infraestructura/persistencia/emp
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { esquemaLibroDeCompras } from './esquema.tablas.js';
 
+const REGIMENES_DE_IVA_SQL = `'general', 'pequeno_contribuyente', 'pequeno_contribuyente_electronico', 'contribuyente_agropecuario', 'primario_pecuario', 'no_afiliado'`;
+
+type ColumnasDeLaEmpresa = Record<
+  'regimenIva' | 'regimenIsr' | 'agenteDeRetencionIva' | 'tipoDePersona' | 'vigenteDesde',
+  AnyPgColumn
+>;
+
+/** Las reglas de coherencia de los regímenes y el agente de IVA (las mismas del dominio). */
+function reglasDeLosRegimenes(t: ColumnasDeLaEmpresa) {
+  return [
+    check('datos_fiscales_de_empresa_regimen_iva', sql`${t.regimenIva} in (${sql.raw(REGIMENES_DE_IVA_SQL)})`),
+    check(
+      'datos_fiscales_de_empresa_regimen_isr',
+      sql`${t.regimenIsr} is null or ${t.regimenIsr} in ('utilidades', 'opcional_simplificado', 'exento')`,
+    ),
+    check(
+      'datos_fiscales_de_empresa_regimen_isr_segun_iva',
+      sql`(${t.regimenIva} in ('general', 'no_afiliado')) = (${t.regimenIsr} is not null)`,
+    ),
+    check(
+      'datos_fiscales_de_empresa_agente_de_iva',
+      sql`${t.agenteDeRetencionIva} in ('ninguno', 'exportador', 'contribuyente_especial', 'sector_publico', 'otro')`,
+    ),
+    check(
+      'datos_fiscales_de_empresa_agente_de_iva_solo_general',
+      sql`${t.regimenIva} = 'general' or ${t.agenteDeRetencionIva} = 'ninguno'`,
+    ),
+  ];
+}
+
+/** Las reglas del tipo de persona y de la fecha de vigencia (las mismas del dominio). */
+function reglasDePersonaYVigencia(t: ColumnasDeLaEmpresa) {
+  return [
+    check('datos_fiscales_de_empresa_tipo_de_persona', sql`${t.tipoDePersona} in ('individual', 'juridica')`),
+    check(
+      'datos_fiscales_de_empresa_agropecuario_individual',
+      sql`${t.regimenIva} <> 'contribuyente_agropecuario' or ${t.tipoDePersona} = 'individual'`,
+    ),
+    check(
+      'datos_fiscales_de_empresa_exento_solo_juridica',
+      sql`${t.regimenIsr} is distinct from 'exento' or ${t.tipoDePersona} = 'juridica'`,
+    ),
+    check(
+      'datos_fiscales_de_empresa_vigente_desde_primer_dia',
+      sql`${t.vigenteDesde} is null or extract(day from ${t.vigenteDesde}) = 1`,
+    ),
+  ];
+}
+
 /**
- * Datos fiscales de cada empresa: regímenes y agentes de retención (una fila por empresa, creada al guardar la
- * sección por primera vez; sin fila valen los valores por omisión). El NIT sigue en `core.empresas`, y la razón
- * social y el nombre comercial en `empresas.datos_fiscales`.
+ * Historial fiscal de cada empresa: una fila por vigencia (escalón). Cada fila rige desde `vigente_desde` hasta el
+ * mes anterior al de la siguiente; la base tiene `vigente_desde` nulo («desde el inicio»). El tipo de persona vive
+ * en cada fila y el dominio lo mantiene igual en todas. Sin filas la empresa no tiene datos fiscales: no se supone
+ * ningún régimen. El NIT sigue en `core.empresas`, y la razón social y el nombre comercial en
+ * `empresas.datos_fiscales`.
  */
 export const datosFiscalesDeEmpresa = esquemaLibroDeCompras.table(
   'datos_fiscales_de_empresa',
   {
+    id: idPrimario(),
     empresaId: uuid()
-      .primaryKey()
+      .notNull()
       .references(() => empresas.id, { onDelete: 'cascade' }),
+    vigenteDesde: date(),
+    tipoDePersona: text().notNull(),
     regimenIva: text().notNull().default('general'),
-    regimenIsr: text().notNull().default('utilidades'),
+    regimenIsr: text().default('utilidades'),
     agenteDeRetencionIva: text().notNull().default('ninguno'),
     esAgenteDeRetencionIsr: boolean().notNull().default(true),
     ...marcasDeTiempo,
     ...autoria,
   },
   (t) => [
-    check('datos_fiscales_de_empresa_regimen_iva', sql`${t.regimenIva} in ('general', 'pequeno_contribuyente')`),
-    check('datos_fiscales_de_empresa_regimen_isr', sql`${t.regimenIsr} in ('utilidades', 'opcional_simplificado')`),
-    check(
-      'datos_fiscales_de_empresa_agente_de_iva',
-      sql`${t.agenteDeRetencionIva} in ('ninguno', 'exportador', 'contribuyente_especial', 'sector_publico', 'otro')`,
-    ),
-    check(
-      'datos_fiscales_de_empresa_pequeno_no_retiene',
-      sql`${t.regimenIva} <> 'pequeno_contribuyente' or ${t.agenteDeRetencionIva} = 'ninguno'`,
-    ),
+    unique('datos_fiscales_de_empresa_vigencia_unica').on(t.empresaId, t.vigenteDesde).nullsNotDistinct(),
+    ...reglasDeLosRegimenes(t),
+    ...reglasDePersonaYVigencia(t),
     politicaPorEmpresa(),
   ],
 );

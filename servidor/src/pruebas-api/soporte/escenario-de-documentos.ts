@@ -18,6 +18,12 @@ const CLAVE = 'libro-de-compras';
 /** La fecha de hoy en Guatemala, como la ve el servidor. */
 export const HOY = new Date().toLocaleDateString('sv', { timeZone: 'America/Guatemala' });
 
+/** El primer día del mes que queda `meses` después del de hoy (puede ser negativo): `aaaa-mm-01`. */
+export function primerDiaDelMes(meses: number): string {
+  const indice = Number(HOY.slice(0, 4)) * 12 + (Number(HOY.slice(5, 7)) - 1) + meses;
+  return `${Math.floor(indice / 12)}-${String((indice % 12) + 1).padStart(2, '0')}-01`;
+}
+
 export class DestinoRechaza extends ReglaDeNegocioInfringida {
   readonly codigo = 'destino_rechaza';
 }
@@ -96,7 +102,7 @@ export async function configurarEmpresa(cuenta: CuentaDePrueba, seccion: Record<
   const respuesta = await cuenta.propietario.put(`/api/empresas/${cuenta.empresaId}`, {
     nombre: 'Rancho fiscal',
     nit: NIT_DE_LA_EMPRESA,
-    secciones: { [CLAVE]: seccion },
+    secciones: { [CLAVE]: { tipoDePersona: 'juridica', ...seccion } },
   });
   expect(respuesta.estado).toBe(200);
 }

@@ -9,6 +9,21 @@ export class EmpresaSinNit extends ReglaDeNegocioInfringida {
   }
 }
 
+/**
+ * La empresa no tiene datos fiscales guardados: sin su régimen no se sabe si el IVA es crédito, así que no se supone
+ * ninguno. `detalles.seccion` lleva a la sección fiscal del formulario de la empresa.
+ */
+export class EmpresaSinDatosFiscales extends ReglaDeNegocioInfringida {
+  readonly codigo = 'empresa_sin_datos_fiscales';
+
+  constructor() {
+    super(
+      'La empresa no tiene sus datos fiscales (tipo de persona y régimen). Complételos en la sección fiscal de los datos de la empresa para registrar documentos.',
+      { seccion: 'secciones.libro-de-compras' },
+    );
+  }
+}
+
 /** El proveedor está inactivo (él o su papel de proveedor): no se le registran documentos nuevos. */
 export class ProveedorInactivo extends ReglaDeNegocioInfringida {
   readonly codigo = 'proveedor_inactivo';

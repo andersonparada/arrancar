@@ -123,7 +123,11 @@ describe('registrar un documento', () => {
     const marcado = documentoDePrueba(escenario);
     expect((await escenario.cuenta.propietario.post(RUTA_DOCUMENTOS, recibo)).estado).toBe(201);
     expect((await escenario.cuenta.propietario.post(RUTA_DOCUMENTOS, marcado)).estado).toBe(201);
-    const otra = await escenario.cuenta.propietario.post('/api/empresas', { nombre: 'Otra empresa', nit: '22222227' });
+    const otra = await escenario.cuenta.propietario.post('/api/empresas', {
+      nombre: 'Otra empresa',
+      nit: '22222227',
+      secciones: { 'libro-de-compras': { tipoDePersona: 'juridica' } },
+    });
     await escenario.cuenta.propietario.put('/api/sesion/empresa-activa', { empresaId: otra.cuerpo.id });
     const concepto = await escenario.cuenta.propietario.post('/api/libro-de-compras/conceptos-de-gasto', {
       nombre: 'Medicinas',

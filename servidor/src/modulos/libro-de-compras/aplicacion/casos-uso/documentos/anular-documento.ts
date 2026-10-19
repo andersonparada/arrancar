@@ -14,10 +14,13 @@ import {
 import type { DestinoDeDocumento } from '../../../dominio/destinos-de-documento.js';
 import { DocumentoAnulado } from '../../../dominio/eventos.js';
 import type { AnulacionDeDocumentoDto } from '../../dto/documento-ficha.dto.js';
-import type { RepositorioDeDocumentosGuardados } from '../../puertos/puertos-de-baja-de-documentos.js';
+import type {
+  DocumentoGuardado,
+  RepositorioDeDocumentosGuardados,
+} from '../../puertos/puertos-de-baja-de-documentos.js';
 import type { ControlDePeriodos, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
-import { empresaConCreditoFiscal } from './credito-de-la-empresa.js';
+import { bajaDelPeriodo } from './credito-de-la-empresa.js';
 import { dtoDeFicha, hechosDe } from './dto-de-ficha.js';
 
 interface Dependencias {
@@ -72,7 +75,7 @@ export class AnularDocumento {
     operador: Operador,
     { documentoId, causa, motivo, origen }: PeticionDeAnulacion,
   ): Promise<AnulacionDeDocumentoDto> {
-    const { repositorio, destinos, control, auditoria } = this.dependencias;
+    const { repositorio, destinos, control } = this.dependencias;
     const guardado = await repositorio.buscar(documentoId, true);
     if (!guardado) throw new RecursoNoEncontrado('El documento');
     exigirAnulable(hechosDe(guardado));
@@ -80,17 +83,21 @@ export class AnularDocumento {
     const { destino } = guardado.documento;
     if (origen !== destino) await destinos.avisarPorAnular(operador, { documentoId, destino, motivo });
     await repositorio.anular(documentoId, { anuladoPor: operador.usuarioId, motivo, causa });
-    await auditoria.registrar({
-      recurso: 'libro-de-compras.documentos',
-      registroId: documentoId,
-      accion: 'anular',
-      anterior: dtoDeFicha(guardado),
-      motivo: `${causa}: ${motivo}`,
-    });
+    await this.auditar(guardado, `${causa}: ${motivo}`);
     const hoy = await this.dependencias.reloj.hoy(operador);
     const anulado = (await repositorio.buscar(documentoId, false)) ?? guardado;
-    const conCredito = await empresaConCreditoFiscal(this.dependencias.datosFiscalesDeEmpresa, operador.empresaId);
-    const baja = { periodo: guardado.documento.periodo, empresaConCreditoFiscal: conCredito };
+    const { periodo } = guardado.documento;
+    const baja = await bajaDelPeriodo(this.dependencias.datosFiscalesDeEmpresa, operador.empresaId, periodo);
     return { documento: dtoDeFicha(anulado), avisos: avisosDeBajaPorPeriodo(baja, hoy) };
+  }
+
+  private auditar(guardado: DocumentoGuardado, motivo: string): Promise<void> {
+    return this.dependencias.auditoria.registrar({
+      recurso: 'libro-de-compras.documentos',
+      registroId: guardado.documento.id,
+      accion: 'anular',
+      anterior: dtoDeFicha(guardado),
+      motivo,
+    });
   }
 }

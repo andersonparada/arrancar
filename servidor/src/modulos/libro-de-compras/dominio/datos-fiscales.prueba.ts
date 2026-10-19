@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { DatosFiscalesDeEmpresa } from './datos-fiscales-de-empresa.js';
+import {
+  DatosFiscalesDeEmpresa,
+  problemasFiscalesDeEmpresa,
+  type PropiedadesFiscalesDeEmpresa,
+} from './datos-fiscales-de-empresa.js';
 import { DatosFiscalesDeProveedor, type PropiedadesFiscalesDeProveedor } from './datos-fiscales-de-proveedor.js';
 import { DatosFiscalesInvalidos } from './errores.js';
 
@@ -8,45 +12,96 @@ const proveedor = (cambios: Partial<PropiedadesFiscalesDeProveedor> = {}): Propi
   ...cambios,
 });
 
-describe('datos fiscales de la empresa', () => {
-  it('sin datos guardados: régimen general, sobre utilidades, agente de retención del ISR y ninguno del IVA', () => {
-    expect(DatosFiscalesDeEmpresa.porOmision().instantanea()).toEqual({
-      regimenIva: 'general',
-      regimenIsr: 'utilidades',
-      agenteDeRetencionIva: 'ninguno',
-      esAgenteDeRetencionIsr: true,
-    });
-  });
+const empresa = (cambios: Partial<PropiedadesFiscalesDeEmpresa> = {}): PropiedadesFiscalesDeEmpresa => ({
+  ...DatosFiscalesDeEmpresa.porOmision().instantanea(),
+  ...cambios,
+});
 
+const sinISr = { regimenIsr: null, esAgenteDeRetencionIsr: false } as const;
+
+describe('datos fiscales de la empresa', () => {
   it('una empresa general puede ser agente de retención', () => {
-    const datos = DatosFiscalesDeEmpresa.crear({
-      regimenIva: 'general',
-      regimenIsr: 'opcional_simplificado',
-      agenteDeRetencionIva: 'exportador',
-      esAgenteDeRetencionIsr: true,
-    });
+    const datos = DatosFiscalesDeEmpresa.crear(
+      empresa({ regimenIsr: 'opcional_simplificado', agenteDeRetencionIva: 'exportador' }),
+    );
 
     expect(datos.instantanea()).toMatchObject({ agenteDeRetencionIva: 'exportador', esAgenteDeRetencionIsr: true });
   });
 
-  it('un pequeño contribuyente no puede ser agente de retención del IVA', () => {
+  it.each([
+    'pequeno_contribuyente',
+    'pequeno_contribuyente_electronico',
+    'contribuyente_agropecuario',
+    'primario_pecuario',
+  ] as const)('con %s no puede ser agente de retención del IVA', (regimenIva) => {
     const crear = () =>
-      DatosFiscalesDeEmpresa.crear({
-        regimenIva: 'pequeno_contribuyente',
-        regimenIsr: 'utilidades',
-        agenteDeRetencionIva: 'contribuyente_especial',
-        esAgenteDeRetencionIsr: false,
-      });
+      DatosFiscalesDeEmpresa.crear(
+        empresa({ regimenIva, ...sinISr, tipoDePersona: 'individual', agenteDeRetencionIva: 'otro' }),
+      );
 
     expect(crear).toThrow(DatosFiscalesInvalidos);
   });
 
-  it('sabe si dos datos son iguales', () => {
+  it('con el régimen general o no afiliado el ISR es obligatorio; con los demás no aplica', () => {
+    const problemas = (cambios: Partial<PropiedadesFiscalesDeEmpresa>) => problemasFiscalesDeEmpresa(empresa(cambios));
+
+    expect(problemas({ regimenIsr: null })).toEqual([expect.objectContaining({ campo: 'regimenIsr' })]);
+    expect(problemas({ regimenIva: 'no_afiliado', regimenIsr: null })).toHaveLength(1);
+    expect(problemas({ regimenIva: 'primario_pecuario', regimenIsr: 'utilidades' })).toHaveLength(1);
+    expect(problemas({ regimenIva: 'pequeno_contribuyente', ...sinISr })).toEqual([]);
+  });
+
+  it('solo una persona jurídica puede estar exenta del ISR', () => {
+    const exenta = (tipoDePersona: 'individual' | 'juridica') =>
+      problemasFiscalesDeEmpresa(empresa({ regimenIva: 'no_afiliado', regimenIsr: 'exento', tipoDePersona }));
+
+    expect(exenta('juridica')).toEqual([]);
+    expect(exenta('individual')).toEqual([expect.objectContaining({ campo: 'regimenIsr' })]);
+  });
+
+  it('el contribuyente agropecuario solo puede ser persona individual', () => {
+    const agropecuario = (tipoDePersona: 'individual' | 'juridica') =>
+      problemasFiscalesDeEmpresa(empresa({ regimenIva: 'contribuyente_agropecuario', ...sinISr, tipoDePersona }));
+
+    expect(agropecuario('individual')).toEqual([]);
+    expect(agropecuario('juridica')).toEqual([expect.objectContaining({ campo: 'tipoDePersona' })]);
+  });
+
+  it('el primario y pecuario admite personas individuales y jurídicas', () => {
+    for (const tipoDePersona of ['individual', 'juridica'] as const) {
+      const datos = empresa({ regimenIva: 'primario_pecuario', ...sinISr, tipoDePersona });
+
+      expect(problemasFiscalesDeEmpresa(datos)).toEqual([]);
+    }
+  });
+
+  it('da crédito fiscal solo en el régimen general', () => {
+    const da = (cambios: Partial<PropiedadesFiscalesDeEmpresa>) =>
+      DatosFiscalesDeEmpresa.crear(empresa(cambios)).daCreditoFiscal();
+
+    expect(da({})).toBe(true);
+    expect(da({ regimenIva: 'no_afiliado', regimenIsr: 'exento' })).toBe(false);
+    expect(da({ regimenIva: 'pequeno_contribuyente', ...sinISr })).toBe(false);
+  });
+
+  it('tiene ISR sobre utilidades solo con ese régimen', () => {
+    const tiene = (regimenIsr: PropiedadesFiscalesDeEmpresa['regimenIsr']) =>
+      DatosFiscalesDeEmpresa.crear(empresa({ regimenIsr })).tieneIsrSobreUtilidades();
+
+    expect(tiene('utilidades')).toBe(true);
+    expect(tiene('opcional_simplificado')).toBe(false);
+    expect(tiene('exento')).toBe(false);
+  });
+
+  it('sabe si dos datos son iguales y si tienen los mismos datos fiscales (sin contar la persona)', () => {
     const base = DatosFiscalesDeEmpresa.porOmision();
-    const otros = DatosFiscalesDeEmpresa.crear({ ...base.instantanea(), esAgenteDeRetencionIsr: false });
+    const otros = DatosFiscalesDeEmpresa.crear(empresa({ esAgenteDeRetencionIsr: false }));
+    const individual = base.conTipoDePersona('individual');
 
     expect(base.esIgualA(DatosFiscalesDeEmpresa.porOmision())).toBe(true);
     expect(base.esIgualA(otros)).toBe(false);
+    expect(base.esIgualA(individual)).toBe(false);
+    expect(base.tieneLosMismosDatosFiscalesQue(individual)).toBe(true);
   });
 });
 

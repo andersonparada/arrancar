@@ -19,10 +19,8 @@ import { ProveedoresParaDocumentosDrizzle } from '../infraestructura/persistenci
 import { ConsultasDeListaDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-lista-de-documentos.drizzle.js';
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { RepositorioDeDocumentosGuardadosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos-guardados.drizzle.js';
-import {
-  RepositorioDeDatosFiscalesDeEmpresaDrizzle,
-  RepositorioDeDatosFiscalesDeProveedorDrizzle,
-} from '../infraestructura/persistencia/repositorios-de-datos-fiscales.drizzle.js';
+import { RepositorioDeDatosFiscalesDeEmpresaDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales-de-empresa.drizzle.js';
+import { RepositorioDeDatosFiscalesDeProveedorDrizzle } from '../infraestructura/persistencia/repositorios-de-datos-fiscales.drizzle.js';
 import { CompletadorDeNitEnMediador, DatosDeLaEmpresaEnMediador } from '../infraestructura/vecinos-en-mediador.js';
 import { atenderOrdenesDeDocumentos } from './ordenes-de-documentos.js';
 

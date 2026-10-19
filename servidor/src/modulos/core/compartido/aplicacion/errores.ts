@@ -21,8 +21,8 @@ export class RecursoDuplicado extends ErrorEsperado {
 export class RecursoEnUso extends ErrorEsperado {
   readonly codigo: string = 'en_uso';
 
-  constructor(mensaje = 'El registro está relacionado con otros datos y no se puede eliminar.') {
-    super(mensaje);
+  constructor(mensaje = 'El registro está relacionado con otros datos y no se puede eliminar.', detalles?: unknown) {
+    super(mensaje, detalles);
   }
 }
 

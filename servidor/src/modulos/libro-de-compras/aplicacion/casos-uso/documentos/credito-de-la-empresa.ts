@@ -1,14 +1,15 @@
-import { DatosFiscalesDeEmpresa } from '../../../dominio/datos-fiscales-de-empresa.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 
 /**
- * Si la empresa acredita hoy el IVA de sus compras (sin datos guardados, valen los de omisión). Es lo que usan
- * las bajas para decidir si avisan de rectificar; el paso R1-4 lo cambiará por el régimen del período del documento.
+ * Lo que las bajas necesitan para decidir si avisan de rectificar: el período del documento y si la empresa acredita
+ * el IVA de sus compras en él (el régimen de ese período, no el de hoy). Si por algo no hubiera datos de ese
+ * período, vale que sí acredita.
  */
-export async function empresaConCreditoFiscal(
+export async function bajaDelPeriodo(
   datosFiscales: RepositorioDeDatosFiscalesDeEmpresa,
   empresaId: string,
-): Promise<boolean> {
-  const datos = (await datosFiscales.buscar(empresaId)) ?? DatosFiscalesDeEmpresa.porOmision();
-  return datos.daCreditoFiscal();
+  periodo: string,
+): Promise<{ periodo: string; empresaConCreditoFiscal: boolean }> {
+  const datos = await datosFiscales.vigenteEn(empresaId, periodo);
+  return { periodo, empresaConCreditoFiscal: datos?.daCreditoFiscal() ?? true };
 }

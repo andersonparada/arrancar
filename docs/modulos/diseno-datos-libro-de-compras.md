@@ -373,16 +373,27 @@ El `when` de cada entrada del `_journal.json` debe ser mayor que el de `0010` (`
 
 Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`.
 
-1. **R1-1 (servidor, datos):** tabla de 3.1b.3 en `datos-fiscales.tablas.ts`, migración `0011`; dominio:
+1. **R1-1 (servidor, datos) — HECHO (2026-10-18):** tabla de 3.1b.3 en `datos-fiscales.tablas.ts`, migración `0011`; dominio:
    `DatosFiscalesDeEmpresa` con `tipoDePersona` y los seis regímenes, `problemasFiscalesDeEmpresa` con las reglas
    nuevas, `datosPropuestos` (3.1b.6) y `HistorialFiscalDeEmpresa` (`vigenteEn`, `aplicar`, `rangosAfectados`) con
    pruebas puras; repositorio (`historial`, `vigenteEn`, `bloquear(modo)`, `insertar`, `actualizar`,
    `actualizarTipoDePersona`, `eliminar`); mensaje del `23505`; pruebas de checks, lectura y RLS. El caso de uso
    de guardar se adapta lo mínimo para seguir funcionando (corrige la vigencia de hoy).
-2. **R1-2 (servidor, guardar y leer):** `GuardarDatosFiscalesDeEmpresa` con los siete casos, `vigenteDesde` y
+   Hecho: migración `0012_r1_regimen_de_empresa_con_vigencia` (a mano, para cambiar la llave primaria; la `0011` es la
+   de R1-3); `HistorialFiscalDeEmpresa` guarda también el id de cada vigencia y el repositorio escribe las
+   diferencias (`diferenciasCon`: eliminar, actualizar, insertar), por eso no hay `actualizarTipoDePersona`: el tipo
+   de persona va en cada vigencia. Dos escalones seguidos con los mismos datos se juntan siempre (también al corregir
+   o quitar). `DatosFiscalesDeEmpresa.porOmision()` queda solo como punto de partida de las pruebas; la empresa sin
+   filas no tiene datos. La derogación del régimen agropecuario (`FECHA_DE_DEROGACION_AGROPECUARIO`, 2025-07-01,
+   por confirmar en el Decreto 31-2024) se revisa con la fecha pedida, también en el alta.
+2. **R1-2 (servidor, guardar y leer) — HECHO (2026-10-18):** `GuardarDatosFiscalesDeEmpresa` con los siete casos, `vigenteDesde` y
    `tipoDePersona` en `esquemaSeccionFiscalDeEmpresa` (completando con `datosPropuestos`), `VigenciaFiscalEnUso`
    (consulta de documentos vigentes por rango), bloqueo `for update`, auditoría; DTO con historial y `conDocumentos`;
    ruta `DELETE …/datos-fiscales/vigencias/:id` (si se aprueba R1-c); pruebas de API.
+   Hecho: la ruta es `DELETE /api/libro-de-compras/empresas/:empresaId/datos-fiscales/vigencias/:vigenciaId`
+   (`empresas.editar`, 204). Sin datos guardados, registrar y calcular responden 422 `empresa_sin_datos_fiscales`
+   (`detalles.seccion`); el cargador lee la vigencia del período del documento (sin `for share` ni foto: R1-4).
+   Las bajas leen el crédito del período del documento. El tipo de persona es obligatorio en la sección.
 3. **R1-3 (servidor, dominio de documentos) — HECHO (2026-10-05):** `daCreditoFiscal` y `tieneIsrSobreUtilidades`, motivo
    `empresa_sin_credito` y su orden, regla de la nota, avisos de la decisión 1; pruebas puras. Se adelantó la parte de
    la migración que solo amplía los checks de `motivo_sin_credito` e `iva_no_acreditable_por_motivo` (migración
@@ -962,9 +973,9 @@ solo). `core.rol_permisos` y `core.usuario_permisos` no se tocan.
 | L2-1 | `0002_l2_conceptos_de_gasto.sql` | tabla |
 | L2-3 | `0003_l2_combustibles.sql` | `create extension if not exists btree_gist;` + las dos tablas + exclusión |
 | L3-1 | `0004_l3_documentos.sql` | documentos, líneas y retenciones con sus checks e índices (los índices con `coalesce` o `where` que drizzle-kit no escriba bien, en una `--custom` aparte) |
-| R1-1 | `0011_r1_regimen_de_empresa_con_vigencia.sql` | historial de datos fiscales de la empresa (§3.1b.9) |
-| R1-3 | `0011_r1_motivo_empresa_sin_credito.sql` | solo amplía el check del motivo y el de `iva_no_acreditable_por_motivo` (número a renumerar al integrar con R1-1) |
-| R1-4 | `0012_r1_foto_del_regimen_en_documentos.sql` | `regimen_iva_de_la_empresa`, motivo `empresa_sin_credito` y checks (§3.1b.9) |
+| R1-1 | `0012_r1_regimen_de_empresa_con_vigencia.sql` (hecha; la `0011` es la de R1-3) | historial de datos fiscales de la empresa (§3.1b.9) |
+| R1-3 | `0011_r1_motivo_empresa_sin_credito.sql` | solo amplía el check del motivo y el de `iva_no_acreditable_por_motivo` (ya integrada: tiene el número `0011`) |
+| R1-4 | `0013_r1_foto_del_regimen_en_documentos.sql` | `regimen_iva_de_la_empresa`, motivo `empresa_sin_credito` y checks (§3.1b.9) |
 | L5 | `…_periodos.sql` | `periodos` |
 
 Datos existentes: ninguno (módulo nuevo, ninguna cuenta lo tiene activo). Semillas: ninguna

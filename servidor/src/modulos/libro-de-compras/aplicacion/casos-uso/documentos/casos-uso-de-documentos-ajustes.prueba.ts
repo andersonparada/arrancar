@@ -101,7 +101,7 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
       autorizacionFel: null,
     });
     const base = DatosFiscalesDeEmpresa.porOmision().instantanea();
-    e.datosDeEmpresa.filas.set(
+    e.datosDeEmpresa.fijar(
       operador.empresaId,
       DatosFiscalesDeEmpresa.crear({ ...base, esAgenteDeRetencionIsr: false }),
     );
@@ -194,7 +194,7 @@ describe('retención ya practicada en un documento anulado', () => {
   beforeEach(() => {
     const base = DatosFiscalesDeEmpresa.porOmision().instantanea();
     const agente = DatosFiscalesDeEmpresa.crear({ ...base, agenteDeRetencionIva: 'contribuyente_especial' });
-    e.datosDeEmpresa.filas.set(operador.empresaId, agente);
+    e.datosDeEmpresa.fijar(operador.empresaId, agente);
     e.consultas.anuladoConRetenciones = practicada;
   });
 
@@ -255,7 +255,7 @@ describe('retención rebajada', () => {
   it('rebajar una retención (no solo quitarla) avisa la responsabilidad solidaria', async () => {
     const base = DatosFiscalesDeEmpresa.porOmision().instantanea();
     const agente = DatosFiscalesDeEmpresa.crear({ ...base, agenteDeRetencionIva: 'contribuyente_especial' });
-    e.datosDeEmpresa.filas.set(operador.empresaId, agente);
+    e.datosDeEmpresa.fijar(operador.empresaId, agente);
     const ajuste = [{ regla: 'iva_contribuyente_especial' as const, monto: '45.00', motivo: 'Convenio' }];
 
     const { avisos } = await registrar({ lineas: grande(), ajustesDeRetenciones: ajuste }, true);

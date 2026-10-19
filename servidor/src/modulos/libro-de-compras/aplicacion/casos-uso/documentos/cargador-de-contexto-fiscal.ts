@@ -3,10 +3,10 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import { normalizarNit } from '../../../../core/compartido/dominio/objetos-valor/nit.js';
 import type { CalendarioLaboral, FuenteDeCalendario } from '../../../dominio/calendario-laboral.js';
-import { DatosFiscalesDeEmpresa } from '../../../dominio/datos-fiscales-de-empresa.js';
+import type { DatosFiscalesDeEmpresa } from '../../../dominio/datos-fiscales-de-empresa.js';
 import type { DatosFiscalesDeProveedor } from '../../../dominio/datos-fiscales-de-proveedor.js';
 import { resolverDatosFiscalesDelProveedor } from '../../../dominio/datos-fiscales-del-documento.js';
-import { EmpresaSinNit, ProveedorInactivo } from '../../../dominio/errores-de-documento.js';
+import { EmpresaSinDatosFiscales, EmpresaSinNit, ProveedorInactivo } from '../../../dominio/errores-de-documento.js';
 import { periodoPropuesto } from '../../../dominio/periodo-del-libro.js';
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
 import type {
@@ -56,6 +56,7 @@ export class CargadorDeContextoFiscal {
 
   /**
    * @throws EmpresaSinNit si la empresa no tiene NIT.
+   * @throws EmpresaSinDatosFiscales si la empresa no tiene datos fiscales guardados.
    * @throws RecursoNoEncontrado si el proveedor no es de la cuenta.
    * @throws ProveedorInactivo si el papel de proveedor (o el tercero) está inactivo.
    * @throws FaltanDatosFiscalesDelProveedor si hacen falta sus datos fiscales y no llegaron.
@@ -65,14 +66,15 @@ export class CargadorDeContextoFiscal {
     const fechaDeRecepcion = solicitud.fechaRecepcion ?? hoy;
     const proveedor = await this.proveedor(solicitud.proveedorId);
     const nitDeLaEmpresa = await this.nitDeLaEmpresa(operador);
-    const datosDeLaEmpresa = await this.datosDeLaEmpresa(operador);
+    const periodo =
+      solicitud.periodo ??
+      periodoPropuesto({ tipo: solicitud.tipo, fechaDeEmision: solicitud.fechaEmision, fechaDeRecepcion });
+    const datosDeLaEmpresa = await this.datosDeLaEmpresa(operador, periodo);
     const delProveedor = await this.datosDelProveedor(solicitud, datosDeLaEmpresa);
     return {
       hoy,
       fechaDeRecepcion,
-      periodo:
-        solicitud.periodo ??
-        periodoPropuesto({ tipo: solicitud.tipo, fechaDeEmision: solicitud.fechaEmision, fechaDeRecepcion }),
+      periodo,
       nitDeLaEmpresa,
       proveedor,
       datosDeLaEmpresa,
@@ -89,9 +91,11 @@ export class CargadorDeContextoFiscal {
     return this.dependencias.calendario.paraAnios([...new Set(anios)]);
   }
 
-  private async datosDeLaEmpresa(operador: Operador): Promise<DatosFiscalesDeEmpresa> {
-    const guardados = await this.dependencias.datosFiscalesDeEmpresa.buscar(operador.empresaId);
-    return guardados ?? DatosFiscalesDeEmpresa.porOmision();
+  /** Lo que regía en el período del documento (no lo de hoy). Sin datos guardados no se supone ningún régimen. */
+  private async datosDeLaEmpresa(operador: Operador, periodo: string): Promise<DatosFiscalesDeEmpresa> {
+    const datos = await this.dependencias.datosFiscalesDeEmpresa.vigenteEn(operador.empresaId, periodo);
+    if (!datos) throw new EmpresaSinDatosFiscales();
+    return datos;
   }
 
   private async datosDelProveedor(solicitud: SolicitudDeDocumento, empresa: DatosFiscalesDeEmpresa) {

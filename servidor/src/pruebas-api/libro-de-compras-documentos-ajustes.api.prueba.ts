@@ -6,6 +6,7 @@ import {
   consultar,
   documentoDePrueba,
   instalarDestinoFalso,
+  primerDiaDelMes,
   nitValido,
   prepararEscenario,
   registrarProveedor,
@@ -197,11 +198,17 @@ describe('receptor de la FEL', () => {
   });
 });
 
+/** Los documentos ya registrados usan el régimen de su mes, así que el cambio de agente rige desde el mes siguiente. */
+const SIGUIENTE = primerDiaDelMes(1);
+
 describe('retención ya practicada en un documento anulado', () => {
   it('la nueva propone en cero, avisa lo retenido, audita, y no exige el permiso de ajustar', async () => {
-    await configurarEmpresa(escenario.cuenta, { agenteDeRetencionIva: 'contribuyente_especial' });
+    await configurarEmpresa(escenario.cuenta, {
+      agenteDeRetencionIva: 'contribuyente_especial',
+      vigenteDesde: SIGUIENTE,
+    });
     const proveedor = await proveedorNuevo();
-    const original = cuerpoDe(proveedor, { serie: 'R', numero: '77' });
+    const original = cuerpoDe(proveedor, { serie: 'R', numero: '77', periodo: SIGUIENTE });
     const primera = await registrar(original);
     await propietario().post(`${RUTA_DOCUMENTOS}/${primera.cuerpo.documento.id}/anular`, {
       causa: 'error_de_captura',
@@ -227,7 +234,7 @@ describe('retención ya practicada en un documento anulado', () => {
 
   it('también por el mismo NIT, tipo, serie y número aunque la autorización FEL sea otra', async () => {
     const proveedor = await proveedorNuevo();
-    const original = cuerpoDe(proveedor, { serie: 'S', numero: '5' });
+    const original = cuerpoDe(proveedor, { serie: 'S', numero: '5', periodo: SIGUIENTE });
     const primera = await registrar(original);
     await propietario().post(`${RUTA_DOCUMENTOS}/${primera.cuerpo.documento.id}/anular`, {
       causa: 'fel_anulada_por_el_emisor',

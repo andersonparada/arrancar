@@ -11,7 +11,7 @@ import type { EliminacionDeDocumentoDto } from '../../dto/documento-ficha.dto.js
 import type { RepositorioDeDocumentosGuardados } from '../../puertos/puertos-de-baja-de-documentos.js';
 import type { ControlDePeriodos, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
-import { empresaConCreditoFiscal } from './credito-de-la-empresa.js';
+import { bajaDelPeriodo } from './credito-de-la-empresa.js';
 import { dtoDeFicha, hechosDe } from './dto-de-ficha.js';
 
 interface Dependencias {
@@ -70,8 +70,8 @@ export class EliminarDocumento {
       anterior: dtoDeFicha(guardado),
     });
     const hoy = await this.dependencias.reloj.hoy(operador);
-    const conCredito = await empresaConCreditoFiscal(this.dependencias.datosFiscalesDeEmpresa, operador.empresaId);
-    const baja = { periodo: guardado.documento.periodo, empresaConCreditoFiscal: conCredito };
+    const { periodo } = guardado.documento;
+    const baja = await bajaDelPeriodo(this.dependencias.datosFiscalesDeEmpresa, operador.empresaId, periodo);
     return { destino, avisos: avisosDeBajaPorPeriodo(baja, hoy) };
   }
 }

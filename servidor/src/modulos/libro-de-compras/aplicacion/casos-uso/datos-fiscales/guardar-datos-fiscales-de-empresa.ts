@@ -1,22 +1,34 @@
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import {
   DatosFiscalesDeEmpresa,
   type PropiedadesFiscalesDeEmpresa,
 } from '../../../dominio/datos-fiscales-de-empresa.js';
+import { DatosFiscalesInvalidos } from '../../../dominio/errores.js';
+import type { HistorialFiscalDeEmpresa } from '../../../dominio/historial-fiscal-de-empresa.js';
+import { problemasDeLaFechaDeVigencia } from '../../../dominio/vigencia-fiscal-de-empresa.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
-import { dtoDeEmpresa } from './dtos-de-datos-fiscales.js';
+import type { CambiosAlHistorialFiscal } from './cambios-al-historial-fiscal.js';
+import { historialParaAuditoria } from './dtos-de-datos-fiscales.js';
 
 interface Dependencias {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioDeDatosFiscalesDeEmpresa;
+  cambios: CambiosAlHistorialFiscal;
   auditoria: Auditoria;
+  reloj: Reloj;
 }
 
-interface CambioDeDatosFiscales {
+export interface CambioDeDatosFiscales {
   empresaId: string;
   datos: PropiedadesFiscalesDeEmpresa;
+  /**
+   * Desde qué mes rigen los datos (`aaaa-mm-01`), o `null` para «desde el inicio». Si no llega, rigen desde la
+   * vigencia de hoy: así quien no lo manda nunca crea escalones por accidente.
+   */
+  vigenteDesde?: string | null;
 }
 
 /**
@@ -27,24 +39,38 @@ export class GuardarDatosFiscalesDeEmpresa {
   constructor(private readonly dependencias: Dependencias) {}
 
   /**
-   * Un cambio respecto de lo que valía (lo guardado o, si nunca se guardó, los valores por omisión) queda en la
-   * auditoría como `corregir` con los datos anteriores, porque cambia las retenciones de las compras futuras.
-   * @throws DatosFiscalesInvalidos si los datos se contradicen.
+   * «Estos datos rigen desde `vigenteDesde` hasta la siguiente vigencia que ya exista» (ver `HistorialFiscalDeEmpresa`):
+   * alta de la base, corrección de una vigencia, cambio a partir de un mes, o nada si no cambia nada. Todo cambio
+   * se audita como `corregir` con el historial anterior; el alta no.
+   * @throws DatosFiscalesInvalidos si los datos se contradicen o la fecha no es válida.
+   * @throws VigenciaFiscalEnUso si el cambio tocaría meses con documentos vigentes.
    */
-  async ejecutar(operador: Operador, { empresaId, datos }: CambioDeDatosFiscales): Promise<void> {
-    const { unidadDeTrabajo, repositorio, auditoria } = this.dependencias;
-    const nuevos = DatosFiscalesDeEmpresa.crear(datos);
+  async ejecutar(operador: Operador, cambio: CambioDeDatosFiscales): Promise<void> {
+    const { unidadDeTrabajo, repositorio, cambios, auditoria, reloj } = this.dependencias;
+    const { empresaId } = cambio;
+    const datos = DatosFiscalesDeEmpresa.crear(cambio.datos);
     await unidadDeTrabajo.ejecutar(operador, async () => {
-      const guardados = await repositorio.buscar(empresaId);
-      const anteriores = guardados ?? DatosFiscalesDeEmpresa.porOmision();
-      await repositorio.guardar(empresaId, nuevos);
-      if (anteriores.esIgualA(nuevos)) return;
+      await repositorio.bloquear(empresaId, 'actualizar');
+      const antes = await repositorio.historial(empresaId);
+      const vigenteDesde = this.vigenteDesde(cambio, antes, await reloj.hoy(operador));
+      const despues = antes.aplicar({ vigenteDesde, datos });
+      if (antes.esIgualA(despues)) return;
+      if (!antes.estaVacio()) await cambios.exigirSinDocumentosAfectados(empresaId, antes, despues);
+      await cambios.escribir(empresaId, antes, despues);
+      if (antes.estaVacio()) return;
       await auditoria.registrar({
         recurso: 'libro-de-compras.datos-fiscales-de-empresa',
         registroId: empresaId,
         accion: 'corregir',
-        anterior: dtoDeEmpresa(empresaId, anteriores, guardados !== null),
+        anterior: historialParaAuditoria(empresaId, antes),
       });
     });
+  }
+
+  private vigenteDesde(cambio: CambioDeDatosFiscales, historial: HistorialFiscalDeEmpresa, hoy: string) {
+    if (cambio.vigenteDesde === undefined) return historial.vigenteEn(hoy)?.vigenteDesde ?? null;
+    const problemas = problemasDeLaFechaDeVigencia(cambio.vigenteDesde, hoy);
+    if (problemas.length > 0) throw new DatosFiscalesInvalidos(problemas);
+    return cambio.vigenteDesde;
   }
 }

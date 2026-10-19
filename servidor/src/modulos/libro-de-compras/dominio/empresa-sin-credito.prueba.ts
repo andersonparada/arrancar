@@ -196,7 +196,7 @@ describe('DatosFiscalesDeEmpresa: crédito fiscal e ISR sobre utilidades', () =>
 
   it('solo el régimen general da crédito fiscal', () => {
     expect(DatosFiscalesDeEmpresa.porOmision().daCreditoFiscal()).toBe(true);
-    expect(datos({ regimenIva: 'pequeno_contribuyente' }).daCreditoFiscal()).toBe(false);
+    expect(datos({ regimenIva: 'pequeno_contribuyente', regimenIsr: null }).daCreditoFiscal()).toBe(false);
   });
 
   it('el ISR sobre utilidades no es el régimen opcional simplificado', () => {

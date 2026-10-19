@@ -31,7 +31,7 @@ describe('retenciones ajustadas', () => {
 
   beforeEach(() => {
     const base = DatosFiscalesDeEmpresa.porOmision().instantanea();
-    datosDeEmpresa.filas.set(
+    datosDeEmpresa.fijar(
       operador.empresaId,
       DatosFiscalesDeEmpresa.crear({ ...base, agenteDeRetencionIva: 'contribuyente_especial' }),
     );

@@ -85,6 +85,13 @@
       "when": 1791229261349,
       "tag": "0011_r1_motivo_empresa_sin_credito",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792380475106,
+      "tag": "0012_r1_regimen_de_empresa_con_vigencia",
+      "breakpoints": true
     }
   ]
 }
