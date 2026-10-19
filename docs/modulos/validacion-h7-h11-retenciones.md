@@ -568,3 +568,28 @@ sigue (techo de 125 salarios mínimos no agrícolas; retención del 5 % sin camb
 - Los textos de motivos en pantalla los revisa el contador.
 Confirmar en el texto oficial: Decreto 31-2024 (derogatoria y art. 9), AG 54-2026, Reglas FEL vigentes (siglas y frases),
 Decreto 10-2012 art. 16, AG 5-2013 art. 30 y el plazo del SAT-2085.
+
+## Dudas de R2 y de la nota en R1-4 (contador-guatemala, 2026-10-18)
+
+- **FESP:** IVA retenido se entera **dentro del mes calendario siguiente** (SAT-2085, como la declaración del IVA), no
+  en 10 días; ISR retenido en los **10 días hábiles** del mes siguiente a la emisión (Retenciones Web ISR); **sin mínimo**
+  (el de Q2,500 es del art. 47-48); base `total − iva`. Plazo por **tipo de regla**, no por número de días. Una empresa
+  sin crédito o no afiliada **la registra sin bloqueo** (la SAT ya la certificó): retiene IVA 100 % (al costo) e ISR 5 %,
+  con avisos («sin contabilidad completa: confirme la retención del ISR»; no afiliada: «confirme su habilitación»; FESP a
+  inscrito con la salvedad de la negativa del art. 52; mención de la FEPE para compras a productores primario/pecuario).
+  Nota de crédito sobre FESP: **error** («anule la FESP en su certificador, anule este registro y registre la nueva»).
+- Siglas FARP, FCRP, FPEC, FCPC correctas (confirmar nombres en Reglas FEL v2.1).
+- **Nota en período sin crédito (R1-4):** con IVA lleva siempre `empresa_sin_credito`; el motivo de la factura se
+  muestra como dato derivado; aviso solo si la factura dio crédito. Fiscal y contablemente da lo mismo (IVA al costo);
+  el libro del período queda coherente.
+- **Hallazgo:** posible retención del **1.5 % (ICT)** al comprar FARP/FCRP/FPEC/FCPC (borrador de Reglas FEL, Retenciones
+  Web ICT). Por confirmar en el Decreto 31-2024 y el AG 54-2026 antes de R2-4.
+- Falta la **nota de débito (NDEB)** como familia.
+
+**Decisiones del usuario (2026-10-18), las recomendadas:** ratifica la regla de la nota en período sin crédito (cambia la
+del 2026-10-04 para ese caso); confirmar el 1.5 % antes de R2-4 («sin retención» queda provisional); aplicar todo lo de
+la FESP; NDEB en un paso propio antes de producción, y ya el aviso de la FEPE en la FESP. Del diseño R2 (arquitecto):
+**R2-a** fecha de derogación como variable de instalación `libro-de-compras.regimenes.fecha_de_derogacion` revisada por el
+dominio (reemplaza la constante; el inicio del primario y pecuario sí va como check); **R2-b** familias reservadas e
+`ict` fuera de los checks hasta su paso; **R2-c** no domiciliado se queda en `regimen_iva` y `regimen_isr`; **R2-d** el
+nombre del vendedor de la FESP va en `nombre_emisor`; **R2-e** nota sobre FESP bloqueada.
