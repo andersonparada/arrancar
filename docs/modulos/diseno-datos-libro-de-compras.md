@@ -808,6 +808,285 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
   confirmar las siglas FEL nuevas (`FARP`, `FCRP`, `FPEC`, `FCPC`) y los nombres que lleva el encabezado de cada una.
   Recomendación: llevarlas a `contador-guatemala` antes de R2-6 (no frenan R2-1 a R2-5).
 
+### 3.2c Nota de débito del proveedor (R3) — arquitecto de datos, 2026-10-18
+
+Estado: **propuesta para aprobar**. El usuario aprobó la NDEB como paso propio antes de producción (decisión del
+2026-10-18 en «Dudas de R2 y de la nota en R1-4», `validacion-h7-h11-retenciones.md`). Va **después de R2-4**: usa la
+columna `tipo_dte`, las familias y `motivo_de_la_familia` de R2 (§3.2b.3), y su migración sigue a la `0016`.
+
+**Qué es:** el proveedor la emite para **aumentar** el valor de una factura ya emitida (intereses, cargos, diferencias de
+precio) y la referencia. Aumenta lo que se le debe y, si da crédito, el crédito fiscal (Ley del IVA art. 29; la
+lectura de crédito, período y plazo está **por confirmar con el contador**, preguntas C1 a C3). Es lo contrario de la
+nota de crédito: el monto se guarda **positivo** y la familia da el signo en los reportes, como hoy con la nota de crédito.
+
+#### 3.2c.1 Lo encontrado
+
+1. La nota de crédito está repartida en el código por su nombre: `documentos_nota_con_factura`, cuatro checks que la
+   excluyen (`plazo_del_credito`, `fuera_de_plazo_real`, `empresa_sin_credito_real`, `sin_credito_sin_art_20`), uno que
+   solo la toca a ella (`nota_en_su_mes`) y, desde R2, `motivo_de_la_familia`. En el dominio: `ResolutorDeFactura`
+   (`TIPOS_QUE_SE_REBAJAN`), `determinarMotivoSinCredito` (`motivoDeUnaNota`), `exigirNotaCoherenteConLaFactura`,
+   `exigirQueLaNotaNoSupereLaFactura`, `periodoPropuesto`/`exigirPeriodoValido`, `calcularRetenciones` y
+   `buscarAnulado` (las notas no retienen).
+2. `ConsultasDeDocumentosDrizzle.sumaDeNotasVigentes` suma solo `tipo = 'nota_de_credito'`; en cambio
+   `notasDeLasFacturas` (lista) y la ficha cuentan **todo** documento que apunte a la factura. Con la NDEB las dos
+   cosas deben distinguir el tipo: la suma para el tope, por tipo; el conteo para anular y eliminar, de los dos.
+3. La llave `documentos_nota_factura_fk` (`0007`, MATCH SIMPLE) ya sirve tal cual para la NDEB: mismo proveedor, mismo
+   destino y misma empresa; las filas sin `documento_afectado_id` no se revisan. Que lo apuntado sea una factura (y no
+   una nota o un recibo) lo revisa solo el dominio.
+4. La casilla «Se muestra en reportes SAT» de una nota de crédito hoy **no** se ata a la de su factura (ni en un check
+   ni en el dominio): una nota marcada puede rebajar una factura desmarcada y al revés. Es un hueco pequeño de L3 que
+   la NDEB repetiría (pregunta R3-h).
+5. «Nota de débito» ya es, en Bancos, un movimiento que saca dinero de la cuenta (`docs/modulos/bancos.md`), y Cuentas
+   por pagar paga con ella. En pantalla el documento del proveedor necesita otro nombre (pregunta R3-i).
+6. En desarrollo no hay documentos (consulta de solo lectura del 2026-10-18), y no hay producción: la migración solo
+   cambia checks, sin datos que convertir.
+
+#### 3.2c.2 Decisiones de diseño
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Familia y código | `tipo = 'nota_de_debito'`, `tipo_dte = 'NDEB'` | Como R2: la familia decide las reglas fiscales y el código cruza con el DTE (L4) |
+| Referencia | `documento_afectado_id` obligatorio, a una **factura** vigente del mismo proveedor y destino; la misma llave compuesta | Ya garantizado en la base para la nota de crédito; no hace falta otra llave |
+| Qué facturas admiten NDEB | `factura`, `factura_pequeno_contribuyente`, `factura_pequeno_contribuyente_electronico`, `factura_contribuyente_agropecuario`, `factura_primario_pecuario`. **No:** `factura_especial` (la emitió la empresa: mismo criterio que R2-e), `recibo`, ninguna nota | Una nota corrige la factura original (art. 29); una nota sobre otra nota rompe el rastro y el tope |
+| Motivo sin crédito | La NDEB **se evalúa como un documento propio** (su período, su emisión, su IVA) y **hereda de su factura solo lo que es de la compra**: la familia sin crédito y `no_vinculado` (ver 3.2c.3) | El IVA de la NDEB es IVA nuevo que se documenta en su propia fecha; heredar `fuera_de_plazo` o `empresa_sin_credito` daría o quitaría crédito por la fecha de otro documento |
+| Período y art. 20 | Como una factura: se propone el mes de recepción, nunca antes del mes de su emisión; el plazo del art. 20 se cuenta **desde su propia emisión** | Mismo razonamiento; los checks del art. 20 ya se escriben «salvo `nota_de_credito`», así que la NDEB entra sola |
+| Casilla SAT | La NDEB va **siempre** en el libro, y solo sobre facturas que van en el libro | Es un DTE al NIT de la empresa (decisión A1 del 2026-10-04: toda FEL al NIT de la empresa va en el libro) |
+| Retenciones | **Ninguna en R3-1 a R3-4** (como la nota de crédito); el paso R3-5 las agrega si el contador lo confirma. La tabla `retenciones` no cambia: las filas colgarían de la NDEB con las reglas de hoy | No hay norma clara; los datos no dependen de la respuesta |
+| Tope de las notas de crédito | Σ notas de crédito vigentes ≤ factura + Σ NDEB vigentes, en total **y** en IVA | La NDEB aumenta lo que se puede rebajar |
+| Totales derivados | «Total ajustado» de la factura = total + Σ NDEB vigentes − Σ notas de crédito vigentes; no se guarda | Se calcula en la ficha y en el destino; guardarlo pide mantenerlo en cada alta y baja |
+
+#### 3.2c.3 Motivo sin crédito de la NDEB
+
+Nueva rama `motivoDeUnaNotaDeDebito` en `determinarMotivoSinCredito` (`motivo-sin-credito.ts`), en este orden:
+
+1. Casilla desmarcada → nulo (no ocurre: el check `nota_de_debito_en_el_libro` lo impide; queda por coherencia).
+2. **Factura de una familia con motivo propio** (las cuatro sin IVA de R2) → **ese motivo**, del mapa
+   `MOTIVO_DE_LA_FAMILIA` aplicado a la familia **de la factura**; la NDEB debe traer IVA cero (si no, error
+   `NotaDeDebitoConIvaDeFacturaSinIva`, 422, en el cálculo, y el check `motivo_sin_iva` lo repite).
+3. Factura `exento` y NDEB con IVA → error `NotaConIvaDeFacturaExenta` (el mismo de la nota de crédito, con el
+   mensaje generalizado a «la nota»; pregunta C4).
+4. IVA cero y todo exento → `exento`.
+5. **Período de la NDEB sin crédito** (`daCreditoFiscal()` de la vigencia de **su** período) → `empresa_sin_credito`
+   (regla de R1-4, sin excepción). Si la factura sí dio crédito, no hace falta aviso: es la misma regla que una
+   factura cualquiera de ese período.
+6. Factura `no_vinculado` → `no_vinculado` (heredado; el usuario no lo cambia en la NDEB: la vinculación es de la
+   compra, pregunta R3-c).
+7. Período mayor que el mes de **su** emisión + 2 → `fuera_de_plazo` (aviso de siempre).
+8. Si no, nulo (da crédito).
+
+Casos que cambian respecto de heredar todo (opción A de R3-a):
+
+| Factura | NDEB | Heredar todo (A) | Evaluar propia (B, recomendada) |
+|---|---|---|---|
+| Con crédito, en plazo | Registrada 4 meses después de su emisión | Da crédito (incorrecto por art. 20) | `fuera_de_plazo` |
+| `fuera_de_plazo` | Registrada el mes de su emisión | Sin crédito | Da crédito (pregunta C2) |
+| `empresa_sin_credito` (régimen anterior) | Cae en un período general | Sin crédito | Da crédito, con aviso «La factura se registró sin crédito fiscal (régimen anterior); consulte a su contador» (pregunta C2) |
+| Con crédito | Cae en un período sin crédito | Da crédito (incorrecto: viola `empresa_sin_credito`) | `empresa_sin_credito` |
+
+`iva_no_acreditable` sigue la regla de siempre (`= iva` con `fuera_de_plazo`, `no_vinculado` o `empresa_sin_credito`):
+el IVA al costo va a cada línea de la NDEB, que lleva sus propios conceptos (el formulario propone los de la factura).
+
+#### 3.2c.4 Período y art. 20
+
+- `periodoPropuesto` y `exigirPeriodoValido`: la NDEB sigue la rama de la factura (mes de recepción, nunca antes del
+  mes de emisión); `nota_en_su_mes` sigue siendo solo de la nota de crédito.
+- Regla nueva del dominio (no puede ser check: es otra fila): `fecha_emision` de la NDEB `>=` la de su factura
+  (`NotaDeDebitoAnteriorALaFactura`, 422, campo `fechaEmision`).
+- Avisos: los de período de siempre (`avisosDelPeriodo`). **Sin** el aviso de nota tardía del art. 17: es de la nota de
+  crédito (pregunta C5 por si hay un plazo equivalente para la NDEB).
+- Familias derogadas: una NDEB sobre una FAPE o una factura agropecuaria se acepta **aunque se emita después de la
+  derogación** (corrige una venta anterior), con motivo heredado e IVA cero; pregunta C6.
+
+#### 3.2c.5 `documentos`: restricciones
+
+Nombres `documentos_<regla>`; todas con `coalesce` donde hay nulos.
+
+| Nombre | Expresión | Estado |
+|---|---|---|
+| `tipo_valido` | la lista de R2 más `'nota_de_debito'` | se reemplaza |
+| `tipo_dte_valido` | la lista de R2 más `'NDEB'` | se reemplaza |
+| `tipo_dte_de_la_familia` | el `case` de R2 más `when 'nota_de_debito' then tipo_dte = 'NDEB'` | se reemplaza |
+| `nota_con_factura` | `(tipo in ('nota_de_credito', 'nota_de_debito')) = (documento_afectado_id is not null)` | se reemplaza |
+| `motivo_de_la_familia` | el de R2 con la primera condición `tipo in ('nota_de_credito', 'nota_de_debito') or …` | se reemplaza: la NDEB hereda el motivo de la familia de su factura |
+| `nota_de_debito_en_el_libro` | `tipo <> 'nota_de_debito' or muestra_en_reportes_sat` | **nueva** (R3-b) |
+| `motivo_sin_iva` | `coalesce(motivo_sin_credito, '') not in ('pequeno_contribuyente', 'contribuyente_agropecuario', 'primario_pecuario') or iva = 0` | **nueva**: cubre a las dos notas, que `familia_sin_iva` no ve (hoy una nota de crédito de una FPEQ con IVA pasaría la base) |
+
+**Checks que no cambian y por qué siguen bien con la NDEB:**
+- `plazo_del_credito` y `fuera_de_plazo_real`: excluyen solo `nota_de_credito`, así que a la NDEB se le revisa el plazo
+  desde su emisión (decisión de 3.2c.4).
+- `empresa_sin_credito` y `empresa_sin_credito_real`: la NDEB lleva `empresa_sin_credito` solo en su período sin
+  crédito, como una factura; la excepción de la nota de crédito no hace falta.
+- `sin_credito_sin_art_20`: en un período sin crédito la NDEB no puede llevar `no_vinculado` ni `fuera_de_plazo`; el
+  orden de 3.2c.3 pone `empresa_sin_credito` antes, así que el heredado `no_vinculado` no llega.
+- `nota_en_su_mes`: solo nota de crédito.
+- `datos_sat`, `tipo_dte_con_fel`: la NDEB va en el libro con NIT del emisor, serie, autorización y `NDEB`.
+- `iva_no_acreditable_por_motivo`, `exento_sin_iva`, `familia_sin_iva`, `sin_sat_sin_credito`, `periodo_desde_emision`:
+  sin cambio.
+- Únicos: `documentos_sat_unico` y `documentos_del_proveedor_unico` llevan `tipo`, así que una NDEB no choca con una
+  factura de igual serie y número (en FEL no pasa: la serie y el número los da el certificador); la autorización FEL
+  sigue única.
+- Llave `documentos_nota_factura_fk`: sin cambio (3.2c.1, punto 3). Índices: ninguno nuevo; `documentos_afectado_idx`
+  cubre las sumas y los conteos por factura.
+
+**Lo que revisa el dominio y no la base:** que lo apuntado sea una factura de las familias que admiten NDEB, vigente y en
+el libro; la fecha de la NDEB contra la de la factura; el motivo heredado de la familia o de `no_vinculado`; los topes.
+Para garantizar en la base que la nota apunta a una factura habría que agregar dos columnas generadas a la tabla y a la
+llave, con la lista de familias repetida en ellas (pregunta R3-g; recomendación: no).
+
+#### 3.2c.6 Topes y bloqueos
+
+`FacturaParaNota` (puerto) suma `familia`, `muestraEnReportesSat`, `totalDeNotasDeDebito` e `ivaDeNotasDeDebito`
+(centavos, de las NDEB vigentes); `totalDeNotas`/`ivaDeNotas` pasan a llamarse `totalDeNotasDeCredito`/
+`ivaDeNotasDeCredito`. Una sola consulta agregada por factura (`sum(...) filter (where tipo = ...)`).
+
+| Al… | Regla | Error |
+|---|---|---|
+| Registrar una nota de crédito | Σ total de notas de crédito vigentes + la nueva `<=` total de la factura + Σ total de NDEB vigentes; lo mismo con el IVA | `NotaSuperaLaFactura`, `IvaDeNotasExcedeElDeLaFactura` (mensajes: «…más sus notas de débito») |
+| Registrar una NDEB | Sin tope propio (aumenta) | — |
+| Anular o eliminar una NDEB | Las notas de crédito vigentes deben seguir cabiendo sin ella: Σ NC `<=` factura + Σ de las **otras** NDEB vigentes (total e IVA) | `NotaDeDebitoSostieneNotasDeCredito` (409, `ReglaDeNegocioInfringida`): «Las notas de crédito de esta factura pasan de su valor sin esta nota de débito: anule antes la nota de crédito» |
+
+**Bloqueo:** registrar cualquier nota (de crédito o de débito) y anular o eliminar una NDEB toman la factura `for update`
+(`buscarFacturaParaNota(id, true)`, como hoy la nota de crédito) antes de sumar. Así, una NDEB que se anula y una nota de
+crédito que se registra a la vez sobre la misma factura se ordenan y el tope no se rompe; y anular la factura (que
+también la bloquea) no se cruza con una NDEB nueva.
+
+#### 3.2c.7 Bajas
+
+- **La factura:** «notas vigentes» y «notas en total» cuentan **las dos** familias (`HechosDeUnDocumento` no cambia de
+  forma; cambian la consulta de la ficha, que hoy ya cuenta todo, y la suma del tope, que no). Una factura con una NDEB
+  vigente no se anula; con una NDEB anulada no se elimina (la llave la ve). `DocumentoConNotasVigentes` y
+  `DocumentoConNotas` cambian el texto a «notas de crédito o de débito».
+- **La NDEB:** se anula si está vigente y pasa el tope de 3.2c.6; se elimina si además sigue pendiente en el destino
+  (`procesado_en_destino_en is null`). Ninguna nota apunta a una NDEB, así que la llave no la frena. Aviso de período
+  anterior al mes actual, causa y motivo de anulación, aviso al destino y control de períodos: como cualquier documento.
+- **Auditoría:** sin acciones nuevas. `anular` y `eliminar` de la NDEB con `recurso = 'libro-de-compras.documentos'` y
+  su DTO completo (líneas y retenciones, si R3-5 las agrega).
+
+#### 3.2c.8 Retenciones (bloqueado por el contador)
+
+Hasta la respuesta de C3, `calcularRetenciones` devuelve `[]` para las dos notas, y `buscarAnulado` no busca retención
+practicada en notas. Si el contador confirma que se retiene sobre la NDEB, R3-5 hace solo esto:
+
+- `EntradaDeRetenciones` suma `familiaQueRige`: la familia **de la factura** en una NDEB, la propia en lo demás. Las
+  estrategias miran `familiaQueRige` en lugar de `tipo` (la NDEB de una `factura` usa las de IVA de agente y la del ISR
+  opcional; la de una FPEQ, la del 5 %; la de las familias sin crédito, ninguna, como su factura).
+- El mínimo (Q2,500 del IVA de agentes, del 5 % y del ISR) se mide sobre **la NDEB sola** o sobre **la factura más sus
+  NDEB**, según conteste el contador; la segunda pide sumar las NDEB anteriores dentro del bloqueo de la factura.
+- La protección contra la retención doble se aplica igual (misma autorización FEL de una NDEB anulada).
+- La tabla `retenciones` y sus checks no cambian; la fecha de cada regla es la de hoy (recepción en el IVA, emisión en
+  el ISR) tomada de la NDEB.
+
+#### 3.2c.9 Migración
+
+**`0017_r3_nota_de_debito`** (paso R3-1), generada con `npm run bd:generar -w servidor -- libro-de-compras
+r3_nota_de_debito` (sin `--custom`: solo checks) y revisada a mano antes de aplicarla: `drop`/`add` de `tipo_valido`,
+`tipo_dte_valido`, `tipo_dte_de_la_familia`, `nota_con_factura` y `motivo_de_la_familia`; `add` de
+`nota_de_debito_en_el_libro` y `motivo_sin_iva`. Sin `update`: no hay datos que convertir. El número es tentativo (el
+`when` del `_journal.json` mayor que el de la `0016`; si R2 terminó con otra numeración, se renumera). La llave
+`documentos_nota_factura_fk` (custom, `0007`) no se toca. Los `meta/*_snapshot.json` quedan iguales a las tablas. Ninguna
+migración de permisos ni de otros esquemas.
+
+#### 3.2c.10 Pruebas de integración (PostgreSQL real)
+
+- **Checks:** NDEB con `NDEB` (pasa) y con `NCRE` o `FACT` (falla); NDEB sin `documento_afectado_id` (falla); NDEB
+  desmarcada (falla); NDEB de una FPEQ con `pequeno_contribuyente` e IVA cero (pasa) y con IVA (falla
+  `motivo_sin_iva`); nota de crédito de una FPEQ con IVA (falla, hueco cerrado); NDEB con `fuera_de_plazo` en plazo
+  (falla `fuera_de_plazo_real`) y sin motivo fuera de plazo (falla `plazo_del_credito`); NDEB con `empresa_sin_credito`
+  en período general (falla); NDEB de otro proveedor o de otro destino que su factura (falla la llave).
+- **API (`app.inject`):** NDEB sobre factura con crédito (da crédito; DTO con `tipo`, `tipoDte` y la factura); sobre
+  factura `no_vinculado` (hereda); sobre factura `fuera_de_plazo` registrada en su mes (da crédito); NDEB tardía
+  (`fuera_de_plazo` con aviso); NDEB en período sin crédito; NDEB sobre FPEQ con IVA (422); NDEB sobre factura exenta con
+  IVA (422); NDEB sobre FESP, recibo, nota de crédito, factura anulada o desmarcada (422); NDEB anterior a su factura
+  (422); nota de crédito que solo cabe gracias a una NDEB (pasa) y que no cabe sin ella (422); anular esa NDEB (409) y,
+  anulada la nota de crédito, anularla (pasa); factura con NDEB vigente no se anula; con NDEB anulada no se elimina;
+  NDEB pendiente en el destino se elimina; orden `<destino>.recibir_documento` con `tipo = 'nota_de_debito'` y la factura.
+- `politicas-de-los-modulos` y `llaves-entre-esquemas` siguen pasando; `documentos.soporte.ts` gana un ayudante para
+  insertar una NDEB.
+
+#### 3.2c.11 API, contratos, destino, Excel, permisos y auditoría
+
+- **Solicitud:** `tipoDte: 'NDEB'` deduce la familia; `documentoAfectadoId` obligatorio (el mismo campo de la nota de
+  crédito); `noVinculado` se ignora en la NDEB (se hereda). El DTO de la ficha de una factura lista sus notas con
+  `tipo` (`NotaDeFacturaDto` suma `tipo`) y devuelve el «total ajustado» (derivado). El filtro `tipo` de la lista acepta
+  `nota_de_debito`.
+- **Contratos** (`core/contratos/libro-de-compras.contratos.ts`): `TipoDeDocumentoDeCompra` suma `'nota_de_debito'`;
+  el comentario de `documentoAfectadoId` pasa a «la factura que corrige, en las notas de crédito y de débito». Sin
+  órdenes nuevas.
+- **Destino:** Cuentas por pagar recibe la NDEB como un **cargo** que aumenta lo que se debe al proveedor; su plan
+  (`cuentas-por-pagar.md`, saldo = facturas − notas de crédito − retenciones − pagos) debe sumar «+ notas de débito»
+  cuando se diseñe CP1/CP2. La NDEB de una factura ya pagada entra como pendiente nueva (otra contraseña). Esto **no** lo
+  cambia R3; se anota para el diseño de Cuentas por pagar.
+- **Libro de compras (L5):** la NDEB es una fila propia del libro con su tipo SAT; suma al crédito del período (si no
+  tiene motivo) en vez de restar, como resta la nota de crédito.
+- **Excel:** nada (Ingreso de facturas es operación; L4 deducirá la familia del código `NDEB` con el mismo mapa).
+- **Permisos:** ninguno nuevo (`documentos.crear`, `.anular`, `.eliminar` de siempre).
+- **Auditoría:** ninguna acción nueva (3.2c.7).
+
+#### 3.2c.12 Pasos (un commit cada uno; servidor y cliente por separado)
+
+Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`. Dependen de R2-3 (familias y
+`tipo_dte`) y R2-4 (motivo por familia).
+
+1. **R3-1 (servidor, datos):** migración `0017`; `tipos-de-documento.ts` con la familia `nota_de_debito`, `NDEB` en
+   `TIPOS_DTE` y `FAMILIA_DEL_TIPO_DTE`, `TIPOS_DE_NOTA` y `esNota(tipo)`, y `FAMILIAS_QUE_ADMITEN_NOTA_DE_DEBITO`; tipo
+   de la tabla y del contrato; pruebas de checks de 3.2c.10.
+2. **R3-2 (servidor, dominio):** `motivoDeUnaNotaDeDebito` (3.2c.3), período como factura y fecha contra la factura
+   (3.2c.4), `exigirNotaCoherenteConLaFactura` y `exigirQueLaNotaNoSupereLaFactura` con las NDEB (3.2c.6), regla de la
+   familia y de la casilla de la factura; errores nuevos; pruebas puras con la tabla de casos de 3.2c.3.
+3. **R3-3 (servidor, registrar):** `ResolutorDeFactura` para las dos notas, consulta agregada por tipo con bloqueo,
+   solicitud, DTO de ficha y lista (`tipo` de las notas, total ajustado), contrato del destino y evento; pruebas de API.
+4. **R3-4 (servidor, bajas):** anular y eliminar la NDEB con el tope y el bloqueo; textos de «notas de crédito o de
+   débito» en las bajas de la factura; pruebas de API.
+5. **R3-5 (servidor, retenciones; solo si el contador las confirma):** 3.2c.8; pruebas puras y de API.
+6. **R3-6 (cliente, lista y ficha):** textos de la familia y del código (nombre de R3-i), notas de la factura con su
+   tipo y el total ajustado en la ficha, motivos heredados. **No depende de L3-8.**
+7. **R3-7 (cliente, formulario):** «Nota de débito del proveedor» en el selector de código; elegir la factura (solo las
+   que la admiten); conceptos de las líneas propuestos desde la factura; avisos. **Depende de L3-8 y R2-8.**
+8. **R3-8 (QA):** de punta a punta: factura con crédito, NDEB de intereses, nota de crédito que solo cabe con ella,
+   intento de anular la NDEB (rechazado), anular la nota de crédito y luego la NDEB.
+
+#### 3.2c.13 Preguntas para el usuario (con recomendación)
+
+- **R3-a. Motivo de la NDEB:** (A) hereda tal cual el de su factura, como la nota de crédito; (B) se evalúa como
+  documento propio y hereda solo la familia y `no_vinculado`. **Recomendación: (B)**; (A) da crédito a una NDEB
+  registrada tarde y se lo da en un período sin crédito (tabla de 3.2c.3), y además choca con el check
+  `empresa_sin_credito`.
+- **R3-b. Solo en el libro:** la NDEB va siempre marcada y solo sobre facturas marcadas. Recomendación: sí; una NDEB es
+  un DTE al NIT de la empresa (A1).
+- **R3-c. `no_vinculado` heredado** sin que el usuario lo cambie en la NDEB. Recomendación: sí; si la compra era de la
+  actividad no gravada, su cargo también.
+- **R3-d. Facturas que admiten NDEB:** todas las familias de factura salvo la FESP. Recomendación: sí, con la FESP
+  bloqueada como en R2-e (la NDEB la emitiría la propia empresa).
+- **R3-e. Anular una NDEB que sostiene notas de crédito:** bloquear con mensaje (anular antes la nota de crédito) o
+  dejarla pasar con aviso. Recomendación: bloquear; si no, el libro queda con más rebaja que factura.
+- **R3-f. Retenciones:** ninguna hasta que conteste el contador (R3-5 aparte). Recomendación: sí; los datos no cambian.
+- **R3-g. Garantía en la base de que la nota apunta a una factura** (dos columnas generadas en la llave). Recomendación:
+  no; el dominio ya lo revisa para la nota de crédito, y la lista de familias quedaría repetida en una columna que
+  habría que migrar con cada familia nueva.
+- **R3-h. Hueco de la nota de crédito:** ¿se ata también su casilla a la de su factura (dominio, en R3-2)?
+  Recomendación: sí; hoy una nota marcada puede rebajar una factura desmarcada.
+- **R3-i. Nombre en pantalla:** «Nota de débito del proveedor» (y «Nota de crédito del proveedor») para no confundirla
+  con la nota de débito de Bancos. Recomendación: sí, en Ingreso de facturas; en el selector de código, «Nota de débito
+  (NDEB)».
+
+#### 3.2c.14 Preguntas para el contador (llevar a `contador-guatemala` antes de R3-2; C3 bloquea solo R3-5)
+
+- **C1.** Base legal: ¿la NDEB recibida da crédito fiscal al comprador (Ley del IVA arts. 16, 18 y 29; AG 5-2013) en el
+  período de su propia emisión, con el plazo del art. 20 contado desde su fecha y no desde la de la factura?
+- **C2.** NDEB de una factura `fuera_de_plazo` registrada en plazo: ¿da crédito? NDEB en período general de una factura
+  registrada cuando la empresa no tenía crédito (cambio de régimen): ¿da crédito?
+- **C3.** Retenciones sobre la NDEB: IVA de agentes (Decreto 20-2006; ¿RetenIVA admite NDEB?), 5 % al pequeño
+  contribuyente (Ley del IVA art. 48) e ISR del régimen opcional (Decreto 10-2012 arts. 47 y 48). Si se retiene, ¿el
+  mínimo de Q2,500 se mide sobre la NDEB sola o sobre la factura más sus NDEB? ¿Los intereses cobrados por NDEB tienen
+  otra retención (rentas de capital) que deba avisarse?
+- **C4.** NDEB con IVA sobre una factura exenta: ¿error como en la nota de crédito, o puede haber un cargo gravado?
+- **C5.** ¿Hay un plazo para que el emisor registre la NDEB, como el de dos meses de la nota de crédito (art. 17), que
+  merezca un aviso?
+- **C6.** NDEB emitida después del 9-07-2025 sobre una FAPE o una factura agropecuaria anterior: ¿se acepta (sin crédito,
+  sin retención)?
+- **C7.** ¿Una nota de crédito puede referenciar una NDEB en la FEL, o siempre la factura original? (El diseño las
+  ata a la factura.)
+
 ### 3.3 `libro_de_compras.conceptos_de_gasto` (L2)
 
 | Columna | Tipo | Nulo | Regla |

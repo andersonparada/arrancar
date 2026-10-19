@@ -593,3 +593,18 @@ la FESP; NDEB en un paso propio antes de producción, y ya el aviso de la FEPE e
 dominio (reemplaza la constante; el inicio del primario y pecuario sí va como check); **R2-b** familias reservadas e
 `ict` fuera de los checks hasta su paso; **R2-c** no domiciliado se queda en `regimen_iva` y `regimen_isr`; **R2-d** el
 nombre del vendedor de la FESP va en `nombre_emisor`; **R2-e** nota sobre FESP bloqueada.
+
+## Retención ICT al comprar a primario y pecuario (contador-guatemala, 2026-10-18)
+
+Corrige el hallazgo anterior: si el productor **factura** (FARP, FCRP, FPEC, FCPC), el ICT lo paga él en su declaración y
+**el comprador no retiene** (ni IVA, que no hay, ni ISR del art. 47, que solo alcanza al régimen opcional). El 1.5 % lo
+retiene **solo quien emite la factura específica (FEPE)** estando afiliado al ICT (SAT, Retenciones Web ICT; borrador de
+Reglas FEL), sobre el total, sin mínimo conocido, pago definitivo, entero en los 10 días hábiles tras el mes. Certeza
+media-alta; confirmar con el texto del Decreto 31-2024 (`pdftotext` del PDF de la ACG) y del AG 54-2026.
+Cambios: no crear `ict_factura_primario_pecuario`; `ict` sigue reservado para `ict_factura_especifica` (tasa de
+instalación, afiliación al ICT con vigencia en la empresa); en la tabla del 2026-10-05, fila primario/pecuario, «ISR si es
+sociedad» pasa a «ninguna»; aviso en FARP/FPEC: «el impuesto lo paga el productor; no se retiene IVA ni ISR».
+
+**Decisión provisional (usuario ausente, 2026-10-18 noche), pendiente de ratificar:** se sigue la recomendación del
+contador: «sin retención» en FARP/FCRP/FPEC/FCPC queda como regla para R2-4; la FEPE en un paso propio después de R2,
+solo si un cliente acopiador la pide; cotejar el texto oficial cuando se pueda extraer el PDF.
