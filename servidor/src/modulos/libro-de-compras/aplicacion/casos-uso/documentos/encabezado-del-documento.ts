@@ -8,6 +8,7 @@ import {
   resolverEmisor,
   type EmisorResuelto,
 } from '../../../dominio/reglas-del-encabezado.js';
+import { encabezadoDeFacturaEspecial } from './encabezado-de-factura-especial.js';
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
 import type { ContextoFiscal } from './cargador-de-contexto-fiscal.js';
 
@@ -16,6 +17,8 @@ export interface EncabezadoResuelto {
   muestraEnReportesSat: boolean;
   emisor: EmisorResuelto;
   nitReceptor: string | null;
+  /** El vendedor de una factura especial es un CUI y el proveedor no tiene DPI: hay que mandarle `terceros.completar_dpi`. */
+  dpiParaCompletar: string | null;
   /** El tipo no correspondía al régimen guardado del proveedor y el usuario confirmó el cambio: hay que auditarlo. */
   cambioDeRegimenConfirmado: boolean;
   avisos: string[];
@@ -48,11 +51,12 @@ function evaluarCasilla(solicitud: SolicitudDeDocumento, contexto: ContextoFisca
 }
 
 /**
- * Aplica las reglas del encabezado: casilla SAT (FEL a la empresa no se desmarca), recibo, tipo según el régimen
+ * Aplica las reglas del encabezado (la factura especial tiene las suyas): casilla SAT (FEL a la empresa no se desmarca), recibo, tipo según el régimen
  * del proveedor y emisor (H10).
  * @throws las reglas del dominio que no se cumplan (ver `evaluarFueraDelLibro` y `reglas-del-encabezado`).
  */
 export function resolverEncabezado(solicitud: SolicitudDeDocumento, contexto: ContextoFiscal): EncabezadoResuelto {
+  if (solicitud.tipo === 'factura_especial') return encabezadoDeFacturaEspecial(solicitud, contexto);
   const fuera = evaluarCasilla(solicitud, contexto);
   exigirReciboFueraDelLibro(solicitud.tipo, fuera.muestraEnReportesSat);
   const cambioDeRegimen = exigirTipoDelProveedor(
@@ -71,6 +75,7 @@ export function resolverEncabezado(solicitud: SolicitudDeDocumento, contexto: Co
     muestraEnReportesSat: fuera.muestraEnReportesSat,
     emisor,
     nitReceptor: receptorGuardado(solicitud, contexto),
+    dpiParaCompletar: null,
     cambioDeRegimenConfirmado: cambioDeRegimen,
     avisos: [...fuera.avisos, ...(cambioDeRegimen ? [AVISO_DE_CAMBIO_DE_REGIMEN] : [])],
   };

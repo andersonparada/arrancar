@@ -47,6 +47,10 @@ export interface DependenciasDelCargador {
   calendario: FuenteDeCalendario;
 }
 
+/** Sin fecha de recepción: hoy; en la factura especial, la de emisión (la empresa la emite al comprar). */
+const recepcionPropuesta = (solicitud: SolicitudDeDocumento, hoy: string): string =>
+  solicitud.tipo === 'factura_especial' ? solicitud.fechaEmision : hoy;
+
 /** El período que pidió el usuario o, sin él, el que corresponde a las fechas del documento. */
 function periodoDe(solicitud: SolicitudDeDocumento, fechaDeRecepcion: string): string {
   const fechas = { tipo: solicitud.tipo, fechaDeEmision: solicitud.fechaEmision, fechaDeRecepcion };
@@ -74,7 +78,7 @@ export class CargadorDeContextoFiscal {
     opciones: { bloquear: boolean },
   ): Promise<ContextoFiscal> {
     const hoy = await this.dependencias.reloj.hoy(operador);
-    const fechaDeRecepcion = solicitud.fechaRecepcion ?? hoy;
+    const fechaDeRecepcion = solicitud.fechaRecepcion ?? recepcionPropuesta(solicitud, hoy);
     const proveedor = await this.proveedor(solicitud.proveedorId);
     const nitDeLaEmpresa = await this.nitDeLaEmpresa(operador);
     const periodo = periodoDe(solicitud, fechaDeRecepcion);

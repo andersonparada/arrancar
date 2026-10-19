@@ -7,7 +7,8 @@ import { esquemaLibroDeCompras } from './esquema.tablas.js';
 
 const REGLAS =
   "'iva_exportador_agropecuario', 'iva_exportador', 'iva_contribuyente_especial', 'iva_otro_agente', " +
-  "'iva_sector_publico', 'iva_pequeno_contribuyente', 'isr_opcional_simplificado'";
+  "'iva_sector_publico', 'iva_pequeno_contribuyente', 'isr_opcional_simplificado', " +
+  "'iva_factura_especial', 'isr_factura_especial'";
 
 type Columnas = Record<
   | 'empresaId'
@@ -35,6 +36,10 @@ const restriccionesDeMontos = (t: Columnas) => [
   check(
     'retenciones_porcentaje_nulo_solo_isr',
     sql`${t.porcentaje} is not null or ${t.regla} = 'isr_opcional_simplificado'`,
+  ),
+  check(
+    'retenciones_iva_factura_especial_completa',
+    sql`${t.regla} <> 'iva_factura_especial' or ${t.porcentaje} = 100`,
   ),
   check('retenciones_monto_propuesto_no_negativo', sql`${t.montoPropuesto} >= 0`),
   check('retenciones_monto_rango', sql`${t.monto} between 0 and ${t.base}`),

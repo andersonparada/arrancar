@@ -1,4 +1,5 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
+import { NotaSobreFacturaEspecial } from '../../../dominio/errores-de-factura-especial.js';
 import {
   FacturaAfectadaIncoherente,
   FacturaNoSirveParaLaNota,
@@ -7,7 +8,7 @@ import {
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
 import type { ConsultasDeDocumentos, FacturaParaNota } from '../../puertos/puertos-de-documentos.js';
 
-/** La factura especial queda fuera hasta que se decida su nota (R2-e). */
+/** Las familias a las que una nota de crédito sí rebaja; la factura especial se anula y se registra de nuevo. */
 const TIPOS_QUE_SE_REBAJAN: readonly string[] = [
   'factura',
   'factura_pequeno_contribuyente',
@@ -27,6 +28,7 @@ export class ResolutorDeFactura {
    * bloqueada hasta el fin de la transacción: dos notas simultáneas no se pasan de la factura.
    * @throws FacturaAfectadaIncoherente si la nota no trae factura o un documento que no es nota trae una.
    * @throws RecursoNoEncontrado si la factura no existe en la empresa.
+   * @throws NotaSobreFacturaEspecial si la factura es una factura especial.
    * @throws FacturaNoSirveParaLaNota si no es una factura vigente del mismo proveedor y destino.
    */
   async resolver(solicitud: DatosParaLaFactura, bloquear: boolean): Promise<FacturaParaNota | null> {
@@ -46,6 +48,7 @@ export class ResolutorDeFactura {
 }
 
 function exigirQueSirva(factura: FacturaParaNota, solicitud: DatosParaLaFactura): void {
+  if (factura.tipo === 'factura_especial') throw new NotaSobreFacturaEspecial();
   if (factura.estado !== 'vigente' || !TIPOS_QUE_SE_REBAJAN.includes(factura.tipo)) {
     throw new FacturaNoSirveParaLaNota('La nota de crédito debe rebajar una factura vigente.');
   }

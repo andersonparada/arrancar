@@ -1,5 +1,6 @@
 import { avisosDeRetenciones, type ContextoDeEntero } from '../../../dominio/avisos-de-retenciones.js';
 import { avisosDelProveedor } from '../../../dominio/avisos-del-proveedor.js';
+import { avisosDeLaFacturaEspecial } from '../../../dominio/factura-especial.js';
 import { avisosDeLaFamilia } from '../../../dominio/familia-del-documento.js';
 import { avisosDeConsumidorFinal } from '../../../dominio/fuera-del-libro.js';
 import { avisosDeNotaTardia } from '../../../dominio/reglas-de-notas-de-credito.js';
@@ -15,8 +16,14 @@ const contextoDeEntero = (contexto: ContextoFiscal): ContextoDeEntero => ({
   empresaConIsrSobreUtilidades: contexto.datosDeLaEmpresa.tieneIsrSobreUtilidades(),
 });
 
+/** Los avisos propios de la factura especial; los demás tipos no tienen. */
+const avisosDeLaFactura = (solicitud: SolicitudDeDocumento, contexto: ContextoFiscal): string[] =>
+  solicitud.tipo === 'factura_especial'
+    ? avisosDeLaFacturaEspecial({ empresa: contexto.datosDeLaEmpresa, proveedor: contexto.datosDelProveedor })
+    : [];
+
 /**
- * Todos los avisos del documento, que no bloquean: período, FEL, nota tardía, proveedor, retención ya practicada
+ * Todos los avisos del documento, que no bloquean: período, FEL, factura especial, nota tardía, proveedor, retención ya practicada
  * en un documento anulado y retenciones.
  */
 export function avisosDelDocumento(
@@ -29,6 +36,7 @@ export function avisosDelDocumento(
     ...resuelto.calculado.avisos,
     ...resuelto.encabezado.avisos,
     ...avisosDeLaFamilia(solicitud.tipo),
+    ...avisosDeLaFactura(solicitud, contexto),
     ...avisosDeConsumidorFinal(
       { motivo: solicitud.motivoFueraDelLibro, total: resuelto.calculado.totales.total },
       contexto.datosDeLaEmpresa.tieneIsrSobreUtilidades(),

@@ -22,6 +22,7 @@ export function configuracionDeRetenciones(
     porcentajePequenoContribuyente: porcentaje(`${RAIZ_IVA}.pequeno_contribuyente`),
     porcentajeIsrPrimerTramo: porcentaje(`${RAIZ_ISR}.tasa_primer_tramo`),
     porcentajeIsrExcedente: porcentaje(`${RAIZ_ISR}.tasa_excedente`),
+    porcentajeIsrFacturaEspecial: porcentaje(`${RAIZ_ISR}.factura_especial`),
     minimoIva: monto(`${RAIZ_IVA}.minimo`),
     minimoSectorPublico: monto(`${RAIZ_IVA}.minimo_sector_publico`),
     umbralPequenoContribuyente: monto(`${RAIZ_IVA}.umbral_pequeno_contribuyente`),

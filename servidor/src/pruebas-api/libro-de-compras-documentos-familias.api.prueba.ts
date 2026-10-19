@@ -231,16 +231,6 @@ describe('tipo de documento y código de la SAT', () => {
     expect(respuesta.estado).toBe(400);
   });
 
-  it('la factura especial dice que estará disponible próximamente', async () => {
-    const proveedor = await proveedorNuevo();
-
-    const respuesta = await registrar(cuerpoDe(proveedor, { tipoDte: 'FESP' }));
-
-    expect(respuesta.estado).toBe(422);
-    expect(respuesta.cuerpo.error.codigo).toBe('factura_especial_no_disponible');
-    expect(respuesta.cuerpo.error.mensaje).toContain('próximamente');
-  });
-
   it('la lista y la ficha traen el código', async () => {
     const proveedor = await proveedorNuevo();
     const creada = await registrar(cuerpoDe(proveedor, { tipoDte: 'FCAM' }));

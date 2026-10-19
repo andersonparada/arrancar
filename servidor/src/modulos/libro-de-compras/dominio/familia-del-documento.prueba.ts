@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  FacturaEspecialNoDisponible,
   FamiliaAunNoVigente,
   FamiliaDerogada,
   TipoDeDocumentoObligatorio,
@@ -50,13 +49,11 @@ describe('resolverTipoDeDocumento', () => {
     expect(() => resolverTipoDeDocumento({ autorizacionFel: null })).toThrow(TipoDeDocumentoObligatorio);
   });
 
-  it('la factura especial dice que estará disponible próximamente', () => {
-    expect(() => resolverTipoDeDocumento({ tipoDte: 'FESP', autorizacionFel: FEL })).toThrow(
-      FacturaEspecialNoDisponible,
-    );
-    expect(() => resolverTipoDeDocumento({ tipo: 'factura_especial', autorizacionFel: null })).toThrow(
-      /disponible próximamente/,
-    );
+  it('la factura especial se resuelve como cualquier otra familia', () => {
+    expect(resolverTipoDeDocumento({ tipoDte: 'FESP', autorizacionFel: FEL })).toEqual({
+      tipo: 'factura_especial',
+      tipoDte: 'FESP',
+    });
   });
 });
 

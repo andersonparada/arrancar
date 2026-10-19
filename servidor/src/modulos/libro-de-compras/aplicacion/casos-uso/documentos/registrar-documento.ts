@@ -7,7 +7,11 @@ import { DocumentoRegistrado } from '../../../dominio/eventos.js';
 import type { DocumentoConAvisosDto } from '../../dto/documento.dto.js';
 import type { SolicitudSinResolver } from '../../dto/solicitud-de-documento.js';
 import { DocumentoRepetido } from '../../errores.js';
-import type { CompletadorDeNit, RepositorioDeDocumentos } from '../../puertos/puertos-de-documentos.js';
+import type {
+  CompletadorDeDpi,
+  CompletadorDeNit,
+  RepositorioDeDocumentos,
+} from '../../puertos/puertos-de-documentos.js';
 import { GuardarDatosFiscalesDeProveedor } from '../datos-fiscales/guardar-datos-fiscales-de-proveedor.js';
 import { auditarRegistro } from './auditoria-del-registro.js';
 import { dtoDeDocumento } from './dto-de-documento.js';
@@ -21,6 +25,7 @@ interface Dependencias extends DependenciasDelPreparador {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioDeDocumentos;
   completadorDeNit: CompletadorDeNit;
+  completadorDeDpi: CompletadorDeDpi;
   auditoria: Auditoria;
   publicadorEventos: PublicadorEventos;
 }
@@ -32,8 +37,8 @@ export interface PeticionDeRegistro {
 }
 
 /**
- * Registra una factura, factura de pequeño contribuyente, nota de crédito o recibo, con sus líneas y retenciones,
- * en una sola transacción: valida, calcula, completa el NIT del proveedor si falta, guarda sus datos fiscales si no
+ * Registra una factura (de cualquier familia, incluida la especial), nota de crédito o recibo, con sus líneas y retenciones,
+ * en una sola transacción: valida, calcula, completa el NIT o el DPI del proveedor si falta, guarda sus datos fiscales si no
  * los tenía, guarda y manda el documento al destino (`<destino>.recibir_documento`). Si el destino lo rechaza, no queda nada. El evento
  * `libro-de-compras.documento_registrado` sale solo después de confirmar.
  */
@@ -76,11 +81,12 @@ export class RegistrarDocumento {
 
   /** Repetido, NIT y datos fiscales del proveedor, inserción, auditoría y orden al destino. */
   private async guardar(operador: Operador, preparado: DocumentoPreparado) {
-    const { repositorio, completadorDeNit, destinos, auditoria } = this.dependencias;
-    const { documento, nitParaCompletar, datosFiscalesPorGuardar } = preparado;
+    const { repositorio, completadorDeNit, completadorDeDpi, destinos, auditoria } = this.dependencias;
+    const { documento, nitParaCompletar, dpiParaCompletar, datosFiscalesPorGuardar } = preparado;
     const repetido = await repositorio.buscarRepetido(documento);
     if (repetido) throw new DocumentoRepetido(repetido.id);
     if (nitParaCompletar) await completadorDeNit.completar(operador, documento.proveedorId, nitParaCompletar);
+    if (dpiParaCompletar) await completadorDeDpi.completar(operador, documento.proveedorId, dpiParaCompletar);
     if (datosFiscalesPorGuardar) {
       const datos = datosFiscalesPorGuardar.instantanea();
       await this.guardarDatosFiscales.ejecutar(operador, { proveedorId: documento.proveedorId, datos });

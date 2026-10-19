@@ -17,6 +17,7 @@ const PREDETERMINADOS: Record<string, number | boolean | string> = {
   'libro-de-compras.retenciones_isr.tasa_primer_tramo': 5,
   'libro-de-compras.retenciones_isr.limite_primer_tramo': 30000,
   'libro-de-compras.retenciones_isr.tasa_excedente': 7,
+  'libro-de-compras.retenciones_isr.factura_especial': 5,
   'libro-de-compras.retenciones_isr.minimo': 2500,
   'libro-de-compras.retenciones_isr.incluye_idp': true,
   'libro-de-compras.plazos.dias_habiles_entero_iva': 15,
@@ -25,7 +26,7 @@ const PREDETERMINADOS: Record<string, number | boolean | string> = {
 };
 
 describe('configuración del libro de compras (§8)', () => {
-  it('declara las 16 variables de la sección 8, la del IDP en la base del ISR y la fecha de derogación con sus valores por omisión', () => {
+  it('declara las 17 variables de la sección 8, la del IDP en la base del ISR y la fecha de derogación con sus valores por omisión', () => {
     const declaradas = Object.fromEntries(configuracionDelLibroDeCompras.map((c) => [c.clave, c.predeterminado]));
     expect(declaradas).toEqual(PREDETERMINADOS);
   });
@@ -44,7 +45,7 @@ describe('configuración del libro de compras (§8)', () => {
       moduloLibroDeCompras,
       { clave: 'terceros', nombre: 'T', descripcion: '', permisos: [] },
     ]);
-    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(18);
+    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(19);
     expect(registro.definicionConfiguracion('libro-de-compras.iva.tasa')?.predeterminado).toBe(12);
   });
 

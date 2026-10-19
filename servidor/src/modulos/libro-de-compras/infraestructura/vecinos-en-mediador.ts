@@ -2,7 +2,11 @@ import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import '../../core/contratos/empresas.contratos.js';
 import '../../core/contratos/terceros.contratos.js';
 import { mediador } from '../../core/mediador/contexto.js';
-import type { CompletadorDeNit, DatosDeLaEmpresaParaDocumentos } from '../aplicacion/puertos/puertos-de-documentos.js';
+import type {
+  CompletadorDeDpi,
+  CompletadorDeNit,
+  DatosDeLaEmpresaParaDocumentos,
+} from '../aplicacion/puertos/puertos-de-documentos.js';
 
 /** El NIT de la empresa activa lo da Empresas (orden `empresas.obtener_datos_de_empresa`). */
 export class DatosDeLaEmpresaEnMediador implements DatosDeLaEmpresaParaDocumentos {
@@ -18,5 +22,12 @@ export class DatosDeLaEmpresaEnMediador implements DatosDeLaEmpresaParaDocumento
 export class CompletadorDeNitEnMediador implements CompletadorDeNit {
   completar(operador: Operador, proveedorId: string, nit: string): Promise<void> {
     return mediador.enviar(operador, 'terceros.completar_nit', { proveedorId, nit });
+  }
+}
+
+/** Terceros pone el CUI al proveedor que no lo tiene (orden `terceros.completar_dpi`). */
+export class CompletadorDeDpiEnMediador implements CompletadorDeDpi {
+  completar(operador: Operador, proveedorId: string, dpi: string): Promise<void> {
+    return mediador.enviar(operador, 'terceros.completar_dpi', { proveedorId, dpi });
   }
 }

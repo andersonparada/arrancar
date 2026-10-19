@@ -36,15 +36,6 @@ export class TipoDteIncoherente extends DatoInvalido {
   }
 }
 
-/** La factura especial se registra en un paso posterior (R2-6). */
-export class FacturaEspecialNoDisponible extends ReglaDeNegocioInfringida {
-  readonly codigo = 'factura_especial_no_disponible';
-
-  constructor() {
-    super('La factura especial estará disponible próximamente.');
-  }
-}
-
 /** La familia de documento ya no se emite: la fecha de emisión es posterior a la derogación de su régimen. */
 export class FamiliaDerogada extends ReglaDeNegocioInfringida {
   readonly codigo = 'familia_derogada';

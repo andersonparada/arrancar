@@ -1,6 +1,6 @@
 import type { CalendarioLaboral } from './calendario-laboral.js';
 import type { RetencionDeDocumento } from './documento-de-compra.js';
-import { esEnteroVencido, fechaLimiteDeEntero, type PlazoDeEntero } from './plazo-de-entero.js';
+import { esEnteroVencido, fechaLimiteDeEntero, ULTIMO_DIA_HABIL, type PlazoDeEntero } from './plazo-de-entero.js';
 import type { ImpuestoRetenido } from './retencion-propuesta.js';
 
 export const AVISO_DE_RETENCION_QUITADA =
@@ -24,8 +24,11 @@ const DESCRIPCION_DEL_IMPUESTO: Record<ImpuestoRetenido, string> = {
   isr: 'ISR (se cuenta desde la fecha de la factura, Decreto 10-2012 art. 48)',
 };
 
-const diasDelImpuesto = (impuesto: ImpuestoRetenido, contexto: ContextoDeEntero): number =>
-  impuesto === 'iva' ? contexto.diasHabilesIva : contexto.diasHabilesIsr;
+/** El plazo depende de la regla: el IVA de la factura especial vence el último día hábil del mes siguiente. */
+const diasDeLaRegla = (retencion: RetencionDeDocumento, contexto: ContextoDeEntero): PlazoDeEntero['diasHabiles'] => {
+  if (retencion.regla === 'iva_factura_especial') return ULTIMO_DIA_HABIL;
+  return retencion.impuesto === 'iva' ? contexto.diasHabilesIva : contexto.diasHabilesIsr;
+};
 
 function avisoDeEnteroVencido(impuesto: ImpuestoRetenido, limite: string): string {
   const [anio, mes, dia] = limite.split('-');
@@ -34,7 +37,7 @@ function avisoDeEnteroVencido(impuesto: ImpuestoRetenido, limite: string): strin
 
 const plazoDe = (retencion: RetencionDeDocumento, contexto: ContextoDeEntero): PlazoDeEntero => ({
   fechaDeLaRetencion: retencion.fecha,
-  diasHabiles: diasDelImpuesto(retencion.impuesto, contexto),
+  diasHabiles: diasDeLaRegla(retencion, contexto),
   calendario: contexto.calendario,
 });
 

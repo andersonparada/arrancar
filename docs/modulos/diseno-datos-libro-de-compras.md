@@ -691,7 +691,7 @@ calculador. Índices: sin cambio.
 | Clave | Por omisión |
 |---|---|
 | `libro-de-compras.retenciones_isr.factura_especial` | 5 |
-| `libro-de-compras.plazos.dias_habiles_entero_factura_especial` | 10 (por confirmar con el contador: plazo del SAT-2085; pregunta R2-f) |
+| ~~`libro-de-compras.plazos.dias_habiles_entero_factura_especial`~~ | **No se crea** (decisión del usuario, 2026-10-19): el plazo va por tipo de regla en el dominio. IVA de la FESP: último día hábil del mes siguiente a la emisión, corrido con el calendario de feriados; ISR de la FESP: `dias_habiles_entero_isr` (10 por omisión) |
 | `libro-de-compras.regimenes.fecha_de_derogacion` | `'2025-07-09'` (texto `aaaa-mm-dd`; pregunta R2-a). Primer día en que ya no se aceptan documentos de familias derogadas **ni** vigencias nuevas de la empresa con esos regímenes: reemplaza a la constante `FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019` |
 
 #### 3.2b.8 Migraciones
@@ -776,7 +776,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    primario y pecuario, familia ↔ régimen del proveedor, opción C por código, `tipoDte` en solicitud, DTO y lista;
    pruebas puras y de API.
 5. **R2-5 (servidor, terceros) — HECHO (2026-10-19):** orden `terceros.completar_dpi` con pruebas.
-6. **R2-6 (servidor, factura especial):** migración `0016`; encabezado de la FESP (emisor = empresa, vendedor por NIT o
+6. **R2-6 (servidor, factura especial) — HECHO (2026-10-19):** migración `0016`; encabezado de la FESP (emisor = empresa, vendedor por NIT o
    CUI), las dos estrategias y la configuración nueva, plazo de entero por regla, avisos, regla de la nota (R2-e);
    pruebas puras y de API.
 7. **R2-7 (cliente, lista y ficha) — HECHO (2026-10-19):** textos de las familias, del código DTE («Factura cambiaria», «Factura especial»…)

@@ -15,6 +15,7 @@ export class ProveedoresParaDocumentosDrizzle implements ProveedoresParaDocument
         id: proveedores.id,
         nombre: terceros.nombreMostrar,
         nit: terceros.nit,
+        dpi: terceros.dpi,
         tipo: terceros.tipo,
         papelActivo: proveedores.activo,
         terceroActivo: terceros.activo,
@@ -27,6 +28,7 @@ export class ProveedoresParaDocumentosDrizzle implements ProveedoresParaDocument
       id: fila.id,
       nombre: fila.nombre,
       nit: fila.nit,
+      dpi: fila.dpi,
       tipoDePersona: fila.tipo === 'individual' ? 'individual' : 'juridica',
       activo: fila.papelActivo && fila.terceroActivo,
     };

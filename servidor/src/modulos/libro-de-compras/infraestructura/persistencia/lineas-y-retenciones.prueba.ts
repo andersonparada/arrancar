@@ -203,6 +203,29 @@ describe('retenciones: seguridad por empresa, llaves y check', () => {
     await expect(insertarRetencion(escalonado)).resolves.toBeTruthy();
   });
 
+  it('las reglas de la factura especial se aceptan; el IVA puede quedar en cero por un ajuste', async () => {
+    const iva = {
+      regla: 'iva_factura_especial',
+      porcentaje: '100',
+      base: '12',
+      montoPropuesto: '12',
+      monto: '0',
+      motivoDelAjuste: 'Ya retenida',
+    };
+    const isr = { impuesto: 'isr', regla: 'isr_factura_especial', porcentaje: '5' };
+
+    await expect(insertarRetencion(iva)).resolves.toBeTruthy();
+    await expect(insertarRetencion(isr)).resolves.toBeTruthy();
+  });
+
+  it('rechaza la regla de la factura especial con otro impuesto y el IVA con otro porcentaje', async () => {
+    const cruzada = await restriccionDeRetencion({ impuesto: 'isr', regla: 'iva_factura_especial', porcentaje: '100' });
+    const quince = await restriccionDeRetencion({ regla: 'iva_factura_especial', porcentaje: '15' });
+
+    expect(cruzada).toBe('retenciones_impuesto_de_la_regla');
+    expect(quince).toBe('retenciones_iva_factura_especial_completa');
+  });
+
   it('al eliminar el documento se van sus líneas y sus retenciones', async () => {
     const eliminar = () =>
       enTransaccionSegura(enA1(), (tx) => tx.delete(documentos).where(eq(documentos.id, facturaA1)));

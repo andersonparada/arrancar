@@ -13,6 +13,8 @@ export const REGLAS_DE_RETENCION = [
   'iva_sector_publico',
   'iva_pequeno_contribuyente',
   'isr_opcional_simplificado',
+  'iva_factura_especial',
+  'isr_factura_especial',
 ] as const;
 export type ReglaDeRetencion = (typeof REGLAS_DE_RETENCION)[number];
 
@@ -44,6 +46,7 @@ export interface ConfiguracionDeRetenciones {
   porcentajePequenoContribuyente: number;
   porcentajeIsrPrimerTramo: number;
   porcentajeIsrExcedente: number;
+  porcentajeIsrFacturaEspecial: number;
   minimoIva: number;
   minimoSectorPublico: number;
   umbralPequenoContribuyente: number;

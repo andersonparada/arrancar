@@ -86,17 +86,23 @@ const base = (pedidos: DatosFiscalesPedidos) => ({
   esAgenteDeRetencionIva: pedidos.esAgenteDeRetencionIva,
 });
 
-/** El régimen que dice la familia (y el código) cuando el proveedor no tiene datos; `null` si no se deduce. */
+/** El régimen que dice la familia (y el código) cuando el proveedor no tiene datos (el vendedor de la factura especial no está inscrito); `null` si no se deduce. */
 function regimenDeducido(tipo: TipoDeDocumento, tipoDte: TipoDte | null): RegimenDeIvaDeProveedor | null {
   if (tipo === 'factura_pequeno_contribuyente') return 'pequeno_contribuyente';
   if (tipo === 'factura_pequeno_contribuyente_electronico') return 'pequeno_contribuyente_electronico';
   if (tipo === 'factura_contribuyente_agropecuario') return 'contribuyente_agropecuario';
+  if (tipo === 'factura_especial') return 'sin_inscripcion';
   if (tipo !== 'factura_primario_pecuario') return null;
   return tipoDte === 'FPEC' || tipoDte === 'FCPC' ? 'pecuario' : 'primario';
 }
 
 /** Los derogados se calculan pero no se guardan: sería el régimen de hoy de un proveedor que ya no puede tenerlo. */
-const SE_GUARDA: readonly RegimenDeIvaDeProveedor[] = ['pequeno_contribuyente', 'primario', 'pecuario'];
+const SE_GUARDA: readonly RegimenDeIvaDeProveedor[] = [
+  'pequeno_contribuyente',
+  'primario',
+  'pecuario',
+  'sin_inscripcion',
+];
 
 /** Las familias sin IVA deducen el régimen de su tipo y código; los derogados se calculan pero no se guardan. */
 function deducidosDeLaFamilia(entrada: EntradaDeDatosFiscalesDelDocumento): DatosFiscalesResueltos | null {

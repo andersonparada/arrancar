@@ -1,0 +1,3 @@
+ALTER TABLE "libro_de_compras"."retenciones" DROP CONSTRAINT "retenciones_regla_valida";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."retenciones" ADD CONSTRAINT "retenciones_iva_factura_especial_completa" CHECK ("libro_de_compras"."retenciones"."regla" <> 'iva_factura_especial' or "libro_de_compras"."retenciones"."porcentaje" = 100);--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."retenciones" ADD CONSTRAINT "retenciones_regla_valida" CHECK ("libro_de_compras"."retenciones"."regla" in ('iva_exportador_agropecuario', 'iva_exportador', 'iva_contribuyente_especial', 'iva_otro_agente', 'iva_sector_publico', 'iva_pequeno_contribuyente', 'isr_opcional_simplificado', 'iva_factura_especial', 'isr_factura_especial'));

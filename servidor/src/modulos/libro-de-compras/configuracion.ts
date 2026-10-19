@@ -104,6 +104,12 @@ const filas: Fila[] = [
     7,
   ],
   [
+    'libro-de-compras.retenciones_isr.factura_especial',
+    'Porcentaje de ISR que retiene la empresa que emite una factura especial, sobre el valor sin IVA.',
+    porcentaje,
+    5,
+  ],
+  [
     'libro-de-compras.retenciones_isr.minimo',
     'Base (en quetzales) que debe superar la factura para retener ISR.',
     monto,

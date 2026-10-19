@@ -58,6 +58,8 @@ export interface DocumentoPreparado {
   avisos: string[];
   /** El proveedor no tiene NIT: hay que mandarle `terceros.completar_nit` con este. */
   nitParaCompletar: string | null;
+  /** El proveedor no tiene DPI y el vendedor de la factura especial es un CUI: hay que mandarle `terceros.completar_dpi`. */
+  dpiParaCompletar: string | null;
   /** El proveedor no tenía datos fiscales y llegaron (o se dedujeron) unos: se guardan con el documento. */
   datosFiscalesPorGuardar: DatosFiscalesDeProveedor | null;
   /** El usuario confirmó que el proveedor cambió de régimen: se audita al registrar. */
@@ -104,6 +106,7 @@ export class PreparadorDeDocumento {
       documento,
       avisos: avisosDelDocumento(solicitud, contexto, resuelto),
       nitParaCompletar: resuelto.encabezado.emisor.nitParaCompletar,
+      dpiParaCompletar: resuelto.encabezado.dpiParaCompletar,
       datosFiscalesPorGuardar: contexto.datosDelProveedorPorGuardar,
       cambioDeRegimenConfirmado: resuelto.encabezado.cambioDeRegimenConfirmado,
       regimenDelProveedor: contexto.datosDelProveedor.instantanea().regimenIva,

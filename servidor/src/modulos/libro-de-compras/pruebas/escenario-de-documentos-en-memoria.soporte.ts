@@ -10,11 +10,16 @@ import { CODIGOS_DTE_DE_LA_FAMILIA } from '../dominio/tipos-de-documento.js';
 import { FuenteDeLunesAViernes } from '../dominio/calendario-laboral.js';
 import type { DependenciasDelPreparador } from '../aplicacion/casos-uso/documentos/preparador-de-documento.js';
 import type { SolicitudSinResolver } from '../aplicacion/dto/solicitud-de-documento.js';
-import type { CompletadorDeNit, RepositorioDeDocumentos } from '../aplicacion/puertos/puertos-de-documentos.js';
+import type {
+  CompletadorDeDpi,
+  CompletadorDeNit,
+  RepositorioDeDocumentos,
+} from '../aplicacion/puertos/puertos-de-documentos.js';
 import { DocumentosGuardadosEnMemoria } from './dobles-de-bajas-de-documentos.js';
 import { DatosFiscalesDeEmpresaEnMemoria, DatosFiscalesDeProveedorEnMemoria } from './dobles-de-datos-fiscales.js';
 import {
   CatalogosEnMemoria,
+  CompletadorDeDpiEnMemoria,
   CompletadorDeNitEnMemoria,
   ConfiguracionFiscalEnMemoria,
   ConsultasDeDocumentosEnMemoria,
@@ -81,6 +86,7 @@ export function crearEscenario() {
     id: proveedorId,
     nombre: 'Veterinaria',
     nit: null,
+    dpi: null,
     tipoDePersona: 'juridica',
     activo: true,
   });
@@ -98,6 +104,7 @@ export function crearEscenario() {
   const destinos = new DestinosEnMemoria();
   const empresa = new DatosDeLaEmpresaEnMemoria();
   const completadorDeNit = new CompletadorDeNitEnMemoria();
+  const completadorDeDpi = new CompletadorDeDpiEnMemoria();
   const datosDeEmpresa = new DatosFiscalesDeEmpresaEnMemoria(DatosFiscalesDeEmpresa.porOmision());
   const datosDeProveedor = new DatosFiscalesDeProveedorEnMemoria();
   const publicadorEventos = new PublicadorEventosEnMemoria();
@@ -108,6 +115,7 @@ export function crearEscenario() {
     unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
     repositorio: RepositorioDeDocumentos;
     completadorDeNit: CompletadorDeNit;
+    completadorDeDpi: CompletadorDeDpi;
     auditoria: AuditoriaEnMemoria;
     publicadorEventos: PublicadorEventosEnMemoria;
   } = {
@@ -125,6 +133,7 @@ export function crearEscenario() {
     control,
     repositorio,
     completadorDeNit,
+    completadorDeDpi,
     auditoria,
     publicadorEventos,
   };
@@ -136,6 +145,7 @@ export function crearEscenario() {
     destinos,
     empresa,
     completadorDeNit,
+    completadorDeDpi,
     datosDeEmpresa,
     datosDeProveedor,
     publicadorEventos,

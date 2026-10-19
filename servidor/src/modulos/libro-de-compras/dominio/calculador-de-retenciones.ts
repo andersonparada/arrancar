@@ -1,3 +1,7 @@
+import {
+  EstrategiaDeIsrDeFacturaEspecial,
+  EstrategiaDeIvaDeFacturaEspecial,
+} from './estrategias-de-factura-especial.js';
 import { EstrategiaDeIsrOpcionalSimplificado } from './estrategia-de-retencion-de-isr.js';
 import {
   EstrategiaDeAgenteGeneral,
@@ -18,6 +22,8 @@ const ESTRATEGIAS: readonly EstrategiaDeRetencion[] = [
   new EstrategiaDeSectorPublico(),
   new EstrategiaDePequenoContribuyente(),
   new EstrategiaDeIsrOpcionalSimplificado(),
+  new EstrategiaDeIvaDeFacturaEspecial(),
+  new EstrategiaDeIsrDeFacturaEspecial(),
 ];
 
 /**

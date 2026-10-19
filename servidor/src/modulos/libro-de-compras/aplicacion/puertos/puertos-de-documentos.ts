@@ -14,6 +14,8 @@ export interface ProveedorParaDocumento {
   nombre: string;
   /** NIT normalizado; `null` si el tercero no tiene. */
   nit: string | null;
+  /** DPI (CUI) normalizado; `null` si el tercero no tiene. */
+  dpi: string | null;
   tipoDePersona: 'individual' | 'juridica';
   /** El papel de proveedor y el tercero siguen activos. */
   activo: boolean;
@@ -122,6 +124,11 @@ export interface DatosDeLaEmpresaParaDocumentos {
 /** Pone el NIT del emisor al proveedor que no tiene (orden `terceros.completar_nit`). */
 export interface CompletadorDeNit {
   completar(operador: Operador, proveedorId: string, nit: string): Promise<void>;
+}
+
+/** Pone el CUI del vendedor al proveedor que no tiene (orden `terceros.completar_dpi`). */
+export interface CompletadorDeDpi {
+  completar(operador: Operador, proveedorId: string, dpi: string): Promise<void>;
 }
 
 /** Tasas, mínimos y plazos fiscales resueltos para la empresa (empresa, cuenta, instalación o por omisión). */

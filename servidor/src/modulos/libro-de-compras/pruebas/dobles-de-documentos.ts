@@ -5,6 +5,7 @@ import type {
   CatalogosParaDocumentos,
   ClaveDeDocumento,
   CombustibleConTasa,
+  CompletadorDeDpi,
   CompletadorDeNit,
   ConceptoParaLinea,
   ConfiguracionFiscal,
@@ -130,6 +131,14 @@ export class CompletadorDeNitEnMemoria implements CompletadorDeNit {
 
   async completar(_operador: Operador, proveedorId: string, nit: string): Promise<void> {
     this.llamadas.push({ proveedorId, nit });
+  }
+}
+
+export class CompletadorDeDpiEnMemoria implements CompletadorDeDpi {
+  readonly llamadas: Array<{ proveedorId: string; dpi: string }> = [];
+
+  async completar(_operador: Operador, proveedorId: string, dpi: string): Promise<void> {
+    this.llamadas.push({ proveedorId, dpi });
   }
 }
 

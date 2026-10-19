@@ -883,6 +883,30 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   las nuevas entran en R2-8, con su propia regla de emisor y de régimen. Pruebas: `textos-de-documentos.prueba.ts` y
   `detalles-de-documento.prueba.ts` (nuevo).
 
+- **2026-10-19 (R2-6, factura especial, servidor).** La FESP ya se registra (desaparece `factura_especial_no_disponible`).
+  Encabezado (`dominio/factura-especial.ts`, `resolverFacturaEspecial`): `nit_emisor` es el NIT de la empresa (el
+  `nitEmisor` del cuerpo se ignora) y el vendedor va en `nit_receptor` por NIT o CUI; no puede faltar, ser `CF` ni la
+  propia empresa (`vendedor_de_factura_especial_invalido`, 400); debe coincidir con el NIT o el DPI del proveedor y, si no
+  tiene ninguno, se le completa con `terceros.completar_nit` (si lo escrito pasa como NIT) o `terceros.completar_dpi` (si es
+  CUI); con otro dato, `vendedor_no_coincide` (422). `nombre_emisor` es el nombre del proveedor (R2-d). Va siempre en el
+  libro (`factura_especial_siempre_en_el_libro`, 422, si se manda un `motivoFueraDelLibro`) y exige serie y autorización.
+  Da crédito como una factura, o `empresa_sin_credito` si la empresa no lo tiene. Si no llega `fechaRecepcion`, la FESP toma
+  la de emisión. Opción C: sin datos fiscales guardados, el proveedor se guarda `sin_inscripcion`. Estrategias nuevas
+  (`estrategias-de-factura-especial.ts`): `iva_factura_especial` (base el IVA del documento, 100 %) e
+  `isr_factura_especial` (base `total − iva`, 5 % de `libro-de-compras.retenciones_isr.factura_especial`), con fecha de
+  emisión, sin mínimo y sin mirar al proveedor ni si la empresa es agente. Plazo de entero por regla
+  (`ULTIMO_DIA_HABIL` en `plazo-de-entero.ts`): IVA de la FESP, último día hábil del mes siguiente a la emisión con el
+  calendario de feriados; ISR, `dias_habiles_entero_isr` (10); no se creó variable de días para la FESP. Avisos que no
+  bloquean (`avisosDeLaFacturaEspecial`): sin contabilidad completa (`es_agente_de_retencion_isr = false`), empresa
+  `no_afiliado`, proveedor inscrito en el IVA (art. 52) y siempre la mención de la FEPE. Nota de crédito sobre una FESP:
+  `nota_sobre_factura_especial` (422) con el texto aprobado. Migración `0016_r2_retenciones_de_factura_especial`:
+  `retenciones_regla_valida` con las dos reglas y `retenciones_iva_factura_especial_completa` (porcentaje 100). Nuevo
+  puerto `CompletadorDeDpi` y `ProveedorParaDocumento.dpi`. **Para el cliente (R2-8):** la causa de anulación
+  `fel_anulada_por_el_emisor` solo existe como texto del cliente (`CAUSAS_DE_ANULACION`, «El emisor anuló la FEL en la
+  SAT»): en una FESP debe mostrarse «FESP anulada por la empresa»; el servidor no cambia el código. Pruebas: dominio
+  (estrategias, plazos, encabezado, avisos, empresa sin crédito), casos de uso en memoria, `check`s de la migración y API
+  (NIT, CUI, completar, CF rechazado, nota rechazada, retenciones con fecha, anulación y empresa sin crédito).
+
 - **2026-10-19 (R2-5, orden `terceros.completar_dpi`, servidor).** Contrato `terceros.completar_dpi`
   (`{ proveedorId, dpi }`, sin respuesta) y caso de uso `CompletarDpiDeProveedor`, igual que `completar_nit`: valida con
   `Dpi`, se une a la transacción de quien llama, pone el DPI si falta, no hace nada si es el mismo, y rechaza con

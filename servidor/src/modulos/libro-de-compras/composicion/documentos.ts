@@ -21,7 +21,11 @@ import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/
 import { RepositorioDeDocumentosGuardadosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos-guardados.drizzle.js';
 import { RepositorioDeDatosFiscalesDeEmpresaDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales-de-empresa.drizzle.js';
 import { RepositorioDeDatosFiscalesDeProveedorDrizzle } from '../infraestructura/persistencia/repositorios-de-datos-fiscales.drizzle.js';
-import { CompletadorDeNitEnMediador, DatosDeLaEmpresaEnMediador } from '../infraestructura/vecinos-en-mediador.js';
+import {
+  CompletadorDeDpiEnMediador,
+  CompletadorDeNitEnMediador,
+  DatosDeLaEmpresaEnMediador,
+} from '../infraestructura/vecinos-en-mediador.js';
 import { atenderOrdenesDeDocumentos } from './ordenes-de-documentos.js';
 
 function dependenciasDeDocumentos() {
@@ -45,6 +49,7 @@ function dependenciasDeDocumentos() {
     guardados: new RepositorioDeDocumentosGuardadosDrizzle(),
     consultasDeLista: new ConsultasDeListaDeDocumentosDrizzle(),
     completadorDeNit: new CompletadorDeNitEnMediador(),
+    completadorDeDpi: new CompletadorDeDpiEnMediador(),
   };
 }
 

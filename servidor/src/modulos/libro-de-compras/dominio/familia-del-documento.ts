@@ -1,5 +1,4 @@
 import {
-  FacturaEspecialNoDisponible,
   FamiliaAunNoVigente,
   FamiliaDerogada,
   TipoDeDocumentoObligatorio,
@@ -52,15 +51,14 @@ function familiaDeclarada({ tipo, tipoDte }: TipoSolicitado): TipoDeDocumento {
 
 /**
  * La familia se deduce del código de la SAT; si también llega `tipo` debe coincidir. Con FEL el código es obligatorio;
- * sin FEL no se escribe. La factura especial se registra en otro paso (R2-6).
- * @throws TipoDeDocumentoObligatorio, TipoDteObligatorio, TipoDteSinFel, TipoDteIncoherente o FacturaEspecialNoDisponible.
+ * sin FEL no se escribe.
+ * @throws TipoDeDocumentoObligatorio, TipoDteObligatorio, TipoDteSinFel o TipoDteIncoherente.
  */
 export function resolverTipoDeDocumento(solicitado: TipoSolicitado): TipoResuelto {
   const tipo = familiaDeclarada(solicitado);
   const tipoDte = solicitado.tipoDte ?? null;
   if (solicitado.autorizacionFel && !tipoDte) throw new TipoDteObligatorio();
   if (!solicitado.autorizacionFel && tipoDte) throw new TipoDteSinFel();
-  if (tipo === 'factura_especial') throw new FacturaEspecialNoDisponible();
   return { tipo, tipoDte };
 }
 
