@@ -6,7 +6,14 @@ import type { EdicionDeDocumento } from './edicion-de-documento';
 import { etiquetaDePeriodo, mesDe } from './filtros-de-documentos';
 import { familiaDelCodigo } from './tipos-de-documento-sat';
 
-const TIPOS_QUE_SE_REBAJAN = ['factura', 'factura_pequeno_contribuyente'];
+/** Las mismas familias que acepta el servidor (`resolutor-de-factura.ts`); la factura especial no se rebaja (R2-e). */
+const TIPOS_QUE_SE_REBAJAN = [
+  'factura',
+  'factura_pequeno_contribuyente',
+  'factura_pequeno_contribuyente_electronico',
+  'factura_contribuyente_agropecuario',
+  'factura_primario_pecuario',
+];
 const CONSUMIDOR_FINAL = 'CF';
 
 const porNombre = <T extends { texto: string }>(opciones: T[]): T[] =>
