@@ -608,3 +608,27 @@ sociedad» pasa a «ninguna»; aviso en FARP/FPEC: «el impuesto lo paga el prod
 **Decisión provisional (usuario ausente, 2026-10-18 noche), pendiente de ratificar:** se sigue la recomendación del
 contador: «sin retención» en FARP/FCRP/FPEC/FCPC queda como regla para R2-4; la FEPE en un paso propio después de R2,
 solo si un cliente acopiador la pide; cotejar el texto oficial cuando se pueda extraer el PDF.
+
+## Nota de débito del proveedor (contador-guatemala, 2026-10-19) — preguntas pendientes del usuario
+
+Revisión de la §3.2c (R3). Veredicto: **correcto con ajustes**.
+- **Hallazgo (art. 17 párr. 3 y 4, reformado por el Decreto 20-2006):** la NDEB debe emitirse dentro de los **dos meses
+  desde la fecha de la factura** (vence la víspera, Código Tributario, confirmar artículo); si no, **el comprador pierde
+  el crédito**, aunque la registre a tiempo según el art. 20. La nota de crédito tardía no tiene esa sanción.
+- C1: la NDEB da crédito por sí misma (arts. 17, 18, 20), en el período en que se recibe; art. 20 desde su emisión, más el
+  art. 17. C2a: factura fuera de plazo + NDEB en plazo → sí da crédito. C2b (factura sin crédito, NDEB en período general):
+  cumple lo formal, duda de fondo (art. 16), certeza baja. C3: retenciones sobre la NDEB sin norma expresa; la más sólida
+  es el ISR opcional (art. 48 «valor pagado o acreditado»); confirmar si Retenciones Web acepta NDEB; intereses cobrados
+  por NDEB pueden ser renta de capital (10 %, art. 84/86/92, confirmar) y son gasto financiero (NIIF 13.7, 25.2). C4: NDEB
+  con IVA sobre factura exenta es error («pida anular la nota y emitir factura»). C6: se acepta sobre facturas derogadas
+  con IVA 0, midiendo la derogación con la fecha **de la factura**. C7: la nota de crédito se ata a la factura (art. 17).
+- De acuerdo con R3-a (con el art. 17 en el orden: familia → exento → empresa_sin_credito → no_vinculado → **art. 17** →
+  art. 20), R3-b, R3-c (opción: el usuario puede agregar `no_vinculado`), R3-d, R3-e, R3-f (con aviso a agentes), R3-h, R3-i.
+- Datos: motivo nuevo `nota_de_debito_tardia`; derogación por fecha de la factura; opcional clase de cargo (precio,
+  intereses, otros). L5 debe sumar las NDEB recibidas (SAT-2237).
+
+**Preguntas para el usuario (recomendación del contador):** 1) art. 17 con motivo propio (A); 2) C2b: da crédito y el
+usuario puede marcar `no_vinculado` (C); 3) sin retenciones sobre NDEB, con aviso, hasta probar Retenciones Web (A);
+4) preguntar la clase de cargo para intereses (sí, solo aviso y propuesta); 5) mantener el bloqueo de C4 (sí);
+6) nota de crédito tardía con «vence la víspera» (sí, tras confirmar el artículo). Más las de diseño R3-a a R3-i del
+arquitecto (§3.2c), todas con su recomendación.
