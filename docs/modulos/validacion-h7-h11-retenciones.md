@@ -532,3 +532,39 @@ crédito.
 7. **Paso propio, antes de producción**, para las compras a proveedores agropecuarios, primario y pecuario y pequeño
    contribuyente electrónico (tipos de documento y retenciones; hoy se les propondría el 5 %, que no procede).
 8. Nada está instalado (fase de desarrollo): lo registrado en pruebas se anula, sin migraciones de corrección.
+
+## Proveedores de regímenes especiales (contador-guatemala, 2026-10-18)
+
+Hallazgo: el Decreto 31-2024 (vigente desde el 9-04-2025) **derogó los arts. 54 «A» a «F» de la Ley del IVA** a los tres
+meses (≈ 9-07-2025): cayeron el contribuyente agropecuario **y** el pequeño contribuyente electrónico. Nacieron los
+regímenes **primario** y **pecuario** (ICT; AG 54-2026 vigente desde el 28-04-2026). El pequeño contribuyente convencional
+sigue (techo de 125 salarios mínimos no agrícolas; retención del 5 % sin cambios).
+
+| Proveedor | DTE | Crédito | Retenciones al comprador | Motivo |
+|---|---|---|---|---|
+| Pequeño contribuyente | FPEQ, FCAP | No | 5 % si es agente de IVA y total > Q2,500 (ya programado) | `pequeno_contribuyente` |
+| PC electrónico (derogado) | FAPE, FCPE | No | Ninguna | `pequeno_contribuyente`, solo antes de la derogación |
+| Agropecuario (derogado) | FACA, FCCA, FAAE, FCAE | No | Ninguna en Arrancar (decisión) | `contribuyente_agropecuario`, solo antes de la derogación |
+| Primario / pecuario | FARP, FCRP, FPEC, FCPC | No | Ninguna (el ICT lo paga el productor) | `primario_pecuario` |
+| Productor que no factura, comprador ICT | FEPE (la emite el comprador) | No | ICT 1.5 % solo si el comprador está afiliado al ICT | `primario_pecuario` |
+| Exento | FACT con frase de exento | Por lo gravado | IVA sobre lo gravado; ISR salvo exención | `exento` si todo exento |
+| No domiciliado | DUCA / factura del exterior | DUCA sí | ISR de no residentes (después) | — |
+| Particular que no factura | **FESP** (la emite la empresa, art. 52) | Sí | **IVA 100 %** e **ISR 5 % único** sobre el valor sin IVA (Decreto 10-2012 art. 16, reformado por el Decreto 4-2019), los retiene quien emite | los de hoy |
+
+**Decisiones del usuario (2026-10-18), todas las recomendadas:**
+- **Factura especial (FESP) en este paso**, con las estrategias `iva_factura_especial` (100 % del IVA) e
+  `isr_factura_especial` (5 % configurable); avisos: FESP en empresa sin contabilidad completa y FESP a un proveedor
+  inscrito en el IVA (art. 52).
+- `tipo` = **familia fiscal** + **`tipo_dte`** (código SAT); familias nuevas `factura_pequeno_contribuyente_electronico`,
+  `factura_contribuyente_agropecuario`, `factura_primario_pecuario`, `factura_especial`; **reservadas** `factura_especifica`
+  (FEPE, cuando un cliente ICT lo pida) y `duca` (después de CP1).
+- El proveedor pasa de `es_pequeno_contribuyente` a **`regimen_iva`** (`general`, `pequeno_contribuyente`, `primario`,
+  `pecuario`, `sin_inscripcion`, `no_domiciliado` y los derogados `pequeno_contribuyente_electronico`,
+  `contribuyente_agropecuario`); `regimen_isr` del proveedor suma `exento`. Sin historial (el documento es la foto).
+- Documentos de regímenes derogados: se aceptan con emisión anterior a la derogación, sin crédito y **sin retención**.
+- Motivos separados `contribuyente_agropecuario` y `primario_pecuario`.
+- **Corrección de R1:** el `pequeno_contribuyente_electronico` de la empresa sigue la misma regla de derogación que el
+  agropecuario (constante única, 2025-07-09, por confirmar).
+- Los textos de motivos en pantalla los revisa el contador.
+Confirmar en el texto oficial: Decreto 31-2024 (derogatoria y art. 9), AG 54-2026, Reglas FEL vigentes (siglas y frases),
+Decreto 10-2012 art. 16, AG 5-2013 art. 30 y el plazo del SAT-2085.
