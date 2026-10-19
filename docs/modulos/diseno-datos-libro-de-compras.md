@@ -1041,7 +1041,8 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 6. **R3-6 (cliente, lista y ficha):** textos de la familia y del código (nombre de R3-i), notas de la factura con su
    tipo y el total ajustado en la ficha, motivos heredados. **No depende de L3-8.**
 7. **R3-7 (cliente, formulario):** «Nota de débito del proveedor» en el selector de código; elegir la factura (solo las
-   que la admiten); conceptos de las líneas propuestos desde la factura; avisos. **Depende de L3-8 y R2-8.**
+   que la admiten); conceptos de las líneas propuestos desde la factura; avisos. **Depende de R2-8** (L3-8 ya está
+   hecho: se extiende su formulario).
 8. **R3-8 (QA):** de punta a punta: factura con crédito, NDEB de intereses, nota de crédito que solo cabe con ella,
    intento de anular la NDEB (rechazado), anular la nota de crédito y luego la NDEB.
 
@@ -1148,6 +1149,9 @@ transacción).
 >
 > **R2:** familias nuevas, `tipo_dte`, motivos `contribuyente_agropecuario` y `primario_pecuario`, factura especial y
 > sus dos reglas de retención; ver §3.2b.
+>
+> **R3:** familia `nota_de_debito` (`tipo_dte` NDEB) sobre la misma referencia a la factura, con su motivo, su
+> período, sus checks y el tope nuevo de las notas de crédito; ver §3.2c.
 
 | Columna | Tipo | Nulo | Regla |
 |---|---|---|---|
@@ -1765,6 +1769,10 @@ Pasos R1-1 a R1-7 en §3.1b.11 (antes de L3-7 y L3-8, que ya deben mostrar el mo
 ### R2 Proveedores de regímenes especiales y factura especial
 
 Pasos R2-1 a R2-9 en §3.2b.11 (después de R1-4; R2-8 depende de L3-8).
+
+### R3 Nota de débito del proveedor
+
+Pasos R3-1 a R3-8 en §3.2c.12 (después de R2-4; R3-5 espera al contador; R3-7 depende de R2-8).
 
 ## 15. Fuera de L1 a L3
 
