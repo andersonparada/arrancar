@@ -10,6 +10,15 @@ export class NitYaRegistrado extends RecursoDuplicado {
   }
 }
 
+/** El DPI que se quiere poner ya es de otro tercero de la cuenta. */
+export class DpiYaRegistrado extends RecursoDuplicado {
+  override readonly codigo = 'dpi_ya_registrado';
+
+  constructor(nombreDelOtro: string) {
+    super(`Ese DPI ya está registrado para ${nombreDelOtro}.`);
+  }
+}
+
 /** Aviso antes de registrar a alguien dos veces; el usuario puede confirmar y guardarlo igual. */
 export class HayTercerosParecidos extends RecursoDuplicado {
   constructor(parecidos: TerceroParecidoDto[]) {

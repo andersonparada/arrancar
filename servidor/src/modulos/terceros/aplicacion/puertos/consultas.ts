@@ -29,6 +29,8 @@ export interface ConsultasTerceros {
   obtenerPapel(terceroId: string, tipo: TipoDePapel): Promise<PapelDeClienteDto | PapelDeProveedorDto>;
   /** El nombre del otro tercero de la cuenta que ya tiene ese NIT, o `null` si está libre. */
   nombreDelOtroConNit(nit: string, excepto: string): Promise<string | null>;
+  /** El nombre del otro tercero de la cuenta que ya tiene ese DPI, o `null` si está libre. */
+  nombreDelOtroConDpi(dpi: string, excepto: string): Promise<string | null>;
 }
 
 export interface ConsultasContactos {

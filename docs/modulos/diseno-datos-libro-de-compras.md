@@ -775,7 +775,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    de pequeño contribuyente), fecha de derogación por configuración (también en la vigencia de la empresa) e inicio del
    primario y pecuario, familia ↔ régimen del proveedor, opción C por código, `tipoDte` en solicitud, DTO y lista;
    pruebas puras y de API.
-5. **R2-5 (servidor, terceros):** orden `terceros.completar_dpi` con pruebas.
+5. **R2-5 (servidor, terceros) — HECHO (2026-10-19):** orden `terceros.completar_dpi` con pruebas.
 6. **R2-6 (servidor, factura especial):** migración `0016`; encabezado de la FESP (emisor = empresa, vendedor por NIT o
    CUI), las dos estrategias y la configuración nueva, plazo de entero por regla, avisos, regla de la nota (R2-e);
    pruebas puras y de API.

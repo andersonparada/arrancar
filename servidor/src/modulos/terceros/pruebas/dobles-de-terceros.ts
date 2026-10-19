@@ -41,6 +41,11 @@ export class TercerosEnMemoria implements RepositorioTerceros, ConsultasTerceros
     return otro?.nombreParaMostrar ?? null;
   }
 
+  async nombreDelOtroConDpi(dpi: string, excepto: string): Promise<string | null> {
+    const otro = [...this.terceros.values()].find((t) => t.id.valor !== excepto && t.instantanea().dpi?.valor === dpi);
+    return otro?.nombreParaMostrar ?? null;
+  }
+
   async agregar(tercero: Tercero): Promise<void> {
     this.terceros.set(tercero.id.valor, tercero);
   }

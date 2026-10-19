@@ -882,3 +882,11 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   Decisión de interfaz: el formulario de registro sigue ofreciendo solo las cuatro familias de hoy (`TIPOS_QUE_SE_REGISTRAN`);
   las nuevas entran en R2-8, con su propia regla de emisor y de régimen. Pruebas: `textos-de-documentos.prueba.ts` y
   `detalles-de-documento.prueba.ts` (nuevo).
+
+- **2026-10-19 (R2-5, orden `terceros.completar_dpi`, servidor).** Contrato `terceros.completar_dpi`
+  (`{ proveedorId, dpi }`, sin respuesta) y caso de uso `CompletarDpiDeProveedor`, igual que `completar_nit`: valida con
+  `Dpi`, se une a la transacción de quien llama, pone el DPI si falta, no hace nada si es el mismo, y rechaza con
+  `ProveedorYaTieneOtroDpi` (`proveedor_con_otro_dpi`) si tiene otro o `DpiYaRegistrado` (`dpi_ya_registrado`) si es de
+  otro tercero de la cuenta. `terceros` ya tenía el único `terceros_dpi_por_cuenta_idx` (cuenta, dpi); la consulta
+  `nombreDelOtroConDpi` da el mensaje antes de chocar con él. Sin auditoría, como `completar_nit`. Pruebas unitarias y de API
+  con el mediador real.

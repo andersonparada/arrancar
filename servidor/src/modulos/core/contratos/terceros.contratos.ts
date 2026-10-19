@@ -12,6 +12,12 @@ declare module './mediador.contratos.js' {
      * lanza su error y se deshace la transacción de quien llama.
      */
     'terceros.completar_nit': { datos: { proveedorId: string; nit: string }; respuesta: void };
+    /**
+     * Pone el DPI (CUI) a un proveedor que no lo tiene (factura especial, donde el vendedor se identifica por
+     * CUI). Si ya tiene ese mismo DPI no hace nada; si tiene otro, o el DPI es de otro tercero de la cuenta,
+     * lanza su error y se deshace la transacción de quien llama.
+     */
+    'terceros.completar_dpi': { datos: { proveedorId: string; dpi: string }; respuesta: void };
   }
   interface AvisosEntreModulos {
     /**

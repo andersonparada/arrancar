@@ -4,7 +4,12 @@ import type { Correo } from '../../core/compartido/dominio/objetos-valor/correo.
 import type { Dpi } from '../../core/compartido/dominio/objetos-valor/dpi.js';
 import type { Nit } from '../../core/compartido/dominio/objetos-valor/nit.js';
 import type { Telefono } from '../../core/compartido/dominio/objetos-valor/telefono.js';
-import { NitDeProveedorSinNumero, ProveedorYaTieneOtroNit, TerceroInactivo } from './errores.js';
+import {
+  NitDeProveedorSinNumero,
+  ProveedorYaTieneOtroDpi,
+  ProveedorYaTieneOtroNit,
+  TerceroInactivo,
+} from './errores.js';
 import { PapelAsignado, PapelQuitado, TerceroActualizado, TerceroCreado, TerceroInactivado } from './eventos.js';
 import type { IdentidadDeTercero } from './identidad-de-tercero.js';
 import type { Papel, PapelSegunTipo, TipoDePapel } from './papeles.js';
@@ -81,6 +86,18 @@ export class Tercero extends RaizAgregado<TerceroId> {
     if (actual?.esIgualA(nit)) return false;
     if (actual) throw new ProveedorYaTieneOtroNit(actual.valor);
     this.propiedades = { ...this.propiedades, nit };
+    return true;
+  }
+
+  /**
+   * Pone el DPI si no tiene; con el mismo DPI no hace nada. Devuelve si lo cambió.
+   * @throws ProveedorYaTieneOtroDpi si ya tiene uno distinto.
+   */
+  completarDpi(dpi: Dpi): boolean {
+    const actual = this.propiedades.dpi;
+    if (actual?.esIgualA(dpi)) return false;
+    if (actual) throw new ProveedorYaTieneOtroDpi(actual.valor);
+    this.propiedades = { ...this.propiedades, dpi };
     return true;
   }
 

@@ -20,6 +20,14 @@ export class ProveedorYaTieneOtroNit extends ReglaDeNegocioInfringida {
   }
 }
 
+export class ProveedorYaTieneOtroDpi extends ReglaDeNegocioInfringida {
+  readonly codigo = 'proveedor_con_otro_dpi';
+
+  constructor(dpiActual: string) {
+    super(`El proveedor ya tiene registrado otro DPI (${dpiActual}); corríjalo en sus datos antes de seguir.`);
+  }
+}
+
 export class NitDeProveedorSinNumero extends DatoInvalido {
   readonly codigo = 'nit_de_proveedor_sin_numero';
 

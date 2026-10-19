@@ -14,6 +14,7 @@ import { ListarContactos } from './aplicacion/casos-uso/contactos/listar-contact
 import '../core/contratos/terceros.contratos.js';
 import { mediador } from '../core/mediador/contexto.js';
 import { AsignarPapel } from './aplicacion/casos-uso/papeles/asignar-papel.js';
+import { CompletarDpiDeProveedor } from './aplicacion/casos-uso/papeles/completar-dpi-de-proveedor.js';
 import { CompletarNitDeProveedor } from './aplicacion/casos-uso/papeles/completar-nit-de-proveedor.js';
 import { QuitarPapel } from './aplicacion/casos-uso/papeles/quitar-papel.js';
 import { ActualizarTercero } from './aplicacion/casos-uso/terceros/actualizar-tercero.js';
@@ -81,6 +82,8 @@ function controladorDeTerceros(piezas: Piezas): TercerosControlador {
 function atenderOrdenes({ unidadDeTrabajo, repositorio, consultas }: Piezas): void {
   const completarNit = new CompletarNitDeProveedor({ unidadDeTrabajo, repositorio, consultas });
   mediador.atender('terceros', 'terceros.completar_nit', (datos, operador) => completarNit.ejecutar(operador, datos));
+  const completarDpi = new CompletarDpiDeProveedor({ unidadDeTrabajo, repositorio, consultas });
+  mediador.atender('terceros', 'terceros.completar_dpi', (datos, operador) => completarDpi.ejecutar(operador, datos));
 }
 
 function controladorDeContactos(piezas: Piezas) {
