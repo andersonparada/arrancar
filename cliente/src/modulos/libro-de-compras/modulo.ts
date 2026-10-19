@@ -5,6 +5,7 @@ import { Tags } from 'lucide-vue-next';
 import { VENTANAS_LIBRO_DE_COMPRAS } from './textos';
 import { FileText, Fuel } from 'lucide-vue-next';
 import { VENTANA_DE_DOCUMENTOS } from './textos-de-documentos';
+import { FORMULARIO_DE_DOCUMENTO } from './textos-del-registro';
 // generador: importaciones
 
 /** Rutas y menú del módulo Libro de compras. Un grupo sin opciones no se muestra. */
@@ -31,6 +32,12 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       name: 'libro-de-compras.documentos',
       component: () => import('./paginas/ListaDeDocumentos.vue'),
       meta: { permiso: 'libro-de-compras.documentos.ver', titulo: VENTANA_DE_DOCUMENTOS.titulo },
+    },
+    {
+      path: '/libro-de-compras/documentos/nuevo',
+      name: 'libro-de-compras.documentos.nuevo',
+      component: () => import('./paginas/FormularioDeDocumento.vue'),
+      meta: { permiso: 'libro-de-compras.documentos.crear', titulo: FORMULARIO_DE_DOCUMENTO.titulo },
     },
     {
       path: '/libro-de-compras/documentos/:documentoId',

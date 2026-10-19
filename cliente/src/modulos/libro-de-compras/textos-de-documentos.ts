@@ -37,7 +37,6 @@ export const VENTANA_DE_DOCUMENTOS = {
   titulo: 'Ingreso de facturas',
   descripcion: 'Las facturas y notas de crédito de las compras de la empresa.',
   registrar: 'Registrar factura',
-  registrarNoDisponible: 'El formulario de registro estará disponible próximamente.',
   ficha: 'Factura',
 } as const;
 

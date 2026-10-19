@@ -5,7 +5,8 @@ import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { totalRetenido } from '../../composables/documentos/detalles-de-documento';
 import type { FichaDeDocumento } from '../../servicios/documentos.api';
 
-const props = defineProps<{ ficha: FichaDeDocumento }>();
+/** Sirve para la ficha y para la vista previa del formulario: solo necesita los totales, las retenciones y el neto. */
+const props = defineProps<{ ficha: Pick<FichaDeDocumento, 'totales' | 'retenciones' | 'netoAPagar'> }>();
 const cifras = computed(() => {
   const { totales, retenciones } = props.ficha;
   return [

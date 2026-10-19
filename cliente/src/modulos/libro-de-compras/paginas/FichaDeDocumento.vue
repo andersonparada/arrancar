@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Ban, Trash2 } from 'lucide-vue-next';
+import { ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
+import AvisosDelRegistro from '../componentes/documentos/AvisosDelRegistro.vue';
 import LineasDelDocumento from '../componentes/documentos/LineasDelDocumento.vue';
 import MotivosDelDocumento from '../componentes/documentos/MotivosDelDocumento.vue';
 import NotasDelDocumento from '../componentes/documentos/NotasDelDocumento.vue';
@@ -19,6 +21,7 @@ import {
   tituloDeDocumento,
   tonoDeEstado,
 } from '../composables/documentos/detalles-de-documento';
+import { tomarAvisosDelRegistro } from '../composables/documentos/avisos-del-registro';
 import { explicacionesDeAcciones, resumenDeAnulacion } from '../composables/documentos/reglas-de-baja-de-documento';
 import { usarBajaDeDocumento } from '../composables/documentos/usar-baja-de-documento';
 import { usarFichaDeDocumento } from '../composables/documentos/usar-ficha-de-documento';
@@ -28,6 +31,8 @@ import { VENTANA_DE_DOCUMENTOS } from '../textos-de-documentos';
 const props = defineProps<{ documentoId: string }>();
 
 const router = useRouter();
+// Si se llegó desde el registro, trae los avisos del servidor (se entregan una sola vez).
+const avisosDelRegistro = ref(tomarAvisosDelRegistro(props.documentoId));
 const { ficha, cargando, conceptos, reemplazar } = usarFichaDeDocumento(() => props.documentoId);
 const baja = usarBajaDeDocumento(ficha, reemplazar, () => router.replace({ name: 'libro-de-compras.documentos' }));
 const volver = { texto: VENTANA_DE_DOCUMENTOS.titulo, ruta: { name: 'libro-de-compras.documentos' } };
@@ -59,6 +64,7 @@ const volver = { texto: VENTANA_DE_DOCUMENTOS.titulo, ruta: { name: 'libro-de-co
       </BotonBase>
     </EncabezadoPagina>
 
+    <AvisosDelRegistro :avisos="avisosDelRegistro" @cerrar="avisosDelRegistro = []" />
     <p
       v-for="explicacion in explicacionesDeAcciones(ficha)"
       :key="explicacion"

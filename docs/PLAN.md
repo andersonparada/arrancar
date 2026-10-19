@@ -816,3 +816,23 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   devuelven `regimenIvaDeLaEmpresa`; la factura de una nota trae su foto. Decisión: la nota de un período sin crédito
   con IVA lleva `empresa_sin_credito` aunque su factura tuviera otro motivo (si no, el check obligatorio la rechazaría),
   con aviso solo si su factura sí dio crédito.
+
+- **2026-10-18 (Libro de compras L3-8, cliente: registrar factura).** Formulario en página
+  `/libro-de-compras/documentos/nuevo` (permiso `documentos.crear`; habilita «Registrar factura» de L3-7), en dos
+  columnas: a la izquierda datos del documento (tipo, proveedor con buscador, destino, factura que rebaja la nota,
+  serie, número, fechas y período), FEL (casilla «Se muestra en reportes SAT» con su motivo, NIT del emisor,
+  autorización y receptor), líneas (concepto que propone tipo y activo fijo, combustible con galones, total y exento) y
+  «Más datos»; a la derecha la vista previa en vivo con lo que responde `POST …/documentos/calcular` (400 ms o al salir
+  de un campo, sin repetir peticiones ni aceptar respuestas viejas): motivos, totales, costo, avisos y retenciones
+  propuestas. Con `retenciones.ajustar` se puede «Ajustar el monto» o «No retener», con motivo obligatorio y el tope de
+  la base; se explica que vale solo para esa factura y queda registrado. Los errores se explican dentro del formulario:
+  `faltan_datos_fiscales_del_proveedor` muestra sus preguntas (se reenvía con `datosFiscalesDelProveedor` y se guardan
+  en el proveedor), `tipo_no_corresponde_al_proveedor` pide confirmar (`confirmarCambioDeRegimen`), `empresa_sin_*`
+  lleva a Empresas, `documento_repetido` enlaza a la ficha, el 403 explica cómo quitar el ajuste y los errores por campo
+  se ponen junto a su campo o línea. Sin destinos activos (`GET /destinos` vacío) avisa «hace falta activar un destino»
+  y no deja registrar, pero la vista previa funciona (el servidor no revisa el destino al calcular). Tras el 201 la
+  ficha muestra los avisos del servidor completos (no como avisos que desaparecen). Un recibo queda siempre fuera del
+  libro; una nota toma el destino de su factura. Enter en un campo no registra, y salir con lo escrito pide confirmar.
+  El selector de tipo sale de `TIPOS_DE_DOCUMENTO` para crecer en R2-8. Lógica pura con pruebas en
+  `composables/documentos/` (`edicion-de-documento`, `lineas-del-documento`, `ajustes-de-retenciones`,
+  `preguntas-fiscales`, `errores-del-registro`, reglas del formulario y la vista previa). Pruebas del cliente: 499.

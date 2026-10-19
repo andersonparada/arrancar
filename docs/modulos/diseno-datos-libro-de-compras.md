@@ -1473,7 +1473,7 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
     retención doble; la lista oculta los anulados por omisión. Ver las secciones 4 y 5.
 17. **L3-7 (cliente, hecho 2026-10-18):** Ingreso de facturas: lista con filtros (período, proveedor, estado,
     destino) y ficha con anular y eliminar (menú Operación).
-18. **L3-8 (cliente):** formulario en página: encabezado (proveedor con destino sugerido, NIT
+18. **L3-8 (cliente, hecho 2026-10-18):** formulario en página: encabezado (proveedor con destino sugerido, NIT
     del DTE, casilla SAT, período), editor de líneas (concepto, bien/servicio, activo fijo,
     combustible con galones), totales y avisos que devuelve `calcular`, panel de retenciones
     (quitar o ajustar con motivo, con `v-permiso`); lógica en `edicion-de-documento.ts` con

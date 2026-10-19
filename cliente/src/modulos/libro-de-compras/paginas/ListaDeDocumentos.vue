@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Plus, ReceiptText } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
@@ -9,6 +10,7 @@ import TarjetaDeDocumento from '../componentes/documentos/TarjetaDeDocumento.vue
 import { usarListaDeDocumentos } from '../composables/documentos/usar-lista-de-documentos';
 import { VENTANA_DE_DOCUMENTOS as ventana } from '../textos-de-documentos';
 
+const router = useRouter();
 const { documentos, total, pagina, paginas, cargando, filtros, proveedores, quitarFiltros, limite } =
   usarListaDeDocumentos();
 </script>
@@ -16,12 +18,10 @@ const { documentos, total, pagina, paginas, cargando, filtros, proveedores, quit
 <template>
   <div>
     <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion">
-      <!-- El formulario de registro lo trae el paso L3-8: mientras tanto el botón queda a la vista, sin acción. -->
       <BotonBase
         v-permiso="'libro-de-compras.documentos.crear'"
         :icono="Plus"
-        deshabilitado
-        :title="ventana.registrarNoDisponible"
+        @click="router.push({ name: 'libro-de-compras.documentos.nuevo' })"
       >
         {{ ventana.registrar }}
       </BotonBase>
