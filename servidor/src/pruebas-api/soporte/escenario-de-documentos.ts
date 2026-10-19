@@ -9,6 +9,10 @@ import { mediador } from '../../modulos/core/mediador/contexto.js';
 import { ModulosActivosDeLaCuentaEnRegistro } from '../../modulos/core/mediador/infraestructura/modulos-activos-de-la-cuenta-en-registro.js';
 import type { EntornoApi } from './entorno-api.js';
 import { darDeAltaCuenta, type CuentaDePrueba } from './escenarios.js';
+import {
+  CODIGOS_DTE_DE_LA_FAMILIA,
+  type TipoDeDocumento,
+} from '../../modulos/libro-de-compras/dominio/tipos-de-documento.js';
 
 export const RUTA_DOCUMENTOS = '/api/libro-de-compras/documentos';
 export const NIT_DE_LA_EMPRESA = '12345679';
@@ -141,10 +145,14 @@ export async function prepararEscenario(entorno: EntornoApi, usuario: string): P
 
 let consecutivo = 0;
 
-/** Un documento de compra válido (factura general con una línea de Q1,120.00 con IVA); `cambios` lo ajusta. */
+/**
+ * Un documento de compra válido (factura general con una línea de Q1,120.00 con IVA); `cambios` lo ajusta. Con FEL
+ * lleva el primer código de la SAT de su familia, salvo que `cambios` diga otro; si `cambios` trae `tipoDte` sin
+ * `tipo`, la familia se deduce del código.
+ */
 export function documentoDePrueba(escenario: EscenarioDeDocumentos, cambios: Record<string, unknown> = {}) {
   consecutivo += 1;
-  return {
+  const documento: Record<string, unknown> = {
     tipo: 'factura',
     proveedorId: escenario.proveedorId,
     destino: 'cuentas-por-pagar',
@@ -159,6 +167,10 @@ export function documentoDePrueba(escenario: EscenarioDeDocumentos, cambios: Rec
     datosFiscalesDelProveedor: { regimenIsr: 'utilidades', esAgenteDeRetencionIva: false },
     ...cambios,
   };
+  if (cambios.tipoDte && !('tipo' in cambios)) delete documento.tipo;
+  if (documento.tipoDte !== undefined || !documento.autorizacionFel) return documento;
+  const familia = (documento.tipo ?? 'factura') as TipoDeDocumento;
+  return { ...documento, tipoDte: CODIGOS_DTE_DE_LA_FAMILIA[familia][0] };
 }
 
 /** Un NIT válido (dígito verificador de módulo 11) para el cuerpo dado, para no repetir NIT entre proveedores. */

@@ -1,6 +1,5 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { DocumentoDeCompra, LineaDeDocumento, RetencionDeDocumento } from '../../dominio/documento-de-compra.js';
-import { CODIGOS_DTE_DE_LA_FAMILIA } from '../../dominio/tipos-de-documento.js';
 import type { documentos } from './documentos.tablas.js';
 import type { lineasDeDocumento } from './lineas-de-documento.tablas.js';
 import type { retenciones } from './retenciones.tablas.js';
@@ -57,19 +56,10 @@ function filaDeRetencion(documento: DocumentoDeCompra, retencion: RetencionDeDoc
   };
 }
 
-/**
- * Mientras la solicitud no traiga `tipoDte` (R2-4), un documento con FEL lleva el primer código de su familia
- * (el que la ley usa por omisión: FACT, FPEQ, NCRE…); sin FEL, ninguno (`documentos_tipo_dte_con_fel`).
- */
-function tipoDteProvisional(documento: DocumentoDeCompra) {
-  return documento.autorizacionFel ? CODIGOS_DTE_DE_LA_FAMILIA[documento.tipo][0] : null;
-}
-
 function filaDeEncabezado(documento: DocumentoDeCompra): FilaDeDocumento {
   const { totales, lineas: _lineas, retenciones: _retenciones, ...encabezado } = documento;
   return {
     ...encabezado,
-    tipoDte: tipoDteProvisional(documento),
     total: deCentavos(totales.total),
     base: deCentavos(totales.base),
     iva: deCentavos(totales.iva),

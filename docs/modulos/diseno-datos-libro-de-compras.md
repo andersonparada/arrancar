@@ -771,7 +771,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 3. **R2-3 (servidor, datos de documentos) — HECHO (2026-10-19):** migración `0015`; `tipos-de-documento.ts` con las familias,
    `TIPOS_DTE`, `FAMILIA_DEL_TIPO_DTE`, `MOTIVO_DE_LA_FAMILIA` y las reservadas en comentario; tipo de la tabla y del
    contrato; pruebas de checks.
-4. **R2-4 (servidor, dominio y registro de las familias sin crédito):** motivo por familia, IVA 0 en el cálculo (como la
+4. **R2-4 (servidor, dominio y registro de las familias sin crédito) — HECHO (2026-10-19):** motivo por familia, IVA 0 en el cálculo (como la
    de pequeño contribuyente), fecha de derogación por configuración (también en la vigencia de la empresa) e inicio del
    primario y pecuario, familia ↔ régimen del proveedor, opción C por código, `tipoDte` en solicitud, DTO y lista;
    pruebas puras y de API.

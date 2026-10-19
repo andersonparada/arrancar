@@ -890,3 +890,23 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   otro tercero de la cuenta. `terceros` ya tenía el único `terceros_dpi_por_cuenta_idx` (cuenta, dpi); la consulta
   `nombreDelOtroConDpi` da el mensaje antes de chocar con él. Sin auditoría, como `completar_nit`. Pruebas unitarias y de API
   con el mediador real.
+
+- **2026-10-19 (R2-4, dominio y registro de las familias sin crédito, servidor).** El cuerpo de calcular y registrar
+  acepta `tipoDte` (código SAT) y `tipo` pasa a opcional: si llega `tipoDte`, la familia se deduce de él
+  (`FAMILIA_DEL_TIPO_DTE`) y, si también llega `tipo`, deben coincidir (`tipo_dte_incoherente`, 400); con FEL `tipoDte`
+  es obligatorio (`tipo_dte_obligatorio`) y sin FEL no se escribe (`tipo_dte_sin_fel`); sin ninguno,
+  `tipo_de_documento_obligatorio`. Desaparece `tipoDteProvisional`; el DTO del documento, la ficha y la lista traen
+  `tipoDte`. Dominio nuevo `familia-del-documento.ts`: `resolverTipoDeDocumento`, `exigirFechaDeLaFamilia` (derogadas
+  antes de `fechaDeDerogacion`; primario y pecuario desde 2025-04-09; la nota mide la familia y la fecha de **su
+  factura**) y el aviso del primario y pecuario. `motivo-sin-credito` y `cobraIva` usan `MOTIVO_DE_LA_FAMILIA`: IVA 0 y
+  motivo propio en las cuatro familias sin IVA, y la nota sobre ellas tampoco cobra IVA. Las estrategias de retención no
+  cambian: ninguna reconoce las tres familias nuevas, y una prueba lo comprueba con una empresa agente de todo
+  (decisión provisional del contador: FARP, FCRP, FPEC y FCPC no retienen). `exigirTipoDelProveedor` usa la tabla de
+  familia contra régimen del diseño (el no domiciliado sigue facturando como el general, como hoy). Opción C:
+  `regimenDeducido` por familia y código (pequeño contribuyente, primario o pecuario se guardan; los derogados se
+  calculan sin guardarse); `preguntasDeDatosFiscales` suma `regimenIva` (primero, con `general` y `no_domiciliado`).
+  La auditoría del cambio de régimen guarda `anterior.regimenIvaSegunSusDatos` con el régimen guardado del proveedor
+  (antes `esPequenoContribuyenteSegunSusDatos`, deducido del tipo). La ficha trae `motivoDeLaFactura` (solo en la
+  nota; se lee de la factura, no se guarda). La factura especial responde `factura_especial_no_disponible` («estará
+  disponible próximamente») hasta R2-6. El cliente debe enviar `tipoDte` en los documentos con FEL (el formulario es
+  L3-8/R2-8).

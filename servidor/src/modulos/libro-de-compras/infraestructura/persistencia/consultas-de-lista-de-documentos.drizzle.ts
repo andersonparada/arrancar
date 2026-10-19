@@ -45,6 +45,7 @@ function filaDeLista(fila: FilaDeDocumento, notas: NotasDeUnaFactura, retenido: 
   return {
     id: fila.id,
     tipo: fila.tipo,
+    tipoDte: fila.tipoDte,
     proveedorId: fila.proveedorId,
     nombreEmisor: fila.nombreEmisor,
     serie: fila.serie,

@@ -44,7 +44,7 @@ export const CODIGOS_DTE_DE_LA_FAMILIA = {
 export type TipoDte = (typeof CODIGOS_DTE_DE_LA_FAMILIA)[TipoDeDocumento][number];
 
 /** Todos los códigos DTE admitidos. */
-export const TIPOS_DTE: readonly TipoDte[] = Object.values(CODIGOS_DTE_DE_LA_FAMILIA).flat();
+export const TIPOS_DTE = Object.values(CODIGOS_DTE_DE_LA_FAMILIA).flat() as unknown as readonly [TipoDte, ...TipoDte[]];
 
 /** La familia a la que pertenece cada código DTE. */
 export const FAMILIA_DEL_TIPO_DTE = Object.fromEntries(
@@ -61,3 +61,6 @@ export const MOTIVO_DE_LA_FAMILIA: Partial<Record<TipoDeDocumento, MotivoSinCred
 
 /** Desde cuándo existe el DTE del primario y pecuario (Decreto 31-2024); antes no se emitía. */
 export const INICIO_DEL_PRIMARIO_Y_PECUARIO = '2025-04-09';
+
+/** Los motivos de las familias que no cobran IVA: una nota de crédito sobre ellas tampoco lo cobra. */
+export const MOTIVOS_SIN_IVA: readonly MotivoSinCredito[] = Object.values(MOTIVO_DE_LA_FAMILIA);

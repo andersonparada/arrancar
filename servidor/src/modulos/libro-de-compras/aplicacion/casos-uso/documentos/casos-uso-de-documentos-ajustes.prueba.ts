@@ -44,7 +44,10 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
       expect(error).toBeInstanceOf(FaltanDatosFiscalesDelProveedor);
       expect(error).toMatchObject({
         codigo: 'faltan_datos_fiscales_del_proveedor',
-        detalles: { campo: 'datosFiscalesDelProveedor', preguntas: [{ campo: 'regimenIsr' }, expect.anything()] },
+        detalles: {
+          campo: 'datosFiscalesDelProveedor',
+          preguntas: [{ campo: 'regimenIva' }, { campo: 'regimenIsr' }, expect.anything()],
+        },
       });
     }
     expect(e.repositorio.agregados).toHaveLength(0);

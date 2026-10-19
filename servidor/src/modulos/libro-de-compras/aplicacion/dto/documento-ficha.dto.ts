@@ -1,4 +1,5 @@
 import type { CausaDeAnulacion } from '../../dominio/baja-de-documento.js';
+import type { MotivoSinCredito } from '../../dominio/tipos-de-documento.js';
 import type { DocumentoDto } from './documento.dto.js';
 
 /** Una nota de crédito que rebaja la factura de la ficha; el dinero, como texto con dos decimales. */
@@ -27,6 +28,8 @@ export interface DocumentoFichaDto extends DocumentoDto {
   puedeAnular: boolean;
   /** Lo calcula el servidor: vigente, pendiente en el destino y sin notas de crédito. */
   puedeEliminar: boolean;
+  /** Solo en una nota de crédito: el motivo sin crédito de su factura (derivado, no se guarda); `null` en los demás. */
+  motivoDeLaFactura: MotivoSinCredito | null;
   /** Las notas de crédito que rebajan esta factura, también las anuladas; vacío si no es una factura. */
   notas: NotaDeFacturaDto[];
 }

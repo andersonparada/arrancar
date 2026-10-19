@@ -1,7 +1,10 @@
 import { AccesoDenegado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { retencionesAjustadas } from '../../../dominio/ajuste-de-retenciones.js';
-import type { DatosFiscalesDeProveedor } from '../../../dominio/datos-fiscales-de-proveedor.js';
+import type {
+  DatosFiscalesDeProveedor,
+  RegimenDeIvaDeProveedor,
+} from '../../../dominio/datos-fiscales-de-proveedor.js';
 import type { DestinoDeDocumento } from '../../../dominio/destinos-de-documento.js';
 import {
   normalizarSerieONumero,
@@ -9,13 +12,15 @@ import {
   type RetencionDeDocumento,
 } from '../../../dominio/documento-de-compra.js';
 import { DestinoNoDisponible } from '../../../dominio/errores-de-documento.js';
+import { exigirFechaDeLaFamilia, resolverTipoDeDocumento } from '../../../dominio/familia-del-documento.js';
 import type { PropuestaEnCero } from '../../../dominio/retencion-practicada.js';
-import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
+import type { SolicitudDeDocumento, SolicitudSinResolver } from '../../dto/solicitud-de-documento.js';
 import type {
   CatalogosParaDocumentos,
   ConsultasDeDocumentos,
   ControlDePeriodos,
   DestinosDeDocumentos,
+  FacturaParaNota,
 } from '../../puertos/puertos-de-documentos.js';
 import {
   armarDocumento,
@@ -57,6 +62,8 @@ export interface DocumentoPreparado {
   datosFiscalesPorGuardar: DatosFiscalesDeProveedor | null;
   /** El usuario confirmó que el proveedor cambió de régimen: se audita al registrar. */
   cambioDeRegimenConfirmado: boolean;
+  /** El régimen de IVA con que se calculó al proveedor (el guardado, o el deducido de la familia). */
+  regimenDelProveedor: RegimenDeIvaDeProveedor;
   /** Retenciones que el sistema dejó en cero por una ya practicada en un documento anulado: se auditan al registrar. */
   retencionesEnCero: PropuestaEnCero[];
 }
@@ -84,7 +91,7 @@ export class PreparadorDeDocumento {
    */
   async preparar(
     operador: Operador,
-    pedida: SolicitudDeDocumento,
+    pedida: SolicitudSinResolver,
     opciones: OpcionesDePreparacion,
   ): Promise<DocumentoPreparado> {
     const solicitud = normalizar(pedida);
@@ -99,6 +106,7 @@ export class PreparadorDeDocumento {
       nitParaCompletar: resuelto.encabezado.emisor.nitParaCompletar,
       datosFiscalesPorGuardar: contexto.datosDelProveedorPorGuardar,
       cambioDeRegimenConfirmado: resuelto.encabezado.cambioDeRegimenConfirmado,
+      regimenDelProveedor: contexto.datosDelProveedor.instantanea().regimenIva,
       retencionesEnCero: resuelto.practicada.enCero,
     };
   }
@@ -112,6 +120,7 @@ export class PreparadorDeDocumento {
     const encabezado = resolverEncabezado(solicitud, contexto);
     const lineas = await this.lineas.resolver(solicitud.lineas, solicitud.fechaEmision);
     const factura = await this.facturas.resolver(solicitud, opciones.bloquearFactura);
+    exigirLaFechaDeLaFamilia(solicitud, contexto, factura);
     const calculado = calcularElDocumento(solicitud, contexto, { encabezado, lineas, factura });
     if (factura) exigirQueLaNotaNoSupereLaFactura(factura, calculado.totales.total);
     const anulado = await this.buscarAnulado(solicitud, encabezado);
@@ -145,10 +154,26 @@ export class PreparadorDeDocumento {
   }
 }
 
-/** Serie y número en mayúsculas y sin espacios, como los guarda la tabla; la serie vacía es ninguna. */
-function normalizar(solicitud: SolicitudDeDocumento): SolicitudDeDocumento {
+/**
+ * Resuelve la familia y el código de la SAT, y deja la serie y el número en mayúsculas y sin espacios, como los guarda
+ * la tabla; la serie vacía es ninguna.
+ */
+function normalizar(solicitud: SolicitudSinResolver): SolicitudDeDocumento {
   const serie = solicitud.serie ? normalizarSerieONumero(solicitud.serie) : '';
-  return { ...solicitud, serie: serie || null, numero: normalizarSerieONumero(solicitud.numero) };
+  const tipo = resolverTipoDeDocumento(solicitud);
+  return { ...solicitud, ...tipo, serie: serie || null, numero: normalizarSerieONumero(solicitud.numero) };
+}
+
+/** El documento se mide con su fecha; la nota de crédito, con la familia y la fecha de su factura. */
+function exigirLaFechaDeLaFamilia(
+  solicitud: SolicitudDeDocumento,
+  contexto: ContextoFiscal,
+  factura: FacturaParaNota | null,
+): void {
+  const medido = factura
+    ? { tipo: factura.tipo, fechaDeEmision: factura.fechaEmision }
+    : { tipo: solicitud.tipo, fechaDeEmision: solicitud.fechaEmision };
+  exigirFechaDeLaFamilia(medido, contexto.configuracion.fechaDeDerogacion);
 }
 
 function exigirPermisoDeAjuste(retenciones: RetencionDeDocumento[], opciones: OpcionesDePreparacion): void {

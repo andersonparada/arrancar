@@ -4,7 +4,7 @@ import type { RegimenDeIva } from './datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from './destinos-de-documento.js';
 import type { MotivoFueraDelLibro } from './fuera-del-libro.js';
 import type { ImpuestoRetenido, ReglaDeRetencion } from './retencion-propuesta.js';
-import type { MotivoSinCredito, TipoDeDocumento } from './tipos-de-documento.js';
+import type { MotivoSinCredito, TipoDeDocumento, TipoDte } from './tipos-de-documento.js';
 import type { TotalesDelDocumento } from './totales-del-documento.js';
 
 /** La tasa de IDP de un combustible tal como la guarda la línea (textos de `numeric`). */
@@ -44,6 +44,8 @@ export interface DocumentoDeCompra {
   id: string;
   empresaId: string;
   tipo: TipoDeDocumento;
+  /** El código de la SAT; `null` en un documento sin FEL. */
+  tipoDte: TipoDte | null;
   proveedorId: string;
   nitEmisor: string | null;
   nombreEmisor: string;

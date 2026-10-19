@@ -6,9 +6,10 @@ import {
   operadorDePrueba,
 } from '../../core/compartido/pruebas/dobles-compartidos.js';
 import { DatosFiscalesDeEmpresa } from '../dominio/datos-fiscales-de-empresa.js';
+import { CODIGOS_DTE_DE_LA_FAMILIA } from '../dominio/tipos-de-documento.js';
 import { FuenteDeLunesAViernes } from '../dominio/calendario-laboral.js';
 import type { DependenciasDelPreparador } from '../aplicacion/casos-uso/documentos/preparador-de-documento.js';
-import type { SolicitudDeDocumento } from '../aplicacion/dto/solicitud-de-documento.js';
+import type { SolicitudSinResolver } from '../aplicacion/dto/solicitud-de-documento.js';
 import type { CompletadorDeNit, RepositorioDeDocumentos } from '../aplicacion/puertos/puertos-de-documentos.js';
 import { DocumentosGuardadosEnMemoria } from './dobles-de-bajas-de-documentos.js';
 import { DatosFiscalesDeEmpresaEnMemoria, DatosFiscalesDeProveedorEnMemoria } from './dobles-de-datos-fiscales.js';
@@ -30,7 +31,14 @@ export const proveedorId = crypto.randomUUID();
 export const conceptoId = crypto.randomUUID();
 export const combustibleId = crypto.randomUUID();
 
-export const solicitud = (cambios: Partial<SolicitudDeDocumento> = {}): SolicitudDeDocumento => ({
+/** Una solicitud de factura; con FEL lleva el primer código de la SAT de su familia, salvo que se diga otro. */
+export const solicitud = (cambios: Partial<SolicitudSinResolver> = {}): SolicitudSinResolver => {
+  const completa = solicitudBase(cambios);
+  if (completa.tipoDte !== undefined || !completa.autorizacionFel) return completa;
+  return { ...completa, tipoDte: CODIGOS_DTE_DE_LA_FAMILIA[completa.tipo ?? 'factura'][0] };
+};
+
+const solicitudBase = (cambios: Partial<SolicitudSinResolver>): SolicitudSinResolver => ({
   tipo: 'factura',
   proveedorId,
   destino: 'cuentas-por-pagar',

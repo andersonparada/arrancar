@@ -2,7 +2,7 @@ import type { DatosFiscalesPedidos } from '../../dominio/datos-fiscales-del-docu
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { MotivoFueraDelLibro } from '../../dominio/fuera-del-libro.js';
 import type { ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
-import type { TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
+import type { TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
 
 /** Una línea tal como llega: los montos como texto (`"1250.50"`), sin ningún cálculo. */
 export interface SolicitudDeLinea {
@@ -26,9 +26,12 @@ export interface AjusteDeRetencionSolicitado {
   motivo: string | null;
 }
 
-/** Lo que llega al calcular o registrar un documento de compra. */
+/** Lo que llega al calcular o registrar un documento de compra, con su tipo ya resuelto. */
 export interface SolicitudDeDocumento {
+  /** La familia fiscal: la que dice `tipo` o la que se deduce de `tipoDte`. */
   tipo: TipoDeDocumento;
+  /** El código de la SAT (`FACT`, `FPEQ`, `NCRE`...); obligatorio con FEL y `null` sin ella. */
+  tipoDte: TipoDte | null;
   proveedorId: string;
   destino: DestinoDeDocumento;
   /** NIT del emisor que dice el DTE; en el libro es obligatorio. */
@@ -62,3 +65,12 @@ export interface SolicitudDeDocumento {
   /** El tipo no corresponde al régimen guardado del proveedor, pero el usuario confirma que cambió de régimen. */
   confirmarCambioDeRegimen: boolean;
 }
+
+/**
+ * La solicitud tal como llega: el tipo se dice con la familia (`tipo`), con el código de la SAT (`tipoDte`) o con los
+ * dos (deben coincidir). `PreparadorDeDocumento` lo resuelve.
+ */
+export type SolicitudSinResolver = Omit<SolicitudDeDocumento, 'tipo' | 'tipoDte'> & {
+  tipo?: TipoDeDocumento | null;
+  tipoDte?: TipoDte | null;
+};

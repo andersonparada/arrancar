@@ -83,7 +83,7 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
       expect(respuesta.cuerpo.error.codigo).toBe('faltan_datos_fiscales_del_proveedor');
       expect(respuesta.cuerpo.error.detalles).toMatchObject({
         campo: 'datosFiscalesDelProveedor',
-        preguntas: [{ campo: 'regimenIsr' }, { campo: 'esAgenteDeRetencionIva' }],
+        preguntas: [{ campo: 'regimenIva' }, { campo: 'regimenIsr' }, { campo: 'esAgenteDeRetencionIva' }],
       });
     }
     expect(await filas('documentos', proveedor.proveedorId)).toHaveLength(0);
@@ -183,11 +183,12 @@ describe('cambio de régimen del proveedor', () => {
     expect(confirmado.cuerpo.avisos).toContain(
       'El proveedor cambió de régimen: confirme que la factura es anterior al cambio.',
     );
-    const auditadas = await consultar<{ motivo: string }>(
-      "select motivo from core.auditoria where recurso = 'libro-de-compras.documentos' and accion = 'corregir' and registro_id = $1",
+    const auditadas = await consultar<{ motivo: string; anterior: { regimenIvaSegunSusDatos: string } }>(
+      "select motivo, anterior from core.auditoria where recurso = 'libro-de-compras.documentos' and accion = 'corregir' and registro_id = $1",
       [confirmado.cuerpo.documento.id],
     );
     expect(auditadas[0]?.motivo).toContain('cambió de régimen');
+    expect(auditadas[0]?.anterior.regimenIvaSegunSusDatos).toBe('pequeno_contribuyente');
   });
 });
 

@@ -7,7 +7,14 @@ import {
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
 import type { ConsultasDeDocumentos, FacturaParaNota } from '../../puertos/puertos-de-documentos.js';
 
-const TIPOS_QUE_SE_REBAJAN = ['factura', 'factura_pequeno_contribuyente'];
+/** La factura especial queda fuera hasta que se decida su nota (R2-e). */
+const TIPOS_QUE_SE_REBAJAN: readonly string[] = [
+  'factura',
+  'factura_pequeno_contribuyente',
+  'factura_pequeno_contribuyente_electronico',
+  'factura_contribuyente_agropecuario',
+  'factura_primario_pecuario',
+];
 
 type DatosParaLaFactura = Pick<SolicitudDeDocumento, 'tipo' | 'proveedorId' | 'destino' | 'documentoAfectadoId'>;
 

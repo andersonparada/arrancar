@@ -5,6 +5,7 @@ import type {
   DocumentoGuardado,
   RepositorioDeDocumentosGuardados,
 } from '../../aplicacion/puertos/puertos-de-baja-de-documentos.js';
+import type { MotivoSinCredito } from '../../dominio/tipos-de-documento.js';
 import { mapeadorDeDocumentoGuardado } from './documento-guardado.mapeador.js';
 import { documentos } from './documentos.tablas.js';
 import { lineasDeDocumento } from './lineas-de-documento.tablas.js';
@@ -24,7 +25,24 @@ export class RepositorioDeDocumentosGuardadosDrizzle implements RepositorioDeDoc
       .from(documentos)
       .where(eq(documentos.documentoAfectadoId, id))
       .orderBy(asc(documentos.fechaEmision), asc(documentos.creadoEn));
-    return mapeadorDeDocumentoGuardado.aDominio({ documento, lineas, retenciones: retenidas, notas });
+    const motivoDeLaFactura = await this.motivoDeLaFactura(documento.documentoAfectadoId);
+    return mapeadorDeDocumentoGuardado.aDominio({
+      documento,
+      lineas,
+      retenciones: retenidas,
+      notas,
+      motivoDeLaFactura,
+    });
+  }
+
+  /** El motivo sin crédito de la factura de una nota; `null` si el documento no es una nota. */
+  private async motivoDeLaFactura(facturaId: string | null): Promise<MotivoSinCredito | null> {
+    if (facturaId === null) return null;
+    const [factura] = await transaccionEnCurso()
+      .select({ motivo: documentos.motivoSinCredito })
+      .from(documentos)
+      .where(eq(documentos.id, facturaId));
+    return (factura?.motivo as MotivoSinCredito | null | undefined) ?? null;
   }
 
   async anular(id: string, { anuladoPor, motivo, causa }: AnulacionDeDocumento): Promise<void> {

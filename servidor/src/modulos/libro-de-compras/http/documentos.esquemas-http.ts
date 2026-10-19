@@ -19,7 +19,7 @@ import {
 import { DESTINOS_DE_DOCUMENTO } from '../dominio/destinos-de-documento.js';
 import { MOTIVOS_FUERA_DEL_LIBRO } from '../dominio/fuera-del-libro.js';
 import { REGLAS_DE_RETENCION } from '../dominio/retencion-propuesta.js';
-import { TIPOS_DE_DOCUMENTO } from '../dominio/tipos-de-documento.js';
+import { TIPOS_DE_DOCUMENTO, TIPOS_DTE } from '../dominio/tipos-de-documento.js';
 
 const MAXIMO_DE_LINEAS = 200;
 
@@ -58,7 +58,10 @@ const esquemaDatosFiscalesDelProveedor = z
  * Las reglas fiscales las revisa el dominio.
  */
 export const esquemaDocumento = z.object({
-  tipo: opcionObligatoria(TIPOS_DE_DOCUMENTO),
+  /** Familia fiscal; opcional si llega `tipoDte`, y entonces debe coincidir con él. */
+  tipo: opcionOpcional(TIPOS_DE_DOCUMENTO),
+  /** Código de la SAT del documento; obligatorio si tiene FEL. */
+  tipoDte: opcionOpcional(TIPOS_DTE),
   proveedorId: idObligatorio(),
   destino: opcionObligatoria(DESTINOS_DE_DOCUMENTO),
   nitEmisor: nitOpcional,

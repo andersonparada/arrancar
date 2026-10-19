@@ -115,6 +115,7 @@ export class CargadorDeContextoFiscal {
   private async datosDelProveedor(solicitud: SolicitudDeDocumento, empresa: DatosFiscalesDeEmpresa) {
     return resolverDatosFiscalesDelProveedor({
       tipo: solicitud.tipo,
+      tipoDte: solicitud.tipoDte,
       enElLibro: solicitud.motivoFueraDelLibro === null,
       empresa,
       guardados: await this.dependencias.datosFiscalesDeProveedor.buscar(solicitud.proveedorId),

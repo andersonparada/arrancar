@@ -1,8 +1,9 @@
 import { calcularLineas, type LineaCalculada, type LineaEscrita } from './calculo-de-linea.js';
+import { esFamiliaSinIva } from './familia-del-documento.js';
 import { determinarMotivoSinCredito } from './motivo-sin-credito.js';
 import { avisosDelPeriodo, exigirPeriodoValido } from './periodo-del-libro.js';
 import { exigirNotaCoherenteConLaFactura, type DatosDeLaFacturaAfectada } from './reglas-de-notas-de-credito.js';
-import type { MotivoSinCredito, TipoDeDocumento } from './tipos-de-documento.js';
+import { MOTIVOS_SIN_IVA, type MotivoSinCredito, type TipoDeDocumento } from './tipos-de-documento.js';
 import { totalesDelDocumento, type TotalesDelDocumento } from './totales-del-documento.js';
 
 /** Lo que escribe el usuario en el documento (las fechas como `AAAA-MM-DD`; los montos, en centavos). */
@@ -36,13 +37,10 @@ export interface DocumentoCalculado {
 
 const IVA_AL_COSTO: readonly (MotivoSinCredito | null)[] = ['fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito'];
 
-/** Sin IVA: casilla SAT desmarcada, factura de pequeño contribuyente (o nota de una) y recibos. */
+/** Sin IVA: casilla SAT desmarcada, familias sin IVA (o nota de una factura de ellas) y recibos. */
 function cobraIva(datos: DatosParaCalcular): boolean {
-  return (
-    datos.muestraEnReportesSat &&
-    datos.tipo !== 'factura_pequeno_contribuyente' &&
-    datos.motivoDeLaFactura !== 'pequeno_contribuyente'
-  );
+  const notaDeFamiliaSinIva = !!datos.motivoDeLaFactura && MOTIVOS_SIN_IVA.includes(datos.motivoDeLaFactura);
+  return datos.muestraEnReportesSat && !esFamiliaSinIva(datos.tipo) && !notaDeFamiliaSinIva;
 }
 
 /**

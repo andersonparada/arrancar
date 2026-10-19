@@ -1,6 +1,6 @@
 import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
-import type { TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
+import type { TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
 
 /** Los filtros de la lista de documentos; todos opcionales. */
 export interface FiltroDeDocumentos {
@@ -23,6 +23,7 @@ export interface PaginacionDeDocumentos {
 export interface DocumentoListadoDto {
   id: string;
   tipo: TipoDeDocumento;
+  tipoDte: TipoDte | null;
   proveedorId: string;
   nombreEmisor: string;
   serie: string | null;

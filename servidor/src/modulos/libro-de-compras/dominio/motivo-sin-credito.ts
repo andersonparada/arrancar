@@ -1,6 +1,6 @@
 import type { RegimenDeIva } from './datos-fiscales-de-empresa.js';
 import { esFueraDePlazo } from './periodo-del-libro.js';
-import type { MotivoSinCredito, TipoDeDocumento } from './tipos-de-documento.js';
+import { MOTIVO_DE_LA_FAMILIA, type MotivoSinCredito, type TipoDeDocumento } from './tipos-de-documento.js';
 
 /** Lo que el dominio necesita para decidir si el documento da crédito fiscal. Montos en centavos. */
 export interface DatosParaElMotivo {
@@ -51,7 +51,8 @@ function motivoDeUnaNota(datos: DatosParaElMotivo): ResultadoDelMotivo {
 }
 
 /**
- * Decide el motivo sin crédito fiscal, en este orden: casilla SAT desmarcada, ninguno; pequeño contribuyente;
+ * Decide el motivo sin crédito fiscal, en este orden: casilla SAT desmarcada, ninguno; familia sin IVA, su motivo
+ * (pequeño contribuyente, agropecuario, primario o pecuario);
  * nota de crédito, el de su factura tal cual (su propia antigüedad nunca le da motivo; si su período no da crédito y
  * tiene IVA, `empresa_sin_credito`, con aviso si la factura sí dio crédito); todo exento con IVA cero, `exento`; empresa sin
  * crédito, `empresa_sin_credito` (no se miran `noVinculado` ni el art. 20); el usuario marcó no vinculado; período
@@ -59,7 +60,8 @@ function motivoDeUnaNota(datos: DatosParaElMotivo): ResultadoDelMotivo {
  */
 export function determinarMotivoSinCredito(datos: DatosParaElMotivo): ResultadoDelMotivo {
   if (!datos.muestraEnReportesSat) return { motivo: null, avisos: [] };
-  if (datos.tipo === 'factura_pequeno_contribuyente') return { motivo: 'pequeno_contribuyente', avisos: [] };
+  const deLaFamilia = MOTIVO_DE_LA_FAMILIA[datos.tipo];
+  if (deLaFamilia) return { motivo: deLaFamilia, avisos: [] };
   if (datos.tipo === 'nota_de_credito') return motivoDeUnaNota(datos);
   const motivo = motivoDeUnaFactura(datos);
   return { motivo, avisos: motivo === 'fuera_de_plazo' ? [AVISO_FUERA_DE_PLAZO] : [] };

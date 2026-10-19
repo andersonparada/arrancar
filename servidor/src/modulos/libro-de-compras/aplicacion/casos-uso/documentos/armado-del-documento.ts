@@ -98,7 +98,16 @@ type EncabezadoDeDocumento = Omit<DocumentoDeCompra, 'totales' | 'lineas' | 'ret
 type DatosDelEncabezado = { contexto: ContextoFiscal } & Pick<DocumentoResuelto, 'encabezado' | 'calculado'>;
 type Identidad = Pick<
   EncabezadoDeDocumento,
-  'id' | 'empresaId' | 'tipo' | 'proveedorId' | 'nitEmisor' | 'nombreEmisor' | 'nitReceptor' | 'serie' | 'numero'
+  | 'id'
+  | 'empresaId'
+  | 'tipo'
+  | 'tipoDte'
+  | 'proveedorId'
+  | 'nitEmisor'
+  | 'nombreEmisor'
+  | 'nitReceptor'
+  | 'serie'
+  | 'numero'
 >;
 
 /** Quién emite, a quién y qué número lleva. */
@@ -111,6 +120,7 @@ function identidadDelDocumento(
     id: crypto.randomUUID(),
     empresaId: operador.empresaId,
     tipo: solicitud.tipo,
+    tipoDte: solicitud.tipoDte,
     proveedorId: contexto.proveedor.id,
     nitEmisor: encabezado.emisor.nitEmisor,
     nombreEmisor: contexto.proveedor.nombre,

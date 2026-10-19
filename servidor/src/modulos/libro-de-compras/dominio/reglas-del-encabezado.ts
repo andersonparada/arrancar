@@ -66,25 +66,47 @@ export function resolverEmisor(datos: DatosDelEmisor): EmisorResuelto {
 
 const AYUDA_DE_REGIMEN = ' Si el proveedor cambió de régimen, actualice sus datos fiscales o confirme.';
 
+/**
+ * Los regímenes del proveedor con que cada familia no pide confirmar (`null`: cualquiera). El no domiciliado factura
+ * como el general. Las de pequeño contribuyente electrónico y agropecuario aceptan adonde el proveedor pudo pasar
+ * tras la derogación.
+ */
+const REGIMENES_DE_LA_FAMILIA: Record<TipoDeDocumento, readonly RegimenDeIvaDeProveedor[] | null> = {
+  factura: ['general', 'no_domiciliado'],
+  factura_pequeno_contribuyente: ['pequeno_contribuyente'],
+  factura_pequeno_contribuyente_electronico: ['pequeno_contribuyente_electronico', 'pequeno_contribuyente'],
+  factura_contribuyente_agropecuario: ['contribuyente_agropecuario', 'primario', 'pecuario', 'general'],
+  factura_primario_pecuario: ['primario', 'pecuario'],
+  factura_especial: null,
+  nota_de_credito: null,
+  recibo: null,
+};
+
+const MENSAJE_DE_LA_FAMILIA: Partial<Record<TipoDeDocumento, string>> = {
+  factura_pequeno_contribuyente: 'El proveedor no es pequeño contribuyente: registre una factura normal.',
+  factura_pequeno_contribuyente_electronico: 'El proveedor no es pequeño contribuyente: revise el tipo de factura.',
+  factura_contribuyente_agropecuario:
+    'El proveedor no es agropecuario, primario ni pecuario: revise el tipo de factura.',
+  factura_primario_pecuario: 'El proveedor no es productor primario ni pecuario: revise el tipo de factura.',
+};
+
 function tipoIncoherente(tipo: TipoDeDocumento, regimenIva: RegimenDeIvaDeProveedor): string | null {
-  if (tipo === 'factura_pequeno_contribuyente' && regimenIva !== 'pequeno_contribuyente') {
-    return 'El proveedor no es pequeño contribuyente: registre una factura normal.';
-  }
-  const esDeFacturaNormal = regimenIva === 'general' || regimenIva === 'no_domiciliado';
+  const permitidos = REGIMENES_DE_LA_FAMILIA[tipo];
+  if (permitidos === null || permitidos.includes(regimenIva)) return null;
   if (tipo === 'factura' && regimenIva === 'pequeno_contribuyente') {
     return 'El proveedor es pequeño contribuyente: registre una factura de pequeño contribuyente.';
   }
-  if (tipo === 'factura' && !esDeFacturaNormal) {
-    return 'El régimen de IVA del proveedor no es el general: registre el tipo de factura que le corresponde.';
-  }
-  return null;
+  return (
+    MENSAJE_DE_LA_FAMILIA[tipo] ??
+    'El régimen de IVA del proveedor no es el general: registre el tipo de factura que le corresponde.'
+  );
 }
 
 /**
- * Una factura de pequeño contribuyente es de un proveedor de ese régimen, y las facturas generales solo del
- * régimen general (o no domiciliado). Si no
- * corresponde, es un error, salvo que el usuario confirme que el proveedor cambió de régimen (la factura es
- * anterior al cambio): entonces pasa y devuelve `true`, para avisar y auditar.
+ * Cada familia de factura es de proveedores de ciertos regímenes de IVA (`REGIMENES_DE_LA_FAMILIA`); la nota, el
+ * recibo y la factura especial no se revisan. Si no corresponde, es un error, salvo que el usuario confirme que el
+ * proveedor cambió de régimen (la factura es anterior al cambio): entonces pasa y devuelve `true`, para avisar y
+ * auditar.
  * @throws TipoNoCorrespondeAlProveedor si no corresponde y no se confirmó.
  */
 export function exigirTipoDelProveedor(

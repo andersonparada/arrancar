@@ -6,7 +6,7 @@ import {
   type RegimenDeIvaDeProveedor,
 } from './datos-fiscales-de-proveedor.js';
 import { FaltanDatosFiscalesDelProveedor } from './errores-de-documento.js';
-import type { TipoDeDocumento } from './tipos-de-documento.js';
+import type { TipoDeDocumento, TipoDte } from './tipos-de-documento.js';
 
 /** Lo que el usuario contesta en el mismo documento cuando el proveedor no tiene datos fiscales guardados. */
 export interface DatosFiscalesPedidos {
@@ -18,6 +18,8 @@ export interface DatosFiscalesPedidos {
 
 export interface EntradaDeDatosFiscalesDelDocumento {
   tipo: TipoDeDocumento;
+  /** El código de la SAT; distingue al primario del pecuario. `null` sin FEL. */
+  tipoDte?: TipoDte | null;
   /** El documento va en el libro (casilla «Se muestra en reportes SAT» marcada). */
   enElLibro: boolean;
   empresa: DatosFiscalesDeEmpresa;
@@ -46,11 +48,21 @@ const OPCIONES_DE_REGIMEN: Record<RegimenDeIsrDeProveedor, string> = {
   exento: 'Exento de ISR',
 };
 
+const OPCIONES_DE_REGIMEN_DE_IVA: Partial<Record<RegimenDeIvaDeProveedor, string>> = {
+  general: 'Régimen general',
+  no_domiciliado: 'No domiciliado en el país',
+};
+
 /** Las preguntas que la pantalla le hace al usuario; viajan en los `detalles` del error. */
 export function preguntasDeDatosFiscales() {
   return {
     campo: 'datosFiscalesDelProveedor',
     preguntas: [
+      {
+        campo: 'regimenIva',
+        pregunta: '¿En qué régimen de IVA está el proveedor?',
+        opciones: Object.entries(OPCIONES_DE_REGIMEN_DE_IVA).map(([valor, texto]) => ({ valor, texto })),
+      },
       {
         campo: 'regimenIsr',
         pregunta: '¿En qué régimen de ISR está el proveedor?',
@@ -74,25 +86,51 @@ const base = (pedidos: DatosFiscalesPedidos) => ({
   esAgenteDeRetencionIva: pedidos.esAgenteDeRetencionIva,
 });
 
-/**
- * Los datos fiscales con que se calcula el documento y los que hay que guardar (opción C). Lo guardado manda. Sin
- * fila guardada: la factura de pequeño contribuyente lo deduce de su tipo; una factura del libro necesita lo que
- * contesta el usuario si la empresa retiene algo (si no, se usan los valores por omisión); recibos, documentos
- * fuera del libro y notas usan los valores por omisión sin avisar nada.
- * @throws FaltanDatosFiscalesDelProveedor si hacen falta y no llegaron.
- */
-export function resolverDatosFiscalesDelProveedor(entrada: EntradaDeDatosFiscalesDelDocumento): DatosFiscalesResueltos {
-  const { tipo, enElLibro, empresa, guardados, pedidos } = entrada;
-  if (guardados) return { vigentes: guardados, porGuardar: null };
-  if (tipo === 'factura_pequeno_contribuyente') {
-    const deducidos = DatosFiscalesDeProveedor.porOmision({ regimenIva: 'pequeno_contribuyente' });
-    return { vigentes: deducidos, porGuardar: enElLibro ? deducidos : null };
-  }
-  if (tipo !== 'factura' || !enElLibro) return { vigentes: DatosFiscalesDeProveedor.porOmision(), porGuardar: null };
+/** El régimen que dice la familia (y el código) cuando el proveedor no tiene datos; `null` si no se deduce. */
+function regimenDeducido(tipo: TipoDeDocumento, tipoDte: TipoDte | null): RegimenDeIvaDeProveedor | null {
+  if (tipo === 'factura_pequeno_contribuyente') return 'pequeno_contribuyente';
+  if (tipo === 'factura_pequeno_contribuyente_electronico') return 'pequeno_contribuyente_electronico';
+  if (tipo === 'factura_contribuyente_agropecuario') return 'contribuyente_agropecuario';
+  if (tipo !== 'factura_primario_pecuario') return null;
+  return tipoDte === 'FPEC' || tipoDte === 'FCPC' ? 'pecuario' : 'primario';
+}
+
+/** Los derogados se calculan pero no se guardan: sería el régimen de hoy de un proveedor que ya no puede tenerlo. */
+const SE_GUARDA: readonly RegimenDeIvaDeProveedor[] = ['pequeno_contribuyente', 'primario', 'pecuario'];
+
+/** Las familias sin IVA deducen el régimen de su tipo y código; los derogados se calculan pero no se guardan. */
+function deducidosDeLaFamilia(entrada: EntradaDeDatosFiscalesDelDocumento): DatosFiscalesResueltos | null {
+  const regimen = regimenDeducido(entrada.tipo, entrada.tipoDte ?? null);
+  if (!regimen) return null;
+  const datos = DatosFiscalesDeProveedor.porOmision({ regimenIva: regimen });
+  return { vigentes: datos, porGuardar: entrada.enElLibro && SE_GUARDA.includes(regimen) ? datos : null };
+}
+
+/** Una factura del libro: lo que contesta el usuario, o los valores por omisión si la empresa no retiene nada. */
+function deFacturaGeneral(entrada: EntradaDeDatosFiscalesDelDocumento): DatosFiscalesResueltos {
+  const { empresa, pedidos } = entrada;
   if (pedidos) {
     const contestados = DatosFiscalesDeProveedor.porOmision(base(pedidos));
     return { vigentes: contestados, porGuardar: contestados };
   }
   if (retieneAlgo(empresa)) throw new FaltanDatosFiscalesDelProveedor(preguntasDeDatosFiscales());
   return { vigentes: DatosFiscalesDeProveedor.porOmision(), porGuardar: null };
+}
+
+/**
+ * Los datos fiscales con que se calcula el documento y los que hay que guardar (opción C). Lo guardado manda. Sin
+ * fila guardada: las familias sin IVA lo deducen de su tipo y código (pequeño contribuyente, primario o pecuario se
+ * guardan en el libro; los derogados solo se usan para calcular); una factura del libro necesita lo que contesta el
+ * usuario si la empresa retiene algo (si no, se usan los valores por omisión); recibos, documentos fuera del libro y
+ * notas usan los valores por omisión sin avisar nada.
+ * @throws FaltanDatosFiscalesDelProveedor si hacen falta y no llegaron.
+ */
+export function resolverDatosFiscalesDelProveedor(entrada: EntradaDeDatosFiscalesDelDocumento): DatosFiscalesResueltos {
+  if (entrada.guardados) return { vigentes: entrada.guardados, porGuardar: null };
+  const deducidos = deducidosDeLaFamilia(entrada);
+  if (deducidos) return deducidos;
+  if (entrada.tipo !== 'factura' || !entrada.enElLibro) {
+    return { vigentes: DatosFiscalesDeProveedor.porOmision(), porGuardar: null };
+  }
+  return deFacturaGeneral(entrada);
 }

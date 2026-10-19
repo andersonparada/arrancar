@@ -17,6 +17,8 @@ export interface FilasLeidasDeDocumento {
   lineas: FilaDeLinea[];
   retenciones: FilaDeRetencion[];
   notas: FilaDeDocumento[];
+  /** Solo en una nota de crédito: el motivo de la factura que rebaja. */
+  motivoDeLaFactura: MotivoSinCredito | null;
 }
 
 function lineaDeDominio(fila: FilaDeLinea): LineaDeDocumento {
@@ -87,6 +89,7 @@ function documentoDeDominio(fila: FilaDeDocumento, lineas: FilaDeLinea[], reteni
     id: fila.id,
     empresaId: fila.empresaId,
     tipo: fila.tipo,
+    tipoDte: fila.tipoDte,
     proveedorId: fila.proveedorId,
     ...datosFiscalesDeDominio(fila),
     fechaEmision: fila.fechaEmision,
@@ -115,7 +118,8 @@ function notaDeFactura(fila: FilaDeDocumento): NotaDeFactura {
 }
 
 export const mapeadorDeDocumentoGuardado = {
-  aDominio({ documento, lineas, retenciones: retenidas, notas }: FilasLeidasDeDocumento): DocumentoGuardado {
+  aDominio(filas: FilasLeidasDeDocumento): DocumentoGuardado {
+    const { documento, lineas, retenciones: retenidas, notas } = filas;
     return {
       documento: documentoDeDominio(documento, lineas, retenidas),
       estado: documento.estado,
@@ -125,6 +129,7 @@ export const mapeadorDeDocumentoGuardado = {
       causaDeAnulacion: documento.causaDeAnulacion,
       procesadoEnDestinoEn: documento.procesadoEnDestinoEn,
       notas: notas.map(notaDeFactura),
+      motivoDeLaFactura: filas.motivoDeLaFactura,
     };
   },
 };

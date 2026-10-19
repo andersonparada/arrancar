@@ -5,7 +5,7 @@ import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/uni
 import { paraElDestino } from '../../../dominio/documento-de-compra.js';
 import { DocumentoRegistrado } from '../../../dominio/eventos.js';
 import type { DocumentoConAvisosDto } from '../../dto/documento.dto.js';
-import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
+import type { SolicitudSinResolver } from '../../dto/solicitud-de-documento.js';
 import { DocumentoRepetido } from '../../errores.js';
 import type { CompletadorDeNit, RepositorioDeDocumentos } from '../../puertos/puertos-de-documentos.js';
 import { GuardarDatosFiscalesDeProveedor } from '../datos-fiscales/guardar-datos-fiscales-de-proveedor.js';
@@ -26,7 +26,7 @@ interface Dependencias extends DependenciasDelPreparador {
 }
 
 export interface PeticionDeRegistro {
-  solicitud: SolicitudDeDocumento;
+  solicitud: SolicitudSinResolver;
   /** El usuario tiene `libro-de-compras.retenciones.ajustar`. */
   puedeAjustarRetenciones: boolean;
 }

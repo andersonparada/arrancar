@@ -1,5 +1,6 @@
 import type { CausaDeAnulacion } from '../../dominio/baja-de-documento.js';
 import type { DocumentoDeCompra } from '../../dominio/documento-de-compra.js';
+import type { MotivoSinCredito } from '../../dominio/tipos-de-documento.js';
 import type {
   FiltroDeDocumentos,
   PaginaDeDocumentosDto,
@@ -26,6 +27,8 @@ export interface DocumentoGuardado {
   causaDeAnulacion: CausaDeAnulacion | null;
   procesadoEnDestinoEn: Date | null;
   notas: NotaDeFactura[];
+  /** Solo en una nota de crédito: el motivo sin crédito de la factura que rebaja (derivado, no se guarda en la nota). */
+  motivoDeLaFactura: MotivoSinCredito | null;
 }
 
 export interface AnulacionDeDocumento {

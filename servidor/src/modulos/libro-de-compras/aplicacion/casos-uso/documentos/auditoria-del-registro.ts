@@ -1,5 +1,6 @@
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import { retencionesAjustadas } from '../../../dominio/ajuste-de-retenciones.js';
+import type { RegimenDeIvaDeProveedor } from '../../../dominio/datos-fiscales-de-proveedor.js';
 import type { DocumentoDeCompra } from '../../../dominio/documento-de-compra.js';
 import { dtoDeRetencion } from './dto-de-documento.js';
 import type { DocumentoPreparado } from './preparador-de-documento.js';
@@ -39,16 +40,17 @@ async function auditarRetencionesEnCero(
 }
 
 /** El tipo no correspondía al régimen guardado del proveedor y el usuario confirmó que cambió de régimen. */
-async function auditarCambioDeRegimen(auditoria: Auditoria, documento: DocumentoDeCompra): Promise<void> {
-  const eraPequeno = documento.tipo !== 'factura_pequeno_contribuyente';
+async function auditarCambioDeRegimen(
+  auditoria: Auditoria,
+  documento: DocumentoDeCompra,
+  regimenGuardado: RegimenDeIvaDeProveedor,
+): Promise<void> {
   await auditoria.registrar({
     recurso: 'libro-de-compras.documentos',
     registroId: documento.id,
     accion: 'corregir',
-    anterior: { proveedorId: documento.proveedorId, esPequenoContribuyenteSegunSusDatos: eraPequeno },
-    motivo: `El proveedor cambió de régimen: se registró una ${documento.tipo} aunque sus datos fiscales decían ${
-      eraPequeno ? 'pequeño contribuyente' : 'régimen general'
-    }.`,
+    anterior: { proveedorId: documento.proveedorId, regimenIvaSegunSusDatos: regimenGuardado },
+    motivo: `El proveedor cambió de régimen: se registró una ${documento.tipo} aunque sus datos fiscales decían ${regimenGuardado}.`,
   });
 }
 
@@ -63,5 +65,7 @@ export async function auditarRegistro(
 ): Promise<void> {
   await auditarAjustes(auditoria, documento);
   await auditarRetencionesEnCero(auditoria, documento, preparado.retencionesEnCero);
-  if (preparado.cambioDeRegimenConfirmado) await auditarCambioDeRegimen(auditoria, documento);
+  if (preparado.cambioDeRegimenConfirmado) {
+    await auditarCambioDeRegimen(auditoria, documento, preparado.regimenDelProveedor);
+  }
 }

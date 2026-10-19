@@ -1,5 +1,6 @@
 import { avisosDeRetenciones, type ContextoDeEntero } from '../../../dominio/avisos-de-retenciones.js';
 import { avisosDelProveedor } from '../../../dominio/avisos-del-proveedor.js';
+import { avisosDeLaFamilia } from '../../../dominio/familia-del-documento.js';
 import { avisosDeConsumidorFinal } from '../../../dominio/fuera-del-libro.js';
 import { avisosDeNotaTardia } from '../../../dominio/reglas-de-notas-de-credito.js';
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
@@ -27,6 +28,7 @@ export function avisosDelDocumento(
   return [
     ...resuelto.calculado.avisos,
     ...resuelto.encabezado.avisos,
+    ...avisosDeLaFamilia(solicitud.tipo),
     ...avisosDeConsumidorFinal(
       { motivo: solicitud.motivoFueraDelLibro, total: resuelto.calculado.totales.total },
       contexto.datosDeLaEmpresa.tieneIsrSobreUtilidades(),

@@ -2,7 +2,7 @@ import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { MotivoFueraDelLibro } from '../../dominio/fuera-del-libro.js';
 import type { ImpuestoRetenido, ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
-import type { MotivoSinCredito, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
+import type { MotivoSinCredito, TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
 
 /** Todo el dinero viaja como texto con dos decimales (`"1250.50"`). */
 export interface LineaDeDocumentoDto {
@@ -53,6 +53,8 @@ export interface TotalesDeDocumentoDto {
 export interface DocumentoDto {
   id: string | null;
   tipo: TipoDeDocumento;
+  /** El código de la SAT; `null` en un documento sin FEL. */
+  tipoDte: TipoDte | null;
   proveedorId: string;
   nitEmisor: string | null;
   nombreEmisor: string;

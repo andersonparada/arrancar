@@ -38,6 +38,7 @@ export function dtoDeFicha(guardado: DocumentoGuardado): DocumentoFichaDto {
     causaDeAnulacion: guardado.causaDeAnulacion,
     procesadoEnDestinoEn: guardado.procesadoEnDestinoEn?.toISOString() ?? null,
     ...accionesDeDocumento(hechosDe(guardado)),
+    motivoDeLaFactura: guardado.motivoDeLaFactura,
     notas: guardado.notas.map(dtoDeNota),
   };
 }
