@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { Info } from 'lucide-vue-next';
 import type { FichaDeDocumento } from '../../servicios/documentos.api';
-import { MOTIVOS_FUERA_DEL_LIBRO, MOTIVOS_SIN_CREDITO } from '../../textos-de-documentos';
+import { MOTIVOS_SIN_CREDITO, textoFueraDelLibro } from '../../textos-de-documentos';
 
 /** Por qué el IVA va al costo y por qué el documento queda fuera de los reportes de la SAT, si aplica. */
 const props = defineProps<{ ficha: Pick<FichaDeDocumento, 'motivoSinCredito' | 'motivoFueraDelLibro'> }>();
@@ -10,7 +10,7 @@ const motivos = computed(() => {
   const { motivoSinCredito, motivoFueraDelLibro } = props.ficha;
   return [
     motivoSinCredito ? MOTIVOS_SIN_CREDITO[motivoSinCredito] : null,
-    motivoFueraDelLibro ? MOTIVOS_FUERA_DEL_LIBRO[motivoFueraDelLibro] : null,
+    motivoFueraDelLibro ? textoFueraDelLibro(motivoFueraDelLibro) : null,
   ].filter((texto): texto is string => texto !== null);
 });
 </script>

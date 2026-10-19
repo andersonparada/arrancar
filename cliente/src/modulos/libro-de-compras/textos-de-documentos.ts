@@ -6,6 +6,32 @@ import type {
   TipoDeDocumento,
 } from './servicios/documentos.api';
 
+/** Fecha en que quedó derogado el régimen de contribuyentes agropecuarios (Decreto 7-2019), `AAAA-MM-DD`. */
+export const FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019 = '2025-07-09';
+
+const MESES = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+/** El mes y el año de una fecha `AAAA-MM-DD`, en español: «julio de 2025». */
+export function mesDeFecha(fecha: string): string {
+  const [anio, mes] = fecha.split('-');
+  return `${MESES[Number(mes) - 1]} de ${anio}`;
+}
+
+const MES_DE_DEROGACION = mesDeFecha(FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019);
+
 /** Textos de la pantalla «Ingreso de facturas» (lista, ficha y anulación). */
 export const VENTANA_DE_DOCUMENTOS = {
   titulo: 'Ingreso de facturas',
@@ -30,35 +56,55 @@ export const DESTINOS_DE_DOCUMENTO: Record<DestinoDeDocumento, string> = {
 
 export const CAUSAS_DE_ANULACION: Record<CausaDeAnulacion, string> = {
   error_de_captura: 'Error de captura',
-  fel_anulada_por_el_emisor: 'La FEL fue anulada por el emisor',
-  no_corresponde_a_la_empresa: 'No corresponde a la empresa',
+  fel_anulada_por_el_emisor: 'El emisor anuló la FEL en la SAT',
+  no_corresponde_a_la_empresa: 'No es una compra de esta empresa',
 };
 
-/** Por qué el IVA de un documento no es crédito fiscal y va al costo. */
+/** Por qué el IVA de un documento no es crédito fiscal y va al costo o gasto. */
 export const MOTIVOS_SIN_CREDITO: Record<MotivoSinCredito, string> = {
-  empresa_sin_credito: 'La empresa no tiene crédito fiscal: el IVA va al costo.',
-  fuera_de_plazo: 'Se registró fuera del plazo para tomar el crédito fiscal: el IVA va al costo.',
-  no_vinculado: 'La compra no está vinculada a operaciones gravadas: el IVA no es crédito fiscal y va al costo.',
-  pequeno_contribuyente: 'El proveedor es pequeño contribuyente: no hay IVA que tomar como crédito fiscal.',
-  exento: 'Lo comprado está exento de IVA: no hay crédito fiscal.',
+  empresa_sin_credito:
+    'Por el régimen de IVA de la empresa en este período, las compras no dan crédito fiscal. El IVA se suma al costo o gasto de lo comprado.',
+  fuera_de_plazo:
+    'Pasaron más de dos meses desde el mes en que se emitió la factura: ya no se puede tomar el IVA como crédito fiscal (Ley del IVA, art. 20). El IVA se suma al costo o gasto de lo comprado.',
+  no_vinculado:
+    'Esta compra no se usa en ventas gravadas con IVA (Ley del IVA, art. 16): su IVA no es crédito fiscal. Se suma al costo o gasto.',
+  pequeno_contribuyente:
+    'El proveedor está en el régimen de pequeño contribuyente: su factura no da crédito fiscal. El total se registra como costo o gasto.',
+  exento: 'Todo lo comprado está exento de IVA (Ley del IVA, art. 7): no hay IVA que acreditar.',
+  contribuyente_agropecuario: `Factura de un contribuyente agropecuario, régimen eliminado en ${MES_DE_DEROGACION} (Decreto 31-2024): no da crédito fiscal. El total se registra como costo o gasto.`,
+  primario_pecuario:
+    'Compra a un productor primario o pecuario (Decreto 31-2024): su factura no da crédito fiscal. El monto se registra como costo o gasto.',
 };
 
 /** Por qué un documento no se muestra en los reportes de la SAT. */
 export const MOTIVOS_FUERA_DEL_LIBRO: Record<MotivoFueraDelLibro, string> = {
-  sin_fel: 'No tiene FEL: no aparece en los reportes de la SAT.',
-  fel_a_consumidor_final: 'La FEL se emitió a consumidor final, no al NIT de la empresa: queda fuera del libro.',
-  fel_a_otro_nit: 'La FEL se emitió a otro NIT, no al de la empresa: queda fuera del libro.',
+  sin_fel:
+    'Documento sin FEL (por ejemplo, recibo de un proveedor informal): la SAT no lo conoce, así que no se reporta ni da crédito fiscal.',
+  fel_a_consumidor_final:
+    'La FEL se emitió a consumidor final (CF) y no a nombre de la empresa: no se reporta a la SAT ni da crédito fiscal.',
+  fel_a_otro_nit:
+    'La FEL se emitió a nombre de otra persona (otro NIT o CUI), no de la empresa: no se reporta a la SAT ni da crédito fiscal.',
 };
 
+const ADVERTENCIA_DE_ISR = ' Puede no ser deducible del ISR.';
+
+/** El texto de por qué un documento queda fuera del libro; agrega la advertencia del ISR si la empresa tiene ISR sobre utilidades. */
+export function textoFueraDelLibro(motivo: MotivoFueraDelLibro, conIsrSobreUtilidades = false): string {
+  const texto = MOTIVOS_FUERA_DEL_LIBRO[motivo];
+  return conIsrSobreUtilidades ? `${texto}${ADVERTENCIA_DE_ISR}` : texto;
+}
+
 export const REGLAS_DE_RETENCION: Record<string, string> = {
-  iva_exportador_agropecuario: 'IVA, exportador (producto agropecuario)',
-  iva_exportador: 'IVA, exportador',
-  iva_contribuyente_especial: 'IVA, contribuyente especial',
-  iva_otro_agente: 'IVA, otro agente de retención',
-  iva_sector_publico: 'IVA, sector público',
-  iva_pequeno_contribuyente: 'IVA, pequeño contribuyente',
-  isr_opcional_simplificado: 'ISR, proveedor del régimen opcional simplificado',
+  iva_exportador_agropecuario: 'Retención de IVA: la empresa es exportadora (bienes agropecuarios)',
+  iva_exportador: 'Retención de IVA: la empresa es exportadora (otras compras)',
+  iva_contribuyente_especial: 'Retención de IVA: la empresa es contribuyente especial',
+  iva_otro_agente: 'Retención de IVA: la empresa fue calificada por la SAT como agente de retención',
+  iva_sector_publico: 'Retención de IVA: la empresa pertenece al sector público',
+  iva_pequeno_contribuyente: 'Retención de IVA del 5 %: el proveedor es pequeño contribuyente',
+  isr_opcional_simplificado: 'Retención de ISR: el proveedor está en el régimen opcional simplificado sobre ingresos',
+  iva_factura_especial: 'Retención del 100 % del IVA: factura especial',
+  isr_factura_especial: 'Retención de ISR (pago único): factura especial',
 };
 
 export const AYUDA_DE_ANULAR =
-  'Anular aquí solo anula el registro en Arrancar. La factura sigue vigente en la SAT: solo su emisor puede anularla allá.';
+  'Esto anula únicamente el registro en Arrancar, no la factura en la SAT. Solo su emisor puede anularla allá, y solo hasta el vencimiento de la declaración del IVA del mes de la factura. Si hubo una devolución o un descuento, use una nota de crédito.';

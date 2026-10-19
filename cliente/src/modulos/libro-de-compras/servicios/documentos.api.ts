@@ -6,7 +6,13 @@ export type EstadoDeDocumento = 'vigente' | 'anulado';
 export type EstadoBuscado = EstadoDeDocumento | 'todos';
 export type CausaDeAnulacion = 'error_de_captura' | 'fel_anulada_por_el_emisor' | 'no_corresponde_a_la_empresa';
 export type MotivoSinCredito =
-  'empresa_sin_credito' | 'fuera_de_plazo' | 'no_vinculado' | 'pequeno_contribuyente' | 'exento';
+  | 'empresa_sin_credito'
+  | 'fuera_de_plazo'
+  | 'no_vinculado'
+  | 'pequeno_contribuyente'
+  | 'exento'
+  | 'contribuyente_agropecuario'
+  | 'primario_pecuario';
 export type MotivoFueraDelLibro = 'sin_fel' | 'fel_a_consumidor_final' | 'fel_a_otro_nit';
 
 /** Una fila de la lista; el dinero viaja como texto con dos decimales. */

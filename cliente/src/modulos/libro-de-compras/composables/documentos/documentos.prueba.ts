@@ -65,13 +65,15 @@ const ficha = (cambios: Partial<FichaDeDocumento> = {}): FichaDeDocumento =>
 
 describe('textos de los motivos', () => {
   it('cada motivo sin crédito tiene su texto', () => {
-    expect(MOTIVOS_SIN_CREDITO.empresa_sin_credito).toBe('La empresa no tiene crédito fiscal: el IVA va al costo.');
+    expect(MOTIVOS_SIN_CREDITO.empresa_sin_credito).toContain('Por el régimen de IVA de la empresa');
     expect(Object.keys(MOTIVOS_SIN_CREDITO).sort()).toEqual([
+      'contribuyente_agropecuario',
       'empresa_sin_credito',
       'exento',
       'fuera_de_plazo',
       'no_vinculado',
       'pequeno_contribuyente',
+      'primario_pecuario',
     ]);
   });
 
@@ -120,18 +122,19 @@ describe('detalles del documento', () => {
 
 describe('retenciones', () => {
   it('se nombran por su regla', () => {
-    expect(nombreDeRetencion(retencion())).toBe('IVA, contribuyente especial');
+    expect(nombreDeRetencion(retencion())).toBe('Retención de IVA: la empresa es contribuyente especial');
     expect(nombreDeRetencion(retencion({ regla: 'otra', impuesto: 'isr' }))).toBe('Retención de ISR');
   });
 
-  it('dicen si el usuario las quitó o ajustó', () => {
+  it('dicen si el usuario las quitó, agregó o ajustó a mano', () => {
     expect(estadoDeRetencion(retencion())).toBeNull();
-    expect(estadoDeRetencion(retencion({ monto: '0.00' }))).toBe('Quitada');
-    expect(estadoDeRetencion(retencion({ monto: '100.00' }))).toBe('Ajustada');
+    expect(estadoDeRetencion(retencion({ monto: '0.00' }))).toBe('Quitada a mano');
+    expect(estadoDeRetencion(retencion({ monto: '100.00' }))).toBe('Ajustada a mano');
+    expect(estadoDeRetencion(retencion({ montoPropuesto: '0.00', monto: '80.00' }))).toBe('Agregada a mano');
   });
 
   it('el ISR por escalones no tiene porcentaje único', () => {
-    expect(cifrasDeRetencion(retencion({ porcentaje: null }))[1]?.valor).toBe('Por escalones');
+    expect(cifrasDeRetencion(retencion({ porcentaje: null }))[1]?.valor).toBe('Por tramos (5 % y 7 %)');
     expect(cifrasDeRetencion(retencion())[1]?.valor).toBe('15.00 %');
   });
 });
@@ -140,8 +143,8 @@ describe('anular', () => {
   it('ofrece las causas por nombre, con la invitación a escoger primero', () => {
     expect(opcionesDeCausa().map((o) => o.valor)).toEqual([
       '',
-      'error_de_captura',
       'fel_anulada_por_el_emisor',
+      'error_de_captura',
       'no_corresponde_a_la_empresa',
     ]);
   });

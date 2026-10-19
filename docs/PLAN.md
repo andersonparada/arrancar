@@ -788,3 +788,8 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   en los meses afectados. `GET …/datos-fiscales` trae lo de hoy y el historial; `DELETE …/vigencias/:id` quita una
   vigencia. Sin datos fiscales, registrar o calcular un documento responde 422 `empresa_sin_datos_fiscales`; el
   cargador lee el régimen del período del documento. Pendiente: R1-4 (foto del régimen, `for share`), R1-5 a R1-7.
+- **2026-10-18 (textos revisados por el contador).** Cambian solo los textos del cliente de Ingreso de facturas:
+  motivos sin crédito (nuevos `contribuyente_agropecuario` con `FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019` y
+  `primario_pecuario`), motivos fuera del libro (`textoFueraDelLibro`, con la advertencia de ISR opcional), causas y
+  ayuda de anular, etiquetas de retención (incluida «Agregada a mano» cuando la propuesta es 0) y reglas de retención
+  (nuevas `iva_factura_especial` e `isr_factura_especial`). Pruebas del cliente: 407.
