@@ -766,3 +766,14 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   los dos checks ampliados. Calendario: `CalendarioDeFeriados` (infraestructura) precarga del core los días no
   hábiles y el dominio sigue síncrono; el entero de septiembre de 2026 vence el 22 de octubre (el 20 es feriado).
   Pendiente de R1-1 a R1-4: renumerar migraciones al integrar, tabla con historial y régimen por período.
+
+- **2026-10-18 (Libro de compras L3-7, cliente).** Pantalla «Ingreso de facturas» (menú Operación, permiso
+  `documentos.ver`): lista en `/libro-de-compras/documentos` con filtros de período (mes; abre en el mes en curso),
+  proveedor (selector con buscador), estado (vigentes por omisión), destino y tipo, tarjetas con emisor, fecha, total,
+  retenido y neto, y paginación de 50; ficha en `/libro-de-compras/documentos/:documentoId` con encabezado, totales,
+  líneas (con el nombre del concepto), retenciones (con el motivo del ajuste y si fueron quitadas o ajustadas), notas
+  de crédito, estado, y el motivo sin crédito y el de fuera del libro con un texto por cada valor. «Anular el registro
+  (no anula la factura en la SAT)» abre una ventana con el resumen, la causa (lista) y el motivo, y sugiere eliminar si
+  `puedeEliminar`; eliminar pide confirmación; los `avisos` de las respuestas se muestran con `usarAvisos`. El botón
+  «Registrar factura» queda deshabilitado hasta L3-8. Lógica pura con pruebas en `composables/documentos/`.
+  Pruebas del cliente: 400.

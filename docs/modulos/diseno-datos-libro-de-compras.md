@@ -1117,7 +1117,7 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
     o más y `sin_fel` sin receptor; `confirmarCambioDeRegimen`; `causa_de_anulacion` (migración `0010`); aviso de
     período anterior al mes actual al anular y eliminar (eliminar responde 200 `{ avisos }`); protección contra la
     retención doble; la lista oculta los anulados por omisión. Ver las secciones 4 y 5.
-17. **L3-7 (cliente):** Ingreso de facturas: lista con filtros (período, proveedor, estado,
+17. **L3-7 (cliente, hecho 2026-10-18):** Ingreso de facturas: lista con filtros (período, proveedor, estado,
     destino) y ficha con anular y eliminar (menú Operación).
 18. **L3-8 (cliente):** formulario en página: encabezado (proveedor con destino sugerido, NIT
     del DTE, casilla SAT, período), editor de líneas (concepto, bien/servicio, activo fijo,

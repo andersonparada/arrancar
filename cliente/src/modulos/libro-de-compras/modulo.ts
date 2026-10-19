@@ -3,7 +3,8 @@ import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_LIBRO_DE_COMPRAS, TITULO_SECCION_FISCAL } from './textos';
 import { Tags } from 'lucide-vue-next';
 import { VENTANAS_LIBRO_DE_COMPRAS } from './textos';
-import { Fuel } from 'lucide-vue-next';
+import { FileText, Fuel } from 'lucide-vue-next';
+import { VENTANA_DE_DOCUMENTOS } from './textos-de-documentos';
 // generador: importaciones
 
 /** Rutas y menú del módulo Libro de compras. Un grupo sin opciones no se muestra. */
@@ -24,6 +25,19 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       name: 'libro-de-compras.combustibles',
       component: () => import('./paginas/ListaDeCombustibles.vue'),
       meta: { permiso: 'libro-de-compras.combustibles.ver', titulo: VENTANAS_LIBRO_DE_COMPRAS.combustibles.titulo },
+    },
+    {
+      path: '/libro-de-compras/documentos',
+      name: 'libro-de-compras.documentos',
+      component: () => import('./paginas/ListaDeDocumentos.vue'),
+      meta: { permiso: 'libro-de-compras.documentos.ver', titulo: VENTANA_DE_DOCUMENTOS.titulo },
+    },
+    {
+      path: '/libro-de-compras/documentos/:documentoId',
+      name: 'libro-de-compras.documentos.ficha',
+      component: () => import('./paginas/FichaDeDocumento.vue'),
+      props: ({ params }) => ({ documentoId: String(params.documentoId) }),
+      meta: { permiso: 'libro-de-compras.documentos.ver', titulo: VENTANA_DE_DOCUMENTOS.ficha },
     },
     // generador: rutas
   ],
@@ -50,6 +64,13 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       titulo: NOMBRE_LIBRO_DE_COMPRAS,
       icono: ReceiptText,
       entradas: [
+        {
+          titulo: VENTANA_DE_DOCUMENTOS.titulo,
+          ruta: '/libro-de-compras/documentos',
+          icono: FileText,
+          seccion: 'operacion',
+          permiso: 'libro-de-compras.documentos.ver',
+        },
         {
           titulo: VENTANAS_LIBRO_DE_COMPRAS.conceptosDeGasto.titulo,
           ruta: '/libro-de-compras/conceptos-de-gasto',
