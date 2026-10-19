@@ -1,0 +1,20 @@
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" DROP CONSTRAINT "datos_fiscales_de_proveedor_pequeno_no_es_agente";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" DROP CONSTRAINT "datos_fiscales_de_proveedor_regimen_isr_valido";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" DROP CONSTRAINT "datos_fiscales_de_proveedor_regimen_isr";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" DROP CONSTRAINT "datos_fiscales_de_proveedor_retencion_iva_pequeno";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" DROP CONSTRAINT "datos_fiscales_de_proveedor_retencion_iva_general";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" DROP CONSTRAINT "datos_fiscales_de_proveedor_retencion_isr";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD COLUMN "regimen_iva" text DEFAULT 'general' NOT NULL;--> statement-breakpoint
+UPDATE "libro_de_compras"."datos_fiscales_de_proveedor" SET "regimen_iva" = CASE
+  WHEN "es_pequeno_contribuyente" THEN 'pequeno_contribuyente'
+  WHEN "regimen_isr" = 'no_domiciliado' THEN 'no_domiciliado'
+  ELSE 'general' END;--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" DROP COLUMN "es_pequeno_contribuyente";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD CONSTRAINT "datos_fiscales_de_proveedor_regimen_iva_valido" CHECK ("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_iva" in ('general', 'pequeno_contribuyente', 'primario', 'pecuario', 'sin_inscripcion', 'no_domiciliado', 'pequeno_contribuyente_electronico', 'contribuyente_agropecuario'));--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD CONSTRAINT "datos_fiscales_de_proveedor_no_domiciliado" CHECK (("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_iva" = 'no_domiciliado') = ("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_isr" is not distinct from 'no_domiciliado'));--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD CONSTRAINT "datos_fiscales_de_proveedor_agente_solo_general" CHECK ("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_iva" = 'general' or not "libro_de_compras"."datos_fiscales_de_proveedor"."es_agente_de_retencion_iva");--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD CONSTRAINT "datos_fiscales_de_proveedor_regimen_isr_valido" CHECK ("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_isr" is null or "libro_de_compras"."datos_fiscales_de_proveedor"."regimen_isr" in ('utilidades', 'opcional_simplificado', 'no_domiciliado', 'exento'));--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD CONSTRAINT "datos_fiscales_de_proveedor_regimen_isr" CHECK (("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_iva" in ('general', 'no_domiciliado')) = ("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_isr" is not null));--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD CONSTRAINT "datos_fiscales_de_proveedor_retencion_iva_pequeno" CHECK ("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_iva" = 'pequeno_contribuyente' or not "libro_de_compras"."datos_fiscales_de_proveedor"."se_le_retiene_iva_pequeno_contribuyente");--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD CONSTRAINT "datos_fiscales_de_proveedor_retencion_iva_general" CHECK ("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_iva" = 'general' or not "libro_de_compras"."datos_fiscales_de_proveedor"."se_le_retiene_iva");--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD CONSTRAINT "datos_fiscales_de_proveedor_retencion_isr" CHECK ("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_isr" is not null or not "libro_de_compras"."datos_fiscales_de_proveedor"."se_le_retiene_isr");

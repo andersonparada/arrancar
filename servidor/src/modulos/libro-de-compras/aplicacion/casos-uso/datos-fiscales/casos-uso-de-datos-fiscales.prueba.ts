@@ -15,7 +15,7 @@ const operador = operadorDePrueba();
 const proveedorId = crypto.randomUUID();
 
 const datosDeProveedor = (cambios: Partial<PropiedadesFiscalesDeProveedor> = {}): PropiedadesFiscalesDeProveedor => ({
-  esPequenoContribuyente: false,
+  regimenIva: 'general',
   regimenIsr: 'utilidades',
   esAgenteDeRetencionIva: false,
   seLeRetieneIva: true,
@@ -40,7 +40,7 @@ describe('guardar los datos fiscales del proveedor', () => {
 
   it('un cambio de régimen queda en la auditoría con lo que valía', async () => {
     const pequeno = datosDeProveedor({
-      esPequenoContribuyente: true,
+      regimenIva: 'pequeno_contribuyente',
       regimenIsr: null,
       seLeRetieneIva: false,
       seLeRetieneIvaPequenoContribuyente: true,
@@ -53,7 +53,7 @@ describe('guardar los datos fiscales del proveedor', () => {
       recurso: 'libro-de-compras.datos-fiscales-de-proveedor',
       registroId: proveedorId,
       accion: 'corregir',
-      anterior: { esPequenoContribuyente: false, seLeRetieneIva: true, guardado: false },
+      anterior: { regimenIva: 'general', seLeRetieneIva: true, guardado: false },
     });
   });
 
@@ -65,7 +65,7 @@ describe('guardar los datos fiscales del proveedor', () => {
   });
 
   it('rechaza datos contradictorios sin guardar', async () => {
-    const contradictorios = datosDeProveedor({ esPequenoContribuyente: true, regimenIsr: 'utilidades' });
+    const contradictorios = datosDeProveedor({ regimenIva: 'pequeno_contribuyente', regimenIsr: 'utilidades' });
 
     await expect(guardar().ejecutar(operador, { proveedorId, datos: contradictorios })).rejects.toThrow(
       DatosFiscalesInvalidos,

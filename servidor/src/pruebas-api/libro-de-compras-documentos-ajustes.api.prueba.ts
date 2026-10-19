@@ -32,6 +32,8 @@ const NOMBRES = [
   'Distribuidora Nova',
   'Hotel Mirador',
   'Imprenta Tipografía Moderna',
+  'Agroservicios del Norte',
+  'Importadora Pacífico',
 ];
 
 const propietario = () => escenario.cuenta.propietario;
@@ -110,6 +112,27 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
     expect(auditadas).toEqual([{ accion: 'corregir' }]);
   });
 
+  it('la respuesta puede traer el régimen de IVA; sin él, se deduce del ISR (exento o no domiciliado)', async () => {
+    const exento = await proveedorNuevo();
+    const extranjero = await proveedorNuevo();
+    const respuestaExento = { regimenIsr: 'exento', esAgenteDeRetencionIva: false };
+    const respuestaExtranjero = {
+      regimenIva: 'no_domiciliado',
+      regimenIsr: 'no_domiciliado',
+      esAgenteDeRetencionIva: false,
+    };
+
+    await registrar(cuerpoDe(exento, { datosFiscalesDelProveedor: respuestaExento }));
+    await registrar(cuerpoDe(extranjero, { datosFiscalesDelProveedor: respuestaExtranjero }));
+
+    expect(await filas('datos_fiscales_de_proveedor', exento.proveedorId)).toEqual([
+      expect.objectContaining({ regimen_iva: 'general', regimen_isr: 'exento', se_le_retiene_isr: false }),
+    ]);
+    expect(await filas('datos_fiscales_de_proveedor', extranjero.proveedorId)).toEqual([
+      expect.objectContaining({ regimen_iva: 'no_domiciliado', regimen_isr: 'no_domiciliado' }),
+    ]);
+  });
+
   it('un régimen fuera del catálogo se rechaza', async () => {
     const proveedor = await proveedorNuevo();
     const datos = { regimenIsr: 'inventado', esAgenteDeRetencionIva: false };
@@ -137,7 +160,7 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
 
     expect(factura.estado).toBe(201);
     expect(await filas('datos_fiscales_de_proveedor', pequeno.proveedorId)).toEqual([
-      expect.objectContaining({ es_pequeno_contribuyente: true, regimen_isr: null }),
+      expect.objectContaining({ regimen_iva: 'pequeno_contribuyente', regimen_isr: null }),
     ]);
     expect(recibo.estado).toBe(201);
     expect(recibo.cuerpo.documento.nitReceptor).toBeNull();
@@ -147,7 +170,7 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
 
 describe('cambio de régimen del proveedor', () => {
   it('el error sigue, con la confirmación pasa con aviso y queda en la auditoría', async () => {
-    const seccion = { secciones: { 'libro-de-compras': { esPequenoContribuyente: true } } };
+    const seccion = { secciones: { 'libro-de-compras': { regimenIva: 'pequeno_contribuyente' } } };
     const proveedor = await proveedorNuevo(seccion);
     const cuerpo = cuerpoDe(proveedor, { datosFiscalesDelProveedor: null });
 

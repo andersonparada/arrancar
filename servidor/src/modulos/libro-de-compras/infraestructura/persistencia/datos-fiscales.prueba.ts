@@ -61,7 +61,7 @@ async function crearProveedorEn(cuentaId: string, empresaId: string): Promise<st
 
 const fiscalesDeProveedor = (proveedorId: string, cambios: Record<string, unknown> = {}) => ({
   proveedorId,
-  esPequenoContribuyente: false,
+  regimenIva: 'general',
   regimenIsr: 'utilidades',
   esAgenteDeRetencionIva: false,
   seLeRetieneIva: true,
@@ -159,12 +159,34 @@ describe('datos fiscales del proveedor: seguridad por cuenta y llave compuesta',
 
 describe('datos fiscales del proveedor: check de coherencia', () => {
   const casos: Array<[string, Record<string, unknown>, string]> = [
-    ['un pequeño contribuyente con régimen de ISR', { esPequenoContribuyente: true }, 'regimen_isr'],
-    ['quien no es pequeño sin régimen de ISR', { regimenIsr: null }, 'regimen_isr'],
+    ['un pequeño contribuyente con régimen de ISR', { regimenIva: 'pequeno_contribuyente' }, 'regimen_isr'],
+    ['el régimen general sin régimen de ISR', { regimenIsr: null }, 'regimen_isr'],
     [
       'un pequeño contribuyente agente de retención',
-      { esPequenoContribuyente: true, regimenIsr: null, esAgenteDeRetencionIva: true, seLeRetieneIva: false },
-      'pequeno_no_es_agente',
+      { regimenIva: 'pequeno_contribuyente', regimenIsr: null, esAgenteDeRetencionIva: true, seLeRetieneIva: false },
+      'agente_solo_general',
+    ],
+    [
+      'un régimen de IVA que no existe',
+      { regimenIva: 'inventado', regimenIsr: null, seLeRetieneIva: false },
+      'regimen_iva_valido',
+    ],
+    ['un primario con régimen de ISR', { regimenIva: 'primario' }, 'regimen_isr'],
+    [
+      'un no domiciliado sin su régimen de ISR',
+      { regimenIva: 'no_domiciliado', regimenIsr: 'utilidades', seLeRetieneIva: false },
+      'no_domiciliado',
+    ],
+    ['el ISR de no domiciliado en el régimen general', { regimenIsr: 'no_domiciliado' }, 'no_domiciliado'],
+    [
+      'retener el 5 % al pequeño contribuyente electrónico',
+      {
+        regimenIva: 'pequeno_contribuyente_electronico',
+        regimenIsr: null,
+        seLeRetieneIva: false,
+        seLeRetieneIvaPequenoContribuyente: true,
+      },
+      'retencion_iva_pequeno',
     ],
     [
       'retener el 5 % a quien no es pequeño contribuyente',
@@ -173,12 +195,12 @@ describe('datos fiscales del proveedor: check de coherencia', () => {
     ],
     [
       'retener el IVA general a un pequeño contribuyente',
-      { esPequenoContribuyente: true, regimenIsr: null, seLeRetieneIva: true },
+      { regimenIva: 'pequeno_contribuyente', regimenIsr: null, seLeRetieneIva: true },
       'retencion_iva_general',
     ],
     [
       'retener ISR a un pequeño contribuyente',
-      { esPequenoContribuyente: true, regimenIsr: null, seLeRetieneIva: false, seLeRetieneIsr: true },
+      { regimenIva: 'pequeno_contribuyente', regimenIsr: null, seLeRetieneIva: false, seLeRetieneIsr: true },
       'retencion_isr',
     ],
     ['un régimen de ISR que no existe', { regimenIsr: 'inventado' }, 'regimen_isr_valido'],

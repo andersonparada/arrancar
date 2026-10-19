@@ -1,13 +1,35 @@
 import { DatosFiscalesInvalidos, type ProblemaDeDatosFiscales } from './errores.js';
 
-export const REGIMENES_DE_ISR_DE_PROVEEDOR = ['utilidades', 'opcional_simplificado', 'no_domiciliado'] as const;
+/** Los dos últimos están derogados (Decreto 7-2019) y solo existen para proveedores o documentos anteriores. */
+export const REGIMENES_DE_IVA_DE_PROVEEDOR = [
+  'general',
+  'pequeno_contribuyente',
+  'primario',
+  'pecuario',
+  'sin_inscripcion',
+  'no_domiciliado',
+  'pequeno_contribuyente_electronico',
+  'contribuyente_agropecuario',
+] as const;
+
+export type RegimenDeIvaDeProveedor = (typeof REGIMENES_DE_IVA_DE_PROVEEDOR)[number];
+
+export const REGIMENES_DE_ISR_DE_PROVEEDOR = [
+  'utilidades',
+  'opcional_simplificado',
+  'no_domiciliado',
+  'exento',
+] as const;
 
 export type RegimenDeIsrDeProveedor = (typeof REGIMENES_DE_ISR_DE_PROVEEDOR)[number];
 
 /** Lo que dice la sección fiscal de un proveedor (una por proveedor, igual para todas las empresas de la cuenta). */
 export interface PropiedadesFiscalesDeProveedor {
-  esPequenoContribuyente: boolean;
-  /** El pequeño contribuyente no tiene régimen de ISR aparte: es `null`; los demás siempre tienen uno. */
+  regimenIva: RegimenDeIvaDeProveedor;
+  /**
+   * Solo el régimen general escoge uno (`utilidades`, `opcional_simplificado` o `exento`) y el no domiciliado
+   * lleva `no_domiciliado`; en los demás regímenes de IVA es `null` («no aplica»).
+   */
   regimenIsr: RegimenDeIsrDeProveedor | null;
   esAgenteDeRetencionIva: boolean;
   seLeRetieneIva: boolean;
@@ -18,33 +40,48 @@ export interface PropiedadesFiscalesDeProveedor {
 /** Lo que el usuario decide; los tres «se le retiene» se proponen de aquí (`porOmision`). */
 export type BaseFiscalDeProveedor = Pick<
   PropiedadesFiscalesDeProveedor,
-  'esPequenoContribuyente' | 'regimenIsr' | 'esAgenteDeRetencionIva'
+  'regimenIva' | 'regimenIsr' | 'esAgenteDeRetencionIva'
 >;
 
+/** El régimen de ISR que corresponde al de IVA; solo el general deja escoger (por omisión, `utilidades`). */
+export function regimenIsrPropuesto(
+  regimenIva: RegimenDeIvaDeProveedor,
+  escogido?: RegimenDeIsrDeProveedor | null,
+): RegimenDeIsrDeProveedor | null {
+  if (regimenIva === 'no_domiciliado') return 'no_domiciliado';
+  if (regimenIva !== 'general') return null;
+  return escogido ?? 'utilidades';
+}
+
 /**
- * Los tres «se le retiene» que se proponen según el régimen: se le retiene el IVA si no es pequeño contribuyente
- * ni agente; el ISR, si es del régimen opcional simplificado; y el IVA de pequeño contribuyente, si lo es.
+ * Los tres «se le retiene» que se proponen según el régimen: solo el general es sujeto del IVA (si no es agente);
+ * el ISR, si es del régimen opcional simplificado; el 5 % de pequeño contribuyente, solo al pequeño contribuyente
+ * (el electrónico derogado y los demás especiales no retienen, decisión del contador).
  */
 export function retencionesPropuestas(
   base: BaseFiscalDeProveedor,
 ): Pick<PropiedadesFiscalesDeProveedor, 'seLeRetieneIva' | 'seLeRetieneIsr' | 'seLeRetieneIvaPequenoContribuyente'> {
   return {
-    seLeRetieneIva: !base.esPequenoContribuyente && !base.esAgenteDeRetencionIva,
+    seLeRetieneIva: base.regimenIva === 'general' && !base.esAgenteDeRetencionIva,
     seLeRetieneIsr: base.regimenIsr === 'opcional_simplificado',
-    seLeRetieneIvaPequenoContribuyente: base.esPequenoContribuyente,
+    seLeRetieneIvaPequenoContribuyente: base.regimenIva === 'pequeno_contribuyente',
   };
 }
 
 const problema = (campo: string, mensaje: string): ProblemaDeDatosFiscales => ({ campo, mensaje });
 
 function problemasDelRegimen(datos: PropiedadesFiscalesDeProveedor): ProblemaDeDatosFiscales[] {
-  if (datos.esPequenoContribuyente && datos.regimenIsr !== null) {
-    return [problema('regimenIsr', 'El pequeño contribuyente no tiene régimen de ISR aparte.')];
+  const { regimenIva, regimenIsr } = datos;
+  if (regimenIva === 'general') {
+    if (regimenIsr === null) return [problema('regimenIsr', 'Escoja el régimen de ISR del proveedor.')];
+    if (regimenIsr === 'no_domiciliado') return [problema('regimenIsr', 'Solo un proveedor no domiciliado lo es.')];
+    return [];
   }
-  if (!datos.esPequenoContribuyente && datos.regimenIsr === null) {
-    return [problema('regimenIsr', 'Escoja el régimen de ISR del proveedor.')];
+  if (regimenIva === 'no_domiciliado') {
+    if (regimenIsr === 'no_domiciliado') return [];
+    return [problema('regimenIsr', 'Un proveedor no domiciliado lleva el régimen de ISR de no domiciliado.')];
   }
-  return [];
+  return regimenIsr === null ? [] : [problema('regimenIsr', 'Este régimen de IVA no tiene régimen de ISR aparte.')];
 }
 
 interface ReglaDeRetencion {
@@ -56,23 +93,23 @@ interface ReglaDeRetencion {
 const REGLAS_DE_RETENCION: readonly ReglaDeRetencion[] = [
   {
     campo: 'esAgenteDeRetencionIva',
-    mensaje: 'Un pequeño contribuyente no es agente de retención del IVA.',
-    seInfringe: (datos) => datos.esPequenoContribuyente && datos.esAgenteDeRetencionIva,
+    mensaje: 'Solo un proveedor del régimen general puede ser agente de retención del IVA.',
+    seInfringe: (datos) => datos.regimenIva !== 'general' && datos.esAgenteDeRetencionIva,
   },
   {
     campo: 'seLeRetieneIva',
-    mensaje: 'A un pequeño contribuyente no se le retiene el IVA general.',
-    seInfringe: (datos) => datos.esPequenoContribuyente && datos.seLeRetieneIva,
+    mensaje: 'Solo al régimen general se le retiene el IVA general.',
+    seInfringe: (datos) => datos.regimenIva !== 'general' && datos.seLeRetieneIva,
   },
   {
     campo: 'seLeRetieneIsr',
-    mensaje: 'A un pequeño contribuyente no se le retiene ISR.',
-    seInfringe: (datos) => datos.esPequenoContribuyente && datos.seLeRetieneIsr,
+    mensaje: 'No se le retiene ISR a un proveedor sin régimen de ISR.',
+    seInfringe: (datos) => datos.regimenIsr === null && datos.seLeRetieneIsr,
   },
   {
     campo: 'seLeRetieneIvaPequenoContribuyente',
     mensaje: 'Solo se retiene el IVA de pequeño contribuyente a quien lo es.',
-    seInfringe: (datos) => !datos.esPequenoContribuyente && datos.seLeRetieneIvaPequenoContribuyente,
+    seInfringe: (datos) => datos.regimenIva !== 'pequeno_contribuyente' && datos.seLeRetieneIvaPequenoContribuyente,
   },
 ];
 
@@ -105,15 +142,15 @@ export class DatosFiscalesDeProveedor {
   }
 
   /**
-   * Lo que se propone según el régimen (ver `retencionesPropuestas`). Sin datos: régimen sobre utilidades,
-   * ni pequeño contribuyente ni agente.
+   * Lo que se propone según el régimen (ver `retencionesPropuestas`). Sin datos: régimen general sobre
+   * utilidades y que no es agente. Un régimen especial fuerza «no aplica» en el ISR y que no es agente.
    */
   static porOmision(base: Partial<BaseFiscalDeProveedor> = {}): DatosFiscalesDeProveedor {
-    const esPequenoContribuyente = base.esPequenoContribuyente ?? false;
+    const regimenIva = base.regimenIva ?? 'general';
     const completa = {
-      esPequenoContribuyente,
-      esAgenteDeRetencionIva: base.esAgenteDeRetencionIva ?? false,
-      regimenIsr: esPequenoContribuyente ? null : (base.regimenIsr ?? 'utilidades'),
+      regimenIva,
+      esAgenteDeRetencionIva: regimenIva === 'general' && (base.esAgenteDeRetencionIva ?? false),
+      regimenIsr: regimenIsrPropuesto(regimenIva, base.regimenIsr),
     };
     return DatosFiscalesDeProveedor.crear({ ...completa, ...retencionesPropuestas(completa) });
   }

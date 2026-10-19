@@ -107,7 +107,7 @@ describe('otros avisos del documento', () => {
   });
 
   it('avisa un proveedor no domiciliado con el texto del ISR de no residentes', () => {
-    const extranjero = DatosFiscalesDeProveedor.porOmision({ regimenIsr: 'no_domiciliado' });
+    const extranjero = DatosFiscalesDeProveedor.porOmision({ regimenIva: 'no_domiciliado' });
 
     expect(avisosDelProveedor(extranjero)).toEqual([AVISO_DE_PROVEEDOR_NO_DOMICILIADO]);
     expect(AVISO_DE_PROVEEDOR_NO_DOMICILIADO).toContain(

@@ -108,7 +108,7 @@ describe('datos fiscales de la empresa', () => {
 describe('datos fiscales del proveedor: valores por omisión', () => {
   it('sin datos: sobre utilidades, se le retiene el IVA y no el ISR', () => {
     expect(DatosFiscalesDeProveedor.porOmision().instantanea()).toEqual({
-      esPequenoContribuyente: false,
+      regimenIva: 'general',
       regimenIsr: 'utilidades',
       esAgenteDeRetencionIva: false,
       seLeRetieneIva: true,
@@ -130,10 +130,13 @@ describe('datos fiscales del proveedor: valores por omisión', () => {
   });
 
   it('un pequeño contribuyente no tiene régimen de ISR y se le retiene el IVA de pequeño contribuyente', () => {
-    const datos = DatosFiscalesDeProveedor.porOmision({ esPequenoContribuyente: true, regimenIsr: 'utilidades' });
+    const datos = DatosFiscalesDeProveedor.porOmision({
+      regimenIva: 'pequeno_contribuyente',
+      regimenIsr: 'utilidades',
+    });
 
     expect(datos.instantanea()).toEqual({
-      esPequenoContribuyente: true,
+      regimenIva: 'pequeno_contribuyente',
       regimenIsr: null,
       esAgenteDeRetencionIva: false,
       seLeRetieneIva: false,
@@ -159,7 +162,7 @@ describe('datos fiscales del proveedor: coherencia', () => {
   });
 
   it('un pequeño contribuyente no lleva régimen de ISR, ni es agente, ni sufre retención general', () => {
-    const pequeno = { esPequenoContribuyente: true, regimenIsr: null, seLeRetieneIva: false };
+    const pequeno = { regimenIva: 'pequeno_contribuyente', regimenIsr: null, seLeRetieneIva: false } as const;
 
     expect(campos({ ...pequeno, regimenIsr: 'utilidades' })).toEqual(['regimenIsr']);
     expect(campos({ ...pequeno, esAgenteDeRetencionIva: true })).toEqual(['esAgenteDeRetencionIva']);
@@ -173,6 +176,7 @@ describe('datos fiscales del proveedor: coherencia', () => {
   });
 
   it('un no domiciliado es un régimen válido', () => {
-    expect(campos({ regimenIsr: 'no_domiciliado' })).toEqual([]);
+    expect(campos({ regimenIva: 'no_domiciliado', regimenIsr: 'no_domiciliado', seLeRetieneIva: false })).toEqual([]);
+    expect(campos({ regimenIsr: 'no_domiciliado' })).toEqual(['regimenIsr']);
   });
 });

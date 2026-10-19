@@ -70,22 +70,24 @@ describe('el emisor del documento (H10)', () => {
 
 describe('tipo, recibo y receptor', () => {
   it('la factura de pequeño contribuyente y la general deben corresponder al régimen del proveedor', () => {
-    expect(() => exigirTipoDelProveedor('factura_pequeno_contribuyente', false)).toThrow(TipoNoCorrespondeAlProveedor);
-    expect(() => exigirTipoDelProveedor('factura', true)).toThrow(TipoNoCorrespondeAlProveedor);
-    expect(() => exigirTipoDelProveedor('factura', false)).not.toThrow();
-    expect(() => exigirTipoDelProveedor('recibo', true)).not.toThrow();
+    expect(() => exigirTipoDelProveedor('factura_pequeno_contribuyente', 'general')).toThrow(
+      TipoNoCorrespondeAlProveedor,
+    );
+    expect(() => exigirTipoDelProveedor('factura', 'pequeno_contribuyente')).toThrow(TipoNoCorrespondeAlProveedor);
+    expect(() => exigirTipoDelProveedor('factura', 'general')).not.toThrow();
+    expect(() => exigirTipoDelProveedor('recibo', 'pequeno_contribuyente')).not.toThrow();
   });
 
   it('el error del tipo sugiere actualizar los datos fiscales o confirmar el cambio de régimen', () => {
-    expect(() => exigirTipoDelProveedor('factura', true)).toThrow(
+    expect(() => exigirTipoDelProveedor('factura', 'pequeno_contribuyente')).toThrow(
       /Si el proveedor cambió de régimen, actualice sus datos fiscales o confirme\./,
     );
   });
 
   it('con la confirmación del cambio de régimen deja pasar el tipo y lo señala; sin cambio no señala nada', () => {
-    expect(exigirTipoDelProveedor('factura', true, true)).toBe(true);
-    expect(exigirTipoDelProveedor('factura_pequeno_contribuyente', false, true)).toBe(true);
-    expect(exigirTipoDelProveedor('factura', false, true)).toBe(false);
+    expect(exigirTipoDelProveedor('factura', 'pequeno_contribuyente', true)).toBe(true);
+    expect(exigirTipoDelProveedor('factura_pequeno_contribuyente', 'general', true)).toBe(true);
+    expect(exigirTipoDelProveedor('factura', 'general', true)).toBe(false);
     expect(AVISO_DE_CAMBIO_DE_REGIMEN).toBe(
       'El proveedor cambió de régimen: confirme que la factura es anterior al cambio.',
     );

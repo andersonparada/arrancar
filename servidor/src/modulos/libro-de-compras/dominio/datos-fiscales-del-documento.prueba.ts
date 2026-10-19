@@ -62,7 +62,7 @@ describe('datos fiscales de un proveedor sin fila guardada (opción C)', () => {
       entrada({ tipo: 'factura_pequeno_contribuyente' }),
     );
 
-    expect(vigentes.instantanea()).toMatchObject({ esPequenoContribuyente: true, regimenIsr: null });
+    expect(vigentes.instantanea()).toMatchObject({ regimenIva: 'pequeno_contribuyente', regimenIsr: null });
     expect(porGuardar).toBe(vigentes);
   });
 
@@ -80,7 +80,7 @@ describe('datos fiscales de un proveedor sin fila guardada (opción C)', () => {
   });
 
   it('lo guardado manda: no se pregunta ni se guarda nada', () => {
-    const guardados = DatosFiscalesDeProveedor.porOmision({ esPequenoContribuyente: true });
+    const guardados = DatosFiscalesDeProveedor.porOmision({ regimenIva: 'pequeno_contribuyente' });
 
     const resultado = resolverDatosFiscalesDelProveedor(entrada({ guardados, pedidos }));
 

@@ -55,7 +55,7 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
     const { documento, avisos } = await registrar({ datosFiscalesDelProveedor: opcional, lineas: grande() });
 
     expect(e.datosDeProveedor.filas.get(proveedorId)?.instantanea()).toMatchObject({
-      esPequenoContribuyente: false,
+      regimenIva: 'general',
       regimenIsr: 'opcional_simplificado',
       seLeRetieneIsr: true,
     });
@@ -73,7 +73,7 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
   });
 
   it('si el proveedor ya tiene datos guardados, mandan ellos y no se pregunta ni se guarda nada', async () => {
-    const guardados = DatosFiscalesDeProveedor.porOmision({ regimenIsr: 'no_domiciliado' });
+    const guardados = DatosFiscalesDeProveedor.porOmision({ regimenIva: 'no_domiciliado' });
     e.datosDeProveedor.filas.set(proveedorId, guardados);
 
     const { avisos } = await registrar({ ...sinDatos });
@@ -86,7 +86,7 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
     await registrar({ ...sinDatos, tipo: 'factura_pequeno_contribuyente' });
 
     expect(e.datosDeProveedor.filas.get(proveedorId)?.instantanea()).toMatchObject({
-      esPequenoContribuyente: true,
+      regimenIva: 'pequeno_contribuyente',
       regimenIsr: null,
     });
   });
@@ -115,7 +115,10 @@ describe('proveedor sin datos fiscales guardados (opción C)', () => {
 
 describe('cambio de régimen del proveedor', () => {
   beforeEach(() => {
-    e.datosDeProveedor.filas.set(proveedorId, DatosFiscalesDeProveedor.porOmision({ esPequenoContribuyente: true }));
+    e.datosDeProveedor.filas.set(
+      proveedorId,
+      DatosFiscalesDeProveedor.porOmision({ regimenIva: 'pequeno_contribuyente' }),
+    );
   });
 
   it('el error sugiere actualizar los datos fiscales o confirmar', async () => {

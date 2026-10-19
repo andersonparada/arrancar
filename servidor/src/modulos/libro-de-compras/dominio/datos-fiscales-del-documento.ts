@@ -3,12 +3,15 @@ import {
   DatosFiscalesDeProveedor,
   REGIMENES_DE_ISR_DE_PROVEEDOR,
   type RegimenDeIsrDeProveedor,
+  type RegimenDeIvaDeProveedor,
 } from './datos-fiscales-de-proveedor.js';
 import { FaltanDatosFiscalesDelProveedor } from './errores-de-documento.js';
 import type { TipoDeDocumento } from './tipos-de-documento.js';
 
 /** Lo que el usuario contesta en el mismo documento cuando el proveedor no tiene datos fiscales guardados. */
 export interface DatosFiscalesPedidos {
+  /** Si no llega, se deduce: no domiciliado si el ISR lo es y general en los demás casos. */
+  regimenIva?: RegimenDeIvaDeProveedor | null;
   regimenIsr: RegimenDeIsrDeProveedor;
   esAgenteDeRetencionIva: boolean;
 }
@@ -40,6 +43,7 @@ const OPCIONES_DE_REGIMEN: Record<RegimenDeIsrDeProveedor, string> = {
   utilidades: 'Régimen sobre las utilidades de actividades lucrativas',
   opcional_simplificado: 'Régimen opcional simplificado sobre ingresos',
   no_domiciliado: 'No domiciliado en el país',
+  exento: 'Exento de ISR',
 };
 
 /** Las preguntas que la pantalla le hace al usuario; viajan en los `detalles` del error. */
@@ -65,7 +69,7 @@ export function preguntasDeDatosFiscales() {
 }
 
 const base = (pedidos: DatosFiscalesPedidos) => ({
-  esPequenoContribuyente: false,
+  regimenIva: pedidos.regimenIva ?? (pedidos.regimenIsr === 'no_domiciliado' ? 'no_domiciliado' : 'general'),
   regimenIsr: pedidos.regimenIsr,
   esAgenteDeRetencionIva: pedidos.esAgenteDeRetencionIva,
 });
@@ -81,7 +85,7 @@ export function resolverDatosFiscalesDelProveedor(entrada: EntradaDeDatosFiscale
   const { tipo, enElLibro, empresa, guardados, pedidos } = entrada;
   if (guardados) return { vigentes: guardados, porGuardar: null };
   if (tipo === 'factura_pequeno_contribuyente') {
-    const deducidos = DatosFiscalesDeProveedor.porOmision({ esPequenoContribuyente: true });
+    const deducidos = DatosFiscalesDeProveedor.porOmision({ regimenIva: 'pequeno_contribuyente' });
     return { vigentes: deducidos, porGuardar: enElLibro ? deducidos : null };
   }
   if (tipo !== 'factura' || !enElLibro) return { vigentes: DatosFiscalesDeProveedor.porOmision(), porGuardar: null };

@@ -8,6 +8,7 @@ import {
   ReciboDebeQuedarFueraDelLibro,
   TipoNoCorrespondeAlProveedor,
 } from './errores-de-documento.js';
+import type { RegimenDeIvaDeProveedor } from './datos-fiscales-de-proveedor.js';
 import { MotivoFueraDelLibroIncoherente, type MotivoFueraDelLibro } from './fuera-del-libro.js';
 import type { TipoDeDocumento } from './tipos-de-documento.js';
 
@@ -65,28 +66,33 @@ export function resolverEmisor(datos: DatosDelEmisor): EmisorResuelto {
 
 const AYUDA_DE_REGIMEN = ' Si el proveedor cambió de régimen, actualice sus datos fiscales o confirme.';
 
-function tipoIncoherente(tipo: TipoDeDocumento, proveedorEsPequeno: boolean): string | null {
-  if (tipo === 'factura_pequeno_contribuyente' && !proveedorEsPequeno) {
+function tipoIncoherente(tipo: TipoDeDocumento, regimenIva: RegimenDeIvaDeProveedor): string | null {
+  if (tipo === 'factura_pequeno_contribuyente' && regimenIva !== 'pequeno_contribuyente') {
     return 'El proveedor no es pequeño contribuyente: registre una factura normal.';
   }
-  if (tipo === 'factura' && proveedorEsPequeno) {
+  const esDeFacturaNormal = regimenIva === 'general' || regimenIva === 'no_domiciliado';
+  if (tipo === 'factura' && regimenIva === 'pequeno_contribuyente') {
     return 'El proveedor es pequeño contribuyente: registre una factura de pequeño contribuyente.';
+  }
+  if (tipo === 'factura' && !esDeFacturaNormal) {
+    return 'El régimen de IVA del proveedor no es el general: registre el tipo de factura que le corresponde.';
   }
   return null;
 }
 
 /**
- * Una factura de pequeño contribuyente es de un proveedor de ese régimen, y las facturas generales no. Si no
+ * Una factura de pequeño contribuyente es de un proveedor de ese régimen, y las facturas generales solo del
+ * régimen general (o no domiciliado). Si no
  * corresponde, es un error, salvo que el usuario confirme que el proveedor cambió de régimen (la factura es
  * anterior al cambio): entonces pasa y devuelve `true`, para avisar y auditar.
  * @throws TipoNoCorrespondeAlProveedor si no corresponde y no se confirmó.
  */
 export function exigirTipoDelProveedor(
   tipo: TipoDeDocumento,
-  proveedorEsPequeno: boolean,
+  regimenIva: RegimenDeIvaDeProveedor,
   confirmarCambioDeRegimen = false,
 ): boolean {
-  const mensaje = tipoIncoherente(tipo, proveedorEsPequeno);
+  const mensaje = tipoIncoherente(tipo, regimenIva);
   if (mensaje === null) return false;
   if (confirmarCambioDeRegimen) return true;
   throw new TipoNoCorrespondeAlProveedor(`${mensaje}${AYUDA_DE_REGIMEN}`, { confirmarCon: 'confirmarCambioDeRegimen' });

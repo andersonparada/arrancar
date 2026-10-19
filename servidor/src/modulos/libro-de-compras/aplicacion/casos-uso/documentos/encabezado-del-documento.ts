@@ -57,7 +57,7 @@ export function resolverEncabezado(solicitud: SolicitudDeDocumento, contexto: Co
   exigirReciboFueraDelLibro(solicitud.tipo, fuera.muestraEnReportesSat);
   const cambioDeRegimen = exigirTipoDelProveedor(
     solicitud.tipo,
-    contexto.datosDelProveedor.instantanea().esPequenoContribuyente,
+    contexto.datosDelProveedor.instantanea().regimenIva,
     solicitud.confirmarCambioDeRegimen,
   );
   const emisor = resolverEmisor({

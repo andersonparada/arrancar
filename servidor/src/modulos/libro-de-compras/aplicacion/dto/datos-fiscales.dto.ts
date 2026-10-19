@@ -4,7 +4,7 @@ import type {
   RegimenDeIva,
   TipoDePersona,
 } from '../../dominio/datos-fiscales-de-empresa.js';
-import type { RegimenDeIsrDeProveedor } from '../../dominio/datos-fiscales-de-proveedor.js';
+import type { RegimenDeIsrDeProveedor, RegimenDeIvaDeProveedor } from '../../dominio/datos-fiscales-de-proveedor.js';
 
 /** Una vigencia del historial fiscal de la empresa; `vigenteHasta` es el último mes incluido (nulo si es la última). */
 export interface VigenciaFiscalDto {
@@ -42,7 +42,7 @@ export interface DatosFiscalesDeEmpresaDto {
 /** Datos fiscales de un proveedor tal como los ve el usuario; `guardado` es falso si son los valores por omisión. */
 export interface DatosFiscalesDeProveedorDto {
   proveedorId: string;
-  esPequenoContribuyente: boolean;
+  regimenIva: RegimenDeIvaDeProveedor;
   regimenIsr: RegimenDeIsrDeProveedor | null;
   esAgenteDeRetencionIva: boolean;
   seLeRetieneIva: boolean;

@@ -836,3 +836,13 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   El selector de tipo sale de `TIPOS_DE_DOCUMENTO` para crecer en R2-8. Lógica pura con pruebas en
   `composables/documentos/` (`edicion-de-documento`, `lineas-del-documento`, `ajustes-de-retenciones`,
   `preguntas-fiscales`, `errores-del-registro`, reglas del formulario y la vista previa). Pruebas del cliente: 499.
+- **2026-10-18 (R2-1, régimen de IVA del proveedor, servidor).** `datos_fiscales_de_proveedor.es_pequeno_contribuyente`
+  pasa a `regimen_iva` (text not null, `default 'general'`, ocho valores) y `regimen_isr` suma `exento`; checks
+  `regimen_iva_valido`, `regimen_isr_valido`, `regimen_isr` (ISR solo en general y no domiciliado), `no_domiciliado`,
+  `agente_solo_general` y los tres de retención por régimen. Migración
+  `0014_r2_regimen_iva_del_proveedor` (`when` 1792383375345; convierte las filas con un `update` antes de borrar la
+  columna). Dominio: `DatosFiscalesDeProveedor.porOmision` fuerza ISR «no aplica» y sin retenciones en los regímenes
+  especiales (`regimenIsrPropuesto`); el 5 % solo al `pequeno_contribuyente` (la estrategia también lo comprueba);
+  `exigirTipoDelProveedor` recibe el régimen. Opción C: `datosFiscalesDelProveedor` acepta `regimenIva` opcional (si no
+  llega: `no_domiciliado` si el ISR lo es, `general` en los demás). Decisión: `factura` sigue aceptada para `general` y
+  `no_domiciliado` (hoy lo era; evita pedir confirmación a quien ya funcionaba). Rompe la sección del cliente hasta R2-2.

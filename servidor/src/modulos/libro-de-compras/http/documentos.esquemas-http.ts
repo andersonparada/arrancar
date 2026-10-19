@@ -12,7 +12,10 @@ import {
   textoObligatorio,
   textoOpcional,
 } from '../../core/compartido/http/esquemas-comunes.js';
-import { REGIMENES_DE_ISR_DE_PROVEEDOR } from '../dominio/datos-fiscales-de-proveedor.js';
+import {
+  REGIMENES_DE_ISR_DE_PROVEEDOR,
+  REGIMENES_DE_IVA_DE_PROVEEDOR,
+} from '../dominio/datos-fiscales-de-proveedor.js';
 import { DESTINOS_DE_DOCUMENTO } from '../dominio/destinos-de-documento.js';
 import { MOTIVOS_FUERA_DEL_LIBRO } from '../dominio/fuera-del-libro.js';
 import { REGLAS_DE_RETENCION } from '../dominio/retencion-propuesta.js';
@@ -43,6 +46,7 @@ const esquemaAjusteDeRetencion = z.object({
 /** Lo que el usuario contesta de un proveedor sin datos fiscales guardados (opción C). */
 const esquemaDatosFiscalesDelProveedor = z
   .object({
+    regimenIva: opcionOpcional(REGIMENES_DE_IVA_DE_PROVEEDOR),
     regimenIsr: opcionObligatoria(REGIMENES_DE_ISR_DE_PROVEEDOR),
     esAgenteDeRetencionIva: z.boolean(),
   })

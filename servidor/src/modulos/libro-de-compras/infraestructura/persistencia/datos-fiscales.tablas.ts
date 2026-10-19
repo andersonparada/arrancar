@@ -94,7 +94,7 @@ export const datosFiscalesDeEmpresa = esquemaLibroDeCompras.table(
 );
 
 type ColumnasDelProveedor = Record<
-  | 'esPequenoContribuyente'
+  | 'regimenIva'
   | 'regimenIsr'
   | 'esAgenteDeRetencionIva'
   | 'seLeRetieneIva'
@@ -103,20 +103,27 @@ type ColumnasDelProveedor = Record<
   AnyPgColumn
 >;
 
+const REGIMENES_DE_IVA = `'general', 'pequeno_contribuyente', 'primario', 'pecuario', 'sin_inscripcion', 'no_domiciliado', 'pequeno_contribuyente_electronico', 'contribuyente_agropecuario'`;
+
 /** Las reglas del régimen del proveedor (las mismas del dominio). */
 function reglasDelRegimen(t: ColumnasDelProveedor) {
   return [
+    check('datos_fiscales_de_proveedor_regimen_iva_valido', sql`${t.regimenIva} in (${sql.raw(REGIMENES_DE_IVA)})`),
     check(
       'datos_fiscales_de_proveedor_regimen_isr_valido',
-      sql`${t.regimenIsr} is null or ${t.regimenIsr} in ('utilidades', 'opcional_simplificado', 'no_domiciliado')`,
+      sql`${t.regimenIsr} is null or ${t.regimenIsr} in ('utilidades', 'opcional_simplificado', 'no_domiciliado', 'exento')`,
     ),
     check(
       'datos_fiscales_de_proveedor_regimen_isr',
-      sql`(${t.esPequenoContribuyente} and ${t.regimenIsr} is null) or (not ${t.esPequenoContribuyente} and ${t.regimenIsr} is not null)`,
+      sql`(${t.regimenIva} in ('general', 'no_domiciliado')) = (${t.regimenIsr} is not null)`,
     ),
     check(
-      'datos_fiscales_de_proveedor_pequeno_no_es_agente',
-      sql`not (${t.esPequenoContribuyente} and ${t.esAgenteDeRetencionIva})`,
+      'datos_fiscales_de_proveedor_no_domiciliado',
+      sql`(${t.regimenIva} = 'no_domiciliado') = (${t.regimenIsr} is not distinct from 'no_domiciliado')`,
+    ),
+    check(
+      'datos_fiscales_de_proveedor_agente_solo_general',
+      sql`${t.regimenIva} = 'general' or not ${t.esAgenteDeRetencionIva}`,
     ),
   ];
 }
@@ -126,13 +133,13 @@ function reglasDeRetencion(t: ColumnasDelProveedor) {
   return [
     check(
       'datos_fiscales_de_proveedor_retencion_iva_pequeno',
-      sql`not ${t.seLeRetieneIvaPequenoContribuyente} or ${t.esPequenoContribuyente}`,
+      sql`${t.regimenIva} = 'pequeno_contribuyente' or not ${t.seLeRetieneIvaPequenoContribuyente}`,
     ),
     check(
       'datos_fiscales_de_proveedor_retencion_iva_general',
-      sql`not (${t.seLeRetieneIva} and ${t.esPequenoContribuyente})`,
+      sql`${t.regimenIva} = 'general' or not ${t.seLeRetieneIva}`,
     ),
-    check('datos_fiscales_de_proveedor_retencion_isr', sql`not (${t.seLeRetieneIsr} and ${t.esPequenoContribuyente})`),
+    check('datos_fiscales_de_proveedor_retencion_isr', sql`${t.regimenIsr} is not null or not ${t.seLeRetieneIsr}`),
   ];
 }
 
@@ -149,7 +156,7 @@ export const datosFiscalesDeProveedor = esquemaLibroDeCompras.table(
       .notNull()
       .default(deLaTransaccion.cuenta())
       .references(() => cuentas.id, { onDelete: 'cascade' }),
-    esPequenoContribuyente: boolean().notNull().default(false),
+    regimenIva: text().notNull().default('general'),
     regimenIsr: text(),
     esAgenteDeRetencionIva: boolean().notNull().default(false),
     seLeRetieneIva: boolean().notNull(),

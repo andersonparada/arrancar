@@ -160,7 +160,7 @@ describe('IVA del sector público: mínimo propio de Q30,000.00', () => {
 
 describe('IVA de pequeño contribuyente: el total debe ser mayor al umbral', () => {
   const agente = { agenteDeRetencionIva: 'otro' } as const;
-  const pequeno = { esPequenoContribuyente: true } as const;
+  const pequeno = { regimenIva: 'pequeno_contribuyente' } as const;
   it.each([
     ['Q2,499.99', 249999, []],
     ['Q2,500.00 exactos', 250000, []],
@@ -181,6 +181,15 @@ describe('IVA de pequeño contribuyente: el total debe ser mayor al umbral', () 
   it('una empresa que no es agente no retiene', () => {
     expect(montos({ total: 500000, tipo: 'factura_pequeno_contribuyente', proveedor: pequeno })).toEqual([]);
   });
+
+  it.each(['pequeno_contribuyente_electronico', 'primario', 'pecuario', 'sin_inscripcion'] as const)(
+    'el régimen %s no sufre el 5 %%',
+    (regimenIva) => {
+      const proveedor = { regimenIva };
+
+      expect(montos({ total: 500000, tipo: 'factura_pequeno_contribuyente', empresa: agente, proveedor })).toEqual([]);
+    },
+  );
 });
 
 describe('ISR del régimen opcional simplificado', () => {

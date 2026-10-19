@@ -55,6 +55,14 @@ beforeAll(async () => {
   });
 });
 
+const NOMBRES_ESPECIALES: Record<string, string> = {
+  primario: 'Cosechas del Valle',
+  pecuario: 'Granja Los Alamos',
+  sin_inscripcion: 'Vendedor Ambulante Mario',
+  pequeno_contribuyente_electronico: 'Carlos Ramirez Taller',
+  contribuyente_agropecuario: 'Hortalizas Quetzal',
+};
+
 describe('datos fiscales con el formulario de Proveedores', () => {
   it('un proveedor sin sección tiene los valores por omisión, sin fila guardada', async () => {
     const proveedor = await registrarProveedor('Sin datos');
@@ -63,7 +71,7 @@ describe('datos fiscales con el formulario de Proveedores', () => {
 
     expect(datos.cuerpo).toEqual({
       proveedorId: await proveedorIdDe(proveedor.cuerpo.id),
-      esPequenoContribuyente: false,
+      regimenIva: 'general',
       regimenIsr: 'utilidades',
       esAgenteDeRetencionIva: false,
       seLeRetieneIva: true,
@@ -74,14 +82,14 @@ describe('datos fiscales con el formulario de Proveedores', () => {
   });
 
   it('se guardan junto con el proveedor nuevo, y lo que falta se propone según el régimen', async () => {
-    const respuesta = await registrarProveedor('Pequeño', seccionDeProveedor({ esPequenoContribuyente: true }));
+    const respuesta = await registrarProveedor('Pequeño', seccionDeProveedor({ regimenIva: 'pequeno_contribuyente' }));
     const id = await proveedorIdDe(respuesta.cuerpo.id);
 
     const datos = await cuenta.propietario.get(rutaDeProveedor(id));
 
     expect(respuesta.estado).toBe(201);
     expect(datos.cuerpo).toMatchObject({
-      esPequenoContribuyente: true,
+      regimenIva: 'pequeno_contribuyente',
       regimenIsr: null,
       seLeRetieneIva: false,
       seLeRetieneIvaPequenoContribuyente: true,
@@ -110,7 +118,7 @@ describe('datos fiscales con el formulario de Proveedores', () => {
   it('una sección inválida marca el campo con su prefijo y no guarda ni el proveedor', async () => {
     const respuesta = await registrarProveedor(
       'Rechazado',
-      seccionDeProveedor({ esPequenoContribuyente: true, regimenIsr: 'utilidades' }),
+      seccionDeProveedor({ regimenIva: 'pequeno_contribuyente', regimenIsr: 'utilidades' }),
     );
     const buscados = await cuenta.propietario.get('/api/terceros?texto=Rechazado');
 
@@ -118,7 +126,7 @@ describe('datos fiscales con el formulario de Proveedores', () => {
     expect(respuesta.cuerpo.error.detalles).toEqual([
       {
         campo: 'secciones.libro-de-compras.regimenIsr',
-        mensaje: 'El pequeño contribuyente no tiene régimen de ISR aparte.',
+        mensaje: 'Este régimen de IVA no tiene régimen de ISR aparte.',
       },
     ]);
     expect(buscados.cuerpo).toEqual([]);
@@ -129,6 +137,51 @@ describe('datos fiscales con el formulario de Proveedores', () => {
 
     expect(respuesta.estado).toBe(400);
     expect(respuesta.cuerpo.error.detalles[0].campo).toBe('secciones.libro-de-compras.regimenIsr');
+  });
+
+  it.each([
+    'primario',
+    'pecuario',
+    'sin_inscripcion',
+    'pequeno_contribuyente_electronico',
+    'contribuyente_agropecuario',
+  ])('%s: se guarda sin régimen de ISR y sin retenciones', async (regimenIva) => {
+    const respuesta = await registrarProveedor(NOMBRES_ESPECIALES[regimenIva]!, seccionDeProveedor({ regimenIva }));
+    const datos = await cuenta.propietario.get(rutaDeProveedor(await proveedorIdDe(respuesta.cuerpo.id)));
+
+    expect(datos.cuerpo).toMatchObject({
+      regimenIva,
+      regimenIsr: null,
+      esAgenteDeRetencionIva: false,
+      seLeRetieneIva: false,
+      seLeRetieneIsr: false,
+      seLeRetieneIvaPequenoContribuyente: false,
+      guardado: true,
+    });
+  });
+
+  it('el no domiciliado lleva su régimen de ISR; el general puede ser exento de ISR', async () => {
+    const extranjero = await registrarProveedor('Extranjero', seccionDeProveedor({ regimenIva: 'no_domiciliado' }));
+    const exento = await registrarProveedor('Exento de ISR', seccionDeProveedor({ regimenIsr: 'exento' }));
+
+    const deExtranjero = await cuenta.propietario.get(rutaDeProveedor(await proveedorIdDe(extranjero.cuerpo.id)));
+    const deExento = await cuenta.propietario.get(rutaDeProveedor(await proveedorIdDe(exento.cuerpo.id)));
+
+    expect(deExtranjero.cuerpo).toMatchObject({ regimenIva: 'no_domiciliado', regimenIsr: 'no_domiciliado' });
+    expect(deExento.cuerpo).toMatchObject({ regimenIva: 'general', regimenIsr: 'exento', seLeRetieneIsr: false });
+  });
+
+  it('un régimen de IVA fuera de catálogo o un ISR que no le corresponde se rechazan por campo', async () => {
+    const inventado = await registrarProveedor('Régimen inventado', seccionDeProveedor({ regimenIva: 'inventado' }));
+    const cruzado = await registrarProveedor(
+      'ISR cruzado',
+      seccionDeProveedor({ regimenIva: 'primario', regimenIsr: 'exento' }),
+    );
+
+    expect(inventado.estado).toBe(400);
+    expect(inventado.cuerpo.error.detalles[0].campo).toBe('secciones.libro-de-compras.regimenIva');
+    expect(cruzado.estado).toBe(400);
+    expect(cruzado.cuerpo.error.detalles[0].campo).toBe('secciones.libro-de-compras.regimenIsr');
   });
 
   it('un proveedor que no existe responde 404', async () => {

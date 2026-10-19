@@ -760,7 +760,7 @@ iguales a las tablas (volver a correr `bd:generar` no propone nada).
 
 Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`.
 
-1. **R2-1 (servidor, régimen del proveedor):** migración `0014`; `DatosFiscalesDeProveedor` con `regimenIva`
+1. **R2-1 (servidor, régimen del proveedor) — HECHO (2026-10-18):** migración `0014`; `DatosFiscalesDeProveedor` con `regimenIva`
    (`REGIMENES_DE_IVA_DE_PROVEEDOR`, `REGIMENES_DE_ISR_DE_PROVEEDOR` con `exento`), `retencionesPropuestas` y
    `problemasFiscalesDeProveedor` según 3.2b.5; esquema estricto de la sección; DTO, mapeador, repositorio y auditoría;
    `resolverDatosFiscalesDelProveedor` y `exigirTipoDelProveedor` con `regimenIva` (aún con las familias de hoy);

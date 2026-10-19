@@ -125,7 +125,7 @@ describe('registrar un tercero', () => {
 
   it('si entra como proveedor, avisa a los demás módulos con las secciones del formulario', async () => {
     const papel = { tipo: 'proveedor' as const, categoriaId: null, activo: true, notas: null };
-    const secciones = { 'libro-de-compras': { esPequenoContribuyente: false } };
+    const secciones = { 'libro-de-compras': { regimenIva: 'general' } };
 
     const registrado = await casos.registrar.ejecutar(operador, solicitud({ papel }), secciones);
 
@@ -230,7 +230,7 @@ describe('papeles', () => {
 
   it('asignar el papel de proveedor avisa con sus secciones; el de cliente no', async () => {
     const tercero = await casos.registrar.ejecutar(operador, solicitud());
-    const secciones = { 'libro-de-compras': { esPequenoContribuyente: true } };
+    const secciones = { 'libro-de-compras': { regimenIva: 'pequeno_contribuyente' } };
 
     await casos.asignar.ejecutar(operador, {
       terceroId: tercero.id,

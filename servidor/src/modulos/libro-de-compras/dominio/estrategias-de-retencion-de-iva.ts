@@ -22,7 +22,12 @@ function propuestaDeIva(regla: ReglaDeRetencion, base: number, porcentaje: numbe
  */
 function esSujetoDeIva(entrada: EntradaDeRetenciones): boolean {
   const proveedor = entrada.proveedor.instantanea();
-  return entrada.tipo === 'factura' && proveedor.seLeRetieneIva && !proveedor.esAgenteDeRetencionIva;
+  return (
+    entrada.tipo === 'factura' &&
+    proveedor.regimenIva === 'general' &&
+    proveedor.seLeRetieneIva &&
+    !proveedor.esAgenteDeRetencionIva
+  );
 }
 
 function esAgente(entrada: EntradaDeRetenciones, agente: AgenteDeRetencionDeIva): boolean {
@@ -95,6 +100,7 @@ export class EstrategiaDePequenoContribuyente implements EstrategiaDeRetencion {
     const aplica =
       entrada.tipo === 'factura_pequeno_contribuyente' &&
       !esAgente(entrada, 'ninguno') &&
+      entrada.proveedor.instantanea().regimenIva === 'pequeno_contribuyente' &&
       entrada.proveedor.instantanea().seLeRetieneIvaPequenoContribuyente &&
       base > config.umbralPequenoContribuyente;
     if (!aplica) return [];

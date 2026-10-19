@@ -11,8 +11,10 @@ import {
 import { datosPropuestos } from '../dominio/datos-propuestos-de-empresa.js';
 import {
   problemasFiscalesDeProveedor,
+  regimenIsrPropuesto,
   retencionesPropuestas,
   REGIMENES_DE_ISR_DE_PROVEEDOR,
+  REGIMENES_DE_IVA_DE_PROVEEDOR,
   type PropiedadesFiscalesDeProveedor,
 } from '../dominio/datos-fiscales-de-proveedor.js';
 import type { ProblemaDeDatosFiscales } from '../dominio/errores.js';
@@ -76,7 +78,7 @@ export const esquemaSeccionFiscalDeEmpresa = entradaDeEmpresa
   .superRefine((seccion, ctx) => señalar(ctx, problemasFiscalesDeEmpresa(seccion.datos)));
 
 const entradaDeProveedor = z.object({
-  esPequenoContribuyente: z.boolean().default(false),
+  regimenIva: z.enum(REGIMENES_DE_IVA_DE_PROVEEDOR).default('general'),
   regimenIsr: z.enum(REGIMENES_DE_ISR_DE_PROVEEDOR).nullish(),
   esAgenteDeRetencionIva: z.boolean().default(false),
   seLeRetieneIva: z.boolean().optional(),
@@ -86,12 +88,11 @@ const entradaDeProveedor = z.object({
 
 /** Completa con lo que propone el régimen lo que el usuario no dijo. */
 function conLoQueProponeElRegimen(entrada: z.infer<typeof entradaDeProveedor>): PropiedadesFiscalesDeProveedor {
-  const { esPequenoContribuyente, esAgenteDeRetencionIva } = entrada;
-  const regimenIsr =
-    entrada.regimenIsr === undefined ? (esPequenoContribuyente ? null : 'utilidades') : entrada.regimenIsr;
-  const propuestas = retencionesPropuestas({ esPequenoContribuyente, esAgenteDeRetencionIva, regimenIsr });
+  const { regimenIva, esAgenteDeRetencionIva } = entrada;
+  const regimenIsr = entrada.regimenIsr === undefined ? regimenIsrPropuesto(regimenIva) : entrada.regimenIsr;
+  const propuestas = retencionesPropuestas({ regimenIva, esAgenteDeRetencionIva, regimenIsr });
   return {
-    esPequenoContribuyente,
+    regimenIva,
     esAgenteDeRetencionIva,
     regimenIsr,
     seLeRetieneIva: entrada.seLeRetieneIva ?? propuestas.seLeRetieneIva,

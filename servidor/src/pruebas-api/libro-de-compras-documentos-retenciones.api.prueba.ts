@@ -68,7 +68,7 @@ beforeAll(async () => {
   ).proveedorId;
   pequeno = (
     await registrarProveedor(escenario.cuenta, 'Pequeño', {
-      secciones: { [SECCION]: { esPequenoContribuyente: true } },
+      secciones: { [SECCION]: { regimenIva: 'pequeno_contribuyente' } },
     })
   ).proveedorId;
 });

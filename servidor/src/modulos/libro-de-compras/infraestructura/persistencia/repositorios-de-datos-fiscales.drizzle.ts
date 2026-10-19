@@ -3,7 +3,11 @@ import { deLaTransaccion } from '../../../core/base-datos/columnas.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import type { RepositorioDeDatosFiscalesDeProveedor } from '../../aplicacion/puertos/repositorios-de-datos-fiscales.js';
-import { DatosFiscalesDeProveedor, type RegimenDeIsrDeProveedor } from '../../dominio/datos-fiscales-de-proveedor.js';
+import {
+  DatosFiscalesDeProveedor,
+  type RegimenDeIsrDeProveedor,
+  type RegimenDeIvaDeProveedor,
+} from '../../dominio/datos-fiscales-de-proveedor.js';
 import { datosFiscalesDeProveedor } from './datos-fiscales.tablas.js';
 
 const cambioDeAutoria = () => ({ actualizadoEn: new Date(), actualizadoPor: deLaTransaccion.usuario() });
@@ -16,7 +20,7 @@ export class RepositorioDeDatosFiscalesDeProveedorDrizzle implements Repositorio
       .where(eq(datosFiscalesDeProveedor.proveedorId, proveedorId));
     if (!fila) return null;
     return DatosFiscalesDeProveedor.crear({
-      esPequenoContribuyente: fila.esPequenoContribuyente,
+      regimenIva: fila.regimenIva as RegimenDeIvaDeProveedor,
       regimenIsr: fila.regimenIsr as RegimenDeIsrDeProveedor | null,
       esAgenteDeRetencionIva: fila.esAgenteDeRetencionIva,
       seLeRetieneIva: fila.seLeRetieneIva,

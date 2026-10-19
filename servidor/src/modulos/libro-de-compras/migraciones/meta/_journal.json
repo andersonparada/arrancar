@@ -99,6 +99,13 @@
       "when": 1792382262095,
       "tag": "0013_r1_foto_del_regimen_en_documentos",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792383375345,
+      "tag": "0014_r2_regimen_iva_del_proveedor",
+      "breakpoints": true
     }
   ]
 }
