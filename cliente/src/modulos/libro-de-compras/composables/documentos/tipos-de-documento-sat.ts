@@ -26,24 +26,24 @@ const notaDeCredito = deLaFamilia('nota_de_credito');
 const pequenoElectronico = deLaFamilia('factura_pequeno_contribuyente_electronico', { derogado: true });
 const agropecuario = deLaFamilia('factura_contribuyente_agropecuario', { derogado: true });
 
-/** Los códigos que ofrece el formulario, agrupados por familia (los nombres por confirmar con el contador, R2-f). */
+/** Los códigos que ofrece el formulario, agrupados por familia. Los nombres de FAPE, FCPE y FAAE están por confirmar en el Libro de Reglas FEL. */
 export const TIPOS_SAT: TipoSat[] = [
   factura('FACT', 'Factura'),
   factura('FCAM', 'Factura cambiaria'),
-  pequeno('FPEQ', 'Factura de pequeño contribuyente'),
-  pequeno('FCAP', 'Factura cambiaria de pequeño contribuyente'),
+  pequeno('FPEQ', 'Factura pequeño contribuyente'),
+  pequeno('FCAP', 'Factura cambiaria pequeño contribuyente'),
   primarioPecuario('FARP', 'Factura contribuyente régimen primario'),
   primarioPecuario('FCRP', 'Factura cambiaria contribuyente régimen primario'),
   primarioPecuario('FPEC', 'Factura contribuyente régimen pecuario'),
   primarioPecuario('FCPC', 'Factura cambiaria contribuyente régimen pecuario'),
   especial('FESP', 'Factura especial'),
   notaDeCredito('NCRE', 'Nota de crédito'),
-  pequenoElectronico('FAPE', 'Factura de pequeño contribuyente electrónico'),
-  pequenoElectronico('FCPE', 'Factura cambiaria de pequeño contribuyente electrónico'),
-  agropecuario('FACA', 'Factura de contribuyente agropecuario'),
-  agropecuario('FCCA', 'Factura cambiaria de contribuyente agropecuario'),
-  agropecuario('FAAE', 'Factura de contribuyente agropecuario electrónico'),
-  agropecuario('FCAE', 'Factura cambiaria de contribuyente agropecuario electrónico'),
+  pequenoElectronico('FAPE', 'Factura pequeño contribuyente régimen electrónico'),
+  pequenoElectronico('FCPE', 'Factura cambiaria pequeño contribuyente régimen electrónico'),
+  agropecuario('FACA', 'Factura contribuyente agropecuario'),
+  agropecuario('FCCA', 'Factura cambiaria contribuyente agropecuario'),
+  agropecuario('FAAE', 'Factura contribuyente agropecuario régimen electrónico especial'),
+  agropecuario('FCAE', 'Factura cambiaria contribuyente agropecuario régimen electrónico especial'),
 ];
 
 /** El nombre de cada grupo del selector. */

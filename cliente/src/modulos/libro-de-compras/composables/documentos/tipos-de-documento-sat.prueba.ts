@@ -41,6 +41,28 @@ describe('tipos de documento por código de la SAT', () => {
     expect(textos.NCRE).toBe('NCRE — Nota de crédito');
   });
 
+  it('usa el patrón de nombres de la SAT (sin «de» y con «pequeño contribuyente»)', () => {
+    const nombres = Object.fromEntries(TIPOS_SAT.map(({ codigo, nombre }) => [codigo, nombre]));
+    expect(nombres).toMatchObject({
+      FPEQ: 'Factura pequeño contribuyente',
+      FCAP: 'Factura cambiaria pequeño contribuyente',
+      FAPE: 'Factura pequeño contribuyente régimen electrónico',
+      FCPE: 'Factura cambiaria pequeño contribuyente régimen electrónico',
+      FACA: 'Factura contribuyente agropecuario',
+      FCCA: 'Factura cambiaria contribuyente agropecuario',
+      FAAE: 'Factura contribuyente agropecuario régimen electrónico especial',
+      FCAE: 'Factura cambiaria contribuyente agropecuario régimen electrónico especial',
+      FARP: 'Factura contribuyente régimen primario',
+      FCRP: 'Factura cambiaria contribuyente régimen primario',
+      FPEC: 'Factura contribuyente régimen pecuario',
+      FCPC: 'Factura cambiaria contribuyente régimen pecuario',
+      FACT: 'Factura',
+      FCAM: 'Factura cambiaria',
+      FESP: 'Factura especial',
+      NCRE: 'Nota de crédito',
+    });
+  });
+
   it('los derogados lo dicen y la factura especial ya se puede elegir', () => {
     const opciones = opcionesDeTipoSat();
     const de = (codigo: string) => opciones.find((opcion) => opcion.valor === codigo);
