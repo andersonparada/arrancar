@@ -1,4 +1,4 @@
-import { watch, type Ref } from 'vue';
+import { ref, watch, type Ref } from 'vue';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import {
   apiLibroDeCompras,
@@ -6,8 +6,11 @@ import {
   type DatosFiscalesDeProveedor,
 } from '../servicios/libro-de-compras.api';
 import {
+  contextoFiscalDe,
+  contextoSinGuardar,
   fiscalesDeEmpresaDesde,
   fiscalesDeEmpresaPorOmision,
+  type ContextoFiscalDeEmpresa,
   type FiscalesDeEmpresa,
 } from './datos-fiscales-de-empresa';
 import {
@@ -17,13 +20,22 @@ import {
 } from './datos-fiscales-de-proveedor';
 import { usarLecturaDeSeccion } from './usar-lectura-de-seccion';
 
-/** Trae los datos fiscales de la empresa que se edita al `v-model` de la sección (o los de omisión si es nueva). */
+/** Trae los datos fiscales de la empresa que se edita al `v-model` de la sección (o los de omisión si es nueva), y si ya estaban guardados. */
 export function usarFiscalesDeEmpresa(modelo: Ref<FiscalesDeEmpresa | undefined>, registroId: () => string | null) {
-  return usarLecturaDeSeccion(modelo, {
+  const contexto = ref<ContextoFiscalDeEmpresa>(contextoSinGuardar());
+  const lectura = usarLecturaDeSeccion(modelo, {
     registroId,
-    traer: async (id) => fiscalesDeEmpresaDesde(await apiLibroDeCompras.obtenerDatosFiscalesDeEmpresa(id)),
-    porOmision: fiscalesDeEmpresaPorOmision,
+    traer: async (id) => {
+      const datos = await apiLibroDeCompras.obtenerDatosFiscalesDeEmpresa(id);
+      contexto.value = contextoFiscalDe(datos);
+      return fiscalesDeEmpresaDesde(datos);
+    },
+    porOmision: () => {
+      contexto.value = contextoSinGuardar();
+      return fiscalesDeEmpresaPorOmision();
+    },
   });
+  return { ...lectura, contexto };
 }
 
 /** Trae los datos fiscales del proveedor que se edita al `v-model` de la sección (o los de omisión si aún no lo es). */

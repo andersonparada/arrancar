@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import type { DatosFiscalesDeEmpresa, DatosFiscalesDeProveedor } from '../servicios/libro-de-compras.api';
+import type {
+  DatosFiscalesDeEmpresa,
+  DatosFiscalesDeProveedor,
+  VigenciaFiscal,
+} from '../servicios/libro-de-compras.api';
 import {
+  conRegimenDeIsr,
   conRegimenDeIva,
+  conTipoDePersona,
+  contextoFiscalDe,
+  contextoSinGuardar,
   detallesDeEmpresa,
   fiscalesDeEmpresaDesde,
   fiscalesDeEmpresaPorOmision,
+  haceFaltaPreguntarLaContabilidad,
 } from './datos-fiscales-de-empresa';
 import {
   conCambioDeRegimen,
@@ -15,35 +24,92 @@ import {
   retencionesSonLasPropuestas,
 } from './datos-fiscales-de-proveedor';
 
+const dtoDeEmpresa = (cambios: Partial<DatosFiscalesDeEmpresa> = {}): DatosFiscalesDeEmpresa => ({
+  empresaId: 'e1',
+  guardado: true,
+  vigenteDesde: null,
+  tipoDePersona: 'juridica',
+  regimenIva: 'general',
+  regimenIsr: 'utilidades',
+  agenteDeRetencionIva: 'ninguno',
+  esAgenteDeRetencionIsr: true,
+  historial: [],
+  ...cambios,
+});
+
 describe('datos fiscales de la empresa', () => {
-  it('sin datos guardados es régimen general, sobre utilidades y sin agente', () => {
-    expect(fiscalesDeEmpresaPorOmision()).toEqual({
+  it('una empresa nueva no tiene tipo de persona supuesto ni vigencia escogida', () => {
+    expect(fiscalesDeEmpresaPorOmision()).toMatchObject({
+      tipoDePersona: null,
+      regimenIva: 'general',
+      vigenteDesde: undefined,
+    });
+  });
+
+  it('al pasar del servidor al formulario deja fuera el historial y no manda vigencia', () => {
+    const formulario = fiscalesDeEmpresaDesde(dtoDeEmpresa({ vigenteDesde: '2026-03-01' }));
+    expect(formulario).toEqual({
+      tipoDePersona: 'juridica',
       regimenIva: 'general',
       regimenIsr: 'utilidades',
       agenteDeRetencionIva: 'ninguno',
       esAgenteDeRetencionIsr: true,
+      vigenteDesde: undefined,
     });
   });
 
-  it('al pasar del servidor al formulario deja fuera el id y la marca de guardado', () => {
-    const dto: DatosFiscalesDeEmpresa = { empresaId: 'e1', guardado: true, ...fiscalesDeEmpresaPorOmision() };
-    expect(fiscalesDeEmpresaDesde(dto)).toEqual(fiscalesDeEmpresaPorOmision());
-  });
-
-  it('un pequeño contribuyente deja de ser agente de retención del IVA', () => {
+  it('fuera del régimen general quita el agente de IVA y el ISR no aplica', () => {
     const agente = { ...fiscalesDeEmpresaPorOmision(), agenteDeRetencionIva: 'exportador' as const };
-    expect(conRegimenDeIva(agente, 'pequeno_contribuyente').agenteDeRetencionIva).toBe('ninguno');
+    const pequeno = conRegimenDeIva(agente, 'pequeno_contribuyente');
+    expect(pequeno.agenteDeRetencionIva).toBe('ninguno');
+    expect(pequeno.regimenIsr).toBeNull();
     expect(conRegimenDeIva(agente, 'general').agenteDeRetencionIva).toBe('exportador');
   });
 
-  it('la ficha usa nombres legibles', () => {
-    const detalles = detallesDeEmpresa({ ...fiscalesDeEmpresaPorOmision(), esAgenteDeRetencionIsr: true });
-    expect(detalles.map((d) => d.valor)).toEqual(['General', 'Sobre las utilidades', 'Ninguno', 'Sí']);
+  it('al escoger la persona aplica la propuesta', () => {
+    const individual = conRegimenDeIva(
+      conTipoDePersona(fiscalesDeEmpresaPorOmision(), 'individual'),
+      'primario_pecuario',
+    );
+    expect(individual).toMatchObject({ regimenIsr: null, esAgenteDeRetencionIsr: false });
+    expect(conTipoDePersona(individual, 'juridica').esAgenteDeRetencionIsr).toBe(true);
   });
 
-  it('desmarcada, la ficha dice que no es agente del ISR', () => {
-    const detalles = detallesDeEmpresa({ ...fiscalesDeEmpresaPorOmision(), esAgenteDeRetencionIsr: false });
-    expect(detalles[3]?.valor).toBe('No');
+  it('persona individual en el opcional simplificado: hay que preguntar si lleva contabilidad', () => {
+    const base = conTipoDePersona(fiscalesDeEmpresaPorOmision(), 'individual');
+    expect(haceFaltaPreguntarLaContabilidad(base)).toBe(false);
+    const simplificado = conRegimenDeIsr(base, 'opcional_simplificado');
+    expect(simplificado.esAgenteDeRetencionIsr).toBeUndefined();
+    expect(haceFaltaPreguntarLaContabilidad(simplificado)).toBe(true);
+  });
+
+  it('una persona individual no queda exenta: al cambiar de jurídica a individual vuelve a utilidades', () => {
+    const exenta = conRegimenDeIsr(conTipoDePersona(fiscalesDeEmpresaPorOmision(), 'juridica'), 'exento');
+    expect(exenta.regimenIsr).toBe('exento');
+    expect(conTipoDePersona(exenta, 'individual').regimenIsr).toBe('utilidades');
+  });
+
+  it('el contexto dice si ya había datos y si lo que rige hoy tiene facturas', () => {
+    const vigencia = { vigenteHasta: null, conDocumentos: true } as VigenciaFiscal;
+    expect(contextoFiscalDe(dtoDeEmpresa({ historial: [vigencia] }))).toEqual({ guardado: true, hayFacturasHoy: true });
+    expect(contextoFiscalDe(dtoDeEmpresa({ guardado: false })).hayFacturasHoy).toBe(false);
+    expect(contextoSinGuardar().guardado).toBe(false);
+  });
+
+  it('la ficha usa nombres legibles', () => {
+    const detalles = detallesDeEmpresa(fiscalesDeEmpresaDesde(dtoDeEmpresa()));
+    expect(detalles.map((d) => d.valor)).toEqual([
+      'Persona jurídica (sociedad, asociación…)',
+      'General',
+      'Sobre las utilidades',
+      'Ninguno',
+      'Sí',
+    ]);
+  });
+
+  it('en la ficha, sin ISR dice que no aplica', () => {
+    const pequeno = fiscalesDeEmpresaDesde(dtoDeEmpresa({ regimenIva: 'pequeno_contribuyente', regimenIsr: null }));
+    expect(detallesDeEmpresa(pequeno)[2]?.valor).toBe('No aplica');
   });
 });
 

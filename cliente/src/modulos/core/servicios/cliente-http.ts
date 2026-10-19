@@ -22,6 +22,12 @@ export class ErrorApi extends Error {
   get erroresCampos(): ErrorCampo[] {
     return Array.isArray(this.detalles) ? (this.detalles as ErrorCampo[]) : [];
   }
+
+  /** El campo que señala un error que no es de validación (`detalles: { campo }`), si lo hay. */
+  get campoDelConflicto(): string | null {
+    const campo = (this.detalles as { campo?: unknown } | null | undefined)?.campo;
+    return typeof campo === 'string' ? campo : null;
+  }
 }
 
 export type Consulta = Record<string, string | number | boolean | undefined | null>;

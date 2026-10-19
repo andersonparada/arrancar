@@ -793,3 +793,16 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `primario_pecuario`), motivos fuera del libro (`textoFueraDelLibro`, con la advertencia de ISR opcional), causas y
   ayuda de anular, etiquetas de retención (incluida «Agregada a mano» cuando la propuesta es 0) y reglas de retención
   (nuevas `iva_factura_especial` e `isr_factura_especial`). Pruebas del cliente: 407.
+
+- **2026-10-18 (R1-5 y R1-6, cliente: sección fiscal de la empresa).** La sección de Empresas pide el tipo de persona
+  (obligatorio, sin valor supuesto), los seis regímenes de IVA con una línea de ayuda (los dos derogados dicen «derogado
+  en 2025, solo para períodos anteriores»), el ISR (bloqueado en «No aplica» fuera de general y no afiliado; «Exento»
+  solo para jurídica) y el agente de IVA (bloqueado fuera de general). Los valores se proponen con
+  `datosPropuestos` (réplica de la tabla R1-e, con pruebas) al cambiar régimen, persona o ISR; si la tabla no propone
+  si lleva contabilidad completa, el interruptor pasa a ser la pregunta «¿Lleva contabilidad completa?» (Sí/No).
+  «¿Desde cuándo rigen estos datos?» (solo si ya hay datos; la primera vez se explica que rigen desde el inicio):
+  «Corregir lo registrado» (no manda fecha), «Cambió a partir de un mes» (propone el mes actual, o el siguiente si lo de
+  hoy tiene facturas) y «Desde el inicio». `usarFormulario` ahora marca el campo de un conflicto con `detalles.campo`
+  (409 `vigencia_fiscal_en_uso`) y además avisa. La ficha muestra el historial (desde, hasta o «vigente», régimen y
+  persona) y «Quitar» con confirmación y resumen, solo si no es la base ni tiene documentos. Pendiente: R1-4 y R1-7;
+  los textos del motivo `empresa_sin_credito` se agregan junto con L3-8.

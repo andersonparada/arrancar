@@ -406,12 +406,12 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    de la empresa (también las bajas); R1-4 lo cambia por la vigencia del período del documento.
 4. **R1-4 (servidor, documentos):** columna y checks de 3.1b.7, migración `0012`; el cargador lee la vigencia del
    período con `for share`, `EmpresaSinDatosFiscales`, copia de la foto, DTO; pruebas de checks y de API de 3.1b.10.
-5. **R1-5 (cliente, sección de Empresa):** tipo de persona (obligatorio la primera vez, pregunta R1-f), los seis
+5. **R1-5 (cliente, sección de Empresa) — HECHO (2026-10-18):** tipo de persona (obligatorio la primera vez, pregunta R1-f), los seis
    regímenes, ISR con «No aplica» y «Exento», agente de IVA deshabilitado fuera de general, propuestas al cambiar
    régimen o tipo de persona (lógica pura con pruebas), y «¿Desde cuándo?» al cambiar un dato fiscal: «Corregir lo
    registrado (desde <mes>)» o «Cambió a partir de [mes]» (propone el mes siguiente al último con documentos);
    errores por campo, incluido `vigenteDesde`.
-6. **R1-6 (cliente, ficha de Empresa):** historial de vigencias (desde, hasta, régimen) y «Quitar» con confirmación en
+6. **R1-6 (cliente, ficha de Empresa) — HECHO (2026-10-18; los textos de `empresa_sin_credito` quedan para L3-8):** historial de vigencias (desde, hasta, régimen) y «Quitar» con confirmación en
    las que se pueden quitar; textos del motivo `empresa_sin_credito` para la lista y la ficha de documentos (L3-7 y
    L3-8 los usarán).
 7. **R1-7 (QA):** de punta a punta: cambiar el régimen a partir de un mes, registrar una factura en cada lado del
