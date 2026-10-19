@@ -30,3 +30,14 @@ export const OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO: Record<MotivoFueraDelLibro, str
   fel_a_consumidor_final: 'La FEL está a consumidor final (CF)',
   fel_a_otro_nit: 'La FEL está a nombre de otro NIT o CUI',
 };
+
+/** Textos de la factura especial (FESP) en el formulario. */
+export const FACTURA_ESPECIAL = {
+  ayuda:
+    'La factura especial la emite su empresa en el certificador cuando un particular no factura; regístrela aquí con su número de autorización. Se retiene todo el IVA y el 5 % de ISR.',
+  siempreEnElLibro: 'La factura especial siempre se muestra en los reportes de la SAT.',
+  ayudaDelVendedor: 'El NIT o CUI del proveedor, que es un particular. Se propone con el de su ficha.',
+} as const;
+
+/** Quién emite la factura especial: la empresa, con su NIT si se pudo leer. */
+export const textoDelEmisorEspecial = (nit: string | null): string => (nit ? `Su empresa (NIT ${nit})` : 'Su empresa');

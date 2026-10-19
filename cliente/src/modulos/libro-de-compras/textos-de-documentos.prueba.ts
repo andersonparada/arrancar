@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AYUDA_DE_ANULAR,
   CAUSAS_DE_ANULACION,
+  textoDeCausa,
   FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019,
   MOTIVOS_SIN_CREDITO,
   REGLAS_DE_RETENCION,
@@ -104,5 +105,13 @@ describe('motivos de los regímenes que dan nombre propio', () => {
       'Factura de un contribuyente agropecuario, régimen eliminado en julio de 2025 (Decreto 31-2024): no da crédito fiscal. El total se registra como costo o gasto.',
     );
     expect(MOTIVOS_SIN_CREDITO.primario_pecuario).toContain('no da crédito fiscal');
+  });
+});
+
+describe('causa de anulación de la factura especial', () => {
+  it('la emite la propia empresa, así que el emisor no es otro', () => {
+    expect(textoDeCausa('fel_anulada_por_el_emisor', 'factura_especial')).toBe('FESP anulada por la empresa');
+    expect(textoDeCausa('fel_anulada_por_el_emisor', 'factura')).toBe('El emisor anuló la FEL en la SAT');
+    expect(textoDeCausa('error_de_captura', 'factura_especial')).toBe('Error de captura');
   });
 });

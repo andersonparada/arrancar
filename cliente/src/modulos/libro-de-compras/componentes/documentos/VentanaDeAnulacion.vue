@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Info, Trash2 } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
@@ -9,13 +10,20 @@ import {
   opcionesDeCausa,
   type EdicionDeAnulacion,
 } from '../../composables/documentos/reglas-de-baja-de-documento';
+import type { TipoDeDocumento } from '../../servicios/documentos.api';
 import { AYUDA_DE_ANULAR } from '../../textos-de-documentos';
 
 /** `resumen` dice qué va a pasar; `puedeEliminar` (lo dice el servidor) ofrece borrar en vez de anular. */
-defineProps<{ resumen: string; puedeEliminar: boolean; errores: Record<string, string>; enviando: boolean }>();
+const props = defineProps<{
+  resumen: string;
+  tipo: TipoDeDocumento;
+  puedeEliminar: boolean;
+  errores: Record<string, string>;
+  enviando: boolean;
+}>();
 const emit = defineEmits<{ cerrar: []; guardar: []; eliminar: [] }>();
 const edicion = defineModel<EdicionDeAnulacion>({ required: true });
-const causas = opcionesDeCausa();
+const causas = computed(() => opcionesDeCausa(props.tipo));
 </script>
 
 <template>

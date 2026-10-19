@@ -11,7 +11,7 @@ import {
   type LineaEnEdicion,
 } from './lineas-del-documento';
 import { datosFiscalesContestados, type RespuestasFiscales } from './preguntas-fiscales';
-import { familiaDelCodigo } from './tipos-de-documento-sat';
+import { esFacturaEspecial, familiaDelCodigo } from './tipos-de-documento-sat';
 
 type Valor = string | number | null | undefined;
 
@@ -85,6 +85,16 @@ export const lineaEnBlanco = (linea: LineaEnEdicion): boolean =>
 
 const conLineasUsadas = (lineas: LineaEnEdicion[]) => lineas.filter((linea) => !lineaEnBlanco(linea));
 
+/** La factura especial exige el vendedor, la serie y la autorización de la FEL que emitió la empresa. */
+function pendientesDeFacturaEspecial(edicion: EdicionDeDocumento): [boolean, string][] {
+  if (!esFacturaEspecial(edicion.tipoDte)) return [];
+  return [
+    [edicion.nitReceptor.trim() === '', 'escribir el NIT o CUI del vendedor'],
+    [edicion.serie.trim() === '', 'escribir la serie de la factura especial'],
+    [edicion.autorizacionFel.trim() === '', 'escribir la autorización de la FEL'],
+  ];
+}
+
 /** Lo que falta para poder registrar, en lenguaje del usuario; vacío si ya se puede. */
 export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
   const usadas = conLineasUsadas(edicion.lineas);
@@ -98,6 +108,7 @@ export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
       'elegir la factura que rebaja la nota',
     ],
     [!edicion.muestraEnReportesSat && !edicion.motivoFueraDelLibro, 'decir por qué no se muestra en reportes SAT'],
+    ...pendientesDeFacturaEspecial(edicion),
     [usadas.length === 0, 'escribir al menos una línea'],
     [usadas.some((linea) => !lineaCompleta(linea)), 'completar las líneas (concepto y total)'],
   ];
@@ -118,10 +129,12 @@ function tipoDelCuerpo(edicion: EdicionDeDocumento) {
 function datosDeLaFel(edicion: EdicionDeDocumento) {
   const enElLibro = edicion.muestraEnReportesSat;
   const conFel = tieneFel(edicion);
+  const especial = esFacturaEspecial(edicion.tipoDte);
   return {
-    nitEmisor: enElLibro ? textoONulo(edicion.nitEmisor) : null,
+    // En la factura especial el emisor es la empresa (lo pone el servidor) y el receptor es el vendedor.
+    nitEmisor: enElLibro && !especial ? textoONulo(edicion.nitEmisor) : null,
     autorizacionFel: conFel ? textoONulo(edicion.autorizacionFel) : null,
-    nitReceptor: !enElLibro && conFel ? textoONulo(edicion.nitReceptor) : null,
+    nitReceptor: (!enElLibro || especial) && conFel ? textoONulo(edicion.nitReceptor) : null,
     motivoFueraDelLibro: enElLibro ? null : edicion.motivoFueraDelLibro,
   };
 }

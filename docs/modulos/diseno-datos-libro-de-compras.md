@@ -781,12 +781,12 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    pruebas puras y de API.
 7. **R2-7 (cliente, lista y ficha) — HECHO (2026-10-19):** textos de las familias, del código DTE («Factura cambiaria», «Factura especial»…)
    y de los motivos nuevos (revisados por el contador) en Ingreso de facturas (L3-7). **No depende de L3-8.**
-8. **R2-8 (cliente, formulario):** selector «Tipo de documento como dice el encabezado de la factura» (lista de
+8. **R2-8 (cliente, formulario) — HECHO (2026-10-19):** selector «Tipo de documento como dice el encabezado de la factura» (lista de
    códigos con su nombre; oculta los derogados si la emisión es posterior a la fecha y propone según el régimen del
    proveedor), y la factura especial: NIT de la empresa fijo como emisor, «NIT o CUI del vendedor», recepción igual a la
    emisión, retenciones propuestas y avisos. **Depende de L3-8** (el formulario aún no existe): se hace dentro de L3-8 o
    justo después.
-   **Estado (2026-10-19): a medias.** Hecho el selector por código de la SAT (agrupado por familia, derogados rotulados,
+   **Estado (2026-10-19): hecho** (selector por código y factura especial; lo siguiente, que queda opcional, es ocultar derogados por fecha y proponer el código por régimen). Antes estaba a medias. Hecho el selector por código de la SAT (agrupado por familia, derogados rotulados,
    `FESP` deshabilitada) y el envío de `tipoDte`. Falta el formulario de la factura especial (NIT de la empresa como
    emisor, NIT o CUI del vendedor, recepción igual a la emisión, retenciones propuestas y avisos) y, si se quiere,
    ocultar derogados según la fecha y proponer el código según el régimen del proveedor.

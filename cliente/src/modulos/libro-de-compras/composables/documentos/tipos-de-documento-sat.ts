@@ -12,8 +12,6 @@ export interface TipoSat {
   familia: TipoDeDocumento;
   /** Régimen derogado: solo vale para lo emitido antes de la fecha de derogación (el servidor decide). */
   derogado?: boolean;
-  /** Todavía sin formulario: se muestra, pero no se puede elegir. */
-  proximamente?: boolean;
 }
 
 const deLaFamilia =
@@ -23,7 +21,7 @@ const deLaFamilia =
 const factura = deLaFamilia('factura');
 const pequeno = deLaFamilia('factura_pequeno_contribuyente');
 const primarioPecuario = deLaFamilia('factura_primario_pecuario');
-const especial = deLaFamilia('factura_especial', { proximamente: true });
+const especial = deLaFamilia('factura_especial');
 const notaDeCredito = deLaFamilia('nota_de_credito');
 const pequenoElectronico = deLaFamilia('factura_pequeno_contribuyente_electronico', { derogado: true });
 const agropecuario = deLaFamilia('factura_contribuyente_agropecuario', { derogado: true });
@@ -60,16 +58,18 @@ export const GRUPOS_DE_TIPOS_SAT: Record<TipoDeDocumento, string> = {
   recibo: 'Sin FEL',
 };
 
+/** Si el código es el de la factura especial, que la emite la empresa y no el proveedor. */
+export const esFacturaEspecial = (codigo: string): boolean => familiaDelCodigo(codigo) === 'factura_especial';
+
 /** La familia a la que pertenece un código del selector; `null` si no hay ninguno elegido o no se conoce. */
 export function familiaDelCodigo(codigo: string): TipoDeDocumento | null {
   if (codigo === CODIGO_DE_RECIBO) return 'recibo';
   return TIPOS_SAT.find((tipoSat) => tipoSat.codigo === codigo)?.familia ?? null;
 }
 
-function textoDelTipo({ codigo, nombre, derogado, proximamente }: TipoSat): string {
+function textoDelTipo({ codigo, nombre, derogado }: TipoSat): string {
   const hasta = mesDeFecha(FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019);
-  if (derogado) return `${codigo} — ${nombre} (régimen derogado, solo antes de ${hasta})`;
-  return proximamente ? `${codigo} — ${nombre} (próximamente)` : `${codigo} — ${nombre}`;
+  return derogado ? `${codigo} — ${nombre} (régimen derogado, solo antes de ${hasta})` : `${codigo} — ${nombre}`;
 }
 
 /** Las opciones del selector «Tipo de documento»: por familia, con el recibo sin FEL al final. */
@@ -78,7 +78,6 @@ export function opcionesDeTipoSat(): (OpcionBuscable<string> & { grupo: string }
     valor: tipoSat.codigo,
     texto: textoDelTipo(tipoSat),
     grupo: GRUPOS_DE_TIPOS_SAT[tipoSat.familia],
-    deshabilitada: tipoSat.proximamente === true,
   }));
   return [...opciones, { valor: CODIGO_DE_RECIBO, texto: 'Recibo (sin FEL)', grupo: GRUPOS_DE_TIPOS_SAT.recibo }];
 }

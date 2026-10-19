@@ -149,6 +149,13 @@ describe('anular', () => {
     ]);
   });
 
+  it('en una factura especial la causa del emisor dice que fue la empresa', () => {
+    const textos = opcionesDeCausa('factura_especial').map((o) => o.texto);
+    expect(textos).toContain('FESP anulada por la empresa');
+    expect(textos).not.toContain('El emisor anuló la FEL en la SAT');
+    expect(opcionesDeCausa('factura_especial')).toHaveLength(4);
+  });
+
   it('pide la causa y el motivo', () => {
     expect(Object.keys(erroresDeAnulacion(edicionDeAnulacionVacia()))).toEqual(['causa', 'motivo']);
     const completa = { ...edicionDeAnulacionVacia(), causa: 'error_de_captura' as const, motivo: ' Se repitió ' };

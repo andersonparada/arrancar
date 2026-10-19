@@ -1,5 +1,6 @@
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, type Ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { apiCombustibles, type Combustible } from '../../servicios/combustibles.api';
 import { apiConceptosDeGasto, type ConceptoDeGasto } from '../../servicios/conceptos-de-gasto.api';
 import type { DestinoDeDocumento } from '../../servicios/documentos.api';
@@ -15,6 +16,7 @@ function crearListas() {
     combustibles: ref<Combustible[]>([]),
     destinos: ref<DestinoDeDocumento[]>([]),
     destinosCargados: ref(false),
+    nitDeLaEmpresa: ref<string | null>(null),
   };
 }
 
@@ -51,6 +53,16 @@ function mensajeDelFallo(resultados: Resultados): string | null {
   return `No se pudo cargar todo lo que ofrece el formulario.${motivo}`;
 }
 
+/** El NIT de la empresa es el emisor de la factura especial; si no hay permiso para verlo, se dice solo «su empresa». */
+function traerElNitDeLaEmpresa(nit: Ref<string | null>): void {
+  const empresaId = usarSesion().empresa?.id;
+  if (!empresaId) return;
+  apiRegistroDeDocumentos
+    .nitDeLaEmpresa(empresaId)
+    .then((valor) => (nit.value = valor))
+    .catch(() => undefined);
+}
+
 /**
  * Lo que el formulario ofrece para escoger: proveedores, conceptos de gasto, combustibles y destinos activos.
  * Si un catálogo no se puede leer (por falta de permiso, por ejemplo) avisa una sola vez y ese selector queda vacío.
@@ -61,6 +73,7 @@ export function usarCatalogosDelRegistro() {
   const cargando = ref(true);
 
   onMounted(async () => {
+    traerElNitDeLaEmpresa(listas.nitDeLaEmpresa);
     const resultados = await traerTodo();
     repartir(resultados, listas);
     const fallo = mensajeDelFallo(resultados);

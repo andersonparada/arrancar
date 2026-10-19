@@ -2,7 +2,11 @@
 import { computed } from 'vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
-import { familiaDelCodigo, opcionesDeTipoSat } from '../../composables/documentos/tipos-de-documento-sat';
+import {
+  esFacturaEspecial,
+  familiaDelCodigo,
+  opcionesDeTipoSat,
+} from '../../composables/documentos/tipos-de-documento-sat';
 import type { EdicionDeDocumento } from '../../composables/documentos/edicion-de-documento';
 import {
   opcionesDeDestinos,
@@ -40,6 +44,13 @@ const facturasDeLaNota = computed(() => [
 const periodos = computed(() =>
   opcionesDePeriodoDelDocumento(new Date(), edicion.value.periodo, props.periodoPropuesto),
 );
+const esEspecial = computed(() => esFacturaEspecial(edicion.value.tipoDte));
+const ayudaDeLaRecepcion = computed(() => {
+  if (esEspecial.value) return 'Se propone igual a la fecha de emisión.';
+  return props.fechaPropuesta
+    ? `Si la deja vacía se usa ${props.fechaPropuesta}.`
+    : 'Si la deja vacía se usa la de hoy.';
+});
 const esNota = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'nota_de_credito');
 </script>
 
@@ -78,7 +89,14 @@ const esNota = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'nota_
       :opciones="facturasDeLaNota"
       :error="errores.documentoAfectadoId"
     />
-    <CampoTexto v-model="edicion.serie" etiqueta="Serie" :longitud-maxima="40" :error="errores.serie" sin-correccion />
+    <CampoTexto
+      v-model="edicion.serie"
+      etiqueta="Serie"
+      :requerido="esEspecial"
+      :longitud-maxima="40"
+      :error="errores.serie"
+      sin-correccion
+    />
     <CampoTexto
       v-model="edicion.numero"
       etiqueta="Número"
@@ -98,7 +116,7 @@ const esNota = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'nota_
       v-model="edicion.fechaRecepcion"
       tipo="date"
       etiqueta="Fecha de recepción"
-      :ayuda="fechaPropuesta ? `Si la deja vacía se usa ${fechaPropuesta}.` : 'Si la deja vacía se usa la de hoy.'"
+      :ayuda="ayudaDeLaRecepcion"
       :error="errores.fechaRecepcion"
     />
     <CampoSelector

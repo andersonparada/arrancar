@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  esFacturaEspecial,
   CODIGO_DE_RECIBO,
   familiaDelCodigo,
   GRUPOS_DE_TIPOS_SAT,
@@ -40,12 +41,14 @@ describe('tipos de documento por código de la SAT', () => {
     expect(textos.NCRE).toBe('NCRE — Nota de crédito');
   });
 
-  it('los derogados lo dicen y la factura especial va deshabilitada', () => {
+  it('los derogados lo dicen y la factura especial ya se puede elegir', () => {
     const opciones = opcionesDeTipoSat();
     const de = (codigo: string) => opciones.find((opcion) => opcion.valor === codigo);
     expect(de('FAPE')?.texto).toContain('(régimen derogado, solo antes de julio de 2025)');
     expect(de('FACA')?.texto).toContain('régimen derogado');
-    expect(de('FESP')).toMatchObject({ texto: 'FESP — Factura especial (próximamente)', deshabilitada: true });
-    expect(opciones.filter((opcion) => opcion.deshabilitada)).toHaveLength(1);
+    expect(de('FESP')).toMatchObject({ texto: 'FESP — Factura especial' });
+    expect(opciones.some((opcion) => opcion.deshabilitada)).toBe(false);
+    expect(esFacturaEspecial('FESP')).toBe(true);
+    expect(esFacturaEspecial('FACT')).toBe(false);
   });
 });

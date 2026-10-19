@@ -62,6 +62,8 @@ describe('problemaDeError', () => {
       'familia_derogada',
       'familia_aun_no_vigente',
       'factura_especial_no_disponible',
+      'factura_especial_siempre_en_el_libro',
+      'nota_sobre_factura_especial',
     ]) {
       const fallo = error(400, codigo, 'Mensaje del servidor.');
       expect(problemaDeError(fallo)).toBeNull();
@@ -187,5 +189,24 @@ describe('preguntas fiscales', () => {
       datosFiscalesContestados({ regimenIva: 'general', regimenIsr: 'exento', esAgenteDeRetencionIva: 'true' }),
     ).toEqual({ regimenIva: 'general', regimenIsr: 'exento', esAgenteDeRetencionIva: true });
     expect(datosFiscalesContestados({ regimenIva: 'general' })).toBeNull();
+  });
+});
+
+describe('errores de la factura especial', () => {
+  it('los del vendedor van en el campo del vendedor, diciendo cómo corregir', () => {
+    for (const codigo of ['vendedor_de_factura_especial_invalido', 'receptor_invalido', 'vendedor_no_coincide']) {
+      const fallo = error(codigo === 'vendedor_no_coincide' ? 422 : 400, codigo, 'Mensaje del servidor.');
+      expect(problemaDeError(fallo)).toBeNull();
+      expect(errorDelTipo(fallo)?.nitReceptor).toBeTruthy();
+      expect(errorDelTipo(fallo)?.tipoDte).toBeUndefined();
+    }
+    expect(errorDelTipo(error(400, 'vendedor_de_factura_especial_invalido', 'x'))?.nitReceptor).toContain(
+      'NIT o el CUI',
+    );
+    expect(errorDelTipo(error(422, 'vendedor_no_coincide', 'x'))?.nitReceptor).toContain('proveedor elegido');
+  });
+
+  it('la nota sobre una factura especial dice qué hacer', () => {
+    expect(errorDelTipo(error(422, 'nota_sobre_factura_especial', 'x'))?.tipoDte).toContain('Anule la FESP');
   });
 });

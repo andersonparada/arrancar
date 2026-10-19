@@ -2,7 +2,12 @@ import { ref, watch, type Ref } from 'vue';
 import type { DestinoDeDocumento, DocumentoEnLista } from '../../servicios/documentos.api';
 import { apiRegistroDeDocumentos, type ProveedorParaRegistro } from '../../servicios/registro-de-documentos.api';
 import type { EdicionDeDocumento } from './edicion-de-documento';
-import { alCambiarElTipo, alElegirProveedor, opcionesDeFacturas } from './reglas-del-formulario-de-documento';
+import {
+  alCambiarElTipo,
+  alCambiarLaEmision,
+  alElegirProveedor,
+  opcionesDeFacturas,
+} from './reglas-del-formulario-de-documento';
 import { familiaDelCodigo } from './tipos-de-documento-sat';
 
 interface Datos {
@@ -52,6 +57,14 @@ function elegirElUnicoDestino(edicion: EdicionDeDocumento, destinos: Readonly<Re
   });
 }
 
+/** En la factura especial la recepción acompaña a la emisión. */
+function vigilarLaEmision(edicion: EdicionDeDocumento): void {
+  watch(
+    () => edicion.fechaEmision,
+    (_, anterior) => alCambiarLaEmision(edicion, anterior),
+  );
+}
+
 /**
  * Lo que pasa en el formulario al elegir el proveedor o el tipo: se propone su NIT, el destino de su último
  * documento y, en una nota de crédito, se ofrecen sus facturas. Si algo de eso no se puede traer (sin permiso, sin
@@ -62,13 +75,12 @@ export function usarProveedorDelDocumento({ edicion, proveedores, destinos }: Da
   const facturas = usarFacturasDeLaNota(edicion);
   elegirElUnicoDestino(edicion, destinos);
 
+  const proveedorElegido = () => proveedores.value.find(({ id }) => id === edicion.proveedorId);
+
   watch(
     () => edicion.proveedorId,
     async (proveedorId) => {
-      alElegirProveedor(
-        edicion,
-        proveedores.value.find(({ id }) => id === proveedorId),
-      );
+      alElegirProveedor(edicion, proveedorElegido());
       await facturas.traer(proveedorId);
       if (proveedorId) await proponerElDestino(proveedorId);
     },
@@ -76,10 +88,11 @@ export function usarProveedorDelDocumento({ edicion, proveedores, destinos }: Da
   watch(
     () => edicion.tipoDte,
     async (_, anterior) => {
-      alCambiarElTipo(edicion, anterior);
+      alCambiarElTipo(edicion, anterior, proveedorElegido());
       await facturas.traer(edicion.proveedorId);
     },
   );
+  vigilarLaEmision(edicion);
 
   return { documentos: facturas.documentos };
 }

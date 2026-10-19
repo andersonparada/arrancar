@@ -4,7 +4,7 @@ import type { ProveedorParaRegistro } from '../../servicios/registro-de-document
 import { DESTINOS_DE_DOCUMENTO } from '../../textos-de-documentos';
 import type { EdicionDeDocumento } from './edicion-de-documento';
 import { etiquetaDePeriodo, mesDe } from './filtros-de-documentos';
-import { familiaDelCodigo } from './tipos-de-documento-sat';
+import { esFacturaEspecial, familiaDelCodigo } from './tipos-de-documento-sat';
 
 /** Las mismas familias que acepta el servidor (`resolutor-de-factura.ts`); la factura especial no se rebaja (R2-e). */
 const TIPOS_QUE_SE_REBAJAN = [
@@ -55,16 +55,57 @@ export function opcionesDePeriodoDelDocumento(hoy: Date, actual: string, propues
   ];
 }
 
-/** Un recibo no es un documento FEL, así que nunca va en el libro; los demás tipos vuelven a él al dejar de serlo. */
-export function alCambiarElTipo(edicion: EdicionDeDocumento, codigoAnterior: string): void {
+const nitDelProveedor = (proveedor: ProveedorParaRegistro | undefined): string =>
+  proveedor?.nit && proveedor.nit !== CONSUMIDOR_FINAL ? proveedor.nit : '';
+
+/** El vendedor de una factura especial se propone con el NIT del proveedor o, si no tiene, con su DPI (CUI). */
+export function vendedorPropuesto(proveedor: ProveedorParaRegistro | undefined): string {
+  return nitDelProveedor(proveedor) || proveedor?.dpi || '';
+}
+
+/** La factura especial la emite la empresa: el emisor es ella, el vendedor es el proveedor y se recibe el día que se emite. */
+function prepararFacturaEspecial(edicion: EdicionDeDocumento, proveedor: ProveedorParaRegistro | undefined): void {
+  edicion.muestraEnReportesSat = true;
+  edicion.motivoFueraDelLibro = null;
+  edicion.nitEmisor = '';
+  edicion.nitReceptor = vendedorPropuesto(proveedor);
+  edicion.fechaRecepcion = edicion.fechaEmision;
+}
+
+/** Al dejar la factura especial el vendedor y la recepción propuestos ya no valen; el emisor vuelve a ser el proveedor. */
+function soltarFacturaEspecial(edicion: EdicionDeDocumento, proveedor: ProveedorParaRegistro | undefined): void {
+  edicion.nitReceptor = '';
+  edicion.fechaRecepcion = '';
+  edicion.nitEmisor = nitDelProveedor(proveedor);
+}
+
+/**
+ * Un recibo no es un documento FEL, así que nunca va en el libro; los demás tipos vuelven a él al dejar de serlo.
+ * La factura especial cambia quién es el emisor y quién el vendedor.
+ */
+export function alCambiarElTipo(
+  edicion: EdicionDeDocumento,
+  codigoAnterior: string,
+  proveedor?: ProveedorParaRegistro,
+): void {
   const familia = familiaDelCodigo(edicion.tipoDte);
   edicion.confirmarCambioDeRegimen = false;
   if (familia !== 'nota_de_credito') edicion.documentoAfectadoId = null;
+  if (esFacturaEspecial(edicion.tipoDte)) return prepararFacturaEspecial(edicion, proveedor);
+  if (esFacturaEspecial(codigoAnterior)) soltarFacturaEspecial(edicion, proveedor);
   if (familia === 'recibo') {
     edicion.muestraEnReportesSat = false;
     edicion.motivoFueraDelLibro = 'sin_fel';
   } else if (familiaDelCodigo(codigoAnterior) === 'recibo') {
     alMarcarLaCasilla(edicion, true);
+  }
+}
+
+/** En la factura especial la recepción acompaña a la emisión mientras el usuario no la haya cambiado. */
+export function alCambiarLaEmision(edicion: EdicionDeDocumento, emisionAnterior: string): void {
+  if (!esFacturaEspecial(edicion.tipoDte)) return;
+  if (edicion.fechaRecepcion === '' || edicion.fechaRecepcion === emisionAnterior) {
+    edicion.fechaRecepcion = edicion.fechaEmision;
   }
 }
 
@@ -89,10 +130,13 @@ export function alCambiarElMotivo(edicion: EdicionDeDocumento): void {
   }
 }
 
-/** El emisor de la factura es el proveedor: al elegirlo se pone su NIT (o se deja vacío para escribir el del documento). */
+/** El emisor de la factura es el proveedor: al elegirlo se pone su NIT (o se deja vacío para escribir el del documento).
+ * En la factura especial el proveedor es el vendedor: se propone su NIT o CUI como receptor. */
 export function alElegirProveedor(edicion: EdicionDeDocumento, proveedor: ProveedorParaRegistro | undefined): void {
   edicion.confirmarCambioDeRegimen = false;
   edicion.respuestasFiscales = {};
   edicion.documentoAfectadoId = null;
-  edicion.nitEmisor = proveedor?.nit && proveedor.nit !== CONSUMIDOR_FINAL ? proveedor.nit : '';
+  const especial = esFacturaEspecial(edicion.tipoDte);
+  edicion.nitEmisor = especial ? '' : nitDelProveedor(proveedor);
+  if (especial) edicion.nitReceptor = vendedorPropuesto(proveedor);
 }

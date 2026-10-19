@@ -110,5 +110,15 @@ export const REGLAS_DE_RETENCION: Record<string, string> = {
   isr_factura_especial: 'Retención de ISR (pago único): factura especial',
 };
 
+/** La causa «anulada por el emisor» de una factura especial: la emite la propia empresa, no el proveedor. */
+export const CAUSA_ANULADA_POR_LA_EMPRESA = 'FESP anulada por la empresa';
+
+/** El nombre de una causa de anulación; en la factura especial el emisor es la empresa. */
+export function textoDeCausa(causa: CausaDeAnulacion, tipo: TipoDeDocumento): string {
+  return causa === 'fel_anulada_por_el_emisor' && tipo === 'factura_especial'
+    ? CAUSA_ANULADA_POR_LA_EMPRESA
+    : CAUSAS_DE_ANULACION[causa];
+}
+
 export const AYUDA_DE_ANULAR =
   'Esto anula únicamente el registro en Arrancar, no la factura en la SAT. Solo su emisor puede anularla allá, y solo hasta el vencimiento de la declaración del IVA del mes de la factura. Si hubo una devolución o un descuento, use una nota de crédito.';

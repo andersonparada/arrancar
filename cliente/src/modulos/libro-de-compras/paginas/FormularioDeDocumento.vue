@@ -80,7 +80,11 @@ watch(registro.problema, async (problema) => {
         </TarjetaBase>
         <TarjetaBase>
           <h2 class="mb-4 font-semibold">Factura electrónica (FEL)</h2>
-          <CamposDeLaFel v-model="edicion" :errores="registro.erroresDelEncabezado.value" />
+          <CamposDeLaFel
+            v-model="edicion"
+            :nit-de-la-empresa="catalogos.nitDeLaEmpresa.value"
+            :errores="registro.erroresDelEncabezado.value"
+          />
         </TarjetaBase>
         <TarjetaBase>
           <h2 class="mb-4 font-semibold">Líneas</h2>

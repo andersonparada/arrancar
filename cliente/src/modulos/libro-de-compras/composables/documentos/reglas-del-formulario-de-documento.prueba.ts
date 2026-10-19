@@ -5,12 +5,14 @@ import { edicionVacia } from './edicion-de-documento';
 import {
   alCambiarElMotivo,
   alCambiarElTipo,
+  alCambiarLaEmision,
   alElegirProveedor,
   alMarcarLaCasilla,
   opcionesDeDestinos,
   opcionesDeFacturas,
   opcionesDePeriodoDelDocumento,
   opcionesDeProveedores,
+  vendedorPropuesto,
 } from './reglas-del-formulario-de-documento';
 
 // Los textos de las facturas dan formato con `formatearFecha` y `formatearMonto`, que leen la sesión (Pinia).
@@ -44,9 +46,9 @@ const documento = (cambios: Partial<DocumentoEnLista>): DocumentoEnLista => ({
 describe('opciones de los selectores', () => {
   it('los proveedores y los destinos van por nombre', () => {
     const proveedores = [
-      { id: '1', nombre: 'Zacapa', nit: null },
-      { id: '2', nombre: 'Álvarez', nit: null },
-      { id: '3', nombre: 'Bodega', nit: null },
+      { id: '1', nombre: 'Zacapa', nit: null, dpi: null },
+      { id: '2', nombre: 'Álvarez', nit: null, dpi: null },
+      { id: '3', nombre: 'Bodega', nit: null, dpi: null },
     ];
     expect(opcionesDeProveedores(proveedores).map((o) => o.texto)).toEqual(['Álvarez', 'Bodega', 'Zacapa']);
     expect(opcionesDeDestinos(['cuentas-por-pagar', 'caja-chica']).map((o) => o.texto)).toEqual([
@@ -118,9 +120,82 @@ describe('reglas del formulario', () => {
       documentoAfectadoId: 'f-1',
       respuestasFiscales: { regimenIsr: 'general' },
     };
-    alElegirProveedor(edicion, { id: 'p-1', nombre: 'Agro', nit: '1234567-8' });
+    alElegirProveedor(edicion, { id: 'p-1', nombre: 'Agro', nit: '1234567-8', dpi: null });
     expect(edicion).toMatchObject({ nitEmisor: '1234567-8', documentoAfectadoId: null, respuestasFiscales: {} });
-    alElegirProveedor(edicion, { id: 'p-2', nombre: 'Informal', nit: 'CF' });
+    alElegirProveedor(edicion, { id: 'p-2', nombre: 'Informal', nit: 'CF', dpi: null });
     expect(edicion.nitEmisor).toBe('');
+  });
+});
+
+describe('factura especial', () => {
+  const proveedor = { id: 'p-1', nombre: 'Doña Rosa', nit: '1234567-8', dpi: '2345678901234' };
+  const sinNit = { ...proveedor, nit: null };
+
+  it('el vendedor se propone con el NIT, o con el DPI si no hay NIT ni lo es CF', () => {
+    expect(vendedorPropuesto(proveedor)).toBe('1234567-8');
+    expect(vendedorPropuesto(sinNit)).toBe('2345678901234');
+    expect(vendedorPropuesto({ ...proveedor, nit: 'CF' })).toBe('2345678901234');
+    expect(vendedorPropuesto({ ...sinNit, dpi: null })).toBe('');
+    expect(vendedorPropuesto(undefined)).toBe('');
+  });
+
+  it('al elegirla queda en el libro, sin NIT de emisor, con el vendedor y la recepción igual a la emisión', () => {
+    const edicion = {
+      ...edicionVacia(HOY),
+      nitEmisor: '999',
+      muestraEnReportesSat: false,
+      motivoFueraDelLibro: 'fel_a_consumidor_final' as const,
+    };
+    edicion.tipoDte = 'FESP';
+    alCambiarElTipo(edicion, 'FACT', proveedor);
+    expect(edicion).toMatchObject({
+      muestraEnReportesSat: true,
+      motivoFueraDelLibro: null,
+      nitEmisor: '',
+      nitReceptor: '1234567-8',
+      fechaRecepcion: edicion.fechaEmision,
+    });
+  });
+
+  it('al dejarla el vendedor y la recepción propuestos se quitan y el emisor vuelve a ser el proveedor', () => {
+    const edicion = { ...edicionVacia(HOY), tipoDte: 'FESP' };
+    alCambiarElTipo(edicion, 'FACT', proveedor);
+    edicion.tipoDte = 'FACT';
+    alCambiarElTipo(edicion, 'FESP', proveedor);
+    expect(edicion).toMatchObject({ nitEmisor: '1234567-8', nitReceptor: '', fechaRecepcion: '' });
+  });
+
+  it('elegir al proveedor propone el vendedor y no el emisor; elegirlo en otro tipo, lo contrario', () => {
+    const especial = { ...edicionVacia(HOY), tipoDte: 'FESP' };
+    alElegirProveedor(especial, sinNit);
+    expect(especial).toMatchObject({ nitEmisor: '', nitReceptor: '2345678901234' });
+    const factura = edicionVacia(HOY);
+    alElegirProveedor(factura, proveedor);
+    expect(factura).toMatchObject({ nitEmisor: '1234567-8', nitReceptor: '' });
+  });
+
+  it('la recepción sigue a la emisión mientras no se haya cambiado', () => {
+    const edicion = { ...edicionVacia(HOY), tipoDte: 'FESP', fechaEmision: '2026-10-10', fechaRecepcion: '2026-10-10' };
+    edicion.fechaEmision = '2026-10-12';
+    alCambiarLaEmision(edicion, '2026-10-10');
+    expect(edicion.fechaRecepcion).toBe('2026-10-12');
+    edicion.fechaRecepcion = '2026-10-15';
+    edicion.fechaEmision = '2026-10-13';
+    alCambiarLaEmision(edicion, '2026-10-12');
+    expect(edicion.fechaRecepcion).toBe('2026-10-15');
+  });
+
+  it('en otro tipo la recepción no se toca', () => {
+    const edicion = { ...edicionVacia(HOY), fechaEmision: '2026-10-12', fechaRecepcion: '' };
+    alCambiarLaEmision(edicion, '2026-10-10');
+    expect(edicion.fechaRecepcion).toBe('');
+  });
+
+  it('la nota de crédito no ofrece rebajar una factura especial', () => {
+    const opciones = opcionesDeFacturas([
+      documento({ id: 'f-1', tipo: 'factura' }),
+      documento({ id: 'f-2', tipo: 'factura_especial' }),
+    ]);
+    expect(opciones.map(({ valor }) => valor)).toEqual(['f-1']);
   });
 });

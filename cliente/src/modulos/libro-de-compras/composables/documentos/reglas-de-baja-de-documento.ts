@@ -1,6 +1,11 @@
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
-import type { CausaDeAnulacion, DatosDeAnulacion, FichaDeDocumento } from '../../servicios/documentos.api';
-import { CAUSAS_DE_ANULACION } from '../../textos-de-documentos';
+import type {
+  CausaDeAnulacion,
+  DatosDeAnulacion,
+  FichaDeDocumento,
+  TipoDeDocumento,
+} from '../../servicios/documentos.api';
+import { CAUSAS_DE_ANULACION, textoDeCausa } from '../../textos-de-documentos';
 import { tituloDeDocumento } from './detalles-de-documento';
 
 export const MAXIMO_DEL_MOTIVO = 300;
@@ -14,10 +19,10 @@ export interface EdicionDeAnulacion {
 
 export const edicionDeAnulacionVacia = (): EdicionDeAnulacion => ({ abierta: false, causa: '', motivo: '' });
 
-/** Las causas por nombre, con la invitación a escoger primero. */
-export function opcionesDeCausa(): { valor: CausaDeAnulacion | ''; texto: string }[] {
-  const causas = (Object.entries(CAUSAS_DE_ANULACION) as [CausaDeAnulacion, string][])
-    .map(([valor, texto]) => ({ valor, texto }))
+/** Las causas por nombre, con la invitación a escoger primero; en una factura especial el emisor es la empresa. */
+export function opcionesDeCausa(tipo?: TipoDeDocumento): { valor: CausaDeAnulacion | ''; texto: string }[] {
+  const causas = (Object.keys(CAUSAS_DE_ANULACION) as CausaDeAnulacion[])
+    .map((valor) => ({ valor, texto: textoDeCausa(valor, tipo ?? 'factura') }))
     .sort((a, b) => a.texto.localeCompare(b.texto, 'es', { sensitivity: 'base' }));
   return [{ valor: '', texto: 'Escoja la causa' }, ...causas];
 }

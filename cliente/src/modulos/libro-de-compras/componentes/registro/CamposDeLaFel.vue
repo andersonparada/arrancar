@@ -4,19 +4,21 @@ import { Info } from 'lucide-vue-next';
 import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
-import { familiaDelCodigo } from '../../composables/documentos/tipos-de-documento-sat';
+import { esFacturaEspecial, familiaDelCodigo } from '../../composables/documentos/tipos-de-documento-sat';
 import type { EdicionDeDocumento } from '../../composables/documentos/edicion-de-documento';
 import { alCambiarElMotivo, alMarcarLaCasilla } from '../../composables/documentos/reglas-del-formulario-de-documento';
+import CamposDeFacturaEspecial from './CamposDeFacturaEspecial.vue';
 import { textoFueraDelLibro } from '../../textos-de-documentos';
 import { OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO } from '../../textos-del-registro';
 
 /** La FEL: NIT del emisor y autorización, o por qué el documento no se muestra en los reportes de la SAT. */
-defineProps<{ errores: Record<string, string> }>();
+defineProps<{ nitDeLaEmpresa: string | null; errores: Record<string, string> }>();
 const edicion = defineModel<EdicionDeDocumento>({ required: true });
 
 const motivos = Object.entries(OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO)
   .map(([valor, texto]) => ({ valor: valor as NonNullable<EdicionDeDocumento['motivoFueraDelLibro']>, texto }))
   .sort((a, b) => a.texto.localeCompare(b.texto, 'es'));
+const esEspecial = computed(() => esFacturaEspecial(edicion.value.tipoDte));
 const esRecibo = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'recibo');
 const conFel = computed(() => edicion.value.muestraEnReportesSat || edicion.value.motivoFueraDelLibro !== 'sin_fel');
 const explicacion = computed(() => {
@@ -33,7 +35,8 @@ function elegirMotivo(motivo: EdicionDeDocumento['motivoFueraDelLibro'] | undefi
 </script>
 
 <template>
-  <div class="space-y-4">
+  <CamposDeFacturaEspecial v-if="esEspecial" v-model="edicion" :nit-de-la-empresa="nitDeLaEmpresa" :errores="errores" />
+  <div v-else class="space-y-4">
     <CampoInterruptor
       :model-value="edicion.muestraEnReportesSat"
       etiqueta="Se muestra en reportes SAT"

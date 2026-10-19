@@ -945,3 +945,14 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `CampoSelector` acepta opciones con `grupo` y `deshabilitada`. El cliente no oculta derogados según la fecha de
   emisión ni propone el código según el régimen del proveedor (lo decide el servidor). Los nombres de los códigos
   nuevos siguen por confirmar con el contador (R2-f).
+- 2026-10-19 — **Libro de compras R2-8 (cliente), segunda parte: factura especial en el formulario.** `FESP` ya se puede
+  elegir. Al elegirla el bloque FEL muestra la ayuda («la emite su empresa en el certificador… se retiene todo el IVA y
+  el 5 % de ISR»), el emisor fijo y de solo lectura («Su empresa (NIT …)», leído de `/empresas`; sin permiso se dice solo
+  «Su empresa»), «Vendedor (NIT o CUI)» (va en `nitReceptor`, propuesto con el NIT o, si no hay, el DPI del proveedor),
+  la casilla «Se muestra en reportes SAT» fija y marcada y la recepción igual a la emisión (la sigue mientras no se
+  cambie). `nitEmisor` no se envía. Para registrar piden vendedor, serie y autorización. Los errores
+  `vendedor_de_factura_especial_invalido`, `receptor_invalido` y `vendedor_no_coincide` salen en el vendedor y
+  `factura_especial_siempre_en_el_libro` y `nota_sobre_factura_especial` en el tipo, con cómo corregir. La lista de
+  facturas que una nota rebaja ya excluía la FESP. La causa `fel_anulada_por_el_emisor` de una FESP se lee «FESP anulada
+  por la empresa» en la ficha y en la ventana de anular (`textoDeCausa`). Pruebas puras nuevas en reglas del formulario,
+  edición, errores, textos y anulación.

@@ -213,3 +213,33 @@ describe('pendientesDelRegistro', () => {
     expect(pendientesDelRegistro(facturaCompleta())).toEqual([]);
   });
 });
+
+describe('factura especial', () => {
+  const especial = (cambios: Partial<EdicionDeDocumento> = {}) =>
+    facturaCompleta({ tipoDte: 'FESP', nitEmisor: '', nitReceptor: '2345678901234', ...cambios });
+
+  it('manda el vendedor como receptor y ningún emisor, con la casilla marcada', () => {
+    const cuerpo = cuerpoDeDocumento(especial({ nitEmisor: '999' }), [], 'registro');
+    expect(cuerpo).toMatchObject({
+      tipoDte: 'FESP',
+      nitEmisor: null,
+      nitReceptor: '2345678901234',
+      autorizacionFel: 'UUID-1',
+      motivoFueraDelLibro: null,
+    });
+  });
+
+  it('pide vendedor, serie y autorización', () => {
+    const pendientes = pendientesDelRegistro(especial({ nitReceptor: ' ', serie: '', autorizacionFel: '' }));
+    expect(pendientes).toEqual([
+      'escribir el NIT o CUI del vendedor',
+      'escribir la serie de la factura especial',
+      'escribir la autorización de la FEL',
+    ]);
+    expect(pendientesDelRegistro(especial())).toEqual([]);
+  });
+
+  it('una factura común no pide vendedor', () => {
+    expect(pendientesDelRegistro(facturaCompleta())).toEqual([]);
+  });
+});

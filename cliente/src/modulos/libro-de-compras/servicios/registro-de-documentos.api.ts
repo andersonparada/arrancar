@@ -90,11 +90,14 @@ export interface ProveedorParaRegistro {
   id: string;
   nombre: string;
   nit: string | null;
+  /** Para proponer el vendedor de una factura especial cuando el particular no tiene NIT. */
+  dpi: string | null;
 }
 
 interface TerceroConProveedor {
   nombreMostrar: string;
   nit: string | null;
+  dpi: string | null;
   activo: boolean;
   proveedor: { id: string; activo: boolean } | null;
 }
@@ -129,9 +132,15 @@ export class ApiRegistroDeDocumentos {
   /** Los proveedores activos de la cuenta. */
   async proveedores(): Promise<ProveedorParaRegistro[]> {
     const terceros = await this.http.obtener<TerceroConProveedor[]>('/terceros', { papel: 'proveedor' });
-    return terceros.flatMap(({ nombreMostrar, nit, activo, proveedor }) =>
-      proveedor?.activo && activo ? [{ id: proveedor.id, nombre: nombreMostrar, nit }] : [],
+    return terceros.flatMap(({ nombreMostrar, nit, dpi, activo, proveedor }) =>
+      proveedor?.activo && activo ? [{ id: proveedor.id, nombre: nombreMostrar, nit, dpi }] : [],
     );
+  }
+
+  /** El NIT de la empresa activa, que es el emisor de una factura especial; `null` si no lo tiene. */
+  async nitDeLaEmpresa(empresaId: string): Promise<string | null> {
+    const empresas = await this.http.obtener<{ id: string; nit: string | null }[]>('/empresas');
+    return empresas.find(({ id }) => id === empresaId)?.nit ?? null;
   }
 
   /** Los documentos vigentes de un proveedor, de los que una nota de crédito puede rebajar las facturas. */

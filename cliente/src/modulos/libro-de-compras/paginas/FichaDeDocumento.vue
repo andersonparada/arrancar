@@ -100,6 +100,7 @@ const volver = { texto: VENTANA_DE_DOCUMENTOS.titulo, ruta: { name: 'libro-de-co
     <VentanaDeAnulacion
       v-model="baja.edicion.value"
       :resumen="resumenDeAnulacion(ficha)"
+      :tipo="ficha.tipo"
       :puede-eliminar="ficha.puedeEliminar"
       :errores="baja.errores.value"
       :enviando="baja.enviando.value"

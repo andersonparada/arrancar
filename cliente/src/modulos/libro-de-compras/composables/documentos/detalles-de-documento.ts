@@ -14,7 +14,7 @@ import type {
   LineaDeDocumento,
 } from '../../servicios/documentos.api';
 import {
-  CAUSAS_DE_ANULACION,
+  textoDeCausa,
   DESTINOS_DE_DOCUMENTO,
   MOTIVOS_SIN_CREDITO,
   TIPOS_DE_DOCUMENTO,
@@ -71,7 +71,7 @@ export function detallesDeEncabezado(ficha: FichaDeDocumento): DetalleDeRegistro
 export function detallesDeAnulacion(ficha: FichaDeDocumento): DetalleDeRegistro[] {
   return [
     { etiqueta: 'Anulado el', valor: formatearFechaHora(ficha.anuladoEn) },
-    { etiqueta: 'Causa', valor: formatearOpcion(CAUSAS_DE_ANULACION, ficha.causaDeAnulacion) },
+    { etiqueta: 'Causa', valor: ficha.causaDeAnulacion ? textoDeCausa(ficha.causaDeAnulacion, ficha.tipo) : '—' },
     { etiqueta: 'Motivo', valor: formatearTexto(ficha.motivoDeAnulacion) },
   ];
 }
