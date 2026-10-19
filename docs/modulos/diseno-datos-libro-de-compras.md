@@ -440,6 +440,8 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 
 ### 3.2 `libro_de_compras.datos_fiscales_de_proveedor` (L1)
 
+> **R2:** `es_pequeno_contribuyente` pasa a `regimen_iva` y `regimen_isr` suma `exento`; ver §3.2b.5.
+
 Una fila por proveedor, **compartida por todas las empresas de la cuenta**.
 
 | Columna | Tipo | Nulo | Por omisión / regla |
@@ -472,6 +474,338 @@ la sección del cliente al cambiar el régimen: `se_le_retiene_iva = not pequeñ
 pequeño, no agente, y los tres «se le retiene» según esa regla.
 
 RLS: `politicaPorCuenta()`. Índice: la PK cubre la FK.
+
+### 3.2b Proveedores de regímenes especiales y factura especial (R2) — arquitecto de datos, 2026-10-18
+
+Estado: **propuesta para aprobar**. Lleva a tablas las decisiones del usuario del 2026-10-18 sobre el veredicto del
+contador («Proveedores de regímenes especiales» en `validacion-h7-h11-retenciones.md`). Va **después de R1-4**: las
+migraciones de R1 llegan hasta la `0013` (`regimen_iva_de_la_empresa`), y las de este paso empiezan en la `0014`.
+
+#### 3.2b.1 Lo encontrado
+
+1. En desarrollo no hay ninguna fila en `datos_fiscales_de_proveedor`, `documentos` ni `retenciones` (consulta de solo
+   lectura del 2026-10-18). Las migraciones convierten sin copiar datos; el `update` de cada una queda solo para otra
+   base de desarrollo que sí tenga filas de prueba.
+2. `documentos.tipo` admite hoy `factura`, `factura_pequeno_contribuyente`, `nota_de_credito` y `recibo`. Las
+   estrategias de IVA miran `tipo = 'factura'`, la del 5 % mira `factura_pequeno_contribuyente` y la del ISR,
+   `factura`. Por eso **una familia nueva no recibe ninguna retención** si nadie la agrega: es lo que se quiere para las
+   familias sin crédito y lo que hay que agregar a propósito para la factura especial.
+3. El proveedor se describe con `es_pequeno_contribuyente` (booleano) y `regimen_isr` (`utilidades`,
+   `opcional_simplificado`, `no_domiciliado`). Lo usan seis checks, `retencionesPropuestas`, `problemasFiscalesDeProveedor`,
+   `resolverDatosFiscalesDelProveedor` (opción C), `exigirTipoDelProveedor` y la sección del cliente
+   (`SeccionFiscalDeProveedor.vue`, `datos-fiscales-de-proveedor.ts`).
+4. `resolverEmisor` compara `nit_emisor` con el NIT del proveedor y, si este no tiene, le manda `terceros.completar_nit`.
+   En la factura especial el emisor es **la empresa**: esa regla no sirve tal cual.
+5. `terceros.terceros` tiene `nit` y `dpi` (CUI de 13 dígitos, único por cuenta). Ojo: un CUI de 13 dígitos también
+   cumple la expresión del NIT (`^[0-9]{1,12}[0-9K]$`); la base no puede distinguirlos solo por su forma.
+6. La fecha de derogación ya existe como constante del dominio: `FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019 =
+   '2025-07-09'` (`vigencia-fiscal-de-empresa.ts`, commit `9e5b7ec`), y la usa la vigencia de la empresa.
+
+#### 3.2b.2 Decisiones de diseño
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Familia y código | `tipo` = **familia fiscal** (lo que decide crédito, motivo y retenciones) y `tipo_dte` = **código SAT** (lo que dice el DTE). Un check dice qué códigos admite cada familia | Lo decidió el usuario. Las reglas fiscales se escriben una vez por familia (FACT y FCAM se tratan igual); el código sirve para cruzar con los DTE (L4) y para mostrar el documento como lo ve el usuario |
+| Reservadas | `factura_especifica` (FEPE) y `duca` **no** entran en el check ni en `TIPOS_DE_DOCUMENTO`; quedan nombradas en un comentario de `tipos-de-documento.ts` y aquí | Un valor en el check sin reglas permite filas que el dominio no sabe calcular (la DUCA no tiene serie ni FEL y chocaría con `datos_sat`; la FEPE lleva ICT). Agregarlas después es un `drop`/`add` del check, sin datos que convertir |
+| `ict` | No entra en `retenciones_impuesto_valido`; se reserva el nombre (`impuesto = 'ict'`, regla `ict_factura_especifica`, que cumple `impuesto = split_part(regla, '_', 1)`) | Mismo motivo: llega con la factura específica |
+| Fecha de derogación | El dominio la valida con una **variable de configuración de instalación**; la base **no** la revisa (ver pregunta R2-a) | El dato es legal y está «por confirmar»; si la SAT dio una transición para emitir esos DTE después del 9-07-2025, soporte la corrige sin migración. Un check con la fecha escrita rechazaría lo que el dominio ya acepta |
+| Inicio del primario y pecuario | Check en la base: `fecha_emision >= '2025-04-09'` | Es la vigencia del Decreto 31-2024: antes no existía el DTE. No hay transición posible hacia atrás |
+| Régimen del proveedor | `regimen_iva` en lugar de `es_pequeno_contribuyente`; sin historial | Decisión del usuario: el documento es la foto (familia y código) |
+| `no_domiciliado` | Se queda en `regimen_isr` **y** es un `regimen_iva`; un check los ata (uno si y solo si el otro) | El aviso de no residentes y la opción C ya leen `regimen_isr`; quitarlo cambiaría más código que atarlo. Ver pregunta R2-c |
+| Factura especial | `nit_emisor` = NIT de la empresa y `nit_receptor` = NIT o CUI del vendedor: **las dos columnas copian el DTE tal cual**; `proveedor_id` sigue siendo el vendedor y `nombre_emisor` guarda su nombre | En la FESP la empresa emite y el vendedor recibe. Copiar el DTE sin reinterpretar evita una columna nueva y deja que L4 la cruce igual que las demás. `nombre_emisor` es «el nombre del proveedor como estaba» (§3.5): en la FESP se documenta que es el del vendedor (pregunta R2-d) |
+
+#### 3.2b.3 `documentos`: familias, `tipo_dte` y sus checks
+
+**Familias y códigos** (siglas de las Reglas FEL; el contador pide confirmarlas en la versión vigente):
+
+| `tipo` (familia) | `tipo_dte` admitidos | IVA | Motivo sin crédito en el libro | Fecha de emisión |
+|---|---|---|---|---|
+| `factura` | `FACT`, `FCAM` | sí | los de hoy (o nulo) | — |
+| `factura_pequeno_contribuyente` | `FPEQ`, `FCAP` | 0 | `pequeno_contribuyente` | — |
+| `factura_pequeno_contribuyente_electronico` (nueva, derogada) | `FAPE`, `FCPE` | 0 | `pequeno_contribuyente` | anterior a la derogación (dominio) |
+| `factura_contribuyente_agropecuario` (nueva, derogada) | `FACA`, `FCCA`, `FAAE`, `FCAE` | 0 | `contribuyente_agropecuario` | anterior a la derogación (dominio) |
+| `factura_primario_pecuario` (nueva) | `FARP`, `FCRP`, `FPEC`, `FCPC` | 0 | `primario_pecuario` | desde el 2025-04-09 (check) |
+| `factura_especial` (nueva) | `FESP` | sí | los de hoy (o nulo): da crédito | — |
+| `nota_de_credito` | `NCRE` | sí | el de su factura | — |
+| `recibo` | `RECI`, `RDON`, o nulo sin FEL | 0 (fuera del libro) | nulo | — |
+
+**Columna nueva:**
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `tipo_dte` | text | sí | código SAT de cuatro letras; obligatorio si el documento tiene FEL (`autorizacion_fel is not null`), nulo si no (`sin_fel`). Lo escribe el caso de uso con lo que escogió el usuario; el dominio comprueba la familia |
+
+Restricciones (nombres `documentos_<regla>`; todas con `coalesce`, porque una comparación con nulo deja pasar el check):
+
+| Nombre | Expresión | Estado |
+|---|---|---|
+| `tipo_valido` | `tipo in ('factura', 'factura_pequeno_contribuyente', 'factura_pequeno_contribuyente_electronico', 'factura_contribuyente_agropecuario', 'factura_primario_pecuario', 'factura_especial', 'nota_de_credito', 'recibo')` | se reemplaza |
+| `tipo_dte_valido` | `tipo_dte is null or tipo_dte in ('FACT','FCAM','FPEQ','FCAP','FAPE','FCPE','FACA','FCCA','FAAE','FCAE','FARP','FCRP','FPEC','FCPC','FESP','NCRE','RECI','RDON')` | nueva |
+| `tipo_dte_con_fel` | `(tipo_dte is null) = (autorizacion_fel is null)` | nueva |
+| `tipo_dte_de_la_familia` | `tipo_dte is null or case tipo when 'factura' then tipo_dte in ('FACT','FCAM') when 'factura_pequeno_contribuyente' then tipo_dte in ('FPEQ','FCAP') when 'factura_pequeno_contribuyente_electronico' then tipo_dte in ('FAPE','FCPE') when 'factura_contribuyente_agropecuario' then tipo_dte in ('FACA','FCCA','FAAE','FCAE') when 'factura_primario_pecuario' then tipo_dte in ('FARP','FCRP','FPEC','FCPC') when 'factura_especial' then tipo_dte = 'FESP' when 'nota_de_credito' then tipo_dte = 'NCRE' when 'recibo' then tipo_dte in ('RECI','RDON') else false end` | nueva |
+| `motivo_sin_credito_valido` | la lista de hoy más `'contribuyente_agropecuario'` y `'primario_pecuario'` | se reemplaza |
+| `familia_sin_iva` | `tipo not in ('factura_pequeno_contribuyente', 'factura_pequeno_contribuyente_electronico', 'factura_contribuyente_agropecuario', 'factura_primario_pecuario') or iva = 0` | **reemplaza** `pequeno_contribuyente_sin_iva` |
+| `motivo_de_la_familia` | `tipo = 'nota_de_credito' or not muestra_en_reportes_sat or (case tipo when 'factura_pequeno_contribuyente' then coalesce(motivo_sin_credito,'') = 'pequeno_contribuyente' when 'factura_pequeno_contribuyente_electronico' then coalesce(motivo_sin_credito,'') = 'pequeno_contribuyente' when 'factura_contribuyente_agropecuario' then coalesce(motivo_sin_credito,'') = 'contribuyente_agropecuario' when 'factura_primario_pecuario' then coalesce(motivo_sin_credito,'') = 'primario_pecuario' else coalesce(motivo_sin_credito,'') not in ('pequeno_contribuyente','contribuyente_agropecuario','primario_pecuario') end)` | **reemplaza** `pequeno_contribuyente`: cada familia sin crédito lleva su motivo, y esos motivos no aparecen en otra familia (salvo la nota, que hereda) |
+| `primario_pecuario_desde` | `tipo <> 'factura_primario_pecuario' or fecha_emision >= date '2025-04-09'` | nueva |
+| `factura_especial_en_el_libro` | `tipo <> 'factura_especial' or muestra_en_reportes_sat` | nueva: la emite la empresa a su NIT, siempre va en el libro |
+| `factura_especial_vendedor` | `tipo <> 'factura_especial' or (nit_receptor is not null and nit_receptor <> coalesce(nit_emisor,'') and (nit_receptor ~ '^[0-9]{1,12}[0-9K]$' or nit_receptor ~ '^[0-9]{13}$'))` | nueva: el vendedor se identifica por NIT o CUI, nunca `CF`, y no es la empresa |
+
+Lo que la base **no** puede ver y revisa el dominio: que `nit_emisor` de la FESP sea el NIT de la empresa (la empresa
+está en otra tabla); que la familia corresponda al régimen del proveedor (3.2b.5); la fecha de derogación (pregunta
+R2-a); que una nota de crédito no rebaje una FESP (pregunta R2-e).
+
+**Checks que no cambian y por qué siguen bien:**
+- `iva_no_acreditable_por_motivo`: los dos motivos nuevos no están en la lista de «al costo», así que exigen
+  `iva_no_acreditable = 0`, que se cumple porque `familia_sin_iva` pone `iva = 0`.
+- `plazo_del_credito` (art. 20): pasa con cualquier motivo no nulo; las familias sin crédito siempre lo llevan.
+  La FESP sí da crédito, así que el plazo se le revisa como a una factura (correcto: es su crédito).
+- `empresa_sin_credito` y `empresa_sin_credito_real` (R1-4): con `iva = 0` las familias sin crédito pasan, y conservan
+  su propio motivo aunque la empresa no dé crédito (igual que hoy la de pequeño contribuyente). La FESP con IVA en una
+  empresa sin crédito lleva `empresa_sin_credito`.
+- `sin_credito_sin_art_20`, `exento_sin_iva`, `sin_sat_sin_credito`, `nota_en_su_mes`, `datos_sat`: sin cambio. La FESP
+  cumple `datos_sat` con el NIT de la empresa, su serie y su autorización.
+- Únicos: `documentos_sat_unico (nit_emisor, tipo, serie, numero)` sirve también para la FESP (el emisor es la
+  empresa, y serie y número son los suyos); `documentos_autorizacion_fel_unica` y `documentos_del_proveedor_unico`
+  tampoco cambian. `tipo_dte` **no** entra en los únicos: dentro de una familia, serie y número ya son únicos por
+  emisor.
+
+Índices: ninguno nuevo. Nadie consulta por `tipo_dte` (la lista filtra por familia, `documentos_libro_idx` la cubre),
+y L4 cruzará por `autorizacion_fel`, que ya tiene su único.
+
+#### 3.2b.4 Motivos nuevos
+
+| Motivo | Lo pone el dominio cuando | IVA no acreditable | Art. 20 |
+|---|---|---|---|
+| `contribuyente_agropecuario` | familia `factura_contribuyente_agropecuario` en el libro | 0 (no hay IVA) | no se evalúa (motivo no nulo) |
+| `primario_pecuario` | familia `factura_primario_pecuario` en el libro | 0 (no hay IVA) | no se evalúa |
+
+`pequeno_contribuyente` cubre también la familia electrónica (decisión del contador). Orden nuevo de
+`determinarMotivoSinCredito`: desmarcado → nulo; **familia con motivo propio** (las cuatro sin IVA) → su motivo; nota →
+como hoy; después todo igual (la FESP sigue el camino de `factura`). En `MOTIVOS_SIN_CREDITO` se agregan los dos; un
+mapa `MOTIVO_DE_LA_FAMILIA` en `tipos-de-documento.ts` es la única fuente del dominio, y su prueba recorre las familias
+contra el check (como `politicas-de-los-modulos`). Los textos de los motivos en pantalla los revisa el contador.
+
+#### 3.2b.5 `datos_fiscales_de_proveedor`: `regimen_iva`
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `regimen_iva` | text | no | **reemplaza** `es_pequeno_contribuyente` (se borra la columna); `default 'general'` |
+| `regimen_isr` | text | sí | suma `exento`: `utilidades`, `opcional_simplificado`, `no_domiciliado`, `exento` |
+| `es_agente_de_retencion_iva`, `se_le_retiene_iva`, `se_le_retiene_isr`, `se_le_retiene_iva_pequeno_contribuyente` | boolean | no | sin cambio de columna; cambian sus checks |
+
+Valores de `regimen_iva`: `general`, `pequeno_contribuyente`, `primario`, `pecuario`, `sin_inscripcion`,
+`no_domiciliado` y los derogados `pequeno_contribuyente_electronico` y `contribuyente_agropecuario`.
+
+Restricciones (nombres `datos_fiscales_de_proveedor_<regla>`):
+
+| Nombre | Expresión | Estado |
+|---|---|---|
+| `regimen_iva_valido` | `regimen_iva in (los ocho)` | nueva |
+| `regimen_isr_valido` | `regimen_isr is null or regimen_isr in ('utilidades','opcional_simplificado','no_domiciliado','exento')` | se reemplaza |
+| `regimen_isr` | `(regimen_iva in ('general','no_domiciliado')) = (regimen_isr is not null)` | se reemplaza (antes con el booleano): «no aplica» fuera de general y no domiciliado |
+| `no_domiciliado` | `(regimen_iva = 'no_domiciliado') = (regimen_isr is not distinct from 'no_domiciliado')` | nueva |
+| `agente_solo_general` | `regimen_iva = 'general' or not es_agente_de_retencion_iva` | **reemplaza** `pequeno_no_es_agente` |
+| `retencion_iva_general` | `regimen_iva = 'general' or not se_le_retiene_iva` | se reemplaza |
+| `retencion_isr` | `regimen_isr is not null or not se_le_retiene_isr` | se reemplaza |
+| `retencion_iva_pequeno` | `regimen_iva = 'pequeno_contribuyente' or not se_le_retiene_iva_pequeno_contribuyente` | se reemplaza: el electrónico **no** (sin retención, decisión del contador) |
+
+**Propuestas por régimen** (`retencionesPropuestas` y `porOmision`, servidor y copia del cliente con pruebas). Sale
+de la tabla del contador del 2026-10-18; confirmar con él la columna del ISR del no domiciliado:
+
+| `regimen_iva` | `regimen_isr` | Agente de IVA | Se le retiene IVA | Se le retiene ISR | Se le retiene IVA PC |
+|---|---|---|---|---|---|
+| `general` | `utilidades` (escoge `opcional_simplificado` o `exento`) | `false` (escoge) | `not agente` | `regimen_isr = 'opcional_simplificado'` | `false`, forzado |
+| `pequeno_contribuyente` | nulo, forzado | `false`, forzado | `false`, forzado | `false`, forzado | `true` |
+| `pequeno_contribuyente_electronico` (derogado) | nulo, forzado | `false`, forzado | `false`, forzado | `false`, forzado | `false`, forzado |
+| `contribuyente_agropecuario` (derogado) | nulo, forzado | `false`, forzado | `false`, forzado | `false`, forzado | `false`, forzado |
+| `primario`, `pecuario` | nulo, forzado | `false`, forzado | `false`, forzado | `false`, forzado | `false`, forzado |
+| `sin_inscripcion` | nulo, forzado | `false`, forzado | `false`, forzado | `false`, forzado | `false`, forzado |
+| `no_domiciliado` | `no_domiciliado`, forzado | `false`, forzado | `false`, forzado | `false` (el ISR de no residentes no se calcula; aviso) | `false`, forzado |
+
+Las retenciones de la factura especial **no** dependen de estas casillas (las manda la ley a quien emite la FESP).
+`exento` en `regimen_isr` solo cambia la propuesta: `se_le_retiene_isr = false`.
+
+**Familia ↔ régimen del proveedor** (reemplaza `exigirTipoDelProveedor`; mismo error `TipoNoCorrespondeAlProveedor` y
+misma salida `confirmarCambioDeRegimen` con auditoría):
+
+| Familia | Régimen del proveedor que no pide confirmar |
+|---|---|
+| `factura` | `general` |
+| `factura_pequeno_contribuyente` | `pequeno_contribuyente` |
+| `factura_pequeno_contribuyente_electronico` | `pequeno_contribuyente_electronico` o `pequeno_contribuyente` (adonde volvieron tras la derogación) |
+| `factura_contribuyente_agropecuario` | `contribuyente_agropecuario`, `primario`, `pecuario` o `general` (adonde pudieron pasar) |
+| `factura_primario_pecuario` | `primario` o `pecuario` (con `FARP`/`FCRP` se espera `primario`; con `FPEC`/`FCPC`, `pecuario`) |
+| `factura_especial` | cualquiera; si no es `sin_inscripcion`, aviso del art. 52 (no bloquea) |
+| `nota_de_credito`, `recibo` | sin revisión (como hoy) |
+
+**Opción C (proveedor sin datos guardados):** el régimen se **deduce del código** y solo se pregunta en `FACT`/`FCAM`
+(régimen de ISR, que ahora ofrece «Exento», y si es agente de IVA). Se guarda lo deducido en `FPEQ`/`FCAP`
+(`pequeno_contribuyente`), `FARP`/`FCRP` (`primario`), `FPEC`/`FCPC` (`pecuario`) y `FESP` (`sin_inscripcion`). En las
+familias derogadas se calcula con el régimen derogado **sin guardarlo** (sería el régimen de hoy de un proveedor que ya
+no puede tenerlo).
+
+#### 3.2b.6 Factura especial
+
+- **Encabezado:** `nit_emisor` = NIT de la empresa (de `empresas.obtener_datos_de_empresa`; el usuario no lo escribe);
+  serie, número y autorización son los de la FESP que la empresa emitió en su certificador. `nit_receptor` = NIT o CUI
+  del vendedor como dice la FESP (`receptorDelDocumento`, que ya acepta los dos).
+- **El vendedor es el proveedor:** lo escrito debe coincidir con `terceros.nit` **o** `terceros.dpi` del proveedor. Si
+  no tiene ninguno, se le completa en la misma transacción: `terceros.completar_nit` si lo escrito pasa como NIT y la
+  orden nueva `terceros.completar_dpi` si es un CUI (13 dígitos que no pasan como NIT). Si tiene otro, error
+  `VendedorNoCoincide` (422). Así se cierra la ambigüedad del punto 5 de 3.2b.1: manda el dato del tercero.
+- **Fechas:** se propone `fecha_recepcion = fecha_emision` (la empresa la emite al comprar); el usuario puede cambiarla.
+- **Crédito:** como una factura (el IVA de la FESP lo paga la empresa por cuenta del vendedor y lo acredita).
+- **Avisos** (no bloquean): FESP en una empresa que no lleva contabilidad completa (`es_agente_de_retencion_isr =
+  false`); FESP a un proveedor con régimen distinto de `sin_inscripcion` (art. 52: el inscrito debe facturar).
+
+#### 3.2b.7 `retenciones`: las reglas de la factura especial
+
+| Regla | Impuesto | Condición | Base | Porcentaje | Fecha |
+|---|---|---|---|---|---|
+| `iva_factura_especial` | `iva` | `tipo = 'factura_especial'`, IVA > 0 | IVA del documento | 100 (fijo, de la ley) | emisión |
+| `isr_factura_especial` | `isr` | `tipo = 'factura_especial'`, `total − iva > 0` | `total − iva` (sin la variable `incluye_idp`: el contador fija la base) | 5 (`libro-de-compras.retenciones_isr.factura_especial`) | emisión |
+
+- Sin mínimo, sin mirar si la empresa es agente ni las casillas del proveedor (las manda la ley a quien emite la FESP).
+  Se ajustan y quitan como las demás (con `retenciones.ajustar`, motivo y aviso de responsabilidad solidaria), y les
+  aplica la protección contra la retención doble.
+- Dos estrategias nuevas (`EstrategiaDeIvaDeFacturaEspecial`, `EstrategiaDeIsrDeFacturaEspecial`) en el calculador; las
+  de hoy no cambian (miran `factura` o `factura_pequeno_contribuyente`).
+
+Restricciones (nombres `retenciones_<regla>`):
+
+| Nombre | Cambio |
+|---|---|
+| `regla_valida` | se reemplaza: suma `iva_factura_especial` e `isr_factura_especial` |
+| `impuesto_valido` | sin cambio (`iva`, `isr`); `ict` reservado, no se agrega |
+| `impuesto_de_la_regla` | sin cambio: las dos reglas nuevas lo cumplen |
+| `porcentaje_rango`, `porcentaje_nulo_solo_isr` | sin cambio: las dos llevan porcentaje |
+| `iva_factura_especial_completa` | **nueva**: `regla <> 'iva_factura_especial' or porcentaje = 100` (el monto puede quedar en 0 por ajuste o retención doble, por eso no se ata el monto) |
+| `monto_rango` | sin cambio: con 100 % el monto es la base |
+
+Que la regla corresponda a la familia del documento no lo puede revisar un check (otra tabla); lo garantiza el
+calculador. Índices: sin cambio.
+
+**Configuración nueva** (`niveles: ['instalacion']`, `publica: false`):
+
+| Clave | Por omisión |
+|---|---|
+| `libro-de-compras.retenciones_isr.factura_especial` | 5 |
+| `libro-de-compras.plazos.dias_habiles_entero_factura_especial` | 10 (por confirmar con el contador: plazo del SAT-2085; pregunta R2-f) |
+| `libro-de-compras.regimenes.fecha_de_derogacion` | `'2025-07-09'` (texto `aaaa-mm-dd`; pregunta R2-a). Primer día en que ya no se aceptan documentos de familias derogadas **ni** vigencias nuevas de la empresa con esos regímenes: reemplaza a la constante `FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019` |
+
+#### 3.2b.8 Migraciones
+
+Generadas con `npm run bd:generar -w servidor -- libro-de-compras <nombre>` y **revisadas a mano antes de aplicarlas**
+(drizzle-kit agrega `not null` sin llenar y ordena los `drop` como quiere). Números tentativos: si al integrar ya
+existen, se renumeran (el `when` del `_journal.json` mayor que el de la `0013`). Sin producción: la base de
+desarrollo se convierte sin más.
+
+1. **`0014_r2_regimen_iva_del_proveedor`** (R2-1): `add column "regimen_iva" text`; `update … set regimen_iva = case
+   when es_pequeno_contribuyente then 'pequeno_contribuyente' when regimen_isr = 'no_domiciliado' then 'no_domiciliado'
+   else 'general' end`; `set not null`, `set default 'general'`; `drop constraint` de los seis checks de hoy; `drop
+   column "es_pequeno_contribuyente"`; `add constraint` de los ocho de 3.2b.5.
+2. **`0015_r2_familias_y_tipo_dte`** (R2-3): `add column "tipo_dte" text`; `update … set tipo_dte = case tipo when
+   'factura' then 'FACT' when 'factura_pequeno_contribuyente' then 'FPEQ' when 'nota_de_credito' then 'NCRE' else
+   'RECI' end where autorizacion_fel is not null`; `drop`/`add` de `tipo_valido` y `motivo_sin_credito_valido`; `drop`
+   de `pequeno_contribuyente` y `pequeno_contribuyente_sin_iva`; `add` de los demás de 3.2b.3.
+3. **`0016_r2_retenciones_de_factura_especial`** (R2-6): `drop`/`add` de `retenciones_regla_valida`; `add` de
+   `retenciones_iva_factura_especial_completa`.
+
+Ninguna migración de permisos (no hay permisos nuevos), ni de otros esquemas. Los `meta/*_snapshot.json` deben quedar
+iguales a las tablas (volver a correr `bd:generar` no propone nada).
+
+#### 3.2b.9 Pruebas de integración (PostgreSQL real)
+
+- **`datos_fiscales_de_proveedor`:** un caso que viola cada check (agente de IVA en `primario`; `regimen_isr` nulo en
+  `general` y no nulo en `sin_inscripcion`; `no_domiciliado` en un lado y no en el otro; `se_le_retiene_iva` en
+  `pequeno_contribuyente`; `se_le_retiene_iva_pequeno_contribuyente` en `pequeno_contribuyente_electronico`;
+  `se_le_retiene_isr` sin régimen de ISR); `exento` aceptado en `general`; los ocho regímenes válidos; RLS por cuenta
+  sin cambio (otra empresa de la misma cuenta ve la fila; otra cuenta no).
+- **`documentos`:** cada familia con un código suyo (pasa) y con uno ajeno (`FPEQ` en `factura` falla); FEL sin
+  `tipo_dte` y `sin_fel` con `tipo_dte` (fallan); IVA distinto de 0 en cada familia sin IVA; cada familia sin crédito con
+  un motivo ajeno o nulo (falla) y una `factura` con `contribuyente_agropecuario` (falla); nota de una factura
+  agropecuaria con su motivo heredado (pasa); FARP del 2025-04-08 (falla) y del 2025-04-09 (pasa); FAPE del 2025-08-01
+  **pasa** en la base (la fecha la revisa el dominio, R2-a); FESP desmarcada, sin receptor, con `CF`, con receptor igual
+  al emisor (fallan), con NIT y con CUI (pasan); FESP con `fuera_de_plazo` real (pasa); dos FESP de empresas distintas al mismo vendedor con
+  la misma serie y número (pasan: el emisor es distinto).
+- **`retenciones`:** las dos reglas nuevas con su impuesto (pasa) y con el impuesto cruzado (falla);
+  `iva_factura_especial` con 15 % (falla) y con 100 % y monto 0 por ajuste (pasa).
+- **API (`app.inject`):** sección del proveedor con `regimenIva` y sus errores por campo; un cuerpo con
+  `esPequenoContribuyente` se rechaza (esquema estricto: un cliente viejo no guarda «general» sin querer); opción C que
+  deduce y guarda `primario`/`pecuario`/`sin_inscripcion` y no guarda los derogados; FAPE con emisión después de la
+  derogación → 422 con campo `fechaEmision`, y antes → registra con motivo y sin retenciones; FARP con motivo
+  `primario_pecuario` y sin retenciones aunque la empresa sea agente; FESP completa: `nit_emisor` de la empresa, vendedor
+  por NIT y por CUI (con `completar_nit`/`completar_dpi` cuando el tercero no tiene), vendedor distinto → 422, IVA 100 %
+  e ISR 5 % con fecha de emisión, avisos de empresa sin contabilidad completa y de proveedor inscrito; nota sobre FESP
+  (según R2-e); retención doble de una FESP anulada.
+- `politicas-de-los-modulos` y `llaves-entre-esquemas` siguen pasando; `documentos.soporte.ts` agrega `tipo_dte`.
+
+#### 3.2b.10 API, contratos, Excel, permisos y auditoría
+
+- **Solicitud de documento:** suma `tipoDte` (obligatorio con FEL). El servidor deduce la familia del código; si llega
+  también `tipo`, deben concordar (`TipoDteNoCorrespondeAlTipo`, 422). Los documentos sin FEL siguen mandando `tipo`.
+  El DTO de la ficha y de la lista devuelve `tipo` y `tipoDte`; el filtro `tipo` de la lista acepta las familias nuevas.
+- **Contratos:** `DocumentoParaDestino.tipo` (`core/contratos/libro-de-compras.contratos.ts`) suma las familias nuevas;
+  orden nueva `terceros.completar_dpi` en `terceros.contratos.ts`, atendida por `terceros` (pone el CUI si está vacío,
+  valida con `Dpi` y la unicidad por cuenta, error si tiene otro).
+- **Excel:** nada. Ingreso de facturas es operación (no exporta) y los datos fiscales del proveedor no están en el Excel
+  de Proveedores (§10). L4 (importar DTE) leerá el código del DTE y deducirá la familia con el mismo mapa.
+- **Permisos:** ninguno nuevo; la FESP se registra con `documentos.crear`.
+- **Auditoría:** sin bajas nuevas. Lo que ya se audita sigue igual: el cambio del régimen del proveedor (`corregir`, con
+  el DTO anterior, que ahora lleva `regimenIva`), el `confirmarCambioDeRegimen` con la familia nueva, y los ajustes de
+  retenciones de la FESP. `TEXTOS_FISCALES` y el DTO de auditoría reemplazan `esPequenoContribuyente` por `regimenIva`.
+
+#### 3.2b.11 Pasos (un commit cada uno; servidor y cliente por separado)
+
+Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`.
+
+1. **R2-1 (servidor, régimen del proveedor):** migración `0014`; `DatosFiscalesDeProveedor` con `regimenIva`
+   (`REGIMENES_DE_IVA_DE_PROVEEDOR`, `REGIMENES_DE_ISR_DE_PROVEEDOR` con `exento`), `retencionesPropuestas` y
+   `problemasFiscalesDeProveedor` según 3.2b.5; esquema estricto de la sección; DTO, mapeador, repositorio y auditoría;
+   `resolverDatosFiscalesDelProveedor` y `exigirTipoDelProveedor` con `regimenIva` (aún con las familias de hoy);
+   pruebas puras, de checks y de API. Rompe la sección del cliente hasta R2-2: van seguidos.
+2. **R2-2 (cliente, sección del proveedor):** selector de régimen de IVA (los derogados solo se muestran si ya estaban
+   guardados, con «(derogado)»), régimen de ISR con «No aplica» y «Exento», propuestas al cambiar (lógica pura con
+   pruebas), ficha. **No depende de L3-8.**
+3. **R2-3 (servidor, datos de documentos):** migración `0015`; `tipos-de-documento.ts` con las familias,
+   `TIPOS_DTE`, `FAMILIA_DEL_TIPO_DTE`, `MOTIVO_DE_LA_FAMILIA` y las reservadas en comentario; tipo de la tabla y del
+   contrato; pruebas de checks.
+4. **R2-4 (servidor, dominio y registro de las familias sin crédito):** motivo por familia, IVA 0 en el cálculo (como la
+   de pequeño contribuyente), fecha de derogación por configuración (también en la vigencia de la empresa) e inicio del
+   primario y pecuario, familia ↔ régimen del proveedor, opción C por código, `tipoDte` en solicitud, DTO y lista;
+   pruebas puras y de API.
+5. **R2-5 (servidor, terceros):** orden `terceros.completar_dpi` con pruebas.
+6. **R2-6 (servidor, factura especial):** migración `0016`; encabezado de la FESP (emisor = empresa, vendedor por NIT o
+   CUI), las dos estrategias y la configuración nueva, plazo de entero por regla, avisos, regla de la nota (R2-e);
+   pruebas puras y de API.
+7. **R2-7 (cliente, lista y ficha):** textos de las familias, del código DTE («Factura cambiaria», «Factura especial»…)
+   y de los motivos nuevos (revisados por el contador) en Ingreso de facturas (L3-7). **No depende de L3-8.**
+8. **R2-8 (cliente, formulario):** selector «Tipo de documento como dice el encabezado de la factura» (lista de
+   códigos con su nombre; oculta los derogados si la emisión es posterior a la fecha y propone según el régimen del
+   proveedor), y la factura especial: NIT de la empresa fijo como emisor, «NIT o CUI del vendedor», recepción igual a la
+   emisión, retenciones propuestas y avisos. **Depende de L3-8** (el formulario aún no existe): se hace dentro de L3-8 o
+   justo después.
+9. **R2-9 (QA):** de punta a punta: un proveedor primario con su FARP, una FAPE anterior y otra posterior a la
+   derogación, y una FESP a un particular sin NIT (con CUI) con sus dos retenciones.
+
+#### 3.2b.12 Preguntas para el usuario (con recomendación)
+
+- **R2-a. Fecha de derogación:** (1) variable de instalación que el dominio revisa, sin check en la base; (2) check en
+  la base con la fecha escrita y constante en el dominio (cambiarla pide migración); (3) las dos. **Recomendación: (1).**
+  La fecha está por confirmar y una transición de la SAT la movería; con (2) o (3) un cambio de fecha pide migración y
+  la base y la configuración pueden contradecirse. El inicio del primario y pecuario sí va como check (no cambia).
+- **R2-b. Familias reservadas** (`factura_especifica`, `duca`) e `ict`: fuera del check hasta su paso. Recomendación:
+  sí, fuera; agregarlas es un cambio de check sin datos.
+- **R2-c. No domiciliado** en los dos regímenes, atados por un check, o solo en `regimen_iva` (y quitarlo de
+  `regimen_isr`). Recomendación: en los dos por ahora (menos cambio; el aviso de no residentes lee el ISR).
+- **R2-d. Nombre del vendedor en la FESP:** se guarda en `nombre_emisor` aunque el emisor del DTE sea la empresa.
+  Recomendación: sí, con la columna documentada como «nombre del proveedor»; renombrarla tocaría todo L3 sin ganar nada.
+- **R2-e. Nota de crédito sobre una FESP** (la emitiría la propia empresa): ¿se permite en R2? Recomendación: no por
+  ahora (error claro); pasarla al contador, porque rebajar una FESP también cambia lo retenido.
+- **R2-f. Para el contador:** plazo de entero de lo retenido en la FESP (SAT-2085) y si es el mismo para IVA e ISR;
+  si la FESP lleva mínimo para el ISR; si una empresa sin crédito (pequeño contribuyente) que emite FESP retiene igual;
+  confirmar las siglas FEL nuevas (`FARP`, `FCRP`, `FPEC`, `FCPC`) y los nombres que lleva el encabezado de cada una.
+  Recomendación: llevarlas a `contador-guatemala` antes de R2-6 (no frenan R2-1 a R2-5).
 
 ### 3.3 `libro_de_compras.conceptos_de_gasto` (L2)
 
@@ -531,6 +865,9 @@ transacción).
 
 > **R1:** se agregan `regimen_iva_de_la_empresa` (foto del régimen del período), el motivo `empresa_sin_credito` y
 > cuatro checks; ver §3.1b.7.
+>
+> **R2:** familias nuevas, `tipo_dte`, motivos `contribuyente_agropecuario` y `primario_pecuario`, factura especial y
+> sus dos reglas de retención; ver §3.2b.
 
 | Columna | Tipo | Nulo | Regla |
 |---|---|---|---|
@@ -978,6 +1315,9 @@ solo). `core.rol_permisos` y `core.usuario_permisos` no se tocan.
 | R1-1 | `0012_r1_regimen_de_empresa_con_vigencia.sql` (hecha; la `0011` es la de R1-3) | historial de datos fiscales de la empresa (§3.1b.9) |
 | R1-3 | `0011_r1_motivo_empresa_sin_credito.sql` | solo amplía el check del motivo y el de `iva_no_acreditable_por_motivo` (ya integrada: tiene el número `0011`) |
 | R1-4 | `0013_r1_foto_del_regimen_en_documentos.sql` | `regimen_iva_de_la_empresa`, motivo `empresa_sin_credito` y checks (§3.1b.9) |
+| R2-1 | `0014_r2_regimen_iva_del_proveedor.sql` | `regimen_iva` del proveedor (§3.2b.8) |
+| R2-3 | `0015_r2_familias_y_tipo_dte.sql` | familias, `tipo_dte` y sus checks (§3.2b.8) |
+| R2-6 | `0016_r2_retenciones_de_factura_especial.sql` | reglas de la factura especial (§3.2b.8) |
 | L5 | `…_periodos.sql` | `periodos` |
 
 Datos existentes: ninguno (módulo nuevo, ninguna cuenta lo tiene activo). Semillas: ninguna
@@ -1142,9 +1482,13 @@ La lista sugerida de conceptos de gasto (respuesta 11) **no se sembró**: queda 
 
 Pasos R1-1 a R1-7 en §3.1b.11 (antes de L3-7 y L3-8, que ya deben mostrar el motivo `empresa_sin_credito`).
 
+### R2 Proveedores de regímenes especiales y factura especial
+
+Pasos R2-1 a R2-9 en §3.2b.11 (después de R1-4; R2-8 depende de L3-8).
+
 ## 15. Fuera de L1 a L3
 
-Importar DTE (L4), reportes, constancias y períodos declarados (L5), factura especial, DUCA,
+Importar DTE (L4), reportes, constancias y períodos declarados (L5), factura especial (ya planificada en R2, §3.2b), DUCA,
 no domiciliados en pantalla, moneda extranjera, localidad (establecimiento) por documento y
 cuenta contable por proveedor o concepto (con Contabilidad).
 
