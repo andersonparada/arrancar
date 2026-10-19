@@ -16,7 +16,8 @@ resuelva el trabajo diario de verdad, no pantallas vacías.
 6. **Multimoneda** (abajo).
 7. Caja chica y Cuentas por liquidar.
 8. Activos fijos e Inventarios.
-9. Parcelas, Cultivos y Ganadería.
+9. **Parcelas** primero (en cada parcela se decide si tendrá ganado o siembra) y después **Ganadería** y
+   **Cultivos** (usuario, 2026-10-18). Son módulos de rubro: los generales no dependen de ellos.
 
 Contabilidad va cuando haga falta para las partidas (provisión, reversión, ajuste
 diferencial cambiario).
