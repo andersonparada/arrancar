@@ -92,6 +92,7 @@ function documentoDeDominio(fila: FilaDeDocumento, lineas: FilaDeLinea[], reteni
     fechaEmision: fila.fechaEmision,
     fechaRecepcion: fila.fechaRecepcion,
     periodo: fila.periodo,
+    regimenIvaDeLaEmpresa: fila.regimenIvaDeLaEmpresa,
     documentoAfectadoId: fila.documentoAfectadoId,
     destino: fila.destino,
     totales: totalesDeDominio(fila),

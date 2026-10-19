@@ -144,6 +144,7 @@ export function documentoValido(escenario: Escenario, cambios: Record<string, un
     fechaRecepcion: '2026-03-10',
     periodo: '2026-03-01',
     destino: 'cuentas-por-pagar',
+    regimenIvaDeLaEmpresa: 'general',
     total: '112',
     base: '100',
     iva: '12',

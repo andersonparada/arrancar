@@ -1,3 +1,4 @@
+import type { RegimenDeIva } from './datos-fiscales-de-empresa.js';
 import { IvaDeNotasExcedeElDeLaFactura, NotaConIvaDeFacturaExenta } from './errores-de-calculo.js';
 import { MESES_DE_PLAZO_DEL_CREDITO, sumarMesesALaFecha } from './periodo-del-libro.js';
 import type { MotivoSinCredito } from './tipos-de-documento.js';
@@ -6,6 +7,8 @@ import type { MotivoSinCredito } from './tipos-de-documento.js';
 export interface DatosDeLaFacturaAfectada {
   /** Solo en la nota de crédito: el motivo de la factura que rebaja. */
   motivoDeLaFactura?: MotivoSinCredito | null;
+  /** El régimen con que se registró la factura (su foto). */
+  regimenDeLaFactura?: RegimenDeIva;
   /** IVA de la factura. Sin este dato no se compara el acumulado de las notas. */
   ivaDeLaFactura?: number;
   /** Suma del IVA de las demás notas vigentes de la factura (la nueva no entra). */

@@ -68,6 +68,7 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
       proveedorId: factura.proveedorId,
       destino: factura.destino,
       motivoSinCredito: factura.motivoSinCredito as MotivoSinCredito | null,
+      regimenIvaDeLaEmpresa: factura.regimenIvaDeLaEmpresa,
       fechaEmision: factura.fechaEmision,
       total: aCentavos(factura.total),
       iva: aCentavos(factura.iva),

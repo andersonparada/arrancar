@@ -1,3 +1,4 @@
+import type { RegimenDeIva } from './datos-fiscales-de-empresa.js';
 import { esFueraDePlazo } from './periodo-del-libro.js';
 import type { MotivoSinCredito, TipoDeDocumento } from './tipos-de-documento.js';
 
@@ -16,6 +17,8 @@ export interface DatosParaElMotivo {
   fechaDeEmision: string;
   /** Solo en la nota de crédito: el motivo de la factura que rebaja. */
   motivoDeLaFactura?: MotivoSinCredito | null;
+  /** Solo en la nota de crédito: el régimen con que se registró su factura (su foto); sin dato vale `general`. */
+  regimenDeLaFactura?: RegimenDeIva;
 }
 
 export interface ResultadoDelMotivo {
@@ -36,19 +39,21 @@ function motivoDeUnaFactura(datos: DatosParaElMotivo): MotivoSinCredito | null {
   return esFueraDePlazo(datos.periodo, datos.fechaDeEmision) ? 'fuera_de_plazo' : null;
 }
 
-/** La nota hereda el motivo de su factura; si la factura dio crédito y la empresa ya no lo tiene, `empresa_sin_credito`. */
+/**
+ * La nota cuyo período no da crédito y lleva IVA es `empresa_sin_credito` (con aviso si su factura sí dio crédito en
+ * el régimen anterior); si no, hereda el motivo de su factura tal cual.
+ */
 function motivoDeUnaNota(datos: DatosParaElMotivo): ResultadoDelMotivo {
   const deLaFactura = datos.motivoDeLaFactura ?? null;
-  if (deLaFactura === null && !datos.empresaConCreditoFiscal) {
-    return { motivo: 'empresa_sin_credito', avisos: [AVISO_NOTA_CON_CAMBIO_DE_REGIMEN] };
-  }
-  return { motivo: deLaFactura, avisos: [] };
+  if (datos.empresaConCreditoFiscal || datos.iva === 0) return { motivo: deLaFactura, avisos: [] };
+  const facturaDioCredito = deLaFactura === null && (datos.regimenDeLaFactura ?? 'general') === 'general';
+  return { motivo: 'empresa_sin_credito', avisos: facturaDioCredito ? [AVISO_NOTA_CON_CAMBIO_DE_REGIMEN] : [] };
 }
 
 /**
  * Decide el motivo sin crédito fiscal, en este orden: casilla SAT desmarcada, ninguno; pequeño contribuyente;
- * nota de crédito, el de su factura tal cual (su propia antigüedad nunca le da motivo; si la factura dio crédito y
- * la empresa ya no lo tiene, `empresa_sin_credito` con aviso); todo exento con IVA cero, `exento`; empresa sin
+ * nota de crédito, el de su factura tal cual (su propia antigüedad nunca le da motivo; si su período no da crédito y
+ * tiene IVA, `empresa_sin_credito`, con aviso si la factura sí dio crédito); todo exento con IVA cero, `exento`; empresa sin
  * crédito, `empresa_sin_credito` (no se miran `noVinculado` ni el art. 20); el usuario marcó no vinculado; período
  * pasado de emisión + 2 meses, `fuera_de_plazo` (con aviso).
  */

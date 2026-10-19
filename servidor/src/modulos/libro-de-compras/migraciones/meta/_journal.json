@@ -92,6 +92,13 @@
       "when": 1792380475106,
       "tag": "0012_r1_regimen_de_empresa_con_vigencia",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792382262095,
+      "tag": "0013_r1_foto_del_regimen_en_documentos",
+      "breakpoints": true
     }
   ]
 }

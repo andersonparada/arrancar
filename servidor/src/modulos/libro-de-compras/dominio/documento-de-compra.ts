@@ -1,5 +1,6 @@
 import type { DocumentoParaDestino } from '../../core/contratos/libro-de-compras.contratos.js';
 import type { LineaCalculada } from './calculo-de-linea.js';
+import type { RegimenDeIva } from './datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from './destinos-de-documento.js';
 import type { MotivoFueraDelLibro } from './fuera-del-libro.js';
 import type { ImpuestoRetenido, ReglaDeRetencion } from './retencion-propuesta.js';
@@ -56,6 +57,8 @@ export interface DocumentoDeCompra {
   muestraEnReportesSat: boolean;
   motivoFueraDelLibro: MotivoFueraDelLibro | null;
   motivoSinCredito: MotivoSinCredito | null;
+  /** Régimen de IVA de la empresa en el período del documento: la foto que se copia al registrar. */
+  regimenIvaDeLaEmpresa: RegimenDeIva;
   documentoAfectadoId: string | null;
   destino: DestinoDeDocumento;
   totales: TotalesDelDocumento;

@@ -134,6 +134,7 @@ describe('registrar un documento: destino, catálogos y notas', () => {
       proveedorId,
       destino: 'cuentas-por-pagar',
       motivoSinCredito: null,
+      regimenIvaDeLaEmpresa: 'general',
       fechaEmision: '2026-10-01',
       total: 112000,
       iva: 12000,

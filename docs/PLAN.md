@@ -806,3 +806,13 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   (409 `vigencia_fiscal_en_uso`) y además avisa. La ficha muestra el historial (desde, hasta o «vigente», régimen y
   persona) y «Quitar» con confirmación y resumen, solo si no es la base ni tiene documentos. Pendiente: R1-4 y R1-7;
   los textos del motivo `empresa_sin_credito` se agregan junto con L3-8.
+
+- **2026-10-18 (R1-4, foto del régimen en los documentos).** `documentos.regimen_iva_de_la_empresa` (text not null sin
+  valor por omisión, con check de los seis regímenes), copiada al registrar de la vigencia del período del documento;
+  checks `empresa_sin_credito`, `empresa_sin_credito_real` y `sin_credito_sin_art_20` (en
+  `documentos.restricciones-de-regimen.ts`). Migración `0013_r1_foto_del_regimen_en_documentos` (la columna se llena con
+  la vigencia del período, o `general` sin filas, antes del `not null`). `CargadorDeContextoFiscal` bloquea el historial
+  con `for share` al registrar (no en la vista previa), contra el `for update` del guardado. La ficha y la lista
+  devuelven `regimenIvaDeLaEmpresa`; la factura de una nota trae su foto. Decisión: la nota de un período sin crédito
+  con IVA lleva `empresa_sin_credito` aunque su factura tuviera otro motivo (si no, el check obligatorio la rechazaría),
+  con aviso solo si su factura sí dio crédito.

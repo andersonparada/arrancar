@@ -1,3 +1,4 @@
+import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
@@ -32,6 +33,8 @@ export interface DocumentoListadoDto {
   destino: DestinoDeDocumento;
   estado: 'vigente' | 'anulado';
   muestraEnReportesSat: boolean;
+  /** Régimen de IVA de la empresa en el período del documento. */
+  regimenIvaDeLaEmpresa: RegimenDeIva;
   documentoAfectadoId: string | null;
   total: string;
   /** Lo retenido al proveedor (la suma de las retenciones). */

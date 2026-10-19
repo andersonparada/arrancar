@@ -88,7 +88,7 @@ export class PreparadorDeDocumento {
     opciones: OpcionesDePreparacion,
   ): Promise<DocumentoPreparado> {
     const solicitud = normalizar(pedida);
-    const contexto = await this.cargador.cargar(operador, solicitud);
+    const contexto = await this.cargador.cargar(operador, solicitud, { bloquear: opciones.bloquearFactura });
     await this.exigirDestinoActivo(operador, solicitud.destino);
     await this.dependencias.control.exigirAbierto(contexto.periodo);
     const resuelto = await this.resolver(solicitud, contexto, opciones);

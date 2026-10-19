@@ -113,8 +113,9 @@ describe('documentos: cada check', () => {
   });
 
   it('empresa_sin_credito exige que el IVA vaya entero al costo, y solo con ese IVA se acepta', async () => {
-    const sinAcreditar = await restriccionDe({ motivoSinCredito: 'empresa_sin_credito', ivaNoAcreditable: '0' });
-    const alCosto = await errorDePostgres(crear({ motivoSinCredito: 'empresa_sin_credito', ivaNoAcreditable: '12' }));
+    const sinCredito = { regimenIvaDeLaEmpresa: 'no_afiliado', motivoSinCredito: 'empresa_sin_credito' };
+    const sinAcreditar = await restriccionDe({ ...sinCredito, ivaNoAcreditable: '0' });
+    const alCosto = await errorDePostgres(crear({ ...sinCredito, ivaNoAcreditable: '12' }));
 
     expect(sinAcreditar).toBe('documentos_iva_no_acreditable_por_motivo');
     expect(alCosto).toBeUndefined();

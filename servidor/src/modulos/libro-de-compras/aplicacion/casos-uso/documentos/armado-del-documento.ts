@@ -52,13 +52,17 @@ export function calcularElDocumento(
     tasaDeIva: contexto.configuracion.tasaDeIva,
     ivaDeLaFel: solicitud.ivaDeLaFel === null ? null : aCentavos(solicitud.ivaDeLaFel),
     mesActual: primerDiaDelMes(contexto.hoy),
-    ...(factura && {
-      motivoDeLaFactura: factura.motivoSinCredito,
-      ivaDeLaFactura: factura.iva,
-      ivaRebajadoPorOtrasNotas: factura.ivaDeNotas,
-    }),
+    ...(factura && datosDeLaFactura(factura)),
   });
 }
+
+/** Lo que la nota necesita de su factura: su motivo, el régimen con que se registró y lo ya rebajado. */
+const datosDeLaFactura = (factura: FacturaParaNota) => ({
+  motivoDeLaFactura: factura.motivoSinCredito,
+  regimenDeLaFactura: factura.regimenIvaDeLaEmpresa,
+  ivaDeLaFactura: factura.iva,
+  ivaRebajadoPorOtrasNotas: factura.ivaDeNotas,
+});
 
 /**
  * Las retenciones que propone el sistema (en cero las ya practicadas en un documento anulado), con los ajustes del
@@ -129,6 +133,7 @@ function condicionesDelDocumento(
     muestraEnReportesSat: encabezado.muestraEnReportesSat,
     motivoFueraDelLibro: solicitud.motivoFueraDelLibro,
     motivoSinCredito: calculado.motivoSinCredito,
+    regimenIvaDeLaEmpresa: contexto.datosDeLaEmpresa.instantanea().regimenIva,
     documentoAfectadoId: solicitud.documentoAfectadoId,
     destino: solicitud.destino,
     observaciones: solicitud.observaciones,

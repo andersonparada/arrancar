@@ -1,3 +1,4 @@
+import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { MotivoFueraDelLibro } from '../../dominio/fuera-del-libro.js';
 import type { ImpuestoRetenido, ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
@@ -65,6 +66,8 @@ export interface DocumentoDto {
   muestraEnReportesSat: boolean;
   motivoFueraDelLibro: MotivoFueraDelLibro | null;
   motivoSinCredito: MotivoSinCredito | null;
+  /** Régimen de IVA de la empresa en el período del documento (con el que se registró). */
+  regimenIvaDeLaEmpresa: RegimenDeIva;
   documentoAfectadoId: string | null;
   destino: DestinoDeDocumento;
   observaciones: string | null;

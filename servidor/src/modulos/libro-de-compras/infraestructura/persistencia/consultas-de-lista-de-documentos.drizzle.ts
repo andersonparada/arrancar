@@ -55,6 +55,7 @@ function filaDeLista(fila: FilaDeDocumento, notas: NotasDeUnaFactura, retenido: 
     destino: fila.destino,
     estado: fila.estado,
     muestraEnReportesSat: fila.muestraEnReportesSat,
+    regimenIvaDeLaEmpresa: fila.regimenIvaDeLaEmpresa,
     documentoAfectadoId: fila.documentoAfectadoId,
     total: deCentavos(total),
     retenido: deCentavos(retenido),

@@ -47,6 +47,12 @@ export interface DependenciasDelCargador {
   calendario: FuenteDeCalendario;
 }
 
+/** El período que pidió el usuario o, sin él, el que corresponde a las fechas del documento. */
+function periodoDe(solicitud: SolicitudDeDocumento, fechaDeRecepcion: string): string {
+  const fechas = { tipo: solicitud.tipo, fechaDeEmision: solicitud.fechaEmision, fechaDeRecepcion };
+  return solicitud.periodo ?? periodoPropuesto(fechas);
+}
+
 /**
  * Reúne el contexto fiscal de un documento. Sin datos fiscales guardados del proveedor usa los que llegan en el
  * cuerpo (obligatorios en una factura del libro si la empresa retiene algo) o los valores por omisión.
@@ -60,16 +66,19 @@ export class CargadorDeContextoFiscal {
    * @throws RecursoNoEncontrado si el proveedor no es de la cuenta.
    * @throws ProveedorInactivo si el papel de proveedor (o el tercero) está inactivo.
    * @throws FaltanDatosFiscalesDelProveedor si hacen falta sus datos fiscales y no llegaron.
+   * `opciones.bloquear` es `true` al registrar (bloqueo compartido del historial fiscal) y `false` en la vista previa.
    */
-  async cargar(operador: Operador, solicitud: SolicitudDeDocumento): Promise<ContextoFiscal> {
+  async cargar(
+    operador: Operador,
+    solicitud: SolicitudDeDocumento,
+    opciones: { bloquear: boolean },
+  ): Promise<ContextoFiscal> {
     const hoy = await this.dependencias.reloj.hoy(operador);
     const fechaDeRecepcion = solicitud.fechaRecepcion ?? hoy;
     const proveedor = await this.proveedor(solicitud.proveedorId);
     const nitDeLaEmpresa = await this.nitDeLaEmpresa(operador);
-    const periodo =
-      solicitud.periodo ??
-      periodoPropuesto({ tipo: solicitud.tipo, fechaDeEmision: solicitud.fechaEmision, fechaDeRecepcion });
-    const datosDeLaEmpresa = await this.datosDeLaEmpresa(operador, periodo);
+    const periodo = periodoDe(solicitud, fechaDeRecepcion);
+    const datosDeLaEmpresa = await this.datosDeLaEmpresa(operador, periodo, opciones.bloquear);
     const delProveedor = await this.datosDelProveedor(solicitud, datosDeLaEmpresa);
     return {
       hoy,
@@ -91,8 +100,13 @@ export class CargadorDeContextoFiscal {
     return this.dependencias.calendario.paraAnios([...new Set(anios)]);
   }
 
-  /** Lo que regía en el período del documento (no lo de hoy). Sin datos guardados no se supone ningún régimen. */
-  private async datosDeLaEmpresa(operador: Operador, periodo: string): Promise<DatosFiscalesDeEmpresa> {
+  /**
+   * Lo que regía en el período del documento (no lo de hoy). Sin datos guardados no se supone ningún régimen. Al
+   * registrar se bloquea el historial con `for share`: quien lo cambia (`for update`) espera a que termine el
+   * registro, o el registro espera a que el cambio termine, y la foto del régimen nunca queda a medias.
+   */
+  private async datosDeLaEmpresa(operador: Operador, periodo: string, bloquear: boolean) {
+    if (bloquear) await this.dependencias.datosFiscalesDeEmpresa.bloquear(operador.empresaId, 'compartir');
     const datos = await this.dependencias.datosFiscalesDeEmpresa.vigenteEn(operador.empresaId, periodo);
     if (!datos) throw new EmpresaSinDatosFiscales();
     return datos;

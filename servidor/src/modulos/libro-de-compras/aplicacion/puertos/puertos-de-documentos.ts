@@ -1,6 +1,7 @@
 import type { ContextoEmpresa } from '../../../core/compartido/aplicacion/contexto-empresa.js';
 import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import type { DocumentoParaDestino } from '../../../core/contratos/libro-de-compras.contratos.js';
+import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { DocumentoDeCompra } from '../../dominio/documento-de-compra.js';
 import type { DocumentoAnuladoConRetenciones } from '../../dominio/retencion-practicada.js';
@@ -54,6 +55,8 @@ export interface FacturaParaNota {
   proveedorId: string;
   destino: DestinoDeDocumento;
   motivoSinCredito: MotivoSinCredito | null;
+  /** Régimen de IVA con que se registró la factura (su foto). */
+  regimenIvaDeLaEmpresa: RegimenDeIva;
   fechaEmision: string;
   total: number;
   iva: number;

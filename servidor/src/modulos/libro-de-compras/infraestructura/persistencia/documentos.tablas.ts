@@ -18,6 +18,8 @@ import {
   restriccionesDeTipo,
   restriccionesDeValores,
 } from './documentos.restricciones.js';
+import { restriccionesDeRegimen } from './documentos.restricciones-de-regimen.js';
+import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import { esquemaLibroDeCompras } from './esquema.tablas.js';
 
 /**
@@ -51,6 +53,8 @@ export const documentos = esquemaLibroDeCompras.table(
     muestraEnReportesSat: boolean().default(true).notNull(),
     motivoFueraDelLibro: text().$type<'sin_fel' | 'fel_a_consumidor_final' | 'fel_a_otro_nit'>(),
     motivoSinCredito: text(),
+    /** Régimen de IVA de la empresa en el período del documento, copiado al registrar (no cambia después). */
+    regimenIvaDeLaEmpresa: text().$type<RegimenDeIva>().notNull(),
     documentoAfectadoId: uuid(),
     destino: text().$type<'cuentas-por-pagar' | 'caja-chica' | 'cuentas-por-liquidar'>().notNull(),
     procesadoEnDestinoEn: timestamp({ withTimezone: true }),
@@ -76,6 +80,7 @@ export const documentos = esquemaLibroDeCompras.table(
     ...restriccionesDePeriodo(t),
     ...restriccionesDeTipo(t),
     ...restriccionesDeFueraDelLibro(t),
+    ...restriccionesDeRegimen(t),
     ...llavesDeDocumento(t),
     ...indicesDeDocumento(t),
     politicaPorEmpresa(),

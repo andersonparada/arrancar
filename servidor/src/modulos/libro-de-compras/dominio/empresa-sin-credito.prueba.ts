@@ -78,11 +78,18 @@ describe('nota de crédito con cambio de régimen', () => {
     expect(documento.totales.ivaNoAcreditable).toBe(documento.totales.iva);
   });
 
-  it('si la factura ya tenía un motivo, la nota lo hereda tal cual', () => {
+  it('si la factura ya tenía un motivo, la nota de un período sin crédito lleva empresa_sin_credito sin aviso', () => {
     for (const motivo of ['fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito'] as const) {
       const documento = calcularDocumento(nota({ motivoDeLaFactura: motivo }));
-      expect(documento.motivoSinCredito).toBe(motivo);
+      expect(documento.motivoSinCredito).toBe('empresa_sin_credito');
       expect(documento.avisos).toEqual([]);
+    }
+  });
+
+  it('en un período con crédito hereda el motivo de su factura tal cual', () => {
+    for (const motivo of ['fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito'] as const) {
+      const documento = calcularDocumento(nota({ empresaConCreditoFiscal: true, motivoDeLaFactura: motivo }));
+      expect(documento.motivoSinCredito).toBe(motivo);
     }
   });
 
