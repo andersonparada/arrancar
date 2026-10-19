@@ -8,6 +8,10 @@
 export interface OpcionBuscable<T> {
   valor: T;
   texto: string;
+  /** Título del grupo al que pertenece; las opciones del mismo grupo van juntas. */
+  grupo?: string;
+  /** Se ve, pero no se puede elegir. */
+  deshabilitada?: boolean;
 }
 
 /** A partir de cuántas opciones vale la pena mostrar el campo de búsqueda. */

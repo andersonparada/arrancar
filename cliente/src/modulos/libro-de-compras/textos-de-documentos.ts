@@ -52,14 +52,6 @@ export const TIPOS_DE_DOCUMENTO: Record<TipoDeDocumento, string> = {
   recibo: 'Recibo',
 };
 
-/** Las familias que el formulario de registro ofrece hoy; las de factura especial y de régimen primario se suman en R2-8. */
-export const TIPOS_QUE_SE_REGISTRAN: TipoDeDocumento[] = [
-  'factura',
-  'factura_pequeno_contribuyente',
-  'nota_de_credito',
-  'recibo',
-];
-
 export const DESTINOS_DE_DOCUMENTO: Record<DestinoDeDocumento, string> = {
   'caja-chica': 'Caja chica',
   'cuentas-por-liquidar': 'Cuentas por liquidar',

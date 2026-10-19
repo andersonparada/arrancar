@@ -1,5 +1,5 @@
 import { textoONulo } from '@/modulos/core/utilidades/edicion';
-import type { DestinoDeDocumento, MotivoFueraDelLibro, TipoDeDocumento } from '../../servicios/documentos.api';
+import type { DestinoDeDocumento, MotivoFueraDelLibro } from '../../servicios/documentos.api';
 import type { RetencionDeDocumento } from '../../servicios/documentos.api';
 import type { LineaSolicitada, SolicitudDeDocumento } from '../../servicios/registro-de-documentos.api';
 import { ajustesParaElCuerpo, type AjustesEnEdicion } from './ajustes-de-retenciones';
@@ -11,12 +11,14 @@ import {
   type LineaEnEdicion,
 } from './lineas-del-documento';
 import { datosFiscalesContestados, type RespuestasFiscales } from './preguntas-fiscales';
+import { familiaDelCodigo } from './tipos-de-documento-sat';
 
 type Valor = string | number | null | undefined;
 
 /** El formulario de un documento tal como lo ve el usuario; el período va como `AAAA-MM` y vacío es «el propuesto». */
 export interface EdicionDeDocumento {
-  tipo: TipoDeDocumento;
+  /** El código de la SAT que dice el encabezado de la factura (o el del recibo sin FEL); la familia sale de él. */
+  tipoDte: string;
   proveedorId: string | null;
   destino: DestinoDeDocumento | null;
   documentoAfectadoId: string | null;
@@ -53,7 +55,7 @@ export const fechaEnTexto = (fecha: Date): string =>
 /** Un documento nuevo: factura, en el libro, emitida hoy y con una línea en blanco. */
 export function edicionVacia(hoy: Date): EdicionDeDocumento {
   return {
-    tipo: 'factura',
+    tipoDte: 'FACT',
     proveedorId: null,
     destino: null,
     documentoAfectadoId: null,
@@ -90,7 +92,11 @@ export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
     [!edicion.proveedorId, 'elegir el proveedor'],
     [edicion.numero.trim() === '', 'escribir el número del documento'],
     [edicion.fechaEmision === '', 'poner la fecha de emisión'],
-    [edicion.tipo === 'nota_de_credito' && !edicion.documentoAfectadoId, 'elegir la factura que rebaja la nota'],
+    [!familiaDelCodigo(edicion.tipoDte), 'elegir el tipo de documento'],
+    [
+      familiaDelCodigo(edicion.tipoDte) === 'nota_de_credito' && !edicion.documentoAfectadoId,
+      'elegir la factura que rebaja la nota',
+    ],
     [!edicion.muestraEnReportesSat && !edicion.motivoFueraDelLibro, 'decir por qué no se muestra en reportes SAT'],
     [usadas.length === 0, 'escribir al menos una línea'],
     [usadas.some((linea) => !lineaCompleta(linea)), 'completar las líneas (concepto y total)'],
@@ -98,9 +104,20 @@ export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
   return pendientes.filter(([falta]) => falta).map(([, texto]) => texto);
 }
 
+const tieneFel = (edicion: EdicionDeDocumento): boolean =>
+  edicion.muestraEnReportesSat || edicion.motivoFueraDelLibro !== 'sin_fel';
+
+/** Con FEL se manda el código de la SAT; sin ella, solo la familia (el servidor rechaza un código sin FEL). */
+function tipoDelCuerpo(edicion: EdicionDeDocumento) {
+  const familia = familiaDelCodigo(edicion.tipoDte);
+  return familia && familia !== 'recibo' && tieneFel(edicion)
+    ? { tipoDte: edicion.tipoDte }
+    : { tipo: familia ?? undefined };
+}
+
 function datosDeLaFel(edicion: EdicionDeDocumento) {
   const enElLibro = edicion.muestraEnReportesSat;
-  const conFel = enElLibro || edicion.motivoFueraDelLibro !== 'sin_fel';
+  const conFel = tieneFel(edicion);
   return {
     nitEmisor: enElLibro ? textoONulo(edicion.nitEmisor) : null,
     autorizacionFel: conFel ? textoONulo(edicion.autorizacionFel) : null,
@@ -116,17 +133,20 @@ function lineasDelCuerpo(edicion: EdicionDeDocumento): LineaSolicitada[] {
 const destinoDelCuerpo = (edicion: EdicionDeDocumento, finalidad: FinalidadDelCuerpo): DestinoDeDocumento | null =>
   edicion.destino ?? (finalidad === 'previa' ? DESTINO_DE_LA_VISTA_PREVIA : null);
 
-/** Falta el número, la fecha o toda línea completa. */
+/** Falta el tipo, el número, la fecha o toda línea completa. */
 const sinLoBasico = (edicion: EdicionDeDocumento, lineas: LineaSolicitada[]): boolean =>
-  !edicion.numero.trim() || !edicion.fechaEmision || lineas.length === 0;
+  !familiaDelCodigo(edicion.tipoDte) || !edicion.numero.trim() || !edicion.fechaEmision || lineas.length === 0;
 
 /** Para registrar no se acepta una línea a medias: en la vista previa simplemente no se cuenta. */
 const hayLineasAMedias = (edicion: EdicionDeDocumento, lineas: LineaSolicitada[], finalidad: FinalidadDelCuerpo) =>
   finalidad === 'registro' && lineas.length !== conLineasUsadas(edicion.lineas).length;
 
+const faltaLoBasico = (edicion: EdicionDeDocumento, lineas: LineaSolicitada[], finalidad: FinalidadDelCuerpo) =>
+  sinLoBasico(edicion, lineas) || hayLineasAMedias(edicion, lineas, finalidad);
+
 function encabezadoDelCuerpo(edicion: EdicionDeDocumento) {
   return {
-    tipo: edicion.tipo,
+    ...tipoDelCuerpo(edicion),
     ...datosDeLaFel(edicion),
     serie: textoONulo(edicion.serie),
     numero: edicion.numero.trim(),
@@ -134,7 +154,7 @@ function encabezadoDelCuerpo(edicion: EdicionDeDocumento) {
     fechaEmision: edicion.fechaEmision,
     fechaRecepcion: textoONulo(edicion.fechaRecepcion),
     periodo: edicion.periodo ? `${edicion.periodo}-01` : null,
-    documentoAfectadoId: edicion.tipo === 'nota_de_credito' ? edicion.documentoAfectadoId : null,
+    documentoAfectadoId: familiaDelCodigo(edicion.tipoDte) === 'nota_de_credito' ? edicion.documentoAfectadoId : null,
     ivaDeLaFel: montoEnTexto(edicion.ivaDeLaFel),
     observaciones: textoONulo(edicion.observaciones),
   };
@@ -153,9 +173,7 @@ export function cuerpoDeDocumento(
   const lineas = lineasDelCuerpo(edicion);
   const destino = destinoDelCuerpo(edicion, finalidad);
   const { proveedorId } = edicion;
-  if (!proveedorId || !destino || sinLoBasico(edicion, lineas) || hayLineasAMedias(edicion, lineas, finalidad)) {
-    return null;
-  }
+  if (!proveedorId || !destino || faltaLoBasico(edicion, lineas, finalidad)) return null;
   return {
     ...encabezadoDelCuerpo(edicion),
     proveedorId,

@@ -4,6 +4,7 @@ import type { ProveedorParaRegistro } from '../../servicios/registro-de-document
 import { DESTINOS_DE_DOCUMENTO } from '../../textos-de-documentos';
 import type { EdicionDeDocumento } from './edicion-de-documento';
 import { etiquetaDePeriodo, mesDe } from './filtros-de-documentos';
+import { familiaDelCodigo } from './tipos-de-documento-sat';
 
 const TIPOS_QUE_SE_REBAJAN = ['factura', 'factura_pequeno_contribuyente'];
 const CONSUMIDOR_FINAL = 'CF';
@@ -48,13 +49,14 @@ export function opcionesDePeriodoDelDocumento(hoy: Date, actual: string, propues
 }
 
 /** Un recibo no es un documento FEL, así que nunca va en el libro; los demás tipos vuelven a él al dejar de serlo. */
-export function alCambiarElTipo(edicion: EdicionDeDocumento, tipoAnterior: EdicionDeDocumento['tipo']): void {
+export function alCambiarElTipo(edicion: EdicionDeDocumento, codigoAnterior: string): void {
+  const familia = familiaDelCodigo(edicion.tipoDte);
   edicion.confirmarCambioDeRegimen = false;
-  if (edicion.tipo !== 'nota_de_credito') edicion.documentoAfectadoId = null;
-  if (edicion.tipo === 'recibo') {
+  if (familia !== 'nota_de_credito') edicion.documentoAfectadoId = null;
+  if (familia === 'recibo') {
     edicion.muestraEnReportesSat = false;
     edicion.motivoFueraDelLibro = 'sin_fel';
-  } else if (tipoAnterior === 'recibo') {
+  } else if (familiaDelCodigo(codigoAnterior) === 'recibo') {
     alMarcarLaCasilla(edicion, true);
   }
 }

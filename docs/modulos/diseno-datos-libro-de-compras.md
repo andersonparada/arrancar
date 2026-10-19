@@ -786,6 +786,10 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    proveedor), y la factura especial: NIT de la empresa fijo como emisor, «NIT o CUI del vendedor», recepción igual a la
    emisión, retenciones propuestas y avisos. **Depende de L3-8** (el formulario aún no existe): se hace dentro de L3-8 o
    justo después.
+   **Estado (2026-10-19): a medias.** Hecho el selector por código de la SAT (agrupado por familia, derogados rotulados,
+   `FESP` deshabilitada) y el envío de `tipoDte`. Falta el formulario de la factura especial (NIT de la empresa como
+   emisor, NIT o CUI del vendedor, recepción igual a la emisión, retenciones propuestas y avisos) y, si se quiere,
+   ocultar derogados según la fecha y proponer el código según el régimen del proveedor.
 9. **R2-9 (QA):** de punta a punta: un proveedor primario con su FARP, una FAPE anterior y otra posterior a la
    derogación, y una FESP a un particular sin NIT (con CUI) con sus dos retenciones.
 

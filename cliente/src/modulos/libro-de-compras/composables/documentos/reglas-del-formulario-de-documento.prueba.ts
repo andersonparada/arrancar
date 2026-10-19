@@ -78,18 +78,18 @@ describe('opciones de los selectores', () => {
 describe('reglas del formulario', () => {
   it('un recibo nunca va en el libro; al dejar de serlo vuelve a él', () => {
     const edicion = edicionVacia(HOY);
-    edicion.tipo = 'recibo';
-    alCambiarElTipo(edicion, 'factura');
+    edicion.tipoDte = 'RECIBO';
+    alCambiarElTipo(edicion, 'FACT');
     expect(edicion).toMatchObject({ muestraEnReportesSat: false, motivoFueraDelLibro: 'sin_fel' });
-    edicion.tipo = 'factura';
-    alCambiarElTipo(edicion, 'recibo');
+    edicion.tipoDte = 'FACT';
+    alCambiarElTipo(edicion, 'RECIBO');
     expect(edicion).toMatchObject({ muestraEnReportesSat: true, motivoFueraDelLibro: null });
   });
 
   it('cambiar el tipo quita la factura afectada si ya no es una nota y olvida la confirmación del régimen', () => {
     const edicion = { ...edicionVacia(HOY), documentoAfectadoId: 'f-1', confirmarCambioDeRegimen: true };
-    edicion.tipo = 'factura';
-    alCambiarElTipo(edicion, 'nota_de_credito');
+    edicion.tipoDte = 'FACT';
+    alCambiarElTipo(edicion, 'NCRE');
     expect(edicion).toMatchObject({ documentoAfectadoId: null, confirmarCambioDeRegimen: false });
   });
 

@@ -910,3 +910,14 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   nota; se lee de la factura, no se guarda). La factura especial responde `factura_especial_no_disponible` («estará
   disponible próximamente») hasta R2-6. El cliente debe enviar `tipoDte` en los documentos con FEL (el formulario es
   L3-8/R2-8).
+- 2026-10-19 — **Libro de compras R2-8 (cliente), primera parte.** El formulario de registro manda `tipoDte` (código
+  de la SAT) en todo documento con FEL; antes registrar fallaba con `tipo_dte_obligatorio`. El selector «Tipo de
+  documento (como dice el encabezado de la factura)» lista los códigos agrupados por familia con buscador
+  («FACT — Factura», «FARP — Factura contribuyente régimen primario»…), los derogados llevan «(régimen derogado, solo
+  antes de julio de 2025)» y `FESP` aparece deshabilitada («próximamente»). La familia se deduce del código
+  (`familiaDelCodigo`, con pruebas); el recibo es una opción aparte sin código y, sin FEL, solo se manda la familia
+  (el servidor rechaza un código sin FEL). Los errores `tipo_dte_*`, `tipo_de_documento_obligatorio`,
+  `familia_derogada`, `familia_aun_no_vigente` y `factura_especial_no_disponible` salen en el campo del código.
+  `CampoSelector` acepta opciones con `grupo` y `deshabilitada`. El cliente no oculta derogados según la fecha de
+  emisión ni propone el código según el régimen del proveedor (lo decide el servidor). Los nombres de los códigos
+  nuevos siguen por confirmar con el contador (R2-f).

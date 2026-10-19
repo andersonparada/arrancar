@@ -41,7 +41,7 @@ function facturaCompleta(cambios: Partial<EdicionDeDocumento> = {}): EdicionDeDo
 describe('edicionVacia', () => {
   it('empieza con una factura en el libro, emitida hoy y con una línea en blanco', () => {
     const edicion = edicionVacia(HOY);
-    expect(edicion).toMatchObject({ tipo: 'factura', fechaEmision: '2026-10-18', muestraEnReportesSat: true });
+    expect(edicion).toMatchObject({ tipoDte: 'FACT', fechaEmision: '2026-10-18', muestraEnReportesSat: true });
     expect(edicion.lineas).toHaveLength(1);
     expect(edicion.periodo).toBe('');
   });
@@ -51,7 +51,7 @@ describe('cuerpoDeDocumento', () => {
   it('arma el cuerpo con los montos como texto y los vacíos como null', () => {
     const cuerpo = cuerpoDeDocumento(facturaCompleta(), [], 'registro');
     expect(cuerpo).toMatchObject({
-      tipo: 'factura',
+      tipoDte: 'FACT',
       proveedorId: 'p-1',
       destino: 'cuentas-por-pagar',
       numero: '123',
@@ -111,8 +111,29 @@ describe('cuerpoDeDocumento', () => {
   it('solo una nota de crédito lleva la factura afectada', () => {
     const factura = facturaCompleta({ documentoAfectadoId: 'f-1' });
     expect(cuerpoDeDocumento(factura, [], 'registro')?.documentoAfectadoId).toBeNull();
-    const nota = facturaCompleta({ tipo: 'nota_de_credito', documentoAfectadoId: 'f-1' });
+    const nota = facturaCompleta({ tipoDte: 'NCRE', documentoAfectadoId: 'f-1' });
     expect(cuerpoDeDocumento(nota, [], 'registro')?.documentoAfectadoId).toBe('f-1');
+  });
+
+  it('manda el código de la SAT sin la familia cuando hay FEL', () => {
+    const cuerpo = cuerpoDeDocumento(facturaCompleta({ tipoDte: 'FARP' }), [], 'registro');
+    expect(cuerpo?.tipoDte).toBe('FARP');
+    expect(cuerpo).not.toHaveProperty('tipo');
+  });
+
+  it('un recibo manda la familia y ningún código; sin FEL tampoco se manda el código', () => {
+    const recibo = facturaCompleta({ tipoDte: 'RECIBO', muestraEnReportesSat: false, motivoFueraDelLibro: 'sin_fel' });
+    expect(cuerpoDeDocumento(recibo, [], 'registro')).toMatchObject({ tipo: 'recibo' });
+    expect(cuerpoDeDocumento(recibo, [], 'registro')).not.toHaveProperty('tipoDte');
+    const sinFel = facturaCompleta({ tipoDte: 'FCAM', muestraEnReportesSat: false, motivoFueraDelLibro: 'sin_fel' });
+    expect(cuerpoDeDocumento(sinFel, [], 'registro')).toMatchObject({ tipo: 'factura' });
+    expect(cuerpoDeDocumento(sinFel, [], 'registro')).not.toHaveProperty('tipoDte');
+  });
+
+  it('sin tipo elegido no se calcula y falta elegirlo', () => {
+    const sinTipo = facturaCompleta({ tipoDte: '' });
+    expect(cuerpoDeDocumento(sinTipo, [], 'previa')).toBeNull();
+    expect(pendientesDelRegistro(sinTipo)).toContain('elegir el tipo de documento');
   });
 
   it('las filas en blanco no viajan', () => {
@@ -169,7 +190,7 @@ describe('pendientesDelRegistro', () => {
   });
 
   it('una nota pide la factura que rebaja', () => {
-    expect(pendientesDelRegistro(facturaCompleta({ tipo: 'nota_de_credito' }))).toEqual([
+    expect(pendientesDelRegistro(facturaCompleta({ tipoDte: 'NCRE' }))).toEqual([
       'elegir la factura que rebaja la nota',
     ]);
   });

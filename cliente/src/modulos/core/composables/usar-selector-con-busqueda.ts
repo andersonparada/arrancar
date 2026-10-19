@@ -33,6 +33,7 @@ function cerrarSelector<T>(estado: EstadoSelector<T>): void {
 }
 
 function elegirOpcion<T>(estado: EstadoSelector<T>, opcion: OpcionBuscable<T>): void {
+  if (opcion.deshabilitada) return;
   estado.modelo.value = opcion.valor;
   cerrarSelector(estado);
 }

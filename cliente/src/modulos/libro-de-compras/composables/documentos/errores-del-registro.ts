@@ -12,6 +12,25 @@ export type ProblemaDelFormulario =
   | { tipo: 'permiso'; mensaje: string }
   | { tipo: 'otro'; mensaje: string };
 
+/** Los errores del tipo de documento se muestran en su campo, con lo que el usuario debe hacer. */
+const TEXTOS_DEL_TIPO: Record<string, (error: ErrorApi) => string> = {
+  tipo_dte_incoherente: () =>
+    'El código no corresponde a este documento. Elija otra vez el tipo, tal como lo dice el encabezado de la factura.',
+  tipo_dte_obligatorio: () => 'Elija el tipo de documento, tal como lo dice el encabezado de la factura.',
+  tipo_de_documento_obligatorio: () => 'Elija el tipo de documento, tal como lo dice el encabezado de la factura.',
+  tipo_dte_sin_fel: () =>
+    'Un documento sin FEL no lleva código de la SAT. Elija «Recibo (sin FEL)» o escriba la autorización de la FEL.',
+  familia_derogada: (error) => error.message,
+  familia_aun_no_vigente: (error) => error.message,
+  factura_especial_no_disponible: () => 'La factura especial estará disponible próximamente. Elija otro tipo.',
+};
+
+/** El error del campo «Tipo de documento», si el error del servidor es de él. */
+export function errorDelTipo(error: unknown): Record<string, string> | null {
+  const texto = error instanceof ErrorApi ? TEXTOS_DEL_TIPO[error.codigo] : undefined;
+  return texto && error instanceof ErrorApi ? { tipoDte: texto(error) } : null;
+}
+
 const TEXTO_SIN_PERMISO =
   'No tiene permiso para cambiar retenciones. Quite el ajuste de las retenciones, o pídale el permiso «Ajustar retenciones» al administrador.';
 
@@ -47,7 +66,7 @@ export function problemaDeError(error: unknown): ProblemaDelFormulario | null {
   if (!(error instanceof ErrorApi)) {
     return { tipo: 'otro', mensaje: error instanceof Error ? error.message : 'Ocurrió un error inesperado.' };
   }
-  if (error.erroresCampos.length > 0) return null;
+  if (error.erroresCampos.length > 0 || errorDelTipo(error)) return null;
   const delCodigo = PROBLEMAS_POR_CODIGO[error.codigo];
   if (delCodigo) return delCodigo(error);
   if (error.estado === 403) return { tipo: 'permiso', mensaje: TEXTO_SIN_PERMISO };

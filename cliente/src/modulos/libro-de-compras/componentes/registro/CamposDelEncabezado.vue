@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import { familiaDelCodigo, opcionesDeTipoSat } from '../../composables/documentos/tipos-de-documento-sat';
 import type { EdicionDeDocumento } from '../../composables/documentos/edicion-de-documento';
 import {
   opcionesDeDestinos,
@@ -11,7 +12,6 @@ import {
 } from '../../composables/documentos/reglas-del-formulario-de-documento';
 import type { DestinoDeDocumento, DocumentoEnLista } from '../../servicios/documentos.api';
 import type { ProveedorParaRegistro } from '../../servicios/registro-de-documentos.api';
-import { TIPOS_DE_DOCUMENTO, TIPOS_QUE_SE_REGISTRAN } from '../../textos-de-documentos';
 
 /** Quién, qué y cuándo: tipo, proveedor, destino, factura que rebaja la nota, número, fechas y período. */
 const props = defineProps<{
@@ -24,9 +24,7 @@ const props = defineProps<{
 }>();
 const edicion = defineModel<EdicionDeDocumento>({ required: true });
 
-const tipos = TIPOS_QUE_SE_REGISTRAN.map((valor) => ({ valor, texto: TIPOS_DE_DOCUMENTO[valor] })).sort((a, b) =>
-  a.texto.localeCompare(b.texto, 'es'),
-);
+const tipos = opcionesDeTipoSat();
 const opcionesDeProveedor = computed(() => [
   { valor: null, texto: 'Elija un proveedor' },
   ...opcionesDeProveedores(props.proveedores),
@@ -42,12 +40,19 @@ const facturasDeLaNota = computed(() => [
 const periodos = computed(() =>
   opcionesDePeriodoDelDocumento(new Date(), edicion.value.periodo, props.periodoPropuesto),
 );
-const esNota = computed(() => edicion.value.tipo === 'nota_de_credito');
+const esNota = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'nota_de_credito');
 </script>
 
 <template>
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    <CampoSelector v-model="edicion.tipo" etiqueta="Tipo de documento" requerido :opciones="tipos" />
+    <CampoSelector
+      v-model="edicion.tipoDte"
+      class="sm:col-span-2 lg:col-span-3"
+      etiqueta="Tipo de documento (como dice el encabezado de la factura)"
+      requerido
+      :opciones="tipos"
+      :error="errores.tipoDte"
+    />
     <CampoSelector
       v-model="edicion.proveedorId"
       etiqueta="Proveedor"

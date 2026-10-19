@@ -35,7 +35,10 @@ export interface DatosFiscalesContestados {
 
 /** El cuerpo de calcular y de registrar un documento; el dinero viaja como texto. */
 export interface SolicitudDeDocumento {
-  tipo: TipoDeDocumento;
+  /** La familia; opcional: se deduce de `tipoDte`. Un recibo (sin FEL) la manda y no manda código. */
+  tipo?: TipoDeDocumento;
+  /** El código de la SAT del encabezado de la FEL (`FACT`, `FPEQ`, `NCRE`…), obligatorio en todo documento con FEL. */
+  tipoDte?: string;
   proveedorId: string;
   destino: DestinoDeDocumento;
   nitEmisor: string | null;

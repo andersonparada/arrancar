@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
-import { erroresDeLineas, erroresDelEncabezado, problemaDeError } from './errores-del-registro';
+import { erroresDeLineas, erroresDelEncabezado, errorDelTipo, problemaDeError } from './errores-del-registro';
 import { lineaVacia } from './lineas-del-documento';
 import {
   datosFiscalesContestados,
@@ -51,6 +51,31 @@ describe('problemaDeError', () => {
       tipo: 'regimen',
       mensaje: 'Es pequeño.',
     });
+  });
+
+  it('los errores del tipo de documento van en su campo, no en un aviso general', () => {
+    for (const codigo of [
+      'tipo_dte_incoherente',
+      'tipo_dte_obligatorio',
+      'tipo_dte_sin_fel',
+      'tipo_de_documento_obligatorio',
+      'familia_derogada',
+      'familia_aun_no_vigente',
+      'factura_especial_no_disponible',
+    ]) {
+      const fallo = error(400, codigo, 'Mensaje del servidor.');
+      expect(problemaDeError(fallo)).toBeNull();
+      expect(errorDelTipo(fallo)?.tipoDte).toBeTruthy();
+    }
+  });
+
+  it('los de fechas dicen lo que explica el servidor y los demás, cómo corregir', () => {
+    expect(errorDelTipo(error(422, 'familia_derogada', 'Derogado desde 2025-07-09.'))).toEqual({
+      tipoDte: 'Derogado desde 2025-07-09.',
+    });
+    expect(errorDelTipo(error(400, 'tipo_dte_sin_fel', 'x'))?.tipoDte).toContain('Recibo');
+    expect(errorDelTipo(error(422, 'documento_repetido', 'x'))).toBeNull();
+    expect(errorDelTipo(new Error('x'))).toBeNull();
   });
 
   it('la empresa sin datos fiscales o sin NIT lleva a los datos de la empresa', () => {

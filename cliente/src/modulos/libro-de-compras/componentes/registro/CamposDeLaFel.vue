@@ -4,6 +4,7 @@ import { Info } from 'lucide-vue-next';
 import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import { familiaDelCodigo } from '../../composables/documentos/tipos-de-documento-sat';
 import type { EdicionDeDocumento } from '../../composables/documentos/edicion-de-documento';
 import { alCambiarElMotivo, alMarcarLaCasilla } from '../../composables/documentos/reglas-del-formulario-de-documento';
 import { textoFueraDelLibro } from '../../textos-de-documentos';
@@ -16,7 +17,7 @@ const edicion = defineModel<EdicionDeDocumento>({ required: true });
 const motivos = Object.entries(OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO)
   .map(([valor, texto]) => ({ valor: valor as NonNullable<EdicionDeDocumento['motivoFueraDelLibro']>, texto }))
   .sort((a, b) => a.texto.localeCompare(b.texto, 'es'));
-const esRecibo = computed(() => edicion.value.tipo === 'recibo');
+const esRecibo = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'recibo');
 const conFel = computed(() => edicion.value.muestraEnReportesSat || edicion.value.motivoFueraDelLibro !== 'sin_fel');
 const explicacion = computed(() => {
   const motivo = edicion.value.motivoFueraDelLibro;

@@ -1,12 +1,13 @@
 <script setup lang="ts" generic="T extends string | number | null">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { Check, ChevronDown, Search } from 'lucide-vue-next';
+import type { OpcionBuscable } from '../utilidades/busqueda-de-opciones';
 import { usarSelectorConBusqueda } from '../composables/usar-selector-con-busqueda';
 import { usarPosicionFlotante } from '../composables/usar-posicion-flotante';
 
 const props = defineProps<{
   etiqueta: string;
-  opciones: { valor: T; texto: string }[];
+  opciones: OpcionBuscable<T>[];
   error?: string;
   requerido?: boolean;
   ocultarEtiqueta?: boolean;
@@ -49,7 +50,7 @@ function alPresionarTecla(evento: KeyboardEvent): void {
   if (evento.key === 'Escape' || evento.key === 'Enter') boton.value?.focus();
 }
 
-function elegir(opcion: { valor: T; texto: string }): void {
+function elegir(opcion: OpcionBuscable<T>): void {
   selector.elegir(opcion);
   boton.value?.focus();
 }
@@ -102,19 +103,32 @@ function elegir(opcion: { valor: T; texto: string }): void {
             />
           </div>
           <ul :id="idLista" role="listbox" :aria-label="etiqueta" class="overflow-y-auto py-1">
-            <li
-              v-for="(opcion, indice) in selector.opcionesFiltradas.value"
-              :id="idDeOpcion(indice)"
-              :key="String(opcion.valor)"
-              role="option"
-              :aria-selected="opcion.valor === modelo"
-              class="flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm text-tierra-800 dark:text-tierra-100"
-              :class="indice === selector.indiceActivo.value ? 'bg-campo-50 dark:bg-tierra-700' : ''"
-              @click="elegir(opcion)"
-            >
-              <span class="truncate">{{ opcion.texto }}</span>
-              <Check v-if="opcion.valor === modelo" class="size-4 shrink-0 text-campo-600" aria-hidden="true" />
-            </li>
+            <template v-for="(opcion, indice) in selector.opcionesFiltradas.value" :key="String(opcion.valor)">
+              <li
+                v-if="opcion.grupo && opcion.grupo !== selector.opcionesFiltradas.value[indice - 1]?.grupo"
+                role="presentation"
+                class="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-tierra-600 dark:text-tierra-300"
+              >
+                {{ opcion.grupo }}
+              </li>
+              <li
+                :id="idDeOpcion(indice)"
+                role="option"
+                :aria-selected="opcion.valor === modelo"
+                :aria-disabled="opcion.deshabilitada || undefined"
+                class="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+                :class="[
+                  opcion.deshabilitada
+                    ? 'cursor-not-allowed text-tierra-500 dark:text-tierra-400'
+                    : 'cursor-pointer text-tierra-800 dark:text-tierra-100',
+                  indice === selector.indiceActivo.value ? 'bg-campo-50 dark:bg-tierra-700' : '',
+                ]"
+                @click="elegir(opcion)"
+              >
+                <span class="truncate">{{ opcion.texto }}</span>
+                <Check v-if="opcion.valor === modelo" class="size-4 shrink-0 text-campo-600" aria-hidden="true" />
+              </li>
+            </template>
             <li v-if="selector.opcionesFiltradas.value.length === 0" class="px-3 py-2 text-sm text-tierra-500">
               Sin resultados
             </li>

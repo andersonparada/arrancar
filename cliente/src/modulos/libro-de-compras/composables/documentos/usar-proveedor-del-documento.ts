@@ -3,6 +3,7 @@ import type { DestinoDeDocumento, DocumentoEnLista } from '../../servicios/docum
 import { apiRegistroDeDocumentos, type ProveedorParaRegistro } from '../../servicios/registro-de-documentos.api';
 import type { EdicionDeDocumento } from './edicion-de-documento';
 import { alCambiarElTipo, alElegirProveedor, opcionesDeFacturas } from './reglas-del-formulario-de-documento';
+import { familiaDelCodigo } from './tipos-de-documento-sat';
 
 interface Datos {
   edicion: EdicionDeDocumento;
@@ -27,7 +28,7 @@ function usarFacturasDeLaNota(edicion: EdicionDeDocumento) {
 
   async function traer(proveedorId: string | null): Promise<void> {
     documentos.value = [];
-    if (!proveedorId || edicion.tipo !== 'nota_de_credito') return;
+    if (!proveedorId || familiaDelCodigo(edicion.tipoDte) !== 'nota_de_credito') return;
     const pagina = await apiRegistroDeDocumentos.documentosVigentesDelProveedor(proveedorId).catch(() => null);
     if (edicion.proveedorId === proveedorId) documentos.value = pagina?.elementos ?? [];
   }
@@ -73,7 +74,7 @@ export function usarProveedorDelDocumento({ edicion, proveedores, destinos }: Da
     },
   );
   watch(
-    () => edicion.tipo,
+    () => edicion.tipoDte,
     async (_, anterior) => {
       alCambiarElTipo(edicion, anterior);
       await facturas.traer(edicion.proveedorId);

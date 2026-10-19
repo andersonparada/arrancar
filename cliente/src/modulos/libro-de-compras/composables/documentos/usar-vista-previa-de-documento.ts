@@ -3,7 +3,7 @@ import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import { apiRegistroDeDocumentos, type RespuestaDeDocumento } from '../../servicios/registro-de-documentos.api';
 import { ajustesVigentes } from './ajustes-de-retenciones';
 import { cuerpoDeDocumento, type EdicionDeDocumento } from './edicion-de-documento';
-import { problemaDeError, type ProblemaDelFormulario } from './errores-del-registro';
+import { errorDelTipo, problemaDeError, type ProblemaDelFormulario } from './errores-del-registro';
 
 /** Cuánto espera la vista previa después de la última tecla antes de pedir el cálculo. */
 export const PAUSA_DE_LA_VISTA_PREVIA = 400;
@@ -22,7 +22,8 @@ type Estado = ReturnType<typeof crearEstado>;
 
 function erroresDeValidacion(error: unknown): Record<string, string> {
   if (!(error instanceof ErrorApi)) return {};
-  return Object.fromEntries(error.erroresCampos.map(({ campo, mensaje }) => [campo, mensaje]));
+  const delCampo = Object.fromEntries(error.erroresCampos.map(({ campo, mensaje }) => [campo, mensaje]));
+  return { ...delCampo, ...errorDelTipo(error) };
 }
 
 /** Muestra el cálculo nuevo y quita los ajustes de retenciones que ya no se proponen (el servidor los rechazaría). */

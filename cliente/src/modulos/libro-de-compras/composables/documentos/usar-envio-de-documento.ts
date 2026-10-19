@@ -1,4 +1,4 @@
-import { ref, watch, type Ref } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
 import { useRouter, type Router } from 'vue-router';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
@@ -10,7 +10,7 @@ import {
 } from '../../servicios/registro-de-documentos.api';
 import { dejarAvisosDelRegistro } from './avisos-del-registro';
 import { cuerpoDeDocumento, type EdicionDeDocumento } from './edicion-de-documento';
-import { problemaDeError, type ProblemaDelFormulario } from './errores-del-registro';
+import { errorDelTipo, problemaDeError, type ProblemaDelFormulario } from './errores-del-registro';
 
 type Avisos = ReturnType<typeof usarAvisos>;
 
@@ -21,22 +21,46 @@ const confirmarElRegimen = (avisos: Avisos, mensaje: string): Promise<boolean> =
     textoConfirmar: 'Sí, registrarla',
   });
 
+type EstadoDelEnvio = ReturnType<typeof crearEstadoDelEnvio>;
+
+/** Lo que el envío deja a la vista: el problema del formulario y el error del campo «Tipo de documento». */
+function crearEstadoDelEnvio() {
+  const problema = ref<ProblemaDelFormulario | null>(null);
+  const delTipo = ref<Record<string, string>>({});
+  return {
+    problema,
+    delTipo,
+    limpiar: () => {
+      problema.value = null;
+      delTipo.value = {};
+    },
+  };
+}
+
+/** Deja a la vista un error que se corrige en el formulario; `false` si no es de esos y debe relanzarse. */
+function mostrarElProblema(estado: EstadoDelEnvio, error: unknown): boolean {
+  const delTipo = errorDelTipo(error);
+  const problema = problemaDeError(error);
+  if (delTipo) estado.delTipo.value = delTipo;
+  if (problema && problema.tipo !== 'regimen') estado.problema.value = problema;
+  return !!delTipo || !!problema;
+}
+
 /**
- * Pide registrar. Los errores que se corrigen dentro del formulario quedan en `problema` (y devuelve `null`); el del
+ * Pide registrar. Los errores que se corrigen dentro del formulario quedan a la vista (y devuelve `null`); el del
  * cambio de régimen se confirma con el usuario y se reenvía. Los de validación por campo se relanzan.
  */
-function crearRegistrador(edicion: EdicionDeDocumento, avisos: Avisos, problema: Ref<ProblemaDelFormulario | null>) {
+function crearRegistrador(edicion: EdicionDeDocumento, avisos: Avisos, estado: EstadoDelEnvio) {
   const intentar = async (cuerpo: SolicitudDeDocumento): Promise<RespuestaDeDocumento | null> => {
     try {
       return await apiRegistroDeDocumentos.registrar(cuerpo);
     } catch (error) {
       const encontrado = problemaDeError(error);
-      if (!encontrado) throw error;
-      if (encontrado.tipo === 'regimen' && (await confirmarElRegimen(avisos, encontrado.mensaje))) {
+      if (encontrado?.tipo === 'regimen' && (await confirmarElRegimen(avisos, encontrado.mensaje))) {
         edicion.confirmarCambioDeRegimen = true;
         return intentar({ ...cuerpo, confirmarCambioDeRegimen: true });
       }
-      if (encontrado.tipo !== 'regimen') problema.value = encontrado;
+      if (!mostrarElProblema(estado, error)) throw error;
       return null;
     }
   };
@@ -62,17 +86,17 @@ export function usarEnvioDeDocumento(edicion: EdicionDeDocumento, retenciones: R
   const router = useRouter();
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
-  const problema = ref<ProblemaDelFormulario | null>(null);
+  const estado = crearEstadoDelEnvio();
   const registrado = ref(false);
-  const intentar = crearRegistrador(edicion, avisos, problema);
+  const intentar = crearRegistrador(edicion, avisos, estado);
 
   // Corregir cualquier campo da por atendido el problema anterior.
-  watch(edicion, () => (problema.value = null), { deep: true });
+  watch(edicion, estado.limpiar, { deep: true });
 
   async function registrar(): Promise<void> {
     const cuerpo = cuerpoDeDocumento(edicion, retenciones.value, 'registro');
     if (!cuerpo) return;
-    problema.value = null;
+    estado.limpiar();
     const respuesta = ref<RespuestaDeDocumento | null>(null);
     await enviar(async () => (respuesta.value = await intentar(cuerpo)));
     if (!respuesta.value) return;
@@ -80,5 +104,6 @@ export function usarEnvioDeDocumento(edicion: EdicionDeDocumento, retenciones: R
     irAlDocumento(router, avisos, respuesta.value);
   }
 
-  return { registrar, enviando, errores, problema, registrado };
+  const erroresDelEnvio = computed(() => ({ ...errores.value, ...estado.delTipo.value }));
+  return { registrar, enviando, errores: erroresDelEnvio, problema: estado.problema, registrado };
 }

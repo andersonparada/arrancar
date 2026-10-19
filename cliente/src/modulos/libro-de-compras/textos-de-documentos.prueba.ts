@@ -6,7 +6,6 @@ import {
   MOTIVOS_SIN_CREDITO,
   REGLAS_DE_RETENCION,
   TIPOS_DE_DOCUMENTO,
-  TIPOS_QUE_SE_REGISTRAN,
   mesDeFecha,
   textoFueraDelLibro,
 } from './textos-de-documentos';
@@ -82,11 +81,6 @@ describe('familias de documento', () => {
     expect(TIPOS_DE_DOCUMENTO.factura_pequeno_contribuyente).toBe('Factura de pequeño contribuyente');
     expect(TIPOS_DE_DOCUMENTO.nota_de_credito).toBe('Nota de crédito');
     expect(TIPOS_DE_DOCUMENTO.recibo).toBe('Recibo');
-  });
-
-  it('el formulario de registro solo ofrece las familias de hoy, todas con texto', () => {
-    expect(TIPOS_QUE_SE_REGISTRAN).toEqual(['factura', 'factura_pequeno_contribuyente', 'nota_de_credito', 'recibo']);
-    for (const tipo of TIPOS_QUE_SE_REGISTRAN) expect(TIPOS_DE_DOCUMENTO[tipo]).toBeTruthy();
   });
 
   it('todas las familias del tipo tienen texto', () => {
