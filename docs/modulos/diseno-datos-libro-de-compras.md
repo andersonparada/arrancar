@@ -101,9 +101,11 @@ cada vigencia e igual en todas.
 |---|---|---|---|---|
 | `general` | jurídica | `utilidades` (o `opcional_simplificado`, o `exento` si es entidad del art. 11) | `ninguno` (el usuario escoge si la SAT lo calificó) | `true` |
 | `general` | individual | `utilidades` (o `opcional_simplificado`; nunca `exento`) | `ninguno` (escoge) | con `utilidades` `true`; con `opcional_simplificado` **sin propuesta**: el usuario contesta «¿Lleva contabilidad completa?» |
-| `pequeno_contribuyente` y `_electronico` | jurídica | nulo, forzado | `ninguno`, forzado | `true` |
-| `pequeno_contribuyente` y `_electronico` | individual | nulo, forzado | `ninguno`, forzado | `false` (ayuda: comerciante con activo > Q25,000 → sí) |
-| `contribuyente_agropecuario` | individual (jurídica la rechaza el check) | nulo, forzado (relevado del ISR) | `ninguno`, forzado | `false`; **solo vigencias anteriores a su derogación** por el Decreto 31-2024 (≈ julio de 2025, confirmar fecha): una vigencia nueva posterior se rechaza en el dominio |
+| `pequeno_contribuyente` | jurídica | nulo, forzado | `ninguno`, forzado | `true` |
+| `pequeno_contribuyente` | individual | nulo, forzado | `ninguno`, forzado | `false` (ayuda: comerciante con activo > Q25,000 → sí) |
+| `pequeno_contribuyente_electronico` | jurídica | nulo, forzado | `ninguno`, forzado | `true`; **solo vigencias anteriores a su derogación** por el Decreto 31-2024 (`FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019`, 2025-07-09, confirmar en el texto oficial): una vigencia nueva posterior se rechaza en el dominio |
+| `pequeno_contribuyente_electronico` | individual | nulo, forzado | `ninguno`, forzado | `false` (ayuda: comerciante con activo > Q25,000 → sí); mismo límite de derogación que la fila anterior |
+| `contribuyente_agropecuario` | individual (jurídica la rechaza el check) | nulo, forzado (relevado del ISR) | `ninguno`, forzado | `false`; **solo vigencias anteriores a su derogación** por el Decreto 31-2024 (2025-07-09, confirmar fecha): una vigencia nueva posterior se rechaza en el dominio |
 | `primario_pecuario` | jurídica | nulo, forzado | `ninguno`, forzado | `true` (confirmar AG 54-2026) |
 | `primario_pecuario` | individual | nulo, forzado | `ninguno`, forzado | `false` (ayuda: intermediario con contabilidad → sí) |
 | `no_afiliado` | jurídica | `exento` (o `utilidades`/`opcional_simplificado` si tiene rentas lucrativas) | `ninguno`, forzado | `true` (art. 47) |
@@ -384,7 +386,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    diferencias (`diferenciasCon`: eliminar, actualizar, insertar), por eso no hay `actualizarTipoDePersona`: el tipo
    de persona va en cada vigencia. Dos escalones seguidos con los mismos datos se juntan siempre (también al corregir
    o quitar). `DatosFiscalesDeEmpresa.porOmision()` queda solo como punto de partida de las pruebas; la empresa sin
-   filas no tiene datos. La derogación del régimen agropecuario (`FECHA_DE_DEROGACION_AGROPECUARIO`, 2025-07-01,
+   filas no tiene datos. La derogación del régimen agropecuario (`FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019`, 2025-07-09,
    por confirmar en el Decreto 31-2024) se revisa con la fecha pedida, también en el alta.
 2. **R1-2 (servidor, guardar y leer) — HECHO (2026-10-18):** `GuardarDatosFiscalesDeEmpresa` con los siete casos, `vigenteDesde` y
    `tipoDePersona` en `esquemaSeccionFiscalDeEmpresa` (completando con `datosPropuestos`), `VigenciaFiscalEnUso`

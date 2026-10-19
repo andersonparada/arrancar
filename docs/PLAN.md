@@ -782,7 +782,7 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   regímenes de IVA, `regimen_isr` nulo («no aplica») o con `exento`, y los checks del diseño; migración
   `0012_r1_regimen_de_empresa_con_vigencia` (a mano, tras la `0011` de R1-3). Dominio: `HistorialFiscalDeEmpresa`
   (`vigenteEn`, `aplicar`, `quitar`, `rangosAfectados`, `diferenciasCon`), `datosPropuestos` (tabla R1-e) y
-  `FECHA_DE_DEROGACION_AGROPECUARIO` (por confirmar). La sección fiscal de Empresas lleva `tipoDePersona`
+  `FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019` (por confirmar). La sección fiscal de Empresas lleva `tipoDePersona`
   (obligatorio) y `vigenteDesde`; `GuardarDatosFiscalesDeEmpresa` resuelve los siete casos con bloqueo `for update`,
   auditoría `corregir`/`eliminar` con el historial anterior y 409 `vigencia_fiscal_en_uso` si hay documentos vigentes
   en los meses afectados. `GET …/datos-fiscales` trae lo de hoy y el historial; `DELETE …/vigencias/:id` quita una

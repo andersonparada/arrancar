@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  FECHA_DE_DEROGACION_AGROPECUARIO,
+  FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019,
   problemasDeLaDerogacion,
   problemasDeLaFechaDeVigencia,
 } from './vigencia-fiscal-de-empresa.js';
@@ -30,23 +30,29 @@ describe('la fecha desde la que rigen unos datos', () => {
   });
 });
 
-describe('la derogación del régimen agropecuario', () => {
-  it('la fecha es el 1 de julio de 2025 (confirmar en el Decreto 31-2024)', () => {
-    expect(FECHA_DE_DEROGACION_AGROPECUARIO).toBe('2025-07-01');
+describe('la derogación de los regímenes del Decreto 7-2019', () => {
+  it('la fecha es el 9 de julio de 2025 (confirmar en el texto oficial del Decreto 31-2024)', () => {
+    expect(FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019).toBe('2025-07-09');
   });
 
-  it('una vigencia agropecuaria anterior o «desde el inicio» vale', () => {
-    expect(problemasDeLaDerogacion('contribuyente_agropecuario', null)).toEqual([]);
-    expect(problemasDeLaDerogacion('contribuyente_agropecuario', '2025-06-01')).toEqual([]);
-  });
+  it.each(['contribuyente_agropecuario', 'pequeno_contribuyente_electronico'] as const)(
+    'el régimen %s vale antes de la derogación o «desde el inicio»',
+    (regimen) => {
+      expect(problemasDeLaDerogacion(regimen, null)).toEqual([]);
+      expect(problemasDeLaDerogacion(regimen, '2025-07-01')).toEqual([]);
+    },
+  );
 
-  it('una vigencia agropecuaria que inicia en la fecha de derogación o después se rechaza', () => {
-    for (const desde of ['2025-07-01', '2026-01-01']) {
-      expect(problemasDeLaDerogacion('contribuyente_agropecuario', desde)).toEqual([
-        expect.objectContaining({ campo: 'vigenteDesde' }),
-      ]);
-    }
-  });
+  it.each(['contribuyente_agropecuario', 'pequeno_contribuyente_electronico'] as const)(
+    'el régimen %s no puede iniciar después de la derogación',
+    (regimen) => {
+      for (const desde of ['2025-08-01', '2026-01-01']) {
+        expect(problemasDeLaDerogacion(regimen, desde)).toEqual([
+          expect.objectContaining({ campo: 'vigenteDesde', mensaje: expect.stringContaining('Decreto 31-2024') }),
+        ]);
+      }
+    },
+  );
 
   it('los demás regímenes no tienen esa regla', () => {
     expect(problemasDeLaDerogacion('general', '2026-01-01')).toEqual([]);

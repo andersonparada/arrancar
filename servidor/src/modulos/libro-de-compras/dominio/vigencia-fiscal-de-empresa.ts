@@ -3,11 +3,16 @@ import type { ProblemaDeDatosFiscales } from './errores.js';
 import { primerDiaDelMes, sumarMeses } from './periodo-del-libro.js';
 
 /**
- * Primer día en que el régimen de contribuyente agropecuario (Decreto 7-2019) ya no existe: lo derogó el Decreto
- * 31-2024 (arts. 54 «A» a «F» de la Ley del IVA). Una vigencia nueva de ese régimen no puede empezar en esta fecha
- * ni después. TODO: confirmar el artículo y la fecha en el Decreto 31-2024.
+ * Fecha en que el Decreto 31-2024 derogó los arts. 54 «A» a «F» de la Ley del IVA (régimen agropecuario y pequeño
+ * contribuyente electrónico); confirmar en el texto oficial.
  */
-export const FECHA_DE_DEROGACION_AGROPECUARIO = '2025-07-01';
+export const FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019 = '2025-07-09';
+
+/** Regímenes de IVA que el Decreto 31-2024 derogó: una vigencia nueva desde la fecha ya no puede usarlos. */
+const REGIMENES_DEROGADOS: readonly RegimenDeIva[] = [
+  'contribuyente_agropecuario',
+  'pequeno_contribuyente_electronico',
+];
 
 /** Una vigencia fiscal no empieza antes de esta fecha: atrapa errores de tecleo. */
 export const PRIMERA_FECHA_DE_VIGENCIA = '2000-01-01';
@@ -32,14 +37,12 @@ export function problemasDeLaFechaDeVigencia(vigenteDesde: string | null, hoy: s
   return [];
 }
 
-/** El régimen agropecuario solo puede iniciar antes de su derogación (la vigencia «desde el inicio» es anterior). */
+/** Los regímenes derogados solo pueden iniciar antes de la fecha de derogación («desde el inicio» vale). */
 export function problemasDeLaDerogacion(
   regimenIva: RegimenDeIva,
   vigenteDesde: string | null,
 ): ProblemaDeDatosFiscales[] {
-  const iniciaTarde = vigenteDesde !== null && vigenteDesde >= FECHA_DE_DEROGACION_AGROPECUARIO;
-  if (regimenIva !== 'contribuyente_agropecuario' || !iniciaTarde) return [];
-  return [
-    { campo: CAMPO, mensaje: 'El régimen de contribuyente agropecuario ya no existe a partir de julio de 2025.' },
-  ];
+  const iniciaTarde = vigenteDesde !== null && vigenteDesde >= FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019;
+  if (!REGIMENES_DEROGADOS.includes(regimenIva) || !iniciaTarde) return [];
+  return [{ campo: CAMPO, mensaje: 'Ese régimen ya no existe a partir de julio de 2025 (Decreto 31-2024).' }];
 }
