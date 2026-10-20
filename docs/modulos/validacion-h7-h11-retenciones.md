@@ -663,3 +663,6 @@ proveedor nuevo desde la bandeja con el régimen deducido; importar **Emitidos**
 L5 al declarar si quedan pendientes. Conexión automática con credenciales de la SAT: **la evalúa el agente de seguridad**.
 **Pendiente del usuario:** un Excel real de un mes de «Recibidos» y 3–4 XML (factura, combustible, nota de crédito,
 anulada), con NIT y nombres tachados pero sin borrar columnas, para cotejar las columnas antes de programar.
+**Aclaración del usuario (2026-10-19):** no todos los clientes bajarán sus facturas; muchos las ingresarán **a mano**. El
+formulario es la vía principal y debe quedar completo (otros impuestos, IDP); la bandeja y la conciliación de L4 son
+**opcionales** y nada (avisos, cierre de período de L5) puede exigirlas.
