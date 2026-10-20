@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { CalendarRange, Plus } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
+import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { detallesDeVigenciaDeCombustible } from '../../composables/vigencias-de-combustible/detalles-de-vigencia-de-combustible';
@@ -55,7 +56,11 @@ const PERMISO = 'libro-de-compras.vigencias-de-combustible';
           eliminable
           @editar="$emit('editar', tasa)"
           @eliminar="$emit('eliminar', tasa)"
-        />
+        >
+          <template v-if="tasa.ivaExento" #destacado>
+            <InsigniaBase tono="campo">Exento de IVA</InsigniaBase>
+          </template>
+        </TarjetaDeRegistro>
       </li>
     </ul>
   </VentanaModal>

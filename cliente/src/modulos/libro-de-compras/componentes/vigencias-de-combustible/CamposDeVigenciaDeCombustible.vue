@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import type { EdicionDeVigenciaDeCombustible } from '../../composables/vigencias-de-combustible/edicion-de-vigencia-de-combustible';
 
@@ -34,6 +35,16 @@ const edicion = defineModel<EdicionDeVigenciaDeCombustible>({ required: true });
         :error="errores.vigenteDesde"
       />
       <CampoTexto v-model="edicion.vigenteHasta" etiqueta="Vigente hasta" tipo="date" :error="errores.vigenteHasta" />
+    </div>
+    <div class="space-y-2">
+      <CampoInterruptor
+        v-model="edicion.ivaExento"
+        etiqueta="Exento de IVA en esta vigencia"
+        descripcion="Por ejemplo, el Decreto 22-2026 exoneró de IVA e IDP los combustibles del 1-10 al 31-12-2026. Las facturas de esas fechas no dan crédito fiscal."
+      />
+      <p v-if="errores.ivaExento" role="alert" class="text-sm text-red-700 dark:text-red-400">
+        {{ errores.ivaExento }}
+      </p>
     </div>
     <p class="text-xs text-tierra-600 dark:text-tierra-300">
       Deje «Vigente hasta» vacío si es la tasa actual. Una tasa de Q0.00 sirve para una exención temporal.

@@ -20,6 +20,7 @@ const tasa = (cambios: Partial<VigenciaDeCombustible>): VigenciaDeCombustible =>
   combustibleNombre: 'Diésel',
   idpPorGalon: '4.70',
   porcentajeDeEtanol: '0.00',
+  ivaExento: false,
   vigenteDesde: '2026-01-01',
   vigenteHasta: null,
   ...cambios,

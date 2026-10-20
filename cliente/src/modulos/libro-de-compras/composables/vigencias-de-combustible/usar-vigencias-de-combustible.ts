@@ -4,6 +4,7 @@ import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import type { Combustible } from '../../servicios/combustibles.api';
 import { apiVigenciasDeCombustible, type VigenciaDeCombustible } from '../../servicios/vigencias-de-combustible.api';
 import {
@@ -12,6 +13,7 @@ import {
   edicionNuevaDe,
   type EdicionDeVigenciaDeCombustible,
 } from './edicion-de-vigencia-de-combustible';
+import { erroresDeUsoDeVigencia } from './conflicto-de-vigencia-de-combustible';
 import { avisoDeCierre, tasaVigente, tasasDeUnCombustible } from './reglas-de-vigencia-de-combustible';
 import { usarEliminacionDeVigenciaDeCombustible } from './usar-eliminacion-de-vigencia-de-combustible';
 
@@ -22,21 +24,38 @@ const guardarVigencia = (edicion: EdicionDeVigenciaDeCombustible) =>
     ? apiVigenciasDeCombustible.actualizar(edicion.id, datosDeVigenciaDeCombustible(edicion))
     : apiVigenciasDeCombustible.crear(datosDeVigenciaDeCombustible(edicion));
 
+/** Manda lo escrito; si documentos ya usan la tasa, el error marca en su campo lo que el cambio contradice. */
+async function enviarEdicion(
+  edicion: EdicionDeVigenciaDeCombustible,
+  original: VigenciaDeCombustible | null,
+  errores: Ref<Record<string, string>>,
+): Promise<void> {
+  try {
+    await guardarVigencia(edicion);
+  } catch (error) {
+    if (error instanceof ErrorApi) errores.value = erroresDeUsoDeVigencia(original, edicion, error);
+    throw error;
+  }
+}
+
 /** La ventana de una tasa: abrirla, guardar lo escrito y avisar, y recargar la historia. */
 function usarVentanaDeTasa(cargar: () => Promise<void>, combustible: Ref<Combustible | null>) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
   const edicion = ref<EdicionDeVigenciaDeCombustible>({ ...edicionDe(), abierta: false });
+  /** La tasa tal como se cargó; el servidor la compara con lo escrito para señalar el campo que no cambia. */
+  const original = ref<VigenciaDeCombustible | null>(null);
 
   function abrir(vigencia?: VigenciaDeCombustible): void {
     if (!combustible.value) return;
+    original.value = vigencia ?? null;
     edicion.value = vigencia ? edicionDe(vigencia) : edicionNuevaDe(combustible.value.id);
     errores.value = {};
   }
 
   async function guardar(): Promise<void> {
     const esNueva = edicion.value.id === null;
-    if (!(await enviar(() => guardarVigencia(edicion.value)))) return;
+    if (!(await enviar(() => enviarEdicion(edicion.value, original.value, errores)))) return;
     avisos.exito(esNueva ? 'Tasa registrada.' : 'Tasa actualizada.');
     edicion.value.abierta = false;
     await cargar();

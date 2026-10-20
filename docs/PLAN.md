@@ -1102,3 +1102,10 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `total − idp − otros` con IVA 0, y un exento distinto escrito se respeta con aviso. La vigencia del decreto no se siembra:
   la carga el usuario en Combustibles (ver el diseño). Recibo FEL (RECI/RDON) a otro NIT: se acepta como `fel_a_otro_nit`, fuera
   del libro. Pendiente del cliente: casilla «Exento de IVA» en la ventana de vigencias (sin ella un PUT la deja en `false`).
+
+- **2026-10-20 — Libro de compras L5-1 (cliente, exención de IVA de la tasa de combustible).** La ventana de la tasa tiene la casilla
+  «Exento de IVA en esta vigencia» (interruptor, con la ayuda del Decreto 22-2026) y la historia de tasas muestra la insignia «Exento de
+  IVA» en las que lo son. El servicio manda y recibe `ivaExento`. Si documentos ya usan la tasa, el error del servidor marca en su campo
+  lo que el cambio contradice (`conflicto-de-vigencia-de-combustible.ts`: exención, tasa, etanol o inicio; si solo cambió el cierre,
+  «Vigente hasta»); el servidor no dice qué campo, así que el mensaje se reparte según lo que cambió el usuario. Con pruebas de la
+  lógica pura. Pendiente: que el servidor mande el campo en `detalles` si se quiere una señal exacta.

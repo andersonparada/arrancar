@@ -8,6 +8,7 @@ export interface EdicionDeVigenciaDeCombustible {
   combustibleId: string | null;
   idpPorGalon: string | number;
   porcentajeDeEtanol: string | number;
+  ivaExento: boolean;
   vigenteDesde: string;
   vigenteHasta: string;
 }
@@ -16,6 +17,7 @@ const VIGENCIA_DE_COMBUSTIBLE_NUEVO: Omit<EdicionDeVigenciaDeCombustible, 'abier
   combustibleId: null,
   idpPorGalon: '',
   porcentajeDeEtanol: '',
+  ivaExento: false,
   vigenteDesde: '',
   vigenteHasta: '',
 };
@@ -29,6 +31,7 @@ export function edicionDe(vigenciaDeCombustible?: VigenciaDeCombustible): Edicio
     combustibleId: vigenciaDeCombustible.combustibleId,
     idpPorGalon: textoDeEdicion(vigenciaDeCombustible.idpPorGalon),
     porcentajeDeEtanol: textoDeEdicion(vigenciaDeCombustible.porcentajeDeEtanol),
+    ivaExento: vigenciaDeCombustible.ivaExento,
     vigenteDesde: textoDeEdicion(vigenciaDeCombustible.vigenteDesde),
     vigenteHasta: textoDeEdicion(vigenciaDeCombustible.vigenteHasta),
   };
@@ -45,6 +48,7 @@ export const datosDeVigenciaDeCombustible = (edicion: EdicionDeVigenciaDeCombust
   combustibleId: edicion.combustibleId ?? '',
   idpPorGalon: textoDeEdicion(edicion.idpPorGalon),
   porcentajeDeEtanol: textoDeEdicion(edicion.porcentajeDeEtanol),
+  ivaExento: edicion.ivaExento,
   vigenteDesde: edicion.vigenteDesde,
   vigenteHasta: textoONulo(edicion.vigenteHasta),
 });

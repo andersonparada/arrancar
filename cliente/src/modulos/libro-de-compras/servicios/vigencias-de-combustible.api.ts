@@ -7,6 +7,8 @@ export interface VigenciaDeCombustible {
   combustibleId: string;
   idpPorGalon: string;
   porcentajeDeEtanol: string;
+  /** Exento de IVA por decreto (p. ej. el 22-2026); las facturas de esas fechas no dan crédito fiscal. */
+  ivaExento: boolean;
   vigenteDesde: string;
   vigenteHasta: string | null;
   combustibleNombre: string | null;

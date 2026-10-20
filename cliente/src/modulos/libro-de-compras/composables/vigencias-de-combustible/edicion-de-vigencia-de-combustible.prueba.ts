@@ -6,6 +6,7 @@ const datos: DatosVigenciaDeCombustible = {
   combustibleId: '00000000-0000-4000-8000-000000000001',
   idpPorGalon: '12.50',
   porcentajeDeEtanol: '12.50',
+  ivaExento: false,
   vigenteDesde: '2026-01-15',
   vigenteHasta: '2026-01-15',
 };
@@ -23,5 +24,17 @@ describe('ventana de vigencias de combustible', () => {
 
   it('lo que no se llena se manda como null', () => {
     expect(datosDeVigenciaDeCombustible(edicionDe())).toMatchObject({ vigenteHasta: null });
+  });
+
+  it('una tasa nueva empieza sin exención de IVA', () => {
+    expect(edicionDe().ivaExento).toBe(false);
+    expect(datosDeVigenciaDeCombustible(edicionDe()).ivaExento).toBe(false);
+  });
+
+  it('la exención de IVA se abre tal como viene y se manda al cambiarla', () => {
+    const exenta = edicionDe({ ...vigenciaDeCombustible, ivaExento: true });
+    expect(exenta.ivaExento).toBe(true);
+    expect(datosDeVigenciaDeCombustible(exenta).ivaExento).toBe(true);
+    expect(datosDeVigenciaDeCombustible({ ...exenta, ivaExento: false }).ivaExento).toBe(false);
   });
 });
