@@ -7,6 +7,7 @@ import { rutasDeConceptosDeGasto } from './composicion/conceptos-de-gasto.js';
 import { rutasDeCombustibles } from './composicion/combustibles.js';
 import { configuracionDelLibroDeCompras } from './configuracion.js';
 import { rutasDeVigenciasDeCombustible } from './composicion/vigencias-de-combustible.js';
+import { rutasDeAnalisisComponidas } from './composicion/analisis.js';
 import { rutasDeLibro } from './composicion/libro.js';
 import { rutasDePeriodosComponidas } from './composicion/periodos.js';
 import { rutasDeRetencionesComponidas } from './composicion/retenciones.js';
@@ -24,6 +25,7 @@ function componerRutas() {
     rutasDeLibro(),
     rutasDeRetencionesComponidas(),
     rutasDePeriodosComponidas(),
+    rutasDeAnalisisComponidas(),
     // generador: rutas
   ]);
 }
@@ -108,6 +110,15 @@ export const moduloLibroDeCompras: DefinicionModulo = {
     {
       clave: 'libro-de-compras.periodos.reabrir',
       descripcion: 'Reabrir períodos declarados y apagar el bloqueo de los períodos declarados',
+    },
+    {
+      clave: 'libro-de-compras.analisis-de-compras.ver',
+      descripcion:
+        'Ver los análisis de compras: por proveedor, por concepto, IVA al costo, activos fijos y combustibles',
+    },
+    {
+      clave: 'libro-de-compras.analisis-de-compras.exportar',
+      descripcion: 'Exportar a Excel los análisis de compras',
     },
     // generador: permisos
   ],

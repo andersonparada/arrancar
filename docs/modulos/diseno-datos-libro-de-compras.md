@@ -2686,7 +2686,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
     `periodos.*`; pruebas.
 16. **L5-7b y L5-8b (cliente, períodos) — hecho el 2026-10-20 (falta el botón en la bandeja, que espera L4-9):** página de períodos (año, estado, historial, «cambió desde la declaración», revisión,
     declarar, reabrir, control) y, en el formulario y la bandeja, el error `periodo_declarado` con «Registrar en <mes>».
-17. **L5-9a (servidor, análisis):** los cinco reportes de 3.9.8 con su Excel y el permiso `analisis-de-compras`.
+17. **L5-9a (servidor, análisis) — hecho el 2026-10-20:** los cinco reportes de 3.9.8 con su Excel y el permiso `analisis-de-compras`.
 18. **L5-9b (cliente, análisis):** sus páginas en Reportes.
 19. **L5-10 (QA):** de punta a punta en una empresa general agente de IVA y en una de pequeño contribuyente: registrar
     un mes con todas las familias, ver y exportar el libro, emitir con folios y una copia, anotar constancias en lote,

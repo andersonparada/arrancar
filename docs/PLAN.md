@@ -1247,3 +1247,24 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   con el motivo y el enlace a Períodos. La bandeja (L4-9) aún no existe: su botón queda para cuando se programe. Lógica
   pura con pruebas en `composables/periodos/` y `errores-del-registro.prueba.ts`; textos en `textos-de-periodos.ts`. Sin
   cambios en el servidor.
+
+
+- **2026-10-20 — Libro de compras L5-9a (servidor, análisis de compras).** Cinco análisis con permisos `libro-de-compras.analisis-de-compras.ver`
+  y `.exportar` (un solo par). Todos reciben `?desde=AAAA-MM&hasta=AAAA-MM` (máximo 24 meses; si no, 400
+  `rango_de_periodos_invalido`), cuentan solo documentos vigentes del libro, las notas de crédito restan y cada uno tiene su
+  `GET /api/libro-de-compras/analisis/<ruta>` y `…/exportar` (Excel de una hoja, `<ruta>-AAAA-MM-a-AAAA-MM.xlsx`). Todas las
+  respuestas empiezan con `desde` y `hasta` (primer día de mes) y llevan el dinero como texto. Rutas: `compras-por-proveedor`
+  (`{ filas: [{ proveedorId, nit, nombre, documentos, total, base, ivaConCredito, ivaSinCredito, exentoYNoAfecto, idp, retenido,
+  neto }], total }`, con `incluirFueraDelLibro=true` entran también los documentos fuera del libro; NIT y nombre son los del
+  documento más reciente), `compras-por-concepto` (`{ filas: [{ conceptoId, concepto, tipo, lineas, base, ivaConCredito,
+  ivaAlCosto, costo }], total }`, costo = `total − iva + iva_no_acreditable`), `iva-al-costo` (`{ motivos: [{ motivo, lineas: [{
+  documentoId, periodo, fecha, tipoDte, serie, numero, nitDelProveedor, proveedor, numeroDeLinea, concepto, ivaAlCosto }],
+  subtotal }], total }`), `activos-fijos` (`{ filas: [{ …documento, numeroDeLinea, concepto, descripcion, costo, ivaConCredito }],
+  total: { costo, ivaConCredito } }`) y `combustibles` (`{ combustibles: [{ combustible, meses: [{ periodo, galones, idp, base,
+  iva, exentoYNoAfecto, exentoPorDecreto, aviso }], subtotal }], total }`; galones con tres decimales; `combustible: null` y el
+  aviso «IDP según la factura, sin galones» para el IDP escrito sin catálogo). Diseño: un caso de uso genérico
+  (`ConsultarAnalisis` y `ExportarAnalisis`) parametrizado por una `DefinicionDeAnalisis` por reporte (Estrategia); las consultas
+  agregan en SQL (`ConsultasDeAnalisisDrizzle`). Decisiones: el NIT y el nombre del proveedor salen del documento más reciente
+  (no se lee `terceros`, para no cruzar módulos); lo retenido suma las retenciones practicadas del documento; la hoja de cada
+  Excel lleva subtotales y total. Pruebas: dominio (`analisis.prueba.ts`) y API (`libro-de-compras-analisis-compras` y
+  `-lineas`, con dos meses de compras).
