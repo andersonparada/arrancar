@@ -4,13 +4,24 @@ import { Plus } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { ErroresDeLineas } from '../../composables/documentos/errores-del-registro';
-import { lineaVacia, sumaDeLineas, type LineaEnEdicion } from '../../composables/documentos/lineas-del-documento';
+import {
+  erroresLocalesDeLinea,
+  lineaVacia,
+  sumaDeLineas,
+  type LineaEnEdicion,
+} from '../../composables/documentos/lineas-del-documento';
 import type { Combustible } from '../../servicios/combustibles.api';
 import type { ConceptoDeGasto } from '../../servicios/conceptos-de-gasto.api';
+import { esFacturaEspecial } from '../../composables/documentos/tipos-de-documento-sat';
 import FilaDeLinea from './FilaDeLinea.vue';
 
 /** Las líneas del documento: agregar, quitar y editar cada una. */
-defineProps<{ conceptos: ConceptoDeGasto[]; combustibles: Combustible[]; errores: ErroresDeLineas }>();
+const props = defineProps<{
+  conceptos: ConceptoDeGasto[];
+  combustibles: Combustible[];
+  errores: ErroresDeLineas;
+  tipoDte: string;
+}>();
 const lineas = defineModel<LineaEnEdicion[]>({ required: true });
 
 const quitar = (clave: number) => (lineas.value = lineas.value.filter((linea) => linea.clave !== clave));
@@ -33,7 +44,8 @@ async function agregar(): Promise<void> {
       :numero="indice + 1"
       :conceptos="conceptos"
       :combustibles="combustibles"
-      :errores="errores[linea.clave] ?? {}"
+      :errores="{ ...erroresLocalesDeLinea(linea), ...errores[linea.clave] }"
+      :con-montos-extra="!esFacturaEspecial(props.tipoDte)"
       :puede-quitar="lineas.length > 1"
       @quitar="quitar(linea.clave)"
     />

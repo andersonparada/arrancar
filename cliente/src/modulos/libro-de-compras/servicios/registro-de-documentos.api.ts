@@ -16,6 +16,10 @@ export interface LineaSolicitada {
   galones: string | null;
   total: string;
   exento: string | null;
+  /** Texto con dos decimales; `null` es cero. */
+  otrosImpuestos: string | null;
+  /** El IDP que dice la factura; `null` (o cero) es calcularlo de los galones. */
+  idpEscrito: string | null;
 }
 
 /** El monto final de una retención propuesta, cuando el usuario la cambió. */

@@ -17,6 +17,11 @@ export interface LineaEnEdicion {
   galones: Valor;
   total: Valor;
   exento: Valor;
+  /** Tasa municipal, turismo, timbre…: viene en la factura y no paga IVA. */
+  otrosImpuestos: Valor;
+  /** Combustible: el IDP lo dice la factura (en vez de calcularse de los galones). */
+  escribeIdp: boolean;
+  idpEscrito: Valor;
 }
 
 let ultimaClave = 0;
@@ -33,6 +38,9 @@ export function lineaVacia(): LineaEnEdicion {
     galones: '',
     total: '',
     exento: '',
+    otrosImpuestos: '',
+    escribeIdp: false,
+    idpEscrito: '',
   };
 }
 
@@ -62,17 +70,36 @@ export function ajustarTipoDeLinea(linea: LineaEnEdicion): void {
   if (!linea.esCombustible) {
     linea.combustibleId = null;
     linea.galones = '';
+    linea.escribeIdp = false;
+    linea.idpEscrito = '';
   }
 }
 
-/** La línea tiene lo mínimo para pedirle el cálculo al servidor: concepto y total (y galones si es combustible). */
-export function lineaCompleta(linea: LineaEnEdicion): boolean {
-  if (!linea.conceptoId || montoEnTexto(linea.total) === null) return false;
-  return !linea.esCombustible || (!!linea.combustibleId && montoEnTexto(linea.galones, 3) !== null);
+const idpTecleado = (linea: LineaEnEdicion): boolean => aCentavos(linea.idpEscrito) > 0;
+
+/** Con el IDP de la factura, el combustible y los galones van juntos o no van: sirven solo para comparar. */
+function combustibleCompleto(linea: LineaEnEdicion): boolean {
+  const tieneGalones = montoEnTexto(linea.galones, 3) !== null;
+  if (linea.escribeIdp) return idpTecleado(linea) && !!linea.combustibleId === tieneGalones;
+  return !!linea.combustibleId && tieneGalones;
 }
 
-/** La línea para el cuerpo de la API; `null` si está incompleta. */
-export function lineaParaElCuerpo(linea: LineaEnEdicion): LineaSolicitada | null {
+/** La línea tiene lo mínimo para pedirle el cálculo al servidor: concepto y total (y galones o IDP si es combustible). */
+export function lineaCompleta(linea: LineaEnEdicion): boolean {
+  if (!linea.conceptoId || montoEnTexto(linea.total) === null) return false;
+  return !linea.esCombustible || combustibleCompleto(linea);
+}
+
+const montosExtraDelCuerpo = (linea: LineaEnEdicion) => ({
+  otrosImpuestos: montoEnTexto(linea.otrosImpuestos),
+  idpEscrito: linea.esCombustible && linea.escribeIdp ? montoEnTexto(linea.idpEscrito) : null,
+});
+
+/**
+ * La línea para el cuerpo de la API; `null` si está incompleta. Con `conMontosExtra` en falso (factura especial) no
+ * lleva otros impuestos ni IDP escrito.
+ */
+export function lineaParaElCuerpo(linea: LineaEnEdicion, conMontosExtra = true): LineaSolicitada | null {
   const total = montoEnTexto(linea.total);
   if (!lineaCompleta(linea) || total === null || !linea.conceptoId) return null;
   return {
@@ -84,7 +111,29 @@ export function lineaParaElCuerpo(linea: LineaEnEdicion): LineaSolicitada | null
     galones: linea.esCombustible ? montoEnTexto(linea.galones, 3) : null,
     total,
     exento: montoEnTexto(linea.exento),
+    ...(conMontosExtra ? montosExtraDelCuerpo(linea) : { otrosImpuestos: null, idpEscrito: null }),
   };
+}
+
+/**
+ * Errores que se ven sin ir al servidor, en el campo de la línea: montos negativos, o que el IDP, lo exento y los
+ * otros impuestos sumen más que el total.
+ */
+export function erroresLocalesDeLinea(linea: LineaEnEdicion): Record<string, string> {
+  const errores: Record<string, string> = {};
+  for (const campo of ['exento', 'otrosImpuestos', 'idpEscrito'] as const) {
+    if (aCentavos(linea[campo]) < 0) errores[campo] = 'El monto no puede ser negativo.';
+  }
+  const total = aCentavos(linea.total);
+  const idp = linea.esCombustible && linea.escribeIdp ? aCentavos(linea.idpEscrito) : 0;
+  if (
+    total > 0 &&
+    Object.keys(errores).length === 0 &&
+    idp + aCentavos(linea.exento) + aCentavos(linea.otrosImpuestos) > total
+  ) {
+    errores.otrosImpuestos = 'Lo exento, el IDP y los otros impuestos no pueden sumar más que el total de la línea.';
+  }
+  return errores;
 }
 
 /** Lo que suman los totales tecleados, en quetzales con dos decimales (sin ningún impuesto: solo la suma). */

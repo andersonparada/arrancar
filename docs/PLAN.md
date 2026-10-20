@@ -1068,3 +1068,11 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   especial con otros impuestos o IDP (escrito o de galones) en alguna línea da `factura_especial_sin_otros_impuestos` (400, «Una factura
   especial no lleva otros impuestos ni IDP.»). Diseño §3.3b: el bloqueo `recibo_a_la_empresa` de la bandeja ya no aplica (el recibo entra
   `pendiente`). Falta en el cliente el motivo `recibo_fel` (selector y textos) y el aviso.
+
+- **2026-10-20 — Libro de compras, L4-3 (cliente): otros impuestos e IDP escrito en el formulario, la ficha y la vista previa.** En cada
+  línea, la sección plegable «Más montos de la factura» (se abre sola si trae un monto o un error) con «Otros impuestos (tasa municipal,
+  turismo, timbre…)»; en combustible, «Escribir el IDP que dice la factura», con combustible y galones opcionales (juntos o ninguno; con
+  ellos el aviso del servidor dice si no cuadra). La factura especial no los muestra ni los manda. Errores en su campo de la línea,
+  también antes de enviar (negativos; exento + IDP + otros mayores que el total). Totales de la vista previa y de la ficha muestran
+  «Otros impuestos» si no es cero; la línea de la ficha rotula «IDP (el de la factura)». La lista no cambia: el servidor no trae
+  los otros impuestos en el listado.

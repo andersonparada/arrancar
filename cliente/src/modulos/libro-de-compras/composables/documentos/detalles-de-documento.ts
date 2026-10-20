@@ -93,11 +93,12 @@ export function nombreDeLinea(linea: LineaDeDocumento, conceptos: Map<string, st
   return concepto ?? linea.descripcion ?? 'Concepto';
 }
 
-/** Los montos de una línea; IDP y exento solo si los hay. */
+/** Los montos de una línea; IDP, exento y otros impuestos solo si los hay. */
 export function cifrasDeLinea(linea: LineaDeDocumento): { etiqueta: string; valor: string }[] {
   const opcionales = [
-    { etiqueta: 'IDP', valor: linea.idp },
+    { etiqueta: linea.idpEscrito ? 'IDP (el de la factura)' : 'IDP', valor: linea.idp },
     { etiqueta: 'Exento', valor: linea.exento },
+    { etiqueta: 'Otros impuestos', valor: linea.otrosImpuestos },
   ].filter(({ valor }) => aCentavos(valor) !== 0);
   return [
     { etiqueta: 'Total', valor: linea.total },

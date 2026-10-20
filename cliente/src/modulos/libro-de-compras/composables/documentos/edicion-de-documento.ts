@@ -144,7 +144,8 @@ function datosDeLaFel(edicion: EdicionDeDocumento) {
 }
 
 function lineasDelCuerpo(edicion: EdicionDeDocumento): LineaSolicitada[] {
-  return conLineasUsadas(edicion.lineas).flatMap((linea) => lineaParaElCuerpo(linea) ?? []);
+  const conMontosExtra = !esFacturaEspecial(edicion.tipoDte);
+  return conLineasUsadas(edicion.lineas).flatMap((linea) => lineaParaElCuerpo(linea, conMontosExtra) ?? []);
 }
 
 const destinoDelCuerpo = (edicion: EdicionDeDocumento, finalidad: FinalidadDelCuerpo): DestinoDeDocumento | null =>

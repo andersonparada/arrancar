@@ -78,7 +78,10 @@ export interface LineaDeDocumento {
   combustible: { vigenciaDeCombustibleId: string; galones: string; idpPorGalon: string } | null;
   total: string;
   exento: string;
+  otrosImpuestos: string;
   idp: string;
+  /** `true`: el IDP es el que dice la factura; `false`: salió de los galones. */
+  idpEscrito: boolean;
   base: string;
   iva: string;
   ivaNoAcreditable: string;
@@ -103,6 +106,7 @@ export interface TotalesDeDocumento {
   ivaNoAcreditable: string;
   idp: string;
   exento: string;
+  otrosImpuestos: string;
 }
 
 /** Una nota que corrige la factura (de crédito o de débito); el dinero, como texto con dos decimales. */

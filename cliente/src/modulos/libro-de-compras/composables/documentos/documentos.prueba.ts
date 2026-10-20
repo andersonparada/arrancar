@@ -38,7 +38,9 @@ const linea = (cambios: Partial<LineaDeDocumento> = {}): LineaDeDocumento => ({
   combustible: null,
   total: '112.00',
   exento: '0.00',
+  otrosImpuestos: '0.00',
   idp: '0.00',
+  idpEscrito: false,
   base: '100.00',
   iva: '12.00',
   ivaNoAcreditable: '0.00',
@@ -120,6 +122,10 @@ describe('detalles del documento', () => {
       'Costo',
     ]);
     expect(cifrasDeLinea(linea({ idp: '4.70' })).map((c) => c.etiqueta)).toContain('IDP');
+    expect(cifrasDeLinea(linea({ idp: '4.70', idpEscrito: true })).map((c) => c.etiqueta)).toContain(
+      'IDP (el de la factura)',
+    );
+    expect(cifrasDeLinea(linea({ otrosImpuestos: '5.00' })).map((c) => c.etiqueta)).toContain('Otros impuestos');
   });
 });
 

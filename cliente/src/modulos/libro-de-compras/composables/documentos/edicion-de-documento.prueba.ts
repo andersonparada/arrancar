@@ -77,6 +77,8 @@ describe('cuerpoDeDocumento', () => {
         galones: null,
         total: '112.00',
         exento: null,
+        otrosImpuestos: null,
+        idpEscrito: null,
       },
     ]);
   });
@@ -258,6 +260,19 @@ describe('factura especial', () => {
       'escribir la autorización de la FEL',
     ]);
     expect(pendientesDelRegistro(especial())).toEqual([]);
+  });
+
+  it('no manda otros impuestos ni IDP escrito', () => {
+    const lineas = [{ ...lineaVacia(), conceptoId: 'c-1', total: '100', otrosImpuestos: '5', esCombustible: true }];
+    expect(cuerpoDeDocumento(especial({ lineas }), [], 'previa')).toBeNull();
+    const sinCombustible = [{ ...lineas[0]!, esCombustible: false }];
+    expect(cuerpoDeDocumento(especial({ lineas: sinCombustible }), [], 'previa')?.lineas[0]).toMatchObject({
+      otrosImpuestos: null,
+      idpEscrito: null,
+    });
+    expect(cuerpoDeDocumento(facturaCompleta({ lineas: sinCombustible }), [], 'previa')?.lineas[0]).toMatchObject({
+      otrosImpuestos: '5.00',
+    });
   });
 
   it('una factura común no pide vendedor', () => {

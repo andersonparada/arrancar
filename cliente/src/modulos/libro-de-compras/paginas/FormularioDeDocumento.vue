@@ -21,7 +21,6 @@ const registro = usarRegistroDeDocumento();
 const { edicion, catalogos, previa, propuestas } = registro;
 const volver = { texto: textos.volver, ruta: { name: 'libro-de-compras.documentos' } };
 const zonaDelProblema = ref<HTMLElement | null>(null);
-
 /** Enter en un campo de texto no registra: se registra con el botón, así un Enter de más no guarda a medias. */
 function alPresionarEnter(evento: KeyboardEvent): void {
   if (evento.target instanceof HTMLInputElement) evento.preventDefault();
@@ -94,6 +93,7 @@ watch(registro.problema, async (problema) => {
             :conceptos="catalogos.conceptos.value"
             :combustibles="catalogos.combustibles.value"
             :errores="registro.erroresDeLineas.value"
+            :tipo-dte="edicion.tipoDte"
           />
         </TarjetaBase>
         <MasDatosDelDocumento v-model="edicion" :errores="registro.erroresDelEncabezado.value" />

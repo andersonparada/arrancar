@@ -12,6 +12,8 @@ import {
 } from '../../composables/documentos/lineas-del-documento';
 import type { Combustible } from '../../servicios/combustibles.api';
 import type { ConceptoDeGasto } from '../../servicios/conceptos-de-gasto.api';
+import IdpDeLaFactura from './IdpDeLaFactura.vue';
+import MasMontosDeLinea from './MasMontosDeLinea.vue';
 
 /** Una línea del documento: qué se compró, cuánto costó y, si es combustible, cuántos galones. */
 const props = defineProps<{
@@ -20,6 +22,8 @@ const props = defineProps<{
   combustibles: Combustible[];
   errores: Record<string, string>;
   puedeQuitar: boolean;
+  /** Falso en la factura especial: no lleva otros impuestos ni IDP escrito. */
+  conMontosExtra: boolean;
 }>();
 const linea = defineModel<LineaEnEdicion>({ required: true });
 defineEmits<{ quitar: [] }>();
@@ -121,7 +125,7 @@ function elegirConcepto(id: string | null | undefined): void {
           v-model="linea.combustibleId"
           class="sm:col-span-2"
           etiqueta="Combustible"
-          requerido
+          :requerido="!linea.escribeIdp"
           :opciones="opcionesDeCombustible"
           :error="errores.combustibleId"
         />
@@ -130,10 +134,13 @@ function elegirConcepto(id: string | null | undefined): void {
           tipo="number"
           paso="any"
           etiqueta="Galones"
-          requerido
+          :requerido="!linea.escribeIdp"
+          :ayuda="linea.escribeIdp ? 'Opcional: con ellos le avisamos si el IDP no cuadra.' : undefined"
           :error="errores.galones"
         />
+        <IdpDeLaFactura v-if="conMontosExtra" v-model="linea" :errores="errores" />
       </template>
     </div>
+    <MasMontosDeLinea v-if="conMontosExtra" v-model="linea" class="mt-3" :errores="errores" />
   </fieldset>
 </template>

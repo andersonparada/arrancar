@@ -16,6 +16,7 @@ const cifras = computed(() => {
     { etiqueta: 'IVA no acreditable', valor: totales.ivaNoAcreditable },
     { etiqueta: 'IDP', valor: totales.idp },
     { etiqueta: 'Exento', valor: totales.exento },
+    ...(Number(totales.otrosImpuestos) === 0 ? [] : [{ etiqueta: 'Otros impuestos', valor: totales.otrosImpuestos }]),
     { etiqueta: 'Retenido', valor: totalRetenido({ retenciones }) },
   ];
 });
