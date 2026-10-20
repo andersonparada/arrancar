@@ -2662,7 +2662,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
    resumen, pestaña de anulados, Excel. Página de hasta 120 líneas; lógica en archivos sin Vue con pruebas.
 5. **L5-2a (servidor, SAT-2237) — hecho el 2026-10-20:** rubros, segmento 9, detalle de proveedores y facturas especiales, rutas y Excel; el
    mapa de casillas vacío (`casillas: null`). **No espera la captura.**
-6. **L5-2b (cliente, SAT-2237):** pestaña «Datos para el SAT-2237» con rubros, operaciones, proveedores y avisos.
+6. **L5-2b (cliente, SAT-2237) — hecho el 2026-10-20:** página hermana «Datos para el SAT-2237» con rubros, operaciones, proveedores y avisos.
 7. **L5-2c (servidor y cliente) (captura):** el mapa de rubros a casillas con sus nombres y la vista «como en el
    formulario»; cerrar las preguntas L5-C1 a L5-C3.
 8. **L5-3a (servidor, PDF) — hecho el 2026-10-20 (con `pdfkit` 0.20.2 en lugar de `pdfmake`; la hoja final es siempre el resumen):** dependencia aprobada por el agente de seguridad, `paginarLibro`, plantilla,

@@ -1219,3 +1219,13 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `dominio/libro/casillas-del-sat-2237.ts`, todo «por confirmar» y sin versión (L5-2c espera la captura). Decisión: la FESP
   cuenta en «otras compras»/«servicios» según su línea. Pruebas: dominio (`datos-del-sat-2237.prueba.ts`) y API
   (`libro-de-compras-libro-sat-2237.api.prueba.ts`).
+- **2026-10-20 — Libro de compras L5-2b (cliente, datos para el SAT-2237).** Página hermana del libro,
+  `/libro-de-compras/libro/sat-2237` (menú Reportes «Datos para el SAT-2237», permiso `libro.ver`; el Excel pide
+  `libro.exportar`), en vez de una pestaña: el libro ya está cerca de las 120 líneas, su pestaña es un interruptor
+  libro/anulados y esta vista tiene su propio Excel y su propia respuesta (puede no aplicar). Lleva el mismo selector de
+  período y un enlace «Libro de compras» para volver. Muestra la nota de que las casillas exactas se completan con la
+  captura del formulario vigente, los avisos, los rubros (base e IVA de facturas, notas de débito, notas de crédito y
+  neto; la nota de cada rubro bajo su nombre, visible también en el celular; los rubros sin movimiento van atenuados pero
+  presentes), el segmento 9, el detalle de proveedores y las facturas especiales ordenados por crédito (con el aviso de
+  neto en cero o negativo dentro de la fila). Si no aplica, explica el motivo y el formulario que corresponde (SAT-2046).
+  Las tablas se desplazan dentro de su región, no la página. Lógica pura en `datos-del-sat-2237.ts` con pruebas.

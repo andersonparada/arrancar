@@ -1,0 +1,17 @@
+export const VENTANA_DEL_SAT_2237 = {
+  titulo: 'Datos para el SAT-2237',
+  descripcion: 'Las compras del mes agrupadas como las pide el formulario del IVA.',
+  volver: 'Libro de compras',
+  exportar: 'Exportar a Excel',
+  notaDeCasillas: 'Las casillas exactas del formulario se completarán con la captura del SAT-2237 vigente.',
+  rubros: 'Rubros',
+  rubrosAyuda: 'Base e IVA por rubro. Las notas de crédito restan.',
+  segmento9: 'Segmento 9: operaciones',
+  segmento9Ayuda: 'Cantidad de documentos y base por tipo de operación.',
+  proveedores: 'Detalle de proveedores',
+  proveedoresAyuda: 'Ordenado por crédito fiscal, de mayor a menor. Las notas se restan al proveedor.',
+  facturasEspeciales: 'Facturas especiales',
+  facturasEspecialesAyuda: 'Compras a quienes no emiten factura, ordenadas por crédito fiscal.',
+  sinProveedores: 'No hay compras de este tipo en el período.',
+  sinFormulario: 'Este período no lleva SAT-2237',
+} as const;
