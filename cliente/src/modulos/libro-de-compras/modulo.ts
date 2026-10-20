@@ -3,7 +3,8 @@ import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_LIBRO_DE_COMPRAS, TITULO_SECCION_FISCAL } from './textos';
 import { Tags } from 'lucide-vue-next';
 import { VENTANAS_LIBRO_DE_COMPRAS } from './textos';
-import { FileText, Fuel } from 'lucide-vue-next';
+import { BookOpen, FileText, Fuel } from 'lucide-vue-next';
+import { VENTANA_DEL_LIBRO } from './textos-del-libro';
 import { VENTANA_DE_DOCUMENTOS } from './textos-de-documentos';
 import { FORMULARIO_DE_DOCUMENTO } from './textos-del-registro';
 // generador: importaciones
@@ -45,6 +46,12 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       component: () => import('./paginas/FichaDeDocumento.vue'),
       props: ({ params }) => ({ documentoId: String(params.documentoId) }),
       meta: { permiso: 'libro-de-compras.documentos.ver', titulo: VENTANA_DE_DOCUMENTOS.ficha },
+    },
+    {
+      path: '/libro-de-compras/libro',
+      name: 'libro-de-compras.libro',
+      component: () => import('./paginas/LibroDelPeriodo.vue'),
+      meta: { permiso: 'libro-de-compras.libro.ver', titulo: VENTANA_DEL_LIBRO.titulo },
     },
     // generador: rutas
   ],
@@ -91,6 +98,13 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
           icono: Fuel,
           seccion: 'administracion',
           permiso: 'libro-de-compras.combustibles.ver',
+        },
+        {
+          titulo: VENTANA_DEL_LIBRO.titulo,
+          ruta: '/libro-de-compras/libro',
+          icono: BookOpen,
+          seccion: 'reportes',
+          permiso: 'libro-de-compras.libro.ver',
         },
         // generador: menu
       ],

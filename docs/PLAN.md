@@ -1118,3 +1118,8 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   IVA con y sin crédito con su motivo). Completo o simplificado según `regimen_iva_de_la_empresa` de los documentos (sin
   documentos, el régimen que rige en el período). Resumen mensual, avisos y, aparte, `GET …/libro/anulados`. Se declaran
   `libro.ver` y `libro.exportar`. Pendiente: Excel de tres hojas (`escribirVarias` en el core) y el PDF, en pasos siguientes.
+- **2026-10-20 (L5-1b, cliente del libro):** página «Libro de compras» en Reportes (`libro-de-compras.libro.ver`): período
+  (mes anterior por omisión), encabezado con empresa, NIT y tipo de libro, avisos, tabla completa o simplificada que se
+  desplaza dentro de su contenedor en el celular, notas de crédito en rojo con enlace a la ficha, totales al pie, leyenda,
+  resumen en tarjetas y pestaña «Anulados del período» (solo pantalla). Excel y «PDF con folios» quedan deshabilitados
+  («próximamente») hasta que el servidor los ofrezca.
