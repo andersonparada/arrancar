@@ -641,3 +641,25 @@ confirmar en Retenciones Web; clase de cargo (precio, intereses, otros) solo par
 financiero; bloqueo de NDEB con IVA sobre factura exenta; plazos en meses con «vence la víspera» (Código Tributario,
 confirmar artículo) para la nota de crédito tardía y la NDEB; se aprueba el diseño R3-a a R3-i del arquitecto con los
 ajustes del contador. La vista previa (`calcular`) no exige destino; solo registrar.
+
+## Importar DTE recibidos (L4) (contador-guatemala, 2026-10-19)
+
+La SAT ofrece en la Agencia Virtual → FEL → **Consultar DTE → Recibidos** la descarga en Excel, PDF o XML (uno o todos los
+de la búsqueda; tope ≈ 10,000 por consulta y CSV por correo hasta 500,000, confirmar). **No hay API oficial para
+receptores**; los programas que «traen» las facturas raspan la Agencia Virtual con las credenciales del contribuyente.
+El Excel trae UUID, tipo, serie, número, NIT y nombre del emisor y del receptor, fecha, moneda, total, IVA, IDP, otros
+impuestos por columna y **estado de anulación** (columnas por confirmar con un archivo real); no trae base y exento por
+separado, ítems, galones ni la factura de las notas. El XML trae todo eso pero no dice si se anuló (la anulación es otro
+XML). El emisor puede anular hasta el vencimiento de la declaración del IVA del período: un Excel bajado antes no es
+definitivo. Riesgos: anulaciones tardías, duplicados, notas sin su factura, FESP en **emitidos**, otros impuestos sin
+columna, IDP sin galones, XML con XXE.
+
+**Decisiones del usuario (2026-10-19), las recomendadas:** Excel/CSV primero y XML después como enriquecimiento y
+anexo (L4b); importar a una **bandeja** con upsert por UUID, completar y confirmar en lote **fila por fila** con el mismo
+caso de uso del formulario, más **conciliación** por período (faltantes, anuladas en la SAT, diferencias; manda el DTE);
+columna nueva **«otros impuestos»** (no afectos en el libro), también al registrar a mano; **manda el IDP del DTE** con
+galones opcionales y aviso si no coincide; recepción propuesta = emisión, **exigida** a agentes de IVA; crear el
+proveedor nuevo desde la bandeja con el régimen deducido; importar **Emitidos** filtrado a FESP después de L4; aviso en
+L5 al declarar si quedan pendientes. Conexión automática con credenciales de la SAT: **la evalúa el agente de seguridad**.
+**Pendiente del usuario:** un Excel real de un mes de «Recibidos» y 3–4 XML (factura, combustible, nota de crédito,
+anulada), con NIT y nombres tachados pero sin borrar columnas, para cotejar las columnas antes de programar.
