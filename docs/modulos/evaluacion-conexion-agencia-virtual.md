@@ -198,3 +198,11 @@ control**. Si el usuario la aprobara contra esta recomendación, aplican todos y
   https://owasp.org/www-project-automated-threats-to-web-applications/
 - CWE-257 (contraseñas en formato recuperable): https://cwe.mitre.org/data/definitions/257.html;
   CWE-522 (credenciales protegidas insuficientemente): https://cwe.mitre.org/data/definitions/522.html
+
+## Decisión del usuario (2026-10-20)
+
+El usuario quiere la descarga automática. Se guarda **solo el usuario** de la Agencia Virtual; la **contraseña y el
+código de segundo factor se escriben cada vez** y se usan solo para esa descarga, sin guardarse (un hash no serviría: la
+SAT necesita la contraseña tal cual). El permiso delegado «Consulta-FEL» queda descartado por ahora. Se programa
+**después de L4 con archivos**, en un paso propio que revisa el agente de seguridad (proceso aislado, nada secreto en
+registros, límites de frecuencia), y lo descargado entra a la misma bandeja.
