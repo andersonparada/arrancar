@@ -2656,7 +2656,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
 
 1. **L5-0a (servidor):** 3.9.9: migración `0023`, cálculo de la línea exenta, Excel de vigencias, avisos; pruebas.
 2. **L5-0b (cliente):** casilla en la ventana de la vigencia; formulario de documentos con el combustible exento.
-3. **L5-1a (servidor, libro):** consulta, `FilaDelLibro`, `ResumenDelLibro`, anexo de anulados, `escribirVarias` en el
+3. **L5-1a (servidor, libro) — hecho el 2026-10-20 (consulta, `FilaDelLibro`, resumen, anexo, rutas y permisos; faltan `escribirVarias` y el Excel):** consulta, `FilaDelLibro`, `ResumenDelLibro`, anexo de anulados, `escribirVarias` en el
    core, rutas y permisos `libro.ver`/`.exportar`, Excel de tres hojas, avisos; pruebas.
 4. **L5-1b (cliente, libro):** página «Libro de compras y servicios» (Reportes): período, tabla completa o simplificada,
    resumen, pestaña de anulados, Excel. Página de hasta 120 líneas; lógica en archivos sin Vue con pruebas.

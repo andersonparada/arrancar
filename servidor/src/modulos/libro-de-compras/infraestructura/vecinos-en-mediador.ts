@@ -2,6 +2,7 @@ import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import '../../core/contratos/empresas.contratos.js';
 import '../../core/contratos/terceros.contratos.js';
 import { mediador } from '../../core/mediador/contexto.js';
+import type { IdentidadDeLaEmpresa } from '../aplicacion/puertos/consultas-del-libro.js';
 import type {
   CompletadorDeDpi,
   CompletadorDeNit,
@@ -29,5 +30,15 @@ export class CompletadorDeNitEnMediador implements CompletadorDeNit {
 export class CompletadorDeDpiEnMediador implements CompletadorDeDpi {
   completar(operador: Operador, proveedorId: string, dpi: string): Promise<void> {
     return mediador.enviar(operador, 'terceros.completar_dpi', { proveedorId, dpi });
+  }
+}
+
+/** El nombre y el NIT de la empresa que encabezan el libro (orden `empresas.obtener_datos_de_empresa`). */
+export class IdentidadDeLaEmpresaEnMediador implements IdentidadDeLaEmpresa {
+  async datos(operador: Operador): Promise<{ nombre: string; nit: string | null }> {
+    const { nombre, nit } = await mediador.enviar(operador, 'empresas.obtener_datos_de_empresa', {
+      empresaId: operador.empresaId,
+    });
+    return { nombre, nit };
   }
 }

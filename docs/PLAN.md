@@ -1109,3 +1109,12 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   lo que el cambio contradice (`conflicto-de-vigencia-de-combustible.ts`: exención, tasa, etanol o inicio; si solo cambió el cierre,
   «Vigente hasta»); el servidor no dice qué campo, así que el mensaje se reparte según lo que cambió el usuario. Con pruebas de la
   lógica pura. Pendiente: que el servidor mande el campo en `detalles` si se quiere una señal exacta.
+
+- **2026-10-20 — Libro de compras L5-1a (servidor, libro del período).** `GET /api/libro-de-compras/libro?periodo=AAAA-MM`
+  (permiso `libro.ver`) arma el libro con una sola consulta por período (documentos vigentes con `muestra_en_reportes_sat`,
+  sumados por documento y categoría de línea: bien, servicio, combustible y activo fijo) y la función pura
+  `dominio/libro/fila-del-libro.ts`, que reparte las columnas y pone el signo (nota de crédito negativa, nota de débito
+  positiva, vendedor de la FESP, IDP aparte, «exento y no afecto» = exento + otros impuestos, regímenes sin IVA en su columna,
+  IVA con y sin crédito con su motivo). Completo o simplificado según `regimen_iva_de_la_empresa` de los documentos (sin
+  documentos, el régimen que rige en el período). Resumen mensual, avisos y, aparte, `GET …/libro/anulados`. Se declaran
+  `libro.ver` y `libro.exportar`. Pendiente: Excel de tres hojas (`escribirVarias` en el core) y el PDF, en pasos siguientes.

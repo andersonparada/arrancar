@@ -7,6 +7,7 @@ import { rutasDeConceptosDeGasto } from './composicion/conceptos-de-gasto.js';
 import { rutasDeCombustibles } from './composicion/combustibles.js';
 import { configuracionDelLibroDeCompras } from './configuracion.js';
 import { rutasDeVigenciasDeCombustible } from './composicion/vigencias-de-combustible.js';
+import { rutasDeLibro } from './composicion/libro.js';
 // generador: importaciones
 
 /** Raíz de composición: el único lugar donde se eligen las implementaciones concretas. */
@@ -18,6 +19,7 @@ function componerRutas() {
     rutasDeCombustibles(),
     rutasDeVigenciasDeCombustible(),
     rutasDeDocumentosComponidas(),
+    rutasDeLibro(),
     // generador: rutas
   ]);
 }
@@ -71,6 +73,8 @@ export const moduloLibroDeCompras: DefinicionModulo = {
       clave: 'libro-de-compras.retenciones.ajustar',
       descripcion: 'Cambiar o quitar las retenciones que el sistema propone al registrar un documento',
     },
+    { clave: 'libro-de-compras.libro.ver', descripcion: 'Ver el libro de compras del período y su anexo de anulados' },
+    { clave: 'libro-de-compras.libro.exportar', descripcion: 'Exportar el libro de compras del período' },
     // generador: permisos
   ],
   configuracion: configuracionDelLibroDeCompras,
