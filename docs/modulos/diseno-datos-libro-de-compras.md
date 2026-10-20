@@ -1092,6 +1092,623 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 - **C7.** ¿Una nota de crédito puede referenciar una NDEB en la FEL, o siempre la factura original? (El diseño las
   ata a la factura.)
 
+### 3.3b Bandeja de DTE recibidos y otros impuestos (L4) — arquitecto de datos, 2026-10-19
+
+Estado: **propuesta para aprobar**. Lleva a tablas el informe del contador y las decisiones del usuario del 2026-10-19
+(«Importar DTE recibidos (L4)» al final de `validacion-h7-h11-retenciones.md`), con su aclaración del mismo día: **el
+registro a mano (formulario de L3-8) es la vía principal** y debe quedar completo por sí solo; la bandeja y la
+conciliación son **opcionales**. Va después de R3: la migración de R3 es la `0018` (`0018_r3_nota_de_debito`), así que
+las de L4 empiezan en la `0019`.
+
+**Las columnas exactas del Excel de la SAT todavía no se conocen** (el usuario conseguirá un archivo real de un mes de
+«Recibidos» y 3–4 XML). Todo lo que depende de ellas está aislado en un **mapa de encabezados** (3.3b.6) que se ajusta
+sin migrar, y los pasos que lo esperan van marcados.
+
+#### 3.3b.1 Lo encontrado
+
+1. **Excel del motor (`core/intercambio`):** `LibroDeExcelJs.leer` toma la **fila 1** como encabezados y lee la primera
+   hoja; `ubicarColumnas` busca cada columna por **un solo** título normalizado (`normalizar`: sin tildes, minúsculas,
+   sin `*`). Un archivo de la SAT puede traer filas de título antes de los encabezados y nombres que cambian: hace falta
+   una lectura **cruda** (todas las filas) y un mapa con **variantes**. `ValidadorDeXlsx` (bomba zip, macros, vínculos,
+   100 entradas, 25/50 MB inflados), `leerArchivoDeExcel` (5 MB, 413) y `limitarImportaciones` (10 solicitudes por minuto
+   por usuario) sirven tal cual. No hay lector de CSV ni detección de formato por contenido.
+2. **El motor es «todo o nada»** y pasa cada fila por el caso de uso del formulario dentro de **una** transacción. Para la
+   bandeja eso no sirve al confirmar (una fila con un problema no debe frenar las demás), pero **sí** sirve para cargar el
+   archivo en la bandeja (un lote entra entero o no entra).
+3. **Cálculo de la línea** (`calculo-de-linea.ts`): `gravado = total − idp − exento`; el IDP **solo** se calcula de
+   galones × tasa de la vigencia × (100 − etanol) y el check `lineas_idp_calculado` exige esa fórmula exacta. No hay forma
+   de escribir el IDP que dice el DTE. El IVA ya se puede corregir al de la FEL (`ivaDeLaFel`, hasta `max(5, líneas)`
+   centavos).
+4. **Motivo `exento`** (`motivo-sin-credito.ts`): «IVA cero y `exento = total`». La base del ISR
+   (`estrategia-de-retencion-de-isr.ts`) es `total − iva − (idp si no se incluye)`.
+5. `documentos_autorizacion_fel_unica` es único **en toda la instalación** (solo vigentes): sirve para saber si un DTE ya
+   está registrado en otra empresa sin revelar cuál (riesgo ya aceptado, §13.1).
+6. **Recibos FEL a la empresa:** la familia `recibo` (`RECI`, `RDON`) solo se registra con la casilla SAT desmarcada y uno
+   de tres motivos (`sin_fel`, `fel_a_consumidor_final`, `fel_a_otro_nit`). Un `RECI` emitido **al NIT de la empresa** no
+   tiene camino hoy (hueco de L3 que L4 hace visible; pregunta L4-c3 al contador).
+7. La auditoría (`AccionAuditada`) es un tipo de TypeScript sin `check` en la base: agregar una acción no pide migración.
+8. En desarrollo no hay documentos ni líneas (consulta de solo lectura del 2026-10-19): las migraciones no convierten
+   datos.
+9. `terceros.terceros` exige `tipo` (`individual` o `juridica`) y `nombre_mostrar`; el NIT es único por cuenta. Crear un
+   proveedor desde otro módulo no existe: hoy solo hay `completar_nit` y `completar_dpi`.
+
+#### 3.3b.2 Decisiones de diseño (resumen)
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Vía principal | El formulario de L3-8 gana «Otros impuestos» e «IDP según la factura» y queda completo sin la bandeja | Aclaración del usuario: muchos clientes no bajarán nada de la SAT |
+| Otros impuestos | **Una columna de total** `otros_impuestos` en documentos y líneas; el detalle por nombre corto solo se guarda en la bandeja (lo trae el Excel) | Ninguno de esos impuestos da crédito, cambia el motivo ni se retiene: el total basta para calcular y para el libro. El detalle por impuesto en el formulario sería un selector más para nada (3.3b.3) |
+| IDP del DTE | Columna `idp_escrito` en la línea: si es `true` manda el IDP escrito y los galones son opcionales (aviso si no coinciden); si es `false`, como hoy | Decisión del usuario («manda el IDP del DTE») sin perder la garantía de la fórmula en la base cuando el IDP sí se calcula |
+| Bandeja | Tabla `dte_recibidos`, por empresa, único `(empresa_id, autorizacion_fel)`, upsert al reimportar | Decisión del usuario |
+| Lote | Tabla `lotes_de_dte` con su resumen; **el archivo no se guarda** (solo su sha256, nombre y tamaño) | Mismo criterio que hoy para el Excel importado (`seguridad-de-archivos.md`, A9): no hay por qué guardar un archivo con NIT y montos de terceros |
+| Cargar | Un lote entra **entero o no entra** (una transacción) | Es una carga a una tabla de trabajo, no un registro fiscal |
+| Confirmar | **Fila por fila**, cada una en su transacción, con `RegistrarDocumento` (el mismo caso de uso del formulario) | Decisión del usuario: una fila con error no frena las demás |
+| Conciliación | **Consulta**, no tabla (3.3b.9) | Se calcula en el momento con lo que hay; guardarla pediría mantenerla con cada alta, baja y reimportación |
+| Opcional | Nada exige la bandeja: ni avisos, ni el cierre del período (L5), ni la conciliación | Aclaración del usuario |
+
+#### 3.3b.3 Otros impuestos
+
+**Qué son:** los impuestos del DTE que no son IVA ni IDP (en la FEL: turismo hospedaje, turismo pasajes, timbre de prensa,
+bomberos, tasa municipal, bebidas alcohólicas, bebidas no alcohólicas, tabaco, cemento, tarifa portuaria; la lista exacta
+de las columnas del Excel se confirma con el archivo real). No dan crédito fiscal, no cambian el motivo sin crédito y van
+al **costo** de la línea.
+
+**Forma: total, no detalle.** Opciones:
+
+| Opción | A favor | En contra |
+|---|---|---|
+| (A) Total `otros_impuestos` en documento y línea | Un campo más en el formulario; el check de cuadre sigue simple; el libro lo pone como no afecto | No dice qué impuesto era |
+| (B) Tabla hija `impuestos_de_documento (documento_id, nombre_corto, monto)` | Detalle exacto | Un selector por impuesto en el formulario a mano (la vía principal) para un dato que nada usa; otra tabla que cuadrar con las líneas |
+| (C) Total más `jsonb` con el detalle en el documento | Detalle sin tabla | Dos verdades que pueden no cuadrar |
+
+**Recomendación: (A)**, y el detalle por nombre corto se queda en la fila de la bandeja (`otros_impuestos_detalle`), que ya
+lo trae el Excel y queda enlazada al documento. Si Contabilidad pide algún día una cuenta por impuesto, se agrega (B) sin
+cambiar el total.
+
+**Columnas nuevas:**
+
+| Tabla | Columna | Tipo | Nulo | Regla |
+|---|---|---|---|---|
+| `documentos` | `otros_impuestos` | numeric(14,2) | no | `default 0`; check `documentos_otros_impuestos_no_negativo` (`>= 0`); suma de sus líneas |
+| `lineas_de_documento` | `otros_impuestos` | numeric(14,2) | no | `default 0`; check `lineas_de_documento_otros_impuestos_no_negativo` (`>= 0`) |
+
+**`totales_cuadran`** (los dos se reemplazan): `total = base + iva + idp + exento + otros_impuestos`, en el documento
+(`documentos_totales_cuadran`) y en la línea (`lineas_de_documento_totales_cuadran`). Con `default 0` lo registrado hasta
+hoy sigue cuadrando.
+
+**Cálculo** (`calculo-de-linea.ts`, `totales-del-documento.ts`):
+- `gravado = total − idp − exento − otros_impuestos` (debe ser `>= 0`; el error de hoy cambia a «El IDP, lo exento y los
+  otros impuestos de la línea suman más que su total»).
+- El IVA se saca del gravado como hoy; `base = gravado − iva`. Familias sin IVA y casilla desmarcada: `base = total −
+  idp − exento − otros_impuestos`.
+- Costo de la línea: la fórmula de hoy (`total − iva + iva_no_acreditable`) ya incluye los otros impuestos.
+- Motivo `exento`: pasa a `iva = 0 and exento > 0 and exento + otros_impuestos = total` (lo no afecto no convierte en
+  exenta una compra; una línea solo de otros impuestos no lleva motivo, igual que hoy una solo de IDP).
+- **Retenciones (pregunta L4-c1 al contador):** la propuesta es **sacar** los otros impuestos de la base del ISR (no son
+  renta del proveedor: los cobra por cuenta del Estado), como ya se puede sacar el IDP. El mínimo de Q2,500 de las
+  retenciones de IVA se sigue midiendo como hoy. Mientras el contador no conteste, L4-2 deja la base del ISR como está
+  (incluidos) y la cambia en un commit aparte si confirma.
+
+**En el libro (L5):** los otros impuestos van en la columna de **no afecto/exento** junto con `exento` (decisión del
+usuario). La fila del libro sigue cuadrando: `total = base + iva + idp + (exento + otros_impuestos)`.
+
+**Formulario a mano (L3-8):** cada línea gana «Otros impuestos (turismo, timbre, bomberos…)», junto a «Exento», plegado
+bajo «Más montos de la factura» para no estorbar a quien no lo usa (se despliega solo si la línea ya tiene un valor). Los
+totales del documento muestran la suma. Viaja como texto (`otrosImpuestos: "12.50"`), `null` = 0, en `SolicitudDeLinea`,
+en el DTO de la línea y del documento y en `POST …/documentos/calcular`. Los avisos no cambian.
+
+**Contratos y destino:** `DocumentoParaDestino` no cambia (manda el total). Contabilidad (futuro) llevará los otros
+impuestos al costo de la línea, como el IDP.
+
+#### 3.3b.4 IDP del DTE con galones opcionales
+
+**Hoy:** la línea de combustible exige vigencia, galones, IDP por galón y etanol (los cuatro o ninguno) y el IDP es la
+fórmula exacta (`lineas_idp_calculado`).
+
+**Decisión del usuario:** manda el IDP que dice el DTE; los galones son opcionales y, si vienen, se avisa si no coinciden.
+
+**Columna nueva en `lineas_de_documento`:**
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `idp_escrito` | boolean | no | `default false`. `true`: el IDP es el que escribió el usuario (o trajo el DTE) y manda; `false`: se calcula de los galones como hoy |
+
+**Restricciones** (nombres `lineas_de_documento_<regla>`):
+
+| Nombre | Expresión | Estado |
+|---|---|---|
+| `combustible_completo` | la de hoy: vigencia, galones, IDP por galón y etanol, los cuatro o ninguno | **sin cambio** (sin galones no se guarda la vigencia: no hay con qué comparar) |
+| `idp_calculado` | `idp_escrito or (vigencia_de_combustible_id is null and idp = 0) or idp = round(galones * idp_por_galon * (100 - porcentaje_de_etanol) / 100, 2)` | se reemplaza: la fórmula solo ata al IDP calculado |
+| `idp_escrito_positivo` | `not idp_escrito or (idp > 0 and tipo = 'bien')` | **nueva**: un IDP escrito es de un bien y no es cero (sin IDP, la casilla no se marca) |
+| `combustible_es_bien` | sin cambio | |
+
+**Reglas del dominio** (`calculo-de-linea.ts`; `LineaEscrita` suma `idp: number | null`, en centavos):
+
+| Lo que escribe el usuario | Se guarda | Aviso |
+|---|---|---|
+| Combustible y galones, sin IDP | `idp_escrito = false`, IDP calculado (hoy) | — |
+| IDP, sin combustible ni galones | `idp_escrito = true`, `tipo = 'bien'`, sin vigencia | — |
+| IDP, combustible y galones | `idp_escrito = true`, la vigencia y su tasa copiadas, el IDP escrito | «El IDP de la factura (Q x) no coincide con el de N galones de <combustible> (Q y): revise los galones o el IDP.» si difieren en cualquier centavo |
+| Combustible sin galones (con o sin IDP) | error `LineaInvalida` («Escriba los galones del combustible, o deje solo el IDP de la factura») | — |
+
+- Con IDP escrito y combustible, el combustible **no** es obligatorio: el Excel de la SAT no dice ni galones ni tipo de
+  combustible. Sin galones no se guarda la vigencia (pregunta L4-b).
+- Sin vigencia en la fecha de emisión y con IDP escrito y galones: se registra sin la comparación (y sin vigencia) y con
+  el aviso «No hay tasa de IDP para <combustible> en la fecha de emisión: no se comprobó el IDP» en vez del error
+  `CombustibleSinTasaVigente` (que sigue cuando el IDP se calcula).
+- Una vigencia «en uso» (L2-3) sigue siendo la que tienen las líneas: con IDP escrito y galones también cuenta.
+- **Formulario:** la línea muestra «IDP según la factura» cuando se marca «Lleva IDP (combustible)»; debajo, opcionales,
+  «Combustible» y «Galones» con el texto «para comprobar el IDP». Sin IDP escrito y con galones, se calcula como hoy (para
+  los pocos documentos sin FEL). La solicitud de la línea suma `idp: string | null`.
+
+#### 3.3b.5 Tablas de la bandeja
+
+Las dos son **por empresa** (`empresa_id`, `politicaPorEmpresa()`), sin alcance por registro, con `...marcasDeTiempo` y
+`...autoria` (quién y cuándo los pone la transacción). Nunca se borran (solo en cascada con la empresa).
+
+##### `libro_de_compras.lotes_de_dte`
+
+Una fila por archivo subido, con su resumen. Es el rastro de cada carga.
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `id` | uuid | no | PK |
+| `empresa_id` | uuid | no | FK cascade |
+| `proposito` | text | no | check `in ('bandeja','conciliacion')`; `conciliacion` = conciliación liviana (3.3b.9), sin filas en la bandeja |
+| `formato` | text | no | check `in ('xlsx','csv')` (detectado por el contenido, no por el nombre) |
+| `nombre_del_archivo` | text | no | 1–200, como lo mandó el navegador (solo para mostrar) |
+| `sha256` | char(64) | no | check `~ '^[0-9a-f]{64}$'`; volver a subir el mismo archivo da un aviso, no un error |
+| `tamano_en_bytes` | integer | no | `> 0` |
+| `version_del_mapa` | text | no | la versión del mapa de encabezados con que se leyó (3.3b.6) |
+| `emision_desde`, `emision_hasta` | date | sí | la fecha de emisión menor y mayor del archivo; check `emision_hasta >= emision_desde`; los dos o ninguno |
+| `filas_leidas` | integer | no | `>= 0` |
+| `filas_nuevas`, `filas_actualizadas`, `filas_sin_cambio`, `filas_rechazadas` | integer | no | `>= 0`; check `filas_leidas = filas_nuevas + filas_actualizadas + filas_sin_cambio + filas_rechazadas` |
+| `anuladas_en_la_sat` | integer | no | `>= 0`; filas que llegaron anuladas o pasaron a anuladas en este lote |
+| `rechazos` | jsonb | no | `'[]'`; `[{ fila, autorizacion, motivo, detalle }]`, check `jsonb_typeof = 'array' and jsonb_array_length(rechazos) <= 1000` (si hay más, el resumen lo dice y se guardan los primeros 1000) |
+| `encabezados_no_reconocidos` | jsonb | no | `'[]'`; los títulos del archivo que el mapa no conoce (para ajustar el mapa) |
+| `resumen_de_conciliacion` | jsonb | sí | solo en `proposito = 'conciliacion'`: los conteos de cada resultado; check `(proposito = 'conciliacion') = (resumen_de_conciliacion is not null)` |
+
+Únicos e índices: `lotes_de_dte_id_empresa_unico (id, empresa_id)` (FK de la bandeja); `lotes_de_dte_empresa_idx
+(empresa_id, creado_en desc)` (lista de lotes).
+
+##### `libro_de_compras.dte_recibidos` (la bandeja)
+
+Una fila por DTE recibido, con sus datos **tal como los dice la SAT**, su estado en la SAT, su estado en la bandeja y lo
+que el usuario completa para confirmarlo.
+
+**Datos del DTE (los escribe solo la importación):**
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `id` | uuid | no | PK |
+| `empresa_id` | uuid | no | FK cascade |
+| `cuenta_id` | uuid | no | `default` cuenta de la transacción; solo para la FK del proveedor (como `documentos`) |
+| `autorizacion_fel` | uuid | no | único con la empresa |
+| `tipo_dte` | text | no | check con la lista de `TIPOS_DTE` (los que tienen familia; los demás se rechazan al importar) |
+| `serie` | text | no | mayúsculas, sin espacios, 1–40 (mismo check que `documentos`) |
+| `numero` | text | no | mayúsculas, sin espacios, 1–40 |
+| `fecha_emision` | date | no | |
+| `nit_emisor` | text | no | normalizado (`Nit`), check `~ '^[0-9]{1,12}[0-9K]$'` |
+| `nombre_emisor` | text | no | 1–200, tal cual |
+| `nit_receptor` | text | no | normalizado; el de la empresa al importar (si no, se rechaza) |
+| `total` | numeric(14,2) | no | `> 0`; siempre positivo (la familia da el signo, como en `documentos`) |
+| `iva` | numeric(14,2) | no | `>= 0` |
+| `idp` | numeric(14,2) | no | `>= 0`, `default 0` |
+| `otros_impuestos` | numeric(14,2) | no | `>= 0`, `default 0`; suma del detalle |
+| `otros_impuestos_detalle` | jsonb | no | `'{}'`; `{ "<nombre corto>": "12.50" }` como venga en el Excel |
+| `fila_original` | jsonb | no | la fila del archivo, `{ "<encabezado>": "<texto>" }`; check `pg_column_size(fila_original) <= 16384`. Guarda lo que el mapa no usa (columnas que aún no conocemos) |
+| `estado_sat` | text | no | check `in ('vigente','anulado')` |
+| `anulado_en_la_sat_el` | date | sí | check `(estado_sat = 'anulado') = (anulado_en_la_sat_el is not null)` si el Excel trae la fecha; si solo trae la marca, `estado_sat = 'anulado'` con la fecha del lote (pregunta al tener el archivo) |
+| `lote_id` | uuid | no | el **último** lote que trajo la fila; FK `(lote_id, empresa_id) → lotes_de_dte (id, empresa_id)` no action |
+| `primer_lote_id` | uuid | no | el lote que la creó; misma FK |
+
+**Estado en la bandeja:**
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `estado` | text | no | `'pendiente'`; check `in ('pendiente','registrado','descartado','bloqueado')` |
+| `documento_id` | uuid | sí | el documento registrado; FK `(documento_id, empresa_id) → documentos (id, empresa_id)` no action |
+| `motivo_de_descarte` | text | sí | 1–300 |
+| `descartado_en`, `descartado_por` | timestamptz, uuid | sí | |
+| `motivo_de_bloqueo` | text | sí | check `in ('registrado_en_otra_empresa','recibo_a_la_empresa')` (pregunta L4-c y L4-c3) |
+
+**Lo que el usuario completa (borrador; se puede llenar en varias sesiones):**
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `proveedor_id` | uuid | sí | lo resuelve la importación por NIT; nulo = proveedor nuevo. FK `(proveedor_id, cuenta_id) → terceros.proveedores (id, cuenta_id)` no action |
+| `concepto_id` | uuid | sí | FK `(concepto_id, empresa_id) → conceptos_de_gasto` no action |
+| `destino` | text | sí | check como `documentos_destino_valido` |
+| `fecha_recepcion` | date | sí | check `>= fecha_emision`; nula = la propone el dominio (3.3b.8) |
+| `periodo` | date | sí | check primer día del mes y `>= date_trunc('month', fecha_emision)`; nulo = el propuesto |
+| `no_vinculado` | boolean | no | `false` |
+| `documento_afectado_id` | uuid | sí | la factura de una nota (el Excel no la trae); FK `(documento_afectado_id, empresa_id) → documentos (id, empresa_id)` no action |
+
+**Restricciones** (nombres `dte_recibidos_<regla>`, además de las de cada columna):
+- `registrado_con_documento`: `(estado = 'registrado') = (documento_id is not null)`.
+- `descarte_completo`: `(estado = 'descartado') = (motivo_de_descarte is not null and descartado_en is not null and
+  descartado_por is not null)`.
+- `bloqueo_con_motivo`: `(estado = 'bloqueado') = (motivo_de_bloqueo is not null)`.
+- `otros_impuestos_cuadran`: `idp + iva + otros_impuestos <= total` (lo demás es base y exento, que el Excel no separa).
+- `nota_con_factura`: `documento_afectado_id is null or tipo_dte in ('NCRE','NDEB')`.
+
+**Únicos e índices:**
+
+| Nombre | Definición | Para |
+|---|---|---|
+| `dte_recibidos_autorizacion_unica` | unique `(empresa_id, autorizacion_fel)` | upsert y enlace con lo registrado a mano |
+| `dte_recibidos_documento_unico` | unique `(documento_id) where documento_id is not null` | un documento, una fila; cubre la FK |
+| `dte_recibidos_bandeja_idx` | `(empresa_id, estado, fecha_emision)` | la lista por estado y mes |
+| `dte_recibidos_numero_idx` | `(empresa_id, nit_emisor, serie, numero)` | cruce de respaldo de la conciliación |
+| `dte_recibidos_proveedor_idx` | `(proveedor_id) where proveedor_id is not null` | FK a `terceros.proveedores` |
+| `dte_recibidos_concepto_idx` | `(concepto_id) where concepto_id is not null` | FK |
+| `dte_recibidos_afectado_idx` | `(documento_afectado_id) where documento_afectado_id is not null` | FK |
+| `dte_recibidos_lote_idx`, `dte_recibidos_primer_lote_idx` | `(lote_id)`, `(primer_lote_id)` | FK |
+
+RLS: `politicaPorEmpresa()` en las dos. Ninguna tiene política de alcance.
+
+**Convivencia con `documentos`:**
+- **Registrar a mano enlaza solo:** después de insertar, `RegistrarDocumento` hace `update dte_recibidos set estado =
+  'registrado', documento_id = … where empresa_id = … and autorizacion_fel = … and estado <> 'registrado'` (también una
+  fila descartada o bloqueada: el usuario decidió registrarla). Quien nunca importa no paga nada: el `update` no
+  encuentra filas.
+- **Anular o eliminar el documento** devuelve su fila a `pendiente` (`documento_id = null`) en la misma transacción; el
+  rastro es la auditoría del documento. La FK es `no action` a propósito: si alguien olvida soltar la fila, la base
+  rechaza el borrado.
+- **Importar enlaza lo ya registrado:** una fila nueva cuya autorización ya está vigente en `documentos` de la empresa
+  entra como `registrado` con su `documento_id`.
+
+#### 3.3b.6 Lectura del archivo y mapa de encabezados
+
+**Formato por contenido** (no por extensión ni `Content-Type`), en `core/intercambio` (lo puede usar otro módulo):
+
+| Primeros bytes | Formato | Qué pasa |
+|---|---|---|
+| `PK\x03\x04` | `.xlsx` | `ValidadorDeXlsx` y exceljs, como hoy |
+| `D0 CF 11 E0 A1 B1 1A E1` | `.xls` (Excel 97–2003) | error `ExcelAntiguoNoAdmitido` (422): «Abra el archivo en Excel y guárdelo como .xlsx» |
+| `<html`, `<table` o `<?xml` al inicio (tras espacios o BOM) | HTML o XML con extensión `.xls` (lo hacen algunos portales) | error `ArchivoNoEsExcel` con el mismo consejo; **revisar con el archivo real** |
+| Texto (UTF-8 válido o Windows-1252, sin bytes `NUL` en los primeros 8 KB) | CSV | `LectorDeCsv` (nuevo) |
+| Otro | — | `ArchivoNoEsExcel` |
+
+**Lectura cruda:** el puerto `LibroDeExcel` suma `leerFilas(contenido): FilaLeida[]` (todas las filas no vacías de la
+primera hoja, incluida la 1, con el mismo `valorVisible`); `leer` pasa a apoyarse en él. El `LectorDeCsv` devuelve la misma
+forma: separador detectado en la primera línea con datos (`,`, `;` o tabulador), comillas RFC 4180, BOM quitado, cada celda
+como texto; límites de 10,000 filas, 200 columnas y 4,000 caracteres por celda. Se recomienda `csv-parse` (sin
+dependencias, con `max_record_size`) antes que un lector propio; lo confirma el agente de seguridad.
+
+**Mapa de encabezados** (`aplicacion/dte/mapa-de-encabezados-sat.ts`, datos puros con pruebas; constante versionada
+`VERSION_DEL_MAPA`):
+
+```ts
+/** Campo del DTE → títulos con que puede venir en el archivo de la SAT (se comparan normalizados). */
+export const ENCABEZADOS_DEL_DTE: Record<CampoDelDte, readonly string[]> = {
+  autorizacionFel: ['Número de autorización', 'Numero de Autorizacion', 'UUID', 'Autorización'],
+  tipoDte: ['Tipo de DTE', 'Tipo DTE', 'Tipo de documento'],
+  // … serie, numero, fechaEmision, nitEmisor, nombreEmisor, nitReceptor, moneda, total, iva, idp,
+  // estado (o «Anulado»), fechaDeAnulacion
+};
+/** Columnas de otros impuestos: título → nombre corto que se guarda en el detalle. */
+export const OTROS_IMPUESTOS_DEL_DTE: Record<string, readonly string[]> = {
+  'TURISMO HOSPEDAJE': ['Turismo Hospedaje', 'Impuesto de turismo hospedaje'],
+  // … timbre de prensa, bomberos, tasa municipal, bebidas, tabaco, cemento, tarifa portuaria
+};
+```
+
+- **Comparación:** `normalizar` de `core/intercambio` más quitar signos de puntuación (`.`, `:`, `#`, `(`, `)`) y la palabra
+  «Q» de los montos.
+- **Fila de encabezados:** la primera, entre las 20 primeras, que contenga los campos obligatorios (`autorizacionFel`,
+  `tipoDte`, `serie`, `numero`, `fechaEmision`, `nitEmisor`, `nombreEmisor`, `total`, `iva`). Si ninguna los tiene, error
+  `ArchivoDeLaSatNoReconocido` (422) con `detalles: { faltan: [...], encontrados: [...] }`, para que soporte ajuste el mapa.
+- **Valores con variantes** en el mismo archivo: el tipo puede venir como código (`FACT`) o como nombre («Factura»); el
+  estado como «Vigente/Anulado», «Sí/No» en una columna «Anulado», o una fecha de anulación. Se interpretan con mapas del
+  mismo estilo.
+- **Ajuste sin migrar ni desplegar:** variable de instalación `libro-de-compras.dte.encabezados_adicionales` (`niveles:
+  ['instalacion']`, `publica: false`, **texto** con JSON, porque el panel solo edita `string`/`number`/`boolean`),
+  validada con Zod al leerla: `{ "<campo o impuesto>": ["<título>", …] }`. Solo **agrega** variantes; nunca quita las del
+  código. Un JSON inválido se ignora con un registro en el log (no tumba la importación). Pregunta L4-j.
+- **Columnas desconocidas:** se guardan en `fila_original` y sus títulos en `lotes_de_dte.encabezados_no_reconocidos`. Si
+  una de ellas tiene montos y el DTE no cuadra (3.3b.7), se avisa: puede ser un impuesto que el mapa no conoce.
+
+#### 3.3b.7 Importar a la bandeja (lote)
+
+Caso de uso `ImportarDteRecibidos` (permiso `libro-de-compras.documentos.importar`, límite de frecuencia de siempre). Lee
+el archivo **fuera** de la transacción; después, en **una** unidad de trabajo:
+
+1. Exige el NIT de la empresa (`EmpresaSinNit`, como en `RegistrarDocumento`).
+2. Convierte cada fila (puras, con pruebas): NIT sin guion y en mayúsculas, fechas `dd/mm/aaaa [hh:mm:ss]` o de Excel
+   (en UTC, como `celdas.ts`), montos con comas de miles, montos negativos de las notas a positivo.
+3. **Rechaza** la fila (no entra; queda en `lotes_de_dte.rechazos`) si: el NIT receptor no es el de la empresa; la moneda
+   no es `GTQ` (si el archivo no trae columna de moneda, se supone `GTQ` y el resumen lo dice); el tipo no tiene familia
+   (`FEPE`, `NABN` y cualquier código fuera de `TIPOS_DTE`); faltan datos obligatorios o no se pueden leer; el total es
+   cero; `iva + idp + otros > total`; la autorización se repite **dentro del mismo archivo** con datos distintos.
+4. **Ya registrado en otra empresa** (la autorización está vigente en `documentos` y la empresa activa no la ve): una
+   función `libro_de_compras.autorizacion_registrada_fuera(uuid) returns boolean`, `security definer`, `stable`, dueña la
+   del esquema, que solo responde sí o no. Según la pregunta L4-c: se **rechaza** (como pidió el usuario) o entra
+   **bloqueada** con `registrado_en_otra_empresa` (recomendado).
+5. Resuelve los proveedores con **una** consulta por todos los NIT del archivo (`terceros.terceros` con papel de
+   proveedor activo en la cuenta).
+6. **Upsert** por `(empresa_id, autorizacion_fel)` en tandas de 500:
+   - **Nueva:** `pendiente` (o `registrado` si la autorización ya está vigente en `documentos` de la empresa, o `bloqueado`
+     si es un recibo `RECI`/`RDON` a la empresa).
+   - **Existente sin cambios:** solo `lote_id`.
+   - **Existente con cambios** en los datos del DTE (lo normal: pasó a anulada en la SAT): actualiza los datos del DTE y
+     `lote_id`, **no** toca el estado de la bandeja ni lo completado, y audita `corregir` (recurso
+     `libro-de-compras.dte-recibidos`, `anterior` = el DTO de la fila, `motivo` = «Lote del <fecha>: <campos>»).
+7. Guarda el lote con su resumen y responde `{ lote, avisos }` (archivo repetido por su sha256, moneda supuesta, columnas
+   desconocidas, anuladas en la SAT que ya están registradas aquí).
+
+No hay ensayo: cargar la bandeja no registra nada fiscal y se puede volver a subir el archivo cuantas veces haga falta.
+
+#### 3.3b.8 Completar y confirmar
+
+**Completar** (`PATCH /libro-de-compras/dte-recibidos`, `{ ids, cambios }` para varias filas a la vez, y por fila;
+permiso `documentos.importar`; no se audita: es borrador). Solo filas `pendiente`. Propuestas que ve el usuario y que se
+calculan al mostrar (no se guardan hasta que las acepta o las cambia):
+
+| Campo | Propuesta |
+|---|---|
+| Proveedor | por NIT (lo resuelve la importación); si no existe, «Proveedor nuevo» con el botón de crearlo (abajo) |
+| Concepto | el de la última línea registrada del mismo proveedor en la empresa; si no hay, vacío (obligatorio para confirmar) |
+| Destino | el destino sugerido de hoy (`GET …/proveedores/:id/destino-sugerido`) |
+| Fecha de recepción | la de emisión (decisión del usuario). En una empresa **agente de retención del IVA** no se toma sola: el usuario la escribe o aplica «Usar la fecha de emisión» a las filas elegidas, porque de ella sale la fecha de la retención |
+| Período | el que propone el dominio (mes de recepción, nunca antes del de emisión) |
+| No vinculado | no |
+| Factura de la nota | solo en `NCRE`/`NDEB`: obligatoria; se elige entre las facturas vigentes del proveedor |
+
+**Montos que se proponen al documento** (función pura `documentoDesdeElDte`, con pruebas; el Excel no separa base y
+exento ni trae líneas):
+- **Una línea** con el total, el concepto, `idp` del DTE con `idp_escrito = true` si es mayor que cero (y `tipo = 'bien'`)
+  y `otros_impuestos` del DTE. Quien quiera varias líneas o galones usa «Abrir en el formulario».
+- `ivaDeLaFel` = IVA del DTE.
+- Exento: en una familia sin IVA, 0. En las demás, con `R = total − idp − otros_impuestos` y `G = round(iva × (100 + tasa)
+  / tasa)`: si `iva = 0`, exento `= R` (motivo `exento`); si `|R − G|` cabe en la tolerancia del IVA, exento 0; si no,
+  exento `= R − G` con el aviso «Se dedujo un exento de Q x: revise la factura».
+
+**Vista previa** (`POST …/dte-recibidos/vista-previa`, `{ ids }` hasta 100, permiso `documentos.crear`): corre el cálculo
+del formulario (`calcular`) por fila y devuelve, por fila, totales, motivo, retenciones propuestas, avisos o el error.
+
+**Confirmar** (`POST …/dte-recibidos/confirmar`, `{ ids, datosFiscalesPorProveedor? }` hasta 100, permiso
+`documentos.crear`). Caso de uso `ConfirmarDteRecibidos`: **por cada fila**, en su propia unidad de trabajo:
+1. Bloquea la fila (`for update`); debe estar `pendiente` y con `estado_sat = 'vigente'`; si no, resultado de error.
+2. Arma la `SolicitudSinResolver` con los datos del DTE, lo completado y las propuestas (`tipoDte`, `nitEmisor`, serie,
+   número, autorización, `nitReceptor`, fechas, período, la línea, `ivaDeLaFel`, `ajustesDeRetenciones: []`,
+   `datosFiscalesDelProveedor` del proveedor si vino en `datosFiscalesPorProveedor`).
+3. Exige la recepción si la empresa es agente de retención del IVA (`FaltaLaFechaDeRecepcion`, 422, campo
+   `fechaRecepcion`).
+4. Llama a `RegistrarDocumento.ejecutar` (se une a la transacción): todas las reglas del formulario, incluidos los
+   únicos, el destino, la opción C (`faltan_datos_fiscales_del_proveedor`) y las retenciones **propuestas** (quien quiera
+   ajustarlas usa el formulario).
+5. Marca la fila `registrado` con su `documento_id` (lo hace el mismo enlace de `RegistrarDocumento`).
+
+Responde `{ resultados: [{ id, documentoId, avisos } | { id, error: { codigo, mensaje, detalles } }] }`. Una fila que
+falla deja su transacción deshecha y **no** frena las demás. Las filas se procesan en orden de fecha de emisión (las
+facturas antes que sus notas).
+
+**«Abrir en el formulario»:** `GET …/dte-recibidos/:id/solicitud` devuelve la solicitud propuesta; el cliente abre el
+formulario de L3-8 lleno con ella. Al registrar, el enlace por autorización marca la fila; no hace falta otro campo.
+
+**Proveedor nuevo:** `POST …/dte-recibidos/proveedores`, `{ proveedores: [{ nit, tipo, nombre }] }` (la pantalla los
+propone desde las filas sin proveedor, agrupadas por NIT, y el usuario confirma el tipo de persona y el nombre; pregunta
+L4-k). Exige `documentos.importar` en la ruta y `proveedores.crear` en el caso de uso (como `retenciones.ajustar`). Por
+cada uno, en su transacción:
+1. Orden nueva **`terceros.crear_proveedor_desde_dte`** (`core/contratos/terceros.contratos.ts`, la atiende `terceros`):
+   `datos: { nit, tipo: 'individual' | 'juridica', nombre }`, `respuesta: { proveedorId, creado: boolean }`. Si el NIT ya es
+   de un tercero de la cuenta con papel de proveedor activo, devuelve ese; si lo tiene sin el papel, se lo asigna; si el
+   papel está inactivo, error `ProveedorInactivo` (se reactiva en Proveedores); si no existe, crea el tercero (jurídica:
+   `razon_social = nombre`; individual: el nombre tal cual en `nombres`, pregunta L4-k) con el papel. Valida con los
+   objetos de valor y la unicidad del NIT de `terceros`.
+2. Libro de compras guarda los **datos fiscales deducidos del código** con la regla de la opción C de R2 (§3.2b.5): `FPEQ`/
+   `FCAP` → `pequeno_contribuyente`; `FARP`/`FCRP` → `primario`; `FPEC`/`FCPC` → `pecuario`; `FACT`/`FCAM` → no se guarda
+   nada (se pregunta régimen de ISR y agente de IVA al confirmar, opción C); familias derogadas → no se guarda. Si las
+   filas del NIT traen códigos de régimen distinto, manda el de la emisión más reciente.
+3. Pone `proveedor_id` en las filas pendientes de ese NIT.
+
+**Descartar y restaurar** (`POST …/dte-recibidos/descartar`, `{ ids, motivo }`, y `POST …/dte-recibidos/:id/restaurar`;
+permiso `libro-de-compras.dte-recibidos.descartar`): solo `pendiente` o `bloqueado` → `descartado`; restaurar vuelve a
+`pendiente` (o a `bloqueado` si su motivo sigue). Auditoría: `descartar` (acción nueva en `AccionAuditada`) y `reactivar`,
+con el DTO de la fila y el motivo.
+
+**Avisos en L5 (sin exigir nada):** al declarar o al ver el libro de un período P, «Quedan N DTE pendientes en la bandeja
+que pueden ir en este período» **solo si** la empresa tiene algún lote `bandeja` cuyas fechas de emisión tocan P o los
+dos meses anteriores (plazo del art. 20), y hay filas `pendiente` vigentes en la SAT emitidas en ese rango. Quien nunca
+importó no ve nada. No bloquea.
+
+#### 3.3b.9 Conciliación por período
+
+**Consulta, no tabla.** Se calcula al pedirla con lo que hay en `dte_recibidos` y `documentos`; nada que mantener cuando
+se registra, anula o reimporta.
+
+**Cruce:** primero por **autorización FEL**; lo que no cruza, por **(NIT del emisor, serie, número)** — así se encuentra
+un documento a mano con la autorización mal escrita.
+
+**Los dos lados del período P** (el libro se ordena por período y la SAT por fecha de emisión):
+- **Lado Arrancar:** documentos **vigentes** de la empresa con `periodo = P` y `muestra_en_reportes_sat`.
+- **Lado SAT:** filas de la bandeja **emitidas en el mes P** (cualquier estado), y para buscar los documentos de P emitidos
+  antes, **todas** las filas de la empresa.
+
+**Resultados** (`GET /libro-de-compras/dte-recibidos/conciliacion?periodo=AAAA-MM-01`, permiso `documentos.importar`):
+
+| Resultado | Cuándo | Qué ofrece la pantalla |
+|---|---|---|
+| Cuadra | cruza por autorización y coinciden tipo, NIT, serie, número, fecha, total, IVA, IDP y otros | — |
+| Con diferencias | cruza pero difiere algún dato (se listan campo, Arrancar y SAT); IVA con diferencia de centavos incluida: manda el DTE | abrir el documento (anular y registrar de nuevo, o editar mientras se pueda) |
+| En la SAT y no en Arrancar | fila emitida en P, vigente en la SAT, sin documento | «Registrar» (bandeja) o descartar |
+| Registrado en otro período | fila emitida en P cuyo documento va en otro período | informativo |
+| En Arrancar y no en la SAT | documento de P sin fila; si **no hay ningún lote** que cubra su mes de emisión, se muestra como «Sin datos de la SAT para <mes>» en vez de faltante | revisar la factura (posible error de captura o FEL de otro NIT) |
+| Anulado en la SAT y vigente aquí | fila `anulado` cuyo documento sigue vigente | «Anular» con causa `fel_anulada_por_el_emisor` (permiso `documentos.anular`) |
+| Descartado | fila emitida en P descartada | informativo, con su motivo |
+
+**Conciliación liviana (opcional, para quien no usa la bandeja):** `POST …/dte-recibidos/conciliar?periodo=…` con el
+archivo (permiso `documentos.importar`, mismo límite de frecuencia). Usa el mismo lector y el mismo mapa, cruza **en
+memoria** las filas del archivo con los documentos y responde los mismos resultados **sin crear filas** en la bandeja.
+Guarda solo un `lotes_de_dte` con `proposito = 'conciliacion'` y `resumen_de_conciliacion` (los conteos), para dejar
+rastro de quién concilió y cuándo. Como no crea filas, no activa el aviso de L5. Desde su resultado, «Pasar los faltantes
+a la bandeja» vuelve a subir el mismo archivo como lote `bandeja` (el cliente aún lo tiene). Recomendación: hacerla, como
+paso propio después de la bandeja (pregunta L4-f).
+
+**Cómo se muestra:** pestaña «Conciliación» de la pantalla «DTE de la SAT», con selector de período, una tarjeta por
+resultado con su conteo y la lista de cada uno. Operación no exporta (§10): imprimir o exportar la conciliación iría en
+Reportes (L5), pregunta L4-g.
+
+#### 3.3b.10 Permisos (PLAN §3.5)
+
+| Permiso | Para | Estado |
+|---|---|---|
+| `libro-de-compras.documentos.importar` | subir el archivo a la bandeja, ver la bandeja y sus lotes, completar filas, crear proveedores desde la bandeja (más `proveedores.crear`), ver la conciliación y la conciliación liviana | ya previsto en §9; se declara en L4-7 |
+| `libro-de-compras.dte-recibidos.descartar` | descartar y restaurar filas | **nuevo** (acción especial con permiso propio) |
+| `libro-de-compras.documentos.crear` | vista previa y confirmar (es registrar) | existente |
+| `libro-de-compras.documentos.anular` | anular desde la conciliación | existente |
+| `proveedores.crear` (de `terceros`) | crear el proveedor nuevo; lo comprueba el caso de uso | existente |
+
+Ninguna migración de permisos: son permisos nuevos de un módulo (el acceso total los recibe solo; `core.rol_permisos` y
+`core.usuario_permisos` no se tocan). En el cliente, `v-permiso` oculta el botón «Importar de la SAT» a quien no tiene
+`documentos.importar`.
+
+#### 3.3b.11 Seguridad
+
+- **Tamaño:** 5 MB por archivo, `.xlsx` y CSV (`leerArchivoDeExcel` con el mismo tope; 413). Inflado: los topes de
+  `ValidadorDeXlsx`.
+- **Filas:** hasta **10,000** por archivo (el tope de una consulta de la SAT); 10,001 → `DemasiadasFilas` (pregunta L4-d).
+  El motor de Excel sigue en 5,000 para los demás recursos.
+- **Formato:** solo `.xlsx` y CSV, detectados por contenido (3.3b.6). **No** se lee `.xls` (BIFF): las librerías que lo
+  leen (SheetJS) arrastran avisos de seguridad y la versión de npm no se mantiene; se pide guardarlo como `.xlsx`.
+- **CSV:** sin evaluación de fórmulas (se lee como texto y nunca se vuelve a escribir en un Excel sin escapar, A8); topes de
+  filas, columnas y largo de celda; codificación detectada sin adivinar más allá de UTF-8 y Windows-1252.
+- **Frecuencia:** `limitarImportaciones` (10 por minuto por usuario) en importar y en conciliar; confirmar y vista previa,
+  20 solicitudes por minuto por usuario (cada una hasta 100 filas, cada fila un registro completo).
+- **El archivo no se guarda** (solo sha256, nombre y tamaño). `fila_original` va con tope de 16 KB.
+- **Datos de otra empresa:** la función `autorizacion_registrada_fuera` responde solo sí o no (la unicidad global ya lo
+  revela; §13.1). El agente de seguridad la revisa (`security definer` con `search_path` fijo).
+- **XML (L4b) y conexión automática con la SAT:** fuera de L4; el XML con XXE y la conexión con credenciales los evalúa
+  el agente de seguridad antes de planificarlos.
+
+#### 3.3b.12 Migraciones
+
+Generadas con `npm run bd:generar -w servidor -- libro-de-compras <nombre>` y revisadas a mano. No hay producción ni
+documentos en desarrollo: sin datos que convertir. Números tentativos (si al integrar ya existen, se renumeran con el
+`when` del `_journal.json` mayor que el de la `0018`).
+
+1. **`0019_l4_otros_impuestos_e_idp_del_dte`** (L4-1): `add column "otros_impuestos" numeric(14,2) default 0 not null`
+   en `documentos` y `lineas_de_documento`; `add column "idp_escrito" boolean default false not null` en
+   `lineas_de_documento`; `drop`/`add` de `documentos_totales_cuadran`, `lineas_de_documento_totales_cuadran` y
+   `lineas_de_documento_idp_calculado`; `add` de los dos `otros_impuestos_no_negativo` y de
+   `lineas_de_documento_idp_escrito_positivo`.
+2. **`0020_l4_bandeja_de_dte`** (L4-5): `lotes_de_dte` y `dte_recibidos` con sus checks, llaves compuestas (incluida la
+   del proveedor hacia `terceros.proveedores (id, cuenta_id)`), índices y políticas.
+3. **`0021_l4_autorizacion_registrada_fuera`** (`--custom`, L4-7): la función `security definer` con `set search_path =
+   pg_catalog, libro_de_compras`, `revoke all … from public` y `grant execute` a `arrancar_app`.
+
+Ninguna migración en otros esquemas ni de permisos. Los `meta/*_snapshot.json` deben quedar iguales a las tablas.
+
+#### 3.3b.13 Pruebas de integración (PostgreSQL real)
+
+- **Otros impuestos e IDP (checks):** documento y línea que cuadran solo con `otros_impuestos` (pasa) y sin él (falla);
+  `otros_impuestos` negativo (falla); línea con `idp_escrito` sin combustible (pasa), con IDP 0 (falla), de servicio
+  (falla), con galones y un IDP distinto de la fórmula (pasa), sin `idp_escrito` y con IDP distinto (falla); combustible
+  incompleto (sigue fallando).
+- **API de documentos:** factura con turismo hospedaje (base sin él; costo con él; motivo nulo); factura toda exenta más
+  otros impuestos (motivo `exento`); línea solo de otros impuestos (sin motivo); IDP escrito sin galones; IDP escrito con
+  galones que no coinciden (aviso); combustible sin galones ni IDP (422); IDP escrito sin vigencia en la fecha (aviso, no
+  error).
+- **Bandeja (checks y RLS):** cada `check` de 3.3b.5 con un caso que lo viola; otra empresa de la misma cuenta no ve las
+  filas ni los lotes; la FK del proveedor con uno de otra cuenta (falla); eliminar un documento enlazado sin soltar la
+  fila (falla la FK).
+- **Importar:** archivo de prueba (generado en la prueba, con el mapa) con filas de cada rechazo; reimportar el mismo
+  (sin cambios, aviso de sha256); reimportar con una anulada (actualiza, audita `corregir`, no toca lo completado); una
+  autorización registrada a mano antes de importar (entra `registrado`); una registrada en otra empresa de **otra cuenta**
+  (rechazo o bloqueo según L4-c, sin decir dónde); `.xls`, HTML disfrazado, zip bomba y CSV con `;` y Windows-1252.
+- **Confirmar:** lote de tres filas donde la segunda falla (proveedor sin datos fiscales en empresa agente): la primera y
+  la tercera quedan registradas y la segunda pendiente; agente de IVA sin recepción (422 por fila); nota sin factura
+  (422); fila anulada en la SAT (error de la fila); dos confirmaciones a la vez de la misma fila (una registra, la otra
+  ve `registrado`); anular el documento devuelve la fila a `pendiente`.
+- **Proveedor nuevo:** crea tercero y papel; asigna el papel a un cliente existente; papel inactivo (error); sin
+  `proveedores.crear` (403); datos fiscales deducidos de `FPEQ` guardados y de `FACT` no.
+- **Conciliación:** un caso por resultado de 3.3b.9, incluidos el cruce por serie y número con autorización mal escrita y
+  «sin datos de la SAT» para un mes sin lote; la liviana no crea filas.
+- `politicas-de-los-modulos` y `llaves-entre-esquemas` siguen pasando con las tablas nuevas.
+
+#### 3.3b.14 Pasos (un commit cada uno; servidor y cliente por separado)
+
+Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`. **(archivo)** = espera el Excel
+real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la bandeja: se pueden hacer ya.
+
+1. **L4-1 (servidor, datos):** migración `0019`; tipos de las tablas; pruebas de checks de 3.3b.3 y 3.3b.4.
+2. **L4-2 (servidor, dominio y registro a mano):** `otrosImpuestos` e `idp` escrito en `LineaEscrita`, `calcularLineas`,
+   `totalesDelDocumento`, motivo `exento`, aviso de IDP que no coincide y de tasa sin vigencia; solicitud, esquemas http,
+   DTO de línea y documento, mapeadores; pruebas puras y de API. La base del ISR **no** cambia aquí.
+3. **L4-3 (cliente, formulario, ficha y lista):** «Otros impuestos» plegado en la línea, «Lleva IDP» con «IDP según la
+   factura» y combustible y galones opcionales, totales y avisos; ficha con los dos datos; lógica en
+   `edicion-de-documento.ts` con pruebas. Ningún archivo pasa de 200 líneas ni la página de 120.
+4. **L4-2b (servidor, base del ISR):** solo si el contador confirma L4-c1: sacar los otros impuestos de la base; pruebas.
+5. **L4-4 (servidor, core/intercambio):** `leerFilas` en el puerto y en exceljs, detección de formato, `LectorDeCsv`,
+   `ExcelAntiguoNoAdmitido`; pruebas (incluidas bomba zip, `.xls`, HTML y CSV con `;`). Sin lógica de la SAT.
+6. **L4-5 (servidor, datos de la bandeja):** migración `0020`; pruebas de checks, llaves y RLS de 3.3b.13.
+7. **L4-6 (servidor, lectura del DTE) (archivo):** mapa de encabezados y de valores, fila de encabezados, conversión,
+   reglas de rechazo, `documentoDesdeElDte` y la variable `libro-de-compras.dte.encabezados_adicionales`; pruebas puras con
+   el archivo real anonimizado como dato de prueba.
+8. **L4-7 (servidor, importar) (archivo):** migración `0021`, `ImportarDteRecibidos` (upsert, enlace con lo registrado,
+   auditoría `corregir`), rutas de importar, lista y lotes, permiso `documentos.importar`; pruebas de API.
+9. **L4-8 (servidor, terceros):** orden `terceros.crear_proveedor_desde_dte` atendida en `terceros` y caso de uso de
+   proveedores desde la bandeja con los datos fiscales deducidos; pruebas.
+10. **L4-9 (servidor, completar, confirmar y descartar):** `PATCH`, vista previa, `ConfirmarDteRecibidos` fila por fila,
+    solicitud para el formulario, descartar y restaurar (acción `descartar`, permiso `dte-recibidos.descartar`), enlace en
+    `RegistrarDocumento` y regreso a `pendiente` al anular o eliminar; pruebas de API.
+11. **L4-10 (servidor, conciliación):** consulta por período con sus resultados; pruebas.
+12. **L4-11 (cliente, bandeja) (archivo, para el QA):** botón «Importar de la SAT» en Ingreso de facturas (con
+    `v-permiso`; nunca como paso obligatorio), página «DTE de la SAT» (pendientes, registrados, descartados, bloqueados;
+    resumen del último lote), completar varias filas a la vez, proveedores nuevos, vista previa, confirmar con resultados
+    por fila, descartar y «Abrir en el formulario». La lista de facturas solo muestra «N pendientes de la SAT» si hay.
+13. **L4-12 (cliente, conciliación):** pestaña por período con sus tarjetas y acciones.
+14. **L4-13 (servidor y cliente, conciliación liviana; opcional, si se aprueba L4-f):** `POST …/conciliar` y su pantalla,
+    con «Pasar los faltantes a la bandeja».
+15. **L4-14 (QA) (archivo):** de punta a punta con el archivo real: importar, crear proveedores, completar, confirmar en
+    lote, reimportar con una anulada, conciliar; y la vía a mano con otros impuestos e IDP sin galones, sin pasar nunca por
+    la bandeja.
+
+El aviso de L5 (3.3b.8) se programa con L5.
+
+#### 3.3b.15 Preguntas para el usuario (con recomendación)
+
+- **L4-a. Otros impuestos: total o detalle.** (A) un total por línea y documento; (B) detalle por impuesto en una tabla.
+  **Recomendación: (A)**, con el detalle guardado en la bandeja para lo importado; ningún otro impuesto cambia el crédito,
+  el motivo ni el libro.
+- **L4-b. IDP escrito sin combustible.** ¿Se permite registrar el IDP de la factura sin elegir el combustible (el Excel no
+  lo trae), o se exige el combustible siempre? **Recomendación: permitirlo**; el combustible y los galones quedan para
+  comprobar el IDP de quien los tenga.
+- **L4-c. DTE ya registrado en otra empresa:** rechazar la fila (lo que se pidió) o dejarla **bloqueada** en la bandeja.
+  **Recomendación: bloqueada**: el usuario la ve en la bandeja y en la conciliación, y se libera sola si la otra empresa
+  la anula; rechazada, desaparece hasta la siguiente importación.
+- **L4-d. Tope de filas:** 10,000 por archivo (el de la SAT) y 5 MB. **Recomendación: sí**; cargar la bandeja es liviano
+  (no pasa cada fila por el registro).
+- **L4-e. `.xls` y HTML:** no leerlos y pedir guardarlos como `.xlsx`. **Recomendación: sí**; se revisa con el archivo
+  real (si la SAT entrega `.xls`, se valora convertirlo en el navegador).
+- **L4-f. Conciliación liviana** (subir el Excel solo para cruzar, sin bandeja). **Recomendación: sí, como paso opcional
+  L4-13** después de la bandeja; sirve a quien registra a mano y no le crea pendientes.
+- **L4-g. Imprimir o exportar la conciliación:** Operación no exporta. **Recomendación: no en L4**; si se quiere, como
+  reporte en L5.
+- **L4-h. Recepción en empresas agentes de IVA:** queda vacía hasta que el usuario la escribe o aplica «Usar la fecha de
+  emisión» a las filas elegidas. **Recomendación: sí** (un acto explícito por lote, no una fecha supuesta).
+- **L4-i. Guardar el archivo subido:** **Recomendación: no**, solo su sha256, nombre y tamaño; la fila original queda en
+  `fila_original`.
+- **L4-j. Ajustar el mapa en la instalación** (`libro-de-compras.dte.encabezados_adicionales`, solo agrega variantes).
+  **Recomendación: sí**; si la SAT cambia un título, soporte lo arregla sin esperar un despliegue.
+- **L4-k. Proveedor nuevo:** el tipo de persona y el nombre se proponen (jurídica si el nombre trae «S.A.», «SOCIEDAD»,
+  «LIMITADA»…; individual si no) y el usuario los confirma en una ventana antes de crear. **Recomendación: sí**; cómo
+  partir nombres y apellidos de una persona individual se decide con el archivo real.
+- **L4-l. Confirmar hasta 100 filas por solicitud** (la pantalla manda varias tandas). **Recomendación: sí.**
+
+#### 3.3b.16 Preguntas para el contador (llevar a `contador-guatemala`; ninguna frena L4-1 a L4-3 salvo L4-2b)
+
+- **L4-c1.** ¿Los otros impuestos (turismo, timbre de prensa, bomberos, tasa municipal, bebidas, tabaco, cemento, tarifa
+  portuaria) entran en la base de la retención del ISR (régimen opcional y factura especial)? ¿Y en el total con que se
+  mide el mínimo de Q2,500 de las retenciones de IVA y en el umbral del 5 % al pequeño contribuyente?
+- **L4-c2.** ¿Van en la columna de no afecto/exento del libro de compras, o la SAT espera otra columna? (El usuario decidió
+  no afecto; confirmar con el formato vigente.)
+- **L4-c3.** Un recibo FEL (`RECI`, `RDON`) emitido al NIT de la empresa: ¿va en el libro, fuera del libro o no se registra?
+  (Hoy no tiene camino en Arrancar; en la bandeja entra bloqueado.)
+- **L4-c4.** ¿Es aceptable deducir el exento de una factura como `total − IDP − otros − IVA × 112/12` cuando el Excel no lo
+  separa, con aviso al usuario?
+
 ### 3.3 `libro_de_compras.conceptos_de_gasto` (L2)
 
 | Columna | Tipo | Nulo | Regla |
@@ -1573,7 +2190,8 @@ costo de cada línea, sin cuenta aparte (corregir `libro-de-compras.md`). El pla
 | `libro-de-compras.vigencias-de-combustible.{ver,crear,editar,eliminar,importar,exportar}` | L2 (eliminar solo sin uso) |
 | `libro-de-compras.documentos.{ver,crear,anular,eliminar}` | L3 |
 | `libro-de-compras.retenciones.ajustar` | L3 (pregunta 6) |
-| `libro-de-compras.documentos.importar` | L4 |
+| `libro-de-compras.documentos.importar` | L4 (subir, ver y completar la bandeja, conciliar; §3.3b.10) |
+| `libro-de-compras.dte-recibidos.descartar` | L4 (§3.3b.10) |
 | `libro-de-compras.libro.{ver,exportar}`, `…retenciones.{ver,exportar,constancias}`, `…periodos.{declarar,reabrir}` | L5 |
 
 Donde el plan dice `.registrar` / `.gestionar` léase `.crear` / `.crear`+`.editar`. Datos
@@ -1606,6 +2224,9 @@ solo). `core.rol_permisos` y `core.usuario_permisos` no se tocan.
 | R2-1 | `0014_r2_regimen_iva_del_proveedor.sql` | `regimen_iva` del proveedor (§3.2b.8) |
 | R2-3 | `0015_r2_familias_y_tipo_dte.sql` (hecha) | familias, `tipo_dte` y sus checks (§3.2b.8) |
 | R2-6 | `0016_r2_retenciones_de_factura_especial.sql` | reglas de la factura especial (§3.2b.8) |
+| L4-1 | `0019_l4_otros_impuestos_e_idp_del_dte.sql` | `otros_impuestos` e `idp_escrito` con sus checks (§3.3b.12) |
+| L4-5 | `0020_l4_bandeja_de_dte.sql` | `lotes_de_dte` y `dte_recibidos` (§3.3b.12) |
+| L4-7 | `0021_l4_autorizacion_registrada_fuera.sql` (`--custom`) | función `security definer` (§3.3b.12) |
 | L5 | `…_periodos.sql` | `periodos` |
 
 Datos existentes: ninguno (módulo nuevo, ninguna cuenta lo tiene activo). Semillas: ninguna
@@ -1778,9 +2399,14 @@ Pasos R2-1 a R2-9 en §3.2b.11 (después de R1-4; R2-8 depende de L3-8).
 
 Pasos R3-1 a R3-8 en §3.2c.12 (después de R2-4; R3-5 espera al contador; R3-7 depende de R2-8).
 
+### L4 Bandeja de DTE recibidos y otros impuestos
+
+Pasos L4-1 a L4-14 en §3.3b.14 (después de R3; L4-1 a L4-3 son de la vía a mano y no esperan nada; L4-6, L4-7, L4-11 y
+L4-14 esperan el Excel real del usuario; L4-2b espera al contador).
+
 ## 15. Fuera de L1 a L3
 
-Importar DTE (L4), reportes, constancias y períodos declarados (L5), factura especial (ya planificada en R2, §3.2b), DUCA,
+Importar DTE (L4, ya planificado en §3.3b), reportes, constancias y períodos declarados (L5), factura especial (ya planificada en R2, §3.2b), DUCA,
 no domiciliados en pantalla, moneda extranjera, localidad (establecimiento) por documento y
 cuenta contable por proveedor o concepto (con Contabilidad).
 
