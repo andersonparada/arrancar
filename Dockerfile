@@ -23,6 +23,8 @@ COPY servidor/package.json servidor/
 COPY cliente/package.json cliente/
 RUN npm ci --omit=dev -w servidor && npm cache clean --force
 COPY --from=construccion /app/servidor/dist servidor/dist
+# Fuentes (Noto Sans, licencia OFL) con que se dibuja el PDF del libro de compras.
+COPY --from=construccion /app/servidor/recursos servidor/recursos
 COPY --from=construccion /app/cliente/dist cliente/dist
 RUN mkdir -p /datos/archivos && chown -R node:node /datos
 USER node

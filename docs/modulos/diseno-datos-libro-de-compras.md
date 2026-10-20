@@ -2656,7 +2656,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
 
 1. **L5-0a (servidor):** 3.9.9: migración `0023`, cálculo de la línea exenta, Excel de vigencias, avisos; pruebas.
 2. **L5-0b (cliente):** casilla en la ventana de la vigencia; formulario de documentos con el combustible exento.
-3. **L5-1a (servidor, libro) — hecho el 2026-10-20 (consulta, `FilaDelLibro`, resumen, anexo, rutas y permisos; faltan `escribirVarias` y el Excel):** consulta, `FilaDelLibro`, `ResumenDelLibro`, anexo de anulados, `escribirVarias` en el
+3. **L5-1a (servidor, libro) — hecho el 2026-10-20 (consulta, `FilaDelLibro`, resumen, anexo, rutas y permisos) y L5-1 exportar (`escribirVarias` y el Excel de tres hojas) — hecho el 2026-10-20:** consulta, `FilaDelLibro`, `ResumenDelLibro`, anexo de anulados, `escribirVarias` en el
    core, rutas y permisos `libro.ver`/`.exportar`, Excel de tres hojas, avisos; pruebas.
 4. **L5-1b (cliente, libro) — hecho el 2026-10-20 (Excel y PDF deshabilitados hasta su servidor):** página «Libro de compras y servicios» (Reportes): período, tabla completa o simplificada,
    resumen, pestaña de anulados, Excel. Página de hasta 120 líneas; lógica en archivos sin Vue con pruebas.
@@ -2665,7 +2665,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
 6. **L5-2b (cliente, SAT-2237):** pestaña «Datos para el SAT-2237» con rubros, operaciones, proveedores y avisos.
 7. **L5-2c (servidor y cliente) (captura):** el mapa de rubros a casillas con sus nombres y la vista «como en el
    formulario»; cerrar las preguntas L5-C1 a L5-C3.
-8. **L5-3a (servidor, PDF):** dependencia `pdfmake` aprobada por el agente de seguridad, `paginarLibro`, plantilla,
+8. **L5-3a (servidor, PDF) — hecho el 2026-10-20 (con `pdfkit` 0.20.2 en lugar de `pdfmake`; la hoja final es siempre el resumen):** dependencia aprobada por el agente de seguridad, `paginarLibro`, plantilla,
    migraciones `0024` y `0025`, emitir, copia, borrador, corregir el último folio, permiso `libro.emitir`; pruebas.
 9. **L5-3b (cliente, PDF):** botones «Borrador», «Emitir con folios» (confirmación con los folios que gastará), lista de
    emisiones con «Copia», y el último folio.

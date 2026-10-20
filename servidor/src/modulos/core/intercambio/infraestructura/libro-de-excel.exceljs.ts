@@ -3,7 +3,13 @@ import { ArchivoNoLegible } from '../aplicacion/errores.js';
 import { ValidadorDeXlsx } from './zip/validador-de-xlsx.js';
 import { CeldaConProblema } from '../aplicacion/puertos/libro-de-excel.js';
 import type { FilaCruda } from '../aplicacion/puertos/lector-de-filas.js';
-import type { FilaLeida, HojaLeida, HojaParaEscribir, LibroDeExcel } from '../aplicacion/puertos/libro-de-excel.js';
+import type {
+  FilaLeida,
+  HojaLeida,
+  HojaParaEscribir,
+  HojaSimple,
+  LibroDeExcel,
+} from '../aplicacion/puertos/libro-de-excel.js';
 
 const ANCHO_DE_COLUMNA = 22;
 /** Excel no acepta nombres de hoja de más de 31 caracteres. */
@@ -69,6 +75,12 @@ export class LibroDeExcelJs implements LibroDeExcel {
     const libro = new ExcelJS.Workbook();
     agregarHoja(libro, nombre, [encabezados, ...filas]);
     agregarHoja(libro, 'Instrucciones', instrucciones);
+    return Buffer.from(await libro.xlsx.writeBuffer());
+  }
+
+  async escribirVarias(hojas: HojaSimple[]): Promise<Buffer> {
+    const libro = new ExcelJS.Workbook();
+    for (const { nombre, encabezados, filas } of hojas) agregarHoja(libro, nombre, [encabezados, ...filas]);
     return Buffer.from(await libro.xlsx.writeBuffer());
   }
 

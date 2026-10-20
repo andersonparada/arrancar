@@ -1123,3 +1123,17 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   desplaza dentro de su contenedor en el celular, notas de crédito en rojo con enlace a la ficha, totales al pie, leyenda,
   resumen en tarjetas y pestaña «Anulados del período» (solo pantalla). Excel y «PDF con folios» quedan deshabilitados
   («próximamente») hasta que el servidor los ofrezca.
+- **2026-10-20 — Libro de compras L5-1 (Excel) y L5-3a (PDF con folios), servidor.** `GET …/libro/exportar?periodo=` (`libro.exportar`)
+  baja un `.xlsx` de tres hojas (Libro, Resumen, Anulados) con el dinero como número; el core suma `escribirVarias` al puerto
+  `LibroDeExcel`. PDF con `pdfkit` en versión exacta 0.20.2 (más `@types/pdfkit` 0.17.6), fuente Noto Sans Regular y Bold
+  (OFL) en `servidor/recursos/fuentes/` con su licencia (el `Dockerfile` la copia a la imagen) y `mem_limit: 1g` al servicio
+  `app`. Paginación propia en el dominio (`paginarLibro`: 32 filas por hoja, «Vienen» y «Van», «Total del período» en la última;
+  la hoja final es siempre el resumen mensual, así que un libro gasta `ceil(filas/32) + 1` folios, mínimo 2). Textos del usuario
+  por `textoParaElPdf` (NFC, sin controles ni marcas de dirección, recorte a 60 con «…») y lo que la fuente no tiene sale como
+  «?»; tope de 5,000 filas (422 `libro_con_demasiadas_filas`); una generación a la vez (`Semaforo`) y 5 emisiones o 10
+  borradores por minuto por usuario. Migraciones `0024` (tablas `foliacion_del_libro` y `emisiones_del_libro`, esta de solo
+  agregar con `politicasDeSoloAgregarPorEmpresa()`) y `0025` (exclusión de folios traslapados). Rutas: `POST …/libro/emisiones`
+  (`libro.emitir`, consume los folios y guarda el PDF en `core.archivos` en la misma transacción; 409 `emision_sin_cambios`
+  si nada cambió; motivo obligatorio al reemitir), `GET …/libro/emisiones` (lista y último folio), `GET …/libro/emisiones/:id/pdf`
+  (copia), `GET …/libro/pdf` (borrador sin folio) y `PUT …/libro/foliacion` (corregir el último folio, con auditoría).
+  Permiso nuevo `libro.emitir`. `npm audit fix` subió `sharp` a 0.35.5 (avisaba alta antes de este paso).

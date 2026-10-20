@@ -2,9 +2,13 @@ import { dependenciasCompartidas } from '../compartido/infraestructura/dependenc
 import { interpretarErrorDePostgres } from '../compartido/infraestructura/errores-de-postgres.js';
 import { IntercambioDeRecurso, type DatosDelRecurso } from './aplicacion/intercambio-de-recurso.js';
 import { LectorDeFilasDeArchivo } from './infraestructura/lector-de-filas-de-archivo.js';
+import type { LibroDeExcel } from './aplicacion/puertos/libro-de-excel.js';
 import { LibroDeExcelJs } from './infraestructura/libro-de-excel.exceljs.js';
 
 const libro = new LibroDeExcelJs();
+
+/** El escritor de Excel del sistema, para reportes que solo se exportan. */
+export const crearLibroDeExcel = (): LibroDeExcel => libro;
 
 /** Lector de `.xlsx` y CSV por contenido, para quien necesite filas crudas (por ejemplo la bandeja de DTE). */
 export const crearLectorDeFilas = () => new LectorDeFilasDeArchivo(libro);

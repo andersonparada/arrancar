@@ -21,6 +21,8 @@ services:
   app:
     build: ..
     restart: unless-stopped
+    # El PDF del libro de compras se dibuja en el proceso: el tope evita que una emisión grande tumbe el servidor.
+    mem_limit: 1g
     depends_on:
       postgres:
         condition: service_healthy

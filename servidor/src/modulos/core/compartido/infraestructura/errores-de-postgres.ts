@@ -31,6 +31,7 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
 /** Restricciones de exclusión (rangos que no pueden traslaparse) y lo que se le dice al usuario. */
 const MENSAJES_DE_EXCLUSION: Readonly<Record<string, string>> = {
   vigencias_de_combustible_sin_traslape: 'Esa vigencia se traslapa con otra del mismo combustible.',
+  emisiones_del_libro_sin_traslape: 'Esos folios del libro ya fueron usados por otra emisión.',
 };
 
 /** La base de datos rechazó un registro cuyo rango se traslapa con el de otro. */

@@ -1,10 +1,14 @@
 import type { FilaCruda } from './lector-de-filas.js';
 
-/** Lo que se escribe en un Excel: una hoja con encabezados y filas, y otra con instrucciones. */
-export interface HojaParaEscribir {
+/** Una hoja de Excel: encabezados y filas. */
+export interface HojaSimple {
   nombre: string;
   encabezados: string[];
   filas: unknown[][];
+}
+
+/** Lo que se escribe en un Excel de importación: una hoja con encabezados y filas, y otra con instrucciones. */
+export interface HojaParaEscribir extends HojaSimple {
   /** Cómo llenar cada columna; va en una segunda hoja. */
   instrucciones: string[][];
 }
@@ -29,6 +33,8 @@ export interface HojaLeida {
 /** Lee y escribe archivos de Excel; la aplicación no sabe con qué librería. */
 export interface LibroDeExcel {
   escribir(hoja: HojaParaEscribir): Promise<Buffer>;
+  /** Un solo archivo con varias hojas (sin instrucciones), en el orden dado; es para reportes que solo se exportan. */
+  escribirVarias(hojas: HojaSimple[]): Promise<Buffer>;
   /**
    * @throws ArchivoNoEsExcel, ExcelConContenidoNoPermitido o ExcelDemasiadoGrandeAlDescomprimir
    * si el archivo no es un Excel normal o infla más de lo permitido.

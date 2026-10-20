@@ -64,6 +64,25 @@ export const politicaPorCuenta = () =>
   });
 
 /**
+ * Como `politicasDeSoloAgregar`, pero por empresa: para registros de una empresa que solo crecen, como las
+ * emisiones del libro de compras. Sin política de cambio ni de borrado, RLS los rechaza.
+ */
+export const politicasDeSoloAgregarPorEmpresa = () => [
+  pgPolicy('agregar_en_la_empresa', {
+    as: 'permissive',
+    for: 'insert',
+    to: rolAplicacion,
+    withCheck: sql.raw(`empresa_id = ${empresaDeLaTransaccion}`),
+  }),
+  pgPolicy('leer_en_la_empresa', {
+    as: 'permissive',
+    for: 'select',
+    to: rolAplicacion,
+    using: sql.raw(`empresa_id = ${empresaDeLaTransaccion}`),
+  }),
+];
+
+/**
  * Políticas de una tabla que solo crece, como la auditoría: dentro de la cuenta
  * se agrega y se lee. Sin política de cambio ni de borrado, RLS los rechaza.
  */

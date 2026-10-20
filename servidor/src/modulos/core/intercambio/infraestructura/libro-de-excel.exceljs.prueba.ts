@@ -51,3 +51,18 @@ describe('libro de Excel: fórmulas', () => {
     expect(celda.value).toBe(texto);
   });
 });
+
+describe('libro de Excel: varias hojas', () => {
+  it('escribe un archivo con las hojas dadas, en orden, y sin hoja de instrucciones', async () => {
+    const contenido = await new LibroDeExcelJs().escribirVarias([
+      { nombre: 'Libro', encabezados: ['A', 'B'], filas: [['uno', 1.5]] },
+      { nombre: 'Anulados', encabezados: ['C'], filas: [] },
+    ]);
+    const libro = new ExcelJS.Workbook();
+    await libro.xlsx.load(contenido as unknown as ArrayBuffer);
+
+    expect(libro.worksheets.map((hoja) => hoja.name)).toEqual(['Libro', 'Anulados']);
+    expect(libro.worksheets[0]!.getCell('B2').value).toBe(1.5);
+    expect(libro.worksheets[1]!.getCell('A1').value).toBe('C');
+  });
+});

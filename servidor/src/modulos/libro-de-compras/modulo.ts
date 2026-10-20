@@ -75,6 +75,10 @@ export const moduloLibroDeCompras: DefinicionModulo = {
     },
     { clave: 'libro-de-compras.libro.ver', descripcion: 'Ver el libro de compras del período y su anexo de anulados' },
     { clave: 'libro-de-compras.libro.exportar', descripcion: 'Exportar el libro de compras del período' },
+    {
+      clave: 'libro-de-compras.libro.emitir',
+      descripcion: 'Emitir el libro de compras en PDF con folios y corregir el último folio',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDelLibroDeCompras,

@@ -169,6 +169,20 @@
       "when": 1792497921699,
       "tag": "0023_l5_vigencia_iva_exento",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792501876116,
+      "tag": "0024_l5_folios_del_libro",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792501882905,
+      "tag": "0025_l5_folios_sin_traslape",
+      "breakpoints": true
     }
   ]
 }
