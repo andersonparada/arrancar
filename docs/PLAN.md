@@ -1014,3 +1014,13 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   (`ReglaDeNegocioInfringida`; el diseño decía 409). Auditoría con las acciones y el recurso de siempre. Aviso a agentes: «Verifique con su
   contador si debe retener sobre esta nota de débito.». `puedeAnular` de la ficha de una nota de débito no mira el tope (lo
   rechaza el servidor al anular). Falta R3-5 (retenciones, bloqueado por el contador), el cliente (R3-6, R3-7) y el QA.
+- 2026-10-20 — **Libro de compras L4-4 (servidor, core/intercambio): lectura cruda y segura de archivos de filas.** Puerto
+  `LectorDeFilas.leerFilas(archivo, encabezadosEsperados)` (implementa `LectorDeFilasDeArchivo`; se obtiene con
+  `crearLectorDeFilas()` de `core/intercambio/contexto.ts`) y `LibroDeExcel.leerFilas` en exceljs. El formato se detecta por
+  el contenido (`detectarFormato`): `PK\3\4` es xlsx (pasa por `ValidadorDeXlsx`), BIFF da `ExcelAntiguoNoAdmitido`, texto que
+  empieza con `<` (HTML o XML) da `ArchivoDeTextoNoAdmitido`, NUL, UTF-16 o vacío dan `ArchivoNoEsExcel`, y el resto es CSV
+  (UTF-8 o Windows-1252, BOM quitado). `LectorDeCsv` propio, sin dependencia nueva (RFC 4180, separador `,` `;` o tabulador por
+  la primera línea). Topes: 5 MB, 10,000 filas, 200 columnas, 4,000 caracteres por celda. Las celdas salen como texto (fechas
+  `aaaa-mm-dd`, fórmulas por su valor, sin valor o con error vacía) y los encabezados se buscan entre las 20 primeras filas
+  (gana la fila con más coincidencias, comparadas sin tildes, mayúsculas ni `. : # ( )`); devuelve `reconocidos` y
+  `noReconocidos`, o `EncabezadosNoEncontrados` con los esperados. Sin lógica de la SAT.

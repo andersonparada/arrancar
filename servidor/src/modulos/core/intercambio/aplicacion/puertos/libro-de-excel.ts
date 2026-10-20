@@ -1,3 +1,5 @@
+import type { FilaCruda } from './lector-de-filas.js';
+
 /** Lo que se escribe en un Excel: una hoja con encabezados y filas, y otra con instrucciones. */
 export interface HojaParaEscribir {
   nombre: string;
@@ -33,4 +35,10 @@ export interface LibroDeExcel {
    * @throws ArchivoNoLegible si no tiene hojas o no se puede leer.
    */
   leer(contenido: Buffer): Promise<HojaLeida>;
+  /**
+   * Todas las filas no vacías de la primera hoja, la 1 incluida, con cada celda como texto
+   * (fechas en `aaaa-mm-dd`, fórmulas por su valor guardado; sin valor o con error, vacía).
+   * @throws los mismos errores que `leer`.
+   */
+  leerFilas(contenido: Buffer): Promise<FilaCruda[]>;
 }

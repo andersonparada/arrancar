@@ -1647,7 +1647,7 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
    factura» y combustible y galones opcionales, totales y avisos; ficha con los dos datos; lógica en
    `edicion-de-documento.ts` con pruebas. Ningún archivo pasa de 200 líneas ni la página de 120.
 4. **L4-2b (servidor, base del ISR):** solo si el contador confirma L4-c1: sacar los otros impuestos de la base; pruebas.
-5. **L4-4 (servidor, core/intercambio):** `leerFilas` en el puerto y en exceljs, detección de formato, `LectorDeCsv`,
+5. **L4-4 (servidor, core/intercambio) - HECHO 2026-10-20:** `leerFilas` en el puerto y en exceljs, detección de formato, `LectorDeCsv`,
    `ExcelAntiguoNoAdmitido`; pruebas (incluidas bomba zip, `.xls`, HTML y CSV con `;`). Sin lógica de la SAT.
 6. **L4-5 (servidor, datos de la bandeja):** migración `0020`; pruebas de checks, llaves y RLS de 3.3b.13.
 7. **L4-6 (servidor, lectura del DTE) (archivo):** mapa de encabezados y de valores, fila de encabezados, conversión,

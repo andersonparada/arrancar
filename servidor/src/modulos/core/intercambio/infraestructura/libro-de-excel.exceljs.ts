@@ -2,6 +2,7 @@ import ExcelJS from 'exceljs';
 import { ArchivoNoLegible } from '../aplicacion/errores.js';
 import { ValidadorDeXlsx } from './zip/validador-de-xlsx.js';
 import { CeldaConProblema } from '../aplicacion/puertos/libro-de-excel.js';
+import type { FilaCruda } from '../aplicacion/puertos/lector-de-filas.js';
 import type { FilaLeida, HojaLeida, HojaParaEscribir, LibroDeExcel } from '../aplicacion/puertos/libro-de-excel.js';
 
 const ANCHO_DE_COLUMNA = 22;
@@ -49,6 +50,17 @@ function agregarHoja(libro: ExcelJS.Workbook, nombre: string, filas: unknown[][]
   return hoja;
 }
 
+/** Una celda como texto: fechas en ISO y lo que no se puede leer (fórmula sin valor, error), vacío. */
+function textoDeCelda(valor: unknown): string {
+  if (valor === null || valor === undefined || valor instanceof CeldaConProblema) return '';
+  if (valor instanceof Date)
+    return valor
+      .toISOString()
+      .replace(/T00:00:00\.000Z$/, '')
+      .replace(/\.000Z$/, '');
+  return String(valor).trim();
+}
+
 /** Excel con la librería exceljs: la primera hoja lleva los datos y la segunda, las instrucciones. */
 export class LibroDeExcelJs implements LibroDeExcel {
   constructor(private readonly validador = new ValidadorDeXlsx()) {}
@@ -60,7 +72,17 @@ export class LibroDeExcelJs implements LibroDeExcel {
     return Buffer.from(await libro.xlsx.writeBuffer());
   }
 
-  async leer(contenido: Buffer): Promise<HojaLeida> {
+  async leerFilas(contenido: Buffer): Promise<FilaCruda[]> {
+    const hoja = await this.cargarPrimeraHoja(contenido);
+    const filas: FilaCruda[] = [];
+    hoja.eachRow((fila, numero) => {
+      const celdas = celdasDe(fila, hoja.columnCount).map(textoDeCelda);
+      if (celdas.some((celda) => celda !== '')) filas.push({ numero, celdas });
+    });
+    return filas;
+  }
+
+  private async cargarPrimeraHoja(contenido: Buffer): Promise<ExcelJS.Worksheet> {
     const seguro = this.validador.sanear(contenido);
     const libro = new ExcelJS.Workbook();
     await libro.xlsx.load(seguro as unknown as ArrayBuffer).catch(() => {
@@ -68,6 +90,11 @@ export class LibroDeExcelJs implements LibroDeExcel {
     });
     const hoja = libro.worksheets[0];
     if (!hoja) throw new ArchivoNoLegible();
+    return hoja;
+  }
+
+  async leer(contenido: Buffer): Promise<HojaLeida> {
+    const hoja = await this.cargarPrimeraHoja(contenido);
     const encabezados = celdasDe(hoja.getRow(1), hoja.columnCount).map((celda) => String(celda ?? ''));
     const filas: FilaLeida[] = [];
     hoja.eachRow((fila, numero) => {
