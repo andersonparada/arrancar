@@ -150,3 +150,9 @@ el navegador corta las páginas donde quiere, de modo que no sirve para folios c
 - Licencia de Roboto: [Font Squirrel](https://www.fontsquirrel.com/fonts/roboto) (Apache 2.0); el cambio a OFL en 2020 solo
   lo menciona [Wikipedia](https://en.wikipedia.com/wiki/Roboto) y no se pudo confirmar.
 - Documento propio: `docs/modulos/seguridad-de-archivos.md` (qpdf, límites de archivos).
+
+## Decisión del usuario (2026-10-20)
+
+**`pdfkit` directo** (versión exacta 0.20.2) con la paginación propia de filas fijas; nombres recortados a ~60 caracteres
+con «…» en el PDF (completos en pantalla y Excel); tope de **5,000 filas** por emisión; fuente **Noto Sans** (OFL) incluida
+en el repositorio; caracteres fuera de la fuente como «?»; **`mem_limit: 1g`** al servicio `app` de producción.
