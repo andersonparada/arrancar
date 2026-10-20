@@ -559,3 +559,13 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
   la fecha desde la que corre el crédito.
 - **C5. Anular un documento autorizado en un mes de Contabilidad cerrado.** Para cuando llegue Contabilidad: ¿la
   reversión de la provisión va en el mes de la anulación (recomendado) o en el del documento?
+
+## Respuestas del usuario (2026-10-20)
+
+Todas las recomendadas: **U1** vencimiento = emisión + días de crédito del proveedor (por cuenta, **U3**), sin dato un mes
+calendario ajustable por empresa (C4 del contador puede afinar el origen); **U2** CP1 recibe todo tipo de documento
+(cargos y abonos, notas aplicadas solas a su factura); **U4** saldos calculados; **U5** «Desautorizar» mientras no haya
+pago, con motivo y auditoría; **U6** Libro de compras rechaza las bajas si CxP está inactivo; **U7** la nota de crédito
+rebaja desde que se recibe; **U8** saldos iniciales justo después de CP1; **U9** acción de auditoría `autorizar`;
+**U10** `dependeDe` incluye `bancos`; **U11** completar y autorizar en lote hasta 100; separación de funciones con el
+permiso `documentos.autorizar-propios` (no «salvo el Propietario»). Dudas C1–C5: en revisión por el contador.
