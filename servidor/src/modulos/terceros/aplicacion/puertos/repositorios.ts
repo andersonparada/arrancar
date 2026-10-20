@@ -11,6 +11,8 @@ export interface RepositorioTerceros {
   buscar(id: TerceroId): Promise<Tercero | null>;
   /** El tercero dueño de ese papel de proveedor (`proveedorId` es el id del papel, no del tercero). */
   buscarDeProveedor(proveedorId: string): Promise<Tercero | null>;
+  /** El tercero de la cuenta que tiene ese NIT (ya normalizado), con sus papeles, o `null` si está libre. */
+  buscarPorNit(nit: string): Promise<Tercero | null>;
   agregar(tercero: Tercero): Promise<void>;
   guardar(tercero: Tercero): Promise<void>;
 }

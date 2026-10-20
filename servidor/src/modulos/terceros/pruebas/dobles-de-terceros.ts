@@ -36,6 +36,10 @@ export class TercerosEnMemoria implements RepositorioTerceros, ConsultasTerceros
     return tercero?.tienePapel('proveedor') ? tercero : null;
   }
 
+  async buscarPorNit(nit: string): Promise<Tercero | null> {
+    return [...this.terceros.values()].find((t) => t.instantanea().nit?.valor === nit) ?? null;
+  }
+
   async nombreDelOtroConNit(nit: string, excepto: string): Promise<string | null> {
     const otro = [...this.terceros.values()].find((t) => t.id.valor !== excepto && t.instantanea().nit?.valor === nit);
     return otro?.nombreParaMostrar ?? null;

@@ -1499,7 +1499,8 @@ propone desde las filas sin proveedor, agrupadas por NIT, y el usuario confirma 
 L4-k). Exige `documentos.importar` en la ruta y `proveedores.crear` en el caso de uso (como `retenciones.ajustar`). Por
 cada uno, en su transacción:
 1. Orden nueva **`terceros.crear_proveedor_desde_dte`** (`core/contratos/terceros.contratos.ts`, la atiende `terceros`):
-   `datos: { nit, tipo: 'individual' | 'juridica', nombre }`, `respuesta: { proveedorId, creado: boolean }`. Si el NIT ya es
+   `datos: { nit, nombre, tipoDePersona, puedeCrearProveedores }` (el último, porque el mediador no lleva permisos),
+   `respuesta: { proveedorId, terceroId, creado: boolean }`. Si el NIT ya es
    de un tercero de la cuenta con papel de proveedor activo, devuelve ese; si lo tiene sin el papel, se lo asigna; si el
    papel está inactivo, error `ProveedorInactivo` (se reactiva en Proveedores); si no existe, crea el tercero (jurídica:
    `razon_social = nombre`; individual: el nombre tal cual en `nombres`, pregunta L4-k) con el papel. Valida con los
@@ -1655,7 +1656,7 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
    el archivo real anonimizado como dato de prueba.
 8. **L4-7 (servidor, importar) (archivo):** migración `0021`, `ImportarDteRecibidos` (upsert, enlace con lo registrado,
    auditoría `corregir`), rutas de importar, lista y lotes, permiso `documentos.importar`; pruebas de API.
-9. **L4-8 (servidor, terceros):** orden `terceros.crear_proveedor_desde_dte` atendida en `terceros` y caso de uso de
+9. **L4-8 (servidor, terceros) - HECHO 2026-10-20:** orden `terceros.crear_proveedor_desde_dte` atendida en `terceros` y caso de uso de
    proveedores desde la bandeja con los datos fiscales deducidos; pruebas.
 10. **L4-9 (servidor, completar, confirmar y descartar):** `PATCH`, vista previa, `ConfirmarDteRecibidos` fila por fila,
     solicitud para el formulario, descartar y restaurar (acción `descartar`, permiso `dte-recibidos.descartar`), enlace en

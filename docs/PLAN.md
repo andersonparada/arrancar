@@ -1026,6 +1026,16 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `noReconocidos`, o `EncabezadosNoEncontrados` con los esperados. Sin lógica de la SAT.
 
 
+- 2026-10-20 — **Libro de compras L4-8 (servidor, terceros): orden `terceros.crear_proveedor_desde_dte`.** La atiende
+  `CrearProveedorDesdeDte` (`terceros/aplicacion/casos-uso/papeles/`): `datos: { nit, nombre, tipoDePersona,
+  puedeCrearProveedores }`, respuesta `{ proveedorId, terceroId, creado }`. Busca por NIT en la cuenta (`buscarPorNit` en
+  `RepositorioTerceros`): si no existe crea el tercero (jurídica: `razon_social`; individual: `nombres`) con papel de proveedor
+  activo; si existe sin el papel se lo asigna; si ya es proveedor activo devuelve el suyo (`creado: false` en ambos); si el
+  papel está inactivo, `proveedor_inactivo` (se reactiva en Proveedores). El mediador no lleva permisos, así que quien manda
+  pasa `puedeCrearProveedores` (su usuario tiene `proveedores.crear`); en falso responde `sin_permiso` (403). Como el alta de
+  proveedores, no audita (no es baja ni inactivación) y no publica eventos (la transacción es de quien llama). Sin datos
+  fiscales: los guarda Libro de compras (opción C). Consumidor final se rechaza.
+
 - 2026-10-20 — **Libro de compras R3-7 (cliente): nota de débito del proveedor en el formulario de registro.** `NDEB` se puede
   elegir (ya no dice «próximamente»). Pide «Factura que aumenta esta nota» (vigentes del proveedor, **solo las del libro** y sin la
   factura especial; el destino se toma de la factura) y «¿Por qué cobra más el proveedor?» (`claseDeCargo`: Diferencia de precio,

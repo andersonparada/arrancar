@@ -38,6 +38,11 @@ export class RepositorioTercerosDrizzle implements RepositorioTerceros {
     return fila ? this.buscar(Identificador.desde(fila.terceroId)) : null;
   }
 
+  async buscarPorNit(nit: string): Promise<Tercero | null> {
+    const [fila] = await transaccionEnCurso().select({ id: terceros.id }).from(terceros).where(eq(terceros.nit, nit));
+    return fila ? this.buscar(Identificador.desde(fila.id)) : null;
+  }
+
   /** Con los papeles que traiga (el alta puede registrarlo ya como cliente o proveedor). */
   async agregar(tercero: Tercero): Promise<void> {
     await transaccionEnCurso().insert(terceros).values(mapeadorDeTercero.aFila(tercero));

@@ -12,6 +12,14 @@ export class TerceroInactivo extends ReglaDeNegocioInfringida {
   }
 }
 
+export class ProveedorInactivo extends ReglaDeNegocioInfringida {
+  readonly codigo = 'proveedor_inactivo';
+
+  constructor(nombre: string) {
+    super(`El proveedor ${nombre} está inactivo; reactívelo en Proveedores antes de seguir.`);
+  }
+}
+
 export class ProveedorYaTieneOtroNit extends ReglaDeNegocioInfringida {
   readonly codigo = 'proveedor_con_otro_nit';
 

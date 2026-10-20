@@ -16,6 +16,7 @@ import { mediador } from '../core/mediador/contexto.js';
 import { AsignarPapel } from './aplicacion/casos-uso/papeles/asignar-papel.js';
 import { CompletarDpiDeProveedor } from './aplicacion/casos-uso/papeles/completar-dpi-de-proveedor.js';
 import { CompletarNitDeProveedor } from './aplicacion/casos-uso/papeles/completar-nit-de-proveedor.js';
+import { CrearProveedorDesdeDte } from './aplicacion/casos-uso/papeles/crear-proveedor-desde-dte.js';
 import { QuitarPapel } from './aplicacion/casos-uso/papeles/quitar-papel.js';
 import { ActualizarTercero } from './aplicacion/casos-uso/terceros/actualizar-tercero.js';
 import { ListarTerceros } from './aplicacion/casos-uso/terceros/listar-terceros.js';
@@ -78,12 +79,16 @@ function controladorDeTerceros(piezas: Piezas): TercerosControlador {
   });
 }
 
-/** Atiende por el mediador la orden de completar el NIT de un proveedor; el permiso lo exige la ruta que origina. */
+/** Atiende por el mediador las órdenes sobre proveedores; el permiso lo exige la ruta que origina (o el dato `puedeCrearProveedores`). */
 function atenderOrdenes({ unidadDeTrabajo, repositorio, consultas }: Piezas): void {
   const completarNit = new CompletarNitDeProveedor({ unidadDeTrabajo, repositorio, consultas });
   mediador.atender('terceros', 'terceros.completar_nit', (datos, operador) => completarNit.ejecutar(operador, datos));
   const completarDpi = new CompletarDpiDeProveedor({ unidadDeTrabajo, repositorio, consultas });
   mediador.atender('terceros', 'terceros.completar_dpi', (datos, operador) => completarDpi.ejecutar(operador, datos));
+  const crearProveedor = new CrearProveedorDesdeDte({ unidadDeTrabajo, repositorio, consultas });
+  mediador.atender('terceros', 'terceros.crear_proveedor_desde_dte', (datos, operador) =>
+    crearProveedor.ejecutar(operador, datos),
+  );
 }
 
 function controladorDeContactos(piezas: Piezas) {
