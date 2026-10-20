@@ -1954,6 +1954,13 @@ bloquea; L5 pone la real.
 
 ### 3.9 Reportes y cierre (L5) — arquitecto de datos, 2026-10-20
 
+**Respuestas del usuario a L5-a…L5-o (2026-10-20):** se aceptan las recomendaciones del arquitecto. Declarar y el historial
+funcionan siempre; el bloqueo de períodos declarados lo enciende la propia empresa desde la página de períodos
+(`periodos.declarar`) y apagarlo pide `periodos.reabrir` y motivo. PDF del libro en el servidor con el folio impreso, Van y
+Vienen, un solo contador por empresa y el PDF foliado guardado (copia y borrador sin gastar folios). Se bloquea eliminar
+un documento con constancia anotada. Menú: Libro, Retenciones y Análisis de compras en Reportes; Períodos en Operación.
+**Numeración:** la `0023` la tomó L5-0 (`0023_l5_vigencia_iva_exento`); las migraciones de L5 empiezan en la `0024`.
+
 Estado: **propuesta para aprobar**. Lleva a datos, consultas y pasos lo que pidió el contador en «Qué debe tener L5» y lo
 que decidió el usuario el 2026-10-20 (final de `validacion-h7-h11-retenciones.md`). Manda sobre la §3.8, que queda como
 antecedente. Sirve a **cualquier régimen**: el libro sale completo o simplificado según la foto
