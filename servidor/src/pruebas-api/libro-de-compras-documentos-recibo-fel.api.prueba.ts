@@ -19,7 +19,15 @@ const AVISO_DE_DONACION =
   'Donación: deducible solo en el ISR sobre utilidades, a entidades autorizadas y con límite anual; no es una compra.';
 let escenario: EscenarioDeDocumentos;
 let contador = 0;
-const NOMBRES = ['Fundación Esperanza', 'Fundación Manos Unidas', 'Asociación Luz del Norte', 'Comité Pro Mejoras'];
+const NOMBRES = [
+  'Fundación Esperanza',
+  'Fundación Manos Unidas',
+  'Asociación Luz del Norte',
+  'Comité Pro Mejoras',
+  'Fundación Amanecer',
+  'Asociación Pro Niñez',
+  'Comité del Agua Limpia',
+];
 
 const propietario = () => escenario.cuenta.propietario;
 
@@ -91,6 +99,34 @@ describe('recibo FEL a la empresa', () => {
       autorizacion,
     ]);
     expect(guardados).toHaveLength(0);
+  });
+
+  it.each(['RECI', 'RDON'] as const)(
+    'un %s a otro NIT se acepta como fel_a_otro_nit, fuera del libro',
+    async (tipoDte) => {
+      const respuesta = await registrarRecibo({
+        tipoDte,
+        motivoFueraDelLibro: 'fel_a_otro_nit',
+        nitReceptor: nitValido('9100002'),
+      });
+
+      expect(respuesta.estado).toBe(201);
+      expect(respuesta.cuerpo.documento).toMatchObject({
+        tipo: 'recibo',
+        tipoDte,
+        muestraEnReportesSat: false,
+        motivoFueraDelLibro: 'fel_a_otro_nit',
+        motivoSinCredito: null,
+        retenciones: [],
+      });
+    },
+  );
+
+  it('un recibo con fel_a_otro_nit al NIT de la empresa no puede quedar fuera por ese motivo', async () => {
+    const respuesta = await registrarRecibo({ motivoFueraDelLibro: 'fel_a_otro_nit', nitReceptor: NIT_DE_LA_EMPRESA });
+
+    expect(respuesta.estado).toBe(422);
+    expect(respuesta.cuerpo.error.codigo).toBe('fel_al_nit_de_la_empresa_no_se_desmarca');
   });
 
   it('el motivo recibo_fel no vale para una factura', async () => {

@@ -1,0 +1,1 @@
+ALTER TABLE "libro_de_compras"."vigencias_de_combustible" ADD COLUMN "iva_exento" boolean DEFAULT false NOT NULL;

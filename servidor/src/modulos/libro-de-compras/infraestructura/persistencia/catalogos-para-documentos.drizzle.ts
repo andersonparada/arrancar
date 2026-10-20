@@ -45,14 +45,15 @@ export class CatalogosParaDocumentosDrizzle implements CatalogosParaDocumentos {
         vigenciaId: vigenciasDeCombustible.id,
         idpPorGalon: vigenciasDeCombustible.idpPorGalon,
         porcentajeDeEtanol: vigenciasDeCombustible.porcentajeDeEtanol,
+        ivaExento: vigenciasDeCombustible.ivaExento,
       })
       .from(combustibles)
       .leftJoin(vigenciasDeCombustible, vigenciaQueRige(fecha))
       .where(inArray(combustibles.id, [...ids]));
-    return filas.map(({ vigenciaId, idpPorGalon, porcentajeDeEtanol, ...combustible }) => ({
+    return filas.map(({ vigenciaId, idpPorGalon, porcentajeDeEtanol, ivaExento, ...combustible }) => ({
       ...combustible,
       vigencia: vigenciaId
-        ? { id: vigenciaId, idpPorGalon: idpPorGalon!, porcentajeDeEtanol: porcentajeDeEtanol! }
+        ? { id: vigenciaId, idpPorGalon: idpPorGalon!, porcentajeDeEtanol: porcentajeDeEtanol!, ivaExento: ivaExento! }
         : null,
     }));
   }

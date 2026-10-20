@@ -56,6 +56,18 @@ describe('evaluarFueraDelLibro', () => {
     expect(resultado.muestraEnReportesSat).toBe(false);
   });
 
+  it.each(['RECI', 'RDON'] as const)('un %s a otro NIT queda fuera como fel_a_otro_nit', (tipoDte) => {
+    const recibo = datos({
+      tipo: 'recibo',
+      tipoDte,
+      motivo: 'fel_a_otro_nit',
+      autorizacionFel: AUTORIZACION,
+      nitReceptor: '7654321',
+    });
+
+    expect(evaluarFueraDelLibro(recibo).muestraEnReportesSat).toBe(false);
+  });
+
   it('una FEL al NIT de la empresa no se desmarca', () => {
     const alNit = datos({ motivo: 'fel_a_otro_nit', autorizacionFel: AUTORIZACION, nitReceptor: '1234567' });
 

@@ -11,6 +11,7 @@ export const esquemaVigenciaDeCombustible = z.object({
   combustibleId: idObligatorio(),
   idpPorGalon: decimalObligatorio(2),
   porcentajeDeEtanol: decimalObligatorio(2),
+  ivaExento: z.boolean().default(false),
   vigenteDesde: fechaObligatoria(),
   vigenteHasta: fechaOpcional(),
 });

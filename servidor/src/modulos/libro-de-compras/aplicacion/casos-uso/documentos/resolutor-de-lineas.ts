@@ -20,6 +20,8 @@ export interface DescripcionDeLinea {
   tipo: 'bien' | 'servicio';
   esActivoFijo: boolean;
   combustible: CombustibleDeLineaGuardada | null;
+  /** El exento que fija la vigencia exenta de IVA (Decreto 22-2026); `null` si el usuario manda el exento. */
+  exentoDelCombustible: number | null;
 }
 
 export interface LineasResueltas {
@@ -55,7 +57,7 @@ export class ResolutorDeLineas {
     const resueltas = lineas.map((linea, indice) => describir(linea, indice + 1, { catalogos, fechaDeEmision }));
     const descripciones = resueltas.map((resuelta) => resuelta.descripcion);
     return {
-      escritas: lineas.map((linea, indice) => escribir(linea, descripciones[indice]?.combustible ?? null)),
+      escritas: lineas.map((linea, indice) => escribir(linea, descripciones[indice])),
       descripciones,
       avisos: resueltas.flatMap((resuelta) => resuelta.avisos),
       paraRetencion: descripciones.map((descripcion) => ({
@@ -85,6 +87,12 @@ function conceptoDe(linea: SolicitudDeLinea, catalogos: Catalogos): ConceptoPara
   return concepto;
 }
 
+class LineaNoEsBien extends LineaDeDocumentoInvalida {
+  constructor(numero: number) {
+    super(`La línea ${numero} es un activo fijo, combustible o lleva IDP: debe ser un bien.`);
+  }
+}
+
 function describir(
   linea: SolicitudDeLinea,
   numero: number,
@@ -94,12 +102,11 @@ function describir(
   const conIdp = idpEscritoDe(linea) !== null;
   const tipo = linea.tipo ?? (conIdp ? 'bien' : concepto.tipoPorOmision);
   const esActivoFijo = linea.esActivoFijo ?? concepto.esActivoFijo;
-  const { combustible, avisos } = resolverCombustible(linea, { combustibles: catalogos.combustibles, fechaDeEmision });
-  if ((esActivoFijo || combustible || conIdp) && tipo !== 'bien') {
-    throw new LineaDeDocumentoInvalida(
-      `La línea ${numero} es un activo fijo, combustible o lleva IDP: debe ser un bien.`,
-    );
-  }
+  const { combustible, exento, avisos } = resolverCombustible(linea, {
+    combustibles: catalogos.combustibles,
+    fechaDeEmision,
+  });
+  if ((esActivoFijo || combustible || conIdp) && tipo !== 'bien') throw new LineaNoEsBien(numero);
   const descripcion = {
     numero,
     conceptoId: concepto.id,
@@ -107,14 +114,16 @@ function describir(
     tipo,
     esActivoFijo,
     combustible,
+    exentoDelCombustible: exento,
   };
   return { descripcion, avisos };
 }
 
-function escribir(linea: SolicitudDeLinea, combustible: CombustibleDeLineaGuardada | null): LineaEscrita {
+function escribir(linea: SolicitudDeLinea, descripcion: DescripcionDeLinea | undefined): LineaEscrita {
+  const combustible = descripcion?.combustible ?? null;
   return {
     total: aCentavos(linea.total),
-    exento: aCentavos(linea.exento ?? '0'),
+    exento: descripcion?.exentoDelCombustible ?? aCentavos(linea.exento ?? '0'),
     otrosImpuestos: aCentavos(linea.otrosImpuestos ?? '0'),
     idp: idpEscritoDe(linea),
     combustible: combustible && {

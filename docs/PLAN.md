@@ -1097,3 +1097,8 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `DteRecibido` (registrar, devolver a pendiente, descartar con motivo, bloquear); `LoteDeDte`. Repositorios Drizzle de lotes y de
   filas con sus puertos. Pruebas: dominio y de integración (checks, llaves, único por empresa, RLS, función y repositorios). El enlace
   con lo registrado a mano (registrar enlaza, anular o eliminar devuelve a `pendiente`) **no** va aquí: el diseño lo asigna a L4-9.
+- **2026-10-20 — Libro de compras L5-0 (servidor).** Decreto 22-2026: columna `iva_exento` en `vigencias_de_combustible`
+  (migración `0023`), con DTO, esquema y Excel; en una línea de combustible con vigencia exenta se propone el exento
+  `total − idp − otros` con IVA 0, y un exento distinto escrito se respeta con aviso. La vigencia del decreto no se siembra:
+  la carga el usuario en Combustibles (ver el diseño). Recibo FEL (RECI/RDON) a otro NIT: se acepta como `fel_a_otro_nit`, fuera
+  del libro. Pendiente del cliente: casilla «Exento de IVA» en la ventana de vigencias (sin ella un PUT la deja en `false`).

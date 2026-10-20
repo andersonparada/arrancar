@@ -162,6 +162,13 @@
       "when": 1792491471100,
       "tag": "0022_l4_autorizacion_registrada_fuera",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792497921699,
+      "tag": "0023_l5_vigencia_iva_exento",
+      "breakpoints": true
     }
   ]
 }

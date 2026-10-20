@@ -40,7 +40,7 @@ export interface CombustibleConTasa {
   combustibleId: string;
   nombre: string;
   activo: boolean;
-  vigencia: { id: string; idpPorGalon: string; porcentajeDeEtanol: string } | null;
+  vigencia: { id: string; idpPorGalon: string; porcentajeDeEtanol: string; ivaExento: boolean } | null;
 }
 
 /** Catálogos de la empresa que usan las líneas. */

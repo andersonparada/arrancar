@@ -23,6 +23,7 @@ const solicitud = (cambios: Partial<SolicitudDeVigenciaDeCombustible> = {}): Sol
   combustibleId: COMBUSTIBLE,
   idpPorGalon: '4.70',
   porcentajeDeEtanol: '10.00',
+  ivaExento: false,
   vigenteDesde: '2026-01-01',
   vigenteHasta: null,
   ...cambios,

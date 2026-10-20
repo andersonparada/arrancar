@@ -15,6 +15,7 @@ const datos = (cambios: Partial<DatosDeVigenciaDeCombustible> = {}): DatosDeVige
   combustibleId: '22222222-2222-4222-8222-222222222222',
   idpPorGalon: '4.70',
   porcentajeDeEtanol: '10',
+  ivaExento: false,
   vigenteDesde: '2026-01-01',
   vigenteHasta: null,
   ...cambios,
@@ -94,6 +95,7 @@ describe('VigenciaDeCombustible', () => {
 
       expect(() => vigencia.cambiarDatos(datos({ idpPorGalon: '5.00' }), uso)).toThrow(VigenciaDeCombustibleEnUso);
       expect(() => vigencia.cambiarDatos(datos({ porcentajeDeEtanol: '0' }), uso)).toThrow(VigenciaDeCombustibleEnUso);
+      expect(() => vigencia.cambiarDatos(datos({ ivaExento: true }), uso)).toThrow(VigenciaDeCombustibleEnUso);
       expect(() => vigencia.cambiarDatos(datos({ vigenteDesde: '2026-01-02' }), uso)).toThrow(
         VigenciaDeCombustibleEnUso,
       );

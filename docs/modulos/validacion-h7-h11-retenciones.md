@@ -708,3 +708,19 @@ totales, y la factura olvidada de un período declarado se propone en el **prime
 exportadores: todo «local» con aviso (vinculación con la prorrata, después); **estado de «por resolver»** y **marcar
 enterado** por mes y grupo; medicamentos y vehículos del SAT-2237: aviso. Recibo FEL (RECI/RDON) a **otro NIT**: se
 permite como `fel_a_otro_nit`, fuera del libro.
+
+### L5-0 programado en el servidor (2026-10-20)
+
+- **Decreto 22-2026:** la vigencia de combustible tiene la casilla `iva_exento` (migración `0023_l5_vigencia_iva_exento`; DTO y
+  esquema con `ivaExento`, por omisión `false`; entra a la plantilla de Excel). Una vigencia usada por documentos no cambia su
+  `ivaExento`, igual que su tasa. En una línea con combustible cuya vigencia está exenta se **propone**
+  `exento = total − idp − otros impuestos` (el IDP escrito o el de los galones) y el IVA queda en 0. Si el usuario manda otro
+  exento (distinto de cero y del propuesto) se respeta, con el aviso «Este combustible está exento de IVA en esa fecha
+  (Decreto 22-2026): revise el exento de la línea.». La regla pura es `dominio/combustible-exento.ts`. El motivo `exento` del
+  documento sigue su regla de siempre (todo exento más otros impuestos); si queda IDP, el IVA es 0 y el documento no da crédito.
+- **Cómo cargarlo (no está sembrado):** en Combustibles, para cada combustible, cerrar la vigencia abierta el 30-9-2026 y
+  registrar una nueva del 1-10-2026 al 31-12-2026 con IDP por galón 0, etanol 0 y «Exento de IVA» marcado; el 1-1-2027 registrar
+  otra con la tasa que corresponda y sin la casilla.
+- **Recibo FEL a otro NIT:** `RECI` o `RDON` con NIT receptor distinto al de la empresa se acepta con
+  `motivoFueraDelLibro: "fel_a_otro_nit"`, fuera del libro (la regla general ya lo permitía; faltaba la prueba). Con el motivo
+  `recibo_fel` y otro NIT se sigue rechazando (`recibo_fel_incoherente`), y con `fel_a_otro_nit` al NIT de la empresa también.

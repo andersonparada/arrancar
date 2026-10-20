@@ -14,6 +14,7 @@ export const columnasDeVigenciasDeCombustible = (
   },
   { clave: 'idpPorGalon', titulo: 'IDP por galón (Q)', requerido: true, tipo: 'decimal' },
   { clave: 'porcentajeDeEtanol', titulo: 'Porcentaje de etanol', requerido: true, tipo: 'decimal' },
+  { clave: 'ivaExento', titulo: 'Exento de IVA (Decreto 22-2026)', requerido: false, tipo: 'siNo' },
   { clave: 'vigenteDesde', titulo: 'Vigente desde', requerido: true, tipo: 'fecha' },
   { clave: 'vigenteHasta', titulo: 'Vigente hasta', requerido: false, tipo: 'fecha' },
 ];

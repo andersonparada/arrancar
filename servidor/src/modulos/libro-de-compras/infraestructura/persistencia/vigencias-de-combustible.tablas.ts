@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, date, foreignKey, numeric, unique, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, date, foreignKey, numeric, unique, uuid } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { combustibles } from './combustibles.tablas.js';
@@ -20,6 +20,7 @@ export const vigenciasDeCombustible = esquemaLibroDeCompras.table(
     combustibleId: uuid().notNull(),
     idpPorGalon: numeric({ precision: 8, scale: 2 }).notNull(),
     porcentajeDeEtanol: numeric({ precision: 5, scale: 2 }).notNull().default('0'),
+    ivaExento: boolean().notNull().default(false),
     vigenteDesde: date().notNull(),
     vigenteHasta: date(),
     ...marcasDeTiempo,

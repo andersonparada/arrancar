@@ -6,7 +6,7 @@ import type { TipoDeDocumento, TipoDte } from './tipos-de-documento.js';
  * desmarcan los documentos sin FEL a nombre de la empresa: toda **factura** FEL al NIT de la empresa va en el libro,
  * porque la SAT la tiene en sus DTE recibidos y la cruza con él. La excepción es el recibo FEL (`RECI`, `RDON`) al
  * NIT de la empresa (`recibo_fel`): no es una compra gravada, así que queda fuera del libro de IVA, sin crédito ni
- * retenciones.
+ * retenciones. Un recibo FEL a **otro NIT** va con `fel_a_otro_nit`, como una factura.
  */
 export const MOTIVOS_FUERA_DEL_LIBRO = ['sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit', 'recibo_fel'] as const;
 export type MotivoFueraDelLibro = (typeof MOTIVOS_FUERA_DEL_LIBRO)[number];

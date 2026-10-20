@@ -4,6 +4,7 @@ export interface VigenciaDeCombustibleDto {
   combustibleId: string;
   idpPorGalon: string;
   porcentajeDeEtanol: string;
+  ivaExento: boolean;
   vigenteDesde: string;
   vigenteHasta: string | null;
   combustibleNombre: string | null;

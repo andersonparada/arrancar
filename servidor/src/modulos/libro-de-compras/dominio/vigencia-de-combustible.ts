@@ -9,6 +9,8 @@ export interface DatosDeVigenciaDeCombustible {
   combustibleId: string;
   idpPorGalon: string;
   porcentajeDeEtanol: string;
+  /** Decreto 22-2026: en esta vigencia el combustible está exento de IVA. */
+  ivaExento: boolean;
   vigenteDesde: string;
   vigenteHasta: string | null;
 }
@@ -77,7 +79,8 @@ function datosValidos(datos: DatosDeVigenciaDeCombustible): DatosDeVigenciaDeCom
 
 const mismaTasa = (a: DatosDeVigenciaDeCombustible, b: DatosDeVigenciaDeCombustible): boolean =>
   aCentesimas(a.idpPorGalon) === aCentesimas(b.idpPorGalon) &&
-  aCentesimas(a.porcentajeDeEtanol) === aCentesimas(b.porcentajeDeEtanol);
+  aCentesimas(a.porcentajeDeEtanol) === aCentesimas(b.porcentajeDeEtanol) &&
+  a.ivaExento === b.ivaExento;
 
 /** Vigencia de la tasa de IDP de un combustible de la empresa. Sus reglas van aquí, en el dominio. */
 export class VigenciaDeCombustible extends Entidad<VigenciaDeCombustibleId> {
@@ -137,7 +140,7 @@ export class VigenciaDeCombustible extends Entidad<VigenciaDeCombustibleId> {
   private exigirCambioCompatibleConElUso(datos: DatosDeVigenciaDeCombustible, uso: UsoDeVigencia): void {
     if (!mismaTasa(this.propiedades, datos) || datos.vigenteDesde !== this.propiedades.vigenteDesde) {
       throw new VigenciaDeCombustibleEnUso(
-        'Esta vigencia ya se usó en documentos: no se cambia su tasa, su etanol ni su inicio. Registre una vigencia nueva.',
+        'Esta vigencia ya se usó en documentos: no se cambia su tasa, su etanol, su exención de IVA ni su inicio. Registre una vigencia nueva.',
       );
     }
     if (datos.vigenteHasta !== null && datos.vigenteHasta < uso.ultimaFechaDeEmision) {
