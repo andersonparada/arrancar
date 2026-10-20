@@ -6,9 +6,11 @@ import type {
   GenerarBorradorDelLibro,
   ListarEmisionesDelLibro,
 } from '../aplicacion/casos-uso/libro/consultas-de-emisiones.js';
+import type { ConsultarSat2237 } from '../aplicacion/casos-uso/libro/consultar-sat-2237.js';
 import type { CorregirUltimoFolio } from '../aplicacion/casos-uso/libro/corregir-ultimo-folio.js';
 import type { EmitirLibroFoliado } from '../aplicacion/casos-uso/libro/emitir-libro-foliado.js';
 import type { ExportarLibro } from '../aplicacion/casos-uso/libro/exportar-libro.js';
+import type { ExportarSat2237 } from '../aplicacion/casos-uso/libro/exportar-sat-2237.js';
 import type {
   ConsultaDeEmisionesSolicitada,
   ConsultaDelLibroSolicitada,
@@ -21,6 +23,8 @@ export interface CasosDeUsoDelLibro {
   consultar: ConsultarLibro;
   anulados: ConsultarAnuladosDelLibro;
   exportar: ExportarLibro;
+  sat2237: ConsultarSat2237;
+  exportarSat2237: ExportarSat2237;
   borrador: GenerarBorradorDelLibro;
   emitir: EmitirLibroFoliado;
   emisiones: ListarEmisionesDelLibro;
@@ -56,6 +60,21 @@ export class LibroControlador {
     return respuesta
       .header('Content-Type', TIPO_EXCEL)
       .header('Content-Disposition', `attachment; filename="libro-de-compras-${periodo}.xlsx"`)
+      .send(contenido);
+  };
+
+  sat2237 = (solicitud: FastifyRequest<{ Querystring: ConsultaDelLibroSolicitada }>) =>
+    this.casosDeUso.sat2237.ejecutar(operadorDe(solicitud), solicitud.query.periodo);
+
+  exportarSat2237 = async (
+    solicitud: FastifyRequest<{ Querystring: ConsultaDelLibroSolicitada }>,
+    respuesta: FastifyReply,
+  ) => {
+    const { periodo } = solicitud.query;
+    const contenido = await this.casosDeUso.exportarSat2237.ejecutar(operadorDe(solicitud), periodo);
+    return respuesta
+      .header('Content-Type', TIPO_EXCEL)
+      .header('Content-Disposition', `attachment; filename="sat-2237-${periodo}.xlsx"`)
       .send(contenido);
   };
 

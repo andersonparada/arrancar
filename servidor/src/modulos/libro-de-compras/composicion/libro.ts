@@ -7,9 +7,11 @@ import {
   GenerarBorradorDelLibro,
   ListarEmisionesDelLibro,
 } from '../aplicacion/casos-uso/libro/consultas-de-emisiones.js';
+import { ConsultarSat2237 } from '../aplicacion/casos-uso/libro/consultar-sat-2237.js';
 import { CorregirUltimoFolio } from '../aplicacion/casos-uso/libro/corregir-ultimo-folio.js';
 import { EmitirLibroFoliado } from '../aplicacion/casos-uso/libro/emitir-libro-foliado.js';
 import { ExportarLibro } from '../aplicacion/casos-uso/libro/exportar-libro.js';
+import { ExportarSat2237 } from '../aplicacion/casos-uso/libro/exportar-sat-2237.js';
 import { LibroControlador } from '../http/libro.controlador.js';
 import { rutasDelLibro } from '../http/libro.rutas.js';
 import { GeneradorPdfkitDelLibro } from '../infraestructura/pdf/generador-pdfkit-del-libro.js';
@@ -60,6 +62,8 @@ export function rutasDeLibro() {
       consultar: new ConsultarLibro(dependencias),
       anulados: new ConsultarAnuladosDelLibro(dependencias),
       exportar: new ExportarLibro({ ...dependencias, excel: crearLibroDeExcel() }),
+      sat2237: new ConsultarSat2237(dependencias),
+      exportarSat2237: new ExportarSat2237({ ...dependencias, excel: crearLibroDeExcel() }),
       ...casosDeUsoDeFolios(compartidas),
     }),
   );

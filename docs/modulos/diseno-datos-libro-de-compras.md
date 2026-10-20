@@ -2660,7 +2660,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
    core, rutas y permisos `libro.ver`/`.exportar`, Excel de tres hojas, avisos; pruebas.
 4. **L5-1b (cliente, libro) — hecho el 2026-10-20 (Excel y PDF deshabilitados hasta su servidor):** página «Libro de compras y servicios» (Reportes): período, tabla completa o simplificada,
    resumen, pestaña de anulados, Excel. Página de hasta 120 líneas; lógica en archivos sin Vue con pruebas.
-5. **L5-2a (servidor, SAT-2237):** rubros, segmento 9, detalle de proveedores y facturas especiales, rutas y Excel; el
+5. **L5-2a (servidor, SAT-2237) — hecho el 2026-10-20:** rubros, segmento 9, detalle de proveedores y facturas especiales, rutas y Excel; el
    mapa de casillas vacío (`casillas: null`). **No espera la captura.**
 6. **L5-2b (cliente, SAT-2237):** pestaña «Datos para el SAT-2237» con rubros, operaciones, proveedores y avisos.
 7. **L5-2c (servidor y cliente) (captura):** el mapa de rubros a casillas con sus nombres y la vista «como en el

@@ -1203,3 +1203,19 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   libro) con la huella; los rubros del SAT-2237 se suman cuando exista L5-2a. Avisos al declarar: los DTE pendientes en la
   bandeja solo si hay lotes que toquen el período, y que los emisores pueden anular DTE hasta el vencimiento. Eventos
   `libro-de-compras.periodo_declarado` y `periodo_reabierto`. Pendiente: avisos de conciliación (esperan L4-10) y la página (L5-8b).
+
+- **2026-10-20 — Libro de compras L5-2a (servidor, datos para el SAT-2237).** `GET /api/libro-de-compras/libro/sat-2237?periodo=AAAA-MM`
+  (`libro.ver`) y `…/sat-2237/exportar` (`libro.exportar`, Excel de tres hojas: Rubros, Operaciones y Proveedores). Solo el
+  régimen general (el del período: el de sus documentos o, sin ellos, el vigente) devuelve `{ aplica: true, formulario:
+  'SAT-2237', rubros, segmento9, proveedores, facturasEspeciales, casillas: null, avisos }`; el pequeño contribuyente recibe
+  `{ aplica: false, formulario: 'SAT-2046', mensaje }` (las compras no se declaran) y los demás `formulario: null`; el Excel de
+  estos responde 422 `sat_2237_no_aplica`. **Rubros** (nueve, siempre): combustibles, activos fijos, servicios, otras compras,
+  importaciones (reservado, en cero), pequeño contribuyente, regímenes sin IVA, exento y no afecto y combustible exento por el
+  Decreto 22-2026 (este último informativo, ya incluido en el exento); cada uno con base e IVA de facturas (y FESP), notas de
+  débito, notas de crédito (en negativo) y neto; solo los documentos con crédito entran a los rubros del crédito.
+  **Segmento 9:** cantidad y base (sin signo) de facturas, pequeño contribuyente, regímenes sin IVA, FESP, NCRE y NDEB del libro.
+  **Proveedores:** por NIT, solo con crédito, notas neteadas en su proveedor (con aviso si queda en cero o negativo), del mayor
+  al menor crédito, y la FESP aparte por NIT o CUI del vendedor, cada lista con su total. **Mapa de casillas:**
+  `dominio/libro/casillas-del-sat-2237.ts`, todo «por confirmar» y sin versión (L5-2c espera la captura). Decisión: la FESP
+  cuenta en «otras compras»/«servicios» según su línea. Pruebas: dominio (`datos-del-sat-2237.prueba.ts`) y API
+  (`libro-de-compras-libro-sat-2237.api.prueba.ts`).

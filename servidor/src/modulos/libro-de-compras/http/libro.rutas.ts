@@ -23,6 +23,12 @@ function rutasDeConsulta(app: Aplicacion, controlador: LibroControlador): void {
   app.get(RUTA, { schema: consulta, preHandler: ver, handler: controlador.consultar });
   app.get(`${RUTA}/anulados`, { schema: consulta, preHandler: ver, handler: controlador.anulados });
   app.get(`${RUTA}/exportar`, { schema: consulta, preHandler: exportar, handler: controlador.exportar });
+  app.get(`${RUTA}/sat-2237`, { schema: consulta, preHandler: ver, handler: controlador.sat2237 });
+  app.get(`${RUTA}/sat-2237/exportar`, {
+    schema: consulta,
+    preHandler: exportar,
+    handler: controlador.exportarSat2237,
+  });
   app.get(`${RUTA}/pdf`, {
     schema: consulta,
     preHandler: [ver, limitarPdfs(app, { clave: 'borrador', maximo: 10 })],
