@@ -8,6 +8,7 @@ export type TipoDeDocumento =
   | 'factura_primario_pecuario'
   | 'factura_especial'
   | 'nota_de_credito'
+  | 'nota_de_debito'
   | 'recibo';
 export type DestinoDeDocumento = 'cuentas-por-pagar' | 'caja-chica' | 'cuentas-por-liquidar';
 export type EstadoDeDocumento = 'vigente' | 'anulado';
@@ -20,7 +21,8 @@ export type MotivoSinCredito =
   | 'pequeno_contribuyente'
   | 'exento'
   | 'contribuyente_agropecuario'
-  | 'primario_pecuario';
+  | 'primario_pecuario'
+  | 'nota_de_debito_tardia';
 export type MotivoFueraDelLibro = 'sin_fel' | 'fel_a_consumidor_final' | 'fel_a_otro_nit';
 
 /** Una fila de la lista; el dinero viaja como texto con dos decimales. */
@@ -103,8 +105,11 @@ export interface TotalesDeDocumento {
   exento: string;
 }
 
+/** Una nota que corrige la factura (de crédito o de débito); el dinero, como texto con dos decimales. */
 export interface NotaDeFactura {
   id: string;
+  /** La familia de la nota; opcional mientras el servidor no la envíe. Sin ella, se toma como nota de crédito. */
+  tipo?: TipoDeDocumento;
   serie: string | null;
   numero: string;
   fechaEmision: string;

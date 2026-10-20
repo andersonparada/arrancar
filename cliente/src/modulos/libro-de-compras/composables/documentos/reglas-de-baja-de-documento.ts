@@ -7,6 +7,7 @@ import type {
 } from '../../servicios/documentos.api';
 import { CAUSAS_DE_ANULACION, textoDeCausa } from '../../textos-de-documentos';
 import { tituloDeDocumento } from './detalles-de-documento';
+import { nombreDeLasNotas } from './notas-de-la-factura';
 
 export const MAXIMO_DEL_MOTIVO = 300;
 
@@ -56,8 +57,9 @@ export function resumenDeAnulacion(ficha: FichaDeDocumento): string {
 export function explicacionesDeAcciones(ficha: FichaDeDocumento): string[] {
   if (ficha.estado !== 'vigente') return [];
   const explicaciones: string[] = [];
-  if (!ficha.puedeAnular && ficha.notas.some((nota) => nota.estado === 'vigente')) {
-    explicaciones.push('Para anular esta factura, primero anule sus notas de crédito vigentes.');
+  const vigentes = ficha.notas.filter((nota) => nota.estado === 'vigente');
+  if (!ficha.puedeAnular && vigentes.length > 0) {
+    explicaciones.push(`Para anular esta factura, primero anule sus ${nombreDeLasNotas(vigentes)} vigentes.`);
   }
   if (!ficha.puedeEliminar && ficha.procesadoEnDestinoEn) {
     const cuando = formatearFecha(ficha.procesadoEnDestinoEn);
@@ -65,7 +67,7 @@ export function explicacionesDeAcciones(ficha: FichaDeDocumento): string[] {
       `No se puede eliminar: el destino ya la procesó el ${cuando}. Si hace falta, anule el registro.`,
     );
   } else if (!ficha.puedeEliminar && ficha.notas.length > 0) {
-    explicaciones.push('No se puede eliminar porque tiene notas de crédito, aunque estén anuladas.');
+    explicaciones.push(`No se puede eliminar porque tiene ${nombreDeLasNotas(ficha.notas)}, aunque estén anuladas.`);
   }
   return explicaciones;
 }

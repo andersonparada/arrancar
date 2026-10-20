@@ -72,6 +72,7 @@ describe('textos de los motivos', () => {
       'exento',
       'fuera_de_plazo',
       'no_vinculado',
+      'nota_de_debito_tardia',
       'pequeno_contribuyente',
       'primario_pecuario',
     ]);
@@ -89,7 +90,9 @@ describe('textos de los motivos', () => {
 describe('detalles del documento', () => {
   it('el título lleva el tipo y la serie con el número', () => {
     expect(tituloDeDocumento({ tipo: 'factura', serie: 'A', numero: '123' })).toBe('Factura A-123');
-    expect(tituloDeDocumento({ tipo: 'nota_de_credito', serie: null, numero: '45' })).toBe('Nota de crédito 45');
+    expect(tituloDeDocumento({ tipo: 'nota_de_credito', serie: null, numero: '45' })).toBe(
+      'Nota de crédito del proveedor 45',
+    );
   });
 
   it('suma montos sin errores de redondeo', () => {

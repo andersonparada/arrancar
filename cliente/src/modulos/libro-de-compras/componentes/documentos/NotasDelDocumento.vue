@@ -7,7 +7,7 @@ import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/format
 import { textoDeEstado, tonoDeEstado } from '../../composables/documentos/detalles-de-documento';
 import type { NotaDeFactura } from '../../servicios/documentos.api';
 
-/** Las notas de crédito de una factura; cada una lleva a su propia ficha. */
+/** Las notas (de crédito o de débito) de un grupo de la ficha; cada una lleva a su propia ficha. */
 defineProps<{ notas: NotaDeFactura[] }>();
 </script>
 

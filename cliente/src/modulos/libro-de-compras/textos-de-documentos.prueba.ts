@@ -8,6 +8,7 @@ import {
   REGLAS_DE_RETENCION,
   TIPOS_DE_DOCUMENTO,
   mesDeFecha,
+  textoDelEnlaceALaFactura,
   textoFueraDelLibro,
 } from './textos-de-documentos';
 import type { TipoDeDocumento } from './servicios/documentos.api';
@@ -29,6 +30,23 @@ describe('textos de los motivos sin crédito nuevos', () => {
     expect(MOTIVOS_SIN_CREDITO.primario_pecuario).toBe(
       'Compra a un productor primario o pecuario (Decreto 31-2024): su factura no da crédito fiscal. El monto se registra como costo o gasto.',
     );
+  });
+});
+
+describe('nota de débito del proveedor', () => {
+  it('la familia tiene su nombre en los filtros, la lista y la ficha', () => {
+    expect(TIPOS_DE_DOCUMENTO.nota_de_debito).toBe('Nota de débito del proveedor');
+  });
+
+  it('el motivo de la nota tardía dice que no da crédito y que el IVA va al costo', () => {
+    expect(MOTIVOS_SIN_CREDITO.nota_de_debito_tardia).toBe(
+      'La nota de débito se emitió más de dos meses después de su factura: no da crédito fiscal (Ley del IVA, art. 17). El IVA se suma al costo o gasto.',
+    );
+  });
+
+  it('el enlace a la factura dice si la nota la aumenta o la rebaja', () => {
+    expect(textoDelEnlaceALaFactura('nota_de_debito')).toBe('Ver la factura que aumenta esta nota');
+    expect(textoDelEnlaceALaFactura('nota_de_credito')).toBe('Ver la factura que rebaja esta nota');
   });
 });
 
@@ -80,7 +98,7 @@ describe('familias de documento', () => {
   it('las familias de antes conservan su texto', () => {
     expect(TIPOS_DE_DOCUMENTO.factura).toBe('Factura');
     expect(TIPOS_DE_DOCUMENTO.factura_pequeno_contribuyente).toBe('Factura de pequeño contribuyente');
-    expect(TIPOS_DE_DOCUMENTO.nota_de_credito).toBe('Nota de crédito');
+    expect(TIPOS_DE_DOCUMENTO.nota_de_credito).toBe('Nota de crédito del proveedor');
     expect(TIPOS_DE_DOCUMENTO.recibo).toBe('Recibo');
   });
 
@@ -93,6 +111,7 @@ describe('familias de documento', () => {
       'factura_primario_pecuario',
       'factura_especial',
       'nota_de_credito',
+      'nota_de_debito',
       'recibo',
     ];
     expect(Object.keys(TIPOS_DE_DOCUMENTO).sort()).toEqual([...familias].sort());

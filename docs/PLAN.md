@@ -992,3 +992,12 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   factura (`factura-de-la-nota.ts`, R3-h). `FacturaParaNota` suma las sumas por familia de nota (una consulta agregada). La
   derogación se mide con la fecha de la factura, como ya se hacía con la nota de crédito. Falta R3-3 (solicitud, DTO,
   contrato del destino), R3-4 (bajas), el cliente y el QA.
+- 2026-10-19 — **Libro de compras R3-6 (cliente): nota de débito del proveedor en la lista y la ficha.** Familia
+  `nota_de_debito` en `TIPOS_DE_DOCUMENTO` con «Nota de débito del proveedor» (filtros, lista y ficha); la de crédito pasa a
+  «Nota de crédito del proveedor» (R3-i, aprobado con las recomendaciones del 2026-10-19). Código `NDEB` («Nota de débito»,
+  grupo «Notas de débito») en `tipos-de-documento-sat.ts`, visible pero deshabilitado con «(próximamente)» hasta R3-7.
+  Motivo `nota_de_debito_tardia` con su texto (art. 17). La ficha agrupa las notas en «Notas de crédito (n)» y «Notas de
+  débito (n)» (`gruposDeNotas`, `notas-de-la-factura.ts`); una nota sin `tipo` cuenta como de crédito mientras el DTO no lo
+  trae (el tipo de `NotaDeFactura` es opcional). El enlace de una NDEB dice «Ver la factura que aumenta esta nota». Las
+  explicaciones de anular y eliminar nombran «notas de crédito o de débito» según las notas. Pendiente: el total ajustado
+  de la ficha (lo deriva el servidor en R3-3; el cliente no lo calcula) y la lista de notas con `tipo` del DTO (R3-3).

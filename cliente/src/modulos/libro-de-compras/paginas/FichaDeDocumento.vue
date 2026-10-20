@@ -22,12 +22,13 @@ import {
   tonoDeEstado,
 } from '../composables/documentos/detalles-de-documento';
 import { tomarAvisosDelRegistro } from '../composables/documentos/avisos-del-registro';
+import { gruposDeNotas } from '../composables/documentos/notas-de-la-factura';
 import { explicacionesDeAcciones, resumenDeAnulacion } from '../composables/documentos/reglas-de-baja-de-documento';
 import { usarBajaDeDocumento } from '../composables/documentos/usar-baja-de-documento';
 import { usarFichaDeDocumento } from '../composables/documentos/usar-ficha-de-documento';
-import { VENTANA_DE_DOCUMENTOS } from '../textos-de-documentos';
+import { textoDelEnlaceALaFactura, VENTANA_DE_DOCUMENTOS } from '../textos-de-documentos';
 
-/** La ficha de una factura o nota de crédito, con anular y eliminar. */
+/** La ficha de una factura o de una nota (de crédito o de débito), con anular y eliminar. */
 const props = defineProps<{ documentoId: string }>();
 
 const router = useRouter();
@@ -81,7 +82,7 @@ const volver = { texto: VENTANA_DE_DOCUMENTOS.titulo, ruta: { name: 'libro-de-co
         class="font-medium text-campo-700 underline dark:text-campo-300"
         :to="{ name: 'libro-de-compras.documentos.ficha', params: { documentoId: ficha.documentoAfectadoId } }"
       >
-        Ver la factura que rebaja esta nota
+        {{ textoDelEnlaceALaFactura(ficha.tipo) }}
       </RouterLink>
     </p>
 
@@ -93,8 +94,8 @@ const volver = { texto: VENTANA_DE_DOCUMENTOS.titulo, ruta: { name: 'libro-de-co
       <LineasDelDocumento :lineas="ficha.lineas" :conceptos="conceptos" />
     </SeccionDeFicha>
     <SeccionDeFicha titulo="Retenciones"><RetencionesDelDocumento :retenciones="ficha.retenciones" /></SeccionDeFicha>
-    <SeccionDeFicha v-if="ficha.notas.length" :titulo="`Notas de crédito (${ficha.notas.length})`">
-      <NotasDelDocumento :notas="ficha.notas" />
+    <SeccionDeFicha v-for="grupo in gruposDeNotas(ficha.notas)" :key="grupo.titulo" :titulo="grupo.titulo">
+      <NotasDelDocumento :notas="grupo.notas" />
     </SeccionDeFicha>
 
     <VentanaDeAnulacion

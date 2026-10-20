@@ -39,6 +39,13 @@ describe('tipos de documento por código de la SAT', () => {
     expect(textos.FCAM).toBe('FCAM — Factura cambiaria');
     expect(textos.FARP).toBe('FARP — Factura contribuyente régimen primario');
     expect(textos.NCRE).toBe('NCRE — Nota de crédito');
+    expect(textos.NDEB).toBe('NDEB — Nota de débito (próximamente)');
+  });
+
+  it('la nota de débito deduce su familia y se ve deshabilitada hasta su formulario', () => {
+    expect(familiaDelCodigo('NDEB')).toBe('nota_de_debito');
+    const ndeb = opcionesDeTipoSat().find((opcion) => opcion.valor === 'NDEB');
+    expect(ndeb).toMatchObject({ deshabilitada: true, grupo: 'Notas de débito' });
   });
 
   it('usa el patrón de nombres de la SAT (sin «de» y con «pequeño contribuyente»)', () => {
@@ -69,7 +76,8 @@ describe('tipos de documento por código de la SAT', () => {
     expect(de('FAPE')?.texto).toContain('(régimen derogado, solo antes de julio de 2025)');
     expect(de('FACA')?.texto).toContain('régimen derogado');
     expect(de('FESP')).toMatchObject({ texto: 'FESP — Factura especial' });
-    expect(opciones.some((opcion) => opcion.deshabilitada)).toBe(false);
+    const deshabilitadas = opciones.filter((opcion) => opcion.deshabilitada).map((opcion) => opcion.valor);
+    expect(deshabilitadas).toEqual(['NDEB']);
     expect(esFacturaEspecial('FESP')).toBe(true);
     expect(esFacturaEspecial('FACT')).toBe(false);
   });

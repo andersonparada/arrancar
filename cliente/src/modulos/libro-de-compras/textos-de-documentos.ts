@@ -35,7 +35,7 @@ const MES_DE_DEROGACION = mesDeFecha(FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_201
 /** Textos de la pantalla «Ingreso de facturas» (lista, ficha y anulación). */
 export const VENTANA_DE_DOCUMENTOS = {
   titulo: 'Ingreso de facturas',
-  descripcion: 'Las facturas y notas de crédito de las compras de la empresa.',
+  descripcion: 'Las facturas y las notas de crédito y de débito de las compras de la empresa.',
   registrar: 'Registrar factura',
   ficha: 'Factura',
 } as const;
@@ -48,7 +48,8 @@ export const TIPOS_DE_DOCUMENTO: Record<TipoDeDocumento, string> = {
   factura_contribuyente_agropecuario: 'Factura de contribuyente agropecuario (régimen derogado)',
   factura_primario_pecuario: 'Factura de productor primario o pecuario',
   factura_especial: 'Factura especial (emitida por la empresa)',
-  nota_de_credito: 'Nota de crédito',
+  nota_de_credito: 'Nota de crédito del proveedor',
+  nota_de_debito: 'Nota de débito del proveedor',
   recibo: 'Recibo',
 };
 
@@ -78,7 +79,13 @@ export const MOTIVOS_SIN_CREDITO: Record<MotivoSinCredito, string> = {
   contribuyente_agropecuario: `Factura de un contribuyente agropecuario, régimen eliminado en ${MES_DE_DEROGACION} (Decreto 31-2024): no da crédito fiscal. El total se registra como costo o gasto.`,
   primario_pecuario:
     'Compra a un productor primario o pecuario (Decreto 31-2024): su factura no da crédito fiscal. El monto se registra como costo o gasto.',
+  nota_de_debito_tardia:
+    'La nota de débito se emitió más de dos meses después de su factura: no da crédito fiscal (Ley del IVA, art. 17). El IVA se suma al costo o gasto.',
 };
+
+/** El enlace a la factura que corrige la nota: la de débito la aumenta; la de crédito, la rebaja. */
+export const textoDelEnlaceALaFactura = (tipo: TipoDeDocumento): string =>
+  tipo === 'nota_de_debito' ? 'Ver la factura que aumenta esta nota' : 'Ver la factura que rebaja esta nota';
 
 /** Por qué un documento no se muestra en los reportes de la SAT. */
 export const MOTIVOS_FUERA_DEL_LIBRO: Record<MotivoFueraDelLibro, string> = {
