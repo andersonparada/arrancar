@@ -854,7 +854,7 @@ nota de crédito: el monto se guarda **positivo** y la familia da el signo en lo
 | Qué facturas admiten NDEB | `factura`, `factura_pequeno_contribuyente`, `factura_pequeno_contribuyente_electronico`, `factura_contribuyente_agropecuario`, `factura_primario_pecuario`. **No:** `factura_especial` (la emitió la empresa: mismo criterio que R2-e), `recibo`, ninguna nota | Una nota corrige la factura original (art. 29); una nota sobre otra nota rompe el rastro y el tope |
 | Motivo sin crédito | La NDEB **se evalúa como un documento propio** (su período, su emisión, su IVA) y **hereda de su factura solo lo que es de la compra**: la familia sin crédito y `no_vinculado` (ver 3.2c.3) | El IVA de la NDEB es IVA nuevo que se documenta en su propia fecha; heredar `fuera_de_plazo` o `empresa_sin_credito` daría o quitaría crédito por la fecha de otro documento |
 | Período y art. 20 | Como una factura: se propone el mes de recepción, nunca antes del mes de su emisión; el plazo del art. 20 se cuenta **desde su propia emisión** | Mismo razonamiento; los checks del art. 20 ya se escriben «salvo `nota_de_credito`», así que la NDEB entra sola |
-| Casilla SAT | La NDEB va **siempre** en el libro, y solo sobre facturas que van en el libro | Es un DTE al NIT de la empresa (decisión A1 del 2026-10-04: toda FEL al NIT de la empresa va en el libro) |
+| Casilla SAT | La NDEB va **siempre** en el libro, y solo sobre facturas que van en el libro | Es un DTE al NIT de la empresa (decisión A1 del 2026-10-04: toda **factura** FEL al NIT de la empresa va en el libro; el recibo FEL es la excepción) |
 | Retenciones | **Ninguna en R3-1 a R3-4** (como la nota de crédito); el paso R3-5 las agrega si el contador lo confirma. La tabla `retenciones` no cambia: las filas colgarían de la NDEB con las reglas de hoy | No hay norma clara; los datos no dependen de la respuesta |
 | Tope de las notas de crédito | Σ notas de crédito vigentes ≤ factura + Σ NDEB vigentes, en total **y** en IVA | La NDEB aumenta lo que se puede rebajar |
 | Totales derivados | «Total ajustado» de la factura = total + Σ NDEB vigentes − Σ notas de crédito vigentes; no se guarda | Se calcula en la ficha y en el destino; guardarlo pide mantenerlo en cada alta y baja |
@@ -1131,8 +1131,11 @@ sin migrar, y los pasos que lo esperan van marcados.
 5. `documentos_autorizacion_fel_unica` es único **en toda la instalación** (solo vigentes): sirve para saber si un DTE ya
    está registrado en otra empresa sin revelar cuál (riesgo ya aceptado, §13.1).
 6. **Recibos FEL a la empresa:** la familia `recibo` (`RECI`, `RDON`) solo se registra con la casilla SAT desmarcada y uno
-   de tres motivos (`sin_fel`, `fel_a_consumidor_final`, `fel_a_otro_nit`). Un `RECI` emitido **al NIT de la empresa** no
-   tiene camino hoy (hueco de L3 que L4 hace visible; pregunta L4-c3 al contador).
+   de cuatro motivos (`sin_fel`, `fel_a_consumidor_final`, `fel_a_otro_nit` y, desde la migración `0020`, `recibo_fel`).
+   Un `RECI`/`RDON` emitido **al NIT de la empresa** lleva `recibo_fel` (L4-c3, resuelta el 2026-10-20): exige la
+   autorización y el NIT receptor de la empresa (si se escribe otro, error), queda fuera del libro de IVA sin crédito ni
+   retenciones, y el `RDON` avisa que la donación es deducible solo en el ISR sobre utilidades. El check
+   `documentos_recibo_fel_de_la_familia` exige `tipo = 'recibo'` y `tipo_dte in ('RECI','RDON')`.
 7. La auditoría (`AccionAuditada`) es un tipo de TypeScript sin `check` en la base: agregar una acción no pide migración.
 8. En desarrollo no hay documentos ni líneas (consulta de solo lectura del 2026-10-19): las migraciones no convierten
    datos.
@@ -1317,7 +1320,7 @@ que el usuario completa para confirmarlo.
 | `documento_id` | uuid | sí | el documento registrado; FK `(documento_id, empresa_id) → documentos (id, empresa_id)` no action |
 | `motivo_de_descarte` | text | sí | 1–300 |
 | `descartado_en`, `descartado_por` | timestamptz, uuid | sí | |
-| `motivo_de_bloqueo` | text | sí | check `in ('registrado_en_otra_empresa','recibo_a_la_empresa')` (pregunta L4-c y L4-c3) |
+| `motivo_de_bloqueo` | text | sí | check `in ('registrado_en_otra_empresa')` (pregunta L4-c). `recibo_a_la_empresa` **ya no aplica** (L4-c3, 2026-10-20): un `RECI`/`RDON` entra `pendiente` y se registra con el motivo `recibo_fel` |
 
 **Lo que el usuario completa (borrador; se puede llenar en varias sesiones):**
 
@@ -1435,8 +1438,8 @@ el archivo **fuera** de la transacción; después, en **una** unidad de trabajo:
 5. Resuelve los proveedores con **una** consulta por todos los NIT del archivo (`terceros.terceros` con papel de
    proveedor activo en la cuenta).
 6. **Upsert** por `(empresa_id, autorizacion_fel)` en tandas de 500:
-   - **Nueva:** `pendiente` (o `registrado` si la autorización ya está vigente en `documentos` de la empresa, o `bloqueado`
-     si es un recibo `RECI`/`RDON` a la empresa).
+   - **Nueva:** `pendiente` (o `registrado` si la autorización ya está vigente en `documentos` de la empresa). Un recibo
+     `RECI`/`RDON` a la empresa entra `pendiente`, no bloqueado (L4-c3).
    - **Existente sin cambios:** solo `lote_id`.
    - **Existente con cambios** en los datos del DTE (lo normal: pasó a anulada en la SAT): actualiza los datos del DTE y
      `lote_id`, **no** toca el estado de la bandeja ni lo completado, y audita `corregir` (recurso
@@ -1713,7 +1716,8 @@ El aviso de L5 (3.3b.8) se programa con L5.
 - **L4-c2.** ¿Van en la columna de no afecto/exento del libro de compras, o la SAT espera otra columna? (El usuario decidió
   no afecto; confirmar con el formato vigente.)
 - **L4-c3.** Un recibo FEL (`RECI`, `RDON`) emitido al NIT de la empresa: ¿va en el libro, fuera del libro o no se registra?
-  (Hoy no tiene camino en Arrancar; en la bandeja entra bloqueado.)
+  **Resuelta (2026-10-20):** fuera del libro de IVA con el motivo `recibo_fel`, sin crédito ni retenciones; en la bandeja
+  entra `pendiente` (el bloqueo `recibo_a_la_empresa` ya no aplica).
 - **L4-c4.** ¿Es aceptable deducir el exento de una factura como `total − IDP − otros − IVA × 112/12` cuando el Excel no lo
   separa, con aviso al usuario?
 

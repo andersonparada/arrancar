@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AVISO_DE_DONACION,
   AVISO_FACTURA_ESPECIAL,
   AVISO_NO_DEDUCIBLE,
   FelAlNitDeLaEmpresaNoSeDesmarca,
   MotivoFueraDelLibroIncoherente,
+  ReciboFelIncoherente,
   evaluarFueraDelLibro,
   type DatosDeFueraDelLibro,
 } from './fuera-del-libro.js';
@@ -12,6 +14,8 @@ const AUTORIZACION = '6f1d0c5e-0f55-4f7a-9d0e-5f3f0a0b9c11';
 
 const datos = (cambios: Partial<DatosDeFueraDelLibro> = {}): DatosDeFueraDelLibro => ({
   motivo: 'sin_fel',
+  tipo: 'recibo',
+  tipoDte: null,
   autorizacionFel: null,
   nitReceptor: null,
   nitDeLaEmpresa: '1234567',
@@ -63,5 +67,41 @@ describe('evaluarFueraDelLibro', () => {
       MotivoFueraDelLibroIncoherente,
     );
     expect(() => evaluarFueraDelLibro(datos({ motivo: 'fel_a_otro_nit' }))).toThrow(MotivoFueraDelLibroIncoherente);
+  });
+
+  describe('recibo FEL a la empresa', () => {
+    const recibo = (cambios: Partial<DatosDeFueraDelLibro> = {}) =>
+      datos({ motivo: 'recibo_fel', tipoDte: 'RECI', autorizacionFel: AUTORIZACION, ...cambios });
+
+    it('un RECI al NIT de la empresa queda fuera del libro sin avisos', () => {
+      expect(evaluarFueraDelLibro(recibo({ nitReceptor: '1234567' }))).toEqual({
+        muestraEnReportesSat: false,
+        avisos: [],
+      });
+    });
+
+    it('sin NIT escrito se toma el de la empresa', () => {
+      expect(evaluarFueraDelLibro(recibo()).muestraEnReportesSat).toBe(false);
+    });
+
+    it('un RDON avisa que la donación solo es deducible en el ISR sobre utilidades', () => {
+      expect(evaluarFueraDelLibro(recibo({ tipoDte: 'RDON' })).avisos).toEqual([AVISO_DE_DONACION]);
+      expect(AVISO_DE_DONACION).toMatch(/ISR sobre utilidades/);
+    });
+
+    it('un NIT receptor ajeno es un error', () => {
+      expect(() => evaluarFueraDelLibro(recibo({ nitReceptor: '7654321' }))).toThrow(ReciboFelIncoherente);
+    });
+
+    it('exige la autorización FEL', () => {
+      expect(() => evaluarFueraDelLibro(recibo({ autorizacionFel: null }))).toThrow(MotivoFueraDelLibroIncoherente);
+    });
+
+    it.each([
+      ['una factura', 'factura', 'FACT'],
+      ['un recibo sin código', 'recibo', null],
+    ] as const)('no vale para %s', (_caso, tipo, tipoDte) => {
+      expect(() => evaluarFueraDelLibro(recibo({ tipo, tipoDte }))).toThrow(ReciboFelIncoherente);
+    });
   });
 });

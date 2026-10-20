@@ -155,6 +155,8 @@ describe('empresa en el régimen opcional simplificado (sin ISR sobre utilidades
   it('los avisos de no deducible quitan la parte del ISR y el de factura especial queda', () => {
     const datos = {
       motivo: 'sin_fel' as const,
+      tipo: 'recibo' as const,
+      tipoDte: null,
       autorizacionFel: null,
       nitReceptor: null,
       nitDeLaEmpresa: '1234567',

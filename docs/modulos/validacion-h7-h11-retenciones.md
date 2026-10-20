@@ -440,7 +440,7 @@ Artículos de extractos coincidentes; confirmar en el texto vigente los que se m
 
 **Decisiones del usuario (2026-10-04), las recomendadas:**
 - **A1:** solo se desmarcan documentos sin FEL a nombre de la empresa (recibo de informal, FEL a CF o a otro NIT);
-  toda FEL al NIT de la empresa va en el libro. Al desmarcar: aviso de no deducible y, si el tercero es persona
+  toda **factura** FEL al NIT de la empresa va en el libro (el recibo FEL `RECI`/`RDON` es la excepción desde el 2026-10-20: motivo `recibo_fel`). Al desmarcar: aviso de no deducible y, si el tercero es persona
   individual no inscrita, sugerencia de factura especial. Se quita el aviso de «lo que se habría retenido».
   Reemplaza la decisión del 2026-09-29 de poder desmarcar una FEL con IVA. Datos: `motivo_fuera_del_libro`
   (`sin_fel`, `fel_a_consumidor_final`, `fel_a_otro_nit`), check de motivo obligatorio al desmarcar y `sin_fel`

@@ -32,7 +32,9 @@ const receptorEscrito = (solicitud: SolicitudDeDocumento): string | null => rece
  * si es una FEL a otro NIT (o CUI) o a consumidor final, el que dice el documento.
  */
 function receptorGuardado(solicitud: SolicitudDeDocumento, contexto: ContextoFiscal): string | null {
-  if (solicitud.motivoFueraDelLibro === null) return contexto.nitDeLaEmpresa;
+  if (solicitud.motivoFueraDelLibro === null || solicitud.motivoFueraDelLibro === 'recibo_fel') {
+    return contexto.nitDeLaEmpresa;
+  }
   return solicitud.motivoFueraDelLibro === 'sin_fel' ? null : receptorEscrito(solicitud);
 }
 
@@ -42,6 +44,8 @@ function evaluarCasilla(solicitud: SolicitudDeDocumento, contexto: ContextoFisca
   exigirReceptorCoherente(solicitud.motivoFueraDelLibro, nitReceptor);
   return evaluarFueraDelLibro({
     motivo: solicitud.motivoFueraDelLibro,
+    tipo: solicitud.tipo,
+    tipoDte: solicitud.tipoDte,
     autorizacionFel: solicitud.autorizacionFel,
     nitReceptor,
     nitDeLaEmpresa: contexto.nitDeLaEmpresa,

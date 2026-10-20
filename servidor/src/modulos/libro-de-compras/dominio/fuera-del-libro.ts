@@ -1,11 +1,14 @@
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
+import type { TipoDeDocumento, TipoDte } from './tipos-de-documento.js';
 
 /**
  * Por qué un documento queda fuera del libro (casilla «Se muestra en reportes SAT» desmarcada). Solo se
- * desmarcan los documentos sin FEL a nombre de la empresa: toda FEL al NIT de la empresa va en el libro,
- * porque la SAT la tiene en sus DTE recibidos y la cruza con él.
+ * desmarcan los documentos sin FEL a nombre de la empresa: toda **factura** FEL al NIT de la empresa va en el libro,
+ * porque la SAT la tiene en sus DTE recibidos y la cruza con él. La excepción es el recibo FEL (`RECI`, `RDON`) al
+ * NIT de la empresa (`recibo_fel`): no es una compra gravada, así que queda fuera del libro de IVA, sin crédito ni
+ * retenciones.
  */
-export const MOTIVOS_FUERA_DEL_LIBRO = ['sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit'] as const;
+export const MOTIVOS_FUERA_DEL_LIBRO = ['sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit', 'recibo_fel'] as const;
 export type MotivoFueraDelLibro = (typeof MOTIVOS_FUERA_DEL_LIBRO)[number];
 
 /** Una FEL emitida al NIT de la empresa no puede quedar fuera del libro. */
@@ -24,6 +27,11 @@ export class MotivoFueraDelLibroIncoherente extends DatoInvalido {
   readonly codigo = 'motivo_fuera_del_libro_incoherente';
 }
 
+/** El motivo `recibo_fel` solo vale para un recibo `RECI` o `RDON` emitido al NIT de la empresa. */
+export class ReciboFelIncoherente extends DatoInvalido {
+  readonly codigo = 'recibo_fel_incoherente';
+}
+
 /** Lo que el dominio sabe del proveedor (de `terceros`) para dar los avisos. */
 export interface ProveedorParaFueraDelLibro {
   tipoDePersona: 'individual' | 'juridica';
@@ -32,6 +40,9 @@ export interface ProveedorParaFueraDelLibro {
 }
 
 export interface DatosDeFueraDelLibro {
+  tipo: TipoDeDocumento;
+  /** El código de la SAT; `null` sin FEL. */
+  tipoDte: TipoDte | null;
   /** `null` = el documento va en el libro. */
   motivo: MotivoFueraDelLibro | null;
   autorizacionFel: string | null;
@@ -53,6 +64,8 @@ export interface ResultadoFueraDelLibro {
 
 export const AVISO_NO_DEDUCIBLE = 'Sin un documento válido, este gasto no es deducible del ISR.';
 export const AVISO_NO_DEDUCIBLE_SIN_ISR = 'Sin un documento válido, este gasto no queda respaldado en la contabilidad.';
+export const AVISO_DE_DONACION =
+  'Donación: deducible solo en el ISR sobre utilidades, a entidades autorizadas y con límite anual; no es una compra.';
 export const AVISO_FACTURA_ESPECIAL =
   'La ley obliga a emitir factura especial (Ley del IVA art. 52); sin ella el gasto no es deducible del ISR.';
 
@@ -73,6 +86,19 @@ function exigirCoherenciaConLaFel(datos: DatosDeFueraDelLibro): void {
   }
 }
 
+/** Un recibo FEL (`RECI`, `RDON`) a la empresa: fuera del libro de IVA; la donación lleva su aviso. */
+function evaluarReciboFel(datos: DatosDeFueraDelLibro): ResultadoFueraDelLibro {
+  const esReciboFel = datos.tipo === 'recibo' && (datos.tipoDte === 'RECI' || datos.tipoDte === 'RDON');
+  if (!esReciboFel) throw new ReciboFelIncoherente('El motivo «recibo FEL» es solo para un recibo RECI o RDON.');
+  exigirCoherenciaConLaFel(datos);
+  if (datos.nitReceptor !== null && datos.nitReceptor !== datos.nitDeLaEmpresa) {
+    throw new ReciboFelIncoherente(
+      'El recibo FEL debe estar a nombre de la empresa; si está a otro NIT, elija «La FEL está a nombre de otro NIT».',
+    );
+  }
+  return { muestraEnReportesSat: false, avisos: datos.tipoDte === 'RDON' ? [AVISO_DE_DONACION] : [] };
+}
+
 /** Una persona individual sin NIT no está inscrita: la ley obliga a emitirle factura especial. */
 const seSugiereFacturaEspecial = (proveedor: ProveedorParaFueraDelLibro): boolean =>
   proveedor.tipoDePersona === 'individual' && proveedor.nit === null;
@@ -82,9 +108,11 @@ const seSugiereFacturaEspecial = (proveedor: ProveedorParaFueraDelLibro): boolea
  * con qué avisos. Sin motivo va en el libro y no hay avisos.
  * @throws MotivoFueraDelLibroIncoherente si el motivo contradice la autorización FEL.
  * @throws FelAlNitDeLaEmpresaNoSeDesmarca si es una FEL emitida al NIT de la empresa.
+ * @throws ReciboFelIncoherente si `recibo_fel` no es un RECI o RDON a nombre de la empresa.
  */
 export function evaluarFueraDelLibro(datos: DatosDeFueraDelLibro): ResultadoFueraDelLibro {
   if (datos.motivo === null) return { muestraEnReportesSat: true, avisos: [] };
+  if (datos.motivo === 'recibo_fel') return evaluarReciboFel(datos);
   exigirCoherenciaConLaFel(datos);
   const esAlNitDeLaEmpresa = datos.nitReceptor !== null && datos.nitReceptor === datos.nitDeLaEmpresa;
   if (datos.motivo !== 'sin_fel' && esAlNitDeLaEmpresa) throw new FelAlNitDeLaEmpresaNoSeDesmarca();

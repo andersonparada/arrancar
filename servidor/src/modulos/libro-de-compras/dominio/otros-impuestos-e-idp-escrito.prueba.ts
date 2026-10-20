@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { calcularDocumento, type DatosParaCalcular } from './calculo-de-documento.js';
 import { calcularLineas, costoDeLinea, type OpcionesDeCalculo } from './calculo-de-linea.js';
+import { FacturaEspecialSinOtrosImpuestos } from './errores-de-factura-especial.js';
 import { LineaInvalida } from './errores-de-calculo.js';
 import { totalesDelDocumento } from './totales-del-documento.js';
 
@@ -116,5 +117,35 @@ describe('IDP escrito', () => {
     ['mayor al total', 100001],
   ])('rechaza un IDP escrito %s', (_caso, idp) => {
     expect(() => calcularLineas([{ total: 100000, exento: 0, idp }], conIva)).toThrow(LineaInvalida);
+  });
+});
+
+describe('factura especial sin otros impuestos ni IDP', () => {
+  const especial = (lineas: DatosParaCalcular['lineas']) => ({
+    ...documento(lineas),
+    tipo: 'factura_especial' as const,
+  });
+
+  it('rechaza otros impuestos en una línea', () => {
+    const calcular = () => calcularDocumento(especial([{ total: 11200, exento: 0, otrosImpuestos: 100 }]));
+    expect(calcular).toThrow(FacturaEspecialSinOtrosImpuestos);
+    expect(calcular).toThrow('Una factura especial no lleva otros impuestos ni IDP.');
+  });
+
+  it('rechaza un IDP escrito o de galones en una línea', () => {
+    const combustible = { galones: '10', idpPorGalon: '4.70', porcentajeDeEtanol: '0' };
+    expect(() => calcularDocumento(especial([{ total: 11200, exento: 0, idp: 500 }]))).toThrow(
+      FacturaEspecialSinOtrosImpuestos,
+    );
+    expect(() => calcularDocumento(especial([{ total: 11200, exento: 0, combustible }]))).toThrow(
+      FacturaEspecialSinOtrosImpuestos,
+    );
+  });
+
+  it('sin ellos se calcula normal, y una factura común sí admite otros impuestos', () => {
+    expect(calcularDocumento(especial([{ total: 11200, exento: 0 }])).totales.iva).toBe(1200);
+    expect(
+      calcularDocumento(documento([{ total: 11200, exento: 0, otrosImpuestos: 100 }])).totales.otrosImpuestos,
+    ).toBe(100);
   });
 });

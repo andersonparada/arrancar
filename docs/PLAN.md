@@ -1057,3 +1057,14 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   de totales, `otrosImpuestos`. El combustible sin galones es error; con IDP escrito y galones se compara y, si difieren, aviso; sin
   tasa en la fecha, aviso y se guarda sin vigencia. **L4-2b no va:** la base del ISR sigue siendo `total − iva` (los otros impuestos
   quedan dentro) hasta que conteste el contador (L4-c1). Falta el cliente (L4-3) y la bandeja.
+- **2026-10-20 — Libro de compras, decisiones del usuario sobre L4-c1 y L4-c3 (servidor).** Migración
+  `0020_l4_recibo_fel_y_factura_especial_limpia`: el motivo `recibo_fel` entra en `documentos_motivo_fuera_del_libro_valido` y en
+  `documentos_fel_con_autorizacion`; check nuevo `documentos_recibo_fel_de_la_familia` (`recibo_fel` solo con `tipo = 'recibo'` y
+  `tipo_dte in ('RECI','RDON')`); check nuevo `documentos_factura_especial_sin_otros` (`tipo <> 'factura_especial' or (otros_impuestos = 0
+  and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían tal cual. Dominio: la regla A1 queda «toda **factura** FEL
+  al NIT de la empresa va en el libro»; el recibo FEL es la excepción (`evaluarFueraDelLibro` valida tipo, código, autorización y NIT
+  receptor, que si se escribe debe ser el de la empresa: `recibo_fel_incoherente`, 400; si se omite se guarda el de la empresa); queda
+  fuera del libro, sin crédito ni retenciones, y el `RDON` avisa «Donación: deducible solo en el ISR sobre utilidades…». Una factura
+  especial con otros impuestos o IDP (escrito o de galones) en alguna línea da `factura_especial_sin_otros_impuestos` (400, «Una factura
+  especial no lleva otros impuestos ni IDP.»). Diseño §3.3b: el bloqueo `recibo_a_la_empresa` de la bandeja ya no aplica (el recibo entra
+  `pendiente`). Falta en el cliente el motivo `recibo_fel` (selector y textos) y el aviso.

@@ -6,6 +6,7 @@ import {
   marcasDeTiempo,
   politicaPorEmpresa,
 } from '../../../core/base-datos/columnas.js';
+import type { MotivoFueraDelLibro } from '../../dominio/fuera-del-libro.js';
 import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import {
@@ -55,7 +56,7 @@ export const documentos = esquemaLibroDeCompras.table(
     fechaRecepcion: date().notNull(),
     periodo: date().notNull(),
     muestraEnReportesSat: boolean().default(true).notNull(),
-    motivoFueraDelLibro: text().$type<'sin_fel' | 'fel_a_consumidor_final' | 'fel_a_otro_nit'>(),
+    motivoFueraDelLibro: text().$type<MotivoFueraDelLibro>(),
     motivoSinCredito: text(),
     /** Régimen de IVA de la empresa en el período del documento, copiado al registrar (no cambia después). */
     regimenIvaDeLaEmpresa: text().$type<RegimenDeIva>().notNull(),

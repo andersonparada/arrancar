@@ -141,6 +141,13 @@
       "when": 1792478380111,
       "tag": "0019_l4_otros_impuestos_e_idp_escrito",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792489655174,
+      "tag": "0020_l4_recibo_fel_y_factura_especial_limpia",
+      "breakpoints": true
     }
   ]
 }

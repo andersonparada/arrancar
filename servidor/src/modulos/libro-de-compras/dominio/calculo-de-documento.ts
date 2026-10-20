@@ -1,4 +1,5 @@
 import { calcularLineas, type LineaCalculada, type LineaEscrita } from './calculo-de-linea.js';
+import { FacturaEspecialSinOtrosImpuestos } from './errores-de-factura-especial.js';
 import { esFamiliaSinIva } from './familia-del-documento.js';
 import { determinarMotivoSinCredito } from './motivo-sin-credito.js';
 import { avisosDelPeriodo, exigirPeriodoValido } from './periodo-del-libro.js';
@@ -50,6 +51,13 @@ function validarNota(datos: DatosParaCalcular, iva: number): void {
   exigirNotaCoherenteConLaFactura(datos, { tipo: datos.tipo, iva });
 }
 
+/** La factura especial no lleva otros impuestos ni IDP en ninguna línea. */
+function exigirFacturaEspecialLimpia(tipo: TipoDeDocumento, lineas: readonly LineaCalculada[]): void {
+  if (tipo === 'factura_especial' && lineas.some((l) => l.otrosImpuestos > 0 || l.idp > 0)) {
+    throw new FacturaEspecialSinOtrosImpuestos();
+  }
+}
+
 /** Sin IVA: casilla SAT desmarcada, familias sin IVA (o nota de una factura de ellas) y recibos. */
 function cobraIva(datos: DatosParaCalcular): boolean {
   const notaDeFamiliaSinIva = !!datos.motivoDeLaFactura && MOTIVOS_SIN_IVA.includes(datos.motivoDeLaFactura);
@@ -73,6 +81,7 @@ export function calcularDocumento(datos: DatosParaCalcular): DocumentoCalculado 
     ivaNoAcreditable: false,
     ivaDeLaFel: datos.ivaDeLaFel,
   });
+  exigirFacturaEspecialLimpia(datos.tipo, calculadas);
   const { motivo, avisos } = determinarMotivoSinCredito({
     ...datos,
     ...totalesDelDocumento(calculadas),

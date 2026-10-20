@@ -35,3 +35,12 @@ export class NotaSobreFacturaEspecial extends ReglaDeNegocioInfringida {
     );
   }
 }
+
+/** Una factura especial no lleva otros impuestos ni IDP (ni en el documento ni en sus líneas). */
+export class FacturaEspecialSinOtrosImpuestos extends DatoInvalido {
+  readonly codigo = 'factura_especial_sin_otros_impuestos';
+
+  constructor() {
+    super('Una factura especial no lleva otros impuestos ni IDP.');
+  }
+}

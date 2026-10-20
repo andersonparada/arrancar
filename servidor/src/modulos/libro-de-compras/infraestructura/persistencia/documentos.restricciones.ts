@@ -5,7 +5,7 @@ import { proveedores } from '../../../terceros/infraestructura/persistencia/prov
 
 const TIPOS = TIPOS_DE_DOCUMENTO.map((tipo) => `'${tipo}'`).join(', ');
 const DESTINOS = "'cuentas-por-pagar', 'caja-chica', 'cuentas-por-liquidar'";
-const MOTIVOS_FUERA = "'sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit'";
+const MOTIVOS_FUERA = "'sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit', 'recibo_fel'";
 const CAUSAS_DE_ANULACION = "'error_de_captura', 'fel_anulada_por_el_emisor', 'no_corresponde_a_la_empresa'";
 const MOTIVOS = MOTIVOS_SIN_CREDITO.map((motivo) => `'${motivo}'`).join(', ');
 /** Los motivos cuyo IVA va al costo de las líneas. */
@@ -153,6 +153,10 @@ export const restriccionesDeTipo = (t: T) => [
     'documentos_anulacion_completa',
     sql`(${t.estado} = 'anulado') = (${t.anuladoEn} is not null and ${t.anuladoPor} is not null and ${t.motivoDeAnulacion} is not null and ${t.causaDeAnulacion} is not null)`,
   ),
+  check(
+    'documentos_factura_especial_sin_otros',
+    sql`${t.tipo} <> 'factura_especial' or (${t.otrosImpuestos} = 0 and ${t.idp} = 0)`,
+  ),
   check('documentos_recibo_desmarcado', sql`${t.tipo} <> 'recibo' or not ${t.muestraEnReportesSat}`),
 ];
 
@@ -165,7 +169,11 @@ export const restriccionesDeFueraDelLibro = (t: T) => [
   ),
   check(
     'documentos_fel_con_autorizacion',
-    sql`${t.motivoFueraDelLibro} not in ('fel_a_consumidor_final', 'fel_a_otro_nit') or ${t.autorizacionFel} is not null`,
+    sql`${t.motivoFueraDelLibro} not in ('fel_a_consumidor_final', 'fel_a_otro_nit', 'recibo_fel') or ${t.autorizacionFel} is not null`,
+  ),
+  check(
+    'documentos_recibo_fel_de_la_familia',
+    sql`${t.motivoFueraDelLibro} is distinct from 'recibo_fel' or (${t.tipo} = 'recibo' and ${t.tipoDte} in ('RECI', 'RDON'))`,
   ),
 ];
 
