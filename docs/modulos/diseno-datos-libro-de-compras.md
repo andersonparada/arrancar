@@ -2667,7 +2667,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
    formulario»; cerrar las preguntas L5-C1 a L5-C3.
 8. **L5-3a (servidor, PDF) — hecho el 2026-10-20 (con `pdfkit` 0.20.2 en lugar de `pdfmake`; la hoja final es siempre el resumen):** dependencia aprobada por el agente de seguridad, `paginarLibro`, plantilla,
    migraciones `0024` y `0025`, emitir, copia, borrador, corregir el último folio, permiso `libro.emitir`; pruebas.
-9. **L5-3b (cliente, PDF):** botones «Borrador», «Emitir con folios» (confirmación con los folios que gastará), lista de
+9. **L5-3b (cliente, PDF) — hecho el 2026-10-20:** botones «Borrador», «Emitir con folios» (confirmación con los folios que gastará), lista de
    emisiones con «Copia», y el último folio.
 10. **L5-4a (servidor, retenciones):** reporte por mes y grupo, plazos con feriados, `GRUPO_DE_ENTERO`, Excel, permisos
     `retenciones.ver`/`.exportar`; pruebas.

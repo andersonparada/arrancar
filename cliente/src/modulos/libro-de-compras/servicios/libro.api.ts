@@ -1,4 +1,4 @@
-import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
+import { clienteHttp, type ArchivoDescargado, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import type { MotivoSinCredito } from './documentos.api';
 
 export type TipoDeLibro = 'completo' | 'simplificado';
@@ -68,6 +68,25 @@ export interface AnuladoDelLibro {
   anuladoPor: string | null;
 }
 
+/** Una emisión del libro con folios; `sustituida` si hay otra posterior del mismo período. */
+export interface EmisionDelLibro {
+  id: string;
+  /** Primer día del mes (`AAAA-MM-01`). */
+  periodo: string;
+  tipoDeLibro: TipoDeLibro;
+  folioDesde: number;
+  folioHasta: number;
+  paginas: number;
+  motivo: string | null;
+  creadoEn: string;
+  sustituida: boolean;
+}
+
+export interface EmisionesDelLibro {
+  ultimoFolio: number;
+  emisiones: EmisionDelLibro[];
+}
+
 /** El libro de compras de un período (`AAAA-MM`) y su anexo de anulados. */
 export class ApiLibro {
   constructor(private readonly http: ClienteHttp) {}
@@ -78,6 +97,35 @@ export class ApiLibro {
 
   anulados(periodo: string) {
     return this.http.obtener<AnuladoDelLibro[]>('/libro-de-compras/libro/anulados', { periodo });
+  }
+
+  exportar(periodo: string): Promise<ArchivoDescargado> {
+    return this.http.descargar('/libro-de-compras/libro/exportar', { periodo });
+  }
+
+  /** El PDF sin folios: no gasta nada. */
+  borrador(periodo: string): Promise<ArchivoDescargado> {
+    return this.http.descargar('/libro-de-compras/libro/pdf', { periodo });
+  }
+
+  emisiones(periodo: string) {
+    return this.http.obtener<EmisionesDelLibro>('/libro-de-compras/libro/emisiones', { periodo });
+  }
+
+  /** Emite el PDF con folios y gasta las hojas; el motivo es obligatorio si el período ya se emitió. */
+  emitir(periodo: string, motivo: string | null) {
+    return this.http.crear<EmisionDelLibro>('/libro-de-compras/libro/emisiones', {
+      periodo,
+      motivo: motivo || undefined,
+    });
+  }
+
+  copia(emisionId: string): Promise<ArchivoDescargado> {
+    return this.http.descargar(`/libro-de-compras/libro/emisiones/${emisionId}/pdf`);
+  }
+
+  corregirFolio(ultimoFolio: number, motivo: string) {
+    return this.http.reemplazar<{ ultimoFolio: number }>('/libro-de-compras/libro/foliacion', { ultimoFolio, motivo });
   }
 }
 

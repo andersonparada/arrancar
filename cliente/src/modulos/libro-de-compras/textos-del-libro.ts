@@ -7,8 +7,40 @@ export const VENTANA_DEL_LIBRO = {
   anulados: 'Anulados del período',
   libro: 'Libro del período',
   exportar: 'Exportar a Excel',
-  pdf: 'PDF con folios',
-  proximamente: 'Próximamente',
+  borrador: 'Ver borrador (PDF)',
+  borradorAyuda: 'El borrador no lleva número de folio y no gasta hojas.',
+  emitir: 'Emitir con folios',
+  corregirFolio: 'Corregir el último folio',
+} as const;
+
+export const EMISIONES_DEL_LIBRO = {
+  titulo: 'Emisiones del período',
+  vacio: 'Este período todavía no se ha emitido con folios.',
+  vacioAyuda: 'Revise el borrador y, cuando esté listo, use «Emitir con folios».',
+  copia: 'Descargar copia',
+  copiaAyuda: 'La copia es el mismo archivo con los mismos folios: no gasta hojas.',
+  sustituida: 'Sustituida',
+  vigente: 'Vigente',
+  ultimoFolio: 'Último folio usado',
+  sinFolios: 'Ninguno todavía',
+} as const;
+
+export const VENTANA_DE_EMISION = {
+  titulo: 'Emitir el libro con folios',
+  motivo: 'Motivo de la nueva emisión',
+  motivoAyuda: 'Este período ya se emitió. Explique por qué lo emite otra vez (por ejemplo, se corrigió un documento).',
+  confirmar: 'Emitir y gastar folios',
+  cancelar: 'Cancelar',
+} as const;
+
+export const VENTANA_DE_FOLIO = {
+  titulo: 'Corregir el último folio',
+  explicacion:
+    'Úselo cuando las hojas habilitadas en la SAT no coinciden con las que Arrancar tiene contadas: por ejemplo, si la empresa viene de otro sistema o de hojas usadas a mano. La siguiente emisión empezará en el folio siguiente al que escriba.',
+  folio: 'Último folio usado',
+  folioAyuda: 'Escriba 0 si no ha usado ninguna hoja. No puede ser menor que lo ya emitido en Arrancar.',
+  motivo: 'Motivo de la corrección',
+  guardar: 'Guardar folio',
 } as const;
 
 /** Qué es cada tipo de libro, para el encabezado. */

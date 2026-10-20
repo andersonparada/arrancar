@@ -1123,6 +1123,13 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   desplaza dentro de su contenedor en el celular, notas de crédito en rojo con enlace a la ficha, totales al pie, leyenda,
   resumen en tarjetas y pestaña «Anulados del período» (solo pantalla). Excel y «PDF con folios» quedan deshabilitados
   («próximamente») hasta que el servidor los ofrezca.
+- **2026-10-20 (L5-3b, cliente del libro):** se activan «Exportar a Excel» (`libro.exportar`) y «Ver borrador (PDF)», este
+  último con la nota de que no lleva folio ni gasta hojas. «Emitir con folios» (`libro.emitir`) abre una confirmación con
+  el último folio, el folio en que empezará y el aviso de que gasta hojas; si el período ya se emitió pide el motivo.
+  Al terminar descarga el PDF y avisa el rango de folios (si la descarga falla, dice que el libro sí se emitió). Sección
+  «Emisiones del período» (fecha, rango de folios, vigente o sustituida, motivo y «Descargar copia») y «Corregir el último
+  folio» (número y motivo). Errores 409, 400 y 422 con texto que dice cómo seguir. La lista de emisiones del servidor no
+  devuelve quién emitió: queda pendiente agregarlo al DTO para mostrar «emitida por».
 - **2026-10-20 — Libro de compras L5-1 (Excel) y L5-3a (PDF con folios), servidor.** `GET …/libro/exportar?periodo=` (`libro.exportar`)
   baja un `.xlsx` de tres hojas (Libro, Resumen, Anulados) con el dinero como número; el core suma `escribirVarias` al puerto
   `LibroDeExcel`. PDF con `pdfkit` en versión exacta 0.20.2 (más `@types/pdfkit` 0.17.6), fuente Noto Sans Regular y Bold
