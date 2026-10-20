@@ -29,12 +29,12 @@ export class DocumentoYaAnulado extends ReglaDeNegocioInfringida {
   }
 }
 
-/** Una factura con notas de crédito vigentes no se anula: primero se anulan sus notas. */
+/** Una factura con notas de crédito o de débito vigentes no se anula: primero se anulan sus notas. */
 export class DocumentoConNotasVigentes extends ReglaDeNegocioInfringida {
   readonly codigo = 'documento_con_notas_vigentes';
 
   constructor() {
-    super('La factura tiene notas de crédito vigentes: anúlelas primero.');
+    super('La factura tiene notas de crédito o de débito vigentes: anúlelas primero.');
   }
 }
 
@@ -47,12 +47,12 @@ export class DocumentoProcesadoEnElDestino extends ReglaDeNegocioInfringida {
   }
 }
 
-/** Una factura con notas de crédito (aunque estén anuladas) no se elimina: las notas apuntan a ella. */
+/** Una factura con notas de crédito o de débito (aunque estén anuladas) no se elimina: las notas apuntan a ella. */
 export class DocumentoConNotas extends ReglaDeNegocioInfringida {
   readonly codigo = 'documento_con_notas';
 
   constructor() {
-    super('La factura tiene notas de crédito registradas: no se puede eliminar.');
+    super('La factura tiene notas de crédito o de débito registradas: no se puede eliminar.');
   }
 }
 

@@ -1,6 +1,7 @@
 import type { DatosFiscalesPedidos } from '../../dominio/datos-fiscales-del-documento.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { MotivoFueraDelLibro } from '../../dominio/fuera-del-libro.js';
+import type { ClaseDeCargo } from '../../dominio/reglas-de-notas-de-debito.js';
 import type { ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
 import type { TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
 
@@ -51,8 +52,10 @@ export interface SolicitudDeDocumento {
   fechaRecepcion: string | null;
   /** Primer día del mes; `null`: el que propone el dominio (mes de recepción, nunca antes del de emisión). */
   periodo: string | null;
-  /** Solo en las notas de crédito. */
+  /** La factura que corrige; obligatoria en las notas de crédito y de débito, y solo ahí. */
   documentoAfectadoId: string | null;
+  /** Solo en la nota de débito: por qué cobra. No se guarda; sirve para avisar (intereses). */
+  claseDeCargo?: ClaseDeCargo | null;
   /** IVA que dice la FEL, para corregir el calculado (hasta `max(5, líneas)` centavos de diferencia). */
   ivaDeLaFel: string | null;
   observaciones: string | null;

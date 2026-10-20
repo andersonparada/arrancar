@@ -197,6 +197,28 @@ describe('factura especial: lo que se rechaza', () => {
   });
 });
 
+describe('factura especial: nota de débito', () => {
+  it('una nota de débito no aumenta una factura especial', async () => {
+    const vendedor = await vendedores.nuevo();
+    const creada = await registrar(vendedor.proveedorId, { nitReceptor: nitValido('4100099') });
+
+    const nota = await propietario().post(
+      RUTA_DOCUMENTOS,
+      documentoDePrueba(escenario, {
+        tipoDte: 'NDEB',
+        proveedorId: vendedor.proveedorId,
+        nitEmisor: nitValido('4100099'),
+        documentoAfectadoId: creada.cuerpo.documento.id,
+        fechaEmision: EMISION,
+        lineas: [{ conceptoId: escenario.conceptoId, total: '112.00' }],
+      }),
+    );
+
+    expect(nota.estado).toBe(422);
+    expect(nota.cuerpo.error.codigo).toBe('nota_sobre_factura_especial');
+  });
+});
+
 describe('factura especial: avisos', () => {
   it('a un proveedor inscrito en el IVA avisa el artículo 52', async () => {
     const nit = nitValido('4100008');

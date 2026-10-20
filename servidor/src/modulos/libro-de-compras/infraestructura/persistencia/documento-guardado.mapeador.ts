@@ -109,6 +109,7 @@ function documentoDeDominio(fila: FilaDeDocumento, lineas: FilaDeLinea[], reteni
 function notaDeFactura(fila: FilaDeDocumento): NotaDeFactura {
   return {
     id: fila.id,
+    tipo: fila.tipo === 'nota_de_debito' ? 'nota_de_debito' : 'nota_de_credito',
     serie: fila.serie,
     numero: fila.numero,
     fechaEmision: fila.fechaEmision,

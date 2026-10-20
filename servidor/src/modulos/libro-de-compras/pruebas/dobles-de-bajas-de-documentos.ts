@@ -30,9 +30,21 @@ export class DocumentosGuardadosEnMemoria implements RepositorioDeDocumentosGuar
     return guardado;
   }
 
-  /** Agrega una nota de crédito (vigente o anulada) a la factura sembrada. */
-  agregarNota(facturaId: string, estado: NotaDeFactura['estado']): void {
-    const nota = { id: crypto.randomUUID(), serie: 'N', numero: '1', fechaEmision: '2026-10-02', total: 5000, estado };
+  /** Agrega una nota (de crédito por omisión; vigente o anulada) a la factura sembrada. */
+  agregarNota(
+    facturaId: string,
+    estado: NotaDeFactura['estado'],
+    tipo: NotaDeFactura['tipo'] = 'nota_de_credito',
+  ): void {
+    const nota = {
+      id: crypto.randomUUID(),
+      tipo,
+      serie: 'N',
+      numero: '1',
+      fechaEmision: '2026-10-02',
+      total: 5000,
+      estado,
+    };
     this.filas.get(facturaId)?.notas.push(nota);
   }
 

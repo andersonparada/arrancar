@@ -1037,9 +1037,9 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 2. **R3-2 (servidor, dominio) — HECHO (2026-10-19, con los ajustes aprobados por el usuario el mismo día: motivo `nota_de_debito_tardia` del art. 17, `no_vinculado` que el usuario puede agregar, aviso a agentes sin retenciones, clase de cargo solo como aviso, casilla atada también en la nota de crédito):** `motivoDeUnaNotaDeDebito` (3.2c.3), período como factura y fecha contra la factura
    (3.2c.4), `exigirNotaCoherenteConLaFactura` y `exigirQueLaNotaNoSupereLaFactura` con las NDEB (3.2c.6), regla de la
    familia y de la casilla de la factura; errores nuevos; pruebas puras con la tabla de casos de 3.2c.3.
-3. **R3-3 (servidor, registrar):** `ResolutorDeFactura` para las dos notas, consulta agregada por tipo con bloqueo,
+3. **R3-3 (servidor, registrar) — HECHO (2026-10-19; `claseDeCargo` opcional en la solicitud, sin columna; el contrato del destino ya traía el tipo):** `ResolutorDeFactura` para las dos notas, consulta agregada por tipo con bloqueo,
    solicitud, DTO de ficha y lista (`tipo` de las notas, total ajustado), contrato del destino y evento; pruebas de API.
-4. **R3-4 (servidor, bajas):** anular y eliminar la NDEB con el tope y el bloqueo; textos de «notas de crédito o de
+4. **R3-4 (servidor, bajas) — HECHO (2026-10-19; el error del tope es 422 como las demás bajas, no 409):** anular y eliminar la NDEB con el tope y el bloqueo; textos de «notas de crédito o de
    débito» en las bajas de la factura; pruebas de API.
 5. **R3-5 (servidor, retenciones; solo si el contador las confirma):** 3.2c.8; pruebas puras y de API.
 6. **R3-6 (cliente, lista y ficha) — HECHO (2026-10-19; el total ajustado y el `tipo` de las notas llegan con R3-3):** textos de la familia y del código (nombre de R3-i), notas de la factura con su

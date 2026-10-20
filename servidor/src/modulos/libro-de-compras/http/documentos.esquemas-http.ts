@@ -18,6 +18,7 @@ import {
 } from '../dominio/datos-fiscales-de-proveedor.js';
 import { DESTINOS_DE_DOCUMENTO } from '../dominio/destinos-de-documento.js';
 import { MOTIVOS_FUERA_DEL_LIBRO } from '../dominio/fuera-del-libro.js';
+import { CLASES_DE_CARGO } from '../dominio/reglas-de-notas-de-debito.js';
 import { REGLAS_DE_RETENCION } from '../dominio/retencion-propuesta.js';
 import { TIPOS_DE_DOCUMENTO, TIPOS_DTE } from '../dominio/tipos-de-documento.js';
 
@@ -76,6 +77,8 @@ export const esquemaDocumento = z.object({
   fechaRecepcion: fechaOpcional(),
   periodo: fechaOpcional(),
   documentoAfectadoId: idOpcional(),
+  /** Solo en la nota de débito; no se guarda. */
+  claseDeCargo: opcionOpcional(CLASES_DE_CARGO),
   ivaDeLaFel: decimalOpcional(2),
   observaciones: textoOpcional(500),
   lineas: z.array(esquemaLinea).min(1).max(MAXIMO_DE_LINEAS),

@@ -23,9 +23,9 @@ export interface HechosDeUnDocumento {
   anulado: boolean;
   /** El destino ya lo procesó (`procesado_en_destino_en` lleno). */
   procesadoEnElDestino: boolean;
-  /** Notas de crédito que lo rebajan y siguen vigentes. */
+  /** Notas de crédito o de débito que lo corrigen y siguen vigentes. */
   notasVigentes: number;
-  /** Todas las notas que lo rebajan, también las anuladas (la llave foránea las cuenta). */
+  /** Todas las notas que lo corrigen, también las anuladas (la llave foránea las cuenta). */
   notasEnTotal: number;
 }
 
@@ -35,14 +35,14 @@ export interface AccionesDeDocumento {
   puedeEliminar: boolean;
 }
 
-/** Se anula lo vigente que no tenga notas de crédito vigentes. */
+/** Se anula lo vigente que no tenga notas (de crédito o de débito) vigentes. */
 export function sePuedeAnular(hechos: HechosDeUnDocumento): boolean {
   return !hechos.anulado && hechos.notasVigentes === 0;
 }
 
 /**
  * «Limpio» es lo que se puede eliminar de verdad: vigente, sin procesar en el destino y sin notas de crédito
- * (ni siquiera anuladas). Lo anulado se queda como rastro fiscal.
+ * ni de débito (ni siquiera anuladas). Lo anulado se queda como rastro fiscal.
  */
 export function sePuedeEliminar(hechos: HechosDeUnDocumento): boolean {
   return !hechos.anulado && !hechos.procesadoEnElDestino && hechos.notasEnTotal === 0;

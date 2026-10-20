@@ -1,15 +1,16 @@
 import type { CausaDeAnulacion } from '../../dominio/baja-de-documento.js';
 import type { DocumentoDeCompra } from '../../dominio/documento-de-compra.js';
-import type { MotivoSinCredito } from '../../dominio/tipos-de-documento.js';
+import type { MotivoSinCredito, TipoDeNota } from '../../dominio/tipos-de-documento.js';
 import type {
   FiltroDeDocumentos,
   PaginaDeDocumentosDto,
   PaginacionDeDocumentos,
 } from '../dto/documento-listado.dto.js';
 
-/** Una nota de crédito que rebaja una factura; el total, en centavos. */
+/** Una nota de crédito (rebaja) o de débito (aumenta) de una factura; el total, en centavos. */
 export interface NotaDeFactura {
   id: string;
+  tipo: TipoDeNota;
   serie: string | null;
   numero: string;
   fechaEmision: string;
@@ -27,7 +28,7 @@ export interface DocumentoGuardado {
   causaDeAnulacion: CausaDeAnulacion | null;
   procesadoEnDestinoEn: Date | null;
   notas: NotaDeFactura[];
-  /** Solo en una nota de crédito: el motivo sin crédito de la factura que rebaja (derivado, no se guarda en la nota). */
+  /** Solo en una nota: el motivo sin crédito de la factura que corrige (derivado, no se guarda en la nota). */
   motivoDeLaFactura: MotivoSinCredito | null;
 }
 

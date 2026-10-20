@@ -18,15 +18,22 @@ import type {
   DocumentoGuardado,
   RepositorioDeDocumentosGuardados,
 } from '../../puertos/puertos-de-baja-de-documentos.js';
-import type { ControlDePeriodos, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
+import type {
+  ConsultasDeDocumentos,
+  ControlDePeriodos,
+  DestinosDeDocumentos,
+} from '../../puertos/puertos-de-documentos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 import { bajaDelPeriodo } from './credito-de-la-empresa.js';
 import { dtoDeFicha, hechosDe } from './dto-de-ficha.js';
+import { exigirQueLaBajaRespeteElTope } from './tope-de-la-baja.js';
 
 interface Dependencias {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioDeDocumentosGuardados;
   destinos: DestinosDeDocumentos;
+  /** Para bloquear la factura de una nota de débito y revisar el tope de sus notas de crédito. */
+  consultas: ConsultasDeDocumentos;
   control: ControlDePeriodos;
   auditoria: Auditoria;
   publicadorEventos: PublicadorEventos;
@@ -54,7 +61,7 @@ export class AnularDocumento {
   /**
    * @throws RecursoNoEncontrado si no existe; MotivoDeAnulacionInvalido si falta o pasa de 300 caracteres;
    *   CausaDeAnulacionInvalida si no es de la lista.
-   * @throws DocumentoYaAnulado o DocumentoConNotasVigentes si no se puede anular.
+   * @throws DocumentoYaAnulado, DocumentoConNotasVigentes o NotaDeDebitoSostieneNotasDeCredito si no se puede anular.
    * @throws el error del destino si rechaza la anulación.
    */
   async ejecutar(operador: Operador, peticion: PeticionDeAnulacion): Promise<AnulacionDeDocumentoDto> {
@@ -79,6 +86,7 @@ export class AnularDocumento {
     const guardado = await repositorio.buscar(documentoId, true);
     if (!guardado) throw new RecursoNoEncontrado('El documento');
     exigirAnulable(hechosDe(guardado));
+    await exigirQueLaBajaRespeteElTope(this.dependencias.consultas, guardado);
     await control.exigirAbierto(guardado.documento.periodo);
     const { destino } = guardado.documento;
     if (origen !== destino) await destinos.avisarPorAnular(operador, { documentoId, destino, motivo });

@@ -9,15 +9,22 @@ import type { DestinoDeDocumento } from '../../../dominio/destinos-de-documento.
 import { DocumentoEliminado } from '../../../dominio/eventos.js';
 import type { EliminacionDeDocumentoDto } from '../../dto/documento-ficha.dto.js';
 import type { RepositorioDeDocumentosGuardados } from '../../puertos/puertos-de-baja-de-documentos.js';
-import type { ControlDePeriodos, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
+import type {
+  ConsultasDeDocumentos,
+  ControlDePeriodos,
+  DestinosDeDocumentos,
+} from '../../puertos/puertos-de-documentos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 import { bajaDelPeriodo } from './credito-de-la-empresa.js';
 import { dtoDeFicha, hechosDe } from './dto-de-ficha.js';
+import { exigirQueLaBajaRespeteElTope } from './tope-de-la-baja.js';
 
 interface Dependencias {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioDeDocumentosGuardados;
   destinos: DestinosDeDocumentos;
+  /** Para bloquear la factura de una nota de débito y revisar el tope de sus notas de crédito. */
+  consultas: ConsultasDeDocumentos;
   control: ControlDePeriodos;
   auditoria: Auditoria;
   publicadorEventos: PublicadorEventos;
@@ -32,7 +39,7 @@ export interface PeticionDeEliminacion {
 }
 
 /**
- * Elimina de verdad un documento «limpio»: vigente, sin procesar en el destino y sin notas de crédito. Avisa al
+ * Elimina de verdad un documento «limpio»: vigente, sin procesar en el destino y sin notas de crédito ni de débito. Avisa al
  * destino (`documento_por_eliminar`) para que borre lo suyo, lo audita con la ficha anterior, lo borra (líneas y
  * retenciones en cascada) y, tras confirmar, publica `documento_eliminado`. Si el período es anterior al mes actual
  * avisa que puede estar declarado.
@@ -42,7 +49,7 @@ export class EliminarDocumento {
 
   /**
    * @throws RecursoNoEncontrado si no existe.
-   * @throws DocumentoYaAnulado, DocumentoProcesadoEnElDestino o DocumentoConNotas si no está limpio.
+   * @throws DocumentoYaAnulado, DocumentoProcesadoEnElDestino, DocumentoConNotas o NotaDeDebitoSostieneNotasDeCredito si no está limpio.
    * @throws el error del destino si rechaza la eliminación.
    */
   async ejecutar(operador: Operador, peticion: PeticionDeEliminacion): Promise<EliminacionDeDocumentoDto> {
@@ -59,6 +66,7 @@ export class EliminarDocumento {
     const guardado = await repositorio.buscar(documentoId, true);
     if (!guardado) throw new RecursoNoEncontrado('El documento');
     exigirEliminable(hechosDe(guardado));
+    await exigirQueLaBajaRespeteElTope(this.dependencias.consultas, guardado);
     await control.exigirAbierto(guardado.documento.periodo);
     const { destino } = guardado.documento;
     if (origen !== destino) await destinos.avisarPorEliminar(operador, { documentoId, destino });

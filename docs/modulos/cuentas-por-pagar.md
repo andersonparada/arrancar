@@ -162,6 +162,12 @@ ventanas se crean con el **generador** (`npm run generar -- modulo`, `definicion
 1. **CP1 Bandeja y facturas**: días de crédito en Proveedores (con el «espacio» de
    secciones que crea L1), recibir documentos, completar, autorizar con separación de
    funciones (y fechar la retención del 5 %) y anular.
+   **Pendiente de R3 (Libro de compras):** `libro-de-compras.recibir_documento` ya puede traer
+   `tipo = 'nota_de_debito'` (NDEB) con `documentoAfectadoId` de la factura. Es un **cargo** que
+   aumenta lo que se debe al proveedor: el saldo pasa a ser facturas **+ notas de débito** −
+   notas de crédito − retenciones − pagos. La NDEB de una factura ya pagada entra como
+   pendiente nueva (otra contraseña). Hoy el destino debe aceptarla o rechazarla a propósito;
+   la tabla (`notas_de_debito` o `tipo` en `facturas`) se decide en CP1.
 2. **CP2 Notas de crédito**.
 3. **CP3 Contraseñas**: crear (con documentos registrados o autorizados), imprimir y
    anular.

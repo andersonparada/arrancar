@@ -1001,3 +1001,16 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   trae (el tipo de `NotaDeFactura` es opcional). El enlace de una NDEB dice «Ver la factura que aumenta esta nota». Las
   explicaciones de anular y eliminar nombran «notas de crédito o de débito» según las notas. Pendiente: el total ajustado
   de la ficha (lo deriva el servidor en R3-3; el cliente no lo calcula) y la lista de notas con `tipo` del DTO (R3-3).
+
+- 2026-10-19 — **Libro de compras R3-3 y R3-4 (servidor): registrar y dar de baja la nota de débito.** Solicitud: `tipoDte: "NDEB"`
+  con `documentoAfectadoId` y `claseDeCargo` (`precio`, `intereses` u `otros`; opcional, no se guarda; con `intereses` sale el
+  aviso de gasto financiero). Ficha: `notas[].tipo` (`nota_de_credito` o `nota_de_debito`) y `totalAjustado` (factura + notas de
+  débito vigentes − notas de crédito vigentes; `null` si el documento no es una factura); la lista ya traía `tipo` y
+  `puedeAnular`/`puedeEliminar` cuentan las dos familias de nota. Contrato del destino: `DocumentoParaDestino.tipo` acepta
+  `nota_de_debito` (anotado en `cuentas-por-pagar.md` como pendiente de CP1: es un cargo). Bajas: la factura con una nota de
+  débito vigente no se anula y con una anulada no se elimina (textos «de crédito o de débito»); anular o eliminar una nota de débito
+  bloquea la factura (`for update`) y exige que las notas de crédito sigan cabiendo en total e IVA sin ella
+  (`exigirQueLaBajaRespeteElTope`); si no, `NotaDeDebitoSostieneNotasDeCredito`, que responde **422** como las demás bajas
+  (`ReglaDeNegocioInfringida`; el diseño decía 409). Auditoría con las acciones y el recurso de siempre. Aviso a agentes: «Verifique con su
+  contador si debe retener sobre esta nota de débito.». `puedeAnular` de la ficha de una nota de débito no mira el tope (lo
+  rechaza el servidor al anular). Falta R3-5 (retenciones, bloqueado por el contador), el cliente (R3-6, R3-7) y el QA.

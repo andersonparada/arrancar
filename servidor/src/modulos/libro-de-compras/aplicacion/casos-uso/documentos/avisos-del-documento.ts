@@ -19,7 +19,8 @@ const contextoDeEntero = (contexto: ContextoFiscal): ContextoDeEntero => ({
 
 /** Los avisos propios de la factura especial y de la nota de débito; los demás tipos no tienen. */
 function avisosDeLaFactura(solicitud: SolicitudDeDocumento, contexto: ContextoFiscal): string[] {
-  if (solicitud.tipo === 'nota_de_debito') return avisosDeNotaDeDebito({ empresa: contexto.datosDeLaEmpresa });
+  if (solicitud.tipo === 'nota_de_debito')
+    return avisosDeNotaDeDebito({ empresa: contexto.datosDeLaEmpresa, claseDeCargo: solicitud.claseDeCargo });
   if (solicitud.tipo !== 'factura_especial') return [];
   return avisosDeLaFacturaEspecial({ empresa: contexto.datosDeLaEmpresa, proveedor: contexto.datosDelProveedor });
 }
