@@ -3,13 +3,14 @@ import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_LIBRO_DE_COMPRAS, TITULO_SECCION_FISCAL } from './textos';
 import { Tags } from 'lucide-vue-next';
 import { VENTANAS_LIBRO_DE_COMPRAS } from './textos';
-import { BookOpen, CalendarCheck, FileText, Fuel, HandCoins, Landmark } from 'lucide-vue-next';
+import { BookOpen, CalendarCheck, ChartColumn, FileText, Fuel, HandCoins, Landmark } from 'lucide-vue-next';
 import { VENTANA_DEL_LIBRO } from './textos-del-libro';
 import { VENTANA_DEL_SAT_2237 } from './textos-del-sat-2237';
 import { VENTANA_DE_DOCUMENTOS } from './textos-de-documentos';
 import { FORMULARIO_DE_DOCUMENTO } from './textos-del-registro';
 import { VENTANA_DE_ENTEROS, VENTANA_DE_RETENCIONES, VENTANA_POR_RESOLVER } from './textos-de-retenciones';
 import { VENTANA_DE_PERIODOS } from './textos-de-periodos';
+import { VENTANA_DEL_ANALISIS } from './textos-del-analisis';
 // generador: importaciones
 
 /** Rutas y menú del módulo Libro de compras. Un grupo sin opciones no se muestra. */
@@ -93,6 +94,12 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       props: ({ params }) => ({ periodo: String(params.periodo) }),
       meta: { permiso: 'libro-de-compras.periodos.ver', titulo: VENTANA_DE_PERIODOS.detalle },
     },
+    {
+      path: '/libro-de-compras/analisis',
+      name: 'libro-de-compras.analisis',
+      component: () => import('./paginas/AnalisisDeCompras.vue'),
+      meta: { permiso: 'libro-de-compras.analisis-de-compras.ver', titulo: VENTANA_DEL_ANALISIS.titulo },
+    },
     // generador: rutas
   ],
   // Los datos fiscales se editan dentro de Empresas y Proveedores, y se guardan con esos formularios.
@@ -166,6 +173,13 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
           icono: HandCoins,
           seccion: 'reportes',
           permiso: 'libro-de-compras.retenciones.ver',
+        },
+        {
+          titulo: VENTANA_DEL_ANALISIS.titulo,
+          ruta: '/libro-de-compras/analisis',
+          icono: ChartColumn,
+          seccion: 'reportes',
+          permiso: 'libro-de-compras.analisis-de-compras.ver',
         },
         // generador: menu
       ],

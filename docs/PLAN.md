@@ -1268,3 +1268,12 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   (no se lee `terceros`, para no cruzar módulos); lo retenido suma las retenciones practicadas del documento; la hoja de cada
   Excel lleva subtotales y total. Pruebas: dominio (`analisis.prueba.ts`) y API (`libro-de-compras-analisis-compras` y
   `-lineas`, con dos meses de compras).
+
+- **2026-10-20 — Libro de compras L5-9b (cliente, análisis de compras).** Página «Análisis de compras» en Reportes
+  (`/libro-de-compras/analisis`, permiso `analisis-de-compras.ver`; Excel con `.exportar`; imprimir con `window.print()`): rango
+  desde-hasta (enero al mes en curso por omisión; avisa en la pantalla si va al revés o pasa de 24 meses, sin pedirlo al
+  servidor) y cinco pestañas con teclado (flechas, Inicio y Fin). Cada una con su tabla, totales y Excel; «Por proveedor» con
+  la casilla «Incluir documentos fuera del libro»; «IVA al costo» agrupa por motivo con los textos de `textos-de-documentos.ts`
+  y su subtotal; «Combustibles» marca los meses exentos por el Decreto 22-2026 y muestra el aviso de IDP sin galones; los
+  documentos llevan a su ficha. Los resultados se guardan por pestaña mientras no cambie el rango. En el celular las tablas
+  se desplazan dentro de su marco, con la primera columna fija en proveedor y concepto. Pruebas: `datos-del-analisis.prueba.ts`.
