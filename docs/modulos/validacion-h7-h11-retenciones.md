@@ -685,3 +685,26 @@ formulario es la vía principal y debe quedar completo (otros impuestos, IDP); l
 **Decisiones del usuario (2026-10-20), las recomendadas:** otros impuestos **incluidos** en la base del ISR (no se hace
 L4-2b); motivo `recibo_fel` para RECI/RDON (la regla A1 queda «toda **factura** FEL al NIT va en el libro»); FESP sin
 otros impuestos ni IDP (error y check); los ajustes de c4 al importar; el libro dirá «Exento y no afecto».
+
+## Qué debe tener L5 (contador-guatemala, 2026-10-20)
+
+Libro de compras y servicios (Ley del IVA art. 37; AG 5-2013 arts. 37 habilitación y 38 contenido: orden cronológico,
+separado por vinculación a ventas locales, exportación o exentas, datos mínimos y resumen mensual). Pequeño contribuyente:
+un solo libro de compras y ventas (art. 49; Arrancar da la mitad de compras). Asiste Libros (32 columnas) sustituido desde
+2023; el LET arma el libro con las FEL. **El SAT-2237 exige el detalle de proveedores locales del crédito** (NIT, nombre,
+cantidad de facturas, base, crédito; la CC lo confirmó) y rubros (combustibles, otras compras, servicios, activos fijos,
+importaciones; segmento 9 con facturas y notas recibidas). Retenciones: las constancias las emite la SAT en Retenciones Web
+IVA/ISR (las FEL ya están cargadas). **Decreto 22-2026:** combustibles exentos de IVA e IDP del 1-10 al 31-12-2026, sin
+crédito. Corregido: AG 311-97 → AG 5-2013 art. 38. Columnas recomendadas del libro completo, reglas (notas de crédito en
+negativo en el mes en que se reciben, NDEB positivas, FESP con el NIT del vendedor, anulados fuera) y orden L5-0…L5-10 en
+el informe del contador (resumido aquí). Pendiente del usuario: captura del SAT-2237 vigente y un PDF de constancia de
+Retenciones Web IVA e ISR, para cerrar los «confirmar» de las casillas.
+
+**Decisiones del usuario (2026-10-20), las recomendadas:** casilla **«IVA exento»** en la vigencia de combustible, ya
+(L5-0); libro en **PDF con folios** (último folio por empresa) **y Excel**, completo o simplificado según la foto del
+régimen, sin archivo `.asl` ni del LET; **IDP en columna propia**; anulados solo en un anexo de pantalla/Excel; constancias:
+**listar y anotar** (una a una y en lote) más Excel; **historial de declaraciones** con número del SAT-2237 y foto de
+totales, y la factura olvidada de un período declarado se propone en el **primer período abierto** dentro del art. 20;
+exportadores: todo «local» con aviso (vinculación con la prorrata, después); **estado de «por resolver»** y **marcar
+enterado** por mes y grupo; medicamentos y vehículos del SAT-2237: aviso. Recibo FEL (RECI/RDON) a **otro NIT**: se
+permite como `fel_a_otro_nit`, fuera del libro.
