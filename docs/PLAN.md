@@ -1162,3 +1162,20 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   registrar en un mes ya enterado el aviso de plazo vencido se cambia por «pague la diferencia». Las retenciones en cero
   salen marcadas (`enCero`) y no suman (el diseño decía que no salían). Pendiente: afinar el formato del número de
   constancia con un PDF real (L5-C4).
+- **2026-10-20 — Libro de compras L5-4b (cliente, retenciones).** Tres páginas en Reportes (menú «Retenciones», permiso
+  `retenciones.ver`) unidas por una navegación de pestañas con rutas propias, así cada una conserva su composable y sus
+  120 líneas: `/libro-de-compras/retenciones` (mes), `…/por-resolver` y `…/enteros`. **Mes:** selector de mes (el anterior al
+  abrir) y filtros de grupo, constancia y documentos; una tarjeta por grupo con retenido, pagado, lo que falta, plazo
+  («Vence el» / «Venció el»), estado y aviso en rojo si está vencido, con atajo «Registrar pago»; tabla en pantallas
+  anchas y tarjetas en el celular, con las retenciones en cero atenuadas y marcadas «En cero» (con lo propuesto y el
+  motivo); selección múltiple de las que no tienen constancia, con «Marcar las N sin constancia» y una barra fija con el
+  total; ventana de constancias en lote (número y fecha por fila, «Misma fecha para todas», los errores del servidor salen
+  en su fila y en el campo) que sirve igual para anotar o corregir una; quitar constancia pide motivo y resume lo que
+  pasa; los documentos anulados van en su propia tabla; Excel con los mismos filtros e Imprimir (`window.print()`).
+  **Por resolver:** pendientes y resueltas, con la acción sugerida en lenguaje llano («Anule la constancia en
+  Retenciones Web de la SAT.») y la ventana de resolución (la resolución sugerida queda escogida cuando solo hay una cosa
+  por hacer; nota obligatoria salvo al volver a «pendiente»); la pestaña muestra cuántas hay pendientes. **Pagos a la
+  SAT:** matriz del año (12 meses por 4 grupos) con estado y «pagado de retenido»; cada celda abre sus pagos (vigentes y
+  anulados) y desde allí se registra, corrige o anula con motivo; la ventana del pago propone la fecha de hoy y lo que
+  falta, y dice cómo quedaría el mes. Lógica pura con pruebas en `composables/retenciones/` (49 pruebas); textos en
+  `textos-de-retenciones.ts`. Sin cambios en el servidor.

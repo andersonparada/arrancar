@@ -7,7 +7,7 @@ import { usarCorreccionDelFolio } from './usar-correccion-del-folio';
 import { usarEmisionDelLibro } from './usar-emision-del-libro';
 
 /** Baja un archivo y avisa si falla. */
-function usarDescargas() {
+export function usarDescargas() {
   const avisos = usarAvisos();
   const descargando = ref(false);
 

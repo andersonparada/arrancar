@@ -2676,7 +2676,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
     `retenciones.constancias`; pruebas.
 12. **L5-6a (servidor, enteros) — hecho el 2026-10-20 (migración `0027`):** migración `0027`, marcar, corregir, anular, estado derivado, avisos al registrar y
     anular; permiso `retenciones.enterar`; pruebas.
-13. **L5-4b (cliente, retenciones):** página «Retenciones de IVA e ISR» con pestañas Mes (anotar una y en lote), Por
+13. **L5-4b (cliente, retenciones) — hecho el 2026-10-20 (tres rutas con pestañas en lugar de una sola página):** página «Retenciones de IVA e ISR» con pestañas Mes (anotar una y en lote), Por
     resolver y Enteros (matriz del año, marcar y anular); imprimir con `window.print()` y Excel.
 14. **L5-7a (servidor, períodos y control):** configuración `control_de_declarados`, migración `0028`,
     `ControlDePeriodosEnBaseDeDatos` (con `modo`), `PeriodoDeclarado` con `periodoAbiertoPropuesto`, bloqueo de vigencias

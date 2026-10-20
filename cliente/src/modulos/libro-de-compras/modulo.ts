@@ -3,10 +3,11 @@ import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_LIBRO_DE_COMPRAS, TITULO_SECCION_FISCAL } from './textos';
 import { Tags } from 'lucide-vue-next';
 import { VENTANAS_LIBRO_DE_COMPRAS } from './textos';
-import { BookOpen, FileText, Fuel } from 'lucide-vue-next';
+import { BookOpen, FileText, Fuel, HandCoins } from 'lucide-vue-next';
 import { VENTANA_DEL_LIBRO } from './textos-del-libro';
 import { VENTANA_DE_DOCUMENTOS } from './textos-de-documentos';
 import { FORMULARIO_DE_DOCUMENTO } from './textos-del-registro';
+import { VENTANA_DE_ENTEROS, VENTANA_DE_RETENCIONES, VENTANA_POR_RESOLVER } from './textos-de-retenciones';
 // generador: importaciones
 
 /** Rutas y menú del módulo Libro de compras. Un grupo sin opciones no se muestra. */
@@ -52,6 +53,24 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       name: 'libro-de-compras.libro',
       component: () => import('./paginas/LibroDelPeriodo.vue'),
       meta: { permiso: 'libro-de-compras.libro.ver', titulo: VENTANA_DEL_LIBRO.titulo },
+    },
+    {
+      path: '/libro-de-compras/retenciones',
+      name: 'libro-de-compras.retenciones',
+      component: () => import('./paginas/RetencionesDelMes.vue'),
+      meta: { permiso: 'libro-de-compras.retenciones.ver', titulo: VENTANA_DE_RETENCIONES.titulo },
+    },
+    {
+      path: '/libro-de-compras/retenciones/por-resolver',
+      name: 'libro-de-compras.retenciones.por-resolver',
+      component: () => import('./paginas/RetencionesPorResolver.vue'),
+      meta: { permiso: 'libro-de-compras.retenciones.ver', titulo: VENTANA_POR_RESOLVER.titulo },
+    },
+    {
+      path: '/libro-de-compras/retenciones/enteros',
+      name: 'libro-de-compras.retenciones.enteros',
+      component: () => import('./paginas/EnterosDeRetenciones.vue'),
+      meta: { permiso: 'libro-de-compras.retenciones.ver', titulo: VENTANA_DE_ENTEROS.titulo },
     },
     // generador: rutas
   ],
@@ -105,6 +124,13 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
           icono: BookOpen,
           seccion: 'reportes',
           permiso: 'libro-de-compras.libro.ver',
+        },
+        {
+          titulo: VENTANA_DE_RETENCIONES.titulo,
+          ruta: '/libro-de-compras/retenciones',
+          icono: HandCoins,
+          seccion: 'reportes',
+          permiso: 'libro-de-compras.retenciones.ver',
         },
         // generador: menu
       ],
