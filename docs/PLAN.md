@@ -1086,3 +1086,14 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `reglas-del-formulario-de-documento.ts` y tienen pruebas. El aviso de donación (`RDON`) lo devuelve el servidor y se muestra por los
   avisos del registro que ya existen. Pendiente de decisión: un recibo `RECI` a otro NIT queda con el motivo fijo y el servidor lo
   rechaza (`recibo_fel_incoherente`); el usuario debe decidir si debe ofrecerse «otro NIT» en ese caso.
+
+- **2026-10-20 — Libro de compras, L4-5 (servidor, datos de la bandeja de DTE recibidos).** Migración `0021_l4_bandeja_de_dte`
+  (`lotes_de_dte` y `dte_recibidos` con todos los checks, llaves compuestas, únicos, índices y `politicaPorEmpresa()`; `...marcasDeTiempo`
+  y `...autoria`) y migración custom `0022_l4_autorizacion_registrada_fuera` (función `security definer`, `stable`, con
+  `search_path = pg_catalog, libro_de_compras`, sin permiso para el público y con `execute` solo para `arrancar_app`). Según la
+  respuesta L4-c, la función dice sí solo si la autorización está vigente en **otra empresa de la misma cuenta** de la empresa
+  activa; para otra cuenta, la propia empresa o una anulada dice no (sin avisar nada). Las migraciones se renumeraron respecto del diseño
+  (la `0021` del diseño pasó a `0022`). Dominio mínimo: `estado-de-dte.ts` (estados, motivos de bloqueo y transiciones) y la entidad
+  `DteRecibido` (registrar, devolver a pendiente, descartar con motivo, bloquear); `LoteDeDte`. Repositorios Drizzle de lotes y de
+  filas con sus puertos. Pruebas: dominio y de integración (checks, llaves, único por empresa, RLS, función y repositorios). El enlace
+  con lo registrado a mano (registrar enlaza, anular o eliminar devuelve a `pendiente`) **no** va aquí: el diseño lo asigna a L4-9.

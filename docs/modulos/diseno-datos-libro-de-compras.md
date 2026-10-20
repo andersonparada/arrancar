@@ -1653,7 +1653,7 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
 4. **L4-2b (servidor, base del ISR):** solo si el contador confirma L4-c1: sacar los otros impuestos de la base; pruebas.
 5. **L4-4 (servidor, core/intercambio) - HECHO 2026-10-20:** `leerFilas` en el puerto y en exceljs, detección de formato, `LectorDeCsv`,
    `ExcelAntiguoNoAdmitido`; pruebas (incluidas bomba zip, `.xls`, HTML y CSV con `;`). Sin lógica de la SAT.
-6. **L4-5 (servidor, datos de la bandeja):** migración `0020`; pruebas de checks, llaves y RLS de 3.3b.13.
+6. **L4-5 (servidor, datos de la bandeja) - HECHO 2026-10-20:** migración `0021` (tablas) y `0022` custom (función `autorizacion_registrada_fuera`, que solo ve las otras empresas de la misma cuenta); dominio de estados, repositorios y pruebas de checks, llaves, RLS y la función. El enlace con `documentos` queda en L4-9.
 7. **L4-6 (servidor, lectura del DTE) (archivo):** mapa de encabezados y de valores, fila de encabezados, conversión,
    reglas de rechazo, `documentoDesdeElDte` y la variable `libro-de-compras.dte.encabezados_adicionales`; pruebas puras con
    el archivo real anonimizado como dato de prueba.
