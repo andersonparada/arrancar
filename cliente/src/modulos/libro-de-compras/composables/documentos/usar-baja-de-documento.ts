@@ -48,7 +48,11 @@ function usarAnulacion(ficha: FichaActual, { errores, pedir }: Peticion, alAnula
     if (Object.keys(errores.value).length > 0) return;
     const { id } = ficha.value;
     const resultado = await pedir(() => apiDocumentos.anular(id, datosDeAnulacion(edicion.value)));
-    if (!resultado) return;
+    if (!resultado) {
+      // El período está declarado: el aviso con el enlace a Períodos queda en la ficha, no detrás de la ventana.
+      if (errores.value.periodo) edicion.value.abierta = false;
+      return;
+    }
     edicion.value.abierta = false;
     alAnular(resultado.respuesta.documento);
     usarAvisos().exito('Registro anulado. La factura sigue vigente en la SAT.');

@@ -4,6 +4,8 @@ import { RouterLink } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import type { ProblemaDelFormulario } from '../../composables/documentos/errores-del-registro';
 import type { RespuestasFiscales } from '../../composables/documentos/preguntas-fiscales';
+import { nombreDelPeriodo } from '../../composables/periodos/datos-de-periodos';
+import { PERIODO_BLOQUEADO } from '../../textos-de-periodos';
 import { AYUDA_DE_DATOS_FISCALES, FORMULARIO_DE_DOCUMENTO as textos } from '../../textos-del-registro';
 import PreguntasDeDatosFiscales from './PreguntasDeDatosFiscales.vue';
 
@@ -13,7 +15,7 @@ import PreguntasDeDatosFiscales from './PreguntasDeDatosFiscales.vue';
  */
 defineProps<{ problema: ProblemaDelFormulario; confirmado: boolean }>();
 const respuestas = defineModel<RespuestasFiscales>({ required: true });
-defineEmits<{ confirmarRegimen: [] }>();
+defineEmits<{ confirmarRegimen: []; usarPeriodo: [periodo: string] }>();
 
 const enlace = 'font-medium underline underline-offset-2';
 </script>
@@ -40,6 +42,23 @@ const enlace = 'font-medium underline underline-offset-2';
     >
       {{ textos.confirmarRegimen }}
     </BotonBase>
+
+    <template v-else-if="problema.tipo === 'periodo_declarado'">
+      <template v-if="problema.propuesto">
+        <p v-if="problema.enPlazo === false" class="text-xs">{{ PERIODO_BLOQUEADO.fueraDePlazo }}</p>
+        <BotonBase variante="secundario" @click="$emit('usarPeriodo', problema.propuesto)">
+          {{ PERIODO_BLOQUEADO.usar(nombreDelPeriodo(problema.propuesto)) }}
+        </BotonBase>
+      </template>
+      <p v-else class="text-xs">{{ PERIODO_BLOQUEADO.sinPropuesta }}</p>
+      <RouterLink
+        v-permiso="'libro-de-compras.periodos.ver'"
+        :to="{ name: 'libro-de-compras.periodos' }"
+        :class="enlace"
+      >
+        {{ PERIODO_BLOQUEADO.irAPeriodos }}
+      </RouterLink>
+    </template>
 
     <RouterLink v-else-if="problema.tipo === 'empresa'" :to="{ name: 'empresas' }" :class="enlace">
       {{ textos.empresaSinDatos }}

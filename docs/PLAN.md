@@ -1229,3 +1229,21 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   presentes), el segmento 9, el detalle de proveedores y las facturas especiales ordenados por crédito (con el aviso de
   neto en cero o negativo dentro de la fila). Si no aplica, explica el motivo y el formulario que corresponde (SAT-2046).
   Las tablas se desplazan dentro de su región, no la página. Lógica pura en `datos-del-sat-2237.ts` con pruebas.
+
+- **2026-10-20 — Libro de compras L5-7b y L5-8b (cliente, períodos).** Página «Períodos» en Operación
+  (`/libro-de-compras/periodos`, permiso `periodos.ver`) y su detalle (`…/periodos/AAAA-MM`). **Lista:** selector de año
+  y una tarjeta por mes (declarado, abierto o sin terminar; última declaración, quién y formulario; toda la tarjeta lleva
+  al período) y, arriba, el **bloqueo de períodos declarados** con lo que bloquea y lo que no, quién lo cambió y cuándo;
+  encenderlo pide confirmar con resumen (`periodos.declarar`) y apagarlo pide motivo (`periodos.reabrir`). **Detalle:**
+  revisión previa a declarar (avisos, nunca bloquean), «Cambios desde la declaración» (cifras declaradas contra hoy con el
+  cambio, y las facturas registradas o anuladas después, con enlace a su ficha; si el libro cambió sin que lo expliquen
+  altas ni anulaciones, remite a la auditoría), historial (declaraciones, rectificaciones y reaperturas) y las acciones
+  Declarar o «Declarar de nuevo (rectificación)» (formulario, número y fecha opcionales; el resumen dice si queda
+  bloqueado) y Reabrir (motivo y resumen). Declarar se ofrece con el mes terminado y, si está declarado, solo con el
+  bloqueo apagado; los errores del servidor (`periodo_sin_terminar`, `periodo_ya_declarado`, fecha y número) salen en la
+  ventana. **Registro de facturas:** el error `periodo_declarado` sale en el campo período y en el aviso del formulario con
+  el botón «Usar <mes>» (aviso de que el IVA irá al costo si `propuestaEnPlazo` es falso; sin propuesta, explica que la
+  nota de crédito va en su mes y lleva a Períodos). **Ficha:** anular o eliminar en un período bloqueado deja un aviso
+  con el motivo y el enlace a Períodos. La bandeja (L4-9) aún no existe: su botón queda para cuando se programe. Lógica
+  pura con pruebas en `composables/periodos/` y `errores-del-registro.prueba.ts`; textos en `textos-de-periodos.ts`. Sin
+  cambios en el servidor.

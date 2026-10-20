@@ -10,6 +10,7 @@ export type ProblemaDelFormulario =
   | { tipo: 'empresa'; mensaje: string }
   | { tipo: 'repetido'; mensaje: string; documentoId: string | null }
   | { tipo: 'permiso'; mensaje: string }
+  | { tipo: 'periodo_declarado'; mensaje: string; propuesto: string | null; enPlazo: boolean | null }
   | { tipo: 'otro'; mensaje: string };
 
 const ELIJA_EL_TIPO = 'Elija el tipo de documento, tal como lo dice el encabezado de la factura.';
@@ -62,6 +63,7 @@ const ERRORES_DE_CAMPO: Record<string, ErrorDeCampo> = {
     () => `${DATO_DEL_VENDEDOR} No puede quedar vacío, ser CF ni el NIT de su empresa.`,
   ),
   receptor_invalido: delVendedor((error) => `${error.message} ${DATO_DEL_VENDEDOR}`),
+  periodo_declarado: { campo: 'periodo', texto: (error) => error.message },
   vendedor_no_coincide: delVendedor(
     () =>
       'Este NIT o CUI no es el del proveedor elegido. Elija al proveedor correcto o corrija el dato en su ficha de contacto.',
@@ -82,10 +84,24 @@ function documentoDelRepetido(detalles: unknown): string | null {
   return typeof id === 'string' ? id : null;
 }
 
+/** El período que el servidor propone en lugar del declarado (`AAAA-MM`) y si todavía da crédito fiscal. */
+export function propuestaDelPeriodo(detalles: unknown): { propuesto: string | null; enPlazo: boolean | null } {
+  const { periodoPropuesto, propuestaEnPlazo } = (detalles ?? {}) as Record<string, unknown>;
+  return {
+    propuesto: typeof periodoPropuesto === 'string' ? periodoPropuesto.slice(0, 7) : null,
+    enPlazo: typeof propuestaEnPlazo === 'boolean' ? propuestaEnPlazo : null,
+  };
+}
+
 const deLaEmpresa = (error: ErrorApi): ProblemaDelFormulario => ({ tipo: 'empresa', mensaje: error.message });
 
 /** Cómo se explica cada código de error que el formulario sabe resolver. */
 const PROBLEMAS_POR_CODIGO: Record<string, (error: ErrorApi) => ProblemaDelFormulario> = {
+  periodo_declarado: (error) => ({
+    tipo: 'periodo_declarado',
+    mensaje: error.message,
+    ...propuestaDelPeriodo(error.detalles),
+  }),
   faltan_datos_fiscales_del_proveedor: (error) => ({
     tipo: 'datos_fiscales',
     mensaje: error.message,
@@ -109,6 +125,7 @@ export function problemaDeError(error: unknown): ProblemaDelFormulario | null {
   if (!(error instanceof ErrorApi)) {
     return { tipo: 'otro', mensaje: error instanceof Error ? error.message : 'Ocurrió un error inesperado.' };
   }
+  if (error.codigo === 'periodo_declarado') return PROBLEMAS_POR_CODIGO.periodo_declarado!(error);
   if (error.erroresCampos.length > 0 || errorDelTipo(error)) return null;
   const delCodigo = PROBLEMAS_POR_CODIGO[error.codigo];
   if (delCodigo) return delCodigo(error);

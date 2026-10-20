@@ -226,3 +226,29 @@ describe('errores de la factura especial', () => {
     expect(errorDelTipo(error(422, 'nota_sobre_factura_especial', 'x'))?.tipoDte).toContain('Anule la FESP');
   });
 });
+
+describe('período declarado y bloqueado', () => {
+  const detalles = (extra: object) => ({ campo: 'periodo', periodo: '2026-08-01', ...extra });
+  const conflicto = (extra: object) => error(409, 'periodo_declarado', 'Está declarado.', detalles(extra));
+
+  it('sale en el campo período y ofrece el período propuesto', () => {
+    const delServidor = conflicto({ periodoPropuesto: '2026-09-01', propuestaEnPlazo: true });
+    expect(errorDelTipo(delServidor)).toEqual({ periodo: 'Está declarado.' });
+    expect(problemaDeError(delServidor)).toEqual({
+      tipo: 'periodo_declarado',
+      mensaje: 'Está declarado.',
+      propuesto: '2026-09',
+      enPlazo: true,
+    });
+  });
+
+  it('avisa si la propuesta ya no da crédito fiscal', () => {
+    const delServidor = conflicto({ periodoPropuesto: '2026-12-01', propuestaEnPlazo: false });
+    expect(problemaDeError(delServidor)).toMatchObject({ propuesto: '2026-12', enPlazo: false });
+  });
+
+  it('sin propuesta (nota de crédito) no inventa un período', () => {
+    const delServidor = conflicto({ periodoPropuesto: null, propuestaEnPlazo: null });
+    expect(problemaDeError(delServidor)).toMatchObject({ propuesto: null, enPlazo: null });
+  });
+});

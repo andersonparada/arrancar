@@ -6,6 +6,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
+import AvisoDePeriodoBloqueado from '../componentes/documentos/AvisoDePeriodoBloqueado.vue';
 import AvisosDelRegistro from '../componentes/documentos/AvisosDelRegistro.vue';
 import LineasDelDocumento from '../componentes/documentos/LineasDelDocumento.vue';
 import MotivosDelDocumento from '../componentes/documentos/MotivosDelDocumento.vue';
@@ -66,6 +67,7 @@ const volver = { texto: VENTANA_DE_DOCUMENTOS.titulo, ruta: { name: 'libro-de-co
     </EncabezadoPagina>
 
     <AvisosDelRegistro :avisos="avisosDelRegistro" @cerrar="avisosDelRegistro = []" />
+    <AvisoDePeriodoBloqueado v-if="baja.errores.value.periodo" :mensaje="baja.errores.value.periodo" />
     <p
       v-for="explicacion in explicacionesDeAcciones(ficha)"
       :key="explicacion"

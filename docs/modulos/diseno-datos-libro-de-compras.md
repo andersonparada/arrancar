@@ -2684,7 +2684,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
 15. **L5-8a (servidor, declarar) — hecho el 2026-10-20 (número y fecha opcionales; el bloqueo se enciende y apaga con `POST …/periodos/control/encender|apagar`):** foto, diferencia, declarar, reabrir, rectificar, encender y apagar el control,
     revisión con avisos de bandeja y conciliación (los de L4 entran cuando existan L4-9 y L4-10), eventos; permisos
     `periodos.*`; pruebas.
-16. **L5-8b (cliente, períodos):** página de períodos (año, estado, historial, «cambió desde la declaración», revisión,
+16. **L5-7b y L5-8b (cliente, períodos) — hecho el 2026-10-20 (falta el botón en la bandeja, que espera L4-9):** página de períodos (año, estado, historial, «cambió desde la declaración», revisión,
     declarar, reabrir, control) y, en el formulario y la bandeja, el error `periodo_declarado` con «Registrar en <mes>».
 17. **L5-9a (servidor, análisis):** los cinco reportes de 3.9.8 con su Excel y el permiso `analisis-de-compras`.
 18. **L5-9b (cliente, análisis):** sus páginas en Reportes.

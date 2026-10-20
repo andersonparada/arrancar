@@ -58,6 +58,7 @@ watch(registro.problema, async (problema) => {
         :problema="registro.problema.value"
         :confirmado="edicion.confirmarCambioDeRegimen"
         @confirmar-regimen="edicion.confirmarCambioDeRegimen = true"
+        @usar-periodo="edicion.periodo = $event"
       />
     </div>
 
