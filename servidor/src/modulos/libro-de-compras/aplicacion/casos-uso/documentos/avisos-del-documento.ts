@@ -37,6 +37,7 @@ export function avisosDelDocumento(
   const { factura } = resuelto;
   return [
     ...resuelto.calculado.avisos,
+    ...resuelto.lineas.avisos,
     ...resuelto.encabezado.avisos,
     ...avisosDeLaFamilia(solicitud.tipo),
     ...avisosDeLaFactura(solicitud, contexto),

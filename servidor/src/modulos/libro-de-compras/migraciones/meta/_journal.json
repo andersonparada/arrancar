@@ -134,6 +134,13 @@
       "when": 1792474865081,
       "tag": "0018_r3_nota_de_debito",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792478380111,
+      "tag": "0019_l4_otros_impuestos_e_idp_escrito",
+      "breakpoints": true
     }
   ]
 }

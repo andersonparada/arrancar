@@ -18,6 +18,10 @@ export interface SolicitudDeLinea {
   galones: string | null;
   total: string;
   exento: string | null;
+  /** Turismo, timbre de prensa, tasa municipal...: un total por línea; `null` es cero. */
+  otrosImpuestos?: string | null;
+  /** El IDP que dice la factura; manda sobre los galones. `null` (o cero): se calcula de los galones, si los hay. */
+  idpEscrito?: string | null;
 }
 
 /** Lo que el usuario dejó de una retención propuesta; `monto` es el final (`"0"` la quita). */

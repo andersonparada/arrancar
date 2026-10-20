@@ -142,7 +142,15 @@ describe('calcularDocumento: nota de débito', () => {
     const documento = calcular();
 
     expect(documento.motivoSinCredito).toBeNull();
-    expect(documento.totales).toEqual({ total: 11200, base: 10000, iva: 1200, ivaNoAcreditable: 0, idp: 0, exento: 0 });
+    expect(documento.totales).toEqual({
+      total: 11200,
+      base: 10000,
+      iva: 1200,
+      ivaNoAcreditable: 0,
+      idp: 0,
+      exento: 0,
+      otrosImpuestos: 0,
+    });
   });
 
   it('tardía por el art. 17: el IVA va al costo de cada línea', () => {

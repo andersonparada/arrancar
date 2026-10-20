@@ -13,14 +13,21 @@ export interface CombustibleDeLinea {
 export interface LineaEscrita {
   total: number;
   exento: number;
+  /** Turismo, timbre de prensa, tasa municipal...: no dan crédito, no se retienen y van al costo. */
+  otrosImpuestos?: number;
+  /** El IDP que dice la factura; si viene, manda sobre el que saldría de los galones. */
+  idp?: number | null;
   combustible?: CombustibleDeLinea | null;
 }
 
-/** Una línea con todo lo que se guarda: `total = base + iva + idp + exento`. */
+/** Una línea con todo lo que se guarda: `total = base + iva + idp + exento + otrosImpuestos`. */
 export interface LineaCalculada {
   total: number;
   exento: number;
+  otrosImpuestos: number;
   idp: number;
+  /** `true`: el IDP es el escrito por el usuario; `false`: salió de los galones. */
+  idpEscrito: boolean;
   base: number;
   iva: number;
   ivaNoAcreditable: number;
@@ -59,13 +66,22 @@ export function calcularIdp(combustible: CombustibleDeLinea): number {
   return Number(dividirRedondeando(milesimas * tasa * (10000n - etanol), 10n ** 7n));
 }
 
-/** IDP y gravado (`total − idp − exento`) de una línea; el gravado no puede ser negativo. */
+/** El IDP escrito manda; si no, sale de los galones, y sin combustible es cero. */
+function idpDe(linea: LineaEscrita): number {
+  if (linea.idp !== undefined && linea.idp !== null) return linea.idp;
+  return linea.combustible ? calcularIdp(linea.combustible) : 0;
+}
+
+/** IDP y gravado (`total − idp − exento − otros impuestos`) de una línea; el gravado no puede ser negativo. */
 function gravadoDe(linea: LineaEscrita): { idp: number; gravado: number } {
   exigirCentavos(linea.total, 'Total', 1);
   exigirCentavos(linea.exento, 'Exento', 0);
-  const idp = linea.combustible ? calcularIdp(linea.combustible) : 0;
-  const gravado = linea.total - idp - linea.exento;
-  if (gravado < 0) throw new LineaInvalida('El IDP y lo exento de la línea suman más que su total.');
+  exigirCentavos(linea.otrosImpuestos ?? 0, 'Otros impuestos', 0);
+  if (linea.idp !== undefined && linea.idp !== null) exigirCentavos(linea.idp, 'IDP', 1);
+  const idp = idpDe(linea);
+  const gravado = linea.total - idp - linea.exento - (linea.otrosImpuestos ?? 0);
+  if (gravado < 0)
+    throw new LineaInvalida('El IDP, lo exento y los otros impuestos de la línea suman más que su total.');
   return { idp, gravado };
 }
 
@@ -87,7 +103,9 @@ export function calcularLineas(lineas: readonly LineaEscrita[], opciones: Opcion
     return {
       total: linea.total,
       exento: linea.exento,
+      otrosImpuestos: linea.otrosImpuestos ?? 0,
       idp,
+      idpEscrito: linea.idp !== undefined && linea.idp !== null,
       iva,
       base: gravado - iva,
       ivaNoAcreditable: opciones.ivaNoAcreditable ? iva : 0,
@@ -95,7 +113,7 @@ export function calcularLineas(lineas: readonly LineaEscrita[], opciones: Opcion
   });
 }
 
-/** Costo de la línea (no se guarda): `total − iva + iva_no_acreditable`; incluye IDP y exento. */
+/** Costo de la línea (no se guarda): `total − iva + iva_no_acreditable`; incluye IDP, exento y otros impuestos. */
 export function costoDeLinea(linea: LineaCalculada): number {
   return linea.total - linea.iva + linea.ivaNoAcreditable;
 }

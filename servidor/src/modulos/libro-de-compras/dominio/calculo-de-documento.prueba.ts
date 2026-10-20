@@ -32,7 +32,15 @@ describe('calcularDocumento: factura de régimen general', () => {
     const documento = calcularDocumento(datos());
     expect(documento.motivoSinCredito).toBeNull();
     expect(documento.avisos).toEqual([]);
-    expect(documento.totales).toEqual({ total: 11200, base: 10000, iva: 1200, ivaNoAcreditable: 0, idp: 0, exento: 0 });
+    expect(documento.totales).toEqual({
+      total: 11200,
+      base: 10000,
+      iva: 1200,
+      ivaNoAcreditable: 0,
+      idp: 0,
+      exento: 0,
+      otrosImpuestos: 0,
+    });
   });
 
   it('el último día del plazo (marzo para enero) todavía da crédito', () => {

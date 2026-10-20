@@ -68,6 +68,7 @@ export const documentos = esquemaLibroDeCompras.table(
     ivaNoAcreditable: numeric({ precision: 14, scale: 2 }).notNull(),
     idp: numeric({ precision: 14, scale: 2 }).notNull(),
     exento: numeric({ precision: 14, scale: 2 }).notNull(),
+    otrosImpuestos: numeric({ precision: 14, scale: 2 }).default('0').notNull(),
     observaciones: text(),
     estado: text().$type<'vigente' | 'anulado'>().notNull().default('vigente'),
     anuladoEn: timestamp({ withTimezone: true }),

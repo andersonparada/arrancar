@@ -18,6 +18,8 @@ export interface DatosParaElMotivo {
   empresaConCreditoFiscal: boolean;
   total: number;
   exento: number;
+  /** Lo no afecto que no es exento (turismo, timbre...); sin dato vale cero. */
+  otrosImpuestos?: number;
   iva: number;
   periodo: string;
   fechaDeEmision: string;
@@ -43,8 +45,13 @@ export const AVISO_NOTA_DE_DEBITO_SOBRE_FACTURA_SIN_CREDITO =
 export const AVISO_NOTA_CON_CAMBIO_DE_REGIMEN =
   'La factura dio crédito en el régimen anterior; consulte a su contador.';
 
+/** Sin IVA, con algo exento y el resto solo otros impuestos: lo no afecto no convierte en exenta una compra. */
+function esTodoExento(datos: DatosParaElMotivo): boolean {
+  return datos.iva === 0 && datos.exento > 0 && datos.exento + (datos.otrosImpuestos ?? 0) === datos.total;
+}
+
 function motivoDeUnaFactura(datos: DatosParaElMotivo): MotivoSinCredito | null {
-  if (datos.iva === 0 && datos.exento === datos.total) return 'exento';
+  if (esTodoExento(datos)) return 'exento';
   if (!datos.empresaConCreditoFiscal) return 'empresa_sin_credito';
   if (datos.noVinculado) return 'no_vinculado';
   return esFueraDePlazo(datos.periodo, datos.fechaDeEmision) ? 'fuera_de_plazo' : null;
@@ -89,7 +96,7 @@ const avisoDelMotivo = (motivo: MotivoSinCredito | null): string[] => {
 function motivoDeUnaNotaDeDebito(datos: DatosParaElMotivo): ResultadoDelMotivo {
   const deLaFactura = datos.motivoDeLaFactura ?? null;
   if (deLaFactura && MOTIVOS_SIN_IVA.includes(deLaFactura)) return { motivo: deLaFactura, avisos: [] };
-  if (datos.iva === 0 && datos.exento === datos.total) return { motivo: 'exento', avisos: [] };
+  if (esTodoExento(datos)) return { motivo: 'exento', avisos: [] };
   const motivo = motivoDeUnaNotaDeDebitoConIva(datos);
   const cambioDeRegimen = datos.empresaConCreditoFiscal && deLaFactura === 'empresa_sin_credito';
   return {

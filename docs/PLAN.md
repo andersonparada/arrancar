@@ -1035,3 +1035,15 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `nota_de_debito_con_iva_de_factura_sin_iva`, `nota_supera_la_factura`, `factura_no_sirve_para_la_nota` e
   `iva_de_notas_excede_el_de_la_factura` salen en el campo de la factura; `nota_de_debito_anterior_a_la_factura`, en la fecha de
   emisión. Los avisos (agentes, intereses) y el motivo `nota_de_debito_tardia` ya los mostraba la vista previa.
+
+- **2026-10-20 — Libro de compras, L4-1 y L4-2 (otros impuestos e IDP escrito, vía a mano).** Migración `0019_l4_otros_impuestos_e_idp_escrito`
+  (`when` 1792478380111): `otros_impuestos numeric(14,2) not null default 0` en documentos y líneas, `idp_escrito boolean` en la línea;
+  `totales_cuadran` suma los otros impuestos en ambas tablas; `lineas_de_documento_idp_calculado` pasa a `idp_escrito or (sin vigencia
+  e idp = 0) or (con vigencia e idp = fórmula)` (antes, una línea sin combustible con IDP distinto de cero pasaba por el `null` de la
+  fórmula; ahora se rechaza); check nuevo `idp_escrito_positivo`. Dominio: `LineaEscrita` suma `otrosImpuestos` e `idp`, `LineaCalculada`
+  e `TotalesDelDocumento` suman `otrosImpuestos` (y `idpEscrito` en la línea); los otros impuestos se restan del gravado y quedan en el
+  costo; el motivo `exento` exige `exento > 0` y `exento + otros = total`. Cuerpo de calcular y registrar: por línea `otrosImpuestos` y
+  `idpEscrito` (monto, `null` o cero = se calcula de los galones); el DTO de línea trae `otrosImpuestos` e `idpEscrito` (booleano) y el
+  de totales, `otrosImpuestos`. El combustible sin galones es error; con IDP escrito y galones se compara y, si difieren, aviso; sin
+  tasa en la fecha, aviso y se guarda sin vigencia. **L4-2b no va:** la base del ISR sigue siendo `total − iva` (los otros impuestos
+  quedan dentro) hasta que conteste el contador (L4-c1). Falta el cliente (L4-3) y la bandeja.

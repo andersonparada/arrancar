@@ -20,7 +20,7 @@ const combustible = (cambios: Partial<CombustibleDeLinea> = {}): CombustibleDeLi
 
 const conIva: OpcionesDeCalculo = { cobraIva: true, tasaDeIva: 1200, ivaNoAcreditable: false };
 
-const cuadra = (linea: LineaCalculada) => linea.base + linea.iva + linea.idp + linea.exento;
+const cuadra = (linea: LineaCalculada) => linea.base + linea.iva + linea.idp + linea.exento + linea.otrosImpuestos;
 
 describe('calcularIdp: round(galones × idp × (100 − etanol) / 100, 2)', () => {
   it.each([
@@ -51,12 +51,30 @@ describe('calcularIdp: round(galones × idp × (100 − etanol) / 100, 2)', () =
 describe('calcularLineas', () => {
   it('saca la base y el IVA de una línea gravada', () => {
     const [linea] = calcularLineas([{ total: 11200, exento: 0 }], conIva);
-    expect(linea).toEqual({ total: 11200, exento: 0, idp: 0, base: 10000, iva: 1200, ivaNoAcreditable: 0 });
+    expect(linea).toEqual({
+      total: 11200,
+      exento: 0,
+      otrosImpuestos: 0,
+      idp: 0,
+      idpEscrito: false,
+      base: 10000,
+      iva: 1200,
+      ivaNoAcreditable: 0,
+    });
   });
 
   it('separa el IDP, el exento y el gravado', () => {
     const [linea] = calcularLineas([{ total: 100000, exento: 0, combustible: combustible() }], conIva);
-    expect(linea).toEqual({ total: 100000, exento: 0, idp: 42300, base: 51518, iva: 6182, ivaNoAcreditable: 0 });
+    expect(linea).toEqual({
+      total: 100000,
+      exento: 0,
+      otrosImpuestos: 0,
+      idp: 42300,
+      idpEscrito: false,
+      base: 51518,
+      iva: 6182,
+      ivaNoAcreditable: 0,
+    });
     const [conExento] = calcularLineas([{ total: 16200, exento: 5000 }], conIva);
     expect(conExento).toMatchObject({ exento: 5000, base: 10000, iva: 1200 });
   });
@@ -150,6 +168,14 @@ describe('totalesDelDocumento', () => {
   });
 
   it('sin líneas todo es cero', () => {
-    expect(totalesDelDocumento([])).toEqual({ total: 0, base: 0, iva: 0, ivaNoAcreditable: 0, idp: 0, exento: 0 });
+    expect(totalesDelDocumento([])).toEqual({
+      total: 0,
+      base: 0,
+      iva: 0,
+      ivaNoAcreditable: 0,
+      idp: 0,
+      exento: 0,
+      otrosImpuestos: 0,
+    });
   });
 });

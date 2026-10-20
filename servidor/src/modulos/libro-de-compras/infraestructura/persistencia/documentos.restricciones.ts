@@ -39,6 +39,7 @@ export type ColumnasDeDocumento = Record<
   | 'ivaNoAcreditable'
   | 'idp'
   | 'exento'
+  | 'otrosImpuestos'
   | 'observaciones'
   | 'estado'
   | 'anuladoEn'
@@ -100,7 +101,11 @@ export const restriccionesDeMontos = (t: T) => [
   check('documentos_iva_no_acreditable_rango', sql`${t.ivaNoAcreditable} between 0 and ${t.iva}`),
   check('documentos_idp_no_negativo', sql`${t.idp} >= 0`),
   check('documentos_exento_no_negativo', sql`${t.exento} >= 0`),
-  check('documentos_totales_cuadran', sql`${t.total} = ${t.base} + ${t.iva} + ${t.idp} + ${t.exento}`),
+  check('documentos_otros_impuestos_no_negativo', sql`${t.otrosImpuestos} >= 0`),
+  check(
+    'documentos_totales_cuadran',
+    sql`${t.total} = ${t.base} + ${t.iva} + ${t.idp} + ${t.exento} + ${t.otrosImpuestos}`,
+  ),
   check(
     'documentos_sin_sat_sin_credito',
     sql`${t.muestraEnReportesSat} or (${t.iva} = 0 and ${t.motivoSinCredito} is null)`,

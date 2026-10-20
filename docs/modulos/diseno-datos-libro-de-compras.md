@@ -1639,8 +1639,8 @@ Ninguna migración en otros esquemas ni de permisos. Los `meta/*_snapshot.json` 
 Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`. **(archivo)** = espera el Excel
 real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la bandeja: se pueden hacer ya.
 
-1. **L4-1 (servidor, datos):** migración `0019`; tipos de las tablas; pruebas de checks de 3.3b.3 y 3.3b.4.
-2. **L4-2 (servidor, dominio y registro a mano):** `otrosImpuestos` e `idp` escrito en `LineaEscrita`, `calcularLineas`,
+1. **L4-1 (servidor, datos) — hecho (2026-10-20):** migración `0019`; tipos de las tablas; pruebas de checks de 3.3b.3 y 3.3b.4.
+2. **L4-2 (servidor, dominio y registro a mano) — hecho (2026-10-20):** `otrosImpuestos` e `idp` escrito en `LineaEscrita`, `calcularLineas`,
    `totalesDelDocumento`, motivo `exento`, aviso de IDP que no coincide y de tasa sin vigencia; solicitud, esquemas http,
    DTO de línea y documento, mapeadores; pruebas puras y de API. La base del ISR **no** cambia aquí.
 3. **L4-3 (cliente, formulario, ficha y lista):** «Otros impuestos» plegado en la línea, «Lleva IDP» con «IDP según la

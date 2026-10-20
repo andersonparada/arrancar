@@ -36,6 +36,8 @@ const esquemaLinea = z.object({
   galones: decimalOpcional(3),
   total: decimalObligatorio(2),
   exento: decimalOpcional(2),
+  otrosImpuestos: decimalOpcional(2),
+  idpEscrito: decimalOpcional(2),
 });
 
 const esquemaAjusteDeRetencion = z.object({

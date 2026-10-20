@@ -21,25 +21,29 @@ export interface FilasLeidasDeDocumento {
   motivoDeLaFactura: MotivoSinCredito | null;
 }
 
+function combustibleDeDominio(fila: FilaDeLinea): LineaDeDocumento['combustible'] {
+  if (fila.vigenciaDeCombustibleId === null) return null;
+  return {
+    vigenciaDeCombustibleId: fila.vigenciaDeCombustibleId,
+    galones: fila.galones as string,
+    idpPorGalon: fila.idpPorGalon as string,
+    porcentajeDeEtanol: fila.porcentajeDeEtanol as string,
+  };
+}
+
 function lineaDeDominio(fila: FilaDeLinea): LineaDeDocumento {
-  const conCombustible = fila.vigenciaDeCombustibleId !== null;
   return {
     numero: fila.numero,
     conceptoId: fila.conceptoId,
     descripcion: fila.descripcion,
     tipo: fila.tipo,
     esActivoFijo: fila.esActivoFijo,
-    combustible: conCombustible
-      ? {
-          vigenciaDeCombustibleId: fila.vigenciaDeCombustibleId as string,
-          galones: fila.galones as string,
-          idpPorGalon: fila.idpPorGalon as string,
-          porcentajeDeEtanol: fila.porcentajeDeEtanol as string,
-        }
-      : null,
+    combustible: combustibleDeDominio(fila),
     total: aCentavos(fila.total),
     exento: aCentavos(fila.exento),
+    otrosImpuestos: aCentavos(fila.otrosImpuestos),
     idp: aCentavos(fila.idp),
+    idpEscrito: fila.idpEscrito,
     base: aCentavos(fila.base),
     iva: aCentavos(fila.iva),
     ivaNoAcreditable: aCentavos(fila.ivaNoAcreditable),
@@ -67,6 +71,7 @@ function totalesDeDominio(fila: FilaDeDocumento): DocumentoDeCompra['totales'] {
     ivaNoAcreditable: aCentavos(fila.ivaNoAcreditable),
     idp: aCentavos(fila.idp),
     exento: aCentavos(fila.exento),
+    otrosImpuestos: aCentavos(fila.otrosImpuestos),
   };
 }
 

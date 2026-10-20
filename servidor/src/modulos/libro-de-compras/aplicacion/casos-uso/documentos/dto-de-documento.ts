@@ -20,6 +20,8 @@ function dtoDeLinea(linea: LineaDeDocumento): LineaDeDocumentoDto {
     combustible: linea.combustible,
     total: deCentavos(linea.total),
     exento: deCentavos(linea.exento),
+    otrosImpuestos: deCentavos(linea.otrosImpuestos),
+    idpEscrito: linea.idpEscrito,
     idp: deCentavos(linea.idp),
     base: deCentavos(linea.base),
     iva: deCentavos(linea.iva),
@@ -50,6 +52,7 @@ function dtoDeTotales(totales: TotalesDelDocumento): TotalesDeDocumentoDto {
     ivaNoAcreditable: deCentavos(totales.ivaNoAcreditable),
     idp: deCentavos(totales.idp),
     exento: deCentavos(totales.exento),
+    otrosImpuestos: deCentavos(totales.otrosImpuestos),
   };
 }
 

@@ -19,7 +19,10 @@ export interface LineaDeDocumentoDto {
   } | null;
   total: string;
   exento: string;
+  otrosImpuestos: string;
   idp: string;
+  /** `true`: el IDP es el que dice la factura; `false`: salió de los galones. */
+  idpEscrito: boolean;
   base: string;
   iva: string;
   ivaNoAcreditable: string;
@@ -47,6 +50,7 @@ export interface TotalesDeDocumentoDto {
   ivaNoAcreditable: string;
   idp: string;
   exento: string;
+  otrosImpuestos: string;
 }
 
 /** El documento; en la vista previa (`/calcular`) todavía no tiene `id`. */

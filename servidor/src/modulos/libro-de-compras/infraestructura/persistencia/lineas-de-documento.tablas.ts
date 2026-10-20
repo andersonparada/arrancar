@@ -32,6 +32,8 @@ type Columnas = Record<
   | 'porcentajeDeEtanol'
   | 'total'
   | 'exento'
+  | 'otrosImpuestos'
+  | 'idpEscrito'
   | 'idp'
   | 'base'
   | 'iva'
@@ -73,7 +75,11 @@ const restriccionesDeMontosDeLinea = (t: Columnas) => [
   check('lineas_de_documento_base_no_negativa', sql`${t.base} >= 0`),
   check('lineas_de_documento_iva_no_negativo', sql`${t.iva} >= 0`),
   check('lineas_de_documento_iva_no_acreditable_rango', sql`${t.ivaNoAcreditable} between 0 and ${t.iva}`),
-  check('lineas_de_documento_totales_cuadran', sql`${t.total} = ${t.base} + ${t.iva} + ${t.idp} + ${t.exento}`),
+  check('lineas_de_documento_otros_impuestos_no_negativo', sql`${t.otrosImpuestos} >= 0`),
+  check(
+    'lineas_de_documento_totales_cuadran',
+    sql`${t.total} = ${t.base} + ${t.iva} + ${t.idp} + ${t.exento} + ${t.otrosImpuestos}`,
+  ),
 ];
 
 /** Combustible (galones, IDP por galón y etanol) y activo fijo: solo para bienes. */
@@ -88,9 +94,11 @@ const restriccionesDeCombustible = (t: Columnas) => [
   check('lineas_de_documento_activo_fijo_es_bien', sql`not ${t.esActivoFijo} or ${t.tipo} = 'bien'`),
   check(
     'lineas_de_documento_idp_calculado',
-    sql`(${t.vigenciaDeCombustibleId} is null and ${t.idp} = 0)
-        or ${t.idp} = round(${t.galones} * ${t.idpPorGalon} * (100 - ${t.porcentajeDeEtanol}) / 100, 2)`,
+    sql`${t.idpEscrito}
+        or (${t.vigenciaDeCombustibleId} is null and ${t.idp} = 0)
+        or (${t.vigenciaDeCombustibleId} is not null and ${t.idp} = round(${t.galones} * ${t.idpPorGalon} * (100 - ${t.porcentajeDeEtanol}) / 100, 2))`,
   ),
+  check('lineas_de_documento_idp_escrito_positivo', sql`not ${t.idpEscrito} or (${t.idp} > 0 and ${t.tipo} = 'bien')`),
 ];
 
 /** Una línea del documento con sus montos ya calculados; la llave foránea es compuesta con la empresa. */
@@ -113,6 +121,8 @@ export const lineasDeDocumento = esquemaLibroDeCompras.table(
     porcentajeDeEtanol: numeric({ precision: 5, scale: 2 }),
     total: numeric({ precision: 14, scale: 2 }).notNull(),
     exento: numeric({ precision: 14, scale: 2 }).default('0').notNull(),
+    otrosImpuestos: numeric({ precision: 14, scale: 2 }).default('0').notNull(),
+    idpEscrito: boolean().default(false).notNull(),
     idp: numeric({ precision: 14, scale: 2 }).notNull(),
     base: numeric({ precision: 14, scale: 2 }).notNull(),
     iva: numeric({ precision: 14, scale: 2 }).notNull(),
