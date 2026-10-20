@@ -1094,6 +1094,13 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 
 ### 3.3b Bandeja de DTE recibidos y otros impuestos (L4) — arquitecto de datos, 2026-10-19
 
+**Respuestas del usuario a L4-a…L4-l (2026-10-20):** se aceptan las recomendaciones del arquitecto, con un matiz en
+**L4-c**: si el DTE ya está registrado en otra empresa **de la misma cuenta**, la fila queda `bloqueado` y visible («ya
+está registrado en otra empresa de su cuenta»); si está en **otra cuenta**, **no se avisa nada** en la bandeja (no exponer
+información): la fila sigue `pendiente` y al confirmar responde el mensaje genérico de siempre. No se guarda el archivo
+(solo su huella); otros impuestos como **total**; exportar la conciliación va en L5. Descarga automática desde la Agencia
+Virtual: después de L4, ver `evaluacion-conexion-agencia-virtual.md`.
+
 Estado: **propuesta para aprobar**. Lleva a tablas el informe del contador y las decisiones del usuario del 2026-10-19
 («Importar DTE recibidos (L4)» al final de `validacion-h7-h11-retenciones.md`), con su aclaración del mismo día: **el
 registro a mano (formulario de L3-8) es la vía principal** y debe quedar completo por sí solo; la bandeja y la
