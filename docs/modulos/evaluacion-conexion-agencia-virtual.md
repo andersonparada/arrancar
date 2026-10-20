@@ -206,3 +206,7 @@ código de segundo factor se escriben cada vez** y se usan solo para esa descarg
 SAT necesita la contraseña tal cual). El permiso delegado «Consulta-FEL» queda descartado por ahora. Se programa
 **después de L4 con archivos**, en un paso propio que revisa el agente de seguridad (proceso aislado, nada secreto en
 registros, límites de frecuencia), y lo descargado entra a la misma bandeja.
+
+**Aclaración del usuario (2026-10-20):** el usuario de la Agencia Virtual **es el NIT** de la empresa, así que no se guarda
+ningún dato nuevo: se toma el NIT de los datos de la empresa y al pulsar «Traer de la SAT» solo se piden la contraseña y
+el código de segundo factor, que no se guardan.
