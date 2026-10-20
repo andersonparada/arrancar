@@ -13,6 +13,7 @@ import {
 } from '../../../dominio/documento-de-compra.js';
 import { DestinoNoDisponible } from '../../../dominio/errores-de-documento.js';
 import { exigirFechaDeLaFamilia, resolverTipoDeDocumento } from '../../../dominio/familia-del-documento.js';
+import { AVISO_DE_PERIODO_PASADO } from '../../../dominio/periodo-del-libro.js';
 import { esNota } from '../../../dominio/tipos-de-documento.js';
 import { exigirQueLaNotaNoSupereLaFactura } from '../../../dominio/tope-de-notas.js';
 import type { PropuestaEnCero } from '../../../dominio/retencion-practicada.js';
@@ -20,7 +21,6 @@ import type { SolicitudDeDocumento, SolicitudSinResolver } from '../../dto/solic
 import type {
   CatalogosParaDocumentos,
   ConsultasDeDocumentos,
-  ControlDePeriodos,
   DestinosDeDocumentos,
   FacturaParaNota,
 } from '../../puertos/puertos-de-documentos.js';
@@ -36,6 +36,7 @@ import {
   type ContextoFiscal,
   type DependenciasDelCargador,
 } from './cargador-de-contexto-fiscal.js';
+import { GuardiaDelPeriodo } from './guardia-del-periodo.js';
 import { resolverEncabezado, type EncabezadoResuelto } from './encabezado-del-documento.js';
 import { ResolutorDeFactura } from './resolutor-de-factura.js';
 import { ResolutorDeLineas } from './resolutor-de-lineas.js';
@@ -44,7 +45,6 @@ export interface DependenciasDelPreparador extends DependenciasDelCargador {
   catalogos: CatalogosParaDocumentos;
   consultas: ConsultasDeDocumentos;
   destinos: DestinosDeDocumentos;
-  control: ControlDePeriodos;
 }
 
 export interface OpcionesDePreparacion {
@@ -54,6 +54,8 @@ export interface OpcionesDePreparacion {
   puedeAjustarRetenciones: boolean;
   /** Registrar exige un destino activo; la vista previa calcula sin él y, si no está activo, solo avisa. */
   exigirDestino: boolean;
+  /** Al registrar, el período se toma y, si está declarado y bloqueado, se rechaza; la vista previa solo avisa. */
+  bloquearPeriodo: boolean;
 }
 
 /** El documento calculado, listo para guardar, con sus avisos y lo que falta hacerle al proveedor. */
@@ -83,8 +85,10 @@ export class PreparadorDeDocumento {
   private readonly cargador: CargadorDeContextoFiscal;
   private readonly lineas: ResolutorDeLineas;
   private readonly facturas: ResolutorDeFactura;
+  private readonly periodos: GuardiaDelPeriodo;
 
   constructor(private readonly dependencias: DependenciasDelPreparador) {
+    this.periodos = new GuardiaDelPeriodo(dependencias);
     this.cargador = new CargadorDeContextoFiscal(dependencias);
     this.lineas = new ResolutorDeLineas(dependencias.catalogos);
     this.facturas = new ResolutorDeFactura(dependencias.consultas);
@@ -103,12 +107,13 @@ export class PreparadorDeDocumento {
     const solicitud = normalizar(pedida);
     const contexto = await this.cargador.cargar(operador, solicitud, { bloquear: opciones.bloquearFactura });
     const avisoDelDestino = await this.revisarDestino(operador, solicitud.destino, opciones.exigirDestino);
-    await this.dependencias.control.exigirAbierto(contexto.periodo);
+    const periodo = await this.periodos.revisar(operador, { solicitud, ...contexto }, opciones.bloquearPeriodo);
     const resuelto = await this.resolver(solicitud, contexto, opciones);
     const documento = armarDocumento(operador, solicitud, { contexto, ...resuelto });
+    const avisos = avisosDelDocumento(solicitud, contexto, resuelto);
     return {
       documento,
-      avisos: [...avisosDelDocumento(solicitud, contexto, resuelto), ...avisoDelDestino],
+      avisos: [...(periodo.declarado ? sinElAvisoGenerico(avisos) : avisos), ...periodo.avisos, ...avisoDelDestino],
       nitParaCompletar: resuelto.encabezado.emisor.nitParaCompletar,
       dpiParaCompletar: resuelto.encabezado.dpiParaCompletar,
       datosFiscalesPorGuardar: contexto.datosDelProveedorPorGuardar,
@@ -193,6 +198,9 @@ function exigirLaFechaDeLaFamilia(
     : { tipo: solicitud.tipo, fechaDeEmision: solicitud.fechaEmision };
   exigirFechaDeLaFamilia(medido, contexto.configuracion.fechaDeDerogacion);
 }
+
+/** Cuando se sabe que el período sí se declaró, el aviso preciso reemplaza al de «puede estar declarado». */
+const sinElAvisoGenerico = (avisos: string[]): string[] => avisos.filter((aviso) => aviso !== AVISO_DE_PERIODO_PASADO);
 
 function exigirPermisoDeAjuste(retenciones: RetencionDeDocumento[], opciones: OpcionesDePreparacion): void {
   if (retencionesAjustadas(retenciones).length > 0 && !opciones.puedeAjustarRetenciones) {

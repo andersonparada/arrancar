@@ -36,3 +36,29 @@ export class DocumentoEliminado extends EventoDominio<DatosDeBajaDeDocumento> {
     super(datos);
   }
 }
+
+export interface DatosDeCambioDePeriodo {
+  empresaId: string;
+  /** Primer día del mes. */
+  periodo: string;
+}
+
+export type DatosDeDeclaracion = DatosDeCambioDePeriodo & { rectificacion: boolean };
+
+/** Un período se declaró o se rectificó (lo escuchará Contabilidad, cuando exista). Se publica tras confirmar. */
+export class PeriodoDeclaradoEnElLibro extends EventoDominio<DatosDeDeclaracion> {
+  readonly nombre = 'libro-de-compras.periodo_declarado';
+
+  constructor(datos: DatosDeDeclaracion) {
+    super(datos);
+  }
+}
+
+/** Un período declarado se reabrió. Se publica tras confirmar. */
+export class PeriodoReabierto extends EventoDominio<DatosDeCambioDePeriodo> {
+  readonly nombre = 'libro-de-compras.periodo_reabierto';
+
+  constructor(datos: DatosDeCambioDePeriodo) {
+    super(datos);
+  }
+}

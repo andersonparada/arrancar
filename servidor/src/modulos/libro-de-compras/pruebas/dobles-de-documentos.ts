@@ -10,7 +10,6 @@ import type {
   ConceptoParaLinea,
   ConfiguracionFiscal,
   ConsultasDeDocumentos,
-  ControlDePeriodos,
   DatosDeLaEmpresaParaDocumentos,
   DestinosDeDocumentos,
   FacturaParaNota,
@@ -19,10 +18,12 @@ import type {
   ProveedoresParaDocumentos,
   RepositorioDeDocumentos,
 } from '../aplicacion/puertos/puertos-de-documentos.js';
+import type { ControlDePeriodos, EstadoDelPeriodo, ModoDeControl } from '../aplicacion/puertos/puertos-de-periodos.js';
 import { configuracionDelLibroDeCompras } from '../configuracion.js';
 import { aCentesimasDeConfiguracion } from '../dominio/aritmetica-fiscal.js';
 import { configuracionDeRetenciones } from '../dominio/configuracion-de-retenciones.js';
 import type { DestinoDeDocumento } from '../dominio/destinos-de-documento.js';
+import type { DeclaracionCitada } from '../dominio/periodos/avisos-de-periodos.js';
 import type { DocumentoDeCompra } from '../dominio/documento-de-compra.js';
 import type { DocumentoAnuladoConRetenciones } from '../dominio/retencion-practicada.js';
 
@@ -163,10 +164,27 @@ export class ConfiguracionFiscalEnMemoria implements LectorDeConfiguracionFiscal
   }
 }
 
+/** El control de períodos en memoria: por omisión nada está declarado; las pruebas declaran períodos a mano. */
 export class ControlDePeriodosEnMemoria implements ControlDePeriodos {
+  /** Los períodos que se consultaron, en orden. */
   readonly consultados: string[] = [];
+  /** Períodos declarados y su última declaración. */
+  readonly declarados = new Map<string, DeclaracionCitada>();
+  /** El bloqueo está encendido. */
+  bloqueo = false;
 
-  async exigirAbierto(periodo: string): Promise<void> {
+  async estadoDe(periodo: string, _modo: ModoDeControl): Promise<EstadoDelPeriodo> {
     this.consultados.push(periodo);
+    const ultimaDeclaracion = this.declarados.get(periodo) ?? null;
+    return {
+      periodo,
+      declarado: ultimaDeclaracion !== null,
+      bloquea: this.bloqueo && ultimaDeclaracion !== null,
+      ultimaDeclaracion,
+    };
+  }
+
+  async bloqueados(): Promise<string[]> {
+    return this.bloqueo ? [...this.declarados.keys()].sort() : [];
   }
 }

@@ -1179,3 +1179,27 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   anulados) y desde allí se registra, corrige o anula con motivo; la ventana del pago propone la fecha de hoy y lo que
   falta, y dice cómo quedaría el mes. Lógica pura con pruebas en `composables/retenciones/` (49 pruebas); textos en
   `textos-de-retenciones.ts`. Sin cambios en el servidor.
+- **2026-10-20 — Libro de compras L5-7a y L5-8a (servidor, períodos: control, declarar, reabrir y rectificar).**
+  Migración `0028_l5_periodos_y_declaraciones`: `periodos` (PK empresa y mes; abierto o declarado) y
+  `declaraciones_de_periodos` (de solo agregar con `politicasDeSoloAgregarPorEmpresa()`; declaración, reapertura y
+  rectificación con su foto de totales en jsonb y la diferencia). Cambios al diseño por lo que decidió el usuario: el
+  número del formulario y la fecha de presentación son **opcionales** (sin fecha vale hoy; sin formulario se propone el del
+  régimen del período) y el bloqueo es **por empresa**. **Dónde vive el ajuste:** en la configuración
+  `libro-de-compras.periodos.control_de_declarados` (niveles empresa e instalación, pública), como decía el diseño: así soporte
+  puede fijarlo para todas las empresas y no hace falta una tabla más; quién y cuándo salen de `core.configuraciones`
+  (`actualizado_por`/`actualizado_en`) y el motivo, de la auditoría `corregir`. `ControlDePeriodos` ya bloquea (`estadoDe(periodo,
+  'consultar' | 'bloquear')`, `bloqueados()`): registrar con el período pedido (también lo de la bandeja), anular, eliminar y
+  cambiar o quitar una vigencia del régimen que cubra un período declarado (`vigencia_fiscal_en_periodo_declarado`) responden
+  409 `periodo_declarado` con `detalles.periodoPropuesto` y `propuestaEnPlazo`; `bloquear` toma la fila con `for share` contra el
+  `for update` de declarar. No bloquea constancias, enteros, «por resolver» ni una nota de crédito recibida en otro mes. La vista
+  previa solo avisa. Sin período pedido, si el que corresponde está declarado y bloqueado se usa el primer período abierto
+  (dentro del art. 20 si lo hay; si no, fuera de plazo y el IVA va al costo) con un aviso; la nota de crédito no tiene
+  alternativa. Con el bloqueo apagado, el aviso genérico «puede estar declarado» se reemplaza por «se declaró el … (SAT-2237 nº …)».
+  Rutas en `/api/libro-de-compras/periodos`: `GET ?anio=` (12 meses con estado, última declaración y `control`), `GET :periodo`
+  (historial con foto y diferencia, `cambioDesdeLaDeclaracion` y `revision`), `POST :periodo/declarar` (`periodos.declarar`),
+  `POST :periodo/reabrir {motivo}` (`periodos.reabrir`, auditoría `reabrir`), `POST control/encender` (`periodos.declarar`) y
+  `POST control/apagar {motivo}` (`periodos.reabrir`, auditoría `corregir`). Declarar funciona siempre; con el bloqueo
+  apagado, declarar un período ya declarado es una rectificación sin reabrir. La foto es el resumen del libro (mismo código del
+  libro) con la huella; los rubros del SAT-2237 se suman cuando exista L5-2a. Avisos al declarar: los DTE pendientes en la
+  bandeja solo si hay lotes que toquen el período, y que los emisores pueden anular DTE hasta el vencimiento. Eventos
+  `libro-de-compras.periodo_declarado` y `periodo_reabierto`. Pendiente: avisos de conciliación (esperan L4-10) y la página (L5-8b).

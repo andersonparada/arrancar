@@ -141,6 +141,15 @@ export const configuracionDelLibroDeCompras: DefinicionConfiguracion[] = [
     publica: false,
   }),
   definirConfiguracion({
+    clave: 'libro-de-compras.periodos.control_de_declarados',
+    descripcion:
+      'Bloquea registrar, anular y eliminar documentos (y cambiar el régimen) de los períodos declarados; reabrir el período lo permite. Declarar y el historial funcionan siempre.',
+    esquema: z.boolean(),
+    predeterminado: false,
+    niveles: ['instalacion', 'empresa'],
+    publica: true,
+  }),
+  definirConfiguracion({
     clave: 'libro-de-compras.regimenes.fecha_de_derogacion',
     descripcion:
       'Primer día (aaaa-mm-dd) en que ya no se aceptan los regímenes ni los documentos derogados por el Decreto 31-2024 (pequeño contribuyente electrónico y agropecuario).',

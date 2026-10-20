@@ -17,7 +17,7 @@ import {
   DatosFiscalesDeEmpresaEnMemoria,
   PeriodosConDocumentosEnMemoria,
 } from '../../../pruebas/dobles-de-datos-fiscales.js';
-import { ConfiguracionFiscalEnMemoria } from '../../../pruebas/dobles-de-documentos.js';
+import { ConfiguracionFiscalEnMemoria, ControlDePeriodosEnMemoria } from '../../../pruebas/dobles-de-documentos.js';
 import { VigenciaFiscalEnUso } from '../../errores.js';
 import { CambiosAlHistorialFiscal } from './cambios-al-historial-fiscal.js';
 import { GuardarDatosFiscalesDeEmpresa, type CambioDeDatosFiscales } from './guardar-datos-fiscales-de-empresa.js';
@@ -46,7 +46,7 @@ beforeEach(() => {
   auditoria = new AuditoriaEnMemoria();
   repositorio = new DatosFiscalesDeEmpresaEnMemoria();
   documentos = new PeriodosConDocumentosEnMemoria();
-  cambios = new CambiosAlHistorialFiscal({ repositorio, documentos });
+  cambios = new CambiosAlHistorialFiscal({ repositorio, documentos, control: new ControlDePeriodosEnMemoria() });
 });
 
 const guardar = (cambio: Omit<CambioDeDatosFiscales, 'empresaId'>) =>

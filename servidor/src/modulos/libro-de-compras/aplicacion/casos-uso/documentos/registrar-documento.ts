@@ -66,6 +66,7 @@ export class RegistrarDocumento {
         bloquearFactura: true,
         puedeAjustarRetenciones: peticion.puedeAjustarRetenciones,
         exigirDestino: true,
+        bloquearPeriodo: true,
       });
       await this.guardar(operador, preparado);
       return preparado;

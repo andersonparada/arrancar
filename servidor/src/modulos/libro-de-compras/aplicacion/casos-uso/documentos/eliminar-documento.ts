@@ -9,14 +9,12 @@ import type { DestinoDeDocumento } from '../../../dominio/destinos-de-documento.
 import { DocumentoEliminado } from '../../../dominio/eventos.js';
 import type { EliminacionDeDocumentoDto } from '../../dto/documento-ficha.dto.js';
 import type { RepositorioDeDocumentosGuardados } from '../../puertos/puertos-de-baja-de-documentos.js';
-import type {
-  ConsultasDeDocumentos,
-  ControlDePeriodos,
-  DestinosDeDocumentos,
-} from '../../puertos/puertos-de-documentos.js';
+import type { ConsultasDeDocumentos, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
+import type { ControlDePeriodos } from '../../puertos/puertos-de-periodos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 import { bajaDelPeriodo } from './credito-de-la-empresa.js';
 import { exigirSinConstanciaNiEntero, type DependenciasDeRetencionesDeLaBaja } from './retenciones-de-la-baja.js';
+import { exigirPeriodoAbierto } from './guardia-del-periodo.js';
 import { dtoDeFicha, hechosDe } from './dto-de-ficha.js';
 import { exigirQueLaBajaRespeteElTope } from './tope-de-la-baja.js';
 
@@ -69,7 +67,7 @@ export class EliminarDocumento {
     if (!guardado) throw new RecursoNoEncontrado('El documento');
     exigirEliminable(hechosDe(guardado));
     await exigirQueLaBajaRespeteElTope(this.dependencias.consultas, guardado);
-    await control.exigirAbierto(guardado.documento.periodo);
+    await exigirPeriodoAbierto(control, guardado.documento.periodo);
     await exigirSinConstanciaNiEntero(this.dependencias, documentoId);
     const { destino } = guardado.documento;
     if (origen !== destino) await destinos.avisarPorEliminar(operador, { documentoId, destino });

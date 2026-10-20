@@ -7,9 +7,10 @@ import type { DatosFiscalesDeEmpresa } from '../../../dominio/datos-fiscales-de-
 import type { DatosFiscalesDeProveedor } from '../../../dominio/datos-fiscales-de-proveedor.js';
 import { resolverDatosFiscalesDelProveedor } from '../../../dominio/datos-fiscales-del-documento.js';
 import { EmpresaSinDatosFiscales, EmpresaSinNit, ProveedorInactivo } from '../../../dominio/errores-de-documento.js';
-import { periodoPropuesto, primerDiaDelMes } from '../../../dominio/periodo-del-libro.js';
+import { primerDiaDelMes } from '../../../dominio/periodo-del-libro.js';
 import { claveDelGrupo } from '../../../dominio/retenciones/grupo-de-entero.js';
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
+import { GuardiaDelPeriodo } from './guardia-del-periodo.js';
 import type {
   ConfiguracionFiscal,
   DatosDeLaEmpresaParaDocumentos,
@@ -17,6 +18,7 @@ import type {
   ProveedorParaDocumento,
   ProveedoresParaDocumentos,
 } from '../../puertos/puertos-de-documentos.js';
+import type { ControlDePeriodos } from '../../puertos/puertos-de-periodos.js';
 import type { ConsultasDeEnteros } from '../../puertos/puertos-de-retenciones.js';
 import type {
   RepositorioDeDatosFiscalesDeEmpresa,
@@ -28,6 +30,8 @@ export interface ContextoFiscal {
   hoy: string;
   fechaDeRecepcion: string;
   periodo: string;
+  /** Se propuso otro período porque el que correspondía está declarado y bloqueado. */
+  avisoDelPeriodo: string | null;
   nitDeLaEmpresa: string;
   proveedor: ProveedorParaDocumento;
   datosDeLaEmpresa: DatosFiscalesDeEmpresa;
@@ -50,24 +54,23 @@ export interface DependenciasDelCargador {
   configuracion: LectorDeConfiguracionFiscal;
   calendario: FuenteDeCalendario;
   enteros: Pick<ConsultasDeEnteros, 'delRango'>;
+  control: ControlDePeriodos;
 }
 
 /** Sin fecha de recepción: hoy; en la factura especial, la de emisión (la empresa la emite al comprar). */
 const recepcionPropuesta = (solicitud: SolicitudDeDocumento, hoy: string): string =>
   solicitud.tipo === 'factura_especial' ? solicitud.fechaEmision : hoy;
 
-/** El período que pidió el usuario o, sin él, el que corresponde a las fechas del documento. */
-function periodoDe(solicitud: SolicitudDeDocumento, fechaDeRecepcion: string): string {
-  const fechas = { tipo: solicitud.tipo, fechaDeEmision: solicitud.fechaEmision, fechaDeRecepcion };
-  return solicitud.periodo ?? periodoPropuesto(fechas);
-}
-
 /**
  * Reúne el contexto fiscal de un documento. Sin datos fiscales guardados del proveedor usa los que llegan en el
  * cuerpo (obligatorios en una factura del libro si la empresa retiene algo) o los valores por omisión.
  */
 export class CargadorDeContextoFiscal {
-  constructor(private readonly dependencias: DependenciasDelCargador) {}
+  private readonly guardia: GuardiaDelPeriodo;
+
+  constructor(private readonly dependencias: DependenciasDelCargador) {
+    this.guardia = new GuardiaDelPeriodo(dependencias);
+  }
 
   /**
    * @throws EmpresaSinNit si la empresa no tiene NIT.
@@ -82,17 +85,17 @@ export class CargadorDeContextoFiscal {
     solicitud: SolicitudDeDocumento,
     opciones: { bloquear: boolean },
   ): Promise<ContextoFiscal> {
-    const hoy = await this.dependencias.reloj.hoy(operador);
-    const fechaDeRecepcion = solicitud.fechaRecepcion ?? recepcionPropuesta(solicitud, hoy);
+    const { hoy, fechaDeRecepcion } = await this.fechasDeHoyYRecepcion(operador, solicitud);
     const proveedor = await this.proveedor(solicitud.proveedorId);
     const nitDeLaEmpresa = await this.nitDeLaEmpresa(operador);
-    const periodo = periodoDe(solicitud, fechaDeRecepcion);
+    const { periodo, aviso: avisoDelPeriodo } = await this.guardia.elegir(operador, solicitud, fechaDeRecepcion);
     const datosDeLaEmpresa = await this.datosDeLaEmpresa(operador, periodo, opciones.bloquear);
     const delProveedor = await this.datosDelProveedor(solicitud, datosDeLaEmpresa);
     return {
       hoy,
       fechaDeRecepcion,
       periodo,
+      avisoDelPeriodo,
       nitDeLaEmpresa,
       proveedor,
       datosDeLaEmpresa,
@@ -101,6 +104,11 @@ export class CargadorDeContextoFiscal {
       configuracion: await this.dependencias.configuracion.paraEmpresa(operador),
       ...(await this.deLasFechas({ hoy, fechaDeRecepcion, fechaDeEmision: solicitud.fechaEmision })),
     };
+  }
+
+  private async fechasDeHoyYRecepcion(operador: Operador, solicitud: SolicitudDeDocumento) {
+    const hoy = await this.dependencias.reloj.hoy(operador);
+    return { hoy, fechaDeRecepcion: solicitud.fechaRecepcion ?? recepcionPropuesta(solicitud, hoy) };
   }
 
   /** Lo que depende de las fechas del documento: los feriados y los meses y grupos ya enterados. */

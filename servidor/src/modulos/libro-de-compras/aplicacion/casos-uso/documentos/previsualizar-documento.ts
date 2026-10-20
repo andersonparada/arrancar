@@ -28,6 +28,7 @@ export class PrevisualizarDocumento {
         bloquearFactura: false,
         puedeAjustarRetenciones: peticion.puedeAjustarRetenciones,
         exigirDestino: false,
+        bloquearPeriodo: false,
       });
       return { documento: dtoDeDocumento(documento, false), avisos };
     });

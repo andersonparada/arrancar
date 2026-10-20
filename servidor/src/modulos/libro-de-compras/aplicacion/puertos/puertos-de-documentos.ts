@@ -151,9 +151,3 @@ export interface ConfiguracionFiscal {
 export interface LectorDeConfiguracionFiscal {
   paraEmpresa(contexto: ContextoEmpresa): Promise<ConfiguracionFiscal>;
 }
-
-/** Períodos declarados (L5). Hoy ninguna implementación bloquea. */
-export interface ControlDePeriodos {
-  /** @throws si el período ya está declarado y el control está encendido. */
-  exigirAbierto(periodo: string): Promise<void>;
-}

@@ -71,6 +71,10 @@ declare module '../eventos/bus-eventos.js' {
     };
     'libro-de-compras.documento_anulado': { documentoId: string; empresaId: string; destino: DestinoDeDocumento };
     'libro-de-compras.documento_eliminado': { documentoId: string; empresaId: string; destino: DestinoDeDocumento };
+    /** Un período del libro se declaró o se rectificó (`periodo` es el primer día del mes). */
+    'libro-de-compras.periodo_declarado': { empresaId: string; periodo: string; rectificacion: boolean };
+    /** Un período declarado se reabrió. */
+    'libro-de-compras.periodo_reabierto': { empresaId: string; periodo: string };
   }
 }
 

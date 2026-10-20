@@ -11,7 +11,6 @@ import { DocumentosControlador } from '../http/documentos.controlador.js';
 import { rutasDeDocumentos } from '../http/documentos.rutas.js';
 import { CalendarioDeFeriados } from '../infraestructura/calendario-de-feriados.js';
 import { ConfiguracionFiscalEnConfiguracion } from '../infraestructura/configuracion-fiscal-en-configuracion.js';
-import { ControlDePeriodosSinBloqueo } from '../infraestructura/control-de-periodos-sin-bloqueo.js';
 import { DestinosDeDocumentosEnMediador } from '../infraestructura/destinos-de-documentos-en-mediador.js';
 import { CatalogosParaDocumentosDrizzle } from '../infraestructura/persistencia/catalogos-para-documentos.drizzle.js';
 import { ConsultasDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-documentos.drizzle.js';
@@ -28,6 +27,7 @@ import {
   CompletadorDeNitEnMediador,
   DatosDeLaEmpresaEnMediador,
 } from '../infraestructura/vecinos-en-mediador.js';
+import { controlDePeriodos } from './control-de-periodos.js';
 import { atenderOrdenesDeDocumentos } from './ordenes-de-documentos.js';
 
 /** Las retenciones y los enteros que miran la baja y los avisos del documento. */
@@ -52,7 +52,7 @@ function dependenciasDeDocumentos() {
     catalogos: new CatalogosParaDocumentosDrizzle(),
     consultas: new ConsultasDeDocumentosDrizzle(),
     destinos: new DestinosDeDocumentosEnMediador(new ModulosActivosDeLaCuentaEnRegistro()),
-    control: new ControlDePeriodosSinBloqueo(),
+    control: controlDePeriodos(),
     repositorio: new RepositorioDeDocumentosDrizzle(),
     guardados: new RepositorioDeDocumentosGuardadosDrizzle(),
     consultasDeLista: new ConsultasDeListaDeDocumentosDrizzle(),

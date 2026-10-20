@@ -22,20 +22,25 @@ const PREDETERMINADOS: Record<string, number | boolean | string> = {
   'libro-de-compras.retenciones_isr.incluye_idp': true,
   'libro-de-compras.plazos.dias_habiles_entero_iva': 15,
   'libro-de-compras.plazos.dias_habiles_entero_isr': 10,
+  'libro-de-compras.periodos.control_de_declarados': false,
   'libro-de-compras.regimenes.fecha_de_derogacion': '2025-07-09',
 };
 
 describe('configuración del libro de compras (§8)', () => {
-  it('declara las 17 variables de la sección 8, la del IDP en la base del ISR y la fecha de derogación con sus valores por omisión', () => {
+  it('declara las 17 variables de la sección 8, la del IDP en la base del ISR, el bloqueo de períodos declarados y la fecha de derogación con sus valores por omisión', () => {
     const declaradas = Object.fromEntries(configuracionDelLibroDeCompras.map((c) => [c.clave, c.predeterminado]));
     expect(declaradas).toEqual(PREDETERMINADOS);
   });
 
-  it('son de instalación (el IDP del ISR también de empresa), no públicas, y su omisión pasa su esquema', () => {
+  it('son de instalación (el IDP del ISR y el bloqueo de períodos también de empresa), no públicas salvo el bloqueo, y su omisión pasa su esquema', () => {
+    const tambienDeEmpresa = [
+      'libro-de-compras.retenciones_isr.incluye_idp',
+      'libro-de-compras.periodos.control_de_declarados',
+    ];
     for (const definicion of configuracionDelLibroDeCompras) {
-      const incluyeIdp = definicion.clave === 'libro-de-compras.retenciones_isr.incluye_idp';
-      expect(definicion.niveles).toEqual(incluyeIdp ? ['instalacion', 'empresa'] : ['instalacion']);
-      expect(definicion.publica).toBe(false);
+      const deEmpresa = tambienDeEmpresa.includes(definicion.clave);
+      expect(definicion.niveles).toEqual(deEmpresa ? ['instalacion', 'empresa'] : ['instalacion']);
+      expect(definicion.publica).toBe(definicion.clave === 'libro-de-compras.periodos.control_de_declarados');
       expect(definicion.esquema.safeParse(definicion.predeterminado).success).toBe(true);
     }
   });
@@ -45,7 +50,7 @@ describe('configuración del libro de compras (§8)', () => {
       moduloLibroDeCompras,
       { clave: 'terceros', nombre: 'T', descripcion: '', permisos: [] },
     ]);
-    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(19);
+    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(20);
     expect(registro.definicionConfiguracion('libro-de-compras.iva.tasa')?.predeterminado).toBe(12);
   });
 

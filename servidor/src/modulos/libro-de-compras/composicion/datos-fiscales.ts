@@ -22,6 +22,7 @@ import { AccesoAEmpresasDrizzle } from '../infraestructura/persistencia/acceso-a
 import { ConsultaDePeriodosConDocumentosDrizzle } from '../infraestructura/persistencia/consulta-de-periodos-con-documentos.drizzle.js';
 import { RepositorioDeDatosFiscalesDeEmpresaDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales-de-empresa.drizzle.js';
 import { RepositorioDeDatosFiscalesDeProveedorDrizzle } from '../infraestructura/persistencia/repositorios-de-datos-fiscales.drizzle.js';
+import { controlDePeriodos } from './control-de-periodos.js';
 
 const MODULO = 'libro-de-compras';
 
@@ -63,7 +64,7 @@ function casosDeUsoDeEmpresa({ unidadDeTrabajo, auditoria, reloj }: Dependencias
   const repositorio = new RepositorioDeDatosFiscalesDeEmpresaDrizzle();
   const documentos = new ConsultaDePeriodosConDocumentosDrizzle();
   const acceso = new AccesoAEmpresasDrizzle();
-  const cambios = new CambiosAlHistorialFiscal({ repositorio, documentos });
+  const cambios = new CambiosAlHistorialFiscal({ repositorio, documentos, control: controlDePeriodos() });
   return {
     guardar: new GuardarDatosFiscalesDeEmpresa({
       unidadDeTrabajo,

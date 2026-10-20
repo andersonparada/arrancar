@@ -2623,7 +2623,7 @@ toma alguno antes, se renumeran con el `when` del `_journal.json` mayor que el d
 | L5-3a | `0025_l5_folios_sin_traslape` (`--custom`) | la exclusión `emisiones_del_libro_sin_traslape` |
 | L5-5a | `0026_l5_retenciones_por_resolver` | cuatro columnas, dos checks e índice parcial en `retenciones`; `update … set resolucion = 'pendiente'` de las retenciones con monto de documentos anulados |
 | L5-6a | `0027_l5_enteros_de_retenciones` | la tabla con sus checks, índice y política |
-| L5-7a | `0028_l5_periodos_y_declaraciones` | `periodos` y `declaraciones_de_periodos` con checks, llaves y políticas |
+| L5-7a | `0028_l5_periodos_y_declaraciones` (hecha) | `periodos` y `declaraciones_de_periodos` con checks, llaves y políticas |
 
 Ninguna migración en otros esquemas ni de permisos. Los `meta/*_snapshot.json` quedan iguales a las tablas.
 
@@ -2678,10 +2678,10 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
     anular; permiso `retenciones.enterar`; pruebas.
 13. **L5-4b (cliente, retenciones) — hecho el 2026-10-20 (tres rutas con pestañas en lugar de una sola página):** página «Retenciones de IVA e ISR» con pestañas Mes (anotar una y en lote), Por
     resolver y Enteros (matriz del año, marcar y anular); imprimir con `window.print()` y Excel.
-14. **L5-7a (servidor, períodos y control):** configuración `control_de_declarados`, migración `0028`,
+14. **L5-7a (servidor, períodos y control) — hecho el 2026-10-20 (migración `0028`):** configuración `control_de_declarados`, migración `0028`,
     `ControlDePeriodosEnBaseDeDatos` (con `modo`), `PeriodoDeclarado` con `periodoAbiertoPropuesto`, bloqueo de vigencias
     fiscales, aviso preciso con el control apagado; pruebas de bloqueo y concurrencia.
-15. **L5-8a (servidor, declarar):** foto, diferencia, declarar, reabrir, rectificar, encender y apagar el control,
+15. **L5-8a (servidor, declarar) — hecho el 2026-10-20 (número y fecha opcionales; el bloqueo se enciende y apaga con `POST …/periodos/control/encender|apagar`):** foto, diferencia, declarar, reabrir, rectificar, encender y apagar el control,
     revisión con avisos de bandeja y conciliación (los de L4 entran cuando existan L4-9 y L4-10), eventos; permisos
     `periodos.*`; pruebas.
 16. **L5-8b (cliente, períodos):** página de períodos (año, estado, historial, «cambió desde la declaración», revisión,

@@ -8,6 +8,7 @@ import { rutasDeCombustibles } from './composicion/combustibles.js';
 import { configuracionDelLibroDeCompras } from './configuracion.js';
 import { rutasDeVigenciasDeCombustible } from './composicion/vigencias-de-combustible.js';
 import { rutasDeLibro } from './composicion/libro.js';
+import { rutasDePeriodosComponidas } from './composicion/periodos.js';
 import { rutasDeRetencionesComponidas } from './composicion/retenciones.js';
 // generador: importaciones
 
@@ -22,6 +23,7 @@ function componerRutas() {
     rutasDeDocumentosComponidas(),
     rutasDeLibro(),
     rutasDeRetencionesComponidas(),
+    rutasDePeriodosComponidas(),
     // generador: rutas
   ]);
 }
@@ -94,6 +96,18 @@ export const moduloLibroDeCompras: DefinicionModulo = {
     {
       clave: 'libro-de-compras.retenciones.enterar',
       descripcion: 'Marcar como enterados, corregir y anular los pagos de las retenciones',
+    },
+    {
+      clave: 'libro-de-compras.periodos.ver',
+      descripcion: 'Ver los períodos del libro, su historial de declaraciones y lo que cambió desde declararlos',
+    },
+    {
+      clave: 'libro-de-compras.periodos.declarar',
+      descripcion: 'Declarar y rectificar períodos del libro y encender el bloqueo de los períodos declarados',
+    },
+    {
+      clave: 'libro-de-compras.periodos.reabrir',
+      descripcion: 'Reabrir períodos declarados y apagar el bloqueo de los períodos declarados',
     },
     // generador: permisos
   ],
