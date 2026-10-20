@@ -632,3 +632,12 @@ usuario puede marcar `no_vinculado` (C); 3) sin retenciones sobre NDEB, con avis
 4) preguntar la clase de cargo para intereses (sí, solo aviso y propuesta); 5) mantener el bloqueo de C4 (sí);
 6) nota de crédito tardía con «vence la víspera» (sí, tras confirmar el artículo). Más las de diseño R3-a a R3-i del
 arquitecto (§3.2c), todas con su recomendación.
+
+**Decisiones del usuario (2026-10-19), todas las recomendadas:** ratifica la regla del ICT (el comprador de FARP, FCRP,
+FPEC y FCPC no retiene; la FEPE va en un paso propio si un cliente la pide). Nota de débito: motivo propio
+`nota_de_debito_tardia` (art. 17) con el IVA al costo; NDEB en período general sobre factura sin crédito: da crédito y
+el usuario puede marcarla `no_vinculado`; sin retenciones sobre la NDEB, con aviso a las empresas agentes, hasta
+confirmar en Retenciones Web; clase de cargo (precio, intereses, otros) solo para aviso y propuesta de concepto
+financiero; bloqueo de NDEB con IVA sobre factura exenta; plazos en meses con «vence la víspera» (Código Tributario,
+confirmar artículo) para la nota de crédito tardía y la NDEB; se aprueba el diseño R3-a a R3-i del arquitecto con los
+ajustes del contador. La vista previa (`calcular`) no exige destino; solo registrar.
