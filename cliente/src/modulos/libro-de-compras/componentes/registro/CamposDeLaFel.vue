@@ -4,7 +4,11 @@ import { Info } from 'lucide-vue-next';
 import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
-import { esFacturaEspecial, familiaDelCodigo } from '../../composables/documentos/tipos-de-documento-sat';
+import {
+  esFacturaEspecial,
+  esNotaDeDebito,
+  familiaDelCodigo,
+} from '../../composables/documentos/tipos-de-documento-sat';
 import type { EdicionDeDocumento } from '../../composables/documentos/edicion-de-documento';
 import { alCambiarElMotivo, alMarcarLaCasilla } from '../../composables/documentos/reglas-del-formulario-de-documento';
 import CamposDeFacturaEspecial from './CamposDeFacturaEspecial.vue';
@@ -19,11 +23,18 @@ const motivos = Object.entries(OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO)
   .map(([valor, texto]) => ({ valor: valor as NonNullable<EdicionDeDocumento['motivoFueraDelLibro']>, texto }))
   .sort((a, b) => a.texto.localeCompare(b.texto, 'es'));
 const esEspecial = computed(() => esFacturaEspecial(edicion.value.tipoDte));
+const esDebito = computed(() => esNotaDeDebito(edicion.value.tipoDte));
 const esRecibo = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'recibo');
 const conFel = computed(() => edicion.value.muestraEnReportesSat || edicion.value.motivoFueraDelLibro !== 'sin_fel');
 const explicacion = computed(() => {
   const motivo = edicion.value.motivoFueraDelLibro;
   return motivo ? textoFueraDelLibro(motivo) : null;
+});
+
+const descripcionDeLaCasilla = computed(() => {
+  if (esRecibo.value) return 'Un recibo no es un documento FEL: nunca se muestra en los reportes de la SAT.';
+  if (esDebito.value) return 'La nota de débito siempre se muestra en los reportes de la SAT.';
+  return 'Déjelo activado cuando la FEL está a nombre de la empresa. Desactívelo solo si el documento no se reporta a la SAT.';
 });
 
 const marcar = (marcada: boolean) => alMarcarLaCasilla(edicion.value, marcada);
@@ -40,12 +51,8 @@ function elegirMotivo(motivo: EdicionDeDocumento['motivoFueraDelLibro'] | undefi
     <CampoInterruptor
       :model-value="edicion.muestraEnReportesSat"
       etiqueta="Se muestra en reportes SAT"
-      :descripcion="
-        esRecibo
-          ? 'Un recibo no es un documento FEL: nunca se muestra en los reportes de la SAT.'
-          : 'Déjelo activado cuando la FEL está a nombre de la empresa. Desactívelo solo si el documento no se reporta a la SAT.'
-      "
-      :deshabilitado="esRecibo"
+      :descripcion="descripcionDeLaCasilla"
+      :deshabilitado="esRecibo || esDebito"
       @update:model-value="marcar"
     />
 

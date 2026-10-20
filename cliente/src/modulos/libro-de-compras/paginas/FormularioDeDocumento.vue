@@ -71,6 +71,7 @@ watch(registro.problema, async (problema) => {
             :proveedores="catalogos.proveedores.value"
             :destinos="catalogos.destinos.value"
             :facturas="registro.documentos.value"
+            :conceptos="catalogos.conceptos.value"
             :periodo-propuesto="propuestas.periodo.value"
             :fecha-propuesta="
               propuestas.fechaDeRecepcion.value ? formatearFecha(propuestas.fechaDeRecepcion.value) : null

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   esFacturaEspecial,
+  esNotaDeDebito,
+  llevaFacturaAfectada,
   CODIGO_DE_RECIBO,
   familiaDelCodigo,
   GRUPOS_DE_TIPOS_SAT,
@@ -39,13 +41,17 @@ describe('tipos de documento por código de la SAT', () => {
     expect(textos.FCAM).toBe('FCAM — Factura cambiaria');
     expect(textos.FARP).toBe('FARP — Factura contribuyente régimen primario');
     expect(textos.NCRE).toBe('NCRE — Nota de crédito');
-    expect(textos.NDEB).toBe('NDEB — Nota de débito (próximamente)');
+    expect(textos.NDEB).toBe('NDEB — Nota de débito');
   });
 
-  it('la nota de débito deduce su familia y se ve deshabilitada hasta su formulario', () => {
+  it('la nota de débito deduce su familia y se puede elegir', () => {
     expect(familiaDelCodigo('NDEB')).toBe('nota_de_debito');
     const ndeb = opcionesDeTipoSat().find((opcion) => opcion.valor === 'NDEB');
-    expect(ndeb).toMatchObject({ deshabilitada: true, grupo: 'Notas de débito' });
+    expect(ndeb).toMatchObject({ texto: 'NDEB — Nota de débito', grupo: 'Notas de débito' });
+    expect(ndeb?.deshabilitada).toBeUndefined();
+    expect(esNotaDeDebito('NDEB')).toBe(true);
+    expect(llevaFacturaAfectada('NDEB') && llevaFacturaAfectada('NCRE')).toBe(true);
+    expect(llevaFacturaAfectada('FACT')).toBe(false);
   });
 
   it('usa el patrón de nombres de la SAT (sin «de» y con «pequeño contribuyente»)', () => {
@@ -76,8 +82,7 @@ describe('tipos de documento por código de la SAT', () => {
     expect(de('FAPE')?.texto).toContain('(régimen derogado, solo antes de julio de 2025)');
     expect(de('FACA')?.texto).toContain('régimen derogado');
     expect(de('FESP')).toMatchObject({ texto: 'FESP — Factura especial' });
-    const deshabilitadas = opciones.filter((opcion) => opcion.deshabilitada).map((opcion) => opcion.valor);
-    expect(deshabilitadas).toEqual(['NDEB']);
+    expect(opciones.some((opcion) => opcion.deshabilitada)).toBe(false);
     expect(esFacturaEspecial('FESP')).toBe(true);
     expect(esFacturaEspecial('FACT')).toBe(false);
   });

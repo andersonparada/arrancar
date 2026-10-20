@@ -4,7 +4,7 @@ import type { ProveedorParaRegistro } from '../../servicios/registro-de-document
 import { DESTINOS_DE_DOCUMENTO } from '../../textos-de-documentos';
 import type { EdicionDeDocumento } from './edicion-de-documento';
 import { etiquetaDePeriodo, mesDe } from './filtros-de-documentos';
-import { esFacturaEspecial, familiaDelCodigo } from './tipos-de-documento-sat';
+import { esFacturaEspecial, esNotaDeDebito, familiaDelCodigo, llevaFacturaAfectada } from './tipos-de-documento-sat';
 
 /** Las mismas familias que acepta el servidor (`resolutor-de-factura.ts`); la factura especial no se rebaja (R2-e). */
 const TIPOS_QUE_SE_REBAJAN = [
@@ -27,10 +27,14 @@ export const opcionesDeProveedores = (proveedores: ProveedorParaRegistro[]) =>
 export const opcionesDeDestinos = (claves: DestinoDeDocumento[]) =>
   porNombre(claves.map((clave) => ({ valor: clave, texto: DESTINOS_DE_DOCUMENTO[clave] })));
 
-/** Las facturas vigentes que una nota puede rebajar: la más reciente primero. */
-export function opcionesDeFacturas(documentos: DocumentoEnLista[]) {
+/**
+ * Las facturas vigentes que una nota puede corregir: la más reciente primero. La nota de débito solo va sobre
+ * facturas del libro (`soloEnElLibro`).
+ */
+export function opcionesDeFacturas(documentos: DocumentoEnLista[], soloEnElLibro = false) {
   return documentos
     .filter(({ tipo }) => TIPOS_QUE_SE_REBAJAN.includes(tipo))
+    .filter(({ muestraEnReportesSat }) => muestraEnReportesSat || !soloEnElLibro)
     .sort((a, b) => b.fechaEmision.localeCompare(a.fechaEmision))
     .map((documento) => ({
       valor: documento.id,
@@ -80,6 +84,24 @@ function soltarFacturaEspecial(edicion: EdicionDeDocumento, proveedor: Proveedor
 }
 
 /**
+ * La factura de una nota no sirve para la otra clase de nota (la de débito solo admite facturas del libro) y la clase
+ * de cargo es solo de la nota de débito, que siempre va en el libro.
+ */
+function ajustarLaNota(edicion: EdicionDeDocumento, codigoAnterior: string): void {
+  const familia = familiaDelCodigo(edicion.tipoDte);
+  if (!llevaFacturaAfectada(edicion.tipoDte) || familia !== familiaDelCodigo(codigoAnterior)) {
+    edicion.documentoAfectadoId = null;
+  }
+  if (!esNotaDeDebito(edicion.tipoDte)) {
+    edicion.claseDeCargo = null;
+    return;
+  }
+  edicion.muestraEnReportesSat = true;
+  edicion.motivoFueraDelLibro = null;
+  edicion.nitReceptor = '';
+}
+
+/**
  * Un recibo no es un documento FEL, así que nunca va en el libro; los demás tipos vuelven a él al dejar de serlo.
  * La factura especial cambia quién es el emisor y quién el vendedor.
  */
@@ -88,9 +110,9 @@ export function alCambiarElTipo(
   codigoAnterior: string,
   proveedor?: ProveedorParaRegistro,
 ): void {
-  const familia = familiaDelCodigo(edicion.tipoDte);
   edicion.confirmarCambioDeRegimen = false;
-  if (familia !== 'nota_de_credito') edicion.documentoAfectadoId = null;
+  ajustarLaNota(edicion, codigoAnterior);
+  const familia = familiaDelCodigo(edicion.tipoDte);
   if (esFacturaEspecial(edicion.tipoDte)) return prepararFacturaEspecial(edicion, proveedor);
   if (esFacturaEspecial(codigoAnterior)) soltarFacturaEspecial(edicion, proveedor);
   if (familia === 'recibo') {

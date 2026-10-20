@@ -4,7 +4,8 @@ import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import {
   esFacturaEspecial,
-  familiaDelCodigo,
+  esNotaDeDebito,
+  llevaFacturaAfectada,
   opcionesDeTipoSat,
 } from '../../composables/documentos/tipos-de-documento-sat';
 import type { EdicionDeDocumento } from '../../composables/documentos/edicion-de-documento';
@@ -14,6 +15,8 @@ import {
   opcionesDePeriodoDelDocumento,
   opcionesDeProveedores,
 } from '../../composables/documentos/reglas-del-formulario-de-documento';
+import CamposDeNotaDeDebito from './CamposDeNotaDeDebito.vue';
+import type { ConceptoDeGasto } from '../../servicios/conceptos-de-gasto.api';
 import type { DestinoDeDocumento, DocumentoEnLista } from '../../servicios/documentos.api';
 import type { ProveedorParaRegistro } from '../../servicios/registro-de-documentos.api';
 
@@ -22,6 +25,7 @@ const props = defineProps<{
   proveedores: ProveedorParaRegistro[];
   destinos: DestinoDeDocumento[];
   facturas: DocumentoEnLista[];
+  conceptos: ConceptoDeGasto[];
   periodoPropuesto: string | null;
   fechaPropuesta: string | null;
   errores: Record<string, string>;
@@ -37,10 +41,14 @@ const opcionesDeDestino = computed(() => [
   { valor: null, texto: 'Elija el destino' },
   ...opcionesDeDestinos(props.destinos),
 ]);
-const facturasDeLaNota = computed(() => [
-  { valor: null, texto: props.facturas.length ? 'Elija la factura' : 'Este proveedor no tiene facturas vigentes' },
-  ...opcionesDeFacturas(props.facturas),
-]);
+const esDebito = computed(() => esNotaDeDebito(edicion.value.tipoDte));
+const facturasDeLaNota = computed(() => {
+  const facturas = opcionesDeFacturas(props.facturas, esDebito.value);
+  const sinFacturas = esDebito.value
+    ? 'Este proveedor no tiene facturas vigentes en el libro'
+    : 'Este proveedor no tiene facturas vigentes';
+  return [{ valor: null, texto: facturas.length ? 'Elija la factura' : sinFacturas }, ...facturas];
+});
 const periodos = computed(() =>
   opcionesDePeriodoDelDocumento(new Date(), edicion.value.periodo, props.periodoPropuesto),
 );
@@ -51,7 +59,7 @@ const ayudaDeLaRecepcion = computed(() => {
     ? `Si la deja vacía se usa ${props.fechaPropuesta}.`
     : 'Si la deja vacía se usa la de hoy.';
 });
-const esNota = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'nota_de_credito');
+const esNota = computed(() => llevaFacturaAfectada(edicion.value.tipoDte));
 </script>
 
 <template>
@@ -84,10 +92,17 @@ const esNota = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'nota_
       v-if="esNota"
       v-model="edicion.documentoAfectadoId"
       class="sm:col-span-2 lg:col-span-3"
-      etiqueta="Factura que rebaja esta nota"
+      :etiqueta="esDebito ? 'Factura que aumenta esta nota' : 'Factura que rebaja esta nota'"
       requerido
       :opciones="facturasDeLaNota"
       :error="errores.documentoAfectadoId"
+    />
+    <CamposDeNotaDeDebito
+      v-if="esDebito"
+      v-model="edicion"
+      class="sm:col-span-2 lg:col-span-3"
+      :conceptos="conceptos"
+      :errores="errores"
     />
     <CampoTexto
       v-model="edicion.serie"

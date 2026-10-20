@@ -1044,7 +1044,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 5. **R3-5 (servidor, retenciones; solo si el contador las confirma):** 3.2c.8; pruebas puras y de API.
 6. **R3-6 (cliente, lista y ficha) — HECHO (2026-10-19; el total ajustado y el `tipo` de las notas llegan con R3-3):** textos de la familia y del código (nombre de R3-i), notas de la factura con su
    tipo y el total ajustado en la ficha, motivos heredados. **No depende de L3-8.**
-7. **R3-7 (cliente, formulario):** «Nota de débito del proveedor» en el selector de código; elegir la factura (solo las
+7. **R3-7 (cliente, formulario) — HECHO (2026-10-20; la factura se ofrece solo si está en el libro, la clase de cargo es opcional y los conceptos de las líneas no se copian de la factura: con «Intereses» se propone el gasto financiero):** «Nota de débito del proveedor» en el selector de código; elegir la factura (solo las
    que la admiten); conceptos de las líneas propuestos desde la factura; avisos. **Depende de R2-8** (L3-8 ya está
    hecho: se extiende su formulario).
 8. **R3-8 (QA):** de punta a punta: factura con crédito, NDEB de intereses, nota de crédito que solo cabe con ella,

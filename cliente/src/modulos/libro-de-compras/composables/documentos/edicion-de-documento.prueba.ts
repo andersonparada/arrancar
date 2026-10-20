@@ -115,6 +115,27 @@ describe('cuerpoDeDocumento', () => {
     expect(cuerpoDeDocumento(nota, [], 'registro')?.documentoAfectadoId).toBe('f-1');
   });
 
+  it('la nota de débito lleva la factura y la clase de cargo, y la nota de crédito no manda la clase', () => {
+    const debito = facturaCompleta({ tipoDte: 'NDEB', documentoAfectadoId: 'f-1', claseDeCargo: 'intereses' });
+    expect(cuerpoDeDocumento(debito, [], 'registro')).toMatchObject({
+      tipoDte: 'NDEB',
+      documentoAfectadoId: 'f-1',
+      claseDeCargo: 'intereses',
+    });
+    const credito = facturaCompleta({ tipoDte: 'NCRE', documentoAfectadoId: 'f-1', claseDeCargo: 'otros' });
+    expect(cuerpoDeDocumento(credito, [], 'registro')?.claseDeCargo).toBeNull();
+    expect(cuerpoDeDocumento(facturaCompleta({ tipoDte: 'NDEB' }), [], 'registro')?.claseDeCargo).toBeNull();
+  });
+
+  it('la nota de débito pide la factura que aumenta antes de registrar', () => {
+    const pendientes = pendientesDelRegistro(facturaCompleta({ tipoDte: 'NDEB' }));
+    expect(pendientes).toContain('elegir la factura que aumenta la nota');
+    expect(pendientesDelRegistro(facturaCompleta({ tipoDte: 'NCRE' }))).toContain(
+      'elegir la factura que rebaja la nota',
+    );
+    expect(pendientesDelRegistro(facturaCompleta({ tipoDte: 'NDEB', documentoAfectadoId: 'f-1' }))).toEqual([]);
+  });
+
   it('manda el código de la SAT sin la familia cuando hay FEL', () => {
     const cuerpo = cuerpoDeDocumento(facturaCompleta({ tipoDte: 'FARP' }), [], 'registro');
     expect(cuerpo?.tipoDte).toBe('FARP');

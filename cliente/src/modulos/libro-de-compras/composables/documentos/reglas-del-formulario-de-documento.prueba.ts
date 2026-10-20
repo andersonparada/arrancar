@@ -68,6 +68,20 @@ describe('opciones de los selectores', () => {
     expect(opciones[0]?.destino).toBe('cuentas-por-pagar');
   });
 
+  it('la nota de débito solo ofrece facturas que están en el libro; la de crédito ofrece todas', () => {
+    const documentos = [
+      documento({ id: 'a', numero: '1' }),
+      documento({ id: 'b', numero: '2', muestraEnReportesSat: false }),
+      documento({ id: 'c', numero: '3', tipo: 'factura_especial' }),
+    ];
+    expect(opcionesDeFacturas(documentos, true).map((o) => o.valor)).toEqual(['a']);
+    expect(
+      opcionesDeFacturas(documentos)
+        .map((o) => o.valor)
+        .sort(),
+    ).toEqual(['a', 'b']);
+  });
+
   it('el período ofrece el propuesto, y conserva uno antiguo que ya estaba elegido', () => {
     const opciones = opcionesDePeriodoDelDocumento(HOY, '2020-01', '2026-10');
     expect(opciones[0]).toEqual({ valor: '', texto: 'Propuesto: octubre de 2026' });
@@ -93,6 +107,23 @@ describe('reglas del formulario', () => {
     edicion.tipoDte = 'FACT';
     alCambiarElTipo(edicion, 'NCRE');
     expect(edicion).toMatchObject({ documentoAfectadoId: null, confirmarCambioDeRegimen: false });
+  });
+
+  it('la nota de débito siempre va en el libro, aunque venga de un recibo, y conserva su clase de cargo', () => {
+    const edicion = { ...edicionVacia(HOY), muestraEnReportesSat: false, motivoFueraDelLibro: 'sin_fel' as const };
+    edicion.tipoDte = 'NDEB';
+    alCambiarElTipo(edicion, 'RECIBO');
+    expect(edicion).toMatchObject({ muestraEnReportesSat: true, motivoFueraDelLibro: null });
+    edicion.claseDeCargo = 'precio';
+    edicion.tipoDte = 'FACT';
+    alCambiarElTipo(edicion, 'NDEB');
+    expect(edicion.claseDeCargo).toBeNull();
+  });
+
+  it('pasar de nota de crédito a de débito olvida la factura elegida, que pudo no estar en el libro', () => {
+    const edicion = { ...edicionVacia(HOY), documentoAfectadoId: 'f-1', tipoDte: 'NDEB' };
+    alCambiarElTipo(edicion, 'NCRE');
+    expect(edicion.documentoAfectadoId).toBeNull();
   });
 
   it('desmarcar la casilla propone «sin FEL» y marcarla borra el receptor', () => {

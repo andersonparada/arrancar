@@ -36,6 +36,22 @@ const PREGUNTAS = {
 };
 
 describe('problemaDeError', () => {
+  it('los errores de la nota de débito salen en el campo de la factura o de la fecha', () => {
+    for (const codigo of [
+      'nota_con_iva_de_factura_exenta',
+      'nota_de_debito_con_iva_de_factura_sin_iva',
+      'nota_supera_la_factura',
+      'factura_no_sirve_para_la_nota',
+    ]) {
+      expect(errorDelTipo(error(422, codigo, 'Mensaje del servidor.'))).toEqual({
+        documentoAfectadoId: 'Mensaje del servidor.',
+      });
+    }
+    const fecha = errorDelTipo(error(422, 'nota_de_debito_anterior_a_la_factura', 'x'));
+    expect(fecha?.fechaEmision).toContain('fecha de emisión');
+    expect(problemaDeError(error(422, 'nota_supera_la_factura', 'x'))).toBeNull();
+  });
+
   it('faltan_datos_fiscales_del_proveedor trae las preguntas del servidor', () => {
     const problema = problemaDeError(error(422, 'faltan_datos_fiscales_del_proveedor', 'Conteste.', PREGUNTAS));
     expect(problema).toMatchObject({ tipo: 'datos_fiscales', mensaje: 'Conteste.' });

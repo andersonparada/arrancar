@@ -33,6 +33,9 @@ export interface DatosFiscalesContestados {
   esAgenteDeRetencionIva: boolean;
 }
 
+/** Por qué cobra más el proveedor en una nota de débito; el servidor solo lo usa para avisar. */
+export type ClaseDeCargo = 'precio' | 'intereses' | 'otros';
+
 /** El cuerpo de calcular y de registrar un documento; el dinero viaja como texto. */
 export interface SolicitudDeDocumento {
   /** La familia; opcional: se deduce de `tipoDte`. Un recibo (sin FEL) la manda y no manda código. */
@@ -52,6 +55,8 @@ export interface SolicitudDeDocumento {
   fechaRecepcion: string | null;
   periodo: string | null;
   documentoAfectadoId: string | null;
+  /** Solo en una nota de débito. */
+  claseDeCargo?: ClaseDeCargo | null;
   ivaDeLaFel: string | null;
   observaciones: string | null;
   lineas: LineaSolicitada[];

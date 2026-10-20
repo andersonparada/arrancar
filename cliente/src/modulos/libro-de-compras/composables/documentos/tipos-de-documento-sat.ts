@@ -12,8 +12,6 @@ export interface TipoSat {
   familia: TipoDeDocumento;
   /** Régimen derogado: solo vale para lo emitido antes de la fecha de derogación (el servidor decide). */
   derogado?: boolean;
-  /** Se ve en el selector, pero no se puede elegir todavía (su formulario llega en un paso posterior). */
-  proximamente?: boolean;
 }
 
 const deLaFamilia =
@@ -25,7 +23,7 @@ const pequeno = deLaFamilia('factura_pequeno_contribuyente');
 const primarioPecuario = deLaFamilia('factura_primario_pecuario');
 const especial = deLaFamilia('factura_especial');
 const notaDeCredito = deLaFamilia('nota_de_credito');
-const notaDeDebito = deLaFamilia('nota_de_debito', { proximamente: true });
+const notaDeDebito = deLaFamilia('nota_de_debito');
 const pequenoElectronico = deLaFamilia('factura_pequeno_contribuyente_electronico', { derogado: true });
 const agropecuario = deLaFamilia('factura_contribuyente_agropecuario', { derogado: true });
 
@@ -66,15 +64,23 @@ export const GRUPOS_DE_TIPOS_SAT: Record<TipoDeDocumento, string> = {
 /** Si el código es el de la factura especial, que la emite la empresa y no el proveedor. */
 export const esFacturaEspecial = (codigo: string): boolean => familiaDelCodigo(codigo) === 'factura_especial';
 
+/** Si el código es el de una nota de débito del proveedor, que siempre va en el libro y aumenta una factura. */
+export const esNotaDeDebito = (codigo: string): boolean => familiaDelCodigo(codigo) === 'nota_de_debito';
+
+/** Las notas (de crédito y de débito) corrigen una factura que hay que elegir. */
+export const llevaFacturaAfectada = (codigo: string): boolean => {
+  const familia = familiaDelCodigo(codigo);
+  return familia === 'nota_de_credito' || familia === 'nota_de_debito';
+};
+
 /** La familia a la que pertenece un código del selector; `null` si no hay ninguno elegido o no se conoce. */
 export function familiaDelCodigo(codigo: string): TipoDeDocumento | null {
   if (codigo === CODIGO_DE_RECIBO) return 'recibo';
   return TIPOS_SAT.find((tipoSat) => tipoSat.codigo === codigo)?.familia ?? null;
 }
 
-function textoDelTipo({ codigo, nombre, derogado, proximamente }: TipoSat): string {
+function textoDelTipo({ codigo, nombre, derogado }: TipoSat): string {
   const hasta = mesDeFecha(FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019);
-  if (proximamente) return `${codigo} — ${nombre} (próximamente)`;
   return derogado ? `${codigo} — ${nombre} (régimen derogado, solo antes de ${hasta})` : `${codigo} — ${nombre}`;
 }
 
@@ -84,7 +90,6 @@ export function opcionesDeTipoSat(): (OpcionBuscable<string> & { grupo: string }
     valor: tipoSat.codigo,
     texto: textoDelTipo(tipoSat),
     grupo: GRUPOS_DE_TIPOS_SAT[tipoSat.familia],
-    deshabilitada: tipoSat.proximamente === true,
   }));
   return [...opciones, { valor: CODIGO_DE_RECIBO, texto: 'Recibo (sin FEL)', grupo: GRUPOS_DE_TIPOS_SAT.recibo }];
 }

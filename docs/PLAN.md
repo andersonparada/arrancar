@@ -1024,3 +1024,14 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `aaaa-mm-dd`, fórmulas por su valor, sin valor o con error vacía) y los encabezados se buscan entre las 20 primeras filas
   (gana la fila con más coincidencias, comparadas sin tildes, mayúsculas ni `. : # ( )`); devuelve `reconocidos` y
   `noReconocidos`, o `EncabezadosNoEncontrados` con los esperados. Sin lógica de la SAT.
+
+
+- 2026-10-20 — **Libro de compras R3-7 (cliente): nota de débito del proveedor en el formulario de registro.** `NDEB` se puede
+  elegir (ya no dice «próximamente»). Pide «Factura que aumenta esta nota» (vigentes del proveedor, **solo las del libro** y sin la
+  factura especial; el destino se toma de la factura) y «¿Por qué cobra más el proveedor?» (`claseDeCargo`: Diferencia de precio,
+  Intereses, Otros cargos; opcional, con ayuda corta). Con «Intereses» la primera línea sin concepto se propone con el concepto
+  activo de gasto financiero (nombre con «financier…» y si no «interés…»); si no existe, un aviso dice cómo seguir. La casilla
+  «Se muestra en reportes SAT» queda marcada y deshabilitada con su explicación. Los errores `nota_con_iva_de_factura_exenta`,
+  `nota_de_debito_con_iva_de_factura_sin_iva`, `nota_supera_la_factura`, `factura_no_sirve_para_la_nota` e
+  `iva_de_notas_excede_el_de_la_factura` salen en el campo de la factura; `nota_de_debito_anterior_a_la_factura`, en la fecha de
+  emisión. Los avisos (agentes, intereses) y el motivo `nota_de_debito_tardia` ya los mostraba la vista previa.

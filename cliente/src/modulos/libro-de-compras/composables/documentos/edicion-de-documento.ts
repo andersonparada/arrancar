@@ -1,7 +1,7 @@
 import { textoONulo } from '@/modulos/core/utilidades/edicion';
 import type { DestinoDeDocumento, MotivoFueraDelLibro } from '../../servicios/documentos.api';
 import type { RetencionDeDocumento } from '../../servicios/documentos.api';
-import type { LineaSolicitada, SolicitudDeDocumento } from '../../servicios/registro-de-documentos.api';
+import type { ClaseDeCargo, LineaSolicitada, SolicitudDeDocumento } from '../../servicios/registro-de-documentos.api';
 import { ajustesParaElCuerpo, type AjustesEnEdicion } from './ajustes-de-retenciones';
 import {
   lineaCompleta,
@@ -11,7 +11,7 @@ import {
   type LineaEnEdicion,
 } from './lineas-del-documento';
 import { datosFiscalesContestados, type RespuestasFiscales } from './preguntas-fiscales';
-import { esFacturaEspecial, familiaDelCodigo } from './tipos-de-documento-sat';
+import { esFacturaEspecial, esNotaDeDebito, familiaDelCodigo, llevaFacturaAfectada } from './tipos-de-documento-sat';
 
 type Valor = string | number | null | undefined;
 
@@ -22,6 +22,8 @@ export interface EdicionDeDocumento {
   proveedorId: string | null;
   destino: DestinoDeDocumento | null;
   documentoAfectadoId: string | null;
+  /** Solo en la nota de débito; vacío es «sin indicar». */
+  claseDeCargo: ClaseDeCargo | null;
   numero: string;
   serie: string;
   fechaEmision: string;
@@ -52,13 +54,15 @@ const dosDigitos = (numero: number) => String(numero).padStart(2, '0');
 export const fechaEnTexto = (fecha: Date): string =>
   `${fecha.getFullYear()}-${dosDigitos(fecha.getMonth() + 1)}-${dosDigitos(fecha.getDate())}`;
 
+const SIN_FACTURA_AFECTADA = { documentoAfectadoId: null, claseDeCargo: null };
+
 /** Un documento nuevo: factura, en el libro, emitida hoy y con una línea en blanco. */
 export function edicionVacia(hoy: Date): EdicionDeDocumento {
   return {
     tipoDte: 'FACT',
     proveedorId: null,
     destino: null,
-    documentoAfectadoId: null,
+    ...SIN_FACTURA_AFECTADA,
     numero: '',
     serie: '',
     fechaEmision: fechaEnTexto(hoy),
@@ -95,6 +99,9 @@ function pendientesDeFacturaEspecial(edicion: EdicionDeDocumento): [boolean, str
   ];
 }
 
+const textoDeLaFacturaPendiente = (edicion: EdicionDeDocumento): string =>
+  esNotaDeDebito(edicion.tipoDte) ? 'elegir la factura que aumenta la nota' : 'elegir la factura que rebaja la nota';
+
 /** Lo que falta para poder registrar, en lenguaje del usuario; vacío si ya se puede. */
 export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
   const usadas = conLineasUsadas(edicion.lineas);
@@ -103,10 +110,7 @@ export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
     [edicion.numero.trim() === '', 'escribir el número del documento'],
     [edicion.fechaEmision === '', 'poner la fecha de emisión'],
     [!familiaDelCodigo(edicion.tipoDte), 'elegir el tipo de documento'],
-    [
-      familiaDelCodigo(edicion.tipoDte) === 'nota_de_credito' && !edicion.documentoAfectadoId,
-      'elegir la factura que rebaja la nota',
-    ],
+    [llevaFacturaAfectada(edicion.tipoDte) && !edicion.documentoAfectadoId, textoDeLaFacturaPendiente(edicion)],
     [!edicion.muestraEnReportesSat && !edicion.motivoFueraDelLibro, 'decir por qué no se muestra en reportes SAT'],
     ...pendientesDeFacturaEspecial(edicion),
     [usadas.length === 0, 'escribir al menos una línea'],
@@ -167,7 +171,8 @@ function encabezadoDelCuerpo(edicion: EdicionDeDocumento) {
     fechaEmision: edicion.fechaEmision,
     fechaRecepcion: textoONulo(edicion.fechaRecepcion),
     periodo: edicion.periodo ? `${edicion.periodo}-01` : null,
-    documentoAfectadoId: familiaDelCodigo(edicion.tipoDte) === 'nota_de_credito' ? edicion.documentoAfectadoId : null,
+    documentoAfectadoId: llevaFacturaAfectada(edicion.tipoDte) ? edicion.documentoAfectadoId : null,
+    claseDeCargo: esNotaDeDebito(edicion.tipoDte) ? edicion.claseDeCargo : null,
     ivaDeLaFel: montoEnTexto(edicion.ivaDeLaFel),
     observaciones: textoONulo(edicion.observaciones),
   };

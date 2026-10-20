@@ -22,6 +22,7 @@ interface ErrorDeCampo {
 }
 
 const delTipo = (texto: (error: ErrorApi) => string): ErrorDeCampo => ({ campo: 'tipoDte', texto });
+const delaFactura = (texto: (error: ErrorApi) => string): ErrorDeCampo => ({ campo: 'documentoAfectadoId', texto });
 const delVendedor = (texto: (error: ErrorApi) => string): ErrorDeCampo => ({ campo: 'nitReceptor', texto });
 
 /** Los errores del tipo de documento y del vendedor de la factura especial se muestran en su campo. */
@@ -44,8 +45,19 @@ const ERRORES_DE_CAMPO: Record<string, ErrorDeCampo> = {
   ),
   nota_sobre_factura_especial: delTipo(
     () =>
-      'Una nota de crédito no puede rebajar una factura especial. Anule la FESP en su certificador, anule este registro y registre la nueva.',
+      'Una nota no puede corregir una factura especial. Anule la FESP en su certificador, anule este registro y registre la nueva.',
   ),
+  factura_afectada_incoherente: delaFactura((error) => error.message),
+  factura_no_sirve_para_la_nota: delaFactura((error) => error.message),
+  nota_supera_la_factura: delaFactura((error) => error.message),
+  iva_de_notas_excede_el_de_la_factura: delaFactura((error) => error.message),
+  nota_con_iva_de_factura_exenta: delaFactura((error) => error.message),
+  nota_de_debito_con_iva_de_factura_sin_iva: delaFactura((error) => error.message),
+  nota_de_debito_anterior_a_la_factura: {
+    campo: 'fechaEmision',
+    texto: () =>
+      'La nota de débito no puede ser anterior a la factura que aumenta. Corrija la fecha de emisión de la nota o elija otra factura.',
+  },
   vendedor_de_factura_especial_invalido: delVendedor(
     () => `${DATO_DEL_VENDEDOR} No puede quedar vacío, ser CF ni el NIT de su empresa.`,
   ),
