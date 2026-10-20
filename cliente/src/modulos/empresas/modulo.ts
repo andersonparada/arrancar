@@ -13,6 +13,13 @@ export const moduloEmpresas: DefinicionModuloCliente = {
       meta: { permiso: 'empresas.ver', titulo: VENTANAS_EMPRESAS.empresas.titulo },
     },
     {
+      path: '/empresas/:empresaId',
+      name: 'empresas.ficha',
+      component: () => import('./paginas/FichaDeEmpresa.vue'),
+      props: true,
+      meta: { permiso: 'empresas.ver', titulo: VENTANAS_EMPRESAS.empresas.titulo },
+    },
+    {
       path: '/empresas/tipos-de-localidad',
       name: 'empresas.tipos-de-localidad',
       component: () => import('./paginas/ListaDeTiposDeLocalidad.vue'),

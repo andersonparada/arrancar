@@ -70,6 +70,14 @@ describe('datos fiscales de la empresa', () => {
     expect(conRegimenDeIva(agente, 'general').agenteDeRetencionIva).toBe('exportador');
   });
 
+  it('jurídica que pasa de general a no afiliado no arrastra «utilidades»: propone exento', () => {
+    const general = conTipoDePersona(fiscalesDeEmpresaPorOmision(), 'juridica');
+    expect(conRegimenDeIva(general, 'general').regimenIsr).toBe('utilidades');
+    expect(conRegimenDeIva(general, 'no_afiliado').regimenIsr).toBe('exento');
+    const individual = conTipoDePersona(fiscalesDeEmpresaPorOmision(), 'individual');
+    expect(conRegimenDeIva(individual, 'no_afiliado').regimenIsr).toBeNull();
+  });
+
   it('al escoger la persona aplica la propuesta', () => {
     const individual = conRegimenDeIva(
       conTipoDePersona(fiscalesDeEmpresaPorOmision(), 'individual'),

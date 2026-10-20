@@ -956,3 +956,11 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   facturas que una nota rebaja ya excluía la FESP. La causa `fel_anulada_por_el_emisor` de una FESP se lee «FESP anulada
   por la empresa» en la ficha y en la ventana de anular (`textoDeCausa`). Pruebas puras nuevas en reglas del formulario,
   edición, errores, textos y anulación.
+
+- **2026-10-19 · Ficha de la empresa y correcciones del QA (cliente).** Nueva ficha `/empresas/:empresaId`
+  (`FichaDeEmpresa`, `usarFichaDeEmpresa`): datos generales con `DatosDelRegistro` y debajo `SeccionesEnLaFicha
+  en="empresa"`, donde ya se ven la vigencia fiscal, su historial y «Quitar» (R1-6). La tarjeta de la lista lleva a la
+  ficha; «Editar» (con `empresas.editar`) abre la ventana de siempre y la ficha trae «Empresas» para volver. Observación
+  4 del QA: al cambiar el régimen de IVA con la persona ya escogida, el ISR vuelve a la propuesta de la tabla (jurídica
+  de general a no afiliado propone «Exento») en vez de arrastrar la elección previa; con prueba. La lista de
+  proveedores del registro ya toma `proveedor.id` del papel (`GET /terceros?papel=proveedor`), sin cambios.

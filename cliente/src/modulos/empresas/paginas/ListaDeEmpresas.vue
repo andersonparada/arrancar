@@ -39,7 +39,7 @@ const {
 
     <ul class="grid gap-3 md:grid-cols-2">
       <li v-for="empresa in empresas" :key="empresa.id">
-        <TarjetaDeEmpresa :empresa="empresa" :en-uso="empresa.id === sesion.empresa?.id" @editar="abrir(empresa)" />
+        <TarjetaDeEmpresa :empresa="empresa" :en-uso="empresa.id === sesion.empresa?.id" />
       </li>
     </ul>
 

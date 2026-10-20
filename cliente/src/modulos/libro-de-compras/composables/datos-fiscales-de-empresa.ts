@@ -82,8 +82,13 @@ function conPropuesta(fiscales: FiscalesDeEmpresa): FiscalesDeEmpresa {
   };
 }
 
+/** Al cambiar de régimen de IVA el ISR escogido antes no se arrastra: se vuelve a la propuesta de la tabla. */
 export const conRegimenDeIva = (fiscales: FiscalesDeEmpresa, regimenIva: RegimenDeIva): FiscalesDeEmpresa =>
-  conPropuesta({ ...fiscales, regimenIva });
+  conPropuesta({
+    ...fiscales,
+    regimenIva,
+    regimenIsr: regimenIva === fiscales.regimenIva || !fiscales.tipoDePersona ? fiscales.regimenIsr : null,
+  });
 
 export const conTipoDePersona = (fiscales: FiscalesDeEmpresa, tipoDePersona: TipoDePersona): FiscalesDeEmpresa =>
   conPropuesta({ ...fiscales, tipoDePersona });
