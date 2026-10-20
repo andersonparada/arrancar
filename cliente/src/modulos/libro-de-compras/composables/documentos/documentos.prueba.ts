@@ -84,6 +84,7 @@ describe('textos de los motivos', () => {
     expect(Object.keys(MOTIVOS_FUERA_DEL_LIBRO).sort()).toEqual([
       'fel_a_consumidor_final',
       'fel_a_otro_nit',
+      'recibo_fel',
       'sin_fel',
     ]);
   });

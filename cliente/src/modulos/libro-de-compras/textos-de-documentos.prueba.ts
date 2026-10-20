@@ -60,6 +60,12 @@ describe('fuera del libro', () => {
     );
   });
 
+  it('el recibo FEL a la empresa dice que va en el gasto o la donación, sin crédito', () => {
+    expect(textoFueraDelLibro('recibo_fel')).toBe(
+      'Recibo FEL emitido a la empresa (no es documento del IVA): se registra para respaldar el gasto o la donación, sin crédito fiscal.',
+    );
+  });
+
   it('con ISR sobre utilidades agrega la advertencia de deducibilidad', () => {
     expect(textoFueraDelLibro('fel_a_consumidor_final', true)).toBe(
       'La FEL se emitió a consumidor final (CF) y no a nombre de la empresa: no se reporta a la SAT ni da crédito fiscal. Puede no ser deducible del ISR.',

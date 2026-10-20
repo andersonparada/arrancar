@@ -23,7 +23,7 @@ export type MotivoSinCredito =
   | 'contribuyente_agropecuario'
   | 'primario_pecuario'
   | 'nota_de_debito_tardia';
-export type MotivoFueraDelLibro = 'sin_fel' | 'fel_a_consumidor_final' | 'fel_a_otro_nit';
+export type MotivoFueraDelLibro = 'sin_fel' | 'fel_a_consumidor_final' | 'fel_a_otro_nit' | 'recibo_fel';
 
 /** Una fila de la lista; el dinero viaja como texto con dos decimales. */
 export interface DocumentoEnLista {

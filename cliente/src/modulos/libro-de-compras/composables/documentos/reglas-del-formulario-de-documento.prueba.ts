@@ -19,6 +19,7 @@ import {
 beforeEach(() => setActivePinia(createPinia()));
 
 const HOY = new Date(2026, 9, 18);
+const SIN_CONTEXTO = { proveedor: undefined, nitDeLaEmpresa: null };
 
 const documento = (cambios: Partial<DocumentoEnLista>): DocumentoEnLista => ({
   id: 'd-1',
@@ -95,34 +96,34 @@ describe('reglas del formulario', () => {
   it('un recibo nunca va en el libro; al dejar de serlo vuelve a él', () => {
     const edicion = edicionVacia(HOY);
     edicion.tipoDte = 'RECIBO';
-    alCambiarElTipo(edicion, 'FACT');
+    alCambiarElTipo(edicion, 'FACT', SIN_CONTEXTO);
     expect(edicion).toMatchObject({ muestraEnReportesSat: false, motivoFueraDelLibro: 'sin_fel' });
     edicion.tipoDte = 'FACT';
-    alCambiarElTipo(edicion, 'RECIBO');
+    alCambiarElTipo(edicion, 'RECIBO', SIN_CONTEXTO);
     expect(edicion).toMatchObject({ muestraEnReportesSat: true, motivoFueraDelLibro: null });
   });
 
   it('cambiar el tipo quita la factura afectada si ya no es una nota y olvida la confirmación del régimen', () => {
     const edicion = { ...edicionVacia(HOY), documentoAfectadoId: 'f-1', confirmarCambioDeRegimen: true };
     edicion.tipoDte = 'FACT';
-    alCambiarElTipo(edicion, 'NCRE');
+    alCambiarElTipo(edicion, 'NCRE', SIN_CONTEXTO);
     expect(edicion).toMatchObject({ documentoAfectadoId: null, confirmarCambioDeRegimen: false });
   });
 
   it('la nota de débito siempre va en el libro, aunque venga de un recibo, y conserva su clase de cargo', () => {
     const edicion = { ...edicionVacia(HOY), muestraEnReportesSat: false, motivoFueraDelLibro: 'sin_fel' as const };
     edicion.tipoDte = 'NDEB';
-    alCambiarElTipo(edicion, 'RECIBO');
+    alCambiarElTipo(edicion, 'RECIBO', SIN_CONTEXTO);
     expect(edicion).toMatchObject({ muestraEnReportesSat: true, motivoFueraDelLibro: null });
     edicion.claseDeCargo = 'precio';
     edicion.tipoDte = 'FACT';
-    alCambiarElTipo(edicion, 'NDEB');
+    alCambiarElTipo(edicion, 'NDEB', SIN_CONTEXTO);
     expect(edicion.claseDeCargo).toBeNull();
   });
 
   it('pasar de nota de crédito a de débito olvida la factura elegida, que pudo no estar en el libro', () => {
     const edicion = { ...edicionVacia(HOY), documentoAfectadoId: 'f-1', tipoDte: 'NDEB' };
-    alCambiarElTipo(edicion, 'NCRE');
+    alCambiarElTipo(edicion, 'NCRE', SIN_CONTEXTO);
     expect(edicion.documentoAfectadoId).toBeNull();
   });
 
@@ -178,7 +179,7 @@ describe('factura especial', () => {
       motivoFueraDelLibro: 'fel_a_consumidor_final' as const,
     };
     edicion.tipoDte = 'FESP';
-    alCambiarElTipo(edicion, 'FACT', proveedor);
+    alCambiarElTipo(edicion, 'FACT', { proveedor, nitDeLaEmpresa: null });
     expect(edicion).toMatchObject({
       muestraEnReportesSat: true,
       motivoFueraDelLibro: null,
@@ -190,9 +191,9 @@ describe('factura especial', () => {
 
   it('al dejarla el vendedor y la recepción propuestos se quitan y el emisor vuelve a ser el proveedor', () => {
     const edicion = { ...edicionVacia(HOY), tipoDte: 'FESP' };
-    alCambiarElTipo(edicion, 'FACT', proveedor);
+    alCambiarElTipo(edicion, 'FACT', { proveedor, nitDeLaEmpresa: null });
     edicion.tipoDte = 'FACT';
-    alCambiarElTipo(edicion, 'FESP', proveedor);
+    alCambiarElTipo(edicion, 'FESP', { proveedor, nitDeLaEmpresa: null });
     expect(edicion).toMatchObject({ nitEmisor: '1234567-8', nitReceptor: '', fechaRecepcion: '' });
   });
 

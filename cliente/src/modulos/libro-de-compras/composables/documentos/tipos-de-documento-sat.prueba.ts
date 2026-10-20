@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   esFacturaEspecial,
   esNotaDeDebito,
+  esReciboFel,
   llevaFacturaAfectada,
   CODIGO_DE_RECIBO,
   familiaDelCodigo,
@@ -42,6 +43,29 @@ describe('tipos de documento por código de la SAT', () => {
     expect(textos.FARP).toBe('FARP — Factura contribuyente régimen primario');
     expect(textos.NCRE).toBe('NCRE — Nota de crédito');
     expect(textos.NDEB).toBe('NDEB — Nota de débito');
+  });
+
+  it('los recibos FEL (RECI, RDON) son de la familia recibo, con su nombre y el grupo de recibos', () => {
+    expect(familiaDelCodigo('RECI')).toBe('recibo');
+    expect(familiaDelCodigo('RDON')).toBe('recibo');
+    const opciones = opcionesDeTipoSat();
+    expect(opciones.find((opcion) => opcion.valor === 'RECI')).toMatchObject({
+      texto: 'RECI — Recibo',
+      grupo: 'Recibos',
+    });
+    expect(opciones.find((opcion) => opcion.valor === 'RDON')).toMatchObject({
+      texto: 'RDON — Recibo por donación',
+      grupo: 'Recibos',
+    });
+    expect(opciones.at(-1)).toMatchObject({ valor: CODIGO_DE_RECIBO, grupo: 'Recibos' });
+  });
+
+  it('solo RECI y RDON son recibos FEL; el recibo sin FEL, las facturas y lo desconocido no', () => {
+    expect(esReciboFel('RECI')).toBe(true);
+    expect(esReciboFel('RDON')).toBe(true);
+    expect(esReciboFel(CODIGO_DE_RECIBO)).toBe(false);
+    expect(esReciboFel('FACT')).toBe(false);
+    expect(esReciboFel('')).toBe(false);
   });
 
   it('la nota de débito deduce su familia y se puede elegir', () => {

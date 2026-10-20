@@ -26,6 +26,7 @@ const notaDeCredito = deLaFamilia('nota_de_credito');
 const notaDeDebito = deLaFamilia('nota_de_debito');
 const pequenoElectronico = deLaFamilia('factura_pequeno_contribuyente_electronico', { derogado: true });
 const agropecuario = deLaFamilia('factura_contribuyente_agropecuario', { derogado: true });
+const recibo = deLaFamilia('recibo');
 
 /** Los códigos que ofrece el formulario, agrupados por familia. Los nombres de FAPE, FCPE y FAAE están por confirmar en el Libro de Reglas FEL. */
 export const TIPOS_SAT: TipoSat[] = [
@@ -46,6 +47,8 @@ export const TIPOS_SAT: TipoSat[] = [
   agropecuario('FCCA', 'Factura cambiaria contribuyente agropecuario'),
   agropecuario('FAAE', 'Factura contribuyente agropecuario régimen electrónico especial'),
   agropecuario('FCAE', 'Factura cambiaria contribuyente agropecuario régimen electrónico especial'),
+  recibo('RECI', 'Recibo'),
+  recibo('RDON', 'Recibo por donación'),
 ];
 
 /** El nombre de cada grupo del selector. */
@@ -58,8 +61,12 @@ export const GRUPOS_DE_TIPOS_SAT: Record<TipoDeDocumento, string> = {
   nota_de_debito: 'Notas de débito',
   factura_pequeno_contribuyente_electronico: 'Pequeño contribuyente electrónico (derogado)',
   factura_contribuyente_agropecuario: 'Contribuyente agropecuario (derogado)',
-  recibo: 'Sin FEL',
+  recibo: 'Recibos',
 };
+
+/** Si el código es un recibo FEL (`RECI`, `RDON`): el recibo a nombre de la empresa, que va fuera del libro de IVA. */
+export const esReciboFel = (codigo: string): boolean =>
+  familiaDelCodigo(codigo) === 'recibo' && codigo !== CODIGO_DE_RECIBO;
 
 /** Si el código es el de la factura especial, que la emite la empresa y no el proveedor. */
 export const esFacturaEspecial = (codigo: string): boolean => familiaDelCodigo(codigo) === 'factura_especial';

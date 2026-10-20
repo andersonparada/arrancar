@@ -11,7 +11,13 @@ import {
   type LineaEnEdicion,
 } from './lineas-del-documento';
 import { datosFiscalesContestados, type RespuestasFiscales } from './preguntas-fiscales';
-import { esFacturaEspecial, esNotaDeDebito, familiaDelCodigo, llevaFacturaAfectada } from './tipos-de-documento-sat';
+import {
+  esFacturaEspecial,
+  esNotaDeDebito,
+  esReciboFel,
+  familiaDelCodigo,
+  llevaFacturaAfectada,
+} from './tipos-de-documento-sat';
 
 type Valor = string | number | null | undefined;
 
@@ -102,6 +108,13 @@ function pendientesDeFacturaEspecial(edicion: EdicionDeDocumento): [boolean, str
 const textoDeLaFacturaPendiente = (edicion: EdicionDeDocumento): string =>
   esNotaDeDebito(edicion.tipoDte) ? 'elegir la factura que aumenta la nota' : 'elegir la factura que rebaja la nota';
 
+/** Un recibo FEL (RECI, RDON) lleva el número de autorización de la FEL, como toda FEL. */
+function pendientesDelReciboFel(edicion: EdicionDeDocumento): [boolean, string][] {
+  return [
+    [esReciboFel(edicion.tipoDte) && edicion.autorizacionFel.trim() === '', 'escribir la autorización de la FEL'],
+  ];
+}
+
 /** Lo que falta para poder registrar, en lenguaje del usuario; vacío si ya se puede. */
 export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
   const usadas = conLineasUsadas(edicion.lineas);
@@ -113,6 +126,7 @@ export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
     [llevaFacturaAfectada(edicion.tipoDte) && !edicion.documentoAfectadoId, textoDeLaFacturaPendiente(edicion)],
     [!edicion.muestraEnReportesSat && !edicion.motivoFueraDelLibro, 'decir por qué no se muestra en reportes SAT'],
     ...pendientesDeFacturaEspecial(edicion),
+    ...pendientesDelReciboFel(edicion),
     [usadas.length === 0, 'escribir al menos una línea'],
     [usadas.some((linea) => !lineaCompleta(linea)), 'completar las líneas (concepto y total)'],
   ];
@@ -122,12 +136,14 @@ export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
 const tieneFel = (edicion: EdicionDeDocumento): boolean =>
   edicion.muestraEnReportesSat || edicion.motivoFueraDelLibro !== 'sin_fel';
 
-/** Con FEL se manda el código de la SAT; sin ella, solo la familia (el servidor rechaza un código sin FEL). */
+/**
+ * Con FEL se manda el código de la SAT (también el de un recibo FEL); sin ella, solo la familia (el servidor
+ * rechaza un código sin FEL).
+ */
 function tipoDelCuerpo(edicion: EdicionDeDocumento) {
   const familia = familiaDelCodigo(edicion.tipoDte);
-  return familia && familia !== 'recibo' && tieneFel(edicion)
-    ? { tipoDte: edicion.tipoDte }
-    : { tipo: familia ?? undefined };
+  const conCodigo = familia !== 'recibo' || esReciboFel(edicion.tipoDte);
+  return familia && conCodigo && tieneFel(edicion) ? { tipoDte: edicion.tipoDte } : { tipo: familia ?? undefined };
 }
 
 function datosDeLaFel(edicion: EdicionDeDocumento) {

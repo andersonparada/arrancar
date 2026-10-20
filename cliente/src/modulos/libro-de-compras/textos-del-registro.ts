@@ -29,6 +29,7 @@ export const OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO: Record<MotivoFueraDelLibro, str
   sin_fel: 'No tiene FEL (recibo o documento informal)',
   fel_a_consumidor_final: 'La FEL está a consumidor final (CF)',
   fel_a_otro_nit: 'La FEL está a nombre de otro NIT o CUI',
+  recibo_fel: 'Recibo FEL a nombre de la empresa',
 };
 
 /** Textos de la factura especial (FESP) en el formulario. */

@@ -1076,3 +1076,13 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   también antes de enviar (negativos; exento + IDP + otros mayores que el total). Totales de la vista previa y de la ficha muestran
   «Otros impuestos» si no es cero; la línea de la ficha rotula «IDP (el de la factura)». La lista no cambia: el servidor no trae
   los otros impuestos en el listado.
+
+- **2026-10-20 — Libro de compras, motivo `recibo_fel` en el cliente.** El motivo entra en `MotivoFueraDelLibro`, con su texto en
+  `MOTIVOS_FUERA_DEL_LIBRO` («Recibo FEL emitido a la empresa (no es documento del IVA): se registra para respaldar el gasto o la
+  donación, sin crédito fiscal.») y su nombre en el selector. Los códigos `RECI` («Recibo») y `RDON` («Recibo por donación») van en el
+  grupo «Recibos» del selector de código SAT, antes de «Recibo (sin FEL)», que no cambia (`sin_fel`). Al elegir `RECI` o `RDON` el
+  motivo se fija en `recibo_fel` (sin selector, con su explicación), el NIT receptor se propone con el de la empresa (si ya llegó; si
+  no, al llegar) y la autorización de la FEL es obligatoria; el cuerpo manda el código de la SAT. Las reglas nuevas están en
+  `reglas-del-formulario-de-documento.ts` y tienen pruebas. El aviso de donación (`RDON`) lo devuelve el servidor y se muestra por los
+  avisos del registro que ya existen. Pendiente de decisión: un recibo `RECI` a otro NIT queda con el motivo fijo y el servidor lo
+  rechaza (`recibo_fel_incoherente`); el usuario debe decidir si debe ofrecerse «otro NIT» en ese caso.

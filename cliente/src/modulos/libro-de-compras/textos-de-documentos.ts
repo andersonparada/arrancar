@@ -95,6 +95,8 @@ export const MOTIVOS_FUERA_DEL_LIBRO: Record<MotivoFueraDelLibro, string> = {
     'La FEL se emitió a consumidor final (CF) y no a nombre de la empresa: no se reporta a la SAT ni da crédito fiscal.',
   fel_a_otro_nit:
     'La FEL se emitió a nombre de otra persona (otro NIT o CUI), no de la empresa: no se reporta a la SAT ni da crédito fiscal.',
+  recibo_fel:
+    'Recibo FEL emitido a la empresa (no es documento del IVA): se registra para respaldar el gasto o la donación, sin crédito fiscal.',
 };
 
 const ADVERTENCIA_DE_ISR = ' Puede no ser deducible del ISR.';

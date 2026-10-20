@@ -8,6 +8,7 @@ import {
   alCambiarLaEmision,
   alElegirProveedor,
   opcionesDeFacturas,
+  proponerElNitDeLaEmpresa,
 } from './reglas-del-formulario-de-documento';
 import { proponerConceptoDeIntereses } from './notas-de-debito';
 import { llevaFacturaAfectada } from './tipos-de-documento-sat';
@@ -17,6 +18,7 @@ interface Datos {
   proveedores: Readonly<Ref<ProveedorParaRegistro[]>>;
   destinos: Readonly<Ref<DestinoDeDocumento[]>>;
   conceptos: Readonly<Ref<ConceptoDeGasto[]>>;
+  nitDeLaEmpresa: Readonly<Ref<string | null>>;
 }
 
 /** Propone el destino de la última factura de ese proveedor, si sigue activo. Si no se puede traer, no pasa nada. */
@@ -83,7 +85,7 @@ function vigilarLaEmision(edicion: EdicionDeDocumento): void {
  * documento y, en una nota, se ofrecen sus facturas. Si algo de eso no se puede traer (sin permiso, sin
  * conexión) el formulario sigue: el usuario lo escribe.
  */
-export function usarProveedorDelDocumento({ edicion, proveedores, destinos, conceptos }: Datos) {
+export function usarProveedorDelDocumento({ edicion, proveedores, destinos, conceptos, nitDeLaEmpresa }: Datos) {
   const proponerElDestino = crearProponedorDeDestino({ edicion, destinos });
   const facturas = usarFacturasDeLaNota(edicion);
   elegirElUnicoDestino(edicion, destinos);
@@ -102,10 +104,12 @@ export function usarProveedorDelDocumento({ edicion, proveedores, destinos, conc
   watch(
     () => edicion.tipoDte,
     async (_, anterior) => {
-      alCambiarElTipo(edicion, anterior, proveedorElegido());
+      alCambiarElTipo(edicion, anterior, { proveedor: proveedorElegido(), nitDeLaEmpresa: nitDeLaEmpresa.value });
       await facturas.traer(edicion.proveedorId);
     },
   );
+  // El NIT de la empresa puede llegar después del tipo: el recibo FEL lo toma cuando ya está.
+  watch(nitDeLaEmpresa, (nit) => proponerElNitDeLaEmpresa(edicion, nit));
   vigilarLaEmision(edicion);
 
   return { documentos: facturas.documentos };

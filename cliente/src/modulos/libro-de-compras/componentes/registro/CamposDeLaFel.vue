@@ -7,24 +7,27 @@ import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import {
   esFacturaEspecial,
   esNotaDeDebito,
+  esReciboFel,
   familiaDelCodigo,
 } from '../../composables/documentos/tipos-de-documento-sat';
 import type { EdicionDeDocumento } from '../../composables/documentos/edicion-de-documento';
-import { alCambiarElMotivo, alMarcarLaCasilla } from '../../composables/documentos/reglas-del-formulario-de-documento';
+import {
+  alCambiarElMotivo,
+  alMarcarLaCasilla,
+  opcionesDeMotivo,
+} from '../../composables/documentos/reglas-del-formulario-de-documento';
 import CamposDeFacturaEspecial from './CamposDeFacturaEspecial.vue';
 import { textoFueraDelLibro } from '../../textos-de-documentos';
-import { OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO } from '../../textos-del-registro';
 
 /** La FEL: NIT del emisor y autorización, o por qué el documento no se muestra en los reportes de la SAT. */
 defineProps<{ nitDeLaEmpresa: string | null; errores: Record<string, string> }>();
 const edicion = defineModel<EdicionDeDocumento>({ required: true });
 
-const motivos = Object.entries(OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO)
-  .map(([valor, texto]) => ({ valor: valor as NonNullable<EdicionDeDocumento['motivoFueraDelLibro']>, texto }))
-  .sort((a, b) => a.texto.localeCompare(b.texto, 'es'));
+const motivos = opcionesDeMotivo();
 const esEspecial = computed(() => esFacturaEspecial(edicion.value.tipoDte));
 const esDebito = computed(() => esNotaDeDebito(edicion.value.tipoDte));
 const esRecibo = computed(() => familiaDelCodigo(edicion.value.tipoDte) === 'recibo');
+const esReciboDeLaEmpresa = computed(() => esReciboFel(edicion.value.tipoDte));
 const conFel = computed(() => edicion.value.muestraEnReportesSat || edicion.value.motivoFueraDelLibro !== 'sin_fel');
 const explicacion = computed(() => {
   const motivo = edicion.value.motivoFueraDelLibro;
@@ -32,6 +35,8 @@ const explicacion = computed(() => {
 });
 
 const descripcionDeLaCasilla = computed(() => {
+  if (esReciboDeLaEmpresa.value)
+    return 'El recibo FEL a nombre de la empresa no va en el libro de IVA: se registra aparte.';
   if (esRecibo.value) return 'Un recibo no es un documento FEL: nunca se muestra en los reportes de la SAT.';
   if (esDebito.value) return 'La nota de débito siempre se muestra en los reportes de la SAT.';
   return 'Déjelo activado cuando la FEL está a nombre de la empresa. Desactívelo solo si el documento no se reporta a la SAT.';
@@ -58,6 +63,7 @@ function elegirMotivo(motivo: EdicionDeDocumento['motivoFueraDelLibro'] | undefi
 
     <div v-if="!edicion.muestraEnReportesSat" class="space-y-3">
       <CampoSelector
+        v-if="!esReciboDeLaEmpresa"
         :model-value="edicion.motivoFueraDelLibro"
         etiqueta="¿Por qué no se muestra en reportes SAT?"
         requerido
@@ -85,7 +91,7 @@ function elegirMotivo(motivo: EdicionDeDocumento['motivoFueraDelLibro'] | undefi
         v-if="conFel"
         v-model="edicion.autorizacionFel"
         etiqueta="Autorización de la FEL"
-        :requerido="edicion.muestraEnReportesSat"
+        :requerido="edicion.muestraEnReportesSat || esReciboDeLaEmpresa"
         ayuda="El número de autorización (UUID) que trae la factura."
         :error="errores.autorizacionFel"
         sin-correccion
@@ -94,7 +100,7 @@ function elegirMotivo(motivo: EdicionDeDocumento['motivoFueraDelLibro'] | undefi
         v-if="!edicion.muestraEnReportesSat && conFel"
         v-model="edicion.nitReceptor"
         etiqueta="NIT o CUI al que se emitió"
-        placeholder="CF si fue a consumidor final"
+        :placeholder="esReciboDeLaEmpresa ? 'Se propone el NIT de su empresa' : 'CF si fue a consumidor final'"
         :error="errores.nitReceptor"
         sin-correccion
       />

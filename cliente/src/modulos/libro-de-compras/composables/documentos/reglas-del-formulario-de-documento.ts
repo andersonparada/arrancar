@@ -2,9 +2,16 @@ import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/format
 import type { DestinoDeDocumento, DocumentoEnLista, MotivoFueraDelLibro } from '../../servicios/documentos.api';
 import type { ProveedorParaRegistro } from '../../servicios/registro-de-documentos.api';
 import { DESTINOS_DE_DOCUMENTO } from '../../textos-de-documentos';
+import { OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO } from '../../textos-del-registro';
 import type { EdicionDeDocumento } from './edicion-de-documento';
 import { etiquetaDePeriodo, mesDe } from './filtros-de-documentos';
-import { esFacturaEspecial, esNotaDeDebito, familiaDelCodigo, llevaFacturaAfectada } from './tipos-de-documento-sat';
+import {
+  esFacturaEspecial,
+  esNotaDeDebito,
+  esReciboFel,
+  familiaDelCodigo,
+  llevaFacturaAfectada,
+} from './tipos-de-documento-sat';
 
 /** Las mismas familias que acepta el servidor (`resolutor-de-factura.ts`); la factura especial no se rebaja (R2-e). */
 const TIPOS_QUE_SE_REBAJAN = [
@@ -101,26 +108,41 @@ function ajustarLaNota(edicion: EdicionDeDocumento, codigoAnterior: string): voi
   edicion.nitReceptor = '';
 }
 
+/** Lo que el formulario sabe al cambiar el tipo: el proveedor (para su NIT) y el NIT de la empresa (para el recibo FEL). */
+export interface ContextoDelTipo {
+  proveedor: ProveedorParaRegistro | undefined;
+  nitDeLaEmpresa: string | null;
+}
+
+/** El recibo FEL va a nombre de la empresa: su NIT se propone como receptor, y el usuario lo puede cambiar. */
+export function proponerElNitDeLaEmpresa(edicion: EdicionDeDocumento, nitDeLaEmpresa: string | null): void {
+  if (esReciboFel(edicion.tipoDte) && edicion.nitReceptor.trim() === '') edicion.nitReceptor = nitDeLaEmpresa ?? '';
+}
+
+/** El recibo sin FEL va sin FEL; el recibo FEL (RECI, RDON) va fuera del libro con su motivo propio. */
+function alElegirElRecibo(edicion: EdicionDeDocumento, codigoAnterior: string, nitDeLaEmpresa: string | null): void {
+  edicion.muestraEnReportesSat = false;
+  if (!esReciboFel(edicion.tipoDte)) {
+    edicion.motivoFueraDelLibro = 'sin_fel';
+    alCambiarElMotivo(edicion);
+    return;
+  }
+  edicion.motivoFueraDelLibro = 'recibo_fel';
+  if (!esReciboFel(codigoAnterior)) edicion.nitReceptor = nitDeLaEmpresa ?? '';
+}
+
 /**
- * Un recibo no es un documento FEL, así que nunca va en el libro; los demás tipos vuelven a él al dejar de serlo.
- * La factura especial cambia quién es el emisor y quién el vendedor.
+ * Un recibo sin FEL nunca va en el libro; un recibo FEL (RECI, RDON) tampoco, pero su motivo es `recibo_fel`. Los
+ * demás tipos vuelven al libro al dejar de ser recibos. La factura especial cambia quién es el emisor y el vendedor.
  */
-export function alCambiarElTipo(
-  edicion: EdicionDeDocumento,
-  codigoAnterior: string,
-  proveedor?: ProveedorParaRegistro,
-): void {
+export function alCambiarElTipo(edicion: EdicionDeDocumento, codigoAnterior: string, contexto: ContextoDelTipo): void {
   edicion.confirmarCambioDeRegimen = false;
   ajustarLaNota(edicion, codigoAnterior);
-  const familia = familiaDelCodigo(edicion.tipoDte);
-  if (esFacturaEspecial(edicion.tipoDte)) return prepararFacturaEspecial(edicion, proveedor);
-  if (esFacturaEspecial(codigoAnterior)) soltarFacturaEspecial(edicion, proveedor);
-  if (familia === 'recibo') {
-    edicion.muestraEnReportesSat = false;
-    edicion.motivoFueraDelLibro = 'sin_fel';
-  } else if (familiaDelCodigo(codigoAnterior) === 'recibo') {
-    alMarcarLaCasilla(edicion, true);
-  }
+  if (esFacturaEspecial(edicion.tipoDte)) return prepararFacturaEspecial(edicion, contexto.proveedor);
+  if (esFacturaEspecial(codigoAnterior)) soltarFacturaEspecial(edicion, contexto.proveedor);
+  if (familiaDelCodigo(edicion.tipoDte) === 'recibo')
+    return alElegirElRecibo(edicion, codigoAnterior, contexto.nitDeLaEmpresa);
+  if (familiaDelCodigo(codigoAnterior) === 'recibo') alMarcarLaCasilla(edicion, true);
 }
 
 /** En la factura especial la recepción acompaña a la emisión mientras el usuario no la haya cambiado. */
@@ -137,6 +159,14 @@ export function alMarcarLaCasilla(edicion: EdicionDeDocumento, marcada: boolean)
   edicion.motivoFueraDelLibro = marcada ? null : (edicion.motivoFueraDelLibro ?? 'sin_fel');
   if (marcada) edicion.nitReceptor = '';
   else alCambiarElMotivo(edicion);
+}
+
+/** Los motivos que se eligen a mano, por nombre. El recibo FEL no se elige: lo pone Arrancar según el tipo. */
+export function opcionesDeMotivo() {
+  const motivos = Object.entries(OPCIONES_DE_MOTIVO_FUERA_DEL_LIBRO)
+    .filter(([valor]) => valor !== 'recibo_fel')
+    .map(([valor, texto]) => ({ valor: valor as Exclude<MotivoFueraDelLibro, 'recibo_fel'>, texto }));
+  return porNombre(motivos);
 }
 
 /** Sin FEL no hay autorización ni receptor; a consumidor final el receptor es «CF». */
