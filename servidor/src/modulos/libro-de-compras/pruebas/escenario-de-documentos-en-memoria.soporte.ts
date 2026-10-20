@@ -8,6 +8,7 @@ import {
 import { DatosFiscalesDeEmpresa } from '../dominio/datos-fiscales-de-empresa.js';
 import { CODIGOS_DTE_DE_LA_FAMILIA } from '../dominio/tipos-de-documento.js';
 import { FuenteDeLunesAViernes } from '../dominio/calendario-laboral.js';
+import type { RetencionesDeUnDocumento } from '../aplicacion/puertos/puertos-de-retenciones.js';
 import type { DependenciasDelPreparador } from '../aplicacion/casos-uso/documentos/preparador-de-documento.js';
 import type { SolicitudSinResolver } from '../aplicacion/dto/solicitud-de-documento.js';
 import type {
@@ -16,6 +17,7 @@ import type {
   RepositorioDeDocumentos,
 } from '../aplicacion/puertos/puertos-de-documentos.js';
 import { DocumentosGuardadosEnMemoria } from './dobles-de-bajas-de-documentos.js';
+import { ConsultasDeEnterosEnMemoria, RetencionesDeUnDocumentoEnMemoria } from './dobles-de-retenciones.js';
 import { DatosFiscalesDeEmpresaEnMemoria, DatosFiscalesDeProveedorEnMemoria } from './dobles-de-datos-fiscales.js';
 import {
   CatalogosEnMemoria,
@@ -111,6 +113,8 @@ export function crearEscenario() {
   const auditoria = new AuditoriaEnMemoria();
   const control = new ControlDePeriodosEnMemoria();
   const guardados = new DocumentosGuardadosEnMemoria();
+  const enteros = new ConsultasDeEnterosEnMemoria();
+  const retenciones = new RetencionesDeUnDocumentoEnMemoria();
   const dependencias: DependenciasDelPreparador & {
     unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
     repositorio: RepositorioDeDocumentos;
@@ -118,6 +122,7 @@ export function crearEscenario() {
     completadorDeDpi: CompletadorDeDpi;
     auditoria: AuditoriaEnMemoria;
     publicadorEventos: PublicadorEventosEnMemoria;
+    retenciones: RetencionesDeUnDocumento;
   } = {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     reloj: new RelojFijo('2026-10-04'),
@@ -136,6 +141,8 @@ export function crearEscenario() {
     completadorDeDpi,
     auditoria,
     publicadorEventos,
+    enteros,
+    retenciones,
   };
   return {
     proveedores,
@@ -152,6 +159,8 @@ export function crearEscenario() {
     auditoria,
     control,
     guardados,
+    enteros,
+    retenciones,
     dependencias,
   };
 }

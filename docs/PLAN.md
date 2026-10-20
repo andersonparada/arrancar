@@ -1144,3 +1144,21 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   si nada cambió; motivo obligatorio al reemitir), `GET …/libro/emisiones` (lista y último folio), `GET …/libro/emisiones/:id/pdf`
   (copia), `GET …/libro/pdf` (borrador sin folio) y `PUT …/libro/foliacion` (corregir el último folio, con auditoría).
   Permiso nuevo `libro.emitir`. `npm audit fix` subió `sharp` a 0.35.5 (avisaba alta antes de este paso).
+- **2026-10-20 — Libro de compras L5-4a, L5-5a y L5-6a (servidor, retenciones, constancias, por resolver y enteros).**
+  Migraciones `0026_l5_retenciones_por_resolver` (cuatro columnas, cuatro checks e índice parcial en `retenciones`; pone
+  `pendiente` a las retenciones con monto de documentos ya anulados) y `0027_l5_enteros_de_retenciones` (la tabla con sus
+  checks, índice y RLS). El check `retenciones_resolucion_completa` es más estricto que el del diseño:
+  sin resolver, la nota, la fecha y el autor deben ser nulos. Rutas en `/api/libro-de-compras/retenciones`: reporte del
+  mes (`?mes=AAAA-MM&grupo=&constancia=con|sin|todas&documentos=vigentes|anulados|todos`, `retenciones.ver`) con los cuatro
+  grupos de entero (`iva_agentes`, `isr_opcional`, `iva_factura_especial`, `isr_factura_especial`), su plazo con feriados,
+  retenido, pagado, diferencia, estado (`sin_retenciones`, `pendiente`, `vencido`, `enterado`, `con_diferencia`) y aviso de
+  vencido (apagado si hay pagos); `/exportar` (Excel, `.exportar`); `PUT :id/constancia`, `DELETE :id/constancia {motivo}`,
+  `POST constancias` (lote de hasta 200, todo o nada, errores en `detalles.filas[{indice, campo, mensaje}]`) y
+  `PUT :id/resolucion` (`.constancias`); `GET por-resolver?estado=pendiente|resueltas` con `accionSugerida`; enteros en
+  `/enteros` (`GET ?anio=` con `.ver`; `POST`, `PUT :id`, `POST :id/anular` con `.enterar`, varios pagos por mes y grupo).
+  Eliminar un documento con una retención con constancia o con su mes y grupo enterado queda bloqueado
+  (`documento_con_constancia`, `documento_con_retencion_enterada`); anular deja sus retenciones con monto `pendiente` y
+  avisa «Quedan N retenciones por resolver» y, si el mes se enteró, «Ese mes ya se enteró: rectifique el entero»; al
+  registrar en un mes ya enterado el aviso de plazo vencido se cambia por «pague la diferencia». Las retenciones en cero
+  salen marcadas (`enCero`) y no suman (el diseño decía que no salían). Pendiente: afinar el formato del número de
+  constancia con un PDF real (L5-C4).

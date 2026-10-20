@@ -7,7 +7,8 @@ import type { DatosFiscalesDeEmpresa } from '../../../dominio/datos-fiscales-de-
 import type { DatosFiscalesDeProveedor } from '../../../dominio/datos-fiscales-de-proveedor.js';
 import { resolverDatosFiscalesDelProveedor } from '../../../dominio/datos-fiscales-del-documento.js';
 import { EmpresaSinDatosFiscales, EmpresaSinNit, ProveedorInactivo } from '../../../dominio/errores-de-documento.js';
-import { periodoPropuesto } from '../../../dominio/periodo-del-libro.js';
+import { periodoPropuesto, primerDiaDelMes } from '../../../dominio/periodo-del-libro.js';
+import { claveDelGrupo } from '../../../dominio/retenciones/grupo-de-entero.js';
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
 import type {
   ConfiguracionFiscal,
@@ -16,6 +17,7 @@ import type {
   ProveedorParaDocumento,
   ProveedoresParaDocumentos,
 } from '../../puertos/puertos-de-documentos.js';
+import type { ConsultasDeEnteros } from '../../puertos/puertos-de-retenciones.js';
 import type {
   RepositorioDeDatosFiscalesDeEmpresa,
   RepositorioDeDatosFiscalesDeProveedor,
@@ -35,6 +37,8 @@ export interface ContextoFiscal {
   datosDelProveedorPorGuardar: DatosFiscalesDeProveedor | null;
   calendario: CalendarioLaboral;
   configuracion: ConfiguracionFiscal;
+  /** Los meses y grupos de las fechas del documento que ya tienen un entero vigente (`claveDelGrupo`). */
+  gruposEnterados: ReadonlySet<string>;
 }
 
 export interface DependenciasDelCargador {
@@ -45,6 +49,7 @@ export interface DependenciasDelCargador {
   datosFiscalesDeProveedor: RepositorioDeDatosFiscalesDeProveedor;
   configuracion: LectorDeConfiguracionFiscal;
   calendario: FuenteDeCalendario;
+  enteros: Pick<ConsultasDeEnteros, 'delRango'>;
 }
 
 /** Sin fecha de recepción: hoy; en la factura especial, la de emisión (la empresa la emite al comprar). */
@@ -93,9 +98,26 @@ export class CargadorDeContextoFiscal {
       datosDeLaEmpresa,
       datosDelProveedor: delProveedor.vigentes,
       datosDelProveedorPorGuardar: delProveedor.porGuardar,
-      calendario: await this.calendario({ hoy, fechaDeRecepcion, fechaDeEmision: solicitud.fechaEmision }),
       configuracion: await this.dependencias.configuracion.paraEmpresa(operador),
+      ...(await this.deLasFechas({ hoy, fechaDeRecepcion, fechaDeEmision: solicitud.fechaEmision })),
     };
+  }
+
+  /** Lo que depende de las fechas del documento: los feriados y los meses y grupos ya enterados. */
+  private async deLasFechas(fechas: { hoy: string; fechaDeRecepcion: string; fechaDeEmision: string }) {
+    return {
+      calendario: await this.calendario(fechas),
+      gruposEnterados: await this.gruposEnterados([fechas.fechaDeRecepcion, fechas.fechaDeEmision]),
+    };
+  }
+
+  /** Los meses y grupos con algún entero vigente entre los meses de las fechas (de ahí sale la fecha de la retención). */
+  private async gruposEnterados(fechas: readonly string[]): Promise<ReadonlySet<string>> {
+    const meses = fechas.map(primerDiaDelMes).sort();
+    const pagos = await this.dependencias.enteros.delRango(meses[0]!, meses[meses.length - 1]!);
+    return new Set(
+      pagos.filter((pago) => pago.estado === 'vigente').map((pago) => claveDelGrupo(pago.mes, pago.grupo)),
+    );
   }
 
   /** Precarga los años de las fechas y el siguiente a cada una: el entero cae en el mes que sigue a la retención. */

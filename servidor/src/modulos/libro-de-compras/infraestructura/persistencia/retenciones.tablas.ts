@@ -1,5 +1,16 @@
 import { sql } from 'drizzle-orm';
-import { check, date, foreignKey, index, numeric, text, unique, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import {
+  check,
+  date,
+  foreignKey,
+  index,
+  numeric,
+  text,
+  timestamp,
+  unique,
+  uuid,
+  type AnyPgColumn,
+} from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { documentos } from './documentos.tablas.js';
@@ -22,7 +33,11 @@ type Columnas = Record<
   | 'motivoDelAjuste'
   | 'fecha'
   | 'constanciaNumero'
-  | 'constanciaFecha',
+  | 'constanciaFecha'
+  | 'resolucion'
+  | 'notaDeResolucion'
+  | 'resueltaEn'
+  | 'resueltaPor',
   AnyPgColumn
 >;
 
@@ -52,6 +67,26 @@ const restriccionesDeFechas = (t: Columnas) => [
   index('retenciones_mes_idx').on(t.empresaId, t.fecha),
 ];
 
+/** «Por resolver»: una retención practicada de un documento anulado (que sea de un anulado lo cuida el dominio). */
+const restriccionesDeResolucion = (t: Columnas) => [
+  check(
+    'retenciones_resolucion_valida',
+    sql`${t.resolucion} is null or ${t.resolucion} in ('pendiente', 'constancia_anulada', 'rectificada', 'no_requiere')`,
+  ),
+  check('retenciones_resolucion_solo_practicada', sql`${t.resolucion} is null or ${t.monto} > 0`),
+  check(
+    'retenciones_resolucion_completa',
+    sql`(${t.resolucion} in ('constancia_anulada', 'rectificada', 'no_requiere') and ${t.resueltaEn} is not null and ${t.resueltaPor} is not null and ${t.notaDeResolucion} is not null) or ((${t.resolucion} is null or ${t.resolucion} = 'pendiente') and ${t.resueltaEn} is null and ${t.resueltaPor} is null and ${t.notaDeResolucion} is null)`,
+  ),
+  check(
+    'retenciones_nota_de_resolucion_rango',
+    sql`${t.notaDeResolucion} is null or char_length(${t.notaDeResolucion}) between 1 and 300`,
+  ),
+  index('retenciones_por_resolver_idx')
+    .on(t.empresaId)
+    .where(sql`${t.resolucion} = 'pendiente'`),
+];
+
 /** Una retención ya calculada y fijada al registrar el documento; se guarda aunque el usuario la quite. */
 export const retenciones = esquemaLibroDeCompras.table(
   'retenciones',
@@ -71,6 +106,11 @@ export const retenciones = esquemaLibroDeCompras.table(
     fecha: date().notNull(),
     constanciaNumero: text(),
     constanciaFecha: date(),
+    /** Nulo = nada que resolver; `pendiente` al anular el documento con la retención practicada. */
+    resolucion: text().$type<'pendiente' | 'constancia_anulada' | 'rectificada' | 'no_requiere'>(),
+    notaDeResolucion: text(),
+    resueltaEn: timestamp({ withTimezone: true }),
+    resueltaPor: uuid(),
     ...marcasDeTiempo,
     ...autoria,
   },
@@ -83,6 +123,7 @@ export const retenciones = esquemaLibroDeCompras.table(
     }).onDelete('cascade'),
     ...restriccionesDeMontos(t),
     ...restriccionesDeFechas(t),
+    ...restriccionesDeResolucion(t),
     politicaPorEmpresa(),
   ],
 );

@@ -2669,12 +2669,12 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
    migraciones `0024` y `0025`, emitir, copia, borrador, corregir el último folio, permiso `libro.emitir`; pruebas.
 9. **L5-3b (cliente, PDF) — hecho el 2026-10-20:** botones «Borrador», «Emitir con folios» (confirmación con los folios que gastará), lista de
    emisiones con «Copia», y el último folio.
-10. **L5-4a (servidor, retenciones):** reporte por mes y grupo, plazos con feriados, `GRUPO_DE_ENTERO`, Excel, permisos
+10. **L5-4a (servidor, retenciones) — hecho el 2026-10-20:** reporte por mes y grupo, plazos con feriados, `GRUPO_DE_ENTERO`, Excel, permisos
     `retenciones.ver`/`.exportar`; pruebas.
-11. **L5-5a (servidor, constancias y por resolver) (constancia):** migración `0026`, anotar una y en lote, quitar,
+11. **L5-5a (servidor, constancias y por resolver) (constancia) — hecho el 2026-10-20 (migración `0026`):** migración `0026`, anotar una y en lote, quitar,
     resolución, `AnularDocumento` pone `pendiente`, `EliminarDocumento` bloquea con constancia; permiso
     `retenciones.constancias`; pruebas.
-12. **L5-6a (servidor, enteros):** migración `0027`, marcar, corregir, anular, estado derivado, avisos al registrar y
+12. **L5-6a (servidor, enteros) — hecho el 2026-10-20 (migración `0027`):** migración `0027`, marcar, corregir, anular, estado derivado, avisos al registrar y
     anular; permiso `retenciones.enterar`; pruebas.
 13. **L5-4b (cliente, retenciones):** página «Retenciones de IVA e ISR» con pestañas Mes (anotar una y en lote), Por
     resolver y Enteros (matriz del año, marcar y anular); imprimir con `window.print()` y Excel.

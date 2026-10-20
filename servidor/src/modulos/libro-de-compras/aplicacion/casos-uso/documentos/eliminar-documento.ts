@@ -16,10 +16,11 @@ import type {
 } from '../../puertos/puertos-de-documentos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 import { bajaDelPeriodo } from './credito-de-la-empresa.js';
+import { exigirSinConstanciaNiEntero, type DependenciasDeRetencionesDeLaBaja } from './retenciones-de-la-baja.js';
 import { dtoDeFicha, hechosDe } from './dto-de-ficha.js';
 import { exigirQueLaBajaRespeteElTope } from './tope-de-la-baja.js';
 
-interface Dependencias {
+interface Dependencias extends DependenciasDeRetencionesDeLaBaja {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioDeDocumentosGuardados;
   destinos: DestinosDeDocumentos;
@@ -50,6 +51,7 @@ export class EliminarDocumento {
   /**
    * @throws RecursoNoEncontrado si no existe.
    * @throws DocumentoYaAnulado, DocumentoProcesadoEnElDestino, DocumentoConNotas o NotaDeDebitoSostieneNotasDeCredito si no está limpio.
+   * @throws DocumentoConConstancia o DocumentoConRetencionEnterada si una retención ya tiene constancia o entero: solo se anula.
    * @throws el error del destino si rechaza la eliminación.
    */
   async ejecutar(operador: Operador, peticion: PeticionDeEliminacion): Promise<EliminacionDeDocumentoDto> {
@@ -68,6 +70,7 @@ export class EliminarDocumento {
     exigirEliminable(hechosDe(guardado));
     await exigirQueLaBajaRespeteElTope(this.dependencias.consultas, guardado);
     await control.exigirAbierto(guardado.documento.periodo);
+    await exigirSinConstanciaNiEntero(this.dependencias, documentoId);
     const { destino } = guardado.documento;
     if (origen !== destino) await destinos.avisarPorEliminar(operador, { documentoId, destino });
     await repositorio.eliminar(documentoId);

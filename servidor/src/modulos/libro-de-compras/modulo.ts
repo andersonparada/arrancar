@@ -8,6 +8,7 @@ import { rutasDeCombustibles } from './composicion/combustibles.js';
 import { configuracionDelLibroDeCompras } from './configuracion.js';
 import { rutasDeVigenciasDeCombustible } from './composicion/vigencias-de-combustible.js';
 import { rutasDeLibro } from './composicion/libro.js';
+import { rutasDeRetencionesComponidas } from './composicion/retenciones.js';
 // generador: importaciones
 
 /** Raíz de composición: el único lugar donde se eligen las implementaciones concretas. */
@@ -20,6 +21,7 @@ function componerRutas() {
     rutasDeVigenciasDeCombustible(),
     rutasDeDocumentosComponidas(),
     rutasDeLibro(),
+    rutasDeRetencionesComponidas(),
     // generador: rutas
   ]);
 }
@@ -78,6 +80,20 @@ export const moduloLibroDeCompras: DefinicionModulo = {
     {
       clave: 'libro-de-compras.libro.emitir',
       descripcion: 'Emitir el libro de compras en PDF con folios y corregir el último folio',
+    },
+    {
+      clave: 'libro-de-compras.retenciones.ver',
+      descripcion: 'Ver las retenciones del mes, lo por resolver y los enteros',
+    },
+    { clave: 'libro-de-compras.retenciones.exportar', descripcion: 'Exportar las retenciones del mes a Excel' },
+    {
+      clave: 'libro-de-compras.retenciones.constancias',
+      descripcion:
+        'Anotar, cambiar y quitar constancias de retención y resolver las retenciones de documentos anulados',
+    },
+    {
+      clave: 'libro-de-compras.retenciones.enterar',
+      descripcion: 'Marcar como enterados, corregir y anular los pagos de las retenciones',
     },
     // generador: permisos
   ],

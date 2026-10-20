@@ -1,6 +1,7 @@
 import type { CalendarioLaboral } from './calendario-laboral.js';
 import type { RetencionDeDocumento } from './documento-de-compra.js';
 import { esEnteroVencido, fechaLimiteDeEntero, ULTIMO_DIA_HABIL, type PlazoDeEntero } from './plazo-de-entero.js';
+import { GRUPO_DE_ENTERO, claveDelGrupo, mesDeLaRetencion } from './retenciones/grupo-de-entero.js';
 import type { ImpuestoRetenido } from './retencion-propuesta.js';
 
 export const AVISO_DE_RETENCION_QUITADA =
@@ -17,7 +18,15 @@ export interface ContextoDeEntero {
   calendario: CalendarioLaboral;
   /** Sin ISR sobre utilidades el aviso de la retención rebajada no habla de deducibilidad. */
   empresaConIsrSobreUtilidades: boolean;
+  /** Los meses y grupos (`claveDelGrupo`) que ya tienen un entero vigente: ahí el plazo vencido no se avisa. */
+  gruposEnterados?: ReadonlySet<string>;
 }
+
+export const AVISO_DE_MES_YA_ENTERADO = 'Ese mes ya se enteró: pague la diferencia (pago complementario).';
+
+const estaEnterada = (retencion: RetencionDeDocumento, contexto: ContextoDeEntero): boolean =>
+  contexto.gruposEnterados?.has(claveDelGrupo(mesDeLaRetencion(retencion.fecha), GRUPO_DE_ENTERO[retencion.regla])) ??
+  false;
 
 const DESCRIPCION_DEL_IMPUESTO: Record<ImpuestoRetenido, string> = {
   iva: 'IVA',
@@ -41,10 +50,17 @@ const plazoDe = (retencion: RetencionDeDocumento, contexto: ContextoDeEntero): P
   calendario: contexto.calendario,
 });
 
-/** Un aviso por impuesto cuyo plazo de entero ya pasó, sin contar las retenciones que quedaron en cero. */
+/**
+ * Un aviso por impuesto cuyo plazo de entero ya pasó, sin contar las retenciones que quedaron en cero. Si el mes y
+ * grupo ya tiene un entero, el aviso de vencido se apaga y se avisa que hay que pagar la diferencia.
+ */
 function avisosDeEnteroVencido(retenciones: readonly RetencionDeDocumento[], contexto: ContextoDeEntero): string[] {
   const avisos = new Map<ImpuestoRetenido, string>();
   for (const retencion of retenciones.filter((r) => r.monto > 0)) {
+    if (estaEnterada(retencion, contexto)) {
+      avisos.set(retencion.impuesto, AVISO_DE_MES_YA_ENTERADO);
+      continue;
+    }
     const plazo = plazoDe(retencion, contexto);
     if (esEnteroVencido(contexto.hoy, plazo)) {
       avisos.set(retencion.impuesto, avisoDeEnteroVencido(retencion.impuesto, fechaLimiteDeEntero(plazo)));

@@ -17,6 +17,8 @@ import { CatalogosParaDocumentosDrizzle } from '../infraestructura/persistencia/
 import { ConsultasDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-documentos.drizzle.js';
 import { ProveedoresParaDocumentosDrizzle } from '../infraestructura/persistencia/proveedores-para-documentos.drizzle.js';
 import { ConsultasDeListaDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-lista-de-documentos.drizzle.js';
+import { ConsultasDeEnterosDrizzle } from '../infraestructura/persistencia/enteros-de-retenciones.drizzle.js';
+import { RetencionesDeUnDocumentoDrizzle } from '../infraestructura/persistencia/repositorio-de-retenciones.drizzle.js';
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { RepositorioDeDocumentosGuardadosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos-guardados.drizzle.js';
 import { RepositorioDeDatosFiscalesDeEmpresaDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales-de-empresa.drizzle.js';
@@ -27,6 +29,12 @@ import {
   DatosDeLaEmpresaEnMediador,
 } from '../infraestructura/vecinos-en-mediador.js';
 import { atenderOrdenesDeDocumentos } from './ordenes-de-documentos.js';
+
+/** Las retenciones y los enteros que miran la baja y los avisos del documento. */
+const retencionesDeLaBaja = () => ({
+  enteros: new ConsultasDeEnterosDrizzle(),
+  retenciones: new RetencionesDeUnDocumentoDrizzle(),
+});
 
 function dependenciasDeDocumentos() {
   const compartidas = dependenciasCompartidas();
@@ -50,6 +58,7 @@ function dependenciasDeDocumentos() {
     consultasDeLista: new ConsultasDeListaDeDocumentosDrizzle(),
     completadorDeNit: new CompletadorDeNitEnMediador(),
     completadorDeDpi: new CompletadorDeDpiEnMediador(),
+    ...retencionesDeLaBaja(),
   };
 }
 

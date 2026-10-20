@@ -25,10 +25,11 @@ import type {
 } from '../../puertos/puertos-de-documentos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 import { bajaDelPeriodo } from './credito-de-la-empresa.js';
+import { dejarRetencionesPorResolver, type DependenciasDeRetencionesDeLaBaja } from './retenciones-de-la-baja.js';
 import { dtoDeFicha, hechosDe } from './dto-de-ficha.js';
 import { exigirQueLaBajaRespeteElTope } from './tope-de-la-baja.js';
 
-interface Dependencias {
+interface Dependencias extends DependenciasDeRetencionesDeLaBaja {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioDeDocumentosGuardados;
   destinos: DestinosDeDocumentos;
@@ -51,7 +52,7 @@ export interface PeticionDeAnulacion {
 
 /**
  * Anula el registro de un documento vigente (no la FEL: solo su emisor la anula en la SAT) con su causa y su motivo: avisa al destino (`documento_por_anular`) antes de cambiar nada, lo
- * deja `anulado` con su fecha y usuario (su número queda libre), lo audita con la ficha anterior y, tras confirmar,
+ * deja `anulado` con su fecha y usuario (su número queda libre), deja sus retenciones con monto «por resolver», lo audita con la ficha anterior y, tras confirmar,
  * publica `documento_anulado`. Si el período es anterior al mes actual avisa que puede estar declarado. Si el destino
  * lo rechaza, no cambia nada. Lo usan la ruta y la orden del mediador.
  */
@@ -92,11 +93,12 @@ export class AnularDocumento {
     if (origen !== destino) await destinos.avisarPorAnular(operador, { documentoId, destino, motivo });
     await repositorio.anular(documentoId, { anuladoPor: operador.usuarioId, motivo, causa });
     await this.auditar(guardado, `${causa}: ${motivo}`);
+    const avisosDeRetenciones = await dejarRetencionesPorResolver(this.dependencias, documentoId);
     const hoy = await this.dependencias.reloj.hoy(operador);
     const anulado = (await repositorio.buscar(documentoId, false)) ?? guardado;
     const { periodo } = guardado.documento;
     const baja = await bajaDelPeriodo(this.dependencias.datosFiscalesDeEmpresa, operador.empresaId, periodo);
-    return { documento: dtoDeFicha(anulado), avisos: avisosDeBajaPorPeriodo(baja, hoy) };
+    return { documento: dtoDeFicha(anulado), avisos: [...avisosDeBajaPorPeriodo(baja, hoy), ...avisosDeRetenciones] };
   }
 
   private auditar(guardado: DocumentoGuardado, motivo: string): Promise<void> {

@@ -183,6 +183,20 @@
       "when": 1792501882905,
       "tag": "0025_l5_folios_sin_traslape",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792509471278,
+      "tag": "0026_l5_retenciones_por_resolver",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1792509472268,
+      "tag": "0027_l5_enteros_de_retenciones",
+      "breakpoints": true
     }
   ]
 }

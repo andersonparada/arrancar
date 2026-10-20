@@ -15,6 +15,7 @@ const contextoDeEntero = (contexto: ContextoFiscal): ContextoDeEntero => ({
   diasHabilesIsr: contexto.configuracion.diasHabilesIsr,
   calendario: contexto.calendario,
   empresaConIsrSobreUtilidades: contexto.datosDeLaEmpresa.tieneIsrSobreUtilidades(),
+  gruposEnterados: contexto.gruposEnterados,
 });
 
 /** Los avisos propios de la factura especial y de la nota de débito; los demás tipos no tienen. */
