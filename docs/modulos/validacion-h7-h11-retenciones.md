@@ -666,3 +666,22 @@ anulada), con NIT y nombres tachados pero sin borrar columnas, para cotejar las 
 **Aclaración del usuario (2026-10-19):** no todos los clientes bajarán sus facturas; muchos las ingresarán **a mano**. El
 formulario es la vía principal y debe quedar completo (otros impuestos, IDP); la bandeja y la conciliación de L4 son
 **opcionales** y nada (avisos, cierre de período de L5) puede exigirlas.
+
+## Dudas de L4 (contador-guatemala, 2026-10-20)
+
+- **c1:** los otros impuestos se dividen en percibidos por cuenta de terceros (turismo, tasa municipal, timbre, bomberos)
+  y específicos que son precio (cemento, bebidas, tabaco). La ley solo excluye el IVA de la base del ISR opcional: se
+  **incluyen**; entran en el mínimo de Q2,500 del IVA y en el umbral del 5 % (total de la factura). Una FESP no lleva
+  otros impuestos ni IDP.
+- **c2:** en el libro van en «Exento y no afecto», guardados aparte; son costo de la línea (NIIF 13.6, 17.10). Corregir
+  en `libro-de-compras.md` la cita del AG 311-97 por el **AG 5-2013 art. 38**.
+- **c3:** RECI y RDON al NIT de la empresa: se registran **fuera del libro de IVA** con motivo propio `recibo_fel`, sin
+  crédito ni retenciones; el RDON avisa que la donación es deducible solo en ISR sobre utilidades, a entidades
+  autorizadas y con límite (art. 21, confirmar). En la bandeja entran `pendiente`, no bloqueados.
+- **c4:** exento deducido del Excel: comparar en IVA (`round(R × 12/112, 2)` con tolerancia `max(5, líneas)` centavos), sin
+  exento negativo (la fila va al formulario), sin confirmar en lote filas con montos en columnas desconocidas, aviso de
+  bien/servicio y marca «montos del resumen de la SAT» en la ficha.
+
+**Decisiones del usuario (2026-10-20), las recomendadas:** otros impuestos **incluidos** en la base del ISR (no se hace
+L4-2b); motivo `recibo_fel` para RECI/RDON (la regla A1 queda «toda **factura** FEL al NIT va en el libro»); FESP sin
+otros impuestos ni IDP (error y check); los ajustes de c4 al importar; el libro dirá «Exento y no afecto».

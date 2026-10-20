@@ -105,7 +105,7 @@ o marzo; el de marzo se declara en abril). Después no da derecho a crédito.
 - **Fuera de plazo: se registra con aviso** (es costo y deuda real). El IVA va al
   costo, a la **cuenta configurable por empresa** (gasto deducible o no deducible;
   la cuenta contable llega con *Contabilidad*), y el documento **sí va** en el libro
-  del período de registro, en la columna sin crédito fiscal (AG 311-97 art. 38;
+  del período de registro, en la columna sin crédito fiscal (AG 5-2013 art. 38;
   confirmar en el AG 5-2013).
 - **Notas de crédito del proveedor** (Ley del IVA art. 17): rebajan el crédito del
   **período en que se reciben**, sin los dos meses de gracia. Si su factura quedó sin
