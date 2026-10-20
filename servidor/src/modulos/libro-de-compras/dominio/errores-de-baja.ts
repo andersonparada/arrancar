@@ -55,3 +55,14 @@ export class DocumentoConNotas extends ReglaDeNegocioInfringida {
     super('La factura tiene notas de crédito registradas: no se puede eliminar.');
   }
 }
+
+/** Anular o eliminar una nota de débito dejaría a las notas de crédito de su factura rebajando más de lo que vale. */
+export class NotaDeDebitoSostieneNotasDeCredito extends ReglaDeNegocioInfringida {
+  readonly codigo = 'nota_de_debito_sostiene_notas_de_credito';
+
+  constructor() {
+    super(
+      'Las notas de crédito de esta factura pasan de su valor sin esta nota de débito: anule antes la nota de crédito.',
+    );
+  }
+}

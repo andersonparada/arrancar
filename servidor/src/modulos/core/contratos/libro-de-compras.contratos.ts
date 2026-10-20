@@ -20,6 +20,7 @@ export type TipoDeDocumentoDeCompra =
   | 'factura_primario_pecuario'
   | 'factura_especial'
   | 'nota_de_credito'
+  | 'nota_de_debito'
   | 'recibo';
 
 /** Lo que recibe cada destino en su orden `<destino>.recibir_documento`. */
@@ -27,7 +28,7 @@ export interface DocumentoParaDestino {
   documentoId: string;
   tipo: TipoDeDocumentoDeCompra;
   proveedorId: string;
-  /** La factura que corrige, solo en las notas de crédito. */
+  /** La factura que corrige, en las notas de crédito y de débito. */
   documentoAfectadoId: string | null;
   /** `AAAA-MM-DD`. */
   fechaEmision: string;

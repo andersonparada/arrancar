@@ -70,10 +70,10 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
       motivoSinCredito: factura.motivoSinCredito as MotivoSinCredito | null,
       regimenIvaDeLaEmpresa: factura.regimenIvaDeLaEmpresa,
       fechaEmision: factura.fechaEmision,
+      muestraEnReportesSat: factura.muestraEnReportesSat,
       total: aCentavos(factura.total),
       iva: aCentavos(factura.iva),
-      totalDeNotas: notas.total,
-      ivaDeNotas: notas.iva,
+      ...notas,
     };
   }
 
@@ -106,21 +106,25 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
     return delMasReciente(filas);
   }
 
-  /** Lo que ya rebajaron las notas de crédito vigentes de la factura, en centavos. */
-  private async sumaDeNotasVigentes(facturaId: string): Promise<{ total: number; iva: number }> {
+  /** Lo que ya corrigieron las notas vigentes de la factura, por familia de nota, en centavos. */
+  private async sumaDeNotasVigentes(facturaId: string) {
+    const deLaFamilia = (tipo: string, columna: typeof documentos.total | typeof documentos.iva) =>
+      sql<string>`coalesce(sum(${columna}) filter (where ${documentos.tipo} = ${tipo}), 0)`;
     const [suma] = await transaccionEnCurso()
       .select({
-        total: sql<string>`coalesce(sum(${documentos.total}), 0)`,
-        iva: sql<string>`coalesce(sum(${documentos.iva}), 0)`,
+        totalDeCredito: deLaFamilia('nota_de_credito', documentos.total),
+        ivaDeCredito: deLaFamilia('nota_de_credito', documentos.iva),
+        totalDeDebito: deLaFamilia('nota_de_debito', documentos.total),
+        ivaDeDebito: deLaFamilia('nota_de_debito', documentos.iva),
       })
       .from(documentos)
-      .where(
-        and(
-          eq(documentos.documentoAfectadoId, facturaId),
-          eq(documentos.tipo, 'nota_de_credito'),
-          eq(documentos.estado, 'vigente'),
-        ),
-      );
-    return { total: aCentavos(suma?.total ?? '0'), iva: aCentavos(suma?.iva ?? '0') };
+      .where(and(eq(documentos.documentoAfectadoId, facturaId), eq(documentos.estado, 'vigente')));
+    const fila = suma ?? { totalDeCredito: '0', ivaDeCredito: '0', totalDeDebito: '0', ivaDeDebito: '0' };
+    return {
+      totalDeNotasDeCredito: aCentavos(fila.totalDeCredito),
+      ivaDeNotasDeCredito: aCentavos(fila.ivaDeCredito),
+      totalDeNotasDeDebito: aCentavos(fila.totalDeDebito),
+      ivaDeNotasDeDebito: aCentavos(fila.ivaDeDebito),
+    };
   }
 }

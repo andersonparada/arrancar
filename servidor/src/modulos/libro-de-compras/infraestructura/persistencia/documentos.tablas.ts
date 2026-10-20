@@ -18,7 +18,7 @@ import {
   restriccionesDeTipo,
   restriccionesDeValores,
 } from './documentos.restricciones.js';
-import { restriccionesDeFamilia } from './documentos.restricciones-de-familia.js';
+import { restriccionesDeFamilia, restriccionesDeNotas } from './documentos.restricciones-de-familia.js';
 import { restriccionesDeRegimen } from './documentos.restricciones-de-regimen.js';
 import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import type { TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
@@ -85,6 +85,7 @@ export const documentos = esquemaLibroDeCompras.table(
     ...restriccionesDeTipo(t),
     ...restriccionesDeFueraDelLibro(t),
     ...restriccionesDeFamilia(t),
+    ...restriccionesDeNotas(t),
     ...restriccionesDeRegimen(t),
     ...llavesDeDocumento(t),
     ...indicesDeDocumento(t),

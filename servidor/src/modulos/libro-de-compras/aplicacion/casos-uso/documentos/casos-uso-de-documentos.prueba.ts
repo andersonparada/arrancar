@@ -138,8 +138,11 @@ describe('registrar un documento: destino, catálogos y notas', () => {
       fechaEmision: '2026-10-01',
       total: 112000,
       iva: 12000,
-      totalDeNotas: 100000,
-      ivaDeNotas: 0,
+      muestraEnReportesSat: true,
+      totalDeNotasDeCredito: 100000,
+      ivaDeNotasDeCredito: 0,
+      totalDeNotasDeDebito: 0,
+      ivaDeNotasDeDebito: 0,
     });
 
     await expect(registrar({ tipo: 'nota_de_credito', documentoAfectadoId: facturaId, serie: 'N' })).rejects.toThrow(

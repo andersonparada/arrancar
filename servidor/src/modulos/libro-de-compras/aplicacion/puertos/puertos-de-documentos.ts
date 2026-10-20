@@ -49,7 +49,10 @@ export interface CatalogosParaDocumentos {
   combustiblesConTasa(ids: readonly string[], fecha: string): Promise<CombustibleConTasa[]>;
 }
 
-/** La factura que rebaja una nota de crédito, con lo ya rebajado por las notas vigentes. Montos en centavos. */
+/**
+ * La factura que corrige una nota, con lo ya corregido por sus notas vigentes (de crédito y de débito). Montos en
+ * centavos.
+ */
 export interface FacturaParaNota {
   id: string;
   tipo: TipoDeDocumento;
@@ -60,10 +63,13 @@ export interface FacturaParaNota {
   /** Régimen de IVA con que se registró la factura (su foto). */
   regimenIvaDeLaEmpresa: RegimenDeIva;
   fechaEmision: string;
+  muestraEnReportesSat: boolean;
   total: number;
   iva: number;
-  totalDeNotas: number;
-  ivaDeNotas: number;
+  totalDeNotasDeCredito: number;
+  ivaDeNotasDeCredito: number;
+  totalDeNotasDeDebito: number;
+  ivaDeNotasDeDebito: number;
 }
 
 /** La clave con que se busca un documento ya registrado en la empresa. */

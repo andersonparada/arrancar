@@ -94,8 +94,11 @@ describe('registrar una factura especial', () => {
       regimenIvaDeLaEmpresa: 'general',
       iva: 12000,
       total: 112000,
-      totalDeNotas: 0,
-      ivaDeNotas: 0,
+      muestraEnReportesSat: true,
+      totalDeNotasDeCredito: 0,
+      ivaDeNotasDeCredito: 0,
+      totalDeNotasDeDebito: 0,
+      ivaDeNotasDeDebito: 0,
     });
 
     const nota = solicitud({

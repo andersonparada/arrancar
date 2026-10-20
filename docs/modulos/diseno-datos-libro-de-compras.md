@@ -1031,10 +1031,10 @@ migración de permisos ni de otros esquemas.
 Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`. Dependen de R2-3 (familias y
 `tipo_dte`) y R2-4 (motivo por familia).
 
-1. **R3-1 (servidor, datos):** migración `0017`; `tipos-de-documento.ts` con la familia `nota_de_debito`, `NDEB` en
+1. **R3-1 (servidor, datos) — HECHO (2026-10-19):** migración `0017`; `tipos-de-documento.ts` con la familia `nota_de_debito`, `NDEB` en
    `TIPOS_DTE` y `FAMILIA_DEL_TIPO_DTE`, `TIPOS_DE_NOTA` y `esNota(tipo)`, y `FAMILIAS_QUE_ADMITEN_NOTA_DE_DEBITO`; tipo
    de la tabla y del contrato; pruebas de checks de 3.2c.10.
-2. **R3-2 (servidor, dominio):** `motivoDeUnaNotaDeDebito` (3.2c.3), período como factura y fecha contra la factura
+2. **R3-2 (servidor, dominio) — HECHO (2026-10-19, con los ajustes aprobados por el usuario el mismo día: motivo `nota_de_debito_tardia` del art. 17, `no_vinculado` que el usuario puede agregar, aviso a agentes sin retenciones, clase de cargo solo como aviso, casilla atada también en la nota de crédito):** `motivoDeUnaNotaDeDebito` (3.2c.3), período como factura y fecha contra la factura
    (3.2c.4), `exigirNotaCoherenteConLaFactura` y `exigirQueLaNotaNoSupereLaFactura` con las NDEB (3.2c.6), regla de la
    familia y de la casilla de la factura; errores nuevos; pruebas puras con la tabla de casos de 3.2c.3.
 3. **R3-3 (servidor, registrar):** `ResolutorDeFactura` para las dos notas, consulta agregada por tipo con bloqueo,

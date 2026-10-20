@@ -62,7 +62,7 @@ export const restriccionesDeFamilia = (t: T) => [
   check('documentos_familia_sin_iva', sql`${t.tipo} not in (${sql.raw(lista(FAMILIAS_CON_MOTIVO))}) or ${t.iva} = 0`),
   check(
     'documentos_motivo_de_la_familia',
-    sql`${t.tipo} = 'nota_de_credito' or not ${t.muestraEnReportesSat} or (case ${t.tipo} ${motivoDeCadaFamilia(t)} else coalesce(${t.motivoSinCredito}, '') not in (${sql.raw(lista(MOTIVOS_DE_FAMILIA))}) end)`,
+    sql`${t.tipo} in ('nota_de_credito', 'nota_de_debito') or not ${t.muestraEnReportesSat} or (case ${t.tipo} ${motivoDeCadaFamilia(t)} else coalesce(${t.motivoSinCredito}, '') not in (${sql.raw(lista(MOTIVOS_DE_FAMILIA))}) end)`,
   ),
   check(
     'documentos_primario_pecuario_desde',
@@ -73,5 +73,18 @@ export const restriccionesDeFamilia = (t: T) => [
     'documentos_factura_especial_vendedor',
     sql`${t.tipo} <> 'factura_especial' or (${t.nitReceptor} is not null and ${t.nitReceptor} <> coalesce(${t.nitEmisor}, '')
         and (${t.nitReceptor} ~ '^[0-9]{1,12}[0-9K]$' or ${t.nitReceptor} ~ '^[0-9]{13}$'))`,
+  ),
+];
+
+/** La nota de débito va siempre en el libro, y las notas no cobran IVA donde su factura no lo cobra. */
+export const restriccionesDeNotas = (t: T) => [
+  check('documentos_nota_de_debito_en_el_libro', sql`${t.tipo} <> 'nota_de_debito' or ${t.muestraEnReportesSat}`),
+  check(
+    'documentos_motivo_sin_iva',
+    sql`coalesce(${t.motivoSinCredito}, '') not in (${sql.raw(lista(MOTIVOS_DE_FAMILIA))}) or ${t.iva} = 0`,
+  ),
+  check(
+    'documentos_nota_de_debito_tardia_solo_en_la_nota',
+    sql`coalesce(${t.motivoSinCredito}, '') <> 'nota_de_debito_tardia' or ${t.tipo} = 'nota_de_debito'`,
   ),
 ];

@@ -1,25 +1,17 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import { NotaSobreFacturaEspecial } from '../../../dominio/errores-de-factura-especial.js';
-import {
-  FacturaAfectadaIncoherente,
-  FacturaNoSirveParaLaNota,
-  NotaSuperaLaFactura,
-} from '../../../dominio/errores-de-documento.js';
+import { FacturaAfectadaIncoherente } from '../../../dominio/errores-de-documento.js';
+import { exigirFacturaQueAdmiteLaNota } from '../../../dominio/factura-de-la-nota.js';
+import { esNota } from '../../../dominio/tipos-de-documento.js';
 import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
 import type { ConsultasDeDocumentos, FacturaParaNota } from '../../puertos/puertos-de-documentos.js';
 
-/** Las familias a las que una nota de crédito sí rebaja; la factura especial se anula y se registra de nuevo. */
-const TIPOS_QUE_SE_REBAJAN: readonly string[] = [
-  'factura',
-  'factura_pequeno_contribuyente',
-  'factura_pequeno_contribuyente_electronico',
-  'factura_contribuyente_agropecuario',
-  'factura_primario_pecuario',
-];
+type DatosParaLaFactura = Pick<SolicitudDeDocumento, 'tipo' | 'proveedorId' | 'destino' | 'documentoAfectadoId'> & {
+  /** La casilla del documento, ya resuelta: la nota y su factura van las dos en el libro o las dos fuera. */
+  muestraEnReportesSat: boolean;
+};
 
-type DatosParaLaFactura = Pick<SolicitudDeDocumento, 'tipo' | 'proveedorId' | 'destino' | 'documentoAfectadoId'>;
-
-/** Busca la factura que rebaja una nota de crédito y revisa que sirva: vigente, del mismo proveedor y destino. */
+/** Busca la factura que corrige una nota (de crédito o de débito) y revisa que sirva (`exigirFacturaQueAdmiteLaNota`). */
 export class ResolutorDeFactura {
   constructor(private readonly consultas: ConsultasDeDocumentos) {}
 
@@ -29,38 +21,21 @@ export class ResolutorDeFactura {
    * @throws FacturaAfectadaIncoherente si la nota no trae factura o un documento que no es nota trae una.
    * @throws RecursoNoEncontrado si la factura no existe en la empresa.
    * @throws NotaSobreFacturaEspecial si la factura es una factura especial.
-   * @throws FacturaNoSirveParaLaNota si no es una factura vigente del mismo proveedor y destino.
+   * @throws FacturaNoSirveParaLaNota si no es una factura vigente del mismo proveedor y destino, o la casilla difiere.
    */
   async resolver(solicitud: DatosParaLaFactura, bloquear: boolean): Promise<FacturaParaNota | null> {
-    const esNota = solicitud.tipo === 'nota_de_credito';
-    if (!esNota && solicitud.documentoAfectadoId !== null) {
-      throw new FacturaAfectadaIncoherente('Solo una nota de crédito lleva la factura que rebaja.');
+    const { tipo, documentoAfectadoId } = solicitud;
+    if (!esNota(tipo)) {
+      if (documentoAfectadoId !== null) {
+        throw new FacturaAfectadaIncoherente('Solo una nota de crédito o de débito lleva la factura que corrige.');
+      }
+      return null;
     }
-    if (!esNota) return null;
-    if (solicitud.documentoAfectadoId === null) {
-      throw new FacturaAfectadaIncoherente('Elija la factura que rebaja la nota de crédito.');
-    }
-    const factura = await this.consultas.buscarFacturaParaNota(solicitud.documentoAfectadoId, bloquear);
+    if (documentoAfectadoId === null) throw new FacturaAfectadaIncoherente('Elija la factura que corrige la nota.');
+    const factura = await this.consultas.buscarFacturaParaNota(documentoAfectadoId, bloquear);
     if (!factura) throw new RecursoNoEncontrado('La factura');
-    exigirQueSirva(factura, solicitud);
+    if (factura.tipo === 'factura_especial') throw new NotaSobreFacturaEspecial();
+    exigirFacturaQueAdmiteLaNota(factura, { ...solicitud, tipo });
     return factura;
   }
-}
-
-function exigirQueSirva(factura: FacturaParaNota, solicitud: DatosParaLaFactura): void {
-  if (factura.tipo === 'factura_especial') throw new NotaSobreFacturaEspecial();
-  if (factura.estado !== 'vigente' || !TIPOS_QUE_SE_REBAJAN.includes(factura.tipo)) {
-    throw new FacturaNoSirveParaLaNota('La nota de crédito debe rebajar una factura vigente.');
-  }
-  if (
-    factura.proveedorId !== solicitud.proveedorId ||
-    (solicitud.destino !== null && factura.destino !== solicitud.destino)
-  ) {
-    throw new FacturaNoSirveParaLaNota('La factura debe ser del mismo proveedor y del mismo destino que la nota.');
-  }
-}
-
-/** Las notas vigentes de la factura, con la nueva, no pasan del total de la factura. */
-export function exigirQueLaNotaNoSupereLaFactura(factura: FacturaParaNota, totalDeLaNota: number): void {
-  if (factura.totalDeNotas + totalDeLaNota > factura.total) throw new NotaSuperaLaFactura();
 }

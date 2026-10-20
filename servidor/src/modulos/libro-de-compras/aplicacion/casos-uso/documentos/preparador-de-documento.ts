@@ -13,6 +13,8 @@ import {
 } from '../../../dominio/documento-de-compra.js';
 import { DestinoNoDisponible } from '../../../dominio/errores-de-documento.js';
 import { exigirFechaDeLaFamilia, resolverTipoDeDocumento } from '../../../dominio/familia-del-documento.js';
+import { esNota } from '../../../dominio/tipos-de-documento.js';
+import { exigirQueLaNotaNoSupereLaFactura } from '../../../dominio/tope-de-notas.js';
 import type { PropuestaEnCero } from '../../../dominio/retencion-practicada.js';
 import type { SolicitudDeDocumento, SolicitudSinResolver } from '../../dto/solicitud-de-documento.js';
 import type {
@@ -35,7 +37,7 @@ import {
   type DependenciasDelCargador,
 } from './cargador-de-contexto-fiscal.js';
 import { resolverEncabezado, type EncabezadoResuelto } from './encabezado-del-documento.js';
-import { exigirQueLaNotaNoSupereLaFactura, ResolutorDeFactura } from './resolutor-de-factura.js';
+import { ResolutorDeFactura } from './resolutor-de-factura.js';
 import { ResolutorDeLineas } from './resolutor-de-lineas.js';
 
 export interface DependenciasDelPreparador extends DependenciasDelCargador {
@@ -124,10 +126,13 @@ export class PreparadorDeDocumento {
   ): Promise<DocumentoResuelto> {
     const encabezado = resolverEncabezado(solicitud, contexto);
     const lineas = await this.lineas.resolver(solicitud.lineas, solicitud.fechaEmision);
-    const factura = await this.facturas.resolver(solicitud, opciones.bloquearFactura);
+    const { muestraEnReportesSat } = encabezado;
+    const factura = await this.facturas.resolver({ ...solicitud, muestraEnReportesSat }, opciones.bloquearFactura);
     exigirLaFechaDeLaFamilia(solicitud, contexto, factura);
     const calculado = calcularElDocumento(solicitud, contexto, { encabezado, lineas, factura });
-    if (factura) exigirQueLaNotaNoSupereLaFactura(factura, calculado.totales.total);
+    if (factura && esNota(solicitud.tipo)) {
+      exigirQueLaNotaNoSupereLaFactura(factura, { tipo: solicitud.tipo, total: calculado.totales.total });
+    }
     const anulado = await this.buscarAnulado(solicitud, encabezado);
     const { retenciones, practicada } = retencionesDelDocumento(solicitud, contexto, {
       encabezado,
@@ -141,7 +146,7 @@ export class PreparadorDeDocumento {
 
   /** El documento anulado con la misma FEL (o NIT, tipo, serie y número) que ya retuvo algo; las notas no retienen. */
   private async buscarAnulado(solicitud: SolicitudDeDocumento, encabezado: EncabezadoResuelto) {
-    if (solicitud.tipo === 'nota_de_credito') return null;
+    if (esNota(solicitud.tipo)) return null;
     return this.dependencias.consultas.buscarAnuladoConRetenciones({
       tipo: solicitud.tipo,
       proveedorId: solicitud.proveedorId,

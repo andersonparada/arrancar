@@ -13,6 +13,7 @@ export const TIPOS_DE_DOCUMENTO = [
   'factura_primario_pecuario',
   'factura_especial',
   'nota_de_credito',
+  'nota_de_debito',
   'recibo',
 ] as const;
 export type TipoDeDocumento = (typeof TIPOS_DE_DOCUMENTO)[number];
@@ -26,6 +27,8 @@ export const MOTIVOS_SIN_CREDITO = [
   'primario_pecuario',
   'exento',
   'empresa_sin_credito',
+  /** Nota de débito emitida después de los dos meses desde la fecha de su factura (Ley del IVA art. 17). */
+  'nota_de_debito_tardia',
 ] as const;
 export type MotivoSinCredito = (typeof MOTIVOS_SIN_CREDITO)[number];
 
@@ -38,6 +41,7 @@ export const CODIGOS_DTE_DE_LA_FAMILIA = {
   factura_primario_pecuario: ['FARP', 'FCRP', 'FPEC', 'FCPC'],
   factura_especial: ['FESP'],
   nota_de_credito: ['NCRE'],
+  nota_de_debito: ['NDEB'],
   recibo: ['RECI', 'RDON'],
 } as const satisfies Record<TipoDeDocumento, readonly string[]>;
 
@@ -64,3 +68,23 @@ export const INICIO_DEL_PRIMARIO_Y_PECUARIO = '2025-04-09';
 
 /** Los motivos de las familias que no cobran IVA: una nota de crédito sobre ellas tampoco lo cobra. */
 export const MOTIVOS_SIN_IVA: readonly MotivoSinCredito[] = Object.values(MOTIVO_DE_LA_FAMILIA);
+
+/** Las familias que corrigen una factura: apuntan a ella con `documento_afectado_id`. */
+export const TIPOS_DE_NOTA = ['nota_de_credito', 'nota_de_debito'] as const satisfies readonly TipoDeDocumento[];
+export type TipoDeNota = (typeof TIPOS_DE_NOTA)[number];
+
+/** `true` si la familia es una nota (de crédito o de débito) y por eso lleva la factura que corrige. */
+export const esNota = (tipo: TipoDeDocumento): tipo is TipoDeNota =>
+  (TIPOS_DE_NOTA as readonly string[]).includes(tipo);
+
+/**
+ * Las familias de factura a las que una nota (de débito o de crédito) sí corrige. No la factura especial, que emitió
+ * la propia empresa y se anula y se registra de nuevo, ni el recibo ni otra nota.
+ */
+export const FAMILIAS_QUE_ADMITEN_NOTA_DE_DEBITO: readonly TipoDeDocumento[] = [
+  'factura',
+  'factura_pequeno_contribuyente',
+  'factura_pequeno_contribuyente_electronico',
+  'factura_contribuyente_agropecuario',
+  'factura_primario_pecuario',
+];

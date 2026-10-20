@@ -24,12 +24,16 @@ export class CombustibleSinTasaVigente extends ReglaDeNegocioInfringida {
   }
 }
 
-/** Una nota de crédito con IVA contra una factura exenta: el IVA que rebaja no existe en la factura (art. 29). */
+/** Una nota con IVA contra una factura exenta: el IVA que corrige no existe en la factura (art. 29). */
 export class NotaConIvaDeFacturaExenta extends ReglaDeNegocioInfringida {
   readonly codigo = 'nota_con_iva_de_factura_exenta';
 
-  constructor() {
-    super('La factura es exenta: la nota de crédito no puede traer IVA. Pida al proveedor que la corrija.');
+  constructor(tipoDeNota: 'nota_de_credito' | 'nota_de_debito' = 'nota_de_credito') {
+    super(
+      tipoDeNota === 'nota_de_debito'
+        ? 'La factura es exenta: la nota de débito no puede traer IVA; pida al proveedor que anule la nota y emita una factura por el cargo gravado.'
+        : 'La factura es exenta: la nota de crédito no puede traer IVA. Pida al proveedor que la corrija.',
+    );
   }
 }
 
@@ -38,6 +42,26 @@ export class IvaDeNotasExcedeElDeLaFactura extends ReglaDeNegocioInfringida {
   readonly codigo = 'iva_de_notas_excede_el_de_la_factura';
 
   constructor() {
-    super('El IVA de las notas de crédito no puede pasar del IVA de la factura que rebajan.');
+    super(
+      'El IVA de las notas de crédito no puede pasar del IVA de la factura que rebajan más el de sus notas de débito.',
+    );
+  }
+}
+
+/** La nota de débito se emitió antes que la factura que aumenta. */
+export class NotaDeDebitoAnteriorALaFactura extends ReglaDeNegocioInfringida {
+  readonly codigo = 'nota_de_debito_anterior_a_la_factura';
+
+  constructor() {
+    super('La nota de débito no puede ser anterior a la fecha de emisión de su factura.', { campo: 'fechaEmision' });
+  }
+}
+
+/** La nota de débito trae IVA sobre una factura de una familia que no lo cobra (pequeño contribuyente, agropecuario...). */
+export class NotaDeDebitoConIvaDeFacturaSinIva extends ReglaDeNegocioInfringida {
+  readonly codigo = 'nota_de_debito_con_iva_de_factura_sin_iva';
+
+  constructor() {
+    super('La factura no cobra IVA: la nota de débito tampoco puede traerlo. Pida al proveedor que la corrija.');
   }
 }

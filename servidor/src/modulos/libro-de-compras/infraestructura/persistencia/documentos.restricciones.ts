@@ -8,6 +8,8 @@ const DESTINOS = "'cuentas-por-pagar', 'caja-chica', 'cuentas-por-liquidar'";
 const MOTIVOS_FUERA = "'sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit'";
 const CAUSAS_DE_ANULACION = "'error_de_captura', 'fel_anulada_por_el_emisor', 'no_corresponde_a_la_empresa'";
 const MOTIVOS = MOTIVOS_SIN_CREDITO.map((motivo) => `'${motivo}'`).join(', ');
+/** Los motivos cuyo IVA va al costo de las líneas. */
+const MOTIVOS_AL_COSTO = "'fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito', 'nota_de_debito_tardia'";
 
 /** Las columnas de `documentos` que usan las restricciones (la tabla las pasa desde su callback). */
 export type ColumnasDeDocumento = Record<
@@ -105,8 +107,8 @@ export const restriccionesDeMontos = (t: T) => [
   ),
   check(
     'documentos_iva_no_acreditable_por_motivo',
-    sql`(${t.motivoSinCredito} in ('fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito') and ${t.ivaNoAcreditable} = ${t.iva})
-        or (coalesce(${t.motivoSinCredito}, '') not in ('fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito') and ${t.ivaNoAcreditable} = 0)`,
+    sql`(${t.motivoSinCredito} in (${sql.raw(MOTIVOS_AL_COSTO)}) and ${t.ivaNoAcreditable} = ${t.iva})
+        or (coalesce(${t.motivoSinCredito}, '') not in (${sql.raw(MOTIVOS_AL_COSTO)}) and ${t.ivaNoAcreditable} = 0)`,
   ),
   check('documentos_exento_sin_iva', sql`coalesce(${t.motivoSinCredito}, '') <> 'exento' or ${t.iva} = 0`),
 ];
@@ -134,7 +136,10 @@ export const restriccionesDePeriodo = (t: T) => [
 
 /** Reglas del SAT, de la nota de crédito, del recibo y de la anulación. */
 export const restriccionesDeTipo = (t: T) => [
-  check('documentos_nota_con_factura', sql`(${t.tipo} = 'nota_de_credito') = (${t.documentoAfectadoId} is not null)`),
+  check(
+    'documentos_nota_con_factura',
+    sql`(${t.tipo} in ('nota_de_credito', 'nota_de_debito')) = (${t.documentoAfectadoId} is not null)`,
+  ),
   check(
     'documentos_datos_sat',
     sql`not ${t.muestraEnReportesSat} or (${t.nitEmisor} is not null and ${t.serie} is not null and ${t.autorizacionFel} is not null)`,

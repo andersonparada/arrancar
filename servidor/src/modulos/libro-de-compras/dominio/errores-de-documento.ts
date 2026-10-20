@@ -76,7 +76,7 @@ export class CatalogoInactivo extends ReglaDeNegocioInfringida {
   readonly codigo = 'catalogo_inactivo';
 }
 
-/** La nota de crédito no trae la factura que rebaja, o un documento que no es nota trae una factura afectada. */
+/** La nota no trae la factura que corrige, o un documento que no es nota trae una factura afectada. */
 export class FacturaAfectadaIncoherente extends DatoInvalido {
   readonly codigo = 'factura_afectada_incoherente';
 }
@@ -91,7 +91,7 @@ export class NotaSuperaLaFactura extends ReglaDeNegocioInfringida {
   readonly codigo = 'nota_supera_la_factura';
 
   constructor() {
-    super('Las notas de crédito no pueden sumar más que el total de la factura que rebajan.');
+    super('Las notas de crédito no pueden sumar más que el total de la factura que rebajan más sus notas de débito.');
   }
 }
 

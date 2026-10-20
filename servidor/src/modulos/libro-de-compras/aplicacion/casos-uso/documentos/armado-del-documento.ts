@@ -57,12 +57,16 @@ export function calcularElDocumento(
   });
 }
 
-/** Lo que la nota necesita de su factura: su motivo, el régimen con que se registró y lo ya rebajado. */
+/**
+ * Lo que la nota necesita de su factura: su motivo, su fecha, el régimen con que se registró y lo que puede rebajar
+ * (su IVA más el de sus notas de débito) y ya rebajaron las notas de crédito.
+ */
 const datosDeLaFactura = (factura: FacturaParaNota) => ({
   motivoDeLaFactura: factura.motivoSinCredito,
   regimenDeLaFactura: factura.regimenIvaDeLaEmpresa,
-  ivaDeLaFactura: factura.iva,
-  ivaRebajadoPorOtrasNotas: factura.ivaDeNotas,
+  fechaDeLaFactura: factura.fechaEmision,
+  ivaDeLaFactura: factura.iva + factura.ivaDeNotasDeDebito,
+  ivaRebajadoPorOtrasNotas: factura.ivaDeNotasDeCredito,
 });
 
 /**

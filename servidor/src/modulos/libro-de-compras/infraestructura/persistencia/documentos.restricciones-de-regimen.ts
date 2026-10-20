@@ -26,6 +26,6 @@ export const restriccionesDeRegimen = (t: T) => [
   check(
     'documentos_sin_credito_sin_art_20',
     sql`${t.tipo} = 'nota_de_credito' or ${t.regimenIvaDeLaEmpresa} = 'general'
-        or coalesce(${t.motivoSinCredito}, '') not in ('fuera_de_plazo', 'no_vinculado')`,
+        or coalesce(${t.motivoSinCredito}, '') not in ('fuera_de_plazo', 'no_vinculado', 'nota_de_debito_tardia')`,
   ),
 ];

@@ -976,3 +976,19 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   que corrige filas anteriores); el agropecuario con persona jurídica dice que el régimen es solo de persona individual
   (ya no pide la contabilidad) y el cambio de tipo de persona en el historial explica que es igual en todas las vigencias.
   Pendiente de cliente: error 1 (ficha de la empresa sin historial) y la baja 4 (propuesta de ISR exento al pasar a no afiliado).
+- 2026-10-19 — **Libro de compras R3-1 y R3-2 (servidor): nota de débito del proveedor (NDEB), datos y dominio.** Migración
+  `0018_r3_nota_de_debito` (`when` mayor que el de la `0017`; solo checks, sin datos que convertir):
+  familia `nota_de_debito` con `tipo_dte = 'NDEB'`, `nota_con_factura` para las dos notas, `motivo_de_la_familia`, checks nuevos
+  `nota_de_debito_en_el_libro`, `motivo_sin_iva` (cierra el hueco de la nota de crédito de una factura sin IVA) y
+  `nota_de_debito_tardia_solo_en_la_nota`, y el motivo `nota_de_debito_tardia` (art. 17) en `iva_no_acreditable_por_motivo` y
+  `sin_credito_sin_art_20`. Dominio: orden del motivo de la NDEB familia, exento, `empresa_sin_credito`, `no_vinculado`
+  (el usuario puede agregarlo, no quitarlo si la factura lo traía), art. 17, art. 20; una factura registrada sin crédito
+  no se hereda (da crédito, con aviso). `esNotaDeDebitoTardia` en `plazo-de-la-nota-de-debito.ts`, sobre `venceLaVispera` de `plazo-en-meses.ts`. Reglas de la NDEB: no anterior a su
+  factura, sin IVA de la FEL sobre factura que no lo cobra, error de factura exenta con IVA («pida al proveedor que anule
+  la nota y emita una factura por el cargo gravado»); sin retenciones (`esNota`) y con aviso a agentes de IVA o de ISR;
+  avisos de la clase de cargo `intereses` (sin columna: el diseño no la prevé, llega en la solicitud de R3-3). Topes
+  (`tope-de-notas.ts`): las notas de crédito caben en la factura más sus NDEB, en total y en IVA; también la regla para
+  anular una NDEB (`NotaDeDebitoSostieneNotasDeCredito`, que R3-4 usa). La casilla SAT de las dos notas va atada a la de su
+  factura (`factura-de-la-nota.ts`, R3-h). `FacturaParaNota` suma las sumas por familia de nota (una consulta agregada). La
+  derogación se mide con la fecha de la factura, como ya se hacía con la nota de crédito. Falta R3-3 (solicitud, DTO,
+  contrato del destino), R3-4 (bajas), el cliente y el QA.

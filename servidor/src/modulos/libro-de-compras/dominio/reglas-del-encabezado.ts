@@ -79,6 +79,7 @@ const REGIMENES_DE_LA_FAMILIA: Record<TipoDeDocumento, readonly RegimenDeIvaDePr
   factura_primario_pecuario: ['primario', 'pecuario'],
   factura_especial: null,
   nota_de_credito: null,
+  nota_de_debito: null,
   recibo: null,
 };
 
