@@ -27,12 +27,16 @@ export interface TerceroDto {
 
 /** Lo que el listado de clientes muestra del papel. */
 export interface ClienteEnListadoDto {
+  /** Id del papel de cliente (no el del tercero). */
+  id: string;
   clase: ClaseDeCliente;
   activo: boolean;
 }
 
 /** Lo que el listado de proveedores muestra del papel. */
 export interface ProveedorEnListadoDto {
+  /** Id del papel de proveedor (no el del tercero): es el que usan los demás módulos. */
+  id: string;
   categoriaId: string | null;
   categoriaNombre: string | null;
   activo: boolean;

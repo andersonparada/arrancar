@@ -103,8 +103,8 @@ const REGLAS_DE_RETENCION: readonly ReglaDeRetencion[] = [
   },
   {
     campo: 'seLeRetieneIsr',
-    mensaje: 'No se le retiene ISR a un proveedor sin régimen de ISR.',
-    seInfringe: (datos) => datos.regimenIsr === null && datos.seLeRetieneIsr,
+    mensaje: 'No se le retiene ISR a un proveedor sin régimen de ISR ni a uno exento.',
+    seInfringe: (datos) => (datos.regimenIsr === null || datos.regimenIsr === 'exento') && datos.seLeRetieneIsr,
   },
   {
     campo: 'seLeRetieneIvaPequenoContribuyente',

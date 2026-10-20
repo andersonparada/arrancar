@@ -161,6 +161,11 @@ describe('datos fiscales del proveedor: coherencia', () => {
     expect(campos({ seLeRetieneIsr: true })).toEqual([]);
   });
 
+  it('a un proveedor exento de ISR no se le retiene ISR', () => {
+    expect(campos({ regimenIsr: 'exento', seLeRetieneIsr: true })).toEqual(['seLeRetieneIsr']);
+    expect(campos({ regimenIsr: 'exento', seLeRetieneIsr: false })).toEqual([]);
+  });
+
   it('un pequeño contribuyente no lleva régimen de ISR, ni es agente, ni sufre retención general', () => {
     const pequeno = { regimenIva: 'pequeno_contribuyente', regimenIsr: null, seLeRetieneIva: false } as const;
 

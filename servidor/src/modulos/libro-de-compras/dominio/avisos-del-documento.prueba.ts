@@ -93,11 +93,14 @@ describe('avisos de una retención quitada o rebajada', () => {
 });
 
 describe('otros avisos del documento', () => {
-  it('la nota tardía se mide de fecha a fecha (emisión de la factura más dos meses)', () => {
+  it('la nota tardía se mide de fecha a fecha, venciendo la víspera (factura del 15/03: en plazo hasta el 14/05)', () => {
     expect(avisosDeNotaTardia('2027-01-05', '2026-10-01')).toEqual([AVISO_DE_NOTA_TARDIA]);
     expect(avisosDeNotaTardia('2026-12-01', '2026-10-31')).toEqual([]);
-    expect(avisosDeNotaTardia('2026-12-31', '2026-10-31')).toEqual([]);
+    expect(avisosDeNotaTardia('2026-12-30', '2026-10-31')).toEqual([]);
+    expect(avisosDeNotaTardia('2026-12-31', '2026-10-31')).toEqual([AVISO_DE_NOTA_TARDIA]);
     expect(avisosDeNotaTardia('2027-01-01', '2026-10-31')).toEqual([AVISO_DE_NOTA_TARDIA]);
+    expect(avisosDeNotaTardia('2026-05-14', '2026-03-15')).toEqual([]);
+    expect(avisosDeNotaTardia('2026-05-15', '2026-03-15')).toEqual([AVISO_DE_NOTA_TARDIA]);
     expect(AVISO_DE_NOTA_TARDIA).toContain('Aun así, rebájela en el período en que la recibe');
   });
 

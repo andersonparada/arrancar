@@ -21,12 +21,13 @@ export class PrevisualizarDocumento {
     this.preparador = new PreparadorDeDocumento(dependencias);
   }
 
-  /** @throws las mismas reglas que `RegistrarDocumento`, salvo repetido, NIT del proveedor y destino. */
+  /** @throws las mismas reglas que `RegistrarDocumento`, salvo repetido y NIT del proveedor; el destino no se exige (si no está activo, solo avisa). */
   ejecutar(operador: Operador, peticion: PeticionDeRegistro): Promise<DocumentoConAvisosDto> {
     return this.dependencias.unidadDeTrabajo.ejecutar(operador, async () => {
       const { documento, avisos } = await this.preparador.preparar(operador, peticion.solicitud, {
         bloquearFactura: false,
         puedeAjustarRetenciones: peticion.puedeAjustarRetenciones,
+        exigirDestino: false,
       });
       return { documento: dtoDeDocumento(documento, false), avisos };
     });

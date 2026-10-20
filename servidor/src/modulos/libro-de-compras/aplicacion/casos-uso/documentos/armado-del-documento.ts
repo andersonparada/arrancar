@@ -1,3 +1,4 @@
+import { DESTINO_DE_VISTA_PREVIA } from '../../../dominio/destinos-de-documento.js';
 import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { fijarRetenciones } from '../../../dominio/ajuste-de-retenciones.js';
@@ -145,7 +146,7 @@ function condicionesDelDocumento(
     motivoSinCredito: calculado.motivoSinCredito,
     regimenIvaDeLaEmpresa: contexto.datosDeLaEmpresa.instantanea().regimenIva,
     documentoAfectadoId: solicitud.documentoAfectadoId,
-    destino: solicitud.destino,
+    destino: solicitud.destino ?? DESTINO_DE_VISTA_PREVIA,
     observaciones: solicitud.observaciones,
   };
 }

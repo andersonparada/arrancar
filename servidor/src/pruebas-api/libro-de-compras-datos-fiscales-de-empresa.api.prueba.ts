@@ -55,6 +55,17 @@ describe('datos fiscales con el formulario de Empresas', () => {
     });
   });
 
+  it('agropecuario con persona jurídica explica que el régimen es solo de persona individual', async () => {
+    const nueva = await cuenta.propietario.post('/api/empresas', {
+      nombre: 'Agropecuaria jurídica',
+      secciones: { [CLAVE]: { ...PERSONA, regimenIva: 'contribuyente_agropecuario' } },
+    });
+
+    expect(nueva.estado).toBe(400);
+    expect(nueva.cuerpo.error.detalles[0].campo).toBe('secciones.libro-de-compras.tipoDePersona');
+    expect(nueva.cuerpo.error.detalles[0].mensaje).toContain('solo de persona individual');
+  });
+
   it('se guardan al crear una empresa nueva, aunque no sea la activa', async () => {
     const nueva = await cuenta.propietario.post('/api/empresas', {
       nombre: 'Exportadora',

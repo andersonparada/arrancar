@@ -52,7 +52,10 @@ function exigirQueSirva(factura: FacturaParaNota, solicitud: DatosParaLaFactura)
   if (factura.estado !== 'vigente' || !TIPOS_QUE_SE_REBAJAN.includes(factura.tipo)) {
     throw new FacturaNoSirveParaLaNota('La nota de crédito debe rebajar una factura vigente.');
   }
-  if (factura.proveedorId !== solicitud.proveedorId || factura.destino !== solicitud.destino) {
+  if (
+    factura.proveedorId !== solicitud.proveedorId ||
+    (solicitud.destino !== null && factura.destino !== solicitud.destino)
+  ) {
     throw new FacturaNoSirveParaLaNota('La factura debe ser del mismo proveedor y del mismo destino que la nota.');
   }
 }

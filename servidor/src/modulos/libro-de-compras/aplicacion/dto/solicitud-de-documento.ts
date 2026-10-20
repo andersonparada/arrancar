@@ -33,7 +33,8 @@ export interface SolicitudDeDocumento {
   /** El código de la SAT (`FACT`, `FPEQ`, `NCRE`...); obligatorio con FEL y `null` sin ella. */
   tipoDte: TipoDte | null;
   proveedorId: string;
-  destino: DestinoDeDocumento;
+  /** `null` solo en la vista previa, que se calcula sin destino; registrar siempre lo trae. */
+  destino: DestinoDeDocumento | null;
   /** NIT del emisor que dice el DTE; en el libro es obligatorio. */
   nitEmisor: string | null;
   serie: string | null;

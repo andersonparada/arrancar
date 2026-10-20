@@ -964,3 +964,15 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   4 del QA: al cambiar el régimen de IVA con la persona ya escogida, el ISR vuelve a la propuesta de la tabla (jurídica
   de general a no afiliado propone «Exento») en vez de arrastrar la elección previa; con prueba. La lista de
   proveedores del registro ya toma `proveedor.id` del papel (`GET /terceros?papel=proveedor`), sin cambios.
+
+- 2026-10-19 — Libro de compras: correcciones del servidor tras el QA (`informe-qa-2026-10-19.md`). **Error 2:** el listado
+  `GET /api/terceros` trae el `id` del papel en `cliente.id` y `proveedor.id` (el del papel, no el del tercero), que el
+  formulario de documentos usa. **Error 3:** `POST …/documentos/calcular` ya no exige destino: vacío o desconocido calcula
+  igual (se arma con un destino de vista previa que no se guarda); conocido pero inactivo calcula y agrega un aviso; registrar
+  sigue exigiéndolo (`OpcionesDePreparacion.exigirDestino`). **Vence la víspera:** `venceLaVispera(fecha, meses)` en
+  `dominio/plazo-en-meses.ts` da el último día incluido del plazo (15/03 + 2 meses: hasta el 14/05; si el mes final no
+  tiene ese número, vence su último día) y mide el aviso de la nota de crédito tardía; la nota de débito la reutilizará.
+  **Bajas:** un proveedor con ISR `exento` no puede tener «se le retiene ISR» (dominio y check de la base, migración 0017,
+  que corrige filas anteriores); el agropecuario con persona jurídica dice que el régimen es solo de persona individual
+  (ya no pide la contabilidad) y el cambio de tipo de persona en el historial explica que es igual en todas las vigencias.
+  Pendiente de cliente: error 1 (ficha de la empresa sin historial) y la baja 4 (propuesta de ISR exento al pasar a no afiliado).

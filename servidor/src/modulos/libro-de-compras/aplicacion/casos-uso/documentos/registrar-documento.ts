@@ -65,6 +65,7 @@ export class RegistrarDocumento {
       const preparado = await this.preparador.preparar(operador, peticion.solicitud, {
         bloquearFactura: true,
         puedeAjustarRetenciones: peticion.puedeAjustarRetenciones,
+        exigirDestino: true,
       });
       await this.guardar(operador, preparado);
       return preparado;

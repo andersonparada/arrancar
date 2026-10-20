@@ -84,7 +84,11 @@ export const esquemaDocumento = z.object({
   confirmarCambioDeRegimen: z.boolean().default(false),
 });
 
+/** Al calcular el destino es opcional y de texto libre: solo registrar lo exige (el caso de uso lo revisa). */
+export const esquemaDocumentoParaCalcular = esquemaDocumento.extend({ destino: z.string().max(60).nullish() });
+
 export const esquemaParamsDeProveedor = z.object({ proveedorId: z.uuid() });
 
+export type DocumentoParaCalcular = z.output<typeof esquemaDocumentoParaCalcular>;
 export type DocumentoSolicitado = z.output<typeof esquemaDocumento>;
 export type ParamsDeProveedorDeDocumento = z.infer<typeof esquemaParamsDeProveedor>;

@@ -5,6 +5,7 @@ import type {
   ListarDestinos,
   ObtenerDestinoSugerido,
 } from '../aplicacion/casos-uso/documentos/consultas-del-formulario.js';
+import { destinoConocido } from '../dominio/destinos-de-documento.js';
 import type { AnularDocumento } from '../aplicacion/casos-uso/documentos/anular-documento.js';
 import type { ListarDocumentos, ObtenerDocumento } from '../aplicacion/casos-uso/documentos/consultar-documentos.js';
 import type { EliminarDocumento } from '../aplicacion/casos-uso/documentos/eliminar-documento.js';
@@ -15,7 +16,11 @@ import type {
   FiltroDeDocumentosSolicitado,
   ParamsDeDocumento,
 } from './documentos.bajas.esquemas-http.js';
-import type { DocumentoSolicitado, ParamsDeProveedorDeDocumento } from './documentos.esquemas-http.js';
+import type {
+  DocumentoParaCalcular,
+  DocumentoSolicitado,
+  ParamsDeProveedorDeDocumento,
+} from './documentos.esquemas-http.js';
 
 export interface CasosDeUsoDeDocumentos {
   previsualizar: PrevisualizarDocumento;
@@ -34,8 +39,8 @@ const PERMISO_DE_AJUSTAR = 'libro-de-compras.retenciones.ajustar';
 export class DocumentosControlador {
   constructor(private readonly casosDeUso: CasosDeUsoDeDocumentos) {}
 
-  calcular = (solicitud: FastifyRequest<{ Body: DocumentoSolicitado }>) =>
-    this.casosDeUso.previsualizar.ejecutar(operadorDe(solicitud), peticionDe(solicitud));
+  calcular = (solicitud: FastifyRequest<{ Body: DocumentoParaCalcular }>) =>
+    this.casosDeUso.previsualizar.ejecutar(operadorDe(solicitud), peticionDeCalculo(solicitud));
 
   registrar = async (solicitud: FastifyRequest<{ Body: DocumentoSolicitado }>, respuesta: FastifyReply) => {
     const registrado = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), peticionDe(solicitud));
@@ -65,6 +70,15 @@ export class DocumentosControlador {
   /** Responde 200 con `{ avisos }` (no 204) para poder avisar que el período puede estar declarado. */
   eliminar = (solicitud: FastifyRequest<{ Params: ParamsDeDocumento }>) =>
     this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), { documentoId: solicitud.params.documentoId });
+}
+
+/** Al calcular, un destino vacío o desconocido llega como `null`: la vista previa no lo necesita. */
+function peticionDeCalculo(solicitud: FastifyRequest<{ Body: DocumentoParaCalcular }>): PeticionDeRegistro {
+  const permisos = contextoDe(solicitud).permisos;
+  return {
+    solicitud: { ...solicitud.body, destino: destinoConocido(solicitud.body.destino) },
+    puedeAjustarRetenciones: permisos.has(PERMISO_DE_AJUSTAR),
+  };
 }
 
 function peticionDe(solicitud: FastifyRequest<{ Body: DocumentoSolicitado }>): PeticionDeRegistro {

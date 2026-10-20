@@ -1,5 +1,6 @@
 import { ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
 import type { DatosFiscalesDeEmpresa, TipoDePersona } from './datos-fiscales-de-empresa.js';
+import { DatosFiscalesInvalidos } from './errores.js';
 import { sumarMeses } from './periodo-del-libro.js';
 
 /** La vigencia «desde el inicio» (la base) no se quita: la empresa siempre tiene un régimen. */
@@ -8,6 +9,21 @@ export class VigenciaBaseNoSeQuita extends ReglaDeNegocioInfringida {
 
   constructor() {
     super('La vigencia inicial no se quita: corríjala o registre el cambio a partir del mes que corresponde.');
+  }
+}
+
+/** Cambia el tipo de persona de una vigencia; si la deja contradictoria, explica que el tipo es igual en todas. */
+function conTipoDePersonaExplicado(vigencia: VigenciaFiscal, tipoDePersona: TipoDePersona): VigenciaFiscal {
+  try {
+    return { ...vigencia, datos: vigencia.datos.conTipoDePersona(tipoDePersona) };
+  } catch (error) {
+    if (!(error instanceof DatosFiscalesInvalidos)) throw error;
+    throw new DatosFiscalesInvalidos([
+      {
+        campo: 'tipoDePersona',
+        mensaje: `El tipo de persona es el mismo en todas las vigencias del historial y, con ese tipo, una de ellas queda mal: ${error.message} Corrija o quite esa vigencia primero.`,
+      },
+    ]);
   }
 }
 
@@ -113,9 +129,7 @@ export class HistorialFiscalDeEmpresa {
 
   /** Los mismos escalones con otro tipo de persona en todos. */
   conTipoDePersona(tipoDePersona: TipoDePersona): HistorialFiscalDeEmpresa {
-    return new HistorialFiscalDeEmpresa(
-      this.lista.map((v) => ({ ...v, datos: v.datos.conTipoDePersona(tipoDePersona) })),
-    );
+    return new HistorialFiscalDeEmpresa(this.lista.map((v) => conTipoDePersonaExplicado(v, tipoDePersona)));
   }
 
   /** Los períodos donde este historial y `despues` dicen algo distinto en alguno de los cuatro datos fiscales. */

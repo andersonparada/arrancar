@@ -50,6 +50,8 @@ export interface OpcionesDePreparacion {
   bloquearFactura: boolean;
   /** El usuario tiene `libro-de-compras.retenciones.ajustar`. */
   puedeAjustarRetenciones: boolean;
+  /** Registrar exige un destino activo; la vista previa calcula sin él y, si no está activo, solo avisa. */
+  exigirDestino: boolean;
 }
 
 /** El documento calculado, listo para guardar, con sus avisos y lo que falta hacerle al proveedor. */
@@ -87,7 +89,7 @@ export class PreparadorDeDocumento {
   }
 
   /**
-   * @throws DestinoNoDisponible si el módulo del destino no está activo en la cuenta.
+   * @throws DestinoNoDisponible si se pide exigir el destino y su módulo no está activo en la cuenta.
    * @throws AccesoDenegado si cambia una retención sin el permiso de ajustarlas.
    * @throws las reglas del dominio de cada paso (NIT, tipo, líneas, nota de crédito, retenciones...).
    */
@@ -98,13 +100,13 @@ export class PreparadorDeDocumento {
   ): Promise<DocumentoPreparado> {
     const solicitud = normalizar(pedida);
     const contexto = await this.cargador.cargar(operador, solicitud, { bloquear: opciones.bloquearFactura });
-    await this.exigirDestinoActivo(operador, solicitud.destino);
+    const avisoDelDestino = await this.revisarDestino(operador, solicitud.destino, opciones.exigirDestino);
     await this.dependencias.control.exigirAbierto(contexto.periodo);
     const resuelto = await this.resolver(solicitud, contexto, opciones);
     const documento = armarDocumento(operador, solicitud, { contexto, ...resuelto });
     return {
       documento,
-      avisos: avisosDelDocumento(solicitud, contexto, resuelto),
+      avisos: [...avisosDelDocumento(solicitud, contexto, resuelto), ...avisoDelDestino],
       nitParaCompletar: resuelto.encabezado.emisor.nitParaCompletar,
       dpiParaCompletar: resuelto.encabezado.dpiParaCompletar,
       datosFiscalesPorGuardar: contexto.datosDelProveedorPorGuardar,
@@ -151,9 +153,17 @@ export class PreparadorDeDocumento {
     });
   }
 
-  private async exigirDestinoActivo(operador: Operador, destino: DestinoDeDocumento): Promise<void> {
+  /** Registrar exige el destino activo; la vista previa sin destino no dice nada y con uno inactivo avisa. */
+  private async revisarDestino(
+    operador: Operador,
+    destino: DestinoDeDocumento | null,
+    exigir: boolean,
+  ): Promise<string[]> {
+    if (destino === null && !exigir) return [];
     const activos = await this.dependencias.destinos.activos(operador);
-    if (!activos.includes(destino)) throw new DestinoNoDisponible(destino);
+    if (destino !== null && activos.includes(destino)) return [];
+    if (exigir || destino === null) throw new DestinoNoDisponible(destino ?? 'sin elegir');
+    return [new DestinoNoDisponible(destino).message];
   }
 }
 

@@ -6,7 +6,11 @@ import {
   esquemaFiltroDeDocumentos,
   esquemaParamsDeDocumento,
 } from './documentos.bajas.esquemas-http.js';
-import { esquemaDocumento, esquemaParamsDeProveedor } from './documentos.esquemas-http.js';
+import {
+  esquemaDocumento,
+  esquemaDocumentoParaCalcular,
+  esquemaParamsDeProveedor,
+} from './documentos.esquemas-http.js';
 
 const tags = ['Libro de compras'];
 const RUTA = '/libro-de-compras/documentos';
@@ -22,7 +26,7 @@ export function rutasDeDocumentos(controlador: DocumentosControlador): FastifyPl
     rutasDeConsultaYBaja(app, controlador);
 
     app.post(`${RUTA}/calcular`, {
-      schema: { tags, body: esquemaDocumento },
+      schema: { tags, body: esquemaDocumentoParaCalcular },
       preHandler: crear,
       handler: controlador.calcular,
     });

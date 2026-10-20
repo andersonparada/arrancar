@@ -120,6 +120,13 @@
       "when": 1792402722204,
       "tag": "0016_r2_retenciones_de_factura_especial",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792473954457,
+      "tag": "0017_r2_isr_exento_no_se_retiene",
+      "breakpoints": true
     }
   ]
 }

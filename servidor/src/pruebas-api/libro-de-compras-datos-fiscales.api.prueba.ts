@@ -184,6 +184,16 @@ describe('datos fiscales con el formulario de Proveedores', () => {
     expect(cruzado.cuerpo.error.detalles[0].campo).toBe('secciones.libro-de-compras.regimenIsr');
   });
 
+  it('a un proveedor exento de ISR no se le retiene ISR', async () => {
+    const respuesta = await registrarProveedor(
+      'Exento que retiene',
+      seccionDeProveedor({ regimenIsr: 'exento', seLeRetieneIsr: true }),
+    );
+
+    expect(respuesta.estado).toBe(400);
+    expect(respuesta.cuerpo.error.detalles[0].campo).toBe('secciones.libro-de-compras.seLeRetieneIsr');
+  });
+
   it('un proveedor que no existe responde 404', async () => {
     const respuesta = await cuenta.propietario.get(rutaDeProveedor(crypto.randomUUID()));
 

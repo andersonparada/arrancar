@@ -56,7 +56,8 @@ function conLoQueProponeElRegimenDeEmpresa(
   const propuestos = datosPropuestos(regimenIva, tipoDePersona, entrada.regimenIsr ?? null);
   const regimenIsr = entrada.regimenIsr === undefined ? propuestos.regimenIsr : entrada.regimenIsr;
   const esAgente = entrada.esAgenteDeRetencionIsr ?? propuestos.esAgenteDeRetencionIsr;
-  if (esAgente === undefined) {
+  // Con agropecuario y persona jurídica, el problema es el tipo de persona (lo dice la regla del dominio), no la contabilidad.
+  if (esAgente === undefined && regimenIva !== 'contribuyente_agropecuario') {
     señalar(ctx, [{ campo: 'esAgenteDeRetencionIsr', mensaje: 'Diga si la empresa lleva contabilidad completa.' }]);
   }
   const datos = {

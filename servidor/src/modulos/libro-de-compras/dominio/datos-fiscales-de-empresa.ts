@@ -57,7 +57,13 @@ function problemasDelIsr(datos: PropiedadesFiscalesDeEmpresa): Problemas {
 
 function problemasDelTipoDePersona(datos: PropiedadesFiscalesDeEmpresa): Problemas {
   if (datos.regimenIva !== 'contribuyente_agropecuario' || datos.tipoDePersona === 'individual') return [];
-  return [{ campo: 'tipoDePersona', mensaje: 'El contribuyente agropecuario solo puede ser persona individual.' }];
+  return [
+    {
+      campo: 'tipoDePersona',
+      mensaje:
+        'El contribuyente agropecuario es un régimen solo de persona individual: para una persona jurídica escoja otro régimen de IVA.',
+    },
+  ];
 }
 
 /**

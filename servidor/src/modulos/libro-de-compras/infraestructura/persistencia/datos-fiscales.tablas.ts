@@ -139,7 +139,10 @@ function reglasDeRetencion(t: ColumnasDelProveedor) {
       'datos_fiscales_de_proveedor_retencion_iva_general',
       sql`${t.regimenIva} = 'general' or not ${t.seLeRetieneIva}`,
     ),
-    check('datos_fiscales_de_proveedor_retencion_isr', sql`${t.regimenIsr} is not null or not ${t.seLeRetieneIsr}`),
+    check(
+      'datos_fiscales_de_proveedor_retencion_isr',
+      sql`(${t.regimenIsr} is not null and ${t.regimenIsr} <> 'exento') or not ${t.seLeRetieneIsr}`,
+    ),
   ];
 }
 

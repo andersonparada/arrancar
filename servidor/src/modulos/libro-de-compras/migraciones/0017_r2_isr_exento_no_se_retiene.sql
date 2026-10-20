@@ -1,0 +1,3 @@
+UPDATE "libro_de_compras"."datos_fiscales_de_proveedor" SET "se_le_retiene_isr" = false WHERE "regimen_isr" = 'exento' AND "se_le_retiene_isr";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" DROP CONSTRAINT "datos_fiscales_de_proveedor_retencion_isr";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."datos_fiscales_de_proveedor" ADD CONSTRAINT "datos_fiscales_de_proveedor_retencion_isr" CHECK (("libro_de_compras"."datos_fiscales_de_proveedor"."regimen_isr" is not null and "libro_de_compras"."datos_fiscales_de_proveedor"."regimen_isr" <> 'exento') or not "libro_de_compras"."datos_fiscales_de_proveedor"."se_le_retiene_isr");
