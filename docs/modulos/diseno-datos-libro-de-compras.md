@@ -1949,6 +1949,795 @@ y motivo. Solo se consulta si `libro-de-compras.periodos.control_de_declarados` 
 L3 deja el puerto `ControlDePeriodos.exigirAbierto(periodo)` con una implementación que no
 bloquea; L5 pone la real.
 
+> **L5 (2026-10-20):** revisada en la §3.9.7: la fila ya no se crea en cada registro con el control apagado, se
+> puede declarar siempre (el control solo decide si bloquea) y el historial va en `declaraciones_de_periodos`.
+
+### 3.9 Reportes y cierre (L5) — arquitecto de datos, 2026-10-20
+
+Estado: **propuesta para aprobar**. Lleva a datos, consultas y pasos lo que pidió el contador en «Qué debe tener L5» y lo
+que decidió el usuario el 2026-10-20 (final de `validacion-h7-h11-retenciones.md`). Manda sobre la §3.8, que queda como
+antecedente. Sirve a **cualquier régimen**: el libro sale completo o simplificado según la foto
+`regimen_iva_de_la_empresa`, nada supone que la empresa sea agente de retención, y la bandeja y la conciliación de L4
+siguen siendo opcionales (solo producen avisos si se usaron). Las migraciones siguen a la última de `main`
+(`0022_l4_autorizacion_registrada_fuera`).
+
+#### 3.9.1 Lo encontrado
+
+1. **`ControlDePeriodos`** (`aplicacion/puertos/puertos-de-documentos.ts`) tiene un solo método,
+   `exigirAbierto(periodo)`, y una sola implementación que no bloquea (`ControlDePeriodosSinBloqueo`). Lo llaman
+   `PreparadorDeDocumento.preparar` (que sirve **a la vez** a registrar y a `calcular`, la vista previa),
+   `AnularDocumento` y `EliminarDocumento`. Ni la escucha de datos fiscales de la empresa ni `CambiosAlHistorialFiscal`
+   lo consultan.
+2. **No existe** la variable `libro-de-compras.periodos.control_de_declarados` (la §8 la anunció para L5): hay que
+   declararla. Hoy **solo el superacceso** edita la configuración (`configuracion.gestionar` es `soloSuperacceso`), en
+   cualquier nivel; el contexto `core/configuracion` expone `establecer` para que otro caso de uso escriba un valor (lo
+   usa Apariencia).
+3. **`retenciones`** ya tiene `constancia_numero` y `constancia_fecha` (check «los dos o ninguno») y el índice
+   `retenciones_mes_idx (empresa_id, fecha)`. El plazo de entero por regla ya existe en el dominio
+   (`plazo-de-entero.ts`: día hábil N del mes siguiente o el último día hábil; `avisos-de-retenciones.ts` elige
+   `ULTIMO_DIA_HABIL` para `iva_factura_especial`), con el calendario de feriados del core
+   (`infraestructura/calendario-de-feriados.ts`).
+4. **`documentos_libro_idx (empresa_id, periodo)`** ya cubre el libro; `lineas_de_documento_numero_unico
+   (documento_id, numero)` cubre las líneas por documento.
+5. **Imprimir** en el proyecto es `window.print()` con un encabezado `print:block` (los siete reportes de Bancos). No
+   hay ninguna librería de PDF en el servidor ni en el cliente. Sí hay `core/archivos` con `DocumentosProtegidos.guardar`
+   (PDF revisado con qpdf, `recurso_dueno` para servirlo solo desde el módulo dueño; lo usa `bancos.conciliaciones`).
+6. **Excel:** `LibroDeExcel.escribir` arma **una** hoja de datos más la de instrucciones; `rutasDeIntercambio` registra
+   `GET …/exportar` con un `filtro` Zod. No hay libro de varias hojas.
+7. **`vigencias_de_combustible`** todavía **no** tiene la casilla «IVA exento» que el usuario decidió hacer ya (L5-0).
+8. `AccionAuditada` ya tiene `reabrir`, `corregir`, `anular` y `quitar` (es un tipo de TypeScript sin check en la base).
+9. Hay `politicasDeSoloAgregar()` (insertar y leer, **por cuenta**), pero no su par **por empresa**.
+10. En desarrollo no hay documentos, retenciones ni filas en la bandeja (consulta de solo lectura del 2026-10-20; hay
+    dos vigencias de combustible): las migraciones no convierten datos.
+
+#### 3.9.2 Decisiones de diseño (resumen)
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Libro | **Consulta**, no tabla: una sola consulta por período da las filas, el resumen, los datos del SAT-2237 y la foto | Los montos ya están fijos en `documentos` y `lineas_de_documento`; una tabla del libro habría que mantenerla con cada alta y baja |
+| Reparto de columnas | En el **dominio** (función pura con pruebas), sobre montos por documento y categoría de línea que agrega el SQL | El signo, la columna y el motivo son reglas fiscales: deben poder probarse sin base |
+| Completo o simplificado | Según la vigencia del período (`HistorialFiscalDeEmpresa.vigenteEn(P)`); todos los documentos vigentes de P tienen esa misma foto (lo garantiza `VigenciaFiscalEnUso`) | Un período no puede mezclar regímenes |
+| PDF | **En el servidor**, con paginación propia (filas fijas por página) | Los folios exigen saber cuántas páginas salen antes de numerarlas y consumirlos en la misma transacción (3.9.5) |
+| Último folio | Tabla propia por empresa (`foliacion_del_libro`) más el historial de emisiones (`emisiones_del_libro`), **no** en `periodos` | Los folios corren aunque el control de períodos esté apagado, y son de la empresa, no del período |
+| Retenciones por resolver | Columnas en `retenciones`, puestas en `pendiente` al anular el documento | Es un dato 1 a 1 con la retención; la auditoría guarda su historia |
+| Enteros | Tabla nueva `enteros_de_retenciones` por mes y grupo, con pagos complementarios | El entero es un hecho propio (fecha, formulario, monto) que no pertenece a ninguna retención |
+| Períodos | `periodos` (estado) más `declaraciones_de_periodos` (historial de solo agregar, con la foto en `jsonb`) | La foto permite comparar y rectificar; el historial no se corrige |
+| Declarar sin control | **Se puede declarar siempre**; el control (apagado por omisión) solo decide si un período declarado **bloquea** | Quien no quiere bloqueos igual gana el historial, el número del SAT-2237 y el aviso de «cambió después de declarar» (pregunta L5-a) |
+| Bandeja y conciliación | Solo avisos, y solo si la empresa tiene lotes que tocan el período | Aclaración del usuario del 2026-10-19 |
+
+#### 3.9.3 Libro del período
+
+**Qué entra:** documentos de la empresa activa con `periodo = P`, `estado = 'vigente'` y `muestra_en_reportes_sat`.
+Esto incluye las familias sin IVA (pequeño contribuyente, primario y pecuario, y las derogadas con emisión anterior a la
+derogación), la factura especial, las notas de crédito y de débito y todo documento sin crédito con su motivo.
+
+**Qué no entra:** los anulados (van al anexo, 3.9.3.4); los eliminados (solo la auditoría los recuerda); todo lo que
+está fuera del libro (`motivo_fuera_del_libro`: `sin_fel`, `fel_a_consumidor_final`, `fel_a_otro_nit`, `recibo_fel`,
+incluidos los RECI y RDON); las filas de la bandeja que no se registraron.
+
+##### 3.9.3.1 Consulta (una por período)
+
+En `infraestructura/persistencia/consultas-del-libro.drizzle.ts`, con `transaccionEnCurso()` (RLS de la empresa) y además
+el filtro explícito por empresa:
+
+```sql
+select d.id, d.tipo, d.tipo_dte, d.fecha_emision, d.serie, d.numero,
+       case when d.tipo = 'factura_especial' then d.nit_receptor else d.nit_emisor end as nit_del_proveedor,
+       d.nombre_emisor, d.proveedor_id, d.motivo_sin_credito, d.regimen_iva_de_la_empresa,
+       d.total, d.base, d.iva, d.iva_no_acreditable, d.idp, d.exento, d.otros_impuestos,
+       c.categoria, c.base as base_de_la_categoria, c.iva as iva_de_la_categoria,
+       c.iva_no_acreditable as iva_al_costo_de_la_categoria, c.exento_y_no_afecto, c.combustible_exento
+from libro_de_compras.documentos d
+cross join lateral (
+  select case when l.vigencia_de_combustible_id is not null or l.idp > 0 then 'combustible'
+              when l.es_activo_fijo then 'activo_fijo'
+              else l.tipo end as categoria,                       -- 'bien' | 'servicio'
+         sum(l.base) as base, sum(l.iva) as iva, sum(l.iva_no_acreditable) as iva_no_acreditable,
+         sum(l.exento + l.otros_impuestos) as exento_y_no_afecto,
+         coalesce(bool_or(v.iva_exento), false) as combustible_exento
+  from libro_de_compras.lineas_de_documento l
+  left join libro_de_compras.vigencias_de_combustible v
+         on v.id = l.vigencia_de_combustible_id and v.empresa_id = l.empresa_id
+  where l.documento_id = d.id and l.empresa_id = d.empresa_id
+  group by 1
+) c
+where d.empresa_id = $empresa and d.periodo = $periodo and d.estado = 'vigente' and d.muestra_en_reportes_sat
+order by d.fecha_emision, d.tipo_dte, d.serie, d.numero, d.id;
+```
+
+Devuelve una fila por documento y categoría (casi siempre una o dos). El repositorio las agrupa por documento y las pasa
+en **centavos** al dominio: `FilaDelLibro.desde(documento, categorias)` (función pura, `dominio/libro/fila-del-libro.ts`).
+
+- **NIT del vendedor en la FESP:** `nit_receptor` (NIT o CUI del vendedor, R2) y `nombre_emisor` (su nombre, R2-d).
+- **Signo:** `nota_de_credito` → todos los montos **negativos**; `nota_de_debito` → **positivos** (se guarda positivo y
+  suma al crédito, §3.2c.11). Todas las demás, positivas. Las notas van en el mes en que se reciben (check
+  `nota_en_su_mes`), así que ya caen en su período.
+- **Orden cronológico** (AG 5-2013 art. 38): por fecha de emisión, código DTE, serie y número. El número de fila (`Nº`)
+  se da al armar. (Confirmar con el contador que el orden es por emisión y no por recepción, pregunta L5-C6.)
+
+##### 3.9.3.2 Columnas
+
+**Libro completo** (empresa con crédito, `regimen_iva_de_la_empresa = 'general'`), en este orden; dinero con signo:
+
+| # | Columna | De dónde sale |
+|---|---|---|
+| 1 | Nº | correlativo de la fila en el período |
+| 2 | Fecha | `fecha_emision` |
+| 3 | Tipo | `tipo_dte` (FACT, FCAM, FPEQ, FESP, NCRE, NDEB…); la leyenda de códigos va al final |
+| 4–5 | Serie, Número | |
+| 6 | NIT del proveedor | `nit_emisor`; en la FESP, `nit_receptor` (NIT o CUI del vendedor) |
+| 7 | Nombre del proveedor | `nombre_emisor` (en la FESP, el vendedor) |
+| 8 | Bienes | `base` de las categorías `bien` y `activo_fijo` (activos fijos dentro de bienes: el SAT-2237 los separa en 3.9.4; pregunta L5-n) |
+| 9 | Servicios | `base` de la categoría `servicio` |
+| 10 | Combustibles | `base` de la categoría `combustible` |
+| 11 | Pequeño contribuyente | `base` del documento con motivo `pequeno_contribuyente` (también la familia electrónica derogada); en estos documentos las columnas 8–10 quedan en cero |
+| 12 | Primario, pecuario y agropecuario | `base` con motivo `primario_pecuario` o `contribuyente_agropecuario` (regímenes sin IVA); columnas 8–10 en cero |
+| 13 | Exento y no afecto | `exento + otros_impuestos` (decisión del usuario, L4-c2) |
+| 14 | IDP | `idp`, columna propia (decisión del usuario) |
+| 15 | IVA crédito fiscal | `iva − iva_no_acreditable` |
+| 16 | IVA sin crédito | `iva_no_acreditable` (al costo) |
+| 17 | Motivo | código corto del motivo cuando lo hay (FP fuera de plazo, NV no vinculado, ESC empresa sin crédito, NDT nota de débito tardía, PC, RE, EX); leyenda al final |
+| 18 | Total | `total` |
+
+Cuadre por fila (prueba pura y de integración): `8 + 9 + 10 + 11 + 12 + 13 + 14 + 15 + 16 = 18`. Se cumple porque
+`total = base + iva + idp + exento + otros_impuestos` en el documento y la suma de las bases de sus categorías es su
+`base`.
+
+**Libro simplificado** (cualquier otro régimen: pequeño contribuyente, primario y pecuario, no afiliado y los derogados):
+sin columnas de crédito ni motivo, el IVA es **informativo** (va al costo).
+
+| Nº | Fecha | Tipo | Serie | Número | NIT | Nombre | Bienes | Servicios | Exento y no afecto | IDP | IVA (informativo) | Total |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+
+Bienes = `base` de `bien`, `activo_fijo` y `combustible`; servicios = `base` de `servicio`; en las familias sin IVA la base
+se reparte igual por categoría de línea. El pequeño contribuyente lleva un solo libro de compras y ventas (Ley del IVA
+art. 49): Arrancar da **la mitad de compras**, y la pantalla lo dice.
+
+**Exportadores:** todo se reporta como compras locales vinculadas a operaciones gravadas, con el aviso «Si exporta o
+tiene ventas exentas, separe la vinculación con su contador (prorrata, pendiente)» (decisión del usuario).
+
+##### 3.9.3.3 Resumen mensual
+
+Lo arma el dominio con las filas (`ResumenDelLibro`, puro):
+- Totales de cada columna del libro (con signo).
+- Por código DTE: cantidad y total (FACT, FCAM, FPEQ…, NCRE en negativo, NDEB, FESP).
+- **Crédito fiscal del período** = Σ columna 15 (facturas, FESP y NDEB menos notas de crédito).
+- **IVA sin crédito por motivo:** una fila por motivo con su suma (lo que fue al costo).
+- Combustibles: base, IDP, IVA y, aparte, lo **exento por el Decreto 22-2026** (líneas con vigencia `iva_exento`).
+- Sin débito, remanente ni impuesto a pagar: son de la declaración, que también lleva las ventas (fuera de este módulo).
+
+##### 3.9.3.4 Anexo de anulados (solo pantalla y Excel)
+
+```sql
+select d.id, d.tipo_dte, d.fecha_emision, d.serie, d.numero, <nit del proveedor como arriba>, d.nombre_emisor,
+       d.total, d.iva, d.causa_de_anulacion, d.motivo_de_anulacion, d.anulado_en, u.nombres, u.apellidos
+from libro_de_compras.documentos d
+left join core.usuarios u on u.id = d.anulado_por
+where d.empresa_id = $empresa and d.periodo = $periodo and d.estado = 'anulado' and d.muestra_en_reportes_sat
+order by d.fecha_emision, d.serie, d.numero;
+```
+
+No entra en el PDF foliado (decisión del usuario). Los montos van positivos (no suman al libro).
+
+##### 3.9.3.5 Índices
+
+Ninguno nuevo. `documentos_libro_idx (empresa_id, periodo)` filtra el período (un período tiene de decenas a pocos miles
+de filas; el filtro de `estado` y la casilla se aplican sobre ese rango); las líneas entran por
+`lineas_de_documento_numero_unico (documento_id, numero)`; la vigencia por su PK. Un índice parcial `(empresa_id,
+periodo) where estado = 'vigente' and muestra_en_reportes_sat` no se justifica con estos volúmenes; se revisa con
+`explain` en la prueba de carga de L5-10.
+
+##### 3.9.3.6 API, Excel y permisos
+
+| Ruta | Permiso | Responde |
+|---|---|---|
+| `GET /libro-de-compras/libro?periodo=AAAA-MM-01` | `libro-de-compras.libro.ver` | `{ tipoDeLibro, empresa: { nombre, nit }, filas, resumen, avisos }` (montos como texto) |
+| `GET /libro-de-compras/libro/anulados?periodo=…` | `libro.ver` | filas del anexo |
+| `GET /libro-de-compras/libro/exportar?periodo=…` | `libro-de-compras.libro.exportar` | `.xlsx` con tres hojas: **Libro**, **Resumen** y **Anulados** |
+
+Excel: Reportes exporta y no importa. Para un solo archivo con tres hojas, el puerto `LibroDeExcel` suma
+`escribirVarias(hojas: HojaParaEscribir[])` (cambio pequeño del core, con su prueba) y la ruta se registra a mano (no por
+`rutasDeIntercambio`, que da una hoja). Las celdas de texto pasan por el mismo escape de fórmulas que el motor. Pregunta
+L5-f.
+
+Avisos del libro (no bloquean): bandeja con pendientes que pueden ir en P (§3.3b.8, solo si hay lotes); período sin
+declarar anterior a P; documentos con `fuera_de_plazo` en P; exportador «todo local»; combustibles del Decreto 22-2026.
+
+#### 3.9.4 Datos para el SAT-2237
+
+Solo para períodos con libro completo (régimen general). El pequeño contribuyente declara en el SAT-2046, que no lleva
+compras: la pantalla lo dice y no muestra rubros. **Los números y nombres de casilla esperan la captura del SAT-2237
+vigente que conseguirá el usuario**: el servidor entrega rubros con nombre propio, y un mapa del dominio
+(`dominio/libro/casillas-del-sat-2237.ts`, datos puros con su versión) los lleva a casillas cuando llegue la captura,
+sin migrar.
+
+##### 3.9.4.1 Rubros (de la misma consulta del libro)
+
+Cada rubro trae, en centavos con signo: `base`, `ivaCredito`, `ivaSinCredito`, `exentoYNoAfecto` y, **por separado**,
+lo de facturas (y FESP), lo de notas de débito y lo de notas de crédito, más el neto. Así el mapa puede poner las notas
+donde las pida el formulario (restando del crédito o en una casilla propia; pregunta L5-C2) sin cambiar la consulta.
+
+| Rubro | Qué entra |
+|---|---|
+| `combustibles` | categoría `combustible` de documentos con IVA |
+| `activos_fijos` | categoría `activo_fijo` |
+| `servicios` | categoría `servicio` |
+| `otras_compras` | categoría `bien` |
+| `importaciones` | **reservado** (DUCA, después de CP1): siempre cero, con la nota «sin DUCA en Arrancar» |
+| `pequeno_contribuyente` | documentos con motivo `pequeno_contribuyente` |
+| `regimenes_sin_iva` | `primario_pecuario` y `contribuyente_agropecuario` |
+| `exento_y_no_afecto` | `exento + otros_impuestos` de todas las categorías |
+| `combustibles_exentos` | líneas de combustible con vigencia `iva_exento` (Decreto 22-2026): su exento, aparte, con la marca |
+
+Avisos fijos de la pantalla: «Medicamentos y vehículos tienen casillas propias en el SAT-2237: Arrancar no los separa;
+revise sus compras» (decisión del usuario), «Importaciones: sin DUCA en Arrancar».
+
+##### 3.9.4.2 Segmento 9 (cantidad de operaciones)
+
+Conteos de documentos del libro de P por código DTE: facturas recibidas (FACT, FCAM), de pequeño contribuyente (FPEQ,
+FCAP, FAPE, FCPE), de regímenes sin IVA (FARP, FCRP, FPEC, FCPC, FACA, FCCA, FAAE, FCAE), facturas especiales emitidas
+(FESP), notas de crédito recibidas (NCRE) y notas de débito recibidas (NDEB). El mapa de casillas decide cuáles suma
+cada casilla.
+
+##### 3.9.4.3 Detalle de proveedores
+
+El SAT-2237 exige el detalle de los proveedores locales del crédito: NIT, nombre, cantidad de facturas, base y crédito.
+Del mismo conjunto de filas, agrupado por **NIT del proveedor** (el que sale en el libro, no `proveedor_id`):
+
+- Entran los documentos **con crédito** (`motivo_sin_credito is null`): facturas, NDEB y notas de crédito.
+- **Notas (recomendación, pregunta L5-g):** se **netean** en su proveedor: `base = Σ signo × base`, `crédito = Σ signo
+  × (iva − iva_no_acreditable)`; «cantidad de facturas» cuenta solo facturas (`factura`, y FESP si el contador la deja
+  entrar); la pantalla muestra además cuántas NCRE y NDEB tiene cada proveedor. Un proveedor que queda en cero o
+  negativo (nota de crédito de una factura de otro período) se muestra **con aviso** y no se omite: el contador decide
+  cómo declararlo.
+- **FESP:** hasta que conteste el contador (pregunta L5-C3) va en una fila aparte «Facturas especiales (vendedores sin
+  inscripción)» y no en el detalle por NIT.
+- Nombre: el `nombre_emisor` del documento más reciente de ese NIT.
+- Orden: por crédito de mayor a menor. Si el formulario limita filas (en 2019 eran diez), la pantalla marca las que
+  entran y suma el resto en «Otros» según lo que diga la captura.
+
+##### 3.9.4.4 API y Excel
+
+| Ruta | Permiso |
+|---|---|
+| `GET /libro-de-compras/libro/sat-2237?periodo=…` → `{ rubros, segmento9, proveedores, facturasEspeciales, casillas (con la versión del mapa o null), avisos }` | `libro.ver` |
+| `GET /libro-de-compras/libro/sat-2237/exportar?periodo=…` → `.xlsx` con hojas **Rubros**, **Operaciones** y **Proveedores** | `libro.exportar` |
+
+#### 3.9.5 PDF del libro con folios
+
+##### 3.9.5.1 Servidor o cliente
+
+| Opción | A favor | En contra |
+|---|---|---|
+| (A) `window.print()` del cliente, como Bancos | Ya existe; sin dependencias | El navegador decide los saltos de página: el servidor no sabe cuántas páginas salieron, no puede numerar folios con certeza ni consumirlos; cambia con el navegador, el papel y los márgenes |
+| (B) PDF en el cliente (jsPDF o similar) | Sin carga en el servidor | El cliente diría cuántos folios usó: dato no confiable, y dos usuarios a la vez podrían repetir folios |
+| (C) **PDF en el servidor** con paginación propia | Páginas conocidas **antes** de dibujar; folios consumidos en la misma transacción; mismo PDF en cualquier equipo; se guarda como evidencia | Una dependencia nueva y algo de CPU |
+
+**Recomendación: (C).** El resto de los reportes de L5 (retenciones, análisis) siguen con `window.print()` como Bancos:
+no llevan folios.
+
+- **Paginación en el dominio** (`paginarLibro(filas, filasPorPagina)`, pura con pruebas): un número fijo de filas por
+  página (p. ej. 32 en oficio horizontal, constante del código), nombres recortados con «…» para que cada fila ocupe una
+  línea, subtotales **«Van»** al pie y **«Vienen»** al inicio de cada página, y el resumen mensual en la última. Así se
+  sabe cuántas páginas habrá antes de dibujar.
+- **Dibujo** con `pdfmake` (sobre `pdfkit`, JavaScript puro, sin Chromium): tablas, encabezado por página (razón social,
+  NIT, «Libro de compras y servicios» o «Libro de compras (simplificado)», período, folio) y pie. La dependencia la
+  revisa el agente de seguridad antes de instalarla (alternativa: `pdfkit` solo). Fuente incrustada en el repositorio.
+- **Borrador:** el mismo PDF con «BORRADOR — sin folio» en lugar del número, sin consumir nada (`libro.ver`).
+
+##### 3.9.5.2 Dónde se guarda el último folio
+
+Opciones: (1) columnas de folio en `periodos`; (2) tabla por empresa con el contador más el historial de emisiones; (3)
+solo el historial, con el último folio como `max(folio_hasta)`. **Recomendación: (2).** Con (1) los folios dependerían
+del control de períodos, que es opcional, y el folio es de la empresa, no del período; con (3) no hay fila que bloquear
+ni dónde anotar el folio con que empieza una empresa que ya tenía hojas usadas.
+
+**`libro_de_compras.foliacion_del_libro`** (una fila por empresa; se crea al primer uso):
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `empresa_id` | uuid | no | **PK**; FK `core.empresas(id)` on delete cascade |
+| `ultimo_folio` | integer | no | `default 0`; check `ultimo_folio >= 0` |
+| marcas y autoría | | | |
+
+RLS `politicaPorEmpresa()`. Corregir el último folio (empresa que viene de hojas usadas o de otro sistema):
+`PUT /libro-de-compras/libro/foliacion { ultimoFolio, motivo }` (`libro.emitir`), nunca por debajo del mayor
+`folio_hasta` emitido en Arrancar (`FolioMenorQueLoEmitido`, 422); auditoría `corregir`, recurso
+`libro-de-compras.foliacion-del-libro`, `registroId = empresaId`, `anterior = { ultimoFolio }`.
+
+**`libro_de_compras.emisiones_del_libro`** (historial de solo agregar):
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `id` | uuid | no | PK |
+| `empresa_id` | uuid | no | FK cascade |
+| `periodo` | date | no | check primer día del mes |
+| `tipo_de_libro` | text | no | check `in ('completo','simplificado')` |
+| `folio_desde`, `folio_hasta` | integer | no | check `folio_desde >= 1 and folio_hasta >= folio_desde` |
+| `paginas` | smallint | no | check `paginas = folio_hasta - folio_desde + 1` |
+| `archivo_id` | uuid | sí | FK `core.archivos(id)` no action (índice propio); el PDF guardado (pregunta L5-c) |
+| `huella_de_datos` | char(64) | no | sha256 de las filas del libro (ids y montos, en orden): dice si los datos cambiaron desde esta emisión |
+| `version_de_plantilla` | smallint | no | la del dibujo; una copia con otra versión podría paginar distinto |
+| `totales` | jsonb | no | el resumen mensual en texto; check `pg_column_size(totales) <= 65536` |
+| `motivo` | text | sí | 1–300; **obligatorio** si ya hay otra emisión del mismo período (se valida en el caso de uso) |
+| `creado_en`, `creado_por` (autoría) | | | |
+
+Restricciones e índices: `emisiones_del_libro_folio_unico (empresa_id, folio_desde)`; exclusión
+`emisiones_del_libro_sin_traslape` `exclude using gist (empresa_id with =, int4range(folio_desde, folio_hasta, '[]')
+with &&)` (`btree_gist` ya está; va en una migración `--custom` porque drizzle-kit no escribe exclusiones, como la
+`0004`); `emisiones_del_libro_periodo_idx (empresa_id, periodo, creado_en desc)`; `emisiones_del_libro_archivo_idx
+(archivo_id) where archivo_id is not null`. RLS: insertar y leer por empresa (3.9.10). Una emisión nunca se corrige: la
+«sustituida» se deriva (hay otra posterior del mismo período).
+
+##### 3.9.5.3 Emitir (caso de uso `EmitirLibroFoliado`, `POST /libro-de-compras/libro/emisiones { periodo, motivo? }`, permiso `libro-de-compras.libro.emitir`)
+
+En una unidad de trabajo:
+1. `insert … on conflict do nothing` y `select … for update` de `foliacion_del_libro` (dos emisiones de la misma
+   empresa se ordenan; las de otras empresas no se esperan).
+2. Lee las filas del libro (después del bloqueo) y calcula la huella. Si ya hay una emisión del período con la misma
+   huella y la misma versión de plantilla, responde 409 `EmisionSinCambios` y ofrece la **copia** (no gasta folios).
+3. Pagina, dibuja con `folio_desde = ultimo_folio + 1`, guarda el PDF con `DocumentosProtegidos.guardar` (recurso dueño
+   `libro-de-compras.emisiones-del-libro`), inserta la emisión y sube `ultimo_folio`.
+4. Responde la emisión; el cliente baja el PDF por `GET /libro-de-compras/libro/emisiones/:id/pdf` (`libro.ver`, que
+   también sirve para la **copia** de una emisión anterior: el mismo archivo, los mismos folios).
+
+Límite: 5 emisiones por minuto por usuario; `statement_timeout` del caso de uso holgado (un período de 5,000 filas son
+unas 160 páginas). Con el control de períodos encendido, el libro de un período abierto se puede emitir con el aviso
+«El período no está declarado: si cambia, tendrá que emitirlo de nuevo con folios nuevos».
+
+`GET /libro-de-compras/libro/pdf?periodo=…` (`libro.ver`): el borrador, sin guardar nada.
+
+#### 3.9.6 Retenciones
+
+##### 3.9.6.1 Reporte por mes, impuesto y regla
+
+```sql
+select r.id, r.impuesto, r.regla, r.base, r.porcentaje, r.monto, r.fecha, r.constancia_numero, r.constancia_fecha,
+       r.resolucion, d.id as documento_id, d.estado as estado_del_documento, d.tipo_dte, d.serie, d.numero,
+       d.fecha_emision, <nit del proveedor como en el libro>, d.nombre_emisor
+from libro_de_compras.retenciones r
+join libro_de_compras.documentos d on d.id = r.documento_id and d.empresa_id = r.empresa_id
+where r.empresa_id = $empresa and r.fecha >= $mes and r.fecha < ($mes::date + interval '1 month') and r.monto > 0
+order by r.impuesto, r.regla, r.fecha, d.serie, d.numero;
+```
+
+Cubre `retenciones_mes_idx (empresa_id, fecha)`. El mes es el de `retencion.fecha` (recepción en el IVA, emisión en el
+ISR, Decreto 10-2012 art. 48). Las retenciones de documentos **anulados** salen en una sección aparte y no suman al
+«retenido del mes». Las quitadas (monto 0) no salen (son rastro de la propuesta; se ven en la ficha del documento).
+
+**Grupos de entero** (constante del dominio `GRUPO_DE_ENTERO`, con su prueba que recorre las reglas del check):
+
+| Grupo | Reglas | Plazo |
+|---|---|---|
+| `iva_agentes` | `iva_exportador_agropecuario`, `iva_exportador`, `iva_contribuyente_especial`, `iva_otro_agente`, `iva_sector_publico`, `iva_pequeno_contribuyente` | día hábil `dias_habiles_entero_iva` (15) del mes siguiente |
+| `isr_opcional` | `isr_opcional_simplificado` | día hábil `dias_habiles_entero_isr` (10) |
+| `iva_factura_especial` | `iva_factura_especial` | último día hábil del mes siguiente (SAT-2085) |
+| `isr_factura_especial` | `isr_factura_especial` | día hábil `dias_habiles_entero_isr` (10) |
+
+El plazo se calcula **por mes y grupo** con `fechaLimiteDeEntero` y el calendario de feriados del core (los años del
+reporte y el siguiente). El reporte da, por grupo: retenido del mes (documentos vigentes), plazo, estado del entero
+(3.9.6.4) y la lista de retenciones con su constancia.
+
+`GET /libro-de-compras/retenciones?mes=AAAA-MM-01&grupo=&constancia=con|sin|todas` (`libro-de-compras.retenciones.ver`);
+`GET …/retenciones/exportar` (`libro-de-compras.retenciones.exportar`, una hoja con los mismos filtros, por el motor de
+intercambio). Imprimir: `window.print()`.
+
+##### 3.9.6.2 Anotar constancia (`libro-de-compras.retenciones.constancias`)
+
+Las constancias las emite la SAT en Retenciones Web; Arrancar solo **anota** su número y fecha en las columnas que ya
+existen.
+
+- **Una a una:** `PUT /libro-de-compras/retenciones/:id/constancia { numero, fecha }`.
+- **En lote:** `POST /libro-de-compras/retenciones/constancias { constancias: [{ retencionId, numero, fecha }] }`, hasta
+  200, **todo o nada** con errores por fila (`detalles.filas[i].campo`), como la importación (pregunta L5-i). La pantalla
+  arma la lista desde las filas marcadas del reporte.
+- **Quitar:** `DELETE /libro-de-compras/retenciones/:id/constancia { motivo }`.
+- Reglas: solo retenciones con `monto > 0`; también de documentos anulados (la constancia pudo emitirse antes de anular);
+  `numero` 1–40, sin espacios, en mayúsculas (se afina con el PDF de una constancia real); `fecha >= retencion.fecha` (si
+  no, error `ConstanciaAnteriorALaRetencion`, campo `fecha`). Mismo número en **otro proveedor**: aviso, no error (no
+  sabemos aún si una constancia de ISR cubre varias facturas; pregunta L5-C4).
+- Auditoría: anotar por primera vez no se audita (es un alta); **cambiarla** se audita `corregir` y **quitarla**
+  `quitar`, recurso `libro-de-compras.retenciones`, `anterior` = la retención con su constancia.
+- **Eliminar un documento** cuya retención tiene constancia queda prohibido (`DocumentoConConstancia`, 422: «Anúlelo»),
+  igual que si su mes y grupo ya está enterado: el rastro debe quedar.
+
+##### 3.9.6.3 «Por resolver»
+
+Una retención practicada (`monto > 0`) cuyo documento se **anula** queda por resolver: hay que anular la constancia en
+Retenciones Web o rectificar el entero, o confirmar que no hacía falta.
+
+**Columnas nuevas en `retenciones`:**
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `resolucion` | text | sí | nulo = nada que resolver; check `in ('pendiente','constancia_anulada','rectificada','no_requiere')` |
+| `nota_de_resolucion` | text | sí | 1–300 |
+| `resuelta_en` | timestamptz | sí | |
+| `resuelta_por` | uuid | sí | |
+
+Checks (`retenciones_<regla>`): `resolucion_solo_practicada`: `resolucion is null or monto > 0`;
+`resolucion_completa`: `(resolucion in ('constancia_anulada','rectificada','no_requiere')) = (resuelta_en is not null
+and resuelta_por is not null and nota_de_resolucion is not null)`. Índice parcial `retenciones_por_resolver_idx
+(empresa_id) where resolucion = 'pendiente'` (el contador del menú). Que el documento esté anulado no lo puede revisar un
+check (otra tabla): lo hace el dominio.
+
+- `AnularDocumento` pone `resolucion = 'pendiente'` en sus retenciones con `monto > 0`, en la misma transacción, y avisa
+  «Quedan N retenciones por resolver».
+- `PUT /libro-de-compras/retenciones/:id/resolucion { resolucion, nota }` (`retenciones.constancias`): solo de un
+  documento anulado; se puede volver a `pendiente` (corrección). Auditoría `corregir`, `anterior` = la retención.
+- `GET /libro-de-compras/retenciones/por-resolver?estado=pendiente|resueltas` (`retenciones.ver`), con documento,
+  constancia y si su mes y grupo estaba enterado (para sugerir `rectificada`).
+- Las retenciones anuladas que quedan en `pendiente` aparecen como aviso al declarar (3.9.7.6) y en el inicio de
+  Retenciones.
+
+##### 3.9.6.4 Marcar enterado (`libro_de_compras.enteros_de_retenciones`)
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `id` | uuid | no | PK |
+| `empresa_id` | uuid | no | FK cascade |
+| `mes` | date | no | check primer día del mes |
+| `grupo` | text | no | check `in ('iva_agentes','isr_opcional','iva_factura_especial','isr_factura_especial')` |
+| `fecha_de_pago` | date | no | check `fecha_de_pago >= mes` |
+| `documento_de_pago` | text | no | número de formulario o boleta; 1–40, sin espacios |
+| `monto` | numeric(14,2) | no | `> 0` |
+| `retenido_al_marcar` | numeric(14,2) | no | `>= 0`; foto de lo retenido del mes y grupo (documentos vigentes) cuando se marcó |
+| `observaciones` | text | sí | 1–300 |
+| `estado` | text | no | `'vigente'`; check `in ('vigente','anulado')` |
+| `anulado_en`, `anulado_por`, `motivo_de_anulacion` | | sí | check «los tres o ninguno» con `estado = 'anulado'` |
+| marcas y autoría | | | |
+
+Índice `enteros_de_retenciones_mes_idx (empresa_id, mes, grupo)`. RLS `politicaPorEmpresa()`. **Varios pagos por mes y
+grupo** (original y complementarios; pregunta L5-h): sin único. Estado derivado por mes y grupo: `sin_retenciones`,
+`pendiente` (en plazo), `vencido`, `enterado` (Σ montos vigentes = retenido actual) o `con_diferencia` (distinto; por
+ejemplo, un documento anulado o registrado después de pagar).
+
+Rutas (`libro-de-compras.retenciones.enterar`, permiso **nuevo**): `POST /libro-de-compras/retenciones/enteros`,
+`PUT …/enteros/:id` (corregir: auditoría `corregir`), `POST …/enteros/:id/anular { motivo }` (auditoría `anular`, recurso
+`libro-de-compras.enteros-de-retenciones`). `GET …/retenciones/enteros?anio=` (`retenciones.ver`): la matriz mes × grupo
+con retenido, plazo, pagado y estado.
+
+Efectos (avisos, no bloqueos): registrar un documento con una retención en un mes y grupo ya enterado → «Ese mes ya se
+enteró: pague la diferencia (pago complementario)»; anular uno → además de «por resolver», «Ese mes ya se enteró:
+rectifique». Marcar enterado sin retenciones en el mes y grupo → error `SinRetencionesQueEnterar`.
+
+#### 3.9.7 Períodos declarados
+
+##### 3.9.7.1 `libro_de_compras.periodos` (revisa la §3.8)
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `empresa_id` | uuid | no | PK compuesta; FK `core.empresas(id)` cascade |
+| `periodo` | date | no | PK compuesta; check primer día del mes |
+| `estado` | text | no | `'abierto'`; check `in ('abierto','declarado')` |
+| `declarado_en` | timestamptz | sí | |
+| `declarado_por` | uuid | sí | check `(estado = 'declarado') = (declarado_en is not null and declarado_por is not null)` |
+| marcas y autoría | | | |
+
+RLS `politicaPorEmpresa()`. Una fila existe solo si el período se declaró alguna vez **o** el control está encendido y
+alguien registró en él (3.9.7.3). Sin fila = abierto. Nunca se borra.
+
+**Cambio respecto de la §3.8:** la fila ya no se crea en cada registro con el control apagado (no hace falta bloquear);
+el número del formulario y la fecha viven en el historial, no aquí.
+
+##### 3.9.7.2 Historial: `libro_de_compras.declaraciones_de_periodos` (solo agregar)
+
+| Columna | Tipo | Nulo | Regla |
+|---|---|---|---|
+| `id` | uuid | no | PK |
+| `empresa_id` | uuid | no | FK cascade |
+| `periodo` | date | no | FK `(empresa_id, periodo) → periodos` no action |
+| `secuencia` | smallint | no | 1, 2, 3… por período; único `(empresa_id, periodo, secuencia)` (cubre la FK) |
+| `evento` | text | no | check `in ('declaracion','reapertura','rectificacion')` |
+| `formulario` | text | sí | check `in ('SAT-2237','SAT-2046','sin_formulario')`; se propone por el régimen del período (general → SAT-2237, pequeño contribuyente → SAT-2046, los demás → `sin_formulario`; pregunta L5-k) |
+| `numero_de_formulario` | text | sí | 1–40, solo dígitos y letras; obligatorio salvo `sin_formulario` |
+| `fecha_de_presentacion` | date | sí | |
+| `tipo_de_libro` | text | sí | `completo` o `simplificado` |
+| `foto` | jsonb | sí | los totales al declarar (abajo); check `pg_column_size(foto) <= 1048576` |
+| `diferencia` | jsonb | sí | solo en `rectificacion`: contra la declaración o rectificación anterior |
+| `motivo` | text | sí | 1–500 |
+| `creado_en`, `creado_por` | | | autoría |
+
+Checks: `declaracion_completa`: `evento = 'reapertura' or (formulario is not null and fecha_de_presentacion is not null
+and tipo_de_libro is not null and foto is not null and (formulario = 'sin_formulario' or numero_de_formulario is not
+null))`; `reapertura_con_motivo`: `evento <> 'reapertura' or (motivo is not null and foto is null and formulario is
+null)`; `diferencia_solo_en_rectificacion`: `(evento = 'rectificacion') = (diferencia is not null)`. RLS: **insertar y
+leer** por empresa (3.9.10): el historial no se cambia ni se borra (solo en cascada con la empresa, que no pasa por RLS).
+
+**Foto** (`version: 1`, todo en texto con dos decimales): `tipoDeLibro`; conteo y total por código DTE; totales de cada
+columna del libro; crédito del período; IVA sin crédito por motivo; los rubros y el segmento 9 de 3.9.4; el **detalle de
+proveedores** completo (lo pide la rectificativa) y la fila de facturas especiales; `huella` (la misma de 3.9.5.2). Se
+arma con el mismo código del libro: no hay un segundo cálculo.
+
+**Diferencia:** por cada clave numérica, `anterior`, `actual` y `cambio` (solo las que cambian), más los documentos de P
+**registrados o anulados** después de la declaración anterior (`creado_en`/`anulado_en` mayores que su `creado_en`), con
+serie, número y total. Los eliminados no se listan (no quedan en la tabla): si la huella cambió y no hay altas ni
+anulaciones que lo expliquen, la diferencia lo dice y remite a la auditoría.
+
+##### 3.9.7.3 `ControlDePeriodos` real (`ControlDePeriodosEnBaseDeDatos`)
+
+Puerto nuevo (reemplaza al de hoy):
+
+```ts
+export interface EstadoDelPeriodo { periodo: string; declarado: boolean; bloquea: boolean;
+  ultimaDeclaracion: { formulario: string; numero: string | null; fechaDePresentacion: string } | null }
+export interface ControlDePeriodos {
+  /** Con el control encendido y el período declarado lanza PeriodoDeclarado; si no, devuelve el estado (para avisos). */
+  exigirAbierto(periodo: string, modo: 'consultar' | 'bloquear'): Promise<EstadoDelPeriodo>;
+  /** Los períodos declarados entre dos meses (para proponer el primero abierto y para las vigencias fiscales). */
+  declaradosEntre(desde: string, hasta: string): Promise<string[]>;
+}
+```
+
+- Lee `libro-de-compras.periodos.control_de_declarados` de la empresa con el `LectorDeConfiguracion`.
+- **Control apagado:** no bloquea ni escribe; si P tiene una declaración, devuelve su estado y el documento cambia el
+  aviso genérico de período pasado por uno preciso: «El período <mes> se declaró el <fecha> (<formulario> nº <número>):
+  tendrá que rectificar».
+- **Control encendido, `bloquear`** (registrar, anular, eliminar): `insert … (empresa_id, periodo, 'abierto') on conflict
+  do nothing`, luego `select estado … for share`. Si está declarado → `PeriodoDeclarado` (`ReglaDeNegocioInfringida`,
+  409, código `periodo_declarado`, `detalles: { campo: 'periodo', periodo, periodoPropuesto }`).
+- **Control encendido, `consultar`** (`calcular`, la vista previa, y la confirmación en lote de la bandeja antes de
+  bloquear): solo `select`, sin escribir ni bloquear; el mismo error, para que el formulario lo muestre antes de guardar.
+- **Declarar** toma la fila `for update` (después del mismo `insert … on conflict do nothing`): un registro en curso en P
+  termina antes o espera, y después de declarar ve `declarado`.
+
+**Qué bloquea con el control encendido y P declarado:**
+
+| Operación | Bloquea | Cómo |
+|---|---|---|
+| Registrar un documento de P (factura, FESP, NDEB, nota de crédito, recibo; a mano o confirmando la bandeja) | sí | `PreparadorDeDocumento` con `bloquear` |
+| Anular o eliminar un documento de P (también por las órdenes del destino y desde la conciliación) | sí | `AnularDocumento`, `EliminarDocumento` |
+| Editar un documento de P (cuando exista, respuesta 5 del 2026-09-29) | sí | el mismo preparador |
+| Guardar, corregir o quitar una **vigencia fiscal de la empresa** cuyo rango afectado cubra un P declarado | sí | `CambiosAlHistorialFiscal.exigirSinDocumentosAfectados` suma `declaradosEntre`; error `VigenciaFiscalEnPeriodoDeclarado` (409, campo `secciones.libro-de-compras.vigenteDesde`) aunque P no tenga documentos (el tipo de libro cambiaría) |
+| Anotar o quitar constancias, resolver «por resolver», marcar enterado | no | son de las retenciones, que tienen su propio formulario y plazo |
+| Marcar procesado en el destino (`marcar_procesado`) | no | no cambia nada fiscal |
+| Datos fiscales del proveedor, conceptos, combustibles y vigencias de combustible | no | los documentos guardan su foto; una vigencia de combustible usada ya no cambia (L2-3) |
+| Cargar, completar o descartar filas de la bandeja | no | solo confirmarlas registra |
+| Emitir el PDF foliado | no | es una lectura que gasta folios |
+
+##### 3.9.7.4 Proponer el primer período abierto (la factura olvidada)
+
+Función pura `periodoAbiertoPropuesto(fechas, declarados, conCredito)` en `dominio/periodo-del-libro.ts`, con pruebas:
+
+1. **Nota de crédito:** no hay alternativa (va en su mes de recepción, check `nota_en_su_mes`): `periodoPropuesto = null`
+   y el mensaje dice «Reabra el período <mes> para registrarla (luego rectifique)».
+2. **Empresa sin crédito en ese período:** el primer mes abierto desde `periodoPropuesto(fechas)`.
+3. **Con crédito:** el primer mes abierto entre `periodoPropuesto(fechas)` y `ultimoPeriodoConCredito(fecha_emision)` (art.
+   20; en la NDEB, desde su propia emisión). Si todos están declarados, el primer mes abierto después, con `enPlazo:
+   false` y el aviso «Ahí pierde el crédito (art. 20): el IVA irá al costo; también puede reabrir <mes> y rectificar».
+
+El formulario (L3-8) y la bandeja (L4-9) muestran el error con el botón «Registrar en <mes>». Con el control apagado no
+hay error: el aviso preciso de 3.9.7.3 incluye la misma propuesta.
+
+##### 3.9.7.5 Declarar, reabrir y rectificar
+
+| Acción | Ruta | Permiso | Reglas |
+|---|---|---|---|
+| Ver | `GET /libro-de-compras/periodos?anio=` y `GET …/periodos/:periodo` | `libro-de-compras.periodos.ver` | estado, historial, la revisión de 3.9.7.6 y «cambió desde la declaración» (foto actual contra la última) |
+| Declarar | `POST …/periodos/:periodo/declarar { formulario, numeroDeFormulario, fechaDePresentacion }` | `libro-de-compras.periodos.declarar` | P anterior al mes actual (`PeriodoSinTerminar`); `fechaDePresentacion >=` el primer día del mes siguiente a P; abierto, **o** declarado con el control apagado (registrar la rectificación sin reabrir). Evento `declaracion` si es la primera, `rectificacion` si ya hubo una (con `diferencia`). Toma `for update`, arma la foto, inserta el historial y pone `declarado` |
+| Reabrir | `POST …/periodos/:periodo/reabrir { motivo }` | `libro-de-compras.periodos.reabrir` | declarado; motivo 1–500; estado `abierto`; historial `reapertura`; auditoría `reabrir`, recurso `libro-de-compras.periodos`, `registroId` = `<empresaId>:<periodo>`, `anterior` = la fila y su última declaración |
+| Encender o apagar el control | `PUT /libro-de-compras/periodos/control { encendido, motivo? }` | encender: `periodos.declarar`; apagar: `periodos.reabrir` con motivo | escribe la variable en el nivel **empresa** con `configuracion.establecer` (pregunta L5-b); auditoría `corregir`, recurso `libro-de-compras.periodos`, `registroId = empresaId` |
+
+No hay «eliminar declaración»: un error se corrige reabriendo y declarando de nuevo (queda todo en el historial).
+Eventos después de confirmar (para Contabilidad, futuro): `libro-de-compras.periodo_declarado` y
+`libro-de-compras.periodo_reabierto`.
+
+##### 3.9.7.6 Revisión antes de declarar (avisos, nunca bloquean)
+
+`GET …/periodos/:periodo` devuelve `revision: [{ codigo, mensaje, cantidad?, enlace? }]`:
+- **Bandeja** (solo si la empresa tiene un lote `bandeja` cuyas fechas de emisión tocan P o los dos meses anteriores):
+  «Quedan N DTE pendientes en la bandeja que pueden ir en este período» (§3.3b.8). Depende de L4-9.
+- **Conciliación** (solo si algún lote cubre el mes P): conteos de «En la SAT y no en Arrancar», «Anulado en la SAT y
+  vigente aquí» y «Con diferencias» (§3.3b.9). Depende de L4-10. Quien nunca importó no ve nada.
+- Retenciones por resolver de documentos de P; mes anterior sin declarar; documentos `fuera_de_plazo` en P; exportador
+  «todo local»; combustibles del Decreto 22-2026; medicamentos y vehículos (SAT-2237).
+
+#### 3.9.8 Otros reportes («Análisis de compras», Reportes: imprimir y exportar)
+
+Todos por **rango de períodos** (`desde`, `hasta`, primer día de mes; máximo 24 meses), solo documentos vigentes del libro
+salvo que se diga otra cosa, con signo como el libro. Consultas sobre `documentos_libro_idx` y las líneas por documento;
+ningún índice nuevo. Cada uno con su `GET …/analisis/<reporte>` y `…/exportar` (una hoja). Permisos: un par
+`libro-de-compras.analisis-de-compras.ver` / `.exportar` para los cinco (pregunta L5-l).
+
+| Reporte | Filas | Columnas |
+|---|---|---|
+| **Compras por proveedor** | una por proveedor (`proveedor_id`, con su NIT y nombre actual) | documentos, total, base, IVA crédito, IVA sin crédito, exento y no afecto, IDP, retenciones practicadas; filtro opcional «incluir fuera del libro» |
+| **Compras por concepto** | una por concepto de gasto (líneas) | líneas, base, IVA crédito, IVA al costo, **costo** (`total − iva + iva_no_acreditable`) |
+| **IVA al costo por motivo** | documentos con `iva_no_acreditable <> 0` | período, documento, proveedor, motivo, IVA al costo; subtotal por motivo (`fuera_de_plazo`, `no_vinculado`, `empresa_sin_credito`, `nota_de_debito_tardia`) |
+| **Activos fijos** | líneas con `es_activo_fijo` | fecha, documento, proveedor, concepto, descripción, costo, IVA crédito |
+| **Combustibles e IDP** | líneas de combustible (vigencia o IDP) | fecha, documento, proveedor, combustible (si lo hay), galones, IDP por galón, IDP, base, IVA, exento y la marca **«Exento Decreto 22-2026»** (vigencia `iva_exento`); subtotales por combustible; aviso «IDP según la factura, sin galones» en las líneas con `idp_escrito` y sin galones |
+
+#### 3.9.9 L5-0: IVA exento en la vigencia de combustible (decisión del usuario, «ya»)
+
+| Tabla | Columna | Tipo | Nulo | Regla |
+|---|---|---|---|---|
+| `vigencias_de_combustible` | `iva_exento` | boolean | no | `default false`. Marcada: las compras de ese combustible con emisión en la vigencia no llevan IVA (Decreto 22-2026: 1-10 al 31-12-2026, también sin IDP; el usuario carga la vigencia con IDP 0) |
+
+- **Cálculo** (`calculo-de-linea.ts`): una línea con combustible cuya vigencia tiene `iva_exento` lleva `exento = total −
+  idp − otros_impuestos` e IVA 0; el motivo del documento sale `exento` si todo lo es (regla de siempre). Sin check nuevo
+  en las líneas (la vigencia es otra tabla; una vigencia usada ya no cambia, L2-3).
+- **Formulario:** con emisión dentro de una vigencia exenta, «Lleva combustible» exige elegir el combustible y los galones
+  (están en la FEL), para que el reporte lo marque; aviso «Combustible exento de IVA e IDP (Decreto 22-2026)».
+- **Excel de vigencias:** columna «IVA exento» (sí/no). Auditoría: cambiarla en una vigencia sin uso es `corregir`, como
+  la tasa.
+
+#### 3.9.10 RLS, permisos, configuración y auditoría
+
+**RLS de las tablas nuevas:**
+
+| Tabla | Política |
+|---|---|
+| `foliacion_del_libro`, `periodos`, `enteros_de_retenciones` | `politicaPorEmpresa()` |
+| `emisiones_del_libro`, `declaraciones_de_periodos` | **insertar y leer** por empresa: helper nuevo `politicasDeSoloAgregarPorEmpresa()` en `core/base-datos/columnas.ts` (par de `politicasDeSoloAgregar`, con `empresa_id`); sin política de `update` ni `delete`, RLS los rechaza. La prueba `politicas-de-los-modulos` sigue pasando (exige RLS activa) y se le suma un caso: estas dos rechazan `update` y `delete` a `arrancar_app` |
+
+Ninguna tabla nueva tiene alcance por registro. Las llaves foráneas: a `core.empresas` (cascade) y a `core.archivos` (no
+action, con índice); ninguna hacia otro módulo.
+
+**Permisos nuevos** (por acción, PLAN §3.5; ninguna migración de permisos: el acceso total los recibe solo y nadie más
+los tenía; pregunta L5-m):
+
+| Permiso | Para |
+|---|---|
+| `libro-de-compras.libro.ver` | libro, resumen, anexo, datos del SAT-2237, borrador en PDF, copias de emisiones |
+| `libro-de-compras.libro.exportar` | Excel del libro y del SAT-2237 |
+| `libro-de-compras.libro.emitir` | PDF foliado (gasta folios) y corregir el último folio |
+| `libro-de-compras.retenciones.ver` / `.exportar` | reporte, por resolver y matriz de enteros |
+| `libro-de-compras.retenciones.constancias` | anotar, cambiar y quitar constancias; resolver «por resolver» |
+| `libro-de-compras.retenciones.enterar` | marcar, corregir y anular enteros |
+| `libro-de-compras.periodos.ver` / `.declarar` / `.reabrir` | períodos, historial y control |
+| `libro-de-compras.analisis-de-compras.ver` / `.exportar` | los cinco reportes de 3.9.8 |
+
+**Configuración nueva:** `libro-de-compras.periodos.control_de_declarados` (boolean, `false`, `niveles: ['instalacion',
+'empresa']`, `publica: true` para que el cliente muestre u oculte los bloqueos). Ninguna otra: las filas por página y la
+versión de la plantilla son constantes del código.
+
+**Auditoría** (nunca se borra; recurso `<modulo>.<plural>`):
+
+| Qué | Acción | Recurso | `anterior` |
+|---|---|---|---|
+| Cambiar / quitar constancia | `corregir` / `quitar` | `libro-de-compras.retenciones` | la retención |
+| Resolver «por resolver» | `corregir` | `libro-de-compras.retenciones` | la retención |
+| Corregir / anular entero | `corregir` / `anular` | `libro-de-compras.enteros-de-retenciones` | el entero |
+| Reabrir período | `reabrir` | `libro-de-compras.periodos` | la fila y su última declaración |
+| Encender o apagar el control | `corregir` | `libro-de-compras.periodos` | `{ encendido }` |
+| Corregir el último folio | `corregir` | `libro-de-compras.foliacion-del-libro` | `{ ultimoFolio }` |
+| Declarar, rectificar, emitir | — | — | el historial de solo agregar es el rastro |
+
+#### 3.9.11 Migraciones
+
+Generadas con `npm run bd:generar -w servidor -- libro-de-compras <nombre>` y revisadas a mano; números tentativos (si L4
+toma alguno antes, se renumeran con el `when` del `_journal.json` mayor que el de la `0022`). Sin datos que convertir
+(3.9.1, punto 10); los `update` quedan para otra base de desarrollo con filas de prueba.
+
+| Paso | Migración | Contenido |
+|---|---|---|
+| L5-0a | `0023_l5_iva_exento_de_combustible` | `add column iva_exento boolean default false not null` en `vigencias_de_combustible` |
+| L5-3a | `0024_l5_folios_del_libro` | `foliacion_del_libro` y `emisiones_del_libro` con checks, índices, FK a `core.archivos` y políticas |
+| L5-3a | `0025_l5_folios_sin_traslape` (`--custom`) | la exclusión `emisiones_del_libro_sin_traslape` |
+| L5-5a | `0026_l5_retenciones_por_resolver` | cuatro columnas, dos checks e índice parcial en `retenciones`; `update … set resolucion = 'pendiente'` de las retenciones con monto de documentos anulados |
+| L5-6a | `0027_l5_enteros_de_retenciones` | la tabla con sus checks, índice y política |
+| L5-7a | `0028_l5_periodos_y_declaraciones` | `periodos` y `declaraciones_de_periodos` con checks, llaves y políticas |
+
+Ninguna migración en otros esquemas ni de permisos. Los `meta/*_snapshot.json` quedan iguales a las tablas.
+
+#### 3.9.12 Pruebas
+
+- **Dominio (puras):** `FilaDelLibro` (signo de NCRE y NDEB, NIT de la FESP, columna por motivo y categoría, cuadre de la
+  fila para cada familia, simplificado); `ResumenDelLibro`; rubros y segmento 9; detalle de proveedores (neteo, proveedor
+  negativo con aviso, FESP aparte); `paginarLibro` (van y vienen, última página con el resumen, 0 filas, exactamente N
+  filas); `GRUPO_DE_ENTERO` contra el check de reglas; plazos por grupo con feriados; estado del entero;
+  `periodoAbiertoPropuesto` (nota de crédito, sin crédito, en plazo, todo declarado, NDEB desde su emisión); la foto y
+  su diferencia.
+- **Integración (PostgreSQL real):** cada check nuevo con un caso que lo viola; RLS (otra empresa no ve ni inserta en
+  ninguna tabla nueva; `update` y `delete` rechazados en `emisiones_del_libro` y `declaraciones_de_periodos`); la
+  exclusión de folios (`23P01` con su mensaje); la consulta del libro con un período de todas las familias (cuadre contra
+  `documentos.total`); anulados solo en el anexo; fuera del libro ausente.
+- **API (`app.inject`):** permisos de cada ruta; emitir dos veces sin cambios (409 y copia), con cambios (folios nuevos y
+  motivo exigido), dos emisiones a la vez (folios seguidos, sin repetir); corregir el último folio por debajo de lo
+  emitido (422); constancias una, en lote con un error (nada se guarda) y quitar con auditoría; anular un documento con
+  retención (queda `pendiente`) y eliminar uno con constancia (422); enteros (estado con diferencia tras anular);
+  declarar con el control apagado (no bloquea, aviso preciso) y encendido (registrar, anular, eliminar y la vigencia
+  fiscal → 409 con `periodoPropuesto`); `calcular` en período declarado; reabrir con auditoría; rectificación con
+  diferencia; concurrencia de declarar contra registrar (con dos conexiones); avisos de bandeja y conciliación solo con
+  lotes.
+- **Carga:** un período de 5,000 documentos: libro, PDF y foto por debajo de unos segundos (`explain` del libro).
+
+#### 3.9.13 Pasos (un commit cada uno; servidor y cliente por separado)
+
+Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`. **(captura)** = espera la
+captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF de una constancia de Retenciones Web.
+
+1. **L5-0a (servidor):** 3.9.9: migración `0023`, cálculo de la línea exenta, Excel de vigencias, avisos; pruebas.
+2. **L5-0b (cliente):** casilla en la ventana de la vigencia; formulario de documentos con el combustible exento.
+3. **L5-1a (servidor, libro):** consulta, `FilaDelLibro`, `ResumenDelLibro`, anexo de anulados, `escribirVarias` en el
+   core, rutas y permisos `libro.ver`/`.exportar`, Excel de tres hojas, avisos; pruebas.
+4. **L5-1b (cliente, libro):** página «Libro de compras y servicios» (Reportes): período, tabla completa o simplificada,
+   resumen, pestaña de anulados, Excel. Página de hasta 120 líneas; lógica en archivos sin Vue con pruebas.
+5. **L5-2a (servidor, SAT-2237):** rubros, segmento 9, detalle de proveedores y facturas especiales, rutas y Excel; el
+   mapa de casillas vacío (`casillas: null`). **No espera la captura.**
+6. **L5-2b (cliente, SAT-2237):** pestaña «Datos para el SAT-2237» con rubros, operaciones, proveedores y avisos.
+7. **L5-2c (servidor y cliente) (captura):** el mapa de rubros a casillas con sus nombres y la vista «como en el
+   formulario»; cerrar las preguntas L5-C1 a L5-C3.
+8. **L5-3a (servidor, PDF):** dependencia `pdfmake` aprobada por el agente de seguridad, `paginarLibro`, plantilla,
+   migraciones `0024` y `0025`, emitir, copia, borrador, corregir el último folio, permiso `libro.emitir`; pruebas.
+9. **L5-3b (cliente, PDF):** botones «Borrador», «Emitir con folios» (confirmación con los folios que gastará), lista de
+   emisiones con «Copia», y el último folio.
+10. **L5-4a (servidor, retenciones):** reporte por mes y grupo, plazos con feriados, `GRUPO_DE_ENTERO`, Excel, permisos
+    `retenciones.ver`/`.exportar`; pruebas.
+11. **L5-5a (servidor, constancias y por resolver) (constancia):** migración `0026`, anotar una y en lote, quitar,
+    resolución, `AnularDocumento` pone `pendiente`, `EliminarDocumento` bloquea con constancia; permiso
+    `retenciones.constancias`; pruebas.
+12. **L5-6a (servidor, enteros):** migración `0027`, marcar, corregir, anular, estado derivado, avisos al registrar y
+    anular; permiso `retenciones.enterar`; pruebas.
+13. **L5-4b (cliente, retenciones):** página «Retenciones de IVA e ISR» con pestañas Mes (anotar una y en lote), Por
+    resolver y Enteros (matriz del año, marcar y anular); imprimir con `window.print()` y Excel.
+14. **L5-7a (servidor, períodos y control):** configuración `control_de_declarados`, migración `0028`,
+    `ControlDePeriodosEnBaseDeDatos` (con `modo`), `PeriodoDeclarado` con `periodoAbiertoPropuesto`, bloqueo de vigencias
+    fiscales, aviso preciso con el control apagado; pruebas de bloqueo y concurrencia.
+15. **L5-8a (servidor, declarar):** foto, diferencia, declarar, reabrir, rectificar, encender y apagar el control,
+    revisión con avisos de bandeja y conciliación (los de L4 entran cuando existan L4-9 y L4-10), eventos; permisos
+    `periodos.*`; pruebas.
+16. **L5-8b (cliente, períodos):** página de períodos (año, estado, historial, «cambió desde la declaración», revisión,
+    declarar, reabrir, control) y, en el formulario y la bandeja, el error `periodo_declarado` con «Registrar en <mes>».
+17. **L5-9a (servidor, análisis):** los cinco reportes de 3.9.8 con su Excel y el permiso `analisis-de-compras`.
+18. **L5-9b (cliente, análisis):** sus páginas en Reportes.
+19. **L5-10 (QA):** de punta a punta en una empresa general agente de IVA y en una de pequeño contribuyente: registrar
+    un mes con todas las familias, ver y exportar el libro, emitir con folios y una copia, anotar constancias en lote,
+    marcar enterado, declarar, intentar registrar en el período (propuesta del mes siguiente), reabrir, anular, ver
+    «por resolver» y rectificar.
+
+#### 3.9.14 Preguntas para el usuario (con recomendación)
+
+- **L5-a. Declarar con el control apagado.** (A) Declarar, historial y bloqueo solo con el control encendido; (B)
+  declarar e historial siempre, y el control solo decide si bloquea. **Recomendación: (B)**: el número del SAT-2237, la
+  foto y el aviso «cambió después de declarar» sirven a todos; el bloqueo es lo opcional.
+- **L5-b. Quién enciende el control.** (A) solo soporte, desde el panel de configuración; (B) la empresa, desde la página
+  de períodos (encender con `periodos.declarar`, apagar con `periodos.reabrir` y motivo, con auditoría).
+  **Recomendación: (B)**: es una decisión de la empresa y hoy el panel es solo del superacceso.
+- **L5-c. Guardar el PDF foliado** en `core.archivos` (la copia es idéntica y queda la evidencia de cada folio) o solo
+  su huella y totales (regenerarlo podría paginar distinto si cambian los datos o la plantilla). **Recomendación:
+  guardarlo.**
+- **L5-d. Número de folio impreso** en cada página, o PDF sin número para hojas ya numeradas y habilitadas (Arrancar solo
+  lleva la cuenta). **Recomendación: imprimirlo**; si alguien usa hojas preimpresas, se agrega la opción al emitir.
+- **L5-e. Un solo contador de folios por empresa** para el libro completo y el simplificado (también si cambia de
+  régimen a mitad de año). **Recomendación: sí**, como decidió «último folio por empresa».
+- **L5-f. Excel del libro** en un archivo de tres hojas (Libro, Resumen, Anulados; cambio pequeño del core) o tres
+  descargas. **Recomendación: un archivo.**
+- **L5-g. Notas en el detalle de proveedores:** netear en su proveedor (con la cantidad de notas a la vista) o listarlas
+  aparte. **Recomendación: netear**, hasta que la captura diga otra cosa.
+- **L5-h. Enteros:** varios pagos por mes y grupo (original y complementarios) o uno solo. **Recomendación: varios.**
+- **L5-i. Constancias en lote:** todo o nada con errores por fila, o fila por fila. **Recomendación: todo o nada.**
+- **L5-j. «Por resolver»** como columnas de `retenciones`, puestas en `pendiente` al anular, con nota obligatoria al
+  resolver; y prohibir eliminar un documento con constancia o con su mes enterado. **Recomendación: sí a todo.**
+- **L5-k. Formulario de la declaración** según el régimen del período (SAT-2237, SAT-2046 o «sin formulario» para
+  regímenes que no declaran compras). **Recomendación: sí**, así el cierre sirve a cualquier régimen.
+- **L5-l. Permisos de análisis:** un par `analisis-de-compras.ver`/`.exportar` para los cinco reportes, o un par por
+  reporte. **Recomendación: un par.**
+- **L5-m. Permisos nuevos sin migración** (solo el acceso total los recibe; los roles se ajustan a mano).
+  **Recomendación: sí**; ninguno reemplaza a uno que ya existía.
+- **L5-n. Activos fijos dentro de «Bienes» en el libro** (separados solo en el SAT-2237 y en su reporte), para que el
+  libro no pase de 18 columnas. **Recomendación: sí.**
+- **L5-o. Menú:** «Libro de compras y servicios», «Retenciones de IVA e ISR» y «Análisis de compras» en Reportes; «Períodos
+  y declaraciones» en Operación (declarar y reabrir son acciones, sin Excel). **Recomendación: así.**
+
+#### 3.9.15 Preguntas para el contador (llevar a `contador-guatemala`)
+
+- **L5-C1.** Con la captura del SAT-2237: número y nombre de cada casilla de compras, crédito y segmento 9, y si los
+  rubros de 3.9.4.1 alcanzan (¿hay casillas de compras exentas, de pequeño contribuyente, de regímenes sin IVA?).
+- **L5-C2.** Notas de crédito recibidas: ¿restan en el rubro del crédito o van en una casilla propia (o en el débito)? Y
+  las notas de débito recibidas, ¿en su rubro o aparte?
+- **L5-C3.** ¿La FESP entra en el detalle de proveedores (con el CUI o NIT del vendedor) o se declara aparte? ¿El detalle
+  tiene tope de filas?
+- **L5-C4.** Con el PDF de una constancia de Retenciones Web IVA e ISR: formato del número, si es único por agente, y si
+  una constancia de ISR puede cubrir varias facturas.
+- **L5-C5.** ¿El combustible exento por el Decreto 22-2026 va en la casilla de combustibles, en compras exentas o en las
+  dos?
+- **L5-C6.** El orden cronológico del libro (AG 5-2013 art. 38): ¿por fecha de emisión o de recepción? Y el pequeño
+  contribuyente con su libro único de compras y ventas: ¿los folios del libro de compras de Arrancar le sirven, o el
+  libro debe ser uno solo con las ventas?
+- **L5-C7.** Las columnas de 3.9.3.2 contra las recomendadas en su informe de L5 (el documento de validación solo las
+  resume).
+
 ## 4. Cálculos: qué se guarda y qué se deriva
 
 Todo en **centavos enteros** en el dominio (objeto `Dinero`/funciones puras con pruebas); los
@@ -2204,7 +2993,7 @@ costo de cada línea, sin cuenta aparte (corregir `libro-de-compras.md`). El pla
 | `libro-de-compras.retenciones.ajustar` | L3 (pregunta 6) |
 | `libro-de-compras.documentos.importar` | L4 (subir, ver y completar la bandeja, conciliar; §3.3b.10) |
 | `libro-de-compras.dte-recibidos.descartar` | L4 (§3.3b.10) |
-| `libro-de-compras.libro.{ver,exportar}`, `…retenciones.{ver,exportar,constancias}`, `…periodos.{declarar,reabrir}` | L5 |
+| `libro-de-compras.libro.{ver,exportar,emitir}`, `…retenciones.{ver,exportar,constancias,enterar}`, `…periodos.{ver,declarar,reabrir}`, `…analisis-de-compras.{ver,exportar}` | L5 (§3.9.10) |
 
 Donde el plan dice `.registrar` / `.gestionar` léase `.crear` / `.crear`+`.editar`. Datos
 fiscales: con `empresas.ver`/`empresas.editar` y `terceros.ver`/`proveedores.crear`/
@@ -2239,7 +3028,7 @@ solo). `core.rol_permisos` y `core.usuario_permisos` no se tocan.
 | L4-1 | `0019_l4_otros_impuestos_e_idp_del_dte.sql` | `otros_impuestos` e `idp_escrito` con sus checks (§3.3b.12) |
 | L4-5 | `0020_l4_bandeja_de_dte.sql` | `lotes_de_dte` y `dte_recibidos` (§3.3b.12) |
 | L4-7 | `0021_l4_autorizacion_registrada_fuera.sql` (`--custom`) | función `security definer` (§3.3b.12) |
-| L5 | `…_periodos.sql` | `periodos` |
+| L5 | `0023` a `0028` (§3.9.11) | IVA exento del combustible, folios, retenciones por resolver, enteros, períodos y declaraciones |
 
 Datos existentes: ninguno (módulo nuevo, ninguna cuenta lo tiene activo). Semillas: ninguna
 obligatoria; combustibles no se siembran (son del usuario); conceptos, según la pregunta 11
@@ -2415,6 +3204,11 @@ Pasos R3-1 a R3-8 en §3.2c.12 (después de R2-4; R3-5 espera al contador; R3-7 
 
 Pasos L4-1 a L4-14 en §3.3b.14 (después de R3; L4-1 a L4-3 son de la vía a mano y no esperan nada; L4-6, L4-7, L4-11 y
 L4-14 esperan el Excel real del usuario; L4-2b espera al contador).
+
+### L5 Reportes y cierre
+
+Pasos L5-0a a L5-10 en §3.9.13 (L5-2c espera la captura del SAT-2237; L5-5a se afina con una constancia real; los avisos
+de bandeja y conciliación de L5-8a esperan L4-9 y L4-10).
 
 ## 15. Fuera de L1 a L3
 
