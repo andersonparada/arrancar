@@ -724,3 +724,32 @@ permite como `fel_a_otro_nit`, fuera del libro.
 - **Recibo FEL a otro NIT:** `RECI` o `RDON` con NIT receptor distinto al de la empresa se acepta con
   `motivoFueraDelLibro: "fel_a_otro_nit"`, fuera del libro (la regla general ya lo permitía; faltaba la prueba). Con el motivo
   `recibo_fel` y otro NIT se sigue rechazando (`recibo_fel_incoherente`), y con `fel_a_otro_nit` al NIT de la empresa también.
+
+## Cuentas por pagar CP1: dudas C1–C5 (contador, 2026-10-20)
+
+Veredicto general: **correcto con ajustes**; nada frena CP1-1 ni CP1-2. Citas del Código de Comercio, Código Civil,
+Código Tributario y art. 11 de la Ley del IVA están marcadas «confirmar» (no se pudo leer el texto oficial).
+
+- **C1. Nota de crédito mayor que el neto por pagar.** Lo que sobra (por la retención ya practicada) es un **derecho de
+  cobro frente al proveedor**, no algo «por resolver con la SAT»: la retención era debida, se entera y la constancia sigue
+  vigente (Ley del IVA arts. 17 y 48; Decreto 20-2006; Decreto 10-2012 art. 48; NIIF pymes 11.36 y 2.52). Se liquida
+  compensando con otra factura, con reintegro del proveedor o dándolo de baja con justificación. Ajustes: (1) los reportes
+  muestran aparte los **saldos deudores** de cada proveedor; (2) falta una forma de cobrar el reintegro (CP2/CP4);
+  (3) aviso al recibir la nota: «Esta nota deja Q… a favor de la empresa porque la retención ya se practicó…».
+- **C2. Cuándo rebaja la nota.** Desde que se recibe (NIIF pymes 11.36 y 2.36), con fecha de recepción: el diseño está bien.
+  **Problema de fondo:** «autorizar = provisionar» no cumple el devengo (factura de octubre autorizada en noviembre deja
+  octubre sin pasivo y descuadra el IVA). Recomienda **(A)**: Contabilidad registra al registrar en Libro de compras y
+  autorizar solo aprueba el pago (`documento_autorizado` = «aprobado para pago»). Alternativa (B): provisionar al autorizar
+  con regla «nota después de su factura» y provisión de cierre de lo no autorizado.
+- **C3. NDEB de intereses.** Cargo más del mismo proveedor (NIIF pymes 4.2), pero es **gasto financiero** (5.5 b, 25.2).
+  Proponer el concepto «Intereses y recargos a proveedores» con la clase de cargo `intereses` y excluir los intereses de los
+  análisis de compras. Sin retención de ISR (ya decidido); si el interés es parte del giro del proveedor, probablemente es
+  renta de actividad lucrativa (confirmar). Vencimiento desde la fecha de la NDEB.
+- **C4. Base del vencimiento.** Manda lo pactado; la emisión por omisión está bien (Código de Comercio arts. 674–678,
+  confirmar). Ajustes: (1) si es **FCAM** con abonos, el vencimiento sale de ellos (último abono hasta que existan cuotas);
+  (2) opción por proveedor «cuenta desde la recepción» (opcional, columna en `condiciones_de_proveedor`); (3) la contraseña
+  **no** mueve el vencimiento: «Vence» y «Pago prometido» son datos distintos; la antigüedad usa «Vence».
+- **C5. Reversión con mes contable cerrado.** La reversión contable va con la **fecha de la anulación** (o el primer mes
+  abierto), nunca en el mes cerrado, y reabrir un mes es un acto aparte con permiso y auditoría. Errores de captura y FEL
+  anulada son corrección de error (NIIF pymes 10.19–10.23). Lo fiscal sigue su regla: se rectifica el período del
+  documento. Ajuste: `documento_anulado` lleva `fechaDeAnulacion`, `causa` y el período o `fechaEmision` del documento.

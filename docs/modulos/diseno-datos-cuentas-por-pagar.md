@@ -569,3 +569,20 @@ pago, con motivo y auditoría; **U6** Libro de compras rechaza las bajas si CxP 
 rebaja desde que se recibe; **U8** saldos iniciales justo después de CP1; **U9** acción de auditoría `autorizar`;
 **U10** `dependeDe` incluye `bancos`; **U11** completar y autorizar en lote hasta 100; separación de funciones con el
 permiso `documentos.autorizar-propios` (no «salvo el Propietario»). Dudas C1–C5: en revisión por el contador.
+
+## Respuestas del usuario a la validación del contador C1–C5 (2026-10-20)
+
+Detalle del contador en `validacion-h7-h11-retenciones.md` («Cuentas por pagar CP1: dudas C1–C5»).
+
+- **U12 (C2, devengo):** Contabilidad registrará el pasivo y el gasto **al registrar en Libro de compras**; autorizar solo
+  aprueba el pago. `cuentas-por-pagar.documento_autorizado` significa «aprobado para pago», no «provisionado».
+- **U13 (C1, saldo a favor):** el saldo libre de una nota que no se compensa se liquida con un **reintegro del proveedor**
+  que entra por Bancos (CP4) o con un **ajuste manual** con permiso, motivo y auditoría (CP2). Los reportes muestran aparte
+  los saldos deudores por proveedor. Al recibir la nota con sobrante, aviso «Esta nota deja Q… a favor de la empresa…».
+- **U14 (C4, vencimiento):** (a) si la FCAM trae abonos, el vencimiento sale de ellos (fecha del último abono hasta que
+  existan cuotas); (b) opción por proveedor «contar desde la recepción» (columna en `condiciones_de_proveedor`, por omisión
+  desde la emisión); (c) «Vence» y «Pago prometido» (contraseña) son datos distintos y la antigüedad usa «Vence».
+- **U15 (C3, intereses):** una NDEB de clase `intereses` propone el concepto de gasto financiero y los análisis de compras
+  no la suman como compra.
+- **U16 (C5, mes cerrado):** la reversión contable va con la fecha de la anulación (o el primer mes abierto) y lo fiscal se
+  rectifica en el período del documento. `documento_anulado` lleva `fechaDeAnulacion`, `causa` y el período del documento.
