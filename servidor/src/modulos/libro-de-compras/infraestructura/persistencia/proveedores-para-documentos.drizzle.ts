@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, type SQL } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
@@ -9,7 +9,15 @@ import type {
 
 /** Lee el proveedor y su tercero; la seguridad por cuenta (RLS) deja ver solo los de la cuenta. */
 export class ProveedoresParaDocumentosDrizzle implements ProveedoresParaDocumentos {
-  async buscar(proveedorId: string): Promise<ProveedorParaDocumento | null> {
+  buscar(proveedorId: string): Promise<ProveedorParaDocumento | null> {
+    return this.buscarDonde(eq(proveedores.id, proveedorId));
+  }
+
+  buscarPorNit(nit: string): Promise<ProveedorParaDocumento | null> {
+    return this.buscarDonde(eq(terceros.nit, nit));
+  }
+
+  private async buscarDonde(condicion: SQL): Promise<ProveedorParaDocumento | null> {
     const [fila] = await transaccionEnCurso()
       .select({
         id: proveedores.id,
@@ -22,7 +30,7 @@ export class ProveedoresParaDocumentosDrizzle implements ProveedoresParaDocument
       })
       .from(proveedores)
       .innerJoin(terceros, eq(terceros.id, proveedores.terceroId))
-      .where(eq(proveedores.id, proveedorId));
+      .where(condicion);
     if (!fila) return null;
     return {
       id: fila.id,

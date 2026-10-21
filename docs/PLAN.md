@@ -1277,3 +1277,30 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   y su subtotal; «Combustibles» marca los meses exentos por el Decreto 22-2026 y muestra el aviso de IDP sin galones; los
   documentos llevan a su ficha. Los resultados se guardan por pestaña mientras no cambie el rango. En el celular las tablas
   se desplazan dentro de su marco, con la primera columna fija en proveedor y concepto. Pruebas: `datos-del-analisis.prueba.ts`.
+
+- **2026-10-20 — Libro de compras, L4-9 (servidor): completar, confirmar y descartar filas de la bandeja de DTE recibidos, y enlace
+  con lo registrado a mano.** Rutas bajo `/api/libro-de-compras/dte-recibidos`: `GET` (filtros `estado`, `desde`, `hasta`, `busqueda`,
+  `tipoDte`, `loteId`, `conProveedor`, `pagina`, `limite`; permiso `documentos.importar`) responde `{ elementos, total, pagina, limite }`,
+  cada fila con sus datos del DTE, `estado`, `borrador` y, si está pendiente, su `propuesta` (`proveedorId` por NIT, `conceptoId` del
+  último documento del proveedor, `destino` sugerido, `fechaRecepcion` igual a la emisión con `recepcionObligatoria` si la empresa es
+  agente de IVA, `periodo` según la regla de siempre y el control de períodos, y `avisoDelPeriodo`); `PATCH` (`{ ids, cambios,
+  aplicarPropuestas }`, `documentos.importar`, todo o nada, hasta 500 filas) responde `{ elementos }`: `cambios` escribe a mano
+  (`null` deja sin completar) y `aplicarPropuestas` llena los campos pedidos con la propuesta de cada fila («Usar la fecha de
+  emisión»); `POST …/vista-previa` y `POST …/confirmar` (`{ ids, datosFiscalesPorProveedor? }`, hasta 100, `documentos.crear`, 20 por minuto por
+  usuario) responden `{ resultados: [{ id, documentoId, avisos } | { id, error: { codigo, mensaje, detalles } }] }` (la vista previa trae `documento`
+  en vez de `documentoId`); `GET …/:dteId/solicitud` (`documentos.crear`) responde `{ solicitud, avisos }` para «Abrir en el
+  formulario» (un IVA que no cuadra no es error ahí: sale sin deducir y con aviso); `POST …/descartar` (`{ ids, motivo }`) responde
+  `{ elementos }` y `POST …/:dteId/restaurar` responde la fila, con el permiso nuevo `dte-recibidos.descartar` y la auditoría `descartar`
+  (acción nueva de `AccionAuditada`) y `reactivar`. `documentos.importar` queda declarado aquí (L4-7 lo usará para subir el archivo).
+  Confirmar procesa por fecha de emisión (facturas antes que sus notas), cada fila en su transacción (`ConfirmadorDeFila`: revisa
+  y prepara, crea el proveedor nuevo con `terceros.crear_proveedor_desde_dte` y el tipo de persona según el nombre, y registra con el
+  mismo `RegistrarDocumento` del formulario). Una fila con error responde el suyo y no frena a las demás. El exento deducido sigue
+  L4-c4 (`montos-del-dte.ts`: tolerancia en el IVA de `max(5, líneas)` centavos, sin exento negativo, notas y familias sin IVA no
+  deducen); una fila con monto distinto de cero en una columna que el mapa no conoce (`encabezados_no_reconocidos` de su lote) no se
+  confirma en lote. Un DTE registrado en otra empresa de la misma cuenta deja la fila `bloqueado` (y se libera sola al anularse
+  allá); en otra cuenta no se avisa nada y sale el mensaje genérico. Registrar a mano un documento con FEL pasa a `registrado` la fila
+  (también una descartada); anular o eliminar el documento la devuelve a `pendiente`. Decisiones: la marca «montos del resumen de la
+  SAT» va en las observaciones del documento y en los avisos; `bloqueado` puede pasar a `descartado` (el diseño lo pedía y la tabla de
+  transiciones de L4-5 no); como el importador aún no existe, el bloqueo se detecta al confirmar y al restaurar; el proveedor nuevo
+  queda creado aunque el registro de esa fila falle; las respuestas de datos fiscales se aceptan por id del proveedor o por NIT.
+  Pruebas: dominio, casos de uso y API (46 pruebas en cinco archivos).

@@ -31,6 +31,9 @@ export interface PeriodoElegido {
   aviso: string | null;
 }
 
+/** Lo que hace falta de la solicitud para elegir el período: la familia, la emisión y el período pedido, si lo hay. */
+export type PeriodoPedido = Pick<SolicitudDeDocumento, 'tipo' | 'fechaEmision' | 'periodo'>;
+
 /** Lo que `revisar` necesita del documento: sus fechas y el período con que se va a registrar. */
 export interface PeriodoDelDocumento {
   periodo: string;
@@ -45,7 +48,7 @@ export class GuardiaDelPeriodo {
   constructor(private readonly dependencias: Dependencias) {}
 
   /** El período pedido, o el que corresponde a las fechas; si ese está declarado y bloqueado, el primero abierto. */
-  async elegir(operador: Operador, solicitud: SolicitudDeDocumento, fechaDeRecepcion: string): Promise<PeriodoElegido> {
+  async elegir(operador: Operador, solicitud: PeriodoPedido, fechaDeRecepcion: string): Promise<PeriodoElegido> {
     if (solicitud.periodo) return { periodo: solicitud.periodo, aviso: null };
     const propuesto = periodoPropuesto({
       tipo: solicitud.tipo,
@@ -83,7 +86,7 @@ export class GuardiaDelPeriodo {
 
   private async alternativa(
     operador: Operador,
-    solicitud: SolicitudDeDocumento,
+    solicitud: Pick<SolicitudDeDocumento, 'tipo' | 'fechaEmision'>,
     { periodo, fechaDeRecepcion }: PeriodoDelDocumento,
   ): Promise<PeriodoAbiertoPropuesto> {
     const datosDeLaEmpresa = await this.dependencias.datosFiscalesDeEmpresa.vigenteEn(operador.empresaId, periodo);

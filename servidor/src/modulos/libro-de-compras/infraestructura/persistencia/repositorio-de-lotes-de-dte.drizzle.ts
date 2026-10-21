@@ -11,6 +11,11 @@ export class RepositorioDeLotesDeDteDrizzle implements RepositorioDeLotesDeDte {
     await transaccionEnCurso().insert(lotesDeDte).values(mapeadorDeLoteDeDte.aFila(lote));
   }
 
+  async buscar(id: string): Promise<LoteDeDte | null> {
+    const [fila] = await transaccionEnCurso().select().from(lotesDeDte).where(eq(lotesDeDte.id, id));
+    return fila ? mapeadorDeLoteDeDte.aLote(fila) : null;
+  }
+
   async buscarPorSha256(sha256: string): Promise<LoteDeDte | null> {
     const [fila] = await transaccionEnCurso()
       .select()

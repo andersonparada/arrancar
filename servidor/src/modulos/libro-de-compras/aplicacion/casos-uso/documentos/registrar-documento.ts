@@ -12,6 +12,7 @@ import type {
   CompletadorDeNit,
   RepositorioDeDocumentos,
 } from '../../puertos/puertos-de-documentos.js';
+import type { EnlaceConLaBandeja } from '../../puertos/puertos-de-la-bandeja.js';
 import { GuardarDatosFiscalesDeProveedor } from '../datos-fiscales/guardar-datos-fiscales-de-proveedor.js';
 import { auditarRegistro } from './auditoria-del-registro.js';
 import { dtoDeDocumento } from './dto-de-documento.js';
@@ -26,6 +27,8 @@ interface Dependencias extends DependenciasDelPreparador {
   repositorio: RepositorioDeDocumentos;
   completadorDeNit: CompletadorDeNit;
   completadorDeDpi: CompletadorDeDpi;
+  /** Si el documento viene de la bandeja de DTE recibidos, su fila pasa a `registrado`. */
+  bandeja: EnlaceConLaBandeja;
   auditoria: Auditoria;
   publicadorEventos: PublicadorEventos;
 }
@@ -39,7 +42,7 @@ export interface PeticionDeRegistro {
 /**
  * Registra una factura (de cualquier familia, incluida la especial), nota de crédito o recibo, con sus líneas y retenciones,
  * en una sola transacción: valida, calcula, completa el NIT o el DPI del proveedor si falta, guarda sus datos fiscales si no
- * los tenía, guarda y manda el documento al destino (`<destino>.recibir_documento`). Si el destino lo rechaza, no queda nada. El evento
+ * los tenía, guarda, enlaza con su fila de la bandeja de DTE (si la hay) y manda el documento al destino (`<destino>.recibir_documento`). Si el destino lo rechaza, no queda nada. El evento
  * `libro-de-compras.documento_registrado` sale solo después de confirmar.
  */
 export class RegistrarDocumento {
@@ -94,6 +97,7 @@ export class RegistrarDocumento {
       await this.guardarDatosFiscales.ejecutar(operador, { proveedorId: documento.proveedorId, datos });
     }
     await repositorio.agregar(documento);
+    if (documento.autorizacionFel) await this.dependencias.bandeja.enlazar(documento.autorizacionFel, documento.id);
     await auditarRegistro(auditoria, documento, preparado);
     await destinos.recibir(operador, documento.destino, paraElDestino(documento));
   }

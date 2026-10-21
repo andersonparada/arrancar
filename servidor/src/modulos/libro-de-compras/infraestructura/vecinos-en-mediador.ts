@@ -4,6 +4,11 @@ import '../../core/contratos/terceros.contratos.js';
 import { mediador } from '../../core/mediador/contexto.js';
 import type { IdentidadDeLaEmpresa } from '../aplicacion/puertos/consultas-del-libro.js';
 import type {
+  CreadorDeProveedores,
+  PedidoDeProveedorNuevo,
+  ProveedorDeLaBandeja,
+} from '../aplicacion/puertos/puertos-de-la-bandeja.js';
+import type {
   CompletadorDeDpi,
   CompletadorDeNit,
   DatosDeLaEmpresaParaDocumentos,
@@ -40,5 +45,12 @@ export class IdentidadDeLaEmpresaEnMediador implements IdentidadDeLaEmpresa {
       empresaId: operador.empresaId,
     });
     return { nombre, nit };
+  }
+}
+
+/** Terceros crea el proveedor del DTE sin duplicar el NIT (orden `terceros.crear_proveedor_desde_dte`). */
+export class CreadorDeProveedoresEnMediador implements CreadorDeProveedores {
+  crear(operador: Operador, pedido: PedidoDeProveedorNuevo): Promise<ProveedorDeLaBandeja> {
+    return mediador.enviar(operador, 'terceros.crear_proveedor_desde_dte', pedido);
   }
 }

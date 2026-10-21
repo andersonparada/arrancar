@@ -1,6 +1,7 @@
 import { DatoInvalido } from '../../core/compartido/dominio/errores.js';
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
+import { DteNoEstaPendiente } from './errores-de-bandeja.js';
 import { exigirTransicion, type EstadoDeDte, type EstadoDeDteEnLaSat, type MotivoDeBloqueo } from './estado-de-dte.js';
 import type { TipoDte } from './tipos-de-documento.js';
 
@@ -140,6 +141,14 @@ export class DteRecibido extends Entidad<DteRecibidoId> {
     const limpio = motivo.trim();
     if (limpio.length === 0 || limpio.length > MAXIMO_DEL_MOTIVO) throw new MotivoDeDescarteInvalido();
     this.mover('descartado', { motivoDeDescarte: limpio, descartadoPor: por, descartadoEn: en });
+  }
+
+  /** Pone lo que el usuario completó; el borrador solo se cambia mientras la fila está pendiente.
+   * @throws DteNoEstaPendiente si ya no lo está.
+   */
+  completar(cambios: Partial<BorradorDelDte>): void {
+    if (this.propiedades.estado !== 'pendiente') throw new DteNoEstaPendiente(this.propiedades.estado);
+    this.propiedades = { ...this.propiedades, ...cambios };
   }
 
   /** @throws TransicionDeDteInvalida si no está pendiente. */

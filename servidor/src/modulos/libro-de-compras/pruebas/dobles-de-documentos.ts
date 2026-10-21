@@ -18,6 +18,7 @@ import type {
   ProveedoresParaDocumentos,
   RepositorioDeDocumentos,
 } from '../aplicacion/puertos/puertos-de-documentos.js';
+import type { EnlaceConLaBandeja } from '../aplicacion/puertos/puertos-de-la-bandeja.js';
 import type { ControlDePeriodos, EstadoDelPeriodo, ModoDeControl } from '../aplicacion/puertos/puertos-de-periodos.js';
 import { configuracionDelLibroDeCompras } from '../configuracion.js';
 import { aCentesimasDeConfiguracion } from '../dominio/aritmetica-fiscal.js';
@@ -32,6 +33,10 @@ export class ProveedoresEnMemoria implements ProveedoresParaDocumentos {
 
   async buscar(proveedorId: string): Promise<ProveedorParaDocumento | null> {
     return this.filas.get(proveedorId) ?? null;
+  }
+
+  async buscarPorNit(nit: string): Promise<ProveedorParaDocumento | null> {
+    return [...this.filas.values()].find((proveedor) => proveedor.nit === nit) ?? null;
   }
 }
 
@@ -186,5 +191,19 @@ export class ControlDePeriodosEnMemoria implements ControlDePeriodos {
 
   async bloqueados(): Promise<string[]> {
     return this.bloqueo ? [...this.declarados.keys()].sort() : [];
+  }
+}
+
+/** La bandeja de DTE en memoria: solo recuerda los enlaces y las bajas que le avisaron. */
+export class EnlaceConLaBandejaEnMemoria implements EnlaceConLaBandeja {
+  readonly enlazados: Array<{ autorizacionFel: string; documentoId: string }> = [];
+  readonly soltados: string[] = [];
+
+  async enlazar(autorizacionFel: string, documentoId: string): Promise<void> {
+    this.enlazados.push({ autorizacionFel, documentoId });
+  }
+
+  async soltar(documentoId: string): Promise<void> {
+    this.soltados.push(documentoId);
   }
 }

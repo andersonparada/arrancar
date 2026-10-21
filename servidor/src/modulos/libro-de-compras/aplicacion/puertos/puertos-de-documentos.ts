@@ -24,6 +24,8 @@ export interface ProveedorParaDocumento {
 /** Lee proveedores de la cuenta de la transacción (RLS por cuenta). */
 export interface ProveedoresParaDocumentos {
   buscar(proveedorId: string): Promise<ProveedorParaDocumento | null>;
+  /** El proveedor de la cuenta cuyo tercero tiene ese NIT (normalizado); `null` si no hay. */
+  buscarPorNit(nit: string): Promise<ProveedorParaDocumento | null>;
 }
 
 export interface ConceptoParaLinea {

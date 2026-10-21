@@ -28,6 +28,7 @@ import {
   ControlDePeriodosEnMemoria,
   DatosDeLaEmpresaEnMemoria,
   DestinosEnMemoria,
+  EnlaceConLaBandejaEnMemoria,
   ProveedoresEnMemoria,
   RepositorioDeDocumentosEnMemoria,
 } from './dobles-de-documentos.js';
@@ -107,6 +108,7 @@ export function crearEscenario() {
   const empresa = new DatosDeLaEmpresaEnMemoria();
   const completadorDeNit = new CompletadorDeNitEnMemoria();
   const completadorDeDpi = new CompletadorDeDpiEnMemoria();
+  const bandeja = new EnlaceConLaBandejaEnMemoria();
   const datosDeEmpresa = new DatosFiscalesDeEmpresaEnMemoria(DatosFiscalesDeEmpresa.porOmision());
   const datosDeProveedor = new DatosFiscalesDeProveedorEnMemoria();
   const publicadorEventos = new PublicadorEventosEnMemoria();
@@ -120,6 +122,7 @@ export function crearEscenario() {
     repositorio: RepositorioDeDocumentos;
     completadorDeNit: CompletadorDeNit;
     completadorDeDpi: CompletadorDeDpi;
+    bandeja: EnlaceConLaBandejaEnMemoria;
     auditoria: AuditoriaEnMemoria;
     publicadorEventos: PublicadorEventosEnMemoria;
     retenciones: RetencionesDeUnDocumento;
@@ -139,6 +142,7 @@ export function crearEscenario() {
     repositorio,
     completadorDeNit,
     completadorDeDpi,
+    bandeja,
     auditoria,
     publicadorEventos,
     enteros,
@@ -153,6 +157,7 @@ export function crearEscenario() {
     empresa,
     completadorDeNit,
     completadorDeDpi,
+    bandeja,
     datosDeEmpresa,
     datosDeProveedor,
     publicadorEventos,

@@ -10,6 +10,7 @@ import { DocumentoEliminado } from '../../../dominio/eventos.js';
 import type { EliminacionDeDocumentoDto } from '../../dto/documento-ficha.dto.js';
 import type { RepositorioDeDocumentosGuardados } from '../../puertos/puertos-de-baja-de-documentos.js';
 import type { ConsultasDeDocumentos, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
+import type { EnlaceConLaBandeja } from '../../puertos/puertos-de-la-bandeja.js';
 import type { ControlDePeriodos } from '../../puertos/puertos-de-periodos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 import { bajaDelPeriodo } from './credito-de-la-empresa.js';
@@ -25,6 +26,8 @@ interface Dependencias extends DependenciasDeRetencionesDeLaBaja {
   /** Para bloquear la factura de una nota de débito y revisar el tope de sus notas de crédito. */
   consultas: ConsultasDeDocumentos;
   control: ControlDePeriodos;
+  /** La fila de la bandeja de DTE enlazada con el documento vuelve a `pendiente`. */
+  bandeja: EnlaceConLaBandeja;
   auditoria: Auditoria;
   publicadorEventos: PublicadorEventos;
   reloj: Reloj;
@@ -39,7 +42,7 @@ export interface PeticionDeEliminacion {
 
 /**
  * Elimina de verdad un documento «limpio»: vigente, sin procesar en el destino y sin notas de crédito ni de débito. Avisa al
- * destino (`documento_por_eliminar`) para que borre lo suyo, lo audita con la ficha anterior, lo borra (líneas y
+ * destino (`documento_por_eliminar`) para que borre lo suyo, devuelve a `pendiente` su fila de la bandeja de DTE (la llave la impide borrar si no), lo audita con la ficha anterior, lo borra (líneas y
  * retenciones en cascada) y, tras confirmar, publica `documento_eliminado`. Si el período es anterior al mes actual
  * avisa que puede estar declarado.
  */
@@ -71,6 +74,7 @@ export class EliminarDocumento {
     await exigirSinConstanciaNiEntero(this.dependencias, documentoId);
     const { destino } = guardado.documento;
     if (origen !== destino) await destinos.avisarPorEliminar(operador, { documentoId, destino });
+    await this.dependencias.bandeja.soltar(documentoId);
     await repositorio.eliminar(documentoId);
     await auditoria.registrar({
       recurso: 'libro-de-compras.documentos',

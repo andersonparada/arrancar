@@ -42,6 +42,7 @@ describe('transiciones de estado de un DTE', () => {
     ['descartado', 'registrado'],
     ['bloqueado', 'pendiente'],
     ['bloqueado', 'registrado'],
+    ['bloqueado', 'descartado'],
   ];
 
   it('permite solo las transiciones del diseño', () => {

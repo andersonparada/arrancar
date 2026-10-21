@@ -19,6 +19,7 @@ import type {
   RepositorioDeDocumentosGuardados,
 } from '../../puertos/puertos-de-baja-de-documentos.js';
 import type { ConsultasDeDocumentos, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
+import type { EnlaceConLaBandeja } from '../../puertos/puertos-de-la-bandeja.js';
 import type { ControlDePeriodos } from '../../puertos/puertos-de-periodos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
 import { bajaDelPeriodo } from './credito-de-la-empresa.js';
@@ -34,6 +35,8 @@ interface Dependencias extends DependenciasDeRetencionesDeLaBaja {
   /** Para bloquear la factura de una nota de débito y revisar el tope de sus notas de crédito. */
   consultas: ConsultasDeDocumentos;
   control: ControlDePeriodos;
+  /** La fila de la bandeja de DTE enlazada con el documento vuelve a `pendiente`. */
+  bandeja: EnlaceConLaBandeja;
   auditoria: Auditoria;
   publicadorEventos: PublicadorEventos;
   reloj: Reloj;
@@ -50,7 +53,7 @@ export interface PeticionDeAnulacion {
 
 /**
  * Anula el registro de un documento vigente (no la FEL: solo su emisor la anula en la SAT) con su causa y su motivo: avisa al destino (`documento_por_anular`) antes de cambiar nada, lo
- * deja `anulado` con su fecha y usuario (su número queda libre), deja sus retenciones con monto «por resolver», lo audita con la ficha anterior y, tras confirmar,
+ * deja `anulado` con su fecha y usuario (su número queda libre), devuelve a `pendiente` su fila de la bandeja de DTE, deja sus retenciones con monto «por resolver», lo audita con la ficha anterior y, tras confirmar,
  * publica `documento_anulado`. Si el período es anterior al mes actual avisa que puede estar declarado. Si el destino
  * lo rechaza, no cambia nada. Lo usan la ruta y la orden del mediador.
  */
@@ -90,6 +93,7 @@ export class AnularDocumento {
     const { destino } = guardado.documento;
     if (origen !== destino) await destinos.avisarPorAnular(operador, { documentoId, destino, motivo });
     await repositorio.anular(documentoId, { anuladoPor: operador.usuarioId, motivo, causa });
+    await this.dependencias.bandeja.soltar(documentoId);
     await this.auditar(guardado, `${causa}: ${motivo}`);
     const avisosDeRetenciones = await dejarRetencionesPorResolver(this.dependencias, documentoId);
     const hoy = await this.dependencias.reloj.hoy(operador);

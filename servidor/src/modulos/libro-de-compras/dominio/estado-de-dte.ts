@@ -16,13 +16,13 @@ export type EstadoDeDteEnLaSat = 'vigente' | 'anulado';
  * - `pendiente` se registra, se descarta o se bloquea (ya está en otra empresa de la cuenta).
  * - `registrado` solo vuelve a `pendiente` (se anuló o eliminó su documento).
  * - `descartado` se restaura a `pendiente` o se registra (el usuario decidió registrarlo).
- * - `bloqueado` se libera a `pendiente` (la otra empresa soltó el DTE) o se registra.
+ * - `bloqueado` se libera a `pendiente` (la otra empresa soltó el DTE), se descarta (la lleva la otra empresa) o se registra.
  */
 const TRANSICIONES: Record<EstadoDeDte, readonly EstadoDeDte[]> = {
   pendiente: ['registrado', 'descartado', 'bloqueado'],
   registrado: ['pendiente'],
   descartado: ['pendiente', 'registrado'],
-  bloqueado: ['pendiente', 'registrado'],
+  bloqueado: ['pendiente', 'registrado', 'descartado'],
 };
 
 /** El DTE no puede pasar de un estado de la bandeja al otro. */

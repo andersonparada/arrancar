@@ -1661,7 +1661,7 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
    auditoría `corregir`), rutas de importar, lista y lotes, permiso `documentos.importar`; pruebas de API.
 9. **L4-8 (servidor, terceros) - HECHO 2026-10-20:** orden `terceros.crear_proveedor_desde_dte` atendida en `terceros` y caso de uso de
    proveedores desde la bandeja con los datos fiscales deducidos; pruebas.
-10. **L4-9 (servidor, completar, confirmar y descartar):** `PATCH`, vista previa, `ConfirmarDteRecibidos` fila por fila,
+10. **L4-9 (servidor, completar, confirmar y descartar) - HECHO 2026-10-20:** `PATCH`, vista previa, `ConfirmarDteRecibidos` fila por fila,
     solicitud para el formulario, descartar y restaurar (acción `descartar`, permiso `dte-recibidos.descartar`), enlace en
     `RegistrarDocumento` y regreso a `pendiente` al anular o eliminar; pruebas de API.
 11. **L4-10 (servidor, conciliación):** consulta por período con sus resultados; pruebas.

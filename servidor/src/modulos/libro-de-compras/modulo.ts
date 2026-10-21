@@ -3,6 +3,7 @@ import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeDatosFiscalesComponidas } from './composicion/datos-fiscales.js';
 import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
+import { rutasDeDteRecibidosComponidas } from './composicion/dte-recibidos.js';
 import { rutasDeConceptosDeGasto } from './composicion/conceptos-de-gasto.js';
 import { rutasDeCombustibles } from './composicion/combustibles.js';
 import { configuracionDelLibroDeCompras } from './configuracion.js';
@@ -22,6 +23,7 @@ function componerRutas() {
     rutasDeCombustibles(),
     rutasDeVigenciasDeCombustible(),
     rutasDeDocumentosComponidas(),
+    rutasDeDteRecibidosComponidas(),
     rutasDeLibro(),
     rutasDeRetencionesComponidas(),
     rutasDePeriodosComponidas(),
@@ -74,6 +76,15 @@ export const moduloLibroDeCompras: DefinicionModulo = {
     {
       clave: 'libro-de-compras.documentos.eliminar',
       descripcion: 'Eliminar documentos de compra que no se han procesado en su destino',
+    },
+    {
+      clave: 'libro-de-compras.documentos.importar',
+      descripcion:
+        'Ver la bandeja de DTE recibidos de la SAT y completar sus filas (proveedor, concepto, destino y fechas)',
+    },
+    {
+      clave: 'libro-de-compras.dte-recibidos.descartar',
+      descripcion: 'Descartar y restaurar filas de la bandeja de DTE recibidos',
     },
     {
       clave: 'libro-de-compras.retenciones.ajustar',

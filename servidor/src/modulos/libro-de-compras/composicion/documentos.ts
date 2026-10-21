@@ -27,16 +27,20 @@ import {
   CompletadorDeNitEnMediador,
   DatosDeLaEmpresaEnMediador,
 } from '../infraestructura/vecinos-en-mediador.js';
+import { EnlaceDeLaBandeja } from '../aplicacion/casos-uso/bandeja/enlace-de-la-bandeja.js';
+import { RepositorioDeDteRecibidosDrizzle } from '../infraestructura/persistencia/repositorio-de-dte-recibidos.drizzle.js';
 import { controlDePeriodos } from './control-de-periodos.js';
 import { atenderOrdenesDeDocumentos } from './ordenes-de-documentos.js';
 
-/** Las retenciones y los enteros que miran la baja y los avisos del documento. */
-const retencionesDeLaBaja = () => ({
+/** Las retenciones y los enteros que miran la baja y los avisos del documento, y la bandeja de DTE que enlaza o suelta su fila. */
+const vecinosDelDocumento = () => ({
   enteros: new ConsultasDeEnterosDrizzle(),
   retenciones: new RetencionesDeUnDocumentoDrizzle(),
+  bandeja: new EnlaceDeLaBandeja(new RepositorioDeDteRecibidosDrizzle()),
 });
 
-function dependenciasDeDocumentos() {
+/** Lo que usan el registro y las bajas de documentos; también lo usa la bandeja de DTE para confirmar con el mismo registro. */
+export function dependenciasDeDocumentos() {
   const compartidas = dependenciasCompartidas();
   return {
     unidadDeTrabajo: compartidas.unidadDeTrabajo,
@@ -58,7 +62,7 @@ function dependenciasDeDocumentos() {
     consultasDeLista: new ConsultasDeListaDeDocumentosDrizzle(),
     completadorDeNit: new CompletadorDeNitEnMediador(),
     completadorDeDpi: new CompletadorDeDpiEnMediador(),
-    ...retencionesDeLaBaja(),
+    ...vecinosDelDocumento(),
   };
 }
 
