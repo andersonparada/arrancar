@@ -489,13 +489,14 @@ casos de §4.3), reglas de baja, separación de funciones.
 
 Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`.
 
-1. **CP1-1 (servidor, módulo y datos):** generar el módulo; `dependeDe`, permisos y configuración; tablas de §3 con
+1. **CP1-1 (servidor, módulo y datos) — hecho:** generar el módulo; `dependeDe`, permisos y configuración; tablas de §3 con
    migración `0001`; mensajes de restricciones; pruebas de tablas y RLS.
-2. **CP1-2 (servidor, recibir):** `RecibirDocumento` con propuesta de vencimiento y aplicación automática; manejador
+2. **CP1-2 (servidor, recibir) — hecho:** `RecibirDocumento` con propuesta de vencimiento y aplicación automática; manejador
    de la orden; pruebas puras y de API a través de Libro de compras.
-3. **CP1-3 (servidor, bajas por aviso):** manejadores de `documento_por_anular` y `documento_por_eliminar`, reglas de
+3. **CP1-3 (servidor, bajas por aviso) — hecho:** manejadores de `documento_por_anular` y `documento_por_eliminar`, reglas de
    baja ampliables, auditoría, evento `documento_anulado`; pruebas.
-4. **CP1-4 (servidor, días de crédito):** escucha de `terceros.proveedor_guardado`, ruta de lectura; pruebas.
+4. **CP1-4 (servidor, días de crédito) — hecho (2026-10-20):** escucha de `terceros.proveedor_guardado`, ruta de lectura; pruebas.
+   Incluye U14 b (columna `contar_desde_la_recepcion`, migración `0002`).
 5. **CP1-5 (servidor, consultas):** bandeja, lista con filtros (proveedor, estado, tipo, fechas, vencidas), ficha con
    notas y aplicaciones, saldo del proveedor; DTO con `puedeAutorizar`, `puedeAnular`, `puedeEliminar` calculados en
    el servidor (como Bancos); pruebas.

@@ -21,6 +21,7 @@ export const mapeadorDeDocumento = {
       retencionesCentavos: aCentavos(fila.retenciones),
       tieneActivoFijo: fila.tieneActivoFijo,
       vencimiento: fila.vencimiento,
+      ingresadoPor: fila.creadoPor,
       estado: fila.estado,
       registradoEn: fila.registradoEn?.toISOString() ?? null,
       registradoPor: fila.registradoPor,

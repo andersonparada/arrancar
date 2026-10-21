@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, foreignKey, smallint, unique, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, foreignKey, smallint, unique, uuid } from 'drizzle-orm/pg-core';
 import {
   autoria,
   deLaTransaccion,
@@ -12,8 +12,8 @@ import { proveedores } from '../../../terceros/infraestructura/persistencia/prov
 import { esquemaCuentasPorPagar } from './esquema.tablas.js';
 
 /**
- * Las condiciones de pago de cada proveedor, por cuenta (como el proveedor): hoy los días de crédito; `null` es el
- * plazo por omisión (un mes) y `0`, contado. Nunca se borra una fila: vaciar el campo guarda `null`.
+ * Las condiciones de pago de cada proveedor, por cuenta (como el proveedor): los días de crédito (`null` es el
+ * plazo por omisión, un mes, y `0`, contado) y desde qué fecha corren (por omisión, la de emisión). Nunca se borra una fila: vaciar el campo guarda `null`.
  */
 export const condicionesDeProveedor = esquemaCuentasPorPagar.table(
   'condiciones_de_proveedor',
@@ -25,6 +25,8 @@ export const condicionesDeProveedor = esquemaCuentasPorPagar.table(
       .references(() => cuentas.id, { onDelete: 'cascade' }),
     proveedorId: uuid().notNull(),
     diasDeCredito: smallint(),
+    /** El plazo corre desde la fecha de recepción del documento y no desde la de emisión (U14 b). */
+    contarDesdeLaRecepcion: boolean().notNull().default(false),
     ...marcasDeTiempo,
     ...autoria,
   },

@@ -18,6 +18,7 @@ const documento = (cambios: Partial<DocumentoPorPagar> = {}): DocumentoPorPagar 
   retencionesCentavos: 0,
   tieneActivoFijo: false,
   vencimiento: '2026-04-10',
+  ingresadoPor: null,
   estado: 'pendiente',
   registradoEn: null,
   registradoPor: null,

@@ -4,6 +4,7 @@ import type { DocumentoParaDestino } from '../../../core/contratos/libro-de-comp
 import {
   AplicacionesEnMemoria,
   CondicionesEnMemoria,
+  DocumentosDeCompraEnMemoria,
   DocumentosEnMemoria,
   PlazoFijo,
 } from '../../pruebas/dobles-de-documentos.js';
@@ -14,6 +15,7 @@ const PROVEEDOR = crypto.randomUUID();
 let aplicaciones: AplicacionesEnMemoria;
 let documentos: DocumentosEnMemoria;
 let condiciones: CondicionesEnMemoria;
+let documentosDeCompra: DocumentosDeCompraEnMemoria;
 let unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
 let recibir: RecibirDocumento;
 const operador = operadorDePrueba();
@@ -34,6 +36,7 @@ beforeEach(() => {
   aplicaciones = new AplicacionesEnMemoria();
   documentos = new DocumentosEnMemoria(aplicaciones);
   condiciones = new CondicionesEnMemoria();
+  documentosDeCompra = new DocumentosDeCompraEnMemoria();
   unidadDeTrabajo = new UnidadDeTrabajoEnMemoria();
   recibir = new RecibirDocumento({
     unidadDeTrabajo,
@@ -41,6 +44,7 @@ beforeEach(() => {
     aplicaciones,
     cargos: documentos,
     condiciones,
+    documentosDeCompra,
     plazo: new PlazoFijo(1),
   });
 });
@@ -71,6 +75,27 @@ describe('recibir un documento', () => {
     await recibir.ejecutar(operador, factura);
 
     expect(guardadoDe(factura.documentoId).vencimiento).toBe('2026-03-25');
+  });
+
+  it('si el proveedor cuenta desde la recepción, el plazo corre desde esa fecha', async () => {
+    condiciones.dias.set(PROVEEDOR, 15);
+    condiciones.desdeLaRecepcion.add(PROVEEDOR);
+    const factura = llega();
+    documentosDeCompra.recepciones.set(factura.documentoId, '2026-03-14');
+
+    await recibir.ejecutar(operador, factura);
+
+    expect(guardadoDe(factura.documentoId).vencimiento).toBe('2026-03-29');
+  });
+
+  it('sin días de crédito y contando desde la recepción, el mes por omisión también corre desde ella', async () => {
+    condiciones.desdeLaRecepcion.add(PROVEEDOR);
+    const factura = llega();
+    documentosDeCompra.recepciones.set(factura.documentoId, '2026-03-31');
+
+    await recibir.ejecutar(operador, factura);
+
+    expect(guardadoDe(factura.documentoId).vencimiento).toBe('2026-04-30');
   });
 
   it('sin días de crédito propone un mes calendario desde la emisión', async () => {

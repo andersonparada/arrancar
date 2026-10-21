@@ -15,6 +15,13 @@
       "when": 1792543604829,
       "tag": "0001_cp1_documentos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792547740190,
+      "tag": "0002_condiciones_desde_la_recepcion",
+      "breakpoints": true
     }
   ]
 }

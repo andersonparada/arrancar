@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { proponerVencimiento, sumarDias, sumarMeses } from './propuesta-de-vencimiento.js';
+import { fechaBaseDelPlazo, proponerVencimiento, sumarDias, sumarMeses } from './propuesta-de-vencimiento.js';
 
 describe('propuesta de vencimiento', () => {
   describe('con días de crédito del proveedor', () => {
     it('suma los días a la fecha de emisión', () => {
-      const vencimiento = proponerVencimiento({ fechaEmision: '2026-03-10', diasDeCredito: 15, mesesPorOmision: 1 });
+      const vencimiento = proponerVencimiento({ fechaBase: '2026-03-10', diasDeCredito: 15, mesesPorOmision: 1 });
 
       expect(vencimiento).toBe('2026-03-25');
     });
 
     it('con 0 días es de contado: vence el mismo día', () => {
-      const vencimiento = proponerVencimiento({ fechaEmision: '2026-03-10', diasDeCredito: 0, mesesPorOmision: 1 });
+      const vencimiento = proponerVencimiento({ fechaBase: '2026-03-10', diasDeCredito: 0, mesesPorOmision: 1 });
 
       expect(vencimiento).toBe('2026-03-10');
     });
@@ -25,15 +25,36 @@ describe('propuesta de vencimiento', () => {
     });
 
     it('los días del proveedor mandan sobre los meses por omisión', () => {
-      const vencimiento = proponerVencimiento({ fechaEmision: '2026-03-10', diasDeCredito: 5, mesesPorOmision: 6 });
+      const vencimiento = proponerVencimiento({ fechaBase: '2026-03-10', diasDeCredito: 5, mesesPorOmision: 6 });
 
       expect(vencimiento).toBe('2026-03-15');
     });
   });
 
+  describe('desde cuándo corre el plazo', () => {
+    const fechas = { fechaEmision: '2026-03-10', fechaRecepcion: '2026-03-14' };
+
+    it('por omisión corre desde la emisión', () => {
+      expect(fechaBaseDelPlazo({ ...fechas, contarDesdeLaRecepcion: false })).toBe('2026-03-10');
+    });
+
+    it('si el proveedor lo pactó, corre desde la recepción', () => {
+      const fechaBase = fechaBaseDelPlazo({ ...fechas, contarDesdeLaRecepcion: true });
+
+      expect(fechaBase).toBe('2026-03-14');
+      expect(proponerVencimiento({ fechaBase, diasDeCredito: 15, mesesPorOmision: 1 })).toBe('2026-03-29');
+    });
+
+    it('nunca vence antes de la emisión: una recepción anterior se ignora', () => {
+      const anterior = { fechaEmision: '2026-03-10', fechaRecepcion: '2026-03-01', contarDesdeLaRecepcion: true };
+
+      expect(fechaBaseDelPlazo(anterior)).toBe('2026-03-10');
+    });
+  });
+
   describe('sin días de crédito: el plazo por omisión', () => {
     it('es un mes calendario desde la emisión', () => {
-      const vencimiento = proponerVencimiento({ fechaEmision: '2026-03-10', diasDeCredito: null, mesesPorOmision: 1 });
+      const vencimiento = proponerVencimiento({ fechaBase: '2026-03-10', diasDeCredito: null, mesesPorOmision: 1 });
 
       expect(vencimiento).toBe('2026-04-10');
     });

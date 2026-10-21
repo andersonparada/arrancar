@@ -11,6 +11,7 @@ import { REGLAS_PARA_ANULAR, REGLAS_PARA_ELIMINAR, type ReglaDeBaja } from '../.
 import {
   AplicacionesEnMemoria,
   CondicionesEnMemoria,
+  DocumentosDeCompraEnMemoria,
   DocumentosEnMemoria,
   PlazoFijo,
 } from '../../../pruebas/dobles-de-documentos.js';
@@ -71,6 +72,7 @@ beforeEach(() => {
     aplicaciones,
     cargos: documentos,
     condiciones: new CondicionesEnMemoria(),
+    documentosDeCompra: new DocumentosDeCompraEnMemoria(),
     plazo: new PlazoFijo(1),
   });
 });

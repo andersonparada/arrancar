@@ -21,6 +21,8 @@ export interface FichaDelDocumentoDto {
   retenciones: string;
   tieneActivoFijo: boolean;
   vencimiento: string | null;
+  /** Quien lo registró en Libro de compras. */
+  ingresadoPor: string | null;
   estado: EstadoDeDocumento;
   registradoEn: string | null;
   registradoPor: string | null;

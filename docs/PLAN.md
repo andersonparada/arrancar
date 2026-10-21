@@ -1354,3 +1354,14 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   sembrarse). Los análisis de compras de L5-9a (por proveedor, por concepto y los demás) excluyen los documentos con clase
   `intereses` porque son gasto financiero y no compra. Pruebas de API (`libro-de-compras-nota-de-debito-intereses.api.prueba.ts`).
   El cliente ya proponía el concepto por nombre («financier» o «interes»); falta que muestre la clase en la ficha.
+- **2026-10-20 — Cuentas por pagar CP1-4 (servidor, días de crédito) y U14 b.** Cuentas por pagar aporta su sección al formulario
+  de Proveedores: escucha `terceros.proveedor_guardado`, valida `secciones.cuentas-por-pagar` (`diasDeCredito` entero 0 a 365
+  o `null` para el plazo por omisión, y `contarDesdeLaRecepcion` booleano; lo que no llega se queda como estaba; un valor
+  inválido deshace el formulario con el error en `secciones.cuentas-por-pagar.<campo>`) y hace el *upsert* en
+  `condiciones_de_proveedor`, sin auditoría. Lectura: `GET /api/cuentas-por-pagar/proveedores/:proveedorId/condiciones`
+  (permiso `terceros.ver`; sin fila devuelve `diasDeCredito: null` y `contarDesdeLaRecepcion: false`). U14 b: migración `0002`
+  agrega `contar_desde_la_recepcion boolean not null default false`; `RecibirDocumento` toma la fecha de recepción de
+  `libro_de_compras.documentos` (`DocumentosDeCompraDrizzle`, solo lectura de infraestructura) y, si el proveedor así lo
+  pactó, el plazo corre desde ella (`fechaBaseDelPlazo`; nunca antes de la emisión, para no violar
+  `vencimiento >= fecha_emision`). U14 a (vencimiento desde los abonos de la FCAM) queda pendiente: los abonos no llegan en
+  `DocumentoParaDestino`. La entidad `DocumentoPorPagar` suma `ingresadoPor` (`creado_por`), base de la separación de funciones.

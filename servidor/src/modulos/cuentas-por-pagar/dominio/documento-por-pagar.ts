@@ -17,6 +17,8 @@ export interface DocumentoPorPagar {
   /** `AAAA-MM-DD`; nulo en las notas de crédito, que no vencen. */
   vencimiento: string | null;
   estado: EstadoDeDocumento;
+  /** Quien lo registró en Libro de compras (`creado_por`): cuenta para la separación de funciones al autorizar. */
+  ingresadoPor: string | null;
   /** Cuándo y quién lo completó en la bandeja (fecha y hora ISO); nulos mientras esté pendiente. */
   registradoEn: string | null;
   registradoPor: string | null;

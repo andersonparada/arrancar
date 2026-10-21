@@ -4,6 +4,7 @@ import { PublicadorEventosTrasConfirmar } from '../../core/compartido/infraestru
 import { AnularPorAviso } from '../aplicacion/casos-uso/bajas/anular-por-aviso.js';
 import { EliminarPorAviso } from '../aplicacion/casos-uso/bajas/eliminar-por-aviso.js';
 import { RecibirDocumento } from '../aplicacion/casos-uso/recibir-documento.js';
+import { DocumentosDeCompraDrizzle } from '../infraestructura/persistencia/documentos-de-compra.drizzle.js';
 import { REGLAS_PARA_ANULAR, REGLAS_PARA_ELIMINAR } from '../dominio/reglas-de-baja.js';
 import { ConsultasDeCargosDrizzle } from '../infraestructura/persistencia/consultas-de-cargos.drizzle.js';
 import { CondicionesDeProveedoresDrizzle } from '../infraestructura/persistencia/condiciones-de-proveedores.drizzle.js';
@@ -28,7 +29,13 @@ export function rutasDeDocumentosComponidas(): FastifyPluginAsync {
   const condiciones = new CondicionesDeProveedoresDrizzle();
   const plazo = new PlazoPorOmisionEnConfiguracion();
   atenderOrdenesDeDocumentos({
-    recibir: new RecibirDocumento({ ...bajas, cargos, condiciones, plazo }),
+    recibir: new RecibirDocumento({
+      ...bajas,
+      cargos,
+      condiciones,
+      documentosDeCompra: new DocumentosDeCompraDrizzle(),
+      plazo,
+    }),
     anularPorAviso: new AnularPorAviso({ ...bajas, publicadorEventos, reglas: REGLAS_PARA_ANULAR }),
     eliminarPorAviso: new EliminarPorAviso({ ...bajas, reglas: REGLAS_PARA_ELIMINAR }),
   });

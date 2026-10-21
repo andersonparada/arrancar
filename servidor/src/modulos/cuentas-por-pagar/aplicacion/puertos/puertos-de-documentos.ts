@@ -1,4 +1,5 @@
 import type { ContextoEmpresa } from '../../../core/compartido/aplicacion/contexto-empresa.js';
+import type { CambioDeCondiciones, CondicionesDeProveedor } from '../../dominio/condiciones-de-proveedor.js';
 import type {
   AplicacionDeNota,
   DocumentoConAplicaciones,
@@ -58,8 +59,18 @@ export interface ConsultasDeCargos {
 }
 
 export interface CondicionesDeProveedores {
-  /** Los días de crédito del proveedor; `null` si no tiene (o dejó el campo vacío). */
-  diasDeCredito(proveedorId: string): Promise<number | null>;
+  /** Las condiciones del proveedor; sin ninguna guardada, las de por omisión. */
+  deProveedor(proveedorId: string): Promise<CondicionesDeProveedor>;
+  /** Si el proveedor existe en la cuenta activa. */
+  existeElProveedor(proveedorId: string): Promise<boolean>;
+  /** Guarda lo que cambió (crea la fila si no había); lo que el cambio no trae se queda como estaba. */
+  guardar(proveedorId: string, cambio: CambioDeCondiciones): Promise<void>;
+}
+
+/** Datos del documento que se quedan en Libro de compras y no viajan en la orden `recibir_documento`. */
+export interface DocumentosDeCompra {
+  /** La fecha de recepción (`AAAA-MM-DD`) con que se registró el documento. */
+  fechaDeRecepcion(documentoId: string): Promise<string>;
 }
 
 export interface PlazoPorOmision {

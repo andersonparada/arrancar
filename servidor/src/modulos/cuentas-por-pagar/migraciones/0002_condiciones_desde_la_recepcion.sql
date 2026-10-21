@@ -1,0 +1,1 @@
+ALTER TABLE "cuentas_por_pagar"."condiciones_de_proveedor" ADD COLUMN "contar_desde_la_recepcion" boolean DEFAULT false NOT NULL;

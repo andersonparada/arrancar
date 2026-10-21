@@ -2,8 +2,8 @@ const UN_DIA_EN_MS = 24 * 60 * 60 * 1000;
 
 /** Lo que decide cuándo vence un cargo. */
 export interface DatosDelPlazo {
-  /** `AAAA-MM-DD`. */
-  fechaEmision: string;
+  /** `AAAA-MM-DD`: desde cuándo corre el plazo (ver `fechaBaseDelPlazo`). */
+  fechaBase: string;
   /** Los días de crédito del proveedor; `null` si no tiene (se usa el plazo por omisión), `0` es contado. */
   diasDeCredito: number | null;
   /** Los meses de crédito por omisión de la empresa (0 es contado). */
@@ -25,11 +25,27 @@ export function sumarDias(fecha: string, dias: number): string {
   return new Date(new Date(`${fecha}T00:00:00Z`).getTime() + dias * UN_DIA_EN_MS).toISOString().slice(0, 10);
 }
 
+/** Las dos fechas del documento y la condición del proveedor que decide desde cuál corre el plazo. */
+export interface FechasDelPlazo {
+  fechaEmision: string;
+  fechaRecepcion: string;
+  contarDesdeLaRecepcion: boolean;
+}
+
 /**
- * El vencimiento que se propone al recibir un cargo: la fecha de emisión más los días de crédito del proveedor; sin
- * ese dato, la fecha de emisión más los meses por omisión de la empresa (un mes calendario si nadie lo cambió).
+ * Desde cuándo corre el plazo: la fecha de emisión, o la de recepción si el proveedor así lo pactó. Un documento no
+ * vence antes de emitirse, así que si la recepción fuera anterior a la emisión se queda con la emisión.
  */
-export function proponerVencimiento({ fechaEmision, diasDeCredito, mesesPorOmision }: DatosDelPlazo): string {
-  if (diasDeCredito !== null) return sumarDias(fechaEmision, diasDeCredito);
-  return sumarMeses(fechaEmision, mesesPorOmision);
+export function fechaBaseDelPlazo({ fechaEmision, fechaRecepcion, contarDesdeLaRecepcion }: FechasDelPlazo): string {
+  if (!contarDesdeLaRecepcion) return fechaEmision;
+  return fechaRecepcion > fechaEmision ? fechaRecepcion : fechaEmision;
+}
+
+/**
+ * El vencimiento que se propone al recibir un cargo: la fecha base más los días de crédito del proveedor; sin ese
+ * dato, la fecha base más los meses por omisión de la empresa (un mes calendario si nadie lo cambió).
+ */
+export function proponerVencimiento({ fechaBase, diasDeCredito, mesesPorOmision }: DatosDelPlazo): string {
+  if (diasDeCredito !== null) return sumarDias(fechaBase, diasDeCredito);
+  return sumarMeses(fechaBase, mesesPorOmision);
 }
