@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { ConceptoDeGasto } from '../../servicios/conceptos-de-gasto.api';
 import { edicionVacia } from './edicion-de-documento';
-import { CLASES_DE_CARGO, conceptoDeIntereses, proponerConceptoDeIntereses } from './notas-de-debito';
+import {
+  CLASES_DE_CARGO,
+  conceptoDeIntereses,
+  proponerConceptoDeIntereses,
+  textoDeLaClaseDeCargo,
+} from './notas-de-debito';
 
 const concepto = (id: string, nombre: string, activo = true): ConceptoDeGasto => ({
   id,
@@ -30,6 +35,21 @@ describe('nota de débito: clase de cargo', () => {
     expect(conceptoDeIntereses(CONCEPTOS.slice(0, 2))?.id).toBe('b');
     expect(conceptoDeIntereses([concepto('d', 'Gasto financiero', false)])).toBeUndefined();
     expect(conceptoDeIntereses([concepto('e', 'Fletes')])).toBeUndefined();
+  });
+
+  it('prefiere «Intereses y recargos a proveedores», el de la lista sugerida, sobre cualquier otro', () => {
+    const sugerido = concepto('s', 'Intereses y recargos a proveedores');
+    expect(conceptoDeIntereses([...CONCEPTOS, sugerido])?.id).toBe('s');
+    expect(conceptoDeIntereses([concepto('s', 'Intereses y recargos a proveedores', false), ...CONCEPTOS])?.id).toBe(
+      'c',
+    );
+  });
+
+  it('dice la clase de cargo en palabras para la ficha', () => {
+    expect(textoDeLaClaseDeCargo('intereses')).toBe('Intereses');
+    expect(textoDeLaClaseDeCargo('precio')).toBe('Diferencia de precio');
+    expect(textoDeLaClaseDeCargo(null)).toBeNull();
+    expect(textoDeLaClaseDeCargo(undefined)).toBeNull();
   });
 
   it('se reconoce sin acentos ni mayúsculas', () => {

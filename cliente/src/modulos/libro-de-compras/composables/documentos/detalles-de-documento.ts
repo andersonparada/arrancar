@@ -20,6 +20,7 @@ import {
   TIPOS_DE_DOCUMENTO,
 } from '../../textos-de-documentos';
 import { etiquetaDePeriodo } from './filtros-de-documentos';
+import { textoDeLaClaseDeCargo } from './notas-de-debito';
 
 type Identificable = { tipo: DocumentoEnLista['tipo']; serie: string | null; numero: string };
 
@@ -59,6 +60,7 @@ export function detallesDeEncabezado(ficha: FichaDeDocumento): DetalleDeRegistro
     ['Período del libro', etiquetaDePeriodo(ficha.periodo)],
     ['Destino', formatearOpcion(DESTINOS_DE_DOCUMENTO, ficha.destino)],
     ['Se muestra en reportes SAT', formatearSiNo(ficha.muestraEnReportesSat)],
+    ['Clase de cargo', textoDeLaClaseDeCargo(ficha.claseDeCargo)],
     ['Motivo de la factura', motivoDeLaFactura],
     ['Observaciones', ficha.observaciones],
   ];

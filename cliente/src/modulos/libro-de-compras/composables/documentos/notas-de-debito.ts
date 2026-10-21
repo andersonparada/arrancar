@@ -21,10 +21,25 @@ const nombreContiene = (conceptos: ConceptoDeGasto[], palabra: string): Concepto
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
     .find(({ nombre }) => sinAcentos(nombre).includes(palabra));
 
-/** El concepto de gasto financiero que se propone para los intereses; `undefined` si la empresa no tiene uno activo. */
+/** El texto de la clase de cargo para la ficha; vacío si el documento no la lleva. */
+export function textoDeLaClaseDeCargo(clase: ClaseDeCargo | null | undefined): string | null {
+  return CLASES_DE_CARGO.find(({ valor }) => valor === clase)?.texto ?? null;
+}
+
+/** El concepto de la lista sugerida del sistema para los intereses y recargos de un proveedor. */
+const CONCEPTO_SUGERIDO = 'intereses y recargos';
+
+/**
+ * El concepto que se propone para los intereses: primero «Intereses y recargos a proveedores» (el de la lista
+ * sugerida), luego cualquier gasto financiero o de intereses; `undefined` si la empresa no tiene uno activo.
+ */
 export function conceptoDeIntereses(conceptos: ConceptoDeGasto[]): ConceptoDeGasto | undefined {
   const activos = conceptos.filter(({ activo }) => activo);
-  return nombreContiene(activos, 'financier') ?? nombreContiene(activos, 'interes');
+  return (
+    nombreContiene(activos, CONCEPTO_SUGERIDO) ??
+    nombreContiene(activos, 'financier') ??
+    nombreContiene(activos, 'interes')
+  );
 }
 
 /**

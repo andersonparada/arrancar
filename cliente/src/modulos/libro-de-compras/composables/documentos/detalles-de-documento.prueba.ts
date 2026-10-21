@@ -52,3 +52,15 @@ describe('motivo de la factura en la ficha', () => {
     expect(etiquetas(fichaBase)).not.toContain('Motivo de la factura');
   });
 });
+
+describe('clase de cargo en la ficha', () => {
+  it('una nota de débito muestra qué cobra', () => {
+    const nota = { ...fichaBase, tipo: 'nota_de_debito', claseDeCargo: 'intereses' } as FichaDeDocumento;
+    expect(valorDe(nota, 'Clase de cargo')).toBe('Intereses');
+  });
+
+  it('se omite en lo que no es nota de débito', () => {
+    expect(etiquetas(fichaBase)).not.toContain('Clase de cargo');
+    expect(etiquetas({ ...fichaBase, claseDeCargo: null } as FichaDeDocumento)).not.toContain('Clase de cargo');
+  });
+});

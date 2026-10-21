@@ -1,4 +1,5 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
+import type { ClaseDeCargo } from './registro-de-documentos.api';
 
 export type TipoDeDocumento =
   | 'factura'
@@ -143,6 +144,8 @@ export interface FichaDeDocumento {
   /** Solo en notas de crédito: el motivo sin crédito de la factura que rebajan (opcional hasta que el servidor lo envíe). */
   motivoDeLaFactura?: MotivoSinCredito | null;
   documentoAfectadoId: string | null;
+  /** Solo en la nota de débito: qué cobra (precio, intereses u otros). */
+  claseDeCargo?: ClaseDeCargo | null;
   destino: DestinoDeDocumento;
   observaciones: string | null;
   totales: TotalesDeDocumento;
