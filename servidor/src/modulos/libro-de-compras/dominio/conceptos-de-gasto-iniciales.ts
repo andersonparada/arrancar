@@ -91,6 +91,13 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     activo: true,
   },
   {
+    nombre: 'Intereses y recargos a proveedores',
+    tipoPorOmision: 'servicio',
+    esProductoAgropecuario: false,
+    esActivoFijo: false,
+    activo: true,
+  },
+  {
     nombre: 'Maquinaria y equipo',
     tipoPorOmision: 'bien',
     esProductoAgropecuario: false,

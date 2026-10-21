@@ -113,7 +113,7 @@ describe('conceptos de gasto', () => {
   it('siembra la lista sugerida al abrir el catálogo vacío', async () => {
     const listado = await casos.listar.ejecutar(operador);
 
-    expect(listado).toHaveLength(16);
+    expect(listado).toHaveLength(17);
     expect(listado.map((conceptoDeGasto) => conceptoDeGasto.nombre)).toEqual(
       expect.arrayContaining([
         'Combustibles',
@@ -128,6 +128,7 @@ describe('conceptos de gasto', () => {
         'Publicidad',
         'Seguros',
         'Materiales y suministros',
+        'Intereses y recargos a proveedores',
         'Maquinaria y equipo',
         'Vehículos',
         'Mobiliario y equipo de oficina',

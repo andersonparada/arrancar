@@ -150,6 +150,7 @@ function condicionesDelDocumento(
     motivoSinCredito: calculado.motivoSinCredito,
     regimenIvaDeLaEmpresa: contexto.datosDeLaEmpresa.instantanea().regimenIva,
     documentoAfectadoId: solicitud.documentoAfectadoId,
+    claseDeCargo: solicitud.tipo === 'nota_de_debito' ? (solicitud.claseDeCargo ?? null) : null,
     destino: solicitud.destino ?? DESTINO_DE_VISTA_PREVIA,
     observaciones: solicitud.observaciones,
   };

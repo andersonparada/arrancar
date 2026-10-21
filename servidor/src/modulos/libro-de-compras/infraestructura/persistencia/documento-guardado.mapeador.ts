@@ -102,6 +102,7 @@ function documentoDeDominio(fila: FilaDeDocumento, lineas: FilaDeLinea[], reteni
     periodo: fila.periodo,
     regimenIvaDeLaEmpresa: fila.regimenIvaDeLaEmpresa,
     documentoAfectadoId: fila.documentoAfectadoId,
+    claseDeCargo: fila.claseDeCargo,
     destino: fila.destino,
     totales: totalesDeDominio(fila),
     observaciones: fila.observaciones,

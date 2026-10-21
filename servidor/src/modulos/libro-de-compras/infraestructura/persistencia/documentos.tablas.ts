@@ -21,6 +21,7 @@ import {
 } from './documentos.restricciones.js';
 import { restriccionesDeFamilia, restriccionesDeNotas } from './documentos.restricciones-de-familia.js';
 import { restriccionesDeRegimen } from './documentos.restricciones-de-regimen.js';
+import type { ClaseDeCargo } from '../../dominio/reglas-de-notas-de-debito.js';
 import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import type { TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
 import { esquemaLibroDeCompras } from './esquema.tablas.js';
@@ -61,6 +62,8 @@ export const documentos = esquemaLibroDeCompras.table(
     /** Régimen de IVA de la empresa en el período del documento, copiado al registrar (no cambia después). */
     regimenIvaDeLaEmpresa: text().$type<RegimenDeIva>().notNull(),
     documentoAfectadoId: uuid(),
+    /** Solo en la nota de débito: qué cobra (precio, intereses u otros). Los intereses no cuentan como compra. */
+    claseDeCargo: text().$type<ClaseDeCargo>(),
     destino: text().$type<'cuentas-por-pagar' | 'caja-chica' | 'cuentas-por-liquidar'>().notNull(),
     procesadoEnDestinoEn: timestamp({ withTimezone: true }),
     total: numeric({ precision: 14, scale: 2 }).notNull(),

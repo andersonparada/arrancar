@@ -204,6 +204,20 @@
       "when": 1792510849939,
       "tag": "0028_l5_periodos_y_declaraciones",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792548570595,
+      "tag": "0029_u15_clase_de_cargo_de_la_nota_de_debito",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1792548587416,
+      "tag": "0030_u15_concepto_de_intereses_y_recargos",
+      "breakpoints": true
     }
   ]
 }

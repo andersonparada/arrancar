@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { check, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { CLASES_DE_CARGO } from '../../dominio/reglas-de-notas-de-debito.js';
 import {
   CODIGOS_DTE_DE_LA_FAMILIA,
   INICIO_DEL_PRIMARIO_Y_PECUARIO,
@@ -18,7 +19,8 @@ type T = Record<
   | 'iva'
   | 'fechaEmision'
   | 'muestraEnReportesSat'
-  | 'motivoSinCredito',
+  | 'motivoSinCredito'
+  | 'claseDeCargo',
   AnyPgColumn
 >;
 
@@ -86,5 +88,9 @@ export const restriccionesDeNotas = (t: T) => [
   check(
     'documentos_nota_de_debito_tardia_solo_en_la_nota',
     sql`coalesce(${t.motivoSinCredito}, '') <> 'nota_de_debito_tardia' or ${t.tipo} = 'nota_de_debito'`,
+  ),
+  check(
+    'documentos_clase_de_cargo_valida',
+    sql`${t.claseDeCargo} is null or (${t.tipo} = 'nota_de_debito' and ${t.claseDeCargo} in (${sql.raw(lista(CLASES_DE_CARGO))}))`,
   ),
 ];

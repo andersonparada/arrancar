@@ -584,5 +584,8 @@ Detalle del contador en `validacion-h7-h11-retenciones.md` («Cuentas por pagar 
   desde la emisión); (c) «Vence» y «Pago prometido» (contraseña) son datos distintos y la antigüedad usa «Vence».
 - **U15 (C3, intereses):** una NDEB de clase `intereses` propone el concepto de gasto financiero y los análisis de compras
   no la suman como compra.
+  **Hecho en Libro de compras (2026-10-20):** `documentos.clase_de_cargo` (migración `0029`, solo en la nota de débito) guarda
+  la clase; la lista sugerida de conceptos trae «Intereses y recargos a proveedores» (migración `0030` la agrega a las
+  empresas que ya tienen catálogo) y los análisis de compras excluyen los documentos con clase `intereses`.
 - **U16 (C5, mes cerrado):** la reversión contable va con la fecha de la anulación (o el primer mes abierto) y lo fiscal se
   rectifica en el período del documento. `documento_anulado` lleva `fechaDeAnulacion`, `causa` y el período del documento.

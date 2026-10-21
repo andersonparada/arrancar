@@ -3,6 +3,7 @@ import type { LineaCalculada } from './calculo-de-linea.js';
 import type { RegimenDeIva } from './datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from './destinos-de-documento.js';
 import type { MotivoFueraDelLibro } from './fuera-del-libro.js';
+import type { ClaseDeCargo } from './reglas-de-notas-de-debito.js';
 import type { ImpuestoRetenido, ReglaDeRetencion } from './retencion-propuesta.js';
 import type { MotivoSinCredito, TipoDeDocumento, TipoDte } from './tipos-de-documento.js';
 import type { TotalesDelDocumento } from './totales-del-documento.js';
@@ -62,6 +63,8 @@ export interface DocumentoDeCompra {
   /** Régimen de IVA de la empresa en el período del documento: la foto que se copia al registrar. */
   regimenIvaDeLaEmpresa: RegimenDeIva;
   documentoAfectadoId: string | null;
+  /** Solo en la nota de débito: qué cobra. Los intereses no cuentan como compra en los análisis. */
+  claseDeCargo: ClaseDeCargo | null;
   destino: DestinoDeDocumento;
   totales: TotalesDelDocumento;
   observaciones: string | null;

@@ -125,7 +125,7 @@ describe('registrar una nota de débito', () => {
     expect(sinFactura.estado).toBe(400);
   });
 
-  it('la clase de cargo `intereses` agrega el aviso de gasto financiero; no se guarda', async () => {
+  it('la clase de cargo `intereses` agrega el aviso de gasto financiero y se guarda (U15)', async () => {
     const facturaId = await registrarFactura();
 
     const intereses = await nota('NDEB', facturaId, { total: '56.00', claseDeCargo: 'intereses' });
@@ -134,7 +134,9 @@ describe('registrar una nota de débito', () => {
 
     expect(intereses.cuerpo.avisos).toContain(AVISO_DE_INTERESES_EN_NOTA_DE_DEBITO);
     expect(precio.cuerpo.avisos).not.toContain(AVISO_DE_INTERESES_EN_NOTA_DE_DEBITO);
-    expect(intereses.cuerpo.documento).not.toHaveProperty('claseDeCargo');
+    expect(intereses.cuerpo.documento.claseDeCargo).toBe('intereses');
+    expect(precio.cuerpo.documento.claseDeCargo).toBe('precio');
+    expect((await ficha(intereses.cuerpo.documento.id)).claseDeCargo).toBe('intereses');
     expect(invalida.estado).toBe(400);
   });
 });

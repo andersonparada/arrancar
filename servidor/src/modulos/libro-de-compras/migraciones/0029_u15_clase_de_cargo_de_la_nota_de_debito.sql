@@ -1,0 +1,2 @@
+ALTER TABLE "libro_de_compras"."documentos" ADD COLUMN "clase_de_cargo" text;--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."documentos" ADD CONSTRAINT "documentos_clase_de_cargo_valida" CHECK ("libro_de_compras"."documentos"."clase_de_cargo" is null or ("libro_de_compras"."documentos"."tipo" = 'nota_de_debito' and "libro_de_compras"."documentos"."clase_de_cargo" in ('precio', 'intereses', 'otros')));

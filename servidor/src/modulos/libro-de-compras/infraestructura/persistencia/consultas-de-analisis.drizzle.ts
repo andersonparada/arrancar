@@ -33,11 +33,18 @@ const sumaConSigno = (expresion: SQL | SQL.Aliased | object) =>
 const nitSql = sql<string | null>`case when ${documentos.tipo} = 'factura_especial'
   then ${documentos.nitReceptor} else ${documentos.nitEmisor} end`;
 
-/** Los documentos vigentes de la empresa dentro del rango; salvo que se pida lo contrario, solo los del libro. */
+/** Los intereses de una nota de débito son gasto financiero (U15): no se suman como compra. */
+const noEsDeIntereses = sql`${documentos.claseDeCargo} is distinct from 'intereses'`;
+
+/**
+ * Los documentos vigentes de la empresa dentro del rango, sin los intereses de las notas de débito; salvo que se pida
+ * lo contrario, solo los del libro.
+ */
 function documentosDelRango(empresaId: string, rango: RangoDePeriodos, soloDelLibro = true): SQL | undefined {
   return and(
     eq(documentos.empresaId, empresaId),
     eq(documentos.estado, 'vigente'),
+    noEsDeIntereses,
     gte(documentos.periodo, rango.desde),
     lte(documentos.periodo, rango.hasta),
     soloDelLibro ? eq(documentos.muestraEnReportesSat, true) : undefined,

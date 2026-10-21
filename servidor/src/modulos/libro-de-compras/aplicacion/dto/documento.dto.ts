@@ -2,6 +2,7 @@ import type { RegimenDeIva } from '../../dominio/datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js';
 import type { MotivoFueraDelLibro } from '../../dominio/fuera-del-libro.js';
 import type { ImpuestoRetenido, ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
+import type { ClaseDeCargo } from '../../dominio/reglas-de-notas-de-debito.js';
 import type { MotivoSinCredito, TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
 
 /** Todo el dinero viaja como texto con dos decimales (`"1250.50"`). */
@@ -75,6 +76,8 @@ export interface DocumentoDto {
   /** Régimen de IVA de la empresa en el período del documento (con el que se registró). */
   regimenIvaDeLaEmpresa: RegimenDeIva;
   documentoAfectadoId: string | null;
+  /** Solo en la nota de débito: qué cobra (precio, intereses u otros). */
+  claseDeCargo: ClaseDeCargo | null;
   destino: DestinoDeDocumento;
   observaciones: string | null;
   totales: TotalesDeDocumentoDto;

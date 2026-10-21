@@ -1346,3 +1346,11 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   anulado en la SAT y vigente aquí, y descartado. Lógica pura en `dominio/conciliacion/` (`conciliar`, `emparejar`,
   `CoberturaDeLotes`); consulta con `ConsultasDeConciliacionDrizzle`, sin tablas ni migración. Pruebas de dominio y de API
   (`libro-de-compras-dte-recibidos-conciliacion.api.prueba.ts`). Queda la conciliación liviana (L4-13) y la pantalla (L4-12).
+- **2026-10-20 — Libro de compras, decisión U15 (servidor): intereses de la nota de débito.** La clase de cargo de la NDEB (R3-3)
+  llegaba en la solicitud solo para el aviso y no se guardaba; ahora se guarda en `documentos.clase_de_cargo` (migración `0029`,
+  con el check `documentos_clase_de_cargo_valida`: solo en la nota de débito) y viaja en el documento, la ficha y la
+  vista previa. La lista sugerida de conceptos de gasto suma «Intereses y recargos a proveedores» (servicio, neutral para
+  cualquier rubro) y la migración `0030` lo agrega a las empresas que ya tenían catálogo (no a las vacías, que lo reciben al
+  sembrarse). Los análisis de compras de L5-9a (por proveedor, por concepto y los demás) excluyen los documentos con clase
+  `intereses` porque son gasto financiero y no compra. Pruebas de API (`libro-de-compras-nota-de-debito-intereses.api.prueba.ts`).
+  El cliente ya proponía el concepto por nombre («financier» o «interes»); falta que muestre la clase en la ficha.

@@ -1728,6 +1728,15 @@ El aviso de L5 (3.3b.8) se programa con L5.
 - **L4-c4.** ¿Es aceptable deducir el exento de una factura como `total − IDP − otros − IVA × 112/12` cuando el Excel no lo
   separa, con aviso al usuario?
 
+**Clase de cargo de la nota de débito (U15, 2026-10-20).** R3 la dejó sin columna (solo aviso y propuesta de concepto). Por la
+decisión U15 del usuario («Respuestas del usuario a la validación del contador», `diseno-datos-cuentas-por-pagar.md`) los
+intereses no son compra, así que ahora se guarda: `documentos.clase_de_cargo` (`text`, nula; check
+`documentos_clase_de_cargo_valida`: solo con `tipo = 'nota_de_debito'` y uno de `precio`, `intereses`, `otros`; migración
+`0029`). La ficha y la vista previa la devuelven. Los análisis de compras (L5-9a) excluyen los documentos con clase
+`intereses`; el libro, las retenciones y las declaraciones no cambian. El concepto «Intereses y recargos a proveedores»
+(servicio, general para cualquier rubro) entra en la lista sugerida y, por la migración `0030`, en las empresas que ya
+tenían catálogo.
+
 ### 3.3 `libro_de_compras.conceptos_de_gasto` (L2)
 
 | Columna | Tipo | Nulo | Regla |
