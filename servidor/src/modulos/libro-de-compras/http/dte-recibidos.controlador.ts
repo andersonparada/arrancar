@@ -2,6 +2,7 @@ import type { FastifyRequest } from 'fastify';
 import { contextoDe } from '../../core/compartido/http/contexto-de-la-solicitud.js';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { CompletarDteRecibidos } from '../aplicacion/casos-uso/bandeja/completar-dte-recibidos.js';
+import type { ConciliarPeriodo } from '../aplicacion/casos-uso/bandeja/conciliar-periodo.js';
 import type { ConfirmarDteRecibidos } from '../aplicacion/casos-uso/bandeja/confirmar-dte-recibidos.js';
 import type {
   DescartarDteRecibidos,
@@ -12,6 +13,7 @@ import type { ObtenerSolicitudDeDte } from '../aplicacion/casos-uso/bandeja/obte
 import type { VistaPreviaDeDteRecibidos } from '../aplicacion/casos-uso/bandeja/vista-previa-de-dte-recibidos.js';
 import type {
   CompletarDteRecibidosSolicitado,
+  ConsultaDeConciliacionSolicitada,
   ConfirmarDteRecibidosSolicitado,
   DescartarDteRecibidosSolicitado,
   FiltroDeDteRecibidosSolicitado,
@@ -26,6 +28,7 @@ export interface CasosDeUsoDeDteRecibidos {
   solicitud: ObtenerSolicitudDeDte;
   descartar: DescartarDteRecibidos;
   restaurar: RestaurarDteRecibido;
+  conciliar: ConciliarPeriodo;
 }
 
 const PERMISO_DE_CREAR_PROVEEDORES = 'proveedores.crear';
@@ -61,4 +64,7 @@ export class DteRecibidosControlador {
 
   restaurar = (solicitud: FastifyRequest<{ Params: ParamsDeDte }>) =>
     this.casosDeUso.restaurar.ejecutar(operadorDe(solicitud), solicitud.params.dteId);
+
+  conciliacion = (solicitud: FastifyRequest<{ Querystring: ConsultaDeConciliacionSolicitada }>) =>
+    this.casosDeUso.conciliar.ejecutar(operadorDe(solicitud), solicitud.query.periodo);
 }

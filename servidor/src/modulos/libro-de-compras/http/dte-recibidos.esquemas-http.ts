@@ -74,8 +74,17 @@ export const esquemaDescartarDteRecibidos = z.object({
   motivo: z.string().trim().min(1, 'Campo obligatorio.'),
 });
 
+/** El período de la conciliación: `AAAA-MM` o `AAAA-MM-01`; siempre queda como el primer día del mes. */
+export const esquemaConsultaDeConciliacion = z.object({
+  periodo: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])(-01)?$/, 'Escriba el período como AAAA-MM o AAAA-MM-01.')
+    .transform((periodo) => `${periodo.slice(0, 7)}-01`),
+});
+
 export type ParamsDeDte = z.infer<typeof esquemaParamsDeDte>;
 export type FiltroDeDteRecibidosSolicitado = z.output<typeof esquemaFiltroDeDteRecibidos>;
 export type CompletarDteRecibidosSolicitado = z.output<typeof esquemaCompletarDteRecibidos>;
 export type ConfirmarDteRecibidosSolicitado = z.output<typeof esquemaConfirmarDteRecibidos>;
 export type DescartarDteRecibidosSolicitado = z.output<typeof esquemaDescartarDteRecibidos>;
+export type ConsultaDeConciliacionSolicitada = z.output<typeof esquemaConsultaDeConciliacion>;

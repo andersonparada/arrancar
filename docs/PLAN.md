@@ -1337,3 +1337,12 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   anular y eliminar si el destino no está activo (`destino_inactivo`: «Active Cuentas por pagar para dar de baja este
   documento.»), salvo que el destino mismo pida la baja. Pruebas de API de las bajas a través de Libro de compras
   (`cuentas-por-pagar-bajas.api.prueba.ts`).
+- **2026-10-20 — Libro de compras L4-10 (servidor, conciliación por período).** `GET /libro-de-compras/dte-recibidos/conciliacion`
+  (`periodo` como `AAAA-MM` o `AAAA-MM-01`, permiso `documentos.importar`) cruza en el momento los documentos vigentes del período
+  (con `muestra_en_reportes_sat`) con la bandeja, primero por autorización FEL y luego por NIT, serie y número, y responde
+  `{ periodo, hayDatosDeLaSat, resumen, resultados }` con ocho listas: cuadra, con diferencias (campo, Arrancar, SAT; manda el
+  DTE, también por centavos de IVA), en la SAT y no en Arrancar (con su estado en la bandeja, incluidas las bloqueadas),
+  registrado en otro período, en Arrancar y no en la SAT, sin datos de la SAT (el mes no lo toca ningún lote `bandeja`),
+  anulado en la SAT y vigente aquí, y descartado. Lógica pura en `dominio/conciliacion/` (`conciliar`, `emparejar`,
+  `CoberturaDeLotes`); consulta con `ConsultasDeConciliacionDrizzle`, sin tablas ni migración. Pruebas de dominio y de API
+  (`libro-de-compras-dte-recibidos-conciliacion.api.prueba.ts`). Queda la conciliación liviana (L4-13) y la pantalla (L4-12).

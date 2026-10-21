@@ -2,6 +2,7 @@ import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { interpretarErrorDePostgres } from '../../core/compartido/infraestructura/errores-de-postgres.js';
 import { ArmadorDeSolicitudDelDte } from '../aplicacion/casos-uso/bandeja/armador-de-solicitud-del-dte.js';
+import { ConciliarPeriodo } from '../aplicacion/casos-uso/bandeja/conciliar-periodo.js';
 import { CompletarDteRecibidos } from '../aplicacion/casos-uso/bandeja/completar-dte-recibidos.js';
 import { ConfirmadorDeFila } from '../aplicacion/casos-uso/bandeja/confirmador-de-fila.js';
 import { ConfirmarDteRecibidos } from '../aplicacion/casos-uso/bandeja/confirmar-dte-recibidos.js';
@@ -19,6 +20,7 @@ import { RegistrarDocumento } from '../aplicacion/casos-uso/documentos/registrar
 import { DteRecibidosControlador } from '../http/dte-recibidos.controlador.js';
 import { rutasDeDteRecibidos } from '../http/dte-recibidos.rutas.js';
 import { AutorizacionesRegistradasFueraDrizzle } from '../infraestructura/persistencia/autorizaciones-registradas-fuera.drizzle.js';
+import { ConsultasDeConciliacionDrizzle } from '../infraestructura/persistencia/consultas-de-conciliacion.drizzle.js';
 import { ConsultasDeLaBandejaDrizzle } from '../infraestructura/persistencia/consultas-de-la-bandeja.drizzle.js';
 import { RepositorioDeDteRecibidosDrizzle } from '../infraestructura/persistencia/repositorio-de-dte-recibidos.drizzle.js';
 import { RepositorioDeLotesDeDteDrizzle } from '../infraestructura/persistencia/repositorio-de-lotes-de-dte.drizzle.js';
@@ -75,6 +77,10 @@ export function rutasDeDteRecibidosComponidas() {
       solicitud: new ObtenerSolicitudDeDte(bandeja),
       descartar: new DescartarDteRecibidos(bandeja),
       restaurar: new RestaurarDteRecibido(bandeja),
+      conciliar: new ConciliarPeriodo({
+        unidadDeTrabajo: bandeja.unidadDeTrabajo,
+        consultasDeConciliacion: new ConsultasDeConciliacionDrizzle(),
+      }),
     }),
   );
 }

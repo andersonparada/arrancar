@@ -1664,7 +1664,14 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
 10. **L4-9 (servidor, completar, confirmar y descartar) - HECHO 2026-10-20:** `PATCH`, vista previa, `ConfirmarDteRecibidos` fila por fila,
     solicitud para el formulario, descartar y restaurar (acción `descartar`, permiso `dte-recibidos.descartar`), enlace en
     `RegistrarDocumento` y regreso a `pendiente` al anular o eliminar; pruebas de API.
-11. **L4-10 (servidor, conciliación):** consulta por período con sus resultados; pruebas.
+11. **L4-10 (servidor, conciliación) — HECHO (2026-10-20):** `GET /libro-de-compras/dte-recibidos/conciliacion?periodo=AAAA-MM[-01]`
+    (permiso `documentos.importar`), `ConciliarPeriodo` y dominio puro en `dominio/conciliacion/`; pruebas. Decisiones que el
+    diseño dejaba abiertas: el mes de una fecha de emisión está «cubierto» si el rango de emisión de algún lote `bandeja`
+    lo toca (no se pide que lo cubra entero, porque el rango del lote es el de las fechas que trajo el archivo, no el que
+    se pidió a la SAT); una fila anulada en la SAT cuyo documento sigue vigente va en «Anulado en la SAT y vigente aquí»
+    aunque el documento esté en otro período; una fila anulada sin documento no aparece; un documento fuera del libro
+    que cruza con una fila del mes sale como «Registrado en otro período» con `documentoFueraDelLibro`; el cruce por
+    serie y número muestra la autorización como diferencia. Falta del lado del contador: nada.
 12. **L4-11 (cliente, bandeja) (archivo, para el QA):** botón «Importar de la SAT» en Ingreso de facturas (con
     `v-permiso`; nunca como paso obligatorio), página «DTE de la SAT» (pendientes, registrados, descartados, bloqueados;
     resumen del último lote), completar varias filas a la vez, proveedores nuevos, vista previa, confirmar con resultados

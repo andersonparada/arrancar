@@ -4,6 +4,7 @@ import type { DteRecibidosControlador } from './dte-recibidos.controlador.js';
 import {
   esquemaCompletarDteRecibidos,
   esquemaConfirmarDteRecibidos,
+  esquemaConsultaDeConciliacion,
   esquemaDescartarDteRecibidos,
   esquemaFiltroDeDteRecibidos,
   esquemaParamsDeDte,
@@ -15,7 +16,7 @@ const RUTA = '/libro-de-compras/dte-recibidos';
 
 type App = Parameters<FastifyPluginAsyncZod>[0];
 
-/** Ver y completar la bandeja: `documentos.importar`. */
+/** Ver, completar y conciliar la bandeja: `documentos.importar`. */
 function rutasDeLaBandeja(app: App, controlador: DteRecibidosControlador): void {
   const importar = proteger({ permiso: 'libro-de-compras.documentos.importar' });
   app.get(RUTA, {
@@ -27,6 +28,11 @@ function rutasDeLaBandeja(app: App, controlador: DteRecibidosControlador): void 
     schema: { tags, body: esquemaCompletarDteRecibidos },
     preHandler: importar,
     handler: controlador.completar,
+  });
+  app.get(`${RUTA}/conciliacion`, {
+    schema: { tags, querystring: esquemaConsultaDeConciliacion },
+    preHandler: importar,
+    handler: controlador.conciliacion,
   });
 }
 
