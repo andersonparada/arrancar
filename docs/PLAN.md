@@ -23,14 +23,14 @@ del 2026-10-05; nació para ranchos ganaderos y parcelas.
 
 ## 2. Tecnologías
 
-| Parte | Elección |
-|---|---|
-| Base de datos | PostgreSQL 16 |
-| Backend | Node.js 22 + TypeScript + Fastify 5 + Drizzle ORM + Zod |
-| Frontend | Vue 3 + Vite + Tailwind 4 + Pinia + vue-router, PWA con vite-plugin-pwa |
-| Despliegue | Docker Compose: Caddy (HTTPS automático) + app + PostgreSQL + respaldo diario |
-| Servidor objetivo | VPS de 4–6 USD/mes (1–2 GB de RAM) |
-| Desarrollo | WSL Ubuntu 22.04, PostgreSQL en Docker (puerto 5433) |
+| Parte             | Elección                                                                      |
+| ----------------- | ----------------------------------------------------------------------------- |
+| Base de datos     | PostgreSQL 16                                                                 |
+| Backend           | Node.js 22 + TypeScript + Fastify 5 + Drizzle ORM + Zod                       |
+| Frontend          | Vue 3 + Vite + Tailwind 4 + Pinia + vue-router, PWA con vite-plugin-pwa       |
+| Despliegue        | Docker Compose: Caddy (HTTPS automático) + app + PostgreSQL + respaldo diario |
+| Servidor objetivo | VPS de 4–6 USD/mes (1–2 GB de RAM)                                            |
+| Desarrollo        | WSL Ubuntu 22.04, PostgreSQL en Docker (puerto 5433)                          |
 
 ## 3. Arquitectura
 
@@ -43,7 +43,7 @@ del 2026-10-05; nació para ranchos ganaderos y parcelas.
   dependencias (`dependeDe`), permisos, recursos con alcance, configuración y rutas.
 - Lo que usan todos los módulos va en **core**.
 - Los módulos se **activan por cuenta** (SaaS). Un módulo solo se activa si sus
-  dependencias están activas (p. ej. *Caja chica* depende de *Bancos*); no se
+  dependencias están activas (p. ej. _Caja chica_ depende de _Bancos_); no se
   desactiva si otro activo depende de él. No hay submódulos: cada cosa es un
   módulo con indicador de dependencia.
 - Los módulos no se llaman entre sí: se comunican con **eventos de dominio**
@@ -202,20 +202,20 @@ su color para que la app se entienda igual en todas las instalaciones.
 
 ### 3.8 Patrones (guía: refactoring.guru)
 
-| Necesidad | Patrón | Dónde |
-|---|---|---|
-| Verificación de cada petición (sesión → empresa → módulo → permiso) | Chain of Responsibility | `core/http/guardias.ts` |
-| Alta de un suscriptor (cuenta + empresa + rol + usuario + módulos) | Facade | `core/servicios/alta-cuenta.servicio.ts` |
-| Dónde se guardan los archivos (disco hoy, S3/R2 mañana) | Strategy | `core/almacenamiento/almacenamiento.ts` |
-| Comunicación entre módulos, después de confirmar | Observer | `core/eventos/bus-eventos.ts` |
-| Comunicación entre módulos, dentro de la misma transacción (órdenes y avisos) | Mediator | `core/mediador` |
-| Registro único de módulos | Singleton | `core/modulos-sistema/registro-global.ts` |
-| Estados (siembra, animal, préstamo, tarea) | State | pendiente |
-| Frecuencia de recordatorios | Strategy | pendiente |
-| Canales de notificación (push, correo, WhatsApp) y certificadores FEL | Factory Method + Adapter | pendiente |
-| Reportes de rentabilidad | Template Method | pendiente |
-| Terrenos (finca → potrero → parcela) | Composite | pendiente |
-| Duplicar siembra o plan sanitario | Prototype | pendiente |
+| Necesidad                                                                     | Patrón                   | Dónde                                     |
+| ----------------------------------------------------------------------------- | ------------------------ | ----------------------------------------- |
+| Verificación de cada petición (sesión → empresa → módulo → permiso)           | Chain of Responsibility  | `core/http/guardias.ts`                   |
+| Alta de un suscriptor (cuenta + empresa + rol + usuario + módulos)            | Facade                   | `core/servicios/alta-cuenta.servicio.ts`  |
+| Dónde se guardan los archivos (disco hoy, S3/R2 mañana)                       | Strategy                 | `core/almacenamiento/almacenamiento.ts`   |
+| Comunicación entre módulos, después de confirmar                              | Observer                 | `core/eventos/bus-eventos.ts`             |
+| Comunicación entre módulos, dentro de la misma transacción (órdenes y avisos) | Mediator                 | `core/mediador`                           |
+| Registro único de módulos                                                     | Singleton                | `core/modulos-sistema/registro-global.ts` |
+| Estados (siembra, animal, préstamo, tarea)                                    | State                    | pendiente                                 |
+| Frecuencia de recordatorios                                                   | Strategy                 | pendiente                                 |
+| Canales de notificación (push, correo, WhatsApp) y certificadores FEL         | Factory Method + Adapter | pendiente                                 |
+| Reportes de rentabilidad                                                      | Template Method          | pendiente                                 |
+| Terrenos (finca → potrero → parcela)                                          | Composite                | pendiente                                 |
+| Duplicar siembra o plan sanitario                                             | Prototype                | pendiente                                 |
 
 ### 3.9 Convenciones de código
 
@@ -227,16 +227,17 @@ su color para que la app se entienda igual en todas las instalaciones.
 
 ## 4. Estado de los módulos
 
-| Módulo | Estado | Notas |
-|---|---|---|
-| **core** | En construcción (fase 1) | Ver sección 5 |
-| **empresas** | En construcción (fase 1) | Datos generales de ranchos y parcelas. Esencial. |
-| **terceros** (se muestra como **Clientes**) | En arquitectura limpia | Clientes y proveedores; ver `docs/modulos/terceros.md`. |
-| Resto | **Por planificar** | Ver sección 6. No se programa nada hasta acordarlo. |
+| Módulo                                      | Estado                   | Notas                                                   |
+| ------------------------------------------- | ------------------------ | ------------------------------------------------------- |
+| **core**                                    | En construcción (fase 1) | Ver sección 5                                           |
+| **empresas**                                | En construcción (fase 1) | Datos generales de ranchos y parcelas. Esencial.        |
+| **terceros** (se muestra como **Clientes**) | En arquitectura limpia   | Clientes y proveedores; ver `docs/modulos/terceros.md`. |
+| Resto                                       | **Por planificar**       | Ver sección 6. No se programa nada hasta acordarlo.     |
 
 ## 5. Fase 1 — Core (en curso)
 
 Hecho:
+
 - [x] Estructura del monorepo (servidor + cliente), PostgreSQL en Docker.
 - [x] Esquema `core`: cuentas, módulos por cuenta, usuarios, sesiones, roles,
       permisos por rol, empresas, accesos usuario-empresa, monedas (GTQ, USD),
@@ -273,6 +274,7 @@ Hecho:
       en `validaciones/comunes`), junto a la de NIT.
 
 Pendiente en esta fase:
+
 - [ ] Guía de instalación paso a paso en un VPS (`docs/INSTALACION.md`).
 - [ ] Lint y formato (ESLint + Prettier).
 - [ ] Pruebas de API de las rutas del core (inyección con `app.inject`).
@@ -319,10 +321,10 @@ de programarlo.
 - **Moneda extranjera**: habilita monedas distintas de la base y los tipos de
   cambio. Sin él todo funciona en GTQ.
 - **Bancos**: catálogo de bancos (Banrural, BI, G&T…); un banco puede tener varias
-  cuentas con distinta moneda (las cuentas en USD requieren *Moneda extranjera*).
+  cuentas con distinta moneda (las cuentas en USD requieren _Moneda extranjera_).
   Alcance por usuario sobre las cuentas.
 - **Caja chica**, **Cuentas por pagar**, **Cuentas por cobrar**, **Anticipos por
-  liquidar**: módulos separados que dependen de *Bancos*. Segregación de funciones
+  liquidar**: módulos separados que dependen de _Bancos_. Segregación de funciones
   (registrar, aprobar y pagar) y permisos por botón (pagar, emitir cheque, emitir nota).
 - **Contabilidad** (futuro): guarda sus propios enlaces (cuenta bancaria → cuenta
   contable) y genera partidas escuchando eventos de bancos.
@@ -532,7 +534,7 @@ y `demo` / `demo-arrancar`.
   `editar`). Resolutor con `permisosEfectivos` (unión de roles y directos, módulos activos, sin
   `soloSuperacceso`); la sesión trae `roles: string[]`. API: `empresaIds` en crear y editar usuario
   (`rolIds` y `permisos` opcionales al crear, solo con el permiso propio), `GET`/`PUT
-  /usuarios/:id/permisos` con el origen de cada permiso; quien tiene el permiso da cualquier permiso
+/usuarios/:id/permisos` con el origen de cada permiso; quien tiene el permiso da cualquier permiso
   asignable, sin mínimo de acceso total. Se auditan roles, permisos directos y empresas de un usuario,
   y los permisos de un rol (`core.roles-de-usuario`, `core.permisos-de-usuario`,
   `core.empresas-de-usuario`, `core.permisos-de-rol`). P3 (cliente) hecho después.
@@ -640,7 +642,6 @@ y `demo` / `demo-arrancar`.
   `avisosDelPeriodo` (`mesActual` como dato): período anterior al mes actual y año de emisión anterior al del
   período, para todo documento. El período propuesto es el mes de recepción.
 
-
 - **2026-10-04 · Cliente (terceros): secciones aportadas en la ventana del papel de proveedor.** `VentanaDePapel`
   (ficha del tercero) muestra, solo para proveedor, las secciones de los módulos activos (hoy «Datos fiscales»)
   bajo el papel, separadas por una línea; usa el id del proveedor si ya existe o `null`. Al guardar manda
@@ -663,11 +664,10 @@ y `demo` / `demo-arrancar`.
   otro tercero de la cuenta. No se audita (no es baja ni corrección de dinero o fechas) ni publica eventos (correría
   antes de confirmar la transacción de quien llama). Pruebas: servidor 1488, cliente 368, generador 46.
 - 2026-10-04 · Libro de compras (cliente), textos fiscales según el contador y el usuario: la casilla pasa a «Lleva
-contabilidad completa (agente de retención del ISR)», marcada por omisión, con ayuda (Decreto 10-2012, art. 47) y
-aviso no bloqueante al desmarcarla; el agente de retención del IVA aclara que lo califica la SAT; «Se le retiene el
-ISR» menciona «Sujeto a pago directo ISR»; «Producto agropecuario» explica qué cuenta como estado natural y que
-afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
-
+  contabilidad completa (agente de retención del ISR)», marcada por omisión, con ayuda (Decreto 10-2012, art. 47) y
+  aviso no bloqueante al desmarcarla; el agente de retención del IVA aclara que lo califica la SAT; «Se le retiene el
+  ISR» menciona «Sujeto a pago directo ISR»; «Producto agropecuario» explica qué cuenta como estado natural y que
+  afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
 
 - **2026-10-04 · Libro de compras L3-3, decisiones A1, B2 y A3 del usuario (servidor).** **A1:** la casilla «Se muestra
   en reportes SAT» solo se desmarca para documentos sin FEL a nombre de la empresa: columna
@@ -721,7 +721,6 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   libro-de-compras. **Dudas legales** (no implementadas): el 15 de agosto (solo municipio de Guatemala) y el posible
   traslado de feriados que reformas recientes al art. 127 permitirían por acuerdo; no se verificó el texto vigente.
 
-
 - **2026-10-05 · Libro de compras, ajustes de L3-5 y L3-6 (servidor).** Se aplican las decisiones del usuario sobre
   el veredicto del contador (`validacion-h7-h11-retenciones.md`, secciones de L3-5 y L3-6); el diseño
   (`diseno-datos-libro-de-compras.md`, secciones 4 y 5 y la nota de los pasos 15 y 16) quedó al día.
@@ -750,7 +749,6 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
 - **2026-10-05 (visión general).** El usuario pide que la app sirva a cualquier rubro (concreto, venta de terrenos…)
   y a cualquier régimen fiscal, no solo a ganaderos ni a agentes retenedores: visión (§1) y `CLAUDE.md` actualizados;
   semillas y textos de los módulos generales pasan a ser neutros; lo ganadero queda en módulos de rubro.
-
 
 - **2026-10-05**:
   - **Textos y semilla neutros (Arrancar sirve a cualquier rubro).** La semilla de conceptos de gasto pasa a
@@ -959,7 +957,7 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
 
 - **2026-10-19 · Ficha de la empresa y correcciones del QA (cliente).** Nueva ficha `/empresas/:empresaId`
   (`FichaDeEmpresa`, `usarFichaDeEmpresa`): datos generales con `DatosDelRegistro` y debajo `SeccionesEnLaFicha
-  en="empresa"`, donde ya se ven la vigencia fiscal, su historial y «Quitar» (R1-6). La tarjeta de la lista lleva a la
+en="empresa"`, donde ya se ven la vigencia fiscal, su historial y «Quitar» (R1-6). La tarjeta de la lista lleva a la
   ficha; «Editar» (con `empresas.editar`) abre la ventana de siempre y la ficha trae «Empresas» para volver. Observación
   4 del QA: al cambiar el régimen de IVA con la persona ya escogida, el ISR vuelve a la propuesta de la tabla (jurídica
   de general a no afiliado propone «Exento») en vez de arrastrar la elección previa; con prueba. La lista de
@@ -1025,10 +1023,9 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   (gana la fila con más coincidencias, comparadas sin tildes, mayúsculas ni `. : # ( )`); devuelve `reconocidos` y
   `noReconocidos`, o `EncabezadosNoEncontrados` con los esperados. Sin lógica de la SAT.
 
-
 - 2026-10-20 — **Libro de compras L4-8 (servidor, terceros): orden `terceros.crear_proveedor_desde_dte`.** La atiende
   `CrearProveedorDesdeDte` (`terceros/aplicacion/casos-uso/papeles/`): `datos: { nit, nombre, tipoDePersona,
-  puedeCrearProveedores }`, respuesta `{ proveedorId, terceroId, creado }`. Busca por NIT en la cuenta (`buscarPorNit` en
+puedeCrearProveedores }`, respuesta `{ proveedorId, terceroId, creado }`. Busca por NIT en la cuenta (`buscarPorNit` en
   `RepositorioTerceros`): si no existe crea el tercero (jurídica: `razon_social`; individual: `nombres`) con papel de proveedor
   activo; si existe sin el papel se lo asigna; si ya es proveedor activo devuelve el suyo (`creado: false` en ambos); si el
   papel está inactivo, `proveedor_inactivo` (se reactiva en Proveedores). El mediador no lleva permisos, así que quien manda
@@ -1049,7 +1046,7 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
 - **2026-10-20 — Libro de compras, L4-1 y L4-2 (otros impuestos e IDP escrito, vía a mano).** Migración `0019_l4_otros_impuestos_e_idp_escrito`
   (`when` 1792478380111): `otros_impuestos numeric(14,2) not null default 0` en documentos y líneas, `idp_escrito boolean` en la línea;
   `totales_cuadran` suma los otros impuestos en ambas tablas; `lineas_de_documento_idp_calculado` pasa a `idp_escrito or (sin vigencia
-  e idp = 0) or (con vigencia e idp = fórmula)` (antes, una línea sin combustible con IDP distinto de cero pasaba por el `null` de la
+e idp = 0) or (con vigencia e idp = fórmula)` (antes, una línea sin combustible con IDP distinto de cero pasaba por el `null` de la
   fórmula; ahora se rechaza); check nuevo `idp_escrito_positivo`. Dominio: `LineaEscrita` suma `otrosImpuestos` e `idp`, `LineaCalculada`
   e `TotalesDelDocumento` suman `otrosImpuestos` (y `idpEscrito` en la línea); los otros impuestos se restan del gravado y quedan en el
   costo; el motivo `exento` exige `exento > 0` y `exento + otros = total`. Cuerpo de calcular y registrar: por línea `otrosImpuestos` y
@@ -1061,7 +1058,7 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   `0020_l4_recibo_fel_y_factura_especial_limpia`: el motivo `recibo_fel` entra en `documentos_motivo_fuera_del_libro_valido` y en
   `documentos_fel_con_autorizacion`; check nuevo `documentos_recibo_fel_de_la_familia` (`recibo_fel` solo con `tipo = 'recibo'` y
   `tipo_dte in ('RECI','RDON')`); check nuevo `documentos_factura_especial_sin_otros` (`tipo <> 'factura_especial' or (otros_impuestos = 0
-  and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían tal cual. Dominio: la regla A1 queda «toda **factura** FEL
+and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían tal cual. Dominio: la regla A1 queda «toda **factura** FEL
   al NIT de la empresa va en el libro»; el recibo FEL es la excepción (`evaluarFueraDelLibro` valida tipo, código, autorización y NIT
   receptor, que si se escribe debe ser el de la empresa: `recibo_fel_incoherente`, 400; si se omite se guarda el de la empresa); queda
   fuera del libro, sin crédito ni retenciones, y el `RDON` avisa «Donación: deducible solo en el ISR sobre utilidades…». Una factura
@@ -1316,3 +1313,13 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   cuenta, días de crédito 0 a 365). Mensaje de unicidad `documentos_documento_unico`. Pruebas de integración de checks,
   llaves y RLS. Diseño: `docs/modulos/diseno-datos-cuentas-por-pagar.md` (respuestas del 2026-10-20). El módulo del cliente
   quedó generado y vacío (sin entradas de menú) para el paso CP1-8.
+- **2026-10-20 — Cuentas por pagar CP1-2 (servidor, recibir documentos).** `RecibirDocumento` atiende
+  `cuentas-por-pagar.recibir_documento` dentro de la transacción de Libro de compras: todo tipo de documento entra como
+  `pendiente` (U2); a los cargos se les propone el vencimiento (emisión más los días de crédito del proveedor, por cuenta; sin
+  dato, emisión más `meses_por_omision` meses calendario con el día ajustado a fin de mes: 31-ene a 28-feb; con 0 días,
+  contado) y la nota de crédito (sin vencimiento) se aplica sola desde que se recibe (U7), con su factura bloqueada:
+  primero a la factura, luego a las notas de débito de esa factura de la más antigua a la más nueva; lo que sobra queda como
+  saldo libre (los saldos se calculan, U4: neto = total − retenciones − lo aplicado). La nota de débito es un cargo con su
+  propio vencimiento. Dominio puro: `propuesta-de-vencimiento` y `reparto-de-nota-de-credito`.
+  `Mediador.retirarManejadoresDe(modulo)` (solo para pruebas) deja que las pruebas de Libro de compras cambien al módulo real
+  por su doble (`instalarDestinoFalso`). Pruebas de API a través de Libro de compras (`cuentas-por-pagar-recibir.api.prueba.ts`).

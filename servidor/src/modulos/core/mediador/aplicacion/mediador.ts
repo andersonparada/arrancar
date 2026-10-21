@@ -64,6 +64,20 @@ export class Mediador {
     this.avisos.set(aviso, escuchas);
   }
 
+  /**
+   * Quita todo lo que un módulo registró (las órdenes que atiende y los avisos que escucha). Es para las pruebas, que
+   * lo cambian por un doble; en producción nadie lo llama.
+   */
+  retirarManejadoresDe(modulo: string): void {
+    for (const [orden, registrada] of this.ordenes) if (registrada.modulo === modulo) this.ordenes.delete(orden);
+    for (const [aviso, escuchas] of this.avisos) {
+      this.avisos.set(
+        aviso,
+        escuchas.filter((escucha) => escucha.modulo !== modulo),
+      );
+    }
+  }
+
   /** @throws ModuloNoDisponible si nadie la atiende o el módulo no está activo en la cuenta del operador. */
   async enviar<Nombre extends NombreDeOrden>(
     operador: Operador,

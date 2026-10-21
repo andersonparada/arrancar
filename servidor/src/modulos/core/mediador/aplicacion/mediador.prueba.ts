@@ -108,4 +108,21 @@ describe('Mediador', () => {
       expect(recibidos).toEqual([]);
     });
   });
+
+  describe('retirar los manejadores de un módulo (para las pruebas)', () => {
+    it('quita sus órdenes y sus avisos, deja los de los demás y permite registrar un doble', async () => {
+      const mediador = mediadorCon(['calculadora', 'otro']);
+      const recibidos: string[] = [];
+      mediador.atender('calculadora', 'prueba.sumar', async ({ a, b }) => a + b);
+      mediador.escuchar('calculadora', 'prueba.avisar', async () => void recibidos.push('calculadora'));
+      mediador.escuchar('otro', 'prueba.avisar', async () => void recibidos.push('otro'));
+
+      mediador.retirarManejadoresDe('calculadora');
+      mediador.atender('calculadora', 'prueba.sumar', async ({ a, b }) => a * b);
+      await mediador.avisar(operador, 'prueba.avisar', { mensaje: 'hola' });
+
+      await expect(mediador.enviar(operador, 'prueba.sumar', { a: 2, b: 3 })).resolves.toBe(6);
+      expect(recibidos).toEqual(['otro']);
+    });
+  });
 });

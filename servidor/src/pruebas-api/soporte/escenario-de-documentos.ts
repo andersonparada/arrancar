@@ -32,7 +32,7 @@ export class DestinoRechaza extends ReglaDeNegocioInfringida {
   readonly codigo = 'destino_rechaza';
 }
 
-/** El destino falso: Cuentas por pagar aún no existe, así que se simula que está instalado y atiende la orden. */
+/** El destino falso: sustituye a Cuentas por pagar para probar Libro de compras sin sus reglas. */
 export interface DestinoFalso {
   recibidos: DocumentoParaDestino[];
   rechazar: boolean;
@@ -56,8 +56,12 @@ function escucharBajas(destino: DestinoFalso): void {
   );
 }
 
-/** Registra el manejador de `cuentas-por-pagar.recibir_documento` y hace que el módulo figure como activo. */
+/**
+ * Cambia a Cuentas por pagar por un doble: retira lo que el módulo real registró, atiende `recibir_documento` y escucha
+ * los avisos de baja a su manera, y hace que el módulo figure como activo.
+ */
 export function instalarDestinoFalso(): DestinoFalso {
+  mediador.retirarManejadoresDe('cuentas-por-pagar');
   const destino: DestinoFalso = {
     recibidos: [],
     rechazar: false,
@@ -124,9 +128,16 @@ export async function registrarProveedor(cuenta: CuentaDePrueba, nombre: string,
   return { terceroId: tercero.cuerpo.id as string, proveedorId: ficha.cuerpo.proveedor.id as string };
 }
 
-/** Da de alta una cuenta con Terceros y Libro de compras, su empresa con NIT, un proveedor sin NIT, un concepto y un combustible. */
-export async function prepararEscenario(entorno: EntornoApi, usuario: string): Promise<EscenarioDeDocumentos> {
-  const cuenta = await darDeAltaCuenta(entorno, { nombre: usuario, usuario, modulos: ['terceros', CLAVE] });
+/**
+ * Da de alta una cuenta con Terceros y Libro de compras (u otros `modulos`), su empresa con NIT, un proveedor sin NIT,
+ * un concepto y un combustible.
+ */
+export async function prepararEscenario(
+  entorno: EntornoApi,
+  usuario: string,
+  modulos: string[] = ['terceros', CLAVE],
+): Promise<EscenarioDeDocumentos> {
+  const cuenta = await darDeAltaCuenta(entorno, { nombre: usuario, usuario, modulos });
   await configurarEmpresa(cuenta);
   const { proveedorId, terceroId } = await registrarProveedor(cuenta, 'Veterinaria El Quiroa');
   const concepto = await cuenta.propietario.post('/api/libro-de-compras/conceptos-de-gasto', {
