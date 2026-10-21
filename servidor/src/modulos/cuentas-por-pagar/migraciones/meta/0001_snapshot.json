@@ -1,0 +1,741 @@
+{
+  "id": "0ed67653-0cba-4b16-808b-1ff7de1d4a94",
+  "prevId": "803d97db-0101-422e-8816-3611a59b6cb5",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "cuentas_por_pagar.aplicaciones_de_notas": {
+      "name": "aplicaciones_de_notas",
+      "schema": "cuentas_por_pagar",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "proveedor_id": {
+          "name": "proveedor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nota_id": {
+          "name": "nota_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cargo_id": {
+          "name": "cargo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "aplicaciones_cargo_idx": {
+          "name": "aplicaciones_cargo_idx",
+          "columns": [
+            {
+              "expression": "cargo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "aplicaciones_de_notas_empresa_id_empresas_id_fk": {
+          "name": "aplicaciones_de_notas_empresa_id_empresas_id_fk",
+          "tableFrom": "aplicaciones_de_notas",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "aplicaciones_nota_fk": {
+          "name": "aplicaciones_nota_fk",
+          "tableFrom": "aplicaciones_de_notas",
+          "tableTo": "documentos",
+          "schemaTo": "cuentas_por_pagar",
+          "columnsFrom": [
+            "nota_id",
+            "empresa_id",
+            "proveedor_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "proveedor_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "aplicaciones_cargo_fk": {
+          "name": "aplicaciones_cargo_fk",
+          "tableFrom": "aplicaciones_de_notas",
+          "tableTo": "documentos",
+          "schemaTo": "cuentas_por_pagar",
+          "columnsFrom": [
+            "cargo_id",
+            "empresa_id",
+            "proveedor_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "proveedor_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "aplicaciones_nota_cargo_unico": {
+          "name": "aplicaciones_nota_cargo_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nota_id",
+            "cargo_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "aplicaciones_distintos": {
+          "name": "aplicaciones_distintos",
+          "value": "\"cuentas_por_pagar\".\"aplicaciones_de_notas\".\"nota_id\" <> \"cuentas_por_pagar\".\"aplicaciones_de_notas\".\"cargo_id\""
+        },
+        "aplicaciones_monto_positivo": {
+          "name": "aplicaciones_monto_positivo",
+          "value": "\"cuentas_por_pagar\".\"aplicaciones_de_notas\".\"monto\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "cuentas_por_pagar.condiciones_de_proveedor": {
+      "name": "condiciones_de_proveedor",
+      "schema": "cuentas_por_pagar",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        },
+        "proveedor_id": {
+          "name": "proveedor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dias_de_credito": {
+          "name": "dias_de_credito",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "condiciones_de_proveedor_cuenta_id_cuentas_id_fk": {
+          "name": "condiciones_de_proveedor_cuenta_id_cuentas_id_fk",
+          "tableFrom": "condiciones_de_proveedor",
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "cuenta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "condiciones_proveedor_fk": {
+          "name": "condiciones_proveedor_fk",
+          "tableFrom": "condiciones_de_proveedor",
+          "tableTo": "proveedores",
+          "schemaTo": "terceros",
+          "columnsFrom": [
+            "proveedor_id",
+            "cuenta_id"
+          ],
+          "columnsTo": [
+            "id",
+            "cuenta_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "condiciones_proveedor_unico": {
+          "name": "condiciones_proveedor_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "proveedor_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_cuenta": {
+          "name": "aislamiento_por_cuenta",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
+          "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "condiciones_dias_de_credito_rango": {
+          "name": "condiciones_dias_de_credito_rango",
+          "value": "\"cuentas_por_pagar\".\"condiciones_de_proveedor\".\"dias_de_credito\" is null or \"cuentas_por_pagar\".\"condiciones_de_proveedor\".\"dias_de_credito\" between 0 and 365"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "cuentas_por_pagar.documentos": {
+      "name": "documentos",
+      "schema": "cuentas_por_pagar",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "documento_id": {
+          "name": "documento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "destino": {
+          "name": "destino",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'cuentas-por-pagar'"
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "proveedor_id": {
+          "name": "proveedor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "documento_afectado_id": {
+          "name": "documento_afectado_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_emision": {
+          "name": "fecha_emision",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total": {
+          "name": "total",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "retenciones": {
+          "name": "retenciones",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "tiene_activo_fijo": {
+          "name": "tiene_activo_fijo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "vencimiento": {
+          "name": "vencimiento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pendiente'"
+        },
+        "registrado_en": {
+          "name": "registrado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registrado_por": {
+          "name": "registrado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "autorizado_en": {
+          "name": "autorizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "autorizado_por": {
+          "name": "autorizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "autorizacion_propia": {
+          "name": "autorizacion_propia",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estaba_autorizado": {
+          "name": "estaba_autorizado",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "documentos_afectado_idx": {
+          "name": "documentos_afectado_idx",
+          "columns": [
+            {
+              "expression": "documento_afectado_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_pagar\".\"documentos\".\"documento_afectado_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "documentos_bandeja_idx": {
+          "name": "documentos_bandeja_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "creado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_pagar\".\"documentos\".\"estado\" = 'pendiente'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "documentos_estado_idx": {
+          "name": "documentos_estado_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "estado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha_emision",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "documentos_proveedor_vencimiento_idx": {
+          "name": "documentos_proveedor_vencimiento_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "proveedor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vencimiento",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_pagar\".\"documentos\".\"estado\" <> 'anulado'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "documentos_vencimiento_idx": {
+          "name": "documentos_vencimiento_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vencimiento",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_pagar\".\"documentos\".\"estado\" <> 'anulado' and \"cuentas_por_pagar\".\"documentos\".\"vencimiento\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "documentos_empresa_id_empresas_id_fk": {
+          "name": "documentos_empresa_id_empresas_id_fk",
+          "tableFrom": "documentos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "documentos_documento_fk": {
+          "name": "documentos_documento_fk",
+          "tableFrom": "documentos",
+          "tableTo": "documentos",
+          "schemaTo": "libro_de_compras",
+          "columnsFrom": [
+            "documento_id",
+            "empresa_id",
+            "proveedor_id",
+            "destino"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "proveedor_id",
+            "destino"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "documentos_documento_unico": {
+          "name": "documentos_documento_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "documento_id"
+          ]
+        },
+        "documentos_para_notas_unico": {
+          "name": "documentos_para_notas_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "documento_id",
+            "empresa_id",
+            "proveedor_id"
+          ]
+        },
+        "documentos_id_proveedor_unico": {
+          "name": "documentos_id_proveedor_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id",
+            "proveedor_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "documentos_destino_propio": {
+          "name": "documentos_destino_propio",
+          "value": "\"cuentas_por_pagar\".\"documentos\".\"destino\" = 'cuentas-por-pagar'"
+        },
+        "documentos_tipo_valido": {
+          "name": "documentos_tipo_valido",
+          "value": "\"cuentas_por_pagar\".\"documentos\".\"tipo\" in ('factura', 'factura_pequeno_contribuyente', 'factura_pequeno_contribuyente_electronico', 'factura_contribuyente_agropecuario', 'factura_primario_pecuario', 'factura_especial', 'nota_de_credito', 'nota_de_debito', 'recibo')"
+        },
+        "documentos_estado_valido": {
+          "name": "documentos_estado_valido",
+          "value": "\"cuentas_por_pagar\".\"documentos\".\"estado\" in ('pendiente', 'registrado', 'autorizado', 'anulado')"
+        },
+        "documentos_nota_con_factura": {
+          "name": "documentos_nota_con_factura",
+          "value": "(\"cuentas_por_pagar\".\"documentos\".\"tipo\" in ('nota_de_credito', 'nota_de_debito')) = (\"cuentas_por_pagar\".\"documentos\".\"documento_afectado_id\" is not null)"
+        },
+        "documentos_total_positivo": {
+          "name": "documentos_total_positivo",
+          "value": "\"cuentas_por_pagar\".\"documentos\".\"total\" > 0"
+        },
+        "documentos_retenciones_validas": {
+          "name": "documentos_retenciones_validas",
+          "value": "\"cuentas_por_pagar\".\"documentos\".\"retenciones\" >= 0 and \"cuentas_por_pagar\".\"documentos\".\"retenciones\" <= \"cuentas_por_pagar\".\"documentos\".\"total\""
+        },
+        "documentos_nota_de_credito_sin_retenciones": {
+          "name": "documentos_nota_de_credito_sin_retenciones",
+          "value": "\"cuentas_por_pagar\".\"documentos\".\"tipo\" <> 'nota_de_credito' or \"cuentas_por_pagar\".\"documentos\".\"retenciones\" = 0"
+        },
+        "documentos_vencimiento_de_cargos": {
+          "name": "documentos_vencimiento_de_cargos",
+          "value": "(\"cuentas_por_pagar\".\"documentos\".\"tipo\" = 'nota_de_credito') = (\"cuentas_por_pagar\".\"documentos\".\"vencimiento\" is null)"
+        },
+        "documentos_vencimiento_desde_emision": {
+          "name": "documentos_vencimiento_desde_emision",
+          "value": "\"cuentas_por_pagar\".\"documentos\".\"vencimiento\" is null or \"cuentas_por_pagar\".\"documentos\".\"vencimiento\" >= \"cuentas_por_pagar\".\"documentos\".\"fecha_emision\""
+        },
+        "documentos_motivo_rango": {
+          "name": "documentos_motivo_rango",
+          "value": "\"cuentas_por_pagar\".\"documentos\".\"motivo_de_anulacion\" is null or char_length(\"cuentas_por_pagar\".\"documentos\".\"motivo_de_anulacion\") between 1 and 300"
+        },
+        "documentos_registro_completo": {
+          "name": "documentos_registro_completo",
+          "value": "(\"cuentas_por_pagar\".\"documentos\".\"registrado_en\" is null) = (\"cuentas_por_pagar\".\"documentos\".\"registrado_por\" is null) and (\"cuentas_por_pagar\".\"documentos\".\"estado\" not in ('registrado', 'autorizado') or \"cuentas_por_pagar\".\"documentos\".\"registrado_en\" is not null)"
+        },
+        "documentos_autorizacion_completa": {
+          "name": "documentos_autorizacion_completa",
+          "value": "(\"cuentas_por_pagar\".\"documentos\".\"autorizado_en\" is null) = (\"cuentas_por_pagar\".\"documentos\".\"autorizado_por\" is null) and (\"cuentas_por_pagar\".\"documentos\".\"estado\" <> 'autorizado' or \"cuentas_por_pagar\".\"documentos\".\"autorizado_en\" is not null) and (\"cuentas_por_pagar\".\"documentos\".\"autorizado_en\" is not null or not \"cuentas_por_pagar\".\"documentos\".\"autorizacion_propia\")"
+        },
+        "documentos_separacion_de_funciones": {
+          "name": "documentos_separacion_de_funciones",
+          "value": "\"cuentas_por_pagar\".\"documentos\".\"autorizado_por\" is null or \"cuentas_por_pagar\".\"documentos\".\"autorizacion_propia\" or (\"cuentas_por_pagar\".\"documentos\".\"autorizado_por\" is distinct from \"cuentas_por_pagar\".\"documentos\".\"registrado_por\" and \"cuentas_por_pagar\".\"documentos\".\"autorizado_por\" is distinct from \"cuentas_por_pagar\".\"documentos\".\"creado_por\")"
+        },
+        "documentos_anulacion_completa": {
+          "name": "documentos_anulacion_completa",
+          "value": "(\"cuentas_por_pagar\".\"documentos\".\"estado\" = 'anulado') = (\"cuentas_por_pagar\".\"documentos\".\"anulado_en\" is not null and \"cuentas_por_pagar\".\"documentos\".\"anulado_por\" is not null and \"cuentas_por_pagar\".\"documentos\".\"motivo_de_anulacion\" is not null and \"cuentas_por_pagar\".\"documentos\".\"estaba_autorizado\" is not null)"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "cuentas_por_pagar": "cuentas_por_pagar"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

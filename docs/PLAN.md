@@ -1304,3 +1304,15 @@ afecta el 65 % de los exportadores. Textos en `TEXTOS_FISCALES`.
   transiciones de L4-5 no); como el importador aún no existe, el bloqueo se detecta al confirmar y al restaurar; el proveedor nuevo
   queda creado aunque el registro de esa fila falle; las respuestas de datos fiscales se aceptan por id del proveedor o por NIT.
   Pruebas: dominio, casos de uso y API (46 pruebas en cinco archivos).
+
+- **2026-10-20 — Cuentas por pagar CP1-1 (servidor, módulo y datos).** Módulo `cuentas-por-pagar` generado (`dependeDe`:
+  `libro-de-compras` y `bancos`, respuesta U10), con seis permisos del recurso `documentos` (`ver`, `registrar`, `autorizar`,
+  `autorizar-propios`, `anular`, `eliminar`; sin `crear` ni `gestionar`) y la variable
+  `cuentas-por-pagar.vencimientos.meses_por_omision` (0 a 12, un mes por omisión, niveles instalación y empresa, no pública).
+  Esquema `cuentas_por_pagar` con la migración `0001_cp1_documentos`: `documentos` (una sola tabla para todos los tipos,
+  por empresa, con checks de estado, notas, vencimiento, separación de funciones y anulación; llave compuesta hacia
+  `libro_de_compras.documentos` por `(id, empresa, proveedor, destino)` y llave autorreferente `documentos_factura_fk`
+  escrita a mano), `aplicaciones_de_notas` (por empresa; la nota se borra en cascada) y `condiciones_de_proveedor` (por
+  cuenta, días de crédito 0 a 365). Mensaje de unicidad `documentos_documento_unico`. Pruebas de integración de checks,
+  llaves y RLS. Diseño: `docs/modulos/diseno-datos-cuentas-por-pagar.md` (respuestas del 2026-10-20). El módulo del cliente
+  quedó generado y vacío (sin entradas de menú) para el paso CP1-8.

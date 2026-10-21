@@ -25,6 +25,7 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   documentos_sat_unico: 'Ese documento ya está registrado.',
   documentos_autorizacion_fel_unica: 'Ese documento ya está registrado.',
   documentos_del_proveedor_unico: 'Ese documento ya está registrado.',
+  documentos_documento_unico: 'Ese documento ya está en Cuentas por pagar.',
   datos_fiscales_de_empresa_vigencia_unica: 'Ya hay un régimen registrado desde ese mes.',
 };
 
