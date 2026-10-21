@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { RecibirDocumento } from '../modulos/cuentas-por-pagar/aplicacion/casos-uso/recibir-documento.js';
 import { sumarDias, sumarMeses } from '../modulos/cuentas-por-pagar/dominio/propuesta-de-vencimiento.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
+import { DocumentosPorPagarDePrueba, MODULOS_DE_CUENTAS_POR_PAGAR } from './soporte/cuentas-por-pagar.js';
 import { EMISION_DE_PRUEBA, VendedoresDePrueba } from './soporte/factura-especial.js';
 import {
   configurarEmpresa,
@@ -21,55 +22,12 @@ const EMISION = haceDias(3);
 let escenario: EscenarioDeDocumentos;
 
 const propietario = () => escenario.cuenta.propietario;
-const registrar = async (cambios: Record<string, unknown> = {}) => {
-  const respuesta = await propietario().post(RUTA_DOCUMENTOS, documentoDePrueba(escenario, cambios));
-  expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
-  return respuesta.cuerpo.documento.id as string;
-};
-const lineaDe = (total: string) => [{ conceptoId: escenario.conceptoId, total }];
-const registrarNota = (
-  tipoDte: 'NCRE' | 'NDEB',
-  facturaId: string,
-  { total, ...cambios }: { total: string } & Record<string, unknown>,
-) =>
-  registrar({
-    tipoDte,
-    documentoAfectadoId: facturaId,
-    serie: tipoDte === 'NDEB' ? 'D' : 'N',
-    lineas: lineaDe(total),
-    fechaEmision: EMISION,
-    ...cambios,
-  });
-
-interface Fila {
-  id: string;
-  tipo: string;
-  estado: string;
-  vencimiento: string | null;
-  total: string;
-  retenciones: string;
-  proveedor_id: string;
-  empresa_id: string;
-  documento_afectado_id: string | null;
-  fecha_emision: string;
-}
-const filaDe = async (documentoId: string) =>
-  (
-    await consultar<Fila>(
-      `select id, tipo, estado, vencimiento::text, total::text, retenciones::text, proveedor_id, empresa_id,
-            documento_afectado_id, fecha_emision::text
-       from cuentas_por_pagar.documentos where documento_id = $1`,
-      [documentoId],
-    )
-  )[0];
-const aplicacionesDe = (notaDocumentoId: string) =>
-  consultar<{ monto: string; cargo_documento_id: string }>(
-    `select a.monto, c.documento_id as cargo_documento_id from cuentas_por_pagar.aplicaciones_de_notas a
-       join cuentas_por_pagar.documentos n on n.id = a.nota_id
-       join cuentas_por_pagar.documentos c on c.id = a.cargo_id
-      where n.documento_id = $1 order by c.fecha_emision, c.creado_en`,
-    [notaDocumentoId],
-  );
+let documentos: DocumentosPorPagarDePrueba;
+const registrar = (cambios: Record<string, unknown> = {}) => documentos.registrar(cambios);
+const registrarNota = (...argumentos: Parameters<DocumentosPorPagarDePrueba['registrarNota']>) =>
+  documentos.registrarNota(...argumentos);
+const filaDe = (documentoId: string) => documentos.fila(documentoId);
+const aplicacionesDe = (notaDocumentoId: string) => documentos.aplicacionesDe(notaDocumentoId);
 const ponerDiasDeCredito = (proveedorId: string, dias: number | null) =>
   consultar(
     `insert into cuentas_por_pagar.condiciones_de_proveedor (cuenta_id, proveedor_id, dias_de_credito)
@@ -78,12 +36,8 @@ const ponerDiasDeCredito = (proveedorId: string, dias: number | null) =>
   );
 
 beforeAll(async () => {
-  escenario = await prepararEscenario(entorno, 'cxprecibir', [
-    'terceros',
-    'libro-de-compras',
-    'bancos',
-    'cuentas-por-pagar',
-  ]);
+  escenario = await prepararEscenario(entorno, 'cxprecibir', MODULOS_DE_CUENTAS_POR_PAGAR);
+  documentos = new DocumentosPorPagarDePrueba(escenario, EMISION);
 });
 
 afterAll(() => vi.restoreAllMocks());

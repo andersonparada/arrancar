@@ -1323,3 +1323,17 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   propio vencimiento. Dominio puro: `propuesta-de-vencimiento` y `reparto-de-nota-de-credito`.
   `Mediador.retirarManejadoresDe(modulo)` (solo para pruebas) deja que las pruebas de Libro de compras cambien al módulo real
   por su doble (`instalarDestinoFalso`). Pruebas de API a través de Libro de compras (`cuentas-por-pagar-recibir.api.prueba.ts`).
+- **2026-10-20 — Cuentas por pagar CP1-3 (servidor, bajas por aviso) y regla U6 de Libro de compras.** Cuentas por pagar
+  escucha `libro-de-compras.documento_por_anular` y `documento_por_eliminar` (`AnularPorAviso` y `EliminarPorAviso`), siempre
+  idempotentes y solo para su destino. Las reglas que pueden rechazar la baja son una lista de funciones
+  (`dominio/reglas-de-baja.ts`, `REGLAS_PARA_ANULAR` y `REGLAS_PARA_ELIMINAR`) que la composición arma, así que contraseñas (CP3)
+  y pagos (CP4) suman las suyas sin tocar los casos de uso: hoy `noTenerNotasAplicadas` (un cargo que no es nota de débito, con
+  notas de crédito aplicadas) y, solo para eliminar, `noEstarAutorizado`. Anular borra las aplicaciones de la nota de crédito (vuelven al
+  saldo de sus cargos) o las que recibió una nota de débito (vuelven al saldo libre de esas notas), deja `anulado` con el motivo
+  y `estaba_autorizado`, y audita `anular` con la ficha tal como estaba (con sus aplicaciones). Eliminar audita `eliminar` y
+  borra su fila antes de que Libro de compras borre la suya. El evento `cuentas-por-pagar.documento_anulado` (con
+  `estabaAutorizado`) se publica **tras confirmar la transacción de Libro de compras**: `despuesDeConfirmar` en la unidad de
+  trabajo y `PublicadorEventosTrasConfirmar` (si la transacción se deshace, el evento se descarta). U6: Libro de compras rechaza
+  anular y eliminar si el destino no está activo (`destino_inactivo`: «Active Cuentas por pagar para dar de baja este
+  documento.»), salvo que el destino mismo pida la baja. Pruebas de API de las bajas a través de Libro de compras
+  (`cuentas-por-pagar-bajas.api.prueba.ts`).

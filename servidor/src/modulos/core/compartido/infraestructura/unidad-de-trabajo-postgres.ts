@@ -4,9 +4,13 @@ import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import type { UnidadDeTrabajo } from '../aplicacion/unidad-de-trabajo.js';
 import { fijarVariablesDeSeguridad } from './variables-de-seguridad.js';
 
+type Tarea = () => Promise<void>;
+
 interface TrabajoEnCurso {
   transaccion: Transaccion;
   contexto: ContextoEmpresa;
+  /** Lo que espera a que la transacción más externa se confirme. */
+  alConfirmar: Tarea[];
 }
 
 const trabajoEnCurso = new AsyncLocalStorage<TrabajoEnCurso>();
@@ -45,14 +49,17 @@ function mismoContexto(a: ContextoEmpresa, b: ContextoEmpresa): boolean {
 export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
   constructor(private readonly baseDatos: BaseDatos) {}
 
-  ejecutar<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
+  async ejecutar<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
     const enCurso = trabajoEnCurso.getStore();
     if (enCurso) return this.unirseAl(enCurso, contexto, trabajo);
 
-    return this.baseDatos.transaction(async (transaccion) => {
+    const alConfirmar: Tarea[] = [];
+    const resultado = await this.baseDatos.transaction(async (transaccion) => {
       await fijarVariablesDeSeguridad(transaccion, contexto);
-      return trabajoEnCurso.run({ transaccion, contexto }, trabajo);
+      return trabajoEnCurso.run({ transaccion, contexto, alConfirmar }, trabajo);
     });
+    for (const tarea of alConfirmar) await tarea();
+    return resultado;
   }
 
   private unirseAl<Resultado>(
@@ -77,4 +84,15 @@ export function contextoEnCurso(): ContextoEmpresa {
   const enCurso = trabajoEnCurso.getStore();
   if (!enCurso) throw new ConsultaFueraDeUnidadDeTrabajo();
   return enCurso.contexto;
+}
+
+/**
+ * Deja una tarea para después de que se confirme la transacción más externa (si esa se deshace, la tarea se descarta).
+ * Devuelve `false` si no hay ninguna unidad de trabajo en curso: quien llama debe hacer la tarea de inmediato.
+ */
+export function despuesDeConfirmar(tarea: Tarea): boolean {
+  const enCurso = trabajoEnCurso.getStore();
+  if (!enCurso) return false;
+  enCurso.alConfirmar.push(tarea);
+  return true;
 }

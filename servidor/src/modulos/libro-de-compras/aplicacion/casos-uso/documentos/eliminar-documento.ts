@@ -13,6 +13,7 @@ import type { ConsultasDeDocumentos, DestinosDeDocumentos } from '../../puertos/
 import type { EnlaceConLaBandeja } from '../../puertos/puertos-de-la-bandeja.js';
 import type { ControlDePeriodos } from '../../puertos/puertos-de-periodos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
+import { avisarEliminacion } from './destino-de-la-baja.js';
 import { bajaDelPeriodo } from './credito-de-la-empresa.js';
 import { exigirSinConstanciaNiEntero, type DependenciasDeRetencionesDeLaBaja } from './retenciones-de-la-baja.js';
 import { exigirPeriodoAbierto } from './guardia-del-periodo.js';
@@ -73,7 +74,7 @@ export class EliminarDocumento {
     await exigirPeriodoAbierto(control, guardado.documento.periodo);
     await exigirSinConstanciaNiEntero(this.dependencias, documentoId);
     const { destino } = guardado.documento;
-    if (origen !== destino) await destinos.avisarPorEliminar(operador, { documentoId, destino });
+    await avisarEliminacion(destinos, operador, { documentoId, destino, origen });
     await this.dependencias.bandeja.soltar(documentoId);
     await repositorio.eliminar(documentoId);
     await auditoria.registrar({

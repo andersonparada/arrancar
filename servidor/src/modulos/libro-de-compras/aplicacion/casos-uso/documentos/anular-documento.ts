@@ -22,6 +22,7 @@ import type { ConsultasDeDocumentos, DestinosDeDocumentos } from '../../puertos/
 import type { EnlaceConLaBandeja } from '../../puertos/puertos-de-la-bandeja.js';
 import type { ControlDePeriodos } from '../../puertos/puertos-de-periodos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
+import { avisarAnulacion } from './destino-de-la-baja.js';
 import { bajaDelPeriodo } from './credito-de-la-empresa.js';
 import { dejarRetencionesPorResolver, type DependenciasDeRetencionesDeLaBaja } from './retenciones-de-la-baja.js';
 import { exigirPeriodoAbierto } from './guardia-del-periodo.js';
@@ -91,7 +92,7 @@ export class AnularDocumento {
     await exigirQueLaBajaRespeteElTope(this.dependencias.consultas, guardado);
     await exigirPeriodoAbierto(control, guardado.documento.periodo);
     const { destino } = guardado.documento;
-    if (origen !== destino) await destinos.avisarPorAnular(operador, { documentoId, destino, motivo });
+    await avisarAnulacion(destinos, operador, { documentoId, destino, motivo, origen });
     await repositorio.anular(documentoId, { anuladoPor: operador.usuarioId, motivo, causa });
     await this.dependencias.bandeja.soltar(documentoId);
     await this.auditar(guardado, `${causa}: ${motivo}`);

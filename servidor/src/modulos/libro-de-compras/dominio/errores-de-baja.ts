@@ -66,3 +66,12 @@ export class NotaDeDebitoSostieneNotasDeCredito extends ReglaDeNegocioInfringida
     );
   }
 }
+
+/** El módulo de destino del documento no está activo: no podría revertir lo suyo, así que la baja espera a que se active. */
+export class DestinoInactivo extends ReglaDeNegocioInfringida {
+  readonly codigo = 'destino_inactivo';
+
+  constructor(nombreDelModulo: string) {
+    super(`Active ${nombreDelModulo} para dar de baja este documento.`);
+  }
+}

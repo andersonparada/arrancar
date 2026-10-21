@@ -1,4 +1,5 @@
 import type {
+  AnulacionDeDocumento,
   CondicionesDeProveedores,
   ConsultasDeCargos,
   DocumentoNuevo,
@@ -6,21 +7,38 @@ import type {
   RepositorioDeAplicaciones,
   RepositorioDeDocumentos,
 } from '../aplicacion/puertos/puertos-de-documentos.js';
-import { netoDe, type DocumentoPorPagar } from '../dominio/documento-por-pagar.js';
+import {
+  netoDe,
+  type AplicacionDeNota,
+  type DocumentoConAplicaciones,
+  type DocumentoPorPagar,
+} from '../dominio/documento-por-pagar.js';
 import type { AplicacionACargo, CargoConSaldo } from '../dominio/reparto-de-nota-de-credito.js';
 
-export interface AplicacionGuardada extends AplicacionACargo {
-  notaId: string;
-}
-
-const sumar = (aplicaciones: readonly AplicacionGuardada[]) =>
+const sumar = (aplicaciones: readonly AplicacionDeNota[]) =>
   aplicaciones.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0);
 
 export class AplicacionesEnMemoria implements RepositorioDeAplicaciones {
-  readonly lista: AplicacionGuardada[] = [];
+  lista: AplicacionDeNota[] = [];
 
   async agregar(nota: DocumentoPorPagar, aplicaciones: readonly AplicacionACargo[]): Promise<void> {
     this.lista.push(...aplicaciones.map((aplicacion) => ({ ...aplicacion, notaId: nota.id })));
+  }
+
+  async hechasPorLaNota(notaId: string): Promise<AplicacionDeNota[]> {
+    return this.lista.filter((aplicacion) => aplicacion.notaId === notaId);
+  }
+
+  async recibidasPorElCargo(cargoId: string): Promise<AplicacionDeNota[]> {
+    return this.lista.filter((aplicacion) => aplicacion.cargoId === cargoId);
+  }
+
+  async borrarDeLaNota(notaId: string): Promise<void> {
+    this.lista = this.lista.filter((aplicacion) => aplicacion.notaId !== notaId);
+  }
+
+  async borrarDelCargo(cargoId: string): Promise<void> {
+    this.lista = this.lista.filter((aplicacion) => aplicacion.cargoId !== cargoId);
   }
 
   /** Lo que ya rebajaron las notas de un cargo. */
@@ -36,9 +54,11 @@ export class AplicacionesEnMemoria implements RepositorioDeAplicaciones {
 
 /** Documentos en memoria, con las mismas cuentas de saldo que la consulta real. */
 export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDeCargos {
-  readonly documentos: DocumentoPorPagar[] = [];
+  documentos: DocumentoPorPagar[] = [];
   /** Las facturas que se bloquearon para aplicar una nota, en orden. */
   readonly bloqueadas: string[] = [];
+  /** Lo que se anuló, con su motivo, en orden. */
+  readonly anulaciones: Array<AnulacionDeDocumento & { id: string }> = [];
 
   constructor(private readonly aplicaciones: AplicacionesEnMemoria) {}
 
@@ -47,9 +67,38 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
   }
 
   async agregar(nuevo: DocumentoNuevo): Promise<DocumentoPorPagar> {
-    const guardado: DocumentoPorPagar = { ...nuevo, id: crypto.randomUUID(), estado: 'pendiente' };
+    const guardado: DocumentoPorPagar = {
+      ...nuevo,
+      id: crypto.randomUUID(),
+      estado: 'pendiente',
+      registradoEn: null,
+      registradoPor: null,
+      autorizadoEn: null,
+      autorizadoPor: null,
+      autorizacionPropia: false,
+    };
     this.documentos.push(guardado);
     return guardado;
+  }
+
+  async buscarPorDocumentoDeCompra(documentoId: string): Promise<DocumentoConAplicaciones | null> {
+    const documento = this.documentos.find((candidato) => candidato.documentoId === documentoId);
+    if (!documento) return null;
+    return {
+      documento: { ...documento },
+      hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
+      recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
+    };
+  }
+
+  async anular(id: string, anulacion: AnulacionDeDocumento): Promise<void> {
+    const documento = this.documentos.find((candidato) => candidato.id === id);
+    if (documento) documento.estado = 'anulado';
+    this.anulaciones.push({ id, ...anulacion });
+  }
+
+  async eliminar(id: string): Promise<void> {
+    this.documentos = this.documentos.filter((documento) => documento.id !== id);
   }
 
   async paraAplicarUnaNota(facturaDeCompraId: string): Promise<CargoConSaldo[]> {

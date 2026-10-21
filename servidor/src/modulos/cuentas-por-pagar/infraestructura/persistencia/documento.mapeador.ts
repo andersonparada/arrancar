@@ -22,6 +22,11 @@ export const mapeadorDeDocumento = {
       tieneActivoFijo: fila.tieneActivoFijo,
       vencimiento: fila.vencimiento,
       estado: fila.estado,
+      registradoEn: fila.registradoEn?.toISOString() ?? null,
+      registradoPor: fila.registradoPor,
+      autorizadoEn: fila.autorizadoEn?.toISOString() ?? null,
+      autorizadoPor: fila.autorizadoPor,
+      autorizacionPropia: fila.autorizacionPropia,
     };
   },
 

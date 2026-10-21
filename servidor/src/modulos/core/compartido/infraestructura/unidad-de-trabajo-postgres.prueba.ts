@@ -13,6 +13,7 @@ import {
   ConsultaFueraDeUnidadDeTrabajo,
   ContextoDistintoEnLaTransaccion,
   UnidadDeTrabajoPostgres,
+  despuesDeConfirmar,
   transaccionEnCurso,
 } from './unidad-de-trabajo-postgres.js';
 
@@ -117,5 +118,36 @@ describe('unidad de trabajo sobre PostgreSQL', () => {
 
     await expect(paraAsignar).rejects.toThrow(ContextoDistintoEnLaTransaccion);
     await expect(sinAsignar).rejects.toThrow(ContextoDistintoEnLaTransaccion);
+  });
+});
+
+describe('tareas para después de confirmar', () => {
+  it('corren cuando se confirma la transacción más externa, no antes', async () => {
+    const orden: string[] = [];
+
+    await unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      await unidadDeTrabajo.ejecutar({ ...enEmpresaA }, async () => {
+        despuesDeConfirmar(async () => void orden.push('tarea'));
+      });
+      orden.push('trabajo');
+    });
+    orden.push('fin');
+
+    expect(orden).toEqual(['trabajo', 'tarea', 'fin']);
+  });
+
+  it('si la transacción se deshace, se descartan', async () => {
+    const orden: string[] = [];
+    const conFallo = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      despuesDeConfirmar(async () => void orden.push('tarea'));
+      throw new FalloProvocado();
+    });
+
+    await expect(conFallo).rejects.toThrow(FalloProvocado);
+    expect(orden).toEqual([]);
+  });
+
+  it('fuera de una unidad de trabajo avisa que no la dejó pendiente', () => {
+    expect(despuesDeConfirmar(async () => {})).toBe(false);
   });
 });

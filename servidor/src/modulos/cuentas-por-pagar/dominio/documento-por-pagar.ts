@@ -17,6 +17,27 @@ export interface DocumentoPorPagar {
   /** `AAAA-MM-DD`; nulo en las notas de crédito, que no vencen. */
   vencimiento: string | null;
   estado: EstadoDeDocumento;
+  /** Cuándo y quién lo completó en la bandeja (fecha y hora ISO); nulos mientras esté pendiente. */
+  registradoEn: string | null;
+  registradoPor: string | null;
+  autorizadoEn: string | null;
+  autorizadoPor: string | null;
+  /** Se autorizó una excepción a la separación de funciones: quien lo autorizó también lo ingresó o lo completó. */
+  autorizacionPropia: boolean;
+}
+
+/** Una nota de crédito que rebaja un cargo, por un monto en centavos. */
+export interface AplicacionDeNota {
+  notaId: string;
+  cargoId: string;
+  montoCentavos: number;
+}
+
+/** Un documento con lo que rebajó (si es una nota) y lo que le rebajaron (si es un cargo). */
+export interface DocumentoConAplicaciones {
+  documento: DocumentoPorPagar;
+  hechas: AplicacionDeNota[];
+  recibidas: AplicacionDeNota[];
 }
 
 /** Lo que se le paga al proveedor por un cargo: el total menos lo retenido, que es de la SAT. */
