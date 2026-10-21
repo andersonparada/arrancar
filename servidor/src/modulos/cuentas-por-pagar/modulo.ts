@@ -1,6 +1,7 @@
 import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo.js';
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeCondicionesComponidas } from './composicion/condiciones.js';
+import { rutasDeConsultasComponidas } from './composicion/consultas.js';
 import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { configuracionDeCuentasPorPagar } from './configuracion.js';
 // generador: importaciones
@@ -40,6 +41,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
   rutas: rutasDelModulo([
     rutasDeDocumentosComponidas(),
     rutasDeCondicionesComponidas(),
+    rutasDeConsultasComponidas(),
     // generador: rutas
   ]),
 };

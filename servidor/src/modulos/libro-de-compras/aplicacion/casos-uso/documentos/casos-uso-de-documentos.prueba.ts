@@ -59,6 +59,14 @@ describe('registrar un documento: el proveedor y su NIT (H10)', () => {
     expect(publicadorEventos.nombres()).toEqual(['libro-de-compras.documento_registrado']);
   });
 
+  it('suma a sus avisos los que devuelve el destino al recibir el documento', async () => {
+    destinos.avisosAlRecibir = ['El destino avisa algo que no bloquea.'];
+
+    const { avisos } = await registrar();
+
+    expect(avisos).toContain('El destino avisa algo que no bloquea.');
+  });
+
   it('si el proveedor no tiene NIT, le manda el del documento', async () => {
     await registrar({ nitEmisor: '576937-k' });
 

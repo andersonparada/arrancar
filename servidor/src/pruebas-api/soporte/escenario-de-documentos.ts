@@ -73,6 +73,7 @@ export function instalarDestinoFalso(): DestinoFalso {
   mediador.atender('cuentas-por-pagar', 'cuentas-por-pagar.recibir_documento', async (documento) => {
     destino.recibidos.push(documento);
     if (destino.rechazar) throw new DestinoRechaza('El destino rechazó el documento.');
+    return { avisos: [] };
   });
   const original = ModulosActivosDeLaCuentaEnRegistro.prototype.activosPara;
   vi.spyOn(ModulosActivosDeLaCuentaEnRegistro.prototype, 'activosPara').mockImplementation(async function (

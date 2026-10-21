@@ -109,8 +109,8 @@ export interface ConsultasDeDocumentos {
 export interface DestinosDeDocumentos {
   /** Los destinos cuyo módulo está activo en la cuenta del operador. */
   activos(operador: Operador): Promise<DestinoDeDocumento[]>;
-  /** Orden `<destino>.recibir_documento`, dentro de la transacción en curso. */
-  recibir(operador: Operador, destino: DestinoDeDocumento, documento: DocumentoParaDestino): Promise<void>;
+  /** Orden `<destino>.recibir_documento`, dentro de la transacción en curso; devuelve los avisos que el destino quiere dar. */
+  recibir(operador: Operador, destino: DestinoDeDocumento, documento: DocumentoParaDestino): Promise<string[]>;
   /** Aviso `documento_por_anular`, antes de anular: el destino revierte lo suyo o lanza su error. */
   avisarPorAnular(operador: Operador, aviso: AvisoDeBaja & { motivo: string }): Promise<void>;
   /** Aviso `documento_por_eliminar`, antes de eliminar: el destino borra lo suyo o lanza su error. */

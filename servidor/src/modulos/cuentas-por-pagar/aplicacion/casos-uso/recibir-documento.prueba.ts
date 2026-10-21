@@ -179,6 +179,26 @@ describe('recibir una nota de crédito', () => {
     expect(aplicaciones.saldoLibreDe(guardadoDe(nota.documentoId))).toBe(1200);
   });
 
+  it('avisa cuánto queda a favor de la empresa cuando la nota deja saldo libre', async () => {
+    const factura = await conFactura(1200);
+
+    const { avisos } = await recibir.ejecutar(operador, notaDe(factura, 11200));
+
+    expect(avisos).toEqual([
+      'Esta nota deja Q12.00 a favor de la empresa porque la retención ya se practicó. Compénselo en la próxima factura o pida el reintegro al proveedor.',
+    ]);
+  });
+
+  it('no avisa nada si la nota se aplicó completa, ni cuando entra una factura', async () => {
+    const factura = llega();
+
+    const deLaFactura = await recibir.ejecutar(operador, factura);
+    const deLaNota = await recibir.ejecutar(operador, notaDe(factura, 3000));
+
+    expect(deLaFactura.avisos).toEqual([]);
+    expect(deLaNota.avisos).toEqual([]);
+  });
+
   it('lo que sobra de la factura se aplica a sus notas de débito, de la más antigua a la más nueva', async () => {
     const factura = await conFactura(1200);
     const debito = (dia: string, totalCentavos: number) =>

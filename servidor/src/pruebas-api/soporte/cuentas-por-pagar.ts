@@ -2,6 +2,8 @@ import { expect } from 'vitest';
 import {
   consultar,
   documentoDePrueba,
+  nitValido,
+  registrarProveedor,
   RUTA_DOCUMENTOS,
   type EscenarioDeDocumentos,
 } from './escenario-de-documentos.js';
@@ -74,4 +76,18 @@ export class DocumentosPorPagarDePrueba {
       [notaDocumentoId],
     );
   }
+}
+
+/**
+ * Un proveedor nuevo con sus días de crédito (`null` es el plazo por omisión), para tener documentos propios; devuelve
+ * también un NIT válido distinto para el emisor de sus documentos.
+ */
+export async function proveedorConCredito(
+  escenario: EscenarioDeDocumentos,
+  { nombre, nit, diasDeCredito }: { nombre: string; nit: string; diasDeCredito: number | null },
+) {
+  const { proveedorId } = await registrarProveedor(escenario.cuenta, nombre, {
+    secciones: { 'cuentas-por-pagar': { diasDeCredito } },
+  });
+  return { proveedorId, nitEmisor: nitValido(nit) };
 }

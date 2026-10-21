@@ -19,13 +19,14 @@ export class DestinosDeDocumentosEnMediador implements DestinosDeDocumentos {
     return DESTINOS_DE_DOCUMENTO.filter((destino) => activos.has(destino));
   }
 
-  recibir(operador: Operador, destino: DestinoDeDocumento, documento: DocumentoParaDestino): Promise<void> {
+  async recibir(operador: Operador, destino: DestinoDeDocumento, documento: DocumentoParaDestino): Promise<string[]> {
     // Solo `cuentas-por-pagar` está declarada hoy; las demás se agregan con su módulo y comparten estos datos.
-    return mediador.enviar(
+    const { avisos } = await mediador.enviar(
       operador,
       `${destino}.recibir_documento` as 'cuentas-por-pagar.recibir_documento',
       documento,
     );
+    return avisos;
   }
 
   avisarPorAnular(operador: Operador, aviso: AvisoDeBaja & { motivo: string }): Promise<void> {

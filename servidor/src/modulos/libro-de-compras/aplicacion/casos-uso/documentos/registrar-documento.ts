@@ -71,8 +71,8 @@ export class RegistrarDocumento {
         exigirDestino: true,
         bloquearPeriodo: true,
       });
-      await this.guardar(operador, preparado);
-      return preparado;
+      const avisosDelDestino = await this.guardar(operador, preparado);
+      return { ...preparado, avisos: [...preparado.avisos, ...avisosDelDestino] };
     });
     await publicadorEventos.publicar([
       new DocumentoRegistrado({
@@ -84,8 +84,8 @@ export class RegistrarDocumento {
     return { documento: dtoDeDocumento(documento, true), avisos };
   }
 
-  /** Repetido, NIT y datos fiscales del proveedor, inserción, auditoría y orden al destino. */
-  private async guardar(operador: Operador, preparado: DocumentoPreparado) {
+  /** Repetido, NIT y datos fiscales del proveedor, inserción, auditoría y orden al destino; devuelve los avisos del destino. */
+  private async guardar(operador: Operador, preparado: DocumentoPreparado): Promise<string[]> {
     const { repositorio, completadorDeNit, completadorDeDpi, destinos, auditoria } = this.dependencias;
     const { documento, nitParaCompletar, dpiParaCompletar, datosFiscalesPorGuardar } = preparado;
     const repetido = await repositorio.buscarRepetido(documento);
@@ -99,6 +99,6 @@ export class RegistrarDocumento {
     await repositorio.agregar(documento);
     if (documento.autorizacionFel) await this.dependencias.bandeja.enlazar(documento.autorizacionFel, documento.id);
     await auditarRegistro(auditoria, documento, preparado);
-    await destinos.recibir(operador, documento.destino, paraElDestino(documento));
+    return destinos.recibir(operador, documento.destino, paraElDestino(documento));
   }
 }

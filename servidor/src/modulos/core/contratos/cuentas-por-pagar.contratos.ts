@@ -6,8 +6,12 @@ import type { DocumentoParaDestino } from './libro-de-compras.contratos.js';
  */
 declare module './mediador.contratos.js' {
   interface OrdenesEntreModulos {
-    /** Recibe el documento registrado en el libro, dentro de su misma transacción; si lanza, no se registra nada. */
-    'cuentas-por-pagar.recibir_documento': { datos: DocumentoParaDestino; respuesta: void };
+    /**
+     * Recibe el documento registrado en el libro, dentro de su misma transacción; si lanza, no se registra nada.
+     * Responde los avisos que no bloquean (por ejemplo, una nota de crédito que deja saldo a favor de la empresa), que
+     * Libro de compras suma a los suyos.
+     */
+    'cuentas-por-pagar.recibir_documento': { datos: DocumentoParaDestino; respuesta: { avisos: string[] } };
   }
 }
 

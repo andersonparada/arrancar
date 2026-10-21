@@ -99,6 +99,8 @@ export class DestinosEnMemoria implements DestinosDeDocumentos {
   readonly recibidos: DocumentoParaDestino[] = [];
   instalados: DestinoDeDocumento[] = ['cuentas-por-pagar'];
   fallo: Error | null = null;
+  /** Los avisos que el destino devuelve al recibir un documento. */
+  avisosAlRecibir: string[] = [];
   readonly avisosDeAnular: Array<AvisoDeBaja & { motivo: string }> = [];
   readonly avisosDeEliminar: AvisoDeBaja[] = [];
   falloAlAnular: Error | null = null;
@@ -108,9 +110,10 @@ export class DestinosEnMemoria implements DestinosDeDocumentos {
     return this.instalados;
   }
 
-  async recibir(_operador: Operador, _destino: DestinoDeDocumento, documento: DocumentoParaDestino): Promise<void> {
+  async recibir(_operador: Operador, _destino: DestinoDeDocumento, documento: DocumentoParaDestino): Promise<string[]> {
     if (this.fallo) throw this.fallo;
     this.recibidos.push(documento);
+    return this.avisosAlRecibir;
   }
 
   async avisarPorAnular(_operador: Operador, aviso: AvisoDeBaja & { motivo: string }): Promise<void> {

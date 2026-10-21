@@ -497,7 +497,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    baja ampliables, auditoría, evento `documento_anulado`; pruebas.
 4. **CP1-4 (servidor, días de crédito) — hecho (2026-10-20):** escucha de `terceros.proveedor_guardado`, ruta de lectura; pruebas.
    Incluye U14 b (columna `contar_desde_la_recepcion`, migración `0002`).
-5. **CP1-5 (servidor, consultas):** bandeja, lista con filtros (proveedor, estado, tipo, fechas, vencidas), ficha con
+5. **CP1-5 (servidor, consultas) — hecho (2026-10-20), con U13:** bandeja, lista con filtros (proveedor, estado, tipo, fechas, vencidas), ficha con
    notas y aplicaciones, saldo del proveedor; DTO con `puedeAutorizar`, `puedeAnular`, `puedeEliminar` calculados en
    el servidor (como Bancos); pruebas.
 6. **CP1-6 (servidor, completar y autorizar):** completar en lote, cambiar vencimiento, autorizar en lote con

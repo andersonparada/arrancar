@@ -1,6 +1,7 @@
 import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import type { DocumentoParaDestino } from '../../../core/contratos/libro-de-compras.contratos.js';
+import { avisoDeSaldoALaFavor } from '../../dominio/avisos.js';
 import { DocumentoYaRecibido } from '../../dominio/errores.js';
 import { fechaBaseDelPlazo, proponerVencimiento } from '../../dominio/propuesta-de-vencimiento.js';
 import { repartirNotaDeCredito } from '../../dominio/reparto-de-nota-de-credito.js';
@@ -25,6 +26,11 @@ interface Dependencias {
   plazo: PlazoPorOmision;
 }
 
+/** Lo que responde la orden: los avisos que Libro de compras suma a los suyos. */
+export interface ResultadoDeRecibir {
+  avisos: string[];
+}
+
 /**
  * Atiende la orden `cuentas-por-pagar.recibir_documento`: corre dentro de la transacción de Libro de compras, así que
  * si algo falla no se registra nada. Guarda el documento como `pendiente` (todo tipo entra) y, si es un cargo, le propone
@@ -35,12 +41,17 @@ interface Dependencias {
 export class RecibirDocumento {
   constructor(private readonly dependencias: Dependencias) {}
 
-  /** @throws DocumentoYaRecibido si el documento ya había llegado. */
-  ejecutar(operador: Operador, documento: DocumentoParaDestino): Promise<void> {
+  /**
+   * Devuelve los avisos que no bloquean: el de una nota de crédito que deja saldo libre (a favor de la empresa).
+   * @throws DocumentoYaRecibido si el documento ya había llegado.
+   */
+  ejecutar(operador: Operador, documento: DocumentoParaDestino): Promise<ResultadoDeRecibir> {
     return this.dependencias.unidadDeTrabajo.ejecutar(operador, async () => {
       if (await this.dependencias.documentos.existe(documento.documentoId)) throw new DocumentoYaRecibido();
       const guardado = await this.guardar(operador, documento);
-      if (guardado.tipo === 'nota_de_credito') await this.aplicarALaFactura(guardado);
+      if (guardado.tipo !== 'nota_de_credito') return { avisos: [] };
+      const saldoLibreCentavos = await this.aplicarALaFactura(guardado);
+      return { avisos: saldoLibreCentavos > 0 ? [avisoDeSaldoALaFavor(saldoLibreCentavos)] : [] };
     });
   }
 
@@ -70,11 +81,13 @@ export class RecibirDocumento {
     return proponerVencimiento({ fechaBase, diasDeCredito, mesesPorOmision: await plazo.meses(operador) });
   }
 
-  private async aplicarALaFactura(nota: DocumentoPorPagar): Promise<void> {
+  /** Aplica la nota a su factura y a las notas de débito de esa factura; devuelve lo que quedó libre, en centavos. */
+  private async aplicarALaFactura(nota: DocumentoPorPagar): Promise<number> {
     const { cargos, aplicaciones } = this.dependencias;
-    if (nota.documentoAfectadoId === null) return;
+    if (nota.documentoAfectadoId === null) return nota.totalCentavos;
     const posibles = await cargos.paraAplicarUnaNota(nota.documentoAfectadoId);
-    const { aplicaciones: reparto } = repartirNotaDeCredito(nota.totalCentavos, posibles);
-    if (reparto.length > 0) await aplicaciones.agregar(nota, reparto);
+    const reparto = repartirNotaDeCredito(nota.totalCentavos, posibles);
+    if (reparto.aplicaciones.length > 0) await aplicaciones.agregar(nota, reparto.aplicaciones);
+    return reparto.saldoLibreCentavos;
   }
 }
