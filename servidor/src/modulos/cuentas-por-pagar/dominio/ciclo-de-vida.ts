@@ -1,3 +1,4 @@
+import type { CausaDeAnulacionDeDocumento } from '../../core/contratos/libro-de-compras.contratos.js';
 import type { DocumentoPorPagar } from './documento-por-pagar.js';
 import {
   DocumentoConNotas,
@@ -96,3 +97,10 @@ export function exigirEliminable(documento: DocumentoPorPagar, notasEnTotal: num
   if (documento.estado === 'anulado') throw new DocumentoNoEliminable(etiqueta);
   if (notasEnTotal > 0) throw new DocumentoConNotas(etiqueta);
 }
+
+/** Las causas con que Libro de compras acepta anular un registro (no la FEL: solo su emisor la anula en la SAT). */
+export const CAUSAS_DE_ANULACION = [
+  'error_de_captura',
+  'fel_anulada_por_el_emisor',
+  'no_corresponde_a_la_empresa',
+] as const satisfies readonly CausaDeAnulacionDeDocumento[];

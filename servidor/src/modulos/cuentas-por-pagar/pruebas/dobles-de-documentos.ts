@@ -98,10 +98,10 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
     };
   }
 
-  async buscarPorId(id: string): Promise<DocumentoConAplicaciones | null> {
+  async buscarPorId(id: string, bloquear = true): Promise<DocumentoConAplicaciones | null> {
     const documento = this.documentos.find((candidato) => candidato.id === id);
     if (!documento) return null;
-    this.bitacora.push('bloquea-aqui');
+    if (bloquear) this.bitacora.push('bloquea-aqui');
     return {
       documento: { ...documento },
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),

@@ -503,7 +503,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 6. **CP1-6 (servidor, completar y autorizar) — hecho (2026-11-01):** completar en lote, cambiar vencimiento, autorizar en lote con
    separación de funciones y `marcar_procesado`, evento, auditoría de lo propio (y desautorizar si se aprueba U5);
    pruebas.
-7. **CP1-7 (servidor, bajas desde aquí):** anular y eliminar con las órdenes a Libro de compras y el orden de
+7. **CP1-7 (servidor, bajas desde aquí) — hecho (2026-11-01):** anular y eliminar con las órdenes a Libro de compras y el orden de
    bloqueo de §4.7; pruebas (y, si se aprueba U6, el guardia de destino inactivo en Libro de compras).
 8. **CP1-8 (cliente, módulo y días de crédito):** `cliente/src/modulos/cuentas-por-pagar/` (textos, menú, servicio),
    sección «Cuentas por pagar» en el formulario de Proveedores (días de crédito, con la ayuda «vacío = un mes») y en
