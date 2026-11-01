@@ -9,6 +9,7 @@ export const CLAVES_DE_RUBRO = [
   'importaciones',
   'pequeno_contribuyente',
   'regimenes_sin_iva',
+  'compras_sin_credito',
   'exento_y_no_afecto',
   'combustibles_exentos',
 ] as const;
@@ -22,16 +23,18 @@ const NOMBRES: Record<ClaveDeRubro, string> = {
   importaciones: 'Importaciones',
   pequeno_contribuyente: 'Pequeño contribuyente',
   regimenes_sin_iva: 'Regímenes sin IVA',
+  compras_sin_credito: 'Compras sin derecho a crédito',
   exento_y_no_afecto: 'Exento y no afecto',
   combustibles_exentos: 'Combustible exento (Decreto 22-2026)',
 };
 
 const NOTAS: Partial<Record<ClaveDeRubro, string>> = {
   importaciones: 'Sin DUCA en Arrancar: siempre en cero.',
+  compras_sin_credito: 'Base más el IVA que fue al costo (fuera de plazo, no vinculado, sin crédito en la empresa).',
   combustibles_exentos: 'Informativo: ya está incluido en «Exento y no afecto».',
 };
 
-/** Base e IVA con crédito en centavos y con signo. */
+/** Base e IVA en centavos y con signo: el IVA con crédito, o el que fue al costo en «Compras sin derecho a crédito». */
 export interface MontoDeRubro {
   base: number;
   iva: number;
@@ -68,11 +71,24 @@ function rubroSinIva(motivo: MotivoSinCredito | null): ClaveDeRubro | null {
   return null;
 }
 
-/** Las compras del documento por rubro (sin signo): con crédito, por categoría; sin IVA, por régimen. */
+/** Los motivos que dejan sin crédito un documento con IVA: su base y su IVA van a «Compras sin derecho a crédito». */
+const MOTIVOS_CON_IVA_AL_COSTO: readonly MotivoSinCredito[] = [
+  'fuera_de_plazo',
+  'no_vinculado',
+  'empresa_sin_credito',
+  'nota_de_debito_tardia',
+];
+
+function aportesSinCredito(documento: DocumentoDelLibro, motivo: MotivoSinCredito): Aporte[] {
+  if (!MOTIVOS_CON_IVA_AL_COSTO.includes(motivo)) return [];
+  return [{ clave: 'compras_sin_credito', base: documento.base, iva: documento.iva }];
+}
+
+/** Las compras del documento por rubro (sin signo): con crédito, por categoría; sin IVA, por régimen; sin crédito, aparte. */
 function aportesDeCompra(documento: DocumentoDelLibro): Aporte[] {
   const sinIva = rubroSinIva(documento.motivoSinCredito);
   if (sinIva) return [{ clave: sinIva, base: documento.base, iva: 0 }];
-  if (documento.motivoSinCredito !== null) return [];
+  if (documento.motivoSinCredito !== null) return aportesSinCredito(documento, documento.motivoSinCredito);
   return documento.categorias.map((c) => ({
     clave: RUBRO_DE_CATEGORIA[c.categoria],
     base: c.base,

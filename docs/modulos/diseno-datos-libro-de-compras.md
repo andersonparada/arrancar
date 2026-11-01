@@ -2114,7 +2114,8 @@ sin columnas de crédito ni motivo, el IVA es **informativo** (va al costo).
 
 Bienes = `base` de `bien`, `activo_fijo` y `combustible`; servicios = `base` de `servicio`; en las familias sin IVA la base
 se reparte igual por categoría de línea. El pequeño contribuyente lleva un solo libro de compras y ventas (Ley del IVA
-art. 49): Arrancar da **la mitad de compras**, y la pantalla lo dice.
+art. 49) donde anota las **ventas**; las compras solo se exigen y conservan como **respaldo** y no van al formulario
+SAT-2046. Arrancar da **la mitad de compras**, y la pantalla lo dice.
 
 **Exportadores:** todo se reporta como compras locales vinculadas a operaciones gravadas, con el aviso «Si exporta o
 tiene ventas exentas, separe la vinculación con su contador (prorrata, pendiente)» (decisión del usuario).
@@ -2170,9 +2171,12 @@ declarar anterior a P; documentos con `fuera_de_plazo` en P; exportador «todo l
 
 Solo para períodos con libro completo (régimen general). El pequeño contribuyente declara en el SAT-2046, que no lleva
 compras: la pantalla lo dice y no muestra rubros. **Los números y nombres de casilla esperan la captura del SAT-2237
-vigente que conseguirá el usuario**: el servidor entrega rubros con nombre propio, y un mapa del dominio
-(`dominio/libro/casillas-del-sat-2237.ts`, datos puros con su versión) los lleva a casillas cuando llegue la captura,
-sin migrar.
+vigente, que sale de la Agencia Virtual** (desde el 1-sep-2026 el régimen general lo presenta ahí: «Servicios
+tributarios → Generar formulario → IVA → SAT-2237», con datos sugeridos; se puede generar sin presentar; informe en
+`investigacion-sat-2237-y-2046.md`): el servidor entrega rubros con nombre propio, y un mapa del dominio
+(`dominio/libro/casillas-del-sat-2237.ts`, datos puros con su versión) los lleva a casillas, sin migrar. Mientras no
+haya captura, el mapa lleva los **nombres de las guías de Declaraguate, marcados «sin confirmar (versión Declaraguate,
+hasta 2026-08)»**, y sin números de casilla.
 
 ##### 3.9.4.1 Rubros (de la misma consulta del libro)
 
@@ -2189,6 +2193,7 @@ donde las pida el formulario (restando del crédito o en una casilla propia; pre
 | `importaciones` | **reservado** (DUCA, después de CP1): siempre cero, con la nota «sin DUCA en Arrancar» |
 | `pequeno_contribuyente` | documentos con motivo `pequeno_contribuyente` |
 | `regimenes_sin_iva` | `primario_pecuario` y `contribuyente_agropecuario` |
+| `compras_sin_credito` | documentos con IVA que no dan crédito (`fuera_de_plazo`, `no_vinculado`, `empresa_sin_credito`, `nota_de_debito_tardia`): su base más el IVA que fue al costo (L5-2c, 2026-11-01) |
 | `exento_y_no_afecto` | `exento + otros_impuestos` de todas las categorías |
 | `combustibles_exentos` | líneas de combustible con vigencia `iva_exento` (Decreto 22-2026): su exento, aparte, con la marca |
 
@@ -2679,7 +2684,7 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
 5. **L5-2a (servidor, SAT-2237) — hecho el 2026-10-20:** rubros, segmento 9, detalle de proveedores y facturas especiales, rutas y Excel; el
    mapa de casillas vacío (`casillas: null`). **No espera la captura.**
 6. **L5-2b (cliente, SAT-2237) — hecho el 2026-10-20:** página hermana «Datos para el SAT-2237» con rubros, operaciones, proveedores y avisos.
-7. **L5-2c (servidor y cliente) (captura):** el mapa de rubros a casillas con sus nombres y la vista «como en el
+7. **L5-2c (servidor y cliente) — en curso (2026-11-01, sin captura: nombres de las guías marcados «sin confirmar»):** el mapa de rubros a casillas con sus nombres y la vista «como en el
    formulario»; cerrar las preguntas L5-C1 a L5-C3.
 8. **L5-3a (servidor, PDF) — hecho el 2026-10-20 (con `pdfkit` 0.20.2 en lugar de `pdfmake`; la hoja final es siempre el resumen):** dependencia aprobada por el agente de seguridad, `paginarLibro`, plantilla,
    migraciones `0024` y `0025`, emitir, copia, borrador, corregir el último folio, permiso `libro.emitir`; pruebas.

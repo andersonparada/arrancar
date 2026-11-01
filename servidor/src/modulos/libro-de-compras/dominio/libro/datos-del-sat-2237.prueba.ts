@@ -45,10 +45,10 @@ const rubro = (documentos: DocumentoDelLibro[], clave: string) =>
   rubrosDelSat2237(documentos).find((r) => r.clave === clave)!;
 
 describe('rubros del SAT-2237', () => {
-  it('siempre trae los nueve rubros en orden, y las importaciones en cero con su nota', () => {
+  it('siempre trae los diez rubros en orden, y las importaciones en cero con su nota', () => {
     const rubros = rubrosDelSat2237([]);
 
-    expect(rubros.map((r) => r.clave)).toHaveLength(9);
+    expect(rubros.map((r) => r.clave)).toHaveLength(10);
     expect(rubros.find((r) => r.clave === 'importaciones')).toMatchObject({
       neto: { base: 0, iva: 0 },
       nota: 'Sin DUCA en Arrancar: siempre en cero.',
@@ -90,6 +90,30 @@ describe('rubros del SAT-2237', () => {
     const fueraDePlazo = documento({ motivoSinCredito: 'fuera_de_plazo', ivaNoAcreditable: 12000 });
 
     expect(rubro([fueraDePlazo], 'otras_compras').neto).toEqual({ base: 0, iva: 0 });
+  });
+
+  it('lo que pierde el crédito va a «Compras sin derecho a crédito» con su base y el IVA que fue al costo', () => {
+    const documentos = [
+      documento({ motivoSinCredito: 'fuera_de_plazo', ivaNoAcreditable: 12000 }),
+      documento({ motivoSinCredito: 'no_vinculado', ivaNoAcreditable: 12000 }),
+      documento({ motivoSinCredito: 'empresa_sin_credito', ivaNoAcreditable: 12000 }),
+      documento({ tipo: 'nota_de_debito', motivoSinCredito: 'nota_de_debito_tardia', base: 10000, iva: 1200 }),
+      documento({ tipo: 'nota_de_credito', motivoSinCredito: 'fuera_de_plazo', base: 20000, iva: 2400 }),
+    ];
+
+    expect(rubro(documentos, 'compras_sin_credito')).toMatchObject({
+      facturas: { base: 300000, iva: 36000 },
+      notasDeDebito: { base: 10000, iva: 1200 },
+      notasDeCredito: { base: -20000, iva: -2400 },
+      neto: { base: 290000, iva: 34800 },
+    });
+    expect(rubro(documentos, 'otras_compras').neto).toEqual({ base: 0, iva: 0 });
+  });
+
+  it('el motivo «exento» no suma a «Compras sin derecho a crédito»', () => {
+    const exento = documento({ motivoSinCredito: 'exento', base: 0, iva: 0, exento: 5000 });
+
+    expect(rubro([exento], 'compras_sin_credito').neto).toEqual({ base: 0, iva: 0 });
   });
 
   it('pequeño contribuyente y regímenes sin IVA llevan su base y nada de crédito', () => {

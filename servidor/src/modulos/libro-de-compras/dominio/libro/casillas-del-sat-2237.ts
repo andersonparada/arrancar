@@ -23,6 +23,7 @@ export const MAPA_DE_CASILLAS_SAT_2237: MapaDeCasillas = {
     importaciones: 'por_confirmar',
     pequeno_contribuyente: 'por_confirmar',
     regimenes_sin_iva: 'por_confirmar',
+    compras_sin_credito: 'por_confirmar',
     exento_y_no_afecto: 'por_confirmar',
     combustibles_exentos: 'por_confirmar',
   },
