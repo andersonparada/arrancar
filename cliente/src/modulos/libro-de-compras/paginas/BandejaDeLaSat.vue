@@ -1,23 +1,35 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { Plus, Upload } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
+import PanelDeConciliacion from '../componentes/bandeja/PanelDeConciliacion.vue';
 import PanelDeLaBandeja from '../componentes/bandeja/PanelDeLaBandeja.vue';
 import PestanasDeLaBandeja from '../componentes/bandeja/PestanasDeLaBandeja.vue';
 import {
   IMPORTAR_DE_LA_SAT as importar,
+  PESTANA_DE_CONCILIACION,
   VENTANA_DE_LA_SAT as ventana,
   type ClaveDePestana,
 } from '../textos-de-la-bandeja';
 import { VENTANA_DE_DOCUMENTOS } from '../textos-de-documentos';
 
-/** «DTE de la SAT»: lo que la SAT dice que la empresa recibió, para registrarlo en lote. */
+/** «DTE de la SAT»: lo que la SAT dice que la empresa recibió, para registrarlo en lote, y su conciliación con el libro. */
 const router = useRouter();
 const pestana = ref<ClaveDePestana>('pendiente');
+const busqueda = ref('');
 const volver = { texto: VENTANA_DE_DOCUMENTOS.titulo, ruta: { name: 'libro-de-compras.documentos' } };
+
+/** Desde la conciliación: la fila de la SAT que falta registrar, buscada por su número en la pestaña de pendientes. */
+function verEnLaBandeja(texto: string): void {
+  busqueda.value = texto;
+  pestana.value = 'pendiente';
+}
+
+// La búsqueda de la conciliación vale solo para esa llegada; el panel ya la leyó al crearse.
+watch(pestana, () => (busqueda.value = ''), { flush: 'post' });
 </script>
 
 <template>
@@ -51,6 +63,12 @@ const volver = { texto: VENTANA_DE_DOCUMENTOS.titulo, ruta: { name: 'libro-de-co
     </p>
 
     <PestanasDeLaBandeja v-model="pestana" />
-    <PanelDeLaBandeja :key="pestana" :estado="pestana" busqueda-inicial="" />
+    <PanelDeConciliacion v-if="pestana === PESTANA_DE_CONCILIACION" @ver-en-la-bandeja="verEnLaBandeja" />
+    <PanelDeLaBandeja
+      v-else
+      :key="pestana"
+      :estado="pestana"
+      :busqueda-inicial="pestana === 'pendiente' ? busqueda : ''"
+    />
   </div>
 </template>

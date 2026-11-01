@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { pestanaTrasLaTecla } from '../../composables/bandeja/navegacion-por-pestanas';
-import { PESTANAS_DE_LA_BANDEJA, type ClaveDePestana } from '../../textos-de-la-bandeja';
+import { CONCILIACION } from '../../textos-de-la-conciliacion';
+import { PESTANA_DE_CONCILIACION, PESTANAS_DE_LA_BANDEJA, type ClaveDePestana } from '../../textos-de-la-bandeja';
 
-/** Las pestañas de la pantalla: un estado de la bandeja cada una. Las flechas pasan de una a otra. */
+/** Las pestañas de la pantalla: un estado de la bandeja cada una, y la conciliación. Las flechas pasan de una a otra. */
 const actual = defineModel<ClaveDePestana>({ required: true });
-const pestanas = [...PESTANAS_DE_LA_BANDEJA.map(({ clave, texto }) => ({ clave: clave as ClaveDePestana, texto }))];
+const pestanas = [
+  ...PESTANAS_DE_LA_BANDEJA.map(({ clave, texto }) => ({ clave: clave as ClaveDePestana, texto })),
+  { clave: PESTANA_DE_CONCILIACION as ClaveDePestana, texto: CONCILIACION.pestana },
+];
 const claves = pestanas.map(({ clave }) => clave);
 const idDe = (clave: string): string => `pestana-${clave}`;
 

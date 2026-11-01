@@ -1373,3 +1373,17 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   NDEB propone el concepto de intereses por nombre y ahora prefiere el de la lista sugerida, «Intereses y recargos a
   proveedores», sobre cualquier otro gasto financiero o de intereses (después sigue buscando «financier» e «interes»; no
   usa conceptos inactivos). Pruebas puras de ambas cosas.
+- **2026-10-21 — Libro de compras L4-11 y L4-12 (cliente): pantalla «DTE de la SAT» con la bandeja y la conciliación.** Ruta
+  `/libro-de-compras/dte-recibidos` (permiso `documentos.importar`, menú Operación). Cuatro pestañas por estado (pendientes,
+  registrados, descartados, bloqueados) con filtros (búsqueda, tipo, proveedor nuevo o existente, fechas de emisión), 50 por
+  página y marcas por página. Pendientes: «Completar» en lote (concepto, destino, fecha de recepción o «Usar la fecha de
+  emisión», y la factura que corrige si se completa una sola nota), «Confirmar» con vista previa (neto a pagar y avisos por
+  fila, proveedores nuevos que se crearán, preguntas fiscales del proveedor con «Volver a calcular») y resultados fila por fila
+  (las que fallan quedan pendientes y marcadas, con el error y qué hacer), y «Descartar» con motivo; las descartadas se
+  restauran y las registradas llevan a su factura. Quinta pestaña, «Conciliación»: selector de mes (por omisión el anterior),
+  ocho tarjetas con su conteo, lista del grupo abierto con diferencias (campo, Arrancar, SAT) y acciones (abrir la factura,
+  «Registrar» que pasa a Pendientes buscando el número, descartar y restaurar). «Ingreso de facturas» suma el botón «Importar de
+  la SAT» y el aviso «N DTE pendientes de la SAT» solo a quien tiene el permiso y hay pendientes. El botón «Cargar el archivo de
+  la SAT» está deshabilitado con «Disponible pronto» hasta L4-6/L4-7. Los proveedores nuevos se crean al confirmar (el servidor lo
+  hace dentro de la confirmación; no hay endpoint aparte). Queda sin programar «Abrir en el formulario». Lógica pura con pruebas
+  en `composables/bandeja/`.

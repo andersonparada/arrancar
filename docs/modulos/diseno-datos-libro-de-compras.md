@@ -1672,11 +1672,11 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
     aunque el documento esté en otro período; una fila anulada sin documento no aparece; un documento fuera del libro
     que cruza con una fila del mes sale como «Registrado en otro período» con `documentoFueraDelLibro`; el cruce por
     serie y número muestra la autorización como diferencia. Falta del lado del contador: nada.
-12. **L4-11 (cliente, bandeja) (archivo, para el QA):** botón «Importar de la SAT» en Ingreso de facturas (con
+12. **L4-11 (cliente, bandeja) - HECHO 2026-10-21, falta cargar el archivo (espera L4-6/L4-7):** botón «Importar de la SAT» en Ingreso de facturas (con
     `v-permiso`; nunca como paso obligatorio), página «DTE de la SAT» (pendientes, registrados, descartados, bloqueados;
     resumen del último lote), completar varias filas a la vez, proveedores nuevos, vista previa, confirmar con resultados
     por fila, descartar y «Abrir en el formulario». La lista de facturas solo muestra «N pendientes de la SAT» si hay.
-13. **L4-12 (cliente, conciliación):** pestaña por período con sus tarjetas y acciones.
+13. **L4-12 (cliente, conciliación) - HECHO 2026-10-21:** pestaña por período con sus tarjetas y acciones.
 14. **L4-13 (servidor y cliente, conciliación liviana; opcional, si se aprueba L4-f):** `POST …/conciliar` y su pantalla,
     con «Pasar los faltantes a la bandeja».
 15. **L4-14 (QA) (archivo):** de punta a punta con el archivo real: importar, crear proveedores, completar, confirmar en

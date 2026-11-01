@@ -62,7 +62,9 @@ export const FALTANTES = {
   factura: 'la factura que corrige',
 } as const;
 
-export type ClaveDePestana = EstadoDeDte;
+/** La pestaña que no es un estado de la fila: la comparación de un mes contra la SAT. */
+export const PESTANA_DE_CONCILIACION = 'conciliacion';
+export type ClaveDePestana = EstadoDeDte | typeof PESTANA_DE_CONCILIACION;
 
 export const IMPORTAR_DE_LA_SAT = {
   boton: 'Importar de la SAT',
