@@ -4,7 +4,9 @@ export class ExcelAntiguoNoAdmitido extends DatoInvalido {
   readonly codigo = 'excel_antiguo_no_admitido';
 
   constructor() {
-    super('El archivo es un Excel antiguo (.xls). Ábralo en Excel y guárdelo como .xlsx.');
+    super(
+      'El archivo es de una versión de Excel demasiado antigua (Excel 5 o 95). Ábralo en Excel y guárdelo como .xlsx.',
+    );
   }
 }
 
@@ -14,6 +16,15 @@ export class ArchivoDeTextoNoAdmitido extends DatoInvalido {
 
   constructor() {
     super('El archivo no es un Excel ni un CSV. Ábralo en Excel y guárdelo como .xlsx.');
+  }
+}
+
+/** El Excel está protegido con contraseña: no se puede leer. */
+export class ExcelCifrado extends DatoInvalido {
+  readonly codigo = 'excel_cifrado';
+
+  constructor() {
+    super('El Excel tiene contraseña. Guárdelo sin contraseña e inténtelo de nuevo.');
   }
 }
 

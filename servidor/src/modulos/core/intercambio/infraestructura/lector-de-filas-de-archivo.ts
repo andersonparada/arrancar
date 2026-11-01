@@ -4,13 +4,14 @@ import type { LibroDeExcel } from '../aplicacion/puertos/libro-de-excel.js';
 import type { ArchivoDeFilas, FilaCruda, LectorDeFilas } from '../aplicacion/puertos/lector-de-filas.js';
 import { ubicarEncabezados } from '../aplicacion/ubicar-encabezados.js';
 import { LibroDeExcelJs } from './libro-de-excel.exceljs.js';
-import { detectarFormato } from './lectura/detectar-formato.js';
+import { detectarFormato, type FormatoDetectado } from './lectura/detectar-formato.js';
 import {
   LectorDeCsv,
   MAXIMO_DE_CARACTERES_POR_CELDA,
   MAXIMO_DE_COLUMNAS,
   MAXIMO_DE_FILAS_CRUDAS,
 } from './lectura/lector-de-csv.js';
+import { LectorDeXls } from './lectura/lector-de-xls.js';
 
 export const MAXIMO_DEL_ARCHIVO_EN_MB = 5;
 
@@ -27,11 +28,12 @@ function validarTopes(filas: FilaCruda[]): void {
   }
 }
 
-/** Lee `.xlsx` (validado con `ValidadorDeXlsx`) y CSV según su contenido, y ubica la fila de encabezados. */
+/** Lee `.xlsx` (validado con `ValidadorDeXlsx`), `.xls` (lector propio) y CSV según su contenido, y ubica la fila de encabezados. */
 export class LectorDeFilasDeArchivo implements LectorDeFilas {
   constructor(
     private readonly libro: LibroDeExcel = new LibroDeExcelJs(),
     private readonly csv = new LectorDeCsv(),
+    private readonly xls = new LectorDeXls(),
   ) {}
 
   async leerFilas(archivo: Buffer, encabezadosEsperados: readonly string[]): Promise<ArchivoDeFilas> {
@@ -39,8 +41,13 @@ export class LectorDeFilasDeArchivo implements LectorDeFilas {
       throw new ArchivoDemasiadoGrande(MAXIMO_DEL_ARCHIVO_EN_MB);
     }
     const detectado = detectarFormato(archivo);
-    const filas = detectado.formato === 'xlsx' ? await this.libro.leerFilas(archivo) : this.csv.leer(detectado.texto);
+    const filas = await this.filasDe(archivo, detectado);
     validarTopes(filas);
     return { formato: detectado.formato, ...ubicarEncabezados(filas, encabezadosEsperados) };
+  }
+
+  private async filasDe(archivo: Buffer, detectado: FormatoDetectado): Promise<FilaCruda[]> {
+    if (detectado.formato === 'xlsx') return this.libro.leerFilas(archivo);
+    return detectado.formato === 'xls' ? this.xls.leer(archivo) : this.csv.leer(detectado.texto);
   }
 }

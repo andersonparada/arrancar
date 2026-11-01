@@ -5,7 +5,6 @@ import {
   ArchivoConCeldasDemasiadoGrandes,
   ArchivoDeTextoNoAdmitido,
   EncabezadosNoEncontrados,
-  ExcelAntiguoNoAdmitido,
 } from '../aplicacion/errores-de-lectura.js';
 import { LectorDeFilasDeArchivo } from './lector-de-filas-de-archivo.js';
 import { excelDePrueba, parteDeCeros } from './zip/zip-de-prueba.js';
@@ -148,10 +147,10 @@ describe('lector de filas: CSV', () => {
 });
 
 describe('lector de filas: formatos que no se aceptan', () => {
-  it('rechaza un .xls (BIFF) aunque se llame .xlsx', async () => {
-    const biff = Buffer.concat([Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]), Buffer.alloc(512)]);
+  it('un contenedor OLE2 vacío (la firma de un .xls sin libro) no se puede leer', async () => {
+    const vacio = Buffer.concat([Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]), Buffer.alloc(512)]);
 
-    await expect(leer(biff)).rejects.toThrow(ExcelAntiguoNoAdmitido);
+    await expect(leer(vacio)).rejects.toThrow('No se pudo leer');
   });
 
   it.each([

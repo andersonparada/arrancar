@@ -4,7 +4,7 @@ export interface FilaCruda {
   celdas: string[];
 }
 
-export type FormatoDeArchivo = 'xlsx' | 'csv';
+export type FormatoDeArchivo = 'xlsx' | 'xls' | 'csv';
 
 /** Las filas de un archivo con la fila de encabezados ya ubicada. */
 export interface ArchivoDeFilas {
@@ -19,12 +19,12 @@ export interface ArchivoDeFilas {
   filas: FilaCruda[];
 }
 
-/** Lee un .xlsx o un CSV detectando el formato por su contenido; sin lógica de ningún recurso. */
+/** Lee un .xlsx, un .xls (Excel 97-2003) o un CSV detectando el formato por su contenido; sin lógica de ningún recurso. */
 export interface LectorDeFilas {
   /**
    * @param encabezadosEsperados nombres (y variantes) que puede tener la fila de encabezados; se comparan
    * sin tildes, mayúsculas ni signos de puntuación.
-   * @throws ExcelAntiguoNoAdmitido, ArchivoDeTextoNoAdmitido, ArchivoNoEsExcel o ArchivoNoLegible según el contenido.
+   * @throws ArchivoDeTextoNoAdmitido, ArchivoNoEsExcel, ExcelConContenidoNoPermitido, ExcelCifrado, ExcelAntiguoNoAdmitido (Excel 5/95) o ArchivoNoLegible según el contenido.
    * @throws ArchivoDemasiadoGrande, DemasiadasFilas o ArchivoConCeldasDemasiadoGrandes si pasa los topes.
    * @throws EncabezadosNoEncontrados si ninguna de las primeras 20 filas trae un encabezado esperado.
    */

@@ -1375,7 +1375,7 @@ RLS: `politicaPorEmpresa()` en las dos. Ninguna tiene política de alcance.
 | Primeros bytes | Formato | Qué pasa |
 |---|---|---|
 | `PK\x03\x04` | `.xlsx` | `ValidadorDeXlsx` y exceljs, como hoy |
-| `D0 CF 11 E0 A1 B1 1A E1` | `.xls` (Excel 97–2003) | error `ExcelAntiguoNoAdmitido` (422): «Abra el archivo en Excel y guárdelo como .xlsx» |
+| `D0 CF 11 E0 A1 B1 1A E1` | `.xls` (Excel 97–2003; es lo que entrega la SAT) | lector propio CFB + BIFF8 (`lectura/lector-de-xls.ts`), con los controles de `evaluacion-lectura-xls.md`; Excel 5/95 da `ExcelAntiguoNoAdmitido` y un archivo dañado, con macros u objetos o con contraseña, su error propio (422) |
 | `<html`, `<table` o `<?xml` al inicio (tras espacios o BOM) | HTML o XML con extensión `.xls` (lo hacen algunos portales) | error `ArchivoNoEsExcel` con el mismo consejo; **revisar con el archivo real** |
 | Texto (UTF-8 válido o Windows-1252, sin bytes `NUL` en los primeros 8 KB) | CSV | `LectorDeCsv` (nuevo) |
 | Otro | — | `ArchivoNoEsExcel` |
@@ -1581,8 +1581,10 @@ Ninguna migración de permisos: son permisos nuevos de un módulo (el acceso tot
   `ValidadorDeXlsx`.
 - **Filas:** hasta **10,000** por archivo (el tope de una consulta de la SAT); 10,001 → `DemasiadasFilas` (pregunta L4-d).
   El motor de Excel sigue en 5,000 para los demás recursos.
-- **Formato:** solo `.xlsx` y CSV, detectados por contenido (3.3b.6). **No** se lee `.xls` (BIFF): las librerías que lo
-  leen (SheetJS) arrastran avisos de seguridad y la versión de npm no se mantiene; se pide guardarlo como `.xlsx`.
+- **Formato:** `.xlsx`, `.xls` (Excel 97-2003) y CSV, detectados por contenido (3.3b.6). El `.xls` se lee con un lector propio
+  de CFB y BIFF8 (sin SheetJS, cuyas versiones de npm arrastran avisos de seguridad; `docs/modulos/evaluacion-lectura-xls.md`):
+  lista blanca del directorio, cadenas de sectores sin ciclos, rechazo de macros, objetos, dibujos y contraseña, topes de filas,
+  columnas y celdas, y las fórmulas se leen por su valor guardado sin evaluarlas.
 - **CSV:** sin evaluación de fórmulas (se lee como texto y nunca se vuelve a escribir en un Excel sin escapar, A8); topes de
   filas, columnas y largo de celda; codificación detectada sin adivinar más allá de UTF-8 y Windows-1252.
 - **Frecuencia:** `limitarImportaciones` (10 por minuto por usuario) en importar y en conciliar; confirmar y vista previa,
@@ -1627,7 +1629,7 @@ Ninguna migración en otros esquemas ni de permisos. Los `meta/*_snapshot.json` 
 - **Importar:** archivo de prueba (generado en la prueba, con el mapa) con filas de cada rechazo; reimportar el mismo
   (sin cambios, aviso de sha256); reimportar con una anulada (actualiza, audita `corregir`, no toca lo completado); una
   autorización registrada a mano antes de importar (entra `registrado`); una registrada en otra empresa de **otra cuenta**
-  (rechazo o bloqueo según L4-c, sin decir dónde); `.xls`, HTML disfrazado, zip bomba y CSV con `;` y Windows-1252.
+  (rechazo o bloqueo según L4-c, sin decir dónde); un `.xls` sintético, HTML disfrazado, zip bomba y CSV con `;` y Windows-1252.
 - **Confirmar:** lote de tres filas donde la segunda falla (proveedor sin datos fiscales en empresa agente): la primera y
   la tercera quedan registradas y la segunda pendiente; agente de IVA sin recepción (422 por fila); nota sin factura
   (422); fila anulada en la SAT (error de la fila); dos confirmaciones a la vez de la misma fila (una registra, la otra
@@ -1653,6 +1655,7 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
 4. **L4-2b (servidor, base del ISR):** solo si el contador confirma L4-c1: sacar los otros impuestos de la base; pruebas.
 5. **L4-4 (servidor, core/intercambio) - HECHO 2026-10-20:** `leerFilas` en el puerto y en exceljs, detección de formato, `LectorDeCsv`,
    `ExcelAntiguoNoAdmitido`; pruebas (incluidas bomba zip, `.xls`, HTML y CSV con `;`). Sin lógica de la SAT.
+   **Ampliado el 2026-11-01 (L4-4b):** lector de `.xls` propio (`detectarFormato` da `'xls'`; `ExcelAntiguoNoAdmitido` queda para Excel 5/95).
 6. **L4-5 (servidor, datos de la bandeja) - HECHO 2026-10-20:** migración `0021` (tablas) y `0022` custom (función `autorizacion_registrada_fuera`, que solo ve las otras empresas de la misma cuenta); dominio de estados, repositorios y pruebas de checks, llaves, RLS y la función. El enlace con `documentos` queda en L4-9.
 7. **L4-6 (servidor, lectura del DTE) (archivo):** mapa de encabezados y de valores, fila de encabezados, conversión,
    reglas de rechazo, `documentoDesdeElDte` y la variable `libro-de-compras.dte.encabezados_adicionales`; pruebas puras con
@@ -1698,8 +1701,8 @@ El aviso de L5 (3.3b.8) se programa con L5.
   la anula; rechazada, desaparece hasta la siguiente importación.
 - **L4-d. Tope de filas:** 10,000 por archivo (el de la SAT) y 5 MB. **Recomendación: sí**; cargar la bandeja es liviano
   (no pasa cada fila por el registro).
-- **L4-e. `.xls` y HTML:** no leerlos y pedir guardarlos como `.xlsx`. **Recomendación: sí**; se revisa con el archivo
-  real (si la SAT entrega `.xls`, se valora convertirlo en el navegador).
+- **L4-e. `.xls` y HTML (resuelta el 2026-11-01):** la SAT entrega **`.xls` (Excel 97-2003)**, así que se lee con un lector propio
+  en el servidor (decisión del usuario, `evaluacion-lectura-xls.md`). El HTML y el XML disfrazados de `.xls` se siguen rechazando.
 - **L4-f. Conciliación liviana** (subir el Excel solo para cruzar, sin bandeja). **Recomendación: sí, como paso opcional
   L4-13** después de la bandeja; sirve a quien registra a mano y no le crea pendientes.
 - **L4-g. Imprimir o exportar la conciliación:** Operación no exporta. **Recomendación: no en L4**; si se quiere, como
