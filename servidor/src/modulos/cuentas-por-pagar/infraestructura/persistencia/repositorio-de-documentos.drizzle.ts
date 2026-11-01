@@ -1,10 +1,13 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, type SQL } from 'drizzle-orm';
+import type { PgUpdateSetSource } from 'drizzle-orm/pg-core';
 import {
   contextoEnCurso,
   transaccionEnCurso,
 } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   AnulacionDeDocumento,
+  AutorizacionDeDocumento,
+  DocumentoCompletado,
   DocumentoNuevo,
   RepositorioDeAplicaciones,
   RepositorioDeDocumentos,
@@ -31,8 +34,55 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
     return mapeadorDeDocumento.aDominio(fila!);
   }
 
-  async buscarPorDocumentoDeCompra(documentoId: string, bloquear: boolean): Promise<DocumentoConAplicaciones | null> {
-    const consulta = transaccionEnCurso().select().from(documentos).where(eq(documentos.documentoId, documentoId));
+  buscarPorDocumentoDeCompra(documentoId: string, bloquear: boolean): Promise<DocumentoConAplicaciones | null> {
+    return this.buscarDonde(eq(documentos.documentoId, documentoId), bloquear);
+  }
+
+  buscarPorId(id: string, bloquear: boolean): Promise<DocumentoConAplicaciones | null> {
+    return this.buscarDonde(eq(documentos.id, id), bloquear);
+  }
+
+  async registrar(id: string, { registradoPor, vencimiento }: DocumentoCompletado): Promise<void> {
+    await this.cambiar(id, { estado: 'registrado', registradoEn: sql`now()`, registradoPor, vencimiento });
+  }
+
+  async cambiarVencimiento(id: string, vencimiento: string): Promise<void> {
+    await this.cambiar(id, { vencimiento });
+  }
+
+  async autorizar(id: string, { autorizadoPor, autorizacionPropia }: AutorizacionDeDocumento): Promise<void> {
+    await this.cambiar(id, { estado: 'autorizado', autorizadoEn: sql`now()`, autorizadoPor, autorizacionPropia });
+  }
+
+  async desautorizar(id: string): Promise<void> {
+    await this.cambiar(id, {
+      estado: 'registrado',
+      autorizadoEn: null,
+      autorizadoPor: null,
+      autorizacionPropia: false,
+    });
+  }
+
+  async anular(id: string, { anuladoPor, motivo, estabaAutorizado }: AnulacionDeDocumento): Promise<void> {
+    await this.cambiar(id, {
+      estado: 'anulado',
+      anuladoEn: sql`now()`,
+      anuladoPor,
+      motivoDeAnulacion: motivo,
+      estabaAutorizado,
+    });
+  }
+
+  async eliminar(id: string): Promise<void> {
+    await transaccionEnCurso().delete(documentos).where(eq(documentos.id, id));
+  }
+
+  private async cambiar(id: string, cambios: PgUpdateSetSource<typeof documentos>): Promise<void> {
+    await transaccionEnCurso().update(documentos).set(cambios).where(eq(documentos.id, id));
+  }
+
+  private async buscarDonde(condicion: SQL, bloquear: boolean): Promise<DocumentoConAplicaciones | null> {
+    const consulta = transaccionEnCurso().select().from(documentos).where(condicion);
     const [fila] = await (bloquear ? consulta.for('update') : consulta);
     if (!fila) return null;
     const documento = mapeadorDeDocumento.aDominio(fila);
@@ -41,16 +91,5 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
     };
-  }
-
-  async anular(id: string, { anuladoPor, motivo, estabaAutorizado }: AnulacionDeDocumento): Promise<void> {
-    await transaccionEnCurso()
-      .update(documentos)
-      .set({ estado: 'anulado', anuladoEn: sql`now()`, anuladoPor, motivoDeAnulacion: motivo, estabaAutorizado })
-      .where(eq(documentos.id, id));
-  }
-
-  async eliminar(id: string): Promise<void> {
-    await transaccionEnCurso().delete(documentos).where(eq(documentos.id, id));
   }
 }

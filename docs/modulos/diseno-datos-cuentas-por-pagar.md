@@ -500,7 +500,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 5. **CP1-5 (servidor, consultas) — hecho (2026-10-20), con U13:** bandeja, lista con filtros (proveedor, estado, tipo, fechas, vencidas), ficha con
    notas y aplicaciones, saldo del proveedor; DTO con `puedeAutorizar`, `puedeAnular`, `puedeEliminar` calculados en
    el servidor (como Bancos); pruebas.
-6. **CP1-6 (servidor, completar y autorizar):** completar en lote, cambiar vencimiento, autorizar en lote con
+6. **CP1-6 (servidor, completar y autorizar) — hecho (2026-11-01):** completar en lote, cambiar vencimiento, autorizar en lote con
    separación de funciones y `marcar_procesado`, evento, auditoría de lo propio (y desautorizar si se aprueba U5);
    pruebas.
 7. **CP1-7 (servidor, bajas desde aquí):** anular y eliminar con las órdenes a Libro de compras y el orden de

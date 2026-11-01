@@ -28,9 +28,29 @@ export interface RepositorioDeDocumentos {
   agregar(nuevo: DocumentoNuevo): Promise<DocumentoPorPagar>;
   /** Busca por el id del documento de Libro de compras; con `bloquear`, deja la fila y las que cuelgan de ella para este caso de uso. */
   buscarPorDocumentoDeCompra(documentoId: string, bloquear: boolean): Promise<DocumentoConAplicaciones | null>;
+  /** Busca por el id de aquí; con `bloquear`, igual que `buscarPorDocumentoDeCompra`. */
+  buscarPorId(id: string, bloquear: boolean): Promise<DocumentoConAplicaciones | null>;
+  /** Lo pasa de `pendiente` a `registrado`, con quién y cuándo; los cargos quedan con su vencimiento definitivo. */
+  registrar(id: string, completado: DocumentoCompletado): Promise<void>;
+  cambiarVencimiento(id: string, vencimiento: string): Promise<void>;
+  /** Lo pasa de `registrado` a `autorizado`; `autorizacionPropia` deja marcada la excepción a la separación de funciones. */
+  autorizar(id: string, autorizacion: AutorizacionDeDocumento): Promise<void>;
+  /** Lo devuelve de `autorizado` a `registrado`. */
+  desautorizar(id: string): Promise<void>;
   /** Lo deja `anulado` con quién, cuándo y por qué, y si estaba autorizado. */
   anular(id: string, anulacion: AnulacionDeDocumento): Promise<void>;
   eliminar(id: string): Promise<void>;
+}
+
+export interface DocumentoCompletado {
+  registradoPor: string;
+  /** `null` en una nota de crédito, que no vence. */
+  vencimiento: string | null;
+}
+
+export interface AutorizacionDeDocumento {
+  autorizadoPor: string;
+  autorizacionPropia: boolean;
 }
 
 export interface AnulacionDeDocumento {
@@ -71,6 +91,8 @@ export interface CondicionesDeProveedores {
 export interface DocumentosDeCompra {
   /** La fecha de recepción (`AAAA-MM-DD`) con que se registró el documento. */
   fechaDeRecepcion(documentoId: string): Promise<string>;
+  /** Bloquea la fila del documento en Libro de compras (solo para fijar el orden de bloqueo; no la cambia). */
+  bloquear(documentoId: string): Promise<void>;
 }
 
 export interface PlazoPorOmision {

@@ -16,4 +16,12 @@ export class DocumentosDeCompraDrizzle implements DocumentosDeCompra {
     if (!fila) throw new Error(`El documento ${documentoId} de Libro de compras no existe.`);
     return fila.fechaRecepcion;
   }
+
+  async bloquear(documentoId: string): Promise<void> {
+    await transaccionEnCurso()
+      .select({ id: documentosDeCompra.id })
+      .from(documentosDeCompra)
+      .where(eq(documentosDeCompra.id, documentoId))
+      .for('update');
+  }
 }

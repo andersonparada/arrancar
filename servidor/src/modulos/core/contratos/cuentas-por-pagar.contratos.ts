@@ -1,4 +1,4 @@
-import type { DocumentoParaDestino } from './libro-de-compras.contratos.js';
+import type { DocumentoParaDestino, TipoDeDocumentoDeCompra } from './libro-de-compras.contratos.js';
 
 /**
  * Órdenes y eventos de `cuentas-por-pagar` (ver `mediador.contratos.ts`). Por ahora la orden que llama Libro de compras
@@ -19,8 +19,30 @@ declare module './mediador.contratos.js' {
 declare module '../eventos/bus-eventos.js' {
   interface EventosDominio {
     /**
-     * Un documento por pagar quedó anulado. `estabaAutorizado`: ya estaba provisionado, así que Contabilidad revierte la
-     * provisión. `documentoId` es el de Cuentas por pagar y `documentoDeCompraId` el de Libro de compras.
+     * Un documento por pagar quedó aprobado para pago (U12: autorizar no provisiona; el pasivo y el gasto se registran al
+     * registrar el documento en Libro de compras). `documentoId` es el de Cuentas por pagar y `documentoDeCompraId` el de
+     * Libro de compras; el dinero va en centavos enteros.
+     */
+    'cuentas-por-pagar.documento_autorizado': {
+      empresaId: string;
+      documentoId: string;
+      documentoDeCompraId: string;
+      tipo: TipoDeDocumentoDeCompra;
+      proveedorId: string;
+      totalCentavos: number;
+      retencionesCentavos: number;
+      /** Autorizó quien también lo ingresó o lo completó (con el permiso `autorizar-propios`). */
+      autorizacionPropia: boolean;
+    };
+    /** Un documento autorizado volvió a «completado» (mientras no tenga pagos): ya no está aprobado para pago. */
+    'cuentas-por-pagar.documento_desautorizado': {
+      empresaId: string;
+      documentoId: string;
+      documentoDeCompraId: string;
+    };
+    /**
+     * Un documento por pagar quedó anulado. `estabaAutorizado`: ya estaba aprobado para pago. `documentoId` es el de
+     * Cuentas por pagar y `documentoDeCompraId` el de Libro de compras.
      */
     'cuentas-por-pagar.documento_anulado': {
       empresaId: string;

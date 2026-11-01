@@ -25,3 +25,6 @@ export const noTenerNotasAplicadas: ReglaDeBaja = ({ documento, recibidas }) => 
 export const REGLAS_PARA_ANULAR: readonly ReglaDeBaja[] = [noTenerNotasAplicadas];
 
 export const REGLAS_PARA_ELIMINAR: readonly ReglaDeBaja[] = [noEstarAutorizado, noTenerNotasAplicadas];
+
+/** Hoy nada frena una desautorización; los pagos (CP4) sumarán aquí «el cargo ya tiene pagos». */
+export const REGLAS_PARA_DESAUTORIZAR: readonly ReglaDeBaja[] = [];

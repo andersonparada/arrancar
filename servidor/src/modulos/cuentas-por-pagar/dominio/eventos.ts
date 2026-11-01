@@ -1,4 +1,5 @@
 import { EventoDominio } from '../../core/compartido/dominio/evento-dominio.js';
+import type { TipoDeDocumento } from './tipos-de-documento.js';
 
 export interface DatosDeDocumentoAnulado {
   empresaId: string;
@@ -7,6 +8,43 @@ export interface DatosDeDocumentoAnulado {
   /** El id del documento en Libro de compras. */
   documentoDeCompraId: string;
   estabaAutorizado: boolean;
+}
+
+export interface DatosDeDocumentoAutorizado {
+  empresaId: string;
+  /** El id del documento en Cuentas por pagar. */
+  documentoId: string;
+  /** El id del documento en Libro de compras. */
+  documentoDeCompraId: string;
+  tipo: TipoDeDocumento;
+  proveedorId: string;
+  totalCentavos: number;
+  retencionesCentavos: number;
+  autorizacionPropia: boolean;
+}
+
+/** Un documento por pagar quedó aprobado para pago (U12: no es una provisión). Se publica tras confirmar la transacción. */
+export class DocumentoAutorizadoEvento extends EventoDominio<DatosDeDocumentoAutorizado> {
+  readonly nombre = 'cuentas-por-pagar.documento_autorizado';
+
+  constructor(datos: DatosDeDocumentoAutorizado) {
+    super(datos);
+  }
+}
+
+export interface DatosDeDocumentoDesautorizado {
+  empresaId: string;
+  documentoId: string;
+  documentoDeCompraId: string;
+}
+
+/** Un documento autorizado volvió a completado. Se publica tras confirmar la transacción. */
+export class DocumentoDesautorizado extends EventoDominio<DatosDeDocumentoDesautorizado> {
+  readonly nombre = 'cuentas-por-pagar.documento_desautorizado';
+
+  constructor(datos: DatosDeDocumentoDesautorizado) {
+    super(datos);
+  }
 }
 
 /** Un documento por pagar quedó anulado (sigue como rastro). Se publica tras confirmar la transacción de quien lo anuló. */

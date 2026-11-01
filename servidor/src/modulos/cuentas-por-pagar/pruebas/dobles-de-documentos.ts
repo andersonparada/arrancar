@@ -1,5 +1,7 @@
 import type {
   AnulacionDeDocumento,
+  AutorizacionDeDocumento,
+  DocumentoCompletado,
   CondicionesDeProveedores,
   ConsultasDeCargos,
   DocumentoNuevo,
@@ -59,6 +61,8 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
   documentos: DocumentoPorPagar[] = [];
   /** Las facturas que se bloquearon para aplicar una nota, en orden. */
   readonly bloqueadas: string[] = [];
+  /** El orden en que se bloqueó y se ordenó, junto con las órdenes a Libro de compras (ver `LibroDeComprasEnMemoria`). */
+  readonly bitacora: string[] = [];
   /** Lo que se anuló, con su motivo, en orden. */
   readonly anulaciones: Array<AnulacionDeDocumento & { id: string }> = [];
 
@@ -92,6 +96,42 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
     };
+  }
+
+  async buscarPorId(id: string): Promise<DocumentoConAplicaciones | null> {
+    const documento = this.documentos.find((candidato) => candidato.id === id);
+    if (!documento) return null;
+    this.bitacora.push('bloquea-aqui');
+    return {
+      documento: { ...documento },
+      hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
+      recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
+    };
+  }
+
+  async registrar(id: string, { registradoPor, vencimiento }: DocumentoCompletado): Promise<void> {
+    Object.assign(this.con(id), { estado: 'registrado', registradoEn: 'ahora', registradoPor, vencimiento });
+  }
+
+  async cambiarVencimiento(id: string, vencimiento: string): Promise<void> {
+    this.con(id).vencimiento = vencimiento;
+  }
+
+  async autorizar(id: string, { autorizadoPor, autorizacionPropia }: AutorizacionDeDocumento): Promise<void> {
+    Object.assign(this.con(id), { estado: 'autorizado', autorizadoEn: 'ahora', autorizadoPor, autorizacionPropia });
+  }
+
+  async desautorizar(id: string): Promise<void> {
+    Object.assign(this.con(id), {
+      estado: 'registrado',
+      autorizadoEn: null,
+      autorizadoPor: null,
+      autorizacionPropia: false,
+    });
+  }
+
+  private con(id: string): DocumentoPorPagar {
+    return this.documentos.find((candidato) => candidato.id === id)!;
   }
 
   async anular(id: string, anulacion: AnulacionDeDocumento): Promise<void> {
@@ -149,6 +189,8 @@ export class DocumentosDeCompraEnMemoria implements DocumentosDeCompra {
   readonly recepciones = new Map<string, string>();
 
   constructor(private readonly recepcionPorOmision = '2026-03-10') {}
+
+  async bloquear(): Promise<void> {}
 
   async fechaDeRecepcion(documentoId: string): Promise<string> {
     return this.recepciones.get(documentoId) ?? this.recepcionPorOmision;

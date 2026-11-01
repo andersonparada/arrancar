@@ -4,6 +4,7 @@
  * `corregir`: se cambió dinero o fechas de un registro; `anterior` guarda cómo estaba (Bancos: notas y saldo inicial).
  * `reabrir`: se reabrió algo que estaba cerrado, con su motivo (Empresas: la carga inicial).
  * `descartar`: se apartó una fila de una bandeja de trabajo sin registrarla, con su motivo (Libro de compras: DTE recibidos).
+ * `autorizar`: se autorizó algo que la misma persona ingresó o completó, excepción a la separación de funciones (Cuentas por pagar).
  */
 export type AccionAuditada =
   | 'eliminar'
@@ -15,6 +16,7 @@ export type AccionAuditada =
   | 'corregir'
   | 'reabrir'
   | 'descartar'
+  | 'autorizar'
   | 'asignar'
   | 'quitar';
 
