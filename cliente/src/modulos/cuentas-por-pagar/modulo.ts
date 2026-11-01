@@ -1,4 +1,4 @@
-import { HandCoins, Inbox } from 'lucide-vue-next';
+import { FileClock, HandCoins, Inbox } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_CUENTAS_POR_PAGAR, TITULO_SECCION_DE_PAGO, VENTANAS_CUENTAS_POR_PAGAR } from './textos';
 // generador: importaciones
@@ -12,6 +12,19 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       name: 'cuentas-por-pagar.bandeja',
       component: () => import('./paginas/BandejaDeCuentasPorPagar.vue'),
       meta: { permiso: 'cuentas-por-pagar.documentos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.bandeja.titulo },
+    },
+    {
+      path: '/cuentas-por-pagar/documentos',
+      name: 'cuentas-por-pagar.documentos',
+      component: () => import('./paginas/DocumentosPorPagar.vue'),
+      meta: { permiso: 'cuentas-por-pagar.documentos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo },
+    },
+    {
+      path: '/cuentas-por-pagar/documentos/:documentoId',
+      name: 'cuentas-por-pagar.documentos.ficha',
+      component: () => import('./paginas/FichaDelDocumentoPorPagar.vue'),
+      props: ({ params }) => ({ documentoId: String(params.documentoId) }),
+      meta: { permiso: 'cuentas-por-pagar.documentos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.documentos.ficha },
     },
     // generador: rutas
   ],
@@ -35,6 +48,13 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           titulo: VENTANAS_CUENTAS_POR_PAGAR.bandeja.titulo,
           ruta: '/cuentas-por-pagar/bandeja',
           icono: Inbox,
+          seccion: 'operacion',
+          permiso: 'cuentas-por-pagar.documentos.ver',
+        },
+        {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo,
+          ruta: '/cuentas-por-pagar/documentos',
+          icono: FileClock,
           seccion: 'operacion',
           permiso: 'cuentas-por-pagar.documentos.ver',
         },

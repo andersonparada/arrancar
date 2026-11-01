@@ -510,7 +510,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    la ficha (días y saldo con la empresa activa).
 9. **CP1-9 (cliente, bandeja) — hecho (2026-11-01):** página de Operación «Bandeja de cuentas por pagar»: documentos pendientes con el
    vencimiento propuesto editable, selección y «Completar», enlace a la ficha del documento en Libro de compras.
-10. **CP1-10 (cliente, documentos):** página de Operación «Documentos por pagar»: lista con filtros y saldos,
+10. **CP1-10 (cliente, documentos) — hecho (2026-11-01):** página de Operación «Documentos por pagar»: lista con filtros y saldos,
     selección y «Autorizar» (con el mensaje de lo propio), ficha con notas, aplicaciones, saldo, cambiar vencimiento,
     anular (registro, no FEL) y eliminar.
 11. **CP1-11 (QA):** de punta a punta: proveedor con 15 días, factura con retención, NDEB, nota de crédito que sobra,
