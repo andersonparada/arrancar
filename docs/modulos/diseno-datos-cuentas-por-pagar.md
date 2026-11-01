@@ -239,7 +239,7 @@ reparte cada pago en CP4 (`pago_aplicaciones.retencion_descontada`), no del sald
 La lista y la ficha traen, por documento, `neto`, `aplicado` y `saldo` (texto, como todo dinero en la API) y, en la
 ficha de la factura, sus notas (crédito y débito) con lo aplicado. El saldo del proveedor sale con una consulta
 agregada (`consultas-de-saldos.drizzle.ts`) que usa `documentos_proveedor_vencimiento_idx`; la sección «Cuentas por
-pagar» de la ficha del proveedor lo muestra para la empresa activa (paso CP1-9).
+pagar» de la ficha del proveedor lo muestra para la empresa activa (paso CP1-8).
 
 ### 4.3 Aplicación automática de la nota de crédito
 
@@ -505,7 +505,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    pruebas.
 7. **CP1-7 (servidor, bajas desde aquí) — hecho (2026-11-01):** anular y eliminar con las órdenes a Libro de compras y el orden de
    bloqueo de §4.7; pruebas (y, si se aprueba U6, el guardia de destino inactivo en Libro de compras).
-8. **CP1-8 (cliente, módulo y días de crédito):** `cliente/src/modulos/cuentas-por-pagar/` (textos, menú, servicio),
+8. **CP1-8 (cliente, módulo y días de crédito) — hecho (2026-11-01):** `cliente/src/modulos/cuentas-por-pagar/` (textos, menú, servicio),
    sección «Cuentas por pagar» en el formulario de Proveedores (días de crédito, con la ayuda «vacío = un mes») y en
    la ficha (días y saldo con la empresa activa).
 9. **CP1-9 (cliente, bandeja):** página de Operación «Bandeja de cuentas por pagar»: documentos pendientes con el

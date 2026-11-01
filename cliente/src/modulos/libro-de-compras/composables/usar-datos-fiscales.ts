@@ -18,7 +18,7 @@ import {
   fiscalesDeProveedorPorOmision,
   type FiscalesDeProveedor,
 } from './datos-fiscales-de-proveedor';
-import { usarLecturaDeSeccion } from './usar-lectura-de-seccion';
+import { usarLecturaDeSeccion } from '@/modulos/core/composables/usar-lectura-de-seccion';
 
 /** Trae los datos fiscales de la empresa que se edita al `v-model` de la sección (o los de omisión si es nueva), y si ya estaban guardados. */
 export function usarFiscalesDeEmpresa(modelo: Ref<FiscalesDeEmpresa | undefined>, registroId: () => string | null) {
