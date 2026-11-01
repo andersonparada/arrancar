@@ -69,8 +69,20 @@ export type ClaveDePestana = EstadoDeDte | typeof PESTANA_DE_CONCILIACION;
 export const IMPORTAR_DE_LA_SAT = {
   boton: 'Importar de la SAT',
   cargarArchivo: 'Cargar el archivo de la SAT',
-  proximamente: 'Disponible pronto',
-  ayuda: 'Cargar el archivo de la SAT todavía no está disponible. Mientras tanto puede registrar sus facturas a mano.',
+  ayuda:
+    'Cargar el archivo es opcional: sirve para registrar varias facturas de una vez y comparar el mes con la SAT. Puede registrar sus facturas a mano cuando prefiera.',
+  titulo: 'Cargar el archivo de la SAT',
+  instrucciones:
+    'Baje de la Agencia Virtual de la SAT la consulta de «DTE recibidos» del mes y súbala tal como la entrega la SAT (.xls), o en .xlsx o CSV. Cargarla no registra nada: solo llena la lista de pendientes, y puede subir el mismo archivo otra vez.',
+  archivo: 'Archivo de la SAT',
+  extensionNoAdmitida: 'Elija un archivo .xls, .xlsx o .csv.',
+  cargando: 'Cargando y revisando el archivo…',
+  cargar: 'Cargar',
+  listo: 'Listo',
+  cancelar: 'Cancelar',
+  rechazadas: 'Filas que no entraron',
+  masRechazadas: 'Se muestran las primeras; el lote guardó el resto en su resumen.',
+  avisos: 'Avisos',
 } as const;
 
 export const TEXTOS_DE_LAS_ACCIONES = {

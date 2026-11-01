@@ -131,6 +131,37 @@ export interface SolicitudConAvisos {
   avisos: string[];
 }
 
+/** Una fila del archivo que no entró a la bandeja, con el motivo. */
+export interface RechazoDeLote {
+  fila: number;
+  autorizacion: string | null;
+  motivo: string;
+  detalle: string;
+}
+
+/** El resumen de una carga del archivo de la SAT: lo que se guarda de cada archivo (nunca el archivo). */
+export interface LoteDeDte {
+  id: string;
+  formato: 'xlsx' | 'xls' | 'csv';
+  nombreDelArchivo: string;
+  emisionDesde: string | null;
+  emisionHasta: string | null;
+  filasLeidas: number;
+  filasNuevas: number;
+  filasActualizadas: number;
+  filasSinCambio: number;
+  filasRechazadas: number;
+  anuladasEnLaSat: number;
+  /** Hasta 1,000; el total está en `filasRechazadas`. */
+  rechazos: RechazoDeLote[];
+  encabezadosNoReconocidos: string[];
+}
+
+export interface ResultadoDeImportarDte {
+  lote: LoteDeDte;
+  avisos: string[];
+}
+
 const RUTA = '/libro-de-compras/dte-recibidos';
 
 /** La bandeja de DTE recibidos de la SAT: ver, completar, confirmar en lote, descartar y restaurar. */
@@ -160,6 +191,11 @@ export class ApiDteRecibidos {
 
   descartar(ids: string[], motivo: string) {
     return this.http.crear<{ elementos: DteRecibido[] }>(`${RUTA}/descartar`, { ids, motivo });
+  }
+
+  /** Carga el archivo de la SAT (.xls, .xlsx o CSV): todo o nada; el servidor responde el lote y sus avisos. */
+  importar(archivo: File) {
+    return this.http.subir<ResultadoDeImportarDte>(`${RUTA}/importar`, archivo);
   }
 
   restaurar(id: string) {
