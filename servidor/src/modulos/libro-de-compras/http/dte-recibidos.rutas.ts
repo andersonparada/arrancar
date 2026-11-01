@@ -9,6 +9,7 @@ import {
   esquemaFiltroDeDteRecibidos,
   esquemaParamsDeDte,
 } from './dte-recibidos.esquemas-http.js';
+import { limitarImportaciones } from '../../core/intercambio/http/limite-de-importaciones.js';
 import { limitarConfirmaciones } from './limite-de-confirmaciones.js';
 
 const tags = ['Libro de compras'];
@@ -28,6 +29,11 @@ function rutasDeLaBandeja(app: App, controlador: DteRecibidosControlador): void 
     schema: { tags, body: esquemaCompletarDteRecibidos },
     preHandler: importar,
     handler: controlador.completar,
+  });
+  app.post(`${RUTA}/importar`, {
+    schema: { tags },
+    preHandler: [importar, limitarImportaciones(app)],
+    handler: controlador.importar,
   });
   app.get(`${RUTA}/conciliacion`, {
     schema: { tags, querystring: esquemaConsultaDeConciliacion },

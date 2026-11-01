@@ -2,12 +2,14 @@ import type { FastifyRequest } from 'fastify';
 import { contextoDe } from '../../core/compartido/http/contexto-de-la-solicitud.js';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { CompletarDteRecibidos } from '../aplicacion/casos-uso/bandeja/completar-dte-recibidos.js';
+import { leerArchivoConNombre } from '../../core/intercambio/http/leer-archivo-de-excel.js';
 import type { ConciliarPeriodo } from '../aplicacion/casos-uso/bandeja/conciliar-periodo.js';
 import type { ConfirmarDteRecibidos } from '../aplicacion/casos-uso/bandeja/confirmar-dte-recibidos.js';
 import type {
   DescartarDteRecibidos,
   RestaurarDteRecibido,
 } from '../aplicacion/casos-uso/bandeja/descartar-y-restaurar-dte-recibidos.js';
+import type { ImportarDteRecibidos } from '../aplicacion/casos-uso/bandeja/importar-dte-recibidos.js';
 import type { ListarDteRecibidos } from '../aplicacion/casos-uso/bandeja/listar-dte-recibidos.js';
 import type { ObtenerSolicitudDeDte } from '../aplicacion/casos-uso/bandeja/obtener-solicitud-de-dte.js';
 import type { VistaPreviaDeDteRecibidos } from '../aplicacion/casos-uso/bandeja/vista-previa-de-dte-recibidos.js';
@@ -29,6 +31,7 @@ export interface CasosDeUsoDeDteRecibidos {
   descartar: DescartarDteRecibidos;
   restaurar: RestaurarDteRecibido;
   conciliar: ConciliarPeriodo;
+  importar: ImportarDteRecibidos;
 }
 
 const PERMISO_DE_CREAR_PROVEEDORES = 'proveedores.crear';
@@ -67,4 +70,9 @@ export class DteRecibidosControlador {
 
   conciliacion = (solicitud: FastifyRequest<{ Querystring: ConsultaDeConciliacionSolicitada }>) =>
     this.casosDeUso.conciliar.ejecutar(operadorDe(solicitud), solicitud.query.periodo);
+
+  importar = async (solicitud: FastifyRequest) => {
+    const { contenido, nombre } = await leerArchivoConNombre(solicitud);
+    return this.casosDeUso.importar.ejecutar(operadorDe(solicitud), { archivo: contenido, nombreDelArchivo: nombre });
+  };
 }

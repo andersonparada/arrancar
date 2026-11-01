@@ -1660,7 +1660,7 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
 7. **L4-6 (servidor, lectura del DTE) - HECHO 2026-11-01:** mapa de encabezados y de valores, fila de encabezados, conversión,
    reglas de rechazo, `documentoDesdeElDte` y la variable `libro-de-compras.dte.encabezados_adicionales`; pruebas puras con
    el archivo real anonimizado como dato de prueba.
-8. **L4-7 (servidor, importar) (archivo):** migración `0021`, `ImportarDteRecibidos` (upsert, enlace con lo registrado,
+8. **L4-7 (servidor, importar) - HECHO 2026-11-01** (`POST /libro-de-compras/dte-recibidos/importar`; la migración de tablas fue la `0021`; la del formato `xls`, la `0031`): `ImportarDteRecibidos` (upsert, enlace con lo registrado,
    auditoría `corregir`), rutas de importar, lista y lotes, permiso `documentos.importar`; pruebas de API.
 9. **L4-8 (servidor, terceros) - HECHO 2026-10-20:** orden `terceros.crear_proveedor_desde_dte` atendida en `terceros` y caso de uso de
    proveedores desde la bandeja con los datos fiscales deducidos; pruebas.

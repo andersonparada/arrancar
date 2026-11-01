@@ -39,4 +39,17 @@ export const mapeadorDeDteRecibido = {
       ...{ proveedorId, conceptoId, destino, fechaRecepcion, periodo, noVinculado, documentoAfectadoId },
     };
   },
+
+  /** Lo que cambia cuando una nueva carga trae la fila otra vez: los datos de la SAT y el último lote. */
+  aDatosDeLaSat(dte: DteRecibido): Partial<FilaNueva> {
+    const { autorizacionFel, tipoDte, serie, numero, fechaEmision, nitEmisor, nombreEmisor, nitReceptor } =
+      dte.instantanea();
+    const { total, iva, idp, otrosImpuestos, otrosImpuestosDetalle, filaOriginal } = dte.instantanea();
+    const { estadoSat, anuladoEnLaSatEl, loteId } = dte.instantanea();
+    return {
+      ...{ autorizacionFel, tipoDte, serie, numero, fechaEmision, nitEmisor, nombreEmisor, nitReceptor },
+      ...{ total, iva, idp, otrosImpuestos, otrosImpuestosDetalle, filaOriginal },
+      ...{ estadoSat, anuladoEnLaSatEl, loteId },
+    };
+  },
 };

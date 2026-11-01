@@ -156,6 +156,11 @@ export class DteRecibido extends Entidad<DteRecibidoId> {
     this.mover('bloqueado', { motivoDeBloqueo: motivo });
   }
 
+  /** Una nueva carga trajo la fila otra vez: se actualizan los datos de la SAT y el último lote; el estado y el borrador no se tocan. */
+  actualizarDatosDeLaSat(datos: DatosDelDte, loteId: string): void {
+    this.propiedades = { ...this.propiedades, ...datos, loteId };
+  }
+
   /** Copia de solo lectura de sus propiedades, para guardarla. */
   instantanea(): Readonly<PropiedadesDeDteRecibido> {
     return { ...this.propiedades };

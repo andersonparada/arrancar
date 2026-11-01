@@ -1,4 +1,5 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
+import { crearLectorDeFilas } from '../../core/intercambio/contexto.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { interpretarErrorDePostgres } from '../../core/compartido/infraestructura/errores-de-postgres.js';
 import { ArmadorDeSolicitudDelDte } from '../aplicacion/casos-uso/bandeja/armador-de-solicitud-del-dte.js';
@@ -10,6 +11,7 @@ import {
   DescartarDteRecibidos,
   RestaurarDteRecibido,
 } from '../aplicacion/casos-uso/bandeja/descartar-y-restaurar-dte-recibidos.js';
+import { ImportarDteRecibidos } from '../aplicacion/casos-uso/bandeja/importar-dte-recibidos.js';
 import { ListarDteRecibidos } from '../aplicacion/casos-uso/bandeja/listar-dte-recibidos.js';
 import { ObtenerSolicitudDeDte } from '../aplicacion/casos-uso/bandeja/obtener-solicitud-de-dte.js';
 import { ProponedorDeDte } from '../aplicacion/casos-uso/bandeja/proponedor-de-dte.js';
@@ -24,6 +26,9 @@ import { ConsultasDeConciliacionDrizzle } from '../infraestructura/persistencia/
 import { ConsultasDeLaBandejaDrizzle } from '../infraestructura/persistencia/consultas-de-la-bandeja.drizzle.js';
 import { RepositorioDeDteRecibidosDrizzle } from '../infraestructura/persistencia/repositorio-de-dte-recibidos.drizzle.js';
 import { RepositorioDeLotesDeDteDrizzle } from '../infraestructura/persistencia/repositorio-de-lotes-de-dte.drizzle.js';
+import { ConfiguracionDeImportacionEnConfiguracion } from '../infraestructura/configuracion-de-importacion-en-configuracion.js';
+import { ConsultasParaImportarDrizzle } from '../infraestructura/persistencia/consultas-para-importar.drizzle.js';
+import { RepositorioParaImportarDrizzle } from '../infraestructura/persistencia/repositorio-para-importar.drizzle.js';
 import { CreadorDeProveedoresEnMediador } from '../infraestructura/vecinos-en-mediador.js';
 import { dependenciasDeDocumentos } from './documentos.js';
 
@@ -59,6 +64,21 @@ function confirmadorDeFila(documentos: Documentos, bandeja: Bandeja): Confirmado
   });
 }
 
+/** Cargar el archivo de la SAT: lee con el lector del core y escribe en lote en la bandeja. */
+function importador(documentos: Documentos, bandeja: Bandeja): ImportarDteRecibidos {
+  return new ImportarDteRecibidos({
+    unidadDeTrabajo: bandeja.unidadDeTrabajo,
+    lector: crearLectorDeFilas(),
+    configuracion: new ConfiguracionDeImportacionEnConfiguracion(),
+    datosDeLaEmpresa: documentos.empresa,
+    reloj: documentos.reloj,
+    lotes: new RepositorioDeLotesDeDteDrizzle(),
+    carga: new RepositorioParaImportarDrizzle(),
+    consultas: new ConsultasParaImportarDrizzle(),
+    auditoria: bandeja.auditoria,
+  });
+}
+
 /** Raíz de composición de la bandeja de DTE recibidos: confirma con el mismo registro que usa el formulario. */
 export function rutasDeDteRecibidosComponidas() {
   const documentos = dependenciasDeDocumentos();
@@ -77,6 +97,7 @@ export function rutasDeDteRecibidosComponidas() {
       solicitud: new ObtenerSolicitudDeDte(bandeja),
       descartar: new DescartarDteRecibidos(bandeja),
       restaurar: new RestaurarDteRecibido(bandeja),
+      importar: importador(documentos, bandeja),
       conciliar: new ConciliarPeriodo({
         unidadDeTrabajo: bandeja.unidadDeTrabajo,
         consultasDeConciliacion: new ConsultasDeConciliacionDrizzle(),
