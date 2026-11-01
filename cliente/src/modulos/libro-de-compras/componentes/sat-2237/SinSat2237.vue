@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Info } from 'lucide-vue-next';
+import { RouterLink } from 'vue-router';
 import { VENTANA_DEL_SAT_2237 as textos } from '../../textos-del-sat-2237';
 
 /** Lo que se muestra cuando el régimen de la empresa no declara compras en el SAT-2237. */
@@ -18,6 +19,13 @@ defineProps<{ formulario: string | null; mensaje: string }>();
       <p v-if="formulario" class="mt-1 text-sm text-tierra-600 dark:text-tierra-300">
         Su formulario de este período es el {{ formulario }}.
       </p>
+      <RouterLink
+        v-if="formulario === 'SAT-2046'"
+        :to="{ name: 'libro-de-compras.libro.sat-2046' }"
+        class="mt-2 inline-block text-sm font-medium text-campo-800 underline dark:text-campo-300"
+      >
+        Ver la guía para el SAT-2046
+      </RouterLink>
     </div>
   </div>
 </template>

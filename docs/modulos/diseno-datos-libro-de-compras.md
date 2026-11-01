@@ -2684,8 +2684,15 @@ captura del SAT-2237 vigente del usuario; **(constancia)** = se afina con el PDF
 5. **L5-2a (servidor, SAT-2237) — hecho el 2026-10-20:** rubros, segmento 9, detalle de proveedores y facturas especiales, rutas y Excel; el
    mapa de casillas vacío (`casillas: null`). **No espera la captura.**
 6. **L5-2b (cliente, SAT-2237) — hecho el 2026-10-20:** página hermana «Datos para el SAT-2237» con rubros, operaciones, proveedores y avisos.
-7. **L5-2c (servidor y cliente) — en curso (2026-11-01, sin captura: nombres de las guías marcados «sin confirmar»):** el mapa de rubros a casillas con sus nombres y la vista «como en el
+7. **L5-2c (servidor y cliente) — hecho el 2026-11-01 (sin captura: nombres de las guías marcados «sin confirmar (versión Declaraguate, hasta 2026-08)», sin números de casilla; se ajusta con una captura de la Agencia Virtual):** rubro `compras_sin_credito`, mapa N a N (`mapa-de-casillas-del-sat-2237.ts`; exento, regímenes sin IVA y compras sin crédito suman en «Compras que no generan derecho a compensación del crédito fiscal»; las importaciones quedan listas para repartirse en cuatro casillas con `partes`), `vista-del-formulario-sat-2237.ts` (secciones 5, 6 con máximo 10 proveedores por base y 9; DTO `comoEnElFormulario`), y en el cliente la pestaña «Como en el formulario» con el aviso de nombres sin confirmar y las facturas especiales aparte. Quedan abiertas las preguntas L5-C1 a L5-C3 (confirmación de nombres y números). el mapa de rubros a casillas con sus nombres y la vista «como en el
    formulario»; cerrar las preguntas L5-C1 a L5-C3.
+7b. **Datos para el SAT-2046 (cliente) — hecho el 2026-11-01:** página «Datos para el SAT-2046» en Reportes (`/libro-de-compras/libro/sat-2046`, `libro.ver`)
+   con la guía paso a paso (App FEL con declaración sugerida; o Declaraguate: IVA, SAT-2046, validar, congelar y boleta SAT-2000), el
+   recordatorio de declarar dentro del mes siguiente aunque sea en cero y que las compras son respaldo; el cálculo del impuesto
+   (5 % de los ingresos del mes menos retenciones, y el límite anual de Q150,000) llega con el módulo de Ventas. Se llega también
+   desde el aviso de «Datos para el SAT-2237» de un pequeño contribuyente. **Pendiente:** el pequeño contribuyente *electrónico*
+   (Decreto 7-2019) usa el SAT-2241, no el SAT-2046; `formularioDelRegimen` le asigna hoy el SAT-2046 y el check de
+   `declaraciones_de_periodos` no admite el 2241. No se tocó: queda para un paso propio.
 8. **L5-3a (servidor, PDF) — hecho el 2026-10-20 (con `pdfkit` 0.20.2 en lugar de `pdfmake`; la hoja final es siempre el resumen):** dependencia aprobada por el agente de seguridad, `paginarLibro`, plantilla,
    migraciones `0024` y `0025`, emitir, copia, borrador, corregir el último folio, permiso `libro.emitir`; pruebas.
 9. **L5-3b (cliente, PDF) — hecho el 2026-10-20:** botones «Borrador», «Emitir con folios» (confirmación con los folios que gastará), lista de
@@ -3235,7 +3242,7 @@ L4-14 esperan el Excel real del usuario; L4-2b espera al contador).
 
 ### L5 Reportes y cierre
 
-Pasos L5-0a a L5-10 en §3.9.13 (L5-2c espera la captura del SAT-2237; L5-5a se afina con una constancia real; los avisos
+Pasos L5-0a a L5-10 en §3.9.13 (L5-2c quedó con nombres sin confirmar hasta tener la captura del SAT-2237; L5-5a se afina con una constancia real; los avisos
 de bandeja y conciliación de L5-8a esperan L4-9 y L4-10).
 
 ## 15. Fuera de L1 a L3

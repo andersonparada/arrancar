@@ -3,8 +3,19 @@ import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_LIBRO_DE_COMPRAS, TITULO_SECCION_FISCAL } from './textos';
 import { Tags } from 'lucide-vue-next';
 import { VENTANAS_LIBRO_DE_COMPRAS } from './textos';
-import { BookOpen, CalendarCheck, ChartColumn, FileDown, FileText, Fuel, HandCoins, Landmark } from 'lucide-vue-next';
+import {
+  BookOpen,
+  CalendarCheck,
+  ChartColumn,
+  FileDown,
+  FileText,
+  Fuel,
+  HandCoins,
+  Landmark,
+  ListChecks,
+} from 'lucide-vue-next';
 import { VENTANA_DEL_LIBRO } from './textos-del-libro';
+import { VENTANA_DEL_SAT_2046 } from './textos-del-sat-2046';
 import { VENTANA_DEL_SAT_2237 } from './textos-del-sat-2237';
 import { VENTANA_DE_DOCUMENTOS } from './textos-de-documentos';
 import { FORMULARIO_DE_DOCUMENTO } from './textos-del-registro';
@@ -69,6 +80,12 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       name: 'libro-de-compras.libro.sat-2237',
       component: () => import('./paginas/DatosParaElSat2237.vue'),
       meta: { permiso: 'libro-de-compras.libro.ver', titulo: VENTANA_DEL_SAT_2237.titulo },
+    },
+    {
+      path: '/libro-de-compras/libro/sat-2046',
+      name: 'libro-de-compras.libro.sat-2046',
+      component: () => import('./paginas/DatosParaElSat2046.vue'),
+      meta: { permiso: 'libro-de-compras.libro.ver', titulo: VENTANA_DEL_SAT_2046.titulo },
     },
     {
       path: '/libro-de-compras/retenciones',
@@ -178,6 +195,13 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
           titulo: VENTANA_DEL_SAT_2237.titulo,
           ruta: '/libro-de-compras/libro/sat-2237',
           icono: Landmark,
+          seccion: 'reportes',
+          permiso: 'libro-de-compras.libro.ver',
+        },
+        {
+          titulo: VENTANA_DEL_SAT_2046.titulo,
+          ruta: '/libro-de-compras/libro/sat-2046',
+          icono: ListChecks,
           seccion: 'reportes',
           permiso: 'libro-de-compras.libro.ver',
         },
