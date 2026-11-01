@@ -3,7 +3,7 @@ import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_LIBRO_DE_COMPRAS, TITULO_SECCION_FISCAL } from './textos';
 import { Tags } from 'lucide-vue-next';
 import { VENTANAS_LIBRO_DE_COMPRAS } from './textos';
-import { BookOpen, CalendarCheck, ChartColumn, FileText, Fuel, HandCoins, Landmark } from 'lucide-vue-next';
+import { BookOpen, CalendarCheck, ChartColumn, FileDown, FileText, Fuel, HandCoins, Landmark } from 'lucide-vue-next';
 import { VENTANA_DEL_LIBRO } from './textos-del-libro';
 import { VENTANA_DEL_SAT_2237 } from './textos-del-sat-2237';
 import { VENTANA_DE_DOCUMENTOS } from './textos-de-documentos';
@@ -11,6 +11,7 @@ import { FORMULARIO_DE_DOCUMENTO } from './textos-del-registro';
 import { VENTANA_DE_ENTEROS, VENTANA_DE_RETENCIONES, VENTANA_POR_RESOLVER } from './textos-de-retenciones';
 import { VENTANA_DE_PERIODOS } from './textos-de-periodos';
 import { VENTANA_DEL_ANALISIS } from './textos-del-analisis';
+import { VENTANA_DE_LA_SAT } from './textos-de-la-bandeja';
 // generador: importaciones
 
 /** Rutas y menú del módulo Libro de compras. Un grupo sin opciones no se muestra. */
@@ -50,6 +51,12 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       component: () => import('./paginas/FichaDeDocumento.vue'),
       props: ({ params }) => ({ documentoId: String(params.documentoId) }),
       meta: { permiso: 'libro-de-compras.documentos.ver', titulo: VENTANA_DE_DOCUMENTOS.ficha },
+    },
+    {
+      path: '/libro-de-compras/dte-recibidos',
+      name: 'libro-de-compras.dte-recibidos',
+      component: () => import('./paginas/BandejaDeLaSat.vue'),
+      meta: { permiso: 'libro-de-compras.documentos.importar', titulo: VENTANA_DE_LA_SAT.titulo },
     },
     {
       path: '/libro-de-compras/libro',
@@ -131,6 +138,13 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
           icono: FileText,
           seccion: 'operacion',
           permiso: 'libro-de-compras.documentos.ver',
+        },
+        {
+          titulo: VENTANA_DE_LA_SAT.titulo,
+          ruta: '/libro-de-compras/dte-recibidos',
+          icono: FileDown,
+          seccion: 'operacion',
+          permiso: 'libro-de-compras.documentos.importar',
         },
         {
           titulo: VENTANA_DE_PERIODOS.titulo,

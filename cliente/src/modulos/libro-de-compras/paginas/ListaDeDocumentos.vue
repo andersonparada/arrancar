@@ -1,23 +1,34 @@
 <script setup lang="ts">
-import { Plus, ReceiptText } from 'lucide-vue-next';
-import { useRouter } from 'vue-router';
+import { FileDown, Plus, ReceiptText } from 'lucide-vue-next';
+import { RouterLink, useRouter } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import FiltrosDeDocumentos from '../componentes/documentos/FiltrosDeDocumentos.vue';
 import PaginacionDeLista from '../componentes/documentos/PaginacionDeLista.vue';
 import TarjetaDeDocumento from '../componentes/documentos/TarjetaDeDocumento.vue';
+import { usarPendientesDeLaSat } from '../composables/bandeja/usar-pendientes-de-la-sat';
 import { usarListaDeDocumentos } from '../composables/documentos/usar-lista-de-documentos';
 import { VENTANA_DE_DOCUMENTOS as ventana } from '../textos-de-documentos';
+import { IMPORTAR_DE_LA_SAT } from '../textos-de-la-bandeja';
 
 const router = useRouter();
 const { documentos, total, pagina, paginas, cargando, filtros, proveedores, quitarFiltros, limite } =
   usarListaDeDocumentos();
+const pendientesDeLaSat = usarPendientesDeLaSat();
 </script>
 
 <template>
   <div>
     <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion">
+      <BotonBase
+        v-permiso="'libro-de-compras.documentos.importar'"
+        variante="secundario"
+        :icono="FileDown"
+        @click="router.push({ name: 'libro-de-compras.dte-recibidos' })"
+      >
+        {{ IMPORTAR_DE_LA_SAT.boton }}
+      </BotonBase>
       <BotonBase
         v-permiso="'libro-de-compras.documentos.crear'"
         :icono="Plus"
@@ -26,6 +37,15 @@ const { documentos, total, pagina, paginas, cargando, filtros, proveedores, quit
         {{ ventana.registrar }}
       </BotonBase>
     </EncabezadoPagina>
+
+    <RouterLink
+      v-if="pendientesDeLaSat > 0"
+      :to="{ name: 'libro-de-compras.dte-recibidos' }"
+      class="mb-4 block rounded-2xl bg-trigo-300/40 p-4 text-sm font-medium text-tierra-900 hover:bg-trigo-300/60 dark:bg-trigo-500/20 dark:text-trigo-300"
+    >
+      {{ pendientesDeLaSat === 1 ? '1 DTE pendiente de la SAT' : `${pendientesDeLaSat} DTE pendientes de la SAT` }}:
+      revíselos y regístrelos de una vez.
+    </RouterLink>
 
     <FiltrosDeDocumentos v-model="filtros" :proveedores="proveedores" @quitar="quitarFiltros" />
 
