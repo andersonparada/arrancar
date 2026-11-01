@@ -39,6 +39,26 @@ export interface DetalleDeProveedores {
   total: { cantidadDeFacturas: number; base: string; credito: string };
 }
 
+export interface CasillaDelSat2237 {
+  clave: string;
+  nombre: string;
+  /** El IVA de la casilla es crédito fiscal; si no, es el que fue al costo. */
+  ivaDeCredito: boolean;
+  /** La prellena la SAT: Arrancar no la llena. */
+  llenaLaSat: boolean;
+  rubros: string[];
+  neto: MontoDeRubro;
+}
+
+/** Las secciones 5, 6 y 9 del formulario; con `confirmado: false` los nombres vienen de las guías. */
+export interface VistaDelFormularioSat2237 {
+  version: string;
+  confirmado: boolean;
+  seccion5: { nombre: string; casillas: CasillaDelSat2237[] };
+  seccion6: { nombre: string; maximo: number; filas: ProveedorDelSat2237[]; sinLugar: number };
+  seccion9: { nombre: string; cantidad: string; monto: string; lineas: OperacionDelSegmento9[] };
+}
+
 interface Encabezado {
   periodo: string;
   empresa: { nombre: string; nit: string | null };
@@ -51,6 +71,7 @@ export interface Sat2237 extends Encabezado {
   segmento9: OperacionDelSegmento9[];
   proveedores: DetalleDeProveedores;
   facturasEspeciales: DetalleDeProveedores;
+  comoEnElFormulario: VistaDelFormularioSat2237;
   avisos: string[];
 }
 

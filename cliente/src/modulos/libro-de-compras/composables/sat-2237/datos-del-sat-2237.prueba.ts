@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { ProveedorDelSat2237, RubroDelSat2237 } from '../../servicios/sat-2237.api';
 import {
+  avisoDeProveedoresSinLugar,
+  etiquetaDelIva,
   ordenarPorCredito,
   resumenDeDocumentos,
   rubroSinMovimiento,
   textoDeDocumentos,
+  textoDeRubrosDeLaCasilla,
   tiposDeLaOperacion,
 } from './datos-del-sat-2237';
 
@@ -71,5 +74,30 @@ describe('textos', () => {
     expect(resumenDeDocumentos(proveedor('A', '1', { cantidadDeFacturas: 2, cantidadDeNotasDeCredito: 1 }))).toBe(
       '2 facturas · 1 nota de crédito',
     );
+  });
+});
+
+describe('vista como en el formulario', () => {
+  const casilla = { clave: 'x', nombre: 'X', ivaDeCredito: true, llenaLaSat: false, rubros: ['a', 'b'], neto: cero };
+
+  it('nombra los rubros que suman en una casilla y pone un guion si no tiene', () => {
+    const rubros = [
+      { ...rubro(), clave: 'a', nombre: 'Exento y no afecto' },
+      { ...rubro(), clave: 'b', nombre: 'Compras sin derecho a crédito' },
+    ];
+
+    expect(textoDeRubrosDeLaCasilla(casilla, rubros)).toBe('Exento y no afecto + Compras sin derecho a crédito');
+    expect(textoDeRubrosDeLaCasilla({ ...casilla, rubros: [] }, rubros)).toBe('—');
+  });
+
+  it('dice si el IVA de la casilla es crédito o fue al costo', () => {
+    expect(etiquetaDelIva(casilla)).toBe('IVA con crédito');
+    expect(etiquetaDelIva({ ...casilla, ivaDeCredito: false })).toBe('IVA al costo');
+  });
+
+  it('avisa de los proveedores que no caben, y calla si caben todos', () => {
+    expect(avisoDeProveedoresSinLugar(0, 10)).toBe('');
+    expect(avisoDeProveedoresSinLugar(1, 10)).toContain('queda 1 proveedor');
+    expect(avisoDeProveedoresSinLugar(3, 10)).toContain('quedan 3 proveedores');
   });
 });

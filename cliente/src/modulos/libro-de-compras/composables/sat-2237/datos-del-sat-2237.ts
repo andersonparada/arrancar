@@ -1,4 +1,5 @@
 import type {
+  CasillaDelSat2237,
   MontoDeRubro,
   OperacionDelSegmento9,
   ProveedorDelSat2237,
@@ -39,4 +40,21 @@ export function resumenDeDocumentos(fila: ProveedorDelSat2237): string {
     .filter(([cantidad]) => cantidad > 0)
     .map(([cantidad, singular, plural]) => `${cantidad} ${cantidad === 1 ? singular : plural}`)
     .join(' · ');
+}
+
+/** Los rubros que suman en una casilla, con su nombre: «Regímenes sin IVA + Exento y no afecto». */
+export function textoDeRubrosDeLaCasilla(casilla: CasillaDelSat2237, rubros: RubroDelSat2237[]): string {
+  const nombres = casilla.rubros.map((clave) => rubros.find((r) => r.clave === clave)?.nombre ?? clave);
+  return nombres.length ? nombres.join(' + ') : '—';
+}
+
+/** Qué es el IVA de una casilla: crédito fiscal o el que fue al costo. */
+export const etiquetaDelIva = (casilla: CasillaDelSat2237): string =>
+  casilla.ivaDeCredito ? 'IVA con crédito' : 'IVA al costo';
+
+/** Aviso de la sección 6 cuando hay más proveedores que lugares; vacío si caben todos. */
+export function avisoDeProveedoresSinLugar(sinLugar: number, maximo: number): string {
+  if (sinLugar === 0) return '';
+  const quedan = sinLugar === 1 ? 'queda 1 proveedor' : `quedan ${sinLugar} proveedores`;
+  return `El formulario admite ${maximo} proveedores: ${quedan} fuera de la lista, los de menor compra.`;
 }

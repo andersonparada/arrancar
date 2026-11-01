@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import { FileSpreadsheet, Info } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { FileSpreadsheet } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import AvisosDelLibro from '../componentes/libro/AvisosDelLibro.vue';
-import SeccionDelSat2237 from '../componentes/sat-2237/SeccionDelSat2237.vue';
+import PestanasDelSat2237 from '../componentes/sat-2237/PestanasDelSat2237.vue';
 import SinSat2237 from '../componentes/sat-2237/SinSat2237.vue';
-import TablaDeProveedores from '../componentes/sat-2237/TablaDeProveedores.vue';
-import TablaDeRubros from '../componentes/sat-2237/TablaDeRubros.vue';
-import TablaDelSegmento9 from '../componentes/sat-2237/TablaDelSegmento9.vue';
+import VistaComoEnElFormulario from '../componentes/sat-2237/VistaComoEnElFormulario.vue';
+import VistaPorRubros from '../componentes/sat-2237/VistaPorRubros.vue';
 import { etiquetaDePeriodo } from '../composables/documentos/filtros-de-documentos';
 import { usarSat2237 } from '../composables/sat-2237/usar-sat-2237';
 import { VENTANA_DEL_SAT_2237 as textos } from '../textos-del-sat-2237';
 
+const comoEnElFormulario = ref(false);
 const { periodo, datos, cargando, descargando, opcionesDePeriodo, exportar } = usarSat2237();
 </script>
 
@@ -47,33 +48,10 @@ const { periodo, datos, cargando, descargando, opcionesDePeriodo, exportar } = u
           {{ datos.empresa.nombre }} · NIT {{ datos.empresa.nit ?? 'sin registrar' }} ·
           {{ etiquetaDePeriodo(datos.periodo) }}
         </p>
-        <p
-          class="mb-4 flex items-start gap-2 rounded-2xl bg-campo-100 p-3 text-sm text-campo-900 dark:bg-campo-900/40 dark:text-campo-100"
-          role="note"
-        >
-          <Info class="mt-0.5 size-4 shrink-0" aria-hidden="true" /> {{ textos.notaDeCasillas }}
-        </p>
         <AvisosDelLibro :avisos="datos.avisos" />
-        <SeccionDelSat2237 :titulo="textos.rubros" :ayuda="textos.rubrosAyuda">
-          <TablaDeRubros :rubros="datos.rubros" />
-        </SeccionDelSat2237>
-        <SeccionDelSat2237 :titulo="textos.segmento9" :ayuda="textos.segmento9Ayuda">
-          <TablaDelSegmento9 :operaciones="datos.segmento9" />
-        </SeccionDelSat2237>
-        <SeccionDelSat2237 :titulo="textos.proveedores" :ayuda="textos.proveedoresAyuda">
-          <TablaDeProveedores
-            :detalle="datos.proveedores"
-            :etiqueta="textos.proveedores"
-            :vacio="textos.sinProveedores"
-          />
-        </SeccionDelSat2237>
-        <SeccionDelSat2237 :titulo="textos.facturasEspeciales" :ayuda="textos.facturasEspecialesAyuda">
-          <TablaDeProveedores
-            :detalle="datos.facturasEspeciales"
-            :etiqueta="textos.facturasEspeciales"
-            :vacio="textos.sinProveedores"
-          />
-        </SeccionDelSat2237>
+        <PestanasDelSat2237 v-model="comoEnElFormulario" />
+        <VistaComoEnElFormulario v-if="comoEnElFormulario" :datos="datos" />
+        <VistaPorRubros v-else :datos="datos" />
       </template>
     </div>
   </div>
