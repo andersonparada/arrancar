@@ -158,4 +158,13 @@ export const configuracionDelLibroDeCompras: DefinicionConfiguracion[] = [
     niveles: ['instalacion'],
     publica: false,
   }),
+  definirConfiguracion({
+    clave: 'libro-de-compras.dte.encabezados_adicionales',
+    descripcion:
+      'Títulos de columna extra que reconoce el archivo de DTE recibidos de la SAT, como JSON: {"<campo o impuesto>": ["<título>"]}. Solo agrega variantes; sirve cuando la SAT cambia un título.',
+    esquema: z.string().max(4000),
+    predeterminado: '{}',
+    niveles: ['instalacion'],
+    publica: false,
+  }),
 ];

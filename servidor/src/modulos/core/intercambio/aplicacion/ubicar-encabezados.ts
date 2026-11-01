@@ -7,8 +7,8 @@ export const FILAS_DONDE_BUSCAR_ENCABEZADOS = 20;
 
 type Ubicacion = Omit<ArchivoDeFilas, 'formato'>;
 
-/** Para comparar: sin tildes, mayúsculas ni signos de puntuación. */
-const comparable = (texto: string) =>
+/** Para comparar títulos: sin tildes, mayúsculas ni signos de puntuación. */
+export const comparable = (texto: string) =>
   normalizar(texto)
     .replace(/[.:#()]/g, '')
     .replace(/\s+/g, ' ')

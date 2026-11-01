@@ -2,7 +2,7 @@
 export type PropositoDeLote = 'bandeja' | 'conciliacion';
 
 /** El formato del archivo, detectado por su contenido y no por su nombre. */
-export type FormatoDeArchivoDte = 'xlsx' | 'csv';
+export type FormatoDeArchivoDte = 'xlsx' | 'xls' | 'csv';
 
 /** Una fila que no entró a la bandeja, con el motivo. */
 export interface RechazoDeLote {

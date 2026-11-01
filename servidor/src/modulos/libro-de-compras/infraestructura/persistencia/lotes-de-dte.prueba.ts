@@ -27,6 +27,12 @@ afterAll(async () => {
 });
 
 describe('lotes_de_dte: checks', () => {
+  it('admite los tres formatos que lee el motor: xlsx, xls y csv', async () => {
+    for (const formato of ['xlsx', 'xls', 'csv'] as const) {
+      await expect(insertarLote(enA1(), { formato })).resolves.toBeTruthy();
+    }
+  });
+
   it('guarda un lote válido y una conciliación con su resumen', async () => {
     await expect(insertarLote(enA1())).resolves.toBeTruthy();
     await expect(
@@ -42,7 +48,7 @@ describe('lotes_de_dte: checks', () => {
 
   const casos: [string, Partial<LoteNuevo>, string][] = [
     ['propósito desconocido', { proposito: 'otro' as never }, 'lotes_de_dte_proposito_valido'],
-    ['formato desconocido', { formato: 'xls' as never }, 'lotes_de_dte_formato_valido'],
+    ['formato desconocido', { formato: 'pdf' as never }, 'lotes_de_dte_formato_valido'],
     ['nombre vacío', { nombreDelArchivo: '  ' }, 'lotes_de_dte_nombre_largo'],
     ['nombre de más de 200', { nombreDelArchivo: 'a'.repeat(201) }, 'lotes_de_dte_nombre_largo'],
     ['sha256 en mayúsculas', { sha256: 'A'.repeat(64) }, 'lotes_de_dte_sha256_valido'],

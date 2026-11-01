@@ -119,3 +119,15 @@ export class MontosEnColumnasDesconocidas extends ReglaDeNegocioInfringida {
 export class BorradorDeDteInvalido extends DatoInvalido {
   readonly codigo = 'borrador_de_dte_invalido';
 }
+
+/** El archivo no trae las columnas mínimas de la consulta de DTE recibidos de la SAT. */
+export class ArchivoDeLaSatNoReconocido extends DatoInvalido {
+  readonly codigo = 'archivo_de_la_sat_no_reconocido';
+
+  constructor(faltan: readonly string[], encontrados: readonly string[]) {
+    super(`El archivo no parece la consulta de DTE recibidos de la SAT: faltan las columnas ${faltan.join(', ')}.`, {
+      faltan,
+      encontrados,
+    });
+  }
+}

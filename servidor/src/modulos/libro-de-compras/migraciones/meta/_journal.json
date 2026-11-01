@@ -218,6 +218,13 @@
       "when": 1792548587416,
       "tag": "0030_u15_concepto_de_intereses_y_recargos",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793564701275,
+      "tag": "0031_l4_formato_xls_del_lote",
+      "breakpoints": true
     }
   ]
 }

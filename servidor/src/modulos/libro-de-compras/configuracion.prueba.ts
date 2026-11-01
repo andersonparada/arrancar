@@ -24,6 +24,7 @@ const PREDETERMINADOS: Record<string, number | boolean | string> = {
   'libro-de-compras.plazos.dias_habiles_entero_isr': 10,
   'libro-de-compras.periodos.control_de_declarados': false,
   'libro-de-compras.regimenes.fecha_de_derogacion': '2025-07-09',
+  'libro-de-compras.dte.encabezados_adicionales': '{}',
 };
 
 describe('configuración del libro de compras (§8)', () => {
@@ -50,7 +51,7 @@ describe('configuración del libro de compras (§8)', () => {
       moduloLibroDeCompras,
       { clave: 'terceros', nombre: 'T', descripcion: '', permisos: [] },
     ]);
-    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(20);
+    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(21);
     expect(registro.definicionConfiguracion('libro-de-compras.iva.tasa')?.predeterminado).toBe(12);
   });
 

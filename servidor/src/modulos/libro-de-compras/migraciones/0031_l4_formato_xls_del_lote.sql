@@ -1,0 +1,2 @@
+ALTER TABLE "libro_de_compras"."lotes_de_dte" DROP CONSTRAINT "lotes_de_dte_formato_valido";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."lotes_de_dte" ADD CONSTRAINT "lotes_de_dte_formato_valido" CHECK ("libro_de_compras"."lotes_de_dte"."formato" in ('xlsx', 'xls', 'csv'));

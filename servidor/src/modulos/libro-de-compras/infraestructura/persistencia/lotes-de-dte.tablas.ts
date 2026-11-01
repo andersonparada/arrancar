@@ -28,7 +28,7 @@ type ColumnasDeLote = Record<
 /** Qué archivo es: propósito, formato, nombre, huella, tamaño y fechas de emisión. */
 const reglasDelArchivo = (t: ColumnasDeLote) => [
   check('lotes_de_dte_proposito_valido', sql`${t.proposito} in ('bandeja', 'conciliacion')`),
-  check('lotes_de_dte_formato_valido', sql`${t.formato} in ('xlsx', 'csv')`),
+  check('lotes_de_dte_formato_valido', sql`${t.formato} in ('xlsx', 'xls', 'csv')`),
   check('lotes_de_dte_nombre_largo', sql`char_length(btrim(${t.nombreDelArchivo})) between 1 and 200`),
   check('lotes_de_dte_sha256_valido', sql`${t.sha256} ~ '^[0-9a-f]{64}$'`),
   check('lotes_de_dte_tamano_positivo', sql`${t.tamanoEnBytes} > 0`),

@@ -1657,7 +1657,7 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
    `ExcelAntiguoNoAdmitido`; pruebas (incluidas bomba zip, `.xls`, HTML y CSV con `;`). Sin lógica de la SAT.
    **Ampliado el 2026-11-01 (L4-4b):** lector de `.xls` propio (`detectarFormato` da `'xls'`; `ExcelAntiguoNoAdmitido` queda para Excel 5/95).
 6. **L4-5 (servidor, datos de la bandeja) - HECHO 2026-10-20:** migración `0021` (tablas) y `0022` custom (función `autorizacion_registrada_fuera`, que solo ve las otras empresas de la misma cuenta); dominio de estados, repositorios y pruebas de checks, llaves, RLS y la función. El enlace con `documentos` queda en L4-9.
-7. **L4-6 (servidor, lectura del DTE) (archivo):** mapa de encabezados y de valores, fila de encabezados, conversión,
+7. **L4-6 (servidor, lectura del DTE) - HECHO 2026-11-01:** mapa de encabezados y de valores, fila de encabezados, conversión,
    reglas de rechazo, `documentoDesdeElDte` y la variable `libro-de-compras.dte.encabezados_adicionales`; pruebas puras con
    el archivo real anonimizado como dato de prueba.
 8. **L4-7 (servidor, importar) (archivo):** migración `0021`, `ImportarDteRecibidos` (upsert, enlace con lo registrado,
