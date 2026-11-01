@@ -3,6 +3,7 @@ import type { DatosDelSat2237 } from '../../dominio/libro/datos-del-sat-2237.js'
 import type { FormularioDelRegimen } from '../../dominio/libro/formulario-del-regimen.js';
 import type { DetalleDeProveedores, ProveedorDelSat2237 } from '../../dominio/libro/proveedores-del-sat-2237.js';
 import type { MontoDeRubro } from '../../dominio/libro/rubros-del-sat-2237.js';
+import type { VistaDelFormularioSat2237 } from '../../dominio/libro/vista-del-formulario-sat-2237.js';
 
 interface MontoEnTexto {
   base: string;
@@ -14,6 +15,19 @@ type ProveedorEnTexto = Omit<ProveedorDelSat2237, 'base' | 'credito'> & { base: 
 interface DetalleEnTexto {
   filas: ProveedorEnTexto[];
   total: { cantidadDeFacturas: number; base: string; credito: string };
+}
+
+type OperacionEnTexto = Omit<VistaDelFormularioSat2237['seccion9']['lineas'][number], 'base'> & { base: string };
+
+interface FormularioEnTexto {
+  version: string;
+  confirmado: boolean;
+  seccion5: {
+    nombre: string;
+    casillas: Array<Omit<VistaDelFormularioSat2237['seccion5']['casillas'][number], 'neto'> & { neto: MontoEnTexto }>;
+  };
+  seccion6: Omit<VistaDelFormularioSat2237['seccion6'], 'filas'> & { filas: ProveedorEnTexto[] };
+  seccion9: Omit<VistaDelFormularioSat2237['seccion9'], 'lineas'> & { lineas: OperacionEnTexto[] };
 }
 
 interface Encabezado {
@@ -42,10 +56,7 @@ export interface Sat2237Dto extends Encabezado {
   segmento9: Array<{ clave: string; nombre: string; tiposDte: readonly string[]; cantidad: number; base: string }>;
   proveedores: DetalleEnTexto;
   facturasEspeciales: DetalleEnTexto;
-  casillas: {
-    version: string;
-    casillas: Array<{ rubro: string; numero: string; nombre: string; neto: MontoEnTexto }>;
-  } | null;
+  comoEnElFormulario: FormularioEnTexto;
   avisos: string[];
 }
 
@@ -60,6 +71,18 @@ const proveedor = (p: ProveedorDelSat2237): ProveedorEnTexto => ({
 const detalle = ({ filas, total }: DetalleDeProveedores): DetalleEnTexto => ({
   filas: filas.map(proveedor),
   total: { ...total, base: deCentavos(total.base), credito: deCentavos(total.credito) },
+});
+
+const comoEnElFormulario = ({
+  seccion5,
+  seccion6,
+  seccion9,
+  ...resto
+}: VistaDelFormularioSat2237): FormularioEnTexto => ({
+  ...resto,
+  seccion5: { ...seccion5, casillas: seccion5.casillas.map((c) => ({ ...c, neto: monto(c.neto) })) },
+  seccion6: { ...seccion6, filas: seccion6.filas.map(proveedor) },
+  seccion9: { ...seccion9, lineas: seccion9.lineas.map((o) => ({ ...o, base: deCentavos(o.base) })) },
 });
 
 /** Los datos del SAT-2237 en la forma que sale por la API (dinero como texto). */
@@ -78,10 +101,7 @@ export function dtoDelSat2237(datos: DatosDelSat2237, encabezado: Encabezado): S
     segmento9: datos.segmento9.map((o) => ({ ...o, base: deCentavos(o.base) })),
     proveedores: detalle(datos.proveedores),
     facturasEspeciales: detalle(datos.facturasEspeciales),
-    casillas: datos.casillas && {
-      ...datos.casillas,
-      casillas: datos.casillas.casillas.map((c) => ({ ...c, neto: monto(c.neto) })),
-    },
+    comoEnElFormulario: comoEnElFormulario(datos.formulario),
     avisos: datos.avisos,
   };
 }

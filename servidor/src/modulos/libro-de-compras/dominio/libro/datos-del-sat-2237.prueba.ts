@@ -1,45 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { casillasDelSat2237, MAPA_DE_CASILLAS_SAT_2237, type MapaDeCasillas } from './casillas-del-sat-2237.js';
+import type { DocumentoDelLibro } from './documento-del-libro.js';
 import { datosDelSat2237 } from './datos-del-sat-2237.js';
-import type { CategoriaDelDocumento, DocumentoDelLibro } from './documento-del-libro.js';
+import { categoria, documento } from './documentos-de-prueba-del-sat-2237.js';
 import { formularioDelRegimen } from './formulario-del-regimen.js';
 import { operacionesDelSat2237 } from './operaciones-del-sat-2237.js';
 import { proveedoresDelSat2237 } from './proveedores-del-sat-2237.js';
 import { rubrosDelSat2237 } from './rubros-del-sat-2237.js';
-
-const categoria = (cambios: Partial<CategoriaDelDocumento> = {}): CategoriaDelDocumento => ({
-  categoria: 'bien',
-  base: 100000,
-  iva: 12000,
-  ivaNoAcreditable: 0,
-  exentoYNoAfecto: 0,
-  combustibleExento: false,
-  ...cambios,
-});
-
-/** Una factura de Q1,120.00 (base 1,000.00 e IVA 120.00) de un bien. */
-const documento = (cambios: Partial<DocumentoDelLibro> = {}): DocumentoDelLibro => ({
-  id: 'doc',
-  tipo: 'factura',
-  tipoDte: 'FACT',
-  fechaEmision: '2026-10-05',
-  serie: 'A',
-  numero: '1',
-  nitDelProveedor: '5769370',
-  nombreDelProveedor: 'Veterinaria El Quiroa',
-  proveedorId: 'prov-1',
-  motivoSinCredito: null,
-  regimenIvaDeLaEmpresa: 'general',
-  total: 112000,
-  base: 100000,
-  iva: 12000,
-  ivaNoAcreditable: 0,
-  idp: 0,
-  exento: 0,
-  otrosImpuestos: 0,
-  categorias: [categoria()],
-  ...cambios,
-});
 
 const rubro = (documentos: DocumentoDelLibro[], clave: string) =>
   rubrosDelSat2237(documentos).find((r) => r.clave === clave)!;
@@ -215,20 +181,6 @@ describe('detalle de proveedores', () => {
 });
 
 describe('casillas, avisos y formulario', () => {
-  it('sin captura no hay casillas; con un mapa de prueba, solo las confirmadas', () => {
-    const rubros = rubrosDelSat2237([documento()]);
-    const mapa: MapaDeCasillas = {
-      version: 'prueba',
-      casillas: { ...MAPA_DE_CASILLAS_SAT_2237.casillas, otras_compras: { numero: 'X1', nombre: 'Compras' } },
-    };
-
-    expect(casillasDelSat2237(rubros)).toBeNull();
-    expect(casillasDelSat2237(rubros, mapa)).toEqual({
-      version: 'prueba',
-      casillas: [{ rubro: 'otras_compras', numero: 'X1', nombre: 'Compras', neto: { base: 100000, iva: 12000 } }],
-    });
-  });
-
   it('los avisos fijos siempre van y el del decreto solo si hay combustible exento', () => {
     expect(datosDelSat2237([]).avisos.some((a) => a.includes('Medicamentos y vehículos'))).toBe(true);
     expect(datosDelSat2237([]).avisos.some((a) => a.includes('Decreto 22-2026'))).toBe(false);

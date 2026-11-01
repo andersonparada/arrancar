@@ -50,6 +50,11 @@ export interface RubroDelSat2237 {
   /** En negativo: restan. */
   notasDeCredito: MontoDeRubro;
   neto: MontoDeRubro;
+  /**
+   * Para los rubros que el formulario reparte en varias casillas (las importaciones, cuando exista la DUCA): el neto de
+   * cada porción. Mientras no se desglose, no existe.
+   */
+  partes?: Record<string, MontoDeRubro>;
 }
 
 interface Aporte {

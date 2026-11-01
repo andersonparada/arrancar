@@ -118,7 +118,12 @@ describe('datos para el SAT-2237 (régimen general)', () => {
   it('reparte los rubros con nombre propio, con facturas, notas y neto', async () => {
     const { cuerpo } = await propietario().get(`${RUTA}?periodo=${PERIODO}`);
 
-    expect(cuerpo).toMatchObject({ aplica: true, formulario: 'SAT-2237', periodo: `${PERIODO}-01`, casillas: null });
+    expect(cuerpo).toMatchObject({
+      aplica: true,
+      formulario: 'SAT-2237',
+      periodo: `${PERIODO}-01`,
+      comoEnElFormulario: { confirmado: false },
+    });
     expect(rubroDe(cuerpo, 'otras_compras')).toMatchObject({
       // Incluye la factura especial (Q5,000.00).
       facturas: { base: '6000.00', iva: '720.00' },

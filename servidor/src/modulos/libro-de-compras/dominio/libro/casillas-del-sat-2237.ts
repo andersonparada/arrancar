@@ -1,56 +1,53 @@
+import {
+  MAPA_DE_CASILLAS_SAT_2237,
+  type ClaveDeCasilla,
+  type DefinicionDeCasilla,
+  type MapaDeCasillas,
+} from './mapa-de-casillas-del-sat-2237.js';
 import type { ClaveDeRubro, MontoDeRubro, RubroDelSat2237 } from './rubros-del-sat-2237.js';
 
-/** La casilla del formulario donde va un rubro; «por confirmar» hasta tener la captura del SAT-2237 vigente. */
-export type CasillaDeRubro = 'por_confirmar' | { numero: string; nombre: string };
-
-export interface MapaDeCasillas {
-  /** La versión del formulario del que se tomó el mapa; nula mientras no haya captura. */
-  version: string | null;
-  casillas: Record<ClaveDeRubro, CasillaDeRubro>;
-}
-
-/**
- * Rubro → casilla. Está vacío a propósito: los números y nombres esperan la captura del SAT-2237 vigente (L5-2c); no
- * se inventan. Al llegar la captura solo se llena este dato y se escribe la versión.
- */
-export const MAPA_DE_CASILLAS_SAT_2237: MapaDeCasillas = {
-  version: null,
-  casillas: {
-    combustibles: 'por_confirmar',
-    activos_fijos: 'por_confirmar',
-    servicios: 'por_confirmar',
-    otras_compras: 'por_confirmar',
-    importaciones: 'por_confirmar',
-    pequeno_contribuyente: 'por_confirmar',
-    regimenes_sin_iva: 'por_confirmar',
-    compras_sin_credito: 'por_confirmar',
-    exento_y_no_afecto: 'por_confirmar',
-    combustibles_exentos: 'por_confirmar',
-  },
-};
-
-export interface CasillaConMonto {
-  rubro: ClaveDeRubro;
-  numero: string;
-  nombre: string;
+export interface CasillaConMonto extends DefinicionDeCasilla {
+  /** Los rubros que suman en la casilla. */
+  rubros: ClaveDeRubro[];
   neto: MontoDeRubro;
 }
 
-export interface CasillasDelSat2237 {
-  version: string;
-  casillas: CasillaConMonto[];
+interface AporteAUnaCasilla {
+  rubro: ClaveDeRubro;
+  parte?: string;
 }
 
-/** Lleva los rubros a sus casillas; `null` mientras el mapa no tenga versión (sin captura). */
+const CERO: MontoDeRubro = { base: 0, iva: 0 };
+
+const sumar = (a: MontoDeRubro, b: MontoDeRubro): MontoDeRubro => ({ base: a.base + b.base, iva: a.iva + b.iva });
+
+/** Lo que un rubro aporta a una casilla: todo su neto o la porción pedida (cero mientras el rubro no la desglose). */
+function aporteDelRubro(rubro: RubroDelSat2237 | undefined, parte: string | undefined): MontoDeRubro {
+  if (!rubro) return CERO;
+  return parte === undefined ? rubro.neto : (rubro.partes?.[parte] ?? CERO);
+}
+
+function aportesHacia(clave: ClaveDeCasilla, mapa: MapaDeCasillas): AporteAUnaCasilla[] {
+  const repartos = Object.entries(mapa.reparto) as Array<[ClaveDeRubro, MapaDeCasillas['reparto'][ClaveDeRubro]]>;
+  return repartos.flatMap(([rubro, destinos]) =>
+    destinos
+      .filter((d) => d.casilla === clave)
+      .map((d) => (d.parte === undefined ? { rubro } : { rubro, parte: d.parte })),
+  );
+}
+
+/**
+ * Lleva los rubros a las casillas de la sección 5: varios rubros pueden sumar en una casilla (exento, regímenes sin IVA
+ * y compras sin crédito) y un rubro puede repartirse en varias (las importaciones, cuando exista la DUCA).
+ */
 export function casillasDelSat2237(
   rubros: RubroDelSat2237[],
   mapa: MapaDeCasillas = MAPA_DE_CASILLAS_SAT_2237,
-): CasillasDelSat2237 | null {
-  if (mapa.version === null) return null;
-  const casillas: CasillaConMonto[] = [];
-  for (const rubro of rubros) {
-    const casilla = mapa.casillas[rubro.clave];
-    if (casilla !== 'por_confirmar') casillas.push({ rubro: rubro.clave, ...casilla, neto: rubro.neto });
-  }
-  return { version: mapa.version, casillas };
+): CasillaConMonto[] {
+  const porClave = new Map(rubros.map((rubro) => [rubro.clave, rubro]));
+  return mapa.seccion5.casillas.map((casilla) => {
+    const aportes = aportesHacia(casilla.clave, mapa);
+    const neto = aportes.reduce((suma, a) => sumar(suma, aporteDelRubro(porClave.get(a.rubro), a.parte)), CERO);
+    return { ...casilla, rubros: [...new Set(aportes.map((a) => a.rubro))], neto };
+  });
 }

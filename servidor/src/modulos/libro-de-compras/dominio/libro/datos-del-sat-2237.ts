@@ -1,15 +1,15 @@
 import type { DocumentoDelLibro } from './documento-del-libro.js';
-import { casillasDelSat2237, type CasillasDelSat2237 } from './casillas-del-sat-2237.js';
 import { operacionesDelSat2237, type OperacionDelSegmento9 } from './operaciones-del-sat-2237.js';
 import { proveedoresDelSat2237, type DetalleDeProveedores } from './proveedores-del-sat-2237.js';
 import { rubrosDelSat2237, type RubroDelSat2237 } from './rubros-del-sat-2237.js';
+import { vistaDelFormularioSat2237, type VistaDelFormularioSat2237 } from './vista-del-formulario-sat-2237.js';
 
 export interface DatosDelSat2237 {
   rubros: RubroDelSat2237[];
   segmento9: OperacionDelSegmento9[];
   proveedores: DetalleDeProveedores;
   facturasEspeciales: DetalleDeProveedores;
-  casillas: CasillasDelSat2237 | null;
+  formulario: VistaDelFormularioSat2237;
   avisos: string[];
 }
 
@@ -33,12 +33,13 @@ function avisosVariables(rubros: RubroDelSat2237[], proveedores: DetalleDeProvee
 export function datosDelSat2237(documentos: DocumentoDelLibro[]): DatosDelSat2237 {
   const rubros = rubrosDelSat2237(documentos);
   const { proveedores, facturasEspeciales } = proveedoresDelSat2237(documentos);
+  const segmento9 = operacionesDelSat2237(documentos);
   return {
     rubros,
-    segmento9: operacionesDelSat2237(documentos),
+    segmento9,
     proveedores,
     facturasEspeciales,
-    casillas: casillasDelSat2237(rubros),
+    formulario: vistaDelFormularioSat2237({ rubros, segmento9, proveedores }),
     avisos: [...AVISOS_FIJOS, ...avisosVariables(rubros, [proveedores, facturasEspeciales])],
   };
 }
