@@ -1,6 +1,6 @@
 # Dónde quedamos
 
-Última sesión: **2026-09-29**. Este archivo se reescribe al final de cada paso.
+Última sesión: **2026-11-01**. Este archivo se reescribe al final de cada paso.
 
 Se está implementando `docs/modulos/plan-hallazgos-contables.md` en el orden de su
 sección «Dependencias y orden de implementación» (código con agentes Sonnet;
@@ -197,17 +197,48 @@ En `main`, además de lo anterior:
   Pruebas tras la unión: servidor 1286, cliente 343, generador 46. **Sin menú todavía**: L2
   agrega las pantallas del módulo. Pendiente de probar en el navegador.
 
-## Siguiente (actualizado 2026-10-04)
+## Sesión del 2026-11-01
 
-En `main`, todo en verde (servidor 1795, cliente 369, generador 46): L1, L2 y L3-1 a L3-6 del Libro de compras
-(servidor), con las decisiones del contador y del usuario en `validacion-h7-h11-retenciones.md`.
+Todo en `main` y en origin (último `24bd85f`): servidor 3292, cliente 820 y generador 46 pruebas.
+Ninguna pantalla nueva se ha visto aún en el navegador.
 
-1. **Preguntar al usuario** (con AskUserQuestion) las 8 recomendaciones del contador sobre L3-5 (última sección de
-   `validacion-h7-h11-retenciones.md`) y aplicar lo aprobado (agente backend).
-2. Pasar al contador las 3 preguntas de L3-6 (anulados, notas anuladas, período declarado).
-3. **L3-7** (cliente): Ingreso de facturas, lista con filtros, ficha, anular y eliminar; formulario con vista previa
-   (`POST …/documentos/calcular`).
-4. H2 (pedir PDF del banco), CP1, probar en el navegador lo nuevo.
+- **Cuentas por pagar CP1-4 a CP1-10:** días de crédito (contar desde la recepción, U14 b), bandeja, lista y
+  ficha con acciones calculadas por el servidor, completar y autorizar en lote (máx. 100, todo o nada) con
+  separación de funciones (`autorizar-propios`), desautorizar, cambiar vencimiento, anular y eliminar desde
+  aquí; pantallas Bandeja, Documentos por pagar y su ficha, y sección en Proveedores.
+- **Libro de compras, bandeja de DTE de la SAT (L4-4b, L4-6, L4-7, L4-11, L4-12, U15):** la SAT entrega la
+  consulta como **.xls (Excel 97-2003)**: lector propio CFB + BIFF8 en `core/intercambio` (sin dependencias;
+  informe en `docs/modulos/evaluacion-lectura-xls.md`), importar a la bandeja (`POST
+  /api/libro-de-compras/dte-recibidos/importar`, todo o nada, migración libro-de-compras `0031`), pantalla
+  «DTE de la SAT» (pendientes, completar, confirmar con vista previa, descartar, conciliación por mes) y botón
+  «Cargar el archivo de la SAT». Montos con `core.regional.decimales_montos` (mínimo 2); fecha sin zona en
+  hora de Guatemala.
+- **Formularios (L5-2c):** rubro «Compras sin derecho a crédito»; mapa de rubros a casillas de varios a uno y
+  de uno a varios; pestaña «Como en el formulario» del SAT-2237 con nombres **sin confirmar**; página «Datos
+  para el SAT-2046» con la guía (App FEL preelaborada o Declaraguate). Informe en
+  `docs/modulos/investigacion-sat-2237-y-2046.md`: desde sep-2026 el SAT-2237 se genera en la **Agencia
+  Virtual**, no en Declaraguate.
+
+## Siguiente
+
+1. **Entorno (lo hace el usuario):** desde WSL `localhost:5433` da `ECONNRESET` por un puente de Docker
+   huérfano (`br-15d3405570a6`, misma subred que la base): reiniciar Docker Desktop o
+   `sudo ip link delete br-15d3405570a6`. Los agentes lo esquivaron con un proxy temporal. Además, en WSL no
+   está `qpdf`: fallan 8 pruebas de `libro-de-compras-libro-pdf.api.prueba.ts` (en Docker sí está).
+2. **QA en el navegador:** CP1-11 (Cuentas por pagar de punta a punta), L4-14 (importar el .xls real de la SAT,
+   completar, confirmar, conciliar) y L5-10 (libro, SAT-2237, retenciones y períodos).
+3. **Pendientes de Libro de compras:** «Abrir en el formulario» desde la bandeja (el formulario aún no acepta
+   una solicitud precargada); avisos de período declarado y retenciones por resolver al anular desde Cuentas por
+   pagar (ampliar el contrato `libro-de-compras.anular_documento`); L4-2b si el contador confirma L4-c1;
+   L4-13 (conciliación liviana, opcional); régimen **electrónico** de pequeño contribuyente → SAT-2241 (hoy
+   SAT-2046; confirmar); números de casilla del SAT-2237 cuando haya una captura de la Agencia Virtual.
+4. **Cuentas por pagar después de CP1:** saldos iniciales (U8), CP2 notas de crédito (saldo libre), CP3
+   contraseñas, CP4 pagos (extraer `Reversible`, órdenes a Bancos) y CP5 reportes.
+5. **Bancos:** H2 (estado de cuenta en PDF junto a la conciliación, ver `plan-archivos-y-h2.md`).
+6. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual de Q150,000.
+
+Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) y su base de
+pruebas (`BD_PRUEBAS`), une a `main` por avance rápido con pruebas en verde y borra su worktree.
 
 ## Preguntas abiertas para el usuario
 
