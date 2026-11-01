@@ -508,7 +508,7 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 8. **CP1-8 (cliente, módulo y días de crédito) — hecho (2026-11-01):** `cliente/src/modulos/cuentas-por-pagar/` (textos, menú, servicio),
    sección «Cuentas por pagar» en el formulario de Proveedores (días de crédito, con la ayuda «vacío = un mes») y en
    la ficha (días y saldo con la empresa activa).
-9. **CP1-9 (cliente, bandeja):** página de Operación «Bandeja de cuentas por pagar»: documentos pendientes con el
+9. **CP1-9 (cliente, bandeja) — hecho (2026-11-01):** página de Operación «Bandeja de cuentas por pagar»: documentos pendientes con el
    vencimiento propuesto editable, selección y «Completar», enlace a la ficha del documento en Libro de compras.
 10. **CP1-10 (cliente, documentos):** página de Operación «Documentos por pagar»: lista con filtros y saldos,
     selección y «Autorizar» (con el mensaje de lo propio), ficha con notas, aplicaciones, saldo, cambiar vencimiento,
