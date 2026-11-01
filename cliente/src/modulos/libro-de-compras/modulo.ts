@@ -3,19 +3,9 @@ import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_LIBRO_DE_COMPRAS, TITULO_SECCION_FISCAL } from './textos';
 import { Tags } from 'lucide-vue-next';
 import { VENTANAS_LIBRO_DE_COMPRAS } from './textos';
-import {
-  BookOpen,
-  CalendarCheck,
-  ChartColumn,
-  FileDown,
-  FileText,
-  Fuel,
-  HandCoins,
-  Landmark,
-  ListChecks,
-} from 'lucide-vue-next';
+import { BookOpen, CalendarCheck, ChartColumn, FileDown, FileText, Fuel, HandCoins, Landmark } from 'lucide-vue-next';
 import { VENTANA_DEL_LIBRO } from './textos-del-libro';
-import { VENTANA_DEL_SAT_2046 } from './textos-del-sat-2046';
+import { OPCION_DE_MENU_DEL_SAT_2046, RUTA_DEL_SAT_2046 } from './rutas-del-sat-2046';
 import { VENTANA_DEL_SAT_2237 } from './textos-del-sat-2237';
 import { VENTANA_DE_DOCUMENTOS } from './textos-de-documentos';
 import { FORMULARIO_DE_DOCUMENTO } from './textos-del-registro';
@@ -81,12 +71,7 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       component: () => import('./paginas/DatosParaElSat2237.vue'),
       meta: { permiso: 'libro-de-compras.libro.ver', titulo: VENTANA_DEL_SAT_2237.titulo },
     },
-    {
-      path: '/libro-de-compras/libro/sat-2046',
-      name: 'libro-de-compras.libro.sat-2046',
-      component: () => import('./paginas/DatosParaElSat2046.vue'),
-      meta: { permiso: 'libro-de-compras.libro.ver', titulo: VENTANA_DEL_SAT_2046.titulo },
-    },
+    RUTA_DEL_SAT_2046,
     {
       path: '/libro-de-compras/retenciones',
       name: 'libro-de-compras.retenciones',
@@ -198,13 +183,7 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
           seccion: 'reportes',
           permiso: 'libro-de-compras.libro.ver',
         },
-        {
-          titulo: VENTANA_DEL_SAT_2046.titulo,
-          ruta: '/libro-de-compras/libro/sat-2046',
-          icono: ListChecks,
-          seccion: 'reportes',
-          permiso: 'libro-de-compras.libro.ver',
-        },
+        OPCION_DE_MENU_DEL_SAT_2046,
         {
           titulo: VENTANA_DE_RETENCIONES.titulo,
           ruta: '/libro-de-compras/retenciones',
