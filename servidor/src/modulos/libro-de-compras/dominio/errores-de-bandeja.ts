@@ -36,17 +36,6 @@ export class DteRegistradoEnOtraEmpresa extends ReglaDeNegocioInfringida {
   }
 }
 
-/** El proveedor del DTE aún no existe: se crea al confirmar, pero la vista previa necesita uno. */
-export class DteSinProveedor extends ReglaDeNegocioInfringida {
-  readonly codigo = 'dte_sin_proveedor';
-
-  constructor() {
-    super('El proveedor de este DTE aún no existe: escoja uno o confirme el DTE para crearlo.', {
-      campo: 'proveedorId',
-    });
-  }
-}
-
 /** El proveedor es nuevo y el usuario aún no confirmó su tipo de persona y su nombre: al confirmar no se adivinan. */
 export class ProveedorNuevoSinConfirmar extends ReglaDeNegocioInfringida {
   readonly codigo = 'proveedor_nuevo_sin_confirmar';

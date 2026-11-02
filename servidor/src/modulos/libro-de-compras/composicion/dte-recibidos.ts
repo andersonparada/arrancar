@@ -59,6 +59,11 @@ function proveedorDeLaFila(bandeja: Bandeja): ProveedorDeLaFila {
   return new ProveedorDeLaFila({ creadorDeProveedores: new CreadorDeProveedoresEnMediador(), filas: bandeja.filas });
 }
 
+/** La vista previa ensaya con el mismo `ProveedorDeLaFila` que confirma, sin guardar nada. */
+function vistaPrevia(bandeja: Bandeja, previsualizar: PrevisualizarDocumento): VistaPreviaDeDteRecibidos {
+  return new VistaPreviaDeDteRecibidos({ ...bandeja, previsualizar, proveedorDeLaFila: proveedorDeLaFila(bandeja) });
+}
+
 /** El registro de cada fila es el mismo `RegistrarDocumento` del formulario. */
 function confirmadorDeFila(documentos: Documentos, bandeja: Bandeja): ConfirmadorDeFila {
   return new ConfirmadorDeFila({
@@ -94,7 +99,7 @@ export function rutasDeDteRecibidosComponidas() {
     new DteRecibidosControlador({
       listar: new ListarDteRecibidos(bandeja),
       completar: new CompletarDteRecibidos({ ...documentos, ...bandeja }),
-      vistaPrevia: new VistaPreviaDeDteRecibidos({ ...bandeja, previsualizar }),
+      vistaPrevia: vistaPrevia(bandeja, previsualizar),
       confirmar: new ConfirmarDteRecibidos({
         ...bandeja,
         confirmador: confirmadorDeFila(documentos, bandeja),

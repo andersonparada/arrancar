@@ -50,7 +50,10 @@ export class DteRecibidosControlador {
   });
 
   vistaPrevia = (solicitud: FastifyRequest<{ Body: ConfirmarDteRecibidosSolicitado }>) =>
-    this.casosDeUso.vistaPrevia.ejecutar(operadorDe(solicitud), solicitud.body);
+    this.casosDeUso.vistaPrevia.ejecutar(operadorDe(solicitud), {
+      ...solicitud.body,
+      puedeCrearProveedores: contextoDe(solicitud).permisos.has(PERMISO_DE_CREAR_PROVEEDORES),
+    });
 
   confirmar = (solicitud: FastifyRequest<{ Body: ConfirmarDteRecibidosSolicitado }>) =>
     this.casosDeUso.confirmar.ejecutar(operadorDe(solicitud), {

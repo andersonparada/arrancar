@@ -167,14 +167,4 @@ describe('vista previa', () => {
     expect(respuesta.cuerpo.resultados[0].avisos).toContain(MARCA);
     expect((await filaGuardada(id)).estado).toBe('pendiente');
   });
-
-  it('sin proveedor todavía responde su error, y las demás filas siguen', async () => {
-    const nuevo = await sembrar({ nitEmisor: nitValido('4500013') });
-    const conocido = await sembrar();
-
-    const respuesta = await propietario().post(`${RUTA_DTE}/vista-previa`, { ids: [nuevo, conocido] });
-
-    expect(respuesta.cuerpo.resultados[0].error.codigo).toBe('dte_sin_proveedor');
-    expect(respuesta.cuerpo.resultados[1].documento.totales.total).toBe('1120.00');
-  });
 });
