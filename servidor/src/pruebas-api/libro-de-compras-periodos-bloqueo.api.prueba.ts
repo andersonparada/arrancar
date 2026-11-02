@@ -158,7 +158,7 @@ describe('lo que el bloqueo no toca', () => {
       grupo: 'iva_agentes',
       fechaDePago: diaDe(mesDe(-2)),
       documentoDePago: 'F-1',
-      monto: '1.00',
+      impuesto: '1.00',
     });
     const resuelta = await propietario().put(`${RUTA_RETENCIONES}/${porResolver}/resolucion`, {
       resolucion: 'no_requiere',
