@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { TriangleAlert, UserPlus } from 'lucide-vue-next';
+import { TriangleAlert } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
@@ -13,7 +13,9 @@ import type {
 import type { RespuestasFiscales } from '../../composables/documentos/preguntas-fiscales';
 import type { DteRecibido, ResultadoDeVistaPrevia } from '../../servicios/dte-recibidos.api';
 import PreguntasDeDatosFiscales from '../registro/PreguntasDeDatosFiscales.vue';
+import type { EdicionDeProveedorNuevo } from '../../composables/bandeja/datos-de-proveedores-nuevos';
 import FilasDeLaVistaPrevia from './FilasDeLaVistaPrevia.vue';
+import ProveedoresNuevosDelDte from './ProveedoresNuevosDelDte.vue';
 import ResultadosDeLaConfirmacion from './ResultadosDeLaConfirmacion.vue';
 
 /**
@@ -30,6 +32,8 @@ const props = defineProps<{
   conError: FilaConError[];
   proveedores: ProveedorConPreguntas[];
   faltaContestar: boolean;
+  proveedoresNuevos: EdicionDeProveedorNuevo[];
+  intentosConProblemas: number;
   resultado: { registradas: FilaRegistrada[]; conError: FilaConError[] } | null;
 }>();
 const respuestas = defineModel<Record<string, RespuestasFiscales>>({ required: true });
@@ -54,16 +58,7 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
         Se registrarán <strong>{{ listas.length }}</strong> de {{ resumen.cantidad }} facturas por
         {{ formatearMonto(resumen.total) }} en total, cada una con su cálculo de IVA y retenciones.
       </p>
-      <p
-        v-if="resumen.proveedoresNuevos.length"
-        class="flex gap-2 rounded-lg bg-trigo-300/40 p-3 text-sm text-tierra-800 dark:bg-trigo-500/20 dark:text-trigo-300"
-      >
-        <UserPlus class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        <span>
-          Se crearán {{ resumen.proveedoresNuevos.length }} proveedores nuevos con el NIT y el nombre del DTE:
-          {{ resumen.proveedoresNuevos.map(({ nombre, nit }) => `${nombre} (${nit})`).join(', ') }}.
-        </span>
-      </p>
+      <ProveedoresNuevosDelDte :proveedores="proveedoresNuevos" :intentos="intentosConProblemas" />
       <p
         v-if="resumen.anuladasEnLaSat"
         class="flex gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-900 dark:bg-red-950 dark:text-red-200"

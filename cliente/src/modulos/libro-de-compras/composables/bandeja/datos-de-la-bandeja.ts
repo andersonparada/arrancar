@@ -147,10 +147,16 @@ export function enGrupos<T>(lista: readonly T[], tamano: number): T[][] {
 export const tituloDeLaFila = ({ tipoDte, serie, numero }: Pick<DteRecibido, 'tipoDte' | 'serie' | 'numero'>): string =>
   `${tipoDte} ${serie ? `${serie}-` : ''}${numero}`;
 
-export const OPCIONES_DE_PROVEEDOR: { valor: FiltrosDeLaBandeja['proveedor']; texto: string }[] = [
+/** Las opciones del filtro de proveedor; quien no puede crear proveedores debe crearlos antes en Proveedores. */
+export const opcionesDeProveedor = (
+  puedeCrear: boolean,
+): { valor: FiltrosDeLaBandeja['proveedor']; texto: string }[] => [
   { valor: '', texto: 'Todos' },
   { valor: 'existente', texto: 'Con proveedor' },
-  { valor: 'nuevo', texto: 'Proveedor nuevo (se crea al confirmar)' },
+  {
+    valor: 'nuevo',
+    texto: puedeCrear ? 'Proveedor nuevo (se crea al confirmar)' : 'Proveedor nuevo (falta crearlo en Proveedores)',
+  },
 ];
 
 /** «Todos los tipos» y luego los códigos de la SAT, agrupados como en el formulario. */

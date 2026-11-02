@@ -1,18 +1,28 @@
 import { computed, ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
-import { apiDteRecibidos, type DteRecibido, type ResultadoDeConfirmacion } from '../../servicios/dte-recibidos.api';
+import {
+  apiDteRecibidos,
+  type DteRecibido,
+  type ProveedorNuevoPedido,
+  type ResultadoDeConfirmacion,
+} from '../../servicios/dte-recibidos.api';
 import type { RespuestasFiscales } from '../documentos/preguntas-fiscales';
 import { FILAS_POR_CONFIRMACION, enGrupos, resumenDeLaSeleccion } from './datos-de-la-bandeja';
 import { datosFiscalesContestadosPorNit, separarResultados } from './datos-de-la-confirmacion';
+import { proveedoresNuevosParaEnviar } from './datos-de-proveedores-nuevos';
 import { usarVistaPreviaDeFilas } from './usar-vista-previa-de-filas';
 
 /** Confirma de a grupos que acepta el servidor, uno tras otro, y junta lo que respondió cada fila. */
-async function confirmarEnGrupos(ids: string[], respuestas: Record<string, RespuestasFiscales>) {
+async function confirmarEnGrupos(
+  ids: string[],
+  respuestas: Record<string, RespuestasFiscales>,
+  proveedoresNuevos: Record<string, ProveedorNuevoPedido>,
+) {
   const datosFiscalesPorProveedor = datosFiscalesContestadosPorNit(respuestas);
   const resultados: ResultadoDeConfirmacion[] = [];
   for (const grupo of enGrupos(ids, FILAS_POR_CONFIRMACION)) {
-    const respuesta = await apiDteRecibidos.confirmar({ ids: grupo, datosFiscalesPorProveedor });
+    const respuesta = await apiDteRecibidos.confirmar({ ids: grupo, datosFiscalesPorProveedor, proveedoresNuevos });
     resultados.push(...respuesta.resultados);
   }
   return resultados;
@@ -49,10 +59,12 @@ export function usarConfirmacionDeFilas(alTerminar: (registradas: string[]) => u
   const ventana = usarVentanaDeConfirmacion();
 
   async function confirmar(): Promise<void> {
+    if (ventana.previa.proveedoresNuevos.pedirCorreccion()) return;
     const ids = ventana.previa.listas.value.map(({ id }) => id);
+    const nuevos = proveedoresNuevosParaEnviar(ventana.previa.proveedoresNuevos.edicion.value);
     let resultados: ResultadoDeConfirmacion[] = [];
     const hecho = await enviar(async () => {
-      resultados = await confirmarEnGrupos(ids, ventana.previa.respuestas.value);
+      resultados = await confirmarEnGrupos(ids, ventana.previa.respuestas.value, nuevos);
     });
     if (!hecho) return;
     ventana.resultado.value = separarResultados(resultados);

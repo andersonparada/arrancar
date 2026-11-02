@@ -14,14 +14,16 @@ import {
   type FiltrosDeDocumentos,
 } from './filtros-de-documentos';
 
-/**
- * Los proveedores para el filtro. Si el usuario no puede verlos, el filtro de proveedor se queda solo con «Todos»:
- * no es motivo para impedir que vea sus documentos.
- */
+/** Los proveedores para el filtro; si falla, el filtro queda solo con «Todos» y se avisa por qué. */
 function usarProveedoresDelFiltro() {
+  const avisos = usarAvisos();
   const proveedores = ref<ProveedorParaFiltro[]>([]);
   onMounted(async () => {
-    proveedores.value = await apiCuentasPorPagar.listarProveedores().catch(() => []);
+    try {
+      proveedores.value = await apiCuentasPorPagar.listarProveedores();
+    } catch (error) {
+      avisos.error(error instanceof Error ? error.message : 'No se pudo cargar la lista de proveedores.');
+    }
   });
   return proveedores;
 }

@@ -36,6 +36,8 @@ const COMO_CORREGIR: Record<string, string> = {
   dte_nota_sin_factura: 'Use «Completar» para elegir la factura que corrige y confirme de nuevo.',
   exento_negativo_del_dte:
     'Los montos del archivo no cuadran: regístrela a mano en «Registrar factura» y revise los montos.',
+  proveedor_inactivo: 'Reactívelo en Proveedores y vuelva a calcular.',
+  tercero_inactivo: 'Reactívelo en Proveedores y vuelva a calcular.',
   montos_en_columnas_desconocidas: 'Regístrela a mano en «Registrar factura» para anotar esos montos.',
 };
 

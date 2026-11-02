@@ -90,6 +90,12 @@ export function mensajeDeLoPropio(error: unknown): string | null {
   return error instanceof ErrorApi && error.codigo === CODIGO_DE_LO_PROPIO ? error.message : null;
 }
 
+const CODIGOS_DE_DOCUMENTO_CAMBIADO = ['documento_ya_autorizado', 'documento_ya_anulado'];
+
+/** Otra persona ya autorizó o anuló alguno de los documentos marcados: la lista en pantalla quedó vieja. */
+export const documentoYaCambio = (error: unknown): boolean =>
+  error instanceof ErrorApi && CODIGOS_DE_DOCUMENTO_CAMBIADO.includes(error.codigo);
+
 /** Lo que va a pasar al autorizar, con cuánto se aprueba a pagar. */
 export function resumenDeAutorizacion(documentos: readonly DocumentoPorPagar[]): string {
   const cargos = documentos.filter(({ clase }) => clase === 'cargo');
