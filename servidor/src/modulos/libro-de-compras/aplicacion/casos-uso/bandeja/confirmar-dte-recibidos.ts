@@ -7,7 +7,7 @@ import type { DteRecibido } from '../../../dominio/dte-recibido.js';
 import type { ResultadoDeConfirmacion, ResultadosDeConfirmacionDto } from '../../dto/dte-recibido.dto.js';
 import type { RepositorioDeDteRecibidos } from '../../puertos/repositorio-de-dte-recibidos.js';
 import type { ConfirmadorDeFila, OpcionesDelConfirmador } from './confirmador-de-fila.js';
-import type { DatosFiscalesPorProveedor } from './decisiones-del-dte.js';
+import type { DatosFiscalesPorProveedor, ProveedoresNuevosPorNit } from './decisiones-del-dte.js';
 import type { ProponedorDeDte } from './proponedor-de-dte.js';
 
 interface Dependencias {
@@ -22,6 +22,7 @@ interface Dependencias {
 export interface PeticionDeConfirmacion {
   ids: readonly string[];
   datosFiscalesPorProveedor: DatosFiscalesPorProveedor;
+  proveedoresNuevos: ProveedoresNuevosPorNit;
   /** El usuario tiene `proveedores.crear`. */
   puedeCrearProveedores: boolean;
 }
@@ -52,6 +53,7 @@ export class ConfirmarDteRecibidos {
     const opciones: OpcionesDelConfirmador = {
       proponedor: this.dependencias.crearProponedor(operador),
       datosFiscalesPorProveedor: peticion.datosFiscalesPorProveedor,
+      proveedoresNuevos: peticion.proveedoresNuevos,
       puedeCrearProveedores: peticion.puedeCrearProveedores,
     };
     const resultados: ResultadoDeConfirmacion[] = [];

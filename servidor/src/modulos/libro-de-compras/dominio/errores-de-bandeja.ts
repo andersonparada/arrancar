@@ -47,6 +47,18 @@ export class DteSinProveedor extends ReglaDeNegocioInfringida {
   }
 }
 
+/** El proveedor es nuevo y el usuario aún no confirmó su tipo de persona y su nombre: al confirmar no se adivinan. */
+export class ProveedorNuevoSinConfirmar extends ReglaDeNegocioInfringida {
+  readonly codigo = 'proveedor_nuevo_sin_confirmar';
+
+  constructor(nit: string) {
+    super(`Confirme el tipo de persona y el nombre del proveedor nuevo (NIT ${nit}) antes de registrar.`, {
+      nit,
+      campo: 'proveedoresNuevos',
+    });
+  }
+}
+
 /** Falta el concepto de gasto: el Excel de la SAT no lo trae y el proveedor no tiene uno anterior que proponer. */
 export class DteSinConcepto extends ReglaDeNegocioInfringida {
   readonly codigo = 'dte_sin_concepto';

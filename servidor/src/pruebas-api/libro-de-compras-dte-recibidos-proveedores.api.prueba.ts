@@ -42,14 +42,17 @@ afterAll(() => vi.restoreAllMocks());
 
 describe('proveedor nuevo', () => {
   const NIT_NUEVO = nitValido('4500010');
+  const unaEmpresa = (razonSocial: string) => ({ tipoDePersona: 'juridica', razonSocial });
 
-  it('se crea con su papel, con tipo de persona según el nombre, y se le pone a las demás filas pendientes del NIT', async () => {
+  it('se crea con su papel y lo confirmado, y se le pone a las demás filas pendientes del NIT', async () => {
     const [a, b] = [
       await sembrar({ nitEmisor: NIT_NUEVO, nombreEmisor: 'Distribuidora El Sol, S.A.' }),
       await sembrar({ nitEmisor: NIT_NUEVO, nombreEmisor: 'Distribuidora El Sol, S.A.' }),
     ];
 
-    const resultado = (await confirmar([a])).get(a);
+    const resultado = (
+      await confirmar([a], { proveedoresNuevos: { [NIT_NUEVO]: unaEmpresa('Distribuidora El Sol, S.A.') } })
+    ).get(a);
 
     const [tercero] = await consultar<{ tipo: string; razon_social: string }>(
       'select tipo, razon_social from terceros.terceros where nit = $1',
@@ -65,17 +68,50 @@ describe('proveedor nuevo', () => {
     expect((await filaGuardada(b)).proveedor_id).toBe(papel[0]!.id);
   });
 
-  it('un nombre sin forma de empresa se crea como persona individual', async () => {
+  it('una persona se crea con los nombres y apellidos que el usuario confirmó, no con los del DTE', async () => {
     const nit = nitValido('4500011');
-    const id = await sembrar({ nitEmisor: nit, nombreEmisor: 'Juan Pérez' });
+    const id = await sembrar({ nitEmisor: nit, nombreEmisor: 'JUAN PEREZ LOPEZ' });
+    const persona = { tipoDePersona: 'individual', nombres: 'Juan Carlos', apellidos: 'Pérez López' };
 
-    await confirmar([id]);
+    await confirmar([id], { proveedoresNuevos: { [nit]: persona } });
 
-    const [tercero] = await consultar<{ tipo: string }>('select tipo from terceros.terceros where nit = $1', [nit]);
-    expect(tercero!.tipo).toBe('individual');
+    const [tercero] = await consultar<{ tipo: string; nombres: string; apellidos: string }>(
+      'select tipo, nombres, apellidos from terceros.terceros where nit = $1',
+      [nit],
+    );
+    expect(tercero).toEqual({ tipo: 'individual', nombres: 'Juan Carlos', apellidos: 'Pérez López' });
   });
 
-  it('sin el permiso proveedores.crear la fila falla y no se crea nada', async () => {
+  it('sin lo confirmado del NIT la fila falla, no se crea nada y las demás siguen', async () => {
+    const nit = nitValido('4500014');
+    const nueva = await sembrar({ nitEmisor: nit });
+    const conocida = await sembrar();
+
+    const resultados = await confirmar([nueva, conocida]);
+
+    expect(resultados.get(nueva).error).toMatchObject({
+      codigo: 'proveedor_nuevo_sin_confirmar',
+      detalles: { nit, campo: 'proveedoresNuevos' },
+    });
+    expect(resultados.get(conocida).documentoId).toEqual(expect.any(String));
+    expect(await consultar('select 1 from terceros.terceros where nit = $1', [nit])).toHaveLength(0);
+  });
+
+  it('un nombre vacío se rechaza en la solicitud, señalando el NIT, y no se crea nada', async () => {
+    const nit = nitValido('4500015');
+    const id = await sembrar({ nitEmisor: nit });
+
+    const respuesta = await propietario().post(`${RUTA_DTE}/confirmar`, {
+      ids: [id],
+      proveedoresNuevos: { [nit]: unaEmpresa('   ') },
+    });
+
+    expect(respuesta.estado).toBe(400);
+    expect(respuesta.cuerpo.error.detalles[0].campo).toBe(`proveedoresNuevos.${nit}.razonSocial`);
+    expect(await consultar('select 1 from terceros.terceros where nit = $1', [nit])).toHaveLength(0);
+  });
+
+  it('sin el permiso proveedores.crear la fila falla con su propio código y no se crea nada', async () => {
     const nit = nitValido('4500012');
     const id = await sembrar({ nitEmisor: nit });
     const registrador = await crearUsuarioConPermisos(entorno, bandeja.escenario.cuenta, {
@@ -84,11 +120,36 @@ describe('proveedor nuevo', () => {
       permisos: ['libro-de-compras.documentos.crear'],
     });
 
-    const resultado = (await confirmar([id], {}, registrador)).get(id);
+    const resultado = (await confirmar([id], { proveedoresNuevos: { [nit]: unaEmpresa('X, S.A.') } }, registrador)).get(
+      id,
+    );
 
-    expect(resultado.error.codigo).toBe('sin_permiso');
+    expect(resultado.error).toMatchObject({ codigo: 'proveedor_nuevo_sin_permiso', detalles: { nit } });
     expect(await consultar('select 1 from terceros.terceros where nit = $1', [nit])).toHaveLength(0);
     expect((await filaGuardada(id)).estado).toBe('pendiente');
+  });
+
+  it('un tercero que ya es cliente recibe el papel de proveedor sin duplicarse', async () => {
+    const nit = nitValido('4500016');
+    const cliente = await propietario().post('/api/terceros', {
+      tipo: 'juridica',
+      razonSocial: 'Cliente y proveedor, S.A.',
+      nit,
+    });
+    expect(cliente.estado, JSON.stringify(cliente.cuerpo)).toBe(201);
+    await propietario().put(`/api/terceros/${cliente.cuerpo.id}/cliente`, { clase: 'directo' });
+    const id = await sembrar({ nitEmisor: nit });
+
+    const resultado = (await confirmar([id], { proveedoresNuevos: { [nit]: unaEmpresa('Otro nombre, S.A.') } })).get(
+      id,
+    );
+
+    expect(resultado.documentoId).toEqual(expect.any(String));
+    const terceros = await consultar<{ razon_social: string }>(
+      'select razon_social from terceros.terceros where nit = $1',
+      [nit],
+    );
+    expect(terceros).toEqual([{ razon_social: 'Cliente y proveedor, S.A.' }]);
   });
 });
 

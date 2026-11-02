@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { textoObligatorio, textoOpcional } from '../../core/compartido/http/esquemas-comunes.js';
 import {
   REGIMENES_DE_ISR_DE_PROVEEDOR,
   REGIMENES_DE_IVA_DE_PROVEEDOR,
@@ -64,9 +65,26 @@ const esquemaDatosFiscales = z.object({
 
 const esquemaDatosFiscalesPorProveedor = z.record(z.string().max(40), esquemaDatosFiscales).default({});
 
+/** Lo que el usuario confirmó del proveedor nuevo de un NIT; mismos límites que el formulario de Terceros. */
+const esquemaProveedorNuevo = z.discriminatedUnion('tipoDePersona', [
+  z.strictObject({
+    tipoDePersona: z.literal('individual'),
+    nombres: textoObligatorio(80),
+    apellidos: textoOpcional(80),
+  }),
+  z.strictObject({ tipoDePersona: z.literal('juridica'), razonSocial: textoObligatorio(150) }),
+]);
+
+/** La clave es el NIT del emisor tal como viene en la fila (`nitEmisor`). */
+const esquemaProveedoresNuevos = z
+  .record(z.string().max(40), esquemaProveedorNuevo)
+  .refine((r) => Object.keys(r).length <= MAXIMO_DE_FILAS_A_CONFIRMAR, 'Demasiados proveedores nuevos.')
+  .default({});
+
 export const esquemaConfirmarDteRecibidos = z.object({
   ids: idsHasta(MAXIMO_DE_FILAS_A_CONFIRMAR),
   datosFiscalesPorProveedor: esquemaDatosFiscalesPorProveedor,
+  proveedoresNuevos: esquemaProveedoresNuevos,
 });
 
 export const esquemaDescartarDteRecibidos = z.object({

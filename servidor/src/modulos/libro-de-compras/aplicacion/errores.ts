@@ -1,4 +1,4 @@
-import { RecursoDuplicado, RecursoEnUso } from '../../core/compartido/aplicacion/errores.js';
+import { AccesoDenegado, RecursoDuplicado, RecursoEnUso } from '../../core/compartido/aplicacion/errores.js';
 
 /**
  * El documento ya está registrado en la empresa activa. Trae su id en `detalles.documentoId` para que la pantalla
@@ -23,6 +23,18 @@ export class VigenciaFiscalEnUso extends RecursoEnUso {
     super(
       `Hay documentos registrados en ${periodo.slice(0, 7)} con el régimen anterior: escoja un mes posterior o anúlelos.`,
       { campo: 'secciones.libro-de-compras.vigenteDesde', periodo },
+    );
+  }
+}
+
+/** El proveedor del DTE aún no existe y quien confirma no puede crear proveedores: que los creen en Proveedores. */
+export class ProveedorNuevoSinPermiso extends AccesoDenegado {
+  override readonly codigo = 'proveedor_nuevo_sin_permiso';
+
+  constructor(nit: string) {
+    super(
+      `El proveedor de este DTE (NIT ${nit}) aún no existe y usted no puede crear proveedores. Pida que lo creen en Proveedores; la fila lo tomará sola.`,
+      { nit },
     );
   }
 }
