@@ -341,3 +341,242 @@ la SAT respondió 403): Vesco (SAT-1331), Código Tributario en Wikisource.
 **Respuestas del usuario (2026-11-01):** rechazar fechas futuras (sin estado «programado»), con aviso si el pago es
 anterior al fin del mes; **tres campos** de accesorios (`multa`, `intereses`, `mora`) además del `impuesto`; el estado y
 el aviso de exceso comparan solo el impuesto.
+
+## 8. Plan de datos de los errores 4 y 5
+
+Estado: **propuesta** del `arquitecto-de-datos` (2026-11-01) sobre lo decidido en §7. Nada en producción; la base de
+desarrollo tiene **0 filas** en `libro_de_compras.enteros_de_retenciones` y **0 constancias con fecha futura** (leído el
+2026-11-01), así que la migración no tiene datos que convertir; igual se escribe para que funcione con filas.
+
+### 8.1 Qué lee hoy el monto del entero (y qué no)
+
+| Dónde | Uso del `monto` | Cambia |
+|---|---|---|
+| `dominio/retenciones/retencion-del-reporte.ts` → `pagadoDe` | suma de pagos vigentes → `armarGrupo` (estado, `pagado`, `diferencia`) y avisos de `RegistrarEntero` | **sí**: suma `impuesto` |
+| `dominio/retenciones/estado-del-entero.ts` | recibe `pagado` ya sumado | no (la regla «pagado = retenido → enterado» queda igual; lo que cambia es qué es `pagado`) |
+| `tieneEnteroVigente`, `retenciones-de-la-baja.ts`, `cargador-de-contexto-fiscal.ts` (`gruposEnterados`), `por-resolver.ts` | solo «hay un pago vigente» | no (con `impuesto > 0`, ver 8.2) |
+| `http/retenciones.columnas.ts` (Excel del reporte) | **no** lee pagos (grupo y plazo) | no |
+| `hojas-del-sat-2237.ts`, `hojas-del-libro.ts`, PDF del libro, análisis, períodos | **no** leen enteros | no |
+| `aplicacion/dto/retenciones.dto.ts` (`EnteroDto`, `dtoDeEntero`, `GrupoDelReporteDto`) | lo expone | **sí** |
+| Cliente: `retenciones.api.ts`, `datos-de-pagos.ts`, `usar-pago-de-entero.ts`, `VentanaDePago.vue`, `VentanaDePagosDelMes.vue`, `resumenes-de-acciones.ts`, `textos-de-retenciones.ts` | captura y muestra | **sí** |
+
+Los enteros no se importan ni exportan en Excel (Retenciones es reporte: solo exporta las retenciones). **No cambia**:
+la regla de Excel queda como está; no hace falta columna nueva en el Excel del reporte.
+
+### 8.2 Cambio de la tabla `libro_de_compras.enteros_de_retenciones`
+
+**Opciones para el monto:**
+
+- **A (recomendada): renombrar `monto` → `impuesto` y agregar `multa`, `intereses`, `mora`; el total no se guarda** (lo
+  calcula el dominio: `impuesto + multa + intereses + mora`). Cada columna dice lo que es; lo que compara el estado es
+  una columna sin restas; no hay dato duplicado que pueda descuadrar.
+- B: dejar `monto` como **total** y agregar `impuesto` y los tres accesorios, con check `monto = impuesto + multa +
+  intereses + mora`. Redundante: un dato que solo puede valer lo que dicen los otros cuatro; obliga a mantener el check y
+  confunde (`monto` ya no es lo que se compara).
+- C: A más una columna generada `total numeric(14,2) generated always as (impuesto + multa + intereses + mora) stored`.
+  Sirve si un día Bancos o Contabilidad leen el total por SQL; hoy nadie lo lee. Se puede agregar después sin tocar
+  datos. No se recomienda ahora (YAGNI).
+
+**Columnas (opción A):**
+
+| Columna | Tipo | Nulo | Omisión | Regla |
+|---|---|---|---|---|
+| `impuesto` (antes `monto`) | numeric(14,2) | no | — | `> 0`; lo que se aplica contra lo retenido del mes y grupo |
+| `multa` | numeric(14,2) | no | `0` | `>= 0`; Código Tributario art. 91 |
+| `intereses` | numeric(14,2) | no | `0` | `>= 0`; art. 59 |
+| `mora` | numeric(14,2) | no | `0` | `>= 0`; art. 92 |
+
+Las demás columnas no cambian (`retenido_al_marcar` sigue siendo la foto de lo retenido al marcar).
+
+**Restricciones `check`:**
+
+- `enteros_de_retenciones_monto_positivo` → se borra y se crea `enteros_de_retenciones_impuesto_positivo`
+  (`impuesto > 0`). Al renombrar la columna PostgreSQL actualiza la expresión del check, pero el **nombre** quedaría
+  mintiendo; se cambia para que la prueba de checks y los mensajes digan `impuesto`.
+- `enteros_de_retenciones_multa_no_negativa` (`multa >= 0`), `enteros_de_retenciones_intereses_no_negativos`
+  (`intereses >= 0`), `enteros_de_retenciones_mora_no_negativa` (`mora >= 0`): uno por columna (la prueba de checks
+  sabe cuál falló).
+- **No** se pone check de «fecha no futura» en la base: `current_date` va en la zona de la sesión (UTC, 6 horas adelante
+  de Guatemala) y no en la de la empresa, y las pruebas fijan «hoy» con `RelojFijo`. La regla vive en el dominio
+  (8.4), como la de la fecha de la constancia (tampoco tiene check hoy).
+
+**Índices y RLS:** sin cambio (`enteros_de_retenciones_mes_idx (empresa_id, mes, grupo)`, `politicaPorEmpresa()`). No
+hay llaves foráneas nuevas. Permisos: sin cambio (`libro-de-compras.retenciones.enterar`).
+
+**Datos existentes:** el `monto` de cada fila pasa a `impuesto` (era todo impuesto: no había dónde anotar accesorios) y
+los tres accesorios quedan en `0` por el `default`. Ningún estado cambia.
+
+**Migración:** `0032_l5_accesorios_del_entero` (idx 32; el `when` más alto del journal es `1793564701275`, de
+`0031_l4_formato_xls_del_lote`; el que ponga drizzle-kit con la hora de hoy es mayor). Pasos:
+
+1. Cambiar `enteros-de-retenciones.tablas.ts` (columna `impuesto`, tres `numeric(14,2).notNull().default('0')`, checks
+   nuevos en `restriccionesDelPago`; el tipo `Columnas` suma las tres claves y cambia `monto` por `impuesto`).
+2. `npm run bd:generar -w servidor -- libro-de-compras l5_accesorios_del_entero --custom` (drizzle-kit, sin
+   `--custom`, pregunta en la consola si es renombre o borrar y crear; con `--custom` el SQL se escribe a mano y el
+   snapshot sale de las tablas). SQL:
+
+```sql
+-- L5 (errores 4 y 5 del QA del 2026-11-01): el entero separa el impuesto (lo que se compara con lo retenido) de los
+-- accesorios que se pagan en la misma boleta (multa, intereses y mora). Lo ya registrado era todo impuesto.
+ALTER TABLE "libro_de_compras"."enteros_de_retenciones" RENAME COLUMN "monto" TO "impuesto";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."enteros_de_retenciones" DROP CONSTRAINT "enteros_de_retenciones_monto_positivo";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."enteros_de_retenciones" ADD COLUMN "multa" numeric(14, 2) DEFAULT '0' NOT NULL;--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."enteros_de_retenciones" ADD COLUMN "intereses" numeric(14, 2) DEFAULT '0' NOT NULL;--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."enteros_de_retenciones" ADD COLUMN "mora" numeric(14, 2) DEFAULT '0' NOT NULL;--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."enteros_de_retenciones" ADD CONSTRAINT "enteros_de_retenciones_impuesto_positivo" CHECK ("libro_de_compras"."enteros_de_retenciones"."impuesto" > 0);--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."enteros_de_retenciones" ADD CONSTRAINT "enteros_de_retenciones_multa_no_negativa" CHECK ("libro_de_compras"."enteros_de_retenciones"."multa" >= 0);--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."enteros_de_retenciones" ADD CONSTRAINT "enteros_de_retenciones_intereses_no_negativos" CHECK ("libro_de_compras"."enteros_de_retenciones"."intereses" >= 0);--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."enteros_de_retenciones" ADD CONSTRAINT "enteros_de_retenciones_mora_no_negativa" CHECK ("libro_de_compras"."enteros_de_retenciones"."mora" >= 0);
+```
+
+3. Revisar: correr `bd:generar` sin `--custom` debe decir que no hay cambios (el snapshot `0032` coincide con las
+   tablas); `bd:migrar` en desarrollo y `\d libro_de_compras.enteros_de_retenciones` (solo lectura) muestra las cuatro
+   columnas y los checks. El `ADD COLUMN … DEFAULT '0' NOT NULL` no reescribe la tabla (PostgreSQL 11+).
+
+### 8.3 Dominio y consultas (servidor)
+
+- `entero-de-retenciones.ts`: `PeticionDeEntero` y `DatosDelEntero` cambian `monto` por `impuesto`, `multa`,
+  `intereses`, `mora` (centavos). `enteroValido(peticion, hoy)`: `impuesto` entero `> 0` (`MontoDelEnteroInvalido` pasa a
+  `ImpuestoDelEnteroInvalido`, código `impuesto_del_entero_invalido`, campo `impuesto`, «El impuesto pagado debe ser mayor
+  que cero.»); cada accesorio entero `>= 0` (`AccesorioDelEnteroInvalido`, código `accesorio_del_entero_invalido`,
+  campo `multa`/`intereses`/`mora`, «La multa, los intereses y la mora no pueden ser negativos.»); fecha (8.4). Función
+  `totalDelEntero(datos) = impuesto + multa + intereses + mora`.
+- `retencion-del-reporte.ts`: `EnteroGuardado` con los cuatro montos; `pagadoDe` suma **`impuesto`**; nueva
+  `accesoriosDe(pagos, mes, grupo)` (suma de multa + intereses + mora de los vigentes).
+- `retencion-del-reporte.mapeador.ts` (`enteroGuardado`), `enteros-de-retenciones.drizzle.ts` (`crear`, `corregir`),
+  `puertos-de-retenciones.ts` (`RepositorioDeEnteros.corregir`: `Pick` con los cuatro), `registrar-entero.ts`
+  (`soloLoEscrito`), `pruebas/dobles-de-retenciones.ts` (`agregarVigente(mes, grupo, impuesto)`).
+- `retenciones.dto.ts`: `EnteroDto` cambia `monto` por `impuesto`, `multa`, `intereses`, `mora` y agrega `total` (texto);
+  `GrupoDelReporteDto.pagado` pasa a ser **el impuesto pagado** (su TSDoc lo dice) y se agrega `accesorios` (texto, suma
+  de multa + intereses + mora de los vigentes) para que la tarjeta y la matriz los muestren aparte. `diferencia` sigue
+  siendo `retenido − pagado`.
+- `grupos-del-reporte.ts` (`armarGrupo`): `accesorios`. `estado-del-entero.ts`: solo el TSDoc («lo pagado» = el impuesto).
+
+### 8.4 Fechas futuras (error 4)
+
+- `constancia-de-retencion.ts`: `constanciaValida(constancia, fechaDeLaRetencion, hoy)`; después de
+  `ConstanciaAnteriorALaRetencion`, si `fecha > hoy` → `ConstanciaConFechaFutura` (código `constancia_con_fecha_futura`,
+  `DatoInvalido` → 400, `detalles: { campo: 'fecha' }`, «La fecha de la constancia no puede ser posterior a hoy
+  (dd/mm/aaaa).»). `prepararConstancia(retencion, peticion, hoy)`; `AnotarConstancia` y `AnotarConstanciasEnLote` piden
+  `hoy` **una vez** con `reloj.hoy(operador)` (`DependenciasDeConstancias` suma `reloj: Reloj`; `dependenciasBase()` ya
+  lo trae). En el lote el error sale por fila (`problemaDe` toma `campo: 'fecha'`), todo o nada como hoy.
+- `entero-de-retenciones.ts`: `fechaDePagoValida(fecha, mes, hoy)`: después de `FechaDePagoInvalida` (anterior al mes),
+  si `fecha > hoy` → `FechaDePagoFutura` (código `fecha_de_pago_futura`, 400, `detalles: { campo: 'fechaDePago' }`, «La
+  fecha de pago no puede ser posterior a hoy (dd/mm/aaaa): registre el pago cuando lo haya hecho.»).
+  `RegistrarEntero` y `CorregirEntero` piden `hoy` al `Reloj` (sus `Dependencias` suman `reloj`) y validan dentro de la
+  unidad de trabajo.
+- Aviso (no rechaza) en `avisosDelPago` o una función de dominio `avisoDeFechaDePago(datos)`: si `fechaDePago` es
+  **anterior al último día del mes** de las retenciones (el último día no avisa: puede haber retenciones de ese día ya
+  pagadas): «La fecha de pago (15/03/2026) es anterior al cierre del mes de las retenciones (31/03/2026): revise que la
+  fecha y el mes sean los correctos.» Va en `RegistrarEntero` y `CorregirEntero`.
+
+### 8.5 Contrato HTTP del entero
+
+`POST /api/libro-de-compras/retenciones/enteros` (201) y `PUT …/enteros/:id` (200), permiso `retenciones.enterar`:
+
+```ts
+// http/retenciones.esquemas-http.ts
+const accesorio = dinero.default('0');
+const camposDelPago = {
+  fechaDePago: z.iso.date(),
+  documentoDePago: texto,
+  impuesto: dinero,     // antes «monto»
+  multa: accesorio,
+  intereses: accesorio,
+  mora: accesorio,
+  observaciones: z.string().trim().nullish(),
+};
+// POST: { mes, grupo, ...camposDelPago }   PUT: camposDelPago (reemplaza todo: si falta un accesorio, queda en 0)
+```
+
+`monto` deja de existir en el cuerpo (no hay clientes externos; `z.object` lo ignora si llega). El controlador
+(`datosDelPago`) pasa los cuatro montos a centavos.
+
+Respuesta (POST, PUT y `POST …/:id/anular`, sin cambio de forma):
+
+```jsonc
+{
+  "entero": {
+    "id": "…", "mes": "2026-03-01", "grupo": "iva_agentes", "fechaDePago": "2026-04-20", "documentoDePago": "SAT2000-123",
+    "impuesto": "218.57", "multa": "218.57", "intereses": "5.10", "mora": "0.00", "total": "442.24",
+    "retenidoAlMarcar": "218.57", "observaciones": null, "estado": "vigente", "anuladoEn": null,
+    "motivoDeAnulacion": null, "registradoPor": "Ana López"
+  },
+  "avisos": ["…"]
+}
+```
+
+`GET …/retenciones?mes=` y `GET …/retenciones/enteros?anio=`: cada grupo suma `accesorios` y sus `pagos[]` traen el
+`EnteroDto` nuevo; `pagado` = impuesto pagado.
+
+**Avisos** (no bloquean; comparan solo el impuesto de los pagos vigentes del mes y grupo, después de guardar):
+
+| Cuándo | Texto |
+|---|---|
+| impuesto pagado < retenido | «Falta enterar Q90.00 de lo retenido en ese mes y grupo.» (el de hoy) |
+| impuesto pagado > retenido | «El impuesto pagado en ese mes y grupo (Q537.14) pasa lo retenido (Q218.57) por Q318.57. La multa, los intereses y la mora van en sus casillas y no cuentan aquí: revise que no los sumó al impuesto.» |
+| `fechaDePago` antes del último día del mes | el de 8.4 |
+| impuesto pagado = retenido y hay accesorios | ninguno |
+
+**Errores:** `fecha_de_pago_futura` y `constancia_con_fecha_futura` (400, por campo), `impuesto_del_entero_invalido` y
+`accesorio_del_entero_invalido` (400, por campo; reemplazan a `monto_del_entero_invalido`), más los que ya había
+(`fecha_de_pago_invalida`, `documento_de_pago_invalido`, `sin_retenciones_que_enterar`, `entero_ya_anulado`…).
+
+**Auditoría:** sin cambio de reglas. `corregir` y `anular` ya registran el `EnteroDto` anterior, que ahora lleva los
+cuatro montos y el total. El alta no se audita.
+
+### 8.6 Pasos (un commit cada uno; `npm run revisar`; bitácora de `PLAN.md`)
+
+**E45-1 (servidor) — fechas futuras.** 8.4 completo (errores, `Reloj` en constancias y enteros, aviso de fin de mes).
+Pruebas: `constancia-de-retencion.prueba.ts` (hoy pasa; mañana → `ConstanciaConFechaFutura`; anterior a la retención
+sigue dando su error), `entero-de-retenciones.prueba.ts` (hoy pasa, mañana → `FechaDePagoFutura`; aviso con el día 15 y
+sin aviso el último día del mes), casos de uso con `RelojFijo` (lote: una fila futura → `constancias_en_lote_invalidas`
+con `campo: 'fecha'` y no guarda ninguna), API en `libro-de-compras-retenciones-enteros.api.prueba.ts` (`haceDias(-1)`
+→ 400 `fecha_de_pago_futura`; también al corregir) y en la de constancias (400 `constancia_con_fecha_futura`). Las
+pruebas de API usan `HOY` en hora de Guatemala (`escenario-de-documentos.ts`), así que no fallan de noche.
+
+**E45-2 (servidor) — tabla.** 8.2: `tablas.ts`, migración `0032_l5_accesorios_del_entero`. Pruebas en
+`retenciones-por-resolver-y-enteros.prueba.ts`: la lista de checks cambia `monto_positivo` por `impuesto_positivo` y
+suma `multa_no_negativa`, `intereses_no_negativos`, `mora_no_negativa`; un entero sin accesorios queda con `0.00`.
+Este paso cambia el nombre en tablas, mapeador, repositorio, dominio y DTO para que compile (`impuesto` en vez de
+`monto`, accesorios aún en 0 en el caso de uso).
+
+**E45-3 (servidor) — accesorios y avisos.** 8.3 y 8.5: esquemas, controlador, `enteroValido` con accesorios,
+`totalDelEntero`, `EnteroDto.total`, `accesorios` del grupo, texto nuevo del aviso de exceso. Pruebas: dominio (accesorio
+negativo → `accesorio_del_entero_invalido` con su campo; total = suma), `retencion-del-reporte.prueba.ts` (`pagadoDe`
+ignora accesorios y anulados), `estado-del-entero` sin cambio; API: retenido 180 + pago con impuesto 180 y multa 50 →
+estado `enterado`, `pagado: '180.00'`, `accesorios: '50.00'`, `total: '230.00'`, sin aviso de exceso; impuesto 200 →
+`con_diferencia` y aviso de exceso; corregir quitando la multa la deja en 0 y audita el anterior con `multa: '50.00'`;
+sin `multa` en el cuerpo → 0. Actualizar `diseno-datos-libro-de-compras.md` §3.9.6.4 (tabla de columnas y «enterado
+= Σ impuesto vigente = retenido»).
+
+**E45-4 (cliente) — datos y composables.** `retenciones.api.ts` (`PagoDeEntero` y `DatosDelPago` con `impuesto`,
+`multa`, `intereses`, `mora`, `total`; `GrupoDelMes.accesorios`); `datos-de-pagos.ts`: `PagoEnEdicion` con los cuatro
+(accesorios en blanco = 0), `pagoNuevo` propone lo que falta en `impuesto`, `revisarPago` (impuesto > 0, accesorios
+vacíos o ≥ 0), `cuerpoDelPago` (manda los cuatro siempre), `faltanteTrasElPago` con el impuesto, `totalDelPago(pago)` y
+`pasaLoRetenido(grupo, pago, corrigiendo)`; `usar-pago-de-entero.ts`: si `pasaLoRetenido`, `confirmar` antes de enviar
+(«El impuesto escrito más lo ya pagado pasa lo retenido por Q…. ¿Registrar de todos modos? Si incluye multa, intereses o
+mora, escríbalos en sus casillas.»); los `avisos` de la respuesta con `avisos.info` (como hoy). `errores-del-…`: los
+códigos nuevos van al campo de su `detalles.campo`. Pruebas en `datos-de-pagos.prueba.ts`.
+
+**E45-5 (cliente) — ventanas.** `VentanaDePago.vue`: «Impuesto enterado»*, y un grupo «Multa, intereses y mora (si los
+pagó en la misma boleta)» con tres campos opcionales y el total de la boleta abajo; `max` = hoy (fecha del equipo, el
+servidor manda) en la fecha de pago y en la fecha de `VentanaDeConstancias.vue`. `VentanaDePagosDelMes.vue`: cada pago
+muestra el total y, si hay accesorios, «impuesto Q… + multa Q… + intereses Q… + mora Q…». `CifrasDelGrupo.vue` /
+`TarjetasDeGrupos.vue` / `MatrizDeEnteros.vue`: «Pagado» es el impuesto; los accesorios aparte si no son 0.
+`resumenes-de-acciones.ts` (anular): «Se anula el pago de Q{total}…». Textos en `textos-de-retenciones.ts`. Celular
+380 px: los tres accesorios uno bajo otro.
+
+**E45-6 (QA, `pruebas-qa`).** Repetir los pasos de los errores 4 y 5 del informe: fecha de mañana en constancia (una
+y en lote) y en el pago; pago con fecha antes del fin del mes (aviso); pago tardío con multa e intereses (queda
+«enterado» y muestra el total); impuesto de más (confirmación y aviso). Escritorio y 380 px, claro y oscuro.
+
+### 8.7 Dudas para el usuario
+
+1. **¿Un pago de solo accesorios?** Con `impuesto > 0` no se puede registrar una boleta que solo pague multa o intereses
+   (por ejemplo, si la SAT los cobra después de un entero tardío pagado sin ellos). Recomendación: **dejar `impuesto > 0`
+   por ahora** (lo que el contador describe es todo en la misma boleta, y así «hay un entero vigente» sigue significando
+   «se pagó impuesto», que usan la baja de documentos y los avisos); si aparece el caso, una migración cambia el check a
+   `impuesto >= 0` con total `> 0` y esas reglas pasan a mirar `impuesto > 0`.
+2. **Total guardado o calculado.** Recomendación: calculado (opción A); la columna generada (C) se agrega cuando otro
+   módulo la necesite.
