@@ -1,5 +1,6 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
+import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import { constanciaValida, type ConstanciaAnotada } from '../../../dominio/retenciones/constancia-de-retencion.js';
 import { RetencionEnCero } from '../../../dominio/retenciones/errores-de-retenciones.js';
 import type { RetencionDelReporte } from '../../../dominio/retenciones/retencion-del-reporte.js';
@@ -10,6 +11,7 @@ export interface DependenciasDeConstancias {
   consultas: ConsultasDeRetenciones;
   repositorio: RepositorioDeRetenciones;
   auditoria: Auditoria;
+  reloj: Reloj;
 }
 
 /** Una constancia que el usuario quiere anotar en una retención. */
@@ -25,13 +27,14 @@ export interface ConstanciaPreparada {
   constancia: ConstanciaAnotada;
 }
 
-/** @throws RetencionEnCero, NumeroDeConstanciaInvalido, FechaDeConstanciaInvalida o ConstanciaAnteriorALaRetencion. */
+/** @throws RetencionEnCero, NumeroDeConstanciaInvalido, FechaDeConstanciaInvalida, ConstanciaAnteriorALaRetencion o ConstanciaConFechaFutura. */
 export function prepararConstancia(
   retencion: RetencionDelReporte,
   peticion: PeticionDeConstancia,
+  hoy: string,
 ): ConstanciaPreparada {
   if (retencion.monto <= 0) throw new RetencionEnCero();
-  return { retencion, constancia: constanciaValida(peticion, retencion.fecha) };
+  return { retencion, constancia: constanciaValida(peticion, retencion.fecha, hoy) };
 }
 
 /** Busca y bloquea la retención; @throws RecursoNoEncontrado. */

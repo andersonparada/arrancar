@@ -57,7 +57,7 @@ const enteroValido = (cambios: Record<string, unknown> = {}) =>
     grupo: 'iva_agentes',
     fechaDePago: '2026-04-15',
     documentoDePago: 'SAT2046',
-    monto: '150.00',
+    impuesto: '150.00',
     retenidoAlMarcar: '150.00',
     ...cambios,
   }) as typeof enterosDeRetenciones.$inferInsert;
@@ -113,7 +113,10 @@ describe('enteros de retenciones: cada check', () => {
     ['fecha_de_pago', { fechaDePago: '2026-02-28' }],
     ['documento_de_pago', { documentoDePago: 'con espacio' }],
     ['documento_de_pago', { documentoDePago: '' }],
-    ['monto_positivo', { monto: '0' }],
+    ['impuesto_positivo', { impuesto: '0' }],
+    ['multa_no_negativa', { multa: '-0.01' }],
+    ['intereses_no_negativos', { intereses: '-0.01' }],
+    ['mora_no_negativa', { mora: '-0.01' }],
     ['retenido_no_negativo', { retenidoAlMarcar: '-1' }],
     ['observaciones_rango', { observaciones: '' }],
     ['estado_valido', { estado: 'perdido' }],
@@ -124,9 +127,15 @@ describe('enteros de retenciones: cada check', () => {
     expect(await restriccionDeEntero(cambios)).toBe(`enteros_de_retenciones_${nombre}`);
   });
 
+  it('un entero sin accesorios queda con multa, intereses y mora en cero', async () => {
+    const [guardado] = await insertarEntero({ documentoDePago: 'SAT-SIN-ACCESORIOS' });
+
+    expect(guardado).toMatchObject({ impuesto: '150.00', multa: '0.00', intereses: '0.00', mora: '0.00' });
+  });
+
   it('acepta varios pagos del mismo mes y grupo y un pago anulado con sus tres datos', async () => {
     await expect(insertarEntero()).resolves.toHaveLength(1);
-    await expect(insertarEntero({ documentoDePago: 'SAT2046C', monto: '20.00' })).resolves.toHaveLength(1);
+    await expect(insertarEntero({ documentoDePago: 'SAT2046C', impuesto: '20.00' })).resolves.toHaveLength(1);
     const anulado = {
       estado: 'anulado',
       anuladoEn: new Date(),

@@ -33,10 +33,11 @@ function problemaDe(indice: number, error: unknown): ProblemaDeFila {
 function revisarFila(
   fila: { peticion: PeticionDeConstancia; indice: number },
   retencion: RetencionDelReporte | undefined,
+  hoy: string,
 ): ConstanciaPreparada | ProblemaDeFila {
   if (!retencion) return { indice: fila.indice, campo: 'retencionId', mensaje: 'La retención no existe.' };
   try {
-    return prepararConstancia(retencion, fila.peticion);
+    return prepararConstancia(retencion, fila.peticion, hoy);
   } catch (error) {
     return problemaDe(fila.indice, error);
   }
@@ -46,6 +47,7 @@ function revisarFila(
 function revisarFilas(
   peticiones: readonly PeticionDeConstancia[],
   retenciones: ReadonlyMap<string, RetencionDelReporte>,
+  hoy: string,
 ): { preparadas: ConstanciaPreparada[]; problemas: ProblemaDeFila[] } {
   const preparadas: ConstanciaPreparada[] = [];
   const problemas: ProblemaDeFila[] = [];
@@ -55,7 +57,7 @@ function revisarFilas(
     vistas.add(peticion.retencionId);
     const resultado = repetida
       ? { indice, campo: 'retencionId', mensaje: 'La retención viene repetida.' }
-      : revisarFila({ peticion, indice }, retenciones.get(peticion.retencionId));
+      : revisarFila({ peticion, indice }, retenciones.get(peticion.retencionId), hoy);
     if ('indice' in resultado) problemas.push(resultado);
     else preparadas.push(resultado);
   });
@@ -71,10 +73,11 @@ export class AnotarConstanciasEnLote {
 
   /** @throws ConstanciasEnLoteInvalidas con las filas que fallaron. */
   ejecutar(operador: Operador, constancias: readonly PeticionDeConstancia[]): Promise<ResultadoDelLote> {
-    const { unidadDeTrabajo, consultas } = this.dependencias;
+    const { unidadDeTrabajo, consultas, reloj } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const encontradas = await consultas.buscarVarias(constancias.map((c) => c.retencionId));
-      const { preparadas, problemas } = revisarFilas(constancias, new Map(encontradas.map((r) => [r.id, r])));
+      const retenciones = new Map(encontradas.map((r) => [r.id, r]));
+      const { preparadas, problemas } = revisarFilas(constancias, retenciones, await reloj.hoy(operador));
       if (problemas.length > 0) throw new ConstanciasEnLoteInvalidas(problemas);
       const avisos = await avisosDeNumerosRepetidos(consultas, preparadas);
       for (const preparada of preparadas) await guardarConstancia(this.dependencias, preparada);

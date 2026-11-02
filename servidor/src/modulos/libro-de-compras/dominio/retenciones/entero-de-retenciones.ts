@@ -1,14 +1,17 @@
 import { normalizarSerieONumero } from '../documento-de-compra.js';
 import { primerDiaDelMes } from '../periodo-del-libro.js';
 import {
+  AccesorioDelEnteroInvalido,
   DocumentoDePagoInvalido,
+  FechaDePagoFutura,
   FechaDePagoInvalida,
   GrupoDeEnteroInvalido,
   MesDelEnteroInvalido,
-  MontoDelEnteroInvalido,
+  ImpuestoDelEnteroInvalido,
   MotivoDeAnulacionDelEnteroInvalido,
   ObservacionesDelEnteroInvalidas,
 } from './errores-de-retenciones.js';
+import { fechaLegible, ultimoDiaDelMesDe } from './fechas-de-retenciones.js';
 import { grupoDeEnteroValido, type GrupoDeEntero } from './grupo-de-entero.js';
 
 const MAXIMO_DEL_DOCUMENTO = 40;
@@ -16,13 +19,17 @@ const MAXIMO_DEL_TEXTO = 300;
 const MES = /^\d{4}-(0[1-9]|1[0-2])(-01)?$/;
 const FECHA = /^\d{4}-\d{2}-\d{2}$/;
 
-/** Lo que el usuario escribe al marcar un mes y grupo como enterado; el monto, en centavos. */
+/** Lo que el usuario escribe al marcar un mes y grupo como enterado; los montos, en centavos. */
 export interface PeticionDeEntero {
   mes: string;
   grupo: string;
   fechaDePago: string;
   documentoDePago: string;
-  monto: number;
+  impuesto: number;
+  /** Opcionales: sin escribir valen cero. */
+  multa?: number;
+  intereses?: number;
+  mora?: number;
   observaciones?: string | null;
 }
 
@@ -32,7 +39,10 @@ export interface DatosDelEntero {
   grupo: GrupoDeEntero;
   fechaDePago: string;
   documentoDePago: string;
-  monto: number;
+  impuesto: number;
+  multa: number;
+  intereses: number;
+  mora: number;
   observaciones: string | null;
 }
 
@@ -49,9 +59,23 @@ function textoOpcional(texto: string | null | undefined): string | null {
   return limpio;
 }
 
-function fechaDePagoValida(fecha: string, mes: string): string {
+function fechaDePagoValida(fecha: string, mes: string, hoy: string): string {
   if (!FECHA.test(fecha) || Number.isNaN(Date.parse(fecha)) || fecha < mes) throw new FechaDePagoInvalida();
+  if (fecha > hoy) throw new FechaDePagoFutura(hoy);
   return fecha;
+}
+
+const ACCESORIOS = ['multa', 'intereses', 'mora'] as const;
+
+/** La multa, los intereses y la mora: enteros de centavos, cero si no se escriben. @throws AccesorioDelEnteroInvalido. */
+function accesoriosValidos(peticion: PeticionDeEntero): Pick<DatosDelEntero, (typeof ACCESORIOS)[number]> {
+  const valores = { multa: 0, intereses: 0, mora: 0 };
+  for (const campo of ACCESORIOS) {
+    const valor = peticion[campo] ?? 0;
+    if (!Number.isInteger(valor) || valor < 0) throw new AccesorioDelEnteroInvalido(campo);
+    valores[campo] = valor;
+  }
+  return valores;
 }
 
 function documentoDePagoValido(documento: string): string {
@@ -61,23 +85,44 @@ function documentoDePagoValido(documento: string): string {
 }
 
 /**
- * Revisa lo que escribió el usuario: mes (primer día), grupo conocido, fecha de pago no anterior al mes, formulario o
- * boleta de 1 a 40 caracteres sin espacios, monto mayor que cero y observaciones de hasta 300.
+ * Revisa lo que escribió el usuario: mes (primer día), grupo conocido, fecha de pago no anterior al mes ni posterior a
+ * `hoy` (en la zona de la empresa, que da el `Reloj`), formulario o
+ * boleta de 1 a 40 caracteres sin espacios, impuesto mayor que cero, multa, intereses y mora no negativos (cero si no se escriben) y observaciones de hasta 300.
  */
-export function enteroValido(peticion: PeticionDeEntero): DatosDelEntero {
+export function enteroValido(peticion: PeticionDeEntero, hoy: string): DatosDelEntero {
   const mes = mesDelEnteroValido(peticion.mes);
   const grupo = grupoDeEnteroValido(peticion.grupo);
   if (!grupo) throw new GrupoDeEnteroInvalido();
-  if (!Number.isInteger(peticion.monto) || peticion.monto <= 0) throw new MontoDelEnteroInvalido();
+  if (!Number.isInteger(peticion.impuesto) || peticion.impuesto <= 0) throw new ImpuestoDelEnteroInvalido();
   return {
     mes,
     grupo,
-    fechaDePago: fechaDePagoValida(peticion.fechaDePago, mes),
+    fechaDePago: fechaDePagoValida(peticion.fechaDePago, mes, hoy),
     documentoDePago: documentoDePagoValido(peticion.documentoDePago),
-    monto: peticion.monto,
+    impuesto: peticion.impuesto,
+    ...accesoriosValidos(peticion),
     observaciones: textoOpcional(peticion.observaciones),
   };
 }
+
+/**
+ * Avisa, sin bloquear, si el pago es anterior al cierre del mes de las retenciones (el último día no avisa: puede
+ * haber retenciones de ese día ya pagadas). Devuelve `null` si la fecha está bien.
+ */
+export function avisoDeFechaDePago({ fechaDePago, mes }: Pick<DatosDelEntero, 'fechaDePago' | 'mes'>): string | null {
+  const cierre = ultimoDiaDelMesDe(mes);
+  if (fechaDePago >= cierre) return null;
+  const pago = fechaLegible(fechaDePago);
+  return `La fecha de pago (${pago}) es anterior al cierre del mes de las retenciones (${fechaLegible(cierre)}): revise que la fecha y el mes sean los correctos.`;
+}
+
+/** Lo que se pagó en la boleta: el impuesto más la multa, los intereses y la mora, en centavos. No se guarda. */
+export const totalDelEntero = ({
+  impuesto,
+  multa,
+  intereses,
+  mora,
+}: Pick<DatosDelEntero, 'impuesto' | 'multa' | 'intereses' | 'mora'>) => impuesto + multa + intereses + mora;
 
 /** El motivo de anular un entero: de 1 a 300 caracteres. */
 export function motivoDeAnulacionDelEnteroValido(motivo: string): string {

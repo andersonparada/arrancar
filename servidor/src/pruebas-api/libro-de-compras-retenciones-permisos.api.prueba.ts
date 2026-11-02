@@ -45,7 +45,7 @@ const acciones = (cliente: ClienteApi) => ({
         grupo: 'iva_agentes',
         fechaDePago: HOY,
         documentoDePago: 'F1',
-        monto: '1.00',
+        impuesto: '1.00',
       })
     ).estado,
   corregir: async () =>
@@ -53,7 +53,7 @@ const acciones = (cliente: ClienteApi) => ({
       await cliente.put(`${RUTA_RETENCIONES}/enteros/${ID}`, {
         fechaDePago: HOY,
         documentoDePago: 'F1',
-        monto: '1.00',
+        impuesto: '1.00',
       })
     ).estado,
   anularEntero: async () => (await cliente.post(`${RUTA_RETENCIONES}/enteros/${ID}/anular`, { motivo: 'x' })).estado,

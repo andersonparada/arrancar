@@ -2409,9 +2409,12 @@ check (otra tabla): lo hace el dominio.
 | `empresa_id` | uuid | no | FK cascade |
 | `mes` | date | no | check primer día del mes |
 | `grupo` | text | no | check `in ('iva_agentes','isr_opcional','iva_factura_especial','isr_factura_especial')` |
-| `fecha_de_pago` | date | no | check `fecha_de_pago >= mes` |
+| `fecha_de_pago` | date | no | check `fecha_de_pago >= mes`; el dominio rechaza una fecha posterior a hoy (hora de la empresa, `Reloj`; sin check en la base) |
 | `documento_de_pago` | text | no | número de formulario o boleta; 1–40, sin espacios |
-| `monto` | numeric(14,2) | no | `> 0` |
+| `impuesto` | numeric(14,2) | no | `> 0`; lo que se aplica contra lo retenido del mes y grupo (antes `monto`; migración `0032_l5_accesorios_del_entero`) |
+| `multa` | numeric(14,2) | no | `>= 0`, por omisión `0`; Código Tributario art. 91; se copia de la boleta |
+| `intereses` | numeric(14,2) | no | `>= 0`, por omisión `0`; art. 59 |
+| `mora` | numeric(14,2) | no | `>= 0`, por omisión `0`; art. 92 |
 | `retenido_al_marcar` | numeric(14,2) | no | `>= 0`; foto de lo retenido del mes y grupo (documentos vigentes) cuando se marcó |
 | `observaciones` | text | sí | 1–300 |
 | `estado` | text | no | `'vigente'`; check `in ('vigente','anulado')` |
@@ -2420,8 +2423,12 @@ check (otra tabla): lo hace el dominio.
 
 Índice `enteros_de_retenciones_mes_idx (empresa_id, mes, grupo)`. RLS `politicaPorEmpresa()`. **Varios pagos por mes y
 grupo** (original y complementarios; pregunta L5-h): sin único. Estado derivado por mes y grupo: `sin_retenciones`,
-`pendiente` (en plazo), `vencido`, `enterado` (Σ montos vigentes = retenido actual) o `con_diferencia` (distinto; por
-ejemplo, un documento anulado o registrado después de pagar).
+`pendiente` (en plazo), `vencido`, `enterado` (Σ `impuesto` vigente = retenido actual; la multa, los intereses y la mora **no** cuentan) o `con_diferencia` (distinto; por
+ejemplo, un documento anulado o registrado después de pagar). El total de la boleta (`impuesto + multa + intereses +
+mora`) **no se guarda**: lo calcula el dominio y viaja en el DTO como `total`; cada grupo del reporte trae `pagado` (el
+impuesto) y `accesorios` (multa + intereses + mora de los pagos vigentes). Checks: `impuesto_positivo`,
+`multa_no_negativa`, `intereses_no_negativos`, `mora_no_negativa`. La fecha de pago anterior al último día del mes de las
+retenciones solo avisa; la posterior a hoy se rechaza (`fecha_de_pago_futura`).
 
 Rutas (`libro-de-compras.retenciones.enterar`, permiso **nuevo**): `POST /libro-de-compras/retenciones/enteros`,
 `PUT …/enteros/:id` (corregir: auditoría `corregir`), `POST …/enteros/:id/anular { motivo }` (auditoría `anular`, recurso

@@ -68,7 +68,10 @@ export class RepositorioDeEnterosDrizzle implements RepositorioDeEnteros {
         grupo: datos.grupo,
         fechaDePago: datos.fechaDePago,
         documentoDePago: datos.documentoDePago,
-        monto: deCentavos(datos.monto),
+        impuesto: deCentavos(datos.impuesto),
+        multa: deCentavos(datos.multa),
+        intereses: deCentavos(datos.intereses),
+        mora: deCentavos(datos.mora),
         retenidoAlMarcar: deCentavos(datos.retenidoAlMarcar),
         observaciones: datos.observaciones,
       })
@@ -82,7 +85,10 @@ export class RepositorioDeEnterosDrizzle implements RepositorioDeEnteros {
       .set({
         fechaDePago: datos.fechaDePago,
         documentoDePago: datos.documentoDePago,
-        monto: deCentavos(datos.monto),
+        impuesto: deCentavos(datos.impuesto),
+        multa: deCentavos(datos.multa),
+        intereses: deCentavos(datos.intereses),
+        mora: deCentavos(datos.mora),
         observaciones: datos.observaciones,
       })
       .where(eq(enteros.id, id));

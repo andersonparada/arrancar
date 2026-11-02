@@ -225,6 +225,13 @@
       "when": 1793564701275,
       "tag": "0031_l4_formato_xls_del_lote",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793589322839,
+      "tag": "0032_l5_accesorios_del_entero",
+      "breakpoints": true
     }
   ]
 }
