@@ -126,11 +126,19 @@ describe('tipo de persona del proveedor nuevo', () => {
     'Distribuidora El Sol S. A.',
     'Compañía Agrícola del Valle',
     'Fundación Esperanza',
+    'ACME FOUNDATION',
+    'Tech Services INC',
+    'Global Corp',
+    'Pacific Trade LLC',
+    'Asia Imports LTD',
   ])('%s es jurídica', (nombre) => {
     expect(tipoDePersonaDelNombre(nombre)).toBe('juridica');
   });
 
-  it.each(['Juan Pérez López', 'MARIA DE LOS ANGELES GARCIA', 'Salas Agrícolas'])('%s es individual', (nombre) => {
-    expect(tipoDePersonaDelNombre(nombre)).toBe('individual');
-  });
+  it.each(['Juan Pérez López', 'MARIA DE LOS ANGELES GARCIA', 'Salas Agrícolas', 'INCA PEREZ'])(
+    '%s es individual',
+    (nombre) => {
+      expect(tipoDePersonaDelNombre(nombre)).toBe('individual');
+    },
+  );
 });
