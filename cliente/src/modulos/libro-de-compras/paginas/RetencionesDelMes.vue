@@ -114,6 +114,7 @@ const puedeAnotar = usarSesion().puede('libro-de-compras.retenciones.constancias
       :grupo="pago.grupo"
       :corrigiendo="pago.corrigiendo !== null"
       :faltante="pago.faltante"
+      :total="pago.total"
       :enviando="pago.enviando"
       :errores="pago.errores"
       @guardar="pago.guardar"

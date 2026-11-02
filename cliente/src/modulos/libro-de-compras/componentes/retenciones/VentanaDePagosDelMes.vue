@@ -4,7 +4,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { formatearFecha, formatearFechaHora, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
-import { nombreDelMes } from '../../composables/retenciones/datos-de-pagos';
+import { conAccesorios, desgloseDelPago, nombreDelMes } from '../../composables/retenciones/datos-de-pagos';
 import { prefijoDelPlazo, tonoDelEstado } from '../../composables/retenciones/datos-de-retenciones';
 import type { GrupoDelMes, PagoDeEntero } from '../../servicios/retenciones.api';
 import { NOMBRES_DE_ESTADOS, VENTANA_DE_ENTEROS as textos } from '../../textos-de-retenciones';
@@ -45,7 +45,7 @@ defineEmits<{ registrar: []; corregir: [pago: PagoDeEntero]; anular: [pago: Pago
         >
           <div class="flex flex-wrap items-start justify-between gap-2">
             <p :class="pago.estado === 'anulado' ? 'line-through' : ''">
-              <strong class="tabular-nums">{{ formatearMonto(pago.monto) }}</strong>
+              <strong class="tabular-nums">{{ formatearMonto(pago.total) }}</strong>
               · {{ formatearFecha(pago.fechaDePago) }} · {{ pago.documentoDePago }}
             </p>
             <InsigniaBase v-if="pago.estado === 'anulado'" tono="rojo">Anulado</InsigniaBase>
@@ -58,6 +58,11 @@ defineEmits<{ registrar: []; corregir: [pago: PagoDeEntero]; anular: [pago: Pago
               }}</BotonBase>
             </div>
           </div>
+          <p v-if="conAccesorios(pago)" class="mt-1 text-xs tabular-nums text-tierra-600 dark:text-tierra-300">
+            <template v-for="(parte, indice) in desgloseDelPago(pago)" :key="parte.nombre">
+              <template v-if="indice > 0"> + </template>{{ parte.nombre }} {{ formatearMonto(parte.monto) }}
+            </template>
+          </p>
           <p v-if="pago.observaciones" class="mt-1 break-words text-tierra-600 dark:text-tierra-300">
             {{ pago.observaciones }}
           </p>

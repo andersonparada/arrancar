@@ -4,7 +4,7 @@ import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { PagoEnEdicion } from '../../composables/retenciones/datos-de-pagos';
-import { nombreDelMes } from '../../composables/retenciones/datos-de-pagos';
+import { fechaDeHoy, nombreDelMes, tieneAccesorios } from '../../composables/retenciones/datos-de-pagos';
 import type { GrupoDelMes } from '../../servicios/retenciones.api';
 import { VENTANA_DE_ENTEROS as textos } from '../../textos-de-retenciones';
 import CifrasDelGrupo from './CifrasDelGrupo.vue';
@@ -18,6 +18,8 @@ defineProps<{
   grupo: GrupoDelMes | null;
   corrigiendo: boolean;
   faltante: string | null;
+  /** Impuesto más multa, intereses y mora, calculado con lo escrito. */
+  total: string;
   enviando: boolean;
   errores: Record<string, string>;
   encima?: boolean;
@@ -47,6 +49,7 @@ defineEmits<{ guardar: []; cerrar: [] }>();
         v-model="pago.fechaDePago"
         tipo="date"
         :etiqueta="textos.fechaDePago"
+        :maximo="fechaDeHoy()"
         :error="errores.fechaDePago"
         requerido
       />
@@ -60,9 +63,9 @@ defineEmits<{ guardar: []; cerrar: [] }>();
         requerido
       />
       <CampoTexto
-        v-model="pago.monto"
-        :etiqueta="textos.monto"
-        :error="errores.monto"
+        v-model="pago.impuesto"
+        :etiqueta="textos.impuesto"
+        :error="errores.impuesto"
         paso="any"
         placeholder="0.00"
         requerido
@@ -73,6 +76,44 @@ defineEmits<{ guardar: []; cerrar: [] }>();
           Con este pago se pagarían {{ formatearMonto(faltante.slice(1)) }} de más.
         </template>
         <template v-else>Con este pago todavía faltarían {{ formatearMonto(faltante) }}.</template>
+      </p>
+      <details
+        class="rounded-lg ring-1 ring-tierra-200 dark:ring-tierra-700"
+        :open="tieneAccesorios(pago) || !!(errores.multa || errores.intereses || errores.mora)"
+      >
+        <summary class="cursor-pointer select-none px-3 py-2 text-sm font-medium">{{ textos.accesorios }}</summary>
+        <div class="flex flex-col gap-3 px-3 pb-3">
+          <p class="text-xs text-tierra-600 dark:text-tierra-300">{{ textos.accesoriosAyuda }}</p>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <CampoTexto
+              v-model="pago.multa"
+              :etiqueta="textos.multa"
+              :error="errores.multa"
+              paso="any"
+              placeholder="0.00"
+            />
+            <CampoTexto
+              v-model="pago.intereses"
+              :etiqueta="textos.intereses"
+              :error="errores.intereses"
+              paso="any"
+              placeholder="0.00"
+            />
+            <CampoTexto
+              v-model="pago.mora"
+              :etiqueta="textos.mora"
+              :error="errores.mora"
+              paso="any"
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+      </details>
+      <p
+        class="flex items-baseline justify-between gap-2 rounded-lg bg-tierra-100 px-3 py-2 text-sm dark:bg-tierra-800"
+      >
+        <span>{{ textos.totalDeLaBoleta }}</span>
+        <strong class="tabular-nums" role="status">{{ formatearMonto(total) }}</strong>
       </p>
       <CampoTexto
         v-model="pago.observaciones"

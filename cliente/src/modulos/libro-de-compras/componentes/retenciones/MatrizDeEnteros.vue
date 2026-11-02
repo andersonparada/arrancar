@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
+import { esCero } from '../../composables/retenciones/dinero';
 import { nombreDelMes } from '../../composables/retenciones/datos-de-pagos';
 import { GRUPOS_EN_ORDEN, tonoDelEstado } from '../../composables/retenciones/datos-de-retenciones';
 import type { GrupoDeEntero, MatrizDeEnteros } from '../../servicios/retenciones.api';
@@ -43,6 +44,9 @@ defineEmits<{ abrir: [mes: string, grupo: GrupoDeEntero] }>();
               <InsigniaBase :tono="tonoDelEstado(celda.estado)">{{ NOMBRES_DE_ESTADOS[celda.estado] }}</InsigniaBase>
               <span class="text-xs tabular-nums text-tierra-600 dark:text-tierra-300">
                 {{ formatearMonto(celda.pagado) }} de {{ formatearMonto(celda.retenido) }}
+              </span>
+              <span v-if="!esCero(celda.accesorios)" class="text-xs tabular-nums text-tierra-500 dark:text-tierra-400">
+                + {{ formatearMonto(celda.accesorios) }} extra
               </span>
             </button>
             <span v-else class="block px-2 py-1.5 text-tierra-400" aria-label="Sin retenciones">—</span>

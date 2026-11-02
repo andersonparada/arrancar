@@ -16,7 +16,7 @@ export function resumenDeQuitarConstancia(retencion: RetencionDelMes | null): st
 export function resumenDeAnularPago(pago: PagoDeEntero | null): string[] {
   if (!pago) return [];
   return [
-    `Se anula el pago de ${formatearMonto(pago.monto)} del ${formatearFecha(pago.fechaDePago)} (${pago.documentoDePago}).`,
-    'Ese monto deja de contar como pagado y el mes puede quedar con diferencia.',
+    `Se anula el pago de ${formatearMonto(pago.total)} del ${formatearFecha(pago.fechaDePago)} (${pago.documentoDePago}).`,
+    'Su impuesto deja de contar como pagado y el mes puede quedar con diferencia.',
   ];
 }

@@ -15,6 +15,8 @@ defineProps<{
   soloLectura?: boolean;
   /** Para números: `any` acepta decimales; sin él, el navegador solo acepta enteros. */
   paso?: string;
+  /** Para fechas: la última que deja elegir el navegador (`AAAA-MM-DD`). */
+  maximo?: string;
   /** Tope de caracteres que deja escribir el navegador (el servidor lo valida igual). */
   longitudMaxima?: number;
 }>();
@@ -44,6 +46,7 @@ const id = useId();
       v-model="modelo"
       :type="tipo ?? 'text'"
       :step="paso"
+      :max="maximo"
       :required="requerido"
       :placeholder="placeholder"
       :autocomplete="autocompletar"

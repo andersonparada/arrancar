@@ -49,7 +49,13 @@ export interface PagoDeEntero {
   grupo: GrupoDeEntero;
   fechaDePago: string;
   documentoDePago: string;
-  monto: string;
+  /** Solo el impuesto: es lo que cuenta contra lo retenido. */
+  impuesto: string;
+  multa: string;
+  intereses: string;
+  mora: string;
+  /** Impuesto más multa, intereses y mora: lo que costó la boleta. */
+  total: string;
   retenidoAlMarcar: string;
   observaciones: string | null;
   estado: 'vigente' | 'anulado';
@@ -71,7 +77,10 @@ export interface GrupoDelMes {
   mes: string;
   plazo: string;
   retenido: string;
+  /** Solo el impuesto de los pagos vigentes. */
   pagado: string;
+  /** Multa, intereses y mora de los pagos vigentes (no cuentan contra lo retenido). */
+  accesorios: string;
   /** Retenido menos pagado; puede ser negativo. */
   diferencia: string;
   estado: EstadoDelEntero;
@@ -118,7 +127,10 @@ export interface ConstanciaPorAnotar {
 export interface DatosDelPago {
   fechaDePago: string;
   documentoDePago: string;
-  monto: string;
+  impuesto: string;
+  multa: string;
+  intereses: string;
+  mora: string;
   observaciones: string | null;
 }
 
