@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   avisoDeFechaDePago,
+  totalDelEntero,
   enteroValido,
   mesDelEnteroValido,
   motivoDeAnulacionDelEnteroValido,
 } from './entero-de-retenciones.js';
 import {
+  AccesorioDelEnteroInvalido,
   DocumentoDePagoInvalido,
   FechaDePagoFutura,
   FechaDePagoInvalida,
@@ -70,6 +72,29 @@ describe('entero de retenciones', () => {
     );
     expect(avisoDeFechaDePago({ mes: '2026-03-01', fechaDePago: '2026-03-31' })).toBeNull();
     expect(avisoDeFechaDePago({ mes: '2026-03-01', fechaDePago: '2026-04-20' })).toBeNull();
+  });
+
+  it('los accesorios valen cero si no se escriben y el total suma impuesto, multa, intereses y mora', () => {
+    const sin = enteroValido(peticion(), HOY);
+    const con = enteroValido(peticion({ impuesto: 18000, multa: 5000, intereses: 510, mora: 100 }), HOY);
+
+    expect([sin.multa, sin.intereses, sin.mora]).toEqual([0, 0, 0]);
+    expect(totalDelEntero(sin)).toBe(12550);
+    expect(totalDelEntero(con)).toBe(23610);
+  });
+
+  it.each(['multa', 'intereses', 'mora'])('rechaza %s negativa o con decimales y dice el campo', (campo) => {
+    const negativo = () => enteroValido(peticion({ [campo]: -1 }), HOY);
+    const decimal = () => enteroValido(peticion({ [campo]: 10.5 }), HOY);
+
+    expect(negativo).toThrow(AccesorioDelEnteroInvalido);
+    expect(negativo).toThrow('La multa, los intereses y la mora no pueden ser negativos.');
+    expect(decimal).toThrow(AccesorioDelEnteroInvalido);
+    try {
+      negativo();
+    } catch (error) {
+      expect((error as AccesorioDelEnteroInvalido).detalles).toEqual({ campo });
+    }
   });
 
   it('exige el formulario o la boleta de 1 a 40 caracteres y observaciones de hasta 300', () => {

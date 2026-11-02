@@ -140,6 +140,15 @@ export class ImpuestoDelEnteroInvalido extends DatoInvalido {
   }
 }
 
+/** La multa, los intereses y la mora se copian de la boleta: enteros en centavos y nunca negativos. */
+export class AccesorioDelEnteroInvalido extends DatoInvalido {
+  readonly codigo = 'accesorio_del_entero_invalido';
+
+  constructor(campo: 'multa' | 'intereses' | 'mora') {
+    super('La multa, los intereses y la mora no pueden ser negativos.', { campo });
+  }
+}
+
 export class FechaDePagoInvalida extends DatoInvalido {
   readonly codigo = 'fecha_de_pago_invalida';
 

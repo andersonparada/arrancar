@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { claveDelGrupo } from './grupo-de-entero.js';
 import {
+  accesoriosDe,
   pagadoDe,
   resumirPorGrupo,
   retenidoPorGrupo,
@@ -111,6 +112,8 @@ describe('pagos de un mes y grupo', () => {
 
     expect(pagadoDe(pagos, '2026-09-01', 'iva_agentes')).toBe(3500);
     expect(pagadoDe(pagos, '2026-09-01', 'isr_opcional')).toBe(0);
+    expect(accesoriosDe(pagos, '2026-09-01', 'iva_agentes')).toBe(70);
+    expect(accesoriosDe([pago({ estado: 'anulado', multa: 50 })], '2026-09-01', 'iva_agentes')).toBe(0);
     expect(tieneEnteroVigente(pagos, '2026-09-01', 'iva_agentes')).toBe(true);
     expect(tieneEnteroVigente([pago({ estado: 'anulado' })], '2026-09-01', 'iva_agentes')).toBe(false);
   });

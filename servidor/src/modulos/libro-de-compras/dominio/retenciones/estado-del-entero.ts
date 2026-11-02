@@ -4,7 +4,7 @@ export type EstadoDelEntero = (typeof ESTADOS_DEL_ENTERO)[number];
 export interface DatosDelEstadoDelEntero {
   /** Retenido del mes y grupo en documentos vigentes, en centavos. */
   retenido: number;
-  /** Suma de los pagos vigentes, en centavos. */
+  /** Suma del impuesto de los pagos vigentes, en centavos (sin multa, intereses ni mora). */
   pagado: number;
   hoy: string;
   /** Último día del plazo. */

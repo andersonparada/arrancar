@@ -5,6 +5,7 @@ import type { CalendarioLaboral, FuenteDeCalendario } from '../../../dominio/cal
 import { estadoDelEntero } from '../../../dominio/retenciones/estado-del-entero.js';
 import { NOMBRE_DEL_GRUPO, plazoDelGrupo, type GrupoDeEntero } from '../../../dominio/retenciones/grupo-de-entero.js';
 import {
+  accesoriosDe,
   pagadoDe,
   resumenVacio,
   type Cantidad,
@@ -85,6 +86,7 @@ export function armarGrupo(contexto: ContextoDePlazos, entrada: EntradaDelGrupo)
     plazo,
     retenido: deCentavos(resumen.retenido),
     pagado: deCentavos(pagado),
+    accesorios: deCentavos(accesoriosDe(pagos, mes, grupo)),
     diferencia: deCentavos(resumen.retenido - pagado),
     estado,
     aviso: estado === 'vencido' ? avisoDeVencido(grupo, plazo) : null,

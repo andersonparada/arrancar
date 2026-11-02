@@ -37,10 +37,15 @@ export const esquemaDePorResolver = z.object({ estado: z.enum(['pendiente', 'res
 
 export const esquemaDeAnio = z.object({ anio: z.coerce.number().int().min(2000).max(2100) });
 
+const accesorio = dinero.default('0');
+
 const camposDelPago = {
   fechaDePago: z.iso.date(),
   documentoDePago: texto,
   impuesto: dinero,
+  multa: accesorio,
+  intereses: accesorio,
+  mora: accesorio,
   observaciones: z.string().trim().nullish(),
 };
 

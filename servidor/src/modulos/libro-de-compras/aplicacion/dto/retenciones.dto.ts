@@ -2,6 +2,7 @@ import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { EstadoDelEntero } from '../../dominio/retenciones/estado-del-entero.js';
 import { GRUPO_DE_ENTERO, type GrupoDeEntero } from '../../dominio/retenciones/grupo-de-entero.js';
 import type { AccionSugerida, ResolucionDeRetencion } from '../../dominio/retenciones/resolucion-de-retencion.js';
+import { totalDelEntero } from '../../dominio/retenciones/entero-de-retenciones.js';
 import type { EnteroGuardado, RetencionDelReporte } from '../../dominio/retenciones/retencion-del-reporte.js';
 import type { ImpuestoRetenido, ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
 
@@ -60,6 +61,8 @@ export interface EnteroDto {
   multa: string;
   intereses: string;
   mora: string;
+  /** Impuesto más multa, intereses y mora: lo que dice la boleta. */
+  total: string;
   retenidoAlMarcar: string;
   observaciones: string | null;
   estado: 'vigente' | 'anulado';
@@ -76,7 +79,10 @@ export interface GrupoDelReporteDto {
   /** Último día para enterar, con el calendario de feriados. */
   plazo: string;
   retenido: string;
+  /** El impuesto pagado (pagos vigentes); es lo que se compara con lo retenido. */
   pagado: string;
+  /** Multa, intereses y mora de los pagos vigentes; no cuentan para el estado. */
+  accesorios: string;
   /** Retenido menos pagado (puede ser negativo). */
   diferencia: string;
   estado: EstadoDelEntero;
@@ -178,6 +184,7 @@ export function dtoDeEntero(entero: EnteroGuardado): EnteroDto {
     multa: deCentavos(entero.multa),
     intereses: deCentavos(entero.intereses),
     mora: deCentavos(entero.mora),
+    total: deCentavos(totalDelEntero(entero)),
     retenidoAlMarcar: deCentavos(entero.retenidoAlMarcar),
   };
 }

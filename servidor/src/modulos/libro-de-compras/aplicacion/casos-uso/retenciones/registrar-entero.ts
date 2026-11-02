@@ -33,13 +33,20 @@ async function retenidoDe(consultas: ConsultasDeEnteros, mes: string, grupo: Gru
   return retenidoPorGrupo(sumas).get(claveDelGrupo(mes, grupo)) ?? 0;
 }
 
-/** Compara lo pagado con lo retenido: avisa cuánto falta o cuánto sobra (no bloquea). */
+/**
+ * Compara el impuesto pagado (sin multa, intereses ni mora) con lo retenido: avisa cuánto falta o cuánto sobra (no
+ * bloquea).
+ */
 async function avisosDelPago(consultas: ConsultasDeEnteros, mes: string, grupo: GrupoDeEntero): Promise<string[]> {
   const retenido = await retenidoDe(consultas, mes, grupo);
   const pagado = pagadoDe(await consultas.delRango(mes, mes), mes, grupo);
   if (pagado < retenido) return [`Falta enterar Q${deCentavos(retenido - pagado)} de lo retenido en ese mes y grupo.`];
-  if (pagado > retenido)
-    return [`Lo pagado pasa en Q${deCentavos(pagado - retenido)} de lo retenido en ese mes y grupo.`];
+  if (pagado > retenido) {
+    const pasa = `pasa lo retenido (Q${deCentavos(retenido)}) por Q${deCentavos(pagado - retenido)}`;
+    return [
+      `El impuesto pagado en ese mes y grupo (Q${deCentavos(pagado)}) ${pasa}. La multa, los intereses y la mora van en sus casillas y no cuentan aquí: revise que no los sumó al impuesto.`,
+    ];
+  }
   return [];
 }
 

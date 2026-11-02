@@ -126,6 +126,13 @@ export function pagadoDe(pagos: readonly EnteroGuardado[], mes: string, grupo: G
     .reduce((suma, pago) => suma + pago.impuesto, 0);
 }
 
+/** La multa, los intereses y la mora de los pagos vigentes de un mes y grupo, en centavos (no cuentan para el estado). */
+export function accesoriosDe(pagos: readonly EnteroGuardado[], mes: string, grupo: GrupoDeEntero): number {
+  return pagos
+    .filter((pago) => pago.estado === 'vigente' && pago.mes === mes && pago.grupo === grupo)
+    .reduce((suma, pago) => suma + pago.multa + pago.intereses + pago.mora, 0);
+}
+
 /** `true` si el mes y grupo tiene algún pago vigente. */
 export const tieneEnteroVigente = (pagos: readonly EnteroGuardado[], mes: string, grupo: GrupoDeEntero): boolean =>
   pagos.some((pago) => pago.estado === 'vigente' && pago.mes === mes && pago.grupo === grupo);
