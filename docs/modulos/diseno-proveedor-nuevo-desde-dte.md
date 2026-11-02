@@ -311,3 +311,33 @@ la regla de §2.3 sale de él (formato del RTU, `NOMBRES , APELLIDOS` con coma, 
 
 **P2. Escritura del nombre — respondida (2026-11-01):** tal cual el DTE (mayúsculas).
 
+
+## 7. Validación del contador (errores 4 y 5, 2026-11-01)
+
+**Error 4 — de acuerdo, rechazar fechas futuras** (fecha de hoy en hora de Guatemala, `Reloj`):
+
+- Constancia: nunca es legítimamente futura (se emite al retener, en RetenIVA o Retenciones Web; Decreto 10-2012 art.
+  48; Decreto 20-2006 y AG 425-2006 art. 10).
+- Entero: un pago «programado» en banca no es un pago; contarlo como enterado oculta intereses (Código Tributario art.
+  59), multa (art. 91: 100 %, 50 % antes del requerimiento) y mora (art. 92). Si se quisiera registrar pagos agendados,
+  haría falta otro estado («programado») que no cuente como enterado.
+- Ajuste: **avisar** (sin rechazar) si la fecha de pago es anterior al fin del mes de las retenciones.
+
+**Error 5 — avisar sin rechazar, pero con campos aparte para los accesorios:**
+
+- Un entero tardío se paga en la misma declaración y boleta (SAT-1331 para ISR; boleta SAT-2000 por el total con
+  multa, intereses y mora), así que pagado > retenido es normal en ese caso.
+- Guardar `impuesto` (lo que se aplica contra lo retenido), `multa`, `intereses` y `mora` (`numeric(14,2)`, ≥ 0, 0 por
+  omisión) y el total como suma. El estado «enterado» y el aviso de exceso comparan **solo el impuesto**. Los accesorios
+  son gasto y, en general, no deducibles para ISR (Decreto 10-2012 art. 23, literal por confirmar). El sistema no los
+  calcula: se copian de la boleta. El cambio de tabla lo planifica `arquitecto-de-datos`.
+- Correcciones: las retenciones de ISR se declaran en el **SAT-1331** (no SAT-1311); el SAT-2046 es el IVA del pequeño
+  contribuyente.
+
+**Dudas abiertas:** número del formulario de pago de RetenIVA; si multa (art. 91) y mora (art. 92) se cobran juntas en
+el pago voluntario tardío; literal del art. 23 del Decreto 10-2012. Fuentes de Declaraguate secundarias (el portal de
+la SAT respondió 403): Vesco (SAT-1331), Código Tributario en Wikisource.
+
+**Respuestas del usuario (2026-11-01):** rechazar fechas futuras (sin estado «programado»), con aviso si el pago es
+anterior al fin del mes; **tres campos** de accesorios (`multa`, `intereses`, `mora`) además del `impuesto`; el estado y
+el aviso de exceso comparan solo el impuesto.
