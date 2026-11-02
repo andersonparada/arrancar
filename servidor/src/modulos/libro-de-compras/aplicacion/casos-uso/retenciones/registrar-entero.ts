@@ -1,9 +1,11 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
+import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import {
+  avisoDeFechaDePago,
   enteroValido,
   motivoDeAnulacionDelEnteroValido,
   type DatosDelEntero,
@@ -20,6 +22,7 @@ interface Dependencias {
   consultas: ConsultasDeEnteros;
   repositorio: RepositorioDeEnteros;
   auditoria: Auditoria;
+  reloj: Reloj;
 }
 
 const RECURSO = 'libro-de-compras.enteros-de-retenciones';
@@ -40,6 +43,12 @@ async function avisosDelPago(consultas: ConsultasDeEnteros, mes: string, grupo: 
   return [];
 }
 
+/** El aviso de una fecha de pago anterior al cierre del mes, si lo hay. */
+const avisoDeFecha = (datos: DatosDelEntero): string[] => {
+  const aviso = avisoDeFechaDePago(datos);
+  return aviso ? [aviso] : [];
+};
+
 async function buscarEntero(consultas: ConsultasDeEnteros, id: string): Promise<EnteroGuardado> {
   const entero = await consultas.buscar(id, true);
   if (!entero) throw new RecursoNoEncontrado('El entero');
@@ -55,13 +64,13 @@ export class RegistrarEntero {
 
   /** @throws SinRetencionesQueEnterar y los errores de `enteroValido` (mes, grupo, fecha, formulario, monto). */
   ejecutar(operador: Operador, peticion: PeticionDeEntero): Promise<ResultadoDeEnteroDto> {
-    const datos = enteroValido(peticion);
-    const { unidadDeTrabajo, consultas, repositorio } = this.dependencias;
+    const { unidadDeTrabajo, consultas, repositorio, reloj } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
+      const datos = enteroValido(peticion, await reloj.hoy(operador));
       const retenidoAlMarcar = await retenidoDe(consultas, datos.mes, datos.grupo);
       if (retenidoAlMarcar === 0) throw new SinRetencionesQueEnterar();
       const id = await repositorio.crear(operador.empresaId, { ...datos, retenidoAlMarcar });
-      const avisos = await avisosDelPago(consultas, datos.mes, datos.grupo);
+      const avisos = [...(await avisosDelPago(consultas, datos.mes, datos.grupo)), ...avisoDeFecha(datos)];
       return { entero: dtoDeEntero(await buscarEntero(consultas, id)), avisos };
     });
   }
@@ -77,11 +86,11 @@ export class CorregirEntero {
     id: string,
     peticion: Omit<PeticionDeEntero, 'mes' | 'grupo'>,
   ): Promise<ResultadoDeEnteroDto> {
-    const { unidadDeTrabajo, consultas, repositorio, auditoria } = this.dependencias;
+    const { unidadDeTrabajo, consultas, repositorio, auditoria, reloj } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const actual = await buscarEntero(consultas, id);
       if (actual.estado === 'anulado') throw new EnteroYaAnulado();
-      const datos = enteroValido({ ...peticion, mes: actual.mes, grupo: actual.grupo });
+      const datos = enteroValido({ ...peticion, mes: actual.mes, grupo: actual.grupo }, await reloj.hoy(operador));
       await auditoria.registrar({
         recurso: RECURSO,
         registroId: id,
@@ -89,7 +98,7 @@ export class CorregirEntero {
         anterior: dtoDeEntero(actual),
       });
       await repositorio.corregir(id, soloLoEscrito(datos));
-      const avisos = await avisosDelPago(consultas, actual.mes, actual.grupo);
+      const avisos = [...(await avisosDelPago(consultas, actual.mes, actual.grupo)), ...avisoDeFecha(datos)];
       return { entero: dtoDeEntero(await buscarEntero(consultas, id)), avisos };
     });
   }

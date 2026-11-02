@@ -26,14 +26,14 @@ export class AnotarConstancia {
   constructor(private readonly dependencias: Dependencias) {}
 
   /**
-   * @throws RecursoNoEncontrado, RetencionEnCero, NumeroDeConstanciaInvalido, FechaDeConstanciaInvalida o
-   *   ConstanciaAnteriorALaRetencion.
+   * @throws RecursoNoEncontrado, RetencionEnCero, NumeroDeConstanciaInvalido, FechaDeConstanciaInvalida,
+   *   ConstanciaAnteriorALaRetencion o ConstanciaConFechaFutura.
    */
   ejecutar(operador: Operador, peticion: PeticionDeConstancia): Promise<ConstanciaAnotadaDto> {
-    const { unidadDeTrabajo, consultas } = this.dependencias;
+    const { unidadDeTrabajo, consultas, reloj } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const retencion = await retencionBloqueada(consultas, peticion.retencionId);
-      const preparada = prepararConstancia(retencion, peticion);
+      const preparada = prepararConstancia(retencion, peticion, await reloj.hoy(operador));
       const avisos = await avisosDeNumerosRepetidos(consultas, [preparada]);
       await guardarConstancia(this.dependencias, preparada);
       const guardada = await consultas.buscar(retencion.id, false);

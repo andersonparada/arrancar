@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { consultar, HOY } from './soporte/escenario-de-documentos.js';
+import { consultar, haceDias, HOY } from './soporte/escenario-de-documentos.js';
 import {
   filasDelDocumento,
   MES_DE_HOY,
@@ -86,6 +86,17 @@ describe('anotar una constancia', () => {
     expect(noExiste.estado).toBe(404);
   });
 
+  it('rechaza la fecha de mañana: una constancia no es de una fecha que aún no llega', async () => {
+    const respuesta = await constancia(isr, { fecha: haceDias(-1) });
+
+    expect(respuesta.estado).toBe(400);
+    expect(respuesta.cuerpo.error).toMatchObject({
+      codigo: 'constancia_con_fecha_futura',
+      detalles: { campo: 'fecha' },
+    });
+    expect((await retencionDe(isr)).constanciaNumero).toBeNull();
+  });
+
   it('quitarla exige el motivo y se audita como «quitar»', async () => {
     const sinMotivo = await e.propietario.delete(`${RUTA_RETENCIONES}/${iva2}/constancia`, { motivo: ' ' });
     const quitada = await e.propietario.delete(`${RUTA_RETENCIONES}/${iva2}/constancia`, {
@@ -122,6 +133,15 @@ describe('anotar constancias en lote', () => {
     ]);
     expect((await retencionDe(iva2)).constanciaNumero).toBeNull();
     expect((await retencionDe(isr)).constanciaNumero).toBeNull();
+  });
+
+  it('una fila con la fecha de mañana falla por fila y no guarda ninguna', async () => {
+    const respuesta = await lote([fila(iva2), fila(isr, { fecha: haceDias(-1) })]);
+
+    expect(respuesta.estado).toBe(400);
+    expect(respuesta.cuerpo.error.codigo).toBe('constancias_en_lote_invalidas');
+    expect(respuesta.cuerpo.error.detalles.filas).toEqual([expect.objectContaining({ indice: 1, campo: 'fecha' })]);
+    expect((await retencionDe(iva2)).constanciaNumero).toBeNull();
   });
 
   it('rechaza una retención repetida o inexistente en el lote', async () => {

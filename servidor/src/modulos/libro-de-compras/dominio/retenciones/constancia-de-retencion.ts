@@ -1,6 +1,7 @@
 import { normalizarSerieONumero } from '../documento-de-compra.js';
 import {
   ConstanciaAnteriorALaRetencion,
+  ConstanciaConFechaFutura,
   FechaDeConstanciaInvalida,
   MotivoDeLaConstanciaInvalido,
   NumeroDeConstanciaInvalido,
@@ -22,15 +23,21 @@ export function numeroDeConstanciaValido(numero: string): string {
 }
 
 /**
- * La constancia lista para guardar. La fecha no puede ser anterior a la de la retención.
- * @throws NumeroDeConstanciaInvalido, FechaDeConstanciaInvalida o ConstanciaAnteriorALaRetencion.
+ * La constancia lista para guardar. La fecha no puede ser anterior a la de la retención ni posterior a hoy.
+ * @throws NumeroDeConstanciaInvalido, FechaDeConstanciaInvalida, ConstanciaAnteriorALaRetencion o
+ *   ConstanciaConFechaFutura.
  */
-export function constanciaValida(constancia: ConstanciaAnotada, fechaDeLaRetencion: string): ConstanciaAnotada {
+export function constanciaValida(
+  constancia: ConstanciaAnotada,
+  fechaDeLaRetencion: string,
+  hoy: string,
+): ConstanciaAnotada {
   const numero = numeroDeConstanciaValido(constancia.numero);
   if (!FECHA.test(constancia.fecha) || Number.isNaN(Date.parse(constancia.fecha))) {
     throw new FechaDeConstanciaInvalida();
   }
   if (constancia.fecha < fechaDeLaRetencion) throw new ConstanciaAnteriorALaRetencion(fechaDeLaRetencion);
+  if (constancia.fecha > hoy) throw new ConstanciaConFechaFutura(hoy);
   return { numero, fecha: constancia.fecha };
 }
 

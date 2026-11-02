@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { consultar, HOY, RUTA_DOCUMENTOS } from './soporte/escenario-de-documentos.js';
+import { consultar, haceDias, HOY, RUTA_DOCUMENTOS } from './soporte/escenario-de-documentos.js';
 import {
   FECHA_VIEJA,
   MES_VIEJO,
@@ -162,5 +162,39 @@ describe('enteros: corregir, anular y la matriz del año', () => {
     expect(mes.grupos).toHaveLength(4);
     expect(mes.grupos[0]).toMatchObject({ grupo: 'iva_agentes', pagado: '90.00', estado: 'con_diferencia' });
     expect(mes.grupos[0].plazo > MES_VIEJO).toBe(true);
+  });
+});
+
+describe('enteros: fechas de pago', () => {
+  it('rechaza la fecha de mañana: un pago programado todavía no es un pago', async () => {
+    const respuesta = await enterar({ fechaDePago: haceDias(-1) });
+
+    expect(respuesta.estado).toBe(400);
+    expect(respuesta.cuerpo.error).toMatchObject({
+      codigo: 'fecha_de_pago_futura',
+      detalles: { campo: 'fechaDePago' },
+    });
+  });
+
+  it('rechaza la fecha de mañana también al corregir', async () => {
+    const [pago] = (await grupoDelMes(MES_VIEJO)).pagos;
+
+    const respuesta = await e.propietario.put(`${RUTA}/${pago.id}`, {
+      fechaDePago: haceDias(-1),
+      documentoDePago: 'SAT2046',
+      monto: '90.00',
+    });
+
+    expect(respuesta.estado).toBe(400);
+    expect(respuesta.cuerpo.error.codigo).toBe('fecha_de_pago_futura');
+  });
+
+  it('avisa, sin bloquear, si el pago es anterior al fin del mes de las retenciones', async () => {
+    const mes = MES_VIEJO.slice(0, 7);
+    const pago = await enterar({ fechaDePago: `${mes}-15`, documentoDePago: 'AVISO-FECHA' });
+
+    expect(pago.estado).toBe(201);
+    expect(pago.cuerpo.avisos.join(' ')).toContain('es anterior al cierre del mes de las retenciones');
+    await e.propietario.post(`${RUTA}/${pago.cuerpo.entero.id}/anular`, { motivo: 'Prueba del aviso' });
   });
 });

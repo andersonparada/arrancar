@@ -1,4 +1,5 @@
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../../core/compartido/dominio/errores.js';
+import { fechaLegible } from './fechas-de-retenciones.js';
 
 /** El número de la constancia: de 1 a 40 caracteres sin espacios. */
 export class NumeroDeConstanciaInvalido extends DatoInvalido {
@@ -25,6 +26,15 @@ export class ConstanciaAnteriorALaRetencion extends DatoInvalido {
     super(`La fecha de la constancia no puede ser anterior a la retención (${fechaDeLaRetencion}).`, {
       campo: 'fecha',
     });
+  }
+}
+
+/** La constancia se emite al retener: nunca es de una fecha que aún no llega. */
+export class ConstanciaConFechaFutura extends DatoInvalido {
+  readonly codigo = 'constancia_con_fecha_futura';
+
+  constructor(hoy: string) {
+    super(`La fecha de la constancia no puede ser posterior a hoy (${fechaLegible(hoy)}).`, { campo: 'fecha' });
   }
 }
 
@@ -135,6 +145,18 @@ export class FechaDePagoInvalida extends DatoInvalido {
 
   constructor() {
     super('La fecha de pago no puede ser anterior al mes de las retenciones.', { campo: 'fechaDePago' });
+  }
+}
+
+/** Un pago programado en el banco todavía no es un pago: se registra cuando se haya hecho. */
+export class FechaDePagoFutura extends DatoInvalido {
+  readonly codigo = 'fecha_de_pago_futura';
+
+  constructor(hoy: string) {
+    super(
+      `La fecha de pago no puede ser posterior a hoy (${fechaLegible(hoy)}): registre el pago cuando lo haya hecho.`,
+      { campo: 'fechaDePago' },
+    );
   }
 }
 

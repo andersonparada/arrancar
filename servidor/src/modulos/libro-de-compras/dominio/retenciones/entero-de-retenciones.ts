@@ -2,6 +2,7 @@ import { normalizarSerieONumero } from '../documento-de-compra.js';
 import { primerDiaDelMes } from '../periodo-del-libro.js';
 import {
   DocumentoDePagoInvalido,
+  FechaDePagoFutura,
   FechaDePagoInvalida,
   GrupoDeEnteroInvalido,
   MesDelEnteroInvalido,
@@ -9,6 +10,7 @@ import {
   MotivoDeAnulacionDelEnteroInvalido,
   ObservacionesDelEnteroInvalidas,
 } from './errores-de-retenciones.js';
+import { fechaLegible, ultimoDiaDelMesDe } from './fechas-de-retenciones.js';
 import { grupoDeEnteroValido, type GrupoDeEntero } from './grupo-de-entero.js';
 
 const MAXIMO_DEL_DOCUMENTO = 40;
@@ -49,8 +51,9 @@ function textoOpcional(texto: string | null | undefined): string | null {
   return limpio;
 }
 
-function fechaDePagoValida(fecha: string, mes: string): string {
+function fechaDePagoValida(fecha: string, mes: string, hoy: string): string {
   if (!FECHA.test(fecha) || Number.isNaN(Date.parse(fecha)) || fecha < mes) throw new FechaDePagoInvalida();
+  if (fecha > hoy) throw new FechaDePagoFutura(hoy);
   return fecha;
 }
 
@@ -61,10 +64,11 @@ function documentoDePagoValido(documento: string): string {
 }
 
 /**
- * Revisa lo que escribió el usuario: mes (primer día), grupo conocido, fecha de pago no anterior al mes, formulario o
+ * Revisa lo que escribió el usuario: mes (primer día), grupo conocido, fecha de pago no anterior al mes ni posterior a
+ * `hoy` (en la zona de la empresa, que da el `Reloj`), formulario o
  * boleta de 1 a 40 caracteres sin espacios, monto mayor que cero y observaciones de hasta 300.
  */
-export function enteroValido(peticion: PeticionDeEntero): DatosDelEntero {
+export function enteroValido(peticion: PeticionDeEntero, hoy: string): DatosDelEntero {
   const mes = mesDelEnteroValido(peticion.mes);
   const grupo = grupoDeEnteroValido(peticion.grupo);
   if (!grupo) throw new GrupoDeEnteroInvalido();
@@ -72,11 +76,22 @@ export function enteroValido(peticion: PeticionDeEntero): DatosDelEntero {
   return {
     mes,
     grupo,
-    fechaDePago: fechaDePagoValida(peticion.fechaDePago, mes),
+    fechaDePago: fechaDePagoValida(peticion.fechaDePago, mes, hoy),
     documentoDePago: documentoDePagoValido(peticion.documentoDePago),
     monto: peticion.monto,
     observaciones: textoOpcional(peticion.observaciones),
   };
+}
+
+/**
+ * Avisa, sin bloquear, si el pago es anterior al cierre del mes de las retenciones (el último día no avisa: puede
+ * haber retenciones de ese día ya pagadas). Devuelve `null` si la fecha está bien.
+ */
+export function avisoDeFechaDePago({ fechaDePago, mes }: Pick<DatosDelEntero, 'fechaDePago' | 'mes'>): string | null {
+  const cierre = ultimoDiaDelMesDe(mes);
+  if (fechaDePago >= cierre) return null;
+  const pago = fechaLegible(fechaDePago);
+  return `La fecha de pago (${pago}) es anterior al cierre del mes de las retenciones (${fechaLegible(cierre)}): revise que la fecha y el mes sean los correctos.`;
 }
 
 /** El motivo de anular un entero: de 1 a 300 caracteres. */
