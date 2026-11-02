@@ -580,3 +580,6 @@ y en lote) y en el pago; pago con fecha antes del fin del mes (aviso); pago tard
    `impuesto >= 0` con total `> 0` y esas reglas pasan a mirar `impuesto > 0`.
 2. **Total guardado o calculado.** Recomendación: calculado (opción A); la columna generada (C) se agrega cuando otro
    módulo la necesite.
+
+**Respuestas del usuario al plan de datos (2026-11-01):** el impuesto del entero sigue siendo `> 0` (no se registran
+pagos de solo accesorios por ahora); el total no se guarda, se calcula.
