@@ -104,12 +104,7 @@ export class CorregirEntero {
   }
 }
 
-const soloLoEscrito = ({ fechaDePago, documentoDePago, monto, observaciones }: DatosDelEntero) => ({
-  fechaDePago,
-  documentoDePago,
-  monto,
-  observaciones,
-});
+const soloLoEscrito = ({ mes: _mes, grupo: _grupo, ...escrito }: DatosDelEntero) => escrito;
 
 /** Anula un pago registrado por error: queda como rastro, ya no cuenta y se audita `anular`. */
 export class AnularEntero {

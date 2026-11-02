@@ -47,7 +47,10 @@ const pago = (cambios: Partial<EnteroGuardado> = {}): EnteroGuardado => ({
   grupo: 'iva_agentes',
   fechaDePago: '2026-10-15',
   documentoDePago: 'F1',
-  monto: 3000,
+  impuesto: 3000,
+  multa: 0,
+  intereses: 0,
+  mora: 0,
   retenidoAlMarcar: 3000,
   observaciones: null,
   estado: 'vigente',
@@ -104,7 +107,7 @@ describe('resumen de lo retenido por mes y grupo', () => {
 
 describe('pagos de un mes y grupo', () => {
   it('suma solo los vigentes y sabe si hay alguno', () => {
-    const pagos = [pago(), pago({ monto: 500 }), pago({ estado: 'anulado', monto: 9999 })];
+    const pagos = [pago(), pago({ impuesto: 500, multa: 70 }), pago({ estado: 'anulado', impuesto: 9999 })];
 
     expect(pagadoDe(pagos, '2026-09-01', 'iva_agentes')).toBe(3500);
     expect(pagadoDe(pagos, '2026-09-01', 'isr_opcional')).toBe(0);

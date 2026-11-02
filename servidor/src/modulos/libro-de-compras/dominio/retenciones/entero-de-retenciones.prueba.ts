@@ -11,7 +11,7 @@ import {
   FechaDePagoInvalida,
   GrupoDeEnteroInvalido,
   MesDelEnteroInvalido,
-  MontoDelEnteroInvalido,
+  ImpuestoDelEnteroInvalido,
   MotivoDeAnulacionDelEnteroInvalido,
   ObservacionesDelEnteroInvalidas,
 } from './errores-de-retenciones.js';
@@ -23,7 +23,7 @@ const peticion = (cambios: Record<string, unknown> = {}) => ({
   grupo: 'iva_agentes',
   fechaDePago: '2026-10-15',
   documentoDePago: ' sat 2046 ',
-  monto: 12550,
+  impuesto: 12550,
   observaciones: null,
   ...cambios,
 });
@@ -35,7 +35,10 @@ describe('entero de retenciones', () => {
       grupo: 'iva_agentes',
       fechaDePago: '2026-10-15',
       documentoDePago: 'SAT2046',
-      monto: 12550,
+      impuesto: 12550,
+      multa: 0,
+      intereses: 0,
+      mora: 0,
       observaciones: null,
     });
   });
@@ -46,10 +49,10 @@ describe('entero de retenciones', () => {
     expect(() => mesDelEnteroValido('2026-13')).toThrow(MesDelEnteroInvalido);
   });
 
-  it('rechaza un grupo desconocido, un monto en cero o decimal, y una fecha anterior al mes', () => {
+  it('rechaza un grupo desconocido, un impuesto en cero o decimal, y una fecha anterior al mes', () => {
     expect(() => enteroValido(peticion({ grupo: 'otro' }), HOY)).toThrow(GrupoDeEnteroInvalido);
-    expect(() => enteroValido(peticion({ monto: 0 }), HOY)).toThrow(MontoDelEnteroInvalido);
-    expect(() => enteroValido(peticion({ monto: 10.5 }), HOY)).toThrow(MontoDelEnteroInvalido);
+    expect(() => enteroValido(peticion({ impuesto: 0 }), HOY)).toThrow(ImpuestoDelEnteroInvalido);
+    expect(() => enteroValido(peticion({ impuesto: 10.5 }), HOY)).toThrow(ImpuestoDelEnteroInvalido);
     expect(() => enteroValido(peticion({ fechaDePago: '2026-08-31' }), HOY)).toThrow(FechaDePagoInvalida);
   });
 

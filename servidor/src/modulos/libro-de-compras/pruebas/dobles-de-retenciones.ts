@@ -30,15 +30,18 @@ export class ConsultasDeEnterosEnMemoria implements Pick<ConsultasDeEnteros, 'de
   }
 
   /** Un pago vigente de un mes y grupo, con lo mínimo. */
-  agregarVigente(mes: string, grupo: EnteroGuardado['grupo'], monto = 1000): void {
+  agregarVigente(mes: string, grupo: EnteroGuardado['grupo'], impuesto = 1000): void {
     this.pagos.push({
       id: crypto.randomUUID(),
       mes,
       grupo,
       fechaDePago: mes,
       documentoDePago: 'F-1',
-      monto,
-      retenidoAlMarcar: monto,
+      impuesto,
+      multa: 0,
+      intereses: 0,
+      mora: 0,
+      retenidoAlMarcar: impuesto,
       observaciones: null,
       estado: 'vigente',
       anuladoEn: null,

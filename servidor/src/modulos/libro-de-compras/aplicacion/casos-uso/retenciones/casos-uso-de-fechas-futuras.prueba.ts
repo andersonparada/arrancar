@@ -84,7 +84,7 @@ const peticion = (fechaDePago: string) => ({
   grupo: 'iva_agentes',
   fechaDePago,
   documentoDePago: 'F-1',
-  monto: 1000,
+  impuesto: 1000,
 });
 
 describe('enteros con fechas futuras y avisos de fecha', () => {

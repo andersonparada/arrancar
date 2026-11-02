@@ -22,7 +22,7 @@ const enterar = (cambios: Record<string, unknown> = {}) =>
     grupo: 'iva_agentes',
     fechaDePago: HOY,
     documentoDePago: 'sat 2046',
-    monto: '90.00',
+    impuesto: '90.00',
     ...cambios,
   });
 const grupoDelMes = async (mes: string, grupo = 'iva_agentes') =>
@@ -51,7 +51,7 @@ describe('enteros: estado del mes y grupo', () => {
     expect(respuesta.cuerpo.entero).toMatchObject({
       grupo: 'iva_agentes',
       documentoDePago: 'SAT2046',
-      monto: '90.00',
+      impuesto: '90.00',
       retenidoAlMarcar: '180.00',
       estado: 'vigente',
     });
@@ -77,13 +77,13 @@ describe('enteros: estado del mes y grupo', () => {
   it('rechaza enterar un mes y grupo sin retenciones y los datos mal escritos', async () => {
     const sinRetenciones = await enterar({ grupo: 'isr_opcional' });
     const deOtroGrupo = await enterar({ grupo: 'otro' });
-    const sinMonto = await enterar({ monto: '0.00' });
+    const sinMonto = await enterar({ impuesto: '0.00' });
     const mesMalo = await enterar({ mes: '2026-15' });
     const antesDelMes = await enterar({ fechaDePago: '2020-01-01' });
 
     expect(sinRetenciones.cuerpo.error.codigo).toBe('sin_retenciones_que_enterar');
     expect(deOtroGrupo.estado).toBe(400);
-    expect(sinMonto.cuerpo.error.codigo).toBe('monto_del_entero_invalido');
+    expect(sinMonto.cuerpo.error.codigo).toBe('impuesto_del_entero_invalido');
     expect(mesMalo.estado).toBe(400);
     expect(antesDelMes.cuerpo.error.codigo).toBe('fecha_de_pago_invalida');
   });
@@ -130,23 +130,23 @@ describe('enteros: corregir, anular y la matriz del año', () => {
     const corregido = await e.propietario.put(`${RUTA}/${pago.id}`, {
       fechaDePago: HOY,
       documentoDePago: 'SAT2046-D',
-      monto: '100.00',
+      impuesto: '100.00',
       observaciones: 'Complemento corregido',
     });
     const anulado = await e.propietario.post(`${RUTA}/${pago.id}/anular`, { motivo: 'Pago duplicado' });
     const otraVez = await e.propietario.post(`${RUTA}/${pago.id}/anular`, { motivo: 'Otra vez' });
     const sinMotivo = await e.propietario.post(`${RUTA}/${grupo.pagos[0].id}/anular`, { motivo: ' ' });
 
-    expect(corregido.cuerpo.entero).toMatchObject({ documentoDePago: 'SAT2046-D', monto: '100.00' });
+    expect(corregido.cuerpo.entero).toMatchObject({ documentoDePago: 'SAT2046-D', impuesto: '100.00' });
     expect(anulado.cuerpo.entero).toMatchObject({ estado: 'anulado', motivoDeAnulacion: 'Pago duplicado' });
     expect(otraVez.cuerpo.error.codigo).toBe('entero_ya_anulado');
     expect(sinMotivo.estado).toBe(400);
-    const auditadas = await consultar<{ accion: string; anterior: { monto: string } }>(
+    const auditadas = await consultar<{ accion: string; anterior: { impuesto: string } }>(
       "select accion, anterior from core.auditoria where recurso = 'libro-de-compras.enteros-de-retenciones' and registro_id = $1 order by creado_en",
       [pago.id],
     );
     expect(auditadas.map((a) => a.accion)).toEqual(['corregir', 'anular']);
-    expect(auditadas[0]?.anterior.monto).toBe('90.00');
+    expect(auditadas[0]?.anterior.impuesto).toBe('90.00');
     const despues = await grupoDelMes(MES_VIEJO);
     expect(despues.pagado).toBe('90.00');
   });
@@ -182,7 +182,7 @@ describe('enteros: fechas de pago', () => {
     const respuesta = await e.propietario.put(`${RUTA}/${pago.id}`, {
       fechaDePago: haceDias(-1),
       documentoDePago: 'SAT2046',
-      monto: '90.00',
+      impuesto: '90.00',
     });
 
     expect(respuesta.estado).toBe(400);

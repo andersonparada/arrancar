@@ -40,7 +40,11 @@ export interface EnteroGuardado {
   grupo: GrupoDeEntero;
   fechaDePago: string;
   documentoDePago: string;
-  monto: number;
+  /** Lo que se aplica contra lo retenido; los accesorios de la misma boleta van aparte. */
+  impuesto: number;
+  multa: number;
+  intereses: number;
+  mora: number;
   retenidoAlMarcar: number;
   observaciones: string | null;
   estado: 'vigente' | 'anulado';
@@ -115,11 +119,11 @@ export function resumirPorGrupo(retenciones: readonly RetencionDelReporte[]): Ma
   return resumenes;
 }
 
-/** Lo pagado en un mes y grupo: la suma de los pagos vigentes. */
+/** Lo pagado en un mes y grupo: la suma del impuesto de los pagos vigentes (los accesorios no cuentan). */
 export function pagadoDe(pagos: readonly EnteroGuardado[], mes: string, grupo: GrupoDeEntero): number {
   return pagos
     .filter((pago) => pago.estado === 'vigente' && pago.mes === mes && pago.grupo === grupo)
-    .reduce((suma, pago) => suma + pago.monto, 0);
+    .reduce((suma, pago) => suma + pago.impuesto, 0);
 }
 
 /** `true` si el mes y grupo tiene algún pago vigente. */

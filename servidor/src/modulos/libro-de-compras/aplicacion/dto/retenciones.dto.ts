@@ -55,7 +55,11 @@ export interface EnteroDto {
   grupo: GrupoDeEntero;
   fechaDePago: string;
   documentoDePago: string;
-  monto: string;
+  /** Lo que se aplica contra lo retenido; la multa, los intereses y la mora van aparte. */
+  impuesto: string;
+  multa: string;
+  intereses: string;
+  mora: string;
   retenidoAlMarcar: string;
   observaciones: string | null;
   estado: 'vigente' | 'anulado';
@@ -170,7 +174,10 @@ export function dtoDeRetencion(retencion: RetencionDelReporte): RetencionDto {
 export function dtoDeEntero(entero: EnteroGuardado): EnteroDto {
   return {
     ...entero,
-    monto: deCentavos(entero.monto),
+    impuesto: deCentavos(entero.impuesto),
+    multa: deCentavos(entero.multa),
+    intereses: deCentavos(entero.intereses),
+    mora: deCentavos(entero.mora),
     retenidoAlMarcar: deCentavos(entero.retenidoAlMarcar),
   };
 }

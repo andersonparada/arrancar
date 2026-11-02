@@ -22,8 +22,8 @@ export interface CasosDeUsoDeEnteros {
   matriz: ConsultarEnterosDelAnio;
 }
 
-/** Lo escrito del pago, con el monto en centavos. */
-const datosDelPago = (cuerpo: CorregirEnteroSolicitado) => ({ ...cuerpo, monto: aCentavos(cuerpo.monto) });
+/** Lo escrito del pago, con el impuesto en centavos. */
+const datosDelPago = (cuerpo: CorregirEnteroSolicitado) => ({ ...cuerpo, impuesto: aCentavos(cuerpo.impuesto) });
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
 export class EnterosControlador {

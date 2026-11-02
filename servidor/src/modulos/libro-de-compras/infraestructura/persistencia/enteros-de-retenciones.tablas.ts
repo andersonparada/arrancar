@@ -9,7 +9,10 @@ type Columnas = Record<
   | 'grupo'
   | 'fechaDePago'
   | 'documentoDePago'
-  | 'monto'
+  | 'impuesto'
+  | 'multa'
+  | 'intereses'
+  | 'mora'
   | 'retenidoAlMarcar'
   | 'observaciones'
   | 'estado'
@@ -19,7 +22,7 @@ type Columnas = Record<
   AnyPgColumn
 >;
 
-/** Valores permitidos de lo que se pagó y de cuándo. */
+/** Valores permitidos de lo que se pagó y de cuándo. El total (impuesto + accesorios) no se guarda: se calcula. */
 const restriccionesDelPago = (t: Columnas) => [
   check('enteros_de_retenciones_mes_primer_dia', sql`${t.mes} = date_trunc('month', ${t.mes})::date`),
   check(
@@ -31,7 +34,10 @@ const restriccionesDelPago = (t: Columnas) => [
     'enteros_de_retenciones_documento_de_pago',
     sql`char_length(${t.documentoDePago}) between 1 and 40 and ${t.documentoDePago} !~ '\\s'`,
   ),
-  check('enteros_de_retenciones_monto_positivo', sql`${t.monto} > 0`),
+  check('enteros_de_retenciones_impuesto_positivo', sql`${t.impuesto} > 0`),
+  check('enteros_de_retenciones_multa_no_negativa', sql`${t.multa} >= 0`),
+  check('enteros_de_retenciones_intereses_no_negativos', sql`${t.intereses} >= 0`),
+  check('enteros_de_retenciones_mora_no_negativa', sql`${t.mora} >= 0`),
   check('enteros_de_retenciones_retenido_no_negativo', sql`${t.retenidoAlMarcar} >= 0`),
   check(
     'enteros_de_retenciones_observaciones_rango',
@@ -69,7 +75,12 @@ export const enterosDeRetenciones = esquemaLibroDeCompras.table(
     fechaDePago: date().notNull(),
     /** Número del formulario o de la boleta de pago. */
     documentoDePago: text().notNull(),
-    monto: numeric({ precision: 14, scale: 2 }).notNull(),
+    /** Lo que se aplica contra lo retenido del mes y grupo; el estado «enterado» compara solo esto. */
+    impuesto: numeric({ precision: 14, scale: 2 }).notNull(),
+    /** Accesorios de la misma boleta (Código Tributario arts. 91, 59 y 92); se copian de ella, no se calculan. */
+    multa: numeric({ precision: 14, scale: 2 }).notNull().default('0'),
+    intereses: numeric({ precision: 14, scale: 2 }).notNull().default('0'),
+    mora: numeric({ precision: 14, scale: 2 }).notNull().default('0'),
     /** Foto de lo retenido del mes y grupo (documentos vigentes) cuando se marcó. */
     retenidoAlMarcar: numeric({ precision: 14, scale: 2 }).notNull(),
     observaciones: text(),

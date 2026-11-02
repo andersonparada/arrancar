@@ -64,7 +64,10 @@ export interface RepositorioDeEnteros {
   /** Cambia lo que se escribió; el mes y el grupo no cambian (para eso se anula y se registra otro). */
   corregir(
     id: string,
-    datos: Pick<DatosDelEntero, 'fechaDePago' | 'documentoDePago' | 'monto' | 'observaciones'>,
+    datos: Pick<
+      DatosDelEntero,
+      'fechaDePago' | 'documentoDePago' | 'impuesto' | 'multa' | 'intereses' | 'mora' | 'observaciones'
+    >,
   ): Promise<void>;
   anular(id: string, anulacion: { anuladoPor: string; motivo: string }): Promise<void>;
 }

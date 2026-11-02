@@ -40,7 +40,7 @@ export const esquemaDeAnio = z.object({ anio: z.coerce.number().int().min(2000).
 const camposDelPago = {
   fechaDePago: z.iso.date(),
   documentoDePago: texto,
-  monto: dinero,
+  impuesto: dinero,
   observaciones: z.string().trim().nullish(),
 };
 

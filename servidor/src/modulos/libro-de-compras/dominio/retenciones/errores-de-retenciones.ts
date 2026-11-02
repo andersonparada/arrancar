@@ -132,11 +132,11 @@ export class DocumentoDePagoInvalido extends DatoInvalido {
   }
 }
 
-export class MontoDelEnteroInvalido extends DatoInvalido {
-  readonly codigo = 'monto_del_entero_invalido';
+export class ImpuestoDelEnteroInvalido extends DatoInvalido {
+  readonly codigo = 'impuesto_del_entero_invalido';
 
   constructor() {
-    super('El monto pagado debe ser mayor que cero.', { campo: 'monto' });
+    super('El impuesto pagado debe ser mayor que cero.', { campo: 'impuesto' });
   }
 }
 
