@@ -47,6 +47,7 @@ const pendientes = usarPendientesPorResolver();
       :grupo="pago.grupo"
       :corrigiendo="pago.corrigiendo !== null"
       :faltante="pago.faltante"
+      :total="pago.total"
       :enviando="pago.enviando"
       :errores="pago.errores"
       @guardar="pago.guardar"

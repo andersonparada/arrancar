@@ -10,6 +10,7 @@ import {
   type ErroresPorFila,
   type FilaDeConstancia,
 } from '../../composables/retenciones/datos-de-constancias';
+import { fechaDeHoy } from '../../composables/retenciones/datos-de-pagos';
 import { nombreDelDocumento, textoDeCantidad } from '../../composables/retenciones/datos-de-retenciones';
 import { VENTANA_DE_CONSTANCIAS as textos } from '../../textos-de-retenciones';
 
@@ -22,6 +23,7 @@ const filas = defineModel<FilaDeConstancia[]>('filas', { required: true });
 const fechaParaTodas = defineModel<string>('fecha', { required: true });
 defineEmits<{ guardar: []; cerrar: []; copiarFecha: [fecha: string] }>();
 
+const hoy = fechaDeHoy();
 const resumen = computed(() => resumenDeConstancias(filas.value));
 const unaSola = computed(() => filas.value.length === 1);
 const conProblemas = computed(() => filasConProblemas(props.errores));
@@ -41,6 +43,7 @@ const conProblemas = computed(() => filasConProblemas(props.errores));
         v-model="fechaParaTodas"
         tipo="date"
         :etiqueta="textos.fechaParaTodas"
+        :maximo="hoy"
         :ayuda="textos.fechaParaTodasAyuda"
         @update:model-value="$emit('copiarFecha', String($event ?? ''))"
       />
@@ -77,6 +80,7 @@ const conProblemas = computed(() => filasConProblemas(props.errores));
               v-model="fila.fecha"
               tipo="date"
               :etiqueta="textos.fecha"
+              :maximo="hoy"
               :error="errores[indice]?.fecha ?? errores[indice]?.retencionId"
               requerido
             />
