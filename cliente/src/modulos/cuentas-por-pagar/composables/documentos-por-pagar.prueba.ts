@@ -15,6 +15,7 @@ import {
 import {
   datosDeAnulacion,
   edicionDeAnulacionVacia,
+  documentoYaCambio,
   errorDelMotivo,
   errorDelVencimiento,
   erroresDeAnulacion,
@@ -80,8 +81,8 @@ describe('filtros de la lista', () => {
 
   it('los proveedores y los tipos van por nombre, con «todos» primero', () => {
     const proveedores = opcionesDeProveedor([
-      { id: '2', nombre: 'Zeta' },
-      { id: '1', nombre: 'Álamo' },
+      { id: '2', nombre: 'Zeta', activo: true },
+      { id: '1', nombre: 'Álamo', activo: true },
     ]);
     expect(proveedores.map((o) => o.texto)).toEqual(['Todos los proveedores', 'Álamo', 'Zeta']);
     expect(opcionesDeTipo()[0]).toEqual({ valor: '', texto: 'Todos los tipos' });
@@ -128,6 +129,14 @@ describe('vencimiento nuevo', () => {
 });
 
 describe('autorización', () => {
+  it('reconoce que otra persona ya autorizó o anuló un documento marcado', () => {
+    for (const codigo of ['documento_ya_autorizado', 'documento_ya_anulado']) {
+      expect(documentoYaCambio(new ErrorApi(422, { codigo, mensaje: 'x' }))).toBe(true);
+    }
+    expect(documentoYaCambio(new ErrorApi(422, { codigo: 'otro', mensaje: 'x' }))).toBe(false);
+    expect(documentoYaCambio(new Error('x'))).toBe(false);
+  });
+
   it('reconoce el error de lo propio por su código y deja pasar los demás', () => {
     const propio = new ErrorApi(403, { codigo: 'autorizacion_de_lo_propio', mensaje: 'No puede autorizar A-1.' });
     expect(mensajeDeLoPropio(propio)).toBe('No puede autorizar A-1.');

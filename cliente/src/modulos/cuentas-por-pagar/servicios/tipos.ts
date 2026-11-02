@@ -143,8 +143,9 @@ export interface DatosDeAnulacion {
   motivo: string;
 }
 
-/** Un proveedor de la cuenta, para el filtro de la lista. */
+/** Un proveedor para el filtro de la lista. */
 export interface ProveedorParaFiltro {
   id: string;
   nombre: string;
+  activo: boolean;
 }

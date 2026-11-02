@@ -98,9 +98,34 @@ export interface PeticionDeCompletar {
 /** Lo que el usuario contestó de un proveedor sin datos fiscales guardados, por su id o por el NIT si es nuevo. */
 export type DatosFiscalesPorProveedor = Record<string, DatosFiscalesContestados>;
 
+export type TipoDePersonaDelProveedor = 'individual' | 'juridica';
+
+/** Cómo se creará el proveedor nuevo de un NIT: lo que el usuario confirmó. */
+export type ProveedorNuevoPedido =
+  | { tipoDePersona: 'individual'; nombres: string; apellidos?: string }
+  | { tipoDePersona: 'juridica'; razonSocial: string };
+
+/** Lo que el servidor hará con el proveedor de una fila (ensayo: no se guarda nada). */
+export interface ProveedorNuevoDeLaFila {
+  nit: string;
+  nombreDelDte: string;
+  accion: 'crear' | 'agregar_papel';
+  nombreExistente: string | null;
+  usado:
+    | { tipoDePersona: 'individual'; nombres: string; apellidos: string | null }
+    | { tipoDePersona: 'juridica'; razonSocial: string };
+  propuesta: {
+    tipoDePersona: TipoDePersonaDelProveedor;
+    individual: { nombres: string; apellidos: string | null };
+    juridica: { razonSocial: string };
+  };
+}
+
 export interface PeticionDeConfirmacion {
   ids: string[];
   datosFiscalesPorProveedor: DatosFiscalesPorProveedor;
+  /** Por NIT del emisor. */
+  proveedoresNuevos?: Record<string, ProveedorNuevoPedido>;
 }
 
 export interface ErrorDeFila {
@@ -114,7 +139,8 @@ export type ResultadoDeConfirmacion =
   { id: string; documentoId: string; avisos: string[] } | { id: string; error: ErrorDeFila };
 
 export type ResultadoDeVistaPrevia =
-  { id: string; documento: DocumentoCalculado; avisos: string[] } | { id: string; error: ErrorDeFila };
+  | { id: string; documento: DocumentoCalculado; avisos: string[]; proveedorNuevo?: ProveedorNuevoDeLaFila }
+  | { id: string; error: ErrorDeFila };
 
 /** Una línea con el concepto sin elegir: el DTE no lo trae. */
 export type LineaDeSolicitudDeDte = Omit<LineaSolicitada, 'conceptoId'> & { conceptoId: string | null };

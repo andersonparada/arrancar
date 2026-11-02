@@ -9,6 +9,7 @@ import {
   separarVistaPrevia,
   textoDelError,
 } from './datos-de-la-confirmacion';
+import { proveedoresNuevosDeLaVistaPrevia } from './datos-de-proveedores-nuevos';
 
 const errorFiscal = (id: string) => ({
   id,
@@ -42,6 +43,38 @@ describe('resultados de confirmar', () => {
     const { listas, conError } = separarVistaPrevia(resultados);
     expect(listas.map(({ id }) => id)).toEqual(['a']);
     expect(conError.map(({ id }) => id)).toEqual(['b']);
+  });
+
+  it('un DTE de proveedor nuevo queda entre las listas y el que no tiene permiso para crearlo, con error', () => {
+    const proveedorNuevo = {
+      nit: '111',
+      nombreDelDte: 'PEREZ , JUAN',
+      accion: 'crear',
+      nombreExistente: null,
+      usado: { tipoDePersona: 'individual', nombres: 'JUAN', apellidos: 'PEREZ' },
+      propuesta: {
+        tipoDePersona: 'individual',
+        individual: { nombres: 'JUAN', apellidos: 'PEREZ' },
+        juridica: { razonSocial: 'PEREZ JUAN' },
+      },
+    };
+    const resultados = [
+      { id: 'a', documento: {}, avisos: [], proveedorNuevo },
+      { id: 'b', error: { codigo: 'proveedor_nuevo_sin_permiso', mensaje: 'No puede crear proveedores.' } },
+    ] as unknown as ResultadoDeVistaPrevia[];
+    const { listas, conError } = separarVistaPrevia(resultados);
+    expect(listas.map(({ id }) => id)).toEqual(['a']);
+    expect(conError.map(({ id }) => id)).toEqual(['b']);
+    const grupos = proveedoresNuevosDeLaVistaPrevia(resultados, [filaDte({ id: 'a' })]);
+    expect(grupos.map(({ proveedor }) => proveedor.nit)).toEqual(['111']);
+  });
+
+  it('dice cómo corregir un proveedor o tercero inactivo', () => {
+    for (const codigo of ['proveedor_inactivo', 'tercero_inactivo']) {
+      expect(textoDelError({ codigo, mensaje: 'Está inactivo.' })).toBe(
+        'Está inactivo. Reactívelo en Proveedores y vuelva a calcular.',
+      );
+    }
   });
 
   it('agrega al error lo que el usuario debe hacer, y deja tal cual el que no se conoce', () => {

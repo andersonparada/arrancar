@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { FilterX } from 'lucide-vue-next';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import {
   cantidadDeFiltrosDeLaBandeja,
-  OPCIONES_DE_PROVEEDOR,
+  opcionesDeProveedor,
   opcionesDeTipoDeDte,
   type FiltrosDeLaBandeja,
 } from '../../composables/bandeja/datos-de-la-bandeja';
@@ -14,6 +15,7 @@ import {
 const filtros = defineModel<FiltrosDeLaBandeja>({ required: true });
 defineEmits<{ quitar: [] }>();
 const tipos = opcionesDeTipoDeDte();
+const proveedores = opcionesDeProveedor(usarSesion().puede('proveedores.crear'));
 </script>
 
 <template>
@@ -27,7 +29,7 @@ const tipos = opcionesDeTipoDeDte();
         class="sm:col-span-2 lg:col-span-1"
       />
       <CampoSelector v-model="filtros.tipoDte" etiqueta="Tipo" :opciones="tipos" />
-      <CampoSelector v-model="filtros.proveedor" etiqueta="Proveedor" :opciones="OPCIONES_DE_PROVEEDOR" />
+      <CampoSelector v-model="filtros.proveedor" etiqueta="Proveedor" :opciones="proveedores" />
       <CampoTexto v-model="filtros.desde" etiqueta="Emitido desde" tipo="date" />
       <CampoTexto v-model="filtros.hasta" etiqueta="Emitido hasta" tipo="date" />
     </div>

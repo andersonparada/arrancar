@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { CircleAlert, CircleCheck } from 'lucide-vue-next';
+import { CircleAlert, CircleCheck, UserPlus } from 'lucide-vue-next';
+import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { textoDelError, type FilaConError } from '../../composables/bandeja/datos-de-la-confirmacion';
 import type { ResultadoDeVistaPrevia } from '../../servicios/dte-recibidos.api';
@@ -33,7 +34,12 @@ defineProps<{
       <CircleCheck class="mt-0.5 size-4 shrink-0 text-campo-700 dark:text-campo-300" aria-hidden="true" />
       <div class="min-w-0 flex-1">
         <div class="flex justify-between gap-2">
-          <p class="font-medium">{{ titulos.get(fila.id) }}</p>
+          <p class="font-medium">
+            {{ titulos.get(fila.id) }}
+            <InsigniaBase v-if="'proveedorNuevo' in fila && fila.proveedorNuevo" tono="trigo" class="ml-1 gap-1">
+              <UserPlus class="size-3" aria-hidden="true" />Proveedor nuevo
+            </InsigniaBase>
+          </p>
           <p v-if="'documento' in fila" class="shrink-0 tabular-nums">
             Neto a pagar {{ formatearMonto(fila.documento.netoAPagar) }}
           </p>

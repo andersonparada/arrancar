@@ -17,11 +17,6 @@ export type * from './tipos';
 const RUTA = '/cuentas-por-pagar';
 const RUTA_DE_DOCUMENTOS = `${RUTA}/documentos`;
 
-interface TerceroConProveedor {
-  nombreMostrar: string;
-  proveedor: { id: string } | null;
-}
-
 export class ApiCuentasPorPagar {
   constructor(private readonly http: ClienteHttp) {}
 
@@ -69,12 +64,9 @@ export class ApiCuentasPorPagar {
     return this.http.eliminar(`${RUTA_DE_DOCUMENTOS}/${id}`);
   }
 
-  /** Los proveedores (activos o no) de la cuenta, para el filtro de la lista. */
-  async listarProveedores(): Promise<ProveedorParaFiltro[]> {
-    const terceros = await this.http.obtener<TerceroConProveedor[]>('/terceros', { papel: 'proveedor' });
-    return terceros.flatMap(({ nombreMostrar, proveedor }) =>
-      proveedor ? [{ id: proveedor.id, nombre: nombreMostrar }] : [],
-    );
+  /** Los proveedores con documentos por pagar en la empresa (el papel de proveedor), para el filtro de la lista. */
+  listarProveedores() {
+    return this.http.obtener<ProveedorParaFiltro[]>(`${RUTA}/proveedores`);
   }
 }
 

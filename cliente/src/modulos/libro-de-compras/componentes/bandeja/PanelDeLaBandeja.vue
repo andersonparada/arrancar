@@ -113,6 +113,8 @@ const vacio = computed(() =>
       :listas="confirmacion.previa.listas.value"
       :con-error="confirmacion.previa.conError.value"
       :proveedores="confirmacion.previa.proveedores.value"
+      :proveedores-nuevos="confirmacion.previa.proveedoresNuevos.lista.value"
+      :intentos-con-problemas="confirmacion.previa.proveedoresNuevos.intentos.value"
       :falta-contestar="confirmacion.previa.faltaContestar.value"
       :resultado="confirmacion.resultado.value"
       @cerrar="confirmacion.cerrar"
