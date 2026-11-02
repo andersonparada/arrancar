@@ -18,8 +18,12 @@ interface Dependencias {
 
 export interface PedidoDeProveedorDesdeDte {
   nit: string;
-  nombre: string;
   tipoDePersona: 'individual' | 'juridica';
+  /** Solo con `individual`. */
+  nombres: string | null;
+  apellidos: string | null;
+  /** Solo con `juridica`. */
+  razonSocial: string | null;
   /** El usuario de quien manda tiene `proveedores.crear`. */
   puedeCrearProveedores: boolean;
 }
@@ -28,6 +32,8 @@ export interface ProveedorDesdeDte {
   proveedorId: string;
   terceroId: string;
   creado: boolean;
+  /** El nombre para mostrar del tercero, nuevo o existente. */
+  nombre: string;
 }
 
 const PAPEL_NUEVO: PapelDeProveedor = { tipo: 'proveedor', categoriaId: null, activo: true, notas: null };
@@ -60,16 +66,12 @@ export class CrearProveedorDesdeDte {
       else await this.dependencias.repositorio.agregar(tercero);
       const terceroId = tercero.id.valor;
       const { id: proveedorId } = await this.dependencias.consultas.obtenerPapel(terceroId, 'proveedor');
-      return { proveedorId, terceroId, creado: !existente };
+      return { proveedorId, terceroId, creado: !existente, nombre: tercero.nombreParaMostrar };
     });
   }
 
-  private identidadDe({ tipoDePersona, nombre }: PedidoDeProveedorDesdeDte): IdentidadDeTercero {
-    const nombres = { nombres: null, apellidos: null, razonSocial: null, nombreComercial: null };
-    return IdentidadDeTercero.crear(tipoDePersona, {
-      ...nombres,
-      ...(tipoDePersona === 'individual' ? { nombres: nombre } : { razonSocial: nombre }),
-    });
+  private identidadDe({ tipoDePersona, nombres, apellidos, razonSocial }: PedidoDeProveedorDesdeDte) {
+    return IdentidadDeTercero.crear(tipoDePersona, { nombres, apellidos, razonSocial, nombreComercial: null });
   }
 
   private nuevo(operador: Operador, identidad: IdentidadDeTercero, nit: Nit): Tercero {

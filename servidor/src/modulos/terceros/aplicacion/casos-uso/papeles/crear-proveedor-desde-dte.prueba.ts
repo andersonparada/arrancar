@@ -44,8 +44,10 @@ async function registrarConNit(cambios: { proveedor?: 'activo' | 'inactivo' } = 
 function crear(cambios: Partial<PedidoDeProveedorDesdeDte> = {}) {
   return caso.ejecutar(operadorDePrueba(), {
     nit: NIT,
-    nombre: 'Agro, S.A.',
     tipoDePersona: 'juridica',
+    nombres: null,
+    apellidos: null,
+    razonSocial: 'Agro, S.A.',
     puedeCrearProveedores: true,
     ...cambios,
   });
@@ -71,11 +73,29 @@ describe('crear el proveedor de un DTE recibido', () => {
     expect(tercero.papel('proveedor')?.activo).toBe(true);
   });
 
-  it('una persona individual lleva el nombre en nombres', async () => {
-    await crear({ tipoDePersona: 'individual', nombre: 'Juan Pérez' });
+  it('una persona individual lleva sus nombres y apellidos', async () => {
+    const respuesta = await crear({
+      tipoDePersona: 'individual',
+      nombres: 'Juan Carlos',
+      apellidos: 'Pérez López',
+      razonSocial: null,
+    });
 
     const identidad = (await terceros.buscarPorNit(NIT))!.instantanea().identidad;
-    expect(identidad.nombres.nombres).toBe('Juan Pérez');
+    expect(identidad.nombres).toMatchObject({ nombres: 'Juan Carlos', apellidos: 'Pérez López', razonSocial: null });
+    expect(respuesta.nombre).toBe('Juan Carlos Pérez López');
+  });
+
+  it('una empresa responde su razón social como nombre', async () => {
+    expect((await crear()).nombre).toBe('Agro, S.A.');
+  });
+
+  it('un tercero que ya existe responde su nombre y no cambia su identidad', async () => {
+    await registrarConNit();
+
+    const respuesta = await crear({ razonSocial: 'Otro nombre' });
+
+    expect(respuesta).toMatchObject({ creado: false, nombre: 'Agro, S.A.' });
   });
 
   it('no duplica por NIT: si ya es proveedor devuelve el mismo', async () => {
@@ -111,7 +131,8 @@ describe('crear el proveedor de un DTE recibido', () => {
   it('rechaza NIT inválido, consumidor final y nombre vacío', async () => {
     await expect(crear({ nit: '5769370' })).rejects.toThrow(NitInvalido);
     await expect(crear({ nit: 'CF' })).rejects.toThrow(NitDeProveedorSinNumero);
-    await expect(crear({ nombre: '  ' })).rejects.toThrow(FaltaElNombre);
+    await expect(crear({ razonSocial: '  ' })).rejects.toThrow(FaltaElNombre);
+    await expect(crear({ tipoDePersona: 'individual', nombres: null })).rejects.toThrow(FaltaElNombre);
     expect(terceros.cantidad()).toBe(0);
   });
 });

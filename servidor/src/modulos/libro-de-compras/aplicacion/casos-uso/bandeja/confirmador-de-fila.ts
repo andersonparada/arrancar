@@ -103,10 +103,13 @@ export class ConfirmadorDeFila {
   /** Crea el proveedor del NIT del emisor (o reutiliza el que ya exista) y se lo pone a todas las filas pendientes del NIT. */
   private async crearProveedor(operador: Operador, fila: DteRecibido, opciones: OpcionesDelConfirmador) {
     const { nitEmisor, nombreEmisor } = fila.instantanea();
+    const tipoDePersona = tipoDePersonaDelNombre(nombreEmisor);
     const { proveedorId } = await this.dependencias.creadorDeProveedores.crear(operador, {
       nit: nitEmisor,
-      nombre: nombreEmisor,
-      tipoDePersona: tipoDePersonaDelNombre(nombreEmisor),
+      tipoDePersona,
+      nombres: tipoDePersona === 'individual' ? nombreEmisor : null,
+      apellidos: null,
+      razonSocial: tipoDePersona === 'juridica' ? nombreEmisor : null,
       puedeCrearProveedores: opciones.puedeCrearProveedores,
     });
     await this.dependencias.filas.asignarProveedorALasPendientes(nitEmisor, proveedorId);
