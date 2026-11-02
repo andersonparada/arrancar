@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { ListarDocumentosPorPagar } from '../aplicacion/casos-uso/consultas/listar-documentos-por-pagar.js';
+import { ListarProveedoresConDocumentos } from '../aplicacion/casos-uso/consultas/listar-proveedores-con-documentos.js';
 import { ObtenerDocumentoPorPagar } from '../aplicacion/casos-uso/consultas/obtener-documento-por-pagar.js';
 import { ObtenerSaldoDelProveedor } from '../aplicacion/casos-uso/consultas/obtener-saldo-del-proveedor.js';
 import { VerBandeja } from '../aplicacion/casos-uso/consultas/ver-bandeja.js';
@@ -14,16 +15,14 @@ export function rutasDeConsultasComponidas(): FastifyPluginAsync {
   const { unidadDeTrabajo, reloj } = dependenciasCompartidas();
   const consultas = new ConsultasDeDocumentosDrizzle();
   const dependencias = { unidadDeTrabajo, reloj, consultas };
+  const saldos = new ConsultasDeSaldosDrizzle();
   return rutasDeConsultas(
     new ConsultasControlador({
       bandeja: new VerBandeja(dependencias),
       listar: new ListarDocumentosPorPagar(dependencias),
       obtener: new ObtenerDocumentoPorPagar(dependencias),
-      saldoDelProveedor: new ObtenerSaldoDelProveedor({
-        unidadDeTrabajo,
-        reloj,
-        saldos: new ConsultasDeSaldosDrizzle(),
-      }),
+      saldoDelProveedor: new ObtenerSaldoDelProveedor({ unidadDeTrabajo, reloj, saldos }),
+      proveedores: new ListarProveedoresConDocumentos({ unidadDeTrabajo, saldos }),
     }),
   );
 }

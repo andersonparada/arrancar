@@ -9,7 +9,7 @@ import {
 
 const tags = ['Cuentas por pagar'];
 
-/** Bandeja, lista, ficha y saldo del proveedor: de solo lectura, con el permiso de ver documentos. */
+/** Bandeja, lista, ficha, proveedores con documentos y saldo del proveedor: de solo lectura, con el permiso de ver documentos. */
 export function rutasDeConsultas(controlador: ConsultasControlador): FastifyPluginAsyncZod {
   return async (app) => {
     const ver = proteger({ permiso: 'cuentas-por-pagar.documentos.ver' });
@@ -24,6 +24,7 @@ export function rutasDeConsultas(controlador: ConsultasControlador): FastifyPlug
       preHandler: ver,
       handler: controlador.obtener,
     });
+    app.get('/cuentas-por-pagar/proveedores', { schema: { tags }, preHandler: ver, handler: controlador.proveedores });
     app.get('/cuentas-por-pagar/proveedores/:proveedorId/saldo', {
       schema: { tags, params: esquemaParamsDeProveedor },
       preHandler: ver,

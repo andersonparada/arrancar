@@ -1,4 +1,5 @@
 import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
+import type { ProveedorConDocumentosDto } from '../dto/documento-por-pagar.dto.js';
 import type { EstadoDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
 /** Los filtros de la lista de documentos; todos opcionales. */
@@ -102,4 +103,6 @@ export interface ConsultasDeSaldos {
   /** `null` si el proveedor no existe en la cuenta. */
   totalesDelProveedor(proveedorId: string, hoy: string): Promise<TotalesDelProveedor | null>;
   notasConSaldoLibre(proveedorId: string): Promise<NotaConSaldoLibre[]>;
+  /** Los proveedores que tienen algún documento por pagar en la empresa activa, por nombre. */
+  proveedoresConDocumentos(): Promise<ProveedorConDocumentosDto[]>;
 }

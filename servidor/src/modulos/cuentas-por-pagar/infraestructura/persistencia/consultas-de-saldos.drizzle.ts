@@ -1,9 +1,10 @@
-import { and, asc, eq, ne, sql } from 'drizzle-orm';
+import { and, asc, eq, exists, ne, sql } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { documentos as documentosDeCompra } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
+import type { ProveedorConDocumentosDto } from '../../aplicacion/dto/documento-por-pagar.dto.js';
 import type {
   ConsultasDeSaldos,
   NotaConSaldoLibre,
@@ -53,6 +54,15 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
       vencidoCentavos: aCentavos(sumas!.vencido),
       cargosConSaldo: sumas!.cargos,
     };
+  }
+
+  async proveedoresConDocumentos(): Promise<ProveedorConDocumentosDto[]> {
+    return transaccionEnCurso()
+      .select({ id: proveedores.id, nombre: terceros.nombreMostrar, activo: proveedores.activo })
+      .from(proveedores)
+      .innerJoin(terceros, eq(terceros.id, proveedores.terceroId))
+      .where(exists(transaccionEnCurso().select().from(documentos).where(eq(documentos.proveedorId, proveedores.id))))
+      .orderBy(asc(terceros.nombreMostrar));
   }
 
   async notasConSaldoLibre(proveedorId: string): Promise<NotaConSaldoLibre[]> {
