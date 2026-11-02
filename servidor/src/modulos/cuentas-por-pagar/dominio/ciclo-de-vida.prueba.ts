@@ -8,6 +8,7 @@ import {
   vencimientoAlCompletar,
 } from './ciclo-de-vida.js';
 import type { DocumentoPorPagar } from './documento-por-pagar.js';
+import { DocumentoNoRegistrado, DocumentoYaAnulado, DocumentoYaAutorizado } from './errores.js';
 
 const documento = (cambios: Partial<DocumentoPorPagar> = {}): DocumentoPorPagar => ({
   id: 'doc',
@@ -38,9 +39,15 @@ describe('estados del ciclo de vida', () => {
 
   it('autorizar exige un documento completado', () => {
     expect(() => exigirRegistrado(documento({ estado: 'registrado' }), 'A-1')).not.toThrow();
-    for (const estado of ['pendiente', 'autorizado', 'anulado'] as const) {
-      expect(() => exigirRegistrado(documento({ estado }), 'A-1')).toThrow(/A-1/);
-    }
+    expect(() => exigirRegistrado(documento({ estado: 'pendiente' }), 'A-1')).toThrow(DocumentoNoRegistrado);
+  });
+
+  it('autorizar dice si el documento ya está autorizado o ya está anulado', () => {
+    expect(() => exigirRegistrado(documento({ estado: 'autorizado' }), 'A-1')).toThrow(DocumentoYaAutorizado);
+    expect(() => exigirRegistrado(documento({ estado: 'autorizado' }), 'A-1')).toThrow(
+      'El documento A-1 ya está autorizado.',
+    );
+    expect(() => exigirRegistrado(documento({ estado: 'anulado' }), 'A-1')).toThrow(DocumentoYaAnulado);
   });
 
   it('desautorizar exige un documento autorizado', () => {

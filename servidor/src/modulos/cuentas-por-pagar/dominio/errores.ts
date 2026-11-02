@@ -48,6 +48,15 @@ export class DocumentoNoRegistrado extends ReglaDeNegocioInfringida {
   }
 }
 
+/** Autorizar dos veces (otra pestaña, otro usuario): se dice que ya está autorizado, no que falta completarlo. */
+export class DocumentoYaAutorizado extends ReglaDeNegocioInfringida {
+  readonly codigo = 'documento_ya_autorizado';
+
+  constructor(etiqueta: string) {
+    super(`El documento ${etiqueta} ya está autorizado.`);
+  }
+}
+
 /** Desautorizar solo vale para lo que está autorizado. */
 export class DocumentoNoAutorizado extends ReglaDeNegocioInfringida {
   readonly codigo = 'documento_no_autorizado';
