@@ -15,6 +15,7 @@ import { ImportarDteRecibidos } from '../aplicacion/casos-uso/bandeja/importar-d
 import { ListarDteRecibidos } from '../aplicacion/casos-uso/bandeja/listar-dte-recibidos.js';
 import { ObtenerSolicitudDeDte } from '../aplicacion/casos-uso/bandeja/obtener-solicitud-de-dte.js';
 import { ProponedorDeDte } from '../aplicacion/casos-uso/bandeja/proponedor-de-dte.js';
+import { ProveedorDeLaFila } from '../aplicacion/casos-uso/bandeja/proveedor-de-la-fila.js';
 import { VistaPreviaDeDteRecibidos } from '../aplicacion/casos-uso/bandeja/vista-previa-de-dte-recibidos.js';
 import { GuardiaDelPeriodo } from '../aplicacion/casos-uso/documentos/guardia-del-periodo.js';
 import { PrevisualizarDocumento } from '../aplicacion/casos-uso/documentos/previsualizar-documento.js';
@@ -53,13 +54,23 @@ function dependenciasDeLaBandeja(documentos: Documentos) {
 
 type Bandeja = ReturnType<typeof dependenciasDeLaBandeja>;
 
+/** Terceros crea el proveedor nuevo de una fila sin duplicar el NIT. */
+function proveedorDeLaFila(bandeja: Bandeja): ProveedorDeLaFila {
+  return new ProveedorDeLaFila({ creadorDeProveedores: new CreadorDeProveedoresEnMediador(), filas: bandeja.filas });
+}
+
+/** La vista previa ensaya con el mismo `ProveedorDeLaFila` que confirma, sin guardar nada. */
+function vistaPrevia(bandeja: Bandeja, previsualizar: PrevisualizarDocumento): VistaPreviaDeDteRecibidos {
+  return new VistaPreviaDeDteRecibidos({ ...bandeja, previsualizar, proveedorDeLaFila: proveedorDeLaFila(bandeja) });
+}
+
 /** El registro de cada fila es el mismo `RegistrarDocumento` del formulario. */
 function confirmadorDeFila(documentos: Documentos, bandeja: Bandeja): ConfirmadorDeFila {
   return new ConfirmadorDeFila({
     ...documentos,
     ...bandeja,
     lotes: new RepositorioDeLotesDeDteDrizzle(),
-    creadorDeProveedores: new CreadorDeProveedoresEnMediador(),
+    proveedorDeLaFila: proveedorDeLaFila(bandeja),
     registrar: new RegistrarDocumento(documentos),
   });
 }
@@ -88,7 +99,7 @@ export function rutasDeDteRecibidosComponidas() {
     new DteRecibidosControlador({
       listar: new ListarDteRecibidos(bandeja),
       completar: new CompletarDteRecibidos({ ...documentos, ...bandeja }),
-      vistaPrevia: new VistaPreviaDeDteRecibidos({ ...bandeja, previsualizar }),
+      vistaPrevia: vistaPrevia(bandeja, previsualizar),
       confirmar: new ConfirmarDteRecibidos({
         ...bandeja,
         confirmador: confirmadorDeFila(documentos, bandeja),

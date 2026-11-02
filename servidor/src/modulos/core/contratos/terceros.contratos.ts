@@ -24,12 +24,21 @@ declare module './mediador.contratos.js' {
      * Crea el proveedor de un DTE recibido que aún no lo tiene (bandeja de la SAT). Si el NIT ya es de un tercero de
      * la cuenta no lo duplica: si ya es proveedor devuelve su id; si no, le asigna el papel (`creado` es `false` en
      * los dos casos). Un proveedor inactivo se rechaza con `proveedor_inactivo`. Quien manda indica con
-     * `puedeCrearProveedores` si su usuario tiene `proveedores.crear`; sin él responde `sin_permiso`. No guarda datos
+     * `puedeCrearProveedores` si su usuario tiene `proveedores.crear`; sin él responde `sin_permiso`. La identidad pedida
+     * (nombres y apellidos, o razón social) se ignora si el NIT ya es de un tercero; `nombre` es el que muestra el
+     * tercero, nuevo o existente. No guarda datos
      * fiscales: los guarda quien manda (Libro de compras).
      */
     'terceros.crear_proveedor_desde_dte': {
-      datos: { nit: string; nombre: string; tipoDePersona: 'individual' | 'juridica'; puedeCrearProveedores: boolean };
-      respuesta: { proveedorId: string; terceroId: string; creado: boolean };
+      datos: {
+        nit: string;
+        tipoDePersona: 'individual' | 'juridica';
+        nombres: string | null;
+        apellidos: string | null;
+        razonSocial: string | null;
+        puedeCrearProveedores: boolean;
+      };
+      respuesta: { proveedorId: string; terceroId: string; creado: boolean; nombre: string };
     };
   }
   interface AvisosEntreModulos {

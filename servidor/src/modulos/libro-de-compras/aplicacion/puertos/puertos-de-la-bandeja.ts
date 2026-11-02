@@ -55,12 +55,18 @@ export interface ProveedorDeLaBandeja {
   proveedorId: string;
   terceroId: string;
   creado: boolean;
+  /** El nombre con que Terceros lo muestra, nuevo o existente. */
+  nombre: string;
 }
 
 export interface PedidoDeProveedorNuevo {
   nit: string;
-  nombre: string;
   tipoDePersona: TipoDePersonaDelProveedor;
+  /** Solo con `individual`. */
+  nombres: string | null;
+  apellidos: string | null;
+  /** Solo con `juridica`. */
+  razonSocial: string | null;
   /** El usuario tiene `proveedores.crear`: el mediador no lleva permisos. */
   puedeCrearProveedores: boolean;
 }

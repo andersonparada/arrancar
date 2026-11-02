@@ -122,7 +122,12 @@ describe('ConfirmarDteRecibidos', () => {
       crearProponedor: sinProponedor,
       interpretarError,
     });
-  const peticion = (ids: string[]) => ({ ids, datosFiscalesPorProveedor: {}, puedeCrearProveedores: false });
+  const peticion = (ids: string[]) => ({
+    ids,
+    datosFiscalesPorProveedor: {},
+    proveedoresNuevos: {},
+    puedeCrearProveedores: false,
+  });
 
   beforeEach(() => {
     orden.length = 0;

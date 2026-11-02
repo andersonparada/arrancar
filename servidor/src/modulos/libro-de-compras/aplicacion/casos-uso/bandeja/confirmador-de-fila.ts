@@ -5,15 +5,20 @@ import { Identificador } from '../../../../core/compartido/dominio/identificador
 import { exigirConfirmable } from '../../../dominio/confirmabilidad-del-dte.js';
 import type { DteRecibido } from '../../../dominio/dte-recibido.js';
 import { DteRegistradoEnOtraEmpresa } from '../../../dominio/errores-de-bandeja.js';
-import { tipoDePersonaDelNombre } from '../../../dominio/tipo-de-persona-del-nombre.js';
 import type { CatalogosParaDocumentos } from '../../puertos/puertos-de-documentos.js';
-import type { AutorizacionesRegistradasFuera, CreadorDeProveedores } from '../../puertos/puertos-de-la-bandeja.js';
+import type { AutorizacionesRegistradasFuera } from '../../puertos/puertos-de-la-bandeja.js';
 import type { RepositorioDeDteRecibidos } from '../../puertos/repositorio-de-dte-recibidos.js';
 import type { RepositorioDeLotesDeDte } from '../../puertos/repositorio-de-lotes-de-dte.js';
 import type { PeticionDeRegistro, RegistrarDocumento } from '../documentos/registrar-documento.js';
 import type { ArmadorDeSolicitudDelDte } from './armador-de-solicitud-del-dte.js';
-import { exigirCompleto, solicitudCompleta, type DatosFiscalesPorProveedor } from './decisiones-del-dte.js';
+import {
+  exigirCompleto,
+  solicitudCompleta,
+  type DatosFiscalesPorProveedor,
+  type ProveedoresNuevosPorNit,
+} from './decisiones-del-dte.js';
 import type { ProponedorDeDte } from './proponedor-de-dte.js';
+import type { ProveedorDeLaFila } from './proveedor-de-la-fila.js';
 import { MARCA_DE_MONTOS_DE_LA_SAT } from './solicitud-desde-el-dte.js';
 
 export interface DependenciasDelConfirmador {
@@ -21,7 +26,7 @@ export interface DependenciasDelConfirmador {
   filas: RepositorioDeDteRecibidos;
   lotes: RepositorioDeLotesDeDte;
   autorizaciones: AutorizacionesRegistradasFuera;
-  creadorDeProveedores: CreadorDeProveedores;
+  proveedorDeLaFila: ProveedorDeLaFila;
   armador: ArmadorDeSolicitudDelDte;
   catalogos: CatalogosParaDocumentos;
   registrar: RegistrarDocumento;
@@ -31,6 +36,8 @@ export interface DependenciasDelConfirmador {
 export interface OpcionesDelConfirmador {
   proponedor: ProponedorDeDte;
   datosFiscalesPorProveedor: DatosFiscalesPorProveedor;
+  /** Lo que el usuario confirmó de los proveedores que se crearán, por NIT del emisor. */
+  proveedoresNuevos: ProveedoresNuevosPorNit;
   /** El usuario tiene `proveedores.crear`. */
   puedeCrearProveedores: boolean;
 }
@@ -89,7 +96,11 @@ export class ConfirmadorDeFila {
     exigirConfirmable(fila, lote?.encabezadosNoReconocidos ?? []);
     const { decisiones, solicitud, avisos } = await this.dependencias.armador.armar(operador, fila, opciones);
     const completas = exigirCompleto(fila, decisiones);
-    const proveedorId = decisiones.proveedorId ?? (await this.crearProveedor(operador, fila, opciones));
+    const { proveedorId } = await this.dependencias.proveedorDeLaFila.resolver(operador, fila, {
+      ...opciones,
+      decisiones,
+      exigirConfirmado: true,
+    });
     const avisoDeTipo = await this.avisoDeTipo(solicitud.lineas[0]?.tipo ?? null, completas.conceptoId);
     return {
       peticion: {
@@ -98,19 +109,6 @@ export class ConfirmadorDeFila {
       },
       avisos: [MARCA_DE_MONTOS_DE_LA_SAT, ...avisos, ...avisoDeTipo],
     };
-  }
-
-  /** Crea el proveedor del NIT del emisor (o reutiliza el que ya exista) y se lo pone a todas las filas pendientes del NIT. */
-  private async crearProveedor(operador: Operador, fila: DteRecibido, opciones: OpcionesDelConfirmador) {
-    const { nitEmisor, nombreEmisor } = fila.instantanea();
-    const { proveedorId } = await this.dependencias.creadorDeProveedores.crear(operador, {
-      nit: nitEmisor,
-      nombre: nombreEmisor,
-      tipoDePersona: tipoDePersonaDelNombre(nombreEmisor),
-      puedeCrearProveedores: opciones.puedeCrearProveedores,
-    });
-    await this.dependencias.filas.asignarProveedorALasPendientes(nitEmisor, proveedorId);
-    return proveedorId;
   }
 
   /** El Excel no dice si es un bien o un servicio: se usa el del concepto y se avisa. */

@@ -46,6 +46,14 @@ export function datosFiscalesDe(
   return (id ? porProveedor[id] : undefined) ?? porProveedor[nitEmisor] ?? null;
 }
 
+/** Lo que el usuario confirmó para crear un proveedor nuevo: la persona con sus nombres o la empresa con su razón social. */
+export type ProveedorNuevoPedido =
+  | { tipoDePersona: 'individual'; nombres: string; apellidos: string | null }
+  | { tipoDePersona: 'juridica'; razonSocial: string };
+
+/** Lo confirmado de los proveedores nuevos: la clave es el NIT del emisor tal como viene en la fila. */
+export type ProveedoresNuevosPorNit = Readonly<Record<string, ProveedorNuevoPedido>>;
+
 /** Lo que debe estar decidido para registrar: el concepto y el destino ya no pueden faltar. */
 export interface DecisionesCompletas {
   conceptoId: string;

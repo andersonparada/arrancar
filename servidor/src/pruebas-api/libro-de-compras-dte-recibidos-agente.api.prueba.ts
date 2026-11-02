@@ -125,8 +125,12 @@ describe('proveedor sin datos fiscales en una empresa que retiene', () => {
     const id = await sembrar({ nitEmisor: nit });
     const datos = { regimenIsr: 'utilidades', esAgenteDeRetencionIva: false };
 
-    const sinRespuesta = (await confirmar([id])).get(id);
-    const conRespuesta = (await confirmar([id], { datosFiscalesPorProveedor: { [nit]: datos } })).get(id);
+    const nuevos = { [nit]: { tipoDePersona: 'juridica', razonSocial: 'Proveedor Nuevo, S.A.' } };
+
+    const sinRespuesta = (await confirmar([id], { proveedoresNuevos: nuevos })).get(id);
+    const conRespuesta = (
+      await confirmar([id], { proveedoresNuevos: nuevos, datosFiscalesPorProveedor: { [nit]: datos } })
+    ).get(id);
 
     expect(sinRespuesta.error.codigo).toBe('faltan_datos_fiscales_del_proveedor');
     expect(conRespuesta.documentoId).toEqual(expect.any(String));

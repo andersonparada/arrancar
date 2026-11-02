@@ -38,7 +38,7 @@ export class NoAutenticado extends ErrorEsperado {
 export class AccesoDenegado extends ErrorEsperado {
   readonly codigo: string = 'sin_permiso';
 
-  constructor(mensaje = 'No tiene permiso para realizar esta acción.') {
-    super(mensaje);
+  constructor(mensaje = 'No tiene permiso para realizar esta acción.', detalles?: unknown) {
+    super(mensaje, detalles);
   }
 }

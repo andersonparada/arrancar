@@ -10,6 +10,11 @@ const PALABRAS_DE_EMPRESA = [
   'FUNDACION',
   'COOPERATIVA',
   'EMPRESA',
+  'FOUNDATION',
+  'INC',
+  'CORP',
+  'LLC',
+  'LTD',
 ];
 const SIGLAS_DE_EMPRESA = ['S A', 'SA', 'S R L', 'SRL', 'S A S', 'SAS'];
 const EMPRESA = new RegExp(`\\b(${[...PALABRAS_DE_EMPRESA, ...SIGLAS_DE_EMPRESA].join('|')})\\b`);

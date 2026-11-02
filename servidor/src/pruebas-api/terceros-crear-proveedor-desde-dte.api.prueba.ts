@@ -32,8 +32,10 @@ async function idDelSoporte(): Promise<string> {
 function crearProveedor(nit: string, cambios: { puedeCrearProveedores?: boolean } = {}) {
   return mediador.enviar(operador, 'terceros.crear_proveedor_desde_dte', {
     nit,
-    nombre: 'Agro del Norte, S.A.',
     tipoDePersona: 'juridica',
+    nombres: null,
+    apellidos: null,
+    razonSocial: 'Agro del Norte, S.A.',
     puedeCrearProveedores: true,
     ...cambios,
   });
@@ -62,7 +64,7 @@ describe('orden terceros.crear_proveedor_desde_dte por el mediador', () => {
     const primera = await enTransaccion(() => crearProveedor(NIT));
     const segunda = await enTransaccion(() => crearProveedor(' 576937-k '));
 
-    expect(primera.creado).toBe(true);
+    expect(primera).toMatchObject({ creado: true, nombre: 'Agro del Norte, S.A.' });
     expect(segunda).toEqual({ ...primera, creado: false });
     const ficha = await fichaDe(primera.terceroId);
     expect(ficha).toMatchObject({ nit: NIT, razonSocial: 'Agro del Norte, S.A.', tipo: 'juridica' });

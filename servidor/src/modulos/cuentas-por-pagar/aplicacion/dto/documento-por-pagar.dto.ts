@@ -111,3 +111,12 @@ export interface SaldoDelProveedorDto {
   saldosDeudores: string;
   notasConSaldoLibre: SaldoDeudorDto[];
 }
+
+/** Un proveedor con documentos por pagar en la empresa: lo que necesita el filtro de la lista. */
+export interface ProveedorConDocumentosDto {
+  /** El id del papel de proveedor (el que usan los documentos). */
+  id: string;
+  nombre: string;
+  /** Falso si el proveedor ya está inactivo en Terceros. */
+  activo: boolean;
+}

@@ -8,6 +8,7 @@ import {
   DocumentoNoPendiente,
   DocumentoNoRegistrado,
   DocumentoYaAnulado,
+  DocumentoYaAutorizado,
   MotivoInvalido,
   VencimientoInvalido,
   VencimientoNoEditable,
@@ -22,8 +23,13 @@ export function exigirPendiente(documento: DocumentoPorPagar, etiqueta: string):
   if (documento.estado !== 'pendiente') throw new DocumentoNoPendiente(etiqueta);
 }
 
-/** @throws DocumentoNoRegistrado si no está completado (o ya se autorizó o se anuló). */
+/**
+ * @throws DocumentoYaAutorizado si ya se autorizó, DocumentoYaAnulado si se anuló y DocumentoNoRegistrado si aún no
+ * se completa.
+ */
 export function exigirRegistrado(documento: DocumentoPorPagar, etiqueta: string): void {
+  if (documento.estado === 'autorizado') throw new DocumentoYaAutorizado(etiqueta);
+  if (documento.estado === 'anulado') throw new DocumentoYaAnulado(etiqueta);
   if (documento.estado !== 'registrado') throw new DocumentoNoRegistrado(etiqueta);
 }
 
