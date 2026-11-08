@@ -17,7 +17,7 @@ const filtros = defineModel<FiltrosPorConcepto>({ required: true });
 
 <template>
   <TarjetaBase>
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <CampoSelector v-model="filtros.cuentaBancariaId" etiqueta="Cuenta" :opciones="opcionesDeCuenta" />
       <SelectorDeConceptos v-model="filtros.conceptoIds" :opciones="opcionesDeConcepto" />
       <CampoTexto v-model="filtros.desde" etiqueta="Desde" tipo="date" requerido :error="errorDelRango" />

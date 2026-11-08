@@ -15,7 +15,7 @@ const acento = defineModel<string>('acento', { required: true });
     <h2 class="flex items-center gap-2 font-semibold">
       <Palette class="size-5 text-tierra-500" aria-hidden="true" />Colores
     </h2>
-    <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <CampoColor
         v-model="principal"
         etiqueta="Color principal"

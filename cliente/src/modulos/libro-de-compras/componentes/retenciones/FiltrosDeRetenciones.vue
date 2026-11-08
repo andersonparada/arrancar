@@ -15,7 +15,7 @@ const filtros = defineModel<FiltrosDelReporte>({ required: true });
 </script>
 
 <template>
-  <form class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 print:hidden" @submit.prevent>
+  <form class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 print:hidden" @submit.prevent>
     <CampoSelector v-model="filtros.mes" :etiqueta="textos.mes" :opciones="opcionesDeMes" />
     <CampoSelector v-model="filtros.grupo" :etiqueta="textos.grupo" :opciones="opcionesDeGrupo()" />
     <CampoSelector v-model="filtros.constancia" :etiqueta="textos.constancia" :opciones="opcionesDeConstancia()" />

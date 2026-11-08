@@ -45,7 +45,7 @@ const PERMISO = 'libro-de-compras.vigencias-de-combustible';
       titulo="Todavía no hay tasas"
       descripcion="Registre la tasa de IDP por galón y desde qué fecha rige, para calcular el impuesto de cada compra."
     />
-    <ul v-else class="grid gap-3 sm:grid-cols-2">
+    <ul v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <li v-for="tasa in tasas" :key="tasa.id">
         <TarjetaDeRegistro
           :titulo="`Desde ${formatearFecha(tasa.vigenteDesde)}`"

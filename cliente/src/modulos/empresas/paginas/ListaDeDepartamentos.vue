@@ -51,7 +51,7 @@ const {
       titulo="Todavía no hay departamentos"
       descripcion="Cree el primero (ventas, administración, producción…) o impórtelos desde Excel."
     />
-    <ul v-else class="grid gap-3 md:grid-cols-2">
+    <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in registros" :key="registro.id">
         <TarjetaDeRegistro
           :titulo="String(registro.codigo)"

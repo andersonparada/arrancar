@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useId } from 'vue';
+import { mensajeDeValidacionNativa } from '../utilidades/validacion-nativa';
 
-defineProps<{
+const props = defineProps<{
   etiqueta: string;
   tipo?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'search' | 'date';
   error?: string;
@@ -23,6 +24,15 @@ defineProps<{
 
 const modelo = defineModel<string | number | null>();
 const id = useId();
+
+/** Cambia el texto de la burbuja del navegador (sale en su idioma) por uno en español; se limpia al escribir. */
+function alInvalidar(evento: Event): void {
+  const campo = evento.target as HTMLInputElement;
+  campo.setCustomValidity(
+    mensajeDeValidacionNativa({ validez: campo.validity, tipo: props.tipo, maximo: props.maximo }),
+  );
+}
+const alEscribir = (evento: Event): void => (evento.target as HTMLInputElement).setCustomValidity('');
 </script>
 
 <template>
@@ -58,6 +68,8 @@ const id = useId();
       :aria-invalid="!!error"
       :aria-describedby="error || ayuda ? `${id}-nota` : undefined"
       class="rounded-lg border-0 bg-white px-3 py-2.5 text-base ring-1 ring-tierra-200 placeholder:text-tierra-400 read-only:bg-tierra-100 read-only:text-tierra-600 focus:ring-2 focus:ring-campo-500 aria-invalid:ring-red-500 sm:text-sm dark:bg-tierra-800 dark:ring-tierra-700 dark:read-only:bg-tierra-900"
+      @invalid="alInvalidar"
+      @input="alEscribir"
     />
     <p v-if="error" :id="`${id}-nota`" class="text-sm text-red-700 dark:text-red-400">{{ error }}</p>
     <p v-else-if="ayuda" :id="`${id}-nota`" class="text-xs text-tierra-500">{{ ayuda }}</p>

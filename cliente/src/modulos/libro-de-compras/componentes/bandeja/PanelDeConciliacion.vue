@@ -60,7 +60,12 @@ function alHacer(accion: AccionDeConciliacion, item: ItemDeConciliacion): void {
         :icono="grupo === 'cuadra' ? SearchX : CircleCheckBig"
         :titulo="textos.vacia"
       />
-      <ul v-else class="grid gap-3 md:grid-cols-2" :class="{ 'opacity-60': cargando }" :aria-busy="cargando">
+      <ul
+        v-else
+        class="grid grid-cols-1 gap-3 md:grid-cols-2"
+        :class="{ 'opacity-60': cargando }"
+        :aria-busy="cargando"
+      >
         <li v-for="item in items" :key="`${item.documentoId}-${item.dteId}-${item.numero}`">
           <LineaDeConciliacion :clave="grupo" :item="item" @accion="alHacer($event, item)" />
         </li>

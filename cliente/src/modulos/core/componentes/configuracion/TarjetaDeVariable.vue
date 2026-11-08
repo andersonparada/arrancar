@@ -30,7 +30,7 @@ const borradores = defineModel<Record<string, unknown>>({ required: true });
       </div>
     </div>
 
-    <div v-if="puedeGestionar" class="grid gap-3 sm:grid-cols-2">
+    <div v-if="puedeGestionar" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <CampoDeNivel
         v-for="nivel in nivelesEditables(variable)"
         :key="nivel"

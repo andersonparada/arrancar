@@ -53,7 +53,7 @@ const tasas = usarTasasDeCombustible();
         ventana.nuevo
       }}</BotonBase>
     </EstadoVacio>
-    <ul v-else class="grid gap-3 md:grid-cols-2">
+    <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in registros" :key="registro.id">
         <TarjetaDeCombustible
           :registro="registro"

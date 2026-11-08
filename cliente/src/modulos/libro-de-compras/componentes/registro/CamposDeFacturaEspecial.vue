@@ -28,7 +28,7 @@ const emisor = computed(() => textoDelEmisorEspecial(props.nitDeLaEmpresa));
       deshabilitado
     />
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <CampoTexto :model-value="emisor" etiqueta="Emisor" solo-lectura />
       <CampoTexto
         v-model="edicion.nitReceptor"

@@ -11,7 +11,7 @@ const rolIds = defineModel<string[]>({ required: true });
   <fieldset class="rounded-xl ring-1 ring-tierra-200 dark:ring-tierra-700" :disabled="deshabilitado">
     <legend class="ml-3 px-1 text-sm font-semibold">Roles</legend>
     <p v-if="!roles.length" class="p-3 text-sm text-tierra-500">Todavía no hay roles en esta cuenta.</p>
-    <div class="grid gap-2 p-3 sm:grid-cols-2">
+    <div class="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2">
       <label
         v-for="rol in roles"
         :key="rol.id"

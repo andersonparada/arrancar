@@ -69,7 +69,7 @@ const ultimaId = computed(() => conciliaciones.value[0]?.id ?? null);
         :icono="Inbox"
         titulo="Esta cuenta todavía no tiene conciliaciones"
       />
-      <ul v-else class="grid gap-3 md:grid-cols-2">
+      <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <li v-for="registro in conciliaciones" :key="registro.id">
           <TarjetaDeConciliacion
             :registro="registro"

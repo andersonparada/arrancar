@@ -27,7 +27,7 @@ const tipos = opcionesDeTipo();
 
 <template>
   <TarjetaBase class="mb-4">
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
       <CampoSelector v-model="filtros.periodo" etiqueta="Período" :opciones="periodos" />
       <CampoSelector v-model="filtros.proveedorId" etiqueta="Proveedor" :opciones="opcionesDeProveedores" />
       <CampoSelector v-model="filtros.estado" etiqueta="Estado" :opciones="OPCIONES_DE_ESTADO" />

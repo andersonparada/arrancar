@@ -17,7 +17,7 @@ const contactos = defineModel<DatosContacto[]>({ required: true });
     <div
       v-for="(contacto, indice) in contactos"
       :key="indice"
-      class="grid gap-3 rounded-xl p-3 ring-1 ring-tierra-200 sm:grid-cols-[1fr_1fr_1fr_auto] dark:ring-tierra-700"
+      class="grid grid-cols-1 gap-3 rounded-xl p-3 ring-1 ring-tierra-200 sm:grid-cols-[1fr_1fr_1fr_auto] dark:ring-tierra-700"
     >
       <CampoTexto v-model="contacto.nombre" etiqueta="Nombre" requerido />
       <CampoTexto v-model="contacto.cargo" etiqueta="Cargo" />

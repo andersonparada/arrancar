@@ -14,7 +14,7 @@ defineEmits<{ pagar: [grupo: GrupoDelMes] }>();
 </script>
 
 <template>
-  <ul class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Grupos de entero del mes">
+  <ul class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Grupos de entero del mes">
     <li
       v-for="grupo in grupos"
       :key="grupo.grupo"

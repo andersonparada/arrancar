@@ -4,6 +4,8 @@ import { RouterLink } from 'vue-router';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
+import { formatearFecha } from '@/modulos/core/utilidades/formato';
 import { detallesDeBandeja, tituloDeDocumento } from '../composables/detalles-de-documento';
 import type { DocumentoPorPagar } from '../servicios/tipos';
 
@@ -14,6 +16,7 @@ import type { DocumentoPorPagar } from '../servicios/tipos';
 const props = defineProps<{ documento: DocumentoPorPagar; marcado: boolean; puedeMarcar: boolean; error?: string }>();
 const vencimiento = defineModel<string>('vencimiento', { default: '' });
 const emit = defineEmits<{ alternar: [] }>();
+const puedeVerElLibro = usarSesion().puede('libro-de-compras.documentos.ver');
 const enlaceALaFicha = {
   name: 'libro-de-compras.documentos.ficha',
   params: { documentoId: props.documento.documentoId },
@@ -44,19 +47,22 @@ const enlaceALaFicha = {
       </div>
     </dl>
     <CampoTexto
-      v-if="documento.clase === 'cargo'"
+      v-if="documento.clase === 'cargo' && puedeMarcar"
       v-model="vencimiento"
       etiqueta="Vence"
       tipo="date"
       requerido
-      :solo-lectura="!puedeMarcar"
       :error="error"
     />
+    <p v-else-if="documento.clase === 'cargo'" class="text-sm">
+      <span class="text-xs text-tierra-500">Vence</span>
+      {{ formatearFecha(vencimiento) }}
+    </p>
     <p v-else class="text-xs text-tierra-500">
       Una nota de crédito no vence: rebaja lo que se debe desde que se recibió.
     </p>
     <RouterLink
-      v-permiso="'libro-de-compras.documentos.ver'"
+      v-if="puedeVerElLibro"
       :to="enlaceALaFicha"
       class="mt-auto inline-flex items-center gap-1.5 self-start text-sm font-medium text-campo-700 underline dark:text-campo-300"
     >

@@ -16,7 +16,7 @@ const filtros = defineModel<FiltrosDeChequesCaducos>({ required: true });
 
 <template>
   <TarjetaBase>
-    <div class="grid gap-3 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <CampoSelector v-model="filtros.cuentaBancariaId" etiqueta="Cuenta" :opciones="opcionesDeCuenta" />
       <CampoTexto v-model="filtros.beneficiario" etiqueta="Beneficiario" tipo="search" placeholder="Nombre o parte" />
       <CampoTexto

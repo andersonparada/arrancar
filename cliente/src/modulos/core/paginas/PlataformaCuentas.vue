@@ -24,7 +24,7 @@ const { gestion } = modulos;
     </EncabezadoPagina>
 
     <EstadoVacio v-if="!cuentas.length" :icono="Building" titulo="Todavía no hay cuentas" />
-    <ul v-else class="grid gap-3 md:grid-cols-2">
+    <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="cuenta in cuentas" :key="cuenta.id">
         <TarjetaDeCuenta :cuenta="cuenta" @modulos="modulos.abrir(cuenta)" @cambiar-estado="cambiarEstado(cuenta)" />
       </li>

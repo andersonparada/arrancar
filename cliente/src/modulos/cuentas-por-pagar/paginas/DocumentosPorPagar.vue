@@ -41,7 +41,7 @@ const aviso = lista.autorizacion.avisoDeLoPropio;
     </EstadoVacio>
     <template v-else>
       <ul
-        class="grid gap-3 transition-opacity md:grid-cols-2 xl:grid-cols-3"
+        class="grid grid-cols-1 gap-3 transition-opacity md:grid-cols-2 xl:grid-cols-3"
         :class="{ 'opacity-60': lista.cargando.value }"
         :aria-busy="lista.cargando.value"
       >

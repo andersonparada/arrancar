@@ -41,7 +41,7 @@ const fichaDe = (encontrado: ContactoEncontrado) => ({
       titulo="Sin resultados"
       descripcion="Nadie coincide con lo que escribió. Pruebe con otra parte del nombre o del número."
     />
-    <ul v-else class="grid gap-3 sm:grid-cols-2">
+    <ul v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <li v-for="(encontrado, indice) in encontrados" :key="`${encontrado.terceroId}-${indice}`">
         <ResultadoDeContacto :encontrado="encontrado" :ficha="fichaDe(encontrado)" />
       </li>

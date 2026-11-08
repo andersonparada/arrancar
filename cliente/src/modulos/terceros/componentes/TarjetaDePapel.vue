@@ -31,7 +31,7 @@ defineEmits<{ editar: []; quitar: [] }>();
       </div>
     </div>
     <p v-if="!detalles" class="text-sm text-tierra-500">No tiene el papel de {{ titulo.toLowerCase() }}.</p>
-    <dl v-else class="grid gap-2 text-sm sm:grid-cols-2">
+    <dl v-else class="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
       <div v-for="detalle in detalles" :key="detalle.etiqueta">
         <dt class="text-tierra-500">{{ detalle.etiqueta }}</dt>
         <dd>{{ detalle.valor }}</dd>

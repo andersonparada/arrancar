@@ -33,7 +33,7 @@ const apagado = reactive(periodos.control.apagado);
       </div>
       <ul
         v-if="vista.periodos.length > 0"
-        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+        class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
         :class="{ 'opacity-60': cargando }"
         :aria-busy="cargando"
       >

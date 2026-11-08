@@ -17,7 +17,7 @@ const permisos = defineModel<string[]>({ required: true });
       <legend class="ml-3 flex items-center gap-1.5 px-1 text-sm font-semibold">
         <ShieldCheck class="size-4 text-campo-600" aria-hidden="true" />{{ grupo.nombre }}
       </legend>
-      <div class="grid gap-2 p-3 sm:grid-cols-2">
+      <div class="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2">
         <label
           v-for="permiso in grupo.permisos"
           :key="permiso.clave"

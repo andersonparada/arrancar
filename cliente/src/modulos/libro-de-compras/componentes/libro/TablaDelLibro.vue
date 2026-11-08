@@ -9,10 +9,13 @@ import {
   numeroDeDocumento,
   type ColumnaDelLibro,
 } from '../../composables/libro/datos-del-libro';
+import { etiquetaDePeriodo } from '../../composables/documentos/filtros-de-documentos';
 import type { ColumnaDeDinero, FilaDelLibro, LibroDelPeriodo } from '../../servicios/libro.api';
 
 const props = defineProps<{ libro: LibroDelPeriodo }>();
 
+/** «octubre de 2026», no la fecha cruda que manda el servidor (`2026-10-01`). */
+const periodoLegible = computed(() => etiquetaDePeriodo(props.libro.periodo.slice(0, 7)));
 const columnas = computed(() => columnasDelLibro(props.libro.tipoDeLibro));
 const columnasDeTexto = computed(() => columnas.value.filter((columna) => !columna.dinero).length);
 const descripcionDeSigla = computed(() => new Map(props.libro.leyenda.map((e) => [e.sigla, e.descripcion])));
@@ -28,14 +31,14 @@ const rojo = (fila: FilaDelLibro) => (esNegativo(fila.total) ? 'text-red-700 dar
   <div
     class="max-w-full overflow-x-auto rounded-2xl bg-white ring-1 ring-tierra-200/70 focus-visible:outline-2 dark:bg-tierra-800/60 dark:ring-tierra-700"
     role="region"
-    :aria-label="`Libro de compras de ${libro.periodo}`"
+    :aria-label="`Libro de compras de ${periodoLegible}`"
     tabindex="0"
   >
     <table class="w-full min-w-max border-collapse text-sm">
       <caption class="sr-only">
         Compras del período
         {{
-          libro.periodo
+          periodoLegible
         }}. Las filas en rojo restan: son notas de crédito.
       </caption>
       <thead class="bg-tierra-100 text-left text-xs uppercase text-tierra-700 dark:bg-tierra-800 dark:text-tierra-200">

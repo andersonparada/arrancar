@@ -16,12 +16,12 @@ defineProps<{ titulo: string; descripcion?: string; volver?: { texto: string; ru
       <ArrowLeft class="size-4" aria-hidden="true" />
       {{ volver.texto }}
     </RouterLink>
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
+    <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+      <div class="min-w-0 sm:flex-[1_1_18rem]">
         <h1 class="text-2xl font-semibold tracking-tight text-tierra-900 dark:text-white">{{ titulo }}</h1>
         <p v-if="descripcion" class="mt-1 text-sm text-tierra-600 dark:text-tierra-300">{{ descripcion }}</p>
       </div>
-      <div v-if="$slots.default" class="flex flex-wrap gap-2">
+      <div v-if="$slots.default" class="flex flex-wrap gap-2 sm:justify-end">
         <slot />
       </div>
     </div>

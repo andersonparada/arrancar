@@ -19,7 +19,7 @@ const abierto = computed(() => !!props.errores.otrosImpuestos || Number(linea.va
       <ChevronRight class="size-4 shrink-0 transition-transform group-open:rotate-90" aria-hidden="true" />
       Más montos de la factura
     </summary>
-    <div class="grid gap-3 px-3 pt-1 pb-3 sm:grid-cols-2">
+    <div class="grid grid-cols-1 gap-3 px-3 pt-1 pb-3 sm:grid-cols-2">
       <CampoTexto
         v-model="linea.otrosImpuestos"
         tipo="number"

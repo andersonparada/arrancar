@@ -63,7 +63,7 @@ const esNota = computed(() => llevaFacturaAfectada(edicion.value.tipoDte));
 </script>
 
 <template>
-  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     <CampoSelector
       v-model="edicion.tipoDte"
       class="sm:col-span-2 lg:col-span-3"

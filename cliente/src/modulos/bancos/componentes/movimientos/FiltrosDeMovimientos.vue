@@ -12,7 +12,10 @@ const filtros = defineModel<FiltrosDeMovimientos>({ required: true });
 
 <template>
   <TarjetaBase class="mb-4">
-    <div class="grid gap-3 sm:grid-cols-2" :class="opcionesDeConcepto ? 'lg:grid-cols-4' : 'sm:grid-cols-3'">
+    <div
+      class="grid grid-cols-1 gap-3 sm:grid-cols-2"
+      :class="opcionesDeConcepto ? 'lg:grid-cols-4' : 'sm:grid-cols-3'"
+    >
       <CampoSelector v-model="filtros.cuentaBancariaId" etiqueta="Cuenta" :opciones="opcionesDeCuenta" />
       <CampoSelector
         v-if="opcionesDeConcepto"

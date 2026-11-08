@@ -53,7 +53,7 @@ const cerrarVentana = () => (props.reaperturaAbierta ? undefined : emit('cerrar'
       />
       <CampoTexto v-model="edicion.nit" etiqueta="NIT" placeholder="Ej. 1234567-8" :error="errores.nit" />
       <CampoTexto v-model="edicion.direccion" etiqueta="Dirección" :error="errores.direccion" />
-      <div class="grid gap-4 sm:grid-cols-2">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <CampoTexto v-model="edicion.telefono" etiqueta="Teléfono" tipo="tel" :error="errores.telefono" />
         <CampoTexto v-model="edicion.correo" etiqueta="Correo" tipo="email" :error="errores.correo" />
       </div>

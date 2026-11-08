@@ -20,7 +20,7 @@ const edicion = defineModel<EdicionDeRol>({ required: true });
     @cerrar="emit('cerrar')"
   >
     <form id="form-rol" class="space-y-5" @submit.prevent="emit('guardar')">
-      <div class="grid gap-4 sm:grid-cols-2">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <CampoTexto v-model="edicion.nombre" etiqueta="Nombre" requerido :error="errores.nombre" />
         <CampoTexto v-model="edicion.descripcion" etiqueta="Descripción" :error="errores.descripcion" />
       </div>

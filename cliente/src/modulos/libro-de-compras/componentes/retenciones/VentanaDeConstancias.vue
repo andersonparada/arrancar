@@ -36,7 +36,7 @@ const conProblemas = computed(() => filasConProblemas(props.errores));
     ancha
     @cerrar="$emit('cerrar')"
   >
-    <form id="anotar-constancias" class="flex flex-col gap-4" @submit.prevent="$emit('guardar')">
+    <form id="anotar-constancias" class="flex flex-col gap-4" novalidate @submit.prevent="$emit('guardar')">
       <p class="text-sm text-tierra-600 dark:text-tierra-300">{{ textos.explicacion }}</p>
       <CampoTexto
         v-if="!unaSola"
@@ -67,7 +67,7 @@ const conProblemas = computed(() => filasConProblemas(props.errores));
             · {{ nombreDelDocumento(fila.retencion.documento) }} · retención
             {{ formatearMonto(fila.retencion.retenido) }}
           </p>
-          <div class="grid gap-3 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <CampoTexto
               v-model="fila.numero"
               :etiqueta="textos.numero"

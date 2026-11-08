@@ -35,7 +35,7 @@ const edicion = defineModel<EdicionDeLocalidad>({ required: true });
       etiqueta="Nombre comercial SAT"
       :error="errores.nombreComercialSat"
     />
-    <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <CampoSelector
         v-model="edicion.departamentoCodigo"
         etiqueta="Departamento"

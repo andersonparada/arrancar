@@ -15,7 +15,7 @@ const rango = defineModel<RangoDeAnalisis>({ required: true });
 
 <template>
   <form class="mb-4 print:hidden" @submit.prevent>
-    <div class="grid gap-3 sm:grid-cols-2 lg:max-w-xl">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:max-w-xl">
       <CampoSelector v-model="rango.desde" :etiqueta="textos.desde" :opciones="opcionesDesde" />
       <CampoSelector v-model="rango.hasta" :etiqueta="textos.hasta" :opciones="opcionesHasta" />
     </div>

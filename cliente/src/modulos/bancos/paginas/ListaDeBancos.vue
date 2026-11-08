@@ -29,7 +29,7 @@ const { registros, cargando, intercambio, edicion, enviando, errores, abrir, gua
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
     <EstadoVacio v-else-if="!registros.length" :icono="Inbox" titulo="Todavía no hay bancos" />
-    <ul v-else class="grid gap-3 md:grid-cols-2">
+    <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in registros" :key="registro.id">
         <TarjetaDeRegistro
           :titulo="String(registro.nombre)"

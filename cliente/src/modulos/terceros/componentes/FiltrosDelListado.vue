@@ -15,7 +15,7 @@ const ESTADOS = [
 
 <template>
   <TarjetaBase class="mb-4">
-    <div class="grid gap-3 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <CampoTexto
         v-model="filtros.texto"
         class="sm:col-span-2"

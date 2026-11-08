@@ -8,7 +8,7 @@ defineProps<{ detalles: DetalleDeRegistro[] }>();
 
 <template>
   <TarjetaBase>
-    <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+    <dl class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
       <div v-for="detalle in detalles" :key="detalle.etiqueta" class="min-w-0">
         <dt class="text-xs text-tierra-500">{{ detalle.etiqueta }}</dt>
         <dd class="mt-0.5 break-words">{{ detalle.valor }}</dd>

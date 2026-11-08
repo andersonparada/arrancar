@@ -40,7 +40,7 @@ const exportar = (): Promise<void> => intercambio.exportar(filtroDeLaConsulta(fi
     </EncabezadoPagina>
 
     <TarjetaBase class="print:hidden">
-      <div class="grid gap-3 sm:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <CampoSelector v-model="filtros.clave" etiqueta="Correlativo" :opciones="OPCIONES_DE_CLAVE" />
       </div>
     </TarjetaBase>
@@ -61,7 +61,7 @@ const exportar = (): Promise<void> => intercambio.exportar(filtroDeLaConsulta(fi
       <p class="text-sm" :class="totales.alertas ? 'font-medium text-red-700 dark:text-red-400' : 'text-tierra-600'">
         {{ totales.huecos }} huecos en total; {{ totales.alertas }} sin auditoría.
       </p>
-      <div class="grid gap-4 lg:grid-cols-2">
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <TarjetaDeCorrelativo v-for="c in reporte.correlativos" :key="`${c.clave}-${c.anio}`" :correlativo="c" />
       </div>
     </template>

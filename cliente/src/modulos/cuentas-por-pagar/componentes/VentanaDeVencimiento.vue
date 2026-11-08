@@ -11,7 +11,7 @@ const edicion = defineModel<{ abierta: boolean; vencimiento: string }>({ require
 
 <template>
   <VentanaModal :abierta="edicion.abierta" titulo="Cambiar el vencimiento" @cerrar="emit('cerrar')">
-    <form id="form-vencimiento" class="space-y-4" @submit.prevent="emit('guardar')">
+    <form id="form-vencimiento" class="space-y-4" novalidate @submit.prevent="emit('guardar')">
       <CampoTexto
         v-model="edicion.vencimiento"
         etiqueta="Vence"
