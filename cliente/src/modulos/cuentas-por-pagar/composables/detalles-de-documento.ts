@@ -1,7 +1,7 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import { formatearFecha, formatearFechaHora, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import type { DocumentoPorPagar, EstadoDeDocumento, FichaDelDocumento } from '../servicios/tipos';
-import { ESTADOS_DE_DOCUMENTO, TIPOS_DE_DOCUMENTO } from '../textos';
+import { CAUSAS_DE_ANULACION, ESTADOS_DE_DOCUMENTO, TIPOS_DE_DOCUMENTO } from '../textos';
 
 type Identificable = Pick<DocumentoPorPagar, 'tipo' | 'serie' | 'numero'>;
 type Tono = 'campo' | 'trigo' | 'tierra' | 'rojo';
@@ -83,4 +83,16 @@ export function detallesDeSeguimiento(ficha: FichaDelDocumento): DetalleDeRegist
     detalles.push({ etiqueta: 'Autorización', valor: 'La dio quien lo ingresó o lo completó' });
   }
   return detalles;
+}
+
+/** El bloque «Anulación»: causa, motivo, quién y cuándo; vacío si el documento no está anulado. */
+export function detallesDeAnulacion(ficha: Pick<FichaDelDocumento, 'anulacion'>): DetalleDeRegistro[] {
+  const anulacion = ficha.anulacion;
+  if (!anulacion) return [];
+  return [
+    { etiqueta: 'Causa', valor: formatearTexto(anulacion.causa ? CAUSAS_DE_ANULACION[anulacion.causa] : null) },
+    { etiqueta: 'Motivo', valor: formatearTexto(anulacion.motivo) },
+    { etiqueta: 'Anulado por', valor: formatearTexto(anulacion.anuladoPor) },
+    { etiqueta: 'Anulado el', valor: anulacion.anuladoEn ? formatearFechaHora(anulacion.anuladoEn) : '—' },
+  ];
 }

@@ -9,6 +9,7 @@ export type ClaveDeResultado =
   | 'enArrancarYNoEnLaSat'
   | 'sinDatosDeLaSat'
   | 'registradoEnOtroPeriodo'
+  | 'noVaEnElLibro'
   | 'anuladoEnLaSatYVigenteAqui'
   | 'descartado';
 

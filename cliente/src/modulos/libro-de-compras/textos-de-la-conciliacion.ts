@@ -80,6 +80,14 @@ export const TARJETAS_DE_CONCILIACION: TarjetaDeConciliacion[] = [
     porRevisar: false,
   },
   {
+    clave: 'noVaEnElLibro',
+    texto: 'No va en el libro',
+    explicacion:
+      'Emitidas en este mes pero su documento está fuera del libro (por ejemplo, un recibo por donación). No hay nada que corregir.',
+    tono: 'tierra',
+    porRevisar: false,
+  },
+  {
     clave: 'descartado',
     texto: 'Descartadas',
     explicacion: 'Emitidas en este mes y descartadas a propósito. Puede restaurarlas si fue un error.',

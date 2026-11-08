@@ -56,6 +56,7 @@ const ACCIONES: Record<ClaveDeResultado, AccionesPorGrupo> = {
   enArrancarYNoEnLaSat: abrirSiHayDocumento,
   sinDatosDeLaSat: abrirSiHayDocumento,
   registradoEnOtroPeriodo: abrirSiHayDocumento,
+  noVaEnElLibro: abrirSiHayDocumento,
   anuladoEnLaSatYVigenteAqui: abrirSiHayDocumento,
   descartado: restaurarSiHayFila,
 };
