@@ -12,6 +12,11 @@ export interface Empresa {
   actualizadoEn: string;
 }
 
+/** Lo que responden crear y actualizar: la empresa y avisos que no impiden guardar (p. ej. NIT repetido en la cuenta). */
+export interface EmpresaGuardada extends Empresa {
+  avisos: string[];
+}
+
 export interface DatosEmpresa {
   nombre: string;
   nit: string | null;
@@ -31,11 +36,11 @@ export class ApiEmpresas {
   }
 
   crear(datos: DatosEmpresa) {
-    return this.http.crear<Empresa>('/empresas', datos);
+    return this.http.crear<EmpresaGuardada>('/empresas', datos);
   }
 
   actualizar(id: string, datos: DatosEmpresa) {
-    return this.http.reemplazar<Empresa>(`/empresas/${id}`, datos);
+    return this.http.reemplazar<EmpresaGuardada>(`/empresas/${id}`, datos);
   }
 }
 

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { duracionDeAviso } from './duracion-de-aviso';
 
 export type TipoAviso = 'exito' | 'error' | 'info';
 
@@ -20,8 +21,6 @@ interface SolicitudConfirmacion extends Required<OpcionesDeConfirmacion> {
   resolver: (aceptado: boolean) => void;
 }
 
-const DURACION_AVISO_MS = 4500;
-
 /** Los mensajes emergentes: cada uno se cierra solo al rato. */
 function usarMensajesEmergentes() {
   const avisos = ref<Aviso[]>([]);
@@ -32,7 +31,7 @@ function usarMensajesEmergentes() {
   function mostrar(tipo: TipoAviso, mensaje: string): void {
     const id = siguienteId++;
     avisos.value.push({ id, tipo, mensaje });
-    setTimeout(() => cerrar(id), DURACION_AVISO_MS);
+    setTimeout(() => cerrar(id), duracionDeAviso(mensaje));
   }
 
   return { avisos, mostrar, cerrar };
