@@ -1,4 +1,3 @@
-import { normalizarSerieONumero } from '../documento-de-compra.js';
 import { primerDiaDelMes } from '../periodo-del-libro.js';
 import {
   AccesorioDelEnteroInvalido,
@@ -79,7 +78,7 @@ function accesoriosValidos(peticion: PeticionDeEntero): Pick<DatosDelEntero, (ty
 }
 
 function documentoDePagoValido(documento: string): string {
-  const limpio = normalizarSerieONumero(documento);
+  const limpio = documento.trim();
   if (limpio.length === 0 || limpio.length > MAXIMO_DEL_DOCUMENTO) throw new DocumentoDePagoInvalido();
   return limpio;
 }
@@ -87,7 +86,7 @@ function documentoDePagoValido(documento: string): string {
 /**
  * Revisa lo que escribió el usuario: mes (primer día), grupo conocido, fecha de pago no anterior al mes ni posterior a
  * `hoy` (en la zona de la empresa, que da el `Reloj`), formulario o
- * boleta de 1 a 40 caracteres sin espacios, impuesto mayor que cero, multa, intereses y mora no negativos (cero si no se escriben) y observaciones de hasta 300.
+ * boleta de 1 a 40 caracteres (se guarda como lo escribió, sin espacios en los extremos), impuesto mayor que cero, multa, intereses y mora no negativos (cero si no se escriben) y observaciones de hasta 300.
  */
 export function enteroValido(peticion: PeticionDeEntero, hoy: string): DatosDelEntero {
   const mes = mesDelEnteroValido(peticion.mes);

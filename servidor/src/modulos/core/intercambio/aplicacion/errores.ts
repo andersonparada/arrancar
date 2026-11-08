@@ -4,7 +4,7 @@ export class ArchivoNoLegible extends DatoInvalido {
   readonly codigo = 'archivo_no_legible';
 
   constructor() {
-    super('No se pudo leer el archivo. Suba un Excel (.xlsx), por ejemplo la plantilla.');
+    super('No se pudo leer el archivo. Suba un Excel (.xlsx) con datos.');
   }
 }
 
@@ -28,7 +28,7 @@ export class ArchivoNoEsExcel extends DatoInvalido {
   readonly codigo = 'archivo_no_es_excel';
 
   constructor() {
-    super('El archivo no es un Excel válido. Suba un Excel (.xlsx), por ejemplo la plantilla.');
+    super('El archivo no es un Excel válido. Suba un Excel (.xlsx) con datos.');
   }
 }
 

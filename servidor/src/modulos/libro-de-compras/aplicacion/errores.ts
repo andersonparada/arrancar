@@ -27,14 +27,20 @@ export class VigenciaFiscalEnUso extends RecursoEnUso {
   }
 }
 
-/** El proveedor del DTE aún no existe y quien confirma no puede crear proveedores: que los creen en Proveedores. */
+/**
+ * Quien confirma no puede crear proveedores y el del DTE no existe como tal. `crear`: el NIT es nuevo; `agregar_papel`:
+ * ya está en Terceros (p. ej. como cliente) y solo falta darle el papel de proveedor.
+ */
 export class ProveedorNuevoSinPermiso extends AccesoDenegado {
   override readonly codigo = 'proveedor_nuevo_sin_permiso';
 
-  constructor(nit: string) {
-    super(
-      `El proveedor de este DTE (NIT ${nit}) aún no existe y usted no puede crear proveedores. Pida que lo creen en Proveedores; la fila lo tomará sola.`,
-      { nit },
-    );
+  constructor(nit: string, accion: 'crear' | 'agregar_papel' = 'crear') {
+    super(accion === 'crear' ? MENSAJE_DE_NIT_NUEVO(nit) : MENSAJE_DE_NIT_EXISTENTE(nit), { nit, accion });
   }
 }
+
+const MENSAJE_DE_NIT_NUEVO = (nit: string) =>
+  `El proveedor de este DTE (NIT ${nit}) aún no existe y usted no puede crear proveedores. Pida que lo creen en Proveedores; la fila lo tomará sola.`;
+
+const MENSAJE_DE_NIT_EXISTENTE = (nit: string) =>
+  `El NIT ${nit} ya está en Terceros, pero todavía no es proveedor, y usted no puede crear proveedores. Pida que le den el papel de proveedor en Proveedores; la fila lo tomará sola.`;

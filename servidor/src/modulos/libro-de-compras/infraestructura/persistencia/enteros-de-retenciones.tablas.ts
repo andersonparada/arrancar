@@ -32,7 +32,7 @@ const restriccionesDelPago = (t: Columnas) => [
   check('enteros_de_retenciones_fecha_de_pago', sql`${t.fechaDePago} >= ${t.mes}`),
   check(
     'enteros_de_retenciones_documento_de_pago',
-    sql`char_length(${t.documentoDePago}) between 1 and 40 and ${t.documentoDePago} !~ '\\s'`,
+    sql`char_length(${t.documentoDePago}) between 1 and 40 and ${t.documentoDePago} = btrim(${t.documentoDePago})`,
   ),
   check('enteros_de_retenciones_impuesto_positivo', sql`${t.impuesto} > 0`),
   check('enteros_de_retenciones_multa_no_negativa', sql`${t.multa} >= 0`),

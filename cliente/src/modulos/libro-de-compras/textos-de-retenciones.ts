@@ -142,7 +142,7 @@ export const VENTANA_DE_ENTEROS = {
   anular: 'Anular',
   fechaDePago: 'Fecha de pago',
   documentoDePago: 'Formulario o boleta',
-  documentoDePagoAyuda: 'Número del formulario o de la boleta de pago, sin espacios.',
+  documentoDePagoAyuda: 'Número del formulario o de la boleta de pago.',
   impuesto: 'Impuesto enterado',
   accesorios: 'Multa, intereses y mora (si los pagó en la misma boleta)',
   accesoriosAyuda: 'Opcionales. Déjelos en blanco si no hubo; no los sume al impuesto.',

@@ -4,6 +4,7 @@ import { operadorDePrueba } from '../../../../core/compartido/pruebas/dobles-com
 import { DteRecibido, type DatosDelDte } from '../../../dominio/dte-recibido.js';
 import { ProveedorNuevoSinConfirmar } from '../../../dominio/errores-de-bandeja.js';
 import { RepositorioDeDteRecibidosEnMemoria } from '../../../pruebas/dobles-de-la-bandeja.js';
+import { AccesoDenegado } from '../../../../core/compartido/aplicacion/errores.js';
 import { ProveedorNuevoSinPermiso } from '../../errores.js';
 import type { CreadorDeProveedores, PedidoDeProveedorNuevo } from '../../puertos/puertos-de-la-bandeja.js';
 import type { ProveedorNuevoPedido } from './decisiones-del-dte.js';
@@ -22,6 +23,9 @@ class CreadorFalso implements CreadorDeProveedores {
   async crear(_operador: unknown, pedido: PedidoDeProveedorNuevo) {
     this.pedidos.push(pedido);
     const nombreExistente = this.existentes.get(pedido.nit);
+    if (!pedido.puedeCrearProveedores) {
+      throw new AccesoDenegado('Sin permiso', { accion: nombreExistente ? 'agregar_papel' : 'crear' });
+    }
     const proveedorId = this.porNit.get(pedido.nit) ?? crypto.randomUUID();
     const creado = !nombreExistente && !this.porNit.has(pedido.nit);
     this.porNit.set(pedido.nit, proveedorId);
@@ -147,7 +151,19 @@ describe('proveedor de la fila', () => {
     const intento = resolver(creador, await agregar(), { puedeCrearProveedores: false });
 
     await expect(intento).rejects.toThrow(ProveedorNuevoSinPermiso);
-    expect(creador.pedidos).toHaveLength(0);
+    await expect(intento).rejects.toMatchObject({ detalles: { nit: NIT, accion: 'crear' } });
+  });
+
+  it('sin el permiso y con el NIT ya en Terceros, el mensaje pide el papel de proveedor', async () => {
+    const creador = new CreadorFalso(new Map([[NIT, 'Cliente Existente']]));
+
+    const intento = resolver(creador, await agregar(), { puedeCrearProveedores: false });
+
+    await expect(intento).rejects.toMatchObject({
+      codigo: 'proveedor_nuevo_sin_permiso',
+      detalles: { nit: NIT, accion: 'agregar_papel' },
+      message: expect.stringContaining('ya está en Terceros'),
+    });
   });
 
   it('en la vista previa, sin lo confirmado usa la propuesta en su tipo y la informa', async () => {

@@ -57,7 +57,7 @@ export class ConfirmadorDeFila {
   constructor(private readonly dependencias: DependenciasDelConfirmador) {}
 
   /**
-   * @returns el documento registrado y todos sus avisos.
+   * @returns el documento registrado y sus avisos, sin repetir los iguales (cada línea de la factura puede traer el mismo).
    * @throws RecursoNoEncontrado, DteRegistradoEnOtraEmpresa y cualquier regla de la fila o del registro.
    */
   async confirmar(
@@ -70,7 +70,8 @@ export class ConfirmadorDeFila {
     if (bloqueada) throw new DteRegistradoEnOtraEmpresa();
     const preparada = await unidadDeTrabajo.ejecutar(operador, () => this.preparar(operador, id, opciones));
     const registrado = await registrar.ejecutar(operador, preparada.peticion);
-    return { documentoId: registrado.documento.id!, avisos: [...preparada.avisos, ...registrado.avisos] };
+    const avisos = [...new Set([...preparada.avisos, ...registrado.avisos])];
+    return { documentoId: registrado.documento.id!, avisos };
   }
 
   /**

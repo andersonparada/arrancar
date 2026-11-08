@@ -15,6 +15,7 @@ function resultadoVacio(): ResultadoDeConciliacion {
     conDiferencias: [],
     enLaSatYNoEnArrancar: [],
     registradoEnOtroPeriodo: [],
+    noVaEnElLibro: [],
     enArrancarYNoEnLaSat: [],
     sinDatosDeLaSat: [],
     anuladoEnLaSatYVigenteAqui: [],
@@ -37,13 +38,22 @@ function clasificarDocumento(
   return [item.diferencias.length > 0 ? 'conDiferencias' : 'cuadra', item];
 }
 
+/** Una fila con documento que no es del libro de este período: por anular, fuera del libro u otro período. */
+function claveDeLaFilaConDocumento(
+  fila: FilaConciliable,
+  documento: DocumentoConciliable,
+): keyof ResultadoDeConciliacion {
+  if (fila.estadoSat === 'anulado') return 'anuladoEnLaSatYVigenteAqui';
+  return documento.fueraDelLibro ? 'noVaEnElLibro' : 'registradoEnOtroPeriodo';
+}
+
 /** Del lado de la SAT: una fila emitida en el mes que no cruzó con un documento del libro del período. */
 function clasificarFila(
   fila: FilaConciliable,
   documento: DocumentoConciliable | undefined,
 ): [keyof ResultadoDeConciliacion, ItemDeConciliacion] | null {
   const item = itemDeLaFila(fila, documento ?? null);
-  if (documento) return [fila.estadoSat === 'anulado' ? 'anuladoEnLaSatYVigenteAqui' : 'registradoEnOtroPeriodo', item];
+  if (documento) return [claveDeLaFilaConDocumento(fila, documento), item];
   if (fila.estado === 'descartado') return ['descartado', item];
   return fila.estadoSat === 'anulado' ? null : ['enLaSatYNoEnArrancar', item];
 }

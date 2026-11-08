@@ -128,6 +128,15 @@ describe('crear el proveedor de un DTE recibido', () => {
     expect(terceros.cantidad()).toBe(0);
   });
 
+  it('sin el permiso, el rechazo dice si el NIT es nuevo o ya es de un tercero', async () => {
+    await expect(crear({ puedeCrearProveedores: false })).rejects.toMatchObject({ detalles: { accion: 'crear' } });
+    await registrarConNit();
+
+    await expect(crear({ puedeCrearProveedores: false })).rejects.toMatchObject({
+      detalles: { accion: 'agregar_papel' },
+    });
+  });
+
   it('rechaza NIT inválido, consumidor final y nombre vacío', async () => {
     await expect(crear({ nit: '5769370' })).rejects.toThrow(NitInvalido);
     await expect(crear({ nit: 'CF' })).rejects.toThrow(NitDeProveedorSinNumero);

@@ -82,6 +82,19 @@ export interface AplicacionDelDocumentoDto {
 export interface FichaDelDocumentoPorPagarDto extends DocumentoPorPagarDto {
   notas: NotaDelDocumentoDto[];
   aplicaciones: AplicacionDelDocumentoDto[];
+  /** Cómo se anuló (de Libro de compras); `null` si el documento no está anulado. */
+  anulacion: AnulacionDelDocumentoDto | null;
+}
+
+/** Por qué, quién y cuándo se anuló un documento. */
+export interface AnulacionDelDocumentoDto {
+  /** `error_de_captura`, `fel_anulada_por_el_emisor` o `no_corresponde_a_la_empresa`. */
+  causa: string | null;
+  motivo: string | null;
+  /** Id del usuario que anuló. */
+  anuladoPor: string | null;
+  /** Instante en ISO (UTC). */
+  anuladoEn: string | null;
 }
 
 /** Una nota de crédito con saldo libre: a favor de la empresa frente al proveedor. */

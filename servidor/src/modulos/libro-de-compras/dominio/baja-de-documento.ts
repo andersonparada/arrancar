@@ -18,6 +18,13 @@ export const CAUSAS_DE_ANULACION = [
 ] as const;
 export type CausaDeAnulacion = (typeof CAUSAS_DE_ANULACION)[number];
 
+/** La causa como se lee en pantalla y en los informes. */
+export const TEXTO_DE_CAUSA_DE_ANULACION: Record<CausaDeAnulacion, string> = {
+  error_de_captura: 'Error de captura',
+  fel_anulada_por_el_emisor: 'El emisor anuló la FEL en la SAT',
+  no_corresponde_a_la_empresa: 'No es una compra de esta empresa',
+};
+
 /** Lo que se sabe de un documento para decidir si se anula o se elimina. */
 export interface HechosDeUnDocumento {
   anulado: boolean;

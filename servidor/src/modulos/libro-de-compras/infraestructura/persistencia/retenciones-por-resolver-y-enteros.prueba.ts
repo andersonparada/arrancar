@@ -111,7 +111,7 @@ describe('enteros de retenciones: cada check', () => {
     ['mes_primer_dia', { mes: '2026-03-15' }],
     ['grupo_valido', { grupo: 'otro' }],
     ['fecha_de_pago', { fechaDePago: '2026-02-28' }],
-    ['documento_de_pago', { documentoDePago: 'con espacio' }],
+    ['documento_de_pago', { documentoDePago: ' con espacio al inicio' }],
     ['documento_de_pago', { documentoDePago: '' }],
     ['impuesto_positivo', { impuesto: '0' }],
     ['multa_no_negativa', { multa: '-0.01' }],

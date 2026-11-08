@@ -220,6 +220,7 @@ describe('conciliación por período: con el lote del mes', () => {
       conDiferencias: 2,
       enLaSatYNoEnArrancar: 2,
       registradoEnOtroPeriodo: 0,
+      noVaEnElLibro: 0,
       enArrancarYNoEnLaSat: 2,
       sinDatosDeLaSat: 0,
       anuladoEnLaSatYVigenteAqui: 1,

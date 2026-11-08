@@ -50,7 +50,7 @@ describe('enteros: estado del mes y grupo', () => {
     expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
     expect(respuesta.cuerpo.entero).toMatchObject({
       grupo: 'iva_agentes',
-      documentoDePago: 'SAT2046',
+      documentoDePago: 'sat 2046',
       impuesto: '90.00',
       retenidoAlMarcar: '180.00',
       estado: 'vigente',
@@ -69,7 +69,7 @@ describe('enteros: estado del mes y grupo', () => {
     const grupo = await grupoDelMes(MES_VIEJO);
     expect(grupo).toMatchObject({ pagado: '180.00', estado: 'enterado', aviso: null, diferencia: '0.00' });
     expect(grupo.pagos.map((pago: { documentoDePago: string }) => pago.documentoDePago)).toEqual([
-      'SAT2046',
+      'sat 2046',
       'SAT2046-C',
     ]);
   });

@@ -1,4 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { PoliticaDeZonaHoraria } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import type { LibroDeExcel } from '../../../../core/intercambio/aplicacion/puertos/libro-de-excel.js';
 import type { AnuladoDelLibro } from '../../../dominio/libro/documento-del-libro.js';
@@ -8,6 +9,7 @@ import { hojasDelLibro } from './hojas-del-libro.js';
 interface Dependencias extends DependenciasParaArmarElLibro {
   unidadDeTrabajo: UnidadDeTrabajo;
   excel: Pick<LibroDeExcel, 'escribirVarias'>;
+  zonaHoraria: PoliticaDeZonaHoraria;
 }
 
 /** El libro del período en un solo Excel de tres hojas: Libro, Resumen y Anulados. */
@@ -19,7 +21,8 @@ export class ExportarLibro {
     const { armado, anulados } = await this.dependencias.unidadDeTrabajo.ejecutar(operador, () =>
       this.leer(operador, primerDia),
     );
-    return this.dependencias.excel.escribirVarias(hojasDelLibro(armado, anulados));
+    const zona = await this.dependencias.zonaHoraria.zonaHoraria(operador);
+    return this.dependencias.excel.escribirVarias(hojasDelLibro(armado, anulados, zona));
   }
 
   private async leer(

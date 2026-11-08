@@ -26,7 +26,7 @@ export const GRUPO_DE_ENTERO: Record<ReglaDeRetencion, GrupoDeEntero> = {
 };
 
 export const NOMBRE_DEL_GRUPO: Record<GrupoDeEntero, string> = {
-  iva_agentes: 'IVA de agentes de retención y pequeño contribuyente (5 %)',
+  iva_agentes: 'IVA retenido por agentes de retención y pequeños contribuyentes',
   isr_opcional: 'ISR del régimen opcional simplificado',
   iva_factura_especial: 'IVA de facturas especiales',
   isr_factura_especial: 'ISR de facturas especiales',

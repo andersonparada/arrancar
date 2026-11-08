@@ -24,19 +24,19 @@ const peticion = (cambios: Record<string, unknown> = {}) => ({
   mes: '2026-09',
   grupo: 'iva_agentes',
   fechaDePago: '2026-10-15',
-  documentoDePago: ' sat 2046 ',
+  documentoDePago: ' Boleta 2046 ',
   impuesto: 12550,
   observaciones: null,
   ...cambios,
 });
 
 describe('entero de retenciones', () => {
-  it('lleva el mes a su primer día, el formulario en mayúsculas y sin espacios', () => {
+  it('lleva el mes a su primer día, el formulario tal como se escribió (solo sin espacios en los extremos)', () => {
     expect(enteroValido(peticion(), HOY)).toEqual({
       mes: '2026-09-01',
       grupo: 'iva_agentes',
       fechaDePago: '2026-10-15',
-      documentoDePago: 'SAT2046',
+      documentoDePago: 'Boleta 2046',
       impuesto: 12550,
       multa: 0,
       intereses: 0,

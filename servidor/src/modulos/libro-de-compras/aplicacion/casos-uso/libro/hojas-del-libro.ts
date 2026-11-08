@@ -1,4 +1,6 @@
+import { fechaYHoraLocalEn } from '../../../../core/compartido/dominio/fecha-local.js';
 import type { HojaSimple } from '../../../../core/intercambio/aplicacion/puertos/libro-de-excel.js';
+import { TEXTO_DE_CAUSA_DE_ANULACION, type CausaDeAnulacion } from '../../../dominio/baja-de-documento.js';
 import { COLUMNAS_DEL_LIBRO, esCampoDeTexto } from '../../../dominio/libro/columnas-del-libro.js';
 import type { AnuladoDelLibro } from '../../../dominio/libro/documento-del-libro.js';
 import type { ColumnaDeDinero, FilaDelLibro } from '../../../dominio/libro/fila-del-libro.js';
@@ -70,7 +72,14 @@ function hojaDelResumen(armado: LibroArmado): HojaSimple {
   return { nombre: 'Resumen', encabezados: ENCABEZADOS_DEL_RESUMEN, filas };
 }
 
-function hojaDeAnulados(anulados: AnuladoDelLibro[]): HojaSimple {
+const textoDeLaCausa = (causa: string | null): string =>
+  causa === null ? '' : (TEXTO_DE_CAUSA_DE_ANULACION[causa as CausaDeAnulacion] ?? causa);
+
+/** El instante de la anulación como fecha y hora de la empresa, no en UTC. */
+const instanteLocal = (instante: string | null, zonaHoraria: string): string =>
+  instante === null ? '' : fechaYHoraLocalEn(new Date(instante), zonaHoraria);
+
+function hojaDeAnulados(anulados: AnuladoDelLibro[], zonaHoraria: string): HojaSimple {
   return {
     nombre: 'Anulados',
     encabezados: ['Fecha', 'Tipo', 'Serie', 'Número', 'NIT', 'Proveedor', 'Total', 'IVA', 'Causa', 'Motivo', 'Anulado'],
@@ -83,16 +92,16 @@ function hojaDeAnulados(anulados: AnuladoDelLibro[]): HojaSimple {
       a.nombreDelProveedor,
       quetzales(a.total),
       quetzales(a.iva),
-      a.causaDeAnulacion ?? '',
+      textoDeLaCausa(a.causaDeAnulacion),
       a.motivoDeAnulacion ?? '',
-      a.anuladoEn ?? '',
+      instanteLocal(a.anuladoEn, zonaHoraria),
     ]),
   };
 }
 
 /** Las tres hojas del Excel del libro: Libro, Resumen y Anulados (el anexo no suma al libro). */
-export const hojasDelLibro = (armado: LibroArmado, anulados: AnuladoDelLibro[]): HojaSimple[] => [
+export const hojasDelLibro = (armado: LibroArmado, anulados: AnuladoDelLibro[], zonaHoraria: string): HojaSimple[] => [
   hojaDelLibro(armado),
   hojaDelResumen(armado),
-  hojaDeAnulados(anulados),
+  hojaDeAnulados(anulados, zonaHoraria),
 ];
