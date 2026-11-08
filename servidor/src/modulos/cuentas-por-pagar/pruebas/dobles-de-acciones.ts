@@ -25,7 +25,7 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
         numero: this.numeros.get(id) ?? '1',
         fechaRecepcion: documento.fechaEmision,
         periodo: `${documento.fechaEmision.slice(0, 7)}-01`,
-        anulacion: { causa: null, motivo: null, anuladoPor: null, anuladoEn: null },
+        anulacion: { causa: null, motivo: null, anuladoPor: null, anuladoPorNombre: null, anuladoEn: null },
       },
       aplicadoAlCargoCentavos: 0,
       aplicadoPorLaNotaCentavos: 0,

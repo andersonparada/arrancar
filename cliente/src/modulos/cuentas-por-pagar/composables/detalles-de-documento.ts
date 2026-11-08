@@ -92,7 +92,10 @@ export function detallesDeAnulacion(ficha: Pick<FichaDelDocumento, 'anulacion'>)
   return [
     { etiqueta: 'Causa', valor: formatearTexto(anulacion.causa ? CAUSAS_DE_ANULACION[anulacion.causa] : null) },
     { etiqueta: 'Motivo', valor: formatearTexto(anulacion.motivo) },
-    { etiqueta: 'Anulado por', valor: formatearTexto(anulacion.anuladoPor) },
+    {
+      etiqueta: 'Anulado por',
+      valor: anulacion.anuladoPorNombre ?? (anulacion.anuladoPor ? 'Usuario no disponible' : '—'),
+    },
     { etiqueta: 'Anulado el', valor: anulacion.anuladoEn ? formatearFechaHora(anulacion.anuladoEn) : '—' },
   ];
 }

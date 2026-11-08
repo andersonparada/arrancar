@@ -67,20 +67,29 @@ describe('títulos', () => {
         causa: 'error_de_captura',
         motivo: 'Se duplicó',
         anuladoPor: 'u1',
+        anuladoPorNombre: 'Ana Pérez',
         anuladoEn: '2026-11-05T15:30:00Z',
       },
     });
     expect(detalles.map((d) => d.etiqueta)).toEqual(['Causa', 'Motivo', 'Anulado por', 'Anulado el']);
     expect(detalles[0]?.valor).toBe('Error de captura');
     expect(detalles[1]?.valor).toBe('Se duplicó');
+    expect(detalles[2]?.valor).toBe('Ana Pérez');
     expect(detalles[3]?.valor).not.toBe('—');
   });
 
   it('una anulación antigua sin datos no rompe el bloque', () => {
     const detalles = detallesDeAnulacion({
-      anulacion: { causa: null, motivo: null, anuladoPor: null, anuladoEn: null },
+      anulacion: { causa: null, motivo: null, anuladoPor: null, anuladoPorNombre: null, anuladoEn: null },
     });
     expect(detalles).toHaveLength(4);
+  });
+
+  it('si el usuario no se puede leer, lo dice en vez de mostrar su id', () => {
+    const detalles = detallesDeAnulacion({
+      anulacion: { causa: null, motivo: null, anuladoPor: 'u1', anuladoPorNombre: null, anuladoEn: null },
+    });
+    expect(detalles[2]?.valor).toBe('Usuario no disponible');
   });
 });
 

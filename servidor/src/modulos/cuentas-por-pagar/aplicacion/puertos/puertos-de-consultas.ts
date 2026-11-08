@@ -36,6 +36,8 @@ export interface AnulacionEnElLibro {
   causa: string | null;
   motivo: string | null;
   anuladoPor: string | null;
+  /** Nombres y apellidos de quien anuló; `null` si no se pudo leer al usuario. */
+  anuladoPorNombre: string | null;
   anuladoEn: Date | null;
 }
 
