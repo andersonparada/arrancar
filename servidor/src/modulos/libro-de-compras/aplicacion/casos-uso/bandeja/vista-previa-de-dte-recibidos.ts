@@ -3,6 +3,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { ErrorEsperado } from '../../../../core/compartido/dominio/errores.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { exigirVigenteEnLaSat } from '../../../dominio/confirmabilidad-del-dte.js';
 import { DteSinConcepto, FaltaLaFechaDeRecepcion } from '../../../dominio/errores-de-bandeja.js';
 import type { DocumentoDto } from '../../dto/documento.dto.js';
 import type { RepositorioDeDteRecibidos } from '../../puertos/repositorio-de-dte-recibidos.js';
@@ -89,6 +90,7 @@ export class VistaPreviaDeDteRecibidos {
   private async calcular(operador: Operador, id: string, opciones: OpcionesDeVistaPrevia) {
     const fila = await this.dependencias.filas.buscar(Identificador.desde<'DteRecibido'>(id));
     if (!fila) throw new RecursoNoEncontrado('El DTE recibido');
+    exigirVigenteEnLaSat(fila);
     const { decisiones, solicitud, avisos } = await this.dependencias.armador.armar(operador, fila, opciones);
     const { conceptoId } = exigirLoQueNecesitaElCalculo(decisiones);
     const { proveedorId, nuevo } = await this.dependencias.proveedorDeLaFila.resolver(operador, fila, {

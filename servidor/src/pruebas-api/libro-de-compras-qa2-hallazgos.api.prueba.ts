@@ -6,7 +6,6 @@ import { mesDe } from './soporte/escenario-de-periodos.js';
 
 /**
  * Hallazgos del QA en el navegador con el archivo real de la SAT (informe-qa-2026-11-01-b).
- * Cuando se corrija el error, falla el `it.fails` y hay que quitar la marca.
  */
 const entorno = usarEntornoApi();
 let bandeja: BandejaGeneral;
@@ -16,7 +15,7 @@ beforeAll(async () => {
 });
 
 describe('hallazgos del QA con el archivo real de la SAT', () => {
-  it.fails('la vista previa de un DTE anulado en la SAT dice que no se registra, igual que confirmar', async () => {
+  it('la vista previa de un DTE anulado en la SAT dice que no se registra, igual que confirmar', async () => {
     const id = await bandeja.sembrar({ estadoSat: 'anulado', anuladoEnLaSatEl: mesDe(0) });
 
     const respuesta = await bandeja.escenario.cuenta.propietario.post(`${RUTA_DTE}/vista-previa`, { ids: [id] });
