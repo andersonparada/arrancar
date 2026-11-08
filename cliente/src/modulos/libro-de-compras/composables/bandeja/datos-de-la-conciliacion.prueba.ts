@@ -18,6 +18,7 @@ const resumen = (cambios: Partial<Record<ClaveDeResultado, number>> = {}) => ({
     enArrancarYNoEnLaSat: 0,
     sinDatosDeLaSat: 0,
     registradoEnOtroPeriodo: 0,
+    noVaEnElLibro: 0,
     anuladoEnLaSatYVigenteAqui: 0,
     descartado: 0,
     ...cambios,
@@ -55,10 +56,11 @@ describe('conteos de la conciliación', () => {
       anuladoEnLaSatYVigenteAqui: 1,
       sinDatosDeLaSat: 4,
       registradoEnOtroPeriodo: 5,
+      noVaEnElLibro: 2,
       descartado: 6,
     });
     expect(cantidadPorRevisar(datos)).toBe(7);
-    expect(cantidadConciliada(datos)).toBe(32);
+    expect(cantidadConciliada(datos)).toBe(34);
   });
 
   it('un mes vacío no tiene nada por revisar ni conciliado', () => {

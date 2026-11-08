@@ -12,6 +12,7 @@ import VentanaDeAnulacion from '../componentes/VentanaDeAnulacion.vue';
 import VentanaDeDesautorizacion from '../componentes/VentanaDeDesautorizacion.vue';
 import VentanaDeVencimiento from '../componentes/VentanaDeVencimiento.vue';
 import {
+  detallesDeAnulacion,
   detallesDeFicha,
   detallesDeMontos,
   detallesDeSeguimiento,
@@ -75,6 +76,9 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
     <SeccionDeFicha titulo="Montos"><DatosDelRegistro :detalles="detallesDeMontos(ficha)" /></SeccionDeFicha>
     <SeccionDeFicha v-if="detallesDeSeguimiento(ficha).length" titulo="Seguimiento">
       <DatosDelRegistro :detalles="detallesDeSeguimiento(ficha)" />
+    </SeccionDeFicha>
+    <SeccionDeFicha v-if="ficha.anulacion" titulo="Anulación">
+      <DatosDelRegistro :detalles="detallesDeAnulacion(ficha)" />
     </SeccionDeFicha>
     <NotasYAplicaciones :ficha="ficha" />
     <RouterLink

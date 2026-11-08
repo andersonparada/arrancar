@@ -96,9 +96,21 @@ export interface AplicacionDelDocumento {
   monto: string;
 }
 
+/** Cómo se anuló un documento; cualquier dato puede faltar en anulaciones antiguas. */
+export interface AnulacionDelDocumento {
+  causa: CausaDeAnulacion | null;
+  motivo: string | null;
+  /** Id del usuario que anuló. */
+  anuladoPor: string | null;
+  /** Instante en ISO (UTC). */
+  anuladoEn: string | null;
+}
+
 export interface FichaDelDocumento extends DocumentoPorPagar {
   notas: NotaDelDocumento[];
   aplicaciones: AplicacionDelDocumento[];
+  /** `null` si el documento no está anulado. */
+  anulacion: AnulacionDelDocumento | null;
 }
 
 export interface SaldoDeudor {

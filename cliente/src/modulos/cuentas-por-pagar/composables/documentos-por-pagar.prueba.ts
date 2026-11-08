@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import type { DocumentoPorPagar, FichaDelDocumento } from '../servicios/tipos';
-import { detallesDeFicha, detallesDeLista, tituloDeDocumento } from './detalles-de-documento';
+import { detallesDeAnulacion, detallesDeFicha, detallesDeLista, tituloDeDocumento } from './detalles-de-documento';
 import {
   cantidadDeFiltros,
   consultaDeDocumentos,
@@ -58,6 +58,29 @@ describe('títulos', () => {
   it('la ficha de una nota de crédito no muestra vencimiento', () => {
     const ficha = { ...documento({ clase: 'abono' }), notas: [], aplicaciones: [] } as unknown as FichaDelDocumento;
     expect(detallesDeFicha(ficha).map((detalle) => detalle.etiqueta)).not.toContain('Vence');
+  });
+
+  it('la anulación muestra causa traducida, motivo, quién y cuándo; sin anulación no hay bloque', () => {
+    expect(detallesDeAnulacion({ anulacion: null })).toEqual([]);
+    const detalles = detallesDeAnulacion({
+      anulacion: {
+        causa: 'error_de_captura',
+        motivo: 'Se duplicó',
+        anuladoPor: 'u1',
+        anuladoEn: '2026-11-05T15:30:00Z',
+      },
+    });
+    expect(detalles.map((d) => d.etiqueta)).toEqual(['Causa', 'Motivo', 'Anulado por', 'Anulado el']);
+    expect(detalles[0]?.valor).toBe('Error de captura');
+    expect(detalles[1]?.valor).toBe('Se duplicó');
+    expect(detalles[3]?.valor).not.toBe('—');
+  });
+
+  it('una anulación antigua sin datos no rompe el bloque', () => {
+    const detalles = detallesDeAnulacion({
+      anulacion: { causa: null, motivo: null, anuladoPor: null, anuladoEn: null },
+    });
+    expect(detalles).toHaveLength(4);
   });
 });
 
