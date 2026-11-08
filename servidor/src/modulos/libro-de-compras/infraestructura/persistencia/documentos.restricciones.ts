@@ -187,10 +187,10 @@ export const llavesDeDocumento = (t: T) => [
     foreignColumns: [proveedores.id, proveedores.cuentaId],
   }),
   uniqueIndex('documentos_sat_unico')
-    .on(t.nitEmisor, t.tipo, t.serie, t.numero)
+    .on(t.nitEmisor, t.tipo, t.serie, t.numero, t.cuentaId)
     .where(sql`${t.estado} = 'vigente' and ${t.muestraEnReportesSat}`),
   uniqueIndex('documentos_autorizacion_fel_unica')
-    .on(t.autorizacionFel)
+    .on(t.autorizacionFel, t.cuentaId)
     .where(sql`${t.estado} = 'vigente' and ${t.autorizacionFel} is not null`),
   uniqueIndex('documentos_del_proveedor_unico')
     .on(t.empresaId, t.proveedorId, t.tipo, sql`coalesce(${t.serie}, '')`, t.numero)

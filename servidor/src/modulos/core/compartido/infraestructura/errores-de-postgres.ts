@@ -9,6 +9,8 @@ const VIOLACION_DE_EXCLUSION = '23P01';
 const PROFUNDIDAD_MAXIMA_DE_CAUSAS = 5;
 
 const PEDIR_ACCESO_A_LOCALIDADES = 'Si no la ve, pida acceso a quien administra las localidades.';
+const MENSAJE_DOCUMENTO_DE_LA_CUENTA =
+  'Ese documento ya está registrado en esta empresa o en otra empresa de su cuenta.';
 
 const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   usuarios_usuario_unico: 'Ese nombre de usuario ya está en uso.',
@@ -22,8 +24,8 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   departamentos_codigo_unico: 'Ya existe un departamento con ese código.',
   departamentos_nombre_unico: 'Ya existe un departamento con ese nombre.',
   localidades_establecimiento_sat_unico: `Ya existe una localidad con ese código de establecimiento SAT. ${PEDIR_ACCESO_A_LOCALIDADES}`,
-  documentos_sat_unico: 'Ese documento ya está registrado.',
-  documentos_autorizacion_fel_unica: 'Ese documento ya está registrado.',
+  documentos_sat_unico: MENSAJE_DOCUMENTO_DE_LA_CUENTA,
+  documentos_autorizacion_fel_unica: MENSAJE_DOCUMENTO_DE_LA_CUENTA,
   documentos_del_proveedor_unico: 'Ese documento ya está registrado.',
   documentos_documento_unico: 'Ese documento ya está en Cuentas por pagar.',
   datos_fiscales_de_empresa_vigencia_unica: 'Ya hay un régimen registrado desde ese mes.',

@@ -239,6 +239,13 @@
       "when": 1794140865047,
       "tag": "0033_u16_documento_de_pago_como_se_escribio",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794151754950,
+      "tag": "0034_u17_documentos_unicos_por_cuenta",
+      "breakpoints": true
     }
   ]
 }

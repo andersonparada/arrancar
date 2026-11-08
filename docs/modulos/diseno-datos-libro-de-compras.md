@@ -29,7 +29,7 @@ huecos que quedan están en «Preguntas para el usuario».
    disponible en la base (no instalada).
 6. `interpretarErrorDePostgres` traduce el `23505` por **nombre de restricción** con un
    mensaje propio (sin revelar los valores de la llave): sirve para la unicidad en toda la
-   instalación sin decir en qué empresa está el documento.
+   cuenta («en esta empresa o en otra empresa de su cuenta»).
 7. `core.correlativos` no hace falta: el documento se identifica por su número fiscal; no hay
    número interno de ingreso.
 
@@ -44,7 +44,7 @@ huecos que quedan están en «Preguntas para el usuario».
 | Catálogos | `conceptos_de_gasto`, `combustibles` y `vigencias_de_combustible`, **por empresa**. |
 | Documentos | `documentos` (encabezado y totales), `lineas_de_documento` y `retenciones`, por empresa. |
 | Qué se guarda | Todo monto fiscal **se guarda** calculado y fijo (IVA, base, IDP, exento, `iva_no_acreditable`, retenciones): el documento es inmutable después de registrarlo, así que guardar los totales no arriesga incoherencias, y un cambio de tasa o de configuración nunca cambia lo ya registrado. Se **deriva**: el costo de cada línea, el neto a pagar y el crédito fiscal. |
-| Unicidad | Tres índices únicos parciales **sin `empresa_id`** (toda la instalación para los de SAT; toda la cuenta para los del proveedor), solo sobre documentos vigentes. |
+| Unicidad | Tres índices únicos parciales; los dos de SAT valen **por cuenta** (`cuenta_id` al final; decisión del usuario del 2026-11-08, antes eran de toda la instalación, migración `0034_u17_documentos_unicos_por_cuenta`) y el del proveedor, por empresa; solo sobre documentos vigentes. |
 | Destino sugerido | Se **deriva** (último documento del proveedor en la empresa); sin tabla. |
 | Sección en formularios ajenos | Aviso del mediador **dentro de la transacción** del formulario de Empresas o Proveedores (pregunta 1). |
 | Períodos declarados | Tabla `periodos` diseñada aquí, **se programa en L5** (el plan la pone ahí); L3 deja el puerto listo. |
@@ -1096,8 +1096,8 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 
 **Respuestas del usuario a L4-a…L4-l (2026-10-20):** se aceptan las recomendaciones del arquitecto, con un matiz en
 **L4-c**: si el DTE ya está registrado en otra empresa **de la misma cuenta**, la fila queda `bloqueado` y visible («ya
-está registrado en otra empresa de su cuenta»); si está en **otra cuenta**, **no se avisa nada** en la bandeja (no exponer
-información): la fila sigue `pendiente` y al confirmar responde el mensaje genérico de siempre. No se guarda el archivo
+está registrado en otra empresa de su cuenta»); si está en **otra cuenta**, no cuenta: desde el 2026-11-08 la unicidad es por cuenta, así que la
+fila sigue `pendiente` y se confirma con normalidad (antes: sin aviso y al confirmar salía el mensaje genérico). No se guarda el archivo
 (solo su huella); otros impuestos como **total**; exportar la conciliación va en L5. Descarga automática desde la Agencia
 Virtual: después de L4, ver `evaluacion-conexion-agencia-virtual.md`.
 
@@ -1128,8 +1128,8 @@ sin migrar, y los pasos que lo esperan van marcados.
    centavos).
 4. **Motivo `exento`** (`motivo-sin-credito.ts`): «IVA cero y `exento = total`». La base del ISR
    (`estrategia-de-retencion-de-isr.ts`) es `total − iva − (idp si no se incluye)`.
-5. `documentos_autorizacion_fel_unica` es único **en toda la instalación** (solo vigentes): sirve para saber si un DTE ya
-   está registrado en otra empresa sin revelar cuál (riesgo ya aceptado, §13.1).
+5. `documentos_autorizacion_fel_unica` es único **por cuenta** (solo vigentes): sirve para saber si un DTE ya
+   está registrado en otra empresa de la cuenta (desde el 2026-11-08 ya no cruza cuentas; riesgo 13.1 cerrado).
 6. **Recibos FEL a la empresa:** la familia `recibo` (`RECI`, `RDON`) solo se registra con la casilla SAT desmarcada y uno
    de cuatro motivos (`sin_fel`, `fel_a_consumidor_final`, `fel_a_otro_nit` y, desde la migración `0020`, `recibo_fel`).
    Un `RECI`/`RDON` emitido **al NIT de la empresa** lleva `recibo_fel` (L4-c3, resuelta el 2026-10-20): exige la
@@ -1591,8 +1591,8 @@ Ninguna migración de permisos: son permisos nuevos de un módulo (el acceso tot
 - **Frecuencia:** `limitarImportaciones` (10 por minuto por usuario) en importar y en conciliar; confirmar y vista previa,
   20 solicitudes por minuto por usuario (cada una hasta 100 filas, cada fila un registro completo).
 - **El archivo no se guarda** (solo sha256, nombre y tamaño). `fila_original` va con tope de 16 KB.
-- **Datos de otra empresa:** la función `autorizacion_registrada_fuera` responde solo sí o no (la unicidad global ya lo
-  revela; §13.1). El agente de seguridad la revisa (`security definer` con `search_path` fijo).
+- **Datos de otra empresa:** la función `autorizacion_registrada_fuera` responde solo sí o no y solo mira la cuenta activa
+  (la unicidad por cuenta no revela nada de otras cuentas; §13.1). El agente de seguridad la revisa (`security definer` con `search_path` fijo).
 - **XML (L4b) y conexión automática con la SAT:** fuera de L4; el XML con XXE y la conexión con credenciales los evalúa
   el agente de seguridad antes de planificarlos.
 
@@ -1630,7 +1630,7 @@ Ninguna migración en otros esquemas ni de permisos. Los `meta/*_snapshot.json` 
 - **Importar:** archivo de prueba (generado en la prueba, con el mapa) con filas de cada rechazo; reimportar el mismo
   (sin cambios, aviso de sha256); reimportar con una anulada (actualiza, audita `corregir`, no toca lo completado); una
   autorización registrada a mano antes de importar (entra `registrado`); una registrada en otra empresa de **otra cuenta**
-  (rechazo o bloqueo según L4-c, sin decir dónde); un `.xls` sintético, HTML disfrazado, zip bomba y CSV con `;` y Windows-1252.
+  (entra y se confirma: la unicidad es por cuenta); un `.xls` sintético, HTML disfrazado, zip bomba y CSV con `;` y Windows-1252.
 - **Confirmar:** lote de tres filas donde la segunda falla (proveedor sin datos fiscales en empresa agente): la primera y
   la tercera quedan registradas y la segunda pendiente; agente de IVA sin recepción (422 por fila); nota sin factura
   (422); fila anulada en la SAT (error de la fila); dos confirmaciones a la vez de la misma fila (una registra, la otra
@@ -1878,9 +1878,9 @@ Checks (nombres `documentos_<regla>`):
 | `documentos_id_empresa_unico` | unique `(id, empresa_id)` | FK de líneas y retenciones |
 | `documentos_para_notas_unico` | unique `(id, empresa_id, proveedor_id, destino)` | FK de la nota a su factura |
 | `documentos_nota_factura_fk` | FK `(documento_afectado_id, empresa_id, proveedor_id, destino) → documentos (id, empresa_id, proveedor_id, destino)` MATCH SIMPLE, no action | la nota es del mismo proveedor y va al mismo destino, garantizado en la base |
-| `documentos_sat_unico` | unique `(nit_emisor, tipo, serie, numero) where estado = 'vigente' and muestra_en_reportes_sat` | **toda la instalación** |
-| `documentos_autorizacion_fel_unica` | unique `(autorizacion_fel) where estado = 'vigente' and autorizacion_fel is not null` | **toda la instalación** |
-| `documentos_del_proveedor_unico` | unique `(empresa_id, proveedor_id, tipo, coalesce(serie, ''), numero) where estado = 'vigente'` | marcados y desmarcados, **solo dentro de la empresa** (respuesta 3; los marcados ya son únicos en toda la instalación) |
+| `documentos_sat_unico` | unique `(nit_emisor, tipo, serie, numero, cuenta_id) where estado = 'vigente' and muestra_en_reportes_sat` | **toda la cuenta** |
+| `documentos_autorizacion_fel_unica` | unique `(autorizacion_fel, cuenta_id) where estado = 'vigente' and autorizacion_fel is not null` | **toda la cuenta** |
+| `documentos_del_proveedor_unico` | unique `(empresa_id, proveedor_id, tipo, coalesce(serie, ''), numero) where estado = 'vigente'` | marcados y desmarcados, **solo dentro de la empresa** (respuesta 3; los marcados ya son únicos en toda la cuenta) |
 | `documentos_libro_idx` | `(empresa_id, periodo)` | Libro de compras (L5) y listas |
 | `documentos_proveedor_reciente_idx` | `(empresa_id, proveedor_id, creado_en desc)` | destino sugerido y filtro por proveedor |
 | `documentos_emision_idx` | `(empresa_id, fecha_emision)` | listas por fecha |
@@ -3095,8 +3095,8 @@ agregar datos fiscales y algunos conceptos a la cuenta demo (commit del paso que
   deshace todo); la retención del 5 % lleva la fecha de recepción; fuera del libro (`evaluarFueraDelLibro`).
 - **Infraestructura (PostgreSQL real):** RLS por empresa y por cuenta de cada tabla (otra
   empresa no ve; otra empresa de la **misma cuenta sí** ve los datos fiscales del proveedor);
-  **unicidad entre empresas y entre cuentas** (mismo NIT+serie+número en otra cuenta → mensaje
-  genérico; anulado libera; desmarcado repetido por proveedor en otra empresa de la cuenta);
+  **unicidad entre empresas de la cuenta** (mismo NIT+serie+número en otra empresa de la cuenta → mensaje;
+  en otra cuenta se puede registrar; anulado libera; desmarcado repetido por proveedor en otra empresa de la cuenta);
   cada `check` de 3.5 y 3.6 con un caso que lo viola; la FK de la nota con otro proveedor o
   destino; la FK compuesta del proveedor con un proveedor de otra cuenta; exclusión de
   vigencias (`23P01` mapeado); vigencia usada no se elimina; `politicas-de-los-modulos` y
@@ -3110,10 +3110,9 @@ agregar datos fiscales y algunos conceptos a la cuenta demo (commit del paso que
 
 ## 13. Riesgos
 
-1. **Unicidad global revela existencia:** quien registra puede saber que ese documento existe
-   en otra empresa o cuenta (aceptado en el plan; el mensaje no dice dónde). Un registro
-   equivocado en otra cuenta bloquea al dueño legítimo sin que pueda verlo: soporte necesitará
-   una consulta con superacceso por NIT+serie+número (futuro).
+1. **Unicidad global revela existencia:** *cerrado el 2026-11-08*. La unicidad de los documentos de la SAT pasó a ser
+   por cuenta: un registro de otra cuenta ya no bloquea al dueño legítimo ni revela que el documento existe. Dentro de
+   la cuenta sigue el bloqueo de L4-c.
 2. **IVA calculado ≠ IVA de la FEL** por redondeo (la FEL redondea por ítem): diferencias de
    centavos en el libro frente a los DTE de la SAT (pregunta 7; L4 lo resolverá trayendo el IVA
    del DTE).
