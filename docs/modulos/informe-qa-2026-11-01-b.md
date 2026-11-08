@@ -146,3 +146,124 @@ archivo (persona individual, régimen general, no agente), otra igual para el ca
 - PDF y Excel del libro, SAT-2237 y análisis de compras de este archivo (no estaban en el alcance).
 - Pago de solo accesorios (el impuesto debe ser mayor que cero por decisión del usuario) y la tabla de enteros con filas
   anteriores a la migración (la base de desarrollo tenía 0 filas).
+
+## Análisis: autorización única entre empresas
+
+Arquitecto de datos, 2026-11-08, sobre el error bajo 13. Sin código ni migración: solo el análisis y la propuesta.
+
+### Qué pasó en el QA (comprobado en `arrancar_qa2`, solo lectura)
+
+- «Empresa QA Receptora» y «Empresa QA Otra» tienen **el mismo NIT** (el del archivo) y están en **cuentas distintas**.
+  La segunda tiene un lote, las 17 filas en `pendiente` (ninguna `bloqueado`) y 0 documentos; su cuenta tiene 11
+  proveedores creados por el intento de confirmar.
+- Las filas entraron a la bandeja porque su índice único es **por empresa** (`dte_recibidos_autorizacion_unica` sobre
+  `(empresa_id, autorizacion_fel)`), y el NIT receptor coincide con el de la empresa activa, así que no se rechazaron.
+- Al confirmar falla el índice **global** de `documentos` (`documentos_autorizacion_fel_unica` sobre `autorizacion_fel`,
+  vigentes y no nulos, sin empresa ni cuenta; igual `documentos_sat_unico` sobre NIT del emisor, tipo, serie y número) y
+  `errores-de-postgres.ts` responde el genérico «Ese documento ya está registrado.» (el «duplicado» del informe). El
+  proveedor ya se había creado en otra transacción (`ConfirmadorDeFila`, «el proveedor creado queda aunque el registro
+  falle»).
+
+### ¿Error o lo previsto?
+
+**Es lo previsto**, con dos decisiones del usuario: «Documento único en toda la instalación… si ya existe en otra empresa,
+el mensaje no dice dónde» (`libro-de-compras.md`, decisiones) y L4-c (2026-10-20): en la **misma cuenta** la fila queda
+`bloqueado` con «Ya está registrado en otra empresa de su cuenta» (`autorizacion_registrada_fuera`, `security definer`,
+solo mira la cuenta activa); en **otra cuenta** no se avisa nada en la bandeja y al confirmar sale el genérico. El código
+hace exactamente eso. El riesgo 13.1 del diseño ya lo anotaba: «un registro equivocado en otra cuenta bloquea al dueño
+legítimo sin que pueda verlo».
+
+Cuándo dos empresas comparten un DTE: un DTE tiene un solo receptor, y la carga rechaza las filas de otro NIT
+(`nit_receptor_distinto`), así que solo pasa si dos empresas tienen **el mismo NIT**. `core.empresas.nit` no es único (ni
+en la cuenta ni en el servidor), así que puede pasar:
+
+- **Misma cuenta:** establecimientos o sucursales del mismo contribuyente llevados como empresas aparte, o una empresa
+  duplicada por error. El IVA y el libro de compras son por NIT: el crédito fiscal se toma una sola vez. Aquí el bloqueo
+  está bien y no hay que cambiarlo.
+- **Cuentas distintas:** el contador lleva al cliente en su cuenta y el cliente se suscribe con la suya; el cliente se
+  muda de la cuenta del contador a una propia y quiere cargar su historia; una cuenta de prueba o demo con el NIT real.
+  Aquí el índice global **impide** que la segunda cuenta lleve sus libros, sin poder ver por qué ni arreglarlo (la
+  otra cuenta es de otro suscriptor). Además el índice global responde a cualquier suscriptor si una autorización ya
+  existe en otro (un oráculo entre suscriptores, aunque no diga dónde).
+
+Opinión crítica: la unicidad global no protege nada fiscal que la unicidad por cuenta no proteja. Cada cuenta lleva sus
+propios libros; Arrancar no puede saber cuál de las dos cuentas es la que declara, y el riesgo de declarar dos veces el
+mismo crédito es del contribuyente, no de la instalación. Dentro de la cuenta sí conviene impedirlo (es el mismo usuario
+el que podría duplicarlo sin darse cuenta).
+
+### Opciones
+
+| | Opción | A favor | En contra |
+|---|---|---|---|
+| A | Dejarlo global (por diseño) y solo mejorar el mensaje | Sin migración; nadie registra el mismo DTE dos veces en Arrancar | Bloquea al dueño legítimo en los casos de dos cuentas; sigue el oráculo entre suscriptores; soporte tendría que intervenir a mano |
+| **B** | **Unicidad por cuenta** en los dos índices de SAT de `documentos` (recomendada) | Cada suscriptor queda aislado (como todo lo demás del SaaS); desaparece el riesgo 13.1 y el oráculo; en la cuenta sigue el bloqueo de L4-c; los datos actuales ya cumplen | Dos cuentas pueden registrar el mismo DTE (cada una en sus libros); cambia una decisión ya tomada |
+| C | Unicidad por empresa | Lo más simple | Pierde la protección entre empresas del mismo NIT en la cuenta (crédito fiscal doble); rompe el bloqueo de L4-c |
+
+### Si se escoge B (cambios)
+
+**Tabla afectada:** solo `libro_de_compras.documentos` (sin columnas nuevas: `cuenta_id uuid not null` ya existe, con
+valor por omisión de `app.cuenta_id`, que siempre sale de la empresa activa). `dte_recibidos` no cambia: su único por
+`(empresa_id, autorizacion_fel)` es el del upsert de la carga y está bien.
+
+**Índices** (mismos nombres, para que `errores-de-postgres.ts` los siga traduciendo; `cuenta_id` **al final** para que las
+búsquedas actuales por autorización sola, como `documentosVigentes` de la carga con `inArray`, y por NIT+tipo+serie+número
+sigan usando el índice; PostgreSQL 16 no salta la primera columna):
+
+- `documentos_autorizacion_fel_unica`: `unique (autorizacion_fel, cuenta_id) where estado = 'vigente' and
+  autorizacion_fel is not null`.
+- `documentos_sat_unico`: `unique (nit_emisor, tipo, serie, numero, cuenta_id) where estado = 'vigente' and
+  muestra_en_reportes_sat`.
+- `documentos_del_proveedor_unico` (por empresa) no cambia.
+
+**Migración:** `libro-de-compras`, `0034_u17_documentos_unicos_por_cuenta` generada con `bd:generar` (drizzle-kit da el
+`drop index` y el `create unique index` al cambiar el `.on(...)` en `documentos.restricciones.ts`); `when` mayor que
+`1794140865047`. Datos existentes: lo que hoy es único en la instalación ya es único por cuenta, así que crear los
+índices nuevos no puede fallar; sin relleno ni limpieza. Se crea sin `concurrently` (la migración corre en transacción y
+la tabla es chica); entre el `drop` y el `create` la misma transacción impide que entre un repetido. No se edita la `0006`.
+
+**RLS, permisos, auditoría, Excel:** sin cambios. `politicaPorEmpresa()` sigue; los índices únicos valen sobre todas las
+filas sin importar RLS. `autorizacion_registrada_fuera` ya filtra por la cuenta activa y queda igual. No hay borrado ni
+anulación nueva, así que nada nuevo que auditar. La importación de documentos por Excel y la bandeja pasan por el mismo
+caso de uso y heredan el cambio (en otra cuenta, ahora se registran).
+
+**Mensaje del `23505`** (`errores-de-postgres.ts`, las dos restricciones): «Ese documento ya está registrado en esta
+empresa o en otra empresa de su cuenta.» (antes de llegar ahí, la misma empresa responde `documento_repetido` con enlace y
+la bandeja `dte_registrado_en_otra_empresa`; el `23505` queda para carreras entre dos confirmaciones).
+
+**Documentos a actualizar:** `libro-de-compras.md` (decisión «Documento único»: «en toda la cuenta»), el diseño (§2
+«Unicidad», L4-c sobre otra cuenta, riesgo 13.1 cerrado) y la bitácora de `PLAN.md`.
+
+**Pasos (un commit cada uno):**
+
+1. Servidor: índices por cuenta en `documentos.restricciones.ts`, migración `0034` y mensaje nuevo; pruebas de
+   `documentos-unicidad.prueba.ts` («también en otra cuenta… se rechaza» pasa a «en otra cuenta se puede registrar»; la
+   misma cuenta sigue rechazando) y una prueba de API: la misma carga en dos cuentas con el mismo NIT se confirma en las
+   dos; en dos empresas de la misma cuenta, la segunda queda `bloqueado`.
+2. Documentos: decisión, diseño y bitácora.
+
+### Si se escoge A (solo el aviso)
+
+No hay forma de avisarlo en la bandeja sin cambiar L4-c (hoy en otra cuenta no se dice nada a propósito). Propongo solo el
+texto del error al confirmar, para el `23505` de las dos restricciones, sin decir dónde:
+
+> «Este DTE ya está registrado en el libro de compras de otra empresa con su mismo NIT, que usted no puede ver. Un DTE se
+> registra una sola vez en Arrancar. Si esa empresa es suya o cree que es un error, comuníquese con soporte. Puede
+> descartar la fila con el motivo "Lo lleva otra empresa".»
+
+(Dice que la otra empresa tiene el mismo NIT, lo que ya se deduce de que el receptor es la empresa; no dice si está en la
+cuenta ni cuál es.) Además, soporte necesitaría la consulta con superacceso por autorización que el riesgo 13.1 dejó para
+el futuro.
+
+### Aparte (con cualquier opción)
+
+- El proveedor se crea aunque el registro falle (diseño §2.5): con B ya no pasa en este caso; con A, la vista previa
+  debería no proponer proveedores para filas que no se van a registrar, pero no puede saberlo sin revelar la otra cuenta.
+- Dos empresas con el mismo NIT en la misma cuenta no tienen ningún aviso al crearlas (`core.empresas.nit` no es único):
+  ¿Empresas debería avisar «Ya tiene otra empresa con este NIT» al guardar? Es de otro módulo y no bloquea nada aquí.
+
+### Preguntas para el usuario
+
+1. ¿La unicidad de los documentos de la SAT (autorización FEL y NIT+tipo+serie+número) pasa de «toda la instalación» a
+   «toda la cuenta» (opción B, recomendada), o se queda global y solo se cambia el mensaje (opción A)?
+2. Si se queda global: ¿se acepta el texto propuesto del aviso?
+3. ¿Empresas debe avisar al guardar una empresa con un NIT que ya tiene otra empresa de la cuenta (sin impedirlo)?
