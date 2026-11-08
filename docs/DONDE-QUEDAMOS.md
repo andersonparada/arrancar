@@ -258,6 +258,8 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
   `0033_snapshot` había quedado con la restricción vieja del entero y el `0034_snapshot` ya la trae al día). Dos cuentas
   con empresas del mismo NIT registran el mismo DTE; en la misma cuenta la fila sigue `bloqueado`. Pruebas: servidor
   3385, cliente 865, generador 46.
+- «Anulado por» en la ficha de Cuentas por pagar muestra el nombre (`anuladoPorNombre`; «Usuario no disponible» si no
+  se puede leer). Pruebas: servidor 3385, cliente 866, generador 46.
 
 ## Siguiente
 
@@ -266,7 +268,7 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    la misma cuenta?
 3. **QA en el navegador** de todo lo de 2026-11-08 (lista de arriba), sobre todo las 74 cuadrículas a 380 px, las fechas
    y «Abrir en el formulario».
-4. «Anulado por» con el nombre del usuario (el servidor manda el id).
+4. «Anulado por» en la ficha de Libro de compras (hoy no se muestra; su DTO solo trae el id), si se quiere.
 5. **Sin probar:** formato RTU con 4 comas en un archivo real, dos tandas de 100, lote de constancias desde la pantalla.
 6. **Pendientes de Libro de compras:** L4-2b si el contador confirma L4-c1; L4-13; SAT-2241 del pequeño contribuyente
    electrónico; casillas del SAT-2237; dudas del contador (formulario de pago de RetenIVA, multa y mora juntas, art. 23
