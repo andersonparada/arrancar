@@ -19,7 +19,7 @@ const { edicion, errores, enviando, abrir, guardar } = usarEdicionDeRol(cargar);
       <BotonBase v-permiso="'roles.crear'" :icono="Plus" @click="abrir()">Nuevo rol</BotonBase>
     </EncabezadoPagina>
 
-    <ul class="grid gap-3 md:grid-cols-2">
+    <ul class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="rol in roles" :key="rol.id">
         <TarjetaDeRol :rol="rol" :resumen="resumenDePermisos(rol)" @editar="abrir(rol)" @eliminar="eliminar(rol)" />
       </li>

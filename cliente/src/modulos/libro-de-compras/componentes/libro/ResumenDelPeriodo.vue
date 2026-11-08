@@ -22,7 +22,7 @@ const clasesDeLinea = 'flex justify-between gap-3';
 <template>
   <section aria-label="Resumen mensual" class="mt-6">
     <h2 class="mb-3 text-lg font-semibold">Resumen del mes</h2>
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <TarjetaBase v-if="libro.tipoDeLibro === 'completo'">
         <h3 :class="clasesDelTitulo">Crédito fiscal del período</h3>
         <p class="mt-2 text-2xl font-semibold tabular-nums">{{ formatearMonto(resumen.creditoFiscalDelPeriodo) }}</p>

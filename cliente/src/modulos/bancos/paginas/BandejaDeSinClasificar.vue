@@ -50,7 +50,7 @@ const bandeja = usarBandejaDeSinClasificar();
           class="gap-3"
         />
       </div>
-      <ul class="grid gap-3 md:grid-cols-2">
+      <ul class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <li v-for="fila in bandeja.filas.value" :key="fila.id">
           <TarjetaDePendiente
             :fila="fila"

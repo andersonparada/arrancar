@@ -34,7 +34,7 @@ const volver = { texto: 'Volver a cuentas bancarias', ruta: { name: 'bancos.cuen
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
     <EstadoVacio v-else-if="!cheques.length" :icono="Inbox" titulo="No hay cheques con ese filtro" />
-    <ul v-else class="grid gap-3 md:grid-cols-2">
+    <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in cheques" :key="registro.id">
         <TarjetaDeCheque
           :registro="registro"

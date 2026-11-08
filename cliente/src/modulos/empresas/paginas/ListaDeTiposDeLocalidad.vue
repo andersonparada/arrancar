@@ -40,7 +40,7 @@ const { registros, cargando, intercambio, eliminar, edicion, enviando, errores, 
       titulo="Todavía no hay tipos de localidad"
       descripcion="Cree el primero (finca, planta, oficina…) para clasificar sus localidades."
     />
-    <ul v-else class="grid gap-3 md:grid-cols-2">
+    <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in registros" :key="registro.id">
         <TarjetaDeRegistro
           :titulo="String(registro.nombre)"

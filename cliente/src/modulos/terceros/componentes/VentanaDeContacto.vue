@@ -26,7 +26,7 @@ watch(
     <form id="form-contacto" class="space-y-4" @submit.prevent="emit('guardar', datos)">
       <CampoTexto v-model="datos.nombre" etiqueta="Nombre" requerido :error="errores.nombre" />
       <CampoTexto v-model="datos.cargo" etiqueta="Cargo" :error="errores.cargo" />
-      <div class="grid gap-4 sm:grid-cols-2">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <CampoTexto v-model="datos.telefono" etiqueta="Teléfono" tipo="tel" :error="errores.telefono" />
         <CampoTexto v-model="datos.whatsapp" etiqueta="WhatsApp" tipo="tel" :error="errores.whatsapp" />
       </div>

@@ -21,7 +21,7 @@ defineProps<{ reporte: ReporteDeIntereses }>();
         bruto ni el ISR, así que no entran aquí. Corrígelas en Notas para completar la declaración.
       </p>
     </div>
-    <dl class="grid gap-3 sm:grid-cols-3">
+    <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <div class="rounded-2xl bg-white p-4 ring-1 ring-tierra-200/70 dark:bg-tierra-800/60 dark:ring-tierra-700">
         <dt class="text-xs tracking-wide text-tierra-500 uppercase">Interés bruto</dt>
         <dd class="text-lg font-semibold">{{ formatearMonto(reporte.interesBruto) }}</dd>

@@ -22,7 +22,7 @@ const { vistaPrevia, tieneLogoPropio } = logo;
       <BotonBase :icono="Save" :cargando="enviando" :deshabilitado="!hayCambios" @click="guardar">Guardar</BotonBase>
     </EncabezadoPagina>
 
-    <div class="grid gap-6 lg:grid-cols-[1fr_22rem]">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_22rem]">
       <div class="space-y-4">
         <TarjetaDeIdentidad
           v-model:nombre="borrador.nombreAplicacion"

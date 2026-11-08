@@ -35,7 +35,7 @@ defineEmits<{ guardar: []; cerrar: [] }>();
     :encima="encima"
     @cerrar="$emit('cerrar')"
   >
-    <form v-if="grupo" id="registrar-pago" class="flex flex-col gap-4" @submit.prevent="$emit('guardar')">
+    <form v-if="grupo" id="registrar-pago" class="flex flex-col gap-4" novalidate @submit.prevent="$emit('guardar')">
       <div class="rounded-lg bg-tierra-100 p-3 dark:bg-tierra-800">
         <p class="mb-2 text-sm font-medium">
           {{ grupo.nombre }} · {{ nombreDelMes(grupo.mes) }} {{ grupo.mes.slice(0, 4) }}
@@ -84,7 +84,7 @@ defineEmits<{ guardar: []; cerrar: [] }>();
         <summary class="cursor-pointer select-none px-3 py-2 text-sm font-medium">{{ textos.accesorios }}</summary>
         <div class="flex flex-col gap-3 px-3 pb-3">
           <p class="text-xs text-tierra-600 dark:text-tierra-300">{{ textos.accesoriosAyuda }}</p>
-          <div class="grid gap-3 sm:grid-cols-3">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <CampoTexto
               v-model="pago.multa"
               :etiqueta="textos.multa"

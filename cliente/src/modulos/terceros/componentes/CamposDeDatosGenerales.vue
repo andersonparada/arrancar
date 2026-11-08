@@ -18,20 +18,20 @@ const SIN_REGISTRAR = { valor: null, texto: 'Sin registrar' };
 <template>
   <div class="space-y-4">
     <CampoSelector v-model="datos.tipo" etiqueta="Tipo" :opciones="TIPOS" />
-    <div v-if="datos.tipo === 'individual'" class="grid gap-4 sm:grid-cols-2">
+    <div v-if="datos.tipo === 'individual'" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <CampoTexto v-model="datos.nombres" etiqueta="Nombres" requerido :error="errores.nombres" />
       <CampoTexto v-model="datos.apellidos" etiqueta="Apellidos" :error="errores.apellidos" />
     </div>
     <CampoTexto v-else v-model="datos.razonSocial" etiqueta="Razón social" requerido :error="errores.razonSocial" />
     <CampoTexto v-model="datos.nombreComercial" etiqueta="Nombre comercial" :error="errores.nombreComercial" />
-    <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <CampoTexto v-model="datos.nit" etiqueta="NIT" placeholder="CF si no tiene" :error="errores.nit" />
       <CampoTexto v-model="datos.dpi" etiqueta="DPI" :error="errores.dpi" />
       <CampoTexto v-model="datos.telefono" etiqueta="Teléfono" tipo="tel" :error="errores.telefono" />
       <CampoTexto v-model="datos.whatsapp" etiqueta="WhatsApp" tipo="tel" :error="errores.whatsapp" />
     </div>
     <CampoTexto v-model="datos.correo" etiqueta="Correo" tipo="email" :error="errores.correo" />
-    <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <CampoSelector
         v-model="datos.departamentoCodigo"
         etiqueta="Departamento"

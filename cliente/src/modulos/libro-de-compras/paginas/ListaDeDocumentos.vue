@@ -60,7 +60,7 @@ const pendientesDeLaSat = usarPendientesDeLaSat();
     </EstadoVacio>
     <ul
       v-else
-      class="grid gap-3 transition-opacity md:grid-cols-2 xl:grid-cols-3"
+      class="grid grid-cols-1 gap-3 transition-opacity md:grid-cols-2 xl:grid-cols-3"
       :class="{ 'opacity-60': cargando }"
       :aria-busy="cargando"
     >

@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import {
   conFechaEnTodas,
@@ -14,6 +15,8 @@ import { retencion } from './retenciones.soporte';
 const filas = filasDeConstancias([retencion({ id: 'a' }), retencion({ id: 'b', retenido: '25.50' })]);
 
 describe('filas de constancias', () => {
+  beforeEach(() => setActivePinia(createPinia()));
+
   it('empiezan vacías, o con la constancia que ya tenían para corregirla', () => {
     expect(filas.map((f) => [f.numero, f.fecha])).toEqual([
       ['', ''],
@@ -35,6 +38,13 @@ describe('filas de constancias', () => {
       1: { numero: 'Escriba el número de la constancia.' },
     });
     expect(revisarConstancias(filas)[0]).toHaveProperty('fecha');
+  });
+
+  it('rechaza una fecha de constancia posterior a hoy', () => {
+    const futura = conFechaEnTodas(filasDeConstancias([retencion({ id: 'a' })]), '2026-11-02');
+    futura[0]!.numero = 'C-1';
+    expect(revisarConstancias(futura, '2026-11-01')[0]?.fecha).toContain('posterior a hoy');
+    expect(revisarConstancias(futura, '2026-11-02')).toEqual({});
   });
 
   it('manda el número sin espacios sobrantes', () => {

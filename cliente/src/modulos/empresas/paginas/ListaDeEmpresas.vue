@@ -37,7 +37,7 @@ const {
       <BotonBase v-permiso="'empresas.crear'" :icono="Plus" @click="abrir()">Nueva empresa</BotonBase>
     </EncabezadoPagina>
 
-    <ul class="grid gap-3 md:grid-cols-2">
+    <ul class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="empresa in empresas" :key="empresa.id">
         <TarjetaDeEmpresa :empresa="empresa" :en-uso="empresa.id === sesion.empresa?.id" />
       </li>

@@ -23,7 +23,7 @@ const contratables = computed(() => modulosContratables(props.catalogo));
         requerido
         :error="errores.nombreCuenta"
       />
-      <fieldset class="grid gap-4 sm:grid-cols-2">
+      <fieldset class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <legend class="mb-2 text-sm font-semibold">Primera empresa</legend>
         <CampoTexto v-model="alta.empresa" etiqueta="Nombre" requerido :error="errores['empresa.nombre']" />
         <CampoTexto v-model="alta.nit" etiqueta="NIT" :error="errores['empresa.nit']" />

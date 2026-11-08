@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
 import { aCentavos, deCentavos, esCero, sumarMontos } from './dinero';
 import {
   celdaDeLaMatriz,
@@ -21,6 +22,8 @@ import {
 import { grupo, pago } from './retenciones.soporte';
 
 describe('dinero en centavos', () => {
+  beforeEach(() => setActivePinia(createPinia()));
+
   it('suma sin errores de decimales', () => {
     expect(sumarMontos(['0.10', '0.20'])).toBe('0.30');
   });
@@ -71,6 +74,18 @@ describe('revisión del pago', () => {
     const errores = revisarPago({ ...bueno, fechaDePago: '', documentoDePago: ' ', impuesto: 'veinte' });
     expect(Object.keys(errores).sort()).toEqual(['documentoDePago', 'fechaDePago', 'impuesto']);
     expect(errores.impuesto).toContain('por ejemplo');
+  });
+
+  it('una fecha de pago futura se rechaza en la pantalla, con la fecha de hoy en el mensaje', () => {
+    const errores = revisarPago({ ...bueno, fechaDePago: '2026-11-02' }, '2026-11-01');
+    expect(errores.fechaDePago).toContain('posterior a hoy');
+    expect(revisarPago({ ...bueno, fechaDePago: '2026-11-01' }, '2026-11-01')).toEqual({});
+  });
+
+  it('una multa negativa dice que no puede ser negativa y cómo dejarla', () => {
+    expect(revisarPago({ ...bueno, multa: '-1.00' }).multa).toBe(
+      'No puede ser negativo. Si no hubo, déjelo en blanco.',
+    );
   });
 
   it('el impuesto debe ser mayor que cero', () => {

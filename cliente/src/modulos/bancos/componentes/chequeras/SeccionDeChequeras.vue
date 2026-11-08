@@ -23,7 +23,7 @@ const { chequeras, cargando, cambiarEstado, edicion, enviando, errores, nueva, g
     </div>
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
     <EstadoVacio v-else-if="!chequeras.length" :icono="WalletCards" titulo="Todavía no hay chequeras" />
-    <ul v-else class="grid gap-3 md:grid-cols-2">
+    <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in chequeras" :key="registro.id">
         <TarjetaDeChequera :registro="registro" @cambiar-estado="cambiarEstado(registro)" />
       </li>

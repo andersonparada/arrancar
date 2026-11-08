@@ -28,7 +28,7 @@ const edicion = defineModel<EdicionDeUsuario>({ required: true });
     @cerrar="emit('cerrar')"
   >
     <form id="form-usuario" class="space-y-4" @submit.prevent="emit('guardar')">
-      <div class="grid gap-4 sm:grid-cols-2">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <CampoTexto
           v-model="edicion.nombres"
           etiqueta="Nombres"

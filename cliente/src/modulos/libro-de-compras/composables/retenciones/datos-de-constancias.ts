@@ -1,6 +1,8 @@
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
+import { formatearFecha } from '@/modulos/core/utilidades/formato';
 import type { RetencionDelMes } from '../../servicios/retenciones.api';
 import { sumarMontos } from './dinero';
+import { fechaDeHoy } from './datos-de-pagos';
 
 /** Una fila de la ventana de constancias: la retención y lo que el usuario escribe. */
 export interface FilaDeConstancia {
@@ -26,13 +28,14 @@ export const filasDeConstancias = (retenciones: readonly RetencionDelMes[]): Fil
 export const conFechaEnTodas = (filas: readonly FilaDeConstancia[], fecha: string): FilaDeConstancia[] =>
   filas.map((fila) => ({ ...fila, fecha }));
 
-/** Revisa solo que no falte nada; las demás reglas (fecha, formato del número) las valida el servidor. */
-export function revisarConstancias(filas: readonly FilaDeConstancia[]): ErroresPorFila {
+/** Revisa que no falte nada y que la fecha no sea futura; las demás reglas las valida el servidor. */
+export function revisarConstancias(filas: readonly FilaDeConstancia[], hoy: string = fechaDeHoy()): ErroresPorFila {
   const errores: ErroresPorFila = {};
   filas.forEach((fila, indice) => {
     const deLaFila: Record<string, string> = {};
     if (!fila.numero.trim()) deLaFila.numero = 'Escriba el número de la constancia.';
     if (!fila.fecha) deLaFila.fecha = 'Escriba la fecha de la constancia.';
+    else if (fila.fecha > hoy) deLaFila.fecha = `La fecha no puede ser posterior a hoy (${formatearFecha(hoy)}).`;
     if (Object.keys(deLaFila).length > 0) errores[indice] = deLaFila;
   });
   return errores;

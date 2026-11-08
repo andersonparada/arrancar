@@ -1,3 +1,4 @@
+import { formatearFecha } from '@/modulos/core/utilidades/formato';
 import type { OpcionBuscable } from '@/modulos/core/utilidades/busqueda-de-opciones';
 import type {
   DatosDelPago,
@@ -83,10 +84,12 @@ function revisarAccesorios(pago: PagoEnEdicion, errores: Record<string, string>)
   }
 }
 
-/** Revisa solo lo que falta o no es un importe; el resto lo valida el servidor. */
-export function revisarPago(pago: PagoEnEdicion): Record<string, string> {
+/** Revisa lo que falta, lo que no es un importe y la fecha futura; el resto lo valida el servidor. */
+export function revisarPago(pago: PagoEnEdicion, hoy: string = fechaDeHoy()): Record<string, string> {
   const errores: Record<string, string> = {};
   if (!pago.fechaDePago) errores.fechaDePago = 'Escriba la fecha en que pagó.';
+  else if (pago.fechaDePago > hoy)
+    errores.fechaDePago = `La fecha de pago no puede ser posterior a hoy (${formatearFecha(hoy)}).`;
   if (!pago.documentoDePago.trim()) {
     errores.documentoDePago = 'Escriba el número del formulario o de la boleta de pago.';
   }

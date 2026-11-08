@@ -62,7 +62,7 @@ function dejarLoPropuesto(): void {
       </div>
       <div v-else class="space-y-3">
         <p class="text-xs text-tierra-600 dark:text-tierra-300">{{ AYUDA_DE_AJUSTAR_RETENCION }}</p>
-        <div class="grid gap-3 sm:grid-cols-2">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <CampoTexto
             v-model="ajuste.monto"
             tipo="number"

@@ -76,7 +76,7 @@ function elegirConcepto(id: string | null | undefined): void {
       </BotonBase>
     </div>
 
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <CampoSelector
         :model-value="linea.conceptoId"
         class="sm:col-span-2"

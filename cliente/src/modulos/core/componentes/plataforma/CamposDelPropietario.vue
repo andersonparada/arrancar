@@ -8,7 +8,7 @@ const alta = defineModel<FormularioDeAlta>({ required: true });
 </script>
 
 <template>
-  <fieldset class="grid gap-4 sm:grid-cols-2">
+  <fieldset class="grid grid-cols-1 gap-4 sm:grid-cols-2">
     <legend class="mb-2 text-sm font-semibold">Propietario</legend>
     <CampoTexto v-model="alta.nombres" etiqueta="Nombres" requerido :error="errores['propietario.nombres']" />
     <CampoTexto v-model="alta.apellidos" etiqueta="Apellidos" :error="errores['propietario.apellidos']" />

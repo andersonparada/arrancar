@@ -62,7 +62,7 @@ watch(registro.problema, async (problema) => {
       />
     </div>
 
-    <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-start">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-start">
       <div class="min-w-0 space-y-4">
         <TarjetaBase>
           <h2 class="mb-4 font-semibold">Datos del documento</h2>

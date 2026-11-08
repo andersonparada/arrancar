@@ -26,7 +26,7 @@ defineProps<{ control: ControlDeCuadre }>();
       <component :is="control.cuadra ? CheckCircle2 : AlertTriangle" class="size-5 shrink-0" aria-hidden="true" />
       {{ resumenDelCuadre(control) }}
     </h3>
-    <dl class="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+    <dl class="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
       <div class="flex justify-between gap-3">
         <dt>Saldo al inicio</dt>
         <dd><MontoDelFlujo :monto="control.saldoAlInicio" /></dd>

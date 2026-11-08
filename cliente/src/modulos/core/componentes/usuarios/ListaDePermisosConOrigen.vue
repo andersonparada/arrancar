@@ -49,7 +49,7 @@ const sinEditables = (grupo: GrupoConOrigen) => props.deshabilitado || grupo.per
         />
         Marcar todos los de {{ grupo.nombre }}
       </label>
-      <ul class="grid gap-1 p-3 sm:grid-cols-2">
+      <ul class="grid grid-cols-1 gap-1 p-3 sm:grid-cols-2">
         <li v-for="permiso in grupo.permisos" :key="permiso.clave" :class="{ 'opacity-60': !permiso.moduloActivo }">
           <label
             class="flex items-start gap-2.5 rounded-lg p-2 hover:bg-tierra-50 dark:hover:bg-tierra-800"

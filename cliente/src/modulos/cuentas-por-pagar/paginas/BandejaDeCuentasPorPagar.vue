@@ -46,7 +46,7 @@ const bandeja = usarBandeja();
         />
         Marcar todos (de 100 en 100)
       </label>
-      <ul class="grid gap-3 md:grid-cols-2 xl:grid-cols-3" :aria-busy="bandeja.cargando.value">
+      <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" :aria-busy="bandeja.cargando.value">
         <li v-for="documento in bandeja.documentos.value" :key="documento.id">
           <TarjetaDeBandeja
             v-model:vencimiento="bandeja.vencimientos.value[documento.id]"

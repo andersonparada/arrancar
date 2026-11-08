@@ -21,7 +21,7 @@ const datos = computed(() => [
 <template>
   <TarjetaBase>
     <h2 class="mb-3 font-semibold">Datos generales</h2>
-    <dl class="grid gap-3 text-sm sm:grid-cols-2">
+    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
       <div v-for="dato in datos" :key="dato.etiqueta">
         <dt class="text-tierra-500">{{ dato.etiqueta }}</dt>
         <dd>{{ dato.valor || SIN_REGISTRAR }}</dd>

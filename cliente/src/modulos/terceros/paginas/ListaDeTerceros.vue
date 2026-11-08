@@ -52,7 +52,7 @@ function detalle({ cliente, proveedor }: TerceroEnListado): string {
       titulo="Sin resultados"
       :descripcion="`No hay ${ventana.titulo.toLowerCase()} que coincidan con la búsqueda.`"
     />
-    <ul v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <ul v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <li v-for="tercero in terceros" :key="tercero.id">
         <TarjetaDeTercero
           :tercero="tercero"
