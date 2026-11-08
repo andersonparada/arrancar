@@ -9,6 +9,7 @@ import {
   GRUPOS_DE_TIPOS_SAT,
   opcionesDeTipoSat,
   TIPOS_SAT,
+  tituloDelRegistro,
 } from './tipos-de-documento-sat';
 
 describe('tipos de documento por código de la SAT', () => {
@@ -109,5 +110,16 @@ describe('tipos de documento por código de la SAT', () => {
     expect(opciones.some((opcion) => opcion.deshabilitada)).toBe(false);
     expect(esFacturaEspecial('FESP')).toBe(true);
     expect(esFacturaEspecial('FACT')).toBe(false);
+  });
+});
+
+describe('tituloDelRegistro', () => {
+  it('dice el tipo que se registra y, para cualquier factura, «Registrar factura»', () => {
+    expect(tituloDelRegistro('NCRE')).toBe('Registrar nota de crédito');
+    expect(tituloDelRegistro('NDEB')).toBe('Registrar nota de débito');
+    expect(tituloDelRegistro(CODIGO_DE_RECIBO)).toBe('Registrar recibo');
+    expect(tituloDelRegistro('FACT')).toBe('Registrar factura');
+    expect(tituloDelRegistro('FESP')).toBe('Registrar factura');
+    expect(tituloDelRegistro('')).toBe('Registrar factura');
   });
 });

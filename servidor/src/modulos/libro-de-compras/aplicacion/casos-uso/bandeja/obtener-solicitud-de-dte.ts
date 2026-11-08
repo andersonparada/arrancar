@@ -2,6 +2,7 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { avisoDeAnuladoEnLaSat } from '../../../dominio/confirmabilidad-del-dte.js';
 import { DteNoEstaPendiente } from '../../../dominio/errores-de-bandeja.js';
 import type { RepositorioDeDteRecibidos } from '../../puertos/repositorio-de-dte-recibidos.js';
 import type { ArmadorDeSolicitudDelDte } from './armador-de-solicitud-del-dte.js';
@@ -35,7 +36,8 @@ export class ObtenerSolicitudDeDte {
         proponedor: crearProponedor(operador),
         tolerante: true,
       });
-      return { solicitud, avisos };
+      const anulado = avisoDeAnuladoEnLaSat(fila);
+      return { solicitud, avisos: anulado ? [anulado, ...avisos] : avisos };
     });
   }
 }

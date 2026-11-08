@@ -39,6 +39,16 @@ export function formatearTelefono(telefono: string | null | undefined): string {
   return esLocal ? `${telefono.slice(0, 4)}-${telefono.slice(4)}` : telefono;
 }
 
+/**
+ * Un NIT se guarda sin guion ("1234567K"); se muestra con el dígito verificador separado ("123456-7"). "CF", lo que ya
+ * trae guion y lo que no parece un NIT se muestran tal cual.
+ */
+export function formatearNit(nit: string | null | undefined): string {
+  if (!nit) return '';
+  const limpio = nit.trim();
+  return /^\d{2,12}[\dK]$/i.test(limpio) ? `${limpio.slice(0, -1)}-${limpio.slice(-1).toUpperCase()}` : limpio;
+}
+
 const SIN_VALOR = '—';
 
 /** Un texto o número tal cual; si falta, una raya. */

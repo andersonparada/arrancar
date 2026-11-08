@@ -77,33 +77,35 @@ function elegirMotivo(motivo: EdicionDeDocumento['motivoFueraDelLibro'] | undefi
       </p>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <CampoTexto
-        v-if="edicion.muestraEnReportesSat"
-        v-model="edicion.nitEmisor"
-        etiqueta="NIT del emisor"
-        requerido
-        ayuda="Como aparece en la factura. Si el proveedor no tenía NIT registrado, se le guarda este."
-        :error="errores.nitEmisor"
-        sin-correccion
-      />
-      <CampoTexto
-        v-if="conFel"
-        v-model="edicion.autorizacionFel"
-        etiqueta="Autorización de la FEL"
-        :requerido="edicion.muestraEnReportesSat || esReciboDeLaEmpresa"
-        ayuda="El número de autorización (UUID) que trae la factura."
-        :error="errores.autorizacionFel"
-        sin-correccion
-      />
-      <CampoTexto
-        v-if="!edicion.muestraEnReportesSat && conFel"
-        v-model="edicion.nitReceptor"
-        etiqueta="NIT o CUI al que se emitió"
-        :placeholder="esReciboDeLaEmpresa ? 'Se propone el NIT de su empresa' : 'CF si fue a consumidor final'"
-        :error="errores.nitReceptor"
-        sin-correccion
-      />
+    <div class="@container">
+      <div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @2xl:grid-cols-3">
+        <CampoTexto
+          v-if="edicion.muestraEnReportesSat"
+          v-model="edicion.nitEmisor"
+          etiqueta="NIT del emisor"
+          requerido
+          ayuda="Como aparece en la factura. Si el proveedor no tenía NIT registrado, se le guarda este."
+          :error="errores.nitEmisor"
+          sin-correccion
+        />
+        <CampoTexto
+          v-if="conFel"
+          v-model="edicion.autorizacionFel"
+          etiqueta="Autorización de la FEL"
+          :requerido="edicion.muestraEnReportesSat || esReciboDeLaEmpresa"
+          ayuda="El número de autorización (UUID) que trae la factura."
+          :error="errores.autorizacionFel"
+          sin-correccion
+        />
+        <CampoTexto
+          v-if="!edicion.muestraEnReportesSat && conFel"
+          v-model="edicion.nitReceptor"
+          etiqueta="NIT o CUI al que se emitió"
+          :placeholder="esReciboDeLaEmpresa ? 'Se propone el NIT de su empresa' : 'CF si fue a consumidor final'"
+          :error="errores.nitReceptor"
+          sin-correccion
+        />
+      </div>
     </div>
   </div>
 </template>

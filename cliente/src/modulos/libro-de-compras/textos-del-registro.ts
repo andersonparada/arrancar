@@ -1,9 +1,15 @@
-import type { MotivoFueraDelLibro } from './servicios/documentos.api';
+import type { MotivoFueraDelLibro, TipoDeDocumento } from './servicios/documentos.api';
 
 /** Textos del formulario «Registrar factura». */
 export const FORMULARIO_DE_DOCUMENTO = {
   titulo: 'Registrar factura',
   descripcion: 'Escriba lo que dice el documento. A la derecha verá, al instante, cómo queda el IVA y las retenciones.',
+  /** El título según lo que se registra; el de la factura es el de siempre. */
+  tituloPorFamilia: {
+    nota_de_credito: 'Registrar nota de crédito',
+    nota_de_debito: 'Registrar nota de débito',
+    recibo: 'Registrar recibo',
+  } as Partial<Record<TipoDeDocumento, string>>,
   volver: 'Ingreso de facturas',
   registrar: 'Registrar',
   cancelar: 'Cancelar',

@@ -1,5 +1,4 @@
 import { computed, ref } from 'vue';
-import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import {
   apiDteRecibidos,
@@ -10,7 +9,6 @@ import {
 import type { RespuestasFiscales } from '../documentos/preguntas-fiscales';
 import { FILAS_POR_CONFIRMACION, enGrupos, resumenDeLaSeleccion } from './datos-de-la-bandeja';
 import { datosFiscalesContestadosPorNit, separarResultados } from './datos-de-la-confirmacion';
-import { textoDeRegistrados } from './resumen-de-la-confirmacion';
 import { proveedoresNuevosParaEnviar } from './datos-de-proveedores-nuevos';
 import { usarVistaPreviaDeFilas } from './usar-vista-previa-de-filas';
 
@@ -52,7 +50,6 @@ function usarVentanaDeConfirmacion() {
  * fila. Las filas que fallan quedan pendientes y no frenan a las demás.
  */
 export function usarConfirmacionDeFilas(alTerminar: (registradas: string[]) => unknown) {
-  const avisos = usarAvisos();
   const { enviando, enviar } = usarFormulario();
   const ventana = usarVentanaDeConfirmacion();
 
@@ -67,7 +64,6 @@ export function usarConfirmacionDeFilas(alTerminar: (registradas: string[]) => u
     if (!hecho) return;
     ventana.resultado.value = separarResultados(resultados);
     const registradas = ventana.resultado.value.registradas.map(({ id }) => id);
-    if (registradas.length) avisos.exito(textoDeRegistrados(registradas.length));
     await alTerminar(registradas);
   }
 

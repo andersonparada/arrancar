@@ -125,6 +125,17 @@ describe('confirmar un lote fila por fila', () => {
     expect((await filaGuardada(anulada)).estado).toBe('pendiente');
   });
 
+  it('abrir en el formulario un DTE anulado en la SAT avisa, sin bloquear; uno vigente no avisa de eso', async () => {
+    const [anulada, vigente] = [await sembrar({ estadoSat: 'anulado', anuladoEnLaSatEl: mesDe(0) }), await sembrar()];
+
+    const deLaAnulada = await propietario().get(`${RUTA_DTE}/${anulada}/solicitud`);
+    const deLaVigente = await propietario().get(`${RUTA_DTE}/${vigente}/solicitud`);
+
+    expect(deLaAnulada.estado).toBe(200);
+    expect(deLaAnulada.cuerpo.avisos[0]).toContain('anulado en la SAT');
+    expect(deLaVigente.cuerpo.avisos.join(' ')).not.toContain('anulado');
+  });
+
   it('una fila con un monto en una columna desconocida no se confirma en lote; con cero, sí', async () => {
     const conMonto = await sembrar({ filaOriginal: { 'Columna rara': '25.00' } });
     const enCero = await sembrar({ filaOriginal: { 'Columna rara': '0.00' } });

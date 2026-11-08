@@ -19,6 +19,15 @@ export class ArchivoDeTextoNoAdmitido extends DatoInvalido {
   }
 }
 
+/** El archivo no trae ni un byte: casi siempre una descarga que falló o un archivo recién creado. */
+export class ArchivoVacio extends DatoInvalido {
+  readonly codigo = 'archivo_vacio';
+
+  constructor() {
+    super('El archivo está vacío. Suba un archivo de Excel (.xls o .xlsx) o un CSV con datos.');
+  }
+}
+
 /** El Excel está protegido con contraseña: no se puede leer. */
 export class ExcelCifrado extends DatoInvalido {
   readonly codigo = 'excel_cifrado';

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { cambiosDefinidos, exigirBorradorValido } from './borrador-del-dte.js';
-import { exigirConfirmable, exigirVigenteEnLaSat } from './confirmabilidad-del-dte.js';
+import {
+  AVISO_DE_ANULADO_EN_LA_SAT,
+  avisoDeAnuladoEnLaSat,
+  exigirConfirmable,
+  exigirVigenteEnLaSat,
+} from './confirmabilidad-del-dte.js';
 import { DteRecibido, type DatosDelDte } from './dte-recibido.js';
 import {
   BorradorDeDteInvalido,
@@ -69,6 +74,13 @@ describe('exigirVigenteEnLaSat', () => {
   it('rechaza un DTE anulado en la SAT y deja pasar uno vigente, sin mirar su estado en la bandeja', () => {
     expect(() => exigirVigenteEnLaSat(fila({ estadoSat: 'anulado' }))).toThrow(DteAnuladoEnLaSat);
     expect(() => exigirVigenteEnLaSat(fila())).not.toThrow();
+  });
+});
+
+describe('avisoDeAnuladoEnLaSat', () => {
+  it('avisa solo cuando la SAT marca el DTE como anulado', () => {
+    expect(avisoDeAnuladoEnLaSat(fila({ estadoSat: 'anulado' }))).toBe(AVISO_DE_ANULADO_EN_LA_SAT);
+    expect(avisoDeAnuladoEnLaSat(fila())).toBeNull();
   });
 });
 

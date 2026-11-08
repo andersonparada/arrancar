@@ -82,3 +82,23 @@ export function netoDeLaFila(tipoDte: string | undefined, neto: string): { etiqu
 /** Texto de lo que se registró al terminar: «Se registró 1 documento.» o «Se registraron 3 documentos.». */
 export const textoDeRegistrados = (cantidad: number): string =>
   cantidad === 1 ? 'Se registró 1 documento.' : `Se registraron ${cantidad} documentos.`;
+
+/** Un aviso del servidor y los documentos a los que se refiere. */
+export interface AvisoAgrupado {
+  aviso: string;
+  titulos: string[];
+}
+
+/** Los avisos de las filas registradas sin repetir: cada texto una vez, con los documentos que lo trajeron. */
+export function agruparAvisos(
+  registradas: readonly { id: string; avisos: readonly string[] }[],
+  titulos: ReadonlyMap<string, string>,
+): AvisoAgrupado[] {
+  const grupos = new Map<string, string[]>();
+  for (const { id, avisos } of registradas) {
+    for (const aviso of new Set(avisos)) {
+      grupos.set(aviso, [...(grupos.get(aviso) ?? []), titulos.get(id) ?? id]);
+    }
+  }
+  return [...grupos].map(([aviso, lista]) => ({ aviso, titulos: lista }));
+}

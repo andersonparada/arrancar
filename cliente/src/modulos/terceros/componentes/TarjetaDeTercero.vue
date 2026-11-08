@@ -2,7 +2,7 @@
 import type { Component } from 'vue';
 import { RouterLink, type RouteLocationRaw } from 'vue-router';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
-import { formatearTelefono } from '@/modulos/core/utilidades/formato';
+import { formatearNit, formatearTelefono } from '@/modulos/core/utilidades/formato';
 import type { TerceroEnListado } from '../servicios/terceros.api';
 
 /** `detalle` es lo propio de la pantalla: la clase del cliente o la categoría del proveedor. */
@@ -27,7 +27,10 @@ defineProps<{ tercero: TerceroEnListado; detalle: string; icono: Component; dest
       <InsigniaBase v-if="!tercero.activo" tono="rojo">Inactivo</InsigniaBase>
     </div>
     <p class="truncate text-sm text-tierra-600 dark:text-tierra-300">
-      {{ [tercero.nit, formatearTelefono(tercero.telefono)].filter(Boolean).join(' · ') || 'Sin NIT ni teléfono' }}
+      {{
+        [formatearNit(tercero.nit), formatearTelefono(tercero.telefono)].filter(Boolean).join(' · ') ||
+        'Sin NIT ni teléfono'
+      }}
     </p>
     <div class="flex flex-wrap gap-1.5">
       <InsigniaBase v-if="tercero.papeles.cliente" tono="campo">Cliente</InsigniaBase>

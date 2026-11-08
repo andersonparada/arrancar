@@ -28,24 +28,26 @@ const emisor = computed(() => textoDelEmisorEspecial(props.nitDeLaEmpresa));
       deshabilitado
     />
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <CampoTexto :model-value="emisor" etiqueta="Emisor" solo-lectura />
-      <CampoTexto
-        v-model="edicion.nitReceptor"
-        etiqueta="Vendedor (NIT o CUI)"
-        requerido
-        :ayuda="textos.ayudaDelVendedor"
-        :error="errores.nitReceptor"
-        sin-correccion
-      />
-      <CampoTexto
-        v-model="edicion.autorizacionFel"
-        etiqueta="Autorización de la FEL"
-        requerido
-        ayuda="El número de autorización (UUID) que le dio el certificador al emitir la factura especial."
-        :error="errores.autorizacionFel"
-        sin-correccion
-      />
+    <div class="@container">
+      <div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @2xl:grid-cols-3">
+        <CampoTexto :model-value="emisor" etiqueta="Emisor" solo-lectura />
+        <CampoTexto
+          v-model="edicion.nitReceptor"
+          etiqueta="Vendedor (NIT o CUI)"
+          requerido
+          :ayuda="textos.ayudaDelVendedor"
+          :error="errores.nitReceptor"
+          sin-correccion
+        />
+        <CampoTexto
+          v-model="edicion.autorizacionFel"
+          etiqueta="Autorización de la FEL"
+          requerido
+          ayuda="El número de autorización (UUID) que le dio el certificador al emitir la factura especial."
+          :error="errores.autorizacionFel"
+          sin-correccion
+        />
+      </div>
     </div>
   </div>
 </template>

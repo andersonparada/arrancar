@@ -13,6 +13,7 @@ import MasDatosDelDocumento from '../componentes/registro/MasDatosDelDocumento.v
 import ProblemaDelRegistro from '../componentes/registro/ProblemaDelRegistro.vue';
 import VistaPreviaDelDocumento from '../componentes/registro/VistaPreviaDelDocumento.vue';
 import { usarRegistroDeDocumento } from '../composables/documentos/usar-registro-de-documento';
+import { tituloDelRegistro } from '../composables/documentos/tipos-de-documento-sat';
 import { usarProblemaALaVista } from '../composables/documentos/usar-problema-a-la-vista';
 import { FORMULARIO_DE_DOCUMENTO as textos } from '../textos-del-registro';
 
@@ -35,12 +36,17 @@ function alPresionarEnter(evento: KeyboardEvent): void {
     @focusout="previa.calcularYa"
     @keydown.enter="alPresionarEnter"
   >
-    <EncabezadoPagina :titulo="textos.titulo" :descripcion="textos.descripcion" :volver="precarga.volver.value" />
+    <EncabezadoPagina
+      :titulo="tituloDelRegistro(edicion.tipoDte)"
+      :descripcion="textos.descripcion"
+      :volver="precarga.volver.value"
+    />
 
     <AvisosDelDteDeLaSat
       v-if="precarga.dteId"
       :cargando="precarga.cargando.value"
       :avisos="precarga.avisosDeLaFila.value"
+      :pendientes="precarga.pendientes.value"
     />
     <p
       v-if="registro.sinDestinos.value"

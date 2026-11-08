@@ -1,5 +1,5 @@
 import { ArchivoNoEsExcel } from '../../aplicacion/errores.js';
-import { ArchivoDeTextoNoAdmitido } from '../../aplicacion/errores-de-lectura.js';
+import { ArchivoDeTextoNoAdmitido, ArchivoVacio } from '../../aplicacion/errores-de-lectura.js';
 
 export type FormatoDetectado = { formato: 'xlsx' } | { formato: 'xls' } | { formato: 'csv'; texto: string };
 
@@ -26,12 +26,14 @@ function decodificar(contenido: Buffer): string {
 /**
  * Detecta el formato por los primeros bytes, nunca por la extensión.
  * @throws ArchivoDeTextoNoAdmitido con HTML o XML disfrazados.
- * @throws ArchivoNoEsExcel con binarios, UTF-16 o archivos vacíos.
+ * @throws ArchivoVacio con un archivo de 0 bytes.
+ * @throws ArchivoNoEsExcel con binarios o UTF-16.
  */
 export function detectarFormato(contenido: Buffer): FormatoDetectado {
   if (empiezaCon(contenido, FIRMA_DE_ZIP)) return { formato: 'xlsx' };
   if (empiezaCon(contenido, FIRMA_DE_OLE2)) return { formato: 'xls' };
-  if (contenido.length === 0 || contenido.subarray(0, BYTES_A_REVISAR).includes(0)) throw new ArchivoNoEsExcel();
+  if (contenido.length === 0) throw new ArchivoVacio();
+  if (contenido.subarray(0, BYTES_A_REVISAR).includes(0)) throw new ArchivoNoEsExcel();
   const texto = decodificar(contenido);
   if (texto.trimStart().startsWith(INICIO_DE_MARCADO)) throw new ArchivoDeTextoNoAdmitido();
   return { formato: 'csv', texto };

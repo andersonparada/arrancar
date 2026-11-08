@@ -9,7 +9,7 @@ const linea = defineModel<LineaEnEdicion>({ required: true });
 </script>
 
 <template>
-  <div class="space-y-3 sm:col-span-2 lg:col-span-4">
+  <div class="space-y-3 @md:col-span-2 @3xl:col-span-4">
     <CampoInterruptor
       v-model="linea.escribeIdp"
       etiqueta="Escribir el IDP que dice la factura"

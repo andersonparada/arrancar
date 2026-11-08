@@ -3,7 +3,7 @@ import { Building2, ChevronRight, Mail, MapPin, Phone } from 'lucide-vue-next';
 import { RouterLink } from 'vue-router';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
-import { formatearTelefono } from '@/modulos/core/utilidades/formato';
+import { formatearNit, formatearTelefono } from '@/modulos/core/utilidades/formato';
 import type { Empresa } from '../servicios/empresas.api';
 
 /** La tarjeta de una empresa en la lista: toda ella lleva a su ficha, donde se edita. */
@@ -24,7 +24,9 @@ defineProps<{ empresa: Empresa; enUso: boolean }>();
         </span>
         <div class="min-w-0 flex-1">
           <p class="truncate font-semibold">{{ empresa.nombre }}</p>
-          <p class="text-sm text-tierra-500">NIT {{ empresa.nit ?? 'sin registrar' }} · {{ empresa.monedaBase }}</p>
+          <p class="text-sm text-tierra-500">
+            NIT {{ empresa.nit ? formatearNit(empresa.nit) : 'sin registrar' }} · {{ empresa.monedaBase }}
+          </p>
         </div>
         <InsigniaBase v-if="enUso" tono="campo">Activa ahora</InsigniaBase>
         <InsigniaBase v-else-if="!empresa.activa" tono="rojo">Desactivada</InsigniaBase>

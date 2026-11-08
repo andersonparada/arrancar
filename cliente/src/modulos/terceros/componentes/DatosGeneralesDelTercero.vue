@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
-import { formatearTelefono } from '@/modulos/core/utilidades/formato';
+import { formatearNit, formatearTelefono } from '@/modulos/core/utilidades/formato';
 import type { FichaTercero } from '../servicios/terceros.api';
 
 const props = defineProps<{ ficha: FichaTercero }>();
@@ -9,7 +9,7 @@ const props = defineProps<{ ficha: FichaTercero }>();
 const SIN_REGISTRAR = 'Sin registrar';
 
 const datos = computed(() => [
-  { etiqueta: 'NIT', valor: props.ficha.nit },
+  { etiqueta: 'NIT', valor: props.ficha.nit ? formatearNit(props.ficha.nit) : props.ficha.nit },
   { etiqueta: 'DPI', valor: props.ficha.dpi },
   { etiqueta: 'Teléfono', valor: formatearTelefono(props.ficha.telefono) },
   { etiqueta: 'WhatsApp', valor: formatearTelefono(props.ficha.whatsapp) },
