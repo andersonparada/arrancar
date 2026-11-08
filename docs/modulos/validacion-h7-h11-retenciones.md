@@ -63,7 +63,7 @@ Ajustes:
 | IVA por agente (exportador, especial, otro), al crédito | Decreto 20-2006 arts. 1, 5, 6; AG 425-2006 art. 10 | Al **recibir la factura** | Fecha de recepción; entero en 15 días hábiles del mes siguiente |
 | IVA al contado | Decreto 20-2006 arts. 5, 6 | Al pagar (coincide con la factura) | Igual |
 | IVA 5 % a pequeño contribuyente | Ley del IVA art. 48 | Al acreditar en cuenta o poner a disposición, lo primero entre provisionar y pagar | 15 días del mes siguiente |
-| ISR régimen opcional simplificado | Decreto 10-2012 art. 48 | Constancia **con la fecha de la factura** | Entregar a más tardar el 5 del mes siguiente; entero en 10 días; mínimo Q2,500 sin IVA |
+| ISR régimen opcional simplificado | Decreto 10-2012 art. 48; mínimo: AG 213-2013 art. 35 | Constancia **con la fecha de la factura** | Entregar a más tardar el 5 del mes siguiente; entero en 10 días; mínimo Q2,500 sin IVA |
 
 Recomendación: las retenciones se calculan y **fijan al registrar el documento en Libro de compras** (ISR con la
 fecha de la factura; IVA general con la de recepción; pequeño contribuyente con la de autorizar o pagar, la primera).
@@ -112,7 +112,7 @@ posterior al AG 5-2013 sobre este punto.
 | ¿Mínimo por factura o por pago? | La ley calcula sobre la factura y el reglamento habla del «valor» de los bienes y servicios; la SAT lo presenta como el monto de la factura. **Por factura**, no por pago ni por suma de facturas del mes | AG 5-2013 art. 49; portal SAT RetenIVA | **Inferencia** razonable y práctica general; no hay criterio SAT expreso |
 | Pagos parciales de una factura mayor a Q2,500 | Se retiene el 5 % del **total de la factura**, en el **primer** pago o acreditamiento | Ley del IVA art. 48 (base = total de la factura; momento = primer evento) | **Inferencia**; algunos practican la retención proporcional en cada pago, pero no concuerda con «total de la factura» |
 | Excepciones al mínimo (sector público, operadoras de tarjeta, combustible pagado con tarjeta) | Aparecen en guías (p. ej. Tigo) y vienen del régimen general del Decreto 20-2006 / AG 425-2006 | Fuentes secundarias | **No confirmado** para pequeños contribuyentes; no aplica a una finca privada: no programarlo |
-| Relación con el mínimo del ISR (Q2,500 **sin IVA**, Decreto 10-2012 art. 48) | Es otra retención, otra base y otra norma; no mezclar | Decreto 10-2012 art. 48 | Norma |
+| Relación con el mínimo del ISR (Q2,500 **sin IVA**, AG 213-2013 art. 35) | Es otra retención, otra base y otra norma; no mezclar | AG 213-2013 art. 35 | Norma |
 
 ### Correcciones al plan de Libro de compras (sección «Retenciones»)
 

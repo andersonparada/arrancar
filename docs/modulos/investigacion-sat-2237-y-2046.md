@@ -39,7 +39,7 @@ Virtual»), agregar `compras_sin_credito` y preparar el mapa N a N.
 
 ## SAT-2046 (pequeño contribuyente)
 
-[Ley] Arts. 45–50: ventas hasta Q150,000 al año; 5 % sobre ingresos brutos del mes; retención del 5 % es pago
+[Ley] Arts. 45–50: ventas hasta Q150,000 al año (desde el 9-abr-2025, 125 salarios mínimos no agrícolas: Q500,285 en 2026, Decreto 31-2024); 5 % sobre ingresos brutos del mes; retención del 5 % es pago
 definitivo; declarar dentro del mes siguiente **aunque sea en cero**; libro habilitado de compras y ventas donde
 anota las **ventas** (las compras solo se exigen y conservan); sin crédito fiscal; sin ISR.
 
@@ -51,7 +51,7 @@ si no hay impuesto se presenta ahí; si hay, boleta SAT-2000) o **Declaraguate �
 Contribuyente SAT-2046»** → llenar NIT, período, total facturado y constancias → Validar → Congelar → boleta
 SAT-2000 si hay impuesto. Si no aparece, Agencia Virtual → Declaraciones o 1550.
 
-Para Arrancar: ingresos, retenciones recibidas, impuesto y límite anual de Q150,000 dependen de **Ventas /
+Para Arrancar: ingresos, retenciones recibidas, impuesto y límite anual (125 salarios mínimos no agrícolas desde abr-2025) dependen de **Ventas /
 Cuentas por cobrar** (no existe). Ahora: página explicativa con los pasos y recomendar la preelaborada; con
 Ventas, el cálculo y la comparación. Las compras del pequeño contribuyente son respaldo, no van al formulario
 (corregir el texto del diseño).
@@ -63,4 +63,4 @@ Ventas, el cálculo y la comparación. Las compras del pequeño contribuyente so
 - Agregar el rubro **«Compras sin derecho a crédito»** (en «Compras que no generan derecho a compensación»).
 - Pequeño contribuyente: página **«Datos para el SAT-2046»** con la guía paso a paso (App FEL preelaborada o
   Declaraguate, declarar aunque sea en cero); el cálculo llega con Ventas.
-- Con Ventas: aviso de ventas del año frente al límite de Q150,000.
+- Con Ventas: aviso de ventas del año frente al límite anual (Q500,285 en 2026; monto configurable por año, P-8 del dictamen del 2026-11-08).

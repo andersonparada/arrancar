@@ -273,12 +273,14 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    y «Abrir en el formulario».
 4. «Anulado por» en la ficha de Libro de compras (hoy no se muestra; su DTO solo trae el id), si se quiere.
 5. **Sin probar:** formato RTU con 4 comas en un archivo real, dos tandas de 100, lote de constancias desde la pantalla.
-6. **Pendientes de Libro de compras:** L4-2b si el contador confirma L4-c1; L4-13; SAT-2241 del pequeño contribuyente
-   electrónico; casillas del SAT-2237; dudas del contador (formulario de pago de RetenIVA, multa y mora juntas, art. 23
-   del Decreto 10-2012).
+6. **Decisiones del usuario del dictamen del contador** (`docs/modulos/dictamen-pendientes-libro-de-compras-2026-11-08.md`,
+   preguntas P-2 a P-8): formulario y boleta SAT-2000 en el entero; aviso de declarar el SAT-2340 en cero; `mora` con
+   aviso; hacer ya L4-13 (L4-f); régimen electrónico de pequeño contribuyente como histórico (el SAT-2241 no se
+   programa); captura del SAT-2237 de la Agencia Virtual; tope del pequeño contribuyente configurable por año.
+   L4-2b quedó cerrado («no va»).
 7. **Cuentas por pagar después de CP1:** U8, CP2, CP3, CP4 y CP5.
 8. **Bancos:** H2 (estado de cuenta en PDF).
-9. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual de Q150,000.
+9. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual (ya no Q150,000: 125 salarios mínimos no agrícolas, Q500,285 en 2026).
 
 Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) con su base de pruebas
 (`BD_PRUEBAS`) y el `.env` copiado (para `RUTA_QPDF`); se une a `main` con las pruebas completas en verde. Si

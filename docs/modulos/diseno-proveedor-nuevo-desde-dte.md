@@ -329,13 +329,14 @@ la regla de §2.3 sale de él (formato del RTU, `NOMBRES , APELLIDOS` con coma, 
   multa, intereses y mora), así que pagado > retenido es normal en ese caso.
 - Guardar `impuesto` (lo que se aplica contra lo retenido), `multa`, `intereses` y `mora` (`numeric(14,2)`, ≥ 0, 0 por
   omisión) y el total como suma. El estado «enterado» y el aviso de exceso comparan **solo el impuesto**. Los accesorios
-  son gasto y, en general, no deducibles para ISR (Decreto 10-2012 art. 23, literal por confirmar). El sistema no los
+  son gasto y, en general, no deducibles para ISR (Decreto 10-2012 art. 21 num. 15). El sistema no los
   calcula: se copian de la boleta. El cambio de tabla lo planifica `arquitecto-de-datos`.
 - Correcciones: las retenciones de ISR se declaran en el **SAT-1331** (no SAT-1311); el SAT-2046 es el IVA del pequeño
   contribuyente.
 
-**Dudas abiertas:** número del formulario de pago de RetenIVA; si multa (art. 91) y mora (art. 92) se cobran juntas en
-el pago voluntario tardío; literal del art. 23 del Decreto 10-2012. Fuentes de Declaraguate secundarias (el portal de
+**Dudas resueltas** (`dictamen-pendientes-libro-de-compras-2026-11-08.md`): las retenciones de IVA se declaran en el
+SAT-2340 (Retenciones Web IVA; RetenIVA terminó en 2021) y se pagan con la boleta SAT-2000; en el pago tardío de
+retenciones van multa (art. 91) e intereses, sin mora (art. 90); la no deducibilidad es del art. 21 num. 15. Fuentes de Declaraguate secundarias (el portal de
 la SAT respondió 403): Vesco (SAT-1331), Código Tributario en Wikisource.
 
 **Respuestas del usuario (2026-11-01):** rechazar fechas futuras (sin estado «programado»), con aviso si el pago es

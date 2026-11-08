@@ -1653,7 +1653,7 @@ real del usuario. Los pasos 1 a 3 son de la **vía a mano** y no dependen de la 
 3. **L4-3 (cliente, formulario, ficha y lista) - HECHO 2026-10-20:** «Otros impuestos» plegado en la línea, «Lleva IDP» con «IDP según la
    factura» y combustible y galones opcionales, totales y avisos; ficha con los dos datos; lógica en
    `edicion-de-documento.ts` con pruebas. Ningún archivo pasa de 200 líneas ni la página de 120.
-4. **L4-2b (servidor, base del ISR):** solo si el contador confirma L4-c1: sacar los otros impuestos de la base; pruebas.
+4. **L4-2b (servidor, base del ISR) - NO VA:** el contador confirmó L4-c1 (los otros impuestos se quedan en la base; dictamen del 2026-11-08).
 5. **L4-4 (servidor, core/intercambio) - HECHO 2026-10-20:** `leerFilas` en el puerto y en exceljs, detección de formato, `LectorDeCsv`,
    `ExcelAntiguoNoAdmitido`; pruebas (incluidas bomba zip, `.xls`, HTML y CSV con `;`). Sin lógica de la SAT.
    **Ampliado el 2026-11-01 (L4-4b):** lector de `.xls` propio (`detectarFormato` da `'xls'`; `ExcelAntiguoNoAdmitido` queda para Excel 5/95).
