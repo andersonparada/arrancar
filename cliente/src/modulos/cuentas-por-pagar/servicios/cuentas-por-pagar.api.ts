@@ -5,6 +5,7 @@ import type {
   ConsultaDeDocumentos,
   DatosDeAnulacion,
   DocumentoACompletar,
+  DocumentoAnulado,
   DocumentoPorPagar,
   FichaDelDocumento,
   PaginaDeDocumentos,
@@ -57,7 +58,7 @@ export class ApiCuentasPorPagar {
   }
 
   anular(id: string, datos: DatosDeAnulacion) {
-    return this.http.crear<DocumentoPorPagar>(`${RUTA_DE_DOCUMENTOS}/${id}/anular`, datos);
+    return this.http.crear<DocumentoAnulado>(`${RUTA_DE_DOCUMENTOS}/${id}/anular`, datos);
   }
 
   eliminar(id: string) {

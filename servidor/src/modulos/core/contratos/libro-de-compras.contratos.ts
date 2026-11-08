@@ -47,7 +47,8 @@ declare module './mediador.contratos.js' {
      */
     'libro-de-compras.anular_documento': {
       datos: { documentoId: string; causa: CausaDeAnulacionDeDocumento; motivo: string; origen?: DestinoDeDocumento };
-      respuesta: void;
+      /** Los avisos que no bloquean: período posiblemente declarado y retenciones que quedan «por resolver». */
+      respuesta: { avisos: string[] };
     };
     'libro-de-compras.eliminar_documento': {
       datos: { documentoId: string; origen?: DestinoDeDocumento };

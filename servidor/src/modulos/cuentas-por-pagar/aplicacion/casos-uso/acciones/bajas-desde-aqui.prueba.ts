@@ -83,6 +83,15 @@ const recibida = async (cambios: Partial<DocumentoParaDestino> = {}) => {
 const pedido = (id: string, motivo = ' Duplicada ') => ({ id, causa: 'error_de_captura' as const, motivo });
 
 describe('anular desde Cuentas por pagar', () => {
+  it('devuelve en la respuesta los avisos que da Libro de compras', async () => {
+    const factura = await recibida();
+    libro.avisosAlAnular = ['Queda 1 retención por resolver.'];
+
+    const dto = await anular.ejecutar(operador, pedido(factura.id));
+
+    expect(dto.avisos).toEqual(['Queda 1 retención por resolver.']);
+  });
+
   it('manda la orden a Libro de compras antes de bloquear, anula, audita como estaba y publica', async () => {
     const factura = await recibida();
     documentos.bitacora.length = 0;
