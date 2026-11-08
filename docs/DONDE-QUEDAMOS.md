@@ -268,11 +268,14 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
 ## Siguiente
 
 1. **El usuario:** `git push origin main`.
-2. **QA en el navegador** del aviso de NIT repetido al guardar una empresa (y de los avisos largos, que ahora duran más).
-3. **QA en el navegador** de todo lo de 2026-11-08 (lista de arriba), sobre todo las 74 cuadrículas a 380 px, las fechas
-   y «Abrir en el formulario».
+2. **QA del 2026-11-08 hecha** (Playwright, 380/320 px a 1920, claro y oscuro): todo bien, incluidos el aviso de NIT,
+   la unicidad por cuenta, el RTU con 4 comas, dos tandas de 100 y el lote de constancias. Errores 1, 2, 3, 5, 7 y 8
+   corregidos en `main` (formulario por contenedor, aviso de DTE anulado al «Abrir en el formulario», pendientes vivos y
+   título según tipo, avisos agrupados, NIT con guion, archivo vacío). **Falta:** ver a la vista el formulario de
+   registro por contenedor (768–1920 px); el informe quedó sin commit en el worktree `agent-a19777c26d783baf6`
+   (el clasificador negó el commit; revisarlo y decidir); decidir el error 4 (dos totales distintos en la barra de
+   marcados y en «Confirmar») y el 6 (la selección de la bandeja se limpia al cambiar de página).
 4. «Anulado por» en la ficha de Libro de compras (hoy no se muestra; su DTO solo trae el id), si se quiere.
-5. **Sin probar:** formato RTU con 4 comas en un archivo real, dos tandas de 100, lote de constancias desde la pantalla.
 6. **Decisiones del usuario del dictamen del contador** (`docs/modulos/dictamen-pendientes-libro-de-compras-2026-11-08.md`,
    preguntas P-2 a P-8): formulario y boleta SAT-2000 en el entero; aviso de declarar el SAT-2340 en cero; `mora` con
    aviso; hacer ya L4-13 (L4-f); régimen electrónico de pequeño contribuyente como histórico (el SAT-2241 no se
