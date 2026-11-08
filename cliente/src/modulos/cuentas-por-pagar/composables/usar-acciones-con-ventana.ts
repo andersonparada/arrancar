@@ -72,6 +72,13 @@ export function usarCambioDeVencimiento(ficha: FichaActual, alTerminar: AlTermin
   return { edicion, enviando, errores, abrir, cerrar, cambiar };
 }
 
+/** Confirma la anulación y muestra los avisos de Libro de compras (período declarado, retenciones por resolver). */
+function avisarAnulacion({ avisos: avisosDelLibro }: { avisos: string[] }): void {
+  const avisos = usarAvisos();
+  avisos.exito('Registro anulado. La factura sigue vigente en la SAT.');
+  avisosDelLibro.forEach((aviso) => avisos.info(aviso));
+}
+
 /** Anular el registro (también en el libro de compras), con causa y motivo en una ventana. */
 export function usarAnulacion(ficha: FichaActual, alTerminar: AlTerminar) {
   const { enviando, errores, enviar } = usarFormulario();
@@ -92,10 +99,11 @@ export function usarAnulacion(ficha: FichaActual, alTerminar: AlTerminar) {
       return;
     }
     const { id } = ficha.value;
-    if (!(await enviar(() => apiCuentasPorPagar.anular(id, datosDeAnulacion(edicion.value))))) return;
-    cerrar();
-    usarAvisos().exito('Registro anulado. La factura sigue vigente en la SAT.');
-    await alTerminar();
+    const anulado = await enviar(async () => {
+      avisarAnulacion(await apiCuentasPorPagar.anular(id, datosDeAnulacion(edicion.value)));
+      cerrar();
+    });
+    if (anulado) await alTerminar();
   }
 
   return { edicion, enviando, errores, abrir, cerrar, anular };

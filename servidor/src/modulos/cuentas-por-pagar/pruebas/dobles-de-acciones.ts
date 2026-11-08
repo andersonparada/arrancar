@@ -58,6 +58,7 @@ export class LibroDeComprasEnMemoria implements LibroDeCompras, DocumentosDeComp
   readonly anulaciones: OrdenDeAnulacion[] = [];
   readonly eliminados: string[] = [];
   rechazo: ReglaDeNegocioInfringida | null = null;
+  avisosAlAnular: string[] = [];
 
   constructor(private readonly bitacora: string[]) {}
 
@@ -66,10 +67,11 @@ export class LibroDeComprasEnMemoria implements LibroDeCompras, DocumentosDeComp
     this.procesados.set(documentoId, procesado);
   }
 
-  async anular(_operador: Operador, orden: OrdenDeAnulacion): Promise<void> {
+  async anular(_operador: Operador, orden: OrdenDeAnulacion): Promise<string[]> {
     this.bitacora.push('libro:anular');
     if (this.rechazo) throw this.rechazo;
     this.anulaciones.push(orden);
+    return this.avisosAlAnular;
   }
 
   async eliminar(_operador: Operador, documentoId: string): Promise<void> {

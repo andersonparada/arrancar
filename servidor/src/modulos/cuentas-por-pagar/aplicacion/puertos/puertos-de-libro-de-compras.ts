@@ -9,8 +9,11 @@ import type { CausaDeAnulacionDeDocumento } from '../../../core/contratos/libro-
 export interface LibroDeCompras {
   /** Marca el documento como procesado (al autorizar: ya no se elimina, solo se anula) o lo devuelve a pendiente. */
   marcarProcesado(operador: Operador, documentoId: string, procesado: boolean): Promise<void>;
-  /** Anula el registro del documento. Libro de compras no devuelve el aviso: Cuentas por pagar hace lo suyo aparte. */
-  anular(operador: Operador, orden: OrdenDeAnulacion): Promise<void>;
+  /**
+   * Anula el registro del documento. Libro de compras no devuelve el aviso: Cuentas por pagar hace lo suyo aparte.
+   * Responde los avisos que no bloquean (período declarado, retenciones por resolver).
+   */
+  anular(operador: Operador, orden: OrdenDeAnulacion): Promise<string[]>;
   /** Elimina el documento; sus reglas pueden rechazarlo y entonces se deshace todo. */
   eliminar(operador: Operador, documentoId: string): Promise<void>;
 }

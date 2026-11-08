@@ -11,8 +11,12 @@ export class LibroDeComprasEnMediador implements LibroDeCompras {
     return mediador.enviar(operador, 'libro-de-compras.marcar_procesado', { documentoId, procesado });
   }
 
-  anular(operador: Operador, orden: OrdenDeAnulacion): Promise<void> {
-    return mediador.enviar(operador, 'libro-de-compras.anular_documento', { ...orden, origen: ORIGEN });
+  async anular(operador: Operador, orden: OrdenDeAnulacion): Promise<string[]> {
+    const { avisos } = await mediador.enviar(operador, 'libro-de-compras.anular_documento', {
+      ...orden,
+      origen: ORIGEN,
+    });
+    return avisos;
   }
 
   eliminar(operador: Operador, documentoId: string): Promise<void> {

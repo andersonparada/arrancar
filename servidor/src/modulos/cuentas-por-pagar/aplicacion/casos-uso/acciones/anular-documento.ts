@@ -3,7 +3,7 @@ import type { CausaDeAnulacionDeDocumento } from '../../../../core/contratos/lib
 import { exigirAnulable, motivoValido } from '../../../dominio/ciclo-de-vida.js';
 import { DocumentoAnulado, type DatosDeDocumentoAnulado } from '../../../dominio/eventos.js';
 import { REGLAS_PARA_ANULAR, type ReglaDeBaja } from '../../../dominio/reglas-de-baja.js';
-import type { DocumentoPorPagarDto } from '../../dto/documento-por-pagar.dto.js';
+import type { DocumentoAnuladoDto } from '../../dto/documento-por-pagar.dto.js';
 import { anularLoGuardado } from '../bajas/anular-lo-guardado.js';
 import { revisarReglasDeBaja } from '../bajas/preparar-la-baja.js';
 import { bloquear, dtosDe, etiquetaDe, filaDe, type DependenciasDeBajas } from './dependencias-de-acciones.js';
@@ -33,30 +33,30 @@ export class AnularDocumento {
    * @throws DocumentoYaAnulado, DocumentoConNotasVigentes o el error de una regla de baja si no se puede anular.
    * @throws el error de Libro de compras si rechaza la anulación (período, notas, causa...).
    */
-  async ejecutar(operador: Operador, pedido: PeticionDeAnulacion): Promise<DocumentoPorPagarDto> {
+  async ejecutar(operador: Operador, pedido: PeticionDeAnulacion): Promise<DocumentoAnuladoDto> {
     const motivo = motivoValido(pedido.motivo);
     const { unidadDeTrabajo, publicadorEventos } = this.dependencias;
     const resultado = await unidadDeTrabajo.ejecutar(operador, async () => ({
-      anulado: await this.anular(operador, { ...pedido, motivo }),
+      ...(await this.anular(operador, { ...pedido, motivo })),
       dto: (await dtosDe(this.dependencias, operador, [pedido.id]))[0]!,
     }));
     await publicadorEventos.publicar([new DocumentoAnulado(resultado.anulado)]);
-    return resultado.dto;
+    return { ...resultado.dto, avisos: resultado.avisos };
   }
 
   private async anular(
     operador: Operador,
     { id, causa, motivo }: PeticionDeAnulacion,
-  ): Promise<DatosDeDocumentoAnulado> {
+  ): Promise<{ anulado: DatosDeDocumentoAnulado; avisos: string[] }> {
     const { documentos, consultas, libroDeCompras } = this.dependencias;
     const { documento, origen, notasVigentes } = await filaDe(consultas, id);
     const etiqueta = etiquetaDe(origen);
     exigirAnulable(documento, notasVigentes, etiqueta);
     await revisarReglasDeBaja(this.reglas, (await documentos.buscarPorId(id, false))!);
-    await libroDeCompras.anular(operador, { documentoId: documento.documentoId, causa, motivo });
+    const avisos = await libroDeCompras.anular(operador, { documentoId: documento.documentoId, causa, motivo });
     const guardado = await bloquear(documentos, id);
     exigirAnulable(guardado.documento, 0, etiqueta);
     await revisarReglasDeBaja(this.reglas, guardado);
-    return anularLoGuardado(this.dependencias, operador, { guardado, motivo });
+    return { anulado: await anularLoGuardado(this.dependencias, operador, { guardado, motivo }), avisos };
   }
 }

@@ -150,6 +150,11 @@ export interface DocumentoACompletar {
   vencimiento?: string;
 }
 
+/** El documento anulado y los avisos de Libro de compras (período declarado, retenciones por resolver). */
+export interface DocumentoAnulado extends DocumentoPorPagar {
+  avisos: string[];
+}
+
 export interface DatosDeAnulacion {
   causa: CausaDeAnulacion;
   motivo: string;

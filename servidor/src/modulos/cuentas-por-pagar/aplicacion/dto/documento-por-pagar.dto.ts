@@ -133,3 +133,8 @@ export interface ProveedorConDocumentosDto {
   /** Falso si el proveedor ya está inactivo en Terceros. */
   activo: boolean;
 }
+
+/** El documento anulado y los avisos que no bloquean (período declarado, retenciones por resolver) de Libro de compras. */
+export interface DocumentoAnuladoDto extends DocumentoPorPagarDto {
+  avisos: string[];
+}
