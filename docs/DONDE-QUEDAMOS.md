@@ -284,8 +284,9 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    U8-a a U8-l del diseño y las 7 depuradas del dictamen; luego el arquitecto aplica los cambios al diseño y se programa.
    Después: CP2, CP3, CP4 y CP5.
 8. **Bancos H2** diseñado (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`). El paso 1 (core: qpdf fuera de la
-   transacción, archivos huérfanos, borrado tras confirmar, subida cortada) se está programando y lo revisa
-   `seguridad` antes de unirlo (revisión: «unir con arreglos menores» S3–S11, en curso). **Espera al usuario:** P1 a P5
+   transacción, archivos huérfanos, borrado tras confirmar, subida cortada) **está en `main`** con los arreglos de
+   seguridad S3–S9 y S11 (pruebas: servidor 3425, cliente 868, generador 46). Las tareas «después de confirmar» que
+   fallan (incluida la publicación de eventos) ahora se registran en stderr y no cambian la respuesta. **Espera al usuario:** P1 a P5
    del diseño (§13) para los pasos 2 a 5, y de seguridad: cola de qpdf con tope antes del paso 4 (S1: propuesta 10 en
    espera, 60 s, máx. 2 por cuenta, 429), ¿cola separada o prioridad para los PDF que genera la app, como el libro
    foliado? (S2), ¿tarea diaria que borre archivos huérfanos? (S10).
