@@ -57,7 +57,7 @@ const vacio = computed(() =>
         Marcar todas las de esta página
       </label>
       <ul
-        class="grid gap-3 transition-opacity md:grid-cols-2"
+        class="grid grid-cols-1 gap-3 transition-opacity md:grid-cols-2"
         :class="{ 'opacity-60': cargando }"
         :aria-busy="cargando"
       >

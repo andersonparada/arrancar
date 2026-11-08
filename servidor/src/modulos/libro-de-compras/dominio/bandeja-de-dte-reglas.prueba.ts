@@ -51,6 +51,18 @@ describe('montos en columnas que el mapa no conoce', () => {
 
     expect(columnasDesconocidasConMonto(filaOriginal, ['Cero', 'Vacia', 'Texto', 'Faltante'])).toEqual([]);
   });
+
+  it('no cuenta las columnas del archivo real que traen códigos y NIT (no son dinero)', () => {
+    const filaOriginal = {
+      'Código de establecimiento': '1',
+      'NIT del Certificador': '1234567',
+      'Ubicación temporal': '0',
+      Rara: '5.00',
+    };
+    const encabezados = ['Código de establecimiento', 'NIT del Certificador', 'Ubicación temporal', 'Rara'];
+
+    expect(columnasDesconocidasConMonto(filaOriginal, encabezados)).toEqual(['Rara']);
+  });
 });
 
 describe('exigirConfirmable', () => {
