@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { RotateCcw, Trash2 } from 'lucide-vue-next';
+import { FileInput, RotateCcw, Trash2 } from 'lucide-vue-next';
 import { RouterLink } from 'vue-router';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
@@ -25,13 +25,14 @@ const props = defineProps<{
   marcable: boolean;
   marcada: boolean;
 }>();
-const emit = defineEmits<{ alternar: []; descartar: []; restaurar: [] }>();
+const emit = defineEmits<{ alternar: []; abrir: []; descartar: []; restaurar: [] }>();
 
 const titulo = computed(() => tituloDeLaFila(props.fila));
 const datos = computed(() =>
   props.fila.estado === 'pendiente' ? datosDeLaFilaPendiente(props.fila, props.conceptos, formatearFecha) : [],
 );
 const falta = computed(() => textoDeLoQueFalta(props.fila));
+const puedeAbrir = computed(() => props.fila.estado === 'pendiente');
 const puedeDescartar = computed(() => props.fila.estado === 'pendiente' || props.fila.estado === 'bloqueado');
 </script>
 
@@ -81,9 +82,20 @@ const puedeDescartar = computed(() => props.fila.estado === 'pendiente' || props
       </div>
     </component>
     <div
-      v-if="puedeDescartar || fila.estado === 'descartado' || fila.documentoId"
+      v-if="puedeAbrir || puedeDescartar || fila.estado === 'descartado' || fila.documentoId"
       class="mt-3 flex flex-wrap justify-end gap-2"
     >
+      <BotonBase
+        v-if="puedeAbrir"
+        v-permiso="'libro-de-compras.documentos.crear'"
+        variante="secundario"
+        pequeno
+        :icono="FileInput"
+        :aria-label="`${acciones.abrirEnElFormulario}: ${titulo} de ${fila.nombreEmisor}`"
+        @click="emit('abrir')"
+      >
+        {{ acciones.abrirEnElFormulario }}
+      </BotonBase>
       <BotonBase
         v-if="puedeDescartar"
         v-permiso="'libro-de-compras.dte-recibidos.descartar'"

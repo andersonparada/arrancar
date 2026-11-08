@@ -34,11 +34,10 @@ const COMO_CORREGIR: Record<string, string> = {
   dte_sin_destino: 'Use «Completar» para elegir el destino y confirme de nuevo.',
   falta_la_fecha_de_recepcion: 'Use «Completar» y «Usar la fecha de emisión», o escriba la fecha de recepción.',
   dte_nota_sin_factura: 'Use «Completar» para elegir la factura que corrige y confirme de nuevo.',
-  exento_negativo_del_dte:
-    'Los montos del archivo no cuadran: regístrela a mano en «Registrar factura» y revise los montos.',
+  exento_negativo_del_dte: 'Los montos del archivo no cuadran: use «Abrir en el formulario» y revise los montos.',
   proveedor_inactivo: 'Reactívelo en Proveedores y vuelva a calcular.',
   tercero_inactivo: 'Reactívelo en Proveedores y vuelva a calcular.',
-  montos_en_columnas_desconocidas: 'Regístrela a mano en «Registrar factura» para anotar esos montos.',
+  montos_en_columnas_desconocidas: 'Use «Abrir en el formulario» para anotar esos montos.',
 };
 
 /** El error de una fila con lo que debe hacer el usuario. */

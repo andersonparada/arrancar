@@ -15,6 +15,13 @@ export const FORMULARIO_DE_DOCUMENTO = {
   seguirEditando: 'Revise el documento: ',
 } as const;
 
+/** Cuando el formulario se abre desde una fila de la bandeja «DTE de la SAT». */
+export const DESDE_LA_SAT = {
+  titulo: 'Datos traídos del DTE de la SAT. Revíselos y complete lo que falte antes de registrar.',
+  cargando: 'Trayendo los datos del DTE de la SAT…',
+  volver: 'DTE de la SAT',
+} as const;
+
 export const AYUDA_DE_LA_VISTA_PREVIA =
   'Es solo un cálculo: no se guarda nada hasta que presione «Registrar». Se actualiza solo cuando deja de escribir.';
 

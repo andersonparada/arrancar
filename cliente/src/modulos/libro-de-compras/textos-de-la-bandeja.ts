@@ -88,6 +88,7 @@ export const IMPORTAR_DE_LA_SAT = {
 export const TEXTOS_DE_LAS_ACCIONES = {
   completar: 'Completar',
   confirmar: 'Confirmar',
+  abrirEnElFormulario: 'Abrir en el formulario',
   descartar: 'Descartar',
   restaurar: 'Restaurar',
   marcarTodas: 'Marcar todas las de esta página',

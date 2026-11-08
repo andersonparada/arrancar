@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue';
 import { TriangleAlert } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import { formatearFecha } from '@/modulos/core/utilidades/formato';
+import AvisosDelDteDeLaSat from '../componentes/registro/AvisosDelDteDeLaSat.vue';
 import BarraDeRegistro from '../componentes/registro/BarraDeRegistro.vue';
 import CamposDeLaFel from '../componentes/registro/CamposDeLaFel.vue';
 import CamposDelEncabezado from '../componentes/registro/CamposDelEncabezado.vue';
@@ -13,25 +13,18 @@ import MasDatosDelDocumento from '../componentes/registro/MasDatosDelDocumento.v
 import ProblemaDelRegistro from '../componentes/registro/ProblemaDelRegistro.vue';
 import VistaPreviaDelDocumento from '../componentes/registro/VistaPreviaDelDocumento.vue';
 import { usarRegistroDeDocumento } from '../composables/documentos/usar-registro-de-documento';
+import { usarProblemaALaVista } from '../composables/documentos/usar-problema-a-la-vista';
 import { FORMULARIO_DE_DOCUMENTO as textos } from '../textos-del-registro';
 
 /** Registrar una factura, nota de crédito o recibo, con la vista previa del cálculo en vivo. */
 const router = useRouter();
 const registro = usarRegistroDeDocumento();
-const { edicion, catalogos, previa, propuestas } = registro;
-const volver = { texto: textos.volver, ruta: { name: 'libro-de-compras.documentos' } };
-const zonaDelProblema = ref<HTMLElement | null>(null);
+const { edicion, catalogos, previa, propuestas, precarga } = registro;
+const zonaDelProblema = usarProblemaALaVista(registro.problema);
 /** Enter en un campo de texto no registra: se registra con el botón, así un Enter de más no guarda a medias. */
 function alPresionarEnter(evento: KeyboardEvent): void {
   if (evento.target instanceof HTMLInputElement) evento.preventDefault();
 }
-
-// Un problema nuevo se lleva a la vista: el usuario puede estar en el fondo de un formulario largo.
-watch(registro.problema, async (problema) => {
-  if (!problema) return;
-  await nextTick();
-  zonaDelProblema.value?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-});
 </script>
 
 <template>
@@ -42,8 +35,13 @@ watch(registro.problema, async (problema) => {
     @focusout="previa.calcularYa"
     @keydown.enter="alPresionarEnter"
   >
-    <EncabezadoPagina :titulo="textos.titulo" :descripcion="textos.descripcion" :volver="volver" />
+    <EncabezadoPagina :titulo="textos.titulo" :descripcion="textos.descripcion" :volver="precarga.volver.value" />
 
+    <AvisosDelDteDeLaSat
+      v-if="precarga.dteId"
+      :cargando="precarga.cargando.value"
+      :avisos="precarga.avisosDeLaFila.value"
+    />
     <p
       v-if="registro.sinDestinos.value"
       class="mb-4 flex gap-2 rounded-2xl bg-trigo-300/40 p-4 text-sm text-tierra-900 dark:bg-trigo-500/20 dark:text-trigo-300"
