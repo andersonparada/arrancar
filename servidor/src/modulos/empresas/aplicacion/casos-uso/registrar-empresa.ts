@@ -4,8 +4,9 @@ import type { UnidadDeTrabajo } from '../../../core/compartido/aplicacion/unidad
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
 import type { SeccionesAportadas } from '../../../core/contratos/secciones.contratos.js';
 import { Empresa } from '../../dominio/empresa.js';
+import { avisosDeNitRepetido } from '../avisar-nit-repetido.js';
 import { datosDeEmpresa } from '../datos-de-empresa.js';
-import type { EmpresaDto, SolicitudDeEmpresa } from '../dto/empresa.dto.js';
+import type { EmpresaConAvisosDto, SolicitudDeEmpresa } from '../dto/empresa.dto.js';
 import type { AccesosAEmpresas } from '../puertos/accesos-a-empresas.js';
 import type { AvisosDeEmpresa } from '../puertos/avisos-de-empresa.js';
 import type { ConsultasEmpresas } from '../puertos/consultas-empresas.js';
@@ -39,7 +40,7 @@ export class RegistrarEmpresa {
     operador: Operador,
     solicitud: SolicitudDeEmpresa,
     secciones: SeccionesAportadas = {},
-  ): Promise<EmpresaDto> {
+  ): Promise<EmpresaConAvisosDto> {
     const { unidadDeTrabajo, consultas, publicadorEventos, avisos } = this.dependencias;
     const empresa = Empresa.registrar(Identificador.desde(operador.cuentaId), datosDeEmpresa(solicitud));
     const enLaNueva = { ...operador, empresaId: empresa.id.valor };
@@ -49,7 +50,11 @@ export class RegistrarEmpresa {
       await this.darAccesoAlCreador(operador, empresa);
       await this.dependencias.tiposDeLocalidad.ejecutar(enLaNueva);
       await avisos.empresaGuardada(enLaNueva, { empresaId: empresa.id.valor, secciones });
-      return consultas.obtenerEnCuenta(empresa.id.valor, operador.cuentaId);
+      const guardada = await consultas.obtenerEnCuenta(empresa.id.valor, operador.cuentaId);
+      return {
+        ...guardada,
+        avisos: await avisosDeNitRepetido(consultas, { ...guardada, cuentaId: operador.cuentaId }),
+      };
     });
     await publicadorEventos.publicar(empresa.extraerEventos());
     return registrada;

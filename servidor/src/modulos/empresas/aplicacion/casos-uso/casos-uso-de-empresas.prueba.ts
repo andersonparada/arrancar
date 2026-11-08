@@ -138,6 +138,53 @@ describe('registrar una empresa', () => {
   });
 });
 
+describe('aviso de NIT repetido en la cuenta', () => {
+  const AVISO =
+    'Otra empresa de esta cuenta ya tiene el NIT 1234567-9. Los documentos de la SAT se registran una sola vez ' +
+    'por cuenta: un DTE registrado en una de las dos no se podrá registrar en la otra.';
+
+  it('sin otra empresa con ese NIT, o sin NIT, no hay avisos', async () => {
+    expect((await casos.registrar.ejecutar(propietario, solicitud({ nit: '12345679' }))).avisos).toEqual([]);
+    expect((await casos.registrar.ejecutar(propietario, solicitud())).avisos).toEqual([]);
+  });
+
+  it('al registrar con el NIT de otra empresa de la cuenta avisa y la guarda igual', async () => {
+    await casos.registrar.ejecutar(propietario, solicitud({ nit: '12345679' }));
+
+    const segunda = await casos.registrar.ejecutar(propietario, solicitud({ nombre: 'Otra', nit: '1234567-9' }));
+
+    expect(segunda.avisos).toEqual([AVISO]);
+    expect(await empresas.listarDeCuenta(propietario.cuentaId)).toHaveLength(2);
+  });
+
+  it('cuenta también a la empresa inactiva', async () => {
+    await casos.registrar.ejecutar(propietario, solicitud({ nit: '12345679', activa: false }));
+
+    const segunda = await casos.registrar.ejecutar(propietario, solicitud({ nit: '12345679' }));
+
+    expect(segunda.avisos).toEqual([AVISO]);
+  });
+
+  it('al editar, avisa solo si otra empresa tiene el NIT; la propia no cuenta', async () => {
+    const primera = await casos.registrar.ejecutar(propietario, solicitud({ nit: '12345679' }));
+    const sinCambios = { empresaId: primera.id, solicitud: solicitud({ nit: '12345679' }) };
+    expect((await casos.actualizar.ejecutar(propietario, sinCambios)).avisos).toEqual([]);
+
+    const segunda = await casos.registrar.ejecutar(propietario, solicitud({ nombre: 'Otra' }));
+    const conElNit = { empresaId: segunda.id, solicitud: solicitud({ nombre: 'Otra', nit: '12345679' }) };
+    expect((await casos.actualizar.ejecutar(propietario, conElNit)).avisos).toEqual([AVISO]);
+  });
+
+  it('el NIT de otra cuenta y «CF» no avisan', async () => {
+    const ajeno = operadorDePrueba();
+    await casos.registrar.ejecutar(ajeno, solicitud({ nit: '12345679' }));
+    await casos.registrar.ejecutar(propietario, solicitud({ nit: 'CF' }));
+
+    expect((await casos.registrar.ejecutar(propietario, solicitud({ nit: '12345679' }))).avisos).toEqual([]);
+    expect((await casos.registrar.ejecutar(propietario, solicitud({ nit: 'CF' }))).avisos).toEqual([]);
+  });
+});
+
 describe('ver empresas', () => {
   it('cada usuario ve solo las empresas de las que es miembro; soporte las ve todas', async () => {
     const soporte = operadorDePrueba({ cuentaId: propietario.cuentaId, esSuperacceso: true });

@@ -49,6 +49,11 @@ export class Nit extends ObjetoValor<string> {
     return new Nit(normalizado);
   }
 
+  /** Para mostrarlo: el dígito verificador separado por guion ("1234567K" → "1234567-K"); "CF" queda igual. */
+  formateado(): string {
+    return this.esConsumidorFinal() ? this.valor : `${this.valor.slice(0, -1)}-${this.valor.slice(-1)}`;
+  }
+
   esConsumidorFinal(): boolean {
     return this.valor === CONSUMIDOR_FINAL;
   }

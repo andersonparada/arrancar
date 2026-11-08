@@ -5,8 +5,9 @@ import type { UnidadDeTrabajo } from '../../../core/compartido/aplicacion/unidad
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
 import type { SeccionesAportadas } from '../../../core/contratos/secciones.contratos.js';
 import type { AlcanceDelOperador } from '../alcance-del-operador.js';
+import { avisosDeNitRepetido } from '../avisar-nit-repetido.js';
 import { datosDeEmpresa } from '../datos-de-empresa.js';
-import type { EmpresaDto, SolicitudDeEmpresa } from '../dto/empresa.dto.js';
+import type { EmpresaConAvisosDto, EmpresaDto, SolicitudDeEmpresa } from '../dto/empresa.dto.js';
 import type { AvisosDeEmpresa } from '../puertos/avisos-de-empresa.js';
 import type { ConsultasEmpresas } from '../puertos/consultas-empresas.js';
 import type { RepositorioEmpresas } from '../puertos/repositorio-empresas.js';
@@ -36,7 +37,10 @@ export class ActualizarEmpresa {
    * @throws RecursoNoEncontrado si no es de la cuenta o el operador no tiene acceso a ella.
    * @throws NoSePuedeDesactivarLaEmpresaEnUso si se intenta desactivar la empresa activa.
    */
-  ejecutar(operador: Operador, { empresaId, solicitud, secciones = {} }: CambioDeEmpresa): Promise<EmpresaDto> {
+  ejecutar(
+    operador: Operador,
+    { empresaId, solicitud, secciones = {} }: CambioDeEmpresa,
+  ): Promise<EmpresaConAvisosDto> {
     const { unidadDeTrabajo, repositorio, consultas, alcance, avisos } = this.dependencias;
     const enLaEmpresa = { ...operador, empresaId };
     return unidadDeTrabajo.ejecutar(enLaEmpresa, async () => {
@@ -52,7 +56,11 @@ export class ActualizarEmpresa {
       await repositorio.actualizar(empresa);
       await this.auditar(anterior, solicitud.activa);
       await avisos.empresaGuardada(enLaEmpresa, { empresaId, secciones });
-      return consultas.obtenerEnCuenta(empresaId, operador.cuentaId);
+      const guardada = await consultas.obtenerEnCuenta(empresaId, operador.cuentaId);
+      return {
+        ...guardada,
+        avisos: await avisosDeNitRepetido(consultas, { ...guardada, cuentaId: operador.cuentaId }),
+      };
     });
   }
 

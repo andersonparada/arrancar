@@ -24,6 +24,12 @@ describe('objeto de valor Nit', () => {
     expect(() => Nit.crear('12345678')).toThrow(NitInvalido);
   });
 
+  it('se muestra con guion antes del dígito verificador, y CF queda igual', () => {
+    expect(Nit.crear('12345679').formateado()).toBe('1234567-9');
+    expect(Nit.crear('576937k').formateado()).toBe('576937-K');
+    expect(Nit.CONSUMIDOR_FINAL.formateado()).toBe('CF');
+  });
+
   it('reconoce al consumidor final escrito de cualquier forma', () => {
     const nit = Nit.crear('cf');
 
