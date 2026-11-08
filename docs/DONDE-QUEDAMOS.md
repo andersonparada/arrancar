@@ -1,6 +1,6 @@
 # Dónde quedamos
 
-Última sesión: **2026-11-01**. Este archivo se reescribe al final de cada paso.
+Última sesión: **2026-11-08**. Este archivo se reescribe al final de cada paso.
 
 Se está implementando `docs/modulos/plan-hallazgos-contables.md` en el orden de su
 sección «Dependencias y orden de implementación» (código con agentes Sonnet;
@@ -237,26 +237,43 @@ corrida completa (antes del QA final; tras él falta correrla: ver «Siguiente»
   archivo real (código de establecimiento, NIT del certificador) que bloqueaban confirmar; desborde en celular de la
   bandeja; confirmación escondida tras la ventana al corregir un pago.
 
+## Sesión del 2026-11-08 (sin el usuario, en /loop)
+
+Todo en `main` (último `452d7d6`), **sin subir a origin** (el modo automático no permite `git push`: lo hace el
+usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. **Nada de esto se vio en el navegador.**
+
+- Medios del QA final: la vista previa marca `dte_anulado_en_la_sat`; el resumen de «Confirmar» cuenta y suma solo lo
+  registrable (NCRE restando, «documentos») y la NCRE muestra «A favor».
+- Bajos del cliente: `grid-cols-1` en 74 archivos, burbujas de fecha en español (`utilidades/validacion-nativa.ts`),
+  vencimiento como texto sin permiso, encabezado que no parte el título, subtítulo del libro con el mes.
+- Bajos del servidor: nombre del grupo de retenciones sin «(5 %)», hoja «Anulados» con hora de Guatemala y causa en
+  texto, `anulacion` en la ficha de Cuentas por pagar (y su bloque en el cliente; «anulado por» sale como id),
+  número de boleta como se escribió (migración libro-de-compras `0033`), mensaje de archivo vacío neutro,
+  `proveedor_nuevo_sin_permiso` con `accion`, categoría «No va en el libro» en la conciliación (RDON), avisos sin repetir.
+- «Abrir en el formulario» desde la bandeja de la SAT (formulario precargado con `?desdeDte=`).
+- Anular desde Cuentas por pagar devuelve y muestra los avisos de Libro de compras (contrato
+  `libro-de-compras.anular_documento` → `{ avisos }`).
+
 ## Siguiente
 
-1. **Entorno (lo hace el usuario):** volvieron los puentes de Docker huérfanos (`br-15d3405570a6` y otros seis en
-   DOWN): `localhost:5433` da `ECONNRESET`. Reiniciar Docker Desktop o borrarlos con `sudo ip link delete <puente>`.
-   Luego correr `npm run probar` completo (el servidor no se corrió tras el QA final) y subir `main` a origin.
-2. **Medios sin corregir del QA final:** la vista previa no marca el DTE anulado en la SAT (prueba `it.fails` en
-   `libro-de-compras-qa2-hallazgos.api.prueba.ts`); el total del resumen de «Confirmar» suma todo lo marcado y las NCRE
-   en positivo (falta decidir: total o neto, solo lo registrable).
-3. **Bajos de los dos informes** (textos, RDON en la conciliación, grupo «5 %» con filas de 15 %, avisos repetidos,
-   autorización única entre empresas de la cuenta, `grid-cols-1` en unas diez listas de Bancos).
-4. **Sin probar:** formato RTU con 4 comas en un archivo real, dos tandas de 100, lote de constancias desde la pantalla.
-5. **Pendientes de Libro de compras:** «Abrir en el formulario» desde la bandeja; avisos al anular desde Cuentas por
-   pagar; L4-2b si el contador confirma L4-c1; L4-13; SAT-2241 del pequeño contribuyente electrónico; casillas del
-   SAT-2237; dudas del contador (formulario de pago de RetenIVA, multa y mora juntas, art. 23 del Decreto 10-2012).
-6. **Cuentas por pagar después de CP1:** U8, CP2, CP3, CP4 y CP5.
-7. **Bancos:** H2 (estado de cuenta en PDF).
-8. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual de Q150,000.
+1. **El usuario:** `git push origin main`.
+2. **Decisión del usuario:** autorización FEL única en toda la instalación o por cuenta (análisis al final de
+   `docs/modulos/informe-qa-2026-11-01-b.md`; el arquitecto recomienda **por cuenta**, migración `0034`). También: ¿avisar
+   al guardar una empresa con un NIT que ya tiene otra de la misma cuenta?
+3. **QA en el navegador** de todo lo de 2026-11-08 (lista de arriba), sobre todo las 74 cuadrículas a 380 px, las fechas
+   y «Abrir en el formulario».
+4. «Anulado por» con el nombre del usuario (el servidor manda el id).
+5. **Sin probar:** formato RTU con 4 comas en un archivo real, dos tandas de 100, lote de constancias desde la pantalla.
+6. **Pendientes de Libro de compras:** L4-2b si el contador confirma L4-c1; L4-13; SAT-2241 del pequeño contribuyente
+   electrónico; casillas del SAT-2237; dudas del contador (formulario de pago de RetenIVA, multa y mora juntas, art. 23
+   del Decreto 10-2012).
+7. **Cuentas por pagar después de CP1:** U8, CP2, CP3, CP4 y CP5.
+8. **Bancos:** H2 (estado de cuenta en PDF).
+9. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual de Q150,000.
 
-Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) y su base de
-pruebas (`BD_PRUEBAS`), y se une a `main` con pruebas en verde.
+Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) con su base de pruebas
+(`BD_PRUEBAS`) y el `.env` copiado (para `RUTA_QPDF`); se une a `main` con las pruebas completas en verde. Si
+`localhost:5433` da `ECONNRESET`, son puentes de Docker huérfanos (borrarlos en esta WSL o `wsl --shutdown`).
 
 ## Preguntas abiertas para el usuario
 
