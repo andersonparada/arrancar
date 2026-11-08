@@ -14,6 +14,7 @@ import {
   ContextoDistintoEnLaTransaccion,
   UnidadDeTrabajoPostgres,
   despuesDeConfirmar,
+  siSeDeshace,
   transaccionEnCurso,
 } from './unidad-de-trabajo-postgres.js';
 
@@ -149,5 +150,77 @@ describe('tareas para después de confirmar', () => {
 
   it('fuera de una unidad de trabajo avisa que no la dejó pendiente', () => {
     expect(despuesDeConfirmar(async () => {})).toBe(false);
+  });
+});
+
+describe('tareas que fallan se registran (S4)', () => {
+  const fallos: string[] = [];
+  const registrada = new UnidadDeTrabajoPostgres(bd, (momento, descripcion, error) => {
+    fallos.push(`${momento}:${descripcion}:${(error as Error).message}`);
+  });
+
+  it('las de deshacer que fallan quedan en el registro con su descripción y el error original sale', async () => {
+    fallos.length = 0;
+    const conFallo = registrada.ejecutar(enEmpresaA, async () => {
+      siSeDeshace(async () => Promise.reject(new Error('sin permiso')), 'a/b/c.pdf');
+      throw new FalloProvocado();
+    });
+
+    await expect(conFallo).rejects.toThrow(FalloProvocado);
+    expect(fallos).toEqual(['al_deshacer:a/b/c.pdf:sin permiso']);
+  });
+
+  it('las de confirmar corren todas, las que fallan se registran y la respuesta no cambia', async () => {
+    fallos.length = 0;
+    const orden: string[] = [];
+
+    const resultado = await registrada.ejecutar(enEmpresaA, async () => {
+      despuesDeConfirmar(async () => Promise.reject(new Error('falló')), 'primera');
+      despuesDeConfirmar(async () => void orden.push('segunda'), 'segunda');
+      return 'respuesta';
+    });
+
+    expect(resultado).toBe('respuesta');
+    expect(orden).toEqual(['segunda']);
+    expect(fallos).toEqual(['al_confirmar:primera:falló']);
+  });
+});
+
+describe('tareas para si se deshace', () => {
+  it('corren cuando la transacción más externa se deshace', async () => {
+    const orden: string[] = [];
+    const conFallo = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      await unidadDeTrabajo.ejecutar({ ...enEmpresaA }, async () => {
+        siSeDeshace(async () => void orden.push('tarea'));
+      });
+      throw new FalloProvocado();
+    });
+
+    await expect(conFallo).rejects.toThrow(FalloProvocado);
+    expect(orden).toEqual(['tarea']);
+  });
+
+  it('se descartan si la transacción se confirma', async () => {
+    const orden: string[] = [];
+
+    await unidadDeTrabajo.ejecutar(enEmpresaA, async () => void siSeDeshace(async () => void orden.push('tarea')));
+
+    expect(orden).toEqual([]);
+  });
+
+  it('una tarea que falla no tapa el error original ni frena a las demás', async () => {
+    const orden: string[] = [];
+    const conFallo = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      siSeDeshace(async () => Promise.reject(new Error('no se pudo borrar')));
+      siSeDeshace(async () => void orden.push('segunda'));
+      throw new FalloProvocado();
+    });
+
+    await expect(conFallo).rejects.toThrow(FalloProvocado);
+    expect(orden).toEqual(['segunda']);
+  });
+
+  it('fuera de una unidad de trabajo avisa que no la dejó pendiente', () => {
+    expect(siSeDeshace(async () => {})).toBe(false);
   });
 });

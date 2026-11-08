@@ -15,9 +15,10 @@ export interface ArchivoGuardado {
   paginas: number | null;
   /** Recurso que es dueño del archivo (p. ej. `bancos.conciliaciones`); sin dueño, es de uso libre. */
   recursoDueno: string | null;
+  creadoEn: Date;
 }
 
-export interface NuevoArchivo extends Omit<ArchivoGuardado, 'id'> {
+export interface NuevoArchivo extends Omit<ArchivoGuardado, 'id' | 'creadoEn'> {
   empresaId: string;
   nombreOriginal: string | null;
   /** Huella del archivo tal como llegó, antes de reescribirlo. */

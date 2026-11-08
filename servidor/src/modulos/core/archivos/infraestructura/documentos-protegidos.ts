@@ -1,5 +1,6 @@
 import { configuracion } from '../../../../configuracion.js';
 import type { DocumentosProtegidos } from '../../compartido/aplicacion/documentos-protegidos.js';
+import { TareasDeLaTransaccionPostgres } from '../../compartido/infraestructura/tareas-de-la-transaccion-postgres.js';
 import { almacenamiento } from '../../compartido/infraestructura/almacenamiento-local.js';
 import { GestorDeDocumentos } from '../aplicacion/gestor-de-documentos.js';
 import { OptimizadorSharp } from './optimizador-sharp.js';
@@ -16,6 +17,7 @@ export function crearDocumentosProtegidos(): DocumentosProtegidos {
     repositorio: new RepositorioArchivosDrizzle(),
     almacenamiento,
     optimizador: optimizadorDeImagenes,
+    tareas: new TareasDeLaTransaccionPostgres(),
     inspector: new InspectorQpdf(new EjecutorDeQpdf(configuracion.RUTA_QPDF)),
   });
 }

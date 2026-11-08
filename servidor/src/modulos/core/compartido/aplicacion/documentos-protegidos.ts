@@ -18,9 +18,19 @@ export interface DocumentoGuardado {
   paginas: number | null;
 }
 
+declare const marcaDeDocumentoRevisado: unique symbol;
+
+/** Contenido ya revisado, listo para guardarse. Es opaco: solo se obtiene con `revisar`. */
+export interface DocumentoRevisado {
+  readonly [marcaDeDocumentoRevisado]: true;
+}
+
 export interface DocumentoAbierto {
   tipoMime: string;
   tamanoBytes: number;
+  /** Huella del contenido guardado. */
+  sha256: string | null;
+  creadoEn: Date;
   contenido: Readable;
 }
 
@@ -31,13 +41,32 @@ export interface DocumentoAbierto {
  */
 export interface DocumentosProtegidos {
   /**
-   * Revisa el contenido (por lo que es, no por lo que diga el cliente), lo guarda en disco y registra
-   * la fila; si el registro falla, borra el archivo.
+   * Revisa el contenido (por lo que es, no por lo que diga el cliente) sin tocar la base ni el disco. Llámese
+   * FUERA de la unidad de trabajo: qpdf tarda y no debe retener una conexión del grupo mientras espera.
+   * Con una transacción en curso falla con un error de programación.
    * @throws DocumentoNoAceptado, DocumentoDemasiadoGrande, o un error de PDF o de foto (todos previstos).
+   */
+  revisar(contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado>;
+  /**
+   * Escribe en disco el documento revisado y registra la fila. Llámese dentro de la unidad de trabajo: si se
+   * deshace (también por un error posterior o del `commit`), el archivo se borra del disco. Solo acepta lo que
+   * devolvió `revisar`.
+   */
+  guardarRevisado(
+    operador: Operador,
+    documento: DocumentoRevisado,
+    opciones: Pick<OpcionesDeDocumento, 'recursoDueno'>,
+  ): Promise<DocumentoGuardado>;
+  /**
+   * `revisar` + `guardarRevisado` juntos, para quien no puede revisar antes de abrir la transacción (el contenido
+   * depende de lo que lee dentro de ella). Retiene la conexión mientras se revisa.
    */
   guardar(operador: Operador, contenido: Buffer, opciones: OpcionesDeDocumento): Promise<DocumentoGuardado>;
   /** @throws RecursoNoEncontrado si no existe, es de otra empresa, de otro dueño o falta en el disco. */
   abrir(archivoId: string, recursoDueno: string): Promise<DocumentoAbierto>;
-  /** Borra la fila y el archivo. Llámese como último paso de la unidad de trabajo. */
+  /**
+   * Borra la fila ya y el archivo del disco solo cuando la transacción se confirma (si se deshace, la fila vuelve y
+   * el archivo sigue en su lugar).
+   */
   eliminar(archivoId: string, recursoDueno: string): Promise<void>;
 }

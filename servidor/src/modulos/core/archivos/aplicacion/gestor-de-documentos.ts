@@ -1,99 +1,119 @@
-import { createHash } from 'node:crypto';
 import type { Almacenamiento } from '../../compartido/aplicacion/almacenamiento.js';
 import type {
   DocumentoAbierto,
   DocumentoGuardado,
+  DocumentoRevisado,
   DocumentosProtegidos,
   OpcionesDeDocumento,
 } from '../../compartido/aplicacion/documentos-protegidos.js';
 import { RecursoNoEncontrado } from '../../compartido/aplicacion/errores.js';
 import type { Operador } from '../../compartido/aplicacion/operador.js';
-import {
-  DocumentoDemasiadoGrande,
-  DocumentoNoAceptado,
-  esPdfPorFirma,
-  LIMITE_DE_BYTES_DE_FOTO_DE_DOCUMENTO,
-  LIMITE_DE_BYTES_DE_PDF,
-} from '../dominio/documento.js';
-import { FormatoDeImagenNoAceptado } from '../dominio/imagen.js';
+import type { TareasDeLaTransaccion } from '../../compartido/aplicacion/tareas-de-la-transaccion.js';
+import { DocumentoSinRevisar, RevisionDentroDeTransaccion } from './errores-de-programacion.js';
 import { RutasDeArchivo } from '../dominio/rutas-de-archivo.js';
+import { PreparadorDeDocumentos, sha256, type DocumentoPreparado } from './preparador-de-documentos.js';
 import type { InspectorDePdf } from './puertos/inspector-de-pdf.js';
 import type { OptimizadorDeImagenes } from './puertos/optimizador-de-imagenes.js';
-import type { RepositorioArchivos } from './puertos/repositorio-archivos.js';
+import type { NuevoArchivo, RepositorioArchivos } from './puertos/repositorio-archivos.js';
 
 interface Dependencias {
   repositorio: RepositorioArchivos;
   almacenamiento: Almacenamiento;
   optimizador: OptimizadorDeImagenes;
   inspector: InspectorDePdf;
-}
-
-/** Lo que se guardará: el contenido ya revisado y sus datos. */
-interface DocumentoPreparado {
-  contenido: Buffer;
-  tipoMime: string;
-  extension: 'pdf' | 'webp';
-  paginas: number | null;
-  ancho: number | null;
-  alto: number | null;
+  tareas: TareasDeLaTransaccion;
 }
 
 interface Registro {
   operador: Operador;
-  opciones: OpcionesDeDocumento;
-  recibido: Buffer;
-  documento: DocumentoPreparado;
-  rutas: RutasDeArchivo;
+  opciones: Pick<OpcionesDeDocumento, 'recursoDueno'>;
+  revisado: Revisado;
+  ruta: string;
 }
 
-const MEGABYTE = 1024 * 1024;
-const LARGO_MAXIMO_DEL_NOMBRE = 200;
-/** Las fotos de documentos se guardan más grandes y con más calidad que las demás para que se lean. */
-const MEDIDAS_DE_FOTO = {
-  original: { ladoMaximo: 2400, calidad: 85 },
-  miniatura: { ladoMaximo: 400, calidad: 70 },
-};
+function aNuevoArchivo({ operador, opciones, revisado, ruta }: Registro): NuevoArchivo {
+  return {
+    empresaId: operador.empresaId,
+    clase: 'documento',
+    rutaOriginal: ruta,
+    rutaMiniatura: null,
+    tipoMime: revisado.tipoMime,
+    tamanoBytes: revisado.contenido.length,
+    ancho: revisado.ancho,
+    alto: revisado.alto,
+    sha256: sha256(revisado.contenido),
+    sha256Recibido: revisado.sha256Recibido,
+    paginas: revisado.paginas,
+    recursoDueno: opciones.recursoDueno,
+    nombreOriginal: revisado.nombreOriginal,
+    subidoPor: operador.usuarioId,
+  };
+}
 
-const sha256 = (contenido: Buffer) => createHash('sha256').update(contenido).digest('hex');
+/** Caracteres de control y de dirección del texto: el nombre se muestra en pantalla y no debe poder disfrazarse. */
+const CARACTERES_PROHIBIDOS = /[\p{Cc}\u202A-\u202E\u2066-\u2069]/gu;
+
+/** Deja el nombre listo para mostrar: sin control ni bidireccionales y de hasta 200 caracteres. */
+function limpiarNombre(nombre: string | null): string | null {
+  return nombre?.replace(CARACTERES_PROHIBIDOS, '').slice(0, LARGO_MAXIMO_DEL_NOMBRE) ?? null;
+}
+
+const LARGO_MAXIMO_DEL_NOMBRE = 200;
+
+/** Por dentro, el documento revisado lleva también el nombre con el que llegó; el módulo dueño no lo ve. */
+type Revisado = DocumentoPreparado & { nombreOriginal: string | null };
 
 /** Guarda documentos revisados: los PDF pasan por el inspector y las fotos por el optimizador. */
 export class GestorDeDocumentos implements DocumentosProtegidos {
-  constructor(private readonly dependencias: Dependencias) {}
+  private readonly preparador: PreparadorDeDocumentos;
+  /** Solo se guarda lo que `revisar` produjo aquí: nadie puede fabricar un «documento revisado». */
+  private readonly revisados = new WeakSet<object>();
 
-  async guardar(operador: Operador, recibido: Buffer, opciones: OpcionesDeDocumento): Promise<DocumentoGuardado> {
-    const documento = await this.preparar(recibido);
-    const nombre = `${crypto.randomUUID()}.${documento.extension}`;
-    const rutas = RutasDeArchivo.deDocumento(operador.empresaId, new Date(), nombre);
-    const { almacenamiento } = this.dependencias;
-    await almacenamiento.guardar(rutas.original, documento.contenido);
+  constructor(private readonly dependencias: Dependencias) {
+    this.preparador = new PreparadorDeDocumentos(dependencias.inspector, dependencias.optimizador);
+  }
+
+  async revisar(contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado> {
+    if (this.dependencias.tareas.hayTransaccion()) throw new RevisionDentroDeTransaccion();
+    return this.revisarSinExigirFuera(contenido, nombre);
+  }
+
+  /** Para `guardar`, que por contrato revisa dentro de la transacción de quien lo llama. */
+  private async revisarSinExigirFuera(contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado> {
+    const preparado = await this.preparador.preparar(contenido);
+    const revisado: Revisado = Object.freeze({ ...preparado, nombreOriginal: limpiarNombre(nombre) });
+    this.revisados.add(revisado);
+    return revisado as unknown as DocumentoRevisado;
+  }
+
+  async guardar(operador: Operador, contenido: Buffer, opciones: OpcionesDeDocumento): Promise<DocumentoGuardado> {
+    return this.guardarRevisado(operador, await this.revisarSinExigirFuera(contenido, opciones.nombre), opciones);
+  }
+
+  async guardarRevisado(
+    operador: Operador,
+    documento: DocumentoRevisado,
+    opciones: Pick<OpcionesDeDocumento, 'recursoDueno'>,
+  ): Promise<DocumentoGuardado> {
+    const revisado = documento as unknown as Revisado;
+    if (!this.revisados.has(revisado)) throw new DocumentoSinRevisar();
+    const nombre = `${crypto.randomUUID()}.${revisado.extension}`;
+    const ruta = RutasDeArchivo.deDocumento(operador.empresaId, new Date(), nombre).original;
+    const { almacenamiento, tareas } = this.dependencias;
+    const borrar = () => almacenamiento.eliminar(ruta);
+    tareas.siSeDeshace(borrar, ruta);
     try {
-      return await this.registrar({ operador, opciones, recibido, documento, rutas });
+      await almacenamiento.guardar(ruta, revisado.contenido);
+      return await this.registrar(aNuevoArchivo({ operador, opciones, revisado, ruta }));
     } catch (error) {
-      await almacenamiento.eliminar(rutas.original);
+      await borrar().catch(() => undefined);
       throw error;
     }
   }
 
-  private async registrar({ operador, opciones, recibido, documento, rutas }: Registro): Promise<DocumentoGuardado> {
-    const huella = sha256(documento.contenido);
-    const archivo = await this.dependencias.repositorio.guardar({
-      empresaId: operador.empresaId,
-      clase: 'documento',
-      rutaOriginal: rutas.original,
-      rutaMiniatura: null,
-      tipoMime: documento.tipoMime,
-      tamanoBytes: documento.contenido.length,
-      ancho: documento.ancho,
-      alto: documento.alto,
-      sha256: huella,
-      sha256Recibido: sha256(recibido),
-      paginas: documento.paginas,
-      recursoDueno: opciones.recursoDueno,
-      nombreOriginal: opciones.nombre?.slice(0, LARGO_MAXIMO_DEL_NOMBRE) ?? null,
-      subidoPor: operador.usuarioId,
-    });
-    const { id, tipoMime, tamanoBytes, paginas } = archivo;
-    return { id, tipoMime, sha256: huella, tamanoBytes, paginas };
+  private async registrar(nuevo: NuevoArchivo): Promise<DocumentoGuardado> {
+    const { id, tipoMime, tamanoBytes, paginas } = await this.dependencias.repositorio.guardar(nuevo);
+    return { id, tipoMime, sha256: nuevo.sha256!, tamanoBytes, paginas };
   }
 
   async abrir(archivoId: string, recursoDueno: string): Promise<DocumentoAbierto> {
@@ -102,40 +122,18 @@ export class GestorDeDocumentos implements DocumentosProtegidos {
     if (!archivo) throw new RecursoNoEncontrado('El archivo');
     try {
       const contenido = await almacenamiento.leer(archivo.rutaOriginal);
-      return { tipoMime: archivo.tipoMime, tamanoBytes: archivo.tamanoBytes, contenido };
+      const { tipoMime, tamanoBytes, sha256, creadoEn } = archivo;
+      return { tipoMime, tamanoBytes, sha256, creadoEn, contenido };
     } catch {
       throw new RecursoNoEncontrado('El archivo');
     }
   }
 
   async eliminar(archivoId: string, recursoDueno: string): Promise<void> {
-    const { repositorio, almacenamiento } = this.dependencias;
+    const { repositorio, almacenamiento, tareas } = this.dependencias;
     const archivo = await repositorio.buscarDocumento(archivoId, recursoDueno);
     if (!archivo) throw new RecursoNoEncontrado('El archivo');
     await repositorio.eliminar(archivo.id);
-    await almacenamiento.eliminar(archivo.rutaOriginal);
-  }
-
-  private preparar(contenido: Buffer): Promise<DocumentoPreparado> {
-    return esPdfPorFirma(contenido) ? this.prepararPdf(contenido) : this.prepararFoto(contenido);
-  }
-
-  private async prepararPdf(contenido: Buffer): Promise<DocumentoPreparado> {
-    if (contenido.length > LIMITE_DE_BYTES_DE_PDF)
-      throw new DocumentoDemasiadoGrande(LIMITE_DE_BYTES_DE_PDF / MEGABYTE);
-    const { contenido: limpio, paginas } = await this.dependencias.inspector.inspeccionar(contenido);
-    return { contenido: limpio, tipoMime: 'application/pdf', extension: 'pdf', paginas, ancho: null, alto: null };
-  }
-
-  private async prepararFoto(contenido: Buffer): Promise<DocumentoPreparado> {
-    const limite = LIMITE_DE_BYTES_DE_FOTO_DE_DOCUMENTO;
-    if (contenido.length > limite) throw new DocumentoDemasiadoGrande(limite / MEGABYTE);
-    try {
-      const { original } = await this.dependencias.optimizador.optimizar(contenido, MEDIDAS_DE_FOTO);
-      const { ancho, alto } = original;
-      return { contenido: original.contenido, tipoMime: 'image/webp', extension: 'webp', paginas: null, ancho, alto };
-    } catch (error) {
-      throw error instanceof FormatoDeImagenNoAceptado ? new DocumentoNoAceptado() : error;
-    }
+    await tareas.despuesDeConfirmar(() => almacenamiento.eliminar(archivo.rutaOriginal), archivo.rutaOriginal);
   }
 }
