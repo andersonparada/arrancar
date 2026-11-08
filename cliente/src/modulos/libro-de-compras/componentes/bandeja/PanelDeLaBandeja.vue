@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Inbox } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import {
   cantidadDeFiltrosDeLaBandeja,
@@ -22,6 +23,7 @@ import VentanaDeDescarteDeDte from './VentanaDeDescarteDeDte.vue';
 
 /** Una pestaña de la bandeja por estado: la lista con sus filtros, lo marcado y las ventanas de completar, confirmar y descartar. */
 const props = defineProps<{ estado: EstadoDeDte; busquedaInicial: string }>();
+const router = useRouter();
 const bandeja = usarBandeja(props.estado, props.busquedaInicial);
 const { filtros, filas, total, cargando, pagina, seleccion, marcadas, completar, confirmacion, descarte } = bandeja;
 const explicacion = PESTANAS_DE_LA_BANDEJA.find(({ clave }) => clave === props.estado)?.explicacion;
@@ -68,6 +70,7 @@ const vacio = computed(() =>
             :marcable="bandeja.sePuedeMarcar"
             :marcada="seleccion.estaMarcada(fila.id)"
             @alternar="seleccion.alternar(fila.id)"
+            @abrir="router.push({ name: 'libro-de-compras.documentos.nuevo', query: { desdeDte: fila.id } })"
             @descartar="descarte.abrir([fila.id])"
             @restaurar="descarte.restaurar(fila.id)"
           />
