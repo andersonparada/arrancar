@@ -2,7 +2,7 @@
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { X } from 'lucide-vue-next';
 
-const props = defineProps<{ abierta: boolean; titulo: string; ancha?: boolean; encima?: boolean }>();
+const props = defineProps<{ abierta: boolean; titulo: string; ancha?: boolean; encima?: boolean | 'maxima' }>();
 const emit = defineEmits<{ cerrar: [] }>();
 const contenido = ref<HTMLElement | null>(null);
 
@@ -42,7 +42,7 @@ onBeforeUnmount(() => {
       <div
         v-if="abierta"
         class="fixed inset-0 flex items-end justify-center bg-tierra-900/50 sm:items-center sm:p-4"
-        :class="encima ? 'z-[60]' : 'z-40'"
+        :class="encima === 'maxima' ? 'z-[70]' : encima ? 'z-[60]' : 'z-40'"
         @click.self="emit('cerrar')"
       >
         <section
