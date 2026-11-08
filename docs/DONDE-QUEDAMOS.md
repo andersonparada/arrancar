@@ -260,12 +260,15 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
   3385, cliente 865, generador 46.
 - «Anulado por» en la ficha de Cuentas por pagar muestra el nombre (`anuladoPorNombre`; «Usuario no disponible» si no
   se puede leer). Pruebas: servidor 3385, cliente 866, generador 46.
+- **Aviso de NIT repetido** (decisión del usuario: avisar sin impedir): `POST`/`PUT /api/empresas` devuelven `avisos`
+  si otra empresa de la cuenta (activa o inactiva) tiene el mismo NIT; no nombra a la otra; el cliente lo muestra con
+  `usarAvisos().info`. Los avisos largos duran más (`core/almacenes/duracion-de-aviso.ts`, hasta 20 s). `Nit.formateado()`
+  nuevo en el servidor. Pruebas: servidor 3393, cliente 868, generador 46.
 
 ## Siguiente
 
 1. **El usuario:** `git push origin main`.
-2. **Decisión del usuario (pendiente):** ¿avisar, sin impedirlo, al guardar una empresa con un NIT que ya tiene otra de
-   la misma cuenta?
+2. **QA en el navegador** del aviso de NIT repetido al guardar una empresa (y de los avisos largos, que ahora duran más).
 3. **QA en el navegador** de todo lo de 2026-11-08 (lista de arriba), sobre todo las 74 cuadrículas a 380 px, las fechas
    y «Abrir en el formulario».
 4. «Anulado por» en la ficha de Libro de compras (hoy no se muestra; su DTO solo trae el id), si se quiere.
