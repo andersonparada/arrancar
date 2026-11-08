@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LineaDeSolicitudDeDte, SolicitudDeDte } from '../../servicios/dte-recibidos.api';
 import { cuerpoDeDocumento } from './edicion-de-documento';
-import { avisosDeLaPrecarga, edicionDesdeSolicitud, lineaDesdeSolicitud } from './edicion-desde-solicitud';
+import { edicionDesdeSolicitud, lineaDesdeSolicitud, pendientesDeLaPrecarga } from './edicion-desde-solicitud';
 
 const HOY = new Date(2026, 10, 8);
 
@@ -104,16 +104,26 @@ describe('edicionDesdeSolicitud', () => {
   });
 });
 
-describe('avisosDeLaPrecarga', () => {
-  it('conserva los del servidor y suma lo que falta elegir', () => {
-    const faltante = solicitud({ proveedorId: null, destino: null, lineas: [linea({ conceptoId: null })] });
-    const avisos = avisosDeLaPrecarga(faltante, ['Aviso del servidor']);
-    expect(avisos[0]).toBe('Aviso del servidor');
-    expect(avisos).toHaveLength(4);
-    expect(avisos[1]).toContain('1234567');
+describe('pendientesDeLaPrecarga', () => {
+  const faltante = () =>
+    edicionDesdeSolicitud(solicitud({ proveedorId: null, destino: null, lineas: [linea({ conceptoId: null })] }), HOY);
+
+  it('suma lo que falta elegir', () => {
+    const pendientes = pendientesDeLaPrecarga(faltante(), '1234567');
+    expect(pendientes).toHaveLength(3);
+    expect(pendientes[0]).toContain('1234567');
+  });
+
+  it('lo que el usuario elige después deja de aparecer', () => {
+    const edicion = faltante();
+    edicion.destino = 'cuentas-por-pagar';
+    expect(pendientesDeLaPrecarga(edicion, null)).not.toContain('Elija el destino del documento.');
+    edicion.proveedorId = 'p-1';
+    edicion.lineas[0]!.conceptoId = 'c-1';
+    expect(pendientesDeLaPrecarga(edicion, null)).toEqual([]);
   });
 
   it('con todo elegido no suma nada', () => {
-    expect(avisosDeLaPrecarga(solicitud(), [])).toEqual([]);
+    expect(pendientesDeLaPrecarga(edicionDesdeSolicitud(solicitud(), HOY), '1234567')).toEqual([]);
   });
 });

@@ -4,7 +4,7 @@ import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { apiDteRecibidos } from '../../servicios/dte-recibidos.api';
 import { DESDE_LA_SAT, FORMULARIO_DE_DOCUMENTO } from '../../textos-del-registro';
 import type { EdicionDeDocumento } from './edicion-de-documento';
-import { avisosDeLaPrecarga, edicionDesdeSolicitud } from './edicion-desde-solicitud';
+import { edicionDesdeSolicitud, pendientesDeLaPrecarga } from './edicion-desde-solicitud';
 
 /**
  * Los cambios de proveedor y de tipo que vienen de la precarga: sus reglas («al elegir el proveedor se propone su
@@ -25,6 +25,7 @@ interface EstadoDeLaCarga {
   avisos: ReturnType<typeof usarAvisos>;
   cargando: Ref<boolean>;
   avisosDeLaFila: Ref<string[]>;
+  nitEmisor: Ref<string | null>;
   saltos: SaltosDeLaPrecarga;
 }
 
@@ -35,14 +36,15 @@ function marcarSaltos(saltos: SaltosDeLaPrecarga, actual: EdicionDeDocumento, ll
 }
 
 function crearCargador(edicion: EdicionDeDocumento, estado: EstadoDeLaCarga, alLlenar: () => void) {
-  const { avisos, cargando, avisosDeLaFila, saltos } = estado;
+  const { avisos, cargando, avisosDeLaFila, nitEmisor, saltos } = estado;
   return async function cargar(id: string): Promise<void> {
     try {
       const { solicitud, avisos: delServidor } = await apiDteRecibidos.solicitud(id);
       const lleno = edicionDesdeSolicitud(solicitud, new Date());
       marcarSaltos(saltos, edicion, lleno);
       Object.assign(edicion, lleno);
-      avisosDeLaFila.value = avisosDeLaPrecarga(solicitud, delServidor);
+      avisosDeLaFila.value = delServidor;
+      nitEmisor.value = solicitud.nitEmisor;
       alLlenar();
     } catch (error) {
       avisos.error(error instanceof Error ? error.message : 'No se pudieron traer los datos del DTE de la SAT.');
@@ -61,14 +63,17 @@ export function usarPrecargaDesdeDte(edicion: EdicionDeDocumento, alLlenar: () =
   const dteId = idDeLaFila(useRoute().query.desdeDte);
   const cargando = ref(dteId !== null);
   const avisosDeLaFila = ref<string[]>([]);
+  const nitEmisor = ref<string | null>(null);
   const saltos: SaltosDeLaPrecarga = { proveedor: false, tipo: false };
 
-  const cargar = crearCargador(edicion, { avisos, cargando, avisosDeLaFila, saltos }, alLlenar);
+  const cargar = crearCargador(edicion, { avisos, cargando, avisosDeLaFila, nitEmisor, saltos }, alLlenar);
   onMounted(() => (dteId ? cargar(dteId) : undefined));
   return {
     dteId,
     cargando,
     avisosDeLaFila,
+    /** Lo que falta elegir, según lo escrito ahora. */
+    pendientes: computed(() => (dteId && !cargando.value ? pendientesDeLaPrecarga(edicion, nitEmisor.value) : [])),
     saltos,
     /** Desde la bandeja se vuelve a la bandeja; si no, a la lista de facturas. */
     volver: computed(() =>

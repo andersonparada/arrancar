@@ -60,15 +60,18 @@ export function edicionDesdeSolicitud(solicitud: SolicitudDeDte, hoy: Date): Edi
   };
 }
 
-/** Lo que el servidor avisó de la fila y lo que el usuario debe completar antes de registrar. */
-export function avisosDeLaPrecarga(solicitud: SolicitudDeDte, avisos: string[]): string[] {
-  const propios: string[] = [];
-  if (!solicitud.proveedorId) {
-    propios.push(
-      `El proveedor con NIT ${solicitud.nitEmisor ?? 'del DTE'} aún no está registrado: elíjalo en la lista o créelo en Proveedores.`,
+/**
+ * Lo que el usuario aún debe elegir en el formulario, según lo que tiene escrito ahora (no lo que trajo la SAT): al elegir
+ * el proveedor, el destino o los conceptos, el pendiente desaparece.
+ */
+export function pendientesDeLaPrecarga(edicion: EdicionDeDocumento, nitEmisor: string | null): string[] {
+  const pendientes: string[] = [];
+  if (!edicion.proveedorId) {
+    pendientes.push(
+      `El proveedor con NIT ${nitEmisor ?? 'del DTE'} aún no está registrado: elíjalo en la lista o créelo en Proveedores.`,
     );
   }
-  if (!solicitud.destino) propios.push('Elija el destino del documento.');
-  if (solicitud.lineas.some(({ conceptoId }) => !conceptoId)) propios.push('Elija el concepto de cada línea.');
-  return [...avisos, ...propios];
+  if (!edicion.destino) pendientes.push('Elija el destino del documento.');
+  if (edicion.lineas.some(({ conceptoId }) => !conceptoId)) pendientes.push('Elija el concepto de cada línea.');
+  return pendientes;
 }

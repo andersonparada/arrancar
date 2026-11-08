@@ -4,6 +4,7 @@ import { ArchivoDemasiadoGrande, ArchivoNoEsExcel, DemasiadasFilas } from '../ap
 import {
   ArchivoConCeldasDemasiadoGrandes,
   ArchivoDeTextoNoAdmitido,
+  ArchivoVacio,
   EncabezadosNoEncontrados,
 } from '../aplicacion/errores-de-lectura.js';
 import { LectorDeFilasDeArchivo } from './lector-de-filas-de-archivo.js';
@@ -165,9 +166,13 @@ describe('lector de filas: formatos que no se aceptan', () => {
     await expect(leer(`${BOM}<html></html>`)).rejects.toThrow(ArchivoDeTextoNoAdmitido);
   });
 
-  it('rechaza binarios con bytes NUL, UTF-16 y archivos vacíos', async () => {
+  it('rechaza binarios con bytes NUL y UTF-16', async () => {
     await expect(leer(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x01]))).rejects.toThrow(ArchivoNoEsExcel);
     await expect(leer(Buffer.from('a,b\n1,2', 'utf16le'))).rejects.toThrow(ArchivoNoEsExcel);
-    await expect(leer(Buffer.alloc(0))).rejects.toThrow(ArchivoNoEsExcel);
+  });
+
+  it('un archivo de 0 bytes dice que está vacío y menciona los formatos que se aceptan', async () => {
+    await expect(leer(Buffer.alloc(0))).rejects.toThrow(ArchivoVacio);
+    await expect(leer(Buffer.alloc(0))).rejects.toThrow(/\.xls.*\.xlsx.*CSV/);
   });
 });

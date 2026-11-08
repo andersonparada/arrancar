@@ -76,70 +76,72 @@ function elegirConcepto(id: string | null | undefined): void {
       </BotonBase>
     </div>
 
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <CampoSelector
-        :model-value="linea.conceptoId"
-        class="sm:col-span-2"
-        etiqueta="Concepto de gasto"
-        requerido
-        :opciones="opcionesDeConcepto"
-        :error="errores.conceptoId"
-        @update:model-value="elegirConcepto"
-      />
-      <CampoTexto
-        v-model="linea.total"
-        tipo="number"
-        paso="any"
-        etiqueta="Total con IVA (Q)"
-        requerido
-        :error="errores.total"
-      />
-      <CampoTexto
-        v-model="linea.exento"
-        tipo="number"
-        paso="any"
-        etiqueta="De ese total, exento (Q)"
-        ayuda="Solo si una parte no paga IVA."
-        :error="errores.exento"
-      />
-      <CampoTexto
-        v-model="linea.descripcion"
-        class="sm:col-span-2"
-        etiqueta="Descripción"
-        :longitud-maxima="300"
-        :error="errores.descripcion"
-      />
-      <CampoSelector
-        v-model="linea.tipo"
-        etiqueta="Es un"
-        :deshabilitado="fijaElTipo"
-        :opciones="TIPOS"
-        :error="errores.tipo"
-      />
-      <div class="flex flex-col justify-end gap-3">
-        <CampoInterruptor v-model="linea.esActivoFijo" etiqueta="Es activo fijo" />
-        <CampoInterruptor v-model="linea.esCombustible" etiqueta="Es combustible" />
-      </div>
-      <template v-if="linea.esCombustible">
+    <div class="@container">
+      <div class="grid grid-cols-1 gap-3 @md:grid-cols-2 @3xl:grid-cols-4">
         <CampoSelector
-          v-model="linea.combustibleId"
-          class="sm:col-span-2"
-          etiqueta="Combustible"
-          :requerido="!linea.escribeIdp"
-          :opciones="opcionesDeCombustible"
-          :error="errores.combustibleId"
+          :model-value="linea.conceptoId"
+          class="@md:col-span-2"
+          etiqueta="Concepto de gasto"
+          requerido
+          :opciones="opcionesDeConcepto"
+          :error="errores.conceptoId"
+          @update:model-value="elegirConcepto"
         />
         <CampoTexto
-          v-model="linea.galones"
+          v-model="linea.total"
           tipo="number"
           paso="any"
-          etiqueta="Galones"
-          :requerido="!linea.escribeIdp"
-          :ayuda="linea.escribeIdp ? 'Opcional: con ellos le avisamos si el IDP no cuadra.' : undefined"
-          :error="errores.galones"
+          etiqueta="Total con IVA (Q)"
+          requerido
+          :error="errores.total"
         />
-        <IdpDeLaFactura v-if="conMontosExtra" v-model="linea" :errores="errores" />
-      </template>
+        <CampoTexto
+          v-model="linea.exento"
+          tipo="number"
+          paso="any"
+          etiqueta="De ese total, exento (Q)"
+          ayuda="Solo si una parte no paga IVA."
+          :error="errores.exento"
+        />
+        <CampoTexto
+          v-model="linea.descripcion"
+          class="@md:col-span-2"
+          etiqueta="Descripción"
+          :longitud-maxima="300"
+          :error="errores.descripcion"
+        />
+        <CampoSelector
+          v-model="linea.tipo"
+          etiqueta="Es un"
+          :deshabilitado="fijaElTipo"
+          :opciones="TIPOS"
+          :error="errores.tipo"
+        />
+        <div class="flex flex-col justify-end gap-3">
+          <CampoInterruptor v-model="linea.esActivoFijo" etiqueta="Es activo fijo" />
+          <CampoInterruptor v-model="linea.esCombustible" etiqueta="Es combustible" />
+        </div>
+        <template v-if="linea.esCombustible">
+          <CampoSelector
+            v-model="linea.combustibleId"
+            class="@md:col-span-2"
+            etiqueta="Combustible"
+            :requerido="!linea.escribeIdp"
+            :opciones="opcionesDeCombustible"
+            :error="errores.combustibleId"
+          />
+          <CampoTexto
+            v-model="linea.galones"
+            tipo="number"
+            paso="any"
+            etiqueta="Galones"
+            :requerido="!linea.escribeIdp"
+            :ayuda="linea.escribeIdp ? 'Opcional: con ellos le avisamos si el IDP no cuadra.' : undefined"
+            :error="errores.galones"
+          />
+          <IdpDeLaFactura v-if="conMontosExtra" v-model="linea" :errores="errores" />
+        </template>
+      </div>
     </div>
     <MasMontosDeLinea v-if="conMontosExtra" v-model="linea" class="mt-3" :errores="errores" />
   </fieldset>

@@ -4,6 +4,7 @@ import {
   fraseDelResumen,
   netoDeLaFila,
   resumenDeLoRegistrable,
+  agruparAvisos,
   textoDeRegistrados,
 } from './resumen-de-la-confirmacion';
 
@@ -67,5 +68,27 @@ describe('neto de la fila y texto final', () => {
   it('el aviso final dice documentos', () => {
     expect(textoDeRegistrados(1)).toBe('Se registró 1 documento.');
     expect(textoDeRegistrados(3)).toBe('Se registraron 3 documentos.');
+  });
+});
+
+describe('agruparAvisos', () => {
+  const titulos = new Map([
+    ['a', 'A-1'],
+    ['b', 'A-2'],
+  ]);
+
+  it('junta el mismo aviso de varias filas y no lo repite dentro de una', () => {
+    const registradas = [
+      { id: 'a', avisos: ['Montos del resumen', 'Montos del resumen', 'Otro'] },
+      { id: 'b', avisos: ['Montos del resumen'] },
+    ];
+    expect(agruparAvisos(registradas, titulos)).toEqual([
+      { aviso: 'Montos del resumen', titulos: ['A-1', 'A-2'] },
+      { aviso: 'Otro', titulos: ['A-1'] },
+    ]);
+  });
+
+  it('sin avisos no devuelve nada', () => {
+    expect(agruparAvisos([{ id: 'a', avisos: [] }], titulos)).toEqual([]);
   });
 });

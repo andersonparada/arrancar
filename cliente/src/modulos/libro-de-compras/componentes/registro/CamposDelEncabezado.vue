@@ -63,82 +63,84 @@ const esNota = computed(() => llevaFacturaAfectada(edicion.value.tipoDte));
 </script>
 
 <template>
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    <CampoSelector
-      v-model="edicion.tipoDte"
-      class="sm:col-span-2 lg:col-span-3"
-      etiqueta="Tipo de documento (como dice el encabezado de la factura)"
-      requerido
-      :opciones="tipos"
-      :error="errores.tipoDte"
-    />
-    <CampoSelector
-      v-model="edicion.proveedorId"
-      etiqueta="Proveedor"
-      requerido
-      :opciones="opcionesDeProveedor"
-      :error="errores.proveedorId"
-    />
-    <CampoSelector
-      v-if="destinos.length > 0"
-      v-model="edicion.destino"
-      etiqueta="Destino"
-      requerido
-      :deshabilitado="esNota && !!edicion.documentoAfectadoId"
-      :opciones="opcionesDeDestino"
-      :error="errores.destino"
-    />
-    <CampoSelector
-      v-if="esNota"
-      v-model="edicion.documentoAfectadoId"
-      class="sm:col-span-2 lg:col-span-3"
-      :etiqueta="esDebito ? 'Factura que aumenta esta nota' : 'Factura que rebaja esta nota'"
-      requerido
-      :opciones="facturasDeLaNota"
-      :error="errores.documentoAfectadoId"
-    />
-    <CamposDeNotaDeDebito
-      v-if="esDebito"
-      v-model="edicion"
-      class="sm:col-span-2 lg:col-span-3"
-      :conceptos="conceptos"
-      :errores="errores"
-    />
-    <CampoTexto
-      v-model="edicion.serie"
-      etiqueta="Serie"
-      :requerido="esEspecial"
-      :longitud-maxima="40"
-      :error="errores.serie"
-      sin-correccion
-    />
-    <CampoTexto
-      v-model="edicion.numero"
-      etiqueta="Número"
-      requerido
-      :longitud-maxima="40"
-      :error="errores.numero"
-      sin-correccion
-    />
-    <CampoTexto
-      v-model="edicion.fechaEmision"
-      tipo="date"
-      etiqueta="Fecha de emisión"
-      requerido
-      :error="errores.fechaEmision"
-    />
-    <CampoTexto
-      v-model="edicion.fechaRecepcion"
-      tipo="date"
-      etiqueta="Fecha de recepción"
-      :ayuda="ayudaDeLaRecepcion"
-      :error="errores.fechaRecepcion"
-    />
-    <CampoSelector
-      v-model="edicion.periodo"
-      etiqueta="Período del libro"
-      :opciones="periodos"
-      :error="errores.periodo"
-    />
+  <div class="@container">
+    <div class="grid grid-cols-1 gap-4 @md:grid-cols-2 @2xl:grid-cols-3">
+      <CampoSelector
+        v-model="edicion.tipoDte"
+        class="@md:col-span-2 @2xl:col-span-3"
+        etiqueta="Tipo de documento (como dice el encabezado de la factura)"
+        requerido
+        :opciones="tipos"
+        :error="errores.tipoDte"
+      />
+      <CampoSelector
+        v-model="edicion.proveedorId"
+        etiqueta="Proveedor"
+        requerido
+        :opciones="opcionesDeProveedor"
+        :error="errores.proveedorId"
+      />
+      <CampoSelector
+        v-if="destinos.length > 0"
+        v-model="edicion.destino"
+        etiqueta="Destino"
+        requerido
+        :deshabilitado="esNota && !!edicion.documentoAfectadoId"
+        :opciones="opcionesDeDestino"
+        :error="errores.destino"
+      />
+      <CampoSelector
+        v-if="esNota"
+        v-model="edicion.documentoAfectadoId"
+        class="@md:col-span-2 @2xl:col-span-3"
+        :etiqueta="esDebito ? 'Factura que aumenta esta nota' : 'Factura que rebaja esta nota'"
+        requerido
+        :opciones="facturasDeLaNota"
+        :error="errores.documentoAfectadoId"
+      />
+      <CamposDeNotaDeDebito
+        v-if="esDebito"
+        v-model="edicion"
+        class="@md:col-span-2 @2xl:col-span-3"
+        :conceptos="conceptos"
+        :errores="errores"
+      />
+      <CampoTexto
+        v-model="edicion.serie"
+        etiqueta="Serie"
+        :requerido="esEspecial"
+        :longitud-maxima="40"
+        :error="errores.serie"
+        sin-correccion
+      />
+      <CampoTexto
+        v-model="edicion.numero"
+        etiqueta="Número"
+        requerido
+        :longitud-maxima="40"
+        :error="errores.numero"
+        sin-correccion
+      />
+      <CampoTexto
+        v-model="edicion.fechaEmision"
+        tipo="date"
+        etiqueta="Fecha de emisión"
+        requerido
+        :error="errores.fechaEmision"
+      />
+      <CampoTexto
+        v-model="edicion.fechaRecepcion"
+        tipo="date"
+        etiqueta="Fecha de recepción"
+        :ayuda="ayudaDeLaRecepcion"
+        :error="errores.fechaRecepcion"
+      />
+      <CampoSelector
+        v-model="edicion.periodo"
+        etiqueta="Período del libro"
+        :opciones="periodos"
+        :error="errores.periodo"
+      />
+    </div>
   </div>
 </template>

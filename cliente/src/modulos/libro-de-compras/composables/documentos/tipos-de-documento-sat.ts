@@ -1,5 +1,6 @@
 import type { OpcionBuscable } from '@/modulos/core/utilidades/busqueda-de-opciones';
 import type { TipoDeDocumento } from '../../servicios/documentos.api';
+import { FORMULARIO_DE_DOCUMENTO } from '../../textos-del-registro';
 import { FECHA_DE_DEROGACION_REGIMENES_DECRETO_7_2019, mesDeFecha } from '../../textos-de-documentos';
 
 /** Lo que el selector guarda para un recibo: no es un documento FEL, así que no tiene código de la SAT. */
@@ -99,4 +100,10 @@ export function opcionesDeTipoSat(): (OpcionBuscable<string> & { grupo: string }
     grupo: GRUPOS_DE_TIPOS_SAT[tipoSat.familia],
   }));
   return [...opciones, { valor: CODIGO_DE_RECIBO, texto: 'Recibo (sin FEL)', grupo: GRUPOS_DE_TIPOS_SAT.recibo }];
+}
+
+/** El título del formulario según el tipo elegido: «Registrar nota de crédito», «Registrar recibo»…; si no, el de la factura. */
+export function tituloDelRegistro(codigo: string): string {
+  const familia = familiaDelCodigo(codigo);
+  return (familia && FORMULARIO_DE_DOCUMENTO.tituloPorFamilia[familia]) || FORMULARIO_DE_DOCUMENTO.titulo;
 }
