@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { cambiosDefinidos, exigirBorradorValido } from './borrador-del-dte.js';
-import { exigirConfirmable } from './confirmabilidad-del-dte.js';
+import { exigirConfirmable, exigirVigenteEnLaSat } from './confirmabilidad-del-dte.js';
 import { DteRecibido, type DatosDelDte } from './dte-recibido.js';
 import {
   BorradorDeDteInvalido,
@@ -62,6 +62,13 @@ describe('montos en columnas que el mapa no conoce', () => {
     const encabezados = ['Código de establecimiento', 'NIT del Certificador', 'Ubicación temporal', 'Rara'];
 
     expect(columnasDesconocidasConMonto(filaOriginal, encabezados)).toEqual(['Rara']);
+  });
+});
+
+describe('exigirVigenteEnLaSat', () => {
+  it('rechaza un DTE anulado en la SAT y deja pasar uno vigente, sin mirar su estado en la bandeja', () => {
+    expect(() => exigirVigenteEnLaSat(fila({ estadoSat: 'anulado' }))).toThrow(DteAnuladoEnLaSat);
+    expect(() => exigirVigenteEnLaSat(fila())).not.toThrow();
   });
 });
 
