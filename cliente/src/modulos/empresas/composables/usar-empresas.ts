@@ -37,12 +37,15 @@ function usarFormularioDeEmpresa({ edicion, guardarDatos, recargar }: Formulario
   /** La sesión se recarga para que el selector muestre la empresa nueva o su nombre nuevo. */
   async function guardar(): Promise<void> {
     const esNueva = edicion.value.empresaId === null;
+    let avisosDelServidor: string[] = [];
     const empresaYDatos = async () => {
       const empresa = await guardarEmpresa(edicion.value);
+      avisosDelServidor = empresa.avisos ?? [];
       if (!esNueva) await guardarDatos(empresa.id);
     };
     if (!(await enviar(empresaYDatos))) return;
     avisos.exito(esNueva ? 'Empresa creada. Ya puede elegirla en el selector.' : 'Empresa actualizada.');
+    avisosDelServidor.forEach((aviso) => avisos.info(aviso));
     edicion.value.abierta = false;
     await Promise.all([recargar(), sesion.cargar()]);
   }
