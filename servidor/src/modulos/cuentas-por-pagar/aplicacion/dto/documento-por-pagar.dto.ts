@@ -93,6 +93,8 @@ export interface AnulacionDelDocumentoDto {
   motivo: string | null;
   /** Id del usuario que anuló. */
   anuladoPor: string | null;
+  /** Nombres y apellidos de quien anuló; `null` si no se pudo leer al usuario. */
+  anuladoPorNombre: string | null;
   /** Instante en ISO (UTC). */
   anuladoEn: string | null;
 }

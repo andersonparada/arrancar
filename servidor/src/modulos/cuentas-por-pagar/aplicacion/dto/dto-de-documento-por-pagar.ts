@@ -77,8 +77,8 @@ export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVist
 /** Cómo se anuló el documento; `null` si sigue vigente. */
 export function dtoDeAnulacion({ documento, origen }: FilaDeDocumento): AnulacionDelDocumentoDto | null {
   if (documento.estado !== 'anulado') return null;
-  const { causa, motivo, anuladoPor, anuladoEn } = origen.anulacion;
-  return { causa, motivo, anuladoPor, anuladoEn: anuladoEn?.toISOString() ?? null };
+  const { causa, motivo, anuladoPor, anuladoPorNombre, anuladoEn } = origen.anulacion;
+  return { causa, motivo, anuladoPor, anuladoPorNombre, anuladoEn: anuladoEn?.toISOString() ?? null };
 }
 
 export function dtoDeNota(nota: NotaDeUnDocumento): NotaDelDocumentoDto {

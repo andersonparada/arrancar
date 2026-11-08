@@ -84,6 +84,7 @@ describe('anular desde Cuentas por pagar', () => {
 
     expect(ficha.anulacion).toMatchObject({ causa: 'error_de_captura', motivo: 'Duplicada' });
     expect(ficha.anulacion.anuladoPor).toEqual(expect.any(String));
+    expect(ficha.anulacion.anuladoPorNombre).toEqual(expect.stringMatching(/\S+/));
     expect(Number.isNaN(Date.parse(ficha.anulacion.anuladoEn))).toBe(false);
   });
 

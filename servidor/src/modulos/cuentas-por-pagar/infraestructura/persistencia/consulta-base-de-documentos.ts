@@ -1,6 +1,7 @@
 import { eq, isNotNull, sql } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
+import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { documentos as documentosDeCompra } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
@@ -15,7 +16,14 @@ const columnasDeLaAnulacion = {
   motivoDeAnulacion: documentosDeCompra.motivoDeAnulacion,
   anuladoPorEnElLibro: documentosDeCompra.anuladoPor,
   anuladoEnElLibro: documentosDeCompra.anuladoEn,
+  anuladoPorNombres: usuarios.nombres,
+  anuladoPorApellidos: usuarios.apellidos,
 };
+
+/** Nombres y apellidos juntos; `null` si el usuario no se pudo leer. */
+function nombreCompleto(nombres: string | null, apellidos: string | null): string | null {
+  return nombres ? `${nombres} ${apellidos ?? ''}`.trim() : null;
+}
 
 /**
  * Cada documento con lo que se calcula de las otras tablas: de dónde viene (serie, número y proveedor), lo que sus
@@ -75,6 +83,7 @@ export class ConsultaBaseDeDocumentos {
       })
       .from(documentos)
       .innerJoin(documentosDeCompra, eq(documentosDeCompra.id, documentos.documentoId))
+      .leftJoin(usuarios, eq(usuarios.id, documentosDeCompra.anuladoPor))
       .innerJoin(proveedores, eq(proveedores.id, documentos.proveedorId))
       .innerJoin(terceros, eq(terceros.id, proveedores.terceroId))
       .leftJoin(this.alCargo, eq(this.alCargo.cargoId, documentos.id))
@@ -104,6 +113,7 @@ export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
         causa: fila.causaDeAnulacion,
         motivo: fila.motivoDeAnulacion,
         anuladoPor: fila.anuladoPorEnElLibro,
+        anuladoPorNombre: nombreCompleto(fila.anuladoPorNombres, fila.anuladoPorApellidos),
         anuladoEn: fila.anuladoEnElLibro,
       },
     },
