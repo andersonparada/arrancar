@@ -278,8 +278,14 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    aviso; hacer ya L4-13 (L4-f); régimen electrónico de pequeño contribuyente como histórico (el SAT-2241 no se
    programa); captura del SAT-2237 de la Agencia Virtual; tope del pequeño contribuyente configurable por año.
    L4-2b quedó cerrado («no va»).
-7. **Cuentas por pagar después de CP1:** U8, CP2, CP3, CP4 y CP5.
-8. **Bancos:** H2 (estado de cuenta en PDF).
+7. **Cuentas por pagar después de CP1:** U8 diseñado (`docs/modulos/diseno-u8-saldos-iniciales-cuentas-por-pagar.md`)
+   y validado por el contador (`dictamen-u8-saldos-iniciales-2026-11-08.md`, «correcto con ajustes»: quitar la
+   solución provisional de §9.3, U8-l antes de producción, retenciones por practicar). **Espera al usuario:** preguntas
+   U8-a a U8-l del diseño y las 7 depuradas del dictamen; luego el arquitecto aplica los cambios al diseño y se programa.
+   Después: CP2, CP3, CP4 y CP5.
+8. **Bancos H2** diseñado (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`). El paso 1 (core: qpdf fuera de la
+   transacción, archivos huérfanos, borrado tras confirmar, subida cortada) se está programando y lo revisa
+   `seguridad` antes de unirlo. **Espera al usuario:** P1 a P5 del diseño (§13) para los pasos 2 a 5.
 9. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual (ya no Q150,000: 125 salarios mínimos no agrícolas, Q500,285 en 2026).
 
 Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) con su base de pruebas
