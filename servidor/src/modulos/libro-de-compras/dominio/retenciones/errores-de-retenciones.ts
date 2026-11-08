@@ -6,7 +6,7 @@ export class NumeroDeConstanciaInvalido extends DatoInvalido {
   readonly codigo = 'numero_de_constancia_invalido';
 
   constructor() {
-    super('Escriba el número de la constancia (hasta 40 caracteres, sin espacios).', { campo: 'numero' });
+    super('Escriba el número de la constancia (hasta 40 caracteres).', { campo: 'numero' });
   }
 }
 

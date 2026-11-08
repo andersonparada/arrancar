@@ -9,6 +9,14 @@ import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { mapeadorDeDocumento } from './documento.mapeador.js';
 import { documentos } from './documentos.tablas.js';
 
+/** Cómo se anuló el documento en Libro de compras (de donde ya se guarda). */
+const columnasDeLaAnulacion = {
+  causaDeAnulacion: documentosDeCompra.causaDeAnulacion,
+  motivoDeAnulacion: documentosDeCompra.motivoDeAnulacion,
+  anuladoPorEnElLibro: documentosDeCompra.anuladoPor,
+  anuladoEnElLibro: documentosDeCompra.anuladoEn,
+};
+
 /**
  * Cada documento con lo que se calcula de las otras tablas: de dónde viene (serie, número y proveedor), lo que sus
  * notas de crédito le rebajaron o él rebajó, y cuántas notas lo corrigen. Las filas salen de las tablas con RLS por
@@ -58,6 +66,7 @@ export class ConsultaBaseDeDocumentos {
         numero: documentosDeCompra.numero,
         fechaRecepcion: documentosDeCompra.fechaRecepcion,
         periodo: documentosDeCompra.periodo,
+        ...columnasDeLaAnulacion,
         alCargo: this.alCargo.monto,
         porLaNota: this.porLaNota.monto,
         notasEnTotal: this.notas.enTotal,
@@ -91,6 +100,12 @@ export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
       numero: fila.numero,
       fechaRecepcion: fila.fechaRecepcion,
       periodo: fila.periodo,
+      anulacion: {
+        causa: fila.causaDeAnulacion,
+        motivo: fila.motivoDeAnulacion,
+        anuladoPor: fila.anuladoPorEnElLibro,
+        anuladoEn: fila.anuladoEnElLibro,
+      },
     },
     aplicadoAlCargoCentavos: aCentavos(fila.alCargo ?? '0'),
     aplicadoPorLaNotaCentavos: aCentavos(fila.porLaNota ?? '0'),

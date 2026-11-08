@@ -74,6 +74,19 @@ describe('anular desde Cuentas por pagar', () => {
     expect(anulados).toContainEqual({ documentoId: libroId, estabaAutorizado: false });
   });
 
+  it('la ficha de un documento anulado dice la causa, el motivo, quién y cuándo; la de uno vigente, nada', async () => {
+    const libroId = await documentos.registrar();
+    const id = await idAqui(libroId);
+    expect((await propietario().get(`${RUTA}/${id}`)).cuerpo.anulacion).toBeNull();
+
+    await anular(id, 'Duplicada');
+    const ficha = (await propietario().get(`${RUTA}/${id}`)).cuerpo;
+
+    expect(ficha.anulacion).toMatchObject({ causa: 'error_de_captura', motivo: 'Duplicada' });
+    expect(ficha.anulacion.anuladoPor).toEqual(expect.any(String));
+    expect(Number.isNaN(Date.parse(ficha.anulacion.anuladoEn))).toBe(false);
+  });
+
   it('un documento autorizado se anula y el evento dice que estaba autorizado', async () => {
     const libroId = await documentos.registrar();
     const id = await idAqui(libroId);

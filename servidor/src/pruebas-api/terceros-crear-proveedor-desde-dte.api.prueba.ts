@@ -115,7 +115,7 @@ describe('orden terceros.crear_proveedor_desde_dte por el mediador', () => {
   it('sin el permiso de crear proveedores responde sin_permiso (403) y no crea nada', async () => {
     const operacion = enTransaccion(() => crearProveedor('44444443', { puedeCrearProveedores: false }));
 
-    await expect(operacion).rejects.toMatchObject({ codigo: 'sin_permiso' });
+    await expect(operacion).rejects.toMatchObject({ codigo: 'sin_permiso', detalles: { accion: 'crear' } });
     const listado = await cuenta.propietario.get('/api/terceros?texto=44444443');
     expect(listado.cuerpo).toEqual([]);
   });

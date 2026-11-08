@@ -232,6 +232,13 @@
       "when": 1793589322839,
       "tag": "0032_l5_accesorios_del_entero",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794140865047,
+      "tag": "0033_u16_documento_de_pago_como_se_escribio",
+      "breakpoints": true
     }
   ]
 }

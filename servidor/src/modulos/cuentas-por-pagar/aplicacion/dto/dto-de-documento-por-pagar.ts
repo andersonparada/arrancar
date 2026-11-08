@@ -5,6 +5,7 @@ import { estaVencido, saldoDe, type SaldoDelDocumento } from '../../dominio/sald
 import { claseDe } from '../../dominio/tipos-de-documento.js';
 import type { AplicacionConDatos, FilaDeDocumento, NotaDeUnDocumento } from '../puertos/puertos-de-consultas.js';
 import type {
+  AnulacionDelDocumentoDto,
   AplicacionDelDocumentoDto,
   DocumentoPorPagarDto,
   NotaDelDocumentoDto,
@@ -71,6 +72,13 @@ export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVist
     vencido: estaVencido(documento, saldo.saldoCentavos, vista.hoy),
     ...accionesDelDocumento({ tipo: documento.tipo, estado: documento.estado, notasVigentes, notasEnTotal }),
   };
+}
+
+/** Cómo se anuló el documento; `null` si sigue vigente. */
+export function dtoDeAnulacion({ documento, origen }: FilaDeDocumento): AnulacionDelDocumentoDto | null {
+  if (documento.estado !== 'anulado') return null;
+  const { causa, motivo, anuladoPor, anuladoEn } = origen.anulacion;
+  return { causa, motivo, anuladoPor, anuladoEn: anuladoEn?.toISOString() ?? null };
 }
 
 export function dtoDeNota(nota: NotaDeUnDocumento): NotaDelDocumentoDto {

@@ -17,3 +17,18 @@ export function fechaLocalEn(instante: Date, zonaHoraria: string): string {
   const valorDe = (tipo: string): string => partes.find((parte) => parte.type === tipo)?.value ?? '';
   return `${valorDe('year')}-${valorDe('month')}-${valorDe('day')}`;
 }
+
+/**
+ * La fecha y hora (`AAAA-MM-DD HH:mm`) que marca el reloj de pared de `zonaHoraria` en el `instante` dado.
+ * @throws RangeError si la zona horaria no existe.
+ */
+export function fechaYHoraLocalEn(instante: Date, zonaHoraria: string): string {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: zonaHoraria,
+    hourCycle: 'h23',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).formatToParts(instante);
+  const valorDe = (tipo: string): string => partes.find((parte) => parte.type === tipo)?.value ?? '';
+  return `${fechaLocalEn(instante, zonaHoraria)} ${valorDe('hour')}:${valorDe('minute')}`;
+}

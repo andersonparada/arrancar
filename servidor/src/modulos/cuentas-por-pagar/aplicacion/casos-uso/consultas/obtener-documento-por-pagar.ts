@@ -1,7 +1,12 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { FichaDelDocumentoPorPagarDto } from '../../dto/documento-por-pagar.dto.js';
-import { dtoDeAplicacion, dtoDeDocumentoPorPagar, dtoDeNota } from '../../dto/dto-de-documento-por-pagar.js';
+import {
+  dtoDeAnulacion,
+  dtoDeAplicacion,
+  dtoDeDocumentoPorPagar,
+  dtoDeNota,
+} from '../../dto/dto-de-documento-por-pagar.js';
 import { puntoDeVistaDe, type DependenciasDeConsultas } from './dependencias-de-consultas.js';
 
 /** La ficha de un documento: sus saldos, las notas que lo corrigen y las aplicaciones de notas de crédito. */
@@ -19,6 +24,7 @@ export class ObtenerDocumentoPorPagar {
         ...dtoDeDocumentoPorPagar(fila, vista),
         notas: (await consultas.notasDe(fila.documento)).map(dtoDeNota),
         aplicaciones: (await consultas.aplicacionesDe(fila.documento)).map(dtoDeAplicacion),
+        anulacion: dtoDeAnulacion(fila),
       };
     });
   }

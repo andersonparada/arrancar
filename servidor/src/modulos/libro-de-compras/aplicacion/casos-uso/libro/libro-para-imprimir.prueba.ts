@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { AnuladoDelLibro } from '../../../dominio/libro/documento-del-libro.js';
 import { COLUMNAS_DE_DINERO, type FilaDelLibro } from '../../../dominio/libro/fila-del-libro.js';
 import { libroDelPeriodo } from '../../../dominio/libro/libro-del-periodo.js';
 import { LibroConDemasiadasFilas } from '../../errores-de-emision.js';
@@ -56,11 +57,28 @@ describe('huellaDelLibro', () => {
 
 describe('hojasDelLibro (Excel)', () => {
   it('arma Libro, Resumen y Anulados con el dinero como número', () => {
-    const hojas = hojasDelLibro(armado([fila(1, 11250)]), []);
+    const hojas = hojasDelLibro(armado([fila(1, 11250)]), [], 'America/Guatemala');
 
     expect(hojas.map((hoja) => hoja.nombre)).toEqual(['Libro', 'Resumen', 'Anulados']);
     expect(hojas[0]!.encabezados).toContain('IVA crédito fiscal');
     expect(hojas[0]!.filas[0]).toContain(112.5);
     expect(hojas[2]!.filas).toEqual([]);
+  });
+
+  it('la hoja Anulados trae la causa legible y la anulación en hora de Guatemala', () => {
+    const anulado = {
+      fechaEmision: '2026-09-10',
+      numero: '55',
+      nombreDelProveedor: 'Proveedor',
+      total: 1000,
+      iva: 107,
+      causaDeAnulacion: 'error_de_captura',
+      motivoDeAnulacion: 'Duplicada',
+      anuladoEn: '2026-09-11T02:30:00.000Z',
+    } as unknown as AnuladoDelLibro;
+
+    const filaAnulada = hojasDelLibro(armado([fila(1)]), [anulado], 'America/Guatemala')[2]!.filas[0]!;
+
+    expect(filaAnulada.slice(-3)).toEqual(['Error de captura', 'Duplicada', '2026-09-10 20:30']);
   });
 });

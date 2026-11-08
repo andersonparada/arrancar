@@ -88,6 +88,7 @@ describe('confirmar un lote fila por fila', () => {
       proveedor_id: bandeja.proveedorId,
     });
     expect(resultado.avisos).toContain(MARCA);
+    expect(new Set(resultado.avisos).size).toBe(resultado.avisos.length);
     expect(resultado.avisos).toContain('La SAT no dice si es un bien o un servicio: se usó «bien», el de «Medicinas».');
     const lineas = await consultar(
       'select concepto_id, tipo from libro_de_compras.lineas_de_documento where documento_id = $1',

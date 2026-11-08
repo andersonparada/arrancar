@@ -1,3 +1,4 @@
+import { AccesoDenegado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { DteRecibido } from '../../../dominio/dte-recibido.js';
 import { ProveedorNuevoSinConfirmar } from '../../../dominio/errores-de-bandeja.js';
@@ -97,16 +98,26 @@ export class ProveedorDeLaFila {
     const existente = opciones.decisiones.proveedorId;
     if (existente !== null) return { proveedorId: existente, nuevo: null };
     const { nitEmisor, nombreEmisor } = fila.instantanea();
-    if (!opciones.puedeCrearProveedores) throw new ProveedorNuevoSinPermiso(nitEmisor);
     const propuesta = propuestaDeProveedorNuevo(nombreEmisor);
     const usado = this.pedidoPara(nitEmisor, propuesta, opciones);
-    const respuesta = await this.dependencias.creadorDeProveedores.crear(
+    const respuesta = await this.pedirAlTercero(
       operador,
       pedidoAlTercero(nitEmisor, usado, opciones.puedeCrearProveedores),
     );
     await this.dependencias.filas.asignarProveedorALasPendientes(nitEmisor, respuesta.proveedorId);
     const nuevo = descripcionDelProveedorNuevo(fila, respuesta, { usado, propuesta });
     return { proveedorId: respuesta.proveedorId, nuevo };
+  }
+
+  /** Terceros dice si el NIT es nuevo o ya es suyo cuando rechaza por falta de permiso. */
+  private async pedirAlTercero(operador: Operador, pedido: PedidoDeProveedorNuevo): Promise<ProveedorDeLaBandeja> {
+    try {
+      return await this.dependencias.creadorDeProveedores.crear(operador, pedido);
+    } catch (error) {
+      if (!(error instanceof AccesoDenegado) || pedido.puedeCrearProveedores) throw error;
+      const accion = (error.detalles as { accion?: string } | undefined)?.accion;
+      throw new ProveedorNuevoSinPermiso(pedido.nit, accion === 'agregar_papel' ? accion : 'crear');
+    }
   }
 
   private pedidoPara(nit: string, propuesta: PropuestaDeProveedorNuevo, opciones: OpcionesDelProveedorDeLaFila) {

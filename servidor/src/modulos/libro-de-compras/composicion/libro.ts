@@ -1,5 +1,6 @@
 import type { DependenciasCompartidas } from '../../core/compartido/aplicacion/dependencias-compartidas.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
+import { PoliticaDeZonaHorariaEnConfiguracion } from '../../core/compartido/infraestructura/politica-de-zona-horaria.configuracion.js';
 import { crearLibroDeExcel } from '../../core/intercambio/contexto.js';
 import { ConsultarAnuladosDelLibro, ConsultarLibro } from '../aplicacion/casos-uso/libro/consultar-libro.js';
 import {
@@ -61,7 +62,11 @@ export function rutasDeLibro() {
     new LibroControlador({
       consultar: new ConsultarLibro(dependencias),
       anulados: new ConsultarAnuladosDelLibro(dependencias),
-      exportar: new ExportarLibro({ ...dependencias, excel: crearLibroDeExcel() }),
+      exportar: new ExportarLibro({
+        ...dependencias,
+        excel: crearLibroDeExcel(),
+        zonaHoraria: new PoliticaDeZonaHorariaEnConfiguracion(),
+      }),
       sat2237: new ConsultarSat2237(dependencias),
       exportarSat2237: new ExportarSat2237({ ...dependencias, excel: crearLibroDeExcel() }),
       ...casosDeUsoDeFolios(compartidas),

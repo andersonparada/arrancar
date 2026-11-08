@@ -136,7 +136,9 @@ describe('conciliar', () => {
     });
 
     expect(otroPeriodo.registradoEnOtroPeriodo[0]).toMatchObject({ periodoDelDocumento: '2026-04-01' });
-    expect(fuera.registradoEnOtroPeriodo[0]).toMatchObject({ documentoFueraDelLibro: true });
+    expect(otroPeriodo.noVaEnElLibro).toHaveLength(0);
+    expect(fuera.noVaEnElLibro[0]).toMatchObject({ documentoFueraDelLibro: true });
+    expect(fuera.registradoEnOtroPeriodo).toHaveLength(0);
     expect(fuera.enArrancarYNoEnLaSat).toHaveLength(0);
   });
 

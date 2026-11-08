@@ -1545,6 +1545,7 @@ un documento a mano con la autorización mal escrita.
 | Con diferencias | cruza pero difiere algún dato (se listan campo, Arrancar y SAT); IVA con diferencia de centavos incluida: manda el DTE | abrir el documento (anular y registrar de nuevo, o editar mientras se pueda) |
 | En la SAT y no en Arrancar | fila emitida en P, vigente en la SAT, sin documento | «Registrar» (bandeja) o descartar |
 | Registrado en otro período | fila emitida en P cuyo documento va en otro período | informativo |
+| No va en el libro | fila emitida en P cuyo documento está registrado fuera del libro (p. ej. `RECI`/`RDON` con `recibo_fel`) | informativo |
 | En Arrancar y no en la SAT | documento de P sin fila; si **no hay ningún lote** que cubra su mes de emisión, se muestra como «Sin datos de la SAT para <mes>» en vez de faltante | revisar la factura (posible error de captura o FEL de otro NIT) |
 | Anulado en la SAT y vigente aquí | fila `anulado` cuyo documento sigue vigente | «Anular» con causa `fel_anulada_por_el_emisor` (permiso `documentos.anular`) |
 | Descartado | fila emitida en P descartada | informativo, con su motivo |

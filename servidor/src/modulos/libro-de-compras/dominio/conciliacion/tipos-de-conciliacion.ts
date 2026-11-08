@@ -86,6 +86,8 @@ export interface ResultadoDeConciliacion {
   conDiferencias: ItemDeConciliacion[];
   enLaSatYNoEnArrancar: ItemDeConciliacion[];
   registradoEnOtroPeriodo: ItemDeConciliacion[];
+  /** Emitidas en el mes con un documento registrado fuera del libro (p. ej. un recibo FEL): no se concilian con el libro. */
+  noVaEnElLibro: ItemDeConciliacion[];
   enArrancarYNoEnLaSat: ItemDeConciliacion[];
   sinDatosDeLaSat: ItemDeConciliacion[];
   anuladoEnLaSatYVigenteAqui: ItemDeConciliacion[];

@@ -28,6 +28,15 @@ export interface OrigenDelDocumento {
   numero: string;
   fechaRecepcion: string;
   periodo: string;
+  /** Cómo se anuló en Libro de compras; todo nulo si el documento no está anulado. */
+  anulacion: AnulacionEnElLibro;
+}
+
+export interface AnulacionEnElLibro {
+  causa: string | null;
+  motivo: string | null;
+  anuladoPor: string | null;
+  anuladoEn: Date | null;
 }
 
 /** Un documento con lo que se calcula de las demás tablas; el dinero va en centavos. */

@@ -48,13 +48,13 @@ export class CrearProveedorDesdeDte {
   constructor(private readonly dependencias: Dependencias) {}
 
   /**
-   * @throws AccesoDenegado si el usuario de quien manda no puede crear proveedores.
+   * @throws AccesoDenegado si el usuario de quien manda no puede crear proveedores (con `detalles.accion`).
    * @throws NitInvalido, NitDeProveedorSinNumero o FaltaElNombre si los datos no sirven.
    * @throws ProveedorInactivo si el NIT es de un proveedor inactivo.
    * @throws TerceroInactivo si el NIT es de un tercero inactivo sin papel de proveedor.
    */
   async ejecutar(operador: Operador, pedido: PedidoDeProveedorDesdeDte): Promise<ProveedorDesdeDte> {
-    if (!pedido.puedeCrearProveedores) throw new AccesoDenegado();
+    if (!pedido.puedeCrearProveedores) throw await this.denegado(operador, pedido.nit);
     const nit = Nit.crear(pedido.nit);
     if (nit.esConsumidorFinal()) throw new NitDeProveedorSinNumero();
     const identidad = this.identidadDe(pedido);
@@ -68,6 +68,20 @@ export class CrearProveedorDesdeDte {
       const { id: proveedorId } = await this.dependencias.consultas.obtenerPapel(terceroId, 'proveedor');
       return { proveedorId, terceroId, creado: !existente, nombre: tercero.nombreParaMostrar };
     });
+  }
+
+  /** El rechazo por falta de permiso dice, en `detalles.accion`, si el NIT es nuevo (`crear`) o ya es de un tercero. */
+  private async denegado(operador: Operador, nitEscrito: string): Promise<AccesoDenegado> {
+    const mensaje = 'No tiene permiso para realizar esta acción.';
+    try {
+      const nit = Nit.crear(nitEscrito);
+      const existente = await this.dependencias.unidadDeTrabajo.ejecutar(operador, () =>
+        this.dependencias.repositorio.buscarPorNit(nit.valor),
+      );
+      return new AccesoDenegado(mensaje, { accion: existente ? 'agregar_papel' : 'crear' });
+    } catch {
+      return new AccesoDenegado(mensaje);
+    }
   }
 
   private identidadDe({ tipoDePersona, nombres, apellidos, razonSocial }: PedidoDeProveedorDesdeDte) {
