@@ -95,7 +95,7 @@ describe('registrar un documento', () => {
     expect(repetido.cuerpo.error.detalles).toEqual({ documentoId: primero.cuerpo.documento.id });
   });
 
-  it('el mismo documento en otra cuenta responde con el mensaje genérico, sin decir dónde está', async () => {
+  it('el mismo documento en otra cuenta se registra: la unicidad es por cuenta', async () => {
     const solicitud = documentoDePrueba(escenario);
     await escenario.cuenta.propietario.post(RUTA_DOCUMENTOS, solicitud);
 
@@ -105,11 +105,7 @@ describe('registrar un documento', () => {
       lineas: [{ conceptoId: ajeno.conceptoId, total: '1120.00' }],
     });
 
-    expect(enOtraCuenta.estado).toBe(409);
-    expect(enOtraCuenta.cuerpo.error.mensaje).toBe('Ese documento ya está registrado.');
-    expect(enOtraCuenta.cuerpo.error.detalles).toBeUndefined();
-    const ficha = await ajeno.cuenta.propietario.get(`/api/terceros/${ajeno.terceroId}`);
-    expect(ficha.cuerpo.nit).toBeNull();
+    expect(enOtraCuenta.estado, JSON.stringify(enOtraCuenta.cuerpo)).toBe(201);
   });
 
   it('en otra empresa de la cuenta, el de la FEL se rechaza y el recibo sin FEL (solo único por empresa) se acepta', async () => {
@@ -144,7 +140,9 @@ describe('registrar un documento', () => {
 
     expect(reciboEnOtra.estado).toBe(201);
     expect(marcadoEnOtra.estado).toBe(409);
-    expect(marcadoEnOtra.cuerpo.error.mensaje).toBe('Ese documento ya está registrado.');
+    expect(marcadoEnOtra.cuerpo.error.mensaje).toBe(
+      'Ese documento ya está registrado en esta empresa o en otra empresa de su cuenta.',
+    );
   });
 
   it('si el destino rechaza el documento, no queda nada: ni el documento ni el NIT que se iba a completar', async () => {

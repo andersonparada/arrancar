@@ -147,7 +147,7 @@ describe('un DTE registrado en otra empresa de la misma cuenta', () => {
 });
 
 describe('un DTE registrado en otra cuenta', () => {
-  it('no se avisa nada: la fila sigue pendiente y al confirmar sale el mensaje genérico', async () => {
+  it('no estorba: la fila sigue pendiente y se confirma, porque cada cuenta lleva sus propios libros', async () => {
     const otra = await prepararEscenario(entorno, 'bandejaotracuenta');
     await configurarEmpresa(otra.cuenta, SECCION_FISCAL);
     const autorizacion = crypto.randomUUID();
@@ -155,17 +155,14 @@ describe('un DTE registrado en otra cuenta', () => {
     const cuerpo = documentoDePrueba(otra, { proveedorId: proveedorAjeno.proveedorId, autorizacionFel: autorizacion });
     expect((await otra.cuenta.propietario.post(RUTA_DOCUMENTOS, cuerpo)).estado).toBe(201);
     const id = await sembrar({ autorizacionFel: autorizacion });
-
-    const resultado = await confirmar(id);
-
-    expect(resultado.error).toEqual({
-      codigo: 'duplicado',
-      mensaje: 'Ese documento ya está registrado.',
-    });
-    expect(await filaGuardada(id)).toMatchObject({ estado: 'pendiente', motivo_de_bloqueo: null });
     const lista = await propietario().get(`${RUTA_DTE}?estado=pendiente&limite=200`);
     const fila = lista.cuerpo.elementos.find((elemento: any) => elemento.id === id);
     expect(fila).toMatchObject({ estado: 'pendiente', motivoDeBloqueo: null });
+
+    const resultado = await confirmar(id);
+
+    expect(resultado.documentoId).toEqual(expect.any(String));
+    expect(await filaGuardada(id)).toMatchObject({ estado: 'registrado', motivo_de_bloqueo: null });
   });
 });
 

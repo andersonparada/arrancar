@@ -26,6 +26,7 @@ const enB = () => contextoDe(e, e.empresaB, e.cuentaB);
 const crear = (cambios: Record<string, unknown> = {}, contexto = enA1()) =>
   insertarDocumento(documentoValido(e, { empresaId: contexto.empresaId, ...cambios }), contexto);
 
+const MENSAJE_DE_CUENTA = 'Ese documento ya está registrado en esta empresa o en otra empresa de su cuenta.';
 const MENSAJE = 'Ese documento ya está registrado.';
 const MARCADO = { nitEmisor: '7654321', serie: 'F', numero: '100' };
 const DESMARCADO = {
@@ -40,11 +41,15 @@ const DESMARCADO = {
   base: '112',
 };
 
-function exigirMensajeGenerico(error: Awaited<ReturnType<typeof errorDePostgres>>, restriccion: string): void {
+function exigirMensajeGenerico(
+  error: Awaited<ReturnType<typeof errorDePostgres>>,
+  restriccion: string,
+  mensaje = MENSAJE,
+): void {
   expect(error?.code).toBe('23505');
   expect(error?.constraint).toBe(restriccion);
   expect(interpretarErrorDePostgres(error)).toBeInstanceOf(RecursoDuplicado);
-  expect(interpretarErrorDePostgres(error)?.message).toBe(MENSAJE);
+  expect(interpretarErrorDePostgres(error)?.message).toBe(mensaje);
 }
 
 beforeAll(async () => {
@@ -55,17 +60,19 @@ afterAll(async () => {
   await grupoConexiones.end();
 });
 
-describe('documentos marcados: únicos en toda la instalación', () => {
+describe('documentos marcados: únicos en toda la cuenta', () => {
   it('el mismo NIT, tipo, serie y número en otra empresa de la cuenta se rechaza', async () => {
     await crear(MARCADO);
 
-    exigirMensajeGenerico(await errorDePostgres(crear(MARCADO, enA2())), 'documentos_sat_unico');
+    exigirMensajeGenerico(await errorDePostgres(crear(MARCADO, enA2())), 'documentos_sat_unico', MENSAJE_DE_CUENTA);
   });
 
-  it('también en otra cuenta, y el mensaje no dice dónde está', async () => {
-    const deOtraCuenta = crear({ ...MARCADO, proveedorId: e.proveedorB }, enB());
+  it('en otra cuenta se puede registrar', async () => {
+    const primero = documentoValido(e);
+    await insertarDocumento(primero, enA1());
+    const deOtraCuenta = crear({ ...primero, proveedorId: e.proveedorB, empresaId: e.empresaB }, enB());
 
-    exigirMensajeGenerico(await errorDePostgres(deOtraCuenta), 'documentos_sat_unico');
+    await expect(deOtraCuenta).resolves.toBeTruthy();
   });
 
   it('la misma autorización de la FEL se rechaza aunque cambie el número', async () => {
@@ -73,7 +80,7 @@ describe('documentos marcados: únicos en toda la instalación', () => {
     await insertarDocumento(primero, enA1());
     const repetido = crear({ autorizacionFel: primero.autorizacionFel, numero: 'OTRO' }, enA2());
 
-    exigirMensajeGenerico(await errorDePostgres(repetido), 'documentos_autorizacion_fel_unica');
+    exigirMensajeGenerico(await errorDePostgres(repetido), 'documentos_autorizacion_fel_unica', MENSAJE_DE_CUENTA);
   });
 
   it('un anulado libera el número', async () => {
