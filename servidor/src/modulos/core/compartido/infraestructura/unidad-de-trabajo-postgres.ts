@@ -11,6 +11,8 @@ interface TrabajoEnCurso {
   contexto: ContextoEmpresa;
   /** Lo que espera a que la transacción más externa se confirme. */
   alConfirmar: Tarea[];
+  /** Lo que espera a que la transacción más externa se deshaga. */
+  alDeshacer: Tarea[];
 }
 
 const trabajoEnCurso = new AsyncLocalStorage<TrabajoEnCurso>();
@@ -53,13 +55,25 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
     const enCurso = trabajoEnCurso.getStore();
     if (enCurso) return this.unirseAl(enCurso, contexto, trabajo);
 
-    const alConfirmar: Tarea[] = [];
-    const resultado = await this.baseDatos.transaction(async (transaccion) => {
-      await fijarVariablesDeSeguridad(transaccion, contexto);
-      return trabajoEnCurso.run({ transaccion, contexto, alConfirmar }, trabajo);
-    });
-    for (const tarea of alConfirmar) await tarea();
+    const trabajoNuevo = { contexto, alConfirmar: [] as Tarea[], alDeshacer: [] as Tarea[] };
+    const resultado = await this.ejecutarEnTransaccion(trabajoNuevo, trabajo);
+    for (const tarea of trabajoNuevo.alConfirmar) await tarea();
     return resultado;
+  }
+
+  private async ejecutarEnTransaccion<Resultado>(
+    nuevo: Omit<TrabajoEnCurso, 'transaccion'>,
+    trabajo: () => Promise<Resultado>,
+  ): Promise<Resultado> {
+    try {
+      return await this.baseDatos.transaction(async (transaccion) => {
+        await fijarVariablesDeSeguridad(transaccion, nuevo.contexto);
+        return trabajoEnCurso.run({ ...nuevo, transaccion }, trabajo);
+      });
+    } catch (error) {
+      for (const tarea of nuevo.alDeshacer) await tarea().catch(() => undefined);
+      throw error;
+    }
   }
 
   private unirseAl<Resultado>(
@@ -94,5 +108,16 @@ export function despuesDeConfirmar(tarea: Tarea): boolean {
   const enCurso = trabajoEnCurso.getStore();
   if (!enCurso) return false;
   enCurso.alConfirmar.push(tarea);
+  return true;
+}
+
+/**
+ * Deja una tarea para si se deshace la transacción más externa (si se confirma, se descarta). Sin unidad de trabajo
+ * en curso devuelve `false` y no hace nada: no hay nada que deshacer. Una tarea que falla no tapa el error original.
+ */
+export function siSeDeshace(tarea: Tarea): boolean {
+  const enCurso = trabajoEnCurso.getStore();
+  if (!enCurso) return false;
+  enCurso.alDeshacer.push(tarea);
   return true;
 }

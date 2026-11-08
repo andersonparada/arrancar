@@ -20,6 +20,7 @@ const columnasGuardadas = {
   sha256: archivos.sha256,
   paginas: archivos.paginas,
   recursoDueno: archivos.recursoDueno,
+  creadoEn: archivos.creadoEn,
 };
 
 type FilaGuardada = Omit<ArchivoGuardado, 'clase'> & { clase: string };

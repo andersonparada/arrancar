@@ -1,3 +1,4 @@
+import type { TareasDeLaTransaccion } from '../../compartido/aplicacion/tareas-de-la-transaccion.js';
 import { FotoNoValida, type VerificadorDeFotos } from '../../compartido/aplicacion/verificador-de-fotos.js';
 import type {
   ImagenesOptimizadas,
@@ -32,7 +33,7 @@ export class RepositorioArchivosEnMemoria implements RepositorioArchivos {
   private readonly porId = new Map<string, ArchivoGuardado>();
 
   async guardar(archivo: NuevoArchivo): Promise<ArchivoGuardado> {
-    const guardado = { ...archivo, id: crypto.randomUUID() };
+    const guardado = { ...archivo, id: crypto.randomUUID(), creadoEn: new Date() };
     this.guardados.push(archivo);
     this.porId.set(guardado.id, guardado);
     return guardado;
@@ -73,5 +74,27 @@ export class InspectorDePdfFalso implements InspectorDePdf {
     this.inspeccionados.push(contenido);
     if (this.error) throw this.error;
     return { contenido: Buffer.concat([contenido, Buffer.from('\n%limpio')]), paginas: this.paginas };
+  }
+}
+
+/** Hace de transacción: guarda las tareas hasta que la prueba decida `confirmar()` o `deshacer()`. */
+export class TareasEnMemoria implements TareasDeLaTransaccion {
+  private readonly alConfirmar: Array<() => Promise<void>> = [];
+  private readonly alDeshacer: Array<() => Promise<void>> = [];
+
+  async despuesDeConfirmar(tarea: () => Promise<void>): Promise<void> {
+    this.alConfirmar.push(tarea);
+  }
+
+  siSeDeshace(tarea: () => Promise<void>): void {
+    this.alDeshacer.push(tarea);
+  }
+
+  async confirmar(): Promise<void> {
+    for (const tarea of this.alConfirmar) await tarea();
+  }
+
+  async deshacer(): Promise<void> {
+    for (const tarea of this.alDeshacer) await tarea();
   }
 }
