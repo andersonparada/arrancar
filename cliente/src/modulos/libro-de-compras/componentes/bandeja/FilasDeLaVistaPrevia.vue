@@ -3,11 +3,13 @@ import { CircleAlert, CircleCheck, UserPlus } from 'lucide-vue-next';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { textoDelError, type FilaConError } from '../../composables/bandeja/datos-de-la-confirmacion';
+import { netoDeLaFila } from '../../composables/bandeja/resumen-de-la-confirmacion';
 import type { ResultadoDeVistaPrevia } from '../../servicios/dte-recibidos.api';
 
 /** Lo que pasaría con cada fila marcada: lo que se registraría (con su neto a pagar y avisos) o lo que hay que corregir. */
 defineProps<{
   titulos: ReadonlyMap<string, string>;
+  tipos: ReadonlyMap<string, string>;
   listas: ResultadoDeVistaPrevia[];
   conError: FilaConError[];
 }>();
@@ -41,7 +43,8 @@ defineProps<{
             </InsigniaBase>
           </p>
           <p v-if="'documento' in fila" class="shrink-0 tabular-nums">
-            Neto a pagar {{ formatearMonto(fila.documento.netoAPagar) }}
+            {{ netoDeLaFila(tipos.get(fila.id), fila.documento.netoAPagar).etiqueta }}
+            {{ formatearMonto(netoDeLaFila(tipos.get(fila.id), fila.documento.netoAPagar).monto) }}
           </p>
         </div>
         <ul

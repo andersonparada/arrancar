@@ -5,6 +5,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { tituloDeLaFila, type ResumenDeLaSeleccion } from '../../composables/bandeja/datos-de-la-bandeja';
+import { fraseDelResumen, resumenDeLoRegistrable } from '../../composables/bandeja/resumen-de-la-confirmacion';
 import type {
   FilaConError,
   FilaRegistrada,
@@ -40,6 +41,9 @@ const respuestas = defineModel<Record<string, RespuestasFiscales>>({ required: t
 const emit = defineEmits<{ cerrar: []; confirmar: []; recalcular: [] }>();
 
 const titulos = computed(() => new Map(props.filas.map((fila) => [fila.id, tituloDeLaFila(fila)])));
+const tipos = computed(() => new Map(props.filas.map((fila) => [fila.id, fila.tipoDte])));
+const registrable = computed(() => resumenDeLoRegistrable(props.listas, tipos.value, props.resumen.cantidad));
+const frase = computed(() => fraseDelResumen(registrable.value));
 const contestar = (nit: string, valor: RespuestasFiscales): void => {
   respuestas.value = { ...respuestas.value, [nit]: valor };
 };
@@ -54,9 +58,12 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
       :con-error="resultado.conError"
     />
     <div v-else class="space-y-4">
-      <p class="text-sm">
-        Se registrarán <strong>{{ listas.length }}</strong> de {{ resumen.cantidad }} facturas por
-        {{ formatearMonto(resumen.total) }} en total, cada una con su cálculo de IVA y retenciones.
+      <p v-if="calculando" class="text-sm text-tierra-500" role="status">Calculando lo que se registraría…</p>
+      <p v-else-if="!frase.hayQueRegistrar" class="text-sm font-medium">{{ frase.texto }}</p>
+      <p v-else class="text-sm">
+        Se registrarán <strong>{{ frase.texto }}</strong>
+        <template v-if="frase.desglose"> ({{ frase.desglose }})</template> por
+        {{ formatearMonto(registrable.total) }} en total, cada uno con su cálculo de IVA y retenciones.
       </p>
       <ProveedoresNuevosDelDte :proveedores="proveedoresNuevos" :intentos="intentosConProblemas" />
       <p
@@ -66,8 +73,13 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
         <TriangleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
         <span> {{ resumen.anuladasEnLaSat }} anuladas en la SAT no se pueden registrar: descártelas. </span>
       </p>
-      <p v-if="calculando" class="text-sm text-tierra-500" role="status">Calculando lo que se registraría…</p>
-      <FilasDeLaVistaPrevia v-else :titulos="titulos" :listas="listas" :con-error="conError" />
+      <FilasDeLaVistaPrevia
+        v-if="!calculando"
+        :titulos="titulos"
+        :tipos="tipos"
+        :listas="listas"
+        :con-error="conError"
+      />
       <section
         v-if="proveedores.length"
         class="space-y-4 rounded-lg border border-tierra-200 p-3 dark:border-tierra-700"
@@ -99,7 +111,7 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
         :cargando="enviando"
         @click="emit('confirmar')"
       >
-        Registrar {{ listas.length }} {{ listas.length === 1 ? 'factura' : 'facturas' }}
+        Registrar {{ listas.length }} {{ listas.length === 1 ? 'documento' : 'documentos' }}
       </BotonBase>
     </template>
   </VentanaModal>
