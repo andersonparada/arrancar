@@ -19,7 +19,8 @@ tipos de localidad editables).
    esquema con el nombre del módulo (encaja con `empresas`).
 5. La alta de cuenta inserta la empresa directo en el core, sin `RegistrarEmpresa` ni
    evento `empresas.registrada` (afecta semillas).
-6. `nit` se queda en `core.empresas`.
+6. `nit` se queda en `core.empresas`. Puede repetirse entre empresas de una cuenta: al guardar,
+   la respuesta lleva `avisos` si otra empresa de la cuenta ya lo tiene (no bloquea; bitácora 2026-11-08).
 
 ## Decisión: módulo con esquema propio, declarado «módulo base» (pregunta 1)
 

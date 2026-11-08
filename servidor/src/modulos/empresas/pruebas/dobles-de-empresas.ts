@@ -32,6 +32,15 @@ export class EmpresasEnMemoria implements RepositorioEmpresas, ConsultasEmpresas
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
+  async nitRepetidoEnCuenta(consulta: { cuentaId: string; nit: string; excluirEmpresaId: string }): Promise<boolean> {
+    return [...this.empresas.values()].some(
+      (empresa) =>
+        empresa.cuentaId.valor === consulta.cuentaId &&
+        empresa.id.valor !== consulta.excluirEmpresaId &&
+        empresa.instantanea().nit?.valor === consulta.nit,
+    );
+  }
+
   async obtenerEnCuenta(empresaId: string, cuentaId: string): Promise<EmpresaDto> {
     const empresa = this.empresas.get(empresaId);
     if (!empresa || empresa.cuentaId.valor !== cuentaId) throw new RecursoNoEncontrado('La empresa');

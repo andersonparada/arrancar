@@ -30,6 +30,32 @@ describe('empresas de la cuenta', () => {
     expect(sesion.cuerpo.empresasDisponibles.map((e: { id: string }) => e.id)).toContain(creada.cuerpo.id);
   });
 
+  it('avisa sin impedir cuando otra empresa de la misma cuenta tiene el NIT, y no avisa por otra cuenta', async () => {
+    const nit = '1234567-9';
+    const ajena = await darDeAltaCuenta(entorno, { nombre: 'Ajena', usuario: 'ajena' });
+    await ajena.propietario.put(`/api/empresas/${ajena.empresaId}`, { nombre: 'Ajena', nit });
+    await cuenta.propietario.post('/api/empresas', { nombre: 'Primera con NIT', nit });
+
+    const repetida = await cuenta.propietario.post('/api/empresas', { nombre: 'Segunda con NIT', nit });
+    const propia = await cuenta.propietario.put(`/api/empresas/${repetida.cuerpo.id}`, {
+      nombre: 'Segunda con NIT',
+      nit,
+    });
+
+    expect(repetida.estado).toBe(201);
+    expect(repetida.cuerpo.avisos).toEqual([expect.stringContaining('ya tiene el NIT 1234567-9')]);
+    expect(propia.estado).toBe(200);
+    expect(propia.cuerpo.avisos).toHaveLength(1);
+    const enAjena = await ajena.propietario.put(`/api/empresas/${ajena.empresaId}`, { nombre: 'Ajena', nit });
+    expect(enAjena.cuerpo.avisos).toEqual([]);
+  });
+
+  it('no avisa al crear con un NIT que nadie más tiene', async () => {
+    const creada = await cuenta.propietario.post('/api/empresas', { nombre: 'Sin repetir', nit: '2345678-7' });
+
+    expect(creada.cuerpo.avisos).toEqual([]);
+  });
+
   it('valida el dígito verificador del NIT', async () => {
     const respuesta = await cuenta.propietario.post('/api/empresas', { nombre: 'NIT malo', nit: '12345678' });
 

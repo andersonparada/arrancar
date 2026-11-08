@@ -4,6 +4,8 @@ import type { EmpresasControlador } from './empresas.controlador.js';
 import { esquemaEmpresa, esquemaParamsEmpresa } from './empresas.esquemas-http.js';
 
 const etiquetas = ['Empresas'];
+const descripcion =
+  'Responde la empresa y `avisos: string[]` (p. ej. otra empresa de la cuenta con el mismo NIT); no impiden guardar.';
 
 export function rutasEmpresas(controlador: EmpresasControlador): FastifyPluginAsyncZod {
   return async (app) => {
@@ -18,12 +20,12 @@ export function rutasEmpresas(controlador: EmpresasControlador): FastifyPluginAs
       handler: controlador.obtener,
     });
     app.post('/empresas', {
-      schema: { tags: etiquetas, body: esquemaEmpresa },
+      schema: { tags: etiquetas, description: descripcion, body: esquemaEmpresa },
       preHandler: crear,
       handler: controlador.registrar,
     });
     app.put('/empresas/:empresaId', {
-      schema: { tags: etiquetas, params: esquemaParamsEmpresa, body: esquemaEmpresa },
+      schema: { tags: etiquetas, description: descripcion, params: esquemaParamsEmpresa, body: esquemaEmpresa },
       preHandler: editar,
       handler: controlador.actualizar,
     });

@@ -1,4 +1,4 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, ne } from 'drizzle-orm';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
@@ -14,6 +14,21 @@ export class ConsultasEmpresasDrizzle implements ConsultasEmpresas {
       .where(eq(empresas.cuentaId, cuentaId))
       .orderBy(asc(empresas.nombre));
     return filas.map(mapeadorDeEmpresa.aDto);
+  }
+
+  async nitRepetidoEnCuenta(consulta: { cuentaId: string; nit: string; excluirEmpresaId: string }): Promise<boolean> {
+    const filas = await transaccionEnCurso()
+      .select({ id: empresas.id })
+      .from(empresas)
+      .where(
+        and(
+          eq(empresas.cuentaId, consulta.cuentaId),
+          eq(empresas.nit, consulta.nit),
+          ne(empresas.id, consulta.excluirEmpresaId),
+        ),
+      )
+      .limit(1);
+    return filas.length > 0;
   }
 
   async obtenerEnCuenta(empresaId: string, cuentaId: string): Promise<EmpresaDto> {
