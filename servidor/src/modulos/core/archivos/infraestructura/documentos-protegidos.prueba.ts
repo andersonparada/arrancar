@@ -16,6 +16,7 @@ import {
   transaccionEnCurso,
   UnidadDeTrabajoPostgres,
 } from '../../compartido/infraestructura/unidad-de-trabajo-postgres.js';
+import { RevisionDentroDeTransaccion } from '../aplicacion/errores-de-programacion.js';
 import { GestorDeDocumentos } from '../aplicacion/gestor-de-documentos.js';
 import type { InspectorDePdf, PdfInspeccionado } from '../aplicacion/puertos/inspector-de-pdf.js';
 import { OptimizadorFalso } from '../pruebas/dobles-de-archivos.js';
@@ -46,6 +47,12 @@ let contexto: Operador;
 let almacenamiento: AlmacenamientoEnMemoria;
 let inspector: InspectorQueMiraLaTransaccion;
 let gestor: GestorDeDocumentos;
+
+/** Revisa fuera de la transacción y guarda dentro, como lo hará un caso de uso. */
+async function guardarEnLaBase() {
+  const revisado = await gestor.revisar(pdf, null);
+  return unidadDeTrabajo.ejecutar(contexto, () => gestor.guardarRevisado(contexto, revisado, { recursoDueno: DUENO }));
+}
 
 async function vaciar(): Promise<void> {
   const conexion = new pg.Client({ connectionString: configuracion.DATABASE_URL_PROPIETARIO });
@@ -89,11 +96,21 @@ describe('documentos protegidos con la unidad de trabajo real', () => {
     expect(inspector.conTransaccion).toBe(false);
   });
 
+  it('revisar dentro de una unidad de trabajo falla, y guardar (que revisa por dentro) sigue sirviendo (S6)', async () => {
+    const dentro = unidadDeTrabajo.ejecutar(contexto, async () => {
+      await expect(gestor.revisar(pdf, null)).rejects.toBeInstanceOf(RevisionDentroDeTransaccion);
+      return gestor.guardar(contexto, pdf, { nombre: null, recursoDueno: DUENO });
+    });
+
+    await expect(dentro).resolves.toMatchObject({ tipoMime: 'application/pdf' });
+    expect(almacenamiento.contenidos.size).toBe(1);
+  });
+
   it('si la transacción se deshace después de guardar, el archivo se borra del disco y no queda fila (D2)', async () => {
     const revisado = await gestor.revisar(pdf, null);
 
     const conFallo = unidadDeTrabajo.ejecutar(contexto, async () => {
-      await gestor.guardarRevisado(contexto, revisado, { nombre: null, recursoDueno: DUENO });
+      await gestor.guardarRevisado(contexto, revisado, { recursoDueno: DUENO });
       expect(almacenamiento.contenidos.size).toBe(1);
       throw new FalloProvocado();
     });
@@ -106,7 +123,7 @@ describe('documentos protegidos con la unidad de trabajo real', () => {
     const revisado = await gestor.revisar(pdf, 'estado.pdf');
 
     const guardado = await unidadDeTrabajo.ejecutar(contexto, () =>
-      gestor.guardarRevisado(contexto, revisado, { nombre: 'estado.pdf', recursoDueno: DUENO }),
+      gestor.guardarRevisado(contexto, revisado, { recursoDueno: DUENO }),
     );
 
     expect(almacenamiento.contenidos.size).toBe(1);
@@ -115,9 +132,7 @@ describe('documentos protegidos con la unidad de trabajo real', () => {
   });
 
   it('si eliminar se deshace, la fila vuelve y el archivo sigue en el disco (D3)', async () => {
-    const guardado = await unidadDeTrabajo.ejecutar(contexto, async () =>
-      gestor.guardarRevisado(contexto, await gestor.revisar(pdf, null), { nombre: null, recursoDueno: DUENO }),
-    );
+    const guardado = await guardarEnLaBase();
 
     const conFallo = unidadDeTrabajo.ejecutar(contexto, async () => {
       await gestor.eliminar(guardado.id, DUENO);
@@ -130,9 +145,7 @@ describe('documentos protegidos con la unidad de trabajo real', () => {
   });
 
   it('si eliminar se confirma, se borra la fila y después el archivo (D3)', async () => {
-    const guardado = await unidadDeTrabajo.ejecutar(contexto, async () =>
-      gestor.guardarRevisado(contexto, await gestor.revisar(pdf, null), { nombre: null, recursoDueno: DUENO }),
-    );
+    const guardado = await guardarEnLaBase();
 
     await unidadDeTrabajo.ejecutar(contexto, () => gestor.eliminar(guardado.id, DUENO));
 

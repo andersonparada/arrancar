@@ -153,6 +153,39 @@ describe('tareas para después de confirmar', () => {
   });
 });
 
+describe('tareas que fallan se registran (S4)', () => {
+  const fallos: string[] = [];
+  const registrada = new UnidadDeTrabajoPostgres(bd, (momento, descripcion, error) => {
+    fallos.push(`${momento}:${descripcion}:${(error as Error).message}`);
+  });
+
+  it('las de deshacer que fallan quedan en el registro con su descripción y el error original sale', async () => {
+    fallos.length = 0;
+    const conFallo = registrada.ejecutar(enEmpresaA, async () => {
+      siSeDeshace(async () => Promise.reject(new Error('sin permiso')), 'a/b/c.pdf');
+      throw new FalloProvocado();
+    });
+
+    await expect(conFallo).rejects.toThrow(FalloProvocado);
+    expect(fallos).toEqual(['al_deshacer:a/b/c.pdf:sin permiso']);
+  });
+
+  it('las de confirmar corren todas, las que fallan se registran y la respuesta no cambia', async () => {
+    fallos.length = 0;
+    const orden: string[] = [];
+
+    const resultado = await registrada.ejecutar(enEmpresaA, async () => {
+      despuesDeConfirmar(async () => Promise.reject(new Error('falló')), 'primera');
+      despuesDeConfirmar(async () => void orden.push('segunda'), 'segunda');
+      return 'respuesta';
+    });
+
+    expect(resultado).toBe('respuesta');
+    expect(orden).toEqual(['segunda']);
+    expect(fallos).toEqual(['al_confirmar:primera:falló']);
+  });
+});
+
 describe('tareas para si se deshace', () => {
   it('corren cuando la transacción más externa se deshace', async () => {
     const orden: string[] = [];

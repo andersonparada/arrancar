@@ -43,17 +43,19 @@ export interface DocumentosProtegidos {
   /**
    * Revisa el contenido (por lo que es, no por lo que diga el cliente) sin tocar la base ni el disco. Llámese
    * FUERA de la unidad de trabajo: qpdf tarda y no debe retener una conexión del grupo mientras espera.
+   * Con una transacción en curso falla con un error de programación.
    * @throws DocumentoNoAceptado, DocumentoDemasiadoGrande, o un error de PDF o de foto (todos previstos).
    */
   revisar(contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado>;
   /**
    * Escribe en disco el documento revisado y registra la fila. Llámese dentro de la unidad de trabajo: si se
-   * deshace (también por un error posterior o del `commit`), el archivo se borra del disco.
+   * deshace (también por un error posterior o del `commit`), el archivo se borra del disco. Solo acepta lo que
+   * devolvió `revisar`.
    */
   guardarRevisado(
     operador: Operador,
     documento: DocumentoRevisado,
-    opciones: OpcionesDeDocumento,
+    opciones: Pick<OpcionesDeDocumento, 'recursoDueno'>,
   ): Promise<DocumentoGuardado>;
   /**
    * `revisar` + `guardarRevisado` juntos, para quien no puede revisar antes de abrir la transacción (el contenido

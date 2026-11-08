@@ -81,12 +81,21 @@ export class InspectorDePdfFalso implements InspectorDePdf {
 export class TareasEnMemoria implements TareasDeLaTransaccion {
   private readonly alConfirmar: Array<() => Promise<void>> = [];
   private readonly alDeshacer: Array<() => Promise<void>> = [];
+  /** Las pruebas unitarias del gestor hacen de «fuera de la transacción» salvo que se ponga `true`. */
+  enTransaccion = false;
+  readonly descripciones: string[] = [];
 
-  async despuesDeConfirmar(tarea: () => Promise<void>): Promise<void> {
+  hayTransaccion(): boolean {
+    return this.enTransaccion;
+  }
+
+  async despuesDeConfirmar(tarea: () => Promise<void>, descripcion: string): Promise<void> {
+    this.descripciones.push(descripcion);
     this.alConfirmar.push(tarea);
   }
 
-  siSeDeshace(tarea: () => Promise<void>): void {
+  siSeDeshace(tarea: () => Promise<void>, descripcion: string): void {
+    this.descripciones.push(descripcion);
     this.alDeshacer.push(tarea);
   }
 

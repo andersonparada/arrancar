@@ -10,6 +10,7 @@ import {
   RepositorioArchivosEnMemoria,
   TareasEnMemoria,
 } from '../pruebas/dobles-de-archivos.js';
+import { DocumentoSinRevisar, RevisionDentroDeTransaccion } from './errores-de-programacion.js';
 import { GestorDeDocumentos } from './gestor-de-documentos.js';
 
 const DUENO = 'bancos.conciliaciones';
@@ -101,7 +102,7 @@ describe('revisar y guardar por separado (D1 y D2)', () => {
   it('guardarRevisado no vuelve a revisar y conserva el nombre y la huella de lo recibido', async () => {
     const revisado = await gestor.revisar(pdf, 'estado.pdf');
 
-    await gestor.guardarRevisado(operador, revisado, { nombre: 'estado.pdf', recursoDueno: DUENO });
+    await gestor.guardarRevisado(operador, revisado, { recursoDueno: DUENO });
 
     expect(inspector.inspeccionados).toHaveLength(1);
     expect(repositorio.guardados[0]).toMatchObject({ nombreOriginal: 'estado.pdf', sha256Recibido: huella(pdf) });
@@ -116,12 +117,65 @@ describe('revisar y guardar por separado (D1 y D2)', () => {
 
   it('si la transacción se deshace después de guardar, borra el archivo del disco', async () => {
     const revisado = await gestor.revisar(pdf, null);
-    await gestor.guardarRevisado(operador, revisado, { nombre: null, recursoDueno: DUENO });
+    await gestor.guardarRevisado(operador, revisado, { recursoDueno: DUENO });
     expect(almacenamiento.contenidos.size).toBe(1);
 
     await tareas.deshacer();
 
     expect(almacenamiento.contenidos.size).toBe(0);
+  });
+});
+
+describe('endurecimiento de revisar y guardarRevisado', () => {
+  it('registra el borrado antes de escribir: si la escritura queda a medias, no sobra nada (S3)', async () => {
+    const revisado = await gestor.revisar(pdf, null);
+    almacenamiento.guardar = async (ruta) => {
+      almacenamiento.contenidos.set(ruta, Buffer.from('parcial'));
+      throw new Error('disco lleno');
+    };
+
+    await expect(gestor.guardarRevisado(operador, revisado, { recursoDueno: DUENO })).rejects.toThrow('disco lleno');
+
+    expect(almacenamiento.contenidos.size).toBe(0);
+    expect(tareas.descripciones).toHaveLength(1);
+    expect(tareas.descripciones[0]).toMatch(/\.pdf$/);
+  });
+
+  it('rechaza lo que no salió de revisar y deja el revisado congelado (S5)', async () => {
+    const falso = { contenido: Buffer.from('x'), extension: 'pdf', tipoMime: 'application/pdf' };
+    const revisado = await gestor.revisar(pdf, null);
+
+    await expect(gestor.guardarRevisado(operador, falso as never, { recursoDueno: DUENO })).rejects.toBeInstanceOf(
+      DocumentoSinRevisar,
+    );
+    expect(Object.isFrozen(revisado)).toBe(true);
+    expect(almacenamiento.contenidos.size).toBe(0);
+  });
+
+  it('un revisado de otro gestor tampoco vale (S5)', async () => {
+    const ajeno = await armar().revisar(pdf, null);
+
+    await expect(gestor.guardarRevisado(operador, ajeno, { recursoDueno: DUENO })).rejects.toBeInstanceOf(
+      DocumentoSinRevisar,
+    );
+  });
+
+  it('revisar falla con una transacción en curso, pero guardar sigue sirviendo dentro de ella (S6)', async () => {
+    tareas.enTransaccion = true;
+
+    await expect(gestor.revisar(pdf, null)).rejects.toBeInstanceOf(RevisionDentroDeTransaccion);
+    await expect(gestor.guardar(operador, pdf, { nombre: null, recursoDueno: DUENO })).resolves.toBeDefined();
+  });
+
+  it('quita caracteres de control y bidireccionales del nombre y lo corta a 200 (S11)', async () => {
+    const sucio = `estado‮fdp.exe\u0000\n⁦${'a'.repeat(300)}`;
+
+    await gestor.guardar(operador, pdf, { nombre: sucio, recursoDueno: DUENO });
+
+    const nombre = repositorio.guardados[0]!.nombreOriginal!;
+    expect(nombre).toMatch(/^estadofdp\.exe/);
+    expect(nombre).not.toMatch(/[\p{Cc}‪-‮⁦-⁩]/u);
+    expect(nombre).toHaveLength(200);
   });
 });
 

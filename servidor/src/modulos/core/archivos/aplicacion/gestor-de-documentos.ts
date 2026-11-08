@@ -9,6 +9,7 @@ import type {
 import { RecursoNoEncontrado } from '../../compartido/aplicacion/errores.js';
 import type { Operador } from '../../compartido/aplicacion/operador.js';
 import type { TareasDeLaTransaccion } from '../../compartido/aplicacion/tareas-de-la-transaccion.js';
+import { DocumentoSinRevisar, RevisionDentroDeTransaccion } from './errores-de-programacion.js';
 import { RutasDeArchivo } from '../dominio/rutas-de-archivo.js';
 import { PreparadorDeDocumentos, sha256, type DocumentoPreparado } from './preparador-de-documentos.js';
 import type { InspectorDePdf } from './puertos/inspector-de-pdf.js';
@@ -25,7 +26,7 @@ interface Dependencias {
 
 interface Registro {
   operador: Operador;
-  opciones: OpcionesDeDocumento;
+  opciones: Pick<OpcionesDeDocumento, 'recursoDueno'>;
   revisado: Revisado;
   ruta: string;
 }
@@ -49,6 +50,14 @@ function aNuevoArchivo({ operador, opciones, revisado, ruta }: Registro): NuevoA
   };
 }
 
+/** Caracteres de control y de dirección del texto: el nombre se muestra en pantalla y no debe poder disfrazarse. */
+const CARACTERES_PROHIBIDOS = /[\p{Cc}\u202A-\u202E\u2066-\u2069]/gu;
+
+/** Deja el nombre listo para mostrar: sin control ni bidireccionales y de hasta 200 caracteres. */
+function limpiarNombre(nombre: string | null): string | null {
+  return nombre?.replace(CARACTERES_PROHIBIDOS, '').slice(0, LARGO_MAXIMO_DEL_NOMBRE) ?? null;
+}
+
 const LARGO_MAXIMO_DEL_NOMBRE = 200;
 
 /** Por dentro, el documento revisado lleva también el nombre con el que llegó; el módulo dueño no lo ve. */
@@ -57,36 +66,47 @@ type Revisado = DocumentoPreparado & { nombreOriginal: string | null };
 /** Guarda documentos revisados: los PDF pasan por el inspector y las fotos por el optimizador. */
 export class GestorDeDocumentos implements DocumentosProtegidos {
   private readonly preparador: PreparadorDeDocumentos;
+  /** Solo se guarda lo que `revisar` produjo aquí: nadie puede fabricar un «documento revisado». */
+  private readonly revisados = new WeakSet<object>();
 
   constructor(private readonly dependencias: Dependencias) {
     this.preparador = new PreparadorDeDocumentos(dependencias.inspector, dependencias.optimizador);
   }
 
   async revisar(contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado> {
+    if (this.dependencias.tareas.hayTransaccion()) throw new RevisionDentroDeTransaccion();
+    return this.revisarSinExigirFuera(contenido, nombre);
+  }
+
+  /** Para `guardar`, que por contrato revisa dentro de la transacción de quien lo llama. */
+  private async revisarSinExigirFuera(contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado> {
     const preparado = await this.preparador.preparar(contenido);
-    const revisado: Revisado = { ...preparado, nombreOriginal: nombre?.slice(0, LARGO_MAXIMO_DEL_NOMBRE) ?? null };
+    const revisado: Revisado = Object.freeze({ ...preparado, nombreOriginal: limpiarNombre(nombre) });
+    this.revisados.add(revisado);
     return revisado as unknown as DocumentoRevisado;
   }
 
   async guardar(operador: Operador, contenido: Buffer, opciones: OpcionesDeDocumento): Promise<DocumentoGuardado> {
-    return this.guardarRevisado(operador, await this.revisar(contenido, opciones.nombre), opciones);
+    return this.guardarRevisado(operador, await this.revisarSinExigirFuera(contenido, opciones.nombre), opciones);
   }
 
   async guardarRevisado(
     operador: Operador,
     documento: DocumentoRevisado,
-    opciones: OpcionesDeDocumento,
+    opciones: Pick<OpcionesDeDocumento, 'recursoDueno'>,
   ): Promise<DocumentoGuardado> {
     const revisado = documento as unknown as Revisado;
+    if (!this.revisados.has(revisado)) throw new DocumentoSinRevisar();
     const nombre = `${crypto.randomUUID()}.${revisado.extension}`;
     const ruta = RutasDeArchivo.deDocumento(operador.empresaId, new Date(), nombre).original;
     const { almacenamiento, tareas } = this.dependencias;
-    await almacenamiento.guardar(ruta, revisado.contenido);
-    tareas.siSeDeshace(() => almacenamiento.eliminar(ruta));
+    const borrar = () => almacenamiento.eliminar(ruta);
+    tareas.siSeDeshace(borrar, ruta);
     try {
+      await almacenamiento.guardar(ruta, revisado.contenido);
       return await this.registrar(aNuevoArchivo({ operador, opciones, revisado, ruta }));
     } catch (error) {
-      await almacenamiento.eliminar(ruta);
+      await borrar().catch(() => undefined);
       throw error;
     }
   }
@@ -114,6 +134,6 @@ export class GestorDeDocumentos implements DocumentosProtegidos {
     const archivo = await repositorio.buscarDocumento(archivoId, recursoDueno);
     if (!archivo) throw new RecursoNoEncontrado('El archivo');
     await repositorio.eliminar(archivo.id);
-    await tareas.despuesDeConfirmar(() => almacenamiento.eliminar(archivo.rutaOriginal));
+    await tareas.despuesDeConfirmar(() => almacenamiento.eliminar(archivo.rutaOriginal), archivo.rutaOriginal);
   }
 }

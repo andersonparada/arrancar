@@ -6,13 +6,29 @@ import { fijarVariablesDeSeguridad } from './variables-de-seguridad.js';
 
 type Tarea = () => Promise<void>;
 
+/** Una tarea pendiente y cómo nombrarla en el registro si falla (nunca contenido, solo una ruta relativa o similar). */
+interface TareaPendiente {
+  ejecutar: Tarea;
+  descripcion: string;
+}
+
+/** Cómo se informa que una tarea de la transacción falló; recibe el momento, la descripción y el error. */
+export type RegistroDeFallos = (momento: 'al_confirmar' | 'al_deshacer', descripcion: string, error: unknown) => void;
+
+const registroPorOmision: RegistroDeFallos = (momento, descripcion, error) => {
+  const detalle = error instanceof Error ? error.message : String(error);
+  process.stderr.write(
+    `${JSON.stringify({ nivel: 'error', msg: 'Falló una tarea de la transacción', momento, descripcion, detalle })}\n`,
+  );
+};
+
 interface TrabajoEnCurso {
   transaccion: Transaccion;
   contexto: ContextoEmpresa;
   /** Lo que espera a que la transacción más externa se confirme. */
-  alConfirmar: Tarea[];
+  alConfirmar: TareaPendiente[];
   /** Lo que espera a que la transacción más externa se deshaga. */
-  alDeshacer: Tarea[];
+  alDeshacer: TareaPendiente[];
 }
 
 const trabajoEnCurso = new AsyncLocalStorage<TrabajoEnCurso>();
@@ -49,15 +65,18 @@ function mismoContexto(a: ContextoEmpresa, b: ContextoEmpresa): boolean {
  * Si ya hay una en curso con el mismo contexto, el trabajo se une a ella.
  */
 export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
-  constructor(private readonly baseDatos: BaseDatos) {}
+  constructor(
+    private readonly baseDatos: BaseDatos,
+    private readonly registro: RegistroDeFallos = registroPorOmision,
+  ) {}
 
   async ejecutar<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
     const enCurso = trabajoEnCurso.getStore();
     if (enCurso) return this.unirseAl(enCurso, contexto, trabajo);
 
-    const trabajoNuevo = { contexto, alConfirmar: [] as Tarea[], alDeshacer: [] as Tarea[] };
+    const trabajoNuevo = { contexto, alConfirmar: [] as TareaPendiente[], alDeshacer: [] as TareaPendiente[] };
     const resultado = await this.ejecutarEnTransaccion(trabajoNuevo, trabajo);
-    for (const tarea of trabajoNuevo.alConfirmar) await tarea();
+    await this.correr(trabajoNuevo.alConfirmar, 'al_confirmar');
     return resultado;
   }
 
@@ -71,8 +90,15 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
         return trabajoEnCurso.run({ ...nuevo, transaccion }, trabajo);
       });
     } catch (error) {
-      for (const tarea of nuevo.alDeshacer) await tarea().catch(() => undefined);
+      await this.correr(nuevo.alDeshacer, 'al_deshacer');
       throw error;
+    }
+  }
+
+  /** Corre todas las tareas; las que fallan se registran y no cambian la respuesta (la transacción ya terminó). */
+  private async correr(tareas: TareaPendiente[], momento: 'al_confirmar' | 'al_deshacer'): Promise<void> {
+    for (const { ejecutar, descripcion } of tareas) {
+      await ejecutar().catch((error: unknown) => this.registro(momento, descripcion, error));
     }
   }
 
@@ -101,23 +127,28 @@ export function contextoEnCurso(): ContextoEmpresa {
 }
 
 /**
- * Deja una tarea para después de que se confirme la transacción más externa (si esa se deshace, la tarea se descarta).
+ * Deja una tarea para después de que se confirme la transacción más externa (si esa se deshace, la tarea se descarta). Una tarea que falla se registra y no cambia la respuesta.
  * Devuelve `false` si no hay ninguna unidad de trabajo en curso: quien llama debe hacer la tarea de inmediato.
  */
-export function despuesDeConfirmar(tarea: Tarea): boolean {
+export function despuesDeConfirmar(tarea: Tarea, descripcion = 'tarea'): boolean {
   const enCurso = trabajoEnCurso.getStore();
   if (!enCurso) return false;
-  enCurso.alConfirmar.push(tarea);
+  enCurso.alConfirmar.push({ ejecutar: tarea, descripcion });
   return true;
 }
 
 /**
  * Deja una tarea para si se deshace la transacción más externa (si se confirma, se descarta). Sin unidad de trabajo
- * en curso devuelve `false` y no hace nada: no hay nada que deshacer. Una tarea que falla no tapa el error original.
+ * en curso devuelve `false` y no hace nada: no hay nada que deshacer. Una tarea que falla se registra y no tapa el error original.
  */
-export function siSeDeshace(tarea: Tarea): boolean {
+export function siSeDeshace(tarea: Tarea, descripcion = 'tarea'): boolean {
   const enCurso = trabajoEnCurso.getStore();
   if (!enCurso) return false;
-  enCurso.alDeshacer.push(tarea);
+  enCurso.alDeshacer.push({ ejecutar: tarea, descripcion });
   return true;
+}
+
+/** Si hay una unidad de trabajo en curso (para exigir que ciertas operaciones largas corran fuera de ella). */
+export function hayUnidadDeTrabajoEnCurso(): boolean {
+  return trabajoEnCurso.getStore() !== undefined;
 }

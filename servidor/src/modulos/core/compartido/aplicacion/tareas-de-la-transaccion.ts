@@ -3,14 +3,16 @@
  * puede deshacer con la transacción, así que se ata a su resultado.
  */
 export interface TareasDeLaTransaccion {
+  /** Si hay una unidad de trabajo en curso. */
+  hayTransaccion(): boolean;
   /**
    * Corre cuando la transacción más externa se confirma; si se deshace, se descarta. Sin transacción en curso
-   * corre de inmediato.
+   * corre de inmediato. Si falla, se registra con la `descripcion` (una ruta relativa, nunca contenido).
    */
-  despuesDeConfirmar(tarea: () => Promise<void>): Promise<void>;
+  despuesDeConfirmar(tarea: () => Promise<void>, descripcion: string): Promise<void>;
   /**
    * Corre si la transacción más externa se deshace (error del caso de uso o del `commit`); si se confirma, se
    * descarta. Sin transacción en curso no hay nada que deshacer y no corre.
    */
-  siSeDeshace(tarea: () => Promise<void>): void;
+  siSeDeshace(tarea: () => Promise<void>, descripcion: string): void;
 }
