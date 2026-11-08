@@ -10,6 +10,7 @@ import {
 import type { RespuestasFiscales } from '../documentos/preguntas-fiscales';
 import { FILAS_POR_CONFIRMACION, enGrupos, resumenDeLaSeleccion } from './datos-de-la-bandeja';
 import { datosFiscalesContestadosPorNit, separarResultados } from './datos-de-la-confirmacion';
+import { textoDeRegistrados } from './resumen-de-la-confirmacion';
 import { proveedoresNuevosParaEnviar } from './datos-de-proveedores-nuevos';
 import { usarVistaPreviaDeFilas } from './usar-vista-previa-de-filas';
 
@@ -46,9 +47,6 @@ function usarVentanaDeConfirmacion() {
   return { filas, abierta, resultado, previa, abrir, cerrar: () => (abierta.value = false) };
 }
 
-const textoDeRegistradas = (cantidad: number): string =>
-  `Se registró ${cantidad === 1 ? '1 factura' : `${cantidad} facturas`}.`;
-
 /**
  * La ventana «Confirmar»: primero la vista previa de lo marcado, con lo que se creará; luego los resultados fila por
  * fila. Las filas que fallan quedan pendientes y no frenan a las demás.
@@ -69,7 +67,7 @@ export function usarConfirmacionDeFilas(alTerminar: (registradas: string[]) => u
     if (!hecho) return;
     ventana.resultado.value = separarResultados(resultados);
     const registradas = ventana.resultado.value.registradas.map(({ id }) => id);
-    if (registradas.length) avisos.exito(textoDeRegistradas(registradas.length));
+    if (registradas.length) avisos.exito(textoDeRegistrados(registradas.length));
     await alTerminar(registradas);
   }
 
