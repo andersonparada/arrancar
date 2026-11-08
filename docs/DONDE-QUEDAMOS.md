@@ -253,13 +253,17 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
 - «Abrir en el formulario» desde la bandeja de la SAT (formulario precargado con `?desdeDte=`).
 - Anular desde Cuentas por pagar devuelve y muestra los avisos de Libro de compras (contrato
   `libro-de-compras.anular_documento` → `{ avisos }`).
+- **Unicidad por cuenta** (decisión del usuario, 2026-11-08): la autorización FEL y NIT+tipo+serie+número de los
+  documentos vigentes son únicos en la cuenta, ya no en toda la instalación (migración libro-de-compras `0034`; el
+  `0033_snapshot` había quedado con la restricción vieja del entero y el `0034_snapshot` ya la trae al día). Dos cuentas
+  con empresas del mismo NIT registran el mismo DTE; en la misma cuenta la fila sigue `bloqueado`. Pruebas: servidor
+  3385, cliente 865, generador 46.
 
 ## Siguiente
 
 1. **El usuario:** `git push origin main`.
-2. **Decisión del usuario:** autorización FEL única en toda la instalación o por cuenta (análisis al final de
-   `docs/modulos/informe-qa-2026-11-01-b.md`; el arquitecto recomienda **por cuenta**, migración `0034`). También: ¿avisar
-   al guardar una empresa con un NIT que ya tiene otra de la misma cuenta?
+2. **Decisión del usuario (pendiente):** ¿avisar, sin impedirlo, al guardar una empresa con un NIT que ya tiene otra de
+   la misma cuenta?
 3. **QA en el navegador** de todo lo de 2026-11-08 (lista de arriba), sobre todo las 74 cuadrículas a 380 px, las fechas
    y «Abrir en el formulario».
 4. «Anulado por» con el nombre del usuario (el servidor manda el id).
