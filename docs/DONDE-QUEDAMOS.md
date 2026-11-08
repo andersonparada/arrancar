@@ -219,26 +219,44 @@ Ninguna pantalla nueva se ha visto aún en el navegador.
   `docs/modulos/investigacion-sat-2237-y-2046.md`: desde sep-2026 el SAT-2237 se genera en la **Agencia
   Virtual**, no en Declaraguate.
 
+## Sesión del 2026-11-01 (noche) al 2026-11-07
+
+Todo en `main` (último `97735a8`), **sin subir a origin**. Pruebas: cliente 839, generador 46; servidor 3373 en la última
+corrida completa (antes del QA final; tras él falta correrla: ver «Siguiente» 1).
+
+- **QA en el navegador** de CP1-11, L4-14 y L5-10: `docs/modulos/informe-qa-2026-11-01.md` (1 alto, 4 medios, 10 bajos).
+- **Proveedor nuevo desde «DTE de la SAT»** (error 1): diseño en `docs/modulos/diseno-proveedor-nuevo-desde-dte.md`
+  (PN-1 a PN-6 hechos). Se crea al confirmar con el tipo de persona y el nombre que el usuario revisa en una tarjeta
+  por NIT; la propuesta parte nombres con la regla sacada del **archivo real de la SAT** del usuario (`consulta.xls`,
+  fuera del repositorio: formato del RTU de 4 comas, `NOMBRES , APELLIDOS`, por palabras); nombre tal cual (mayúsculas).
+- **Errores medios 2 y 3** de Cuentas por pagar: `documento_ya_autorizado`; `GET /api/cuentas-por-pagar/proveedores`.
+- **Errores 4 y 5** (validados por el contador, §7 y §8 del diseño): fechas futuras de constancia y de pago rechazadas
+  (aviso si el pago es anterior al cierre del mes); el entero guarda `impuesto` (> 0) y `multa`, `intereses`, `mora`
+  (migración libro-de-compras `0032`), total calculado; estado y exceso comparan solo el impuesto.
+- **QA final con el archivo real**: `docs/modulos/informe-qa-2026-11-01-b.md`. Corregidos: columnas sin monto del
+  archivo real (código de establecimiento, NIT del certificador) que bloqueaban confirmar; desborde en celular de la
+  bandeja; confirmación escondida tras la ventana al corregir un pago.
+
 ## Siguiente
 
-1. **Entorno (lo hace el usuario):** desde WSL `localhost:5433` da `ECONNRESET` por un puente de Docker
-   huérfano (`br-15d3405570a6`, misma subred que la base): reiniciar Docker Desktop o
-   `sudo ip link delete br-15d3405570a6`. Los agentes lo esquivaron con un proxy temporal. Además, en WSL no
-   está `qpdf`: fallan 8 pruebas de `libro-de-compras-libro-pdf.api.prueba.ts` (en Docker sí está).
-2. **QA en el navegador:** CP1-11 (Cuentas por pagar de punta a punta), L4-14 (importar el .xls real de la SAT,
-   completar, confirmar, conciliar) y L5-10 (libro, SAT-2237, retenciones y períodos).
-3. **Pendientes de Libro de compras:** «Abrir en el formulario» desde la bandeja (el formulario aún no acepta
-   una solicitud precargada); avisos de período declarado y retenciones por resolver al anular desde Cuentas por
-   pagar (ampliar el contrato `libro-de-compras.anular_documento`); L4-2b si el contador confirma L4-c1;
-   L4-13 (conciliación liviana, opcional); régimen **electrónico** de pequeño contribuyente → SAT-2241 (hoy
-   SAT-2046; confirmar); números de casilla del SAT-2237 cuando haya una captura de la Agencia Virtual.
-4. **Cuentas por pagar después de CP1:** saldos iniciales (U8), CP2 notas de crédito (saldo libre), CP3
-   contraseñas, CP4 pagos (extraer `Reversible`, órdenes a Bancos) y CP5 reportes.
-5. **Bancos:** H2 (estado de cuenta en PDF junto a la conciliación, ver `plan-archivos-y-h2.md`).
-6. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual de Q150,000.
+1. **Entorno (lo hace el usuario):** volvieron los puentes de Docker huérfanos (`br-15d3405570a6` y otros seis en
+   DOWN): `localhost:5433` da `ECONNRESET`. Reiniciar Docker Desktop o borrarlos con `sudo ip link delete <puente>`.
+   Luego correr `npm run probar` completo (el servidor no se corrió tras el QA final) y subir `main` a origin.
+2. **Medios sin corregir del QA final:** la vista previa no marca el DTE anulado en la SAT (prueba `it.fails` en
+   `libro-de-compras-qa2-hallazgos.api.prueba.ts`); el total del resumen de «Confirmar» suma todo lo marcado y las NCRE
+   en positivo (falta decidir: total o neto, solo lo registrable).
+3. **Bajos de los dos informes** (textos, RDON en la conciliación, grupo «5 %» con filas de 15 %, avisos repetidos,
+   autorización única entre empresas de la cuenta, `grid-cols-1` en unas diez listas de Bancos).
+4. **Sin probar:** formato RTU con 4 comas en un archivo real, dos tandas de 100, lote de constancias desde la pantalla.
+5. **Pendientes de Libro de compras:** «Abrir en el formulario» desde la bandeja; avisos al anular desde Cuentas por
+   pagar; L4-2b si el contador confirma L4-c1; L4-13; SAT-2241 del pequeño contribuyente electrónico; casillas del
+   SAT-2237; dudas del contador (formulario de pago de RetenIVA, multa y mora juntas, art. 23 del Decreto 10-2012).
+6. **Cuentas por pagar después de CP1:** U8, CP2, CP3, CP4 y CP5.
+7. **Bancos:** H2 (estado de cuenta en PDF).
+8. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual de Q150,000.
 
 Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) y su base de
-pruebas (`BD_PRUEBAS`), une a `main` por avance rápido con pruebas en verde y borra su worktree.
+pruebas (`BD_PRUEBAS`), y se une a `main` con pruebas en verde.
 
 ## Preguntas abiertas para el usuario
 
