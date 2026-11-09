@@ -9,7 +9,7 @@ import type { ClaseDeDocumento, EstadoDeDocumento, TipoDeDocumento } from '../..
 export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   id: string;
   /** El id del documento en Libro de compras (para enlazar a su ficha). */
-  documentoId: string;
+  documentoId: string | null;
   tipo: TipoDeDocumento;
   clase: ClaseDeDocumento;
   estado: EstadoDeDocumento;
@@ -56,7 +56,7 @@ export interface BandejaDto {
 /** Una nota de crédito o de débito de la factura de la ficha. */
 export interface NotaDelDocumentoDto {
   id: string;
-  documentoId: string;
+  documentoId: string | null;
   tipo: TipoDeDocumento;
   estado: EstadoDeDocumento;
   serie: string | null;
@@ -102,7 +102,7 @@ export interface AnulacionDelDocumentoDto {
 /** Una nota de crédito con saldo libre: a favor de la empresa frente al proveedor. */
 export interface SaldoDeudorDto {
   id: string;
-  documentoId: string;
+  documentoId: string | null;
   serie: string | null;
   numero: string;
   fechaEmision: string;

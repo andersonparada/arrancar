@@ -37,6 +37,7 @@ export async function anularLoGuardado(
     empresaId: operador.empresaId,
     documentoId: documento.id,
     documentoDeCompraId: documento.documentoId,
+    origen: documento.origen,
     estabaAutorizado,
   };
 }

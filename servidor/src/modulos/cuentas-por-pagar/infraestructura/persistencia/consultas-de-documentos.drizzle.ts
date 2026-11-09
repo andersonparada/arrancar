@@ -123,6 +123,7 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
   }
 
   async notasDe(documento: DocumentoPorPagar): Promise<NotaDeUnDocumento[]> {
+    if (documento.documentoId === null) return [];
     const filas = await transaccionEnCurso()
       .select({
         nota: documentos,

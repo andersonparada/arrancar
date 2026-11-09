@@ -50,7 +50,7 @@ beforeAll(async () => {
     permisos: ['cuentas-por-pagar.documentos.ver'],
   });
   busEventos.suscribir('cuentas-por-pagar.documento_anulado', async (datos) => {
-    anulados.push({ documentoId: datos.documentoDeCompraId, estabaAutorizado: datos.estabaAutorizado });
+    anulados.push({ documentoId: datos.documentoDeCompraId!, estabaAutorizado: datos.estabaAutorizado });
   });
 });
 

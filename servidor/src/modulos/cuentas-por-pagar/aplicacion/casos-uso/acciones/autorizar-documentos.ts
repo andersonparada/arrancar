@@ -17,7 +17,7 @@ const MOTIVO_DE_LO_PROPIO = 'Autorizó un documento que ingresó o completó.';
 
 /**
  * Autoriza en lote (hasta 100, todo o nada): `registrado` pasa a `autorizado`, que significa «aprobado para pago» y no
- * provisiona nada (U12). Por cada documento manda primero `marcar_procesado` a Libro de compras (que bloquea su fila) y
+ * provisiona nada (U12). Por cada documento manda primero `marcar_procesado` a Libro de compras (que bloquea su fila; un saldo inicial no tiene documento allá y se salta) y
  * después bloquea la de aquí y vuelve a revisar. Separación de funciones: quien ingresó o completó un documento solo lo
  * autoriza con el permiso `autorizar-propios`, y entonces queda marcado y auditado. Publica `documento_autorizado` de cada
  * uno al confirmar. Los ids se recorren en orden para que dos lotes que se cruzan no se traben.
@@ -51,7 +51,7 @@ export class AutorizarDocumentos {
     const { documento: previo, origen } = await filaDe(consultas, id);
     const etiqueta = etiquetaDe(origen);
     exigirRegistrado(previo, etiqueta);
-    await libroDeCompras.marcarProcesado(operador, previo.documentoId, true);
+    if (previo.documentoId !== null) await libroDeCompras.marcarProcesado(operador, previo.documentoId, true);
     const guardado = await bloquear(documentos, id);
     exigirRegistrado(guardado.documento, etiqueta);
     const propia = esDeLoPropio(guardado.documento, operador.usuarioId);
@@ -81,6 +81,7 @@ function eventoDeAutorizacion(
     empresaId: operador.empresaId,
     documentoId: documento.id,
     documentoDeCompraId: documento.documentoId,
+    origen: documento.origen,
     tipo: documento.tipo,
     proveedorId: documento.proveedorId,
     totalCentavos: documento.totalCentavos,

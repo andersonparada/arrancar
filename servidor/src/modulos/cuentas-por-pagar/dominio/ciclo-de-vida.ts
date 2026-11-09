@@ -9,6 +9,7 @@ import {
   DocumentoNoRegistrado,
   DocumentoYaAnulado,
   DocumentoYaAutorizado,
+  EsUnSaldoInicial,
   MotivoInvalido,
   VencimientoInvalido,
   VencimientoNoEditable,
@@ -88,8 +89,9 @@ export function motivoValido(motivo: string): string {
   return limpio;
 }
 
-/** @throws DocumentoYaAnulado, DocumentoConNotasVigentes */
+/** @throws EsUnSaldoInicial, DocumentoYaAnulado, DocumentoConNotasVigentes */
 export function exigirAnulable(documento: DocumentoPorPagar, notasVigentes: number, etiqueta: string): void {
+  if (documento.origen === 'saldo_inicial') throw new EsUnSaldoInicial(etiqueta);
   if (documento.estado === 'anulado') throw new DocumentoYaAnulado(etiqueta);
   if (notasVigentes > 0) throw new DocumentoConNotasVigentes(etiqueta);
 }
@@ -97,9 +99,10 @@ export function exigirAnulable(documento: DocumentoPorPagar, notasVigentes: numb
 /**
  * Solo se elimina lo pendiente o completado y sin notas (ni anuladas). Lo autorizado lo rechaza la regla de baja
  * `noEstarAutorizado`, que también corre con la fila bloqueada.
- * @throws DocumentoNoEliminable, DocumentoConNotas
+ * @throws EsUnSaldoInicial, DocumentoNoEliminable, DocumentoConNotas
  */
 export function exigirEliminable(documento: DocumentoPorPagar, notasEnTotal: number, etiqueta: string): void {
+  if (documento.origen === 'saldo_inicial') throw new EsUnSaldoInicial(etiqueta);
   if (documento.estado === 'anulado') throw new DocumentoNoEliminable(etiqueta);
   if (notasEnTotal > 0) throw new DocumentoConNotas(etiqueta);
 }

@@ -11,6 +11,8 @@ import type { AplicacionACargo, CargoConSaldo } from '../../dominio/reparto-de-n
 export type DocumentoNuevo = Pick<
   DocumentoPorPagar,
   | 'documentoId'
+  | 'serie'
+  | 'numero'
   | 'tipo'
   | 'proveedorId'
   | 'documentoAfectadoId'
@@ -89,10 +91,18 @@ export interface CondicionesDeProveedores {
 
 /** Datos del documento que se quedan en Libro de compras y no viajan en la orden `recibir_documento`. */
 export interface DocumentosDeCompra {
-  /** La fecha de recepción (`AAAA-MM-DD`) con que se registró el documento. */
-  fechaDeRecepcion(documentoId: string): Promise<string>;
+  /** La fecha de recepción, la serie y el número con que se registró el documento. */
+  datosDeRecepcion(documentoId: string): Promise<DatosDeRecepcion>;
   /** Bloquea la fila del documento en Libro de compras (solo para fijar el orden de bloqueo; no la cambia). */
   bloquear(documentoId: string): Promise<void>;
+}
+
+/** Lo que Cuentas por pagar lee de Libro de compras al recibir un documento. */
+export interface DatosDeRecepcion {
+  /** `AAAA-MM-DD`. */
+  fechaRecepcion: string;
+  serie: string | null;
+  numero: string;
 }
 
 export interface PlazoPorOmision {

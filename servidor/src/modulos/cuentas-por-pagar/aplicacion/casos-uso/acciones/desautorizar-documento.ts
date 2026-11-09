@@ -39,7 +39,7 @@ export class DesautorizarDocumento {
     const { documento: previo, origen } = await filaDe(consultas, id);
     const etiqueta = etiquetaDe(origen);
     exigirAutorizado(previo, etiqueta);
-    await libroDeCompras.marcarProcesado(operador, previo.documentoId, false);
+    if (previo.documentoId !== null) await libroDeCompras.marcarProcesado(operador, previo.documentoId, false);
     const guardado = await bloquear(documentos, id);
     exigirAutorizado(guardado.documento, etiqueta);
     await revisarReglasDeBaja(this.reglas, guardado);
@@ -55,6 +55,7 @@ export class DesautorizarDocumento {
       empresaId: operador.empresaId,
       documentoId: id,
       documentoDeCompraId: guardado.documento.documentoId,
+      origen: guardado.documento.origen,
     });
   }
 }

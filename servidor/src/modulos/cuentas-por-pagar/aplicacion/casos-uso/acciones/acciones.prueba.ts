@@ -158,7 +158,7 @@ describe('autorizar', () => {
     const [dto] = await autorizar.ejecutar(beto, { ids: [id], puedeAutorizarPropios: false });
 
     expect(documentos.bitacora).toEqual(['libro:procesado=true', 'bloquea-aqui']);
-    expect(libro.procesados.get(guardado(id).documentoId)).toBe(true);
+    expect(libro.procesados.get(guardado(id).documentoId!)).toBe(true);
     expect(guardado(id)).toMatchObject({
       estado: 'autorizado',
       autorizadoPor: beto.usuarioId,
@@ -230,7 +230,7 @@ describe('desautorizar', () => {
 
     expect(dto.estado).toBe('registrado');
     expect(guardado(id)).toMatchObject({ estado: 'registrado', autorizadoPor: null, autorizacionPropia: false });
-    expect(libro.procesados.get(guardado(id).documentoId)).toBe(false);
+    expect(libro.procesados.get(guardado(id).documentoId!)).toBe(false);
     expect(auditoria.entradas).toEqual([
       expect.objectContaining({
         accion: 'devolver',

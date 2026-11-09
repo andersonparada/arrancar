@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   esDeLoPropio,
+  exigirAnulable,
+  exigirEliminable,
   exigirAutorizado,
   exigirPendiente,
   exigirRegistrado,
@@ -8,17 +10,23 @@ import {
   vencimientoAlCompletar,
 } from './ciclo-de-vida.js';
 import type { DocumentoPorPagar } from './documento-por-pagar.js';
-import { DocumentoNoRegistrado, DocumentoYaAnulado, DocumentoYaAutorizado } from './errores.js';
+import { DocumentoNoRegistrado, DocumentoYaAnulado, DocumentoYaAutorizado, EsUnSaldoInicial } from './errores.js';
 
 const documento = (cambios: Partial<DocumentoPorPagar> = {}): DocumentoPorPagar => ({
   id: 'doc',
+  origen: 'libro_de_compras',
   documentoId: 'libro',
+  serie: 'A',
+  numero: '100',
   tipo: 'factura',
   proveedorId: 'proveedor',
   documentoAfectadoId: null,
   fechaEmision: '2026-03-10',
   totalCentavos: 11200,
   retencionesCentavos: 0,
+  saldoAlInicioCentavos: null,
+  retencionesPorPracticarCentavos: null,
+  referencia: null,
   tieneActivoFijo: false,
   vencimiento: '2026-04-10',
   ingresadoPor: 'ana',
@@ -106,5 +114,14 @@ describe('cambiar el vencimiento', () => {
     for (const caso of casos) {
       expect(() => exigirVencimientoNuevoValido(caso, '2026-06-01', 'A-1')).toThrow(/A-1/);
     }
+  });
+});
+
+describe('un saldo inicial no se anula ni se elimina por Documentos', () => {
+  const saldoInicial = documento({ origen: 'saldo_inicial', documentoId: null, estado: 'registrado' });
+
+  it('anular y eliminar lo rechazan', () => {
+    expect(() => exigirAnulable(saldoInicial, 0, 'S-1')).toThrow(EsUnSaldoInicial);
+    expect(() => exigirEliminable(saldoInicial, 0, 'S-1')).toThrow(EsUnSaldoInicial);
   });
 });

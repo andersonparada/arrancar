@@ -146,6 +146,8 @@ export function documentoValido(
   return {
     empresaId: escenario.empresaA1,
     documentoId,
+    serie: 'A',
+    numero: documentoId.toUpperCase(),
     tipo: 'factura',
     proveedorId: escenario.proveedorA,
     fechaEmision: '2026-03-10',

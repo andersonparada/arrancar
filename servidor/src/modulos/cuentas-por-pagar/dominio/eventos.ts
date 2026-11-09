@@ -1,12 +1,13 @@
 import { EventoDominio } from '../../core/compartido/dominio/evento-dominio.js';
-import type { TipoDeDocumento } from './tipos-de-documento.js';
+import type { OrigenDeDocumento, TipoDeDocumento } from './tipos-de-documento.js';
 
 export interface DatosDeDocumentoAnulado {
   empresaId: string;
   /** El id del documento en Cuentas por pagar. */
   documentoId: string;
-  /** El id del documento en Libro de compras. */
-  documentoDeCompraId: string;
+  /** El id del documento en Libro de compras; nulo en un saldo inicial (que no se anula). */
+  documentoDeCompraId: string | null;
+  origen: OrigenDeDocumento;
   estabaAutorizado: boolean;
 }
 
@@ -14,8 +15,9 @@ export interface DatosDeDocumentoAutorizado {
   empresaId: string;
   /** El id del documento en Cuentas por pagar. */
   documentoId: string;
-  /** El id del documento en Libro de compras. */
-  documentoDeCompraId: string;
+  /** El id del documento en Libro de compras; nulo en un saldo inicial. */
+  documentoDeCompraId: string | null;
+  origen: OrigenDeDocumento;
   tipo: TipoDeDocumento;
   proveedorId: string;
   totalCentavos: number;
@@ -35,7 +37,8 @@ export class DocumentoAutorizadoEvento extends EventoDominio<DatosDeDocumentoAut
 export interface DatosDeDocumentoDesautorizado {
   empresaId: string;
   documentoId: string;
-  documentoDeCompraId: string;
+  documentoDeCompraId: string | null;
+  origen: OrigenDeDocumento;
 }
 
 /** Un documento autorizado volvió a completado. Se publica tras confirmar la transacción. */

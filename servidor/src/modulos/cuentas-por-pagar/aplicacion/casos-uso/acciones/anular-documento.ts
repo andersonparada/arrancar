@@ -53,7 +53,7 @@ export class AnularDocumento {
     const etiqueta = etiquetaDe(origen);
     exigirAnulable(documento, notasVigentes, etiqueta);
     await revisarReglasDeBaja(this.reglas, (await documentos.buscarPorId(id, false))!);
-    const avisos = await libroDeCompras.anular(operador, { documentoId: documento.documentoId, causa, motivo });
+    const avisos = await libroDeCompras.anular(operador, { documentoId: documento.documentoId!, causa, motivo });
     const guardado = await bloquear(documentos, id);
     exigirAnulable(guardado.documento, 0, etiqueta);
     await revisarReglasDeBaja(this.reglas, guardado);

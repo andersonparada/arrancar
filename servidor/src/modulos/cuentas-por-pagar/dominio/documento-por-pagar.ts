@@ -1,10 +1,14 @@
-import type { EstadoDeDocumento, TipoDeDocumento } from './tipos-de-documento.js';
+import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from './tipos-de-documento.js';
 
 /** Un documento de Libro de compras recibido en Cuentas por pagar. El dinero va en centavos enteros. */
 export interface DocumentoPorPagar {
   id: string;
-  /** El id del documento en Libro de compras. */
-  documentoId: string;
+  origen: OrigenDeDocumento;
+  /** El id del documento en Libro de compras; nulo en un saldo inicial. */
+  documentoId: string | null;
+  /** Serie del documento (copiada del libro, o escrita en un saldo inicial); puede faltar. */
+  serie: string | null;
+  numero: string;
   tipo: TipoDeDocumento;
   proveedorId: string;
   /** La factura (id de Libro de compras) de una nota. */
@@ -13,6 +17,12 @@ export interface DocumentoPorPagar {
   fechaEmision: string;
   totalCentavos: number;
   retencionesCentavos: number;
+  /** Solo el saldo inicial: lo que faltaba pagarle al proveedor al corte, sin retenciones. */
+  saldoAlInicioCentavos: number | null;
+  /** Solo el saldo inicial: la parte de las retenciones que la empresa todavía no practicó (informativa). */
+  retencionesPorPracticarCentavos: number | null;
+  /** Solo el saldo inicial: cómo se llama el documento en el sistema anterior. */
+  referencia: string | null;
   tieneActivoFijo: boolean;
   /** `AAAA-MM-DD`; nulo en las notas de crédito, que no vencen. */
   vencimiento: string | null;
@@ -42,7 +52,10 @@ export interface DocumentoConAplicaciones {
   recibidas: AplicacionDeNota[];
 }
 
-/** Lo que se le paga al proveedor por un cargo: el total menos lo retenido, que es de la SAT. */
-export function netoDe({ totalCentavos, retencionesCentavos }: DocumentoPorPagar): number {
-  return totalCentavos - retencionesCentavos;
+/**
+ * Lo que se le paga al proveedor por un cargo: el total menos lo retenido, que es de la SAT. En un saldo inicial es lo
+ * que faltaba pagar al corte (ya neto de todas las retenciones).
+ */
+export function netoDe({ totalCentavos, retencionesCentavos, saldoAlInicioCentavos }: DocumentoPorPagar): number {
+  return saldoAlInicioCentavos ?? totalCentavos - retencionesCentavos;
 }

@@ -21,12 +21,15 @@ declare module '../eventos/bus-eventos.js' {
     /**
      * Un documento por pagar quedó aprobado para pago (U12: autorizar no provisiona; el pasivo y el gasto se registran al
      * registrar el documento en Libro de compras). `documentoId` es el de Cuentas por pagar y `documentoDeCompraId` el de
-     * Libro de compras; el dinero va en centavos enteros.
+     * Libro de compras (nulo en un saldo inicial); el dinero va en centavos enteros. Con `origen = 'saldo_inicial'`
+     * no genera partida: el pasivo de apertura lo contabiliza la carga inicial con la fecha del corte (y la cuenta
+     * puente).
      */
     'cuentas-por-pagar.documento_autorizado': {
       empresaId: string;
       documentoId: string;
-      documentoDeCompraId: string;
+      documentoDeCompraId: string | null;
+      origen: 'libro_de_compras' | 'saldo_inicial';
       tipo: TipoDeDocumentoDeCompra;
       proveedorId: string;
       totalCentavos: number;
@@ -34,20 +37,22 @@ declare module '../eventos/bus-eventos.js' {
       /** Autorizó quien también lo ingresó o lo completó (con el permiso `autorizar-propios`). */
       autorizacionPropia: boolean;
     };
-    /** Un documento autorizado volvió a «completado» (mientras no tenga pagos): ya no está aprobado para pago. */
+    /** Un documento autorizado volvió a «completado» (mientras no tenga pagos): ya no está aprobado para pago. Con `origen = 'saldo_inicial'` no genera partida. */
     'cuentas-por-pagar.documento_desautorizado': {
       empresaId: string;
       documentoId: string;
-      documentoDeCompraId: string;
+      documentoDeCompraId: string | null;
+      origen: 'libro_de_compras' | 'saldo_inicial';
     };
     /**
      * Un documento por pagar quedó anulado. `estabaAutorizado`: ya estaba aprobado para pago. `documentoId` es el de
-     * Cuentas por pagar y `documentoDeCompraId` el de Libro de compras.
+     * Cuentas por pagar y `documentoDeCompraId` el de Libro de compras. Nunca sale de un saldo inicial (no se anula).
      */
     'cuentas-por-pagar.documento_anulado': {
       empresaId: string;
       documentoId: string;
-      documentoDeCompraId: string;
+      documentoDeCompraId: string | null;
+      origen: 'libro_de_compras' | 'saldo_inicial';
       estabaAutorizado: boolean;
     };
   }

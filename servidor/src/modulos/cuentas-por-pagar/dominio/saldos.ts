@@ -24,7 +24,7 @@ export interface SaldoDelDocumento {
 /** Los saldos de un documento; salen de sus montos y de las aplicaciones, no se guardan. */
 export function saldoDe(documento: DocumentoPorPagar, aplicado: AplicadoAlDocumento): SaldoDelDocumento {
   const esCargo = claseDe(documento.tipo) === 'cargo';
-  const netoCentavos = esCargo ? netoDe(documento) : documento.totalCentavos;
+  const netoCentavos = esCargo ? netoDe(documento) : (documento.saldoAlInicioCentavos ?? documento.totalCentavos);
   const aplicadoCentavos = esCargo ? aplicado.alCargoCentavos : aplicado.porLaNotaCentavos;
   const saldoCentavos = documento.estado === 'anulado' ? 0 : netoCentavos - aplicadoCentavos;
   return { netoCentavos, aplicadoCentavos, saldoCentavos };

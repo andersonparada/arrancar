@@ -2,7 +2,7 @@ import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import type { ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
 import type { ConsultasDeDocumentos, FilaDeDocumento } from '../aplicacion/puertos/puertos-de-consultas.js';
 import type { LibroDeCompras, OrdenDeAnulacion } from '../aplicacion/puertos/puertos-de-libro-de-compras.js';
-import type { DocumentosDeCompra } from '../aplicacion/puertos/puertos-de-documentos.js';
+import type { DatosDeRecepcion, DocumentosDeCompra } from '../aplicacion/puertos/puertos-de-documentos.js';
 import type { DocumentosEnMemoria } from './dobles-de-documentos.js';
 
 /** Las consultas de la ficha sobre los mismos documentos en memoria; la serie es `A` y el número, el de cada documento. */
@@ -80,8 +80,8 @@ export class LibroDeComprasEnMemoria implements LibroDeCompras, DocumentosDeComp
     this.eliminados.push(documentoId);
   }
 
-  async fechaDeRecepcion(): Promise<string> {
-    return '2026-03-10';
+  async datosDeRecepcion(documentoId: string): Promise<DatosDeRecepcion> {
+    return { fechaRecepcion: '2026-03-10', serie: 'A', numero: documentoId };
   }
 
   async bloquear(): Promise<void> {
