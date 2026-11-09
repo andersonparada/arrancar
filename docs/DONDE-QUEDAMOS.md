@@ -283,8 +283,10 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    L4-2b quedó cerrado («no va»).
 7. **Cuentas por pagar después de CP1:** U8 diseñado (`docs/modulos/diseno-u8-saldos-iniciales-cuentas-por-pagar.md`)
    y validado por el contador (`dictamen-u8-saldos-iniciales-2026-11-08.md`, «correcto con ajustes»: quitar la
-   solución provisional de §9.3, U8-l antes de producción, retenciones por practicar). **Espera al usuario:** preguntas
-   U8-a a U8-l del diseño y las 7 depuradas del dictamen; luego el arquitecto aplica los cambios al diseño y se programa.
+   solución provisional de §9.3, U8-l antes de producción, retenciones por practicar). **El usuario respondió el
+   2026-11-08** (§11 del diseño): todas las recomendaciones, retenciones por practicar con la opción B, cuadre que
+   bloquea con salida auditada cuando exista Contabilidad, solo quetzales. Sigue: el arquitecto aplica al diseño los
+   cambios del dictamen y luego se programa por pasos.
    Después: CP2, CP3, CP4 y CP5.
 8. **Bancos H2** diseñado (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`). El paso 1 (core: qpdf fuera de la
    transacción, archivos huérfanos, borrado tras confirmar, subida cortada) **está en `main`** con los arreglos de

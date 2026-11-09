@@ -1427,3 +1427,9 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   - Tras confirmar en la bandeja queda un solo aviso de éxito (el de la ventana, «Se registraron N documentos.») y los avisos se agrupan sin repetir, con los documentos de cada uno en un desplegable.
   - `formatearNit` en `utilidades/formato.ts`: el NIT se ve con guion en las fichas y listas de empresas y terceros.
   - Un archivo de 0 bytes en la bandeja de la SAT dice «El archivo está vacío. Suba un archivo de Excel (.xls o .xlsx) o un CSV con datos.» (`archivo_vacio`).
+- **2026-11-08 — U8 aprobado por el usuario.** Acepta todas las recomendaciones de U8-a a U8-l con las precisiones del
+  contador (U8-e indispensable, referencia del sistema anterior, U8-l antes de producción con una empresa con
+  historia); retenciones pendientes al corte como columna informativa `retenciones_por_practicar` (opción B); fecha de
+  inicio = primer día en Arrancar (día 1 de un mes recomendado) y aviso en Libro de compras para facturas anteriores;
+  cuadre de la carga inicial que bloquea con salida auditada cuando exista Contabilidad; Cuentas por pagar solo en
+  quetzales por ahora. Detalle en §11 de `docs/modulos/diseno-u8-saldos-iniciales-cuentas-por-pagar.md`.

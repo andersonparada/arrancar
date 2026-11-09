@@ -1,6 +1,6 @@
 # Diseño U8: saldos iniciales de Cuentas por pagar — arquitecto de datos, 2026-11-08
 
-Estado: **propuesta para aprobar**. Aterriza la pregunta **U8** de `diseno-datos-cuentas-por-pagar.md` (respuesta del
+Estado: **aprobado por el usuario el 2026-11-08** (respuestas en §11); falta aplicar los cambios del dictamen. Aterriza la pregunta **U8** de `diseno-datos-cuentas-por-pagar.md` (respuesta del
 usuario del 2026-10-20: «saldos iniciales justo después de CP1»; las dos formas de pago extra van con CP4), su §8, la
 sección «Saldos iniciales de cuentas por pagar» y «Fecha de inicio y carga inicial» de `HOJA-DE-RUTA.md`, y la carga
 inicial de Empresas (H5a, `diseno-esquema-empresas.md`). Si algo de aquí choca con esos documentos, mandan ellos; lo
@@ -456,6 +456,18 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
    Libro de compras el mismo documento (rechazo), cerrar la carga (ya no se agrega ni corrige) y reabrirla.
 
 ## 11. Preguntas para el usuario (con recomendación)
+
+> **Respuestas del usuario (2026-11-08):** acepta **todas las recomendaciones** de U8-a a U8-l con las precisiones del
+> dictamen del contador (`dictamen-u8-saldos-iniciales-2026-11-08.md`): U8-a copiar serie y número en todos (el
+> arquitecto evalúa `tipo` en el único de los cargos); U8-b sí, y un anticipo no es nota de crédito; U8-c total,
+> **todas** las retenciones y saldo pendiente; U8-d, U8-f, U8-g y U8-h como se recomiendan; U8-e **indispensable**
+> (paso U8-6 aprobado); U8-i **sí**, una «referencia» corta y opcional del sistema anterior; U8-l se resuelve en Libro
+> de compras **después de U8 y antes de producción con una empresa con historia**. De las depuradas del contador:
+> retenciones pendientes al corte con la **opción B** (columna informativa `retenciones_por_practicar`, su total y
+> aviso en CP4, sin efecto en el saldo); fecha de inicio = «primer día en Arrancar», recomendando el día 1 de un mes,
+> con aviso sin prohibir; aviso en Libro de compras para facturas con emisión anterior a la fecha de inicio; cuadre al
+> cerrar la carga: con Contabilidad **bloquear** si la puente no está en cero, con salida por permiso y motivo
+> auditado (mientras tanto, solo confirmación); **solo quetzales** por ahora (moneda extranjera, más adelante).
 
 - **U8-a. Serie y número en todos los documentos o solo en el saldo inicial.** §8 propuso guardarlos solo en el saldo
   inicial y leer los del libro con `coalesce`. **Recomendado: copiarlos en todos** (al recibir y con un relleno en la
