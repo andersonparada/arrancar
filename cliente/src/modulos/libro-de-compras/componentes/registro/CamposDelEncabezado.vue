@@ -137,6 +137,7 @@ const esNota = computed(() => llevaFacturaAfectada(edicion.value.tipoDte));
       />
       <CampoSelector
         v-model="edicion.periodo"
+        class="@md:col-span-2 @2xl:col-span-1"
         etiqueta="Período del libro"
         :opciones="periodos"
         :error="errores.periodo"
