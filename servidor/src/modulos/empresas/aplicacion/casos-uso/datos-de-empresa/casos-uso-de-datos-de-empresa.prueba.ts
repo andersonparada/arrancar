@@ -22,6 +22,7 @@ import {
   ConsultasDeDatosDeEmpresaEnMemoria,
   DatosFiscalesEnMemoria,
 } from '../../../pruebas/dobles-de-datos-de-empresa.js';
+import type { FechaDeInicioPorCambiar } from '../../puertos/avisos-de-empresa.js';
 import { AlcanceDelOperador } from '../../alcance-del-operador.js';
 import { EjecutorEnEmpresa } from '../../ejecutor-en-empresa.js';
 import { AtenderOrdenesDeDatosDeEmpresa } from './atender-ordenes-de-datos-de-empresa.js';
@@ -37,6 +38,8 @@ let unidadDeTrabajo: UnidadDeTrabajoEnMemoria;
 let auditoria: AuditoriaEnMemoria;
 let consultas: ConsultasDeDatosDeEmpresaEnMemoria;
 let dependencias: DependenciasDeDatosDeEmpresa;
+let avisados: FechaDeInicioPorCambiar[];
+let rechazo: Error | null;
 let operador: Operador;
 let empresaId: string;
 
@@ -58,6 +61,8 @@ beforeEach(async () => {
   await empresas.agregar(empresa);
   await accesos.darAcceso({ empresaId, usuarioId: operador.usuarioId });
 
+  avisados = [];
+  rechazo = null;
   const fiscales = new DatosFiscalesEnMemoria();
   const cargas = new CargasInicialesEnMemoria();
   consultas = new ConsultasDeDatosDeEmpresaEnMemoria(fiscales, cargas, new Map([[empresaId, 'Rancho El Quiroa']]));
@@ -72,6 +77,12 @@ beforeEach(async () => {
     repositorioCargas: cargas,
     consultas,
     auditoria,
+    avisos: {
+      fechaDeInicioPorCambiar: async (_operador, aviso) => {
+        avisados.push(aviso);
+        if (rechazo) throw rechazo;
+      },
+    },
   };
 });
 
@@ -145,6 +156,23 @@ describe('fecha de inicio', () => {
     const corregida = await fijarFecha('2026-02-01');
 
     expect(corregida).toMatchObject({ fechaDeInicio: '2026-02-01', cerrada: false });
+  });
+
+  it('avisa a los módulos solo cuando ya había fecha y esta cambia', async () => {
+    await fijarFecha('2026-01-01');
+    await fijarFecha('2026-01-01');
+    expect(avisados).toEqual([]);
+
+    await fijarFecha('2026-02-01');
+
+    expect(avisados).toEqual([{ empresaId, fechaDeInicio: '2026-02-01' }]);
+  });
+
+  it('si un módulo rechaza la fecha nueva, el error sale tal cual (la transacción deshace el cambio)', async () => {
+    await fijarFecha('2026-01-01');
+    rechazo = new Error('hay saldos');
+
+    await expect(fijarFecha('2026-02-01')).rejects.toThrow('hay saldos');
   });
 
   it('rechaza una fecha que no existe', async () => {

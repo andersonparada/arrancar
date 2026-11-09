@@ -14,3 +14,18 @@ export interface EmpresaGuardada {
 export interface AvisosDeEmpresa {
   empresaGuardada(operador: Operador, aviso: EmpresaGuardada): Promise<void>;
 }
+
+/** Lo que se avisa antes de cambiar la fecha de inicio de una empresa que ya tenía carga inicial. */
+export interface FechaDeInicioPorCambiar {
+  empresaId: string;
+  /** La fecha nueva, `AAAA-MM-DD`. */
+  fechaDeInicio: string;
+}
+
+/**
+ * Puerto para preguntar a los módulos activos si aceptan la fecha de inicio nueva, dentro de la misma transacción:
+ * el que no la acepta lanza su error y el cambio se deshace. El operador lleva `empresaId` = la empresa.
+ */
+export interface AvisosDeFechaDeInicio {
+  fechaDeInicioPorCambiar(operador: Operador, aviso: FechaDeInicioPorCambiar): Promise<void>;
+}
