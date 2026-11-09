@@ -23,9 +23,17 @@ export class EstablecerFechaDeInicio {
     return ejecutorEnEmpresa.ejecutar(operador, empresaId, async () => {
       const id = Identificador.desde<'Empresa'>(empresaId);
       const carga = await repositorioCargas.buscar(id);
-      if (carga) carga.cambiarFechaDeInicio(fechaDeInicio);
+      if (carga) await this.corregir(operador, carga, { empresaId, fechaDeInicio });
       await repositorioCargas.guardar(carga ?? CargaInicial.iniciar(id, fechaDeInicio));
       return consultas.cargaInicial(empresaId);
     });
+  }
+
+  /** Si la fecha cambia, los módulos con saldos iniciales dicen si la aceptan antes de guardarla. */
+  private async corregir(operador: Operador, carga: CargaInicial, cambio: CambioDeFechaDeInicio): Promise<void> {
+    const anterior = carga.instantanea().fechaDeInicio;
+    carga.cambiarFechaDeInicio(cambio.fechaDeInicio);
+    if (anterior === carga.instantanea().fechaDeInicio) return;
+    await this.dependencias.avisos.fechaDeInicioPorCambiar({ ...operador, empresaId: cambio.empresaId }, cambio);
   }
 }

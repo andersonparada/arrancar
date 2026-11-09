@@ -14,6 +14,7 @@ import { EjecutorEnEmpresa } from '../aplicacion/ejecutor-en-empresa.js';
 import type { ConsultasEmpresas } from '../aplicacion/puertos/consultas-empresas.js';
 import { DatosDeEmpresaControlador } from '../http/datos-de-empresa.controlador.js';
 import { rutasDeDatosDeEmpresa } from '../http/datos-de-empresa.rutas.js';
+import { AvisosDeEmpresaEnMediador } from '../infraestructura/avisos-de-empresa-en-mediador.js';
 import { ConsultasDeDatosDeEmpresaDrizzle } from '../infraestructura/persistencia/consultas-de-datos-de-empresa.drizzle.js';
 import { RepositorioDeCargasInicialesDrizzle } from '../infraestructura/persistencia/repositorio-de-cargas-iniciales.drizzle.js';
 import { RepositorioDeDatosFiscalesDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales.drizzle.js';
@@ -34,6 +35,7 @@ function dependenciasDe(
     repositorioCargas: new RepositorioDeCargasInicialesDrizzle(),
     consultas: new ConsultasDeDatosDeEmpresaDrizzle(),
     auditoria,
+    avisos: new AvisosDeEmpresaEnMediador(),
   };
 }
 

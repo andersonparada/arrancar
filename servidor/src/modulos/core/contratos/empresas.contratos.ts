@@ -28,6 +28,12 @@ declare module './mediador.contratos.js' {
      * suya. El operador del aviso lleva `empresaId` = la empresa guardada, aunque no sea la activa.
      */
     'empresas.empresa_guardada': { empresaId: string; secciones: SeccionesAportadas };
+    /**
+     * La fecha de inicio de una empresa con carga abierta va a cambiar (`fechaDeInicio` es la nueva). Cada módulo con
+     * saldos iniciales (Cuentas por pagar, Bancos…) lanza su error si algún saldo suyo quedaría con emisión o fecha
+     * igual o posterior a la nueva; el error deshace el cambio. El operador lleva `empresaId` = la empresa.
+     */
+    'empresas.fecha_de_inicio_por_cambiar': { empresaId: string; fechaDeInicio: string };
   }
 }
 
