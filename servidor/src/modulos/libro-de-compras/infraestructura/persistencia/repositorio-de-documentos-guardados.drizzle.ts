@@ -1,4 +1,5 @@
 import { asc, eq, sql } from 'drizzle-orm';
+import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   AnulacionDeDocumento,
@@ -32,7 +33,18 @@ export class RepositorioDeDocumentosGuardadosDrizzle implements RepositorioDeDoc
       retenciones: retenidas,
       notas,
       motivoDeLaFactura,
+      anuladoPorNombre: await this.nombreDeQuienAnulo(documento.anuladoPor),
     });
+  }
+
+  /** Nombre y apellidos de quien anuló; `null` si no hubo anulación o el usuario no se puede leer. */
+  private async nombreDeQuienAnulo(usuarioId: string | null): Promise<string | null> {
+    if (usuarioId === null) return null;
+    const [usuario] = await transaccionEnCurso()
+      .select({ nombres: usuarios.nombres, apellidos: usuarios.apellidos })
+      .from(usuarios)
+      .where(eq(usuarios.id, usuarioId));
+    return usuario ? `${usuario.nombres} ${usuario.apellidos ?? ''}`.trim() : null;
   }
 
   /** El motivo sin crédito de la factura de una nota; `null` si el documento no es una nota. */

@@ -46,6 +46,7 @@ export function dtoDeFicha(guardado: DocumentoGuardado): DocumentoFichaDto {
     estado: guardado.estado,
     anuladoEn: guardado.anuladoEn?.toISOString() ?? null,
     anuladoPor: guardado.anuladoPor,
+    anuladoPorNombre: guardado.anuladoPorNombre,
     motivoDeAnulacion: guardado.motivoDeAnulacion,
     causaDeAnulacion: guardado.causaDeAnulacion,
     procesadoEnDestinoEn: guardado.procesadoEnDestinoEn?.toISOString() ?? null,

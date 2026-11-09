@@ -176,6 +176,7 @@ describe('ficha del documento', () => {
     expect(cuerpo).toMatchObject({ estado: 'anulado', motivoDeAnulacion: 'Error de captura' });
     expect(cuerpo.anuladoEn).toEqual(expect.any(String));
     expect(cuerpo.anuladoPor).toEqual(expect.any(String));
+    expect(cuerpo.anuladoPorNombre).toEqual(expect.stringMatching(/\S+/));
   });
 
   it('uno que no existe responde 404', async () => {

@@ -19,6 +19,8 @@ export interface FilasLeidasDeDocumento {
   notas: FilaDeDocumento[];
   /** Solo en una nota de crédito: el motivo de la factura que rebaja. */
   motivoDeLaFactura: MotivoSinCredito | null;
+  /** Nombre de quien anuló; `null` si no está anulado o no se pudo leer el usuario. */
+  anuladoPorNombre: string | null;
 }
 
 function combustibleDeDominio(fila: FilaDeLinea): LineaDeDocumento['combustible'] {
@@ -132,6 +134,7 @@ export const mapeadorDeDocumentoGuardado = {
       estado: documento.estado,
       anuladoEn: documento.anuladoEn,
       anuladoPor: documento.anuladoPor,
+      anuladoPorNombre: filas.anuladoPorNombre,
       motivoDeAnulacion: documento.motivoDeAnulacion,
       causaDeAnulacion: documento.causaDeAnulacion,
       procesadoEnDestinoEn: documento.procesadoEnDestinoEn,

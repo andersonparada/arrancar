@@ -20,6 +20,8 @@ export interface DocumentoFichaDto extends DocumentoDto {
   /** Momento de la anulación (ISO 8601); `null` si está vigente. */
   anuladoEn: string | null;
   anuladoPor: string | null;
+  /** Nombre de quien anuló; `null` si está vigente o si el usuario ya no se puede leer. */
+  anuladoPorNombre: string | null;
   motivoDeAnulacion: string | null;
   /** Por qué se anuló el registro; `null` si está vigente. */
   causaDeAnulacion: CausaDeAnulacion | null;

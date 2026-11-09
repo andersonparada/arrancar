@@ -2,7 +2,14 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { FichaDeDocumento, LineaDeDocumento, RetencionDeDocumento } from '../../servicios/documentos.api';
 import { MOTIVOS_FUERA_DEL_LIBRO, MOTIVOS_SIN_CREDITO } from '../../textos-de-documentos';
-import { cifrasDeLinea, nombreDeLinea, sumarMontos, tituloDeDocumento, totalRetenido } from './detalles-de-documento';
+import {
+  cifrasDeLinea,
+  detallesDeAnulacion,
+  nombreDeLinea,
+  sumarMontos,
+  tituloDeDocumento,
+  totalRetenido,
+} from './detalles-de-documento';
 import { cifrasDeRetencion, estadoDeRetencion, nombreDeRetencion } from './detalles-de-retencion';
 import {
   datosDeAnulacion,
@@ -127,6 +134,23 @@ describe('detalles del documento', () => {
       'IDP (el de la factura)',
     );
     expect(cifrasDeLinea(linea({ otrosImpuestos: '5.00' })).map((c) => c.etiqueta)).toContain('Otros impuestos');
+  });
+});
+
+describe('detalles de la anulación', () => {
+  const quienAnulo = (cambios: Partial<FichaDeDocumento>) =>
+    detallesDeAnulacion(ficha({ estado: 'anulado', ...cambios })).find((d) => d.etiqueta === 'Anulado por')?.valor;
+
+  it('muestra el nombre de quien anuló', () => {
+    expect(quienAnulo({ anuladoPor: 'u1', anuladoPorNombre: 'Ana Pérez' })).toBe('Ana Pérez');
+  });
+
+  it('dice que el usuario no está disponible si no se pudo leer', () => {
+    expect(quienAnulo({ anuladoPor: 'u1', anuladoPorNombre: null })).toBe('Usuario no disponible');
+  });
+
+  it('muestra un guion si no hay quién', () => {
+    expect(quienAnulo({ anuladoPor: null, anuladoPorNombre: null })).toBe('—');
   });
 });
 
