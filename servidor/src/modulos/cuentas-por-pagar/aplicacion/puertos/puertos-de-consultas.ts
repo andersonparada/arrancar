@@ -25,6 +25,8 @@ export interface PaginacionDeDocumentos {
 /** Datos del documento que viven en Libro de compras (no se copian aquí) y del proveedor. Un saldo inicial no tiene libro. */
 export interface DatosDelLibro {
   proveedorNombre: string;
+  /** El NIT del proveedor; nulo si el tercero no tiene. */
+  proveedorNit: string | null;
   /** Nulos en un saldo inicial. */
   fechaRecepcion: string | null;
   periodo: string | null;
@@ -45,6 +47,8 @@ export interface AnulacionEnElLibro {
 export interface FilaDeDocumento {
   documento: DocumentoPorPagar;
   libro: DatosDelLibro;
+  /** Cuándo se creó la fila (instante ISO). */
+  creadoEn: string;
   /** Lo que las notas de crédito rebajaron de este cargo. */
   aplicadoAlCargoCentavos: number;
   /** Lo que esta nota de crédito rebajó de cargos. */

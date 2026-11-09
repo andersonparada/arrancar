@@ -95,6 +95,7 @@ export class ConsultaBaseDeDocumentos {
       .select({
         documento: documentos,
         proveedorNombre: terceros.nombreMostrar,
+        proveedorNit: terceros.nit,
         ...this.columnasDelLibro(),
         alCargo: this.alCargo.monto,
         porLaNota: this.porLaNota.monto,
@@ -128,6 +129,7 @@ export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
     documento: mapeadorDeDocumento.aDominio(fila.documento),
     libro: {
       proveedorNombre: fila.proveedorNombre,
+      proveedorNit: fila.proveedorNit,
       fechaRecepcion: fila.fechaRecepcion,
       periodo: fila.periodo,
       anulacion: {
@@ -138,6 +140,7 @@ export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
         anuladoEn: fila.anuladoEnElLibro,
       },
     },
+    creadoEn: fila.documento.creadoEn.toISOString(),
     aplicadoAlCargoCentavos: aCentavos(fila.alCargo ?? '0'),
     aplicadoPorLaNotaCentavos: aCentavos(fila.porLaNota ?? '0'),
     notasVigentes: fila.notasVigentes ?? 0,
