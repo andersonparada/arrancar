@@ -32,7 +32,7 @@ export class EliminarDocumento {
     const { documento, origen, notasEnTotal } = await filaDe(consultas, id);
     const etiqueta = etiquetaDe(origen);
     exigirEliminable(documento, notasEnTotal, etiqueta);
-    await documentosDeCompra.bloquear(documento.documentoId);
+    await documentosDeCompra.bloquear(documento.documentoId!);
     const guardado = await bloquear(documentos, id);
     exigirEliminable(guardado.documento, notasEnTotal, etiqueta);
     await revisarReglasDeBaja(this.reglas, guardado);
@@ -44,6 +44,6 @@ export class EliminarDocumento {
     });
     await deshacerAplicaciones(aplicaciones, guardado.documento);
     await documentos.eliminar(id);
-    await libroDeCompras.eliminar(operador, documento.documentoId);
+    await libroDeCompras.eliminar(operador, documento.documentoId!);
   }
 }

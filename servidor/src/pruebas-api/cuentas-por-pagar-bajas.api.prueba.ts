@@ -63,7 +63,7 @@ beforeAll(async () => {
   const { cuentaId, empresaId } = escenario.cuenta;
   operador = { usuarioId: usuario!.id, cuentaId, empresaId, esSuperacceso: false };
   busEventos.suscribir('cuentas-por-pagar.documento_anulado', async (datos) => {
-    publicados.push({ documentoId: datos.documentoDeCompraId, estabaAutorizado: datos.estabaAutorizado });
+    publicados.push({ documentoId: datos.documentoDeCompraId!, estabaAutorizado: datos.estabaAutorizado });
   });
   mediador.escuchar('cuentas-por-pagar', 'libro-de-compras.documento_por_anular', async () => {
     if (rechazarDespues) throw new RechazoPosterior('Otro escucha rechazó la anulación.');

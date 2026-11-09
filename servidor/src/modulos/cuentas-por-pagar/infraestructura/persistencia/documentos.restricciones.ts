@@ -9,6 +9,7 @@ const ESTADOS = ESTADOS_DE_DOCUMENTO.map((estado) => `'${estado}'`).join(', ');
 /** Las columnas de `documentos` que usan las restricciones (la tabla las pasa desde su callback). */
 type T = Record<
   | 'id'
+  | 'origen'
   | 'empresaId'
   | 'documentoId'
   | 'destino'
@@ -41,7 +42,7 @@ export const restriccionesDeValores = (t: T) => [
   check('documentos_estado_valido', sql`${t.estado} in (${sql.raw(ESTADOS)})`),
   check(
     'documentos_nota_con_factura',
-    sql`(${t.tipo} in ('nota_de_credito', 'nota_de_debito')) = (${t.documentoAfectadoId} is not null)`,
+    sql`${t.origen} = 'saldo_inicial' or (${t.tipo} in ('nota_de_credito', 'nota_de_debito')) = (${t.documentoAfectadoId} is not null)`,
   ),
   check('documentos_total_positivo', sql`${t.total} > 0`),
   check('documentos_retenciones_validas', sql`${t.retenciones} >= 0 and ${t.retenciones} <= ${t.total}`),

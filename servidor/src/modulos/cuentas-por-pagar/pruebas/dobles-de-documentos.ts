@@ -5,6 +5,7 @@ import type {
   CondicionesDeProveedores,
   ConsultasDeCargos,
   DocumentoNuevo,
+  DatosDeRecepcion,
   DocumentosDeCompra,
   PlazoPorOmision,
   RepositorioDeAplicaciones,
@@ -75,6 +76,10 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
   async agregar(nuevo: DocumentoNuevo): Promise<DocumentoPorPagar> {
     const guardado: DocumentoPorPagar = {
       ...nuevo,
+      origen: 'libro_de_compras',
+      saldoAlInicioCentavos: null,
+      retencionesPorPracticarCentavos: null,
+      referencia: null,
       id: crypto.randomUUID(),
       ingresadoPor: null,
       estado: 'pendiente',
@@ -192,8 +197,9 @@ export class DocumentosDeCompraEnMemoria implements DocumentosDeCompra {
 
   async bloquear(): Promise<void> {}
 
-  async fechaDeRecepcion(documentoId: string): Promise<string> {
-    return this.recepciones.get(documentoId) ?? this.recepcionPorOmision;
+  async datosDeRecepcion(documentoId: string): Promise<DatosDeRecepcion> {
+    const fechaRecepcion = this.recepciones.get(documentoId) ?? this.recepcionPorOmision;
+    return { fechaRecepcion, serie: 'A', numero: documentoId };
   }
 }
 

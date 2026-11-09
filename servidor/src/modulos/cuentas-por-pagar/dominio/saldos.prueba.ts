@@ -4,13 +4,19 @@ import { estaVencido, saldoDe } from './saldos.js';
 
 const documento = (cambios: Partial<DocumentoPorPagar> = {}): DocumentoPorPagar => ({
   id: crypto.randomUUID(),
+  origen: 'libro_de_compras',
   documentoId: crypto.randomUUID(),
+  serie: 'A',
+  numero: '100',
   tipo: 'factura',
   proveedorId: crypto.randomUUID(),
   documentoAfectadoId: null,
   fechaEmision: '2026-03-10',
   totalCentavos: 11200,
   retencionesCentavos: 1200,
+  saldoAlInicioCentavos: null,
+  retencionesPorPracticarCentavos: null,
+  referencia: null,
   tieneActivoFijo: false,
   vencimiento: '2026-04-10',
   ingresadoPor: null,
@@ -48,6 +54,38 @@ describe('saldo de un documento', () => {
   it('un documento anulado no debe nada ni deja nada a favor', () => {
     expect(saldoDe(documento({ estado: 'anulado' }), nada).saldoCentavos).toBe(0);
     expect(saldoDe(documento({ tipo: 'nota_de_credito', estado: 'anulado' }), nada).saldoCentavos).toBe(0);
+  });
+});
+
+describe('saldo de un saldo inicial', () => {
+  const saldoInicial = (cambios: Partial<DocumentoPorPagar> = {}) =>
+    documento({
+      origen: 'saldo_inicial',
+      documentoId: null,
+      totalCentavos: 11200,
+      retencionesCentavos: 1200,
+      saldoAlInicioCentavos: 7000,
+      retencionesPorPracticarCentavos: 500,
+      ...cambios,
+    });
+
+  it('el neto es lo que faltaba pagar al corte, sin restar las retenciones por practicar', () => {
+    expect(saldoDe(saldoInicial(), nada)).toEqual({ netoCentavos: 7000, aplicadoCentavos: 0, saldoCentavos: 7000 });
+  });
+
+  it('las notas aplicadas se restan del saldo al inicio', () => {
+    expect(saldoDe(saldoInicial(), { alCargoCentavos: 2000, porLaNotaCentavos: 0 }).saldoCentavos).toBe(5000);
+  });
+
+  it('una nota de crédito cargada como saldo inicial tiene a favor su saldo al inicio', () => {
+    const nota = saldoInicial({
+      tipo: 'nota_de_credito',
+      retencionesCentavos: 0,
+      saldoAlInicioCentavos: 3000,
+      vencimiento: null,
+    });
+
+    expect(saldoDe(nota, { alCargoCentavos: 0, porLaNotaCentavos: 1000 }).saldoCentavos).toBe(2000);
   });
 });
 

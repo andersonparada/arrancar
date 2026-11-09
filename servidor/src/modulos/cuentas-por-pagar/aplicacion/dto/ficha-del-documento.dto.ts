@@ -12,7 +12,7 @@ export interface AplicacionDto {
 /** El documento por pagar tal como lo ve la pantalla y tal como queda en la auditoría de una baja. */
 export interface FichaDelDocumentoDto {
   id: string;
-  documentoId: string;
+  documentoId: string | null;
   tipo: TipoDeDocumento;
   proveedorId: string;
   documentoAfectadoId: string | null;

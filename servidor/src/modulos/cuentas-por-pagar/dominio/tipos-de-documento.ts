@@ -13,6 +13,20 @@ export const TIPOS_DE_DOCUMENTO = [
   'recibo',
 ] as const satisfies readonly TipoDeDocumentoDeCompra[];
 
+/** Los seis tipos de factura: para no deber dos veces el mismo documento cuentan como uno (índice único por familia). */
+export const TIPOS_DE_FACTURA = [
+  'factura',
+  'factura_pequeno_contribuyente',
+  'factura_pequeno_contribuyente_electronico',
+  'factura_contribuyente_agropecuario',
+  'factura_primario_pecuario',
+  'factura_especial',
+] as const satisfies readonly TipoDeDocumentoDeCompra[];
+
+/** De dónde viene un documento por pagar: del Libro de compras o cargado como saldo inicial. */
+export const ORIGENES_DE_DOCUMENTO = ['libro_de_compras', 'saldo_inicial'] as const;
+export type OrigenDeDocumento = (typeof ORIGENES_DE_DOCUMENTO)[number];
+
 export type TipoDeDocumento = TipoDeDocumentoDeCompra;
 
 /** Un cargo suma a lo que se debe (con vencimiento); un abono lo rebaja (la nota de crédito, sin vencimiento). */

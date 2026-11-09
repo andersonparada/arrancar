@@ -55,7 +55,7 @@ export interface FilaDeDocumento {
 
 export interface NotaDeUnDocumento {
   id: string;
-  documentoId: string;
+  documentoId: string | null;
   tipo: TipoDeDocumento;
   estado: EstadoDeDocumento;
   serie: string | null;
@@ -86,7 +86,7 @@ export interface TotalesDelProveedor {
 
 export interface NotaConSaldoLibre {
   id: string;
-  documentoId: string;
+  documentoId: string | null;
   serie: string | null;
   numero: string;
   fechaEmision: string;

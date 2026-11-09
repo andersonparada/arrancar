@@ -28,6 +28,8 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   documentos_autorizacion_fel_unica: MENSAJE_DOCUMENTO_DE_LA_CUENTA,
   documentos_del_proveedor_unico: 'Ese documento ya está registrado.',
   documentos_documento_unico: 'Ese documento ya está en Cuentas por pagar.',
+  documentos_numero_por_proveedor_unico:
+    'Ese documento ya está en Cuentas por pagar (como saldo inicial o desde el libro de compras).',
   datos_fiscales_de_empresa_vigencia_unica: 'Ya hay un régimen registrado desde ese mes.',
 };
 

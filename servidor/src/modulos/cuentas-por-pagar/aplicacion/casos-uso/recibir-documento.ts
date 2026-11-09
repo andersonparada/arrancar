@@ -56,9 +56,15 @@ export class RecibirDocumento {
   }
 
   private async guardar(operador: Operador, documento: DocumentoParaDestino): Promise<DocumentoPorPagar> {
-    const vencimiento = claseDe(documento.tipo) === 'cargo' ? await this.vencimientoPara(operador, documento) : null;
+    const { fechaRecepcion, serie, numero } = await this.dependencias.documentosDeCompra.datosDeRecepcion(
+      documento.documentoId,
+    );
+    const esCargo = claseDe(documento.tipo) === 'cargo';
+    const vencimiento = esCargo ? await this.vencimientoPara(operador, documento, fechaRecepcion) : null;
     return this.dependencias.documentos.agregar({
       documentoId: documento.documentoId,
+      serie,
+      numero,
       tipo: documento.tipo,
       proveedorId: documento.proveedorId,
       documentoAfectadoId: documento.documentoAfectadoId,
@@ -70,12 +76,16 @@ export class RecibirDocumento {
     });
   }
 
-  private async vencimientoPara(operador: Operador, documento: DocumentoParaDestino): Promise<string> {
-    const { condiciones, documentosDeCompra, plazo } = this.dependencias;
+  private async vencimientoPara(
+    operador: Operador,
+    documento: DocumentoParaDestino,
+    fechaRecepcion: string,
+  ): Promise<string> {
+    const { condiciones, plazo } = this.dependencias;
     const { diasDeCredito, contarDesdeLaRecepcion } = await condiciones.deProveedor(documento.proveedorId);
     const fechaBase = fechaBaseDelPlazo({
       fechaEmision: documento.fechaEmision,
-      fechaRecepcion: await documentosDeCompra.fechaDeRecepcion(documento.documentoId),
+      fechaRecepcion,
       contarDesdeLaRecepcion,
     });
     return proponerVencimiento({ fechaBase, diasDeCredito, mesesPorOmision: await plazo.meses(operador) });

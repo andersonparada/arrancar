@@ -124,3 +124,14 @@ export class DocumentoConNotas extends ReglaDeNegocioInfringida {
     super(`El documento ${etiqueta} tiene notas de crédito o de débito (aunque estén anuladas): no se puede eliminar.`);
   }
 }
+
+/** Un saldo inicial no es un registro fiscal: no se anula ni se elimina por Documentos. */
+export class EsUnSaldoInicial extends ReglaDeNegocioInfringida {
+  readonly codigo = 'es_un_saldo_inicial';
+
+  constructor(etiqueta: string) {
+    super(
+      `El documento ${etiqueta} es un saldo inicial: no se anula; corríjalo o elimínelo en Administración → Saldos iniciales mientras la carga inicial esté abierta.`,
+    );
+  }
+}

@@ -66,10 +66,10 @@ beforeAll(async () => {
     permisos: ['cuentas-por-pagar.documentos.ver', 'cuentas-por-pagar.documentos.autorizar'],
   });
   busEventos.suscribir('cuentas-por-pagar.documento_autorizado', async (datos) => {
-    autorizados.push({ documentoId: datos.documentoDeCompraId, autorizacionPropia: datos.autorizacionPropia });
+    autorizados.push({ documentoId: datos.documentoDeCompraId!, autorizacionPropia: datos.autorizacionPropia });
   });
   busEventos.suscribir('cuentas-por-pagar.documento_desautorizado', async (datos) => {
-    desautorizados.push(datos.documentoDeCompraId);
+    desautorizados.push(datos.documentoDeCompraId!);
   });
 });
 
