@@ -9,6 +9,7 @@ export type TipoDeDocumento =
   | 'nota_de_debito'
   | 'recibo';
 
+export type OrigenDelDocumento = 'libro_de_compras' | 'saldo_inicial';
 export type ClaseDeDocumento = 'cargo' | 'abono';
 export type EstadoDeDocumento = 'pendiente' | 'registrado' | 'autorizado' | 'anulado';
 export type EstadoBuscado = EstadoDeDocumento | 'vigente' | 'todos';
@@ -33,8 +34,9 @@ export interface AccionesDelDocumento {
 /** Un documento tal como lo ven la bandeja, la lista y la ficha; el dinero viaja como texto. */
 export interface DocumentoPorPagar extends AccionesDelDocumento {
   id: string;
-  /** El id del documento en Libro de compras. */
-  documentoId: string;
+  origen: OrigenDelDocumento;
+  /** El id del documento en Libro de compras; `null` en un saldo inicial. */
+  documentoId: string | null;
   tipo: TipoDeDocumento;
   clase: ClaseDeDocumento;
   estado: EstadoDeDocumento;
@@ -43,8 +45,9 @@ export interface DocumentoPorPagar extends AccionesDelDocumento {
   serie: string | null;
   numero: string;
   fechaEmision: string;
-  fechaRecepcion: string;
-  periodo: string;
+  /** `null` en un saldo inicial (no pasó por el libro de compras). */
+  fechaRecepcion: string | null;
+  periodo: string | null;
   vencimiento: string | null;
   vencido: boolean;
   documentoAfectadoId: string | null;
@@ -59,6 +62,13 @@ export interface DocumentoPorPagar extends AccionesDelDocumento {
   registradoEn: string | null;
   autorizadoEn: string | null;
   autorizacionPropia: boolean;
+  /** Solo en saldos iniciales: lo que se debía al cierre del día anterior a la fecha de inicio. */
+  saldoAlInicio: string | null;
+  retencionesPorPracticar: string | null;
+  /** Cómo se llamaba el documento en el sistema anterior. */
+  referencia: string | null;
+  /** Pagos y notas aplicados antes de la fecha de inicio (ya descontados de `saldoAlInicio`). */
+  anterioresAlInicio: string | null;
 }
 
 export interface PaginaDeDocumentos {
@@ -76,7 +86,7 @@ export interface Bandeja {
 
 export interface NotaDelDocumento {
   id: string;
-  documentoId: string;
+  documentoId: string | null;
   tipo: TipoDeDocumento;
   estado: EstadoDeDocumento;
   serie: string | null;
@@ -140,6 +150,7 @@ export interface ConsultaDeDocumentos {
   proveedorId?: string;
   estado?: EstadoBuscado;
   tipo?: TipoDeDocumento;
+  origen?: OrigenDelDocumento;
   emitidosDesde?: string;
   emitidosHasta?: string;
   soloVencidos?: boolean;

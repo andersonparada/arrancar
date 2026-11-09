@@ -19,7 +19,7 @@ const emit = defineEmits<{ alternar: [] }>();
 const puedeVerElLibro = usarSesion().puede('libro-de-compras.documentos.ver');
 const enlaceALaFicha = {
   name: 'libro-de-compras.documentos.ficha',
-  params: { documentoId: props.documento.documentoId },
+  params: { documentoId: props.documento.documentoId ?? '' },
 };
 </script>
 

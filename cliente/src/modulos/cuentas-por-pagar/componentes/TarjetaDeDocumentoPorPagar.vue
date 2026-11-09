@@ -53,6 +53,7 @@ const destino = computed(() => ({
       <span class="flex flex-wrap gap-1.5">
         <InsigniaBase :tono="tonoDeEstado(documento.estado)">{{ textoDeEstado(documento.estado) }}</InsigniaBase>
         <InsigniaBase v-if="documento.vencido" tono="rojo">Vencido</InsigniaBase>
+        <InsigniaBase v-if="documento.origen === 'saldo_inicial'" tono="tierra">Saldo inicial</InsigniaBase>
         <InsigniaBase v-if="documento.clase === 'abono'" tono="campo">A favor</InsigniaBase>
       </span>
       <dl class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">

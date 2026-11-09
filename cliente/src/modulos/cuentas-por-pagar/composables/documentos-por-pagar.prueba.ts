@@ -2,7 +2,13 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import type { DocumentoPorPagar, FichaDelDocumento } from '../servicios/tipos';
-import { detallesDeAnulacion, detallesDeFicha, detallesDeLista, tituloDeDocumento } from './detalles-de-documento';
+import {
+  detallesDeAnulacion,
+  detallesDeFicha,
+  detallesDeLista,
+  detallesDeMontos,
+  tituloDeDocumento,
+} from './detalles-de-documento';
 import {
   cantidadDeFiltros,
   consultaDeDocumentos,
@@ -90,6 +96,55 @@ describe('títulos', () => {
       anulacion: { causa: null, motivo: null, anuladoPor: 'u1', anuladoPorNombre: null, anuladoEn: null },
     });
     expect(detalles[2]?.valor).toBe('Usuario no disponible');
+  });
+});
+
+describe('saldos iniciales', () => {
+  const saldo = (cambios: Partial<FichaDelDocumento> = {}) =>
+    ({
+      ...documento({ origen: 'saldo_inicial', fechaRecepcion: null, documentoId: null }),
+      saldoAlInicio: '500.00',
+      anterioresAlInicio: '100.00',
+      retencionesPorPracticar: '12.00',
+      referencia: 'F-9',
+      ...cambios,
+    }) as FichaDelDocumento;
+  const etiquetas = (detalles: { etiqueta: string }[]) => detalles.map((d) => d.etiqueta);
+
+  it('la ficha muestra el origen y la referencia, sin fecha de recepción', () => {
+    const e = etiquetas(detallesDeFicha(saldo()));
+    expect(e).toContain('Origen');
+    expect(e).toContain('Referencia (sistema anterior)');
+    expect(e).not.toContain('Fecha de recepción');
+  });
+
+  it('los montos agregan saldo al inicio, anteriores y retenciones por practicar', () => {
+    expect(etiquetas(detallesDeMontos(saldo()))).toEqual(
+      expect.arrayContaining([
+        'Saldo al inicio',
+        'Pagos y notas anteriores a la fecha de inicio',
+        'Retenciones por practicar',
+      ]),
+    );
+    expect(etiquetas(detallesDeMontos(saldo({ anterioresAlInicio: null, retencionesPorPracticar: null })))).toEqual(
+      expect.arrayContaining(['Saldo al inicio']),
+    );
+  });
+
+  it('un documento del libro no muestra nada de saldo inicial y conserva la recepción', () => {
+    const ficha = documento({ origen: 'libro_de_compras', fechaRecepcion: '2026-11-01' }) as FichaDelDocumento;
+    expect(etiquetas(detallesDeFicha(ficha))).toContain('Fecha de recepción');
+    expect(etiquetas(detallesDeMontos(ficha))).not.toContain('Saldo al inicio');
+  });
+
+  it('la lista con recepción nula no rompe', () => {
+    expect(() => detallesDeLista(saldo())).not.toThrow();
+  });
+
+  it('el filtro de origen cuenta y se manda solo si se escogió', () => {
+    expect(cantidadDeFiltros({ ...filtrosIniciales(), origen: 'saldo_inicial' })).toBe(1);
+    expect(consultaDeDocumentos(filtrosIniciales(), 1).origen).toBeUndefined();
+    expect(consultaDeDocumentos({ ...filtrosIniciales(), origen: 'saldo_inicial' }, 1).origen).toBe('saldo_inicial');
   });
 });
 
