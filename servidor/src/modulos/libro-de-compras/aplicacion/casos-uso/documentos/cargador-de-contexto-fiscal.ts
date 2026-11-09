@@ -33,6 +33,8 @@ export interface ContextoFiscal {
   /** Se propuso otro período porque el que correspondía está declarado y bloqueado. */
   avisoDelPeriodo: string | null;
   nitDeLaEmpresa: string;
+  /** La fecha de inicio de la empresa; `null` si aún no tiene (entonces no hay aviso de emisión anterior). */
+  fechaDeInicio: string | null;
   proveedor: ProveedorParaDocumento;
   datosDeLaEmpresa: DatosFiscalesDeEmpresa;
   /** Con los que se calcula: los guardados, los que llegaron en el cuerpo o los valores por omisión. */
@@ -87,7 +89,6 @@ export class CargadorDeContextoFiscal {
   ): Promise<ContextoFiscal> {
     const { hoy, fechaDeRecepcion } = await this.fechasDeHoyYRecepcion(operador, solicitud);
     const proveedor = await this.proveedor(solicitud.proveedorId);
-    const nitDeLaEmpresa = await this.nitDeLaEmpresa(operador);
     const { periodo, aviso: avisoDelPeriodo } = await this.guardia.elegir(operador, solicitud, fechaDeRecepcion);
     const datosDeLaEmpresa = await this.datosDeLaEmpresa(operador, periodo, opciones.bloquear);
     const delProveedor = await this.datosDelProveedor(solicitud, datosDeLaEmpresa);
@@ -96,7 +97,7 @@ export class CargadorDeContextoFiscal {
       fechaDeRecepcion,
       periodo,
       avisoDelPeriodo,
-      nitDeLaEmpresa,
+      ...(await this.identidadDeLaEmpresa(operador)),
       proveedor,
       datosDeLaEmpresa,
       datosDelProveedor: delProveedor.vigentes,
@@ -155,6 +156,14 @@ export class CargadorDeContextoFiscal {
       guardados: await this.dependencias.datosFiscalesDeProveedor.buscar(solicitud.proveedorId),
       pedidos: solicitud.datosFiscalesDelProveedor,
     });
+  }
+
+  /** El NIT (obligatorio) y la fecha de inicio de la empresa, que da Empresas. */
+  private async identidadDeLaEmpresa(operador: Operador) {
+    return {
+      nitDeLaEmpresa: await this.nitDeLaEmpresa(operador),
+      fechaDeInicio: await this.dependencias.empresa.fechaDeInicio(operador),
+    };
   }
 
   private async nitDeLaEmpresa(operador: Operador): Promise<string> {
