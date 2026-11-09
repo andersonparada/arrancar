@@ -13,7 +13,6 @@ import type {
   RepositorioDeDocumentos,
 } from '../../puertos/puertos-de-documentos.js';
 import type { LibroDeCompras } from '../../puertos/puertos-de-libro-de-compras.js';
-import type { DocumentoPorPagar } from '../../../dominio/documento-por-pagar.js';
 import type { ConsultasDeDocumentos, FilaDeDocumento } from '../../puertos/puertos-de-consultas.js';
 
 /** Lo que necesitan los casos de uso que cambian el estado de un documento. */
@@ -38,10 +37,7 @@ export interface DependenciasDeBajas extends DependenciasDeAutorizacion {
   documentosDeCompra: DocumentosDeCompra;
 }
 
-/** Cómo se nombra un documento ante el usuario: `serie-número`, o solo el número si no tiene serie. */
-export function etiquetaDe({ serie, numero }: Pick<DocumentoPorPagar, 'serie' | 'numero'>): string {
-  return serie ? `${serie}-${numero}` : numero;
-}
+export { etiquetaDe } from '../../../dominio/documento-por-pagar.js';
 
 /**
  * La fila con sus datos de origen (sin bloquear), para nombrar el documento y para las órdenes a Libro de compras que

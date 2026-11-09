@@ -59,3 +59,8 @@ export interface DocumentoConAplicaciones {
 export function netoDe({ totalCentavos, retencionesCentavos, saldoAlInicioCentavos }: DocumentoPorPagar): number {
   return saldoAlInicioCentavos ?? totalCentavos - retencionesCentavos;
 }
+
+/** Cómo se nombra un documento ante el usuario: `serie-número`, o solo el número si no tiene serie. */
+export function etiquetaDe({ serie, numero }: Pick<DocumentoPorPagar, 'serie' | 'numero'>): string {
+  return serie ? `${serie}-${numero}` : numero;
+}
