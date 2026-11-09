@@ -18,8 +18,7 @@ import { esquemaCuentasPorPagar } from './esquema.tablas.js';
 
 /**
  * Un documento por pagar: de Libro de compras (facturas y demás cargos, y notas de crédito, que son abonos) o un saldo
- * inicial (`origen = 'saldo_inicial'`, sin documento en el libro). El del libro nace en la orden `recibir_documento`. Los saldos no se guardan: se calculan. Serie, número y emisor se leen del
- * documento del libro. Las restricciones viven en `documentos.restricciones.ts`; la llave hacia la factura de una nota
+ * inicial (`origen = 'saldo_inicial'`, sin documento en el libro). El del libro nace en la orden `recibir_documento`. Los saldos no se guardan: se calculan. Las restricciones viven en `documentos.restricciones.ts`; la llave hacia la factura de una nota
  * (`documentos_factura_fk`) va a mano en la migración.
  */
 export const documentos = esquemaCuentasPorPagar.table(

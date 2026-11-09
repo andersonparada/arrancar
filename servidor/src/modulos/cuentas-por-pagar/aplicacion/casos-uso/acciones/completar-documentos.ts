@@ -36,7 +36,7 @@ export class CompletarDocumentos {
 
   private async completar(operador: Operador, { id, vencimiento }: DocumentoPorCompletar): Promise<void> {
     const { documentos, consultas } = this.dependencias;
-    const etiqueta = etiquetaDe((await filaDe(consultas, id)).origen);
+    const etiqueta = etiquetaDe((await filaDe(consultas, id)).documento);
     const { documento } = await bloquear(documentos, id);
     exigirPendiente(documento, etiqueta);
     await documentos.registrar(id, {

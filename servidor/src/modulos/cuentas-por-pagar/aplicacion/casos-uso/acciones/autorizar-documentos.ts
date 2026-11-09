@@ -48,8 +48,8 @@ export class AutorizarDocumentos {
     puedeAutorizarPropios: boolean,
   ): Promise<DocumentoAutorizadoEvento> {
     const { documentos, consultas, libroDeCompras } = this.dependencias;
-    const { documento: previo, origen } = await filaDe(consultas, id);
-    const etiqueta = etiquetaDe(origen);
+    const { documento: previo } = await filaDe(consultas, id);
+    const etiqueta = etiquetaDe(previo);
     exigirRegistrado(previo, etiqueta);
     if (previo.documentoId !== null) await libroDeCompras.marcarProcesado(operador, previo.documentoId, true);
     const guardado = await bloquear(documentos, id);

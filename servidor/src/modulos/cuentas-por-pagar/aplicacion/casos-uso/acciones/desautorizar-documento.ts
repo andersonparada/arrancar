@@ -36,8 +36,8 @@ export class DesautorizarDocumento {
 
   private async desautorizar(operador: Operador, id: string, motivo: string): Promise<DocumentoDesautorizado> {
     const { documentos, consultas, libroDeCompras, auditoria } = this.dependencias;
-    const { documento: previo, origen } = await filaDe(consultas, id);
-    const etiqueta = etiquetaDe(origen);
+    const { documento: previo } = await filaDe(consultas, id);
+    const etiqueta = etiquetaDe(previo);
     exigirAutorizado(previo, etiqueta);
     if (previo.documentoId !== null) await libroDeCompras.marcarProcesado(operador, previo.documentoId, false);
     const guardado = await bloquear(documentos, id);

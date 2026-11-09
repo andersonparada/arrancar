@@ -26,6 +26,8 @@ export interface FilaDeDocumentoPorPagar {
   motivo_de_anulacion: string | null;
 }
 
+let secuencia = 0;
+
 /** Registra documentos por la API de Libro de compras (que los manda a Cuentas por pagar) y lee lo que quedó en la base. */
 export class DocumentosPorPagarDePrueba {
   constructor(
@@ -54,6 +56,54 @@ export class DocumentosPorPagarDePrueba {
       lineas: [{ conceptoId: this.escenario.conceptoId, total }],
       ...cambios,
     });
+  }
+
+  /**
+   * Siembra un saldo inicial ya completado (U8-3 aún no ofrece la carga): sin documento del libro, de Q1,120.00 con
+   * Q700.00 por pagar al corte y Q50.00 de retenciones por practicar. Devuelve su id de Cuentas por pagar.
+   */
+  async sembrarSaldoInicial(cambios: Record<string, unknown> = {}): Promise<string> {
+    const { cuenta, proveedorId } = this.escenario;
+    const [usuario] = await consultar<{ id: string }>('select id from core.usuarios where usuario = $1', [
+      cuenta.usuario,
+    ]);
+    const valores = {
+      serie: 'S',
+      numero: `SALDO${++secuencia}`,
+      tipo: 'factura',
+      proveedorId,
+      fechaEmision: '2026-10-20',
+      total: '1120',
+      retenciones: '120',
+      saldoAlInicio: '700',
+      retencionesPorPracticar: '50',
+      referencia: 'CXP-0045',
+      vencimiento: '2026-11-20',
+      ...cambios,
+    };
+    const [fila] = await consultar<{ id: string }>(
+      `insert into cuentas_por_pagar.documentos (empresa_id, origen, serie, numero, tipo, proveedor_id, fecha_emision,
+         total, retenciones, saldo_al_inicio, retenciones_por_practicar, referencia, vencimiento, estado,
+         registrado_en, registrado_por)
+       values ($1, 'saldo_inicial', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'registrado', now(), $13)
+       returning id`,
+      [
+        cuenta.empresaId,
+        valores.serie,
+        valores.numero,
+        valores.tipo,
+        valores.proveedorId,
+        valores.fechaEmision,
+        valores.total,
+        valores.retenciones,
+        valores.saldoAlInicio,
+        valores.retencionesPorPracticar,
+        valores.referencia,
+        valores.vencimiento,
+        usuario!.id,
+      ],
+    );
+    return fila!.id;
   }
 
   async fila(documentoId: string): Promise<FilaDeDocumentoPorPagar | undefined> {

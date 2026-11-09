@@ -25,7 +25,8 @@ export interface DatosDeDocumentoAutorizado {
   autorizacionPropia: boolean;
 }
 
-/** Un documento por pagar quedó aprobado para pago (U12: no es una provisión). Se publica tras confirmar la transacción. */
+/** Un documento por pagar quedó aprobado para pago (U12: no es una provisión). Se publica tras confirmar la transacción.
+ * Con `origen = 'saldo_inicial'` no genera partida: el pasivo de apertura lo contabiliza la carga inicial. */
 export class DocumentoAutorizadoEvento extends EventoDominio<DatosDeDocumentoAutorizado> {
   readonly nombre = 'cuentas-por-pagar.documento_autorizado';
 
@@ -41,7 +42,7 @@ export interface DatosDeDocumentoDesautorizado {
   origen: OrigenDeDocumento;
 }
 
-/** Un documento autorizado volvió a completado. Se publica tras confirmar la transacción. */
+/** Un documento autorizado volvió a completado. Se publica tras confirmar la transacción. Un saldo inicial no genera partida. */
 export class DocumentoDesautorizado extends EventoDominio<DatosDeDocumentoDesautorizado> {
   readonly nombre = 'cuentas-por-pagar.documento_desautorizado';
 

@@ -10,24 +10,14 @@ import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { mapeadorDeDocumento } from './documento.mapeador.js';
 import { documentos } from './documentos.tablas.js';
 
-/** Cómo se anuló el documento en Libro de compras (de donde ya se guarda). */
-const columnasDeLaAnulacion = {
-  causaDeAnulacion: documentosDeCompra.causaDeAnulacion,
-  motivoDeAnulacion: documentosDeCompra.motivoDeAnulacion,
-  anuladoPorEnElLibro: documentosDeCompra.anuladoPor,
-  anuladoEnElLibro: documentosDeCompra.anuladoEn,
-  anuladoPorNombres: usuarios.nombres,
-  anuladoPorApellidos: usuarios.apellidos,
-};
-
 /** Nombres y apellidos juntos; `null` si el usuario no se pudo leer. */
 function nombreCompleto(nombres: string | null, apellidos: string | null): string | null {
   return nombres ? `${nombres} ${apellidos ?? ''}`.trim() : null;
 }
 
 /**
- * Cada documento con lo que se calcula de las otras tablas: de dónde viene (serie, número y proveedor), lo que sus
- * notas de crédito le rebajaron o él rebajó, y cuántas notas lo corrigen. Las filas salen de las tablas con RLS por
+ * Cada documento con lo que se calcula de las otras tablas: de dónde viene (proveedor y, si es del libro, su recepción), lo que
+ * sus notas de crédito le rebajaron o él rebajó, y cuántas notas lo corrigen. Las filas salen de las tablas con RLS por
  * empresa, así que ninguna consulta necesita filtrar por empresa.
  */
 export class ConsultaBaseDeDocumentos {
@@ -53,6 +43,26 @@ export class ConsultaBaseDeDocumentos {
     .groupBy(aplicacionesDeNotas.notaId)
     .as('aplicado_por_la_nota');
 
+  /**
+   * Lo que se lee del documento del libro (recepción, período y anulación, con el nombre de quien anuló). Va como
+   * subconsulta: Drizzle no resuelve bien un `leftJoin` a otra tabla llamada también `documentos`.
+   */
+  private readonly libro = this.transaccion
+    .select({
+      id: documentosDeCompra.id,
+      fechaRecepcion: documentosDeCompra.fechaRecepcion,
+      periodo: documentosDeCompra.periodo,
+      causaDeAnulacion: documentosDeCompra.causaDeAnulacion,
+      motivoDeAnulacion: documentosDeCompra.motivoDeAnulacion,
+      anuladoPorEnElLibro: documentosDeCompra.anuladoPor,
+      anuladoEnElLibro: documentosDeCompra.anuladoEn,
+      anuladoPorNombres: usuarios.nombres,
+      anuladoPorApellidos: usuarios.apellidos,
+    })
+    .from(documentosDeCompra)
+    .leftJoin(usuarios, eq(usuarios.id, documentosDeCompra.anuladoPor))
+    .as('datos_del_libro');
+
   private readonly notas = this.transaccion
     .select({
       afectadoId: documentos.documentoAfectadoId,
@@ -64,17 +74,28 @@ export class ConsultaBaseDeDocumentos {
     .groupBy(documentos.documentoAfectadoId)
     .as('notas_del_documento');
 
+  /** Lo que se toma del libro en cada fila (nulo en un saldo inicial). */
+  private columnasDelLibro() {
+    const { libro } = this;
+    return {
+      fechaRecepcion: libro.fechaRecepcion,
+      periodo: libro.periodo,
+      causaDeAnulacion: libro.causaDeAnulacion,
+      motivoDeAnulacion: libro.motivoDeAnulacion,
+      anuladoPorEnElLibro: libro.anuladoPorEnElLibro,
+      anuladoEnElLibro: libro.anuladoEnElLibro,
+      anuladoPorNombres: libro.anuladoPorNombres,
+      anuladoPorApellidos: libro.anuladoPorApellidos,
+    };
+  }
+
   /** Todas las columnas y uniones; quien llama agrega `where`, orden y límite. */
   seleccionar() {
     return this.transaccion
       .select({
         documento: documentos,
         proveedorNombre: terceros.nombreMostrar,
-        serie: documentosDeCompra.serie,
-        numero: documentosDeCompra.numero,
-        fechaRecepcion: documentosDeCompra.fechaRecepcion,
-        periodo: documentosDeCompra.periodo,
-        ...columnasDeLaAnulacion,
+        ...this.columnasDelLibro(),
         alCargo: this.alCargo.monto,
         porLaNota: this.porLaNota.monto,
         notasEnTotal: this.notas.enTotal,
@@ -82,8 +103,7 @@ export class ConsultaBaseDeDocumentos {
         total: sql<number>`count(*) over ()`.mapWith(Number),
       })
       .from(documentos)
-      .innerJoin(documentosDeCompra, eq(documentosDeCompra.id, documentos.documentoId))
-      .leftJoin(usuarios, eq(usuarios.id, documentosDeCompra.anuladoPor))
+      .leftJoin(this.libro, eq(this.libro.id, documentos.documentoId))
       .innerJoin(proveedores, eq(proveedores.id, documentos.proveedorId))
       .innerJoin(terceros, eq(terceros.id, proveedores.terceroId))
       .leftJoin(this.alCargo, eq(this.alCargo.cargoId, documentos.id))
@@ -91,9 +111,12 @@ export class ConsultaBaseDeDocumentos {
       .leftJoin(this.notas, eq(this.notas.afectadoId, documentos.documentoId));
   }
 
-  /** Lo que falta por pagar de un cargo, en SQL: total menos retenciones menos lo que le rebajaron. */
+  /**
+   * Lo que falta por pagar de un cargo, en SQL: el saldo al inicio (si es un saldo inicial) o el total menos las
+   * retenciones, menos lo que le rebajaron. Las retenciones por practicar no entran.
+   */
   saldoDelCargo() {
-    return sql`(${documentos.total} - ${documentos.retenciones} - coalesce(${this.alCargo.monto}, 0))`;
+    return sql`(coalesce(${documentos.saldoAlInicio}, ${documentos.total} - ${documentos.retenciones}) - coalesce(${this.alCargo.monto}, 0))`;
   }
 }
 
@@ -103,10 +126,8 @@ type FilaSeleccionada = Awaited<ReturnType<ReturnType<ConsultaBaseDeDocumentos['
 export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
   return {
     documento: mapeadorDeDocumento.aDominio(fila.documento),
-    origen: {
+    libro: {
       proveedorNombre: fila.proveedorNombre,
-      serie: fila.serie,
-      numero: fila.numero,
       fechaRecepcion: fila.fechaRecepcion,
       periodo: fila.periodo,
       anulacion: {

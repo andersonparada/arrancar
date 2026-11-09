@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentoPorPagar } from './documento-por-pagar.js';
-import { estaVencido, saldoDe } from './saldos.js';
+import { anterioresAlInicioDe, estaVencido, saldoDe } from './saldos.js';
 
 const documento = (cambios: Partial<DocumentoPorPagar> = {}): DocumentoPorPagar => ({
   id: crypto.randomUUID(),
@@ -86,6 +86,26 @@ describe('saldo de un saldo inicial', () => {
     });
 
     expect(saldoDe(nota, { alCargoCentavos: 0, porLaNotaCentavos: 1000 }).saldoCentavos).toBe(2000);
+  });
+});
+
+describe('pagos y notas anteriores a la fecha de inicio', () => {
+  const inicial = (cambios: Partial<DocumentoPorPagar> = {}) =>
+    documento({ origen: 'saldo_inicial', documentoId: null, saldoAlInicioCentavos: 7000, ...cambios });
+
+  it('un cargo: total menos retenciones menos lo que faltaba al corte', () => {
+    expect(anterioresAlInicioDe(inicial())).toBe(3000);
+  });
+
+  it('una nota de crédito: su total menos lo que quedaba a favor', () => {
+    const nota = inicial({ tipo: 'nota_de_credito', retencionesCentavos: 0, saldoAlInicioCentavos: 9000 });
+
+    expect(anterioresAlInicioDe(nota)).toBe(2200);
+  });
+
+  it('cero si no hubo pagos anteriores, y nulo en un documento del libro', () => {
+    expect(anterioresAlInicioDe(inicial({ saldoAlInicioCentavos: 10000 }))).toBe(0);
+    expect(anterioresAlInicioDe(documento())).toBeNull();
   });
 });
 

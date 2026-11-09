@@ -1,7 +1,6 @@
 import { aliasedTable, and, asc, desc, eq, gte, lte, lt, ne, sql, type SQL } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import { documentos as documentosDeCompra } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import type {
   AplicacionConDatos,
   ConsultasDeDocumentos,
@@ -34,6 +33,7 @@ function condicionesDe(filtro: FiltroDeDocumentosPorPagar, hoy: string, base: Co
     filtro.proveedorId ? eq(documentos.proveedorId, filtro.proveedorId) : undefined,
     condicionDeEstado(filtro.estado ?? 'vigente'),
     filtro.tipo ? eq(documentos.tipo, filtro.tipo) : undefined,
+    filtro.origen ? eq(documentos.origen, filtro.origen) : undefined,
     filtro.emitidosDesde ? gte(documentos.fechaEmision, filtro.emitidosDesde) : undefined,
     filtro.emitidosHasta ? lte(documentos.fechaEmision, filtro.emitidosHasta) : undefined,
     filtro.soloVencidos
@@ -44,19 +44,17 @@ function condicionesDe(filtro: FiltroDeDocumentosPorPagar, hoy: string, base: Co
 
 type FilaDeNota = {
   nota: typeof documentos.$inferSelect;
-  serie: string | null;
-  numero: string;
   aplicado: string | null;
 };
 
-function aNotaDeUnDocumento({ nota, serie, numero, aplicado }: FilaDeNota): NotaDeUnDocumento {
+function aNotaDeUnDocumento({ nota, aplicado }: FilaDeNota): NotaDeUnDocumento {
   return {
     id: nota.id,
     documentoId: nota.documentoId,
     tipo: nota.tipo,
     estado: nota.estado,
-    serie,
-    numero,
+    serie: nota.serie,
+    numero: nota.numero,
     fechaEmision: nota.fechaEmision,
     totalCentavos: aCentavos(nota.total),
     aplicadoAlDocumentoCentavos: aCentavos(aplicado ?? '0'),
@@ -67,23 +65,19 @@ function aNotaDeUnDocumento({ nota, serie, numero, aplicado }: FilaDeNota): Nota
 function consultaDeAplicaciones() {
   const nota = aliasedTable(documentos, 'nota');
   const cargo = aliasedTable(documentos, 'cargo');
-  const libroDeLaNota = aliasedTable(documentosDeCompra, 'libro_de_la_nota');
-  const libroDelCargo = aliasedTable(documentosDeCompra, 'libro_del_cargo');
   return transaccionEnCurso()
     .select({
       notaId: nota.id,
-      notaSerie: libroDeLaNota.serie,
-      notaNumero: libroDeLaNota.numero,
+      notaSerie: nota.serie,
+      notaNumero: nota.numero,
       cargoId: cargo.id,
-      cargoSerie: libroDelCargo.serie,
-      cargoNumero: libroDelCargo.numero,
+      cargoSerie: cargo.serie,
+      cargoNumero: cargo.numero,
       monto: aplicacionesDeNotas.monto,
     })
     .from(aplicacionesDeNotas)
     .innerJoin(nota, eq(nota.id, aplicacionesDeNotas.notaId))
     .innerJoin(cargo, eq(cargo.id, aplicacionesDeNotas.cargoId))
-    .innerJoin(libroDeLaNota, eq(libroDeLaNota.id, nota.documentoId))
-    .innerJoin(libroDelCargo, eq(libroDelCargo.id, cargo.documentoId))
     .orderBy(asc(aplicacionesDeNotas.creadoEn));
 }
 
@@ -127,12 +121,9 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
     const filas = await transaccionEnCurso()
       .select({
         nota: documentos,
-        serie: documentosDeCompra.serie,
-        numero: documentosDeCompra.numero,
         aplicado: aplicacionesDeNotas.monto,
       })
       .from(documentos)
-      .innerJoin(documentosDeCompra, eq(documentosDeCompra.id, documentos.documentoId))
       .leftJoin(
         aplicacionesDeNotas,
         and(eq(aplicacionesDeNotas.notaId, documentos.id), eq(aplicacionesDeNotas.cargoId, documento.id)),

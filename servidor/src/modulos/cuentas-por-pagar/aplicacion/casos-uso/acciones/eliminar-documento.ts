@@ -1,5 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
-import { exigirEliminable } from '../../../dominio/ciclo-de-vida.js';
+import { documentoDelLibro, exigirEliminable } from '../../../dominio/ciclo-de-vida.js';
 import { REGLAS_PARA_ELIMINAR, type ReglaDeBaja } from '../../../dominio/reglas-de-baja.js';
 import { dtoDeFicha } from '../../dto/ficha-del-documento.dto.js';
 import { deshacerAplicaciones, revisarReglasDeBaja } from '../bajas/preparar-la-baja.js';
@@ -29,10 +29,11 @@ export class EliminarDocumento {
 
   private async eliminar(operador: Operador, id: string): Promise<void> {
     const { documentos, consultas, aplicaciones, auditoria, documentosDeCompra, libroDeCompras } = this.dependencias;
-    const { documento, origen, notasEnTotal } = await filaDe(consultas, id);
-    const etiqueta = etiquetaDe(origen);
+    const { documento, notasEnTotal } = await filaDe(consultas, id);
+    const etiqueta = etiquetaDe(documento);
     exigirEliminable(documento, notasEnTotal, etiqueta);
-    await documentosDeCompra.bloquear(documento.documentoId!);
+    const idDelLibro = documentoDelLibro(documento, etiqueta);
+    await documentosDeCompra.bloquear(idDelLibro);
     const guardado = await bloquear(documentos, id);
     exigirEliminable(guardado.documento, notasEnTotal, etiqueta);
     await revisarReglasDeBaja(this.reglas, guardado);
@@ -44,6 +45,6 @@ export class EliminarDocumento {
     });
     await deshacerAplicaciones(aplicaciones, guardado.documento);
     await documentos.eliminar(id);
-    await libroDeCompras.eliminar(operador, documento.documentoId!);
+    await libroDeCompras.eliminar(operador, idDelLibro);
   }
 }

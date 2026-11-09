@@ -96,6 +96,12 @@ export function exigirAnulable(documento: DocumentoPorPagar, notasVigentes: numb
   if (notasVigentes > 0) throw new DocumentoConNotasVigentes(etiqueta);
 }
 
+/** El id del documento en Libro de compras. @throws EsUnSaldoInicial si el documento no tiene registro allá. */
+export function documentoDelLibro(documento: DocumentoPorPagar, etiqueta: string): string {
+  if (documento.documentoId === null) throw new EsUnSaldoInicial(etiqueta);
+  return documento.documentoId;
+}
+
 /**
  * Solo se elimina lo pendiente o completado y sin notas (ni anuladas). Lo autorizado lo rechaza la regla de baja
  * `noEstarAutorizado`, que también corre con la fila bloqueada.
