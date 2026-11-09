@@ -20,6 +20,12 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.documentos.autorizar-propios',
       'cuentas-por-pagar.documentos.anular',
       'cuentas-por-pagar.documentos.eliminar',
+      'cuentas-por-pagar.saldos-iniciales.ver',
+      'cuentas-por-pagar.saldos-iniciales.crear',
+      'cuentas-por-pagar.saldos-iniciales.editar',
+      'cuentas-por-pagar.saldos-iniciales.eliminar',
+      'cuentas-por-pagar.saldos-iniciales.importar',
+      'cuentas-por-pagar.saldos-iniciales.exportar',
     ]);
   });
 
