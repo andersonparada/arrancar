@@ -5,6 +5,7 @@ import { rutasDeBajasComponidas } from './composicion/bajas.js';
 import { rutasDeCondicionesComponidas } from './composicion/condiciones.js';
 import { rutasDeConsultasComponidas } from './composicion/consultas.js';
 import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
+import { rutasDeSaldosInicialesComponidas } from './composicion/saldos-iniciales.js';
 import { configuracionDeCuentasPorPagar } from './configuracion.js';
 // generador: importaciones
 
@@ -37,6 +38,27 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.documentos.eliminar',
       descripcion: 'Eliminar documentos por pagar que no están autorizados (también en el libro de compras)',
     },
+    { clave: 'cuentas-por-pagar.saldos-iniciales.ver', descripcion: 'Ver los saldos iniciales cargados' },
+    {
+      clave: 'cuentas-por-pagar.saldos-iniciales.crear',
+      descripcion: 'Cargar saldos iniciales (documentos del sistema anterior que seguían pendientes)',
+    },
+    {
+      clave: 'cuentas-por-pagar.saldos-iniciales.editar',
+      descripcion: 'Corregir saldos iniciales mientras la carga inicial esté abierta',
+    },
+    {
+      clave: 'cuentas-por-pagar.saldos-iniciales.eliminar',
+      descripcion: 'Eliminar saldos iniciales mientras la carga inicial esté abierta',
+    },
+    {
+      clave: 'cuentas-por-pagar.saldos-iniciales.importar',
+      descripcion: 'Importar saldos iniciales desde Excel (también bajar la plantilla)',
+    },
+    {
+      clave: 'cuentas-por-pagar.saldos-iniciales.exportar',
+      descripcion: 'Exportar la lista de saldos iniciales y su cuadre',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -46,6 +68,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeConsultasComponidas(),
     rutasDeAccionesComponidas(),
     rutasDeBajasComponidas(),
+    rutasDeSaldosInicialesComponidas(),
     // generador: rutas
   ]),
 };
