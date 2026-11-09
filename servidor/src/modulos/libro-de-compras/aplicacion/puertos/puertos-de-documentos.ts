@@ -127,6 +127,8 @@ export interface AvisoDeBaja {
 export interface DatosDeLaEmpresaParaDocumentos {
   /** El NIT de la empresa, tal como está escrito; `null` si no tiene. */
   nit(operador: Operador): Promise<string | null>;
+  /** La fecha de inicio de la empresa (`aaaa-mm-dd`); `null` si aún no tiene. */
+  fechaDeInicio(operador: Operador): Promise<string | null>;
 }
 
 /** Pone el NIT del emisor al proveedor que no tiene (orden `terceros.completar_nit`). */

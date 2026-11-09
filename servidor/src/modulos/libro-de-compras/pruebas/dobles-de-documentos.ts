@@ -129,6 +129,11 @@ export class DestinosEnMemoria implements DestinosDeDocumentos {
 
 export class DatosDeLaEmpresaEnMemoria implements DatosDeLaEmpresaParaDocumentos {
   nitDeLaEmpresa: string | null = '12345679';
+  fechaDeInicioDeLaEmpresa: string | null = null;
+
+  async fechaDeInicio(_operador: Operador): Promise<string | null> {
+    return this.fechaDeInicioDeLaEmpresa;
+  }
 
   async nit(_operador: Operador): Promise<string | null> {
     return this.nitDeLaEmpresa;

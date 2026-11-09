@@ -22,6 +22,13 @@ export class DatosDeLaEmpresaEnMediador implements DatosDeLaEmpresaParaDocumento
     });
     return datos.nit;
   }
+
+  async fechaDeInicio(operador: Operador): Promise<string | null> {
+    const carga = await mediador.enviar(operador, 'empresas.obtener_carga_inicial', {
+      empresaId: operador.empresaId,
+    });
+    return carga.fechaDeInicio;
+  }
 }
 
 /** Terceros pone el NIT al proveedor que no lo tiene (orden `terceros.completar_nit`). */

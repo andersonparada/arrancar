@@ -1,4 +1,5 @@
 import { avisosDeRetenciones, type ContextoDeEntero } from '../../../dominio/avisos-de-retenciones.js';
+import { avisosDeFechaDeInicio } from '../../../dominio/avisos-de-fecha-de-inicio.js';
 import { avisosDelProveedor } from '../../../dominio/avisos-del-proveedor.js';
 import { avisosDeLaFacturaEspecial } from '../../../dominio/factura-especial.js';
 import { avisosDeLaFamilia } from '../../../dominio/familia-del-documento.js';
@@ -26,6 +27,12 @@ function avisosDeLaFactura(solicitud: SolicitudDeDocumento, contexto: ContextoFi
   return avisosDeLaFacturaEspecial({ empresa: contexto.datosDeLaEmpresa, proveedor: contexto.datosDelProveedor });
 }
 
+/** Los avisos de las fechas: el período propuesto y la emisión anterior a la fecha de inicio de la empresa. */
+const avisosDeFechas = (solicitud: SolicitudDeDocumento, contexto: ContextoFiscal): string[] => [
+  ...(contexto.avisoDelPeriodo ? [contexto.avisoDelPeriodo] : []),
+  ...avisosDeFechaDeInicio({ fechaDeEmision: solicitud.fechaEmision, fechaDeInicio: contexto.fechaDeInicio }),
+];
+
 /**
  * Todos los avisos del documento, que no bloquean: período, FEL, factura especial, nota de débito, nota tardía, proveedor, retención ya practicada
  * en un documento anulado y retenciones.
@@ -37,7 +44,7 @@ export function avisosDelDocumento(
 ): string[] {
   const { factura } = resuelto;
   return [
-    ...(contexto.avisoDelPeriodo ? [contexto.avisoDelPeriodo] : []),
+    ...avisosDeFechas(solicitud, contexto),
     ...resuelto.calculado.avisos,
     ...resuelto.lineas.avisos,
     ...resuelto.encabezado.avisos,
