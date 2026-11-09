@@ -75,6 +75,10 @@ export function detallesDeAnulacion(ficha: FichaDeDocumento): DetalleDeRegistro[
     { etiqueta: 'Anulado el', valor: formatearFechaHora(ficha.anuladoEn) },
     { etiqueta: 'Causa', valor: ficha.causaDeAnulacion ? textoDeCausa(ficha.causaDeAnulacion, ficha.tipo) : '—' },
     { etiqueta: 'Motivo', valor: formatearTexto(ficha.motivoDeAnulacion) },
+    {
+      etiqueta: 'Anulado por',
+      valor: ficha.anuladoPorNombre ?? (ficha.anuladoPor ? 'Usuario no disponible' : '—'),
+    },
   ];
 }
 

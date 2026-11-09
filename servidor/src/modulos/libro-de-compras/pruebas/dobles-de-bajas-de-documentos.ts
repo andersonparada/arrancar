@@ -19,6 +19,7 @@ export class DocumentosGuardadosEnMemoria implements RepositorioDeDocumentosGuar
       estado: 'vigente',
       anuladoEn: null,
       anuladoPor: null,
+      anuladoPorNombre: null,
       motivoDeAnulacion: null,
       causaDeAnulacion: null,
       procesadoEnDestinoEn: null,

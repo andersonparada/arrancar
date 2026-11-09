@@ -1433,3 +1433,6 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   inicio = primer día en Arrancar (día 1 de un mes recomendado) y aviso en Libro de compras para facturas anteriores;
   cuadre de la carga inicial que bloquea con salida auditada cuando exista Contabilidad; Cuentas por pagar solo en
   quetzales por ahora. Detalle en §11 de `docs/modulos/diseno-u8-saldos-iniciales-cuentas-por-pagar.md`.
+- **2026-11-08 — «Anulado por» con nombre en Libro de compras.** La ficha del documento trae `anuladoPorNombre` (se lee
+  del usuario en `RepositorioDeDocumentosGuardadosDrizzle`) y el cliente lo muestra en el bloque de anulación; si el
+  usuario no se puede leer dice «Usuario no disponible», igual que Cuentas por pagar.

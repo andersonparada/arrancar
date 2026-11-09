@@ -154,6 +154,9 @@ export interface FichaDeDocumento {
   retenciones: RetencionDeDocumento[];
   estado: EstadoDeDocumento;
   anuladoEn: string | null;
+  anuladoPor: string | null;
+  /** Nombre de quien anuló; `null` si no se pudo leer el usuario. */
+  anuladoPorNombre: string | null;
   motivoDeAnulacion: string | null;
   causaDeAnulacion: CausaDeAnulacion | null;
   procesadoEnDestinoEn: string | null;
