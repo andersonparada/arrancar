@@ -593,5 +593,7 @@ Dictamen `dictamen-cp2-cp3-2026-11-08.md`: **correcto con ajustes**, ya aplicado
   acuerdo de compensación (C-CP2-1) y con lo hecho para cobrar en un ajuste «No se recuperará» (C-CP2-2). Las preguntas
   depuradas solo aprobaron la **referencia** escrita, así que CP2 no lleva adjuntos. Si se quieren, se diseñan aparte
   sobre `core.archivos` (con el agente de seguridad), sin cambiar estas tablas.
-- **P-CP2-2 (confirmar, no frena): tope por omisión de «Diferencia menor».** Se dejó en **Q25** (el ejemplo del
+- **P-CP2-2 (confirmado por el contador, 2026-11-08): Q25 se queda** (sin monto legal; cubre redondeos y diferencias
+  de Q1 a Q10; con `0` se apaga). La ayuda de la causa aclara que las **comisiones bancarias** no son «diferencia
+  menor» (son gasto bancario con su documento). Nota original: Se dejó en **Q25** (el ejemplo del
   dictamen), cambiable por empresa y por instalación.

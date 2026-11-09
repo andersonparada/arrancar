@@ -246,8 +246,11 @@ En una transacción, con `contrasenas.crear`:
    **cargo** debe tener saldo > 0; una **nota de crédito**, saldo libre > 0 (si no, `DocumentoNoDisponibleParaContrasena`
    con «no debe nada» o «no tiene saldo a favor»).
 3. Al menos un cargo (`ContrasenaSinCargos`).
-4. Fecha: la escrita, por omisión hoy; ni futura ni anterior a la emisión de alguno de sus documentos (no se entrega
-   contraseña de un documento que aún no existía) → `FechaDeContrasenaInvalida`.
+4. Fecha: la escrita, por omisión hoy; ni futura, ni anterior a la emisión de alguno de sus documentos (no se entrega
+   contraseña de un documento que aún no existía), ni anterior a la **fecha de inicio** de la empresa (`CargaInicial`;
+   contador, 2026-11-08) → `FechaDeContrasenaInvalida`. Las contraseñas pendientes del sistema anterior se registran
+   con la fecha de inicio, la fecha prometida real y en *observaciones* «Contraseña N.º X del sistema anterior, del
+   dd/mm/aaaa» (la pantalla lo sugiere con una ayuda).
 5. Fecha prometida de pago: obligatoria, `>= fecha` (`FechaDePagoInvalida`). La pantalla propone la **mayor fecha de
    vencimiento** de los cargos (si es anterior a la fecha, la fecha) (CP3-d). No cambia «Vence» ni la antigüedad (C4).
 6. Observaciones: se recortan; vacías = nulas; hasta 500.
@@ -369,7 +372,7 @@ de funciones propia: la contraseña no aprueba ni paga nada (aprobar es `documen
 | `DocumentoDeOtroProveedor` | `DatoInvalido` (campo `documentos`) | `documento_de_otro_proveedor` | «El documento … es de otro proveedor.» |
 | `DocumentoNoDisponibleParaContrasena` | `ReglaDeNegocioInfringida` | `documento_no_disponible_para_contrasena` | «El documento … está anulado, ya no debe nada o no tiene saldo a favor.» |
 | `DocumentoYaEnContrasena` | `ReglaDeNegocioInfringida` | `documento_ya_en_contrasena` | «El documento … ya está en la contraseña N.» |
-| `FechaDeContrasenaInvalida` | `DatoInvalido` (campo `fecha`) | `fecha_de_contrasena_invalida` | «La fecha no puede ser futura ni anterior a la emisión de los documentos.» |
+| `FechaDeContrasenaInvalida` | `DatoInvalido` (campo `fecha`) | `fecha_de_contrasena_invalida` | «La fecha no puede ser futura, ni anterior a la emisión de los documentos, ni anterior a la fecha de inicio de la empresa.» |
 | `FechaDePagoInvalida` | `DatoInvalido` (campo `fechaDePago`) | `fecha_de_pago_invalida` | «La fecha prometida de pago no puede ser anterior a la fecha de la contraseña.» |
 | `ContrasenaAnulada` | `ReglaDeNegocioInfringida` | `contrasena_anulada` | «La contraseña N está anulada: no se cambia.» |
 | `DocumentoEnContrasena` | `ReglaDeNegocioInfringida` | `documento_en_contrasena` | «El documento … está en la contraseña N: quítelo de ella o anúlela primero.» (ya nombrado en CP1 §4.4) |
@@ -584,7 +587,10 @@ Dictamen `dictamen-cp2-cp3-2026-11-08.md`: **correcto con ajustes**, ya aplicado
 
 ## 13. Pendiente nuevo
 
-- **P-CP3-1 (anotado, no frena): fecha de la contraseña con saldos iniciales.** La regla aprobada (§5.1, 4) solo pide que
+- **P-CP3-1 (resuelto por el contador, 2026-11-08): la fecha no puede ser anterior a la fecha de inicio** (§5.1, 4):
+  cada sistema tiene su período, una contraseña recapturada lleva otro número y fecharla en el pasado aparentaría una
+  prueba que no es, y el correlativo podría abrir una serie de un año anterior. La referencia anterior va en
+  *observaciones* (sin campos aparte). Texto original de la nota: La regla aprobada (§5.1, 4) solo pide que
   la fecha no sea anterior a la **emisión** de los documentos; con un saldo inicial, una contraseña podría fecharse
   antes de la fecha de inicio (una contraseña entregada en el sistema anterior y recapturada). Se deja así: sus
   aplicaciones de notas nunca quedan antes de la fecha de inicio (§2) y no mueve saldos. Si el contador prefiere
