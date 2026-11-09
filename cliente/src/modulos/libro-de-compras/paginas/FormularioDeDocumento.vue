@@ -66,7 +66,7 @@ function alPresionarEnter(evento: KeyboardEvent): void {
       />
     </div>
 
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-start">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-start">
       <div class="min-w-0 space-y-4">
         <TarjetaBase>
           <h2 class="mb-4 font-semibold">Datos del documento</h2>
@@ -104,7 +104,7 @@ function alPresionarEnter(evento: KeyboardEvent): void {
         <MasDatosDelDocumento v-model="edicion" :errores="registro.erroresDelEncabezado.value" />
       </div>
 
-      <div class="min-w-0 lg:sticky lg:top-4">
+      <div class="min-w-0 xl:sticky xl:top-4">
         <VistaPreviaDelDocumento
           v-model="edicion.ajustes"
           :respuesta="previa.respuesta.value"
