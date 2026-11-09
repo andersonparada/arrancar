@@ -168,9 +168,10 @@ ventanas se crean con el **generador** (`npm run generar -- modulo`, `definicion
    notas de crédito − retenciones − pagos. La NDEB de una factura ya pagada entra como
    pendiente nueva (otra contraseña). Hoy el destino debe aceptarla o rechazarla a propósito;
    la tabla (`notas_de_debito` o `tipo` en `facturas`) se decide en CP1.
-2. **CP2 Notas de crédito**. Diseño por aprobar: `diseno-cp2-notas-de-credito.md` (2026-11-08).
-3. **CP3 Contraseñas**: crear (con documentos registrados o autorizados), imprimir y
-   anular. Diseño por aprobar: `diseno-cp3-contrasenas.md` (2026-11-08).
+2. **CP2 Notas de crédito**. Diseño aprobado, listo para programar:
+   `diseno-cp2-notas-de-credito.md` (2026-11-08, con el dictamen `dictamen-cp2-cp3-2026-11-08.md`).
+3. **CP3 Contraseñas**: crear (con documentos pendientes, registrados o autorizados), imprimir y
+   anular. Diseño aprobado, listo para programar: `diseno-cp3-contrasenas.md` (2026-11-08).
 4. **CP4 Pagos**: antes, **extraer `Reversible`** del código de *Bancos*
    (`Movimiento.revertir` y compañía, ver `bancos.md` B7) al core, para que el pago y
    su anulación lo usen. Órdenes a *Bancos* para emitir y anular cheques (también
@@ -178,7 +179,15 @@ ventanas se crean con el **generador** (`npm run generar -- modulo`, `definicion
    cuando se anulan desde allá. El usuario elige las facturas autorizadas y montos de
    cada pago; las retenciones se descuentan en el primer pago de cada factura.
    Requiere los ajustes de conceptos de Bancos (P3, P6).
-5. **CP5 Reportes**.
+   **Anotado por CP2 (2026-11-08):** el **reintegro** del saldo a favor de una nota de
+   crédito resta de su saldo libre y entra por Bancos **o en efectivo** (reemplaza la
+   causa de ajuste «liquidado fuera del sistema», que se quitó); un descuento de precio
+   sin nota no es un ajuste (exige nota de crédito del proveedor); las diferencias de
+   centavos al pagar sí pueden ir a `ajustes_de_saldo`. Ver `diseno-cp2-notas-de-credito.md` §9.
+5. **CP5 Reportes**. **Anotado por CP2 y CP3 (2026-11-08):** reporte mensual de ajustes
+   para que lo revise el contador; saldo neto por proveedor a una fecha de corte,
+   separado en acreedores y deudores (reclasificación de cierre); antigüedad de los saldos
+   a favor; contraseñas con pago prometido vencido; facturas autorizadas sin contraseña.
 
 ## Fuera de esta versión
 

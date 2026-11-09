@@ -1442,3 +1442,16 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   del contador (`docs/modulos/dictamen-cp2-cp3-2026-11-08.md`). La causa de ajuste «liquidado fuera del sistema» se
   quita: el reintegro del proveedor va en CP4, que acepta también efectivo. Anular o eliminar un cargo que recibió
   aplicaciones manuales se rechaza con el mensaje «quite primero la aplicación de la nota N».
+- **2026-11-08 — Diseños CP2 y CP3 listos para programar.** `diseno-cp2-notas-de-credito.md` y
+  `diseno-cp3-contrasenas.md` pasan a «aprobado, listo para programar» con el dictamen aplicado. CP2: causas
+  `no_recuperable`, `diferencia_menor` (tope por empresa `cuentas-por-pagar.ajustes.tope_diferencia_menor`) y
+  `compensado_con_otra_cuenta` (con referencia obligatoria), con `efecto` `perdida`/`transitoria` en el evento;
+  fechas mínimas por la recepción en el libro y la fecha de inicio; `referencia` del acuerdo en las aplicaciones
+  manuales y aviso de bancarización (`cuentas-por-pagar.bancarizacion.umbral`, instalación, Q30,000); ajuste solo de
+  notas registradas o autorizadas; regla `noTenerAplicacionesManualesRecibidas` (también para NDEB y por aviso del
+  libro); migración `0004`. CP3: fecha de las aplicaciones de la contraseña = la mayor (contraseña, recepción de la
+  nota y del cargo, o fecha de inicio); auditoría `corregir` con motivo al cambiar la fecha prometida; `impresa_en` y
+  «REIMPRESIÓN» (vista previa `GET …/impresion`, marca con `POST …/impresiones`); original y copia; leyenda por
+  omisión «recibido para revisión…»; columnas total, retenciones, rebajado y saldo; aviso de recuperar el original al
+  anular; migración `0005`. Lo de CP4 (reintegro también en efectivo) y CP5 (reporte mensual de ajustes, pago
+  prometido vencido) quedó anotado en `cuentas-por-pagar.md`.
