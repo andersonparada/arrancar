@@ -168,9 +168,9 @@ ventanas se crean con el **generador** (`npm run generar -- modulo`, `definicion
    notas de crédito − retenciones − pagos. La NDEB de una factura ya pagada entra como
    pendiente nueva (otra contraseña). Hoy el destino debe aceptarla o rechazarla a propósito;
    la tabla (`notas_de_debito` o `tipo` en `facturas`) se decide en CP1.
-2. **CP2 Notas de crédito**.
+2. **CP2 Notas de crédito**. Diseño por aprobar: `diseno-cp2-notas-de-credito.md` (2026-11-08).
 3. **CP3 Contraseñas**: crear (con documentos registrados o autorizados), imprimir y
-   anular.
+   anular. Diseño por aprobar: `diseno-cp3-contrasenas.md` (2026-11-08).
 4. **CP4 Pagos**: antes, **extraer `Reversible`** del código de *Bancos*
    (`Movimiento.revertir` y compañía, ver `bancos.md` B7) al core, para que el pago y
    su anulación lo usen. Órdenes a *Bancos* para emitir y anular cheques (también
