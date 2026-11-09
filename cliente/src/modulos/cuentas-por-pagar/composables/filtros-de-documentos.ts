@@ -1,4 +1,10 @@
-import type { ConsultaDeDocumentos, EstadoBuscado, ProveedorParaFiltro, TipoDeDocumento } from '../servicios/tipos';
+import type {
+  ConsultaDeDocumentos,
+  EstadoBuscado,
+  OrigenDelDocumento,
+  ProveedorParaFiltro,
+  TipoDeDocumento,
+} from '../servicios/tipos';
 import { TIPOS_DE_DOCUMENTO } from '../textos';
 
 export const DOCUMENTOS_POR_PAGINA = 50;
@@ -8,6 +14,7 @@ export interface FiltrosDeDocumentos {
   proveedorId: string;
   estado: EstadoBuscado;
   tipo: TipoDeDocumento | '';
+  origen: OrigenDelDocumento | '';
   emitidosDesde: string;
   emitidosHasta: string;
   soloVencidos: boolean;
@@ -23,6 +30,7 @@ export const filtrosIniciales = (): FiltrosDeDocumentos => ({
   proveedorId: '',
   estado: 'vigente',
   tipo: '',
+  origen: '',
   emitidosDesde: '',
   emitidosHasta: '',
   soloVencidos: false,
@@ -34,6 +42,7 @@ export function consultaDeDocumentos(filtros: FiltrosDeDocumentos, pagina: numbe
     proveedorId: filtros.proveedorId || undefined,
     estado: filtros.estado,
     tipo: filtros.tipo || undefined,
+    origen: filtros.origen || undefined,
     emitidosDesde: filtros.emitidosDesde || undefined,
     emitidosHasta: filtros.emitidosHasta || undefined,
     soloVencidos: filtros.soloVencidos || undefined,
@@ -44,7 +53,7 @@ export function consultaDeDocumentos(filtros: FiltrosDeDocumentos, pagina: numbe
 
 /** Cuántos filtros distintos de la forma de abrir hay (el estado cuenta solo si no es el de omisión). */
 export function cantidadDeFiltros(filtros: FiltrosDeDocumentos): number {
-  const puestos = [filtros.proveedorId, filtros.tipo, filtros.emitidosDesde, filtros.emitidosHasta];
+  const puestos = [filtros.proveedorId, filtros.tipo, filtros.origen, filtros.emitidosDesde, filtros.emitidosHasta];
   return puestos.filter(Boolean).length + (filtros.soloVencidos ? 1 : 0) + (filtros.estado === 'vigente' ? 0 : 1);
 }
 
@@ -55,6 +64,12 @@ export const OPCIONES_DE_ESTADO: OpcionDeFiltro<EstadoBuscado>[] = [
   { valor: 'autorizado', texto: 'Autorizados' },
   { valor: 'anulado', texto: 'Anulados' },
   { valor: 'todos', texto: 'Todos' },
+];
+
+export const OPCIONES_DE_ORIGEN: OpcionDeFiltro<OrigenDelDocumento | ''>[] = [
+  { valor: '', texto: 'Todos los orígenes' },
+  { valor: 'libro_de_compras', texto: 'Libro de compras' },
+  { valor: 'saldo_inicial', texto: 'Saldo inicial' },
 ];
 
 const porTexto = (a: { texto: string }, b: { texto: string }): number =>

@@ -10,6 +10,7 @@ import {
   cantidadDeFiltros,
   opcionesDeProveedor,
   OPCIONES_DE_ESTADO,
+  OPCIONES_DE_ORIGEN,
   opcionesDeTipo,
   type FiltrosDeDocumentos,
 } from '../composables/filtros-de-documentos';
@@ -29,6 +30,7 @@ const tipos = opcionesDeTipo();
       <CampoSelector v-model="filtros.proveedorId" etiqueta="Proveedor" :opciones="opcionesDeProveedores" />
       <CampoSelector v-model="filtros.estado" etiqueta="Estado" :opciones="OPCIONES_DE_ESTADO" />
       <CampoSelector v-model="filtros.tipo" etiqueta="Tipo" :opciones="tipos" />
+      <CampoSelector v-model="filtros.origen" etiqueta="Origen" :opciones="OPCIONES_DE_ORIGEN" />
       <CampoTexto v-model="filtros.emitidosDesde" etiqueta="Emitidos desde" tipo="date" />
       <CampoTexto v-model="filtros.emitidosHasta" etiqueta="Emitidos hasta" tipo="date" />
       <CampoInterruptor

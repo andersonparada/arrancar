@@ -30,7 +30,7 @@ export const etiquetaDelSaldo = ({ clase }: Pick<DocumentoPorPagar, 'clase'>): s
 export function detallesDeBandeja(documento: DocumentoPorPagar): DetalleDeRegistro[] {
   return [
     { etiqueta: 'Emisión', valor: formatearFecha(documento.fechaEmision) },
-    { etiqueta: 'Recepción', valor: formatearFecha(documento.fechaRecepcion) },
+    { etiqueta: 'Recepción', valor: formatearTexto(fechaONulo(documento.fechaRecepcion)) },
     { etiqueta: 'Total', valor: formatearMonto(documento.total) },
     { etiqueta: 'Neto a pagar', valor: formatearMonto(documento.neto) },
   ];
@@ -46,6 +46,8 @@ export function detallesDeLista(documento: DocumentoPorPagar): DetalleDeRegistro
   ];
 }
 
+const fechaONulo = (fecha: string | null): string | null => (fecha ? formatearFecha(fecha) : null);
+
 const vencimientoEnLaFicha = (ficha: FichaDelDocumento): string | null =>
   ficha.vencimiento ? `${formatearFecha(ficha.vencimiento)}${ficha.vencido ? ' (vencido)' : ''}` : null;
 
@@ -56,16 +58,38 @@ export function detallesDeFicha(ficha: FichaDelDocumento): DetalleDeRegistro[] {
     { etiqueta: 'Tipo', valor: TIPOS_DE_DOCUMENTO[ficha.tipo] },
     { etiqueta: 'Serie y número', valor: ficha.serie ? `${ficha.serie}-${ficha.numero}` : ficha.numero },
     { etiqueta: 'Fecha de emisión', valor: formatearFecha(ficha.fechaEmision) },
-    { etiqueta: 'Fecha de recepción', valor: formatearFecha(ficha.fechaRecepcion) },
   ];
+  if (ficha.origen === 'saldo_inicial') {
+    detalles.push({ etiqueta: 'Origen', valor: 'Saldo inicial' });
+    if (ficha.referencia) detalles.push({ etiqueta: 'Referencia (sistema anterior)', valor: ficha.referencia });
+  } else {
+    detalles.push({ etiqueta: 'Fecha de recepción', valor: formatearTexto(fechaONulo(ficha.fechaRecepcion)) });
+  }
   if (ficha.clase === 'cargo') detalles.push({ etiqueta: 'Vence', valor: formatearTexto(vencimientoEnLaFicha(ficha)) });
   detalles.push({ etiqueta: 'Estado', valor: textoDeEstado(ficha.estado) });
+  return detalles;
+}
+
+/** Solo en un saldo inicial: lo que se debía al arrancar, lo anterior ya descontado y las retenciones sin practicar. */
+function montosAlInicio(ficha: FichaDelDocumento): DetalleDeRegistro[] {
+  if (ficha.origen !== 'saldo_inicial') return [];
+  const detalles: DetalleDeRegistro[] = [{ etiqueta: 'Saldo al inicio', valor: formatearMonto(ficha.saldoAlInicio) }];
+  if (ficha.anterioresAlInicio) {
+    detalles.push({
+      etiqueta: 'Pagos y notas anteriores a la fecha de inicio',
+      valor: formatearMonto(ficha.anterioresAlInicio),
+    });
+  }
+  if (ficha.retencionesPorPracticar) {
+    detalles.push({ etiqueta: 'Retenciones por practicar', valor: formatearMonto(ficha.retencionesPorPracticar) });
+  }
   return detalles;
 }
 
 /** Los montos de la ficha: de dónde sale lo que se debe. */
 export function detallesDeMontos(ficha: FichaDelDocumento): DetalleDeRegistro[] {
   return [
+    ...montosAlInicio(ficha),
     { etiqueta: 'Total', valor: formatearMonto(ficha.total) },
     { etiqueta: 'Retenciones', valor: formatearMonto(ficha.retenciones) },
     { etiqueta: 'Neto a pagar', valor: formatearMonto(ficha.neto) },

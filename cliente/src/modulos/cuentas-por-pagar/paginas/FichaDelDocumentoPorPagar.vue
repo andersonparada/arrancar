@@ -82,6 +82,7 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
     </SeccionDeFicha>
     <NotasYAplicaciones :ficha="ficha" />
     <RouterLink
+      v-if="ficha.documentoId"
       v-permiso="'libro-de-compras.documentos.ver'"
       :to="{ name: 'libro-de-compras.documentos.ficha', params: { documentoId: ficha.documentoId } }"
       class="inline-flex items-center gap-1.5 text-sm font-medium text-campo-700 underline dark:text-campo-300"
