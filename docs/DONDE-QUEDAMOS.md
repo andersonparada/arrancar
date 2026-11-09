@@ -290,7 +290,13 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    de compras para facturas anteriores a la fecha de inicio; cliente U8-9 a U8-11, incluido Empresas; QA U8-12).
    Pendiente sin frenar: P-U8-1 (DTE anteriores a la fecha de inicio en la bandeja). U8-l (notas sobre facturas de
    antes del corte) va en Libro de compras después de U8 y antes de producción con una empresa con historia.
-   Después: CP2, CP3, CP4 y CP5.
+   **En curso:** U8-1 (datos) en `main`; U8-2 en programación.
+   Después: CP2, CP3, CP4 y CP5. **CP2 y CP3 diseñados** (`diseno-cp2-notas-de-credito.md`,
+   `diseno-cp3-contrasenas.md`) y validados por el contador (`dictamen-cp2-cp3-2026-11-08.md`, «correcto con
+   ajustes»: quitar la causa «liquidado fuera del sistema», lista de causas con efecto, límites de fecha por
+   recepción, regla del cargo con aplicaciones manuales, aviso de bancarización, fecha de las aplicaciones de la
+   contraseña, leyenda «recibido para revisión», original y copia, «REIMPRESIÓN»). **Espera al usuario:** CP2-a a i,
+   CP3-a a k y las 8 depuradas del dictamen; luego el arquitecto aplica los cambios.
 8. **Bancos H2** diseñado (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`). El paso 1 (core: qpdf fuera de la
    transacción, archivos huérfanos, borrado tras confirmar, subida cortada) **está en `main`** con los arreglos de
    seguridad S3–S9 y S11 (pruebas: servidor 3425, cliente 868, generador 46). Las tareas «después de confirmar» que
