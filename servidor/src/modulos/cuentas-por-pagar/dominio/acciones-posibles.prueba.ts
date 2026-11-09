@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { accionesDelDocumento, type HechosDelDocumento } from './acciones-posibles.js';
 
 const hechos = (cambios: Partial<HechosDelDocumento> = {}): HechosDelDocumento => ({
+  origen: 'libro_de_compras',
   tipo: 'factura',
   estado: 'pendiente',
   notasVigentes: 0,
@@ -67,6 +68,21 @@ describe('acciones posibles de un documento por pagar', () => {
     expect(accionesDelDocumento(hechos({ tipo: 'nota_de_credito', estado: 'registrado' }))).toMatchObject({
       puedeCambiarVencimiento: false,
       puedeAutorizar: true,
+    });
+  });
+
+  it('un saldo inicial no se anula ni se elimina por Documentos, pero se autoriza y cambia de vencimiento', () => {
+    expect(accionesDelDocumento(hechos({ origen: 'saldo_inicial', estado: 'registrado' }))).toEqual({
+      puedeRegistrar: false,
+      puedeAutorizar: true,
+      puedeDesautorizar: false,
+      puedeCambiarVencimiento: true,
+      puedeAnular: false,
+      puedeEliminar: false,
+    });
+    expect(accionesDelDocumento(hechos({ origen: 'saldo_inicial', estado: 'autorizado' }))).toMatchObject({
+      puedeDesautorizar: true,
+      puedeAnular: false,
     });
   });
 });

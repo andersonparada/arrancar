@@ -1,7 +1,6 @@
 import { and, asc, eq, exists, ne, sql } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import { documentos as documentosDeCompra } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
 import type { ProveedorConDocumentosDto } from '../../aplicacion/dto/documento-por-pagar.dto.js';
@@ -71,20 +70,20 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
       .select({
         id: documentos.id,
         documentoId: documentos.documentoId,
-        serie: documentosDeCompra.serie,
-        numero: documentosDeCompra.numero,
+        serie: documentos.serie,
+        numero: documentos.numero,
         fechaEmision: documentos.fechaEmision,
         total: documentos.total,
+        saldoAlInicio: documentos.saldoAlInicio,
         aplicado: porLaNota.monto,
       })
       .from(documentos)
-      .innerJoin(documentosDeCompra, eq(documentosDeCompra.id, documentos.documentoId))
       .leftJoin(porLaNota, eq(porLaNota.notaId, documentos.id))
       .where(
         and(
           eq(documentos.proveedorId, proveedorId),
           esUnaNotaVigente,
-          sql`${documentos.total} - coalesce(${porLaNota.monto}, 0) > 0`,
+          sql`coalesce(${documentos.saldoAlInicio}, ${documentos.total}) - coalesce(${porLaNota.monto}, 0) > 0`,
         ),
       )
       .orderBy(asc(documentos.fechaEmision), asc(documentos.creadoEn));
@@ -94,8 +93,13 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
 
 function aNotaConSaldoLibre({
   total,
+  saldoAlInicio,
   aplicado,
   ...nota
-}: Omit<NotaConSaldoLibre, 'saldoLibreCentavos'> & { total: string; aplicado: string | null }): NotaConSaldoLibre {
-  return { ...nota, saldoLibreCentavos: aCentavos(total) - aCentavos(aplicado ?? '0') };
+}: Omit<NotaConSaldoLibre, 'saldoLibreCentavos'> & {
+  total: string;
+  saldoAlInicio: string | null;
+  aplicado: string | null;
+}): NotaConSaldoLibre {
+  return { ...nota, saldoLibreCentavos: aCentavos(saldoAlInicio ?? total) - aCentavos(aplicado ?? '0') };
 }

@@ -1,6 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { CausaDeAnulacionDeDocumento } from '../../../../core/contratos/libro-de-compras.contratos.js';
-import { exigirAnulable, motivoValido } from '../../../dominio/ciclo-de-vida.js';
+import { documentoDelLibro, exigirAnulable, motivoValido } from '../../../dominio/ciclo-de-vida.js';
 import { DocumentoAnulado, type DatosDeDocumentoAnulado } from '../../../dominio/eventos.js';
 import { REGLAS_PARA_ANULAR, type ReglaDeBaja } from '../../../dominio/reglas-de-baja.js';
 import type { DocumentoAnuladoDto } from '../../dto/documento-por-pagar.dto.js';
@@ -49,11 +49,15 @@ export class AnularDocumento {
     { id, causa, motivo }: PeticionDeAnulacion,
   ): Promise<{ anulado: DatosDeDocumentoAnulado; avisos: string[] }> {
     const { documentos, consultas, libroDeCompras } = this.dependencias;
-    const { documento, origen, notasVigentes } = await filaDe(consultas, id);
-    const etiqueta = etiquetaDe(origen);
+    const { documento, notasVigentes } = await filaDe(consultas, id);
+    const etiqueta = etiquetaDe(documento);
     exigirAnulable(documento, notasVigentes, etiqueta);
     await revisarReglasDeBaja(this.reglas, (await documentos.buscarPorId(id, false))!);
-    const avisos = await libroDeCompras.anular(operador, { documentoId: documento.documentoId!, causa, motivo });
+    const avisos = await libroDeCompras.anular(operador, {
+      documentoId: documentoDelLibro(documento, etiqueta),
+      causa,
+      motivo,
+    });
     const guardado = await bloquear(documentos, id);
     exigirAnulable(guardado.documento, 0, etiqueta);
     await revisarReglasDeBaja(this.reglas, guardado);

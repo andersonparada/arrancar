@@ -1,5 +1,10 @@
 import type { AccionesDelDocumento } from '../../dominio/acciones-posibles.js';
-import type { ClaseDeDocumento, EstadoDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
+import type {
+  ClaseDeDocumento,
+  EstadoDeDocumento,
+  OrigenDeDocumento,
+  TipoDeDocumento,
+} from '../../dominio/tipos-de-documento.js';
 
 /**
  * Un documento por pagar tal como lo ven la bandeja, la lista y la ficha. El dinero va como texto con dos decimales.
@@ -8,7 +13,8 @@ import type { ClaseDeDocumento, EstadoDeDocumento, TipoDeDocumento } from '../..
  */
 export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   id: string;
-  /** El id del documento en Libro de compras (para enlazar a su ficha). */
+  origen: OrigenDeDocumento;
+  /** El id del documento en Libro de compras (para enlazar a su ficha); nulo en un saldo inicial. */
   documentoId: string | null;
   tipo: TipoDeDocumento;
   clase: ClaseDeDocumento;
@@ -18,9 +24,10 @@ export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   serie: string | null;
   numero: string;
   fechaEmision: string;
-  fechaRecepcion: string;
-  /** Primer día del mes del libro en que quedó el documento. */
-  periodo: string;
+  /** Nula en un saldo inicial, que no pasó por Libro de compras. */
+  fechaRecepcion: string | null;
+  /** Primer día del mes del libro en que quedó el documento; nulo en un saldo inicial. */
+  periodo: string | null;
   /** Solo un cargo; una nota de crédito no vence. */
   vencimiento: string | null;
   vencido: boolean;
@@ -31,6 +38,14 @@ export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   neto: string;
   aplicado: string;
   saldo: string;
+  /** Solo un saldo inicial (nulos en los demás): lo que faltaba pagar al corte, sin retenciones. */
+  saldoAlInicio: string | null;
+  /** Solo un saldo inicial: las retenciones que la empresa aún no practicó (informativas, no restan del saldo). */
+  retencionesPorPracticar: string | null;
+  /** Solo un saldo inicial: cómo se llamaba el documento en el sistema anterior. */
+  referencia: string | null;
+  /** Solo un saldo inicial: pagos y notas anteriores a la fecha de inicio (derivado, no se guarda). */
+  anterioresAlInicio: string | null;
   /** Quien opera lo registró en Libro de compras o lo completó: para autorizarlo necesita `autorizar-propios`. */
   esPropio: boolean;
   registradoEn: string | null;

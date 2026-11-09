@@ -1,7 +1,9 @@
-import { claseDe, type EstadoDeDocumento, type TipoDeDocumento } from './tipos-de-documento.js';
+import { claseDe, type EstadoDeDocumento, type OrigenDeDocumento, type TipoDeDocumento } from './tipos-de-documento.js';
 
 /** Lo que se sabe de un documento para decidir qué se puede hacer con él. */
 export interface HechosDelDocumento {
+  /** Un saldo inicial no se anula ni se elimina por Documentos (se elimina desde su ventana de Administración). */
+  origen: OrigenDeDocumento;
   tipo: TipoDeDocumento;
   estado: EstadoDeDocumento;
   /** Notas de crédito o de débito que lo corrigen y siguen vigentes. */
@@ -33,12 +35,13 @@ const ESTADOS_QUE_SE_ELIMINAN: readonly EstadoDeDocumento[] = ['pendiente', 'reg
  */
 export function accionesDelDocumento(hechos: HechosDelDocumento): AccionesDelDocumento {
   const { tipo, estado } = hechos;
+  const esDelLibro = hechos.origen === 'libro_de_compras';
   return {
     puedeRegistrar: estado === 'pendiente',
     puedeAutorizar: estado === 'registrado',
     puedeDesautorizar: estado === 'autorizado',
     puedeCambiarVencimiento: claseDe(tipo) === 'cargo' && ESTADOS_CON_VENCIMIENTO_EDITABLE.includes(estado),
-    puedeAnular: estado !== 'anulado' && hechos.notasVigentes === 0,
-    puedeEliminar: ESTADOS_QUE_SE_ELIMINAN.includes(estado) && hechos.notasEnTotal === 0,
+    puedeAnular: esDelLibro && estado !== 'anulado' && hechos.notasVigentes === 0,
+    puedeEliminar: esDelLibro && ESTADOS_QUE_SE_ELIMINAN.includes(estado) && hechos.notasEnTotal === 0,
   };
 }

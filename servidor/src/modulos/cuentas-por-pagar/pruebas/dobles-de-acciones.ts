@@ -5,10 +5,8 @@ import type { LibroDeCompras, OrdenDeAnulacion } from '../aplicacion/puertos/pue
 import type { DatosDeRecepcion, DocumentosDeCompra } from '../aplicacion/puertos/puertos-de-documentos.js';
 import type { DocumentosEnMemoria } from './dobles-de-documentos.js';
 
-/** Las consultas de la ficha sobre los mismos documentos en memoria; la serie es `A` y el número, el de cada documento. */
+/** Las consultas de la ficha sobre los mismos documentos en memoria; serie y número vienen del propio documento. */
 export class ConsultasEnMemoria implements ConsultasDeDocumentos {
-  readonly numeros = new Map<string, string>();
-
   constructor(private readonly documentos: DocumentosEnMemoria) {}
 
   async buscar(id: string): Promise<FilaDeDocumento | null> {
@@ -19,12 +17,10 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
     );
     return {
       documento: { ...documento },
-      origen: {
+      libro: {
         proveedorNombre: 'Proveedor',
-        serie: 'A',
-        numero: this.numeros.get(id) ?? '1',
-        fechaRecepcion: documento.fechaEmision,
-        periodo: `${documento.fechaEmision.slice(0, 7)}-01`,
+        fechaRecepcion: documento.documentoId === null ? null : documento.fechaEmision,
+        periodo: documento.documentoId === null ? null : `${documento.fechaEmision.slice(0, 7)}-01`,
         anulacion: { causa: null, motivo: null, anuladoPor: null, anuladoPorNombre: null, anuladoEn: null },
       },
       aplicadoAlCargoCentavos: 0,

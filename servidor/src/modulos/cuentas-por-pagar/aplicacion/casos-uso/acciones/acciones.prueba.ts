@@ -177,7 +177,7 @@ describe('autorizar', () => {
 
     await expect(autorizar.ejecutar(ana, { ids: [id], puedeAutorizarPropios: false })).rejects.toMatchObject({
       codigo: 'autorizacion_de_lo_propio',
-      message: expect.stringContaining('A-1'),
+      message: expect.stringContaining('A-'),
     });
 
     expect(guardado(id).estado).toBe('registrado');

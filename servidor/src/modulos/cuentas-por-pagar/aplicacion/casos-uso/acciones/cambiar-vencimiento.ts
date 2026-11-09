@@ -18,7 +18,7 @@ export class CambiarVencimiento {
   ejecutar(operador: Operador, pedido: { id: string; vencimiento: string }): Promise<DocumentoPorPagarDto> {
     const { unidadDeTrabajo, documentos, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      const etiqueta = etiquetaDe((await filaDe(consultas, pedido.id)).origen);
+      const etiqueta = etiquetaDe((await filaDe(consultas, pedido.id)).documento);
       const { documento } = await bloquear(documentos, pedido.id);
       exigirVencimientoNuevoValido(documento, pedido.vencimiento, etiqueta);
       await documentos.cambiarVencimiento(pedido.id, pedido.vencimiento);

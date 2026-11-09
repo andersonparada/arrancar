@@ -1,6 +1,6 @@
 import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
 import type { ProveedorConDocumentosDto } from '../dto/documento-por-pagar.dto.js';
-import type { EstadoDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
+import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
 /** Los filtros de la lista de documentos; todos opcionales. */
 export interface FiltroDeDocumentosPorPagar {
@@ -8,6 +8,7 @@ export interface FiltroDeDocumentosPorPagar {
   /** Un estado, o `vigente` (todo menos lo anulado) o `todos`. */
   estado?: EstadoDeDocumento | 'vigente' | 'todos';
   tipo?: TipoDeDocumento;
+  origen?: OrigenDeDocumento;
   /** Fecha de emisión desde y hasta (`AAAA-MM-DD`), incluidas. */
   emitidosDesde?: string;
   emitidosHasta?: string;
@@ -21,13 +22,12 @@ export interface PaginacionDeDocumentos {
   limite: number;
 }
 
-/** Datos del documento que viven en Libro de compras (no se copian aquí) y del proveedor. */
-export interface OrigenDelDocumento {
+/** Datos del documento que viven en Libro de compras (no se copian aquí) y del proveedor. Un saldo inicial no tiene libro. */
+export interface DatosDelLibro {
   proveedorNombre: string;
-  serie: string | null;
-  numero: string;
-  fechaRecepcion: string;
-  periodo: string;
+  /** Nulos en un saldo inicial. */
+  fechaRecepcion: string | null;
+  periodo: string | null;
   /** Cómo se anuló en Libro de compras; todo nulo si el documento no está anulado. */
   anulacion: AnulacionEnElLibro;
 }
@@ -44,7 +44,7 @@ export interface AnulacionEnElLibro {
 /** Un documento con lo que se calcula de las demás tablas; el dinero va en centavos. */
 export interface FilaDeDocumento {
   documento: DocumentoPorPagar;
-  origen: OrigenDelDocumento;
+  libro: DatosDelLibro;
   /** Lo que las notas de crédito rebajaron de este cargo. */
   aplicadoAlCargoCentavos: number;
   /** Lo que esta nota de crédito rebajó de cargos. */

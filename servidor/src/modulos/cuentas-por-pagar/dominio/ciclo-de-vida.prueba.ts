@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  documentoDelLibro,
   esDeLoPropio,
   exigirAnulable,
   exigirEliminable,
@@ -123,5 +124,10 @@ describe('un saldo inicial no se anula ni se elimina por Documentos', () => {
   it('anular y eliminar lo rechazan', () => {
     expect(() => exigirAnulable(saldoInicial, 0, 'S-1')).toThrow(EsUnSaldoInicial);
     expect(() => exigirEliminable(saldoInicial, 0, 'S-1')).toThrow(EsUnSaldoInicial);
+  });
+
+  it('solo un documento del libro tiene id en Libro de compras', () => {
+    expect(() => documentoDelLibro(saldoInicial, 'S-1')).toThrow(EsUnSaldoInicial);
+    expect(documentoDelLibro(documento({ documentoId: 'abc' }), 'A-1')).toBe('abc');
   });
 });

@@ -1,9 +1,10 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { accionesDelDocumento } from '../../dominio/acciones-posibles.js';
 import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
-import { estaVencido, saldoDe, type SaldoDelDocumento } from '../../dominio/saldos.js';
+import { anterioresAlInicioDe, estaVencido, saldoDe, type SaldoDelDocumento } from '../../dominio/saldos.js';
 import { claseDe } from '../../dominio/tipos-de-documento.js';
 import type { AplicacionConDatos, FilaDeDocumento, NotaDeUnDocumento } from '../puertos/puertos-de-consultas.js';
+import { textoONulo } from './ficha-del-documento.dto.js';
 import type {
   AnulacionDelDocumentoDto,
   AplicacionDelDocumentoDto,
@@ -20,11 +21,20 @@ export interface PuntoDeVista {
 
 type Identificacion = Pick<
   DocumentoPorPagarDto,
-  'id' | 'documentoId' | 'tipo' | 'clase' | 'estado' | 'proveedorId' | 'documentoAfectadoId' | 'tieneActivoFijo'
+  | 'id'
+  | 'origen'
+  | 'documentoId'
+  | 'tipo'
+  | 'clase'
+  | 'estado'
+  | 'proveedorId'
+  | 'documentoAfectadoId'
+  | 'tieneActivoFijo'
 >;
 
 const identificacionDe = (documento: DocumentoPorPagar): Identificacion => ({
   id: documento.id,
+  origen: documento.origen,
   documentoId: documento.documentoId,
   tipo: documento.tipo,
   clase: claseDe(documento.tipo),
@@ -34,13 +44,13 @@ const identificacionDe = (documento: DocumentoPorPagar): Identificacion => ({
   tieneActivoFijo: documento.tieneActivoFijo,
 });
 
-const origenDe = ({ origen, documento }: FilaDeDocumento) => ({
-  proveedorNombre: origen.proveedorNombre,
-  serie: origen.serie,
-  numero: origen.numero,
+const origenDe = ({ libro, documento }: FilaDeDocumento) => ({
+  proveedorNombre: libro.proveedorNombre,
+  serie: documento.serie,
+  numero: documento.numero,
   fechaEmision: documento.fechaEmision,
-  fechaRecepcion: origen.fechaRecepcion,
-  periodo: origen.periodo,
+  fechaRecepcion: libro.fechaRecepcion,
+  periodo: libro.periodo,
 });
 
 const montosDe = (documento: DocumentoPorPagar, saldo: SaldoDelDocumento) => ({
@@ -49,6 +59,10 @@ const montosDe = (documento: DocumentoPorPagar, saldo: SaldoDelDocumento) => ({
   neto: deCentavos(saldo.netoCentavos),
   aplicado: deCentavos(saldo.aplicadoCentavos),
   saldo: deCentavos(saldo.saldoCentavos),
+  saldoAlInicio: textoONulo(documento.saldoAlInicioCentavos),
+  retencionesPorPracticar: textoONulo(documento.retencionesPorPracticarCentavos),
+  referencia: documento.referencia,
+  anterioresAlInicio: textoONulo(anterioresAlInicioDe(documento)),
 });
 
 const seguimientoDe = (documento: DocumentoPorPagar, usuarioId: string) => ({
@@ -70,14 +84,20 @@ export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVist
     ...seguimientoDe(documento, vista.usuarioId),
     vencimiento: documento.vencimiento,
     vencido: estaVencido(documento, saldo.saldoCentavos, vista.hoy),
-    ...accionesDelDocumento({ tipo: documento.tipo, estado: documento.estado, notasVigentes, notasEnTotal }),
+    ...accionesDelDocumento({
+      origen: documento.origen,
+      tipo: documento.tipo,
+      estado: documento.estado,
+      notasVigentes,
+      notasEnTotal,
+    }),
   };
 }
 
 /** Cómo se anuló el documento; `null` si sigue vigente. */
-export function dtoDeAnulacion({ documento, origen }: FilaDeDocumento): AnulacionDelDocumentoDto | null {
+export function dtoDeAnulacion({ documento, libro }: FilaDeDocumento): AnulacionDelDocumentoDto | null {
   if (documento.estado !== 'anulado') return null;
-  const { causa, motivo, anuladoPor, anuladoPorNombre, anuladoEn } = origen.anulacion;
+  const { causa, motivo, anuladoPor, anuladoPorNombre, anuladoEn } = libro.anulacion;
   return { causa, motivo, anuladoPor, anuladoPorNombre, anuladoEn: anuladoEn?.toISOString() ?? null };
 }
 

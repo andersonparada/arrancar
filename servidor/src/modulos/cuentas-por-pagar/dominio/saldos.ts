@@ -30,6 +30,17 @@ export function saldoDe(documento: DocumentoPorPagar, aplicado: AplicadoAlDocume
   return { netoCentavos, aplicadoCentavos, saldoCentavos };
 }
 
+/**
+ * Lo que se pagó o se rebajó antes de la fecha de inicio de un saldo inicial: el neto que traía el documento menos
+ * lo que faltaba al corte. Es dato derivado (no se guarda); `null` en un documento del libro.
+ */
+export function anterioresAlInicioDe(documento: DocumentoPorPagar): number | null {
+  const { saldoAlInicioCentavos, totalCentavos, retencionesCentavos } = documento;
+  if (saldoAlInicioCentavos === null) return null;
+  const esCargo = claseDe(documento.tipo) === 'cargo';
+  return (esCargo ? totalCentavos - retencionesCentavos : totalCentavos) - saldoAlInicioCentavos;
+}
+
 /** Un cargo vence cuando aún se debe algo y su fecha de vencimiento ya pasó (`hoy` lo da quien llama). */
 export function estaVencido(documento: DocumentoPorPagar, saldoCentavos: number, hoy: string): boolean {
   if (claseDe(documento.tipo) !== 'cargo' || documento.estado === 'anulado') return false;
