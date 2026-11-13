@@ -1,4 +1,4 @@
-import { CargaDemasiadoGrande, DatoInvalido } from '../../compartido/dominio/errores.js';
+import { CargaDemasiadoGrande, DatoInvalido, DemasiadasSolicitudes } from '../../compartido/dominio/errores.js';
 
 /** Constantes de seguridad, no configurables. */
 export const LIMITE_DE_BYTES_DE_PDF = 10 * 1024 * 1024;
@@ -77,5 +77,17 @@ export class PdfNoSePudoRevisar extends DatoInvalido {
     super(
       'No se pudo revisar el PDF: es demasiado complejo o pesado. Guárdelo de nuevo con Imprimir > Guardar como PDF.',
     );
+  }
+}
+
+export type MotivoDeSaturacion = 'fila_llena' | 'cuenta_al_tope' | 'espera_agotada';
+
+/** Hay demasiados PDF esperando revisión (HTTP 429, con `Retry-After`); `detalles.motivo` dice por qué. */
+export class RevisionDePdfSaturada extends DemasiadasSolicitudes {
+  readonly codigo = 'revision_de_pdf_saturada';
+  override readonly reintentarEnSegundos = 30;
+
+  constructor(motivo: MotivoDeSaturacion) {
+    super('Hay muchos archivos en revisión. Intente de nuevo en un momento.', { motivo });
   }
 }

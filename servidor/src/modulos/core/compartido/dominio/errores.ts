@@ -25,4 +25,7 @@ export abstract class ReglaDeNegocioInfringida extends ErrorEsperado {}
 export abstract class CargaDemasiadoGrande extends ErrorEsperado {}
 
 /** Se pidió la misma operación demasiadas veces en poco tiempo (HTTP 429). */
-export abstract class DemasiadasSolicitudes extends ErrorEsperado {}
+export abstract class DemasiadasSolicitudes extends ErrorEsperado {
+  /** Si se indica, la respuesta lleva la cabecera `Retry-After` con estos segundos. */
+  readonly reintentarEnSegundos?: number;
+}

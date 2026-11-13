@@ -1,8 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Semaforo } from '../../../compartido/infraestructura/semaforo.js';
-import type { InspectorDePdf, PdfInspeccionado } from '../../aplicacion/puertos/inspector-de-pdf.js';
+import type { InspectorDePdf, PdfInspeccionado, TurnoDeRevision } from '../../aplicacion/puertos/inspector-de-pdf.js';
 import { buscarContenidoActivo } from '../../dominio/contenido-activo-de-pdf.js';
 import {
   DocumentoNoAceptado,
@@ -15,6 +14,7 @@ import {
   PdfNoSePudoRevisar,
 } from '../../dominio/documento.js';
 import type { EjecutorDeQpdf } from './ejecutor-de-qpdf.js';
+import { FilaDeRevision } from './fila-de-revision.js';
 
 /** Códigos de salida de `qpdf --requires-password`. */
 const REQUIERE_CONTRASENA = 0;
@@ -23,18 +23,18 @@ const SOLO_DE_PROPIETARIO = 3;
 const ERROR_AL_REESCRIBIR = 2;
 
 /**
- * Revisa los PDF con qpdf, de uno en uno: firma, contraseña, reescritura limpia (lo pegado al final
+ * Revisa los PDF con qpdf, de uno en uno (en la `FilaDeRevision`, con tope y prioridad): firma, contraseña, reescritura limpia (lo pegado al final
  * desaparece), contenido activo y número de páginas. Trabaja en una carpeta privada que siempre se borra.
  */
 export class InspectorQpdf implements InspectorDePdf {
   constructor(
     private readonly ejecutor: EjecutorDeQpdf,
-    private readonly semaforo = new Semaforo(1),
+    private readonly fila = new FilaDeRevision(),
   ) {}
 
-  inspeccionar(contenido: Buffer): Promise<PdfInspeccionado> {
+  inspeccionar(contenido: Buffer, turno: TurnoDeRevision): Promise<PdfInspeccionado> {
     if (!esPdfPorFirma(contenido)) return Promise.reject(new DocumentoNoAceptado());
-    return this.semaforo.ejecutar(() => this.enCarpetaPrivada((carpeta) => this.revisar(contenido, carpeta)));
+    return this.fila.ejecutar(turno, () => this.enCarpetaPrivada((carpeta) => this.revisar(contenido, carpeta)));
   }
 
   private async enCarpetaPrivada<T>(trabajo: (carpeta: string) => Promise<T>): Promise<T> {

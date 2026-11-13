@@ -2,7 +2,12 @@ import { createHash } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RecursoNoEncontrado } from '../../compartido/aplicacion/errores.js';
 import { AlmacenamientoEnMemoria, operadorDePrueba } from '../../compartido/pruebas/dobles-compartidos.js';
-import { DocumentoDemasiadoGrande, DocumentoNoAceptado, PdfConContenidoActivo } from '../dominio/documento.js';
+import {
+  DocumentoDemasiadoGrande,
+  DocumentoNoAceptado,
+  PdfConContenidoActivo,
+  RevisionDePdfSaturada,
+} from '../dominio/documento.js';
 import {
   InspectorDePdfFalso,
   OptimizadorFalso,
@@ -92,7 +97,7 @@ describe('guardar un PDF', () => {
 
 describe('revisar y guardar por separado (D1 y D2)', () => {
   it('revisar no toca el disco ni la base', async () => {
-    await gestor.revisar(pdf, 'estado.pdf');
+    await gestor.revisar(operador, pdf, 'estado.pdf');
 
     expect(inspector.inspeccionados).toHaveLength(1);
     expect(almacenamiento.contenidos.size).toBe(0);
@@ -100,7 +105,7 @@ describe('revisar y guardar por separado (D1 y D2)', () => {
   });
 
   it('guardarRevisado no vuelve a revisar y conserva el nombre y la huella de lo recibido', async () => {
-    const revisado = await gestor.revisar(pdf, 'estado.pdf');
+    const revisado = await gestor.revisar(operador, pdf, 'estado.pdf');
 
     await gestor.guardarRevisado(operador, revisado, { recursoDueno: DUENO });
 
@@ -111,12 +116,12 @@ describe('revisar y guardar por separado (D1 y D2)', () => {
   it('un documento rechazado al revisar no deja nada', async () => {
     inspector.error = new PdfConContenidoActivo(['/JavaScript']);
 
-    await expect(gestor.revisar(pdf, null)).rejects.toBeInstanceOf(PdfConContenidoActivo);
+    await expect(gestor.revisar(operador, pdf, null)).rejects.toBeInstanceOf(PdfConContenidoActivo);
     expect(almacenamiento.contenidos.size).toBe(0);
   });
 
   it('si la transacción se deshace después de guardar, borra el archivo del disco', async () => {
-    const revisado = await gestor.revisar(pdf, null);
+    const revisado = await gestor.revisar(operador, pdf, null);
     await gestor.guardarRevisado(operador, revisado, { recursoDueno: DUENO });
     expect(almacenamiento.contenidos.size).toBe(1);
 
@@ -128,7 +133,7 @@ describe('revisar y guardar por separado (D1 y D2)', () => {
 
 describe('endurecimiento de revisar y guardarRevisado', () => {
   it('registra el borrado antes de escribir: si la escritura queda a medias, no sobra nada (S3)', async () => {
-    const revisado = await gestor.revisar(pdf, null);
+    const revisado = await gestor.revisar(operador, pdf, null);
     almacenamiento.guardar = async (ruta) => {
       almacenamiento.contenidos.set(ruta, Buffer.from('parcial'));
       throw new Error('disco lleno');
@@ -143,7 +148,7 @@ describe('endurecimiento de revisar y guardarRevisado', () => {
 
   it('rechaza lo que no salió de revisar y deja el revisado congelado (S5)', async () => {
     const falso = { contenido: Buffer.from('x'), extension: 'pdf', tipoMime: 'application/pdf' };
-    const revisado = await gestor.revisar(pdf, null);
+    const revisado = await gestor.revisar(operador, pdf, null);
 
     await expect(gestor.guardarRevisado(operador, falso as never, { recursoDueno: DUENO })).rejects.toBeInstanceOf(
       DocumentoSinRevisar,
@@ -153,7 +158,7 @@ describe('endurecimiento de revisar y guardarRevisado', () => {
   });
 
   it('un revisado de otro gestor tampoco vale (S5)', async () => {
-    const ajeno = await armar().revisar(pdf, null);
+    const ajeno = await armar().revisar(operador, pdf, null);
 
     await expect(gestor.guardarRevisado(operador, ajeno, { recursoDueno: DUENO })).rejects.toBeInstanceOf(
       DocumentoSinRevisar,
@@ -163,8 +168,25 @@ describe('endurecimiento de revisar y guardarRevisado', () => {
   it('revisar falla con una transacción en curso, pero guardar sigue sirviendo dentro de ella (S6)', async () => {
     tareas.enTransaccion = true;
 
-    await expect(gestor.revisar(pdf, null)).rejects.toBeInstanceOf(RevisionDentroDeTransaccion);
+    await expect(gestor.revisar(operador, pdf, null)).rejects.toBeInstanceOf(RevisionDentroDeTransaccion);
     await expect(gestor.guardar(operador, pdf, { nombre: null, recursoDueno: DUENO })).resolves.toBeDefined();
+  });
+
+  it('revisar pide turno de usuario con la cuenta del operador, y guardar pide turno del sistema', async () => {
+    await gestor.revisar(operador, pdf, null);
+    await gestor.guardar(operador, pdf, { nombre: null, recursoDueno: DUENO });
+
+    expect(inspector.turnos).toEqual([
+      { cuentaId: operador.cuentaId, origen: 'usuario' },
+      { cuentaId: operador.cuentaId, origen: 'sistema' },
+    ]);
+  });
+
+  it('si la fila está saturada, revisar deja pasar el error sin guardar nada', async () => {
+    inspector.error = new RevisionDePdfSaturada('fila_llena');
+
+    await expect(gestor.revisar(operador, pdf, null)).rejects.toBeInstanceOf(RevisionDePdfSaturada);
+    expect(almacenamiento.contenidos.size).toBe(0);
   });
 
   it('quita caracteres de control y bidireccionales del nombre y lo corta a 200 (S11)', async () => {

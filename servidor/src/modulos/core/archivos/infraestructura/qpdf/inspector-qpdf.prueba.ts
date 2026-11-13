@@ -12,14 +12,16 @@ import {
 } from '../../dominio/documento.js';
 import { objetoDePdf, pdfDePrueba } from '../../pruebas/pdfs-de-prueba.js';
 import { hayQpdf, RUTA_QPDF_DE_PRUEBA, transformarConQpdf } from '../../pruebas/soporte-de-qpdf.js';
+import type { TurnoDeRevision } from '../../aplicacion/puertos/inspector-de-pdf.js';
 import { EjecutorDeQpdf, LIMITES_DE_QPDF } from './ejecutor-de-qpdf.js';
 import { InspectorQpdf } from './inspector-qpdf.js';
 
+const TURNO: TurnoDeRevision = { cuentaId: 'cuenta-de-prueba', origen: 'usuario' };
 const inspector = new InspectorQpdf(new EjecutorDeQpdf(RUTA_QPDF_DE_PRUEBA));
 const cuando = it.skipIf(!hayQpdf);
 
 async function hallazgosDe(pdf: Buffer): Promise<string[]> {
-  const error = await inspector.inspeccionar(pdf).then(
+  const error = await inspector.inspeccionar(pdf, TURNO).then(
     () => null,
     (falla: unknown) => falla,
   );
@@ -86,7 +88,7 @@ describe('PDF aceptados (qpdf real)', () => {
     const enlace = '<< /Type /Annot /Subtype /Link /Rect [0 0 10 10] /A << /S /URI /URI (https://ejemplo.com) >> >>';
     const pdf = pdfDePrueba({ catalogo: '/OpenAction [3 0 R /Fit]', pagina: `/Annots [${enlace}]` });
 
-    const resultado = await inspector.inspeccionar(pdf);
+    const resultado = await inspector.inspeccionar(pdf, TURNO);
 
     expect(resultado.paginas).toBe(1);
     expect(resultado.contenido.toString('latin1', 0, 5)).toBe('%PDF-');
@@ -95,13 +97,13 @@ describe('PDF aceptados (qpdf real)', () => {
   cuando('acepta un OpenAction /GoTo', async () => {
     const pdf = pdfDePrueba({ catalogo: '/OpenAction << /S /GoTo /D [3 0 R /Fit] >>' });
 
-    expect((await inspector.inspeccionar(pdf)).paginas).toBe(1);
+    expect((await inspector.inspeccionar(pdf, TURNO)).paginas).toBe(1);
   });
 
   cuando('lo que estaba pegado al final del PDF no llega al archivo guardado', async () => {
     const zip = Buffer.concat([Buffer.from('PK\x03\x04', 'latin1'), Buffer.from('carga escondida'), Buffer.alloc(50)]);
 
-    const resultado = await inspector.inspeccionar(Buffer.concat([pdfDePrueba(), zip]));
+    const resultado = await inspector.inspeccionar(Buffer.concat([pdfDePrueba(), zip]), TURNO);
 
     expect(resultado.contenido.includes('carga escondida')).toBe(false);
     expect(resultado.contenido.includes(Buffer.from('PK\x03\x04', 'latin1'))).toBe(false);
@@ -111,7 +113,7 @@ describe('PDF aceptados (qpdf real)', () => {
     const restringido = transformarConQpdf(pdfDePrueba(), ['--encrypt', '', 'duena', '256', '--']);
     expect(restringido.includes('/Encrypt')).toBe(true);
 
-    const resultado = await inspector.inspeccionar(restringido);
+    const resultado = await inspector.inspeccionar(restringido, TURNO);
 
     expect(resultado.contenido.includes('/Encrypt')).toBe(false);
     expect(resultado.paginas).toBe(1);
@@ -122,7 +124,7 @@ describe('PDF que no se acepta (qpdf real)', () => {
   cuando('rechaza con ayuda un PDF cifrado con contraseña de usuario', async () => {
     const cifrado = transformarConQpdf(pdfDePrueba(), ['--encrypt', 'clave', 'duena', '256', '--']);
 
-    const error = await inspector.inspeccionar(cifrado).catch((falla: unknown) => falla);
+    const error = await inspector.inspeccionar(cifrado, TURNO).catch((falla: unknown) => falla);
 
     expect(error).toBeInstanceOf(PdfConContrasena);
     expect((error as Error).message).toContain('Imprimir > Guardar como PDF');
@@ -131,21 +133,23 @@ describe('PDF que no se acepta (qpdf real)', () => {
   cuando('rechaza un PDF truncado', async () => {
     const completo = transformarConQpdf(pdfDePrueba(), []);
 
-    await expect(inspector.inspeccionar(completo.subarray(0, completo.length / 2))).rejects.toBeInstanceOf(PdfDanado);
+    await expect(inspector.inspeccionar(completo.subarray(0, completo.length / 2), TURNO)).rejects.toBeInstanceOf(
+      PdfDanado,
+    );
   });
 
   cuando('rechaza algo que solo tiene la firma', async () => {
-    await expect(inspector.inspeccionar(Buffer.from('%PDF-1.7\nnada más'))).rejects.toBeInstanceOf(PdfDanado);
+    await expect(inspector.inspeccionar(Buffer.from('%PDF-1.7\nnada más'), TURNO)).rejects.toBeInstanceOf(PdfDanado);
   });
 
   cuando('rechaza más de 300 páginas', async () => {
-    const error = await inspector.inspeccionar(pdfDePrueba({ paginas: 301 })).catch((falla: unknown) => falla);
+    const error = await inspector.inspeccionar(pdfDePrueba({ paginas: 301 }), TURNO).catch((falla: unknown) => falla);
 
     expect(error).toBeInstanceOf(PdfConDemasiadasPaginas);
   });
 
   cuando('acepta 300 páginas', async () => {
-    expect((await inspector.inspeccionar(pdfDePrueba({ paginas: 300 }))).paginas).toBe(300);
+    expect((await inspector.inspeccionar(pdfDePrueba({ paginas: 300 }), TURNO)).paginas).toBe(300);
   });
 
   cuando('un JPEG con nombre de PDF no es un PDF', async () => {
@@ -153,7 +157,7 @@ describe('PDF que no se acepta (qpdf real)', () => {
       .jpeg()
       .toBuffer();
 
-    await expect(inspector.inspeccionar(jpeg)).rejects.toBeInstanceOf(DocumentoNoAceptado);
+    await expect(inspector.inspeccionar(jpeg, TURNO)).rejects.toBeInstanceOf(DocumentoNoAceptado);
   });
 
   cuando('si qpdf gasta más memoria de la permitida responde con error propio, no un 500', async () => {
@@ -161,14 +165,14 @@ describe('PDF que no se acepta (qpdf real)', () => {
       new EjecutorDeQpdf(RUTA_QPDF_DE_PRUEBA, { ...LIMITES_DE_QPDF, memoriaEnBytes: 8e6 }),
     );
 
-    await expect(limitado.inspeccionar(pdfDePrueba())).rejects.toBeInstanceOf(PdfNoSePudoRevisar);
+    await expect(limitado.inspeccionar(pdfDePrueba(), TURNO)).rejects.toBeInstanceOf(PdfNoSePudoRevisar);
   });
 
   cuando('no deja archivos temporales después de revisar', async () => {
     const antes = readdirSync(tmpdir()).filter((nombre) => nombre.startsWith('arrancar-pdf-'));
 
-    await inspector.inspeccionar(pdfDePrueba());
-    await inspector.inspeccionar(Buffer.from('%PDF-basura')).catch(() => null);
+    await inspector.inspeccionar(pdfDePrueba(), TURNO);
+    await inspector.inspeccionar(Buffer.from('%PDF-basura'), TURNO).catch(() => null);
 
     const despues = readdirSync(tmpdir()).filter((nombre) => nombre.startsWith('arrancar-pdf-'));
     expect(despues).toEqual(antes);
@@ -179,7 +183,7 @@ describe('firma del PDF (sin qpdf)', () => {
   it('no arranca ningún proceso si no empieza con %PDF- en el byte 0', async () => {
     const sinQpdf = new InspectorQpdf(new EjecutorDeQpdf('/no/existe/qpdf'));
 
-    await expect(sinQpdf.inspeccionar(Buffer.from('\n%PDF-1.7'))).rejects.toBeInstanceOf(DocumentoNoAceptado);
-    await expect(sinQpdf.inspeccionar(Buffer.from('GIF89a'))).rejects.toBeInstanceOf(DocumentoNoAceptado);
+    await expect(sinQpdf.inspeccionar(Buffer.from('\n%PDF-1.7'), TURNO)).rejects.toBeInstanceOf(DocumentoNoAceptado);
+    await expect(sinQpdf.inspeccionar(Buffer.from('GIF89a'), TURNO)).rejects.toBeInstanceOf(DocumentoNoAceptado);
   });
 });

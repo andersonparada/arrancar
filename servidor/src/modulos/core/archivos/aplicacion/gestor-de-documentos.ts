@@ -12,7 +12,7 @@ import type { TareasDeLaTransaccion } from '../../compartido/aplicacion/tareas-d
 import { DocumentoSinRevisar, RevisionDentroDeTransaccion } from './errores-de-programacion.js';
 import { RutasDeArchivo } from '../dominio/rutas-de-archivo.js';
 import { PreparadorDeDocumentos, sha256, type DocumentoPreparado } from './preparador-de-documentos.js';
-import type { InspectorDePdf } from './puertos/inspector-de-pdf.js';
+import type { InspectorDePdf, TurnoDeRevision } from './puertos/inspector-de-pdf.js';
 import type { OptimizadorDeImagenes } from './puertos/optimizador-de-imagenes.js';
 import type { NuevoArchivo, RepositorioArchivos } from './puertos/repositorio-archivos.js';
 
@@ -73,21 +73,26 @@ export class GestorDeDocumentos implements DocumentosProtegidos {
     this.preparador = new PreparadorDeDocumentos(dependencias.inspector, dependencias.optimizador);
   }
 
-  async revisar(contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado> {
+  async revisar(operador: Operador, contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado> {
     if (this.dependencias.tareas.hayTransaccion()) throw new RevisionDentroDeTransaccion();
-    return this.revisarSinExigirFuera(contenido, nombre);
+    return this.revisarConTurno({ cuentaId: operador.cuentaId, origen: 'usuario' }, contenido, nombre);
   }
 
   /** Para `guardar`, que por contrato revisa dentro de la transacción de quien lo llama. */
-  private async revisarSinExigirFuera(contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado> {
-    const preparado = await this.preparador.preparar(contenido);
+  private async revisarConTurno(
+    turno: TurnoDeRevision,
+    contenido: Buffer,
+    nombre: string | null,
+  ): Promise<DocumentoRevisado> {
+    const preparado = await this.preparador.preparar(contenido, turno);
     const revisado: Revisado = Object.freeze({ ...preparado, nombreOriginal: limpiarNombre(nombre) });
     this.revisados.add(revisado);
     return revisado as unknown as DocumentoRevisado;
   }
 
   async guardar(operador: Operador, contenido: Buffer, opciones: OpcionesDeDocumento): Promise<DocumentoGuardado> {
-    return this.guardarRevisado(operador, await this.revisarSinExigirFuera(contenido, opciones.nombre), opciones);
+    const turno: TurnoDeRevision = { cuentaId: operador.cuentaId, origen: 'sistema' };
+    return this.guardarRevisado(operador, await this.revisarConTurno(turno, contenido, opciones.nombre), opciones);
   }
 
   async guardarRevisado(
