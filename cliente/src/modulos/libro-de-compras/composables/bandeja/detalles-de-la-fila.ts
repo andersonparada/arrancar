@@ -1,6 +1,8 @@
 import type { DteRecibido } from '../../servicios/dte-recibidos.api';
 import { DESTINOS_DE_DOCUMENTO } from '../../textos-de-documentos';
-import { MOTIVOS_DE_BLOQUEO } from '../../textos-de-la-bandeja';
+import { ANTERIORES_A_LA_FECHA_DE_INICIO as textos } from '../../textos-de-anteriores';
+import { FALTANTES, MOTIVOS_DE_BLOQUEO } from '../../textos-de-la-bandeja';
+import { marcaDeAnterioridad } from './anteriores-a-la-fecha-de-inicio';
 import { faltantesDeLaFila, tieneProveedorNuevo, valoresDeLaFila } from './datos-de-la-bandeja';
 
 export interface InsigniaDeLaFila {
@@ -11,6 +13,8 @@ export interface InsigniaDeLaFila {
 /** Las etiquetas que avisan lo importante de la fila a primera vista. */
 export function insigniasDeLaFila(fila: DteRecibido): InsigniaDeLaFila[] {
   const insignias: InsigniaDeLaFila[] = [];
+  const anterior = marcaDeAnterioridad(fila);
+  if (anterior) insignias.push(anterior);
   if (fila.estadoSat === 'anulado') insignias.push({ texto: 'Anulado en la SAT', tono: 'rojo' });
   if (tieneProveedorNuevo(fila)) insignias.push({ texto: 'Proveedor nuevo', tono: 'trigo' });
   if (fila.estado === 'bloqueado') insignias.push({ texto: 'Bloqueado', tono: 'tierra' });
@@ -42,9 +46,11 @@ export function datosDeLaFilaPendiente(
 }
 
 /** Lo que falta para confirmar, como una frase; vacío si no falta nada. */
-export function textoDeLoQueFalta(fila: DteRecibido): string {
+export function textoDeLoQueFalta(fila: DteRecibido, conFechaDeInicio = false): string {
   const faltan = faltantesDeLaFila(fila);
-  return faltan.length ? `Falta ${faltan.join(', ')}.` : '';
+  if (!faltan.length) return '';
+  const nota = conFechaDeInicio && faltan.includes(FALTANTES.factura) ? ` ${textos.notaSinFactura}` : '';
+  return `Falta ${faltan.join(', ')}.${nota}`;
 }
 
 /** El aviso que acompaña a una fila que no está pendiente (por qué está bloqueada o descartada). */

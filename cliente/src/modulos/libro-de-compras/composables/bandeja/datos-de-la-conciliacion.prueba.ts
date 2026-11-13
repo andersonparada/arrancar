@@ -6,6 +6,7 @@ import {
   cantidadPorRevisar,
   grupoInicial,
   numeroDelItem,
+  rutaDeLaAccion,
   tipoDeValorDelCampo,
   tituloDelItem,
 } from './datos-de-la-conciliacion';
@@ -21,6 +22,7 @@ const resumen = (cambios: Partial<Record<ClaveDeResultado, number>> = {}) => ({
     noVaEnElLibro: 0,
     anuladoEnLaSatYVigenteAqui: 0,
     descartado: 0,
+    anterioresALaFechaDeInicio: 0,
     ...cambios,
   },
 });
@@ -43,6 +45,7 @@ const item = (cambios: Partial<ItemDeConciliacion> = {}): ItemDeConciliacion => 
   motivoDeBloqueo: null,
   motivoDeDescarte: null,
   diferencias: [],
+  enPlazoDeCredito: false,
   ...cambios,
 });
 
@@ -58,8 +61,10 @@ describe('conteos de la conciliación', () => {
       registradoEnOtroPeriodo: 5,
       noVaEnElLibro: 2,
       descartado: 6,
+      anterioresALaFechaDeInicio: 9,
     });
     expect(cantidadPorRevisar(datos)).toBe(7);
+    // Los de antes de la fecha de inicio son informativos: no cuentan como conciliados.
     expect(cantidadConciliada(datos)).toBe(34);
   });
 
@@ -95,6 +100,43 @@ describe('acciones de cada línea', () => {
   it('lo descartado se restaura', () => {
     expect(accionesDelItem('descartado', item())).toEqual(['restaurar']);
     expect(accionesDelItem('descartado', item({ dteId: null }))).toEqual([]);
+  });
+});
+
+describe('lo anterior a la fecha de inicio en la conciliación', () => {
+  it('una fila pendiente se registra aquí o se descarta; una descartada se restaura', () => {
+    const grupo = 'anterioresALaFechaDeInicio';
+    const pendiente = item({ documentoId: null, estadoEnLaBandeja: 'pendiente' });
+    expect(accionesDelItem(grupo, pendiente)).toEqual(['registrarAqui', 'descartar']);
+    expect(accionesDelItem(grupo, item({ estadoEnLaBandeja: 'descartado' }))).toEqual(['restaurar']);
+  });
+
+  it('una bloqueada, una ya registrada o una sin fila en la bandeja no ofrecen nada', () => {
+    const grupo = 'anterioresALaFechaDeInicio';
+    expect(accionesDelItem(grupo, item({ estadoEnLaBandeja: 'bloqueado' }))).toEqual([]);
+    expect(accionesDelItem(grupo, item({ estadoEnLaBandeja: 'registrado' }))).toEqual([]);
+    expect(accionesDelItem(grupo, item({ dteId: null, estadoEnLaBandeja: 'pendiente' }))).toEqual([]);
+  });
+
+  it('el grupo no abre por sí solo ni cuenta por revisar', () => {
+    expect(grupoInicial(resumen({ anterioresALaFechaDeInicio: 4 }))).toBe('cuadra');
+    expect(cantidadPorRevisar(resumen({ anterioresALaFechaDeInicio: 4 }))).toBe(0);
+    expect(cantidadConciliada(resumen({ anterioresALaFechaDeInicio: 4 }))).toBe(0);
+  });
+});
+
+describe('rutaDeLaAccion', () => {
+  it('abrir la factura y registrar aquí cambian de pantalla; lo demás no', () => {
+    expect(rutaDeLaAccion('abrirDocumento', item({ documentoId: 'd1' }))).toEqual({
+      name: 'libro-de-compras.documentos.ficha',
+      params: { documentoId: 'd1' },
+    });
+    expect(rutaDeLaAccion('registrarAqui', item({ dteId: 'f1' }))).toEqual({
+      name: 'libro-de-compras.documentos.nuevo',
+      query: { desdeDte: 'f1' },
+    });
+    expect(rutaDeLaAccion('registrarAqui', item({ dteId: null }))).toBeNull();
+    expect(rutaDeLaAccion('descartar', item())).toBeNull();
   });
 });
 

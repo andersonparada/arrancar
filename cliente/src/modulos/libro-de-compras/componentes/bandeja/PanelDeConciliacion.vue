@@ -4,7 +4,7 @@ import { CircleCheckBig, SearchX } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
-import { numeroDelItem } from '../../composables/bandeja/datos-de-la-conciliacion';
+import { numeroDelItem, rutaDeLaAccion } from '../../composables/bandeja/datos-de-la-conciliacion';
 import { usarConciliacion } from '../../composables/bandeja/usar-conciliacion';
 import { opcionesDePeriodoDelLibro } from '../../composables/libro/datos-del-libro';
 import type { ItemDeConciliacion } from '../../servicios/conciliacion.api';
@@ -13,6 +13,7 @@ import {
   TARJETAS_DE_CONCILIACION,
   type AccionDeConciliacion,
 } from '../../textos-de-la-conciliacion';
+import GrupoDeAnterioresDeLaConciliacion from './GrupoDeAnterioresDeLaConciliacion.vue';
 import LineaDeConciliacion from './LineaDeConciliacion.vue';
 import TarjetasDeConciliacion from './TarjetasDeConciliacion.vue';
 import VentanaDeDescarteDeDte from './VentanaDeDescarteDeDte.vue';
@@ -26,9 +27,9 @@ const tarjeta = computed(() => TARJETAS_DE_CONCILIACION.find(({ clave }) => clav
 const items = computed(() => conciliacion.value?.resultados[grupo.value] ?? []);
 
 function alHacer(accion: AccionDeConciliacion, item: ItemDeConciliacion): void {
-  if (accion === 'abrirDocumento' && item.documentoId) {
-    void router.push({ name: 'libro-de-compras.documentos.ficha', params: { documentoId: item.documentoId } });
-  } else if (accion === 'verEnLaBandeja') emit('verEnLaBandeja', numeroDelItem(item));
+  const ruta = rutaDeLaAccion(accion, item);
+  if (ruta) void router.push(ruta);
+  else if (accion === 'verEnLaBandeja') emit('verEnLaBandeja', numeroDelItem(item));
   else if (accion === 'descartar' && item.dteId) descarte.abrir([item.dteId]);
   else if (accion === 'restaurar' && item.dteId) void descarte.restaurar(item.dteId);
 }
@@ -70,6 +71,11 @@ function alHacer(accion: AccionDeConciliacion, item: ItemDeConciliacion): void {
           <LineaDeConciliacion :clave="grupo" :item="item" @accion="alHacer($event, item)" />
         </li>
       </ul>
+      <GrupoDeAnterioresDeLaConciliacion
+        :items="conciliacion.resultados.anterioresALaFechaDeInicio"
+        :cargando="cargando"
+        @accion="alHacer"
+      />
     </template>
 
     <VentanaDeDescarteDeDte
