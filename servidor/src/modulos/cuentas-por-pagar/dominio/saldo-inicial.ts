@@ -42,7 +42,8 @@ const normalizar = (texto: string): string => texto.replace(/\s+/g, '').toUpperC
 
 function exigirLargoDelNumero(texto: string, campo: string): string {
   if (texto.length < 1 || texto.length > MAXIMO_DEL_NUMERO) {
-    throw new NumeroDeDocumentoInvalido(`Escriba ${campo} de 1 a ${MAXIMO_DEL_NUMERO} caracteres.`, campo);
+    const nombre = campo === 'serie' ? 'la serie' : 'el número';
+    throw new NumeroDeDocumentoInvalido(`Escriba ${nombre} de 1 a ${MAXIMO_DEL_NUMERO} caracteres.`, campo);
   }
   return texto;
 }
