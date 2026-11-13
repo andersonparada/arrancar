@@ -124,3 +124,24 @@ queda como pendiente general de Libro de compras.
 - Código Tributario, Decreto 6-91: [Wikisource](https://es.wikisource.org/wiki/C%C3%B3digo_Tributario_de_la_Rep%C3%BAblica_de_Guatemala_(Decreto_Ley_6-91)).
 - Reglamento de la Ley del IVA, AG 5-2013: [CGAB](https://cgab.org.gt/wp-content/uploads/2023/10/Reglamento-de-la-Ley-del-IVA-Acuerdo-Gubernativo-5-2013_3.pdf).
 - NIIF para las Pymes: [IFRS](https://www.ifrs.org/issued-standards/ifrs-for-smes/).
+
+## Adenda (contador, 2026-11-13): rubro de «otra causa», P-U8l-2 y P-U8l-1
+
+Investigación en línea limitada (límite de uso; el portal técnico FEL de la SAT respondió 403).
+
+1. **`otra_causa_sin_credito` en notas de crédito: correcto.** Igual que `fuera_de_plazo` hoy
+   (`rubros-del-sat-2237.ts`): base e IVA a `compras_sin_credito`, con **signo negativo** (resta del rubro; no se
+   omite), IVA al costo [Ley arts. 16 y 18; Práctica; certeza media-alta]. Sigla «OC» correcta.
+   **Ajustes:** (a) aviso cuando el neto de una casilla de la sección 5 del SAT-2237 quede **negativo** («El neto es
+   negativo por notas de crédito sobre compras de meses anteriores; Declaraguate no admite negativos: consulte con su
+   contador cómo declararlo»); el riesgo ya existe hoy con `fuera_de_plazo` (general, no solo U8-l; certeza media).
+   (b) Quitar «otro NIT» y «rechazo de la SAT» de la leyenda de «OC»: una factura a otro NIT no va en el libro de la
+   empresa y un rechazo de la SAT se corrige con rectificativa, no con el motivo.
+2. **P-U8l-2:** recomienda **sí** ofrecerlo a mano en las facturas del libro (requisitos del art. 18, bancarización
+   descubierta al pagar), con **detalle obligatorio** y auditoría; basta quitar el check
+   `documentos_otra_causa_solo_en_nota_con_factura_anterior`. **Pendiente del usuario.**
+3. **P-U8l-1 (frase FEL 9-22): sigue sin verificar** en fuente oficial. Antecedente (Reglas y Validaciones 2018,
+   copia no oficial): la nota emitida después de dos meses de la factura «no se permitirá incluir IVA». Mientras no se
+   confirme: seguir la regla del diseño y **tomar siempre el IVA de la nota del DTE, nunca calcularlo** (con IVA 0 la
+   rebaja del crédito es 0). Pendiente para el usuario o su contador externo: bajar del portal FEL, con sesión, las
+   «Reglas y Validaciones» vigentes y el catálogo de frases, o preguntar a la mesa de ayuda de la SAT.
