@@ -21,6 +21,8 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.documentos.anular',
       'cuentas-por-pagar.documentos.eliminar',
       'cuentas-por-pagar.documentos.aplicar-notas',
+      'cuentas-por-pagar.ajustes.crear',
+      'cuentas-por-pagar.ajustes.anular',
       'cuentas-por-pagar.saldos-iniciales.ver',
       'cuentas-por-pagar.saldos-iniciales.crear',
       'cuentas-por-pagar.saldos-iniciales.editar',
@@ -50,5 +52,16 @@ describe('módulo de Cuentas por pagar', () => {
     expect(meses?.publica).toBe(false);
     expect([0, 1, 12].map((v) => meses?.esquema.safeParse(v).success)).toEqual([true, true, true]);
     expect([-1, 13, 1.5].map((v) => meses?.esquema.safeParse(v).success)).toEqual([false, false, false]);
+  });
+
+  it('el tope de «Diferencia menor» es de Q25, de instalación y empresa, y acepta cero', () => {
+    const tope = configuracionDeCuentasPorPagar.find(
+      ({ clave }) => clave === 'cuentas-por-pagar.ajustes.tope_diferencia_menor',
+    );
+
+    expect(tope?.predeterminado).toBe(25);
+    expect(tope?.niveles).toEqual(['instalacion', 'empresa']);
+    expect([0, 25, 100.5].map((v) => tope?.esquema.safeParse(v).success)).toEqual([true, true, true]);
+    expect([-1, 10.005].map((v) => tope?.esquema.safeParse(v).success)).toEqual([false, false]);
   });
 });

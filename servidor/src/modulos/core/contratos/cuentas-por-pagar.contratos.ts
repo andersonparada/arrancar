@@ -55,6 +55,33 @@ declare module '../eventos/bus-eventos.js' {
       origen: 'libro_de_compras' | 'saldo_inicial';
       estabaAutorizado: boolean;
     };
+    /**
+     * Se dio de baja o se trasladó parte del saldo a favor de una nota de crédito (U13). `efecto`: `perdida` va a otros
+     * gastos (no deducible); `transitoria` a «Saldos de proveedores por regularizar» o a la cuenta por cobrar del tercero.
+     * `serie` y `numero` son los de la nota, para la glosa. El dinero va en centavos enteros.
+     */
+    'cuentas-por-pagar.ajuste_registrado': {
+      empresaId: string;
+      ajusteId: string;
+      documentoId: string;
+      proveedorId: string;
+      serie: string | null;
+      numero: string;
+      montoCentavos: number;
+      fecha: string;
+      causa: 'no_recuperable' | 'diferencia_menor' | 'compensado_con_otra_cuenta';
+      efecto: 'perdida' | 'transitoria';
+      referencia: string | null;
+    };
+    /** Se anuló un ajuste: `fecha` es la de la anulación y se repiten monto y efecto para revertir la partida. */
+    'cuentas-por-pagar.ajuste_anulado': {
+      empresaId: string;
+      ajusteId: string;
+      documentoId: string;
+      fecha: string;
+      montoCentavos: number;
+      efecto: 'perdida' | 'transitoria';
+    };
   }
 }
 

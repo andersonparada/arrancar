@@ -2,6 +2,7 @@ import { aliasedTable, and, asc, desc, eq, gte, lte, lt, ne, sql, type SQL } fro
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
+  AjusteConDatos,
   AplicacionConDatos,
   ConsultasDeDocumentos,
   FilaDeDocumento,
@@ -10,6 +11,7 @@ import type {
   PaginacionDeDocumentos,
 } from '../../aplicacion/puertos/puertos-de-consultas.js';
 import type { DocumentoPorPagar, FormaDeAplicacion } from '../../dominio/documento-por-pagar.js';
+import { ajustesConDatos } from './consultas-de-ajustes.drizzle.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { aFilaDeDocumento, ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
 import { documentos } from './documentos.tablas.js';
@@ -165,6 +167,10 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
   async aplicacion(id: string): Promise<AplicacionConDatos | null> {
     const [fila] = await consultaDeAplicaciones().where(eq(aplicacionesDeNotas.id, id));
     return fila ? aAplicacionConDatos(fila) : null;
+  }
+
+  ajustesDe(documentoId: string): Promise<AjusteConDatos[]> {
+    return ajustesConDatos(documentoId);
   }
 
   async cargosConSaldoDe(proveedorId: string): Promise<FilaDeDocumento[]> {

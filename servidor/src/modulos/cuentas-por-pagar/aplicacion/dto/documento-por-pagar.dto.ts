@@ -1,3 +1,4 @@
+import type { CausaDeAjuste, EfectoDelAjuste } from '../../dominio/ajustes.js';
 import type { AccionesDelDocumento } from '../../dominio/acciones-posibles.js';
 import type {
   ClaseDeDocumento,
@@ -101,10 +102,34 @@ export interface AplicacionDelDocumentoDto {
   monto: string;
 }
 
+/** Un ajuste del saldo libre de una nota, tal como lo ve la ficha. */
+export interface AjusteDelDocumentoDto {
+  id: string;
+  monto: string;
+  fecha: string;
+  causa: CausaDeAjuste;
+  /** `perdida` o `transitoria`: sale de la causa. */
+  efecto: EfectoDelAjuste;
+  motivo: string;
+  referencia: string | null;
+  estado: 'vigente' | 'anulado';
+  creadoPor: string | null;
+  creadoEn: string;
+  anulacion: { motivo: string; anuladoPorNombre: string | null; anuladoEn: string | null } | null;
+  /** Solo un ajuste vigente se anula (el permiso lo valida el servidor al anular). */
+  puedeAnular: boolean;
+}
+
 /** La ficha: el documento, las notas que lo corrigen y las aplicaciones de notas de crédito (hechas o recibidas). */
 export interface FichaDelDocumentoPorPagarDto extends DocumentoPorPagarDto {
   notas: NotaDelDocumentoDto[];
   aplicaciones: AplicacionDelDocumentoDto[];
+  /** Solo una nota de crédito: sus ajustes, también los anulados. */
+  ajustes: AjusteDelDocumentoDto[];
+  /** Solo una nota de crédito: la fecha más antigua que puede llevar un ajuste (recepción o fecha de inicio); nula si nada la limita. */
+  fechaMinimaDeAjuste: string | null;
+  /** Solo una nota de crédito: lo más que puede ajustarse como «Diferencia menor» (cero la apaga). */
+  topeDiferenciaMenor: string;
   /** Cómo se anuló (de Libro de compras); `null` si el documento no está anulado. */
   anulacion: AnulacionDelDocumentoDto | null;
 }

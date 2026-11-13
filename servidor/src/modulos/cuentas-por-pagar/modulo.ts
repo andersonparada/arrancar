@@ -2,6 +2,7 @@ import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeAccionesComponidas } from './composicion/acciones.js';
 import { rutasDeAplicacionesComponidas } from './composicion/aplicaciones.js';
+import { rutasDeAjustesComponidas } from './composicion/ajustes.js';
 import { rutasDeBajasComponidas } from './composicion/bajas.js';
 import { rutasDeCondicionesComponidas } from './composicion/condiciones.js';
 import { rutasDeConsultasComponidas } from './composicion/consultas.js';
@@ -46,6 +47,14 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       descripcion:
         'Aplicar el saldo a favor de una nota de crédito a otros documentos del proveedor y quitar esas aplicaciones',
     },
+    {
+      clave: 'cuentas-por-pagar.ajustes.crear',
+      descripcion: 'Ajustar el saldo a favor de una nota de crédito (darlo de baja o trasladarlo a otra cuenta)',
+    },
+    {
+      clave: 'cuentas-por-pagar.ajustes.anular',
+      descripcion: 'Anular un ajuste del saldo a favor de una nota de crédito',
+    },
     { clave: 'cuentas-por-pagar.saldos-iniciales.ver', descripcion: 'Ver los saldos iniciales cargados' },
     {
       clave: 'cuentas-por-pagar.saldos-iniciales.crear',
@@ -77,6 +86,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeAccionesComponidas(),
     rutasDeBajasComponidas(),
     rutasDeAplicacionesComponidas(),
+    rutasDeAjustesComponidas(),
     escuchasDeFechaDeInicioComponidas(),
     rutasDelCuadreDeSaldosInicialesComponidas(),
     rutasDeSaldosInicialesComponidas(),
