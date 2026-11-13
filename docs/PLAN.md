@@ -1531,3 +1531,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   sin documento en Arrancar; con documento se concilia como siempre) y `fechaDeInicio`; importar responde
   `anterioresALaFechaDeInicio` y un aviso con la salvedad de C-U8-1. Las marcas solo se calculan en la lista (las
   respuestas de completar, descartar y restaurar las traen en falso). Sin migraciones.
+- **2026-11-13 — P1-2 (cliente, Libro de compras): DTE anteriores a la fecha de inicio.** En Pendientes la bandeja pide
+  `anteriores=ocultar` y muestra el aviso «N DTE son de antes de la fecha de inicio (dd/mm/aaaa) y no se muestran» con la
+  ayuda del contador y «Mostrar N» (con ellos a la vista, «Ocultar»); las demás pestañas los incluyen. Cada fila anterior
+  lleva la marca «Antes de la fecha de inicio» (las ya registradas no) y, si está en plazo de crédito, marca destacada,
+  borde ámbar y la frase «revise que esté en el sistema anterior». Al completar la fila conserva las marcas de la lista
+  (las respuestas las traen en falso). La conciliación suma el grupo plegado «DTE de antes de la fecha de inicio»
+  (informativo: no cuenta como conciliado ni por revisar) con «Registrar aquí» (abre el formulario con el DTE),
+  «Descartar» y «Restaurar». La nota sin factura suma «Si su factura es de antes de la fecha de inicio, regístrela desde
+  el formulario» (tarjeta y error en lote). El aviso de importar ya lo muestra la ventana (avisos del servidor). Sin
+  pruebas de navegador (pendiente de QA con U8l).

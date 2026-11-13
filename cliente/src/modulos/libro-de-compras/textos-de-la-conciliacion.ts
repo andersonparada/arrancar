@@ -112,6 +112,7 @@ export const CAMPOS_COMPARADOS: Record<CampoComparado, string> = {
 export const ACCIONES_DE_CONCILIACION = {
   abrirDocumento: 'Abrir factura',
   verEnLaBandeja: 'Registrar',
+  registrarAqui: 'Registrar aquí',
   descartar: 'Descartar',
   restaurar: 'Restaurar',
 } as const;
