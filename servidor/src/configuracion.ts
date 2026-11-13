@@ -12,6 +12,11 @@ const esquemaConfiguracion = z.object({
   RUTA_ALMACENAMIENTO: z.string().default('./almacenamiento'),
   /** Programa qpdf (versión 11 o posterior) con que se revisan los PDF; ruta absoluta. */
   RUTA_QPDF: z.string().default('/usr/bin/qpdf'),
+  /** `false` apaga la tarea diaria que borra archivos sueltos (apáguela antes de restaurar una base más vieja que los archivos). */
+  DEPURAR_HUERFANOS: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((valor) => valor === 'true'),
   RUTA_CLIENTE: z.string().optional(),
   /** Archivo JSON con la configuración propia de este servidor (nivel instalación). */
   RUTA_CONFIG_INSTALACION: z.string().optional(),

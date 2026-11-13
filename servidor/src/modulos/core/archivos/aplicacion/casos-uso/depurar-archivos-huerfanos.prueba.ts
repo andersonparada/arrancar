@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { ExploradorDeArchivos, RegistroDeRutas, RegistroDeTexto } from '../puertos/depuracion-de-archivos.js';
+import type {
+  CerrojoDeCorrida,
+  ExploradorDeArchivos,
+  RegistroDeRutas,
+  RegistroDeTexto,
+} from '../puertos/depuracion-de-archivos.js';
 import { DepurarArchivosHuerfanos, LIMITES_DE_LA_DEPURACION } from './depurar-archivos-huerfanos.js';
 
 const AHORA = new Date('2026-11-13T12:00:00Z');
@@ -33,6 +38,14 @@ class RegistroEnMemoria implements RegistroDeRutas {
   }
 }
 
+class CerrojoEnMemoria implements CerrojoDeCorrida {
+  ocupado = false;
+
+  async ejecutarSiLibre<R>(trabajo: () => Promise<R>): Promise<R | null> {
+    return this.ocupado ? null : trabajo();
+  }
+}
+
 class TextoEnMemoria implements RegistroDeTexto {
   readonly mensajes: string[] = [];
   readonly advertencias: string[] = [];
@@ -43,13 +56,15 @@ class TextoEnMemoria implements RegistroDeTexto {
 let explorador: ExploradorEnMemoria;
 let registro: RegistroEnMemoria;
 let texto: TextoEnMemoria;
+let cerrojo: CerrojoEnMemoria;
 let depurar: DepurarArchivosHuerfanos;
 
 beforeEach(() => {
   explorador = new ExploradorEnMemoria();
   registro = new RegistroEnMemoria();
   texto = new TextoEnMemoria();
-  depurar = new DepurarArchivosHuerfanos({ explorador, registro, registroDeTexto: texto, ahora: () => AHORA });
+  cerrojo = new CerrojoEnMemoria();
+  depurar = new DepurarArchivosHuerfanos({ explorador, registro, cerrojo, registroDeTexto: texto, ahora: () => AHORA });
 });
 
 function soltar(cantidad: number, prefijo = 'e/2026/10/suelto'): string[] {
@@ -67,7 +82,7 @@ describe('depurar archivos huérfanos', () => {
     const resultado = await depurar.ejecutar();
 
     expect(explorador.borrados).toEqual(['e/2026/10/suelto.pdf']);
-    expect(resultado).toEqual({ revisados: 2, borrados: 1, topeAlcanzado: false });
+    expect(resultado).toEqual({ revisados: 2, borrados: 1, topeAlcanzado: false, detenidaPorSospecha: false });
   });
 
   it('respeta las 24 horas: lo más reciente nunca es candidato, ni siquiera se consulta', async () => {
@@ -78,7 +93,7 @@ describe('depurar archivos huérfanos', () => {
 
     expect(explorador.borrados).toEqual([]);
     expect(registro.consultas).toEqual([]);
-    expect(resultado.revisados).toBe(0);
+    expect(resultado?.revisados).toBe(0);
   });
 
   it('pregunta en tandas de 500 rutas', async () => {
@@ -91,13 +106,42 @@ describe('depurar archivos huérfanos', () => {
     expect(explorador.borrados).toEqual([]);
   });
 
+  it('si una tanda completa de 500 no trae ninguna registrada, se detiene sin borrar y avisa', async () => {
+    soltar(1200);
+
+    const resultado = await depurar.ejecutar();
+
+    expect(resultado).toMatchObject({ borrados: 0, detenidaPorSospecha: true });
+    expect(explorador.borrados).toEqual([]);
+    expect(registro.consultas).toEqual([500]);
+    expect(texto.advertencias.join(' ')).toContain('ninguna ruta registrada');
+  });
+
+  it('una tanda corta sin registradas sí se depura (pocos archivos sueltos de verdad)', async () => {
+    soltar(499);
+
+    const resultado = await depurar.ejecutar();
+
+    expect(resultado).toMatchObject({ borrados: 499, detenidaPorSospecha: false });
+  });
+
+  it('si otra instancia tiene el cerrojo, no hace nada', async () => {
+    soltar(3);
+    cerrojo.ocupado = true;
+
+    expect(await depurar.ejecutar()).toBeNull();
+    expect(registro.consultas).toEqual([]);
+    expect(explorador.borrados).toEqual([]);
+  });
+
   it('borra como máximo 1,000 por corrida y lo deja dicho en el registro', async () => {
-    soltar(LIMITES_DE_LA_DEPURACION.borradosPorCorrida + 300);
+    const rutas = soltar(LIMITES_DE_LA_DEPURACION.borradosPorCorrida + 300);
+    for (const ruta of rutas.filter((_, i) => i % 500 === 0)) registro.registrados.add(ruta);
 
     const resultado = await depurar.ejecutar();
 
     expect(explorador.borrados).toHaveLength(LIMITES_DE_LA_DEPURACION.borradosPorCorrida);
-    expect(resultado.topeAlcanzado).toBe(true);
+    expect(resultado?.topeAlcanzado).toBe(true);
     expect(texto.advertencias.join(' ')).toContain('tope');
   });
 
@@ -116,7 +160,7 @@ describe('depurar archivos huérfanos', () => {
     const resultado = await depurar.ejecutar();
 
     expect(explorador.borrados).toEqual([segundo]);
-    expect(resultado.borrados).toBe(1);
+    expect(resultado?.borrados).toBe(1);
     expect(texto.advertencias[0]).toContain(primero!);
   });
 

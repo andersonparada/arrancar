@@ -310,6 +310,11 @@ Cada cierto tiempo hay que **probar una restauración**
 (`pg_restore -d <base> archivo.dump`) y comprobar que la copia externa abre.
 La ubicación elegida por cliente queda pendiente de decidir con el usuario.
 
+**Antes de restaurar una base más vieja que los archivos**, apague la limpieza de archivos
+sueltos (`DEPURAR_HUERFANOS=false` y reinicie la app): una base vieja no conoce los archivos
+nuevos y la tarea diaria los tomaría por huérfanos y los borraría. Vuelva a encenderla cuando
+la restauración haya terminado y los archivos y la base coincidan.
+
 ## 6. Ideas por planificar (no programar todavía)
 
 **Orden y detalle actualizados en `docs/HOJA-DE-RUTA.md`** (2026-09-28). Cómo quedó la

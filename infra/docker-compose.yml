@@ -34,6 +34,7 @@ services:
       SUPERACCESO_USUARIO: ${SUPERACCESO_USUARIO:-}
       SUPERACCESO_CONTRASENA: ${SUPERACCESO_CONTRASENA:-}
       RUTA_CONFIG_INSTALACION: ${RUTA_CONFIG_INSTALACION:-}
+      DEPURAR_HUERFANOS: ${DEPURAR_HUERFANOS:-true}
     volumes:
       - archivos:/datos/archivos
       - ./config:/config:ro

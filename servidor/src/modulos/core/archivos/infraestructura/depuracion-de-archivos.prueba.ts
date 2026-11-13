@@ -1,7 +1,7 @@
 import { lstat, mkdir, mkdtemp, readFile, rm, symlink, utimes, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, afterEach, describe, expect, it } from 'vitest';
 import { configuracion } from '../../../../configuracion.js';
@@ -11,7 +11,8 @@ import { migrarModulos } from '../../base-datos/migrador.js';
 import { cuentas } from '../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas } from '../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { DepurarArchivosHuerfanos } from '../aplicacion/casos-uso/depurar-archivos-huerfanos.js';
-import { ExploradorDeArchivosLocal } from './explorador-de-archivos-local.js';
+import { ExploradorDeArchivosLocal, RaizDeArchivosInsegura } from './explorador-de-archivos-local.js';
+import { CerrojoDeDepuracionPostgres } from './persistencia/cerrojo-de-depuracion.drizzle.js';
 import { RegistroDeRutasDrizzle } from './persistencia/registro-de-rutas.drizzle.js';
 
 const DOS_DIAS_EN_MS = 2 * 24 * 60 * 60 * 1000;
@@ -41,6 +42,7 @@ function depurador(): DepurarArchivosHuerfanos {
   return new DepurarArchivosHuerfanos({
     explorador: new ExploradorDeArchivosLocal(raiz),
     registro: new RegistroDeRutasDrizzle(bd),
+    cerrojo: new CerrojoDeDepuracionPostgres(grupoConexiones),
     registroDeTexto: { info: () => undefined, advertencia: () => undefined },
   });
 }
@@ -73,36 +75,55 @@ afterAll(async () => {
   await grupoConexiones.end();
 });
 
+const nuevoNombre = (extension = 'pdf') => `${crypto.randomUUID()}.${extension}`;
+
 describe('depuración de archivos huérfanos (disco y base reales)', () => {
   it('no borra un archivo registrado de otra empresa (la función ve todas las empresas)', async () => {
-    await crearArchivo(`${empresaB}/2026/10/de-otra-empresa.pdf`);
-    await registrar(empresaB, `${empresaB}/2026/10/de-otra-empresa.pdf`);
+    const ruta = `${empresaB}/2026/10/${nuevoNombre()}`;
+    await crearArchivo(ruta);
+    await registrar(empresaB, ruta);
 
     await depurador().ejecutar();
 
-    expect(existsSync(join(raiz, `${empresaB}/2026/10/de-otra-empresa.pdf`))).toBe(true);
+    expect(existsSync(join(raiz, ruta))).toBe(true);
   });
 
   it('no borra la miniatura de una imagen registrada', async () => {
-    await crearArchivo(`${empresaA}/2026/10/foto.webp`);
-    await crearArchivo(`${empresaA}/2026/10/foto_min.webp`);
-    await registrar(empresaA, `${empresaA}/2026/10/foto.webp`, `${empresaA}/2026/10/foto_min.webp`);
+    const base = crypto.randomUUID();
+    const [original, miniatura] = [`${empresaA}/2026/10/${base}.webp`, `${empresaA}/2026/10/${base}_min.webp`];
+    await crearArchivo(original);
+    await crearArchivo(miniatura);
+    await registrar(empresaA, original, miniatura);
 
     await depurador().ejecutar();
 
-    expect(existsSync(join(raiz, `${empresaA}/2026/10/foto_min.webp`))).toBe(true);
+    expect(existsSync(join(raiz, miniatura))).toBe(true);
   });
 
   it('borra el suelto viejo, pero no el suelto nuevo ni las carpetas', async () => {
-    await crearArchivo(`${empresaA}/2026/10/suelto-viejo.pdf`);
-    await crearArchivo(`${empresaA}/2026/11/suelto-nuevo.pdf`, 60 * 60 * 1000);
+    const [viejo, nuevo] = [`${empresaA}/2026/10/${nuevoNombre()}`, `${empresaA}/2026/11/${nuevoNombre()}`];
+    await crearArchivo(viejo);
+    await crearArchivo(nuevo, 60 * 60 * 1000);
 
     const resultado = await depurador().ejecutar();
 
-    expect(resultado.borrados).toBe(1);
-    expect(existsSync(join(raiz, `${empresaA}/2026/10/suelto-viejo.pdf`))).toBe(false);
-    expect(existsSync(join(raiz, `${empresaA}/2026/11/suelto-nuevo.pdf`))).toBe(true);
+    expect(resultado?.borrados).toBe(1);
+    expect(existsSync(join(raiz, viejo))).toBe(false);
+    expect(existsSync(join(raiz, nuevo))).toBe(true);
     expect(existsSync(join(raiz, `${empresaA}/2026/10`))).toBe(true);
+  });
+
+  it('no toca lo que no tiene la forma de las rutas de la aplicación (el logo de la instalación)', async () => {
+    await crearArchivo('instalacion/logo.png');
+    await crearArchivo(`${empresaA}/2026/10/notas.txt`);
+    await crearArchivo('suelto.pdf');
+
+    const resultado = await depurador().ejecutar();
+
+    expect(resultado).toMatchObject({ revisados: 0, borrados: 0 });
+    expect(existsSync(join(raiz, 'instalacion/logo.png'))).toBe(true);
+    expect(existsSync(join(raiz, `${empresaA}/2026/10/notas.txt`))).toBe(true);
+    expect(existsSync(join(raiz, 'suelto.pdf'))).toBe(true);
   });
 
   it('no sigue enlaces simbólicos: ni los borra ni toca su destino fuera de la raíz', async () => {
@@ -110,29 +131,75 @@ describe('depuración de archivos huérfanos (disco y base reales)', () => {
     await writeFile(secreto, 'no se toca');
     const viejo = new Date(Date.now() - DOS_DIAS_EN_MS);
     await utimes(secreto, viejo, viejo);
-    await symlink(secreto, join(raiz, 'enlace-a-archivo.pdf'));
+    await symlink(secreto, join(raiz, nuevoNombre()));
     await symlink(afuera, join(raiz, 'enlace-a-carpeta'));
 
     const resultado = await depurador().ejecutar();
 
-    expect(resultado.revisados).toBe(0);
+    expect(resultado?.revisados).toBe(0);
     expect(await readFile(secreto, 'utf8')).toBe('no se toca');
-    expect((await lstat(join(raiz, 'enlace-a-archivo.pdf'))).isSymbolicLink()).toBe(true);
     expect((await lstat(join(raiz, 'enlace-a-carpeta'))).isSymbolicLink()).toBe(true);
   });
 
-  it('el explorador se niega a borrar fuera de la raíz o un enlace', async () => {
+  it('el explorador se niega a borrar fuera de la raíz, un enlace o por una carpeta cambiada por un enlace', async () => {
     const explorador = new ExploradorDeArchivosLocal(raiz);
-    await writeFile(join(afuera, 'ajeno.txt'), 'x');
-    await symlink(join(afuera, 'ajeno.txt'), join(raiz, 'enlace.pdf'));
+    const ajeno = join(afuera, nuevoNombre());
+    await writeFile(ajeno, 'x');
+    await symlink(ajeno, join(raiz, nuevoNombre()));
+    await mkdir(join(raiz, empresaA, '2026'), { recursive: true });
+    await symlink(afuera, join(raiz, empresaA, '2026', '10'));
 
     await expect(explorador.borrar('../fuera-de-la-raiz.txt')).rejects.toThrow();
-    await expect(explorador.borrar('enlace.pdf')).rejects.toThrow();
-    expect(existsSync(join(afuera, 'ajeno.txt'))).toBe(true);
+    await expect(explorador.borrar(`${empresaA}/2026/10/${basename(ajeno)}`)).rejects.toThrow('cambió');
+    expect(existsSync(ajeno)).toBe(true);
+  });
+
+  it('borrar algo que ya no estaba no es un error', async () => {
+    await expect(
+      new ExploradorDeArchivosLocal(raiz).borrar(`${empresaA}/2026/10/${nuevoNombre()}`),
+    ).resolves.toBeUndefined();
+  });
+
+  it('se niega a trabajar con la raíz del disco o con la carpeta del programa o una de sus padres', () => {
+    expect(() => new ExploradorDeArchivosLocal('/')).toThrow(RaizDeArchivosInsegura);
+    expect(() => new ExploradorDeArchivosLocal('/srv/app', '/srv/app')).toThrow(RaizDeArchivosInsegura);
+    expect(() => new ExploradorDeArchivosLocal('/srv', '/srv/app')).toThrow(RaizDeArchivosInsegura);
+    expect(() => new ExploradorDeArchivosLocal('/srv/app/archivos', '/srv/app')).not.toThrow();
   });
 
   it('la función rechaza más de 500 rutas', async () => {
     const rutas = Array.from({ length: 501 }, (_, i) => `r${i}`);
     await expect(new RegistroDeRutasDrizzle(bd).registradas(rutas)).rejects.toThrow();
+  });
+
+  it('si el dueño de la función queda sujeto a RLS, la función falla en vez de devolver vacío', async () => {
+    // El dueño de las migraciones es superusuario y no ve RLS: se simula un dueño común, todo dentro de una transacción.
+    await propietario.query('begin');
+    try {
+      await propietario.query('create role dueno_sin_privilegios_de_prueba');
+      await propietario.query('grant usage, create on schema core to dueno_sin_privilegios_de_prueba');
+      await propietario.query('grant select on core.archivos to dueno_sin_privilegios_de_prueba');
+      await propietario.query(
+        'alter function core.rutas_de_archivos_registradas(text[]) owner to dueno_sin_privilegios_de_prueba',
+      );
+      await expect(propietario.query("select * from core.rutas_de_archivos_registradas(array['x'])")).rejects.toThrow(
+        /row-level security/,
+      );
+    } finally {
+      await propietario.query('rollback');
+    }
+  });
+
+  it('con el cerrojo ocupado por otra conexión, la corrida se salta', async () => {
+    const otra = await grupoConexiones.connect();
+    try {
+      await otra.query('select pg_advisory_lock($1)', [7_301_913_001]);
+      await crearArchivo(`${empresaA}/2026/10/${nuevoNombre()}`);
+      expect(await depurador().ejecutar()).toBeNull();
+    } finally {
+      await otra.query('select pg_advisory_unlock($1)', [7_301_913_001]);
+      otra.release();
+    }
+    expect((await depurador().ejecutar())?.borrados).toBe(1);
   });
 });

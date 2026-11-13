@@ -62,7 +62,8 @@ export interface DocumentosProtegidos {
   /**
    * `revisar` + `guardarRevisado` juntos, para quien no puede revisar antes de abrir la transacción (el contenido
    * depende de lo que lee dentro de ella). Retiene la conexión mientras se revisa; su PDF pasa como turno `sistema`
-   * (delante de los de usuario y sin sus topes).
+   * (delante de los de usuario y sin sus topes por cuenta ni de fila).
+   * **Nunca debe recibir contenido subido por un usuario**: se salta los topes de la fila; para eso está `revisar`.
    */
   guardar(operador: Operador, contenido: Buffer, opciones: OpcionesDeDocumento): Promise<DocumentoGuardado>;
   /** @throws RecursoNoEncontrado si no existe, es de otra empresa, de otro dueño o falta en el disco. */

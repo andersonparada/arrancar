@@ -135,3 +135,36 @@ registra el error.
 
 Después sigue el paso 4 de `diseno-h2-evidencia-de-conciliacion.md` (H2b servidor), que usa
 `revisar(operador, …)` ya con fila.
+
+## 5. Notas de implementación (2026-11-13)
+
+**Fila (commit 83e9ec0 y ajustes):**
+
+- `Retry-After`: `DemasiadasSolicitudes` ganó `reintentarEnSegundos?` y el manejador de errores lo convierte en
+  la cabecera. Ninguna ruta de subida usa `revisar` todavía, así que el 429 se probó con el manejador real en una
+  aplicación Fastify mínima y con el gestor.
+- Firmas: `revisar(operador, contenido, nombre)` e `inspeccionar(contenido, turno)`; `guardar` no cambió y usa turno
+  `sistema`. Su TSDoc advierte que nunca debe recibir contenido subido por un usuario (se salta los topes).
+- El turno `sistema` tiene tope propio: 5 en espera (`LIMITES_DE_LA_FILA.enEsperaDelSistema`); el sexto falla con
+  `PdfNoSePudoRevisar`. Sigue con prioridad y sin tope por cuenta.
+- Al agotarse una espera se revisa que el turno siga en la fila antes de sacarlo.
+
+**Huérfanos (commit fd45109 y ajustes):**
+
+- Migración `0023_rutas_de_archivos_registradas`: dos índices (`ruta_original`, `ruta_miniatura`, declarados también
+  en `archivos.tablas.ts`) y la función `security definer` con `row_security = off` (falla en vez de devolver vacío),
+  escrita como `UNION` de dos semijoins.
+- Solo son candidatas las rutas con la forma de `RutasDeArchivo.esGenerada` (`<uuid>/<aaaa>/<mm>/<uuid>[_min].(webp|pdf)`):
+  no se toca `instalacion/logo.png` ni nada más. Una extensión nueva obliga a actualizar ese patrón.
+- La raíz no puede ser `/`, la carpeta de trabajo ni una de sus padres (`RaizDeArchivosInsegura`): la tarea no se
+  programa y queda un error en el registro.
+- Antes de borrar se compara `realpath` de la carpeta con la esperada (cierra el cambio de una carpeta por un enlace);
+  `ENOENT` es «ya no estaba».
+- Si la consulta falla, la corrida se detiene y relanza el error (más estricto que «no borra esa tanda»). Si una tanda
+  completa de 500 vuelve sin ninguna registrada, se detiene sin borrarla y avisa.
+- Varias instancias: `pg_try_advisory_lock(7301913001)` en una conexión propia; quien no lo obtiene salta la corrida.
+- Interruptor `DEPURAR_HUERFANOS` (por omisión `true`; `false` la apaga y se registra al arrancar), en
+  `configuracion.ts`, `.env.ejemplo`, `infra/.env.ejemplo` y `infra/docker-compose.yml`. La nota de restaurar bases viejas
+  está en `docs/PLAN.md`, «Respaldos y copia fuera del servidor».
+- El rastro de los borrados queda solo en el registro (ruta relativa, que incluye el id de la empresa); no hay tabla.
+- El caso de uso recibe `ahora?: () => Date` porque el `Reloj` existente es por empresa.

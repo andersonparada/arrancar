@@ -12,6 +12,12 @@ export interface RegistroDeRutas {
   registradas(rutas: readonly string[]): Promise<ReadonlySet<string>>;
 }
 
+/** Evita que dos instancias de la app depuren a la vez. */
+export interface CerrojoDeCorrida {
+  /** @returns lo que devuelve `trabajo`, o `null` si otra instancia ya está corriendo (no ejecuta nada). */
+  ejecutarSiLibre<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado | null>;
+}
+
 /** Dónde deja constancia la tarea: solo conteos y rutas relativas, nunca contenido. */
 export interface RegistroDeTexto {
   info(mensaje: string): void;

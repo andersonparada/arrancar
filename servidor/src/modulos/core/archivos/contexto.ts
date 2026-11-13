@@ -1,5 +1,5 @@
 import { configuracion } from '../../../configuracion.js';
-import { bd } from '../base-datos/conexion.js';
+import { bd, grupoConexiones } from '../base-datos/conexion.js';
 import type { DependenciasCompartidas } from '../compartido/aplicacion/dependencias-compartidas.js';
 import { almacenamiento } from '../compartido/infraestructura/almacenamiento-local.js';
 import { AbrirImagen } from './aplicacion/casos-uso/abrir-imagen.js';
@@ -10,6 +10,7 @@ import { ArchivosControlador } from './http/archivos.controlador.js';
 import { rutasArchivos } from './http/archivos.rutas.js';
 import { optimizadorDeImagenes as optimizador } from './infraestructura/documentos-protegidos.js';
 import { ExploradorDeArchivosLocal } from './infraestructura/explorador-de-archivos-local.js';
+import { CerrojoDeDepuracionPostgres } from './infraestructura/persistencia/cerrojo-de-depuracion.drizzle.js';
 import { RegistroDeRutasDrizzle } from './infraestructura/persistencia/registro-de-rutas.drizzle.js';
 import { RepositorioArchivosDrizzle } from './infraestructura/persistencia/repositorio-archivos.drizzle.js';
 
@@ -23,11 +24,15 @@ export function componerArchivos({ unidadDeTrabajo }: DependenciasCompartidas) {
   return rutasArchivos(controlador);
 }
 
-/** Lo usa el servidor una vez al día: borra los archivos sueltos (sin fila) con más de 24 horas. */
+/**
+ * Lo usa el servidor una vez al día: borra los archivos sueltos (sin fila) con más de 24 horas.
+ * @throws RaizDeArchivosInsegura si la carpeta de archivos es `/` o contiene al programa.
+ */
 export function crearDepuradorDeArchivosHuerfanos(registroDeTexto: RegistroDeTexto): DepurarArchivosHuerfanos {
   return new DepurarArchivosHuerfanos({
     explorador: new ExploradorDeArchivosLocal(configuracion.RUTA_ALMACENAMIENTO),
     registro: new RegistroDeRutasDrizzle(bd),
+    cerrojo: new CerrojoDeDepuracionPostgres(grupoConexiones),
     registroDeTexto,
   });
 }

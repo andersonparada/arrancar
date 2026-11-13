@@ -6,12 +6,20 @@ import { FilaDeRevision, LIMITES_DE_LA_FILA, type Temporizador } from './fila-de
 /** Reloj de mentira: los plazos solo vencen cuando la prueba lo manda. */
 class RelojFalso {
   private readonly pendientes = new Set<{ accion: () => void }>();
+  private readonly creados: { accion: () => void }[] = [];
 
   readonly temporizador: Temporizador = (accion) => {
     const plazo = { accion };
     this.pendientes.add(plazo);
+    this.creados.push(plazo);
     return () => this.pendientes.delete(plazo);
   };
+
+  /** Hace pasar el plazo del enésimo turno que tuvo que esperar (empezando en 0), si sigue esperando. */
+  vencerPlazo(posicion: number): void {
+    const plazo = this.creados[posicion]!;
+    if (this.pendientes.delete(plazo)) plazo.accion();
+  }
 
   /** Hace pasar el plazo de todo lo que sigue esperando. */
   vencerPlazos(): void {
@@ -146,12 +154,40 @@ describe('fila de revisión', () => {
     const { fila, orden } = armar();
     const corriendo = tareaPausada(orden, 'corre');
     const todos = [fila.ejecutar(usuario('a'), corriendo.tarea)];
-    for (let i = 0; i < LIMITES_DE_LA_FILA.enEsperaDeUsuarios + 3; i++)
+    for (let i = 0; i < LIMITES_DE_LA_FILA.enEsperaDelSistema; i++)
       todos.push(fila.ejecutar({ cuentaId: 'a', origen: 'sistema' }, async () => `s${i}`));
     todos.push(fila.ejecutar(usuario('a'), async () => 'a2'));
     for (let i = 1; i < LIMITES_DE_LA_FILA.enEsperaDeUsuarios; i++)
       todos.push(fila.ejecutar(usuario(`c${i}`), async () => 'ok'));
     corriendo.soltar();
     expect(await Promise.all(todos)).toHaveLength(todos.length);
+  });
+
+  it('el sexto turno del sistema en espera falla con PdfNoSePudoRevisar, y tiene prioridad', async () => {
+    const { fila, orden } = armar();
+    const corriendo = tareaPausada(orden, 'corre');
+    const todos = [fila.ejecutar(usuario('a'), corriendo.tarea)];
+    todos.push(fila.ejecutar(usuario('b'), async () => 'u'));
+    for (let i = 0; i < LIMITES_DE_LA_FILA.enEsperaDelSistema; i++)
+      todos.push(fila.ejecutar(sistema, async () => (orden.push(`s${i}`), `s${i}`)));
+    await expect(fila.ejecutar(sistema, async () => 'sexto')).rejects.toBeInstanceOf(PdfNoSePudoRevisar);
+    corriendo.soltar();
+    await Promise.all(todos);
+    expect(orden).toEqual(['corre', 's0', 's1', 's2', 's3', 's4']);
+  });
+
+  it('si a uno de en medio se le agota la espera, los de atrás siguen en orden y todos reciben turno', async () => {
+    const { fila, reloj, orden } = armar();
+    const corriendo = tareaPausada(orden, 'corre');
+    const activa = fila.ejecutar(usuario('x'), corriendo.tarea);
+    const registrar = (nombre: string) => async () => (orden.push(nombre), nombre);
+    const primero = fila.ejecutar(usuario('a'), registrar('primero'));
+    const deEnMedio = fila.ejecutar(usuario('b'), registrar('nunca'));
+    const ultimo = fila.ejecutar(usuario('c'), registrar('ultimo'));
+    reloj.vencerPlazo(1);
+    await expect(deEnMedio).rejects.toBeInstanceOf(RevisionDePdfSaturada);
+    corriendo.soltar();
+    expect(await Promise.all([activa, primero, ultimo])).toEqual(['corre', 'primero', 'ultimo']);
+    expect(orden).toEqual(['corre', 'primero', 'ultimo']);
   });
 });

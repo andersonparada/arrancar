@@ -5,6 +5,8 @@ import { PdfNoSePudoRevisar, RevisionDePdfSaturada } from '../../dominio/documen
 export const LIMITES_DE_LA_FILA = {
   /** Turnos de usuario que pueden esperar a la vez. */
   enEsperaDeUsuarios: 10,
+  /** Turnos del sistema que pueden esperar a la vez (el sexto falla). Sin tope por cuenta. */
+  enEsperaDelSistema: 5,
   /** Turnos de usuario (esperando o en revisión) por cuenta. */
   porCuenta: 2,
   esperaMaximaEnMs: 60_000,
@@ -25,7 +27,7 @@ interface Espera {
 
 /**
  * Fila de revisión de PDF: corre una revisión a la vez. Los turnos de `usuario` tienen tope (10 en espera,
- * 2 por cuenta, 60 s de espera); los del `sistema` pasan delante y no cuentan para los topes. Nunca
+ * 2 por cuenta, 60 s de espera); los del `sistema` pasan delante, sin tope por cuenta y con su propio tope de 5 en espera. Nunca
  * interrumpe la revisión que ya corre.
  */
 export class FilaDeRevision {
@@ -57,13 +59,19 @@ export class FilaDeRevision {
 
   /** Rechaza enseguida al usuario que no cabe; si cabe, lo anota en su cuenta. */
   private admitir(turno: TurnoDeRevision): void {
-    if (turno.origen === 'sistema') return;
+    if (turno.origen === 'sistema') return this.admitirDelSistema();
     const deLaCuenta = this.turnosDeUsuarioPorCuenta.get(turno.cuentaId) ?? 0;
     if (deLaCuenta >= LIMITES_DE_LA_FILA.porCuenta) throw new RevisionDePdfSaturada('cuenta_al_tope');
     const tendraQueEsperar = this.ocupada || this.esperando.length > 0;
     if (tendraQueEsperar && this.usuariosEsperando() >= LIMITES_DE_LA_FILA.enEsperaDeUsuarios)
       throw new RevisionDePdfSaturada('fila_llena');
     this.turnosDeUsuarioPorCuenta.set(turno.cuentaId, deLaCuenta + 1);
+  }
+
+  private admitirDelSistema(): void {
+    const haraFila = this.ocupada || this.esperando.length > 0;
+    const esperando = this.esperando.length - this.usuariosEsperando();
+    if (haraFila && esperando >= LIMITES_DE_LA_FILA.enEsperaDelSistema) throw new PdfNoSePudoRevisar();
   }
 
   private descontar(turno: TurnoDeRevision): void {
@@ -84,7 +92,9 @@ export class FilaDeRevision {
     }
     return new Promise<void>((resolver, rechazar) => {
       const cancelarEspera = this.temporizador(() => {
-        this.esperando.splice(this.esperando.indexOf(espera), 1);
+        const indice = this.esperando.indexOf(espera);
+        if (indice === -1) return;
+        this.esperando.splice(indice, 1);
         rechazar(errorDeEsperaAgotada(turno));
       }, LIMITES_DE_LA_FILA.esperaMaximaEnMs);
       const espera: Espera = {

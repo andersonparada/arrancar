@@ -21,15 +21,28 @@ const depurar = () =>
 const depuracionDiaria = setInterval(depurar, UN_DIA);
 void depurar();
 
-const depurarArchivos = () =>
-  crearDepuradorDeArchivosHuerfanos({
-    info: (mensaje) => app.log.info(mensaje),
-    advertencia: (mensaje) => app.log.warn(mensaje),
-  })
-    .ejecutar()
-    .catch((error: unknown) => app.log.error(error, 'Depuración de archivos huérfanos'));
-const depuracionDeArchivos = setInterval(depurarArchivos, UN_DIA);
-void depurarArchivos();
+const depuracionDeArchivos = programarDepuracionDeArchivos();
+
+/** Con `DEPURAR_HUERFANOS=false` o con una carpeta de archivos insegura no se programa y queda dicho en el registro. */
+function programarDepuracionDeArchivos(): NodeJS.Timeout | null {
+  if (!configuracion.DEPURAR_HUERFANOS) {
+    app.log.warn('La depuración de archivos huérfanos está APAGADA (DEPURAR_HUERFANOS=false).');
+    return null;
+  }
+  try {
+    const depurador = crearDepuradorDeArchivosHuerfanos({
+      info: (mensaje) => app.log.info(mensaje),
+      advertencia: (mensaje) => app.log.warn(mensaje),
+    });
+    const depurarArchivos = () =>
+      depurador.ejecutar().catch((error: unknown) => app.log.error(error, 'Depuración de archivos huérfanos'));
+    void depurarArchivos();
+    return setInterval(depurarArchivos, UN_DIA);
+  } catch (error) {
+    app.log.error(error, 'Depuración de archivos huérfanos desactivada');
+    return null;
+  }
+}
 
 /** En producción la app no arranca sin qpdf 11+; en desarrollo solo avisa (los PDF no se podrán revisar). */
 async function revisarQpdf(): Promise<void> {
@@ -45,7 +58,7 @@ async function detener(senal: string): Promise<void> {
   app.log.info(`Recibida ${senal}, cerrando…`);
   clearInterval(limpiezaSesiones);
   clearInterval(depuracionDiaria);
-  clearInterval(depuracionDeArchivos);
+  if (depuracionDeArchivos) clearInterval(depuracionDeArchivos);
   await app.close();
   await grupoConexiones.end();
   process.exit(0);
