@@ -27,6 +27,8 @@ export const MOTIVOS_SIN_CREDITO = [
   'primario_pecuario',
   'exento',
   'empresa_sin_credito',
+  /** Otra causa (requisitos del art. 18, otro NIT…); exige un detalle y su IVA va al costo. */
+  'otra_causa_sin_credito',
   /** Nota de débito emitida después de los dos meses desde la fecha de su factura (Ley del IVA art. 17). */
   'nota_de_debito_tardia',
 ] as const;

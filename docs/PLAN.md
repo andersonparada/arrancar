@@ -1532,3 +1532,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `anterioresALaFechaDeInicio` y un aviso con la salvedad de C-U8-1. Las marcas solo se calculan en la lista (las
   respuestas de completar, descartar y restaurar las traen en falso). Sin migraciones.
 - **2026-11-13 — CP2-4 (servidor, ajustes).** `AjustarSaldo` (pide `CargaInicial`, bloquea la nota; solo registrada o autorizada; monto hasta el saldo libre; causa, referencia obligatoria al compensar, tope de «Diferencia menor»; fecha por omisión hoy, no futura ni anterior a la recepción o a la fecha de inicio; audita `ajustar` —acción nueva en `AccionAuditada`— con la ficha de la nota anterior y publica `ajuste_registrado` con `efecto`, serie y número) y `AnularAjuste` (motivo, audita `anular` con el ajuste anterior y publica `ajuste_anulado` con monto, efecto y la fecha de hoy). Reglas en `dominio/reglas-de-ajuste.ts`, errores en `errores-de-ajustes.ts`, eventos en `eventos-de-ajustes.ts` y en `core/contratos`. Variable `cuentas-por-pagar.ajustes.tope_diferencia_menor` (instalación y empresa, Q25; con 0 se apaga), permisos `ajustes.crear` y `ajustes.anular`, rutas `POST …/documentos/:id/ajustes` (201, ficha de la nota) y `POST …/ajustes/:id/anular`. La ficha de una nota trae `ajustes` (con `efecto`, quién y cuándo, anulación y `puedeAnular`), `fechaMinimaDeAjuste` y `topeDiferenciaMenor`; por eso `ObtenerDocumentoPorPagar` y `AplicarNota` leen la carga inicial y el tope. La ayuda de comisiones bancarias y el aviso de año anterior son del cliente (CP2-6). Sigue CP2-5 (cliente, pantalla).
+- **2026-11-13 — U8l-1 (servidor, Libro de compras, datos).** Migración `0035_u8l_facturas_anteriores`: tabla
+  `facturas_anteriores` (diseño §3.1, con las notas de débito anteriores, el único por proveedor + serie + número sin
+  tipo y el único parcial por autorización FEL), `documentos.factura_anterior_id` con su llave e índice, el check
+  `documentos_nota_con_factura` reemplazado (una sola factura) y `otra_causa_sin_credito` en `MOTIVOS_SIN_CREDITO`, en
+  los checks de motivo y de IVA al costo, en el cálculo, el rubro «Compras sin derecho a crédito» del SAT-2237, el
+  análisis y el libro (sigla «OC»). Por P-U8l-2 **no** existe `documentos_otra_causa_solo_en_nota_con_factura_anterior`;
+  el detalle obligatorio reutiliza `documentos.observaciones` (check `documentos_otra_causa_con_detalle`, exige
+  observaciones salvo en la nota de crédito, que hereda el motivo de su factura) y la factura anterior gana la columna
+  `detalle_del_motivo` (check `facturas_anteriores_detalle_del_motivo`, 1 a 500 y obligatorio con «otra causa»). Sin
+  casos de uso ni API nuevos: siguen U8l-2 a U8l-4.
