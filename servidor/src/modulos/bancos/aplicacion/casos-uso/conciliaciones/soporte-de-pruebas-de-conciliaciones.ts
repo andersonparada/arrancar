@@ -29,6 +29,7 @@ import { ListarConciliaciones } from './listar-conciliaciones.js';
 import { MarcarMovimientos } from './marcar-movimientos.js';
 import { ObtenerConciliacion } from './obtener-conciliacion.js';
 import { TerminarConciliacion } from './terminar-conciliacion.js';
+import { TranscribirSaldo } from './transcribir-saldo.js';
 
 export const operador = operadorDePrueba();
 /** Otra persona de la misma empresa: la que autoriza (no puede ser quien elaboró). */
@@ -88,6 +89,7 @@ function casosDeConciliaciones(deConciliaciones: ReturnType<typeof dependenciasD
     obtener: new ObtenerConciliacion(deConciliaciones),
     listar: new ListarConciliaciones(deConciliaciones),
     marcar: new MarcarMovimientos(deConciliaciones),
+    transcribirSaldo: new TranscribirSaldo(deConciliaciones),
     terminar: new TerminarConciliacion(deConciliaciones),
     autorizar: new AutorizarConciliacion(deConciliaciones),
     devolver: new DevolverConciliacion(deConciliaciones),
@@ -136,6 +138,17 @@ export async function agregarMovimiento(
   return movimiento.id.valor;
 }
 
+/** Transcribe el saldo que calculan las marcas (el que muestra el estado de cuenta) y termina la conciliación. */
+export async function terminarConSaldo(
+  casos: ReturnType<typeof casosDeUsoDeConciliaciones>['casos'],
+  quien: typeof operador,
+  conciliacionId: string,
+) {
+  const { saldoQueDebeMostrarElEstadoDeCuenta } = await casos.obtener.ejecutar(quien, conciliacionId);
+  await casos.transcribirSaldo.ejecutar(quien, { conciliacionId, saldo: saldoQueDebeMostrarElEstadoDeCuenta });
+  return casos.terminar.ejecutar(quien, conciliacionId);
+}
+
 /**
  * Inicia, marca (lo que elija `elegirMarcas` entre los candidatos), termina y
  * autoriza (con otro usuario) el mes dado; deja la cuenta conciliada hasta su
@@ -150,7 +163,7 @@ export async function conciliarYAutorizar(
   const iniciada = await casos.iniciar.ejecutar(operador, inicio({ mes }));
   const idsAMarcar = elegirMarcas(iniciada.candidatos);
   await casos.marcar.ejecutar(operador, { conciliacionId: iniciada.id, movimientoIds: idsAMarcar });
-  await casos.terminar.ejecutar(operador, iniciada.id);
+  await terminarConSaldo(casos, operador, iniciada.id);
   await casos.autorizar.ejecutar(otroOperador, iniciada.id);
   movimientos.fechaConciliadaHasta = `2026-${String(mes).padStart(2, '0')}-${mes === 2 ? '28' : '31'}`;
   return iniciada.id;

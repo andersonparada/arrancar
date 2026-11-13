@@ -12,6 +12,7 @@ import type {
 } from '../../aplicacion/dto/conciliacion.dto.js';
 import type { ConsultasConciliaciones } from '../../aplicacion/puertos/consultas-conciliaciones.js';
 import { finDelMesDe } from '../../dominio/conciliacion.js';
+import { diferenciaConElEstadoDeCuenta } from '../../dominio/estado-de-cuenta.js';
 import { bancos } from './bancos.tablas.js';
 import {
   aMovimientoParaConciliar,
@@ -65,6 +66,8 @@ function aEncabezado(fila: FilaEncabezado) {
     elaboradaEn: fila.elaboradaEn ? fila.elaboradaEn.toISOString() : null,
     autorizadaPorNombre: fila.autorizadaPorNombre,
     autorizadaEn: fila.autorizadaEn ? fila.autorizadaEn.toISOString() : null,
+    saldoEstadoDeCuenta: fila.saldoEstadoDeCuenta,
+    previaAlSaldoTranscrito: fila.previaAlSaldoTranscrito,
   };
 }
 
@@ -73,6 +76,18 @@ function saldoDelEstadoDeCuentaDe(fila: FilaEncabezado, calculado: string): stri
   return fila.estado === 'autorizada' && fila.fotoSaldoCalculadoEstadoDeCuenta
     ? fila.fotoSaldoCalculadoEstadoDeCuenta
     : calculado;
+}
+
+/** El saldo que debe mostrar el estado de cuenta y su diferencia con el transcrito. */
+function saldosDelDocumento(fila: FilaEncabezado, calculado: string) {
+  const saldoQueDebeMostrarElEstadoDeCuenta = saldoDelEstadoDeCuentaDe(fila, calculado);
+  return {
+    saldoQueDebeMostrarElEstadoDeCuenta,
+    diferenciaConElEstadoDeCuenta: diferenciaConElEstadoDeCuenta(
+      fila.saldoEstadoDeCuenta,
+      saldoQueDebeMostrarElEstadoDeCuenta,
+    ),
+  };
 }
 
 async function filaDeLaConciliacion(conciliacionId: string) {
@@ -133,10 +148,7 @@ export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
       candidatos,
       cuadratica: { libros: resultado.libros, banco: resultado.banco },
       partidas: resultado.partidas,
-      saldoQueDebeMostrarElEstadoDeCuenta: saldoDelEstadoDeCuentaDe(
-        fila,
-        resultado.saldoQueDebeMostrarElEstadoDeCuenta,
-      ),
+      ...saldosDelDocumento(fila, resultado.saldoQueDebeMostrarElEstadoDeCuenta),
     };
   }
 

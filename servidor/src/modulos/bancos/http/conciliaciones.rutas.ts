@@ -7,6 +7,7 @@ import {
   esquemaMotivo,
   esquemaParamsConciliacion,
   esquemaParamsCuentaBancariaDeConciliaciones,
+  esquemaSaldoDelEstadoDeCuenta,
 } from './conciliaciones.esquemas-http.js';
 
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
@@ -27,7 +28,7 @@ function rutasDeLectura(app: Aplicacion, controlador: ConciliacionesControlador)
   });
 }
 
-/** Iniciar, marcar y terminar comparten el permiso `conciliar`: es quien elabora el documento. */
+/** Iniciar, marcar, transcribir el saldo y terminar comparten el permiso `conciliar`: es quien elabora el documento. */
 function rutasDeConciliar(app: Aplicacion, controlador: ConciliacionesControlador) {
   const conciliar = proteger({ permiso: 'bancos.conciliaciones.conciliar' });
   app.post('/bancos/conciliaciones', {
@@ -39,6 +40,11 @@ function rutasDeConciliar(app: Aplicacion, controlador: ConciliacionesControlado
     schema: { tags: etiquetas, params: esquemaParamsConciliacion, body: esquemaMarcas },
     preHandler: conciliar,
     handler: controlador.guardarMarcas,
+  });
+  app.put('/bancos/conciliaciones/:conciliacionId/saldo-del-estado-de-cuenta', {
+    schema: { tags: etiquetas, params: esquemaParamsConciliacion, body: esquemaSaldoDelEstadoDeCuenta },
+    preHandler: conciliar,
+    handler: controlador.transcribirSaldo,
   });
   app.post('/bancos/conciliaciones/:conciliacionId/terminar', {
     schema: { tags: etiquetas, params: esquemaParamsConciliacion },

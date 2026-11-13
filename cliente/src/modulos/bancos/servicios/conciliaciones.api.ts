@@ -58,6 +58,12 @@ export interface Conciliacion {
   cuadratica: { libros: Cuadratica; banco: Cuadratica };
   partidas: PartidasDeConciliacion;
   saldoQueDebeMostrarElEstadoDeCuenta: string;
+  /** El saldo final que el usuario transcribió del estado de cuenta del banco; `null` si aún no lo escribe. */
+  saldoEstadoDeCuenta: string | null;
+  /** Calculado menos transcrito; `null` sin saldo transcrito. */
+  diferenciaConElEstadoDeCuenta: string | null;
+  /** Elaborada antes de que se pidiera el saldo: no se puede autorizar, hay que devolverla. */
+  previaAlSaldoTranscrito: boolean;
 }
 
 export interface DatosDeInicioDeConciliacion {
@@ -84,6 +90,13 @@ export class ApiConciliaciones {
 
   guardarMarcas(conciliacionId: string, movimientoIds: string[]) {
     return this.http.reemplazar<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/marcas`, { movimientoIds });
+  }
+
+  /** Transcribe el saldo final del estado de cuenta (`null` lo borra); solo en proceso. */
+  transcribirSaldo(conciliacionId: string, saldo: string | null) {
+    return this.http.reemplazar<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/saldo-del-estado-de-cuenta`, {
+      saldoEstadoDeCuenta: saldo,
+    });
   }
 
   /** Termina la conciliación: pasa de en proceso a elaborada. */

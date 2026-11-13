@@ -2,7 +2,13 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
-import { conceptoGeneral, crearCuentaBancaria, inversosDe, saldoDe } from './soporte/escenarios-de-bancos.js';
+import {
+  conceptoGeneral,
+  crearCuentaBancaria,
+  inversosDe,
+  saldoDe,
+  terminarConciliacionConSaldo,
+} from './soporte/escenarios-de-bancos.js';
 
 const RUTA_MOVIMIENTOS = '/api/bancos/movimientos';
 const RUTA_CHEQUES = '/api/bancos/cheques';
@@ -52,7 +58,7 @@ describe('cheques: anular en mes abierto o conciliado, y blanquear, por API', ()
       mes: 1,
     });
     const ruta = `/api/bancos/conciliaciones/${iniciada.cuerpo.id}`;
-    await cuenta.propietario.post(`${ruta}/terminar`, {});
+    await terminarConciliacionConSaldo(cuenta.propietario, iniciada.cuerpo.id);
     expect((await autoriza.post(`${ruta}/autorizar`, {})).estado).toBe(200);
   }
 

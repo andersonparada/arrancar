@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { conceptoGeneral, crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
+import { conceptoGeneral, crearCuentaBancaria, terminarConciliacionConSaldo } from './soporte/escenarios-de-bancos.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const RUTA_CHEQUES = '/api/bancos/cheques';
@@ -73,7 +73,7 @@ async function conciliarEnero(cuentaBancariaId: string, marcados: string[]): Pro
     (m) => m.saldoInicial,
   )!.id;
   await cuenta.propietario.put(`${ruta}/marcas`, { movimientoIds: [saldoInicial, ...marcados] });
-  await cuenta.propietario.post(`${ruta}/terminar`, {});
+  await terminarConciliacionConSaldo(cuenta.propietario, iniciada.cuerpo.id);
   expect((await autoriza.post(`${ruta}/autorizar`, {})).estado).toBe(200);
 }
 
