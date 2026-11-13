@@ -58,16 +58,10 @@ export interface Dependencias<Registro, Solicitud, Filtro = void> extends DatosD
   interpretarError: (error: unknown) => ErrorEsperado | null;
 }
 
-/** Un ensayo crea todo y lo deshace: así revisa también lo que solo la base de datos sabe. */
-class EnsayoTerminado extends Error {
+/** Un ensayo (o una carga con problemas) crea todo y lo deshace: así revisa también lo que solo la base de datos sabe. */
+class ImportacionTerminada extends Error {
   constructor(readonly resultado: ResultadoDeImportacion) {
-    super('Ensayo terminado');
-  }
-}
-
-class FallaEnFila extends Error {
-  constructor(readonly error: ErrorDeImportacion) {
-    super(error.mensaje);
+    super('Importación terminada sin guardar');
   }
 }
 
@@ -116,23 +110,26 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
         this.importarEnTransaccion(operador, hoja, ensayo),
       );
     } catch (error) {
-      if (error instanceof EnsayoTerminado) return error.resultado;
-      if (error instanceof FallaEnFila) return { filas: hoja.filas.length, guardado: false, errores: [error.error] };
+      if (error instanceof ImportacionTerminada) return error.resultado;
       throw error;
     }
   }
 
+  /**
+   * Una sola pasada: los problemas de formato de cada fila y, de las filas que se pudieron leer, los de las reglas
+   * (cada una en su punto de guardado, para seguir con las demás). Con algún problema, o en ensayo, se deshace todo.
+   */
   private async importarEnTransaccion(operador: Operador, hoja: HojaLeida, ensayo: boolean) {
     const { listas, errores } = await this.prepararFilas(hoja);
-    const resultado = { filas: hoja.filas.length, guardado: false, errores };
-    if (errores.length > 0) return resultado;
     const avisos: AvisoDeImportacion[] = [];
     for (const fila of listas) {
-      const aviso = await this.crearFila(operador, fila);
-      if (aviso) avisos.push(aviso);
+      const problema = await this.crearFila(operador, fila, avisos);
+      if (problema) errores.push(problema);
     }
+    errores.sort((a, b) => a.fila - b.fila);
+    const resultado = { filas: hoja.filas.length, guardado: false, errores };
     const conAvisos = avisos.length > 0 ? { ...resultado, avisos } : resultado;
-    if (ensayo) throw new EnsayoTerminado(conAvisos);
+    if (ensayo || errores.length > 0) throw new ImportacionTerminada(conAvisos);
     return { ...conAvisos, guardado: true };
   }
 
@@ -163,23 +160,25 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
     return { lista: { numero: fila.numero, solicitud: validacion.datos } };
   }
 
-  /** Lo que rechacen las reglas o la base de datos se informa con el número de la fila y, si se sabe, la columna. */
+  /**
+   * Crea la fila en un punto de guardado. Lo que rechacen las reglas o la base de datos se devuelve con el número
+   * de la fila y, si se sabe, la columna; el aviso del recurso, si lo hay, se agrega a `avisos`.
+   */
   private async crearFila(
     operador: Operador,
     { numero, solicitud }: FilaLista<Solicitud>,
-  ): Promise<AvisoDeImportacion | null> {
-    let creado: unknown;
+    avisos: AvisoDeImportacion[],
+  ): Promise<ErrorDeImportacion | null> {
     try {
-      creado = await this.dependencias.crear(operador, solicitud);
+      const creado = await this.dependencias.unidadDeTrabajo.aislar(() => this.dependencias.crear(operador, solicitud));
+      const aviso = this.dependencias.avisarDeFila?.(solicitud, creado);
+      if (aviso) avisos.push({ fila: numero, columna: this.tituloDeColumna(aviso.campo), mensaje: aviso.mensaje });
+      return null;
     } catch (error) {
       const esperado = error instanceof ErrorEsperado ? error : this.dependencias.interpretarError(error);
       if (!esperado) throw error;
-      const columna = this.tituloDeColumna(campoDelError(esperado));
-      throw new FallaEnFila({ fila: numero, columna, mensaje: esperado.message });
+      return { fila: numero, columna: this.tituloDeColumna(campoDelError(esperado)), mensaje: esperado.message };
     }
-    const aviso = this.dependencias.avisarDeFila?.(solicitud, creado);
-    if (!aviso) return null;
-    return { fila: numero, columna: this.tituloDeColumna(aviso.campo), mensaje: aviso.mensaje };
   }
 
   private tituloDeColumna(clave: string | null): string | null {

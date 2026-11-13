@@ -45,6 +45,17 @@ export class EmisionNoAnteriorAlInicio extends DatoDeSaldoInicialInvalido {
   }
 }
 
+export class EmisionDemasiadoAntigua extends DatoDeSaldoInicialInvalido {
+  readonly codigo = 'emision_demasiado_antigua';
+
+  constructor(fechaMinima: string) {
+    super(
+      `La fecha de emisión no puede ser de más de 10 años antes de la fecha de inicio: debe ser el ${fechaLegible(fechaMinima)} o posterior. Revise que no haya un error de digitación.`,
+      'fechaEmision',
+    );
+  }
+}
+
 export class SaldoPendienteInvalido extends DatoDeSaldoInicialInvalido {
   readonly codigo = 'saldo_pendiente_invalido';
 

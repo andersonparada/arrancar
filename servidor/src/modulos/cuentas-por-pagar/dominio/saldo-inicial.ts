@@ -1,5 +1,6 @@
 import { VencimientoInvalido } from './errores.js';
 import {
+  EmisionDemasiadoAntigua,
   EmisionNoAnteriorAlInicio,
   NumeroDeDocumentoInvalido,
   ReferenciaInvalida,
@@ -12,6 +13,7 @@ import { claseDe, type TipoDeDocumento } from './tipos-de-documento.js';
 
 const MAXIMO_DEL_NUMERO = 40;
 const MAXIMO_DE_LA_REFERENCIA = 60;
+const ANIOS_MAXIMOS_DE_ANTIGUEDAD = 10;
 
 /** Lo que se carga de un saldo inicial, con el dinero en centavos. */
 export interface DatosDeSaldoInicial {
@@ -71,6 +73,21 @@ export function exigirEmisionAnteriorAlInicio(fechaEmision: string, fechaDeInici
   if (fechaEmision >= fechaDeInicio) throw new EmisionNoAnteriorAlInicio(fechaDeInicio);
 }
 
+/** La fecha de emisión más antigua que se acepta: 10 años antes del inicio (el 29 de febrero pasa al 28 si no existe). */
+export function emisionMinima(fechaDeInicio: string): string {
+  const [anio, mes, dia] = fechaDeInicio.split('-');
+  const anioMinimo = Number(anio) - ANIOS_MAXIMOS_DE_ANTIGUEDAD;
+  const bisiesto = anioMinimo % 4 === 0 && (anioMinimo % 100 !== 0 || anioMinimo % 400 === 0);
+  const diaMinimo = mes === '02' && dia === '29' && !bisiesto ? '28' : dia;
+  return `${String(anioMinimo).padStart(4, '0')}-${mes}-${diaMinimo}`;
+}
+
+/** La emisión no es de más de 10 años antes de la fecha de inicio (justo 10 años pasa). @throws EmisionDemasiadoAntigua */
+export function exigirEmisionNoDemasiadoAntigua(fechaEmision: string, fechaDeInicio: string): void {
+  const minima = emisionMinima(fechaDeInicio);
+  if (fechaEmision < minima) throw new EmisionDemasiadoAntigua(minima);
+}
+
 /**
  * Los montos: total mayor que cero; retenciones entre cero y el total (una nota de crédito no lleva); saldo pendiente
  * mayor que cero y hasta el total menos las retenciones; retenciones por practicar entre cero y las retenciones.
@@ -105,6 +122,7 @@ export function exigirVencimientoCoherente({ tipo, vencimiento, fechaEmision }: 
  */
 export function prepararSaldoInicial(datos: DatosDeSaldoInicial, fechaDeInicio: string): DatosDeSaldoInicial {
   exigirEmisionAnteriorAlInicio(datos.fechaEmision, fechaDeInicio);
+  exigirEmisionNoDemasiadoAntigua(datos.fechaEmision, fechaDeInicio);
   const limpios = { ...datos, serie: limpiarSerie(datos.serie), numero: limpiarNumero(datos.numero) };
   exigirMontosValidos(limpios);
   const referencia = limpiarReferencia(datos.referencia);
