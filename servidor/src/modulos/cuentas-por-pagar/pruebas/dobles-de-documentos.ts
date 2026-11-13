@@ -8,6 +8,7 @@ import type {
   DatosDeRecepcion,
   DocumentosDeCompra,
   PlazoPorOmision,
+  DatosDeAplicacion,
   RepositorioDeAplicaciones,
   RepositorioDeDocumentos,
 } from '../aplicacion/puertos/puertos-de-documentos.js';
@@ -25,8 +26,15 @@ const sumar = (aplicaciones: readonly AplicacionDeNota[]) =>
 
 export class AplicacionesEnMemoria implements RepositorioDeAplicaciones {
   lista: AplicacionDeNota[] = [];
+  /** Lo que llegó con cada llamada a `agregar` (forma, fecha, referencia). */
+  datos: DatosDeAplicacion[] = [];
 
-  async agregar(nota: DocumentoPorPagar, aplicaciones: readonly AplicacionACargo[]): Promise<void> {
+  async agregar(
+    nota: DocumentoPorPagar,
+    aplicaciones: readonly AplicacionACargo[],
+    datos: DatosDeAplicacion,
+  ): Promise<void> {
+    this.datos.push(datos);
     this.lista.push(...aplicaciones.map((aplicacion) => ({ ...aplicacion, notaId: nota.id })));
   }
 

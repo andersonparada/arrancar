@@ -48,20 +48,23 @@ export class RecibirDocumento {
   ejecutar(operador: Operador, documento: DocumentoParaDestino): Promise<ResultadoDeRecibir> {
     return this.dependencias.unidadDeTrabajo.ejecutar(operador, async () => {
       if (await this.dependencias.documentos.existe(documento.documentoId)) throw new DocumentoYaRecibido();
-      const guardado = await this.guardar(operador, documento);
+      const { guardado, fechaRecepcion } = await this.guardar(operador, documento);
       if (guardado.tipo !== 'nota_de_credito') return { avisos: [] };
-      const saldoLibreCentavos = await this.aplicarALaFactura(guardado);
+      const saldoLibreCentavos = await this.aplicarALaFactura(guardado, fechaRecepcion);
       return { avisos: saldoLibreCentavos > 0 ? [avisoDeSaldoALaFavor(saldoLibreCentavos)] : [] };
     });
   }
 
-  private async guardar(operador: Operador, documento: DocumentoParaDestino): Promise<DocumentoPorPagar> {
+  private async guardar(
+    operador: Operador,
+    documento: DocumentoParaDestino,
+  ): Promise<{ guardado: DocumentoPorPagar; fechaRecepcion: string }> {
     const { fechaRecepcion, serie, numero } = await this.dependencias.documentosDeCompra.datosDeRecepcion(
       documento.documentoId,
     );
     const esCargo = claseDe(documento.tipo) === 'cargo';
     const vencimiento = esCargo ? await this.vencimientoPara(operador, documento, fechaRecepcion) : null;
-    return this.dependencias.documentos.agregar({
+    const guardado = await this.dependencias.documentos.agregar({
       documentoId: documento.documentoId,
       serie,
       numero,
@@ -74,6 +77,7 @@ export class RecibirDocumento {
       tieneActivoFijo: documento.tieneActivoFijo,
       vencimiento,
     });
+    return { guardado, fechaRecepcion };
   }
 
   private async vencimientoPara(
@@ -91,13 +95,22 @@ export class RecibirDocumento {
     return proponerVencimiento({ fechaBase, diasDeCredito, mesesPorOmision: await plazo.meses(operador) });
   }
 
-  /** Aplica la nota a su factura y a las notas de débito de esa factura; devuelve lo que quedó libre, en centavos. */
-  private async aplicarALaFactura(nota: DocumentoPorPagar): Promise<number> {
+  /**
+   * Aplica la nota a su factura y a las notas de débito de esa factura, con la fecha de recepción de la nota; devuelve
+   * lo que quedó libre, en centavos.
+   */
+  private async aplicarALaFactura(nota: DocumentoPorPagar, fechaRecepcion: string): Promise<number> {
     const { cargos, aplicaciones } = this.dependencias;
     if (nota.documentoAfectadoId === null) return nota.totalCentavos;
     const posibles = await cargos.paraAplicarUnaNota(nota.documentoAfectadoId);
     const reparto = repartirNotaDeCredito(nota.totalCentavos, posibles);
-    if (reparto.aplicaciones.length > 0) await aplicaciones.agregar(nota, reparto.aplicaciones);
+    if (reparto.aplicaciones.length > 0) {
+      await aplicaciones.agregar(nota, reparto.aplicaciones, {
+        forma: 'automatica',
+        fecha: fechaRecepcion,
+        referencia: null,
+      });
+    }
     return reparto.saldoLibreCentavos;
   }
 }

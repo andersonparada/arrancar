@@ -162,7 +162,11 @@ describe('CorregirSaldoInicial', () => {
   });
 
   it('uno con notas aplicadas no se corrige', async () => {
-    await e.aplicaciones.agregar(e.documentos.documentos[0]!, [{ cargoId: id, montoCentavos: 100 }]);
+    await e.aplicaciones.agregar(e.documentos.documentos[0]!, [{ cargoId: id, montoCentavos: 100 }], {
+      forma: 'automatica',
+      fecha: '2026-01-10',
+      referencia: null,
+    });
     e.aplicaciones.lista[0]!.notaId = crypto.randomUUID();
 
     await expect(e.corregir.ejecutar(e.operador, id, e.solicitud())).rejects.toThrow(SaldoInicialConMovimientos);

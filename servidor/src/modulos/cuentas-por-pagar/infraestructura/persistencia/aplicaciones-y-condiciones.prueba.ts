@@ -2,8 +2,11 @@
  * Prueba de integración contra PostgreSQL: las aplicaciones de notas (mismo proveedor, montos, cascada) y las
  * condiciones de pago de cada proveedor (por cuenta, días entre 0 y 365).
  */
+import { readFileSync } from 'node:fs';
 import { eq } from 'drizzle-orm';
+import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { configuracion } from '../../../../configuracion.js';
 import { grupoConexiones } from '../../../core/base-datos/conexion.js';
 import { enTransaccionSegura } from '../../../core/compartido/pruebas/en-transaccion-segura.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
@@ -43,10 +46,39 @@ const unaNota = async (proveedorId = e.proveedorA) => {
   });
 };
 
-const aplicar = (notaId: string, cargoId: string, { proveedorId = e.proveedorA, monto = '50' } = {}) =>
-  enTransaccionSegura(contexto(), (tx) =>
-    tx.insert(aplicacionesDeNotas).values({ empresaId: e.empresaA1, proveedorId, notaId, cargoId, monto }),
+interface OpcionesDeAplicar {
+  proveedorId?: string;
+  monto?: string;
+  forma?: string;
+  referencia?: string | null;
+  fecha?: string;
+}
+
+const aplicar = (notaId: string, cargoId: string, opciones: OpcionesDeAplicar = {}) => {
+  const { proveedorId = e.proveedorA, monto = '50', forma, referencia, fecha = '2026-03-10' } = opciones;
+  return enTransaccionSegura(contexto(), (tx) =>
+    tx
+      .insert(aplicacionesDeNotas)
+      .values({ empresaId: e.empresaA1, proveedorId, notaId, cargoId, monto, forma, referencia, fecha }),
   );
+};
+
+/** Corre las sentencias de relleno de la migración 0004 sobre una fila sin fecha (el propietario ve todo). */
+async function rellenarLaFechaComoLaMigracion(notaId: string): Promise<void> {
+  const sql = readFileSync(new URL('../../migraciones/0004_cp2_notas_de_credito.sql', import.meta.url), 'utf8');
+  const relleno = sql.split('--> statement-breakpoint').filter((parte) => /UPDATE[^;]*SET "fecha"/.test(parte));
+  const tabla = 'cuentas_por_pagar.aplicaciones_de_notas';
+  const conexion = new pg.Client({ connectionString: configuracion.DATABASE_URL_PROPIETARIO });
+  await conexion.connect();
+  try {
+    await conexion.query(`alter table ${tabla} alter column fecha drop not null`);
+    await conexion.query(`update ${tabla} set fecha = null where nota_id = $1`, [notaId]);
+    for (const sentencia of relleno) await conexion.query(sentencia.replace(/^--.*$/gm, ''));
+    await conexion.query(`alter table ${tabla} alter column fecha set not null`);
+  } finally {
+    await conexion.end();
+  }
+}
 
 beforeAll(async () => {
   e = await prepararEscenario('cuentasporpagaraplicaciones');
@@ -57,14 +89,55 @@ afterAll(async () => {
 });
 
 describe('aplicaciones de notas', () => {
-  it('aplica una nota a un cargo del mismo proveedor, una sola vez por par', async () => {
+  it('aplica una nota a un cargo del mismo proveedor, una sola vez por par si es automática', async () => {
     const nota = await unaNota();
     const cargo = await crear();
     await aplicar(nota.id, cargo.id);
 
     const repetida = await errorDePostgres(aplicar(nota.id, cargo.id));
 
-    expect(repetida?.constraint).toBe('aplicaciones_nota_cargo_unico');
+    expect(repetida?.constraint).toBe('aplicaciones_automatica_unica');
+  });
+
+  it('acepta dos manuales del mismo par (se compensa por partes en fechas distintas)', async () => {
+    const nota = await unaNota();
+    const cargo = await crear();
+    await aplicar(nota.id, cargo.id, { forma: 'manual', fecha: '2026-04-01' });
+    await aplicar(nota.id, cargo.id, { forma: 'manual', fecha: '2026-05-01', referencia: 'Acuerdo del 1 de mayo' });
+    await aplicar(nota.id, cargo.id);
+
+    const filas = await enTransaccionSegura(contexto(), (tx) =>
+      tx.select().from(aplicacionesDeNotas).where(eq(aplicacionesDeNotas.notaId, nota.id)),
+    );
+
+    expect(filas.map((fila) => fila.forma).sort()).toEqual(['automatica', 'manual', 'manual']);
+  });
+
+  it('la forma es automática o manual; la referencia solo en manuales, recortada y de hasta 100', async () => {
+    const nota = await unaNota();
+    const cargo = await crear();
+    const conReferencia = (referencia: string, forma = 'manual') => aplicar(nota.id, cargo.id, { forma, referencia });
+    const restriccion = async (operacion: Promise<unknown>) => (await errorDePostgres(operacion))?.constraint;
+
+    expect(await restriccion(aplicar(nota.id, cargo.id, { forma: 'contrasena' }))).toBe('aplicaciones_forma_valida');
+    expect(await restriccion(conReferencia('Acuerdo', 'automatica'))).toBe('aplicaciones_referencia_valida');
+    expect(await restriccion(conReferencia(' Acuerdo '))).toBe('aplicaciones_referencia_valida');
+    expect(await restriccion(conReferencia(''))).toBe('aplicaciones_referencia_valida');
+    expect(await restriccion(conReferencia('x'.repeat(101)))).toBe('aplicaciones_referencia_valida');
+    await expect(conReferencia('x'.repeat(100))).resolves.toBeDefined();
+  });
+
+  it('el relleno de la migración pone la fecha de recepción de la nota en las filas anteriores', async () => {
+    const nota = await unaNota();
+    const cargo = await crear();
+    await aplicar(nota.id, cargo.id, { fecha: '2000-01-01' });
+
+    await rellenarLaFechaComoLaMigracion(nota.id);
+
+    const [fila] = await enTransaccionSegura(contexto(), (tx) =>
+      tx.select().from(aplicacionesDeNotas).where(eq(aplicacionesDeNotas.notaId, nota.id)),
+    );
+    expect(fila?.fecha).toBe('2026-03-10');
   });
 
   it('rechaza aplicar entre proveedores distintos', async () => {

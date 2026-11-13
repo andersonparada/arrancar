@@ -46,7 +46,11 @@ describe('EliminarSaldoInicial', () => {
   });
 
   it('uno con una nota aplicada no se elimina', async () => {
-    await e.aplicaciones.agregar(e.documentos.documentos[0]!, [{ cargoId: id, montoCentavos: 100 }]);
+    await e.aplicaciones.agregar(e.documentos.documentos[0]!, [{ cargoId: id, montoCentavos: 100 }], {
+      forma: 'automatica',
+      fecha: '2026-01-10',
+      referencia: null,
+    });
     e.aplicaciones.lista[0]!.notaId = crypto.randomUUID();
 
     await expect(e.eliminar.ejecutar(e.operador, id, 'Error')).rejects.toThrow(SaldoInicialConMovimientos);
