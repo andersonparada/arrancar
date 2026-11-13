@@ -3,11 +3,13 @@ import { computed } from 'vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
+import AccionesDeConciliacion from '../componentes/conciliaciones/AccionesDeConciliacion.vue';
 import CuadroCuadratico from '../componentes/conciliaciones/CuadroCuadratico.vue';
 import EncabezadoDeConciliacion from '../componentes/conciliaciones/EncabezadoDeConciliacion.vue';
 import ListaDeMovimientosConciliables from '../componentes/conciliaciones/ListaDeMovimientosConciliables.vue';
 import PartidasDeConciliacion from '../componentes/conciliaciones/PartidasDeConciliacion.vue';
 import SaldoDelEstadoDeCuenta from '../componentes/conciliaciones/SaldoDelEstadoDeCuenta.vue';
+import SaldoTranscrito from '../componentes/conciliaciones/SaldoTranscrito.vue';
 import VentanaDeDevolucion from '../componentes/conciliaciones/VentanaDeDevolucion.vue';
 import { periodoDeConciliacion } from '../composables/conciliaciones/detalles-de-conciliacion';
 import { usarDevolucionDeConciliacion } from '../composables/conciliaciones/usar-devolucion-de-conciliacion';
@@ -22,7 +24,14 @@ const { datos: conciliacion, cargando } = usarCarga(
   'No se pudo cargar la conciliación.',
 );
 const { marcados, candidatosConMarca, alternar } = usarMarcadoDeMovimientos(conciliacion);
-const { guardando, guardarMarcas, terminar, autorizar } = usarGuardadoDeConciliacion(conciliacion);
+const {
+  guardando,
+  errores: erroresDelGuardado,
+  guardarMarcas,
+  guardarSaldo,
+  terminar,
+  autorizar,
+} = usarGuardadoDeConciliacion(conciliacion);
 const {
   abierta: devolucionAbierta,
   motivo: devolucionMotivo,
@@ -34,7 +43,6 @@ const {
 } = usarDevolucionDeConciliacion(conciliacion);
 
 const enProceso = computed(() => conciliacion.value?.estado === 'en_proceso');
-const elaborada = computed(() => conciliacion.value?.estado === 'elaborada');
 const volver = { texto: 'Volver a conciliaciones', ruta: { name: 'bancos.conciliaciones' } };
 const imprimir = (): void => window.print();
 </script>
@@ -54,6 +62,12 @@ const imprimir = (): void => window.print();
       <EncabezadoDeConciliacion :conciliacion="conciliacion" />
       <CuadroCuadratico :libros="conciliacion.cuadratica.libros" :banco="conciliacion.cuadratica.banco" />
       <SaldoDelEstadoDeCuenta :saldo="conciliacion.saldoQueDebeMostrarElEstadoDeCuenta" />
+      <SaldoTranscrito
+        :conciliacion="conciliacion"
+        :guardando="guardando"
+        :error="erroresDelGuardado.saldoEstadoDeCuenta"
+        @guardar="guardarSaldo"
+      />
       <PartidasDeConciliacion :partidas="conciliacion.partidas" />
 
       <div v-if="enProceso" v-permiso="'bancos.conciliaciones.conciliar'" class="flex justify-end print:hidden">
@@ -67,24 +81,13 @@ const imprimir = (): void => window.print();
       </div>
       <ListaDeMovimientosConciliables :movimientos="candidatosConMarca" :editable="enProceso" @alternar="alternar" />
 
-      <div class="flex flex-wrap justify-end gap-2 print:hidden">
-        <BotonBase
-          v-if="enProceso"
-          v-permiso="'bancos.conciliaciones.conciliar'"
-          :cargando="guardando"
-          @click="terminar"
-        >
-          Terminar
-        </BotonBase>
-        <template v-if="elaborada">
-          <BotonBase v-permiso="'bancos.conciliaciones.autorizar'" variante="secundario" @click="abrirDevolucion">
-            Devolver
-          </BotonBase>
-          <BotonBase v-permiso="'bancos.conciliaciones.autorizar'" :cargando="guardando" @click="autorizar">
-            Autorizar
-          </BotonBase>
-        </template>
-      </div>
+      <AccionesDeConciliacion
+        :conciliacion="conciliacion"
+        :guardando="guardando"
+        @terminar="terminar"
+        @devolver="abrirDevolucion"
+        @autorizar="autorizar"
+      />
     </template>
 
     <VentanaDeDevolucion
