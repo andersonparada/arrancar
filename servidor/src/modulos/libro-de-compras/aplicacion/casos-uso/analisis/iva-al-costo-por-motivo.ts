@@ -30,6 +30,7 @@ const NOMBRE_DEL_MOTIVO: Record<string, string> = {
   no_vinculado: 'No vinculado a operaciones gravadas',
   empresa_sin_credito: 'Empresa sin crédito',
   nota_de_debito_tardia: 'Nota de débito tardía',
+  otra_causa_sin_credito: 'No dio crédito por otra causa',
 };
 
 const nombreDelMotivo = (motivo: string | null): string =>

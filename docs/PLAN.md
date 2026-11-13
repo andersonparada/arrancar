@@ -1553,3 +1553,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   el formulario» (tarjeta y error en lote). El aviso de importar ya lo muestra la ventana (avisos del servidor). Sin
   pruebas de navegador (pendiente de QA con U8l).
 - **2026-11-13 — CP2-5 (cliente, pantalla «Notas de crédito»).** Página `NotasDeCredito.vue` (Operación, ruta `/cuentas-por-pagar/notas-de-credito`, permiso `documentos.ver`) con filtros propios (proveedor, estado, «Solo con saldo a favor» encendido por omisión, fechas de emisión), tarjetas con total, aplicado, ajustado y saldo a favor destacado, etiqueta «Saldo inicial» y «Se puede aplicar» (`puedeAplicar`), y resumen de saldo a favor por proveedor. Lógica pura en `composables/notas-de-credito.ts` con pruebas; `usarPeticionDeDocumentos` y `usarProveedoresDelFiltro` se comparten con Documentos por pagar. Tipos: `ajustado`, `puedeAplicar`, `puedeAjustar`, `conSaldo`. El resumen por proveedor solo se muestra cuando todas las notas caben en la página (si no, sumaría una parte). Las ventanas de aplicar y ajustar siguen en CP2-6.
+- **2026-11-13 — U8l-1 (servidor, Libro de compras, datos).** Migración `0035_u8l_facturas_anteriores`: tabla
+  `facturas_anteriores` (diseño §3.1, con las notas de débito anteriores, el único por proveedor + serie + número sin
+  tipo y el único parcial por autorización FEL), `documentos.factura_anterior_id` con su llave e índice, el check
+  `documentos_nota_con_factura` reemplazado (una sola factura) y `otra_causa_sin_credito` en `MOTIVOS_SIN_CREDITO`, en
+  los checks de motivo y de IVA al costo, en el cálculo, el rubro «Compras sin derecho a crédito» del SAT-2237, el
+  análisis y el libro (sigla «OC»). Por P-U8l-2 **no** existe `documentos_otra_causa_solo_en_nota_con_factura_anterior`;
+  el detalle obligatorio reutiliza `documentos.observaciones` (check `documentos_otra_causa_con_detalle`, exige
+  observaciones salvo en la nota de crédito, que hereda el motivo de su factura) y la factura anterior gana la columna
+  `detalle_del_motivo` (check `facturas_anteriores_detalle_del_motivo`, 1 a 500 y obligatorio con «otra causa»). Sin
+  casos de uso ni API nuevos: siguen U8l-2 a U8l-4.

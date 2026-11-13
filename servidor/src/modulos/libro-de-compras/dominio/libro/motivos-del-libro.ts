@@ -6,6 +6,7 @@ export const SIGLA_DEL_MOTIVO: Record<MotivoSinCredito, string> = {
   no_vinculado: 'NV',
   empresa_sin_credito: 'ESC',
   nota_de_debito_tardia: 'NDT',
+  otra_causa_sin_credito: 'OC',
   pequeno_contribuyente: 'PC',
   contribuyente_agropecuario: 'RE',
   primario_pecuario: 'RE',
@@ -18,6 +19,10 @@ export const LEYENDA_DE_MOTIVOS: ReadonlyArray<{ sigla: string; descripcion: str
   { sigla: 'NV', descripcion: 'No vinculado a operaciones gravadas' },
   { sigla: 'ESC', descripcion: 'Empresa sin crédito fiscal en el período' },
   { sigla: 'NDT', descripcion: 'Nota de débito tardía (art. 17 de la Ley del IVA)' },
+  {
+    sigla: 'OC',
+    descripcion: 'No dio crédito fiscal por otra causa (requisitos del art. 18 de la Ley del IVA u otra)',
+  },
   { sigla: 'PC', descripcion: 'Proveedor pequeño contribuyente' },
   { sigla: 'RE', descripcion: 'Proveedor del régimen agropecuario, primario o pecuario (sin IVA)' },
   { sigla: 'EX', descripcion: 'Compra exenta' },

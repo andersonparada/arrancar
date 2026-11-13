@@ -76,6 +76,13 @@ describe('rubros del SAT-2237', () => {
     expect(rubro(documentos, 'otras_compras').neto).toEqual({ base: 0, iva: 0 });
   });
 
+  it('el motivo «otra causa» suma a «Compras sin derecho a crédito» con su IVA al costo', () => {
+    const otra = documento({ motivoSinCredito: 'otra_causa_sin_credito', ivaNoAcreditable: 12000 });
+
+    expect(rubro([otra], 'compras_sin_credito').neto).toEqual({ base: 100000, iva: 12000 });
+    expect(rubro([otra], 'otras_compras').neto).toEqual({ base: 0, iva: 0 });
+  });
+
   it('el motivo «exento» no suma a «Compras sin derecho a crédito»', () => {
     const exento = documento({ motivoSinCredito: 'exento', base: 0, iva: 0, exento: 5000 });
 

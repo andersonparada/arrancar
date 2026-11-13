@@ -82,6 +82,7 @@ const MOTIVOS_CON_IVA_AL_COSTO: readonly MotivoSinCredito[] = [
   'no_vinculado',
   'empresa_sin_credito',
   'nota_de_debito_tardia',
+  'otra_causa_sin_credito',
 ];
 
 function aportesSinCredito(documento: DocumentoDelLibro, motivo: MotivoSinCredito): Aporte[] {
