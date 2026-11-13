@@ -1508,3 +1508,8 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (la `0005` es de CP2-2 y la `0006` de CP3-1). Orden: P1-1, P1-2 y U8l-1 ya (solo Libro); U8l-2 y U8l-3 después de
   CP2-4 y CP3-1 y no en paralelo con CP3-2 a CP3-4; U8l-7 después de CP2-6; QA después de CP2-7. Pendientes P-U8l-1
   (frase FEL 9-22, contador) y P-U8l-2 (¿«otra causa» también en facturas del libro?, usuario).
+- **2026-11-13 — Bancos H2: respuestas del usuario y arranque de H2a.** Mientras siguen Cuentas por pagar y Libro de
+  compras (CP2, CP3, U8-l), se avanza Bancos H2, que no depende de ellos. Respuestas a
+  `docs/modulos/diseno-h2-evidencia-de-conciliacion.md` §13: P1 A (columna `previa_al_saldo_transcrito`), P3 sí (las
+  elaboradas sin archivo se autorizan), P4 no (adjunta solo quien elabora), P5 sí (ícono en la lista); P2 sin respuesta,
+  se sigue con lo recomendado. Se programan los pasos 2 y 3 (H2a, saldo transcrito); el paso 4 espera S1, S2 y S10.

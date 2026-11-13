@@ -359,3 +359,17 @@ pueden autorizar?**
 
 **P5. ¿Ícono «con estado de cuenta» en la lista de conciliaciones?**
 - Recomendación: sí, es barato (`tieneEstadoDeCuenta` en el resumen).
+
+### Respuestas del usuario (2026-11-13)
+
+- **P1: A.** Columna `previa_al_saldo_transcrito`, marcada por la migración; una elaborada previa
+  se devuelve para transcribir.
+- **P3: sí.** La variable del archivo se revisa solo al terminar; al autorizar basta el saldo que
+  coincide.
+- **P4: no.** El archivo lo adjunta solo quien elabora; quien autoriza devuelve si falta.
+- **P5: sí.** Ícono «con estado de cuenta» en la lista (`tieneEstadoDeCuenta`).
+- **P2: sin respuesta.** Se sigue con lo recomendado (no auditar cada cambio del saldo en proceso;
+  sí quitar o reemplazar el archivo). Se puede cambiar después sin migrar datos.
+
+Con esto los pasos 2 y 3 (H2a) quedan listos para programar. El paso 4 (H2b, archivo) sigue
+esperando las decisiones de seguridad S1, S2 y S10.
