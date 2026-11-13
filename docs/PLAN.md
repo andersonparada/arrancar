@@ -1508,3 +1508,10 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (la `0005` es de CP2-2 y la `0006` de CP3-1). Orden: P1-1, P1-2 y U8l-1 ya (solo Libro); U8l-2 y U8l-3 después de
   CP2-4 y CP3-1 y no en paralelo con CP3-2 a CP3-4; U8l-7 después de CP2-6; QA después de CP2-7. Pendientes P-U8l-1
   (frase FEL 9-22, contador) y P-U8l-2 (¿«otra causa» también en facturas del libro?, usuario).
+- **2026-11-13 — P1-1 (servidor, Libro de compras): DTE anteriores a la fecha de inicio.** La bandeja marca cada fila
+  con `anteriorALaFechaDeInicio` y `enPlazoDeCredito` (calculadas al consultar con `empresas.obtener_carga_inicial`; sin
+  fecha de inicio nada se marca), con el filtro `anteriores=incluir|ocultar|solo` y los campos `fechaDeInicio` y
+  `anterioresOcultos` en la página. La conciliación suma el grupo informativo `anterioresALaFechaDeInicio` (solo filas
+  sin documento en Arrancar; con documento se concilia como siempre) y `fechaDeInicio`; importar responde
+  `anterioresALaFechaDeInicio` y un aviso con la salvedad de C-U8-1. Las marcas solo se calculan en la lista (las
+  respuestas de completar, descartar y restaurar las traen en falso). Sin migraciones.

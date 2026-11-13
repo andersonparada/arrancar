@@ -5,10 +5,12 @@ import { conciliar } from '../../../dominio/conciliacion/conciliador.js';
 import type { ResultadoDeConciliacion } from '../../../dominio/conciliacion/tipos-de-conciliacion.js';
 import type { ConciliacionDto, ResumenDeConciliacion } from '../../dto/conciliacion.dto.js';
 import type { ConsultasDeConciliacion } from '../../puertos/consultas-de-conciliacion.js';
+import type { DatosDeLaEmpresaParaDocumentos } from '../../puertos/puertos-de-documentos.js';
 
 interface Dependencias {
   unidadDeTrabajo: UnidadDeTrabajo;
   consultasDeConciliacion: ConsultasDeConciliacion;
+  datosDeLaEmpresa: DatosDeLaEmpresaParaDocumentos;
 }
 
 function resumenDe(resultados: ResultadoDeConciliacion): ResumenDeConciliacion {
@@ -25,14 +27,16 @@ export class ConciliarPeriodo {
   constructor(private readonly dependencias: Dependencias) {}
 
   ejecutar(operador: Operador, periodo: string): Promise<ConciliacionDto> {
-    const { unidadDeTrabajo, consultasDeConciliacion } = this.dependencias;
+    const { unidadDeTrabajo, consultasDeConciliacion, datosDeLaEmpresa } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const documentos = await consultasDeConciliacion.documentos(periodo);
       const filas = await consultasDeConciliacion.filas(periodo);
       const cobertura = new CoberturaDeLotes(await consultasDeConciliacion.rangosDeLotes());
-      const resultados = conciliar({ periodo, documentos, filas, cobertura });
+      const fechaDeInicio = await datosDeLaEmpresa.fechaDeInicio(operador);
+      const resultados = conciliar({ periodo, documentos, filas, cobertura, fechaDeInicio });
       return {
         periodo,
+        fechaDeInicio,
         hayDatosDeLaSat: cobertura.cubreElMesDe(periodo),
         resumen: resumenDe(resultados),
         resultados,

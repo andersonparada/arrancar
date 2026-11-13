@@ -5,6 +5,7 @@ import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { normalizarNit } from '../../../../core/compartido/dominio/objetos-valor/nit.js';
 import type { ArchivoDeFilas, LectorDeFilas } from '../../../../core/intercambio/aplicacion/puertos/lector-de-filas.js';
+import { esAnteriorALaFechaDeInicio } from '../../../dominio/anterioridad-a-la-fecha-de-inicio.js';
 import { EmpresaSinNit } from '../../../dominio/errores-de-documento.js';
 import type { LoteDeDte } from '../../../dominio/lote-de-dte.js';
 import { interpretarEncabezadosAdicionales } from '../../dte/encabezados-adicionales.js';
@@ -32,6 +33,8 @@ export interface PeticionDeImportar {
 export interface ResultadoDeImportar {
   lote: LoteDeDte;
   avisos: string[];
+  /** Cuántos DTE del archivo son de antes de la fecha de inicio de la empresa (quedan marcados y fuera de la conciliación). */
+  anterioresALaFechaDeInicio: number;
 }
 
 interface Dependencias {
@@ -78,8 +81,9 @@ function avisosDeLaCarga(origen: {
   leidas: ResultadoDeLaLectura;
   plan: PlanDeCarga;
   repetido: boolean;
+  anteriores: number;
 }): string[] {
-  const { lectura, leidas, plan, repetido } = origen;
+  const { lectura, leidas, plan, repetido, anteriores } = origen;
   const avisos = [...lectura.avisos, ...leidas.avisos];
   if (repetido) avisos.push('Este mismo archivo ya se había subido antes.');
   if (plan.anuladasYaRegistradas > 0) {
@@ -87,6 +91,11 @@ function avisosDeLaCarga(origen: {
   }
   if (plan.bloqueadas > 0) {
     avisos.push(`${plan.bloqueadas} DTE ya están registrados en otra empresa de su cuenta y quedaron bloqueados.`);
+  }
+  if (anteriores > 0) {
+    avisos.push(
+      `${anteriores} DTE son de antes de la fecha de inicio: quedaron marcados y fuera de la conciliación. Deben estar en el libro del sistema anterior; si alguno no lo está, regístrelo aquí.`,
+    );
   }
   return avisos;
 }
@@ -134,7 +143,12 @@ export class ImportarDteRecibidos {
     const repetido = (await lotes.buscarPorSha256(lectura.sha256)) !== null;
     await lotes.agregar(lote);
     await this.aplicar(plan, { loteId, hoy });
-    return { lote, avisos: avisosDeLaCarga({ lectura, leidas, plan, repetido }) };
+    const fechaDeInicio = await this.dependencias.datosDeLaEmpresa.fechaDeInicio(operador);
+    const anteriores = leidas.filas.filter(({ datos }) =>
+      esAnteriorALaFechaDeInicio(datos.fechaEmision, fechaDeInicio),
+    ).length;
+    const avisos = avisosDeLaCarga({ lectura, leidas, plan, repetido, anteriores });
+    return { lote, avisos, anterioresALaFechaDeInicio: anteriores };
   }
 
   /** Lo que ya hay de las filas del archivo: en la bandeja, en el libro de esta empresa, en otra empresa y en proveedores. */

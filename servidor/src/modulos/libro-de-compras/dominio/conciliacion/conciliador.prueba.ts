@@ -54,6 +54,7 @@ describe('conciliar', () => {
       documentos: [documento({ serie: 'a', total: '1120' })],
       filas: [fila()],
       cobertura,
+      fechaDeInicio: null,
     });
 
     expect(resultado.cuadra).toHaveLength(1);
@@ -66,6 +67,7 @@ describe('conciliar', () => {
       documentos: [documento({ idp: '5.00', otrosImpuestos: '1.00', fechaEmision: '2026-03-09' })],
       filas: [fila({ total: '1121.00' })],
       cobertura,
+      fechaDeInicio: null,
     });
 
     expect(resultado.conDiferencias[0]?.diferencias).toEqual([
@@ -83,6 +85,7 @@ describe('conciliar', () => {
       documentos: [documento()],
       filas: [fila({ autorizacionFel: otra })],
       cobertura,
+      fechaDeInicio: null,
     });
 
     expect(resultado.conDiferencias[0]?.diferencias.map((d) => d.campo)).toEqual(['autorizacionFel']);
@@ -95,6 +98,7 @@ describe('conciliar', () => {
       documentos: [documento()],
       filas: [fila({ id: 'por-numero', autorizacionFel: '33333333-3333-4333-8333-333333333333' }), fila()],
       cobertura,
+      fechaDeInicio: null,
     });
 
     expect(resultado.cuadra[0]?.dteId).toBe('fila-1');
@@ -104,9 +108,9 @@ describe('conciliar', () => {
   it('un documento sin fila es faltante con datos de ese mes y «sin datos» sin ellos', () => {
     const entrada = { periodo: PERIODO, documentos: [documento()], filas: [] };
 
-    expect(conciliar({ ...entrada, cobertura }).enArrancarYNoEnLaSat).toHaveLength(1);
-    expect(conciliar({ ...entrada, cobertura: sinLotes }).sinDatosDeLaSat).toHaveLength(1);
-    expect(conciliar({ ...entrada, cobertura: sinLotes }).enArrancarYNoEnLaSat).toHaveLength(0);
+    expect(conciliar({ ...entrada, cobertura, fechaDeInicio: null }).enArrancarYNoEnLaSat).toHaveLength(1);
+    expect(conciliar({ ...entrada, cobertura: sinLotes, fechaDeInicio: null }).sinDatosDeLaSat).toHaveLength(1);
+    expect(conciliar({ ...entrada, cobertura: sinLotes, fechaDeInicio: null }).enArrancarYNoEnLaSat).toHaveLength(0);
   });
 
   it('una fila anulada con su documento vigente se ofrece para anular, esté donde esté el documento', () => {
@@ -115,6 +119,7 @@ describe('conciliar', () => {
       documentos: [documento({ periodo: '2026-04-01' })],
       filas: [fila({ estadoSat: 'anulado' })],
       cobertura,
+      fechaDeInicio: null,
     });
 
     expect(resultado.anuladoEnLaSatYVigenteAqui[0]?.documentoId).toBe('doc-1');
@@ -127,12 +132,14 @@ describe('conciliar', () => {
       documentos: [documento({ periodo: '2026-04-01' })],
       filas: [fila()],
       cobertura,
+      fechaDeInicio: null,
     });
     const fuera = conciliar({
       periodo: PERIODO,
       documentos: [documento({ fueraDelLibro: true })],
       filas: [fila()],
       cobertura,
+      fechaDeInicio: null,
     });
 
     expect(otroPeriodo.registradoEnOtroPeriodo[0]).toMatchObject({ periodoDelDocumento: '2026-04-01' });
@@ -153,6 +160,7 @@ describe('conciliar', () => {
         fila({ id: 'd', autorizacionFel: 'd', numero: '4', fechaEmision: '2026-04-01', estado: 'pendiente' }),
       ],
       cobertura,
+      fechaDeInicio: null,
     });
 
     expect(resultado.enLaSatYNoEnArrancar.map((i) => i.dteId)).toEqual(['a']);
@@ -169,6 +177,7 @@ describe('conciliar', () => {
       ],
       filas: [],
       cobertura,
+      fechaDeInicio: null,
     });
 
     expect(resultado.enArrancarYNoEnLaSat.map((i) => i.numero)).toEqual(['9', '10']);
