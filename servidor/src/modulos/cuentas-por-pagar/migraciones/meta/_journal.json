@@ -36,6 +36,13 @@
       "when": 1794534062957,
       "tag": "0004_cp2_notas_de_credito",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794536194742,
+      "tag": "0005_cp2_anulacion_del_ajuste",
+      "breakpoints": true
     }
   ]
 }

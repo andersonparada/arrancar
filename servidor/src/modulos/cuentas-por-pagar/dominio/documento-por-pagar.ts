@@ -1,3 +1,4 @@
+import type { AjusteDeSaldo } from './ajustes.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from './tipos-de-documento.js';
 
 /** Un documento de Libro de compras recibido en Cuentas por pagar. El dinero va en centavos enteros. */
@@ -38,16 +39,30 @@ export interface DocumentoPorPagar {
   autorizacionPropia: boolean;
 }
 
+/** Cómo nació una aplicación: con la recepción de la nota (`automatica`) o la hizo un usuario (`manual`). */
+export type FormaDeAplicacion = 'automatica' | 'manual';
+
 /** Una nota de crédito que rebaja un cargo, por un monto en centavos. */
 export interface AplicacionDeNota {
+  id: string;
   notaId: string;
   cargoId: string;
   montoCentavos: number;
+  forma: FormaDeAplicacion;
+  /** `AAAA-MM-DD`: desde cuándo rebaja. */
+  fecha: string;
+  /** La del acuerdo de compensación; solo en las manuales. */
+  referencia: string | null;
+  /** Serie y número del otro documento: la nota en lo `recibido` por un cargo, el cargo en lo `hecho` por una nota. */
+  otraSerie: string | null;
+  otroNumero: string;
 }
 
-/** Un documento con lo que rebajó (si es una nota) y lo que le rebajaron (si es un cargo). */
+/** Un documento con lo que rebajó (si es una nota) y lo que le rebajaron (si es un cargo), y sus ajustes (si es una nota). */
 export interface DocumentoConAplicaciones {
   documento: DocumentoPorPagar;
+  /** Todos los ajustes de la nota, también los anulados; vacío en un cargo. */
+  ajustes: AjusteDeSaldo[];
   hechas: AplicacionDeNota[];
   recibidas: AplicacionDeNota[];
 }

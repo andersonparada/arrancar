@@ -1,4 +1,4 @@
-import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
+import type { DocumentoPorPagar, FormaDeAplicacion } from '../../dominio/documento-por-pagar.js';
 import type { ProveedorConDocumentosDto } from '../dto/documento-por-pagar.dto.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
@@ -14,6 +14,8 @@ export interface FiltroDeDocumentosPorPagar {
   emitidosHasta?: string;
   /** Solo los cargos con saldo cuyo vencimiento ya pasó. */
   soloVencidos?: boolean;
+  /** Solo los cargos con saldo por pagar y las notas de crédito con saldo libre. */
+  conSaldo?: boolean;
 }
 
 /** Qué página de la lista se pide: de 1 en adelante, con hasta `limite` documentos. */
@@ -53,6 +55,11 @@ export interface FilaDeDocumento {
   aplicadoAlCargoCentavos: number;
   /** Lo que esta nota de crédito rebajó de cargos. */
   aplicadoPorLaNotaCentavos: number;
+  /** Lo que se dio de baja del saldo libre de esta nota con ajustes vigentes. */
+  ajustadoCentavos: number;
+  ajustesVigentes: number;
+  /** Aplicaciones manuales que recibió este cargo. */
+  aplicacionesManualesRecibidas: number;
   notasVigentes: number;
   notasEnTotal: number;
 }
@@ -71,6 +78,11 @@ export interface NotaDeUnDocumento {
 }
 
 export interface AplicacionConDatos {
+  id: string;
+  forma: FormaDeAplicacion;
+  /** `AAAA-MM-DD`. */
+  fecha: string;
+  referencia: string | null;
   notaId: string;
   notaSerie: string | null;
   notaNumero: string;

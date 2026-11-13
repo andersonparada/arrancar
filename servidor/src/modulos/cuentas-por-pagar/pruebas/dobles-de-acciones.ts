@@ -35,6 +35,9 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
       creadoEn: '2026-03-10T00:00:00.000Z',
       aplicadoAlCargoCentavos: 0,
       aplicadoPorLaNotaCentavos: 0,
+      ajustadoCentavos: 0,
+      ajustesVigentes: 0,
+      aplicacionesManualesRecibidas: 0,
       notasVigentes: vigentes.length,
       notasEnTotal: this.documentos.documentos.filter((nota) => nota.documentoAfectadoId === documento.documentoId)
         .length,

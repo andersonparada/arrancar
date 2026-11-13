@@ -300,7 +300,7 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    sistema» se quita y el reintegro va en CP4 (que acepta también efectivo); anular o eliminar un cargo con
    aplicaciones manuales se rechaza con el mensaje «quite primero la aplicación de la nota N». Los dos diseños quedaron
    **aprobados, listos para programar** con los cambios del dictamen aplicados: CP2 en 7 pasos (migración `0004`) y
-   CP3 en 8 (migración `0005`), después de U8. Pendientes sin frenar: P-CP2-1 (¿adjuntos para el acuerdo y el
+   CP3 en 8 (migración `0006`, desde CP2-2), después de U8. Pendientes sin frenar: P-CP2-1 (¿adjuntos para el acuerdo y el
    ajuste?), P-CP2-2 (tope de «diferencia menor» por omisión Q25) y P-CP3-1 (fecha de una contraseña con saldos
    iniciales).
 8. **Bancos H2** diseñado (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`). El paso 1 (core: qpdf fuera de la
