@@ -5,7 +5,8 @@ import { usuarios } from '../../../core/identidad/infraestructura/persistencia/u
 import { documentos as documentosDeCompra } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
-import type { FilaDeDocumento } from '../../aplicacion/puertos/puertos-de-consultas.js';
+import type { DatosDelLibro, FilaDeDocumento } from '../../aplicacion/puertos/puertos-de-consultas.js';
+import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { mapeadorDeDocumento } from './documento.mapeador.js';
 import { documentos } from './documentos.tablas.js';
@@ -28,6 +29,9 @@ export class ConsultaBaseDeDocumentos {
     .select({
       cargoId: aplicacionesDeNotas.cargoId,
       monto: sql<string>`sum(${aplicacionesDeNotas.monto})`.as('monto_al_cargo'),
+      manuales: sql<number>`count(*) filter (where ${aplicacionesDeNotas.forma} = 'manual')`
+        .mapWith(Number)
+        .as('manuales_al_cargo'),
     })
     .from(aplicacionesDeNotas)
     .groupBy(aplicacionesDeNotas.cargoId)
@@ -42,6 +46,18 @@ export class ConsultaBaseDeDocumentos {
     .from(aplicacionesDeNotas)
     .groupBy(aplicacionesDeNotas.notaId)
     .as('aplicado_por_la_nota');
+
+  /** Lo que se dio de baja del saldo libre de cada nota con ajustes vigentes, y cuántos son. */
+  readonly ajustadoDeLaNota = this.transaccion
+    .select({
+      notaId: ajustesDeSaldo.documentoId,
+      monto: sql<string>`sum(${ajustesDeSaldo.monto})`.as('monto_ajustado'),
+      vigentes: sql<number>`count(*)`.mapWith(Number).as('ajustes_vigentes'),
+    })
+    .from(ajustesDeSaldo)
+    .where(eq(ajustesDeSaldo.estado, 'vigente'))
+    .groupBy(ajustesDeSaldo.documentoId)
+    .as('ajustado_de_la_nota');
 
   /**
    * Lo que se lee del documento del libro (recepción, período y anulación, con el nombre de quien anuló). Va como
@@ -99,6 +115,9 @@ export class ConsultaBaseDeDocumentos {
         ...this.columnasDelLibro(),
         alCargo: this.alCargo.monto,
         porLaNota: this.porLaNota.monto,
+        manuales: this.alCargo.manuales,
+        ajustado: this.ajustadoDeLaNota.monto,
+        ajustesVigentes: this.ajustadoDeLaNota.vigentes,
         notasEnTotal: this.notas.enTotal,
         notasVigentes: this.notas.vigentes,
         total: sql<number>`count(*) over ()`.mapWith(Number),
@@ -109,6 +128,7 @@ export class ConsultaBaseDeDocumentos {
       .innerJoin(terceros, eq(terceros.id, proveedores.terceroId))
       .leftJoin(this.alCargo, eq(this.alCargo.cargoId, documentos.id))
       .leftJoin(this.porLaNota, eq(this.porLaNota.notaId, documentos.id))
+      .leftJoin(this.ajustadoDeLaNota, eq(this.ajustadoDeLaNota.notaId, documentos.id))
       .leftJoin(this.notas, eq(this.notas.afectadoId, documentos.documentoId));
   }
 
@@ -119,30 +139,42 @@ export class ConsultaBaseDeDocumentos {
   saldoDelCargo() {
     return sql`(coalesce(${documentos.saldoAlInicio}, ${documentos.total} - ${documentos.retenciones}) - coalesce(${this.alCargo.monto}, 0))`;
   }
+
+  /** El saldo libre de una nota de crédito, en SQL: su base menos lo que aplicó y lo que se ajustó (vigente). */
+  saldoLibreDeLaNota() {
+    return sql`(coalesce(${documentos.saldoAlInicio}, ${documentos.total}) - coalesce(${this.porLaNota.monto}, 0) - coalesce(${this.ajustadoDeLaNota.monto}, 0))`;
+  }
 }
 
 type FilaSeleccionada = Awaited<ReturnType<ReturnType<ConsultaBaseDeDocumentos['seleccionar']>['limit']>>[number];
+
+function datosDelLibroDe(fila: FilaSeleccionada): DatosDelLibro {
+  return {
+    proveedorNombre: fila.proveedorNombre,
+    proveedorNit: fila.proveedorNit,
+    fechaRecepcion: fila.fechaRecepcion,
+    periodo: fila.periodo,
+    anulacion: {
+      causa: fila.causaDeAnulacion,
+      motivo: fila.motivoDeAnulacion,
+      anuladoPor: fila.anuladoPorEnElLibro,
+      anuladoPorNombre: nombreCompleto(fila.anuladoPorNombres, fila.anuladoPorApellidos),
+      anuladoEn: fila.anuladoEnElLibro,
+    },
+  };
+}
 
 /** De la fila de SQL al documento con sus cuentas, en centavos. */
 export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
   return {
     documento: mapeadorDeDocumento.aDominio(fila.documento),
-    libro: {
-      proveedorNombre: fila.proveedorNombre,
-      proveedorNit: fila.proveedorNit,
-      fechaRecepcion: fila.fechaRecepcion,
-      periodo: fila.periodo,
-      anulacion: {
-        causa: fila.causaDeAnulacion,
-        motivo: fila.motivoDeAnulacion,
-        anuladoPor: fila.anuladoPorEnElLibro,
-        anuladoPorNombre: nombreCompleto(fila.anuladoPorNombres, fila.anuladoPorApellidos),
-        anuladoEn: fila.anuladoEnElLibro,
-      },
-    },
+    libro: datosDelLibroDe(fila),
     creadoEn: fila.documento.creadoEn.toISOString(),
     aplicadoAlCargoCentavos: aCentavos(fila.alCargo ?? '0'),
     aplicadoPorLaNotaCentavos: aCentavos(fila.porLaNota ?? '0'),
+    ajustadoCentavos: aCentavos(fila.ajustado ?? '0'),
+    ajustesVigentes: fila.ajustesVigentes ?? 0,
+    aplicacionesManualesRecibidas: fila.manuales ?? 0,
     notasVigentes: fila.notasVigentes ?? 0,
     notasEnTotal: fila.notasEnTotal ?? 0,
   };

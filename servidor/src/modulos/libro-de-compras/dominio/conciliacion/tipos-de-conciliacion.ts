@@ -78,6 +78,8 @@ export interface ItemDeConciliacion {
   motivoDeBloqueo: MotivoDeBloqueo | null;
   motivoDeDescarte: string | null;
   diferencias: DiferenciaDeConciliacion[];
+  /** Anterior a la fecha de inicio y dentro del plazo del crédito (el mes de inicio y los dos anteriores); solo se calcula en el grupo de anteriores. */
+  enPlazoDeCredito: boolean;
 }
 
 /** Los resultados de la conciliación de un período; «sin datos» no es un faltante: la SAT no trajo ese mes. */
@@ -92,6 +94,8 @@ export interface ResultadoDeConciliacion {
   sinDatosDeLaSat: ItemDeConciliacion[];
   anuladoEnLaSatYVigenteAqui: ItemDeConciliacion[];
   descartado: ItemDeConciliacion[];
+  /** Emitidas en el mes, antes de la fecha de inicio y sin documento en Arrancar: deben estar en el libro del sistema anterior. Informativo. */
+  anterioresALaFechaDeInicio: ItemDeConciliacion[];
 }
 
 /** Si la SAT trajo datos del mes de una fecha de emisión (algún lote de la bandeja lo toca). */
@@ -108,4 +112,6 @@ export interface EntradaDeConciliacion {
   /** Las filas emitidas en el mes y las que cruzan con algún documento del período. */
   filas: readonly FilaConciliable[];
   cobertura: CoberturaDeLaSat;
+  /** La fecha de inicio de la empresa (`AAAA-MM-DD`); `null` si no tiene y entonces nada es anterior. */
+  fechaDeInicio: string | null;
 }

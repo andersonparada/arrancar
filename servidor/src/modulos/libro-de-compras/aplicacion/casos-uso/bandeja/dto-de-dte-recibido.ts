@@ -1,3 +1,7 @@
+import {
+  esAnteriorALaFechaDeInicio,
+  estaEnPlazoDeCredito,
+} from '../../../dominio/anterioridad-a-la-fecha-de-inicio.js';
 import type { DteRecibido } from '../../../dominio/dte-recibido.js';
 import type { BorradorDeDteDto, DteRecibidoDto, PropuestaDeDteDto } from '../../dto/dte-recibido.dto.js';
 
@@ -41,8 +45,26 @@ function borrador(dte: DteRecibido): BorradorDeDteDto {
   return { proveedorId, conceptoId, destino, fechaRecepcion, periodo, noVinculado, documentoAfectadoId };
 }
 
-/** La fila tal como la ve la pantalla (y como se audita: sin la fila original del archivo). */
-export function dtoDeDteRecibido(dte: DteRecibido, propuesta: PropuestaDeDteDto | null = null): DteRecibidoDto {
+type Marcas = Pick<DteRecibidoDto, 'anteriorALaFechaDeInicio' | 'enPlazoDeCredito'>;
+
+/** Las marcas de anterioridad se calculan al consultar; sin fecha de inicio nada se marca. */
+function marcas(dte: DteRecibido, fechaDeInicio: string | null): Marcas {
+  const { fechaEmision } = dte.instantanea();
+  return {
+    anteriorALaFechaDeInicio: esAnteriorALaFechaDeInicio(fechaEmision, fechaDeInicio),
+    enPlazoDeCredito: estaEnPlazoDeCredito(fechaEmision, fechaDeInicio),
+  };
+}
+
+/**
+ * La fila tal como la ve la pantalla (y como se audita: sin la fila original del archivo). Las marcas de anterioridad
+ * solo se calculan si se da la fecha de inicio (la lista de la bandeja).
+ */
+export function dtoDeDteRecibido(
+  dte: DteRecibido,
+  propuesta: PropuestaDeDteDto | null = null,
+  fechaDeInicio: string | null = null,
+): DteRecibidoDto {
   return {
     ...identidad(dte),
     ...emisor(dte),
@@ -50,6 +72,7 @@ export function dtoDeDteRecibido(dte: DteRecibido, propuesta: PropuestaDeDteDto 
     ...deLaSat(dte),
     ...situacion(dte),
     borrador: borrador(dte),
+    ...marcas(dte, fechaDeInicio),
     propuesta,
   };
 }

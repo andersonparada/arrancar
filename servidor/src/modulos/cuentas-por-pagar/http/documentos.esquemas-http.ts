@@ -11,7 +11,7 @@ const comoBooleano = z.enum(['true', 'false']).transform((valor) => valor === 't
 
 /**
  * Filtros de la lista, todos opcionales. `estado` es uno de los estados, `vigente` (todo menos lo anulado, por
- * omisión) o `todos`. `origen` limita a `libro_de_compras` o `saldo_inicial`. Las fechas son de emisión, incluidas; `soloVencidos` trae los cargos con saldo ya vencidos.
+ * omisión) o `todos`. `origen` limita a `libro_de_compras` o `saldo_inicial`. Las fechas son de emisión, incluidas; `soloVencidos` trae los cargos con saldo ya vencidos; `conSaldo`, los cargos con saldo por pagar y las notas con saldo libre.
  * `pagina` empieza en 1 y `limite` es de 50 por omisión (máximo 200).
  */
 export const esquemaFiltroDeDocumentos = z.object({
@@ -22,6 +22,7 @@ export const esquemaFiltroDeDocumentos = z.object({
   emitidosDesde: z.iso.date().optional(),
   emitidosHasta: z.iso.date().optional(),
   soloVencidos: comoBooleano.optional(),
+  conSaldo: comoBooleano.optional(),
   pagina: z.coerce.number().int().min(1).default(1),
   limite: z.coerce.number().int().min(1).max(LIMITE_MAXIMO).default(LIMITE_POR_OMISION),
 });

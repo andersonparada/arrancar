@@ -1,4 +1,4 @@
-import { eq, sql, type SQL } from 'drizzle-orm';
+import { asc, eq, sql, type SQL } from 'drizzle-orm';
 import type { PgUpdateSetSource } from 'drizzle-orm/pg-core';
 import {
   contextoEnCurso,
@@ -12,7 +12,10 @@ import type {
   RepositorioDeAplicaciones,
   RepositorioDeDocumentos,
 } from '../../aplicacion/puertos/puertos-de-documentos.js';
+import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
+import type { AjusteDeSaldo, CausaDeAjuste } from '../../dominio/ajustes.js';
 import type { DocumentoConAplicaciones, DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
+import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
 import { mapeadorDeDocumento } from './documento.mapeador.js';
 import { documentos } from './documentos.tablas.js';
 
@@ -90,6 +93,26 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
       documento,
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
+      ajustes: await this.ajustesDe(documento.id),
     };
+  }
+
+  private async ajustesDe(documentoId: string): Promise<AjusteDeSaldo[]> {
+    const filas = await transaccionEnCurso()
+      .select()
+      .from(ajustesDeSaldo)
+      .where(eq(ajustesDeSaldo.documentoId, documentoId))
+      .orderBy(asc(ajustesDeSaldo.creadoEn));
+    return filas.map((fila) => ({
+      id: fila.id,
+      documentoId: fila.documentoId,
+      montoCentavos: aCentavos(fila.monto),
+      fecha: fila.fecha,
+      causa: fila.causa as CausaDeAjuste,
+      motivo: fila.motivo,
+      referencia: fila.referencia,
+      estado: fila.estado as AjusteDeSaldo['estado'],
+      motivoDeAnulacion: fila.motivoDeAnulacion,
+    }));
   }
 }

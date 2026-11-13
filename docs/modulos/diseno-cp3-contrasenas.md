@@ -58,8 +58,8 @@ Convive con CP1 (programado), U8 (`diseno-u8-saldos-iniciales-cuentas-por-pagar.
 7. **Base de desarrollo** (solo lectura, 2026-11-08): `cuentas_por_pagar.documentos` sin filas; `core.correlativos` con 3
    filas (de Bancos). Tablas nuevas: no hay datos que convertir.
 8. **Migraciones** (verificado en `migraciones/meta/_journal.json`): la última en `main` es `0003_u8_saldos_iniciales`;
-   la `0004_cp2_notas_de_credito` es de CP2, que va antes. Esta es la **`0005_cp3_contrasenas`** (su `when` debe quedar
-   mayor que el de la `0004`).
+   la `0004_cp2_notas_de_credito` es de CP2, que va antes, y CP2-2 sumó la `0005_cp2_anulacion_del_ajuste`. Esta pasa a
+   ser la **`0006_cp3_contrasenas`** (su `when` debe quedar mayor que el de la `0005`).
 9. **Lo que CP2 deja para usar aquí:** `aplicaciones_de_notas` con `forma`, `fecha` y `referencia` (solo manual); el
    puerto `FechasDeEntrada` (fecha de recepción en el libro de cada documento, nula en un saldo inicial) y `CargaInicial`
    (fecha de inicio, por el mediador, pedida antes de bloquear documentos); la variable de instalación

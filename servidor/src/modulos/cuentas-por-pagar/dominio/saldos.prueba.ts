@@ -29,14 +29,20 @@ const documento = (cambios: Partial<DocumentoPorPagar> = {}): DocumentoPorPagar 
   ...cambios,
 });
 
-const nada = { alCargoCentavos: 0, porLaNotaCentavos: 0 };
+const nada = { alCargoCentavos: 0, porLaNotaCentavos: 0, ajustadoCentavos: 0 };
 
 describe('saldo de un documento', () => {
   it('un cargo debe su total menos las retenciones y menos lo que le aplicaron las notas', () => {
-    expect(saldoDe(documento(), nada)).toEqual({ netoCentavos: 10000, aplicadoCentavos: 0, saldoCentavos: 10000 });
-    expect(saldoDe(documento(), { alCargoCentavos: 2500, porLaNotaCentavos: 99 })).toEqual({
+    expect(saldoDe(documento(), nada)).toEqual({
+      netoCentavos: 10000,
+      aplicadoCentavos: 0,
+      ajustadoCentavos: 0,
+      saldoCentavos: 10000,
+    });
+    expect(saldoDe(documento(), { alCargoCentavos: 2500, porLaNotaCentavos: 99, ajustadoCentavos: 0 })).toEqual({
       netoCentavos: 10000,
       aplicadoCentavos: 2500,
+      ajustadoCentavos: 0,
       saldoCentavos: 7500,
     });
   });
@@ -44,9 +50,10 @@ describe('saldo de un documento', () => {
   it('una nota de crédito tiene como saldo libre lo que no aplicó, sin restar retenciones', () => {
     const nota = documento({ tipo: 'nota_de_credito', retencionesCentavos: 0, totalCentavos: 5000, vencimiento: null });
 
-    expect(saldoDe(nota, { alCargoCentavos: 0, porLaNotaCentavos: 3800 })).toEqual({
+    expect(saldoDe(nota, { alCargoCentavos: 0, porLaNotaCentavos: 3800, ajustadoCentavos: 0 })).toEqual({
       netoCentavos: 5000,
       aplicadoCentavos: 3800,
+      ajustadoCentavos: 0,
       saldoCentavos: 1200,
     });
   });
@@ -70,11 +77,18 @@ describe('saldo de un saldo inicial', () => {
     });
 
   it('el neto es lo que faltaba pagar al corte, sin restar las retenciones por practicar', () => {
-    expect(saldoDe(saldoInicial(), nada)).toEqual({ netoCentavos: 7000, aplicadoCentavos: 0, saldoCentavos: 7000 });
+    expect(saldoDe(saldoInicial(), nada)).toEqual({
+      netoCentavos: 7000,
+      aplicadoCentavos: 0,
+      ajustadoCentavos: 0,
+      saldoCentavos: 7000,
+    });
   });
 
   it('las notas aplicadas se restan del saldo al inicio', () => {
-    expect(saldoDe(saldoInicial(), { alCargoCentavos: 2000, porLaNotaCentavos: 0 }).saldoCentavos).toBe(5000);
+    expect(
+      saldoDe(saldoInicial(), { alCargoCentavos: 2000, porLaNotaCentavos: 0, ajustadoCentavos: 0 }).saldoCentavos,
+    ).toBe(5000);
   });
 
   it('una nota de crédito cargada como saldo inicial tiene a favor su saldo al inicio', () => {
@@ -85,7 +99,9 @@ describe('saldo de un saldo inicial', () => {
       vencimiento: null,
     });
 
-    expect(saldoDe(nota, { alCargoCentavos: 0, porLaNotaCentavos: 1000 }).saldoCentavos).toBe(2000);
+    expect(saldoDe(nota, { alCargoCentavos: 0, porLaNotaCentavos: 1000, ajustadoCentavos: 0 }).saldoCentavos).toBe(
+      2000,
+    );
   });
 });
 

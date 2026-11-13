@@ -9,7 +9,7 @@ import type {
   NotaDeUnDocumento,
   PaginacionDeDocumentos,
 } from '../../aplicacion/puertos/puertos-de-consultas.js';
-import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
+import type { DocumentoPorPagar, FormaDeAplicacion } from '../../dominio/documento-por-pagar.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { aFilaDeDocumento, ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
 import { documentos } from './documentos.tablas.js';
@@ -36,10 +36,24 @@ function condicionesDe(filtro: FiltroDeDocumentosPorPagar, hoy: string, base: Co
     filtro.origen ? eq(documentos.origen, filtro.origen) : undefined,
     filtro.emitidosDesde ? gte(documentos.fechaEmision, filtro.emitidosDesde) : undefined,
     filtro.emitidosHasta ? lte(documentos.fechaEmision, filtro.emitidosHasta) : undefined,
+    condicionesDeSaldo(filtro, hoy, base),
+  );
+}
+
+/** Solo vencidos y con saldo: los dos filtros que miran lo que falta por pagar o lo que queda libre. */
+function condicionesDeSaldo(filtro: FiltroDeDocumentosPorPagar, hoy: string, base: ConsultaBaseDeDocumentos) {
+  return and(
     filtro.soloVencidos
       ? and(ne(documentos.estado, 'anulado'), lt(documentos.vencimiento, hoy), sql`${base.saldoDelCargo()} > 0`)
       : undefined,
+    filtro.conSaldo ? conSaldo(base) : undefined,
   );
+}
+
+/** Un cargo con saldo por pagar, o una nota de crédito vigente con saldo libre. */
+function conSaldo(base: ConsultaBaseDeDocumentos): SQL {
+  return sql`(${documentos.estado} <> 'anulado' and case when ${documentos.tipo} = 'nota_de_credito'
+    then ${base.saldoLibreDeLaNota()} > 0 else ${base.saldoDelCargo()} > 0 end)`;
 }
 
 type FilaDeNota = {
@@ -74,11 +88,21 @@ function consultaDeAplicaciones() {
       cargoSerie: cargo.serie,
       cargoNumero: cargo.numero,
       monto: aplicacionesDeNotas.monto,
+      id: aplicacionesDeNotas.id,
+      forma: aplicacionesDeNotas.forma,
+      fecha: aplicacionesDeNotas.fecha,
+      referencia: aplicacionesDeNotas.referencia,
     })
     .from(aplicacionesDeNotas)
     .innerJoin(nota, eq(nota.id, aplicacionesDeNotas.notaId))
     .innerJoin(cargo, eq(cargo.id, aplicacionesDeNotas.cargoId))
     .orderBy(asc(aplicacionesDeNotas.creadoEn));
+}
+
+type FilaDeAplicacion = Awaited<ReturnType<typeof consultaDeAplicaciones>>[number];
+
+function aAplicacionConDatos({ monto, forma, ...resto }: FilaDeAplicacion): AplicacionConDatos {
+  return { ...resto, forma: forma as FormaDeAplicacion, montoCentavos: aCentavos(monto) };
 }
 
 /** Una nota de crédito rebajó cargos; a un cargo le rebajaron notas. */
@@ -135,6 +159,26 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
 
   async aplicacionesDe(documento: DocumentoPorPagar): Promise<AplicacionConDatos[]> {
     const filas = await consultaDeAplicaciones().where(aplicacionesPropiasDe(documento));
-    return filas.map(({ monto, ...resto }) => ({ ...resto, montoCentavos: aCentavos(monto) }));
+    return filas.map(aAplicacionConDatos);
+  }
+
+  async aplicacion(id: string): Promise<AplicacionConDatos | null> {
+    const [fila] = await consultaDeAplicaciones().where(eq(aplicacionesDeNotas.id, id));
+    return fila ? aAplicacionConDatos(fila) : null;
+  }
+
+  async cargosConSaldoDe(proveedorId: string): Promise<FilaDeDocumento[]> {
+    const base = new ConsultaBaseDeDocumentos();
+    const filas = await base
+      .seleccionar()
+      .where(
+        and(
+          eq(documentos.proveedorId, proveedorId),
+          ne(documentos.estado, 'anulado'),
+          ne(documentos.tipo, 'nota_de_credito'),
+          sql`${base.saldoDelCargo()} > 0`,
+        ),
+      );
+    return filas.map(aFilaDeDocumento);
   }
 }

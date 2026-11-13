@@ -3,6 +3,12 @@ import type { UnidadDeTrabajo } from '../../compartido/aplicacion/unidad-de-trab
 import { ErrorEsperado } from '../../compartido/dominio/errores.js';
 import { escribirCelda } from './celdas.js';
 import type { Columna } from './columnas.js';
+import {
+  campoDelError,
+  type AvisoDeFila,
+  type AvisoDeImportacion,
+  type ResultadoDeImportacion,
+} from './resultado-de-importacion.js';
 import { ArchivoSinFilas, DemasiadasFilas } from './errores.js';
 import { instruccionesDe } from './instrucciones.js';
 import {
@@ -16,15 +22,10 @@ import {
 } from './lectura-de-filas.js';
 import type { FilaLeida, HojaLeida, LibroDeExcel } from './puertos/libro-de-excel.js';
 
+export type { AvisoDeFila, AvisoDeImportacion, ResultadoDeImportacion };
+
 /** Filas por archivo: más, y conviene partirlo. */
 export const MAXIMO_DE_FILAS = 5000;
-
-/** Qué pasó con el archivo: si se guardó, y los problemas por fila (con uno solo no se guarda nada). */
-export interface ResultadoDeImportacion {
-  filas: number;
-  guardado: boolean;
-  errores: ErrorDeImportacion[];
-}
 
 /** Lo que aporta cada recurso: sus columnas y cómo se validan, se listan y se crean sus registros.
  * `Filtro` es lo que puede acotar `listar` al exportar (por ejemplo, cuenta y fechas de un reporte); sin él, exporta todo. */
@@ -40,6 +41,11 @@ export interface DatosDelRecurso<Registro, Solicitud, Filtro = void> {
    * alcance por registro, que se reparten luego desde su ventana de accesos.
    */
   sinAsignarAlCrear?: boolean;
+  /**
+   * Opcional: algo que decir de una fila creada (en el ensayo y al importar), como el vencimiento que el sistema
+   * propuso. Sale en `avisos` del resultado, sin impedir importar.
+   */
+  avisarDeFila?: (solicitud: Solicitud, creado: unknown) => AvisoDeFila | null;
   /** Avisos al final de la hoja de instrucciones, uno por fila, para lo que las columnas no explican. */
   notasDeInstrucciones?: string[];
 }
@@ -52,16 +58,10 @@ export interface Dependencias<Registro, Solicitud, Filtro = void> extends DatosD
   interpretarError: (error: unknown) => ErrorEsperado | null;
 }
 
-/** Un ensayo crea todo y lo deshace: así revisa también lo que solo la base de datos sabe. */
-class EnsayoTerminado extends Error {
+/** Un ensayo (o una carga con problemas) crea todo y lo deshace: así revisa también lo que solo la base de datos sabe. */
+class ImportacionTerminada extends Error {
   constructor(readonly resultado: ResultadoDeImportacion) {
-    super('Ensayo terminado');
-  }
-}
-
-class FallaEnFila extends Error {
-  constructor(readonly error: ErrorDeImportacion) {
-    super(error.mensaje);
+    super('Importación terminada sin guardar');
   }
 }
 
@@ -110,19 +110,27 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
         this.importarEnTransaccion(operador, hoja, ensayo),
       );
     } catch (error) {
-      if (error instanceof EnsayoTerminado) return error.resultado;
-      if (error instanceof FallaEnFila) return { filas: hoja.filas.length, guardado: false, errores: [error.error] };
+      if (error instanceof ImportacionTerminada) return error.resultado;
       throw error;
     }
   }
 
+  /**
+   * Una sola pasada: los problemas de formato de cada fila y, de las filas que se pudieron leer, los de las reglas
+   * (cada una en su punto de guardado, para seguir con las demás). Con algún problema, o en ensayo, se deshace todo.
+   */
   private async importarEnTransaccion(operador: Operador, hoja: HojaLeida, ensayo: boolean) {
     const { listas, errores } = await this.prepararFilas(hoja);
+    const avisos: AvisoDeImportacion[] = [];
+    for (const fila of listas) {
+      const problema = await this.crearFila(operador, fila, avisos);
+      if (problema) errores.push(problema);
+    }
+    errores.sort((a, b) => a.fila - b.fila);
     const resultado = { filas: hoja.filas.length, guardado: false, errores };
-    if (errores.length > 0) return resultado;
-    for (const fila of listas) await this.crearFila(operador, fila);
-    if (ensayo) throw new EnsayoTerminado(resultado);
-    return { ...resultado, guardado: true };
+    const conAvisos = avisos.length > 0 ? { ...resultado, avisos } : resultado;
+    if (ensayo || errores.length > 0) throw new ImportacionTerminada(conAvisos);
+    return { ...conAvisos, guardado: true };
   }
 
   /** Convierte y valida todas las filas; junta los problemas de todas. */
@@ -152,15 +160,29 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
     return { lista: { numero: fila.numero, solicitud: validacion.datos } };
   }
 
-  /** Lo que rechacen las reglas o la base de datos se informa con el número de la fila. */
-  private async crearFila(operador: Operador, { numero, solicitud }: FilaLista<Solicitud>): Promise<void> {
+  /**
+   * Crea la fila en un punto de guardado. Lo que rechacen las reglas o la base de datos se devuelve con el número
+   * de la fila y, si se sabe, la columna; el aviso del recurso, si lo hay, se agrega a `avisos`.
+   */
+  private async crearFila(
+    operador: Operador,
+    { numero, solicitud }: FilaLista<Solicitud>,
+    avisos: AvisoDeImportacion[],
+  ): Promise<ErrorDeImportacion | null> {
     try {
-      await this.dependencias.crear(operador, solicitud);
+      const creado = await this.dependencias.unidadDeTrabajo.aislar(() => this.dependencias.crear(operador, solicitud));
+      const aviso = this.dependencias.avisarDeFila?.(solicitud, creado);
+      if (aviso) avisos.push({ fila: numero, columna: this.tituloDeColumna(aviso.campo), mensaje: aviso.mensaje });
+      return null;
     } catch (error) {
       const esperado = error instanceof ErrorEsperado ? error : this.dependencias.interpretarError(error);
       if (!esperado) throw error;
-      throw new FallaEnFila({ fila: numero, columna: null, mensaje: esperado.message });
+      return { fila: numero, columna: this.tituloDeColumna(campoDelError(esperado)), mensaje: esperado.message };
     }
+  }
+
+  private tituloDeColumna(clave: string | null): string | null {
+    return this.dependencias.columnas.find((columna) => columna.clave === clave)?.titulo ?? null;
   }
 
   private escribir(filas: unknown[][]): Promise<Buffer> {

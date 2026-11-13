@@ -1,8 +1,8 @@
-import { and, count, desc, eq, gte, ilike, isNotNull, isNull, lte, or, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, gte, ilike, isNotNull, isNull, lt, lte, or, type SQL } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   ConsultasDeLaBandeja,
-  FiltroDeLaBandeja,
+  FiltroConFechaDeInicio,
   PaginacionDeLaBandeja,
   PaginaDeFilasDeLaBandeja,
 } from '../../aplicacion/puertos/puertos-de-la-bandeja.js';
@@ -30,14 +30,21 @@ function porProveedor(conProveedor: boolean | undefined): SQL | undefined {
   return conProveedor ? isNotNull(dteRecibidos.proveedorId) : isNull(dteRecibidos.proveedorId);
 }
 
-function porFechas({ desde, hasta }: FiltroDeLaBandeja): SQL | undefined {
+function porAnteriores({ anteriores, fechaDeInicio }: FiltroConFechaDeInicio): SQL | undefined {
+  if (!fechaDeInicio || !anteriores || anteriores === 'incluir') return undefined;
+  return anteriores === 'ocultar'
+    ? gte(dteRecibidos.fechaEmision, fechaDeInicio)
+    : lt(dteRecibidos.fechaEmision, fechaDeInicio);
+}
+
+function porFechas({ desde, hasta }: FiltroConFechaDeInicio): SQL | undefined {
   return and(
     desde ? gte(dteRecibidos.fechaEmision, desde) : undefined,
     hasta ? lte(dteRecibidos.fechaEmision, hasta) : undefined,
   );
 }
 
-function condiciones(filtro: FiltroDeLaBandeja): SQL | undefined {
+function condiciones(filtro: FiltroConFechaDeInicio): SQL | undefined {
   return and(
     filtro.estado ? eq(dteRecibidos.estado, filtro.estado) : undefined,
     porFechas(filtro),
@@ -45,13 +52,14 @@ function condiciones(filtro: FiltroDeLaBandeja): SQL | undefined {
     filtro.loteId ? eq(dteRecibidos.loteId, filtro.loteId) : undefined,
     filtro.busqueda?.trim() ? porBusqueda(filtro.busqueda) : undefined,
     porProveedor(filtro.conProveedor),
+    porAnteriores(filtro),
   );
 }
 
 /** Las tablas tienen seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
 export class ConsultasDeLaBandejaDrizzle implements ConsultasDeLaBandeja {
   async listar(
-    filtro: FiltroDeLaBandeja,
+    filtro: FiltroConFechaDeInicio,
     { pagina, limite }: PaginacionDeLaBandeja,
   ): Promise<PaginaDeFilasDeLaBandeja> {
     const donde = condiciones(filtro);
@@ -64,6 +72,13 @@ export class ConsultasDeLaBandejaDrizzle implements ConsultasDeLaBandeja {
       .limit(limite)
       .offset((pagina - 1) * limite);
     return { filas: filas.map((fila) => mapeadorDeDteRecibido.aEntidad(fila)), total: cuenta?.total ?? 0 };
+  }
+
+  async contarAnteriores(filtro: FiltroConFechaDeInicio): Promise<number> {
+    if (!filtro.fechaDeInicio) return 0;
+    const donde = condiciones({ ...filtro, anteriores: 'solo' });
+    const [cuenta] = await transaccionEnCurso().select({ total: count() }).from(dteRecibidos).where(donde);
+    return cuenta?.total ?? 0;
   }
 
   async ultimoConceptoDelProveedor(proveedorId: string): Promise<string | null> {

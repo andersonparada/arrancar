@@ -1,5 +1,11 @@
 import type { DocumentoConAplicaciones } from './documento-por-pagar.js';
-import { CargoConNotasAplicadas, DocumentoAutorizado } from './errores.js';
+import { etiquetaDe } from './documento-por-pagar.js';
+import {
+  CargoConAplicacionesManuales,
+  CargoConNotasAplicadas,
+  DocumentoAutorizado,
+  NotaConAjustes,
+} from './errores.js';
 
 /**
  * Una regla que puede rechazar la baja de un documento (anularlo o eliminarlo) lanzando su error. Las listas de reglas se
@@ -14,17 +20,43 @@ export const noEstarAutorizado: ReglaDeBaja = ({ documento }) => {
 };
 
 /**
- * Un cargo con notas de crédito aplicadas no se da de baja. Las notas de débito sí: lo que les aplicaron vuelve al saldo
- * libre de esas notas. Libro de compras no anula una factura con notas vigentes, pero se revisa igual.
+ * Una factura con notas de crédito aplicadas por la recepción (las automáticas, que Libro de compras también cuida) no se
+ * da de baja. Las notas de débito sí: lo que les aplicaron vuelve al saldo libre de esas notas. Las aplicaciones
+ * manuales de una factura o de una nota de débito las ataja antes `noTenerAplicacionesManualesRecibidas`.
  */
 export const noTenerNotasAplicadas: ReglaDeBaja = ({ documento, recibidas }) => {
   const esFactura = documento.tipo !== 'nota_de_credito' && documento.tipo !== 'nota_de_debito';
   if (esFactura && recibidas.length > 0) throw new CargoConNotasAplicadas();
 };
 
-export const REGLAS_PARA_ANULAR: readonly ReglaDeBaja[] = [noTenerNotasAplicadas];
+/**
+ * Un cargo (también una nota de débito) que recibió saldo a favor por una aplicación manual no se da de baja: primero se
+ * quita esa aplicación. Corre igual cuando la baja llega por aviso de Libro de compras.
+ */
+export const noTenerAplicacionesManualesRecibidas: ReglaDeBaja = ({ documento, recibidas }) => {
+  const notas = recibidas
+    .filter(({ forma }) => forma === 'manual')
+    .map((aplicacion) => etiquetaDe({ serie: aplicacion.otraSerie, numero: aplicacion.otroNumero }));
+  if (notas.length > 0) throw new CargoConAplicacionesManuales(etiquetaDe(documento), [...new Set(notas)]);
+};
 
-export const REGLAS_PARA_ELIMINAR: readonly ReglaDeBaja[] = [noEstarAutorizado, noTenerNotasAplicadas];
+/** Una nota con ajustes vigentes no se anula ni se elimina; los anulados quedan de rastro (o se van con la nota). */
+export const noTenerAjustesVigentes: ReglaDeBaja = ({ documento, ajustes }) => {
+  if (ajustes.some(({ estado }) => estado === 'vigente')) throw new NotaConAjustes(etiquetaDe(documento));
+};
+
+export const REGLAS_PARA_ANULAR: readonly ReglaDeBaja[] = [
+  noTenerAplicacionesManualesRecibidas,
+  noTenerAjustesVigentes,
+  noTenerNotasAplicadas,
+];
+
+export const REGLAS_PARA_ELIMINAR: readonly ReglaDeBaja[] = [
+  noEstarAutorizado,
+  noTenerAplicacionesManualesRecibidas,
+  noTenerAjustesVigentes,
+  noTenerNotasAplicadas,
+];
 
 /** Hoy nada frena una desautorización; los pagos (CP4) sumarán aquí «el cargo ya tiene pagos». */
 export const REGLAS_PARA_DESAUTORIZAR: readonly ReglaDeBaja[] = [];

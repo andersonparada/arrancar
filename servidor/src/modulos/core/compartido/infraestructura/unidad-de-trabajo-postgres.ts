@@ -80,6 +80,12 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
     return resultado;
   }
 
+  async aislar<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado> {
+    const enCurso = trabajoEnCurso.getStore();
+    if (!enCurso) return trabajo();
+    return enCurso.transaccion.transaction((punto) => trabajoEnCurso.run({ ...enCurso, transaccion: punto }, trabajo));
+  }
+
   private async ejecutarEnTransaccion<Resultado>(
     nuevo: Omit<TrabajoEnCurso, 'transaccion'>,
     trabajo: () => Promise<Resultado>,

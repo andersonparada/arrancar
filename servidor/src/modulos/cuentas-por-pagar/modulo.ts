@@ -1,6 +1,7 @@
 import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo.js';
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeAccionesComponidas } from './composicion/acciones.js';
+import { rutasDeAplicacionesComponidas } from './composicion/aplicaciones.js';
 import { rutasDeBajasComponidas } from './composicion/bajas.js';
 import { rutasDeCondicionesComponidas } from './composicion/condiciones.js';
 import { rutasDeConsultasComponidas } from './composicion/consultas.js';
@@ -40,6 +41,11 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.documentos.eliminar',
       descripcion: 'Eliminar documentos por pagar que no están autorizados (también en el libro de compras)',
     },
+    {
+      clave: 'cuentas-por-pagar.documentos.aplicar-notas',
+      descripcion:
+        'Aplicar el saldo a favor de una nota de crédito a otros documentos del proveedor y quitar esas aplicaciones',
+    },
     { clave: 'cuentas-por-pagar.saldos-iniciales.ver', descripcion: 'Ver los saldos iniciales cargados' },
     {
       clave: 'cuentas-por-pagar.saldos-iniciales.crear',
@@ -70,6 +76,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeConsultasComponidas(),
     rutasDeAccionesComponidas(),
     rutasDeBajasComponidas(),
+    rutasDeAplicacionesComponidas(),
     escuchasDeFechaDeInicioComponidas(),
     rutasDelCuadreDeSaldosInicialesComponidas(),
     rutasDeSaldosInicialesComponidas(),

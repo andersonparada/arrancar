@@ -1,13 +1,5 @@
-import { deCentavos } from '../../core/compartido/dominio/centavos.js';
+import { fechaLegible, quetzales } from './avisos.js';
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
-
-/** `AAAA-MM-DD` como `dd/mm/aaaa`, para los mensajes. */
-function fechaLegible(fecha: string): string {
-  const [anio, mes, dia] = fecha.split('-');
-  return `${dia}/${mes}/${anio}`;
-}
-
-const quetzales = (centavos: number): string => `Q${deCentavos(centavos)}`;
 
 /** Un dato de la solicitud que no cumple su regla; `detalles.campo` dice cuál. */
 abstract class DatoDeSaldoInicialInvalido extends DatoInvalido {
@@ -42,6 +34,17 @@ export class EmisionNoAnteriorAlInicio extends DatoDeSaldoInicialInvalido {
   constructor(fechaDeInicio: string) {
     super(
       `Un saldo inicial es un documento registrado en el sistema anterior, emitido antes de la fecha de inicio (${fechaLegible(fechaDeInicio)}). Lo emitido desde esa fecha, o lo que no se registró en el sistema anterior, va al Libro de compras.`,
+      'fechaEmision',
+    );
+  }
+}
+
+export class EmisionDemasiadoAntigua extends DatoDeSaldoInicialInvalido {
+  readonly codigo = 'emision_demasiado_antigua';
+
+  constructor(fechaMinima: string) {
+    super(
+      `La fecha de emisión no puede ser de más de 10 años antes de la fecha de inicio: debe ser el ${fechaLegible(fechaMinima)} o posterior. Revise que no haya un error de digitación.`,
       'fechaEmision',
     );
   }

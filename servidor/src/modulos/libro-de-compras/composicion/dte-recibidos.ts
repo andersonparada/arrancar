@@ -90,6 +90,15 @@ function importador(documentos: Documentos, bandeja: Bandeja): ImportarDteRecibi
   });
 }
 
+/** La conciliación lee la fecha de inicio de la empresa por el mediador, como el resto de la bandeja. */
+function conciliador(bandeja: Bandeja, documentos: Documentos): ConciliarPeriodo {
+  return new ConciliarPeriodo({
+    unidadDeTrabajo: bandeja.unidadDeTrabajo,
+    consultasDeConciliacion: new ConsultasDeConciliacionDrizzle(),
+    datosDeLaEmpresa: documentos.empresa,
+  });
+}
+
 /** Raíz de composición de la bandeja de DTE recibidos: confirma con el mismo registro que usa el formulario. */
 export function rutasDeDteRecibidosComponidas() {
   const documentos = dependenciasDeDocumentos();
@@ -97,7 +106,7 @@ export function rutasDeDteRecibidosComponidas() {
   const previsualizar = new PrevisualizarDocumento(documentos);
   return rutasDeDteRecibidos(
     new DteRecibidosControlador({
-      listar: new ListarDteRecibidos(bandeja),
+      listar: new ListarDteRecibidos({ ...bandeja, datosDeLaEmpresa: documentos.empresa }),
       completar: new CompletarDteRecibidos({ ...documentos, ...bandeja }),
       vistaPrevia: vistaPrevia(bandeja, previsualizar),
       confirmar: new ConfirmarDteRecibidos({
@@ -109,10 +118,7 @@ export function rutasDeDteRecibidosComponidas() {
       descartar: new DescartarDteRecibidos(bandeja),
       restaurar: new RestaurarDteRecibido(bandeja),
       importar: importador(documentos, bandeja),
-      conciliar: new ConciliarPeriodo({
-        unidadDeTrabajo: bandeja.unidadDeTrabajo,
-        consultasDeConciliacion: new ConsultasDeConciliacionDrizzle(),
-      }),
+      conciliar: conciliador(bandeja, documentos),
     }),
   );
 }

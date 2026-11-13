@@ -132,6 +132,17 @@ describe('importar el archivo de la SAT', () => {
     expect(otra.cuerpo.avisos).toContain('Este mismo archivo ya se había subido antes.');
   });
 
+  it('cuenta los DTE de antes de la fecha de inicio y lo avisa', async () => {
+    const ruta = `/api/empresas/${escenario.cuenta.empresaId}/carga-inicial`;
+    await propietario().put(ruta, { fechaDeInicio: '2026-10-01' });
+    const anterior = fila({ 'Fecha de emisión': '2026-09-20T10:00:00.000-06:00' });
+
+    const respuesta = await subir(propietario(), xls([anterior, fila()]));
+
+    expect(respuesta.cuerpo.anterioresALaFechaDeInicio).toBe(1);
+    expect(respuesta.cuerpo.avisos.some((a: string) => a.includes('son de antes de la fecha de inicio'))).toBe(true);
+  });
+
   it('una fila que pasa a anulada se actualiza, se audita como corregir y no toca lo completado', async () => {
     const vigente = fila();
     const autorizacion = vigente[1] as string;

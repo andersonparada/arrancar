@@ -76,3 +76,12 @@ export function errorConCampoDeFecha(error: unknown): unknown {
     detalles: { campo: 'fechaDeInicio' },
   });
 }
+
+/**
+ * Si el guardado falló por una sección de otro módulo (por ejemplo los datos fiscales del libro de compras), el error
+ * sale en esa sección, arriba en el formulario; esto lo repite junto a la fecha de inicio para quien edita al final.
+ */
+export function avisoDeErrorEnSecciones(errores: Record<string, string>): string | null {
+  const clave = Object.keys(errores).find((campo) => campo.startsWith('secciones.'));
+  return clave ? `No se guardó. Corrija más arriba: ${errores[clave]}` : null;
+}

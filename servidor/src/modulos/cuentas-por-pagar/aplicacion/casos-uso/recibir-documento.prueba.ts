@@ -169,6 +169,16 @@ describe('recibir una nota de crédito', () => {
     expect(documentos.bloqueadas).toEqual([factura.documentoId]);
   });
 
+  it('guarda la aplicación como automática, con la fecha de recepción de la nota y sin referencia', async () => {
+    const factura = await conFactura();
+    const nota = notaDe(factura, 3000);
+    documentosDeCompra.recepciones.set(nota.documentoId, '2026-03-25');
+
+    await recibir.ejecutar(operador, nota);
+
+    expect(aplicaciones.datos).toEqual([{ forma: 'automatica', fecha: '2026-03-25', referencia: null }]);
+  });
+
   it('una devolución total de una factura con retenciones deja libre lo retenido', async () => {
     const factura = await conFactura(1200);
     const nota = notaDe(factura, 11200);

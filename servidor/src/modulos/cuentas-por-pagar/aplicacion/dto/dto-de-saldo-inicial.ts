@@ -1,6 +1,7 @@
 import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { DatosDeSaldoInicial } from '../../dominio/saldo-inicial.js';
 import { anterioresAlInicioDe, saldoDe } from '../../dominio/saldos.js';
+import { aplicadoDe } from './dto-de-documento-por-pagar.js';
 import type { FilaDeDocumento } from '../puertos/puertos-de-consultas.js';
 import type { SaldoInicialDto, SolicitudDeSaldoInicial } from './saldo-inicial.dto.js';
 
@@ -24,21 +25,21 @@ export function datosDeSolicitud(solicitud: SolicitudDeSaldoInicial): DatosDeSal
 
 /** Se puede corregir o eliminar con la carga abierta, completado y sin notas aplicadas (las demás reglas, las de dominio). */
 function sePuedeCambiar(fila: FilaDeDocumento, cargaCerrada: boolean): boolean {
-  const sinMovimientos = fila.aplicadoAlCargoCentavos === 0 && fila.aplicadoPorLaNotaCentavos === 0;
+  const sinMovimientos =
+    fila.aplicadoAlCargoCentavos === 0 && fila.aplicadoPorLaNotaCentavos === 0 && fila.ajustesVigentes === 0;
   return !cargaCerrada && fila.documento.estado === 'registrado' && sinMovimientos;
 }
 
 /** Los montos de la ficha: lo cargado, lo anterior al corte y lo que se debe hoy. */
 function montosDe(fila: FilaDeDocumento) {
   const { documento } = fila;
-  const aplicado = { alCargoCentavos: fila.aplicadoAlCargoCentavos, porLaNotaCentavos: fila.aplicadoPorLaNotaCentavos };
   return {
     total: deCentavos(documento.totalCentavos),
     retenciones: deCentavos(documento.retencionesCentavos),
     retencionesPorPracticar: deCentavos(documento.retencionesPorPracticarCentavos ?? 0),
     saldoPendiente: deCentavos(documento.saldoAlInicioCentavos ?? 0),
     anterioresAlInicio: deCentavos(anterioresAlInicioDe(documento) ?? 0),
-    saldo: deCentavos(saldoDe(documento, aplicado).saldoCentavos),
+    saldo: deCentavos(saldoDe(documento, aplicadoDe(fila)).saldoCentavos),
   };
 }
 

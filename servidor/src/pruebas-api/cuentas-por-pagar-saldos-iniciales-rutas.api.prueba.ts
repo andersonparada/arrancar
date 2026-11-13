@@ -148,6 +148,14 @@ describe('errores por campo', () => {
       codigo: 'emision_no_anterior_al_inicio',
       campo: 'fechaEmision',
     });
+    expect(await campoDelError({ numero: '3010', fechaEmision: '2015-12-31' })).toEqual({
+      estado: 400,
+      codigo: 'emision_demasiado_antigua',
+      campo: 'fechaEmision',
+    });
+    expect((await propietario().post(RUTA, solicitud({ numero: '3011', fechaEmision: '2016-01-01' }))).estado).toBe(
+      201,
+    );
     expect(await campoDelError({ numero: '3002', saldoPendiente: '1100.00' })).toMatchObject({
       codigo: 'saldo_pendiente_invalido',
       campo: 'saldoPendiente',
@@ -173,6 +181,19 @@ describe('errores por campo', () => {
 
     expect(repetido.estado).toBe(409);
     expect(repetido.cuerpo.error.mensaje).toContain('ya está en Cuentas por pagar');
+    expect(repetido.cuerpo.error.detalles).toEqual({ campo: 'numero' });
+  });
+
+  it('un vencimiento anterior a la emisión trae el campo, y el dinero de los mensajes lleva miles', async () => {
+    const vencimiento = await propietario().post(
+      RUTA,
+      solicitud({ numero: '4002', vencimiento: '2025-12-01', fechaEmision: '2025-12-20' }),
+    );
+    const exceso = await propietario().post(RUTA, solicitud({ numero: '4003', saldoPendiente: '99999.00' }));
+
+    expect(vencimiento.estado).toBe(400);
+    expect(vencimiento.cuerpo.error.detalles).toEqual({ campo: 'vencimiento' });
+    expect(exceso.cuerpo.error.mensaje).toMatch(/\(Q[\d,]+\.\d{2}\)/);
   });
 });
 

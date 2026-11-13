@@ -56,6 +56,10 @@ export interface DteRecibidoDto {
   descartadoEn: string | null;
   motivoDeBloqueo: MotivoDeBloqueo | null;
   borrador: BorradorDeDteDto;
+  /** Emitido antes de la fecha de inicio de la empresa: debe estar en el libro del sistema anterior. */
+  anteriorALaFechaDeInicio: boolean;
+  /** Anterior, emitido en el mes de la fecha de inicio o en los dos anteriores: revisar que esté en el sistema anterior. */
+  enPlazoDeCredito: boolean;
   /** Solo en las filas pendientes. */
   propuesta: PropuestaDeDteDto | null;
 }
@@ -65,6 +69,10 @@ export interface PaginaDeDteRecibidosDto {
   total: number;
   pagina: number;
   limite: number;
+  /** La fecha de inicio de la empresa; `null` si no tiene. */
+  fechaDeInicio: string | null;
+  /** Cuántas filas anteriores a la fecha de inicio dejó fuera el filtro `ocultar`. */
+  anterioresOcultos: number;
 }
 
 /** Una fila confirmada: su documento y los avisos del registro; o el error que la dejó pendiente. */

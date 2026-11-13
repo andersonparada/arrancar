@@ -1,18 +1,22 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import type { ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
-import type { DocumentoPorPagar } from '../dominio/documento-por-pagar.js';
+import { netoDe, type DocumentoPorPagar } from '../dominio/documento-por-pagar.js';
 import type {
+  AplicacionConDatos,
   ConsultasDeDocumentos,
   FilaDeDocumento,
   FiltroDeDocumentosPorPagar,
 } from '../aplicacion/puertos/puertos-de-consultas.js';
 import type { LibroDeCompras, OrdenDeAnulacion } from '../aplicacion/puertos/puertos-de-libro-de-compras.js';
 import type { DatosDeRecepcion, DocumentosDeCompra } from '../aplicacion/puertos/puertos-de-documentos.js';
-import type { DocumentosEnMemoria } from './dobles-de-documentos.js';
+import type { AplicacionesEnMemoria, DocumentosEnMemoria } from './dobles-de-documentos.js';
 
 /** Las consultas de la ficha sobre los mismos documentos en memoria; serie y número vienen del propio documento. */
 export class ConsultasEnMemoria implements ConsultasDeDocumentos {
-  constructor(private readonly documentos: DocumentosEnMemoria) {}
+  constructor(
+    private readonly documentos: DocumentosEnMemoria,
+    private readonly aplicaciones?: AplicacionesEnMemoria,
+  ) {}
 
   async buscar(id: string): Promise<FilaDeDocumento | null> {
     const documento = this.documentos.documentos.find((candidato) => candidato.id === id);
@@ -33,8 +37,12 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
         anulacion: { causa: null, motivo: null, anuladoPor: null, anuladoPorNombre: null, anuladoEn: null },
       },
       creadoEn: '2026-03-10T00:00:00.000Z',
-      aplicadoAlCargoCentavos: 0,
-      aplicadoPorLaNotaCentavos: 0,
+      aplicadoAlCargoCentavos: this.aplicaciones?.aplicadoAl(documento) ?? 0,
+      aplicadoPorLaNotaCentavos:
+        documento.totalCentavos - (this.aplicaciones?.saldoLibreDe(documento) ?? documento.totalCentavos),
+      ajustadoCentavos: 0,
+      ajustesVigentes: 0,
+      aplicacionesManualesRecibidas: 0,
       notasVigentes: vigentes.length,
       notasEnTotal: this.documentos.documentos.filter((nota) => nota.documentoAfectadoId === documento.documentoId)
         .length,
@@ -59,6 +67,33 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
 
   async aplicacionesDe() {
     return [];
+  }
+
+  async aplicacion(id: string): Promise<AplicacionConDatos | null> {
+    const aplicacion = this.aplicaciones?.lista.find((candidata) => candidata.id === id);
+    if (!aplicacion) return null;
+    const nota = this.documentos.documentos.find(({ id: notaId }) => notaId === aplicacion.notaId)!;
+    const cargo = this.documentos.documentos.find(({ id: cargoId }) => cargoId === aplicacion.cargoId)!;
+    return {
+      id,
+      forma: aplicacion.forma,
+      fecha: aplicacion.fecha,
+      referencia: aplicacion.referencia,
+      notaId: nota.id,
+      notaSerie: nota.serie,
+      notaNumero: nota.numero,
+      cargoId: cargo.id,
+      cargoSerie: cargo.serie,
+      cargoNumero: cargo.numero,
+      montoCentavos: aplicacion.montoCentavos,
+    };
+  }
+
+  async cargosConSaldoDe(proveedorId: string): Promise<FilaDeDocumento[]> {
+    return this.documentos.documentos
+      .filter((d) => d.proveedorId === proveedorId && d.estado !== 'anulado' && d.tipo !== 'nota_de_credito')
+      .map((documento) => this.filaDe(documento))
+      .filter((fila) => netoDe(fila.documento) - fila.aplicadoAlCargoCentavos > 0);
   }
 }
 
