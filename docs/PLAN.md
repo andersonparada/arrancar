@@ -1490,3 +1490,8 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (`UnidadDeTrabajo.aislar`, nuevo en el puerto) para que un error de la base de datos no aborte la transacción.
   Con cualquier error o en ensayo todo se deshace; el límite de 5,000 filas y la revisión del `.xlsx` no cambian.
   Corrige H6 y H7 del informe de QA de U8.
+- **2026-11-12 — U8-l y P-U8-1 aprobados por el usuario** (diseño `docs/modulos/diseno-u8l-notas-sobre-facturas-anteriores.md`,
+  dictamen `docs/modulos/dictamen-u8l-2026-11-12.md`, «correcto con ajustes»). Acepta las recomendaciones del diseño y
+  todos los ajustes del contador; notas de débito anteriores a la fecha de inicio como **dato opcional** (total e IVA)
+  que suma al tope; una nota con factura anterior **recibida antes de la fecha de inicio se rechaza** («es del sistema
+  anterior: cárguela en Saldos iniciales») y se revisa también al mover la fecha de inicio.
