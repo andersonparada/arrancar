@@ -13,12 +13,13 @@ const COMO_SE_ESCRIBE: Record<TipoDeColumna, (columna: Columna) => string> = {
       : 'El nombre, tal como está registrado en la aplicación.',
 };
 
-/** La hoja de instrucciones de la plantilla: una fila por columna. */
-export const instruccionesDe = (columnas: Columna[]): string[][] => [
+/** La hoja de instrucciones de la plantilla: una fila por columna y, al final, las notas del recurso. */
+export const instruccionesDe = (columnas: Columna[], notas: string[] = []): string[][] => [
   ['Columna', 'Obligatoria', 'Cómo se escribe'],
   ...columnas.map((columna) => [
     columna.titulo,
     columna.requerido ? 'Sí' : 'No',
     COMO_SE_ESCRIBE[columna.tipo](columna),
   ]),
+  ...(notas.length > 0 ? [[''], ...notas.map((nota) => [nota])] : []),
 ];
