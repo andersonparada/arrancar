@@ -303,13 +303,14 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    CP3 en 8 (migración `0006`, desde CP2-2), después de U8. Pendientes sin frenar: P-CP2-1 (¿adjuntos para el acuerdo y el
    ajuste?), P-CP2-2 (tope de «diferencia menor» por omisión Q25) y P-CP3-1 (fecha de una contraseña con saldos
    iniciales).
-8. **Bancos H2** diseñado (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`). El paso 1 (core: qpdf fuera de la
-   transacción, archivos huérfanos, borrado tras confirmar, subida cortada) **está en `main`** con los arreglos de
-   seguridad S3–S9 y S11 (pruebas: servidor 3425, cliente 868, generador 46). Las tareas «después de confirmar» que
-   fallan (incluida la publicación de eventos) ahora se registran en stderr y no cambian la respuesta. **Espera al usuario:** P1 a P5
-   del diseño (§13) para los pasos 2 a 5, y de seguridad: cola de qpdf con tope antes del paso 4 (S1: propuesta 10 en
-   espera, 60 s, máx. 2 por cuenta, 429), ¿cola separada o prioridad para los PDF que genera la app, como el libro
-   foliado? (S2), ¿tarea diaria que borre archivos huérfanos? (S10).
+8. **Bancos H2** (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`): paso 1 (core) y **H2a (pasos 2 y 3, saldo
+   transcrito, servidor y cliente) en `main`** desde el 2026-11-13, con P1 a P5 respondidas (pruebas: servidor 3700,
+   cliente 921; **sin ver en el navegador**; migración de bancos `0030` sin aplicar a la base de desarrollo hasta
+   correr `bd:migrar`). Seguridad S1, S2 y S10 decididas: plan en `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md`
+   (fila de revisión de PDF y limpieza diaria de huérfanos), programado en la rama `worktree-agent-a13465c000c281fed`
+   y **en corrección** tras la revisión de seguridad (no unir sin los arreglos: la limpieza borraba el logo).
+   **Sigue:** unir esa rama, paso 4 (H2b servidor, archivo adjunto, con revisión de seguridad), paso 5 (cliente),
+   documentación y QA en el navegador.
 9. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual (ya no Q150,000: 125 salarios mínimos no agrícolas, Q500,285 en 2026).
 
 Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) con su base de pruebas

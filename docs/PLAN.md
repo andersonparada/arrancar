@@ -1532,3 +1532,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `anterioresALaFechaDeInicio` y un aviso con la salvedad de C-U8-1. Las marcas solo se calculan en la lista (las
   respuestas de completar, descartar y restaurar las traen en falso). Sin migraciones.
 - **2026-11-13 — CP2-4 (servidor, ajustes).** `AjustarSaldo` (pide `CargaInicial`, bloquea la nota; solo registrada o autorizada; monto hasta el saldo libre; causa, referencia obligatoria al compensar, tope de «Diferencia menor»; fecha por omisión hoy, no futura ni anterior a la recepción o a la fecha de inicio; audita `ajustar` —acción nueva en `AccionAuditada`— con la ficha de la nota anterior y publica `ajuste_registrado` con `efecto`, serie y número) y `AnularAjuste` (motivo, audita `anular` con el ajuste anterior y publica `ajuste_anulado` con monto, efecto y la fecha de hoy). Reglas en `dominio/reglas-de-ajuste.ts`, errores en `errores-de-ajustes.ts`, eventos en `eventos-de-ajustes.ts` y en `core/contratos`. Variable `cuentas-por-pagar.ajustes.tope_diferencia_menor` (instalación y empresa, Q25; con 0 se apaga), permisos `ajustes.crear` y `ajustes.anular`, rutas `POST …/documentos/:id/ajustes` (201, ficha de la nota) y `POST …/ajustes/:id/anular`. La ficha de una nota trae `ajustes` (con `efecto`, quién y cuándo, anulación y `puedeAnular`), `fechaMinimaDeAjuste` y `topeDiferenciaMenor`; por eso `ObtenerDocumentoPorPagar` y `AplicarNota` leen la carga inicial y el tope. La ayuda de comisiones bancarias y el aviso de año anterior son del cliente (CP2-6). Sigue CP2-5 (cliente, pantalla).
+- **2026-11-13 — Bancos H2a en `main` (pasos 2 y 3 del diseño de H2).** Servidor: migración de bancos `0030` (columnas
+  `saldo_estado_de_cuenta` y `previa_al_saldo_transcrito`, tres `check`; las conciliaciones ya terminadas quedan
+  previas), `PUT /api/bancos/conciliaciones/:id/saldo-del-estado-de-cuenta`, terminar y autorizar exigen el saldo y que
+  coincida (`falta_el_saldo_del_estado_de_cuenta` 400, `saldo_del_estado_de_cuenta_no_coincide` 422), una elaborada
+  previa se devuelve. Cliente: `SaldoTranscrito` (comparación en vivo en centavos), `AccionesDeConciliacion` (Terminar
+  deshabilitado con lo que falta) e impresión con el saldo. Pruebas: servidor 3700, cliente 921. **Sin ver en el
+  navegador.** Revisión de seguridad de la fila de PDF y de la limpieza de huérfanos: «se puede unir con arreglos»
+  (la limpieza borraba el logo de la instalación); en corrección. Decidido por el usuario: interruptor
+  `DEPURAR_HUERFANOS`, tope de 5 en espera para los PDF del sistema y rastro de borrados solo en el log.
+
