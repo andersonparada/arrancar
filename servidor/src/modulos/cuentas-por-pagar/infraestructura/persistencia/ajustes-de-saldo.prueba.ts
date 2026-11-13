@@ -95,7 +95,8 @@ describe('ajustes de saldo', () => {
     const nota = await unaNota();
     const anulacion = { estado: 'anulado', anuladoEn: new Date(), anuladoPor: e.usuarioId };
 
-    expect(await restriccion(nota.id, { estado: 'borrado' })).toBe('ajustes_estado_valido');
+    // Un estado inválido también incumple la anulación completa, que Postgres revisa primero (orden alfabético).
+    expect(await restriccion(nota.id, { estado: 'borrado' })).toMatch(/^ajustes_(estado_valido|anulacion_completa)$/);
     expect(await restriccion(nota.id, { estado: 'anulado' })).toBe('ajustes_anulacion_completa');
     expect(await restriccion(nota.id, { ...anulacion })).toBe('ajustes_anulacion_completa');
     expect(await restriccion(nota.id, { ...anulacion, estado: 'vigente', motivoDeAnulacion: 'Error' })).toBe(
@@ -105,6 +106,15 @@ describe('ajustes de saldo', () => {
       'ajustes_motivo_de_anulacion_rango',
     );
     await expect(ajustar(nota.id, { ...anulacion, motivoDeAnulacion: 'Error' })).resolves.toBeDefined();
+  });
+
+  it('un ajuste vigente no admite ningún dato de anulación, ni siquiera uno solo (migración 0005)', async () => {
+    const nota = await unaNota();
+
+    expect(await restriccion(nota.id, { anuladoEn: new Date() })).toBe('ajustes_anulacion_completa');
+    expect(await restriccion(nota.id, { anuladoPor: e.usuarioId })).toBe('ajustes_anulacion_completa');
+    expect(await restriccion(nota.id, { motivoDeAnulacion: 'Error' })).toBe('ajustes_anulacion_completa');
+    expect(await restriccion(nota.id, { estado: 'vigente', anuladoEn: new Date() })).toBe('ajustes_anulacion_completa');
   });
 
   it('rechaza ajustar con otro proveedor que el de la nota', async () => {

@@ -30,6 +30,26 @@ export class CargoConNotasAplicadas extends ReglaDeNegocioInfringida {
   }
 }
 
+/** Un cargo que recibió saldo a favor por una aplicación manual no se da de baja: primero se quita la aplicación. */
+export class CargoConAplicacionesManuales extends ReglaDeNegocioInfringida {
+  readonly codigo = 'cargo_con_aplicaciones_manuales';
+
+  constructor(cargo: string, notas: readonly string[]) {
+    const quienes =
+      notas.length === 1 ? `la nota ${notas[0]}` : `las notas ${notas.slice(0, -1).join(', ')} y ${notas.at(-1)}`;
+    super(`El documento ${cargo} recibió saldo a favor de ${quienes}: quite primero la aplicación de ${quienes}.`);
+  }
+}
+
+/** Una nota con ajustes vigentes no se anula ni se elimina: primero se anulan sus ajustes. */
+export class NotaConAjustes extends ReglaDeNegocioInfringida {
+  readonly codigo = 'nota_con_ajustes';
+
+  constructor(nota: string) {
+    super(`La nota ${nota} tiene ajustes de saldo vigentes: anule primero el ajuste.`);
+  }
+}
+
 /** Completar solo vale para lo que está pendiente en la bandeja. */
 export class DocumentoNoPendiente extends ReglaDeNegocioInfringida {
   readonly codigo = 'documento_no_pendiente';

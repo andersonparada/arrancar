@@ -7,6 +7,9 @@ const hechos = (cambios: Partial<HechosDelDocumento> = {}): HechosDelDocumento =
   estado: 'pendiente',
   notasVigentes: 0,
   notasEnTotal: 0,
+  saldoLibreCentavos: 0,
+  ajustesVigentes: 0,
+  aplicacionesManualesRecibidas: 0,
   ...cambios,
 });
 
@@ -19,6 +22,8 @@ describe('acciones posibles de un documento por pagar', () => {
       puedeCambiarVencimiento: false,
       puedeAnular: true,
       puedeEliminar: true,
+      puedeAplicar: false,
+      puedeAjustar: false,
     });
   });
 
@@ -50,6 +55,8 @@ describe('acciones posibles de un documento por pagar', () => {
       puedeCambiarVencimiento: false,
       puedeAnular: false,
       puedeEliminar: false,
+      puedeAplicar: false,
+      puedeAjustar: false,
     });
   });
 
@@ -79,10 +86,53 @@ describe('acciones posibles de un documento por pagar', () => {
       puedeCambiarVencimiento: true,
       puedeAnular: false,
       puedeEliminar: false,
+      puedeAplicar: false,
+      puedeAjustar: false,
     });
     expect(accionesDelDocumento(hechos({ origen: 'saldo_inicial', estado: 'autorizado' }))).toMatchObject({
       puedeDesautorizar: true,
       puedeAnular: false,
+    });
+  });
+});
+
+describe('acciones de una nota de crédito con saldo libre y de lo que la ata', () => {
+  const nota = { tipo: 'nota_de_credito' as const, estado: 'registrado' as const, saldoLibreCentavos: 500 };
+
+  it('con saldo libre se aplica y, registrada o autorizada, se ajusta', () => {
+    expect(accionesDelDocumento(hechos(nota))).toMatchObject({ puedeAplicar: true, puedeAjustar: true });
+    expect(accionesDelDocumento(hechos({ ...nota, estado: 'autorizado' }))).toMatchObject({
+      puedeAplicar: true,
+      puedeAjustar: true,
+    });
+  });
+
+  it('pendiente se aplica pero no se ajusta', () => {
+    expect(accionesDelDocumento(hechos({ ...nota, estado: 'pendiente' }))).toMatchObject({
+      puedeAplicar: true,
+      puedeAjustar: false,
+    });
+  });
+
+  it('sin saldo libre, anulada o siendo cargo no se aplica ni se ajusta', () => {
+    const ninguna = { puedeAplicar: false, puedeAjustar: false };
+
+    expect(accionesDelDocumento(hechos({ ...nota, saldoLibreCentavos: 0 }))).toMatchObject(ninguna);
+    expect(accionesDelDocumento(hechos({ ...nota, estado: 'anulado' }))).toMatchObject(ninguna);
+    expect(accionesDelDocumento(hechos({ saldoLibreCentavos: 500, estado: 'registrado' }))).toMatchObject(ninguna);
+  });
+
+  it('con ajustes vigentes la nota no se anula ni se elimina', () => {
+    expect(accionesDelDocumento(hechos({ ...nota, ajustesVigentes: 1 }))).toMatchObject({
+      puedeAnular: false,
+      puedeEliminar: false,
+    });
+  });
+
+  it('un cargo con aplicaciones manuales recibidas no se anula ni se elimina', () => {
+    expect(accionesDelDocumento(hechos({ estado: 'registrado', aplicacionesManualesRecibidas: 1 }))).toMatchObject({
+      puedeAnular: false,
+      puedeEliminar: false,
     });
   });
 });

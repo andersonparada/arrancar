@@ -37,6 +37,8 @@ export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   retenciones: string;
   neto: string;
   aplicado: string;
+  /** Solo una nota de crédito: lo dado de baja con ajustes vigentes (cero en un cargo). */
+  ajustado: string;
   saldo: string;
   /** Solo un saldo inicial (nulos en los demás): lo que faltaba pagar al corte, sin retenciones. */
   saldoAlInicio: string | null;
@@ -84,6 +86,12 @@ export interface NotaDelDocumentoDto {
 
 /** Cuánto de una nota de crédito rebajó de un cargo, con los datos para mostrar los dos. */
 export interface AplicacionDelDocumentoDto {
+  id: string;
+  forma: 'automatica' | 'manual';
+  fecha: string;
+  referencia: string | null;
+  /** Solo las manuales se quitan (el permiso lo valida el servidor al quitar). */
+  puedeQuitar: boolean;
   notaId: string;
   notaSerie: string | null;
   notaNumero: string;

@@ -12,3 +12,18 @@ export const EFECTO_DE_LA_CAUSA: Readonly<Record<CausaDeAjuste, EfectoDelAjuste>
   diferencia_menor: 'perdida',
   compensado_con_otra_cuenta: 'transitoria',
 };
+
+/** Un ajuste guardado: la baja de parte del saldo libre de una nota. Solo los `vigentes` restan del saldo libre. */
+export interface AjusteDeSaldo {
+  id: string;
+  documentoId: string;
+  montoCentavos: number;
+  /** `AAAA-MM-DD`. */
+  fecha: string;
+  causa: CausaDeAjuste;
+  motivo: string;
+  referencia: string | null;
+  estado: 'vigente' | 'anulado';
+  /** Por qué se anuló; nulo mientras esté vigente. */
+  motivoDeAnulacion: string | null;
+}

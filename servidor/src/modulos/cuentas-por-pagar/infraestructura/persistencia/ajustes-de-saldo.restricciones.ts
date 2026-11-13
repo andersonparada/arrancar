@@ -25,7 +25,7 @@ export const restriccionesDeValoresDelAjuste = (t: T) => [
   ),
 ];
 
-/** Vigente o anulado, y lo anulado trae fecha, usuario y motivo. */
+/** Vigente (sin ningún dato de anulación) o anulado (con fecha, usuario y motivo). */
 export const restriccionesDeEstadoDelAjuste = (t: T) => [
   check('ajustes_estado_valido', sql`${t.estado} in ('vigente', 'anulado')`),
   check(
@@ -34,6 +34,7 @@ export const restriccionesDeEstadoDelAjuste = (t: T) => [
   ),
   check(
     'ajustes_anulacion_completa',
-    sql`(${t.estado} = 'anulado') = (${t.anuladoEn} is not null and ${t.anuladoPor} is not null and ${t.motivoDeAnulacion} is not null)`,
+    sql`(${t.estado} = 'vigente' and ${t.anuladoEn} is null and ${t.anuladoPor} is null and ${t.motivoDeAnulacion} is null)
+      or (${t.estado} = 'anulado' and ${t.anuladoEn} is not null and ${t.anuladoPor} is not null and ${t.motivoDeAnulacion} is not null)`,
   ),
 ];
