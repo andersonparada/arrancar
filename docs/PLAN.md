@@ -1474,3 +1474,10 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   con la referencia escrita. (4) **P-U8-1:** los DTE de la bandeja de la SAT con emisión anterior a la fecha de inicio
   se **marcan** y quedan **fuera de la conciliación**; va en Libro de compras junto con U8-l (notas sobre facturas del
   sistema anterior), antes de producción con una empresa con historia.
+- **2026-11-12 — Diseño de U8-l y P-U8-1 (propuesta, falta aprobar).** `docs/modulos/diseno-u8l-notas-sobre-facturas-anteriores.md`:
+  tabla `libro_de_compras.facturas_anteriores` (una fila por factura del sistema anterior, compartida por sus notas, con
+  total, IVA y motivo para los topes y la herencia del motivo) y `documentos.factura_anterior_id` (migración `0035`); en
+  Cuentas por pagar, `documento_afectado_id` pasa a guardar el id propio (llave a `documentos.id`) y
+  `factura_del_sistema_anterior` marca la nota (migración `0005`, después de CP2-4), que se aplica sola al saldo inicial
+  si existe o queda libre / como cargo suelto si no; DTE anteriores a la fecha de inicio marcados al consultar (sin
+  migración) y en un grupo aparte de la conciliación. Preguntas U8l-a a e, P1-a y b; validación fiscal C-U8l-1 a 10.
