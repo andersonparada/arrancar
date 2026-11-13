@@ -13,4 +13,13 @@ export const configuracionDeCuentasPorPagar: readonly DefinicionConfiguracion[] 
     niveles: ['instalacion', 'empresa'],
     publica: false,
   }),
+  definirConfiguracion({
+    clave: 'cuentas-por-pagar.bancarizacion.umbral',
+    descripcion:
+      'Total (en quetzales) desde el cual compensar un cargo con una nota de crédito pide guardar por escrito el acuerdo con el proveedor (bancarización, Decreto 20-2006).',
+    esquema: z.number().positive().multipleOf(0.01),
+    predeterminado: 30000,
+    niveles: ['instalacion'],
+    publica: false,
+  }),
 ];

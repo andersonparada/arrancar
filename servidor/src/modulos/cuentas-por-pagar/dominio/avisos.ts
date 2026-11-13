@@ -6,6 +6,12 @@ export function quetzales(centavos: number): string {
   return `Q${enteros.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${decimales}`;
 }
 
+/** `AAAA-MM-DD` como `dd/mm/aaaa`, para los mensajes. */
+export function fechaLegible(fecha: string): string {
+  const [anio, mes, dia] = fecha.split('-');
+  return `${dia}/${mes}/${anio}`;
+}
+
 /**
  * Lo que se le dice a quien registra una nota de crédito que deja saldo libre: la retención ya se practicó, así que el
  * proveedor le debe esa parte a la empresa y se compensa en la próxima factura o se le pide en reintegro (U13).

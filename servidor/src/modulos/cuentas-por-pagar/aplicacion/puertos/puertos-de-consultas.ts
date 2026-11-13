@@ -123,6 +123,10 @@ export interface ConsultasDeDocumentos {
   notasDe(documento: DocumentoPorPagar): Promise<NotaDeUnDocumento[]>;
   /** Lo que el documento rebajó (si es nota de crédito) o le rebajaron (si es cargo), con los datos de los dos lados. */
   aplicacionesDe(documento: DocumentoPorPagar): Promise<AplicacionConDatos[]>;
+  /** Una aplicación con los datos de la nota y del cargo; `null` si no existe en la empresa. */
+  aplicacion(id: string): Promise<AplicacionConDatos | null>;
+  /** Los cargos vigentes del proveedor que todavía deben algo (los que una nota puede rebajar), sin orden fijo. */
+  cargosConSaldoDe(proveedorId: string): Promise<FilaDeDocumento[]>;
 }
 
 /** Las cuentas de un proveedor en la empresa activa. */

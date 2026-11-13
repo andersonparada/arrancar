@@ -81,6 +81,8 @@ export interface RepositorioDeAplicaciones {
   /** Las deshace: lo aplicado vuelve al saldo del cargo (o al saldo libre de la nota). */
   borrarDeLaNota(notaId: string): Promise<void>;
   borrarDelCargo(cargoId: string): Promise<void>;
+  /** Quita una sola aplicación (la que se hizo a mano). */
+  borrar(aplicacionId: string): Promise<void>;
 }
 
 export interface ConsultasDeCargos {
@@ -119,4 +121,20 @@ export interface DatosDeRecepcion {
 export interface PlazoPorOmision {
   /** Los meses de crédito por omisión de la empresa. */
   meses(contexto: ContextoEmpresa): Promise<number>;
+}
+
+/** Desde cuándo existe cada documento ante la ley: su recepción en Libro de compras. */
+export interface FechasDeEntrada {
+  /**
+   * La fecha de recepción (`AAAA-MM-DD`) de cada documento, por su id de aquí; `null` en un saldo inicial, que no pasó
+   * por el libro (su límite es la fecha de inicio de la empresa). Lee sin bloquear la fila del libro, para no invertir el
+   * orden de bloqueo «libro, luego Cuentas por pagar».
+   */
+  deDocumentos(ids: readonly string[]): Promise<Map<string, string | null>>;
+}
+
+/** El total desde el cual compensar un cargo pide guardar por escrito el acuerdo (bancarización, Decreto 20-2006). */
+export interface UmbralDeBancarizacion {
+  /** El umbral de la instalación, en centavos. */
+  centavos(contexto: ContextoEmpresa): Promise<number>;
 }
