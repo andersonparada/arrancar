@@ -1519,3 +1519,8 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `docs/modulos/dictamen-u8l-2026-11-12.md`): aviso si el neto de una casilla de la sección 5 del SAT-2237 queda
   negativo; la leyenda de «OC» sin «otro NIT» ni «rechazo de la SAT»; el IVA de una nota siempre se toma del DTE.
   P-U8l-1 (frase FEL 9-22) sigue abierto: necesita el documento oficial de la SAT.
+- **2026-11-13 — Seguridad de H2b decidida (S1, S2 y S10).** Fila de revisión de PDF con tope (10 en espera, 60 s, 2
+  por cuenta, 429), los PDF que genera la app con prioridad en la misma fila, y tarea diaria que borra los archivos
+  huérfanos de más de 24 horas. Plan en `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md` (solo core; va antes del
+  paso 4 de H2).
+
