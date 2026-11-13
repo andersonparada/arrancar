@@ -1,7 +1,7 @@
 import { deCentavos } from '../../core/compartido/dominio/centavos.js';
 
 /** Centavos como quetzales para un mensaje: `120000` → `Q1,200.00`. */
-function quetzales(centavos: number): string {
+export function quetzales(centavos: number): string {
   const [enteros = '0', decimales = '00'] = deCentavos(centavos).split('.');
   return `Q${enteros.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${decimales}`;
 }

@@ -12,6 +12,8 @@ export interface ResultadoDeImportacion {
   filas: number;
   guardado: boolean;
   errores: ErrorDeImportacion[];
+  /** Lo que el recurso quiere hacer notar de filas que sí se pueden importar (p. ej. un dato propuesto). */
+  avisos?: ErrorDeImportacion[];
 }
 
 /** Exportar e importar un recurso en Excel; cada `Api*` generada trae el suyo. */

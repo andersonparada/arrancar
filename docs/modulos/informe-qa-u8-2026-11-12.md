@@ -36,19 +36,28 @@ Gravedad: baja salvo que se diga otra cosa. No se encontró ningún error de din
 
 - **H1 (baja, corregido).** El aviso de cerrar la carga decía «Solo un rol con acceso total podrá reabrirla», pero se reabre con el permiso `empresas.carga-inicial.reabrir` (nada depende del tipo de rol). Ahora dice «Solo quien tenga el permiso de reabrir la carga inicial podrá reabrirla». Pasos: Empresas, Editar, Cerrar carga inicial.
 - **H2 (baja, corregido).** Al autorizar un solo documento, la confirmación decía «Se autorizarán el documento marcados». Ahora «el documento marcado» / «los N documentos marcados» (prueba nueva en `documentos-por-pagar.prueba.ts`).
-- **H3 (baja, queda).** La ventana de desautorizar dice «Factura A-1001 … por Q 5,000.00» (el total) cuando lo aprobado y el saldo son Q 3,000.00; para un saldo inicial parcialmente pagado confunde. Conviene mostrar el neto a pagar o la palabra «total». Pasos: autorizar un saldo con «saldo pendiente» menor que el total, y desautorizar.
+- **H3 (baja, corregido después).** La ventana de desautorizar dice «Factura A-1001 … por Q 5,000.00» (el total) cuando lo aprobado y el saldo son Q 3,000.00; para un saldo inicial parcialmente pagado confunde. Conviene mostrar el neto a pagar o la palabra «total». Pasos: autorizar un saldo con «saldo pendiente» menor que el total, y desautorizar.
 - **H4 (baja, corregido).** El error de largo decía «Escriba numero de 1 a 40 caracteres» (sin tilde ni artículo). Ahora «Escriba el número…» / «Escriba la serie…» (prueba nueva en `saldo-inicial.prueba.ts`).
-- **H5 (baja, queda).** Los mensajes del servidor traen el dinero sin formato (`Q2200.00`) mientras la pantalla usa `Q 2,200.00`. El error «vencimiento anterior a la emisión» y el de repetido (409) no traen campo, así que salen solo como aviso y no bajo el campo.
+- **H5 (baja, corregido después).** Los mensajes del servidor traen el dinero sin formato (`Q2200.00`) mientras la pantalla usa `Q 2,200.00`. El error «vencimiento anterior a la emisión» y el de repetido (409) no traen campo, así que salen solo como aviso y no bajo el campo.
 - **H6 (baja, queda).** Una emisión de 1900-01-01 se acepta como saldo inicial. No hay tope inferior razonable (por ejemplo, años atrás).
-- **H7 (baja, queda).** El ensayo del Excel revisa por etapas: con un proveedor inexistente y un saldo mayor al neto en la misma carga, primero muestra solo el del proveedor y, corregido ese, el otro. Con filas repetidas contra lo cargado muestra solo la primera. El usuario puede tener que subir el archivo varias veces. Lo diseñado en §5.7 («el ensayo muestra el vencimiento propuesto») no está: el ensayo solo dice «20 filas listas».
-- **H8 (baja, queda).** La hoja «Instrucciones» del Excel dice que el proveedor va por «nombre o código», sin decir que el código es el NIT; y escribe «dd/mm/aaaa» literal en lugar de la fecha de inicio real de la empresa.
-- **H9 (baja, queda).** En Empresas, si solo se cambia la fecha de inicio pero faltan los datos fiscales del libro (tipo de persona), el guardado falla con el error al principio del formulario, lejos del campo de fecha; quien edita al final del formulario no ve por qué no guardó. La ficha de la empresa tampoco muestra la fecha de inicio ni el estado de la carga (solo la ventana de edición).
+- **H7 (baja, queda en parte).** El ensayo del Excel revisa por etapas: con un proveedor inexistente y un saldo mayor al neto en la misma carga, primero muestra solo el del proveedor y, corregido ese, el otro. Con filas repetidas contra lo cargado muestra solo la primera. El usuario puede tener que subir el archivo varias veces. Lo diseñado en §5.7 («el ensayo muestra el vencimiento propuesto») no está: el ensayo solo dice «20 filas listas».
+- **H8 (baja, corregido después).** La hoja «Instrucciones» del Excel dice que el proveedor va por «nombre o código», sin decir que el código es el NIT; y escribe «dd/mm/aaaa» literal en lugar de la fecha de inicio real de la empresa.
+- **H9 (baja, corregido después).** En Empresas, si solo se cambia la fecha de inicio pero faltan los datos fiscales del libro (tipo de persona), el guardado falla con el error al principio del formulario, lejos del campo de fecha; quien edita al final del formulario no ve por qué no guardó. La ficha de la empresa tampoco muestra la fecha de inicio ni el estado de la carga (solo la ventana de edición).
 - **H10 (informativa).** El vencimiento propuesto cuando se deja vacío es un mes calendario desde la emisión (proveedores sin días de crédito), no 30 días.
 - **No probable todavía.** «Saldo del proveedor»: no existe una pantalla propia (estado de cuenta es CP5); el saldo se comprobó en la lista de Documentos y en el cuadre. Notas sobre facturas de antes del corte (hueco U8-l) siguen sin poder registrarse, como se avisa en pantalla.
 
 ## Corregido en este paso
 
 H1, H2 y H4 (textos), con sus pruebas. No se tocó nada más del código de la aplicación.
+
+## Corregido después (seguimiento de gravedad baja)
+
+- **H3:** la ventana de desautorizar dice «con saldo de Q …» (en un saldo inicial, «con saldo al inicio de Q …»), no el total.
+- **H5:** los mensajes del servidor dan el dinero con el formato de Cuentas por pagar (`Q1,000.00`, el mismo de `avisos.ts`). El error de vencimiento anterior a la emisión trae `detalles.campo = vencimiento` y el 409 del documento repetido, `numero`; la ventana los muestra bajo el campo y el ensayo del Excel los pone en la columna (el motor ahora usa `detalles.campo` de cualquier error de fila para dar la columna).
+- **H7 (solo el vencimiento propuesto):** el ensayo del Excel muestra, por fila sin vencimiento, el que se propone (`avisos` opcional en el resultado de importar, sin cambios para los demás recursos; `avisarDeFila` en `DatosDelRecurso`). **Queda** el ensayo por etapas, para decidir.
+- **H8:** la hoja «Instrucciones» dice que el código del proveedor es su NIT y da el formato de fecha con un ejemplo (15/03/2025).
+- **H9:** si el guardado falla por una sección de otro módulo (datos fiscales del libro), el error se repite junto a la fecha de inicio («No se guardó. Corrija más arriba: …»), y la ficha de la empresa muestra la fecha de inicio y el estado de la carga inicial.
+- **H6** (tope inferior de la fecha de emisión, se acepta 1900-01-01) y el ensayo por etapas del motor de Excel **siguen anotados para decidir**.
 
 ## Cómo se probó (para repetirlo)
 

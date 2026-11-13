@@ -7,6 +7,14 @@ describe('resumen de la revisión de un Excel', () => {
     expect(resumenDeRevision({ filas: 1, guardado: false, errores: [] })).toBe('1 fila lista para importar.');
   });
 
+  it('con avisos de filas listas invita a revisarlos', () => {
+    const avisos = [{ fila: 2, columna: 'Vencimiento', mensaje: 'Se propone el 15/01/2026.' }];
+
+    expect(resumenDeRevision({ filas: 1, guardado: false, errores: [], avisos })).toBe(
+      '1 fila lista para importar. Revise lo que se propone abajo.',
+    );
+  });
+
   it('con problemas los cuenta por filas y aclara que no se guardó nada', () => {
     const errores = [
       { fila: 2, columna: 'Arete', mensaje: 'Falta este dato.' },

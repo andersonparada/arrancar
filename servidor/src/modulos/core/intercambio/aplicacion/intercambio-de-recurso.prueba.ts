@@ -190,3 +190,65 @@ describe('recursos con alcance por registro', () => {
     expect(operadores).toEqual([false]);
   });
 });
+
+describe('columna del error y avisos por fila', () => {
+  class ErrorConCampo extends RecursoDuplicado {
+    override readonly codigo = 'con_campo';
+  }
+
+  function intercambioCon(extra: Partial<ConstructorParameters<typeof IntercambioDeRecurso<Animal, Animal>>[0]>) {
+    return new IntercambioDeRecurso<Animal, Animal>({
+      nombre: 'Animales',
+      columnas: COLUMNAS,
+      libro,
+      unidadDeTrabajo: new UnidadQueDeshace(guardados),
+      validar: validadorDeZod(esquema),
+      listar: async () => guardados,
+      crear: async () => undefined,
+      interpretarError: () => null,
+      ...extra,
+    });
+  }
+
+  it('si el error de la fila trae `detalles.campo`, el problema sale en esa columna', async () => {
+    const conCampo = intercambioCon({
+      crear: async () => {
+        throw new ErrorConCampo('Repetido.', { campo: 'arete' });
+      },
+    });
+
+    const { errores } = await conCampo.importar(operador, { contenido: await excelCon([['GT-01']]), ensayo: true });
+
+    expect(errores).toEqual([{ fila: 2, columna: 'Arete', mensaje: 'Repetido.' }]);
+  });
+
+  it('un campo que no es columna del archivo deja el problema en la fila entera', async () => {
+    const sinColumna = intercambioCon({
+      crear: async () => {
+        throw new ErrorConCampo('Repetido.', { campo: 'otra' });
+      },
+    });
+
+    const { errores } = await sinColumna.importar(operador, { contenido: await excelCon([['GT-01']]), ensayo: true });
+
+    expect(errores).toEqual([{ fila: 2, columna: null, mensaje: 'Repetido.' }]);
+  });
+
+  it('los avisos del recurso salen en el resultado, sin impedir importar; sin avisos no hay clave', async () => {
+    const conAviso = intercambioCon({
+      avisarDeFila: (animal) => (animal.arete === 'GT-01' ? { campo: 'nacimiento', mensaje: 'Se propone hoy.' } : null),
+    });
+    const contenido = await excelCon([['GT-01'], ['GT-02']]);
+
+    const resultado = await conAviso.importar(operador, { contenido, ensayo: false });
+    const sinAvisos = await intercambioCon({}).importar(operador, { contenido, ensayo: true });
+
+    expect(resultado).toEqual({
+      filas: 2,
+      guardado: true,
+      errores: [],
+      avisos: [{ fila: 2, columna: 'Nacimiento', mensaje: 'Se propone hoy.' }],
+    });
+    expect(sinAvisos).not.toHaveProperty('avisos');
+  });
+});

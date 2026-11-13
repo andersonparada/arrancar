@@ -1,5 +1,6 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
-import { formatearNit, formatearTelefono } from '@/modulos/core/utilidades/formato';
+import { formatearFecha, formatearFechaHora, formatearNit, formatearTelefono } from '@/modulos/core/utilidades/formato';
+import type { CargaInicial } from '../servicios/datos-de-empresa.api';
 import type { Empresa } from '../servicios/empresas.api';
 
 const SIN_REGISTRAR = 'Sin registrar';
@@ -13,3 +14,14 @@ export const detallesDeEmpresa = (empresa: Empresa): DetalleDeRegistro[] => [
   { etiqueta: 'Correo', valor: empresa.correo ?? SIN_REGISTRAR },
   { etiqueta: 'Estado', valor: empresa.activa ? 'Activa' : 'Desactivada' },
 ];
+
+/** Cuándo arranca la empresa en Arrancar y si su carga inicial sigue abierta. */
+export function detallesDeCargaInicial(carga: CargaInicial): DetalleDeRegistro[] {
+  const estado = carga.cerrada
+    ? `Cerrada${carga.cerradaEn ? ` el ${formatearFechaHora(carga.cerradaEn)}` : ''}`
+    : 'Abierta';
+  return [
+    { etiqueta: 'Fecha de inicio', valor: carga.fechaDeInicio ? formatearFecha(carga.fechaDeInicio) : SIN_REGISTRAR },
+    { etiqueta: 'Carga inicial', valor: estado },
+  ];
+}

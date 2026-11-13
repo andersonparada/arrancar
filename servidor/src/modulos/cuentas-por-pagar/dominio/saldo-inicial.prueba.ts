@@ -118,7 +118,7 @@ describe('los montos de un saldo inicial', () => {
   it('el mensaje del saldo pendiente dice el máximo en quetzales', () => {
     const exceso = datos({ retencionesCentavos: 12000, saldoPendienteCentavos: 112000 });
 
-    expect(() => prepararSaldoInicial(exceso, INICIO)).toThrow('(Q1000.00)');
+    expect(() => prepararSaldoInicial(exceso, INICIO)).toThrow('(Q1,000.00)');
   });
 
   it('las retenciones por practicar son parte de las retenciones y no cambian el saldo pendiente', () => {
@@ -151,6 +151,12 @@ describe('el vencimiento de un saldo inicial', () => {
 
   it('no puede ser anterior a la emisión', () => {
     expect(() => prepararSaldoInicial(datos({ vencimiento: '2025-12-19' }), INICIO)).toThrow(VencimientoInvalido);
+  });
+
+  it('el error de vencimiento trae el campo para marcarlo en el formulario', () => {
+    expect(() => prepararSaldoInicial(datos({ vencimiento: '2025-12-19' }), INICIO)).toThrow(
+      expect.objectContaining({ detalles: { campo: 'vencimiento' } }),
+    );
   });
 
   it('una nota de crédito no vence', () => {

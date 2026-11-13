@@ -47,7 +47,9 @@ export const esquemaDeSaldoInicialEnExcel = z.preprocess(sinVacios, esquemaSaldo
 
 /** Los textos del contador para la hoja de instrucciones (C-U8-1 a C-U8-4). */
 export const NOTAS_DE_SALDOS_INICIALES = [
-  'Cargue solo los documentos registrados en el sistema anterior que siguen pendientes de pago al cierre del día anterior a la fecha de inicio (dd/mm/aaaa). Lo emitido antes pero no registrado allá va al Libro de compras.',
+  'Cargue solo los documentos registrados en el sistema anterior que siguen pendientes de pago al cierre del día anterior a la fecha de inicio de la empresa. Lo emitido antes pero no registrado allá va al Libro de compras.',
+  'Proveedor: escríbalo como está en Proveedores o con su NIT (el código del proveedor es su NIT).',
+  'Fechas: día/mes/año con el año de cuatro cifras, por ejemplo 15/03/2025. Si deja vacío el vencimiento, el ensayo muestra el que se propone.',
   'Retenciones: todas las del documento, ya practicadas o no.',
   'Saldo pendiente: lo que falta pagarle al proveedor, sin retenciones (total menos retenciones menos lo pagado y las notas anteriores a la fecha de inicio).',
   'Retenciones por practicar: la parte de las retenciones que la empresa todavía no practicó. Es informativa: no cambia el saldo pendiente; al pagar, la empresa emite la constancia y la entera.',

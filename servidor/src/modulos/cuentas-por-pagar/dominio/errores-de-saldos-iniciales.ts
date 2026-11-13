@@ -1,4 +1,4 @@
-import { deCentavos } from '../../core/compartido/dominio/centavos.js';
+import { quetzales } from './avisos.js';
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
 
 /** `AAAA-MM-DD` como `dd/mm/aaaa`, para los mensajes. */
@@ -6,8 +6,6 @@ function fechaLegible(fecha: string): string {
   const [anio, mes, dia] = fecha.split('-');
   return `${dia}/${mes}/${anio}`;
 }
-
-const quetzales = (centavos: number): string => `Q${deCentavos(centavos)}`;
 
 /** Un dato de la solicitud que no cumple su regla; `detalles.campo` dice cuál. */
 abstract class DatoDeSaldoInicialInvalido extends DatoInvalido {

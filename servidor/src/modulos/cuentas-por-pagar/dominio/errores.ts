@@ -78,6 +78,10 @@ export class VencimientoNoEditable extends ReglaDeNegocioInfringida {
 /** El vencimiento que llegó contradice al documento: una nota de crédito no vence, y ningún cargo vence antes de emitirse. */
 export class VencimientoInvalido extends DatoInvalido {
   readonly codigo = 'vencimiento_invalido';
+
+  constructor(mensaje: string) {
+    super(mensaje, { campo: 'vencimiento' });
+  }
 }
 
 /** El motivo de una anulación o de una desautorización es obligatorio y de hasta 300 caracteres. */
