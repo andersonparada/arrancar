@@ -11,6 +11,7 @@ import type {
   RepositorioDeDocumentos,
   UmbralDeBancarizacion,
 } from '../../puertos/puertos-de-documentos.js';
+import type { TopeDeDiferenciaMenor } from '../../puertos/puertos-de-ajustes.js';
 import type { CargaInicial } from '../../puertos/puertos-de-saldos-iniciales.js';
 
 /** El recurso con que se audita quitar una aplicación. */
@@ -24,6 +25,8 @@ export interface DependenciasDeAplicaciones {
   aplicaciones: RepositorioDeAplicaciones;
   cargaInicial: CargaInicial;
   fechasDeEntrada: FechasDeEntrada;
+  /** Para la ficha que devuelve. */
+  topeDeDiferencia: TopeDeDiferenciaMenor;
   reloj: Reloj;
 }
 

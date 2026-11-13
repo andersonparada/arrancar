@@ -7,6 +7,8 @@ import { ObtenerSaldoDelProveedor } from '../aplicacion/casos-uso/consultas/obte
 import { VerBandeja } from '../aplicacion/casos-uso/consultas/ver-bandeja.js';
 import { ConsultasControlador } from '../http/consultas.controlador.js';
 import { rutasDeConsultas } from '../http/consultas.rutas.js';
+import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
+import { TopeDeDiferenciaEnConfiguracion } from '../infraestructura/tope-de-diferencia-en-configuracion.js';
 import { ConsultasDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-documentos.drizzle.js';
 import { ConsultasDeSaldosDrizzle } from '../infraestructura/persistencia/consultas-de-saldos.drizzle.js';
 
@@ -15,12 +17,17 @@ export function rutasDeConsultasComponidas(): FastifyPluginAsync {
   const { unidadDeTrabajo, reloj } = dependenciasCompartidas();
   const consultas = new ConsultasDeDocumentosDrizzle();
   const dependencias = { unidadDeTrabajo, reloj, consultas };
+  const paraLaFicha = {
+    ...dependencias,
+    cargaInicial: new CargaInicialEnMediador(),
+    topeDeDiferencia: new TopeDeDiferenciaEnConfiguracion(),
+  };
   const saldos = new ConsultasDeSaldosDrizzle();
   return rutasDeConsultas(
     new ConsultasControlador({
       bandeja: new VerBandeja(dependencias),
       listar: new ListarDocumentosPorPagar(dependencias),
-      obtener: new ObtenerDocumentoPorPagar(dependencias),
+      obtener: new ObtenerDocumentoPorPagar(paraLaFicha),
       saldoDelProveedor: new ObtenerSaldoDelProveedor({ unidadDeTrabajo, reloj, saldos }),
       proveedores: new ListarProveedoresConDocumentos({ unidadDeTrabajo, saldos }),
     }),

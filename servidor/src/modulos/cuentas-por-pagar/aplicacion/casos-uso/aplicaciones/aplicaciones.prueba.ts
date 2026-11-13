@@ -13,6 +13,7 @@ import {
   FechasDeEntradaFijas,
   UmbralFijo,
 } from '../../../pruebas/dobles-de-aplicaciones.js';
+import { TopeFijo } from '../../../pruebas/dobles-de-ajustes.js';
 import { AplicacionesEnMemoria, DocumentosEnMemoria } from '../../../pruebas/dobles-de-documentos.js';
 import { AplicarNota } from './aplicar-nota.js';
 import { ListarCargosParaAplicar } from './listar-cargos-para-aplicar.js';
@@ -43,6 +44,7 @@ beforeEach(() => {
     aplicaciones,
     cargaInicial: carga,
     fechasDeEntrada: fechas,
+    topeDeDiferencia: new TopeFijo(),
     reloj: new RelojFijo('2026-06-01'),
   });
   quitar = new QuitarAplicacion({ unidadDeTrabajo, documentos, consultas, aplicaciones, auditoria });

@@ -10,6 +10,7 @@ import { ConsultasDeDocumentosDrizzle } from '../infraestructura/persistencia/co
 import { FechasDeEntradaDrizzle } from '../infraestructura/persistencia/fechas-de-entrada.drizzle.js';
 import { RepositorioDeAplicacionesDrizzle } from '../infraestructura/persistencia/repositorio-de-aplicaciones.drizzle.js';
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
+import { TopeDeDiferenciaEnConfiguracion } from '../infraestructura/tope-de-diferencia-en-configuracion.js';
 import { UmbralDeBancarizacionEnConfiguracion } from '../infraestructura/umbral-de-bancarizacion-en-configuracion.js';
 
 /** Raíz de composición de las aplicaciones manuales de notas de crédito: cargos para aplicar, aplicar y quitar. */
@@ -25,6 +26,7 @@ function casosDeUso(): CasosDeUsoDeAplicaciones {
     consultas: new ConsultasDeDocumentosDrizzle(),
     cargaInicial: new CargaInicialEnMediador(),
     fechasDeEntrada: new FechasDeEntradaDrizzle(),
+    topeDeDiferencia: new TopeDeDiferenciaEnConfiguracion(),
   };
   const documentos = new RepositorioDeDocumentosDrizzle(aplicaciones);
   return {
