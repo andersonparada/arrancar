@@ -5,6 +5,7 @@ import { CrearSaldoInicial } from '../aplicacion/casos-uso/saldos-iniciales/crea
 import { EliminarSaldoInicial } from '../aplicacion/casos-uso/saldos-iniciales/eliminar-saldo-inicial.js';
 import { ListarSaldosIniciales } from '../aplicacion/casos-uso/saldos-iniciales/listar-saldos-iniciales.js';
 import { ObtenerSaldoInicial } from '../aplicacion/casos-uso/saldos-iniciales/obtener-saldo-inicial.js';
+import { rutasDeExcelDeSaldosIniciales } from '../http/saldos-iniciales.excel.rutas.js';
 import { SaldosInicialesControlador } from '../http/saldos-iniciales.controlador.js';
 import { rutasDeSaldosIniciales } from '../http/saldos-iniciales.rutas.js';
 import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
@@ -15,11 +16,11 @@ import { RepositorioDeAplicacionesDrizzle } from '../infraestructura/persistenci
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { RepositorioDeSaldosInicialesDrizzle } from '../infraestructura/persistencia/repositorio-de-saldos-iniciales.drizzle.js';
 import { PlazoPorOmisionEnConfiguracion } from '../infraestructura/plazo-por-omision-en-configuracion.js';
+import { intercambioDeSaldosIniciales } from './saldos-iniciales-excel.js';
 
-/** Raíz de composición de los saldos iniciales: cargar, corregir, eliminar y consultar (el Excel y el cuadre, después). */
-export function rutasDeSaldosInicialesComponidas(): FastifyPluginAsync {
+function dependenciasDeSaldosIniciales() {
   const { unidadDeTrabajo, reloj, auditoria } = dependenciasCompartidas();
-  const dependencias = {
+  return {
     unidadDeTrabajo,
     reloj,
     auditoria,
@@ -31,13 +32,25 @@ export function rutasDeSaldosInicialesComponidas(): FastifyPluginAsync {
     condiciones: new CondicionesDeProveedoresDrizzle(),
     plazo: new PlazoPorOmisionEnConfiguracion(),
   };
-  return rutasDeSaldosIniciales(
-    new SaldosInicialesControlador({
-      crear: new CrearSaldoInicial(dependencias),
-      corregir: new CorregirSaldoInicial(dependencias),
-      eliminar: new EliminarSaldoInicial(dependencias),
-      listar: new ListarSaldosIniciales(dependencias),
-      obtener: new ObtenerSaldoInicial(dependencias),
-    }),
-  );
+}
+
+type Dependencias = ReturnType<typeof dependenciasDeSaldosIniciales>;
+
+const casosDeUso = (dependencias: Dependencias) => ({
+  crear: new CrearSaldoInicial(dependencias),
+  corregir: new CorregirSaldoInicial(dependencias),
+  eliminar: new EliminarSaldoInicial(dependencias),
+  listar: new ListarSaldosIniciales(dependencias),
+  obtener: new ObtenerSaldoInicial(dependencias),
+});
+
+/** Raíz de composición de los saldos iniciales: cargar, corregir, eliminar, consultar y el Excel (el cuadre, después). */
+export function rutasDeSaldosInicialesComponidas(): FastifyPluginAsync {
+  const casos = casosDeUso(dependenciasDeSaldosIniciales());
+  const rutas = rutasDeSaldosIniciales(new SaldosInicialesControlador(casos));
+  const excel = rutasDeExcelDeSaldosIniciales(intercambioDeSaldosIniciales(casos));
+  return async (app) => {
+    await app.register(rutas);
+    await app.register(excel);
+  };
 }

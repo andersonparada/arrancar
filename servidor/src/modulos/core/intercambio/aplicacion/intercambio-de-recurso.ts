@@ -40,6 +40,8 @@ export interface DatosDelRecurso<Registro, Solicitud, Filtro = void> {
    * alcance por registro, que se reparten luego desde su ventana de accesos.
    */
   sinAsignarAlCrear?: boolean;
+  /** Avisos al final de la hoja de instrucciones, uno por fila, para lo que las columnas no explican. */
+  notasDeInstrucciones?: string[];
 }
 
 /** Lo que pone el core, igual para todos los recursos. */
@@ -167,7 +169,7 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
       nombre,
       encabezados: columnas.map((columna) => columna.titulo),
       filas,
-      instrucciones: instruccionesDe(columnas),
+      instrucciones: instruccionesDe(columnas, this.dependencias.notasDeInstrucciones),
     });
   }
 }
