@@ -6,7 +6,7 @@ import { resumenDeRevision, ubicacionDelError } from '../../composables/intercam
 import BotonBase from '../BotonBase.vue';
 import VentanaModal from '../VentanaModal.vue';
 
-/** Importar desde Excel: bajar la plantilla, elegir el archivo, ver la revisión e importar. */
+/** Importar desde Excel: bajar la plantilla, elegir el archivo, ver la revisión e importar. El slot `aviso` agrega una advertencia propia del recurso. */
 const props = defineProps<{ estado: EstadoDeImportacion; titulo: string }>();
 const emit = defineEmits<{ elegir: [archivo: File]; plantilla: []; importar: []; cerrar: [] }>();
 
@@ -25,6 +25,7 @@ function alElegir(evento: Event): void {
         Llene la plantilla (la segunda hoja explica cada columna) y súbala. Primero se revisa todo; no se guarda nada
         hasta que usted confirme, y si una fila tiene problemas no se guarda ninguna.
       </p>
+      <slot name="aviso" />
       <BotonBase variante="fantasma" pequeno :icono="FileSpreadsheet" @click="emit('plantilla')">
         Descargar la plantilla
       </BotonBase>
