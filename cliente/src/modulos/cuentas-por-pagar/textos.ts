@@ -15,6 +15,11 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     descripcion: 'Lo que se debe a los proveedores: busque, autorice y revise cada documento con su saldo.',
     ficha: 'Documento por pagar',
   },
+  saldosIniciales: {
+    titulo: 'Saldos iniciales',
+    descripcion: 'Lo que la empresa debía a sus proveedores al cierre del día anterior a la fecha de inicio.',
+    nuevo: 'Nuevo saldo inicial',
+  },
   // generador: ventanas
 } as const;
 
@@ -55,3 +60,24 @@ export const AYUDA_DE_ANULAR =
   'Esto anula únicamente el registro en Arrancar (en Cuentas por pagar y en el libro de compras), no la factura en la SAT. Solo su emisor puede anularla allá. Si hubo una devolución o un descuento, use una nota de crédito.';
 
 export const MAXIMO_DEL_MOTIVO = 300;
+
+/** Textos del contador (C-U8-1 a C-U8-5) para la ventana de saldos iniciales. */
+export const AVISO_DE_LO_QUE_SE_CARGA =
+  'Cargue solo documentos registrados en el sistema anterior que siguen pendientes de pago al cierre del día anterior a la fecha de inicio. Lo emitido antes pero no registrado allá va al Libro de compras.';
+
+export const AVISO_DE_NOTAS_POSTERIORES =
+  'Las notas de crédito o de débito recibidas desde la fecha de inicio sobre estos documentos todavía no se pueden registrar: no corrija el saldo pendiente por ellas.';
+
+export const AYUDA_DE_REFERENCIA = 'Cómo se llamaba el documento en el sistema anterior (opcional).';
+export const AYUDA_DE_VENCIMIENTO =
+  'Vacío es según los días de crédito del proveedor; mejor escriba el real si lo conoce. Puede ser anterior a la fecha de inicio si ya venció.';
+export const AYUDA_DE_RETENCIONES = 'Todas las retenciones del documento, ya practicadas o no.';
+export const AYUDA_DE_RETENCIONES_POR_PRACTICAR =
+  'La parte de las retenciones que la empresa todavía no practicó. No cambia el saldo pendiente.';
+export const AYUDA_DE_SALDO_PENDIENTE =
+  'Lo que falta pagarle al proveedor, sin retenciones: total menos retenciones, menos lo pagado y las notas anteriores a la fecha de inicio.';
+export const AYUDA_DEL_TIPO =
+  'Una nota de crédito se carga con su saldo a favor. Un anticipo a proveedor no es una nota de crédito: no se carga aquí.';
+
+export const AYUDA_DEL_CUADRE =
+  'Compare estos totales con el balance de apertura: cargos menos notas a favor contra Proveedores; las retenciones por practicar, contra Retenciones por pagar si los libros anteriores llevaban Proveedores sin descontarlas.';

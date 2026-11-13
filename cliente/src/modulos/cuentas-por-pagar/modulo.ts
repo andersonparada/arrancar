@@ -1,4 +1,4 @@
-import { FileClock, HandCoins, Inbox } from 'lucide-vue-next';
+import { FileClock, HandCoins, Inbox, Scale } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_CUENTAS_POR_PAGAR, TITULO_SECCION_DE_PAGO, VENTANAS_CUENTAS_POR_PAGAR } from './textos';
 // generador: importaciones
@@ -25,6 +25,15 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       component: () => import('./paginas/FichaDelDocumentoPorPagar.vue'),
       props: ({ params }) => ({ documentoId: String(params.documentoId) }),
       meta: { permiso: 'cuentas-por-pagar.documentos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.documentos.ficha },
+    },
+    {
+      path: '/cuentas-por-pagar/saldos-iniciales',
+      name: 'cuentas-por-pagar.saldos-iniciales',
+      component: () => import('./paginas/SaldosIniciales.vue'),
+      meta: {
+        permiso: 'cuentas-por-pagar.saldos-iniciales.ver',
+        titulo: VENTANAS_CUENTAS_POR_PAGAR.saldosIniciales.titulo,
+      },
     },
     // generador: rutas
   ],
@@ -57,6 +66,13 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           icono: FileClock,
           seccion: 'operacion',
           permiso: 'cuentas-por-pagar.documentos.ver',
+        },
+        {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.saldosIniciales.titulo,
+          ruta: '/cuentas-por-pagar/saldos-iniciales',
+          icono: Scale,
+          seccion: 'administracion',
+          permiso: 'cuentas-por-pagar.saldos-iniciales.ver',
         },
         // generador: menu
       ],

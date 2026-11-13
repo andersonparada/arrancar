@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ExternalLink } from 'lucide-vue-next';
-import { RouterLink, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import AccionesDeLaFicha from '../componentes/AccionesDeLaFicha.vue';
+import EnlacesDeLaFicha from '../componentes/EnlacesDeLaFicha.vue';
 import AvisoDeLoPropio from '../componentes/AvisoDeLoPropio.vue';
 import NotasYAplicaciones from '../componentes/NotasYAplicaciones.vue';
 import SeccionDeFicha from '../componentes/SeccionDeFicha.vue';
@@ -81,15 +81,7 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
       <DatosDelRegistro :detalles="detallesDeAnulacion(ficha)" />
     </SeccionDeFicha>
     <NotasYAplicaciones :ficha="ficha" />
-    <RouterLink
-      v-if="ficha.documentoId"
-      v-permiso="'libro-de-compras.documentos.ver'"
-      :to="{ name: 'libro-de-compras.documentos.ficha', params: { documentoId: ficha.documentoId } }"
-      class="inline-flex items-center gap-1.5 text-sm font-medium text-campo-700 underline dark:text-campo-300"
-    >
-      <ExternalLink class="size-4" aria-hidden="true" />
-      Ver el registro en el libro de compras
-    </RouterLink>
+    <EnlacesDeLaFicha :ficha="ficha" />
 
     <VentanaDeDesautorizacion
       v-model="acciones.desautorizacion.edicion.value"
