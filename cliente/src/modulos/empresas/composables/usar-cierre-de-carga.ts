@@ -6,7 +6,7 @@ import { RECORDATORIO_DE_CUADRE } from './datos-de-empresa';
 import { apiDatosDeEmpresa, type CargaInicial } from '../servicios/datos-de-empresa.api';
 
 const avisoDelCierre = (fechaDeInicio: string | null) =>
-  `La fecha de inicio (${formatearFecha(fechaDeInicio)}) quedará fija y ya no se podrán registrar saldos iniciales. Solo un rol con acceso total podrá reabrirla, indicando el motivo. ${RECORDATORIO_DE_CUADRE}`;
+  `La fecha de inicio (${formatearFecha(fechaDeInicio)}) quedará fija y ya no se podrán registrar saldos iniciales. Solo quien tenga el permiso de reabrir la carga inicial podrá reabrirla, indicando el motivo. ${RECORDATORIO_DE_CUADRE}`;
 
 /** Cerrar la carga inicial de la empresa que se edita, con confirmación que explica lo que va a pasar. */
 export function usarCierreDeCarga(empresaId: () => string | null, carga: Ref<CargaInicial | null>) {

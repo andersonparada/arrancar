@@ -100,7 +100,7 @@ export const documentoYaCambio = (error: unknown): boolean =>
 export function resumenDeAutorizacion(documentos: readonly DocumentoPorPagar[]): string {
   const cargos = documentos.filter(({ clase }) => clase === 'cargo');
   const centavos = cargos.reduce((suma, { saldo }) => suma + Math.round(Number(saldo) * 100), 0);
-  const cuantos = documentos.length === 1 ? 'el documento' : `los ${documentos.length} documentos`;
+  const cuantos = documentos.length === 1 ? 'el documento marcado' : `los ${documentos.length} documentos marcados`;
   const aprobado = cargos.length > 0 ? ` Se aprueban a pagar ${formatearMonto((centavos / 100).toFixed(2))}.` : '';
-  return `Se autorizarán ${cuantos} marcados.${aprobado}`;
+  return `Se autorizarán ${cuantos}.${aprobado}`;
 }

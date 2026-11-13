@@ -66,6 +66,11 @@ describe('serie, número y referencia', () => {
     expect(limpiarNumero('9'.repeat(40))).toHaveLength(40);
   });
 
+  it('el mensaje del largo habla en español, con tilde y con artículo', () => {
+    expect(() => limpiarNumero('9'.repeat(41))).toThrow('Escriba el número de 1 a 40 caracteres.');
+    expect(() => limpiarSerie('A'.repeat(41))).toThrow('Escriba la serie de 1 a 40 caracteres.');
+  });
+
   it('la referencia se recorta, vacía es nula y no pasa de 60', () => {
     expect(limpiarReferencia('  Póliza 2025-12-0345 línea 12  ')).toBe('Póliza 2025-12-0345 línea 12');
     expect(limpiarReferencia('   ')).toBeNull();

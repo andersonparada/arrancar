@@ -253,8 +253,12 @@ describe('autorización', () => {
       documento({ clase: 'abono', saldo: '9.00' }),
     ];
     const resumen = resumenDeAutorizacion(lote);
-    expect(resumen).toContain('los 3 documentos');
+    expect(resumen).toContain('los 3 documentos marcados.');
     expect(resumen).toContain('150.75');
+  });
+
+  it('con un solo documento dice «el documento marcado», no «marcados»', () => {
+    expect(resumenDeAutorizacion([documento({ saldo: '10.00' })])).toContain('Se autorizarán el documento marcado.');
   });
 
   it('con solo notas de crédito no habla de montos a pagar', () => {
