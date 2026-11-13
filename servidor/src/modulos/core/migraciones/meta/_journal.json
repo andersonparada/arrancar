@@ -162,6 +162,13 @@
       "when": 1791225219582,
       "tag": "0022_calendario_de_feriados",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794601923696,
+      "tag": "0023_rutas_de_archivos_registradas",
+      "breakpoints": true
     }
   ]
 }
