@@ -1513,3 +1513,9 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `docs/modulos/diseno-h2-evidencia-de-conciliacion.md` §13: P1 A (columna `previa_al_saldo_transcrito`), P3 sí (las
   elaboradas sin archivo se autorizan), P4 no (adjunta solo quien elabora), P5 sí (ícono en la lista); P2 sin respuesta,
   se sigue con lo recomendado. Se programan los pasos 2 y 3 (H2a, saldo transcrito); el paso 4 espera S1, S2 y S10.
+- **2026-11-13 — P-U8l-2 aprobado por el usuario.** «No dio crédito por otra causa» (`otra_causa_sin_credito`) también
+  se puede marcar a mano en las **facturas** del libro, con **detalle obligatorio** y auditoría (se quita el check que
+  lo limitaba a notas sobre factura anterior). Con los ajustes del contador (adenda del 2026-11-13 en
+  `docs/modulos/dictamen-u8l-2026-11-12.md`): aviso si el neto de una casilla de la sección 5 del SAT-2237 queda
+  negativo; la leyenda de «OC» sin «otro NIT» ni «rechazo de la SAT»; el IVA de una nota siempre se toma del DTE.
+  P-U8l-1 (frase FEL 9-22) sigue abierto: necesita el documento oficial de la SAT.

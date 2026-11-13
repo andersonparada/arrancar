@@ -316,6 +316,12 @@ Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/work
 (`BD_PRUEBAS`) y el `.env` copiado (para `RUTA_QPDF`); se une a `main` con las pruebas completas en verde. Si
 `localhost:5433` da `ECONNRESET`, son puentes de Docker huérfanos (borrarlos en esta WSL o `wsl --shutdown`).
 
+## Pendiente del usuario (fuera de la app)
+
+- **P-U8l-1, frase FEL 9-22:** bajar del portal FEL de la SAT (con sesión) las «Reglas y Validaciones» vigentes y el
+  catálogo de frases y escenarios, o preguntar a la mesa de ayuda de la SAT el texto y el efecto del escenario 22 en
+  las NCRE emitidas desde el tercer mes siguiente al de la factura. El portal técnico respondió 403 a los agentes.
+
 ## Preguntas abiertas para el usuario
 
 Ninguna que bloquee. Todas las del 2026-09-29 están respondidas y registradas en los
