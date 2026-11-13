@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
-import { conceptoGeneral } from './soporte/escenarios-de-bancos.js';
+import { conceptoGeneral, terminarConciliacionConSaldo } from './soporte/escenarios-de-bancos.js';
 
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
@@ -89,7 +89,7 @@ describe('conciliaciones por API', () => {
     });
 
     // Termina el propietario: pasa a elaborada.
-    const terminada = await cuenta.propietario.post(`/api/bancos/conciliaciones/${conciliacionId}/terminar`, {});
+    const terminada = await terminarConciliacionConSaldo(cuenta.propietario, conciliacionId);
     expect(terminada.estado).toBe(200);
     expect(terminada.cuerpo.estado).toBe('elaborada');
 
@@ -151,7 +151,7 @@ describe('conciliaciones por API', () => {
       mes: 3,
     });
     const conciliacionId = iniciada.cuerpo.id as string;
-    await cuenta.propietario.post(`/api/bancos/conciliaciones/${conciliacionId}/terminar`, {});
+    await terminarConciliacionConSaldo(cuenta.propietario, conciliacionId);
 
     const devuelta = await autoriza.post(`/api/bancos/conciliaciones/${conciliacionId}/devolver`, {
       motivo: 'Revisar',

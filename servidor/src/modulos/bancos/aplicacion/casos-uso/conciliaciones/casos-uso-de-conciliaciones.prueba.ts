@@ -17,6 +17,7 @@ import {
   inicio,
   operador,
   otroOperador,
+  terminarConSaldo,
 } from './soporte-de-pruebas-de-conciliaciones.js';
 
 let entorno: ReturnType<typeof casosDeUsoDeConciliaciones>;
@@ -56,7 +57,7 @@ describe('iniciar', () => {
       HayUnaConciliacionAbierta,
     );
 
-    await entorno.casos.terminar.ejecutar(operador, primera.id);
+    await terminarConSaldo(entorno.casos, operador, primera.id);
     await expect(entorno.casos.iniciar.ejecutar(operador, inicio({ mes: 2 }))).rejects.toThrow(
       HayUnaConciliacionAbierta,
     );
@@ -145,7 +146,7 @@ describe('marcar: candidatos, partidas y saldo calculado', () => {
 
   it('no se pueden cambiar las marcas si ya no está en proceso', async () => {
     const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
-    await entorno.casos.terminar.ejecutar(operador, conciliacion.id);
+    await terminarConSaldo(entorno.casos, operador, conciliacion.id);
 
     await expect(
       entorno.casos.marcar.ejecutar(operador, { conciliacionId: conciliacion.id, movimientoIds: [] }),
@@ -157,7 +158,7 @@ describe('terminar y autorizar', () => {
   it('termina: pasa a elaborada y guarda quién', async () => {
     const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
 
-    const terminada = await entorno.casos.terminar.ejecutar(operador, conciliacion.id);
+    const terminada = await terminarConSaldo(entorno.casos, operador, conciliacion.id);
 
     expect(terminada.estado).toBe('elaborada');
     expect(terminada.elaboradaPorNombre).toBeNull(); // el doble en memoria no resuelve nombres.
@@ -165,7 +166,7 @@ describe('terminar y autorizar', () => {
 
   it('quien elaboró la conciliación no la puede autorizar', async () => {
     const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
-    await entorno.casos.terminar.ejecutar(operador, conciliacion.id);
+    await terminarConSaldo(entorno.casos, operador, conciliacion.id);
 
     await expect(entorno.casos.autorizar.ejecutar(operador, conciliacion.id)).rejects.toThrow(AutorizaQuienElaboro);
   });
@@ -173,7 +174,7 @@ describe('terminar y autorizar', () => {
   it('el superacceso (soporte) sí puede autorizar lo que él mismo elaboró', async () => {
     const soporte = { ...operador, esSuperacceso: true };
     const conciliacion = await entorno.casos.iniciar.ejecutar(soporte, inicio());
-    await entorno.casos.terminar.ejecutar(soporte, conciliacion.id);
+    await terminarConSaldo(entorno.casos, soporte, conciliacion.id);
 
     const autorizada = await entorno.casos.autorizar.ejecutar(soporte, conciliacion.id);
 
@@ -184,7 +185,7 @@ describe('terminar y autorizar', () => {
     const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
     const idSaldoInicial = conciliacion.candidatos[0]!.id;
     await entorno.casos.marcar.ejecutar(operador, { conciliacionId: conciliacion.id, movimientoIds: [idSaldoInicial] });
-    await entorno.casos.terminar.ejecutar(operador, conciliacion.id);
+    await terminarConSaldo(entorno.casos, operador, conciliacion.id);
 
     const autorizada = await entorno.casos.autorizar.ejecutar(otroOperador, conciliacion.id);
 
@@ -208,7 +209,7 @@ describe('devolver', () => {
   it('regresa a en proceso, con motivo, y se puede volver a marcar', async () => {
     const conciliacion = await entorno.casos.iniciar.ejecutar(operador, inicio());
     const idSaldoInicial = conciliacion.candidatos[0]!.id;
-    await entorno.casos.terminar.ejecutar(operador, conciliacion.id);
+    await terminarConSaldo(entorno.casos, operador, conciliacion.id);
 
     const devuelta = await entorno.casos.devolver.ejecutar(otroOperador, {
       conciliacionId: conciliacion.id,

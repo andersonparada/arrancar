@@ -80,7 +80,7 @@ const aplicacionDto = ({
   monto: deCentavos(montoCentavos),
 });
 
-const ajusteDto = ({ montoCentavos, documentoId: _documentoId, ...resto }: AjusteDeSaldo): AjusteDto => ({
+export const ajusteDto = ({ montoCentavos, documentoId: _documentoId, ...resto }: AjusteDeSaldo): AjusteDto => ({
   ...resto,
   monto: deCentavos(montoCentavos),
 });

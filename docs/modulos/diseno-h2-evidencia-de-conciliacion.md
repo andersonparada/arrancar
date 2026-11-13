@@ -371,5 +371,12 @@ pueden autorizar?**
 - **P2: sin respuesta.** Se sigue con lo recomendado (no auditar cada cambio del saldo en proceso;
   sí quitar o reemplazar el archivo). Se puede cambiar después sin migrar datos.
 
-Con esto los pasos 2 y 3 (H2a) quedan listos para programar. El paso 4 (H2b, archivo) sigue
-esperando las decisiones de seguridad S1, S2 y S10.
+Con esto los pasos 2 y 3 (H2a) quedan listos para programar. Las decisiones de seguridad S1, S2 y S10 (también del
+2026-11-13) y su plan están en `plan-h2-cola-de-qpdf-y-huerfanos.md`, que va antes del paso 4.
+
+## Notas de implementación del paso 2 (servidor, 2026-11-13)
+
+- Migración `0030_h2_saldo_del_estado_de_cuenta`: el `UPDATE` de las previas va antes de los `ADD CONSTRAINT`.
+- `Conciliacion.elaborar(usuarioId, { saldoCalculado })`: el objeto de evidencia crece en el paso 4 con el archivo.
+- `PUT /bancos/conciliaciones/:id/saldo-del-estado-de-cuenta` con `{ saldoEstadoDeCuenta: "1250.50" | null }`; `ConciliacionDto` trae `saldoEstadoDeCuenta`, `diferenciaConElEstadoDeCuenta` y `previaAlSaldoTranscrito`. `tieneEstadoDeCuenta` y `estadoDeCuenta` quedan para el paso 4.
+- P1 = A y P2 = no (el saldo en proceso no se audita; devolver y eliminar conservan el `anterior`).

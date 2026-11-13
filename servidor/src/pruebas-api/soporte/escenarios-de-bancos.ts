@@ -61,6 +61,20 @@ export async function conceptoGeneral(usuario: ClienteApi): Promise<string> {
   return creado.cuerpo.id as string;
 }
 
+/**
+ * Transcribe el saldo que muestra el estado de cuenta (el calculado con las marcas actuales) y termina la
+ * conciliación. Devuelve la respuesta de terminar.
+ */
+export async function terminarConciliacionConSaldo(usuario: ClienteApi, conciliacionId: string) {
+  const ruta = `/api/bancos/conciliaciones/${conciliacionId}`;
+  const { cuerpo } = await usuario.get(ruta);
+  const saldo = await usuario.put(`${ruta}/saldo-del-estado-de-cuenta`, {
+    saldoEstadoDeCuenta: cuerpo.saldoQueDebeMostrarElEstadoDeCuenta,
+  });
+  if (saldo.estado !== 200) throw new Error(`No se pudo transcribir el saldo: ${saldo.estado}`);
+  return usuario.post(`${ruta}/terminar`, {});
+}
+
 /** El id del concepto de sistema con esa clave (`sin_clasificar`, `transferencia`, `saldo_inicial`…). */
 export async function conceptoDeSistema(usuario: ClienteApi, clave: string): Promise<{ id: string; nombre: string }> {
   const lista = await usuario.get('/api/bancos/conceptos');

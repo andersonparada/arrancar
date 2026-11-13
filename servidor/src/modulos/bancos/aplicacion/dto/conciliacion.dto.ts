@@ -43,6 +43,12 @@ export interface ConciliacionDto {
   cuadratica: { libros: Cuadratica; banco: Cuadratica };
   partidas: PartidasDeConciliacion;
   saldoQueDebeMostrarElEstadoDeCuenta: string;
+  /** El saldo final del estado de cuenta del banco, transcrito por quien elabora; `null` si falta. */
+  saldoEstadoDeCuenta: string | null;
+  /** Calculado menos transcrito; `null` sin saldo. En las autorizadas, contra la foto. */
+  diferenciaConElEstadoDeCuenta: string | null;
+  /** Elaborada o autorizada antes de que se pidiera el saldo: no tiene saldo transcrito. */
+  previaAlSaldoTranscrito: boolean;
 }
 
 /** Lo que se recibe para iniciar una conciliación: ya no se escribe ningún saldo. */

@@ -1,0 +1,6 @@
+ALTER TABLE "bancos"."conciliaciones" ADD COLUMN "saldo_estado_de_cuenta" numeric(14, 2);--> statement-breakpoint
+ALTER TABLE "bancos"."conciliaciones" ADD COLUMN "previa_al_saldo_transcrito" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+UPDATE bancos.conciliaciones SET previa_al_saldo_transcrito = true WHERE estado <> 'en_proceso';--> statement-breakpoint
+ALTER TABLE "bancos"."conciliaciones" ADD CONSTRAINT "conciliaciones_saldo_al_terminar" CHECK ("bancos"."conciliaciones"."previa_al_saldo_transcrito" or "bancos"."conciliaciones"."estado" = 'en_proceso' or "bancos"."conciliaciones"."saldo_estado_de_cuenta" is not null);--> statement-breakpoint
+ALTER TABLE "bancos"."conciliaciones" ADD CONSTRAINT "conciliaciones_saldo_coincide_al_autorizar" CHECK ("bancos"."conciliaciones"."previa_al_saldo_transcrito" or "bancos"."conciliaciones"."estado" <> 'autorizada' or "bancos"."conciliaciones"."saldo_estado_de_cuenta" = "bancos"."conciliaciones"."foto_saldo_calculado_estado_de_cuenta");--> statement-breakpoint
+ALTER TABLE "bancos"."conciliaciones" ADD CONSTRAINT "conciliaciones_previa_no_en_proceso" CHECK (not "bancos"."conciliaciones"."previa_al_saldo_transcrito" or "bancos"."conciliaciones"."estado" <> 'en_proceso');

@@ -35,8 +35,8 @@ function columnasDeLaFoto(foto: FotoDelCalculo | null) {
 }
 
 function propiedadesDeLaEntidad(fila: Fila) {
-  const { id, empresaId, cuentaBancariaId, anio, mes, estado, elaboradaPor, elaboradaEn, autorizadaPor, autorizadaEn } =
-    fila;
+  const { id, empresaId, cuentaBancariaId, anio, mes, estado, elaboradaPor, elaboradaEn } = fila;
+  const { autorizadaPor, autorizadaEn, saldoEstadoDeCuenta, previaAlSaldoTranscrito } = fila;
   return {
     id: Identificador.desde<'Conciliacion'>(id),
     empresaId: Identificador.desde<'Empresa'>(empresaId),
@@ -48,6 +48,8 @@ function propiedadesDeLaEntidad(fila: Fila) {
     elaboradaEn,
     autorizadaPor,
     autorizadaEn,
+    saldoEstadoDeCuenta,
+    previaAlSaldoTranscrito,
   };
 }
 

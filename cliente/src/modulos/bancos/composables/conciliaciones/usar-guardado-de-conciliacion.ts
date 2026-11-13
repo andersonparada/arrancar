@@ -14,6 +14,13 @@ export function usarGuardadoDeConciliacion(conciliacion: Ref<Conciliacion | null
     return enviar(async () => (conciliacion.value = await apiConciliaciones.guardarMarcas(id, [...marcados])));
   }
 
+  /** Guarda el saldo transcrito; el servidor devuelve el documento con la comparación ya calculada. */
+  async function guardarSaldo(saldo: string | null): Promise<void> {
+    const id = conciliacion.value?.id;
+    if (!id || enviando.value) return;
+    await enviar(async () => (conciliacion.value = await apiConciliaciones.transcribirSaldo(id, saldo)));
+  }
+
   async function terminar(): Promise<void> {
     const id = conciliacion.value?.id;
     if (!id || !(await enviar(async () => (conciliacion.value = await apiConciliaciones.terminar(id))))) return;
@@ -26,5 +33,5 @@ export function usarGuardadoDeConciliacion(conciliacion: Ref<Conciliacion | null
     avisos.exito('Conciliación autorizada: el mes queda bloqueado.');
   }
 
-  return { guardando: enviando, errores, guardarMarcas, terminar, autorizar };
+  return { guardando: enviando, errores, guardarMarcas, guardarSaldo, terminar, autorizar };
 }

@@ -22,4 +22,13 @@ export const configuracionDeCuentasPorPagar: readonly DefinicionConfiguracion[] 
     niveles: ['instalacion'],
     publica: false,
   }),
+  definirConfiguracion({
+    clave: 'cuentas-por-pagar.ajustes.tope_diferencia_menor',
+    descripcion:
+      'Monto máximo (en quetzales) de un ajuste con causa «Diferencia menor» al dar de baja el saldo a favor de una nota de crédito. Con 0 esa causa no se puede usar.',
+    esquema: z.number().nonnegative().multipleOf(0.01),
+    predeterminado: 25,
+    niveles: ['instalacion', 'empresa'],
+    publica: false,
+  }),
 ];

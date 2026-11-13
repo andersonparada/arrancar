@@ -290,7 +290,7 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    de compras para facturas anteriores a la fecha de inicio; cliente U8-9 a U8-11, incluido Empresas; QA U8-12).
    Pendiente sin frenar: P-U8-1 (DTE anteriores a la fecha de inicio en la bandeja). U8-l (notas sobre facturas de
    antes del corte) va en Libro de compras después de U8 y antes de producción con una empresa con historia.
-   **En curso:** U8-1 (datos), U8-2 (dos orígenes), **Servidor de U8 completo** (U8-1 a U8-8) y U8-9 en `main` con todas las pruebas en verde (servidor 3569, cliente 882, generador 46). U8-10 (ventana de Administración) y U8-11 (Empresas) también en `main`: **U8 programado completo**. QA U8-12 hecha (`docs/modulos/informe-qa-u8-2026-11-12.md`: sin errores de dinero ni de seguridad; pendientes de gravedad baja en corrección). **Decidido el 2026-11-12** (bitácora de PLAN): emisión de un saldo inicial hasta 10 años antes de la fecha de inicio; ensayo del Excel en una sola pasada para todos los recursos; adjuntos de CP2 más adelante; P-U8-1: DTE anteriores a la fecha de inicio marcados y fuera de la conciliación (con U8-l, en diseño). **CP2 en programación:** CP2-1 (datos), CP2-2 (saldo libre y reglas de baja) y CP2-3 (aplicar y quitar a mano) en `main` con todas las pruebas en verde (servidor 3660, cliente 911, generador 46); CP2-4 (ajustes) en curso. **U8-l** diseñado y aprobado (`diseno-u8l-notas-sobre-facturas-anteriores.md`); P1-1 en curso.
+   **En curso:** U8-1 (datos), U8-2 (dos orígenes), **Servidor de U8 completo** (U8-1 a U8-8) y U8-9 en `main` con todas las pruebas en verde (servidor 3569, cliente 882, generador 46). U8-10 (ventana de Administración) y U8-11 (Empresas) también en `main`: **U8 programado completo**. QA U8-12 hecha (`docs/modulos/informe-qa-u8-2026-11-12.md`: sin errores de dinero ni de seguridad; pendientes de gravedad baja en corrección). **Decidido el 2026-11-12** (bitácora de PLAN): emisión de un saldo inicial hasta 10 años antes de la fecha de inicio; ensayo del Excel en una sola pasada para todos los recursos; adjuntos de CP2 más adelante; P-U8-1: DTE anteriores a la fecha de inicio marcados y fuera de la conciliación (con U8-l, en diseño). **CP2 en programación:** CP2-1 (datos), CP2-2 (saldo libre y reglas de baja) y CP2-3 (aplicar y quitar a mano) en `main` con todas las pruebas en verde (servidor 3660, cliente 911, generador 46); CP2-4 (ajustes) en curso. **U8-l** diseñado y aprobado (`diseno-u8l-notas-sobre-facturas-anteriores.md`); P1-1 (servidor, DTE anteriores) en `main` (servidor 3678, cliente 911, generador 46); P1-2 (cliente) en curso. Ojo: `usuarios-permisos.api.prueba.ts` (auditoría de permisos) falló una vez de forma intermitente en un worktree; en `main` pasa.
    Después: CP2, CP3, CP4 y CP5. **CP2 y CP3 diseñados** (`diseno-cp2-notas-de-credito.md`,
    `diseno-cp3-contrasenas.md`) y validados por el contador (`dictamen-cp2-cp3-2026-11-08.md`, «correcto con
    ajustes»: quitar la causa «liquidado fuera del sistema», lista de causas con efecto, límites de fecha por
@@ -303,13 +303,14 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    CP3 en 8 (migración `0006`, desde CP2-2), después de U8. Pendientes sin frenar: P-CP2-1 (¿adjuntos para el acuerdo y el
    ajuste?), P-CP2-2 (tope de «diferencia menor» por omisión Q25) y P-CP3-1 (fecha de una contraseña con saldos
    iniciales).
-8. **Bancos H2** diseñado (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`). El paso 1 (core: qpdf fuera de la
-   transacción, archivos huérfanos, borrado tras confirmar, subida cortada) **está en `main`** con los arreglos de
-   seguridad S3–S9 y S11 (pruebas: servidor 3425, cliente 868, generador 46). Las tareas «después de confirmar» que
-   fallan (incluida la publicación de eventos) ahora se registran en stderr y no cambian la respuesta. **Espera al usuario:** P1 a P5
-   del diseño (§13) para los pasos 2 a 5, y de seguridad: cola de qpdf con tope antes del paso 4 (S1: propuesta 10 en
-   espera, 60 s, máx. 2 por cuenta, 429), ¿cola separada o prioridad para los PDF que genera la app, como el libro
-   foliado? (S2), ¿tarea diaria que borre archivos huérfanos? (S10).
+8. **Bancos H2** (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`): paso 1 (core) y **H2a (pasos 2 y 3, saldo
+   transcrito, servidor y cliente) en `main`** desde el 2026-11-13, con P1 a P5 respondidas (pruebas: servidor 3700,
+   cliente 921; **sin ver en el navegador**; migración de bancos `0030` sin aplicar a la base de desarrollo hasta
+   correr `bd:migrar`). Seguridad S1, S2 y S10 decididas: plan en `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md`
+   (fila de revisión de PDF y limpieza diaria de huérfanos), programado en la rama `worktree-agent-a13465c000c281fed`
+   y **en corrección** tras la revisión de seguridad (no unir sin los arreglos: la limpieza borraba el logo).
+   **Sigue:** unir esa rama, paso 4 (H2b servidor, archivo adjunto, con revisión de seguridad), paso 5 (cliente),
+   documentación y QA en el navegador.
 9. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual (ya no Q150,000: 125 salarios mínimos no agrícolas, Q500,285 en 2026).
 
 Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) con su base de pruebas

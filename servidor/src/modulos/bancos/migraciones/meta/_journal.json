@@ -211,6 +211,13 @@
       "when": 1790719213166,
       "tag": "0029_h8_interes_bruto_e_isr_retenido",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794601281466,
+      "tag": "0030_h2_saldo_del_estado_de_cuenta",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,7 @@
  * `reabrir`: se reabrió algo que estaba cerrado, con su motivo (Empresas: la carga inicial).
  * `descartar`: se apartó una fila de una bandeja de trabajo sin registrarla, con su motivo (Libro de compras: DTE recibidos).
  * `autorizar`: se autorizó algo que la misma persona ingresó o completó, excepción a la separación de funciones (Cuentas por pagar).
+ * `ajustar`: se dio de baja o se trasladó un saldo a favor, con su causa (Cuentas por pagar: ajustes de notas de crédito).
  */
 export type AccionAuditada =
   | 'eliminar'
@@ -18,7 +19,8 @@ export type AccionAuditada =
   | 'descartar'
   | 'autorizar'
   | 'asignar'
-  | 'quitar';
+  | 'quitar'
+  | 'ajustar';
 
 /** Una baja (o su reversa): qué registro, qué se hizo, por qué y cómo estaba antes. */
 export interface EntradaDeAuditoria {
