@@ -1,3 +1,4 @@
+import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import type { CargaInicial, DatosDeFiscales, DatosFiscales } from '../servicios/datos-de-empresa.api';
 
 /** Lo que el formulario de la empresa escribe además de sus datos generales. */
@@ -43,4 +44,35 @@ export function fechaPorGuardar(
 /** Se puede cerrar con la fecha ya guardada y sin cambios pendientes en ella. */
 export function puedeCerrarLaCarga(actual: CamposDeDatosDeEmpresa, carga: CargaInicial | null): boolean {
   return Boolean(carga?.fechaDeInicio) && !carga?.cerrada && actual.fechaDeInicio === carga?.fechaDeInicio;
+}
+
+export const AYUDA_DE_FECHA_DE_INICIO =
+  'Primer día que se registra en Arrancar; los saldos iniciales son los del cierre del día anterior. Se puede corregir mientras la carga inicial esté abierta.';
+
+const AVISO_DE_FECHA_QUE_NO_ES_DIA_UNO =
+  'Se recomienda el día 1 de un mes (mejor el 1 de enero, inicio del período del ISR): partir un mes entre dos sistemas obliga a armar a mano el libro de compras y la declaración de ese mes.';
+
+/** Aviso (que no bloquea) si la fecha escrita no es día 1 de un mes; `null` si es día 1 o no hay fecha válida. */
+export function avisoDeFechaDeInicio(fecha: string): string | null {
+  const partes = /^\d{4}-\d{2}-(\d{2})$/.exec(fecha);
+  return partes && partes[1] !== '01' ? AVISO_DE_FECHA_QUE_NO_ES_DIA_UNO : null;
+}
+
+/** Recordatorio que se añade a la confirmación de cerrar la carga inicial. */
+export const RECORDATORIO_DE_CUADRE =
+  'Antes de cerrar, compare el cuadre de los saldos iniciales de cada módulo con el balance de apertura.';
+
+const SALDOS_POSTERIORES = 'saldos_iniciales_posteriores_a_la_fecha';
+
+/**
+ * Si el servidor rechaza la fecha porque hay saldos iniciales emitidos desde ella, devuelve el mismo error
+ * señalando el campo de la fecha (para marcarlo en el formulario); cualquier otro error pasa igual.
+ */
+export function errorConCampoDeFecha(error: unknown): unknown {
+  if (!(error instanceof ErrorApi) || error.codigo !== SALDOS_POSTERIORES) return error;
+  return new ErrorApi(error.estado, {
+    codigo: error.codigo,
+    mensaje: error.message,
+    detalles: { campo: 'fechaDeInicio' },
+  });
 }

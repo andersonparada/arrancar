@@ -4,6 +4,7 @@ import { apiDatosDeEmpresa, type CargaInicial } from '../servicios/datos-de-empr
 import {
   camposGuardados,
   DATOS_DE_EMPRESA_VACIOS,
+  errorConCampoDeFecha,
   fechaPorGuardar,
   fiscalesPorGuardar,
   type CamposDeDatosDeEmpresa,
@@ -27,7 +28,10 @@ async function guardarCambios(
   const fiscales = fiscalesPorGuardar(actual, guardado.campos);
   const fecha = fechaPorGuardar(actual, guardado.campos, guardado.carga.cerrada);
   if (fiscales) await apiDatosDeEmpresa.guardarDatosFiscales(empresaId, fiscales);
-  return fecha ? apiDatosDeEmpresa.establecerFechaDeInicio(empresaId, fecha) : guardado.carga;
+  if (!fecha) return guardado.carga;
+  return apiDatosDeEmpresa.establecerFechaDeInicio(empresaId, fecha).catch((error: unknown) => {
+    throw errorConCampoDeFecha(error);
+  });
 }
 
 /** Avisa con el id de la empresa cuando se abre su ventana, y con null cuando se cierra. */
