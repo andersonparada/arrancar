@@ -1524,3 +1524,10 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   huérfanos de más de 24 horas. Plan en `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md` (solo core; va antes del
   paso 4 de H2).
 
+- **2026-11-13 — P1-1 (servidor, Libro de compras): DTE anteriores a la fecha de inicio.** La bandeja marca cada fila
+  con `anteriorALaFechaDeInicio` y `enPlazoDeCredito` (calculadas al consultar con `empresas.obtener_carga_inicial`; sin
+  fecha de inicio nada se marca), con el filtro `anteriores=incluir|ocultar|solo` y los campos `fechaDeInicio` y
+  `anterioresOcultos` en la página. La conciliación suma el grupo informativo `anterioresALaFechaDeInicio` (solo filas
+  sin documento en Arrancar; con documento se concilia como siempre) y `fechaDeInicio`; importar responde
+  `anterioresALaFechaDeInicio` y un aviso con la salvedad de C-U8-1. Las marcas solo se calculan en la lista (las
+  respuestas de completar, descartar y restaurar las traen en falso). Sin migraciones.

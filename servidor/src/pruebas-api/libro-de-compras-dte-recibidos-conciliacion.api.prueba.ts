@@ -225,6 +225,7 @@ describe('conciliación por período: con el lote del mes', () => {
       sinDatosDeLaSat: 0,
       anuladoEnLaSatYVigenteAqui: 1,
       descartado: 1,
+      anterioresALaFechaDeInicio: 0,
     });
   });
 

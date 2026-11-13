@@ -4,6 +4,9 @@ import type { EstadoDeDte } from '../../dominio/estado-de-dte.js';
 import type { TipoDePersonaDelProveedor } from '../../dominio/tipo-de-persona-del-nombre.js';
 import type { TipoDte } from '../../dominio/tipos-de-documento.js';
 
+/** Qué hacer con los DTE emitidos antes de la fecha de inicio de la empresa. */
+export type FiltroDeAnteriores = 'incluir' | 'ocultar' | 'solo';
+
 /** Los filtros de la lista de la bandeja; todos opcionales. */
 export interface FiltroDeLaBandeja {
   estado?: EstadoDeDte;
@@ -17,6 +20,13 @@ export interface FiltroDeLaBandeja {
   loteId?: string;
   /** `true`: solo las filas con proveedor; `false`: solo las que lo necesitan nuevo. */
   conProveedor?: boolean;
+  /** Cómo tratar los DTE anteriores a la fecha de inicio; por omisión `incluir`. Sin fecha de inicio no filtra. */
+  anteriores?: FiltroDeAnteriores;
+}
+
+/** El filtro de la bandeja junto con la fecha de inicio de la empresa, con la que se traduce `anteriores`. */
+export interface FiltroConFechaDeInicio extends FiltroDeLaBandeja {
+  fechaDeInicio?: string | null;
 }
 
 export interface PaginacionDeLaBandeja {
@@ -32,7 +42,9 @@ export interface PaginaDeFilasDeLaBandeja {
 /** Consultas de la bandeja que no cargan una fila entera. RLS limita todo a la empresa de la transacción. */
 export interface ConsultasDeLaBandeja {
   /** De la fecha de emisión más reciente a la más antigua. */
-  listar(filtro: FiltroDeLaBandeja, paginacion: PaginacionDeLaBandeja): Promise<PaginaDeFilasDeLaBandeja>;
+  listar(filtro: FiltroConFechaDeInicio, paginacion: PaginacionDeLaBandeja): Promise<PaginaDeFilasDeLaBandeja>;
+  /** Cuántas filas anteriores a la fecha de inicio cumplen el resto del filtro (las que `ocultar` deja fuera). */
+  contarAnteriores(filtro: FiltroConFechaDeInicio): Promise<number>;
   /** El concepto activo de la última línea registrada del proveedor en la empresa; `null` si no hay. */
   ultimoConceptoDelProveedor(proveedorId: string): Promise<string | null>;
 }

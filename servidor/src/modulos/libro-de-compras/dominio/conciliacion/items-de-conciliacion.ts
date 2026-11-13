@@ -25,6 +25,7 @@ export function itemDelDocumento(documento: DocumentoConciliable, fila: FilaConc
     documentoFueraDelLibro: documento.fueraDelLibro,
     ...(fila ? situacionDe(fila) : SIN_SITUACION),
     diferencias: fila ? diferenciasDeConciliacion(documento, fila) : [],
+    enPlazoDeCredito: false,
   };
 }
 
@@ -46,6 +47,7 @@ export function itemDeLaFila(fila: FilaConciliable, documento: DocumentoConcilia
     documentoFueraDelLibro: documento?.fueraDelLibro ?? false,
     ...situacionDe(fila),
     diferencias: [],
+    enPlazoDeCredito: false,
   };
 }
 
