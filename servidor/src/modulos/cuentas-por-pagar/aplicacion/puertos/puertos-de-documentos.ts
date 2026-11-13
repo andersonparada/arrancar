@@ -61,9 +61,20 @@ export interface AnulacionDeDocumento {
   estabaAutorizado: boolean;
 }
 
+/** Lo común a las filas que crea una misma aplicación. */
+export interface DatosDeAplicacion {
+  forma: 'automatica' | 'manual';
+  /** `AAAA-MM-DD`. */
+  fecha: string;
+  referencia: string | null;
+}
+
 export interface RepositorioDeAplicaciones {
-  /** Guarda lo que la nota rebaja de cada cargo (los montos ya salen del reparto, en centavos). */
-  agregar(nota: DocumentoPorPagar, aplicaciones: readonly AplicacionACargo[]): Promise<void>;
+  /**
+   * Guarda lo que la nota rebaja de cada cargo (los montos ya salen del reparto, en centavos), con la forma, la fecha
+   * desde la que rebaja y, en las manuales, la referencia del acuerdo.
+   */
+  agregar(nota: DocumentoPorPagar, aplicaciones: readonly AplicacionACargo[], datos: DatosDeAplicacion): Promise<void>;
   /** Lo que la nota rebajó de cada cargo y lo que le rebajaron a un cargo, en centavos. */
   hechasPorLaNota(notaId: string): Promise<AplicacionDeNota[]>;
   recibidasPorElCargo(cargoId: string): Promise<AplicacionDeNota[]>;
