@@ -7,9 +7,11 @@ export const noEstarAutorizadoElSaldo: ReglaDeBaja = ({ documento }) => {
   if (documento.estado === 'autorizado') throw new SaldoInicialAutorizado(etiquetaDe(documento));
 };
 
-/** Un saldo inicial con notas aplicadas (hechas o recibidas) ya tiene movimientos. */
-export const noTenerMovimientos: ReglaDeBaja = ({ documento, hechas, recibidas }) => {
-  if (hechas.length > 0 || recibidas.length > 0) throw new SaldoInicialConMovimientos(etiquetaDe(documento));
+/** Un saldo inicial con notas aplicadas (hechas o recibidas) o con ajustes vigentes ya tiene movimientos. */
+export const noTenerMovimientos: ReglaDeBaja = ({ documento, hechas, recibidas, ajustes }) => {
+  const ajustado = ajustes.some(({ estado }) => estado === 'vigente');
+  if (hechas.length > 0 || recibidas.length > 0 || ajustado)
+    throw new SaldoInicialConMovimientos(etiquetaDe(documento));
 };
 
 /**

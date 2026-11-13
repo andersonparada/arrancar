@@ -7,6 +7,8 @@ export interface AplicadoAlDocumento {
   alCargoCentavos: number;
   /** Lo que esta nota de crédito rebajó de cargos. */
   porLaNotaCentavos: number;
+  /** Lo que se dio de baja del saldo libre de esta nota con ajustes vigentes. */
+  ajustadoCentavos: number;
 }
 
 /** Los tres montos que la pantalla muestra de un documento, en centavos. */
@@ -14,9 +16,11 @@ export interface SaldoDelDocumento {
   /** Un cargo: total menos retenciones (lo que se le paga al proveedor). Una nota de crédito: su total. */
   netoCentavos: number;
   aplicadoCentavos: number;
+  /** Lo dado de baja del saldo libre con ajustes vigentes; cero en un cargo. */
+  ajustadoCentavos: number;
   /**
    * Un cargo: lo que todavía se debe. Una nota de crédito: su saldo libre, a favor de la empresa. Un documento
-   * anulado no debe nada ni deja nada a favor.
+   * anulado no debe nada ni deja nada a favor. El saldo libre es la base menos lo aplicado y lo ajustado.
    */
   saldoCentavos: number;
 }
@@ -26,8 +30,9 @@ export function saldoDe(documento: DocumentoPorPagar, aplicado: AplicadoAlDocume
   const esCargo = claseDe(documento.tipo) === 'cargo';
   const netoCentavos = esCargo ? netoDe(documento) : (documento.saldoAlInicioCentavos ?? documento.totalCentavos);
   const aplicadoCentavos = esCargo ? aplicado.alCargoCentavos : aplicado.porLaNotaCentavos;
-  const saldoCentavos = documento.estado === 'anulado' ? 0 : netoCentavos - aplicadoCentavos;
-  return { netoCentavos, aplicadoCentavos, saldoCentavos };
+  const ajustadoCentavos = esCargo ? 0 : aplicado.ajustadoCentavos;
+  const saldoCentavos = documento.estado === 'anulado' ? 0 : netoCentavos - aplicadoCentavos - ajustadoCentavos;
+  return { netoCentavos, aplicadoCentavos, ajustadoCentavos, saldoCentavos };
 }
 
 /**

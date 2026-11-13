@@ -1,3 +1,4 @@
+import { esAnteriorALaFechaDeInicio, estaEnPlazoDeCredito } from '../anterioridad-a-la-fecha-de-inicio.js';
 import { emparejar, type Parejas } from './emparejar.js';
 import { itemDeLaFila, itemDelDocumento } from './items-de-conciliacion.js';
 import type {
@@ -20,6 +21,7 @@ function resultadoVacio(): ResultadoDeConciliacion {
     sinDatosDeLaSat: [],
     anuladoEnLaSatYVigenteAqui: [],
     descartado: [],
+    anterioresALaFechaDeInicio: [],
   };
 }
 
@@ -51,9 +53,17 @@ function claveDeLaFilaConDocumento(
 function clasificarFila(
   fila: FilaConciliable,
   documento: DocumentoConciliable | undefined,
+  fechaDeInicio: string | null,
 ): [keyof ResultadoDeConciliacion, ItemDeConciliacion] | null {
   const item = itemDeLaFila(fila, documento ?? null);
   if (documento) return [claveDeLaFilaConDocumento(fila, documento), item];
+  if (
+    esAnteriorALaFechaDeInicio(fila.fechaEmision, fechaDeInicio) &&
+    (fila.estado === 'descartado' || fila.estadoSat !== 'anulado')
+  ) {
+    const enPlazoDeCredito = estaEnPlazoDeCredito(fila.fechaEmision, fechaDeInicio);
+    return ['anterioresALaFechaDeInicio', { ...item, enPlazoDeCredito }];
+  }
   if (fila.estado === 'descartado') return ['descartado', item];
   return fila.estadoSat === 'anulado' ? null : ['enLaSatYNoEnArrancar', item];
 }
@@ -77,7 +87,7 @@ function delLado(parejas: Parejas, entrada: EntradaDeConciliacion, resultado: Re
   for (const fila of entrada.filas.filter((f) => f.fechaEmision.startsWith(mes))) {
     const documento = parejas.documentoDeLaFila.get(fila.id);
     if (documento && enElLibro(documento)) continue;
-    const clasificado = clasificarFila(fila, documento);
+    const clasificado = clasificarFila(fila, documento, entrada.fechaDeInicio);
     if (clasificado) resultado[clasificado[0]].push(clasificado[1]);
   }
 }

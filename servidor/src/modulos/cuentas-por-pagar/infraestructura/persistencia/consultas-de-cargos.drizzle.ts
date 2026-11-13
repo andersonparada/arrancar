@@ -6,6 +6,10 @@ import type { CargoConSaldo } from '../../dominio/reparto-de-nota-de-credito.js'
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { documentos } from './documentos.tablas.js';
 
+/** Lo que se le paga al proveedor: el saldo al inicio de un saldo inicial, o el total menos las retenciones. */
+const netoDelCargo = (cargo: typeof documentos.$inferSelect): number =>
+  cargo.saldoAlInicio === null ? aCentavos(cargo.total) - aCentavos(cargo.retenciones) : aCentavos(cargo.saldoAlInicio);
+
 /** Los cargos a los que se aplica una nota de crédito. La tabla tiene seguridad por empresa (RLS). */
 export class ConsultasDeCargosDrizzle implements ConsultasDeCargos {
   async paraAplicarUnaNota(facturaDeCompraId: string): Promise<CargoConSaldo[]> {
@@ -26,7 +30,7 @@ export class ConsultasDeCargosDrizzle implements ConsultasDeCargos {
     const aplicado = await this.aplicadoPorCargo(cargos.map(({ id }) => id));
     return cargos.map((cargo) => ({
       id: cargo.id,
-      saldoCentavos: aCentavos(cargo.total) - aCentavos(cargo.retenciones) - (aplicado.get(cargo.id) ?? 0),
+      saldoCentavos: netoDelCargo(cargo) - (aplicado.get(cargo.id) ?? 0),
     }));
   }
 

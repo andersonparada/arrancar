@@ -8,6 +8,7 @@ import type {
   DatosDeRecepcion,
   DocumentosDeCompra,
   PlazoPorOmision,
+  DatosDeAplicacion,
   RepositorioDeAplicaciones,
   RepositorioDeDocumentos,
 } from '../aplicacion/puertos/puertos-de-documentos.js';
@@ -18,6 +19,7 @@ import {
   type DocumentoConAplicaciones,
   type DocumentoPorPagar,
 } from '../dominio/documento-por-pagar.js';
+import type { AjusteDeSaldo } from '../dominio/ajustes.js';
 import type { AplicacionACargo, CargoConSaldo } from '../dominio/reparto-de-nota-de-credito.js';
 
 const sumar = (aplicaciones: readonly AplicacionDeNota[]) =>
@@ -25,9 +27,28 @@ const sumar = (aplicaciones: readonly AplicacionDeNota[]) =>
 
 export class AplicacionesEnMemoria implements RepositorioDeAplicaciones {
   lista: AplicacionDeNota[] = [];
+  /** Cuántas aplicaciones se han creado, para dar ids distintos. */
+  private contador = 0;
+  /** Lo que llegó con cada llamada a `agregar` (forma, fecha, referencia). */
+  datos: DatosDeAplicacion[] = [];
 
-  async agregar(nota: DocumentoPorPagar, aplicaciones: readonly AplicacionACargo[]): Promise<void> {
-    this.lista.push(...aplicaciones.map((aplicacion) => ({ ...aplicacion, notaId: nota.id })));
+  async agregar(
+    nota: DocumentoPorPagar,
+    aplicaciones: readonly AplicacionACargo[],
+    datos: DatosDeAplicacion,
+  ): Promise<void> {
+    this.datos.push(datos);
+    this.lista.push(
+      ...aplicaciones.map((aplicacion) => ({
+        ...aplicacion,
+        ...datos,
+        id: `aplicacion-${++this.contador}`,
+        notaId: nota.id,
+        // Solo se conoce la nota, que es el «otro» documento de lo recibido por un cargo.
+        otraSerie: nota.serie,
+        otroNumero: nota.numero,
+      })),
+    );
   }
 
   async hechasPorLaNota(notaId: string): Promise<AplicacionDeNota[]> {
@@ -46,6 +67,10 @@ export class AplicacionesEnMemoria implements RepositorioDeAplicaciones {
     this.lista = this.lista.filter((aplicacion) => aplicacion.cargoId !== cargoId);
   }
 
+  async borrar(aplicacionId: string): Promise<void> {
+    this.lista = this.lista.filter((aplicacion) => aplicacion.id !== aplicacionId);
+  }
+
   /** Lo que ya rebajaron las notas de un cargo. */
   aplicadoAl(cargo: DocumentoPorPagar): number {
     return sumar(this.lista.filter(({ cargoId }) => cargoId === cargo.id));
@@ -60,6 +85,8 @@ export class AplicacionesEnMemoria implements RepositorioDeAplicaciones {
 /** Documentos en memoria, con las mismas cuentas de saldo que la consulta real. */
 export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDeCargos {
   documentos: DocumentoPorPagar[] = [];
+  /** Ajustes de saldo sembrados por las pruebas (el caso de uso que los crea llega en CP2-4). */
+  ajustes: AjusteDeSaldo[] = [];
   /** Las facturas que se bloquearon para aplicar una nota, en orden. */
   readonly bloqueadas: string[] = [];
   /** El orden en que se bloqueó y se ordenó, junto con las órdenes a Libro de compras (ver `LibroDeComprasEnMemoria`). */
@@ -100,6 +127,7 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
       documento: { ...documento },
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
+      ajustes: this.ajustes.filter(({ documentoId }) => documentoId === documento.id),
     };
   }
 
@@ -111,6 +139,7 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
       documento: { ...documento },
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
+      ajustes: this.ajustes.filter(({ documentoId }) => documentoId === documento.id),
     };
   }
 

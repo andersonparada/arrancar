@@ -66,9 +66,17 @@ export function mensajeDeEliminacion(ficha: FichaDelDocumento): string {
   return `¿Eliminar ${describir(ficha)}? Se borra por completo, también del libro de compras, y no se puede deshacer. Úselo solo si fue un error de captura; si no, anule el registro.`;
 }
 
+/** Lo que se aprobó a pagar: el saldo pendiente (en un saldo inicial, lo que se debía al arrancar), no el total. */
+function describirLoAprobado(ficha: FichaDelDocumento): string {
+  const esSaldoInicial = ficha.origen === 'saldo_inicial' && ficha.saldoAlInicio !== null;
+  const monto = formatearMonto(esSaldoInicial ? ficha.saldoAlInicio : ficha.saldo);
+  const cual = esSaldoInicial ? 'saldo al inicio' : 'saldo';
+  return `${tituloDeDocumento(ficha)} de ${ficha.proveedorNombre} con ${cual} de ${monto}`;
+}
+
 /** La pregunta antes de devolver un documento autorizado a «por autorizar». */
 export const mensajeDeDesautorizacion = (ficha: FichaDelDocumento): string =>
-  `${describir(ficha)} vuelve a «Por autorizar» y alguien tendrá que autorizarlo de nuevo. Cuente el motivo.`;
+  `${describirLoAprobado(ficha)} vuelve a «Por autorizar» y alguien tendrá que autorizarlo de nuevo. Cuente el motivo.`;
 
 /** Quién no puede autorizar lo que ingresó o completó: el cliente solo lo explica, el servidor decide. */
 export const avisoDeLoPropio =
@@ -100,7 +108,7 @@ export const documentoYaCambio = (error: unknown): boolean =>
 export function resumenDeAutorizacion(documentos: readonly DocumentoPorPagar[]): string {
   const cargos = documentos.filter(({ clase }) => clase === 'cargo');
   const centavos = cargos.reduce((suma, { saldo }) => suma + Math.round(Number(saldo) * 100), 0);
-  const cuantos = documentos.length === 1 ? 'el documento' : `los ${documentos.length} documentos`;
+  const cuantos = documentos.length === 1 ? 'el documento marcado' : `los ${documentos.length} documentos marcados`;
   const aprobado = cargos.length > 0 ? ` Se aprueban a pagar ${formatearMonto((centavos / 100).toFixed(2))}.` : '';
-  return `Se autorizarán ${cuantos} marcados.${aprobado}`;
+  return `Se autorizarán ${cuantos}.${aprobado}`;
 }

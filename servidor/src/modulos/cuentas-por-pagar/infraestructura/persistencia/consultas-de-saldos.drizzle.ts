@@ -65,7 +65,8 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
   }
 
   async notasConSaldoLibre(proveedorId: string): Promise<NotaConSaldoLibre[]> {
-    const { porLaNota } = new ConsultaBaseDeDocumentos();
+    const base = new ConsultaBaseDeDocumentos();
+    const { porLaNota, ajustadoDeLaNota } = base;
     const filas = await transaccionEnCurso()
       .select({
         id: documentos.id,
@@ -76,16 +77,12 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
         total: documentos.total,
         saldoAlInicio: documentos.saldoAlInicio,
         aplicado: porLaNota.monto,
+        ajustado: ajustadoDeLaNota.monto,
       })
       .from(documentos)
       .leftJoin(porLaNota, eq(porLaNota.notaId, documentos.id))
-      .where(
-        and(
-          eq(documentos.proveedorId, proveedorId),
-          esUnaNotaVigente,
-          sql`coalesce(${documentos.saldoAlInicio}, ${documentos.total}) - coalesce(${porLaNota.monto}, 0) > 0`,
-        ),
-      )
+      .leftJoin(ajustadoDeLaNota, eq(ajustadoDeLaNota.notaId, documentos.id))
+      .where(and(eq(documentos.proveedorId, proveedorId), esUnaNotaVigente, sql`${base.saldoLibreDeLaNota()} > 0`))
       .orderBy(asc(documentos.fechaEmision), asc(documentos.creadoEn));
     return filas.map(aNotaConSaldoLibre);
   }
@@ -95,11 +92,15 @@ function aNotaConSaldoLibre({
   total,
   saldoAlInicio,
   aplicado,
+  ajustado,
   ...nota
 }: Omit<NotaConSaldoLibre, 'saldoLibreCentavos'> & {
   total: string;
   saldoAlInicio: string | null;
   aplicado: string | null;
+  ajustado: string | null;
 }): NotaConSaldoLibre {
-  return { ...nota, saldoLibreCentavos: aCentavos(saldoAlInicio ?? total) - aCentavos(aplicado ?? '0') };
+  const saldoLibreCentavos =
+    aCentavos(saldoAlInicio ?? total) - aCentavos(aplicado ?? '0') - aCentavos(ajustado ?? '0');
+  return { ...nota, saldoLibreCentavos };
 }

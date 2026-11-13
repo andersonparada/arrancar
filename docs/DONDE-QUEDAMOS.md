@@ -290,7 +290,7 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    de compras para facturas anteriores a la fecha de inicio; cliente U8-9 a U8-11, incluido Empresas; QA U8-12).
    Pendiente sin frenar: P-U8-1 (DTE anteriores a la fecha de inicio en la bandeja). U8-l (notas sobre facturas de
    antes del corte) va en Libro de compras después de U8 y antes de producción con una empresa con historia.
-   **En curso:** U8-1 (datos), U8-2 (dos orígenes), **Servidor de U8 completo** (U8-1 a U8-8) y U8-9 en `main` con todas las pruebas en verde (servidor 3569, cliente 882, generador 46). En programación: U8-10 (ventana de Administración) y U8-11 (Empresas); falta U8-12 (QA).
+   **En curso:** U8-1 (datos), U8-2 (dos orígenes), **Servidor de U8 completo** (U8-1 a U8-8) y U8-9 en `main` con todas las pruebas en verde (servidor 3569, cliente 882, generador 46). U8-10 (ventana de Administración) y U8-11 (Empresas) también en `main`: **U8 programado completo**. QA U8-12 hecha (`docs/modulos/informe-qa-u8-2026-11-12.md`: sin errores de dinero ni de seguridad; pendientes de gravedad baja en corrección). **Decidido el 2026-11-12** (bitácora de PLAN): emisión de un saldo inicial hasta 10 años antes de la fecha de inicio; ensayo del Excel en una sola pasada para todos los recursos; adjuntos de CP2 más adelante; P-U8-1: DTE anteriores a la fecha de inicio marcados y fuera de la conciliación (con U8-l, en diseño). **CP2 en programación:** CP2-1 (datos), CP2-2 (saldo libre y reglas de baja) y CP2-3 (aplicar y quitar a mano) en `main` con todas las pruebas en verde (servidor 3660, cliente 911, generador 46); CP2-4 (ajustes) en curso. **U8-l** diseñado y aprobado (`diseno-u8l-notas-sobre-facturas-anteriores.md`); P1-1 en curso.
    Después: CP2, CP3, CP4 y CP5. **CP2 y CP3 diseñados** (`diseno-cp2-notas-de-credito.md`,
    `diseno-cp3-contrasenas.md`) y validados por el contador (`dictamen-cp2-cp3-2026-11-08.md`, «correcto con
    ajustes»: quitar la causa «liquidado fuera del sistema», lista de causas con efecto, límites de fecha por
@@ -300,7 +300,7 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    sistema» se quita y el reintegro va en CP4 (que acepta también efectivo); anular o eliminar un cargo con
    aplicaciones manuales se rechaza con el mensaje «quite primero la aplicación de la nota N». Los dos diseños quedaron
    **aprobados, listos para programar** con los cambios del dictamen aplicados: CP2 en 7 pasos (migración `0004`) y
-   CP3 en 8 (migración `0005`), después de U8. Pendientes sin frenar: P-CP2-1 (¿adjuntos para el acuerdo y el
+   CP3 en 8 (migración `0006`, desde CP2-2), después de U8. Pendientes sin frenar: P-CP2-1 (¿adjuntos para el acuerdo y el
    ajuste?), P-CP2-2 (tope de «diferencia menor» por omisión Q25) y P-CP3-1 (fecha de una contraseña con saldos
    iniciales).
 8. **Bancos H2** diseñado (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`). El paso 1 (core: qpdf fuera de la
@@ -315,6 +315,12 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
 Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) con su base de pruebas
 (`BD_PRUEBAS`) y el `.env` copiado (para `RUTA_QPDF`); se une a `main` con las pruebas completas en verde. Si
 `localhost:5433` da `ECONNRESET`, son puentes de Docker huérfanos (borrarlos en esta WSL o `wsl --shutdown`).
+
+## Pendiente del usuario (fuera de la app)
+
+- **P-U8l-1, frase FEL 9-22:** bajar del portal FEL de la SAT (con sesión) las «Reglas y Validaciones» vigentes y el
+  catálogo de frases y escenarios, o preguntar a la mesa de ayuda de la SAT el texto y el efecto del escenario 22 en
+  las NCRE emitidas desde el tercer mes siguiente al de la factura. El portal técnico respondió 403 a los agentes.
 
 ## Preguntas abiertas para el usuario
 

@@ -27,6 +27,7 @@ import {
   erroresDeAnulacion,
   mensajeDeLoPropio,
   esperaAOtraPersona,
+  mensajeDeDesautorizacion,
   opcionesDeCausa,
   resumenDeAutorizacion,
   sePuedeMarcarParaAutorizar,
@@ -253,11 +254,29 @@ describe('autorización', () => {
       documento({ clase: 'abono', saldo: '9.00' }),
     ];
     const resumen = resumenDeAutorizacion(lote);
-    expect(resumen).toContain('los 3 documentos');
+    expect(resumen).toContain('los 3 documentos marcados.');
     expect(resumen).toContain('150.75');
+  });
+
+  it('con un solo documento dice «el documento marcado», no «marcados»', () => {
+    expect(resumenDeAutorizacion([documento({ saldo: '10.00' })])).toContain('Se autorizarán el documento marcado.');
   });
 
   it('con solo notas de crédito no habla de montos a pagar', () => {
     expect(resumenDeAutorizacion([documento({ clase: 'abono' })])).not.toContain('a pagar');
+  });
+
+  it('desautorizar dice el saldo, no el total; en un saldo inicial, el saldo al inicio', () => {
+    const libro = { ...documento({ total: '5000.00', saldo: '3000.00' }), proveedorNombre: 'Agro' };
+    const inicial = { ...libro, origen: 'saldo_inicial', saldoAlInicio: '2500.00' };
+
+    const deLibro = mensajeDeDesautorizacion(libro as unknown as FichaDelDocumento);
+    const deSaldo = mensajeDeDesautorizacion(inicial as unknown as FichaDelDocumento);
+
+    expect(deLibro).toContain('con saldo de');
+    expect(deLibro).toContain('3,000.00');
+    expect(deLibro).not.toContain('5,000.00');
+    expect(deSaldo).toContain('con saldo al inicio de');
+    expect(deSaldo).toContain('2,500.00');
   });
 });

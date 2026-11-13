@@ -1,0 +1,3 @@
+ALTER TABLE "cuentas_por_pagar"."ajustes_de_saldo" DROP CONSTRAINT "ajustes_anulacion_completa";--> statement-breakpoint
+ALTER TABLE "cuentas_por_pagar"."ajustes_de_saldo" ADD CONSTRAINT "ajustes_anulacion_completa" CHECK (("cuentas_por_pagar"."ajustes_de_saldo"."estado" = 'vigente' and "cuentas_por_pagar"."ajustes_de_saldo"."anulado_en" is null and "cuentas_por_pagar"."ajustes_de_saldo"."anulado_por" is null and "cuentas_por_pagar"."ajustes_de_saldo"."motivo_de_anulacion" is null)
+      or ("cuentas_por_pagar"."ajustes_de_saldo"."estado" = 'anulado' and "cuentas_por_pagar"."ajustes_de_saldo"."anulado_en" is not null and "cuentas_por_pagar"."ajustes_de_saldo"."anulado_por" is not null and "cuentas_por_pagar"."ajustes_de_saldo"."motivo_de_anulacion" is not null));

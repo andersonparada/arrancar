@@ -1,7 +1,13 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { accionesDelDocumento } from '../../dominio/acciones-posibles.js';
 import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
-import { anterioresAlInicioDe, estaVencido, saldoDe, type SaldoDelDocumento } from '../../dominio/saldos.js';
+import {
+  anterioresAlInicioDe,
+  estaVencido,
+  saldoDe,
+  type AplicadoAlDocumento,
+  type SaldoDelDocumento,
+} from '../../dominio/saldos.js';
 import { claseDe } from '../../dominio/tipos-de-documento.js';
 import type { AplicacionConDatos, FilaDeDocumento, NotaDeUnDocumento } from '../puertos/puertos-de-consultas.js';
 import { textoONulo } from './ficha-del-documento.dto.js';
@@ -58,6 +64,7 @@ const montosDe = (documento: DocumentoPorPagar, saldo: SaldoDelDocumento) => ({
   retenciones: deCentavos(documento.retencionesCentavos),
   neto: deCentavos(saldo.netoCentavos),
   aplicado: deCentavos(saldo.aplicadoCentavos),
+  ajustado: deCentavos(saldo.ajustadoCentavos),
   saldo: deCentavos(saldo.saldoCentavos),
   saldoAlInicio: textoONulo(documento.saldoAlInicioCentavos),
   retencionesPorPracticar: textoONulo(documento.retencionesPorPracticarCentavos),
@@ -72,11 +79,17 @@ const seguimientoDe = (documento: DocumentoPorPagar, usuarioId: string) => ({
   autorizacionPropia: documento.autorizacionPropia,
 });
 
+/** Lo que rebajaron las notas y lo que se ajustó, tal como viene en la fila. */
+export const aplicadoDe = (fila: FilaDeDocumento): AplicadoAlDocumento => ({
+  alCargoCentavos: fila.aplicadoAlCargoCentavos,
+  porLaNotaCentavos: fila.aplicadoPorLaNotaCentavos,
+  ajustadoCentavos: fila.ajustadoCentavos,
+});
+
 /** El documento tal como lo ven la bandeja, la lista y la ficha, con sus saldos y lo que se puede hacer con él. */
 export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVista): DocumentoPorPagarDto {
   const { documento, notasVigentes, notasEnTotal } = fila;
-  const aplicado = { alCargoCentavos: fila.aplicadoAlCargoCentavos, porLaNotaCentavos: fila.aplicadoPorLaNotaCentavos };
-  const saldo = saldoDe(documento, aplicado);
+  const saldo = saldoDe(documento, aplicadoDe(fila));
   return {
     ...identificacionDe(documento),
     ...origenDe(fila),
@@ -90,6 +103,9 @@ export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVist
       estado: documento.estado,
       notasVigentes,
       notasEnTotal,
+      saldoLibreCentavos: saldo.saldoCentavos,
+      ajustesVigentes: fila.ajustesVigentes,
+      aplicacionesManualesRecibidas: fila.aplicacionesManualesRecibidas,
     }),
   };
 }
@@ -111,5 +127,5 @@ export function dtoDeNota(nota: NotaDeUnDocumento): NotaDelDocumentoDto {
 }
 
 export function dtoDeAplicacion({ montoCentavos, ...resto }: AplicacionConDatos): AplicacionDelDocumentoDto {
-  return { ...resto, monto: deCentavos(montoCentavos) };
+  return { ...resto, puedeQuitar: resto.forma === 'manual', monto: deCentavos(montoCentavos) };
 }

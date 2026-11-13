@@ -31,6 +31,7 @@ export const esquemaFiltroDeDteRecibidos = z.object({
   tipoDte: z.enum(TIPOS_DTE).optional(),
   loteId: z.uuid().optional(),
   conProveedor: booleanoDeLaDireccion.optional(),
+  anteriores: z.enum(['incluir', 'ocultar', 'solo']).optional(),
   pagina: z.coerce.number().int().min(1).default(1),
   limite: z.coerce.number().int().min(1).max(LIMITE_MAXIMO).default(LIMITE_POR_OMISION),
 });

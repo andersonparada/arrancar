@@ -199,15 +199,23 @@ describe('importar', () => {
     expect(await cuantos('9105')).toBe(0);
   });
 
-  it('una fila que rompe una regla del dominio se informa con su fila y no guarda nada', async () => {
-    const resultado = await importarFilas(
-      [filaBuena({ Número: '9107' }), filaBuena({ Número: '9108', 'Saldo pendiente': 5000 })],
-      false,
-    );
+  it('el ensayo muestra de una vez los errores de formato y los de reglas de todas las filas', async () => {
+    const filas = [
+      filaBuena({ Número: '9130', Total: 'mucho' }),
+      filaBuena({ Número: '9131', 'Saldo pendiente': 5000 }),
+      filaBuena({ Número: '9132' }),
+      filaBuena({ Número: '9133', 'Fecha de emisión': '20/12/1990' }),
+    ];
+
+    const resultado = await importarFilas(filas);
 
     expect(resultado.guardado).toBe(false);
-    expect(resultado.errores[0]).toMatchObject({ fila: 3, columna: null });
-    expect(await cuantos('9107')).toBe(0);
+    expect(resultado.errores).toEqual([
+      expect.objectContaining({ fila: 2, columna: 'Total' }),
+      expect.objectContaining({ fila: 3, columna: 'Saldo pendiente' }),
+      expect.objectContaining({ fila: 5, columna: 'Fecha de emisión' }),
+    ]);
+    expect(await cuantos('9132')).toBe(0);
   });
 
   it('el mismo documento dos veces en el archivo, o ya cargado, se rechaza', async () => {
@@ -216,8 +224,32 @@ describe('importar', () => {
 
     expect(dentro).toMatchObject({ guardado: false, errores: [{ fila: 3 }] });
     expect(dentro.errores[0].mensaje).toContain('ya está en Cuentas por pagar');
+    expect(dentro.errores[0].columna).toBe('Número');
     expect(contraLoCargado).toMatchObject({ guardado: false, errores: [{ fila: 2 }] });
     expect(await cuantos('9109')).toBe(0);
+  });
+});
+
+describe('avisos del ensayo', () => {
+  it('sin vencimiento en la fila, el ensayo muestra el propuesto; con vencimiento, no avisa', async () => {
+    const sin = await importarFilas([filaBuena({ Número: '9120', Vencimiento: null })]);
+    const con = await importarFilas([filaBuena({ Número: '9121' })]);
+
+    expect(sin.errores).toEqual([]);
+    expect(sin.avisos).toEqual([
+      expect.objectContaining({ fila: 2, columna: 'Vencimiento', mensaje: expect.stringContaining('Se propone') }),
+    ]);
+    expect(con.avisos).toBeUndefined();
+  });
+
+  it('la hoja de instrucciones dice que el código del proveedor es el NIT y da una fecha de ejemplo', async () => {
+    const plantilla = (await importador.get(`${RUTA}/plantilla`)).cuerpo as Buffer;
+    const hoja = (await leerLibro(plantilla)).worksheets[1]!;
+    const texto: string[] = [];
+    hoja.eachRow((fila) => texto.push(String(fila.getCell(1).value)));
+
+    expect(texto.join('\n')).toContain('el código del proveedor es su NIT');
+    expect(texto.join('\n')).toContain('15/03/2025');
   });
 });
 

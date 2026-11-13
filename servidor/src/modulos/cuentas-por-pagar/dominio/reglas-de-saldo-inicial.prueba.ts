@@ -5,7 +5,7 @@ import { REGLAS_PARA_CORREGIR_SALDO_INICIAL } from './reglas-de-saldo-inicial.js
 
 function guardado(
   cambios: Partial<DocumentoPorPagar> = {},
-  aplicaciones: Partial<Pick<DocumentoConAplicaciones, 'hechas' | 'recibidas'>> = {},
+  aplicaciones: Partial<Pick<DocumentoConAplicaciones, 'hechas' | 'recibidas' | 'ajustes'>> = {},
 ): DocumentoConAplicaciones {
   const documento: DocumentoPorPagar = {
     id: crypto.randomUUID(),
@@ -33,14 +33,24 @@ function guardado(
     autorizacionPropia: false,
     ...cambios,
   };
-  return { documento, hechas: [], recibidas: [], ...aplicaciones };
+  return { documento, hechas: [], recibidas: [], ajustes: [], ...aplicaciones };
 }
 
 async function revisar(saldo: DocumentoConAplicaciones): Promise<void> {
   for (const regla of REGLAS_PARA_CORREGIR_SALDO_INICIAL) await regla(saldo);
 }
 
-const aplicacion = { notaId: 'n', cargoId: 'c', montoCentavos: 100 };
+const aplicacion = {
+  id: 'a',
+  notaId: 'n',
+  cargoId: 'c',
+  montoCentavos: 100,
+  forma: 'automatica' as const,
+  fecha: '2026-03-10',
+  referencia: null,
+  otraSerie: null,
+  otroNumero: '1',
+};
 
 describe('las reglas para corregir o eliminar un saldo inicial', () => {
   it('un saldo inicial completado y sin movimientos pasa todas', async () => {

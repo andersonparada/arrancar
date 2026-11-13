@@ -1,5 +1,6 @@
 import { VencimientoInvalido } from './errores.js';
 import {
+  EmisionDemasiadoAntigua,
   EmisionNoAnteriorAlInicio,
   NumeroDeDocumentoInvalido,
   ReferenciaInvalida,
@@ -12,6 +13,7 @@ import { claseDe, type TipoDeDocumento } from './tipos-de-documento.js';
 
 const MAXIMO_DEL_NUMERO = 40;
 const MAXIMO_DE_LA_REFERENCIA = 60;
+const ANIOS_MAXIMOS_DE_ANTIGUEDAD = 10;
 
 /** Lo que se carga de un saldo inicial, con el dinero en centavos. */
 export interface DatosDeSaldoInicial {
@@ -42,7 +44,8 @@ const normalizar = (texto: string): string => texto.replace(/\s+/g, '').toUpperC
 
 function exigirLargoDelNumero(texto: string, campo: string): string {
   if (texto.length < 1 || texto.length > MAXIMO_DEL_NUMERO) {
-    throw new NumeroDeDocumentoInvalido(`Escriba ${campo} de 1 a ${MAXIMO_DEL_NUMERO} caracteres.`, campo);
+    const nombre = campo === 'serie' ? 'la serie' : 'el número';
+    throw new NumeroDeDocumentoInvalido(`Escriba ${nombre} de 1 a ${MAXIMO_DEL_NUMERO} caracteres.`, campo);
   }
   return texto;
 }
@@ -68,6 +71,21 @@ export function limpiarReferencia(referencia: string | null): string | null {
 /** La emisión es estrictamente anterior a la fecha de inicio. @throws EmisionNoAnteriorAlInicio */
 export function exigirEmisionAnteriorAlInicio(fechaEmision: string, fechaDeInicio: string): void {
   if (fechaEmision >= fechaDeInicio) throw new EmisionNoAnteriorAlInicio(fechaDeInicio);
+}
+
+/** La fecha de emisión más antigua que se acepta: 10 años antes del inicio (el 29 de febrero pasa al 28 si no existe). */
+export function emisionMinima(fechaDeInicio: string): string {
+  const [anio, mes, dia] = fechaDeInicio.split('-');
+  const anioMinimo = Number(anio) - ANIOS_MAXIMOS_DE_ANTIGUEDAD;
+  const bisiesto = anioMinimo % 4 === 0 && (anioMinimo % 100 !== 0 || anioMinimo % 400 === 0);
+  const diaMinimo = mes === '02' && dia === '29' && !bisiesto ? '28' : dia;
+  return `${String(anioMinimo).padStart(4, '0')}-${mes}-${diaMinimo}`;
+}
+
+/** La emisión no es de más de 10 años antes de la fecha de inicio (justo 10 años pasa). @throws EmisionDemasiadoAntigua */
+export function exigirEmisionNoDemasiadoAntigua(fechaEmision: string, fechaDeInicio: string): void {
+  const minima = emisionMinima(fechaDeInicio);
+  if (fechaEmision < minima) throw new EmisionDemasiadoAntigua(minima);
 }
 
 /**
@@ -104,6 +122,7 @@ export function exigirVencimientoCoherente({ tipo, vencimiento, fechaEmision }: 
  */
 export function prepararSaldoInicial(datos: DatosDeSaldoInicial, fechaDeInicio: string): DatosDeSaldoInicial {
   exigirEmisionAnteriorAlInicio(datos.fechaEmision, fechaDeInicio);
+  exigirEmisionNoDemasiadoAntigua(datos.fechaEmision, fechaDeInicio);
   const limpios = { ...datos, serie: limpiarSerie(datos.serie), numero: limpiarNumero(datos.numero) };
   exigirMontosValidos(limpios);
   const referencia = limpiarReferencia(datos.referencia);

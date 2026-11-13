@@ -33,6 +33,11 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   datos_fiscales_de_empresa_vigencia_unica: 'Ya hay un régimen registrado desde ese mes.',
 };
 
+/** Restricciones únicas cuyo valor repetido lo escribe el usuario en un campo: el cliente lo marca ahí. */
+const CAMPOS_POR_RESTRICCION: Readonly<Record<string, string>> = {
+  documentos_numero_por_proveedor_unico: 'numero',
+};
+
 /** Restricciones de exclusión (rangos que no pueden traslaparse) y lo que se le dice al usuario. */
 const MENSAJES_DE_EXCLUSION: Readonly<Record<string, string>> = {
   vigencias_de_combustible_sin_traslape: 'Esa vigencia se traslapa con otra del mismo combustible.',
@@ -62,7 +67,10 @@ function buscarErrorDePostgres(error: unknown): DatabaseError | null {
 /** Cómo se traduce cada código de error de PostgreSQL, según la restricción que lo causó. */
 const INTERPRETES_POR_CODIGO: Readonly<Record<string, (restriccion: string) => ErrorEsperado>> = {
   [VIOLACION_DE_UNICIDAD]: (restriccion) =>
-    new ValorUnicoRepetido(MENSAJES_POR_RESTRICCION[restriccion] ?? 'El registro ya existe.'),
+    new ValorUnicoRepetido(
+      MENSAJES_POR_RESTRICCION[restriccion] ?? 'El registro ya existe.',
+      restriccion in CAMPOS_POR_RESTRICCION ? { campo: CAMPOS_POR_RESTRICCION[restriccion] } : undefined,
+    ),
   [VIOLACION_DE_LLAVE_FORANEA]: () => new RecursoEnUso(),
   [VIOLACION_DE_EXCLUSION]: (restriccion) =>
     new RangoTraslapado(MENSAJES_DE_EXCLUSION[restriccion] ?? 'El registro se traslapa con otro.'),

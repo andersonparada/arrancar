@@ -57,6 +57,16 @@ function alElegir(evento: Event): void {
             <span class="font-medium">{{ ubicacionDelError(error) }}:</span> {{ error.mensaje }}
           </li>
         </ul>
+        <div v-if="estado.resultado.avisos?.length" class="space-y-1">
+          <p class="font-medium">A tener en cuenta (no impiden importar):</p>
+          <ul
+            class="max-h-48 divide-y divide-tierra-100 overflow-y-auto rounded-lg ring-1 ring-tierra-200 dark:divide-tierra-700 dark:ring-tierra-700"
+          >
+            <li v-for="(aviso, i) in estado.resultado.avisos" :key="i" class="px-3 py-2">
+              <span class="font-medium">{{ ubicacionDelError(aviso) }}:</span> {{ aviso.mensaje }}
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
     <template #pie>
