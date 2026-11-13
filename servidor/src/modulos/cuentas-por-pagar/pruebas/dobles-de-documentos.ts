@@ -67,6 +67,10 @@ export class AplicacionesEnMemoria implements RepositorioDeAplicaciones {
     this.lista = this.lista.filter((aplicacion) => aplicacion.cargoId !== cargoId);
   }
 
+  async borrar(aplicacionId: string): Promise<void> {
+    this.lista = this.lista.filter((aplicacion) => aplicacion.id !== aplicacionId);
+  }
+
   /** Lo que ya rebajaron las notas de un cargo. */
   aplicadoAl(cargo: DocumentoPorPagar): number {
     return sumar(this.lista.filter(({ cargoId }) => cargoId === cargo.id));

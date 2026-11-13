@@ -99,6 +99,12 @@ function consultaDeAplicaciones() {
     .orderBy(asc(aplicacionesDeNotas.creadoEn));
 }
 
+type FilaDeAplicacion = Awaited<ReturnType<typeof consultaDeAplicaciones>>[number];
+
+function aAplicacionConDatos({ monto, forma, ...resto }: FilaDeAplicacion): AplicacionConDatos {
+  return { ...resto, forma: forma as FormaDeAplicacion, montoCentavos: aCentavos(monto) };
+}
+
 /** Una nota de crédito rebajó cargos; a un cargo le rebajaron notas. */
 const aplicacionesPropiasDe = ({ id, tipo }: DocumentoPorPagar): SQL =>
   tipo === 'nota_de_credito' ? eq(aplicacionesDeNotas.notaId, id) : eq(aplicacionesDeNotas.cargoId, id);
@@ -153,10 +159,26 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
 
   async aplicacionesDe(documento: DocumentoPorPagar): Promise<AplicacionConDatos[]> {
     const filas = await consultaDeAplicaciones().where(aplicacionesPropiasDe(documento));
-    return filas.map(({ monto, forma, ...resto }) => ({
-      ...resto,
-      forma: forma as FormaDeAplicacion,
-      montoCentavos: aCentavos(monto),
-    }));
+    return filas.map(aAplicacionConDatos);
+  }
+
+  async aplicacion(id: string): Promise<AplicacionConDatos | null> {
+    const [fila] = await consultaDeAplicaciones().where(eq(aplicacionesDeNotas.id, id));
+    return fila ? aAplicacionConDatos(fila) : null;
+  }
+
+  async cargosConSaldoDe(proveedorId: string): Promise<FilaDeDocumento[]> {
+    const base = new ConsultaBaseDeDocumentos();
+    const filas = await base
+      .seleccionar()
+      .where(
+        and(
+          eq(documentos.proveedorId, proveedorId),
+          ne(documentos.estado, 'anulado'),
+          ne(documentos.tipo, 'nota_de_credito'),
+          sql`${base.saldoDelCargo()} > 0`,
+        ),
+      );
+    return filas.map(aFilaDeDocumento);
   }
 }

@@ -50,6 +50,10 @@ export class RepositorioDeAplicacionesDrizzle implements RepositorioDeAplicacion
     await transaccionEnCurso().delete(aplicacionesDeNotas).where(eq(aplicacionesDeNotas.cargoId, cargoId));
   }
 
+  async borrar(aplicacionId: string): Promise<void> {
+    await transaccionEnCurso().delete(aplicacionesDeNotas).where(eq(aplicacionesDeNotas.id, aplicacionId));
+  }
+
   /** Con la serie y el número del otro documento: el cargo de lo que hizo una nota, la nota de lo que recibió un cargo. */
   private async deLa(condicion: SQL, otro: 'cargo' | 'nota'): Promise<AplicacionDeNota[]> {
     const otroDocumento = aliasedTable(documentos, 'otro');
