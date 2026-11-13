@@ -17,6 +17,10 @@ export class UnidadDeTrabajoEnMemoria implements UnidadDeTrabajo {
     this.contextos.push(contexto);
     return trabajo();
   }
+
+  aislar<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado> {
+    return trabajo();
+  }
 }
 
 /** Guarda los eventos publicados en vez de enviarlos. */

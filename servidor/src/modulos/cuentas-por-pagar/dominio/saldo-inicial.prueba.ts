@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VencimientoInvalido } from './errores.js';
 import {
+  EmisionDemasiadoAntigua,
   EmisionNoAnteriorAlInicio,
   NumeroDeDocumentoInvalido,
   ReferenciaInvalida,
@@ -10,6 +11,7 @@ import {
   TotalInvalido,
 } from './errores-de-saldos-iniciales.js';
 import {
+  emisionMinima,
   limpiarNumero,
   limpiarReferencia,
   limpiarSerie,
@@ -48,6 +50,25 @@ describe('la emisión de un saldo inicial', () => {
 
   it('el mensaje dice la fecha de inicio como dd/mm/aaaa', () => {
     expect(() => prepararSaldoInicial(datos({ fechaEmision: INICIO }), INICIO)).toThrow('(01/01/2026)');
+  });
+});
+
+describe('la antigüedad de la emisión', () => {
+  it('justo 10 años antes del inicio pasa; un día más falla, con el campo y la fecha mínima', () => {
+    expect(prepararSaldoInicial(datos({ fechaEmision: '2016-01-01' }), INICIO).fechaEmision).toBe('2016-01-01');
+    expect(() => prepararSaldoInicial(datos({ fechaEmision: '2015-12-31' }), INICIO)).toThrow(EmisionDemasiadoAntigua);
+    expect(() => prepararSaldoInicial(datos({ fechaEmision: '1900-01-01' }), INICIO)).toThrow('01/01/2016');
+    try {
+      prepararSaldoInicial(datos({ fechaEmision: '2015-12-31' }), INICIO);
+    } catch (error) {
+      expect(error).toMatchObject({ codigo: 'emision_demasiado_antigua', detalles: { campo: 'fechaEmision' } });
+    }
+  });
+
+  it('el 29 de febrero de un inicio bisiesto se mide contra el 28 si 10 años antes no hubo 29', () => {
+    expect(emisionMinima('2028-02-29')).toBe('2018-02-28');
+    expect(emisionMinima('2024-02-29')).toBe('2014-02-28');
+    expect(emisionMinima('2030-03-15')).toBe('2020-03-15');
   });
 });
 

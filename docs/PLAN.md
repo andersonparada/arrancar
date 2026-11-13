@@ -1474,3 +1474,11 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   con la referencia escrita. (4) **P-U8-1:** los DTE de la bandeja de la SAT con emisión anterior a la fecha de inicio
   se **marcan** y quedan **fuera de la conciliación**; va en Libro de compras junto con U8-l (notas sobre facturas del
   sistema anterior), antes de producción con una empresa con historia.
+- **2026-11-12 — Tope de antigüedad en saldos iniciales y ensayo de Excel en una sola pasada.** Dominio de
+  `saldo-inicial.ts`: la emisión no puede ser de más de 10 años antes de la fecha de inicio (`EmisionDemasiadoAntigua`,
+  `emision_demasiado_antigua`, `detalles.campo = fechaEmision`, mensaje con la fecha mínima; el Excel lo detecta por la
+  misma vía). Motor `core/intercambio`: el ensayo (y también importar de verdad) junta en una pasada los errores de
+  formato de cada fila y los de reglas de las que se pudieron leer; cada fila corre en un punto de guardado
+  (`UnidadDeTrabajo.aislar`, nuevo en el puerto) para que un error de la base de datos no aborte la transacción.
+  Con cualquier error o en ensayo todo se deshace; el límite de 5,000 filas y la revisión del `.xlsx` no cambian.
+  Corrige H6 y H7 del informe de QA de U8.

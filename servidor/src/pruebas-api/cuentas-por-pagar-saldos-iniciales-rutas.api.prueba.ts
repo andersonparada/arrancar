@@ -148,6 +148,14 @@ describe('errores por campo', () => {
       codigo: 'emision_no_anterior_al_inicio',
       campo: 'fechaEmision',
     });
+    expect(await campoDelError({ numero: '3010', fechaEmision: '2015-12-31' })).toEqual({
+      estado: 400,
+      codigo: 'emision_demasiado_antigua',
+      campo: 'fechaEmision',
+    });
+    expect((await propietario().post(RUTA, solicitud({ numero: '3011', fechaEmision: '2016-01-01' }))).estado).toBe(
+      201,
+    );
     expect(await campoDelError({ numero: '3002', saldoPendiente: '1100.00' })).toMatchObject({
       codigo: 'saldo_pendiente_invalido',
       campo: 'saldoPendiente',

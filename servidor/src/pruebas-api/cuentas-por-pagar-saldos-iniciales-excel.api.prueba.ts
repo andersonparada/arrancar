@@ -199,15 +199,23 @@ describe('importar', () => {
     expect(await cuantos('9105')).toBe(0);
   });
 
-  it('una fila que rompe una regla del dominio se informa con su fila y no guarda nada', async () => {
-    const resultado = await importarFilas(
-      [filaBuena({ Número: '9107' }), filaBuena({ Número: '9108', 'Saldo pendiente': 5000 })],
-      false,
-    );
+  it('el ensayo muestra de una vez los errores de formato y los de reglas de todas las filas', async () => {
+    const filas = [
+      filaBuena({ Número: '9130', Total: 'mucho' }),
+      filaBuena({ Número: '9131', 'Saldo pendiente': 5000 }),
+      filaBuena({ Número: '9132' }),
+      filaBuena({ Número: '9133', 'Fecha de emisión': '20/12/1990' }),
+    ];
+
+    const resultado = await importarFilas(filas);
 
     expect(resultado.guardado).toBe(false);
-    expect(resultado.errores[0]).toMatchObject({ fila: 3, columna: 'Saldo pendiente' });
-    expect(await cuantos('9107')).toBe(0);
+    expect(resultado.errores).toEqual([
+      expect.objectContaining({ fila: 2, columna: 'Total' }),
+      expect.objectContaining({ fila: 3, columna: 'Saldo pendiente' }),
+      expect.objectContaining({ fila: 5, columna: 'Fecha de emisión' }),
+    ]);
+    expect(await cuantos('9132')).toBe(0);
   });
 
   it('el mismo documento dos veces en el archivo, o ya cargado, se rechaza', async () => {

@@ -49,6 +49,16 @@ class UnidadQueDeshace implements UnidadDeTrabajo {
       throw error;
     }
   }
+
+  async aislar<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado> {
+    const antes = [...this.guardados];
+    try {
+      return await trabajo();
+    } catch (error) {
+      this.guardados.splice(0, this.guardados.length, ...antes);
+      throw error;
+    }
+  }
 }
 
 const libro = new LibroDeExcelJs();
@@ -124,6 +134,23 @@ describe('importar', () => {
 
     expect(resultado.errores).toEqual([{ fila: 3, columna: null, mensaje: 'Ese arete ya existe.' }]);
     expect(guardados).toEqual([]);
+  });
+
+  it('en una sola pasada junta los problemas de formato y los de las reglas, de todas las filas', async () => {
+    const archivo = await excelCon([['GT-01'], ['G1'], ['GT-01'], ['GT-02', '31/02/2024'], ['GT-02'], ['GT-02']]);
+
+    for (const ensayo of [true, false]) {
+      const resultado = await intercambio.importar(operador, { contenido: archivo, ensayo });
+
+      expect(resultado.guardado).toBe(false);
+      expect(resultado.errores).toEqual([
+        { fila: 3, columna: 'Arete', mensaje: 'El arete tiene al menos 3 caracteres.' },
+        { fila: 4, columna: null, mensaje: 'Ese arete ya existe.' },
+        { fila: 5, columna: 'Nacimiento', mensaje: 'Esa fecha no existe.' },
+        { fila: 7, columna: null, mensaje: 'Ese arete ya existe.' },
+      ]);
+      expect(guardados).toEqual([]);
+    }
   });
 
   it('avisa si falta una columna obligatoria o el archivo no es un Excel', async () => {
