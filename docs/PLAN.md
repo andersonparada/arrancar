@@ -1495,3 +1495,15 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   todos los ajustes del contador; notas de débito anteriores a la fecha de inicio como **dato opcional** (total e IVA)
   que suma al tope; una nota con factura anterior **recibida antes de la fecha de inicio se rechaza** («es del sistema
   anterior: cárguela en Saldos iniciales») y se revisa también al mover la fecha de inicio.
+- **2026-11-12 — Diseño de U8-l y P-U8-1 listo para programar.** `docs/modulos/diseno-u8l-notas-sobre-facturas-anteriores.md`
+  recibe todo lo aprobado: `facturas_anteriores` con `notas_de_debito_anteriores_total`/`_iva` (suman al tope), clave por
+  familia factura (único sin `tipo`) y único parcial por autorización FEL; `otra_causa_sin_credito` también en
+  `documentos.motivo_sin_credito` del libro (la nota de crédito hereda el motivo tal cual; IVA al costo, sigla «OC»),
+  limitado por check a la nota de crédito con factura anterior; rechazo de la nota recibida antes de la fecha de inicio
+  y revisión en los dos sentidos al mover la fecha; aviso desde 4 años; avisos de retención en Cuentas por pagar; aviso
+  de notas posteriores libres al cargar un saldo inicial (en el DTO y en el cuadre, porque el Excel no lleva avisos);
+  DTE anteriores con la salvedad de C-U8-1 y los de los dos meses anteriores al corte destacados; «Documento que
+  modifica» en la ficha y en el Excel del libro. Migraciones: Libro de compras `0035`; Cuentas por pagar **`0007`**
+  (la `0005` es de CP2-2 y la `0006` de CP3-1). Orden: P1-1, P1-2 y U8l-1 ya (solo Libro); U8l-2 y U8l-3 después de
+  CP2-4 y CP3-1 y no en paralelo con CP3-2 a CP3-4; U8l-7 después de CP2-6; QA después de CP2-7. Pendientes P-U8l-1
+  (frase FEL 9-22, contador) y P-U8l-2 (¿«otra causa» también en facturas del libro?, usuario).
