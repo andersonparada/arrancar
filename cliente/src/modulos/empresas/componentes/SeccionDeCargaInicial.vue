@@ -5,6 +5,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { formatearFecha, formatearFechaHora } from '@/modulos/core/utilidades/formato';
+import { AYUDA_DE_FECHA_DE_INICIO, avisoDeFechaDeInicio } from '../composables/datos-de-empresa';
 import type { CargaInicial } from '../servicios/datos-de-empresa.api';
 
 const props = defineProps<{
@@ -18,6 +19,7 @@ const emit = defineEmits<{ cerrar: []; reabrir: [] }>();
 const fechaDeInicio = defineModel<string>('fechaDeInicio', { required: true });
 
 const cerrada = computed(() => props.carga?.cerrada ?? false);
+const avisoDeFecha = computed(() => (cerrada.value ? null : avisoDeFechaDeInicio(fechaDeInicio.value)));
 const detalleDelCierre = computed(() => {
   const { cerradaEn, cerradaPor } = props.carga ?? {};
   return cerradaEn ? `Cerrada el ${formatearFechaHora(cerradaEn)}${cerradaPor ? ` por ${cerradaPor}` : ''}.` : '';
@@ -41,9 +43,16 @@ const detalleDelCierre = computed(() => {
       :ayuda="
         cerrada
           ? `Fija desde el ${formatearFecha(carga?.fechaDeInicio)}. ${detalleDelCierre}`
-          : 'Desde qué día lleva la empresa su contabilidad en Arrancar. Se puede corregir mientras la carga inicial esté abierta.'
+          : AYUDA_DE_FECHA_DE_INICIO
       "
     />
+    <p
+      v-if="avisoDeFecha"
+      role="status"
+      class="rounded-lg bg-trigo-300/40 px-3 py-2 text-xs text-tierra-800 dark:bg-trigo-500/20 dark:text-trigo-300"
+    >
+      {{ avisoDeFecha }}
+    </p>
     <div class="flex flex-wrap gap-2">
       <BotonBase
         v-if="!cerrada"
