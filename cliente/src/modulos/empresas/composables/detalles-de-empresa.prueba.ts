@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type { CargaInicial } from '../servicios/datos-de-empresa.api';
 import type { Empresa } from '../servicios/empresas.api';
-import { detallesDeEmpresa } from './detalles-de-empresa';
+import { detallesDeCargaInicial, detallesDeEmpresa } from './detalles-de-empresa';
+
+// Las fechas dan formato con la sesión (Pinia).
+beforeEach(() => setActivePinia(createPinia()));
 
 const empresa: Empresa = {
   id: 'e1',
@@ -24,5 +29,29 @@ describe('detalles de la ficha de la empresa', () => {
       Correo: 'a@b.gt',
       Estado: 'Desactivada',
     });
+  });
+});
+
+describe('fecha de inicio y carga inicial en la ficha', () => {
+  const carga: CargaInicial = {
+    empresaId: 'e1',
+    fechaDeInicio: '2026-11-01',
+    cerrada: false,
+    cerradaEn: null,
+    cerradaPor: null,
+  };
+  const porEtiqueta = (c: CargaInicial) =>
+    Object.fromEntries(detallesDeCargaInicial(c).map((d) => [d.etiqueta, d.valor]));
+
+  it('muestra la fecha de inicio y que la carga sigue abierta', () => {
+    const detalles = porEtiqueta(carga);
+
+    expect(detalles['Fecha de inicio']).toContain('2026');
+    expect(detalles['Carga inicial']).toBe('Abierta');
+  });
+
+  it('sin fecha dice «Sin registrar»; con la carga cerrada lo dice', () => {
+    expect(porEtiqueta({ ...carga, fechaDeInicio: null })['Fecha de inicio']).toBe('Sin registrar');
+    expect(porEtiqueta({ ...carga, cerrada: true })['Carga inicial']).toBe('Cerrada');
   });
 });

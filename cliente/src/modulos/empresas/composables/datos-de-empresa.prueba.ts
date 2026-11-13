@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CargaInicial } from '../servicios/datos-de-empresa.api';
 import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import {
+  avisoDeErrorEnSecciones,
   avisoDeFechaDeInicio,
   errorConCampoDeFecha,
   RECORDATORIO_DE_CUADRE,
@@ -103,5 +104,20 @@ describe('error de saldos iniciales posteriores a la fecha', () => {
 describe('recordatorio del cuadre', () => {
   it('pide comparar con el balance de apertura', () => {
     expect(RECORDATORIO_DE_CUADRE).toContain('balance de apertura');
+  });
+});
+
+describe('error de una sección junto a la fecha de inicio', () => {
+  it('repite el error de la sección fiscal para quien edita al final del formulario', () => {
+    const errores = { 'secciones.libro-de-compras.tipoDePersona': 'Escoja si es persona individual o jurídica.' };
+
+    expect(avisoDeErrorEnSecciones(errores)).toBe(
+      'No se guardó. Corrija más arriba: Escoja si es persona individual o jurídica.',
+    );
+  });
+
+  it('con errores de otros campos o sin errores no dice nada', () => {
+    expect(avisoDeErrorEnSecciones({ nombre: 'Escriba el nombre.' })).toBeNull();
+    expect(avisoDeErrorEnSecciones({})).toBeNull();
   });
 });

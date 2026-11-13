@@ -24,6 +24,14 @@ describe('errores de PostgreSQL que en realidad son esperados', () => {
     expect(error).toMatchObject({ codigo: 'duplicado', message: 'Ese nombre de usuario ya está en uso.' });
   });
 
+  it('el número de documento repetido marca el campo `numero`; los demás únicos no traen campo', () => {
+    const repetido = interpretarErrorDePostgres(errorDePostgres('23505', 'documentos_numero_por_proveedor_unico'));
+    const otro = interpretarErrorDePostgres(errorDePostgres('23505', 'usuarios_usuario_unico'));
+
+    expect(repetido).toMatchObject({ detalles: { campo: 'numero' } });
+    expect(otro?.detalles).toBeUndefined();
+  });
+
   it('borrar algo que otros datos usan es un recurso en uso', () => {
     expect(interpretarErrorDePostgres(errorDePostgres('23503'))).toBeInstanceOf(RecursoEnUso);
   });

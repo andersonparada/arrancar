@@ -206,7 +206,7 @@ describe('importar', () => {
     );
 
     expect(resultado.guardado).toBe(false);
-    expect(resultado.errores[0]).toMatchObject({ fila: 3, columna: null });
+    expect(resultado.errores[0]).toMatchObject({ fila: 3, columna: 'Saldo pendiente' });
     expect(await cuantos('9107')).toBe(0);
   });
 
@@ -216,8 +216,32 @@ describe('importar', () => {
 
     expect(dentro).toMatchObject({ guardado: false, errores: [{ fila: 3 }] });
     expect(dentro.errores[0].mensaje).toContain('ya está en Cuentas por pagar');
+    expect(dentro.errores[0].columna).toBe('Número');
     expect(contraLoCargado).toMatchObject({ guardado: false, errores: [{ fila: 2 }] });
     expect(await cuantos('9109')).toBe(0);
+  });
+});
+
+describe('avisos del ensayo', () => {
+  it('sin vencimiento en la fila, el ensayo muestra el propuesto; con vencimiento, no avisa', async () => {
+    const sin = await importarFilas([filaBuena({ Número: '9120', Vencimiento: null })]);
+    const con = await importarFilas([filaBuena({ Número: '9121' })]);
+
+    expect(sin.errores).toEqual([]);
+    expect(sin.avisos).toEqual([
+      expect.objectContaining({ fila: 2, columna: 'Vencimiento', mensaje: expect.stringContaining('Se propone') }),
+    ]);
+    expect(con.avisos).toBeUndefined();
+  });
+
+  it('la hoja de instrucciones dice que el código del proveedor es el NIT y da una fecha de ejemplo', async () => {
+    const plantilla = (await importador.get(`${RUTA}/plantilla`)).cuerpo as Buffer;
+    const hoja = (await leerLibro(plantilla)).worksheets[1]!;
+    const texto: string[] = [];
+    hoja.eachRow((fila) => texto.push(String(fila.getCell(1).value)));
+
+    expect(texto.join('\n')).toContain('el código del proveedor es su NIT');
+    expect(texto.join('\n')).toContain('15/03/2025');
   });
 });
 
