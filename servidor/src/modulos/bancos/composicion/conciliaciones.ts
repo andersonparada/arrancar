@@ -7,6 +7,7 @@ import { ListarConciliaciones } from '../aplicacion/casos-uso/conciliaciones/lis
 import { MarcarMovimientos } from '../aplicacion/casos-uso/conciliaciones/marcar-movimientos.js';
 import { ObtenerConciliacion } from '../aplicacion/casos-uso/conciliaciones/obtener-conciliacion.js';
 import { TerminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/terminar-conciliacion.js';
+import { TranscribirSaldo } from '../aplicacion/casos-uso/conciliaciones/transcribir-saldo.js';
 import { ConciliacionesControlador } from '../http/conciliaciones.controlador.js';
 import { rutasConciliaciones } from '../http/conciliaciones.rutas.js';
 import { ConsultasConciliacionesDrizzle } from '../infraestructura/persistencia/consultas-conciliaciones.drizzle.js';
@@ -33,6 +34,7 @@ export function rutasDeConciliaciones() {
     obtener: new ObtenerConciliacion(dependencias),
     iniciar: new IniciarConciliacion(dependencias),
     marcar: new MarcarMovimientos(dependencias),
+    transcribirSaldo: new TranscribirSaldo(dependencias),
     terminar: new TerminarConciliacion(dependencias),
     autorizar: new AutorizarConciliacion(dependencias),
     devolver: new DevolverConciliacion(dependencias),

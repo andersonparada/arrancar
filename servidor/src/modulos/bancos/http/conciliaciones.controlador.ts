@@ -8,11 +8,13 @@ import type { ListarConciliaciones } from '../aplicacion/casos-uso/conciliacione
 import type { MarcarMovimientos } from '../aplicacion/casos-uso/conciliaciones/marcar-movimientos.js';
 import type { ObtenerConciliacion } from '../aplicacion/casos-uso/conciliaciones/obtener-conciliacion.js';
 import type { TerminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/terminar-conciliacion.js';
+import type { TranscribirSaldo } from '../aplicacion/casos-uso/conciliaciones/transcribir-saldo.js';
 import type {
   InicioDeConciliacionSolicitado,
   MarcasSolicitadas,
   ParamsConciliacion,
   ParamsCuentaBancariaDeConciliaciones,
+  SaldoDelEstadoDeCuentaSolicitado,
   SolicitudConMotivo,
 } from './conciliaciones.esquemas-http.js';
 
@@ -21,6 +23,7 @@ export interface CasosDeUsoDeConciliaciones {
   obtener: ObtenerConciliacion;
   iniciar: IniciarConciliacion;
   marcar: MarcarMovimientos;
+  transcribirSaldo: TranscribirSaldo;
   terminar: TerminarConciliacion;
   autorizar: AutorizarConciliacion;
   devolver: DevolverConciliacion;
@@ -46,6 +49,14 @@ export class ConciliacionesControlador {
     this.casosDeUso.marcar.ejecutar(operadorDe(solicitud), {
       conciliacionId: solicitud.params.conciliacionId,
       movimientoIds: solicitud.body.movimientoIds,
+    });
+
+  transcribirSaldo = (
+    solicitud: FastifyRequest<{ Params: ParamsConciliacion; Body: SaldoDelEstadoDeCuentaSolicitado }>,
+  ) =>
+    this.casosDeUso.transcribirSaldo.ejecutar(operadorDe(solicitud), {
+      conciliacionId: solicitud.params.conciliacionId,
+      saldo: solicitud.body.saldoEstadoDeCuenta,
     });
 
   terminar = (solicitud: FastifyRequest<{ Params: ParamsConciliacion }>) =>

@@ -3,7 +3,7 @@ import { expect } from 'vitest';
 import { configuracion } from '../../configuracion.js';
 import type { ClienteApi } from './cliente-api.js';
 import type { EntornoApi } from './entorno-api.js';
-import { conceptoDeSistema, crearCuentaBancaria } from './escenarios-de-bancos.js';
+import { conceptoDeSistema, crearCuentaBancaria, terminarConciliacionConSaldo } from './escenarios-de-bancos.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './escenarios.js';
 
 /**
@@ -68,7 +68,7 @@ async function conciliarEnero(escenario: EscenarioDeFlujo, autoriza: ClienteApi)
   const ruta = `/api/bancos/conciliaciones/${iniciada.cuerpo.id}`;
   const candidatos = iniciada.cuerpo.candidatos as Array<{ id: string; saldoInicial: boolean }>;
   await propietario.put(`${ruta}/marcas`, { movimientoIds: [candidatos.find((m) => m.saldoInicial)!.id] });
-  await propietario.post(`${ruta}/terminar`, {});
+  await terminarConciliacionConSaldo(propietario, iniciada.cuerpo.id);
   expect((await autoriza.post(`${ruta}/autorizar`, {})).estado).toBe(200);
 }
 

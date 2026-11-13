@@ -18,6 +18,7 @@ import {
   periodoAnterior,
   type ConciliacionId,
 } from '../dominio/conciliacion.js';
+import { diferenciaConElEstadoDeCuenta } from '../dominio/estado-de-cuenta.js';
 import type { MovimientosEnMemoria } from './dobles-de-movimientos.js';
 
 const copia = (conciliacion: Conciliacion) => Conciliacion.reconstruir(conciliacion.instantanea());
@@ -138,26 +139,19 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
   }
 
   private aEncabezado(conciliacion: Conciliacion) {
-    const { id, cuentaBancariaId, anio, mes, estado } = conciliacion.instantanea();
+    const { id, cuentaBancariaId, anio, mes, estado, saldoEstadoDeCuenta, previaAlSaldoTranscrito } =
+      conciliacion.instantanea();
+    const sinNombres = { cuentaBancariaNombre: null, bancoNombre: null, numeroDeCuenta: null, empresaNombre: null };
+    const sinPersonas = { elaboradaPorNombre: null, elaboradaEn: null, autorizadaPorNombre: null, autorizadaEn: null };
     return {
-      id: id.valor,
-      cuentaBancariaId,
-      cuentaBancariaNombre: null,
-      bancoNombre: null,
-      numeroDeCuenta: null,
-      empresaNombre: null,
-      anio,
-      mes,
-      estado,
-      elaboradaPorNombre: null,
-      elaboradaEn: null,
-      autorizadaPorNombre: null,
-      autorizadaEn: null,
+      ...{ id: id.valor, cuentaBancariaId, anio, mes, estado, saldoEstadoDeCuenta, previaAlSaldoTranscrito },
+      ...sinNombres,
+      ...sinPersonas,
     };
   }
 
   private async armarDto(conciliacion: Conciliacion): Promise<ConciliacionDto> {
-    const { estado, foto } = conciliacion.instantanea();
+    const { estado, foto, saldoEstadoDeCuenta } = conciliacion.instantanea();
     const { candidatos, resultado } = await this.calcularDocumento(conciliacion);
     const saldoQueDebeMostrarElEstadoDeCuenta =
       estado === 'autorizada' && foto
@@ -169,6 +163,10 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
       cuadratica: { libros: resultado.libros, banco: resultado.banco },
       partidas: resultado.partidas,
       saldoQueDebeMostrarElEstadoDeCuenta,
+      diferenciaConElEstadoDeCuenta: diferenciaConElEstadoDeCuenta(
+        saldoEstadoDeCuenta,
+        saldoQueDebeMostrarElEstadoDeCuenta,
+      ),
     };
   }
 

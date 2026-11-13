@@ -1,6 +1,7 @@
 import { DatoInvalido } from '../../core/compartido/dominio/errores.js';
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
+import { exigirSaldoQueCoincide, SaldoTranscrito } from './estado-de-cuenta.js';
 import { AutorizaQuienElaboro, ConciliacionNoEstaElaborada, ConciliacionNoEstaEnProceso } from './errores.js';
 
 export type ConciliacionId = Identificador<'Conciliacion'>;
@@ -43,6 +44,16 @@ export interface PropiedadesDeConciliacion extends DatosDeConciliacion {
   autorizadaPor: string | null;
   autorizadaEn: Date | null;
   foto: FotoDelCalculo | null;
+  /** El saldo final que muestra el estado de cuenta del banco, transcrito por quien elabora; solo se compara. */
+  saldoEstadoDeCuenta: string | null;
+  /** Elaborada o autorizada antes de que se pidiera el saldo; solo la migración la marca. */
+  previaAlSaldoTranscrito: boolean;
+}
+
+/** Lo que se revisa al terminar la conciliación. */
+export interface EvidenciaParaTerminar {
+  /** El saldo que calculan hoy las marcas: el transcrito debe coincidir con él. */
+  saldoCalculado: string;
 }
 
 /** El año o el mes de una conciliación no son válidos. */
@@ -83,8 +94,8 @@ export function periodoAnterior({ anio, mes }: Periodo): Periodo {
 
 /**
  * La conciliación de una cuenta con el estado de cuenta del banco, mes por mes.
- * El usuario no escribe ningún saldo: solo marca qué documentos aparecen en el
- * estado de cuenta y el sistema arma el documento (cuadro cuadrático y partidas
+ * El usuario no escribe ningún saldo que entre al cálculo: marca qué documentos aparecen en el
+ * estado de cuenta (y transcribe su saldo final solo para compararlo) y el sistema arma el documento (cuadro cuadrático y partidas
  * detalladas). Flujo: `en_proceso` (se marca) → `elaborada` (quien concilia la
  * termina; ya no se cambian las marcas salvo que se devuelva) → `autorizada`
  * (otra persona, con permiso aparte; congela la foto del cálculo y bloquea el
@@ -107,6 +118,8 @@ export class Conciliacion extends Entidad<ConciliacionId> {
       autorizadaPor: null,
       autorizadaEn: null,
       foto: null,
+      saldoEstadoDeCuenta: null,
+      previaAlSaldoTranscrito: false,
     });
   }
 
@@ -114,9 +127,22 @@ export class Conciliacion extends Entidad<ConciliacionId> {
     return new Conciliacion(propiedades);
   }
 
-  /** La da por terminada quien la elaboró: ya no se le cambian las marcas. @throws ConciliacionNoEstaEnProceso */
-  elaborar(usuarioId: string): void {
+  /** Guarda el saldo del estado de cuenta (o lo borra con `null`). @throws ConciliacionNoEstaEnProceso */
+  transcribirSaldo(saldo: string | null): void {
     this.exigirEnProceso();
+    const saldoEstadoDeCuenta = saldo === null ? null : SaldoTranscrito.desde(saldo).texto;
+    this.propiedades = { ...this.propiedades, saldoEstadoDeCuenta };
+  }
+
+  /**
+   * La da por terminada quien la elaboró: ya no se le cambian las marcas.
+   * @throws ConciliacionNoEstaEnProceso
+   * @throws FaltaElSaldoDelEstadoDeCuenta si no transcribió el saldo.
+   * @throws SaldoDelEstadoDeCuentaNoCoincide si el saldo difiere del calculado.
+   */
+  elaborar(usuarioId: string, evidencia: EvidenciaParaTerminar): void {
+    this.exigirEnProceso();
+    exigirSaldoQueCoincide(this.propiedades.saldoEstadoDeCuenta, evidencia.saldoCalculado);
     this.propiedades = { ...this.propiedades, estado: 'elaborada', elaboradaPor: usuarioId, elaboradaEn: new Date() };
   }
 
@@ -125,10 +151,14 @@ export class Conciliacion extends Entidad<ConciliacionId> {
    * @throws ConciliacionNoEstaElaborada si no está elaborada.
    * @throws AutorizaQuienElaboro si autoriza quien la elaboró, salvo que sea de
    *   superacceso (soporte), que puede hacerlo todo.
+   * @throws FaltaElSaldoDelEstadoDeCuenta si no tiene saldo transcrito (una previa se devuelve).
+   * @throws SaldoDelEstadoDeCuentaNoCoincide si el saldo difiere del calculado de la foto.
    */
   autorizar({ usuarioId, esSuperacceso }: QuienAutoriza, foto: FotoDelCalculo): void {
     this.exigirElaborada();
     if (!esSuperacceso && this.propiedades.elaboradaPor === usuarioId) throw new AutorizaQuienElaboro();
+    const { saldoEstadoDeCuenta, previaAlSaldoTranscrito } = this.propiedades;
+    exigirSaldoQueCoincide(saldoEstadoDeCuenta, foto.saldoCalculadoEstadoDeCuenta, previaAlSaldoTranscrito);
     this.propiedades = {
       ...this.propiedades,
       estado: 'autorizada',
@@ -138,10 +168,20 @@ export class Conciliacion extends Entidad<ConciliacionId> {
     };
   }
 
-  /** Regresa la conciliación a en_proceso para volver a marcar. @throws ConciliacionNoEstaElaborada */
+  /**
+   * Regresa la conciliación a en_proceso para volver a marcar; conserva el saldo transcrito y, si era
+   * previa al saldo, sigue desde aquí el flujo nuevo.
+   * @throws ConciliacionNoEstaElaborada
+   */
   devolver(): void {
     this.exigirElaborada();
-    this.propiedades = { ...this.propiedades, estado: 'en_proceso', elaboradaPor: null, elaboradaEn: null };
+    this.propiedades = {
+      ...this.propiedades,
+      estado: 'en_proceso',
+      elaboradaPor: null,
+      elaboradaEn: null,
+      previaAlSaldoTranscrito: false,
+    };
   }
 
   get estado(): EstadoDeConciliacion {
