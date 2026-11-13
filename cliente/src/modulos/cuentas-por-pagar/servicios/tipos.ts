@@ -29,6 +29,10 @@ export interface AccionesDelDocumento {
   puedeCambiarVencimiento: boolean;
   puedeAnular: boolean;
   puedeEliminar: boolean;
+  /** Una nota de crédito con saldo libre se puede aplicar a otro cargo del proveedor. */
+  puedeAplicar: boolean;
+  /** Una nota de crédito registrada o autorizada con saldo libre se puede ajustar. */
+  puedeAjustar: boolean;
 }
 
 /** Un documento tal como lo ven la bandeja, la lista y la ficha; el dinero viaja como texto. */
@@ -56,6 +60,9 @@ export interface DocumentoPorPagar extends AccionesDelDocumento {
   retenciones: string;
   neto: string;
   aplicado: string;
+  /** Lo dado de baja con ajustes vigentes (solo notas de crédito; en un cargo es 0). */
+  ajustado: string;
+  /** En un cargo, lo que falta pagar; en una nota de crédito, su saldo libre (a favor). */
   saldo: string;
   /** El usuario lo ingresó en Libro de compras o lo completó: para autorizarlo necesita `autorizar-propios`. */
   esPropio: boolean;
@@ -154,6 +161,8 @@ export interface ConsultaDeDocumentos {
   emitidosDesde?: string;
   emitidosHasta?: string;
   soloVencidos?: boolean;
+  /** Cargos con saldo por pagar y notas con saldo libre. */
+  conSaldo?: boolean;
   pagina?: number;
   limite?: number;
 }

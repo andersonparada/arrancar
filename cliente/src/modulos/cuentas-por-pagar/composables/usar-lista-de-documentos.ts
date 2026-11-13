@@ -1,21 +1,16 @@
-import { computed, onMounted, reactive, ref, watch, type Ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { alDejarDeEscribir } from '@/modulos/core/composables/al-dejar-de-escribir';
 import {
   apiCuentasPorPagar,
+  type ConsultaDeDocumentos,
   type DocumentoPorPagar,
   type ProveedorParaFiltro,
 } from '../servicios/cuentas-por-pagar.api';
-import {
-  consultaDeDocumentos,
-  DOCUMENTOS_POR_PAGINA,
-  filtrosIniciales,
-  paginasEnTotal,
-  type FiltrosDeDocumentos,
-} from './filtros-de-documentos';
+import { consultaDeDocumentos, DOCUMENTOS_POR_PAGINA, filtrosIniciales, paginasEnTotal } from './filtros-de-documentos';
 
 /** Los proveedores para el filtro; si falla, el filtro queda solo con «Todos» y se avisa por qué. */
-function usarProveedoresDelFiltro() {
+export function usarProveedoresDelFiltro() {
   const avisos = usarAvisos();
   const proveedores = ref<ProveedorParaFiltro[]>([]);
   onMounted(async () => {
@@ -29,7 +24,7 @@ function usarProveedoresDelFiltro() {
 }
 
 /** Pide la página de documentos; si llegan dos respuestas, solo vale la de la última petición. */
-function usarPeticionDeDocumentos(filtros: FiltrosDeDocumentos, pagina: Ref<number>) {
+export function usarPeticionDeDocumentos(construirConsulta: () => ConsultaDeDocumentos) {
   const avisos = usarAvisos();
   const documentos = ref<DocumentoPorPagar[]>([]);
   const total = ref(0);
@@ -40,7 +35,7 @@ function usarPeticionDeDocumentos(filtros: FiltrosDeDocumentos, pagina: Ref<numb
     const peticion = ++ultimaPeticion;
     cargando.value = true;
     try {
-      const respuesta = await apiCuentasPorPagar.listar(consultaDeDocumentos(filtros, pagina.value));
+      const respuesta = await apiCuentasPorPagar.listar(construirConsulta());
       if (peticion !== ultimaPeticion) return;
       documentos.value = respuesta.elementos;
       total.value = respuesta.total;
@@ -58,7 +53,9 @@ function usarPeticionDeDocumentos(filtros: FiltrosDeDocumentos, pagina: Ref<numb
 export function usarListaDeDocumentos() {
   const filtros = reactive(filtrosIniciales());
   const pagina = ref(1);
-  const { documentos, total, cargando, cargar } = usarPeticionDeDocumentos(filtros, pagina);
+  const { documentos, total, cargando, cargar } = usarPeticionDeDocumentos(() =>
+    consultaDeDocumentos(filtros, pagina.value),
+  );
 
   // Cambiar un filtro vuelve a la primera página; si ya estaba en ella, recarga directo.
   alDejarDeEscribir(filtros, () => (pagina.value === 1 ? cargar() : (pagina.value = 1)));
