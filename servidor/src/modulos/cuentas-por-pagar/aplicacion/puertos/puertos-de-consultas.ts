@@ -1,3 +1,4 @@
+import type { CausaDeAjuste } from '../../dominio/ajustes.js';
 import type { DocumentoPorPagar, FormaDeAplicacion } from '../../dominio/documento-por-pagar.js';
 import type { ProveedorConDocumentosDto } from '../dto/documento-por-pagar.dto.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
@@ -92,6 +93,21 @@ export interface AplicacionConDatos {
   montoCentavos: number;
 }
 
+/** Un ajuste con los nombres de quien lo hizo y de quien lo anuló, para la ficha de la nota. */
+export interface AjusteConDatos {
+  id: string;
+  montoCentavos: number;
+  fecha: string;
+  causa: CausaDeAjuste;
+  motivo: string;
+  referencia: string | null;
+  estado: 'vigente' | 'anulado';
+  creadoPorNombre: string | null;
+  /** Instante en ISO (UTC). */
+  creadoEn: string;
+  anulacion: { motivo: string; anuladoPorNombre: string | null; anuladoEn: string | null } | null;
+}
+
 /** Las cuentas del proveedor en la empresa: lo que se debe y lo que las notas dejaron a favor. */
 export interface TotalesDelProveedor {
   proveedorNombre: string;
@@ -125,6 +141,8 @@ export interface ConsultasDeDocumentos {
   aplicacionesDe(documento: DocumentoPorPagar): Promise<AplicacionConDatos[]>;
   /** Una aplicación con los datos de la nota y del cargo; `null` si no existe en la empresa. */
   aplicacion(id: string): Promise<AplicacionConDatos | null>;
+  /** Los ajustes de una nota de crédito (también los anulados), del más antiguo al más nuevo. */
+  ajustesDe(documentoId: string): Promise<AjusteConDatos[]>;
   /** Los cargos vigentes del proveedor que todavía deben algo (los que una nota puede rebajar), sin orden fijo. */
   cargosConSaldoDe(proveedorId: string): Promise<FilaDeDocumento[]>;
 }

@@ -2,6 +2,7 @@ import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import type { ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
 import { netoDe, type DocumentoPorPagar } from '../dominio/documento-por-pagar.js';
 import type {
+  AjusteConDatos,
   AplicacionConDatos,
   ConsultasDeDocumentos,
   FilaDeDocumento,
@@ -23,25 +24,34 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
     return documento ? this.filaDe(documento) : null;
   }
 
+  private ajustesVigentesDe({ id }: DocumentoPorPagar) {
+    return this.documentos.ajustes.filter(({ documentoId, estado }) => documentoId === id && estado === 'vigente');
+  }
+
+  private libroDe(documento: DocumentoPorPagar): FilaDeDocumento['libro'] {
+    return {
+      proveedorNombre: 'Proveedor',
+      proveedorNit: '1234567',
+      fechaRecepcion: documento.documentoId === null ? null : documento.fechaEmision,
+      periodo: documento.documentoId === null ? null : `${documento.fechaEmision.slice(0, 7)}-01`,
+      anulacion: { causa: null, motivo: null, anuladoPor: null, anuladoPorNombre: null, anuladoEn: null },
+    };
+  }
+
   private filaDe(documento: DocumentoPorPagar): FilaDeDocumento {
     const vigentes = this.documentos.documentos.filter(
       (nota) => nota.documentoAfectadoId === documento.documentoId && nota.estado !== 'anulado',
     );
+    const vigentesDe = this.ajustesVigentesDe(documento);
     return {
       documento: { ...documento },
-      libro: {
-        proveedorNombre: 'Proveedor',
-        proveedorNit: '1234567',
-        fechaRecepcion: documento.documentoId === null ? null : documento.fechaEmision,
-        periodo: documento.documentoId === null ? null : `${documento.fechaEmision.slice(0, 7)}-01`,
-        anulacion: { causa: null, motivo: null, anuladoPor: null, anuladoPorNombre: null, anuladoEn: null },
-      },
+      libro: this.libroDe(documento),
       creadoEn: '2026-03-10T00:00:00.000Z',
       aplicadoAlCargoCentavos: this.aplicaciones?.aplicadoAl(documento) ?? 0,
       aplicadoPorLaNotaCentavos:
         documento.totalCentavos - (this.aplicaciones?.saldoLibreDe(documento) ?? documento.totalCentavos),
-      ajustadoCentavos: 0,
-      ajustesVigentes: 0,
+      ajustadoCentavos: vigentesDe.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0),
+      ajustesVigentes: vigentesDe.length,
       aplicacionesManualesRecibidas: 0,
       notasVigentes: vigentes.length,
       notasEnTotal: this.documentos.documentos.filter((nota) => nota.documentoAfectadoId === documento.documentoId)
@@ -59,6 +69,17 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
 
   async bandeja(): Promise<{ filas: FilaDeDocumento[]; total: number }> {
     return { filas: [], total: 0 };
+  }
+
+  async ajustesDe(documentoId: string): Promise<AjusteConDatos[]> {
+    return this.documentos.ajustes
+      .filter((ajuste) => ajuste.documentoId === documentoId)
+      .map(({ documentoId: _documento, motivoDeAnulacion, ...ajuste }) => ({
+        ...ajuste,
+        creadoPorNombre: 'Quien ajustó',
+        creadoEn: '2026-03-10T00:00:00.000Z',
+        anulacion: motivoDeAnulacion ? { motivo: motivoDeAnulacion, anuladoPorNombre: null, anuladoEn: null } : null,
+      }));
   }
 
   async notasDe() {

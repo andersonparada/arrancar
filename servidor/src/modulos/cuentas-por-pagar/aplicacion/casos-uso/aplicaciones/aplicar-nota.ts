@@ -52,7 +52,7 @@ export class AplicarNota {
       exigirMontosQueCaben(nota, cargos, lineas);
       const fecha = await this.fechaValida(operador, pedido.fecha, { nota, cargos, fechaDeInicio });
       await aplicaciones.agregar(nota.documento, lineas, { forma: 'manual', fecha, referencia });
-      return this.ficha(operador, pedido.notaId);
+      return this.ficha(operador, pedido.notaId, fechaDeInicio);
     });
   }
 
@@ -99,8 +99,14 @@ export class AplicarNota {
     return fecha;
   }
 
-  private async ficha(operador: Operador, notaId: string): Promise<FichaDelDocumentoPorPagarDto> {
-    const { consultas, reloj } = this.dependencias;
-    return fichaDeUnDocumento(consultas, await filaExistente(consultas, notaId), await puntoDeVistaDe(reloj, operador));
+  private async ficha(
+    operador: Operador,
+    notaId: string,
+    fechaDeInicio: string | null,
+  ): Promise<FichaDelDocumentoPorPagarDto> {
+    const { consultas, reloj, topeDeDiferencia } = this.dependencias;
+    const extras = { fechaDeInicio, topeDiferenciaMenorCentavos: await topeDeDiferencia.centavos(operador) };
+    const fila = await filaExistente(consultas, notaId);
+    return fichaDeUnDocumento(consultas, fila, { vista: await puntoDeVistaDe(reloj, operador), extras });
   }
 }
