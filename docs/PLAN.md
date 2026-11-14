@@ -1597,3 +1597,45 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   tenga cheques en circulación al empezar. Preguntas CP4-a a m para el usuario y C-CP4-1 a 8 para el contador.
 
 - **2026-11-13 — CP2-6 (cliente, ficha de la nota).** En la ficha de una nota de crédito: «Aplicar a otro documento» (`aplicar-notas`, `puedeAplicar`) abre `VentanaDeAplicacion` con los cargos del proveedor (autorizados primero, «Sin autorizar» marcados), monto propuesto editable por fila, «Todo lo que cabe», «Repartir de nuevo», total contra el saldo a favor, fecha (mínimo según los documentos elegidos) y referencia del acuerdo, con aviso de bancarización cuando se compensa contra un cargo sobre el umbral; «Ajustar saldo» (`ajustes.crear`, `puedeAjustar`) abre `VentanaDeAjuste` (aviso «corrija la nota en el Libro de compras», ayuda por causa con «no deducible» y «las comisiones bancarias no son diferencia menor», tope de diferencia menor, referencia obligatoria al compensar, aviso de año anterior sin bloquear). Nuevas secciones «Notas de crédito aplicadas» (forma, fecha, referencia, «Quitar» con motivo) y «Ajustes del saldo» (causa, efecto, estado, «Anular el ajuste» con motivo); el cargo con aplicaciones manuales explica «quite primero esas aplicaciones». Lógica pura en `aplicacion-de-nota.ts`, `ajuste-de-saldo.ts`, `aplicaciones-de-la-ficha.ts` y `dinero.ts`, con pruebas. **Pendiente de servidor:** la respuesta de `cargos-para-aplicar` no trae el umbral de bancarización (no es configuración pública), así que el aviso no dice la cifra; basta agregar `umbralDeBancarizacion` a esa respuesta para mostrarla. Sigue CP2-7 (QA).
+- **2026-11-13 — CP4 (pagos) aprobado por el usuario** (diseño `docs/modulos/diseno-cp4-pagos.md`, dictamen
+  `docs/modulos/dictamen-cp4-2026-11-13.md`, «correcto con ajustes»). Acepta todas las recomendaciones del diseño
+  (CP4-a a m) con las correcciones del contador: se **quita** «ligar al cheque o nota de saldo inicial de Bancos»
+  (forma `saldo_inicial_de_bancos`, su permiso y CP4-13); posfechado «comprometido» hasta su fecha y aviso de fondos en
+  Bancos (el cheque se paga a la vista); «reaplicar pago»; centavos solo como residuo de un pago; fecha mínima del
+  pago = emisión del DTE; cuenta de apertura con la fecha de inicio. **Cambia lo decidido antes:** (1) una contraseña
+  con pagos se sigue editando y se quitan los documentos sin pagos; (2) con Cuentas por pagar inactivo, Bancos rechaza
+  cambiar los movimientos que vinieron de un pago. **Desglose de la nota ligada por activo fijo (Inversión) en CP4**,
+  no solo aviso.
+- **2026-11-14 — Diseño de CP4 listo para programar** (`docs/modulos/diseno-cp4-pagos.md`, estado «aprobado, listo
+  para programar»). Aplicados el dictamen y las decisiones del 2026-11-13: sin forma `saldo_inicial_de_bancos` (el
+  cheque de apertura anulado que revive el pasivo queda en *Bancos, segunda parte*, `HOJA-DE-RUTA.md`); posfechado
+  «comprometido» hasta su fecha (`estadoDePago` suma `comprometido`) y aviso de fondos en Bancos; fecha mínima del pago =
+  emisión del DTE; beneficiario = nombre del NIT; texto nuevo de bancarización (cuentan las notas ligadas); desglose de
+  la nota ligada por activo fijo con la orden nueva `bancos.fijar_desglose_de_conceptos`; centavos solo como residuo de
+  un pago (check `ajustes_pago_solo_diferencia`, variable `cuentas-por-pagar.pagos.tope_diferencia`); «reaplicar pago»
+  (`pagos.reaplicar`, auditoría `corregir`, evento `pago_reaplicado`); `pago_anulado` con `anulacionEnBancos` y
+  `fechaOriginal`; concepto `reintegro_de_proveedor_de_activo`; recibo de reintegro y comprobante con leyenda «no es
+  documento tributario». `diseno-cp3-contrasenas.md`: la contraseña con pagos se sigue editando (aviso de
+  «REIMPRESIÓN») y la migración es la `0006` (P-CP4-1). Migraciones verificadas en `main`: Cuentas por pagar `0006`
+  (CP3-1), `0007` reservada a U8l-2, `0008` de CP4; Bancos `0030`, `0031` de H2b, `0032` de CP4. Orden: CP4-B1 y B2a
+  después de H2b servidor; CP4-B2b (avisos desde la conciliación) después de H2b completo; CP4-1 después de U8l-2;
+  CP4-2 después de CP3-3 a CP3-5 y U8l-3; clientes después de CP3-7. Pendientes P-CP4-2 a P-CP4-5 (§14).
+- **2026-11-14 — Detalles de CP4 confirmados por el usuario** (P-CP4-4 del diseño): la fecha de la contraseña ya no
+  limita la fecha del pago (solo aviso); el aviso de fondos del posfechado sale también al emitirlo desde Bancos; la
+  diferencia de centavos se salda también desde la ficha de un pago vigente; sin nombre fiscal del proveedor el pago se
+  rechaza; reaplicar lleva su propio permiso. **P-CP4-2:** además del filtro por mes de Libro de compras → Retenciones,
+  CP5 tendrá un reporte de **constancias pendientes de todos los meses**, con su plazo de entero. P-CP4-5: el aviso
+  «al desmarcar» es la nota marcada que se desmarca desde la conciliación (CP4-B2b). Queda P-CP4-3 (tope de diferencia
+  de pagos, Q25 por omisión) para el contador.
+- 2026-11-14 — **CP3-2 (servidor, crear y consultar contraseñas)** (`diseno-cp3-contrasenas.md`): `CrearContrasena` (carga inicial,
+  proveedor, bloqueo de documentos en orden de id, validaciones de §5.1 con la fecha no anterior a la fecha de inicio,
+  reparto de las notas entre los cargos con forma `contrasena` y fecha «la mayor» de contraseña, recepción de la nota y del
+  cargo, correlativo `cuentas-por-pagar.contrasenas` al final), `ListarContrasenas`, `ObtenerContrasena` y
+  `DocumentosDisponibles`; permisos `contrasenas.ver` y `.crear`; rutas `GET/POST /cuentas-por-pagar/contrasenas`,
+  `GET …/disponibles` y `GET …/:id`. Dominio en `contrasena.ts`, `reglas-de-contrasena.ts`, `reparto-de-contrasena.ts` y
+  `errores-de-contrasenas.ts` (suma `DocumentosRepetidosEnContrasena` y `ObservacionesDeContrasenaInvalidas`). El reparto se
+  guarda desde `RepositorioDeContrasenas.guardarReparto` (no desde `RepositorioDeAplicaciones`). `rebajado` de un saldo
+  inicial incluye lo anterior al inicio. Aparte: `cargos-para-aplicar` (CP2-3) trae `umbralDeBancarizacion`.
+  `noEstarEnContrasena` y `NotaEnContrasena` quedan para CP3-4. Siguen CP3-3 a CP3-5.
+
+- **2026-11-14 — CP2-7 (QA de punta a punta de las notas de crédito).** Informe `docs/modulos/informe-qa-cp2-2026-11-13.md`: flujos de aplicar, quitar, ajustar, anular, bajas desde Libro de compras, pantalla «Notas de crédito» y permisos probados en el navegador (escritorio y celular, claro y oscuro) con saldos cuadrados a mano. Corregido: **(E1, grave)** escribir un monto en las ventanas de aplicar y de ajustar rompía la ventana (el campo numérico entrega números y la lógica llamaba `.trim()`); la ficha se salía de la pantalla del celular con una referencia larga; faltaba «complétela antes de ajustar» en una nota pendiente. Quedan observaciones menores (umbral de bancarización sin cifra, mensaje con tope de diferencia menor en 0, texto de la fecha mínima, «Ajustado» fuera de los montos de la ficha).

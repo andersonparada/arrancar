@@ -1,4 +1,5 @@
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
+import { centavosDe } from './dinero';
 import type { AjusteDelDocumento, AplicacionDelDocumento, FichaDelDocumento } from '../servicios/tipos';
 
 const etiquetaDe = (serie: string | null, numero: string): string => (serie ? `${serie}-${numero}` : numero);
@@ -31,3 +32,11 @@ export function avisoDeAplicacionesManuales(ficha: Pick<FichaDelDocumento, 'clas
 /** Lo que va a pasar al anular un ajuste. */
 export const resumenDeAnularAjuste = (ajuste: AjusteDelDocumento): string =>
   `Se anulará el ajuste de ${formatearMonto(ajuste.monto)} del ${formatearFecha(ajuste.fecha)}: ese monto volverá al saldo a favor de la nota. El ajuste queda en la auditoría como anulado.`;
+
+/** En una nota de crédito pendiente con saldo a favor explica por qué aún no se puede ajustar; `null` si no aplica. */
+export function avisoDeNotaPendiente(ficha: Pick<FichaDelDocumento, 'tipo' | 'estado' | 'saldo'>): string | null {
+  const pendiente = ficha.tipo === 'nota_de_credito' && ficha.estado === 'pendiente';
+  return pendiente && (centavosDe(ficha.saldo) ?? 0) > 0
+    ? 'Complete la nota en la bandeja antes de ajustar su saldo a favor.'
+    : null;
+}

@@ -78,8 +78,8 @@ export function fechaMinimaDeAplicacion(edicion: EdicionDeAplicacion): string | 
 export const tocaBancarizacion = (edicion: EdicionDeAplicacion): boolean =>
   cargosElegidos(edicion).some((cargo) => cargo.sobreUmbralDeBancarizacion);
 
-function errorDelMonto(texto: string, cargo: CargoParaAplicar): string | null {
-  if (!texto.trim()) return null;
+function errorDelMonto(texto: string | number, cargo: CargoParaAplicar): string | null {
+  if (!String(texto).trim()) return null;
   const centavos = centavosDe(texto);
   if (centavos === null || centavos <= 0) return 'Escriba un monto mayor que cero, con hasta dos decimales.';
   return centavos > centavosDelMonto(cargo.saldo) ? `El documento solo debe ${formatearMonto(cargo.saldo)}.` : null;

@@ -29,6 +29,8 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.saldos-iniciales.eliminar',
       'cuentas-por-pagar.saldos-iniciales.importar',
       'cuentas-por-pagar.saldos-iniciales.exportar',
+      'cuentas-por-pagar.contrasenas.ver',
+      'cuentas-por-pagar.contrasenas.crear',
     ]);
   });
 

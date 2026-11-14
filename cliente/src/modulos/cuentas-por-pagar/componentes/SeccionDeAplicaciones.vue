@@ -43,7 +43,7 @@ const resumen = (aplicacion: AplicacionDelDocumento): string => resumenDeQuitar(
             >
               {{ etiquetaDe(aplicacion.cargoSerie, aplicacion.cargoNumero) }}
             </RouterLink>
-            <span class="block text-xs text-tierra-500">
+            <span class="block text-xs text-tierra-500 [overflow-wrap:anywhere]">
               {{ formatearFecha(aplicacion.fecha) }}
               <template v-if="aplicacion.referencia"> · {{ aplicacion.referencia }}</template>
             </span>

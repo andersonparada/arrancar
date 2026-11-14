@@ -113,6 +113,17 @@ describe('erroresDeAplicacion', () => {
     expect(erroresDeAplicacion(edicion, HOY).fecha).toMatch(/anterior/);
   });
 
+  it('no se rompe cuando el campo numérico entrega números en vez de texto', () => {
+    const edicion = base();
+    edicion.montos = { a: 40 as unknown as string, b: 60 as unknown as string };
+    expect(erroresDeAplicacion(edicion, HOY)).toEqual({});
+    edicion.montos = { a: 70 as unknown as string, b: '' };
+    expect(erroresDeAplicacion(edicion, HOY)['monto-a']).toMatch(/solo debe/);
+    expect(datosDeAplicacion({ ...edicion, montos: { a: 40 as unknown as string } }).aplicaciones).toEqual([
+      { cargoId: 'a', monto: '40.00' },
+    ]);
+  });
+
   it('acepta una aplicación bien hecha', () => {
     const edicion = base();
     edicion.montos = { a: '60.00', b: '40' };

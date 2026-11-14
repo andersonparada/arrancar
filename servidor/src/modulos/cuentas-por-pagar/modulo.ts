@@ -6,6 +6,7 @@ import { rutasDeAjustesComponidas } from './composicion/ajustes.js';
 import { rutasDeBajasComponidas } from './composicion/bajas.js';
 import { rutasDeCondicionesComponidas } from './composicion/condiciones.js';
 import { rutasDeConsultasComponidas } from './composicion/consultas.js';
+import { rutasDeContrasenasComponidas } from './composicion/contrasenas.js';
 import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-de-saldos-iniciales.js';
@@ -76,6 +77,14 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.saldos-iniciales.exportar',
       descripcion: 'Exportar la lista de saldos iniciales y su cuadre',
     },
+    {
+      clave: 'cuentas-por-pagar.contrasenas.ver',
+      descripcion: 'Ver las contraseñas de pago y los documentos que se pueden meter en una',
+    },
+    {
+      clave: 'cuentas-por-pagar.contrasenas.crear',
+      descripcion: 'Crear contraseñas de pago con los documentos de un proveedor',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -90,6 +99,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     escuchasDeFechaDeInicioComponidas(),
     rutasDelCuadreDeSaldosInicialesComponidas(),
     rutasDeSaldosInicialesComponidas(),
+    rutasDeContrasenasComponidas(),
     // generador: rutas
   ]),
 };

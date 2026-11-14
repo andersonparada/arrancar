@@ -37,12 +37,11 @@ Acordado el 2026-09-28, después de investigar cómo se hace:
   **cuenta puente de apertura**, no gasto. Sus retenciones, si las hubo, se hicieron
   con el sistema anterior: solo se consultan, no se recalculan.
 - Hacen **todo su proceso** (autorizar, contraseña, pago). En la contraseña tienen
-  **dos formas de pago extra**, con permiso propio:
-  - **Ligar al cheque o nota de saldo inicial de Bancos**: una factura vieja que se
-    pagó con un cheque emitido antes de empezar y todavía en circulación. No se
-    emite un cheque nuevo ni se duplica la salida de dinero.
-  - **Aplicar a la cuenta de apertura** (sin banco): para lo que ya estaba pagado y
-    se cargó por historial o por error. Es la excepción.
+  **una forma de pago extra**, con permiso propio: **Aplicar a la cuenta de apertura**
+  (sin banco), para lo que ya estaba pagado y se cargó por historial o por error. Es
+  la excepción. «Ligar al cheque o nota de saldo inicial de Bancos» **se quitó**
+  (2026-11-13, dictamen CP4): un cheque entregado antes del corte ya pagó la factura
+  (no va en el saldo inicial) y uno sin entregar se registra como cheque nuevo.
 
 ### Fecha de inicio y carga inicial (por empresa)
 
@@ -103,7 +102,7 @@ realizados.
 | Aprobación de transferencias | Variable de configuración: si está activa, las transferencias pasan por una ventana de **aprobación**; si no, se aprueban solas. | Flujo de aprobación (quién solicita, quién aprueba, límites por monto). |
 | Solicitud de cheques y de notas | Igual, con su variable: se **solicita** y otro **aprueba** antes de emitir. | Idem; relación con las contraseñas de Cuentas por pagar. |
 | Formato de impresión de cheques | Administración del formato (posición de cada campo) por banco o chequera. Cada **cuenta cliente** puede tener el suyo: **override** sobre uno de fábrica. | Opción propuesta: plantillas en capas (instalación → cuenta → chequera), la más específica gana; monto en letras; voucher. Cómo lo hacen otros sistemas; medidas de los cheques de los bancos de Guatemala. |
-| Ventana de saldos iniciales | Carga inicial de la cuenta con **notas y cheques** (cheques en circulación al empezar), y se quita de la emisión de notas. | Cómo se hace realmente la carga inicial de bancos (saldo según libros + cheques en circulación + depósitos en tránsito) y cómo cuadra con la primera conciliación. |
+| Ventana de saldos iniciales | Carga inicial de la cuenta con **notas y cheques** (cheques en circulación al empezar), y se quita de la emisión de notas. **Anotado por CP4 (2026-11-13):** si un cheque en circulación de la apertura se anula después (caducó, no se cobró), el pasivo con el beneficiario **revive**; hay que decidir cómo se registra (aviso a Cuentas por pagar o partida de Contabilidad) y validarlo con el contador (`diseno-cp4-pagos.md` §5.6). | Cómo se hace realmente la carga inicial de bancos (saldo según libros + cheques en circulación + depósitos en tránsito) y cómo cuadra con la primera conciliación. |
 | Tarjeta de crédito | Nuevo **tipo de cuenta**: tarjeta de crédito. | Cómo se maneja: saldo deudor, corte, pago de la tarjeta desde una cuenta, estado de cuenta. |
 | Ajuste por diferencial cambiario | Con *Multimoneda* y *Contabilidad* activos: ventana que genera la **partida de ajuste** por diferencia de tipo de cambio. | Método (mensual, al pago), cuentas contables, NIIF/ley de Guatemala. |
 | Reportes | **Saldos por cuenta**, **Movimiento bancario** (ya existe como Movimientos), **Flujo de efectivo**, **Estado de cuenta** por cuenta. | Formato del flujo de efectivo (directo, por concepto). |
