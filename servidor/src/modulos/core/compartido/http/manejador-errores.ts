@@ -1,6 +1,6 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { hasZodFastifySchemaValidationErrors, isResponseSerializationError } from 'fastify-type-provider-zod';
-import { ErrorEsperado } from '../dominio/errores.js';
+import { DemasiadasSolicitudes, ErrorEsperado } from '../dominio/errores.js';
 import { estadoHttpDe } from './estado-http-de-error.js';
 
 interface ErrorEnRespuesta {
@@ -12,6 +12,7 @@ interface ErrorEnRespuesta {
 interface RespuestaDeError {
   estado: number;
   cuerpo: { error: ErrorEnRespuesta };
+  cabeceras?: Record<string, string>;
 }
 
 /** Reconoce errores de afuera (por ejemplo, de la base de datos) que en realidad son esperados. */
@@ -29,7 +30,14 @@ function responderCon(estado: number, error: ErrorEnRespuesta): RespuestaDeError
 }
 
 function traducirErrorEsperado(error: ErrorEsperado): RespuestaDeError {
-  return responderCon(estadoHttpDe(error), { codigo: error.codigo, mensaje: error.message, detalles: error.detalles });
+  const respuesta = responderCon(estadoHttpDe(error), {
+    codigo: error.codigo,
+    mensaje: error.message,
+    detalles: error.detalles,
+  });
+  if (error instanceof DemasiadasSolicitudes && error.reintentarEnSegundos !== undefined)
+    respuesta.cabeceras = { 'Retry-After': String(error.reintentarEnSegundos) };
+  return respuesta;
 }
 
 const traducirValidacionDeEntrada: Traductor = (error) => {
@@ -73,7 +81,10 @@ export function crearManejadorDeErrores(interpretarErrorExterno: InterpretadorDe
   }
 
   return (error: FastifyError, solicitud: FastifyRequest, respuesta: FastifyReply) => {
-    const { estado, cuerpo } = traducir(error, solicitud);
-    return respuesta.status(estado).send(cuerpo);
+    const { estado, cuerpo, cabeceras } = traducir(error, solicitud);
+    return respuesta
+      .headers(cabeceras ?? {})
+      .status(estado)
+      .send(cuerpo);
   };
 }

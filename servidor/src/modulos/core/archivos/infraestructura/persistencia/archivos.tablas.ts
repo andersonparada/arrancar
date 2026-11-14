@@ -36,6 +36,9 @@ export const archivos = esquemaCore.table(
   },
   (t) => [
     index('archivos_empresa_idx').on(t.empresaId),
+    /** Para la depuración de archivos huérfanos (`core.rutas_de_archivos_registradas`). */
+    index('archivos_ruta_original_idx').on(t.rutaOriginal),
+    index('archivos_ruta_miniatura_idx').on(t.rutaMiniatura),
     check('archivos_clase_valida', sql`${t.clase} in ('imagen', 'documento')`),
     check(
       'archivos_imagen_completa',

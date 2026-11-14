@@ -44,9 +44,11 @@ export interface DocumentosProtegidos {
    * Revisa el contenido (por lo que es, no por lo que diga el cliente) sin tocar la base ni el disco. Llámese
    * FUERA de la unidad de trabajo: qpdf tarda y no debe retener una conexión del grupo mientras espera.
    * Con una transacción en curso falla con un error de programación.
+   * Los PDF esperan su turno en la fila de revisión como `usuario`, con el tope de la cuenta del operador.
    * @throws DocumentoNoAceptado, DocumentoDemasiadoGrande, o un error de PDF o de foto (todos previstos).
+   * @throws RevisionDePdfSaturada (429) si la fila está llena o la cuenta ya tiene 2 revisiones en curso.
    */
-  revisar(contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado>;
+  revisar(operador: Operador, contenido: Buffer, nombre: string | null): Promise<DocumentoRevisado>;
   /**
    * Escribe en disco el documento revisado y registra la fila. Llámese dentro de la unidad de trabajo: si se
    * deshace (también por un error posterior o del `commit`), el archivo se borra del disco. Solo acepta lo que
@@ -59,7 +61,9 @@ export interface DocumentosProtegidos {
   ): Promise<DocumentoGuardado>;
   /**
    * `revisar` + `guardarRevisado` juntos, para quien no puede revisar antes de abrir la transacción (el contenido
-   * depende de lo que lee dentro de ella). Retiene la conexión mientras se revisa.
+   * depende de lo que lee dentro de ella). Retiene la conexión mientras se revisa; su PDF pasa como turno `sistema`
+   * (delante de los de usuario y sin sus topes por cuenta ni de fila).
+   * **Nunca debe recibir contenido subido por un usuario**: se salta los topes de la fila; para eso está `revisar`.
    */
   guardar(operador: Operador, contenido: Buffer, opciones: OpcionesDeDocumento): Promise<DocumentoGuardado>;
   /** @throws RecursoNoEncontrado si no existe, es de otra empresa, de otro dueño o falta en el disco. */

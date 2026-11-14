@@ -7,7 +7,7 @@ import {
   LIMITE_DE_BYTES_DE_PDF,
 } from '../dominio/documento.js';
 import { FormatoDeImagenNoAceptado } from '../dominio/imagen.js';
-import type { InspectorDePdf } from './puertos/inspector-de-pdf.js';
+import type { InspectorDePdf, TurnoDeRevision } from './puertos/inspector-de-pdf.js';
 import type { OptimizadorDeImagenes } from './puertos/optimizador-de-imagenes.js';
 
 /** Lo que se guardará: el contenido ya revisado y sus datos. */
@@ -40,15 +40,17 @@ export class PreparadorDeDocumentos {
     private readonly optimizador: OptimizadorDeImagenes,
   ) {}
 
-  async preparar(recibido: Buffer): Promise<DocumentoPreparado> {
-    const revisado = esPdfPorFirma(recibido) ? await this.prepararPdf(recibido) : await this.prepararFoto(recibido);
+  async preparar(recibido: Buffer, turno: TurnoDeRevision): Promise<DocumentoPreparado> {
+    const revisado = esPdfPorFirma(recibido)
+      ? await this.prepararPdf(recibido, turno)
+      : await this.prepararFoto(recibido);
     return { ...revisado, sha256Recibido: sha256(recibido) };
   }
 
-  private async prepararPdf(contenido: Buffer): Promise<Revisado> {
+  private async prepararPdf(contenido: Buffer, turno: TurnoDeRevision): Promise<Revisado> {
     if (contenido.length > LIMITE_DE_BYTES_DE_PDF)
       throw new DocumentoDemasiadoGrande(LIMITE_DE_BYTES_DE_PDF / MEGABYTE);
-    const { contenido: limpio, paginas } = await this.inspector.inspeccionar(contenido);
+    const { contenido: limpio, paginas } = await this.inspector.inspeccionar(contenido, turno);
     return { contenido: limpio, tipoMime: 'application/pdf', extension: 'pdf', paginas, ancho: null, alto: null };
   }
 
