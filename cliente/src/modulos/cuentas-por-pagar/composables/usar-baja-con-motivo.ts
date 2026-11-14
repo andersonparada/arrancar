@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
-import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { quitarErrorAlCambiar, usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiCuentasPorPagar } from '../servicios/cuentas-por-pagar.api';
 import { errorDelMotivo } from './reglas-de-acciones';
 
@@ -18,6 +18,7 @@ const vacia = (): EdicionConMotivo => ({ abierta: false, id: '', resumen: '', mo
 function usarVentanaDeMotivo() {
   const { enviando, errores, enviar } = usarFormulario();
   const edicion = ref(vacia());
+  quitarErrorAlCambiar(errores, 'motivo', () => edicion.value.motivo);
   const abrir = (id: string, resumen: string): void => {
     edicion.value = { abierta: true, id, resumen, motivo: '' };
     errores.value = {};

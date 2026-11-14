@@ -21,7 +21,7 @@ interruptor «Sin contraseña» (manda `sinContrasena`). Con pruebas en `contras
 | Nota que se reparte (orden de vencimiento; saldo inicial primero) y su fecha de aplicación = la mayor (recepción de la nota 12/11 sobre contraseña 11/11) | Bien |
 | Fechas inválidas: futura, anterior a la emisión, anterior a la fecha de inicio, pago antes de la fecha | Bien (mensajes por campo) |
 | Doble clic en «Crear» y en «Anular la contraseña» | Bien: un solo registro y una sola auditoría |
-| Cambiar fecha prometida (motivo obligatorio, auditoría `corregir` con la fecha anterior) | Bien (E3 menor) |
+| Cambiar fecha prometida (motivo obligatorio, auditoría `corregir` con la fecha anterior) | Bien (E3 menor, corregido) |
 | Agregar documentos (también solo notas), quitar documentos con motivo (auditoría `quitar`), no dejar sin cargos | Bien tras corregir E2 |
 | Contraseña ya impresa: agregar y quitar confirman «REIMPRESIÓN»; anular dice «recupere el original» | Bien |
 | Anular y volver a crear con los mismos documentos | Bien; el número no se reutiliza |
@@ -47,8 +47,9 @@ una contraseña y abrir «Agregar documentos» (solo quedaba la nota). Esperado:
 facturas disponibles». Corrección: la lista se oculta solo si no hay facturas ni notas; con solo notas dice «No hay facturas
 disponibles; solo notas a favor.».
 
-**E3 (menor, sin corregir). El error del motivo sigue en rojo después de escribirlo** en las ventanas de cambiar fecha, quitar y
-anular; se limpia al volver a enviar. No bloquea.
+**E3 (menor, corregido). El error del motivo sigue en rojo después de escribirlo** en las ventanas de cambiar fecha, quitar y
+anular; se limpia al volver a enviar. No bloquea. Corregido: `quitarErrorAlCambiar(errores, campo, valor)` (`usar-formulario.ts`) y lo usan
+las ventanas de motivo (contraseñas, notas de crédito y Libro de compras) y la de cambio de fecha; el error del campo sale al cambiarlo.
 
 **E4 (cosmético, corregido). En la hoja impresa, «Proveedor:Veterinaria…» sin espacio** entre la etiqueta y el dato.
 
