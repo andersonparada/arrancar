@@ -1606,3 +1606,5 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   con pagos se sigue editando y se quitan los documentos sin pagos; (2) con Cuentas por pagar inactivo, Bancos rechaza
   cambiar los movimientos que vinieron de un pago. **Desglose de la nota ligada por activo fijo (Inversión) en CP4**,
   no solo aviso.
+
+- **2026-11-14 — CP2-7 (QA de punta a punta de las notas de crédito).** Informe `docs/modulos/informe-qa-cp2-2026-11-13.md`: flujos de aplicar, quitar, ajustar, anular, bajas desde Libro de compras, pantalla «Notas de crédito» y permisos probados en el navegador (escritorio y celular, claro y oscuro) con saldos cuadrados a mano. Corregido: **(E1, grave)** escribir un monto en las ventanas de aplicar y de ajustar rompía la ventana (el campo numérico entrega números y la lógica llamaba `.trim()`); la ficha se salía de la pantalla del celular con una referencia larga; faltaba «complétela antes de ajustar» en una nota pendiente. Quedan observaciones menores (umbral de bancarización sin cifra, mensaje con tope de diferencia menor en 0, texto de la fecha mínima, «Ajustado» fuera de los montos de la ficha).
