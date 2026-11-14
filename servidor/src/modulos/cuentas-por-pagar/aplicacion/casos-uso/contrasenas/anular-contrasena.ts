@@ -1,5 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { motivoValido } from '../../../dominio/ciclo-de-vida.js';
+import { numeroDeContrasena } from '../../../dominio/contrasena.js';
+import { exigirContrasenaSinPagosVigentes } from '../../../dominio/reglas-de-pagos-de-contrasena.js';
 import type { ContrasenaDto } from '../../dto/contrasena.dto.js';
 import type { ContrasenaConDocumentos } from '../../puertos/puertos-de-contrasenas.js';
 import {
@@ -9,14 +11,14 @@ import {
   type DependenciasParaEditarContrasena,
 } from './dependencias-de-contrasenas.js';
 
-/**
- * Una regla que puede rechazar que se anule una contraseña lanzando su error. Los pagos (CP4) sumarán la suya
- * («tiene pagos vigentes») sin tocar el caso de uso.
- */
+/** Una regla que puede rechazar que se anule una contraseña lanzando su error, sin tocar el caso de uso. */
 export type ReglaParaAnularContrasena = (contrasena: ContrasenaConDocumentos) => void | Promise<void>;
 
-/** Hoy no hay pagos: CP4 sumará aquí `ContrasenaConPagos`. */
-export const REGLAS_PARA_ANULAR_CONTRASENA: readonly ReglaParaAnularContrasena[] = [];
+/** Con pagos vigentes no se anula: se anulan primero los pagos (`ContrasenaConPagos`). */
+export const noTenerPagosVigentes: ReglaParaAnularContrasena = ({ contrasena, pagos }) =>
+  exigirContrasenaSinPagosVigentes(numeroDeContrasena(contrasena.numero, contrasena.anioDeNumero), pagos);
+
+export const REGLAS_PARA_ANULAR_CONTRASENA: readonly ReglaParaAnularContrasena[] = [noTenerPagosVigentes];
 
 export interface PeticionParaAnularContrasena {
   id: string;

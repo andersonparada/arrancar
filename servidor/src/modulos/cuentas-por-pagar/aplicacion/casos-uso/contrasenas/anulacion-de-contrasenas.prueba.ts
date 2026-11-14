@@ -15,6 +15,7 @@ import {
   UmbralFijo,
 } from '../../../pruebas/dobles-de-aplicaciones.js';
 import { ContrasenasEnMemoria } from '../../../pruebas/dobles-de-contrasenas.js';
+import { lineaDePago } from '../../../pruebas/lineas-de-pago.js';
 import { AplicacionesEnMemoria, DocumentosEnMemoria } from '../../../pruebas/dobles-de-documentos.js';
 import { AnularContrasena, type ReglaParaAnularContrasena } from './anular-contrasena.js';
 import { CrearContrasena } from './crear-contrasena.js';
@@ -120,7 +121,41 @@ describe('anular una contraseña', () => {
     expect(auditoria.entradas).toHaveLength(1);
   });
 
-  it('una regla de anulación (la de los pagos, en CP4) puede frenarla y nada cambia', async () => {
+  it('con un pago vigente no se anula: se anula primero el pago, y nada cambia', async () => {
+    const cargo = sembrar();
+    const creada = await hacer([cargo.id]);
+    documentos.pagos.push(lineaDePago({ contrasenaId: creada.id, cargoId: cargo.id, numero: 4 }));
+
+    await expect(anular.ejecutar(operador, { id: creada.id, motivo: 'Error' })).rejects.toMatchObject({
+      codigo: 'contrasena_con_pagos',
+    });
+
+    expect(contrasenas.guardadas[0]!.vigente).toBe(true);
+    expect(auditoria.entradas).toEqual([]);
+  });
+
+  it('con un pago sin movimiento en Bancos (cuenta de apertura) tampoco se anula', async () => {
+    const cargo = sembrar();
+    const creada = await hacer([cargo.id]);
+    documentos.pagos.push(lineaDePago({ contrasenaId: creada.id, cargoId: cargo.id, forma: 'cuenta_de_apertura' }));
+
+    await expect(anular.ejecutar(operador, { id: creada.id, motivo: 'Error' })).rejects.toThrow(/pagos vigentes/);
+  });
+
+  it('con solo pagos anulados se anula, y los pagos de otra contraseña no cuentan', async () => {
+    const cargo = sembrar();
+    const creada = await hacer([cargo.id]);
+    documentos.pagos.push(
+      lineaDePago({ contrasenaId: creada.id, cargoId: cargo.id, estado: 'anulado' }),
+      lineaDePago({ contrasenaId: 'otra-contrasena', cargoId: cargo.id }),
+    );
+
+    const dto = await anular.ejecutar(operador, { id: creada.id, motivo: 'Error' });
+
+    expect(dto.estado).toBe('anulada');
+  });
+
+  it('una regla de anulación puede frenarla y nada cambia', async () => {
     const frena: ReglaParaAnularContrasena = () => {
       throw new Error('Tiene pagos.');
     };

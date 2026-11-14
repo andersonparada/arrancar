@@ -1,8 +1,10 @@
-import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
+import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { EmpresaDeLaImpresion } from '../puertos/puertos-de-impresion-de-contrasenas.js';
 import type { CargoDeContrasenaDto, ContrasenaDto, NotaDeContrasenaDto } from './contrasena.dto.js';
+import { fechaLegible } from '../../dominio/avisos.js';
 import type {
   CargoImpresoDto,
+  ChequePosfechadoImpresoDto,
   CompensacionImpresaDto,
   HojaDeImpresionDto,
   ImpresionDeContrasenaDto,
@@ -37,8 +39,19 @@ const dtoDeCargoImpreso = (cargo: CargoDeContrasenaDto): CargoImpresoDto => ({
   total: cargo.total,
   retenciones: cargo.retenciones,
   rebajado: cargo.rebajado,
+  pagado: deCentavos(aCentavos(cargo.pagado) + aCentavos(cargo.comprometido)),
   saldo: cargo.saldo,
 });
+
+/** Los pagos vigentes con fecha futura, con la marca «cheque al dd/mm/aaaa» (un cheque se cobra a la vista). */
+const chequesPosfechadosDe = (contrasena: ContrasenaDto): ChequePosfechadoImpresoDto[] =>
+  contrasena.pagos
+    .filter(({ comprometido }) => comprometido)
+    .map(({ pagoId, numero, fecha, monto }) => ({
+      pagoId,
+      monto,
+      texto: `Pago ${numero}: cheque al ${fechaLegible(fecha)}`,
+    }));
 
 const dtoDeCompensacion = (nota: NotaDeContrasenaDto): CompensacionImpresaDto => ({
   documentoId: nota.documentoId,
@@ -73,6 +86,14 @@ const datosDeLaContrasena = (c: ContrasenaDto): ImpresionDeContrasenaDto['contra
   estado: c.estado,
 });
 
+/** Cuándo, quién y si es reimpresión: lo que no sale de la contraseña. */
+const datosDeLaImpresion = (extras: ExtrasDeImpresion) => ({
+  alDia: extras.hoy,
+  reimpresion: extras.reimpresion,
+  impresoPorNombre: extras.impresoPorNombre,
+  impresoEn: extras.impresoEn,
+});
+
 /** La contraseña de hoy armada como va en el papel: lo fijo, lo vivo al día de la impresión y las leyendas. */
 export function dtoDeImpresionDeContrasena(
   contrasena: ContrasenaDto,
@@ -89,13 +110,11 @@ export function dtoDeImpresionDeContrasena(
     totales: contrasena.totales,
     compensaciones: contrasena.notas.map(dtoDeCompensacion),
     retencionesPorEmitir: retencionesPorEmitirDe(contrasena.cargos),
+    chequesPosfechados: chequesPosfechadosDe(contrasena),
     hayRetenciones,
     leyendaDeRetenciones: hayRetenciones ? LEYENDA_DE_RETENCIONES : null,
     leyenda: leyenda === '' ? null : leyenda,
-    alDia: extras.hoy,
-    reimpresion: extras.reimpresion,
-    impresoPorNombre: extras.impresoPorNombre,
-    impresoEn: extras.impresoEn,
+    ...datosDeLaImpresion(extras),
     anulacion: contrasena.anulacion,
   };
 }

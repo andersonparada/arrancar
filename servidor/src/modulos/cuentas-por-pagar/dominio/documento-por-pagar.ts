@@ -1,4 +1,5 @@
 import type { AjusteDeSaldo } from './ajustes.js';
+import type { LineaDePago, LineaDeReintegro } from './pagos.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from './tipos-de-documento.js';
 
 /** Un documento de Libro de compras recibido en Cuentas por pagar. El dinero va en centavos enteros. */
@@ -88,6 +89,10 @@ export interface DocumentoConAplicaciones {
   contrasenas: ContrasenaDelDocumentoGuardada[];
   /** Cuántas notas (vigentes y anuladas) lo corrigen: un saldo inicial con notas ya tiene movimientos. */
   notasQueLoCorrigen: number;
+  /** Lo que los pagos entregaron a este cargo, vigentes y anulados, del más antiguo al más nuevo; vacío en una nota. */
+  pagos: LineaDePago[];
+  /** Lo que los reintegros devolvieron contra esta nota, vigentes y anulados; vacío en un cargo. */
+  reintegros: LineaDeReintegro[];
 }
 
 /**

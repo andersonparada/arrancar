@@ -18,6 +18,10 @@ export interface HechosDelDocumento {
   aplicacionesManualesRecibidas: number;
   /** Está en una contraseña vigente (las anuladas no cuentan). */
   enContrasena: boolean;
+  /** Pagos vigentes que le entregaron a un cargo (los anulados no cuentan). */
+  pagosVigentes: number;
+  /** Reintegros vigentes contra una nota de crédito (los anulados no cuentan). */
+  reintegrosVigentes: number;
 }
 
 /** Lo que la pantalla puede ofrecer de un documento (el permiso del usuario lo ve el cliente con `v-permiso`). */
@@ -25,7 +29,7 @@ export interface AccionesDelDocumento {
   /** Completarlo en la bandeja. */
   puedeRegistrar: boolean;
   puedeAutorizar: boolean;
-  /** Devolverlo de autorizado a registrado; los pagos (CP4) lo cerrarán. */
+  /** Devolverlo de autorizado a registrado; con pagos vigentes ya no. */
   puedeDesautorizar: boolean;
   /** Un cargo registrado o autorizado; una nota de crédito no vence. */
   puedeCambiarVencimiento: boolean;
@@ -35,6 +39,8 @@ export interface AccionesDelDocumento {
   puedeAplicar: boolean;
   /** Una nota de crédito registrada o autorizada con saldo libre: se da de baja todo o parte de él. */
   puedeAjustar: boolean;
+  /** Una nota de crédito registrada o autorizada con saldo libre y fuera de toda contraseña: el proveedor devuelve el dinero. */
+  puedeReintegrar: boolean;
 }
 
 const ESTADOS_CON_VENCIMIENTO_EDITABLE: readonly EstadoDeDocumento[] = ['registrado', 'autorizado'];
@@ -54,7 +60,7 @@ export function accionesDelDocumento(hechos: HechosDelDocumento): AccionesDelDoc
     ...accionesDeBaja(hechos),
     puedeRegistrar: estado === 'pendiente',
     puedeAutorizar: estado === 'registrado',
-    puedeDesautorizar: estado === 'autorizado',
+    puedeDesautorizar: estado === 'autorizado' && hechos.pagosVigentes === 0,
     puedeCambiarVencimiento: claseDe(tipo) === 'cargo' && ESTADOS_CON_VENCIMIENTO_EDITABLE.includes(estado),
   };
 }
@@ -69,15 +75,20 @@ function accionesDeBaja(hechos: HechosDelDocumento) {
   };
 }
 
-/** Ni ajustes vigentes, ni aplicaciones manuales recibidas, ni estar en una contraseña vigente. */
+/** Ni ajustes, pagos ni reintegros vigentes, ni aplicaciones manuales recibidas, ni estar en una contraseña vigente. */
 const sinAtaduras = (hechos: HechosDelDocumento): boolean =>
-  hechos.ajustesVigentes === 0 && hechos.aplicacionesManualesRecibidas === 0 && !hechos.enContrasena;
+  hechos.ajustesVigentes === 0 &&
+  hechos.aplicacionesManualesRecibidas === 0 &&
+  hechos.pagosVigentes === 0 &&
+  hechos.reintegrosVigentes === 0 &&
+  !hechos.enContrasena;
 
-/** Aplicar y ajustar son de una nota de crédito con saldo libre y fuera de toda contraseña vigente; el saldo libre de una anulada ya es cero. */
+/** Aplicar, ajustar y reintegrar son de una nota de crédito con saldo libre y fuera de toda contraseña vigente; el saldo libre de una anulada ya es cero. */
 function accionesDeLaNota({ tipo, estado, saldoLibreCentavos, enContrasena }: HechosDelDocumento) {
   const notaConSaldo = tipo === 'nota_de_credito' && saldoLibreCentavos > 0 && !enContrasena;
   return {
     puedeAplicar: notaConSaldo && estado !== 'anulado',
     puedeAjustar: notaConSaldo && ESTADOS_QUE_SE_AJUSTAN.includes(estado),
+    puedeReintegrar: notaConSaldo && ESTADOS_QUE_SE_AJUSTAN.includes(estado),
   };
 }

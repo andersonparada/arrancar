@@ -6,6 +6,8 @@ import {
   noTenerAjustesVigentes,
   noTenerAplicacionesManualesRecibidas,
   noTenerNotasAplicadas,
+  noTenerPagosVigentes,
+  noTenerReintegrosVigentes,
   REGLAS_PARA_ANULAR,
   REGLAS_PARA_DESAUTORIZAR,
   REGLAS_PARA_ELIMINAR,
@@ -50,6 +52,8 @@ const guardado = (
   contrasenaVigente: null,
   contrasenas: [],
   notasQueLoCorrigen: 0,
+  pagos: [],
+  reintegros: [],
 });
 const aplicacion = {
   id: 'a1',
@@ -86,9 +90,9 @@ describe('reglas de baja', () => {
       expect(() => noEstarEnContrasena(anulada)).not.toThrow();
     });
 
-    it('va primero al anular y al eliminar, y no frena una desautorización', () => {
-      expect(REGLAS_PARA_ANULAR[0]).toBe(noEstarEnContrasena);
-      expect(REGLAS_PARA_ELIMINAR[0]).toBe(noEstarEnContrasena);
+    it('va después de los pagos al anular y al eliminar, y no frena una desautorización', () => {
+      expect(REGLAS_PARA_ANULAR.indexOf(noEstarEnContrasena)).toBe(2);
+      expect(REGLAS_PARA_ELIMINAR.indexOf(noEstarEnContrasena)).toBe(2);
       expect(REGLAS_PARA_DESAUTORIZAR).not.toContain(noEstarEnContrasena);
     });
   });
@@ -181,14 +185,19 @@ describe('reglas de baja', () => {
     });
   });
 
-  it('las listas de anular y eliminar piden primero no estar en una contraseña', () => {
+  it('las listas piden primero no tener pagos ni reintegros vigentes y luego no estar en una contraseña', () => {
+    expect(REGLAS_PARA_DESAUTORIZAR).toEqual([noTenerPagosVigentes]);
     expect(REGLAS_PARA_ANULAR).toEqual([
+      noTenerPagosVigentes,
+      noTenerReintegrosVigentes,
       noEstarEnContrasena,
       noTenerAplicacionesManualesRecibidas,
       noTenerAjustesVigentes,
       noTenerNotasAplicadas,
     ]);
     expect(REGLAS_PARA_ELIMINAR).toEqual([
+      noTenerPagosVigentes,
+      noTenerReintegrosVigentes,
       noEstarEnContrasena,
       noEstarAutorizado,
       noTenerAplicacionesManualesRecibidas,

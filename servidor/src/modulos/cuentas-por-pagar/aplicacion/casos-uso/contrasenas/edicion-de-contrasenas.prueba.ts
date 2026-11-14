@@ -15,6 +15,7 @@ import {
   UmbralFijo,
 } from '../../../pruebas/dobles-de-aplicaciones.js';
 import { ContrasenasEnMemoria } from '../../../pruebas/dobles-de-contrasenas.js';
+import { lineaDePago } from '../../../pruebas/lineas-de-pago.js';
 import { AplicacionesEnMemoria, DocumentosEnMemoria } from '../../../pruebas/dobles-de-documentos.js';
 import { AgregarDocumentosAContrasena } from './agregar-documentos-a-contrasena.js';
 import { CrearContrasena } from './crear-contrasena.js';
@@ -160,6 +161,48 @@ describe('agregar documentos', () => {
     await expect(agregar.ejecutar(operador, { contrasenaId: creada.id, documentos: muchos })).rejects.toThrow(
       /hasta 100/,
     );
+  });
+});
+
+describe('una contraseña con pagos', () => {
+  async function conPagoEnElPrimero(estado: 'vigente' | 'anulado' = 'vigente') {
+    const [a, b] = [sembrar(), sembrar()];
+    const creada = await hacer([a!.id, b!.id]);
+    documentos.pagos.push(lineaDePago({ contrasenaId: creada.id, cargoId: a!.id, estado }));
+    return { creada, conPago: a!, sinPago: b! };
+  }
+
+  it('se sigue editando: la fecha prometida cambia y la contraseña informa su pago', async () => {
+    const { creada } = await conPagoEnElPrimero();
+
+    const dto = await editar.ejecutar(operador, { id: creada.id, fechaDePago: '2026-08-01', motivo: 'Lo pidió' });
+
+    expect(dto).toMatchObject({ fechaDePago: '2026-08-01', puedeEditar: true, puedeAnular: false });
+    expect(dto.pagos).toEqual([
+      expect.objectContaining({ numero: '1', forma: 'cheque', estado: 'vigente', monto: '10.00' }),
+    ]);
+    expect(dto.estadoDePago).toBe('en_parte');
+  });
+
+  it('agrega documentos y quita el que no tiene pagos', async () => {
+    const { creada, sinPago } = await conPagoEnElPrimero();
+
+    await agregar.ejecutar(operador, { contrasenaId: creada.id, documentos: [sembrar().id] });
+    const dto = await quitar.ejecutar(operador, { contrasenaId: creada.id, documentoId: sinPago.id, motivo: 'No va' });
+
+    expect(dto.cargos).toHaveLength(2);
+    expect(dto.cargos.map(({ documentoId }) => documentoId)).not.toContain(sinPago.id);
+  });
+
+  it('no quita el documento con un pago vigente ni con uno anulado, y nada cambia', async () => {
+    for (const estado of ['vigente', 'anulado'] as const) {
+      const { creada, conPago } = await conPagoEnElPrimero(estado);
+
+      await expect(
+        quitar.ejecutar(operador, { contrasenaId: creada.id, documentoId: conPago.id, motivo: 'No va' }),
+      ).rejects.toMatchObject({ codigo: 'documento_con_pagos_en_la_contrasena' });
+    }
+    expect(auditoria.entradas).toEqual([]);
   });
 });
 

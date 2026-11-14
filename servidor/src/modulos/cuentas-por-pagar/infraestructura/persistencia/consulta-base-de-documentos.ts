@@ -13,11 +13,11 @@ import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { mapeadorDeDocumento } from './documento.mapeador.js';
 import { documentos } from './documentos.tablas.js';
+import { pagosVigentesDe, SubconsultasDePagos } from './subconsultas-de-pagos.js';
 
 /** Nombres y apellidos juntos; `null` si el usuario no se pudo leer. */
-function nombreCompleto(nombres: string | null, apellidos: string | null): string | null {
-  return nombres ? `${nombres} ${apellidos ?? ''}`.trim() : null;
-}
+const nombreCompleto = (nombres: string | null, apellidos: string | null): string | null =>
+  nombres ? `${nombres} ${apellidos ?? ''}`.trim() : null;
 
 /**
  * Cada documento con lo que se calcula de las otras tablas: de dónde viene (proveedor y, si es del libro, su recepción), lo que
@@ -26,6 +26,11 @@ function nombreCompleto(nombres: string | null, apellidos: string | null): strin
  */
 export class ConsultaBaseDeDocumentos {
   private readonly transaccion = transaccionEnCurso();
+  private readonly deLosPagos = new SubconsultasDePagos();
+  /** Lo que los pagos vigentes entregaron, por cargo (con la fecha de cada uno). */
+  readonly pagadoAlCargo = this.deLosPagos.pagadoAlCargo;
+  /** Lo que los reintegros vigentes devolvieron, por nota de crédito. */
+  readonly reintegradoDeLaNota = this.deLosPagos.reintegradoDeLaNota;
 
   /** Lo que las notas de crédito rebajaron, por cargo. */
   readonly alCargo = this.transaccion
@@ -50,7 +55,7 @@ export class ConsultaBaseDeDocumentos {
     .groupBy(aplicacionesDeNotas.notaId)
     .as('aplicado_por_la_nota');
 
-  /** Lo que se dio de baja del saldo libre de cada nota con ajustes vigentes, y cuántos son. */
+  /** Lo que se dio de baja con ajustes vigentes (del saldo libre de una nota o la diferencia menor de un cargo), y cuántos son. */
   readonly ajustadoDeLaNota = this.transaccion
     .select({
       notaId: ajustesDeSaldo.documentoId,
@@ -129,6 +134,9 @@ export class ConsultaBaseDeDocumentos {
       manuales: this.alCargo.manuales,
       ajustado: this.ajustadoDeLaNota.monto,
       ajustesVigentes: this.ajustadoDeLaNota.vigentes,
+      pagos: this.pagadoAlCargo.pagos,
+      reintegrado: this.reintegradoDeLaNota.monto,
+      reintegrosVigentes: this.reintegradoDeLaNota.vigentes,
     };
   }
 
@@ -167,21 +175,26 @@ export class ConsultaBaseDeDocumentos {
       .leftJoin(this.alCargo, eq(this.alCargo.cargoId, documentos.id))
       .leftJoin(this.porLaNota, eq(this.porLaNota.notaId, documentos.id))
       .leftJoin(this.ajustadoDeLaNota, eq(this.ajustadoDeLaNota.notaId, documentos.id))
+      .leftJoin(this.pagadoAlCargo, eq(this.pagadoAlCargo.cargoId, documentos.id))
+      .leftJoin(this.reintegradoDeLaNota, eq(this.reintegradoDeLaNota.notaId, documentos.id))
       .leftJoin(this.notas, eq(this.notas.afectadoId, documentos.id))
       .leftJoin(this.contrasenaVigente, eq(this.contrasenaVigente.documentoId, documentos.id));
   }
 
   /**
    * Lo que falta por pagar de un cargo, en SQL: el saldo al inicio (si es un saldo inicial) o el total menos las
-   * retenciones, menos lo que le rebajaron. Las retenciones por practicar no entran.
+   * retenciones, menos lo que le rebajaron las notas, lo pagado (también lo posfechado, que ya está comprometido) y las
+   * diferencias menores. Las retenciones por practicar no entran. Quien lo usa une las tres subconsultas.
    */
   saldoDelCargo() {
-    return sql`(coalesce(${documentos.saldoAlInicio}, ${documentos.total} - ${documentos.retenciones}) - coalesce(${this.alCargo.monto}, 0))`;
+    const neto = sql`coalesce(${documentos.saldoAlInicio}, ${documentos.total} - ${documentos.retenciones})`;
+    return sql`(${neto} - coalesce(${this.alCargo.monto}, 0) - coalesce(${this.pagadoAlCargo.monto}, 0) - coalesce(${this.ajustadoDeLaNota.monto}, 0))`;
   }
 
-  /** El saldo libre de una nota de crédito, en SQL: su base menos lo que aplicó y lo que se ajustó (vigente). */
+  /** El saldo libre de una nota de crédito, en SQL: su base menos lo que aplicó, lo que se ajustó y lo que se reintegró. */
   saldoLibreDeLaNota() {
-    return sql`(coalesce(${documentos.saldoAlInicio}, ${documentos.total}) - coalesce(${this.porLaNota.monto}, 0) - coalesce(${this.ajustadoDeLaNota.monto}, 0))`;
+    const base = sql`coalesce(${documentos.saldoAlInicio}, ${documentos.total})`;
+    return sql`(${base} - coalesce(${this.porLaNota.monto}, 0) - coalesce(${this.ajustadoDeLaNota.monto}, 0) - coalesce(${this.reintegradoDeLaNota.monto}, 0))`;
   }
 }
 
@@ -208,16 +221,26 @@ function contrasenaDe(fila: FilaSeleccionada): FilaDeDocumento['contrasena'] {
   return { id: fila.contrasenaId, numero: numeroDeContrasena(fila.contrasenaNumero, fila.contrasenaAnio ?? 0) };
 }
 
+/** Lo que las notas, los pagos, los ajustes y los reintegros rebajaron, y cuántos ajustes y reintegros vigentes hay. */
+function rebajasDe(fila: FilaSeleccionada) {
+  return {
+    aplicadoAlCargoCentavos: aCentavos(fila.alCargo ?? '0'),
+    aplicadoPorLaNotaCentavos: aCentavos(fila.porLaNota ?? '0'),
+    ajustadoCentavos: aCentavos(fila.ajustado ?? '0'),
+    ajustesVigentes: fila.ajustesVigentes ?? 0,
+    pagosVigentes: pagosVigentesDe(fila.pagos),
+    reintegradoCentavos: aCentavos(fila.reintegrado ?? '0'),
+    reintegrosVigentes: fila.reintegrosVigentes ?? 0,
+  };
+}
+
 /** De la fila de SQL al documento con sus cuentas, en centavos. */
 export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
   return {
     documento: mapeadorDeDocumento.aDominio(fila.documento),
     libro: datosDelLibroDe(fila),
     creadoEn: fila.documento.creadoEn.toISOString(),
-    aplicadoAlCargoCentavos: aCentavos(fila.alCargo ?? '0'),
-    aplicadoPorLaNotaCentavos: aCentavos(fila.porLaNota ?? '0'),
-    ajustadoCentavos: aCentavos(fila.ajustado ?? '0'),
-    ajustesVigentes: fila.ajustesVigentes ?? 0,
+    ...rebajasDe(fila),
     aplicacionesManualesRecibidas: fila.manuales ?? 0,
     notasVigentes: fila.notasVigentes ?? 0,
     notasEnTotal: fila.notasEnTotal ?? 0,

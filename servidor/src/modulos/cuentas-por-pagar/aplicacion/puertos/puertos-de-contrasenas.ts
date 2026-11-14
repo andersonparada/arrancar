@@ -1,4 +1,5 @@
 import type { EstadoDeContrasena } from '../../dominio/contrasena.js';
+import type { LineaDePago } from '../../dominio/pagos.js';
 import type { AplicacionDeContrasena } from '../../dominio/reparto-de-contrasena.js';
 import type { FilaDeDocumento, PaginacionDeDocumentos } from './puertos-de-consultas.js';
 
@@ -94,6 +95,11 @@ export interface ContrasenaConDocumentos {
   documentos: FilaDeDocumento[];
   /** Por id de nota: lo que aplicó dentro de esta contraseña, en centavos. */
   aplicadoPorNota: ReadonlyMap<string, number>;
+  /**
+   * Lo que los pagos (vigentes y anulados) entregaron a sus cargos, buscado por `aplicaciones_de_pagos.contrasena_id`:
+   * sirve igual si un pago llega a cubrir varias contraseñas del mismo proveedor.
+   */
+  pagos: LineaDePago[];
 }
 
 export interface FiltroDeContrasenas {

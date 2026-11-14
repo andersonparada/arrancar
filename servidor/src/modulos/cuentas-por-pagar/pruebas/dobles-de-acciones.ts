@@ -42,6 +42,22 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
     return this.documentos.ajustes.filter(({ documentoId, estado }) => documentoId === id && estado === 'vigente');
   }
 
+  /** Los pagos vigentes del cargo y lo que los reintegros vigentes devolvieron contra la nota, como los trae la fila. */
+  private pagosYReintegrosDe({ id }: DocumentoPorPagar) {
+    const pagos = this.documentos.pagos.filter(({ cargoId, estado }) => cargoId === id && estado === 'vigente');
+    const reintegros = this.documentos.reintegros.filter(({ notaId, estado }) => notaId === id && estado === 'vigente');
+    return {
+      pagosVigentes: pagos.map(({ fecha, montoCentavos }) => ({ fecha, montoCentavos })),
+      reintegradoCentavos: reintegros.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0),
+      reintegrosVigentes: reintegros.length,
+    };
+  }
+
+  /** Las líneas de pago de una contraseña, buscadas por la contraseña de la línea. */
+  pagosDeLaContrasena(contrasenaId: string) {
+    return this.documentos.pagos.filter((linea) => linea.contrasenaId === contrasenaId);
+  }
+
   private libroDe(documento: DocumentoPorPagar): FilaDeDocumento['libro'] {
     return {
       proveedorNombre: 'Proveedor',
@@ -66,6 +82,7 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
         documento.totalCentavos - (this.aplicaciones?.saldoLibreDe(documento) ?? documento.totalCentavos),
       ajustadoCentavos: vigentesDe.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0),
       ajustesVigentes: vigentesDe.length,
+      ...this.pagosYReintegrosDe(documento),
       aplicacionesManualesRecibidas: 0,
       contrasena: null,
       notasVigentes: vigentes.length,
@@ -85,6 +102,10 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
     return { filas: [], total: 0 };
   }
 
+  private pagadoDe({ pagosVigentes }: FilaDeDocumento): number {
+    return pagosVigentes.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0);
+  }
+
   async ajustesDe(documentoId: string): Promise<AjusteConDatos[]> {
     return this.documentos.ajustes
       .filter((ajuste) => ajuste.documentoId === documentoId)
@@ -94,6 +115,14 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
         creadoEn: '2026-03-10T00:00:00.000Z',
         anulacion: motivoDeAnulacion ? { motivo: motivoDeAnulacion, anuladoPorNombre: null, anuladoEn: null } : null,
       }));
+  }
+
+  async pagosDe(cargoId: string) {
+    return this.documentos.pagos.filter((linea) => linea.cargoId === cargoId);
+  }
+
+  async reintegrosDe(notaId: string) {
+    return this.documentos.reintegros.filter((linea) => linea.notaId === notaId);
   }
 
   async notasDe() {
@@ -128,7 +157,7 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
     return this.documentos.documentos
       .filter((d) => d.proveedorId === proveedorId && d.estado !== 'anulado' && d.tipo !== 'nota_de_credito')
       .map((documento) => this.filaDe(documento))
-      .filter((fila) => netoDe(fila.documento) - fila.aplicadoAlCargoCentavos > 0);
+      .filter((fila) => netoDe(fila.documento) - fila.aplicadoAlCargoCentavos - this.pagadoDe(fila) > 0);
   }
 }
 

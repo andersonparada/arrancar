@@ -1,5 +1,6 @@
 import type { FacturaAnteriorDeLaNotaDto } from '../puertos/puertos-de-consultas.js';
 import type { CausaDeAjuste, EfectoDelAjuste } from '../../dominio/ajustes.js';
+import type { EstadoDePagoDto, PagoDelDocumentoDto, ReintegroDelDocumentoDto } from './pagos.dto.js';
 import type { AccionesDelDocumento } from '../../dominio/acciones-posibles.js';
 import type {
   ClaseDeDocumento,
@@ -42,9 +43,17 @@ export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   retenciones: string;
   neto: string;
   aplicado: string;
-  /** Solo una nota de crédito: lo dado de baja con ajustes vigentes (cero en un cargo). */
+  /** Lo dado de baja con ajustes vigentes: del saldo libre de una nota o la diferencia menor de un cargo. */
   ajustado: string;
+  /** Solo una nota de crédito: lo que los reintegros vigentes devolvieron (cero en un cargo). */
+  reintegrado: string;
   saldo: string;
+  /** Solo un cargo: lo que los pagos vigentes entregaron con fecha de hoy o anterior (cero en una nota). */
+  pagado: string;
+  /** Solo un cargo: lo de pagos vigentes con fecha posterior a hoy (cheques posfechados): el saldo ya lo resta. */
+  comprometido: string;
+  /** Solo un cargo vigente: `pendiente`, `en_parte`, `comprometido` o `pagado`; `null` en una nota o un documento anulado. */
+  estadoDePago: EstadoDePagoDto;
   /** Solo un saldo inicial (nulos en los demás): lo que faltaba pagar al corte, sin retenciones. */
   saldoAlInicio: string | null;
   /** Solo un saldo inicial: las retenciones que la empresa aún no practicó (informativas, no restan del saldo). */
@@ -132,6 +141,10 @@ export interface FichaDelDocumentoPorPagarDto extends DocumentoPorPagarDto {
   aplicaciones: AplicacionDelDocumentoDto[];
   /** Solo una nota de crédito: sus ajustes, también los anulados. */
   ajustes: AjusteDelDocumentoDto[];
+  /** Solo un cargo: lo que los pagos le entregaron, vigentes y anulados. */
+  pagos: PagoDelDocumentoDto[];
+  /** Solo una nota de crédito: sus reintegros, vigentes y anulados. */
+  reintegros: ReintegroDelDocumentoDto[];
   /** Solo una nota de crédito: la fecha más antigua que puede llevar un ajuste (recepción o fecha de inicio); nula si nada la limita. */
   fechaMinimaDeAjuste: string | null;
   /** Solo una nota de crédito: lo más que puede ajustarse como «Diferencia menor» (cero la apaga). */

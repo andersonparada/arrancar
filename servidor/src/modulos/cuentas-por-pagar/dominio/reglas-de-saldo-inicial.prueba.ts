@@ -43,6 +43,8 @@ function guardado(
     contrasenaVigente: null,
     contrasenas: [],
     notasQueLoCorrigen: 0,
+    pagos: [],
+    reintegros: [],
     ...aplicaciones,
   };
 }

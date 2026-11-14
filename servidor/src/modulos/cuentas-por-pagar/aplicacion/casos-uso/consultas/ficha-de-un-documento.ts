@@ -1,4 +1,5 @@
 import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
+import { dtoDePagoDelDocumento, dtoDeReintegro } from '../../dto/dto-de-pagos.js';
 import { EFECTO_DE_LA_CAUSA } from '../../../dominio/ajustes.js';
 import { fechaMinimaDeAjuste } from '../../../dominio/reglas-de-ajuste.js';
 import type { AjusteDelDocumentoDto, FichaDelDocumentoPorPagarDto } from '../../dto/documento-por-pagar.dto.js';
@@ -38,17 +39,22 @@ async function facturaAnteriorDe(consultas: ConsultasDeDocumentos, { documento }
 export async function fichaDeUnDocumento(
   consultas: ConsultasDeDocumentos,
   fila: FilaDeDocumento,
-  { vista, extras }: { vista: PuntoDeVista; extras: ExtrasDeFicha },
+  opciones: { vista: PuntoDeVista; extras: ExtrasDeFicha },
 ): Promise<FichaDelDocumentoPorPagarDto> {
   const { documento, libro } = fila;
+  const { vista } = opciones;
   const esNota = documento.tipo === 'nota_de_credito';
   return {
     ...dtoDeDocumentoPorPagar(fila, vista),
     notas: (await consultas.notasDe(documento)).map(dtoDeNota),
     aplicaciones: (await consultas.aplicacionesDe(documento)).map(dtoDeAplicacion),
     ajustes: esNota ? (await consultas.ajustesDe(documento.id)).map(dtoDeAjuste) : [],
-    fechaMinimaDeAjuste: esNota ? fechaMinimaDeAjuste(libro.fechaRecepcion, extras.fechaDeInicio) : null,
-    topeDiferenciaMenor: deCentavos(extras.topeDiferenciaMenorCentavos),
+    pagos: esNota
+      ? []
+      : (await consultas.pagosDe(documento.id)).map((linea) => dtoDePagoDelDocumento(linea, vista.hoy)),
+    reintegros: esNota ? (await consultas.reintegrosDe(documento.id)).map(dtoDeReintegro) : [],
+    fechaMinimaDeAjuste: esNota ? fechaMinimaDeAjuste(libro.fechaRecepcion, opciones.extras.fechaDeInicio) : null,
+    topeDiferenciaMenor: deCentavos(opciones.extras.topeDiferenciaMenorCentavos),
     anulacion: dtoDeAnulacion(fila),
     facturaAnterior: await facturaAnteriorDe(consultas, fila),
   };

@@ -20,6 +20,8 @@ export interface CargoImpresoDto {
   total: string;
   retenciones: string;
   rebajado: string;
+  /** Lo pagado más lo comprometido (cheques posfechados, que llevan su marca aparte), «al» día de la impresión. */
+  pagado: string;
   saldo: string;
 }
 
@@ -31,6 +33,14 @@ export interface CompensacionImpresaDto {
   fechaEmision: string;
   monto: string;
   /** «Compensación con nota N (saldo a favor)». */
+  texto: string;
+}
+
+/** Un pago vigente con fecha posterior a la impresión: se suma en «Pagado» con su marca. */
+export interface ChequePosfechadoImpresoDto {
+  pagoId: string;
+  monto: string;
+  /** «Pago N: cheque al dd/mm/aaaa». */
   texto: string;
 }
 
@@ -59,6 +69,7 @@ export interface ImpresionDeContrasenaDto {
   totales: TotalesDeContrasenaDto;
   compensaciones: CompensacionImpresaDto[];
   retencionesPorEmitir: RetencionPorEmitirImpresaDto[];
+  chequesPosfechados: ChequePosfechadoImpresoDto[];
   hayRetenciones: boolean;
   /** «Las retenciones se documentan con su constancia.»; nulo si ningún cargo tiene retenciones. */
   leyendaDeRetenciones: string | null;
