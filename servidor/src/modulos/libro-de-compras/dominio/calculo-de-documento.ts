@@ -42,6 +42,7 @@ const IVA_AL_COSTO: readonly (MotivoSinCredito | null)[] = [
   'no_vinculado',
   'empresa_sin_credito',
   'nota_de_debito_tardia',
+  'otra_causa_sin_credito',
 ];
 
 /** Una nota se valida contra su factura: exenta, topes del IVA y, la de débito, su fecha y las familias sin IVA. */

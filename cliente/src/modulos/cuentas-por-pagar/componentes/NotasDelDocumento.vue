@@ -7,10 +7,9 @@ import { textoDeEstado, tituloDeDocumento, tonoDeEstado } from '../composables/d
 import type { FichaDelDocumento } from '../servicios/tipos';
 import SeccionDeFicha from './SeccionDeFicha.vue';
 
-/** Las notas que corrigen el documento y lo que las notas de crédito rebajaron de cada cargo. */
+/** Las notas que corrigen el documento. */
 defineProps<{ ficha: FichaDelDocumento }>();
 const enlaceA = (id: string) => ({ name: 'cuentas-por-pagar.documentos.ficha', params: { documentoId: id } });
-const etiquetaDe = (serie: string | null, numero: string) => (serie ? `${serie}-${numero}` : numero);
 </script>
 
 <template>
@@ -28,28 +27,6 @@ const etiquetaDe = (serie: string | null, numero: string) => (serie ? `${serie}-
             </template>
           </span>
           <InsigniaBase :tono="tonoDeEstado(nota.estado)">{{ textoDeEstado(nota.estado) }}</InsigniaBase>
-        </TarjetaBase>
-      </li>
-    </ul>
-  </SeccionDeFicha>
-  <SeccionDeFicha
-    v-if="ficha.aplicaciones.length"
-    :titulo="`Notas de crédito aplicadas (${ficha.aplicaciones.length})`"
-  >
-    <ul class="space-y-2">
-      <li v-for="aplicacion in ficha.aplicaciones" :key="`${aplicacion.notaId}-${aplicacion.cargoId}`">
-        <TarjetaBase class="text-sm">
-          La nota de crédito
-          <RouterLink :to="enlaceA(aplicacion.notaId)" class="font-medium text-campo-700 underline dark:text-campo-300">
-            {{ etiquetaDe(aplicacion.notaSerie, aplicacion.notaNumero) }}
-          </RouterLink>
-          rebajó <strong>{{ formatearMonto(aplicacion.monto) }}</strong> de
-          <RouterLink
-            :to="enlaceA(aplicacion.cargoId)"
-            class="font-medium text-campo-700 underline dark:text-campo-300"
-          >
-            {{ etiquetaDe(aplicacion.cargoSerie, aplicacion.cargoNumero) }}
-          </RouterLink>
         </TarjetaBase>
       </li>
     </ul>

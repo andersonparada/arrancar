@@ -10,10 +10,12 @@ import {
 } from '../../composables/bandeja/datos-de-la-bandeja';
 import { algunaPideLaRecepcion } from '../../composables/bandeja/datos-de-completar';
 import { usarBandeja } from '../../composables/bandeja/usar-bandeja';
+import { avisoDeLaBandeja } from '../../composables/bandeja/anteriores-a-la-fecha-de-inicio';
 import { paginasEnTotal } from '../../composables/documentos/filtros-de-documentos';
 import type { EstadoDeDte } from '../../servicios/dte-recibidos.api';
 import { PESTANAS_DE_LA_BANDEJA, VACIO_DE_LA_BANDEJA, VACIO_POR_PESTANA } from '../../textos-de-la-bandeja';
 import PaginacionDeLista from '../documentos/PaginacionDeLista.vue';
+import AvisoDeAnterioresDeLaBandeja from './AvisoDeAnterioresDeLaBandeja.vue';
 import BarraDeSeleccionDeLaBandeja from './BarraDeSeleccionDeLaBandeja.vue';
 import FiltrosDeLaBandeja from './FiltrosDeLaBandeja.vue';
 import TarjetaDeDteRecibido from './TarjetaDeDteRecibido.vue';
@@ -26,6 +28,12 @@ const props = defineProps<{ estado: EstadoDeDte; busquedaInicial: string }>();
 const router = useRouter();
 const bandeja = usarBandeja(props.estado, props.busquedaInicial);
 const { filtros, filas, total, cargando, pagina, seleccion, marcadas, completar, confirmacion, descarte } = bandeja;
+const avisoDeAnteriores = computed(() =>
+  avisoDeLaBandeja(props.estado, filtros.anteriores, {
+    fechaDeInicio: bandeja.fechaDeInicio.value,
+    ocultos: bandeja.anterioresOcultos.value,
+  }),
+);
 const explicacion = PESTANAS_DE_LA_BANDEJA.find(({ clave }) => clave === props.estado)?.explicacion;
 const resumen = computed(() => resumenDeLaSeleccion(marcadas.value));
 const sinFiltros = computed(() => cantidadDeFiltrosDeLaBandeja(filtros) === 0);
@@ -40,6 +48,14 @@ const vacio = computed(() =>
   <div id="panel-de-la-bandeja" role="tabpanel">
     <p v-if="explicacion" class="mb-4 text-sm text-tierra-600 dark:text-tierra-300">{{ explicacion }}</p>
     <FiltrosDeLaBandeja v-model="filtros" @quitar="bandeja.quitarFiltros" />
+    <AvisoDeAnterioresDeLaBandeja
+      v-if="avisoDeAnteriores !== 'ninguno' && bandeja.fechaDeInicio.value"
+      :fecha-de-inicio="bandeja.fechaDeInicio.value"
+      :ocultos="bandeja.anterioresOcultos.value"
+      :mostrando="avisoDeAnteriores === 'mostrando'"
+      @mostrar="bandeja.verAnteriores(true)"
+      @ocultar="bandeja.verAnteriores(false)"
+    />
 
     <p v-if="cargando && filas.length === 0" class="text-sm text-tierra-500" role="status">Cargando…</p>
     <EstadoVacio
@@ -69,6 +85,7 @@ const vacio = computed(() =>
             :conceptos="bandeja.nombresDeConceptos.value"
             :marcable="bandeja.sePuedeMarcar"
             :marcada="seleccion.estaMarcada(fila.id)"
+            :con-fecha-de-inicio="bandeja.fechaDeInicio.value !== null"
             @alternar="seleccion.alternar(fila.id)"
             @abrir="router.push({ name: 'libro-de-compras.documentos.nuevo', query: { desdeDte: fila.id } })"
             @descartar="descarte.abrir([fila.id])"

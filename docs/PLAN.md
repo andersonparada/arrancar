@@ -1547,3 +1547,53 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (la limpieza borraba el logo de la instalación); en corrección. Decidido por el usuario: interruptor
   `DEPURAR_HUERFANOS`, tope de 5 en espera para los PDF del sistema y rastro de borrados solo en el log.
 
+- **2026-11-13 — P1-2 (cliente, Libro de compras): DTE anteriores a la fecha de inicio.** En Pendientes la bandeja pide
+  `anteriores=ocultar` y muestra el aviso «N DTE son de antes de la fecha de inicio (dd/mm/aaaa) y no se muestran» con la
+  ayuda del contador y «Mostrar N» (con ellos a la vista, «Ocultar»); las demás pestañas los incluyen. Cada fila anterior
+  lleva la marca «Antes de la fecha de inicio» (las ya registradas no) y, si está en plazo de crédito, marca destacada,
+  borde ámbar y la frase «revise que esté en el sistema anterior». Al completar la fila conserva las marcas de la lista
+  (las respuestas las traen en falso). La conciliación suma el grupo plegado «DTE de antes de la fecha de inicio»
+  (informativo: no cuenta como conciliado ni por revisar) con «Registrar aquí» (abre el formulario con el DTE),
+  «Descartar» y «Restaurar». La nota sin factura suma «Si su factura es de antes de la fecha de inicio, regístrela desde
+  el formulario» (tarjeta y error en lote). El aviso de importar ya lo muestra la ventana (avisos del servidor). Sin
+  pruebas de navegador (pendiente de QA con U8l).
+- **2026-11-13 — CP2-5 (cliente, pantalla «Notas de crédito»).** Página `NotasDeCredito.vue` (Operación, ruta `/cuentas-por-pagar/notas-de-credito`, permiso `documentos.ver`) con filtros propios (proveedor, estado, «Solo con saldo a favor» encendido por omisión, fechas de emisión), tarjetas con total, aplicado, ajustado y saldo a favor destacado, etiqueta «Saldo inicial» y «Se puede aplicar» (`puedeAplicar`), y resumen de saldo a favor por proveedor. Lógica pura en `composables/notas-de-credito.ts` con pruebas; `usarPeticionDeDocumentos` y `usarProveedoresDelFiltro` se comparten con Documentos por pagar. Tipos: `ajustado`, `puedeAplicar`, `puedeAjustar`, `conSaldo`. El resumen por proveedor solo se muestra cuando todas las notas caben en la página (si no, sumaría una parte). Las ventanas de aplicar y ajustar siguen en CP2-6.
+- **2026-11-13 — U8l-1 (servidor, Libro de compras, datos).** Migración `0035_u8l_facturas_anteriores`: tabla
+  `facturas_anteriores` (diseño §3.1, con las notas de débito anteriores, el único por proveedor + serie + número sin
+  tipo y el único parcial por autorización FEL), `documentos.factura_anterior_id` con su llave e índice, el check
+  `documentos_nota_con_factura` reemplazado (una sola factura) y `otra_causa_sin_credito` en `MOTIVOS_SIN_CREDITO`, en
+  los checks de motivo y de IVA al costo, en el cálculo, el rubro «Compras sin derecho a crédito» del SAT-2237, el
+  análisis y el libro (sigla «OC»). Por P-U8l-2 **no** existe `documentos_otra_causa_solo_en_nota_con_factura_anterior`;
+  el detalle obligatorio reutiliza `documentos.observaciones` (check `documentos_otra_causa_con_detalle`, exige
+  observaciones salvo en la nota de crédito, que hereda el motivo de su factura) y la factura anterior gana la columna
+  `detalle_del_motivo` (check `facturas_anteriores_detalle_del_motivo`, 1 a 500 y obligatorio con «otra causa»). Sin
+  casos de uso ni API nuevos: siguen U8l-2 a U8l-4.
+- **2026-11-13 — Core (archivos): fila de revisión de PDF y limpieza de huérfanos en `main`** (plan y notas en
+  `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md`). `FilaDeRevision` reemplaza al semáforo de `InspectorQpdf`: 10 de
+  usuario en espera, 2 por cuenta, 60 s, 429 `revision_de_pdf_saturada` con `Retry-After: 30`; el origen `sistema`
+  (`guardar`, libro foliado) pasa delante con tope propio de 5 en espera. `DocumentosProtegidos.revisar(operador,
+  contenido, nombre)` e `InspectorDePdf.inspeccionar(contenido, turno)`. Tarea diaria `DepurarArchivosHuerfanos`
+  (al arrancar y cada 24 h): solo rutas con la forma de `RutasDeArchivo` (el logo de la instalación no se toca), más de
+  24 h, 1,000 por corrida, cerrojo `pg_try_advisory_lock` entre instancias, se niega con una raíz insegura y se apaga
+  con `DEPURAR_HUERFANOS=false` (antes de restaurar una base más vieja que los archivos). Migración de core `0023`
+  (índices por ruta y función `core.rutas_de_archivos_registradas`, `security definer`, `row_security = off`).
+  Revisado por el agente de seguridad («se puede unir con arreglos», los diez aplicados). Pruebas del servidor: 3797.
+  En programación: H2b servidor (archivo del estado de cuenta).
+
+- 2026-11-13 — **CP3-1 (servidor, datos de contraseñas)** (`diseno-cp3-contrasenas.md`): tablas `cuentas_por_pagar.contrasenas`
+  (con `impresa_en`) y `contrasena_documentos` (llaves compuestas al proveedor, único parcial «una sola contraseña vigente»
+  y cascada desde el documento), `aplicaciones_de_notas.contrasena_id` con la forma `contrasena` y su check; migración
+  `0006_cp3_contrasenas` (CP2-2 tomó la 0005) y mensaje de `contrasena_documentos_vigente_unico`. Sin casos de uso ni API:
+  siguen CP3-2 a CP3-5.
+- **2026-11-13 — Diseño de CP4 (pagos a proveedores), propuesta para aprobar.** `docs/modulos/diseno-cp4-pagos.md`:
+  tablas `pagos` (forma `cheque`, `nota_de_debito`, `nota_ligada` o `cuenta_de_apertura`; correlativo propio; llave a
+  `bancos.movimientos`) y `aplicaciones_de_pagos` (llave a `contrasena_documentos`: solo se paga lo que está en la
+  contraseña; único parcial que garantiza la retención en un solo pago vigente), `reintegros` (depósito o efectivo) y
+  `ajustes_de_saldo.pago_id` (diferencias de centavos de un cargo); migración de Cuentas por pagar `0008` (después de
+  CP3-1 `0006` y U8l-2 `0007`). En Bancos: contratos `bancos.*` (emitir cheque y registrar nota con origen, anular,
+  medios de pago; aviso `movimiento_por_cambiar`), nota de débito marcada = concepto `pago_a_proveedor`, conceptos de
+  sistema `pago_a_proveedor_de_activo` y `reintegro_de_proveedor`, desglose por concepto para el pago mixto (migración
+  de Bancos `0032`, después de H2b `0031`). «Ligar al cheque o nota de saldo inicial de Bancos» espera a que Bancos
+  tenga cheques en circulación al empezar. Preguntas CP4-a a m para el usuario y C-CP4-1 a 8 para el contador.
+
+- **2026-11-13 — CP2-6 (cliente, ficha de la nota).** En la ficha de una nota de crédito: «Aplicar a otro documento» (`aplicar-notas`, `puedeAplicar`) abre `VentanaDeAplicacion` con los cargos del proveedor (autorizados primero, «Sin autorizar» marcados), monto propuesto editable por fila, «Todo lo que cabe», «Repartir de nuevo», total contra el saldo a favor, fecha (mínimo según los documentos elegidos) y referencia del acuerdo, con aviso de bancarización cuando se compensa contra un cargo sobre el umbral; «Ajustar saldo» (`ajustes.crear`, `puedeAjustar`) abre `VentanaDeAjuste` (aviso «corrija la nota en el Libro de compras», ayuda por causa con «no deducible» y «las comisiones bancarias no son diferencia menor», tope de diferencia menor, referencia obligatoria al compensar, aviso de año anterior sin bloquear). Nuevas secciones «Notas de crédito aplicadas» (forma, fecha, referencia, «Quitar» con motivo) y «Ajustes del saldo» (causa, efecto, estado, «Anular el ajuste» con motivo); el cargo con aplicaciones manuales explica «quite primero esas aplicaciones». Lógica pura en `aplicacion-de-nota.ts`, `ajuste-de-saldo.ts`, `aplicaciones-de-la-ficha.ts` y `dinero.ts`, con pruebas. **Pendiente de servidor:** la respuesta de `cargos-para-aplicar` no trae el umbral de bancarización (no es configuración pública), así que el aviso no dice la cifra; basta agregar `umbralDeBancarizacion` a esa respuesta para mostrarla. Sigue CP2-7 (QA).

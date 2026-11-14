@@ -11,7 +11,8 @@ export type ClaveDeResultado =
   | 'registradoEnOtroPeriodo'
   | 'noVaEnElLibro'
   | 'anuladoEnLaSatYVigenteAqui'
-  | 'descartado';
+  | 'descartado'
+  | 'anterioresALaFechaDeInicio';
 
 export type CampoComparado =
   | 'autorizacionFel'
@@ -51,6 +52,8 @@ export interface ItemDeConciliacion {
   motivoDeBloqueo: MotivoDeBloqueo | null;
   motivoDeDescarte: string | null;
   diferencias: DiferenciaDeConciliacion[];
+  /** Solo en el grupo de anteriores: emitida en el mes de la fecha de inicio o en los dos anteriores. */
+  enPlazoDeCredito: boolean;
 }
 
 /** La conciliación de un período: los conteos para las tarjetas y la lista de cada resultado. */
@@ -59,6 +62,8 @@ export interface ConciliacionDelPeriodo {
   periodo: string;
   /** Falso cuando ningún archivo de la SAT toca el mes del período. */
   hayDatosDeLaSat: boolean;
+  /** La fecha de inicio de la empresa; `null` si no tiene. */
+  fechaDeInicio: string | null;
   resumen: Record<ClaveDeResultado, number>;
   resultados: Record<ClaveDeResultado, ItemDeConciliacion[]>;
 }

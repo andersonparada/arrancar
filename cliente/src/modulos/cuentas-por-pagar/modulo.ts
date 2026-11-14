@@ -1,4 +1,4 @@
-import { FileClock, HandCoins, Inbox, Scale } from 'lucide-vue-next';
+import { FileClock, FileMinus, HandCoins, Inbox, Scale } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_CUENTAS_POR_PAGAR, TITULO_SECCION_DE_PAGO, VENTANAS_CUENTAS_POR_PAGAR } from './textos';
 // generador: importaciones
@@ -25,6 +25,12 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       component: () => import('./paginas/FichaDelDocumentoPorPagar.vue'),
       props: ({ params }) => ({ documentoId: String(params.documentoId) }),
       meta: { permiso: 'cuentas-por-pagar.documentos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.documentos.ficha },
+    },
+    {
+      path: '/cuentas-por-pagar/notas-de-credito',
+      name: 'cuentas-por-pagar.notas-de-credito',
+      component: () => import('./paginas/NotasDeCredito.vue'),
+      meta: { permiso: 'cuentas-por-pagar.documentos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.notasDeCredito.titulo },
     },
     {
       path: '/cuentas-por-pagar/saldos-iniciales',
@@ -64,6 +70,13 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           titulo: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo,
           ruta: '/cuentas-por-pagar/documentos',
           icono: FileClock,
+          seccion: 'operacion',
+          permiso: 'cuentas-por-pagar.documentos.ver',
+        },
+        {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.notasDeCredito.titulo,
+          ruta: '/cuentas-por-pagar/notas-de-credito',
+          icono: FileMinus,
           seccion: 'operacion',
           permiso: 'cuentas-por-pagar.documentos.ver',
         },

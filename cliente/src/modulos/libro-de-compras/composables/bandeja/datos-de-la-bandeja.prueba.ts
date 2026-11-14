@@ -23,6 +23,7 @@ describe('filtros y consulta de la bandeja', () => {
       desde: undefined,
       hasta: undefined,
       conProveedor: undefined,
+      anteriores: 'incluir',
       pagina: 2,
       limite: 50,
     });

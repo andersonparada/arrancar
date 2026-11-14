@@ -184,6 +184,7 @@ ventanas se crean con el **generador** (`npm run generar -- modulo`, `definicion
    causa de ajuste «liquidado fuera del sistema», que se quitó); un descuento de precio
    sin nota no es un ajuste (exige nota de crédito del proveedor); las diferencias de
    centavos al pagar sí pueden ir a `ajustes_de_saldo`. Ver `diseno-cp2-notas-de-credito.md` §9.
+   **Diseño (2026-11-13, propuesta para aprobar):** `diseno-cp4-pagos.md`.
 5. **CP5 Reportes**. **Anotado por CP2 y CP3 (2026-11-08):** reporte mensual de ajustes
    para que lo revise el contador; saldo neto por proveedor a una fecha de corte,
    separado en acreedores y deudores (reclasificación de cierre); antigüedad de los saldos

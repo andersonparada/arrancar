@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { check, foreignKey, index, unique, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { MOTIVOS_SIN_CREDITO, TIPOS_DE_DOCUMENTO } from '../../dominio/tipos-de-documento.js';
+import { facturasAnteriores } from './facturas-anteriores.tablas.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 
 const TIPOS = TIPOS_DE_DOCUMENTO.map((tipo) => `'${tipo}'`).join(', ');
@@ -8,8 +9,6 @@ const DESTINOS = "'cuentas-por-pagar', 'caja-chica', 'cuentas-por-liquidar'";
 const MOTIVOS_FUERA = "'sin_fel', 'fel_a_consumidor_final', 'fel_a_otro_nit', 'recibo_fel'";
 const CAUSAS_DE_ANULACION = "'error_de_captura', 'fel_anulada_por_el_emisor', 'no_corresponde_a_la_empresa'";
 const MOTIVOS = MOTIVOS_SIN_CREDITO.map((motivo) => `'${motivo}'`).join(', ');
-/** Los motivos cuyo IVA va al costo de las líneas. */
-const MOTIVOS_AL_COSTO = "'fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito', 'nota_de_debito_tardia'";
 
 /** Las columnas de `documentos` que usan las restricciones (la tabla las pasa desde su callback). */
 export type ColumnasDeDocumento = Record<
@@ -32,6 +31,7 @@ export type ColumnasDeDocumento = Record<
   | 'motivoFueraDelLibro'
   | 'motivoSinCredito'
   | 'documentoAfectadoId'
+  | 'facturaAnteriorId'
   | 'destino'
   | 'total'
   | 'base'
@@ -93,7 +93,7 @@ export const restriccionesDeTextos = (t: T) => [
   ),
 ];
 
-/** Montos: signos, rangos y que los totales cuadren. */
+/** Montos: signos, rangos y que los totales cuadren. Lo que depende del motivo está en `restriccionesDeMotivo`. */
 export const restriccionesDeMontos = (t: T) => [
   check('documentos_total_positivo', sql`${t.total} > 0`),
   check('documentos_base_no_negativa', sql`${t.base} >= 0`),
@@ -106,16 +106,6 @@ export const restriccionesDeMontos = (t: T) => [
     'documentos_totales_cuadran',
     sql`${t.total} = ${t.base} + ${t.iva} + ${t.idp} + ${t.exento} + ${t.otrosImpuestos}`,
   ),
-  check(
-    'documentos_sin_sat_sin_credito',
-    sql`${t.muestraEnReportesSat} or (${t.iva} = 0 and ${t.motivoSinCredito} is null)`,
-  ),
-  check(
-    'documentos_iva_no_acreditable_por_motivo',
-    sql`(${t.motivoSinCredito} in (${sql.raw(MOTIVOS_AL_COSTO)}) and ${t.ivaNoAcreditable} = ${t.iva})
-        or (coalesce(${t.motivoSinCredito}, '') not in (${sql.raw(MOTIVOS_AL_COSTO)}) and ${t.ivaNoAcreditable} = 0)`,
-  ),
-  check('documentos_exento_sin_iva', sql`coalesce(${t.motivoSinCredito}, '') <> 'exento' or ${t.iva} = 0`),
 ];
 
 /** Fechas, periodo y plazo del crédito fiscal. La nota de crédito hereda el motivo de su factura, así que no se revisa su plazo. */
@@ -143,7 +133,8 @@ export const restriccionesDePeriodo = (t: T) => [
 export const restriccionesDeTipo = (t: T) => [
   check(
     'documentos_nota_con_factura',
-    sql`(${t.tipo} in ('nota_de_credito', 'nota_de_debito')) = (${t.documentoAfectadoId} is not null)`,
+    sql`(${t.tipo} in ('nota_de_credito', 'nota_de_debito')) = (num_nonnulls(${t.documentoAfectadoId}, ${t.facturaAnteriorId}) = 1)
+        and num_nonnulls(${t.documentoAfectadoId}, ${t.facturaAnteriorId}) <= 1`,
   ),
   check(
     'documentos_datos_sat',
@@ -182,6 +173,11 @@ export const llavesDeDocumento = (t: T) => [
   unique('documentos_id_empresa_unico').on(t.id, t.empresaId),
   unique('documentos_para_notas_unico').on(t.id, t.empresaId, t.proveedorId, t.destino),
   foreignKey({
+    name: 'documentos_factura_anterior_fk',
+    columns: [t.facturaAnteriorId, t.empresaId, t.proveedorId],
+    foreignColumns: [facturasAnteriores.id, facturasAnteriores.empresaId, facturasAnteriores.proveedorId],
+  }),
+  foreignKey({
     name: 'documentos_proveedor_fk',
     columns: [t.proveedorId, t.cuentaId],
     foreignColumns: [proveedores.id, proveedores.cuentaId],
@@ -206,4 +202,7 @@ export const indicesDeDocumento = (t: T) => [
   index('documentos_afectado_idx')
     .on(t.documentoAfectadoId)
     .where(sql`${t.documentoAfectadoId} is not null`),
+  index('documentos_factura_anterior_idx')
+    .on(t.facturaAnteriorId)
+    .where(sql`${t.facturaAnteriorId} is not null`),
 ];

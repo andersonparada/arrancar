@@ -113,13 +113,13 @@ describe('aplicaciones de notas', () => {
     expect(filas.map((fila) => fila.forma).sort()).toEqual(['automatica', 'manual', 'manual']);
   });
 
-  it('la forma es automática o manual; la referencia solo en manuales, recortada y de hasta 100', async () => {
+  it('la forma es automática, manual o contraseña; la referencia solo en manuales, recortada y de hasta 100', async () => {
     const nota = await unaNota();
     const cargo = await crear();
     const conReferencia = (referencia: string, forma = 'manual') => aplicar(nota.id, cargo.id, { forma, referencia });
     const restriccion = async (operacion: Promise<unknown>) => (await errorDePostgres(operacion))?.constraint;
 
-    expect(await restriccion(aplicar(nota.id, cargo.id, { forma: 'contrasena' }))).toBe('aplicaciones_forma_valida');
+    expect(await restriccion(aplicar(nota.id, cargo.id, { forma: 'otra' }))).toBe('aplicaciones_forma_valida');
     expect(await restriccion(conReferencia('Acuerdo', 'automatica'))).toBe('aplicaciones_referencia_valida');
     expect(await restriccion(conReferencia(' Acuerdo '))).toBe('aplicaciones_referencia_valida');
     expect(await restriccion(conReferencia(''))).toBe('aplicaciones_referencia_valida');

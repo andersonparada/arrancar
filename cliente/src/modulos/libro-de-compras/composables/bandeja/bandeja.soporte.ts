@@ -49,6 +49,8 @@ export function filaDte(cambios: Partial<DteRecibido> = {}): DteRecibido {
       documentoAfectadoId: null,
     },
     propuesta: propuesta(),
+    anteriorALaFechaDeInicio: false,
+    enPlazoDeCredito: false,
     ...cambios,
   };
 }

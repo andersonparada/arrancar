@@ -43,6 +43,13 @@
       "when": 1794536194742,
       "tag": "0005_cp2_anulacion_del_ajuste",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794633224966,
+      "tag": "0006_cp3_contrasenas",
+      "breakpoints": true
     }
   ]
 }

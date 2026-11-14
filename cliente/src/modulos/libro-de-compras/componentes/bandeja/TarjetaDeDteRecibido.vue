@@ -6,6 +6,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import { tituloDeLaFila } from '../../composables/bandeja/datos-de-la-bandeja';
+import { avisoDeAnterioridad } from '../../composables/bandeja/anteriores-a-la-fecha-de-inicio';
 import {
   datosDeLaFilaPendiente,
   insigniasDeLaFila,
@@ -24,6 +25,8 @@ const props = defineProps<{
   conceptos: ReadonlyMap<string, string>;
   marcable: boolean;
   marcada: boolean;
+  /** La empresa tiene fecha de inicio: el error de una nota sin factura recuerda el formulario. */
+  conFechaDeInicio?: boolean;
 }>();
 const emit = defineEmits<{ alternar: []; abrir: []; descartar: []; restaurar: [] }>();
 
@@ -31,15 +34,21 @@ const titulo = computed(() => tituloDeLaFila(props.fila));
 const datos = computed(() =>
   props.fila.estado === 'pendiente' ? datosDeLaFilaPendiente(props.fila, props.conceptos, formatearFecha) : [],
 );
-const falta = computed(() => textoDeLoQueFalta(props.fila));
+const falta = computed(() => textoDeLoQueFalta(props.fila, props.conFechaDeInicio));
+const avisoDeFecha = computed(() => avisoDeAnterioridad(props.fila));
 const puedeAbrir = computed(() => props.fila.estado === 'pendiente');
 const puedeDescartar = computed(() => props.fila.estado === 'pendiente' || props.fila.estado === 'bloqueado');
 </script>
 
 <template>
   <div
-    class="rounded-2xl bg-white p-4 ring-1 ring-tierra-200/70 has-checked:ring-2 has-checked:ring-campo-500 dark:bg-tierra-800/60 dark:ring-tierra-700"
-    :class="{ 'opacity-80': fila.estado === 'descartado' }"
+    class="rounded-2xl bg-white p-4 ring-1 has-checked:ring-2 has-checked:ring-campo-500 dark:bg-tierra-800/60"
+    :class="[
+      fila.estado === 'descartado' ? 'opacity-80' : '',
+      fila.enPlazoDeCredito && fila.anteriorALaFechaDeInicio
+        ? 'ring-trigo-500'
+        : 'ring-tierra-200/70 dark:ring-tierra-700',
+    ]"
   >
     <component :is="marcable ? 'label' : 'div'" class="flex items-start gap-3" :class="{ 'cursor-pointer': marcable }">
       <input
@@ -72,6 +81,9 @@ const puedeDescartar = computed(() => props.fila.estado === 'pendiente' || props
             <dd class="truncate" :class="{ 'text-tierra-400': dato.valor === 'Sin elegir' }">{{ dato.valor }}</dd>
           </div>
         </dl>
+        <p v-if="avisoDeFecha" class="mt-2 text-sm font-medium text-amber-800 dark:text-amber-300">
+          {{ avisoDeFecha }}
+        </p>
         <p v-if="falta" class="mt-2 text-sm text-amber-700 dark:text-amber-400">{{ falta }}</p>
         <p v-if="fila.propuesta?.avisoDelPeriodo" class="mt-1 text-xs text-tierra-500">
           {{ fila.propuesta.avisoDelPeriodo }}

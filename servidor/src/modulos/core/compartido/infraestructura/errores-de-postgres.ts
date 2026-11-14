@@ -30,6 +30,7 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   documentos_documento_unico: 'Ese documento ya está en Cuentas por pagar.',
   documentos_numero_por_proveedor_unico:
     'Ese documento ya está en Cuentas por pagar (como saldo inicial o desde el libro de compras).',
+  contrasena_documentos_vigente_unico: 'Ese documento ya está en otra contraseña vigente.',
   datos_fiscales_de_empresa_vigencia_unica: 'Ya hay un régimen registrado desde ese mes.',
 };
 

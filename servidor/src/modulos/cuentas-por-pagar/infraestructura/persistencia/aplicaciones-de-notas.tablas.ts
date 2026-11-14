@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import { check, date, foreignKey, index, numeric, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
+import { restriccionesDeForma } from './aplicaciones-de-notas.restricciones.js';
 import { documentos } from './documentos.tablas.js';
 import { esquemaCuentasPorPagar } from './esquema.tablas.js';
 
@@ -21,12 +22,14 @@ export const aplicacionesDeNotas = esquemaCuentasPorPagar.table(
     notaId: uuid().notNull(),
     cargoId: uuid().notNull(),
     monto: numeric({ precision: 14, scale: 2 }).notNull(),
-    /** De dónde salió: `automatica` (al recibir la nota) o `manual` (el usuario compensó el saldo libre). */
+    /** De dónde salió: `automatica` (al recibir la nota), `manual` (el usuario compensó el saldo libre) o `contrasena`. */
     forma: text().notNull().default('automatica'),
     /** Desde cuándo rebaja el cargo: la recepción de la nota (automática) o la fecha del acuerdo (manual). */
     fecha: date().notNull(),
     /** Referencia del acuerdo de compensación; solo en las manuales. */
     referencia: text(),
+    /** La contraseña que repartió la nota; solo en las de forma `contrasena`. */
+    contrasenaId: uuid(),
     ...marcasDeTiempo,
     ...autoria,
   },
@@ -43,7 +46,6 @@ export const aplicacionesDeNotas = esquemaCuentasPorPagar.table(
     }),
     check('aplicaciones_distintos', sql`${t.notaId} <> ${t.cargoId}`),
     check('aplicaciones_monto_positivo', sql`${t.monto} > 0`),
-    check('aplicaciones_forma_valida', sql`${t.forma} in ('automatica', 'manual')`),
     check(
       'aplicaciones_referencia_valida',
       sql`${t.referencia} is null or (${t.forma} = 'manual' and char_length(${t.referencia}) between 1 and 100 and ${t.referencia} = btrim(${t.referencia}))`,
@@ -53,6 +55,7 @@ export const aplicacionesDeNotas = esquemaCuentasPorPagar.table(
       .where(sql`${t.forma} = 'automatica'`),
     index('aplicaciones_nota_idx').on(t.notaId),
     index('aplicaciones_cargo_idx').on(t.cargoId),
+    ...restriccionesDeForma(t),
     politicaPorEmpresa(),
   ],
 );

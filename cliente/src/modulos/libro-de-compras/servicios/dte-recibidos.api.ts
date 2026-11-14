@@ -62,6 +62,10 @@ export interface DteRecibido {
   motivoDeBloqueo: MotivoDeBloqueo | null;
   borrador: BorradorDeDte;
   propuesta: PropuestaDeDte | null;
+  /** Emitido antes de la fecha de inicio de la empresa; solo la lista lo calcula (las respuestas de completar, descartar y restaurar lo traen en falso). */
+  anteriorALaFechaDeInicio: boolean;
+  /** Anterior, emitido en el mes de la fecha de inicio o en los dos anteriores: su crédito todavía cabe. */
+  enPlazoDeCredito: boolean;
 }
 
 export interface PaginaDeDteRecibidos {
@@ -69,7 +73,14 @@ export interface PaginaDeDteRecibidos {
   total: number;
   pagina: number;
   limite: number;
+  /** La fecha de inicio de la empresa; `null` si no tiene (entonces nada se marca como anterior). */
+  fechaDeInicio: string | null;
+  /** Cuántas filas anteriores a la fecha de inicio dejó fuera el filtro `ocultar`. */
+  anterioresOcultos: number;
 }
+
+/** Cómo tratar los DTE de antes de la fecha de inicio: mostrarlos, ocultarlos o ver solo esos. */
+export type FiltroDeAnteriores = 'incluir' | 'ocultar' | 'solo';
 
 /** Lo que se pide a la bandeja; lo que falta no filtra. `desde` y `hasta` miden la fecha de emisión. */
 export interface ConsultaDeDteRecibidos {
@@ -79,6 +90,8 @@ export interface ConsultaDeDteRecibidos {
   busqueda?: string;
   tipoDte?: string;
   conProveedor?: boolean;
+  /** El servidor, si no se manda, incluye las anteriores; el cliente pide `ocultar` en Pendientes. */
+  anteriores?: FiltroDeAnteriores;
   pagina?: number;
   limite?: number;
   [clave: string]: string | number | boolean | undefined;
@@ -186,6 +199,8 @@ export interface LoteDeDte {
 export interface ResultadoDeImportarDte {
   lote: LoteDeDte;
   avisos: string[];
+  /** Cuántos DTE del archivo son de antes de la fecha de inicio (el aviso ya los menciona). */
+  anterioresALaFechaDeInicio: number;
 }
 
 const RUTA = '/libro-de-compras/dte-recibidos';

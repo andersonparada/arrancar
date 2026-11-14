@@ -1,3 +1,7 @@
+import type { AjusteDelDocumento, AplicacionDelDocumento } from './tipos-de-notas';
+
+export type * from './tipos-de-notas';
+
 export type TipoDeDocumento =
   | 'factura'
   | 'factura_pequeno_contribuyente'
@@ -29,6 +33,10 @@ export interface AccionesDelDocumento {
   puedeCambiarVencimiento: boolean;
   puedeAnular: boolean;
   puedeEliminar: boolean;
+  /** Una nota de crédito con saldo libre se puede aplicar a otro cargo del proveedor. */
+  puedeAplicar: boolean;
+  /** Una nota de crédito registrada o autorizada con saldo libre se puede ajustar. */
+  puedeAjustar: boolean;
 }
 
 /** Un documento tal como lo ven la bandeja, la lista y la ficha; el dinero viaja como texto. */
@@ -56,6 +64,9 @@ export interface DocumentoPorPagar extends AccionesDelDocumento {
   retenciones: string;
   neto: string;
   aplicado: string;
+  /** Lo dado de baja con ajustes vigentes (solo notas de crédito; en un cargo es 0). */
+  ajustado: string;
+  /** En un cargo, lo que falta pagar; en una nota de crédito, su saldo libre (a favor). */
   saldo: string;
   /** El usuario lo ingresó en Libro de compras o lo completó: para autorizarlo necesita `autorizar-propios`. */
   esPropio: boolean;
@@ -96,16 +107,6 @@ export interface NotaDelDocumento {
   aplicadoAEsteDocumento: string;
 }
 
-export interface AplicacionDelDocumento {
-  notaId: string;
-  notaSerie: string | null;
-  notaNumero: string;
-  cargoId: string;
-  cargoSerie: string | null;
-  cargoNumero: string;
-  monto: string;
-}
-
 /** Cómo se anuló un documento; cualquier dato puede faltar en anulaciones antiguas. */
 export interface AnulacionDelDocumento {
   causa: CausaDeAnulacion | null;
@@ -121,6 +122,12 @@ export interface AnulacionDelDocumento {
 export interface FichaDelDocumento extends DocumentoPorPagar {
   notas: NotaDelDocumento[];
   aplicaciones: AplicacionDelDocumento[];
+  /** Solo en una nota de crédito. */
+  ajustes: AjusteDelDocumento[];
+  /** Solo en una nota de crédito: la fecha más antigua de un ajuste; `null` si nada la limita. */
+  fechaMinimaDeAjuste: string | null;
+  /** Solo en una nota de crédito: lo más que puede ajustarse como «Diferencia menor» (cero la apaga). */
+  topeDiferenciaMenor: string;
   /** `null` si el documento no está anulado. */
   anulacion: AnulacionDelDocumento | null;
 }
@@ -154,6 +161,8 @@ export interface ConsultaDeDocumentos {
   emitidosDesde?: string;
   emitidosHasta?: string;
   soloVencidos?: boolean;
+  /** Cargos con saldo por pagar y notas con saldo libre. */
+  conSaldo?: boolean;
   pagina?: number;
   limite?: number;
 }

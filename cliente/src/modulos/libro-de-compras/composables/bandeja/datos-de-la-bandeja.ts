@@ -2,6 +2,7 @@ import type {
   ConsultaDeDteRecibidos,
   DteRecibido,
   EstadoDeDte,
+  FiltroDeAnteriores,
   PropuestaDeDte,
 } from '../../servicios/dte-recibidos.api';
 import { FALTANTES } from '../../textos-de-la-bandeja';
@@ -19,19 +20,22 @@ export interface FiltrosDeLaBandeja {
   desde: string;
   hasta: string;
   proveedor: '' | 'nuevo' | 'existente';
+  /** No es un filtro de campo: lo cambia el aviso «Mostrar N» y «Quitar filtros» lo respeta. */
+  anteriores: FiltroDeAnteriores;
 }
 
-export const filtrosDeLaBandejaVacios = (): FiltrosDeLaBandeja => ({
+export const filtrosDeLaBandejaVacios = (anteriores: FiltroDeAnteriores = 'incluir'): FiltrosDeLaBandeja => ({
   busqueda: '',
   tipoDte: '',
   desde: '',
   hasta: '',
   proveedor: '',
+  anteriores,
 });
 
 /** Cuántos filtros están puestos, para mostrar «Quitar filtros» solo cuando hace falta. */
 export const cantidadDeFiltrosDeLaBandeja = (filtros: FiltrosDeLaBandeja): number =>
-  Object.values(filtros).filter((valor) => valor.trim() !== '').length;
+  Object.entries(filtros).filter(([clave, valor]) => clave !== 'anteriores' && valor.trim() !== '').length;
 
 const CONDICION_DEL_PROVEEDOR = { nuevo: false, existente: true } as const;
 
@@ -41,7 +45,7 @@ export function consultaDeLaBandeja(
   filtros: FiltrosDeLaBandeja,
   pagina: number,
 ): ConsultaDeDteRecibidos {
-  const { busqueda, tipoDte, desde, hasta, proveedor } = filtros;
+  const { busqueda, tipoDte, desde, hasta, proveedor, anteriores } = filtros;
   return {
     estado,
     busqueda: busqueda.trim() || undefined,
@@ -49,6 +53,7 @@ export function consultaDeLaBandeja(
     desde: desde || undefined,
     hasta: hasta || undefined,
     conProveedor: proveedor ? CONDICION_DEL_PROVEEDOR[proveedor] : undefined,
+    anteriores,
     pagina,
     limite: FILAS_POR_PAGINA,
   };

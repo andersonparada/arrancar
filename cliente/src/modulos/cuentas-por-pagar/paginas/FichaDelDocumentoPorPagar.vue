@@ -6,11 +6,13 @@ import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import AccionesDeLaFicha from '../componentes/AccionesDeLaFicha.vue';
 import EnlacesDeLaFicha from '../componentes/EnlacesDeLaFicha.vue';
 import AvisoDeLoPropio from '../componentes/AvisoDeLoPropio.vue';
-import NotasYAplicaciones from '../componentes/NotasYAplicaciones.vue';
+import AccionesDeLaNota from '../componentes/AccionesDeLaNota.vue';
+import NotasDelDocumento from '../componentes/NotasDelDocumento.vue';
+import SeccionDeAjustes from '../componentes/SeccionDeAjustes.vue';
+import SeccionDeAplicaciones from '../componentes/SeccionDeAplicaciones.vue';
 import SeccionDeFicha from '../componentes/SeccionDeFicha.vue';
-import VentanaDeAnulacion from '../componentes/VentanaDeAnulacion.vue';
-import VentanaDeDesautorizacion from '../componentes/VentanaDeDesautorizacion.vue';
-import VentanaDeVencimiento from '../componentes/VentanaDeVencimiento.vue';
+import VentanasDeLasAcciones from '../componentes/VentanasDeLasAcciones.vue';
+import VentanasDeLaNota from '../componentes/VentanasDeLaNota.vue';
 import {
   detallesDeAnulacion,
   detallesDeFicha,
@@ -20,12 +22,8 @@ import {
   tituloDeDocumento,
   tonoDeEstado,
 } from '../composables/detalles-de-documento';
-import {
-  avisoDeLoPropio,
-  esperaAOtraPersona,
-  mensajeDeDesautorizacion,
-  resumenDeAnulacion,
-} from '../composables/reglas-de-acciones';
+import { avisoDeLoPropio, esperaAOtraPersona } from '../composables/reglas-de-acciones';
+import { usarAccionesDeNota } from '../composables/usar-acciones-de-nota';
 import { usarAccionesDelDocumento } from '../composables/usar-acciones-del-documento';
 import { usarFichaDelDocumento } from '../composables/usar-ficha-del-documento';
 import { VENTANAS_CUENTAS_POR_PAGAR } from '../textos';
@@ -37,6 +35,7 @@ const { datos: ficha, cargando, cargar } = usarFichaDelDocumento(() => props.doc
 const acciones = usarAccionesDelDocumento(ficha, cargar, () =>
   router.replace({ name: 'cuentas-por-pagar.documentos' }),
 );
+const nota = usarAccionesDeNota(ficha, cargar);
 const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { name: 'cuentas-por-pagar.documentos' } };
 </script>
 
@@ -47,6 +46,12 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
         textoDeEstado(ficha.estado)
       }}</InsigniaBase>
       <InsigniaBase v-if="ficha.vencido" class="self-center" tono="rojo">Vencido</InsigniaBase>
+      <AccionesDeLaNota
+        :ficha="ficha"
+        :abriendo="nota.aplicacion.abriendo.value"
+        @aplicar="nota.aplicacion.abrir"
+        @ajustar="nota.ajuste.abrir"
+      />
       <AccionesDeLaFicha
         :ficha="ficha"
         :puede-autorizar-propios="acciones.puedeAutorizarPropios"
@@ -80,32 +85,13 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
     <SeccionDeFicha v-if="ficha.anulacion" titulo="Anulación">
       <DatosDelRegistro :detalles="detallesDeAnulacion(ficha)" />
     </SeccionDeFicha>
-    <NotasYAplicaciones :ficha="ficha" />
+    <NotasDelDocumento :ficha="ficha" />
+    <SeccionDeAplicaciones :ficha="ficha" @quitar="nota.quitar.abrir" />
+    <SeccionDeAjustes :ajustes="ficha.ajustes" @anular="nota.anularAjuste.abrir" />
     <EnlacesDeLaFicha :ficha="ficha" />
 
-    <VentanaDeDesautorizacion
-      v-model="acciones.desautorizacion.edicion.value"
-      :resumen="mensajeDeDesautorizacion(ficha)"
-      :errores="acciones.desautorizacion.errores.value"
-      :enviando="acciones.desautorizacion.enviando.value"
-      @cerrar="acciones.desautorizacion.cerrar"
-      @guardar="acciones.desautorizacion.desautorizar"
-    />
-    <VentanaDeVencimiento
-      v-model="acciones.vencimiento.edicion.value"
-      :errores="acciones.vencimiento.errores.value"
-      :enviando="acciones.vencimiento.enviando.value"
-      @cerrar="acciones.vencimiento.cerrar"
-      @guardar="acciones.vencimiento.cambiar"
-    />
-    <VentanaDeAnulacion
-      v-model="acciones.anulacion.edicion.value"
-      :resumen="resumenDeAnulacion(ficha)"
-      :errores="acciones.anulacion.errores.value"
-      :enviando="acciones.anulacion.enviando.value"
-      @cerrar="acciones.anulacion.cerrar"
-      @guardar="acciones.anulacion.anular"
-    />
+    <VentanasDeLaNota :ficha="ficha" :acciones="nota" />
+    <VentanasDeLasAcciones :ficha="ficha" :acciones="acciones" />
   </div>
   <p v-else-if="cargando" class="text-sm text-tierra-500" role="status">Cargando…</p>
 </template>
