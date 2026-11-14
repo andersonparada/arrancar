@@ -12,20 +12,27 @@ import {
 interface ParteFalsa {
   truncada?: boolean;
   falla?: NodeJS.ErrnoException;
+  campo?: string;
+  /** Una segunda parte después de la primera. */
+  conOtraParte?: boolean;
 }
 
-/** Una petición multipart de mentira: `file()` devuelve la parte que se le indique. */
+/** Una petición multipart de mentira: `parts()` entrega la parte que se le indique. */
 function solicitudCon(parte: ParteFalsa | null): { solicitud: FastifyRequest; opciones: unknown[] } {
   const opciones: unknown[] = [];
+  const archivo = (datos: ParteFalsa) => ({
+    type: 'file',
+    fieldname: datos.campo ?? 'archivo',
+    filename: 'estado.pdf',
+    mimetype: 'application/pdf',
+    file: { truncated: Boolean(datos.truncada) },
+    toBuffer: async () => (datos.falla ? Promise.reject(datos.falla) : Buffer.from('%PDF-1.7')),
+  });
   const solicitud = {
-    file: async (limites: unknown) => {
+    parts: (limites: unknown) => {
       opciones.push(limites);
-      if (!parte) return undefined;
-      return {
-        filename: 'estado.pdf',
-        file: { truncated: Boolean(parte.truncada) },
-        toBuffer: async () => (parte.falla ? Promise.reject(parte.falla) : Buffer.from('%PDF-1.7')),
-      };
+      const restantes = parte ? [archivo(parte), ...(parte.conOtraParte ? [archivo({})] : [])] : [];
+      return { next: async () => (restantes.length ? { done: false, value: restantes.shift() } : { done: true }) };
     },
   } as unknown as FastifyRequest;
   return { solicitud, opciones };
@@ -38,7 +45,30 @@ describe('leerDocumentoDeSolicitud', () => {
     const documento = await leerDocumentoDeSolicitud(solicitud);
 
     expect(documento).toEqual({ contenido: Buffer.from('%PDF-1.7'), nombre: 'estado.pdf' });
-    expect(opciones[0]).toEqual({ limits: { fileSize: LIMITE_DE_BYTES_DE_FOTO_DE_DOCUMENTO } });
+    expect(opciones[0]).toEqual({
+      limits: { files: 1, parts: 1, fields: 0, fieldSize: 0, fileSize: LIMITE_DE_BYTES_DE_FOTO_DE_DOCUMENTO },
+    });
+  });
+
+  it('un campo con otro nombre se rechaza', async () => {
+    const { solicitud } = solicitudCon({ campo: 'otro' });
+
+    await expect(leerDocumentoDeSolicitud(solicitud)).rejects.toBeInstanceOf(SubidaConMasDeUnArchivo);
+  });
+
+  it('otra parte después del archivo se rechaza', async () => {
+    const { solicitud } = solicitudCon({ conOtraParte: true });
+
+    await expect(leerDocumentoDeSolicitud(solicitud)).rejects.toBeInstanceOf(SubidaConMasDeUnArchivo);
+  });
+
+  it.each([
+    ['FST_INVALID_MULTIPART_CONTENT_TYPE', 'subida_no_es_de_archivo'],
+    ['FST_PROTO_VIOLATION', 'subida_interrumpida'],
+  ])('%s sale como un error propio en español', async (code, codigo) => {
+    const { solicitud } = solicitudCon({ falla: Object.assign(new Error('en inglés'), { code }) });
+
+    await expect(leerDocumentoDeSolicitud(solicitud)).rejects.toMatchObject({ codigo });
   });
 
   it('sin archivo dice que falta el documento, no la imagen', async () => {

@@ -1,6 +1,14 @@
 import type { FastifyRequest } from 'fastify';
 import { CargaDemasiadoGrande, DatoInvalido } from '../../compartido/dominio/errores.js';
+import {
+  leerUnSoloArchivo,
+  SubidaConMasDeUnArchivo,
+  SubidaInterrumpida,
+  traducirErrorDeMultipart,
+} from '../../compartido/http/lectura-de-multipart.js';
 import { LIMITE_DE_BYTES_DE_FOTO_DE_DOCUMENTO, LIMITE_DE_BYTES_DE_PDF } from '../dominio/documento.js';
+
+export { SubidaConMasDeUnArchivo, SubidaInterrumpida };
 
 const MEGABYTE = 1024 * 1024;
 
@@ -23,53 +31,32 @@ export class SubidaDemasiadoGrande extends CargaDemasiadoGrande {
   }
 }
 
-export class SubidaConMasDeUnArchivo extends DatoInvalido {
-  readonly codigo = 'subida_con_mas_de_un_archivo';
-
-  constructor() {
-    super('Envíe un solo archivo.');
-  }
-}
-
-export class SubidaInterrumpida extends DatoInvalido {
-  readonly codigo = 'subida_interrumpida';
-
-  constructor() {
-    super('La subida se interrumpió antes de terminar. Intente de nuevo.');
-  }
-}
-
 /** El documento subido y el nombre con que lo mandó el navegador (solo para mostrar). */
 export interface DocumentoSubido {
   contenido: Buffer;
   nombre: string | null;
 }
 
-const CODIGOS_DE_DEMASIADAS_PARTES = ['FST_FILES_LIMIT', 'FST_PARTS_LIMIT', 'FST_FIELDS_LIMIT'];
-const CODIGOS_DE_CORTE = ['ERR_STREAM_PREMATURE_CLOSE', 'FST_PREMATURE_CLOSE'];
-
-/** Convierte los errores del lector multipart en errores propios, en español; el resto sigue su camino. */
+/** Convierte el error de tamaño en el propio de los documentos y deja el resto al traductor común del multipart. */
 function traducir(error: unknown): unknown {
-  const codigo = (error as NodeJS.ErrnoException).code ?? '';
-  if (codigo === 'FST_REQ_FILE_TOO_LARGE') return new SubidaDemasiadoGrande();
-  if (CODIGOS_DE_DEMASIADAS_PARTES.includes(codigo)) return new SubidaConMasDeUnArchivo();
-  if (CODIGOS_DE_CORTE.includes(codigo)) return new SubidaInterrumpida();
-  return error;
+  if ((error as NodeJS.ErrnoException).code === 'FST_REQ_FILE_TOO_LARGE') return new SubidaDemasiadoGrande();
+  return traducirErrorDeMultipart(error);
 }
 
 /**
  * Lee el documento (PDF o foto) de una petición `multipart/form-data` con el tope más alto de los documentos. Si la
  * subida pasa del tope, el flujo se corta: se rechaza en vez de revisar un archivo incompleto.
  * @throws FaltaElDocumento si no trae archivo.
+ * Solo acepta una parte, el campo `archivo`, sin campos de texto.
  * @throws SubidaDemasiadoGrande, SubidaConMasDeUnArchivo o SubidaInterrumpida si la subida no llegó completa o bien.
  */
 export async function leerDocumentoDeSolicitud(solicitud: FastifyRequest): Promise<DocumentoSubido> {
   try {
-    const parte = await solicitud.file({ limits: { fileSize: LIMITE_DE_BYTES_DE_FOTO_DE_DOCUMENTO } });
-    if (!parte) throw new FaltaElDocumento();
-    const contenido = await parte.toBuffer();
-    if (parte.file.truncated) throw new SubidaDemasiadoGrande();
-    return { contenido, nombre: parte.filename || null };
+    const archivo = await leerUnSoloArchivo(solicitud, LIMITE_DE_BYTES_DE_FOTO_DE_DOCUMENTO);
+    if (!archivo) throw new FaltaElDocumento();
+    if (archivo.campo !== 'archivo') throw new SubidaConMasDeUnArchivo();
+    if (archivo.truncado) throw new SubidaDemasiadoGrande();
+    return { contenido: archivo.contenido, nombre: archivo.nombre || null };
   } catch (error) {
     throw traducir(error);
   }
