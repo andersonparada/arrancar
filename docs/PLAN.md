@@ -1789,3 +1789,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   **`0033_cp4_efectivo_para_pagos`** (CP4-EB). Quedan para decidir: N-1 (usuario: empresa sin datos fiscales, aviso
   recomendado), N-2 y N-3 (contador: tabla de efectos por régimen y vigencia del art. 27 del Decreto 4-2012); no frenan
   CP4-V1, CP4-EB ni CP4-E1.
+- **2026-11-14 — Pendientes de la adenda de efectivo resueltos.** N-1 (usuario): empresa sin datos fiscales del libro →
+  **solo aviso** al pagar en efectivo sobre el umbral (no se supone régimen). N-2 (contador): la tabla de efectos de
+  §5.2 es correcta; usar `daCreditoFiscal()` (solo IVA `general`) y `tieneIsrSobreUtilidades()` (solo ISR
+  `utilidades`) de Libro de compras; cuenta el régimen **del período del documento** (el mes del pago solo para la
+  suma contra el umbral); un saldo inicial de empresa general se supone con crédito tomado (texto «si tomó el crédito
+  fiscal»), sin casilla nueva. Ojo: `bajaDelPeriodo` del libro supone `?? true` y no debe «unificarse» con N-1 (N-1
+  solo alcanza saldos iniciales y cargos que no vienen del libro). N-3 (contador): la Corte de Constitucionalidad
+  (exp. 2836-2012, sentencia de dic. 2012) declaró **sin lugar** la inconstitucionalidad del art. 27 del Decreto 4-2012
+  y revocó su suspensión: la bancarización (art. 20 del Decreto 20-2006) sigue vigente, umbral Q30,000, mes calendario
+  y pago fraccionado; certeza alta.
