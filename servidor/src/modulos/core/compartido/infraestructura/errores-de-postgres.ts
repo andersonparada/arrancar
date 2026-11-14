@@ -12,6 +12,8 @@ const PEDIR_ACCESO_A_LOCALIDADES = 'Si no la ve, pida acceso a quien administra 
 const MENSAJE_DOCUMENTO_DE_LA_CUENTA =
   'Ese documento ya está registrado en esta empresa o en otra empresa de su cuenta.';
 
+const MENSAJE_FACTURA_ANTERIOR_REPETIDA = 'Otra persona acaba de registrar esa factura anterior; vuelva a intentar.';
+
 const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   usuarios_usuario_unico: 'Ese nombre de usuario ya está en uso.',
   roles_nombre_por_cuenta: 'Ya existe un rol con ese nombre.',
@@ -33,6 +35,8 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   contrasena_documentos_vigente_unico: 'Ese documento ya está en otra contraseña vigente.',
   aplicaciones_de_pagos_retencion_una_vez:
     'Otro pago de este documento ya descontó su retención; vuelva a abrir la ventana.',
+  facturas_anteriores_del_proveedor_unica: MENSAJE_FACTURA_ANTERIOR_REPETIDA,
+  facturas_anteriores_autorizacion_fel_unica: MENSAJE_FACTURA_ANTERIOR_REPETIDA,
   datos_fiscales_de_empresa_vigencia_unica: 'Ya hay un régimen registrado desde ese mes.',
 };
 

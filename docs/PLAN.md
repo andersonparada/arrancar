@@ -1829,4 +1829,16 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   crean la misma factura se resuelve con `insert … on conflict do nothing` y un error propio (sin tocar el mapa de
   mensajes del core). El IVA de la nota sale de `ivaDeLaFel` como hasta hoy. Sin migración. Siguen U8l-5 (bajas, ficha,
   sugerencias, Excel y fecha de inicio), U8l-6 y U8l-7.
+- **2026-11-14 — U8l-5 (servidor, Libro de compras: bajas, ficha, sugerencias, Excel y fecha de inicio).** El tope de la baja de una
+  nota de débito (`tope-de-la-baja.ts`) también cubre la factura anterior (bloqueada `for update`, con sus notas de débito
+  anteriores sumadas); eliminar una nota borra la fila de su factura anterior si ya nadie la cita
+  (`borrarSiNoTieneNotas`; anular la deja) y la auditoría lleva `facturaAnterior` en el DTO. La ficha de toda nota trae
+  `documentoQueModifica` (`libro` con id, o `sistema_anterior`) y su `motivoDeLaFactura` sale también de la factura anterior. El
+  Excel del libro suma al final «Documento que modifica» (`SERIE-NÚMERO del dd/mm/aaaa`; el libro impreso y el SAT-2237 no
+  cambian). Ruta nueva `GET /libro-de-compras/proveedores/:id/facturas-anteriores` (`documentos.crear`) con `usadas` y
+  `deLaBandeja` (DTE de factura pendientes o descartados, vigentes en la SAT, anteriores a la fecha de inicio, sin repetir
+  las ya usadas). Libro escucha `empresas.fecha_de_inicio_por_cambiar` y revisa los dos sentidos
+  (`facturas_anteriores_posteriores_a_la_fecha` y `notas_recibidas_antes_de_la_fecha`, con hasta cinco notas en `detalles`).
+  `MENSAJES_POR_RESTRICCION` ganó las dos únicas de `facturas_anteriores` (único cambio en el core). Sin migración; `corregidaEn` de
+  `FacturaAnteriorDto` queda fuera (no hay columna para guardarlo). Siguen U8l-6 y U8l-7.
 - **2026-11-14 — CP4-EB (servidor, Bancos: conceptos y leyenda del efectivo para pagos).** Migración de Bancos `0033_cp4_efectivo_para_pagos` (solo datos, SQL a mano como la `0032`, repetible): conceptos de sistema `efectivo_para_pagos` (débito, sin flujo), `devolucion_de_efectivo_para_pagos` (crédito, sin flujo) y `faltante_de_efectivo` (débito, Operación, grupo «Faltante de efectivo»), en `CONCEPTOS_DE_SISTEMA`, en `ClaveDeConceptoDeSistema` y, en las empresas con catálogo, por `update`/`insert`. El flujo de efectivo trae `leyenda` (nula si no aplica): sale cuando el período tiene `efectivo_para_pagos` o `faltante_de_efectivo` (en el concepto o en el desglose); va en la pantalla, la impresión (mismo bloque) y como fila «Nota» al final del Excel. Lo sin flujo cae en «Otros movimientos sin actividad», como el fondo de caja chica, y el control sigue cuadrando. Se tocó el cliente de Bancos solo para mostrar la leyenda.

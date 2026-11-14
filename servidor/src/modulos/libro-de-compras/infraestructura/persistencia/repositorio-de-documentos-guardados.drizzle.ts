@@ -7,7 +7,7 @@ import type {
   RepositorioDeDocumentosGuardados,
 } from '../../aplicacion/puertos/puertos-de-baja-de-documentos.js';
 import type { MotivoSinCredito } from '../../dominio/tipos-de-documento.js';
-import { mapeadorDeDocumentoGuardado } from './documento-guardado.mapeador.js';
+import { mapeadorDeDocumentoGuardado, type FacturaDelLibroDeLaNota } from './documento-guardado.mapeador.js';
 import type { FacturaAnterior } from '../../dominio/factura-anterior.js';
 import { mapeadorDeFacturaAnterior } from './factura-anterior.mapeador.js';
 import { facturasAnteriores } from './facturas-anteriores.tablas.js';
@@ -29,13 +29,12 @@ export class RepositorioDeDocumentosGuardadosDrizzle implements RepositorioDeDoc
       .from(documentos)
       .where(eq(documentos.documentoAfectadoId, id))
       .orderBy(asc(documentos.fechaEmision), asc(documentos.creadoEn));
-    const motivoDeLaFactura = await this.motivoDeLaFactura(documento.documentoAfectadoId);
     return mapeadorDeDocumentoGuardado.aDominio({
       documento,
       lineas,
       retenciones: retenidas,
       notas,
-      motivoDeLaFactura,
+      facturaDelLibro: await this.facturaDelLibro(documento.documentoAfectadoId),
       facturaAnterior: await this.facturaAnterior(documento.facturaAnteriorId),
       anuladoPorNombre: await this.nombreDeQuienAnulo(documento.anuladoPor),
     });
@@ -58,14 +57,19 @@ export class RepositorioDeDocumentosGuardadosDrizzle implements RepositorioDeDoc
     return usuario ? `${usuario.nombres} ${usuario.apellidos ?? ''}`.trim() : null;
   }
 
-  /** El motivo sin crédito de la factura de una nota; `null` si el documento no es una nota. */
-  private async motivoDeLaFactura(facturaId: string | null): Promise<MotivoSinCredito | null> {
+  /** La factura del libro que corrige una nota; `null` si el documento no cita ninguna. */
+  private async facturaDelLibro(facturaId: string | null): Promise<FacturaDelLibroDeLaNota | null> {
     if (facturaId === null) return null;
-    const [factura] = await transaccionEnCurso()
-      .select({ motivo: documentos.motivoSinCredito })
-      .from(documentos)
-      .where(eq(documentos.id, facturaId));
-    return (factura?.motivo as MotivoSinCredito | null | undefined) ?? null;
+    const [factura] = await transaccionEnCurso().select().from(documentos).where(eq(documentos.id, facturaId));
+    if (!factura) return null;
+    return {
+      id: factura.id,
+      tipo: factura.tipo,
+      serie: factura.serie,
+      numero: factura.numero,
+      fechaEmision: factura.fechaEmision,
+      motivoSinCredito: factura.motivoSinCredito as MotivoSinCredito | null,
+    };
   }
 
   async anular(id: string, { anuladoPor, motivo, causa }: AnulacionDeDocumento): Promise<void> {

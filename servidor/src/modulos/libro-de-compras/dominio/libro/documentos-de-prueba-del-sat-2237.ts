@@ -30,6 +30,7 @@ export const documento = (cambios: Partial<DocumentoDelLibro> = {}): DocumentoDe
   idp: 0,
   exento: 0,
   otrosImpuestos: 0,
+  documentoQueModifica: null,
   categorias: [categoria()],
   ...cambios,
 });

@@ -122,3 +122,40 @@ export class OtraCausaSoloEnFacturas extends DatoInvalido {
     });
   }
 }
+
+/** Una nota con factura anterior citada en un error de la fecha de inicio. */
+export interface NotaCitadaEnLaFecha {
+  id: string;
+  serie: string | null;
+  numero: string;
+}
+
+/** Cuántas notas, y hasta cinco de ellas, que estorban al cambiar la fecha de inicio. */
+export interface NotasQueEstorban {
+  cantidad: number;
+  muestra: NotaCitadaEnLaFecha[];
+}
+
+/** La fecha de inicio nueva dejaría una factura anterior con emisión igual o posterior a ella. */
+export class FacturasAnterioresPosterioresALaFecha extends ReglaDeNegocioInfringida {
+  readonly codigo = 'facturas_anteriores_posteriores_a_la_fecha';
+
+  constructor(fechaDeInicio: string, { cantidad, muestra }: NotasQueEstorban) {
+    super(
+      `Hay ${cantidad} notas sobre facturas del sistema anterior emitidas desde el ${fechaLegible(fechaDeInicio)}: anúlelas o elimínelas antes de mover la fecha de inicio a esa fecha o antes.`,
+      { campo: 'fechaDeInicio', cantidad, notas: muestra },
+    );
+  }
+}
+
+/** La fecha de inicio nueva dejaría una nota con factura anterior recibida antes de ella. */
+export class NotasRecibidasAntesDeLaFecha extends ReglaDeNegocioInfringida {
+  readonly codigo = 'notas_recibidas_antes_de_la_fecha';
+
+  constructor(fechaDeInicio: string, { cantidad, muestra }: NotasQueEstorban) {
+    super(
+      `Hay ${cantidad} notas sobre facturas del sistema anterior recibidas antes del ${fechaLegible(fechaDeInicio)}: anúlelas o elimínelas antes de mover la fecha de inicio a esa fecha o después.`,
+      { campo: 'fechaDeInicio', cantidad, notas: muestra },
+    );
+  }
+}

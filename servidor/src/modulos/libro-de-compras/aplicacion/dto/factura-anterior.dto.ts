@@ -1,5 +1,5 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
-import type { FacturaAnterior } from '../../dominio/factura-anterior.js';
+import type { DatosDeFacturaAnterior } from '../../dominio/factura-anterior.js';
 import type { MotivoSinCredito, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
 /** La factura del sistema anterior que corrige una nota, tal como la ve la pantalla (dinero como texto). */
@@ -17,7 +17,7 @@ export interface FacturaAnteriorDto {
   detalleDelMotivo: string | null;
 }
 
-export function dtoDeFacturaAnterior(factura: FacturaAnterior): FacturaAnteriorDto {
+export function dtoDeFacturaAnterior(factura: DatosDeFacturaAnterior): FacturaAnteriorDto {
   return {
     tipo: factura.tipo,
     serie: factura.serie,

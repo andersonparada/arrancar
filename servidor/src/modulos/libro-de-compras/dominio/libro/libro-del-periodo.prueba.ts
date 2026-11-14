@@ -22,6 +22,7 @@ const factura = (id: string, cambios: Partial<DocumentoDelLibro> = {}): Document
   idp: 0,
   exento: 0,
   otrosImpuestos: 0,
+  documentoQueModifica: null,
   categorias: [
     { categoria: 'bien', base: 100000, iva: 12000, ivaNoAcreditable: 0, exentoYNoAfecto: 0, combustibleExento: false },
   ],

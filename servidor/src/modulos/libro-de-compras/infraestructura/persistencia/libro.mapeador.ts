@@ -20,6 +20,8 @@ export interface FilaDeCategoria {
   ivaNoAcreditable: string;
   exentoYNoAfecto: string;
   combustibleExento: boolean;
+  /** Serie, número y fecha de la factura que corrige la nota (del libro o del sistema anterior); nulos si no es nota. */
+  corrige: { serie: string | null; numero: string | null; fechaEmision: string | null };
 }
 
 export interface FilaDeAnulado {
@@ -38,6 +40,10 @@ function categoriaDe(fila: FilaDeCategoria): CategoriaDelDocumento {
     exentoYNoAfecto: aCentavos(fila.exentoYNoAfecto),
     combustibleExento: fila.combustibleExento,
   };
+}
+
+function facturaQueCorrige({ serie, numero, fechaEmision }: FilaDeCategoria['corrige']) {
+  return numero === null || fechaEmision === null ? null : { serie, numero, fechaEmision };
 }
 
 function documentoDe(fila: FilaDeCategoria): DocumentoDelLibro {
@@ -61,6 +67,7 @@ function documentoDe(fila: FilaDeCategoria): DocumentoDelLibro {
     idp: aCentavos(d.idp),
     exento: aCentavos(d.exento),
     otrosImpuestos: aCentavos(d.otrosImpuestos),
+    documentoQueModifica: facturaQueCorrige(fila.corrige),
     categorias: [],
   };
 }

@@ -1,4 +1,4 @@
-import { and, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
@@ -28,6 +28,21 @@ export class RepositorioDeFacturasAnterioresDrizzle implements RepositorioDeFact
     const fila = porFel ?? (await this.filaPor(this.delProveedor(clave), bloquear));
     if (!fila) return null;
     return { ...mapeadorDeFacturaAnterior.aDominio(fila), notas: await this.notasDe(fila.id) };
+  }
+
+  async buscarPorId(id: string, bloquear: boolean): Promise<FacturaAnteriorConNotas | null> {
+    const fila = await this.filaPor(eq(facturasAnteriores.id, id), bloquear);
+    if (!fila) return null;
+    return { ...mapeadorDeFacturaAnterior.aDominio(fila), notas: await this.notasDe(fila.id) };
+  }
+
+  async citadasPorElProveedor(proveedorId: string): Promise<FacturaAnterior[]> {
+    const filas = await transaccionEnCurso()
+      .select()
+      .from(facturasAnteriores)
+      .where(eq(facturasAnteriores.proveedorId, proveedorId))
+      .orderBy(desc(facturasAnteriores.fechaEmision), desc(facturasAnteriores.numero));
+    return filas.map((fila) => mapeadorDeFacturaAnterior.aDominio(fila));
   }
 
   async buscarFacturaDelLibro(clave: ClaveDeFacturaAnterior): Promise<{ id: string } | null> {
@@ -68,6 +83,19 @@ export class RepositorioDeFacturasAnterioresDrizzle implements RepositorioDeFact
       .onConflictDoNothing()
       .returning({ id: facturasAnteriores.id });
     if (insertadas.length === 0) throw new FacturaAnteriorRegistradaPorOtraPersona();
+  }
+
+  async borrarSiNoTieneNotas(id: string): Promise<boolean> {
+    const borradas = await transaccionEnCurso()
+      .delete(facturasAnteriores)
+      .where(
+        and(
+          eq(facturasAnteriores.id, id),
+          sql`not exists (select 1 from ${documentos} where ${documentos.facturaAnteriorId} = ${facturasAnteriores.id})`,
+        ),
+      )
+      .returning({ id: facturasAnteriores.id });
+    return borradas.length > 0;
   }
 
   async corregir(factura: FacturaAnterior): Promise<void> {

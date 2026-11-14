@@ -37,6 +37,11 @@ export function rutasDeDocumentos(controlador: DocumentosControlador): FastifyPl
       preHandler: crear,
       handler: controlador.destinoSugerido,
     });
+    app.get('/libro-de-compras/proveedores/:proveedorId/facturas-anteriores', {
+      schema: { tags, params: esquemaParamsDeProveedor },
+      preHandler: crear,
+      handler: controlador.facturasAnteriores,
+    });
   };
 }
 

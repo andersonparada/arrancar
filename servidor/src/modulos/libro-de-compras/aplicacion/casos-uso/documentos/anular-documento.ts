@@ -18,7 +18,7 @@ import type {
   DocumentoGuardado,
   RepositorioDeDocumentosGuardados,
 } from '../../puertos/puertos-de-baja-de-documentos.js';
-import type { ConsultasDeDocumentos, DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
+import type { DestinosDeDocumentos } from '../../puertos/puertos-de-documentos.js';
 import type { EnlaceConLaBandeja } from '../../puertos/puertos-de-la-bandeja.js';
 import type { ControlDePeriodos } from '../../puertos/puertos-de-periodos.js';
 import type { RepositorioDeDatosFiscalesDeEmpresa } from '../../puertos/repositorios-de-datos-fiscales.js';
@@ -27,14 +27,12 @@ import { bajaDelPeriodo } from './credito-de-la-empresa.js';
 import { dejarRetencionesPorResolver, type DependenciasDeRetencionesDeLaBaja } from './retenciones-de-la-baja.js';
 import { exigirPeriodoAbierto } from './guardia-del-periodo.js';
 import { dtoDeFicha, hechosDe } from './dto-de-ficha.js';
-import { exigirQueLaBajaRespeteElTope } from './tope-de-la-baja.js';
+import { exigirQueLaBajaRespeteElTope, type DependenciasDelTopeDeLaBaja } from './tope-de-la-baja.js';
 
-interface Dependencias extends DependenciasDeRetencionesDeLaBaja {
+interface Dependencias extends DependenciasDeRetencionesDeLaBaja, DependenciasDelTopeDeLaBaja {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioDeDocumentosGuardados;
   destinos: DestinosDeDocumentos;
-  /** Para bloquear la factura de una nota de débito y revisar el tope de sus notas de crédito. */
-  consultas: ConsultasDeDocumentos;
   control: ControlDePeriodos;
   /** La fila de la bandeja de DTE enlazada con el documento vuelve a `pendiente`. */
   bandeja: EnlaceConLaBandeja;
@@ -89,7 +87,7 @@ export class AnularDocumento {
     const guardado = await repositorio.buscar(documentoId, true);
     if (!guardado) throw new RecursoNoEncontrado('El documento');
     exigirAnulable(hechosDe(guardado));
-    await exigirQueLaBajaRespeteElTope(this.dependencias.consultas, guardado);
+    await exigirQueLaBajaRespeteElTope(this.dependencias, guardado);
     await exigirPeriodoAbierto(control, guardado.documento.periodo);
     const { destino } = guardado.documento;
     await avisarAnulacion(destinos, operador, { documentoId, destino, motivo, origen });

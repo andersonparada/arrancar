@@ -1,9 +1,11 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
+import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import type { ConsultasDelLibro } from '../../aplicacion/puertos/consultas-del-libro.js';
 import type { AnuladoDelLibro, CategoriaDeLinea, DocumentoDelLibro } from '../../dominio/libro/documento-del-libro.js';
 import { documentos } from './documentos.tablas.js';
+import { facturasAnteriores } from './facturas-anteriores.tablas.js';
 import { lineasDeDocumento as lineas } from './lineas-de-documento.tablas.js';
 import { anuladoDelLibro, documentosDelLibro } from './libro.mapeador.js';
 import { vigenciasDeCombustible as vigencias } from './vigencias-de-combustible.tablas.js';
@@ -18,10 +20,21 @@ const categoriaSql = sql<CategoriaDeLinea>`case
 const nitSql = sql<string | null>`case when ${documentos.tipo} = 'factura_especial'
   then ${documentos.nitReceptor} else ${documentos.nitEmisor} end`;
 
+/** La factura del libro que corrige una nota, para el Excel del libro. */
+const afectado = alias(documentos, 'afectado');
+
+/** La factura que corrige una nota: la del libro o, si no, la del sistema anterior. */
+const corrige = {
+  serie: sql<string | null>`coalesce(${afectado.serie}, ${facturasAnteriores.serie})`,
+  numero: sql<string | null>`coalesce(${afectado.numero}, ${facturasAnteriores.numero})`,
+  fechaEmision: sql<string | null>`coalesce(${afectado.fechaEmision}, ${facturasAnteriores.fechaEmision})`,
+};
+
 /** Lo que se pide por cada documento y categoría de línea: el documento y las líneas sumadas. */
 const columnasDeCategoria = {
   documento: documentos,
   nit: nitSql,
+  corrige,
   categoria: categoriaSql,
   base: sql<string>`sum(${lineas.base})`,
   iva: sql<string>`sum(${lineas.iva})`,
@@ -29,6 +42,10 @@ const columnasDeCategoria = {
   exentoYNoAfecto: sql<string>`sum(${lineas.exento} + ${lineas.otrosImpuestos})`,
   combustibleExento: sql<boolean>`coalesce(bool_or(${vigencias.ivaExento}), false)`,
 };
+
+/** Une por la llave de la nota y por la empresa, para usar los índices y no cruzar empresas. */
+const alMismoNivel = (id: AnyPgColumn, llave: AnyPgColumn, empresa: AnyPgColumn) =>
+  and(eq(id, llave), eq(empresa, documentos.empresaId));
 
 /** Los documentos de la empresa y el período que van en reportes SAT, en el estado dado. */
 const delPeriodo = (empresaId: string, periodo: string, estado: 'vigente' | 'anulado') =>
@@ -50,8 +67,13 @@ export class ConsultasDelLibroDrizzle implements ConsultasDelLibro {
         vigencias,
         and(eq(vigencias.id, lineas.vigenciaDeCombustibleId), eq(vigencias.empresaId, lineas.empresaId)),
       )
+      .leftJoin(afectado, alMismoNivel(afectado.id, documentos.documentoAfectadoId, afectado.empresaId))
+      .leftJoin(
+        facturasAnteriores,
+        alMismoNivel(facturasAnteriores.id, documentos.facturaAnteriorId, facturasAnteriores.empresaId),
+      )
       .where(delPeriodo(empresaId, periodo, 'vigente'))
-      .groupBy(documentos.id, categoriaSql)
+      .groupBy(documentos.id, afectado.id, facturasAnteriores.id, categoriaSql)
       .orderBy(
         asc(documentos.fechaEmision),
         asc(documentos.tipoDte),

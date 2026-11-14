@@ -25,6 +25,7 @@ export class DocumentosGuardadosEnMemoria implements RepositorioDeDocumentosGuar
       procesadoEnDestinoEn: null,
       notas: [],
       motivoDeLaFactura: null,
+      documentoQueModifica: null,
       ...cambios,
     };
     this.filas.set(documento.id, guardado);
