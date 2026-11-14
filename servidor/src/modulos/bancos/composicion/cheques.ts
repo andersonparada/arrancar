@@ -16,8 +16,7 @@ import { ConsultasMovimientosDrizzle } from '../infraestructura/persistencia/con
 import { RepositorioChequerasDrizzle } from '../infraestructura/persistencia/repositorio-chequeras.drizzle.js';
 import { RepositorioChequesDrizzle } from '../infraestructura/persistencia/repositorio-cheques.drizzle.js';
 import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/repositorio-movimientos.drizzle.js';
-import { CuentasPorPagarActivoEnModulosActivos } from '../infraestructura/cuentas-por-pagar-activo-en-modulos-activos.js';
-import { ModulosActivosDeLaCuentaEnRegistro } from '../../core/mediador/infraestructura/modulos-activos-de-la-cuenta-en-registro.js';
+import { piezasDeOrigen } from './piezas-de-origen.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 
 /** Las dependencias de los casos de uso de cheques; también las usa la anulación en lote de caducos. */
@@ -25,13 +24,14 @@ export function dependenciasDeCheques() {
   const { unidadDeTrabajo, auditoria, correlativos, reloj } = dependenciasCompartidas();
   const consultasMovimientos = new ConsultasMovimientosDrizzle();
   const politicaDeSobregiro = new PoliticaDeSobregiroEnConfiguracion();
+  const conceptos = new ConceptosDeMovimientos(new RepositorioConceptosDrizzle());
   return {
     unidadDeTrabajo,
     auditoria,
     correlativos,
     reloj,
-    cuentasPorPagar: new CuentasPorPagarActivoEnModulosActivos(new ModulosActivosDeLaCuentaEnRegistro()),
-    conceptos: new ConceptosDeMovimientos(new RepositorioConceptosDrizzle()),
+    conceptos,
+    ...piezasDeOrigen(conceptos),
     repositorio: new RepositorioChequesDrizzle(),
     repositorioChequeras: new RepositorioChequerasDrizzle(),
     repositorioMovimientos: new RepositorioMovimientosDrizzle(),
@@ -58,6 +58,7 @@ export function rutasDeCheques() {
         auditoria: dependencias.auditoria,
         conceptos: dependencias.conceptos,
         cuentasPorPagar: dependencias.cuentasPorPagar,
+        revisor: dependencias.revisor,
       },
       'cheques',
     ),

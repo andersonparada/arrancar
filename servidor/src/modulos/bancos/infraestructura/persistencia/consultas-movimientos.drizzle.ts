@@ -1,21 +1,24 @@
-import { and, asc, desc, eq, getTableColumns, gte, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, gt, gte, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir-que-exista.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   FiltroDeMovimientos,
+  LineaDeDesgloseDto,
   MovimientoDto,
   ResumenDeSinClasificar,
   SolicitudDeMovimiento,
 } from '../../aplicacion/dto/movimiento.dto.js';
 import type { ConsultasMovimientos } from '../../aplicacion/puertos/consultas-movimientos.js';
+import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../dominio/asignacion-de-concepto.js';
 import { finDelMesDe } from '../../dominio/conciliacion.js';
 import { cheques } from './cheques.tablas.js';
 import { esPendienteDeClasificar } from './condiciones-de-clasificacion.js';
 import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
+import { desgloseDeMovimientos } from './desglose-de-movimientos.tablas.js';
 import { cuentaConConciliacionesDe, mesConciliadoDe } from './hechos-de-movimiento.js';
 import { mapeadorDeMovimiento } from './movimiento.mapeador.js';
 import { movimientos } from './movimientos.tablas.js';
@@ -24,6 +27,16 @@ import { transferencias } from './transferencias.tablas.js';
 
 const cuentaBancaria = alias(cuentasBancarias, 'cuenta_bancaria');
 const chequeDelMovimiento = alias(cheques, 'cheque_del_movimiento');
+const conceptoDelDesglose = alias(conceptos, 'concepto_del_desglose');
+
+/** El reparto por concepto del movimiento (vacío si no lo tiene), de la línea más grande a la más chica. */
+const desgloseDelMovimiento = sql<LineaDeDesgloseDto[]>`coalesce((
+  select json_agg(json_build_object('conceptoId', ${desgloseDeMovimientos.conceptoId}, 'concepto', ${conceptoDelDesglose.nombre}, 'monto', (${desgloseDeMovimientos.monto})::text)
+    order by ${desgloseDeMovimientos.monto} desc, ${conceptoDelDesglose.nombre})
+  from ${desgloseDeMovimientos}
+  inner join ${conceptos} ${sql.identifier('concepto_del_desglose')} on ${conceptoDelDesglose.id} = ${desgloseDeMovimientos.conceptoId}
+  where ${desgloseDeMovimientos.movimientoId} = ${movimientos.id}
+), '[]'::json)`;
 
 const columnas = {
   ...getTableColumns(movimientos),
@@ -34,6 +47,8 @@ const columnas = {
   // Las notas de una transferencia (y sus inversos) muestran el número de la transferencia.
   numero: sql<number | null>`coalesce(${movimientos.numero}, ${transferencias.numero})`,
   anioDeNumero: sql<number>`case when ${movimientos.numero} is null and ${transferencias.numero} is not null then ${transferencias.anioDeNumero} else ${movimientos.anioDeNumero} end`,
+  conceptoEsDePago: sql<boolean>`coalesce(${conceptos.claveDeSistema} = ${CLAVE_DE_PAGO_A_PROVEEDORES}, false)`,
+  desglose: desgloseDelMovimiento,
   mesConciliado: mesConciliadoDe(movimientos.cuentaBancariaId, movimientos.fecha),
   cuentaConConciliaciones: cuentaConConciliacionesDe(movimientos.cuentaBancariaId),
 };
@@ -134,6 +149,22 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
       .from(movimientos)
       .where(vigentesDe(cuentaBancariaId, undefined, lte(movimientos.fecha, fecha)));
     return fila?.saldo ?? '0.00';
+  }
+
+  async chequesPosfechados(cuentaBancariaId: string, despuesDe: string): Promise<string> {
+    const [fila] = await transaccionEnCurso()
+      .select({ total: sql<string>`(coalesce(sum(${movimientos.monto}), 0))::numeric(14, 2)::text` })
+      .from(movimientos)
+      .where(
+        vigentesDe(
+          cuentaBancariaId,
+          undefined,
+          eq(movimientos.tipo, 'cheque'),
+          gt(movimientos.fecha, despuesDe),
+          isNull(movimientos.revertidoEn),
+        ),
+      );
+    return fila?.total ?? '0.00';
   }
 
   async vigentesEntre(cuentaBancariaId: string, desde: string, hasta: string): Promise<MovimientoDto[]> {

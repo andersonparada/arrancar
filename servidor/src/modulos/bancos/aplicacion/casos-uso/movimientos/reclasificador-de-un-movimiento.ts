@@ -5,13 +5,15 @@ import {
   NoEsUnChequeParaReclasificar,
   UnChequeSeReclasificaComoCheque,
 } from '../../../dominio/errores-de-conceptos.js';
+import { NotaMarcadaConDesglose } from '../../../dominio/errores-de-origen.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
+import type { MovimientoDto } from '../../dto/movimiento.dto.js';
 import type { CuentasPorPagarActivo } from '../../puertos/cuentas-por-pagar-activo.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
 
 export type DependenciasDelReclasificador = Pick<
   DependenciasDeMovimientos,
-  'repositorio' | 'consultas' | 'auditoria' | 'conceptos'
+  'repositorio' | 'consultas' | 'auditoria' | 'conceptos' | 'revisor'
 > & { cuentasPorPagar: CuentasPorPagarActivo };
 
 /**
@@ -47,6 +49,9 @@ export class ReclasificadorDeUnMovimiento {
     const movimiento = await movimientoExistente(repositorio, movimientoId);
     const anterior = await consultas.obtener(movimientoId);
     await this.exigirClase(pedido.clase, anterior);
+    if (anterior.marcadaParaCuentasPorPagar && anterior.conceptoId !== concepto.id.valor) {
+      await this.revisarNotaMarcada(operador, anterior);
+    }
     const conceptoAnterior = movimiento.reclasificar(concepto.id.valor);
     await this.exigirConceptoElegible(operador, concepto, anterior.tipo);
     if (conceptoAnterior === concepto.id.valor) return false;
@@ -56,6 +61,12 @@ export class ReclasificadorDeUnMovimiento {
     await this.auditar(movimientoId, anterior, `Reclasificado de «${anterior.conceptoNombre}» a «${nombre}»${sufijo}`);
     await this.arrastrarAlInverso(movimiento, concepto);
     return true;
+  }
+
+  /** Una nota marcada con desglose no se reclasifica; sin él, Cuentas por pagar revisa que no esté ligada (CP4). */
+  private async revisarNotaMarcada(operador: Operador, marcada: MovimientoDto): Promise<void> {
+    if (marcada.desglose.length > 0) throw new NotaMarcadaConDesglose();
+    await this.dependencias.revisor.revisar(operador, { movimiento: marcada, cambio: 'reclasificar' });
   }
 
   /** Las notas solo tocan notas y cheques pendientes; los cheques ya clasificados son del permiso de los cheques. */

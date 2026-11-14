@@ -1,4 +1,4 @@
-import { accionesDeMovimiento, type HechosDeUnMovimiento } from '../aplicacion/acciones-posibles.js';
+import { accionesDeMovimiento, estaMarcada, type HechosDeUnMovimiento } from '../aplicacion/acciones-posibles.js';
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
 import { resumirSinClasificar } from '../aplicacion/calculo-de-reporte-de-movimientos.js';
@@ -9,7 +9,7 @@ import type { PoliticaDeSobregiro } from '../aplicacion/puertos/politica-de-sobr
 import type { RepositorioMovimientos } from '../aplicacion/puertos/repositorio-movimientos.js';
 import { deCentavos } from '../dominio/centavos.js';
 import { Movimiento, type MovimientoId } from '../dominio/movimiento.js';
-import { CONCEPTO_SIN_CLASIFICAR, nombreDelConceptoDePrueba } from './conceptos-de-prueba.js';
+import { CONCEPTO_SIN_CLASIFICAR, idDeSistema, nombreDelConceptoDePrueba } from './conceptos-de-prueba.js';
 
 const copia = (movimiento: Movimiento) => Movimiento.reconstruir(movimiento.instantanea());
 
@@ -34,12 +34,14 @@ function hechosDe(
     revertido: movimiento.estaRevertido,
     esInverso: movimiento.esInverso,
     esDeOtroModulo: movimiento.instantanea().moduloDeOrigen !== null,
+    conceptoEsDePago: movimiento.instantanea().conceptoId === idDeSistema('pago_a_proveedor'),
     ...cuenta,
   };
 }
 
 function aDto(movimiento: Movimiento, conciliacionId: string | null, cuenta: HechosDeLaCuenta): MovimientoDto {
   const { id, empresaId: _empresaId, anuladoEn, revertidoEn, revierteAId, ...datos } = movimiento.instantanea();
+  const hechos = hechosDe(movimiento, conciliacionId, cuenta);
   return {
     ...datos,
     id: id.valor,
@@ -51,7 +53,9 @@ function aDto(movimiento: Movimiento, conciliacionId: string | null, cuenta: Hec
     chequeId: null,
     numeroDeCheque: null,
     conciliacionId,
-    ...accionesDeMovimiento(hechosDe(movimiento, conciliacionId, cuenta)),
+    desglose: [],
+    marcadaParaCuentasPorPagar: estaMarcada(hechos),
+    ...accionesDeMovimiento(hechos),
   };
 }
 
@@ -82,6 +86,8 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
   fechaConciliadaHasta: string | null = null;
   /** Movimiento → conciliación donde las pruebas lo dan por marcado; lo que falte, sin marcar. */
   readonly marcadosEnConciliacion = new Map<string, string>();
+  /** Movimientos que las pruebas dan por con reparto por concepto (CP4); lo que falte, sin reparto. */
+  readonly conDesglose = new Set<string>();
   /** Cuentas que las pruebas dan por con alguna conciliación (aunque no esté autorizada). */
   readonly cuentasConConciliaciones = new Set<string>();
 
@@ -168,6 +174,14 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
     return resumirSinClasificar(pendientes);
   }
 
+  async chequesPosfechados(cuentaBancariaId: string, despuesDe: string): Promise<string> {
+    const efectos = this.deLaCuenta(cuentaBancariaId)
+      .filter((m) => m.instantanea().tipo === 'cheque' && m.instantanea().fecha > despuesDe)
+      .filter((m) => !m.estaAnulado && !m.estaRevertido)
+      .map((m) => -m.efectoEnCentavos);
+    return deCentavos(efectos.reduce((suma, efecto) => suma + efecto, 0));
+  }
+
   async vigentesEntre(cuentaBancariaId: string, desde: string, hasta: string): Promise<MovimientoDto[]> {
     return this.vigentes(cuentaBancariaId).filter((dto) => dto.fecha >= desde && dto.fecha <= hasta);
   }
@@ -195,7 +209,9 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
 
   private aDtoMarcado(movimiento: Movimiento): MovimientoDto {
     const conciliacionId = this.marcadosEnConciliacion.get(movimiento.id.valor) ?? null;
-    return aDto(movimiento, conciliacionId, this.hechosDeLaCuenta(movimiento));
+    const dto = aDto(movimiento, conciliacionId, this.hechosDeLaCuenta(movimiento));
+    if (!this.conDesglose.has(dto.id)) return dto;
+    return { ...dto, desglose: [{ conceptoId: dto.conceptoId, concepto: dto.conceptoNombre, monto: dto.monto }] };
   }
 
   private hechosDeLaCuenta(movimiento: Movimiento): HechosDeLaCuenta {

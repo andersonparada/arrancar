@@ -16,6 +16,8 @@ import { CuentaConConciliaciones, NoEsUnSaldoInicial } from '../../../dominio/er
 import type { ConsultasConciliaciones } from '../../puertos/consultas-conciliaciones.js';
 import { MovimientosEnMemoria } from '../../../pruebas/dobles-de-movimientos.js';
 import type { SolicitudDeMovimiento } from '../../dto/movimiento.dto.js';
+import { CuentasPorPagarFijo } from '../../../pruebas/dobles-de-cheques.js';
+import { piezasDeOrigenEnMemoria } from '../../../pruebas/dobles-de-origen.js';
 import { CrearMovimiento } from './crear-movimiento.js';
 import { EliminarSaldoInicial } from './eliminar-saldo-inicial.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
@@ -67,6 +69,7 @@ beforeEach(() => {
     auditoria,
     correlativos: new CorrelativosEnMemoria(),
     conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
+    ...piezasDeOrigenEnMemoria(conceptosDeMovimientosDe(conceptosSembrados()), new CuentasPorPagarFijo(false)),
   };
   crear = new CrearMovimiento(dependencias);
   eliminar = new EliminarSaldoInicial({

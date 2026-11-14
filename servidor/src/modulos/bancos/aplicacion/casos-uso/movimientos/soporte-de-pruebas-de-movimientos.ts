@@ -17,12 +17,15 @@ import {
   conceptosSembrados,
 } from '../../../pruebas/conceptos-de-prueba.js';
 import { CuentasPorPagarFijo } from '../../../pruebas/dobles-de-cheques.js';
+import { piezasDeOrigenEnMemoria } from '../../../pruebas/dobles-de-origen.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { ActualizarMovimiento } from './actualizar-movimiento.js';
 import { AnularMovimiento } from './anular-movimiento.js';
 import { CrearMovimiento } from './crear-movimiento.js';
+import { DesmarcarNota } from './desmarcar-nota.js';
 import { EliminarMovimiento } from './eliminar-movimiento.js';
 import { ListarMovimientos } from './listar-movimientos.js';
+import { MarcarNota } from './marcar-nota.js';
 import { ObtenerMovimiento } from './obtener-movimiento.js';
 import { ReclasificarVarios } from './reclasificar-varios.js';
 import { ReclasificarMovimientos } from './reclasificar-movimientos.js';
@@ -54,15 +57,16 @@ interface Opciones {
 
 function dependenciasDe(registros: MovimientosEnMemoria, auditoria: AuditoriaEnMemoria, opciones: Opciones) {
   const politicaDeSobregiro = new PoliticaDeSobregiroFija(opciones.permiteSobregiro ?? false);
+  const conceptos = conceptosDeMovimientosDe(conceptosSembrados());
   return {
-    cuentasPorPagar: new CuentasPorPagarFijo(opciones.cuentasPorPagar ?? false),
+    ...piezasDeOrigenEnMemoria(conceptos, new CuentasPorPagarFijo(opciones.cuentasPorPagar ?? false)),
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     repositorio: registros,
     consultas: registros,
     auditoria,
     correlativos: new CorrelativosEnMemoria(),
     reloj: new RelojFijo(),
-    conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
+    conceptos,
     reglas: new ReglasDeLaCuenta({ consultas: registros, politicaDeSobregiro }),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(opciones.mismaFecha),
   };
@@ -76,6 +80,10 @@ export function armarEntorno({ permiteSobregiro = false, mismaFecha = false, cue
   return {
     registros,
     auditoria,
+    avisos: dependencias.avisos,
+    desgloses: dependencias.desgloses,
+    marcar: new MarcarNota(dependencias),
+    desmarcar: new DesmarcarNota(dependencias),
     listar: new ListarMovimientos(dependencias),
     obtener: new ObtenerMovimiento(dependencias),
     crear: new CrearMovimiento(dependencias),

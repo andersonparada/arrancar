@@ -24,49 +24,13 @@ import {
   NoSeEliminaUnMovimientoRevertido,
   NoSeRevierteUnInverso,
 } from './errores.js';
-import type { DatosDeIntereses, PropiedadesDeIntereses } from './intereses.js';
+import type { DatosDeIntereses } from './intereses.js';
+import { MovimientoDeOtroModulo, NotaNoMarcable } from './errores-de-origen.js';
 import type { Numeracion } from './numeracion.js';
 import type { OrigenDeMovimiento } from './origen-de-movimiento.js';
+import type { DatosDeMovimiento, MovimientoId, PropiedadesDeMovimiento } from './propiedades-de-movimiento.js';
 
-export type MovimientoId = Identificador<'Movimiento'>;
-
-/** Lo que el usuario puede escribir de un movimiento. */
-export interface DatosDeMovimiento extends DatosDeIntereses {
-  cuentaBancariaId: string;
-  tipo: 'credito' | 'debito' | 'cheque';
-  fecha: string;
-  monto: string;
-  saldoInicial: boolean;
-  referencia: string | null;
-  beneficiario: string | null;
-  observaciones: string | null;
-  /** Cómo se clasifica el dinero (H3b). Un original lo elige el usuario; los demás los asigna el sistema. */
-  conceptoId: string;
-}
-
-export interface PropiedadesDeMovimiento
-  extends Omit<DatosDeMovimiento, keyof DatosDeIntereses>, PropiedadesDeIntereses {
-  id: MovimientoId;
-  empresaId: Identificador<'Empresa'>;
-  /** Anulación a la antigua: solo la usan los cheques en un mes abierto (sin inverso, fuera del saldo). */
-  anuladoEn: Date | null;
-  motivoDeAnulacion: string | null;
-  /** La transferencia que lo creó, si es una de sus dos notas; si no, `null`. */
-  transferenciaId: string | null;
-  /** Cuándo y por qué se revirtió (creó su inverso); `null` si nunca se revirtió. */
-  revertidoEn: Date | null;
-  motivoDeReversion: string | null;
-  /** El movimiento original que revierte, si este es un inverso; si no, `null`. */
-  revierteAId: string | null;
-  /** Número correlativo de su tipo (nota de crédito o de débito); `null` en cheques, saldo inicial y notas de transferencia. */
-  numero: number | null;
-  /** Año del correlativo si la empresa lo reinicia cada año; 0 si no. */
-  anioDeNumero: number;
-  /** El módulo que lo generó (P6), si no nació en Bancos; va junto con `documentoDeOrigenId` o ambos son `null`. */
-  moduloDeOrigen: string | null;
-  /** El documento de ese módulo que lo generó (sin llave foránea: vive en otro esquema). */
-  documentoDeOrigenId: string | null;
-}
+export type { DatosDeMovimiento, MovimientoId, PropiedadesDeMovimiento } from './propiedades-de-movimiento.js';
 
 const MAXIMO_DEL_MOTIVO = 500;
 
@@ -134,6 +98,7 @@ export class Movimiento extends Entidad<MovimientoId> {
   corregir(datos: DatosDeMovimiento): void {
     this.exigirVigente();
     if (this.esInverso) throw new NoSeCorrigeUnInverso();
+    this.exigirSinOrigen();
     this.exigirSuelto();
     const { cuentaBancariaId, saldoInicial } = this.propiedades;
     this.propiedades = { ...this.propiedades, ...datosValidos({ ...datos, cuentaBancariaId, saldoInicial }) };
@@ -154,6 +119,18 @@ export class Movimiento extends Entidad<MovimientoId> {
     const anterior = this.propiedades.conceptoId;
     this.propiedades = { ...this.propiedades, conceptoId };
     return anterior;
+  }
+
+  /**
+   * Cambia el concepto de un movimiento con origen cuando su módulo fija el reparto: queda el concepto de mayor monto
+   * (el que se ve en las listas). No es una reclasificación: la hace el módulo de origen, no el usuario.
+   * @throws Error si el movimiento no tiene origen (ahí el concepto lo elige el usuario o lo fija la marca).
+   */
+  fijarConceptoDelReparto(conceptoId: string): void {
+    if (this.propiedades.moduloDeOrigen === null) {
+      throw new Error('Solo un movimiento con origen fija su concepto por reparto.');
+    }
+    this.propiedades = { ...this.propiedades, conceptoId };
   }
 
   /** El inverso sigue a su original cuando este se reclasifica (hereda el concepto, sin validar nada, C2). */
@@ -215,11 +192,24 @@ export class Movimiento extends Entidad<MovimientoId> {
    * Exige que se pueda eliminar de verdad: no revierte a otro y no fue revertido. Lo que la entidad
    * no sabe (si está marcado en una conciliación, si su fecha cae en un mes conciliado) lo revisa
    * quien llama, con datos de consulta.
-   * @throws NoSeEliminaUnInverso si este movimiento es un inverso; NoSeEliminaUnMovimientoRevertido si fue revertido.
+   * @throws NoSeEliminaUnInverso si este movimiento es un inverso; NoSeEliminaUnMovimientoRevertido si fue revertido;
+   *   MovimientoDeOtroModulo si lo generó otro módulo.
    */
   exigirEliminable(): void {
+    this.exigirSinOrigen();
     if (this.propiedades.revierteAId) throw new NoSeEliminaUnInverso();
     if (this.propiedades.revertidoEn) throw new NoSeEliminaUnMovimientoRevertido();
+  }
+
+  /**
+   * Exige que sea una nota de débito suelta y vigente: la única clase que se marca para Cuentas por pagar (sin origen,
+   * sin transferencia, ni inverso, ni saldo inicial, ni cheque).
+   * @throws NotaNoMarcable si no lo es.
+   */
+  exigirNotaDeDebitoMarcable(): void {
+    const { tipo, saldoInicial, transferenciaId, moduloDeOrigen } = this.propiedades;
+    const suelta = tipo === 'debito' && !saldoInicial && transferenciaId === null && moduloDeOrigen === null;
+    if (!suelta || this.esInverso || this.estaAnulado || this.estaRevertido) throw new NotaNoMarcable();
   }
 
   /** @throws MovimientoMarcadoEnConciliacion si `conciliacionId` no es nulo. */
@@ -307,6 +297,10 @@ export class Movimiento extends Entidad<MovimientoId> {
   private exigirVigente(): void {
     if (this.estaAnulado) throw new MovimientoAnulado();
     if (this.estaRevertido) throw new MovimientoYaRevertido();
+  }
+
+  private exigirSinOrigen(): void {
+    if (this.propiedades.moduloDeOrigen !== null) throw new MovimientoDeOtroModulo();
   }
 
   private exigirSuelto(): void {

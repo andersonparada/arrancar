@@ -19,6 +19,8 @@ import {
   conceptosDeMovimientosDe,
   conceptosSembrados,
 } from '../../../pruebas/conceptos-de-prueba.js';
+import { CuentasPorPagarFijo } from '../../../pruebas/dobles-de-cheques.js';
+import { piezasDeOrigenEnMemoria } from '../../../pruebas/dobles-de-origen.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
 import { CrearMovimiento } from '../movimientos/crear-movimiento.js';
@@ -90,6 +92,7 @@ function dependenciasDePrueba(dobles: DoblesDePrueba) {
     reglas,
     correlativos: new CorrelativosEnMemoria(),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(),
+    ...piezasDeOrigenEnMemoria(comunes.conceptos, new CuentasPorPagarFijo(false)),
   };
   return { deConciliaciones, deMovimientos };
 }

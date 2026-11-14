@@ -3,12 +3,13 @@ import { ActualizarMovimiento } from '../aplicacion/casos-uso/movimientos/actual
 import { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anular-movimiento.js';
 import { CrearMovimiento } from '../aplicacion/casos-uso/movimientos/crear-movimiento.js';
 import { EliminarMovimiento } from '../aplicacion/casos-uso/movimientos/eliminar-movimiento.js';
+import { DesmarcarNota } from '../aplicacion/casos-uso/movimientos/desmarcar-nota.js';
 import { ListarMovimientos } from '../aplicacion/casos-uso/movimientos/listar-movimientos.js';
+import { MarcarNota } from '../aplicacion/casos-uso/movimientos/marcar-nota.js';
 import { ReclasificarVarios } from '../aplicacion/casos-uso/movimientos/reclasificar-varios.js';
 import { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
 import { ObtenerMovimiento } from '../aplicacion/casos-uso/movimientos/obtener-movimiento.js';
-import { CuentasPorPagarActivoEnModulosActivos } from '../infraestructura/cuentas-por-pagar-activo-en-modulos-activos.js';
-import { ModulosActivosDeLaCuentaEnRegistro } from '../../core/mediador/infraestructura/modulos-activos-de-la-cuenta-en-registro.js';
+import { piezasDeOrigen } from './piezas-de-origen.js';
 import { casosDeSugerencias } from './sugerencias.js';
 import { ReglasDeLaCuenta } from '../aplicacion/reglas-de-la-cuenta.js';
 import { NotasControlador } from '../http/notas.controlador.js';
@@ -20,10 +21,12 @@ import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/r
 import { PoliticaDeMismaFechaEnAnulacionEnConfiguracion } from '../infraestructura/politica-de-misma-fecha-en-anulacion.configuracion.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 
-function dependenciasDeNotas() {
+/** Las dependencias de las notas; también las usan las órdenes de otros módulos (`ordenes.ts`). */
+export function dependenciasDeNotas() {
   const { unidadDeTrabajo, auditoria, correlativos, reloj } = dependenciasCompartidas();
   const consultas = new ConsultasMovimientosDrizzle();
   const politicaDeSobregiro = new PoliticaDeSobregiroEnConfiguracion();
+  const conceptos = new ConceptosDeMovimientos(new RepositorioConceptosDrizzle());
   return {
     unidadDeTrabajo,
     auditoria,
@@ -31,8 +34,8 @@ function dependenciasDeNotas() {
     reloj,
     consultas,
     repositorio: new RepositorioMovimientosDrizzle(),
-    conceptos: new ConceptosDeMovimientos(new RepositorioConceptosDrizzle()),
-    cuentasPorPagar: new CuentasPorPagarActivoEnModulosActivos(new ModulosActivosDeLaCuentaEnRegistro()),
+    conceptos,
+    ...piezasDeOrigen(conceptos),
     reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro }),
     politicaDeMismaFecha: new PoliticaDeMismaFechaEnAnulacionEnConfiguracion(),
   };
@@ -48,6 +51,8 @@ export function rutasDeNotas() {
     actualizar: new ActualizarMovimiento(dependencias),
     anular: new AnularMovimiento(dependencias),
     eliminar: new EliminarMovimiento(dependencias),
+    marcar: new MarcarNota(dependencias),
+    desmarcar: new DesmarcarNota(dependencias),
     reclasificar: new ReclasificarMovimientos(dependencias),
     reclasificarVarios: new ReclasificarVarios(dependencias),
     ...casosDeSugerencias(dependencias),

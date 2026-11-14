@@ -10,4 +10,6 @@ export interface ConsultasCheques {
   obtener(chequeId: string): Promise<ChequeDto>;
   /** El menor número disponible entre las chequeras activas de la cuenta; `null` si no hay ninguno. */
   siguienteDisponible(cuentaBancariaId: string): Promise<ChequeDto | null>;
+  /** El menor número disponible de esa chequera; `null` si ya no le quedan. */
+  siguienteDeLaChequera(chequeraId: string): Promise<ChequeDto | null>;
 }

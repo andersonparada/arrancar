@@ -20,6 +20,7 @@ import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 import { rutasDeTransferencias } from './composicion/transferencias.js';
 import { rutasDeIntereses } from './composicion/intereses.js';
 import { rutasDeConceptos } from './composicion/conceptos.js';
+import { ordenesDeBancos } from './composicion/ordenes.js';
 import { rutasDeReportesPorConcepto } from './composicion/reportes-por-concepto.js';
 // generador: importaciones
 
@@ -168,6 +169,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeConceptos(),
     rutasDeReportesPorConcepto(),
     rutasDeIntereses(),
+    ordenesDeBancos(),
     // generador: rutas
   ]),
 };

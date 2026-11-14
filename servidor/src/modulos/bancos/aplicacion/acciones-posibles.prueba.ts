@@ -4,6 +4,7 @@ import {
   accionesDeMovimiento,
   accionesDeTransferencia,
   estaLimpio,
+  estaMarcada,
   type HechosDeUnMovimiento,
 } from './acciones-posibles.js';
 
@@ -16,6 +17,7 @@ const limpia = (cambios: Partial<HechosDeUnMovimiento> = {}): HechosDeUnMovimien
   revertido: false,
   esInverso: false,
   esDeOtroModulo: false,
+  conceptoEsDePago: false,
   mesConciliado: false,
   cuentaConConciliaciones: false,
   ...cambios,
@@ -142,5 +144,51 @@ describe('accionesDeCheque', () => {
       puedeAnular: false,
       puedeBlanquear: false,
     });
+  });
+});
+
+describe('lo que generó otro módulo y las notas marcadas (CP4)', () => {
+  const debito = (cambios: Partial<HechosDeUnMovimiento> = {}) => limpia({ tipo: 'debito', ...cambios });
+
+  it('lo de otro módulo se anula, pero no se elimina ni se blanquea ni se marca', () => {
+    const hechos = debito({ esDeOtroModulo: true });
+
+    expect(accionesDeMovimiento(hechos)).toMatchObject({
+      puedeAnular: true,
+      puedeEliminar: false,
+      puedeMarcar: false,
+      puedeDesmarcar: false,
+    });
+    expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque', esDeOtroModulo: true })).puedeBlanquear).toBe(false);
+  });
+
+  it('una nota de débito suelta con el concepto de pago a proveedores está marcada: se desmarca, no se marca', () => {
+    const marcada = debito({ conceptoEsDePago: true });
+
+    expect(estaMarcada(marcada)).toBe(true);
+    expect(accionesDeMovimiento(marcada)).toMatchObject({ puedeMarcar: false, puedeDesmarcar: true });
+    expect(accionesDeMovimiento(debito())).toMatchObject({ puedeMarcar: true, puedeDesmarcar: false });
+  });
+
+  it('el mismo concepto en un crédito, un cheque, una transferencia, un inverso o lo de otro módulo no es marca', () => {
+    for (const cambios of [
+      { tipo: 'credito' as const },
+      { tipo: 'cheque' as const },
+      { esDeTransferencia: true },
+      { esInverso: true },
+      { esDeOtroModulo: true },
+      { saldoInicial: true },
+    ]) {
+      expect(estaMarcada(debito({ conceptoEsDePago: true, ...cambios }))).toBe(false);
+    }
+  });
+
+  it('una nota anulada o revertida no se marca ni se desmarca', () => {
+    for (const cambios of [{ anulado: true }, { revertido: true }]) {
+      expect(accionesDeMovimiento(debito(cambios))).toMatchObject({ puedeMarcar: false });
+      expect(accionesDeMovimiento(debito({ conceptoEsDePago: true, ...cambios }))).toMatchObject({
+        puedeDesmarcar: false,
+      });
+    }
   });
 });

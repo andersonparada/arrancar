@@ -23,6 +23,7 @@ export class BlanquearCheque {
 
   /**
    * @throws ChequeNoEmitido si el cheque no está emitido.
+   * @throws ModuloDeOrigenInactivo, MovimientoDeOtroModulo o lo que rechace el módulo de origen si es de otro módulo (CP4).
    * @throws MovimientoMarcadoEnConciliacion si su movimiento está marcado en una conciliación; MovimientoAnulado si está anulado.
    * @throws MesConciliado si su fecha cae en un mes ya conciliado de la cuenta.
    */
@@ -34,6 +35,8 @@ export class BlanquearCheque {
       const anterior = await consultas.obtener(chequeId);
       const movimientoId = cheque.instantanea().movimientoId as string;
       const movimiento = await movimientoExistente(repositorioMovimientos, movimientoId);
+      const delMovimiento = await this.dependencias.consultasMovimientos.obtener(movimientoId);
+      await this.dependencias.revisor.revisar(operador, { movimiento: delMovimiento, cambio: 'blanquear', motivo });
       await this.exigirMovimientoLimpio(movimiento);
 
       cheque.blanquear();

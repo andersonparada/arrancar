@@ -11,6 +11,8 @@ export interface HechosDeUnMovimiento {
   esInverso: boolean;
   /** Lo generó otro módulo (P6): su concepto lo fija ese módulo. */
   esDeOtroModulo: boolean;
+  /** Su concepto es el de sistema «Pago a proveedores»; con las demás condiciones de `estaMarcada`, es una nota marcada. */
+  conceptoEsDePago: boolean;
   /** Su fecha cae en un mes ya conciliado (autorizado) de su cuenta. */
   mesConciliado: boolean;
   /** Su cuenta tiene alguna conciliación, de cualquier estado. */
@@ -22,7 +24,25 @@ export interface AccionesDeMovimiento {
   puedeAnular: boolean;
   puedeEliminar: boolean;
   puedeReclasificar: boolean;
+  /** Estructural: el servidor además exige que Cuentas por pagar esté activo al marcar. */
+  puedeMarcar: boolean;
+  puedeDesmarcar: boolean;
 }
+
+const esNotaSuelta = (hechos: HechosDeUnMovimiento): boolean =>
+  hechos.tipo === 'debito' &&
+  !hechos.saldoInicial &&
+  !hechos.esDeTransferencia &&
+  !hechos.esInverso &&
+  !hechos.esDeOtroModulo;
+
+const esVigente = (hechos: HechosDeUnMovimiento): boolean => !hechos.anulado && !hechos.revertido;
+
+/**
+ * Una nota de débito suelta, sin origen, con el concepto «Pago a proveedores»: la marca para Cuentas por pagar es el
+ * concepto mismo (no hay columna). Una nota anulada o revertida conserva su concepto y sigue siendo «marcada».
+ */
+export const estaMarcada = (hechos: HechosDeUnMovimiento): boolean => esNotaSuelta(hechos) && hechos.conceptoEsDePago;
 
 /**
  * «Limpio» es lo que se puede eliminar de verdad: nunca pasó por el banco (no está marcado en una
@@ -41,12 +61,29 @@ export function estaLimpio(hechos: HechosDeUnMovimiento): boolean {
  */
 export function accionesDeMovimiento(hechos: HechosDeUnMovimiento): AccionesDeMovimiento {
   if (hechos.saldoInicial) {
-    return { puedeAnular: false, puedeEliminar: !hechos.cuentaConConciliaciones, puedeReclasificar: false };
+    const sinAcciones = { puedeAnular: false, puedeReclasificar: false, puedeMarcar: false, puedeDesmarcar: false };
+    return { ...sinAcciones, puedeEliminar: !hechos.cuentaConConciliaciones };
   }
+  return { ...accionesDeBaja(hechos), puedeReclasificar: sePuedeReclasificar(hechos), ...accionesDeMarca(hechos) };
+}
+
+/** Anular y eliminar: solo notas sueltas; lo que generó otro módulo se anula, pero no se elimina. */
+function accionesDeBaja(hechos: HechosDeUnMovimiento) {
   const suelto = !hechos.esDeTransferencia && hechos.tipo !== 'cheque';
   const vigente = !hechos.anulado && !hechos.revertido && !hechos.esInverso;
-  const puedeReclasificar = sePuedeReclasificar(hechos);
-  return { puedeAnular: suelto && vigente, puedeEliminar: suelto && estaLimpio(hechos), puedeReclasificar };
+  return {
+    puedeAnular: suelto && vigente,
+    puedeEliminar: suelto && estaLimpio(hechos) && !hechos.esDeOtroModulo,
+  };
+}
+
+/** Marcar una nota vigente que no lo está, o desmarcar la que sí (CP4). */
+function accionesDeMarca(hechos: HechosDeUnMovimiento) {
+  const vigente = esVigente(hechos);
+  return {
+    puedeMarcar: esNotaSuelta(hechos) && vigente && !hechos.conceptoEsDePago,
+    puedeDesmarcar: estaMarcada(hechos) && vigente,
+  };
 }
 
 /** Solo un original de Bancos: ni las notas de una transferencia, ni un inverso, ni lo que generó otro módulo. */
@@ -83,6 +120,6 @@ export interface AccionesDeCheque {
 export function accionesDeCheque(estado: EstadoDelCheque, movimiento: HechosDeUnMovimiento | null): AccionesDeCheque {
   return {
     puedeAnular: estado !== 'anulado',
-    puedeBlanquear: estado === 'emitido' && movimiento !== null && estaLimpio(movimiento),
+    puedeBlanquear: estado === 'emitido' && movimiento !== null && estaLimpio(movimiento) && !movimiento.esDeOtroModulo,
   };
 }

@@ -15,6 +15,8 @@ export class EliminarMovimiento {
 
   /**
    * @throws NoEsUnaNota si es el saldo inicial de la cuenta.
+   * @throws ModuloDeOrigenInactivo o lo que rechace el módulo de origen si es de otro módulo o está marcado (CP4);
+   *   MovimientoDeOtroModulo si lo generó otro módulo y su módulo no lo rechazó.
    * @throws NoSeEliminaUnInverso o NoSeEliminaUnMovimientoRevertido si no está limpio por su historia.
    * @throws MovimientoMarcadoEnConciliacion si está marcado en alguna conciliación.
    * @throws MesConciliado si su fecha cae en un mes ya conciliado; SaldoInsuficiente si al quitarlo
@@ -25,8 +27,9 @@ export class EliminarMovimiento {
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
       movimiento.exigirClase(false);
-      movimiento.exigirEliminable();
       const anterior = await consultas.obtener(movimientoId);
+      await this.dependencias.revisor.revisar(operador, { movimiento: anterior, cambio: 'eliminar', motivo });
+      movimiento.exigirEliminable();
       movimiento.exigirNoMarcadoEnConciliacion(anterior.conciliacionId);
       const { cuentaBancariaId, fecha } = movimiento.instantanea();
       await reglas.revisar(operador, { cuentaBancariaId, fechas: [fecha], diferencia: -movimiento.efectoEnCentavos });

@@ -20,6 +20,8 @@ import {
   conceptosSembrados,
 } from '../../../pruebas/conceptos-de-prueba.js';
 import type { ConceptosDeMovimientos } from '../../conceptos-de-movimientos.js';
+import { CuentasPorPagarFijo } from '../../../pruebas/dobles-de-cheques.js';
+import { piezasDeOrigenEnMemoria } from '../../../pruebas/dobles-de-origen.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { ActualizarMovimiento } from '../movimientos/actualizar-movimiento.js';
 import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
@@ -113,6 +115,7 @@ function dependenciasDeMovimientos({ movimientos, auditoria, ...comunes }: Base)
     repositorio: movimientos,
     consultas: movimientos,
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(),
+    ...piezasDeOrigenEnMemoria(comunes.conceptos, new CuentasPorPagarFijo(false)),
   };
 }
 

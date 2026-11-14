@@ -1,6 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { MovimientoDto, SolicitudDeMovimiento } from '../../dto/movimiento.dto.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
+import { NotaNoMarcable } from '../../../dominio/errores-de-origen.js';
 import { exigirInteresesCoherentes } from '../../../dominio/intereses.js';
 import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
@@ -22,6 +23,8 @@ export class ActualizarMovimiento {
 
   /**
    * @throws MovimientoAnulado si está anulado; NoEsUnaNota o NoEsUnSaldoInicial si no es de la clase esperada.
+   * @throws ModuloDeOrigenInactivo o lo que rechace el módulo de origen si es de otro módulo o está marcado (CP4);
+   *   MovimientoDeOtroModulo si lo generó otro módulo y su módulo no lo rechazó.
    * @throws SaldoInicialRepetido, SaldoInicialNoEsElPrimero, MovimientoAntesDelSaldoInicial o SaldoInsuficiente.
    */
   ejecutar(
@@ -33,7 +36,8 @@ export class ActualizarMovimiento {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
       movimiento.exigirClase(esSaldoInicial);
       const anterior = await consultas.obtener(movimientoId);
-      await this.corregirYGuardar(operador, movimiento, solicitud);
+      await this.dependencias.revisor.revisar(operador, { movimiento: anterior, cambio: 'corregir' });
+      await this.corregirYGuardar(operador, movimiento, { solicitud, marcada: anterior.marcadaParaCuentasPorPagar });
       await auditoria.registrar({
         recurso: 'bancos.movimientos',
         registroId: movimientoId,
@@ -44,11 +48,15 @@ export class ActualizarMovimiento {
     });
   }
 
-  private async corregirYGuardar(operador: Operador, movimiento: Movimiento, solicitud: SolicitudDeMovimiento) {
+  private async corregirYGuardar(
+    operador: Operador,
+    movimiento: Movimiento,
+    { solicitud, marcada }: { solicitud: SolicitudDeMovimiento; marcada: boolean },
+  ) {
     const { repositorio, reglas } = this.dependencias;
     const efectoAnterior = movimiento.efectoEnCentavos;
     const { fecha: fechaAnterior, tipo: tipoAnterior } = movimiento.instantanea();
-    const { conceptoId, pideIntereses } = await this.conceptoDeLaCorreccion(movimiento, solicitud);
+    const { conceptoId, pideIntereses } = await this.conceptoDeLaCorreccion(movimiento, { solicitud, marcada });
     exigirInteresesCoherentes(solicitud, pideIntereses);
     movimiento.corregir({ ...solicitud, conceptoId });
     if (solicitud.tipo !== tipoAnterior) await numerarSiCorresponde(this.dependencias.correlativos, movimiento);
@@ -63,13 +71,17 @@ export class ActualizarMovimiento {
     await repositorio.guardar(movimiento);
   }
 
-  /** El saldo inicial conserva su concepto de sistema; una nota lleva el elegido, que se revisa con su nuevo tipo. */
+  /**
+   * El saldo inicial y la nota marcada conservan su concepto de sistema (la marca solo se quita con «Desmarcar»); una
+   * nota lleva el elegido, que se revisa con su nuevo tipo.
+   */
   private async conceptoDeLaCorreccion(
     movimiento: Movimiento,
-    solicitud: SolicitudDeMovimiento,
+    { solicitud, marcada }: { solicitud: SolicitudDeMovimiento; marcada: boolean },
   ): Promise<{ conceptoId: string; pideIntereses: boolean }> {
     const { conceptoId: actual, saldoInicial } = movimiento.instantanea();
-    if (saldoInicial) return { conceptoId: actual, pideIntereses: false };
+    if (marcada && solicitud.tipo !== 'debito') throw new NotaNoMarcable();
+    if (saldoInicial || marcada) return { conceptoId: actual, pideIntereses: false };
     const elegido = await this.dependencias.conceptos.elegido(solicitud.conceptoId, solicitud.tipo, { actual });
     return { conceptoId: elegido.id.valor, pideIntereses: elegido.instantanea().pideDatosDeIntereses };
   }
