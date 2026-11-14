@@ -14,7 +14,9 @@ export function usarVentanaDeAplicacion(ficha: FichaActual, errores: Ref<Record<
     if (!ficha.value || abriendo.value) return;
     abriendo.value = true;
     try {
-      edicion.value = edicionDeAplicacion(await apiCuentasPorPagar.cargosParaAplicar(ficha.value.id), fechaDeHoy());
+      const { id, origen } = ficha.value;
+      const datos = await apiCuentasPorPagar.cargosParaAplicar(id);
+      edicion.value = edicionDeAplicacion(datos, fechaDeHoy(), origen === 'saldo_inicial');
       errores.value = {};
     } catch {
       usarAvisos().error('No se pudieron leer los documentos del proveedor. Intente de nuevo.');

@@ -7,6 +7,7 @@ import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import {
   ayudaDeLaCausa,
+  causaDeDiferenciaMenorApagada,
   esDeAnioAnterior,
   MAXIMO_DE_LA_REFERENCIA_DEL_AJUSTE,
   opcionesDeCausaDeAjuste,
@@ -25,7 +26,8 @@ import {
 const props = defineProps<{ resumen: string; tope: string; errores: Record<string, string>; enviando: boolean }>();
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const edicion = defineModel<EdicionDeAjuste>({ required: true });
-const causas = opcionesDeCausaDeAjuste();
+const causas = computed(() => opcionesDeCausaDeAjuste(props.tope));
+const sinDiferenciaMenor = computed(() => causaDeDiferenciaMenorApagada(props.tope));
 const ayudaDeLaCausaEscogida = computed(() =>
   ayudaDeLaCausa(edicion.value.causa, props.tope, AYUDAS_DE_LAS_CAUSAS_DEL_AJUSTE),
 );
@@ -52,11 +54,15 @@ const referenciaObligatoria = computed(() => edicion.value.causa === 'compensado
       <p v-if="ayudaDeLaCausaEscogida" class="text-sm text-tierra-600 dark:text-tierra-300">
         {{ ayudaDeLaCausaEscogida }}
       </p>
+      <p v-if="sinDiferenciaMenor" class="text-xs text-tierra-500">
+        La causa «Diferencia menor» está desactivada para esta empresa.
+      </p>
       <CampoTexto
         v-model="edicion.referencia"
         etiqueta="Referencia"
         :requerido="referenciaObligatoria"
         :longitud-maxima="MAXIMO_DE_LA_REFERENCIA_DEL_AJUSTE"
+        contar
         :ayuda="referenciaObligatoria ? 'Obligatoria: con qué se compensó.' : 'Opcional.'"
         :error="errores.referencia"
       />

@@ -8,6 +8,7 @@ import {
   erroresDelServidor,
   fechaMinimaDeAplicacion,
   montoMaximoDelCargo,
+  origenDeLaFechaDeAplicacion,
   restanteDeLaNota,
   tocaBancarizacion,
   totalAplicado,
@@ -39,6 +40,7 @@ function cargo(id: string, saldo: string, resto: Partial<CargoParaAplicar> = {})
 
 const datos = (cargos: CargoParaAplicar[], saldoLibre = '100.00'): CargosParaAplicar => ({
   saldoLibre,
+  umbralDeBancarizacion: '30000.00',
   fechaMinima: '2026-10-05',
   cargos,
 });
@@ -53,6 +55,12 @@ describe('edicionDeAplicacion', () => {
     expect(edicion.fecha).toBe(HOY);
     expect(totalAplicado(edicion)).toBe(8000);
     expect(restanteDeLaNota(edicion)).toBe(2000);
+  });
+});
+
+describe('umbral de bancarización', () => {
+  it('la edición guarda la cifra que manda el servidor', () => {
+    expect(edicionDeAplicacion(datos([cargo('a', '10.00')]), HOY).umbral).toBe('30000.00');
   });
 });
 
@@ -122,6 +130,31 @@ describe('erroresDeAplicacion', () => {
     expect(datosDeAplicacion({ ...edicion, montos: { a: 40 as unknown as string } }).aplicaciones).toEqual([
       { cargoId: 'a', monto: '40.00' },
     ]);
+  });
+
+  it('el mensaje de fecha dice de dónde viene el mínimo', () => {
+    const edicion = edicionDeAplicacion(datos([cargo('a', '60.00', { fechaRecepcion: '2026-10-20' })]), HOY);
+    edicion.montos = { a: '10' };
+    edicion.fecha = '2026-10-10';
+    expect(erroresDeAplicacion(edicion, HOY).fecha).toMatch(/documento más reciente/);
+    edicion.cargos = [cargo('b', '60.00', { fechaRecepcion: null })];
+    edicion.montos = { b: '10' };
+    edicion.fecha = '2026-10-04';
+    expect(erroresDeAplicacion(edicion, HOY).fecha).toMatch(/cuando se recibió la nota\.$/);
+    const deSaldoInicial = edicionDeAplicacion(datos([cargo('b', '60.00', { fechaRecepcion: null })]), HOY, true);
+    deSaldoInicial.montos = { b: '10' };
+    deSaldoInicial.fecha = '2026-10-04';
+    expect(origenDeLaFechaDeAplicacion(deSaldoInicial)).toBe('inicio');
+    expect(erroresDeAplicacion(deSaldoInicial, HOY).fecha).toMatch(/inicio de la empresa con saldos iniciales/);
+  });
+
+  it('una referencia de más de 100 caracteres da error, no se corta', () => {
+    const edicion = base();
+    edicion.montos = { a: '10', b: '' };
+    edicion.referencia = 'r'.repeat(101);
+    expect(erroresDeAplicacion(edicion, HOY).referencia).toBe('Sobra 1 carácter. Acórtelo a 100 o menos.');
+    edicion.referencia = 'r'.repeat(100);
+    expect(erroresDeAplicacion(edicion, HOY).referencia).toBeUndefined();
   });
 
   it('acepta una aplicación bien hecha', () => {

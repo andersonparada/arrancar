@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { FichaDelDocumento } from '../servicios/tipos';
 import {
   ayudaDeLaCausa,
+  causaDeDiferenciaMenorApagada,
   datosDeAjuste,
   edicionDeAjuste,
   erroresDeAjuste,
@@ -41,9 +42,18 @@ describe('esDeAnioAnterior', () => {
 
 describe('opcionesDeCausaDeAjuste', () => {
   it('invita a escoger y ordena por nombre', () => {
-    const textos = opcionesDeCausaDeAjuste().map((opcion) => opcion.texto);
+    const textos = opcionesDeCausaDeAjuste('25.00').map((opcion) => opcion.texto);
     expect(textos[0]).toBe('Escoja la causa');
     expect(textos.slice(1)).toEqual([...textos.slice(1)].sort((a, b) => a.localeCompare(b, 'es')));
+    expect(textos).toHaveLength(4);
+  });
+
+  it('no ofrece «Diferencia menor» si el tope de la empresa es cero', () => {
+    const valores = opcionesDeCausaDeAjuste('0.00').map((opcion) => opcion.valor);
+    expect(valores).not.toContain('diferencia_menor');
+    expect(valores).toHaveLength(3);
+    expect(causaDeDiferenciaMenorApagada('0.00')).toBe(true);
+    expect(causaDeDiferenciaMenorApagada('0.01')).toBe(false);
   });
 });
 
@@ -69,6 +79,28 @@ describe('erroresDeAjuste', () => {
   it('respeta el tope de la diferencia menor', () => {
     expect(erroresDeAjuste(llena({ causa: 'diferencia_menor', monto: '25.01' }), ficha, HOY).monto).toMatch(/hasta/);
     expect(erroresDeAjuste(llena({ causa: 'diferencia_menor', monto: '25.00' }), ficha, HOY)).toEqual({});
+  });
+
+  it('con el tope en cero dice que la causa está desactivada, no «hasta Q 0.00»', () => {
+    const sinTope = { ...ficha, topeDiferenciaMenor: '0.00' } as FichaDelDocumento;
+    const error = erroresDeAjuste(llena({ causa: 'diferencia_menor', monto: '1.00' }), sinTope, HOY).monto;
+    expect(error).toMatch(/desactivada para esta empresa/);
+    expect(error).not.toMatch(/hasta/i);
+  });
+
+  it('una referencia de más de 100 caracteres da error con cuántos sobran, no se corta', () => {
+    const error = erroresDeAjuste(llena({ referencia: 'x'.repeat(103) }), ficha, HOY).referencia;
+    expect(error).toBe('Sobran 3 caracteres. Acórtelo a 100 o menos.');
+    expect(erroresDeAjuste(llena({ referencia: 'x'.repeat(100) }), ficha, HOY).referencia).toBeUndefined();
+  });
+
+  it('la fecha mínima dice si viene de la recepción de la nota o del inicio de la empresa', () => {
+    const deLibro = { ...ficha, origen: 'libro_de_compras' } as FichaDelDocumento;
+    const inicial = { ...ficha, origen: 'saldo_inicial' } as FichaDelDocumento;
+    expect(erroresDeAjuste(llena({ fecha: '2026-10-04' }), deLibro, HOY).fecha).toMatch(/cuando se recibió la nota\.$/);
+    expect(erroresDeAjuste(llena({ fecha: '2026-10-04' }), inicial, HOY).fecha).toMatch(
+      /fecha de inicio de la empresa con saldos iniciales\.$/,
+    );
   });
 
   it('pide la referencia al compensar con otra cuenta', () => {

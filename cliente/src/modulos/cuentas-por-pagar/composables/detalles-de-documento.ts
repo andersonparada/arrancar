@@ -93,8 +93,18 @@ export function detallesDeMontos(ficha: FichaDelDocumento): DetalleDeRegistro[] 
     { etiqueta: 'Total', valor: formatearMonto(ficha.total) },
     { etiqueta: 'Retenciones', valor: formatearMonto(ficha.retenciones) },
     { etiqueta: 'Neto a pagar', valor: formatearMonto(ficha.neto) },
-    { etiqueta: 'Aplicado (notas de crédito)', valor: formatearMonto(ficha.aplicado) },
+    ...montosAplicadosYAjustados(ficha),
     { etiqueta: etiquetaDelSaldo(ficha), valor: formatearMonto(ficha.saldo) },
+  ];
+}
+
+/** En una nota de crédito: aplicado + ajustado + saldo a favor = total; en un cargo, lo que le aplicaron las notas. */
+function montosAplicadosYAjustados(ficha: FichaDelDocumento): DetalleDeRegistro[] {
+  if (ficha.clase !== 'abono')
+    return [{ etiqueta: 'Aplicado (notas de crédito)', valor: formatearMonto(ficha.aplicado) }];
+  return [
+    { etiqueta: 'Aplicado a otros documentos', valor: formatearMonto(ficha.aplicado) },
+    { etiqueta: 'Ajustado (dado de baja)', valor: formatearMonto(ficha.ajustado) },
   ];
 }
 
