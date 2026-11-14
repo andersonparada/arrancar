@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { AgregarDocumentosAContrasena } from '../aplicacion/casos-uso/contrasenas/agregar-documentos-a-contrasena.js';
+import type { AnularContrasena } from '../aplicacion/casos-uso/contrasenas/anular-contrasena.js';
 import type { CrearContrasena } from '../aplicacion/casos-uso/contrasenas/crear-contrasena.js';
 import type { DocumentosDisponibles } from '../aplicacion/casos-uso/contrasenas/documentos-disponibles.js';
 import type { ListarContrasenas } from '../aplicacion/casos-uso/contrasenas/listar-contrasenas.js';
@@ -8,6 +9,7 @@ import type { EditarContrasena } from '../aplicacion/casos-uso/contrasenas/edita
 import type { ObtenerContrasena } from '../aplicacion/casos-uso/contrasenas/obtener-contrasena.js';
 import type { QuitarDocumentoDeContrasena } from '../aplicacion/casos-uso/contrasenas/quitar-documento-de-contrasena.js';
 import type {
+  AnularContrasenaSolicitada,
   ContrasenaSolicitada,
   DisponiblesSolicitado,
   DocumentosAgregadosSolicitados,
@@ -26,6 +28,7 @@ export interface CasosDeUsoDeContrasenas {
   editar: EditarContrasena;
   agregarDocumentos: AgregarDocumentosAContrasena;
   quitarDocumento: QuitarDocumentoDeContrasena;
+  anular: AnularContrasena;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
@@ -58,6 +61,9 @@ export class ContrasenasControlador {
       contrasenaId: solicitud.params.id,
       documentos: solicitud.body.documentos,
     });
+
+  anular = (solicitud: FastifyRequest<{ Params: ParamsDeContrasena; Body: AnularContrasenaSolicitada }>) =>
+    this.casosDeUso.anular.ejecutar(operadorDe(solicitud), { id: solicitud.params.id, motivo: solicitud.body.motivo });
 
   quitarDocumento = (
     solicitud: FastifyRequest<{ Params: ParamsDeDocumentoDeContrasena; Body: QuitarDocumentoSolicitado }>,

@@ -1647,6 +1647,17 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   guardar las aplicaciones `contrasena`; las fechas salen igual para las notas que no cambian. Agregar un documento emitido
   después de la fecha de la contraseña da `FechaDeContrasenaInvalida`. Nuevo error `ContrasenaAnulada`. El aviso de
   «REIMPRESIÓN» es de la pantalla. Siguen CP3-4 y CP3-5.
+- 2026-11-14 — **CP3-4 (servidor, anular y reglas de baja)** (`diseno-cp3-contrasenas.md` §4, §5.3 y §5.4): `AnularContrasena`
+  (motivo, auditoría `anular` con la contraseña como estaba, borra las aplicaciones de la contraseña, suelta los documentos con
+  `vigente = false`; lista `REGLAS_PARA_ANULAR_CONTRASENA` vacía para CP4) y `POST …/contrasenas/:id/anular` con el permiso
+  `contrasenas.anular`. `DocumentoConAplicaciones` trae `contrasenaVigente` y `contrasenas` (vigente y anuladas);
+  `noEstarEnContrasena` va primero en `REGLAS_PARA_ANULAR`, `REGLAS_PARA_ELIMINAR` y `REGLAS_PARA_CORREGIR_SALDO_INICIAL`
+  (no en desautorizar) y lanza `DocumentoEnContrasena`. Aplicar, ajustar y quitar una aplicación manual de una nota dentro de
+  una contraseña vigente lanzan `NotaEnContrasena` (`dominio/nota-en-contrasena.ts`; la regla de quitar recibe ahora la nota).
+  `FilaDeDocumento` y `DocumentoPorPagarDto` suman `contrasena: { id, numero } | null`, `accionesDelDocumento` suma
+  `enContrasena` (cierra anular, eliminar, aplicar y ajustar) y la lista admite `sinContrasena=true`. La ficha de la
+  auditoría (`FichaDelDocumentoDto`) suma `contrasenas`, para que quede el rastro al eliminar un documento que estuvo en
+  contraseñas anuladas. Sigue CP3-5.
 
 - **2026-11-14 — CP2-7 (QA de punta a punta de las notas de crédito).** Informe `docs/modulos/informe-qa-cp2-2026-11-13.md`: flujos de aplicar, quitar, ajustar, anular, bajas desde Libro de compras, pantalla «Notas de crédito» y permisos probados en el navegador (escritorio y celular, claro y oscuro) con saldos cuadrados a mano. Corregido: **(E1, grave)** escribir un monto en las ventanas de aplicar y de ajustar rompía la ventana (el campo numérico entrega números y la lógica llamaba `.trim()`); la ficha se salía de la pantalla del celular con una referencia larga; faltaba «complétela antes de ajustar» en una nota pendiente. Quedan observaciones menores (umbral de bancarización sin cifra, mensaje con tope de diferencia menor en 0, texto de la fecha mínima, «Ajustado» fuera de los montos de la ficha).
 - **2026-11-14 — CP2-8 (cliente, observaciones menores de la QA de notas de crédito).** Corregidas O1 a O4 y la referencia larga del informe `informe-qa-cp2-2026-11-13.md`: el aviso de bancarización dice la cifra (`umbralDeBancarizacion` de `cargos-para-aplicar`), «Diferencia menor» no se ofrece con tope 0 y se explica, el mensaje de fecha mínima dice si viene de la recepción del documento, de la nota o del inicio de la empresa, «Montos» de la ficha de una nota suma con «Ajustado», y `CampoTexto` (`contar`) muestra el contador de caracteres y el error en vez de cortar la referencia. Sin cambios de servidor.

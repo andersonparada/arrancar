@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { AgregarDocumentosAContrasena } from '../aplicacion/casos-uso/contrasenas/agregar-documentos-a-contrasena.js';
+import { AnularContrasena } from '../aplicacion/casos-uso/contrasenas/anular-contrasena.js';
 import { CrearContrasena } from '../aplicacion/casos-uso/contrasenas/crear-contrasena.js';
 import { DocumentosDisponibles } from '../aplicacion/casos-uso/contrasenas/documentos-disponibles.js';
 import { EditarContrasena } from '../aplicacion/casos-uso/contrasenas/editar-contrasena.js';
@@ -19,7 +20,7 @@ import { RepositorioDeContrasenasDrizzle } from '../infraestructura/persistencia
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { UmbralDeBancarizacionEnConfiguracion } from '../infraestructura/umbral-de-bancarizacion-en-configuracion.js';
 
-/** Raíz de composición de las contraseñas de pago: lista, ficha, documentos disponibles, crear y editar. */
+/** Raíz de composición de las contraseñas de pago: lista, ficha, documentos disponibles, crear, editar y anular. */
 export function rutasDeContrasenasComponidas(): FastifyPluginAsync {
   return rutasDeContrasenas(new ContrasenasControlador(casosDeUso()));
 }
@@ -43,6 +44,7 @@ function casosDeUso(): CasosDeUsoDeContrasenas {
     editar: new EditarContrasena(paraEditar),
     agregarDocumentos: new AgregarDocumentosAContrasena(paraEditar),
     quitarDocumento: new QuitarDocumentoDeContrasena(paraEditar),
+    anular: new AnularContrasena(paraEditar),
   };
 }
 

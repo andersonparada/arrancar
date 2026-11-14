@@ -3,6 +3,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import type { ContrasenasControlador } from './contrasenas.controlador.js';
 import {
+  esquemaAnularContrasena,
   esquemaContrasena,
   esquemaDisponibles,
   esquemaDocumentosAgregados,
@@ -17,7 +18,7 @@ const tags = ['Cuentas por pagar'];
 const RUTA = '/cuentas-por-pagar/contrasenas';
 
 /** Contraseñas de pago: lista, ficha y documentos disponibles piden `contrasenas.ver`; crear, `contrasenas.crear`; cambiar la fecha,
- * las observaciones o los documentos, `contrasenas.editar`. */
+ * las observaciones o los documentos, `contrasenas.editar`; anular, `contrasenas.anular`. */
 export function rutasDeContrasenas(controlador: ContrasenasControlador): FastifyPluginAsyncZod {
   return async (app) => {
     rutasDeConsulta(app, controlador);
@@ -27,6 +28,11 @@ export function rutasDeContrasenas(controlador: ContrasenasControlador): Fastify
       handler: controlador.crear,
     });
     rutasDeEdicion(app, controlador);
+    app.post(`${RUTA}/:id/anular`, {
+      schema: { tags, params: esquemaParamsDeContrasena, body: esquemaAnularContrasena },
+      preHandler: proteger({ permiso: 'cuentas-por-pagar.contrasenas.anular' }),
+      handler: controlador.anular,
+    });
   };
 }
 

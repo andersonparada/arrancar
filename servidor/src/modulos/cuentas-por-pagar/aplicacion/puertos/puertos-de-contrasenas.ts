@@ -21,6 +21,12 @@ export interface CambiosDeContrasena {
   observaciones: string | null;
 }
 
+/** Quién anuló la contraseña y por qué. */
+export interface AnulacionDeContrasena {
+  anuladaPor: string;
+  motivo: string;
+}
+
 /** La contraseña vigente donde está un documento. */
 export interface ContrasenaDelDocumento {
   id: string;
@@ -47,6 +53,8 @@ export interface RepositorioDeContrasenas {
   agregarDocumentos(contrasenaId: string, proveedorId: string, documentoIds: readonly string[]): Promise<void>;
   /** Saca un documento de la contraseña: borra su fila. */
   quitarDocumento(contrasenaId: string, documentoId: string): Promise<void>;
+  /** La deja `anulada` con quién, cuándo y por qué, y pone `vigente = false` en sus documentos (quedan libres). */
+  anular(contrasenaId: string, anulacion: AnulacionDeContrasena): Promise<void>;
   /** La contraseña vigente de cada documento que está en una; los demás no aparecen. */
   vigentesDe(documentoIds: readonly string[]): Promise<Map<string, ContrasenaDelDocumento>>;
 }

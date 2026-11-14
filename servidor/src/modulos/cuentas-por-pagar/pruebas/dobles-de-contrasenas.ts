@@ -1,4 +1,5 @@
 import type {
+  AnulacionDeContrasena,
   CambiosDeContrasena,
   ConsultasDeContrasenas,
   ContrasenaConDocumentos,
@@ -16,6 +17,7 @@ import type { AplicacionesEnMemoria } from './dobles-de-documentos.js';
 interface Guardada extends ContrasenaNueva {
   id: string;
   vigente: boolean;
+  anulacion?: AnulacionDeContrasena;
 }
 
 /** Contraseñas en memoria: guardan sus documentos y reparten las notas en las aplicaciones en memoria. */
@@ -66,6 +68,13 @@ export class ContrasenasEnMemoria
       ({ id, forma }) => !(forma === 'contrasena' && id.startsWith(prefijo)),
     );
     this.aplicaciones.lista.splice(0, this.aplicaciones.lista.length, ...quedan);
+  }
+
+  async anular(contrasenaId: string, anulacion: AnulacionDeContrasena): Promise<void> {
+    Object.assign(
+      this.guardadas.find(({ id }) => id === contrasenaId)!,
+      { vigente: false, anulacion },
+    );
   }
 
   async bloquear(): Promise<void> {}
@@ -120,7 +129,7 @@ export class ContrasenasEnMemoria
     return [];
   }
 
-  private comoGuardada({ id, vigente, documentoIds: _ids, ...datos }: Guardada) {
+  private comoGuardada({ id, vigente, anulacion, documentoIds: _ids, ...datos }: Guardada) {
     return {
       ...datos,
       id,
@@ -128,7 +137,9 @@ export class ContrasenasEnMemoria
       proveedorNit: '1234567',
       estado: vigente ? ('vigente' as const) : ('anulada' as const),
       impresaEn: null,
-      anulacion: null,
+      anulacion: anulacion
+        ? { motivo: anulacion.motivo, anuladaPorNombre: 'Quien anuló', anuladaEn: '2026-03-11T00:00:00.000Z' }
+        : null,
       creadoPorNombre: 'Quien creó',
       creadoEn: '2026-03-10T00:00:00.000Z',
     };

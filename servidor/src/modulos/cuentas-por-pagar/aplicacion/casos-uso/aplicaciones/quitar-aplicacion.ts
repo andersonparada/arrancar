@@ -1,5 +1,7 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { DocumentoConAplicaciones } from '../../../dominio/documento-por-pagar.js';
+import { exigirNotaFueraDeContrasena } from '../../../dominio/nota-en-contrasena.js';
 import { motivoValido } from '../../../dominio/ciclo-de-vida.js';
 import { AplicacionNoSeQuita } from '../../../dominio/errores-de-aplicaciones.js';
 import { dtoDeAplicacion } from '../../dto/dto-de-documento-por-pagar.js';
@@ -11,10 +13,14 @@ import { RECURSO_DE_APLICACIONES, type DependenciasParaQuitar } from './dependen
  * Una regla que puede rechazar que se quite una aplicación lanzando su error. Las listas se arman al componer el
  * módulo: las contraseñas (CP3) y los pagos (CP4) sumarán las suyas sin tocar el caso de uso.
  */
-export type ReglaParaQuitar = (aplicacion: AplicacionConDatos) => void | Promise<void>;
+export type ReglaParaQuitar = (aplicacion: AplicacionConDatos, nota: DocumentoConAplicaciones) => void | Promise<void>;
 
-/** Hoy solo cuenta que la aplicación sea manual (lo revisa el caso de uso); CP3 y CP4 sumarán aquí las suyas. */
-export const REGLAS_PARA_QUITAR_APLICACION: readonly ReglaParaQuitar[] = [];
+/** La nota de la aplicación no puede estar en una contraseña vigente: su saldo libre ya está repartido. */
+export const notaFueraDeContrasena: ReglaParaQuitar = (_aplicacion, { documento, contrasenaVigente }) =>
+  exigirNotaFueraDeContrasena(documento, contrasenaVigente);
+
+/** Además de que la aplicación sea manual (lo revisa el caso de uso), la nota fuera de contraseña; CP4 sumará la suya. */
+export const REGLAS_PARA_QUITAR_APLICACION: readonly ReglaParaQuitar[] = [notaFueraDeContrasena];
 
 export interface PeticionParaQuitar {
   aplicacionId: string;
@@ -36,14 +42,15 @@ export class QuitarAplicacion {
    * @throws MotivoInvalido si falta el motivo o pasa de 300 caracteres.
    * @throws RecursoNoEncontrado si la aplicación no existe.
    * @throws AplicacionNoSeQuita si es automática o de una contraseña.
+   * @throws NotaEnContrasena si su nota está en una contraseña vigente.
    */
   async ejecutar(operador: Operador, { aplicacionId, motivo }: PeticionParaQuitar): Promise<void> {
     const motivoLimpio = motivoValido(motivo);
     const { unidadDeTrabajo, aplicaciones, auditoria } = this.dependencias;
     await unidadDeTrabajo.ejecutar(operador, async () => {
-      const aplicacion = await this.bloqueada(aplicacionId);
+      const { aplicacion, nota } = await this.bloqueada(aplicacionId);
       if (aplicacion.forma !== 'manual') throw new AplicacionNoSeQuita();
-      for (const regla of this.reglas) await regla(aplicacion);
+      for (const regla of this.reglas) await regla(aplicacion, nota);
       await auditoria.registrar({
         recurso: RECURSO_DE_APLICACIONES,
         registroId: aplicacionId,
@@ -56,12 +63,14 @@ export class QuitarAplicacion {
   }
 
   /** La aplicación con la nota y el cargo bloqueados; se vuelve a leer ya bloqueada por si otra petición la quitó. */
-  private async bloqueada(aplicacionId: string): Promise<AplicacionConDatos> {
+  private async bloqueada(
+    aplicacionId: string,
+  ): Promise<{ aplicacion: AplicacionConDatos; nota: DocumentoConAplicaciones }> {
     const { documentos } = this.dependencias;
     const previa = await this.buscar(aplicacionId);
-    await bloquear(documentos, previa.notaId);
+    const nota = await bloquear(documentos, previa.notaId);
     await bloquear(documentos, previa.cargoId);
-    return this.buscar(aplicacionId);
+    return { aplicacion: await this.buscar(aplicacionId), nota };
   }
 
   private async buscar(aplicacionId: string): Promise<AplicacionConDatos> {

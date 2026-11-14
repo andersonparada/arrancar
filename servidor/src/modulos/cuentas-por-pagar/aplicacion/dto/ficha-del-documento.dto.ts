@@ -1,4 +1,5 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
+import { numeroDeContrasena } from '../../dominio/contrasena.js';
 import type { AjusteDeSaldo } from '../../dominio/ajustes.js';
 import type { AplicacionDeNota, DocumentoConAplicaciones } from '../../dominio/documento-por-pagar.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
@@ -47,6 +48,8 @@ export interface FichaDelDocumentoDto {
   aplicacionesRecibidas: AplicacionDto[];
   /** Los ajustes del saldo libre de esta nota, también los anulados (se van con ella si se elimina). */
   ajustes: AjusteDto[];
+  /** Las contraseñas en que estuvo el documento, vigente y anuladas (`numero` ya formateado). */
+  contrasenas: Array<{ id: string; numero: string; estado: 'vigente' | 'anulada' }>;
 }
 
 export interface AjusteDto {
@@ -85,7 +88,13 @@ export const ajusteDto = ({ montoCentavos, documentoId: _documentoId, ...resto }
   monto: deCentavos(montoCentavos),
 });
 
-export function dtoDeFicha({ documento, hechas, recibidas, ajustes }: DocumentoConAplicaciones): FichaDelDocumentoDto {
+export function dtoDeFicha({
+  documento,
+  hechas,
+  recibidas,
+  ajustes,
+  contrasenas,
+}: DocumentoConAplicaciones): FichaDelDocumentoDto {
   const { totalCentavos, retencionesCentavos, saldoAlInicioCentavos, retencionesPorPracticarCentavos, ...resto } =
     documento;
   return {
@@ -97,5 +106,10 @@ export function dtoDeFicha({ documento, hechas, recibidas, ajustes }: DocumentoC
     aplicacionesHechas: hechas.map(aplicacionDto),
     aplicacionesRecibidas: recibidas.map(aplicacionDto),
     ajustes: ajustes.map(ajusteDto),
+    contrasenas: contrasenas.map(({ id, numero, anioDeNumero, estado }) => ({
+      id,
+      numero: numeroDeContrasena(numero, anioDeNumero),
+      estado,
+    })),
   };
 }

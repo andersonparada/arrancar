@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentoConAplicaciones, DocumentoPorPagar } from './documento-por-pagar.js';
+import { DocumentoEnContrasena } from './errores-de-contrasenas.js';
 import { SaldoInicialAutorizado, SaldoInicialConMovimientos } from './errores-de-saldos-iniciales.js';
 import { REGLAS_PARA_CORREGIR_SALDO_INICIAL } from './reglas-de-saldo-inicial.js';
 
@@ -33,7 +34,15 @@ function guardado(
     autorizacionPropia: false,
     ...cambios,
   };
-  return { documento, hechas: [], recibidas: [], ajustes: [], ...aplicaciones };
+  return {
+    documento,
+    hechas: [],
+    recibidas: [],
+    ajustes: [],
+    contrasenaVigente: null,
+    contrasenas: [],
+    ...aplicaciones,
+  };
 }
 
 async function revisar(saldo: DocumentoConAplicaciones): Promise<void> {
@@ -62,6 +71,21 @@ describe('las reglas para corregir o eliminar un saldo inicial', () => {
 
     await expect(revisar(autorizado)).rejects.toThrow(SaldoInicialAutorizado);
     await expect(revisar(autorizado)).rejects.toThrow('S-1');
+  });
+
+  it('uno en una contraseña vigente se rechaza primero, y sin ella (o solo en anuladas) pasa', async () => {
+    const enContrasena = {
+      ...guardado({ estado: 'autorizado' }),
+      contrasenaVigente: { id: 'c', numero: 7, anioDeNumero: 0 },
+    };
+
+    await expect(revisar(enContrasena)).rejects.toThrow(DocumentoEnContrasena);
+    await expect(revisar(enContrasena)).rejects.toThrow('contraseña 7');
+    const anulada = {
+      ...guardado(),
+      contrasenas: [{ id: 'c', numero: 7, anioDeNumero: 0, estado: 'anulada' as const }],
+    };
+    await expect(revisar(anulada)).resolves.toBeUndefined();
   });
 
   it('uno con notas recibidas o hechas se rechaza', async () => {

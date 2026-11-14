@@ -58,6 +58,18 @@ export interface AplicacionDeNota {
   otroNumero: string;
 }
 
+/** La contraseña vigente donde está un documento (a lo más una). */
+export interface ContrasenaVigente {
+  id: string;
+  numero: number;
+  anioDeNumero: number;
+}
+
+/** Una contraseña en que estuvo o está un documento. */
+export interface ContrasenaDelDocumentoGuardada extends ContrasenaVigente {
+  estado: 'vigente' | 'anulada';
+}
+
 /** Un documento con lo que rebajó (si es una nota) y lo que le rebajaron (si es un cargo), y sus ajustes (si es una nota). */
 export interface DocumentoConAplicaciones {
   documento: DocumentoPorPagar;
@@ -65,6 +77,10 @@ export interface DocumentoConAplicaciones {
   ajustes: AjusteDeSaldo[];
   hechas: AplicacionDeNota[];
   recibidas: AplicacionDeNota[];
+  /** La contraseña vigente en que está el documento; `null` si no está en ninguna (las anuladas no cuentan). */
+  contrasenaVigente: ContrasenaVigente | null;
+  /** Todas las contraseñas en que estuvo (vigente y anuladas): quedan en la auditoría si el documento se elimina. */
+  contrasenas: ContrasenaDelDocumentoGuardada[];
 }
 
 /**

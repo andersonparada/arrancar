@@ -10,6 +10,17 @@ export class NoEsNotaConSaldo extends ReglaDeNegocioInfringida {
   }
 }
 
+/** Una nota dentro de una contraseña vigente no cambia su saldo libre: el reparto de la contraseña lo daría por bueno. */
+export class NotaEnContrasena extends ReglaDeNegocioInfringida {
+  readonly codigo = 'nota_en_contrasena';
+
+  constructor(etiqueta: string, numeroDeLaContrasena: string) {
+    super(
+      `La nota ${etiqueta} está en la contraseña ${numeroDeLaContrasena}: quítela de ella o anule la contraseña primero.`,
+    );
+  }
+}
+
 /** Un dato de la aplicación que no cumple su regla; `detalles.campo` dice cuál (`aplicaciones.<i>.cargoId`...). */
 abstract class DatoDeAplicacionInvalido extends DatoInvalido {
   constructor(mensaje: string, campo: string) {

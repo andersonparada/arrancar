@@ -1,4 +1,4 @@
-import { aliasedTable, and, asc, desc, eq, gte, lte, lt, ne, sql, type SQL } from 'drizzle-orm';
+import { aliasedTable, and, asc, desc, eq, gte, isNull, lte, lt, ne, sql, type SQL } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
@@ -49,6 +49,7 @@ function condicionesDeSaldo(filtro: FiltroDeDocumentosPorPagar, hoy: string, bas
       ? and(ne(documentos.estado, 'anulado'), lt(documentos.vencimiento, hoy), sql`${base.saldoDelCargo()} > 0`)
       : undefined,
     filtro.conSaldo ? conSaldo(base) : undefined,
+    filtro.sinContrasena ? isNull(base.contrasenaVigente.id) : undefined,
   );
 }
 

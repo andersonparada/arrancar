@@ -97,6 +97,7 @@ export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVist
     ...seguimientoDe(documento, vista.usuarioId),
     vencimiento: documento.vencimiento,
     vencido: estaVencido(documento, saldo.saldoCentavos, vista.hoy),
+    contrasena: fila.contrasena,
     ...accionesDelDocumento({
       origen: documento.origen,
       tipo: documento.tipo,
@@ -106,6 +107,7 @@ export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVist
       saldoLibreCentavos: saldo.saldoCentavos,
       ajustesVigentes: fila.ajustesVigentes,
       aplicacionesManualesRecibidas: fila.aplicacionesManualesRecibidas,
+      enContrasena: fila.contrasena !== null,
     }),
   };
 }

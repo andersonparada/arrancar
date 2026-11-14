@@ -5,6 +5,7 @@ import {
   transaccionEnCurso,
 } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
+  AnulacionDeContrasena,
   CambiosDeContrasena,
   ContrasenaDelDocumento,
   ContrasenaNueva,
@@ -54,6 +55,18 @@ export class RepositorioDeContrasenasDrizzle implements RepositorioDeContrasenas
 
   async actualizar(contrasenaId: string, cambios: CambiosDeContrasena): Promise<void> {
     await transaccionEnCurso().update(contrasenas).set(cambios).where(eq(contrasenas.id, contrasenaId));
+  }
+
+  async anular(contrasenaId: string, { anuladaPor, motivo }: AnulacionDeContrasena): Promise<void> {
+    const transaccion = transaccionEnCurso();
+    await transaccion
+      .update(contrasenaDocumentos)
+      .set({ vigente: false })
+      .where(eq(contrasenaDocumentos.contrasenaId, contrasenaId));
+    await transaccion
+      .update(contrasenas)
+      .set({ estado: 'anulada', anuladaEn: new Date(), anuladaPor, motivoDeAnulacion: motivo })
+      .where(eq(contrasenas.id, contrasenaId));
   }
 
   async borrarReparto(contrasenaId: string): Promise<void> {

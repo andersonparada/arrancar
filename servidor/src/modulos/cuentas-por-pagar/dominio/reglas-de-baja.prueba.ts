@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { DocumentoConAplicaciones, DocumentoPorPagar } from './documento-por-pagar.js';
 import {
   noEstarAutorizado,
+  noEstarEnContrasena,
   noTenerAjustesVigentes,
   noTenerAplicacionesManualesRecibidas,
   noTenerNotasAplicadas,
   REGLAS_PARA_ANULAR,
+  REGLAS_PARA_DESAUTORIZAR,
   REGLAS_PARA_ELIMINAR,
 } from './reglas-de-baja.js';
 
@@ -39,7 +41,14 @@ const guardado = (
   cambios: Partial<DocumentoPorPagar> = {},
   recibidas: DocumentoConAplicaciones['recibidas'] = [],
   ajustes: DocumentoConAplicaciones['ajustes'] = [],
-): DocumentoConAplicaciones => ({ documento: documento(cambios), hechas: [], recibidas, ajustes });
+): DocumentoConAplicaciones => ({
+  documento: documento(cambios),
+  hechas: [],
+  recibidas,
+  ajustes,
+  contrasenaVigente: null,
+  contrasenas: [],
+});
 const aplicacion = {
   id: 'a1',
   notaId: 'nota',
@@ -53,6 +62,35 @@ const aplicacion = {
 };
 
 describe('reglas de baja', () => {
+  describe('no estar en una contraseña vigente', () => {
+    const enContrasena = (): DocumentoConAplicaciones => ({
+      ...guardado(),
+      contrasenaVigente: { id: 'c1', numero: 15, anioDeNumero: 2026 },
+    });
+
+    it('rechaza un documento en una contraseña vigente y nombra su número', () => {
+      expect(() => noEstarEnContrasena(enContrasena())).toThrow(
+        expect.objectContaining({ codigo: 'documento_en_contrasena' }),
+      );
+      expect(() => noEstarEnContrasena(enContrasena())).toThrow('contraseña 2026-15');
+    });
+
+    it('deja pasar al que no está en ninguna o solo estuvo en contraseñas anuladas', () => {
+      expect(() => noEstarEnContrasena(guardado())).not.toThrow();
+      const anulada = {
+        ...guardado(),
+        contrasenas: [{ id: 'c1', numero: 3, anioDeNumero: 0, estado: 'anulada' as const }],
+      };
+      expect(() => noEstarEnContrasena(anulada)).not.toThrow();
+    });
+
+    it('va primero al anular y al eliminar, y no frena una desautorización', () => {
+      expect(REGLAS_PARA_ANULAR[0]).toBe(noEstarEnContrasena);
+      expect(REGLAS_PARA_ELIMINAR[0]).toBe(noEstarEnContrasena);
+      expect(REGLAS_PARA_DESAUTORIZAR).not.toContain(noEstarEnContrasena);
+    });
+  });
+
   describe('no estar autorizado (para eliminar)', () => {
     it('rechaza un documento autorizado', () => {
       expect(() => noEstarAutorizado(guardado({ estado: 'autorizado' }))).toThrow(
@@ -141,13 +179,15 @@ describe('reglas de baja', () => {
     });
   });
 
-  it('las listas de anular y eliminar llevan las reglas nuevas antes de las notas aplicadas', () => {
+  it('las listas de anular y eliminar piden primero no estar en una contraseña', () => {
     expect(REGLAS_PARA_ANULAR).toEqual([
+      noEstarEnContrasena,
       noTenerAplicacionesManualesRecibidas,
       noTenerAjustesVigentes,
       noTenerNotasAplicadas,
     ]);
     expect(REGLAS_PARA_ELIMINAR).toEqual([
+      noEstarEnContrasena,
       noEstarAutorizado,
       noTenerAplicacionesManualesRecibidas,
       noTenerAjustesVigentes,

@@ -89,6 +89,10 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.contrasenas.editar',
       descripcion: 'Cambiar la fecha prometida, las observaciones y los documentos de una contraseña de pago',
     },
+    {
+      clave: 'cuentas-por-pagar.contrasenas.anular',
+      descripcion: 'Anular contraseñas de pago (sus documentos quedan libres para otra contraseña)',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,

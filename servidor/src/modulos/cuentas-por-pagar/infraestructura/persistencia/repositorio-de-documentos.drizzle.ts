@@ -14,9 +14,15 @@ import type {
 } from '../../aplicacion/puertos/puertos-de-documentos.js';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { AjusteDeSaldo, CausaDeAjuste } from '../../dominio/ajustes.js';
-import type { DocumentoConAplicaciones, DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
+import type {
+  ContrasenaDelDocumentoGuardada,
+  DocumentoConAplicaciones,
+  DocumentoPorPagar,
+} from '../../dominio/documento-por-pagar.js';
 import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
 import { mapeadorDeDocumento } from './documento.mapeador.js';
+import { contrasenaDocumentos } from './contrasena-documentos.tablas.js';
+import { contrasenas } from './contrasenas.tablas.js';
 import { documentos } from './documentos.tablas.js';
 
 /** La tabla tiene seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
@@ -94,7 +100,31 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
       ajustes: await this.ajustesDe(documento.id),
+      ...(await this.contrasenasDe(documento.id)),
     };
+  }
+
+  /** Las contraseñas en que estuvo el documento y la vigente entre ellas (a lo más una). */
+  private async contrasenasDe(
+    documentoId: string,
+  ): Promise<Pick<DocumentoConAplicaciones, 'contrasenas' | 'contrasenaVigente'>> {
+    const filas = await transaccionEnCurso()
+      .select({
+        id: contrasenas.id,
+        numero: contrasenas.numero,
+        anioDeNumero: contrasenas.anioDeNumero,
+        estado: contrasenas.estado,
+      })
+      .from(contrasenaDocumentos)
+      .innerJoin(contrasenas, eq(contrasenas.id, contrasenaDocumentos.contrasenaId))
+      .where(eq(contrasenaDocumentos.documentoId, documentoId))
+      .orderBy(asc(contrasenas.creadoEn));
+    const guardadas = filas.map((fila) => ({
+      ...fila,
+      estado: fila.estado as ContrasenaDelDocumentoGuardada['estado'],
+    }));
+    const vigente = guardadas.find(({ estado }) => estado === 'vigente');
+    return { contrasenas: guardadas, contrasenaVigente: vigente ? { ...vigente } : null };
   }
 
   private async ajustesDe(documentoId: string): Promise<AjusteDeSaldo[]> {

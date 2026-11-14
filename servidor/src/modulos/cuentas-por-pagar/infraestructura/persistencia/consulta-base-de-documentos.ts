@@ -1,11 +1,14 @@
 import { eq, isNotNull, sql } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
+import { numeroDeContrasena } from '../../dominio/contrasena.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { documentos as documentosDeCompra } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
 import type { DatosDelLibro, FilaDeDocumento } from '../../aplicacion/puertos/puertos-de-consultas.js';
+import { contrasenaDocumentos } from './contrasena-documentos.tablas.js';
+import { contrasenas } from './contrasenas.tablas.js';
 import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { mapeadorDeDocumento } from './documento.mapeador.js';
@@ -79,6 +82,19 @@ export class ConsultaBaseDeDocumentos {
     .leftJoin(usuarios, eq(usuarios.id, documentosDeCompra.anuladoPor))
     .as('datos_del_libro');
 
+  /** La contraseña vigente de cada documento (el índice único parcial garantiza una sola). */
+  readonly contrasenaVigente = this.transaccion
+    .select({
+      documentoId: contrasenaDocumentos.documentoId,
+      id: contrasenas.id,
+      numero: contrasenas.numero,
+      anioDeNumero: contrasenas.anioDeNumero,
+    })
+    .from(contrasenaDocumentos)
+    .innerJoin(contrasenas, eq(contrasenas.id, contrasenaDocumentos.contrasenaId))
+    .where(eq(contrasenaDocumentos.vigente, true))
+    .as('contrasena_vigente_del_documento');
+
   private readonly notas = this.transaccion
     .select({
       afectadoId: documentos.documentoAfectadoId,
@@ -105,6 +121,32 @@ export class ConsultaBaseDeDocumentos {
     };
   }
 
+  /** Lo aplicado y lo ajustado, tal como lo suman las subconsultas. */
+  private columnasDeLosMontos() {
+    return {
+      alCargo: this.alCargo.monto,
+      porLaNota: this.porLaNota.monto,
+      manuales: this.alCargo.manuales,
+      ajustado: this.ajustadoDeLaNota.monto,
+      ajustesVigentes: this.ajustadoDeLaNota.vigentes,
+    };
+  }
+
+  /** Cuántas notas corrigen al documento (todas y las vigentes). */
+  private columnasDeLasNotas() {
+    return { notasEnTotal: this.notas.enTotal, notasVigentes: this.notas.vigentes };
+  }
+
+  /** Lo que se toma de la contraseña vigente en cada fila (nulo si el documento no está en una). */
+  private columnasDeLaContrasena() {
+    const { contrasenaVigente } = this;
+    return {
+      contrasenaId: contrasenaVigente.id,
+      contrasenaNumero: contrasenaVigente.numero,
+      contrasenaAnio: contrasenaVigente.anioDeNumero,
+    };
+  }
+
   /** Todas las columnas y uniones; quien llama agrega `where`, orden y límite. */
   seleccionar() {
     return this.transaccion
@@ -113,13 +155,9 @@ export class ConsultaBaseDeDocumentos {
         proveedorNombre: terceros.nombreMostrar,
         proveedorNit: terceros.nit,
         ...this.columnasDelLibro(),
-        alCargo: this.alCargo.monto,
-        porLaNota: this.porLaNota.monto,
-        manuales: this.alCargo.manuales,
-        ajustado: this.ajustadoDeLaNota.monto,
-        ajustesVigentes: this.ajustadoDeLaNota.vigentes,
-        notasEnTotal: this.notas.enTotal,
-        notasVigentes: this.notas.vigentes,
+        ...this.columnasDeLosMontos(),
+        ...this.columnasDeLasNotas(),
+        ...this.columnasDeLaContrasena(),
         total: sql<number>`count(*) over ()`.mapWith(Number),
       })
       .from(documentos)
@@ -129,7 +167,8 @@ export class ConsultaBaseDeDocumentos {
       .leftJoin(this.alCargo, eq(this.alCargo.cargoId, documentos.id))
       .leftJoin(this.porLaNota, eq(this.porLaNota.notaId, documentos.id))
       .leftJoin(this.ajustadoDeLaNota, eq(this.ajustadoDeLaNota.notaId, documentos.id))
-      .leftJoin(this.notas, eq(this.notas.afectadoId, documentos.documentoId));
+      .leftJoin(this.notas, eq(this.notas.afectadoId, documentos.documentoId))
+      .leftJoin(this.contrasenaVigente, eq(this.contrasenaVigente.documentoId, documentos.id));
   }
 
   /**
@@ -164,6 +203,11 @@ function datosDelLibroDe(fila: FilaSeleccionada): DatosDelLibro {
   };
 }
 
+function contrasenaDe(fila: FilaSeleccionada): FilaDeDocumento['contrasena'] {
+  if (fila.contrasenaId === null || fila.contrasenaNumero === null) return null;
+  return { id: fila.contrasenaId, numero: numeroDeContrasena(fila.contrasenaNumero, fila.contrasenaAnio ?? 0) };
+}
+
 /** De la fila de SQL al documento con sus cuentas, en centavos. */
 export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
   return {
@@ -177,5 +221,6 @@ export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
     aplicacionesManualesRecibidas: fila.manuales ?? 0,
     notasVigentes: fila.notasVigentes ?? 0,
     notasEnTotal: fila.notasEnTotal ?? 0,
+    contrasena: contrasenaDe(fila),
   };
 }
