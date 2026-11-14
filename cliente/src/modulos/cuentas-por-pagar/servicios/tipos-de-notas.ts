@@ -63,6 +63,8 @@ export interface CargoParaAplicar {
 /** Lo que la ventana de aplicar necesita; los cargos vienen en el orden en que se ofrecen. */
 export interface CargosParaAplicar {
   saldoLibre: string;
+  /** Desde cuánto el total de un cargo pide dejar constancia por medios bancarios (dos decimales). */
+  umbralDeBancarizacion: string;
   fechaMinima: string | null;
   cargos: CargoParaAplicar[];
 }

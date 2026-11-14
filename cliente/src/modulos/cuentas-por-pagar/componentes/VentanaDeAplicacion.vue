@@ -4,7 +4,7 @@ import { Info, ShieldAlert } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
-import { formatearMonto } from '@/modulos/core/utilidades/formato';
+import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import {
   fechaMinimaDeAplicacion,
   MAXIMO_DE_LA_REFERENCIA,
@@ -16,7 +16,7 @@ import {
   type EdicionDeAplicacion,
 } from '../composables/aplicacion-de-nota';
 import { textoDeCentavos } from '../composables/dinero';
-import { AVISO_DE_BANCARIZACION, AYUDA_DE_LA_APLICACION, AYUDA_DE_LA_FECHA_DE_APLICACION } from '../textos';
+import { avisoDeBancarizacion, AYUDA_DE_LA_APLICACION, AYUDA_DE_LA_FECHA_DE_APLICACION } from '../textos';
 import FilaDeCargoParaAplicar from './FilaDeCargoParaAplicar.vue';
 
 /** Aplicar el saldo a favor de una nota a otros documentos del proveedor; los montos se pueden cambiar en cada fila. */
@@ -91,7 +91,7 @@ function repartirDeNuevo(): void {
         role="note"
       >
         <ShieldAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        <span>{{ AVISO_DE_BANCARIZACION }}</span>
+        <span>{{ avisoDeBancarizacion(formatearMonto(edicion.umbral)) }}</span>
       </p>
 
       <div class="grid gap-4 sm:grid-cols-2">
@@ -100,13 +100,18 @@ function repartirDeNuevo(): void {
           etiqueta="Fecha del acuerdo"
           tipo="date"
           requerido
-          :ayuda="minima ? `Desde el ${minima}. ${AYUDA_DE_LA_FECHA_DE_APLICACION}` : AYUDA_DE_LA_FECHA_DE_APLICACION"
+          :ayuda="
+            minima
+              ? `Desde el ${formatearFecha(minima)}. ${AYUDA_DE_LA_FECHA_DE_APLICACION}`
+              : AYUDA_DE_LA_FECHA_DE_APLICACION
+          "
           :error="errores.fecha"
         />
         <CampoTexto
           v-model="edicion.referencia"
           :etiqueta="conBancarizacion ? 'Referencia del acuerdo (recomendada)' : 'Referencia del acuerdo'"
           :longitud-maxima="MAXIMO_DE_LA_REFERENCIA"
+          contar
           ayuda="Opcional: número de acuerdo, correo o recibo."
           :error="errores.referencia"
         />

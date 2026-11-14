@@ -130,5 +130,6 @@ export const AYUDA_DE_LA_APLICACION =
 
 export const AYUDA_DE_LA_FECHA_DE_APLICACION = 'La fecha del acuerdo con el proveedor; por omisión, hoy.';
 
-export const AVISO_DE_BANCARIZACION =
-  'Compensa un documento que llega al monto desde el cual la ley pide dejar constancia por medios bancarios (bancarización, Decreto 20-2006). Guarde por escrito el acuerdo de compensación con el proveedor y anote su referencia.';
+/** `umbral` ya formateado (por ejemplo «Q 30,000.00»). */
+export const avisoDeBancarizacion = (umbral: string): string =>
+  `Compensa un documento de ${umbral} o más, monto desde el cual la ley pide dejar constancia por medios bancarios (bancarización, Decreto 20-2006). Guarde por escrito el acuerdo de compensación con el proveedor y anote su referencia.`;

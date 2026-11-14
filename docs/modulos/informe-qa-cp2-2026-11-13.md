@@ -10,8 +10,8 @@ oscuro. Las capturas quedaron fuera del repositorio.
 
 El flujo funciona de punta a punta y los saldos cuadran a mano, pero **la ventana de aplicar y la de ajustar se
 rompían al escribir un monto** (error grave, corregido), la ficha **se salía de la pantalla del celular** con una
-referencia larga (corregido) y faltaba la explicación «complétela antes de ajustar» (corregido). Dos detalles quedan
-abiertos (el umbral no se dice en el aviso de bancarización; el mensaje con el tope de diferencia menor en 0).
+referencia larga (corregido) y faltaba la explicación «complétela antes de ajustar» (corregido). Los detalles menores
+(umbral sin cifra, tope en 0, fecha mínima, «Ajustado», referencia larga) se corrigieron en CP2-8.
 
 ## Datos de la prueba y cuadre a mano
 
@@ -102,22 +102,22 @@ coherentes (1,120 - 1,080 - 25 = 15.00).
 - **Arreglo:** `avisoDeNotaPendiente` (en `aplicaciones-de-la-ficha.ts`, con prueba) y un párrafo en la ficha, visible
   solo con `ajustes.crear`: «Complete la nota en la bandeja antes de ajustar su saldo a favor.».
 
-## Observaciones que quedan (no se tocaron)
+## Observaciones menores (todas corregidas en CP2-8, ver el final)
 
-- **O1. El aviso de bancarización no dice la cifra** (ya anotado en la bitácora tras CP2-6): la respuesta de
+- **O1 (corregida). El aviso de bancarización no dice la cifra** (ya anotado en la bitácora tras CP2-6): la respuesta de
   `cargos-para-aplicar` no trae el umbral. Basta agregar `umbralDeBancarizacion` a esa respuesta (servidor, mínimo) y
   mostrarlo; el aviso actual y la etiqueta «Pide acuerdo escrito» funcionan. Gravedad baja.
-- **O2. Con el tope de diferencia menor en 0** (causa apagada) el mensaje dice «solo se puede ajustar hasta Q 0.00» y
+- **O2 (corregida). Con el tope de diferencia menor en 0** (causa apagada) el mensaje dice «solo se puede ajustar hasta Q 0.00» y
   la ayuda «Hasta Q 0.00»; sería más claro «esta causa está apagada en esta empresa» o no ofrecerla. Gravedad baja.
-- **O3. El mensaje de fecha mínima** al aplicar dice siempre «cuando se recibió el documento más reciente», incluso
+- **O3 (corregida). El mensaje de fecha mínima** al aplicar dice siempre «cuando se recibió el documento más reciente», incluso
   cuando el mínimo viene de la fecha de inicio de la empresa (saldos iniciales); en el ajuste de una nota de saldo
   inicial dice «cuando se recibió la nota». Texto impreciso, el bloqueo es correcto. Gravedad baja.
-- **O4. La sección «Montos» de la ficha no muestra «Ajustado»** (el DTO lo trae): con un ajuste vigente quedan
+- **O4 (corregida). La sección «Montos» de la ficha no muestra «Ajustado»** (el DTO lo trae): con un ajuste vigente quedan
   «Aplicado» y «Saldo a favor» que no suman al total y la explicación está solo en la sección de ajustes (la lista de
   «Notas de crédito» sí lo muestra). Gravedad baja.
 - Los errores de campo de las ventanas aparecen al intentar enviar, no al escribir; es coherente con el resto de la
   app.
-- Una referencia de más de 100 caracteres no da error: el campo corta lo que se escribe a 100 (queda guardada
+- (Corregida) Una referencia de más de 100 caracteres no daba error: el campo cortaba lo que se escribía a 100 (quedaba guardada
   cortada).
 
 ## Permisos (API y botones)
@@ -146,4 +146,21 @@ Nuevas (cliente): montos numéricos en `centavosDe`, `erroresDeAplicacion`, `dat
 
 ## Corregido en este commit
 
-E1, E2 y E3, con sus pruebas. Quedan O1 a O4.
+E1, E2 y E3, con sus pruebas. O1 a O4 se corrigieron después (sección siguiente).
+
+## Corregido después (CP2-8, solo cliente)
+
+- **O1:** el aviso de bancarización dice la cifra («Compensa un documento de Q 30,000.00 o más…»), formateada con
+  `formatearMonto` a partir de `umbralDeBancarizacion` que ya manda `cargos-para-aplicar` (CP3-2). No hizo falta tocar el
+  servidor.
+- **O2:** con el tope en 0 la ventana de ajustar no ofrece «Diferencia menor», lo dice en una nota («está desactivada
+  para esta empresa») y, si el servidor la recibiera, el mensaje ya no dice «hasta Q 0.00».
+- **O3:** el mensaje de fecha mínima nombra el origen: «cuando se recibió el documento más reciente al que se aplica»,
+  «cuando se recibió la nota» o «la fecha de inicio de la empresa con saldos iniciales» (`origen-de-la-fecha-minima.ts`);
+  la ayuda del campo muestra la fecha con formato.
+- **O4:** «Montos» de la ficha de una nota muestra «Aplicado a otros documentos», «Ajustado (dado de baja)» y «Saldo a
+  favor»: suman el total.
+- **Referencia larga:** `CampoTexto` con `contar` ya no corta lo escrito; muestra «n de 100 caracteres» y, si se pasa,
+  «Sobran N caracteres. Acórtelo a 100 o menos.» en rojo (también al enviar).
+- Pruebas nuevas: `contador-de-caracteres`, `origen-de-la-fecha-minima`, `detalles-de-montos` y casos en
+  `ajuste-de-saldo` y `aplicacion-de-nota`.

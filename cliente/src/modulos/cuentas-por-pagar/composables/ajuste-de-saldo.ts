@@ -1,7 +1,9 @@
-import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
+import { contadorDeCaracteres } from '@/modulos/core/utilidades/contador-de-caracteres';
+import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { CausaDeAjuste, DatosDeAjuste, FichaDelDocumento } from '../servicios/tipos';
 import { CAUSAS_DE_AJUSTE } from '../textos';
 import { centavosDe } from './dinero';
+import { mensajeDeFechaMinima, origenDeLaFechaDeLaNota } from './origen-de-la-fecha-minima';
 import { errorDelMotivo } from './reglas-de-acciones';
 
 export const MAXIMO_DE_LA_REFERENCIA_DEL_AJUSTE = 100;
@@ -33,9 +35,14 @@ export const edicionDeAjuste = (saldoLibre: string, hoy: string): EdicionDeAjust
   fecha: hoy,
 });
 
-/** Las causas por nombre, con la invitación a escoger primero. */
-export function opcionesDeCausaDeAjuste(): { valor: CausaDeAjuste | ''; texto: string }[] {
+/** «Diferencia menor» está apagada para la empresa cuando su tope es cero. */
+export const causaDeDiferenciaMenorApagada = (tope: string): boolean => (centavosDe(tope) ?? 0) <= 0;
+
+/** Las causas por nombre, con la invitación a escoger primero; sin «Diferencia menor» si la empresa la apagó. */
+export function opcionesDeCausaDeAjuste(tope: string): { valor: CausaDeAjuste | ''; texto: string }[] {
+  const apagada = causaDeDiferenciaMenorApagada(tope);
   const causas = (Object.entries(CAUSAS_DE_AJUSTE) as [CausaDeAjuste, string][])
+    .filter(([valor]) => !(apagada && valor === 'diferencia_menor'))
     .map(([valor, texto]) => ({ valor, texto }))
     .sort((a, b) => a.texto.localeCompare(b.texto, 'es', { sensitivity: 'base' }));
   return [{ valor: '', texto: 'Escoja la causa' }, ...causas];
@@ -63,18 +70,25 @@ function errorDelMonto(monto: string, saldoLibre: string): string | null {
     : null;
 }
 
-function errorDeLaFecha(fecha: string, minima: string | null, hoy: string): string | null {
+function errorDeLaFecha(fecha: string, ficha: FichaDelDocumento, hoy: string): string | null {
   if (!fecha) return 'Escriba la fecha del ajuste.';
   if (fecha > hoy) return 'La fecha no puede ser futura.';
+  const minima = ficha.fechaMinimaDeAjuste;
   return minima && fecha < minima
-    ? `No puede ser anterior al ${formatearFecha(minima)}, cuando se recibió la nota.`
+    ? mensajeDeFechaMinima(minima, origenDeLaFechaDeLaNota(ficha.origen === 'saldo_inicial'))
+    : null;
+}
+
+function errorDeLaDiferenciaMenor(monto: string, tope: string): string | null {
+  if (causaDeDiferenciaMenorApagada(tope))
+    return 'La causa «Diferencia menor» está desactivada para esta empresa. Use «No se recuperará» si el saldo no se va a cobrar.';
+  return (centavosDe(monto) ?? 0) > (centavosDe(tope) ?? 0)
+    ? `Como «Diferencia menor» solo se puede ajustar hasta ${formatearMonto(tope)}. Use «No se recuperará» si no se va a cobrar.`
     : null;
 }
 
 function errorDeLaCausa({ causa, monto, referencia }: EdicionDeAjuste, tope: string): string | null {
-  const centavos = centavosDe(monto) ?? 0;
-  if (causa === 'diferencia_menor' && centavos > (centavosDe(tope) ?? 0))
-    return `Como «Diferencia menor» solo se puede ajustar hasta ${formatearMonto(tope)}. Use «No se recuperará» si no se va a cobrar.`;
+  if (causa === 'diferencia_menor') return errorDeLaDiferenciaMenor(monto, tope);
   if (causa === 'compensado_con_otra_cuenta' && !referencia.trim())
     return 'Escriba con qué se compensó (factura de venta, recibo o acuerdo).';
   return null;
@@ -88,13 +102,10 @@ export function erroresDeAjuste(
 ): Record<string, string> {
   const posibles: Record<string, string | null> = {
     monto: errorDelMonto(edicion.monto, ficha.saldo),
-    fecha: errorDeLaFecha(edicion.fecha, ficha.fechaMinimaDeAjuste, hoy),
+    fecha: errorDeLaFecha(edicion.fecha, ficha, hoy),
     causa: edicion.causa ? null : 'Escoja por qué se da de baja el saldo.',
     motivo: errorDelMotivo(edicion.motivo),
-    referencia:
-      edicion.referencia.trim().length > MAXIMO_DE_LA_REFERENCIA_DEL_AJUSTE
-        ? `Acórtela a ${MAXIMO_DE_LA_REFERENCIA_DEL_AJUSTE} caracteres o menos.`
-        : null,
+    referencia: contadorDeCaracteres(edicion.referencia, MAXIMO_DE_LA_REFERENCIA_DEL_AJUSTE).error,
   };
   const errorDeCausa = edicion.causa ? errorDeLaCausa(edicion, ficha.topeDiferenciaMenor) : null;
   if (errorDeCausa) posibles[edicion.causa === 'diferencia_menor' ? 'monto' : 'referencia'] ??= errorDeCausa;

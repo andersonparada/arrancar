@@ -1,6 +1,12 @@
-import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
+import { contadorDeCaracteres } from '@/modulos/core/utilidades/contador-de-caracteres';
+import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { CargoParaAplicar, CargosParaAplicar, DatosDeAplicacion } from '../servicios/tipos';
 import { centavosDe, textoDeCentavos } from './dinero';
+import {
+  mensajeDeFechaMinima,
+  origenDeLaFechaAlAplicar,
+  type OrigenDeLaFechaMinima,
+} from './origen-de-la-fecha-minima';
 
 export const MAXIMO_DE_LA_REFERENCIA = 100;
 
@@ -9,6 +15,10 @@ export interface EdicionDeAplicacion {
   abierta: boolean;
   saldoLibre: string;
   fechaMinima: string | null;
+  /** El umbral de bancarización de la empresa, con dos decimales. */
+  umbral: string;
+  /** La nota es un saldo inicial: su fecha mínima es el inicio de la empresa, no una recepción. */
+  notaDeSaldoInicial: boolean;
   cargos: CargoParaAplicar[];
   montos: Record<string, string>;
   fecha: string;
@@ -19,6 +29,8 @@ export const edicionDeAplicacionVacia = (): EdicionDeAplicacion => ({
   abierta: false,
   saldoLibre: '0.00',
   fechaMinima: null,
+  umbral: '0.00',
+  notaDeSaldoInicial: false,
   cargos: [],
   montos: {},
   fecha: '',
@@ -33,11 +45,17 @@ export function montosPropuestos(cargos: readonly CargoParaAplicar[]): Record<st
 }
 
 /** La ventana al abrirse: la propuesta del servidor y la fecha de hoy. */
-export function edicionDeAplicacion(datos: CargosParaAplicar, hoy: string): EdicionDeAplicacion {
+export function edicionDeAplicacion(
+  datos: CargosParaAplicar,
+  hoy: string,
+  notaDeSaldoInicial = false,
+): EdicionDeAplicacion {
   return {
     abierta: true,
     saldoLibre: datos.saldoLibre,
     fechaMinima: datos.fechaMinima,
+    umbral: datos.umbralDeBancarizacion,
+    notaDeSaldoInicial,
     cargos: datos.cargos,
     montos: montosPropuestos(datos.cargos),
     fecha: hoy,
@@ -74,6 +92,16 @@ export function fechaMinimaDeAplicacion(edicion: EdicionDeAplicacion): string | 
   return validas.length > 0 ? validas.reduce((mayor, fecha) => (fecha > mayor ? fecha : mayor)) : null;
 }
 
+/** De dónde sale la fecha mínima que se está mostrando: el documento más reciente, la nota o el inicio de la empresa. */
+export function origenDeLaFechaDeAplicacion(edicion: EdicionDeAplicacion): OrigenDeLaFechaMinima {
+  const recepciones = cargosElegidos(edicion)
+    .map((cargo) => cargo.fechaRecepcion)
+    .filter((fecha): fecha is string => !!fecha);
+  const documento =
+    recepciones.length > 0 ? recepciones.reduce((mayor, fecha) => (fecha > mayor ? fecha : mayor)) : null;
+  return origenDeLaFechaAlAplicar({ nota: edicion.fechaMinima, documento }, edicion.notaDeSaldoInicial);
+}
+
 /** Hay compensación contra algún documento que llega al umbral de bancarización. */
 export const tocaBancarizacion = (edicion: EdicionDeAplicacion): boolean =>
   cargosElegidos(edicion).some((cargo) => cargo.sobreUmbralDeBancarizacion);
@@ -93,8 +121,8 @@ export function erroresDeAplicacion(edicion: EdicionDeAplicacion, hoy: string): 
     if (error) errores[`monto-${cargo.id}`] = error;
   }
   Object.assign(errores, erroresDeLaFecha(edicion, hoy), erroresDelTotal(edicion));
-  if (edicion.referencia.trim().length > MAXIMO_DE_LA_REFERENCIA)
-    errores.referencia = `Acórtela a ${MAXIMO_DE_LA_REFERENCIA} caracteres o menos.`;
+  const errorDeLaReferencia = contadorDeCaracteres(edicion.referencia, MAXIMO_DE_LA_REFERENCIA).error;
+  if (errorDeLaReferencia) errores.referencia = errorDeLaReferencia;
   return errores;
 }
 
@@ -112,7 +140,7 @@ function erroresDeLaFecha(edicion: EdicionDeAplicacion, hoy: string): Record<str
   if (edicion.fecha > hoy) return { fecha: 'La fecha no puede ser futura.' };
   const minima = fechaMinimaDeAplicacion(edicion);
   return minima && edicion.fecha < minima
-    ? { fecha: `No puede ser anterior al ${formatearFecha(minima)}, cuando se recibió el documento más reciente.` }
+    ? { fecha: mensajeDeFechaMinima(minima, origenDeLaFechaDeAplicacion(edicion)) }
     : {};
 }
 
