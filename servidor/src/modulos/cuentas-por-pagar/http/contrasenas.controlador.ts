@@ -6,7 +6,9 @@ import type { CrearContrasena } from '../aplicacion/casos-uso/contrasenas/crear-
 import type { DocumentosDisponibles } from '../aplicacion/casos-uso/contrasenas/documentos-disponibles.js';
 import type { ListarContrasenas } from '../aplicacion/casos-uso/contrasenas/listar-contrasenas.js';
 import type { EditarContrasena } from '../aplicacion/casos-uso/contrasenas/editar-contrasena.js';
+import type { ObtenerImpresionDeContrasena } from '../aplicacion/casos-uso/contrasenas/obtener-impresion-de-contrasena.js';
 import type { ObtenerContrasena } from '../aplicacion/casos-uso/contrasenas/obtener-contrasena.js';
+import type { RegistrarImpresion } from '../aplicacion/casos-uso/contrasenas/registrar-impresion.js';
 import type { QuitarDocumentoDeContrasena } from '../aplicacion/casos-uso/contrasenas/quitar-documento-de-contrasena.js';
 import type {
   AnularContrasenaSolicitada,
@@ -29,6 +31,8 @@ export interface CasosDeUsoDeContrasenas {
   agregarDocumentos: AgregarDocumentosAContrasena;
   quitarDocumento: QuitarDocumentoDeContrasena;
   anular: AnularContrasena;
+  verImpresion: ObtenerImpresionDeContrasena;
+  registrarImpresion: RegistrarImpresion;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
@@ -42,6 +46,12 @@ export class ContrasenasControlador {
 
   obtener = (solicitud: FastifyRequest<{ Params: ParamsDeContrasena }>) =>
     this.casosDeUso.obtener.ejecutar(operadorDe(solicitud), solicitud.params.id);
+
+  verImpresion = (solicitud: FastifyRequest<{ Params: ParamsDeContrasena }>) =>
+    this.casosDeUso.verImpresion.ejecutar(operadorDe(solicitud), solicitud.params.id);
+
+  registrarImpresion = (solicitud: FastifyRequest<{ Params: ParamsDeContrasena }>) =>
+    this.casosDeUso.registrarImpresion.ejecutar(operadorDe(solicitud), solicitud.params.id);
 
   disponibles = (solicitud: FastifyRequest<{ Querystring: DisponiblesSolicitado }>) =>
     this.casosDeUso.disponibles.ejecutar(operadorDe(solicitud), solicitud.query.proveedorId);

@@ -17,6 +17,7 @@ import type { AplicacionesEnMemoria } from './dobles-de-documentos.js';
 interface Guardada extends ContrasenaNueva {
   id: string;
   vigente: boolean;
+  impresaEn?: string;
   anulacion?: AnulacionDeContrasena;
 }
 
@@ -129,14 +130,25 @@ export class ContrasenasEnMemoria
     return [];
   }
 
-  private comoGuardada({ id, vigente, anulacion, documentoIds: _ids, ...datos }: Guardada) {
+  async nombreDelUsuario(): Promise<string | null> {
+    return 'Quien imprime';
+  }
+
+  async marcarImpresion(contrasenaId: string): Promise<boolean> {
+    const guardada = this.guardadas.find(({ id }) => id === contrasenaId);
+    if (!guardada || guardada.impresaEn) return false;
+    guardada.impresaEn = '2026-06-01T10:00:00.000Z';
+    return true;
+  }
+
+  private comoGuardada({ id, vigente, anulacion, impresaEn, documentoIds: _ids, ...datos }: Guardada) {
     return {
       ...datos,
       id,
       proveedorNombre: 'Proveedor',
       proveedorNit: '1234567',
       estado: vigente ? ('vigente' as const) : ('anulada' as const),
-      impresaEn: null,
+      impresaEn: impresaEn ?? null,
       anulacion: anulacion
         ? { motivo: anulacion.motivo, anuladaPorNombre: 'Quien anuló', anuladaEn: '2026-03-11T00:00:00.000Z' }
         : null,
