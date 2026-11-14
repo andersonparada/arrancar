@@ -144,7 +144,6 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
   }
 
   async notasDe(documento: DocumentoPorPagar): Promise<NotaDeUnDocumento[]> {
-    if (documento.documentoId === null) return [];
     const filas = await transaccionEnCurso()
       .select({
         nota: documentos,
@@ -155,7 +154,7 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
         aplicacionesDeNotas,
         and(eq(aplicacionesDeNotas.notaId, documentos.id), eq(aplicacionesDeNotas.cargoId, documento.id)),
       )
-      .where(eq(documentos.documentoAfectadoId, documento.documentoId))
+      .where(eq(documentos.documentoAfectadoId, documento.id))
       .orderBy(asc(documentos.fechaEmision), asc(documentos.creadoEn));
     return filas.map(aNotaDeUnDocumento);
   }

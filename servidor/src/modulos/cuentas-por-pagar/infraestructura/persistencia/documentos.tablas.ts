@@ -19,7 +19,7 @@ import { esquemaCuentasPorPagar } from './esquema.tablas.js';
 /**
  * Un documento por pagar: de Libro de compras (facturas y demás cargos, y notas de crédito, que son abonos) o un saldo
  * inicial (`origen = 'saldo_inicial'`, sin documento en el libro). El del libro nace en la orden `recibir_documento`. Los saldos no se guardan: se calculan. Las restricciones viven en `documentos.restricciones.ts`; la llave hacia la factura de una nota
- * (`documentos_factura_fk`) va a mano en la migración.
+ * (`documentos_factura_fk`) va a mano en las migraciones `0001` y `0007`.
  */
 export const documentos = esquemaCuentasPorPagar.table(
   'documentos',
@@ -38,8 +38,13 @@ export const documentos = esquemaCuentasPorPagar.table(
     destino: text().notNull().default('cuentas-por-pagar'),
     tipo: text().$type<TipoDeDocumento>().notNull(),
     proveedorId: uuid().notNull(),
-    /** La factura (id de Libro de compras) de una nota de crédito o de débito. */
+    /**
+     * La factura que corrige una nota, por su id de aquí (del libro o un saldo inicial). Nulo en lo demás y en la nota
+     * sobre una factura anterior que no está cargada.
+     */
     documentoAfectadoId: uuid(),
+    /** La nota del libro corrige una factura del sistema anterior (U8l). */
+    facturaDelSistemaAnterior: boolean().notNull().default(false),
     fechaEmision: date().notNull(),
     total: numeric({ precision: 14, scale: 2 }).notNull(),
     retenciones: numeric({ precision: 14, scale: 2 }).notNull().default('0'),

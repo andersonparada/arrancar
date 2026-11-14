@@ -32,6 +32,7 @@ export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   /** Solo un cargo; una nota de crédito no vence. */
   vencimiento: string | null;
   vencido: boolean;
+  /** Id de aquí (no del libro) de la factura que corrige la nota. */
   documentoAfectadoId: string | null;
   tieneActivoFijo: boolean;
   total: string;

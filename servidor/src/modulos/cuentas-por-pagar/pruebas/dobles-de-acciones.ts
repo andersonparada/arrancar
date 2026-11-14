@@ -40,7 +40,7 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
 
   private filaDe(documento: DocumentoPorPagar): FilaDeDocumento {
     const vigentes = this.documentos.documentos.filter(
-      (nota) => nota.documentoAfectadoId === documento.documentoId && nota.estado !== 'anulado',
+      (nota) => nota.documentoAfectadoId === documento.id && nota.estado !== 'anulado',
     );
     const vigentesDe = this.ajustesVigentesDe(documento);
     return {
@@ -55,8 +55,7 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
       aplicacionesManualesRecibidas: 0,
       contrasena: null,
       notasVigentes: vigentes.length,
-      notasEnTotal: this.documentos.documentos.filter((nota) => nota.documentoAfectadoId === documento.documentoId)
-        .length,
+      notasEnTotal: this.documentos.documentos.filter((nota) => nota.documentoAfectadoId === documento.id).length,
     };
   }
 

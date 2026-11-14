@@ -1681,3 +1681,16 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   paso 6 (documentación en `bancos.md`) y paso 7 (QA en el navegador de todo H2).
 
 - **2026-11-14 — CP4-B1 (servidor, Bancos: datos y conceptos del diseño de CP4).** Migración de Bancos `0032_cp4_pagos_de_cuentas_por_pagar`: tabla `bancos.desglose_de_movimientos` (llave compuesta al concepto de la empresa, único por movimiento y concepto, monto positivo, cascada al borrar el movimiento, RLS por empresa) y tres conceptos de sistema nuevos (`pago_a_proveedor_de_activo`, `reintegro_de_proveedor`, `reintegro_de_proveedor_de_activo`) en `CONCEPTOS_DE_SISTEMA` y, en las empresas con catálogo, por `insert` (a un concepto sin clave con el mismo nombre se le pone la clave; repetible). Los totales por concepto (flujo de efectivo y movimientos por concepto) usan el desglose cuando existe y un inverso usa el de su original. Nada escribe todavía el desglose: llega con las órdenes de CP4-B2a.
+
+- **2026-11-14 — U8l-2 (servidor, Cuentas por pagar: datos y sentido de la llave).** Migración
+  `0007_u8l_notas_sobre_saldos_iniciales` (con `when` mayor que el de la `0006`): `documento_afectado_id` pasa a guardar
+  el **id propio** de la factura (del libro o saldo inicial); `documentos_factura_fk` ahora va a
+  `documentos_id_proveedor_unico (id, empresa_id, proveedor_id)` (a mano, con el `update` que convierte los ids viejos
+  entre quitar y volver a poner la llave); columna `factura_del_sistema_anterior boolean not null default false`;
+  `documentos_nota_con_factura` reemplazado, `documentos_factura_anterior_solo_en_notas` y el índice parcial
+  `documentos_notas_del_sistema_anterior_libres_idx`. `RecibirDocumento` traduce el id del libro al propio
+  (`buscarPorDocumentoDeCompra`); `paraAplicarUnaNota`, la consulta base (`notas_del_documento`) y `notasDe` buscan por
+  `documentos.id` (ya sirven a un saldo inicial). La columna nueva queda solo en la tabla: la entidad y el DTO la
+  recibirán en U8l-3 (que es quien la escribe). Pruebas nuevas en `documentos-factura-anterior.prueba.ts` (llave por id
+  propio, checks, relleno de la migración 0007 sobre ids viejos) y ajustes a las de CP1, CP2 y CP3 que sembraban el id
+  del libro. Sin cliente ni contrato: sigue U8l-3.

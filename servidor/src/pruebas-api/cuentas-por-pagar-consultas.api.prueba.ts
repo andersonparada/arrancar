@@ -225,7 +225,7 @@ describe('ficha del documento', () => {
       aplicado: '336.00',
       saldo: '0.00',
       puedeCambiarVencimiento: false,
-      documentoAfectadoId: factura,
+      documentoAfectadoId: (await documentos.fila(factura))!.id,
     });
     expect(ficha.aplicaciones).toHaveLength(1);
     expect(ficha.notas).toEqual([]);

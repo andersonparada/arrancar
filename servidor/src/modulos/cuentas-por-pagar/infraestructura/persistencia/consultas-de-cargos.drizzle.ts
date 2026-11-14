@@ -12,19 +12,19 @@ const netoDelCargo = (cargo: typeof documentos.$inferSelect): number =>
 
 /** Los cargos a los que se aplica una nota de crédito. La tabla tiene seguridad por empresa (RLS). */
 export class ConsultasDeCargosDrizzle implements ConsultasDeCargos {
-  async paraAplicarUnaNota(facturaDeCompraId: string): Promise<CargoConSaldo[]> {
+  async paraAplicarUnaNota(facturaId: string): Promise<CargoConSaldo[]> {
     const transaccion = transaccionEnCurso();
     const vigente = ne(documentos.estado, 'anulado');
     const [factura] = await transaccion
       .select()
       .from(documentos)
-      .where(and(eq(documentos.documentoId, facturaDeCompraId), vigente))
+      .where(and(eq(documentos.id, facturaId), vigente))
       .for('update');
     if (!factura) return [];
     const debitos = await transaccion
       .select()
       .from(documentos)
-      .where(and(eq(documentos.documentoAfectadoId, facturaDeCompraId), eq(documentos.tipo, 'nota_de_debito'), vigente))
+      .where(and(eq(documentos.documentoAfectadoId, facturaId), eq(documentos.tipo, 'nota_de_debito'), vigente))
       .orderBy(asc(documentos.fechaEmision), asc(documentos.creadoEn));
     const cargos = [factura, ...debitos];
     const aplicado = await this.aplicadoPorCargo(cargos.map(({ id }) => id));

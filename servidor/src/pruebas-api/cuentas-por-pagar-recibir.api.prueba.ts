@@ -152,7 +152,7 @@ describe('notas de débito y de crédito', () => {
     expect(await filaDe(id)).toMatchObject({
       tipo: 'nota_de_debito',
       estado: 'pendiente',
-      documento_afectado_id: facturaId,
+      documento_afectado_id: (await filaDe(facturaId))?.id,
       total: '560.00',
       vencimiento: sumarMeses(EMISION, 1),
     });

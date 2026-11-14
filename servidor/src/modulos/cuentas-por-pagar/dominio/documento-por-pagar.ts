@@ -12,7 +12,7 @@ export interface DocumentoPorPagar {
   numero: string;
   tipo: TipoDeDocumento;
   proveedorId: string;
-  /** La factura (id de Libro de compras) de una nota. */
+  /** La factura que corrige una nota, por su id de aquí (del libro o un saldo inicial); nulo en lo demás. */
   documentoAfectadoId: string | null;
   /** `AAAA-MM-DD`. */
   fechaEmision: string;
