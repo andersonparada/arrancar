@@ -8,6 +8,9 @@ import type {
 } from '../../aplicacion/puertos/puertos-de-baja-de-documentos.js';
 import type { MotivoSinCredito } from '../../dominio/tipos-de-documento.js';
 import { mapeadorDeDocumentoGuardado } from './documento-guardado.mapeador.js';
+import type { FacturaAnterior } from '../../dominio/factura-anterior.js';
+import { mapeadorDeFacturaAnterior } from './factura-anterior.mapeador.js';
+import { facturasAnteriores } from './facturas-anteriores.tablas.js';
 import { documentos } from './documentos.tablas.js';
 import { lineasDeDocumento } from './lineas-de-documento.tablas.js';
 import { retenciones } from './retenciones.tablas.js';
@@ -33,8 +36,16 @@ export class RepositorioDeDocumentosGuardadosDrizzle implements RepositorioDeDoc
       retenciones: retenidas,
       notas,
       motivoDeLaFactura,
+      facturaAnterior: await this.facturaAnterior(documento.facturaAnteriorId),
       anuladoPorNombre: await this.nombreDeQuienAnulo(documento.anuladoPor),
     });
+  }
+
+  /** La factura del sistema anterior que cita una nota; `null` si no cita ninguna. */
+  private async facturaAnterior(id: string | null): Promise<FacturaAnterior | null> {
+    if (id === null) return null;
+    const [fila] = await transaccionEnCurso().select().from(facturasAnteriores).where(eq(facturasAnteriores.id, id));
+    return fila ? mapeadorDeFacturaAnterior.aDominio(fila) : null;
   }
 
   /** Nombre y apellidos de quien anuló; `null` si no hubo anulación o el usuario no se puede leer. */

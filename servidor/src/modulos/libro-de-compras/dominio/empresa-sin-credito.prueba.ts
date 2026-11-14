@@ -74,7 +74,7 @@ describe('nota de crédito con cambio de régimen', () => {
 
     expect(documento.motivoSinCredito).toBe('empresa_sin_credito');
     expect(documento.avisos).toEqual([AVISO_NOTA_CON_CAMBIO_DE_REGIMEN]);
-    expect(documento.avisos[0]).toBe('La factura dio crédito en el régimen anterior; consulte a su contador.');
+    expect(documento.avisos[0]).toContain('el IVA de la nota se suma al costo');
     expect(documento.totales.ivaNoAcreditable).toBe(documento.totales.iva);
   });
 

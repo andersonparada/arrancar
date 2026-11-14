@@ -2,6 +2,7 @@ import type { DocumentoParaDestino } from '../../core/contratos/libro-de-compras
 import type { LineaCalculada } from './calculo-de-linea.js';
 import type { RegimenDeIva } from './datos-fiscales-de-empresa.js';
 import type { DestinoDeDocumento } from './destinos-de-documento.js';
+import type { FacturaAnterior } from './factura-anterior.js';
 import type { MotivoFueraDelLibro } from './fuera-del-libro.js';
 import type { ClaseDeCargo } from './reglas-de-notas-de-debito.js';
 import type { ImpuestoRetenido, ReglaDeRetencion } from './retencion-propuesta.js';
@@ -63,6 +64,8 @@ export interface DocumentoDeCompra {
   /** Régimen de IVA de la empresa en el período del documento: la foto que se copia al registrar. */
   regimenIvaDeLaEmpresa: RegimenDeIva;
   documentoAfectadoId: string | null;
+  /** La factura del sistema anterior que corrige una nota (en lugar de `documentoAfectadoId`). */
+  facturaAnterior: FacturaAnterior | null;
   /** Solo en la nota de débito: qué cobra. Los intereses no cuentan como compra en los análisis. */
   claseDeCargo: ClaseDeCargo | null;
   destino: DestinoDeDocumento;
@@ -90,6 +93,14 @@ export function paraElDestino(documento: DocumentoDeCompra): DocumentoParaDestin
     tipo: documento.tipo,
     proveedorId: documento.proveedorId,
     documentoAfectadoId: documento.documentoAfectadoId,
+    facturaAnterior: documento.facturaAnterior
+      ? {
+          tipo: documento.facturaAnterior.tipo,
+          serie: documento.facturaAnterior.serie,
+          numero: documento.facturaAnterior.numero,
+          fechaEmision: documento.facturaAnterior.fechaEmision,
+        }
+      : null,
     fechaEmision: documento.fechaEmision,
     totalCentavos: documento.totales.total,
     retencionesCentavos: documento.retenciones.reduce((suma, retencion) => suma + retencion.monto, 0),

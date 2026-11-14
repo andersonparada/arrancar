@@ -1,6 +1,7 @@
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { DocumentoGuardado, NotaDeFactura } from '../../aplicacion/puertos/puertos-de-baja-de-documentos.js';
 import type { DocumentoDeCompra, LineaDeDocumento, RetencionDeDocumento } from '../../dominio/documento-de-compra.js';
+import type { FacturaAnterior } from '../../dominio/factura-anterior.js';
 import type { ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
 import type { MotivoSinCredito } from '../../dominio/tipos-de-documento.js';
 import type { documentos } from './documentos.tablas.js';
@@ -21,6 +22,8 @@ export interface FilasLeidasDeDocumento {
   motivoDeLaFactura: MotivoSinCredito | null;
   /** Nombre de quien anuló; `null` si no está anulado o no se pudo leer el usuario. */
   anuladoPorNombre: string | null;
+  /** La factura del sistema anterior que corrige la nota, si es el caso. */
+  facturaAnterior: FacturaAnterior | null;
 }
 
 function combustibleDeDominio(fila: FilaDeLinea): LineaDeDocumento['combustible'] {
@@ -91,14 +94,8 @@ function datosFiscalesDeDominio(fila: FilaDeDocumento) {
   };
 }
 
-function documentoDeDominio(fila: FilaDeDocumento, lineas: FilaDeLinea[], retenidas: FilaDeRetencion[]) {
-  const documento: DocumentoDeCompra = {
-    id: fila.id,
-    empresaId: fila.empresaId,
-    tipo: fila.tipo,
-    tipoDte: fila.tipoDte,
-    proveedorId: fila.proveedorId,
-    ...datosFiscalesDeDominio(fila),
+function condicionesDeDominio(fila: FilaDeDocumento) {
+  return {
     fechaEmision: fila.fechaEmision,
     fechaRecepcion: fila.fechaRecepcion,
     periodo: fila.periodo,
@@ -106,12 +103,28 @@ function documentoDeDominio(fila: FilaDeDocumento, lineas: FilaDeLinea[], reteni
     documentoAfectadoId: fila.documentoAfectadoId,
     claseDeCargo: fila.claseDeCargo,
     destino: fila.destino,
+  };
+}
+
+function documentoDeDominio(
+  fila: FilaDeDocumento,
+  detalle: Pick<FilasLeidasDeDocumento, 'lineas' | 'retenciones' | 'facturaAnterior'>,
+) {
+  const { lineas, retenciones: retenidas, facturaAnterior } = detalle;
+  return {
+    id: fila.id,
+    empresaId: fila.empresaId,
+    tipo: fila.tipo,
+    tipoDte: fila.tipoDte,
+    proveedorId: fila.proveedorId,
+    ...datosFiscalesDeDominio(fila),
+    ...condicionesDeDominio(fila),
+    facturaAnterior,
     totales: totalesDeDominio(fila),
     observaciones: fila.observaciones,
     lineas: [...lineas].sort((a, b) => a.numero - b.numero).map(lineaDeDominio),
     retenciones: retenidas.map(retencionDeDominio),
-  };
-  return documento;
+  } satisfies DocumentoDeCompra;
 }
 
 function notaDeFactura(fila: FilaDeDocumento): NotaDeFactura {
@@ -128,9 +141,9 @@ function notaDeFactura(fila: FilaDeDocumento): NotaDeFactura {
 
 export const mapeadorDeDocumentoGuardado = {
   aDominio(filas: FilasLeidasDeDocumento): DocumentoGuardado {
-    const { documento, lineas, retenciones: retenidas, notas } = filas;
+    const { documento, notas } = filas;
     return {
-      documento: documentoDeDominio(documento, lineas, retenidas),
+      documento: documentoDeDominio(documento, filas),
       estado: documento.estado,
       anuladoEn: documento.anuladoEn,
       anuladoPor: documento.anuladoPor,

@@ -15,6 +15,7 @@ import type { SolicitudDeDocumento } from '../../dto/solicitud-de-documento.js';
 import type { FacturaParaNota } from '../../puertos/puertos-de-documentos.js';
 import type { ContextoFiscal } from './cargador-de-contexto-fiscal.js';
 import type { EncabezadoResuelto } from './encabezado-del-documento.js';
+import type { FacturaAnteriorResuelta } from './resolutor-de-factura-anterior.js';
 import type { LineasResueltas } from './resolutor-de-lineas.js';
 
 /** Todo lo que se resolvió y calculó de un documento, antes de armarlo. */
@@ -22,6 +23,8 @@ export interface DocumentoResuelto {
   encabezado: EncabezadoResuelto;
   lineas: LineasResueltas;
   factura: FacturaParaNota | null;
+  /** La factura del sistema anterior que corrige la nota, si es el caso (`factura` es su presentación). */
+  anterior: FacturaAnteriorResuelta | null;
   calculado: DocumentoCalculado;
   retenciones: RetencionDeDocumento[];
   /** Lo que el sistema dejó en cero por una retención ya practicada en un documento anulado, y su aviso. */
@@ -45,6 +48,7 @@ export function calcularElDocumento(
     tipo: solicitud.tipo,
     muestraEnReportesSat: resuelto.encabezado.muestraEnReportesSat,
     noVinculado: solicitud.noVinculado,
+    otraCausaSinCredito: solicitud.otraCausaSinCredito ?? false,
     ...regimenDeLaEmpresa(contexto),
     fechaDeEmision: solicitud.fechaEmision,
     fechaDeRecepcion: contexto.fechaDeRecepcion,
@@ -100,7 +104,10 @@ export function retencionesDelDocumento(
 }
 
 type EncabezadoDeDocumento = Omit<DocumentoDeCompra, 'totales' | 'lineas' | 'retenciones'>;
-type DatosDelEncabezado = { contexto: ContextoFiscal } & Pick<DocumentoResuelto, 'encabezado' | 'calculado'>;
+type DatosDelEncabezado = { contexto: ContextoFiscal } & Pick<
+  DocumentoResuelto,
+  'encabezado' | 'calculado' | 'anterior'
+>;
 type Identidad = Pick<
   EncabezadoDeDocumento,
   | 'id'
@@ -138,7 +145,7 @@ function identidadDelDocumento(
 /** Fechas, casilla SAT, motivos, factura afectada y destino. */
 function condicionesDelDocumento(
   solicitud: SolicitudDeDocumento,
-  { contexto, encabezado, calculado }: DatosDelEncabezado,
+  { contexto, encabezado, calculado, anterior }: DatosDelEncabezado,
 ): Omit<EncabezadoDeDocumento, keyof Identidad> {
   return {
     autorizacionFel: solicitud.autorizacionFel,
@@ -150,6 +157,7 @@ function condicionesDelDocumento(
     motivoSinCredito: calculado.motivoSinCredito,
     regimenIvaDeLaEmpresa: contexto.datosDeLaEmpresa.instantanea().regimenIva,
     documentoAfectadoId: solicitud.documentoAfectadoId,
+    facturaAnterior: anterior?.guardada ?? null,
     claseDeCargo: solicitud.tipo === 'nota_de_debito' ? (solicitud.claseDeCargo ?? null) : null,
     destino: solicitud.destino ?? DESTINO_DE_VISTA_PREVIA,
     observaciones: solicitud.observaciones,

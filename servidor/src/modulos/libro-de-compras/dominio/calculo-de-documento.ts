@@ -13,6 +13,7 @@ export interface DatosParaCalcular extends DatosDeLaFacturaAfectada {
   tipo: TipoDeDocumento;
   muestraEnReportesSat: boolean;
   noVinculado: boolean;
+  otraCausaSinCredito?: boolean;
   /** La empresa acredita el IVA de sus compras en el período (`DatosFiscalesDeEmpresa.daCreditoFiscal()`). */
   empresaConCreditoFiscal: boolean;
   /** La empresa paga el ISR sobre utilidades (`tieneIsrSobreUtilidades()`): cambia el texto de los avisos. */

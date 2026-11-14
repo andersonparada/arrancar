@@ -105,7 +105,7 @@ describe('cada documento toma el régimen de su período', () => {
       regimenIvaDeLaEmpresa: 'pequeno_contribuyente',
       motivoSinCredito: 'empresa_sin_credito',
     });
-    expect(nota.cuerpo.avisos).toContain('La factura dio crédito en el régimen anterior; consulte a su contador.');
+    expect(nota.cuerpo.avisos.some((aviso: string) => aviso.includes('el IVA de la nota se suma al costo'))).toBe(true);
   });
 });
 

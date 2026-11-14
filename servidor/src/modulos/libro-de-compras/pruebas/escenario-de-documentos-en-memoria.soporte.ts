@@ -16,6 +16,7 @@ import type {
   CompletadorDeNit,
   RepositorioDeDocumentos,
 } from '../aplicacion/puertos/puertos-de-documentos.js';
+import { FacturasAnterioresEnMemoria } from './dobles-de-facturas-anteriores.js';
 import { DocumentosGuardadosEnMemoria } from './dobles-de-bajas-de-documentos.js';
 import { ConsultasDeEnterosEnMemoria, RetencionesDeUnDocumentoEnMemoria } from './dobles-de-retenciones.js';
 import { DatosFiscalesDeEmpresaEnMemoria, DatosFiscalesDeProveedorEnMemoria } from './dobles-de-datos-fiscales.js';
@@ -104,6 +105,7 @@ export function crearEscenario() {
   });
   const consultas = new ConsultasDeDocumentosEnMemoria();
   const repositorio = new RepositorioDeDocumentosEnMemoria();
+  const facturasAnteriores = new FacturasAnterioresEnMemoria();
   const destinos = new DestinosEnMemoria();
   const empresa = new DatosDeLaEmpresaEnMemoria();
   const completadorDeNit = new CompletadorDeNitEnMemoria();
@@ -137,6 +139,7 @@ export function crearEscenario() {
     calendario: new FuenteDeLunesAViernes(),
     catalogos,
     consultas,
+    facturasAnteriores,
     destinos,
     control,
     repositorio,
@@ -152,6 +155,7 @@ export function crearEscenario() {
     proveedores,
     catalogos,
     consultas,
+    facturasAnteriores,
     repositorio,
     destinos,
     empresa,

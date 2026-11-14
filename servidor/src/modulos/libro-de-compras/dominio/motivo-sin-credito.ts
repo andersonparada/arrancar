@@ -14,6 +14,8 @@ export interface DatosParaElMotivo {
   muestraEnReportesSat: boolean;
   /** El usuario marcó «no vinculado» (la compra no es de la actividad gravada). */
   noVinculado: boolean;
+  /** El usuario marcó «no dio crédito por otra causa» (con detalle en las observaciones); solo en facturas. */
+  otraCausaSinCredito?: boolean;
   /** La empresa acredita el IVA de sus compras en el período del documento (`daCreditoFiscal`). */
   empresaConCreditoFiscal: boolean;
   total: number;
@@ -43,7 +45,7 @@ export const AVISO_NOTA_DE_DEBITO_SOBRE_FACTURA_SIN_CREDITO =
   'La factura se registró sin crédito fiscal (régimen anterior); consulte a su contador.';
 
 export const AVISO_NOTA_CON_CAMBIO_DE_REGIMEN =
-  'La factura dio crédito en el régimen anterior; consulte a su contador.';
+  'La factura dio crédito en el régimen anterior, pero este período no lo da: el IVA de la nota se suma al costo. Consulte a su contador.';
 
 /** Sin IVA, con algo exento y el resto solo otros impuestos: lo no afecto no convierte en exenta una compra. */
 function esTodoExento(datos: DatosParaElMotivo): boolean {
@@ -54,6 +56,7 @@ function motivoDeUnaFactura(datos: DatosParaElMotivo): MotivoSinCredito | null {
   if (esTodoExento(datos)) return 'exento';
   if (!datos.empresaConCreditoFiscal) return 'empresa_sin_credito';
   if (datos.noVinculado) return 'no_vinculado';
+  if (datos.otraCausaSinCredito) return 'otra_causa_sin_credito';
   return esFueraDePlazo(datos.periodo, datos.fechaDeEmision) ? 'fuera_de_plazo' : null;
 }
 
