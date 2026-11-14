@@ -9,6 +9,11 @@ nota ligada por activo fijo va en CP4** (no solo aviso, §5.2); y dos cambios a 
 cambia `diseno-cp3-contrasenas.md`), y Bancos **rechaza** cambiar los movimientos de un pago si Cuentas por pagar está
 inactivo (CP4-i). Este documento ya trae todo aplicado (lo agregado está en la tabla «Decidido el 2026-11-13»).
 
+> **Adenda del 2026-11-14 (propuesta, por aprobar):** el usuario cambió CP4-k: el pago en efectivo a varios proveedores
+> con un **retiro del banco** entra en CP4, sin esperar a Caja chica. Diseño en `diseno-cp4-pagos-en-efectivo.md`
+> (retiros de efectivo, forma `efectivo`, recibo, bancarización, liquidación) con una propuesta más: **un pago para
+> varias contraseñas del mismo proveedor** (§10 de la adenda, a decidir antes de CP4-3).
+
 Aterriza el paso **CP4** de `cuentas-por-pagar.md` («Pagos: órdenes a *Bancos* para
 emitir y anular cheques —también posfechados— y notas de débito con origen y concepto; el aviso de Bancos cuando se
 anulan desde allá; el usuario elige las facturas autorizadas y los montos de cada pago; las retenciones se descuentan en
@@ -60,7 +65,7 @@ sus migraciones `0006`, ya en `main`, y `0007`, reservada). Lo nuevo que aparezc
 | Reintegro ligando una nota de crédito ya registrada | No en CP4 | CP4-h |
 | Cuentas por pagar inactivo | Bancos **rechaza** cambiar movimientos con origen en Cuentas por pagar o marcados | CP4-i, §6.3 |
 | Separación de funciones | Solo permisos distintos; el reporte de pagos (CP5) muestra quién autorizó y quién pagó | CP4-j |
-| Pago de facturas en efectivo | Con Caja chica; allí se avisa la bancarización en efectivo | CP4-k |
+| Pago de facturas en efectivo | ~~Con Caja chica~~ **Cambiado el 2026-11-14:** con un retiro del banco, en CP4 (adenda `diseno-cp4-pagos-en-efectivo.md`, por aprobar) | CP4-k |
 | Comprobante de pago | En CP4, con retenciones, constancias y la leyenda «no es documento tributario» | CP4-l, §9 |
 | Correlativos | Propios de pagos y de reintegros («Recibo de reintegro»), por empresa, con el reinicio anual | CP4-m |
 | Cheque posfechado | El documento queda **comprometido** desde hoy y **pagado en la fecha del cheque** (NIIF para las Pymes 11.36); bancarización con la fecha del cheque; Bancos avisa si el saldo de hoy menos los posfechados no alcanza (el cheque se paga a la vista, Código de Comercio art. 501) | C-CP4-1, §2.4, §6.3 |
@@ -1039,6 +1044,10 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 | CP4-9 a CP4-11 | CP3-6 y CP3-7 en `main`, CP4-8 y CP4-B3 | Pantallas sobre las de CP3 |
 | CP4-12 (QA) | CP3-8, la QA de U8-l y CP4-11 | De punta a punta con todo |
 
+**Adenda de efectivo** (`diseno-cp4-pagos-en-efectivo.md` §11, por aprobar): CP4-V1 (varias contraseñas, antes de
+CP4-3), CP4-EB (Bancos, `0033`), CP4-E1 (datos), CP4-E2 a CP4-E4 (servidor, después de CP4-4, CP4-5 y CP4-8) y CP4-E5
+(cliente, después de CP4-10); CP4-12 suma sus casos.
+
 CP3-2 a CP3-8 y U8l-2 en adelante siguen su propio orden (U8l-2 y U8l-3 después de CP3-1 y no en paralelo con CP3-2 a
 CP3-4); ninguno espera a CP4. Los pasos de Bancos de CP4 sí pueden avanzar en paralelo con CP3 y U8-l.
 
@@ -1150,7 +1159,8 @@ El usuario aceptó todas las recomendaciones, con las correcciones del contador.
 - **CP4-h. Reintegro ligando una nota de crédito ya registrada en Bancos.** **Respondida:** no en CP4.
 - **CP4-i. Bancos con Cuentas por pagar inactivo.** **Respondida:** sí, Bancos rechaza (cambia lo que decía el plan).
 - **CP4-j. Separación de funciones al pagar.** **Respondida:** solo permisos distintos y el reporte de CP5.
-- **CP4-k. Pago en efectivo de facturas.** **Respondida:** con Caja chica, avisando la bancarización en efectivo.
+- **CP4-k. Pago en efectivo de facturas.** **Respondida:** con Caja chica, avisando la bancarización en efectivo. **Cambiada el
+  2026-11-14:** se paga en efectivo con un retiro del banco, en CP4; ver `diseno-cp4-pagos-en-efectivo.md`.
 - **CP4-l. Comprobante de pago.** **Respondida:** en CP4, con retención, constancia y leyenda no tributaria.
 - **CP4-m. Correlativos propios.** **Respondida:** sí, por empresa, con el reinicio anual; el del reintegro es el «Recibo
   de reintegro».
