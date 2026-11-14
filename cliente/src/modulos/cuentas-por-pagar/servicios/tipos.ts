@@ -1,3 +1,7 @@
+import type { AjusteDelDocumento, AplicacionDelDocumento } from './tipos-de-notas';
+
+export type * from './tipos-de-notas';
+
 export type TipoDeDocumento =
   | 'factura'
   | 'factura_pequeno_contribuyente'
@@ -103,16 +107,6 @@ export interface NotaDelDocumento {
   aplicadoAEsteDocumento: string;
 }
 
-export interface AplicacionDelDocumento {
-  notaId: string;
-  notaSerie: string | null;
-  notaNumero: string;
-  cargoId: string;
-  cargoSerie: string | null;
-  cargoNumero: string;
-  monto: string;
-}
-
 /** Cómo se anuló un documento; cualquier dato puede faltar en anulaciones antiguas. */
 export interface AnulacionDelDocumento {
   causa: CausaDeAnulacion | null;
@@ -128,6 +122,12 @@ export interface AnulacionDelDocumento {
 export interface FichaDelDocumento extends DocumentoPorPagar {
   notas: NotaDelDocumento[];
   aplicaciones: AplicacionDelDocumento[];
+  /** Solo en una nota de crédito. */
+  ajustes: AjusteDelDocumento[];
+  /** Solo en una nota de crédito: la fecha más antigua de un ajuste; `null` si nada la limita. */
+  fechaMinimaDeAjuste: string | null;
+  /** Solo en una nota de crédito: lo más que puede ajustarse como «Diferencia menor» (cero la apaga). */
+  topeDiferenciaMenor: string;
   /** `null` si el documento no está anulado. */
   anulacion: AnulacionDelDocumento | null;
 }
