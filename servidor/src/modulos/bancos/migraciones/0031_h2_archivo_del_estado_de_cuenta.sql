@@ -1,0 +1,3 @@
+ALTER TABLE "bancos"."conciliaciones" ADD COLUMN "estado_de_cuenta_archivo_id" uuid;--> statement-breakpoint
+ALTER TABLE "bancos"."conciliaciones" ADD CONSTRAINT "conciliaciones_estado_de_cuenta_archivo_id_archivos_id_fk" FOREIGN KEY ("estado_de_cuenta_archivo_id") REFERENCES "core"."archivos"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "bancos"."conciliaciones" ADD CONSTRAINT "conciliaciones_estado_de_cuenta_unico" UNIQUE("estado_de_cuenta_archivo_id");

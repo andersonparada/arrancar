@@ -2,7 +2,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import { aCentavos, deCentavos } from '../../../dominio/centavos.js';
 import type { FotoDelCalculo } from '../../../dominio/conciliacion.js';
 import type { ConciliacionDto, Partida } from '../../dto/conciliacion.dto.js';
-import { conciliacionExistente, type DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
+import { conciliacionBloqueada, type DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
 
 const sumaDePartidas = (partidas: readonly Partida[]) =>
   deCentavos(partidas.reduce((suma, p) => suma + aCentavos(p.monto), 0));
@@ -31,7 +31,7 @@ export class AutorizarConciliacion {
   ejecutar(operador: Operador, conciliacionId: string): Promise<ConciliacionDto> {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      const conciliacion = await conciliacionExistente(repositorio, conciliacionId);
+      const conciliacion = await conciliacionBloqueada(repositorio, conciliacionId);
       const dto = await consultas.obtener(conciliacionId);
       conciliacion.autorizar(operador, fotoDe(dto));
       await repositorio.guardar(conciliacion);

@@ -1,5 +1,6 @@
 import type { FastifyRequest } from 'fastify';
 import { DatoInvalido } from '../../compartido/dominio/errores.js';
+import { leerUnSoloArchivo, traducirErrorDeMultipart } from '../../compartido/http/lectura-de-multipart.js';
 import { ArchivoDemasiadoGrande } from '../aplicacion/errores.js';
 
 const MEGABYTE = 1024 * 1024;
@@ -27,13 +28,16 @@ export interface ArchivoSubido {
  * @throws ArchivoDemasiadoGrande si pesa más del máximo.
  */
 export async function leerArchivoConNombre(solicitud: FastifyRequest): Promise<ArchivoSubido> {
-  const parte = await solicitud.file({ limits: { fileSize: MAXIMO_DE_EXCEL_EN_MB * MEGABYTE } });
-  if (!parte) throw new FaltaElArchivo();
-  const contenido = await parte.toBuffer().catch((error: NodeJS.ErrnoException) => {
-    throw error.code === 'FST_REQ_FILE_TOO_LARGE' ? new ArchivoDemasiadoGrande(MAXIMO_DE_EXCEL_EN_MB) : error;
-  });
-  if (parte.file.truncated) throw new ArchivoDemasiadoGrande(MAXIMO_DE_EXCEL_EN_MB);
-  return { contenido, nombre: parte.filename };
+  const archivo = await leerUnSoloArchivo(solicitud, MAXIMO_DE_EXCEL_EN_MB * MEGABYTE).catch(
+    (error: NodeJS.ErrnoException) => {
+      throw error.code === 'FST_REQ_FILE_TOO_LARGE'
+        ? new ArchivoDemasiadoGrande(MAXIMO_DE_EXCEL_EN_MB)
+        : traducirErrorDeMultipart(error);
+    },
+  );
+  if (!archivo) throw new FaltaElArchivo();
+  if (archivo.truncado) throw new ArchivoDemasiadoGrande(MAXIMO_DE_EXCEL_EN_MB);
+  return { contenido: archivo.contenido, nombre: archivo.nombre };
 }
 
 /** Lo mismo, solo con el contenido. */

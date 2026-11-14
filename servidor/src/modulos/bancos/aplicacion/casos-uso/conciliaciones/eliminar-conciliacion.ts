@@ -1,6 +1,10 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { SoloSeEliminaLaUltima } from '../../../dominio/errores.js';
-import { conciliacionExistente, type DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
+import {
+  conciliacionBloqueada,
+  RECURSO_DE_ESTADOS_DE_CUENTA,
+  type DependenciasDeConciliaciones,
+} from './dependencias-de-conciliaciones.js';
 
 interface SolicitudDeEliminacion {
   conciliacionId: string;
@@ -10,23 +14,24 @@ interface SolicitudDeEliminacion {
 /**
  * Elimina la última conciliación de su cuenta (en cualquier estado, incluso
  * autorizada) y suelta sus movimientos, así se reabre el mes; queda en la
- * auditoría con el motivo.
+ * auditoría con el motivo (con la huella del estado de cuenta, cuyo archivo se borra).
  */
 export class EliminarConciliacion {
   constructor(private readonly dependencias: DependenciasDeConciliaciones) {}
 
   /** @throws SoloSeEliminaLaUltima si no es la más reciente de su cuenta. */
   ejecutar(operador: Operador, { conciliacionId, motivo }: SolicitudDeEliminacion): Promise<void> {
-    const { unidadDeTrabajo, repositorio, consultas, auditoria } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, consultas, auditoria, documentos } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      const conciliacion = await conciliacionExistente(repositorio, conciliacionId);
-      const { cuentaBancariaId } = conciliacion.instantanea();
+      const conciliacion = await conciliacionBloqueada(repositorio, conciliacionId);
+      const { cuentaBancariaId, estadoDeCuentaArchivoId } = conciliacion.instantanea();
       const ultima = await repositorio.ultimaDeLaCuenta(cuentaBancariaId);
       if (ultima?.id !== conciliacionId) throw new SoloSeEliminaLaUltima();
 
       const anterior = await consultas.obtener(conciliacionId);
       await repositorio.guardarMarcas(conciliacionId, []);
       await repositorio.eliminar(conciliacion.id);
+      if (estadoDeCuentaArchivoId) await documentos.eliminar(estadoDeCuentaArchivoId, RECURSO_DE_ESTADOS_DE_CUENTA);
       await auditoria.registrar({
         recurso: 'bancos.conciliaciones',
         registroId: conciliacionId,

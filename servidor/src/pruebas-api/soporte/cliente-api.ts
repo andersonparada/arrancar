@@ -65,6 +65,11 @@ export class ClienteApi {
     return this.enviar({ metodo, url, cuerpo, cabeceras: { 'content-type': tipoContenido } });
   }
 
+  /** Envía por POST un cuerpo ya armado (por ejemplo un multipart a mano) con el tipo de contenido indicado. */
+  enviarCrudo<Cuerpo = any>(url: string, cuerpo: Buffer, tipoContenido: string) {
+    return this.enviar<Cuerpo>({ metodo: 'POST', url, cuerpo, cabeceras: { 'content-type': tipoContenido } });
+  }
+
   /** Envía la petición como si viniera de otro sitio web (para probar la defensa CSRF). */
   postDesdeOtroOrigen(url: string, cuerpo: unknown, origen: string): Promise<Respuesta> {
     return this.enviar({ metodo: 'POST', url, cuerpo, cabeceras: { origin: origen } });

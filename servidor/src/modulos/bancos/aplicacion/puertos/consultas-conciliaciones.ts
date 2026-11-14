@@ -1,4 +1,4 @@
-import type { ConciliacionDto, ConciliacionResumenDto } from '../dto/conciliacion.dto.js';
+import type { ConciliacionDto, ConciliacionResumenDto, EstadoDeCuentaDto } from '../dto/conciliacion.dto.js';
 
 /** Lecturas para las pantallas de conciliación; el cálculo del documento ya viene resuelto. */
 export interface ConsultasConciliaciones {
@@ -6,6 +6,8 @@ export interface ConsultasConciliaciones {
   listar(cuentaBancariaId: string): Promise<ConciliacionResumenDto[]>;
   /** @throws RecursoNoEncontrado si no existe o no es de la empresa. */
   obtener(conciliacionId: string): Promise<ConciliacionDto>;
+  /** Los datos del archivo del estado de cuenta, o `null` si no tiene; para la auditoría. */
+  estadoDeCuentaDe(conciliacionId: string): Promise<EstadoDeCuentaDto | null>;
   /**
    * Los movimientos que se pueden marcar en esta conciliación: vigentes, de la
    * cuenta, con fecha hasta `finDelMes` y sin otra conciliación (incluye los ya

@@ -4,6 +4,7 @@ import { comoPropietario } from './soporte/consultas-de-propietario.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 import { crearCuentaBancaria, terminarConciliacionConSaldo } from './soporte/escenarios-de-bancos.js';
+import { crearImagenPng } from './soporte/imagenes.js';
 
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
@@ -96,6 +97,7 @@ describe('terminar con el saldo del estado de cuenta', () => {
     expect((await propietario.get(rutaDe(id))).cuerpo.estado).toBe('en_proceso');
 
     await transcribir(id, '1000');
+    await propietario.subirImagen('POST', `${rutaDe(id)}/estado-de-cuenta`, await crearImagenPng());
     const terminada = await propietario.post(`${rutaDe(id)}/terminar`, {});
     expect(terminada.estado).toBe(200);
     expect(terminada.cuerpo).toMatchObject({ estado: 'elaborada', saldoEstadoDeCuenta: '1000.00' });

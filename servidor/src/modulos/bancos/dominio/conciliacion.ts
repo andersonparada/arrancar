@@ -1,7 +1,7 @@
 import { DatoInvalido } from '../../core/compartido/dominio/errores.js';
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
-import { exigirSaldoQueCoincide, SaldoTranscrito } from './estado-de-cuenta.js';
+import { exigirEvidenciaParaTerminar, exigirSaldoQueCoincide, SaldoTranscrito } from './estado-de-cuenta.js';
 import { AutorizaQuienElaboro, ConciliacionNoEstaElaborada, ConciliacionNoEstaEnProceso } from './errores.js';
 
 export type ConciliacionId = Identificador<'Conciliacion'>;
@@ -48,12 +48,16 @@ export interface PropiedadesDeConciliacion extends DatosDeConciliacion {
   saldoEstadoDeCuenta: string | null;
   /** Elaborada o autorizada antes de que se pidiera el saldo; solo la migración la marca. */
   previaAlSaldoTranscrito: boolean;
+  /** El archivo del estado de cuenta (`core.archivos`); lo adjunta quien elabora mientras está en proceso. */
+  estadoDeCuentaArchivoId: string | null;
 }
 
 /** Lo que se revisa al terminar la conciliación. */
 export interface EvidenciaParaTerminar {
   /** El saldo que calculan hoy las marcas: el transcrito debe coincidir con él. */
   saldoCalculado: string;
+  /** Lo dice la variable de la empresa: si es `true`, hace falta el archivo del estado de cuenta. */
+  exigeEstadoDeCuenta: boolean;
 }
 
 /** El año o el mes de una conciliación no son válidos. */
@@ -120,6 +124,7 @@ export class Conciliacion extends Entidad<ConciliacionId> {
       foto: null,
       saldoEstadoDeCuenta: null,
       previaAlSaldoTranscrito: false,
+      estadoDeCuentaArchivoId: null,
     });
   }
 
@@ -135,14 +140,44 @@ export class Conciliacion extends Entidad<ConciliacionId> {
   }
 
   /**
+   * Pone el archivo del estado de cuenta; si ya había uno, lo reemplaza.
+   * @returns el id del archivo anterior (para que el caso de uso lo borre), o `null` si no había.
+   * @throws ConciliacionNoEstaEnProceso
+   */
+  adjuntarEstadoDeCuenta(archivoId: string): string | null {
+    this.exigirEnProceso();
+    const anterior = this.propiedades.estadoDeCuentaArchivoId;
+    this.propiedades = { ...this.propiedades, estadoDeCuentaArchivoId: archivoId };
+    return anterior;
+  }
+
+  /**
+   * Quita el archivo del estado de cuenta.
+   * @returns el id del archivo quitado, para que el caso de uso lo borre; `null` si no tenía.
+   * @throws ConciliacionNoEstaEnProceso
+   */
+  quitarEstadoDeCuenta(): string | null {
+    this.exigirEnProceso();
+    const anterior = this.propiedades.estadoDeCuentaArchivoId;
+    this.propiedades = { ...this.propiedades, estadoDeCuentaArchivoId: null };
+    return anterior;
+  }
+
+  /**
    * La da por terminada quien la elaboró: ya no se le cambian las marcas.
    * @throws ConciliacionNoEstaEnProceso
    * @throws FaltaElSaldoDelEstadoDeCuenta si no transcribió el saldo.
    * @throws SaldoDelEstadoDeCuentaNoCoincide si el saldo difiere del calculado.
+   * @throws FaltaElEstadoDeCuenta si la empresa exige el archivo y no lo hay.
    */
   elaborar(usuarioId: string, evidencia: EvidenciaParaTerminar): void {
     this.exigirEnProceso();
-    exigirSaldoQueCoincide(this.propiedades.saldoEstadoDeCuenta, evidencia.saldoCalculado);
+    exigirEvidenciaParaTerminar({
+      saldo: this.propiedades.saldoEstadoDeCuenta,
+      calculado: evidencia.saldoCalculado,
+      tieneArchivo: this.propiedades.estadoDeCuentaArchivoId !== null,
+      exigeArchivo: evidencia.exigeEstadoDeCuenta,
+    });
     this.propiedades = { ...this.propiedades, estado: 'elaborada', elaboradaPor: usuarioId, elaboradaEn: new Date() };
   }
 
@@ -215,7 +250,8 @@ export class Conciliacion extends Entidad<ConciliacionId> {
     return { ...this.propiedades };
   }
 
-  private exigirEnProceso(): void {
+  /** @throws ConciliacionNoEstaEnProceso */
+  exigirEnProceso(): void {
     if (!this.estaEnProceso) throw new ConciliacionNoEstaEnProceso();
   }
 

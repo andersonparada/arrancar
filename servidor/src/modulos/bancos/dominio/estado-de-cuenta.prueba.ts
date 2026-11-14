@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { Conciliacion, type FotoDelCalculo } from './conciliacion.js';
-import { FaltaElSaldoDelEstadoDeCuenta, SaldoDelEstadoDeCuentaNoCoincide } from './errores-de-estado-de-cuenta.js';
+import {
+  FaltaElEstadoDeCuenta,
+  FaltaElSaldoDelEstadoDeCuenta,
+  SaldoDelEstadoDeCuentaNoCoincide,
+} from './errores-de-estado-de-cuenta.js';
 import { ConciliacionNoEstaEnProceso } from './errores.js';
-import { diferenciaConElEstadoDeCuenta, exigirSaldoQueCoincide, SaldoTranscrito } from './estado-de-cuenta.js';
+import {
+  diferenciaConElEstadoDeCuenta,
+  exigirEvidenciaParaTerminar,
+  exigirSaldoQueCoincide,
+  SaldoTranscrito,
+} from './estado-de-cuenta.js';
 
 const foto = (saldoCalculadoEstadoDeCuenta: string): FotoDelCalculo => ({
   saldoSegunLibros: saldoCalculadoEstadoDeCuenta,
@@ -12,6 +21,9 @@ const foto = (saldoCalculadoEstadoDeCuenta: string): FotoDelCalculo => ({
   totalOtrosDebitosEnTransito: '0.00',
   totalCreditosEnTransito: '0.00',
 });
+
+const SIN_EXIGIR = { saldoCalculado: '10.00', exigeEstadoDeCuenta: false };
+const EXIGIENDO = { saldoCalculado: '10.00', exigeEstadoDeCuenta: true };
 
 const nueva = () =>
   Conciliacion.crear(Identificador.nuevo(), { cuentaBancariaId: Identificador.nuevo().valor, anio: 2026, mes: 1 });
@@ -67,12 +79,12 @@ describe('Conciliacion y el saldo del estado de cuenta', () => {
 
   it('elaborar exige el saldo y que coincida con el calculado', () => {
     const conciliacion = nueva();
-    expect(() => conciliacion.elaborar('u', { saldoCalculado: '10.00' })).toThrow(FaltaElSaldoDelEstadoDeCuenta);
+    expect(() => conciliacion.elaborar('u', SIN_EXIGIR)).toThrow(FaltaElSaldoDelEstadoDeCuenta);
     conciliacion.transcribirSaldo('9.99');
-    expect(() => conciliacion.elaborar('u', { saldoCalculado: '10.00' })).toThrow(SaldoDelEstadoDeCuentaNoCoincide);
+    expect(() => conciliacion.elaborar('u', SIN_EXIGIR)).toThrow(SaldoDelEstadoDeCuentaNoCoincide);
     expect(conciliacion.estado).toBe('en_proceso');
     conciliacion.transcribirSaldo('10.00');
-    conciliacion.elaborar('u', { saldoCalculado: '10.00' });
+    conciliacion.elaborar('u', SIN_EXIGIR);
     expect(conciliacion.estado).toBe('elaborada');
   });
 
@@ -90,6 +102,49 @@ describe('Conciliacion y el saldo del estado de cuenta', () => {
     expect(() => previa.autorizar(quien, foto('10.00'))).toThrow(/Devuélvala/);
     previa.devolver();
     expect(previa.instantanea().previaAlSaldoTranscrito).toBe(false);
-    expect(() => previa.elaborar('u', { saldoCalculado: '10.00' })).toThrow(FaltaElSaldoDelEstadoDeCuenta);
+    expect(() => previa.elaborar('u', SIN_EXIGIR)).toThrow(FaltaElSaldoDelEstadoDeCuenta);
+  });
+});
+
+describe('el archivo del estado de cuenta en la conciliación', () => {
+  it('adjuntar devuelve el id anterior (null la primera vez) y quitar devuelve el que había', () => {
+    const conciliacion = nueva();
+    expect(conciliacion.adjuntarEstadoDeCuenta('a')).toBeNull();
+    expect(conciliacion.adjuntarEstadoDeCuenta('b')).toBe('a');
+    expect(conciliacion.instantanea().estadoDeCuentaArchivoId).toBe('b');
+    expect(conciliacion.quitarEstadoDeCuenta()).toBe('b');
+    expect(conciliacion.quitarEstadoDeCuenta()).toBeNull();
+    expect(conciliacion.instantanea().estadoDeCuentaArchivoId).toBeNull();
+  });
+
+  it('solo se adjunta y se quita en proceso', () => {
+    const terminada = elaborada('10.00');
+    expect(() => terminada.adjuntarEstadoDeCuenta('a')).toThrow(ConciliacionNoEstaEnProceso);
+    expect(() => terminada.quitarEstadoDeCuenta()).toThrow(ConciliacionNoEstaEnProceso);
+  });
+
+  it('terminar exige el archivo solo si la empresa lo pide, y después del saldo', () => {
+    const conciliacion = nueva();
+    expect(() => conciliacion.elaborar('u', EXIGIENDO)).toThrow(FaltaElSaldoDelEstadoDeCuenta);
+    conciliacion.transcribirSaldo('10.00');
+    expect(() => conciliacion.elaborar('u', EXIGIENDO)).toThrow(FaltaElEstadoDeCuenta);
+    conciliacion.adjuntarEstadoDeCuenta('a');
+    conciliacion.elaborar('u', EXIGIENDO);
+    expect(conciliacion.estado).toBe('elaborada');
+  });
+
+  it('exigirEvidenciaParaTerminar: sin la variable no hace falta el archivo', () => {
+    const base = { saldo: '10.00', calculado: '10.00', tieneArchivo: false };
+    expect(() => exigirEvidenciaParaTerminar({ ...base, exigeArchivo: false })).not.toThrow();
+    expect(() => exigirEvidenciaParaTerminar({ ...base, exigeArchivo: true })).toThrow(FaltaElEstadoDeCuenta);
+    expect(() => exigirEvidenciaParaTerminar({ ...base, tieneArchivo: true, exigeArchivo: true })).not.toThrow();
+  });
+
+  it('autorizar no revisa el archivo (la variable se revisa solo al terminar)', () => {
+    const quien = { usuarioId: 'otro', esSuperacceso: false };
+    const buena = elaborada('10.00');
+    expect(buena.instantanea().estadoDeCuentaArchivoId).toBeNull();
+    buena.autorizar(quien, foto('10.00'));
+    expect(buena.estaAutorizada).toBe(true);
   });
 });

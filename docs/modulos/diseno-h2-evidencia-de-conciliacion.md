@@ -380,3 +380,23 @@ Con esto los pasos 2 y 3 (H2a) quedan listos para programar. Las decisiones de s
 - `Conciliacion.elaborar(usuarioId, { saldoCalculado })`: el objeto de evidencia crece en el paso 4 con el archivo.
 - `PUT /bancos/conciliaciones/:id/saldo-del-estado-de-cuenta` con `{ saldoEstadoDeCuenta: "1250.50" | null }`; `ConciliacionDto` trae `saldoEstadoDeCuenta`, `diferenciaConElEstadoDeCuenta` y `previaAlSaldoTranscrito`. `tieneEstadoDeCuenta` y `estadoDeCuenta` quedan para el paso 4.
 - P1 = A y P2 = no (el saldo en proceso no se audita; devolver y eliminar conservan el `anterior`).
+
+## Notas de implementación del paso 4 (servidor, 2026-11-13)
+
+- Migración `0031_h2_archivo_del_estado_de_cuenta`: columna `estado_de_cuenta_archivo_id`, `unique` y llave a `core.archivos` (`NO ACTION`).
+- Variable `bancos.conciliaciones.exigir_estado_de_cuenta` (booleana, `true` por omisión, empresa e instalación, `publica: true`: llega a la sesión). Se revisa solo al terminar (P3); autorizar no la mira.
+- Rutas: `POST` (multipart, campo `archivo`, `conciliar` + `limitarSubidas`), `DELETE` (`conciliar`) y `GET` (`ver`) en `/api/bancos/conciliaciones/:id/estado-de-cuenta`. `POST` y `DELETE` responden la `ConciliacionDto`; `GET` el contenido (nombre armado `estado-de-cuenta-AAAA-MM.pdf|webp`, `Cache-Control: private, no-store`, sin CSP propia).
+- Solo quien tiene `conciliar` sube, reemplaza y quita (P4); quien solo autoriza recibe 403.
+- `ConciliacionDto.estadoDeCuenta` = `{ tipoMime, tamanoBytes, paginas, sha256, nombreOriginal, subidoEn, subidoPorNombre } | null`; `ConciliacionResumenDto.tieneEstadoDeCuenta` (P5).
+- `RepositorioConciliaciones.bloquear` (`for update`) lo usan subir, quitar, transcribir saldo y terminar, para que ninguno pise la columna del archivo con una copia vieja.
+- `SubirEstadoDeCuenta` en tres tiempos; el reemplazo y quitar auditan `quitar` con `{ estadoDeCuenta }` (con `sha256`). Eliminar la conciliación borra el archivo y su `anterior` ya trae el `estadoDeCuenta`.
+- Pruebas de API: `terminarConciliacionConSaldo` sube una foto de prueba si el servidor responde `falta_el_estado_de_cuenta`, así las pruebas existentes no cambian. Que qpdf no corra al subir en `elaborada` se prueba en la unidad (el doble cuenta las revisiones).
+- Error nuevo `FaltaElEstadoDeCuenta` (400, `falta_el_estado_de_cuenta`) y `ConciliacionSinEstadoDeCuenta` (404) en `bancos/aplicacion`.
+
+### Arreglos de la revisión de seguridad del paso 4
+
+- **Multipart sin campos de texto** (`core`, ajuste mínimo autorizado): `leerUnSoloArchivo` (`core/compartido/http/lectura-de-multipart.ts`) recorre `parts()` con `files: 1, parts: 1, fields: 0, fieldSize: 0` y rechaza cualquier segunda parte (otro archivo o campo, antes o después del archivo) con 400 `subida_con_mas_de_un_archivo` («Envíe un solo archivo, sin otros campos.»). Lo usan `leer-documento.ts` (que además exige el campo `archivo`), `leer-imagen.ts` y `leer-archivo-de-excel.ts`. Ninguna subida del cliente manda campos de texto (`cliente-http.ts` solo agrega `archivo` y la apariencia solo `logo`), así que el tope es cero en las tres. `FST_INVALID_MULTIPART_CONTENT_TYPE` sale como 400 `subida_no_es_de_archivo` y `FST_PROTO_VIOLATION` como `subida_interrumpida`, ambos en español.
+- **Bloqueo**: `eliminar`, `autorizar` y `devolver` usan `conciliacionBloqueada` (`for update`); el orden es siempre la conciliación primero y `core.archivos` después.
+- **Límite de subidas común**: `limitarSubidas` crea un solo manejador por aplicación (`WeakMap` sobre `app.rateLimit`), así fotos y estados de cuenta comparten los 30 por minuto.
+- Pruebas nuevas (`bancos-conciliaciones-estado-de-cuenta-seguridad.api.prueba.ts`): multipart (dos archivos, campo antes y después, otro nombre, no multipart, vacío, 15 MB + 1), otra empresa de la misma cuenta, cabeceras `frame-ancestors 'self'` y `X-Frame-Options`, eliminar contra subir, autorizar contra devolver, reemplazo que se deshace (trigger de prueba) y el límite común (15 fotos + 16 estados de cuenta → 429).
+- Sin hacer (por indicación): tope en Caddy, CSP propia del `GET` y cambios del cliente.

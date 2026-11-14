@@ -16,6 +16,15 @@ export class RepositorioConciliacionesDrizzle implements RepositorioConciliacion
     return fila ? mapeadorDeConciliacion.aEntidad(fila) : null;
   }
 
+  async bloquear(id: ConciliacionId): Promise<Conciliacion | null> {
+    const [fila] = await transaccionEnCurso()
+      .select()
+      .from(conciliaciones)
+      .where(eq(conciliaciones.id, id.valor))
+      .for('update');
+    return fila ? mapeadorDeConciliacion.aEntidad(fila) : null;
+  }
+
   async agregar(conciliacion: Conciliacion): Promise<void> {
     await transaccionEnCurso().insert(conciliaciones).values(mapeadorDeConciliacion.aFila(conciliacion));
   }

@@ -10,6 +10,11 @@ export interface ResumenDeLaUltimaConciliacion {
 
 export interface RepositorioConciliaciones {
   buscar(id: ConciliacionId): Promise<Conciliacion | null>;
+  /**
+   * La busca y la bloquea hasta el fin de la transacción (`select … for update`): quien sube o quita el estado de
+   * cuenta, transcribe el saldo o termina no se pisa con otro que cambie la misma fila.
+   */
+  bloquear(id: ConciliacionId): Promise<Conciliacion | null>;
   agregar(conciliacion: Conciliacion): Promise<void>;
   guardar(conciliacion: Conciliacion): Promise<void>;
   eliminar(id: ConciliacionId): Promise<void>;
