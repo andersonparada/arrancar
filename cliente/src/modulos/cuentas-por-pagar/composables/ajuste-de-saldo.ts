@@ -103,7 +103,7 @@ export function erroresDeAjuste(
 
 /** El cuerpo de la solicitud; solo se llama con la edición ya validada. */
 export const datosDeAjuste = (edicion: EdicionDeAjuste): DatosDeAjuste => ({
-  monto: edicion.monto.trim(),
+  monto: String(edicion.monto).trim(),
   fecha: edicion.fecha,
   causa: edicion.causa as CausaDeAjuste,
   motivo: edicion.motivo.trim(),

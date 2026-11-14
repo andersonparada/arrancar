@@ -22,6 +22,7 @@ import {
   tituloDeDocumento,
   tonoDeEstado,
 } from '../composables/detalles-de-documento';
+import { avisoDeNotaPendiente } from '../composables/aplicaciones-de-la-ficha';
 import { avisoDeLoPropio, esperaAOtraPersona } from '../composables/reglas-de-acciones';
 import { usarAccionesDeNota } from '../composables/usar-acciones-de-nota';
 import { usarAccionesDelDocumento } from '../composables/usar-acciones-del-documento';
@@ -73,6 +74,14 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
       class="text-sm text-trigo-700 dark:text-trigo-300"
     >
       {{ avisoDeLoPropio }}
+    </p>
+
+    <p
+      v-if="avisoDeNotaPendiente(ficha)"
+      v-permiso="'cuentas-por-pagar.ajustes.crear'"
+      class="text-sm text-trigo-700 dark:text-trigo-300"
+    >
+      {{ avisoDeNotaPendiente(ficha) }}
     </p>
 
     <SeccionDeFicha titulo="Datos del documento"

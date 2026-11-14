@@ -8,6 +8,12 @@ describe('centavosDe', () => {
     expect(centavosDe('12')).toBe(1200);
   });
 
+  it('acepta el número que entrega un campo numérico (v-model de type=number)', () => {
+    expect(centavosDe(40 as unknown as string)).toBe(4000);
+    expect(centavosDe(12.5 as unknown as string)).toBe(1250);
+    expect(centavosDe(0 as unknown as string)).toBe(0);
+  });
+
   it('rechaza lo que no es un importe', () => {
     for (const texto of ['', 'abc', '-1', '1.234', '1,5', '.5']) expect(centavosDe(texto)).toBeNull();
   });

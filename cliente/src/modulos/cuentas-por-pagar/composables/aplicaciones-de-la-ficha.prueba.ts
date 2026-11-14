@@ -1,7 +1,12 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { AplicacionDelDocumento, FichaDelDocumento } from '../servicios/tipos';
-import { avisoDeAplicacionesManuales, resumenDeAnularAjuste, resumenDeQuitar } from './aplicaciones-de-la-ficha';
+import {
+  avisoDeAplicacionesManuales,
+  avisoDeNotaPendiente,
+  resumenDeAnularAjuste,
+  resumenDeQuitar,
+} from './aplicaciones-de-la-ficha';
 
 // Los formatos de fecha y monto leen la sesión (Pinia).
 beforeEach(() => setActivePinia(createPinia()));
@@ -59,5 +64,19 @@ describe('resumenDeAnularAjuste', () => {
   it('dice que el monto vuelve al saldo a favor', () => {
     const texto = resumenDeAnularAjuste({ monto: '5.00', fecha: '2026-11-01' } as never);
     expect(texto).toMatch(/volverá al saldo a favor/);
+  });
+});
+
+describe('avisoDeNotaPendiente', () => {
+  it('explica que una nota pendiente con saldo se completa antes de ajustarla', () => {
+    expect(avisoDeNotaPendiente({ tipo: 'nota_de_credito', estado: 'pendiente', saldo: '100.00' })).toMatch(
+      /Complete la nota/,
+    );
+  });
+
+  it('no dice nada si ya está registrada, no tiene saldo o no es nota de crédito', () => {
+    expect(avisoDeNotaPendiente({ tipo: 'nota_de_credito', estado: 'registrado', saldo: '100.00' })).toBeNull();
+    expect(avisoDeNotaPendiente({ tipo: 'nota_de_credito', estado: 'pendiente', saldo: '0.00' })).toBeNull();
+    expect(avisoDeNotaPendiente({ tipo: 'factura', estado: 'pendiente', saldo: '100.00' })).toBeNull();
   });
 });

@@ -28,14 +28,14 @@ defineEmits<{ anular: [id: string, resumen: string] }>();
               </InsigniaBase>
             </span>
           </div>
-          <p class="text-tierra-600 dark:text-tierra-300">
+          <p class="[overflow-wrap:anywhere] text-tierra-600 dark:text-tierra-300">
             {{ formatearFecha(ajuste.fecha) }} · {{ ajuste.motivo }}
             <template v-if="ajuste.referencia"> · Referencia: {{ ajuste.referencia }}</template>
           </p>
           <p class="text-xs text-tierra-500">
             Registrado por {{ ajuste.creadoPor ?? 'un usuario' }} el {{ formatearFechaHora(ajuste.creadoEn) }}
           </p>
-          <p v-if="ajuste.anulacion" class="text-xs text-red-700 dark:text-red-400">
+          <p v-if="ajuste.anulacion" class="[overflow-wrap:anywhere] text-xs text-red-700 dark:text-red-400">
             Anulado por {{ ajuste.anulacion.anuladoPorNombre ?? 'un usuario' }}
             <template v-if="ajuste.anulacion.anuladoEn">
               el {{ formatearFechaHora(ajuste.anulacion.anuladoEn) }}</template

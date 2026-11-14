@@ -1,6 +1,6 @@
-/** Pasa un monto escrito («1250.5») a centavos enteros; `null` si no es un importe válido de hasta dos decimales. */
-export function centavosDe(monto: string): number | null {
-  const partes = /^(\d+)(?:\.(\d{1,2}))?$/.exec(monto.trim());
+/** Pasa un monto escrito («1250.5»; un campo numérico entrega un número) a centavos enteros; `null` si no es un importe válido de hasta dos decimales. */
+export function centavosDe(monto: string | number): number | null {
+  const partes = /^(\d+)(?:\.(\d{1,2}))?$/.exec(String(monto).trim());
   if (!partes) return null;
   return Number(partes[1]) * 100 + Number((partes[2] ?? '').padEnd(2, '0'));
 }

@@ -83,6 +83,12 @@ describe('erroresDeAjuste', () => {
 });
 
 describe('datosDeAjuste', () => {
+  it('acepta el monto como número (el campo numérico lo entrega así)', () => {
+    const edicion = llena({ monto: 25 as unknown as string });
+    expect(erroresDeAjuste(edicion, ficha, HOY).monto).toBeUndefined();
+    expect(datosDeAjuste(edicion).monto).toBe('25');
+  });
+
   it('recorta y deja la referencia vacía como nula', () => {
     expect(datosDeAjuste(llena({ motivo: ' cerró ', referencia: ' ' }))).toEqual({
       monto: '100.00',
