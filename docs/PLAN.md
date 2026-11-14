@@ -1726,3 +1726,11 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   llegó a Cuentas por pagar lanza `FacturaDeLaNotaNoRecibida` en vez de un `Error`. Sin migración. Pruebas: unitarias de
   recibir, de dominio y de saldos iniciales, y de integración de las consultas SQL (`notas-del-sistema-anterior`). Sin
   cliente: sigue U8l-4 (Libro) y U8l-7.
+- **2026-11-14 — CP4-1 (servidor, datos de pagos).** Migración `0008_cp4_pagos` de Cuentas por pagar (generada con
+  `bd:generar`, sin editar a mano): tablas `pagos`, `aplicaciones_de_pagos`, `reintegros` y `aplicaciones_de_reintegros`
+  con sus checks, únicos, llaves compuestas, la llave a `contrasena_documentos` y las dos a `bancos.movimientos`, y RLS por
+  empresa; `ajustes_de_saldo.pago_id` con su llave, índice y check `ajustes_pago_solo_diferencia`. Los checks de estado y
+  anulación comunes de `pagos` y `reintegros` viven en `anulacion.restricciones.ts`. Mensaje de
+  `aplicaciones_de_pagos_retencion_una_vez` en `errores-de-postgres.ts`. Pruebas de tablas (`pagos.prueba.ts`,
+  `reintegros.prueba.ts`) con un movimiento real de Bancos (`movimientos-de-bancos.soporte.ts`). Sin casos de uso ni
+  permisos: siguen CP4-2 y siguientes.
