@@ -1,27 +1,17 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { CLAVE_DE_CONTRASENAS } from '../../../dominio/contrasena.js';
-import { ContrasenaSinSaldo } from '../../../dominio/errores-de-contrasenas.js';
 import {
   exigirAlMenosUnCargo,
-  exigirDocumentoDisponible,
   exigirDocumentosPedidos,
   exigirFechaDeContrasena,
   exigirFechaDePago,
   observacionesDeContrasena,
 } from '../../../dominio/reglas-de-contrasena.js';
-import {
-  repartirNotasDeLaContrasena,
-  type CargoDeLaContrasena,
-  type NotaDeLaContrasena,
-  type RepartoDeContrasena,
-} from '../../../dominio/reparto-de-contrasena.js';
-import { claseDe } from '../../../dominio/tipos-de-documento.js';
 import type { ContrasenaDto } from '../../dto/contrasena.dto.js';
 import type { FilaDeDocumento } from '../../puertos/puertos-de-consultas.js';
-import { bloquear } from '../acciones/dependencias-de-acciones.js';
-import { filaExistente, saldoDeLaFila } from '../aplicaciones/dependencias-de-aplicaciones.js';
 import { contrasenaComoDto, type DependenciasParaCrearContrasena } from './dependencias-de-contrasenas.js';
+import { bloquearEnOrden, exigirDisponibles, leerDocumentos, repartirNotas } from './documentos-de-la-contrasena.js';
 
 export interface PeticionDeContrasena {
   proveedorId: string;
@@ -56,7 +46,7 @@ export class CrearContrasena {
       await this.exigirProveedor(pedido.proveedorId);
       const filas = await this.cargarDocumentos(pedido);
       const fecha = await this.fechaValida(operador, pedido, { filas, fechaDeInicio });
-      const reparto = await this.repartir(fecha, filas, fechaDeInicio);
+      const reparto = await repartirNotas(this.dependencias, { fecha, filas, fechaDeInicio });
       const { numero, anio } = await correlativos.siguiente(CLAVE_DE_CONTRASENAS, fecha);
       const id = await repositorio.agregar({
         proveedorId: pedido.proveedorId,
@@ -78,18 +68,9 @@ export class CrearContrasena {
 
   /** Bloquea los documentos en orden de id y devuelve sus filas, en el orden pedido, ya validadas. */
   private async cargarDocumentos({ proveedorId, documentos: ids }: PeticionDeContrasena): Promise<FilaDeDocumento[]> {
-    const { documentos, consultas, repositorio } = this.dependencias;
-    for (const id of [...ids].sort()) await bloquear(documentos, id);
-    const filas = await Promise.all(ids.map((id) => filaExistente(consultas, id)));
-    const vigentes = await repositorio.vigentesDe(ids);
-    for (const fila of filas) {
-      const dueña = vigentes.get(fila.documento.id) ?? null;
-      exigirDocumentoDisponible(
-        { documento: fila.documento, saldoCentavos: saldoDeLaFila(fila) },
-        proveedorId,
-        dueña?.numero ?? null,
-      );
-    }
+    await bloquearEnOrden(this.dependencias, ids);
+    const filas = await leerDocumentos(this.dependencias, ids);
+    await exigirDisponibles(this.dependencias, { proveedorId, filas });
     exigirAlMenosUnCargo(filas.map(({ documento }) => documento));
     return filas;
   }
@@ -106,48 +87,4 @@ export class CrearContrasena {
     exigirFechaDePago(pedido.fechaDePago, fecha);
     return fecha;
   }
-
-  /** Reparte las notas entre los cargos; si nada queda por pagar, no hay contraseña que hacer. */
-  private async repartir(
-    fecha: string,
-    filas: FilaDeDocumento[],
-    fechaDeInicio: string | null,
-  ): Promise<RepartoDeContrasena> {
-    const recepciones = await this.dependencias.fechasDeEntrada.deDocumentos(
-      filas.map(({ documento }) => documento.id),
-    );
-    const entradaDe = (id: string) => recepciones.get(id) ?? fechaDeInicio;
-    const cargos = filas.filter(({ documento }) => claseDe(documento.tipo) === 'cargo');
-    const notas = filas.filter(({ documento }) => claseDe(documento.tipo) !== 'cargo');
-    const reparto = repartirNotasDeLaContrasena(
-      fecha,
-      notas.map((fila) => comoNota(fila, entradaDe(fila.documento.id))),
-      cargos.map((fila) => comoCargo(fila, entradaDe(fila.documento.id))),
-    );
-    if ([...reparto.saldoPorCargo.values()].every((saldo) => saldo <= 0)) throw new ContrasenaSinSaldo();
-    return reparto;
-  }
-}
-
-function comoCargo(fila: FilaDeDocumento, entrada: string | null): CargoDeLaContrasena {
-  const { documento } = fila;
-  return {
-    id: documento.id,
-    saldoCentavos: saldoDeLaFila(fila),
-    vencimiento: documento.vencimiento,
-    fechaEmision: documento.fechaEmision,
-    creadoEn: fila.creadoEn,
-    entrada,
-  };
-}
-
-function comoNota(fila: FilaDeDocumento, entrada: string | null): NotaDeLaContrasena {
-  const { documento } = fila;
-  return {
-    id: documento.id,
-    saldoLibreCentavos: saldoDeLaFila(fila),
-    fechaEmision: documento.fechaEmision,
-    creadoEn: fila.creadoEn,
-    entrada,
-  };
 }

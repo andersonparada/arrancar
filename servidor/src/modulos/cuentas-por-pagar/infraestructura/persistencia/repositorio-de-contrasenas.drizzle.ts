@@ -5,6 +5,7 @@ import {
   transaccionEnCurso,
 } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
+  CambiosDeContrasena,
   ContrasenaDelDocumento,
   ContrasenaNueva,
   RepositorioDeContrasenas,
@@ -20,18 +21,45 @@ export class RepositorioDeContrasenasDrizzle implements RepositorioDeContrasenas
   async agregar(nueva: ContrasenaNueva): Promise<string> {
     const { empresaId } = contextoEnCurso();
     const { documentoIds, ...datos } = nueva;
-    const transaccion = transaccionEnCurso();
-    const [fila] = await transaccion
+    const [fila] = await transaccionEnCurso()
       .insert(contrasenas)
       .values({ empresaId, ...datos })
       .returning({ id: contrasenas.id });
-    const contrasenaId = fila!.id;
-    await transaccion
+    await this.agregarDocumentos(fila!.id, nueva.proveedorId, documentoIds);
+    return fila!.id;
+  }
+
+  async agregarDocumentos(contrasenaId: string, proveedorId: string, documentoIds: readonly string[]): Promise<void> {
+    const { empresaId } = contextoEnCurso();
+    await transaccionEnCurso()
       .insert(contrasenaDocumentos)
-      .values(
-        documentoIds.map((documentoId) => ({ empresaId, proveedorId: nueva.proveedorId, contrasenaId, documentoId })),
+      .values(documentoIds.map((documentoId) => ({ empresaId, proveedorId, contrasenaId, documentoId })));
+  }
+
+  async quitarDocumento(contrasenaId: string, documentoId: string): Promise<void> {
+    await transaccionEnCurso()
+      .delete(contrasenaDocumentos)
+      .where(
+        and(eq(contrasenaDocumentos.contrasenaId, contrasenaId), eq(contrasenaDocumentos.documentoId, documentoId)),
       );
-    return contrasenaId;
+  }
+
+  async bloquear(contrasenaId: string): Promise<void> {
+    await transaccionEnCurso()
+      .select({ id: contrasenas.id })
+      .from(contrasenas)
+      .where(eq(contrasenas.id, contrasenaId))
+      .for('update');
+  }
+
+  async actualizar(contrasenaId: string, cambios: CambiosDeContrasena): Promise<void> {
+    await transaccionEnCurso().update(contrasenas).set(cambios).where(eq(contrasenas.id, contrasenaId));
+  }
+
+  async borrarReparto(contrasenaId: string): Promise<void> {
+    await transaccionEnCurso()
+      .delete(aplicacionesDeNotas)
+      .where(and(eq(aplicacionesDeNotas.contrasenaId, contrasenaId), eq(aplicacionesDeNotas.forma, 'contrasena')));
   }
 
   async guardarReparto(

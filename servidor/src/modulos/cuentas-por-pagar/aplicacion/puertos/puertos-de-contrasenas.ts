@@ -15,6 +15,12 @@ export interface ContrasenaNueva {
   documentoIds: readonly string[];
 }
 
+/** Lo único que se cambia de una contraseña ya hecha. */
+export interface CambiosDeContrasena {
+  fechaDePago: string;
+  observaciones: string | null;
+}
+
 /** La contraseña vigente donde está un documento. */
 export interface ContrasenaDelDocumento {
   id: string;
@@ -31,6 +37,16 @@ export interface RepositorioDeContrasenas {
     proveedorId: string,
     aplicaciones: readonly AplicacionDeContrasena[],
   ): Promise<void>;
+  /** Borra todas las aplicaciones de forma `contrasena` de esta contraseña: lo aplicado vuelve al saldo libre de sus notas. */
+  borrarReparto(contrasenaId: string): Promise<void>;
+  /** Bloquea la contraseña hasta el fin de la transacción (serializa las ediciones de una misma contraseña). */
+  bloquear(contrasenaId: string): Promise<void>;
+  /** Cambia la fecha prometida de pago y las observaciones. */
+  actualizar(contrasenaId: string, cambios: CambiosDeContrasena): Promise<void>;
+  /** Mete documentos más a la contraseña (del proveedor que ya tiene). */
+  agregarDocumentos(contrasenaId: string, proveedorId: string, documentoIds: readonly string[]): Promise<void>;
+  /** Saca un documento de la contraseña: borra su fila. */
+  quitarDocumento(contrasenaId: string, documentoId: string): Promise<void>;
   /** La contraseña vigente de cada documento que está en una; los demás no aparecen. */
   vigentesDe(documentoIds: readonly string[]): Promise<Map<string, ContrasenaDelDocumento>>;
 }

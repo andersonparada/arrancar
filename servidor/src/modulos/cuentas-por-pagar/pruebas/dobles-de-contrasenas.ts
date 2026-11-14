@@ -1,4 +1,5 @@
 import type {
+  CambiosDeContrasena,
   ConsultasDeContrasenas,
   ContrasenaConDocumentos,
   ContrasenaDelDocumento,
@@ -57,6 +58,33 @@ export class ContrasenasEnMemoria
         otroNumero: '',
       });
     }
+  }
+
+  async borrarReparto(contrasenaId: string): Promise<void> {
+    const prefijo = `${contrasenaId}-`;
+    const quedan = this.aplicaciones.lista.filter(
+      ({ id, forma }) => !(forma === 'contrasena' && id.startsWith(prefijo)),
+    );
+    this.aplicaciones.lista.splice(0, this.aplicaciones.lista.length, ...quedan);
+  }
+
+  async bloquear(): Promise<void> {}
+
+  async actualizar(contrasenaId: string, cambios: CambiosDeContrasena): Promise<void> {
+    Object.assign(
+      this.guardadas.find(({ id }) => id === contrasenaId)!,
+      cambios,
+    );
+  }
+
+  async agregarDocumentos(contrasenaId: string, _proveedorId: string, documentoIds: readonly string[]): Promise<void> {
+    const guardada = this.guardadas.find(({ id }) => id === contrasenaId)!;
+    guardada.documentoIds = [...guardada.documentoIds, ...documentoIds];
+  }
+
+  async quitarDocumento(contrasenaId: string, documentoId: string): Promise<void> {
+    const guardada = this.guardadas.find(({ id }) => id === contrasenaId)!;
+    guardada.documentoIds = guardada.documentoIds.filter((id) => id !== documentoId);
   }
 
   async vigentesDe(documentoIds: readonly string[]): Promise<Map<string, ContrasenaDelDocumento>> {

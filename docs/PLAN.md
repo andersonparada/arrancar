@@ -1637,5 +1637,15 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   guarda desde `RepositorioDeContrasenas.guardarReparto` (no desde `RepositorioDeAplicaciones`). `rebajado` de un saldo
   inicial incluye lo anterior al inicio. Aparte: `cargos-para-aplicar` (CP2-3) trae `umbralDeBancarizacion`.
   `noEstarEnContrasena` y `NotaEnContrasena` quedan para CP3-4. Siguen CP3-3 a CP3-5.
+- 2026-11-14 — **CP3-3 (servidor, editar contraseñas)** (`diseno-cp3-contrasenas.md` §5.2): `EditarContrasena` (fecha prometida con
+  motivo y auditoría `corregir` con `{ fechaDePago, observaciones }` como estaban; observaciones sin auditoría),
+  `AgregarDocumentosAContrasena` y `QuitarDocumentoDeContrasena` (motivo, auditoría `quitar` con la contraseña como estaba y
+  su lista de reglas `REGLAS_PARA_QUITAR_DE_CONTRASENA` vacía para CP4); permiso `contrasenas.editar`; rutas
+  `PATCH …/contrasenas/:id`, `POST …/:id/documentos` y `DELETE …/:id/documentos/:documentoId`. Lo común (bloqueo en orden,
+  validación y reparto) está en `documentos-de-la-contrasena.ts` y `rehacer-el-reparto.ts`; `RepositorioDeContrasenas` suma
+  `borrarReparto`, `bloquear`, `actualizar`, `agregarDocumentos` y `quitarDocumento`. Rehacer el reparto borra y vuelve a
+  guardar las aplicaciones `contrasena`; las fechas salen igual para las notas que no cambian. Agregar un documento emitido
+  después de la fecha de la contraseña da `FechaDeContrasenaInvalida`. Nuevo error `ContrasenaAnulada`. El aviso de
+  «REIMPRESIÓN» es de la pantalla. Siguen CP3-4 y CP3-5.
 
 - **2026-11-14 — CP2-7 (QA de punta a punta de las notas de crédito).** Informe `docs/modulos/informe-qa-cp2-2026-11-13.md`: flujos de aplicar, quitar, ajustar, anular, bajas desde Libro de compras, pantalla «Notas de crédito» y permisos probados en el navegador (escritorio y celular, claro y oscuro) con saldos cuadrados a mano. Corregido: **(E1, grave)** escribir un monto en las ventanas de aplicar y de ajustar rompía la ventana (el campo numérico entrega números y la lógica llamaba `.trim()`); la ficha se salía de la pantalla del celular con una referencia larga; faltaba «complétela antes de ajustar» en una nota pendiente. Quedan observaciones menores (umbral de bancarización sin cifra, mensaje con tope de diferencia menor en 0, texto de la fecha mínima, «Ajustado» fuera de los montos de la ficha).
