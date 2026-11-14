@@ -1620,3 +1620,10 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (CP3-1), `0007` reservada a U8l-2, `0008` de CP4; Bancos `0030`, `0031` de H2b, `0032` de CP4. Orden: CP4-B1 y B2a
   después de H2b servidor; CP4-B2b (avisos desde la conciliación) después de H2b completo; CP4-1 después de U8l-2;
   CP4-2 después de CP3-3 a CP3-5 y U8l-3; clientes después de CP3-7. Pendientes P-CP4-2 a P-CP4-5 (§14).
+- **2026-11-14 — Detalles de CP4 confirmados por el usuario** (P-CP4-4 del diseño): la fecha de la contraseña ya no
+  limita la fecha del pago (solo aviso); el aviso de fondos del posfechado sale también al emitirlo desde Bancos; la
+  diferencia de centavos se salda también desde la ficha de un pago vigente; sin nombre fiscal del proveedor el pago se
+  rechaza; reaplicar lleva su propio permiso. **P-CP4-2:** además del filtro por mes de Libro de compras → Retenciones,
+  CP5 tendrá un reporte de **constancias pendientes de todos los meses**, con su plazo de entero. P-CP4-5: el aviso
+  «al desmarcar» es la nota marcada que se desmarca desde la conciliación (CP4-B2b). Queda P-CP4-3 (tope de diferencia
+  de pagos, Q25 por omisión) para el contador.
