@@ -1,9 +1,12 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import type {
   Bandeja,
+  CargosParaAplicar,
   CondicionesDeProveedor,
   ConsultaDeDocumentos,
+  DatosDeAjuste,
   DatosDeAnulacion,
+  DatosDeAplicacion,
   DocumentoACompletar,
   DocumentoAnulado,
   DocumentoPorPagar,
@@ -59,6 +62,27 @@ export class ApiCuentasPorPagar {
 
   anular(id: string, datos: DatosDeAnulacion) {
     return this.http.crear<DocumentoAnulado>(`${RUTA_DE_DOCUMENTOS}/${id}/anular`, datos);
+  }
+
+  cargosParaAplicar(notaId: string) {
+    return this.http.obtener<CargosParaAplicar>(`${RUTA_DE_DOCUMENTOS}/${notaId}/cargos-para-aplicar`);
+  }
+
+  /** Aplica el saldo libre de una nota a varios cargos; devuelve la ficha de la nota. */
+  aplicar(notaId: string, datos: DatosDeAplicacion) {
+    return this.http.crear<FichaDelDocumento>(`${RUTA_DE_DOCUMENTOS}/${notaId}/aplicaciones`, datos);
+  }
+
+  quitarAplicacion(aplicacionId: string, motivo: string) {
+    return this.http.eliminar(`${RUTA}/aplicaciones/${aplicacionId}`, { motivo });
+  }
+
+  ajustar(notaId: string, datos: DatosDeAjuste) {
+    return this.http.crear<FichaDelDocumento>(`${RUTA_DE_DOCUMENTOS}/${notaId}/ajustes`, datos);
+  }
+
+  anularAjuste(ajusteId: string, motivo: string) {
+    return this.http.crear<FichaDelDocumento>(`${RUTA}/ajustes/${ajusteId}/anular`, { motivo });
   }
 
   eliminar(id: string) {
