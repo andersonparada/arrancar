@@ -15,6 +15,8 @@ import {
   type Escenario,
 } from './escenario.soporte.js';
 
+const LLAVES_DEL_PROVEEDOR = ['documentos_documento_fk', 'documentos_factura_fk'];
+
 let e: Escenario;
 const contexto = () => contextoDe(e, e.empresaA1, e.cuentaA);
 
@@ -171,7 +173,8 @@ describe('documentos por pagar: llaves', () => {
 
     await expect(crear(nota)).resolves.toBeTruthy();
     expect(await restriccionDe(sinFactura)).toBe('documentos_factura_fk');
-    expect(await restriccionDe({ ...nota, proveedorId: e.proveedorA2 })).toBe('documentos_documento_fk');
+    // Otro proveedor rompe dos llaves a la vez; PostgreSQL no garantiza cuál revisa primero.
+    expect(LLAVES_DEL_PROVEEDOR).toContain(await restriccionDe({ ...nota, proveedorId: e.proveedorA2 }));
   });
 
   it('la nota apunta a una factura del mismo proveedor aunque el documento del libro coincida', async () => {

@@ -89,9 +89,10 @@ describe('la nota apunta al id propio de su factura', () => {
     expect(await restriccionDe({ tipo: 'nota_de_debito', documentoAfectadoId: crypto.randomUUID() })).toBe(
       'documentos_factura_fk',
     );
-    expect(
+    // Otro proveedor rompe dos llaves a la vez; PostgreSQL no garantiza cuál revisa primero.
+    expect(['documentos_documento_fk', 'documentos_factura_fk']).toContain(
       await restriccionDe({ tipo: 'nota_de_debito', documentoAfectadoId: saldo.id, proveedorId: e.proveedorA2 }),
-    ).toBe('documentos_documento_fk');
+    );
   });
 });
 
