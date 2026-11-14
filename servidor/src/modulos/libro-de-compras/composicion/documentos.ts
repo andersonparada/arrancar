@@ -5,6 +5,7 @@ import { AnularDocumento } from '../aplicacion/casos-uso/documentos/anular-docum
 import { ListarDocumentos, ObtenerDocumento } from '../aplicacion/casos-uso/documentos/consultar-documentos.js';
 import { EliminarDocumento } from '../aplicacion/casos-uso/documentos/eliminar-documento.js';
 import { MarcarDocumentoProcesado } from '../aplicacion/casos-uso/documentos/marcar-documento-procesado.js';
+import { SugerirFacturasAnteriores } from '../aplicacion/casos-uso/documentos/sugerir-facturas-anteriores.js';
 import { PrevisualizarDocumento } from '../aplicacion/casos-uso/documentos/previsualizar-documento.js';
 import { RegistrarDocumento } from '../aplicacion/casos-uso/documentos/registrar-documento.js';
 import { DocumentosControlador } from '../http/documentos.controlador.js';
@@ -18,6 +19,7 @@ import { ProveedoresParaDocumentosDrizzle } from '../infraestructura/persistenci
 import { ConsultasDeListaDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-lista-de-documentos.drizzle.js';
 import { ConsultasDeEnterosDrizzle } from '../infraestructura/persistencia/enteros-de-retenciones.drizzle.js';
 import { RetencionesDeUnDocumentoDrizzle } from '../infraestructura/persistencia/repositorio-de-retenciones.drizzle.js';
+import { DteAnterioresParaSugerirDrizzle } from '../infraestructura/persistencia/dte-anteriores-para-sugerir.drizzle.js';
 import { RepositorioDeFacturasAnterioresDrizzle } from '../infraestructura/persistencia/repositorio-de-facturas-anteriores.drizzle.js';
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { RepositorioDeDocumentosGuardadosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos-guardados.drizzle.js';
@@ -80,6 +82,10 @@ export function rutasDeDocumentosComponidas() {
       previsualizar: new PrevisualizarDocumento(dependencias),
       registrar: new RegistrarDocumento(dependencias),
       destinoSugerido: new ObtenerDestinoSugerido(dependencias),
+      facturasAnteriores: new SugerirFacturasAnteriores({
+        ...dependencias,
+        dteAnteriores: new DteAnterioresParaSugerirDrizzle(),
+      }),
       destinos: new ListarDestinos(dependencias),
       listar: new ListarDocumentos({ ...dependencias, consultas: dependencias.consultasDeLista }),
       obtener: new ObtenerDocumento(bajas),

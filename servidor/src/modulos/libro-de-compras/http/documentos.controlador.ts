@@ -9,6 +9,7 @@ import { destinoConocido } from '../dominio/destinos-de-documento.js';
 import type { AnularDocumento } from '../aplicacion/casos-uso/documentos/anular-documento.js';
 import type { ListarDocumentos, ObtenerDocumento } from '../aplicacion/casos-uso/documentos/consultar-documentos.js';
 import type { EliminarDocumento } from '../aplicacion/casos-uso/documentos/eliminar-documento.js';
+import type { SugerirFacturasAnteriores } from '../aplicacion/casos-uso/documentos/sugerir-facturas-anteriores.js';
 import type { PrevisualizarDocumento } from '../aplicacion/casos-uso/documentos/previsualizar-documento.js';
 import type { PeticionDeRegistro, RegistrarDocumento } from '../aplicacion/casos-uso/documentos/registrar-documento.js';
 import type {
@@ -26,6 +27,7 @@ export interface CasosDeUsoDeDocumentos {
   previsualizar: PrevisualizarDocumento;
   registrar: RegistrarDocumento;
   destinoSugerido: ObtenerDestinoSugerido;
+  facturasAnteriores: SugerirFacturasAnteriores;
   destinos: ListarDestinos;
   listar: ListarDocumentos;
   obtener: ObtenerDocumento;
@@ -49,6 +51,9 @@ export class DocumentosControlador {
 
   destinoSugerido = (solicitud: FastifyRequest<{ Params: ParamsDeProveedorDeDocumento }>) =>
     this.casosDeUso.destinoSugerido.ejecutar(operadorDe(solicitud), solicitud.params.proveedorId);
+
+  facturasAnteriores = (solicitud: FastifyRequest<{ Params: ParamsDeProveedorDeDocumento }>) =>
+    this.casosDeUso.facturasAnteriores.ejecutar(operadorDe(solicitud), solicitud.params.proveedorId);
 
   destinos = (solicitud: FastifyRequest) => this.casosDeUso.destinos.ejecutar(operadorDe(solicitud));
 

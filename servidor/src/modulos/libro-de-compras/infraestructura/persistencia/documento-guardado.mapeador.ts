@@ -3,7 +3,7 @@ import type { DocumentoGuardado, NotaDeFactura } from '../../aplicacion/puertos/
 import type { DocumentoDeCompra, LineaDeDocumento, RetencionDeDocumento } from '../../dominio/documento-de-compra.js';
 import type { FacturaAnterior } from '../../dominio/factura-anterior.js';
 import type { ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
-import type { MotivoSinCredito } from '../../dominio/tipos-de-documento.js';
+import type { MotivoSinCredito, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 import type { documentos } from './documentos.tablas.js';
 import type { lineasDeDocumento } from './lineas-de-documento.tablas.js';
 import type { retenciones } from './retenciones.tablas.js';
@@ -18,12 +18,34 @@ export interface FilasLeidasDeDocumento {
   lineas: FilaDeLinea[];
   retenciones: FilaDeRetencion[];
   notas: FilaDeDocumento[];
-  /** Solo en una nota de crédito: el motivo de la factura que rebaja. */
-  motivoDeLaFactura: MotivoSinCredito | null;
   /** Nombre de quien anuló; `null` si no está anulado o no se pudo leer el usuario. */
   anuladoPorNombre: string | null;
   /** La factura del sistema anterior que corrige la nota, si es el caso. */
   facturaAnterior: FacturaAnterior | null;
+  /** La factura del libro que corrige la nota, si es el caso (la del sistema anterior va en `facturaAnterior`). */
+  facturaDelLibro: FacturaDelLibroDeLaNota | null;
+}
+
+/** Lo que se lee de la factura del libro que corrige una nota. */
+export interface FacturaDelLibroDeLaNota {
+  id: string;
+  tipo: TipoDeDocumento;
+  serie: string | null;
+  numero: string;
+  fechaEmision: string;
+  motivoSinCredito: MotivoSinCredito | null;
+}
+
+/** La factura que corrige la nota, venga del libro o del sistema anterior; `null` si el documento no es una nota. */
+function documentoQueModifica(filas: FilasLeidasDeDocumento): DocumentoGuardado['documentoQueModifica'] {
+  const { facturaAnterior, facturaDelLibro } = filas;
+  if (facturaAnterior) {
+    const { tipo, serie, numero, fechaEmision } = facturaAnterior;
+    return { origen: 'sistema_anterior', documentoId: null, tipo, serie, numero, fechaEmision };
+  }
+  if (!facturaDelLibro) return null;
+  const { id, tipo, serie, numero, fechaEmision } = facturaDelLibro;
+  return { origen: 'libro', documentoId: id, tipo, serie, numero, fechaEmision };
 }
 
 function combustibleDeDominio(fila: FilaDeLinea): LineaDeDocumento['combustible'] {
@@ -152,7 +174,8 @@ export const mapeadorDeDocumentoGuardado = {
       causaDeAnulacion: documento.causaDeAnulacion,
       procesadoEnDestinoEn: documento.procesadoEnDestinoEn,
       notas: notas.map(notaDeFactura),
-      motivoDeLaFactura: filas.motivoDeLaFactura,
+      motivoDeLaFactura: filas.facturaDelLibro?.motivoSinCredito ?? filas.facturaAnterior?.motivoSinCredito ?? null,
+      documentoQueModifica: documentoQueModifica(filas),
     };
   },
 };

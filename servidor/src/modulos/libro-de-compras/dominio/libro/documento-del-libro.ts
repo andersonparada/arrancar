@@ -17,6 +17,13 @@ export interface CategoriaDelDocumento {
   combustibleExento: boolean;
 }
 
+/** Lo que identifica la factura que corrige una nota (del libro o del sistema anterior). */
+export interface FacturaQueCorrigeLaNota {
+  serie: string | null;
+  numero: string;
+  fechaEmision: string;
+}
+
 /** Un documento vigente del período tal como está guardado (sin signo, en centavos), con sus categorías. */
 export interface DocumentoDelLibro {
   id: string;
@@ -38,6 +45,8 @@ export interface DocumentoDelLibro {
   idp: number;
   exento: number;
   otrosImpuestos: number;
+  /** Solo en una nota: la factura que corrige; `null` en los demás. */
+  documentoQueModifica: FacturaQueCorrigeLaNota | null;
   categorias: CategoriaDelDocumento[];
 }
 

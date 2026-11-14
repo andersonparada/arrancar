@@ -10,14 +10,20 @@ import type { LibroArmado } from './consultar-libro.js';
 /** Excel recibe el dinero como número con dos decimales; los centavos son enteros, así que no hay error de suma. */
 const quetzales = (centavos: number): number => centavos / 100;
 
+/** Solo el Excel la lleva: ni el libro impreso ni el SAT-2237 cambian. */
+const TITULO_DEL_DOCUMENTO_QUE_MODIFICA = 'Documento que modifica';
+
 function hojaDelLibro({ libro }: LibroArmado): HojaSimple {
   const columnas = COLUMNAS_DEL_LIBRO[libro.tipoDeLibro];
   const celda = (fila: FilaDelLibro, campo: (typeof columnas)[number]['campo']) =>
     esCampoDeTexto(campo) ? (fila[campo] ?? '') : quetzales(fila[campo]);
   return {
     nombre: 'Libro',
-    encabezados: columnas.map((columna) => columna.titulo),
-    filas: libro.filas.map((fila) => columnas.map((columna) => celda(fila, columna.campo))),
+    encabezados: [...columnas.map((columna) => columna.titulo), TITULO_DEL_DOCUMENTO_QUE_MODIFICA],
+    filas: libro.filas.map((fila) => [
+      ...columnas.map((columna) => celda(fila, columna.campo)),
+      fila.documentoQueModifica ?? '',
+    ]),
   };
 }
 

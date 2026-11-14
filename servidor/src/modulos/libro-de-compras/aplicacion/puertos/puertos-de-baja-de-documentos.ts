@@ -1,6 +1,7 @@
 import type { CausaDeAnulacion } from '../../dominio/baja-de-documento.js';
 import type { DocumentoDeCompra } from '../../dominio/documento-de-compra.js';
 import type { MotivoSinCredito, TipoDeNota } from '../../dominio/tipos-de-documento.js';
+import type { DocumentoQueModificaDto } from '../dto/documento-ficha.dto.js';
 import type {
   FiltroDeDocumentos,
   PaginaDeDocumentosDto,
@@ -32,6 +33,8 @@ export interface DocumentoGuardado {
   notas: NotaDeFactura[];
   /** Solo en una nota: el motivo sin crédito de la factura que corrige (derivado, no se guarda en la nota). */
   motivoDeLaFactura: MotivoSinCredito | null;
+  /** Solo en una nota: la factura que corrige (del libro o del sistema anterior). */
+  documentoQueModifica: DocumentoQueModificaDto | null;
 }
 
 export interface AnulacionDeDocumento {

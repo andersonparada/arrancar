@@ -1,5 +1,6 @@
 import type { MotivoSinCredito, TipoDte } from '../tipos-de-documento.js';
 import type { CategoriaDelDocumento, CategoriaDeLinea, DocumentoDelLibro } from './documento-del-libro.js';
+import { textoDeLaFacturaQueCorrige } from './factura-que-corrige-la-nota.js';
 import { SIGLA_DEL_MOTIVO } from './motivos-del-libro.js';
 import type { TipoDeLibro } from './tipo-de-libro.js';
 
@@ -58,6 +59,8 @@ export interface FilaDelLibro extends MontosDelLibro {
   motivo: MotivoSinCredito | null;
   /** El código corto del motivo; nulo en el libro simplificado. */
   siglaDelMotivo: string | null;
+  /** Solo en una nota: «SERIE-NÚMERO del dd/mm/aaaa» de la factura que corrige (solo lo usa el Excel del libro). */
+  documentoQueModifica: string | null;
 }
 
 const basesDe = (categorias: CategoriaDelDocumento[], ...nombres: CategoriaDeLinea[]) =>
@@ -153,6 +156,7 @@ export function filaDelLibro(
     nombre: documento.nombreDelProveedor,
     motivo: documento.motivoSinCredito,
     siglaDelMotivo: conMotivo ? SIGLA_DEL_MOTIVO[conMotivo] : null,
+    documentoQueModifica: textoDeLaFacturaQueCorrige(documento.documentoQueModifica),
     ...conSigno(montos, signoDe(documento)),
   };
 }
