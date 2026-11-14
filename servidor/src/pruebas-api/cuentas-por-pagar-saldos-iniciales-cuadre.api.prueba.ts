@@ -84,7 +84,14 @@ describe('el cuadre', () => {
     expect(respuesta.cuerpo).toEqual({
       carga: { fechaDeInicio: '2026-01-01', cerrada: false },
       proveedores: [],
-      general: { documentos: 0, cargos: '0.00', notasAFavor: '0.00', neto: '0.00', retencionesPorPracticar: '0.00' },
+      general: {
+        documentos: 0,
+        cargos: '0.00',
+        notasAFavor: '0.00',
+        neto: '0.00',
+        retencionesPorPracticar: '0.00',
+        saldosConNotasPosteriores: 0,
+      },
     });
   });
 
@@ -130,6 +137,7 @@ describe('el cuadre', () => {
       notasAFavor: '580.00',
       neto: '420.50',
       retencionesPorPracticar: '20.00',
+      saldosConNotasPosteriores: 0,
     });
   });
 });

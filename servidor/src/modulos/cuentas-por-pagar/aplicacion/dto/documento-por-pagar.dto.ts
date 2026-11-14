@@ -1,3 +1,4 @@
+import type { FacturaAnteriorDeLaNotaDto } from '../puertos/puertos-de-consultas.js';
 import type { CausaDeAjuste, EfectoDelAjuste } from '../../dominio/ajustes.js';
 import type { AccionesDelDocumento } from '../../dominio/acciones-posibles.js';
 import type {
@@ -34,6 +35,8 @@ export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   vencido: boolean;
   /** Id de aquí (no del libro) de la factura que corrige la nota. */
   documentoAfectadoId: string | null;
+  /** La nota corrige una factura del sistema anterior: su saldo inicial (con `documentoAfectadoId`) o ninguno. */
+  facturaDelSistemaAnterior: boolean;
   tieneActivoFijo: boolean;
   total: string;
   retenciones: string;
@@ -135,6 +138,8 @@ export interface FichaDelDocumentoPorPagarDto extends DocumentoPorPagarDto {
   topeDiferenciaMenor: string;
   /** Cómo se anuló (de Libro de compras); `null` si el documento no está anulado. */
   anulacion: AnulacionDelDocumentoDto | null;
+  /** Solo una nota sobre una factura del sistema anterior: los datos de esa factura, citados en Libro de compras. */
+  facturaAnterior: FacturaAnteriorDeLaNotaDto | null;
 }
 
 /** Por qué, quién y cuándo se anuló un documento. */

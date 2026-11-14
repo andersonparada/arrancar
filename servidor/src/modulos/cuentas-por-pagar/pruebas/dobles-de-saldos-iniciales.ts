@@ -41,6 +41,7 @@ export class SaldosInicialesEnMemoria implements RepositorioDeSaldosIniciales {
       origen: 'saldo_inicial',
       documentoId: null,
       documentoAfectadoId: null,
+      facturaDelSistemaAnterior: false,
       ingresadoPor: registradoPor,
       estado: 'registrado',
       registradoEn: 'ahora',

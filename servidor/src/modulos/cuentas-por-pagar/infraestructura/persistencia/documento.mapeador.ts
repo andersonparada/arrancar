@@ -38,6 +38,7 @@ export const mapeadorDeDocumento = {
       tipo: fila.tipo,
       proveedorId: fila.proveedorId,
       documentoAfectadoId: fila.documentoAfectadoId,
+      facturaDelSistemaAnterior: fila.facturaDelSistemaAnterior,
       fechaEmision: fila.fechaEmision,
       vencimiento: fila.vencimiento,
       tieneActivoFijo: fila.tieneActivoFijo,

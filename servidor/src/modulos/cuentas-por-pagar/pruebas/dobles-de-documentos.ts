@@ -2,17 +2,13 @@ import type {
   AnulacionDeDocumento,
   AutorizacionDeDocumento,
   DocumentoCompletado,
-  CondicionesDeProveedores,
   ConsultasDeCargos,
   DocumentoNuevo,
-  DatosDeRecepcion,
-  DocumentosDeCompra,
-  PlazoPorOmision,
+  FacturaPorBuscar,
   DatosDeAplicacion,
   RepositorioDeAplicaciones,
   RepositorioDeDocumentos,
 } from '../aplicacion/puertos/puertos-de-documentos.js';
-import type { CambioDeCondiciones, CondicionesDeProveedor } from '../dominio/condiciones-de-proveedor.js';
 import {
   netoDe,
   type AplicacionDeNota,
@@ -20,6 +16,8 @@ import {
   type DocumentoPorPagar,
 } from '../dominio/documento-por-pagar.js';
 import type { AjusteDeSaldo } from '../dominio/ajustes.js';
+export { CondicionesEnMemoria, DocumentosDeCompraEnMemoria, PlazoFijo } from './dobles-de-condiciones.js';
+import { TIPOS_DE_FACTURA } from '../dominio/tipos-de-documento.js';
 import type { AplicacionACargo, CargoConSaldo } from '../dominio/reparto-de-nota-de-credito.js';
 
 const sumar = (aplicaciones: readonly AplicacionDeNota[]) =>
@@ -102,6 +100,7 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
 
   async agregar(nuevo: DocumentoNuevo): Promise<DocumentoPorPagar> {
     const guardado: DocumentoPorPagar = {
+      facturaDelSistemaAnterior: false,
       ...nuevo,
       origen: 'libro_de_compras',
       saldoAlInicioCentavos: null,
@@ -130,7 +129,24 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
       ajustes: this.ajustes.filter(({ documentoId }) => documentoId === documento.id),
       contrasenaVigente: null,
       contrasenas: [],
+      notasQueLoCorrigen: this.documentos.filter(({ documentoAfectadoId }) => documentoAfectadoId === documento.id)
+        .length,
     };
+  }
+
+  async buscarSaldoInicialDeLaFactura(factura: FacturaPorBuscar): Promise<DocumentoPorPagar | null> {
+    this.bitacora.push('bloquea-saldo-inicial');
+    return (
+      this.documentos.find(
+        (candidato) =>
+          candidato.origen === 'saldo_inicial' &&
+          candidato.estado !== 'anulado' &&
+          candidato.proveedorId === factura.proveedorId &&
+          TIPOS_DE_FACTURA.some((tipo) => tipo === candidato.tipo) &&
+          (candidato.serie ?? '') === (factura.serie ?? '') &&
+          candidato.numero === factura.numero,
+      ) ?? null
+    );
   }
 
   async buscarPorId(id: string, bloquear = true): Promise<DocumentoConAplicaciones | null> {
@@ -144,6 +160,8 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
       ajustes: this.ajustes.filter(({ documentoId }) => documentoId === documento.id),
       contrasenaVigente: null,
       contrasenas: [],
+      notasQueLoCorrigen: this.documentos.filter(({ documentoAfectadoId }) => documentoAfectadoId === documento.id)
+        .length,
     };
   }
 
@@ -195,51 +213,5 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
 
   saldoDe(cargo: DocumentoPorPagar): number {
     return netoDe(cargo) - this.aplicaciones.aplicadoAl(cargo);
-  }
-}
-
-/** Los días de crédito de cada proveedor, en un mapa. */
-export class CondicionesEnMemoria implements CondicionesDeProveedores {
-  readonly dias = new Map<string, number | null>();
-  readonly desdeLaRecepcion = new Set<string>();
-
-  async deProveedor(proveedorId: string): Promise<CondicionesDeProveedor> {
-    return {
-      diasDeCredito: this.dias.get(proveedorId) ?? null,
-      contarDesdeLaRecepcion: this.desdeLaRecepcion.has(proveedorId),
-    };
-  }
-
-  async existeElProveedor(): Promise<boolean> {
-    return true;
-  }
-
-  async guardar(proveedorId: string, cambio: CambioDeCondiciones): Promise<void> {
-    if (cambio.diasDeCredito !== undefined) this.dias.set(proveedorId, cambio.diasDeCredito);
-    if (cambio.contarDesdeLaRecepcion === undefined) return;
-    if (cambio.contarDesdeLaRecepcion) this.desdeLaRecepcion.add(proveedorId);
-    else this.desdeLaRecepcion.delete(proveedorId);
-  }
-}
-
-/** La fecha de recepción de cada documento; la que no se fija es la misma de emisión de las pruebas. */
-export class DocumentosDeCompraEnMemoria implements DocumentosDeCompra {
-  readonly recepciones = new Map<string, string>();
-
-  constructor(private readonly recepcionPorOmision = '2026-03-10') {}
-
-  async bloquear(): Promise<void> {}
-
-  async datosDeRecepcion(documentoId: string): Promise<DatosDeRecepcion> {
-    const fechaRecepcion = this.recepciones.get(documentoId) ?? this.recepcionPorOmision;
-    return { fechaRecepcion, serie: 'A', numero: documentoId };
-  }
-}
-
-export class PlazoFijo implements PlazoPorOmision {
-  constructor(private readonly mesesFijos = 1) {}
-
-  async meses(): Promise<number> {
-    return this.mesesFijos;
   }
 }

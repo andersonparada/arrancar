@@ -45,6 +45,7 @@ const SIN_SEGUIMIENTO = {
   tieneActivoFijo: false,
   retencionesCentavos: 0,
   documentoAfectadoId: null,
+  facturaDelSistemaAnterior: false,
 } satisfies Partial<DocumentoPorPagar>;
 
 /** Un documento listo para sembrar en memoria; `cambios` sobrescribe lo que haga falta. */

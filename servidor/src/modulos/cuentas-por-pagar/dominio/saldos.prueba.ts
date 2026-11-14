@@ -11,6 +11,7 @@ const documento = (cambios: Partial<DocumentoPorPagar> = {}): DocumentoPorPagar 
   tipo: 'factura',
   proveedorId: crypto.randomUUID(),
   documentoAfectadoId: null,
+  facturaDelSistemaAnterior: false,
   fechaEmision: '2026-03-10',
   totalCentavos: 11200,
   retencionesCentavos: 1200,

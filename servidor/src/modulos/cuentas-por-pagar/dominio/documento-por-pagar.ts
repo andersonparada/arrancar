@@ -14,6 +14,11 @@ export interface DocumentoPorPagar {
   proveedorId: string;
   /** La factura que corrige una nota, por su id de aquí (del libro o un saldo inicial); nulo en lo demás. */
   documentoAfectadoId: string | null;
+  /**
+   * La nota corrige una factura del sistema anterior (U8l): con `documentoAfectadoId` es su saldo inicial; sin él, la
+   * factura no está cargada y la nota queda libre (o es un cargo suelto).
+   */
+  facturaDelSistemaAnterior: boolean;
   /** `AAAA-MM-DD`. */
   fechaEmision: string;
   totalCentavos: number;
@@ -81,6 +86,8 @@ export interface DocumentoConAplicaciones {
   contrasenaVigente: ContrasenaVigente | null;
   /** Todas las contraseñas en que estuvo (vigente y anuladas): quedan en la auditoría si el documento se elimina. */
   contrasenas: ContrasenaDelDocumentoGuardada[];
+  /** Cuántas notas (vigentes y anuladas) lo corrigen: un saldo inicial con notas ya tiene movimientos. */
+  notasQueLoCorrigen: number;
 }
 
 /**

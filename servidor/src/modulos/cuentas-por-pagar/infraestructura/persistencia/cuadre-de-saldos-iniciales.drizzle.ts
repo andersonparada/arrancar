@@ -4,6 +4,8 @@ import { transaccionEnCurso } from '../../../core/compartido/infraestructura/uni
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
 import type { ConsultasDeCuadre, SumasDeProveedorEnElCuadre } from '../../aplicacion/puertos/puertos-de-cuadre.js';
+import { notasPosterioresDe, tieneNotasPosteriores } from '../../dominio/notas-posteriores.js';
+import { notasLibresDelSistemaAnterior } from './consultas-del-sistema-anterior.drizzle.js';
 import { documentos } from './documentos.tablas.js';
 
 const saldosDonde = (condicion: SQL) =>
@@ -22,6 +24,26 @@ export class ConsultasDeCuadreDrizzle implements ConsultasDeCuadre {
       notasAFavorCentavos: aCentavos(fila.notasAFavor),
       retencionesPorPracticarCentavos: aCentavos(fila.retenciones),
     }));
+  }
+
+  async saldosConNotasPosteriores(): Promise<Map<string, number>> {
+    const libres = await notasLibresDelSistemaAnterior();
+    const cuantos = new Map<string, number>();
+    if (libres.length === 0) return cuantos;
+    const saldos = await transaccionEnCurso()
+      .select({
+        proveedorId: documentos.proveedorId,
+        tipo: documentos.tipo,
+        serie: documentos.serie,
+        numero: documentos.numero,
+      })
+      .from(documentos)
+      .where(and(eq(documentos.origen, 'saldo_inicial'), ne(documentos.estado, 'anulado')));
+    for (const saldo of saldos) {
+      if (!tieneNotasPosteriores(notasPosterioresDe(saldo, libres))) continue;
+      cuantos.set(saldo.proveedorId, (cuantos.get(saldo.proveedorId) ?? 0) + 1);
+    }
+    return cuantos;
   }
 
   private sumasEnTexto() {

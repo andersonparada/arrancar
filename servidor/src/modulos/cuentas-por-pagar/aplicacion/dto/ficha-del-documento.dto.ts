@@ -26,6 +26,8 @@ export interface FichaDelDocumentoDto {
   proveedorId: string;
   /** Id de aquí (no del libro) de la factura que corrige la nota. */
   documentoAfectadoId: string | null;
+  /** La nota corrige una factura del sistema anterior (U8l). */
+  facturaDelSistemaAnterior: boolean;
   fechaEmision: string;
   total: string;
   retenciones: string;

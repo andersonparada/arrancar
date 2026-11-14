@@ -49,6 +49,7 @@ function sembrarSaldoInicial(): string {
     tipo: 'factura',
     proveedorId: crypto.randomUUID(),
     documentoAfectadoId: null,
+    facturaDelSistemaAnterior: false,
     fechaEmision: '2025-12-20',
     totalCentavos: 11200,
     retencionesCentavos: 0,

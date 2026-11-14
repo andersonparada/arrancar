@@ -22,6 +22,14 @@ export interface SolicitudDeSaldoInicial {
   tieneActivoFijo?: boolean;
 }
 
+/** Lo que dejaron las notas posteriores que citan un saldo inicial sin estar enlazadas a él. */
+export interface NotasPosterioresDto {
+  notasDeCredito: number;
+  /** El saldo a favor que dejan, en quetzales con dos decimales. */
+  saldoLibre: string;
+  notasDeDebito: number;
+}
+
 /** Un saldo inicial tal como lo ve la ventana de Administración. El dinero va como texto con dos decimales. */
 export interface SaldoInicialDto {
   id: string;
@@ -46,6 +54,11 @@ export interface SaldoInicialDto {
   estado: EstadoDeDocumento;
   tieneActivoFijo: boolean;
   creadoEn: string;
+  /**
+   * Las notas del libro que citan esta factura como «del sistema anterior» y quedaron libres porque se registraron antes
+   * de cargarla (no se enlazan solas: se aplican en Notas de crédito). Todo en cero si no hay.
+   */
+  notasPosteriores: NotasPosterioresDto;
   /** Carga abierta, completado (no autorizado) y sin movimientos; el permiso lo mira el cliente. */
   puedeCorregir: boolean;
   puedeEliminar: boolean;

@@ -21,7 +21,14 @@ export type DocumentoNuevo = Pick<
   | 'retencionesCentavos'
   | 'tieneActivoFijo'
   | 'vencimiento'
->;
+> & { facturaDelSistemaAnterior?: boolean };
+
+/** La factura (de la familia de factura) que cita una nota sobre el sistema anterior. */
+export interface FacturaPorBuscar {
+  proveedorId: string;
+  serie: string | null;
+  numero: string;
+}
 
 export interface RepositorioDeDocumentos {
   /** Si el documento de Libro de compras ya está aquí. */
@@ -30,6 +37,11 @@ export interface RepositorioDeDocumentos {
   agregar(nuevo: DocumentoNuevo): Promise<DocumentoPorPagar>;
   /** Busca por el id del documento de Libro de compras; con `bloquear`, deja la fila y las que cuelgan de ella para este caso de uso. */
   buscarPorDocumentoDeCompra(documentoId: string, bloquear: boolean): Promise<DocumentoConAplicaciones | null>;
+  /**
+   * El saldo inicial vigente (no anulado) de esa factura, bloqueado para este caso de uso; `null` si no está cargado.
+   * Los seis tipos de factura cuentan como uno.
+   */
+  buscarSaldoInicialDeLaFactura(factura: FacturaPorBuscar): Promise<DocumentoPorPagar | null>;
   /** Busca por el id de aquí; con `bloquear`, igual que `buscarPorDocumentoDeCompra`. */
   buscarPorId(id: string, bloquear: boolean): Promise<DocumentoConAplicaciones | null>;
   /** Lo pasa de `pendiente` a `registrado`, con quién y cuándo; los cargos quedan con su vencimiento definitivo. */

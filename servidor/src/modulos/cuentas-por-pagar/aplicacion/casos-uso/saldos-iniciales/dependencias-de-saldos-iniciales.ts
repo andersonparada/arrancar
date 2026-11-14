@@ -8,6 +8,7 @@ import {
   CargaInicialCerradaParaSaldos,
   FechaDeInicioSinRegistrar,
 } from '../../../dominio/errores-de-saldos-iniciales.js';
+import { notasPosterioresDe } from '../../../dominio/notas-posteriores.js';
 import { dtoDeSaldoInicial } from '../../dto/dto-de-saldo-inicial.js';
 import type { SaldoInicialDto } from '../../dto/saldo-inicial.dto.js';
 import type {
@@ -81,5 +82,7 @@ export async function dtoDelSaldoInicial(
 ): Promise<SaldoInicialDto> {
   const fila = await consultas.buscar(id);
   if (fila?.documento.origen !== 'saldo_inicial') throw new RecursoNoEncontrado('El saldo inicial');
-  return dtoDeSaldoInicial(fila, cargaCerrada);
+  const { documento } = fila;
+  const notasPosteriores = notasPosterioresDe(documento, await consultas.notasLibresDelSistemaAnterior());
+  return dtoDeSaldoInicial(fila, cargaCerrada, notasPosteriores);
 }

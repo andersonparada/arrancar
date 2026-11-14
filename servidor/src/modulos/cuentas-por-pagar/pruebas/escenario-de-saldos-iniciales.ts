@@ -21,6 +21,7 @@ export class EscenarioDeSaldosIniciales {
   readonly proveedorId = crypto.randomUUID();
   readonly aplicaciones = new AplicacionesEnMemoria();
   readonly documentos = new DocumentosEnMemoria(this.aplicaciones);
+  readonly consultas = new ConsultasEnMemoria(this.documentos);
   readonly carga = new CargaInicialEnMemoria();
   readonly proveedores = new ProveedoresEnMemoria();
   readonly condiciones = new CondicionesEnMemoria();
@@ -37,7 +38,7 @@ export class EscenarioDeSaldosIniciales {
       unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
       documentos: this.documentos,
       saldosIniciales: new SaldosInicialesEnMemoria(this.documentos),
-      consultas: new ConsultasEnMemoria(this.documentos),
+      consultas: this.consultas,
       cargaInicial: this.carga,
       proveedores: this.proveedores,
       condiciones: this.condiciones,

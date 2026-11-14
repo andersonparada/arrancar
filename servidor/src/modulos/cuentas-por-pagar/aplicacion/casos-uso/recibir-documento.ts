@@ -1,8 +1,8 @@
 import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import type { DocumentoParaDestino } from '../../../core/contratos/libro-de-compras.contratos.js';
-import { avisoDeSaldoALaFavor } from '../../dominio/avisos.js';
-import { DocumentoYaRecibido } from '../../dominio/errores.js';
+import { avisoDeSaldoALaFavor, avisosDeNotaSobreFacturaAnterior } from '../../dominio/avisos.js';
+import { DocumentoYaRecibido, FacturaDeLaNotaNoRecibida } from '../../dominio/errores.js';
 import { fechaBaseDelPlazo, proponerVencimiento } from '../../dominio/propuesta-de-vencimiento.js';
 import { repartirNotaDeCredito } from '../../dominio/reparto-de-nota-de-credito.js';
 import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
@@ -10,6 +10,7 @@ import { claseDe } from '../../dominio/tipos-de-documento.js';
 import type {
   CondicionesDeProveedores,
   ConsultasDeCargos,
+  DocumentoNuevo,
   DocumentosDeCompra,
   PlazoPorOmision,
   RepositorioDeAplicaciones,
@@ -24,6 +25,33 @@ interface Dependencias {
   condiciones: CondicionesDeProveedores;
   documentosDeCompra: DocumentosDeCompra;
   plazo: PlazoPorOmision;
+}
+
+/** La factura a la que apunta la nota que se recibe. */
+interface FacturaDeLaNota {
+  /** El id de aquí de la factura (del libro o saldo inicial); `null` si no hay. */
+  documentoAfectadoId: string | null;
+  /** El saldo inicial bloqueado, en las notas sobre una factura del sistema anterior que sí está cargada. */
+  saldoInicial: DocumentoPorPagar | null;
+  sistemaAnterior: boolean;
+}
+
+/** Lo que de la orden se guarda tal cual en el documento nuevo. */
+function datosPropiosDe(
+  documento: DocumentoParaDestino,
+  factura: FacturaDeLaNota,
+): Omit<DocumentoNuevo, 'serie' | 'numero' | 'vencimiento'> {
+  return {
+    documentoId: documento.documentoId,
+    tipo: documento.tipo,
+    proveedorId: documento.proveedorId,
+    documentoAfectadoId: factura.documentoAfectadoId,
+    facturaDelSistemaAnterior: factura.sistemaAnterior,
+    fechaEmision: documento.fechaEmision,
+    totalCentavos: documento.totalCentavos,
+    retencionesCentavos: documento.retencionesCentavos,
+    tieneActivoFijo: documento.tieneActivoFijo,
+  };
 }
 
 /** Lo que responde la orden: los avisos que Libro de compras suma a los suyos. */
@@ -42,41 +70,75 @@ export class RecibirDocumento {
   constructor(private readonly dependencias: Dependencias) {}
 
   /**
-   * Devuelve los avisos que no bloquean: el de una nota de crédito que deja saldo libre (a favor de la empresa).
+   * Devuelve los avisos que no bloquean: el de una nota de crédito que deja saldo libre (a favor de la empresa) y, en las
+   * notas sobre una factura del sistema anterior, los de §4.3 del diseño U8l.
    * @throws DocumentoYaRecibido si el documento ya había llegado.
+   * @throws FacturaDeLaNotaNoRecibida si la factura del libro que cita la nota no está aquí.
    */
   ejecutar(operador: Operador, documento: DocumentoParaDestino): Promise<ResultadoDeRecibir> {
     return this.dependencias.unidadDeTrabajo.ejecutar(operador, async () => {
       if (await this.dependencias.documentos.existe(documento.documentoId)) throw new DocumentoYaRecibido();
-      const { guardado, fechaRecepcion } = await this.guardar(operador, documento);
-      if (guardado.tipo !== 'nota_de_credito') return { avisos: [] };
-      const saldoLibreCentavos = await this.aplicarALaFactura(guardado, fechaRecepcion);
-      return { avisos: saldoLibreCentavos > 0 ? [avisoDeSaldoALaFavor(saldoLibreCentavos)] : [] };
+      const factura = await this.facturaDeLaNota(documento);
+      const { guardado, fechaRecepcion } = await this.guardar(operador, documento, factura);
+      const saldoLibreCentavos =
+        guardado.tipo === 'nota_de_credito' ? await this.aplicarALaFactura(guardado, fechaRecepcion) : 0;
+      return { avisos: this.avisosDe({ guardado, documento, factura, saldoLibreCentavos }) };
     });
+  }
+
+  /**
+   * A qué factura de aquí apunta la nota: la del libro (por su id propio), el saldo inicial que cita (bloqueado) o
+   * ninguna.
+   */
+  private async facturaDeLaNota(documento: DocumentoParaDestino): Promise<FacturaDeLaNota> {
+    const { facturaAnterior } = documento;
+    if (facturaAnterior) {
+      const { proveedorId } = documento;
+      const saldoInicial = await this.dependencias.documentos.buscarSaldoInicialDeLaFactura({
+        proveedorId,
+        serie: facturaAnterior.serie,
+        numero: facturaAnterior.numero,
+      });
+      return { documentoAfectadoId: saldoInicial?.id ?? null, saldoInicial, sistemaAnterior: true };
+    }
+    return {
+      documentoAfectadoId: await this.facturaPropiaDe(documento.documentoAfectadoId),
+      saldoInicial: null,
+      sistemaAnterior: false,
+    };
+  }
+
+  private avisosDe(datos: {
+    guardado: DocumentoPorPagar;
+    documento: DocumentoParaDestino;
+    factura: FacturaDeLaNota;
+    saldoLibreCentavos: number;
+  }): string[] {
+    const { guardado, documento, factura, saldoLibreCentavos } = datos;
+    const { facturaAnterior } = documento;
+    if (facturaAnterior && (guardado.tipo === 'nota_de_credito' || guardado.tipo === 'nota_de_debito')) {
+      return avisosDeNotaSobreFacturaAnterior({
+        tipo: guardado.tipo,
+        saldoInicial: factura.saldoInicial,
+        citada: facturaAnterior,
+        saldoLibreCentavos,
+      });
+    }
+    return saldoLibreCentavos > 0 ? [avisoDeSaldoALaFavor(saldoLibreCentavos)] : [];
   }
 
   private async guardar(
     operador: Operador,
     documento: DocumentoParaDestino,
+    factura: FacturaDeLaNota,
   ): Promise<{ guardado: DocumentoPorPagar; fechaRecepcion: string }> {
     const { fechaRecepcion, serie, numero } = await this.dependencias.documentosDeCompra.datosDeRecepcion(
       documento.documentoId,
     );
     const esCargo = claseDe(documento.tipo) === 'cargo';
     const vencimiento = esCargo ? await this.vencimientoPara(operador, documento, fechaRecepcion) : null;
-    const guardado = await this.dependencias.documentos.agregar({
-      documentoId: documento.documentoId,
-      serie,
-      numero,
-      tipo: documento.tipo,
-      proveedorId: documento.proveedorId,
-      documentoAfectadoId: await this.facturaPropiaDe(documento.documentoAfectadoId),
-      fechaEmision: documento.fechaEmision,
-      totalCentavos: documento.totalCentavos,
-      retencionesCentavos: documento.retencionesCentavos,
-      tieneActivoFijo: documento.tieneActivoFijo,
-      vencimiento,
-    });
+    const nuevo = { serie, numero, vencimiento, ...datosPropiosDe(documento, factura) };
+    const guardado = await this.dependencias.documentos.agregar(nuevo);
     return { guardado, fechaRecepcion };
   }
 
@@ -84,7 +146,7 @@ export class RecibirDocumento {
   private async facturaPropiaDe(facturaDeCompraId: string | null): Promise<string | null> {
     if (facturaDeCompraId === null) return null;
     const factura = await this.dependencias.documentos.buscarPorDocumentoDeCompra(facturaDeCompraId, false);
-    if (!factura) throw new Error(`La factura ${facturaDeCompraId} del libro no llegó a Cuentas por pagar.`);
+    if (!factura) throw new FacturaDeLaNotaNoRecibida();
     return factura.documento.id;
   }
 

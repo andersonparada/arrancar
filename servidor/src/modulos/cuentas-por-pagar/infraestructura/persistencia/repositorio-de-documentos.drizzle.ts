@@ -1,4 +1,4 @@
-import { asc, eq, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, inArray, ne, sql, type SQL } from 'drizzle-orm';
 import type { PgUpdateSetSource } from 'drizzle-orm/pg-core';
 import {
   contextoEnCurso,
@@ -9,6 +9,7 @@ import type {
   AutorizacionDeDocumento,
   DocumentoCompletado,
   DocumentoNuevo,
+  FacturaPorBuscar,
   RepositorioDeAplicaciones,
   RepositorioDeDocumentos,
 } from '../../aplicacion/puertos/puertos-de-documentos.js';
@@ -23,6 +24,7 @@ import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
 import { mapeadorDeDocumento } from './documento.mapeador.js';
 import { contrasenaDocumentos } from './contrasena-documentos.tablas.js';
 import { contrasenas } from './contrasenas.tablas.js';
+import { TIPOS_DE_FACTURA } from '../../dominio/tipos-de-documento.js';
 import { documentos } from './documentos.tablas.js';
 
 /** La tabla tiene seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
@@ -45,6 +47,28 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
 
   buscarPorDocumentoDeCompra(documentoId: string, bloquear: boolean): Promise<DocumentoConAplicaciones | null> {
     return this.buscarDonde(eq(documentos.documentoId, documentoId), bloquear);
+  }
+
+  async buscarSaldoInicialDeLaFactura({
+    proveedorId,
+    serie,
+    numero,
+  }: FacturaPorBuscar): Promise<DocumentoPorPagar | null> {
+    const [fila] = await transaccionEnCurso()
+      .select()
+      .from(documentos)
+      .where(
+        and(
+          eq(documentos.origen, 'saldo_inicial'),
+          eq(documentos.proveedorId, proveedorId),
+          inArray(documentos.tipo, [...TIPOS_DE_FACTURA]),
+          ne(documentos.estado, 'anulado'),
+          sql`coalesce(${documentos.serie}, '') = ${serie ?? ''}`,
+          eq(documentos.numero, numero),
+        ),
+      )
+      .for('update');
+    return fila ? mapeadorDeDocumento.aDominio(fila) : null;
   }
 
   buscarPorId(id: string, bloquear: boolean): Promise<DocumentoConAplicaciones | null> {
@@ -101,7 +125,16 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
       ajustes: await this.ajustesDe(documento.id),
       ...(await this.contrasenasDe(documento.id)),
+      notasQueLoCorrigen: await this.contarNotasDe(documento.id),
     };
+  }
+
+  private async contarNotasDe(documentoId: string): Promise<number> {
+    const [fila] = await transaccionEnCurso()
+      .select({ cuantas: sql<number>`count(*)`.mapWith(Number) })
+      .from(documentos)
+      .where(eq(documentos.documentoAfectadoId, documentoId));
+    return fila?.cuantas ?? 0;
   }
 
   /** Las contraseñas en que estuvo el documento y la vigente entre ellas (a lo más una). */
