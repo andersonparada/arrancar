@@ -1666,6 +1666,14 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   compensaciones («Compensación con nota N (saldo a favor)»), retenciones por emitir (saldos iniciales, sin restarlas),
   leyenda de constancias solo si hay retenciones, `leyenda` de la empresa, `alDia`, `reimpresion` e `impresoPorNombre`. Variable
   `cuentas-por-pagar.contrasenas.leyenda` (instalación y empresa; vacía no se imprime). Sigue CP3-6.
+- 2026-11-14 — **CP3-6 (cliente, lista y nueva contraseña)** (`diseno-cp3-contrasenas.md` §8): páginas `ListaDeContrasenas` (filtros de
+  proveedor, estado, fechas y pago prometido; tarjetas con «Anulada» o «Pago vencido») y `NuevaContrasena` (proveedor, casillas
+  con «Marcar todas», reparto de las notas y totales en vivo, fecha prometida propuesta con el mayor vencimiento hasta que se
+  escribe, aviso de bancarización, confirmación con resumen); rutas `/cuentas-por-pagar/contrasenas` y `/nueva`, menú
+  «Contraseñas» en Operación. Lógica pura en `composables/contrasenas/` (`edicion-de-contrasena`, `reparto-de-contrasena`,
+  `filtros-de-contrasenas`) con pruebas. El aviso de bancarización no dice el monto del umbral porque `disponibles` no lo trae y no
+  es variable pública (pendiente si se quiere con la cifra). Al crear vuelve a la lista con aviso; CP3-7 la llevará a la ficha y
+  dará destino a las tarjetas. Sigue CP3-7.
 
 - **2026-11-14 — CP2-7 (QA de punta a punta de las notas de crédito).** Informe `docs/modulos/informe-qa-cp2-2026-11-13.md`: flujos de aplicar, quitar, ajustar, anular, bajas desde Libro de compras, pantalla «Notas de crédito» y permisos probados en el navegador (escritorio y celular, claro y oscuro) con saldos cuadrados a mano. Corregido: **(E1, grave)** escribir un monto en las ventanas de aplicar y de ajustar rompía la ventana (el campo numérico entrega números y la lógica llamaba `.trim()`); la ficha se salía de la pantalla del celular con una referencia larga; faltaba «complétela antes de ajustar» en una nota pendiente. Quedan observaciones menores (umbral de bancarización sin cifra, mensaje con tope de diferencia menor en 0, texto de la fecha mínima, «Ajustado» fuera de los montos de la ficha).
 - **2026-11-14 — CP2-8 (cliente, observaciones menores de la QA de notas de crédito).** Corregidas O1 a O4 y la referencia larga del informe `informe-qa-cp2-2026-11-13.md`: el aviso de bancarización dice la cifra (`umbralDeBancarizacion` de `cargos-para-aplicar`), «Diferencia menor» no se ofrece con tope 0 y se explica, el mensaje de fecha mínima dice si viene de la recepción del documento, de la nota o del inicio de la empresa, «Montos» de la ficha de una nota suma con «Ajustado», y `CampoTexto` (`contar`) muestra el contador de caracteres y el error en vez de cortar la referencia. Sin cambios de servidor.

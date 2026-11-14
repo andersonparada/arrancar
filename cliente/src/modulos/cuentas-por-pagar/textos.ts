@@ -31,6 +31,12 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     descripcion: 'Lo que la empresa debía a sus proveedores al cierre del día anterior a la fecha de inicio.',
     nuevo: 'Nuevo saldo inicial',
   },
+  contrasenas: {
+    titulo: 'Contraseñas',
+    descripcion:
+      'Las contraseñas de pago que se entregan a los proveedores: qué facturas cubren y cuándo se prometió pagarlas.',
+    nueva: 'Nueva contraseña',
+  },
   // generador: ventanas
 } as const;
 
@@ -133,3 +139,17 @@ export const AYUDA_DE_LA_FECHA_DE_APLICACION = 'La fecha del acuerdo con el prov
 /** `umbral` ya formateado (por ejemplo «Q 30,000.00»). */
 export const avisoDeBancarizacion = (umbral: string): string =>
   `Compensa un documento de ${umbral} o más, monto desde el cual la ley pide dejar constancia por medios bancarios (bancarización, Decreto 20-2006). Guarde por escrito el acuerdo de compensación con el proveedor y anote su referencia.`;
+
+/** Textos de las contraseñas de pago (CP3). */
+export const AYUDA_DE_LA_FECHA_DE_LA_CONTRASENA =
+  'La fecha en que se entrega al proveedor. Por omisión, hoy; después no se puede cambiar.';
+
+export const AYUDA_DE_LA_FECHA_DE_PAGO_PROMETIDA =
+  'Se propone con el vencimiento más lejano de las facturas marcadas. No cambia el vencimiento de cada factura.';
+
+export const AYUDA_DE_OBSERVACIONES_DE_LA_CONTRASENA =
+  'Opcional. Si registra una contraseña pendiente del sistema anterior, anote «Contraseña N.º X del sistema anterior, del dd/mm/aaaa» y use la fecha de inicio como fecha de la contraseña.';
+
+/** `notas` ya unidas (por ejemplo «A-12, 45»). */
+export const avisoDeBancarizacionDeLaContrasena = (notas: string): string =>
+  `La nota ${notas} se compensa con una factura de monto alto (bancarización, Decreto 20-2006): conserve la copia de la contraseña firmada por el proveedor; es el respaldo del acuerdo.`;
