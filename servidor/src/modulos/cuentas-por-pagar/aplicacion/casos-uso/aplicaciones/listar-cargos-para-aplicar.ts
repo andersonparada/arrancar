@@ -41,6 +41,7 @@ export class ListarCargosParaAplicar {
       const cargos = (await consultas.cargosConSaldoDe(nota.documento.proveedorId)).map(comoCargoOrdenable);
       return {
         saldoLibre: deCentavos(Math.max(saldoLibre, 0)),
+        umbralDeBancarizacion: deCentavos(umbralCentavos),
         fechaMinima: await this.fechaMinima(operador, nota),
         cargos: proponerReparto(saldoLibre, cargos).map(({ cargo, propuestoCentavos }) =>
           dtoDeCargo(cargo.fila, propuestoCentavos, umbralCentavos),

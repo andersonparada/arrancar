@@ -1627,3 +1627,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   CP5 tendrá un reporte de **constancias pendientes de todos los meses**, con su plazo de entero. P-CP4-5: el aviso
   «al desmarcar» es la nota marcada que se desmarca desde la conciliación (CP4-B2b). Queda P-CP4-3 (tope de diferencia
   de pagos, Q25 por omisión) para el contador.
+- 2026-11-14 — **CP3-2 (servidor, crear y consultar contraseñas)** (`diseno-cp3-contrasenas.md`): `CrearContrasena` (carga inicial,
+  proveedor, bloqueo de documentos en orden de id, validaciones de §5.1 con la fecha no anterior a la fecha de inicio,
+  reparto de las notas entre los cargos con forma `contrasena` y fecha «la mayor» de contraseña, recepción de la nota y del
+  cargo, correlativo `cuentas-por-pagar.contrasenas` al final), `ListarContrasenas`, `ObtenerContrasena` y
+  `DocumentosDisponibles`; permisos `contrasenas.ver` y `.crear`; rutas `GET/POST /cuentas-por-pagar/contrasenas`,
+  `GET …/disponibles` y `GET …/:id`. Dominio en `contrasena.ts`, `reglas-de-contrasena.ts`, `reparto-de-contrasena.ts` y
+  `errores-de-contrasenas.ts` (suma `DocumentosRepetidosEnContrasena` y `ObservacionesDeContrasenaInvalidas`). El reparto se
+  guarda desde `RepositorioDeContrasenas.guardarReparto` (no desde `RepositorioDeAplicaciones`). `rebajado` de un saldo
+  inicial incluye lo anterior al inicio. Aparte: `cargos-para-aplicar` (CP2-3) trae `umbralDeBancarizacion`.
+  `noEstarEnContrasena` y `NotaEnContrasena` quedan para CP3-4. Siguen CP3-3 a CP3-5.

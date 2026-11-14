@@ -90,11 +90,13 @@ describe('los cargos para aplicar', () => {
       );
 
     expect(await marcas()).toEqual({ [idGrande]: true, [idJusto]: false });
+    expect((await cargosPara(contexto.notaPropia)).umbralDeBancarizacion).toBe('30000.00');
 
     vi.spyOn(archivoDeInstalacion, 'valor').mockImplementation((clave) => (clave === UMBRAL ? 29999.99 : undefined));
     expect(await marcas()).toEqual({ [idGrande]: true, [idJusto]: true });
     vi.spyOn(archivoDeInstalacion, 'valor').mockImplementation((clave) => (clave === UMBRAL ? 40000 : undefined));
     expect(await marcas()).toEqual({ [idGrande]: false, [idJusto]: false });
+    expect((await cargosPara(contexto.notaPropia)).umbralDeBancarizacion).toBe('40000.00');
   });
 });
 
