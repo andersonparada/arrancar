@@ -82,6 +82,8 @@ export interface ReporteDeFlujoDeEfectivoDto {
   actividades: ActividadDelFlujoDto[];
   lineasAparte: LineaAparteDto[];
   control: ControlDeCuadreDto;
+  /** Aviso del reporte (pantalla, impresión y Excel); nulo si no hay nada que avisar. */
+  leyenda: string | null;
 }
 
 export interface ConceptoDelReporteDto {

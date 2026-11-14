@@ -70,7 +70,7 @@ describe('conceptos', () => {
 
     expect(primera).toHaveLength(CONCEPTOS_INICIALES.length);
     expect(segunda).toEqual(primera);
-    expect(primera.filter((c) => c.claveDeSistema)).toHaveLength(7);
+    expect(primera.filter((c) => c.claveDeSistema)).toHaveLength(10);
     expect(primera.every((c) => !c.admiteFactura)).toBe(true);
   });
 

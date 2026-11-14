@@ -232,6 +232,13 @@
       "when": 1794659747200,
       "tag": "0032_cp4_pagos_de_cuentas_por_pagar",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794690461288,
+      "tag": "0033_cp4_efectivo_para_pagos",
+      "breakpoints": true
     }
   ]
 }

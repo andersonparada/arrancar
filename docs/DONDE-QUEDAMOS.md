@@ -33,7 +33,7 @@ cliente 1034, generador 46.
 | CP2 notas de crédito | `diseno-cp2-…` | CP2-1 a CP2-8 (QA incluida) | — |
 | CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-8 (QA incluida) y el arreglo E3 | — |
 | U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-3 | U8l-4 (en curso), U8l-5 a U8l-8 |
-| CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1 | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-EB y CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
+| CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1, CP4-EB | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
 | CP5 reportes | sin diseñar | — | diseño (ya hay pedidos anotados: constancias pendientes de todos los meses, ajustes del mes, pago prometido vencido, saldo neto por proveedor, crédito fiscal en riesgo por bancarización) |
 
 **Agentes en curso al 2026-11-14** (si se cortan, retomarlos sin `git reset`, o relanzar el paso desde `main`):

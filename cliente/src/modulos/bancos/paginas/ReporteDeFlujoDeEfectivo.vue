@@ -57,6 +57,7 @@ const exportar = (): Promise<void> => intercambio.exportar(filtroDeLaConsulta(fi
       <SeccionDeActividad v-for="actividad in reporte.actividades" :key="actividad.actividad" :actividad="actividad" />
       <LineasAparteDelFlujo v-if="reporte.lineasAparte.length" :lineas="reporte.lineasAparte" />
       <ControlDeCuadre :control="reporte.control" />
+      <p v-if="reporte.leyenda" class="text-sm text-tierra-600">{{ reporte.leyenda }}</p>
     </template>
   </div>
 </template>

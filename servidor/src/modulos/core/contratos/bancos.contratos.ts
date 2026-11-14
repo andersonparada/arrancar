@@ -14,7 +14,13 @@ export interface OrigenDeMovimientoContrato {
 
 /** Conceptos de sistema que un módulo puede fijar por clave; Bancos los busca en el catálogo de la empresa. */
 export type ClaveDeConceptoDeSistema =
-  'pago_a_proveedor' | 'pago_a_proveedor_de_activo' | 'reintegro_de_proveedor' | 'reintegro_de_proveedor_de_activo';
+  | 'pago_a_proveedor'
+  | 'pago_a_proveedor_de_activo'
+  | 'reintegro_de_proveedor'
+  | 'reintegro_de_proveedor_de_activo'
+  | 'efectivo_para_pagos'
+  | 'devolucion_de_efectivo_para_pagos'
+  | 'faltante_de_efectivo';
 
 /** Una parte del movimiento clasificada con un concepto de sistema; las partes suman el monto. */
 export interface LineaDeConcepto {
