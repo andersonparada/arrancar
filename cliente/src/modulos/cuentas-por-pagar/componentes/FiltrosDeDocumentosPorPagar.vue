@@ -39,6 +39,12 @@ const tipos = opcionesDeTipo();
         descripcion="Cargos con saldo cuyo plazo ya pasó."
         class="sm:self-end"
       />
+      <CampoInterruptor
+        v-model="filtros.sinContrasena"
+        etiqueta="Sin contraseña"
+        descripcion="Lo que aún no está en una contraseña de pago vigente."
+        class="sm:self-end"
+      />
     </div>
     <div v-if="cantidadDeFiltros(filtros) > 0" class="mt-3 flex justify-end">
       <BotonBase variante="fantasma" pequeno :icono="FilterX" @click="$emit('quitar')">Quitar filtros</BotonBase>

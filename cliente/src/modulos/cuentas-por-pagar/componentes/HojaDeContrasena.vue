@@ -44,23 +44,23 @@ const linea = 'mt-6 border-t border-black pt-1 text-xs';
     <dl class="grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
       <div>
         <dt class="inline font-semibold">Proveedor:</dt>
-        <dd class="inline">{{ impresion.proveedor.nombre }}</dd>
+        <dd class="ml-1 inline">{{ impresion.proveedor.nombre }}</dd>
       </div>
       <div v-if="impresion.proveedor.nit">
         <dt class="inline font-semibold">NIT:</dt>
-        <dd class="inline">{{ formatearNit(impresion.proveedor.nit) }}</dd>
+        <dd class="ml-1 inline">{{ formatearNit(impresion.proveedor.nit) }}</dd>
       </div>
       <div>
         <dt class="inline font-semibold">Fecha de recepción:</dt>
-        <dd class="inline">{{ formatearFecha(impresion.contrasena.fecha) }}</dd>
+        <dd class="ml-1 inline">{{ formatearFecha(impresion.contrasena.fecha) }}</dd>
       </div>
       <div>
         <dt class="inline font-semibold">Pago prometido para el:</dt>
-        <dd class="inline font-bold">{{ formatearFecha(impresion.contrasena.fechaDePago) }}</dd>
+        <dd class="ml-1 inline font-bold">{{ formatearFecha(impresion.contrasena.fechaDePago) }}</dd>
       </div>
       <div v-if="impresion.contrasena.observaciones" class="sm:col-span-2">
         <dt class="inline font-semibold">Observaciones:</dt>
-        <dd class="inline">{{ impresion.contrasena.observaciones }}</dd>
+        <dd class="ml-1 inline">{{ impresion.contrasena.observaciones }}</dd>
       </div>
     </dl>
 

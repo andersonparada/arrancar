@@ -87,7 +87,23 @@ describe('totales y marcas', () => {
     const datos = disponibles([cargo('a', { retenciones: '5.00' }), cargo('b')], [nota('n', '40.00')]);
     const marcados = documentosMarcados(marcando(['a', 'b'], ['n']), datos);
     const totales = totalesDeLaContrasena(marcados, repartirEnVivo(marcados.cargos, marcados.notas));
-    expect(totales).toEqual({ total: '200.00', retenciones: '5.00', notasAplicadas: '40.00', saldo: '160.00' });
+    expect(totales).toEqual({
+      total: '200.00',
+      retenciones: '5.00',
+      rebajadoAntes: '0.00',
+      notasAplicadas: '40.00',
+      saldo: '160.00',
+    });
+  });
+
+  it('lo ya rebajado de un cargo (saldo inicial) se muestra aparte para que los totales cuadren', () => {
+    const datos = disponibles(
+      [cargo('a', { total: '1120.00', retenciones: '120.00', rebajado: '300.00', saldo: '700.00' })],
+      [nota('n', '24.00')],
+    );
+    const marcados = documentosMarcados(marcando(['a'], ['n']), datos);
+    const totales = totalesDeLaContrasena(marcados, repartirEnVivo(marcados.cargos, marcados.notas));
+    expect(totales).toMatchObject({ rebajadoAntes: '300.00', notasAplicadas: '24.00', saldo: '676.00' });
   });
 
   it('alternar agrega y quita sin repetir', () => {

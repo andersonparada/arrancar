@@ -4,7 +4,13 @@ import { ChevronRight } from 'lucide-vue-next';
 import { RouterLink } from 'vue-router';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
-import { detallesDeLista, textoDeEstado, tituloDeDocumento, tonoDeEstado } from '../composables/detalles-de-documento';
+import {
+  detallesDeLista,
+  etiquetaDeContrasena,
+  textoDeEstado,
+  tituloDeDocumento,
+  tonoDeEstado,
+} from '../composables/detalles-de-documento';
 import type { DocumentoPorPagar } from '../servicios/tipos';
 
 /**
@@ -54,6 +60,9 @@ const destino = computed(() => ({
         <InsigniaBase :tono="tonoDeEstado(documento.estado)">{{ textoDeEstado(documento.estado) }}</InsigniaBase>
         <InsigniaBase v-if="documento.vencido" tono="rojo">Vencido</InsigniaBase>
         <InsigniaBase v-if="documento.origen === 'saldo_inicial'" tono="tierra">Saldo inicial</InsigniaBase>
+        <InsigniaBase v-if="documento.contrasena" tono="trigo">
+          {{ etiquetaDeContrasena(documento.contrasena) }}
+        </InsigniaBase>
         <InsigniaBase v-if="documento.clase === 'abono'" tono="campo">A favor</InsigniaBase>
       </span>
       <dl class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">

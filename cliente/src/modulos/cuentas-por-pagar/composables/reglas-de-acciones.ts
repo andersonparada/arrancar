@@ -82,6 +82,12 @@ export const mensajeDeDesautorizacion = (ficha: FichaDelDocumento): string =>
 export const avisoDeLoPropio =
   'Usted ingresó o completó este documento, así que debe autorizarlo otra persona (o alguien con el permiso de autorizar lo propio).';
 
+/** Por qué un documento en una contraseña vigente no se da de baja (una nota, tampoco se aplica ni se ajusta). */
+export const avisoDeDocumentoEnContrasena = (numero: string, esNota: boolean): string => {
+  const acciones = esNota ? 'aplicar ni ajustar' : 'anular, eliminar ni, si es un saldo inicial, corregir';
+  return `Está en la contraseña ${numero}: mientras siga en ella no se puede ${acciones}. Quítelo de la contraseña o anule la contraseña primero.`;
+};
+
 /**
  * El servidor dice si se puede autorizar (`puedeAutorizar`); lo propio (`esPropio`) solo lo autoriza quien tiene el
  * permiso de autorizar lo propio. Aquí se decide si se ofrece la casilla; el servidor vuelve a revisar.

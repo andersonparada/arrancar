@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Info } from 'lucide-vue-next';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { etiquetaDeDocumento, type TotalesDeLaContrasena } from '../composables/contrasenas/edicion-de-contrasena';
+import { centavosOCero } from '../composables/contrasenas/reparto-de-contrasena';
 import type { NotaDisponible } from '../servicios/tipos-de-contrasenas';
 import { avisoDeBancarizacionDeLaContrasena } from '../textos';
 
@@ -31,6 +32,10 @@ const textoDelAviso = computed(() =>
       <div>
         <dt class="text-xs text-tierra-500">Total de las facturas</dt>
         <dd>{{ formatearMonto(totales.total) }}</dd>
+      </div>
+      <div v-if="centavosOCero(totales.rebajadoAntes) > 0">
+        <dt class="text-xs text-tierra-500">Rebajado antes (pagos y notas)</dt>
+        <dd>− {{ formatearMonto(totales.rebajadoAntes) }}</dd>
       </div>
       <div>
         <dt class="text-xs text-tierra-500">Notas aplicadas</dt>

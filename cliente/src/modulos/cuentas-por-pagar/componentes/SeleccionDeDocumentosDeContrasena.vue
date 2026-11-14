@@ -30,14 +30,17 @@ const todasLasNotas = () => props.notasMarcadas.length === props.disponibles.not
   </p>
   <p v-else-if="cargando" class="text-sm text-tierra-500" role="status">Buscando documentos…</p>
   <EstadoVacio
-    v-else-if="disponibles.cargos.length === 0"
+    v-else-if="disponibles.cargos.length === 0 && disponibles.notas.length === 0"
     :icono="FileText"
-    titulo="Este proveedor no tiene facturas disponibles"
+    titulo="Este proveedor no tiene documentos disponibles"
     descripcion="Solo entran facturas con saldo por pagar que no estén ya en otra contraseña vigente. Si falta alguna, revise que no esté anulada."
   />
   <div v-else class="space-y-5">
     <p v-if="error" class="text-sm text-red-700 dark:text-red-400" role="alert">{{ error }}</p>
-    <section aria-labelledby="titulo-de-facturas">
+    <p v-if="disponibles.cargos.length === 0" class="text-sm text-tierra-600 dark:text-tierra-300">
+      No hay facturas disponibles; solo notas a favor.
+    </p>
+    <section v-if="disponibles.cargos.length > 0" aria-labelledby="titulo-de-facturas">
       <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h3 id="titulo-de-facturas" class="font-medium">Facturas por pagar ({{ disponibles.cargos.length }})</h3>
         <BotonBase variante="fantasma" pequeno @click="$emit('marcarCargos', !todosLosCargos())">
