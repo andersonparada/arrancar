@@ -1761,3 +1761,10 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   contraseñas del mismo proveedor** (quitar `pagos.contrasena_id`, migración `0009` antes de CP4-3). No cambia los saldos
   ni las reglas de CP4-2; le pide buscar los pagos de una contraseña por `aplicaciones_de_pagos.contrasena_id`. Preguntas
   CP4-E-a a h para el usuario; el contador valida bancarización, partidas, flujo y recibo antes de programar.
+- **2026-11-14 — Pagos en efectivo aprobados por el usuario** (adenda `docs/modulos/diseno-cp4-pagos-en-efectivo.md`,
+  dictamen `docs/modulos/dictamen-cp4-efectivo-2026-11-14.md`, «correcto con ajustes»). Acepta la adenda con las
+  correcciones del contador, y precisa: **un solo retiro (un cheque o una nota de débito) paga a uno o varios
+  proveedores**; no se hacen N cheques para pagar en efectivo. Cada proveedor firma su propio recibo (uno por proveedor,
+  dictamen punto 5) y un pago puede cubrir varias contraseñas del mismo proveedor (M2). Bancarización: **bloqueo con
+  permiso y motivo**, solo cuando la empresa pierde algo según su régimen (E-2). Retiro sin liquidar: **aviso a fin de
+  mes** (sin bloqueo). Custodio: **texto con usuario opcional** (aviso si él mismo liquida).
