@@ -40,9 +40,12 @@ cliente 1034, generador 46.
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP4-2 saldos y reglas de pagos | `agent-ad4d1776213011fb8` | programado; repitiendo su corrida completa tras un corte |
-| U8l-4 Libro, registrar notas con factura anterior | `agent-a43da5e106a1a0b38` | programado (sin commit); repitiendo su corrida completa |
-| CP4-EB Bancos, conceptos de efectivo (`0033`) | `agent-af6dcb78f68b81b69` | programando, retomado tras un corte |
+| CP4-V1 un pago para varias contraseñas (`0009`) | `agent-a9ce6fa5d0cddbff4` | programando |
+| U8l-5 Libro: bajas, sugerencias, Excel, fecha de inicio | `agent-ae2116eed31439b38` | programando |
+| Lentitud de la lista de Cuentas por pagar | `agent-aa50631c22329cc5f` | investigando: la prueba de rendimiento (20,000 documentos) pasó de ~290 ms en la rama de CP4-2 a más de 5 s en `main` tras unir U8l-4 y CP4-EB; **`main` no está en verde por esa prueba** |
+
+En `main` ya están CP4-2, U8l-4 y CP4-EB (`40e08f5`); la última corrida: 4248 de 4249 en el servidor (falla solo la de
+rendimiento), cliente y generador en verde.
 
 Siguiente en pagos: CP4-V1 (varias contraseñas por pago, migración `0009`) cuando CP4-2 esté en `main`; luego CP4-E1
 (`0010`) y CP4-3 en adelante en el orden de la adenda. Pendiente menor: hacer que el error de **todos** los formularios
