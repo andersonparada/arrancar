@@ -1,6 +1,6 @@
 # Dónde quedamos
 
-Última sesión: **2026-11-08**. Este archivo se reescribe al final de cada paso.
+Última sesión: **2026-11-14**. Este archivo se reescribe al final de cada paso.
 
 Se está implementando `docs/modulos/plan-hallazgos-contables.md` en el orden de su
 sección «Dependencias y orden de implementación» (código con agentes Sonnet;
@@ -303,14 +303,32 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    CP3 en 8 (migración `0006`, desde CP2-2), después de U8. Pendientes sin frenar: P-CP2-1 (¿adjuntos para el acuerdo y el
    ajuste?), P-CP2-2 (tope de «diferencia menor» por omisión Q25) y P-CP3-1 (fecha de una contraseña con saldos
    iniciales).
-8. **Bancos H2** (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`): paso 1 (core) y **H2a (pasos 2 y 3, saldo
-   transcrito, servidor y cliente) en `main`** desde el 2026-11-13, con P1 a P5 respondidas (pruebas: servidor 3700,
-   cliente 921; **sin ver en el navegador**; migración de bancos `0030` sin aplicar a la base de desarrollo hasta
-   correr `bd:migrar`). Seguridad S1, S2 y S10 decididas: plan en `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md`
-   (fila de revisión de PDF y limpieza diaria de huérfanos), **en `main`** con los diez arreglos de la revisión de
-   seguridad (migración de core `0023`; variable `DEPURAR_HUERFANOS`; pruebas del servidor 3797).
-   **Sigue:** paso 4 (H2b servidor, archivo adjunto, con revisión de seguridad), paso 5 (cliente),
-   documentación y QA en el navegador.
+8. **Bancos H2** (`docs/modulos/diseno-h2-evidencia-de-conciliacion.md`, con las respuestas del usuario y las notas
+   de implementación de cada paso al final). **En `main` al 2026-11-14:**
+   - Paso 1 (core) y **H2a** (pasos 2 y 3: saldo transcrito, servidor y cliente; migración de bancos `0030`).
+   - **Fila de revisión de PDF y limpieza diaria de huérfanos** (core; plan y notas en
+     `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md`; migración de core `0023`; variable `DEPURAR_HUERFANOS`).
+   - **H2b servidor** (paso 4: archivo del estado de cuenta; migración de bancos `0031`; variable
+     `bancos.conciliaciones.exigir_estado_de_cuenta`), con los arreglos de la revisión de seguridad (subidas de un
+     solo archivo sin campos de texto en todo el core, bloqueo al eliminar, autorizar y devolver, límite de subidas
+     común).
+   - Pruebas tras la última unión: servidor 3900, cliente 972, `revisar` limpio. **Nada de H2 se ha visto en el
+     navegador.** Las migraciones core `0023` y bancos `0030` y `0031` no están aplicadas a la base de desarrollo:
+     `npm run bd:migrar -w servidor`.
+   **Sigue (en este orden):**
+   1. **Paso 5, cliente de H2b** (`programador-frontend`): `EstadoDeCuentaAdjunto`, `VisorDeEstadoDeCuenta`,
+      `usar-estado-de-cuenta`, dos columnas, impresión, ícono en la lista y el motivo «falta el archivo» en
+      `faltaParaTerminar` (según `sesion.config('bancos.conciliaciones.exigir_estado_de_cuenta', true)`). El contrato
+      del servidor está en las «Notas de implementación del paso 4» del diseño. Mostrar el 429
+      `revision_de_pdf_saturada` y `demasiadas_subidas` con su mensaje.
+   2. **Paso 6, documentación:** `bancos.md` (sección H2), `plan-hallazgos-contables.md` y `plan-archivos-y-h2.md`.
+   3. **Paso 7, QA en el navegador** (`pruebas-qa`) de todo H2: PDF real de banco, foto del celular, PDF con
+      JavaScript y con contraseña, visor en `iframe` en Chrome, Firefox y Safari, imprimir, celular y modo oscuro.
+   **Decisiones pendientes del usuario** (ninguna frena el paso 5): tope de tamaño de solicitud en Caddy (~20 MB
+   para toda la instalación); si algún navegador no muestra el PDF dentro de la página, CSP propia de esa respuesta o
+   solo «Abrir en otra pestaña»; el nombre original del archivo se conserva 60 meses en la auditoría (seguridad
+   recomienda conservarlo). **Coordinación:** la otra sesión programará CP4-B1 a B3 en Bancos (migración `0032`)
+   después de H2b; el aviso al «desmarcar» en la conciliación toca los mismos archivos.
 9. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual (ya no Q150,000: 125 salarios mínimos no agrícolas, Q500,285 en 2026).
 
 Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) con su base de pruebas

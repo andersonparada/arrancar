@@ -1640,3 +1640,22 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
 
 - **2026-11-14 — CP2-7 (QA de punta a punta de las notas de crédito).** Informe `docs/modulos/informe-qa-cp2-2026-11-13.md`: flujos de aplicar, quitar, ajustar, anular, bajas desde Libro de compras, pantalla «Notas de crédito» y permisos probados en el navegador (escritorio y celular, claro y oscuro) con saldos cuadrados a mano. Corregido: **(E1, grave)** escribir un monto en las ventanas de aplicar y de ajustar rompía la ventana (el campo numérico entrega números y la lógica llamaba `.trim()`); la ficha se salía de la pantalla del celular con una referencia larga; faltaba «complétela antes de ajustar» en una nota pendiente. Quedan observaciones menores (umbral de bancarización sin cifra, mensaje con tope de diferencia menor en 0, texto de la fecha mínima, «Ajustado» fuera de los montos de la ficha).
 - **2026-11-14 — CP2-8 (cliente, observaciones menores de la QA de notas de crédito).** Corregidas O1 a O4 y la referencia larga del informe `informe-qa-cp2-2026-11-13.md`: el aviso de bancarización dice la cifra (`umbralDeBancarizacion` de `cargos-para-aplicar`), «Diferencia menor» no se ofrece con tope 0 y se explica, el mensaje de fecha mínima dice si viene de la recepción del documento, de la nota o del inicio de la empresa, «Montos» de la ficha de una nota suma con «Ajustado», y `CampoTexto` (`contar`) muestra el contador de caracteres y el error en vez de cortar la referencia. Sin cambios de servidor.
+- **2026-11-14 — Bancos H2b servidor en `main` (paso 4 del diseño de H2), con la revisión de seguridad aplicada.**
+  Migración de bancos `0031` (`estado_de_cuenta_archivo_id`, `unique`, llave a `core.archivos`). Rutas
+  `POST`/`DELETE`/`GET /api/bancos/conciliaciones/:id/estado-de-cuenta` (subir y quitar con `conciliar` y solo en
+  proceso; ver con `ver`; el `GET` responde `application/pdf` o `image/webp`, `inline`, nombre armado por el servidor,
+  `no-store`). Subida en tres tiempos (`revisar` fuera de la transacción, fila bloqueada al guardar). Variable
+  `bancos.conciliaciones.exigir_estado_de_cuenta` (empresa e instalación, `true` por omisión, pública): solo se revisa
+  al terminar (`falta_el_estado_de_cuenta` 400); autorizar no la revisa (P3). DTO con `estadoDeCuenta` (sin id ni ruta)
+  y `tieneEstadoDeCuenta` en la lista (P5). Reemplazar, quitar y eliminar auditan con el `sha256`.
+  **Arreglos de seguridad** (dictamen «se puede unir con arreglos»): (1) **core**: toda subida acepta un solo archivo y
+  ningún campo de texto (`core/compartido/http/lectura-de-multipart.ts`, `leerUnSoloArchivo`; documentos, fotos y Excel;
+  400 `subida_con_mas_de_un_archivo`): antes cabían ~1,000 campos de 1 MB en memoria por solicitud; (2) eliminar,
+  autorizar y devolver bloquean la conciliación (`for update`); (3) las 30 subidas por minuto son comunes a fotos y
+  estados de cuenta; (4) errores de multipart en español (`subida_no_es_de_archivo`, `subida_interrumpida`).
+  Pruebas tras la unión con `main`: servidor 3900, cliente 972, `revisar` limpio. **Pendiente del usuario:** tope de
+  tamaño de solicitud en Caddy (~20 MB, toda la instalación); qué hacer si un navegador no muestra el PDF en el
+  `iframe` (CSP propia de esa respuesta o solo «Abrir en otra pestaña»; se sabrá en el QA); el `nombreOriginal` del
+  archivo se conserva 60 meses en la auditoría (seguridad recomienda conservarlo). **Sigue:** paso 5 (cliente de H2b),
+  paso 6 (documentación en `bancos.md`) y paso 7 (QA en el navegador de todo H2).
+
