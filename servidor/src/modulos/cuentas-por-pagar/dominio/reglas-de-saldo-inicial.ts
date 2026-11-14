@@ -1,6 +1,11 @@
 import { etiquetaDe } from './documento-por-pagar.js';
 import { SaldoInicialAutorizado, SaldoInicialConMovimientos } from './errores-de-saldos-iniciales.js';
-import { noEstarEnContrasena, type ReglaDeBaja } from './reglas-de-baja.js';
+import {
+  noEstarEnContrasena,
+  noTenerPagosVigentes,
+  noTenerReintegrosVigentes,
+  type ReglaDeBaja,
+} from './reglas-de-baja.js';
 
 /** La autorización aprobó un monto y no se cambia por debajo: primero se desautoriza. */
 export const noEstarAutorizadoElSaldo: ReglaDeBaja = ({ documento }) => {
@@ -19,9 +24,11 @@ export const noTenerMovimientos: ReglaDeBaja = ({ documento, hechas, recibidas, 
 
 /**
  * Las reglas para corregir o eliminar un saldo inicial (Chain of Responsibility, como las reglas de baja). No estar en una contraseña vigente
- * va primero; CP4 sumará «no tiene pagos».
+ * va primero, y antes «no tiene pagos vigentes»: uno con pagos solo anulados sí se corrige o se elimina.
  */
 export const REGLAS_PARA_CORREGIR_SALDO_INICIAL: readonly ReglaDeBaja[] = [
+  noTenerPagosVigentes,
+  noTenerReintegrosVigentes,
   noEstarEnContrasena,
   noEstarAutorizadoElSaldo,
   noTenerMovimientos,

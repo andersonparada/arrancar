@@ -11,6 +11,8 @@ const hechos = (cambios: Partial<HechosDelDocumento> = {}): HechosDelDocumento =
   ajustesVigentes: 0,
   aplicacionesManualesRecibidas: 0,
   enContrasena: false,
+  pagosVigentes: 0,
+  reintegrosVigentes: 0,
   ...cambios,
 });
 
@@ -25,6 +27,7 @@ describe('acciones posibles de un documento por pagar', () => {
       puedeEliminar: true,
       puedeAplicar: false,
       puedeAjustar: false,
+      puedeReintegrar: false,
     });
   });
 
@@ -58,6 +61,7 @@ describe('acciones posibles de un documento por pagar', () => {
       puedeEliminar: false,
       puedeAplicar: false,
       puedeAjustar: false,
+      puedeReintegrar: false,
     });
   });
 
@@ -89,10 +93,60 @@ describe('acciones posibles de un documento por pagar', () => {
       puedeEliminar: false,
       puedeAplicar: false,
       puedeAjustar: false,
+      puedeReintegrar: false,
     });
     expect(accionesDelDocumento(hechos({ origen: 'saldo_inicial', estado: 'autorizado' }))).toMatchObject({
       puedeDesautorizar: true,
       puedeAnular: false,
+    });
+  });
+});
+
+describe('un documento con pagos o reintegros vigentes', () => {
+  it('un cargo con pagos vigentes no se desautoriza, anula ni elimina', () => {
+    const conPagos = hechos({ estado: 'autorizado', pagosVigentes: 1 });
+
+    expect(accionesDelDocumento(conPagos)).toMatchObject({
+      puedeDesautorizar: false,
+      puedeAnular: false,
+      puedeEliminar: false,
+    });
+    expect(accionesDelDocumento(hechos({ estado: 'autorizado' }))).toMatchObject({
+      puedeDesautorizar: true,
+      puedeAnular: true,
+    });
+  });
+
+  it('una nota con reintegros vigentes no se anula ni se elimina, pero otro reintegro sí cabe si queda saldo', () => {
+    const nota = hechos({
+      tipo: 'nota_de_credito',
+      estado: 'registrado',
+      saldoLibreCentavos: 500,
+      reintegrosVigentes: 1,
+    });
+
+    expect(accionesDelDocumento(nota)).toMatchObject({
+      puedeAnular: false,
+      puedeEliminar: false,
+      puedeReintegrar: true,
+    });
+  });
+
+  it('solo una nota registrada o autorizada con saldo libre y fuera de una contraseña se reintegra', () => {
+    const nota = { tipo: 'nota_de_credito' as const, estado: 'registrado' as const, saldoLibreCentavos: 500 };
+
+    expect(accionesDelDocumento(hechos(nota))).toMatchObject({ puedeReintegrar: true });
+    expect(accionesDelDocumento(hechos({ ...nota, estado: 'pendiente' }))).toMatchObject({ puedeReintegrar: false });
+    expect(accionesDelDocumento(hechos({ ...nota, saldoLibreCentavos: 0 }))).toMatchObject({ puedeReintegrar: false });
+    expect(accionesDelDocumento(hechos({ ...nota, enContrasena: true }))).toMatchObject({ puedeReintegrar: false });
+    expect(accionesDelDocumento(hechos({ estado: 'registrado', saldoLibreCentavos: 500 }))).toMatchObject({
+      puedeReintegrar: false,
+    });
+  });
+
+  it('la diferencia de un cargo no se ajusta desde la ficha: puedeAjustar sigue solo en notas', () => {
+    expect(accionesDelDocumento(hechos({ estado: 'autorizado', saldoLibreCentavos: 500 }))).toMatchObject({
+      puedeAjustar: false,
     });
   });
 });
@@ -112,6 +166,7 @@ describe('un documento en una contraseña vigente', () => {
     expect(accionesDelDocumento(hechos({ ...nota, enContrasena: true }))).toMatchObject({
       puedeAplicar: false,
       puedeAjustar: false,
+      puedeReintegrar: false,
     });
   });
 });

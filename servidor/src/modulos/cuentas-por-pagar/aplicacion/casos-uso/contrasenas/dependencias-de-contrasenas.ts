@@ -5,7 +5,7 @@ import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { ContrasenaDto } from '../../dto/contrasena.dto.js';
-import { dtoDeContrasena } from '../../dto/dto-de-contrasena.js';
+import { dtoDeContrasena, type VistaDeContrasena } from '../../dto/dto-de-contrasena.js';
 import type {
   ConsultasDeContrasenas,
   ContrasenaConDocumentos,
@@ -45,13 +45,21 @@ export interface DependenciasParaCrearContrasena extends DependenciasDeConsultaD
  * @throws RecursoNoEncontrado si no existe o es de otra empresa.
  */
 export async function contrasenaComoDto(
-  { contrasenas, umbral }: Pick<DependenciasDeConsultaDeContrasenas, 'contrasenas' | 'umbral'>,
+  dependencias: Pick<DependenciasDeConsultaDeContrasenas, 'contrasenas' | 'umbral' | 'reloj'>,
   operador: Operador,
   id: string,
 ): Promise<ContrasenaDto> {
-  const detalle = await contrasenas.detalle(id);
+  const detalle = await dependencias.contrasenas.detalle(id);
   if (!detalle) throw new RecursoNoEncontrado('La contraseña');
-  return dtoDeContrasena(detalle, await umbral.centavos(operador));
+  return dtoDeContrasena(detalle, await vistaDeContrasena(dependencias, operador));
+}
+
+/** El umbral de bancarización y el día de hoy de la empresa: lo que cambia entre una consulta y otra. */
+export async function vistaDeContrasena(
+  { umbral, reloj }: Pick<DependenciasDeConsultaDeContrasenas, 'umbral' | 'reloj'>,
+  operador: Operador,
+): Promise<VistaDeContrasena> {
+  return { umbralCentavos: await umbral.centavos(operador), hoy: await reloj.hoy(operador) };
 }
 
 /** Lo que necesita cambiar la fecha prometida y las observaciones de una contraseña. */
@@ -77,7 +85,7 @@ export const RECURSO_DE_CONTRASENAS = 'cuentas-por-pagar.contrasenas';
  * @throws ContrasenaAnulada si ya no está vigente.
  */
 export async function abrirContrasena(
-  dependencias: Pick<DependenciasParaEditarContrasena, 'repositorio' | 'contrasenas' | 'umbral'>,
+  dependencias: Pick<DependenciasParaEditarContrasena, 'repositorio' | 'contrasenas' | 'umbral' | 'reloj'>,
   operador: Operador,
   id: string,
 ): Promise<{ detalle: ContrasenaConDocumentos; antes: ContrasenaDto }> {
@@ -85,5 +93,5 @@ export async function abrirContrasena(
   const detalle = await dependencias.contrasenas.detalle(id);
   if (!detalle) throw new RecursoNoEncontrado('La contraseña');
   if (detalle.contrasena.estado === 'anulada') throw new ContrasenaAnulada();
-  return { detalle, antes: dtoDeContrasena(detalle, await dependencias.umbral.centavos(operador)) };
+  return { detalle, antes: dtoDeContrasena(detalle, await vistaDeContrasena(dependencias, operador)) };
 }

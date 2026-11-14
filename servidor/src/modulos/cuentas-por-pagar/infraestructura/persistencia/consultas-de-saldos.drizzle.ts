@@ -14,6 +14,14 @@ import { documentos } from './documentos.tablas.js';
 
 const esUnaNotaVigente = and(ne(documentos.estado, 'anulado'), eq(documentos.tipo, 'nota_de_credito'));
 
+/** Los cargos vigentes del proveedor (todo lo que no es nota de crédito ni está anulado). */
+const esUnCargoVigenteDe = (proveedorId: string) =>
+  and(
+    eq(documentos.proveedorId, proveedorId),
+    ne(documentos.estado, 'anulado'),
+    ne(documentos.tipo, 'nota_de_credito'),
+  );
+
 type SumasDeLosCargos = Omit<TotalesDelProveedor, 'proveedorNombre'>;
 
 /** Las cuentas de un proveedor en la empresa activa; los saldos se calculan, no se guardan (RLS limita a la empresa). */
@@ -40,14 +48,9 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
       })
       .from(documentos)
       .leftJoin(base.alCargo, eq(base.alCargo.cargoId, documentos.id))
-      .where(
-        and(
-          eq(documentos.proveedorId, proveedorId),
-          ne(documentos.estado, 'anulado'),
-          ne(documentos.tipo, 'nota_de_credito'),
-          sql`${saldo} > 0`,
-        ),
-      );
+      .leftJoin(base.pagadoAlCargo, eq(base.pagadoAlCargo.cargoId, documentos.id))
+      .leftJoin(base.ajustadoDeLaNota, eq(base.ajustadoDeLaNota.notaId, documentos.id))
+      .where(and(esUnCargoVigenteDe(proveedorId), sql`${saldo} > 0`));
     return {
       porPagarCentavos: aCentavos(sumas!.porPagar),
       vencidoCentavos: aCentavos(sumas!.vencido),
@@ -66,7 +69,7 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
 
   async notasConSaldoLibre(proveedorId: string): Promise<NotaConSaldoLibre[]> {
     const base = new ConsultaBaseDeDocumentos();
-    const { porLaNota, ajustadoDeLaNota } = base;
+    const { porLaNota, ajustadoDeLaNota, reintegradoDeLaNota } = base;
     const filas = await transaccionEnCurso()
       .select({
         id: documentos.id,
@@ -78,10 +81,12 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
         saldoAlInicio: documentos.saldoAlInicio,
         aplicado: porLaNota.monto,
         ajustado: ajustadoDeLaNota.monto,
+        reintegrado: reintegradoDeLaNota.monto,
       })
       .from(documentos)
       .leftJoin(porLaNota, eq(porLaNota.notaId, documentos.id))
       .leftJoin(ajustadoDeLaNota, eq(ajustadoDeLaNota.notaId, documentos.id))
+      .leftJoin(reintegradoDeLaNota, eq(reintegradoDeLaNota.notaId, documentos.id))
       .where(and(eq(documentos.proveedorId, proveedorId), esUnaNotaVigente, sql`${base.saldoLibreDeLaNota()} > 0`))
       .orderBy(asc(documentos.fechaEmision), asc(documentos.creadoEn));
     return filas.map(aNotaConSaldoLibre);
@@ -93,14 +98,16 @@ function aNotaConSaldoLibre({
   saldoAlInicio,
   aplicado,
   ajustado,
+  reintegrado,
   ...nota
 }: Omit<NotaConSaldoLibre, 'saldoLibreCentavos'> & {
   total: string;
   saldoAlInicio: string | null;
   aplicado: string | null;
   ajustado: string | null;
+  reintegrado: string | null;
 }): NotaConSaldoLibre {
-  const saldoLibreCentavos =
-    aCentavos(saldoAlInicio ?? total) - aCentavos(aplicado ?? '0') - aCentavos(ajustado ?? '0');
+  const rebajado = [aplicado, ajustado, reintegrado].reduce((suma, monto) => suma + aCentavos(monto ?? '0'), 0);
+  const saldoLibreCentavos = aCentavos(saldoAlInicio ?? total) - rebajado;
   return { ...nota, saldoLibreCentavos };
 }

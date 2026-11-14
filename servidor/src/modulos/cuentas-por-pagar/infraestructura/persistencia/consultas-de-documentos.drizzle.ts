@@ -16,6 +16,7 @@ import { ajustesConDatos } from './consultas-de-ajustes.drizzle.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { aFilaDeDocumento, ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
 import { documentos } from './documentos.tablas.js';
+import { lineasDeReintegroDeLaNota, lineasDePagoDelCargo } from './consultas-de-lineas-de-pago.js';
 
 type Pagina = { filas: FilaDeDocumento[]; total: number };
 
@@ -172,6 +173,14 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
 
   ajustesDe(documentoId: string): Promise<AjusteConDatos[]> {
     return ajustesConDatos(documentoId);
+  }
+
+  pagosDe(cargoId: string) {
+    return lineasDePagoDelCargo(cargoId);
+  }
+
+  reintegrosDe(notaId: string) {
+    return lineasDeReintegroDeLaNota(notaId);
   }
 
   notasLibresDelSistemaAnterior() {

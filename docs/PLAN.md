@@ -1761,3 +1761,19 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   contraseñas del mismo proveedor** (quitar `pagos.contrasena_id`, migración `0009` antes de CP4-3). No cambia los saldos
   ni las reglas de CP4-2; le pide buscar los pagos de una contraseña por `aplicaciones_de_pagos.contrasena_id`. Preguntas
   CP4-E-a a h para el usuario; el contador valida bancarización, partidas, flujo y recibo antes de programar.
+- **2026-11-14 — CP4-2 (servidor, saldos y reglas de pagos).** El saldo calculado suma lo pagado, la diferencia menor del
+  cargo y lo reintegrado (`saldoDe`; SQL con las subconsultas `pagado_al_cargo` y `reintegrado_de_la_nota`, sin migración).
+  Lo pagado y lo comprometido (cheque posfechado, `fecha > hoy`) se separan en el dominio (`dominio/pagos.ts`) con el «hoy»
+  de la empresa: la fila trae los pagos vigentes con su fecha, así ninguna consulta necesita la fecha. `estadoDePago`
+  (`pendiente`, `en_parte`, `comprometido`, `pagado`; nulo en notas y anulados) y `pagado`, `comprometido`, `reintegrado` y
+  `puedeReintegrar` en el DTO de documentos; la ficha trae `pagos` y `reintegros`, y la auditoría de una baja los guarda.
+  Reglas: `noTenerPagosVigentes` (primera de anular, eliminar, desautorizar y corregir o eliminar saldo inicial, antes que la
+  de la contraseña; quitar la aplicación de una nota de un cargo pagado) → `DocumentoConPagos`; `noTenerReintegrosVigentes`
+  → `NotaConReintegros`; anular una contraseña → `ContrasenaConPagos`; quitar un documento con pagos, vigentes o anulados →
+  `DocumentoConPagosEnLaContrasena`. Los pagos de una contraseña se buscan por `aplicaciones_de_pagos.contrasena_id` (no por
+  `pagos.contrasena_id`) y los tipos no suponen que toda forma tenga movimiento en Bancos ni que el efectivo pueda ser
+  futuro (adenda de efectivo). La contraseña con pagos se sigue editando; su DTO trae `pagado`, `comprometido`, `pagos` y
+  `estadoDePago`, la impresión suma la columna «Pagado» y los cheques posfechados con su marca. Rendimiento con 20,000
+  documentos y 30,000 pagos (`cuentas-por-pagar-pagos-rendimiento`): lista con saldo ~290 ms, saldo del proveedor ~90 ms,
+  ficha ~20 ms y contraseña de 100 documentos ~110 ms: no hace falta guardar el saldo. Los pagos y reintegros de las pruebas
+  se siembran en la base (los casos de uso llegan en CP4-3 y CP4-7).

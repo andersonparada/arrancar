@@ -12,9 +12,11 @@ import type {
   FiltroDeContrasenas,
 } from '../../aplicacion/puertos/puertos-de-contrasenas.js';
 import type { EstadoDeContrasena } from '../../dominio/contrasena.js';
+import type { LineaDePago } from '../../dominio/pagos.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { aFilaDeDocumento, ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
 import { contrasenaDocumentos } from './contrasena-documentos.tablas.js';
+import { lineasDePagoPorContrasena } from './consultas-de-lineas-de-pago.js';
 import { contrasenas } from './contrasenas.tablas.js';
 import { documentos } from './documentos.tablas.js';
 
@@ -95,7 +97,7 @@ async function documentosDe(
   const resultado = new Map(
     contrasenaIds.map((id) => [
       id,
-      { documentos: [] as FilaDeDocumento[], aplicadoPorNota: new Map<string, number>() },
+      { documentos: [] as FilaDeDocumento[], aplicadoPorNota: new Map<string, number>(), pagos: [] as LineaDePago[] },
     ]),
   );
   if (contrasenaIds.length === 0) return resultado;
@@ -108,6 +110,8 @@ async function documentosDe(
     resultado.get(contrasenaId)!.documentos.push(porId.get(documentoId)!);
   }
   await sumarAplicaciones(contrasenaIds, resultado);
+  const lineas = await lineasDePagoPorContrasena(contrasenaIds);
+  for (const [contrasenaId, pagos] of lineas) resultado.get(contrasenaId)!.pagos = pagos;
   return resultado;
 }
 

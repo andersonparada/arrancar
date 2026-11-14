@@ -1,5 +1,5 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
-import { accionesDelDocumento } from '../../dominio/acciones-posibles.js';
+import { accionesDelDocumento, type HechosDelDocumento } from '../../dominio/acciones-posibles.js';
 import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
 import {
   anterioresAlInicioDe,
@@ -8,9 +8,11 @@ import {
   type AplicadoAlDocumento,
   type SaldoDelDocumento,
 } from '../../dominio/saldos.js';
+import { estadoDePagoDe, pagadoYComprometido } from '../../dominio/pagos.js';
 import { claseDe } from '../../dominio/tipos-de-documento.js';
 import type { AplicacionConDatos, FilaDeDocumento, NotaDeUnDocumento } from '../puertos/puertos-de-consultas.js';
 import { textoONulo } from './ficha-del-documento.dto.js';
+import type { EstadoDePagoDto } from './pagos.dto.js';
 import type {
   AnulacionDelDocumentoDto,
   AplicacionDelDocumentoDto,
@@ -61,12 +63,23 @@ const origenDe = ({ libro, documento }: FilaDeDocumento) => ({
   periodo: libro.periodo,
 });
 
+/** Lo pagado y lo comprometido (pagos con fecha futura) de un cargo, y cómo va su pago; las notas y lo anulado no se pagan. */
+function pagosDe(fila: FilaDeDocumento, saldo: SaldoDelDocumento, hoy: string) {
+  const { pagadoCentavos, comprometidoCentavos } = pagadoYComprometido(fila.pagosVigentes, hoy);
+  const sePaga = claseDe(fila.documento.tipo) === 'cargo' && fila.documento.estado !== 'anulado';
+  const estadoDePago: EstadoDePagoDto = sePaga
+    ? estadoDePagoDe({ saldoCentavos: saldo.saldoCentavos, pagadoCentavos, comprometidoCentavos })
+    : null;
+  return { pagado: deCentavos(pagadoCentavos), comprometido: deCentavos(comprometidoCentavos), estadoDePago };
+}
+
 const montosDe = (documento: DocumentoPorPagar, saldo: SaldoDelDocumento) => ({
   total: deCentavos(documento.totalCentavos),
   retenciones: deCentavos(documento.retencionesCentavos),
   neto: deCentavos(saldo.netoCentavos),
   aplicado: deCentavos(saldo.aplicadoCentavos),
   ajustado: deCentavos(saldo.ajustadoCentavos),
+  reintegrado: deCentavos(saldo.reintegradoCentavos),
   saldo: deCentavos(saldo.saldoCentavos),
   saldoAlInicio: textoONulo(documento.saldoAlInicioCentavos),
   retencionesPorPracticar: textoONulo(documento.retencionesPorPracticarCentavos),
@@ -81,36 +94,44 @@ const seguimientoDe = (documento: DocumentoPorPagar, usuarioId: string) => ({
   autorizacionPropia: documento.autorizacionPropia,
 });
 
-/** Lo que rebajaron las notas y lo que se ajustó, tal como viene en la fila. */
+/** Lo que rebajaron las notas, los pagos, los ajustes y los reintegros, tal como viene en la fila. */
 export const aplicadoDe = (fila: FilaDeDocumento): AplicadoAlDocumento => ({
   alCargoCentavos: fila.aplicadoAlCargoCentavos,
   porLaNotaCentavos: fila.aplicadoPorLaNotaCentavos,
   ajustadoCentavos: fila.ajustadoCentavos,
+  pagadoCentavos: fila.pagosVigentes.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0),
+  reintegradoCentavos: fila.reintegradoCentavos,
+});
+
+/** Lo que se sabe del documento para decidir qué se puede hacer con él. */
+const hechosDe = (fila: FilaDeDocumento, saldoCentavos: number): HechosDelDocumento => ({
+  origen: fila.documento.origen,
+  tipo: fila.documento.tipo,
+  estado: fila.documento.estado,
+  notasVigentes: fila.notasVigentes,
+  notasEnTotal: fila.notasEnTotal,
+  saldoLibreCentavos: saldoCentavos,
+  ajustesVigentes: fila.ajustesVigentes,
+  aplicacionesManualesRecibidas: fila.aplicacionesManualesRecibidas,
+  enContrasena: fila.contrasena !== null,
+  pagosVigentes: fila.pagosVigentes.length,
+  reintegrosVigentes: fila.reintegrosVigentes,
 });
 
 /** El documento tal como lo ven la bandeja, la lista y la ficha, con sus saldos y lo que se puede hacer con él. */
 export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVista): DocumentoPorPagarDto {
-  const { documento, notasVigentes, notasEnTotal } = fila;
+  const { documento } = fila;
   const saldo = saldoDe(documento, aplicadoDe(fila));
   return {
     ...identificacionDe(documento),
     ...origenDe(fila),
     ...montosDe(documento, saldo),
+    ...pagosDe(fila, saldo, vista.hoy),
     ...seguimientoDe(documento, vista.usuarioId),
     vencimiento: documento.vencimiento,
     vencido: estaVencido(documento, saldo.saldoCentavos, vista.hoy),
     contrasena: fila.contrasena,
-    ...accionesDelDocumento({
-      origen: documento.origen,
-      tipo: documento.tipo,
-      estado: documento.estado,
-      notasVigentes,
-      notasEnTotal,
-      saldoLibreCentavos: saldo.saldoCentavos,
-      ajustesVigentes: fila.ajustesVigentes,
-      aplicacionesManualesRecibidas: fila.aplicacionesManualesRecibidas,
-      enContrasena: fila.contrasena !== null,
-    }),
+    ...accionesDelDocumento(hechosDe(fila, saldo.saldoCentavos)),
   };
 }
 

@@ -1,6 +1,7 @@
 import type { CausaDeAjuste } from '../../dominio/ajustes.js';
 import type { NotaLibreDelSistemaAnterior } from '../../dominio/notas-posteriores.js';
 import type { DocumentoPorPagar, FormaDeAplicacion } from '../../dominio/documento-por-pagar.js';
+import type { LineaDePago, LineaDeReintegro, PagoVigenteDelCargo } from '../../dominio/pagos.js';
 import type { ProveedorConDocumentosDto } from '../dto/documento-por-pagar.dto.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
@@ -59,9 +60,14 @@ export interface FilaDeDocumento {
   aplicadoAlCargoCentavos: number;
   /** Lo que esta nota de crédito rebajó de cargos. */
   aplicadoPorLaNotaCentavos: number;
-  /** Lo que se dio de baja del saldo libre de esta nota con ajustes vigentes. */
+  /** Lo que se dio de baja con ajustes vigentes: del saldo libre de esta nota, o la diferencia menor de este cargo. */
   ajustadoCentavos: number;
   ajustesVigentes: number;
+  /** Los pagos vigentes de este cargo (fecha y monto), también los posfechados; vacío en una nota. */
+  pagosVigentes: PagoVigenteDelCargo[];
+  /** Lo que los reintegros vigentes devolvieron contra esta nota. */
+  reintegradoCentavos: number;
+  reintegrosVigentes: number;
   /** Aplicaciones manuales que recibió este cargo. */
   aplicacionesManualesRecibidas: number;
   notasVigentes: number;
@@ -157,6 +163,10 @@ export interface ConsultasDeDocumentos {
   aplicacion(id: string): Promise<AplicacionConDatos | null>;
   /** Los ajustes de una nota de crédito (también los anulados), del más antiguo al más nuevo. */
   ajustesDe(documentoId: string): Promise<AjusteConDatos[]>;
+  /** Lo que los pagos entregaron a un cargo, vigentes y anulados, del más antiguo al más nuevo. */
+  pagosDe(cargoId: string): Promise<LineaDePago[]>;
+  /** Lo que los reintegros devolvieron contra una nota, vigentes y anulados, del más antiguo al más nuevo. */
+  reintegrosDe(notaId: string): Promise<LineaDeReintegro[]>;
   /** Las notas del libro que citan una factura del sistema anterior y no están enlazadas a ningún saldo inicial. */
   notasLibresDelSistemaAnterior(): Promise<NotaLibreDelSistemaAnterior[]>;
   /** La factura anterior que cita una nota del libro (por su id en Libro de compras); `null` si no cita ninguna. */

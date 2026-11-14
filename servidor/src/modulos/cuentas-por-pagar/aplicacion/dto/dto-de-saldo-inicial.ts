@@ -25,7 +25,7 @@ export function datosDeSolicitud(solicitud: SolicitudDeSaldoInicial): DatosDeSal
 }
 
 /**
- * Se puede corregir o eliminar con la carga abierta, completado, sin notas aplicadas y sin ninguna nota que lo corrija
+ * Se puede corregir o eliminar con la carga abierta, completado, sin notas aplicadas, sin pagos ni reintegros vigentes y sin ninguna nota que lo corrija
  * (las demás reglas, las de dominio).
  */
 function sePuedeCambiar(fila: FilaDeDocumento, cargaCerrada: boolean): boolean {
@@ -33,6 +33,8 @@ function sePuedeCambiar(fila: FilaDeDocumento, cargaCerrada: boolean): boolean {
     fila.aplicadoAlCargoCentavos === 0 &&
     fila.aplicadoPorLaNotaCentavos === 0 &&
     fila.ajustesVigentes === 0 &&
+    fila.pagosVigentes.length === 0 &&
+    fila.reintegrosVigentes === 0 &&
     fila.notasEnTotal === 0;
   return !cargaCerrada && fila.documento.estado === 'registrado' && sinMovimientos;
 }

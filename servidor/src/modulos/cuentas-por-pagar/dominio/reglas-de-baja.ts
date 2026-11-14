@@ -2,6 +2,8 @@ import type { DocumentoConAplicaciones } from './documento-por-pagar.js';
 import { numeroDeContrasena } from './contrasena.js';
 import { etiquetaDe } from './documento-por-pagar.js';
 import { DocumentoEnContrasena } from './errores-de-contrasenas.js';
+import { DocumentoConPagos, NotaConReintegros } from './errores-de-pagos.js';
+import { numeroDelPago } from './pagos.js';
 import {
   CargoConAplicacionesManuales,
   CargoConNotasAplicadas,
@@ -57,7 +59,25 @@ export const noTenerAjustesVigentes: ReglaDeBaja = ({ documento, ajustes }) => {
   if (ajustes.some(({ estado }) => estado === 'vigente')) throw new NotaConAjustes(etiquetaDe(documento));
 };
 
+/**
+ * Un documento con pagos vigentes no se da de baja, ni se desautoriza, ni se corrige: va **antes** que la de la contraseña
+ * porque con pagos tampoco se puede quitar de ella, y lo correcto es decirle «anule el pago N».
+ */
+export const noTenerPagosVigentes: ReglaDeBaja = ({ documento, pagos }) => {
+  const vigentes = pagos.filter(({ estado }) => estado === 'vigente');
+  if (vigentes.length === 0) return;
+  const numeros = [...new Set(vigentes.map(({ numero, anioDeNumero }) => numeroDelPago(numero, anioDeNumero)))];
+  throw new DocumentoConPagos(etiquetaDe(documento), numeros);
+};
+
+/** Una nota con reintegros vigentes no se anula ni se elimina; los anulados quedan de rastro (o se van con la nota). */
+export const noTenerReintegrosVigentes: ReglaDeBaja = ({ documento, reintegros }) => {
+  if (reintegros.some(({ estado }) => estado === 'vigente')) throw new NotaConReintegros(etiquetaDe(documento));
+};
+
 export const REGLAS_PARA_ANULAR: readonly ReglaDeBaja[] = [
+  noTenerPagosVigentes,
+  noTenerReintegrosVigentes,
   noEstarEnContrasena,
   noTenerAplicacionesManualesRecibidas,
   noTenerAjustesVigentes,
@@ -65,6 +85,8 @@ export const REGLAS_PARA_ANULAR: readonly ReglaDeBaja[] = [
 ];
 
 export const REGLAS_PARA_ELIMINAR: readonly ReglaDeBaja[] = [
+  noTenerPagosVigentes,
+  noTenerReintegrosVigentes,
   noEstarEnContrasena,
   noEstarAutorizado,
   noTenerAplicacionesManualesRecibidas,
@@ -72,5 +94,5 @@ export const REGLAS_PARA_ELIMINAR: readonly ReglaDeBaja[] = [
   noTenerNotasAplicadas,
 ];
 
-/** Desautorizar sí se permite con el documento en una contraseña (admite registrados); los pagos (CP4) sumarán aquí «el cargo ya tiene pagos». */
-export const REGLAS_PARA_DESAUTORIZAR: readonly ReglaDeBaja[] = [];
+/** Desautorizar sí se permite con el documento en una contraseña (admite registrados), pero no con pagos vigentes. */
+export const REGLAS_PARA_DESAUTORIZAR: readonly ReglaDeBaja[] = [noTenerPagosVigentes];

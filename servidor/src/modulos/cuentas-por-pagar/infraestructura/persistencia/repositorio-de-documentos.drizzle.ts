@@ -23,6 +23,7 @@ import type {
 import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
 import { mapeadorDeDocumento } from './documento.mapeador.js';
 import { contrasenaDocumentos } from './contrasena-documentos.tablas.js';
+import { lineasDePagoDelCargo, lineasDeReintegroDeLaNota } from './consultas-de-lineas-de-pago.js';
 import { contrasenas } from './contrasenas.tablas.js';
 import { TIPOS_DE_FACTURA } from '../../dominio/tipos-de-documento.js';
 import { documentos } from './documentos.tablas.js';
@@ -124,6 +125,8 @@ export class RepositorioDeDocumentosDrizzle implements RepositorioDeDocumentos {
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
       ajustes: await this.ajustesDe(documento.id),
+      pagos: await lineasDePagoDelCargo(documento.id),
+      reintegros: await lineasDeReintegroDeLaNota(documento.id),
       ...(await this.contrasenasDe(documento.id)),
       notasQueLoCorrigen: await this.contarNotasDe(documento.id),
     };

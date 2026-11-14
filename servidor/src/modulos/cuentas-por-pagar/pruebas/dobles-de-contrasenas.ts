@@ -117,7 +117,12 @@ export class ContrasenasEnMemoria
     for (const { notaId, montoCentavos, forma } of this.aplicaciones.lista) {
       if (forma === 'contrasena') aplicadoPorNota.set(notaId, (aplicadoPorNota.get(notaId) ?? 0) + montoCentavos);
     }
-    return { contrasena: this.comoGuardada(guardada), documentos, aplicadoPorNota };
+    return {
+      contrasena: this.comoGuardada(guardada),
+      documentos,
+      aplicadoPorNota,
+      pagos: this.consultas.pagosDeLaContrasena(id),
+    };
   }
 
   async listar(): Promise<{ filas: ContrasenaConDocumentos[]; total: number }> {

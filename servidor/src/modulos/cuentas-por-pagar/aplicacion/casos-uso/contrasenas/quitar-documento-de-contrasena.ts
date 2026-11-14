@@ -1,6 +1,8 @@
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { motivoValido } from '../../../dominio/ciclo-de-vida.js';
+import { etiquetaDe } from '../../../dominio/documento-por-pagar.js';
+import { exigirDocumentoSinPagosEnLaContrasena } from '../../../dominio/reglas-de-pagos-de-contrasena.js';
 import type { ContrasenaDto } from '../../dto/contrasena.dto.js';
 import type { FilaDeDocumento } from '../../puertos/puertos-de-consultas.js';
 import type { ContrasenaConDocumentos } from '../../puertos/puertos-de-contrasenas.js';
@@ -13,17 +15,17 @@ import {
 import { bloquearEnOrden } from './documentos-de-la-contrasena.js';
 import { rehacerElReparto } from './rehacer-el-reparto.js';
 
-/**
- * Una regla que puede rechazar que se quite un documento de la contraseña lanzando su error. Los pagos (CP4) sumarán la
- * suya («el documento tiene pagos de esta contraseña») sin tocar el caso de uso.
- */
+/** Una regla que puede rechazar que se quite un documento de la contraseña lanzando su error, sin tocar el caso de uso. */
 export type ReglaParaQuitarDeContrasena = (
   fila: FilaDeDocumento,
   contrasena: ContrasenaConDocumentos,
 ) => void | Promise<void>;
 
-/** Hoy no hay pagos: CP4 sumará aquí la suya. */
-export const REGLAS_PARA_QUITAR_DE_CONTRASENA: readonly ReglaParaQuitarDeContrasena[] = [];
+/** Un documento con pagos en la contraseña (vigentes o anulados) no se quita de ella. */
+export const sinPagosEnLaContrasena: ReglaParaQuitarDeContrasena = ({ documento }, { pagos }) =>
+  exigirDocumentoSinPagosEnLaContrasena(etiquetaDe(documento), documento.id, pagos);
+
+export const REGLAS_PARA_QUITAR_DE_CONTRASENA: readonly ReglaParaQuitarDeContrasena[] = [sinPagosEnLaContrasena];
 
 export interface PeticionParaQuitarDocumento {
   contrasenaId: string;

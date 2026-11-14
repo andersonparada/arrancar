@@ -1,4 +1,5 @@
 import type { EstadoDeContrasena } from '../../dominio/contrasena.js';
+import type { EstadoDePagoDto, PagoDeLaContrasenaDto } from './pagos.dto.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
 /** Un cargo de la contraseña. Dinero como texto con dos decimales; `total` y `retenciones` son fijos, `rebajado` y `saldo` son de hoy. */
@@ -18,6 +19,10 @@ export interface CargoDeContrasenaDto {
   rebajado: string;
   /** Lo que falta por pagar de este cargo. */
   saldo: string;
+  /** Lo que los pagos vigentes entregaron con fecha de hoy o anterior. */
+  pagado: string;
+  /** Lo de pagos vigentes con fecha posterior a hoy (cheques posfechados); el saldo ya lo resta. */
+  comprometido: string;
   /** Solo un saldo inicial: retenciones que la empresa todavía no practicó (informativo). */
   retencionesPorPracticar: string | null;
   /** El total llega al umbral de bancarización. */
@@ -38,6 +43,8 @@ export interface TotalesDeContrasenaDto {
   total: string;
   retenciones: string;
   rebajado: string;
+  pagado: string;
+  comprometido: string;
   saldo: string;
 }
 
@@ -69,8 +76,14 @@ export interface ContrasenaDto {
   anulacion: AnulacionDeContrasenaDto | null;
   creadoPorNombre: string | null;
   creadoEn: string;
+  /** Una contraseña vigente se edita aunque tenga pagos: la fecha prometida, agregar y quitar documentos sin pagos. */
   puedeEditar: boolean;
+  /** Vigente y sin pagos vigentes: con ellos se anulan primero los pagos. */
   puedeAnular: boolean;
+  /** Los pagos de la contraseña (vigentes y anulados), del más antiguo al más nuevo. */
+  pagos: PagoDeLaContrasenaDto[];
+  /** `null` en una contraseña anulada. */
+  estadoDePago: EstadoDePagoDto;
 }
 
 /** Una línea de la lista de contraseñas. */
@@ -86,6 +99,8 @@ export interface ContrasenaResumenDto {
   estado: EstadoDeContrasena;
   /** Vigente, con saldo y con la fecha prometida de pago ya pasada. */
   pagoVencido: boolean;
+  /** `null` en una contraseña anulada. */
+  estadoDePago: EstadoDePagoDto;
 }
 
 export interface PaginaDeContrasenasDto {

@@ -4,7 +4,7 @@ import { dtoDeContrasena } from '../../dto/dto-de-contrasena.js';
 import { dtoDeImpresionDeContrasena } from '../../dto/dto-de-impresion-de-contrasena.js';
 import type { ImpresionDeContrasenaDto } from '../../dto/impresion-de-contrasena.dto.js';
 import type { DatosDeLaEmpresa, LeyendaDeContrasenas } from '../../puertos/puertos-de-impresion-de-contrasenas.js';
-import type { DependenciasDeConsultaDeContrasenas } from './dependencias-de-contrasenas.js';
+import { vistaDeContrasena, type DependenciasDeConsultaDeContrasenas } from './dependencias-de-contrasenas.js';
 
 /** Lo que necesita armar la contraseña impresa. */
 export interface DependenciasDeImpresion extends DependenciasDeConsultaDeContrasenas {
@@ -21,10 +21,10 @@ export async function armarImpresion(
   operador: Operador,
   opciones: { id: string; reimpresion?: boolean },
 ): Promise<ImpresionDeContrasenaDto> {
-  const { contrasenas, umbral, reloj, empresa, leyenda } = dependencias;
+  const { contrasenas, reloj, empresa, leyenda } = dependencias;
   const detalle = await contrasenas.detalle(opciones.id);
   if (!detalle) throw new RecursoNoEncontrado('La contraseña');
-  return dtoDeImpresionDeContrasena(dtoDeContrasena(detalle, await umbral.centavos(operador)), {
+  return dtoDeImpresionDeContrasena(dtoDeContrasena(detalle, await vistaDeContrasena(dependencias, operador)), {
     empresa: await empresa.obtener(operador),
     leyenda: await leyenda.texto(operador),
     hoy: await reloj.hoy(operador),

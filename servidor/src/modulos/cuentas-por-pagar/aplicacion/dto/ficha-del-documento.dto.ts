@@ -2,6 +2,8 @@ import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { numeroDeContrasena } from '../../dominio/contrasena.js';
 import type { AjusteDeSaldo } from '../../dominio/ajustes.js';
 import type { AplicacionDeNota, DocumentoConAplicaciones } from '../../dominio/documento-por-pagar.js';
+import type { LineaDePagoDto, ReintegroDelDocumentoDto } from './pagos.dto.js';
+import { dtoDeLineaDePago, dtoDeReintegro } from './dto-de-pagos.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
 export interface AplicacionDto {
@@ -51,6 +53,10 @@ export interface FichaDelDocumentoDto {
   aplicacionesRecibidas: AplicacionDto[];
   /** Los ajustes del saldo libre de esta nota, también los anulados (se van con ella si se elimina). */
   ajustes: AjusteDto[];
+  /** Lo que los pagos entregaron a este cargo, vigentes y anulados. */
+  pagos: LineaDePagoDto[];
+  /** Lo que los reintegros devolvieron contra esta nota, vigentes y anulados. */
+  reintegros: ReintegroDelDocumentoDto[];
   /** Las contraseñas en que estuvo el documento, vigente y anuladas (`numero` ya formateado). */
   contrasenas: Array<{ id: string; numero: string; estado: 'vigente' | 'anulada' }>;
 }
@@ -91,11 +97,20 @@ export const ajusteDto = ({ montoCentavos, documentoId: _documentoId, ...resto }
   monto: deCentavos(montoCentavos),
 });
 
+const contrasenasDto = (contrasenas: DocumentoConAplicaciones['contrasenas']) =>
+  contrasenas.map(({ id, numero, anioDeNumero, estado }) => ({
+    id,
+    numero: numeroDeContrasena(numero, anioDeNumero),
+    estado,
+  }));
+
 export function dtoDeFicha({
   documento,
   hechas,
   recibidas,
   ajustes,
+  pagos,
+  reintegros,
   contrasenas,
 }: DocumentoConAplicaciones): FichaDelDocumentoDto {
   const { totalCentavos, retencionesCentavos, saldoAlInicioCentavos, retencionesPorPracticarCentavos, ...resto } =
@@ -109,10 +124,8 @@ export function dtoDeFicha({
     aplicacionesHechas: hechas.map(aplicacionDto),
     aplicacionesRecibidas: recibidas.map(aplicacionDto),
     ajustes: ajustes.map(ajusteDto),
-    contrasenas: contrasenas.map(({ id, numero, anioDeNumero, estado }) => ({
-      id,
-      numero: numeroDeContrasena(numero, anioDeNumero),
-      estado,
-    })),
+    pagos: pagos.map(dtoDeLineaDePago),
+    reintegros: reintegros.map(dtoDeReintegro),
+    contrasenas: contrasenasDto(contrasenas),
   };
 }

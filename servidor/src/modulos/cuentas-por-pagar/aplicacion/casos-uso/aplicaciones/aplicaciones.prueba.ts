@@ -15,6 +15,7 @@ import {
 } from '../../../pruebas/dobles-de-aplicaciones.js';
 import { TopeFijo } from '../../../pruebas/dobles-de-ajustes.js';
 import { AplicacionesEnMemoria, DocumentosEnMemoria } from '../../../pruebas/dobles-de-documentos.js';
+import { lineaDePago } from '../../../pruebas/lineas-de-pago.js';
 import { AplicarNota } from './aplicar-nota.js';
 import { ListarCargosParaAplicar } from './listar-cargos-para-aplicar.js';
 import { QuitarAplicacion } from './quitar-aplicacion.js';
@@ -199,6 +200,22 @@ describe('QuitarAplicacion', () => {
         }),
       }),
     ]);
+  });
+
+  it('no quita la aplicación si el cargo tiene pagos vigentes; con el pago anulado sí', async () => {
+    const { aplicacionId, cargo } = await conUnaAplicacion('manual');
+    documentos.pagos.push(lineaDePago({ cargoId: cargo.id, numero: 9 }));
+
+    await expect(quitar.ejecutar(operador, { aplicacionId, motivo: 'x' })).rejects.toMatchObject({
+      codigo: 'documento_con_pagos',
+    });
+    expect(aplicaciones.lista).toHaveLength(1);
+    expect(auditoria.entradas).toEqual([]);
+
+    documentos.pagos[0]!.estado = 'anulado';
+    await quitar.ejecutar(operador, { aplicacionId, motivo: 'x' });
+
+    expect(aplicaciones.lista).toEqual([]);
   });
 
   it('no quita una automática ni una que no existe, y pide motivo', async () => {

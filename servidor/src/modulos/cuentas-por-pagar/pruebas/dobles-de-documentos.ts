@@ -16,6 +16,7 @@ import {
   type DocumentoPorPagar,
 } from '../dominio/documento-por-pagar.js';
 import type { AjusteDeSaldo } from '../dominio/ajustes.js';
+import type { LineaDePago, LineaDeReintegro } from '../dominio/pagos.js';
 export { CondicionesEnMemoria, DocumentosDeCompraEnMemoria, PlazoFijo } from './dobles-de-condiciones.js';
 import { TIPOS_DE_FACTURA } from '../dominio/tipos-de-documento.js';
 import type { AplicacionACargo, CargoConSaldo } from '../dominio/reparto-de-nota-de-credito.js';
@@ -85,6 +86,10 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
   documentos: DocumentoPorPagar[] = [];
   /** Ajustes de saldo sembrados por las pruebas (el caso de uso que los crea llega en CP2-4). */
   ajustes: AjusteDeSaldo[] = [];
+  /** Líneas de pago sembradas por las pruebas (los casos de uso que pagan llegan en CP4-3). */
+  pagos: LineaDePago[] = [];
+  /** Líneas de reintegro sembradas por las pruebas. */
+  reintegros: LineaDeReintegro[] = [];
   /** Las facturas que se bloquearon para aplicar una nota, en orden. */
   readonly bloqueadas: string[] = [];
   /** El orden en que se bloqueó y se ordenó, junto con las órdenes a Libro de compras (ver `LibroDeComprasEnMemoria`). */
@@ -127,6 +132,8 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
       ajustes: this.ajustes.filter(({ documentoId }) => documentoId === documento.id),
+      pagos: this.pagos.filter(({ cargoId }) => cargoId === documento.id),
+      reintegros: this.reintegros.filter(({ notaId }) => notaId === documento.id),
       contrasenaVigente: null,
       contrasenas: [],
       notasQueLoCorrigen: this.documentos.filter(({ documentoAfectadoId }) => documentoAfectadoId === documento.id)
@@ -158,6 +165,8 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
       ajustes: this.ajustes.filter(({ documentoId }) => documentoId === documento.id),
+      pagos: this.pagos.filter(({ cargoId }) => cargoId === documento.id),
+      reintegros: this.reintegros.filter(({ notaId }) => notaId === documento.id),
       contrasenaVigente: null,
       contrasenas: [],
       notasQueLoCorrigen: this.documentos.filter(({ documentoAfectadoId }) => documentoAfectadoId === documento.id)
