@@ -1,0 +1,48 @@
+import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
+import type { DocumentoDeCompra } from '../../../dominio/documento-de-compra.js';
+import { FacturaYaEsDelSistemaAnterior } from '../../../dominio/errores-de-factura-anterior.js';
+import { FAMILIAS_QUE_ADMITEN_NOTA_DE_DEBITO } from '../../../dominio/tipos-de-documento.js';
+import type { RepositorioDeFacturasAnteriores } from '../../puertos/puertos-de-facturas-anteriores.js';
+import { dtoDeFacturaAnterior } from '../../dto/factura-anterior.dto.js';
+import type { FacturaAnteriorResuelta } from './resolutor-de-factura-anterior.js';
+
+interface Dependencias {
+  facturasAnteriores: RepositorioDeFacturasAnteriores;
+  auditoria: Auditoria;
+}
+
+/**
+ * Una factura que otra nota vigente ya cita como «del sistema anterior» no se registra en el libro: se explica el
+ * camino (anular la nota, registrar la factura y volver a registrar la nota).
+ * @throws FacturaYaEsDelSistemaAnterior.
+ */
+export async function exigirQueNoSeaDelSistemaAnterior(
+  { facturasAnteriores }: Dependencias,
+  documento: DocumentoDeCompra,
+): Promise<void> {
+  if (!FAMILIAS_QUE_ADMITEN_NOTA_DE_DEBITO.includes(documento.tipo)) return;
+  const { proveedorId, serie, numero, autorizacionFel } = documento;
+  const nota = await facturasAnteriores.buscarNotaVigenteQueLaCita({ proveedorId, serie, numero, autorizacionFel });
+  if (nota) throw new FacturaYaEsDelSistemaAnterior(nota);
+}
+
+/** Crea o corrige la fila de la factura anterior antes de guardar la nota que la cita; corregirla deja su rastro. */
+export async function guardarLaFacturaAnterior(
+  { facturasAnteriores, auditoria }: Dependencias,
+  documento: DocumentoDeCompra,
+  resuelta: FacturaAnteriorResuelta | null,
+): Promise<void> {
+  if (!resuelta || resuelta.accion === 'reutilizar') return;
+  if (resuelta.accion === 'crear') {
+    await facturasAnteriores.agregar(documento.empresaId, resuelta.guardada);
+    return;
+  }
+  await facturasAnteriores.corregir(resuelta.guardada);
+  await auditoria.registrar({
+    recurso: 'libro-de-compras.facturas-anteriores',
+    registroId: resuelta.guardada.id,
+    accion: 'corregir',
+    anterior: dtoDeFacturaAnterior(resuelta.anterior!),
+    motivo: `La nota ${documento.serie ? `${documento.serie}-` : ''}${documento.numero} corrigió los datos de la factura.`,
+  });
+}

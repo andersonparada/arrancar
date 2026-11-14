@@ -3,6 +3,7 @@ import { costoDeLinea } from '../../../dominio/calculo-de-linea.js';
 import { netoAPagar, type DocumentoDeCompra } from '../../../dominio/documento-de-compra.js';
 import type { LineaDeDocumento, RetencionDeDocumento } from '../../../dominio/documento-de-compra.js';
 import type { TotalesDelDocumento } from '../../../dominio/totales-del-documento.js';
+import { dtoDeFacturaAnterior } from '../../dto/factura-anterior.dto.js';
 import type {
   DocumentoDto,
   LineaDeDocumentoDto,
@@ -58,9 +59,10 @@ function dtoDeTotales(totales: TotalesDelDocumento): TotalesDeDocumentoDto {
 
 /** El documento tal como lo ve la pantalla; con `id: null` es la vista previa de uno que no se guardó. */
 export function dtoDeDocumento(documento: DocumentoDeCompra, guardado: boolean): DocumentoDto {
-  const { totales, lineas, retenciones, empresaId: _empresaId, ...encabezado } = documento;
+  const { totales, lineas, retenciones, empresaId: _empresaId, facturaAnterior, ...encabezado } = documento;
   return {
     ...encabezado,
+    facturaAnterior: facturaAnterior ? dtoDeFacturaAnterior(facturaAnterior) : null,
     id: guardado ? documento.id : null,
     totales: dtoDeTotales(totales),
     netoAPagar: deCentavos(netoAPagar(documento)),

@@ -16,6 +16,7 @@ import type { EnlaceConLaBandeja } from '../../puertos/puertos-de-la-bandeja.js'
 import { GuardarDatosFiscalesDeProveedor } from '../datos-fiscales/guardar-datos-fiscales-de-proveedor.js';
 import { auditarRegistro } from './auditoria-del-registro.js';
 import { dtoDeDocumento } from './dto-de-documento.js';
+import { exigirQueNoSeaDelSistemaAnterior, guardarLaFacturaAnterior } from './factura-anterior-al-registrar.js';
 import {
   PreparadorDeDocumento,
   type DependenciasDelPreparador,
@@ -96,6 +97,8 @@ export class RegistrarDocumento {
       const datos = datosFiscalesPorGuardar.instantanea();
       await this.guardarDatosFiscales.ejecutar(operador, { proveedorId: documento.proveedorId, datos });
     }
+    await exigirQueNoSeaDelSistemaAnterior(this.dependencias, documento);
+    await guardarLaFacturaAnterior(this.dependencias, documento, preparado.facturaAnterior);
     await repositorio.agregar(documento);
     if (documento.autorizacionFel) await this.dependencias.bandeja.enlazar(documento.autorizacionFel, documento.id);
     await auditarRegistro(auditoria, documento, preparado);

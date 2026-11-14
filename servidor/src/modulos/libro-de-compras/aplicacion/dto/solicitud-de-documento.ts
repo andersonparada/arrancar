@@ -3,7 +3,7 @@ import type { DestinoDeDocumento } from '../../dominio/destinos-de-documento.js'
 import type { MotivoFueraDelLibro } from '../../dominio/fuera-del-libro.js';
 import type { ClaseDeCargo } from '../../dominio/reglas-de-notas-de-debito.js';
 import type { ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
-import type { TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
+import type { MotivoSinCredito, TipoDeDocumento, TipoDte } from '../../dominio/tipos-de-documento.js';
 
 /** Una línea tal como llega: los montos como texto (`"1250.50"`), sin ningún cálculo. */
 export interface SolicitudDeLinea {
@@ -29,6 +29,28 @@ export interface AjusteDeRetencionSolicitado {
   regla: ReglaDeRetencion;
   monto: string;
   motivo: string | null;
+}
+
+/**
+ * La factura del sistema anterior que corrige una nota, tal como llega (montos como texto). Se escribe completa en
+ * cada nota; el servidor busca o crea su fila.
+ */
+export interface FacturaAnteriorSolicitada {
+  /** Una familia de factura que admite notas. */
+  tipo: TipoDeDocumento;
+  serie: string | null;
+  numero: string;
+  fechaEmision: string;
+  autorizacionFel: string | null;
+  total: string;
+  iva: string;
+  /** Notas de débito del sistema anterior sobre esta factura (total e IVA); `null` es cero. */
+  notasDeDebitoAnterioresTotal: string | null;
+  notasDeDebitoAnterioresIva: string | null;
+  /** `null`: dio crédito fiscal. El de una familia sin IVA lo pone el servidor. */
+  motivoSinCredito: MotivoSinCredito | null;
+  /** Obligatorio con `otra_causa_sin_credito`. */
+  detalleDelMotivo: string | null;
 }
 
 /** Lo que llega al calcular o registrar un documento de compra, con su tipo ya resuelto. */
@@ -58,6 +80,13 @@ export interface SolicitudDeDocumento {
   periodo: string | null;
   /** La factura que corrige; obligatoria en las notas de crédito y de débito, y solo ahí. */
   documentoAfectadoId: string | null;
+  /** La factura del sistema anterior que corrige, en lugar de `documentoAfectadoId`; solo en las notas. */
+  facturaAnterior?: FacturaAnteriorSolicitada | null;
+  /**
+   * La factura no dio crédito fiscal por otra causa (requisitos del art. 18, bancarización…): se marca a mano y exige
+   * explicarla en `observaciones`. Solo en las facturas.
+   */
+  otraCausaSinCredito?: boolean;
   /** Solo en la nota de débito: por qué cobra. No se guarda; sirve para avisar (intereses). */
   claseDeCargo?: ClaseDeCargo | null;
   /** IVA que dice la FEL, para corregir el calculado (hasta `max(5, líneas)` centavos de diferencia). */

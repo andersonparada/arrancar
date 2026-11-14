@@ -15,6 +15,7 @@ import { DestinoNoDisponible } from '../../../dominio/errores-de-documento.js';
 import { exigirFechaDeLaFamilia, resolverTipoDeDocumento } from '../../../dominio/familia-del-documento.js';
 import { AVISO_DE_PERIODO_PASADO } from '../../../dominio/periodo-del-libro.js';
 import { esNota } from '../../../dominio/tipos-de-documento.js';
+import { exigirOtraCausaCoherente } from '../../../dominio/otra-causa-sin-credito.js';
 import { exigirQueLaNotaNoSupereLaFactura } from '../../../dominio/tope-de-notas.js';
 import type { PropuestaEnCero } from '../../../dominio/retencion-practicada.js';
 import type { SolicitudDeDocumento, SolicitudSinResolver } from '../../dto/solicitud-de-documento.js';
@@ -24,12 +25,14 @@ import type {
   DestinosDeDocumentos,
   FacturaParaNota,
 } from '../../puertos/puertos-de-documentos.js';
+import type { RepositorioDeFacturasAnteriores } from '../../puertos/puertos-de-facturas-anteriores.js';
 import {
   armarDocumento,
   calcularElDocumento,
   retencionesDelDocumento,
   type DocumentoResuelto,
 } from './armado-del-documento.js';
+import type { DocumentoCalculado } from '../../../dominio/calculo-de-documento.js';
 import { avisosDelDocumento } from './avisos-del-documento.js';
 import {
   CargadorDeContextoFiscal,
@@ -38,13 +41,15 @@ import {
 } from './cargador-de-contexto-fiscal.js';
 import { GuardiaDelPeriodo } from './guardia-del-periodo.js';
 import { resolverEncabezado, type EncabezadoResuelto } from './encabezado-del-documento.js';
-import { ResolutorDeFactura } from './resolutor-de-factura.js';
+import { ResolutorDeFactura, type ContextoParaLaFactura } from './resolutor-de-factura.js';
+import type { FacturaAnteriorResuelta } from './resolutor-de-factura-anterior.js';
 import { ResolutorDeLineas } from './resolutor-de-lineas.js';
 
 export interface DependenciasDelPreparador extends DependenciasDelCargador {
   catalogos: CatalogosParaDocumentos;
   consultas: ConsultasDeDocumentos;
   destinos: DestinosDeDocumentos;
+  facturasAnteriores: RepositorioDeFacturasAnteriores;
 }
 
 export interface OpcionesDePreparacion {
@@ -74,6 +79,8 @@ export interface DocumentoPreparado {
   regimenDelProveedor: RegimenDeIvaDeProveedor;
   /** Retenciones que el sistema dejó en cero por una ya practicada en un documento anulado: se auditan al registrar. */
   retencionesEnCero: PropuestaEnCero[];
+  /** La nota corrige una factura del sistema anterior: su fila se crea o se corrige al registrar. */
+  facturaAnterior: FacturaAnteriorResuelta | null;
 }
 
 /**
@@ -91,7 +98,7 @@ export class PreparadorDeDocumento {
     this.periodos = new GuardiaDelPeriodo(dependencias);
     this.cargador = new CargadorDeContextoFiscal(dependencias);
     this.lineas = new ResolutorDeLineas(dependencias.catalogos);
-    this.facturas = new ResolutorDeFactura(dependencias.consultas);
+    this.facturas = new ResolutorDeFactura(dependencias.consultas, dependencias.facturasAnteriores);
   }
 
   /**
@@ -120,6 +127,7 @@ export class PreparadorDeDocumento {
       cambioDeRegimenConfirmado: resuelto.encabezado.cambioDeRegimenConfirmado,
       regimenDelProveedor: contexto.datosDelProveedor.instantanea().regimenIva,
       retencionesEnCero: resuelto.practicada.enCero,
+      facturaAnterior: resuelto.anterior,
     };
   }
 
@@ -131,13 +139,14 @@ export class PreparadorDeDocumento {
   ): Promise<DocumentoResuelto> {
     const encabezado = resolverEncabezado(solicitud, contexto);
     const lineas = await this.lineas.resolver(solicitud.lineas, solicitud.fechaEmision);
-    const { muestraEnReportesSat } = encabezado;
-    const factura = await this.facturas.resolver({ ...solicitud, muestraEnReportesSat }, opciones.bloquearFactura);
+    exigirOtraCausaCoherente(solicitud);
+    const { factura, anterior } = await this.facturas.resolver(
+      { ...solicitud, muestraEnReportesSat: encabezado.muestraEnReportesSat },
+      deLaFactura(contexto),
+      opciones.bloquearFactura,
+    );
     exigirLaFechaDeLaFamilia(solicitud, contexto, factura);
-    const calculado = calcularElDocumento(solicitud, contexto, { encabezado, lineas, factura });
-    if (factura && esNota(solicitud.tipo)) {
-      exigirQueLaNotaNoSupereLaFactura(factura, { tipo: solicitud.tipo, total: calculado.totales.total });
-    }
+    const calculado = calcularConTope(solicitud, contexto, { encabezado, lineas, factura });
     const anulado = await this.buscarAnulado(solicitud, encabezado);
     const { retenciones, practicada } = retencionesDelDocumento(solicitud, contexto, {
       encabezado,
@@ -146,7 +155,7 @@ export class PreparadorDeDocumento {
       anulado,
     });
     exigirPermisoDeAjuste(retenciones, opciones);
-    return { encabezado, lineas, factura, calculado, retenciones, practicada };
+    return { encabezado, lineas, factura, anterior, calculado, retenciones, practicada };
   }
 
   /** El documento anulado con la misma FEL (o NIT, tipo, serie y número) que ya retuvo algo; las notas no retienen. */
@@ -186,6 +195,27 @@ function normalizar(solicitud: SolicitudSinResolver): SolicitudDeDocumento {
   const tipo = resolverTipoDeDocumento(solicitud);
   return { ...solicitud, ...tipo, serie: serie || null, numero: normalizarSerieONumero(solicitud.numero) };
 }
+
+/** Calcula el documento y, si es una nota de crédito, revisa que no pase del total de su factura. */
+function calcularConTope(
+  solicitud: SolicitudDeDocumento,
+  contexto: ContextoFiscal,
+  resuelto: Pick<DocumentoResuelto, 'encabezado' | 'lineas' | 'factura'>,
+): DocumentoCalculado {
+  const calculado = calcularElDocumento(solicitud, contexto, resuelto);
+  const { factura } = resuelto;
+  if (factura && esNota(solicitud.tipo)) {
+    exigirQueLaNotaNoSupereLaFactura(factura, { tipo: solicitud.tipo, total: calculado.totales.total });
+  }
+  return calculado;
+}
+
+/** Lo del contexto fiscal que hace falta para ubicar una factura del sistema anterior. */
+const deLaFactura = (contexto: ContextoFiscal): ContextoParaLaFactura => ({
+  fechaDeRecepcion: contexto.fechaDeRecepcion,
+  fechaDeInicio: contexto.fechaDeInicio,
+  regimenDeLaEmpresa: contexto.datosDeLaEmpresa.instantanea().regimenIva,
+});
 
 /** El documento se mide con su fecha; la nota de crédito, con la familia y la fecha de su factura. */
 function exigirLaFechaDeLaFamilia(

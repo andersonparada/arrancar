@@ -59,9 +59,10 @@ function filaDeRetencion(documento: DocumentoDeCompra, retencion: RetencionDeDoc
 }
 
 function filaDeEncabezado(documento: DocumentoDeCompra): FilaDeDocumento {
-  const { totales, lineas: _lineas, retenciones: _retenciones, ...encabezado } = documento;
+  const { totales, lineas: _lineas, retenciones: _retenciones, facturaAnterior, ...encabezado } = documento;
   return {
     ...encabezado,
+    facturaAnteriorId: facturaAnterior?.id ?? null,
     total: deCentavos(totales.total),
     base: deCentavos(totales.base),
     iva: deCentavos(totales.iva),

@@ -1815,3 +1815,17 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   documentos y 30,000 pagos (`cuentas-por-pagar-pagos-rendimiento`): lista con saldo ~290 ms, saldo del proveedor ~90 ms,
   ficha ~20 ms y contraseña de 100 documentos ~110 ms: no hace falta guardar el saldo. Los pagos y reintegros de las pruebas
   se siembran en la base (los casos de uso llegan en CP4-3 y CP4-7).
+- **2026-11-14 — U8l-4 (servidor, Libro de compras: registrar notas con factura anterior).** `facturaAnterior` en la
+  solicitud (excluyente con `documentoAfectadoId`; esquema http `factura-anterior.esquemas-http.ts`) y `otraCausaSinCredito`
+  a mano en facturas, con detalle obligatorio en `observaciones`. `ResolutorDeFactura` delega en
+  `ResolutorDeFacturaAnterior`: revisa fechas (sin fecha de inicio, nota recibida antes, factura igual o posterior, más de
+  10 años, aviso desde 4), que la factura no esté en el libro, busca primero por FEL y luego por proveedor + serie +
+  número (familia factura) y decide crear, reutilizar o corregir (solo con notas anuladas, auditado como `corregir` en
+  `libro-de-compras.facturas-anteriores`); la presenta como `FacturaParaNota` con las notas de débito anteriores
+  sumadas. `RegistrarDocumento` guarda la fila antes de la nota, rechaza registrar una factura que una nota ya cita
+  (`FacturaYaEsDelSistemaAnterior`) y manda `facturaAnterior` al destino. Aviso de NDEB tardía con la fecha de la factura
+  anterior y texto del cambio de régimen con «el IVA va al costo». Nuevo puerto `RepositorioDeFacturasAnteriores`;
+  `DocumentoDeCompra`/`DocumentoDto` ganan `facturaAnterior` (también al leer para las bajas). La carrera de dos notas que
+  crean la misma factura se resuelve con `insert … on conflict do nothing` y un error propio (sin tocar el mapa de
+  mensajes del core). El IVA de la nota sale de `ivaDeLaFel` como hasta hoy. Sin migración. Siguen U8l-5 (bajas, ficha,
+  sugerencias, Excel y fecha de inicio), U8l-6 y U8l-7.

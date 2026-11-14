@@ -18,6 +18,7 @@ import { ProveedoresParaDocumentosDrizzle } from '../infraestructura/persistenci
 import { ConsultasDeListaDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-lista-de-documentos.drizzle.js';
 import { ConsultasDeEnterosDrizzle } from '../infraestructura/persistencia/enteros-de-retenciones.drizzle.js';
 import { RetencionesDeUnDocumentoDrizzle } from '../infraestructura/persistencia/repositorio-de-retenciones.drizzle.js';
+import { RepositorioDeFacturasAnterioresDrizzle } from '../infraestructura/persistencia/repositorio-de-facturas-anteriores.drizzle.js';
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { RepositorioDeDocumentosGuardadosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos-guardados.drizzle.js';
 import { RepositorioDeDatosFiscalesDeEmpresaDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales-de-empresa.drizzle.js';
@@ -34,6 +35,7 @@ import { atenderOrdenesDeDocumentos } from './ordenes-de-documentos.js';
 
 /** Las retenciones y los enteros que miran la baja y los avisos del documento, y la bandeja de DTE que enlaza o suelta su fila. */
 const vecinosDelDocumento = () => ({
+  facturasAnteriores: new RepositorioDeFacturasAnterioresDrizzle(),
   enteros: new ConsultasDeEnterosDrizzle(),
   retenciones: new RetencionesDeUnDocumentoDrizzle(),
   bandeja: new EnlaceDeLaBandeja(new RepositorioDeDteRecibidosDrizzle()),

@@ -22,6 +22,8 @@ import { CLASES_DE_CARGO } from '../dominio/reglas-de-notas-de-debito.js';
 import { REGLAS_DE_RETENCION } from '../dominio/retencion-propuesta.js';
 import { TIPOS_DE_DOCUMENTO, TIPOS_DTE } from '../dominio/tipos-de-documento.js';
 
+import { esquemaFacturaAnterior } from './factura-anterior.esquemas-http.js';
+
 const MAXIMO_DE_LINEAS = 200;
 
 const esquemaLinea = z.object({
@@ -79,6 +81,10 @@ export const esquemaDocumento = z.object({
   fechaRecepcion: fechaOpcional(),
   periodo: fechaOpcional(),
   documentoAfectadoId: idOpcional(),
+  /** Una nota sobre una factura del sistema anterior lleva esto en lugar de `documentoAfectadoId`. */
+  facturaAnterior: esquemaFacturaAnterior,
+  /** Solo en facturas: no dio crédito por otra causa; exige explicarla en `observaciones`. */
+  otraCausaSinCredito: z.boolean().default(false),
   /** Solo en la nota de débito; no se guarda. */
   claseDeCargo: opcionOpcional(CLASES_DE_CARGO),
   ivaDeLaFel: decimalOpcional(2),
