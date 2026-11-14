@@ -28,7 +28,15 @@ describe('conceptos iniciales', () => {
   it('ya no hay concepto de sistema para el cheque caduco: el inverso hereda el del cheque (P1)', () => {
     const claves = CONCEPTOS_INICIALES.map((c) => c.claveDeSistema).filter(Boolean);
 
-    expect(claves.sort()).toEqual(['pago_a_proveedor', 'saldo_inicial', 'sin_clasificar', 'transferencia']);
+    expect(claves.sort()).toEqual([
+      'pago_a_proveedor',
+      'pago_a_proveedor_de_activo',
+      'reintegro_de_proveedor',
+      'reintegro_de_proveedor_de_activo',
+      'saldo_inicial',
+      'sin_clasificar',
+      'transferencia',
+    ]);
     expect(CONCEPTOS_INICIALES.map((c) => c.datos.nombre)).not.toContain('Cheque caduco');
   });
 

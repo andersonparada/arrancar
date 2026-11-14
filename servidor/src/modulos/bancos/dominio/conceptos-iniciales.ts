@@ -27,6 +27,18 @@ const financiamiento = (grupoDeFlujo: string) => ({ actividadDeFlujo: 'financiam
 export const CONCEPTOS_DE_SISTEMA: readonly ConceptoInicial[] = [
   concepto('transferencia', 'Transferencia entre cuentas', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('pago_a_proveedor', 'Pago a proveedores', { aplicaA: 'debito', ...operacion('Pagos a proveedores') }),
+  concepto('pago_a_proveedor_de_activo', 'Pago a proveedores de activo fijo', {
+    aplicaA: 'debito',
+    ...inversion('Compra de activos'),
+  }),
+  concepto('reintegro_de_proveedor', 'Reintegro de proveedores', {
+    aplicaA: 'credito',
+    ...operacion('Pagos a proveedores'),
+  }),
+  concepto('reintegro_de_proveedor_de_activo', 'Reintegro de proveedores de activo fijo', {
+    aplicaA: 'credito',
+    ...inversion('Compra de activos'),
+  }),
   concepto('saldo_inicial', 'Saldo inicial', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('sin_clasificar', 'Sin clasificar', { aplicaA: 'ambos', ...sinFlujo }),
 ];

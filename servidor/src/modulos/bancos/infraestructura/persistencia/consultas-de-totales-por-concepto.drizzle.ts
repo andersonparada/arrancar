@@ -10,13 +10,17 @@ import type {
 import type { ConsultasDeTotalesPorConcepto } from '../../aplicacion/puertos/consultas-de-totales-por-concepto.js';
 import { conceptos } from './conceptos.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
+import { desgloseDeMovimientos } from './desglose-de-movimientos.tablas.js';
 import { movimientos } from './movimientos.tablas.js';
 
 const original = alias(movimientos, 'original');
 
-/** Lo que suma el monto de los movimientos que cumplen la condición (cero si ninguno). */
-const sumaDe = (condicion: SQL) => sql`coalesce(sum(${movimientos.monto}) filter (where ${condicion}), 0)`;
-const cuentaDe = (condicion: SQL) => sql<number>`(count(*) filter (where ${condicion}))::int`;
+/** La línea del reparto si el movimiento (o su original) tiene desglose; si no, el monto entero. */
+const montoDeLaLinea = sql`coalesce(${desgloseDeMovimientos.monto}, ${movimientos.monto})`;
+
+/** Lo que suma la línea de los movimientos que cumplen la condición (cero si ninguno). */
+const sumaDe = (condicion: SQL) => sql`coalesce(sum(${montoDeLaLinea}) filter (where ${condicion}), 0)`;
+const cuentaDe = (condicion: SQL) => sql<number>`(count(distinct ${movimientos.id}) filter (where ${condicion}))::int`;
 
 const esOriginal = sql`${movimientos.revierteAId} is null`;
 const esInverso = sql`${movimientos.revierteAId} is not null`;
@@ -32,6 +36,10 @@ const salidas = sql<string>`(${sumaDe(sql`${esOriginal} and ${noEsCredito}`)} - 
 const efecto = sql`case when ${esCredito} then ${movimientos.monto} else -${movimientos.monto} end`;
 const saldoHasta = (condicion: SQL) =>
   sql<string>`(coalesce(sum(${efecto}) filter (where ${condicion}), 0))::numeric(14,2)::text`;
+
+/** El reparto de un inverso es el de su original. */
+const idDelReparto = sql`coalesce(${original.id}, ${movimientos.id})`;
+const conceptoDeLaLinea = sql`coalesce(${desgloseDeMovimientos.conceptoId}, ${original.conceptoId}, ${movimientos.conceptoId})`;
 
 const columnasDeTotales = {
   conceptoId: conceptos.id,
@@ -55,7 +63,8 @@ const condicionesDeLosMovimientos = ({ desde, hasta, cuentaBancariaId }: FiltroD
 
 /**
  * Agregaciones en la base para los reportes por concepto: una consulta por reporte, sin traer movimientos. El
- * concepto de un inverso es el de su original (unión consigo misma por `revierte_a_id`).
+ * concepto de un inverso es el de su original (unión consigo misma por `revierte_a_id`) y, si el movimiento tiene
+ * desglose (CP4), cada línea cuenta en su concepto con su monto (un inverso usa el desglose de su original).
  */
 export class ConsultasDeTotalesPorConceptoDrizzle implements ConsultasDeTotalesPorConcepto {
   async exigirCuenta(cuentaBancariaId: string): Promise<void> {
@@ -68,20 +77,15 @@ export class ConsultasDeTotalesPorConceptoDrizzle implements ConsultasDeTotalesP
       .select(columnasDeTotales)
       .from(movimientos)
       .leftJoin(original, eq(original.id, movimientos.revierteAId))
-      .innerJoin(conceptos, eq(conceptos.id, sql`coalesce(${original.conceptoId}, ${movimientos.conceptoId})`))
+      .leftJoin(desgloseDeMovimientos, eq(desgloseDeMovimientos.movimientoId, idDelReparto))
+      .innerJoin(conceptos, eq(conceptos.id, conceptoDeLaLinea))
       .where(
         and(
           ...condicionesDeLosMovimientos(filtro),
           conceptoIds?.length ? inArray(conceptos.id, conceptoIds) : undefined,
         ),
       )
-      .groupBy(
-        conceptos.id,
-        conceptos.nombre,
-        conceptos.claveDeSistema,
-        conceptos.actividadDeFlujo,
-        conceptos.grupoDeFlujo,
-      )
+      .groupBy(conceptos.id)
       .orderBy(asc(conceptos.nombre));
   }
 
