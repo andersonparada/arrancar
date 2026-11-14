@@ -1568,3 +1568,15 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   observaciones salvo en la nota de crédito, que hereda el motivo de su factura) y la factura anterior gana la columna
   `detalle_del_motivo` (check `facturas_anteriores_detalle_del_motivo`, 1 a 500 y obligatorio con «otra causa»). Sin
   casos de uso ni API nuevos: siguen U8l-2 a U8l-4.
+- **2026-11-13 — Core (archivos): fila de revisión de PDF y limpieza de huérfanos en `main`** (plan y notas en
+  `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md`). `FilaDeRevision` reemplaza al semáforo de `InspectorQpdf`: 10 de
+  usuario en espera, 2 por cuenta, 60 s, 429 `revision_de_pdf_saturada` con `Retry-After: 30`; el origen `sistema`
+  (`guardar`, libro foliado) pasa delante con tope propio de 5 en espera. `DocumentosProtegidos.revisar(operador,
+  contenido, nombre)` e `InspectorDePdf.inspeccionar(contenido, turno)`. Tarea diaria `DepurarArchivosHuerfanos`
+  (al arrancar y cada 24 h): solo rutas con la forma de `RutasDeArchivo` (el logo de la instalación no se toca), más de
+  24 h, 1,000 por corrida, cerrojo `pg_try_advisory_lock` entre instancias, se niega con una raíz insegura y se apaga
+  con `DEPURAR_HUERFANOS=false` (antes de restaurar una base más vieja que los archivos). Migración de core `0023`
+  (índices por ruta y función `core.rutas_de_archivos_registradas`, `security definer`, `row_security = off`).
+  Revisado por el agente de seguridad («se puede unir con arreglos», los diez aplicados). Pruebas del servidor: 3797.
+  En programación: H2b servidor (archivo del estado de cuenta).
+

@@ -307,9 +307,9 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    transcrito, servidor y cliente) en `main`** desde el 2026-11-13, con P1 a P5 respondidas (pruebas: servidor 3700,
    cliente 921; **sin ver en el navegador**; migración de bancos `0030` sin aplicar a la base de desarrollo hasta
    correr `bd:migrar`). Seguridad S1, S2 y S10 decididas: plan en `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md`
-   (fila de revisión de PDF y limpieza diaria de huérfanos), programado en la rama `worktree-agent-a13465c000c281fed`
-   y **en corrección** tras la revisión de seguridad (no unir sin los arreglos: la limpieza borraba el logo).
-   **Sigue:** unir esa rama, paso 4 (H2b servidor, archivo adjunto, con revisión de seguridad), paso 5 (cliente),
+   (fila de revisión de PDF y limpieza diaria de huérfanos), **en `main`** con los diez arreglos de la revisión de
+   seguridad (migración de core `0023`; variable `DEPURAR_HUERFANOS`; pruebas del servidor 3797).
+   **Sigue:** paso 4 (H2b servidor, archivo adjunto, con revisión de seguridad), paso 5 (cliente),
    documentación y QA en el navegador.
 9. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual (ya no Q150,000: 125 salarios mínimos no agrícolas, Q500,285 en 2026).
 
