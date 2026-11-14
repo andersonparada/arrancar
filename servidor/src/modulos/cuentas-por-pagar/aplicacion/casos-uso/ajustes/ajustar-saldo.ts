@@ -4,6 +4,7 @@ import { EFECTO_DE_LA_CAUSA } from '../../../dominio/ajustes.js';
 import { motivoValido } from '../../../dominio/ciclo-de-vida.js';
 import { AjusteRegistrado } from '../../../dominio/eventos-de-ajustes.js';
 import type { DocumentoPorPagar } from '../../../dominio/documento-por-pagar.js';
+import { exigirNotaFueraDeContrasena } from '../../../dominio/nota-en-contrasena.js';
 import {
   exigirFechaDeAjuste,
   exigirNotaQueSeAjusta,
@@ -37,7 +38,7 @@ export class AjustarSaldo {
 
   /**
    * @throws RecursoNoEncontrado si la nota no existe.
-   * @throws MotivoInvalido, NoEsNotaConSaldo, NotaPendienteNoSeAjusta, CausaDeAjusteInvalida, MontoDeAjusteInvalido,
+   * @throws MotivoInvalido, NoEsNotaConSaldo, NotaPendienteNoSeAjusta, NotaEnContrasena, CausaDeAjusteInvalida, MontoDeAjusteInvalido,
    * AjusteMayorQueElSaldoLibre, DiferenciaMenorSobreElTope, ReferenciaObligatoria, FechaDeAjusteInvalida
    */
   async ejecutar(operador: Operador, pedido: PeticionDeAjuste): Promise<FichaDelDocumentoPorPagarDto> {
@@ -61,6 +62,7 @@ export class AjustarSaldo {
     const { documentos } = this.dependencias;
     const guardado = await bloquear(documentos, pedido.notaId);
     exigirNotaQueSeAjusta(guardado.documento);
+    exigirNotaFueraDeContrasena(guardado.documento, guardado.contrasenaVigente);
     const valido = await this.datosValidos(operador, guardado.documento, pedido);
     const fecha = await this.fechaValida(operador, pedido, fechaDeInicio);
     const ajusteId = await this.dependencias.ajustes.agregar(guardado.documento, {

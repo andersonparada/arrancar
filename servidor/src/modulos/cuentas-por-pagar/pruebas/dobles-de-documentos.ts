@@ -128,6 +128,8 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
       ajustes: this.ajustes.filter(({ documentoId }) => documentoId === documento.id),
+      contrasenaVigente: null,
+      contrasenas: [],
     };
   }
 
@@ -140,6 +142,8 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
       hechas: await this.aplicaciones.hechasPorLaNota(documento.id),
       recibidas: await this.aplicaciones.recibidasPorElCargo(documento.id),
       ajustes: this.ajustes.filter(({ documentoId }) => documentoId === documento.id),
+      contrasenaVigente: null,
+      contrasenas: [],
     };
   }
 

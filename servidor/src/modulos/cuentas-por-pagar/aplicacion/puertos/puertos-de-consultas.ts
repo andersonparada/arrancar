@@ -17,6 +17,8 @@ export interface FiltroDeDocumentosPorPagar {
   soloVencidos?: boolean;
   /** Solo los cargos con saldo por pagar y las notas de crédito con saldo libre. */
   conSaldo?: boolean;
+  /** Solo los documentos que no están en una contraseña vigente. */
+  sinContrasena?: boolean;
 }
 
 /** Qué página de la lista se pide: de 1 en adelante, con hasta `limite` documentos. */
@@ -63,6 +65,8 @@ export interface FilaDeDocumento {
   aplicacionesManualesRecibidas: number;
   notasVigentes: number;
   notasEnTotal: number;
+  /** La contraseña vigente en que está el documento (`numero` ya formateado: `15` o `2026-15`); `null` si no está en ninguna. */
+  contrasena: { id: string; numero: string } | null;
 }
 
 export interface NotaDeUnDocumento {

@@ -10,6 +10,7 @@ import {
   type CargoConSaldoParaAplicar,
   type NotaConSaldoParaAplicar,
 } from '../../../dominio/aplicacion-manual.js';
+import { exigirNotaFueraDeContrasena } from '../../../dominio/nota-en-contrasena.js';
 import { CargoNoDisponible } from '../../../dominio/errores-de-aplicaciones.js';
 import type { AplicacionACargo } from '../../../dominio/reparto-de-nota-de-credito.js';
 import type { FichaDelDocumentoPorPagarDto } from '../../dto/documento-por-pagar.dto.js';
@@ -37,7 +38,7 @@ export class AplicarNota {
 
   /**
    * @throws RecursoNoEncontrado si la nota no existe.
-   * @throws NoEsNotaConSaldo, CargoNoDisponible, CargoRepetido, MontoDeAplicacionInvalido, AplicacionMayorQueElSaldo,
+   * @throws NoEsNotaConSaldo, NotaEnContrasena, CargoNoDisponible, CargoRepetido, MontoDeAplicacionInvalido, AplicacionMayorQueElSaldo,
    * AplicacionMayorQueElSaldoLibre, FechaDeAplicacionInvalida, ReferenciaDeAplicacionInvalida
    */
   ejecutar(operador: Operador, pedido: PeticionDeAplicacion): Promise<FichaDelDocumentoPorPagarDto> {
@@ -58,9 +59,10 @@ export class AplicarNota {
 
   private async cargarNota(notaId: string): Promise<NotaConSaldoParaAplicar> {
     const { documentos, consultas } = this.dependencias;
-    await bloquear(documentos, notaId);
+    const guardada = await bloquear(documentos, notaId);
     const fila = await filaExistente(consultas, notaId);
     exigirNotaQueSeAplica(fila.documento);
+    exigirNotaFueraDeContrasena(fila.documento, guardada.contrasenaVigente);
     return { documento: fila.documento, saldoLibreCentavos: saldoDeLaFila(fila) };
   }
 

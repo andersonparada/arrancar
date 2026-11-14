@@ -53,6 +53,7 @@ export class ConsultasEnMemoria implements ConsultasDeDocumentos {
       ajustadoCentavos: vigentesDe.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0),
       ajustesVigentes: vigentesDe.length,
       aplicacionesManualesRecibidas: 0,
+      contrasena: null,
       notasVigentes: vigentes.length,
       notasEnTotal: this.documentos.documentos.filter((nota) => nota.documentoAfectadoId === documento.documentoId)
         .length,

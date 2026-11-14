@@ -10,6 +10,7 @@ const hechos = (cambios: Partial<HechosDelDocumento> = {}): HechosDelDocumento =
   saldoLibreCentavos: 0,
   ajustesVigentes: 0,
   aplicacionesManualesRecibidas: 0,
+  enContrasena: false,
   ...cambios,
 });
 
@@ -92,6 +93,25 @@ describe('acciones posibles de un documento por pagar', () => {
     expect(accionesDelDocumento(hechos({ origen: 'saldo_inicial', estado: 'autorizado' }))).toMatchObject({
       puedeDesautorizar: true,
       puedeAnular: false,
+    });
+  });
+});
+
+describe('un documento en una contraseña vigente', () => {
+  it('no se anula ni se elimina', () => {
+    expect(accionesDelDocumento(hechos({ estado: 'registrado', enContrasena: true }))).toMatchObject({
+      puedeAnular: false,
+      puedeEliminar: false,
+      puedeAutorizar: true,
+    });
+  });
+
+  it('una nota de crédito con saldo libre dentro de una contraseña no se aplica ni se ajusta', () => {
+    const nota = { tipo: 'nota_de_credito' as const, estado: 'registrado' as const, saldoLibreCentavos: 500 };
+
+    expect(accionesDelDocumento(hechos({ ...nota, enContrasena: true }))).toMatchObject({
+      puedeAplicar: false,
+      puedeAjustar: false,
     });
   });
 });

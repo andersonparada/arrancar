@@ -34,6 +34,9 @@ export const esquemaDocumentosAgregados = z.object({ documentos: z.array(z.uuid(
 /** El motivo se valida en el caso de uso (de 1 a 300 caracteres, sin espacios sobrantes). */
 export const esquemaQuitarDocumento = z.object({ motivo: z.string() });
 
+/** El motivo de la anulación se valida en el caso de uso (de 1 a 300 caracteres). */
+export const esquemaAnularContrasena = z.object({ motivo: z.string() });
+
 /** Filtros de la lista: `estado` es `vigente` por omisión; las fechas son de la contraseña y del pago prometido. */
 export const esquemaFiltroDeContrasenas = z.object({
   proveedorId: z.uuid().optional(),
@@ -52,6 +55,7 @@ export type ParamsDeContrasena = z.infer<typeof esquemaParamsDeContrasena>;
 export type ParamsDeDocumentoDeContrasena = z.infer<typeof esquemaParamsDeDocumentoDeContrasena>;
 export type EdicionDeContrasenaSolicitada = z.infer<typeof esquemaEdicionDeContrasena>;
 export type DocumentosAgregadosSolicitados = z.infer<typeof esquemaDocumentosAgregados>;
+export type AnularContrasenaSolicitada = z.infer<typeof esquemaAnularContrasena>;
 export type QuitarDocumentoSolicitado = z.infer<typeof esquemaQuitarDocumento>;
 export type ContrasenaSolicitada = z.infer<typeof esquemaContrasena>;
 export type FiltroDeContrasenasSolicitado = z.output<typeof esquemaFiltroDeContrasenas>;

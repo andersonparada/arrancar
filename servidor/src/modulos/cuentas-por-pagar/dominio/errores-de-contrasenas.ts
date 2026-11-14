@@ -110,3 +110,11 @@ export class ContrasenaAnulada extends ReglaDeNegocioInfringida {
     super('La contraseña está anulada: ya no se puede cambiar.');
   }
 }
+
+export class DocumentoEnContrasena extends ReglaDeNegocioInfringida {
+  readonly codigo = 'documento_en_contrasena';
+
+  constructor(etiqueta: string, numeroDeLaContrasena: string) {
+    super(`El documento ${etiqueta} está en la contraseña ${numeroDeLaContrasena}: quítelo de ella o anúlela primero.`);
+  }
+}

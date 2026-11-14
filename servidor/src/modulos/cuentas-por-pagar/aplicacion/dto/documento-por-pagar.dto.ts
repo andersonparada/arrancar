@@ -54,6 +54,8 @@ export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   registradoEn: string | null;
   autorizadoEn: string | null;
   autorizacionPropia: boolean;
+  /** La contraseña vigente en que está (`numero` ya formateado: `15` o `2026-15`); `null` si no está en ninguna. */
+  contrasena: { id: string; numero: string } | null;
 }
 
 export interface PaginaDeDocumentosPorPagarDto {

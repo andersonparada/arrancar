@@ -16,6 +16,8 @@ export interface HechosDelDocumento {
   ajustesVigentes: number;
   /** Aplicaciones manuales que recibió un cargo (también una nota de débito). */
   aplicacionesManualesRecibidas: number;
+  /** Está en una contraseña vigente (las anuladas no cuentan). */
+  enContrasena: boolean;
 }
 
 /** Lo que la pantalla puede ofrecer de un documento (el permiso del usuario lo ve el cliente con `v-permiso`). */
@@ -57,20 +59,23 @@ export function accionesDelDocumento(hechos: HechosDelDocumento): AccionesDelDoc
   };
 }
 
-/** Anular y eliminar: solo lo del libro, sin notas que lo corrijan, ni ajustes vigentes ni aplicaciones manuales. */
+/** Anular y eliminar: solo lo del libro, sin notas que lo corrijan y sin ataduras (ver `sinAtaduras`). */
 function accionesDeBaja(hechos: HechosDelDocumento) {
   const { estado } = hechos;
-  const esDelLibro = hechos.origen === 'libro_de_compras';
-  const sinAtaduras = hechos.ajustesVigentes === 0 && hechos.aplicacionesManualesRecibidas === 0;
+  const sePuede = hechos.origen === 'libro_de_compras' && sinAtaduras(hechos);
   return {
-    puedeAnular: esDelLibro && estado !== 'anulado' && hechos.notasVigentes === 0 && sinAtaduras,
-    puedeEliminar: esDelLibro && ESTADOS_QUE_SE_ELIMINAN.includes(estado) && hechos.notasEnTotal === 0 && sinAtaduras,
+    puedeAnular: sePuede && estado !== 'anulado' && hechos.notasVigentes === 0,
+    puedeEliminar: sePuede && ESTADOS_QUE_SE_ELIMINAN.includes(estado) && hechos.notasEnTotal === 0,
   };
 }
 
-/** Aplicar y ajustar son de una nota de crédito con saldo libre; el saldo libre de una anulada ya es cero. */
-function accionesDeLaNota({ tipo, estado, saldoLibreCentavos }: HechosDelDocumento) {
-  const notaConSaldo = tipo === 'nota_de_credito' && saldoLibreCentavos > 0;
+/** Ni ajustes vigentes, ni aplicaciones manuales recibidas, ni estar en una contraseña vigente. */
+const sinAtaduras = (hechos: HechosDelDocumento): boolean =>
+  hechos.ajustesVigentes === 0 && hechos.aplicacionesManualesRecibidas === 0 && !hechos.enContrasena;
+
+/** Aplicar y ajustar son de una nota de crédito con saldo libre y fuera de toda contraseña vigente; el saldo libre de una anulada ya es cero. */
+function accionesDeLaNota({ tipo, estado, saldoLibreCentavos, enContrasena }: HechosDelDocumento) {
+  const notaConSaldo = tipo === 'nota_de_credito' && saldoLibreCentavos > 0 && !enContrasena;
   return {
     puedeAplicar: notaConSaldo && estado !== 'anulado',
     puedeAjustar: notaConSaldo && ESTADOS_QUE_SE_AJUSTAN.includes(estado),

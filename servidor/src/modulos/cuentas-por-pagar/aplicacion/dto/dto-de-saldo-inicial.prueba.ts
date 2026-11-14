@@ -46,6 +46,7 @@ function fila(cambios: Partial<FilaDeDocumento> = {}, documento: Partial<Documen
     aplicacionesManualesRecibidas: 0,
     notasVigentes: 0,
     notasEnTotal: 0,
+    contrasena: null,
     ...cambios,
   };
 }

@@ -1,5 +1,7 @@
 import type { DocumentoConAplicaciones } from './documento-por-pagar.js';
+import { numeroDeContrasena } from './contrasena.js';
 import { etiquetaDe } from './documento-por-pagar.js';
+import { DocumentoEnContrasena } from './errores-de-contrasenas.js';
 import {
   CargoConAplicacionesManuales,
   CargoConNotasAplicadas,
@@ -13,6 +15,16 @@ import {
  * pagos (CP4).
  */
 export type ReglaDeBaja = (guardado: DocumentoConAplicaciones) => void | Promise<void>;
+
+/**
+ * Un documento en una contraseña vigente no se da de baja ni se corrige: la contraseña es un papel que tiene el proveedor.
+ * Primero se quita de ella o se anula. Los de contraseñas anuladas sí (la cascada se lleva esas filas).
+ */
+export const noEstarEnContrasena: ReglaDeBaja = ({ documento, contrasenaVigente }) => {
+  if (!contrasenaVigente) return;
+  const { numero, anioDeNumero } = contrasenaVigente;
+  throw new DocumentoEnContrasena(etiquetaDe(documento), numeroDeContrasena(numero, anioDeNumero));
+};
 
 /** Un documento autorizado ya se provisionó: solo se anula. */
 export const noEstarAutorizado: ReglaDeBaja = ({ documento }) => {
@@ -46,17 +58,19 @@ export const noTenerAjustesVigentes: ReglaDeBaja = ({ documento, ajustes }) => {
 };
 
 export const REGLAS_PARA_ANULAR: readonly ReglaDeBaja[] = [
+  noEstarEnContrasena,
   noTenerAplicacionesManualesRecibidas,
   noTenerAjustesVigentes,
   noTenerNotasAplicadas,
 ];
 
 export const REGLAS_PARA_ELIMINAR: readonly ReglaDeBaja[] = [
+  noEstarEnContrasena,
   noEstarAutorizado,
   noTenerAplicacionesManualesRecibidas,
   noTenerAjustesVigentes,
   noTenerNotasAplicadas,
 ];
 
-/** Hoy nada frena una desautorización; los pagos (CP4) sumarán aquí «el cargo ya tiene pagos». */
+/** Desautorizar sí se permite con el documento en una contraseña (admite registrados); los pagos (CP4) sumarán aquí «el cargo ya tiene pagos». */
 export const REGLAS_PARA_DESAUTORIZAR: readonly ReglaDeBaja[] = [];
