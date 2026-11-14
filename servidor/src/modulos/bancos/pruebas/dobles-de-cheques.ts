@@ -101,6 +101,10 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
       .sort((a, b) => a.numero - b.numero);
   }
 
+  async siguienteDeLaChequera(chequeraId: string): Promise<ChequeDto | null> {
+    return (await this.listarDeLaChequera(chequeraId, 'disponible'))[0] ?? null;
+  }
+
   async obtener(chequeId: string): Promise<ChequeDto> {
     const cheque = this.registros.get(chequeId);
     if (!cheque) throw new RecursoNoEncontrado('El cheque');

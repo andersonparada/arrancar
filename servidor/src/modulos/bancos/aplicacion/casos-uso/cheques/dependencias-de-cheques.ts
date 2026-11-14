@@ -12,7 +12,9 @@ import type { ConsultasMovimientos } from '../../puertos/consultas-movimientos.j
 import type { RepositorioCheques } from '../../puertos/repositorio-cheques.js';
 import type { RepositorioChequeras } from '../../puertos/repositorio-chequeras.js';
 import type { RepositorioMovimientos } from '../../puertos/repositorio-movimientos.js';
+import type { DesgloseDeMovimientos } from '../../desglose-de-movimientos.js';
 import type { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
+import type { RevisorDeCambios } from '../../revisor-de-cambios.js';
 
 /** Lo que usan los casos de uso de los cheques. */
 export interface DependenciasDeCheques {
@@ -28,6 +30,10 @@ export interface DependenciasDeCheques {
   conceptos: ConceptosDeMovimientos;
   reloj: Reloj;
   cuentasPorPagar: CuentasPorPagarActivo;
+  /** Avisa al módulo de origen antes de cambiar un movimiento suyo o marcado (CP4). */
+  revisor: RevisorDeCambios;
+  /** El reparto por concepto de lo que emite otro módulo (CP4). */
+  desglose: DesgloseDeMovimientos;
 }
 
 /** @throws RecursoNoEncontrado si no existe o no es de la empresa. */

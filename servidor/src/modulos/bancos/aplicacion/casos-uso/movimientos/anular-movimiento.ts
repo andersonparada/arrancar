@@ -1,6 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
+import type { OrigenDeMovimiento } from '../../../dominio/origen-de-movimiento.js';
 import type { MovimientoDto } from '../../dto/movimiento.dto.js';
 import type { PoliticaDeMismaFechaEnAnulacion } from '../../puertos/politica-de-misma-fecha-en-anulacion.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
@@ -16,6 +17,8 @@ interface AnulacionDeMovimiento {
   motivo: string;
   /** La fecha del inverso; la escribe el usuario, por omisión hoy. No puede ser anterior a la del original. */
   fecha?: string;
+  /** El módulo de origen que pide la anulación por una orden: no recibe su propio aviso (CP4). */
+  pedidoPor?: OrigenDeMovimiento;
 }
 
 const AUDITORIA = { recurso: 'bancos.movimientos', accion: 'anular' } as const;
@@ -32,14 +35,17 @@ export class AnularMovimiento {
    * @throws MovimientoDeTransferencia o MovimientoDeCheque si no es una nota suelta; NoEsUnaNota si es el saldo inicial.
    * @throws FechaDeReversionAnterior si la fecha del inverso es anterior a la del original.
    * @throws SaldoInsuficiente si el inverso deja la cuenta en negativo sin sobregiro permitido.
+   * @throws ModuloDeOrigenInactivo o lo que rechace el módulo de origen si es de otro módulo o está marcado (CP4).
    */
-  ejecutar(operador: Operador, { movimientoId, motivo, fecha }: AnulacionDeMovimiento): Promise<MovimientoDto> {
+  ejecutar(operador: Operador, solicitud: AnulacionDeMovimiento): Promise<MovimientoDto> {
+    const { movimientoId, motivo, fecha, pedidoPor } = solicitud;
     const { unidadDeTrabajo, repositorio, consultas, reglas, auditoria, correlativos } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
       movimiento.exigirClase(false);
       const anterior = await consultas.obtener(movimientoId);
       const fechaDelInverso = await this.fechaDelInverso(operador, anterior, fecha);
+      await this.revisarElOrigen(operador, anterior, { motivo, fecha: fechaDelInverso, pedidoPor });
       const inverso = movimiento.revertir(fechaDelInverso, motivo);
       const { cuentaBancariaId, motivoDeReversion } = movimiento.instantanea();
       await reglas.revisar(operador, {
@@ -52,6 +58,22 @@ export class AnularMovimiento {
       await repositorio.agregar(inverso);
       await auditoria.registrar({ ...AUDITORIA, registroId: movimientoId, anterior, motivo: motivoDeReversion });
       return consultas.obtener(movimientoId);
+    });
+  }
+
+  /** Si el movimiento es de otro módulo o está marcado, ese módulo revisa la anulación (con inverso) antes de hacerla. */
+  private revisarElOrigen(
+    operador: Operador,
+    movimiento: MovimientoDto,
+    { motivo, fecha, pedidoPor }: Pick<AnulacionDeMovimiento, 'motivo' | 'fecha' | 'pedidoPor'>,
+  ): Promise<void> {
+    return this.dependencias.revisor.revisar(operador, {
+      movimiento,
+      cambio: 'anular',
+      formaDeAnulacion: 'con_inverso',
+      motivo,
+      fecha,
+      pedidoPor,
     });
   }
 

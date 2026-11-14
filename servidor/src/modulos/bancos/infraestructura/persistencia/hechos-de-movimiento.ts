@@ -1,6 +1,8 @@
 import { sql, type AnyColumn } from 'drizzle-orm';
 import type { alias } from 'drizzle-orm/pg-core';
 import type { HechosDeUnMovimiento } from '../../aplicacion/acciones-posibles.js';
+import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../dominio/asignacion-de-concepto.js';
+import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import type { movimientos } from './movimientos.tablas.js';
 
@@ -18,6 +20,7 @@ type AliasDeMovimientos = Pick<
   | 'revertidoEn'
   | 'revierteAId'
   | 'moduloDeOrigen'
+  | 'conceptoId'
   | 'cuentaBancariaId'
   | 'fecha'
 >;
@@ -35,6 +38,13 @@ export const mesConciliadoDe = (cuentaBancariaId: AnyColumn, fecha: AnyColumn) =
 export const cuentaConConciliacionesDe = (cuentaBancariaId: AnyColumn) =>
   sql<boolean>`exists (select 1 from ${conciliaciones} where ${conciliaciones.cuentaBancariaId} = ${cuentaBancariaId})`;
 
+/** Si el concepto del movimiento es el de sistema «Pago a proveedores» (la marca de una nota para Cuentas por pagar). */
+export const conceptoEsDePagoDe = (conceptoId: AnyColumn) =>
+  sql<boolean>`exists (
+    select 1 from ${conceptos}
+    where ${conceptos.id} = ${conceptoId} and ${conceptos.claveDeSistema} = ${CLAVE_DE_PAGO_A_PROVEEDORES}
+  )`;
+
 /** Las columnas de un movimiento (o de su alias) que hacen falta para saber qué se puede hacer con él. */
 interface FilaConHechos {
   tipo: string;
@@ -45,6 +55,7 @@ interface FilaConHechos {
   revertidoEn: Date | null;
   revierteAId: string | null;
   moduloDeOrigen: string | null;
+  conceptoEsDePago: boolean;
   mesConciliado: boolean;
   cuentaConConciliaciones: boolean;
 }
@@ -59,6 +70,7 @@ export const columnasDeHechos = (movimiento: AliasDeMovimientos) => ({
   revertidoEn: movimiento.revertidoEn,
   revierteAId: movimiento.revierteAId,
   moduloDeOrigen: movimiento.moduloDeOrigen,
+  conceptoEsDePago: conceptoEsDePagoDe(movimiento.conceptoId),
   mesConciliado: mesConciliadoDe(movimiento.cuentaBancariaId, movimiento.fecha),
   cuentaConConciliaciones: cuentaConConciliacionesDe(movimiento.cuentaBancariaId),
 });
@@ -75,6 +87,7 @@ export function hechosDeLaFila(fila: FilaConHechos | null): HechosDeUnMovimiento
     revertido: fila.revertidoEn !== null,
     esInverso: fila.revierteAId !== null,
     esDeOtroModulo: fila.moduloDeOrigen !== null,
+    conceptoEsDePago: fila.conceptoEsDePago,
     mesConciliado: fila.mesConciliado,
     cuentaConConciliaciones: fila.cuentaConConciliaciones,
   };

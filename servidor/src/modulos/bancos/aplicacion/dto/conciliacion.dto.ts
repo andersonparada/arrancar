@@ -33,7 +33,14 @@ export interface EstadoDeCuentaDto {
 /** Un movimiento candidato de la pantalla de conciliar, con si está marcado. */
 export interface MovimientoConMarcaDto extends Omit<
   MovimientoDto,
-  'puedeAnular' | 'puedeEliminar' | 'puedeReclasificar' | 'conceptoNombre'
+  | 'puedeAnular'
+  | 'puedeEliminar'
+  | 'puedeReclasificar'
+  | 'conceptoNombre'
+  | 'marcadaParaCuentasPorPagar'
+  | 'desglose'
+  | 'puedeMarcar'
+  | 'puedeDesmarcar'
 > {
   marcado: boolean;
 }

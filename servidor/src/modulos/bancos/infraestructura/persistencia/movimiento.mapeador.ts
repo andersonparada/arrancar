@@ -1,6 +1,6 @@
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
-import { accionesDeMovimiento } from '../../aplicacion/acciones-posibles.js';
-import type { MovimientoDto } from '../../aplicacion/dto/movimiento.dto.js';
+import { accionesDeMovimiento, estaMarcada } from '../../aplicacion/acciones-posibles.js';
+import type { LineaDeDesgloseDto, MovimientoDto } from '../../aplicacion/dto/movimiento.dto.js';
 import { Movimiento } from '../../dominio/movimiento.js';
 import { hechosDeLaFila } from './hechos-de-movimiento.js';
 import type { movimientos } from './movimientos.tablas.js';
@@ -14,6 +14,8 @@ interface DatosDeLaConsulta extends Pick<
 > {
   mesConciliado: boolean;
   cuentaConConciliaciones: boolean;
+  conceptoEsDePago: boolean;
+  desglose: LineaDeDesgloseDto[];
 }
 
 /** Traduce entre la fila de la tabla, la entidad y lo que ve la pantalla. */
@@ -51,15 +53,18 @@ export const mapeadorDeMovimiento = {
       beneficiarioParaComparar: _beneficiarioParaComparar,
       mesConciliado: _mesConciliado,
       cuentaConConciliaciones: _cuentaConConciliaciones,
+      conceptoEsDePago: _conceptoEsDePago,
       anuladoEn,
       revertidoEn,
       ...dto
     } = fila;
+    const hechos = hechosDeLaFila(fila);
     return {
       ...dto,
       anuladoEn: anuladoEn ? anuladoEn.toISOString() : null,
       revertidoEn: revertidoEn ? revertidoEn.toISOString() : null,
-      ...accionesDeMovimiento(hechosDeLaFila(fila)),
+      marcadaParaCuentasPorPagar: estaMarcada(hechos),
+      ...accionesDeMovimiento(hechos),
     };
   },
 };

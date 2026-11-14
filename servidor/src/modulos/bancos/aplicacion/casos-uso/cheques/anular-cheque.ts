@@ -2,6 +2,7 @@ import type { CausaDeAnulacion } from '../../../dominio/cheque.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
 import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
+import type { OrigenDeMovimiento } from '../../../dominio/origen-de-movimiento.js';
 import type { ChequeDto } from '../../dto/cheque.dto.js';
 import { movimientoExistente } from '../movimientos/dependencias-de-movimientos.js';
 import { chequeExistente, type DependenciasDeCheques } from './dependencias-de-cheques.js';
@@ -15,6 +16,8 @@ interface AnulacionDeCheque {
   fecha?: string;
   /** La anulación en lote de caducos (H6b): siempre nota inversa, aunque el mes del cheque siga abierto. */
   conInversoSiempre?: boolean;
+  /** El módulo de origen que pide la anulación por una orden: no recibe su propio aviso (CP4). */
+  pedidoPor?: OrigenDeMovimiento;
 }
 
 /**
@@ -30,6 +33,7 @@ export class AnularCheque {
   /**
    * @throws ChequeAnulado si ya estaba anulado; MotivoDeAnulacionInvalido si falta el motivo.
    * @throws SaldoInsuficiente si al anularlo o revertirlo la cuenta queda en negativo sin sobregiro permitido.
+   * @throws ModuloDeOrigenInactivo o lo que rechace el módulo de origen si el cheque es de otro módulo (CP4).
    */
   ejecutar(operador: Operador, solicitud: AnulacionDeCheque): Promise<ChequeDto> {
     const { chequeId, motivo, causa } = solicitud;
@@ -57,18 +61,25 @@ export class AnularCheque {
   private async anularOrevertirSuMovimiento(
     operador: Operador,
     movimientoId: string,
-    { motivo, fecha, conInversoSiempre }: AnulacionDeCheque,
+    solicitud: AnulacionDeCheque,
   ): Promise<void> {
     const { repositorioMovimientos, consultasMovimientos } = this.dependencias;
+    const { motivo, fecha, conInversoSiempre } = solicitud;
     const movimiento = await movimientoExistente(repositorioMovimientos, movimientoId);
     const { fecha: fechaDelCheque, cuentaBancariaId } = movimiento.instantanea();
     const conciliadaHasta = await consultasMovimientos.conciliadaHasta(cuentaBancariaId);
     const mesConciliado = conciliadaHasta !== null && fechaDelCheque <= conciliadaHasta;
-    if (mesConciliado || conInversoSiempre)
-      await this.revertir(operador, movimiento, {
-        motivo,
-        fecha: fecha ?? (await this.dependencias.reloj.hoy(operador)),
-      });
+    const conInverso = mesConciliado || conInversoSiempre === true;
+    const fechaDelInverso = conInverso ? (fecha ?? (await this.dependencias.reloj.hoy(operador))) : undefined;
+    await this.dependencias.revisor.revisar(operador, {
+      movimiento: await consultasMovimientos.obtener(movimientoId),
+      cambio: 'anular',
+      formaDeAnulacion: conInverso ? 'con_inverso' : 'sin_inverso',
+      motivo,
+      fecha: fechaDelInverso,
+      pedidoPor: solicitud.pedidoPor,
+    });
+    if (fechaDelInverso) await this.revertir(operador, movimiento, { motivo, fecha: fechaDelInverso });
     else await this.anularALaAntigua(operador, movimiento, motivo);
   }
 

@@ -29,6 +29,8 @@ export interface ConsultasMovimientos {
   saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string>;
   /** Los originales vigentes con el concepto de sistema «Sin clasificar», en la cuenta y fechas del filtro. */
   resumenDeSinClasificar(filtro: FiltroDeMovimientos): Promise<ResumenDeSinClasificar>;
+  /** La suma de los cheques vigentes (sin anular ni revertir) de la cuenta con fecha posterior a `despuesDe`, con dos decimales. */
+  chequesPosfechados(cuentaBancariaId: string, despuesDe: string): Promise<string>;
   /** Los movimientos vigentes de la cuenta con fecha entre `desde` y `hasta`, ambas incluidas. */
   vigentesEntre(cuentaBancariaId: string, desde: string, hasta: string): Promise<MovimientoDto[]>;
 }

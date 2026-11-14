@@ -1,3 +1,13 @@
+import type { LineaDeConcepto } from '../../../core/contratos/bancos.contratos.js';
+import type { OrigenDeMovimiento } from '../../dominio/origen-de-movimiento.js';
+
+/** Una línea del reparto por concepto de un movimiento (CP4): el concepto y la parte del monto que clasifica. */
+export interface LineaDeDesgloseDto {
+  conceptoId: string;
+  concepto: string;
+  monto: string;
+}
+
 /** Movimiento tal como lo ve el usuario en pantalla. */
 export interface MovimientoDto {
   id: string;
@@ -44,6 +54,13 @@ export interface MovimientoDto {
   puedeEliminar: boolean;
   /** Lo calcula el servidor: si se le puede cambiar solo el concepto (no un inverso, ni una transferencia, ni el saldo inicial). */
   puedeReclasificar: boolean;
+  /** Nota de débito suelta con el concepto «Pago a proveedores»: Cuentas por pagar puede aplicarla a facturas (CP4). */
+  marcadaParaCuentasPorPagar: boolean;
+  /** El reparto por concepto cuando no es «todo al concepto del movimiento»; vacío si no lo hay. */
+  desglose: LineaDeDesgloseDto[];
+  /** Lo calcula el servidor (estructural: al marcar también se exige Cuentas por pagar activo). */
+  puedeMarcar: boolean;
+  puedeDesmarcar: boolean;
 }
 
 /** Lo que se recibe para registrar o corregir un movimiento, ya validado en su forma. La API nunca acepta `tipo: 'cheque'`. */
@@ -67,6 +84,10 @@ export type SolicitudDeMovimiento = Omit<
   | 'puedeAnular'
   | 'puedeEliminar'
   | 'puedeReclasificar'
+  | 'marcadaParaCuentasPorPagar'
+  | 'desglose'
+  | 'puedeMarcar'
+  | 'puedeDesmarcar'
   | 'conceptoId'
   | 'conceptoNombre'
   | 'interesBruto'
@@ -78,6 +99,11 @@ export type SolicitudDeMovimiento = Omit<
   isrRetenido?: string | null;
   /** Lo elige el usuario en una nota; el saldo inicial no lo trae: lo asigna el sistema. */
   conceptoId?: string;
+  /** Registrar la nota de débito ya marcada para Cuentas por pagar (exige el módulo activo). */
+  marcarParaCuentasPorPagar?: boolean;
+  /** Solo lo pasan las órdenes de otro módulo (nunca la API): el origen y el reparto por concepto fijos. */
+  origen?: OrigenDeMovimiento;
+  conceptos?: LineaDeConcepto[];
 };
 
 /** Qué movimientos listar: de una cuenta y entre dos fechas (incluidas); lo que falte no filtra.

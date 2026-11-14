@@ -3,6 +3,7 @@ import { proteger } from '../../core/compartido/http/guardias.js';
 import { esquemaAnulacion, esquemaEliminacion, esquemaParamsMovimiento } from './movimientos.esquemas-http.js';
 import type { NotasControlador } from './notas.controlador.js';
 import {
+  esquemaDesmarcado,
   esquemaFiltroDeNotas,
   esquemaNota,
   esquemaReclasificacion,
@@ -55,6 +56,17 @@ function rutasDeReclasificacion(app: Aplicacion, controlador: NotasControlador) 
   });
 }
 
+/** Marcar una nota de débito para Cuentas por pagar y quitarle la marca (con motivo): ambos son `editar`. */
+function rutasDeMarca(app: Aplicacion, controlador: NotasControlador) {
+  const editar = proteger({ permiso: 'bancos.notas.editar' });
+  app.post(`${RUTA}/:movimientoId/marcar`, { schema: conId, preHandler: editar, handler: controlador.marcar });
+  app.post(`${RUTA}/:movimientoId/desmarcar`, {
+    schema: { ...conId, body: esquemaDesmarcado },
+    preHandler: editar,
+    handler: controlador.desmarcar,
+  });
+}
+
 /** Registrar y corregir con `crear` y `editar`; anular y eliminar tienen su propio permiso. */
 function rutasDeEscritura(app: Aplicacion, controlador: NotasControlador) {
   const crear = proteger({ permiso: 'bancos.notas.crear' });
@@ -83,6 +95,7 @@ export function rutasNotas(controlador: NotasControlador): FastifyPluginAsyncZod
     rutasDeLectura(app, controlador);
     rutasDeSugerencias(app, controlador);
     rutasDeReclasificacion(app, controlador);
+    rutasDeMarca(app, controlador);
     rutasDeEscritura(app, controlador);
   };
 }

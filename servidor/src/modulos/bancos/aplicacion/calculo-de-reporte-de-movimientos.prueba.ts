@@ -32,6 +32,10 @@ function movimiento(datos: Partial<MovimientoDto> & Pick<MovimientoDto, 'tipo' |
     documentoDeOrigenId: null,
     puedeAnular: false,
     puedeEliminar: false,
+    marcadaParaCuentasPorPagar: false,
+    desglose: [],
+    puedeMarcar: false,
+    puedeDesmarcar: false,
     ...datos,
   };
 }

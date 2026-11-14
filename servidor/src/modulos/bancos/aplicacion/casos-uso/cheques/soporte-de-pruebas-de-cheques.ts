@@ -11,6 +11,7 @@ import { Identificador } from '../../../../core/compartido/dominio/identificador
 import { Movimiento } from '../../../dominio/movimiento.js';
 import { ChequerasEnMemoria } from '../../../pruebas/dobles-de-chequeras.js';
 import { ChequesEnMemoria, CuentasPorPagarFijo, LimiteDeChequeraFijo } from '../../../pruebas/dobles-de-cheques.js';
+import { piezasDeOrigenEnMemoria } from '../../../pruebas/dobles-de-origen.js';
 import {
   MovimientosEnMemoria,
   PoliticaDeMismaFechaFija,
@@ -105,6 +106,8 @@ function dependenciasDeCheques(
   { movimientos, cheques, chequeras, auditoria }: Dobles,
   { unidadDeTrabajo, reglas, reloj, cuentasPorPagarActivo }: EntornoDeCheques,
 ) {
+  const conceptos = conceptosDeMovimientosDe(conceptosSembrados());
+  const cuentasPorPagar = new CuentasPorPagarFijo(cuentasPorPagarActivo);
   return {
     unidadDeTrabajo,
     repositorio: cheques,
@@ -116,8 +119,8 @@ function dependenciasDeCheques(
     auditoria,
     correlativos: new CorrelativosEnMemoria(),
     reloj,
-    cuentasPorPagar: new CuentasPorPagarFijo(cuentasPorPagarActivo),
-    conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
+    conceptos,
+    ...piezasDeOrigenEnMemoria(conceptos, cuentasPorPagar),
   };
 }
 
@@ -135,6 +138,7 @@ function dependenciasDeMovimientos(
     reloj,
     conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(),
+    ...piezasDeOrigenEnMemoria(conceptosDeMovimientosDe(conceptosSembrados()), new CuentasPorPagarFijo(false)),
   };
 }
 

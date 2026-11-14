@@ -1,4 +1,7 @@
+import type { AvisoDeBancos, LineaDeConcepto } from '../../../core/contratos/bancos.contratos.js';
 import type { CausaDeAnulacion, EstadoDelCheque } from '../../dominio/cheque.js';
+import type { OrigenDeMovimiento } from '../../dominio/origen-de-movimiento.js';
+import type { MovimientoDto } from './movimiento.dto.js';
 
 /** Cheque tal como lo ve el usuario en pantalla. */
 export interface ChequeDto {
@@ -27,9 +30,15 @@ export interface SolicitudDeEmisionDeCheque {
   noNegociable: boolean;
   referencia: string | null;
   observaciones: string | null;
-  /** El concepto que clasifica el pago; un cheque cuenta como débito. */
-  conceptoId: string;
+  /** El concepto que clasifica el pago; un cheque cuenta como débito. Sin él solo si lo emite otro módulo (`origen`). */
+  conceptoId?: string;
+  /** Solo lo pasan las órdenes de otro módulo (nunca la API): el origen y el reparto por concepto fijos. */
+  origen?: OrigenDeMovimiento;
+  conceptos?: LineaDeConcepto[];
 }
+
+/** El movimiento del cheque emitido, con los avisos que no bloquean (fondos de un posfechado). */
+export type ChequeEmitidoDto = MovimientoDto & { avisos: AvisoDeBancos[] };
 
 /**
  * Un cheque emitido o anulado en la lista de la empresa (los disponibles no

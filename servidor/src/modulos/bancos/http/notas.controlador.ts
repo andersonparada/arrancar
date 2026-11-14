@@ -4,6 +4,8 @@ import type { ActualizarMovimiento } from '../aplicacion/casos-uso/movimientos/a
 import type { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anular-movimiento.js';
 import type { CrearMovimiento } from '../aplicacion/casos-uso/movimientos/crear-movimiento.js';
 import type { EliminarMovimiento } from '../aplicacion/casos-uso/movimientos/eliminar-movimiento.js';
+import type { DesmarcarNota } from '../aplicacion/casos-uso/movimientos/desmarcar-nota.js';
+import type { MarcarNota } from '../aplicacion/casos-uso/movimientos/marcar-nota.js';
 import type { ListarMovimientos } from '../aplicacion/casos-uso/movimientos/listar-movimientos.js';
 import type { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
 import type { ReclasificarVarios } from '../aplicacion/casos-uso/movimientos/reclasificar-varios.js';
@@ -12,6 +14,7 @@ import type { SugerirConceptosDeSinClasificar } from '../aplicacion/casos-uso/su
 import type { ObtenerMovimiento } from '../aplicacion/casos-uso/movimientos/obtener-movimiento.js';
 import type { ParamsMovimiento, SolicitudDeAnulacion, SolicitudDeEliminacion } from './movimientos.esquemas-http.js';
 import type {
+  DesmarcadoSolicitado,
   FiltroDeNotasSolicitado,
   NotaSolicitada,
   ReclasificacionSolicitada,
@@ -26,6 +29,8 @@ export interface CasosDeUsoDeNotas {
   actualizar: ActualizarMovimiento;
   anular: AnularMovimiento;
   eliminar: EliminarMovimiento;
+  marcar: MarcarNota;
+  desmarcar: DesmarcarNota;
   reclasificar: ReclasificarMovimientos;
   reclasificarVarios: ReclasificarVarios;
   sugerirDeSinClasificar: SugerirConceptosDeSinClasificar;
@@ -55,6 +60,15 @@ export class NotasControlador {
       movimientoId: solicitud.params.movimientoId,
       solicitud: { ...solicitud.body, saldoInicial: false },
       esSaldoInicial: false,
+    });
+
+  marcar = (solicitud: FastifyRequest<{ Params: ParamsMovimiento }>) =>
+    this.casosDeUso.marcar.ejecutar(operadorDe(solicitud), solicitud.params.movimientoId);
+
+  desmarcar = (solicitud: FastifyRequest<{ Params: ParamsMovimiento; Body: DesmarcadoSolicitado }>) =>
+    this.casosDeUso.desmarcar.ejecutar(operadorDe(solicitud), {
+      movimientoId: solicitud.params.movimientoId,
+      ...solicitud.body,
     });
 
   reclasificar = (solicitud: FastifyRequest<{ Body: ReclasificacionSolicitada }>) =>

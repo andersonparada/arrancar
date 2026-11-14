@@ -90,6 +90,14 @@ export class ConsultasChequesDrizzle implements ConsultasCheques {
     return mapeadorDeCheque.aDto(fila);
   }
 
+  async siguienteDeLaChequera(chequeraId: string): Promise<ChequeDto | null> {
+    const [fila] = await consultaBase()
+      .where(and(eq(cheques.chequeraId, chequeraId), eq(cheques.estado, 'disponible')))
+      .orderBy(asc(cheques.numero))
+      .limit(1);
+    return fila ? mapeadorDeCheque.aDto(fila) : null;
+  }
+
   /** El menor disponible por serie y número entre las chequeras activas de la cuenta. */
   async siguienteDisponible(cuentaBancariaId: string): Promise<ChequeDto | null> {
     const [fila] = await consultaBase()
