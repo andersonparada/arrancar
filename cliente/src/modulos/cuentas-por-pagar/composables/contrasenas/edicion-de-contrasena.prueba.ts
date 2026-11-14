@@ -45,6 +45,7 @@ const disponibles = (cargos: CargoDeContrasena[], notas: NotaDisponible[] = []):
   cargos,
   notas,
   fechaDePagoPropuesta: '2026-11-14',
+  umbralDeBancarizacion: '30000.00',
 });
 
 const marcando = (cargos: string[], notas: string[] = []) => ({

@@ -110,4 +110,6 @@ export interface DocumentosDisponiblesDto {
   notas: NotaDisponibleDto[];
   /** La mayor fecha de vencimiento de los cargos, o hoy si es anterior. */
   fechaDePagoPropuesta: string;
+  /** Desde cuánto exige la ley pagar por el sistema bancario, con dos decimales (para el aviso de bancarización). */
+  umbralDeBancarizacion: string;
 }

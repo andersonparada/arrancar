@@ -62,6 +62,7 @@ const rutaDeNueva = { name: 'cuentas-por-pagar.contrasenas.nueva' };
             permiso="cuentas-por-pagar.contrasenas.ver"
             :insignia="marcaDeContrasena(contrasena)"
             :class="{ 'opacity-80': contrasena.estado === 'anulada' }"
+            :destino="{ name: 'cuentas-por-pagar.contrasenas.ficha', params: { id: contrasena.id } }"
             solo-lectura
           />
         </li>

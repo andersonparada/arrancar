@@ -12,6 +12,14 @@ import { centavosOCero, repartirEnVivo, type ResultadoDelReparto } from './repar
 export const MAXIMO_DE_OBSERVACIONES = 500;
 export const MAXIMO_DE_DOCUMENTOS = 100;
 
+/** Mientras no llega nada del servidor. */
+export const SIN_DOCUMENTOS_DISPONIBLES: DocumentosDisponibles = {
+  cargos: [],
+  notas: [],
+  fechaDePagoPropuesta: '',
+  umbralDeBancarizacion: '',
+};
+
 /** Lo que se ve y se escribe al crear una contraseña; `cargos` y `notas` guardan los ids marcados. */
 export interface EdicionDeContrasena {
   proveedorId: string;

@@ -36,6 +36,8 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     descripcion:
       'Las contraseñas de pago que se entregan a los proveedores: qué facturas cubren y cuándo se prometió pagarlas.',
     nueva: 'Nueva contraseña',
+    ficha: 'Contraseña de pago',
+    imprimir: 'Imprimir la contraseña',
   },
   // generador: ventanas
 } as const;
@@ -150,6 +152,6 @@ export const AYUDA_DE_LA_FECHA_DE_PAGO_PROMETIDA =
 export const AYUDA_DE_OBSERVACIONES_DE_LA_CONTRASENA =
   'Opcional. Si registra una contraseña pendiente del sistema anterior, anote «Contraseña N.º X del sistema anterior, del dd/mm/aaaa» y use la fecha de inicio como fecha de la contraseña.';
 
-/** `notas` ya unidas (por ejemplo «A-12, 45»). */
-export const avisoDeBancarizacionDeLaContrasena = (notas: string): string =>
-  `La nota ${notas} se compensa con una factura de monto alto (bancarización, Decreto 20-2006): conserve la copia de la contraseña firmada por el proveedor; es el respaldo del acuerdo.`;
+/** `notas` ya unidas (por ejemplo «A-12, 45») y `umbral` ya formateado (por ejemplo «Q 30,000.00»). */
+export const avisoDeBancarizacionDeLaContrasena = (notas: string, umbral: string): string =>
+  `La nota ${notas} se compensa con una factura de ${umbral} o más (bancarización, Decreto 20-2006): conserve la copia de la contraseña firmada por el proveedor; es el respaldo del acuerdo.`;
