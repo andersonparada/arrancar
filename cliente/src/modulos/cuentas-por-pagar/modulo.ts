@@ -1,4 +1,4 @@
-import { FileClock, FileMinus, HandCoins, Inbox, Scale } from 'lucide-vue-next';
+import { ClipboardCheck, FileClock, FileMinus, HandCoins, Inbox, Scale } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_CUENTAS_POR_PAGAR, TITULO_SECCION_DE_PAGO, VENTANAS_CUENTAS_POR_PAGAR } from './textos';
 // generador: importaciones
@@ -41,6 +41,18 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
         titulo: VENTANAS_CUENTAS_POR_PAGAR.saldosIniciales.titulo,
       },
     },
+    {
+      path: '/cuentas-por-pagar/contrasenas',
+      name: 'cuentas-por-pagar.contrasenas',
+      component: () => import('./paginas/ListaDeContrasenas.vue'),
+      meta: { permiso: 'cuentas-por-pagar.contrasenas.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.contrasenas.titulo },
+    },
+    {
+      path: '/cuentas-por-pagar/contrasenas/nueva',
+      name: 'cuentas-por-pagar.contrasenas.nueva',
+      component: () => import('./paginas/NuevaContrasena.vue'),
+      meta: { permiso: 'cuentas-por-pagar.contrasenas.crear', titulo: VENTANAS_CUENTAS_POR_PAGAR.contrasenas.nueva },
+    },
     // generador: rutas
   ],
   // Los días de crédito se editan dentro de Proveedores y se guardan con su formulario.
@@ -79,6 +91,13 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           icono: FileMinus,
           seccion: 'operacion',
           permiso: 'cuentas-por-pagar.documentos.ver',
+        },
+        {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.contrasenas.titulo,
+          ruta: '/cuentas-por-pagar/contrasenas',
+          icono: ClipboardCheck,
+          seccion: 'operacion',
+          permiso: 'cuentas-por-pagar.contrasenas.ver',
         },
         {
           titulo: VENTANAS_CUENTAS_POR_PAGAR.saldosIniciales.titulo,
