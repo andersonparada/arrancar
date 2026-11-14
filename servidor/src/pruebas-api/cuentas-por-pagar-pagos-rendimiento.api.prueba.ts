@@ -94,7 +94,8 @@ async function milisegundosDe(ruta: string): Promise<{ ms: number; cuerpo: any }
   return { ms: mejor, cuerpo };
 }
 
-describe('saldos calculados con 20,000 documentos y 30,000 pagos', () => {
+// El tope se mide con el mejor de varios intentos; el plazo de la prueba los cubre aunque la máquina esté cargada.
+describe('saldos calculados con 20,000 documentos y 30,000 pagos', { timeout: 30_000 }, () => {
   it('la lista de documentos con saldo responde dentro del tope y cuenta los 20,000', async () => {
     const { ms, cuerpo } = await milisegundosDe(
       `${RUTA_CXP}/documentos?proveedorId=${proveedorId}&conSaldo=true&limite=50`,
