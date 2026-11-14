@@ -7,7 +7,9 @@ datos» del dictamen. Aterriza el paso **CP3** de `cuentas-por-pagar.md` («Cont
 documentos registrados o autorizados), imprimir y anular»), sus «Reglas de contraseñas, pagos y anulaciones», las
 «Respuestas del usuario (2026-09-29, tarde)», la fila CP3 de `diseno-datos-cuentas-por-pagar.md` §2 («documentos
 pendientes, registrados o autorizados») y la C4 del contador (U14 c: «Vence» y «Pago prometido» son datos distintos).
-Convive con CP1 (programado), U8 (`diseno-u8-saldos-iniciales-cuentas-por-pagar.md`; U8-1 y U8-2 ya en `main`) y CP2
+**Cambio del 2026-11-13 (CP4-e, `diseno-cp4-pagos.md`):** una contraseña con pagos **se sigue editando** (fecha
+prometida, agregar documentos y quitar los que no tienen pagos), con el aviso de «REIMPRESIÓN» si ya estaba impresa; ya
+no se cierra la edición al primer pago (§2, §5.2, §9.5). Convive con CP1 (programado), U8 (`diseno-u8-saldos-iniciales-cuentas-por-pagar.md`; U8-1 y U8-2 ya en `main`) y CP2
 (`diseno-cp2-notas-de-credito.md`, aprobado, que va antes). Deja preparado CP4 (pagos). Lo nuevo que aparezca al programar va a
 §13.
 
@@ -72,7 +74,7 @@ Convive con CP1 (programado), U8 (`diseno-u8-saldos-iniciales-cuentas-por-pagar.
 ```
 crear ──▶ vigente ──anular──▶ anulada
             │  ▲
-            └──┘ agregar o quitar documentos, cambiar la fecha prometida (mientras no tenga pagos, CP4)
+            └──┘ agregar o quitar documentos, cambiar la fecha prometida (también con pagos; con CP4 no se quita un documento con pagos)
 ```
 
 «Pagada en parte» y «pagada» **no son estados**: saldrán de los pagos (CP4), igual que en los documentos.
@@ -196,7 +198,7 @@ reparto completo) y la prueba de consistencia.
 
 ### 3.4 Migración
 
-`0005_cp3_contrasenas` (§1.8), con `npm run bd:generar -w servidor -- cuentas-por-pagar cp3_contrasenas`, revisada a
+`0006_cp3_contrasenas` (§1.8; ya en `main`), con `npm run bd:generar -w servidor -- cuentas-por-pagar cp3_contrasenas`, revisada a
 mano: crea `contrasenas` (con `impresa_en`) y `contrasena_documentos` con checks, únicos (el parcial va a mano si drizzle-kit no lo
 escribe), índices, llaves (la de Terceros y las compuestas) y RLS; agrega `contrasena_id` a `aplicaciones_de_notas`,
 cambia `aplicaciones_forma_valida` (`drop` y `add`) y agrega el check y el índice nuevos. Sin relleno (tablas nuevas; no
@@ -269,14 +271,19 @@ reparto una nota compensa un cargo marcado, la pantalla avisa: «La nota N se co
 (bancarización, Decreto 20-2006): conserve la copia de la contraseña firmada por el proveedor; es el respaldo del
 acuerdo.» (con el umbral real).
 
-### 5.2 Editar (mientras esté vigente y, con CP4, sin pagos)
+### 5.2 Editar (mientras esté vigente, también con pagos: CP4-e)
 
 | Acción | Regla |
 |---|---|
 | Cambiar la fecha prometida | `>= fecha` (`FechaDePagoInvalida`); **motivo obligatorio** (1–300, `MotivoInvalido`); auditoría `corregir`, recurso `cuentas-por-pagar.contrasenas`, `anterior` = `{ fechaDePago, observaciones }` como estaban, con el motivo (dictamen C-CP3-1: el proveedor tiene un papel con la fecha anterior). Si la fecha no cambia, no se audita ni se pide motivo. La impresión nueva sale con la fecha nueva (y «REIMPRESIÓN» si ya se imprimió) |
 | Cambiar solo las observaciones | Sin auditoría ni motivo (no cambia lo prometido; queda `actualizado_por`) |
 | Agregar documentos | Mismas validaciones que al crear (§5.1, 2); rehace el reparto |
-| Quitar un documento | Motivo obligatorio (1–300); no puede quedar sin cargos (`ContrasenaSinCargos`: «anúlela en su lugar») ni sin nada que pagar (`ContrasenaSinSaldo`); auditoría `quitar` (§6.2); borra la fila y rehace el reparto. CP4 sumará «el documento tiene pagos de esta contraseña» a `REGLAS_PARA_QUITAR_DE_CONTRASENA` |
+| Quitar un documento | Motivo obligatorio (1–300); no puede quedar sin cargos (`ContrasenaSinCargos`: «anúlela en su lugar») ni sin nada que pagar (`ContrasenaSinSaldo`); auditoría `quitar` (§6.2); borra la fila y rehace el reparto. CP4 sumará «el documento tiene pagos de esta contraseña» a `REGLAS_PARA_QUITAR_DE_CONTRASENA` (solo se quitan los documentos **sin** pagos) |
+
+**Con pagos (CP4-e, 2026-11-13):** las tres acciones siguen disponibles; solo no se quita un documento que tuvo pagos en
+la contraseña (CP4). **Contraseña ya impresa** (`impresa_en` no nulo): quitar o agregar un documento confirma antes «Esta
+contraseña ya se imprimió: imprima la nueva (saldrá con “REIMPRESIÓN”) y cámbiela por el original que tiene el
+proveedor» (dictamen CP4, CP4-e); la marca la pone la impresión (§5.5), sin dato nuevo.
 
 Una contraseña anulada no se edita (`ContrasenaAnulada`). La fecha de la contraseña y el proveedor no se cambian (si
 están mal, se anula y se hace otra).
@@ -483,8 +490,10 @@ documentos traen `contrasena`; filtro `sinContrasena`.
    contraseña, o aplicándola en Notas de crédito. Caso raro; queda en la QA. Si la contraseña ya se entregó, la
    reimpresión sale con «REIMPRESIÓN» y los montos del día.
 5. **CP4:** los pagos colgarán de `contrasenas` y de sus cargos; sumará `ContrasenaConPagos` a las reglas de anular,
-   «documento con pagos» a las de quitar, y cerrará `puedeEditar` al primer pago. Las formas de pago extra (saldo
-   inicial de Bancos, cuenta de apertura, nota de débito existente) se ligan a la contraseña allí.
+   «documento con pagos» a las de quitar. **Ya no** cierra `puedeEditar` al primer pago (CP4-e, 2026-11-13: con pagos se
+   cambia la fecha prometida, se agregan documentos y se quitan los que no tienen pagos). Las formas de pago extra
+   (cuenta de apertura, nota de débito existente) se ligan a la contraseña allí; «saldo inicial de Bancos» se quitó
+   (C-CP4-3).
 6. **CP5 (anotado):** reporte «contraseñas con pago prometido vencido» (vigentes, con saldo y fecha prometida antes de
    hoy, con «Vence» y «Pago prometido» lado a lado; la antigüedad sigue usando «Vence», dictamen C-CP3-5) y «Facturas
    autorizadas sin contraseña» (filtro `sinContrasena`).
@@ -504,8 +513,8 @@ documentos traen `contrasena`; filtro `sinContrasena`.
 Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`. Va **después de CP2** (usa sus
 columnas, `FechasDeEntrada`, `CargaInicial` y la variable de bancarización).
 
-1. **CP3-1 (servidor, datos):** `contrasenas.tablas.ts` (con `impresa_en`), `contrasena-documentos.tablas.ts`, cambios en
-   `aplicaciones-de-notas.tablas.ts`; migración `0005` (§3.4); mensaje de §3.5. **Pruebas de tablas:** cada check
+1. **CP3-1 (servidor, datos; hecho, en `main`):** `contrasenas.tablas.ts` (con `impresa_en`), `contrasena-documentos.tablas.ts`, cambios en
+   `aplicaciones-de-notas.tablas.ts`; migración `0006` (§3.4); mensaje de §3.5. **Pruebas de tablas:** cada check
    (pago antes de la fecha, observaciones con espacios, anulación incompleta, forma `contrasena` sin `contrasena_id`,
    referencia en una aplicación `contrasena`), documento de otro proveedor (falla por la llave), mismo documento en dos
    contraseñas vigentes (falla) y en una vigente y una anulada (pasa), cascada al eliminar el documento, número
@@ -537,7 +546,7 @@ columnas, `FechasDeEntrada`, `CargaInicial` y la variable de bancarización).
 6. **CP3-6 (cliente, lista y nueva):** páginas `Contrasenas` y `NuevaContrasena`, aviso de bancarización, lógica pura con
    pruebas, menú y textos.
 7. **CP3-7 (cliente, ficha e impresión):** ficha con editar (fecha prometida con motivo), quitar, anular (aviso de
-   recuperar el original); página de impresión con original y copia y «REIMPRESIÓN»; etiqueta y filtro en Documentos
+   recuperar el original); con la contraseña ya impresa, quitar o agregar confirma el aviso de «REIMPRESIÓN» (§5.2); página de impresión con original y copia y «REIMPRESIÓN»; etiqueta y filtro en Documentos
    por pagar.
 8. **CP3-8 (QA):** proveedor con tres facturas (una en la bandeja, una registrada, una autorizada, una de más de
    Q30,000), una nota con saldo a favor y un saldo inicial con retención por practicar; crear la contraseña (aviso de
@@ -563,7 +572,8 @@ El usuario aceptó todas las recomendaciones y las preguntas depuradas 6 y 7 del
 - **CP3-e. Leyenda al pie.** **Respondida:** sí, por empresa y por instalación, con la leyenda por omisión «recibido para
   revisión…».
 - **CP3-f. Editar una contraseña vigente.** **Respondida:** sí, mientras no tenga pagos; cambiar la fecha prometida se
-  audita con motivo (pregunta depurada 6).
+  audita con motivo (pregunta depurada 6). **Cambiada el 2026-11-13 (CP4-e):** también con pagos, quitando solo los
+  documentos sin pagos y con el aviso de «REIMPRESIÓN» si ya estaba impresa.
 - **CP3-g. Documento que estuvo en una contraseña anulada.** **Respondida:** se puede eliminar (cascada; queda en la
   auditoría).
 - **CP3-h. Proveedor inactivo.** **Respondida:** sí.

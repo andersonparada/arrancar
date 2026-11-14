@@ -1606,3 +1606,17 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   con pagos se sigue editando y se quitan los documentos sin pagos; (2) con Cuentas por pagar inactivo, Bancos rechaza
   cambiar los movimientos que vinieron de un pago. **Desglose de la nota ligada por activo fijo (Inversión) en CP4**,
   no solo aviso.
+- **2026-11-14 — Diseño de CP4 listo para programar** (`docs/modulos/diseno-cp4-pagos.md`, estado «aprobado, listo
+  para programar»). Aplicados el dictamen y las decisiones del 2026-11-13: sin forma `saldo_inicial_de_bancos` (el
+  cheque de apertura anulado que revive el pasivo queda en *Bancos, segunda parte*, `HOJA-DE-RUTA.md`); posfechado
+  «comprometido» hasta su fecha (`estadoDePago` suma `comprometido`) y aviso de fondos en Bancos; fecha mínima del pago =
+  emisión del DTE; beneficiario = nombre del NIT; texto nuevo de bancarización (cuentan las notas ligadas); desglose de
+  la nota ligada por activo fijo con la orden nueva `bancos.fijar_desglose_de_conceptos`; centavos solo como residuo de
+  un pago (check `ajustes_pago_solo_diferencia`, variable `cuentas-por-pagar.pagos.tope_diferencia`); «reaplicar pago»
+  (`pagos.reaplicar`, auditoría `corregir`, evento `pago_reaplicado`); `pago_anulado` con `anulacionEnBancos` y
+  `fechaOriginal`; concepto `reintegro_de_proveedor_de_activo`; recibo de reintegro y comprobante con leyenda «no es
+  documento tributario». `diseno-cp3-contrasenas.md`: la contraseña con pagos se sigue editando (aviso de
+  «REIMPRESIÓN») y la migración es la `0006` (P-CP4-1). Migraciones verificadas en `main`: Cuentas por pagar `0006`
+  (CP3-1), `0007` reservada a U8l-2, `0008` de CP4; Bancos `0030`, `0031` de H2b, `0032` de CP4. Orden: CP4-B1 y B2a
+  después de H2b servidor; CP4-B2b (avisos desde la conciliación) después de H2b completo; CP4-1 después de U8l-2;
+  CP4-2 después de CP3-3 a CP3-5 y U8l-3; clientes después de CP3-7. Pendientes P-CP4-2 a P-CP4-5 (§14).
