@@ -1,4 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { limitarSubidas } from '../../core/archivos/http/limite-de-subidas.js';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import type { ConciliacionesControlador } from './conciliaciones.controlador.js';
 import {
@@ -26,9 +27,14 @@ function rutasDeLectura(app: Aplicacion, controlador: ConciliacionesControlador)
     preHandler: ver,
     handler: controlador.obtener,
   });
+  app.get('/bancos/conciliaciones/:conciliacionId/estado-de-cuenta', {
+    schema: { tags: etiquetas, params: esquemaParamsConciliacion },
+    preHandler: ver,
+    handler: controlador.abrirEstadoDeCuenta,
+  });
 }
 
-/** Iniciar, marcar, transcribir el saldo y terminar comparten el permiso `conciliar`: es quien elabora el documento. */
+/** Iniciar, marcar, transcribir el saldo, adjuntar el estado de cuenta y terminar comparten el permiso `conciliar`: es quien elabora el documento. */
 function rutasDeConciliar(app: Aplicacion, controlador: ConciliacionesControlador) {
   const conciliar = proteger({ permiso: 'bancos.conciliaciones.conciliar' });
   app.post('/bancos/conciliaciones', {
@@ -50,6 +56,21 @@ function rutasDeConciliar(app: Aplicacion, controlador: ConciliacionesControlado
     schema: { tags: etiquetas, params: esquemaParamsConciliacion },
     preHandler: conciliar,
     handler: controlador.terminar,
+  });
+}
+
+/** El estado de cuenta (PDF o foto) lo sube, reemplaza y quita solo quien elabora; la subida tiene su límite por minuto. */
+function rutasDelEstadoDeCuenta(app: Aplicacion, controlador: ConciliacionesControlador) {
+  const conciliar = proteger({ permiso: 'bancos.conciliaciones.conciliar' });
+  app.post('/bancos/conciliaciones/:conciliacionId/estado-de-cuenta', {
+    schema: { tags: etiquetas, params: esquemaParamsConciliacion, consumes: ['multipart/form-data'] },
+    preHandler: [conciliar, limitarSubidas(app)],
+    handler: controlador.subirEstadoDeCuenta,
+  });
+  app.delete('/bancos/conciliaciones/:conciliacionId/estado-de-cuenta', {
+    schema: { tags: etiquetas, params: esquemaParamsConciliacion },
+    preHandler: conciliar,
+    handler: controlador.quitarEstadoDeCuenta,
   });
 }
 
@@ -82,6 +103,7 @@ export function rutasConciliaciones(controlador: ConciliacionesControlador): Fas
   return async (app) => {
     rutasDeLectura(app, controlador);
     rutasDeConciliar(app, controlador);
+    rutasDelEstadoDeCuenta(app, controlador);
     rutasDeAutorizar(app, controlador);
     rutasDeEliminar(app, controlador);
   };

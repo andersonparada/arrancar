@@ -13,6 +13,21 @@ export interface ConciliacionResumenDto {
   estado: EstadoDeConciliacionDto;
   elaboradaEn: string | null;
   autorizadaEn: string | null;
+  /** Si ya tiene el archivo del estado de cuenta (para el ícono de la lista). */
+  tieneEstadoDeCuenta: boolean;
+}
+
+/** El archivo del estado de cuenta, sin la ruta en disco ni su id: solo se abre por la ruta de la conciliación. */
+export interface EstadoDeCuentaDto {
+  tipoMime: string;
+  tamanoBytes: number;
+  /** Solo los PDF cuentan páginas. */
+  paginas: number | null;
+  sha256: string;
+  /** Como lo llamó quien lo subió (solo para mostrar). */
+  nombreOriginal: string | null;
+  subidoEn: string;
+  subidoPorNombre: string | null;
 }
 
 /** Un movimiento candidato de la pantalla de conciliar, con si está marcado. */
@@ -49,6 +64,8 @@ export interface ConciliacionDto {
   diferenciaConElEstadoDeCuenta: string | null;
   /** Elaborada o autorizada antes de que se pidiera el saldo: no tiene saldo transcrito. */
   previaAlSaldoTranscrito: boolean;
+  /** El archivo del estado de cuenta (PDF o foto), o `null` si no se ha adjuntado. */
+  estadoDeCuenta: EstadoDeCuentaDto | null;
 }
 
 /** Lo que se recibe para iniciar una conciliación: ya no se escribe ningún saldo. */

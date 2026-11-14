@@ -3,6 +3,7 @@ import { calcularConciliacion, type MovimientoParaConciliar } from '../aplicacio
 import type {
   ConciliacionDto,
   ConciliacionResumenDto,
+  EstadoDeCuentaDto,
   MovimientoConMarcaDto,
 } from '../aplicacion/dto/conciliacion.dto.js';
 import type { ConsultasConciliaciones } from '../aplicacion/puertos/consultas-conciliaciones.js';
@@ -12,25 +13,16 @@ import type {
 } from '../aplicacion/puertos/repositorio-conciliaciones.js';
 import { aCentavos } from '../dominio/centavos.js';
 import {
-  Conciliacion,
+  type Conciliacion,
   finDelMesDe,
   inicioDelMesDe,
   periodoAnterior,
   type ConciliacionId,
 } from '../dominio/conciliacion.js';
 import { diferenciaConElEstadoDeCuenta } from '../dominio/estado-de-cuenta.js';
+import { aMovimientoParaConciliar, aResumen, copia, ordenDescendente } from './ayudas-de-conciliaciones.js';
+import type { DocumentosEnMemoria } from './dobles-de-estado-de-cuenta.js';
 import type { MovimientosEnMemoria } from './dobles-de-movimientos.js';
-
-const copia = (conciliacion: Conciliacion) => Conciliacion.reconstruir(conciliacion.instantanea());
-
-function ordenDescendente(a: { anio: number; mes: number }, b: { anio: number; mes: number }): number {
-  return b.anio - a.anio || b.mes - a.mes;
-}
-
-function aMovimientoParaConciliar(m: MovimientoConMarcaDto): MovimientoParaConciliar {
-  const { id, tipo, fecha, monto, numeroDeCheque, beneficiario, referencia, marcado } = m;
-  return { id, tipo, fecha, monto, numeroDeCheque, beneficiario, referencia, marcado };
-}
 
 /**
  * Guarda las conciliaciones en memoria y responde tanto de repositorio como de
@@ -43,14 +35,24 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
   /** conciliacionId → ids de movimientos marcados. */
   private readonly marcas = new Map<string, Set<string>>();
   private movimientos?: MovimientosEnMemoria;
+  /** Para que el DTO muestre los datos del archivo del estado de cuenta. */
+  documentos?: DocumentosEnMemoria;
 
   vincularMovimientos(movimientos: MovimientosEnMemoria): void {
     this.movimientos = movimientos;
   }
 
+  async estadoDeCuentaDe(conciliacionId: string): Promise<EstadoDeCuentaDto | null> {
+    return this.datosDelArchivo(this.registros.get(conciliacionId));
+  }
+
   async buscar(id: ConciliacionId): Promise<Conciliacion | null> {
     const guardada = this.registros.get(id.valor);
     return guardada ? copia(guardada) : null;
+  }
+
+  async bloquear(id: ConciliacionId): Promise<Conciliacion | null> {
+    return this.buscar(id);
   }
 
   async agregar(conciliacion: Conciliacion): Promise<void> {
@@ -80,9 +82,7 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
   }
 
   async listar(cuentaBancariaId: string): Promise<ConciliacionResumenDto[]> {
-    return this.deLaCuenta(cuentaBancariaId)
-      .map((c) => this.aResumen(c))
-      .sort(ordenDescendente);
+    return this.deLaCuenta(cuentaBancariaId).map(aResumen).sort(ordenDescendente);
   }
 
   async obtener(conciliacionId: string): Promise<ConciliacionDto> {
@@ -152,6 +152,7 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
 
   private async armarDto(conciliacion: Conciliacion): Promise<ConciliacionDto> {
     const { estado, foto, saldoEstadoDeCuenta } = conciliacion.instantanea();
+    const estadoDeCuenta = this.datosDelArchivo(conciliacion);
     const { candidatos, resultado } = await this.calcularDocumento(conciliacion);
     const saldoQueDebeMostrarElEstadoDeCuenta =
       estado === 'autorizada' && foto
@@ -159,6 +160,7 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
         : resultado.saldoQueDebeMostrarElEstadoDeCuenta;
     return {
       ...this.aEncabezado(conciliacion),
+      estadoDeCuenta,
       candidatos,
       cuadratica: { libros: resultado.libros, banco: resultado.banco },
       partidas: resultado.partidas,
@@ -170,13 +172,13 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     };
   }
 
-  private deLaCuenta(cuentaBancariaId: string): Conciliacion[] {
-    return [...this.registros.values()].filter((c) => c.instantanea().cuentaBancariaId === cuentaBancariaId);
+  private datosDelArchivo(conciliacion: Conciliacion | undefined): EstadoDeCuentaDto | null {
+    const archivoId = conciliacion?.instantanea().estadoDeCuentaArchivoId ?? null;
+    return this.documentos?.datosDelEstadoDeCuenta(archivoId) ?? null;
   }
 
-  private aResumen(conciliacion: Conciliacion): ConciliacionResumenDto {
-    const { id, anio, mes, estado } = conciliacion.instantanea();
-    return { id: id.valor, anio, mes, estado, elaboradaEn: null, autorizadaEn: null };
+  private deLaCuenta(cuentaBancariaId: string): Conciliacion[] {
+    return [...this.registros.values()].filter((c) => c.instantanea().cuentaBancariaId === cuentaBancariaId);
   }
 
   private async saldosIniciales(cuentaBancariaId: string, periodo: { anio: number; mes: number }) {

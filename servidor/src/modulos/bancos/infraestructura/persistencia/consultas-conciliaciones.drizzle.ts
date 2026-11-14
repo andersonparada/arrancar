@@ -24,6 +24,7 @@ import {
   tieneAlgunaConciliacionDe,
 } from './conciliacion-candidatos.drizzle.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
+import { estadoDeCuentaDeLaConciliacion } from './estado-de-cuenta.consulta.drizzle.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 
 const elaboro = alias(usuarios, 'usuario_elaboro');
@@ -40,6 +41,7 @@ function aResumen(fila: {
   estado: string;
   elaboradaEn: Date | null;
   autorizadaEn: Date | null;
+  tieneEstadoDeCuenta: boolean;
 }): ConciliacionResumenDto {
   return {
     id: fila.id,
@@ -48,6 +50,7 @@ function aResumen(fila: {
     estado: fila.estado as EstadoDeConciliacionDto,
     elaboradaEn: fila.elaboradaEn ? fila.elaboradaEn.toISOString() : null,
     autorizadaEn: fila.autorizadaEn ? fila.autorizadaEn.toISOString() : null,
+    tieneEstadoDeCuenta: fila.tieneEstadoDeCuenta,
   };
 }
 
@@ -123,6 +126,7 @@ export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
         estado: conciliaciones.estado,
         elaboradaEn: conciliaciones.elaboradaEn,
         autorizadaEn: conciliaciones.autorizadaEn,
+        tieneEstadoDeCuenta: sql<boolean>`${conciliaciones.estadoDeCuentaArchivoId} is not null`,
       })
       .from(conciliaciones)
       .where(eq(conciliaciones.cuentaBancariaId, cuentaBancariaId))
@@ -145,11 +149,16 @@ export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
     });
     return {
       ...aEncabezado(fila),
+      estadoDeCuenta: await estadoDeCuentaDeLaConciliacion(conciliacionId),
       candidatos,
       cuadratica: { libros: resultado.libros, banco: resultado.banco },
       partidas: resultado.partidas,
       ...saldosDelDocumento(fila, resultado.saldoQueDebeMostrarElEstadoDeCuenta),
     };
+  }
+
+  estadoDeCuentaDe(conciliacionId: string) {
+    return estadoDeCuentaDeLaConciliacion(conciliacionId);
   }
 
   idsDeCandidatos(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]> {

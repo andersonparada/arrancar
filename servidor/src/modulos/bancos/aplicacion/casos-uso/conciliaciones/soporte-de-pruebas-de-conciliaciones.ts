@@ -8,6 +8,7 @@ import {
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
 import { ConciliacionesEnMemoria } from '../../../pruebas/dobles-de-conciliaciones.js';
+import { DocumentosEnMemoria, PoliticaDeEstadoDeCuentaFija } from '../../../pruebas/dobles-de-estado-de-cuenta.js';
 import {
   MovimientosEnMemoria,
   PoliticaDeMismaFechaFija,
@@ -21,6 +22,7 @@ import {
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
 import { CrearMovimiento } from '../movimientos/crear-movimiento.js';
+import { AbrirEstadoDeCuenta } from './abrir-estado-de-cuenta.js';
 import { AutorizarConciliacion } from './autorizar-conciliacion.js';
 import { DevolverConciliacion } from './devolver-conciliacion.js';
 import { EliminarConciliacion } from './eliminar-conciliacion.js';
@@ -28,6 +30,8 @@ import { IniciarConciliacion } from './iniciar-conciliacion.js';
 import { ListarConciliaciones } from './listar-conciliaciones.js';
 import { MarcarMovimientos } from './marcar-movimientos.js';
 import { ObtenerConciliacion } from './obtener-conciliacion.js';
+import { QuitarEstadoDeCuenta } from './quitar-estado-de-cuenta.js';
+import { SubirEstadoDeCuenta } from './subir-estado-de-cuenta.js';
 import { TerminarConciliacion } from './terminar-conciliacion.js';
 import { TranscribirSaldo } from './transcribir-saldo.js';
 
@@ -59,11 +63,16 @@ function dependenciasComunes(auditoria: AuditoriaEnMemoria) {
   };
 }
 
-function dependenciasDePrueba(
-  movimientos: MovimientosEnMemoria,
-  conciliaciones: ConciliacionesEnMemoria,
-  auditoria: AuditoriaEnMemoria,
-) {
+interface DoblesDePrueba {
+  movimientos: MovimientosEnMemoria;
+  conciliaciones: ConciliacionesEnMemoria;
+  auditoria: AuditoriaEnMemoria;
+  documentos: DocumentosEnMemoria;
+  politicaDeEstadoDeCuenta: PoliticaDeEstadoDeCuentaFija;
+}
+
+function dependenciasDePrueba(dobles: DoblesDePrueba) {
+  const { movimientos, conciliaciones, auditoria, documentos, politicaDeEstadoDeCuenta } = dobles;
   const reglas = new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro: SIN_SOBREGIRO });
   const comunes = dependenciasComunes(auditoria);
   const deConciliaciones = {
@@ -71,6 +80,8 @@ function dependenciasDePrueba(
     repositorio: conciliaciones,
     consultas: conciliaciones,
     consultasMovimientos: movimientos,
+    documentos,
+    politicaDeEstadoDeCuenta,
   };
   const deMovimientos = {
     ...comunes,
@@ -90,6 +101,9 @@ function casosDeConciliaciones(deConciliaciones: ReturnType<typeof dependenciasD
     listar: new ListarConciliaciones(deConciliaciones),
     marcar: new MarcarMovimientos(deConciliaciones),
     transcribirSaldo: new TranscribirSaldo(deConciliaciones),
+    subirEstadoDeCuenta: new SubirEstadoDeCuenta(deConciliaciones),
+    quitarEstadoDeCuenta: new QuitarEstadoDeCuenta(deConciliaciones),
+    abrirEstadoDeCuenta: new AbrirEstadoDeCuenta(deConciliaciones),
     terminar: new TerminarConciliacion(deConciliaciones),
     autorizar: new AutorizarConciliacion(deConciliaciones),
     devolver: new DevolverConciliacion(deConciliaciones),
@@ -103,14 +117,23 @@ export function casosDeUsoDeConciliaciones() {
   const conciliaciones = new ConciliacionesEnMemoria();
   conciliaciones.vincularMovimientos(movimientos);
   const auditoria = new AuditoriaEnMemoria();
-  const { deConciliaciones, deMovimientos } = dependenciasDePrueba(movimientos, conciliaciones, auditoria);
+  const documentos = new DocumentosEnMemoria();
+  conciliaciones.documentos = documentos;
+  const politicaDeEstadoDeCuenta = new PoliticaDeEstadoDeCuentaFija(false);
+  const { deConciliaciones, deMovimientos } = dependenciasDePrueba({
+    movimientos,
+    conciliaciones,
+    auditoria,
+    documentos,
+    politicaDeEstadoDeCuenta,
+  });
 
   const casos = {
     ...casosDeConciliaciones(deConciliaciones),
     crearMovimiento: new CrearMovimiento(deMovimientos),
     anularMovimiento: new AnularMovimiento(deMovimientos),
   };
-  return { casos, movimientos, conciliaciones, auditoria };
+  return { casos, movimientos, conciliaciones, auditoria, documentos, politicaDeEstadoDeCuenta };
 }
 
 export async function agregarMovimiento(

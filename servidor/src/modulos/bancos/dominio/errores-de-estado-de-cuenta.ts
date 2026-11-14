@@ -25,3 +25,12 @@ export class SaldoDelEstadoDeCuentaNoCoincide extends ReglaDeNegocioInfringida {
     );
   }
 }
+
+/** La empresa exige el estado de cuenta (PDF o foto) para terminar y no se adjuntó. */
+export class FaltaElEstadoDeCuenta extends DatoInvalido {
+  readonly codigo = 'falta_el_estado_de_cuenta';
+
+  constructor() {
+    super('Adjunte el estado de cuenta (PDF o foto) para terminar.');
+  }
+}

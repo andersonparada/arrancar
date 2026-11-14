@@ -112,6 +112,14 @@ export const moduloBancos: DefinicionModulo = {
       publica: true,
     }),
     definirConfiguracion({
+      clave: 'bancos.conciliaciones.exigir_estado_de_cuenta',
+      descripcion: 'Pide adjuntar el estado de cuenta (PDF o foto) para terminar una conciliación.',
+      esquema: z.boolean(),
+      predeterminado: true,
+      niveles: ['instalacion', 'empresa'],
+      publica: true,
+    }),
+    definirConfiguracion({
       clave: 'bancos.cheques.meses_de_vencimiento',
       descripcion:
         'Meses que debe tener un cheque emitido y sin cobrar para aparecer en el reporte de cheques caducos.',

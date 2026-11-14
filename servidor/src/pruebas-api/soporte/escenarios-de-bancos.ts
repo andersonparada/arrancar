@@ -1,4 +1,5 @@
 import type { ClienteApi } from './cliente-api.js';
+import { crearImagenPng } from './imagenes.js';
 
 /** Un banco y una cuenta bancaria activa, con saldo inicial de Q 1,000.00 el 2026-01-01. */
 export async function crearCuentaBancaria(usuario: ClienteApi, nombre: string): Promise<string> {
@@ -63,7 +64,8 @@ export async function conceptoGeneral(usuario: ClienteApi): Promise<string> {
 
 /**
  * Transcribe el saldo que muestra el estado de cuenta (el calculado con las marcas actuales) y termina la
- * conciliación. Devuelve la respuesta de terminar.
+ * conciliación. Si la empresa exige el archivo del estado de cuenta (lo normal) y falta, sube una foto de prueba y
+ * vuelve a intentar. Devuelve la respuesta de terminar.
  */
 export async function terminarConciliacionConSaldo(usuario: ClienteApi, conciliacionId: string) {
   const ruta = `/api/bancos/conciliaciones/${conciliacionId}`;
@@ -72,6 +74,10 @@ export async function terminarConciliacionConSaldo(usuario: ClienteApi, concilia
     saldoEstadoDeCuenta: cuerpo.saldoQueDebeMostrarElEstadoDeCuenta,
   });
   if (saldo.estado !== 200) throw new Error(`No se pudo transcribir el saldo: ${saldo.estado}`);
+  const terminada = await usuario.post(`${ruta}/terminar`, {});
+  if (terminada.cuerpo?.error?.codigo !== 'falta_el_estado_de_cuenta') return terminada;
+  const subida = await usuario.subirImagen('POST', `${ruta}/estado-de-cuenta`, await crearImagenPng());
+  if (subida.estado !== 200) throw new Error(`No se pudo subir el estado de cuenta: ${subida.estado}`);
   return usuario.post(`${ruta}/terminar`, {});
 }
 

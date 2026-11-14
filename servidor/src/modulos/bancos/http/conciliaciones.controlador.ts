@@ -1,5 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { leerDocumentoDeSolicitud } from '../../core/archivos/http/leer-documento.js';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
+import type { AbrirEstadoDeCuenta } from '../aplicacion/casos-uso/conciliaciones/abrir-estado-de-cuenta.js';
 import type { AutorizarConciliacion } from '../aplicacion/casos-uso/conciliaciones/autorizar-conciliacion.js';
 import type { DevolverConciliacion } from '../aplicacion/casos-uso/conciliaciones/devolver-conciliacion.js';
 import type { EliminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/eliminar-conciliacion.js';
@@ -7,6 +9,8 @@ import type { IniciarConciliacion } from '../aplicacion/casos-uso/conciliaciones
 import type { ListarConciliaciones } from '../aplicacion/casos-uso/conciliaciones/listar-conciliaciones.js';
 import type { MarcarMovimientos } from '../aplicacion/casos-uso/conciliaciones/marcar-movimientos.js';
 import type { ObtenerConciliacion } from '../aplicacion/casos-uso/conciliaciones/obtener-conciliacion.js';
+import type { QuitarEstadoDeCuenta } from '../aplicacion/casos-uso/conciliaciones/quitar-estado-de-cuenta.js';
+import type { SubirEstadoDeCuenta } from '../aplicacion/casos-uso/conciliaciones/subir-estado-de-cuenta.js';
 import type { TerminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/terminar-conciliacion.js';
 import type { TranscribirSaldo } from '../aplicacion/casos-uso/conciliaciones/transcribir-saldo.js';
 import type {
@@ -24,6 +28,9 @@ export interface CasosDeUsoDeConciliaciones {
   iniciar: IniciarConciliacion;
   marcar: MarcarMovimientos;
   transcribirSaldo: TranscribirSaldo;
+  subirEstadoDeCuenta: SubirEstadoDeCuenta;
+  quitarEstadoDeCuenta: QuitarEstadoDeCuenta;
+  abrirEstadoDeCuenta: AbrirEstadoDeCuenta;
   terminar: TerminarConciliacion;
   autorizar: AutorizarConciliacion;
   devolver: DevolverConciliacion;
@@ -58,6 +65,30 @@ export class ConciliacionesControlador {
       conciliacionId: solicitud.params.conciliacionId,
       saldo: solicitud.body.saldoEstadoDeCuenta,
     });
+
+  subirEstadoDeCuenta = async (solicitud: FastifyRequest<{ Params: ParamsConciliacion }>) => {
+    const { contenido, nombre } = await leerDocumentoDeSolicitud(solicitud);
+    return this.casosDeUso.subirEstadoDeCuenta.ejecutar(operadorDe(solicitud), {
+      conciliacionId: solicitud.params.conciliacionId,
+      contenido,
+      nombre,
+    });
+  };
+
+  quitarEstadoDeCuenta = (solicitud: FastifyRequest<{ Params: ParamsConciliacion }>) =>
+    this.casosDeUso.quitarEstadoDeCuenta.ejecutar(operadorDe(solicitud), solicitud.params.conciliacionId);
+
+  abrirEstadoDeCuenta = async (solicitud: FastifyRequest<{ Params: ParamsConciliacion }>, respuesta: FastifyReply) => {
+    const archivo = await this.casosDeUso.abrirEstadoDeCuenta.ejecutar(
+      operadorDe(solicitud),
+      solicitud.params.conciliacionId,
+    );
+    return respuesta
+      .header('Content-Type', archivo.tipoMime)
+      .header('Content-Disposition', `inline; filename="${archivo.nombre}"`)
+      .header('Cache-Control', 'private, no-store')
+      .send(archivo.contenido);
+  };
 
   terminar = (solicitud: FastifyRequest<{ Params: ParamsConciliacion }>) =>
     this.casosDeUso.terminar.ejecutar(operadorDe(solicitud), solicitud.params.conciliacionId);

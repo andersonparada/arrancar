@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { boolean, check, integer, numeric, text, timestamp, unique, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
+import { archivos } from '../../../core/archivos/infraestructura/persistencia/archivos.tablas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { esquemaBancos } from './esquema.tablas.js';
@@ -41,11 +42,14 @@ export const conciliaciones = esquemaBancos.table(
     saldoEstadoDeCuenta: numeric({ precision: 14, scale: 2 }),
     /** Solo la migración de H2 la pone en `true`: elaboradas o autorizadas antes de pedir el saldo. */
     previaAlSaldoTranscrito: boolean().notNull().default(false),
+    /** El estado de cuenta (PDF o foto) que sube quien elabora; lo pone siempre el servidor, nunca el cliente. */
+    estadoDeCuentaArchivoId: uuid().references(() => archivos.id),
     ...marcasDeTiempo,
     ...autoria,
   },
   (t) => [
     unique('conciliaciones_cuenta_mes_unico').on(t.cuentaBancariaId, t.anio, t.mes),
+    unique('conciliaciones_estado_de_cuenta_unico').on(t.estadoDeCuentaArchivoId),
     check('conciliaciones_mes_valido', sql`${t.mes} between 1 and 12`),
     check('conciliaciones_estado_valido', sql`${t.estado} in ('en_proceso', 'elaborada', 'autorizada')`),
     check(

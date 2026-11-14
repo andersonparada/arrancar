@@ -1,5 +1,9 @@
 import { aCentavos, deCentavos } from './centavos.js';
-import { FaltaElSaldoDelEstadoDeCuenta, SaldoDelEstadoDeCuentaNoCoincide } from './errores-de-estado-de-cuenta.js';
+import {
+  FaltaElEstadoDeCuenta,
+  FaltaElSaldoDelEstadoDeCuenta,
+  SaldoDelEstadoDeCuentaNoCoincide,
+} from './errores-de-estado-de-cuenta.js';
 
 /**
  * El saldo final que el usuario transcribe del estado de cuenta del banco. Solo se
@@ -47,4 +51,28 @@ export function exigirSaldoQueCoincide(saldo: string | null, calculado: string, 
     deCentavos(aCentavos(calculado)),
     transcrito.diferenciaCon(calculado),
   );
+}
+
+/** Lo que hace falta para terminar una conciliación. */
+export interface EvidenciaDelEstadoDeCuenta {
+  saldo: string | null;
+  /** El saldo que calculan hoy las marcas. */
+  calculado: string;
+  tieneArchivo: boolean;
+  /** Si la empresa pide adjuntar el archivo del estado de cuenta. */
+  exigeArchivo: boolean;
+}
+
+/**
+ * Revisa, en este orden, el saldo transcrito, que coincida y el archivo (solo si la empresa lo exige).
+ * @throws FaltaElSaldoDelEstadoDeCuenta, SaldoDelEstadoDeCuentaNoCoincide, FaltaElEstadoDeCuenta
+ */
+export function exigirEvidenciaParaTerminar({
+  saldo,
+  calculado,
+  tieneArchivo,
+  exigeArchivo,
+}: EvidenciaDelEstadoDeCuenta) {
+  exigirSaldoQueCoincide(saldo, calculado);
+  if (exigeArchivo && !tieneArchivo) throw new FaltaElEstadoDeCuenta();
 }
