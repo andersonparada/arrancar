@@ -182,13 +182,13 @@ export class DocumentosEnMemoria implements RepositorioDeDocumentos, ConsultasDe
     this.documentos = this.documentos.filter((documento) => documento.id !== id);
   }
 
-  async paraAplicarUnaNota(facturaDeCompraId: string): Promise<CargoConSaldo[]> {
-    this.bloqueadas.push(facturaDeCompraId);
+  async paraAplicarUnaNota(facturaId: string): Promise<CargoConSaldo[]> {
+    this.bloqueadas.push(facturaId);
     const vigentes = this.documentos.filter(({ estado }) => estado !== 'anulado');
-    const factura = vigentes.find(({ documentoId }) => documentoId === facturaDeCompraId);
+    const factura = vigentes.find(({ id }) => id === facturaId);
     if (!factura) return [];
     const debitos = vigentes.filter(
-      ({ tipo, documentoAfectadoId }) => tipo === 'nota_de_debito' && documentoAfectadoId === facturaDeCompraId,
+      ({ tipo, documentoAfectadoId }) => tipo === 'nota_de_debito' && documentoAfectadoId === facturaId,
     );
     return [factura, ...debitos].map((cargo) => ({ id: cargo.id, saldoCentavos: this.saldoDe(cargo) }));
   }

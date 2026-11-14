@@ -166,7 +166,9 @@ describe('recibir una nota de crédito', () => {
 
     expect(guardadoDe(nota.documentoId)).toMatchObject({ estado: 'pendiente', vencimiento: null });
     expect(documentos.saldoDe(guardadoDe(factura.documentoId))).toBe(8200);
-    expect(documentos.bloqueadas).toEqual([factura.documentoId]);
+    expect(documentos.bloqueadas).toEqual([guardadoDe(factura.documentoId).id]);
+    expect(nota.documentoAfectadoId).toBe(factura.documentoId);
+    expect(guardadoDe(nota.documentoId).documentoAfectadoId).toBe(guardadoDe(factura.documentoId).id);
   });
 
   it('guarda la aplicación como automática, con la fecha de recepción de la nota y sin referencia', async () => {
@@ -226,13 +228,13 @@ describe('recibir una nota de crédito', () => {
     expect(documentos.saldoDe(guardadoDe(segunda.documentoId))).toBe(300);
   });
 
-  it('si la factura no está en Cuentas por pagar la nota queda con todo su saldo libre', async () => {
-    const nota = llega({ tipo: 'nota_de_credito', documentoAfectadoId: crypto.randomUUID(), totalCentavos: 700 });
+  it('una nota de débito se guarda ligada al id propio de la factura', async () => {
+    const factura = await conFactura();
+    const debito = llega({ tipo: 'nota_de_debito', documentoAfectadoId: factura.documentoId });
 
-    await recibir.ejecutar(operador, nota);
+    await recibir.ejecutar(operador, debito);
 
-    expect(aplicaciones.lista).toEqual([]);
-    expect(aplicaciones.saldoLibreDe(guardadoDe(nota.documentoId))).toBe(700);
+    expect(guardadoDe(debito.documentoId).documentoAfectadoId).toBe(guardadoDe(factura.documentoId).id);
   });
 
   it('dos notas seguidas no pasan del saldo de la factura', async () => {

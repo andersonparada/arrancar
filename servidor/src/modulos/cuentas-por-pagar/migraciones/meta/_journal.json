@@ -50,6 +50,13 @@
       "when": 1794633224966,
       "tag": "0006_cp3_contrasenas",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794669767483,
+      "tag": "0007_u8l_notas_sobre_saldos_iniciales",
+      "breakpoints": true
     }
   ]
 }

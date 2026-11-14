@@ -87,10 +87,10 @@ export interface RepositorioDeAplicaciones {
 
 export interface ConsultasDeCargos {
   /**
-   * Bloquea la factura (por su id de Libro de compras) para que nadie más aplique a la vez, y devuelve ella y luego sus
+   * Bloquea la factura (por su id de aquí, venga del libro o sea un saldo inicial) para que nadie más aplique a la vez, y devuelve ella y luego sus
    * notas de débito vigentes, de la más antigua a la más nueva, cada una con lo que todavía debe.
    */
-  paraAplicarUnaNota(facturaDeCompraId: string): Promise<CargoConSaldo[]>;
+  paraAplicarUnaNota(facturaId: string): Promise<CargoConSaldo[]>;
 }
 
 export interface CondicionesDeProveedores {

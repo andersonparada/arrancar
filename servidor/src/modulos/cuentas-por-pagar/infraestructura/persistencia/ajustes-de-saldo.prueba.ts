@@ -36,7 +36,7 @@ async function unaNota(proveedorId = e.proveedorA) {
   return crear(proveedorId, {
     tipo: 'nota_de_credito',
     vencimiento: null,
-    documentoAfectadoId: factura.documentoId,
+    documentoAfectadoId: factura.id,
   });
 }
 

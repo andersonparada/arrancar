@@ -167,7 +167,7 @@ export class ConsultaBaseDeDocumentos {
       .leftJoin(this.alCargo, eq(this.alCargo.cargoId, documentos.id))
       .leftJoin(this.porLaNota, eq(this.porLaNota.notaId, documentos.id))
       .leftJoin(this.ajustadoDeLaNota, eq(this.ajustadoDeLaNota.notaId, documentos.id))
-      .leftJoin(this.notas, eq(this.notas.afectadoId, documentos.documentoId))
+      .leftJoin(this.notas, eq(this.notas.afectadoId, documentos.id))
       .leftJoin(this.contrasenaVigente, eq(this.contrasenaVigente.documentoId, documentos.id));
   }
 

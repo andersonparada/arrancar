@@ -70,7 +70,7 @@ export class RecibirDocumento {
       numero,
       tipo: documento.tipo,
       proveedorId: documento.proveedorId,
-      documentoAfectadoId: documento.documentoAfectadoId,
+      documentoAfectadoId: await this.facturaPropiaDe(documento.documentoAfectadoId),
       fechaEmision: documento.fechaEmision,
       totalCentavos: documento.totalCentavos,
       retencionesCentavos: documento.retencionesCentavos,
@@ -78,6 +78,14 @@ export class RecibirDocumento {
       vencimiento,
     });
     return { guardado, fechaRecepcion };
+  }
+
+  /** Traduce el id de la factura en Libro de compras al id propio de aquí (siempre existe: nota y factura comparten destino). */
+  private async facturaPropiaDe(facturaDeCompraId: string | null): Promise<string | null> {
+    if (facturaDeCompraId === null) return null;
+    const factura = await this.dependencias.documentos.buscarPorDocumentoDeCompra(facturaDeCompraId, false);
+    if (!factura) throw new Error(`La factura ${facturaDeCompraId} del libro no llegó a Cuentas por pagar.`);
+    return factura.documento.id;
   }
 
   private async vencimientoPara(

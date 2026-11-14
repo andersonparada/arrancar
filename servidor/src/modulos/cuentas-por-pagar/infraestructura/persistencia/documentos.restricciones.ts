@@ -16,6 +16,7 @@ type T = Record<
   | 'tipo'
   | 'proveedorId'
   | 'documentoAfectadoId'
+  | 'facturaDelSistemaAnterior'
   | 'fechaEmision'
   | 'total'
   | 'retenciones'
@@ -42,7 +43,11 @@ export const restriccionesDeValores = (t: T) => [
   check('documentos_estado_valido', sql`${t.estado} in (${sql.raw(ESTADOS)})`),
   check(
     'documentos_nota_con_factura',
-    sql`${t.origen} = 'saldo_inicial' or (${t.tipo} in ('nota_de_credito', 'nota_de_debito')) = (${t.documentoAfectadoId} is not null)`,
+    sql`${t.origen} = 'saldo_inicial' or (${t.tipo} not in ('nota_de_credito', 'nota_de_debito') and ${t.documentoAfectadoId} is null) or (${t.tipo} in ('nota_de_credito', 'nota_de_debito') and (${t.documentoAfectadoId} is not null or ${t.facturaDelSistemaAnterior}))`,
+  ),
+  check(
+    'documentos_factura_anterior_solo_en_notas',
+    sql`not ${t.facturaDelSistemaAnterior} or (${t.origen} = 'libro_de_compras' and ${t.tipo} in ('nota_de_credito', 'nota_de_debito'))`,
   ),
   check('documentos_total_positivo', sql`${t.total} > 0`),
   check('documentos_retenciones_validas', sql`${t.retenciones} >= 0 and ${t.retenciones} <= ${t.total}`),
@@ -77,7 +82,7 @@ export const restriccionesDeEstado = (t: T) => [
 
 /**
  * Llaves y únicos. La llave hacia la factura de una nota (`documentos_factura_fk`) es autorreferente y drizzle-kit no
- * la escribe: va a mano en la migración `0001`.
+ * la escribe: va a mano en las migraciones `0001` y `0007` (apunta al id propio).
  */
 export const llavesDeDocumento = (t: T) => [
   foreignKey({
@@ -100,6 +105,9 @@ export const indicesDeDocumento = (t: T) => [
   index('documentos_afectado_idx')
     .on(t.documentoAfectadoId)
     .where(sql`${t.documentoAfectadoId} is not null`),
+  index('documentos_notas_del_sistema_anterior_libres_idx')
+    .on(t.proveedorId)
+    .where(sql`${t.facturaDelSistemaAnterior} and ${t.documentoAfectadoId} is null`),
   index('documentos_bandeja_idx')
     .on(t.empresaId, t.creadoEn)
     .where(sql`${t.estado} = 'pendiente'`),

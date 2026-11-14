@@ -166,7 +166,7 @@ describe('documentos por pagar: llaves', () => {
 
   it('la factura de una nota debe estar aquí y ser del mismo proveedor', async () => {
     const factura = await crear();
-    const nota = { tipo: 'nota_de_debito', documentoAfectadoId: factura.documentoId };
+    const nota = { tipo: 'nota_de_debito', documentoAfectadoId: factura.id };
     const sinFactura = { ...nota, documentoAfectadoId: crypto.randomUUID() };
 
     await expect(crear(nota)).resolves.toBeTruthy();
@@ -180,7 +180,7 @@ describe('documentos por pagar: llaves', () => {
     const nota = documentoValido(e, documentoId, {
       tipo: 'nota_de_debito',
       proveedorId: e.proveedorA2,
-      documentoAfectadoId: factura.documentoId,
+      documentoAfectadoId: factura.id,
     });
 
     const error = await errorDePostgres(insertar(nota));

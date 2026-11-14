@@ -24,6 +24,7 @@ export interface FichaDelDocumentoDto {
   numero: string;
   tipo: TipoDeDocumento;
   proveedorId: string;
+  /** Id de aquí (no del libro) de la factura que corrige la nota. */
   documentoAfectadoId: string | null;
   fechaEmision: string;
   total: string;

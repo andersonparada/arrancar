@@ -42,7 +42,7 @@ const unaNota = async (proveedorId = e.proveedorA) => {
     proveedorId,
     tipo: 'nota_de_credito',
     vencimiento: null,
-    documentoAfectadoId: factura.documentoId,
+    documentoAfectadoId: factura.id,
   });
 };
 
