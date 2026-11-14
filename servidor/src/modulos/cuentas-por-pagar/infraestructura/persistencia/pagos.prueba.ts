@@ -1,5 +1,5 @@
 /**
- * Prueba de integración contra PostgreSQL: los pagos (checks por forma, únicos, llaves hacia la contraseña y Bancos,
+ * Prueba de integración contra PostgreSQL: los pagos (checks por forma, únicos, llaves hacia el proveedor y Bancos,
  * RLS) y la diferencia menor de un cargo ligada a su pago.
  */
 import { eq } from 'drizzle-orm';
@@ -7,7 +7,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { grupoConexiones } from '../../../core/base-datos/conexion.js';
 import { enTransaccionSegura } from '../../../core/compartido/pruebas/en-transaccion-segura.js';
 import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
-import { contrasenas } from './contrasenas.tablas.js';
 import { documentos } from './documentos.tablas.js';
 import {
   contextoDe,
@@ -36,31 +35,13 @@ async function crearDocumento(proveedorId = e.proveedorA) {
   return fila!;
 }
 
-async function crearContrasena() {
-  secuencia += 1;
-  const [fila] = await enTransaccionSegura(contexto(), (tx) =>
-    tx
-      .insert(contrasenas)
-      .values({
-        empresaId: e.empresaA1,
-        proveedorId: e.proveedorA,
-        numero: secuencia,
-        fecha: '2026-03-10',
-        fechaDePago: '2026-04-10',
-      })
-      .returning(),
-  );
-  return fila!;
-}
-
 type NuevoPago = typeof pagos.$inferInsert;
 
-async function pagoValido(contrasenaId: string, cambios: Partial<NuevoPago> = {}): Promise<NuevoPago> {
+async function pagoValido(cambios: Partial<NuevoPago> = {}): Promise<NuevoPago> {
   secuencia += 1;
   return {
     empresaId: e.empresaA1,
     proveedorId: e.proveedorA,
-    contrasenaId,
     numero: secuencia,
     forma: 'cheque',
     fecha: '2026-03-15',
@@ -70,9 +51,8 @@ async function pagoValido(contrasenaId: string, cambios: Partial<NuevoPago> = {}
   };
 }
 
-async function crearPago(cambios: Partial<NuevoPago> = {}, contrasenaId?: string) {
-  const contrasena = contrasenaId ?? (await crearContrasena()).id;
-  const valores = await pagoValido(contrasena, cambios);
+async function crearPago(cambios: Partial<NuevoPago> = {}) {
+  const valores = await pagoValido(cambios);
   const [fila] = await enTransaccionSegura(contexto(), (tx) => tx.insert(pagos).values(valores).returning());
   return fila!;
 }
@@ -189,15 +169,10 @@ describe('pagos', () => {
     await expect(crearPago({ estado: 'anulado', ...completa })).resolves.toBeDefined();
   });
 
-  it('la contraseña debe ser del mismo proveedor y no se borra con pagos', async () => {
-    const contrasena = await crearContrasena();
-    await crearPago({}, contrasena.id);
+  it('el pago es de un proveedor que existe y no se borra con pagos', async () => {
+    await expect(crearPago({ proveedorId: e.proveedorA2 })).resolves.toBeDefined();
 
-    expect(await restriccion(crearPago({ proveedorId: e.proveedorA2 }))).toBe('pagos_contrasena_fk');
-    const alBorrar = await errorDePostgres(
-      enTransaccionSegura(contexto(), (tx) => tx.delete(contrasenas).where(eq(contrasenas.id, contrasena.id))),
-    );
-    expect(alBorrar?.code).toBe('23503');
+    expect(await restriccion(crearPago({ proveedorId: crypto.randomUUID() }))).toBe('pagos_proveedor_fk');
   });
 
   it('cada empresa ve solo sus pagos', async () => {

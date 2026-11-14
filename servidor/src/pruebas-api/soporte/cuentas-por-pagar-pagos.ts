@@ -26,9 +26,9 @@ export async function sembrarPago(
   const anulado = estado === 'anulado';
   const total = lineas.reduce((suma, { monto }) => suma + Number(monto), 0).toFixed(2);
   const [pago] = await consultar<{ id: string; numero: number }>(
-    `insert into cuentas_por_pagar.pagos (empresa_id, proveedor_id, contrasena_id, numero, forma, fecha, monto, motivo,
+    `insert into cuentas_por_pagar.pagos (empresa_id, proveedor_id, numero, forma, fecha, monto, motivo,
        con_carga_cerrada, estado, anulado_en, anulado_por, motivo_de_anulacion)
-     select empresa_id, proveedor_id, id,
+     select empresa_id, proveedor_id,
             (select coalesce(max(numero), 0) + 1 from cuentas_por_pagar.pagos where empresa_id = c.empresa_id),
             'cuenta_de_apertura', $2, $3, 'Pago sembrado por la prueba', false, $4,
             case when $5 then now() end, case when $5 then (select id from core.usuarios where usuario = $6) end,

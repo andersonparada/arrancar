@@ -1815,3 +1815,11 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   documentos y 30,000 pagos (`cuentas-por-pagar-pagos-rendimiento`): lista con saldo ~290 ms, saldo del proveedor ~90 ms,
   ficha ~20 ms y contraseña de 100 documentos ~110 ms: no hace falta guardar el saldo. Los pagos y reintegros de las pruebas
   se siembran en la base (los casos de uso llegan en CP4-3 y CP4-7).
+- **2026-11-14 — CP4-V1 (servidor, un pago cubre varias contraseñas del proveedor, M2).** Migración
+  `0009_cp4_pago_de_varias_contrasenas` (escrita a mano en el orden correcto): quita `pagos.contrasena_id`, `pagos_llave_unica`,
+  `pagos_contrasena_fk` y `pagos_contrasena_idx`; agrega `pagos_id_proveedor_unico (id, empresa_id, proveedor_id)`,
+  `pagos_proveedor_fk` a `terceros.proveedores` y el índice `pagos_proveedor_fecha_idx (proveedor_id, fecha)`; la llave
+  `aplicaciones_de_pagos_pago_fk` pasa a `(pago_id, empresa_id, proveedor_id)`. La contraseña de cada línea sigue garantizada por
+  `aplicaciones_de_pagos_en_la_contrasena_fk`. CP4-2 ya buscaba por la contraseña de la línea: sin cambios de código fuera de las
+  tablas. Pruebas de tablas: líneas de dos contraseñas del mismo proveedor en un pago (pasa), de otro proveedor (falla), cargo
+  fuera de su contraseña (falla), proveedor inexistente (falla).

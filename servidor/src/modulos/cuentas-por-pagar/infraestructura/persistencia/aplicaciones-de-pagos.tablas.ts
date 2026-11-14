@@ -6,7 +6,7 @@ import { llavesDeAplicacionDePago } from './aplicaciones-de-pagos.llaves.js';
 import { esquemaCuentasPorPagar } from './esquema.tablas.js';
 
 /**
- * Cuánto entrega cada pago a cada cargo de su contraseña y qué retención descontó. La base garantiza que el cargo es del
+ * Cuánto entrega cada pago a cada cargo (de la contraseña que lo contiene) y qué retención descontó. La base garantiza que el cargo es del
  * proveedor y la empresa del pago, que está en su contraseña y que la retención se descuenta en un solo pago vigente.
  * Que el cargo esté autorizado, que el monto no pase del saldo y que la suma cuadre con el pago lo cuida el dominio.
  * Al eliminarse el documento (solo con pagos anulados) se van sus líneas.
@@ -21,7 +21,7 @@ export const aplicacionesDePagos = esquemaCuentasPorPagar.table(
     /** Solo para las llaves compuestas. */
     proveedorId: uuid().notNull(),
     pagoId: uuid().notNull(),
-    /** La contraseña del pago, para la llave hacia `contrasena_documentos`. */
+    /** La contraseña vigente del cargo (un pago puede tener de varias del proveedor), para la llave hacia `contrasena_documentos`. */
     contrasenaId: uuid().notNull(),
     cargoId: uuid().notNull(),
     /** Lo que este pago entrega al proveedor por ese cargo. */

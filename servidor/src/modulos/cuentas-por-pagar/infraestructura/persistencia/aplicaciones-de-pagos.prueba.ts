@@ -1,6 +1,6 @@
 /**
  * Prueba de integración contra PostgreSQL: las líneas de un pago (llaves compuestas hacia el pago, el cargo y la
- * contraseña, retención en un solo pago vigente, cascada y RLS).
+ * contraseña de cada línea, retención en un solo pago vigente, cascada y RLS).
  */
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -54,15 +54,14 @@ async function crearContrasena() {
   return fila!;
 }
 
-async function crearPago(contrasenaId: string) {
+async function crearPago(proveedorId = e.proveedorA) {
   secuencia += 1;
   const [fila] = await enTransaccionSegura(contexto(), async (tx) =>
     tx
       .insert(pagos)
       .values({
         empresaId: e.empresaA1,
-        proveedorId: e.proveedorA,
-        contrasenaId,
+        proveedorId,
         numero: secuencia,
         forma: 'cheque',
         fecha: '2026-03-15',
@@ -97,7 +96,7 @@ describe('líneas de un pago', () => {
         documentoId: documento.id,
       }),
     );
-    return { pago: await crearPago(contrasena.id), contrasena, documento };
+    return { pago: await crearPago(), contrasena, documento };
   }
 
   const aplicar = (
@@ -139,18 +138,35 @@ describe('líneas de un pago', () => {
     expect(await restriccion(aplicar(base, { cargoId: fuera.id }))).toBe('aplicaciones_de_pagos_en_la_contrasena_fk');
   });
 
-  it('rechaza un cargo de otro proveedor y un pago de otra contraseña', async () => {
+  it('un pago cubre cargos de varias contraseñas del mismo proveedor', async () => {
+    const primera = await pagoConDocumento();
+    const segunda = await pagoConDocumento();
+
+    await aplicar(primera);
+    await expect(aplicar({ ...segunda, pago: primera.pago })).resolves.toBeDefined();
+  });
+
+  it('rechaza un cargo de otro proveedor y un pago de otro proveedor', async () => {
     const base = await pagoConDocumento();
     const ajeno = await crearDocumento(e.proveedorA2);
-    const otra = await crearContrasena();
+    const deOtro = await crearPago(e.proveedorA2);
 
     expect(await restriccion(aplicar(base, { cargoId: ajeno.id }))).toBe('aplicaciones_de_pagos_cargo_fk');
-    expect(await restriccion(aplicar(base, { contrasenaId: otra.id }))).toBe('aplicaciones_de_pagos_pago_fk');
+    expect(await restriccion(aplicar({ ...base, pago: deOtro }))).toBe('aplicaciones_de_pagos_pago_fk');
+  });
+
+  it('rechaza una línea cuya contraseña no contiene el cargo', async () => {
+    const base = await pagoConDocumento();
+    const otra = await crearContrasena();
+
+    expect(await restriccion(aplicar(base, { contrasenaId: otra.id }))).toBe(
+      'aplicaciones_de_pagos_en_la_contrasena_fk',
+    );
   });
 
   it('la retención de un cargo se descuenta en un solo pago vigente', async () => {
     const base = await pagoConDocumento();
-    const otroPago = await crearPago(base.contrasena.id);
+    const otroPago = await crearPago();
     await aplicar(base, { retencionDescontada: '5' });
 
     expect(await restriccion(aplicar({ ...base, pago: otroPago }, { retencionDescontada: '3' }))).toBe(
@@ -161,7 +177,7 @@ describe('líneas de un pago', () => {
 
   it('con el primer pago anulado, otro puede descontar la retención', async () => {
     const base = await pagoConDocumento();
-    const otroPago = await crearPago(base.contrasena.id);
+    const otroPago = await crearPago();
     await aplicar(base, { retencionDescontada: '5', vigente: false });
 
     await expect(aplicar({ ...base, pago: otroPago }, { retencionDescontada: '5' })).resolves.toBeDefined();
