@@ -1563,3 +1563,8 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   observaciones salvo en la nota de crédito, que hereda el motivo de su factura) y la factura anterior gana la columna
   `detalle_del_motivo` (check `facturas_anteriores_detalle_del_motivo`, 1 a 500 y obligatorio con «otra causa»). Sin
   casos de uso ni API nuevos: siguen U8l-2 a U8l-4.
+- 2026-11-13 — **CP3-1 (servidor, datos de contraseñas)** (`diseno-cp3-contrasenas.md`): tablas `cuentas_por_pagar.contrasenas`
+  (con `impresa_en`) y `contrasena_documentos` (llaves compuestas al proveedor, único parcial «una sola contraseña vigente»
+  y cascada desde el documento), `aplicaciones_de_notas.contrasena_id` con la forma `contrasena` y su check; migración
+  `0006_cp3_contrasenas` (CP2-2 tomó la 0005) y mensaje de `contrasena_documentos_vigente_unico`. Sin casos de uso ni API:
+  siguen CP3-2 a CP3-5.
