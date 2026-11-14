@@ -1,14 +1,21 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
+import type { AgregarDocumentosAContrasena } from '../aplicacion/casos-uso/contrasenas/agregar-documentos-a-contrasena.js';
 import type { CrearContrasena } from '../aplicacion/casos-uso/contrasenas/crear-contrasena.js';
 import type { DocumentosDisponibles } from '../aplicacion/casos-uso/contrasenas/documentos-disponibles.js';
 import type { ListarContrasenas } from '../aplicacion/casos-uso/contrasenas/listar-contrasenas.js';
+import type { EditarContrasena } from '../aplicacion/casos-uso/contrasenas/editar-contrasena.js';
 import type { ObtenerContrasena } from '../aplicacion/casos-uso/contrasenas/obtener-contrasena.js';
+import type { QuitarDocumentoDeContrasena } from '../aplicacion/casos-uso/contrasenas/quitar-documento-de-contrasena.js';
 import type {
   ContrasenaSolicitada,
   DisponiblesSolicitado,
+  DocumentosAgregadosSolicitados,
+  EdicionDeContrasenaSolicitada,
   FiltroDeContrasenasSolicitado,
   ParamsDeContrasena,
+  ParamsDeDocumentoDeContrasena,
+  QuitarDocumentoSolicitado,
 } from './contrasenas.esquemas-http.js';
 
 export interface CasosDeUsoDeContrasenas {
@@ -16,6 +23,9 @@ export interface CasosDeUsoDeContrasenas {
   obtener: ObtenerContrasena;
   disponibles: DocumentosDisponibles;
   crear: CrearContrasena;
+  editar: EditarContrasena;
+  agregarDocumentos: AgregarDocumentosAContrasena;
+  quitarDocumento: QuitarDocumentoDeContrasena;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
@@ -37,4 +47,24 @@ export class ContrasenasControlador {
     const contrasena = await this.casosDeUso.crear.ejecutar(operadorDe(solicitud), solicitud.body);
     return respuesta.status(201).send(contrasena);
   };
+
+  editar = (solicitud: FastifyRequest<{ Params: ParamsDeContrasena; Body: EdicionDeContrasenaSolicitada }>) =>
+    this.casosDeUso.editar.ejecutar(operadorDe(solicitud), { id: solicitud.params.id, ...solicitud.body });
+
+  agregarDocumentos = (
+    solicitud: FastifyRequest<{ Params: ParamsDeContrasena; Body: DocumentosAgregadosSolicitados }>,
+  ) =>
+    this.casosDeUso.agregarDocumentos.ejecutar(operadorDe(solicitud), {
+      contrasenaId: solicitud.params.id,
+      documentos: solicitud.body.documentos,
+    });
+
+  quitarDocumento = (
+    solicitud: FastifyRequest<{ Params: ParamsDeDocumentoDeContrasena; Body: QuitarDocumentoSolicitado }>,
+  ) =>
+    this.casosDeUso.quitarDocumento.ejecutar(operadorDe(solicitud), {
+      contrasenaId: solicitud.params.id,
+      documentoId: solicitud.params.documentoId,
+      motivo: solicitud.body.motivo,
+    });
 }

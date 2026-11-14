@@ -102,3 +102,11 @@ export class ContrasenaSinSaldo extends ReglaDeNegocioInfringida {
     super('Las notas de crédito cubren todo: no queda nada que pagar. Aplíquelas en Notas de crédito.');
   }
 }
+
+export class ContrasenaAnulada extends ReglaDeNegocioInfringida {
+  readonly codigo = 'contrasena_anulada';
+
+  constructor() {
+    super('La contraseña está anulada: ya no se puede cambiar.');
+  }
+}

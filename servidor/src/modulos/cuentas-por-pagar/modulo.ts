@@ -85,6 +85,10 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.contrasenas.crear',
       descripcion: 'Crear contraseñas de pago con los documentos de un proveedor',
     },
+    {
+      clave: 'cuentas-por-pagar.contrasenas.editar',
+      descripcion: 'Cambiar la fecha prometida, las observaciones y los documentos de una contraseña de pago',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
