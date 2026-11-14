@@ -160,6 +160,14 @@ export class ConsultasDeContrasenasDrizzle implements ConsultasDeContrasenas {
     return filas.map(aFilaDeDocumento);
   }
 
+  async nombreDelUsuario(usuarioId: string): Promise<string | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ nombres: usuarios.nombres, apellidos: usuarios.apellidos })
+      .from(usuarios)
+      .where(eq(usuarios.id, usuarioId));
+    return fila ? nombreCompleto(fila.nombres, fila.apellidos) : null;
+  }
+
   private async conDocumentos(filas: FilaDeContrasena[]): Promise<ContrasenaConDocumentos[]> {
     const detalles = await documentosDe(filas.map(({ contrasena }) => contrasena.id));
     return filas.map((fila) => ({ contrasena: aContrasenaGuardada(fila), ...detalles.get(fila.contrasena.id)! }));

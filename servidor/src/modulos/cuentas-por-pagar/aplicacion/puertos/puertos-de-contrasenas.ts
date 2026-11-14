@@ -55,6 +55,11 @@ export interface RepositorioDeContrasenas {
   quitarDocumento(contrasenaId: string, documentoId: string): Promise<void>;
   /** La deja `anulada` con quién, cuándo y por qué, y pone `vigente = false` en sus documentos (quedan libres). */
   anular(contrasenaId: string, anulacion: AnulacionDeContrasena): Promise<void>;
+  /**
+   * Pone `impresa_en` si era nulo, en una sola sentencia (dos impresiones a la vez no son las dos «primera»).
+   * Devuelve si esta fue la primera impresión.
+   */
+  marcarImpresion(contrasenaId: string): Promise<boolean>;
   /** La contraseña vigente de cada documento que está en una; los demás no aparecen. */
   vigentesDe(documentoIds: readonly string[]): Promise<Map<string, ContrasenaDelDocumento>>;
 }
@@ -112,4 +117,6 @@ export interface ConsultasDeContrasenas {
   detalle(id: string): Promise<ContrasenaConDocumentos | null>;
   /** Los cargos con saldo y las notas con saldo libre del proveedor que no están en una contraseña vigente. */
   disponiblesDe(proveedorId: string): Promise<FilaDeDocumento[]>;
+  /** Nombre y apellidos de un usuario (quien imprime); `null` si no se conoce. */
+  nombreDelUsuario(usuarioId: string): Promise<string | null>;
 }

@@ -22,6 +22,7 @@ const RUTA = '/cuentas-por-pagar/contrasenas';
 export function rutasDeContrasenas(controlador: ContrasenasControlador): FastifyPluginAsyncZod {
   return async (app) => {
     rutasDeConsulta(app, controlador);
+    rutasDeImpresion(app, controlador);
     app.post(RUTA, {
       schema: { tags, body: esquemaContrasena },
       preHandler: proteger({ permiso: 'cuentas-por-pagar.contrasenas.crear' }),
@@ -53,6 +54,21 @@ function rutasDeConsulta(app: FastifyInstance, controlador: ContrasenasControlad
     schema: { tags, params: esquemaParamsDeContrasena },
     preHandler: ver,
     handler: controlador.obtener,
+  });
+}
+
+/** Imprimir: la vista previa no cambia nada; «Imprimir» marca la primera impresión. Piden solo `contrasenas.ver`. */
+function rutasDeImpresion(app: FastifyInstance, controlador: ContrasenasControlador): void {
+  const ver = proteger({ permiso: 'cuentas-por-pagar.contrasenas.ver' });
+  app.get(`${RUTA}/:id/impresion`, {
+    schema: { tags, params: esquemaParamsDeContrasena },
+    preHandler: ver,
+    handler: controlador.verImpresion,
+  });
+  app.post(`${RUTA}/:id/impresiones`, {
+    schema: { tags, params: esquemaParamsDeContrasena },
+    preHandler: ver,
+    handler: controlador.registrarImpresion,
   });
 }
 

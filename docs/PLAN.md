@@ -1657,7 +1657,15 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `FilaDeDocumento` y `DocumentoPorPagarDto` suman `contrasena: { id, numero } | null`, `accionesDelDocumento` suma
   `enContrasena` (cierra anular, eliminar, aplicar y ajustar) y la lista admite `sinContrasena=true`. La ficha de la
   auditoría (`FichaDelDocumentoDto`) suma `contrasenas`, para que quede el rastro al eliminar un documento que estuvo en
-  contraseñas anuladas. Sigue CP3-5.
+  contraseñas anuladas.
+- 2026-11-14 — **CP3-5 (servidor, impresión)** (`diseno-cp3-contrasenas.md` §5.5): `GET …/contrasenas/:id/impresion` (vista
+  previa, no cambia nada; ya dice «REIMPRESIÓN» si la contraseña se había impreso) y `POST …/contrasenas/:id/impresiones`
+  (`RegistrarImpresion`: `update … set impresa_en = now() where impresa_en is null`, así de dos impresiones a la vez solo una es
+  la primera), ambos con `contrasenas.ver` y sin auditoría. `ImpresionDeContrasenaDto` trae empresa (mediador,
+  `empresas.obtener_datos_de_empresa`), contraseña, proveedor, las dos hojas, cargos con lo fijo y lo vivo, totales,
+  compensaciones («Compensación con nota N (saldo a favor)»), retenciones por emitir (saldos iniciales, sin restarlas),
+  leyenda de constancias solo si hay retenciones, `leyenda` de la empresa, `alDia`, `reimpresion` e `impresoPorNombre`. Variable
+  `cuentas-por-pagar.contrasenas.leyenda` (instalación y empresa; vacía no se imprime). Sigue CP3-6.
 
 - **2026-11-14 — CP2-7 (QA de punta a punta de las notas de crédito).** Informe `docs/modulos/informe-qa-cp2-2026-11-13.md`: flujos de aplicar, quitar, ajustar, anular, bajas desde Libro de compras, pantalla «Notas de crédito» y permisos probados en el navegador (escritorio y celular, claro y oscuro) con saldos cuadrados a mano. Corregido: **(E1, grave)** escribir un monto en las ventanas de aplicar y de ajustar rompía la ventana (el campo numérico entrega números y la lógica llamaba `.trim()`); la ficha se salía de la pantalla del celular con una referencia larga; faltaba «complétela antes de ajustar» en una nota pendiente. Quedan observaciones menores (umbral de bancarización sin cifra, mensaje con tope de diferencia menor en 0, texto de la fecha mínima, «Ajustado» fuera de los montos de la ficha).
 - **2026-11-14 — CP2-8 (cliente, observaciones menores de la QA de notas de crédito).** Corregidas O1 a O4 y la referencia larga del informe `informe-qa-cp2-2026-11-13.md`: el aviso de bancarización dice la cifra (`umbralDeBancarizacion` de `cargos-para-aplicar`), «Diferencia menor» no se ofrece con tope 0 y se explica, el mensaje de fecha mínima dice si viene de la recepción del documento, de la nota o del inicio de la empresa, «Montos» de la ficha de una nota suma con «Ajustado», y `CampoTexto` (`contar`) muestra el contador de caracteres y el error en vez de cortar la referencia. Sin cambios de servidor.

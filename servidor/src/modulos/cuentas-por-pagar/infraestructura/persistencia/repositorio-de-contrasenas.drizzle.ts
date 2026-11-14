@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import {
   contextoEnCurso,
@@ -67,6 +67,15 @@ export class RepositorioDeContrasenasDrizzle implements RepositorioDeContrasenas
       .update(contrasenas)
       .set({ estado: 'anulada', anuladaEn: new Date(), anuladaPor, motivoDeAnulacion: motivo })
       .where(eq(contrasenas.id, contrasenaId));
+  }
+
+  async marcarImpresion(contrasenaId: string): Promise<boolean> {
+    const marcadas = await transaccionEnCurso()
+      .update(contrasenas)
+      .set({ impresaEn: sql`now()` })
+      .where(and(eq(contrasenas.id, contrasenaId), isNull(contrasenas.impresaEn)))
+      .returning({ id: contrasenas.id });
+    return marcadas.length === 1;
   }
 
   async borrarReparto(contrasenaId: string): Promise<void> {

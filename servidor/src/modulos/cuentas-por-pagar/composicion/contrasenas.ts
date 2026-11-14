@@ -3,13 +3,18 @@ import { dependenciasCompartidas } from '../../core/compartido/infraestructura/d
 import { AgregarDocumentosAContrasena } from '../aplicacion/casos-uso/contrasenas/agregar-documentos-a-contrasena.js';
 import { AnularContrasena } from '../aplicacion/casos-uso/contrasenas/anular-contrasena.js';
 import { CrearContrasena } from '../aplicacion/casos-uso/contrasenas/crear-contrasena.js';
+import type { DependenciasDeConsultaDeContrasenas } from '../aplicacion/casos-uso/contrasenas/dependencias-de-contrasenas.js';
 import { DocumentosDisponibles } from '../aplicacion/casos-uso/contrasenas/documentos-disponibles.js';
 import { EditarContrasena } from '../aplicacion/casos-uso/contrasenas/editar-contrasena.js';
 import { ListarContrasenas } from '../aplicacion/casos-uso/contrasenas/listar-contrasenas.js';
 import { ObtenerContrasena } from '../aplicacion/casos-uso/contrasenas/obtener-contrasena.js';
+import { ObtenerImpresionDeContrasena } from '../aplicacion/casos-uso/contrasenas/obtener-impresion-de-contrasena.js';
+import { RegistrarImpresion } from '../aplicacion/casos-uso/contrasenas/registrar-impresion.js';
 import { QuitarDocumentoDeContrasena } from '../aplicacion/casos-uso/contrasenas/quitar-documento-de-contrasena.js';
 import { ContrasenasControlador, type CasosDeUsoDeContrasenas } from '../http/contrasenas.controlador.js';
 import { rutasDeContrasenas } from '../http/contrasenas.rutas.js';
+import { DatosDeLaEmpresaEnMediador } from '../infraestructura/datos-de-empresa-en-mediador.js';
+import { LeyendaDeContrasenasEnConfiguracion } from '../infraestructura/leyenda-de-contrasenas-en-configuracion.js';
 import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 import { ConsultasDeContrasenasDrizzle } from '../infraestructura/persistencia/consultas-de-contrasenas.drizzle.js';
 import { ConsultasDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-documentos.drizzle.js';
@@ -20,7 +25,7 @@ import { RepositorioDeContrasenasDrizzle } from '../infraestructura/persistencia
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { UmbralDeBancarizacionEnConfiguracion } from '../infraestructura/umbral-de-bancarizacion-en-configuracion.js';
 
-/** Raíz de composición de las contraseñas de pago: lista, ficha, documentos disponibles, crear, editar y anular. */
+/** Raíz de composición de las contraseñas de pago: lista, ficha, documentos disponibles, crear, editar, anular e imprimir. */
 export function rutasDeContrasenasComponidas(): FastifyPluginAsync {
   return rutasDeContrasenas(new ContrasenasControlador(casosDeUso()));
 }
@@ -45,6 +50,20 @@ function casosDeUso(): CasosDeUsoDeContrasenas {
     agregarDocumentos: new AgregarDocumentosAContrasena(paraEditar),
     quitarDocumento: new QuitarDocumentoDeContrasena(paraEditar),
     anular: new AnularContrasena(paraEditar),
+    ...casosDeUsoDeImpresion(paraConsultar),
+  };
+}
+
+/** La vista previa y el registro de la impresión: suman la empresa (por el mediador) y la leyenda configurada. */
+function casosDeUsoDeImpresion(paraConsultar: DependenciasDeConsultaDeContrasenas) {
+  const paraImprimir = {
+    ...paraConsultar,
+    empresa: new DatosDeLaEmpresaEnMediador(),
+    leyenda: new LeyendaDeContrasenasEnConfiguracion(),
+  };
+  return {
+    verImpresion: new ObtenerImpresionDeContrasena(paraImprimir),
+    registrarImpresion: new RegistrarImpresion({ ...paraImprimir, repositorio: new RepositorioDeContrasenasDrizzle() }),
   };
 }
 
