@@ -1751,3 +1751,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   del banco y pagar en efectivo a varios proveedores (y varias contraseñas) con ese retiro, sin esperar a Caja chica.
   El arquitecto escribe la adenda al diseño de CP4 (retiro marcado, forma `efectivo`, recibo, bancarización, anulación,
   contabilidad) y el contador la valida antes de programarla.
+- **2026-11-14 — Adenda de CP4: pagos en efectivo con un retiro del banco (propuesta para aprobar)**
+  (`docs/modulos/diseno-cp4-pagos-en-efectivo.md`). Retiro de efectivo creado desde Cuentas por pagar (tabla
+  `retiros_de_efectivo`, cheque o nota de débito por orden a Bancos con origen = el retiro, custodio, liquidación con
+  devolución por depósito y faltante con motivo), forma `efectivo` en `pagos` con `retiro_id` (un retiro cubre pagos de
+  varios proveedores y contraseñas), recibo = comprobante del pago con leyenda no tributaria, bancarización con bloqueo
+  salvo permiso y motivo (recomendado), conceptos de Bancos sin flujo `efectivo_para_pagos` y
+  `devolucion_de_efectivo_para_pagos` (`0033`) y desglose del retiro para el flujo. Propone además **un pago para varias
+  contraseñas del mismo proveedor** (quitar `pagos.contrasena_id`, migración `0009` antes de CP4-3). No cambia los saldos
+  ni las reglas de CP4-2; le pide buscar los pagos de una contraseña por `aplicaciones_de_pagos.contrasena_id`. Preguntas
+  CP4-E-a a h para el usuario; el contador valida bancarización, partidas, flujo y recibo antes de programar.
