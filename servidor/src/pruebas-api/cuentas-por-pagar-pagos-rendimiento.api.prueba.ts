@@ -52,9 +52,9 @@ async function sembrarVolumen(): Promise<void> {
                  from cuentas_por_pagar.contrasena_documentos where proveedor_id = $2) cd
            on cd.rn = ((g - 1) % ${DOCUMENTOS}) + 1),
      pagos_nuevos as (
-       insert into cuentas_por_pagar.pagos (id, empresa_id, proveedor_id, contrasena_id, numero, forma, fecha, monto, motivo,
+       insert into cuentas_por_pagar.pagos (id, empresa_id, proveedor_id, numero, forma, fecha, monto, motivo,
          con_carga_cerrada)
-       select pago_id, $1, $2, contrasena_id, g, 'cuenta_de_apertura', '2026-11-01', 100, 'Volumen', false from base
+       select pago_id, $1, $2, g, 'cuenta_de_apertura', '2026-11-01', 100, 'Volumen', false from base
        returning id)
      insert into cuentas_por_pagar.aplicaciones_de_pagos (empresa_id, proveedor_id, pago_id, contrasena_id, cargo_id, monto)
      select $1, $2, pago_id, contrasena_id, documento_id, 100 from base`,

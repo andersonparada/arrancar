@@ -7,14 +7,14 @@ import { pagos } from './pagos.tablas.js';
 type T = Record<'empresaId' | 'proveedorId' | 'pagoId' | 'contrasenaId' | 'cargoId', AnyPgColumn>;
 
 /**
- * Las llaves de una línea de pago: del pago (misma empresa, proveedor y contraseña), del cargo (mismo proveedor; se va
+ * Las llaves de una línea de pago: del pago (misma empresa y proveedor), del cargo (mismo proveedor; se va
  * con él) y de la contraseña que lo contiene (sin cascada, para que un cargo con pagos no se quite de ella).
  */
 export const llavesDeAplicacionDePago = (t: T) => [
   foreignKey({
     name: 'aplicaciones_de_pagos_pago_fk',
-    columns: [t.pagoId, t.empresaId, t.proveedorId, t.contrasenaId],
-    foreignColumns: [pagos.id, pagos.empresaId, pagos.proveedorId, pagos.contrasenaId],
+    columns: [t.pagoId, t.empresaId, t.proveedorId],
+    foreignColumns: [pagos.id, pagos.empresaId, pagos.proveedorId],
   }),
   foreignKey({
     name: 'aplicaciones_de_pagos_cargo_fk',
