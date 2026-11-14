@@ -80,6 +80,8 @@ export interface DocumentoPorPagar extends AccionesDelDocumento {
   referencia: string | null;
   /** Pagos y notas aplicados antes de la fecha de inicio (ya descontados de `saldoAlInicio`). */
   anterioresAlInicio: string | null;
+  /** La contraseña vigente en que está (`numero` ya formateado: `15` o `2026-15`); `null` si no está en ninguna. */
+  contrasena: { id: string; numero: string } | null;
 }
 
 export interface PaginaDeDocumentos {
@@ -161,6 +163,8 @@ export interface ConsultaDeDocumentos {
   emitidosDesde?: string;
   emitidosHasta?: string;
   soloVencidos?: boolean;
+  /** Solo lo que no está en una contraseña vigente. */
+  sinContrasena?: boolean;
   /** Cargos con saldo por pagar y notas con saldo libre. */
   conSaldo?: boolean;
   pagina?: number;

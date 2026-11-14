@@ -80,6 +80,8 @@ export function fechaDePagoSugerida(cargos: readonly CargoDeContrasena[], fecha:
 export interface TotalesDeLaContrasena {
   total: string;
   retenciones: string;
+  /** Lo que los cargos ya traen rebajado (notas aplicadas antes, y en un saldo inicial, lo anterior a la fecha de inicio). */
+  rebajadoAntes: string;
   notasAplicadas: string;
   saldo: string;
 }
@@ -95,6 +97,7 @@ export function totalesDeLaContrasena(
   return {
     total: textoDeCentavos(sumaDe(marcados.cargos.map((cargo) => cargo.total))),
     retenciones: textoDeCentavos(sumaDe(marcados.cargos.map((cargo) => cargo.retenciones))),
+    rebajadoAntes: textoDeCentavos(sumaDe(marcados.cargos.map((cargo) => cargo.rebajado))),
     notasAplicadas: textoDeCentavos(aplicado),
     saldo: textoDeCentavos(Object.values(reparto.saldoPorCargo).reduce((suma, saldo) => suma + saldo, 0)),
   };

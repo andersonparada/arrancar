@@ -52,6 +52,9 @@ const vencimientoEnLaFicha = (ficha: FichaDelDocumento): string | null =>
   ficha.vencimiento ? `${formatearFecha(ficha.vencimiento)}${ficha.vencido ? ' (vencido)' : ''}` : null;
 
 /** Los datos del encabezado de la ficha; el vencimiento de una nota de crédito no se muestra. */
+/** «Contraseña 2026-15»: lo que dice la etiqueta de un documento que está en una contraseña vigente. */
+export const etiquetaDeContrasena = (contrasena: { numero: string }): string => `Contraseña ${contrasena.numero}`;
+
 export function detallesDeFicha(ficha: FichaDelDocumento): DetalleDeRegistro[] {
   const detalles: DetalleDeRegistro[] = [
     { etiqueta: 'Proveedor', valor: ficha.proveedorNombre },
@@ -67,6 +70,7 @@ export function detallesDeFicha(ficha: FichaDelDocumento): DetalleDeRegistro[] {
   }
   if (ficha.clase === 'cargo') detalles.push({ etiqueta: 'Vence', valor: formatearTexto(vencimientoEnLaFicha(ficha)) });
   detalles.push({ etiqueta: 'Estado', valor: textoDeEstado(ficha.estado) });
+  if (ficha.contrasena) detalles.push({ etiqueta: 'Contraseña de pago', valor: ficha.contrasena.numero });
   return detalles;
 }
 

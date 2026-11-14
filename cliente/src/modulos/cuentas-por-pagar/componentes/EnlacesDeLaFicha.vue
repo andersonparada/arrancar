@@ -19,6 +19,15 @@ const CLASE = 'inline-flex items-center gap-1.5 text-sm font-medium text-campo-7
     Ver el registro en el libro de compras
   </RouterLink>
   <RouterLink
+    v-if="ficha.contrasena"
+    v-permiso="'cuentas-por-pagar.contrasenas.ver'"
+    :to="{ name: 'cuentas-por-pagar.contrasenas.ficha', params: { id: ficha.contrasena.id } }"
+    :class="CLASE"
+  >
+    <ExternalLink class="size-4" aria-hidden="true" />
+    Ver la contraseña de pago
+  </RouterLink>
+  <RouterLink
     v-if="ficha.origen === 'saldo_inicial'"
     v-permiso="'cuentas-por-pagar.saldos-iniciales.editar'"
     :to="{ name: 'cuentas-por-pagar.saldos-iniciales', query: { corregir: ficha.id } }"

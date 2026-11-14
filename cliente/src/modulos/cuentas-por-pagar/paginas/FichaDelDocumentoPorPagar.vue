@@ -23,7 +23,7 @@ import {
   tonoDeEstado,
 } from '../composables/detalles-de-documento';
 import { avisoDeNotaPendiente } from '../composables/aplicaciones-de-la-ficha';
-import { avisoDeLoPropio, esperaAOtraPersona } from '../composables/reglas-de-acciones';
+import { avisoDeDocumentoEnContrasena, avisoDeLoPropio, esperaAOtraPersona } from '../composables/reglas-de-acciones';
 import { usarAccionesDeNota } from '../composables/usar-acciones-de-nota';
 import { usarAccionesDelDocumento } from '../composables/usar-acciones-del-documento';
 import { usarFichaDelDocumento } from '../composables/usar-ficha-del-documento';
@@ -74,6 +74,10 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
       class="text-sm text-trigo-700 dark:text-trigo-300"
     >
       {{ avisoDeLoPropio }}
+    </p>
+
+    <p v-if="ficha.contrasena && ficha.estado !== 'anulado'" class="text-sm text-trigo-700 dark:text-trigo-300">
+      {{ avisoDeDocumentoEnContrasena(ficha.contrasena.numero, ficha.clase === 'abono') }}
     </p>
 
     <p

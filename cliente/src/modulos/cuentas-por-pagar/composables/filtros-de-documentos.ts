@@ -18,6 +18,7 @@ export interface FiltrosDeDocumentos {
   emitidosDesde: string;
   emitidosHasta: string;
   soloVencidos: boolean;
+  sinContrasena: boolean;
 }
 
 export interface OpcionDeFiltro<T extends string> {
@@ -34,6 +35,7 @@ export const filtrosIniciales = (): FiltrosDeDocumentos => ({
   emitidosDesde: '',
   emitidosHasta: '',
   soloVencidos: false,
+  sinContrasena: false,
 });
 
 /** Lo que se manda al servidor: nada de lo que quedó en «todos». */
@@ -46,6 +48,7 @@ export function consultaDeDocumentos(filtros: FiltrosDeDocumentos, pagina: numbe
     emitidosDesde: filtros.emitidosDesde || undefined,
     emitidosHasta: filtros.emitidosHasta || undefined,
     soloVencidos: filtros.soloVencidos || undefined,
+    sinContrasena: filtros.sinContrasena || undefined,
     pagina,
     limite: DOCUMENTOS_POR_PAGINA,
   };
@@ -54,7 +57,8 @@ export function consultaDeDocumentos(filtros: FiltrosDeDocumentos, pagina: numbe
 /** Cuántos filtros distintos de la forma de abrir hay (el estado cuenta solo si no es el de omisión). */
 export function cantidadDeFiltros(filtros: FiltrosDeDocumentos): number {
   const puestos = [filtros.proveedorId, filtros.tipo, filtros.origen, filtros.emitidosDesde, filtros.emitidosHasta];
-  return puestos.filter(Boolean).length + (filtros.soloVencidos ? 1 : 0) + (filtros.estado === 'vigente' ? 0 : 1);
+  const interruptores = [filtros.soloVencidos, filtros.sinContrasena].filter(Boolean).length;
+  return puestos.filter(Boolean).length + interruptores + (filtros.estado === 'vigente' ? 0 : 1);
 }
 
 export const OPCIONES_DE_ESTADO: OpcionDeFiltro<EstadoBuscado>[] = [
