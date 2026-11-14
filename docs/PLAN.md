@@ -1747,3 +1747,7 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `aplicaciones_de_pagos_retencion_una_vez` en `errores-de-postgres.ts`. Pruebas de tablas (`pagos.prueba.ts`,
   `reintegros.prueba.ts`) con un movimiento real de Bancos (`movimientos-de-bancos.soporte.ts`). Sin casos de uso ni
   permisos: siguen CP4-2 y siguientes.
+- **2026-11-14 — Cambia CP4-k: pago en efectivo a varios proveedores, en CP4.** El usuario pide soportar sacar dinero
+  del banco y pagar en efectivo a varios proveedores (y varias contraseñas) con ese retiro, sin esperar a Caja chica.
+  El arquitecto escribe la adenda al diseño de CP4 (retiro marcado, forma `efectivo`, recibo, bancarización, anulación,
+  contabilidad) y el contador la valida antes de programarla.
