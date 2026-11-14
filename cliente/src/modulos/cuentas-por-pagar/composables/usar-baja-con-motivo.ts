@@ -29,9 +29,9 @@ function usarVentanaDeMotivo() {
 }
 
 /** Una acción que se hace sobre un registro por su id con un motivo: quitar una aplicación, anular un ajuste. */
-function usarAccionConMotivo(
+export function usarAccionConMotivo(
   accion: (id: string, motivo: string) => Promise<unknown>,
-  exito: string,
+  exito: string | (() => string),
   alTerminar: () => Promise<void>,
 ) {
   const { edicion, enviando, errores, enviar, abrir, cerrar } = usarVentanaDeMotivo();
@@ -45,7 +45,7 @@ function usarAccionConMotivo(
     const { id, motivo } = edicion.value;
     if (!(await enviar(() => accion(id, motivo.trim())))) return;
     cerrar();
-    usarAvisos().exito(exito);
+    usarAvisos().exito(typeof exito === 'function' ? exito() : exito);
     await alTerminar();
   }
 

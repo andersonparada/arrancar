@@ -161,5 +161,6 @@ export function dtoDeDisponibles(
       cargos.map(({ documento }) => documento.vencimiento),
       hoy,
     ),
+    umbralDeBancarizacion: deCentavos(umbralCentavos),
   };
 }

@@ -34,6 +34,8 @@ export interface DocumentosDisponibles {
   cargos: CargoDeContrasena[];
   notas: NotaDisponible[];
   fechaDePagoPropuesta: string;
+  /** Desde cuánto se exige pagar por el sistema bancario, con dos decimales. */
+  umbralDeBancarizacion: string;
 }
 
 export interface ContrasenaResumen {
@@ -78,4 +80,117 @@ export interface DatosDeContrasena {
 export interface ContrasenaCreada {
   id: string;
   numero: string;
+}
+
+/** Una nota dentro de la contraseña, con lo que compensó en ella y lo que le queda libre. */
+export interface NotaDeContrasena {
+  documentoId: string;
+  serie: string | null;
+  numero: string;
+  fechaEmision: string;
+  aplicadoEnLaContrasena: string;
+  saldoLibre: string;
+}
+
+export interface TotalesDeContrasena {
+  total: string;
+  retenciones: string;
+  rebajado: string;
+  saldo: string;
+}
+
+export interface AnulacionDeContrasena {
+  motivo: string;
+  anuladaPorNombre: string | null;
+  anuladaEn: string;
+}
+
+/** La ficha de una contraseña con sus montos de hoy; `puedeEditar` y `puedeAnular` los dice el servidor. */
+export interface FichaDeContrasena {
+  id: string;
+  numero: string;
+  fecha: string;
+  fechaDePago: string;
+  proveedorId: string;
+  proveedorNombre: string;
+  proveedorNit: string | null;
+  observaciones: string | null;
+  estado: EstadoDeContrasena;
+  cargos: CargoDeContrasena[];
+  notas: NotaDeContrasena[];
+  totales: TotalesDeContrasena;
+  impresa: boolean;
+  impresaEn: string | null;
+  anulacion: AnulacionDeContrasena | null;
+  creadoPorNombre: string | null;
+  creadoEn: string;
+  puedeEditar: boolean;
+  puedeAnular: boolean;
+}
+
+/** Lo que se cambia de una contraseña vigente; el motivo es obligatorio si cambia la fecha prometida. */
+export interface CambiosDeContrasena {
+  fechaDePago?: string;
+  observaciones?: string | null;
+  motivo?: string;
+}
+
+export interface HojaDeImpresion {
+  rotulo: string;
+  firmaElProveedor: boolean;
+}
+
+export interface CargoImpreso {
+  documentoId: string;
+  tipo: TipoDeDocumento;
+  serie: string | null;
+  numero: string;
+  fechaEmision: string;
+  total: string;
+  retenciones: string;
+  rebajado: string;
+  saldo: string;
+}
+
+export interface CompensacionImpresa {
+  documentoId: string;
+  monto: string;
+  texto: string;
+  serie: string | null;
+  numero: string;
+  fechaEmision: string;
+}
+
+export interface RetencionPorEmitirImpresa {
+  documentoId: string;
+  monto: string;
+  texto: string;
+}
+
+/** Todo lo que lleva el papel; la pantalla solo lo dibuja. */
+export interface ImpresionDeContrasena {
+  empresa: { nombre: string; nit: string | null; razonSocial: string | null; nombreComercial: string | null };
+  contrasena: {
+    id: string;
+    numero: string;
+    fecha: string;
+    fechaDePago: string;
+    observaciones: string | null;
+    estado: EstadoDeContrasena;
+  };
+  proveedor: { nombre: string; nit: string | null };
+  hojas: HojaDeImpresion[];
+  cargos: CargoImpreso[];
+  totales: TotalesDeContrasena;
+  compensaciones: CompensacionImpresa[];
+  retencionesPorEmitir: RetencionPorEmitirImpresa[];
+  hayRetenciones: boolean;
+  leyendaDeRetenciones: string | null;
+  leyenda: string | null;
+  /** Fecha (`AAAA-MM-DD`) de los montos vivos. */
+  alDia: string;
+  reimpresion: boolean;
+  impresoPorNombre: string | null;
+  impresoEn: string;
+  anulacion: AnulacionDeContrasena | null;
 }

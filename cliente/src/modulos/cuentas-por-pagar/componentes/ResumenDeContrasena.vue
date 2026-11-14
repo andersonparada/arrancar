@@ -7,9 +7,17 @@ import type { NotaDisponible } from '../servicios/tipos-de-contrasenas';
 import { avisoDeBancarizacionDeLaContrasena } from '../textos';
 
 /** Los totales de lo marcado, que se recalculan al marcar, y el aviso de bancarización si una nota compensa una factura grande. */
-const props = defineProps<{ totales: TotalesDeLaContrasena; cantidad: number; notasConAviso: NotaDisponible[] }>();
+const props = defineProps<{
+  totales: TotalesDeLaContrasena;
+  cantidad: number;
+  notasConAviso: NotaDisponible[];
+  umbral: string;
+}>();
 const textoDelAviso = computed(() =>
-  avisoDeBancarizacionDeLaContrasena(props.notasConAviso.map(etiquetaDeDocumento).join(', ')),
+  avisoDeBancarizacionDeLaContrasena(
+    props.notasConAviso.map(etiquetaDeDocumento).join(', '),
+    formatearMonto(props.umbral),
+  ),
 );
 </script>
 

@@ -32,6 +32,7 @@ describe('consultas', () => {
     expect(respuesta.cuerpo.cargos.map((c: { documentoId: string }) => c.documentoId)).toEqual([libre]);
     expect(respuesta.cuerpo.cargos[0]).toMatchObject({ sobreUmbralDeBancarizacion: true, saldo: '30000.00' });
     expect(respuesta.cuerpo.notas).toEqual([]);
+    expect(respuesta.cuerpo.umbralDeBancarizacion).toBe('30000.00');
     expect(respuesta.cuerpo.fechaDePagoPropuesta).toBe(respuesta.cuerpo.cargos[0].vencimiento ?? HOY);
   });
 

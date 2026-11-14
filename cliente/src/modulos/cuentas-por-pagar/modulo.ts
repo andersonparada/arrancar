@@ -53,6 +53,20 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       component: () => import('./paginas/NuevaContrasena.vue'),
       meta: { permiso: 'cuentas-por-pagar.contrasenas.crear', titulo: VENTANAS_CUENTAS_POR_PAGAR.contrasenas.nueva },
     },
+    {
+      path: '/cuentas-por-pagar/contrasenas/:id',
+      name: 'cuentas-por-pagar.contrasenas.ficha',
+      component: () => import('./paginas/FichaDeContrasena.vue'),
+      props: ({ params }) => ({ id: String(params.id) }),
+      meta: { permiso: 'cuentas-por-pagar.contrasenas.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.contrasenas.ficha },
+    },
+    {
+      path: '/cuentas-por-pagar/contrasenas/:id/imprimir',
+      name: 'cuentas-por-pagar.contrasenas.imprimir',
+      component: () => import('./paginas/ImpresionDeContrasena.vue'),
+      props: ({ params }) => ({ id: String(params.id) }),
+      meta: { permiso: 'cuentas-por-pagar.contrasenas.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.contrasenas.imprimir },
+    },
     // generador: rutas
   ],
   // Los días de crédito se editan dentro de Proveedores y se guardan con su formulario.

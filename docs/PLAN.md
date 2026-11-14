@@ -1674,6 +1674,19 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `filtros-de-contrasenas`) con pruebas. El aviso de bancarización no dice el monto del umbral porque `disponibles` no lo trae y no
   es variable pública (pendiente si se quiere con la cifra). Al crear vuelve a la lista con aviso; CP3-7 la llevará a la ficha y
   dará destino a las tarjetas. Sigue CP3-7.
+- 2026-11-14 — **CP3-7 (cliente, ficha e impresión de la contraseña)** (`diseno-cp3-contrasenas.md` §5.2, §5.5 y §8): página
+  `FichaDeContrasena` (`/cuentas-por-pagar/contrasenas/:id`): datos, facturas y notas con sus montos de hoy, totales, «Cambiar fecha
+  de pago» (ventana con fecha, motivo solo si cambia la fecha y observaciones), «Agregar documentos» (reutiliza la selección de la
+  nueva contraseña), «Quitar» por documento y «Anular» (ventanas de motivo con el resumen de lo que va a pasar); si la contraseña ya
+  se imprimió, los avisos dicen «REIMPRESIÓN» (agregar además confirma) y anular «recupere el original que tiene el proveedor».
+  Los botones salen con el permiso `contrasenas.*` y con `puedeEditar`/`puedeAnular` del servidor. `ImpresionDeContrasena`
+  (`…/:id/imprimir`): una hoja blanca por cada elemento de `hojas` (original y copia, salto de página al imprimir, sin menú),
+  con lo fijo, lo vivo «al dd/mm/aaaa», compensaciones, retención por emitir, leyendas, firmas y pie; «ANULADA» y «REIMPRESIÓN» son
+  texto, no color. «Imprimir» llama `POST …/impresiones`, redibuja y abre `window.print()`; la vista previa no marca. Lo que dejó
+  CP3-6: al crear va a la ficha, las tarjetas de la lista llevan a ella y `GET …/contrasenas/disponibles` trae
+  `umbralDeBancarizacion` (texto con dos decimales) para que el aviso diga la cifra. Lógica pura con pruebas en
+  `ficha-de-contrasena` e `impresion-de-contrasena`. Sin migración. Falta la etiqueta «Contraseña N» y el filtro «Sin contraseña»
+  en Documentos por pagar (el servidor ya trae `contrasena` y `sinContrasena`). Sigue CP3-8 (QA).
 
 - **2026-11-14 — CP2-7 (QA de punta a punta de las notas de crédito).** Informe `docs/modulos/informe-qa-cp2-2026-11-13.md`: flujos de aplicar, quitar, ajustar, anular, bajas desde Libro de compras, pantalla «Notas de crédito» y permisos probados en el navegador (escritorio y celular, claro y oscuro) con saldos cuadrados a mano. Corregido: **(E1, grave)** escribir un monto en las ventanas de aplicar y de ajustar rompía la ventana (el campo numérico entrega números y la lógica llamaba `.trim()`); la ficha se salía de la pantalla del celular con una referencia larga; faltaba «complétela antes de ajustar» en una nota pendiente. Quedan observaciones menores (umbral de bancarización sin cifra, mensaje con tope de diferencia menor en 0, texto de la fecha mínima, «Ajustado» fuera de los montos de la ficha).
 - **2026-11-14 — CP2-8 (cliente, observaciones menores de la QA de notas de crédito).** Corregidas O1 a O4 y la referencia larga del informe `informe-qa-cp2-2026-11-13.md`: el aviso de bancarización dice la cifra (`umbralDeBancarizacion` de `cargos-para-aplicar`), «Diferencia menor» no se ofrece con tope 0 y se explica, el mensaje de fecha mínima dice si viene de la recepción del documento, de la nota o del inicio de la empresa, «Montos» de la ficha de una nota suma con «Ajustado», y `CampoTexto` (`contar`) muestra el contador de caracteres y el error en vez de cortar la referencia. Sin cambios de servidor.

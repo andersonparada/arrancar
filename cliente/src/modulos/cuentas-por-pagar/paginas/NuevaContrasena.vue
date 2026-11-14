@@ -19,8 +19,8 @@ const volver = { texto: ventana.titulo, ruta: { name: 'cuentas-por-pagar.contras
 async function guardar(): Promise<void> {
   const creada = await nueva.guardar();
   if (!creada) return;
-  usarAvisos().exito(`Contraseña ${creada.numero} creada.`);
-  await router.push(volver.ruta);
+  usarAvisos().exito(`Contraseña ${creada.numero} creada. Ya puede imprimirla y entregarla al proveedor.`);
+  await router.push({ name: 'cuentas-por-pagar.contrasenas.ficha', params: { id: creada.id } });
 }
 </script>
 
@@ -61,6 +61,7 @@ async function guardar(): Promise<void> {
         :totales="nueva.totales.value"
         :cantidad="nueva.marcados.value.cargos.length + nueva.marcados.value.notas.length"
         :notas-con-aviso="nueva.notasConAviso.value"
+        :umbral="nueva.umbral.value"
       />
     </TarjetaBase>
 

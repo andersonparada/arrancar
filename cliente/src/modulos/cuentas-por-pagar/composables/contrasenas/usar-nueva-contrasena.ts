@@ -14,23 +14,22 @@ import {
   fechaDePagoSugerida,
   notasQueTocanBancarizacion,
   resumenDeContrasena,
+  SIN_DOCUMENTOS_DISPONIBLES,
   totalesDeLaContrasena,
   type EdicionDeContrasena,
 } from './edicion-de-contrasena';
 import { repartirEnVivo } from './reparto-de-contrasena';
 
-const SIN_DOCUMENTOS: DocumentosDisponibles = { cargos: [], notas: [], fechaDePagoPropuesta: '' };
-
 /** Trae lo que el proveedor tiene disponible; si se cambia de proveedor a mitad, solo vale la última respuesta. */
 function usarDocumentosDisponibles() {
   const avisos = usarAvisos();
-  const disponibles = ref<DocumentosDisponibles>(SIN_DOCUMENTOS);
+  const disponibles = ref<DocumentosDisponibles>(SIN_DOCUMENTOS_DISPONIBLES);
   const cargando = ref(false);
   let ultima = 0;
 
   async function traer(proveedorId: string): Promise<boolean> {
     const peticion = ++ultima;
-    disponibles.value = SIN_DOCUMENTOS;
+    disponibles.value = SIN_DOCUMENTOS_DISPONIBLES;
     cargando.value = !!proveedorId;
     if (!proveedorId) return false;
     try {
@@ -58,6 +57,7 @@ function usarMarcas(edicion: EdicionDeContrasena, disponibles: Ref<DocumentosDis
     marcados,
     totales: computed(() => totalesDeLaContrasena(marcados.value, reparto.value)),
     notasConAviso: computed(() => notasQueTocanBancarizacion(marcados.value, reparto.value)),
+    umbral: computed(() => disponibles.value.umbralDeBancarizacion),
     alternarCargo: (id: string) => (edicion.cargos = alternarMarca(edicion.cargos, id)),
     alternarNota: (id: string) => (edicion.notas = alternarMarca(edicion.notas, id)),
     marcarCargos: (marcar: boolean) => (edicion.cargos = marcar ? ids(disponibles.value.cargos) : []),
