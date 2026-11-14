@@ -39,6 +39,12 @@ export const CONCEPTOS_DE_SISTEMA: readonly ConceptoInicial[] = [
     aplicaA: 'credito',
     ...inversion('Compra de activos'),
   }),
+  concepto('efectivo_para_pagos', 'Efectivo para pagos a proveedores', { aplicaA: 'debito', ...sinFlujo }),
+  concepto('devolucion_de_efectivo_para_pagos', 'Devolución de efectivo para pagos', {
+    aplicaA: 'credito',
+    ...sinFlujo,
+  }),
+  concepto('faltante_de_efectivo', 'Faltante de efectivo', { aplicaA: 'debito', ...operacion('Faltante de efectivo') }),
   concepto('saldo_inicial', 'Saldo inicial', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('sin_clasificar', 'Sin clasificar', { aplicaA: 'ambos', ...sinFlujo }),
 ];

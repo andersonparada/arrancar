@@ -43,6 +43,8 @@ export interface ReporteDeFlujoDeEfectivo {
   actividades: ActividadDeFlujo[];
   lineasAparte: LineaAparte[];
   control: ControlDeCuadre;
+  /** Aviso del reporte (pagos en efectivo en la fecha del retiro); nulo si no aplica. */
+  leyenda: string | null;
 }
 
 /** Lo que se manda al servidor: el rango es obligatorio; sin cuenta son todas las de la empresa. */

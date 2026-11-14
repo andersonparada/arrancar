@@ -57,11 +57,15 @@ function filasDelControl({ control }: ReporteDeFlujoDeEfectivoDto): FilaExportad
   ];
 }
 
+const filasDeLaLeyenda = ({ leyenda }: ReporteDeFlujoDeEfectivoDto): FilaExportadaDelFlujo[] =>
+  leyenda ? [{ seccion: 'Nota', linea: leyenda, entradas: null, salidas: null, neto: '0.00' }] : [];
+
 /** El reporte en filas planas para Excel: actividades con su total, las líneas aparte y el control de cuadre. */
 export const aFilasExportadasDelFlujo = (reporte: ReporteDeFlujoDeEfectivoDto): FilaExportadaDelFlujo[] => [
   ...reporte.actividades.flatMap(filasDeLaActividad),
   ...reporte.lineasAparte.map((linea) => deLinea(SECCION_APARTE, linea)),
   ...filasDelControl(reporte),
+  ...filasDeLaLeyenda(reporte),
 ];
 
 /** Las columnas del Excel del flujo de efectivo: solo se exporta, nunca se importa. */

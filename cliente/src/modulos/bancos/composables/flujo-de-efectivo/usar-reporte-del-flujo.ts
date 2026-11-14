@@ -21,6 +21,7 @@ const REPORTE_VACIO: ReporteDeFlujoDeEfectivo = {
   actividades: [],
   lineasAparte: [],
   control: CONTROL_VACIO,
+  leyenda: null,
 };
 
 /** El flujo de efectivo con sus filtros; recarga solo al cambiar el filtro, si el rango sirve. */

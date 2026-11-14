@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { totalesDe } from '../pruebas/dobles-de-totales-por-concepto.js';
+import { aFilasExportadasDelFlujo } from '../http/flujo-de-efectivo.columnas.js';
 import { armarFlujoDeEfectivo, ubicarEnElFlujo } from './calculo-de-flujo-de-efectivo.js';
 import type { SaldosDelRango, TotalesDeUnConcepto } from './dto/reportes-por-concepto.dto.js';
 
@@ -169,5 +170,37 @@ describe('flujo de efectivo (método directo)', () => {
     const reporte = armarFlujoDeEfectivo([ventas], saldos('0.00', '499.99'), marcoDeTodas);
 
     expect(reporte.control).toMatchObject({ saldoCalculado: '500.00', diferencia: '-0.01', cuadra: false });
+  });
+});
+
+describe('leyenda de los pagos en efectivo (CP4-EB)', () => {
+  const retiro = totalesDe({
+    conceptoId: 'e',
+    claveDeSistema: 'efectivo_para_pagos',
+    actividadDeFlujo: 'ninguna',
+    salidas: '15.00',
+  });
+  const faltante = totalesDe({ conceptoId: 'f', claveDeSistema: 'faltante_de_efectivo', salidas: '5.00' });
+  const devolucion = totalesDe({
+    conceptoId: 'd',
+    claveDeSistema: 'devolucion_de_efectivo_para_pagos',
+    actividadDeFlujo: 'ninguna',
+    entradas: '10.00',
+  });
+
+  it('aparece con efectivo para pagos o con faltante, y no con solo la devolución ni sin ellos', () => {
+    const con = (...totales: TotalesDeUnConcepto[]) =>
+      armarFlujoDeEfectivo(totales, saldos('0.00', '0.00'), marcoDeTodas).leyenda;
+
+    expect(con(retiro)).toContain('fecha del retiro del banco');
+    expect(con(faltante)).toContain('Es un reporte de gestión');
+    expect(con(devolucion)).toBeNull();
+    expect(con(ventas)).toBeNull();
+  });
+
+  it('el Excel lleva la leyenda como última fila', () => {
+    const reporte = armarFlujoDeEfectivo([retiro], saldos('0.00', '-15.00'), marcoDeTodas);
+
+    expect(aFilasExportadasDelFlujo(reporte).at(-1)).toMatchObject({ seccion: 'Nota', linea: reporte.leyenda });
   });
 });
