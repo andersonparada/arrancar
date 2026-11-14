@@ -57,6 +57,13 @@
       "when": 1794669767483,
       "tag": "0007_u8l_notas_sobre_saldos_iniciales",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794674490584,
+      "tag": "0008_cp4_pagos",
+      "breakpoints": true
     }
   ]
 }

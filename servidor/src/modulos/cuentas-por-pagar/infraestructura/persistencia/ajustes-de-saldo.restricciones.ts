@@ -3,7 +3,7 @@ import { check, type AnyPgColumn } from 'drizzle-orm/pg-core';
 
 /** Las columnas de `ajustes_de_saldo` que revisan sus restricciones. */
 type T = Record<
-  'monto' | 'causa' | 'motivo' | 'referencia' | 'estado' | 'anuladoEn' | 'anuladoPor' | 'motivoDeAnulacion',
+  'monto' | 'pagoId' | 'causa' | 'motivo' | 'referencia' | 'estado' | 'anuladoEn' | 'anuladoPor' | 'motivoDeAnulacion',
   AnyPgColumn
 >;
 
@@ -15,6 +15,7 @@ export const restriccionesDeValoresDelAjuste = (t: T) => [
     sql`${t.causa} in ('no_recuperable', 'diferencia_menor', 'compensado_con_otra_cuenta')`,
   ),
   check('ajustes_motivo_rango', sql`char_length(${t.motivo}) between 1 and 300`),
+  check('ajustes_pago_solo_diferencia', sql`${t.pagoId} is null or ${t.causa} = 'diferencia_menor'`),
   check(
     'ajustes_referencia_valida',
     sql`${t.referencia} is null or (char_length(${t.referencia}) between 1 and 100 and ${t.referencia} = btrim(${t.referencia}))`,
