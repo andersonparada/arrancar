@@ -22,8 +22,8 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `bfa4976` (sin `git push`; lo hace el usuario). Última corrida completa en verde (con CP4-1): servidor 4126,
-cliente 1029, generador 46.
+**`main`:** `96b7ce2` (sin `git push`; lo hace el usuario). Última corrida completa en verde (con CP3-8): servidor 4126,
+cliente 1034, generador 46.
 
 **Cuentas por pagar, avance por diseño** (cada diseño en `docs/modulos/`, con su dictamen):
 
@@ -31,7 +31,7 @@ cliente 1029, generador 46.
 |---|---|---|---|
 | U8 saldos iniciales | `diseno-u8-…` | U8-1 a U8-12 y correcciones de QA | — |
 | CP2 notas de crédito | `diseno-cp2-…` | CP2-1 a CP2-8 (QA incluida) | — |
-| CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-7 | CP3-8 (QA, en curso) |
+| CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-8 (QA incluida) y el arreglo E3 | — |
 | U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-3 | U8l-4 (en curso), U8l-5 a U8l-8 |
 | CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1 | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-EB y CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
 | CP5 reportes | sin diseñar | — | diseño (ya hay pedidos anotados: constancias pendientes de todos los meses, ajustes del mes, pago prometido vencido, saldo neto por proveedor, crédito fiscal en riesgo por bancarización) |
@@ -40,10 +40,13 @@ cliente 1029, generador 46.
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP4-2 saldos y reglas de pagos | `agent-ad4d1776213011fb8` | programando (sin commit) |
-| U8l-4 Libro, registrar notas con factura anterior | `agent-a43da5e106a1a0b38` | programado, esperando su corrida completa |
-| CP3-8 QA de contraseñas (más etiqueta y filtro de contraseña en Documentos) | `agent-a55ba4e91a829a03a` | probando |
-| Adenda de efectivo lista para programar | `agent-abf2d25486870a300` | arquitecto aplicando las decisiones del 2026-11-14 |
+| CP4-2 saldos y reglas de pagos | `agent-ad4d1776213011fb8` | programado; repitiendo su corrida completa tras un corte |
+| U8l-4 Libro, registrar notas con factura anterior | `agent-a43da5e106a1a0b38` | programado (sin commit); repitiendo su corrida completa |
+| CP4-EB Bancos, conceptos de efectivo (`0033`) | `agent-af6dcb78f68b81b69` | programando, retomado tras un corte |
+
+Siguiente en pagos: CP4-V1 (varias contraseñas por pago, migración `0009`) cuando CP4-2 esté en `main`; luego CP4-E1
+(`0010`) y CP4-3 en adelante en el orden de la adenda. Pendiente menor: hacer que el error de **todos** los formularios
+se limpie al escribir (hoy solo en las ventanas con motivo; `quitarErrorAlCambiar` en `usar-formulario.ts`).
 
 **Otra sesión («Siguiente módulo independiente»)** lleva Bancos H2: el servidor de H2b está en `main` (migración de
 bancos `0031`); le falta el cliente de la conciliación y su QA. Acordado: la `0032`/`0033` de bancos son de CP4; el
