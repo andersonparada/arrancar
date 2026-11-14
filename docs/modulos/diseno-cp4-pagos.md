@@ -9,10 +9,13 @@ nota ligada por activo fijo va en CP4** (no solo aviso, §5.2); y dos cambios a 
 cambia `diseno-cp3-contrasenas.md`), y Bancos **rechaza** cambiar los movimientos de un pago si Cuentas por pagar está
 inactivo (CP4-i). Este documento ya trae todo aplicado (lo agregado está en la tabla «Decidido el 2026-11-13»).
 
-> **Adenda del 2026-11-14 (propuesta, por aprobar):** el usuario cambió CP4-k: el pago en efectivo a varios proveedores
-> con un **retiro del banco** entra en CP4, sin esperar a Caja chica. Diseño en `diseno-cp4-pagos-en-efectivo.md`
-> (retiros de efectivo, forma `efectivo`, recibo, bancarización, liquidación) con una propuesta más: **un pago para
-> varias contraseñas del mismo proveedor** (§10 de la adenda, a decidir antes de CP4-3).
+> **Adenda del 2026-11-14 (aprobada, lista para programar):** el usuario cambió CP4-k: el pago en efectivo con un
+> **retiro del banco** entra en CP4, sin esperar a Caja chica. Diseño en `diseno-cp4-pagos-en-efectivo.md` (retiros de
+> efectivo, forma `efectivo`, reparto de un retiro entre uno o varios proveedores en una operación, un recibo por
+> proveedor, bancarización según el régimen, liquidación). Aprobó también **M2: un pago es del proveedor y puede cubrir
+> varias contraseñas suyas**, para **todas** las formas (paso CP4-V1, migración `0009`, antes de CP4-3). Este documento
+> ya trae lo que cambia por la adenda (marcado «adenda» o «M2»): §3.1, §3.2, §5.1, §5.7, §5.9, §5.11, §7.1, §7.4, §8,
+> §9, §10 y §11.
 
 Aterriza el paso **CP4** de `cuentas-por-pagar.md` («Pagos: órdenes a *Bancos* para
 emitir y anular cheques —también posfechados— y notas de débito con origen y concepto; el aviso de Bancos cuando se
@@ -27,8 +30,8 @@ sus migraciones `0006`, ya en `main`, y `0007`, reservada). Lo nuevo que aparezc
 
 | Tema | Decisión | Fuente |
 |---|---|---|
-| Todo pago va por contraseña | Una contraseña se paga con 1 o N pagos; **solo se paga lo autorizado** | `cuentas-por-pagar.md`, Decisiones |
-| Qué cubre cada pago | El usuario elige qué cargos **autorizados** de la contraseña paga y cuánto a cada uno | Reglas de contraseñas, pagos y anulaciones |
+| Todo pago va por contraseña | Una contraseña se paga con 1 o N pagos; **solo se paga lo autorizado**. **M2 (2026-11-14):** un pago es de **un proveedor** y puede cubrir cargos de **varias contraseñas vigentes** suyas; cada línea dice su contraseña | `cuentas-por-pagar.md`, Decisiones; adenda §10 |
+| Qué cubre cada pago | El usuario elige qué cargos **autorizados** de las contraseñas del proveedor paga y cuánto a cada uno | Reglas de contraseñas, pagos y anulaciones |
 | Formas que crean dinero | **Cheque** (también **posfechado**: cuenta en Bancos en su fecha) o **nota de débito** (transferencia o débito) de una cuenta bancaria, creados en Bancos por el mediador con el proveedor como beneficiario | `cuentas-por-pagar.md`, Flujo 6; hoja de ruta (posfechados) |
 | Permiso entre módulos | El permiso de pagar de Cuentas por pagar basta para crear el cheque o la nota en Bancos | Decisiones |
 | Concepto en Bancos | Lo fija este módulo y no se cambia en Bancos: `pago_a_proveedor` (Operación) o uno de **Inversión** si las facturas son de activo fijo (P2); con el módulo activo, un cheque manual no usa «Pago a proveedores» (P3, ya hecho) | Decisiones; `bancos.md` P3, P6 |
@@ -65,12 +68,13 @@ sus migraciones `0006`, ya en `main`, y `0007`, reservada). Lo nuevo que aparezc
 | Reintegro ligando una nota de crédito ya registrada | No en CP4 | CP4-h |
 | Cuentas por pagar inactivo | Bancos **rechaza** cambiar movimientos con origen en Cuentas por pagar o marcados | CP4-i, §6.3 |
 | Separación de funciones | Solo permisos distintos; el reporte de pagos (CP5) muestra quién autorizó y quién pagó | CP4-j |
-| Pago de facturas en efectivo | ~~Con Caja chica~~ **Cambiado el 2026-11-14:** con un retiro del banco, en CP4 (adenda `diseno-cp4-pagos-en-efectivo.md`, por aprobar) | CP4-k |
+| Pago de facturas en efectivo | ~~Con Caja chica~~ **Cambiado el 2026-11-14:** con un retiro del banco, en CP4 (adenda `diseno-cp4-pagos-en-efectivo.md`, **aprobada**): un retiro paga a uno o varios proveedores, un pago y un recibo por proveedor | CP4-k |
+| Un pago para varias contraseñas | **M2** (2026-11-14): se quita `pagos.contrasena_id`; las rutas van por proveedor | Adenda §10, CP4-E-e |
 | Comprobante de pago | En CP4, con retenciones, constancias y la leyenda «no es documento tributario» | CP4-l, §9 |
 | Correlativos | Propios de pagos y de reintegros («Recibo de reintegro»), por empresa, con el reinicio anual | CP4-m |
 | Cheque posfechado | El documento queda **comprometido** desde hoy y **pagado en la fecha del cheque** (NIIF para las Pymes 11.36); bancarización con la fecha del cheque; Bancos avisa si el saldo de hoy menos los posfechados no alcanza (el cheque se paga a la vista, Código de Comercio art. 501) | C-CP4-1, §2.4, §6.3 |
 | Retenciones | El aviso de entero va **por mes de retención**, no atado al pago | C-CP4-1, §5.5 |
-| Bancarización | Texto nuevo (sin «no negociable» obligatorio); cuentan cheques, notas de débito y notas ligadas; no la cuenta de apertura; el reintegro en efectivo solo avisa depositarlo | C-CP4-2, §5.7 |
+| Bancarización | Texto nuevo (sin «no negociable» obligatorio); cuentan cheques, notas de débito, notas ligadas **y efectivo** (adenda); no la cuenta de apertura; el reintegro en efectivo solo avisa depositarlo; **el aviso solo sale si la empresa pierde algo según su régimen** (adenda §5.2) | C-CP4-2, §5.7 |
 | Nota ligada de activo fijo | **Desglose** en Bancos: la parte ligada a cargos de activo fijo pasa a Inversión | C-CP4-4, §5.2, §6.2 |
 | Diferencia de centavos de un cargo | Otros ingresos, sin IVA; solo como residuo de un pago vigente; aviso si viene de una retención mal calculada; tope propio para los pagos | C-CP4-5, §5.4, §7.5 |
 | Reintegro | Operación, o Inversión si la factura de la nota es de activo fijo; recibo no tributario | C-CP4-6, §5.10 |
@@ -223,11 +227,11 @@ Decisiones generales:
 |---|---|---|---|
 | `id` | uuid | no | PK (`idPrimario`); es el `documento_de_origen_id` del movimiento en Bancos |
 | `empresa_id` | uuid | no | FK `core.empresas` on delete cascade |
-| `proveedor_id` | uuid | no | solo para las llaves compuestas |
-| `contrasena_id` | uuid | no | FK `pagos_contrasena_fk (contrasena_id, empresa_id, proveedor_id) → contrasenas (id, empresa_id, proveedor_id)` (`contrasenas_id_proveedor_unico`), no action |
+| `proveedor_id` | uuid | no | El pago es **del proveedor** (M2). FK `pagos_proveedor_fk → terceros.proveedores (id)`, no action (CP4-V1) |
+| ~~`contrasena_id`~~ | | | **Quitada por CP4-V1** (migración `0009`, M2): cada línea dice su contraseña (`aplicaciones_de_pagos.contrasena_id`). En la `0008` era `not null` con `pagos_contrasena_fk` |
 | `numero` | integer | no | correlativo `cuentas-por-pagar.pagos`; check `pagos_numero_positivo`: `numero > 0` |
 | `anio_de_numero` | integer | no | `default 0`; el año si la empresa reinicia sus correlativos (el de `fecha`) |
-| `forma` | text | no | check `pagos_forma_valida`: `forma in ('cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura')` |
+| `forma` | text | no | check `pagos_forma_valida`: `forma in ('cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura')`; la adenda (`0010`) suma `'efectivo'` con `retiro_id`, `recibido_por` y `motivo_sin_bancarizar` |
 | `fecha` | date | no | cheque y nota de débito: la del movimiento (el cheque **posfechado** lleva la suya: `fecha > hoy` es «comprometido», §2.4); nota ligada: la de la aplicación (§5.2); apertura: la fecha de inicio con la carga abierta (§5.3) |
 | `monto` | numeric(14,2) | no | check `pagos_monto_positivo`: `> 0`. Σ `aplicaciones_de_pagos.monto` (lo revisa el dominio; prueba de consistencia) |
 | `movimiento_id` | uuid | sí | FK `pagos_movimiento_fk → bancos.movimientos (id)`, no action. Check `pagos_movimiento_de_su_forma`: `(forma = 'cuenta_de_apertura') = (movimiento_id is null)` |
@@ -249,10 +253,10 @@ and motivo_de_anulacion is not null)` (con la lección de CP2-2: en `vigente` lo
 | Nombre | Definición | Para |
 |---|---|---|
 | `pagos_numero_unico` | unique `(empresa_id, anio_de_numero, numero)` | El correlativo no se repite |
-| `pagos_llave_unica` | unique `(id, empresa_id, proveedor_id, contrasena_id)` | Destino de la llave compuesta de `aplicaciones_de_pagos` (garantiza misma empresa, proveedor y contraseña) |
+| ~~`pagos_llave_unica`~~ → `pagos_id_proveedor_unico` | unique `(id, empresa_id, proveedor_id)` (CP4-V1; antes llevaba `contrasena_id`) | Destino de la llave compuesta de `aplicaciones_de_pagos` (garantiza misma empresa y proveedor; la contraseña la garantiza la llave de cada línea a `contrasena_documentos`) |
 | `pagos_movimiento_creado_unico` | unique `(movimiento_id) where forma in ('cheque', 'nota_de_debito')` | Un cheque o una nota creados por un pago son de **ese** pago. Una nota ligada sí puede cubrir varios pagos (varias contraseñas) |
 | `pagos_movimiento_idx` | `(movimiento_id) where movimiento_id is not null` | Llave y aviso de Bancos (`¿quién usa este movimiento?`) |
-| `pagos_contrasena_idx` | `(contrasena_id)` | Pagos de una contraseña; cubre la llave |
+| ~~`pagos_contrasena_idx`~~ → `pagos_proveedor_fecha_idx` | `(proveedor_id, fecha)` (CP4-V1) | Llave al proveedor, pagos de un proveedor y suma del mes de la bancarización. Los pagos de una contraseña se buscan por `aplicaciones_de_pagos_contrasena_idx` |
 | `pagos_lista_idx` | `(empresa_id, estado, fecha)` | Lista con filtros (y «Pagos realizados» de CP5) |
 
 RLS: `politicaPorEmpresa()`.
@@ -264,8 +268,8 @@ RLS: `politicaPorEmpresa()`.
 | `id` | uuid | no | PK |
 | `empresa_id` | uuid | no | FK `core.empresas` on delete cascade |
 | `proveedor_id` | uuid | no | para las llaves |
-| `pago_id` | uuid | no | FK `aplicaciones_de_pagos_pago_fk (pago_id, empresa_id, proveedor_id, contrasena_id) → pagos (id, empresa_id, proveedor_id, contrasena_id)`, no action |
-| `contrasena_id` | uuid | no | para las llaves (la del pago) |
+| `pago_id` | uuid | no | FK `aplicaciones_de_pagos_pago_fk (pago_id, empresa_id, proveedor_id) → pagos (id, empresa_id, proveedor_id)`, no action (CP4-V1; en la `0008` llevaba también `contrasena_id`) |
+| `contrasena_id` | uuid | no | La contraseña **vigente** del cargo (M2: un pago puede tener líneas de varias contraseñas del proveedor); la pone el servidor |
 | `cargo_id` | uuid | no | FK `aplicaciones_de_pagos_cargo_fk (cargo_id, empresa_id, proveedor_id) → documentos (id, empresa_id, proveedor_id)` **on delete cascade** (decisión de abajo) **y** FK `aplicaciones_de_pagos_en_la_contrasena_fk (contrasena_id, cargo_id) → contrasena_documentos (contrasena_id, documento_id)` (`contrasena_documentos_par_unico`), **no action** |
 | `monto` | numeric(14,2) | no | Lo que este pago entrega al proveedor por ese cargo; check `aplicaciones_de_pagos_monto_positivo`: `> 0` |
 | `retencion_descontada` | numeric(14,2) | no | `default 0`; check `aplicaciones_de_pagos_retencion_valida`: `>= 0`. Las retenciones del cargo si este es su **primer pago vigente**; si no, 0. Siempre 0 en un saldo inicial (U8) |
@@ -282,10 +286,11 @@ RLS: `politicaPorEmpresa()`.
 
 RLS: `politicaPorEmpresa()`.
 
-**Lo que garantiza la base:** que el cargo es del proveedor y la empresa del pago, que **está en la contraseña del
-pago** (llave a `contrasena_documentos`; por eso un cargo con pagos —vigentes o anulados— no se puede quitar de su
+**Lo que garantiza la base:** que el cargo es del proveedor y la empresa del pago, que **está en la contraseña de su
+línea** (llave a `contrasena_documentos`; por eso un cargo con pagos —vigentes o anulados— no se puede quitar de su
 contraseña, §5.8) y que la retención no se descuenta dos veces. **Lo que revisa el dominio** (otras filas, con las filas
-bloqueadas): que el cargo esté **autorizado**, no anulado y sea de clase cargo; que `monto <= saldo`; que Σ montos =
+bloqueadas): que el cargo esté **autorizado**, no anulado y sea de clase cargo; que la contraseña de la línea sea la
+**vigente** del cargo (M2); que `monto <= saldo`; que Σ montos =
 `pagos.monto`; que `retencion_descontada` sea exactamente las retenciones del cargo o 0; que `vigente` coincida con el
 estado del pago (prueba de consistencia, como CP3).
 
@@ -386,12 +391,13 @@ fila previa.
 
 ### 5.1 Pagar con cheque o nota de débito
 
-Una petición crea **un** pago con **una** forma, para uno o varios cargos (1 a 100) de **una** contraseña, en la
-transacción del caso de uso (`RegistrarPago`), con `pagos.emitir`:
+Una petición crea **un** pago con **una** forma, para **un** proveedor y uno o varios cargos (1 a 100) de **una o varias
+contraseñas vigentes** de ese proveedor (M2), en la transacción del caso de uso (`RegistrarPago`), con `pagos.emitir`:
 
 1. Pide la carga inicial (`CargaInicial`, bloqueo compartido) si algún cargo es saldo inicial (para la fecha mínima).
-2. **Revisión temprana sin bloquear** (para no gastar un número de cheque en algo que se va a rechazar): la contraseña es
-   **vigente** (`ContrasenaAnulada`); cada cargo está en ella (`DocumentoFueraDeLaContrasena`), es de clase cargo, **está
+2. **Revisión temprana sin bloquear** (para no gastar un número de cheque en algo que se va a rechazar): cada cargo es
+   del proveedor y está en una contraseña **vigente** (`DocumentoFueraDeLaContrasena`: «El documento … no está en una
+   contraseña vigente.»; el servidor toma esa contraseña para la línea), es de clase cargo, **está
    autorizado** (`DocumentoSinAutorizar`: «solo se paga lo autorizado»), no anulado, sin repetir; cada monto `> 0` y
    `<=` su saldo (`PagoMayorQueElSaldo`); beneficiario (§5.7); fecha (paso 5).
 3. **Orden a Bancos** (§6.1) por el mediador: `bancos.emitir_cheque_de_origen` o `bancos.registrar_nota_de_origen`, con
@@ -400,13 +406,13 @@ transacción del caso de uso (`RegistrarPago`), con `pagos.emitir`:
    **todas** sus reglas (cuenta y chequera activas, cheque disponible, saldo y sobregiro, saldo inicial primero, mes
    conciliado) y responde el `movimientoId`, el número del cheque o de la nota, la cuenta y sus **avisos** (el de fondos
    de un posfechado, §6.3). Si Bancos lanza, no se guarda nada.
-4. **Bloquea** la contraseña y después los cargos (`for update`, en orden de id) y **vuelve a revisar** el paso 2 con las
+4. **Bloquea** las contraseñas (en orden de id) y después los cargos (`for update`, en orden de id) y **vuelve a revisar** el paso 2 con las
    filas bloqueadas (dos pagos a la vez del mismo cargo: el segundo falla aquí y se deshace también su cheque). Orden de
    bloqueo de todo el módulo: **Empresas → Bancos → Cuentas por pagar** (§10.6).
 5. **Fecha** (dictamen, otros 3): por omisión hoy. No anterior a la **fecha de emisión** del DTE de cada cargo (en un
    saldo inicial, su fecha de emisión) ni a la **fecha de inicio** si algún cargo es saldo inicial
    (`FechaDePagoInvalida`, dice la mínima). Si es anterior a la **fecha de recepción** en el libro de algún cargo o a la
-   fecha de la contraseña, **avisa sin bloquear** (en el agro se paga antes de recibir el DTE). La fecha de la contraseña
+   fecha de alguna de sus contraseñas, **avisa sin bloquear** (en el agro se paga antes de recibir el DTE). La fecha de la contraseña
    deja de ser mínima: un pago anterior a la recepción se registra después, cuando ya hay contraseña. **Sí puede ser
    futura** (cheque posfechado, §2.4). En la nota de débito, futura solo si Bancos lo admite (lo decide su regla).
 6. **Retención**: por cada cargo de `origen = 'libro_de_compras'` con `retenciones > 0` y **sin** otra aplicación
@@ -418,8 +424,9 @@ transacción del caso de uso (`RegistrarPago`), con `pagos.emitir`:
 9. Sin auditoría (alta; `creado_por`). Evento `cuentas-por-pagar.pago_registrado` al confirmar (§7.4).
 10. Responde el `PagoDto` con los **avisos** que no bloquean (§5.5), los suyos y los de Bancos.
 
-**Propuesta de la ventana** (solo pantalla, el usuario la cambia): los cargos **autorizados** de la contraseña con saldo,
-por vencimiento (el más viejo primero), cada uno con `propuesto = saldo`. Los no autorizados se muestran apagados con
+**Propuesta de la ventana** (solo pantalla, el usuario la cambia): los cargos **autorizados** con saldo de la contraseña
+desde la que se abrió, por vencimiento (el más viejo primero), cada uno con `propuesto = saldo`; «Agregar otra contraseña
+del proveedor» suma los de sus otras contraseñas vigentes, agrupados por contraseña (M2). Los no autorizados se muestran apagados con
 «Sin autorizar: no se puede pagar». Antes de confirmar muestra el beneficiario que irá en el cheque o la nota.
 
 ### 5.2 Ligar una nota de débito ya registrada (`forma = 'nota_ligada'`)
@@ -529,14 +536,23 @@ crea el documento por pagar al proveedor, o la partida de Contabilidad contra Pr
   `ProveedorSinNombreDelNit` («Escriba la razón social del proveedor en Terceros: el cheque va a nombre del NIT»). Un
   pago a un cesionario (factura cambiaria cedida) queda fuera de esta versión.
 - **Suma del mes**: lo pagado al proveedor en el **mes calendario de la fecha del pago** (en un posfechado, el de la fecha
-  del cheque) con **cheques, notas de débito y notas ligadas** vigentes, más este pago. **No** cuenta la cuenta de
-  apertura. Un reintegro en efectivo no tiene efecto de bancarización (solo el aviso de depositarlo, §5.10).
+  del cheque) con **cheques, notas de débito, notas ligadas y efectivo** (adenda §5.4) vigentes, más este pago, sumando
+  lo aplicado a cargos (antes de retenciones). **No** cuenta la cuenta de apertura. Un reintegro en efectivo no tiene
+  efecto de bancarización (solo el aviso de depositarlo, §5.10). Usa `pagos_proveedor_fecha_idx` (CP4-V1).
 - **Aviso** (sin bloquear) si los cargos del pago tienen total `>=` umbral o la suma del mes llega al umbral (texto del
   contador; se coteja con el Decreto 20-2006 art. 20 antes de ponerlo en la ayuda): «Bancarización (Decreto 20-2006):
   los pagos a un mismo proveedor que suman Q30,000.00 o más en el mes deben hacerse por medios bancarios (cheque,
   transferencia o tarjeta) a nombre del proveedor para que el gasto y el crédito fiscal se puedan respaldar. Se recomienda
   emitir el cheque no negociable.» (con el umbral real). «No negociable» **no** es exigible: el aviso ya no depende de
   apagar la casilla, que sigue encendida por omisión, como hoy en Bancos.
+- **Según el régimen (adenda §5.2, E-2):** el aviso solo sale si algún cargo del pago tiene efecto fiscal (crédito
+  fiscal del IVA o deducción del ISR según el régimen de la empresa y el documento); sin efecto, no sale. La empresa sin
+  datos fiscales recibe el aviso de completarlos.
+- **Efectivo del mismo mes (adenda §5.4):** si este pago hace que el mes llegue al umbral y en ese mes hay pagos en
+  efectivo con efecto, el aviso lo dice: «Con este pago, lo pagado a (proveedor) en mm/aaaa llega a Q…: los pagos en
+  efectivo de ese mes (recibos N, M) dejan de respaldar [el costo] [y] [el crédito fiscal] (Decreto 20-2006, art. 20).
+  Consulte a su contador.» No bloquea (este pago sí está bancarizado). El **pago en efectivo** sobre el umbral sí se
+  bloquea salvo permiso y motivo (adenda §5.3).
 
 ### 5.8 Bajas y reglas que suma CP4 en los otros pasos
 
@@ -581,6 +597,10 @@ El manejador es **idempotente** (sin pagos vigentes con ese movimiento y sin pag
 nada) y corre en la transacción de Bancos: si lanza, Bancos no cambia nada. Quitar la marca de **conciliado** de un
 movimiento (conciliación) no necesita aviso: Cuentas por pagar lee `conciliado` en vivo para `noEstarCobrado`.
 
+**Efectivo (adenda §4.4 y §4.6):** un pago en efectivo no tiene movimiento propio: se anula sin orden a Bancos, con la
+regla `retiroAbierto` en vez de `noEstarCobrado`. El mismo manejador de `movimiento_por_cambiar` busca también el
+movimiento en `retiros_de_efectivo` (el del retiro y el de su devolución) y responde como dice la adenda.
+
 ### 5.10 Reintegros
 
 `RegistrarReintegro` (`reintegros.crear`), desde la ficha de una nota de crédito o desde la pantalla «Notas de crédito»
@@ -617,9 +637,10 @@ Para un pago **vigente** que se aplicó a los cargos equivocados (sobre todo uno
 anularlo, se cambia **a qué cargos** cubre. `ReaplicarPago` (`pagos.reaplicar`), con motivo (1–300):
 
 1. Pide la carga inicial si algún cargo (de antes o de después) es saldo inicial; bloquea, en este orden, la nota ligada
-   si es esa forma, el pago, la contraseña y los cargos de antes y de después (en orden de id).
-2. `REGLAS_PARA_REAPLICAR_PAGO`. Mismo proveedor y **misma contraseña** (los cargos nuevos están en ella; la llave lo
-   exige), autorizados, de clase cargo; cada monto `> 0` y `<=` su saldo **sin contar este pago**; Σ montos =
+   si es esa forma (o el movimiento y el retiro en efectivo, adenda §4.4), el pago, las contraseñas y los cargos de antes y
+   de después (en orden de id).
+2. `REGLAS_PARA_REAPLICAR_PAGO`. Mismo proveedor (la llave lo exige) y cargos en **cualquier contraseña vigente** de ese
+   proveedor (M2; antes «misma contraseña»), autorizados, de clase cargo; cada monto `> 0` y `<=` su saldo **sin contar este pago**; Σ montos =
    `pagos.monto` (`ReaplicacionConOtroMonto`: el dinero no cambia). En la cuenta de apertura, solo saldos iniciales.
 3. Anula los ajustes de diferencia del pago (vuelven a ofrecerse, §5.4); borra sus líneas y crea las nuevas con la
    retención recalculada (§5.1.6; el único parcial la sigue cuidando). `fecha`, `numero`, `forma` y movimiento no cambian.
@@ -769,10 +790,11 @@ pone la clave). Sin datos que convertir (ningún movimiento tiene origen).
 | `cuentas-por-pagar.pagos.emitir` | Pagar con cheque o nota de débito (crea el movimiento en Bancos sin pedir permisos de Bancos) |
 | `cuentas-por-pagar.pagos.ligar-notas-de-debito` | Ligar una nota de débito marcada |
 | `cuentas-por-pagar.pagos.aplicar-a-apertura` | Aplicar saldos iniciales a la cuenta de apertura |
-| `cuentas-por-pagar.pagos.reaplicar` | Reaplicar un pago a otros cargos de su contraseña (§5.11) |
+| `cuentas-por-pagar.pagos.reaplicar` | Reaplicar un pago a otros cargos de las contraseñas vigentes de su proveedor (§5.11, M2) |
 | `cuentas-por-pagar.pagos.anular` | Anular un pago (anula también su movimiento en Bancos) |
 | `cuentas-por-pagar.reintegros.crear` | Registrar un reintegro (depósito o efectivo) |
 | `cuentas-por-pagar.reintegros.anular` | Anular un reintegro |
+| Adenda de efectivo | `retiros.ver`, `retiros.crear`, `retiros.liquidar`, `retiros.anular`, `pagos.pagar-en-efectivo` y `pagos.efectivo-sin-bancarizar` (adenda §7.1) |
 | `cuentas-por-pagar.ajustes.crear` (ya existe) | También la diferencia de centavos de un cargo, al pagar o desde la ficha del pago |
 
 Sin `editar` (un pago no se corrige: se reaplica o se anula), sin `eliminar`, sin `importar`/`exportar` (Operación).
@@ -800,7 +822,7 @@ pagar es otro que el de autorizar; no se agrega «quien autorizó no paga». En 
 | Clase | Familia | Código | Mensaje |
 |---|---|---|---|
 | `DocumentoSinAutorizar` | `ReglaDeNegocioInfringida` | `documento_sin_autorizar` | «El documento … no está autorizado: solo se paga lo autorizado.» |
-| `DocumentoFueraDeLaContrasena` | `DatoInvalido` (campo `aplicaciones.<i>.cargoId`) | `documento_fuera_de_la_contrasena` | «El documento … no está en esta contraseña.» |
+| `DocumentoFueraDeLaContrasena` | `DatoInvalido` (campo `aplicaciones.<i>.cargoId`) | `documento_fuera_de_la_contrasena` | «El documento … no está en una contraseña vigente.» (M2) |
 | `PagoMayorQueElSaldo` | `DatoInvalido` (campo `aplicaciones.<i>.monto`) | `pago_mayor_que_el_saldo` | «El documento … solo debe Q….» |
 | `PagoSinDocumentos` / `DemasiadosDocumentosEnPago` | `DatoInvalido` (campo `aplicaciones`) | `pago_sin_documentos` / `demasiados_documentos_en_pago` | «Elija al menos un documento.» / «Un pago lleva hasta 100 documentos.» |
 | `FechaDePagoInvalida` | `DatoInvalido` (campo `fecha`) | `fecha_de_pago_invalida` (ya lo usa CP3 para `fechaDePago`: este va en `fecha`) | «La fecha no puede ser anterior al dd/mm/aaaa (emisión de los documentos o fecha de inicio).» |
@@ -837,8 +859,8 @@ type AplicacionDelEvento = { documentoId: string; documentoDeCompraId: string | 
   tieneActivoFijo: boolean };
 
 'cuentas-por-pagar.pago_registrado': {
-  empresaId: string; pagoId: string; numero: number; contrasenaId: string; proveedorId: string;
-  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura';
+  empresaId: string; pagoId: string; numero: number; contrasenaIds: string[]; proveedorId: string;  // M2
+  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo';         // adenda
   fecha: string;               // la del cheque o de la aplicación: Contabilidad fecha la partida aquí (§2.4)
   posfechado: boolean; montoCentavos: number; movimientoId: string | null; cuentaBancariaId: string | null;
   efecto: EfectoDePago; aplicaciones: AplicacionDelEvento[];
@@ -860,6 +882,10 @@ type AplicacionDelEvento = { documentoId: string; documentoDeCompraId: string | 
 'cuentas-por-pagar.reintegro_anulado': { empresaId; reintegroId; fecha; fechaOriginal; montoCentavos; forma;
   anulacionEnBancos: 'sin_inverso' | 'con_inverso' | null };
 ```
+
+**Adenda y M2:** `EfectoDePago` suma `'efectivo'`; `pago_registrado` lleva `contrasenaIds` (las contraseñas de sus
+líneas, sin repetir) en vez de `contrasenaId`, y suma `retiroId` y `sinBancarizar`; `pago_anulado` y `pago_reaplicado`
+suman `retiroId`; eventos nuevos de retiros (adenda §7.4).
 
 `EfectoDeAjuste` suma `'ingreso'`. El plan llamaba al primero `…pago_emitido`: se llama `pago_registrado` porque una nota
 ligada no se emite. Nadie los escucha todavía (Contabilidad). `pago_registrado` es también lo que usará el **aviso de pago
@@ -883,6 +909,7 @@ Prefijo `/api/cuentas-por-pagar`. Dinero como texto con dos decimales; fechas `A
 ```ts
 {
   forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura';
+  proveedorId: uuid;                               // M2: el pago es del proveedor
   fecha?: string;                                  // por omisión hoy; apertura con la carga abierta: la fecha de inicio
   chequeraId?: uuid; chequeId?: uuid;              // cheque (por omisión el siguiente disponible)
   noNegociable?: boolean;                          // cheque, por omisión true
@@ -891,26 +918,28 @@ Prefijo `/api/cuentas-por-pagar`. Dinero como texto con dos decimales; fechas `A
   referencia?: string | null;                      // va a Bancos (cheque, nota de débito) o se guarda (ligada, apertura)
   motivo?: string;                                 // cuenta de apertura, obligatorio
   observaciones?: string | null;
-  aplicaciones: Array<{ cargoId: uuid; monto: string }>;   // 1–100
+  aplicaciones: Array<{ cargoId: uuid; monto: string }>;   // 1–100, de una o varias contraseñas vigentes del proveedor
   diferencias?: Array<{ cargoId: uuid; monto: string }>;   // §5.4, solo cargos de `aplicaciones`
 }
 ```
 
-**`PagoDto`**: `id`, `numero` (formateado), `contrasena { id, numero }`, `proveedor { id, nombre, nit }`, `beneficiario`,
+**`PagoDto`**: `id`, `numero` (formateado), `contrasenas: [{ id, numero }]` (M2; antes `contrasena`), `proveedor { id, nombre, nit }`, `beneficiario`,
 `forma`, `fecha`, `posfechado` (calculado: `fecha > hoy`), `monto`, `movimiento` (`{ id, cuentaBancariaNombre, tipo,
 numeroDeCheque | numero, fecha, conciliado, anulado } | null`), `referencia`, `motivo`, `conCargaCerrada`,
 `observaciones`, `estado`, `aplicaciones` (`documentoId`, `tipo`, `serie`, `numero`, `origen`, `total`, `retenciones`,
-`retencionDescontada`, `monto`, `cubre` = monto + retención, `saldoDelDocumento`, `diferenciaOfrecible`),
+`contrasena { id, numero }` de la línea, `retencionDescontada`, `monto`, `cubre` = monto + retención, `saldoDelDocumento`, `diferenciaOfrecible`),
 `diferencias` (ajustes), `anulacion`, `creadoPorNombre`, `creadoEn`, `avisos` (solo en la respuesta de registrar y de
 reaplicar) y, calculados en el servidor, `puedeAnular`, `puedeReaplicar` y `puedeSaldarDiferencia`.
 
 | Método y ruta | Permiso | Cuerpo / consulta | Respuesta |
 |---|---|---|---|
-| `GET /contrasenas/:id/para-pagar` | `pagos.ver` | — | `{ cargos: CargoParaPagarDto[], noAutorizados, fechaMinima, fechaDeInicio, cargaCerrada, beneficiario, sumaDelMesAlProveedor, umbralDeBancarizacion, topeDiferencia }`; cada cargo con `saldo`, `propuesto`, `fechaDeEmision`, `fechaDeRecepcion`, `retencionPorDescontar`, `retencionesPorPracticar`, `constanciasPendientes`, `mesDeRetencion`, `tieneActivoFijo`, `sobreUmbralDeBancarizacion`, `tieneMovimientos` (para la cuenta de apertura) |
+| `GET /pagos/proveedores-por-pagar` (M2) | `pagos.ver` | `buscar?`, `pagina`, `limite` | Proveedores con cargos autorizados con saldo en contraseñas vigentes: `{ proveedorId, nombre, nit, porPagar, contrasenas }` (selector de la ventana y del reparto en efectivo) |
+| `GET /proveedores/:id/para-pagar` (M2; antes `GET /contrasenas/:id/para-pagar`) | `pagos.ver` | `contrasenaId?` (la que se abre primero), `fecha?` | `{ contrasenas: [{ id, numero, fecha }], cargos: CargoParaPagarDto[] (cada uno con su contrasenaId), noAutorizados, fechaMinima, fechaDeInicio, cargaCerrada, beneficiario, sumaDelMesAlProveedor, umbralDeBancarizacion, topeDiferencia }`; cada cargo con `saldo`, `propuesto`, `fechaDeEmision`, `fechaDeRecepcion`, `retencionPorDescontar`, `retencionesPorPracticar`, `constanciasPendientes`, `mesDeRetencion`, `tieneActivoFijo`, `sobreUmbralDeBancarizacion`, `tieneMovimientos` (para la cuenta de apertura) |
 | `GET /pagos/medios` | `pagos.ver` | `fecha?` | La respuesta de `bancos.medios_de_pago` (cuentas y chequeras activas, siguiente cheque, saldo) |
 | `GET /pagos/notas-para-ligar` | `pagos.ver` | `cuentaBancariaId?`, `desde?`, `hasta?`, `soloConDisponible` (true) | Notas marcadas con `monto`, `aplicado`, `disponible`, `fecha`, `referencia`, cuenta |
-| `POST /contrasenas/:id/pagos` | según `forma`: `pagos.emitir`, `pagos.ligar-notas-de-debito` o `pagos.aplicar-a-apertura` (y `ajustes.crear` si trae `diferencias`) | solicitud | 201, `PagoDto` |
-| `GET /pagos` | `pagos.ver` | `proveedorId?`, `contrasenaId?`, `forma?`, `estado?` (`vigente` por omisión), `posfechado?`, `desde?`, `hasta?`, `cuentaBancariaId?`, `pagina`, `limite` | página de `PagoResumenDto` |
+| `POST /pagos`, `POST /pagos/ligar`, `POST /pagos/apertura` (M2; antes `POST /contrasenas/:id/pagos…`) | `pagos.emitir`, `pagos.ligar-notas-de-debito` o `pagos.aplicar-a-apertura` (y `ajustes.crear` si trae `diferencias`) | solicitud con `proveedorId` | 201, `PagoDto` |
+| `POST /retiros/:id/pagos` (adenda §7.5) | `pagos.pagar-en-efectivo` | reparto de 1–20 pagos | 201 |
+| `GET /pagos` | `pagos.ver` | `proveedorId?`, `contrasenaId?` (por las líneas), `retiroId?`, `forma?`, `estado?` (`vigente` por omisión), `posfechado?`, `desde?`, `hasta?`, `cuentaBancariaId?`, `pagina`, `limite` | página de `PagoResumenDto` |
 | `GET /pagos/:id` | `pagos.ver` | — | `PagoDto` |
 | `GET /pagos/:id/comprobante` | `pagos.ver` | — | `ComprobanteDePagoDto` (§9) |
 | `POST /pagos/:id/reaplicar` | `pagos.reaplicar` | `{ motivo, aplicaciones: [{ cargoId, monto }] }` | `PagoDto` |
@@ -921,10 +950,10 @@ reaplicar) y, calculados en el servidor, `puedeAnular`, `puedeReaplicar` y `pued
 | `GET /reintegros/:id/recibo` | `documentos.ver` | — | `ReciboDeReintegroDto` (§5.10) |
 | `POST /reintegros/:id/anular` | `reintegros.anular` | `{ motivo, fecha? }` | `ReintegroDto` |
 
-El permiso de `POST /contrasenas/:id/pagos` depende del cuerpo. Recomendado (se confirma al programar): **tres rutas**
-(`/contrasenas/:id/pagos`, `/contrasenas/:id/pagos/ligar`, `/contrasenas/:id/pagos/apertura`), cada una con su
-`proteger` de siempre; la alternativa es una ruta con `pagos.ver` en el guardia y el permiso de la forma en el caso de uso
-(como `autorizar-propios`). La prueba de API cubre cada forma sin su permiso (403).
+El permiso depende de la forma: **una ruta por forma** (`/pagos`, `/pagos/ligar`, `/pagos/apertura` y, con la adenda,
+`/retiros/:id/pagos`), cada una con su `proteger` de siempre (M2 las pasa del recurso contraseña al recurso pago, porque
+un pago puede cubrir varias contraseñas). La prueba de API cubre cada forma sin su permiso (403) y un cargo de otro
+proveedor o fuera de una contraseña vigente (rechazo).
 
 Bancos: `POST /bancos/notas/:id/marcar` (`bancos.notas.editar`), `POST /bancos/notas/:id/desmarcar { motivo, conceptoId }`
 (`bancos.notas.editar`), y `marcarParaCuentasPorPagar?: boolean` en el registro de una nota de débito. `MovimientoDto`
@@ -935,7 +964,7 @@ respuesta de emitir un cheque gana `avisos` (fondos de un posfechado).
 
 ## 9. Cliente
 
-- `servicios/`: `ApiPagos` (`pagos.api.ts`: `paraPagar`, `medios`, `notasParaLigar`, `registrar`, `listar`, `obtener`,
+- `servicios/`: `ApiPagos` (`pagos.api.ts`: `proveedoresPorPagar`, `paraPagar` (por proveedor), `medios`, `notasParaLigar`, `registrar`, `listar`, `obtener`,
   `comprobante`, `reaplicar`, `saldarDiferencia`, `anular`) y `ApiReintegros` (con `recibo`); tipos en
   `servicios/tipos.ts`.
 - **Ficha de la contraseña** (`FichaDeContrasena.vue`, CP3): sección «Pagos» (número, forma, fecha, monto, estado,
@@ -943,9 +972,11 @@ respuesta de emitir un cheque gana `avisos` (fondos de un posfechado).
   cargos autorizados con saldo). Columna «Pagado» y etiqueta «Pagada» / «Pagada en parte» / «Comprometida». Editar sigue
   disponible con pagos (CP4-e); «Quitar» se oculta en los documentos con pagos; con la contraseña impresa, quitar o
   agregar confirma el aviso de «REIMPRESIÓN» (§4).
-- `paginas/NuevoPago.vue` (formulario en página, ≤ 120 líneas; ruta `/cuentas-por-pagar/contrasenas/:id/pagar`):
-  pestañas por forma según permisos (Cheque, Transferencia o débito, Nota ya registrada, Cuenta de apertura —esta última
-  solo si la contraseña tiene saldos iniciales—); los cargos autorizados con su saldo, retención que se descontará y monto
+- `paginas/NuevoPago.vue` (formulario en página, ≤ 120 líneas; ruta `/cuentas-por-pagar/pagos/nuevo?proveedorId=&contrasenaId=`;
+  desde la ficha de la contraseña llega con las dos; desde «Pagos», eligiendo el proveedor): pestañas por forma según
+  permisos (Cheque, Transferencia o débito, Nota ya registrada, Cuenta de apertura —esta última solo si hay saldos
+  iniciales—; el efectivo va en su pantalla de reparto, adenda §7.6, con un enlace «Pagar en efectivo»); los cargos
+  autorizados **agrupados por contraseña** (la de origen abierta; «Agregar otra contraseña del proveedor», M2) con su saldo, retención que se descontará y monto
   propuesto editable, los no autorizados apagados; total que se recalcula; medio (chequera con el siguiente número o
   cuenta; nota marcada con su disponible); **beneficiario** (solo lectura); fecha (aviso de posfechado y de fecha
   anterior a la recepción; en apertura con la carga abierta, fija en la fecha de inicio); no negociable; referencia;
@@ -954,16 +985,17 @@ respuesta de emitir un cheque gana `avisos` (fondos de un posfechado).
   retención por descontar, diferencia ofrecible, suma del mes y aviso de bancarización, posfechado, fecha mínima, armado
   del cuerpo) con su `*.prueba.ts`. Componentes: `CargosDelPago`, `MedioDePago`, `NotasParaLigar`, `AvisosDelPago`.
 - `paginas/Pagos.vue` (Operación): lista con filtros (proveedor, forma, estado, posfechado, fechas, cuenta), tarjetas
-  `TarjetaDeRegistro` con número, proveedor, contraseña, forma («Cheque 1523 · Banco X»), fecha, monto, etiqueta «Anulado»
+  `TarjetaDeRegistro` con número, proveedor, contraseñas, forma («Cheque 1523 · Banco X»; «Efectivo · Retiro N»), fecha, monto, etiqueta «Anulado»
   o «Posfechado».
 - `paginas/FichaDePago.vue`: datos, beneficiario, movimiento de Bancos (enlace si el usuario tiene `bancos.*.ver`),
   líneas con lo que cubre cada una, diferencias con «Dar por saldada la diferencia» por línea (`puedeSaldarDiferencia`),
-  «Comprobante», «Reaplicar» (ventana o página con los cargos de la contraseña, motivo y la suma fija; lógica pura en
+  «Comprobante», «Reaplicar» (ventana o página con los cargos de las contraseñas vigentes del proveedor, motivo y la suma fija; lógica pura en
   `composables/pagos/reaplicacion.ts`) y «Anular» (`VentanaDeMotivo` con la fecha del inverso si mueve dinero; si está
   cobrado, el botón no aparece y la ficha dice «Cobrado: reaplíquelo o registre un reintegro»).
 - `paginas/ComprobanteDePago.vue` (página de impresión, como la contraseña de CP3; `window.print()`): empresa, proveedor,
   beneficiario, pago N, forma y documento bancario, fecha (y «Cheque posfechado al dd/mm/aaaa»); por documento: tipo,
   serie y número, total, **retención (con número de constancia o «constancia por emitir»)**, notas aplicadas,
+  agrupados **por contraseña** (M2),
   **pagado** y saldo que queda; total del cheque; leyendas «Las retenciones se documentan con su constancia.» y **«Este
   comprobante no es un documento tributario.»**; firmas «Entregado» y «Recibido por el proveedor». Lógica pura en
   `composables/pagos/comprobante-de-pago.ts`.
@@ -980,8 +1012,8 @@ respuesta de emitir un cheque gana `avisos` (fondos de un posfechado).
   «Para Cuentas por pagar» y, si tiene desglose, el reparto en la ficha; en un movimiento con origen, «Origen: Cuentas
   por pagar · Pago N» con enlace y sin corregir, eliminar ni blanquear; al emitir un cheque posfechado, el aviso de
   fondos; los mensajes de rechazo del aviso se muestran tal cual.
-- `modulo.ts` y `textos.ts`: rutas `/cuentas-por-pagar/pagos`, `/pagos/:id`, `/pagos/:id/comprobante`,
-  `/contrasenas/:id/pagar`, `/reintegros/:id/recibo`; menú «Pagos» en `seccion: 'operacion'`.
+- `modulo.ts` y `textos.ts`: rutas `/cuentas-por-pagar/pagos`, `/pagos/nuevo`, `/pagos/:id`, `/pagos/:id/comprobante`,
+  `/reintegros/:id/recibo` (y las de la adenda §7.6); menú «Pagos» en `seccion: 'operacion'`.
 
 ## 10. Convivencia y riesgos
 
@@ -1024,14 +1056,19 @@ respuesta de emitir un cheque gana `avisos` (fondos de un posfechado).
     clasificación; ni el saldo ni la conciliación). Queda en la QA.
 11. **Aviso de pago por correo (CP7).** Sale de `pago_registrado` y del comprobante; no cambia datos de CP4.
 12. **Borrar la empresa:** cascadas por `empresa_id`; las llaves `no action` se revisan al final del comando.
+13. **M2 y la adenda de efectivo.** CP4-2 (en programación) busca los pagos de una contraseña por
+    `aplicaciones_de_pagos.contrasena_id`, no por `pagos.contrasena_id`, que CP4-V1 quita; si llegó a usarla, CP4-V1 lo
+    cambia. Orden de bloqueo con varias contraseñas: las contraseñas en orden de id, después los cargos en orden de id.
+    Lo propio del efectivo (retiro, reparto, bloqueo de bancarización por proveedor) está en la adenda §8.
 
 ## 11. Pasos (un commit cada uno; servidor y cliente por separado)
 
 Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`. Servidor con
 `programador-backend`, cliente con `programador-frontend`, QA con `pruebas-qa`.
 
-**Orden respecto de lo que ya está en camino** (verificado contra `main` el 2026-11-14: Cuentas por pagar hasta la
-`0006`, CP3-1 hecho; Bancos hasta la `0030`):
+**Orden respecto de lo que ya está en camino** (verificado contra `main` el 2026-11-14, después de aprobar la adenda:
+Cuentas por pagar hasta la `0008` —CP4-1 hecho—; Bancos hasta la `0032` —CP4-B1 y CP4-B2a hechos—; CP4-2 en
+programación, sin migración):
 
 | Pasos de CP4 | Van después de | Por qué |
 |---|---|---|
@@ -1040,13 +1077,26 @@ Cada commit corre `npm run revisar` y sus pruebas y actualiza la bitácora de `P
 | CP4-B3 | CP4-B2a (y H2b cliente, por la pantalla de conciliación) | Cliente de lo anterior |
 | CP4-1 | U8l-2 (`0007`) en `main` | La `0008` sigue a la `0007` |
 | CP4-2 | CP3-3, CP3-4, CP3-5 y U8l-3 en `main`, y CP4-1 | Suma reglas a las listas de CP3 y U8l-3 y la columna «Pagado» a la impresión de CP3 |
-| CP4-3 a CP4-8 | CP4-2 y CP4-B2a | Usan los saldos y las órdenes a Bancos |
+| **CP4-V1** (M2, `0009`) | CP4-2 en `main` | Quita `pagos.contrasena_id`; la `0009` sigue a la `0008` y nadie más genera migraciones de Cuentas por pagar a la vez |
+| CP4-3 a CP4-8 | CP4-2, **CP4-V1** y CP4-B2a | Usan los saldos, la forma de M2 y las órdenes a Bancos |
 | CP4-9 a CP4-11 | CP3-6 y CP3-7 en `main`, CP4-8 y CP4-B3 | Pantallas sobre las de CP3 |
 | CP4-12 (QA) | CP3-8, la QA de U8-l y CP4-11 | De punta a punta con todo |
 
-**Adenda de efectivo** (`diseno-cp4-pagos-en-efectivo.md` §11, por aprobar): CP4-V1 (varias contraseñas, antes de
-CP4-3), CP4-EB (Bancos, `0033`), CP4-E1 (datos), CP4-E2 a CP4-E4 (servidor, después de CP4-4, CP4-5 y CP4-8) y CP4-E5
-(cliente, después de CP4-10); CP4-12 suma sus casos.
+**Adenda de efectivo** (`diseno-cp4-pagos-en-efectivo.md` §11, **aprobada**), con las migraciones reales:
+
+| Paso | Migración | Va después de |
+|---|---|---|
+| CP4-V1 (servidor, M2) | Cuentas por pagar `0009_cp4_pago_de_varias_contrasenas` | CP4-2 en `main`; **antes de CP4-3** |
+| CP4-EB (servidor, Bancos: conceptos y leyenda del flujo) | Bancos `0033_cp4_efectivo_para_pagos` | Ya se puede (CP4-B2a en `main`) |
+| CP4-E1 (servidor, datos del efectivo) | Cuentas por pagar `0010_cp4_pagos_en_efectivo` | CP4-V1 en `main` |
+| CP4-E2 (retiros) | — | CP4-EB, CP4-E1 y CP4-4 |
+| CP4-E3 (repartir y pagar en efectivo) | — | CP4-E2 y CP4-5 |
+| CP4-E4 (liquidar y recibo) | — | CP4-E3 y CP4-8 |
+| CP4-E5 (cliente) | — | CP4-E4, CP4-9 y CP4-10 |
+
+CP4-12 (QA) suma sus casos y va después de CP4-E5 y CP4-11. Orden sugerido de toda la serie de Cuentas por pagar:
+CP4-2 → **CP4-V1** → CP4-E1 → CP4-3 → CP4-4 → CP4-5 → CP4-E2 → CP4-E3 → CP4-6 → CP4-7 → CP4-8 → CP4-E4 → CP4-9 → CP4-10 →
+CP4-11 → CP4-E5 → CP4-12; CP4-EB en paralelo cuando haya una sesión de Bancos libre.
 
 CP3-2 a CP3-8 y U8l-2 en adelante siguen su propio orden (U8l-2 y U8l-3 después de CP3-1 y no en paralelo con CP3-2 a
 CP3-4); ninguno espera a CP4. Los pasos de Bancos de CP4 sí pueden avanzar en paralelo con CP3 y U8-l.
@@ -1085,17 +1135,27 @@ CP3-4); ninguno espera a CP4. Los pasos de Bancos de CP4 sí pueden avanzar en p
    pagos vigentes, anulados y posfechados (comprometido hoy, pagado al llegar la fecha), con ajuste de cargo y con
    reintegro; cada regla nueva desde aquí y por aviso de Libro de compras; contraseña con pagos editable y quitar un
    documento sin pagos (pasa) y con pagos (rechazo) (las filas se siembran: los casos de uso llegan en CP4-3).
-7. **CP4-3 (servidor, pagar con cheque y nota de débito):** `RegistrarPago` (§5.1), puertos `PagosEnBancos` (las
+6b. **CP4-V1 (servidor, M2: un pago para varias contraseñas del proveedor):** migración `0009_cp4_pago_de_varias_contrasenas`
+   (adenda §10), `pagos.tablas.ts` sin `contrasena_id`, `pagos_id_proveedor_unico`, `pagos_proveedor_fk` con
+   `pagos_proveedor_fecha_idx`, nueva `aplicaciones_de_pagos_pago_fk`; ajustar lo que CP4-2 haya hecho con
+   `pagos.contrasena_id`. **Pruebas de tablas:** línea de otra contraseña del mismo proveedor (pasa), de otro proveedor
+   (falla), cargo fuera de su contraseña (falla); `politicas-de-los-modulos` y `llaves-entre-esquemas`.
+6c. **CP4-E1 (servidor, datos del efectivo):** migración `0010_cp4_pagos_en_efectivo` (adenda §3.3 y su paso CP4-E1).
+7. **CP4-3 (servidor, pagar con cheque y nota de débito):** `RegistrarPago` (§5.1, con M2: varias contraseñas del
+   proveedor y rutas `POST /pagos…`; suma del mes con efectivo y aviso según el régimen, §5.7), puertos `PagosEnBancos` (las
    órdenes), `RetencionesDelLibro` (constancias y mes, lectura) y `NombreDelNit` (beneficiario, lectura de Terceros y del
    DTE), desglose por activo fijo, retención en el primer pago, diferencias (§5.4) y variable `pagos.tope_diferencia`,
-   avisos (§5.5, §5.7 y los de Bancos), `ListarCargosParaPagar`, `MediosDePago`, eventos, permisos `pagos.ver` y
+   avisos (§5.5, §5.7 y los de Bancos), `ListarCargosParaPagar` (por proveedor), `ProveedoresPorPagar`, `MediosDePago`,
+   puerto `DatosFiscalesDeLaEmpresa` (lectura de Libro de compras, para el efecto fiscal), eventos, permisos `pagos.ver` y
    `pagos.emitir`, rutas. **Pruebas** puras (propuesta, retención por descontar, desglose, suma del mes con posfechado,
    fecha mínima, beneficiario) y de API: cheque, cheque posfechado (comprometido, aviso de fondos), nota de débito, cargo
    sin autorizar (rechazo), monto mayor que el saldo, fecha anterior a la emisión (rechazo) y a la recepción (aviso), dos
    cargos uno de activo fijo (desglose en Bancos), retención solo en el primero, aviso de entero de un mes anterior,
    saldo inicial sin retención y con aviso de por practicar, constancia por emitir, diferencia de Q0.03 y de Q30 (no
    ofrecida), diferencia de un cargo que no está en el pago (rechazo), proveedor sin nombre del NIT (rechazo), saldo
-   insuficiente en Bancos (nada se guarda), dos pagos a la vez, sin permiso.
+   insuficiente en Bancos (nada se guarda), dos pagos a la vez, sin permiso; con M2, un cheque por dos contraseñas del
+   proveedor (pasa) y un cargo de otro proveedor (rechazo); aviso de bancarización con empresa general (sale) y pequeño
+   contribuyente (no sale).
 8. **CP4-4 (servidor, anular, reaplicar y saldar diferencia):** `AnularPago` (§5.9), manejador de
    `bancos.movimiento_por_cambiar`, `REGLAS_PARA_ANULAR_PAGO` con `noEstarCobrado`, `ReaplicarPago` (§5.11) con
    `REGLAS_PARA_REAPLICAR_PAGO`, `SaldarDiferenciaDelPago` (§5.4), permisos `pagos.anular` y `pagos.reaplicar`,
@@ -1103,7 +1163,7 @@ CP3-4); ninguno espera a CP4. Los pasos de Bancos de CP4 sí pueden avanzar en p
    cheque de mes abierto (`sin_inverso`) y de mes conciliado (`con_inverso`), desde aquí y desde Bancos (también caducos
    en lote), cobrado (rechazo), la retención pasa al siguiente pago, eliminar o corregir en Bancos (rechazo),
    idempotencia; reaplicar un cobrado a otro cargo (retención recalculada, desglose nuevo, auditoría), con otra suma
-   (rechazo), a un cargo de otra contraseña (rechazo); saldar la diferencia después del pago y en un pago anulado
+   (rechazo), a un cargo de otra contraseña vigente del proveedor (pasa, M2) y de otro proveedor (rechazo); saldar la diferencia después del pago y en un pago anulado
    (rechazo).
 9. **CP4-5 (servidor, nota ligada):** forma `nota_ligada` (§5.2), `NotasParaLigar`, desglose por activo fijo con
    `fijar_desglose_de_conceptos`, permiso. **Pruebas:** varias contraseñas sobre una nota, disponible, nota no marcada,
@@ -1121,8 +1181,8 @@ CP3-4); ninguno espera a CP4. Los pasos de Bancos de CP4 sí pueden avanzar en p
     (rechazo), contenido del recibo (leyenda no tributaria).
 12. **CP4-8 (servidor, lista, ficha y comprobante):** `ListarPagos` (filtro de posfechados), `ObtenerPago`,
     `ComprobanteDePago` (con constancias del libro y la leyenda no tributaria). **Pruebas** de contenido.
-13. **CP4-9 (cliente, pagar):** `NuevoPago` con sus componentes y lógica pura; sección «Pagos» de la contraseña y su
-    edición con pagos (aviso de «REIMPRESIÓN»).
+13. **CP4-9 (cliente, pagar):** `NuevoPago` con sus componentes y lógica pura, por proveedor con varias contraseñas
+    (M2); sección «Pagos» de la contraseña y su edición con pagos (aviso de «REIMPRESIÓN»).
 14. **CP4-10 (cliente, pagos):** lista, ficha, saldar diferencia, reaplicar, anular, comprobante.
 15. **CP4-11 (cliente, documentos, notas y reintegros):** columna y filtro de estado de pago (con «Comprometido»),
     reintegros en Notas de crédito, recibo de reintegro, enlace a las constancias pendientes.
@@ -1135,7 +1195,10 @@ CP3-4); ninguno espera a CP4. Los pasos de Bancos de CP4 sí pueden avanzar en p
     conciliar un cheque e intentar anularlo (rechazo) y reaplicarlo; anular un pago desde Cuentas por pagar (cheque
     vuelve en Bancos); cheque caduco en lote; inactivar Cuentas por pagar e intentar anular el cheque en Bancos
     (rechazo); cuenta de apertura con la carga abierta y con la cerrada; reintegro por depósito y en efectivo con su
-    recibo; flujo de efectivo con el desglose; permisos por separado; celular.
+    recibo; flujo de efectivo con el desglose; permisos por separado; celular. Con la adenda: un cheque por dos
+    contraseñas del proveedor y los casos de efectivo de la adenda §11.
+
+Los pasos CP4-EB y CP4-E2 a CP4-E5 están en la adenda §11 (orden en la tabla de arriba).
 
 ## 12. Preguntas para el usuario (respondidas el 2026-11-13)
 
@@ -1160,7 +1223,8 @@ El usuario aceptó todas las recomendaciones, con las correcciones del contador.
 - **CP4-i. Bancos con Cuentas por pagar inactivo.** **Respondida:** sí, Bancos rechaza (cambia lo que decía el plan).
 - **CP4-j. Separación de funciones al pagar.** **Respondida:** solo permisos distintos y el reporte de CP5.
 - **CP4-k. Pago en efectivo de facturas.** **Respondida:** con Caja chica, avisando la bancarización en efectivo. **Cambiada el
-  2026-11-14:** se paga en efectivo con un retiro del banco, en CP4; ver `diseno-cp4-pagos-en-efectivo.md`.
+  2026-11-14:** se paga en efectivo con un retiro del banco, en CP4: un retiro paga a uno o varios proveedores, con un
+  pago y un recibo por proveedor; adenda `diseno-cp4-pagos-en-efectivo.md`, **aprobada** el mismo día (con M2).
 - **CP4-l. Comprobante de pago.** **Respondida:** en CP4, con retención, constancia y leyenda no tributaria.
 - **CP4-m. Correlativos propios.** **Respondida:** sí, por empresa, con el reinicio anual; el del reintegro es el «Recibo
   de reintegro».
