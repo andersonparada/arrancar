@@ -88,7 +88,7 @@ export interface NotaDelDocumentoDto {
 /** Cuánto de una nota de crédito rebajó de un cargo, con los datos para mostrar los dos. */
 export interface AplicacionDelDocumentoDto {
   id: string;
-  forma: 'automatica' | 'manual';
+  forma: 'automatica' | 'manual' | 'contrasena';
   fecha: string;
   referencia: string | null;
   /** Solo las manuales se quitan (el permiso lo valida el servidor al quitar). */

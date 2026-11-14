@@ -5,7 +5,7 @@ import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../.
 
 export interface AplicacionDto {
   id: string;
-  forma: 'automatica' | 'manual';
+  forma: 'automatica' | 'manual' | 'contrasena';
   fecha: string;
   referencia: string | null;
   notaId: string;

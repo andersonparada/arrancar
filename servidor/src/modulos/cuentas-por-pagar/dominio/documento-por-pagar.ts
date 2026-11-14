@@ -39,8 +39,8 @@ export interface DocumentoPorPagar {
   autorizacionPropia: boolean;
 }
 
-/** Cómo nació una aplicación: con la recepción de la nota (`automatica`) o la hizo un usuario (`manual`). */
-export type FormaDeAplicacion = 'automatica' | 'manual';
+/** Cómo nació una aplicación: con la recepción de la nota (`automatica`), la hizo un usuario (`manual`) o la repartió una contraseña (`contrasena`). */
+export type FormaDeAplicacion = 'automatica' | 'manual' | 'contrasena';
 
 /** Una nota de crédito que rebaja un cargo, por un monto en centavos. */
 export interface AplicacionDeNota {
