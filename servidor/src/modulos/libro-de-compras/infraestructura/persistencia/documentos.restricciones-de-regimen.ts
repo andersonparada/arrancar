@@ -4,7 +4,38 @@ import { REGIMENES_DE_IVA } from '../../dominio/datos-fiscales-de-empresa.js';
 
 const REGIMENES_SQL = REGIMENES_DE_IVA.map((regimen) => `'${regimen}'`).join(', ');
 
-type T = Record<'tipo' | 'iva' | 'muestraEnReportesSat' | 'motivoSinCredito' | 'regimenIvaDeLaEmpresa', AnyPgColumn>;
+/** Los motivos cuyo IVA va al costo de las líneas. */
+const MOTIVOS_AL_COSTO =
+  "'fuera_de_plazo', 'no_vinculado', 'empresa_sin_credito', 'nota_de_debito_tardia', 'otra_causa_sin_credito'";
+
+type T = Record<
+  | 'tipo'
+  | 'iva'
+  | 'ivaNoAcreditable'
+  | 'observaciones'
+  | 'muestraEnReportesSat'
+  | 'motivoSinCredito'
+  | 'regimenIvaDeLaEmpresa',
+  AnyPgColumn
+>;
+
+/** Lo que depende del motivo de no dar crédito: IVA al costo, detalle de «otra causa», exento y fuera del libro. */
+export const restriccionesDeMotivo = (t: T) => [
+  check(
+    'documentos_sin_sat_sin_credito',
+    sql`${t.muestraEnReportesSat} or (${t.iva} = 0 and ${t.motivoSinCredito} is null)`,
+  ),
+  check(
+    'documentos_iva_no_acreditable_por_motivo',
+    sql`(${t.motivoSinCredito} in (${sql.raw(MOTIVOS_AL_COSTO)}) and ${t.ivaNoAcreditable} = ${t.iva})
+        or (coalesce(${t.motivoSinCredito}, '') not in (${sql.raw(MOTIVOS_AL_COSTO)}) and ${t.ivaNoAcreditable} = 0)`,
+  ),
+  check(
+    'documentos_otra_causa_con_detalle',
+    sql`coalesce(${t.motivoSinCredito}, '') <> 'otra_causa_sin_credito' or ${t.tipo} = 'nota_de_credito' or ${t.observaciones} is not null`,
+  ),
+  check('documentos_exento_sin_iva', sql`coalesce(${t.motivoSinCredito}, '') <> 'exento' or ${t.iva} = 0`),
+];
 
 /**
  * El régimen de IVA con que se registró el documento (la «foto» de la vigencia de su período) y lo que de él

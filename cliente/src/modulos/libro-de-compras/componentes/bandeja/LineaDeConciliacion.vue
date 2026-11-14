@@ -8,6 +8,7 @@ import {
   tipoDeValorDelCampo,
   tituloDelItem,
 } from '../../composables/bandeja/datos-de-la-conciliacion';
+import { ANTERIORES_A_LA_FECHA_DE_INICIO as anteriores } from '../../textos-de-anteriores';
 import { MOTIVOS_DE_BLOQUEO } from '../../textos-de-la-bandeja';
 import type { ClaveDeResultado, ItemDeConciliacion } from '../../servicios/conciliacion.api';
 import {
@@ -27,7 +28,9 @@ const PERMISO_DE_LA_ACCION: Record<AccionDeConciliacion, string> = {
   verEnLaBandeja: 'libro-de-compras.documentos.importar',
   descartar: 'libro-de-compras.dte-recibidos.descartar',
   restaurar: 'libro-de-compras.dte-recibidos.descartar',
+  registrarAqui: 'libro-de-compras.documentos.crear',
 };
+const enPlazo = computed(() => props.clave === 'anterioresALaFechaDeInicio' && props.item.enPlazoDeCredito);
 
 function valorDeDiferencia(campo: keyof typeof CAMPOS_COMPARADOS, valor: string | null): string {
   if (valor === null || valor === '') return '—';
@@ -51,7 +54,10 @@ const nota = computed(() => {
 </script>
 
 <template>
-  <div class="rounded-2xl bg-white p-4 ring-1 ring-tierra-200/70 dark:bg-tierra-800/60 dark:ring-tierra-700">
+  <div
+    class="rounded-2xl bg-white p-4 ring-1 dark:bg-tierra-800/60"
+    :class="enPlazo ? 'ring-2 ring-trigo-500' : 'ring-tierra-200/70 dark:ring-tierra-700'"
+  >
     <div class="flex items-start justify-between gap-2">
       <p class="font-semibold">{{ tituloDelItem(item) }}</p>
       <p class="shrink-0 font-semibold tabular-nums">{{ formatearMonto(item.total) }}</p>
@@ -62,6 +68,7 @@ const nota = computed(() => {
       {{ formatearFecha(item.fechaEmision) }} · IVA {{ formatearMonto(item.iva) }}
     </p>
     <InsigniaBase v-if="item.estadoEnLaBandeja === 'bloqueado'" tono="tierra" class="mt-2">Bloqueado</InsigniaBase>
+    <p v-if="enPlazo" class="mt-2 text-sm font-medium text-amber-800 dark:text-amber-300">{{ anteriores.enPlazo }}</p>
     <p v-if="nota" class="mt-2 text-sm text-tierra-600 dark:text-tierra-300">{{ nota }}</p>
     <table v-if="item.diferencias.length" class="mt-3 w-full text-sm">
       <caption class="sr-only">
@@ -95,7 +102,7 @@ const nota = computed(() => {
         v-for="accion in acciones"
         :key="accion"
         v-permiso="PERMISO_DE_LA_ACCION[accion]"
-        :variante="accion === 'verEnLaBandeja' ? 'primario' : 'secundario'"
+        :variante="accion === 'verEnLaBandeja' || accion === 'registrarAqui' ? 'primario' : 'secundario'"
         pequeno
         @click="emit('accion', accion)"
       >

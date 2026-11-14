@@ -15,6 +15,10 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     descripcion: 'Lo que se debe a los proveedores: busque, autorice y revise cada documento con su saldo.',
     ficha: 'Documento por pagar',
   },
+  notasDeCredito: {
+    titulo: 'Notas de crédito',
+    descripcion: 'Las notas de crédito de los proveedores y lo que queda a favor de la empresa en cada una.',
+  },
   saldosIniciales: {
     titulo: 'Saldos iniciales',
     descripcion: 'Lo que la empresa debía a sus proveedores al cierre del día anterior a la fecha de inicio.',

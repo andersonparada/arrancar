@@ -1547,3 +1547,24 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (la limpieza borraba el logo de la instalación); en corrección. Decidido por el usuario: interruptor
   `DEPURAR_HUERFANOS`, tope de 5 en espera para los PDF del sistema y rastro de borrados solo en el log.
 
+- **2026-11-13 — P1-2 (cliente, Libro de compras): DTE anteriores a la fecha de inicio.** En Pendientes la bandeja pide
+  `anteriores=ocultar` y muestra el aviso «N DTE son de antes de la fecha de inicio (dd/mm/aaaa) y no se muestran» con la
+  ayuda del contador y «Mostrar N» (con ellos a la vista, «Ocultar»); las demás pestañas los incluyen. Cada fila anterior
+  lleva la marca «Antes de la fecha de inicio» (las ya registradas no) y, si está en plazo de crédito, marca destacada,
+  borde ámbar y la frase «revise que esté en el sistema anterior». Al completar la fila conserva las marcas de la lista
+  (las respuestas las traen en falso). La conciliación suma el grupo plegado «DTE de antes de la fecha de inicio»
+  (informativo: no cuenta como conciliado ni por revisar) con «Registrar aquí» (abre el formulario con el DTE),
+  «Descartar» y «Restaurar». La nota sin factura suma «Si su factura es de antes de la fecha de inicio, regístrela desde
+  el formulario» (tarjeta y error en lote). El aviso de importar ya lo muestra la ventana (avisos del servidor). Sin
+  pruebas de navegador (pendiente de QA con U8l).
+- **2026-11-13 — CP2-5 (cliente, pantalla «Notas de crédito»).** Página `NotasDeCredito.vue` (Operación, ruta `/cuentas-por-pagar/notas-de-credito`, permiso `documentos.ver`) con filtros propios (proveedor, estado, «Solo con saldo a favor» encendido por omisión, fechas de emisión), tarjetas con total, aplicado, ajustado y saldo a favor destacado, etiqueta «Saldo inicial» y «Se puede aplicar» (`puedeAplicar`), y resumen de saldo a favor por proveedor. Lógica pura en `composables/notas-de-credito.ts` con pruebas; `usarPeticionDeDocumentos` y `usarProveedoresDelFiltro` se comparten con Documentos por pagar. Tipos: `ajustado`, `puedeAplicar`, `puedeAjustar`, `conSaldo`. El resumen por proveedor solo se muestra cuando todas las notas caben en la página (si no, sumaría una parte). Las ventanas de aplicar y ajustar siguen en CP2-6.
+- **2026-11-13 — U8l-1 (servidor, Libro de compras, datos).** Migración `0035_u8l_facturas_anteriores`: tabla
+  `facturas_anteriores` (diseño §3.1, con las notas de débito anteriores, el único por proveedor + serie + número sin
+  tipo y el único parcial por autorización FEL), `documentos.factura_anterior_id` con su llave e índice, el check
+  `documentos_nota_con_factura` reemplazado (una sola factura) y `otra_causa_sin_credito` en `MOTIVOS_SIN_CREDITO`, en
+  los checks de motivo y de IVA al costo, en el cálculo, el rubro «Compras sin derecho a crédito» del SAT-2237, el
+  análisis y el libro (sigla «OC»). Por P-U8l-2 **no** existe `documentos_otra_causa_solo_en_nota_con_factura_anterior`;
+  el detalle obligatorio reutiliza `documentos.observaciones` (check `documentos_otra_causa_con_detalle`, exige
+  observaciones salvo en la nota de crédito, que hereda el motivo de su factura) y la factura anterior gana la columna
+  `detalle_del_motivo` (check `facturas_anteriores_detalle_del_motivo`, 1 a 500 y obligatorio con «otra causa»). Sin
+  casos de uso ni API nuevos: siguen U8l-2 a U8l-4.

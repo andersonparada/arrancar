@@ -1,14 +1,33 @@
 import { onMounted, ref, reactive, watch } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { alDejarDeEscribir } from '@/modulos/core/composables/al-dejar-de-escribir';
-import { apiDteRecibidos, type DteRecibido, type EstadoDeDte } from '../../servicios/dte-recibidos.api';
+import {
+  apiDteRecibidos,
+  type DteRecibido,
+  type EstadoDeDte,
+  type PaginaDeDteRecibidos,
+} from '../../servicios/dte-recibidos.api';
+import { anterioresPorOmision, conLasMarcasDeLaLista } from './anteriores-a-la-fecha-de-inicio';
 import { consultaDeLaBandeja, filtrosDeLaBandejaVacios, type FiltrosDeLaBandeja } from './datos-de-la-bandeja';
+
+/** Lo de la página que no son filas: el total, la fecha de inicio de la empresa y cuántas anteriores quedaron ocultas. */
+function usarDatosDeLaPagina() {
+  const total = ref(0);
+  const fechaDeInicio = ref<string | null>(null);
+  const anterioresOcultos = ref(0);
+  const aplicar = (respuesta: PaginaDeDteRecibidos): void => {
+    total.value = respuesta.total;
+    fechaDeInicio.value = respuesta.fechaDeInicio;
+    anterioresOcultos.value = respuesta.anterioresOcultos;
+  };
+  return { total, fechaDeInicio, anterioresOcultos, aplicar };
+}
 
 /** Pide la página de filas; si llegan dos respuestas, solo vale la de la última petición. */
 function usarPeticionDeLaBandeja(estado: EstadoDeDte, filtros: FiltrosDeLaBandeja, pagina: { value: number }) {
   const avisos = usarAvisos();
   const filas = ref<DteRecibido[]>([]);
-  const total = ref(0);
+  const datos = usarDatosDeLaPagina();
   const cargando = ref(true);
   let ultimaPeticion = 0;
 
@@ -19,7 +38,7 @@ function usarPeticionDeLaBandeja(estado: EstadoDeDte, filtros: FiltrosDeLaBandej
       const respuesta = await apiDteRecibidos.listar(consultaDeLaBandeja(estado, filtros, pagina.value));
       if (peticion !== ultimaPeticion) return;
       filas.value = respuesta.elementos;
-      total.value = respuesta.total;
+      datos.aplicar(respuesta);
     } catch (error) {
       if (peticion !== ultimaPeticion) return;
       avisos.error(error instanceof Error ? error.message : 'No se pudo cargar la bandeja.');
@@ -27,19 +46,22 @@ function usarPeticionDeLaBandeja(estado: EstadoDeDte, filtros: FiltrosDeLaBandej
     cargando.value = false;
   }
 
-  return { filas, total, cargando, cargar };
+  return { filas, ...datos, cargando, cargar };
 }
 
 /** Las filas de una pestaña de la bandeja: filtros, página y recarga cuando cambian. */
 export function usarListaDeLaBandeja(estado: EstadoDeDte, busquedaInicial = '') {
-  const filtros = reactive({ ...filtrosDeLaBandejaVacios(), busqueda: busquedaInicial });
+  const filtros = reactive({ ...filtrosDeLaBandejaVacios(anterioresPorOmision(estado)), busqueda: busquedaInicial });
   const pagina = ref(1);
   const peticion = usarPeticionDeLaBandeja(estado, filtros, pagina);
 
   /** Pone las filas que el servidor devolvió ya cambiadas, sin volver a pedir la página. */
   const reemplazar = (cambiadas: readonly DteRecibido[]): void => {
     const porId = new Map(cambiadas.map((fila) => [fila.id, fila]));
-    peticion.filas.value = peticion.filas.value.map((fila) => porId.get(fila.id) ?? fila);
+    peticion.filas.value = peticion.filas.value.map((fila) => {
+      const nueva = porId.get(fila.id);
+      return nueva ? conLasMarcasDeLaLista(nueva, fila) : fila;
+    });
   };
 
   // Cambiar un filtro vuelve a la primera página; si ya estaba en ella, recarga directo.
@@ -48,8 +70,12 @@ export function usarListaDeLaBandeja(estado: EstadoDeDte, busquedaInicial = '') 
   onMounted(peticion.cargar);
 
   const quitarFiltros = (): void => {
-    Object.assign(filtros, filtrosDeLaBandejaVacios());
+    Object.assign(filtros, filtrosDeLaBandejaVacios(filtros.anteriores));
   };
 
-  return { ...peticion, filtros, pagina, reemplazar, quitarFiltros };
+  const verAnteriores = (ver: boolean): void => {
+    filtros.anteriores = ver ? 'incluir' : 'ocultar';
+  };
+
+  return { ...peticion, filtros, pagina, reemplazar, quitarFiltros, verAnteriores };
 }
