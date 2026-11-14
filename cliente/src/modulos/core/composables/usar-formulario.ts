@@ -1,6 +1,14 @@
-import { ref } from 'vue';
+import { ref, watch, type Ref } from 'vue';
 import { usarAvisos } from '../almacenes/avisos';
 import { ErrorApi } from '../servicios/cliente-http';
+
+/** Los mismos errores sin el de `campo`; si ese campo no tiene error, devuelve el mismo objeto. */
+export function sinErrorDe(errores: Record<string, string>, campo: string): Record<string, string> {
+  if (!(campo in errores)) return errores;
+  const resto = { ...errores };
+  delete resto[campo];
+  return resto;
+}
 
 /** Los errores repartidos por campo: los de validación, o el campo que señala un conflicto; `null` si no hay. */
 function erroresPorCampo(error: unknown): Record<string, string> | null {
@@ -9,6 +17,11 @@ function erroresPorCampo(error: unknown): Record<string, string> | null {
     return Object.fromEntries(error.erroresCampos.map((e) => [e.campo, e.mensaje]));
   }
   return error.campoDelConflicto ? { [error.campoDelConflicto]: error.message } : null;
+}
+
+/** Quita el error de `campo` en cuanto cambia lo que devuelve `valor`: el usuario ya lo está corrigiendo. */
+export function quitarErrorAlCambiar(errores: Ref<Record<string, string>>, campo: string, valor: () => unknown): void {
+  watch(valor, () => (errores.value = sinErrorDe(errores.value, campo)));
 }
 
 /**

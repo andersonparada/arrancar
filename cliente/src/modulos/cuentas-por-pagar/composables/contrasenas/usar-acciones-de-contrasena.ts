@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
-import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { quitarErrorAlCambiar, usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiContrasenas, type DocumentosDisponibles, type FichaDeContrasena } from '../../servicios/contrasenas.api';
 import { usarAccionConMotivo } from '../usar-baja-con-motivo';
 import { alternarMarca, SIN_DOCUMENTOS_DISPONIBLES } from './edicion-de-contrasena';
@@ -30,6 +30,9 @@ function usarVentana<T extends { abierta: boolean }>(inicial: T) {
 /** Cambiar la fecha prometida (con motivo) y las observaciones, en una ventana. */
 export function usarCambioDeContrasena(ficha: FichaActual, alTerminar: AlTerminar) {
   const { edicion, enviando, errores, enviar, cerrar } = usarVentana(edicionDeCambioVacia());
+  for (const campo of ['fechaDePago', 'observaciones', 'motivo'] as const) {
+    quitarErrorAlCambiar(errores, campo, () => edicion.value[campo]);
+  }
   const abrir = (): void => {
     if (ficha.value) edicion.value = edicionDeCambioDe(ficha.value);
     errores.value = {};
