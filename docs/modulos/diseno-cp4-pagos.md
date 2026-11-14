@@ -864,7 +864,7 @@ por correo** (CP7).
 
 | Clave | Esquema | Niveles | Predeterminado | Para |
 |---|---|---|---|---|
-| `cuentas-por-pagar.pagos.tope_diferencia` (**nueva**, C-CP4-5) | dinero `>= 0` (como `ajustes.tope_diferencia_menor`) | instalación y empresa | **Q25.00** (el mismo de las notas, para no decidir por el contador; P-CP4-3) | Tope de la diferencia que se puede saldar como residuo de un pago; con 0 se apaga |
+| `cuentas-por-pagar.pagos.tope_diferencia` (**nueva**, C-CP4-5) | dinero `>= 0` (como `ajustes.tope_diferencia_menor`) | instalación y empresa | **Q1.00** (contador, 2026-11-14, P-CP4-3: solo redondeos; lo demás suele ser retención mal calculada o descuento que exige nota de crédito) | Tope de la diferencia que se puede saldar como residuo de un pago; con 0 se apaga |
 
 Se siguen usando `cuentas-por-pagar.bancarizacion.umbral` (instalación, CP2) y
 `cuentas-por-pagar.ajustes.tope_diferencia_menor` (notas, CP2), y las de Bancos (sobregiro, misma fecha en anulación).
@@ -1178,7 +1178,7 @@ art. 20, AG 425-2006 art. 32 reformado) se cotejan con el texto oficial antes de
 - **P-CP4-2 (para el usuario y el contador, no frena CP4):** el «reporte de constancias pendientes» del dictamen se
   cubre hoy con Libro de compras → Retenciones (por mes, filtro «sin constancia», L5-4b). Si hace falta una vista de
   **todos los meses** con las retenciones sin constancia, es un agregado de Libro de compras (Reportes), fuera de CP4.
-- **P-CP4-3 (para el contador, no frena CP4):** predeterminado de `cuentas-por-pagar.pagos.tope_diferencia`. Se dejó
+- **P-CP4-3 (resuelto por el contador el 2026-11-14): Q1.00 por omisión** (con 0 se apaga; la empresa lo sube con su contador). Nota original: predeterminado de `cuentas-por-pagar.pagos.tope_diferencia`. Se dejó
   Q25.00 (el de las notas) para no decidir; el dictamen habla de «centavos» y quizá prefiera un tope menor (p. ej. Q1.00).
 - **P-CP4-4 (interpretaciones del arquitecto, a confirmar con el usuario):** (a) la fecha de la contraseña deja de ser
   mínima del pago (se sigue de «fecha mínima = emisión del DTE»; queda como aviso); (b) el aviso de fondos de un
