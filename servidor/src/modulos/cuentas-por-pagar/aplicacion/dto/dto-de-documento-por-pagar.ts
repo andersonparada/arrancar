@@ -35,6 +35,7 @@ type Identificacion = Pick<
   | 'estado'
   | 'proveedorId'
   | 'documentoAfectadoId'
+  | 'facturaDelSistemaAnterior'
   | 'tieneActivoFijo'
 >;
 
@@ -47,6 +48,7 @@ const identificacionDe = (documento: DocumentoPorPagar): Identificacion => ({
   estado: documento.estado,
   proveedorId: documento.proveedorId,
   documentoAfectadoId: documento.documentoAfectadoId,
+  facturaDelSistemaAnterior: documento.facturaDelSistemaAnterior,
   tieneActivoFijo: documento.tieneActivoFijo,
 });
 

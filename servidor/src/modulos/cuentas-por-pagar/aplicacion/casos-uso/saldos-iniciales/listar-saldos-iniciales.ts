@@ -1,4 +1,5 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { notasPosterioresDe } from '../../../dominio/notas-posteriores.js';
 import { dtoDeSaldoInicial } from '../../dto/dto-de-saldo-inicial.js';
 import type { PaginaDeSaldosInicialesDto } from '../../dto/saldo-inicial.dto.js';
 import type { PaginacionDeDocumentos } from '../../puertos/puertos-de-consultas.js';
@@ -25,7 +26,10 @@ export class ListarSaldosIniciales {
         paginacion,
         hoy,
       );
-      const elementos = filas.map((fila) => dtoDeSaldoInicial(fila, carga.cerrada));
+      const libres = await consultas.notasLibresDelSistemaAnterior();
+      const elementos = filas.map((fila) =>
+        dtoDeSaldoInicial(fila, carga.cerrada, notasPosterioresDe(fila.documento, libres)),
+      );
       return { carga, elementos, total, ...paginacion };
     });
   }

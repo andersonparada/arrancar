@@ -11,6 +11,7 @@ import type {
   PaginacionDeDocumentos,
 } from '../../aplicacion/puertos/puertos-de-consultas.js';
 import type { DocumentoPorPagar, FormaDeAplicacion } from '../../dominio/documento-por-pagar.js';
+import { facturaAnteriorDeLaNota, notasLibresDelSistemaAnterior } from './consultas-del-sistema-anterior.drizzle.js';
 import { ajustesConDatos } from './consultas-de-ajustes.drizzle.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { aFilaDeDocumento, ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
@@ -171,6 +172,14 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
 
   ajustesDe(documentoId: string): Promise<AjusteConDatos[]> {
     return ajustesConDatos(documentoId);
+  }
+
+  notasLibresDelSistemaAnterior() {
+    return notasLibresDelSistemaAnterior();
+  }
+
+  facturaAnteriorDeLaNota(documentoId: string) {
+    return facturaAnteriorDeLaNota(documentoId);
   }
 
   async cargosConSaldoDe(proveedorId: string): Promise<FilaDeDocumento[]> {

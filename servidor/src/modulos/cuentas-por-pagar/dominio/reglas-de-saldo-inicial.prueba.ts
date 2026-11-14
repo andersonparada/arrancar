@@ -6,7 +6,7 @@ import { REGLAS_PARA_CORREGIR_SALDO_INICIAL } from './reglas-de-saldo-inicial.js
 
 function guardado(
   cambios: Partial<DocumentoPorPagar> = {},
-  aplicaciones: Partial<Pick<DocumentoConAplicaciones, 'hechas' | 'recibidas' | 'ajustes'>> = {},
+  aplicaciones: Partial<Pick<DocumentoConAplicaciones, 'hechas' | 'recibidas' | 'ajustes' | 'notasQueLoCorrigen'>> = {},
 ): DocumentoConAplicaciones {
   const documento: DocumentoPorPagar = {
     id: crypto.randomUUID(),
@@ -17,6 +17,7 @@ function guardado(
     tipo: 'factura',
     proveedorId: crypto.randomUUID(),
     documentoAfectadoId: null,
+    facturaDelSistemaAnterior: false,
     fechaEmision: '2025-12-20',
     totalCentavos: 1000,
     retencionesCentavos: 0,
@@ -41,6 +42,7 @@ function guardado(
     ajustes: [],
     contrasenaVigente: null,
     contrasenas: [],
+    notasQueLoCorrigen: 0,
     ...aplicaciones,
   };
 }
@@ -86,6 +88,11 @@ describe('las reglas para corregir o eliminar un saldo inicial', () => {
       contrasenas: [{ id: 'c', numero: 7, anioDeNumero: 0, estado: 'anulada' as const }],
     };
     await expect(revisar(anulada)).resolves.toBeUndefined();
+  });
+
+  it('uno que alguna nota corrige (vigente o anulada) ya tiene movimientos', async () => {
+    await expect(revisar(guardado({}, { notasQueLoCorrigen: 1 }))).rejects.toThrow(SaldoInicialConMovimientos);
+    await expect(revisar(guardado({}, { notasQueLoCorrigen: 0 }))).resolves.toBeUndefined();
   });
 
   it('uno con notas recibidas o hechas se rechaza', async () => {

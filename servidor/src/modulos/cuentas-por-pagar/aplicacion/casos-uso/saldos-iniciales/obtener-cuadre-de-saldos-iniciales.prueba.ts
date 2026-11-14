@@ -15,8 +15,15 @@ const proveedor = (cambios: Partial<SumasDeProveedorEnElCuadre>): SumasDeProveed
   ...cambios,
 });
 
-function cuadreCon(filas: SumasDeProveedorEnElCuadre[], carga = new CargaInicialEnMemoria()) {
-  const consultas: ConsultasDeCuadre = { sumasPorProveedor: async () => filas };
+function cuadreCon(
+  filas: SumasDeProveedorEnElCuadre[],
+  carga = new CargaInicialEnMemoria(),
+  conNotas = new Map<string, number>(),
+) {
+  const consultas: ConsultasDeCuadre = {
+    sumasPorProveedor: async () => filas,
+    saldosConNotasPosteriores: async () => conNotas,
+  };
   const caso = new ObtenerCuadreDeSaldosIniciales({
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     consultas,
@@ -44,7 +51,17 @@ describe('ObtenerCuadreDeSaldosIniciales', () => {
       notasAFavor: '580.10',
       neto: '420.40',
       retencionesPorPracticar: '20.00',
+      saldosConNotasPosteriores: 0,
     });
+  });
+
+  it('cuenta los saldos con notas posteriores por proveedor y en el general', async () => {
+    const [a, b] = [proveedor({ documentos: 3 }), proveedor({})];
+
+    const cuadre = await cuadreCon([a, b], undefined, new Map([[a.proveedorId, 2]]));
+
+    expect(cuadre.proveedores.map((p) => p.saldosConNotasPosteriores)).toEqual([2, 0]);
+    expect(cuadre.general.saldosConNotasPosteriores).toBe(2);
   });
 
   it('sin saldos devuelve ceros y trae el estado de la carga', async () => {

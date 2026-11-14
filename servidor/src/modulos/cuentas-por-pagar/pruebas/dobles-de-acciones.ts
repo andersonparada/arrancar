@@ -1,11 +1,13 @@
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import type { ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
+import type { NotaLibreDelSistemaAnterior } from '../dominio/notas-posteriores.js';
 import { netoDe, type DocumentoPorPagar } from '../dominio/documento-por-pagar.js';
 import type {
   AjusteConDatos,
   AplicacionConDatos,
   ConsultasDeDocumentos,
   FilaDeDocumento,
+  FacturaAnteriorDeLaNotaDto,
   FiltroDeDocumentosPorPagar,
 } from '../aplicacion/puertos/puertos-de-consultas.js';
 import type { LibroDeCompras, OrdenDeAnulacion } from '../aplicacion/puertos/puertos-de-libro-de-compras.js';
@@ -14,10 +16,22 @@ import type { AplicacionesEnMemoria, DocumentosEnMemoria } from './dobles-de-doc
 
 /** Las consultas de la ficha sobre los mismos documentos en memoria; serie y número vienen del propio documento. */
 export class ConsultasEnMemoria implements ConsultasDeDocumentos {
+  /** Lo que la prueba quiere que lea de Libro de compras. */
+  libres: NotaLibreDelSistemaAnterior[] = [];
+  facturaAnterior: FacturaAnteriorDeLaNotaDto | null = null;
+
   constructor(
     private readonly documentos: DocumentosEnMemoria,
     private readonly aplicaciones?: AplicacionesEnMemoria,
   ) {}
+
+  async notasLibresDelSistemaAnterior(): Promise<NotaLibreDelSistemaAnterior[]> {
+    return this.libres;
+  }
+
+  async facturaAnteriorDeLaNota(): Promise<FacturaAnteriorDeLaNotaDto | null> {
+    return this.facturaAnterior;
+  }
 
   async buscar(id: string): Promise<FilaDeDocumento | null> {
     const documento = this.documentos.documentos.find((candidato) => candidato.id === id);

@@ -14,6 +14,7 @@ function fila(cambios: Partial<FilaDeDocumento> = {}, documento: Partial<Documen
       tipo: 'factura',
       proveedorId: 'proveedor',
       documentoAfectadoId: null,
+      facturaDelSistemaAnterior: false,
       fechaEmision: '2025-12-20',
       totalCentavos: 112000,
       retencionesCentavos: 12000,

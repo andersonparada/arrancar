@@ -1702,3 +1702,18 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   recibirán en U8l-3 (que es quien la escribe). Pruebas nuevas en `documentos-factura-anterior.prueba.ts` (llave por id
   propio, checks, relleno de la migración 0007 sobre ids viejos) y ajustes a las de CP1, CP2 y CP3 que sembraban el id
   del libro. Sin cliente ni contrato: sigue U8l-3.
+
+- **2026-11-14 — U8l-3 (servidor, Cuentas por pagar: recibir notas sobre facturas anteriores).** Contrato:
+  `DocumentoParaDestino.facturaAnterior?` (`FacturaAnteriorDeLaNota`: tipo, serie, número y fecha), opcional al leerlo.
+  `RecibirDocumento` busca (con `for update`) el saldo inicial vigente de la factura que cita la nota (mismo proveedor,
+  serie y número; los seis tipos de factura cuentan como uno): si lo halla, la nota apunta a él, se marca
+  `factura_del_sistema_anterior` y la de crédito se aplica sola (saldo inicial y luego sus notas de débito); si no, queda
+  libre (crédito) o como cargo suelto (débito). Avisos: fecha distinta, saldo libre con «la factura pudo tener retención»,
+  retenciones por practicar del saldo inicial y «no hay saldo inicial» (de crédito y de débito). La entidad y el DTO
+  ganan `facturaDelSistemaAnterior`; la ficha, `facturaAnterior` (leída de Libro de compras). `noTenerMovimientos` cuenta
+  las notas que corrigen al saldo inicial (también anuladas) con `notasQueLoCorrigen`, y `puedeCorregir`/`puedeEliminar`
+  usan `notasEnTotal`. `SaldoInicialDto.notasPosteriores` y `saldosConNotasPosteriores` del cuadre (por proveedor y
+  general) avisan de las notas libres que citan un saldo inicial cargado después (no se enlazan solas). La factura que no
+  llegó a Cuentas por pagar lanza `FacturaDeLaNotaNoRecibida` en vez de un `Error`. Sin migración. Pruebas: unitarias de
+  recibir, de dominio y de saldos iniciales, y de integración de las consultas SQL (`notas-del-sistema-anterior`). Sin
+  cliente: sigue U8l-4 (Libro) y U8l-7.

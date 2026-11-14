@@ -1,4 +1,5 @@
 import type { CausaDeAjuste } from '../../dominio/ajustes.js';
+import type { NotaLibreDelSistemaAnterior } from '../../dominio/notas-posteriores.js';
 import type { DocumentoPorPagar, FormaDeAplicacion } from '../../dominio/documento-por-pagar.js';
 import type { ProveedorConDocumentosDto } from '../dto/documento-por-pagar.dto.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
@@ -129,6 +130,15 @@ export interface NotaConSaldoLibre {
   saldoLibreCentavos: number;
 }
 
+/** La factura del sistema anterior que cita una nota, tal como está guardada en Libro de compras. */
+export interface FacturaAnteriorDeLaNotaDto {
+  tipo: TipoDeDocumento;
+  serie: string | null;
+  numero: string;
+  /** `AAAA-MM-DD`. */
+  fechaEmision: string;
+}
+
 /** Las consultas de la bandeja, la lista y la ficha; las tablas tienen RLS por empresa. */
 export interface ConsultasDeDocumentos {
   listar(
@@ -147,6 +157,10 @@ export interface ConsultasDeDocumentos {
   aplicacion(id: string): Promise<AplicacionConDatos | null>;
   /** Los ajustes de una nota de crédito (también los anulados), del más antiguo al más nuevo. */
   ajustesDe(documentoId: string): Promise<AjusteConDatos[]>;
+  /** Las notas del libro que citan una factura del sistema anterior y no están enlazadas a ningún saldo inicial. */
+  notasLibresDelSistemaAnterior(): Promise<NotaLibreDelSistemaAnterior[]>;
+  /** La factura anterior que cita una nota del libro (por su id en Libro de compras); `null` si no cita ninguna. */
+  facturaAnteriorDeLaNota(documentoId: string): Promise<FacturaAnteriorDeLaNotaDto | null>;
   /** Los cargos vigentes del proveedor que todavía deben algo (los que una nota puede rebajar), sin orden fijo. */
   cargosConSaldoDe(proveedorId: string): Promise<FilaDeDocumento[]>;
 }

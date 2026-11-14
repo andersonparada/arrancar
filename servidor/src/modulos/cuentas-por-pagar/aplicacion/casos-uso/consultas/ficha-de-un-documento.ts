@@ -25,6 +25,12 @@ const dtoDeAjuste = ({ montoCentavos, creadoPorNombre, ...resto }: AjusteConDato
   puedeAnular: resto.estado === 'vigente',
 });
 
+/** Los datos de la factura anterior que cita la nota, solo si el libro la tiene registrada. */
+async function facturaAnteriorDe(consultas: ConsultasDeDocumentos, { documento }: FilaDeDocumento) {
+  if (!documento.facturaDelSistemaAnterior || documento.documentoId === null) return null;
+  return consultas.facturaAnteriorDeLaNota(documento.documentoId);
+}
+
 /**
  * La ficha de un documento: sus saldos, las notas que lo corrigen, las aplicaciones de notas de crédito y, en una nota,
  * sus ajustes con la fecha mínima y el tope para ajustar.
@@ -44,5 +50,6 @@ export async function fichaDeUnDocumento(
     fechaMinimaDeAjuste: esNota ? fechaMinimaDeAjuste(libro.fechaRecepcion, extras.fechaDeInicio) : null,
     topeDiferenciaMenor: deCentavos(extras.topeDiferenciaMenorCentavos),
     anulacion: dtoDeAnulacion(fila),
+    facturaAnterior: await facturaAnteriorDe(consultas, fila),
   };
 }

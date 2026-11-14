@@ -20,8 +20,9 @@ type Sumas = Pick<
   'documentos' | 'cargosCentavos' | 'notasAFavorCentavos' | 'retencionesPorPracticarCentavos'
 >;
 
-function totalesDe(sumas: Sumas): TotalesDelCuadreDto {
+function totalesDe(sumas: Sumas, saldosConNotasPosteriores: number): TotalesDelCuadreDto {
   return {
+    saldosConNotasPosteriores,
     documentos: sumas.documentos,
     cargos: deCentavos(sumas.cargosCentavos),
     notasAFavor: deCentavos(sumas.notasAFavorCentavos),
@@ -55,13 +56,15 @@ export class ObtenerCuadreDeSaldosIniciales {
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const carga = await cargaInicial.obtener(operador);
       const filas = await consultas.sumasPorProveedor();
+      const conNotas = await consultas.saldosConNotasPosteriores();
       const proveedores: CuadreDeProveedorDto[] = filas.map((fila) => ({
         proveedorId: fila.proveedorId,
         proveedorNombre: fila.proveedorNombre,
         proveedorNit: fila.proveedorNit,
-        ...totalesDe(fila),
+        ...totalesDe(fila, conNotas.get(fila.proveedorId) ?? 0),
       }));
-      return { carga, proveedores, general: totalesDe(sumarTodos(filas)) };
+      const totalConNotas = proveedores.reduce((suma, fila) => suma + fila.saldosConNotasPosteriores, 0);
+      return { carga, proveedores, general: totalesDe(sumarTodos(filas), totalConNotas) };
     });
   }
 }

@@ -10,6 +10,8 @@ export interface TotalesDelCuadreDto {
   /** Cargos menos notas a favor; negativo si la empresa tiene saldo deudor con el proveedor. */
   neto: string;
   retencionesPorPracticar: string;
+  /** Cuántos saldos iniciales vigentes del grupo tienen notas posteriores libres que citan su factura (U8l). */
+  saldosConNotasPosteriores: number;
 }
 
 export interface CuadreDeProveedorDto extends TotalesDelCuadreDto {

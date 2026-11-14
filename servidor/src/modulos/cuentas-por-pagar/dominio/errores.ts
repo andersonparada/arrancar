@@ -12,6 +12,18 @@ export class DocumentoYaRecibido extends ReglaDeNegocioInfringida {
   }
 }
 
+/**
+ * La nota cita una factura del libro que no llegó a Cuentas por pagar. Nota y factura comparten destino, así que es un
+ * error de programación y no se ignora en silencio.
+ */
+export class FacturaDeLaNotaNoRecibida extends ReglaDeNegocioInfringida {
+  readonly codigo = 'factura_de_la_nota_no_recibida';
+
+  constructor() {
+    super('La factura que corrige la nota no está en Cuentas por pagar.');
+  }
+}
+
 /** El documento ya se autorizó (se aprobó para pago): no se elimina, se anula. */
 export class DocumentoAutorizado extends ReglaDeNegocioInfringida {
   readonly codigo = 'documento_autorizado';

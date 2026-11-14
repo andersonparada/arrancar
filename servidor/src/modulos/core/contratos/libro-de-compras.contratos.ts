@@ -23,6 +23,20 @@ export type TipoDeDocumentoDeCompra =
   | 'nota_de_debito'
   | 'recibo';
 
+/**
+ * La factura del sistema anterior que corrige una nota (no está en el libro de Arrancar). Contabilidad usa
+ * `fechaEmision` para saber si el costo que la nota corrige es de un año anterior (ISR: menor costo u otro ingreso del
+ * año en que se recibe la nota).
+ */
+export interface FacturaAnteriorDeLaNota {
+  /** Siempre de la familia de factura. */
+  tipo: TipoDeDocumentoDeCompra;
+  serie: string | null;
+  numero: string;
+  /** `AAAA-MM-DD`. */
+  fechaEmision: string;
+}
+
 /** Lo que recibe cada destino en su orden `<destino>.recibir_documento`. */
 export interface DocumentoParaDestino {
   documentoId: string;
@@ -30,6 +44,11 @@ export interface DocumentoParaDestino {
   proveedorId: string;
   /** La factura que corrige, en las notas de crédito y de débito. */
   documentoAfectadoId: string | null;
+  /**
+   * La factura del sistema anterior que corrige la nota, en las notas sobre una de ellas; ausente o nulo en lo demás
+   * (opcional al leerlo: los destinos viejos y las pruebas no la traen).
+   */
+  facturaAnterior?: FacturaAnteriorDeLaNota | null;
   /** `AAAA-MM-DD`. */
   fechaEmision: string;
   totalCentavos: number;
