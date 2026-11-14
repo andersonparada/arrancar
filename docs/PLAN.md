@@ -1774,3 +1774,18 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   dictamen punto 5) y un pago puede cubrir varias contraseñas del mismo proveedor (M2). Bancarización: **bloqueo con
   permiso y motivo**, solo cuando la empresa pierde algo según su régimen (E-2). Retiro sin liquidar: **aviso a fin de
   mes** (sin bloqueo). Custodio: **texto con usuario opcional** (aviso si él mismo liquida).
+- **2026-11-14 — Adenda de pagos en efectivo lista para programar** (`docs/modulos/diseno-cp4-pagos-en-efectivo.md`,
+  estado «aprobado, listo para programar», y los cambios de M2 en `docs/modulos/diseno-cp4-pagos.md`). Aplicados los
+  nueve cambios del dictamen y las respuestas del usuario. **Un retiro (un cheque o una nota de débito) paga a uno o
+  varios proveedores**: la pantalla «Pagar en efectivo» reparte el retiro en una sola operación (`POST
+  /retiros/:id/pagos`, 1–20 pagos, todo o nada), un pago y un recibo por proveedor, cada uno con cargos de varias
+  contraseñas. Bancarización: efecto fiscal por cargo según el régimen de IVA del documento y el de ISR de la empresa
+  (`datos_fiscales_de_empresa`); bloqueo con permiso y motivo solo con efecto; el efectivo suma en el aviso de los pagos
+  bancarios. Tabla `retiros_de_efectivo` con `custodio_usuario_id` opcional; cheque no negociable por omisión y nunca al
+  portador; concepto `faltante_de_efectivo` (Operación) y leyenda en el flujo de Bancos; lista con fecha de corte. M2:
+  sin `pagos.contrasena_id`, rutas por proveedor (`POST /pagos`, `/pagos/ligar`, `/pagos/apertura`, `GET
+  /proveedores/:id/para-pagar`). Migraciones reales: Cuentas por pagar **`0009_cp4_pago_de_varias_contrasenas`**
+  (CP4-V1, después de CP4-2 y antes de CP4-3) y **`0010_cp4_pagos_en_efectivo`** (CP4-E1); Bancos
+  **`0033_cp4_efectivo_para_pagos`** (CP4-EB). Quedan para decidir: N-1 (usuario: empresa sin datos fiscales, aviso
+  recomendado), N-2 y N-3 (contador: tabla de efectos por régimen y vigencia del art. 27 del Decreto 4-2012); no frenan
+  CP4-V1, CP4-EB ni CP4-E1.
