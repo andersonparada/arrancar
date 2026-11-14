@@ -1563,3 +1563,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   observaciones salvo en la nota de crédito, que hereda el motivo de su factura) y la factura anterior gana la columna
   `detalle_del_motivo` (check `facturas_anteriores_detalle_del_motivo`, 1 a 500 y obligatorio con «otra causa»). Sin
   casos de uso ni API nuevos: siguen U8l-2 a U8l-4.
+- **2026-11-13 — Diseño de CP4 (pagos a proveedores), propuesta para aprobar.** `docs/modulos/diseno-cp4-pagos.md`:
+  tablas `pagos` (forma `cheque`, `nota_de_debito`, `nota_ligada` o `cuenta_de_apertura`; correlativo propio; llave a
+  `bancos.movimientos`) y `aplicaciones_de_pagos` (llave a `contrasena_documentos`: solo se paga lo que está en la
+  contraseña; único parcial que garantiza la retención en un solo pago vigente), `reintegros` (depósito o efectivo) y
+  `ajustes_de_saldo.pago_id` (diferencias de centavos de un cargo); migración de Cuentas por pagar `0008` (después de
+  CP3-1 `0006` y U8l-2 `0007`). En Bancos: contratos `bancos.*` (emitir cheque y registrar nota con origen, anular,
+  medios de pago; aviso `movimiento_por_cambiar`), nota de débito marcada = concepto `pago_a_proveedor`, conceptos de
+  sistema `pago_a_proveedor_de_activo` y `reintegro_de_proveedor`, desglose por concepto para el pago mixto (migración
+  de Bancos `0032`, después de H2b `0031`). «Ligar al cheque o nota de saldo inicial de Bancos» espera a que Bancos
+  tenga cheques en circulación al empezar. Preguntas CP4-a a m para el usuario y C-CP4-1 a 8 para el contador.
