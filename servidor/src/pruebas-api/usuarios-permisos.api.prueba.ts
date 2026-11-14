@@ -260,8 +260,10 @@ describe('auditoría de permisos', () => {
     await cuenta.propietario.patch(`/api/usuarios/${objetivo.id}`, { empresaIds: [segundaEmpresaId] });
     const registros = (await auditoria('core.empresas-de-usuario')).filter((a) => a.registro_id === objetivo.id);
 
-    expect(registros.map((a) => a.accion)).toEqual(['asignar', 'asignar', 'quitar']);
-    expect(registros[2]!.anterior).toMatchObject({ empresaId: cuenta.empresaId, usuario: objetivo.usuario });
+    // Lo de una misma transacción comparte `creado_en`: su orden no está garantizado.
+    expect(registros.map((a) => a.accion).sort()).toEqual(['asignar', 'asignar', 'quitar']);
+    const quitado = registros.find((a) => a.accion === 'quitar');
+    expect(quitado!.anterior).toMatchObject({ empresaId: cuenta.empresaId, usuario: objetivo.usuario });
   });
 
   it('los permisos que se agregan o quitan a un rol quedan registrados', async () => {
@@ -274,7 +276,7 @@ describe('auditoría de permisos', () => {
     });
     const registros = (await auditoria('core.permisos-de-rol')).filter((a) => a.registro_id === rol.cuerpo.id);
 
-    expect(registros.map((a) => [a.accion, a.anterior.permiso])).toEqual([
+    expect(registros.map((a) => [a.accion, a.anterior.permiso]).sort()).toEqual([
       ['asignar', 'roles.ver'],
       ['quitar', 'usuarios.ver'],
     ]);
