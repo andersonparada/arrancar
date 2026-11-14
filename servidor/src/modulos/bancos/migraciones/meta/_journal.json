@@ -225,6 +225,13 @@
       "when": 1794604407649,
       "tag": "0031_h2_archivo_del_estado_de_cuenta",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794659747200,
+      "tag": "0032_cp4_pagos_de_cuentas_por_pagar",
+      "breakpoints": true
     }
   ]
 }
