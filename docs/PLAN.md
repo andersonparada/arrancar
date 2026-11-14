@@ -1580,3 +1580,8 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   Revisado por el agente de seguridad («se puede unir con arreglos», los diez aplicados). Pruebas del servidor: 3797.
   En programación: H2b servidor (archivo del estado de cuenta).
 
+- 2026-11-13 — **CP3-1 (servidor, datos de contraseñas)** (`diseno-cp3-contrasenas.md`): tablas `cuentas_por_pagar.contrasenas`
+  (con `impresa_en`) y `contrasena_documentos` (llaves compuestas al proveedor, único parcial «una sola contraseña vigente»
+  y cascada desde el documento), `aplicaciones_de_notas.contrasena_id` con la forma `contrasena` y su check; migración
+  `0006_cp3_contrasenas` (CP2-2 tomó la 0005) y mensaje de `contrasena_documentos_vigente_unico`. Sin casos de uso ni API:
+  siguen CP3-2 a CP3-5.
