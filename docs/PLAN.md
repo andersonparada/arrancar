@@ -1883,3 +1883,10 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (el servidor solo manda el id); los avisos de retención del saldo libre y de retenciones por practicar vienen en los avisos del
   servidor al recibir la nota y los muestra Libro de compras (U8l-6), sin pantalla propia aquí. Lo pendiente de U8l-6 en Libro (marca
   de la bandeja, filtro, conciliación y texto de la confirmación en lote) ya estaba en `main`.
+- **2026-11-15 — CP5 (reportes) aprobado por el usuario** (diseño `docs/modulos/diseno-cp5-reportes.md`, dictamen
+  `docs/modulos/dictamen-cp5-2026-11-15.md`, «correcto con ajustes»). Acepta CP5-a a CP5-i como se recomiendan
+  (anulaciones con **fecha contable**, B) con todas las correcciones del contador. Además: (1) cuando exista
+  Contabilidad, la factura se contabiliza **al registrarla**, no al autorizarla (corrige «autorizar = provisionar» de
+  `cuentas-por-pagar.md`; autorizar queda como control de pago); (2) el reporte de saldos **agrupa por NIT**, con las
+  fichas como subrenglones y aviso de NIT repetido; (3) el estado de cuenta para el proveedor muestra la retención como
+  **abono** con su número de constancia.
