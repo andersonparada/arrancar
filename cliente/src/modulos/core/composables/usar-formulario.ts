@@ -1,4 +1,4 @@
-import { ref, watch, type Ref } from 'vue';
+import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
 import { usarAvisos } from '../almacenes/avisos';
 import { ErrorApi } from '../servicios/cliente-http';
 
@@ -22,6 +22,21 @@ function erroresPorCampo(error: unknown): Record<string, string> | null {
 /** Quita el error de `campo` en cuanto cambia lo que devuelve `valor`: el usuario ya lo está corrigiendo. */
 export function quitarErrorAlCambiar(errores: Ref<Record<string, string>>, campo: string, valor: () => unknown): void {
   watch(valor, () => (errores.value = sinErrorDe(errores.value, campo)));
+}
+
+/**
+ * El error de un campo, que deja de verse en cuanto el usuario cambia el valor del campo y vuelve
+ * si llega un error nuevo. Lo usan los campos del core, así todo formulario lo recibe sin tocarlo.
+ */
+export function usarErrorDescartable(
+  error: () => string | undefined,
+  valor: () => unknown,
+): ComputedRef<string | undefined> {
+  const descartado = ref(false);
+  // El del valor va primero: si cambian en el mismo ciclo, el error nuevo gana.
+  watch(valor, () => (descartado.value = true));
+  watch(error, () => (descartado.value = false));
+  return computed(() => (descartado.value ? undefined : error()));
 }
 
 /**

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, useId } from 'vue';
 import { contadorDeCaracteres } from '../utilidades/contador-de-caracteres';
+import { usarErrorDescartable } from '../composables/usar-formulario';
 import { mensajeDeValidacionNativa } from '../utilidades/validacion-nativa';
 
 const props = defineProps<{
@@ -30,7 +31,11 @@ const id = useId();
 const contador = computed(() =>
   props.contar && props.longitudMaxima ? contadorDeCaracteres(modelo.value, props.longitudMaxima) : null,
 );
-const errorVisible = computed(() => props.error ?? contador.value?.error ?? undefined);
+const errorDelServidor = usarErrorDescartable(
+  () => props.error,
+  () => modelo.value,
+);
+const errorVisible = computed(() => errorDelServidor.value ?? contador.value?.error ?? undefined);
 
 /** Cambia el texto de la burbuja del navegador (sale en su idioma) por uno en español; se limpia al escribir. */
 function alInvalidar(evento: Event): void {
