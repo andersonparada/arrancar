@@ -60,9 +60,18 @@ async function sembrarVolumen(): Promise<void> {
      select $1, $2, pago_id, contrasena_id, documento_id, 100 from base`,
     [empresaId, proveedorId],
   );
-  await consultar('analyze cuentas_por_pagar.documentos');
-  await consultar('analyze cuentas_por_pagar.aplicaciones_de_pagos');
-  await consultar('analyze cuentas_por_pagar.pagos');
+  await analizarTablasDelVolumen();
+}
+
+/**
+ * Las estadísticas deben estar al día en todas las tablas que lee la lista. Sin ellas (el autoanálisis de PostgreSQL
+ * llega tarde) el plan supone una sola contraseña y repite por cada documento un recorrido de las 20,000 filas de
+ * `contrasena_documentos`: la lista pasaba de 30 s según el momento en que corría el autoanálisis.
+ */
+async function analizarTablasDelVolumen(): Promise<void> {
+  for (const tabla of ['documentos', 'contrasenas', 'contrasena_documentos', 'aplicaciones_de_pagos', 'pagos']) {
+    await consultar(`analyze cuentas_por_pagar.${tabla}`);
+  }
 }
 
 beforeAll(async () => {
