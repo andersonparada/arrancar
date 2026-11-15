@@ -33,6 +33,8 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.contrasenas.crear',
       'cuentas-por-pagar.contrasenas.editar',
       'cuentas-por-pagar.contrasenas.anular',
+      'cuentas-por-pagar.pagos.ver',
+      'cuentas-por-pagar.pagos.emitir',
     ]);
   });
 

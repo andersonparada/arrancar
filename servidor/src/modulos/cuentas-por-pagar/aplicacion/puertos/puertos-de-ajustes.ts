@@ -10,6 +10,8 @@ export interface AjusteNuevo {
   causa: CausaDeAjuste;
   motivo: string;
   referencia: string | null;
+  /** El pago que dejó la diferencia menor de un cargo; ausente en el ajuste de una nota. */
+  pagoId?: string;
 }
 
 /** Cómo se anula un ajuste. */
@@ -19,7 +21,7 @@ export interface AnulacionDeAjuste {
 }
 
 export interface RepositorioDeAjustes {
-  /** Guarda el ajuste de la nota como `vigente` y devuelve su id. */
+  /** Guarda el ajuste de la nota (o la diferencia menor de un cargo) como `vigente` y devuelve su id. */
   agregar(nota: DocumentoPorPagar, ajuste: AjusteNuevo): Promise<string>;
   /** El ajuste con su nota; `null` si no existe en la empresa. */
   buscar(id: string): Promise<AjusteDeSaldo | null>;

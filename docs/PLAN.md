@@ -1891,3 +1891,24 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `cuentas-por-pagar.md`; autorizar queda como control de pago); (2) el reporte de saldos **agrupa por NIT**, con las
   fichas como subrenglones y aviso de NIT repetido; (3) el estado de cuenta para el proveedor muestra la retención como
   **abono** con su número de constancia.
+- **2026-11-15 — CP4-3 (servidor, pagar con cheque y con nota de débito).** `RegistrarPago` (`POST /cuentas-por-pagar/pagos`,
+  `pagos.emitir`; con `diferencias` pide además `ajustes.crear`): un pago es del proveedor y cubre hasta 100 cargos
+  autorizados de una o varias contraseñas vigentes suyas (la contraseña de cada línea la pone el servidor). Orden: carga
+  inicial, revisión sin bloquear (fecha, beneficiario, saldos), orden a Bancos por el mediador (`emitir_cheque_de_origen` o
+  `registrar_nota_de_origen`, con el pago como origen y el reparto Operación/Inversión por activo fijo), bloqueo de
+  contraseñas y cargos en orden de id con nueva revisión, retención en el primer pago vigente (nunca en un saldo inicial),
+  correlativo `cuentas-por-pagar.pagos`, líneas y diferencias de centavos (ajuste del cargo con `pago_id`, auditoría
+  `ajustar`, evento `ajuste_registrado` con efecto `ingreso`). Fecha mínima = emisión del DTE (y fecha de inicio con un saldo
+  inicial); aviso, sin bloquear, si es anterior a la recepción o a la contraseña. Beneficiario = razón social del NIT (o
+  nombres y apellidos; sin ella, el `nombre_emisor` del DTE más reciente; sin nada, `proveedor_sin_nombre_del_nit`). Cheque
+  no negociable por omisión; posfechado = comprometido con el aviso de fondos de Bancos. Bancarización: la suma del mes
+  cuenta cheques, notas de débito, notas ligadas y efectivo vigentes; el aviso solo sale si algún cargo tiene efecto fiscal
+  (IVA: régimen general con IVA acreditable; ISR: régimen de utilidades en el período del documento o, en un saldo inicial,
+  en la fecha de inicio), sin datos fiscales solo pide completarlos, y el cheque que hace llegar el mes al umbral avisa que
+  el efectivo del mes deja de respaldar el costo o el crédito fiscal. Consultas: `GET /proveedores/:proveedorId/para-pagar`,
+  `GET /pagos/proveedores-por-pagar`, `GET /pagos/medios`. Permisos nuevos `pagos.ver` y `pagos.emitir`; variable
+  `cuentas-por-pagar.pagos.tope_diferencia` (Q1.00); evento `pago_registrado`. Sin migración. Desviaciones: Libro de compras
+  no se puede importar (solo sus tablas), así que `daCreditoFiscal()` y `tieneIsrSobreUtilidades()` se replican en
+  `DatosFiscalesDeLaEmpresaDrizzle` leyendo `datos_fiscales_de_empresa` y la copia del régimen del documento; el `PagoDto`
+  de la respuesta es el mínimo (sin `puedeAnular`, conciliado ni `tieneMovimientos`: llegan en CP4-4, CP4-6 y CP4-8); la
+  prueba del aviso del efectivo siembra el pago en efectivo en la base (el caso de uso llega en CP4-E3).

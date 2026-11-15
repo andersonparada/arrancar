@@ -1,0 +1,41 @@
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
+import type { ListarCargosParaPagar } from '../aplicacion/casos-uso/pagos/listar-cargos-para-pagar.js';
+import type {
+  ListarProveedoresPorPagar,
+  ObtenerMediosDePago,
+} from '../aplicacion/casos-uso/pagos/consultas-de-pagos.js';
+import type { RegistrarPago } from '../aplicacion/casos-uso/pagos/registrar-pago.js';
+import type { ParamsDeProveedor } from './documentos.esquemas-http.js';
+import type {
+  MediosSolicitado,
+  PagoSolicitado,
+  ParaPagarSolicitado,
+  ProveedoresPorPagarSolicitado,
+} from './pagos.esquemas-http.js';
+
+export interface CasosDeUsoDePagos {
+  registrar: RegistrarPago;
+  paraPagar: ListarCargosParaPagar;
+  proveedoresPorPagar: ListarProveedoresPorPagar;
+  medios: ObtenerMediosDePago;
+}
+
+/** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
+export class PagosControlador {
+  constructor(private readonly casosDeUso: CasosDeUsoDePagos) {}
+
+  registrar = async (solicitud: FastifyRequest<{ Body: PagoSolicitado }>, respuesta: FastifyReply) => {
+    const pago = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), solicitud.body);
+    return respuesta.status(201).send(pago);
+  };
+
+  paraPagar = (solicitud: FastifyRequest<{ Params: ParamsDeProveedor; Querystring: ParaPagarSolicitado }>) =>
+    this.casosDeUso.paraPagar.ejecutar(operadorDe(solicitud), solicitud.params.proveedorId, solicitud.query);
+
+  proveedoresPorPagar = (solicitud: FastifyRequest<{ Querystring: ProveedoresPorPagarSolicitado }>) =>
+    this.casosDeUso.proveedoresPorPagar.ejecutar(operadorDe(solicitud), solicitud.query);
+
+  medios = (solicitud: FastifyRequest<{ Querystring: MediosSolicitado }>) =>
+    this.casosDeUso.medios.ejecutar(operadorDe(solicitud), solicitud.query.fecha);
+}
