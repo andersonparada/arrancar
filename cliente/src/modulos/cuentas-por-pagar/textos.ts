@@ -85,7 +85,7 @@ export const AVISO_DE_LO_QUE_SE_CARGA =
   'Cargue solo documentos registrados en el sistema anterior que siguen pendientes de pago al cierre del día anterior a la fecha de inicio. Lo emitido antes pero no registrado allá va al Libro de compras.';
 
 export const AVISO_DE_NOTAS_POSTERIORES =
-  'Las notas de crédito o de débito recibidas desde la fecha de inicio sobre estos documentos todavía no se pueden registrar: no corrija el saldo pendiente por ellas.';
+  'Las notas recibidas desde la fecha de inicio sobre estos documentos se registran en Libro de compras con «Factura del sistema anterior»; aquí se aplican solas. No corrija el saldo pendiente por ellas.';
 
 export const AYUDA_DE_REFERENCIA = 'Cómo se llamaba el documento en el sistema anterior (opcional).';
 export const AYUDA_DE_VENCIMIENTO =

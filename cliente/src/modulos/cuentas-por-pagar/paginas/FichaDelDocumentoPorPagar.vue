@@ -4,6 +4,7 @@ import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import AccionesDeLaFicha from '../componentes/AccionesDeLaFicha.vue';
+import FacturaDelSistemaAnterior from '../componentes/FacturaDelSistemaAnterior.vue';
 import EnlacesDeLaFicha from '../componentes/EnlacesDeLaFicha.vue';
 import AvisoDeLoPropio from '../componentes/AvisoDeLoPropio.vue';
 import AccionesDeLaNota from '../componentes/AccionesDeLaNota.vue';
@@ -98,6 +99,7 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
     <SeccionDeFicha v-if="ficha.anulacion" titulo="Anulación">
       <DatosDelRegistro :detalles="detallesDeAnulacion(ficha)" />
     </SeccionDeFicha>
+    <FacturaDelSistemaAnterior :ficha="ficha" />
     <NotasDelDocumento :ficha="ficha" />
     <SeccionDeAplicaciones :ficha="ficha" @quitar="nota.quitar.abrir" />
     <SeccionDeAjustes :ajustes="ficha.ajustes" @anular="nota.anularAjuste.abrir" />

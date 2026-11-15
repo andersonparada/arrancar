@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
+import { avisoDeNotasPosteriores } from '../../composables/notas-del-sistema-anterior';
 import { detallesDeSaldo, tituloDeSaldo } from '../../composables/saldos-iniciales/detalles-de-saldo-inicial';
+import AvisoDeNotasPosteriores from './AvisoDeNotasPosteriores.vue';
 import type { SaldoInicial } from '../../servicios/tipos-de-saldos-iniciales';
 
 /**
@@ -25,6 +27,7 @@ defineEmits<{ corregir: []; eliminar: [] }>();
   >
     <template #destacado>
       <p class="truncate text-sm text-tierra-600 dark:text-tierra-300">{{ saldo.proveedorNombre }}</p>
+      <AvisoDeNotasPosteriores class="mt-2" :texto="avisoDeNotasPosteriores(saldo.notasPosteriores)" />
     </template>
   </TarjetaDeRegistro>
 </template>

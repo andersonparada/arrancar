@@ -3,9 +3,11 @@ import { ref, useId } from 'vue';
 import { ChevronDown, Download } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
+import { avisoDelCuadreConNotas } from '../../composables/notas-del-sistema-anterior';
 import { detallesDelCuadre, filaDelCuadre } from '../../composables/saldos-iniciales/detalles-de-saldo-inicial';
 import type { CuadreDeSaldosIniciales } from '../../servicios/tipos-de-saldos-iniciales';
 import { AYUDA_DEL_CUADRE } from '../../textos';
+import AvisoDeNotasPosteriores from './AvisoDeNotasPosteriores.vue';
 
 /** El cuadre: los totales generales siempre a la vista, cada uno por separado, y el detalle por proveedor al desplegar. */
 defineProps<{ cuadre: CuadreDeSaldosIniciales }>();
@@ -34,6 +36,7 @@ const idDelDetalle = useId();
         <dd class="font-medium break-words">{{ detalle.valor }}</dd>
       </div>
     </dl>
+    <AvisoDeNotasPosteriores :texto="avisoDelCuadreConNotas(cuadre.general.saldosConNotasPosteriores)" />
     <p class="text-xs text-tierra-500">{{ AYUDA_DEL_CUADRE }}</p>
     <template v-if="cuadre.proveedores.length > 0">
       <button
