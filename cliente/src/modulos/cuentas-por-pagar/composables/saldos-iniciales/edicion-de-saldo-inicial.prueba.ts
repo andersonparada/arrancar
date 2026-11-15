@@ -30,6 +30,7 @@ const saldo: SaldoInicial = {
   estado: 'registrado',
   tieneActivoFijo: false,
   creadoEn: '2026-10-01T00:00:00Z',
+  notasPosteriores: { notasDeCredito: 0, saldoLibre: '0.00', notasDeDebito: 0 },
   puedeCorregir: true,
   puedeEliminar: true,
 };

@@ -59,6 +59,8 @@ export interface DocumentoPorPagar extends AccionesDelDocumento {
   vencimiento: string | null;
   vencido: boolean;
   documentoAfectadoId: string | null;
+  /** La nota corrige una factura del sistema anterior: su saldo inicial (con `documentoAfectadoId`) o ninguno. */
+  facturaDelSistemaAnterior: boolean;
   tieneActivoFijo: boolean;
   total: string;
   retenciones: string;
@@ -132,6 +134,16 @@ export interface FichaDelDocumento extends DocumentoPorPagar {
   topeDiferenciaMenor: string;
   /** `null` si el documento no está anulado. */
   anulacion: AnulacionDelDocumento | null;
+  /** Solo una nota sobre una factura anterior que no tiene saldo inicial: los datos que citó en Libro de compras. */
+  facturaAnterior: FacturaAnteriorDeLaNota | null;
+}
+
+/** La factura del sistema anterior que cita una nota. */
+export interface FacturaAnteriorDeLaNota {
+  tipo: TipoDeDocumento;
+  serie: string | null;
+  numero: string;
+  fechaEmision: string;
 }
 
 export interface SaldoDeudor {

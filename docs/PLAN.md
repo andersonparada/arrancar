@@ -1872,3 +1872,14 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `motivo_sin_bancarizar` y los checks de §3.2; `FormaDePago` suma `efectivo`. Desviación: `retiros_anulacion_completa` y
   `retiros_liquidacion_completa` exigen los tres campos todos nulos o todos llenos (la fórmula del diseño dejaba pasar un
   campo suelto en un retiro abierto). Pruebas de tablas para cada check, único, llave y RLS. Sin casos de uso.
+- **2026-11-14 — U8l-7 (cliente, Cuentas por pagar: notas sobre facturas anteriores).** La ficha de una nota del libro con
+  `facturaDelSistemaAnterior` muestra «Factura del sistema anterior» (`FacturaDelSistemaAnterior`): con enlace «Ver el saldo
+  inicial» si corrige uno, o la serie, número y fecha citados y la ayuda («cárguela en Saldos iniciales y aplique la nota en Notas
+  de crédito» / «cargo sin factura») si no lo tiene. Las notas del saldo inicial ya salen en «Notas que lo corrigen». En Saldos
+  iniciales, `notasPosteriores` marca la tarjeta con el aviso («Hay N notas de crédito posteriores… con Q… de saldo a favor:
+  aplíquelas en Notas de crédito», y las de débito como cargo sin factura), el guardado lo repite como aviso emergente y el cuadre
+  muestra `saldosConNotasPosteriores`. El texto de la ventana cambió al acordado. Lógica pura en
+  `notas-del-sistema-anterior.ts` con pruebas. Desviaciones: la ficha de la nota enlazada no nombra el número del saldo inicial
+  (el servidor solo manda el id); los avisos de retención del saldo libre y de retenciones por practicar vienen en los avisos del
+  servidor al recibir la nota y los muestra Libro de compras (U8l-6), sin pantalla propia aquí. Lo pendiente de U8l-6 en Libro (marca
+  de la bandeja, filtro, conciliación y texto de la confirmación en lote) ya estaba en `main`.

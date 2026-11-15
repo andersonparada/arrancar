@@ -33,8 +33,18 @@ export interface SaldoInicial extends DatosDeSaldoInicial {
   saldo: string;
   estado: EstadoDeDocumento;
   creadoEn: string;
+  /** Notas del libro que citan esta factura y quedaron libres por registrarse antes de cargarla. */
+  notasPosteriores: NotasPosteriores;
   puedeCorregir: boolean;
   puedeEliminar: boolean;
+}
+
+/** Lo que dejaron las notas posteriores que citan un saldo inicial sin estar enlazadas a él (todo en cero si no hay). */
+export interface NotasPosteriores {
+  notasDeCredito: number;
+  /** El saldo a favor que dejan, en quetzales. */
+  saldoLibre: string;
+  notasDeDebito: number;
 }
 
 export interface PaginaDeSaldosIniciales {
@@ -52,6 +62,8 @@ export interface TotalesDelCuadre {
   /** Cargos menos notas a favor; puede ser negativo (saldo deudor). */
   neto: string;
   retencionesPorPracticar: string;
+  /** Cuántos saldos iniciales vigentes tienen notas posteriores libres que citan su factura. */
+  saldosConNotasPosteriores: number;
 }
 
 export interface CuadreDeProveedor extends TotalesDelCuadre {

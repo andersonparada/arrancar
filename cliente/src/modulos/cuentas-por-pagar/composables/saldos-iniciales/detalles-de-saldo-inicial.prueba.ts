@@ -68,6 +68,7 @@ describe('cuadre', () => {
       notasAFavor: '30.00',
       neto: '70.00',
       retencionesPorPracticar: '5.00',
+      saldosConNotasPosteriores: 0,
     }).map((d) => d.etiqueta);
     expect(etiquetas).toEqual([
       'Documentos',
