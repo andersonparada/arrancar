@@ -111,7 +111,12 @@ describe('reintegros', () => {
   });
 
   it('el estado es vigente o anulado, y la anulación se escribe completa', async () => {
-    const completa = { anuladoEn: new Date(), anuladoPor: e.usuarioId, motivoDeAnulacion: 'Error' };
+    const completa = {
+      anuladoEn: new Date(),
+      anuladoPor: e.usuarioId,
+      motivoDeAnulacion: 'Error',
+      fechaDeAnulacion: '2026-03-15',
+    };
 
     expect(await restriccion(crearReintegro({ estado: 'cobrado' as never }))).toBe('reintegros_estado_valido');
     expect(await restriccion(crearReintegro({ estado: 'anulado' }))).toBe('reintegros_anulacion_completa');
@@ -120,6 +125,19 @@ describe('reintegros', () => {
       'reintegros_motivo_de_anulacion_rango',
     );
     await expect(crearReintegro({ estado: 'anulado', ...completa })).resolves.toBeDefined();
+  });
+
+  it('la fecha de la anulación va si y solo si está anulado, y no es anterior a la del registro', async () => {
+    const completa = { anuladoEn: new Date(), anuladoPor: e.usuarioId, motivoDeAnulacion: 'Error' };
+    const anulado = (fechaDeAnulacion?: string) => ({ estado: 'anulado' as const, ...completa, fechaDeAnulacion });
+
+    expect(await restriccion(crearReintegro(anulado()))).toBe('reintegros_fecha_de_anulacion_de_su_estado');
+    expect(await restriccion(crearReintegro({ fechaDeAnulacion: '2026-03-15' }))).toBe(
+      'reintegros_fecha_de_anulacion_de_su_estado',
+    );
+    expect(await restriccion(crearReintegro(anulado('2026-03-14')))).toBe('reintegros_fecha_de_anulacion_valida');
+    await expect(crearReintegro(anulado('2026-03-15'))).resolves.toBeDefined();
+    await expect(crearReintegro(anulado('2026-05-01'))).resolves.toBeDefined();
   });
 
   it('las observaciones van recortadas y de 1 a 500 caracteres', async () => {

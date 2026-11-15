@@ -58,6 +58,8 @@ export const retirosDeEfectivo = esquemaCuentasPorPagar.table(
     movimientoDeDevolucionId: uuid(),
     faltante: numeric({ precision: 14, scale: 2 }).notNull().default('0'),
     motivoDeFaltante: text(),
+    /** Fecha contable de la anulación (CP5): la del inverso en Bancos, la del registro si «nunca existió» o la del día. */
+    fechaDeAnulacion: date(),
     anuladoEn: timestamp({ withTimezone: true }),
     anuladoPor: uuid(),
     motivoDeAnulacion: text(),

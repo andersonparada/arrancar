@@ -155,7 +155,7 @@ describe('pagos', () => {
   });
 
   it('el estado es vigente o anulado, y la anulación se escribe completa', async () => {
-    const completa = { ...anulacion, anuladoPor: e.usuarioId };
+    const completa = { ...anulacion, anuladoPor: e.usuarioId, fechaDeAnulacion: '2026-03-15' };
 
     expect(await restriccion(crearPago({ estado: 'pagado' as never }))).toBe('pagos_estado_valido');
     expect(await restriccion(crearPago({ estado: 'anulado' }))).toBe('pagos_anulacion_completa');
@@ -167,6 +167,19 @@ describe('pagos', () => {
       'pagos_motivo_de_anulacion_rango',
     );
     await expect(crearPago({ estado: 'anulado', ...completa })).resolves.toBeDefined();
+  });
+
+  it('la fecha de la anulación va si y solo si está anulado, y no es anterior a la del registro', async () => {
+    const completa = { anuladoEn: new Date(), anuladoPor: e.usuarioId, motivoDeAnulacion: 'Error' };
+    const anulado = (fechaDeAnulacion?: string) => ({ estado: 'anulado' as const, ...completa, fechaDeAnulacion });
+
+    expect(await restriccion(crearPago(anulado()))).toBe('pagos_fecha_de_anulacion_de_su_estado');
+    expect(await restriccion(crearPago({ fechaDeAnulacion: '2026-03-15' }))).toBe(
+      'pagos_fecha_de_anulacion_de_su_estado',
+    );
+    expect(await restriccion(crearPago(anulado('2026-03-14')))).toBe('pagos_fecha_de_anulacion_valida');
+    await expect(crearPago(anulado('2026-03-15'))).resolves.toBeDefined();
+    await expect(crearPago(anulado('2026-05-01'))).resolves.toBeDefined();
   });
 
   it('el pago es de un proveedor que existe y no se borra con pagos', async () => {

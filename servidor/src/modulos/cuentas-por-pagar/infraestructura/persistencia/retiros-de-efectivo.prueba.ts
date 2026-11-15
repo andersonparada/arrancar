@@ -109,6 +109,19 @@ describe('retiros de efectivo', () => {
     await expect(crearRetiro({ custodio: 'x'.repeat(150) })).resolves.toBeDefined();
   });
 
+  it('la fecha de la anulación va si y solo si está anulado, y no es anterior a la del registro', async () => {
+    const completa = { anuladoEn: new Date(), anuladoPor: e.usuarioId, motivoDeAnulacion: 'Error' };
+    const anulado = (fechaDeAnulacion?: string) => ({ estado: 'anulado' as const, ...completa, fechaDeAnulacion });
+
+    expect(await restriccion(crearRetiro(anulado()))).toBe('retiros_fecha_de_anulacion_de_su_estado');
+    expect(await restriccion(crearRetiro({ fechaDeAnulacion: '2026-03-15' }))).toBe(
+      'retiros_fecha_de_anulacion_de_su_estado',
+    );
+    expect(await restriccion(crearRetiro(anulado('2026-03-14')))).toBe('retiros_fecha_de_anulacion_valida');
+    await expect(crearRetiro(anulado('2026-03-15'))).resolves.toBeDefined();
+    await expect(crearRetiro(anulado('2026-05-01'))).resolves.toBeDefined();
+  });
+
   it('las observaciones van recortadas y de 1 a 500 caracteres', async () => {
     for (const observaciones of [' con espacios ', '', 'x'.repeat(501)]) {
       expect(await restriccion(crearRetiro({ observaciones }))).toBe('retiros_observaciones_validas');
@@ -136,7 +149,7 @@ describe('retiros de efectivo', () => {
   });
 
   it('el estado es uno de los tres y la anulación se escribe completa', async () => {
-    const completa = { ...anulacion, anuladoPor: e.usuarioId };
+    const completa = { ...anulacion, anuladoPor: e.usuarioId, fechaDeAnulacion: '2026-03-15' };
 
     expect(await restriccion(crearRetiro({ estado: 'cerrado' as never }))).toBe('retiros_estado_valido');
     expect(await restriccion(crearRetiro({ estado: 'anulado' }))).toBe('retiros_anulacion_completa');

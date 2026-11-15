@@ -44,6 +44,8 @@ export const reintegros = esquemaCuentasPorPagar.table(
     referencia: text(),
     observaciones: text(),
     estado: text().$type<'vigente' | 'anulado'>().notNull().default('vigente'),
+    /** Fecha contable de la anulación (CP5): la del inverso en Bancos, la del registro si «nunca existió» o la del día. */
+    fechaDeAnulacion: date(),
     anuladoEn: timestamp({ withTimezone: true }),
     anuladoPor: uuid(),
     motivoDeAnulacion: text(),

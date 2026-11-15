@@ -1928,3 +1928,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   Contabilidad la factura se provisiona **al registrarla** (autorizar = «aprobado para pago»). Quedan para el contador,
   sin frenar CP5-1 a CP5-4: días hábiles o calendario en el plazo de la constancia de ISR y el monto del costo no
   deducible de R9 (§14 del diseño).
+- **2026-11-15 — CP5-1 (servidor, fecha contable de las anulaciones).** Migración `0011_cp5_fecha_de_anulacion` de Cuentas
+  por pagar (generada con `bd:generar`; el relleno se agregó a mano antes de los checks): columna `fecha_de_anulacion` en
+  `pagos`, `reintegros` y `retiros_de_efectivo`, los checks `<tabla>_fecha_de_anulacion_de_su_estado` (anulado si y solo si
+  hay fecha) y `<tabla>_fecha_de_anulacion_valida` (no anterior a la fecha del registro) e índice `pagos_anulados_corte_idx`.
+  El relleno de lo ya anulado: sin inverso en Bancos, la fecha del registro; con inverso, la fecha del inverso; sin
+  movimiento (nota ligada, apertura, efectivo), el día de la anulación en Guatemala, nunca antes de la fecha del registro.
+  Los checks comunes de `pagos` y `reintegros` viven en `anulacion.restricciones.ts` (`restriccionesDeFechaDeAnulacion`,
+  que también usa el retiro). Sin casos de uso ni entidades nuevas (no existe aún el repositorio de anulación): los llenan
+  CP4-4, CP4-5, CP4-7, CP4-E2 y CP4-E3. Pruebas: checks de las tres tablas y relleno con las sentencias reales del SQL
+  (`fecha-de-anulacion-migracion.prueba.ts`, repetible).

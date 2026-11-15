@@ -78,6 +78,13 @@
       "when": 1794699324982,
       "tag": "0010_cp4_pagos_en_efectivo",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794780602076,
+      "tag": "0011_cp5_fecha_de_anulacion",
+      "breakpoints": true
     }
   ]
 }
