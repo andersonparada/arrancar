@@ -199,6 +199,20 @@ describe('casillas, avisos y formulario', () => {
     expect(datosDelSat2237([exento]).avisos.some((a) => a.includes('Decreto 22-2026'))).toBe(true);
   });
 
+  it('avisa si las notas de crédito dejan negativo el neto de una casilla con crédito, y no si queda positivo', () => {
+    const aviso = (documentos: DocumentoDelLibro[]) =>
+      datosDelSat2237(documentos).avisos.some((a) => a.startsWith('El neto de una casilla del crédito fiscal'));
+
+    expect(aviso([documento({ tipo: 'nota_de_credito' })])).toBe(true);
+    expect(aviso([documento(), documento({ tipo: 'nota_de_credito' })])).toBe(false);
+    expect(
+      aviso([
+        documento({ motivoSinCredito: 'fuera_de_plazo' }),
+        documento({ tipo: 'nota_de_credito', motivoSinCredito: 'fuera_de_plazo' }),
+      ]),
+    ).toBe(false);
+  });
+
   it('el formulario sale del régimen', () => {
     expect(formularioDelRegimen('general')).toMatchObject({ formulario: 'SAT-2237', declaraCompras: true });
     expect(formularioDelRegimen('pequeno_contribuyente')).toMatchObject({

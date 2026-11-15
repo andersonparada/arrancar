@@ -19,10 +19,19 @@ const AVISOS_FIJOS = [
   'Si exporta o tiene ventas exentas, separe la vinculación con su contador (prorrata, pendiente): todo se reporta como compras locales.',
 ];
 
+/** Los rubros con crédito fiscal de la sección 5: un neto negativo (notas de crédito sobre compras de meses anteriores) no se puede declarar tal cual. */
+const RUBROS_CON_CREDITO = ['combustibles', 'activos_fijos', 'servicios', 'otras_compras'];
+
+const AVISO_DE_NETO_NEGATIVO =
+  'El neto de una casilla del crédito fiscal es negativo por notas de crédito sobre compras de meses anteriores: Declaraguate no admite negativos; consulte con su contador cómo declararlo.';
+
 function avisosVariables(rubros: RubroDelSat2237[], proveedores: DetalleDeProveedores[]): string[] {
   const avisos: string[] = [];
   if (rubros.some((r) => r.clave === 'combustibles_exentos' && r.neto.base !== 0)) {
     avisos.push('Hay combustibles exentos de IVA e IDP por el Decreto 22-2026: no dan crédito fiscal.');
+  }
+  if (rubros.some((r) => RUBROS_CON_CREDITO.includes(r.clave) && (r.neto.base < 0 || r.neto.iva < 0))) {
+    avisos.push(AVISO_DE_NETO_NEGATIVO);
   }
   const conAviso = proveedores.flatMap((detalle) => detalle.filas).filter((fila) => fila.aviso !== null).length;
   if (conAviso > 0) avisos.push(`${conAviso} proveedor(es) quedan con neto cero o negativo: revise sus notas.`);

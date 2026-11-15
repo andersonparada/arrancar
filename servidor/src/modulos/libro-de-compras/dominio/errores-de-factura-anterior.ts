@@ -136,13 +136,20 @@ export interface NotasQueEstorban {
   muestra: NotaCitadaEnLaFecha[];
 }
 
+/** «1 nota» o «N notas», con su verbo y su pronombre concordados. */
+function notasQueEstorban(cantidad: number): { hay: string; pronombre: string } {
+  return cantidad === 1
+    ? { hay: 'Hay 1 nota', pronombre: 'anúlela o elimínela' }
+    : { hay: `Hay ${cantidad} notas`, pronombre: 'anúlelas o elimínelas' };
+}
+
 /** La fecha de inicio nueva dejaría una factura anterior con emisión igual o posterior a ella. */
 export class FacturasAnterioresPosterioresALaFecha extends ReglaDeNegocioInfringida {
   readonly codigo = 'facturas_anteriores_posteriores_a_la_fecha';
 
   constructor(fechaDeInicio: string, { cantidad, muestra }: NotasQueEstorban) {
     super(
-      `Hay ${cantidad} notas sobre facturas del sistema anterior emitidas desde el ${fechaLegible(fechaDeInicio)}: anúlelas o elimínelas antes de mover la fecha de inicio a esa fecha o antes.`,
+      `${notasQueEstorban(cantidad).hay} sobre facturas del sistema anterior con fecha del ${fechaLegible(fechaDeInicio)} o posterior: ${notasQueEstorban(cantidad).pronombre} antes de mover la fecha de inicio a esa fecha o antes.`,
       { campo: 'fechaDeInicio', cantidad, notas: muestra },
     );
   }
@@ -154,7 +161,7 @@ export class NotasRecibidasAntesDeLaFecha extends ReglaDeNegocioInfringida {
 
   constructor(fechaDeInicio: string, { cantidad, muestra }: NotasQueEstorban) {
     super(
-      `Hay ${cantidad} notas sobre facturas del sistema anterior recibidas antes del ${fechaLegible(fechaDeInicio)}: anúlelas o elimínelas antes de mover la fecha de inicio a esa fecha o después.`,
+      `${notasQueEstorban(cantidad).hay} sobre facturas del sistema anterior recibidas antes del ${fechaLegible(fechaDeInicio)}: ${notasQueEstorban(cantidad).pronombre} antes de mover la fecha de inicio a esa fecha o después.`,
       { campo: 'fechaDeInicio', cantidad, notas: muestra },
     );
   }
