@@ -93,8 +93,8 @@ describe('pagos', () => {
     await expect(crearPago({ numero: primero.numero, anioDeNumero: 2026 })).resolves.toBeDefined();
   });
 
-  it('la forma es una de las cuatro y el monto es positivo', async () => {
-    expect(await restriccion(crearPago({ forma: 'efectivo' as never }))).toBe('pagos_forma_valida');
+  it('la forma es una de las cinco y el monto es positivo', async () => {
+    expect(await restriccion(crearPago({ forma: 'trueque' as never }))).toBe('pagos_forma_valida');
     expect(await restriccion(crearPago({ monto: '0' }))).toBe('pagos_monto_positivo');
     expect(await restriccion(crearPago({ monto: '-1' }))).toBe('pagos_monto_positivo');
   });
