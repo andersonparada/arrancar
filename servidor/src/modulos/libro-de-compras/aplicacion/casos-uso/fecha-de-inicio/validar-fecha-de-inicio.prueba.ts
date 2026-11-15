@@ -78,6 +78,6 @@ describe('validar la fecha de inicio nueva con notas sobre facturas anteriores',
 
     await expect(intento).rejects.toBeInstanceOf(NotasRecibidasAntesDeLaFecha);
     await expect(intento).rejects.toMatchObject({ codigo: 'notas_recibidas_antes_de_la_fecha' });
-    await expect(intento).rejects.toThrow('Hay 1 notas');
+    await expect(intento).rejects.toThrow('Hay 1 nota sobre');
   });
 });
