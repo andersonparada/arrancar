@@ -71,6 +71,13 @@
       "when": 1794696855407,
       "tag": "0009_cp4_pago_de_varias_contrasenas",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794699324982,
+      "tag": "0010_cp4_pagos_en_efectivo",
+      "breakpoints": true
     }
   ]
 }

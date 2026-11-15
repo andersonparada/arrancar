@@ -19,6 +19,7 @@ import { proveedores } from '../../../terceros/infraestructura/persistencia/prov
 import { restriccionesDeEstadoYAnulacion } from './anulacion.restricciones.js';
 import { esquemaCuentasPorPagar } from './esquema.tablas.js';
 import { restriccionesDePago } from './pagos.restricciones.js';
+import { retirosDeEfectivo } from './retiros-de-efectivo.tablas.js';
 
 /**
  * Un pago a un proveedor sobre uno o varios cargos de sus contraseñas vigentes: cheque, nota de débito, nota ya registrada que se liga o aplicación a la
@@ -39,13 +40,19 @@ export const pagos = esquemaCuentasPorPagar.table(
     numero: integer().notNull(),
     /** El año del número si la empresa reinicia sus correlativos cada año; 0 si no. */
     anioDeNumero: integer().notNull().default(0),
-    forma: text().$type<'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura'>().notNull(),
+    forma: text().$type<'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo'>().notNull(),
     /** La del movimiento (un cheque posfechado lleva la suya), la de la aplicación o la de inicio con carga abierta. */
     fecha: date().notNull(),
     monto: numeric({ precision: 14, scale: 2 }).notNull(),
-    /** El cheque o la nota de Bancos; nulo solo en la cuenta de apertura. */
+    /** El cheque o la nota de Bancos; nulo en la cuenta de apertura y en efectivo (el movimiento es del retiro). */
     movimientoId: uuid(),
-    /** Solo en nota ligada y cuenta de apertura; en cheque y nota de débito la referencia va a Bancos. */
+    /** El retiro del que sale el efectivo; solo en la forma efectivo, y obligatorio en ella. */
+    retiroId: uuid(),
+    /** Quien recibió el efectivo por el proveedor (el que firma); solo en efectivo, opcional. */
+    recibidoPor: text(),
+    /** Solo en efectivo: por qué se usó la excepción de bancarización. */
+    motivoSinBancarizar: text(),
+    /** En nota ligada, cuenta de apertura y efectivo (el recibo del proveedor); en cheque y nota de débito la referencia va a Bancos. */
     referencia: text(),
     /** Solo en la cuenta de apertura, obligatorio. */
     motivo: text(),
@@ -61,6 +68,11 @@ export const pagos = esquemaCuentasPorPagar.table(
   },
   (t) => [
     foreignKey({ name: 'pagos_proveedor_fk', columns: [t.proveedorId], foreignColumns: [proveedores.id] }),
+    foreignKey({
+      name: 'pagos_retiro_fk',
+      columns: [t.retiroId, t.empresaId],
+      foreignColumns: [retirosDeEfectivo.id, retirosDeEfectivo.empresaId],
+    }),
     foreignKey({ name: 'pagos_movimiento_fk', columns: [t.movimientoId], foreignColumns: [movimientos.id] }),
     ...restriccionesDePago(t),
     ...restriccionesDeEstadoYAnulacion('pagos', t),
@@ -72,6 +84,9 @@ export const pagos = esquemaCuentasPorPagar.table(
     index('pagos_movimiento_idx')
       .on(t.movimientoId)
       .where(sql`${t.movimientoId} is not null`),
+    index('pagos_retiro_idx')
+      .on(t.retiroId)
+      .where(sql`${t.retiroId} is not null`),
     index('pagos_proveedor_fecha_idx').on(t.proveedorId, t.fecha),
     index('pagos_lista_idx').on(t.empresaId, t.estado, t.fecha),
     politicaPorEmpresa(),

@@ -1852,3 +1852,9 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `aplicaciones_de_pagos_en_la_contrasena_fk`. CP4-2 ya buscaba por la contraseña de la línea: sin cambios de código fuera de las
   tablas. Pruebas de tablas: líneas de dos contraseñas del mismo proveedor en un pago (pasa), de otro proveedor (falla), cargo
   fuera de su contraseña (falla), proveedor inexistente (falla).
+- **2026-11-14 — CP4-E1 (servidor, datos de los pagos en efectivo).** Migración `0010_cp4_pagos_en_efectivo` de Cuentas por
+  pagar: tabla `retiros_de_efectivo` (checks, únicos, llaves a `bancos.movimientos` y, con `set null`, a `core.usuarios`,
+  RLS por empresa) y, en `pagos`, la forma `efectivo` con `retiro_id` (llave compuesta al retiro), `recibido_por`,
+  `motivo_sin_bancarizar` y los checks de §3.2; `FormaDePago` suma `efectivo`. Desviación: `retiros_anulacion_completa` y
+  `retiros_liquidacion_completa` exigen los tres campos todos nulos o todos llenos (la fórmula del diseño dejaba pasar un
+  campo suelto en un retiro abierto). Pruebas de tablas para cada check, único, llave y RLS. Sin casos de uso.
