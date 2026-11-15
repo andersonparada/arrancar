@@ -32,7 +32,7 @@ cliente 1034, generador 46.
 | U8 saldos iniciales | `diseno-u8-…` | U8-1 a U8-12 y correcciones de QA | — |
 | CP2 notas de crédito | `diseno-cp2-…` | CP2-1 a CP2-8 (QA incluida) | — |
 | CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-8 (QA incluida) y el arreglo E3 | — |
-| U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-4 | U8l-5 (en curso), U8l-6 a U8l-8 |
+| U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-5 | U8l-6 (en curso), U8l-7, U8l-8 |
 | CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1, CP4-EB | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
 | CP5 reportes | sin diseñar | — | diseño (ya hay pedidos anotados: constancias pendientes de todos los meses, ajustes del mes, pago prometido vencido, saldo neto por proveedor, crédito fiscal en riesgo por bancarización) |
 
@@ -40,12 +40,14 @@ cliente 1034, generador 46.
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP4-E1 datos de pagos en efectivo (`0010`) | `agent-a6f24758169b0b498` | programando |
-| U8l-5 Libro: bajas, sugerencias, Excel, fecha de inicio | `agent-ae2116eed31439b38` | programando |
+| Bloqueo en la prueba de rendimiento | `agent-a962ca9022e9e465b` | investigando con `pg_locks` |
+| U8l-6 cliente de Libro (notas con factura anterior) | `agent-a1b18dc9040f3567c` | programando |
+| CP4-E1 datos de pagos en efectivo (`0010`) | `agent-a6f24758169b0b498` | **terminado, sin unir** (commit `5572b57`): se une cuando `main` vuelva a verde |
 
-`main` (`ffe97e2` + docs) tiene CP4-2, CP4-V1, U8l-4 y CP4-EB, todo en verde: servidor 4251, cliente 1038, generador 46.
-La prueba de rendimiento de Cuentas por pagar falló una vez por carga de la máquina (no era lentitud: ~250 ms con
-20,000 documentos); ahora tiene plazo propio de 30 s y sigue exigiendo menos de 1.5 s.
+**`main` (`8be8ba4`, con U8l-5) NO está en verde:** la primera prueba de
+`cuentas-por-pagar-pagos-rendimiento.api.prueba.ts` se queda colgada 30 s dentro de la suite completa del servidor
+(sola pasa en ~250 ms; 4277 de 4278). Apunta a un bloqueo entre pruebas o a un `for update` que no se libera desde
+U8l-4/U8l-5. No unir nada más hasta resolverlo.
 
 Siguiente en pagos: CP4-3 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
