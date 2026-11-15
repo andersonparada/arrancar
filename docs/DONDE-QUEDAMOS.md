@@ -32,25 +32,20 @@ cliente 1034, generador 46.
 | U8 saldos iniciales | `diseno-u8-…` | U8-1 a U8-12 y correcciones de QA | — |
 | CP2 notas de crédito | `diseno-cp2-…` | CP2-1 a CP2-8 (QA incluida) | — |
 | CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-8 (QA incluida) y el arreglo E3 | — |
-| U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-6 | U8l-7 (en curso), U8l-8 (QA) |
+| U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-8 (QA incluida) | detalles menores de la QA (en curso) |
 | CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1, CP4-EB | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
-| CP5 reportes | sin diseñar | — | diseño (ya hay pedidos anotados: constancias pendientes de todos los meses, ajustes del mes, pago prometido vencido, saldo neto por proveedor, crédito fiscal en riesgo por bancarización) |
+| CP5 reportes | `diseno-cp5-reportes.md` (aprobado 2026-11-15, dictamen `dictamen-cp5-2026-11-15.md`) | — | 12 reportes en 11 pasos (CP5-1 a CP5-11) |
 
-**Agentes en curso al 2026-11-14** (si se cortan, retomarlos sin `git reset`, o relanzar el paso desde `main`):
+**Agentes en curso al 2026-11-15** (si se cortan, retomarlos sin `git reset`, o relanzar el paso desde `main`):
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP4-3 pagar con cheque y nota de débito | `agent-af5c9aea871a41f97` | programando |
-| U8l-7 cliente de Cuentas por pagar (fichas y avisos) | `agent-aaea720439e0815cc` | programando |
-| Lentitud de la lista con una base de pruebas reutilizada | `agent-a962ca9022e9e465b` | investigando |
-| CP5 reportes (diseño) | `agent-ad34ea9cbc42663e4` | arquitecto diseñando `docs/modulos/diseno-cp5-reportes.md` |
-| Errores de todos los formularios se limpian al escribir | `agent-a9c00a28b4590f545` | programando (cliente, `usar-formulario.ts`) |
+| CP5 diseño listo para programar (dictamen y decisiones del 2026-11-15) | `agent-a10894f2c2a983e8b` | arquitecto aplicando; define la columna `fecha_de_anulacion` que necesita CP4-4 |
+| Detalles de la QA de U8-l (puntos 3 a 7 del informe) | `agent-a93d793162a2c894b` | programando |
 
-`main` (`05a110b`, con CP4-E1 y U8l-6) está en verde **en una base de pruebas recién creada**: servidor 4298, cliente
-1076, generador 46. En la base reutilizada `arrancar_pruebas_cxp` la primera prueba de
-`cuentas-por-pagar-pagos-rendimiento.api.prueba.ts` se cuelga 30 s (datos acumulados de corridas anteriores; posible
-plan de consulta malo con mucho volumen, a corregir de raíz). Mientras tanto, el coordinador corre la suite en
-`arrancar_pruebas_cxp2` (nueva).
+En `main`: CP4-3 (pagar con cheque y nota de débito), U8l-7, U8l-8 (QA de U8-l: **U8-l terminado**), el arreglo de la
+prueba de rendimiento (faltaba `analyze` de contraseñas) y la limpieza de errores al escribir en todos los formularios.
+Pruebas corriendo con todo eso. **CP4-4 espera** a que el diseño de CP5 diga dónde entra `fecha_de_anulacion`.
 
 Siguiente en pagos: CP4-3 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
