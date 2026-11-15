@@ -6,7 +6,11 @@ import type { ProblemaDelFormulario } from '../../composables/documentos/errores
 import type { RespuestasFiscales } from '../../composables/documentos/preguntas-fiscales';
 import { nombreDelPeriodo } from '../../composables/periodos/datos-de-periodos';
 import { PERIODO_BLOQUEADO } from '../../textos-de-periodos';
-import { AYUDA_DE_DATOS_FISCALES, FORMULARIO_DE_DOCUMENTO as textos } from '../../textos-del-registro';
+import {
+  AYUDA_DE_DATOS_FISCALES,
+  FACTURA_ANTERIOR,
+  FORMULARIO_DE_DOCUMENTO as textos,
+} from '../../textos-del-registro';
 import PreguntasDeDatosFiscales from './PreguntasDeDatosFiscales.vue';
 
 /**
@@ -70,6 +74,14 @@ const enlace = 'font-medium underline underline-offset-2';
       :class="enlace"
     >
       {{ textos.repetido }}
+    </RouterLink>
+
+    <RouterLink
+      v-else-if="problema.tipo === 'cita_anterior' && problema.notaId"
+      :to="{ name: 'libro-de-compras.documentos.ficha', params: { documentoId: problema.notaId } }"
+      :class="enlace"
+    >
+      {{ FACTURA_ANTERIOR.citaUnaNota }}
     </RouterLink>
   </div>
 </template>

@@ -82,6 +82,7 @@ describe('textos de los motivos', () => {
       'fuera_de_plazo',
       'no_vinculado',
       'nota_de_debito_tardia',
+      'otra_causa_sin_credito',
       'pequeno_contribuyente',
       'primario_pecuario',
     ]);

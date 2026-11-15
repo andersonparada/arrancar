@@ -10,6 +10,7 @@ import { usarCatalogosDelRegistro } from './usar-catalogos-del-registro';
 import { usarEnvioDeDocumento } from './usar-envio-de-documento';
 import { usarPrecargaDesdeDte } from './usar-precarga-desde-dte';
 import { usarProveedorDelDocumento } from './usar-proveedor-del-documento';
+import { usarSugerenciasDeFacturasAnteriores } from './usar-sugerencias-de-facturas-anteriores';
 import { usarVistaPreviaDeDocumento } from './usar-vista-previa-de-documento';
 
 /** Si lo escrito se pierde al salir, pregunta antes (una vez registrado ya no hay nada que perder). */
@@ -97,6 +98,7 @@ export function usarRegistroDeDocumento() {
     edicion,
     catalogos,
     documentos,
+    ...usarSugerenciasDeFacturasAnteriores(edicion),
     previa,
     ...condiciones,
     propuestas: usarPropuestas(edicion, previa.respuesta),

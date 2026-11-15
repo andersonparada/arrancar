@@ -81,6 +81,12 @@ export const llevaFacturaAfectada = (codigo: string): boolean => {
   return familia === 'nota_de_credito' || familia === 'nota_de_debito';
 };
 
+/** Si el código es de una factura (de cualquier familia): ni nota ni recibo. Solo ella lleva «otra causa» a mano. */
+export const esUnaFactura = (codigo: string): boolean => {
+  const familia = familiaDelCodigo(codigo);
+  return familia !== null && familia !== 'recibo' && !llevaFacturaAfectada(codigo);
+};
+
 /** La familia a la que pertenece un código del selector; `null` si no hay ninguno elegido o no se conoce. */
 export function familiaDelCodigo(codigo: string): TipoDeDocumento | null {
   if (codigo === CODIGO_DE_RECIBO) return 'recibo';

@@ -9,6 +9,7 @@ export type ProblemaDelFormulario =
   | { tipo: 'regimen'; mensaje: string }
   | { tipo: 'empresa'; mensaje: string }
   | { tipo: 'repetido'; mensaje: string; documentoId: string | null }
+  | { tipo: 'cita_anterior'; mensaje: string; notaId: string | null }
   | { tipo: 'permiso'; mensaje: string }
   | { tipo: 'periodo_declarado'; mensaje: string; propuesto: string | null; enPlazo: boolean | null }
   | { tipo: 'otro'; mensaje: string };
@@ -18,9 +19,14 @@ const DATO_DEL_VENDEDOR = 'Escriba el NIT o el CUI (DPI) del vendedor, es decir,
 
 /** Un error conocido que se muestra en su campo, con lo que el usuario debe hacer. */
 interface ErrorDeCampo {
-  campo: string;
+  /** El campo fijo, o el que dice el propio error (`detalles.campo`) con este de respaldo. */
+  campo: string | { respaldo: string };
   texto: (error: ErrorApi) => string;
 }
+
+const delMensaje = (error: ErrorApi): string => error.message;
+const enCampo = (campo: string): ErrorDeCampo => ({ campo, texto: delMensaje });
+const deLaFacturaAnterior = (respaldo: string): ErrorDeCampo => ({ campo: { respaldo }, texto: delMensaje });
 
 const delTipo = (texto: (error: ErrorApi) => string): ErrorDeCampo => ({ campo: 'tipoDte', texto });
 const delaFactura = (texto: (error: ErrorApi) => string): ErrorDeCampo => ({ campo: 'documentoAfectadoId', texto });
@@ -64,6 +70,15 @@ const ERRORES_DE_CAMPO: Record<string, ErrorDeCampo> = {
   ),
   receptor_invalido: delVendedor((error) => `${error.message} ${DATO_DEL_VENDEDOR}`),
   periodo_declarado: { campo: 'periodo', texto: (error) => error.message },
+  factura_anterior_sin_fecha_de_inicio: enCampo('documentoAfectadoId'),
+  factura_anterior_invalida: deLaFacturaAnterior('facturaAnterior.numero'),
+  factura_anterior_posterior_a_la_fecha_de_inicio: enCampo('facturaAnterior.fechaEmision'),
+  factura_anterior_muy_antigua: enCampo('facturaAnterior.fechaEmision'),
+  factura_anterior_esta_en_el_libro: enCampo('facturaAnterior.numero'),
+  factura_anterior_con_otros_datos: enCampo('facturaAnterior.numero'),
+  nota_recibida_antes_de_la_fecha_de_inicio: enCampo('fechaRecepcion'),
+  otra_causa_sin_detalle: enCampo('observaciones'),
+  otra_causa_solo_en_facturas: enCampo('otraCausaSinCredito'),
   vendedor_no_coincide: delVendedor(
     () =>
       'Este NIT o CUI no es el del proveedor elegido. Elija al proveedor correcto o corrija el dato en su ficha de contacto.',
@@ -73,16 +88,20 @@ const ERRORES_DE_CAMPO: Record<string, ErrorDeCampo> = {
 /** El error del tipo o del vendedor, con el nombre de su campo, si el error del servidor es de ellos. */
 export function errorDelTipo(error: unknown): Record<string, string> | null {
   const conocido = error instanceof ErrorApi ? ERRORES_DE_CAMPO[error.codigo] : undefined;
-  return conocido && error instanceof ErrorApi ? { [conocido.campo]: conocido.texto(error) } : null;
+  if (!conocido || !(error instanceof ErrorApi)) return null;
+  const campo =
+    typeof conocido.campo === 'string' ? conocido.campo : (error.campoDelConflicto ?? conocido.campo.respaldo);
+  return { [campo]: conocido.texto(error) };
 }
 
 const TEXTO_SIN_PERMISO =
   'No tiene permiso para cambiar retenciones. Quite el ajuste de las retenciones, o pídale el permiso «Ajustar retenciones» al administrador.';
 
-function documentoDelRepetido(detalles: unknown): string | null {
-  const id = (detalles as { documentoId?: unknown } | null | undefined)?.documentoId;
+function idDeLosDetalles(detalles: unknown, clave: 'documentoId' | 'notaId'): string | null {
+  const id = (detalles as Record<string, unknown> | null | undefined)?.[clave];
   return typeof id === 'string' ? id : null;
 }
+const documentoDelRepetido = (detalles: unknown): string | null => idDeLosDetalles(detalles, 'documentoId');
 
 /** El período que el servidor propone en lugar del declarado (`AAAA-MM`) y si todavía da crédito fiscal. */
 export function propuestaDelPeriodo(detalles: unknown): { propuesto: string | null; enPlazo: boolean | null } {
@@ -110,6 +129,11 @@ const PROBLEMAS_POR_CODIGO: Record<string, (error: ErrorApi) => ProblemaDelFormu
   tipo_no_corresponde_al_proveedor: (error) => ({ tipo: 'regimen', mensaje: error.message }),
   empresa_sin_datos_fiscales: deLaEmpresa,
   empresa_sin_nit: deLaEmpresa,
+  factura_ya_es_del_sistema_anterior: (error) => ({
+    tipo: 'cita_anterior',
+    mensaje: error.message,
+    notaId: idDeLosDetalles(error.detalles, 'notaId'),
+  }),
   documento_repetido: (error) => ({
     tipo: 'repetido',
     mensaje: error.message,

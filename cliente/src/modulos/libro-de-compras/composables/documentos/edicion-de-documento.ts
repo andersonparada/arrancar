@@ -2,22 +2,26 @@ import { textoONulo } from '@/modulos/core/utilidades/edicion';
 import type { DestinoDeDocumento, MotivoFueraDelLibro } from '../../servicios/documentos.api';
 import type { RetencionDeDocumento } from '../../servicios/documentos.api';
 import type { ClaseDeCargo, LineaSolicitada, SolicitudDeDocumento } from '../../servicios/registro-de-documentos.api';
-import { ajustesParaElCuerpo, type AjustesEnEdicion } from './ajustes-de-retenciones';
 import {
-  lineaCompleta,
-  lineaParaElCuerpo,
-  lineaVacia,
-  montoEnTexto,
-  type LineaEnEdicion,
-} from './lineas-del-documento';
+  cuerpoDeFacturaAnterior,
+  facturaAnteriorVacia,
+  type FacturaAnteriorEnEdicion,
+  type OrigenDeLaFactura,
+} from './edicion-de-factura-anterior';
+import { ajustesParaElCuerpo, type AjustesEnEdicion } from './ajustes-de-retenciones';
+import { lineaParaElCuerpo, lineaVacia, montoEnTexto, type LineaEnEdicion } from './lineas-del-documento';
+import { conLineasUsadas } from './pendientes-del-registro';
 import { datosFiscalesContestados, type RespuestasFiscales } from './preguntas-fiscales';
 import {
   esFacturaEspecial,
   esNotaDeDebito,
   esReciboFel,
+  esUnaFactura,
   familiaDelCodigo,
   llevaFacturaAfectada,
 } from './tipos-de-documento-sat';
+
+export { lineaEnBlanco, pendientesDelRegistro } from './pendientes-del-registro';
 
 type Valor = string | number | null | undefined;
 
@@ -28,6 +32,11 @@ export interface EdicionDeDocumento {
   proveedorId: string | null;
   destino: DestinoDeDocumento | null;
   documentoAfectadoId: string | null;
+  /** Solo en una nota: si la factura que corrige es del libro (`documentoAfectadoId`) o del sistema anterior. */
+  origenDeLaFactura: OrigenDeLaFactura;
+  facturaAnterior: FacturaAnteriorEnEdicion;
+  /** Solo en una factura: «No dio crédito por otra causa»; exige explicarla en las observaciones. */
+  otraCausaSinCredito: boolean;
   /** Solo en la nota de débito; vacío es «sin indicar». */
   claseDeCargo: ClaseDeCargo | null;
   numero: string;
@@ -60,7 +69,14 @@ const dosDigitos = (numero: number) => String(numero).padStart(2, '0');
 export const fechaEnTexto = (fecha: Date): string =>
   `${fecha.getFullYear()}-${dosDigitos(fecha.getMonth() + 1)}-${dosDigitos(fecha.getDate())}`;
 
-const SIN_FACTURA_AFECTADA = { documentoAfectadoId: null, claseDeCargo: null };
+/** Lo de la factura que corrige una nota y de «otra causa», sin llenar: una factura común no lo usa. */
+const sinFacturaQueCorrige = () => ({
+  documentoAfectadoId: null,
+  claseDeCargo: null,
+  origenDeLaFactura: 'libro' as OrigenDeLaFactura,
+  otraCausaSinCredito: false,
+  facturaAnterior: facturaAnteriorVacia(),
+});
 
 /** Un documento nuevo: factura, en el libro, emitida hoy y con una línea en blanco. */
 export function edicionVacia(hoy: Date): EdicionDeDocumento {
@@ -68,7 +84,7 @@ export function edicionVacia(hoy: Date): EdicionDeDocumento {
     tipoDte: 'FACT',
     proveedorId: null,
     destino: null,
-    ...SIN_FACTURA_AFECTADA,
+    ...sinFacturaQueCorrige(),
     numero: '',
     serie: '',
     fechaEmision: fechaEnTexto(hoy),
@@ -87,50 +103,6 @@ export function edicionVacia(hoy: Date): EdicionDeDocumento {
     respuestasFiscales: {},
     confirmarCambioDeRegimen: false,
   };
-}
-
-/** Una línea sin concepto ni total es una fila que el usuario todavía no usa: se ignora. */
-export const lineaEnBlanco = (linea: LineaEnEdicion): boolean =>
-  !linea.conceptoId && montoEnTexto(linea.total) === null;
-
-const conLineasUsadas = (lineas: LineaEnEdicion[]) => lineas.filter((linea) => !lineaEnBlanco(linea));
-
-/** La factura especial exige el vendedor, la serie y la autorización de la FEL que emitió la empresa. */
-function pendientesDeFacturaEspecial(edicion: EdicionDeDocumento): [boolean, string][] {
-  if (!esFacturaEspecial(edicion.tipoDte)) return [];
-  return [
-    [edicion.nitReceptor.trim() === '', 'escribir el NIT o CUI del vendedor'],
-    [edicion.serie.trim() === '', 'escribir la serie de la factura especial'],
-    [edicion.autorizacionFel.trim() === '', 'escribir la autorización de la FEL'],
-  ];
-}
-
-const textoDeLaFacturaPendiente = (edicion: EdicionDeDocumento): string =>
-  esNotaDeDebito(edicion.tipoDte) ? 'elegir la factura que aumenta la nota' : 'elegir la factura que rebaja la nota';
-
-/** Un recibo FEL (RECI, RDON) lleva el número de autorización de la FEL, como toda FEL. */
-function pendientesDelReciboFel(edicion: EdicionDeDocumento): [boolean, string][] {
-  return [
-    [esReciboFel(edicion.tipoDte) && edicion.autorizacionFel.trim() === '', 'escribir la autorización de la FEL'],
-  ];
-}
-
-/** Lo que falta para poder registrar, en lenguaje del usuario; vacío si ya se puede. */
-export function pendientesDelRegistro(edicion: EdicionDeDocumento): string[] {
-  const usadas = conLineasUsadas(edicion.lineas);
-  const pendientes: [boolean, string][] = [
-    [!edicion.proveedorId, 'elegir el proveedor'],
-    [edicion.numero.trim() === '', 'escribir el número del documento'],
-    [edicion.fechaEmision === '', 'poner la fecha de emisión'],
-    [!familiaDelCodigo(edicion.tipoDte), 'elegir el tipo de documento'],
-    [llevaFacturaAfectada(edicion.tipoDte) && !edicion.documentoAfectadoId, textoDeLaFacturaPendiente(edicion)],
-    [!edicion.muestraEnReportesSat && !edicion.motivoFueraDelLibro, 'decir por qué no se muestra en reportes SAT'],
-    ...pendientesDeFacturaEspecial(edicion),
-    ...pendientesDelReciboFel(edicion),
-    [usadas.length === 0, 'escribir al menos una línea'],
-    [usadas.some((linea) => !lineaCompleta(linea)), 'completar las líneas (concepto y total)'],
-  ];
-  return pendientes.filter(([falta]) => falta).map(([, texto]) => texto);
 }
 
 const tieneFel = (edicion: EdicionDeDocumento): boolean =>
@@ -178,6 +150,16 @@ const hayLineasAMedias = (edicion: EdicionDeDocumento, lineas: LineaSolicitada[]
 const faltaLoBasico = (edicion: EdicionDeDocumento, lineas: LineaSolicitada[], finalidad: FinalidadDelCuerpo) =>
   sinLoBasico(edicion, lineas) || hayLineasAMedias(edicion, lineas, finalidad);
 
+/** La factura que corrige una nota: la del libro o la del sistema anterior, nunca las dos. */
+function facturaQueCorrigeDelCuerpo(edicion: EdicionDeDocumento) {
+  const esNota = llevaFacturaAfectada(edicion.tipoDte);
+  const anterior = esNota && edicion.origenDeLaFactura === 'anterior';
+  return {
+    documentoAfectadoId: esNota && !anterior ? edicion.documentoAfectadoId : null,
+    facturaAnterior: anterior ? cuerpoDeFacturaAnterior(edicion.facturaAnterior) : null,
+  };
+}
+
 function encabezadoDelCuerpo(edicion: EdicionDeDocumento) {
   return {
     ...tipoDelCuerpo(edicion),
@@ -188,12 +170,17 @@ function encabezadoDelCuerpo(edicion: EdicionDeDocumento) {
     fechaEmision: edicion.fechaEmision,
     fechaRecepcion: textoONulo(edicion.fechaRecepcion),
     periodo: edicion.periodo ? `${edicion.periodo}-01` : null,
-    documentoAfectadoId: llevaFacturaAfectada(edicion.tipoDte) ? edicion.documentoAfectadoId : null,
+    ...facturaQueCorrigeDelCuerpo(edicion),
+    otraCausaSinCredito: esUnaFactura(edicion.tipoDte) && edicion.otraCausaSinCredito,
     claseDeCargo: esNotaDeDebito(edicion.tipoDte) ? edicion.claseDeCargo : null,
     ivaDeLaFel: montoEnTexto(edicion.ivaDeLaFel),
     observaciones: textoONulo(edicion.observaciones),
   };
 }
+
+/** Una nota con factura anterior a medias no se calcula ni se registra: el formulario dice qué falta. */
+const faltaLaFacturaAnterior = (edicion: EdicionDeDocumento, facturaAnterior: unknown): boolean =>
+  edicion.origenDeLaFactura === 'anterior' && llevaFacturaAfectada(edicion.tipoDte) && !facturaAnterior;
 
 /**
  * El cuerpo de calcular o registrar. Devuelve `null` si aún no hay con qué pedir nada (proveedor, número, fecha y
@@ -209,8 +196,10 @@ export function cuerpoDeDocumento(
   const destino = destinoDelCuerpo(edicion, finalidad);
   const { proveedorId } = edicion;
   if (!proveedorId || !destino || faltaLoBasico(edicion, lineas, finalidad)) return null;
+  const encabezado = encabezadoDelCuerpo(edicion);
+  if (faltaLaFacturaAnterior(edicion, encabezado.facturaAnterior)) return null;
   return {
-    ...encabezadoDelCuerpo(edicion),
+    ...encabezado,
     proveedorId,
     destino,
     lineas,
