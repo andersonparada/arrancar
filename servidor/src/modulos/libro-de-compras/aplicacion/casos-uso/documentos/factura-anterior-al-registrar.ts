@@ -1,8 +1,11 @@
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import type { DocumentoDeCompra } from '../../../dominio/documento-de-compra.js';
 import { FacturaYaEsDelSistemaAnterior } from '../../../dominio/errores-de-factura-anterior.js';
-import { FAMILIAS_QUE_ADMITEN_NOTA_DE_DEBITO } from '../../../dominio/tipos-de-documento.js';
-import type { RepositorioDeFacturasAnteriores } from '../../puertos/puertos-de-facturas-anteriores.js';
+import { FAMILIAS_QUE_ADMITEN_NOTA_DE_DEBITO, type TipoDeDocumento } from '../../../dominio/tipos-de-documento.js';
+import type {
+  ClaveDeFacturaAnterior,
+  RepositorioDeFacturasAnteriores,
+} from '../../puertos/puertos-de-facturas-anteriores.js';
 import { dtoDeFacturaAnterior } from '../../dto/factura-anterior.dto.js';
 import type { FacturaAnteriorResuelta } from './resolutor-de-factura-anterior.js';
 
@@ -20,9 +23,23 @@ export async function exigirQueNoSeaDelSistemaAnterior(
   { facturasAnteriores }: Dependencias,
   documento: DocumentoDeCompra,
 ): Promise<void> {
-  if (!FAMILIAS_QUE_ADMITEN_NOTA_DE_DEBITO.includes(documento.tipo)) return;
-  const { proveedorId, serie, numero, autorizacionFel } = documento;
-  const nota = await facturasAnteriores.buscarNotaVigenteQueLaCita({ proveedorId, serie, numero, autorizacionFel });
+  const { tipo, proveedorId, serie, numero, autorizacionFel } = documento;
+  await exigirQueLaClaveNoSeaDelSistemaAnterior(facturasAnteriores, tipo, {
+    proveedorId,
+    serie,
+    numero,
+    autorizacionFel,
+  });
+}
+
+/** Lo mismo con solo la clave del documento: lo usa también la vista previa de la bandeja para no anticipar un registro imposible. */
+export async function exigirQueLaClaveNoSeaDelSistemaAnterior(
+  facturasAnteriores: RepositorioDeFacturasAnteriores,
+  tipo: TipoDeDocumento,
+  clave: ClaveDeFacturaAnterior,
+): Promise<void> {
+  if (!FAMILIAS_QUE_ADMITEN_NOTA_DE_DEBITO.includes(tipo)) return;
+  const nota = await facturasAnteriores.buscarNotaVigenteQueLaCita(clave);
   if (nota) throw new FacturaYaEsDelSistemaAnterior(nota);
 }
 

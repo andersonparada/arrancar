@@ -1,15 +1,17 @@
 import { computed, onMounted, ref, watch } from 'vue';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiConceptosDeGasto } from '../../servicios/conceptos-de-gasto.api';
 import { apiDocumentos, type FichaDeDocumento } from '../../servicios/documentos.api';
 
 /**
  * Los nombres de los conceptos de gasto, para rotular las líneas. Si el usuario no puede ver el catálogo, las
- * líneas se muestran con su descripción: no es motivo para ocultar la factura.
+ * líneas se muestran con su descripción: no es motivo para ocultar la factura (ni para pedir lo que no puede ver).
  */
 function usarNombresDeConceptos() {
   const nombres = ref(new Map<string, string>());
   onMounted(async () => {
+    if (!usarSesion().puede('libro-de-compras.conceptos-de-gasto.ver')) return;
     const conceptos = await apiConceptosDeGasto.listar().catch(() => []);
     nombres.value = new Map(conceptos.map(({ id, nombre }) => [id, nombre]));
   });

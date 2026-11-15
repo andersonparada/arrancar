@@ -65,6 +65,16 @@ describe('hojasDelLibro (Excel)', () => {
     expect(hojas[2]!.filas).toEqual([]);
   });
 
+  it('el IVA sin crédito por motivo trae el nombre legible, no la clave', () => {
+    const completo = armado([fila(1)]);
+    completo.libro.resumen.ivaSinCreditoPorMotivo = [{ motivo: 'otra_causa_sin_credito', ivaSinCredito: 6000 }];
+
+    const celdas = hojasDelLibro(completo, [], 'America/Guatemala')[1]!.filas.flat();
+
+    expect(celdas).toContain('No dio crédito por otra causa');
+    expect(celdas).not.toContain('otra_causa_sin_credito');
+  });
+
   it('la hoja Anulados trae la causa legible y la anulación en hora de Guatemala', () => {
     const anulado = {
       fechaEmision: '2026-09-10',

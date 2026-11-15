@@ -27,3 +27,16 @@ export const LEYENDA_DE_MOTIVOS: ReadonlyArray<{ sigla: string; descripcion: str
   { sigla: 'RE', descripcion: 'Proveedor del régimen agropecuario, primario o pecuario (sin IVA)' },
   { sigla: 'EX', descripcion: 'Compra exenta' },
 ];
+
+/** El nombre legible del motivo, para el Excel y el PDF del libro. */
+export const NOMBRE_DEL_MOTIVO_EN_EL_LIBRO: Record<MotivoSinCredito, string> = {
+  fuera_de_plazo: 'Fuera de plazo',
+  no_vinculado: 'No vinculado a operaciones gravadas',
+  empresa_sin_credito: 'Empresa sin crédito fiscal',
+  nota_de_debito_tardia: 'Nota de débito tardía',
+  otra_causa_sin_credito: 'No dio crédito por otra causa',
+  pequeno_contribuyente: 'Proveedor pequeño contribuyente',
+  contribuyente_agropecuario: 'Proveedor agropecuario',
+  primario_pecuario: 'Proveedor primario o pecuario',
+  exento: 'Compra exenta',
+};

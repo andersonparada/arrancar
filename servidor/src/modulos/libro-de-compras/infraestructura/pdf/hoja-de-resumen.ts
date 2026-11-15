@@ -1,6 +1,7 @@
 import { COLUMNAS_DEL_LIBRO, esCampoDeTexto } from '../../dominio/libro/columnas-del-libro.js';
 import type { ColumnaDeDinero } from '../../dominio/libro/fila-del-libro.js';
 import type { DatosDelPdfDelLibro } from '../../aplicacion/puertos/generador-de-pdf-del-libro.js';
+import { NOMBRE_DEL_MOTIVO_EN_EL_LIBRO } from '../../dominio/libro/motivos-del-libro.js';
 import { montoParaElPdf } from './monto-del-pdf.js';
 import type { PincelDelPdf } from './pincel-del-pdf.js';
 import { MARGEN } from './tabla-del-pdf.js';
@@ -32,7 +33,8 @@ function bloqueIzquierdo({ resumen, tipoDeLibro }: DatosDelPdfDelLibro): LineaDe
   ];
 }
 
-function bloqueDerecho({ resumen, leyenda }: DatosDelPdfDelLibro): LineaDeResumen[] {
+/** El bloque derecho de la hoja de resumen (visible para las pruebas). */
+export function bloqueDerecho({ resumen, leyenda }: DatosDelPdfDelLibro): LineaDeResumen[] {
   return [
     titulo('Documentos por tipo (cantidad y total)'),
     ...resumen.porTipoDte.map((g) => ({
@@ -40,7 +42,10 @@ function bloqueDerecho({ resumen, leyenda }: DatosDelPdfDelLibro): LineaDeResume
       valor: montoParaElPdf(g.total),
     })),
     titulo('IVA sin crédito por motivo (va al costo)'),
-    ...resumen.ivaSinCreditoPorMotivo.map((g) => ({ etiqueta: g.motivo, valor: montoParaElPdf(g.ivaSinCredito) })),
+    ...resumen.ivaSinCreditoPorMotivo.map((g) => ({
+      etiqueta: NOMBRE_DEL_MOTIVO_EN_EL_LIBRO[g.motivo],
+      valor: montoParaElPdf(g.ivaSinCredito),
+    })),
     titulo('Motivos'),
     ...leyenda.map((l) => ({ etiqueta: `${l.sigla}: ${l.descripcion}` })),
   ];

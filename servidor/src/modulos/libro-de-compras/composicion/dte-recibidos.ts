@@ -1,3 +1,4 @@
+import { RepositorioDeFacturasAnterioresDrizzle } from '../infraestructura/persistencia/repositorio-de-facturas-anteriores.drizzle.js';
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import { crearLectorDeFilas } from '../../core/intercambio/contexto.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
@@ -61,7 +62,12 @@ function proveedorDeLaFila(bandeja: Bandeja): ProveedorDeLaFila {
 
 /** La vista previa ensaya con el mismo `ProveedorDeLaFila` que confirma, sin guardar nada. */
 function vistaPrevia(bandeja: Bandeja, previsualizar: PrevisualizarDocumento): VistaPreviaDeDteRecibidos {
-  return new VistaPreviaDeDteRecibidos({ ...bandeja, previsualizar, proveedorDeLaFila: proveedorDeLaFila(bandeja) });
+  return new VistaPreviaDeDteRecibidos({
+    ...bandeja,
+    previsualizar,
+    facturasAnteriores: new RepositorioDeFacturasAnterioresDrizzle(),
+    proveedorDeLaFila: proveedorDeLaFila(bandeja),
+  });
 }
 
 /** El registro de cada fila es el mismo `RegistrarDocumento` del formulario. */
