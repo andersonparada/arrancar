@@ -57,7 +57,8 @@ declare module '../eventos/bus-eventos.js' {
     };
     /**
      * Se dio de baja o se trasladó parte del saldo a favor de una nota de crédito (U13). `efecto`: `perdida` va a otros
-     * gastos (no deducible); `transitoria` a «Saldos de proveedores por regularizar» o a la cuenta por cobrar del tercero.
+     * gastos (no deducible); `transitoria` a «Saldos de proveedores por regularizar» o a la cuenta por cobrar del tercero;
+     * `ingreso` (la diferencia de centavos de un cargo al pagar) a otros ingresos, sin IVA.
      * `serie` y `numero` son los de la nota, para la glosa. El dinero va en centavos enteros.
      */
     'cuentas-por-pagar.ajuste_registrado': {
@@ -70,7 +71,7 @@ declare module '../eventos/bus-eventos.js' {
       montoCentavos: number;
       fecha: string;
       causa: 'no_recuperable' | 'diferencia_menor' | 'compensado_con_otra_cuenta';
-      efecto: 'perdida' | 'transitoria';
+      efecto: 'perdida' | 'transitoria' | 'ingreso';
       referencia: string | null;
     };
     /** Se anuló un ajuste: `fecha` es la de la anulación y se repiten monto y efecto para revertir la partida. */
@@ -80,7 +81,37 @@ declare module '../eventos/bus-eventos.js' {
       documentoId: string;
       fecha: string;
       montoCentavos: number;
-      efecto: 'perdida' | 'transitoria';
+      efecto: 'perdida' | 'transitoria' | 'ingreso';
+    };
+
+    /**
+     * Se registró un pago a un proveedor (cheque o nota de débito; la cuenta de apertura y el efectivo llegan con sus
+     * pasos). `fecha` es la del cheque (Contabilidad fecha la partida aquí, también si está posfechado) y `efecto` le dice
+     * qué cuenta usar. `contrasenaIds` son las contraseñas de sus líneas, sin repetir. El dinero va en centavos enteros.
+     */
+    'cuentas-por-pagar.pago_registrado': {
+      empresaId: string;
+      pagoId: string;
+      numero: number;
+      contrasenaIds: string[];
+      proveedorId: string;
+      forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo';
+      fecha: string;
+      posfechado: boolean;
+      montoCentavos: number;
+      movimientoId: string | null;
+      cuentaBancariaId: string | null;
+      retiroId: string | null;
+      sinBancarizar: boolean;
+      efecto: 'banco' | 'transitoria_por_aplicar' | 'apertura' | 'correccion_de_error' | 'efectivo';
+      aplicaciones: Array<{
+        documentoId: string;
+        documentoDeCompraId: string | null;
+        origen: 'libro_de_compras' | 'saldo_inicial';
+        montoCentavos: number;
+        retencionDescontadaCentavos: number;
+        tieneActivoFijo: boolean;
+      }>;
     };
   }
 }

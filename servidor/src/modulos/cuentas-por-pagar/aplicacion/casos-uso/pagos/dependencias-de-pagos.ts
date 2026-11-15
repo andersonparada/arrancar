@@ -1,0 +1,74 @@
+import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
+import type { Correlativos } from '../../../../core/compartido/aplicacion/correlativos.js';
+import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
+import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
+import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
+import type { RepositorioDeAjustes } from '../../puertos/puertos-de-ajustes.js';
+import type { RepositorioDeContrasenas } from '../../puertos/puertos-de-contrasenas.js';
+import type { ConsultasDeDocumentos, FilaDeDocumento } from '../../puertos/puertos-de-consultas.js';
+import type {
+  FechasDeEntrada,
+  RepositorioDeDocumentos,
+  UmbralDeBancarizacion,
+} from '../../puertos/puertos-de-documentos.js';
+import type {
+  ConsultasDePagos,
+  DatosFiscalesDeLaEmpresa,
+  NombreDelNit,
+  PagosEnBancos,
+  RepositorioDePagos,
+  RetencionesDelLibro,
+  TopeDeDiferenciaDelPago,
+} from '../../puertos/puertos-de-pagos.js';
+import type { CargaInicial } from '../../puertos/puertos-de-saldos-iniciales.js';
+
+/** El recurso con que se audita la diferencia de un cargo (el mismo de los ajustes de notas). */
+export { RECURSO_DE_AJUSTES } from '../ajustes/dependencias-de-ajustes.js';
+
+/** Lo que necesita registrar un pago con cheque o con nota de débito. */
+export interface DependenciasDeRegistrarPago {
+  unidadDeTrabajo: UnidadDeTrabajo;
+  documentos: RepositorioDeDocumentos;
+  consultas: ConsultasDeDocumentos;
+  contrasenas: RepositorioDeContrasenas;
+  pagos: RepositorioDePagos;
+  consultasDePagos: ConsultasDePagos;
+  ajustes: RepositorioDeAjustes;
+  bancos: PagosEnBancos;
+  retenciones: RetencionesDelLibro;
+  nombreDelNit: NombreDelNit;
+  fiscal: DatosFiscalesDeLaEmpresa;
+  umbral: UmbralDeBancarizacion;
+  topeDeDiferencia: TopeDeDiferenciaDelPago;
+  cargaInicial: CargaInicial;
+  fechasDeEntrada: FechasDeEntrada;
+  correlativos: Correlativos;
+  auditoria: Auditoria;
+  /** Se publica después de confirmar la transacción de la propia petición. */
+  publicadorEventos: PublicadorEventos;
+  reloj: Reloj;
+}
+
+/** Lo que necesitan las consultas de la ventana de pago: los cargos del proveedor y los proveedores por pagar. */
+export interface DependenciasParaPagar {
+  unidadDeTrabajo: UnidadDeTrabajo;
+  consultas: ConsultasDeDocumentos;
+  consultasDePagos: ConsultasDePagos;
+  retenciones: RetencionesDelLibro;
+  nombreDelNit: NombreDelNit;
+  pagos: RepositorioDePagos;
+  umbral: UmbralDeBancarizacion;
+  topeDeDiferencia: TopeDeDiferenciaDelPago;
+  cargaInicial: CargaInicial;
+  fechasDeEntrada: FechasDeEntrada;
+  reloj: Reloj;
+}
+
+/** Un cargo del pago con lo que se necesita de él: su fila, lo que se le paga y la contraseña de su línea. */
+export interface LineaRevisada {
+  indice: number;
+  fila: FilaDeDocumento;
+  saldoCentavos: number;
+  montoCentavos: number;
+  contrasena: { id: string; numero: string };
+}

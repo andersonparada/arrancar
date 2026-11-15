@@ -28,6 +28,7 @@ export class RepositorioDeAjustesDrizzle implements RepositorioDeAjustes {
         causa: ajuste.causa,
         motivo: ajuste.motivo,
         referencia: ajuste.referencia,
+        pagoId: ajuste.pagoId ?? null,
       })
       .returning({ id: ajustesDeSaldo.id });
     return fila!.id;

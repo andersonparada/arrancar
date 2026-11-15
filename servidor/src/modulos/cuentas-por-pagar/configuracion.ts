@@ -36,6 +36,15 @@ export const configuracionDeCuentasPorPagar: readonly DefinicionConfiguracion[] 
     publica: false,
   }),
   definirConfiguracion({
+    clave: 'cuentas-por-pagar.pagos.tope_diferencia',
+    descripcion:
+      'Monto máximo (en quetzales) de la diferencia de centavos que se da por saldada de un documento al pagarlo (solo redondeos: un descuento exige nota de crédito). Con 0 no se puede saldar ninguna.',
+    esquema: z.number().nonnegative().multipleOf(0.01),
+    predeterminado: 1,
+    niveles: ['instalacion', 'empresa'],
+    publica: false,
+  }),
+  definirConfiguracion({
     clave: 'cuentas-por-pagar.contrasenas.leyenda',
     descripcion:
       'Texto al pie de la contraseña de pago impresa. Cada empresa puede reemplazarlo (por ejemplo, con el horario de pagos); vacío, no se imprime.',

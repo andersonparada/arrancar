@@ -3,10 +3,16 @@ export const CAUSAS_DE_AJUSTE = ['no_recuperable', 'diferencia_menor', 'compensa
 
 export type CausaDeAjuste = (typeof CAUSAS_DE_AJUSTE)[number];
 
-/** Qué hace Contabilidad con el ajuste: lo lleva a gasto (`perdida`) o a una cuenta puente (`transitoria`). */
-export type EfectoDelAjuste = 'perdida' | 'transitoria';
+/**
+ * Qué hace Contabilidad con el ajuste: lo lleva a gasto (`perdida`), a una cuenta puente (`transitoria`) o a otros ingresos
+ * sin IVA (`ingreso`: la diferencia de centavos de un cargo al pagarlo).
+ */
+export type EfectoDelAjuste = 'perdida' | 'transitoria' | 'ingreso';
 
-/** El efecto sale de la causa y no se guarda. */
+/** La diferencia menor que deja un pago sobre un cargo es un ingreso de la empresa, no una pérdida. */
+export const EFECTO_DE_LA_DIFERENCIA_DE_UN_CARGO: EfectoDelAjuste = 'ingreso';
+
+/** El efecto de un ajuste de nota sale de la causa y no se guarda. */
 export const EFECTO_DE_LA_CAUSA: Readonly<Record<CausaDeAjuste, EfectoDelAjuste>> = {
   no_recuperable: 'perdida',
   diferencia_menor: 'perdida',

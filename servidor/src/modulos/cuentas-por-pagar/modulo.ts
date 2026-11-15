@@ -10,6 +10,7 @@ import { rutasDeContrasenasComponidas } from './composicion/contrasenas.js';
 import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-de-saldos-iniciales.js';
+import { rutasDePagosComponidas } from './composicion/pagos.js';
 import { rutasDeSaldosInicialesComponidas } from './composicion/saldos-iniciales.js';
 import { configuracionDeCuentasPorPagar } from './configuracion.js';
 // generador: importaciones
@@ -93,6 +94,14 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.contrasenas.anular',
       descripcion: 'Anular contraseñas de pago (sus documentos quedan libres para otra contraseña)',
     },
+    {
+      clave: 'cuentas-por-pagar.pagos.ver',
+      descripcion: 'Ver los proveedores por pagar, los medios de pago y lo que se puede pagar de cada proveedor',
+    },
+    {
+      clave: 'cuentas-por-pagar.pagos.emitir',
+      descripcion: 'Pagar a un proveedor con cheque o con nota de débito (crea el movimiento en Bancos)',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -108,6 +117,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDelCuadreDeSaldosInicialesComponidas(),
     rutasDeSaldosInicialesComponidas(),
     rutasDeContrasenasComponidas(),
+    rutasDePagosComponidas(),
     // generador: rutas
   ]),
 };
