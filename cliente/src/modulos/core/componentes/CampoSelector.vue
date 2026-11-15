@@ -4,6 +4,7 @@ import { Check, ChevronDown, Search } from 'lucide-vue-next';
 import type { OpcionBuscable } from '../utilidades/busqueda-de-opciones';
 import { usarSelectorConBusqueda } from '../composables/usar-selector-con-busqueda';
 import { usarPosicionFlotante } from '../composables/usar-posicion-flotante';
+import { usarErrorDescartable } from '../composables/usar-formulario';
 
 const props = defineProps<{
   etiqueta: string;
@@ -17,6 +18,10 @@ const props = defineProps<{
 
 const modelo = defineModel<T>();
 const id = useId();
+const error = usarErrorDescartable(
+  () => props.error,
+  () => modelo.value,
+);
 const idLista = `${id}-lista`;
 const idDeOpcion = (indice: number): string => `${id}-opcion-${indice}`;
 

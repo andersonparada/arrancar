@@ -3,7 +3,7 @@ import { nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { usarAvisos } from '../almacenes/avisos';
 import { ErrorApi } from '../servicios/cliente-http';
-import { quitarErrorAlCambiar, sinErrorDe, usarFormulario } from './usar-formulario';
+import { quitarErrorAlCambiar, sinErrorDe, usarErrorDescartable, usarFormulario } from './usar-formulario';
 
 describe('usarFormulario', () => {
   beforeEach(() => setActivePinia(createPinia()));
@@ -72,5 +72,50 @@ describe('sinErrorDe', () => {
   it('devuelve el mismo objeto si el campo no tiene error', () => {
     const original = { fecha: 'Inválida.' };
     expect(sinErrorDe(original, 'motivo')).toBe(original);
+  });
+});
+
+describe('usarErrorDescartable', () => {
+  const montar = (campo: string) => {
+    const errores = ref<Record<string, string>>({});
+    const formulario = ref({ nombre: '', lineas: [{ monto: '' }] });
+    const valor = campo === 'nombre' ? () => formulario.value.nombre : () => formulario.value.lineas[0]!.monto;
+    const visible = usarErrorDescartable(() => errores.value[campo], valor);
+    return { errores, formulario, visible };
+  };
+
+  it('oculta el error de un campo simple al cambiarlo y no toca el de otros', async () => {
+    const a = montar('nombre');
+    const b = montar('lineas.0.monto');
+    a.errores.value = { nombre: 'Falta.' };
+    b.errores.value = { 'lineas.0.monto': 'Mal.' };
+    await nextTick();
+    expect([a.visible.value, b.visible.value]).toEqual(['Falta.', 'Mal.']);
+    a.formulario.value.nombre = 'X';
+    await nextTick();
+    expect(a.visible.value).toBeUndefined();
+    expect(b.visible.value).toBe('Mal.');
+  });
+
+  it('en un campo anidado se oculta al cambiar ese valor', async () => {
+    const { errores, formulario, visible } = montar('lineas.0.monto');
+    errores.value = { 'lineas.0.monto': 'Mal.' };
+    await nextTick();
+    formulario.value.lineas[0]!.monto = '5';
+    await nextTick();
+    expect(visible.value).toBeUndefined();
+  });
+
+  it('un error nuevo, aunque sea el mismo texto, vuelve a verse', async () => {
+    const { errores, formulario, visible } = montar('nombre');
+    errores.value = { nombre: 'Falta.' };
+    await nextTick();
+    formulario.value.nombre = 'X';
+    await nextTick();
+    errores.value = {};
+    await nextTick();
+    errores.value = { nombre: 'Falta.' };
+    await nextTick();
+    expect(visible.value).toBe('Falta.');
   });
 });
