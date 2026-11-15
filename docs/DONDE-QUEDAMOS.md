@@ -45,7 +45,7 @@ cliente 1034, generador 46.
 
 En `main`: CP4-3 (pagar con cheque y nota de débito), U8l-7, U8l-8 (QA de U8-l: **U8-l terminado**), el arreglo de la
 prueba de rendimiento (faltaba `analyze` de contraseñas) y la limpieza de errores al escribir en todos los formularios.
-Pruebas corriendo con todo eso. **CP4-4 espera** a que el diseño de CP5 diga dónde entra `fecha_de_anulacion`.
+Todo en verde en base nueva (servidor 4350, cliente 1086, generador 46). **CP4-4 espera** a que el diseño de CP5 diga dónde entra `fecha_de_anulacion`.
 
 Siguiente en pagos: CP4-3 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
