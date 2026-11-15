@@ -55,3 +55,31 @@ export const FACTURA_ESPECIAL = {
 
 /** Quién emite la factura especial: la empresa, con su NIT si se pudo leer. */
 export const textoDelEmisorEspecial = (nit: string | null): string => (nit ? `Su empresa (NIT ${nit})` : 'Su empresa');
+
+/** Textos de la factura del sistema anterior que corrige una nota. */
+export const FACTURA_ANTERIOR = {
+  titulo: 'Factura del sistema anterior',
+  cuandoUsarla:
+    'Use esta opción solo si la factura estaba en el libro de compras del sistema anterior. Si la registró en Arrancar, elíjala de la lista.',
+  datosImpresos: 'Los datos de la factura vienen impresos en la propia nota (documento de origen).',
+  ayudaDeLaFecha: 'Debe ser anterior a la fecha de inicio de la empresa.',
+  ayudaDelIva: 'Escriba 0 si la factura no lleva IVA.',
+  dioCredito: 'Sí: su IVA se tomó como crédito fiscal.',
+  noDioCredito: 'No: su IVA se sumó al costo o gasto. Diga por qué.',
+  notasDeDebito: 'Notas de débito del sistema anterior sobre esta factura',
+  ayudaDeNotasDeDebito:
+    'Solo si el proveedor ya había aumentado esta factura con notas de débito antes de la fecha de inicio. Suben lo que una nota de crédito puede rebajar.',
+  sugeridasTitulo: 'Elija una para llenar los datos con un clic',
+  sugeridasUsadas: 'Ya usadas en otras notas de este proveedor',
+  sugeridasDeLaBandeja: 'De la bandeja de la SAT, anteriores a la fecha de inicio',
+  citaUnaNota: 'Ver la nota que la cita',
+  elegirOrigen: 'Elija la factura que corrige esta nota',
+} as const;
+
+/** Textos de «No dio crédito por otra causa» en las facturas. */
+export const OTRA_CAUSA = {
+  etiqueta: 'No dio crédito fiscal por otra causa',
+  descripcion:
+    'Úselo si el IVA de esta factura no es crédito fiscal por una razón que no está entre las demás (por ejemplo, no cumple los requisitos de la ley). El IVA se suma al costo.',
+  ayudaDeObservaciones: 'Obligatorio: explique por qué no dio crédito fiscal. Queda guardado con la factura.',
+} as const;

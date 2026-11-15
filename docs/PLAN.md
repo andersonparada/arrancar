@@ -1843,6 +1843,20 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `FacturaAnteriorDto` queda fuera (no hay columna para guardarlo). Siguen U8l-6 y U8l-7.
 - **2026-11-14 — CP4-EB (servidor, Bancos: conceptos y leyenda del efectivo para pagos).** Migración de Bancos `0033_cp4_efectivo_para_pagos` (solo datos, SQL a mano como la `0032`, repetible): conceptos de sistema `efectivo_para_pagos` (débito, sin flujo), `devolucion_de_efectivo_para_pagos` (crédito, sin flujo) y `faltante_de_efectivo` (débito, Operación, grupo «Faltante de efectivo»), en `CONCEPTOS_DE_SISTEMA`, en `ClaveDeConceptoDeSistema` y, en las empresas con catálogo, por `update`/`insert`. El flujo de efectivo trae `leyenda` (nula si no aplica): sale cuando el período tiene `efectivo_para_pagos` o `faltante_de_efectivo` (en el concepto o en el desglose); va en la pantalla, la impresión (mismo bloque) y como fila «Nota» al final del Excel. Lo sin flujo cae en «Otros movimientos sin actividad», como el fondo de caja chica, y el control sigue cuadrando. Se tocó el cliente de Bancos solo para mostrar la leyenda.
 
+- **2026-11-14 — U8l-6 (cliente, Libro de compras: notas sobre facturas anteriores).** En «Factura que corrige» del formulario de una nota
+  aparece, si la empresa tiene fecha de inicio, «Una factura del sistema anterior (antes del dd/mm/aaaa)» y abre
+  `CamposDeFacturaAnterior` (tipo, serie, número, fecha con tope el día anterior a la fecha de inicio, total, IVA, FEL opcional,
+  «¿Dio crédito fiscal?» y «¿Por qué?» con detalle obligatorio en «otra causa», notas de débito anteriores plegadas y las dos
+  ayudas). Las sugerencias (`GET …/proveedores/:id/facturas-anteriores`: `usadas` y `deLaBandeja`) son botones que llenan todo con un
+  clic; sin permiso o sin fecha de inicio la opción no se ofrece. Lógica pura en `edicion-de-factura-anterior.ts`,
+  `pendientes-del-registro.ts` y `documento-que-modifica.ts`. El cuerpo manda `facturaAnterior` (nunca junto a `documentoAfectadoId`) y
+  no se calcula ni registra mientras esté a medias; «No dio crédito por otra causa» a mano en facturas (en «Más datos», con las
+  observaciones obligatorias; no va en notas ni recibos). Errores de U8l-4 y U8l-5 en su campo; «la factura ya es del sistema
+  anterior» se explica con el camino completo y un enlace a la nota que la cita. Los avisos (4 años, NDEB tardía, retención) son los del
+  servidor, en la vista previa y en la ficha. La ficha de toda nota muestra «Documento que modifica» (con enlace si es del libro; si es del
+  sistema anterior, sus datos, el crédito y las notas de débito anteriores). El motivo «otra causa» ya tiene texto y nombre corto. Los
+  errores de fecha de inicio en Empresas ya salían en el campo «Fecha de inicio» (el mensaje no lista las notas). Fuera de alcance, sigue
+  pendiente: la marca «Antes de la fecha de inicio» de la bandeja y la conciliación, y el texto de la confirmación en lote.
 - **2026-11-14 (rendimiento de la lista de Cuentas por pagar, no reproducido en `main` 40e08f5).** La prueba `cuentas-por-pagar-pagos-rendimiento` (20,000 documentos, 30,000 pagos) dio, en base propia y corrida sola, lista 252 ms, saldo 89 ms, ficha 22 ms y contraseña 111 ms (tope 1,500 ms); la suite completa del servidor pasó (450 archivos, 4,249 pruebas) mientras otro agente corría la suya. U8l-4 y CP4-EB no tocan la consulta (solo agregan pruebas). La lentitud vista antes se atribuye a carga de la máquina (varias suites y PostgreSQL compartidos); no se cambió consulta, índice ni migración (la `0010` queda libre).
 - **2026-11-14 — CP4-V1 (servidor, un pago cubre varias contraseñas del proveedor, M2).** Migración
   `0009_cp4_pago_de_varias_contrasenas` (escrita a mano en el orden correcto): quita `pagos.contrasena_id`, `pagos_llave_unica`,

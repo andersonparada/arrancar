@@ -79,6 +79,8 @@ export const MOTIVOS_SIN_CREDITO: Record<MotivoSinCredito, string> = {
   contribuyente_agropecuario: `Factura de un contribuyente agropecuario, régimen eliminado en ${MES_DE_DEROGACION} (Decreto 31-2024): no da crédito fiscal. El total se registra como costo o gasto.`,
   primario_pecuario:
     'Compra a un productor primario o pecuario (Decreto 31-2024): su factura no da crédito fiscal. El monto se registra como costo o gasto.',
+  otra_causa_sin_credito:
+    'Se marcó que no dio crédito fiscal por otra causa (la explicación está en las observaciones): el IVA se suma al costo o gasto.',
   nota_de_debito_tardia:
     'La nota de débito se emitió más de dos meses después de su factura: no da crédito fiscal (Ley del IVA, art. 17). El IVA se suma al costo o gasto.',
 };

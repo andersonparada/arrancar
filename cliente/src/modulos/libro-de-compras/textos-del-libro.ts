@@ -62,6 +62,7 @@ export const MOTIVOS_CORTOS: Record<MotivoSinCredito, string> = {
   fuera_de_plazo: 'Fuera de plazo',
   nota_de_debito_tardia: 'Nota de débito tardía',
   no_vinculado: 'No vinculado a operaciones gravadas',
+  otra_causa_sin_credito: 'No dio crédito por otra causa',
   pequeno_contribuyente: 'Proveedor pequeño contribuyente',
   primario_pecuario: 'Proveedor primario o pecuario',
 };

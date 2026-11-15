@@ -75,6 +75,7 @@ function alPresionarEnter(evento: KeyboardEvent): void {
             :proveedores="catalogos.proveedores.value"
             :destinos="catalogos.destinos.value"
             :facturas="registro.documentos.value"
+            :sugerencias="registro.sugerencias.value"
             :conceptos="catalogos.conceptos.value"
             :periodo-propuesto="propuestas.periodo.value"
             :fecha-propuesta="

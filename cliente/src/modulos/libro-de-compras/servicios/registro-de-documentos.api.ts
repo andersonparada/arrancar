@@ -6,6 +6,7 @@ import type {
   PaginaDeDocumentos,
   TipoDeDocumento,
 } from './documentos.api';
+import type { FacturaAnteriorSolicitada } from './facturas-anteriores.api';
 
 export interface LineaSolicitada {
   conceptoId: string;
@@ -59,6 +60,10 @@ export interface SolicitudDeDocumento {
   fechaRecepcion: string | null;
   periodo: string | null;
   documentoAfectadoId: string | null;
+  /** Solo en una nota: la factura del sistema anterior que corrige (excluyente con `documentoAfectadoId`). */
+  facturaAnterior?: FacturaAnteriorSolicitada | null;
+  /** Solo en una factura: no dio crédito fiscal por otra causa (exige las observaciones). */
+  otraCausaSinCredito?: boolean;
   /** Solo en una nota de débito. */
   claseDeCargo?: ClaseDeCargo | null;
   ivaDeLaFel: string | null;

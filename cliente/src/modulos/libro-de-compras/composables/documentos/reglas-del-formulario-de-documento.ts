@@ -9,6 +9,7 @@ import {
   esFacturaEspecial,
   esNotaDeDebito,
   esReciboFel,
+  esUnaFactura,
   familiaDelCodigo,
   llevaFacturaAfectada,
 } from './tipos-de-documento-sat';
@@ -99,6 +100,8 @@ function ajustarLaNota(edicion: EdicionDeDocumento, codigoAnterior: string): voi
   if (!llevaFacturaAfectada(edicion.tipoDte) || familia !== familiaDelCodigo(codigoAnterior)) {
     edicion.documentoAfectadoId = null;
   }
+  if (!llevaFacturaAfectada(edicion.tipoDte)) edicion.origenDeLaFactura = 'libro';
+  if (!esUnaFactura(edicion.tipoDte)) edicion.otraCausaSinCredito = false;
   if (!esNotaDeDebito(edicion.tipoDte)) {
     edicion.claseDeCargo = null;
     return;

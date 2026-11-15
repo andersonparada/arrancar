@@ -15,6 +15,13 @@ import {
   opcionesDePeriodoDelDocumento,
   opcionesDeProveedores,
 } from '../../composables/documentos/reglas-del-formulario-de-documento';
+import {
+  elegirLaFacturaQueCorrige,
+  opcionDeFacturaAnterior,
+  valorDelSelectorDeFactura,
+} from '../../composables/documentos/edicion-de-factura-anterior';
+import type { SugerenciasDeFacturasAnteriores } from '../../servicios/facturas-anteriores.api';
+import CamposDeFacturaAnterior from './CamposDeFacturaAnterior.vue';
 import CamposDeNotaDeDebito from './CamposDeNotaDeDebito.vue';
 import type { ConceptoDeGasto } from '../../servicios/conceptos-de-gasto.api';
 import type { DestinoDeDocumento, DocumentoEnLista } from '../../servicios/documentos.api';
@@ -26,6 +33,7 @@ const props = defineProps<{
   destinos: DestinoDeDocumento[];
   facturas: DocumentoEnLista[];
   conceptos: ConceptoDeGasto[];
+  sugerencias: SugerenciasDeFacturasAnteriores;
   periodoPropuesto: string | null;
   fechaPropuesta: string | null;
   errores: Record<string, string>;
@@ -47,8 +55,16 @@ const facturasDeLaNota = computed(() => {
   const sinFacturas = esDebito.value
     ? 'Este proveedor no tiene facturas vigentes en el libro'
     : 'Este proveedor no tiene facturas vigentes';
-  return [{ valor: null, texto: facturas.length ? 'Elija la factura' : sinFacturas }, ...facturas];
+  const anterior = opcionDeFacturaAnterior(props.sugerencias.fechaDeInicio);
+  const sinOpciones = facturas.length + anterior.length === 0;
+  return [{ valor: null, texto: sinOpciones ? sinFacturas : 'Elija la factura' }, ...anterior, ...facturas];
 });
+/** El selector «Factura que corrige» elige entre una factura del libro y «una factura del sistema anterior». */
+const facturaElegida = computed({
+  get: () => valorDelSelectorDeFactura(edicion.value.origenDeLaFactura, edicion.value.documentoAfectadoId),
+  set: (valor: string | null) => Object.assign(edicion.value, elegirLaFacturaQueCorrige(valor)),
+});
+const esDeSistemaAnterior = computed(() => edicion.value.origenDeLaFactura === 'anterior');
 const periodos = computed(() =>
   opcionesDePeriodoDelDocumento(new Date(), edicion.value.periodo, props.periodoPropuesto),
 );
@@ -91,12 +107,19 @@ const esNota = computed(() => llevaFacturaAfectada(edicion.value.tipoDte));
       />
       <CampoSelector
         v-if="esNota"
-        v-model="edicion.documentoAfectadoId"
+        v-model="facturaElegida"
         class="@md:col-span-2 @2xl:col-span-3"
         :etiqueta="esDebito ? 'Factura que aumenta esta nota' : 'Factura que rebaja esta nota'"
         requerido
         :opciones="facturasDeLaNota"
         :error="errores.documentoAfectadoId"
+      />
+      <CamposDeFacturaAnterior
+        v-if="esNota && esDeSistemaAnterior"
+        v-model="edicion.facturaAnterior"
+        class="@md:col-span-2 @2xl:col-span-3"
+        :sugerencias="sugerencias"
+        :errores="errores"
       />
       <CamposDeNotaDeDebito
         v-if="esDebito"
