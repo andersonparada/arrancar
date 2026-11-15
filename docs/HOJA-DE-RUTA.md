@@ -208,5 +208,11 @@ Quedan preguntas abiertas en la sección «Preguntas para el usuario» de cada p
 - Con Contabilidad: en qué otros casos se permite eliminar (registros no
   contabilizados de un período abierto); cuenta contable por defecto del proveedor
   por empresa; partidas de provisión y reversión.
+- **Contabilidad y Cuentas por pagar (decidido el 2026-11-15, CP5; dictamen `dictamen-cp5-2026-11-15.md`, O-1):** la
+  factura se provisiona **al registrarla** (ingreso en Libro de compras), no al autorizarla, con «Retenciones por
+  pagar» en la misma partida y con la **fecha de efecto** del auxiliar (emisión; fecha de inicio para los del libro
+  emitidos antes; `diseno-cp5-reportes.md` §2.2); revierte toda anulación de un documento registrado y lo que se
+  elimina; fecha las reversas de pagos, reintegros y retiros con su `fecha_de_anulacion`; cuadra Proveedores con el
+  reporte R1 (por NIT, acreedores y deudores para la reclasificación) y la transitoria con R11.
 - Excel de DTE recibidos de la SAT: investigar su formato; después, traerlos
   directo de la SAT.

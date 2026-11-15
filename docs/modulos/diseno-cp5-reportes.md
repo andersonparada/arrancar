@@ -1,6 +1,31 @@
 # Diseño CP5: reportes de Cuentas por pagar — arquitecto de datos, 2026-11-15
 
-Estado: **propuesta para aprobar**. No se programa hasta que el usuario responda §12 y `contador-guatemala` valide §13.
+Estado: **aprobado, listo para programar** (2026-11-15). El usuario aceptó CP5-a a CP5-i como se recomiendan (§12) y
+**todos** los «Cambios que el diseño debe recibir» del dictamen del contador (`dictamen-cp5-2026-11-15.md`, «correcto con
+ajustes»), con tres precisiones: R1 **agrupa por NIT**; R3 tiene una versión **para el proveedor** con la retención como
+**abono**; y, cuando exista Contabilidad, la factura se provisiona **al registrarla**, no al autorizarla (corrige
+«autorizar = provisionar» de `cuentas-por-pagar.md`). Este documento ya trae todo aplicado (tabla de abajo); lo que
+cambia en CP4 está escrito en `diseno-cp4-pagos.md` (§5.9 y pasos) y en la adenda de efectivo (§4.4, §4.6 y pasos).
+
+**Decidido el 2026-11-15 (aprobación, con el dictamen del contador):**
+
+| Tema | Decisión | Dónde |
+|---|---|---|
+| Anulaciones al corte | **B**: `pagos`, `reintegros` y `retiros_de_efectivo` guardan `fecha_de_anulacion` (fecha contable); migración `0011` de Cuentas por pagar **antes de CP4-4**; la llenan CP4-4, CP4-7, CP4-E2 y CP4-E3 | CP5-a, §2.3, §3.1, §11 |
+| Fecha de efecto | **Emisión**; los documentos del libro emitidos antes de la fecha de inicio cuentan **desde la fecha de inicio**; aviso de documentos registrados después del corte | CP5-b, dictamen 1, §2.2 |
+| Posfechado cobrado antes de su fecha | Cuenta desde el **fin del mes de la conciliación autorizada** que lo marcó, si es antes de su fecha; si no se puede saber, leyenda | Dictamen 5 y cambio 2, §2.1 |
+| Sin autorizar | Entran al saldo, con columna y filtro | CP5-c, dictamen 4 |
+| Provisión en Contabilidad | **Al registrar** el documento (ingreso en Libro de compras, ya en la bandeja), con la fecha de efecto; autorizar es solo «aprobado para pago» (U12 del 2026-10-20). Con «Retenciones por pagar» en la misma partida | Usuario; dictamen 2 y O-1; §10.7 |
+| R1 | **Neto por NIT** (fichas como subrenglones, aviso de NIT repetido); % por tramo **sobre el total de cargos**; conciliación con R11 al pie | Usuario; dictamen 3 y 8 |
+| R3 | Dos presentaciones: **interna** (total, retenciones y neto en una línea) y **para el proveedor** (cargo por el total y abono por la retención con su constancia, misma fecha) | Usuario; dictamen 2 y cambio 4 |
+| R4 | «**Posible prescripción desde**» = último movimiento + 5 años (Código Civil art. 1508), columna «Último movimiento», leyendas | Dictamen 7 y cambio 5 |
+| R6 | Columna «**Registró el documento**» | Dictamen O-9 y cambio 9 |
+| R8 | Sección 5: **documentos anulados o desautorizados en el mes** | CP5-e, dictamen 9 |
+| R9 | Criterio **por cargo** de Q30,000 o más pagado en parte en efectivo; **IVA completo** del cargo; **costo no deducible**; máximo **48 meses** | Dictamen 10 y cambio 7 |
+| R12 | En Libro de compras (CP5-f = A); columna «**Plazo de la constancia**» (ISR); enlace a la vista de **retenciones por practicar** de saldos iniciales (R2) | CP5-f, dictamen 11 y cambio 8 |
+| Permisos | Por audiencia (CP5-d) | §5 |
+| Leyendas | NIIF para las Pymes citada **por sección** (la 3.ª edición rige desde 2027); umbral de bancarización con «verifique el vigente» | Dictamen O-10 y cambio 11 |
+| CP5-e, g, h, i | Como se recomendaron (ajustes con secciones 3 a 5, R2 con vistas, impresión hasta 2,000 filas, R7 propio) | §12 |
 
 Aterriza el paso **CP5** de `cuentas-por-pagar.md` («Reportes: antigüedad de saldos, estado de cuenta del proveedor,
 facturas por vencer, pagos realizados») con todo lo que le dejaron anotado los diseños y dictámenes anteriores
@@ -45,7 +70,12 @@ facturas por vencer, pagos realizados») con todo lo que le dejaron anotado los 
    `documentos` guardan `anulado_en` (`timestamptz`, el momento del clic). La fecha del inverso de un pago con cheque o
    nota vive en Bancos (`movimientos.revertido_en` y el movimiento inverso con su `fecha`; `anulado_en` en Bancos es la
    anulación «a la antigua», sin inverso). `AnularPago` (CP4-4), `AnularReintegro` (CP4-7) y `AnularRetiro` (CP4-E2)
-   **todavía no están programados**: CP4-3 está en curso.
+   **todavía no están programados**. **Verificado el 2026-11-15 contra `main` (`826a308`):** CP4-3 ya está (sin
+   migración); la última migración de Cuentas por pagar es la `0010_cp4_pagos_en_efectivo` y **ninguna rama** tiene una
+   `0011`; la de Libro de compras es la `0035_u8l_facturas_anteriores`.
+   La orden `bancos.anular_movimiento_de_origen` responde `{ forma, inversoId }` (**sin la fecha del inverso**, que Bancos
+   puede cambiar por la variable `bancos.anulaciones.misma_fecha`); el aviso `bancos.movimiento_por_cambiar` sí trae
+   `formaDeAnulacion` y `fecha` (la del inverso con `con_inverso`; nula con `sin_inverso`).
 3. **Fórmulas de saldo** (`dominio/saldos.ts` y `ConsultaBaseDeDocumentos.saldoDelCargo` / `saldoLibreDeLaNota`):
    cargo = `coalesce(saldo_al_inicio, total − retenciones)` − aplicaciones de notas − pagos vigentes (también los
    posfechados) − ajustes vigentes; nota = `coalesce(saldo_al_inicio, total)` − aplicaciones − ajustes − reintegros.
@@ -94,7 +124,7 @@ facturas por vencer, pagos realizados») con todo lo que le dejaron anotado los 
 cargo vigente al corte  = documento no nota, con fecha de efecto <= corte y no anulado al corte (§2.3)
 saldo del cargo al corte = neto
                          − Σ aplicaciones de notas recibidas con fecha <= corte
-                         − Σ líneas de pagos con pago.fecha <= corte y pago vigente al corte
+                         − Σ líneas de pagos con fecha de efecto del pago <= corte y pago vigente al corte
                          − Σ ajustes del cargo con fecha <= corte y vigentes al corte
    neto = coalesce(saldo_al_inicio, total − retenciones)
 
@@ -109,15 +139,51 @@ saldo neto del proveedor = Σ saldos de sus cargos − Σ saldos libres de sus n
 ```
 
 Con `corte = hoy` el saldo **no** es el de la lista de Documentos: la lista resta lo comprometido (cheques posfechados,
-para que nadie lo vuelva a pagar) y el reporte no (el pasivo sigue hasta la fecha del cheque, NIIF para las Pymes
-11.36). Por eso los reportes de saldo llevan la columna **«Comprometido (cheques posfechados)»** = líneas de pagos
-vigentes con `fecha > corte` y emitidos (`creado_en`) hasta el corte, y **«Disponible para pagar» = saldo −
+para que nadie lo vuelva a pagar) y el reporte no (el pasivo sigue hasta la fecha del cheque, NIIF para las Pymes,
+sección 11). Por eso los reportes de saldo llevan la columna **«Comprometido (cheques posfechados)»** = líneas de pagos
+vigentes con fecha de efecto `> corte` y emitidos (`creado_en`) hasta el corte, y **«Disponible para pagar» = saldo −
 comprometido**, que sí coincide con la lista. Así nadie ve dos cifras sin explicación.
 
-### 2.2 Fecha de efecto de un documento (CP5-b, para el contador)
+**Fecha de efecto del pago (dictamen 5, cambio 2: posfechado cobrado antes de su fecha).** El cheque se paga a la vista
+(Código de Comercio art. 501): si el banco lo cobró antes de su fecha, el pasivo se extinguió con el cobro. Bancos no
+guarda el **día** del cobro, solo en qué conciliación mensual quedó marcado (`bancos.movimientos.conciliacion_id` →
+`bancos.conciliaciones (anio, mes, estado)`). Regla:
 
-La fecha desde la que un documento cuenta en un corte. Recomendada: **`fecha_emision`** para cargos y notas, del libro y
-de saldo inicial:
+```
+fecha de efecto del pago = least(pagos.fecha, último día del mes de la conciliación del movimiento)
+   solo si esa conciliación está «autorizada» (la única que ya no cambia); si no, pagos.fecha
+```
+
+- Corte en o después del fin de ese mes: el posfechado cobrado ya rebaja el saldo (y sale de «Comprometido»).
+- Corte dentro del mes conciliado y antes de la fecha del cheque: no se sabe el día; sigue como comprometido, con la
+  leyenda «El cheque N se cobró en el estado de cuenta de mm/aaaa, antes de su fecha; Bancos no guarda el día del
+  cobro.»
+- Solo cambia algo en cheques posfechados (`fecha` posterior al fin del mes de su conciliación). La lectura de
+  `bancos.movimientos` y `bancos.conciliaciones` es desde `infraestructura` (Bancos es `dependeDe`), con su RLS.
+- R1, R2, R3 (fecha de la línea del pago) y R7 usan la **misma** fecha de efecto, para que los invariantes de §2.5
+  sigan cuadrando.
+
+### 2.2 Fecha de efecto de un documento (CP5-b: **emisión**, decidido)
+
+La fecha desde la que un documento cuenta en un corte: **`fecha_emision`** para cargos y notas, del libro y de saldo
+inicial, con una excepción (dictamen 1, O-4):
+
+```
+fecha de efecto = fecha_emision                                   saldo inicial (U8)
+                = greatest(fecha_emision, fecha de inicio)        documento del libro (con fecha de inicio)
+                = fecha_emision                                   documento del libro (empresa sin fecha de inicio)
+```
+
+Un documento del libro emitido **antes** de la fecha de inicio (factura vieja que llegó después; U8-l) no estaba en la
+carga inicial: si contara desde su emisión, el saldo al día anterior a la fecha de inicio ya no sería el del cuadre de
+saldos iniciales (invariante 5). Cuenta desde la fecha de inicio y el reporte lo avisa (§2.4).
+
+**Aviso de registros tardíos** (dictamen 1): R1 y R2 cuentan los documentos con fecha de efecto `<= corte` registrados
+**después** del corte (`documentos.creado_en`, en hora de Guatemala, `> corte`) y avisan: «N documentos con fecha hasta
+el dd/mm/aaaa se registraron después (Q…): si ya cerró ese mes con este reporte, el saldo cambió.» Es la excepción
+esperada del invariante 4 (devengo: la factura es del mes de su emisión aunque llegue tarde).
+
+Por qué la emisión:
 
 - Es la que usa el proveedor en **su** estado de cuenta: el nuestro se puede cotejar con el suyo línea por línea.
 - Es la base del vencimiento (o la recepción, si el proveedor tiene `contarDesdeLaRecepcion`) y de la antigüedad.
@@ -127,12 +193,11 @@ de saldo inicial:
   `>=` sus emisiones: la suma por proveedor siempre cuadra.
 - No necesita unir el Libro de compras para el saldo (rendimiento).
 
-Alternativas: `fecha_recepcion` (lo que la empresa sabía a esa fecha; un pago anterior a la recepción, permitido con
-aviso, deja un saldo deudor transitorio) o `periodo` del libro (cuadra con el Libro de compras y el IVA, pero no con la
-antigüedad). La que se elija debe ser la misma con la que Contabilidad feche la provisión, para que el auxiliar cuadre
-con el mayor.
+Descartadas: `fecha_recepcion` y `periodo` del libro. **Contabilidad** (cuando exista) provisiona cada documento **al
+registrarlo**, con **esta misma fecha de efecto** y con «Retenciones por pagar» en la misma partida (dictamen 2), para
+que el auxiliar (R1) cuadre con el mayor (§10.7).
 
-### 2.3 Lo anulado y lo quitado después del corte (CP5-a)
+### 2.3 Lo anulado y lo quitado después del corte (CP5-a: **B**, decidido)
 
 Un corte del pasado debe dar **siempre la misma cifra**: el contador cierra octubre con este reporte y saca de él la
 partida de reclasificación; si en noviembre se anula un pago de octubre, octubre no debe cambiar (Contabilidad hará la
@@ -142,7 +207,7 @@ reversa en noviembre). Para eso cada fila necesita su **fecha contable de anulac
 |---|---|---|
 | Documento | `estado <> 'anulado'` o `anulado_en` (en hora de Guatemala) `> corte` | `anulado_en::date` (la anulación revierte en su día) |
 | Ajuste | Igual | `anulado_en::date` (`AnularAjuste` ya lo fecha hoy) |
-| Pago | `fecha_de_anulacion is null or fecha_de_anulacion > corte` | **Columna nueva** `pagos.fecha_de_anulacion` (§3.1): la fecha del inverso en Bancos; la **fecha del pago** si Bancos lo anuló sin inverso (cheque de mes abierto: «nunca existió»); el día de la anulación en nota ligada, cuenta de apertura y efectivo |
+| Pago | `fecha_de_anulacion is null or fecha_de_anulacion > corte` | **Columna nueva** `pagos.fecha_de_anulacion` (§3.1): la fecha del inverso en Bancos; la **fecha del pago** si Bancos lo anuló sin inverso (cheque de mes abierto: «nunca existió», su anulación no aparece en ningún corte); el día de la anulación en nota ligada, cuenta de apertura y efectivo |
 | Reintegro | Igual | **Columna nueva** `reintegros.fecha_de_anulacion` (misma regla) |
 | Retiro de efectivo | Igual | **Columna nueva** `retiros_de_efectivo.fecha_de_anulacion` |
 
@@ -153,17 +218,18 @@ proveedor ni el total. Tampoco un documento **eliminado** (solo los no autorizad
 **desautorización** (el reporte usa el estado de autorización de hoy). Leyenda: «Las aplicaciones de notas y los pagos
 reaplicados se muestran como están hoy; el saldo neto de cada proveedor no depende de eso.»
 
-Alternativa A (estado de hoy, sin columnas nuevas, como la lista de retiros de la adenda §4.5): más simple, pero un
-corte cerrado cambia cada vez que se anula algo de ese mes.
+Descartada la alternativa A (estado de hoy, sin columnas nuevas). Pendiente para más adelante (dictamen 3, fuera de
+CP5): marcar las aplicaciones de notas **no vigentes** en vez de borrarlas, para quitar esta limitación (§14).
 
 ### 2.4 Corte mínimo y saldos iniciales
 
 - Corte mínimo: el **día anterior a la fecha de inicio** de la empresa (orden `empresas.obtener_carga_inicial`, como
   hoy). Antes no hay datos completos: el reporte rechaza con `CorteAnteriorAlInicio`. Sin fecha de inicio, no hay
   mínimo.
-- En ese corte, el saldo de Proveedores debe ser **igual al cuadre de saldos iniciales** (U8). Si hay documentos del
-  libro con emisión anterior a la fecha de inicio (facturas viejas que llegaron después), el reporte los lista en un
-  aviso: «No estaban en la carga inicial: revise si faltaban en el saldo de apertura.»
+- En ese corte, el saldo de Proveedores debe ser **igual al cuadre de saldos iniciales** (U8). Los documentos del
+  libro con emisión anterior a la fecha de inicio (facturas viejas que llegaron después) cuentan desde la fecha de
+  inicio (§2.2) y el reporte los lista en un aviso: «Emitidos antes de la fecha de inicio: cuentan desde el dd/mm/aaaa.
+  No estaban en la carga inicial: revise si faltaban en el saldo de apertura.»
 - Corte máximo: ninguno (un corte futuro sirve para proyectar con los posfechados).
 
 ### 2.5 Invariantes que prueban los pasos
@@ -171,7 +237,9 @@ corte cerrado cambia cada vez que se anula algo de ese mes.
 1. Σ saldos netos por proveedor (R1) = Σ saldos de cargos − Σ saldos libres (R2 y R4) al mismo corte.
 2. Saldo final del estado de cuenta (R3) del proveedor P al día `hasta` = saldo neto de P en R1 con `corte = hasta`.
 3. Con `corte = hoy`, «Disponible para pagar» de cada documento = saldo de la lista de Documentos.
-4. Un corte pasado no cambia al anular después un pago, un reintegro, un ajuste o un documento (§2.3).
+4. Un corte pasado no cambia al anular después un pago, un reintegro, un ajuste o un documento (§2.3). Excepciones
+   esperadas, con su aviso o leyenda: un documento con fecha de efecto hasta el corte registrado después (§2.2) y un
+   cheque posfechado cuya conciliación se autoriza después (§2.1).
 5. Al día anterior a la fecha de inicio, el total de R1 = total del cuadre de saldos iniciales.
 
 ## 3. Datos
@@ -179,7 +247,7 @@ corte cerrado cambia cada vez que se anula algo de ese mes.
 **Sin tablas nuevas.** Los reportes calculan; no guardan fotos. Si el contador pidiera congelar el cierre (guardar el
 saldo de cada proveedor al cierre de mes), sería tarea de Contabilidad, no de CP5.
 
-### 3.1 Columnas nuevas (solo con CP5-a = B)
+### 3.1 Columnas nuevas (CP5-a = B)
 
 | Tabla | Columna | Tipo | Nula | Regla |
 |---|---|---|---|---|
@@ -187,10 +255,23 @@ saldo de cada proveedor al cierre de mes), sería tarea de Contabilidad, no de C
 | `cuentas_por_pagar.reintegros` | `fecha_de_anulacion` | `date` | sí | Los dos checks equivalentes (`reintegros_…`) |
 | `cuentas_por_pagar.retiros_de_efectivo` | `fecha_de_anulacion` | `date` | sí | `(estado = 'anulado') = (fecha_de_anulacion is not null)` y `>= fecha` |
 
-Quién las llena: `AnularPago` y el manejador de `bancos.movimiento_por_cambiar` (CP4-4; la respuesta de
-`anular_movimiento_de_origen` y el aviso ya traen `sin_inverso`/`con_inverso` y la fecha), `AnularReintegro` (CP4-7) y
-`AnularRetiro` (CP4-E2). Si esos pasos aún no están en `main` cuando se apruebe CP5, se anota en ellos y CP5-1 solo
-crea las columnas; si ya están, CP5-1 los cambia. Mensajes en `MENSAJES_POR_RESTRICCION` para los checks nuevos.
+Las crea **CP5-1** (migración `0011`, §3.3), que va **antes de CP4-4**: así ningún caso de uso de anulación se programa
+sin la columna y no hace falta volver a tocarlos. Mensajes en `MENSAJES_POR_RESTRICCION` para los checks nuevos (un
+`fecha_de_anulacion` que falta es un error de programación: mensaje genérico de datos inconsistentes).
+
+**Quién las llena** (escrito también en `diseno-cp4-pagos.md` §5.9 y en la adenda de efectivo §4.4 y §4.6):
+
+| Paso de CP4 | Caso | `fecha_de_anulacion` |
+|---|---|---|
+| **CP4-4** | `AnularPago` de cheque o nota de débito, desde Cuentas por pagar | `forma = 'sin_inverso'` → `pagos.fecha`; `con_inverso` → la `fecha` del inverso, **leída** de `bancos.movimientos` por el `inversoId` de la respuesta (lectura desde `infraestructura`; no se supone la fecha mandada, porque `bancos.anulaciones.misma_fecha` puede cambiarla) |
+| **CP4-4** | Manejador de `bancos.movimiento_por_cambiar` (`anular`, también cheques caducos en lote) | `formaDeAnulacion = 'sin_inverso'` → `pagos.fecha`; `con_inverso` → la `fecha` del aviso |
+| **CP4-4** (`cuenta_de_apertura`, al anularla) y **CP4-5** (`nota_ligada`) | Sin movimiento en Bancos | `greatest(hoy en Guatemala, pagos.fecha)` |
+| **CP4-E3** | `AnularPago` de un pago en **efectivo** | `greatest(hoy, pagos.fecha)` |
+| **CP4-7** | `AnularReintegro` (y su caso en el manejador): depósito / efectivo | Depósito: como el pago con Bancos (`reintegros.fecha` sin inverso, fecha del inverso con él); efectivo: `greatest(hoy, reintegros.fecha)` |
+| **CP4-E2** | `AnularRetiro` y su caso en el manejador | Como el pago con Bancos (`retiros_de_efectivo.fecha` sin inverso; fecha del inverso con él) |
+
+`ReaplicarPago` no la toca (el pago sigue vigente). `ReabrirRetiro` (CP4-E4) tampoco: reabrir no anula el retiro (la
+devolución anulada vive en Bancos con su propia fecha). Cada paso prueba la columna en sus casos de anular.
 
 ### 3.2 Índices nuevos (Cuentas por pagar)
 
@@ -200,20 +281,27 @@ crea las columnas; si ya están, CP5-1 los cambia. Mensajes en `MENSAJES_POR_RES
 | `ajustes_corte_idx` | `(empresa_id, fecha)` | Lo ajustado hasta el corte y el reporte del mes (lo pidió CP2) |
 | `aplicaciones_de_pagos_empresa_idx` | `(empresa_id, pago_id)` | Unir con `pagos` filtrados por empresa y fecha sin recorrer las de otras empresas |
 | `aplicaciones_de_reintegros_empresa_idx` | `(empresa_id, reintegro_id)` | Igual con `reintegros` |
-| `pagos_anulados_corte_idx` | `(empresa_id, fecha_de_anulacion) where estado = 'anulado'` | Solo con B: los anulados después del corte |
+| `pagos_anulados_corte_idx` | `(empresa_id, fecha_de_anulacion) where estado = 'anulado'` | Los anulados después del corte (va en la `0011`, con la columna) |
 
 No hace falta índice nuevo en `documentos` (`documentos_estado_idx` empieza por `empresa_id` y lleva `fecha_emision`;
-`documentos_proveedor_vencimiento_idx` sirve al estado de cuenta). Se confirman con `EXPLAIN` en la prueba de
-rendimiento (§9): si el plan no los usa, no se crean.
+`documentos_proveedor_vencimiento_idx` sirve al estado de cuenta). Los cuatro primeros se confirman con `EXPLAIN` en la
+prueba de rendimiento de CP5-2 (§9): si el plan no los usa, no se crean; por eso van en su propia migración (`0012`).
 
-### 3.3 Migración
+### 3.3 Migraciones (números verificados en `main` el 2026-11-15)
 
-- Cuentas por pagar: **`0011_cp5_reportes`** (la siguiente libre hoy; CP4-3 a CP4-12 no traen migración). `npm run
-  bd:generar -w servidor -- cuentas-por-pagar cp5_reportes`. Relleno en la misma migración, solo de filas anuladas que
-  existan (en producción no hay: CP4 no se ha desplegado): pago con movimiento anulado sin inverso (`movimientos.anulado_en
-  is not null`) → `fecha`; con inverso → `fecha` del movimiento que lo revierte; sin movimiento → `(anulado_en at time
-  zone 'America/Guatemala')::date`; igual en reintegros y retiros. Después, los checks.
-- Libro de compras (solo si CP5-f = A): **`0036_cp5_constancias_pendientes`** con
+- Cuentas por pagar **`0011_cp5_fecha_de_anulacion`** (paso **CP5-1**, antes de CP4-4): `npm run bd:generar -w
+  servidor -- cuentas-por-pagar cp5_fecha_de_anulacion` y completar a mano el relleno (`--custom` no hace falta: las
+  columnas y checks los genera drizzle-kit desde las tablas; el `update` se agrega antes de los checks). Orden: columnas
+  nulas → relleno de las filas `anulado` que existan (en producción no hay: CP4 no se ha desplegado, y hasta CP4-4 nadie
+  anula; en desarrollo puede haber filas sembradas): pago con movimiento anulado a la antigua (`bancos.movimientos.anulado_en
+  is not null`) → `fecha`; con inverso (`revertido_en is not null`) → `fecha` del movimiento con `revierte_a_id` = ese
+  movimiento; sin movimiento → `greatest(fecha, (anulado_en at time zone 'America/Guatemala')::date)`; igual en
+  reintegros y retiros → los checks de §3.1 → `pagos_anulados_corte_idx`. Prueba de la migración: repetible sobre una
+  base con un pago, un reintegro y un retiro anulados sembrados.
+- Cuentas por pagar **`0012_cp5_indices_de_corte`** (paso **CP5-2**): los índices de §3.2 que confirme el `EXPLAIN`.
+  CP4-4 a CP4-12 y CP4-E2 a E5 no traen migración; si alguno la necesitara, toma el número siguiente libre y CP5-2 se
+  corre después (nunca dos migraciones de Cuentas por pagar a la vez; se avisa en `DONDE-QUEDAMOS.md`).
+- Libro de compras **`0036_cp5_constancias_pendientes`** (paso **CP5-6**, CP5-f = A) con
   `retenciones_sin_constancia_idx (empresa_id, fecha) where constancia_numero is null and monto > 0`.
 - Ninguna toca permisos guardados (§5): los permisos son nuevos.
 
@@ -239,14 +327,27 @@ acreedores y deudores (C-CP2-4).
   Las notas no se reparten en tramos: van en «Saldos a favor» (su antigüedad es R4).
 - **Filtros:** `corte` (por omisión hoy), `proveedorId?`, `autorizacion` (`todos` por omisión, `autorizados`,
   `sin_autorizar`; CP5-c), `incluirSinSaldo` (no).
-- **Columnas:** proveedor, Por vencer, 1–30, 31–60, 61–90, Más de 90, Sin vencimiento, **Total cargos**, Saldos a favor,
-  **Saldo neto**, Comprometido (posfechados), Disponible para pagar, Sin autorizar (parte del total que no está
+- **Columnas:** NIT y nombre, Por vencer, 1–30, 31–60, 61–90, Más de 90, Sin vencimiento, **Total cargos**, Saldos a
+  favor, **Saldo neto**, Comprometido (posfechados), Disponible para pagar, Sin autorizar (parte del total que no está
   autorizada).
+- **Agrupa por NIT** (decidido; Código Civil art. 1469 y NIIF para las Pymes, sección 11: la compensación es entre el
+  mismo acreedor y deudor): la fila es el **NIT** (normalizado, `terceros.terceros.nit`) y el acreedor o deudor se decide
+  con el neto del NIT; si un NIT tiene más de una ficha de proveedor, cada ficha va como **subrenglón** debajo y sale el
+  aviso «El NIT … está en N fichas de proveedor: revise si son el mismo y únalas en Terceros.». Los proveedores sin NIT
+  o con «CF» **no** se agrupan entre sí: cada uno es su propio grupo (clave `coalesce(nit real, proveedor_id)`). Hoy
+  Terceros no deja repetir un NIT en la cuenta (`terceros_nit_por_cuenta_idx`, salvo «CF») y un tercero tiene a lo sumo
+  una ficha de proveedor (`proveedores_tercero_idx`), así que el subrenglón y el aviso son defensivos: la consulta los
+  soporta y una prueba los cubre sembrando las filas, aunque en la práctica casi nunca salgan.
 - **Dos bloques:** «Proveedores con saldo acreedor» (neto `> 0`) y «Proveedores con saldo deudor» (neto `< 0`, en
   positivo, para la partida de reclasificación). Cada bloque con su total; al pie, «Saldo neto de Proveedores» =
-  acreedores − deudores, y el % por tramo.
-- **Avisos y leyendas:** limitación de §2.3; documentos anteriores a la fecha de inicio (§2.4); «Los cheques
-  posfechados no rebajan el saldo antes de su fecha.»
+  acreedores − deudores, y el **% por tramo sobre el total de cargos** (no sobre el neto: los saldos a favor no tienen
+  tramo).
+- **Conciliación al pie** (dictamen 12, se agrega en CP5-5 con R11): «Saldo neto de Proveedores (auxiliar)» − «Pagos a
+  proveedores por aplicar (R11 al mismo corte)» = «Proveedores, neto de pagos por aplicar». La transitoria resta de
+  Proveedores al presentar.
+- **Avisos y leyendas:** limitación de §2.3; documentos emitidos antes de la fecha de inicio (§2.4); registros tardíos
+  (§2.2); posfechados cobrados antes de su fecha sin día conocido (§2.1); «Los cheques posfechados no rebajan el saldo
+  antes de su fecha (NIIF para las Pymes, sección 11).»
 - **Orden:** por nombre; opción «mayor saldo primero».
 - **Pantalla:** sin paginar (una fila por proveedor; aun con 2,000 proveedores es liviano). Cada fila lleva a R2
   filtrado por ese proveedor y corte.
@@ -267,10 +368,11 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
 | Por vencer | Cargos con saldo y `vencimiento` entre `corte` y `corte + días` (`dias`, 7 por omisión) |
 | Autorizados sin contraseña | Corte = hoy, autorizados, con saldo, sin contraseña vigente |
 | Estado de pago | Cargos con emisión en `desde`–`hasta` y `estadoDePago` elegido (pagados, en parte, comprometidos, pendientes) |
+| Retenciones por practicar (saldos iniciales) | Corte = hoy, origen saldo inicial, `retenciones_por_practicar > 0` (dictamen 11, O-3; R12 enlaza aquí) |
 
 - **Filtros:** `corte`, `proveedorId?`, `tipo?`, `origen?` (libro o saldo inicial), `autorizacion`, `vencidos`,
-  `venceHasta?`, `sinContrasena`, `estadoDePago?`, `emitidosDesde/Hasta?`, `pagina`, `limite` (25–100; 2,000 para
-  imprimir, §6).
+  `venceHasta?`, `sinContrasena`, `estadoDePago?`, `emitidosDesde/Hasta?`, `conRetencionesPorPracticar`, `pagina`,
+  `limite` (25–100; 2,000 para imprimir, §6).
 - **Columnas:** proveedor, tipo, serie y número, emisión, **Vence**, días vencido, tramo, total, retenciones, neto,
   **«Pagos y notas anteriores a la fecha de inicio»** (solo saldos iniciales), notas aplicadas, pagado, ajustado, saldo,
   comprometido, estado de pago, autorizado (sí/no), contraseña y pago prometido, retenciones por practicar (saldos
@@ -280,7 +382,8 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
 
 ### R3. Estado de cuenta del proveedor
 
-- **Filtros:** `proveedorId` (obligatorio), `desde`, `hasta` (por omisión, del primer día del mes a hoy).
+- **Filtros:** `proveedorId` (obligatorio), `desde`, `hasta` (por omisión, del primer día del mes a hoy),
+  `presentacion` (`interna` por omisión, `para_el_proveedor`).
 - **Saldo anterior** = saldo neto del proveedor al día `desde − 1` (§2.1).
 - **Líneas** del rango, por fecha y después por hora de registro:
 
@@ -289,13 +392,23 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
 | Factura, nota de débito, recibo… | Fecha de efecto (§2.2) | Neto (con total y retenciones en columnas) | — |
 | Saldo inicial (cargo) | Su emisión | Neto, con la columna **«Pagos y notas anteriores a la fecha de inicio»** (neto − saldo al inicio) ya restada: el cargo efectivo es `saldo_al_inicio` | — |
 | Nota de crédito (del libro o saldo inicial) | Fecha de efecto | — | Base («aplicada a F-123» como referencia, sin línea aparte: aplicar no cambia el saldo del proveedor) |
-| Pago | `pagos.fecha` | — | Monto de las líneas (forma, número de cheque o recibo, cuenta) |
+| Pago | Fecha de efecto del pago (§2.1) | — | Monto de las líneas (forma, número de cheque o recibo, cuenta) |
 | Diferencia menor de un cargo | Su fecha | — | Monto |
 | Ajuste del saldo a favor de una nota | Su fecha | Monto (el saldo a favor se da de baja) | — |
 | Reintegro del proveedor | Su fecha | Monto (devolvió lo que tenía a favor) | — |
 | Anulación posterior (con B) | Fecha de anulación | La reversa de un pago o reintegro anulado **dentro** del rango cuya fecha original quedó antes | — |
 
-- **Columnas:** fecha, documento o pago, concepto, total, retenciones, cargo, abono, **saldo corrido**.
+- **Columnas (interna):** fecha, documento o pago, concepto, total, retenciones, cargo, abono, **saldo corrido**.
+- **Para el proveedor** (decidido; dictamen 2 y cambio 4): es lo que se le manda para cotejar con **su** estado de
+  cuenta, que lleva la factura por el total. Cada cargo con retenciones sale en **dos líneas con la misma fecha**: el
+  cargo por el **total** y, debajo, un **abono** «Retención de IVA/ISR, constancia N» por cada retención
+  (`libro_de_compras.retenciones`, con su número de constancia o «constancia pendiente»). Las notas de crédito, como en la
+  interna: abono por su base (§2.1). El saldo corrido y el final
+  son **los mismos** que en la interna (total − retenciones = neto): el invariante 2 no cambia. Sin las columnas
+  «total» y «retenciones» ni «Comprometido/Disponible» (son internas); un saldo inicial sale por su `saldo_al_inicio`
+  (sus retenciones ya practicadas en el sistema anterior no se detallan; las **por practicar** no se muestran como abono
+  porque aún no se han hecho). Encabezado de impresión con los datos de la empresa y del proveedor, sin «emitido por».
+  Excel con la misma forma.
 - **Totales:** saldo anterior, cargos, abonos, saldo final (= R1 a `hasta`, invariante 2), y debajo, al día `hasta`:
   comprometido y disponible.
 - **Un pago anulado dentro del rango** con su anulación también dentro no aparece (no tuvo efecto), salvo con la
@@ -307,13 +420,18 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
 - **Datos:** notas vigentes al corte con saldo libre al corte (§2.1), del libro o saldo inicial.
 - **Filtros:** `corte`, `proveedorId?`, `incluirSinSaldo` (no; así cubre también «Notas de crédito de proveedores» de la
   hoja de ruta).
-- **Columnas:** proveedor, serie y número, emisión, base, aplicado, ajustado, reintegrado, saldo libre, **años desde la
-  emisión**, tramo (menos de 1 año, 1–2, 2–3, 3–4, 4–5, 5 o más), **«Prescribe el»** = emisión + plazo (§13.7), en
-  contraseña (sí/no).
+- **Columnas:** proveedor, serie y número, emisión, base, aplicado, ajustado, reintegrado, saldo libre, **«Último
+  movimiento»** = la mayor fecha entre la emisión y las de sus aplicaciones, ajustes y reintegros vigentes al corte
+  (un pago parcial o un reconocimiento interrumpe la prescripción, Código Civil arts. 1506–1507), **años desde el último
+  movimiento**, tramo (menos de 1 año, 1–2, 2–3, 3–4, 4–5, 5 o más), **«Posible prescripción desde»** = último
+  movimiento + **5 años** (Código Civil art. 1508; sin plazo mercantil más corto), en contraseña (sí/no).
 - **Totales:** por tramo y total; los de «5 o más» en un renglón aparte «Posiblemente prescritos: consulte a su
   contador.»
-- El plazo y su fecha de inicio los confirma el contador; se codifican en el dominio (`plazoDePrescripcion`) y no en
-  configuración, salvo que el contador diga que varía por empresa.
+- **Leyendas** (dictamen 7, O-7): «La prescripción no opera sola: debe alegarse, y se interrumpe con un reconocimiento
+  del proveedor o un pago parcial; Arrancar solo conoce los movimientos registrados aquí.» y «Un saldo a favor prescrito
+  no es por eso una cuenta incobrable deducible: consulte a su contador.»
+- El plazo (5 años) se codifica en el dominio (`plazoDePrescripcion`), no en configuración. La limitación de §2.3 (las
+  aplicaciones quitadas no dejan fecha) puede adelantar el «último movimiento»: la leyenda de §2.3 la cubre.
 
 ### R5. Contraseñas por pagar y con pago prometido vencido
 
@@ -336,7 +454,9 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
   (control: líneas cuyo documento autorizó quien registró el pago).
 - **Columnas** (una fila por línea; el pago se repite): número de pago, fecha, forma, documento bancario o recibo,
   cuenta, proveedor, contraseña, documento pagado, monto, retención descontada, **cubre** (monto + retención),
-  **registró el pago**, **autorizó el documento**, «misma persona» (marca), estado y, si anulado, fecha de anulación y
+  **registró el documento** (quien lo ingresó en Libro de compras, `documentos.creado_por`, y quien lo completó,
+  `registrado_por`, si es otro), **autorizó el documento**, **registró el pago**, «misma persona» (marca: quien registró
+  o autorizó el documento también registró el pago), estado y, si anulado, fecha de anulación (`fecha_de_anulacion`) y
   motivo.
 - **Totales:** por forma y total (monto y retenciones descontadas); vigentes y anulados separados.
 - Usa `pagos_lista_idx`; paginado en pantalla.
@@ -349,6 +469,8 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
 - **Columnas:** fecha del cheque, días que faltan, cuenta, número de cheque, proveedor, pago, monto, cobrado (si Bancos
   ya lo concilió: se pagó a la vista).
 - **Totales:** por cuenta y total; por semana de vencimiento. Es la cifra de «Comprometido» de R1 (invariante).
+- Un posfechado cobrado antes de su fecha con conciliación autorizada que termina hasta el corte **no** sale (ya rebajó,
+  §2.1); si su conciliación es del mes del corte, sale con la marca «cobrado en mm/aaaa».
 - Leyenda: «El cheque se paga a la vista (Código de Comercio art. 501): el proveedor puede cobrarlo antes de su fecha.»
 
 ### R8. Ajustes del mes (para el contador)
@@ -363,6 +485,10 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
 - **Secciones 3 y 4 (CP5-e, recomendadas):** **aplicaciones manuales** del mes (compensaciones sin dinero: nota, cargo,
   monto, referencia del acuerdo, quién) y **pagos a la cuenta de apertura** del mes (la excepción con permiso propio:
   motivo, carga abierta o cerrada, quién).
+- **Sección 5, documentos anulados o desautorizados en el mes** (decidido; dictamen 9): anulados con `anulado_en` en el
+  mes (documento, proveedor, emisión, total, si estaba autorizado, motivo, quién) y desautorizados en el mes, leídos de
+  `core.auditoria` (acción `devolver`, recurso `cuentas-por-pagar.documentos`, con su motivo y quién; el documento como
+  estaba en `anterior`). Para que el contador vea lo que se revirtió o volvió a revisión.
 - **Totales:** por causa y efecto (vigentes), anulados aparte; por sección.
 - Usa `ajustes_corte_idx` y `aplicaciones_de_notas_corte_idx`.
 
@@ -371,15 +497,25 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
 - **Datos, en vivo:** por proveedor y mes calendario, la **suma del mes** de CP4 §5.7 (cheques, notas de débito, notas
   ligadas y efectivo vigentes; lo aplicado a cargos antes de retenciones; sin la cuenta de apertura) con la **misma
   consulta** que CP4-3 (no otra fórmula). Se listan los meses del proveedor que llegan al umbral
-  (`cuentas-por-pagar.bancarizacion.umbral`, el valor de hoy: limitación escrita) **y** tienen pagos en efectivo.
-- **Por cada pago en efectivo** de esos meses: recibo, fecha, retiro, monto, si se registró con la excepción (permiso y
-  `motivo_sin_bancarizar`), y sus cargos con el **efecto fiscal** (el de CP4-E3, §5.2 de la adenda): con efecto de IVA,
-  la marca **«Crédito fiscal en riesgo por bancarización»** y el monto (`iva − iva_no_acreditable` del documento del
-  libro; en un saldo inicial, «IVA no conocido»); con efecto de ISR, «Costo no deducible». Sin efecto, no sale.
-- **Filtros:** `desde`, `hasta` (meses; por omisión los últimos 12), `proveedorId?`, `soloConEfecto` (sí).
-- **Totales:** por mes y proveedor (suma del mes, efectivo, IVA en riesgo), y total.
+  (`cuentas-por-pagar.bancarizacion.umbral`, el valor de hoy: limitación escrita) **y** tienen pagos en efectivo
+  (criterio **por proveedor y mes**).
+- **Criterio por cargo** (decidido; dictamen 10, O-2; Decreto 20-2006 art. 20 reformado: una operación de Q30,000 o más
+  pagada en partes): además, todo **cargo** con total (antes de retenciones, como la suma de CP4 §5.7; un saldo inicial, por su `saldo_al_inicio`) `>=` umbral que tenga **alguna** línea de pago en
+  efectivo vigente, aunque la suma del mes del proveedor no llegue al umbral (pagado en varios meses). Sale en una
+  sección propia «Documentos sobre el umbral pagados en parte en efectivo», con todos sus pagos (forma, fecha, monto).
+- **Por cada pago en efectivo** de esos meses o cargos: recibo, fecha, retiro, monto, si se registró con la excepción
+  (permiso y `motivo_sin_bancarizar`), y sus cargos con el **efecto fiscal** (el de CP4-E3, §5.2 de la adenda): con
+  efecto de IVA, la marca **«Crédito fiscal en riesgo por bancarización»** y el monto = **IVA completo del cargo**
+  (`iva − iva_no_acreditable` del documento del libro, aunque solo una parte se haya pagado en efectivo; en un saldo
+  inicial, «IVA no conocido»); con efecto de ISR, **«Costo no deducible»** con su monto = el **cargo completo sin IVA**
+  (`total − iva` del documento del libro; en un saldo inicial, su neto con la nota «IVA no conocido»). Sin efecto, no
+  sale.
+- **Filtros:** `desde`, `hasta` (meses; por omisión los últimos 12; **máximo 48 meses**, los que la SAT puede revisar,
+  Código Tributario art. 47), `proveedorId?`, `soloConEfecto` (sí).
+- **Totales:** por mes y proveedor (suma del mes, efectivo, IVA en riesgo, costo no deducible), por sección y total.
 - **Leyendas:** E-6 «Arrancar solo suma los pagos registrados en Cuentas por pagar.»; «Arrancar no rectifica el Libro
-  de compras: si ya tomó el crédito fiscal, consulte a su contador (Código Tributario art. 106).»; umbral de hoy.
+  de compras: si ya tomó el crédito fiscal, consulte a su contador (Código Tributario art. 106).»; «Umbral usado:
+  Q… (el configurado hoy); verifique el vigente para cada mes.»
 - **No toca** el Libro de compras ni sus reportes.
 - Depende de CP4-E3 (efecto fiscal) y del índice `pagos_proveedor_fecha_idx`.
 
@@ -411,10 +547,17 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
   de documentos anulados con `resolucion = 'pendiente'` van en una sección aparte (ya tienen su pantalla «Por
   resolver»).
 - **Columnas:** mes, grupo de entero, **plazo de entero** (`plazoDelGrupo`), días para el plazo o «Vencido», enterado
-  (el mes y grupo tiene entero vigente), proveedor, documento, fecha, impuesto, regla, base, retenido.
+  (el mes y grupo tiene entero vigente), proveedor, documento, fecha, impuesto, regla, base, retenido, **«Plazo de la
+  constancia»** (decidido; dictamen 11): ISR → el **5.º día (hábil, por confirmar con el contador, §14) del mes siguiente** a la fecha de la retención (Decreto
+  10-2012 art. 48, reformado por el Decreto 19-2013: constancia en los primeros 5 días del mes siguiente), con «Vencida»
+  si ya pasó; IVA → «Sin plazo propio confirmado» (se guía por el del entero; AG 425-2006 art. 32 sin confirmar).
+  El plazo se calcula en el dominio de Libro de compras (`plazoDeLaConstancia`), junto a `plazoDelGrupo`.
+- **Enlace** (dictamen 11, O-3): «Retenciones por practicar de saldos iniciales» lleva a la vista de R2 del mismo
+  nombre, **solo** si Cuentas por pagar está activo y el usuario tiene `reportes-de-saldos.ver` (el cliente lo decide
+  con la sesión; Libro de compras no importa nada de Cuentas por pagar).
 - **Filtros:** `hasta` (mes; por omisión el en curso), `grupo?`, `proveedorId?`.
 - **Totales:** por mes y grupo, y total pendiente.
-- **Recomendado (CP5-f = A):** vive en **Libro de compras** (Reportes, «Constancias pendientes»), con
+- **Decidido (CP5-f = A):** vive en **Libro de compras** (Reportes, «Constancias pendientes»), con
   `libro-de-compras.retenciones.ver/.exportar`. Razones: las retenciones y su plazo son de Libro de compras (su dominio
   calcula el plazo con su calendario y sus variables), y una empresa agente de retención **sin** Cuentas por pagar
   también las debe emitir. Cuentas por pagar enlaza a esa pantalla desde su menú de reportes y desde el aviso de entero
@@ -423,7 +566,7 @@ contraseña» en **una** pantalla con **vistas** (CP5-g).
 
 ## 5. Permisos (`modulo.ts`, PLAN §3.5; CP5-d)
 
-Recomendado: **cuatro recursos de reporte por audiencia**, cada uno con `.ver` y `.exportar` (imprimir va con `.ver`:
+Decidido (CP5-d): **cuatro recursos de reporte por audiencia**, cada uno con `.ver` y `.exportar` (imprimir va con `.ver`:
 lo que se ve se puede imprimir; Excel es aparte porque «ver una lista no da derecho a llevársela entera»):
 
 | Permiso | Reportes | Para |
@@ -431,7 +574,7 @@ lo que se ve se puede imprimir; Excel es aparte porque «ver una lista no da der
 | `cuentas-por-pagar.reportes-de-saldos.ver` / `.exportar` | R1, R2, R3, R4, R5 | Tesorería, compras, contador |
 | `cuentas-por-pagar.reportes-de-pagos.ver` / `.exportar` | R6, R7, R10, R11 | Tesorería, contador |
 | `cuentas-por-pagar.reportes-de-control.ver` / `.exportar` | R8, R9 | Contador, auditoría interna |
-| `libro-de-compras.retenciones.ver` / `.exportar` (ya existen) | R12 (si CP5-f = A) | Quien lleva las retenciones |
+| `libro-de-compras.retenciones.ver` / `.exportar` (ya existen) | R12 (CP5-f = A) | Quien lleva las retenciones |
 
 Ninguno es `soloSuperacceso`. Quien tiene acceso total los recibe solos (son asignables). **Sin migración de permisos**:
 son nuevos y no reemplazan a ninguno; el administrador los asigna. Alternativas: uno por reporte, como Bancos (22
@@ -462,9 +605,9 @@ Prefijo `/api/cuentas-por-pagar/reportes`. Dinero como texto con dos decimales; 
 
 | Ruta | Permiso (ver / exportar) | Consulta | Respuesta |
 |---|---|---|---|
-| `GET /saldos-por-proveedor` | `reportes-de-saldos` | `corte?`, `proveedorId?`, `autorizacion?`, `incluirSinSaldo?`, `orden?` | `{ corte, acreedores: FilaDeSaldoDto[], deudores: FilaDeSaldoDto[], totales, avisos, leyendas }` |
+| `GET /saldos-por-proveedor` | `reportes-de-saldos` | `corte?`, `proveedorId?`, `autorizacion?`, `incluirSinSaldo?`, `orden?` | `{ corte, acreedores: FilaDeSaldoDto[], deudores: FilaDeSaldoDto[], totales, conciliacion?, avisos, leyendas }` (cada fila es un NIT con `fichas: FilaDeSaldoDto[]` si tiene más de una; `conciliacion` llega con CP5-5) |
 | `GET /documentos` | `reportes-de-saldos` | §4 R2 (`vista?` solo la usa el cliente para preajustar) | página `{ filas, total, totales }` |
-| `GET /estado-de-cuenta` | `reportes-de-saldos` | `proveedorId`, `desde`, `hasta`, `mostrarAnulados?` | `{ proveedor, saldoAnterior, lineas, totales, alCorte: { comprometido, disponible } }` |
+| `GET /estado-de-cuenta` | `reportes-de-saldos` | `proveedorId`, `desde`, `hasta`, `mostrarAnulados?`, `presentacion?` | `{ proveedor, presentacion, saldoAnterior, lineas, totales, alCorte?: { comprometido, disponible } }` (`alCorte` solo en la interna) |
 | `GET /saldos-a-favor` | `reportes-de-saldos` | `corte?`, `proveedorId?`, `incluirSinSaldo?` | `{ filas, totalesPorTramo, total }` |
 | `GET /contrasenas-por-pagar` | `reportes-de-saldos` | `pagoPrometidoHasta?`, `proveedorId?` | `{ filas, totales }` |
 | `GET /pagos` | `reportes-de-pagos` | §4 R6 | página `{ filas, total, totales }` |
@@ -473,11 +616,11 @@ Prefijo `/api/cuentas-por-pagar/reportes`. Dinero como texto con dos decimales; 
 | `GET /notas-sin-aplicar` | `reportes-de-pagos` | `corte?`, `cuentaBancariaId?` | `{ filas, total }` |
 | `GET /ajustes-del-mes` | `reportes-de-control` | `mes?`, `proveedorId?`, `causa?` | `{ mes, ajustes, anulacionesDeOtrosMeses, aplicacionesManuales, pagosAApertura, totales }` |
 | `GET /bancarizacion` | `reportes-de-control` | `desde?`, `hasta?`, `proveedorId?`, `soloConEfecto?` | `{ meses: [{ proveedor, mes, sumaDelMes, efectivo, pagos: [...] }], totales, umbral, leyendas }` |
-| `GET /api/libro-de-compras/retenciones/pendientes` (CP5-f = A) | `libro-de-compras.retenciones` | `hasta?`, `grupo?`, `proveedorId?` | `{ grupos, retenciones, porResolver }` |
+| `GET /api/libro-de-compras/retenciones/pendientes` | `libro-de-compras.retenciones` | `hasta?`, `grupo?`, `proveedorId?` | `{ grupos, retenciones, porResolver }` |
 
 Errores nuevos (`dominio/errores-de-reportes.ts`, código propio, familia `DatoInvalido`): `CorteAnteriorAlInicio`
 («La fecha de corte no puede ser anterior al dd/mm/aaaa, el día antes de la fecha de inicio.»), `RangoDeReporteInvalido`
-(`desde > hasta`), `RangoDeReporteMuyLargo` (estado de cuenta y pagos: más de 24 meses; bancarización: más de 36),
+(`desde > hasta`), `RangoDeReporteMuyLargo` (estado de cuenta y pagos: más de 24 meses; bancarización: más de 48),
 `ProveedorDelReporteNoExiste` (`RecursoNoEncontrado`).
 
 ## 8. Cliente
@@ -519,20 +662,28 @@ Errores nuevos (`dominio/errores-de-reportes.ts`, código propio, familia `DatoI
 
 ## 10. Convivencia y riesgos
 
-1. **CP4 en curso.** R1–R5 y R8 (secciones 1 y 2) solo necesitan lo que ya está en `main` (CP4-2, V1, E1). R6, R7 y R8
-   (sección 4) piden CP4-3 a CP4-6; R10 pide CP4-E2/E4; R11, CP4-5; R9, CP4-E3. Los pasos de §11 lo respetan.
-2. **Columnas de anulación (B):** deben llenarlas CP4-4, CP4-7 y CP4-E2. Si se programan antes que CP5-1, la migración
-   rellena; si después, ya las encuentran.
-3. **Migraciones:** `0011` de Cuentas por pagar no choca con CP4 (sus pasos restantes no traen migración); se avisa en
-   `DONDE-QUEDAMOS.md` para que nadie más genere una a la vez. Libro de compras `0036` no choca con U8-l (`0035` en
+1. **CP4 en curso** (CP4-3 en `main`; CP4-4 es el siguiente). R1–R5 y R8 (secciones 1, 2 y 5) solo necesitan lo que ya
+   está en `main`. R6, R7 y R8 (secciones 3 y 4) piden CP4-4 a CP4-6; R10 pide CP4-E2/E4; R11, CP4-5; R9, CP4-E3. Los
+   pasos de §11 lo respetan.
+2. **Columnas de anulación (B):** las crea CP5-1 **antes de CP4-4** y las llenan CP4-4, CP4-5, CP4-7, CP4-E2 y CP4-E3
+   (tabla de §3.1, copiada en los diseños de CP4). Si por algún motivo un paso de anulación se programara antes de CP5-1,
+   el relleno de la `0011` lo cubre.
+3. **Migraciones:** la `0011` de Cuentas por pagar es de CP5-1 y la `0012` de CP5-2 (CP4 no trae más); nadie genera otra
+   de Cuentas por pagar a la vez (se avisa en `DONDE-QUEDAMOS.md`). Libro de compras `0036` no choca con U8-l (`0035` en
    `main`).
 4. **Saldos distintos a la lista** con `corte = hoy` (posfechados): explicado con «Comprometido» y «Disponible para
    pagar» (§2.1) y probado (invariante 3).
-5. **Umbral de bancarización de hoy** aplicado a meses pasados (R9): leyenda; si el contador pide el histórico, la
-   variable tendría vigencias (fuera de CP5).
-6. **Proveedores con el mismo NIT** (dos fichas en Terceros): R1 netea por ficha de proveedor, no por NIT (§13.8).
-7. **Contabilidad** (futura) usará R1 al cierre para la reclasificación y R11 para cuadrar la transitoria; cuando
-   exista, sus partidas deben usar la fecha de efecto que se elija en CP5-b.
+5. **Umbral de bancarización de hoy** aplicado a meses pasados (R9): leyenda «verifique el vigente»; si el contador pide
+   el histórico, la variable tendría vigencias (fuera de CP5).
+6. **NIT:** R1 netea por NIT (decidido). Terceros ya impide dos fichas con el mismo NIT en una cuenta, así que hoy el NIT
+   y la ficha coinciden salvo «CF» y los terceros sin NIT, que no se agrupan.
+7. **Contabilidad** (futura; anotado en `cuentas-por-pagar.md`, `HOJA-DE-RUTA.md` y la bitácora de `PLAN.md`):
+   provisiona cada documento **al registrarlo** (ingreso en Libro de compras, ya en la bandeja de Cuentas por pagar), con
+   la **fecha de efecto** de §2.2 y «Retenciones por pagar» en la misma partida; autorizar solo aprueba el pago (U12 del
+   2026-10-20; corrige «autorizar = provisionar», hallazgo O-1). Revierte toda anulación de un documento registrado
+   (no solo de los autorizados: `documentos.estaba_autorizado` deja de decidir la reversa) y también lo que se
+   **elimina** (un documento no autorizado ya tenía su provisión). Fecha las reversas de pagos, reintegros y retiros con
+   su `fecha_de_anulacion`. Usa R1 al cierre para la reclasificación y R11 para cuadrar la transitoria.
 8. **Borrar la empresa:** sin tablas nuevas, nada cambia.
 
 ## 11. Pasos (un commit cada uno; servidor y cliente por separado)
@@ -542,64 +693,58 @@ revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`.
 
 | Paso | Qué | Va después de |
 |---|---|---|
-| **CP5-1** (servidor, datos y dominio) | Migración `0011_cp5_reportes` (§3.1 con su relleno, §3.2), checks y mensajes; `dominio/saldo-al-corte.ts` (vigente al corte, saldo al corte, tramo, prescripción) con pruebas puras; si CP4-4/CP4-7/CP4-E2 ya están, que llenen `fecha_de_anulacion`. **Pruebas de tablas:** cada check, RLS, `politicas-de-los-modulos`, relleno | CP4-3 en `main` (para no generar migraciones a la vez) |
-| **CP5-2** (servidor, saldos) | `ConsultaDeSaldosAlCorte`, R1 y R2 con sus Excel, permisos `reportes-de-saldos.*`, errores, rutas. **Pruebas:** invariantes 1, 3, 4 y 5 de §2.5, tramos, acreedor y deudor del mismo escenario, posfechado, autorización, corte anterior al inicio (rechazo), sin permiso (403), exportar sin `.exportar` (403); prueba de rendimiento de §9 | CP5-1 |
-| **CP5-3** (servidor, proveedor y contraseñas) | R3, R4 y R5 con sus Excel. **Pruebas:** invariante 2, saldo inicial con «anteriores a la fecha de inicio», anulado dentro y fuera del rango, prescripción, contraseña vencida y por vencer | CP5-2 |
-| **CP5-4** (servidor, pagos) | R6, R7 y R8 (las cuatro secciones), permisos `reportes-de-pagos.*` y `reportes-de-control.*`. **Pruebas:** quién autorizó y quién pagó («misma persona»), posfechado al corte y después de cobrado, ajustes anulados de otro mes, aplicaciones manuales y apertura | CP5-3 y CP4-6 |
-| **CP5-5** (servidor, efectivo y transitoria) | R9 (con el efecto fiscal de CP4-E3), R10 y R11. **Pruebas:** proveedor-mes con cheque más efectivo sobre el umbral (marca y monto de IVA), pequeño contribuyente (no sale), excepción con permiso, retiro liquidado después del corte, nota marcada con aplicación parcial | CP5-4, CP4-E4 y CP4-5 |
-| **CP5-6** (servidor, Libro de compras; si CP5-f = A) | Migración `0036`, `ConsultarConstanciasPendientes` con `plazoDelGrupo`, Excel, ruta. **Pruebas:** varios meses y grupos, enterado, plazo vencido, anuladas aparte | CP5-1 (independiente de los demás) |
-| **CP5-7** (cliente, saldos) | Componentes comunes, R1 y R2 (vistas), enlaces, impresión con tope, lógica pura con pruebas | CP5-2 |
-| **CP5-8** (cliente, proveedor y contraseñas) | R3 (y «Estado de cuenta» en la ficha del proveedor), R4, R5 | CP5-3 y CP5-7 |
-| **CP5-9** (cliente, pagos y control) | R6, R7, R8, R9, R10, R11 | CP5-4, CP5-5 y CP5-7 |
-| **CP5-10** (cliente, Libro de compras) | R12 y su enlace desde Cuentas por pagar | CP5-6 |
-| **CP5-11** (QA) | Empresa con fecha de inicio y saldos iniciales, facturas de varios proveedores con notas y retenciones, pagos (uno posfechado, uno anulado al mes siguiente), ajustes, efectivo sobre el umbral, retiro abierto, nota marcada; R1 al cierre del mes antes y después de anular (no cambia), acreedores y deudores, R3 cuadra con R1, impresión y Excel de cada reporte, permisos por separado, celular | CP5-8 a CP5-10 y CP4-12 |
+| **CP5-1** (servidor, datos) | Migración **`0011_cp5_fecha_de_anulacion`** (§3.1 y §3.3: tres columnas, relleno, checks y `pagos_anulados_corte_idx`), `pagos.tablas.ts`, `reintegros` y `retiros-de-efectivo.tablas.ts`, mensajes de los checks; `fechaDeAnulacion` en las entidades y mapeadores (nula; nadie la llena todavía). **Pruebas de tablas:** cada check (anulado sin fecha, vigente con fecha, fecha anterior a la del pago: fallan), RLS, `politicas-de-los-modulos`, relleno repetible | CP4-3 en `main` (ya está). **Antes de CP4-4**, que la llena |
+| CP4-4, CP4-5, CP4-7, CP4-E2, CP4-E3 | Llenan `fecha_de_anulacion` (tabla de §3.1) y lo prueban | CP5-1 |
+| **CP5-2** (servidor, saldos) | `dominio/saldo-al-corte.ts` (fecha de efecto del documento y del pago, vigente al corte, saldo al corte, tramo, prescripción) con pruebas puras; `ConsultaDeSaldosAlCorte`; migración **`0012_cp5_indices_de_corte`** (§3.2, los que confirme el `EXPLAIN`); R1 (por NIT, avisos) y R2 (vistas, también «retenciones por practicar») con sus Excel; permisos `reportes-de-saldos.*`, errores, rutas. **Pruebas:** invariantes 1, 3, 4 y 5 de §2.5, tramos y % sobre cargos, acreedor y deudor, NIT con dos fichas (sembradas) y «CF», posfechado (comprometido, cobrado antes de su fecha con conciliación autorizada y en proceso), documento del libro emitido antes de la fecha de inicio, registro tardío (aviso), autorización, corte anterior al inicio (rechazo), sin permiso (403), exportar sin `.exportar` (403); prueba de rendimiento de §9 | CP5-1; en paralelo con los pasos de CP4 que no traen migración (las pruebas siembran pagos anulados) |
+| **CP5-3** (servidor, proveedor y contraseñas) | R3 (interna y para el proveedor), R4 y R5 con sus Excel. **Pruebas:** invariante 2 en las dos presentaciones, retención como abono con y sin constancia, saldo inicial con «anteriores a la fecha de inicio», anulado dentro y fuera del rango, último movimiento y posible prescripción, contraseña vencida y por vencer | CP5-2 |
+| **CP5-4** (servidor, pagos) | R6 (con «registró el documento»), R7 y R8 (las cinco secciones), permisos `reportes-de-pagos.*` y `reportes-de-control.*`. **Pruebas:** quién registró, autorizó y pagó («misma persona»), posfechado al corte y cobrado antes, ajustes anulados de otro mes, aplicaciones manuales y apertura, documento anulado y desautorizado en el mes | CP5-3 y CP4-6 |
+| **CP5-5** (servidor, efectivo y transitoria) | R9 (efecto fiscal de CP4-E3, criterio por cargo, IVA completo, costo no deducible, 48 meses), R10, R11 y la conciliación al pie de R1. **Pruebas:** proveedor-mes con cheque más efectivo sobre el umbral (marca y montos), cargo de Q30,000 o más pagado en dos meses con una parte en efectivo (sale aunque ningún mes llegue), pequeño contribuyente (no sale), excepción con permiso, rango de 49 meses (rechazo), retiro anulado o liquidado después del corte, nota marcada con aplicación parcial, R1 − R11 | CP5-4, CP4-E4 y CP4-5 |
+| **CP5-6** (servidor, Libro de compras) | Migración **`0036_cp5_constancias_pendientes`**, `ConsultarConstanciasPendientes` con `plazoDelGrupo` y `plazoDeLaConstancia`, Excel, ruta. **Pruebas:** varios meses y grupos, enterado, plazo de entero y de constancia vencidos, anuladas aparte | CP5-1 (independiente de los demás; nunca a la vez que otra migración de Libro de compras) |
+| **CP5-7** (cliente, saldos) | Componentes comunes, R1 (NIT con subrenglones) y R2 (vistas), enlaces, impresión con tope, lógica pura con pruebas | CP5-2 |
+| **CP5-8** (cliente, proveedor y contraseñas) | R3 con las dos presentaciones (y «Estado de cuenta» en la ficha del proveedor), R4, R5 | CP5-3 y CP5-7 |
+| **CP5-9** (cliente, pagos y control) | R6, R7, R8, R9, R10, R11 y la conciliación al pie de R1 | CP5-4, CP5-5 y CP5-7 |
+| **CP5-10** (cliente, Libro de compras) | R12, su enlace desde Cuentas por pagar y el de R12 a la vista de retenciones por practicar | CP5-6 y CP5-7 |
+| **CP5-11** (QA) | Empresa con fecha de inicio y saldos iniciales, factura del libro emitida antes de la fecha de inicio, facturas de varios proveedores con notas y retenciones, pagos (uno posfechado cobrado antes de su fecha, uno anulado al mes siguiente), ajustes, efectivo sobre el umbral (por mes y por cargo), retiro abierto, nota marcada; R1 al cierre del mes antes y después de anular (no cambia), acreedores y deudores, R1 − R11, R3 interno y para el proveedor cuadran con R1, impresión y Excel de cada reporte, permisos por separado, celular | CP5-8 a CP5-10 y CP4-12 |
 
-## 12. Preguntas para el usuario
+Orden con CP4: CP4-3 (hecho) → **CP5-1** → CP4-4 → CP4-5 → CP4-E2 → CP4-E3 → CP4-6 → CP4-7 → CP4-8 → CP4-E4 → … (el
+de la adenda, sin cambios). CP5-2, CP5-3 y CP5-6 pueden avanzar en paralelo con CP4 desde que CP5-1 esté en `main`;
+CP5-4 y CP5-5 esperan sus pasos de CP4.
 
-- **CP5-a. Lo anulado después del corte.** A: los reportes usan el estado de hoy (lo anulado no cuenta nunca; un mes
-  cerrado cambia si después se anula algo suyo). B: cada anulación guarda su fecha contable y el corte la respeta (tres
-  columnas nuevas, §3.1). **Recomendado: B**, para que el saldo con que se cierra un mes no cambie y cuadre con lo que
-  hará Contabilidad (la reversa en el mes de la anulación).
-- **CP5-b. Desde qué fecha cuenta un documento en un corte.** Emisión, recepción o período del libro. **Recomendado:
-  emisión** (la del estado de cuenta del proveedor y la de la antigüedad; §2.2). Lo valida el contador.
-- **CP5-c. Documentos sin autorizar en los saldos.** A: entran todos los vigentes, con columna y filtro de autorización.
-  B: solo los autorizados (lo provisionado). **Recomendado: A** con el filtro, porque la deuda existe aunque falte la
-  revisión interna; el contador dice cuál usa para cuadrar con el mayor.
-- **CP5-d. Permisos.** Cuatro recursos por audiencia (saldos, pagos, control y el de retenciones de Libro de compras),
-  uno por reporte como Bancos, o uno solo. **Recomendado: por audiencia** (§5), sin migración de permisos.
-- **CP5-e. Reporte de ajustes.** ¿Solo ajustes (lo pedido) o también aplicaciones manuales y pagos a la cuenta de
-  apertura del mes? **Recomendado: también**: son las otras dos formas de bajar un saldo sin dinero.
-- **CP5-f. Constancias pendientes.** A: en Libro de compras, con enlace desde Cuentas por pagar. B: en Cuentas por
-  pagar. **Recomendado: A** (§4 R12): las retenciones son de Libro de compras y sirven sin Cuentas por pagar.
-- **CP5-g. Documentos por pagar.** Una pantalla con vistas (pendientes, vencidos, por vencer, sin contraseña, estado de
-  pago) o una opción de menú por cada una. **Recomendado: una pantalla con vistas** (menos menú, mismos filtros).
-- **CP5-h. Imprimir reportes grandes.** **Recomendado:** hasta 2,000 filas; con más, se acota el filtro o se usa Excel.
-- **CP5-i. Cheques posfechados.** Reporte propio (R7) o un filtro de Pagos realizados. **Recomendado: propio**, porque
-  va a una fecha de corte y su total es el «Comprometido» de los saldos.
+## 12. Preguntas para el usuario (respondidas el 2026-11-15)
 
-## 13. Lo que debe validar `contador-guatemala`
+El usuario aceptó todas las recomendaciones, con las correcciones del contador. Quedan como registro:
 
-1. **Fecha de efecto** de cargos y notas en un corte (CP5-b) y que Contabilidad feche la provisión igual.
-2. **Saldo al proveedor neto de retenciones** desde el registro (la retención es pasivo con la SAT desde su fecha, aunque
-   no se haya pagado al proveedor) y la presentación en el estado de cuenta (total, retenciones y neto en la misma
-   línea, §4 R3).
-3. **Anulaciones al corte** (CP5-a): la fecha contable de la anulación de un pago (inverso en Bancos; sin inverso, «nunca
-   existió») y la limitación de las aplicaciones quitadas o reaplicadas (§2.3).
-4. **Sin autorizar** en el saldo (CP5-c) y con qué cifra cuadra el auxiliar con el mayor.
-5. **Posfechados:** que el saldo al corte los mantenga (no rebajan) y su presentación como «Comprometido» y en R7.
-6. **Antigüedad** por «Vence» con los tramos acordados y la columna «Sin vencimiento».
-7. **Prescripción del saldo a favor:** plazo (Código Civil art. 1508, 5 años, o uno mercantil más corto), desde qué
-   fecha corre (emisión de la nota, último reconocimiento) y los tramos de R4; qué se hace con lo prescrito.
-8. **Acreedores y deudores:** neto por ficha de proveedor o por NIT cuando un NIT tiene dos fichas; presentación del
-   bloque deudor para la reclasificación.
-9. **Reporte de ajustes:** que los campos y las secciones (CP5-e) basten para su revisión mensual; efecto por causa.
-10. **Bancarización (R9):** suma por mes calendario, umbral de hoy, marca solo en los cargos pagados en efectivo (y no en
-    toda la operación, duda del dictamen de efectivo), monto «IVA en riesgo» = IVA − no acreditable, «costo no
-    deducible» en ISR sobre utilidades, y el saldo inicial con IVA no conocido.
-11. **Constancias pendientes (R12):** definición (retención practicada, sin número de constancia, documento vigente),
-    plazo de entero por grupo y si la constancia tiene un plazo propio distinto del entero.
-12. **Retiros por liquidar (R10)** como saldo de Caja – Efectivo para pagos a proveedores al corte, y **notas sin
-    aplicar (R11)** como saldo de la transitoria «Pagos a proveedores por aplicar».
+- **CP5-a. Lo anulado después del corte.** **B**: cada anulación guarda su fecha contable y el corte la respeta (tres
+  columnas, §3.1).
+- **CP5-b. Desde qué fecha cuenta un documento.** **Emisión**, con la fecha de inicio para los del libro emitidos antes
+  (§2.2).
+- **CP5-c. Sin autorizar en los saldos.** **A**: entran todos, con columna y filtro.
+- **CP5-d. Permisos.** **Por audiencia** (§5), sin migración de permisos.
+- **CP5-e. Reporte de ajustes.** **También** aplicaciones manuales y pagos a la cuenta de apertura, y la sección 5 del
+  contador.
+- **CP5-f. Constancias pendientes.** **A**: en Libro de compras, con enlaces.
+- **CP5-g. Documentos por pagar.** **Una pantalla con vistas**.
+- **CP5-h. Imprimir reportes grandes.** Hasta 2,000 filas; con más, acotar o Excel.
+- **CP5-i. Cheques posfechados.** **Reporte propio** (R7), con la regla del cobro anticipado.
+- **Además:** R1 agrupa por NIT; R3 para el proveedor con la retención como abono; Contabilidad provisiona al registrar.
+
+## 13. Validado por `contador-guatemala` (2026-11-15)
+
+Dictamen `dictamen-cp5-2026-11-15.md`, «correcto con ajustes»; todos sus cambios están aplicados:
+
+| Cambio del dictamen | Dónde |
+|---|---|
+| 1. Fecha de efecto con la fecha de inicio; aviso de registros tardíos | §2.2, §2.4, R1 |
+| 2. Posfechado cobrado antes de su fecha | §2.1, R7 |
+| 3. R1 por NIT, % sobre cargos, conciliación con R11 | R1, CP5-5 |
+| 4. R3 para el proveedor con la retención como abono | R3 |
+| 5. R4 «Posible prescripción desde», último movimiento, leyendas | R4 |
+| 6. R8 sección 5 | R8 |
+| 7. R9: criterio por cargo, IVA completo, costo no deducible, 48 meses | R9, §7 |
+| 8. R12: plazo de la constancia ISR; vista de retenciones por practicar | R12, R2 |
+| 9. R6: «Registró el documento» | R6 |
+| 10. PLAN: pendiente de Contabilidad | §10.7, `cuentas-por-pagar.md`, `HOJA-DE-RUTA.md`, bitácora |
+| 11. Leyendas NIIF por sección; umbral «verifique el vigente» | §2.1, R1, R9 |
 
 ## 14. Pendiente nuevo
 
@@ -607,3 +752,15 @@ revisar` y sus pruebas y actualiza la bitácora de `PLAN.md`.
 - `EncabezadoDeImpresion` común a todos los módulos (Bancos, Libro de compras y Cuentas por pagar): paso aparte del core.
 - Histórico del umbral de bancarización (variable con vigencias), si el contador lo pide (R9).
 - Aviso de pago por correo (hoja de ruta) podría adjuntar el estado de cuenta (R3): fuera de CP5.
+- Aplicaciones de notas marcadas **no vigentes** en vez de borradas (dictamen 3), para que un corte pasado también
+  reconstruya la antigüedad y los saldos a favor por documento: cambio de CP2/CP3, fuera de CP5.
+- **Para el contador (no frena CP5-1 a CP5-4; sí CP5-5 y CP5-6), interpretaciones del arquitecto:**
+  (a) el plazo de la constancia de ISR, ¿5 días **hábiles** (Código Tributario art. 6) o calendario? Se propone hábiles
+  con el calendario de Libro de compras; (b) el «costo no deducible» de R9 es el **cargo completo sin IVA**, como el IVA
+  completo, y la marca sigue solo en los cargos con alguna parte pagada en efectivo (no en los demás cargos del mismo
+  proveedor y mes); (c) el criterio por cargo usa el total antes de retenciones, como la suma del mes.
+- **Para el usuario (no frena):** «al registrarla» se interpreta como el **ingreso en Libro de compras** (el documento
+  ya está en la bandeja), como U12; si quiso decir «al completarla en la bandeja» (estado `registrado`), lo de la
+  bandeja quedaría fuera del mayor y R1 tendría que separarlo.
+- **Cheque posfechado cobrado antes:** solo cuenta con la conciliación **autorizada** (la elaborada o en proceso aún
+  puede cambiar). Si Bancos llegara a guardar el día del cobro, la regla de §2.1 se cambia por esa fecha.
