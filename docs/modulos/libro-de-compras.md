@@ -21,7 +21,7 @@ bandeja de pendientes y completa lo suyo:
 
 | Destino | Qué hace con la factura | Contrapartida contable (con Contabilidad) |
 |---|---|---|
-| **Cuentas por pagar** | Pone el vencimiento, la provisiona y la paga por contraseña | Proveedores |
+| **Cuentas por pagar** | Pone el vencimiento, la aprueba para pago y la paga por contraseña (con *Contabilidad*, la provisión nace al registrarla aquí; corrección del 2026-11-15) | Proveedores |
 | **Caja chica** (futuro) | La asigna a una liquidación del fondo; no se provisiona | Fondo de caja chica |
 | **Cuentas por liquidar** (futuro) | La descuenta del anticipo del empleado | Cuenta por liquidar del empleado |
 

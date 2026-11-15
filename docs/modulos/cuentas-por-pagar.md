@@ -5,12 +5,21 @@ Estado: **en planificación** (2026-09-28; corregido el 2026-09-29 con
 `plan-hallazgos-contables.md`, que mandan sobre este documento). No se programa hasta
 que el usuario apruebe este documento.
 
+> **Corrección (2026-11-15, CP5, hallazgo O-1 del contador; confirma U12 del 2026-10-20):** autorizar **no**
+> provisiona. Cuando exista *Contabilidad*, el documento se contabiliza (provisión del gasto o activo, IVA, Proveedores y
+> «Retenciones por pagar») **al registrarlo** —al ingresarlo en *Libro de compras*, cuando llega a la bandeja—, con su
+> **fecha de efecto** (la emisión; la fecha de inicio si es del libro y se emitió antes, `diseno-cp5-reportes.md` §2.2).
+> Autorizar es solo el control «aprobado para pago». Donde este documento dice «autorizada (provisionada)», «autorizar
+> (provisionar)» o que autorizar genera la partida, léase así. Consecuencias para Contabilidad: anular **cualquier**
+> documento registrado genera su reversa (no solo los autorizados) y eliminar uno no autorizado también la necesita;
+> las anulaciones de pagos, reintegros y retiros se fechan con su `fecha_de_anulacion` (CP5-a = B).
+
 > **Nota (2026-09-29, PLAN §3.5):** donde este documento dice `gestionar` léase `crear`, `editar` y `eliminar` (el que corresponda a cada acción; inactivar y reactivar van con `editar`), y `reabrir` ya no es solo de acceso total: `soloAccesoTotal` se eliminó.
 
 ## Propósito
 
 Controlar lo que cada empresa **debe a sus proveedores**: qué facturas tiene,
-cuáles están autorizadas (provisionadas), cuándo vencen, qué se agrupó en cada
+cuáles están autorizadas (aprobadas para pago), cuándo vencen, qué se agrupó en cada
 contraseña de pago y cómo se pagó.
 
 **Depende de:** *Libro de compras* (el documento fiscal, sus líneas, el IDP y las
@@ -27,7 +36,7 @@ Ingreso de facturas (Libro de compras, destino = Cuentas por pagar)
         │
         ▼
 Bandeja ──completar──▶ registrada ──autorizar──▶ autorizada ──pagos──▶ pagada
-(pendiente)            (vencimiento)            (provisionada)
+(pendiente)            (vencimiento)            (aprobada para pago)
 Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte ──▶ pagada
 (documentos registrados o autorizados; se paga solo lo autorizado)
 ```
@@ -37,10 +46,10 @@ Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte 
    a la **bandeja** de este módulo.
 2. **Completar en la bandeja**: el **vencimiento** se propone con la fecha + los
    días de crédito del proveedor y se puede cambiar. Queda **registrada**.
-3. **Autorizar (provisionar)**: con permiso propio. **Quien registró no autoriza**,
-   salvo el **Propietario** y el **superacceso**. Si *Contabilidad* está activa, se
-   publica un evento con las líneas para que genere la partida de provisión; si no,
-   solo cambia el estado. Las retenciones **ya vienen fijadas** de *Libro de compras*
+3. **Autorizar (aprobar para pago)**: con permiso propio. **Quien registró no autoriza**,
+   salvo el **Propietario** y el **superacceso**. **No provisiona** (corrección del
+   2026-11-15): con *Contabilidad*, la partida de provisión nace **al registrar** el
+   documento (paso 1), con su fecha de efecto; autorizar solo cambia el estado. Las retenciones **ya vienen fijadas** de *Libro de compras*
    (al registrar, todas con fecha, incluida la del 5 % a pequeño contribuyente, que lleva
    la de recepción: decisión del 2026-10-04); autorizar no las recalcula ni las fecha.
 4. **Notas de crédito del proveedor**: se ingresan igual (en su propia ventana de
@@ -70,7 +79,7 @@ Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte 
 | Ingreso | Por la pantalla única «Ingreso de facturas» de *Libro de compras*; este módulo recibe los documentos en su bandeja. |
 | Pagos | Siempre por contraseña; una contraseña se paga con 1 o N pagos (cheque o nota de débito). |
 | Notas de crédito | Ventana aparte; con retenciones si aplica; rebajan la factura a la que apuntan. |
-| Aprobación | Toda factura se autoriza (provisiona). Con *Contabilidad* genera partida; sin ella, solo se autoriza. |
+| Aprobación | Toda factura se autoriza (aprobada para pago) antes de pagarla. **No genera partida**: con *Contabilidad*, la provisión se hace **al registrar** el documento, con su fecha de efecto (corrección del 2026-11-15, O-1). |
 | Separación de funciones | Permisos distintos para registrar, autorizar y pagar. Quien registra no autoriza, salvo Propietario y superacceso. |
 | FEL exenta del banco | Va a Cuentas por pagar: la nota de débito de Bancos se **marca para uso de Cuentas por pagar** y se liga en la contraseña como forma de pago, sin emitir otro pago (el contador valida el concepto para no duplicar el gasto). |
 | Nota marcada | Al marcarla lleva el concepto «Pago a proveedores» contra la transitoria «Pagos a proveedores por aplicar»; varias notas por contraseña y aplicaciones parciales; al cierre de cada mes se listan las marcadas sin ligar para desmarcarlas (con auditoría); una nota ligada no se desmarca ni se anula sin anular antes la contraseña. |
@@ -92,8 +101,8 @@ Contraseña ──crear──▶ pendiente ──pagos──▶ pagada en parte 
 | Contenido de la contraseña | Documentos **registrados o autorizados**, del mismo proveedor, que no estén en otra contraseña vigente. |
 | Qué cubre cada pago | El **usuario elige** qué facturas **autorizadas** de la contraseña paga (una o varias) y cuánto a cada una. |
 | Retenciones en el pago | Las de cada factura se descuentan en su **primer pago** (no en cada pago), así que el proveedor recibe el neto. |
-| Eliminar una factura | Solo si **no está autorizada (provisionada)** y **no está en una contraseña**. Se borra de verdad (queda en la auditoría) y libera el número del documento. |
-| Anular una factura | Si ya está autorizada: genera su **reversión** (con *Contabilidad*, la partida inversa). No se puede si está en una contraseña vigente. Libera el número del documento. |
+| Eliminar una factura | Solo si **no está autorizada** y **no está en una contraseña** (con *Contabilidad*, su provisión del registro se revierte). Se borra de verdad (queda en la auditoría) y libera el número del documento. |
+| Anular una factura | Genera su **reversión** (con *Contabilidad*, la partida inversa de la provisión hecha al registrarla, esté o no autorizada). No se puede si está en una contraseña vigente. Libera el número del documento. |
 | Anular una contraseña | **No se eliminan**, para no perder el correlativo. Anularla **no genera reversión**: queda marcada como anulada, con su motivo y en la auditoría, y **suelta sus facturas**, que vuelven a estar disponibles para otra contraseña. Solo si **no tiene pagos emitidos** (vigentes). |
 | Anular un pago desde Cuentas por pagar | Anula también el cheque o la nota de débito en *Bancos*, en la misma transacción. |
 | Anular el cheque o la nota desde Bancos | **Se permite.** En la misma transacción, *Bancos* avisa al módulo que lo emitió y ese módulo **revierte lo suyo** (aquí: anula el pago y devuelve el saldo a las facturas). Antes, ese módulo **revisa sus reglas**: si algo lo bloquea (p. ej. un período cerrado), rechaza y **no se anula nada**. Si ese módulo no está activo, se anula solo en *Bancos* y queda en la auditoría. |
@@ -191,6 +200,10 @@ ventanas se crean con el **generador** (`npm run generar -- modulo`, `definicion
    para que lo revise el contador; saldo neto por proveedor a una fecha de corte,
    separado en acreedores y deudores (reclasificación de cierre); antigüedad de los saldos
    a favor; contraseñas con pago prometido vencido; facturas autorizadas sin contraseña.
+   **Diseño aprobado, listo para programar (2026-11-15):** `diseno-cp5-reportes.md`, con el dictamen
+   `dictamen-cp5-2026-11-15.md`. Doce reportes a una fecha de corte (anulaciones con fecha contable: columna
+   `fecha_de_anulacion`, migración `0011`, paso CP5-1 **antes de CP4-4**); R1 agrupa por NIT; R3 tiene versión para el
+   proveedor; constancias pendientes en Libro de compras. Corrige «autorizar = provisionar» (nota del principio).
 
 ## Fuera de esta versión
 

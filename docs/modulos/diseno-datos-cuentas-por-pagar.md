@@ -96,7 +96,7 @@ Un documento de Libro de compras con destino Cuentas por pagar. Nace en la orden
 | `anulado_en` | timestamptz | sí | |
 | `anulado_por` | uuid | sí | |
 | `motivo_de_anulacion` | text | sí | 1–300 (el motivo que llega en el aviso o el que se escribe aquí) |
-| `estaba_autorizado` | boolean | sí | al anular: si estaba provisionado (Contabilidad revierte solo esos); check `documentos_anulacion_completa` abajo |
+| `estaba_autorizado` | boolean | sí | al anular: si estaba autorizado (aprobado para pago). **Corrección del 2026-11-15 (CP5, O-1):** ya no decide la reversa: Contabilidad provisiona al registrar y revierte toda anulación; check `documentos_anulacion_completa` abajo |
 | `...marcasDeTiempo`, `...autoria` | | | `creado_por` = quien registró en Libro de compras (es su transacción) |
 
 Checks de estado (nombres `documentos_<regla>`):
@@ -254,7 +254,7 @@ debe eso a la empresa, porque la retención ya se le acreditó; pregunta C1) o l
 compras permite notas de crédito hasta la factura **más** sus NDEB).
 
 La nota se aplica **aunque esté pendiente de autorizar**: rebaja lo que se debe desde que se recibe, como rebaja el
-crédito fiscal desde que se registra. Autorizarla solo provisiona (pregunta U7).
+crédito fiscal desde que se registra. Autorizarla solo la aprueba para pago (pregunta U7; la provisión es al registrar, U12 y corrección del 2026-11-15).
 
 ### 4.4 Respuesta a `libro-de-compras.documento_por_anular`
 
@@ -296,7 +296,7 @@ tiene provisión que revertir.
 
 | Momento | Orden | Por qué |
 |---|---|---|
-| **Autorizar** | `marcar_procesado { procesado: true }` | Desde aquí el documento está provisionado: Libro de compras ya no lo deja eliminar, solo anular (coincide con «eliminar solo si no está autorizada» del plan) |
+| **Autorizar** | `marcar_procesado { procesado: true }` | Desde aquí el documento está aprobado para pago (no «provisionado»: corrección del 2026-11-15, la provisión es al registrar): Libro de compras ya no lo deja eliminar, solo anular (coincide con «eliminar solo si no está autorizada» del plan) |
 | Desautorizar (si se aprueba U5) | `marcar_procesado { procesado: false }` | Vuelve a ser eliminable |
 | Completar, cambiar vencimiento, entrar en contraseña (CP3) | Ninguna | La contraseña protege por su cuenta: el aviso de baja la rechaza mientras esté vigente |
 

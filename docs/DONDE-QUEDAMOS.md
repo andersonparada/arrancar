@@ -34,7 +34,7 @@ cliente 1034, generador 46.
 | CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-8 (QA incluida) y el arreglo E3 | — |
 | U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-6 | U8l-7 (en curso), U8l-8 (QA) |
 | CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1, CP4-EB | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
-| CP5 reportes | sin diseñar | — | diseño (ya hay pedidos anotados: constancias pendientes de todos los meses, ajustes del mes, pago prometido vencido, saldo neto por proveedor, crédito fiscal en riesgo por bancarización) |
+| CP5 reportes | `diseno-cp5-reportes.md` (aprobado, listo para programar, 2026-11-15) | — | **CP5-1** (migración `0011_cp5_fecha_de_anulacion`, **antes de CP4-4**), CP5-2 a CP5-11 (§11 del diseño) |
 
 **Agentes en curso al 2026-11-14** (si se cortan, retomarlos sin `git reset`, o relanzar el paso desde `main`):
 
@@ -52,7 +52,7 @@ cliente 1034, generador 46.
 plan de consulta malo con mucho volumen, a corregir de raíz). Mientras tanto, el coordinador corre la suite en
 `arrancar_pruebas_cxp2` (nueva).
 
-Siguiente en pagos: CP4-3 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
+Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie más genera migraciones de Cuentas por pagar a la vez) y después CP4-4 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → CP5-1 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
 se limpie al escribir (hoy solo en las ventanas con motivo; `quitarErrorAlCambiar` en `usar-formulario.ts`).
 

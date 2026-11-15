@@ -9,6 +9,11 @@ opcional**. Precisó además: **un retiro (un cheque o una nota de débito) paga
 un cheque por proveedor. Este documento ya trae todo aplicado (lo agregado está en la tabla «Decidido el 2026-11-14»);
 lo que cambia del diseño de CP4 ya está escrito en `diseno-cp4-pagos.md`.
 
+> **Adenda del 2026-11-15 (CP5-a = B):** `retiros_de_efectivo` (y `pagos`, `reintegros`) ganan `fecha_de_anulacion`, la
+> fecha contable de la anulación, en la migración `0011_cp5_fecha_de_anulacion` (paso CP5-1, antes de CP4-4). En esta
+> adenda la llenan **CP4-E2** (`AnularRetiro` y su caso en el aviso de Bancos, §4.6) y **CP4-E3** (anular un pago en
+> efectivo, §4.4). Regla completa en `diseno-cp4-pagos.md` §5.9 y `diseno-cp5-reportes.md` §3.1.
+
 Adenda a `diseno-cp4-pagos.md` (CP4, aprobado el 2026-11-13). Nace de la decisión del usuario del **2026-11-14**, que
 **cambia CP4-k** («pago de facturas en efectivo: con Caja chica»): «imagina que voy a sacar dinero y quiero pagar en
 efectivo a varios proveedores: debemos soportarlo». Es decir: un **retiro del banco** cuyo efectivo se usa para pagar a
@@ -148,6 +153,7 @@ Por empresa (`politicaPorEmpresa()`), sin alcance por registro, **sin proveedor*
 | `anulado_en` | timestamptz | sí | |
 | `anulado_por` | uuid | sí | |
 | `motivo_de_anulacion` | text | sí | `retiros_motivo_de_anulacion_rango`: `is null or char_length between 1 and 300` |
+| `fecha_de_anulacion` | date | sí | **CP5-1, migración `0011_cp5_fecha_de_anulacion`** (CP5-a = B, 2026-11-15): fecha contable de la anulación (§4.6). Checks `retiros_fecha_de_anulacion_de_su_estado`: `(estado = 'anulado') = (fecha_de_anulacion is not null)` y `retiros_fecha_de_anulacion_valida`: `fecha_de_anulacion is null or fecha_de_anulacion >= fecha` |
 | `...marcasDeTiempo`, `...autoria` | | | `creado_por` = quien registró el retiro |
 
 Checks de estado (los de anulación con la lección de CP2-2: en los otros estados, los tres nulos):
@@ -310,7 +316,8 @@ Bancos.
 2. `REGLAS_PARA_ANULAR_PAGO`: `noEstarCobrado` **no aplica** (no hay cheque que cobrar); se suma **`retiroAbierto`**: si
    el retiro está **liquidado**, se rechaza con `RetiroLiquidado` («El retiro N ya se liquidó: reábralo para anular este
    pago»).
-3. Estado `anulado`, líneas `vigente = false`, anula sus ajustes de diferencia (CP4 §5.9); el retiro recupera
+3. Estado `anulado`, **`fecha_de_anulacion = greatest(hoy en Guatemala, pagos.fecha)`** (CP5-a = B; columna de la
+   `0011`, CP4 §5.9), líneas `vigente = false`, anula sus ajustes de diferencia (CP4 §5.9); el retiro recupera
    disponible; se vuelve a fijar el desglose.
 4. Auditoría `anular`, recurso `cuentas-por-pagar.pagos`, `anterior` = `PagoDto`, con motivo (que diga qué pasó con el
    efectivo: «el proveedor lo devolvió», «se registró en el proveedor equivocado»…). Evento `pago_anulado` con
@@ -353,16 +360,19 @@ retiros, en su ficha, al elegirlo para pagar y al registrar otro retiro (§4.1).
 **Retiros por liquidar con fecha de corte** (E-7): la lista acepta `corte` (por omisión hoy) y muestra los retiros con
 `fecha <= corte`, no anulados, y que al corte seguían abiertos (`estado = 'abierto'` o `fecha_de_liquidacion > corte`),
 con el **disponible al corte** = monto − pagos vigentes con fecha `<=` corte, y el total. Sirve para saber el efectivo en
-manos de custodios al cierre. Limitación: un pago anulado después del corte no cuenta (se mira el estado de hoy); la
-versión imprimible y exportable es de CP5 (P-CPE-3).
+manos de custodios al cierre. Con `fecha_de_anulacion` (CP5-1, antes de este paso) la lista ya
+usa «vigente al corte» (`fecha_de_anulacion is null or > corte`) para el retiro y sus pagos, sin la limitación del
+estado de hoy; la versión imprimible y exportable es de CP5 (R10, P-CPE-3).
 
 ### 4.6 Anular el retiro (`AnularRetiro`, `retiros.anular`) y avisos de Bancos
 
 **Desde Cuentas por pagar**, con motivo y fecha del inverso: el retiro está **abierto** y **sin pagos vigentes**
 (`RetiroConPagos`: «El retiro N tiene los pagos …: anúlelos primero»); `noEstarCobrado` sí aplica (cheque conciliado →
 `RetiroCobrado`: «El banco ya pagó el cheque del retiro N: deposite el efectivo y liquide el retiro»). Orden
-`anular_movimiento_de_origen`; `estado = 'anulado'`; auditoría `anular`, recurso `cuentas-por-pagar.retiros`; evento
-`retiro_anulado` con `anulacionEnBancos`.
+`anular_movimiento_de_origen`; `estado = 'anulado'` con **`fecha_de_anulacion`** (CP5-a = B, columna de la `0011`):
+`sin_inverso` → `retiros_de_efectivo.fecha` («nunca existió»); `con_inverso` → la `fecha` del inverso leída de
+`bancos.movimientos` por el `inversoId` de la respuesta; auditoría `anular`, recurso `cuentas-por-pagar.retiros`; evento
+`retiro_anulado` con `anulacionEnBancos`. Por aviso (abajo), con la `formaDeAnulacion` y la `fecha` del aviso, igual.
 
 **Por aviso de Bancos** (`bancos.movimiento_por_cambiar`, el manejador de CP4-4 suma este caso: busca el movimiento en
 `retiros_de_efectivo.movimiento_id` y en `movimiento_de_devolucion_id`):
@@ -658,9 +668,10 @@ migración). Esta adenda **no frena CP4-2**. Servidor con `programador-backend`,
 | **CP4-V1** (servidor, varias contraseñas) | Migración **`0009_cp4_pago_de_varias_contrasenas`** (§10), `pagos.tablas.ts` y `aplicaciones_de_pagos` con las llaves e índice nuevos; ajustar lo que CP4-2 haya hecho con `pagos.contrasena_id`. **Pruebas de tablas**: línea de otra contraseña del mismo proveedor (pasa), de otro proveedor (falla), cargo fuera de su contraseña (falla), proveedor inexistente (falla); `politicas-de-los-modulos` y `llaves-entre-esquemas` | CP4-2 en `main`; **antes de CP4-3** |
 | **CP4-EB** (servidor, Bancos) | Migración **`0033_cp4_efectivo_para_pagos`** (tres conceptos, §3.4), `CONCEPTOS_DE_SISTEMA`, `ClaveDeConceptoDeSistema`, **leyenda** del flujo de efectivo (pantalla, impresión y Excel). **Pruebas**: migración repetible, flujo con un retiro desglosado (parte en Operación, parte en Inversión, faltante en Operación, resto sin flujo), su devolución, la leyenda solo cuando hay esos conceptos | Ya se puede (CP4-B2a en `main`); en paralelo con CP4-2 y CP4-V1 (otro módulo), nunca con otra migración de Bancos |
 | **CP4-E1** (servidor, datos) | Migración **`0010_cp4_pagos_en_efectivo`** (§3.3), `retiros-de-efectivo.tablas.ts`, cambios en `pagos.tablas.ts`. **Pruebas de tablas**: cada check (estado, anulación, liquidación, devolución con depósito, faltante con motivo, retiro solo en efectivo, movimiento nulo en efectivo, recibido por y motivo sin bancarizar solo en efectivo), llave compuesta del retiro, custodio usuario con `set null`, RLS, `politicas-de-los-modulos` y `llaves-entre-esquemas` | CP4-V1 en `main` (nunca en paralelo con otra migración de Cuentas por pagar) |
+| **CP5-1** (servidor, `fecha_de_anulacion`; `diseno-cp5-reportes.md` §3.1) | Migración **`0011_cp5_fecha_de_anulacion`**: la columna en `pagos`, `reintegros` y `retiros_de_efectivo`, con sus checks (CP5-a = B, 2026-11-15) | CP4-3 en `main` (hecho); **antes de CP4-4**, y por tanto antes de CP4-E2 y CP4-E3, que la llenan |
 | CP4-3 a CP4-5 | Como el diseño de CP4, ya con M2 (rutas por proveedor) y con la suma del mes y el aviso de §5.4 (el efectivo aún no existe: la consulta ya lo incluye por `forma`) | CP4-3 después de CP4-V1 |
-| **CP4-E2** (servidor, retiros) | `RegistrarRetiroDeEfectivo` (beneficiario, no negociable, custodio usuario), `AnularRetiro`, `ListarRetiros` (con corte), `ObtenerRetiro`, el caso del retiro en el manejador de `movimiento_por_cambiar`, permisos `retiros.ver/crear/anular`, eventos, rutas. **Pruebas** de API: cheque y nota, posfechado (rechazo), beneficiario vacío o «Al Portador» (rechazo), no negociable por omisión, custodio usuario de otra empresa (rechazo), saldo insuficiente (nada se guarda), anular sin pagos desde aquí y desde Bancos, cobrado (rechazo), corregir o eliminar en Bancos (rechazo), Cuentas por pagar inactivo (rechazo), lista con corte, aviso de mes anterior, sin permiso | CP4-EB, CP4-E1 y CP4-4 (el manejador) |
-| **CP4-E3** (servidor, repartir y pagar en efectivo) | `RegistrarPagosEnEfectivo` (1–20 pagos, todo o nada), disponible, bloqueo de bancarización, desglose del retiro, efecto fiscal por régimen y documento (§5.2, puerto de lectura de datos fiscales), regla y permiso de excepción, anular y reaplicar (`retiroAbierto`), suma del mes con efectivo y aviso de «contaminación» en los pagos bancarios (§5.4). **Pruebas**: un reparto a tres proveedores (uno con dos contraseñas), proveedor repetido (rechazo), más que el disponible (rechazo; nada se guarda), un pago malo hace fallar todo el reparto, fecha anterior al retiro (rechazo), retención en el primer pago, cargo de activo fijo (desglose), umbral por cargo, por pago y por mes con empresa general (bloqueo; con permiso y motivo pasa), con pequeño contribuyente (nada), con ISR opcional simplificado y IVA general (solo crédito fiscal en el texto), sin datos fiscales (aviso), cheque que lleva el mes al umbral con efectivo previo (aviso), anular un pago (disponible y desglose vuelven), con el retiro liquidado (rechazo), reaplicar, dos repartos a la vez al mismo proveedor (el segundo ve al primero) | CP4-E2 y CP4-5 (patrón de la nota ligada) |
+| **CP4-E2** (servidor, retiros) | `RegistrarRetiroDeEfectivo` (beneficiario, no negociable, custodio usuario), `AnularRetiro` (con `fecha_de_anulacion`, §4.6), `ListarRetiros` (con corte), `ObtenerRetiro`, el caso del retiro en el manejador de `movimiento_por_cambiar`, permisos `retiros.ver/crear/anular`, eventos, rutas. **Pruebas** de API: cheque y nota, posfechado (rechazo), beneficiario vacío o «Al Portador» (rechazo), no negociable por omisión, custodio usuario de otra empresa (rechazo), saldo insuficiente (nada se guarda), anular sin pagos desde aquí y desde Bancos (`fecha_de_anulacion` sin y con inverso), cobrado (rechazo), corregir o eliminar en Bancos (rechazo), Cuentas por pagar inactivo (rechazo), lista con corte, aviso de mes anterior, sin permiso | CP4-EB, CP4-E1 y CP4-4 (el manejador) |
+| **CP4-E3** (servidor, repartir y pagar en efectivo) | `RegistrarPagosEnEfectivo` (1–20 pagos, todo o nada), disponible, bloqueo de bancarización, desglose del retiro, efecto fiscal por régimen y documento (§5.2, puerto de lectura de datos fiscales), regla y permiso de excepción, anular y reaplicar (`retiroAbierto`), suma del mes con efectivo y aviso de «contaminación» en los pagos bancarios (§5.4). **Pruebas**: un reparto a tres proveedores (uno con dos contraseñas), proveedor repetido (rechazo), más que el disponible (rechazo; nada se guarda), un pago malo hace fallar todo el reparto, fecha anterior al retiro (rechazo), retención en el primer pago, cargo de activo fijo (desglose), umbral por cargo, por pago y por mes con empresa general (bloqueo; con permiso y motivo pasa), con pequeño contribuyente (nada), con ISR opcional simplificado y IVA general (solo crédito fiscal en el texto), sin datos fiscales (aviso), cheque que lleva el mes al umbral con efectivo previo (aviso), anular un pago (disponible y desglose vuelven, `fecha_de_anulacion` = hoy), con el retiro liquidado (rechazo), reaplicar, dos repartos a la vez al mismo proveedor (el segundo ve al primero) | CP4-E2 y CP4-5 (patrón de la nota ligada) |
 | **CP4-E4** (servidor, liquidar y recibo) | `LiquidarRetiro` (faltante en `faltante_de_efectivo`, aviso del custodio), `ReabrirRetiro`, el caso de la devolución en el manejador, permiso `retiros.liquidar`, auditoría, eventos; recibo en `ComprobanteDePago` (título, custodio, por contraseña, total en letras). **Pruebas**: liquidar sin sobrante, con devolución (depósito sin flujo), con faltante (auditoría `ajustar`, desglose en Operación), que no cuadra (rechazo), liquida el custodio (aviso), reabrir (anula el depósito), anular el depósito desde Bancos (reabre), depósito conciliado (no reabre), contenido del recibo (leyenda) | CP4-E3 y CP4-8 (comprobante) |
 | CP4-9 a CP4-11 | Como el diseño de CP4 (con M2) | — |
 | **CP4-E5** (cliente) | Retiros (lista con corte, ventana, ficha, liquidar, reabrir, anular), `PagoEnEfectivo` (reparto), `RecibosDeEfectivo`, recibo. Lógica pura con pruebas | CP4-E4, CP4-9 y CP4-10 |

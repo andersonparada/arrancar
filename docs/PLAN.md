@@ -1913,3 +1913,18 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   de la respuesta es el mínimo (sin `puedeAnular`, conciliado ni `tieneMovimientos`: llegan en CP4-4, CP4-6 y CP4-8); la
   prueba del aviso del efectivo siembra el pago en efectivo en la base (el caso de uso llega en CP4-E3).
 - **2026-11-15 — U8l-8 (QA de punta a punta de las notas sobre facturas anteriores y los DTE anteriores a la fecha de inicio).** Informe en `docs/modulos/informe-qa-u8l-2026-11-15.md`: todos los flujos del diseño (bandeja, conciliación, notas de crédito y de débito, avisos, rechazos, «otra causa», sugerencias, «Documento que modifica», eliminar, cambio de la fecha de inicio, roles) funcionan y el libro y el SAT-2237 cuadran a mano. Corregido: aviso de neto negativo en las casillas con crédito del SAT-2237 (adenda del dictamen) y concordancia de los mensajes al cambiar la fecha de inicio. Pendientes menores en el informe (vista previa de la confirmación en lote, textos de montos negativos, claves de motivo en el Excel y el PDF del libro).
+- **2026-11-15 — CP5 (reportes) listo para programar.** `docs/modulos/diseno-cp5-reportes.md` pasa a «aprobado, listo
+  para programar» con todos los cambios del dictamen aplicados: fecha de efecto = emisión (la fecha de inicio para los
+  documentos del libro emitidos antes) y aviso de registros tardíos; posfechado cobrado antes de su fecha cuenta desde el
+  fin del mes de su conciliación autorizada; R1 por NIT con % sobre cargos y conciliación con R11; R3 interno y para el
+  proveedor (retención como abono con su constancia); R4 «Posible prescripción desde» (último movimiento + 5 años); R6
+  «Registró el documento»; R8 sección 5 (anulados y desautorizados del mes); R9 por mes y por cargo, IVA completo, costo
+  no deducible y 48 meses; R12 en Libro de compras con plazo de la constancia y enlace a las retenciones por practicar.
+  Migraciones verificadas en `main`: Cuentas por pagar **`0011_cp5_fecha_de_anulacion`** (paso **CP5-1**, columna
+  `fecha_de_anulacion` en `pagos`, `reintegros` y `retiros_de_efectivo`, **antes de CP4-4**), `0012_cp5_indices_de_corte`
+  (CP5-2) y Libro de compras `0036_cp5_constancias_pendientes` (CP5-6). La llenan CP4-4, CP4-5, CP4-7, CP4-E2 y CP4-E3
+  (escrito en `diseno-cp4-pagos.md` §5.9 y la adenda de efectivo §4.4 y §4.6). Orden: CP4-3 → CP5-1 → CP4-4 → … Anotado
+  en `cuentas-por-pagar.md`, `diseno-datos-cuentas-por-pagar.md`, `libro-de-compras.md` y `HOJA-DE-RUTA.md`: con
+  Contabilidad la factura se provisiona **al registrarla** (autorizar = «aprobado para pago»). Quedan para el contador,
+  sin frenar CP5-1 a CP5-4: días hábiles o calendario en el plazo de la constancia de ISR y el monto del costo no
+  deducible de R9 (§14 del diseño).

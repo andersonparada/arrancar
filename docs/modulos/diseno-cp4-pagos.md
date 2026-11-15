@@ -17,6 +17,14 @@ inactivo (CP4-i). Este documento ya trae todo aplicado (lo agregado está en la 
 > ya trae lo que cambia por la adenda (marcado «adenda» o «M2»): §3.1, §3.2, §5.1, §5.7, §5.9, §5.11, §7.1, §7.4, §8,
 > §9, §10 y §11.
 
+> **Adenda del 2026-11-15 (CP5 aprobado, CP5-a = B):** `pagos`, `reintegros` y `retiros_de_efectivo` ganan
+> **`fecha_de_anulacion`** (`date`, la fecha contable de la anulación) para que los reportes a una fecha de corte no
+> cambien al anular después (`diseno-cp5-reportes.md` §2.3 y §3.1). La columna entra en la migración
+> **`0011_cp5_fecha_de_anulacion`** de Cuentas por pagar (paso **CP5-1**, **antes de CP4-4**; la `0011` está libre en
+> `main` el 2026-11-15, CP4-3 no trajo migración). La llenan **CP4-4** (`AnularPago` y el manejador del aviso de Bancos;
+> cuenta de apertura), **CP4-5** (nota ligada), **CP4-7** (reintegros), **CP4-E2** (retiros) y **CP4-E3** (pago en
+> efectivo): regla en §5.9 y en los pasos de §11.
+
 Aterriza el paso **CP4** de `cuentas-por-pagar.md` («Pagos: órdenes a *Bancos* para
 emitir y anular cheques —también posfechados— y notas de débito con origen y concepto; el aviso de Bancos cuando se
 anulan desde allá; el usuario elige las facturas autorizadas y los montos de cada pago; las retenciones se descuentan en
@@ -243,6 +251,7 @@ Decisiones generales:
 | `anulado_en` | timestamptz | sí | |
 | `anulado_por` | uuid | sí | |
 | `motivo_de_anulacion` | text | sí | check `pagos_motivo_de_anulacion_rango`: `is null or char_length between 1 and 300` |
+| `fecha_de_anulacion` | date | sí | **CP5-1, migración `0011`** (CP5-a = B): fecha contable de la anulación (§5.9). Checks `pagos_fecha_de_anulacion_de_su_estado`: `(estado = 'anulado') = (fecha_de_anulacion is not null)` y `pagos_fecha_de_anulacion_valida`: `fecha_de_anulacion is null or fecha_de_anulacion >= fecha`; índice `pagos_anulados_corte_idx (empresa_id, fecha_de_anulacion) where estado = 'anulado'` |
 | `...marcasDeTiempo`, `...autoria` | | | `creado_por` = quien pagó |
 
 Check de estado `pagos_anulacion_completa`: `(estado = 'anulado') = (anulado_en is not null and anulado_por is not null
@@ -315,6 +324,7 @@ sentencia y la revisión `no action` del final ya no encuentra nada.
 | `movimiento_id` | uuid | sí | FK `reintegros_movimiento_fk → bancos.movimientos (id)`, no action; único parcial `reintegros_movimiento_unico (movimiento_id) where movimiento_id is not null`; check `reintegros_movimiento_de_su_forma`: `(forma = 'deposito') = (movimiento_id is not null)` |
 | `referencia` | text | sí | En efectivo **obligatoria** (número del recibo de caja o de la boleta): check `reintegros_referencia_en_efectivo`: `forma <> 'efectivo' or referencia is not null`; `reintegros_referencia_valida` (1–100, sin espacios al borde) |
 | `observaciones`, `estado`, `anulado_en`, `anulado_por`, `motivo_de_anulacion` | | | como `pagos`, con `reintegros_anulacion_completa` |
+| `fecha_de_anulacion` | date | sí | **CP5-1, `0011`**: como en `pagos`, con `reintegros_fecha_de_anulacion_de_su_estado` y `reintegros_fecha_de_anulacion_valida` (`>= fecha`) |
 | `...marcasDeTiempo`, `...autoria` | | | |
 
 `cuentas_por_pagar.aplicaciones_de_reintegros`: `id`, `empresa_id`, `proveedor_id`, `reintegro_id` (FK compuesta
@@ -577,7 +587,7 @@ crea el documento por pagar al proveedor, o la partida de Contabilidad contra Pr
    responde la forma (`sin_inverso` o `con_inverso`). Si lanza, nada cambia.
 3. Nota ligada: **nada** se anula en Bancos; la nota recupera su disponible y se vuelve a fijar su desglose (§5.2).
    Cuenta de apertura: nada en Bancos.
-4. `estado = 'anulado'`, `anulado_en/por`, `motivo_de_anulacion`; sus líneas `vigente = false` (la retención descontada
+4. `estado = 'anulado'`, `anulado_en/por`, `motivo_de_anulacion`, **`fecha_de_anulacion`** (CP5-a, abajo); sus líneas `vigente = false` (la retención descontada
    queda libre para el siguiente pago del cargo); anula sus ajustes de diferencia (§5.4).
 5. Auditoría `anular`, recurso `cuentas-por-pagar.pagos`, `anterior` = `PagoDto` como estaba (con sus líneas y el
    movimiento), con el motivo.
@@ -596,6 +606,21 @@ crea el documento por pagar al proveedor, o la partida de Contabilidad contra Pr
 El manejador es **idempotente** (sin pagos vigentes con ese movimiento y sin pagos anulados en un `eliminar`, no hace
 nada) y corre en la transacción de Bancos: si lanza, Bancos no cambia nada. Quitar la marca de **conciliado** de un
 movimiento (conciliación) no necesita aviso: Cuentas por pagar lee `conciliado` en vivo para `noEstarCobrado`.
+
+**Fecha contable de la anulación (`fecha_de_anulacion`, CP5-a = B; columna de la `0011`, paso CP5-1).** La pone el
+caso de uso en el paso 4, en la misma transacción; el check `pagos_fecha_de_anulacion_de_su_estado` exige que esté en
+todo pago anulado y `pagos_fecha_de_anulacion_valida`, que no sea anterior a `pagos.fecha`:
+
+| Caso | `fecha_de_anulacion` |
+|---|---|
+| Cheque o nota de débito, desde aquí | Con la respuesta de `anular_movimiento_de_origen`: `forma = 'sin_inverso'` → `pagos.fecha` («nunca existió»); `con_inverso` → la `fecha` del inverso **leída** de `bancos.movimientos` por `inversoId` (lectura desde `infraestructura`; no se supone la fecha mandada, porque Bancos puede usar la del original con `bancos.anulaciones.misma_fecha`) |
+| Cheque o nota de débito, por aviso de Bancos | `formaDeAnulacion = 'sin_inverso'` → `pagos.fecha`; `con_inverso` → la `fecha` del aviso (la del inverso) |
+| Nota ligada (CP4-5), cuenta de apertura (CP4-4/CP4-6), efectivo (CP4-E3) | `greatest(hoy en Guatemala, pagos.fecha)`: nada se anula en Bancos y el pasivo revive el día de la anulación |
+
+Los reintegros (§5.10, CP4-7) y los retiros (adenda §4.6, CP4-E2) siguen la misma regla con su `fecha`: depósito o
+cheque/nota con Bancos como arriba; reintegro en efectivo, `greatest(hoy, reintegros.fecha)`. Reaplicar no la toca.
+Las pruebas de cada paso comprueban la columna en cada forma (sin inverso, con inverso desde aquí y por aviso, sin
+movimiento).
 
 **Efectivo (adenda §4.4 y §4.6):** un pago en efectivo no tiene movimiento propio: se anula sin orden a Bancos, con la
 regla `retiroAbierto` en vez de `noEstarCobrado`. El mismo manejador de `movimiento_por_cambiar` busca también el
@@ -1089,13 +1114,14 @@ programación, sin migración):
 | CP4-V1 (servidor, M2) | Cuentas por pagar `0009_cp4_pago_de_varias_contrasenas` | CP4-2 en `main`; **antes de CP4-3** |
 | CP4-EB (servidor, Bancos: conceptos y leyenda del flujo) | Bancos `0033_cp4_efectivo_para_pagos` | Ya se puede (CP4-B2a en `main`) |
 | CP4-E1 (servidor, datos del efectivo) | Cuentas por pagar `0010_cp4_pagos_en_efectivo` | CP4-V1 en `main` |
+| **CP5-1** (servidor, `fecha_de_anulacion`) | Cuentas por pagar **`0011_cp5_fecha_de_anulacion`** | CP4-3 en `main` (hecho); **antes de CP4-4** |
 | CP4-E2 (retiros) | — | CP4-EB, CP4-E1 y CP4-4 |
 | CP4-E3 (repartir y pagar en efectivo) | — | CP4-E2 y CP4-5 |
 | CP4-E4 (liquidar y recibo) | — | CP4-E3 y CP4-8 |
 | CP4-E5 (cliente) | — | CP4-E4, CP4-9 y CP4-10 |
 
 CP4-12 (QA) suma sus casos y va después de CP4-E5 y CP4-11. Orden sugerido de toda la serie de Cuentas por pagar:
-CP4-2 → **CP4-V1** → CP4-E1 → CP4-3 → CP4-4 → CP4-5 → CP4-E2 → CP4-E3 → CP4-6 → CP4-7 → CP4-8 → CP4-E4 → CP4-9 → CP4-10 →
+CP4-2 → **CP4-V1** → CP4-E1 → CP4-3 → **CP5-1** → CP4-4 → CP4-5 → CP4-E2 → CP4-E3 → CP4-6 → CP4-7 → CP4-8 → CP4-E4 → CP4-9 → CP4-10 →
 CP4-11 → CP4-E5 → CP4-12; CP4-EB en paralelo cuando haya una sesión de Bancos libre.
 
 CP3-2 a CP3-8 y U8l-2 en adelante siguen su propio orden (U8l-2 y U8l-3 después de CP3-1 y no en paralelo con CP3-2 a
@@ -1156,7 +1182,9 @@ CP3-4); ninguno espera a CP4. Los pasos de Bancos de CP4 sí pueden avanzar en p
    insuficiente en Bancos (nada se guarda), dos pagos a la vez, sin permiso; con M2, un cheque por dos contraseñas del
    proveedor (pasa) y un cargo de otro proveedor (rechazo); aviso de bancarización con empresa general (sale) y pequeño
    contribuyente (no sale).
-8. **CP4-4 (servidor, anular, reaplicar y saldar diferencia):** `AnularPago` (§5.9), manejador de
+7b. **CP5-1 (servidor, datos de CP5):** migración `0011_cp5_fecha_de_anulacion` (`diseno-cp5-reportes.md` §3.1 y §3.3):
+   `fecha_de_anulacion` en `pagos`, `reintegros` y `retiros_de_efectivo` con sus checks. Va **antes de CP4-4**.
+8. **CP4-4 (servidor, anular, reaplicar y saldar diferencia):** `AnularPago` (§5.9, **con `fecha_de_anulacion`**), manejador de
    `bancos.movimiento_por_cambiar`, `REGLAS_PARA_ANULAR_PAGO` con `noEstarCobrado`, `ReaplicarPago` (§5.11) con
    `REGLAS_PARA_REAPLICAR_PAGO`, `SaldarDiferenciaDelPago` (§5.4), permisos `pagos.anular` y `pagos.reaplicar`,
    auditoría, eventos (`pago_anulado` con `anulacionEnBancos` y `fechaOriginal`, `pago_reaplicado`). **Pruebas:** anular
@@ -1164,21 +1192,22 @@ CP3-4); ninguno espera a CP4. Los pasos de Bancos de CP4 sí pueden avanzar en p
    en lote), cobrado (rechazo), la retención pasa al siguiente pago, eliminar o corregir en Bancos (rechazo),
    idempotencia; reaplicar un cobrado a otro cargo (retención recalculada, desglose nuevo, auditoría), con otra suma
    (rechazo), a un cargo de otra contraseña vigente del proveedor (pasa, M2) y de otro proveedor (rechazo); saldar la diferencia después del pago y en un pago anulado
-   (rechazo).
+   (rechazo); `fecha_de_anulacion` = `pagos.fecha` sin inverso, = fecha del inverso con él (desde aquí, leída por
+   `inversoId`, también con `bancos.anulaciones.misma_fecha`, y por aviso) y = hoy en un pago sin movimiento sembrado.
 9. **CP4-5 (servidor, nota ligada):** forma `nota_ligada` (§5.2), `NotasParaLigar`, desglose por activo fijo con
    `fijar_desglose_de_conceptos`, permiso. **Pruebas:** varias contraseñas sobre una nota, disponible, nota no marcada,
    desmarcar o anular la nota ligada en Bancos (rechazo), anular el pago (la nota recupera disponible y su desglose
-   vuelve), nota ligada a un cargo de activo fijo (desglose; toda en Inversión sigue marcada), aviso de retención no
+   vuelve, `fecha_de_anulacion` = hoy), nota ligada a un cargo de activo fijo (desglose; toda en Inversión sigue marcada), aviso de retención no
    descontada y de año anterior.
 10. **CP4-6 (servidor, cuenta de apertura):** forma `cuenta_de_apertura` (§5.3), permiso, auditoría `ajustar`, `efecto`
     y fecha según la carga. **Pruebas:** carga abierta con saldo sin movimientos, también autorizado (rechazo), con
     movimientos (pasa, `apertura`, fecha de inicio aunque se mande otra), carga cerrada (`correccion_de_error`), cargo del
-    libro (rechazo), sin motivo, no entra en la suma de bancarización.
+    libro (rechazo), sin motivo, no entra en la suma de bancarización; anularlo deja `fecha_de_anulacion` = hoy.
 11. **CP4-7 (servidor, reintegros):** §5.10, tablas ya creadas, orden de nota de crédito con `reintegro_de_proveedor` y
     `reintegro_de_proveedor_de_activo`, `ReciboDeReintegro`, permisos, auditoría, eventos, reglas de la nota.
     **Pruebas:** depósito y efectivo (referencia obligatoria), varias notas (una de activo fijo: desglose), mayor que el
-    saldo libre, nota en una contraseña (rechazo), anular desde aquí y desde Bancos, anular la nota con reintegro
-    (rechazo), contenido del recibo (leyenda no tributaria).
+    saldo libre, nota en una contraseña (rechazo), anular desde aquí y desde Bancos (con `fecha_de_anulacion`:
+    sin y con inverso, y hoy en efectivo), anular la nota con reintegro (rechazo), contenido del recibo (leyenda no tributaria).
 12. **CP4-8 (servidor, lista, ficha y comprobante):** `ListarPagos` (filtro de posfechados), `ObtenerPago`,
     `ComprobanteDePago` (con constancias del libro y la leyenda no tributaria). **Pruebas** de contenido.
 13. **CP4-9 (cliente, pagar):** `NuevoPago` con sus componentes y lógica pura, por proveedor con varias contraseñas
