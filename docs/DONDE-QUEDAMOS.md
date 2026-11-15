@@ -43,6 +43,8 @@ cliente 1034, generador 46.
 | CP4-3 pagar con cheque y nota de débito | `agent-af5c9aea871a41f97` | programando |
 | U8l-7 cliente de Cuentas por pagar (fichas y avisos) | `agent-aaea720439e0815cc` | programando |
 | Lentitud de la lista con una base de pruebas reutilizada | `agent-a962ca9022e9e465b` | investigando |
+| CP5 reportes (diseño) | `agent-ad34ea9cbc42663e4` | arquitecto diseñando `docs/modulos/diseno-cp5-reportes.md` |
+| Errores de todos los formularios se limpian al escribir | `agent-a9c00a28b4590f545` | programando (cliente, `usar-formulario.ts`) |
 
 `main` (`05a110b`, con CP4-E1 y U8l-6) está en verde **en una base de pruebas recién creada**: servidor 4298, cliente
 1076, generador 46. En la base reutilizada `arrancar_pruebas_cxp` la primera prueba de
