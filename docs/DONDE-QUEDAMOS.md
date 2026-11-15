@@ -40,8 +40,8 @@ cliente 1034, generador 46.
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP4-3 pagar con cheque y nota de débito | `agent-` (ver `git worktree list`, el más reciente de CP4-3) | programando |
-| U8l-7 cliente de Cuentas por pagar (fichas y avisos) | `agent-` (el más reciente de U8l-7) | programando |
+| CP4-3 pagar con cheque y nota de débito | `agent-af5c9aea871a41f97` | programando |
+| U8l-7 cliente de Cuentas por pagar (fichas y avisos) | `agent-aaea720439e0815cc` | programando |
 | Lentitud de la lista con una base de pruebas reutilizada | `agent-a962ca9022e9e465b` | investigando |
 
 `main` (`05a110b`, con CP4-E1 y U8l-6) está en verde **en una base de pruebas recién creada**: servidor 4298, cliente
