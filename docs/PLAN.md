@@ -1945,3 +1945,18 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   que también usa el retiro). Sin casos de uso ni entidades nuevas (no existe aún el repositorio de anulación): los llenan
   CP4-4, CP4-5, CP4-7, CP4-E2 y CP4-E3. Pruebas: checks de las tres tablas y relleno con las sentencias reales del SQL
   (`fecha-de-anulacion-migracion.prueba.ts`, repetible).
+- **2026-11-15 — CP5-2 (servidor, saldos al corte: R1 y R2).** `ConsultaDeSaldosAlCorte` (una sola consulta en SQL con
+  expresiones de tabla, no la de la lista de documentos) y las reglas del dominio (`saldo-al-corte.ts`, `fechas-de-corte.ts`,
+  `saldos-por-nit.ts`, `prescripcion-de-saldos.ts`): fecha de efecto = emisión (la fecha de inicio para los del libro emitidos
+  antes), anulaciones por `fecha_de_anulacion` (pagos y reintegros) o por el día de `anulado_en` en Guatemala (documentos y
+  ajustes), posfechado como comprometido y cheque cobrado antes de su fecha por la conciliación **autorizada** (rebaja desde el
+  fin de ese mes; con la conciliación elaborada o en proceso, desde su fecha). R1 `GET /cuentas-por-pagar/reportes/saldos-por-proveedor`
+  (por NIT, acreedores y deudores, tramos, porcentajes sobre cargos, avisos y leyendas) y R2 `…/documentos` (cargos al corte con
+  los filtros de las vistas, totales de todo lo filtrado), cada uno con su Excel; permisos `reportes-de-saldos.ver/.exportar`;
+  errores `corte_anterior_al_inicio` y `proveedor_del_reporte_no_existe`. Migración **`0012_cp5_indices_de_corte`** con solo
+  los índices que el `EXPLAIN` confirmó (con dos empresas de 20,000 documentos cada una): `aplicaciones_de_notas_corte_idx` y
+  `ajustes_corte_idx`; los de `aplicaciones_de_pagos` y `aplicaciones_de_reintegros` no se crean (el plan prefiere recorrer
+  esas tablas enteras, que son el 50 % de cada empresa). Rendimiento medido: R1 ~150 ms, R2 página de 100 ~150 ms, Excel de
+  20,000 filas ~2 s (tope 1.5 s y 8 s). Desviaciones: R2 lista solo cargos (las notas son de R4), sin vencimiento no existe en
+  un cargo (la base exige vencimiento a todo cargo; la columna queda en cero); un saldo inicial no se puede anular (la base
+  lo exige registrado o autorizado), así que la prueba de documento anulado usa uno del libro.

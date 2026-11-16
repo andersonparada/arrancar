@@ -287,6 +287,11 @@ No hace falta índice nuevo en `documentos` (`documentos_estado_idx` empieza por
 `documentos_proveedor_vencimiento_idx` sirve al estado de cuenta). Los cuatro primeros se confirman con `EXPLAIN` en la
 prueba de rendimiento de CP5-2 (§9): si el plan no los usa, no se crean; por eso van en su propia migración (`0012`).
 
+**Resultado del `EXPLAIN` (CP5-2, 2026-11-15, dos empresas con 20,000 documentos y 30,000 pagos):** el plan usa
+`aplicaciones_de_notas_corte_idx` y `ajustes_corte_idx`; **no** usa `aplicaciones_de_pagos_empresa_idx` ni
+`aplicaciones_de_reintegros_empresa_idx` (prefiere recorrer enteras esas tablas, que son la mitad de cada empresa). La
+`0012` trae solo los dos primeros. Si con muchas empresas el plan cambiara, se agregan en una migración nueva.
+
 ### 3.3 Migraciones (números verificados en `main` el 2026-11-15)
 
 - Cuentas por pagar **`0011_cp5_fecha_de_anulacion`** (paso **CP5-1**, antes de CP4-4): `npm run bd:generar -w

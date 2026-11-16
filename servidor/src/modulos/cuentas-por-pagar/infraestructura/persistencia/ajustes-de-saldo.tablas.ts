@@ -50,6 +50,7 @@ export const ajustesDeSaldo = esquemaCuentasPorPagar.table(
     ...restriccionesDeValoresDelAjuste(t),
     ...restriccionesDeEstadoDelAjuste(t),
     index('ajustes_documento_idx').on(t.documentoId),
+    index('ajustes_corte_idx').on(t.empresaId, t.fecha),
     index('ajustes_pago_idx')
       .on(t.pagoId)
       .where(sql`${t.pagoId} is not null`),
