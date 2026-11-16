@@ -34,19 +34,18 @@ cliente 1034, generador 46.
 | CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-8 (QA incluida) y el arreglo E3 | — |
 | U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-8 (QA incluida) | detalles menores de la QA (en curso) |
 | CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1, CP4-EB | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
-| CP5 reportes | `diseno-cp5-reportes.md` (aprobado 2026-11-15, dictamen `dictamen-cp5-2026-11-15.md`) | — | 12 reportes en 11 pasos (CP5-1 a CP5-11) |
+| CP5 reportes | `diseno-cp5-reportes.md` (aprobado 2026-11-15, dictamen `dictamen-cp5-2026-11-15.md`) | CP5-1 | CP5-2 (en curso) a CP5-11 |
 | CP5 reportes | `diseno-cp5-reportes.md` (aprobado, listo para programar, 2026-11-15) | — | **CP5-1** (migración `0011_cp5_fecha_de_anulacion`, **antes de CP4-4**), CP5-2 a CP5-11 (§11 del diseño) |
 
 **Agentes en curso al 2026-11-15** (si se cortan, retomarlos sin `git reset`, o relanzar el paso desde `main`):
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP5 diseño listo para programar (dictamen y decisiones del 2026-11-15) | `agent-a10894f2c2a983e8b` | arquitecto aplicando; define la columna `fecha_de_anulacion` que necesita CP4-4 |
-| Detalles de la QA de U8-l (puntos 3 a 7 del informe) | `agent-a93d793162a2c894b` | programando |
+| CP4-4 anular pago, reaplicar y saldar diferencia | `agent-a69d30795631c48f5` | programando |
+| CP5-2 saldos al corte (y `0012` de índices si hace falta) | `agent-af00d074e12b8abed` | programando |
 
-En `main`: CP4-3 (pagar con cheque y nota de débito), U8l-7, U8l-8 (QA de U8-l: **U8-l terminado**), el arreglo de la
-prueba de rendimiento (faltaba `analyze` de contraseñas) y la limpieza de errores al escribir en todos los formularios.
-Todo en verde en base nueva (servidor 4350, cliente 1086, generador 46). **CP4-4 espera** a que el diseño de CP5 diga dónde entra `fecha_de_anulacion`.
+En `main`: CP5-1 (`0011`, fecha contable de las anulaciones) y U8l-9 (detalles de la QA de U8-l); pruebas corriendo en
+base nueva. CP5 queda con su orden: CP5-3 y CP5-6 en paralelo con CP4; CP5-4 y CP5-5 esperan sus pasos de CP4.
 
 Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie más genera migraciones de Cuentas por pagar a la vez) y después CP4-4 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → CP5-1 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
