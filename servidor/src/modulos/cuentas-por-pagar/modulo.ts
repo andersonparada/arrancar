@@ -11,6 +11,7 @@ import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-de-saldos-iniciales.js';
 import { rutasDePagosComponidas } from './composicion/pagos.js';
+import { rutasDeReportesDeSaldosComponidas } from './composicion/reportes-de-saldos.js';
 import { rutasDeSaldosInicialesComponidas } from './composicion/saldos-iniciales.js';
 import { configuracionDeCuentasPorPagar } from './configuracion.js';
 // generador: importaciones
@@ -102,6 +103,14 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.pagos.emitir',
       descripcion: 'Pagar a un proveedor con cheque o con nota de débito (crea el movimiento en Bancos)',
     },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-saldos.ver',
+      descripcion: 'Ver e imprimir los reportes de saldos de proveedores, antigüedad y documentos a una fecha',
+    },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-saldos.exportar',
+      descripcion: 'Exportar a Excel los reportes de saldos de proveedores',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -118,6 +127,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeSaldosInicialesComponidas(),
     rutasDeContrasenasComponidas(),
     rutasDePagosComponidas(),
+    rutasDeReportesDeSaldosComponidas(),
     // generador: rutas
   ]),
 };

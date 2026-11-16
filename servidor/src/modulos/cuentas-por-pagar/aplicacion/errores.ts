@@ -1,4 +1,4 @@
-import { AccesoDenegado } from '../../core/compartido/aplicacion/errores.js';
+import { AccesoDenegado, RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
 
 /**
  * Separación de funciones: quien ingresó el documento en Libro de compras o lo completó necesita el permiso
@@ -11,5 +11,14 @@ export class AutorizacionDeLoPropio extends AccesoDenegado {
     super(
       `No puede autorizar el documento ${etiqueta} porque usted lo ingresó o lo completó: debe autorizarlo otra persona.`,
     );
+  }
+}
+
+/** El proveedor que se pidió para un reporte no existe en la cuenta. */
+export class ProveedorDelReporteNoExiste extends RecursoNoEncontrado {
+  override readonly codigo = 'proveedor_del_reporte_no_existe';
+
+  constructor() {
+    super('El proveedor');
   }
 }

@@ -1,0 +1,2 @@
+CREATE INDEX "ajustes_corte_idx" ON "cuentas_por_pagar"."ajustes_de_saldo" USING btree ("empresa_id","fecha");--> statement-breakpoint
+CREATE INDEX "aplicaciones_de_notas_corte_idx" ON "cuentas_por_pagar"."aplicaciones_de_notas" USING btree ("empresa_id","fecha");

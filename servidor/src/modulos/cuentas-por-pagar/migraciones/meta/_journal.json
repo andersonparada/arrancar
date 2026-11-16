@@ -85,6 +85,13 @@
       "when": 1794780602076,
       "tag": "0011_cp5_fecha_de_anulacion",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794796223469,
+      "tag": "0012_cp5_indices_de_corte",
+      "breakpoints": true
     }
   ]
 }
