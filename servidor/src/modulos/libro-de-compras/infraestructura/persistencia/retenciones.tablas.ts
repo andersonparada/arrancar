@@ -65,6 +65,10 @@ const restriccionesDeMontos = (t: Columnas) => [
 const restriccionesDeFechas = (t: Columnas) => [
   check('retenciones_constancia_completa', sql`(${t.constanciaNumero} is null) = (${t.constanciaFecha} is null)`),
   index('retenciones_mes_idx').on(t.empresaId, t.fecha),
+  /** Las constancias pendientes de todos los meses (reporte R12). */
+  index('retenciones_sin_constancia_idx')
+    .on(t.empresaId, t.fecha)
+    .where(sql`${t.constanciaNumero} is null and ${t.monto} > 0`),
 ];
 
 /** «Por resolver»: una retención practicada de un documento anulado (que sea de un anulado lo cuida el dominio). */

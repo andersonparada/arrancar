@@ -253,6 +253,13 @@
       "when": 1794603425052,
       "tag": "0035_u8l_facturas_anteriores",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794800745865,
+      "tag": "0036_cp5_constancias_pendientes",
+      "breakpoints": true
     }
   ]
 }
