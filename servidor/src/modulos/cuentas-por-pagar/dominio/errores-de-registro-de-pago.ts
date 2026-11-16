@@ -109,3 +109,33 @@ export class ProveedorSinNombreDelNit extends ReglaDeNegocioInfringida {
     super('Escriba la razón social del proveedor en Terceros: el cheque va a nombre del NIT.');
   }
 }
+
+/** La fecha con que se aplica una nota ya registrada no puede ser futura ni anterior a la de la nota o a las de los documentos. */
+export class FechaDeAplicacionInvalida extends DatoDelPagoInvalido {
+  readonly codigo = 'fecha_de_pago_invalida';
+
+  constructor(minima: string) {
+    super(
+      `La fecha no puede ser futura ni anterior al ${fechaLegible(minima)} (la nota, la emisión de los documentos o la fecha de inicio).`,
+      'fecha',
+    );
+  }
+}
+
+/** La nota que se quiere ligar no es una nota de débito marcada para Cuentas por pagar, está anulada o es de otra empresa. */
+export class MovimientoNoLigable extends DatoDelPagoInvalido {
+  readonly codigo = 'movimiento_no_ligable';
+
+  constructor() {
+    super('Esa nota no está marcada para Cuentas por pagar, está anulada o es de otra empresa.', 'movimientoId');
+  }
+}
+
+/** El pago pasa de lo que queda de la nota por aplicar. */
+export class PagoMayorQueLaNota extends DatoDelPagoInvalido {
+  readonly codigo = 'pago_mayor_que_la_nota';
+
+  constructor(nota: string, disponibleCentavos: number) {
+    super(`A la nota ${nota} solo le quedan ${quetzales(disponibleCentavos)} por aplicar.`, 'aplicaciones');
+  }
+}

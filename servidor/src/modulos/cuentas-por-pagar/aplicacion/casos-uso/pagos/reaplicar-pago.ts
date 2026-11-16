@@ -8,7 +8,8 @@ import {
 } from '../../../dominio/anulacion-de-pagos.js';
 import { motivoValido } from '../../../dominio/ciclo-de-vida.js';
 import { PagoReaplicado } from '../../../dominio/eventos-de-pagos.js';
-import { creoSuMovimiento, type PagoConLineas } from '../../../dominio/pago-con-lineas.js';
+import type { NotaParaLigar } from '../../../dominio/nota-para-ligar.js';
+import type { PagoConLineas } from '../../../dominio/pago-con-lineas.js';
 import { exigirLineasValidas, retencionPorDescontar, type LineaPedida } from '../../../dominio/registro-de-pago.js';
 import type { PagoDto } from '../../dto/registro-de-pago.dto.js';
 import { bloquear } from '../acciones/dependencias-de-acciones.js';
@@ -17,8 +18,8 @@ import { pagoVigenteBloqueado } from './anular-pago.js';
 import { aplicacionDelEvento } from './armado-del-pago.js';
 import type { LineaConRetencion } from './avisos-del-pago.js';
 import type { DependenciasDeCambiarPagos, LineaRevisada } from './dependencias-de-pagos.js';
+import { DesgloseDelPago } from './desglose-del-pago.js';
 import { LectorDelPago, type PagoLeido } from './lector-del-pago.js';
-import { conceptosDelPago, MODULO_DE_ORIGEN } from './orden-a-bancos.js';
 import { RevisorDelPago } from './revisor-del-pago.js';
 
 export interface PeticionParaReaplicar {
@@ -34,9 +35,6 @@ interface Reaplicacion {
   lineas: LineaPedida[];
 }
 
-const deActivoFijo = (lineas: readonly LineaRevisada[]): number =>
-  lineas.reduce((suma, { fila, montoCentavos }) => (fila.documento.tieneActivoFijo ? suma + montoCentavos : suma), 0);
-
 /**
  * Cambia a qué cargos cubre un pago vigente (§5.11, `pagos.reaplicar`): para un pago aplicado a los documentos
  * equivocados, sobre todo un cheque ya cobrado, que no se anula. El dinero, la fecha, el número y el movimiento no cambian.
@@ -49,11 +47,13 @@ export class ReaplicarPago {
   private readonly revisor: RevisorDelPago;
   private readonly anulador: AnuladorDelPago;
   private readonly lector: LectorDelPago;
+  private readonly desglose: DesgloseDelPago;
 
   constructor(private readonly dependencias: DependenciasDeCambiarPagos) {
     this.revisor = new RevisorDelPago(dependencias);
     this.anulador = new AnuladorDelPago(dependencias);
     this.lector = new LectorDelPago(dependencias);
+    this.desglose = new DesgloseDelPago(dependencias);
   }
 
   /**
@@ -76,7 +76,7 @@ export class ReaplicarPago {
   private async reaplicar(operador: Operador, pedido: Reaplicacion) {
     const { pagos, cargaInicial, reglasParaReaplicar, reloj } = this.dependencias;
     await cargaInicial.obtener(operador);
-    const pago = await this.bloquear(pedido);
+    const { pago, nota } = await this.bloquear(pedido);
     await this.anulador.revisar(pago, reglasParaReaplicar);
     const antes = await this.lector.leer(operador, pago);
     const previas = await this.revisor.revisar(pago.proveedorId, pedido.lineas, await this.devueltos(pago));
@@ -88,7 +88,7 @@ export class ReaplicarPago {
     const hoy = await reloj.hoy(operador);
     const ajustes = await this.anulador.anularDiferencias(operador, pago, { motivo: pedido.motivo, fecha: hoy });
     const despues = await this.guardarLineas(pago, previas);
-    await this.fijarElDesglose(operador, pago, { antes: antes.lineas, despues });
+    await this.desglose.alReaplicar(operador, pago, { antes: antes.lineas, despues, nota });
     const evento = await this.dejarRastro(operador, pago, { antes, despues, hoy, motivo: pedido.motivo });
     const dto = (await this.lector.leer(operador, (await pagos.buscar(pago.id))!)).dto;
     return { dto, eventos: [evento, ...ajustes] as EventoDominio[] };
@@ -115,10 +115,11 @@ export class ReaplicarPago {
     return this.evento(operador, pago, { antes: antes.lineas, despues, hoy });
   }
 
-  /** Bloquea el pago y después, en orden de id, las contraseñas y los cargos de antes y de después. */
-  private async bloquear(pedido: Reaplicacion): Promise<PagoConLineas> {
+  /** Bloquea el pago, su nota de Bancos si la liga y después, en orden de id, las contraseñas y los cargos de antes y de después. */
+  private async bloquear(pedido: Reaplicacion): Promise<{ pago: PagoConLineas; nota: NotaParaLigar | null }> {
     const { contrasenas, documentos, consultas } = this.dependencias;
     const pago = await pagoVigenteBloqueado(this.dependencias, pedido.pagoId);
+    const nota = await this.desglose.bloquearLaNota(pago);
     const contrasenaIds = new Set(pago.lineas.map(({ contrasenaId }) => contrasenaId));
     for (const { cargoId } of pedido.lineas) {
       const contrasena = (await consultas.buscar(cargoId))?.contrasena;
@@ -127,7 +128,7 @@ export class ReaplicarPago {
     const cargoIds = new Set([...pago.lineas, ...pedido.lineas].map(({ cargoId }) => cargoId));
     for (const id of [...contrasenaIds].sort()) await contrasenas.bloquear(id);
     for (const id of [...cargoIds].sort()) await bloquear(documentos, id);
-    return pago;
+    return { pago, nota };
   }
 
   /** Lo que este pago ya tiene en cada cargo (su línea y su diferencia de centavos): el saldo se cuenta sin esto. */
@@ -160,21 +161,6 @@ export class ReaplicarPago {
       })),
     );
     return nuevas;
-  }
-
-  /** Si cambió lo pagado a cargos de activo fijo, Bancos vuelve a repartir el cheque o la nota entre Operación e Inversión. */
-  private async fijarElDesglose(
-    operador: Operador,
-    pago: PagoConLineas,
-    { antes, despues }: { antes: readonly LineaRevisada[]; despues: readonly LineaRevisada[] },
-  ): Promise<void> {
-    if (!creoSuMovimiento(pago) || pago.movimientoId === null) return;
-    if (deActivoFijo(antes) === deActivoFijo(despues)) return;
-    await this.dependencias.bancos.fijarDesglose(operador, {
-      origen: { modulo: MODULO_DE_ORIGEN, documentoId: pago.id },
-      movimientoId: pago.movimientoId,
-      conceptos: conceptosDelPago(despues),
-    });
   }
 
   private evento(

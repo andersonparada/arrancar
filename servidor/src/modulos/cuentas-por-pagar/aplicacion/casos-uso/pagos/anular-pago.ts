@@ -8,6 +8,7 @@ import { numeroDelPago } from '../../../dominio/pagos.js';
 import type { PagoDto } from '../../dto/registro-de-pago.dto.js';
 import { AnuladorDelPago, type AnulacionHechaEnBancos } from './anulador-del-pago.js';
 import type { DependenciasDeCambiarPagos } from './dependencias-de-pagos.js';
+import { DesgloseDelPago } from './desglose-del-pago.js';
 import { LectorDelPago } from './lector-del-pago.js';
 import { MODULO_DE_ORIGEN } from './orden-a-bancos.js';
 
@@ -33,15 +34,18 @@ export async function pagoVigenteBloqueado(
  * Anula un pago desde Cuentas por pagar (§5.9, `pagos.anular`): bloquea el pago, corre las reglas (un cheque ya conciliado no
  * se anula), ordena a Bancos anular su cheque o su nota (a la antigua o con inverso; si Bancos lanza, nada cambia), deja el
  * pago `anulado` con su fecha contable, anula sus ajustes de diferencia, audita `anular` con el pago como estaba y publica
- * `pago_anulado` al confirmar. Una nota ligada o la cuenta de apertura no tocan Bancos.
+ * `pago_anulado` al confirmar. Una nota ligada o la cuenta de apertura no anulan nada en Bancos; la nota ligada recupera su
+ * disponible y su reparto por concepto se vuelve a fijar sin este pago.
  */
 export class AnularPago {
   private readonly anulador: AnuladorDelPago;
   private readonly lector: LectorDelPago;
+  private readonly desglose: DesgloseDelPago;
 
   constructor(private readonly dependencias: DependenciasDeCambiarPagos) {
     this.anulador = new AnuladorDelPago(dependencias);
     this.lector = new LectorDelPago(dependencias);
+    this.desglose = new DesgloseDelPago(dependencias);
   }
 
   /**
@@ -61,9 +65,11 @@ export class AnularPago {
   private async anular(operador: Operador, pedido: PeticionParaAnularPago) {
     const { pagos, reglasParaAnular } = this.dependencias;
     const pago = await pagoVigenteBloqueado(this.dependencias, pedido.pagoId);
+    const nota = await this.desglose.bloquearLaNota(pago);
     await this.anulador.revisar(pago, reglasParaAnular);
     const enBancos = await this.anularEnBancos(operador, pago, pedido);
     const eventos: EventoDominio[] = await this.anulador.anular(operador, pago, { motivo: pedido.motivo, ...enBancos });
+    if (nota) await this.desglose.fijarLaNota(operador, nota);
     const anulado = (await pagos.buscar(pago.id))!;
     return { dto: (await this.lector.leer(operador, anulado)).dto, eventos };
   }

@@ -4,6 +4,8 @@ import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { MediosDePago } from '../../../../core/contratos/bancos.contratos.js';
 import type { ProveedorPorPagarDto } from '../../dto/cargos-para-pagar.dto.js';
+import type { NotaParaLigarDto } from '../../dto/notas-para-ligar.dto.js';
+import type { FiltroDeNotasParaLigar, NotasParaLigar } from '../../puertos/puertos-de-notas-para-ligar.js';
 import type { ConsultasDePagos, PagosEnBancos } from '../../puertos/puertos-de-pagos.js';
 
 export interface FiltroDeProveedoresPorPagar {
@@ -45,5 +47,24 @@ export class ObtenerMediosDePago {
     return unidadDeTrabajo.ejecutar(operador, async () =>
       bancos.medios(operador, fecha ?? (await reloj.hoy(operador))),
     );
+  }
+}
+
+/** Las notas de débito marcadas para Cuentas por pagar con lo que les queda por aplicar: la lista de la ventana de ligar. */
+export class ListarNotasParaLigar {
+  constructor(private readonly dependencias: { unidadDeTrabajo: UnidadDeTrabajo; notas: NotasParaLigar }) {}
+
+  ejecutar(operador: Operador, filtro: FiltroDeNotasParaLigar): Promise<{ elementos: NotaParaLigarDto[] }> {
+    const { unidadDeTrabajo, notas } = this.dependencias;
+    return unidadDeTrabajo.ejecutar(operador, async () => {
+      const filas = await notas.listar(filtro);
+      const elementos = filas.map(({ montoCentavos, aplicadoCentavos, ligable: _ligable, ...nota }) => ({
+        ...nota,
+        monto: deCentavos(montoCentavos),
+        aplicado: deCentavos(aplicadoCentavos),
+        disponible: deCentavos(montoCentavos - aplicadoCentavos),
+      }));
+      return { elementos };
+    });
   }
 }

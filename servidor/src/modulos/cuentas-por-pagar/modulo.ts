@@ -121,6 +121,10 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.pagos.anular',
       descripcion: 'Anular un pago (anula también su cheque o su nota en Bancos y sus diferencias de centavos)',
     },
+    {
+      clave: 'cuentas-por-pagar.pagos.ligar-notas-de-debito',
+      descripcion: 'Pagar con una nota de débito ya registrada en Bancos y marcada para Cuentas por pagar',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,

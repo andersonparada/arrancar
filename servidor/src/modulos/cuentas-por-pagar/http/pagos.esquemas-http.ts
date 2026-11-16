@@ -36,6 +36,14 @@ export const esquemaPago = z.discriminatedUnion('forma', [
   }),
 ]);
 
+/** Ligar una nota de débito que ya estaba en Bancos, marcada para Cuentas por pagar; `referencia` es el recibo del proveedor. */
+export const esquemaPagoLigado = z.object({
+  forma: z.literal('nota_ligada'),
+  movimientoId: z.uuid({ error: 'Escoja la nota.' }),
+  ...comun,
+  referencia: z.string().trim().min(1).max(100, 'La referencia admite hasta 100 caracteres.').nullable().optional(),
+});
+
 export const esquemaParamsDePago = z.object({ id: z.uuid() });
 
 const motivo = z.string().trim().min(1, 'Escriba el motivo.').max(300, 'El motivo admite hasta 300 caracteres.');
@@ -59,6 +67,17 @@ export const esquemaSaldarDiferencia = z.object({
 export const esquemaParaPagar = z.object({ contrasenaId: z.uuid().optional(), fecha: fecha.optional() });
 export const esquemaMedios = z.object({ fecha: fecha.optional() });
 
+const comoBooleano = z.enum(['true', 'false']).transform((valor) => valor === 'true');
+
+/** Las notas marcadas para Cuentas por pagar; por omisión, solo las que todavía tienen algo por aplicar. */
+export const esquemaNotasParaLigar = z.object({
+  cuentaBancariaId: z.uuid().optional(),
+  desde: fecha.optional(),
+  hasta: fecha.optional(),
+  soloConDisponible: comoBooleano.default(true),
+  limite: z.coerce.number().int().min(1).max(LIMITE_MAXIMO).default(LIMITE_POR_OMISION),
+});
+
 export const esquemaProveedoresPorPagar = z.object({
   buscar: z.string().trim().min(1).optional(),
   pagina: z.coerce.number().int().min(1).default(1),
@@ -66,6 +85,8 @@ export const esquemaProveedoresPorPagar = z.object({
 });
 
 export type PagoSolicitado = z.infer<typeof esquemaPago>;
+export type PagoLigadoSolicitado = z.infer<typeof esquemaPagoLigado>;
+export type NotasParaLigarSolicitado = z.output<typeof esquemaNotasParaLigar>;
 export type ParaPagarSolicitado = z.infer<typeof esquemaParaPagar>;
 export type MediosSolicitado = z.infer<typeof esquemaMedios>;
 export type ProveedoresPorPagarSolicitado = z.output<typeof esquemaProveedoresPorPagar>;

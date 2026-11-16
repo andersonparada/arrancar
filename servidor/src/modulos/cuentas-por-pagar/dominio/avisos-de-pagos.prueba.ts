@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { documentoSembrado } from '../pruebas/dobles-de-aplicaciones.js';
-import { avisoDelPosfechado, avisosDeLaLinea, type LineaParaAvisar } from './avisos-de-pagos.js';
+import {
+  avisoDelPosfechado,
+  avisoDeRetencionNoDescontada,
+  avisosDeLaLinea,
+  type LineaParaAvisar,
+} from './avisos-de-pagos.js';
 
 const linea = (cambios: Partial<LineaParaAvisar> = {}): LineaParaAvisar => ({
   documento: documentoSembrado({ serie: 'A', numero: '15', origen: 'libro_de_compras' }),
@@ -50,5 +55,15 @@ describe('los avisos de una línea del pago', () => {
   it('el cheque posfechado se paga a la vista y compromete el documento', () => {
     expect(avisoDelPosfechado('cheque', '2026-12-01')).toContain('a la vista');
     expect(avisoDelPosfechado('nota_de_debito', '2026-12-01')).not.toContain('a la vista');
+  });
+
+  it('al ligar una nota avisa que el banco debitó sin descontar la retención y cuánto le queda a la nota', () => {
+    const aviso = avisoDeRetencionNoDescontada(linea().documento, {
+      retencionCentavos: 12_000,
+      restanteDeLaNotaCentavos: 46_000,
+    });
+
+    expect(aviso).toContain('debitó la nota sin descontar la retención de Q120.00 de la factura A-15');
+    expect(aviso).toContain('quedan Q460.00 de la nota por aplicar');
   });
 });

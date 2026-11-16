@@ -2003,3 +2003,22 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   referencia (cheque o recibo) pero no la cuenta bancaria; los saldos iniciales nunca aparecen como línea en un rango posterior a
   su emisión (entran en el saldo anterior). `nombres-de-tipos.ts` pasó de `http/` a `dominio/` porque el concepto de las líneas lo
   usa.
+- **2026-11-15 — CP4-5 (servidor, pagar con una nota de débito ya registrada).** `LigarNotaDeDebito`
+  (`POST /cuentas-por-pagar/pagos/ligar`, permiso nuevo `pagos.ligar-notas-de-debito`, y `ajustes.crear` si trae diferencias):
+  paga cargos de una o varias contraseñas del proveedor con una nota de Bancos marcada, sin crear nada allá. Bloquea la nota
+  primero (`NotasParaLigar`, lectura de `bancos.movimientos` con `for update`: de débito, suelta, vigente y marcada; si no,
+  `movimiento_no_ligable`), revisa los cargos como cualquier pago, exige que el monto quepa en lo que le queda a la nota
+  (`pago_mayor_que_la_nota`; disponible = monto menos los pagos vigentes que la ligan) y que la fecha no sea futura ni
+  anterior a la nota ni a las mínimas del pago, guarda el pago con la nota como su movimiento y la referencia como recibo del
+  proveedor, y con la nota bloqueada manda `bancos.fijar_desglose_de_conceptos` (sin origen) con el reparto absoluto: lo ligado a
+  cargos de activo fijo en todos sus pagos vigentes a Inversión y el resto a Operación; la nota sigue marcada aunque toda quede
+  en Inversión. El mismo reparto se vuelve a fijar al reaplicar (si cambió lo de activo fijo) y al anular un pago ligado
+  (`DesgloseDelPago`); anular no toca el movimiento en Bancos y deja `fecha_de_anulacion` = hoy (no antes del pago). Orden de
+  bloqueo: la nota, antes de las contraseñas y los cargos, también al anular y reaplicar. Avisos: retención no descontada («el
+  banco debitó la nota sin descontar la retención…», con lo que le queda a la nota) y nota de un año anterior al de la
+  aplicación; el evento `pago_registrado` lleva el efecto `transitoria_por_aplicar`. `GET /pagos/notas-para-ligar` (`pagos.ver`;
+  `cuentaBancariaId`, `desde`, `hasta`, `soloConDisponible`, `limite`) lista las notas marcadas con `monto`, `aplicado` y
+  `disponible`. Cambios compartidos: `RegistrarPago` usa `comunes-del-registro.ts`; `fijarDesglose` admite origen nulo. Sin
+  migración (`pagos.referencia` y las formas ya existían). Desviaciones: el `PagoDto` no trae `referencia` (como en CP4-3, solo el
+  mínimo); la lista de notas no pagina (hasta 200, las más nuevas); la nota ligada usa como beneficiario el de la nota y, si no
+  tiene, el proveedor, sin exigir la razón social del NIT.

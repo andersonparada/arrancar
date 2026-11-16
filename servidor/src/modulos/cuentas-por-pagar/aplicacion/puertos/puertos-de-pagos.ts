@@ -10,6 +10,7 @@ import type { AnulacionEnBancos } from '../../dominio/anulacion-de-pagos.js';
 import type { EfectoFiscal } from '../../dominio/bancarizacion-de-pagos.js';
 import type { PagoConLineas } from '../../dominio/pago-con-lineas.js';
 import type { RetencionDelLibro } from '../../dominio/avisos-de-pagos.js';
+import type { LigadoAUnaNota } from './puertos-de-notas-para-ligar.js';
 
 /** Lo que Bancos necesita para emitir el cheque de un pago. */
 export interface ChequeAEmitir {
@@ -73,7 +74,8 @@ export interface AnulacionDelMovimiento {
 }
 
 export interface DesgloseDelMovimiento {
-  origen: OrigenDeMovimientoContrato;
+  /** Nulo en una nota marcada que se liga: no tiene origen, y Bancos revisa que esté marcada. */
+  origen: OrigenDeMovimientoContrato | null;
   movimientoId: string;
   conceptos: LineaDeConcepto[];
 }
@@ -117,10 +119,12 @@ export interface PagoNuevo {
   proveedorId: string;
   numero: number;
   anioDeNumero: number;
-  forma: 'cheque' | 'nota_de_debito';
+  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada';
   /** `AAAA-MM-DD`. */
   fecha: string;
   movimientoId: string;
+  /** El recibo del proveedor; solo en la nota ligada (en cheque y nota de débito va a Bancos). */
+  referencia?: string | null;
   observaciones: string | null;
   lineas: LineaDePagoNueva[];
 }
@@ -134,6 +138,8 @@ export interface RepositorioDePagos {
   buscar(id: string): Promise<PagoConLineas | null>;
   /** Igual que `buscar`, y deja la fila bloqueada para este caso de uso. */
   bloquear(id: string): Promise<PagoConLineas | null>;
+  /** Lo que los pagos vigentes ligan de una nota de Bancos y, de eso, lo pagado a cargos de activo fijo. */
+  ligadoAlMovimiento(movimientoId: string): Promise<LigadoAUnaNota>;
   /** Los pagos (vigentes y anulados) cuyo movimiento en Bancos es este, por número. */
   delMovimiento(movimientoId: string): Promise<PagoConLineas[]>;
   /** Deja el pago `anulado` con quién, cuándo, por qué y la fecha contable, y sus líneas `vigente = false`. */

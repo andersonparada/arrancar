@@ -92,8 +92,24 @@ export function avisoDeDiferenciaConRetencion(documento: DocumentoPorPagar): str
 }
 
 /** El cheque posfechado compromete el documento hoy y lo da por pagado en su fecha; se paga a la vista (C-CP4-1). */
-export function avisoDelPosfechado(forma: 'cheque' | 'nota_de_debito', fecha: string): string {
+export function avisoDelPosfechado(forma: 'cheque' | 'nota_de_debito' | 'nota_ligada', fecha: string): string {
   const quien = forma === 'cheque' ? 'El cheque' : 'La nota de débito';
   const aLaVista = forma === 'cheque' ? ' El cheque se paga a la vista: el proveedor puede cobrarlo antes.' : '';
   return `${quien} lleva fecha ${fechaLegible(fecha)}: el documento queda comprometido y se da por pagado en esa fecha.${aLaVista}`;
+}
+
+/** El banco debitó la nota sin descontar la retención: lo que sobra de la nota queda por aplicar (CP4, §5.2). */
+export function avisoDeRetencionNoDescontada(
+  documento: DocumentoPorPagar,
+  { retencionCentavos, restanteDeLaNotaCentavos }: { retencionCentavos: number; restanteDeLaNotaCentavos: number },
+): string {
+  return `El banco debitó la nota sin descontar la retención de ${quetzales(retencionCentavos)} de la factura ${etiquetaDe(documento)}: quedan ${quetzales(restanteDeLaNotaCentavos)} de la nota por aplicar. Revise la retención en Libro de compras (si no la practicó, corríjala allí; si la practicó, el proveedor le debe ese monto).`;
+}
+
+/** La nota es de un año anterior al de su aplicación (nota de diciembre y FEL de enero). */
+export function avisoDeNotaDeAnioAnterior(fechaDeLaNota: string, fechaDeLaAplicacion: string): string[] {
+  if (fechaDeLaNota.slice(0, 4) >= fechaDeLaAplicacion.slice(0, 4)) return [];
+  return [
+    `La nota es del ${fechaLegible(fechaDeLaNota)} y se aplica con fecha ${fechaLegible(fechaDeLaAplicacion)}, de otro año: revise que corresponda a esas facturas.`,
+  ];
 }

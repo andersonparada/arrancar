@@ -7,12 +7,15 @@ import type { PagosControlador } from './pagos.controlador.js';
 import {
   esquemaAnularPago,
   esquemaMedios,
+  esquemaNotasParaLigar,
   esquemaPago,
+  esquemaPagoLigado,
   esquemaParamsDePago,
   esquemaReaplicarPago,
   esquemaSaldarDiferencia,
   esquemaParaPagar,
   esquemaProveedoresPorPagar,
+  type PagoLigadoSolicitado,
   type PagoSolicitado,
 } from './pagos.esquemas-http.js';
 
@@ -20,19 +23,22 @@ const tags = ['Cuentas por pagar'];
 const RUTA = '/cuentas-por-pagar';
 
 /** Saldar una diferencia de centavos al pagar además pide `ajustes.crear`. */
-async function exigirAjustesSiHayDiferencias(solicitud: FastifyRequest<{ Body: PagoSolicitado }>): Promise<void> {
+async function exigirAjustesSiHayDiferencias(
+  solicitud: FastifyRequest<{ Body: PagoSolicitado | PagoLigadoSolicitado }>,
+): Promise<void> {
   const pide = (solicitud.body?.diferencias?.length ?? 0) > 0;
   if (pide && !solicitud.contexto?.permisos.has('cuentas-por-pagar.ajustes.crear')) throw new AccesoDenegado();
 }
 
 /**
- * Pagar con cheque o nota de débito (`pagos.emitir`, y `ajustes.crear` si trae diferencias), anular, reaplicar y saldar la
+ * Pagar con cheque o nota de débito (`pagos.emitir`) o ligar una nota ya registrada (`pagos.ligar-notas-de-debito`), con `ajustes.crear` si trae diferencias, anular, reaplicar y saldar la
  * diferencia de un pago (`pagos.anular`, `pagos.reaplicar`, `ajustes.crear`) y lo que la ventana de pago consulta (`pagos.ver`): proveedores por pagar, medios de pago y lo que se puede pagar de un proveedor.
  */
 export function rutasDePagos(controlador: PagosControlador): FastifyPluginAsyncZod {
   return async (app) => {
     consultas(app, controlador);
     cambios(app, controlador);
+    ligar(app, controlador);
   };
 }
 
@@ -47,6 +53,11 @@ function consultas(app: FastifyInstance, controlador: PagosControlador): void {
     schema: { tags, querystring: esquemaMedios },
     preHandler: ver,
     handler: controlador.medios,
+  });
+  app.get(`${RUTA}/pagos/notas-para-ligar`, {
+    schema: { tags, querystring: esquemaNotasParaLigar },
+    preHandler: ver,
+    handler: controlador.notasParaLigar,
   });
   app.get(`${RUTA}/proveedores/:proveedorId/para-pagar`, {
     schema: { tags, params: esquemaParamsDeProveedor, querystring: esquemaParaPagar },
@@ -75,5 +86,14 @@ function cambios(app: FastifyInstance, controlador: PagosControlador): void {
     schema: { tags, params: esquemaParamsDePago, body: esquemaSaldarDiferencia },
     preHandler: proteger({ permiso: 'cuentas-por-pagar.ajustes.crear' }),
     handler: controlador.saldarDiferencia,
+  });
+}
+
+/** Pagar con una nota de débito que ya estaba en Bancos. */
+function ligar(app: FastifyInstance, controlador: PagosControlador): void {
+  app.post(`${RUTA}/pagos/ligar`, {
+    schema: { tags, body: esquemaPagoLigado },
+    preHandler: [proteger({ permiso: 'cuentas-por-pagar.pagos.ligar-notas-de-debito' }), exigirAjustesSiHayDiferencias],
+    handler: controlador.ligar,
   });
 }
