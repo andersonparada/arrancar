@@ -44,8 +44,8 @@ cliente 1034, generador 46.
 | CP4-4 anular pago, reaplicar y saldar diferencia | `agent-a69d30795631c48f5` | programando |
 | CP5-2 saldos al corte (y `0012` de índices si hace falta) | `agent-af00d074e12b8abed` | programando |
 
-En `main`: CP5-1 (`0011`, fecha contable de las anulaciones) y U8l-9 (detalles de la QA de U8-l); pruebas corriendo en
-base nueva. CP5 queda con su orden: CP5-3 y CP5-6 en paralelo con CP4; CP5-4 y CP5-5 esperan sus pasos de CP4.
+En `main`: CP5-1 (`0011`, fecha contable de las anulaciones) y U8l-9 (detalles de la QA de U8-l); todo en verde en base
+nueva: servidor 4362, cliente 1089, generador 46. CP5 queda con su orden: CP5-3 y CP5-6 en paralelo con CP4; CP5-4 y CP5-5 esperan sus pasos de CP4.
 
 Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie más genera migraciones de Cuentas por pagar a la vez) y después CP4-4 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → CP5-1 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
