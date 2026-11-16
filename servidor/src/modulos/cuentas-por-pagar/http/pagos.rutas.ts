@@ -9,6 +9,7 @@ import {
   esquemaMedios,
   esquemaNotasParaLigar,
   esquemaPago,
+  esquemaPagoDeApertura,
   esquemaPagoLigado,
   esquemaParamsDePago,
   esquemaReaplicarPago,
@@ -39,6 +40,7 @@ export function rutasDePagos(controlador: PagosControlador): FastifyPluginAsyncZ
     consultas(app, controlador);
     cambios(app, controlador);
     ligar(app, controlador);
+    apertura(app, controlador);
   };
 }
 
@@ -95,5 +97,14 @@ function ligar(app: FastifyInstance, controlador: PagosControlador): void {
     schema: { tags, body: esquemaPagoLigado },
     preHandler: [proteger({ permiso: 'cuentas-por-pagar.pagos.ligar-notas-de-debito' }), exigirAjustesSiHayDiferencias],
     handler: controlador.ligar,
+  });
+}
+
+/** La excepción para lo que ya estaba pagado antes de la fecha de inicio: sin dinero, con permiso propio. */
+function apertura(app: FastifyInstance, controlador: PagosControlador): void {
+  app.post(`${RUTA}/pagos/apertura`, {
+    schema: { tags, body: esquemaPagoDeApertura },
+    preHandler: proteger({ permiso: 'cuentas-por-pagar.pagos.aplicar-a-apertura' }),
+    handler: controlador.aplicarAApertura,
   });
 }

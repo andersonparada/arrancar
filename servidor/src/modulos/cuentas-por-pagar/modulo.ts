@@ -125,6 +125,11 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.pagos.ligar-notas-de-debito',
       descripcion: 'Pagar con una nota de débito ya registrada en Bancos y marcada para Cuentas por pagar',
     },
+    {
+      clave: 'cuentas-por-pagar.pagos.aplicar-a-apertura',
+      descripcion:
+        'Aplicar saldos iniciales a la cuenta de apertura (dar por pagado lo que ya se había pagado antes de la fecha de inicio)',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,

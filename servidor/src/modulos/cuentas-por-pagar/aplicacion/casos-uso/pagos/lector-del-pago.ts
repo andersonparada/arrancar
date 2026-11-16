@@ -35,6 +35,8 @@ export class LectorDelPago {
       numero: { numero: pago.numero, anio: pago.anioDeNumero },
       forma: pago.forma,
       observaciones: pago.observaciones,
+      motivo: pago.motivo,
+      conCargaCerrada: pago.conCargaCerrada,
       fecha: pago.fecha,
       hoy: await this.dependencias.reloj.hoy(operador),
       beneficiario: this.beneficiario(lineas, movimiento),

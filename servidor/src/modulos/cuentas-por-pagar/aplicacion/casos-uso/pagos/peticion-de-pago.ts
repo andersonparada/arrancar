@@ -35,5 +35,12 @@ export interface PeticionDeNotaLigada extends PeticionBase {
   movimientoId: string;
 }
 
-/** Lo que el guardador sabe guardar: las formas que emiten en Bancos y la que liga una nota ya registrada. */
-export type PeticionGuardable = PeticionDePago | PeticionDeNotaLigada;
+/** Dar por pagado un saldo inicial sin dinero (§5.3): la excepción, con motivo obligatorio. No admite diferencias. */
+export interface PeticionDeApertura extends PeticionBase {
+  forma: 'cuenta_de_apertura';
+  /** De 1 a 300 caracteres. */
+  motivo: string;
+}
+
+/** Lo que el guardador sabe guardar: las formas que emiten en Bancos, la que liga una nota ya registrada y la apertura. */
+export type PeticionGuardable = PeticionDePago | PeticionDeNotaLigada | PeticionDeApertura;

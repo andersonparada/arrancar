@@ -13,6 +13,8 @@ export interface PagoParaElDto {
   numero: { numero: number; anio: number };
   forma: FormaDePago;
   observaciones: string | null;
+  motivo: string | null;
+  conCargaCerrada: boolean | null;
   fecha: string;
   hoy: string;
   beneficiario: string;
@@ -29,7 +31,6 @@ export interface PagoParaElDto {
 /** Todo lo que el pago ya tiene resuelto al terminar de guardarse. */
 export interface PagoGuardado extends PagoParaElDto {
   empresaId: string;
-  movimiento: MovimientoCreado;
 }
 
 const sumaDe = (lineas: readonly LineaConRetencion[]): number =>
@@ -76,6 +77,8 @@ export function dtoDelPago(pago: PagoParaElDto): PagoDto {
     monto: sumaDeLaForma(pago),
     movimiento: pago.movimiento ? dtoDelMovimiento(pago.movimiento) : null,
     observaciones: pago.observaciones,
+    motivo: pago.motivo,
+    conCargaCerrada: pago.conCargaCerrada,
     estado: pago.estado,
     anulacion: pago.anulacion,
     aplicaciones: pago.lineas.map(dtoDeLaLinea),
@@ -110,11 +113,11 @@ export function eventoDelPago(pago: PagoGuardado): PagoRegistrado {
     fecha: pago.fecha,
     posfechado: pago.fecha > pago.hoy,
     montoCentavos: sumaDe(pago.lineas),
-    movimientoId: pago.movimiento.movimientoId,
-    cuentaBancariaId: pago.movimiento.cuentaBancariaId,
+    movimientoId: pago.movimiento?.movimientoId ?? null,
+    cuentaBancariaId: pago.movimiento?.cuentaBancariaId ?? null,
     retiroId: null,
     sinBancarizar: false,
-    efecto: efectoDelPago({ forma: pago.forma, conCargaCerrada: null }),
+    efecto: efectoDelPago({ forma: pago.forma, conCargaCerrada: pago.conCargaCerrada }),
     aplicaciones: pago.lineas.map(aplicacionDelEvento),
   });
 }

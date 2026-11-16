@@ -37,6 +37,7 @@ const aPago = (
   movimientoId: fila.movimientoId,
   retiroId: fila.retiroId,
   observaciones: fila.observaciones,
+  motivo: fila.motivo,
   conCargaCerrada: fila.conCargaCerrada,
   estado: fila.estado,
   fechaDeAnulacion: fila.fechaDeAnulacion,

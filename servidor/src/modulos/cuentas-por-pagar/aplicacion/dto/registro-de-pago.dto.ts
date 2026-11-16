@@ -54,6 +54,9 @@ export interface PagoDto {
   /** `null` en la cuenta de apertura y en efectivo. */
   movimiento: MovimientoDelPagoDto | null;
   observaciones: string | null;
+  /** Solo en la cuenta de apertura: por qué se dio por pagado, y si la carga inicial estaba cerrada. */
+  motivo: string | null;
+  conCargaCerrada: boolean | null;
   estado: EstadoDeUnPago;
   /** Solo en un pago anulado: la fecha contable de la anulación y el motivo. */
   anulacion: { fecha: string; motivo: string } | null;
