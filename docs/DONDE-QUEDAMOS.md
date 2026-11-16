@@ -45,7 +45,10 @@ cliente 1034, generador 46.
 | CP4-7 reintegros del proveedor | `agent-a9442d291f3afb5fb` | programando |
 | CP5-4 reportes de pagos y control (R6, R7, R8) | `agent-ab76b5e6013a35f9b` | programando (retomado tras un corte) |
 | CP5-8 cliente de R3, R4 y R5 | `agent-a95e0bf517758ee8a` | repitiendo su corrida completa (retomado) |
-| CP5-10 cliente de R12 (Libro de compras) | `agent-a0b1d282a47aa6b9e` | repitiendo su corrida completa (retomado) |
+| CP5-10 cliente de R12 (Libro de compras) | `agent-a0b1d282a47aa6b9e` | **terminado, sin unir** (commit `19e7eff`) |
+| Bancos H2 paso 5 (cliente del estado de cuenta en la conciliación) | `agent-af5ce5db56b554796` | programando (por pedido del usuario; avisado a la otra sesión) |
+| CP4-B2b avisos desde la conciliación (servidor) | `agent-ae9ac59462c01ab88` | programando |
+| Diseño de Bancos, segunda parte | `agent-aec064ab9725da815` | arquitecto diseñando |
 
 En `main`: CP4-6 (en verde: servidor 4563, cliente 1124, generador 46) y CP4-E2 (retiros de efectivo, `400e7f1`);
 pruebas corriendo con CP4-E2.
