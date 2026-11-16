@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import type { ConsultasDeRetenciones } from '../../aplicacion/puertos/puertos-de-retenciones.js';
@@ -60,6 +60,20 @@ export class ConsultasDeRetencionesDrizzle implements ConsultasDeRetenciones {
         and(sql`${retenciones.fecha} >= ${mes}::date`, sql`${retenciones.fecha} < (${mes}::date + interval '1 month')`),
       )
       .orderBy(...orden);
+    return filas.map(retencionDelReporte);
+  }
+
+  async pendientesDeConstancia(filtro: { hasta: string; proveedorId?: string }): Promise<RetencionDelReporte[]> {
+    const condiciones = [
+      isNull(retenciones.constanciaNumero),
+      gt(retenciones.monto, '0'),
+      sql`${retenciones.fecha} < (${filtro.hasta}::date + interval '1 month')`,
+      or(eq(documentos.estado, 'vigente'), eq(retenciones.resolucion, 'pendiente')),
+      filtro.proveedorId ? eq(documentos.proveedorId, filtro.proveedorId) : undefined,
+    ];
+    const filas = await consultaBase()
+      .where(and(...condiciones))
+      .orderBy(asc(retenciones.fecha), ...orden);
     return filas.map(retencionDelReporte);
   }
 

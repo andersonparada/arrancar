@@ -12,6 +12,7 @@ import { rutasDeAnalisisComponidas } from './composicion/analisis.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { rutasDeLibro } from './composicion/libro.js';
 import { rutasDePeriodosComponidas } from './composicion/periodos.js';
+import { rutasDeConstanciasPendientesComponidas } from './composicion/constancias-pendientes.js';
 import { rutasDeRetencionesComponidas } from './composicion/retenciones.js';
 // generador: importaciones
 
@@ -27,6 +28,7 @@ function componerRutas() {
     rutasDeDteRecibidosComponidas(),
     rutasDeLibro(),
     rutasDeRetencionesComponidas(),
+    rutasDeConstanciasPendientesComponidas(),
     rutasDePeriodosComponidas(),
     rutasDeAnalisisComponidas(),
     escuchasDeFechaDeInicioComponidas(),

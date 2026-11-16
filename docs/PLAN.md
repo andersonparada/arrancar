@@ -2022,3 +2022,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   migración (`pagos.referencia` y las formas ya existían). Desviaciones: el `PagoDto` no trae `referencia` (como en CP4-3, solo el
   mínimo); la lista de notas no pagina (hasta 200, las más nuevas); la nota ligada usa como beneficiario el de la nota y, si no
   tiene, el proveedor, sin exigir la razón social del NIT.
+- **2026-11-15 — CP5-6 (servidor, Libro de compras: constancias de retención pendientes, R12).** Migración
+  `0036_cp5_constancias_pendientes` (índice parcial `retenciones_sin_constancia_idx (empresa_id, fecha) where constancia_numero is
+  null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes` (filtros `hasta` = último mes, por omisión el
+  en curso, `grupo?` y `proveedorId?`) junta las retenciones practicadas sin constancia de todos los meses: por fila, mes, grupo,
+  `plazoDelGrupo` (entero, con el calendario de feriados), días para el plazo y si está vencido, si el mes y grupo está enterado,
+  y `plazoDeLaConstancia` (ISR: 5.º día hábil del mes siguiente, Código Tributario art. 8 num. 4, con el mismo calendario; IVA:
+  `null` con la nota «Sin plazo propio confirmado»), más totales por mes y grupo y total. Las de documentos anulados con
+  resolución pendiente van en `anuladas`, sin sumar. Rutas `GET /libro-de-compras/retenciones/constancias-pendientes` y
+  `…/exportar` (`retenciones.ver` y `.exportar`; sin permisos nuevos). Dominio nuevo: `plazo-de-la-constancia.ts`. Desviación:
+  los días para el plazo son de calendario (negativos si ya pasó), no hábiles.

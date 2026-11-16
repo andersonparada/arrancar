@@ -1,0 +1,1 @@
+CREATE INDEX "retenciones_sin_constancia_idx" ON "libro_de_compras"."retenciones" USING btree ("empresa_id","fecha") WHERE "libro_de_compras"."retenciones"."constancia_numero" is null and "libro_de_compras"."retenciones"."monto" > 0;

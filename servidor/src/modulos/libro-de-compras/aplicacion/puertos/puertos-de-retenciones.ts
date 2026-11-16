@@ -8,6 +8,11 @@ import type { ReglaDeRetencion } from '../../dominio/retencion-propuesta.js';
 export interface ConsultasDeRetenciones {
   /** Las retenciones cuya fecha cae en el mes (primer día), también las de monto cero y las de documentos anulados. */
   delMes(mes: string): Promise<RetencionDelReporte[]>;
+  /**
+   * Las retenciones practicadas (monto mayor que cero) sin constancia, de todos los meses hasta el de `hasta` (primer
+   * día, incluido): las de documentos vigentes y las de anulados que siguen «pendientes» de resolver.
+   */
+  pendientesDeConstancia(filtro: { hasta: string; proveedorId?: string }): Promise<RetencionDelReporte[]>;
   /** Las retenciones puestas en «por resolver» alguna vez: `pendiente`, o ya resueltas. */
   porResolver(estado: 'pendiente' | 'resueltas'): Promise<RetencionDelReporte[]>;
   /** Con `bloquear`, la fila queda bloqueada hasta el fin de la transacción. */
