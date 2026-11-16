@@ -25,6 +25,9 @@ class BancosFalso implements PagosEnBancos {
     this.nota = nota;
     return { movimientoId: 'm', cuentaBancariaId: nota.cuentaBancariaId, numero: 2, avisos: [] };
   }
+  async registrarNotaDeCredito(_: Operador, nota: NotaDeDebitoARegistrar) {
+    return { movimientoId: 'm', cuentaBancariaId: nota.cuentaBancariaId, numero: 3, avisos: [] };
+  }
   async anularMovimiento() {
     return { forma: 'sin_inverso' as const, fechaDelInverso: null };
   }

@@ -38,6 +38,9 @@ export interface NotaDeDebitoARegistrar {
   observaciones?: string;
 }
 
+/** Lo que Bancos necesita para registrar la nota de crédito de un depósito (el sobrante de un retiro). */
+export type NotaDeCreditoARegistrar = NotaDeDebitoARegistrar;
+
 /** El movimiento que Bancos creó, con sus avisos (el de fondos de un posfechado). */
 export interface MovimientoCreado {
   movimientoId: string;
@@ -52,6 +55,8 @@ export interface PagosEnBancos {
   medios(operador: Operador, fecha: string): Promise<MediosDePago>;
   emitirCheque(operador: Operador, cheque: ChequeAEmitir): Promise<MovimientoCreado>;
   registrarNotaDeDebito(operador: Operador, nota: NotaDeDebitoARegistrar): Promise<MovimientoCreado>;
+  /** El depósito de lo que sobró de un retiro, con el retiro como origen. */
+  registrarNotaDeCredito(operador: Operador, nota: NotaDeCreditoARegistrar): Promise<MovimientoCreado>;
   /** Anula el cheque o la nota que creó el pago (Bancos decide si a la antigua o con inverso); lanza lo que rechace Bancos. */
   anularMovimiento(operador: Operador, anulacion: AnulacionDeMovimiento): Promise<AnulacionDelMovimiento>;
   /** Vuelve a fijar el reparto por concepto del movimiento del pago (solo clasifica el flujo). */
@@ -82,6 +87,8 @@ export interface DesgloseDelMovimiento {
 
 /** Lo que se lee de Bancos (infraestructura, sin orden) de un movimiento de un pago. */
 export interface MovimientosDePagos {
+  /** Deja bloqueado el movimiento de Bancos (solo lectura para bloquear): se bloquea antes que el retiro. */
+  bloquear(movimientoId: string): Promise<void>;
   /** Si el movimiento ya está conciliado (el banco lo pagó); `false` si no existe. */
   estaConciliado(movimientoId: string): Promise<boolean>;
   /** La fecha de un movimiento, p. ej. la del inverso con que Bancos anuló el cheque; `null` si no existe. */

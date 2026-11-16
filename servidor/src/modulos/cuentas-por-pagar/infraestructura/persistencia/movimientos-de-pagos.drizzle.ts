@@ -9,6 +9,14 @@ import type { DatosDelMovimiento, MovimientosDePagos } from '../../aplicacion/pu
  * están conciliados, su fecha y su número. Las tablas de Bancos tienen seguridad por empresa (RLS).
  */
 export class MovimientosDePagosDrizzle implements MovimientosDePagos {
+  async bloquear(movimientoId: string): Promise<void> {
+    await transaccionEnCurso()
+      .select({ id: movimientos.id })
+      .from(movimientos)
+      .where(eq(movimientos.id, movimientoId))
+      .for('update');
+  }
+
   async estaConciliado(movimientoId: string): Promise<boolean> {
     const [fila] = await transaccionEnCurso()
       .select({ id: movimientos.id })

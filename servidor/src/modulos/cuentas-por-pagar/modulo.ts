@@ -13,6 +13,7 @@ import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-
 import { rutasDePagosComponidas } from './composicion/pagos.js';
 import { rutasDeReportesDeProveedorComponidas } from './composicion/reportes-de-proveedor.js';
 import { rutasDeReportesDeSaldosComponidas } from './composicion/reportes-de-saldos.js';
+import { rutasDeRetirosComponidas } from './composicion/retiros.js';
 import { rutasDeSaldosInicialesComponidas } from './composicion/saldos-iniciales.js';
 import { configuracionDeCuentasPorPagar } from './configuracion.js';
 // generador: importaciones
@@ -125,6 +126,23 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.pagos.ligar-notas-de-debito',
       descripcion: 'Pagar con una nota de débito ya registrada en Bancos y marcada para Cuentas por pagar',
     },
+    {
+      clave: 'cuentas-por-pagar.retiros.ver',
+      descripcion:
+        'Ver los retiros de efectivo para pagos, lo que queda de cada uno y los retiros por liquidar a una fecha',
+    },
+    {
+      clave: 'cuentas-por-pagar.retiros.crear',
+      descripcion: 'Registrar un retiro de efectivo para pagos (crea el cheque o la nota de débito en Bancos)',
+    },
+    {
+      clave: 'cuentas-por-pagar.retiros.liquidar',
+      descripcion: 'Liquidar un retiro de efectivo (depositar lo que sobró o declarar el faltante) y reabrirlo',
+    },
+    {
+      clave: 'cuentas-por-pagar.retiros.anular',
+      descripcion: 'Anular un retiro de efectivo que no tiene pagos (anula también su cheque o su nota en Bancos)',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -141,6 +159,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeSaldosInicialesComponidas(),
     rutasDeContrasenasComponidas(),
     rutasDePagosComponidas(),
+    rutasDeRetirosComponidas(),
     rutasDeReportesDeSaldosComponidas(),
     rutasDeReportesDeProveedorComponidas(),
     // generador: rutas
