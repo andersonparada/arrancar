@@ -2003,3 +2003,12 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   referencia (cheque o recibo) pero no la cuenta bancaria; los saldos iniciales nunca aparecen como línea en un rango posterior a
   su emisión (entran en el saldo anterior). `nombres-de-tipos.ts` pasó de `http/` a `dominio/` porque el concepto de las líneas lo
   usa.
+- **2026-11-15 — CP5-7 (cliente, reportes de saldos: R1 y R2).** Páginas `SaldosPorProveedor` y `DocumentosAUnaFecha`
+  (`/cuentas-por-pagar/reportes/saldos-por-proveedor` y `…/documentos`, sección **Reportes** del menú, permiso
+  `cuentas-por-pagar.reportes-de-saldos.ver`; Excel solo con `.exportar`, mediante `AccionesDeIntercambio`). Componentes comunes en
+  `componentes/reportes/` (`EncabezadoDeImpresion`, `FiltroDeCorte`, `TotalesDelReporte`, `LeyendasDelReporte`,
+  `AccionesDelReporte`). R1: acreedores y deudores en tarjetas (celular) o tabla (desde `lg` y en papel), NIT con fichas como
+  subrenglones (cada ficha lleva a R2), porcentajes por tramo sobre cargos y avisos del servidor. R2: seis vistas que preajustan
+  filtros editables (`aplicarVista`), «Más filtros», paginación de 50 e impresión que pide hasta 2,000 filas (con más avisa «Son N
+  filas: acote el filtro o use Excel»). El corte se valida en el cliente contra la fecha de inicio que devuelve el servidor
+  (solo para avisar antes; la regla sigue siendo del servidor). Lógica pura con pruebas en `composables/reportes/`.
