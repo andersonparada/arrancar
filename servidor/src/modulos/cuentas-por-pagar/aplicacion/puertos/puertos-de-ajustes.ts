@@ -25,6 +25,8 @@ export interface RepositorioDeAjustes {
   agregar(nota: DocumentoPorPagar, ajuste: AjusteNuevo): Promise<string>;
   /** El ajuste con su nota; `null` si no existe en la empresa. */
   buscar(id: string): Promise<AjusteDeSaldo | null>;
+  /** Los ajustes vigentes que dejó un pago (la diferencia de centavos de sus cargos), por id. */
+  vigentesDelPago(pagoId: string): Promise<AjusteDeSaldo[]>;
   /** Lo deja `anulado` con quién, cuándo y por qué; el saldo libre vuelve a la nota. */
   anular(id: string, anulacion: AnulacionDeAjuste): Promise<void>;
 }

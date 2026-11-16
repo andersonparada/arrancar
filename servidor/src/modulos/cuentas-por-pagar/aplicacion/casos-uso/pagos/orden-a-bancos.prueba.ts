@@ -25,6 +25,10 @@ class BancosFalso implements PagosEnBancos {
     this.nota = nota;
     return { movimientoId: 'm', cuentaBancariaId: nota.cuentaBancariaId, numero: 2, avisos: [] };
   }
+  async anularMovimiento() {
+    return { forma: 'sin_inverso' as const, fechaDelInverso: null };
+  }
+  async fijarDesglose() {}
 }
 
 const datos = { pagoId: 'p1', fecha: '2026-11-10', montoCentavos: 300, beneficiario: 'Agro S.A.', conceptos: [] };

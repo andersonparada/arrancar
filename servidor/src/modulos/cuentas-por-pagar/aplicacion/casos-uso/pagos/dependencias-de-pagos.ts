@@ -14,6 +14,7 @@ import type {
 import type {
   ConsultasDePagos,
   DatosFiscalesDeLaEmpresa,
+  MovimientosDePagos,
   NombreDelNit,
   PagosEnBancos,
   RepositorioDePagos,
@@ -21,6 +22,7 @@ import type {
   TopeDeDiferenciaDelPago,
 } from '../../puertos/puertos-de-pagos.js';
 import type { CargaInicial } from '../../puertos/puertos-de-saldos-iniciales.js';
+import type { ReglaDePago } from '../../../dominio/reglas-de-anulacion-de-pagos.js';
 
 /** El recurso con que se audita la diferencia de un cargo (el mismo de los ajustes de notas). */
 export { RECURSO_DE_AJUSTES } from '../ajustes/dependencias-de-ajustes.js';
@@ -71,4 +73,27 @@ export interface LineaRevisada {
   saldoCentavos: number;
   montoCentavos: number;
   contrasena: { id: string; numero: string };
+}
+
+/** Lo que necesitan anular un pago, reaplicarlo y saldar la diferencia de un cargo desde su ficha (CP4-4). */
+export interface DependenciasDeCambiarPagos {
+  unidadDeTrabajo: UnidadDeTrabajo;
+  documentos: RepositorioDeDocumentos;
+  consultas: ConsultasDeDocumentos;
+  contrasenas: RepositorioDeContrasenas;
+  pagos: RepositorioDePagos;
+  consultasDePagos: ConsultasDePagos;
+  ajustes: RepositorioDeAjustes;
+  bancos: PagosEnBancos;
+  /** Lo que se lee de Bancos sin orden: si el movimiento está conciliado, su fecha, su número. */
+  movimientos: MovimientosDePagos;
+  topeDeDiferencia: TopeDeDiferenciaDelPago;
+  cargaInicial: CargaInicial;
+  auditoria: Auditoria;
+  /** Se publica después de confirmar la transacción de la propia petición (o de la de Bancos, si llegó por aviso). */
+  publicadorEventos: PublicadorEventos;
+  reloj: Reloj;
+  /** Contabilidad sumará la del mes cerrado sin tocar los casos de uso. */
+  reglasParaAnular: readonly ReglaDePago[];
+  reglasParaReaplicar: readonly ReglaDePago[];
 }

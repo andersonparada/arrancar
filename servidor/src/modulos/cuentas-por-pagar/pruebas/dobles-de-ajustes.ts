@@ -33,6 +33,10 @@ export class AjustesEnMemoria implements RepositorioDeAjustes {
     return ajuste ? { ...ajuste } : null;
   }
 
+  async vigentesDelPago(): Promise<AjusteDeSaldo[]> {
+    return [];
+  }
+
   async anular(id: string, anulacion: AnulacionDeAjuste): Promise<void> {
     const ajuste = this.documentos.ajustes.find((candidato) => candidato.id === id)!;
     ajuste.estado = 'anulado';

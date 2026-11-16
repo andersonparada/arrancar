@@ -36,6 +36,26 @@ export const esquemaPago = z.discriminatedUnion('forma', [
   }),
 ]);
 
+export const esquemaParamsDePago = z.object({ id: z.uuid() });
+
+const motivo = z.string().trim().min(1, 'Escriba el motivo.').max(300, 'El motivo admite hasta 300 caracteres.');
+
+/** Anular un pago: el motivo y, si movió dinero, la fecha del inverso en Bancos (por omisión la decide Bancos). */
+export const esquemaAnularPago = z.object({ motivo, fecha: fecha.optional() });
+
+/** Reaplicar un pago a otros cargos de las contraseñas vigentes del proveedor; la suma no cambia. */
+export const esquemaReaplicarPago = z.object({
+  motivo,
+  aplicaciones: lineas.max(MAXIMO_DE_DOCUMENTOS_EN_PAGO + 1),
+});
+
+/** Dar por saldada la diferencia de centavos de un cargo del pago. */
+export const esquemaSaldarDiferencia = z.object({
+  cargoId: z.uuid({ error: 'Escoja el documento.' }),
+  monto,
+  fecha: fecha.optional(),
+});
+
 export const esquemaParaPagar = z.object({ contrasenaId: z.uuid().optional(), fecha: fecha.optional() });
 export const esquemaMedios = z.object({ fecha: fecha.optional() });
 
@@ -49,3 +69,7 @@ export type PagoSolicitado = z.infer<typeof esquemaPago>;
 export type ParaPagarSolicitado = z.infer<typeof esquemaParaPagar>;
 export type MediosSolicitado = z.infer<typeof esquemaMedios>;
 export type ProveedoresPorPagarSolicitado = z.output<typeof esquemaProveedoresPorPagar>;
+export type ParamsDePago = z.infer<typeof esquemaParamsDePago>;
+export type AnularPagoSolicitado = z.infer<typeof esquemaAnularPago>;
+export type ReaplicarPagoSolicitado = z.infer<typeof esquemaReaplicarPago>;
+export type SaldarDiferenciaSolicitada = z.infer<typeof esquemaSaldarDiferencia>;

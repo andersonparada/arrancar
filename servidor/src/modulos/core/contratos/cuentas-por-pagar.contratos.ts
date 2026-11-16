@@ -113,7 +113,47 @@ declare module '../eventos/bus-eventos.js' {
         tieneActivoFijo: boolean;
       }>;
     };
+    /**
+     * Un pago vigente pasó a cubrir otros cargos (reaplicación). `fecha` es la de hoy; el dinero, la fecha del pago y su
+     * movimiento no cambian, así que Contabilidad solo mueve lo reclasificado (`antes` y `despues`, centavos enteros).
+     */
+    'cuentas-por-pagar.pago_reaplicado': {
+      empresaId: string;
+      pagoId: string;
+      fecha: string;
+      fechaDelPago: string;
+      efecto: 'banco' | 'transitoria_por_aplicar' | 'apertura' | 'correccion_de_error' | 'efectivo';
+      retiroId: string | null;
+      antes: Array<AplicacionDelPagoEnElEvento>;
+      despues: Array<AplicacionDelPagoEnElEvento>;
+    };
+    /**
+     * Se anuló un pago. `fecha` es la fecha contable de la anulación y `fechaOriginal` la del pago; `anulacionEnBancos`
+     * dice cómo la hizo Bancos (`sin_inverso`: el cheque «nunca existió», se cancela la partida; `con_inverso`: se revierte
+     * con `fecha`) o es `null` si el pago no tenía movimiento propio (nota ligada, cuenta de apertura, efectivo).
+     */
+    'cuentas-por-pagar.pago_anulado': {
+      empresaId: string;
+      pagoId: string;
+      fecha: string;
+      fechaOriginal: string;
+      anulacionEnBancos: 'sin_inverso' | 'con_inverso' | null;
+      montoCentavos: number;
+      efecto: 'banco' | 'transitoria_por_aplicar' | 'apertura' | 'correccion_de_error' | 'efectivo';
+      movimientoId: string | null;
+      retiroId: string | null;
+    };
   }
+}
+
+/** Lo que un pago entregó a un cargo, para que Contabilidad reparta la partida. */
+interface AplicacionDelPagoEnElEvento {
+  documentoId: string;
+  documentoDeCompraId: string | null;
+  origen: 'libro_de_compras' | 'saldo_inicial';
+  montoCentavos: number;
+  retencionDescontadaCentavos: number;
+  tieneActivoFijo: boolean;
 }
 
 export {};

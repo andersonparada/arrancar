@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import {
   contextoEnCurso,
@@ -12,6 +12,18 @@ import type {
 import type { AjusteDeSaldo, CausaDeAjuste } from '../../dominio/ajustes.js';
 import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
 import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
+
+const aAjuste = (fila: typeof ajustesDeSaldo.$inferSelect): AjusteDeSaldo => ({
+  id: fila.id,
+  documentoId: fila.documentoId,
+  montoCentavos: aCentavos(fila.monto),
+  fecha: fila.fecha,
+  causa: fila.causa as CausaDeAjuste,
+  motivo: fila.motivo,
+  referencia: fila.referencia,
+  estado: fila.estado as AjusteDeSaldo['estado'],
+  motivoDeAnulacion: fila.motivoDeAnulacion,
+});
 
 /** La tabla tiene seguridad por empresa (RLS). */
 export class RepositorioDeAjustesDrizzle implements RepositorioDeAjustes {
@@ -36,18 +48,16 @@ export class RepositorioDeAjustesDrizzle implements RepositorioDeAjustes {
 
   async buscar(id: string): Promise<AjusteDeSaldo | null> {
     const [fila] = await transaccionEnCurso().select().from(ajustesDeSaldo).where(eq(ajustesDeSaldo.id, id));
-    if (!fila) return null;
-    return {
-      id: fila.id,
-      documentoId: fila.documentoId,
-      montoCentavos: aCentavos(fila.monto),
-      fecha: fila.fecha,
-      causa: fila.causa as CausaDeAjuste,
-      motivo: fila.motivo,
-      referencia: fila.referencia,
-      estado: fila.estado as AjusteDeSaldo['estado'],
-      motivoDeAnulacion: fila.motivoDeAnulacion,
-    };
+    return fila ? aAjuste(fila) : null;
+  }
+
+  async vigentesDelPago(pagoId: string): Promise<AjusteDeSaldo[]> {
+    const filas = await transaccionEnCurso()
+      .select()
+      .from(ajustesDeSaldo)
+      .where(and(eq(ajustesDeSaldo.pagoId, pagoId), eq(ajustesDeSaldo.estado, 'vigente')))
+      .orderBy(asc(ajustesDeSaldo.documentoId));
+    return filas.map(aAjuste);
   }
 
   async anular(id: string, { anuladoPor, motivo }: AnulacionDeAjuste): Promise<void> {

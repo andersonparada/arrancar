@@ -111,6 +111,14 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.reportes-de-saldos.exportar',
       descripcion: 'Exportar a Excel los reportes de saldos de proveedores',
     },
+    {
+      clave: 'cuentas-por-pagar.pagos.reaplicar',
+      descripcion: 'Reaplicar un pago vigente a otros documentos de las contraseñas vigentes de su proveedor',
+    },
+    {
+      clave: 'cuentas-por-pagar.pagos.anular',
+      descripcion: 'Anular un pago (anula también su cheque o su nota en Bancos y sus diferencias de centavos)',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,

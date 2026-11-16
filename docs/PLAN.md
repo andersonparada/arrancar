@@ -1960,3 +1960,25 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   20,000 filas ~2 s (tope 1.5 s y 8 s). Desviaciones: R2 lista solo cargos (las notas son de R4), sin vencimiento no existe en
   un cargo (la base exige vencimiento a todo cargo; la columna queda en cero); un saldo inicial no se puede anular (la base
   lo exige registrado o autorizado), así que la prueba de documento anulado usa uno del libro.
+- **2026-11-15 — CP4-4 (servidor, anular un pago, reaplicarlo y saldar su diferencia).** `AnularPago`
+  (`POST /cuentas-por-pagar/pagos/:id/anular`, `pagos.anular`, motivo y `fecha` opcional del inverso): bloquea el pago, corre
+  `REGLAS_PARA_ANULAR_PAGO` (`noEstarCobrado`: el movimiento conciliado, leído de Bancos, se rechaza con `pago_cobrado`),
+  ordena `bancos.anular_movimiento_de_origen` (cheque o nota; Bancos decide `sin_inverso` o `con_inverso`), deja el pago
+  `anulado` con `fecha_de_anulacion` (sin inverso, la del pago; con inverso, la fecha del inverso **leída** de
+  `bancos.movimientos` por `inversoId`; sin movimiento, `greatest(hoy, fecha del pago)`), pone sus líneas sin vigencia
+  (la retención queda libre para el siguiente pago), anula sus ajustes de diferencia (auditoría `anular` de cada uno),
+  audita `anular` con el `PagoDto` como estaba y publica `pago_anulado` (`anulacionEnBancos`, `fechaOriginal`, `efecto`).
+  `AtenderMovimientoPorCambiar` escucha `bancos.movimiento_por_cambiar`: `anular` (también el lote de cheques caducos)
+  anula el pago con la forma y la fecha del aviso sin volver a ordenar a Bancos; eliminar, blanquear, corregir y
+  reclasificar lo que emitió un pago vigente se rechazan (`movimiento_de_cuentas_por_pagar`), todo cambio de una nota
+  ligada también (`movimiento_ligado_a_pagos`) y eliminar lo que solo tiene pagos anulados
+  (`movimiento_con_pagos_anulados`); es idempotente. `ReaplicarPago` (`POST …/:id/reaplicar`, `pagos.reaplicar`, motivo y
+  cargos nuevos): bloquea pago, contraseñas y cargos de antes y de después en orden de id, revisa los cargos con el saldo
+  sin contar este pago (cualquier contraseña vigente del proveedor), exige la misma suma, anula las diferencias, recalcula
+  la retención sin contar la del propio pago, vuelve a fijar el desglose en Bancos si cambió lo de activo fijo, audita
+  `corregir` y publica `pago_reaplicado`. `SaldarDiferenciaDelPago` (`POST …/:id/diferencias`, `ajustes.crear`): el
+  residuo de un pago vigente, hasta el tope y el saldo, con fecha del pago a hoy. Los tres devuelven el `PagoDto`, que ahora
+  admite `estado` anulado, `anulacion` y `movimiento` nulo; se arma con `LectorDelPago` desde el pago guardado. El
+  registrar pago comparte `RegistradorDeDiferencias`. Sin migración. Desviaciones: la respuesta de reaplicar lleva `avisos`
+  vacíos; la forma `efectivo` y el desglose de la nota ligada llegan con CP4-E3 y CP4-5 (el código ya trata a esas formas
+  sin orden a Bancos); el motivo que Bancos recibe lleva el prefijo «Anulado desde Cuentas por pagar: ».
