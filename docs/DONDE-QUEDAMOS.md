@@ -54,6 +54,10 @@ Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie má
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
 se limpie al escribir (hoy solo en las ventanas con motivo; `quitarErrorAlCambiar` en `usar-formulario.ts`).
 
+**Siguiente módulo (decidido 2026-11-16): Bancos, segunda parte.** Lanzar al arquitecto para
+`docs/modulos/diseno-bancos-segunda-parte.md` (el primer intento falló por un error transitorio del clasificador de
+permisos); luego el contador.
+
 **Otra sesión («Siguiente módulo independiente»)** lleva Bancos H2: el servidor de H2b está en `main` (migración de
 bancos `0031`); le falta el cliente de la conciliación y su QA. Acordado: la `0032`/`0033` de bancos son de CP4; el
 aviso al desmarcar desde la conciliación (CP4-B2b) va después del cliente de H2b.

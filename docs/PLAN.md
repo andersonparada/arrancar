@@ -2074,3 +2074,7 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (§4.1 punto 4) queda para CP4-E3, que trae la lectura del régimen fiscal; sin pagos en efectivo todavía, las pruebas siembran
   los pagos con SQL; `fecha` del evento `retiro_reabierto` = fecha del inverso del depósito, la de la liquidación si «nunca
   existió», o la de hoy sin depósito.
+- **2026-11-16 — Siguiente módulo: Bancos, segunda parte** (usuario). Se diseña en paralelo mientras se termina Cuentas
+  por pagar (`docs/modulos/diseno-bancos-segunda-parte.md`, arquitecto; luego contador): saldos iniciales con cheques en
+  circulación y depósitos en tránsito, cuadre con la primera conciliación, cheque de apertura que se anula (revive el
+  pasivo), y los pasos de pagos en Bancos (CP4-B2b, CP4-B3). Coordinado con la otra sesión, que lleva Bancos H2.
