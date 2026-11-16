@@ -29,6 +29,18 @@ describe('normalizarFacturaAnterior', () => {
   });
 
   it.each([
+    ['IVA negativo', { iva: -1 }, /negativo/],
+    [
+      'notas de débito anteriores negativas',
+      { notasDeDebitoAnterioresTotal: -100, notasDeDebitoAnterioresIva: -10 },
+      /negativos/,
+    ],
+    ['IVA mayor que el total', { iva: 112001 }, /mayor que su total/],
+  ])('dice la causa cuando hay %s', (_caso, cambios, mensaje) => {
+    expect(() => normalizarFacturaAnterior(datos(cambios))).toThrow(mensaje);
+  });
+
+  it.each([
     ['total en cero', { total: 0 }],
     ['IVA mayor que el total', { iva: 112001 }],
     [

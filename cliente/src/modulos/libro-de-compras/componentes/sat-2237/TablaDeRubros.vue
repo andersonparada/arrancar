@@ -13,7 +13,7 @@ const grupos = [
   { clave: 'notasDeCredito', titulo: 'Notas de crédito' },
   { clave: 'neto', titulo: 'Neto' },
 ] as const;
-const clasesDeNumero = 'px-3 py-2 text-right tabular-nums';
+const clasesDeNumero = 'px-2 py-2 text-right tabular-nums xl:px-3';
 </script>
 
 <template>
@@ -23,7 +23,7 @@ const clasesDeNumero = 'px-3 py-2 text-right tabular-nums';
     aria-label="Rubros del SAT-2237"
     tabindex="0"
   >
-    <table class="w-full min-w-max border-collapse text-sm">
+    <table class="w-full min-w-max border-collapse text-sm lg:min-w-0 lg:text-xs xl:text-sm">
       <thead class="bg-tierra-100 text-xs uppercase text-tierra-700 dark:bg-tierra-800 dark:text-tierra-200">
         <tr>
           <th scope="col" rowspan="2" class="px-3 py-2 text-left font-semibold">Rubro</th>
@@ -44,7 +44,7 @@ const clasesDeNumero = 'px-3 py-2 text-right tabular-nums';
           :key="rubro.clave"
           :class="{ 'text-tierra-500 dark:text-tierra-400': rubroSinMovimiento(rubro) }"
         >
-          <th scope="row" class="min-w-52 px-3 py-2 text-left font-medium">
+          <th scope="row" class="min-w-52 px-3 py-2 text-left font-medium lg:min-w-0">
             {{ rubro.nombre }}
             <span v-if="rubro.nota" class="block max-w-xs text-xs font-normal text-tierra-600 dark:text-tierra-300">{{
               rubro.nota

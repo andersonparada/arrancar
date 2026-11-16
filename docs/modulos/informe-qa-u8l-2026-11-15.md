@@ -62,21 +62,21 @@ débito ND-001 base 200 IVA 24 sin crédito (NDT).
 2. **Mensajes de rechazo al cambiar la fecha de inicio (baja). Corregido.** Decían «Hay 1 notas» y «emitidas desde» (las
    emitidas son las facturas). Ahora concuerdan en singular y plural y dicen «facturas… con fecha del dd/mm/aaaa o
    posterior» (prueba nueva `errores-de-factura-anterior.prueba.ts`).
-3. **La vista previa de la confirmación en lote no anticipa el rechazo «factura ya es del sistema anterior» (baja).**
+3. **La vista previa de la confirmación en lote no anticipa el rechazo «factura ya es del sistema anterior» (baja). Corregido (U8l-9).**
    Pasos: importar un DTE FACT con serie y número de una factura citada por una nota (B-F100), marcarlo y pulsar «Confirmar».
    Esperado: aviso de error en la ventana antes de «Registrar». Pasó: sale en verde («Neto a pagar Q 1,120.00») y recién al
    registrar aparece «1 factura no se registró y sigue pendiente» con el camino completo. No se pierde nada, solo se
    descubre tarde. Sin corregir (toca la vista previa de la bandeja).
-4. **Mensajes de montos con nombre equivocado (baja).** Con IVA de la factura anterior negativo dice «El IVA de la factura
+4. **Mensajes de montos con nombre equivocado (baja). Corregido (U8l-9).** Con IVA de la factura anterior negativo dice «El IVA de la factura
    no puede ser mayor que su total»; con notas de débito anteriores negativas dice lo mismo del IVA de las notas de débito.
    Esperado: «no puede ser negativo». Se rechaza bien; solo el texto confunde. Sin corregir.
-5. **Excel y PDF del libro muestran la clave del motivo (baja, ya existía).** La hoja Resumen escribe
+5. **Excel y PDF del libro muestran la clave del motivo (baja, ya existía). Corregido (U8l-9).** La hoja Resumen escribe
    `otra_causa_sin_credito` y `nota_de_debito_tardia` en «IVA sin crédito por motivo» (la pantalla sí usa los nombres).
    Archivos: `hojas-del-libro.ts` y `hoja-de-resumen.ts`. Sin corregir.
-6. **«Este proveedor no tiene facturas vigentes» antes de elegir proveedor (baja).** En el formulario de una nota, el
+6. **«Este proveedor no tiene facturas vigentes» antes de elegir proveedor (baja). Corregido (U8l-9).** En el formulario de una nota, el
    selector «Factura que rebaja esta nota» lo dice aunque todavía no se eligió proveedor. El diálogo de eliminar una nota
    se titula «Eliminar factura». Sin corregir.
-7. **Observaciones menores.** La vista previa del formulario muestra el texto genérico «Elija el proveedor, escriba el
+7. **Observaciones menores. Corregidas (U8l-9), salvo la regla de fechas futuras del libro, que es general del libro y queda anotada.** La vista previa del formulario muestra el texto genérico «Elija el proveedor, escriba el
    número…» cuando el cálculo devuelve un rechazo (el error sí aparece en el campo, lejos de la barra de abajo). La ficha de
    un rol de solo lectura pide listas que no puede ver (403 de conceptos y terceros en consola) pero se muestra completa.
    La tabla de rubros del SAT-2237 en escritorio necesita desplazarse a la derecha para ver el neto. Una factura del libro

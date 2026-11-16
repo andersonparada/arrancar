@@ -3,8 +3,11 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { ErrorEsperado } from '../../../../core/compartido/dominio/errores.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { resolverTipoDeDocumento } from '../../../dominio/familia-del-documento.js';
 import { exigirVigenteEnLaSat } from '../../../dominio/confirmabilidad-del-dte.js';
 import { DteSinConcepto, FaltaLaFechaDeRecepcion } from '../../../dominio/errores-de-bandeja.js';
+import type { RepositorioDeFacturasAnteriores } from '../../puertos/puertos-de-facturas-anteriores.js';
+import { exigirQueLaClaveNoSeaDelSistemaAnterior } from '../documentos/factura-anterior-al-registrar.js';
 import type { DocumentoDto } from '../../dto/documento.dto.js';
 import type { RepositorioDeDteRecibidos } from '../../puertos/repositorio-de-dte-recibidos.js';
 import type { PrevisualizarDocumento } from '../documentos/previsualizar-documento.js';
@@ -23,6 +26,7 @@ interface Dependencias {
   filas: RepositorioDeDteRecibidos;
   armador: ArmadorDeSolicitudDelDte;
   previsualizar: PrevisualizarDocumento;
+  facturasAnteriores: RepositorioDeFacturasAnteriores;
   proveedorDeLaFila: ProveedorDeLaFila;
   crearProponedor: (operador: Operador) => ProponedorDeDte;
 }
@@ -99,10 +103,20 @@ export class VistaPreviaDeDteRecibidos {
       exigirConfirmado: false,
     });
     const completas = { proveedorId, conceptoId, destino: decisiones.destino };
-    const peticion = { solicitud: solicitudCompleta(solicitud, completas), puedeAjustarRetenciones: false };
+    const completa = solicitudCompleta(solicitud, completas);
+    await this.exigirQueNoSeaDelSistemaAnterior(completa);
+    const peticion = { solicitud: completa, puedeAjustarRetenciones: false };
     const { documento, avisos: delCalculo } = await this.dependencias.previsualizar.ejecutar(operador, peticion);
     const resultado = { id, documento, avisos: [MARCA_DE_MONTOS_DE_LA_SAT, ...avisos, ...delCalculo] };
     return nuevo ? { ...resultado, proveedorNuevo: nuevo } : resultado;
+  }
+
+  /** Confirmar lo rechazaría (la factura ya la cita una nota como del sistema anterior): se anticipa aquí. */
+  private async exigirQueNoSeaDelSistemaAnterior(solicitud: ReturnType<typeof solicitudCompleta>): Promise<void> {
+    const { proveedorId, serie, numero, autorizacionFel } = solicitud;
+    const { tipo } = resolverTipoDeDocumento(solicitud);
+    const clave = { proveedorId, serie, numero, autorizacionFel };
+    await exigirQueLaClaveNoSeaDelSistemaAnterior(this.dependencias.facturasAnteriores, tipo, clave);
   }
 }
 

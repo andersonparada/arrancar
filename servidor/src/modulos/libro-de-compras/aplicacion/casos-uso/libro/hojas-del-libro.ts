@@ -4,7 +4,7 @@ import { TEXTO_DE_CAUSA_DE_ANULACION, type CausaDeAnulacion } from '../../../dom
 import { COLUMNAS_DEL_LIBRO, esCampoDeTexto } from '../../../dominio/libro/columnas-del-libro.js';
 import type { AnuladoDelLibro } from '../../../dominio/libro/documento-del-libro.js';
 import type { ColumnaDeDinero, FilaDelLibro } from '../../../dominio/libro/fila-del-libro.js';
-import { LEYENDA_DE_MOTIVOS } from '../../../dominio/libro/motivos-del-libro.js';
+import { LEYENDA_DE_MOTIVOS, NOMBRE_DEL_MOTIVO_EN_EL_LIBRO } from '../../../dominio/libro/motivos-del-libro.js';
 import type { LibroArmado } from './consultar-libro.js';
 
 /** Excel recibe el dinero como número con dos decimales; los centavos son enteros, así que no hay error de suma. */
@@ -56,7 +56,7 @@ function gruposDelResumen({ libro }: LibroArmado): unknown[][] {
     ...resumen.porTipoDte.map((g) => [g.tipoDte ?? 'Sin tipo', g.cantidad, quetzales(g.total)]),
     [],
     ['IVA sin crédito por motivo', ''],
-    ...resumen.ivaSinCreditoPorMotivo.map((g) => [g.motivo, quetzales(g.ivaSinCredito)]),
+    ...resumen.ivaSinCreditoPorMotivo.map((g) => [NOMBRE_DEL_MOTIVO_EN_EL_LIBRO[g.motivo], quetzales(g.ivaSinCredito)]),
     [],
     ['Combustibles', ''],
     ['Base', quetzales(resumen.combustibles.base)],

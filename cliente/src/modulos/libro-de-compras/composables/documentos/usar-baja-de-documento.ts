@@ -7,6 +7,7 @@ import {
   edicionDeAnulacionVacia,
   erroresDeAnulacion,
   mensajeDeEliminacion,
+  nombreDelRegistro,
   type EdicionDeAnulacion,
 } from './reglas-de-baja-de-documento';
 
@@ -65,7 +66,7 @@ function usarAnulacion(ficha: FichaActual, { errores, pedir }: Peticion, alAnula
 async function eliminarConConfirmacion(ficha: FichaDeDocumento, { pedir }: Peticion, alEliminar: () => void) {
   const avisos = usarAvisos();
   const confirmado = await avisos.confirmar({
-    titulo: 'Eliminar factura',
+    titulo: nombreDelRegistro(ficha) === 'nota' ? 'Eliminar nota' : 'Eliminar factura',
     mensaje: mensajeDeEliminacion(ficha),
     textoConfirmar: 'Eliminar',
     peligroso: true,
@@ -73,7 +74,7 @@ async function eliminarConConfirmacion(ficha: FichaDeDocumento, { pedir }: Petic
   const resultado = confirmado ? await pedir(() => apiDocumentos.eliminar(ficha.id)) : null;
   if (!resultado) return;
   alEliminar();
-  avisos.exito('Factura eliminada.');
+  avisos.exito(nombreDelRegistro(ficha) === 'nota' ? 'Nota eliminada.' : 'Factura eliminada.');
   mostrarAvisos(resultado.respuesta?.avisos ?? []);
 }
 

@@ -46,11 +46,18 @@ const MAXIMO_DEL_DETALLE = 500;
 
 function exigirMontos(datos: DatosDeFacturaAnterior): void {
   if (datos.total <= 0) throw new FacturaAnteriorInvalida('El total de la factura debe ser mayor que cero.', 'total');
-  if (datos.iva < 0 || datos.iva > datos.total) {
+  if (datos.iva < 0) throw new FacturaAnteriorInvalida('El IVA de la factura no puede ser negativo.', 'iva');
+  if (datos.iva > datos.total) {
     throw new FacturaAnteriorInvalida('El IVA de la factura no puede ser mayor que su total.', 'iva');
   }
   const { notasDeDebitoAnterioresTotal: total, notasDeDebitoAnterioresIva: iva } = datos;
-  if (total < 0 || iva < 0 || iva > total) {
+  if (total < 0 || iva < 0) {
+    throw new FacturaAnteriorInvalida(
+      'El total y el IVA de las notas de débito anteriores no pueden ser negativos.',
+      'notasDeDebitoAnterioresIva',
+    );
+  }
+  if (iva > total) {
     throw new FacturaAnteriorInvalida(
       'El IVA de las notas de débito anteriores no puede ser mayor que su total.',
       'notasDeDebitoAnterioresIva',

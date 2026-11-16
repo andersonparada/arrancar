@@ -15,6 +15,7 @@ import {
   opcionesDePeriodoDelDocumento,
   opcionesDeProveedores,
 } from '../../composables/documentos/reglas-del-formulario-de-documento';
+import { textoInicialDeLasFacturas } from '../../composables/documentos/texto-de-las-facturas';
 import {
   elegirLaFacturaQueCorrige,
   opcionDeFacturaAnterior,
@@ -52,12 +53,14 @@ const opcionesDeDestino = computed(() => [
 const esDebito = computed(() => esNotaDeDebito(edicion.value.tipoDte));
 const facturasDeLaNota = computed(() => {
   const facturas = opcionesDeFacturas(props.facturas, esDebito.value);
-  const sinFacturas = esDebito.value
-    ? 'Este proveedor no tiene facturas vigentes en el libro'
-    : 'Este proveedor no tiene facturas vigentes';
   const anterior = opcionDeFacturaAnterior(props.sugerencias.fechaDeInicio);
   const sinOpciones = facturas.length + anterior.length === 0;
-  return [{ valor: null, texto: sinOpciones ? sinFacturas : 'Elija la factura' }, ...anterior, ...facturas];
+  const texto = textoInicialDeLasFacturas({
+    hayProveedor: edicion.value.proveedorId !== null,
+    sinOpciones,
+    esDebito: esDebito.value,
+  });
+  return [{ valor: null, texto }, ...anterior, ...facturas];
 });
 /** El selector «Factura que corrige» elige entre una factura del libro y «una factura del sistema anterior». */
 const facturaElegida = computed({

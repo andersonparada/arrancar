@@ -12,7 +12,13 @@ import TotalesDelDocumento from '../documentos/TotalesDelDocumento.vue';
 import RetencionPropuesta from './RetencionPropuesta.vue';
 
 /** Lo que el servidor calculó: totales, IVA, costo, retenciones propuestas y avisos. No guarda nada. */
-const props = defineProps<{ respuesta: RespuestaDeDocumento | null; calculando: boolean; desactualizada: boolean }>();
+const props = defineProps<{
+  respuesta: RespuestaDeDocumento | null;
+  calculando: boolean;
+  desactualizada: boolean;
+  /** El último cálculo fue rechazado: sin cifras previas, la tarjeta lo dice en vez del texto de bienvenida. */
+  conProblema?: boolean;
+}>();
 const ajustes = defineModel<AjustesEnEdicion>({ required: true });
 
 const documento = computed(() => props.respuesta?.documento ?? null);
@@ -30,7 +36,11 @@ const costo = computed(() => sumarMontos(documento.value?.lineas.map((linea) => 
       </p>
     </div>
 
-    <p v-if="!documento" class="text-sm text-tierra-600 dark:text-tierra-300">
+    <p v-if="!documento && conProblema" class="text-sm text-red-700 dark:text-red-300" role="status">
+      No se pudo calcular todavía: corrija lo señalado en el formulario y aquí aparecerán el IVA, el costo y las
+      retenciones.
+    </p>
+    <p v-else-if="!documento" class="text-sm text-tierra-600 dark:text-tierra-300">
       Elija el proveedor, escriba el número, la fecha y al menos una línea con su concepto y su total: aquí aparecerá el
       IVA, el costo y las retenciones.
     </p>

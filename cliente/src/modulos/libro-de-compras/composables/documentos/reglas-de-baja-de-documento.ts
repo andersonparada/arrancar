@@ -72,6 +72,10 @@ export function explicacionesDeAcciones(ficha: FichaDeDocumento): string[] {
   return explicaciones;
 }
 
+/** «nota» para las notas de crédito y de débito; «factura» para el resto (el título y el aviso de eliminar lo usan). */
+export const nombreDelRegistro = (ficha: Pick<FichaDeDocumento, 'tipo'>): 'nota' | 'factura' =>
+  ficha.tipo === 'nota_de_credito' || ficha.tipo === 'nota_de_debito' ? 'nota' : 'factura';
+
 /** La pregunta antes de eliminar; dice qué se pierde. */
 export function mensajeDeEliminacion(ficha: FichaDeDocumento): string {
   const documento = `${tituloDeDocumento(ficha)} de ${ficha.nombreEmisor} por ${formatearMonto(ficha.totales.total)}`;

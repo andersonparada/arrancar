@@ -111,6 +111,7 @@ function alPresionarEnter(evento: KeyboardEvent): void {
           :respuesta="previa.respuesta.value"
           :calculando="previa.calculando.value"
           :desactualizada="previa.desactualizada.value"
+          :con-problema="previa.problema.value !== null || Object.keys(previa.errores.value).length > 0"
         />
       </div>
     </div>
