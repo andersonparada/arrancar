@@ -271,7 +271,8 @@ describe('una nota con reintegros', () => {
     }
     await consultar(
       `update cuentas_por_pagar.reintegros set estado = 'anulado', anulado_en = now(),
-              anulado_por = (select id from core.usuarios where usuario = $2), motivo_de_anulacion = 'Error' where id = $1`,
+              anulado_por = (select id from core.usuarios where usuario = $2), motivo_de_anulacion = 'Error',
+              fecha_de_anulacion = current_date where id = $1`,
       [reintegroId, mundo.escenario.cuenta.usuario],
     );
     await consultar('update cuentas_por_pagar.aplicaciones_de_reintegros set vigente = false where reintegro_id = $1', [

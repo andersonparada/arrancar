@@ -1,10 +1,13 @@
 import { sql } from 'drizzle-orm';
 import { check, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { restriccionesDeFechaDeAnulacion } from './anulacion.restricciones.js';
 
 /** Las columnas de `retiros_de_efectivo` que usan estos checks. */
 type T = Record<
   | 'numero'
   | 'forma'
+  | 'fecha'
+  | 'fechaDeAnulacion'
   | 'monto'
   | 'custodio'
   | 'observaciones'
@@ -48,6 +51,7 @@ export const restriccionesDeEstadoDeRetiro = (t: T) => [
     'retiros_motivo_de_anulacion_rango',
     sql`${t.motivoDeAnulacion} is null or char_length(${t.motivoDeAnulacion}) between 1 and 300`,
   ),
+  ...restriccionesDeFechaDeAnulacion('retiros', t),
   check(
     'retiros_liquidacion_completa',
     sql`(${t.estado} = 'liquidado') = (${t.fechaDeLiquidacion} is not null) and (${t.fechaDeLiquidacion} is not null) = (${t.liquidadoEn} is not null) and (${t.liquidadoEn} is not null) = (${t.liquidadoPor} is not null)`,

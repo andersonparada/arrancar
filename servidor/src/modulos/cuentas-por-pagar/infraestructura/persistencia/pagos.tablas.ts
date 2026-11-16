@@ -3,7 +3,6 @@ import {
   boolean,
   date,
   foreignKey,
-  index,
   integer,
   numeric,
   text,
@@ -18,6 +17,7 @@ import { movimientos } from '../../../bancos/infraestructura/persistencia/movimi
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { restriccionesDeEstadoYAnulacion } from './anulacion.restricciones.js';
 import { esquemaCuentasPorPagar } from './esquema.tablas.js';
+import { indicesDePago } from './pagos.indices.js';
 import { restriccionesDePago } from './pagos.restricciones.js';
 import { retirosDeEfectivo } from './retiros-de-efectivo.tablas.js';
 
@@ -60,6 +60,8 @@ export const pagos = esquemaCuentasPorPagar.table(
     conCargaCerrada: boolean(),
     observaciones: text(),
     estado: text().$type<'vigente' | 'anulado'>().notNull().default('vigente'),
+    /** Fecha contable de la anulación (CP5): la del inverso en Bancos, la del registro si «nunca existió» o la del día. */
+    fechaDeAnulacion: date(),
     anuladoEn: timestamp({ withTimezone: true }),
     anuladoPor: uuid(),
     motivoDeAnulacion: text(),
@@ -81,14 +83,7 @@ export const pagos = esquemaCuentasPorPagar.table(
     uniqueIndex('pagos_movimiento_creado_unico')
       .on(t.movimientoId)
       .where(sql`${t.forma} in ('cheque', 'nota_de_debito')`),
-    index('pagos_movimiento_idx')
-      .on(t.movimientoId)
-      .where(sql`${t.movimientoId} is not null`),
-    index('pagos_retiro_idx')
-      .on(t.retiroId)
-      .where(sql`${t.retiroId} is not null`),
-    index('pagos_proveedor_fecha_idx').on(t.proveedorId, t.fecha),
-    index('pagos_lista_idx').on(t.empresaId, t.estado, t.fecha),
+    ...indicesDePago(t),
     politicaPorEmpresa(),
   ],
 );

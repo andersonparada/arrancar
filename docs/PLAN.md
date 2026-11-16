@@ -1935,3 +1935,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   marca solo en cargos con parte pagada en efectivo, más una columna informativa «pagado en efectivo»; el criterio por
   cargo usa el total con IVA antes de retenciones.
 - **2026-11-15 — U8l-9 (observaciones menores de la QA de U8l-8).** Corregidos los puntos 3 a 7 del informe: la vista previa de la bandeja anticipa «la factura ya es del sistema anterior» (mismo chequeo que registrar), el mensaje de montos negativos dice «negativo», el Excel y el PDF del libro usan los nombres legibles de los motivos, el selector «Factura que corrige» pide primero el proveedor, eliminar una nota se titula «Eliminar nota», la vista previa del formulario avisa cuando el cálculo fue rechazado, la ficha no pide conceptos sin permiso y la tabla de rubros del SAT-2237 cabe en escritorio. Sin cambio: la regla de fechas futuras del libro (es general del libro, no de este paso).
+- **2026-11-15 — CP5-1 (servidor, fecha contable de las anulaciones).** Migración `0011_cp5_fecha_de_anulacion` de Cuentas
+  por pagar (generada con `bd:generar`; el relleno se agregó a mano antes de los checks): columna `fecha_de_anulacion` en
+  `pagos`, `reintegros` y `retiros_de_efectivo`, los checks `<tabla>_fecha_de_anulacion_de_su_estado` (anulado si y solo si
+  hay fecha) y `<tabla>_fecha_de_anulacion_valida` (no anterior a la fecha del registro) e índice `pagos_anulados_corte_idx`.
+  El relleno de lo ya anulado: sin inverso en Bancos, la fecha del registro; con inverso, la fecha del inverso; sin
+  movimiento (nota ligada, apertura, efectivo), el día de la anulación en Guatemala, nunca antes de la fecha del registro.
+  Los checks comunes de `pagos` y `reintegros` viven en `anulacion.restricciones.ts` (`restriccionesDeFechaDeAnulacion`,
+  que también usa el retiro). Sin casos de uso ni entidades nuevas (no existe aún el repositorio de anulación): los llenan
+  CP4-4, CP4-5, CP4-7, CP4-E2 y CP4-E3. Pruebas: checks de las tres tablas y relleno con las sentencias reales del SQL
+  (`fecha-de-anulacion-migracion.prueba.ts`, repetible).

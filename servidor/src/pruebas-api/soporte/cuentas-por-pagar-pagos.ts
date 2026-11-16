@@ -27,12 +27,12 @@ export async function sembrarPago(
   const total = lineas.reduce((suma, { monto }) => suma + Number(monto), 0).toFixed(2);
   const [pago] = await consultar<{ id: string; numero: number }>(
     `insert into cuentas_por_pagar.pagos (empresa_id, proveedor_id, numero, forma, fecha, monto, motivo,
-       con_carga_cerrada, estado, anulado_en, anulado_por, motivo_de_anulacion)
+       con_carga_cerrada, estado, anulado_en, anulado_por, motivo_de_anulacion, fecha_de_anulacion)
      select empresa_id, proveedor_id,
             (select coalesce(max(numero), 0) + 1 from cuentas_por_pagar.pagos where empresa_id = c.empresa_id),
             'cuenta_de_apertura', $2, $3, 'Pago sembrado por la prueba', false, $4,
             case when $5 then now() end, case when $5 then (select id from core.usuarios where usuario = $6) end,
-            case when $5 then 'Error' end
+            case when $5 then 'Error' end, case when $5 then greatest($2::date, current_date) end
        from cuentas_por_pagar.contrasenas c where id = $1 returning id, numero`,
     [contrasenaId, fecha, total, estado, anulado, escenario.cuenta.usuario],
   );
@@ -51,7 +51,8 @@ export async function sembrarPago(
 export async function anularPagoSembrado(escenario: EscenarioDeDocumentos, pagoId: string): Promise<void> {
   await consultar(
     `update cuentas_por_pagar.pagos set estado = 'anulado', anulado_en = now(),
-            anulado_por = (select id from core.usuarios where usuario = $2), motivo_de_anulacion = 'Error' where id = $1`,
+            anulado_por = (select id from core.usuarios where usuario = $2), motivo_de_anulacion = 'Error',
+            fecha_de_anulacion = greatest(fecha, current_date) where id = $1`,
     [pagoId, escenario.cuenta.usuario],
   );
   await consultar('update cuentas_por_pagar.aplicaciones_de_pagos set vigente = false where pago_id = $1', [pagoId]);
@@ -65,12 +66,12 @@ export async function sembrarReintegro(
   const anulado = estado === 'anulado';
   const [reintegro] = await consultar<{ id: string }>(
     `insert into cuentas_por_pagar.reintegros (empresa_id, proveedor_id, numero, forma, fecha, monto, referencia, estado,
-       anulado_en, anulado_por, motivo_de_anulacion)
+       anulado_en, anulado_por, motivo_de_anulacion, fecha_de_anulacion)
      select empresa_id, proveedor_id,
             (select coalesce(max(numero), 0) + 1 from cuentas_por_pagar.reintegros where empresa_id = d.empresa_id),
             'efectivo', current_date, $2, 'RC-1', $3,
             case when $4 then now() end, case when $4 then (select id from core.usuarios where usuario = $5) end,
-            case when $4 then 'Error' end
+            case when $4 then 'Error' end, case when $4 then current_date end
        from cuentas_por_pagar.documentos d where id = $1 returning id`,
     [notaPropia, monto, estado, anulado, escenario.cuenta.usuario],
   );
