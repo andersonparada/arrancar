@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileClock, FileMinus, HandCoins, Inbox, Scale } from 'lucide-vue-next';
+import { ClipboardCheck, FileClock, FileMinus, HandCoins, Hourglass, Inbox, ReceiptText, Scale } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_CUENTAS_POR_PAGAR, TITULO_SECCION_DE_PAGO, VENTANAS_CUENTAS_POR_PAGAR } from './textos';
 // generador: importaciones
@@ -67,6 +67,24 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       props: ({ params }) => ({ id: String(params.id) }),
       meta: { permiso: 'cuentas-por-pagar.contrasenas.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.contrasenas.imprimir },
     },
+    {
+      path: '/cuentas-por-pagar/reportes/saldos-por-proveedor',
+      name: 'cuentas-por-pagar.reportes.saldos-por-proveedor',
+      component: () => import('./paginas/SaldosPorProveedor.vue'),
+      meta: {
+        permiso: 'cuentas-por-pagar.reportes-de-saldos.ver',
+        titulo: VENTANAS_CUENTAS_POR_PAGAR.saldosPorProveedor.titulo,
+      },
+    },
+    {
+      path: '/cuentas-por-pagar/reportes/documentos',
+      name: 'cuentas-por-pagar.reportes.documentos',
+      component: () => import('./paginas/DocumentosAUnaFecha.vue'),
+      meta: {
+        permiso: 'cuentas-por-pagar.reportes-de-saldos.ver',
+        titulo: VENTANAS_CUENTAS_POR_PAGAR.documentosAUnaFecha.titulo,
+      },
+    },
     // generador: rutas
   ],
   // Los días de crédito se editan dentro de Proveedores y se guardan con su formulario.
@@ -119,6 +137,20 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           icono: Scale,
           seccion: 'administracion',
           permiso: 'cuentas-por-pagar.saldos-iniciales.ver',
+        },
+        {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.saldosPorProveedor.titulo,
+          ruta: '/cuentas-por-pagar/reportes/saldos-por-proveedor',
+          icono: Hourglass,
+          seccion: 'reportes',
+          permiso: 'cuentas-por-pagar.reportes-de-saldos.ver',
+        },
+        {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.documentosAUnaFecha.titulo,
+          ruta: '/cuentas-por-pagar/reportes/documentos',
+          icono: ReceiptText,
+          seccion: 'reportes',
+          permiso: 'cuentas-por-pagar.reportes-de-saldos.ver',
         },
         // generador: menu
       ],

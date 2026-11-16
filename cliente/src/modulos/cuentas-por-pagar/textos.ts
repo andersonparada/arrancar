@@ -39,6 +39,16 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     ficha: 'Contraseña de pago',
     imprimir: 'Imprimir la contraseña',
   },
+  saldosPorProveedor: {
+    titulo: 'Saldos por proveedor',
+    descripcion:
+      'Lo que la empresa debe a cada proveedor (o NIT) al cierre de una fecha, por antigüedad, con los saldos a favor ya restados.',
+  },
+  documentosAUnaFecha: {
+    titulo: 'Documentos por pagar a una fecha',
+    descripcion:
+      'Los cargos con su saldo al cierre de una fecha: pendientes, vencidos, por vencer y su estado de pago.',
+  },
   // generador: ventanas
 } as const;
 
