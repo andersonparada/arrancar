@@ -41,6 +41,10 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.pagos.anular',
       'cuentas-por-pagar.pagos.ligar-notas-de-debito',
       'cuentas-por-pagar.pagos.aplicar-a-apertura',
+      'cuentas-por-pagar.retiros.ver',
+      'cuentas-por-pagar.retiros.crear',
+      'cuentas-por-pagar.retiros.liquidar',
+      'cuentas-por-pagar.retiros.anular',
     ]);
   });
 

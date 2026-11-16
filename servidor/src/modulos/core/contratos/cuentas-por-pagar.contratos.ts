@@ -143,6 +143,52 @@ declare module '../eventos/bus-eventos.js' {
       movimientoId: string | null;
       retiroId: string | null;
     };
+    /** Se registró un retiro de efectivo para pagos: el cheque o la nota de débito ya está en Bancos (efectivo que sigue siendo de la empresa). */
+    'cuentas-por-pagar.retiro_registrado': {
+      empresaId: string;
+      retiroId: string;
+      numero: number;
+      forma: 'cheque' | 'nota_de_debito';
+      fecha: string;
+      montoCentavos: number;
+      movimientoId: string;
+      cuentaBancariaId: string;
+      custodio: string;
+      custodioUsuarioId: string | null;
+    };
+    /** Se liquidó un retiro: lo devuelto se depositó (`movimientoDeDevolucionId`) y el faltante es una pérdida o una cuenta por cobrar al custodio, según Contabilidad. */
+    'cuentas-por-pagar.retiro_liquidado': {
+      empresaId: string;
+      retiroId: string;
+      numero: number;
+      fecha: string;
+      devueltoCentavos: number;
+      faltanteCentavos: number;
+      movimientoDeDevolucionId: string | null;
+    };
+    /**
+     * Se reabrió un retiro liquidado. `fecha` es la fecha contable de la reversa (la del inverso del depósito; la de la
+     * liquidación si el depósito «nunca existió»; hoy si no hubo depósito).
+     */
+    'cuentas-por-pagar.retiro_reabierto': {
+      empresaId: string;
+      retiroId: string;
+      numero: number;
+      fecha: string;
+      fechaDeLiquidacion: string;
+      devueltoCentavos: number;
+      faltanteCentavos: number;
+      anulacionEnBancos: 'sin_inverso' | 'con_inverso' | null;
+    };
+    /** Se anuló un retiro sin pagos; `fecha` es la fecha contable de la anulación y `fechaOriginal` la del retiro. */
+    'cuentas-por-pagar.retiro_anulado': {
+      empresaId: string;
+      retiroId: string;
+      numero: number;
+      fecha: string;
+      fechaOriginal: string;
+      anulacionEnBancos: 'sin_inverso' | 'con_inverso';
+    };
   }
 }
 

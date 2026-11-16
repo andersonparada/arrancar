@@ -2054,3 +2054,23 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   textos fijos del contador. El `PagoDto` gana `motivo` y `conCargaCerrada`. Anularlo ya dejaba `fecha_de_anulacion` =
   `greatest(hoy, fecha)` (CP4-4/CP5-1): queda probado. Sin migración. Desviaciones: la solicitud no admite `diferencias`
   (§5.3 no las menciona); en esta forma no se avisa la fecha anterior a la contraseña (la fecha de inicio siempre lo sería).
+- **2026-11-15 — CP4-E2 (servidor, retiros de efectivo para pagos).** Sin migración (las tablas son de CP4-E1 y los conceptos
+  de CP4-EB). `RegistrarRetiroDeEfectivo` (`POST /cuentas-por-pagar/retiros`, `retiros.crear`) ordena a Bancos el cheque (a
+  nombre del custodio o de quien se escriba, nunca vacío ni «al portador» comparado sin mayúsculas, tildes ni signos; «no
+  negociable» por omisión) o la nota de débito (boleta como referencia) con el retiro como origen y el concepto `efectivo_para_pagos`;
+  fecha no futura, custodio texto o usuario activo de la empresa (`custodio_invalido` si no), número del correlativo
+  `cuentas-por-pagar.retiros`, evento `retiro_registrado`. `AnularRetiro` (`retiros.anular`): bloquea los movimientos de Bancos
+  y el retiro (en ese orden, también al llegar el aviso), rechaza con pagos vigentes, liquidado, ya anulado o cheque conciliado,
+  ordena anular en Bancos y guarda `fecha_de_anulacion` (sin inverso la del retiro; con inverso la del inverso leída de Bancos),
+  audita `anular` y publica `retiro_anulado`. `LiquidarRetiro` y `ReabrirRetiro` (`retiros.liquidar`, adelantados de CP4-E4 por
+  pedido): el sobrante se devuelve en una nota de crédito (concepto `devolucion_de_efectivo_para_pagos`) o se declara faltante
+  con motivo (auditoría `ajustar`); el cheque se redistribuye en Bancos (`DesgloseDelRetiro`: pagos a Operación o Inversión,
+  `faltante_de_efectivo`, resto `efectivo_para_pagos`); aviso si el custodio liquida su retiro; reabrir anula el depósito y audita
+  `reabrir`. `ListarRetiros` (estado, `corte`, `desde`, `hasta`, `soloConDisponible`, página; con corte, los retiros por
+  liquidar a esa fecha con su disponible al corte y el total) y `ObtenerRetiro`; aviso de fin de mes en la ficha, la lista y al
+  registrar otro. `AtenderMovimientoDeRetiroPorCambiar` (segundo escucha de `bancos.movimiento_por_cambiar`): anular el cheque o
+  la nota anula el retiro (o se rechaza con pagos o liquidado), anular el depósito reabre el retiro, todo otro cambio se rechaza;
+  idempotente. Permisos `retiros.ver/crear/liquidar/anular`. Desviaciones: el aviso de bancarización al registrar el retiro
+  (§4.1 punto 4) queda para CP4-E3, que trae la lectura del régimen fiscal; sin pagos en efectivo todavía, las pruebas siembran
+  los pagos con SQL; `fecha` del evento `retiro_reabierto` = fecha del inverso del depósito, la de la liquidación si «nunca
+  existió», o la de hoy sin depósito.

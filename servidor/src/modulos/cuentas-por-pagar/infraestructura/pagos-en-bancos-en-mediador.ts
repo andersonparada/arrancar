@@ -8,6 +8,7 @@ import type {
   ChequeAEmitir,
   DesgloseDelMovimiento,
   MovimientoCreado,
+  NotaDeCreditoARegistrar,
   MovimientosDePagos,
   NotaDeDebitoARegistrar,
   PagosEnBancos,
@@ -34,6 +35,16 @@ export class PagosEnBancosEnMediador implements PagosEnBancos {
 
   async registrarNotaDeDebito(operador: Operador, nota: NotaDeDebitoARegistrar): Promise<MovimientoCreado> {
     const registrada = await mediador.enviar(operador, 'bancos.registrar_nota_de_origen', { ...nota, tipo: 'debito' });
+    return {
+      movimientoId: registrada.movimientoId,
+      cuentaBancariaId: nota.cuentaBancariaId,
+      numero: registrada.numero,
+      avisos: registrada.avisos,
+    };
+  }
+
+  async registrarNotaDeCredito(operador: Operador, nota: NotaDeCreditoARegistrar): Promise<MovimientoCreado> {
+    const registrada = await mediador.enviar(operador, 'bancos.registrar_nota_de_origen', { ...nota, tipo: 'credito' });
     return {
       movimientoId: registrada.movimientoId,
       cuentaBancariaId: nota.cuentaBancariaId,
