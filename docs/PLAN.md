@@ -1928,3 +1928,9 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   Contabilidad la factura se provisiona **al registrarla** (autorizar = «aprobado para pago»). Quedan para el contador,
   sin frenar CP5-1 a CP5-4: días hábiles o calendario en el plazo de la constancia de ISR y el monto del costo no
   deducible de R9 (§14 del diseño).
+- **2026-11-15 — Aclaraciones de CP5.** Usuario: «contabilizar al registrar» = **al entrar al Libro de compras** (como
+  U12), aunque en Cuentas por pagar siga en la bandeja. Contador (§14 del diseño de CP5): el plazo de la constancia de
+  ISR son **5 días hábiles** (Código Tributario **art. 8 num. 4**, no art. 6; se corre al siguiente hábil y cuenta los
+  días que la SAT declare inhábiles); en R9 el costo no deducible es **`total − (iva − iva_no_acreditable)`** con la
+  marca solo en cargos con parte pagada en efectivo, más una columna informativa «pagado en efectivo»; el criterio por
+  cargo usa el total con IVA antes de retenciones.
