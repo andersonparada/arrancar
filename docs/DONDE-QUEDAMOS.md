@@ -46,8 +46,7 @@ cliente 1034, generador 46.
 | CP5-8 cliente de R3, R4 y R5 | `agent-a95e0bf517758ee8a` | programando |
 | CP5-10 cliente de R12 (Libro de compras) | `agent-a0b1d282a47aa6b9e` | programando |
 
-En `main`: CP4-5, CP5-6 y CP5-7 (pantallas de R1 y R2). Con CP4-5 y CP5-6 todo en verde (servidor 4543, cliente 1089,
-generador 46); pruebas corriendo con CP5-7.
+En `main`: CP4-5, CP5-6 y CP5-7 (pantallas de R1 y R2). Todo en verde: servidor 4543, cliente 1124, generador 46.
 
 Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie más genera migraciones de Cuentas por pagar a la vez) y después CP4-4 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → CP5-1 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
