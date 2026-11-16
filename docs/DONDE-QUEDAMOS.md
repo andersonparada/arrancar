@@ -44,8 +44,8 @@ cliente 1034, generador 46.
 | CP4-5 nota ligada (con desglose por activo fijo) | `agent-ac34359f76b39269a` | programando |
 | CP5-3 reportes (estado de cuenta, saldos a favor, pago prometido vencido) | `agent-a621f2d148a8ee9a8` | programando |
 
-En `main`: CP5-2 (saldos al corte, R1 y R2, migración `0012`) y CP4-4 (anular, reaplicar, saldar diferencia); pruebas
-corriendo en base nueva (con CP5-2 solo: servidor 4419, cliente 1089, generador 46).
+En `main`: CP5-2 (saldos al corte, R1 y R2, migración `0012`) y CP4-4 (anular, reaplicar, saldar diferencia); todo en
+verde en base nueva: servidor 4455, cliente 1089, generador 46.
 
 Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie más genera migraciones de Cuentas por pagar a la vez) y después CP4-4 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → CP5-1 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
