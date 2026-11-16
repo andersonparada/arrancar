@@ -56,7 +56,10 @@ se limpie al escribir (hoy solo en las ventanas con motivo; `quitarErrorAlCambia
 
 **Siguiente módulo (decidido 2026-11-16): Bancos, segunda parte.** Lanzar al arquitecto para
 `docs/modulos/diseno-bancos-segunda-parte.md` (el primer intento falló por un error transitorio del clasificador de
-permisos); luego el contador.
+permisos); luego el contador. Estado de H2 según la otra sesión (2026-11-16): sin trabajo en curso; faltan el paso 5
+(cliente de H2b: `EstadoDeCuentaAdjunto`, `VisorDeEstadoDeCuenta`, `usar-estado-de-cuenta`, columnas en
+`ConciliarCuenta.vue`, ícono, motivo «falta el archivo»), el 6 (docs) y el 7 (QA de todo H2). CP4-B2b se puede
+planificar sobre `main`; lo que toque `ConciliarCuenta.vue` o `AccionesDeConciliacion.vue` va después del paso 5.
 
 **Otra sesión («Siguiente módulo independiente»)** lleva Bancos H2: el servidor de H2b está en `main` (migración de
 bancos `0031`); le falta el cliente de la conciliación y su QA. Acordado: la `0032`/`0033` de bancos son de CP4; el
