@@ -1,4 +1,4 @@
-import type { TipoDeDocumento } from '../dominio/tipos-de-documento.js';
+import type { TipoDeDocumento } from './tipos-de-documento.js';
 
 /** Los tipos de documento con el nombre que ve quien carga (el mismo de las pantallas). */
 export const NOMBRES_DE_TIPOS: Record<TipoDeDocumento, string> = {

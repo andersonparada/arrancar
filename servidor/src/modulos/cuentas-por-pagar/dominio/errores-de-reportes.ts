@@ -14,3 +14,35 @@ export class CorteAnteriorAlInicio extends DatoInvalido {
     );
   }
 }
+
+/** El rango de un reporte empieza después de donde termina. */
+export class RangoDeReporteInvalido extends DatoInvalido {
+  readonly codigo = 'rango_de_reporte_invalido';
+
+  constructor() {
+    super('La fecha inicial no puede ser posterior a la final.', { campo: 'desde' });
+  }
+}
+
+/** El rango de un reporte pasa del máximo que se puede pedir de una vez. */
+export class RangoDeReporteMuyLargo extends DatoInvalido {
+  readonly codigo = 'rango_de_reporte_muy_largo';
+
+  constructor(maximoDeMeses: number) {
+    super(`El rango no puede pasar de ${maximoDeMeses} meses: acórtelo.`, { campo: 'desde' });
+  }
+}
+
+/** La pantalla del estado de cuenta no muestra más de este número de líneas; Excel no tiene tope. */
+export class EstadoDeCuentaConDemasiadasLineas extends DatoInvalido {
+  readonly codigo = 'estado_de_cuenta_con_demasiadas_lineas';
+
+  constructor(lineas: number, maximo: number) {
+    super(
+      `El estado de cuenta tiene ${lineas} líneas y la pantalla muestra hasta ${maximo}: acorte el rango o use Excel.`,
+      {
+        campo: 'desde',
+      },
+    );
+  }
+}

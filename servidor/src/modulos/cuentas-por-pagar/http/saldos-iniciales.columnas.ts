@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Columna, OpcionDeReferencia } from '../../core/intercambio/aplicacion/columnas.js';
 import { esquemaSaldoInicial } from './saldos-iniciales.esquemas-http.js';
-import { NOMBRES_DE_TIPOS } from './saldos-iniciales.nombres-de-tipos.js';
+import { NOMBRES_DE_TIPOS } from '../dominio/nombres-de-tipos.js';
 
 /** Las columnas del Excel de los saldos iniciales: los mismos datos del formulario, en el mismo orden. */
 export const columnasDeSaldosIniciales = (opciones: {

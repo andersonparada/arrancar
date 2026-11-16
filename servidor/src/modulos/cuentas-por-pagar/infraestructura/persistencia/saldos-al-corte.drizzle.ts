@@ -9,6 +9,18 @@ import type {
   PaginaDeDocumentosAlCorte,
 } from '../../aplicacion/puertos/puertos-de-saldos-al-corte.js';
 import type { PaginacionDeDocumentos } from '../../aplicacion/puertos/puertos-de-consultas.js';
+import type {
+  ConsultasDeReportesDeProveedor,
+  ContrasenaPorPagar,
+  FiltroDeContrasenasPorPagar,
+  FiltroDeSaldosAFavor,
+  RangoDelEstado,
+} from '../../aplicacion/puertos/puertos-de-reportes-de-proveedor.js';
+import type { MovimientoDelProveedor, RetencionDelDocumento } from '../../dominio/estado-de-cuenta.js';
+import type { NotaAlCorte } from '../../dominio/saldos-a-favor.js';
+import { contrasenasPorPagar } from './contrasenas-por-pagar.drizzle.js';
+import { movimientosDelProveedor, retencionesDelProveedor } from './movimientos-del-proveedor.drizzle.js';
+import { notasConSaldoAlCorte } from './saldos-a-favor.drizzle.js';
 import { numeroDelPago } from '../../dominio/pagos.js';
 import type { SaldoDeProveedor } from '../../dominio/saldos-por-nit.js';
 import type { TramoDeAntiguedad } from '../../dominio/saldo-al-corte.js';
@@ -73,7 +85,7 @@ function aSaldoDeProveedor(fila: Fila): SaldoDeProveedor {
  * de la lista de documentos. Calcula en SQL por proveedor y por documento; las reglas son las de `dominio/saldo-al-corte.ts`.
  * Corre dentro de la unidad de trabajo, con RLS de la empresa.
  */
-export class ConsultaDeSaldosAlCorte implements ConsultasDeSaldosAlCorte {
+export class ConsultaDeSaldosAlCorte implements ConsultasDeSaldosAlCorte, ConsultasDeReportesDeProveedor {
   /** La transacción de la unidad de trabajo en curso (la clase se arma al componer, antes de que haya una). */
   private get transaccion() {
     return transaccionEnCurso();
@@ -150,5 +162,30 @@ export class ConsultaDeSaldosAlCorte implements ConsultasDeSaldosAlCorte {
     pagina: PaginacionDeDocumentos | null,
   ): Promise<PaginaDeDocumentosAlCorte> {
     return documentosAlCorte(this.transaccion, filtro, pagina);
+  }
+
+  async datosDelProveedor(proveedorId: string): Promise<{ nombre: string; nit: string | null } | null> {
+    const { rows } = await this.transaccion.execute(sql`
+      select t.nombre_mostrar as nombre, t.nit
+        from terceros.proveedores p join terceros.terceros t on t.id = p.tercero_id
+       where p.id = ${proveedorId}::uuid`);
+    const [fila] = rows as Fila[];
+    return fila ? { nombre: String(fila.nombre), nit: fila.nit === null ? null : String(fila.nit) } : null;
+  }
+
+  movimientosDelProveedor(rango: RangoDelEstado): Promise<MovimientoDelProveedor[]> {
+    return movimientosDelProveedor(this.transaccion, rango);
+  }
+
+  retencionesDelProveedor(empresaId: string, proveedorId: string): Promise<RetencionDelDocumento[]> {
+    return retencionesDelProveedor(this.transaccion, empresaId, proveedorId);
+  }
+
+  notasConSaldoAlCorte(filtro: FiltroDeSaldosAFavor): Promise<NotaAlCorte[]> {
+    return notasConSaldoAlCorte(this.transaccion, filtro);
+  }
+
+  contrasenasPorPagar(filtro: FiltroDeContrasenasPorPagar): Promise<ContrasenaPorPagar[]> {
+    return contrasenasPorPagar(this.transaccion, filtro);
   }
 }
