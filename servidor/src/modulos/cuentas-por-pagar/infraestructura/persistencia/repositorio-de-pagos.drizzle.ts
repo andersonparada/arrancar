@@ -1,9 +1,10 @@
-import { and, asc, eq, gt, inArray, type SQL } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, sql, type SQL } from 'drizzle-orm';
 import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import {
   contextoEnCurso,
   transaccionEnCurso,
 } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
+import type { LigadoAUnaNota } from '../../aplicacion/puertos/puertos-de-notas-para-ligar.js';
 import type {
   AnulacionDePago,
   LineaDePagoNueva,
@@ -12,6 +13,7 @@ import type {
 } from '../../aplicacion/puertos/puertos-de-pagos.js';
 import type { LineaGuardadaDePago, PagoConLineas } from '../../dominio/pago-con-lineas.js';
 import { aplicacionesDePagos } from './aplicaciones-de-pagos.tablas.js';
+import { documentos } from './documentos.tablas.js';
 import { pagos } from './pagos.tablas.js';
 
 const aLinea = (fila: typeof aplicacionesDePagos.$inferSelect): LineaGuardadaDePago => ({
@@ -85,6 +87,26 @@ export class RepositorioDePagosDrizzle implements RepositorioDePagos {
 
   bloquear(id: string): Promise<PagoConLineas | null> {
     return this.leer(eq(pagos.id, id), true).then(([pago]) => pago ?? null);
+  }
+
+  async ligadoAlMovimiento(movimientoId: string): Promise<LigadoAUnaNota> {
+    const [fila] = await transaccionEnCurso()
+      .select({
+        total: sql<string>`coalesce(sum(${aplicacionesDePagos.monto}), 0)::text`,
+        deActivo: sql<string>`coalesce(sum(${aplicacionesDePagos.monto}) filter (where ${documentos.tieneActivoFijo}), 0)::text`,
+      })
+      .from(aplicacionesDePagos)
+      .innerJoin(pagos, eq(pagos.id, aplicacionesDePagos.pagoId))
+      .innerJoin(documentos, eq(documentos.id, aplicacionesDePagos.cargoId))
+      .where(
+        and(
+          eq(pagos.movimientoId, movimientoId),
+          eq(pagos.forma, 'nota_ligada'),
+          eq(pagos.estado, 'vigente'),
+          eq(aplicacionesDePagos.vigente, true),
+        ),
+      );
+    return { totalCentavos: aCentavos(fila!.total), deActivoCentavos: aCentavos(fila!.deActivo) };
   }
 
   delMovimiento(movimientoId: string): Promise<PagoConLineas[]> {

@@ -21,6 +21,7 @@ import type {
   RetencionesDelLibro,
   TopeDeDiferenciaDelPago,
 } from '../../puertos/puertos-de-pagos.js';
+import type { NotasParaLigar } from '../../puertos/puertos-de-notas-para-ligar.js';
 import type { CargaInicial } from '../../puertos/puertos-de-saldos-iniciales.js';
 import type { ReglaDePago } from '../../../dominio/reglas-de-anulacion-de-pagos.js';
 
@@ -37,6 +38,8 @@ export interface DependenciasDeRegistrarPago {
   consultasDePagos: ConsultasDePagos;
   ajustes: RepositorioDeAjustes;
   bancos: PagosEnBancos;
+  /** Las notas de Bancos que se pueden ligar a un pago (se bloquean antes que las contraseñas y los cargos). */
+  notas: NotasParaLigar;
   retenciones: RetencionesDelLibro;
   nombreDelNit: NombreDelNit;
   fiscal: DatosFiscalesDeLaEmpresa;
@@ -85,6 +88,7 @@ export interface DependenciasDeCambiarPagos {
   consultasDePagos: ConsultasDePagos;
   ajustes: RepositorioDeAjustes;
   bancos: PagosEnBancos;
+  notas: NotasParaLigar;
   /** Lo que se lee de Bancos sin orden: si el movimiento está conciliado, su fecha, su número. */
   movimientos: MovimientosDePagos;
   topeDeDiferencia: TopeDeDiferenciaDelPago;

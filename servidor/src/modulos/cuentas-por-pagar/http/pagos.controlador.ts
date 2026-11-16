@@ -1,7 +1,9 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { ListarCargosParaPagar } from '../aplicacion/casos-uso/pagos/listar-cargos-para-pagar.js';
+import type { LigarNotaDeDebito } from '../aplicacion/casos-uso/pagos/ligar-nota-de-debito.js';
 import type {
+  ListarNotasParaLigar,
   ListarProveedoresPorPagar,
   ObtenerMediosDePago,
 } from '../aplicacion/casos-uso/pagos/consultas-de-pagos.js';
@@ -13,6 +15,8 @@ import type { ParamsDeProveedor } from './documentos.esquemas-http.js';
 import type {
   AnularPagoSolicitado,
   MediosSolicitado,
+  NotasParaLigarSolicitado,
+  PagoLigadoSolicitado,
   PagoSolicitado,
   ParamsDePago,
   ParaPagarSolicitado,
@@ -23,6 +27,8 @@ import type {
 
 export interface CasosDeUsoDePagos {
   registrar: RegistrarPago;
+  ligar: LigarNotaDeDebito;
+  notasParaLigar: ListarNotasParaLigar;
   paraPagar: ListarCargosParaPagar;
   proveedoresPorPagar: ListarProveedoresPorPagar;
   medios: ObtenerMediosDePago;
@@ -39,6 +45,14 @@ export class PagosControlador {
     const pago = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), solicitud.body);
     return respuesta.status(201).send(pago);
   };
+
+  ligar = async (solicitud: FastifyRequest<{ Body: PagoLigadoSolicitado }>, respuesta: FastifyReply) => {
+    const pago = await this.casosDeUso.ligar.ejecutar(operadorDe(solicitud), solicitud.body);
+    return respuesta.status(201).send(pago);
+  };
+
+  notasParaLigar = (solicitud: FastifyRequest<{ Querystring: NotasParaLigarSolicitado }>) =>
+    this.casosDeUso.notasParaLigar.ejecutar(operadorDe(solicitud), solicitud.query);
 
   paraPagar = (solicitud: FastifyRequest<{ Params: ParamsDeProveedor; Querystring: ParaPagarSolicitado }>) =>
     this.casosDeUso.paraPagar.ejecutar(operadorDe(solicitud), solicitud.params.proveedorId, solicitud.query);

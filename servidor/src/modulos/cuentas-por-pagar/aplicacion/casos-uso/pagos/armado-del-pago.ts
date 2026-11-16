@@ -1,4 +1,5 @@
 import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
+import { efectoDelPago } from '../../../dominio/anulacion-de-pagos.js';
 import { PagoRegistrado, type AplicacionDelEvento } from '../../../dominio/eventos-de-pagos.js';
 import { numeroDelPago, type EstadoDeUnPago, type FormaDePago } from '../../../dominio/pagos.js';
 import type { DiferenciaPedida } from '../../../dominio/registro-de-pago.js';
@@ -96,7 +97,7 @@ export const aplicacionDelEvento = ({
   tieneActivoFijo: documento.tieneActivoFijo,
 });
 
-/** El evento para Contabilidad: la partida va con la fecha del cheque contra la cuenta del banco. */
+/** El evento para Contabilidad: la partida va con la fecha del cheque contra la cuenta del banco (en la nota ligada, contra la transitoria). */
 export function eventoDelPago(pago: PagoGuardado): PagoRegistrado {
   const { fila } = pago.lineas[0]!;
   return new PagoRegistrado({
@@ -113,7 +114,7 @@ export function eventoDelPago(pago: PagoGuardado): PagoRegistrado {
     cuentaBancariaId: pago.movimiento.cuentaBancariaId,
     retiroId: null,
     sinBancarizar: false,
-    efecto: 'banco',
+    efecto: efectoDelPago({ forma: pago.forma, conCargaCerrada: null }),
     aplicaciones: pago.lineas.map(aplicacionDelEvento),
   });
 }

@@ -8,6 +8,7 @@ import {
 import {
   avisoDeDiferenciaConRetencion,
   avisoDelPosfechado,
+  avisoDeRetencionNoDescontada,
   avisosDeLaLinea,
 } from '../../../dominio/avisos-de-pagos.js';
 import { numeroDelPago } from '../../../dominio/pagos.js';
@@ -27,7 +28,9 @@ export interface LineaConRetencion extends LineaRevisada {
 
 /** Lo que el armador necesita saber del pago para avisar. */
 export interface PagoParaAvisar {
-  forma: 'cheque' | 'nota_de_debito';
+  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada';
+  /** Solo al ligar una nota: lo que le queda por aplicar después de este pago. */
+  restanteDeLaNotaCentavos?: number;
   proveedorId: string;
   proveedorNombre: string;
   /** `AAAA-MM-DD`. */
@@ -48,6 +51,7 @@ export class ArmadorDeAvisosDelPago {
       ...(await this.deLasLineas(pago)),
       ...posfechado,
       ...this.deLasDiferencias(pago),
+      ...this.deLaNotaLigada(pago),
       ...(await this.deLaBancarizacion(operador, pago)),
     ];
   }
@@ -76,6 +80,19 @@ export class ArmadorDeAvisosDelPago {
       const linea = lineas.find(({ fila }) => fila.documento.id === cargoId);
       return linea ? avisoDeDiferenciaConRetencion(linea.fila.documento) : [];
     });
+  }
+
+  /** Una nota ligada con una línea que descuenta retención: el banco debitó la nota sin esa retención (§5.2). */
+  private deLaNotaLigada({ forma, lineas, restanteDeLaNotaCentavos }: PagoParaAvisar): string[] {
+    if (forma !== 'nota_ligada') return [];
+    return lineas
+      .filter(({ retencionDescontadaCentavos }) => retencionDescontadaCentavos > 0)
+      .map(({ fila, retencionDescontadaCentavos }) =>
+        avisoDeRetencionNoDescontada(fila.documento, {
+          retencionCentavos: retencionDescontadaCentavos,
+          restanteDeLaNotaCentavos: restanteDeLaNotaCentavos ?? 0,
+        }),
+      );
   }
 
   private async deLaBancarizacion(operador: Operador, pago: PagoParaAvisar): Promise<string[]> {

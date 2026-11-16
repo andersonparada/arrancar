@@ -1,8 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
 import '../../core/contratos/bancos.contratos.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
-import { ListarProveedoresPorPagar, ObtenerMediosDePago } from '../aplicacion/casos-uso/pagos/consultas-de-pagos.js';
+import {
+  ListarNotasParaLigar,
+  ListarProveedoresPorPagar,
+  ObtenerMediosDePago,
+} from '../aplicacion/casos-uso/pagos/consultas-de-pagos.js';
 import { ListarCargosParaPagar } from '../aplicacion/casos-uso/pagos/listar-cargos-para-pagar.js';
+import { LigarNotaDeDebito } from '../aplicacion/casos-uso/pagos/ligar-nota-de-debito.js';
 import { RegistrarPago } from '../aplicacion/casos-uso/pagos/registrar-pago.js';
 import { mediador } from '../../core/mediador/contexto.js';
 import { AnularPago } from '../aplicacion/casos-uso/pagos/anular-pago.js';
@@ -15,6 +20,7 @@ import { PagosControlador, type CasosDeUsoDePagos } from '../http/pagos.controla
 import { rutasDePagos } from '../http/pagos.rutas.js';
 import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 import { MovimientosDePagosDrizzle } from '../infraestructura/persistencia/movimientos-de-pagos.drizzle.js';
+import { NotasParaLigarDrizzle } from '../infraestructura/persistencia/notas-para-ligar.drizzle.js';
 import { PagosEnBancosEnMediador } from '../infraestructura/pagos-en-bancos-en-mediador.js';
 import { ConsultasDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-documentos.drizzle.js';
 import { ConsultasDePagosDrizzle } from '../infraestructura/persistencia/consultas-de-pagos.drizzle.js';
@@ -55,6 +61,8 @@ function casosDeUso(): CasosDeUsoDePagos {
     reaplicar: new ReaplicarPago(paraCambiar),
     saldarDiferencia: new SaldarDiferenciaDelPago(paraCambiar),
     registrar: new RegistrarPago(piezasParaRegistrar(paraConsultar, bancos)),
+    ligar: new LigarNotaDeDebito(piezasParaRegistrar(paraConsultar, bancos)),
+    notasParaLigar: new ListarNotasParaLigar(paraConsultar),
     paraPagar: new ListarCargosParaPagar(paraConsultar),
     proveedoresPorPagar: new ListarProveedoresPorPagar(paraConsultar),
     medios: new ObtenerMediosDePago({ unidadDeTrabajo, bancos, reloj }),
@@ -69,6 +77,7 @@ function piezasParaConsultar() {
     consultas: new ConsultasDeDocumentosDrizzle(),
     consultasDePagos: new ConsultasDePagosDrizzle(),
     retenciones: new RetencionesDelLibroDrizzle(),
+    notas: new NotasParaLigarDrizzle(),
     nombreDelNit: new NombreDelNitDrizzle(),
     pagos: new RepositorioDePagosDrizzle(),
     umbral: new UmbralDeBancarizacionEnConfiguracion(),

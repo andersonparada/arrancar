@@ -9,13 +9,13 @@ import type { MovimientoCreado } from '../../puertos/puertos-de-pagos.js';
 import { dtoDelPago, eventoDelPago, type PagoGuardado } from './armado-del-pago.js';
 import { ArmadorDeAvisosDelPago, type LineaConRetencion } from './avisos-del-pago.js';
 import type { DependenciasDeRegistrarPago, LineaRevisada } from './dependencias-de-pagos.js';
-import type { PeticionDePago } from './peticion-de-pago.js';
+import type { PeticionGuardable } from './peticion-de-pago.js';
 import { RegistradorDeDiferencias } from './registrador-de-diferencias.js';
 import type { PagoBloqueado } from './revisor-del-pago.js';
 
 /** Todo lo que `RegistrarPago` ya resolvió antes de guardar. */
 export interface PagoPorGuardar {
-  pedido: PeticionDePago;
+  pedido: PeticionGuardable;
   pagoId: string;
   fecha: string;
   hoy: string;
@@ -24,6 +24,8 @@ export interface PagoPorGuardar {
   bloqueado: PagoBloqueado;
   diferencias: DiferenciaPedida[];
   fechaDeInicio: string | null;
+  /** Solo al ligar una nota: lo que le queda por aplicar después de este pago. */
+  restanteDeLaNotaCentavos?: number;
 }
 
 export interface PagoYSusEventos {
@@ -77,6 +79,7 @@ export class GuardadorDelPago {
       forma: pedido.forma,
       fecha: por.fecha,
       movimientoId: por.movimiento.movimientoId,
+      referencia: pedido.forma === 'nota_ligada' ? (pedido.referencia ?? null) : null,
       observaciones: pedido.observaciones ?? null,
       lineas: lineas.map(({ fila, contrasena, montoCentavos, retencionDescontadaCentavos }) => ({
         cargoId: fila.documento.id,
@@ -90,6 +93,7 @@ export class GuardadorDelPago {
   private async avisosDe(operador: Operador, por: PagoPorGuardar, lineas: LineaConRetencion[]): Promise<string[]> {
     const propios = await this.avisos.avisos(operador, {
       forma: por.pedido.forma,
+      restanteDeLaNotaCentavos: por.restanteDeLaNotaCentavos,
       proveedorId: por.pedido.proveedorId,
       proveedorNombre: lineas[0]!.fila.libro.proveedorNombre,
       fecha: por.fecha,

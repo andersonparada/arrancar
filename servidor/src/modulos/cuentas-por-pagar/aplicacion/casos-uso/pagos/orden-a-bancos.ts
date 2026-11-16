@@ -8,19 +8,24 @@ import type { PeticionDePago } from './peticion-de-pago.js';
 export const MODULO_DE_ORIGEN = 'cuentas-por-pagar';
 
 /**
- * El reparto por concepto del movimiento: lo pagado a cargos de activo fijo va a «Pago a proveedores de activo fijo»
+ * El reparto por concepto de un monto: lo pagado a cargos de activo fijo va a «Pago a proveedores de activo fijo»
  * (Inversión) y el resto a «Pago a proveedores» (Operación). Con una sola clase, una sola línea.
  */
+export function repartoPorActivo(totalCentavos: number, deActivoCentavos: number): LineaDeConcepto[] {
+  const conceptos: LineaDeConcepto[] = [
+    { claveDeSistema: 'pago_a_proveedor', montoCentavos: totalCentavos - deActivoCentavos },
+    { claveDeSistema: 'pago_a_proveedor_de_activo', montoCentavos: deActivoCentavos },
+  ];
+  return conceptos.filter(({ montoCentavos }) => montoCentavos > 0);
+}
+
+/** El reparto del cheque o la nota de un pago según sus cargos. */
 export function conceptosDelPago(lineas: readonly LineaRevisada[]): LineaDeConcepto[] {
   const deActivo = lineas
     .filter(({ fila }) => fila.documento.tieneActivoFijo)
     .reduce((suma, { montoCentavos }) => suma + montoCentavos, 0);
   const total = lineas.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0);
-  const conceptos: LineaDeConcepto[] = [
-    { claveDeSistema: 'pago_a_proveedor', montoCentavos: total - deActivo },
-    { claveDeSistema: 'pago_a_proveedor_de_activo', montoCentavos: deActivo },
-  ];
-  return conceptos.filter(({ montoCentavos }) => montoCentavos > 0);
+  return repartoPorActivo(total, deActivo);
 }
 
 /** Lo que Bancos necesita del pago, ya resuelto. */

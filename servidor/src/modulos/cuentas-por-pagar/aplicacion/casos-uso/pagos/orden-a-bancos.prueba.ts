@@ -3,7 +3,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import { documentoSembrado } from '../../../pruebas/dobles-de-aplicaciones.js';
 import type { ChequeAEmitir, NotaDeDebitoARegistrar, PagosEnBancos } from '../../puertos/puertos-de-pagos.js';
 import type { LineaRevisada } from './dependencias-de-pagos.js';
-import { conceptosDelPago, ordenarABancos } from './orden-a-bancos.js';
+import { conceptosDelPago, ordenarABancos, repartoPorActivo } from './orden-a-bancos.js';
 import type { PeticionDePago } from './peticion-de-pago.js';
 
 const operador = { usuarioId: 'u', cuentaId: 'c', empresaId: 'e', esSuperacceso: false } as Operador;
@@ -48,6 +48,17 @@ describe('el reparto del pago por concepto', () => {
       { claveDeSistema: 'pago_a_proveedor', montoCentavos: 150 },
       { claveDeSistema: 'pago_a_proveedor_de_activo', montoCentavos: 200 },
     ]);
+  });
+});
+
+describe('el reparto de un monto entre Operación e Inversión', () => {
+  it('lo no ligado a activo fijo queda en Operación y sin activo fijo no hay línea de Inversión', () => {
+    expect(repartoPorActivo(336_000, 224_000)).toEqual([
+      { claveDeSistema: 'pago_a_proveedor', montoCentavos: 112_000 },
+      { claveDeSistema: 'pago_a_proveedor_de_activo', montoCentavos: 224_000 },
+    ]);
+    expect(repartoPorActivo(100, 0)).toEqual([{ claveDeSistema: 'pago_a_proveedor', montoCentavos: 100 }]);
+    expect(repartoPorActivo(100, 100)).toEqual([{ claveDeSistema: 'pago_a_proveedor_de_activo', montoCentavos: 100 }]);
   });
 });
 
