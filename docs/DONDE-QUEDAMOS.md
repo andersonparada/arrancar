@@ -37,16 +37,20 @@ cliente 1034, generador 46.
 | CP5 reportes | `diseno-cp5-reportes.md` (aprobado 2026-11-15, dictamen `dictamen-cp5-2026-11-15.md`) | CP5-1 a CP5-3, CP5-6, CP5-7 | CP5-4 (espera CP4-6), CP5-5 (espera CP4-E2/E3), CP5-8 y CP5-10 (en curso), CP5-9, CP5-11 |
 | CP5 reportes | `diseno-cp5-reportes.md` (aprobado, listo para programar, 2026-11-15) | — | **CP5-1** (migración `0011_cp5_fecha_de_anulacion`, **antes de CP4-4**), CP5-2 a CP5-11 (§11 del diseño) |
 
-**Agentes en curso al 2026-11-15** (si se cortan, retomarlos sin `git reset`, o relanzar el paso desde `main`):
+**Agentes y ramas al cortar por límite de uso (2026-11-15)** (retomarlos sin `git reset`, o relanzar el paso desde `main`):
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP4-E2 retiros de efectivo | `agent-a95cc3a96920000a5` | programando |
-| CP4-6 cuenta de apertura | `agent-ac10d8dbc12724825` | programando |
+| CP4-E2 retiros de efectivo | `agent-a95cc3a96920000a5` | **terminado, sin unir** (commit `2b4769c`, pruebas en verde en su rama); también adelantó liquidar y reabrir |
+| CP5-4 reportes de pagos y control (R6, R7, R8) | `agent-ab76b5e6013a35f9b` | programando |
 | CP5-8 cliente de R3, R4 y R5 | `agent-a95e0bf517758ee8a` | programando |
 | CP5-10 cliente de R12 (Libro de compras) | `agent-a0b1d282a47aa6b9e` | programando |
 
-En `main`: CP4-5, CP5-6 y CP5-7 (pantallas de R1 y R2). Todo en verde: servidor 4543, cliente 1124, generador 46.
+En `main`: CP4-6 (`c4e52c4`, cuenta de apertura). Sus pruebas completas quedaron corriendo (antes de CP4-6: servidor
+4543, cliente 1124, generador 46). **Al retomar:** confirmar en verde, unir CP4-E2 y los demás conforme terminen, y
+seguir con CP4-E3 (pago en efectivo, reutiliza `RepositorioDeRetiros.bloquear`, `DesgloseDelRetiro.fijar` y
+`ConsultasDeRetiros.repartoDelRetiro`; falta el aviso de bancarización al registrar el retiro), CP4-7 (reintegros),
+CP4-8 en adelante, CP5-5, CP5-9 y las QA.
 
 Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie más genera migraciones de Cuentas por pagar a la vez) y después CP4-4 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → CP5-1 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
