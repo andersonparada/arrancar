@@ -1,4 +1,4 @@
-import type { FormaDePago } from '../../dominio/pagos.js';
+import type { EstadoDeUnPago, FormaDePago } from '../../dominio/pagos.js';
 import type { OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
 /** Una contraseña vigente del proveedor, con su número como se lee (`15` o `2026-15`). */
@@ -37,7 +37,7 @@ export interface MovimientoDelPagoDto {
   numero: number;
 }
 
-/** El pago recién registrado, con los avisos que no bloquean (los suyos y los de Bancos). */
+/** El pago con los avisos que no bloquean al registrarlo (los suyos y los de Bancos); vacíos al leerlo después. */
 export interface PagoDto {
   id: string;
   /** Como se lee: `15` o `2026-15`. */
@@ -51,9 +51,12 @@ export interface PagoDto {
   /** Con fecha posterior a hoy el pago es un cheque posfechado: el documento queda comprometido. */
   posfechado: boolean;
   monto: string;
-  movimiento: MovimientoDelPagoDto;
+  /** `null` en la cuenta de apertura y en efectivo. */
+  movimiento: MovimientoDelPagoDto | null;
   observaciones: string | null;
-  estado: 'vigente';
+  estado: EstadoDeUnPago;
+  /** Solo en un pago anulado: la fecha contable de la anulación y el motivo. */
+  anulacion: { fecha: string; motivo: string } | null;
   aplicaciones: AplicacionDelPagoDto[];
   diferencias: DiferenciaDelPagoDto[];
   avisos: string[];

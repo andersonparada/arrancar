@@ -1,19 +1,16 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { NumeroAsignado } from '../../../../core/compartido/aplicacion/correlativos.js';
 import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
-import { EFECTO_DE_LA_DIFERENCIA_DE_UN_CARGO } from '../../../dominio/ajustes.js';
-import type { DocumentoConAplicaciones, DocumentoPorPagar } from '../../../dominio/documento-por-pagar.js';
-import { AjusteRegistrado } from '../../../dominio/eventos-de-ajustes.js';
+import type { AjusteRegistrado } from '../../../dominio/eventos-de-ajustes.js';
 import { numeroDelPago } from '../../../dominio/pagos.js';
 import { CLAVE_DE_PAGOS, retencionPorDescontar, type DiferenciaPedida } from '../../../dominio/registro-de-pago.js';
-import { dtoDeFicha } from '../../dto/ficha-del-documento.dto.js';
 import type { PagoDto } from '../../dto/registro-de-pago.dto.js';
-import type { AjusteNuevo } from '../../puertos/puertos-de-ajustes.js';
 import type { MovimientoCreado } from '../../puertos/puertos-de-pagos.js';
 import { dtoDelPago, eventoDelPago, type PagoGuardado } from './armado-del-pago.js';
 import { ArmadorDeAvisosDelPago, type LineaConRetencion } from './avisos-del-pago.js';
-import { RECURSO_DE_AJUSTES, type DependenciasDeRegistrarPago, type LineaRevisada } from './dependencias-de-pagos.js';
+import type { DependenciasDeRegistrarPago, LineaRevisada } from './dependencias-de-pagos.js';
 import type { PeticionDePago } from './peticion-de-pago.js';
+import { RegistradorDeDiferencias } from './registrador-de-diferencias.js';
 import type { PagoBloqueado } from './revisor-del-pago.js';
 
 /** Todo lo que `RegistrarPago` ya resolvió antes de guardar. */
@@ -37,9 +34,11 @@ export interface PagoYSusEventos {
 /** Guarda el pago y sus líneas, las diferencias de centavos y arma lo que se responde y se publica. */
 export class GuardadorDelPago {
   private readonly avisos: ArmadorDeAvisosDelPago;
+  private readonly diferencias: RegistradorDeDiferencias;
 
   constructor(private readonly dependencias: DependenciasDeRegistrarPago) {
     this.avisos = new ArmadorDeAvisosDelPago(dependencias);
+    this.diferencias = new RegistradorDeDiferencias(dependencias);
   }
 
   async guardar(operador: Operador, por: PagoPorGuardar): Promise<PagoYSusEventos> {
@@ -53,7 +52,10 @@ export class GuardadorDelPago {
       empresaId: operador.empresaId,
       pagoId: por.pagoId,
       numero: { numero: asignado.numero, anio: asignado.anio },
-      pedido: por.pedido,
+      forma: por.pedido.forma,
+      observaciones: por.pedido.observaciones ?? null,
+      estado: 'vigente',
+      anulacion: null,
       fecha: por.fecha,
       hoy: por.hoy,
       beneficiario: por.beneficiario,
@@ -110,61 +112,12 @@ export class GuardadorDelPago {
 
   /** Las diferencias de centavos: un ajuste del cargo ligado al pago, auditado y con su evento (efecto `ingreso`). */
   private async guardarDiferencias(operador: Operador, por: PagoPorGuardar, numero: string): Promise<EventoDominio[]> {
-    const eventos: EventoDominio[] = [];
-    for (const diferencia of por.diferencias)
-      eventos.push(await this.guardarUna(operador, por, { diferencia, numero }));
+    const eventos: AjusteRegistrado[] = [];
+    for (const { cargoId, montoCentavos } of por.diferencias) {
+      const cargo = por.bloqueado.guardados.get(cargoId)!;
+      const por1 = { pagoId: por.pagoId, numeroDelPago: numero, fecha: por.fecha, cargo, montoCentavos };
+      eventos.push(await this.diferencias.registrar(operador, por1));
+    }
     return eventos;
   }
-
-  private auditar(ajusteId: string, guardado: DocumentoConAplicaciones, motivo: string): Promise<void> {
-    return this.dependencias.auditoria.registrar({
-      recurso: RECURSO_DE_AJUSTES,
-      registroId: ajusteId,
-      accion: 'ajustar',
-      anterior: dtoDeFicha(guardado),
-      motivo,
-    });
-  }
-
-  private async guardarUna(
-    operador: Operador,
-    por: PagoPorGuardar,
-    { diferencia, numero }: { diferencia: DiferenciaPedida; numero: string },
-  ): Promise<AjusteRegistrado> {
-    const guardado = por.bloqueado.guardados.get(diferencia.cargoId)!;
-    const { documento } = guardado;
-    const motivo = `Diferencia al pagar con el pago ${numero}`;
-    const ajusteId = await this.dependencias.ajustes.agregar(documento, ajusteDeLaDiferencia(por, diferencia, motivo));
-    await this.auditar(ajusteId, guardado, motivo);
-    return new AjusteRegistrado({
-      ...datosDelDocumento(documento),
-      empresaId: operador.empresaId,
-      ajusteId,
-      montoCentavos: diferencia.montoCentavos,
-      fecha: por.fecha,
-      causa: 'diferencia_menor',
-      efecto: EFECTO_DE_LA_DIFERENCIA_DE_UN_CARGO,
-      referencia: null,
-    });
-  }
 }
-
-const ajusteDeLaDiferencia = (
-  por: PagoPorGuardar,
-  { montoCentavos }: DiferenciaPedida,
-  motivo: string,
-): AjusteNuevo => ({
-  montoCentavos,
-  fecha: por.fecha,
-  causa: 'diferencia_menor',
-  motivo,
-  referencia: null,
-  pagoId: por.pagoId,
-});
-
-const datosDelDocumento = ({ id, proveedorId, serie, numero }: DocumentoPorPagar) => ({
-  documentoId: id,
-  proveedorId,
-  serie,
-  numero,
-});

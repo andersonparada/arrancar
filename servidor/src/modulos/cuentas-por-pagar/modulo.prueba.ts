@@ -35,6 +35,8 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.contrasenas.anular',
       'cuentas-por-pagar.pagos.ver',
       'cuentas-por-pagar.pagos.emitir',
+      'cuentas-por-pagar.pagos.reaplicar',
+      'cuentas-por-pagar.pagos.anular',
     ]);
   });
 

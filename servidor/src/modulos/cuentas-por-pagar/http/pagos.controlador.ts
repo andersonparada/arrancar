@@ -5,13 +5,20 @@ import type {
   ListarProveedoresPorPagar,
   ObtenerMediosDePago,
 } from '../aplicacion/casos-uso/pagos/consultas-de-pagos.js';
+import type { AnularPago } from '../aplicacion/casos-uso/pagos/anular-pago.js';
+import type { ReaplicarPago } from '../aplicacion/casos-uso/pagos/reaplicar-pago.js';
+import type { SaldarDiferenciaDelPago } from '../aplicacion/casos-uso/pagos/saldar-diferencia-del-pago.js';
 import type { RegistrarPago } from '../aplicacion/casos-uso/pagos/registrar-pago.js';
 import type { ParamsDeProveedor } from './documentos.esquemas-http.js';
 import type {
+  AnularPagoSolicitado,
   MediosSolicitado,
   PagoSolicitado,
+  ParamsDePago,
   ParaPagarSolicitado,
   ProveedoresPorPagarSolicitado,
+  ReaplicarPagoSolicitado,
+  SaldarDiferenciaSolicitada,
 } from './pagos.esquemas-http.js';
 
 export interface CasosDeUsoDePagos {
@@ -19,6 +26,9 @@ export interface CasosDeUsoDePagos {
   paraPagar: ListarCargosParaPagar;
   proveedoresPorPagar: ListarProveedoresPorPagar;
   medios: ObtenerMediosDePago;
+  anular: AnularPago;
+  reaplicar: ReaplicarPago;
+  saldarDiferencia: SaldarDiferenciaDelPago;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
@@ -38,4 +48,21 @@ export class PagosControlador {
 
   medios = (solicitud: FastifyRequest<{ Querystring: MediosSolicitado }>) =>
     this.casosDeUso.medios.ejecutar(operadorDe(solicitud), solicitud.query.fecha);
+
+  anular = (solicitud: FastifyRequest<{ Params: ParamsDePago; Body: AnularPagoSolicitado }>) =>
+    this.casosDeUso.anular.ejecutar(operadorDe(solicitud), { pagoId: solicitud.params.id, ...solicitud.body });
+
+  reaplicar = (solicitud: FastifyRequest<{ Params: ParamsDePago; Body: ReaplicarPagoSolicitado }>) =>
+    this.casosDeUso.reaplicar.ejecutar(operadorDe(solicitud), { pagoId: solicitud.params.id, ...solicitud.body });
+
+  saldarDiferencia = async (
+    solicitud: FastifyRequest<{ Params: ParamsDePago; Body: SaldarDiferenciaSolicitada }>,
+    respuesta: FastifyReply,
+  ) => {
+    const pago = await this.casosDeUso.saldarDiferencia.ejecutar(operadorDe(solicitud), {
+      pagoId: solicitud.params.id,
+      ...solicitud.body,
+    });
+    return respuesta.status(201).send(pago);
+  };
 }

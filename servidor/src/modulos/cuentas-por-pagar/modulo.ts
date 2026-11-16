@@ -102,6 +102,14 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.pagos.emitir',
       descripcion: 'Pagar a un proveedor con cheque o con nota de débito (crea el movimiento en Bancos)',
     },
+    {
+      clave: 'cuentas-por-pagar.pagos.reaplicar',
+      descripcion: 'Reaplicar un pago vigente a otros documentos de las contraseñas vigentes de su proveedor',
+    },
+    {
+      clave: 'cuentas-por-pagar.pagos.anular',
+      descripcion: 'Anular un pago (anula también su cheque o su nota en Bancos y sus diferencias de centavos)',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,

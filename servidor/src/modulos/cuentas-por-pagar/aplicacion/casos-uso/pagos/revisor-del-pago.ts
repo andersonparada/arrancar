@@ -26,10 +26,20 @@ export interface PagoBloqueado {
 export class RevisorDelPago {
   constructor(private readonly dependencias: Dependencias) {}
 
-  /** Lee y revisa cada cargo sin bloquear nada. @throws RecursoNoEncontrado, CargoNoDisponible, DocumentoFueraDeLaContrasena, DocumentoSinAutorizar, PagoMayorQueElSaldo */
-  async revisar(proveedorId: string, lineas: readonly LineaPedida[]): Promise<LineaRevisada[]> {
+  /**
+   * Lee y revisa cada cargo sin bloquear nada. `devueltos` es lo que el propio pago ya tiene en cada cargo (al reaplicar: el
+   * saldo se cuenta sin este pago).
+   * @throws RecursoNoEncontrado, CargoNoDisponible, DocumentoFueraDeLaContrasena, DocumentoSinAutorizar, PagoMayorQueElSaldo
+   */
+  async revisar(
+    proveedorId: string,
+    lineas: readonly LineaPedida[],
+    devueltos: ReadonlyMap<string, number> = new Map(),
+  ): Promise<LineaRevisada[]> {
     const revisadas: LineaRevisada[] = [];
-    for (const [indice, linea] of lineas.entries()) revisadas.push(await this.revisarUna(proveedorId, linea, indice));
+    for (const [indice, linea] of lineas.entries()) {
+      revisadas.push(await this.revisarUna({ proveedorId, devueltos }, { linea, indice }));
+    }
     return revisadas;
   }
 
@@ -52,12 +62,15 @@ export class RevisorDelPago {
     return { lineas: await this.revisar(proveedorId, lineas), guardados };
   }
 
-  private async revisarUna(proveedorId: string, linea: LineaPedida, indice: number): Promise<LineaRevisada> {
+  private async revisarUna(
+    { proveedorId, devueltos }: { proveedorId: string; devueltos: ReadonlyMap<string, number> },
+    { linea, indice }: { linea: LineaPedida; indice: number },
+  ): Promise<LineaRevisada> {
     const fila = await this.dependencias.consultas.buscar(linea.cargoId);
     if (!fila) throw new CargoNoDisponible(null, indice);
     const cargo: CargoParaPagar = {
       documento: fila.documento,
-      saldoCentavos: saldoDeLaFila(fila),
+      saldoCentavos: saldoDeLaFila(fila) + (devueltos.get(linea.cargoId) ?? 0),
       contrasenaId: fila.contrasena?.id ?? null,
     };
     exigirCargoPagable(cargo, proveedorId, indice);

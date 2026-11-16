@@ -6,7 +6,9 @@ import type {
   MediosDePago,
   OrigenDeMovimientoContrato,
 } from '../../../core/contratos/bancos.contratos.js';
+import type { AnulacionEnBancos } from '../../dominio/anulacion-de-pagos.js';
 import type { EfectoFiscal } from '../../dominio/bancarizacion-de-pagos.js';
+import type { PagoConLineas } from '../../dominio/pago-con-lineas.js';
 import type { RetencionDelLibro } from '../../dominio/avisos-de-pagos.js';
 
 /** Lo que Bancos necesita para emitir el cheque de un pago. */
@@ -49,6 +51,56 @@ export interface PagosEnBancos {
   medios(operador: Operador, fecha: string): Promise<MediosDePago>;
   emitirCheque(operador: Operador, cheque: ChequeAEmitir): Promise<MovimientoCreado>;
   registrarNotaDeDebito(operador: Operador, nota: NotaDeDebitoARegistrar): Promise<MovimientoCreado>;
+  /** Anula el cheque o la nota que creó el pago (Bancos decide si a la antigua o con inverso); lanza lo que rechace Bancos. */
+  anularMovimiento(operador: Operador, anulacion: AnulacionDeMovimiento): Promise<AnulacionDelMovimiento>;
+  /** Vuelve a fijar el reparto por concepto del movimiento del pago (solo clasifica el flujo). */
+  fijarDesglose(operador: Operador, desglose: DesgloseDelMovimiento): Promise<void>;
+}
+
+/** Lo que Bancos necesita para anular el movimiento de un pago. */
+export interface AnulacionDeMovimiento {
+  origen: OrigenDeMovimientoContrato;
+  movimientoId: string;
+  motivo: string;
+  /** La fecha del inverso, si hay; por omisión decide Bancos (hoy o la del original según su configuración). */
+  fecha?: string;
+}
+
+/** Cómo anuló Bancos el movimiento, y la fecha del inverso si lo hubo (la lee de sus movimientos por `inversoId`). */
+export interface AnulacionDelMovimiento {
+  forma: Exclude<AnulacionEnBancos, null>;
+  fechaDelInverso: string | null;
+}
+
+export interface DesgloseDelMovimiento {
+  origen: OrigenDeMovimientoContrato;
+  movimientoId: string;
+  conceptos: LineaDeConcepto[];
+}
+
+/** Lo que se lee de Bancos (infraestructura, sin orden) de un movimiento de un pago. */
+export interface MovimientosDePagos {
+  /** Si el movimiento ya está conciliado (el banco lo pagó); `false` si no existe. */
+  estaConciliado(movimientoId: string): Promise<boolean>;
+  /** La fecha de un movimiento, p. ej. la del inverso con que Bancos anuló el cheque; `null` si no existe. */
+  fechaDe(movimientoId: string): Promise<string | null>;
+  /** Cuenta, número del cheque o de la nota y beneficiario de cada movimiento, para mostrar el pago. */
+  datosDe(movimientoId: string): Promise<DatosDelMovimiento | null>;
+}
+
+export interface DatosDelMovimiento {
+  cuentaBancariaId: string;
+  /** El número del cheque o el de la nota. */
+  numero: number;
+  beneficiario: string | null;
+}
+
+/** Cómo se anula un pago guardado. */
+export interface AnulacionDePago {
+  anuladoPor: string;
+  motivo: string;
+  /** `AAAA-MM-DD`: la fecha contable de la anulación (CP5-a). */
+  fechaDeAnulacion: string;
 }
 
 /** Una línea del pago lista para guardar. */
@@ -78,6 +130,16 @@ export interface RepositorioDePagos {
   agregar(pago: PagoNuevo): Promise<void>;
   /** Los cargos que ya tienen un pago vigente donde se descontó su retención. */
   conRetencionYaDescontada(cargoIds: readonly string[]): Promise<Set<string>>;
+  /** El pago con todas sus líneas; `null` si no existe en la empresa. */
+  buscar(id: string): Promise<PagoConLineas | null>;
+  /** Igual que `buscar`, y deja la fila bloqueada para este caso de uso. */
+  bloquear(id: string): Promise<PagoConLineas | null>;
+  /** Los pagos (vigentes y anulados) cuyo movimiento en Bancos es este, por número. */
+  delMovimiento(movimientoId: string): Promise<PagoConLineas[]>;
+  /** Deja el pago `anulado` con quién, cuándo, por qué y la fecha contable, y sus líneas `vigente = false`. */
+  anular(id: string, anulacion: AnulacionDePago): Promise<void>;
+  /** Cambia a qué cargos cubre un pago vigente: borra sus líneas y guarda las nuevas. */
+  reemplazarLineas(pago: Pick<PagoConLineas, 'id' | 'proveedorId'>, lineas: LineaDePagoNueva[]): Promise<void>;
 }
 
 /** Un pago vigente del mes del proveedor. */

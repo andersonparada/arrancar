@@ -1,25 +1,34 @@
 import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import { PagoRegistrado, type AplicacionDelEvento } from '../../../dominio/eventos-de-pagos.js';
-import { numeroDelPago } from '../../../dominio/pagos.js';
+import { numeroDelPago, type EstadoDeUnPago, type FormaDePago } from '../../../dominio/pagos.js';
 import type { DiferenciaPedida } from '../../../dominio/registro-de-pago.js';
 import type { AplicacionDelPagoDto, PagoDto } from '../../dto/registro-de-pago.dto.js';
 import type { MovimientoCreado } from '../../puertos/puertos-de-pagos.js';
 import type { LineaConRetencion } from './avisos-del-pago.js';
-import type { PeticionDePago } from './peticion-de-pago.js';
 
-/** Todo lo que el pago ya tiene resuelto al terminar de guardarse. */
-export interface PagoGuardado {
-  empresaId: string;
+/** Lo que hace falta para armar la respuesta de un pago, recién registrado o ya guardado (anulado o reaplicado). */
+export interface PagoParaElDto {
   pagoId: string;
   numero: { numero: number; anio: number };
-  pedido: PeticionDePago;
+  forma: FormaDePago;
+  observaciones: string | null;
   fecha: string;
   hoy: string;
   beneficiario: string;
-  movimiento: MovimientoCreado;
+  /** El cheque o la nota de Bancos; nulo si el pago no lo tiene (cuenta de apertura, efectivo). */
+  movimiento: MovimientoCreado | null;
   lineas: readonly LineaConRetencion[];
   diferencias: readonly DiferenciaPedida[];
   avisos: string[];
+  estado: EstadoDeUnPago;
+  /** Solo en un pago anulado: la fecha contable y el motivo. */
+  anulacion: { fecha: string; motivo: string } | null;
+}
+
+/** Todo lo que el pago ya tiene resuelto al terminar de guardarse. */
+export interface PagoGuardado extends PagoParaElDto {
+  empresaId: string;
+  movimiento: MovimientoCreado;
 }
 
 const sumaDe = (lineas: readonly LineaConRetencion[]): number =>
@@ -48,8 +57,10 @@ const dtoDelMovimiento = ({ movimientoId, cuentaBancariaId, numero }: Movimiento
   numero,
 });
 
+const sumaDeLaForma = (pago: PagoParaElDto) => deCentavos(sumaDe(pago.lineas));
+
 /** El pago como lo ve la pantalla justo después de registrarlo. */
-export function dtoDelPago(pago: PagoGuardado): PagoDto {
+export function dtoDelPago(pago: PagoParaElDto): PagoDto {
   const { fila } = pago.lineas[0]!;
   const contrasenas = new Map(pago.lineas.map(({ contrasena }) => [contrasena.id, contrasena]));
   return {
@@ -58,20 +69,21 @@ export function dtoDelPago(pago: PagoGuardado): PagoDto {
     contrasenas: [...contrasenas.values()],
     proveedor: { id: fila.documento.proveedorId, nombre: fila.libro.proveedorNombre, nit: fila.libro.proveedorNit },
     beneficiario: pago.beneficiario,
-    forma: pago.pedido.forma,
+    forma: pago.forma,
     fecha: pago.fecha,
-    posfechado: pago.fecha > pago.hoy,
-    monto: deCentavos(sumaDe(pago.lineas)),
-    movimiento: dtoDelMovimiento(pago.movimiento),
-    observaciones: pago.pedido.observaciones ?? null,
-    estado: 'vigente',
+    posfechado: pago.estado === 'vigente' && pago.fecha > pago.hoy,
+    monto: sumaDeLaForma(pago),
+    movimiento: pago.movimiento ? dtoDelMovimiento(pago.movimiento) : null,
+    observaciones: pago.observaciones,
+    estado: pago.estado,
+    anulacion: pago.anulacion,
     aplicaciones: pago.lineas.map(dtoDeLaLinea),
     diferencias: pago.diferencias.map(({ cargoId, montoCentavos }) => ({ cargoId, monto: deCentavos(montoCentavos) })),
     avisos: pago.avisos,
   };
 }
 
-const aplicacionDelEvento = ({
+export const aplicacionDelEvento = ({
   fila: { documento },
   montoCentavos,
   retencionDescontadaCentavos,
@@ -93,7 +105,7 @@ export function eventoDelPago(pago: PagoGuardado): PagoRegistrado {
     numero: pago.numero.numero,
     contrasenaIds: [...new Set(pago.lineas.map(({ contrasena }) => contrasena.id))],
     proveedorId: fila.documento.proveedorId,
-    forma: pago.pedido.forma,
+    forma: pago.forma,
     fecha: pago.fecha,
     posfechado: pago.fecha > pago.hoy,
     montoCentavos: sumaDe(pago.lineas),
