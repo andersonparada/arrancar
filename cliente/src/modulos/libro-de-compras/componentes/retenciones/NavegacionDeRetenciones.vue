@@ -9,6 +9,7 @@ const secciones = [
   { nombre: 'libro-de-compras.retenciones', texto: textos.mes },
   { nombre: 'libro-de-compras.retenciones.por-resolver', texto: textos.porResolver },
   { nombre: 'libro-de-compras.retenciones.enteros', texto: textos.enteros },
+  { nombre: 'libro-de-compras.retenciones.constancias-pendientes', texto: textos.constanciasPendientes },
 ];
 </script>
 

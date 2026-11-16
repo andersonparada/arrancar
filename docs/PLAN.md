@@ -2041,3 +2041,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   filtros editables (`aplicarVista`), «Más filtros», paginación de 50 e impresión que pide hasta 2,000 filas (con más avisa «Son N
   filas: acote el filtro o use Excel»). El corte se valida en el cliente contra la fecha de inicio que devuelve el servidor
   (solo para avisar antes; la regla sigue siendo del servidor). Lógica pura con pruebas en `composables/reportes/`.
+- **2026-11-15 — CP5-10 (cliente, Libro de compras: R12, constancias pendientes).** Página `ConstanciasPendientes`
+  (`/libro-de-compras/retenciones/constancias-pendientes`, cuarta pestaña de Retenciones y opción de **Reportes** del menú;
+  `retenciones.ver`, Excel con `retenciones.exportar` y papel con `.ver`). Filtros: hasta el mes (por omisión el en curso),
+  grupo y proveedor. Resumen (retenido sin constancia, cantidad, constancias vencidas, enteros vencidos sin pagar, anuladas),
+  bloques por mes y grupo con su plazo de entero («Vencido hace N días»), si está enterado y el total del servidor, y por fila el
+  «Plazo de la constancia» (ISR con fecha y estado; IVA «Sin plazo propio confirmado»). Las anuladas van en sección aparte que no
+  suma. Enlace a la vista «Retenciones por practicar» de R2 (`?vista=retenciones_por_practicar`) solo con Cuentas por pagar activo
+  y `reportes-de-saldos.ver`; Cuentas por pagar enlaza a R12 en su menú de Reportes. Se copiaron a `core/componentes/reportes/`
+  `EncabezadoDeImpresion` y `TotalesDelReporte` (genérico); las de `cuentas-por-pagar/componentes/reportes/` quedan
+  iguales y pueden migrarse a las de core después. Lógica pura con pruebas en `datos-de-constancias-pendientes.ts`.
