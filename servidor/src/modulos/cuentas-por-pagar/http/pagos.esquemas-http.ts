@@ -44,6 +44,20 @@ export const esquemaPagoLigado = z.object({
   referencia: z.string().trim().min(1).max(100, 'La referencia admite hasta 100 caracteres.').nullable().optional(),
 });
 
+/**
+ * Aplicar saldos iniciales a la cuenta de apertura: el motivo es obligatorio y `referencia` es el comprobante del sistema
+ * anterior. Con la carga abierta la fecha es la de inicio, se mande o no; no lleva diferencias.
+ */
+export const esquemaPagoDeApertura = z.object({
+  forma: z.literal('cuenta_de_apertura'),
+  proveedorId: comun.proveedorId,
+  fecha: comun.fecha,
+  motivo: z.string().trim().min(1, 'Escriba el motivo.').max(300, 'El motivo admite hasta 300 caracteres.'),
+  referencia: z.string().trim().min(1).max(100, 'La referencia admite hasta 100 caracteres.').nullable().optional(),
+  observaciones: comun.observaciones,
+  aplicaciones: comun.aplicaciones,
+});
+
 export const esquemaParamsDePago = z.object({ id: z.uuid() });
 
 const motivo = z.string().trim().min(1, 'Escriba el motivo.').max(300, 'El motivo admite hasta 300 caracteres.');
@@ -86,6 +100,7 @@ export const esquemaProveedoresPorPagar = z.object({
 
 export type PagoSolicitado = z.infer<typeof esquemaPago>;
 export type PagoLigadoSolicitado = z.infer<typeof esquemaPagoLigado>;
+export type PagoDeAperturaSolicitado = z.infer<typeof esquemaPagoDeApertura>;
 export type NotasParaLigarSolicitado = z.output<typeof esquemaNotasParaLigar>;
 export type ParaPagarSolicitado = z.infer<typeof esquemaParaPagar>;
 export type MediosSolicitado = z.infer<typeof esquemaMedios>;

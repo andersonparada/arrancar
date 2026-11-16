@@ -1,6 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { NumeroAsignado } from '../../../../core/compartido/aplicacion/correlativos.js';
 import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
+import { avisosDeLaApertura } from '../../../dominio/apertura-de-pagos.js';
 import type { AjusteRegistrado } from '../../../dominio/eventos-de-ajustes.js';
 import { numeroDelPago } from '../../../dominio/pagos.js';
 import { CLAVE_DE_PAGOS, retencionPorDescontar, type DiferenciaPedida } from '../../../dominio/registro-de-pago.js';
@@ -20,18 +21,31 @@ export interface PagoPorGuardar {
   fecha: string;
   hoy: string;
   beneficiario: string;
-  movimiento: MovimientoCreado;
+  /** Nulo en la cuenta de apertura: no mueve dinero. */
+  movimiento: MovimientoCreado | null;
   bloqueado: PagoBloqueado;
   diferencias: DiferenciaPedida[];
   fechaDeInicio: string | null;
   /** Solo al ligar una nota: lo que le queda por aplicar después de este pago. */
   restanteDeLaNotaCentavos?: number;
+  /** Solo en la cuenta de apertura: si la carga inicial estaba cerrada. */
+  conCargaCerrada?: boolean;
 }
 
 export interface PagoYSusEventos {
   dto: PagoDto;
   eventos: EventoDominio[];
 }
+
+/** Lo que solo lleva la cuenta de apertura: su motivo y si la carga inicial estaba cerrada; nulos en las demás formas. */
+function datosDeApertura({ pedido, conCargaCerrada }: PagoPorGuardar) {
+  if (pedido.forma !== 'cuenta_de_apertura') return { motivo: null, conCargaCerrada: null };
+  return { motivo: pedido.motivo, conCargaCerrada: conCargaCerrada ?? false };
+}
+
+/** La referencia que se guarda aquí: en cheque y nota de débito va a Bancos. */
+const referenciaPropia = (pedido: PeticionGuardable): string | null =>
+  pedido.forma === 'cheque' || pedido.forma === 'nota_de_debito' ? null : (pedido.referencia ?? null);
 
 /** Guarda el pago y sus líneas, las diferencias de centavos y arma lo que se responde y se publica. */
 export class GuardadorDelPago {
@@ -56,6 +70,7 @@ export class GuardadorDelPago {
       numero: { numero: asignado.numero, anio: asignado.anio },
       forma: por.pedido.forma,
       observaciones: por.pedido.observaciones ?? null,
+      ...datosDeApertura(por),
       estado: 'vigente',
       anulacion: null,
       fecha: por.fecha,
@@ -78,9 +93,10 @@ export class GuardadorDelPago {
       anioDeNumero: asignado.anio,
       forma: pedido.forma,
       fecha: por.fecha,
-      movimientoId: por.movimiento.movimientoId,
-      referencia: pedido.forma === 'nota_ligada' ? (pedido.referencia ?? null) : null,
+      movimientoId: por.movimiento?.movimientoId ?? null,
+      referencia: referenciaPropia(pedido),
       observaciones: pedido.observaciones ?? null,
+      ...datosDeApertura(por),
       lineas: lineas.map(({ fila, contrasena, montoCentavos, retencionDescontadaCentavos }) => ({
         cargoId: fila.documento.id,
         contrasenaId: contrasena.id,
@@ -102,7 +118,11 @@ export class GuardadorDelPago {
       lineas,
       diferencias: por.diferencias,
     });
-    return [...propios, ...por.movimiento.avisos.map(({ mensaje }) => mensaje)];
+    const deLaApertura =
+      por.pedido.forma === 'cuenta_de_apertura'
+        ? avisosDeLaApertura({ cargaCerrada: por.conCargaCerrada ?? false, fechaDeInicio: por.fechaDeInicio })
+        : [];
+    return [...deLaApertura, ...propios, ...(por.movimiento?.avisos ?? []).map(({ mensaje }) => mensaje)];
   }
 
   /** A cada línea, las retenciones del cargo si este es su primer pago vigente; si no, cero. */

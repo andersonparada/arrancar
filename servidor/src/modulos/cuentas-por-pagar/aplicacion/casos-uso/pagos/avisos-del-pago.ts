@@ -28,7 +28,7 @@ export interface LineaConRetencion extends LineaRevisada {
 
 /** Lo que el armador necesita saber del pago para avisar. */
 export interface PagoParaAvisar {
-  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada';
+  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura';
   /** Solo al ligar una nota: lo que le queda por aplicar después de este pago. */
   restanteDeLaNotaCentavos?: number;
   proveedorId: string;
@@ -46,7 +46,8 @@ export class ArmadorDeAvisosDelPago {
   constructor(private readonly dependencias: Dependencias) {}
 
   async avisos(operador: Operador, pago: PagoParaAvisar): Promise<string[]> {
-    const posfechado = pago.fecha > pago.hoy ? [avisoDelPosfechado(pago.forma, pago.fecha)] : [];
+    const posfechado =
+      pago.fecha > pago.hoy && pago.forma !== 'cuenta_de_apertura' ? [avisoDelPosfechado(pago.forma, pago.fecha)] : [];
     return [
       ...(await this.deLasLineas(pago)),
       ...posfechado,
@@ -70,7 +71,7 @@ export class ArmadorDeAvisosDelPago {
         retencionDescontadaCentavos: linea.retencionDescontadaCentavos,
         retenciones: delLibro.get(documento.id) ?? [],
         fechaDeRecepcion: recepciones.get(documento.id) ?? null,
-        contrasena: contrasenas.get(linea.contrasena.id) ?? null,
+        contrasena: pago.forma === 'cuenta_de_apertura' ? null : (contrasenas.get(linea.contrasena.id) ?? null),
       });
     });
   }
@@ -95,7 +96,9 @@ export class ArmadorDeAvisosDelPago {
       );
   }
 
+  /** La cuenta de apertura no mueve dinero: no cuenta para la bancarización (§5.7). */
   private async deLaBancarizacion(operador: Operador, pago: PagoParaAvisar): Promise<string[]> {
+    if (pago.forma === 'cuenta_de_apertura') return [];
     const { consultasDePagos, umbral } = this.dependencias;
     const delMes = await consultasDePagos.pagosDelMes(pago.proveedorId, pago.fecha);
     const efectivo = delMes.filter(({ forma }) => forma === 'efectivo');

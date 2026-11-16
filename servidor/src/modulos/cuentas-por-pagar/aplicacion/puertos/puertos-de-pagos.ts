@@ -119,12 +119,17 @@ export interface PagoNuevo {
   proveedorId: string;
   numero: number;
   anioDeNumero: number;
-  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada';
+  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura';
   /** `AAAA-MM-DD`. */
   fecha: string;
-  movimientoId: string;
-  /** El recibo del proveedor; solo en la nota ligada (en cheque y nota de débito va a Bancos). */
+  /** Nulo en la cuenta de apertura. */
+  movimientoId: string | null;
+  /** El recibo del proveedor (nota ligada) o el comprobante del sistema anterior (apertura); en cheque y nota de débito va a Bancos. */
   referencia?: string | null;
+  /** Solo en la cuenta de apertura: por qué se da por pagado. */
+  motivo?: string | null;
+  /** Solo en la cuenta de apertura: si la carga inicial estaba cerrada. */
+  conCargaCerrada?: boolean | null;
   observaciones: string | null;
   lineas: LineaDePagoNueva[];
 }

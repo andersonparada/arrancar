@@ -10,6 +10,7 @@ import { ListarCargosParaPagar } from '../aplicacion/casos-uso/pagos/listar-carg
 import { LigarNotaDeDebito } from '../aplicacion/casos-uso/pagos/ligar-nota-de-debito.js';
 import { RegistrarPago } from '../aplicacion/casos-uso/pagos/registrar-pago.js';
 import { mediador } from '../../core/mediador/contexto.js';
+import { AplicarACuentaDeApertura } from '../aplicacion/casos-uso/pagos/aplicar-a-cuenta-de-apertura.js';
 import { AnularPago } from '../aplicacion/casos-uso/pagos/anular-pago.js';
 import { AtenderMovimientoPorCambiar } from '../aplicacion/casos-uso/pagos/atender-movimiento-por-cambiar.js';
 import type { DependenciasDeCambiarPagos } from '../aplicacion/casos-uso/pagos/dependencias-de-pagos.js';
@@ -62,6 +63,7 @@ function casosDeUso(): CasosDeUsoDePagos {
     saldarDiferencia: new SaldarDiferenciaDelPago(paraCambiar),
     registrar: new RegistrarPago(piezasParaRegistrar(paraConsultar, bancos)),
     ligar: new LigarNotaDeDebito(piezasParaRegistrar(paraConsultar, bancos)),
+    aplicarAApertura: new AplicarACuentaDeApertura(piezasParaRegistrar(paraConsultar, bancos)),
     notasParaLigar: new ListarNotasParaLigar(paraConsultar),
     paraPagar: new ListarCargosParaPagar(paraConsultar),
     proveedoresPorPagar: new ListarProveedoresPorPagar(paraConsultar),

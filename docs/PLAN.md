@@ -2041,3 +2041,16 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   filtros editables (`aplicarVista`), «Más filtros», paginación de 50 e impresión que pide hasta 2,000 filas (con más avisa «Son N
   filas: acote el filtro o use Excel»). El corte se valida en el cliente contra la fecha de inicio que devuelve el servidor
   (solo para avisar antes; la regla sigue siendo del servidor). Lógica pura con pruebas en `composables/reportes/`.
+- **2026-11-15 — CP4-6 (servidor, aplicar a la cuenta de apertura).** `AplicarACuentaDeApertura`
+  (`POST /cuentas-por-pagar/pagos/apertura`, permiso nuevo `pagos.aplicar-a-apertura`): da por pagados saldos iniciales sin
+  dinero, forma `cuenta_de_apertura`, con motivo obligatorio (1 a 300), referencia opcional y sin movimiento en Bancos. Todos los
+  cargos deben ser saldos iniciales (`solo_saldos_iniciales`), autorizados y en una contraseña vigente. Con la carga abierta la
+  fecha es siempre la de inicio (aunque se mande otra) y el saldo debe tener movimientos (notas aplicadas o que lo corrigen,
+  ajustes o pagos vigentes); uno sin ellos, aunque esté autorizado, se rechaza con `corrija_el_saldo_inicial` (se quita de la
+  contraseña, se desautoriza y se corrige en Saldos iniciales). Con la carga cerrada es una corrección de error: fecha hoy por
+  omisión, ni futura ni anterior a la fecha de inicio (`fecha_de_pago_invalida`). Audita `ajustar` (recurso
+  `cuentas-por-pagar.pagos`, las fichas de los cargos antes del pago y el motivo), publica `pago_registrado` con efecto
+  `apertura` o `correccion_de_error`, no descuenta retenciones ni cuenta para la bancarización, y trae como primeros avisos los
+  textos fijos del contador. El `PagoDto` gana `motivo` y `conCargaCerrada`. Anularlo ya dejaba `fecha_de_anulacion` =
+  `greatest(hoy, fecha)` (CP4-4/CP5-1): queda probado. Sin migración. Desviaciones: la solicitud no admite `diferencias`
+  (§5.3 no las menciona); en esta forma no se avisa la fecha anterior a la contraseña (la fecha de inicio siempre lo sería).

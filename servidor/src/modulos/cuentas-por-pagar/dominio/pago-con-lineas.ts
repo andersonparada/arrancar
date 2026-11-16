@@ -23,6 +23,8 @@ export interface PagoConLineas {
   movimientoId: string | null;
   retiroId: string | null;
   observaciones: string | null;
+  /** Solo en la cuenta de apertura: por qué se dio por pagado. */
+  motivo: string | null;
   /** Solo en la cuenta de apertura: si la carga inicial estaba cerrada al registrarla. */
   conCargaCerrada: boolean | null;
   estado: EstadoDeUnPago;

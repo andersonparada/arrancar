@@ -7,6 +7,7 @@ import type {
   ListarProveedoresPorPagar,
   ObtenerMediosDePago,
 } from '../aplicacion/casos-uso/pagos/consultas-de-pagos.js';
+import type { AplicarACuentaDeApertura } from '../aplicacion/casos-uso/pagos/aplicar-a-cuenta-de-apertura.js';
 import type { AnularPago } from '../aplicacion/casos-uso/pagos/anular-pago.js';
 import type { ReaplicarPago } from '../aplicacion/casos-uso/pagos/reaplicar-pago.js';
 import type { SaldarDiferenciaDelPago } from '../aplicacion/casos-uso/pagos/saldar-diferencia-del-pago.js';
@@ -15,6 +16,7 @@ import type { ParamsDeProveedor } from './documentos.esquemas-http.js';
 import type {
   AnularPagoSolicitado,
   MediosSolicitado,
+  PagoDeAperturaSolicitado,
   NotasParaLigarSolicitado,
   PagoLigadoSolicitado,
   PagoSolicitado,
@@ -28,6 +30,7 @@ import type {
 export interface CasosDeUsoDePagos {
   registrar: RegistrarPago;
   ligar: LigarNotaDeDebito;
+  aplicarAApertura: AplicarACuentaDeApertura;
   notasParaLigar: ListarNotasParaLigar;
   paraPagar: ListarCargosParaPagar;
   proveedoresPorPagar: ListarProveedoresPorPagar;
@@ -48,6 +51,11 @@ export class PagosControlador {
 
   ligar = async (solicitud: FastifyRequest<{ Body: PagoLigadoSolicitado }>, respuesta: FastifyReply) => {
     const pago = await this.casosDeUso.ligar.ejecutar(operadorDe(solicitud), solicitud.body);
+    return respuesta.status(201).send(pago);
+  };
+
+  aplicarAApertura = async (solicitud: FastifyRequest<{ Body: PagoDeAperturaSolicitado }>, respuesta: FastifyReply) => {
+    const pago = await this.casosDeUso.aplicarAApertura.ejecutar(operadorDe(solicitud), solicitud.body);
     return respuesta.status(201).send(pago);
   };
 
