@@ -34,19 +34,19 @@ cliente 1034, generador 46.
 | CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-8 (QA incluida) y el arreglo E3 | — |
 | U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-8 (QA incluida) | detalles menores de la QA (en curso) |
 | CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1, CP4-EB | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
-| CP5 reportes | `diseno-cp5-reportes.md` (aprobado 2026-11-15, dictamen `dictamen-cp5-2026-11-15.md`) | CP5-1 a CP5-3 | CP5-4 (espera CP4-6), CP5-5 (espera CP4-E2/E3), CP5-6 y CP5-7 (en curso), CP5-8 a CP5-11 |
+| CP5 reportes | `diseno-cp5-reportes.md` (aprobado 2026-11-15, dictamen `dictamen-cp5-2026-11-15.md`) | CP5-1 a CP5-3, CP5-6 | CP5-4 (espera CP4-6), CP5-5 (espera CP4-E2/E3), CP5-7 (en curso), CP5-8 a CP5-11 |
 | CP5 reportes | `diseno-cp5-reportes.md` (aprobado, listo para programar, 2026-11-15) | — | **CP5-1** (migración `0011_cp5_fecha_de_anulacion`, **antes de CP4-4**), CP5-2 a CP5-11 (§11 del diseño) |
 
 **Agentes en curso al 2026-11-15** (si se cortan, retomarlos sin `git reset`, o relanzar el paso desde `main`):
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP4-5 nota ligada (con desglose por activo fijo) | `agent-ac34359f76b39269a` | programando |
-| CP5-6 constancias pendientes (Libro de compras, `0036`) | `agent-a71bbc0003f396144` | programando |
+| CP4-E2 retiros de efectivo | `agent-a95cc3a96920000a5` | programando |
+| CP4-6 cuenta de apertura | `agent-ac10d8dbc12724825` | programando |
 | CP5-7 cliente de reportes de saldos (R1 y R2) | `agent-aee1ea964f880f44e` | programando |
 
-En `main`: CP5-3 (R3 estado de cuenta, R4 saldos a favor, R5 contraseñas por pagar); pruebas corriendo en base nueva
-(con CP4-4: servidor 4455, cliente 1089, generador 46).
+En `main`: CP5-3, CP4-5 (nota ligada) y CP5-6 (constancias pendientes, `0036` de Libro de compras); pruebas corriendo en
+base nueva (con CP5-3: servidor 4499, cliente 1089, generador 46).
 
 Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie más genera migraciones de Cuentas por pagar a la vez) y después CP4-4 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → CP5-1 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
