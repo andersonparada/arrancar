@@ -11,6 +11,7 @@ import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-de-saldos-iniciales.js';
 import { rutasDePagosComponidas } from './composicion/pagos.js';
+import { rutasDeReportesDeProveedorComponidas } from './composicion/reportes-de-proveedor.js';
 import { rutasDeReportesDeSaldosComponidas } from './composicion/reportes-de-saldos.js';
 import { rutasDeSaldosInicialesComponidas } from './composicion/saldos-iniciales.js';
 import { configuracionDeCuentasPorPagar } from './configuracion.js';
@@ -105,7 +106,8 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     },
     {
       clave: 'cuentas-por-pagar.reportes-de-saldos.ver',
-      descripcion: 'Ver e imprimir los reportes de saldos de proveedores, antigüedad y documentos a una fecha',
+      descripcion:
+        'Ver e imprimir los reportes de saldos: por proveedor y antigüedad, documentos a una fecha, estado de cuenta, saldos a favor y contraseñas por pagar',
     },
     {
       clave: 'cuentas-por-pagar.reportes-de-saldos.exportar',
@@ -136,6 +138,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeContrasenasComponidas(),
     rutasDePagosComponidas(),
     rutasDeReportesDeSaldosComponidas(),
+    rutasDeReportesDeProveedorComponidas(),
     // generador: rutas
   ]),
 };

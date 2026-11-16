@@ -76,7 +76,8 @@ const SIN_DATOS: FilaExportadaDeDocumentos = {
   retencionesPorPracticar: null,
 };
 
-const numeroDelDocumento = (serie: string | null, numero: string): string => (serie ? `${serie}-${numero}` : numero);
+export const numeroDelDocumento = (serie: string | null, numero: string): string =>
+  serie ? `${serie}-${numero}` : numero;
 
 type DatosDelCargo = Pick<
   FilaExportadaDeDocumentos,

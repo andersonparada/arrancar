@@ -1982,3 +1982,24 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   registrar pago comparte `RegistradorDeDiferencias`. Sin migración. Desviaciones: la respuesta de reaplicar lleva `avisos`
   vacíos; la forma `efectivo` y el desglose de la nota ligada llegan con CP4-E3 y CP4-5 (el código ya trata a esas formas
   sin orden a Bancos); el motivo que Bancos recibe lleva el prefijo «Anulado desde Cuentas por pagar: ».
+- **2026-11-15 — CP5-3 (servidor, estado de cuenta, saldos a favor y contraseñas: R3, R4 y R5).** Mismo `ConsultaDeSaldosAlCorte`
+  (R4 y R5 reutilizan su CTE `saldosAlCorte`; el saldo anterior y el final de R3 salen de `saldosPorProveedor` del mismo corte, así
+  que la invariante 2 se cumple por la misma fórmula). R3 `GET /cuentas-por-pagar/reportes/estado-de-cuenta`: los hechos del rango
+  salen de una consulta propia (`movimientos-del-proveedor.sql.ts`, un `union all` por hecho con las mismas fechas de efecto y de
+  anulación que R1): documentos y notas, pagos (con el cheque cobrado antes de su fecha), reintegros, bajas y diferencias menores,
+  y la reversa en su fecha de un pago, reintegro, ajuste o documento anulado dentro del rango cuyo hecho original quedó antes; lo
+  nacido y anulado dentro del rango no suma y solo sale con `mostrarAnulados`. Presentación interna (neto, con total, retenciones y
+  «anteriores a la fecha de inicio») y `para_el_proveedor` (cargo por el total y cada retención de Libro de compras como abono con
+  su constancia o «constancia pendiente»; lo que Libro no detalla va en un abono sin impuesto; sin comprometido, avisos ni
+  leyendas internas). Sin rango: del primer día del mes de `hasta` a hoy; errores `rango_de_reporte_invalido`,
+  `rango_de_reporte_muy_largo` (24 meses) y `estado_de_cuenta_con_demasiadas_lineas` (pantalla 2,000; Excel sin tope). R4
+  `…/saldos-a-favor` (último movimiento = emisión, aplicaciones, ajustes y reintegros vigentes al corte; años cumplidos, tramo,
+  «Posible prescripción desde» a 5 años, aparte lo posiblemente prescrito y las leyendas del dictamen 7). R5
+  `…/contrasenas-por-pagar` (de hoy, por omisión pago prometido hasta ayer; saldo, autorizado, sin autorizar, comprometido, días
+  de atraso). Los tres con Excel y los permisos `reportes-de-saldos.ver/.exportar` (sin permisos nuevos ni migración). Rendimiento
+  medido con dos empresas de 20,000 documentos y un proveedor de 1,850 documentos: R3 ~90 ms, R3 para el proveedor ~40 ms, Excel
+  ~240 ms, R4 ~150 ms, R5 ~120 ms. Desviaciones: el estado de cuenta rechaza un `desde` cuyo día anterior sea anterior al día
+  antes de la fecha de inicio (`corte_anterior_al_inicio`, el saldo anterior no existe antes); la línea del pago lleva forma y
+  referencia (cheque o recibo) pero no la cuenta bancaria; los saldos iniciales nunca aparecen como línea en un rango posterior a
+  su emisión (entran en el saldo anterior). `nombres-de-tipos.ts` pasó de `http/` a `dominio/` porque el concepto de las líneas lo
+  usa.

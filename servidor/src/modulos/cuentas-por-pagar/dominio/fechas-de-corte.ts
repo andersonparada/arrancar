@@ -30,3 +30,13 @@ export function sumarAnios(fecha: string, anios: number): string {
   const ultimo = Number(ultimoDiaDelMes(anio + anios, mes).slice(8));
   return `${conCeros(anio + anios, 4)}-${conCeros(mes, 2)}-${conCeros(Math.min(dia, ultimo), 2)}`;
 }
+
+/** Los meses completos de `desde` a `hasta` (`desde <= hasta`). */
+export function mesesEntre(desde: string, hasta: string): number {
+  const [a1 = 0, m1 = 1, d1 = 1] = desde.split('-').map(Number);
+  const [a2 = 0, m2 = 1, d2 = 1] = hasta.split('-').map(Number);
+  return (a2 - a1) * 12 + (m2 - m1) - (d2 < d1 ? 1 : 0);
+}
+
+/** El primer día del mes de una fecha. */
+export const primerDiaDelMes = (fecha: string): string => `${fecha.slice(0, 8)}01`;
