@@ -78,6 +78,9 @@ const CLASE_DE_MARCA = {
           </td>
           <td class="px-4 py-2.5">
             <p>{{ formatearTexto(fila.conceptoNombre) }}</p>
+            <p v-for="linea in fila.desglose" :key="linea.conceptoId" class="text-xs text-tierra-500 no-underline">
+              {{ linea.concepto }}: {{ formatearMonto(linea.monto) }}
+            </p>
             <p v-if="textoDeOrigen(fila)" class="text-xs text-tierra-500 no-underline">{{ textoDeOrigen(fila) }}</p>
           </td>
           <td class="px-4 py-2.5">{{ formatearTexto(fila.beneficiario) }}</td>

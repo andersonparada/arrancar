@@ -7,6 +7,7 @@ import { apiSugerencias } from '../../servicios/sugerencias.api';
 import { usarSugerenciaAlCapturar } from '../sugerencias/usar-sugerencia-al-capturar';
 import { opcionesDeConceptoDeCheque } from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
+import { mensajesDeAvisos } from '../movimientos/avisos-de-bancos';
 import { datosDeEmisionDeCheque, edicionDeCheque, type EdicionDeCheque } from './edicion-de-cheque';
 import { usarSeleccionDeCheque } from './usar-seleccion-de-cheque';
 
@@ -34,8 +35,13 @@ function usarEmision(edicion: Ref<EdicionDeCheque>, alGuardar: () => Promise<voi
   async function guardar(): Promise<void> {
     const { chequeId } = edicion.value;
     if (!chequeId) return;
-    if (!(await enviar(() => apiCheques.emitir(chequeId, datosDeEmisionDeCheque(edicion.value))))) return;
+    let respuesta: Awaited<ReturnType<typeof apiCheques.emitir>> | null = null;
+    const emitido = await enviar(async () => {
+      respuesta = await apiCheques.emitir(chequeId, datosDeEmisionDeCheque(edicion.value));
+    });
+    if (!emitido) return;
     avisos.exito('Cheque emitido.');
+    mensajesDeAvisos(respuesta).forEach((mensaje) => avisos.info(mensaje));
     edicion.value.abierta = false;
     await alGuardar();
   }

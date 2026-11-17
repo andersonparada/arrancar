@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import AvisoDeFecha from '../comunes/AvisoDeFecha.vue';
 import CamposDeIntereses from './CamposDeIntereses.vue';
 import SugerenciaAlCapturar from '../sugerencias/SugerenciaAlCapturar.vue';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { opcionesDeLista } from '@/modulos/core/utilidades/edicion';
+import { ofreceCasillaDeMarca } from '../../composables/notas/marca-de-nota';
 import { OPCIONES_DE_TIPO } from '../../composables/notas/edicion-de-nota';
 import type { OpcionDeRegistro } from '@/modulos/core/utilidades/edicion';
 import type { SugerenciaDeMovimiento } from '../../servicios/sugerencias.api';
@@ -20,6 +24,8 @@ defineProps<{
   sugerencia: SugerenciaDeMovimiento | null;
 }>();
 const edicion = defineModel<EdicionDeNota>({ required: true });
+const sesion = usarSesion();
+const conCasilla = computed(() => ofreceCasillaDeMarca(edicion.value, sesion.moduloActivo('cuentas-por-pagar')));
 </script>
 
 <template>
@@ -57,14 +63,25 @@ const edicion = defineModel<EdicionDeNota>({ required: true });
       :error="errores.referencia"
     />
     <CampoTexto v-model="edicion.beneficiario" etiqueta="Beneficiario u origen" :error="errores.beneficiario" />
+    <CampoInterruptor
+      v-if="conCasilla"
+      v-model="edicion.marcarParaCuentasPorPagar"
+      etiqueta="Pago a proveedor para Cuentas por pagar"
+      descripcion="Queda marcada con el concepto «Pago a proveedores» para aplicarla a facturas de un proveedor."
+    />
     <CampoSelector
+      v-if="!(conCasilla && edicion.marcarParaCuentasPorPagar)"
       v-model="edicion.conceptoId"
       etiqueta="Concepto"
       :opciones="opcionesDeConcepto"
       requerido
       :error="errores.conceptoId"
     />
-    <SugerenciaAlCapturar :sugerencia="sugerencia" @usar="edicion.conceptoId = $event" />
+    <SugerenciaAlCapturar
+      v-if="!edicion.marcarParaCuentasPorPagar"
+      :sugerencia="sugerencia"
+      @usar="edicion.conceptoId = $event"
+    />
     <CamposDeIntereses v-if="pideIntereses" v-model="edicion" :errores="errores" />
     <CampoTexto v-model="edicion.observaciones" etiqueta="Observaciones" multilinea :error="errores.observaciones" />
   </div>

@@ -2088,3 +2088,12 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   y `reportes-de-saldos.ver`; Cuentas por pagar enlaza a R12 en su menú de Reportes. Se copiaron a `core/componentes/reportes/`
   `EncabezadoDeImpresion` y `TotalesDelReporte` (genérico); las de `cuentas-por-pagar/componentes/reportes/` quedan
   iguales y pueden migrarse a las de core después. Lógica pura con pruebas en `datos-de-constancias-pendientes.ts`.
+- **2026-11-16 — CP4-B3a (cliente, Bancos: pagos fuera de la conciliación).** `Movimiento` gana `marcadaParaCuentasPorPagar`,
+  `desglose`, `puedeMarcar` y `puedeDesmarcar`; `ApiNotas.marcar` y `desmarcar` (motivo y concepto). Lista de notas: casilla
+  «Pago a proveedor para Cuentas por pagar» al registrar un débito (solo con el módulo activo; oculta el concepto y manda la marca),
+  «Marcar» (confirmación con resumen) y «Desmarcar» (`VentanaDeDesmarcar`: concepto y motivo) según lo que dice el servidor,
+  etiqueta «Para Cuentas por pagar», reparto por concepto en la tarjeta y en el reporte de movimientos, y en lo que generó otro
+  módulo se oculta «Corregir» y se explica por qué. Al emitir un cheque, los avisos de la respuesta (fondos del posfechado) se
+  muestran. Lógica pura en `marca-de-nota.ts` y `avisos-de-bancos.ts` con pruebas. Los rechazos `MovimientoDeOtroModulo` y
+  `ModuloDeOrigenInactivo` se muestran tal como los manda el servidor. Pendiente: el enlace del origen a `/cuentas-por-pagar/pagos/:id`
+  (la ruta no existe aún, CP4-10: hoy es texto) y CP4-B3b en la conciliación.

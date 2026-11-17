@@ -5,11 +5,13 @@ import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import VentanaDeMotivo from '../componentes/VentanaDeMotivo.vue';
 import AccionesDeNotas from '../componentes/notas/AccionesDeNotas.vue';
 import TarjetaDeNota from '../componentes/notas/TarjetaDeNota.vue';
+import VentanaDeDesmarcar from '../componentes/notas/VentanaDeDesmarcar.vue';
 import VentanaDeNota from '../componentes/notas/VentanaDeNota.vue';
 import FiltrosDeMovimientos from '../componentes/movimientos/FiltrosDeMovimientos.vue';
 import { usarReferenciasDeCuenta } from '../composables/cuentas-bancarias/referencias-de-cuenta';
 import { usarBajasDeNota } from '../composables/notas/usar-bajas-de-nota';
 import { usarFormularioDeNota } from '../composables/notas/usar-formulario-de-nota';
+import { usarMarcasDeNota } from '../composables/notas/usar-marcas-de-nota';
 import { usarListaDeNotas } from '../composables/notas/usar-lista-de-notas';
 import { VENTANAS_BANCOS } from '../textos';
 
@@ -19,6 +21,7 @@ const { campos: referencias, filtroDeCuenta: opcionesDeCuenta } = usarReferencia
 const { edicion, enviando, errores, opcionesDeConceptos, pideIntereses, sugerencia, nueva, editar, guardar } =
   usarFormularioDeNota(cargar);
 const { anulacion, eliminacion } = usarBajasDeNota(cargar);
+const { marcar, desmarcado } = usarMarcasDeNota(cargar);
 </script>
 
 <template>
@@ -38,6 +41,8 @@ const { anulacion, eliminacion } = usarBajasDeNota(cargar);
           @editar="editar(registro)"
           @anular="anulacion.abrir(registro)"
           @eliminar="eliminacion.abrir(registro)"
+          @marcar="marcar(registro)"
+          @desmarcar="desmarcado.abrir(registro)"
         />
       </li>
     </ul>
@@ -52,6 +57,16 @@ const { anulacion, eliminacion } = usarBajasDeNota(cargar);
       :enviando="enviando"
       @cerrar="edicion.abierta = false"
       @guardar="guardar"
+    />
+    <VentanaDeDesmarcar
+      v-model:motivo="desmarcado.motivo"
+      v-model:concepto-id="desmarcado.conceptoId"
+      :abierta="!!desmarcado.registro"
+      :opciones="desmarcado.opciones"
+      :errores="desmarcado.errores"
+      :enviando="desmarcado.enviando"
+      @cerrar="desmarcado.cerrar"
+      @confirmar="desmarcado.confirmar"
     />
     <VentanaDeMotivo
       v-model:motivo="anulacion.motivo"
