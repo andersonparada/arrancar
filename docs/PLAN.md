@@ -2088,3 +2088,12 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   y `reportes-de-saldos.ver`; Cuentas por pagar enlaza a R12 en su menú de Reportes. Se copiaron a `core/componentes/reportes/`
   `EncabezadoDeImpresion` y `TotalesDelReporte` (genérico); las de `cuentas-por-pagar/componentes/reportes/` quedan
   iguales y pueden migrarse a las de core después. Lógica pura con pruebas en `datos-de-constancias-pendientes.ts`.
+- **2026-11-16 — Bancos, segunda parte aprobado por el usuario** (diseño `docs/modulos/diseno-bancos-segunda-parte.md`,
+  dictamen `docs/modulos/dictamen-bancos-segunda-parte-2026-11-16.md`, «correcto con ajustes»). Acepta P-1 a P-15 como
+  se recomiendan y todos los cambios del contador (partida `error_del_banco`, solo cheques entregados, aviso por
+  antigüedad con la variable y el art. 508, aviso de depósito en tránsito de más de 30 días, Bancos y Sobregiros
+  separados, cierre de la carga con diferencias = confirmación con motivo, aviso si la fecha de inicio no es día 1,
+  opción C para el cheque de apertura anulado con beneficiarios no proveedores, sin aprobación para notas de cargos del
+  banco). El **posfechado de una chequera no registrada** se carga desde Saldos iniciales en la chequera de apertura con
+  su fecha real, solo con la carga abierta. La **evidencia de la apertura** (último estado de cuenta y conciliación del
+  sistema anterior) es **opcional, con aviso** al cerrar la carga si falta.
