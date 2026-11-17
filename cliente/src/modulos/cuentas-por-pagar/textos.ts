@@ -49,6 +49,19 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     descripcion:
       'Los cargos con su saldo al cierre de una fecha: pendientes, vencidos, por vencer y su estado de pago.',
   },
+  estadoDeCuenta: {
+    titulo: 'Estado de cuenta del proveedor',
+    descripcion:
+      'Lo facturado, pagado y ajustado de un proveedor en un período, con su saldo corrido. Se puede imprimir para enviárselo.',
+  },
+  saldosAFavor: {
+    titulo: 'Saldos a favor',
+    descripcion: 'Notas de crédito con saldo, su último movimiento y desde cuándo podrían estar prescritas.',
+  },
+  contrasenasPorPagar: {
+    titulo: 'Contraseñas con pago vencido',
+    descripcion: 'Contraseñas con saldo cuyo pago prometido ya pasó, para cobrar o reprogramar.',
+  },
   // generador: ventanas
 } as const;
 
