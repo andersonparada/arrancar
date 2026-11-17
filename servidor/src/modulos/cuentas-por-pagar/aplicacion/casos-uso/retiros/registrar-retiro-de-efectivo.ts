@@ -1,7 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
-import { avisoDeRetiroDeMesAnterior } from '../../../dominio/avisos-de-retiros.js';
+import { avisoDeRetiroDeMesAnterior, avisoDelRetiroEnEfectivo } from '../../../dominio/avisos-de-retiros.js';
 import { CustodioInvalido } from '../../../dominio/errores-de-retiros.js';
 import { RetiroRegistrado } from '../../../dominio/eventos-de-retiros.js';
 import {
@@ -64,7 +64,11 @@ export class RegistrarRetiroDeEfectivo {
     const datos = await this.datosDelRetiro(pedido, hoy);
     const movimiento = await ordenarElRetiro(this.dependencias.bancos, operador, { pedido, datos });
     const retiro = await this.guardar({ pedido, datos, movimiento });
-    const avisos = [...movimiento.avisos.map(({ mensaje }) => mensaje), ...(await this.avisosDeMesesAnteriores(hoy))];
+    const avisos = [
+      ...movimiento.avisos.map(({ mensaje }) => mensaje),
+      ...(await this.avisoDeBancarizacion(operador, datos)),
+      ...(await this.avisosDeMesesAnteriores(hoy)),
+    ];
     return {
       dto: await this.lector.leer(operador, retiro, avisos),
       eventos: [this.evento(operador, retiro, movimiento.cuentaBancariaId)],
@@ -105,6 +109,15 @@ export class RegistrarRetiroDeEfectivo {
     const delUsuario = usuarioId === null ? null : await this.dependencias.custodios.nombreDelUsuario(usuarioId);
     if (usuarioId !== null && delUsuario === null) throw new CustodioInvalido();
     return { nombre: nombreDelCustodio(pedido.custodio, delUsuario), usuarioId };
+  }
+
+  /** Si el retiro llega al umbral y la empresa pierde algo sin bancarización (según su régimen), avisa lo que viene (§4.1). */
+  private async avisoDeBancarizacion(operador: Operador, datos: DatosDelRetiro): Promise<string[]> {
+    const { fiscal, umbral } = this.dependencias;
+    const efecto = await fiscal.efectoDeLaEmpresa(datos.fecha);
+    const umbralCentavos = await umbral.centavos(operador);
+    const aviso = avisoDelRetiroEnEfectivo({ montoCentavos: datos.montoCentavos, umbralCentavos }, efecto);
+    return aviso === null ? [] : [aviso];
   }
 
   /** Un aviso por cada retiro abierto de un mes anterior: ese efectivo sigue a cargo de su custodio. */

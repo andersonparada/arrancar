@@ -22,6 +22,7 @@ import type {
   TopeDeDiferenciaDelPago,
 } from '../../puertos/puertos-de-pagos.js';
 import type { NotasParaLigar } from '../../puertos/puertos-de-notas-para-ligar.js';
+import type { ConsultasDeRetiros, RepositorioDeRetiros } from '../../puertos/puertos-de-retiros.js';
 import type { CargaInicial } from '../../puertos/puertos-de-saldos-iniciales.js';
 import type { ReglaDePago } from '../../../dominio/reglas-de-anulacion-de-pagos.js';
 
@@ -91,6 +92,9 @@ export interface DependenciasDeCambiarPagos {
   notas: NotasParaLigar;
   /** Lo que se lee de Bancos sin orden: si el movimiento está conciliado, su fecha, su número. */
   movimientos: MovimientosDePagos;
+  /** El retiro de un pago en efectivo: se bloquea antes que el pago, y su desglose se vuelve a fijar al anular o reaplicar. */
+  retiros: RepositorioDeRetiros;
+  consultasDeRetiros: ConsultasDeRetiros;
   topeDeDiferencia: TopeDeDiferenciaDelPago;
   cargaInicial: CargaInicial;
   auditoria: Auditoria;

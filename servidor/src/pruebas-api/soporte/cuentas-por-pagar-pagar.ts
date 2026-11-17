@@ -65,6 +65,22 @@ export class EscenarioDePagos {
     return this.mundo.propietario();
   }
 
+  /** Abona más fondos a la cuenta (la prueba la prepara con Q60,000.00; los retiros grandes necesitan más). */
+  async fondear(monto: string): Promise<void> {
+    const propietario = this.propietario();
+    const deposito = await propietario.post('/api/bancos/notas', {
+      cuentaBancariaId: this.cuentaBancariaId,
+      tipo: 'credito',
+      fecha: HOY,
+      monto,
+      referencia: 'Más fondos de la prueba',
+      beneficiario: null,
+      observaciones: null,
+      conceptoId: await conceptoGeneral(propietario),
+    });
+    expect(deposito.estado, JSON.stringify(deposito.cuerpo)).toBe(201);
+  }
+
   /** Un cargo del proveedor completado y autorizado; con `activoFijo`, de un concepto de activo fijo. */
   async cargoAutorizado(proveedor: ProveedorDePrueba, total = '1120.00', activoFijo = false): Promise<string> {
     const { documentos, escenario } = this.mundo;

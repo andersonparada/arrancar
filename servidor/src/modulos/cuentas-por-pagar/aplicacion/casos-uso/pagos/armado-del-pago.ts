@@ -15,6 +15,10 @@ export interface PagoParaElDto {
   observaciones: string | null;
   motivo: string | null;
   conCargaCerrada: boolean | null;
+  /** Solo en efectivo: el retiro, quien recibió por el proveedor y por qué se usó la excepción de bancarización. */
+  retiroId: string | null;
+  recibidoPor: string | null;
+  motivoSinBancarizar: string | null;
   fecha: string;
   hoy: string;
   beneficiario: string;
@@ -31,6 +35,8 @@ export interface PagoParaElDto {
 /** Todo lo que el pago ya tiene resuelto al terminar de guardarse. */
 export interface PagoGuardado extends PagoParaElDto {
   empresaId: string;
+  /** Se pagó en efectivo sobre el umbral con la excepción de bancarización (Contabilidad lo marca sin deducción ni crédito). */
+  sinBancarizar: boolean;
 }
 
 const sumaDe = (lineas: readonly LineaConRetencion[]): number =>
@@ -61,6 +67,17 @@ const dtoDelMovimiento = ({ movimientoId, cuentaBancariaId, numero }: Movimiento
 
 const sumaDeLaForma = (pago: PagoParaElDto) => deCentavos(sumaDe(pago.lineas));
 
+/** Lo que solo lleva el efectivo: su retiro, quien recibió y el motivo de la excepción de bancarización. */
+export const datosDelEfectivo = ({
+  retiroId,
+  recibidoPor,
+  motivoSinBancarizar,
+}: Pick<PagoParaElDto, 'retiroId' | 'recibidoPor' | 'motivoSinBancarizar'>) => ({
+  retiroId,
+  recibidoPor,
+  motivoSinBancarizar,
+});
+
 /** El pago como lo ve la pantalla justo después de registrarlo. */
 export function dtoDelPago(pago: PagoParaElDto): PagoDto {
   const { fila } = pago.lineas[0]!;
@@ -79,6 +96,7 @@ export function dtoDelPago(pago: PagoParaElDto): PagoDto {
     observaciones: pago.observaciones,
     motivo: pago.motivo,
     conCargaCerrada: pago.conCargaCerrada,
+    ...datosDelEfectivo(pago),
     estado: pago.estado,
     anulacion: pago.anulacion,
     aplicaciones: pago.lineas.map(dtoDeLaLinea),
@@ -115,8 +133,8 @@ export function eventoDelPago(pago: PagoGuardado): PagoRegistrado {
     montoCentavos: sumaDe(pago.lineas),
     movimientoId: pago.movimiento?.movimientoId ?? null,
     cuentaBancariaId: pago.movimiento?.cuentaBancariaId ?? null,
-    retiroId: null,
-    sinBancarizar: false,
+    retiroId: pago.retiroId,
+    sinBancarizar: pago.sinBancarizar,
     efecto: efectoDelPago({ forma: pago.forma, conCargaCerrada: pago.conCargaCerrada }),
     aplicaciones: pago.lineas.map(aplicacionDelEvento),
   });

@@ -3,7 +3,8 @@ import type { Correlativos } from '../../../../core/compartido/aplicacion/correl
 import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
-import type { MovimientosDePagos, PagosEnBancos } from '../../puertos/puertos-de-pagos.js';
+import type { UmbralDeBancarizacion } from '../../puertos/puertos-de-documentos.js';
+import type { DatosFiscalesDeLaEmpresa, MovimientosDePagos, PagosEnBancos } from '../../puertos/puertos-de-pagos.js';
 import type { ConsultasDeRetiros, CustodiosDeRetiros, RepositorioDeRetiros } from '../../puertos/puertos-de-retiros.js';
 
 /** Lo que necesitan los casos de uso de los retiros de efectivo. */
@@ -16,6 +17,9 @@ export interface DependenciasDeRetiros {
   bancos: PagosEnBancos;
   /** Lo que se lee de Bancos sin orden: bloquear el movimiento, si está conciliado y su cuenta y número. */
   movimientos: MovimientosDePagos;
+  /** Lo que pierde la empresa sin bancarización según su régimen (aviso al registrar un retiro). */
+  fiscal: Pick<DatosFiscalesDeLaEmpresa, 'efectoDeLaEmpresa'>;
+  umbral: UmbralDeBancarizacion;
   correlativos: Correlativos;
   auditoria: Auditoria;
   /** Se publica después de confirmar la transacción de la propia petición (o de la de Bancos, si llegó por aviso). */

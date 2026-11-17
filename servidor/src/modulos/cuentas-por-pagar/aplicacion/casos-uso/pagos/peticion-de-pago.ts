@@ -42,5 +42,18 @@ export interface PeticionDeApertura extends PeticionBase {
   motivo: string;
 }
 
-/** Lo que el guardador sabe guardar: las formas que emiten en Bancos, la que liga una nota ya registrada y la apertura. */
-export type PeticionGuardable = PeticionDePago | PeticionDeNotaLigada | PeticionDeApertura;
+/**
+ * Un pago en efectivo, uno por proveedor en el reparto de un retiro (adenda de efectivo §4.2): no mueve dinero en Bancos (el
+ * movimiento es del retiro); `referencia` es el recibo del proveedor, si lo dio.
+ */
+export interface PeticionDeEfectivo extends PeticionBase {
+  forma: 'efectivo';
+  retiroId: string;
+  /** Quien recibió el efectivo por el proveedor (el que firma). */
+  recibidoPor?: string | null;
+  /** Solo si se usó la excepción de bancarización (1 a 300 caracteres). */
+  motivoSinBancarizar?: string | null;
+}
+
+/** Lo que el guardador sabe guardar: las formas que emiten en Bancos, la nota ligada, la apertura y el efectivo. */
+export type PeticionGuardable = PeticionDePago | PeticionDeNotaLigada | PeticionDeApertura | PeticionDeEfectivo;

@@ -22,6 +22,10 @@ export interface PagoConLineas {
   /** El cheque o la nota de Bancos (en la nota ligada, la nota); nulo en la cuenta de apertura y en efectivo. */
   movimientoId: string | null;
   retiroId: string | null;
+  /** Solo en efectivo: quien recibió el efectivo por el proveedor. */
+  recibidoPor: string | null;
+  /** Solo en efectivo: por qué se usó la excepción de bancarización. */
+  motivoSinBancarizar: string | null;
   observaciones: string | null;
   /** Solo en la cuenta de apertura: por qué se dio por pagado. */
   motivo: string | null;
