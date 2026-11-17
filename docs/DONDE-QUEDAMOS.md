@@ -385,11 +385,9 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
      navegador.** Las migraciones core `0023` y bancos `0030` y `0031` no están aplicadas a la base de desarrollo:
      `npm run bd:migrar -w servidor`.
    **Sigue (en este orden):**
-   1. **Paso 5, cliente de H2b** (`programador-frontend`): `EstadoDeCuentaAdjunto`, `VisorDeEstadoDeCuenta`,
-      `usar-estado-de-cuenta`, dos columnas, impresión, ícono en la lista y el motivo «falta el archivo» en
-      `faltaParaTerminar` (según `sesion.config('bancos.conciliaciones.exigir_estado_de_cuenta', true)`). El contrato
-      del servidor está en las «Notas de implementación del paso 4» del diseño. Mostrar el 429
-      `revision_de_pdf_saturada` y `demasiadas_subidas` con su mensaje.
+   1. **Paso 5, cliente de H2b: hecho** (2026-11-16): `EstadoDeCuentaAdjunto`, `VisorDeEstadoDeCuenta`,
+      `ColumnaDelEstadoDeCuenta`, `usar-estado-de-cuenta`, dos columnas en `ConciliarCuenta`, ícono en la lista y el
+      motivo «falta el archivo» en `faltaParaTerminar`. Sin ver aún en el navegador (paso 7).
    2. **Paso 6, documentación:** `bancos.md` (sección H2), `plan-hallazgos-contables.md` y `plan-archivos-y-h2.md`.
    3. **Paso 7, QA en el navegador** (`pruebas-qa`) de todo H2: PDF real de banco, foto del celular, PDF con
       JavaScript y con contraseña, visor en `iframe` en Chrome, Firefox y Safari, imprimir, celular y modo oscuro.

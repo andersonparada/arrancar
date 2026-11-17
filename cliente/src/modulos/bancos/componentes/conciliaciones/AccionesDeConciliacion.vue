@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import { faltaParaTerminar } from '../../composables/conciliaciones/comparacion-de-saldo';
 import type { Conciliacion } from '../../servicios/conciliaciones.api';
@@ -8,7 +9,9 @@ import type { Conciliacion } from '../../servicios/conciliaciones.api';
 const props = defineProps<{ conciliacion: Conciliacion; guardando?: boolean }>();
 defineEmits<{ terminar: []; devolver: []; autorizar: [] }>();
 
-const faltante = computed(() => faltaParaTerminar(props.conciliacion));
+const sesion = usarSesion();
+const exigeArchivo = computed(() => sesion.config('bancos.conciliaciones.exigir_estado_de_cuenta', true));
+const faltante = computed(() => faltaParaTerminar(props.conciliacion, exigeArchivo.value));
 const enProceso = computed(() => props.conciliacion.estado === 'en_proceso');
 const elaborada = computed(() => props.conciliacion.estado === 'elaborada');
 </script>

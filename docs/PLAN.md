@@ -2078,3 +2078,8 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   por pagar (`docs/modulos/diseno-bancos-segunda-parte.md`, arquitecto; luego contador): saldos iniciales con cheques en
   circulación y depósitos en tránsito, cuadre con la primera conciliación, cheque de apertura que se anula (revive el
   pasivo), y los pasos de pagos en Bancos (CP4-B2b, CP4-B3). Coordinado con la otra sesión, que lleva Bancos H2.
+- **2026-11-16 — Bancos H2, paso 5 (cliente del estado de cuenta)**. En la conciliación: subir, reemplazar y quitar el
+  PDF o foto (validado antes de subir: tipo, HEIC, tamaño), visor `iframe`/imagen con «Abrir en otra pestaña», dos
+  columnas en pantallas grandes, ícono en la lista y motivo «falta el archivo» al terminar según
+  `bancos.conciliaciones.exigir_estado_de_cuenta`. Si el servidor responde que ya no está en proceso, se recarga la
+  conciliación.

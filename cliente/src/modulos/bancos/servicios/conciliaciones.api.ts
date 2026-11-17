@@ -11,6 +11,20 @@ export interface ConciliacionResumen {
   estado: EstadoDeConciliacion;
   elaboradaEn: string | null;
   autorizadaEn: string | null;
+  /** Si ya tiene el archivo del estado de cuenta (para el ícono de la lista). */
+  tieneEstadoDeCuenta: boolean;
+}
+
+/** El archivo del estado de cuenta; nunca trae la ruta ni el id: solo se abre por la ruta de la conciliación. */
+export interface EstadoDeCuentaAdjuntado {
+  tipoMime: string;
+  tamanoBytes: number;
+  /** Solo los PDF cuentan páginas. */
+  paginas: number | null;
+  sha256: string;
+  nombreOriginal: string | null;
+  subidoEn: string;
+  subidoPorNombre: string | null;
 }
 
 export interface MovimientoConMarca extends Omit<Movimiento, 'puedeAnular' | 'puedeEliminar'> {
@@ -64,6 +78,8 @@ export interface Conciliacion {
   diferenciaConElEstadoDeCuenta: string | null;
   /** Elaborada antes de que se pidiera el saldo: no se puede autorizar, hay que devolverla. */
   previaAlSaldoTranscrito: boolean;
+  /** El PDF o foto del estado de cuenta, o `null` si no se ha adjuntado. */
+  estadoDeCuenta: EstadoDeCuentaAdjuntado | null;
 }
 
 export interface DatosDeInicioDeConciliacion {
@@ -97,6 +113,21 @@ export class ApiConciliaciones {
     return this.http.reemplazar<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/saldo-del-estado-de-cuenta`, {
       saldoEstadoDeCuenta: saldo,
     });
+  }
+
+  /** Sube (o reemplaza) el estado de cuenta, un solo archivo y sin campos de texto; solo en proceso. */
+  subirEstadoDeCuenta(conciliacionId: string, archivo: File) {
+    return this.http.subir<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/estado-de-cuenta`, archivo);
+  }
+
+  /** Quita el estado de cuenta adjunto; solo en proceso. */
+  quitarEstadoDeCuenta(conciliacionId: string) {
+    return this.http.eliminar<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/estado-de-cuenta`);
+  }
+
+  /** La dirección desde la que el visor y la pestaña nueva piden el archivo (la sesión viaja en la cookie). */
+  direccionDelEstadoDeCuenta(conciliacionId: string): string {
+    return `/api/bancos/conciliaciones/${conciliacionId}/estado-de-cuenta`;
   }
 
   /** Termina la conciliación: pasa de en proceso a elaborada. */

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { Paperclip } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import { RouterLink } from 'vue-router';
@@ -26,6 +27,14 @@ const textoDeIr = computed(() => (props.registro.estado === 'en_proceso' ? 'Conc
     sin-editar
   >
     <template #acciones-extra>
+      <span
+        v-if="registro.tieneEstadoDeCuenta"
+        class="inline-flex items-center gap-1 text-xs text-tierra-600 dark:text-tierra-300"
+        title="Tiene el estado de cuenta adjunto"
+      >
+        <Paperclip class="size-4" aria-hidden="true" />
+        <span class="sr-only">Con estado de cuenta adjunto</span>
+      </span>
       <RouterLink
         :to="{ name: 'bancos.conciliaciones.conciliar', params: { conciliacionId: registro.id } }"
         class="text-sm font-medium text-campo-700 hover:underline dark:text-campo-400"
