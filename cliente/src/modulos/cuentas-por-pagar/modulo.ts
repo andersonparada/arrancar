@@ -152,6 +152,14 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           seccion: 'reportes',
           permiso: 'cuentas-por-pagar.reportes-de-saldos.ver',
         },
+        // R12 vive en Libro de compras (CP5-f): aquí solo se enlaza, con el permiso de esa pantalla.
+        {
+          titulo: 'Constancias de retención pendientes',
+          ruta: '/libro-de-compras/retenciones/constancias-pendientes',
+          icono: FileClock,
+          seccion: 'reportes',
+          permiso: 'libro-de-compras.retenciones.ver',
+        },
         // generador: menu
       ],
     },

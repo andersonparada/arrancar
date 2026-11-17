@@ -9,8 +9,9 @@ import { OPCION_DE_MENU_DEL_SAT_2046, RUTA_DEL_SAT_2046 } from './rutas-del-sat-
 import { VENTANA_DEL_SAT_2237 } from './textos-del-sat-2237';
 import { VENTANA_DE_DOCUMENTOS } from './textos-de-documentos';
 import { FORMULARIO_DE_DOCUMENTO } from './textos-del-registro';
-import { VENTANA_DE_ENTEROS, VENTANA_DE_RETENCIONES, VENTANA_POR_RESOLVER } from './textos-de-retenciones';
+import { VENTANA_DE_RETENCIONES } from './textos-de-retenciones';
 import { VENTANA_DE_PERIODOS } from './textos-de-periodos';
+import { OPCION_DE_MENU_DE_CONSTANCIAS_PENDIENTES, RUTAS_DE_RETENCIONES } from './rutas-de-retenciones';
 import { VENTANA_DEL_ANALISIS } from './textos-del-analisis';
 import { VENTANA_DE_LA_SAT } from './textos-de-la-bandeja';
 // generador: importaciones
@@ -72,24 +73,7 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
       meta: { permiso: 'libro-de-compras.libro.ver', titulo: VENTANA_DEL_SAT_2237.titulo },
     },
     RUTA_DEL_SAT_2046,
-    {
-      path: '/libro-de-compras/retenciones',
-      name: 'libro-de-compras.retenciones',
-      component: () => import('./paginas/RetencionesDelMes.vue'),
-      meta: { permiso: 'libro-de-compras.retenciones.ver', titulo: VENTANA_DE_RETENCIONES.titulo },
-    },
-    {
-      path: '/libro-de-compras/retenciones/por-resolver',
-      name: 'libro-de-compras.retenciones.por-resolver',
-      component: () => import('./paginas/RetencionesPorResolver.vue'),
-      meta: { permiso: 'libro-de-compras.retenciones.ver', titulo: VENTANA_POR_RESOLVER.titulo },
-    },
-    {
-      path: '/libro-de-compras/retenciones/enteros',
-      name: 'libro-de-compras.retenciones.enteros',
-      component: () => import('./paginas/EnterosDeRetenciones.vue'),
-      meta: { permiso: 'libro-de-compras.retenciones.ver', titulo: VENTANA_DE_ENTEROS.titulo },
-    },
+    ...RUTAS_DE_RETENCIONES,
     {
       path: '/libro-de-compras/periodos',
       name: 'libro-de-compras.periodos',
@@ -191,6 +175,7 @@ export const moduloLibroDeCompras: DefinicionModuloCliente = {
           seccion: 'reportes',
           permiso: 'libro-de-compras.retenciones.ver',
         },
+        OPCION_DE_MENU_DE_CONSTANCIAS_PENDIENTES,
         {
           titulo: VENTANA_DEL_ANALISIS.titulo,
           ruta: '/libro-de-compras/analisis',

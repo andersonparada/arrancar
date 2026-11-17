@@ -30,6 +30,7 @@ export const PESTANAS_DE_RETENCIONES = {
   mes: 'Del mes',
   porResolver: 'Por resolver',
   enteros: 'Pagos a la SAT',
+  constanciasPendientes: 'Constancias pendientes',
 } as const;
 
 /** Nombres cortos de los grupos para encabezados; el servidor manda el largo. */

@@ -2078,3 +2078,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   por pagar (`docs/modulos/diseno-bancos-segunda-parte.md`, arquitecto; luego contador): saldos iniciales con cheques en
   circulación y depósitos en tránsito, cuadre con la primera conciliación, cheque de apertura que se anula (revive el
   pasivo), y los pasos de pagos en Bancos (CP4-B2b, CP4-B3). Coordinado con la otra sesión, que lleva Bancos H2.
+- **2026-11-15 — CP5-10 (cliente, Libro de compras: R12, constancias pendientes).** Página `ConstanciasPendientes`
+  (`/libro-de-compras/retenciones/constancias-pendientes`, cuarta pestaña de Retenciones y opción de **Reportes** del menú;
+  `retenciones.ver`, Excel con `retenciones.exportar` y papel con `.ver`). Filtros: hasta el mes (por omisión el en curso),
+  grupo y proveedor. Resumen (retenido sin constancia, cantidad, constancias vencidas, enteros vencidos sin pagar, anuladas),
+  bloques por mes y grupo con su plazo de entero («Vencido hace N días»), si está enterado y el total del servidor, y por fila el
+  «Plazo de la constancia» (ISR con fecha y estado; IVA «Sin plazo propio confirmado»). Las anuladas van en sección aparte que no
+  suma. Enlace a la vista «Retenciones por practicar» de R2 (`?vista=retenciones_por_practicar`) solo con Cuentas por pagar activo
+  y `reportes-de-saldos.ver`; Cuentas por pagar enlaza a R12 en su menú de Reportes. Se copiaron a `core/componentes/reportes/`
+  `EncabezadoDeImpresion` y `TotalesDelReporte` (genérico); las de `cuentas-por-pagar/componentes/reportes/` quedan
+  iguales y pueden migrarse a las de core después. Lógica pura con pruebas en `datos-de-constancias-pendientes.ts`.
