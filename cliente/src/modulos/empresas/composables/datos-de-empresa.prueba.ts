@@ -80,7 +80,14 @@ describe('aviso de la fecha de inicio', () => {
   });
 
   it('avisa si no es día 1 de un mes', () => {
-    expect(avisoDeFechaDeInicio('2026-11-15')).toContain('Se recomienda el día 1 de un mes');
+    expect(avisoDeFechaDeInicio('2026-11-15')).toBe(
+      'La fecha de inicio no es el primer día de un mes. Se puede, pero conviene empezar el día 1 (mejor el 1 de enero, inicio del período fiscal): así los saldos iniciales cuadran con un estado de cuenta y un cierre de mes completos.',
+    );
+  });
+
+  it('avisa también el 31 y con el día 2 (no solo el 15)', () => {
+    expect(avisoDeFechaDeInicio('2026-01-31')).not.toBeNull();
+    expect(avisoDeFechaDeInicio('2026-03-02')).not.toBeNull();
   });
 });
 
