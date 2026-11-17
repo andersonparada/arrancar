@@ -2074,6 +2074,14 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (§4.1 punto 4) queda para CP4-E3, que trae la lectura del régimen fiscal; sin pagos en efectivo todavía, las pruebas siembran
   los pagos con SQL; `fecha` del evento `retiro_reabierto` = fecha del inverso del depósito, la de la liquidación si «nunca
   existió», o la de hoy sin depósito.
+- **2026-11-16 — CP4-B2b (servidor, Bancos: aviso desde la conciliación).** Sin migración. Nuevo
+  `POST /bancos/conciliaciones/:conciliacionId/notas/:movimientoId/desmarcar` (`conciliar` y `bancos.notas.editar`): el caso de
+  uso `DesmarcarNotaEnConciliacion` bloquea primero la conciliación (en proceso), comprueba que la nota sea candidata del mes y
+  delega en `DesmarcarNota` (aviso `bancos.movimiento_por_cambiar` con `desmarcar`, concepto elegido, auditoría `corregir`
+  con motivo), todo en la misma transacción: nota ligada, rechazo; sin ligar, pasa. Lo demás de la conciliación (marcar,
+  terminar, subir, quitar, eliminar, autorizar, devolver) solo toca marcas de conciliado y no cambia movimientos, así que no
+  avisa (P-CP4-5). Los manejadores de Cuentas por pagar (CP4-4, CP4-E2) ya cubren `desmarcar` y no se tocaron. Desviación:
+  `candidatos` de la conciliación no trae `marcadaParaCuentasPorPagar`; el cliente (CP4-B3) puede cruzarla con la lista de notas.
 - **2026-11-16 — Siguiente módulo: Bancos, segunda parte** (usuario). Se diseña en paralelo mientras se termina Cuentas
   por pagar (`docs/modulos/diseno-bancos-segunda-parte.md`, arquitecto; luego contador): saldos iniciales con cheques en
   circulación y depósitos en tránsito, cuadre con la primera conciliación, cheque de apertura que se anula (revive el

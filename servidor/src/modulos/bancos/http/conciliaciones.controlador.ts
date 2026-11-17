@@ -3,6 +3,7 @@ import { leerDocumentoDeSolicitud } from '../../core/archivos/http/leer-document
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { AbrirEstadoDeCuenta } from '../aplicacion/casos-uso/conciliaciones/abrir-estado-de-cuenta.js';
 import type { AutorizarConciliacion } from '../aplicacion/casos-uso/conciliaciones/autorizar-conciliacion.js';
+import type { DesmarcarNotaEnConciliacion } from '../aplicacion/casos-uso/conciliaciones/desmarcar-nota-en-conciliacion.js';
 import type { DevolverConciliacion } from '../aplicacion/casos-uso/conciliaciones/devolver-conciliacion.js';
 import type { EliminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/eliminar-conciliacion.js';
 import type { IniciarConciliacion } from '../aplicacion/casos-uso/conciliaciones/iniciar-conciliacion.js';
@@ -14,10 +15,12 @@ import type { SubirEstadoDeCuenta } from '../aplicacion/casos-uso/conciliaciones
 import type { TerminarConciliacion } from '../aplicacion/casos-uso/conciliaciones/terminar-conciliacion.js';
 import type { TranscribirSaldo } from '../aplicacion/casos-uso/conciliaciones/transcribir-saldo.js';
 import type {
+  DesmarcadoEnConciliacionSolicitado,
   InicioDeConciliacionSolicitado,
   MarcasSolicitadas,
   ParamsConciliacion,
   ParamsCuentaBancariaDeConciliaciones,
+  ParamsNotaDeConciliacion,
   SaldoDelEstadoDeCuentaSolicitado,
   SolicitudConMotivo,
 } from './conciliaciones.esquemas-http.js';
@@ -35,6 +38,7 @@ export interface CasosDeUsoDeConciliaciones {
   autorizar: AutorizarConciliacion;
   devolver: DevolverConciliacion;
   eliminar: EliminarConciliacion;
+  desmarcarNota: DesmarcarNotaEnConciliacion;
 }
 
 /** Traduce las peticiones HTTP a casos de uso; no contiene reglas de negocio. */
@@ -112,4 +116,8 @@ export class ConciliacionesControlador {
     });
     return respuesta.status(204).send();
   };
+
+  desmarcarNota = (
+    solicitud: FastifyRequest<{ Params: ParamsNotaDeConciliacion; Body: DesmarcadoEnConciliacionSolicitado }>,
+  ) => this.casosDeUso.desmarcarNota.ejecutar(operadorDe(solicitud), { ...solicitud.params, ...solicitud.body });
 }
