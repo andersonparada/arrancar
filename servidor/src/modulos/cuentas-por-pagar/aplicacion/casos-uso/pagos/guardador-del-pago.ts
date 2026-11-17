@@ -30,6 +30,9 @@ export interface PagoPorGuardar {
   restanteDeLaNotaCentavos?: number;
   /** Solo en la cuenta de apertura: si la carga inicial estaba cerrada. */
   conCargaCerrada?: boolean;
+  /** Solo en efectivo: los avisos de bancarización ya resueltos y si se usó la excepción (se publica en el evento). */
+  avisosDeEfectivo?: string[];
+  sinBancarizar?: boolean;
 }
 
 export interface PagoYSusEventos {
@@ -43,9 +46,46 @@ function datosDeApertura({ pedido, conCargaCerrada }: PagoPorGuardar) {
   return { motivo: pedido.motivo, conCargaCerrada: conCargaCerrada ?? false };
 }
 
+/** Lo que solo lleva el efectivo: su retiro, quien recibió y el motivo de la excepción de bancarización; nulos en las demás formas. */
+function datosDeEfectivo(pedido: PeticionGuardable) {
+  if (pedido.forma !== 'efectivo') return { retiroId: null, recibidoPor: null, motivoSinBancarizar: null };
+  return {
+    retiroId: pedido.retiroId,
+    recibidoPor: pedido.recibidoPor ?? null,
+    motivoSinBancarizar: pedido.motivoSinBancarizar ?? null,
+  };
+}
+
 /** La referencia que se guarda aquí: en cheque y nota de débito va a Bancos. */
 const referenciaPropia = (pedido: PeticionGuardable): string | null =>
   pedido.forma === 'cheque' || pedido.forma === 'nota_de_debito' ? null : (pedido.referencia ?? null);
+
+/** El pago como quedó guardado, con lo que hace falta para su respuesta y su evento. */
+function pagoGuardado(
+  operador: Operador,
+  por: PagoPorGuardar,
+  { asignado, lineas, avisos }: { asignado: NumeroAsignado; lineas: LineaConRetencion[]; avisos: string[] },
+): PagoGuardado {
+  return {
+    empresaId: operador.empresaId,
+    pagoId: por.pagoId,
+    numero: { numero: asignado.numero, anio: asignado.anio },
+    forma: por.pedido.forma,
+    observaciones: por.pedido.observaciones ?? null,
+    ...datosDeApertura(por),
+    ...datosDeEfectivo(por.pedido),
+    sinBancarizar: por.sinBancarizar ?? false,
+    estado: 'vigente',
+    anulacion: null,
+    fecha: por.fecha,
+    hoy: por.hoy,
+    beneficiario: por.beneficiario,
+    movimiento: por.movimiento,
+    lineas,
+    diferencias: por.diferencias,
+    avisos,
+  };
+}
 
 /** Guarda el pago y sus líneas, las diferencias de centavos y arma lo que se responde y se publica. */
 export class GuardadorDelPago {
@@ -64,23 +104,7 @@ export class GuardadorDelPago {
     const asignado = await this.dependencias.correlativos.siguiente(CLAVE_DE_PAGOS, por.fecha);
     await this.insertar(por, lineas, asignado);
     const ajustes = await this.guardarDiferencias(operador, por, numeroDelPago(asignado.numero, asignado.anio));
-    const guardado: PagoGuardado = {
-      empresaId: operador.empresaId,
-      pagoId: por.pagoId,
-      numero: { numero: asignado.numero, anio: asignado.anio },
-      forma: por.pedido.forma,
-      observaciones: por.pedido.observaciones ?? null,
-      ...datosDeApertura(por),
-      estado: 'vigente',
-      anulacion: null,
-      fecha: por.fecha,
-      hoy: por.hoy,
-      beneficiario: por.beneficiario,
-      movimiento: por.movimiento,
-      lineas,
-      diferencias: por.diferencias,
-      avisos,
-    };
+    const guardado = pagoGuardado(operador, por, { asignado, lineas, avisos });
     return { dto: dtoDelPago(guardado), eventos: [eventoDelPago(guardado), ...ajustes] };
   }
 
@@ -97,6 +121,7 @@ export class GuardadorDelPago {
       referencia: referenciaPropia(pedido),
       observaciones: pedido.observaciones ?? null,
       ...datosDeApertura(por),
+      ...datosDeEfectivo(pedido),
       lineas: lineas.map(({ fila, contrasena, montoCentavos, retencionDescontadaCentavos }) => ({
         cargoId: fila.documento.id,
         contrasenaId: contrasena.id,
@@ -122,7 +147,12 @@ export class GuardadorDelPago {
       por.pedido.forma === 'cuenta_de_apertura'
         ? avisosDeLaApertura({ cargaCerrada: por.conCargaCerrada ?? false, fechaDeInicio: por.fechaDeInicio })
         : [];
-    return [...deLaApertura, ...propios, ...(por.movimiento?.avisos ?? []).map(({ mensaje }) => mensaje)];
+    return [
+      ...deLaApertura,
+      ...propios,
+      ...(por.avisosDeEfectivo ?? []),
+      ...(por.movimiento?.avisos ?? []).map(({ mensaje }) => mensaje),
+    ];
   }
 
   /** A cada línea, las retenciones del cargo si este es su primer pago vigente; si no, cero. */

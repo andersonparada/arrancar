@@ -11,6 +11,7 @@ import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-de-saldos-iniciales.js';
 import { rutasDePagosComponidas } from './composicion/pagos.js';
+import { rutasDePagosEnEfectivoComponidas } from './composicion/pagos-en-efectivo.js';
 import { rutasDeReportesDeProveedorComponidas } from './composicion/reportes-de-proveedor.js';
 import { rutasDeReportesDeSaldosComponidas } from './composicion/reportes-de-saldos.js';
 import { rutasDeRetirosComponidas } from './composicion/retiros.js';
@@ -148,6 +149,16 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.retiros.anular',
       descripcion: 'Anular un retiro de efectivo que no tiene pagos (anula también su cheque o su nota en Bancos)',
     },
+    {
+      clave: 'cuentas-por-pagar.pagos.pagar-en-efectivo',
+      descripcion:
+        'Repartir el efectivo de un retiro entre uno o varios proveedores (un pago y un recibo por proveedor)',
+    },
+    {
+      clave: 'cuentas-por-pagar.pagos.efectivo-sin-bancarizar',
+      descripcion:
+        'Pagar en efectivo sobre el umbral de bancarización cuando la empresa pierde costo o crédito fiscal, con un motivo',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -167,6 +178,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeRetirosComponidas(),
     rutasDeReportesDeSaldosComponidas(),
     rutasDeReportesDeProveedorComponidas(),
+    rutasDePagosEnEfectivoComponidas(),
     // generador: rutas
   ]),
 };

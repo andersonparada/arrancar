@@ -28,7 +28,7 @@ export interface LineaConRetencion extends LineaRevisada {
 
 /** Lo que el armador necesita saber del pago para avisar. */
 export interface PagoParaAvisar {
-  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura';
+  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo';
   /** Solo al ligar una nota: lo que le queda por aplicar después de este pago. */
   restanteDeLaNotaCentavos?: number;
   proveedorId: string;
@@ -47,7 +47,9 @@ export class ArmadorDeAvisosDelPago {
 
   async avisos(operador: Operador, pago: PagoParaAvisar): Promise<string[]> {
     const posfechado =
-      pago.fecha > pago.hoy && pago.forma !== 'cuenta_de_apertura' ? [avisoDelPosfechado(pago.forma, pago.fecha)] : [];
+      pago.fecha > pago.hoy && pago.forma !== 'cuenta_de_apertura' && pago.forma !== 'efectivo'
+        ? [avisoDelPosfechado(pago.forma, pago.fecha)]
+        : [];
     return [
       ...(await this.deLasLineas(pago)),
       ...posfechado,
@@ -96,9 +98,12 @@ export class ArmadorDeAvisosDelPago {
       );
   }
 
-  /** La cuenta de apertura no mueve dinero: no cuenta para la bancarización (§5.7). */
+  /**
+   * La cuenta de apertura no mueve dinero: no cuenta para la bancarización (§5.7). El efectivo la evalúa antes de guardar
+   * (bloquea o avisa, `EvaluadorDeBancarizacionEnEfectivo`): aquí no se repite.
+   */
   private async deLaBancarizacion(operador: Operador, pago: PagoParaAvisar): Promise<string[]> {
-    if (pago.forma === 'cuenta_de_apertura') return [];
+    if (pago.forma === 'cuenta_de_apertura' || pago.forma === 'efectivo') return [];
     const { consultasDePagos, umbral } = this.dependencias;
     const delMes = await consultasDePagos.pagosDelMes(pago.proveedorId, pago.fecha);
     const efectivo = delMes.filter(({ forma }) => forma === 'efectivo');

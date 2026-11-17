@@ -2074,3 +2074,18 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (§4.1 punto 4) queda para CP4-E3, que trae la lectura del régimen fiscal; sin pagos en efectivo todavía, las pruebas siembran
   los pagos con SQL; `fecha` del evento `retiro_reabierto` = fecha del inverso del depósito, la de la liquidación si «nunca
   existió», o la de hoy sin depósito.
+- **2026-11-16 — CP4-E3 (servidor, repartir y pagar en efectivo).** Sin migración. `RegistrarPagosEnEfectivo`
+  (`POST /cuentas-por-pagar/retiros/:id/pagos`, `pagos.pagar-en-efectivo`; con diferencias pide `ajustes.crear` y con
+  `motivoSinBancarizar`, `pagos.efectivo-sin-bancarizar`): de 1 a 20 pagos, uno por proveedor y hasta 300 cargos, todo o nada,
+  un pago y un recibo por proveedor (cada uno con varias contraseñas), retención en el primer pago, `recibido_por`. Bloquea el
+  cheque o la nota del retiro, el retiro, la bancarización por proveedor (`pg_advisory_xact_lock`), las contraseñas y los
+  cargos, y revisa otra vez con todo bloqueado. Fecha: hoy o pasada, sin preceder al retiro (`fecha_de_pago_invalida`).
+  Bancarización por régimen y documento: si el pago llega al umbral (cargo, pago o mes con todas las formas) y la empresa
+  perdería costo o crédito fiscal, rechaza con `efectivo_sobre_el_umbral` salvo permiso y motivo (`motivo_sin_bancarizar`,
+  evento con `sinBancarizar`); sin datos fiscales solo avisa. Errores con `pagos.<i>.campo` y `detalles.pago`. Al final vuelve a
+  fijar el desglose del retiro. Anular un pago en efectivo (regla `retiroAbierto`: con el retiro liquidado se rechaza) deja
+  `fecha_de_anulacion = greatest(hoy, fecha)` y vuelve a fijar el desglose; reaplicar también. El aviso de bancarización al
+  registrar el retiro (pendiente de CP4-E2) ya sale. `PagoDto` suma `retiroId`, `recibidoPor` y `motivoSinBancarizar`.
+  Desviaciones: la respuesta del reparto lleva `retiro` como `RetiroDto` completo (no resumen); el efecto fiscal de un pago es
+  `null` (solo aviso) si algún cargo no tiene datos fiscales, igual que el aviso de los cheques; un motivo sin el permiso
+  se rechaza con 403 aunque la regla no se dispare.

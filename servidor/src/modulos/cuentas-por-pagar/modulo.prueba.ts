@@ -45,6 +45,8 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.retiros.crear',
       'cuentas-por-pagar.retiros.liquidar',
       'cuentas-por-pagar.retiros.anular',
+      'cuentas-por-pagar.pagos.pagar-en-efectivo',
+      'cuentas-por-pagar.pagos.efectivo-sin-bancarizar',
     ]);
   });
 

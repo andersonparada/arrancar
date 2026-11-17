@@ -36,6 +36,8 @@ import { RepositorioDeAplicacionesDrizzle } from '../infraestructura/persistenci
 import { RepositorioDeContrasenasDrizzle } from '../infraestructura/persistencia/repositorio-de-contrasenas.drizzle.js';
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { RepositorioDePagosDrizzle } from '../infraestructura/persistencia/repositorio-de-pagos.drizzle.js';
+import { ConsultasDeRetirosDrizzle } from '../infraestructura/persistencia/consultas-de-retiros.drizzle.js';
+import { RepositorioDeRetirosDrizzle } from '../infraestructura/persistencia/repositorio-de-retiros.drizzle.js';
 import { TopeDeDiferenciaDelPagoEnConfiguracion } from '../infraestructura/tope-de-diferencia-del-pago-en-configuracion.js';
 import { UmbralDeBancarizacionEnConfiguracion } from '../infraestructura/umbral-de-bancarizacion-en-configuracion.js';
 
@@ -111,6 +113,8 @@ function piezasParaCambiar(
   return {
     ...paraRegistrar,
     movimientos,
+    retiros: new RepositorioDeRetirosDrizzle(),
+    consultasDeRetiros: new ConsultasDeRetirosDrizzle(),
     reglasParaAnular: REGLAS_PARA_ANULAR_PAGO,
     reglasParaReaplicar: REGLAS_PARA_REAPLICAR_PAGO,
   };

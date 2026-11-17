@@ -39,7 +39,7 @@ export const AVISO_DE_DATOS_FISCALES =
   'Complete los datos fiscales de la empresa en Libro de compras para saber si la bancarización (Decreto 20-2006) afecta el costo o el crédito fiscal de este pago.';
 
 /** `AAAA-MM-DD` como `mm/aaaa`. */
-const mesLegible = (fecha: string): string => `${fecha.slice(5, 7)}/${fecha.slice(0, 4)}`;
+export const mesLegible = (fecha: string): string => `${fecha.slice(5, 7)}/${fecha.slice(0, 4)}`;
 
 function textoDelAviso(umbralCentavos: number): string {
   return `Bancarización (Decreto 20-2006): los pagos a un mismo proveedor que suman ${quetzales(umbralCentavos)} o más en el mes deben hacerse por medios bancarios (cheque, transferencia o tarjeta) a nombre del proveedor para que el gasto y el crédito fiscal se puedan respaldar. Se recomienda emitir el cheque no negociable.`;
