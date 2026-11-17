@@ -13,6 +13,7 @@ import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-
 import { rutasDePagosComponidas } from './composicion/pagos.js';
 import { rutasDeReportesDePagosComponidas } from './composicion/reportes-de-pagos.js';
 import { rutasDePagosEnEfectivoComponidas } from './composicion/pagos-en-efectivo.js';
+import { rutasDeReintegrosComponidas } from './composicion/reintegros.js';
 import { rutasDeReportesDeProveedorComponidas } from './composicion/reportes-de-proveedor.js';
 import { rutasDeReportesDeSaldosComponidas } from './composicion/reportes-de-saldos.js';
 import { rutasDeRetirosComponidas } from './composicion/retiros.js';
@@ -176,6 +177,15 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       descripcion:
         'Pagar en efectivo sobre el umbral de bancarización cuando la empresa pierde costo o crédito fiscal, con un motivo',
     },
+    {
+      clave: 'cuentas-por-pagar.reintegros.crear',
+      descripcion:
+        'Registrar un reintegro del proveedor: el saldo a favor de sus notas de crédito devuelto por depósito o en efectivo',
+    },
+    {
+      clave: 'cuentas-por-pagar.reintegros.anular',
+      descripcion: 'Anular un reintegro del proveedor (anula también su nota de crédito en Bancos)',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -193,6 +203,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeContrasenasComponidas(),
     rutasDePagosComponidas(),
     rutasDeRetirosComponidas(),
+    rutasDeReintegrosComponidas(),
     rutasDeReportesDeSaldosComponidas(),
     rutasDeReportesDeProveedorComponidas(),
     rutasDeReportesDePagosComponidas(),

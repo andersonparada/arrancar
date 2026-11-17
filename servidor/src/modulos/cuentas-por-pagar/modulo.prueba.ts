@@ -51,6 +51,8 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.reportes-de-control.exportar',
       'cuentas-por-pagar.pagos.pagar-en-efectivo',
       'cuentas-por-pagar.pagos.efectivo-sin-bancarizar',
+      'cuentas-por-pagar.reintegros.crear',
+      'cuentas-por-pagar.reintegros.anular',
     ]);
   });
 
