@@ -123,4 +123,34 @@ describe('reportes de proveedor con 20,000 documentos y 30,000 pagos por empresa
     expect(cuerpo.filas.length).toBeGreaterThan(400);
     expect(ms).toBeLessThan(TOPE_EN_MS);
   });
+
+  it('R6: los pagos de un mes (más de 2,000 líneas), una página de 100 con sus totales y el Excel', async () => {
+    const consulta = `${RUTA}/pagos?desde=2026-05-01&hasta=2026-05-31&estado=todos`;
+
+    const { ms, cuerpo } = await milisegundosDe(`${consulta}&limite=100`);
+    const inicio = performance.now();
+    const exportado = await empresaA().get(`${RUTA}/pagos/exportar?desde=2026-05-01&hasta=2026-05-31`);
+    const excelEnMs = performance.now() - inicio;
+
+    console.warn(`[CP5-4 rendimiento] GET pagos/exportar: ${excelEnMs.toFixed(0)} ms`);
+    expect(cuerpo.total).toBeGreaterThan(2000);
+    expect(cuerpo.filas).toHaveLength(100);
+    expect(ms).toBeLessThan(TOPE_EN_MS);
+    expect(exportado.estado).toBe(200);
+    expect(excelEnMs).toBeLessThan(TOPE_DEL_EXCEL_EN_MS);
+  });
+
+  it('R7: los cheques posfechados al corte', async () => {
+    const { ms, cuerpo } = await milisegundosDe(`${RUTA}/cheques-posfechados?corte=2026-10-31`);
+
+    expect(cuerpo.filas).toEqual([]);
+    expect(ms).toBeLessThan(TOPE_EN_MS);
+  });
+
+  it('R8: los ajustes del mes con los 2,000 ajustes de la empresa, todos de marzo', async () => {
+    const { ms, cuerpo } = await milisegundosDe(`${RUTA}/ajustes-del-mes?mes=2026-03`);
+
+    expect(cuerpo.ajustes).toHaveLength(2000);
+    expect(ms).toBeLessThan(TOPE_EN_MS);
+  });
 });

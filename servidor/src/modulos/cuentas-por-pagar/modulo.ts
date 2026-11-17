@@ -11,6 +11,7 @@ import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-de-saldos-iniciales.js';
 import { rutasDePagosComponidas } from './composicion/pagos.js';
+import { rutasDeReportesDePagosComponidas } from './composicion/reportes-de-pagos.js';
 import { rutasDeReportesDeProveedorComponidas } from './composicion/reportes-de-proveedor.js';
 import { rutasDeReportesDeSaldosComponidas } from './composicion/reportes-de-saldos.js';
 import { rutasDeRetirosComponidas } from './composicion/retiros.js';
@@ -148,6 +149,22 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.retiros.anular',
       descripcion: 'Anular un retiro de efectivo que no tiene pagos (anula también su cheque o su nota en Bancos)',
     },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-pagos.ver',
+      descripcion: 'Ver e imprimir los reportes de pagos: pagos realizados y cheques posfechados',
+    },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-pagos.exportar',
+      descripcion: 'Exportar a Excel los reportes de pagos',
+    },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-control.ver',
+      descripcion: 'Ver e imprimir los reportes de control: ajustes del mes (para el contador)',
+    },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-control.exportar',
+      descripcion: 'Exportar a Excel los reportes de control',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -167,6 +184,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeRetirosComponidas(),
     rutasDeReportesDeSaldosComponidas(),
     rutasDeReportesDeProveedorComponidas(),
+    rutasDeReportesDePagosComponidas(),
     // generador: rutas
   ]),
 };

@@ -66,7 +66,9 @@ function ajustesVigentes({ empresaId, corte }: ParametrosDeCorte): SQL {
 }
 
 /** El último día del mes de la conciliación autorizada que marcó el cheque; nulo si no hay. */
-const FIN_DE_MES_COBRADO = sql.raw("(make_date(cn.anio, cn.mes, 1) + interval '1 month' - interval '1 day')::date");
+export const FIN_DE_MES_COBRADO = sql.raw(
+  "(make_date(cn.anio, cn.mes, 1) + interval '1 month' - interval '1 day')::date",
+);
 
 /**
  * Los pagos al corte, por cargo: lo que ya rebaja (fecha de efecto hasta el corte, §2.1) y lo comprometido (entregado

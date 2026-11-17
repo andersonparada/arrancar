@@ -45,6 +45,10 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.retiros.crear',
       'cuentas-por-pagar.retiros.liquidar',
       'cuentas-por-pagar.retiros.anular',
+      'cuentas-por-pagar.reportes-de-pagos.ver',
+      'cuentas-por-pagar.reportes-de-pagos.exportar',
+      'cuentas-por-pagar.reportes-de-control.ver',
+      'cuentas-por-pagar.reportes-de-control.exportar',
     ]);
   });
 

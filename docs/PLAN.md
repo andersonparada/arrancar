@@ -2102,3 +2102,21 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   tránsito viejo quedan **fijos**. N-4 se decide en el diseño corto de EM-2. **Pendiente N-2** (va al diseño corto
   CP-AP, con el contador): cómo ligar el posfechado de apertura a la factura que paga en Cuentas por pagar; mientras
   tanto, «aplicar a la cuenta de apertura» con advertencia.
+- **2026-11-16 — CP5-4 (servidor, reportes de pagos y control: R6, R7 y R8).** Rutas `GET /cuentas-por-pagar/reportes/pagos`
+  (R6), `…/cheques-posfechados` (R7) y `…/ajustes-del-mes` (R8), cada una con su `…/exportar`; permisos nuevos
+  `reportes-de-pagos.ver/.exportar` (R6, R7) y `reportes-de-control.ver/.exportar` (R8), sin migración ni índices nuevos. R6: una fila
+  por línea de pago (rango por omisión, el mes en curso; máximo 24 meses; filtros proveedor, forma, cuenta bancaria, estado,
+  posfechados y `mismaPersona`; paginado, y Excel con todo lo filtrado) con «registró el documento» (`documentos.creado_por`),
+  «completó el documento» (`registrado_por`, solo si es otro), «autorizó» y «registró el pago» (`pagos.creado_por`); la marca
+  «misma persona» es que quien registró el pago también creó, completó o autorizó el documento; totales por forma y estado,
+  vigentes y anulados separados. R7: pagos de cheque vigentes al corte, entregados hasta el corte y con fecha posterior, con la
+  misma fecha de efecto de R1 (`least(fecha, fin del mes de la conciliación autorizada)`): el cobrado antes de su fecha por una
+  conciliación autorizada que termina hasta el corte no sale; el del mes del corte sale con «cobrado en mm/aaaa»; totales por
+  cuenta, por semana de vencimiento (siete días desde el día siguiente al corte) y general, que una prueba compara con el
+  «Comprometido» de R1. R8: las cinco secciones (ajustes del mes con efecto y aviso de año anterior, anulaciones del mes de
+  ajustes de otras fechas, aplicaciones manuales, pagos a la cuenta de apertura y documentos anulados o desautorizados en el
+  mes, estos leídos de `core.auditoria` acción `devolver`) con la marca «De un mes anterior: revise la rectificación del IVA»
+  cuando la emisión es anterior al mes; mes por omisión, el anterior; totales por causa y efecto, anulados aparte y por sección.
+  Dominio nuevo: `meses-de-reporte.ts`. Desviaciones: «de un mes anterior» se decide por la fecha de emisión del documento (el
+  periodo del libro es de otro módulo); la diferencia de centavos de un cargo sale con efecto `ingreso`; el filtro de
+  `mismaPersona` usa la misma marca completa (registró, completó o autorizó); R7 solo toma pagos de forma cheque (como el diseño).
