@@ -48,7 +48,9 @@ cliente 1034, generador 46.
 | CP5-10 cliente de R12 (Libro de compras) | `agent-a0b1d282a47aa6b9e` | **unido a `main`**; pruebas completas corriendo |
 | Bancos H2 paso 5 (cliente del estado de cuenta en la conciliación) | `agent-af5ce5db56b554796` | programando (por pedido del usuario; avisado a la otra sesión) |
 | CP4-B2b avisos desde la conciliación (servidor) | `agent-ae9ac59462c01ab88` | programando |
-| Diseño de Bancos, segunda parte | `agent-aec064ab9725da815` | arquitecto diseñando |
+| CP4-B3a cliente de Bancos para pagos (sin conciliación) | `agent-a7fdc12b108b37447` | programando |
+| BS-1 Bancos, segunda parte: datos (`0034`) | `agent-a7143c581f35d7d4b` | programando |
+| EM-1 aviso de fecha de inicio que no es día 1 | `agent-aaf24abd6d15647b2` | programando |
 
 En `main`: CP4-6 (en verde: servidor 4563, cliente 1124, generador 46) y CP4-E2 (retiros de efectivo, `400e7f1`);
 pruebas corriendo con CP4-E2.
@@ -60,7 +62,8 @@ se limpie al escribir (hoy solo en las ventanas con motivo; `quitarErrorAlCambia
 **Bloqueo de PostgreSQL resuelto (2026-11-16):** el usuario reinició la WSL; si vuelve `ECONNRESET` en `localhost:5433`,
 son puentes de Docker huérfanos (`sudo ip link delete br-…` o `wsl --shutdown`). Todos los agentes se retomaron.
 
-**Siguiente módulo (decidido 2026-11-16): Bancos, segunda parte.** Lanzar al arquitecto para
+**Siguiente módulo (decidido 2026-11-16): Bancos, segunda parte — diseño aprobado** (`diseno-bancos-segunda-parte.md`,
+dictamen `dictamen-bancos-segunda-parte-2026-11-16.md`); orden de pasos en su §14 (BS-1 a BS-9, BS-R1, BS-R2, EM-1, EM-2). Lanzar al arquitecto para
 `docs/modulos/diseno-bancos-segunda-parte.md` (el primer intento falló por un error transitorio del clasificador de
 permisos); luego el contador. Estado de H2 según la otra sesión (2026-11-16): sin trabajo en curso; faltan el paso 5
 (cliente de H2b: `EstadoDeCuentaAdjunto`, `VisorDeEstadoDeCuenta`, `usar-estado-de-cuenta`, columnas en

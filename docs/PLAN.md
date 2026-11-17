@@ -2097,3 +2097,8 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   banco). El **posfechado de una chequera no registrada** se carga desde Saldos iniciales en la chequera de apertura con
   su fecha real, solo con la carga abierta. La **evidencia de la apertura** (último estado de cuenta y conciliación del
   sistema anterior) es **opcional, con aviso** al cerrar la carga si falta.
+- **2026-11-16 — Detalles de Bancos, segunda parte (§17 del diseño).** N-1: por ahora **no** se guarda ni muestra el
+  sobregiro autorizado; el reporte aclara que el disponible no lo incluye. N-3: los 30 días del aviso de depósito en
+  tránsito viejo quedan **fijos**. N-4 se decide en el diseño corto de EM-2. **Pendiente N-2** (va al diseño corto
+  CP-AP, con el contador): cómo ligar el posfechado de apertura a la factura que paga en Cuentas por pagar; mientras
+  tanto, «aplicar a la cuenta de apertura» con advertencia.
