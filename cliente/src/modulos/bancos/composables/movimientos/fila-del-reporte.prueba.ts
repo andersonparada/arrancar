@@ -32,6 +32,10 @@ function fila(datos: Partial<FilaDelReporte> & Pick<FilaDelReporte, 'tipo' | 'mo
     interesBruto: null,
     isrRetenido: null,
     puedeReclasificar: true,
+    marcadaParaCuentasPorPagar: false,
+    desglose: [],
+    puedeMarcar: false,
+    puedeDesmarcar: false,
     saldo: null,
     ...datos,
   };

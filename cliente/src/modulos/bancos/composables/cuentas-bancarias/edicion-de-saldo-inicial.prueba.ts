@@ -39,6 +39,10 @@ const saldoInicial: Movimiento = {
   interesBruto: null,
   isrRetenido: null,
   puedeReclasificar: true,
+  marcadaParaCuentasPorPagar: false,
+  desglose: [],
+  puedeMarcar: false,
+  puedeDesmarcar: false,
 };
 
 describe('ventana del saldo inicial', () => {

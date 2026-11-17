@@ -25,7 +25,24 @@ export type DatosNota = Omit<
   | 'puedeEliminar'
   | 'puedeReclasificar'
   | 'conceptoNombre'
-> & { tipo: 'credito' | 'debito' };
+  | 'marcadaParaCuentasPorPagar'
+  | 'desglose'
+  | 'puedeMarcar'
+  | 'puedeDesmarcar'
+  | 'conceptoId'
+> & {
+  tipo: 'credito' | 'debito';
+  /** Obligatorio, salvo al registrar la nota ya marcada (la marca fija el concepto). */
+  conceptoId?: string;
+  /** Registrar la nota de débito ya marcada para Cuentas por pagar (exige ese módulo activo). */
+  marcarParaCuentasPorPagar?: boolean;
+};
+
+/** Quitar la marca: el motivo queda en la auditoría y el concepto es el que la nota lleva en adelante. */
+export interface DatosDeDesmarcado {
+  motivo: string;
+  conceptoId: string;
+}
 
 /** Cambiar solo el concepto de hasta 200 movimientos a la vez (todo o nada). */
 export interface DatosDeReclasificacion {
@@ -80,6 +97,16 @@ export class ApiNotas {
   /** Clasifica cada movimiento pendiente con su propio concepto (todo o nada); es lo que hace «Usar» y «Aceptar lo sugerido». */
   reclasificarVarios(datos: DatosDeReclasificacionVarios) {
     return this.http.crear<ResultadoDeReclasificacion>(`${RUTA}/reclasificar-varios`, datos);
+  }
+
+  /** Marca la nota de débito para que Cuentas por pagar la aplique a facturas. */
+  marcar(id: string) {
+    return this.http.crear<Movimiento>(`${RUTA}/${id}/marcar`, {});
+  }
+
+  /** Quita la marca: el motivo queda en la auditoría y la nota pasa al concepto elegido. */
+  desmarcar(id: string, datos: DatosDeDesmarcado) {
+    return this.http.crear<Movimiento>(`${RUTA}/${id}/desmarcar`, datos);
   }
 
   /** Elimina de verdad una nota limpia; el motivo queda en la auditoría. */

@@ -2171,3 +2171,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   columnas en pantallas grandes, ícono en la lista y motivo «falta el archivo» al terminar según
   `bancos.conciliaciones.exigir_estado_de_cuenta`. Si el servidor responde que ya no está en proceso, se recarga la
   conciliación.
+- **2026-11-16 — CP4-B3a (cliente, Bancos: pagos fuera de la conciliación).** `Movimiento` gana `marcadaParaCuentasPorPagar`,
+  `desglose`, `puedeMarcar` y `puedeDesmarcar`; `ApiNotas.marcar` y `desmarcar` (motivo y concepto). Lista de notas: casilla
+  «Pago a proveedor para Cuentas por pagar» al registrar un débito (solo con el módulo activo; oculta el concepto y manda la marca),
+  «Marcar» (confirmación con resumen) y «Desmarcar» (`VentanaDeDesmarcar`: concepto y motivo) según lo que dice el servidor,
+  etiqueta «Para Cuentas por pagar», reparto por concepto en la tarjeta y en el reporte de movimientos, y en lo que generó otro
+  módulo se oculta «Corregir» y se explica por qué. Al emitir un cheque, los avisos de la respuesta (fondos del posfechado) se
+  muestran. Lógica pura en `marca-de-nota.ts` y `avisos-de-bancos.ts` con pruebas. Los rechazos `MovimientoDeOtroModulo` y
+  `ModuloDeOrigenInactivo` se muestran tal como los manda el servidor. Pendiente: el enlace del origen a `/cuentas-por-pagar/pagos/:id`
+  (la ruta no existe aún, CP4-10: hoy es texto) y CP4-B3b en la conciliación.

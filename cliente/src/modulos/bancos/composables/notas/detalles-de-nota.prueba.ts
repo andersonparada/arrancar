@@ -37,6 +37,10 @@ const base: Movimiento = {
   interesBruto: null,
   isrRetenido: null,
   puedeReclasificar: true,
+  marcadaParaCuentasPorPagar: false,
+  desglose: [],
+  puedeMarcar: false,
+  puedeDesmarcar: false,
 };
 
 describe('título de la nota', () => {

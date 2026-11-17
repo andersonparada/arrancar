@@ -3,6 +3,7 @@ import { formatearNumeroDeComprobante } from '../comunes/numero-de-comprobante';
 import { motivoDeLaBaja } from '../movimientos/estado-de-reversion';
 import { textoDeOrigen } from '../movimientos/origen-y-causa';
 import { CLASE_DE_TIPO, SIGNO_DE_TIPO } from '../movimientos/estilo-de-tipo';
+import { detallesDeDesglose, explicacionDeOrigen } from './marca-de-nota';
 import { OPCIONES_DE_TIPO } from './edicion-de-nota';
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import type { Movimiento } from '../../servicios/movimientos.api';
@@ -23,12 +24,15 @@ export function detallesDeNota(nota: Movimiento): DetalleDeRegistro[] {
     { etiqueta: 'Referencia', valor: formatearTexto(nota.referencia) },
     { etiqueta: 'Beneficiario u origen', valor: formatearTexto(nota.beneficiario) },
   ];
+  detalles.push(...detallesDeDesglose(nota));
   if (nota.interesBruto !== null) {
     detalles.push({ etiqueta: 'Interés bruto', valor: formatearMonto(nota.interesBruto) });
     detalles.push({ etiqueta: 'ISR retenido', valor: formatearMonto(nota.isrRetenido) });
   }
   const origen = textoDeOrigen(nota);
   if (origen) detalles.push({ etiqueta: 'Origen', valor: origen.replace('Origen: ', '') });
+  const explicacion = explicacionDeOrigen(nota);
+  if (explicacion) detalles.push({ etiqueta: 'Nota', valor: explicacion });
   if (nota.observaciones) detalles.push({ etiqueta: 'Observaciones', valor: nota.observaciones });
   const motivo = motivoDeLaBaja(nota);
   if (motivo) detalles.push(motivo);

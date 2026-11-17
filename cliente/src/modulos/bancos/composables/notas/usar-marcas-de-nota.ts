@@ -1,0 +1,82 @@
+import { computed, reactive, ref } from 'vue';
+import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
+import { apiNotas } from '../../servicios/notas.api';
+import type { Movimiento } from '../../servicios/movimientos.api';
+import { opcionesDeConcepto } from '../conceptos/opciones-de-concepto';
+import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
+import { resumenDeMarcado } from './marca-de-nota';
+
+/** Marcar una nota de débito para Cuentas por pagar: se confirma con el resumen y se recarga la lista. */
+function usarMarcado(alTerminar: () => Promise<void>) {
+  const avisos = usarAvisos();
+
+  async function marcar(nota: Movimiento): Promise<void> {
+    const aceptado = await avisos.confirmar({
+      titulo: 'Marcar para Cuentas por pagar',
+      mensaje: resumenDeMarcado(nota),
+      textoConfirmar: 'Marcar',
+    });
+    if (!aceptado) return;
+    try {
+      await apiNotas.marcar(nota.id);
+      avisos.exito('Nota marcada para Cuentas por pagar.');
+      await alTerminar();
+    } catch (error) {
+      avisos.error(error instanceof Error ? error.message : 'No se pudo marcar la nota.');
+    }
+  }
+
+  return { marcar };
+}
+
+/** Lo que se escribe en la ventana de desmarcar: la nota, el motivo y el concepto con que sigue (débitos, por nombre). */
+function usarDatosDeDesmarcado() {
+  const { conceptos } = usarCatalogoDeConceptos();
+  const registro = ref<Movimiento | null>(null);
+  const motivo = ref('');
+  const conceptoId = ref<string | null>(null);
+  const opciones = computed(() => opcionesDeConcepto(conceptos.value, ['debito']));
+
+  function abrir(nota: Movimiento): void {
+    registro.value = nota;
+    motivo.value = '';
+    conceptoId.value = null;
+  }
+
+  return { registro, motivo, conceptoId, opciones, abrir };
+}
+
+/** Quitar la marca: pide el motivo y el concepto con que sigue la nota. */
+function usarDesmarcado(alTerminar: () => Promise<void>) {
+  const avisos = usarAvisos();
+  const { enviando, errores, enviar } = usarFormulario();
+  const { abrir, ...datos } = usarDatosDeDesmarcado();
+
+  async function confirmar(): Promise<void> {
+    const nota = datos.registro.value;
+    if (!nota) return;
+    const cuerpo = { motivo: datos.motivo.value, conceptoId: datos.conceptoId.value ?? '' };
+    if (!(await enviar(() => apiNotas.desmarcar(nota.id, cuerpo)))) return;
+    avisos.exito('Se quitó la marca de la nota.');
+    datos.registro.value = null;
+    await alTerminar();
+  }
+
+  return reactive({
+    ...datos,
+    enviando,
+    errores,
+    abrir: (nota: Movimiento) => {
+      abrir(nota);
+      errores.value = {};
+    },
+    confirmar,
+    cerrar: () => (datos.registro.value = null),
+  });
+}
+
+/** Las dos acciones de la marca de una nota: marcar (con confirmación) y desmarcar (con motivo y concepto). */
+export function usarMarcasDeNota(alTerminar: () => Promise<void>) {
+  return { ...usarMarcado(alTerminar), desmarcado: usarDesmarcado(alTerminar) };
+}

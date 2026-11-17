@@ -1,4 +1,5 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
+import type { AvisoDeBancos } from '../composables/movimientos/avisos-de-bancos';
 import type { DatosDeBaja } from './datos-de-baja';
 import type { Movimiento } from './movimientos.api';
 import type { DatosDeReclasificacion, ResultadoDeReclasificacion } from './notas.api';
@@ -86,8 +87,9 @@ export class ApiCheques {
     return this.http.obtener<Cheque | null>(`/bancos/cuentas-bancarias/${cuentaBancariaId}/siguiente-cheque`);
   }
 
+  /** Emite el cheque; la respuesta trae además los avisos que no bloquean (fondos de un posfechado). */
   emitir(chequeId: string, datos: DatosDeEmisionDeCheque) {
-    return this.http.crear<Movimiento>(`/bancos/cheques/${chequeId}/emitir`, datos);
+    return this.http.crear<Movimiento & { avisos?: AvisoDeBancos[] }>(`/bancos/cheques/${chequeId}/emitir`, datos);
   }
 
   /**
