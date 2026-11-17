@@ -14,9 +14,17 @@ export const esquemaSaldoDelEstadoDeCuenta = z.object({ saldoEstadoDeCuenta: dec
 
 export const esquemaMotivo = z.object({ motivo: z.string().trim().min(1).max(500) });
 
+export const esquemaDesmarcadoEnConciliacion = z.object({
+  motivo: z.string().trim().min(1).max(500),
+  conceptoId: idObligatorio(),
+});
+
+export const esquemaParamsNotaDeConciliacion = z.object({ conciliacionId: z.uuid(), movimientoId: z.uuid() });
 export const esquemaParamsConciliacion = z.object({ conciliacionId: z.uuid() });
 export const esquemaParamsCuentaBancariaDeConciliaciones = z.object({ cuentaBancariaId: z.uuid() });
 
+export type DesmarcadoEnConciliacionSolicitado = z.infer<typeof esquemaDesmarcadoEnConciliacion>;
+export type ParamsNotaDeConciliacion = z.infer<typeof esquemaParamsNotaDeConciliacion>;
 export type InicioDeConciliacionSolicitado = z.infer<typeof esquemaInicioDeConciliacion>;
 export type MarcasSolicitadas = z.infer<typeof esquemaMarcas>;
 export type SaldoDelEstadoDeCuentaSolicitado = z.infer<typeof esquemaSaldoDelEstadoDeCuenta>;

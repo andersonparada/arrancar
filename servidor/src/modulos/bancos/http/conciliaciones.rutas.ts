@@ -3,11 +3,13 @@ import { limitarSubidas } from '../../core/archivos/http/limite-de-subidas.js';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import type { ConciliacionesControlador } from './conciliaciones.controlador.js';
 import {
+  esquemaDesmarcadoEnConciliacion,
   esquemaInicioDeConciliacion,
   esquemaMarcas,
   esquemaMotivo,
   esquemaParamsConciliacion,
   esquemaParamsCuentaBancariaDeConciliaciones,
+  esquemaParamsNotaDeConciliacion,
   esquemaSaldoDelEstadoDeCuenta,
 } from './conciliaciones.esquemas-http.js';
 
@@ -59,6 +61,18 @@ function rutasDeConciliar(app: Aplicacion, controlador: ConciliacionesControlado
   });
 }
 
+/** Quitar la marca de Cuentas por pagar a una nota desde la conciliación: pide `conciliar` y el `editar` de las notas. */
+function rutaDeDesmarcarNota(app: Aplicacion, controlador: ConciliacionesControlador) {
+  app.post('/bancos/conciliaciones/:conciliacionId/notas/:movimientoId/desmarcar', {
+    schema: { tags: etiquetas, params: esquemaParamsNotaDeConciliacion, body: esquemaDesmarcadoEnConciliacion },
+    preHandler: [
+      proteger({ permiso: 'bancos.conciliaciones.conciliar' }),
+      proteger({ permiso: 'bancos.notas.editar' }),
+    ],
+    handler: controlador.desmarcarNota,
+  });
+}
+
 /** El estado de cuenta (PDF o foto) lo sube, reemplaza y quita solo quien elabora; la subida tiene su límite por minuto. */
 function rutasDelEstadoDeCuenta(app: Aplicacion, controlador: ConciliacionesControlador) {
   const conciliar = proteger({ permiso: 'bancos.conciliaciones.conciliar' });
@@ -103,6 +117,7 @@ export function rutasConciliaciones(controlador: ConciliacionesControlador): Fas
   return async (app) => {
     rutasDeLectura(app, controlador);
     rutasDeConciliar(app, controlador);
+    rutaDeDesmarcarNota(app, controlador);
     rutasDelEstadoDeCuenta(app, controlador);
     rutasDeAutorizar(app, controlador);
     rutasDeEliminar(app, controlador);
