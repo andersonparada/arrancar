@@ -50,7 +50,7 @@ export const AYUDA_DE_FECHA_DE_INICIO =
   'Primer día que se registra en Arrancar; los saldos iniciales son los del cierre del día anterior. Se puede corregir mientras la carga inicial esté abierta.';
 
 const AVISO_DE_FECHA_QUE_NO_ES_DIA_UNO =
-  'Se recomienda el día 1 de un mes (mejor el 1 de enero, inicio del período del ISR): partir un mes entre dos sistemas obliga a armar a mano el libro de compras y la declaración de ese mes.';
+  'La fecha de inicio no es el primer día de un mes. Se puede, pero conviene empezar el día 1 (mejor el 1 de enero, inicio del período fiscal): así los saldos iniciales cuadran con un estado de cuenta y un cierre de mes completos.';
 
 /** Aviso (que no bloquea) si la fecha escrita no es día 1 de un mes; `null` si es día 1 o no hay fecha válida. */
 export function avisoDeFechaDeInicio(fecha: string): string | null {
