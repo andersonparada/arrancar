@@ -57,13 +57,8 @@ Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie má
 CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
 se limpie al escribir (hoy solo en las ventanas con motivo; `quitarErrorAlCambiar` en `usar-formulario.ts`).
 
-**BLOQUEO (2026-11-16): PostgreSQL de desarrollo no responde desde el host** (`localhost:5433` da `ECONNRESET`;
-dentro del contenedor funciona). Son puentes de Docker huérfanos en la WSL (`br-0d0ed696133b`, `br-15d3405570a6`,
-`br-3a00ba830271`, `br-3b6aa57a2c45`, `br-87a56b253327`, `br-f691ed1ec761`, `br-fa422cdbfdc3`; el bueno es
-`br-bf1a6fceee8c`). Reiniciar el contenedor no basta. El usuario debe borrarlos con `sudo ip link delete <puente>` o
-hacer `wsl --shutdown` desde Windows y volver a levantar con `npm run bd:levantar`. Mientras tanto ningún agente puede
-correr pruebas de base. CP4-E3 (`agent-a2d74edd09662eca6`) quedó programado sin commit esperando la base; también
-CP4-7, CP5-4, CP5-8, H2 paso 5, CP4-B2b y CP4-B3a necesitan la base para terminar.
+**Bloqueo de PostgreSQL resuelto (2026-11-16):** el usuario reinició la WSL; si vuelve `ECONNRESET` en `localhost:5433`,
+son puentes de Docker huérfanos (`sudo ip link delete br-…` o `wsl --shutdown`). Todos los agentes se retomaron.
 
 **Siguiente módulo (decidido 2026-11-16): Bancos, segunda parte.** Lanzar al arquitecto para
 `docs/modulos/diseno-bancos-segunda-parte.md` (el primer intento falló por un error transitorio del clasificador de
