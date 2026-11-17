@@ -2166,3 +2166,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   leyenda de no ser documento tributario. Desviaciones: Bancos siempre anula una nota con inverso (también conciliada), así que
   «sin inverso» solo se prueba por aviso y `puedeAnular` no mira la conciliación; un movimiento con un reintegro anulado no se elimina
   en Bancos (`movimiento_con_reintegro_anulado`).
+- **2026-11-16 — Bancos H2, paso 5 (cliente del estado de cuenta)**. En la conciliación: subir, reemplazar y quitar el
+  PDF o foto (validado antes de subir: tipo, HEIC, tamaño), visor `iframe`/imagen con «Abrir en otra pestaña», dos
+  columnas en pantallas grandes, ícono en la lista y motivo «falta el archivo» al terminar según
+  `bancos.conciliaciones.exigir_estado_de_cuenta`. Si el servidor responde que ya no está en proceso, se recarga la
+  conciliación.

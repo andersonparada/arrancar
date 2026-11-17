@@ -3,10 +3,11 @@ import { aCentavos, deCentavos } from '../comunes/centavos';
 export type ResultadoDeComparacion =
   { estado: 'sin_saldo' } | { estado: 'coincide' } | { estado: 'difiere'; diferencia: string };
 
-/** Lo que `faltaParaTerminar` necesita saber; el paso del archivo adjunto agrega aquí su exigencia. */
+/** Lo que `faltaParaTerminar` necesita saber. */
 export interface DatosParaTerminar {
   saldoEstadoDeCuenta: string | null;
   saldoQueDebeMostrarElEstadoDeCuenta: string;
+  estadoDeCuenta: unknown | null;
 }
 
 /**
@@ -27,13 +28,15 @@ export function compararSaldo(escrito: string | null, calculado: string): Result
 }
 
 /** Los motivos por los que aún no se puede terminar la conciliación; vacío si ya se puede. */
-export function faltaParaTerminar(datos: DatosParaTerminar): string[] {
+export function faltaParaTerminar(datos: DatosParaTerminar, exigeArchivo = false): string[] {
+  const motivos: string[] = [];
   const resultado = compararSaldo(datos.saldoEstadoDeCuenta, datos.saldoQueDebeMostrarElEstadoDeCuenta);
-  if (resultado.estado === 'sin_saldo') return ['Escriba el saldo final que muestra el estado de cuenta.'];
+  if (resultado.estado === 'sin_saldo') motivos.push('Escriba el saldo final que muestra el estado de cuenta.');
   if (resultado.estado === 'difiere') {
-    return [
+    motivos.push(
       'El saldo del estado de cuenta no coincide con el calculado: revise las marcas o registre la nota que falte.',
-    ];
+    );
   }
-  return [];
+  if (exigeArchivo && !datos.estadoDeCuenta) motivos.push('Adjunte el estado de cuenta (PDF o foto) del banco.');
+  return motivos;
 }

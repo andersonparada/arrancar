@@ -34,7 +34,7 @@ describe('compararSaldo', () => {
 });
 
 describe('faltaParaTerminar', () => {
-  const base = { saldoEstadoDeCuenta: null, saldoQueDebeMostrarElEstadoDeCuenta: '100.00' };
+  const base = { saldoEstadoDeCuenta: null, saldoQueDebeMostrarElEstadoDeCuenta: '100.00', estadoDeCuenta: null };
   it('pide el saldo si no hay', () => {
     expect(faltaParaTerminar(base)).toHaveLength(1);
   });
@@ -43,5 +43,16 @@ describe('faltaParaTerminar', () => {
   });
   it('vacío si coincide', () => {
     expect(faltaParaTerminar({ ...base, saldoEstadoDeCuenta: '100' })).toEqual([]);
+  });
+  it('pide el archivo solo si la empresa lo exige', () => {
+    const conSaldo = { ...base, saldoEstadoDeCuenta: '100' };
+    expect(faltaParaTerminar(conSaldo, true)).toEqual(['Adjunte el estado de cuenta (PDF o foto) del banco.']);
+    expect(faltaParaTerminar(conSaldo, false)).toEqual([]);
+  });
+  it('no lo pide si ya está adjunto', () => {
+    expect(faltaParaTerminar({ ...base, saldoEstadoDeCuenta: '100', estadoDeCuenta: {} }, true)).toEqual([]);
+  });
+  it('junta varios motivos', () => {
+    expect(faltaParaTerminar(base, true)).toHaveLength(2);
   });
 });
