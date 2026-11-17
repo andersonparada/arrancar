@@ -11,6 +11,7 @@ import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-de-saldos-iniciales.js';
 import { rutasDePagosComponidas } from './composicion/pagos.js';
+import { rutasDeReintegrosComponidas } from './composicion/reintegros.js';
 import { rutasDeReportesDeProveedorComponidas } from './composicion/reportes-de-proveedor.js';
 import { rutasDeReportesDeSaldosComponidas } from './composicion/reportes-de-saldos.js';
 import { rutasDeRetirosComponidas } from './composicion/retiros.js';
@@ -148,6 +149,15 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       clave: 'cuentas-por-pagar.retiros.anular',
       descripcion: 'Anular un retiro de efectivo que no tiene pagos (anula también su cheque o su nota en Bancos)',
     },
+    {
+      clave: 'cuentas-por-pagar.reintegros.crear',
+      descripcion:
+        'Registrar un reintegro del proveedor: el saldo a favor de sus notas de crédito devuelto por depósito o en efectivo',
+    },
+    {
+      clave: 'cuentas-por-pagar.reintegros.anular',
+      descripcion: 'Anular un reintegro del proveedor (anula también su nota de crédito en Bancos)',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -165,6 +175,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeContrasenasComponidas(),
     rutasDePagosComponidas(),
     rutasDeRetirosComponidas(),
+    rutasDeReintegrosComponidas(),
     rutasDeReportesDeSaldosComponidas(),
     rutasDeReportesDeProveedorComponidas(),
     // generador: rutas
