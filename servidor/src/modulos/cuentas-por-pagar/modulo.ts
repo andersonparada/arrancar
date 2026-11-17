@@ -11,6 +11,7 @@ import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { rutasDelCuadreDeSaldosInicialesComponidas } from './composicion/cuadre-de-saldos-iniciales.js';
 import { rutasDePagosComponidas } from './composicion/pagos.js';
+import { rutasDeReportesDePagosComponidas } from './composicion/reportes-de-pagos.js';
 import { rutasDeReportesDeProveedorComponidas } from './composicion/reportes-de-proveedor.js';
 import { rutasDeReportesDeSaldosComponidas } from './composicion/reportes-de-saldos.js';
 import { rutasDeSaldosInicialesComponidas } from './composicion/saldos-iniciales.js';
@@ -130,6 +131,22 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
       descripcion:
         'Aplicar saldos iniciales a la cuenta de apertura (dar por pagado lo que ya se había pagado antes de la fecha de inicio)',
     },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-pagos.ver',
+      descripcion: 'Ver e imprimir los reportes de pagos: pagos realizados y cheques posfechados',
+    },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-pagos.exportar',
+      descripcion: 'Exportar a Excel los reportes de pagos',
+    },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-control.ver',
+      descripcion: 'Ver e imprimir los reportes de control: ajustes del mes (para el contador)',
+    },
+    {
+      clave: 'cuentas-por-pagar.reportes-de-control.exportar',
+      descripcion: 'Exportar a Excel los reportes de control',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeCuentasPorPagar,
@@ -148,6 +165,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDePagosComponidas(),
     rutasDeReportesDeSaldosComponidas(),
     rutasDeReportesDeProveedorComponidas(),
+    rutasDeReportesDePagosComponidas(),
     // generador: rutas
   ]),
 };

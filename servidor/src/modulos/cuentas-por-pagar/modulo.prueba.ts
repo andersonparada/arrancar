@@ -41,6 +41,10 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.pagos.anular',
       'cuentas-por-pagar.pagos.ligar-notas-de-debito',
       'cuentas-por-pagar.pagos.aplicar-a-apertura',
+      'cuentas-por-pagar.reportes-de-pagos.ver',
+      'cuentas-por-pagar.reportes-de-pagos.exportar',
+      'cuentas-por-pagar.reportes-de-control.ver',
+      'cuentas-por-pagar.reportes-de-control.exportar',
     ]);
   });
 
