@@ -41,12 +41,6 @@ cliente 1034, generador 46.
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP4-E3 pagos en efectivo (varios proveedores por retiro) | `agent-a2d74edd09662eca6` | programando |
-| CP4-7 reintegros del proveedor | `agent-a9442d291f3afb5fb` | programando |
-| CP5-10 cliente de R12 (Libro de compras) | `agent-a0b1d282a47aa6b9e` | **unido a `main`**; pruebas completas corriendo |
-| Bancos H2 paso 5 (cliente del estado de cuenta en la conciliación) | `agent-af5ce5db56b554796` | programando (por pedido del usuario; avisado a la otra sesión) |
-| CP4-B2b avisos desde la conciliación (servidor) | `agent-ae9ac59462c01ab88` | programando |
-| CP4-B3a cliente de Bancos para pagos (sin conciliación) | `agent-a7fdc12b108b37447` | programando |
 | BS-1 Bancos, segunda parte: datos (`0034`) | `agent-a7143c581f35d7d4b` | programando |
 | CP4-8 lista, ficha y comprobante de pagos | `agent-ad73d5cef330cdfa6` | programando |
 
