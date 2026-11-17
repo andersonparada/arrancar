@@ -2041,3 +2041,15 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   filtros editables (`aplicarVista`), «Más filtros», paginación de 50 e impresión que pide hasta 2,000 filas (con más avisa «Son N
   filas: acote el filtro o use Excel»). El corte se valida en el cliente contra la fecha de inicio que devuelve el servidor
   (solo para avisar antes; la regla sigue siendo del servidor). Lógica pura con pruebas en `composables/reportes/`.
+- **2026-11-15 — CP5-8 (cliente, estado de cuenta, saldos a favor y contraseñas: R3, R4 y R5).** Páginas
+  `EstadoDeCuentaDelProveedor`, `SaldosAFavor` y `ContrasenasPorPagar` (`/cuentas-por-pagar/reportes/estado-de-cuenta`,
+  `…/saldos-a-favor`, `…/contrasenas-por-pagar`; las cinco rutas y entradas de **Reportes** salen ahora de
+  `reportes-del-modulo.ts`). R3: proveedor obligatorio (sin él, estado vacío «Elija un proveedor»), rango del mes a hoy, las dos
+  presentaciones (interna con total, retenciones y neto; para el proveedor con la retención como abono y su constancia, tal
+  como la devuelve el servidor), anulados en gris «(anulada)», saldo anterior y totales, comprometido y disponible solo en la
+  interna; el acceso «Estado de cuenta» está en la sección de pago de la ficha del proveedor (`FichaCondicionesDePago`, con
+  `v-permiso`) y abre R3 con `?proveedorId=`. R4: separa «Dentro del plazo» de «Posiblemente prescritas» (consulte a su contador),
+  columnas «Último movimiento» y «Posible prescripción desde», leyendas del servidor. R5: pago prometido hasta ayer por omisión,
+  días de atraso, autorizado y sin autorizar. Los tres: tarjetas en celular, tabla desde `lg` y en papel, Excel con `.exportar`.
+  Desviaciones: el cliente solo valida que las fechas estén completas y `desde <= hasta`; el tope de 24 meses y de 2,000 líneas
+  lo informa el servidor (su mensaje sale como aviso). R3 no enlaza todavía desde R1 y R2 (proveedor → R3).
