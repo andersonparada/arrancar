@@ -2385,6 +2385,42 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Todas las recomendaciones, salvo en Caja chica: una factura con retención se rechaza **con permiso de excepción**
   (lo del contador, CC-f A′) y la bancarización solo **avisa y marca** (lo del arquitecto, CC-h A). Detalle al final de
   cada diseño. Los tres quedan **aprobados** para programar (orden de la hoja de ruta: Multimoneda antes que Caja chica).
+- **2026-11-18 (correcciones de la revisión de CP4-9, solo cliente).** «Nuevo pago»: la pestaña «Cuenta de apertura» ya
+  no depende de los cargos antes de elegir proveedor (solo del permiso; con proveedor, de que tenga saldos iniciales), y
+  si el proveedor no los tiene se explica en vez de mostrar una interfaz sin pestañas. «Registrar pago» en la ficha de la
+  contraseña pide `pagos.ver` (lo que exige la ruta) y cuenta la apertura solo si hay saldos iniciales por pagar. El
+  selector de proveedores junta todas las páginas (antes cortaba en 200) y las notas por ligar piden el máximo del
+  servidor (200) con aviso si se llega al tope, porque esa ruta no pagina. La suma del mes del proveedor sale de la fecha
+  escrita y no se pisa con la de un proveedor anterior; el resumen de la apertura dice la fecha de inicio. Sin cambios en
+  el servidor ni en rótulos de saldo o estados de pago.
+- **2026-11-18 (segunda revisión de CP4-9).** «Nuevo pago»: el aviso del tope de notas ya no sale como emergente (ni al
+  pagar con cheque ni en cada «Pagar otro»); en la pestaña «Nota ya registrada» hay filtros por cuenta bancaria y por
+  fechas, que se mandan al servidor (`cuentaBancariaId`, `desde`, `hasta`), y al llegar al tope dice «Hay más notas:
+  filtre por cuenta o por fechas». Si el filtro saca a la nota elegida, se suelta. La suma del mes usa un control de
+  solicitudes propio (`control-de-suma.ts`): la respuesta solo vale si es la última y su proveedor y mes siguen vigentes,
+  y si la fecha cambió de mes mientras cargaba el proveedor, se vuelve a pedir. El estado vacío de sin permiso sale por
+  no tener ningún permiso de pago, aunque se entre con `?proveedorId=`; el texto de «solo apertura» queda para quien sí
+  tiene ese permiso. Si la lista de proveedores llega al tope de 50 páginas, se avisa que está incompleta. Servidor:
+  `proveedoresPorPagar` desempata por id (paginación estable), con prueba de API de proveedores con el mismo nombre.
+- **2026-11-18, Cuentas por pagar: revisión de «Nuevo pago» (filtros de notas y proveedores).** Con la lista de proveedores
+  incompleta (tope de 50 páginas), el selector busca en el servidor (`CampoSelector` con `busquedaEnServidor` y el evento
+  `buscar`; retardo de 300 ms y respuestas viejas descartadas en `busqueda-escalonada.ts`) y el proveedor elegido no sale de
+  las opciones aunque la búsqueda ya no lo traiga; la ruta busca solo por nombre, y el aviso lo dice. Las cuentas del filtro
+  de notas se acumulan entre cargas (quien solo liga notas ya no ve encogerse el selector al filtrar). Con el rango de fechas
+  al revés se limpia la lista de notas y se invalida el pedido en vuelo. `GET /pagos/notas-para-ligar` sigue con
+  `pagos.ver`: el diseño de CP4 (§8, tabla de rutas) la asigna expresamente a ese permiso y la prueba de nota ligada fija
+  200 para quien solo ve; `ligar-notas-de-debito` es de la acción de ligar (`POST /pagos/ligar`), que no cambia. Prueba de API
+  de los filtros `cuentaBancariaId`, `desde` y `hasta`. La tarjeta del proveedor sale de la página a
+  `SeleccionDeProveedorDelPago`.
+- 2026-11-18 · Correcciones de la revisión del selector de proveedores del pago: el proveedor elegido ya no sale repetido
+  (se compara por id en `conProveedorElegido`, con prueba); la búsqueda escalonada cancela su temporizador y descarta
+  pedidos en vuelo al salir de la pantalla; `usarSelectorConBusqueda` reinicia la opción resaltada cuando llegan otras
+  opciones mientras se busca. Queda pendiente (no es regresión): el texto del botón si se entra con `?proveedorId=` de un
+  proveedor fuera de la carga inicial.
+- 2026-11-18 · `GET /pagos/notas-para-ligar` exige `cuentas-por-pagar.pagos.ligar-notas-de-debito` (decisión del usuario; §8 de
+  `diseno-cp4-pagos.md` actualizado): quien solo tiene `pagos.ver` recibe 403. El cliente ya no pide las notas sin ese permiso.
+  `usarSelectorConBusqueda` reinicia la opción resaltada solo con `enServidor`, con prueba de que sin él no se reinicia.
+
 - **2026-11-18 (respuestas del usuario al plazo de crédito).** Todas las recomendaciones de
   `docs/modulos/diseno-plazo-de-credito-del-proveedor.md` (detalle al final del diseño). Aprobado para programar PC-1 a PC-6;
   PC-4 y PC-5 (Excel de plazos) van después de que el Excel de Terceros esté en `main`.
