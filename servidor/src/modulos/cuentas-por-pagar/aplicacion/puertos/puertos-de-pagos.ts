@@ -95,6 +95,20 @@ export interface MovimientosDePagos {
   fechaDe(movimientoId: string): Promise<string | null>;
   /** Cuenta, número del cheque o de la nota y beneficiario de cada movimiento, para mostrar el pago. */
   datosDe(movimientoId: string): Promise<DatosDelMovimiento | null>;
+  /** Lo que la ficha del pago muestra de su cheque o nota: cuenta, tipo, número, fecha y si está conciliado o anulado. */
+  fichaDe(movimientoId: string): Promise<FichaDelMovimiento | null>;
+}
+
+export interface FichaDelMovimiento {
+  cuentaBancariaId: string;
+  cuentaBancariaNombre: string;
+  tipo: 'cheque' | 'nota_de_debito' | 'nota_de_credito';
+  /** El número del cheque o el de la nota. */
+  numero: number;
+  fecha: string;
+  conciliado: boolean;
+  /** Anulado o revertido en Bancos. */
+  anulado: boolean;
 }
 
 export interface DatosDelMovimiento {
