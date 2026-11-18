@@ -1,3 +1,5 @@
+import '../../core/contratos/empresas.contratos.js';
+import { mediador } from '../../core/mediador/contexto.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { AgregarPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/agregar-partida-de-apertura.js';
 import { CorregirPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/corregir-partida-de-apertura.js';
@@ -7,6 +9,7 @@ import { GuardarSaldoInicial } from '../aplicacion/casos-uso/saldos-iniciales/gu
 import { ListarPartidasDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/listar-partidas-de-apertura.js';
 import { ListarSaldosIniciales } from '../aplicacion/casos-uso/saldos-iniciales/listar-saldos-iniciales.js';
 import { ObtenerSaldoInicial } from '../aplicacion/casos-uso/saldos-iniciales/obtener-saldo-inicial.js';
+import { ResponderRevisionDeCierreDeCarga } from '../aplicacion/casos-uso/saldos-iniciales/responder-revision-de-cierre-de-carga.js';
 import { RevisarCierreDeCargaEnBancos } from '../aplicacion/casos-uso/saldos-iniciales/revisar-cierre-de-carga-en-bancos.js';
 import { ArmadorDePartidas } from '../aplicacion/armador-de-partidas.js';
 import { AvisoDeFondosDePosfechados } from '../aplicacion/aviso-de-fondos-de-posfechados.js';
@@ -86,6 +89,8 @@ const casosDeUso = (dependencias: Dependencias) => ({
 /** Raíz de composición de los saldos iniciales con partidas: el único lugar donde se eligen las implementaciones concretas. */
 export function rutasDeSaldosIniciales() {
   const casos = casosDeUso(dependenciasDeSaldosIniciales());
+  const revision = new ResponderRevisionDeCierreDeCarga(casos.listar);
+  mediador.responder('bancos', 'empresas.revisar_cierre_de_carga', (_datos, operador) => revision.ejecutar(operador));
   const heredado = new SaldosGlobalesControlador(saldosGlobalesHeredados());
   return rutasSaldosIniciales(new SaldosInicialesControlador(casos), heredado, {
     saldos: intercambioDeSaldosIniciales(casos),

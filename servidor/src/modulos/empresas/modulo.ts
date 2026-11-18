@@ -7,6 +7,8 @@ import { ActualizarEmpresa } from './aplicacion/casos-uso/actualizar-empresa.js'
 import { ListarEmpresas } from './aplicacion/casos-uso/listar-empresas.js';
 import { ObtenerEmpresa } from './aplicacion/casos-uso/obtener-empresa.js';
 import { RegistrarEmpresa } from './aplicacion/casos-uso/registrar-empresa.js';
+import { rutasDelBalanceDeAperturaComponidas } from './composicion/balance-de-apertura.js';
+import { rutasDeCierresDeCargaComponidas } from './composicion/cierres-de-carga.js';
 import { rutasDeDatosDeEmpresaComponidas } from './composicion/datos-de-empresa.js';
 import { EmpresasControlador } from './http/empresas.controlador.js';
 import { rutasEmpresas } from './http/empresas.rutas.js';
@@ -59,6 +61,8 @@ function componerRutas(compartidas: DependenciasCompartidas) {
   return rutasDelModulo([
     rutasEmpresas(controlador, intercambio),
     rutasDeDatosDeEmpresaComponidas(compartidas, { consultas, alcance }),
+    rutasDeCierresDeCargaComponidas(compartidas, { consultas, alcance }),
+    rutasDelBalanceDeAperturaComponidas(compartidas, { consultas, alcance }),
     rutasDeTiposDeLocalidad(),
     rutasDeLocalidades(),
     rutasDeAccesosALocalidades(),
@@ -85,6 +89,15 @@ export const moduloEmpresas: DefinicionModulo = {
     {
       clave: 'empresas.carga-inicial.reabrir',
       descripcion: 'Reabrir la carga inicial cerrada de una empresa, con su motivo',
+    },
+    {
+      clave: 'empresas.carga-inicial.ver-cierres',
+      descripcion:
+        'Ver el historial de cierres y reaperturas de la carga inicial y la revisión guardada de cada cierre',
+    },
+    {
+      clave: 'empresas.carga-inicial.exportar',
+      descripcion: 'Exportar a Excel la revisión guardada de un cierre de la carga inicial',
     },
     { clave: 'empresas.tipos-de-localidad.ver', descripcion: 'Ver tipos de localidad' },
     { clave: 'empresas.tipos-de-localidad.crear', descripcion: 'Registrar tipos de localidad' },

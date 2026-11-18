@@ -6,9 +6,8 @@ import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiEmpresas, type Empresa } from '../servicios/empresas.api';
 import { datosDeLaEmpresa, edicionDe, type EdicionDeEmpresa } from './edicion-de-empresa';
-import { usarCierreDeCarga } from './usar-cierre-de-carga';
+import { usarCargaInicial } from './usar-carga-inicial';
 import { usarDatosDeEmpresa } from './usar-datos-de-empresa';
-import { usarReaperturaDeCarga } from './usar-reapertura-de-carga';
 
 const guardarEmpresa = (edicion: EdicionDeEmpresa) =>
   edicion.empresaId
@@ -54,7 +53,7 @@ function usarFormularioDeEmpresa({ edicion, guardarDatos, recargar }: Formulario
   return { enviando, errores, abrir, guardar };
 }
 
-/** Las empresas de la cuenta: listarlas, crearlas y editarlas en una ventana, con cierre y reapertura de la carga inicial. */
+/** Las empresas de la cuenta: listarlas, crearlas y editarlas en una ventana, con la carga inicial (cierre, reapertura, historial y balance). */
 export function usarEmpresas() {
   const { datos: empresas, cargar } = listarEmpresas();
   const sesion = usarSesion();
@@ -72,7 +71,6 @@ export function usarEmpresas() {
     edicion,
     carga,
     ...formulario,
-    ...usarCierreDeCarga(idEnEdicion, carga),
-    ...usarReaperturaDeCarga(idEnEdicion, carga),
+    cargaInicial: usarCargaInicial(idEnEdicion, carga),
   };
 }

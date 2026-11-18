@@ -7,34 +7,22 @@ import SeccionesAportadas from '@/modulos/core/componentes/SeccionesAportadas.vu
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { puedeCerrarLaCarga } from '../composables/datos-de-empresa';
 import type { EdicionDeEmpresa } from '../composables/edicion-de-empresa';
-import type { CargaInicial } from '../servicios/datos-de-empresa.api';
+import type { CargaInicialEnEdicion } from '../composables/usar-carga-inicial';
 import SeccionDeCargaInicial from './SeccionDeCargaInicial.vue';
 import SeccionDeDatosFiscales from './SeccionDeDatosFiscales.vue';
-import VentanaDeReapertura from './VentanaDeReapertura.vue';
+import VentanasDeCargaInicial from './VentanasDeCargaInicial.vue';
 
 const props = defineProps<{
   errores: Record<string, string>;
   enviando: boolean;
-  carga: CargaInicial | null;
-  enviandoCierre: boolean;
-  erroresDeReapertura: Record<string, string>;
-  enviandoReapertura: boolean;
-  reaperturaAbierta: boolean;
+  cargaInicial: CargaInicialEnEdicion;
 }>();
-const emit = defineEmits<{
-  cerrar: [];
-  guardar: [];
-  cerrarCarga: [];
-  abrirReapertura: [];
-  cancelarReapertura: [];
-  reabrir: [];
-}>();
+const emit = defineEmits<{ cerrar: []; guardar: [] }>();
 const edicion = defineModel<EdicionDeEmpresa>({ required: true });
-const motivo = defineModel<string>('motivo', { required: true });
-const puedeCerrar = computed(() => puedeCerrarLaCarga(edicion.value, props.carga));
+const puedeCerrar = computed(() => puedeCerrarLaCarga(edicion.value, props.cargaInicial.carga));
 
-/** Con la ventana del motivo encima, Escape solo debe cerrar esa. */
-const cerrarVentana = () => (props.reaperturaAbierta ? undefined : emit('cerrar'));
+/** Con otra ventana encima (cierre, reapertura, historial…), Escape solo debe cerrar esa. */
+const cerrarVentana = () => (props.cargaInicial.hayVentanaEncima ? undefined : emit('cerrar'));
 </script>
 
 <template>
@@ -71,12 +59,9 @@ const cerrarVentana = () => (props.reaperturaAbierta ? undefined : emit('cerrar'
         />
         <SeccionDeCargaInicial
           v-model:fecha-de-inicio="edicion.fechaDeInicio"
-          :carga="carga"
+          :estado="cargaInicial"
           :errores="errores"
-          :enviando="enviandoCierre"
           :puede-cerrar="puedeCerrar"
-          @cerrar="emit('cerrarCarga')"
-          @reabrir="emit('abrirReapertura')"
         />
         <CampoInterruptor
           v-model="edicion.activa"
@@ -90,12 +75,5 @@ const cerrarVentana = () => (props.reaperturaAbierta ? undefined : emit('cerrar'
       <BotonBase tipo="submit" form="form-empresa" :cargando="enviando">Guardar</BotonBase>
     </template>
   </VentanaModal>
-  <VentanaDeReapertura
-    v-model:motivo="motivo"
-    :abierta="reaperturaAbierta"
-    :errores="erroresDeReapertura"
-    :enviando="enviandoReapertura"
-    @cerrar="emit('cancelarReapertura')"
-    @confirmar="emit('reabrir')"
-  />
+  <VentanasDeCargaInicial :estado="cargaInicial" />
 </template>

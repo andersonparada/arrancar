@@ -293,7 +293,8 @@ El contenedor `respaldo` (`infra/respaldo.sh`) hace cada día un `pg_dump` y un
   del mes) se copia a `infra/respaldos/mensuales/` y se conserva
   `MESES_RETENCION_MENSUAL` meses (60 = 5 años, por omisión). Sirven para recuperarse
   de un desastre y como evidencia histórica; la auditoría de la app se conserva
-  además 60 meses como mínimo en la base (`core.depurar_auditoria`).
+  además 60 meses como mínimo en la base (`core.depurar_auditoria`), salvo los recursos de
+  `core.recursos_de_auditoria_permanente`, que se conservan mientras exista la empresa.
 
 Ambas variables van en `infra/.env` (ver `infra/.env.ejemplo`). **Un respaldo que solo
 está en el servidor no sirve si el servidor se pierde**, así que los archivos deben
@@ -2373,6 +2374,51 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   libro anteriores a la fecha de inicio, proveedores con saldo a favor, mes partido de Libro de compras); dos permisos
   nuevos (`empresas.carga-inicial.ver-cierres` y `.exportar`). Trece pasos (EM-2.1 a EM-2.13) y U8-B aparte. Preguntas
   P-6 a P-8 con recomendación.
+- **2026-11-18 (EM-2.1 y EM-2.2, servidor del core).** Mediador: `preguntarATodos` y `responder` (`PreguntasEntreModulos`,
+  `NombreDePregunta`); las respuestas `null` se omiten, un módulo inactivo se salta, si uno lanza el error se propaga y
+  `retirarManejadoresDe` también quita las preguntas. Migración core `0024_auditoria_permanente`: catálogo
+  `core.recursos_de_auditoria_permanente` (solo lectura para la app por RLS) y `core.depurar_auditoria` que no borra las
+  entradas con empresa de esos recursos; el mínimo de 60 meses sigue.
+- **2026-11-18 (EM-2.3, servidor de Empresas: revisar y cerrar).** Contrato `empresas.revisar_cierre_de_carga`
+  (`RevisionDeCierreDeModulo`, `HallazgoDeCierre`, `CifraDelCuadre`, tope de 200 cifras por módulo). `GET
+  …/carga-inicial/revision-de-cierre` (permiso de cerrar) junta los avisos propios de Empresas (fecha que no es día 1 y
+  sin balance de apertura) con lo que respondan los módulos activos, más una huella sha256 de hallazgos y cifras. `POST
+  …/cerrar` acepta `{ motivo?, huella? }`, vuelve a revisar con la carga bloqueada, pide motivo si hay diferencias,
+  rechaza una huella vieja y audita `cerrar` (versión 1 con la revisión). Migración de Empresas `0011`: fila
+  `empresas.cargas-iniciales` en el catálogo de auditoría permanente y los permisos `ver-cierres` y `exportar` para quien
+  podía cerrar o reabrir.
+- **2026-11-18 (EM-2.4 y EM-2.5, servidor de Empresas: lo que se ve después y el balance de apertura).** `CargaInicialDto` gana
+  `ultimoCierre` (diferencias, avisos, motivo y `revisionGuardada`; una carga cerrada antes de EM-2 sale con `revisionGuardada` falso)
+  y `balanceDeApertura`. Puerto `HistorialDeLaCarga` (lee `core.auditoria` desde infraestructura y rechaza una versión desconocida) y los
+  casos de uso `ListarHistorialDeCargaInicial`, `ObtenerCierreDeCargaInicial` y `ExportarCierreDeCargaInicial` (Excel de tres hojas: Cierre,
+  Hallazgos y Cifras, con los montos como número): rutas `GET …/historial`, `…/cierres/:cierreId` y `…/cierres/:cierreId/exportar`
+  (permisos `ver-cierres` y `exportar`). Migración de Empresas `0012`: `cargas_iniciales.balance_de_apertura_archivo_id` (FK sin `on delete`
+  a `core.archivos`, `unique`). `SubirBalanceDeApertura` en tres tiempos (solo PDF; una foto deshace la transacción y borra el archivo),
+  `QuitarBalanceDeApertura` y `AbrirBalanceDeApertura`; con la carga cerrada solo se sube si falta (`balance_de_apertura_fijo`); reemplazar
+  y quitar auditan `quitar`; el cierre guarda el sha256 del balance. Pendiente: la revisión del agente `seguridad` antes de unirlo.
+- **2026-11-18 (EM-2.6 a EM-2.8, respuestas de los módulos).** Bancos responde la revisión con un adaptador sobre `ListarSaldosIniciales`
+  (hallazgos de BS-2 con su nivel, `sin_saldos_iniciales`, totales sin compensar y cifras por cuenta; `activa` en el resumen de cuenta);
+  Cuentas por pagar con `sin_saldos_iniciales`, `retenciones_por_practicar`, `documentos_del_libro_anteriores` y
+  `proveedores_con_saldo_a_favor` más las cifras (saldo de proveedores y saldo a favor, sin compensar); Libro de compras con `mes_partido`
+  (o `null` si la fecha es día 1). Sin migraciones de Bancos. Falta el cliente (EM-2.9 a EM-2.13) y U8-B.
+- **2026-11-18 (EM-2.9 a EM-2.12, cliente de Empresas y piezas comunes).** Core: `DocumentoAdjunto` y `VisorDeDocumento`
+  (`core/componentes/archivos/`) con `utilidades/documentos.ts` (tamaño, tope y tipo; Bancos no se tocó). Empresas: «Cerrar la
+  carga inicial» abre una ventana con la revisión de cada módulo (diferencias en rojo y avisos en ámbar, con icono y texto, cifras del
+  cuadre, «Revisar en <módulo>» solo si el usuario puede entrar a esa pantalla), motivo obligatorio solo si algún hallazgo lo pide
+  (contador 0/500) y botón «Cerrar con N diferencias»; manda la huella y, si el servidor dice `revision_de_cierre_desactualizada`,
+  muestra la revisión nueva con el aviso «Los saldos cambiaron mientras revisaba…» sin cerrar la ventana. Tras cerrar, la sección muestra
+  «Cerrada el … por …, con N diferencias: motivo» (o «antes de que se guardara la revisión»), «Ver revisión», «Exportar revisión»
+  (Excel) e «Historial» (cierres, reaperturas y balances quitados), con `ver-cierres` y `exportar`. Balance de apertura firmado: solo PDF,
+  subir/reemplazar/quitar con la carga abierta, y con la carga cerrada solo subir si falta; verlo con `ver-cierres`. Lógica pura con
+  pruebas (`revision-de-cierre`, `resumen-de-cierre`, `balance-de-apertura`, `documentos`) y del composable de cierre. Falta EM-2.13 (QA
+  en el navegador y docs de Bancos y Cuentas por pagar) y U8-B.
+- **2026-11-18 (EM-2, correcciones de la revisión).** Se trajo `integracion`: la `0010` de Empresas la tomó el Excel
+  (`0010_permisos_de_excel_de_empresas`), así que las migraciones de EM-2 son `0011_em2_cierre_de_la_carga` y
+  `0012_em2_balance_de_apertura` (con sus snapshots y el journal; la ruta de la prueba de API y el diseño se actualizaron).
+  «Exportar revisión» solo se muestra a quien tiene también `ver-cierres` (el último cierre se busca en el historial).
+  Decisiones que quedan por confirmar con el arquitecto: (1) Bancos, con más de 60 cuentas con saldo inicial, guarda solo
+  los tres totales y no las cifras por cuenta (tope de 200 cifras del diseño §3.2); (2) subir el primer balance de apertura
+  no deja entrada en `core.auditoria` (solo `core.archivos`), como dice el diseño §7.3.
 - **2026-11-18 — Impresión de cheques: diseño final con el dictamen.** `diseno-impresion-de-cheques.md` queda aprobado y con
   los ajustes del contador: `movimientos.para_abono_en_cuenta` (falso por omisión; va con el pago al pasar a otro
   formulario), relleno tras el beneficiario y en el primer renglón de las letras, campos de la cara del cheque cerrados (sin
@@ -2743,3 +2789,26 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   acción `adjuntar` en `empresas.cargas-iniciales` (también con la carga cerrada) y se ve en el historial; exportar un cierre
   exige en el servidor `empresas.carga-inicial.exportar` **y** `.ver-cierres`. *Decisión del usuario:* la línea «Cerrada el …
   por …, con N diferencias» la ve quien ve la empresa; **el texto del motivo y el detalle piden `ver-cierres`**.
+- **2026-11-18 (EM-2, correcciones de la revisión de seguridad, hecho).** M-1: cada subida del balance deja la entrada
+  `adjuntar` (acción nueva de `AccionAuditada`; `anterior` lleva el balance como quedó) y el historial de la carga la
+  muestra («Balance de apertura adjuntado», servidor y cliente). B-1: la firma `%PDF` se comprueba antes de `revisar`, sin
+  pasar una foto por sharp; el tipo se sigue comprobando después. B-2: exportar un cierre exige `exportar` y `ver-cierres`
+  en la ruta. Decisión del usuario: `CargaInicialDto.ultimoCierre` sale con `motivo` y `avisos` en `null` para quien no
+  tiene `ver-cierres` (`http/carga-segun-permiso.ts`, aplicado en todo lo que devuelve la carga); la línea con las
+  diferencias se sigue viendo y el cliente no muestra avisos ni motivo cuando no llegan. B-4: la prueba de cabeceras del
+  balance comprueba `nosniff` y la CSP.
+
+- **2026-11-18 · PC-4 (servidor): Excel «Plazos de proveedores».** `GET/POST /api/cuentas-por-pagar/condiciones/{exportar,plantilla,importar}`
+  con `core/intercambio`, permisos `cuentas-por-pagar.condiciones.importar` (migración `0013`: quien tenía
+  `proveedores.editar`) y `.exportar` (quien tenía `terceros.ver`), en `core.rol_permisos` y `core.usuario_permisos`.
+  Columnas NIT, Proveedor, Días de crédito y Contar desde la recepción; la validación reutiliza el esquema de la sección
+  del formulario. El proveedor se halla por NIT o, sin NIT, por nombre exacto y único en la cuenta (nombre repetido,
+  proveedor inexistente y proveedor repetido en el archivo son errores de fila); nunca se crean proveedores. Días vacíos
+  vuelven al plazo por omisión y «contar desde la recepción» vacío es No. Todo o nada, con ensayo.
+- **2026-11-18 (PC-5, plazos de proveedores: cliente).** Página «Plazos de proveedores» en Administración de Cuentas por
+  pagar (`/cuentas-por-pagar/plazos`, permiso `terceros.ver`): tarjetas de solo lectura con proveedor, NIT, días de crédito
+  («De contado», «Plazo por omisión de la empresa») y desde cuándo corren, búsqueda por nombre o NIT sin tildes y estados vacíos
+  distintos (sin proveedores / sin coincidencias). `AccionesDeIntercambio` y `VentanaDeImportacion` con
+  `cuentas-por-pagar.condiciones.importar` y `.exportar`; el texto de la página manda a Proveedores para editar uno por uno.
+  El servidor suma `GET /api/cuentas-por-pagar/condiciones` (lista de la cuenta, mismo caso de uso del Excel, permiso
+  `terceros.ver`); sin migración. Lógica pura con pruebas.

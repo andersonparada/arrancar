@@ -5,12 +5,15 @@ import type { EstablecerFechaDeInicio } from '../aplicacion/casos-uso/datos-de-e
 import type { GuardarDatosFiscales } from '../aplicacion/casos-uso/datos-de-empresa/guardar-datos-fiscales.js';
 import type { ObtenerCargaInicial } from '../aplicacion/casos-uso/datos-de-empresa/obtener-carga-inicial.js';
 import type { ObtenerDatosFiscales } from '../aplicacion/casos-uso/datos-de-empresa/obtener-datos-fiscales.js';
+import type { RevisarCierreDeCargaInicial } from '../aplicacion/casos-uso/datos-de-empresa/revisar-cierre-de-carga-inicial.js';
 import type { ReabrirCargaInicial } from '../aplicacion/casos-uso/datos-de-empresa/reabrir-carga-inicial.js';
 import type {
+  CierreSolicitado,
   DatosFiscalesSolicitados,
   FechaDeInicioSolicitada,
   ReaperturaSolicitada,
 } from './datos-de-empresa.esquemas-http.js';
+import { cargaSegunPermiso } from './carga-segun-permiso.js';
 import type { ParamsEmpresa } from './empresas.esquemas-http.js';
 
 export interface CasosDeUsoDeDatosDeEmpresa {
@@ -18,6 +21,7 @@ export interface CasosDeUsoDeDatosDeEmpresa {
   guardarDatosFiscales: GuardarDatosFiscales;
   obtenerCargaInicial: ObtenerCargaInicial;
   establecerFechaDeInicio: EstablecerFechaDeInicio;
+  revisarCierreDeCargaInicial: RevisarCierreDeCargaInicial;
   cerrarCargaInicial: CerrarCargaInicial;
   reabrirCargaInicial: ReabrirCargaInicial;
 }
@@ -37,21 +41,40 @@ export class DatosDeEmpresaControlador {
       solicitud: solicitud.body,
     });
 
-  obtenerCargaInicial = (solicitud: Solicitud) =>
-    this.casosDeUso.obtenerCargaInicial.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
+  obtenerCargaInicial = async (solicitud: Solicitud) =>
+    cargaSegunPermiso(
+      solicitud,
+      await this.casosDeUso.obtenerCargaInicial.ejecutar(operadorDe(solicitud), solicitud.params.empresaId),
+    );
 
-  establecerFechaDeInicio = (solicitud: Solicitud<FechaDeInicioSolicitada>) =>
-    this.casosDeUso.establecerFechaDeInicio.ejecutar(operadorDe(solicitud), {
-      empresaId: solicitud.params.empresaId,
-      fechaDeInicio: solicitud.body.fechaDeInicio,
-    });
+  establecerFechaDeInicio = async (solicitud: Solicitud<FechaDeInicioSolicitada>) =>
+    cargaSegunPermiso(
+      solicitud,
+      await this.casosDeUso.establecerFechaDeInicio.ejecutar(operadorDe(solicitud), {
+        empresaId: solicitud.params.empresaId,
+        fechaDeInicio: solicitud.body.fechaDeInicio,
+      }),
+    );
 
-  cerrarCargaInicial = (solicitud: Solicitud) =>
-    this.casosDeUso.cerrarCargaInicial.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
+  revisarCierreDeCargaInicial = (solicitud: Solicitud) =>
+    this.casosDeUso.revisarCierreDeCargaInicial.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
 
-  reabrirCargaInicial = (solicitud: Solicitud<ReaperturaSolicitada>) =>
-    this.casosDeUso.reabrirCargaInicial.ejecutar(operadorDe(solicitud), {
-      empresaId: solicitud.params.empresaId,
-      motivo: solicitud.body.motivo,
-    });
+  cerrarCargaInicial = async (solicitud: Solicitud<CierreSolicitado | null | undefined>) =>
+    cargaSegunPermiso(
+      solicitud,
+      await this.casosDeUso.cerrarCargaInicial.ejecutar(operadorDe(solicitud), {
+        empresaId: solicitud.params.empresaId,
+        motivo: solicitud.body?.motivo,
+        huella: solicitud.body?.huella,
+      }),
+    );
+
+  reabrirCargaInicial = async (solicitud: Solicitud<ReaperturaSolicitada>) =>
+    cargaSegunPermiso(
+      solicitud,
+      await this.casosDeUso.reabrirCargaInicial.ejecutar(operadorDe(solicitud), {
+        empresaId: solicitud.params.empresaId,
+        motivo: solicitud.body.motivo,
+      }),
+    );
 }

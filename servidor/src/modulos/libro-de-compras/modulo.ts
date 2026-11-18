@@ -10,6 +10,7 @@ import { configuracionDelLibroDeCompras } from './configuracion.js';
 import { rutasDeVigenciasDeCombustible } from './composicion/vigencias-de-combustible.js';
 import { rutasDeAnalisisComponidas } from './composicion/analisis.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
+import { respuestasDeCierreDeCargaComponidas } from './composicion/revision-de-cierre.js';
 import { rutasDeLibro } from './composicion/libro.js';
 import { rutasDePeriodosComponidas } from './composicion/periodos.js';
 import { rutasDeConstanciasPendientesComponidas } from './composicion/constancias-pendientes.js';
@@ -32,6 +33,7 @@ function componerRutas() {
     rutasDePeriodosComponidas(),
     rutasDeAnalisisComponidas(),
     escuchasDeFechaDeInicioComponidas(),
+    respuestasDeCierreDeCargaComponidas(),
     // generador: rutas
   ]);
 }

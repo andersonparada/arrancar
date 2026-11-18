@@ -20,12 +20,17 @@ export class RepositorioDeCargasInicialesDrizzle implements RepositorioDeCargasI
       empresaId: Identificador.desde(fila.empresaId),
       fechaDeInicio: fila.fechaDeInicio,
       cierre: cerradaEn && cerradaPor ? { cerradaEn, cerradaPor } : null,
+      balanceDeAperturaArchivoId: fila.balanceDeAperturaArchivoId,
     });
   }
 
   async guardar(carga: CargaInicial): Promise<void> {
-    const { empresaId, fechaDeInicio, cierre } = carga.instantanea();
-    const cierreGuardado = { cerradaEn: cierre?.cerradaEn ?? null, cerradaPor: cierre?.cerradaPor ?? null };
+    const { empresaId, fechaDeInicio, cierre, balanceDeAperturaArchivoId } = carga.instantanea();
+    const cierreGuardado = {
+      cerradaEn: cierre?.cerradaEn ?? null,
+      cerradaPor: cierre?.cerradaPor ?? null,
+      balanceDeAperturaArchivoId,
+    };
     await transaccionEnCurso()
       .insert(cargasIniciales)
       .values({ empresaId: empresaId.valor, fechaDeInicio, ...cierreGuardado })

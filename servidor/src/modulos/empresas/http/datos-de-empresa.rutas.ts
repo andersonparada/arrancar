@@ -2,6 +2,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import type { DatosDeEmpresaControlador } from './datos-de-empresa.controlador.js';
 import {
+  esquemaCierreDeCarga,
   esquemaDatosFiscales,
   esquemaFechaDeInicio,
   esquemaReaperturaDeCarga,
@@ -36,8 +37,16 @@ function rutasDeLaCargaInicial(app: Aplicacion, controlador: DatosDeEmpresaContr
     preHandler: proteger({ permiso: 'empresas.editar' }),
     handler: controlador.establecerFechaDeInicio,
   });
-  app.post('/empresas/:empresaId/carga-inicial/cerrar', {
+}
+
+function rutasDelCierreDeLaCarga(app: Aplicacion, controlador: DatosDeEmpresaControlador) {
+  app.get('/empresas/:empresaId/carga-inicial/revision-de-cierre', {
     schema: { tags, params },
+    preHandler: proteger({ permiso: 'empresas.carga-inicial.cerrar' }),
+    handler: controlador.revisarCierreDeCargaInicial,
+  });
+  app.post('/empresas/:empresaId/carga-inicial/cerrar', {
+    schema: { tags, params, body: esquemaCierreDeCarga.nullish() },
     preHandler: proteger({ permiso: 'empresas.carga-inicial.cerrar' }),
     handler: controlador.cerrarCargaInicial,
   });
@@ -53,5 +62,6 @@ export function rutasDeDatosDeEmpresa(controlador: DatosDeEmpresaControlador): F
   return async (app) => {
     rutasDeDatosFiscales(app, controlador);
     rutasDeLaCargaInicial(app, controlador);
+    rutasDelCierreDeLaCarga(app, controlador);
   };
 }

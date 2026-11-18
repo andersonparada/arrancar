@@ -9,6 +9,8 @@ export interface ConsultasDeDatosDeEmpresa {
    * hace esperar a quien intente cerrarla hasta que termine su transacción.
    */
   cargaInicialBloqueandoElCierre(empresaId: string): Promise<CargaInicialDto>;
+  /** El id del archivo del balance de apertura (solo para abrirlo desde el módulo dueño); `null` si no hay. */
+  archivoDelBalanceDeApertura(empresaId: string): Promise<string | null>;
   /** @throws RecursoNoEncontrado si la empresa no existe. */
   datosDeIdentificacion(empresaId: string): Promise<DatosDeIdentificacionDto>;
 }
