@@ -2417,6 +2417,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   pedidos en vuelo al salir de la pantalla; `usarSelectorConBusqueda` reinicia la opción resaltada cuando llegan otras
   opciones mientras se busca. Queda pendiente (no es regresión): el texto del botón si se entra con `?proveedorId=` de un
   proveedor fuera de la carga inicial.
+- 2026-11-18 · `GET /pagos/notas-para-ligar` exige `cuentas-por-pagar.pagos.ligar-notas-de-debito` (decisión del usuario; §8 de
+  `diseno-cp4-pagos.md` actualizado): quien solo tiene `pagos.ver` recibe 403. El cliente ya no pide las notas sin ese permiso.
+  `usarSelectorConBusqueda` reinicia la opción resaltada solo con `enServidor`, con prueba de que sin él no se reinicia.
 
 - **2026-11-18 (respuestas del usuario al plazo de crédito).** Todas las recomendaciones de
   `docs/modulos/diseno-plazo-de-credito-del-proveedor.md` (detalle al final del diseño). Aprobado para programar PC-1 a PC-6;

@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { describe, expect, it } from 'vitest';
 import type { OpcionBuscable } from '../utilidades/busqueda-de-opciones';
 import { usarSelectorConBusqueda } from './usar-selector-con-busqueda';
@@ -38,5 +38,28 @@ describe('selector con búsqueda en el servidor', () => {
     selector.busqueda.value = 'zzz';
     expect(selector.opcionesFiltradas.value).toHaveLength(2);
     expect(selector.muestraBuscador.value).toBe(true);
+  });
+});
+
+describe('reinicio de la opción resaltada al cambiar las opciones', () => {
+  async function conOpcionesNuevas(enServidor: boolean) {
+    const opciones = ref<OpcionBuscable<string>[]>([
+      { valor: 'A', texto: 'Alfa' },
+      { valor: 'B', texto: 'Beta' },
+    ]);
+    const selector = usarSelectorConBusqueda(opciones, ref<string | undefined>('B'), ref(enServidor));
+    selector.abrir();
+    selector.busqueda.value = 'a';
+    opciones.value = [{ valor: 'C', texto: 'Gama' }];
+    await nextTick();
+    return selector;
+  }
+
+  it('sin búsqueda en el servidor el índice no se reinicia', async () => {
+    expect((await conOpcionesNuevas(false)).indiceActivo.value).toBe(1);
+  });
+
+  it('con búsqueda en el servidor sí se reinicia', async () => {
+    expect((await conOpcionesNuevas(true)).indiceActivo.value).toBe(-1);
   });
 });
