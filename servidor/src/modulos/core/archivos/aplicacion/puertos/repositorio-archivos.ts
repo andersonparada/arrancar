@@ -12,6 +12,8 @@ export interface ArchivoGuardado {
   alto: number | null;
   /** Huella del contenido guardado (no se calcula en las imágenes anteriores a los documentos). */
   sha256: string | null;
+  /** Huella del archivo tal como llegó, antes de reescribirlo: es la que se muestra al usuario. */
+  sha256Recibido: string | null;
   paginas: number | null;
   /** Recurso que es dueño del archivo (p. ej. `bancos.conciliaciones`); sin dueño, es de uso libre. */
   recursoDueno: string | null;
@@ -21,8 +23,6 @@ export interface ArchivoGuardado {
 export interface NuevoArchivo extends Omit<ArchivoGuardado, 'id' | 'creadoEn'> {
   empresaId: string;
   nombreOriginal: string | null;
-  /** Huella del archivo tal como llegó, antes de reescribirlo. */
-  sha256Recibido: string | null;
   subidoPor: string;
 }
 

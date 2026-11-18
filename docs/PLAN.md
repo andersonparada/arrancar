@@ -262,7 +262,8 @@ Hecho:
 - [x] PWA instalable: manifiesto, íconos generados desde `cliente/public/logo.svg`,
       service worker que solo guarda la estructura de la app.
 - [x] Docker de producción (Caddy + app + PostgreSQL + respaldo diario), probado:
-      la app usa unos 72 MB de RAM.
+      la app usa unos 72 MB de RAM. El tope de **20 MB por solicitud** (toda la instalación) está en
+      `infra/Caddyfile` (`request_body { max_size 20MB }`); al pasarse responde 413 con el mensaje en el formato de la API.
 - [x] `CLAUDE.md` del proyecto.
 - [x] `app.cuenta_id` en `ejecutarEnEmpresa` (se fija junto a `app.empresa_id`, a partir
       de `cuentaId` en `ContextoEmpresa`) y `politicaPorCuenta()` en `columnas.ts`, para
@@ -2384,3 +2385,17 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Todas las recomendaciones, salvo en Caja chica: una factura con retención se rechaza **con permiso de excepción**
   (lo del contador, CC-f A′) y la bancarización solo **avisa y marca** (lo del arquitecto, CC-h A). Detalle al final de
   cada diseño. Los tres quedan **aprobados** para programar (orden de la hoja de ruta: Multimoneda antes que Caja chica).
+- **2026-11-18 (H2, tope en Caddy).** `infra/Caddyfile`: `request_body { max_size 20MB }` para todo el sitio y `handle_errors 413`
+  que responde `SOLICITUD_DEMASIADO_GRANDE` en el formato de errores de la API. Configuración validada con `caddy validate`.
+  Los topes de la app (PDF 10 MB, foto 15 MB, Excel 5 MB) siguen igual; para cambiar el de Caddy se edita ese archivo y se reinicia el contenedor.
+- **2026-11-18 (H2, huella del archivo recibido).** La huella que se informa y se muestra del estado de cuenta es la sha256 **del archivo
+  tal como llegó** (`sha256_recibido`), estable aunque qpdf reescriba el PDF y comparable con `sha256sum` del original. El gestor de
+  documentos (`core/archivos`) la devuelve al guardar y al abrir (con respaldo a `sha256` si falta) y la consulta del estado de cuenta
+  de bancos la lee de ahí. Sin migración ni datos que corregir: `sha256_recibido` ya se guardaba en cada documento (las filas de
+  desarrollo anteriores a H2b que no la tengan siguen mostrando la huella guardada). La auditoría conserva el `nombreOriginal` igual.
+  Pruebas: el mismo PDF dos veces da la misma huella y coincide con `createHash('sha256')` del original.
+- **2026-11-18 (impresión siempre en claro).** `cliente/src/estilos.css`: regla `@media print` global (fuera de las capas de
+  Tailwind, para ganarle a `dark:`): `html`/`body` con fondo blanco y texto negro, y con el modo oscuro puesto (`html.oscuro`) todo
+  elemento pasa a fondo transparente, texto negro, bordes grises y sin sombras; el menú lateral no se imprime. Las hojas existentes
+  (reportes de bancos y de cuentas por pagar, contraseña, conciliación) ya imprimían en claro con `print:*`; la regla solo cubre lo
+  que `dark:` les cambiaba.

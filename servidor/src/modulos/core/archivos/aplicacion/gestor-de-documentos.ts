@@ -118,7 +118,7 @@ export class GestorDeDocumentos implements DocumentosProtegidos {
 
   private async registrar(nuevo: NuevoArchivo): Promise<DocumentoGuardado> {
     const { id, tipoMime, tamanoBytes, paginas } = await this.dependencias.repositorio.guardar(nuevo);
-    return { id, tipoMime, sha256: nuevo.sha256!, tamanoBytes, paginas };
+    return { id, tipoMime, sha256: nuevo.sha256Recibido ?? nuevo.sha256!, tamanoBytes, paginas };
   }
 
   async abrir(archivoId: string, recursoDueno: string): Promise<DocumentoAbierto> {
@@ -127,7 +127,8 @@ export class GestorDeDocumentos implements DocumentosProtegidos {
     if (!archivo) throw new RecursoNoEncontrado('El archivo');
     try {
       const contenido = await almacenamiento.leer(archivo.rutaOriginal);
-      const { tipoMime, tamanoBytes, sha256, creadoEn } = archivo;
+      const { tipoMime, tamanoBytes, creadoEn } = archivo;
+      const sha256 = archivo.sha256Recibido ?? archivo.sha256;
       return { tipoMime, tamanoBytes, sha256, creadoEn, contenido };
     } catch {
       throw new RecursoNoEncontrado('El archivo');
