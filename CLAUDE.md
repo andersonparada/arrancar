@@ -50,7 +50,7 @@ levantada. **Corren en paralelo**: cada worker de Vitest tiene su propia base
 de archivos (`almacenamiento-pruebas/<base>`) y su `TMPDIR`
 (`servidor/src/pruebas-api/paralelo/`). Cada agente usa su prefijo con `BD_PRUEBAS=<prefijo>` (se valida: minúsculas, dígitos y `_`, hasta 41
 caracteres, nunca `arrancar`; basta elegirlo, las bases se crean solas) y no corre dos suites a la vez con el mismo.
-Si el historial de migraciones de las bases no concuerda con el código, `globalSetup` las vuelve a crear. Workers: `--maxWorkers` o `VITEST_MAX_WORKERS` (por omisión la mitad de los
+Si el historial de migraciones de las bases no concuerda con el código, `globalSetup` las vuelve a crear. Workers: `--maxWorkers` o `VITEST_MAX_WORKERS` (esta solo acepta un número entero; para un porcentaje: `npm run probar -w servidor -- --maxWorkers=50%`; por omisión la mitad de los
 núcleos, máximo 8); se crean tantas bases como workers. Para borrar las bases sobrantes de un prefijo:
 `BD_PRUEBAS=<prefijo> npm run bd:limpiar-pruebas -w servidor` (con la máquina cargada puede tardar
 mucho: córralo en segundo plano). Una prueba nueva no debe depender de

@@ -1,7 +1,7 @@
 import pg from 'pg';
 import type { TestProject } from 'vitest/node';
 import { baseConHistorialIncompatible } from './historial-de-migraciones.js';
-import { BD_PLANTILLA, bdDelWorker, urlDelPropietario } from './nombres-de-bases.js';
+import { BD_PLANTILLA, bdDelWorker, urlDelPropietario, validarCantidadDeWorkers } from './nombres-de-bases.js';
 
 const identificador = pg.escapeIdentifier;
 
@@ -62,12 +62,12 @@ async function descartarBasesDesactualizadas(conexion: pg.Client, bases: readonl
 /**
  * Una vez por corrida: crea las bases de los workers que falten, clonándolas de una plantilla
  * migrada, para que los archivos de pruebas que corren a la vez no se pisen los datos. Crea tantas como
- * `maxWorkers` ya resuelto por Vitest (`--maxWorkers`, `VITEST_MAX_WORKERS` o la configuración).
+ * `maxWorkers` ya resuelto por Vitest (`--maxWorkers`, `VITEST_MAX_WORKERS` o la configuración); si no es un entero positivo, falla.
  * Las bases se conservan entre corridas (borrarlas fuerza un checkpoint lento de PostgreSQL);
  * cada archivo de pruebas las migra y limpia al empezar (`prepararBaseDeDatos`).
  */
 export async function setup(proyecto: TestProject): Promise<void> {
-  const cantidad = proyecto.config.maxWorkers;
+  const cantidad = validarCantidadDeWorkers(proyecto.config.maxWorkers, 'maxWorkers');
   const workers = Array.from({ length: cantidad }, (_, i) => bdDelWorker(i + 1));
   const faltantes = await comoAdministrador(async (conexion) => {
     await descartarBasesDesactualizadas(conexion, [BD_PLANTILLA, ...workers]);

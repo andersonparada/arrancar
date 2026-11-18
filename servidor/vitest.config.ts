@@ -1,7 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';
 import { defineConfig } from 'vitest/config';
-import { trabajadoresPorOmision } from './src/pruebas-api/paralelo/nombres-de-bases.js';
+import { trabajadoresPorOmision, validarCantidadDeWorkers } from './src/pruebas-api/paralelo/nombres-de-bases.js';
+
+const workersDelEntorno = process.env.VITEST_MAX_WORKERS;
+if (workersDelEntorno !== undefined) validarCantidadDeWorkers(workersDelEntorno, 'VITEST_MAX_WORKERS');
 
 /** Del `.env` de desarrollo solo se toma dónde está qpdf (cuando no está en `/usr/bin/qpdf`). */
 const archivoEnv = new URL('../.env', import.meta.url);
@@ -17,7 +20,7 @@ export default defineConfig({
     testTimeout: 30_000,
     hookTimeout: 60_000,
     // Con `--maxWorkers` o `VITEST_MAX_WORKERS` manda Vitest; `globalSetup` crea tantas bases como workers resueltos.
-    ...(process.env.VITEST_MAX_WORKERS ? {} : { maxWorkers: trabajadoresPorOmision() }),
+    ...(workersDelEntorno ? {} : { maxWorkers: trabajadoresPorOmision() }),
     globalSetup: ['./src/pruebas-api/paralelo/preparar-bases-paralelas.ts'],
     setupFiles: ['./src/pruebas-api/paralelo/entorno-por-worker.ts'],
     env: {

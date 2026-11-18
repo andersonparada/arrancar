@@ -49,3 +49,19 @@ export const urlDelPropietario = (base: string): string => `postgres://arrancar:
 export function trabajadoresPorOmision(): number {
   return Math.max(1, Math.min(8, Math.floor(availableParallelism() / 2)));
 }
+
+/**
+ * Comprueba que la cantidad de workers sea un entero positivo y la devuelve. Vitest lee el valor con `parseInt`
+ * (`50%` daría 50 workers y `abc`, NaN), por eso aquí se rechaza todo lo que no sea un entero.
+ * @throws Error si no es un entero positivo.
+ */
+export function validarCantidadDeWorkers(valor: unknown, origen: string): number {
+  const texto = typeof valor === 'string' ? valor.trim() : valor;
+  const cantidad = typeof texto === 'string' && /^[0-9]+$/.test(texto) ? Number(texto) : texto;
+  if (typeof cantidad !== 'number' || !Number.isInteger(cantidad) || cantidad <= 0) {
+    throw new Error(
+      `${origen} "${String(valor)}" no es válido: debe ser un número entero positivo. Para un porcentaje use \`--maxWorkers=50%\`.`,
+    );
+  }
+  return cantidad;
+}

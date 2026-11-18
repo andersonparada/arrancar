@@ -2322,7 +2322,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   distinto de `arrancar`, error si viene vacío) desde `nombres-de-bases.ts`, usado por el `globalSetup`, la configuración y el script de limpieza; este
   último ya no usa expresiones regulares en SQL: lista las bases y filtra en JavaScript (`esBaseDePruebasDelPrefijo`: prefijo exacto más `_plantilla` o
   `_` y solo dígitos), con los identificadores escapados. El número de bases sigue al `maxWorkers` que Vitest resuelve (`setup(proyecto)` lee
-  `proyecto.config.maxWorkers`: sirven `--maxWorkers` y `VITEST_MAX_WORKERS=50%`; `vitest.config.ts` solo fija el valor por omisión si no hay variable).
+  `proyecto.config.maxWorkers`: sirven `--maxWorkers` (admite `50%`: `npm run probar -w servidor -- --maxWorkers=50%`) y `VITEST_MAX_WORKERS`, que solo acepta un número entero porque Vitest la lee con `parseInt` (`50%` daría 50 workers); ambas rutas rechazan lo que no sea un entero positivo con un error claro; `vitest.config.ts` solo fija el valor por omisión si no hay variable).
   `globalSetup` compara el historial de `drizzle.migraciones_<modulo>` de la plantilla y de cada base de worker con el código (`historial-de-migraciones.ts`:
   hash aplicado que ya no existe, o migración pendiente con fecha anterior a la última aplicada, que drizzle saltaría); si no concuerda, borra y vuelve a
   crear las bases del prefijo. `RUTA_ALMACENAMIENTO` es por base (`almacenamiento-pruebas/<base>`). Borrar bases puede tardar mucho con la máquina
