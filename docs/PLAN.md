@@ -2212,3 +2212,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   bloqueen; 8 observaciones menores (el signo de «Difiere en», la huella que cambia en cada subida, la impresión en modo oscuro…).
   Firefox y Safari no se pudieron comprobar. Decisiones abiertas: tope de solicitud en Caddy, conservar 60 meses el
   `nombreOriginal`, CSP propia o «Abrir en otra pestaña» si Firefox o Safari no muestran el PDF, y qué huella mostrar.
+- **2026-11-18 — CP4-B3b (cliente, Bancos: notas marcadas en la conciliación).** Sin migración ni cambios de servidor.
+  `ConciliarCuenta` gana `NotasMarcadasEnConciliacion` (solo en proceso, con Cuentas por pagar activo y los permisos
+  `conciliar`, `bancos.notas.ver` y `bancos.notas.editar`): lista las notas marcadas para Cuentas por pagar que son candidatas
+  del mes, con «Desmarcar» (ventana `VentanaDeDesmarcar` de Notas, con concepto y motivo, que el servidor exige) por
+  `POST /bancos/conciliaciones/:id/notas/:movimientoId/desmarcar`; el rechazo por nota ligada a un pago sale como aviso con el
+  mensaje del servidor. Como `candidatos` no trae la marca (desviación de CP4-B2b), el cliente cruza sus ids con la lista de
+  notas de la cuenta hasta fin de mes y se queda con las que el servidor dice `puedeDesmarcar`. Quitar la marca no cambia
+  montos: no se recarga la conciliación y las marcas sin guardar se conservan. Lógica pura en `notas-marcadas.ts`;
+  `usarDesmarcado` de Notas se reutiliza con un envío propio. Pruebas del cliente: +6.
