@@ -155,7 +155,13 @@ describe('Excel de proveedores', () => {
   it('exporta solo a los proveedores', async () => {
     const exportado = await importador.get(`${PROVEEDORES}/exportar`);
 
+    const libro = new ExcelJS.Workbook();
+    await libro.xlsx.load(exportado.cuerpo as unknown as ExcelJS.Buffer);
+    const celdas: string[] = [];
+    libro.worksheets[0]!.eachRow((fila) => fila.eachCell((celda) => celdas.push(String(celda.value))));
+
     expect(exportado.estado).toBe(200);
+    expect(celdas).not.toContain('Importada');
   });
 });
 
