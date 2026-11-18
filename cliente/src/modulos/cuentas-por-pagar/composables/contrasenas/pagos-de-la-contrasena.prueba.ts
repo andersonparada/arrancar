@@ -5,8 +5,10 @@ import {
   cargoConPagos,
   cargosPagables,
   destinoDeNuevoPago,
+  destinoDePagoEnEfectivo,
   filasDePagosDeLaContrasena,
   puedeRegistrarPago,
+  puedePagarEnEfectivo,
 } from './pagos-de-la-contrasena';
 
 const cargo = (id: string, cambios: Partial<CargoDeContrasena> = {}): CargoDeContrasena => ({
@@ -126,5 +128,34 @@ describe('sección Pagos de la ficha', () => {
 
   it('sin pagos queda vacío', () => {
     expect(filasDePagosDeLaContrasena({ pagos: [] })).toEqual([]);
+  });
+});
+
+describe('pagar en efectivo desde la contraseña', () => {
+  const permisos =
+    (...dados: string[]) =>
+    (permiso: string) =>
+      dados.includes(permiso);
+  const TODOS = permisos('cuentas-por-pagar.pagos.pagar-en-efectivo', 'cuentas-por-pagar.retiros.ver');
+
+  it('se ofrece con cargos por pagar y los permisos de repartir efectivo y ver retiros', () => {
+    expect(puedePagarEnEfectivo(ficha(), TODOS)).toBe(true);
+  });
+
+  it('sin alguno de los dos permisos no se ofrece', () => {
+    expect(puedePagarEnEfectivo(ficha(), permisos('cuentas-por-pagar.pagos.pagar-en-efectivo'))).toBe(false);
+    expect(puedePagarEnEfectivo(ficha(), permisos('cuentas-por-pagar.retiros.ver'))).toBe(false);
+  });
+
+  it('no se ofrece en una contraseña anulada ni sin nada por pagar', () => {
+    expect(puedePagarEnEfectivo(ficha({ estado: 'anulada' }), TODOS)).toBe(false);
+    expect(puedePagarEnEfectivo(ficha({ cargos: [cargo('a', { saldo: '0.00' })] }), TODOS)).toBe(false);
+  });
+
+  it('lleva al reparto con el proveedor y la contraseña, y ahí se escoge el retiro', () => {
+    expect(destinoDePagoEnEfectivo({ id: 'c1', proveedorId: 'p1' })).toEqual({
+      name: 'cuentas-por-pagar.pagos.efectivo',
+      query: { proveedorId: 'p1', contrasenaId: 'c1' },
+    });
   });
 });

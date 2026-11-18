@@ -1,0 +1,54 @@
+<script setup lang="ts">
+import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
+import type { EdicionDeCambioDeRetiro } from '../composables/retiros/usar-cambio-de-retiro';
+import { MAXIMO_DEL_MOTIVO } from '../textos';
+
+/** Anular o reabrir un retiro: dice qué va a pasar, pide el motivo (queda en la auditoría) y, si mueve dinero, la fecha en Bancos. */
+defineProps<{
+  titulo: string;
+  textoDelBoton: string;
+  peligroso?: boolean;
+  errores: Record<string, string>;
+  enviando: boolean;
+}>();
+const emit = defineEmits<{ cerrar: []; guardar: [] }>();
+const edicion = defineModel<EdicionDeCambioDeRetiro>({ required: true });
+</script>
+
+<template>
+  <VentanaModal :abierta="edicion.abierta" :titulo="titulo" @cerrar="emit('cerrar')">
+    <form id="form-cambio-de-retiro" class="space-y-4" novalidate @submit.prevent="emit('guardar')">
+      <p class="text-sm">{{ edicion.resumen }}</p>
+      <CampoTexto
+        v-model="edicion.motivo"
+        etiqueta="Motivo"
+        requerido
+        multilinea
+        :longitud-maxima="MAXIMO_DEL_MOTIVO"
+        ayuda="Por qué se hace; queda registrado en la auditoría."
+        :error="errores.motivo"
+      />
+      <CampoTexto
+        v-if="edicion.conFecha"
+        v-model="edicion.fecha"
+        etiqueta="Fecha del movimiento en Bancos"
+        tipo="date"
+        ayuda="Opcional. Si la deja en blanco, Bancos la decide; revise que ese mes no esté conciliado."
+        :error="errores.fecha"
+      />
+    </form>
+    <template #pie>
+      <BotonBase variante="secundario" @click="emit('cerrar')">Cancelar</BotonBase>
+      <BotonBase
+        tipo="submit"
+        form="form-cambio-de-retiro"
+        :variante="peligroso ? 'peligro' : 'primario'"
+        :cargando="enviando"
+      >
+        {{ textoDelBoton }}
+      </BotonBase>
+    </template>
+  </VentanaModal>
+</template>

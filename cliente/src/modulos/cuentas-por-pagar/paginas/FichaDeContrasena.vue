@@ -15,7 +15,7 @@ import {
   resumenDeAnularContrasena,
   resumenDeQuitarDocumento,
 } from '../composables/contrasenas/ficha-de-contrasena';
-import { destinoDeNuevoPago } from '../composables/contrasenas/pagos-de-la-contrasena';
+import { destinoDeNuevoPago, destinoDePagoEnEfectivo } from '../composables/contrasenas/pagos-de-la-contrasena';
 import { nombreDelEstadoDePago, tonoDelEstadoDePago } from '../composables/pagos/detalles-de-pago';
 import { usarFichaDeContrasena } from '../composables/contrasenas/usar-ficha-de-contrasena';
 import { VENTANAS_CUENTAS_POR_PAGAR } from '../textos';
@@ -32,6 +32,7 @@ const volver = {
 
 const imprimir = () => router.push({ name: 'cuentas-por-pagar.contrasenas.imprimir', params: { id: props.id } });
 const pagar = () => ficha.value && router.push(destinoDeNuevoPago(ficha.value));
+const pagarEnEfectivo = () => ficha.value && router.push(destinoDePagoEnEfectivo(ficha.value));
 const quitar = (documentoId: string, nombre: string) =>
   ficha.value && contrasena.quitar.abrir(documentoId, resumenDeQuitarDocumento(ficha.value, nombre));
 const anular = () => ficha.value && contrasena.anular.abrir(props.id, resumenDeAnularContrasena(ficha.value));
@@ -55,6 +56,7 @@ const anular = () => ficha.value && contrasena.anular.abrir(props.id, resumenDeA
         :ficha="ficha"
         @imprimir="imprimir"
         @pagar="pagar"
+        @pagar-en-efectivo="pagarEnEfectivo"
         @cambiar-fecha="contrasena.cambio.abrir"
         @agregar="contrasena.agregar.abrir"
         @anular="anular"

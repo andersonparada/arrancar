@@ -74,6 +74,18 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     descripcionDelNuevo:
       'Pague a un proveedor lo que ya autorizó: con cheque, transferencia o débito, una nota que ya está en Bancos, o dando por pagado lo que ya estaba pagado antes de la fecha de inicio.',
   },
+  retiros: {
+    titulo: 'Retiros de efectivo',
+    descripcion:
+      'El efectivo que se sacó del banco para pagar a proveedores: cuánto queda en manos de cada custodio, qué falta por liquidar y a qué fecha.',
+    nuevo: 'Retirar efectivo',
+    ficha: 'Retiro de efectivo',
+    pagar: 'Pagar en efectivo',
+    descripcionDelPago:
+      'Reparta el efectivo de un retiro entre uno o varios proveedores: cada uno recibe su pago y su recibo para firmar.',
+    elegir: 'Pagar en efectivo: elija el retiro',
+    recibos: 'Recibos de pago en efectivo',
+  },
   pagosRealizados: {
     titulo: 'Pagos realizados',
     descripcion: 'Los pagos de un rango de fechas, una fila por documento pagado, con quién lo registró y autorizó.',
