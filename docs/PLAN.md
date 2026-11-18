@@ -2739,3 +2739,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   partes y la suma del mes se vuelve a traer cuando la fecha cambia de mes. En la ficha del retiro solo el enlace depende
   de `pagos.ver` (la lista se ve con `retiros.ver`) y se avisa si hay más de 20 recibos. Pendiente: ocultar «Retirar
   efectivo» y «Pagar en efectivo» a quien no tiene `pagos.ver` (los medios salen de `GET /pagos/medios`).
+
+- **2026-11-18 · PC-4 (servidor): Excel «Plazos de proveedores».** `GET/POST /api/cuentas-por-pagar/condiciones/{exportar,plantilla,importar}`
+  con `core/intercambio`, permisos `cuentas-por-pagar.condiciones.importar` (migración `0013`: quien tenía
+  `proveedores.editar`) y `.exportar` (quien tenía `terceros.ver`), en `core.rol_permisos` y `core.usuario_permisos`.
+  Columnas NIT, Proveedor, Días de crédito y Contar desde la recepción; la validación reutiliza el esquema de la sección
+  del formulario. El proveedor se halla por NIT o, sin NIT, por nombre exacto y único en la cuenta (nombre repetido,
+  proveedor inexistente y proveedor repetido en el archivo son errores de fila); nunca se crean proveedores. Días vacíos
+  vuelven al plazo por omisión y «contar desde la recepción» vacío es No. Todo o nada, con ensayo.

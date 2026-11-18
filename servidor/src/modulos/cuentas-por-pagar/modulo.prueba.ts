@@ -53,6 +53,8 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.pagos.efectivo-sin-bancarizar',
       'cuentas-por-pagar.reintegros.crear',
       'cuentas-por-pagar.reintegros.anular',
+      'cuentas-por-pagar.condiciones.importar',
+      'cuentas-por-pagar.condiciones.exportar',
     ]);
   });
 
