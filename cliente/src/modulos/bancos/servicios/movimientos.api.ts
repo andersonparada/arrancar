@@ -1,6 +1,13 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import { intercambioDe } from '@/modulos/core/servicios/intercambio';
 
+/** Una línea del reparto por concepto de un movimiento (CP4). */
+export interface LineaDeDesglose {
+  conceptoId: string;
+  concepto: string;
+  monto: string;
+}
+
 /** Movimiento tal como lo manda el servidor: una nota, un saldo inicial o un cheque. */
 export interface Movimiento {
   id: string;
@@ -46,6 +53,13 @@ export interface Movimiento {
   puedeEliminar: boolean;
   /** Lo calcula el servidor: si se le puede cambiar solo el concepto (no un inverso, una transferencia ni el saldo inicial). */
   puedeReclasificar: boolean;
+  /** Nota de débito suelta con el concepto «Pago a proveedores»: Cuentas por pagar puede aplicarla a facturas. */
+  marcadaParaCuentasPorPagar: boolean;
+  /** El reparto por concepto si no es «todo al concepto del movimiento»; vacío si no lo hay. */
+  desglose: LineaDeDesglose[];
+  /** Lo calcula el servidor: si se puede marcar (estructural; además exige Cuentas por pagar activo). */
+  puedeMarcar: boolean;
+  puedeDesmarcar: boolean;
 }
 
 /** Una fila del reporte, con su saldo corrido (`null` si el reporte no eligió una cuenta). */

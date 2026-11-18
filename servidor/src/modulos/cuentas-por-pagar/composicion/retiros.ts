@@ -15,7 +15,9 @@ import { PagosEnBancosEnMediador } from '../infraestructura/pagos-en-bancos-en-m
 import { ConsultasDeRetirosDrizzle } from '../infraestructura/persistencia/consultas-de-retiros.drizzle.js';
 import { CustodiosDeRetirosDrizzle } from '../infraestructura/persistencia/custodios-de-retiros.drizzle.js';
 import { MovimientosDePagosDrizzle } from '../infraestructura/persistencia/movimientos-de-pagos.drizzle.js';
+import { DatosFiscalesDeLaEmpresaDrizzle } from '../infraestructura/persistencia/lecturas-del-libro.drizzle.js';
 import { RepositorioDeRetirosDrizzle } from '../infraestructura/persistencia/repositorio-de-retiros.drizzle.js';
+import { UmbralDeBancarizacionEnConfiguracion } from '../infraestructura/umbral-de-bancarizacion-en-configuracion.js';
 
 /**
  * Raíz de composición de los retiros de efectivo para pagos. También atiende el aviso de Bancos antes de cambiar el
@@ -49,6 +51,8 @@ function dependenciasDeRetiros(): DependenciasDeRetiros {
     custodios: new CustodiosDeRetirosDrizzle(),
     bancos: new PagosEnBancosEnMediador(movimientos),
     movimientos,
+    fiscal: new DatosFiscalesDeLaEmpresaDrizzle(),
+    umbral: new UmbralDeBancarizacionEnConfiguracion(),
     correlativos,
     auditoria,
     publicadorEventos,

@@ -122,6 +122,12 @@ export class DatosFiscalesDeLaEmpresaDrizzle implements DatosFiscalesDeLaEmpresa
     return efectos;
   }
 
+  async efectoDeLaEmpresa(fecha: string): Promise<EfectoFiscal | null> {
+    const vigencia = vigenteEn(await transaccionEnCurso().select().from(datosFiscalesDeEmpresa), fecha);
+    if (vigencia === null) return null;
+    return { iva: vigencia.regimenIva === 'general', isr: vigencia.regimenIsr === 'utilidades' };
+  }
+
   private async cargosConSuLibro(cargoIds: readonly string[]): Promise<CargoConSuLibro[]> {
     const propios = await transaccionEnCurso()
       .select({ id: documentos.id, documentoId: documentos.documentoId })

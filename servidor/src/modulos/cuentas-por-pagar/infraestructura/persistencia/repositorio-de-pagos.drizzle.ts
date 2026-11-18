@@ -36,6 +36,8 @@ const aPago = (
   montoCentavos: aCentavos(fila.monto),
   movimientoId: fila.movimientoId,
   retiroId: fila.retiroId,
+  recibidoPor: fila.recibidoPor,
+  motivoSinBancarizar: fila.motivoSinBancarizar,
   observaciones: fila.observaciones,
   motivo: fila.motivo,
   conCargaCerrada: fila.conCargaCerrada,

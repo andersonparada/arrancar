@@ -28,7 +28,15 @@ export interface DatosDeAnular extends AnulacionHechaEnBancos {
 
 type Dependencias = Pick<
   DependenciasDeCambiarPagos,
-  'pagos' | 'ajustes' | 'documentos' | 'auditoria' | 'reloj' | 'consultas' | 'consultasDePagos' | 'movimientos'
+  | 'pagos'
+  | 'ajustes'
+  | 'documentos'
+  | 'auditoria'
+  | 'reloj'
+  | 'consultas'
+  | 'consultasDePagos'
+  | 'movimientos'
+  | 'retiros'
 >;
 
 /**
@@ -49,7 +57,8 @@ export class AnuladorDelPago {
       creoSuMovimiento(pago) &&
       pago.movimientoId !== null &&
       (await this.dependencias.movimientos.estaConciliado(pago.movimientoId));
-    await revisarReglasDePago(reglas, { pago, conciliado });
+    const retiro = pago.retiroId === null ? null : await this.dependencias.retiros.buscar(pago.retiroId);
+    await revisarReglasDePago(reglas, { pago, conciliado, retiro });
   }
 
   async anular(operador: Operador, pago: PagoConLineas, datos: DatosDeAnular): Promise<EventoDominio[]> {

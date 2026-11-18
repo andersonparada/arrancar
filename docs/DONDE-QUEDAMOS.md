@@ -34,23 +34,16 @@ cliente 1034, generador 46.
 | CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-8 (QA incluida) y el arreglo E3 | — |
 | U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-8 (QA incluida) | detalles menores de la QA (en curso) |
 | CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1, CP4-EB | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
-| CP5 reportes | `diseno-cp5-reportes.md` (aprobado 2026-11-15, dictamen `dictamen-cp5-2026-11-15.md`) | CP5-1 a CP5-3, CP5-6, CP5-7 | CP5-4 (espera CP4-6), CP5-5 (espera CP4-E2/E3), CP5-8 y CP5-10 (en curso), CP5-9, CP5-11 |
+| CP5 reportes | `diseno-cp5-reportes.md` (aprobado 2026-11-15, dictamen `dictamen-cp5-2026-11-15.md`) | CP5-1 a CP5-4, CP5-6 a CP5-8, CP5-10 | CP5-5 (espera CP4-E3), CP5-9, CP5-11 |
 | CP5 reportes | `diseno-cp5-reportes.md` (aprobado, listo para programar, 2026-11-15) | — | **CP5-1** (migración `0011_cp5_fecha_de_anulacion`, **antes de CP4-4**), CP5-2 a CP5-11 (§11 del diseño) |
 
 **Agentes al 2026-11-16 (varios cortados por el límite de uso; retomar cada uno con un mensaje, sin `git reset`)** (si se cortan, retomarlos sin `git reset`, o relanzar el paso desde `main`):
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| CP4-E3 pagos en efectivo (varios proveedores por retiro) | `agent-a2d74edd09662eca6` | programando |
-| CP4-7 reintegros del proveedor | `agent-a9442d291f3afb5fb` | programando |
-| CP5-4 reportes de pagos y control (R6, R7, R8) | `agent-ab76b5e6013a35f9b` | programando (retomado tras un corte) |
-| CP5-8 cliente de R3, R4 y R5 | `agent-a95e0bf517758ee8a` | repitiendo su corrida completa (retomado) |
-| CP5-10 cliente de R12 (Libro de compras) | `agent-a0b1d282a47aa6b9e` | **unido a `main`**; pruebas completas corriendo |
-| Bancos H2 paso 5 (cliente del estado de cuenta en la conciliación) | `agent-af5ce5db56b554796` | programando (por pedido del usuario; avisado a la otra sesión) |
-| CP4-B2b avisos desde la conciliación (servidor) | `agent-ae9ac59462c01ab88` | programando |
-| CP4-B3a cliente de Bancos para pagos (sin conciliación) | `agent-a7fdc12b108b37447` | programando |
 | BS-1 Bancos, segunda parte: datos (`0034`) | `agent-a7143c581f35d7d4b` | programando |
-| EM-1 aviso de fecha de inicio que no es día 1 | `agent-aaf24abd6d15647b2` | programando |
+| CP4-8 lista, ficha y comprobante de pagos | `agent-ad73d5cef330cdfa6` | programando |
+| Bancos H2 pasos 6 (docs) y 7 (QA de todo H2) | `agent-a536a989849810df2` | probando (la otra sesión cedió estos pasos) |
 
 En `main`: CP4-6 (en verde: servidor 4563, cliente 1124, generador 46) y CP4-E2 (retiros de efectivo, `400e7f1`);
 pruebas corriendo con CP4-E2.
@@ -391,11 +384,9 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
      navegador.** Las migraciones core `0023` y bancos `0030` y `0031` no están aplicadas a la base de desarrollo:
      `npm run bd:migrar -w servidor`.
    **Sigue (en este orden):**
-   1. **Paso 5, cliente de H2b** (`programador-frontend`): `EstadoDeCuentaAdjunto`, `VisorDeEstadoDeCuenta`,
-      `usar-estado-de-cuenta`, dos columnas, impresión, ícono en la lista y el motivo «falta el archivo» en
-      `faltaParaTerminar` (según `sesion.config('bancos.conciliaciones.exigir_estado_de_cuenta', true)`). El contrato
-      del servidor está en las «Notas de implementación del paso 4» del diseño. Mostrar el 429
-      `revision_de_pdf_saturada` y `demasiadas_subidas` con su mensaje.
+   1. **Paso 5, cliente de H2b: hecho** (2026-11-16): `EstadoDeCuentaAdjunto`, `VisorDeEstadoDeCuenta`,
+      `ColumnaDelEstadoDeCuenta`, `usar-estado-de-cuenta`, dos columnas en `ConciliarCuenta`, ícono en la lista y el
+      motivo «falta el archivo» en `faltaParaTerminar`. Sin ver aún en el navegador (paso 7).
    2. **Paso 6, documentación:** `bancos.md` (sección H2), `plan-hallazgos-contables.md` y `plan-archivos-y-h2.md`.
    3. **Paso 7, QA en el navegador** (`pruebas-qa`) de todo H2: PDF real de banco, foto del celular, PDF con
       JavaScript y con contraseña, visor en `iframe` en Chrome, Firefox y Safari, imprimir, celular y modo oscuro.

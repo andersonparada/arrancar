@@ -140,10 +140,10 @@ export interface PagoNuevo {
   proveedorId: string;
   numero: number;
   anioDeNumero: number;
-  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura';
+  forma: 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura' | 'efectivo';
   /** `AAAA-MM-DD`. */
   fecha: string;
-  /** Nulo en la cuenta de apertura. */
+  /** Nulo en la cuenta de apertura y en efectivo (el movimiento es del retiro). */
   movimientoId: string | null;
   /** El recibo del proveedor (nota ligada) o el comprobante del sistema anterior (apertura); en cheque y nota de débito va a Bancos. */
   referencia?: string | null;
@@ -151,6 +151,10 @@ export interface PagoNuevo {
   motivo?: string | null;
   /** Solo en la cuenta de apertura: si la carga inicial estaba cerrada. */
   conCargaCerrada?: boolean | null;
+  /** Solo en efectivo: el retiro de donde sale el dinero, quien recibió por el proveedor y la excepción de bancarización. */
+  retiroId?: string | null;
+  recibidoPor?: string | null;
+  motivoSinBancarizar?: string | null;
   observaciones: string | null;
   lineas: LineaDePagoNueva[];
 }
@@ -227,6 +231,8 @@ export interface NombreDelNit {
  */
 export interface DatosFiscalesDeLaEmpresa {
   efectoDe(cargoIds: readonly string[], fechaDeInicio: string | null): Promise<Map<string, EfectoFiscal>>;
+  /** Lo que pierde la empresa en general según su régimen en la fecha; `null` si no tiene datos fiscales vigentes. */
+  efectoDeLaEmpresa(fecha: string): Promise<EfectoFiscal | null>;
 }
 
 /** El tope de la diferencia de centavos que se da por saldada al pagar. */

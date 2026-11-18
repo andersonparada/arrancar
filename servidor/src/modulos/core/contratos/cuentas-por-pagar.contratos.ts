@@ -189,6 +189,36 @@ declare module '../eventos/bus-eventos.js' {
       fechaOriginal: string;
       anulacionEnBancos: 'sin_inverso' | 'con_inverso';
     };
+    /**
+     * El proveedor devolvió saldo a favor de una o varias notas de crédito: es un cobro, por depósito (`banco`, con la nota
+     * de crédito en Bancos) o en efectivo. Cada nota dice si su factura es de activo fijo (el depósito va a Inversión).
+     */
+    'cuentas-por-pagar.reintegro_registrado': {
+      empresaId: string;
+      reintegroId: string;
+      numero: number;
+      proveedorId: string;
+      forma: 'deposito' | 'efectivo';
+      fecha: string;
+      montoCentavos: number;
+      movimientoId: string | null;
+      efecto: 'banco' | 'efectivo';
+      notas: Array<{ documentoId: string; montoCentavos: number; tieneActivoFijo: boolean }>;
+    };
+    /**
+     * Se anuló un reintegro. `fecha` es la fecha contable de la anulación y `fechaOriginal` la del reintegro;
+     * `anulacionEnBancos` es `null` en el efectivo (nada se anula en Bancos).
+     */
+    'cuentas-por-pagar.reintegro_anulado': {
+      empresaId: string;
+      reintegroId: string;
+      fecha: string;
+      fechaOriginal: string;
+      montoCentavos: number;
+      forma: 'deposito' | 'efectivo';
+      efecto: 'banco' | 'efectivo';
+      anulacionEnBancos: 'sin_inverso' | 'con_inverso' | null;
+    };
   }
 }
 

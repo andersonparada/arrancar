@@ -19,6 +19,8 @@ export interface EdicionDeNota {
   referencia: string;
   beneficiario: string;
   observaciones: string;
+  /** Solo en una nota de débito nueva y con Cuentas por pagar activo: se registra ya marcada (el concepto lo fija la marca). */
+  marcarParaCuentasPorPagar: boolean;
 }
 
 const NOTA_NUEVA: Omit<EdicionDeNota, 'abierta' | 'id'> = {
@@ -32,6 +34,7 @@ const NOTA_NUEVA: Omit<EdicionDeNota, 'abierta' | 'id'> = {
   referencia: '',
   beneficiario: '',
   observaciones: '',
+  marcarParaCuentasPorPagar: false,
 };
 
 /** La ventana abierta con los datos de la nota, o vacía (con `tipo`) si es nueva. */
@@ -50,6 +53,7 @@ export function edicionDe(nota?: Movimiento, tipo: 'credito' | 'debito' = 'credi
     referencia: textoDeEdicion(nota.referencia),
     beneficiario: textoDeEdicion(nota.beneficiario),
     observaciones: textoDeEdicion(nota.observaciones),
+    marcarParaCuentasPorPagar: false,
   };
 }
 
@@ -61,8 +65,10 @@ export const datosDeNota = (edicion: EdicionDeNota): DatosNota => ({
   monto: textoDeEdicion(edicion.monto),
   interesBruto: textoONulo(edicion.interesBruto),
   isrRetenido: textoONulo(edicion.isrRetenido),
-  conceptoId: edicion.conceptoId ?? '',
   referencia: textoONulo(edicion.referencia),
   beneficiario: textoONulo(edicion.beneficiario),
   observaciones: textoONulo(edicion.observaciones),
+  ...(edicion.marcarParaCuentasPorPagar && edicion.tipo === 'debito'
+    ? { marcarParaCuentasPorPagar: true }
+    : { conceptoId: edicion.conceptoId ?? '' }),
 });

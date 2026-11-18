@@ -18,6 +18,7 @@ const datos: DatosNota = {
 const nota: Movimiento = {
   id: 'registro-1',
   ...datos,
+  conceptoId: 'concepto-1',
   saldoInicial: false,
   cuentaBancariaNombre: null,
   anuladoEn: null,
@@ -37,6 +38,10 @@ const nota: Movimiento = {
   puedeEliminar: true,
   conceptoNombre: 'Concepto de prueba',
   puedeReclasificar: true,
+  marcadaParaCuentasPorPagar: false,
+  desglose: [],
+  puedeMarcar: false,
+  puedeDesmarcar: false,
 };
 
 describe('ventana de notas', () => {
@@ -66,5 +71,16 @@ describe('ventana de notas', () => {
     expect(edicionDe(conIntereses)).toMatchObject({ interesBruto: '100.00', isrRetenido: '10.00' });
     expect(datosDeNota(edicionDe(conIntereses))).toMatchObject({ interesBruto: '100.00', isrRetenido: '10.00' });
     expect(datosDeNota(edicionDe())).toMatchObject({ interesBruto: null, isrRetenido: null });
+  });
+
+  it('una nota nueva no nace marcada; al marcarla se manda la marca y no el concepto', () => {
+    const edicion = { ...edicionDe(undefined, 'debito'), conceptoId: 'concepto-1' };
+    expect(edicion.marcarParaCuentasPorPagar).toBe(false);
+    expect(datosDeNota(edicion)).toMatchObject({ conceptoId: 'concepto-1' });
+    expect(datosDeNota(edicion).marcarParaCuentasPorPagar).toBeUndefined();
+
+    const marcada = datosDeNota({ ...edicion, marcarParaCuentasPorPagar: true });
+    expect(marcada.marcarParaCuentasPorPagar).toBe(true);
+    expect(marcada).not.toHaveProperty('conceptoId');
   });
 });

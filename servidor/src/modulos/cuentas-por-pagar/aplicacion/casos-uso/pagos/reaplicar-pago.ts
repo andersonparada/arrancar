@@ -19,6 +19,7 @@ import { aplicacionDelEvento } from './armado-del-pago.js';
 import type { LineaConRetencion } from './avisos-del-pago.js';
 import type { DependenciasDeCambiarPagos, LineaRevisada } from './dependencias-de-pagos.js';
 import { DesgloseDelPago } from './desglose-del-pago.js';
+import { DesgloseDelPagoEnEfectivo } from './desglose-del-pago-en-efectivo.js';
 import { LectorDelPago, type PagoLeido } from './lector-del-pago.js';
 import { RevisorDelPago } from './revisor-del-pago.js';
 
@@ -48,12 +49,14 @@ export class ReaplicarPago {
   private readonly anulador: AnuladorDelPago;
   private readonly lector: LectorDelPago;
   private readonly desglose: DesgloseDelPago;
+  private readonly desgloseEnEfectivo: DesgloseDelPagoEnEfectivo;
 
   constructor(private readonly dependencias: DependenciasDeCambiarPagos) {
     this.revisor = new RevisorDelPago(dependencias);
     this.anulador = new AnuladorDelPago(dependencias);
     this.lector = new LectorDelPago(dependencias);
     this.desglose = new DesgloseDelPago(dependencias);
+    this.desgloseEnEfectivo = new DesgloseDelPagoEnEfectivo(dependencias);
   }
 
   /**
@@ -89,6 +92,7 @@ export class ReaplicarPago {
     const ajustes = await this.anulador.anularDiferencias(operador, pago, { motivo: pedido.motivo, fecha: hoy });
     const despues = await this.guardarLineas(pago, previas);
     await this.desglose.alReaplicar(operador, pago, { antes: antes.lineas, despues, nota });
+    await this.desgloseEnEfectivo.fijar(operador, pago);
     const evento = await this.dejarRastro(operador, pago, { antes, despues, hoy, motivo: pedido.motivo });
     const dto = (await this.lector.leer(operador, (await pagos.buscar(pago.id))!)).dto;
     return { dto, eventos: [evento, ...ajustes] as EventoDominio[] };

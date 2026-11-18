@@ -4,16 +4,18 @@ import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import AccionesDeConciliacion from '../componentes/conciliaciones/AccionesDeConciliacion.vue';
+import ColumnaDelEstadoDeCuenta from '../componentes/conciliaciones/ColumnaDelEstadoDeCuenta.vue';
 import CuadroCuadratico from '../componentes/conciliaciones/CuadroCuadratico.vue';
 import EncabezadoDeConciliacion from '../componentes/conciliaciones/EncabezadoDeConciliacion.vue';
 import ListaDeMovimientosConciliables from '../componentes/conciliaciones/ListaDeMovimientosConciliables.vue';
 import PartidasDeConciliacion from '../componentes/conciliaciones/PartidasDeConciliacion.vue';
 import SaldoDelEstadoDeCuenta from '../componentes/conciliaciones/SaldoDelEstadoDeCuenta.vue';
-import SaldoTranscrito from '../componentes/conciliaciones/SaldoTranscrito.vue';
+
 import VentanaDeDevolucion from '../componentes/conciliaciones/VentanaDeDevolucion.vue';
 import { periodoDeConciliacion } from '../composables/conciliaciones/detalles-de-conciliacion';
 import { usarDevolucionDeConciliacion } from '../composables/conciliaciones/usar-devolucion-de-conciliacion';
 import { usarGuardadoDeConciliacion } from '../composables/conciliaciones/usar-guardado-de-conciliacion';
+import { usarEstadoDeCuenta } from '../composables/conciliaciones/usar-estado-de-cuenta';
 import { usarMarcadoDeMovimientos } from '../composables/conciliaciones/usar-marcado-de-movimientos';
 import { apiConciliaciones, type Conciliacion } from '../servicios/conciliaciones.api';
 
@@ -42,6 +44,7 @@ const {
   confirmar: confirmarDevolucion,
 } = usarDevolucionDeConciliacion(conciliacion);
 
+const archivo = usarEstadoDeCuenta(conciliacion);
 const enProceso = computed(() => conciliacion.value?.estado === 'en_proceso');
 const volver = { texto: 'Volver a conciliaciones', ruta: { name: 'bancos.conciliaciones' } };
 const imprimir = (): void => window.print();
@@ -61,25 +64,37 @@ const imprimir = (): void => window.print();
 
       <EncabezadoDeConciliacion :conciliacion="conciliacion" />
       <CuadroCuadratico :libros="conciliacion.cuadratica.libros" :banco="conciliacion.cuadratica.banco" />
-      <SaldoDelEstadoDeCuenta :saldo="conciliacion.saldoQueDebeMostrarElEstadoDeCuenta" />
-      <SaldoTranscrito
-        :conciliacion="conciliacion"
-        :guardando="guardando"
-        :error="erroresDelGuardado.saldoEstadoDeCuenta"
-        @guardar="guardarSaldo"
-      />
-      <PartidasDeConciliacion :partidas="conciliacion.partidas" />
-
-      <div v-if="enProceso" v-permiso="'bancos.conciliaciones.conciliar'" class="flex justify-end print:hidden">
-        <button
-          type="button"
-          class="text-sm font-medium text-campo-700 hover:underline dark:text-campo-400"
-          @click="guardarMarcas(marcados)"
-        >
-          Guardar marcas
-        </button>
+      <div class="grid gap-4 lg:grid-cols-2 lg:items-start print:grid-cols-1">
+        <div class="min-w-0 space-y-4">
+          <SaldoDelEstadoDeCuenta :saldo="conciliacion.saldoQueDebeMostrarElEstadoDeCuenta" />
+          <PartidasDeConciliacion :partidas="conciliacion.partidas" />
+          <div v-if="enProceso" v-permiso="'bancos.conciliaciones.conciliar'" class="flex justify-end print:hidden">
+            <button
+              type="button"
+              class="text-sm font-medium text-campo-700 hover:underline dark:text-campo-400"
+              @click="guardarMarcas(marcados)"
+            >
+              Guardar marcas
+            </button>
+          </div>
+          <ListaDeMovimientosConciliables
+            :movimientos="candidatosConMarca"
+            :editable="enProceso"
+            @alternar="alternar"
+          />
+        </div>
+        <ColumnaDelEstadoDeCuenta
+          :conciliacion="conciliacion"
+          :direccion="archivo.direccion.value"
+          :guardando-saldo="guardando"
+          :error-del-saldo="erroresDelGuardado.saldoEstadoDeCuenta"
+          :enviando-archivo="archivo.enviando.value"
+          :error-del-archivo="archivo.error.value"
+          @guardar-saldo="guardarSaldo"
+          @subir="archivo.subir"
+          @quitar="archivo.quitar"
+        />
       </div>
-      <ListaDeMovimientosConciliables :movimientos="candidatosConMarca" :editable="enProceso" @alternar="alternar" />
 
       <AccionesDeConciliacion
         :conciliacion="conciliacion"

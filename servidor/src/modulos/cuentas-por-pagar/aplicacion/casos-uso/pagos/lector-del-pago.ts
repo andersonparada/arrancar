@@ -4,7 +4,7 @@ import type { PagoConLineas } from '../../../dominio/pago-con-lineas.js';
 import type { PagoDto } from '../../dto/registro-de-pago.dto.js';
 import type { MovimientoCreado } from '../../puertos/puertos-de-pagos.js';
 import { saldoDeLaFila } from '../aplicaciones/dependencias-de-aplicaciones.js';
-import { dtoDelPago } from './armado-del-pago.js';
+import { datosDelEfectivo, dtoDelPago } from './armado-del-pago.js';
 import type { LineaConRetencion } from './avisos-del-pago.js';
 import type { DependenciasDeCambiarPagos } from './dependencias-de-pagos.js';
 
@@ -37,6 +37,7 @@ export class LectorDelPago {
       observaciones: pago.observaciones,
       motivo: pago.motivo,
       conCargaCerrada: pago.conCargaCerrada,
+      ...datosDelEfectivo(pago),
       fecha: pago.fecha,
       hoy: await this.dependencias.reloj.hoy(operador),
       beneficiario: this.beneficiario(lineas, movimiento),

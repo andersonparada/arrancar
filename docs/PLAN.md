@@ -1190,7 +1190,7 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `libro-de-compras.periodos.control_de_declarados` (niveles empresa e instalación, pública), como decía el diseño: así soporte
   puede fijarlo para todas las empresas y no hace falta una tabla más; quién y cuándo salen de `core.configuraciones`
   (`actualizado_por`/`actualizado_en`) y el motivo, de la auditoría `corregir`. `ControlDePeriodos` ya bloquea (`estadoDe(periodo,
-  'consultar' | 'bloquear')`, `bloqueados()`): registrar con el período pedido (también lo de la bandeja), anular, eliminar y
+'consultar' | 'bloquear')`, `bloqueados()`): registrar con el período pedido (también lo de la bandeja), anular, eliminar y
   cambiar o quitar una vigencia del régimen que cubra un período declarado (`vigencia_fiscal_en_periodo_declarado`) responden
   409 `periodo_declarado` con `detalles.periodoPropuesto` y `propuestaEnPlazo`; `bloquear` toma la fila con `for share` contra el
   `for update` de declarar. No bloquea constancias, enteros, «por resolver» ni una nota de crédito recibida en otro mes. La vista
@@ -1209,7 +1209,7 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
 - **2026-10-20 — Libro de compras L5-2a (servidor, datos para el SAT-2237).** `GET /api/libro-de-compras/libro/sat-2237?periodo=AAAA-MM`
   (`libro.ver`) y `…/sat-2237/exportar` (`libro.exportar`, Excel de tres hojas: Rubros, Operaciones y Proveedores). Solo el
   régimen general (el del período: el de sus documentos o, sin ellos, el vigente) devuelve `{ aplica: true, formulario:
-  'SAT-2237', rubros, segmento9, proveedores, facturasEspeciales, casillas: null, avisos }`; el pequeño contribuyente recibe
+'SAT-2237', rubros, segmento9, proveedores, facturasEspeciales, casillas: null, avisos }`; el pequeño contribuyente recibe
   `{ aplica: false, formulario: 'SAT-2046', mensaje }` (las compras no se declaran) y los demás `formulario: null`; el Excel de
   estos responde 422 `sat_2237_no_aplica`. **Rubros** (nueve, siempre): combustibles, activos fijos, servicios, otras compras,
   importaciones (reservado, en cero), pequeño contribuyente, regímenes sin IVA, exento y no afecto y combustible exento por el
@@ -1250,20 +1250,19 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   pura con pruebas en `composables/periodos/` y `errores-del-registro.prueba.ts`; textos en `textos-de-periodos.ts`. Sin
   cambios en el servidor.
 
-
 - **2026-10-20 — Libro de compras L5-9a (servidor, análisis de compras).** Cinco análisis con permisos `libro-de-compras.analisis-de-compras.ver`
   y `.exportar` (un solo par). Todos reciben `?desde=AAAA-MM&hasta=AAAA-MM` (máximo 24 meses; si no, 400
   `rango_de_periodos_invalido`), cuentan solo documentos vigentes del libro, las notas de crédito restan y cada uno tiene su
   `GET /api/libro-de-compras/analisis/<ruta>` y `…/exportar` (Excel de una hoja, `<ruta>-AAAA-MM-a-AAAA-MM.xlsx`). Todas las
   respuestas empiezan con `desde` y `hasta` (primer día de mes) y llevan el dinero como texto. Rutas: `compras-por-proveedor`
   (`{ filas: [{ proveedorId, nit, nombre, documentos, total, base, ivaConCredito, ivaSinCredito, exentoYNoAfecto, idp, retenido,
-  neto }], total }`, con `incluirFueraDelLibro=true` entran también los documentos fuera del libro; NIT y nombre son los del
+neto }], total }`, con `incluirFueraDelLibro=true` entran también los documentos fuera del libro; NIT y nombre son los del
   documento más reciente), `compras-por-concepto` (`{ filas: [{ conceptoId, concepto, tipo, lineas, base, ivaConCredito,
-  ivaAlCosto, costo }], total }`, costo = `total − iva + iva_no_acreditable`), `iva-al-costo` (`{ motivos: [{ motivo, lineas: [{
-  documentoId, periodo, fecha, tipoDte, serie, numero, nitDelProveedor, proveedor, numeroDeLinea, concepto, ivaAlCosto }],
-  subtotal }], total }`), `activos-fijos` (`{ filas: [{ …documento, numeroDeLinea, concepto, descripcion, costo, ivaConCredito }],
-  total: { costo, ivaConCredito } }`) y `combustibles` (`{ combustibles: [{ combustible, meses: [{ periodo, galones, idp, base,
-  iva, exentoYNoAfecto, exentoPorDecreto, aviso }], subtotal }], total }`; galones con tres decimales; `combustible: null` y el
+ivaAlCosto, costo }], total }`, costo = `total − iva + iva_no_acreditable`), `iva-al-costo` (`{ motivos: [{ motivo, lineas: [{
+documentoId, periodo, fecha, tipoDte, serie, numero, nitDelProveedor, proveedor, numeroDeLinea, concepto, ivaAlCosto }],
+subtotal }], total }`), `activos-fijos` (`{ filas: [{ …documento, numeroDeLinea, concepto, descripcion, costo, ivaConCredito }],
+total: { costo, ivaConCredito } }`) y `combustibles` (`{ combustibles: [{ combustible, meses: [{ periodo, galones, idp, base,
+iva, exentoYNoAfecto, exentoPorDecreto, aviso }], subtotal }], total }`; galones con tres decimales; `combustible: null` y el
   aviso «IDP según la factura, sin galones» para el IDP escrito sin catálogo). Diseño: un caso de uso genérico
   (`ConsultarAnalisis` y `ExportarAnalisis`) parametrizado por una `DefinicionDeAnalisis` por reporte (Estrategia); las consultas
   agregan en SQL (`ConsultasDeAnalisisDrizzle`). Decisiones: el NIT y el nombre del proveedor salen del documento más reciente
@@ -1286,7 +1285,7 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   cada fila con sus datos del DTE, `estado`, `borrador` y, si está pendiente, su `propuesta` (`proveedorId` por NIT, `conceptoId` del
   último documento del proveedor, `destino` sugerido, `fechaRecepcion` igual a la emisión con `recepcionObligatoria` si la empresa es
   agente de IVA, `periodo` según la regla de siempre y el control de períodos, y `avisoDelPeriodo`); `PATCH` (`{ ids, cambios,
-  aplicarPropuestas }`, `documentos.importar`, todo o nada, hasta 500 filas) responde `{ elementos }`: `cambios` escribe a mano
+aplicarPropuestas }`, `documentos.importar`, todo o nada, hasta 500 filas) responde `{ elementos }`: `cambios` escribe a mano
   (`null` deja sin completar) y `aplicarPropuestas` llena los campos pedidos con la propuesta de cada fila («Usar la fecha de
   emisión»); `POST …/vista-previa` y `POST …/confirmar` (`{ ids, datosFiscalesPorProveedor? }`, hasta 100, `documentos.crear`, 20 por minuto por
   usuario) responden `{ resultados: [{ id, documentoId, avisos } | { id, error: { codigo, mensaje, detalles } }] }` (la vista previa trae `documento`
@@ -1362,7 +1361,7 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
 - **2026-10-20 — Cuentas por pagar CP1-4 (servidor, días de crédito) y U14 b.** Cuentas por pagar aporta su sección al formulario
   de Proveedores: escucha `terceros.proveedor_guardado`, valida `secciones.cuentas-por-pagar` (`diasDeCredito` entero 0 a 365
   o `null` para el plazo por omisión, y `contarDesdeLaRecepcion` booleano; lo que no llega se queda como estaba; un valor
-  inválido deshace el formulario con el error en `secciones.cuentas-por-pagar.<campo>`) y hace el *upsert* en
+  inválido deshace el formulario con el error en `secciones.cuentas-por-pagar.<campo>`) y hace el _upsert_ en
   `condiciones_de_proveedor`, sin auditoría. Lectura: `GET /api/cuentas-por-pagar/proveedores/:proveedorId/condiciones`
   (permiso `terceros.ver`; sin fila devuelve `diasDeCredito: null` y `contarDesdeLaRecepcion: false`). U14 b: migración `0002`
   agrega `contar_desde_la_recepcion boolean not null default false`; `RecibirDocumento` toma la fecha de recepción de
@@ -1572,7 +1571,7 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `docs/modulos/plan-h2-cola-de-qpdf-y-huerfanos.md`). `FilaDeRevision` reemplaza al semáforo de `InspectorQpdf`: 10 de
   usuario en espera, 2 por cuenta, 60 s, 429 `revision_de_pdf_saturada` con `Retry-After: 30`; el origen `sistema`
   (`guardar`, libro foliado) pasa delante con tope propio de 5 en espera. `DocumentosProtegidos.revisar(operador,
-  contenido, nombre)` e `InspectorDePdf.inspeccionar(contenido, turno)`. Tarea diaria `DepurarArchivosHuerfanos`
+contenido, nombre)` e `InspectorDePdf.inspeccionar(contenido, turno)`. Tarea diaria `DepurarArchivosHuerfanos`
   (al arrancar y cada 24 h): solo rutas con la forma de `RutasDeArchivo` (el logo de la instalación no se toca), más de
   24 h, 1,000 por corrida, cerrojo `pg_try_advisory_lock` entre instancias, se niega con una raíz insegura y se apaga
   con `DEPURAR_HUERFANOS=false` (antes de restaurar una base más vieja que los archivos). Migración de core `0023`
@@ -1608,7 +1607,7 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   no solo aviso.
 - **2026-11-14 — Diseño de CP4 listo para programar** (`docs/modulos/diseno-cp4-pagos.md`, estado «aprobado, listo
   para programar»). Aplicados el dictamen y las decisiones del 2026-11-13: sin forma `saldo_inicial_de_bancos` (el
-  cheque de apertura anulado que revive el pasivo queda en *Bancos, segunda parte*, `HOJA-DE-RUTA.md`); posfechado
+  cheque de apertura anulado que revive el pasivo queda en _Bancos, segunda parte_, `HOJA-DE-RUTA.md`); posfechado
   «comprometido» hasta su fecha (`estadoDePago` suma `comprometido`) y aviso de fondos en Bancos; fecha mínima del pago =
   emisión del DTE; beneficiario = nombre del NIT; texto nuevo de bancarización (cuentan las notas ligadas); desglose de
   la nota ligada por activo fijo con la orden nueva `bancos.fijar_desglose_de_conceptos`; centavos solo como residuo de
@@ -1778,13 +1777,13 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   estado «aprobado, listo para programar», y los cambios de M2 en `docs/modulos/diseno-cp4-pagos.md`). Aplicados los
   nueve cambios del dictamen y las respuestas del usuario. **Un retiro (un cheque o una nota de débito) paga a uno o
   varios proveedores**: la pantalla «Pagar en efectivo» reparte el retiro en una sola operación (`POST
-  /retiros/:id/pagos`, 1–20 pagos, todo o nada), un pago y un recibo por proveedor, cada uno con cargos de varias
+/retiros/:id/pagos`, 1–20 pagos, todo o nada), un pago y un recibo por proveedor, cada uno con cargos de varias
   contraseñas. Bancarización: efecto fiscal por cargo según el régimen de IVA del documento y el de ISR de la empresa
   (`datos_fiscales_de_empresa`); bloqueo con permiso y motivo solo con efecto; el efectivo suma en el aviso de los pagos
   bancarios. Tabla `retiros_de_efectivo` con `custodio_usuario_id` opcional; cheque no negociable por omisión y nunca al
   portador; concepto `faltante_de_efectivo` (Operación) y leyenda en el flujo de Bancos; lista con fecha de corte. M2:
   sin `pagos.contrasena_id`, rutas por proveedor (`POST /pagos`, `/pagos/ligar`, `/pagos/apertura`, `GET
-  /proveedores/:id/para-pagar`). Migraciones reales: Cuentas por pagar **`0009_cp4_pago_de_varias_contrasenas`**
+/proveedores/:id/para-pagar`). Migraciones reales: Cuentas por pagar **`0009_cp4_pago_de_varias_contrasenas`**
   (CP4-V1, después de CP4-2 y antes de CP4-3) y **`0010_cp4_pagos_en_efectivo`** (CP4-E1); Bancos
   **`0033_cp4_efectivo_para_pagos`** (CP4-EB). Quedan para decidir: N-1 (usuario: empresa sin datos fiscales, aviso
   recomendado), N-2 y N-3 (contador: tabla de efectos por régimen y vigencia del art. 27 del Decreto 4-2012); no frenan
@@ -2024,7 +2023,7 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   tiene, el proveedor, sin exigir la razón social del NIT.
 - **2026-11-15 — CP5-6 (servidor, Libro de compras: constancias de retención pendientes, R12).** Migración
   `0036_cp5_constancias_pendientes` (índice parcial `retenciones_sin_constancia_idx (empresa_id, fecha) where constancia_numero is
-  null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes` (filtros `hasta` = último mes, por omisión el
+null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes` (filtros `hasta` = último mes, por omisión el
   en curso, `grupo?` y `proveedorId?`) junta las retenciones practicadas sin constancia de todos los meses: por fila, mes, grupo,
   `plazoDelGrupo` (entero, con el calendario de feriados), días para el plazo y si está vencido, si el mes y grupo está enterado,
   y `plazoDeLaConstancia` (ISR: 5.º día hábil del mes siguiente, Código Tributario art. 8 num. 4, con el mismo calendario; IVA:
@@ -2074,6 +2073,14 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   (§4.1 punto 4) queda para CP4-E3, que trae la lectura del régimen fiscal; sin pagos en efectivo todavía, las pruebas siembran
   los pagos con SQL; `fecha` del evento `retiro_reabierto` = fecha del inverso del depósito, la de la liquidación si «nunca
   existió», o la de hoy sin depósito.
+- **2026-11-16 — CP4-B2b (servidor, Bancos: aviso desde la conciliación).** Sin migración. Nuevo
+  `POST /bancos/conciliaciones/:conciliacionId/notas/:movimientoId/desmarcar` (`conciliar` y `bancos.notas.editar`): el caso de
+  uso `DesmarcarNotaEnConciliacion` bloquea primero la conciliación (en proceso), comprueba que la nota sea candidata del mes y
+  delega en `DesmarcarNota` (aviso `bancos.movimiento_por_cambiar` con `desmarcar`, concepto elegido, auditoría `corregir`
+  con motivo), todo en la misma transacción: nota ligada, rechazo; sin ligar, pasa. Lo demás de la conciliación (marcar,
+  terminar, subir, quitar, eliminar, autorizar, devolver) solo toca marcas de conciliado y no cambia movimientos, así que no
+  avisa (P-CP4-5). Los manejadores de Cuentas por pagar (CP4-4, CP4-E2) ya cubren `desmarcar` y no se tocaron. Desviación:
+  `candidatos` de la conciliación no trae `marcadaParaCuentasPorPagar`; el cliente (CP4-B3) puede cruzarla con la lista de notas.
 - **2026-11-16 — Siguiente módulo: Bancos, segunda parte** (usuario). Se diseña en paralelo mientras se termina Cuentas
   por pagar (`docs/modulos/diseno-bancos-segunda-parte.md`, arquitecto; luego contador): saldos iniciales con cheques en
   circulación y depósitos en tránsito, cuadre con la primera conciliación, cheque de apertura que se anula (revive el
@@ -2144,10 +2151,49 @@ and idp = 0)`). `tipo_dte_de_la_familia` y `muestra_segun_motivo` ya servían ta
   `empresas.obtener_datos_de_empresa`, documentos por contraseña con su retención y sus constancias solo donde este pago la
   descuenta, total en números y en letras, leyendas «Las retenciones se documentan con su constancia.» y «Este comprobante no es un
   documento tributario.» («Este recibo…» en efectivo), `hojas` Original y Copia, firmas «Entregado por» y «Recibí conforme»; la forma
-  `efectivo` es el «Recibo de pago en efectivo» con el retiro y el custodio que entrega y `recibido_por` como quien recibe). Nuevo en
-  el core: `montoEnLetras` (`core/compartido/dominio/monto-en-letras.ts`, MAYÚSCULAS, «UN MILLÓN DE QUETZALES CON 00/100», probado
-  del 0 al 1,999 y en los bordes de miles y millones), que Bancos puede reutilizar para el cheque. Desviaciones: el
+  `efectivo` es el «Recibo de pago en efectivo» con el retiro y el custodio que entrega y `recibido_por` como quien recibe). Reutiliza
+  `montoEnLetras` del core (`core/compartido/dominio/monto-en-letras.ts`, de CP4-7) para el total en letras. Desviaciones: el
   comprobante de un pago anulado se puede pedir y sale marcado (`pago.estado`, `anulacion`); el saldo de cada documento es el de
-  hoy, no el que quedó tras este pago; el pago en efectivo se probó con datos sembrados en la base porque CP4-E3 aún no estaba en
-  `main` (la lista y la ficha leen `retiro_id`, `recibido_por` y `referencia` de `pagos`); rutas, controlador y composición van en
+  hoy, no el que quedó tras este pago; el pago en efectivo se probó con datos sembrados en la base (la lista y la ficha leen `retiro_id`, `recibido_por` y `referencia` de `pagos`); rutas, controlador y composición van en
   archivos propios (`consulta-de-pagos.*`) para no chocar con los pasos que tocan `pagos.controlador`.
+- **2026-11-16 — CP4-E3 (servidor, repartir y pagar en efectivo).** Sin migración. `RegistrarPagosEnEfectivo`
+  (`POST /cuentas-por-pagar/retiros/:id/pagos`, `pagos.pagar-en-efectivo`; con diferencias pide `ajustes.crear` y con
+  `motivoSinBancarizar`, `pagos.efectivo-sin-bancarizar`): de 1 a 20 pagos, uno por proveedor y hasta 300 cargos, todo o nada,
+  un pago y un recibo por proveedor (cada uno con varias contraseñas), retención en el primer pago, `recibido_por`. Bloquea el
+  cheque o la nota del retiro, el retiro, la bancarización por proveedor (`pg_advisory_xact_lock`), las contraseñas y los
+  cargos, y revisa otra vez con todo bloqueado. Fecha: hoy o pasada, sin preceder al retiro (`fecha_de_pago_invalida`).
+  Bancarización por régimen y documento: si el pago llega al umbral (cargo, pago o mes con todas las formas) y la empresa
+  perdería costo o crédito fiscal, rechaza con `efectivo_sobre_el_umbral` salvo permiso y motivo (`motivo_sin_bancarizar`,
+  evento con `sinBancarizar`); sin datos fiscales solo avisa. Errores con `pagos.<i>.campo` y `detalles.pago`. Al final vuelve a
+  fijar el desglose del retiro. Anular un pago en efectivo (regla `retiroAbierto`: con el retiro liquidado se rechaza) deja
+  `fecha_de_anulacion = greatest(hoy, fecha)` y vuelve a fijar el desglose; reaplicar también. El aviso de bancarización al
+  registrar el retiro (pendiente de CP4-E2) ya sale. `PagoDto` suma `retiroId`, `recibidoPor` y `motivoSinBancarizar`.
+  Desviaciones: la respuesta del reparto lleva `retiro` como `RetiroDto` completo (no resumen); el efecto fiscal de un pago es
+  `null` (solo aviso) si algún cargo no tiene datos fiscales, igual que el aviso de los cheques; un motivo sin el permiso
+  se rechaza con 403 aunque la regla no se dispare.
+- **2026-11-16 — CP4-7 (servidor, reintegros del proveedor).** Sin migración (tablas de CP4-1/CP5-1). `RegistrarReintegro`
+  (`POST /cuentas-por-pagar/reintegros`, `reintegros.crear`): una o varias notas de crédito del mismo proveedor (registradas o
+  autorizadas, fuera de contraseña, monto <= saldo libre, bloqueadas en orden de id), fecha no futura ni anterior a la recepción;
+  depósito = orden `registrar_nota_de_origen` de crédito con `reintegro_de_proveedor` (o `..._de_activo` por lo de notas cuya
+  factura es de activo fijo); efectivo = referencia obligatoria, sin movimiento, con el aviso de depositarlo. Correlativo propio
+  `cuentas-por-pagar.reintegros`. `AnularReintegro` (`reintegros.anular`) y `AtenderReintegroPorCambiar` (tercer escucha de
+  `bancos.movimiento_por_cambiar`): `fecha_de_anulacion` sin inverso = la del reintegro, con inverso = la leída del inverso, efectivo
+  = `greatest(hoy, fecha)`; auditoría `anular`; eventos `reintegro_registrado`/`reintegro_anulado` con `efecto`. `GET /reintegros/:id`
+  y `/recibo` (`documentos.ver`): «Recibo de reintegro» con total en letras (`montoEnLetras`, nuevo en `core/compartido/dominio`) y la
+  leyenda de no ser documento tributario. Desviaciones: Bancos siempre anula una nota con inverso (también conciliada), así que
+  «sin inverso» solo se prueba por aviso y `puedeAnular` no mira la conciliación; un movimiento con un reintegro anulado no se elimina
+  en Bancos (`movimiento_con_reintegro_anulado`).
+- **2026-11-16 — Bancos H2, paso 5 (cliente del estado de cuenta)**. En la conciliación: subir, reemplazar y quitar el
+  PDF o foto (validado antes de subir: tipo, HEIC, tamaño), visor `iframe`/imagen con «Abrir en otra pestaña», dos
+  columnas en pantallas grandes, ícono en la lista y motivo «falta el archivo» al terminar según
+  `bancos.conciliaciones.exigir_estado_de_cuenta`. Si el servidor responde que ya no está en proceso, se recarga la
+  conciliación.
+- **2026-11-16 — CP4-B3a (cliente, Bancos: pagos fuera de la conciliación).** `Movimiento` gana `marcadaParaCuentasPorPagar`,
+  `desglose`, `puedeMarcar` y `puedeDesmarcar`; `ApiNotas.marcar` y `desmarcar` (motivo y concepto). Lista de notas: casilla
+  «Pago a proveedor para Cuentas por pagar» al registrar un débito (solo con el módulo activo; oculta el concepto y manda la marca),
+  «Marcar» (confirmación con resumen) y «Desmarcar» (`VentanaDeDesmarcar`: concepto y motivo) según lo que dice el servidor,
+  etiqueta «Para Cuentas por pagar», reparto por concepto en la tarjeta y en el reporte de movimientos, y en lo que generó otro
+  módulo se oculta «Corregir» y se explica por qué. Al emitir un cheque, los avisos de la respuesta (fondos del posfechado) se
+  muestran. Lógica pura en `marca-de-nota.ts` y `avisos-de-bancos.ts` con pruebas. Los rechazos `MovimientoDeOtroModulo` y
+  `ModuloDeOrigenInactivo` se muestran tal como los manda el servidor. Pendiente: el enlace del origen a `/cuentas-por-pagar/pagos/:id`
+  (la ruta no existe aún, CP4-10: hoy es texto) y CP4-B3b en la conciliación.
