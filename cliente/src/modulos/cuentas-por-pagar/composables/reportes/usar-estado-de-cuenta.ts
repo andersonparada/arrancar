@@ -5,9 +5,10 @@ import { apiReportesDeCuentasPorPagar } from '../../servicios/reportes.api';
 import { fechaDeHoy } from '../dinero';
 import { usarProveedoresDelFiltro } from '../usar-lista-de-documentos';
 import {
+  ajustesDeEstadoDesdeLaRuta,
   cantidadDeFiltrosDeEstado,
   consultaDeEstadoDeCuenta,
-  errorDelRango,
+  errorDelRango as errorDeLasFechas,
   filtrosDeEstadoIniciales,
   puedePedirElEstado,
 } from './estado-de-cuenta';
@@ -17,12 +18,18 @@ import { usarPeticionDeReporte } from './usar-peticion-de-reporte';
 
 /** Los filtros (con el proveedor y el día que pide su ficha), cuántos se salen de lo normal y cómo quitarlos. */
 function usarFiltrosDelEstado(hoy: string) {
-  const pedido = pedidoDesdeLaRuta(useRoute().query);
+  const consulta = useRoute().query;
+  const pedido = pedidoDesdeLaRuta(consulta);
   const filtros = reactive(filtrosDeEstadoIniciales(hoy, pedido.proveedorId, pedido.corte));
+  Object.assign(filtros, ajustesDeEstadoDesdeLaRuta(consulta));
+  watch(
+    () => filtros.presentacion,
+    (presentacion) => presentacion === 'para_el_proveedor' && (filtros.mostrarAnulados = false),
+    { immediate: true },
+  );
   return {
     filtros,
     proveedores: usarProveedoresDelFiltro(),
-    errorDelRango: computed(() => errorDelRango(filtros)),
     cantidadDeFiltros: computed(() => cantidadDeFiltrosDeEstado(filtros, hoy)),
     quitarFiltros: () => Object.assign(filtros, filtrosDeEstadoIniciales(hoy, filtros.proveedorId)),
   };
@@ -34,7 +41,9 @@ export function usarEstadoDeCuenta() {
   const { reporte, cargando, cargar } = usarPeticionDeReporte(
     () => apiReportesDeCuentasPorPagar.estadoDeCuenta(consultaDeEstadoDeCuenta(filtros)),
     'No se pudo cargar el estado de cuenta.',
+    true,
   );
+  const errorDelRango = computed(() => errorDeLasFechas(filtros));
   const cargarSiSirve = (): void => {
     if (puedePedirElEstado(filtros)) void cargar();
   };
@@ -49,5 +58,5 @@ export function usarEstadoDeCuenta() {
     () => consultaDeEstadoDeCuenta(filtros),
     () => !puedePedirElEstado(filtros),
   );
-  return { ...deLosFiltros, filtros, reporte, cargando, exportar };
+  return { ...deLosFiltros, filtros, reporte, cargando, errorDelRango, exportar };
 }

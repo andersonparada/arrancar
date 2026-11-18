@@ -50,7 +50,7 @@ const volver = { texto: 'Volver a cuentas bancarias', ruta: { name: 'bancos.cuen
       con-fecha
       :abierta="!!anulacion.registro"
       titulo="Anular cheque"
-      :texto="TEXTO_DE_ANULACION(anulacion.registro?.numero)"
+      :texto="TEXTO_DE_ANULACION(anulacion.registro?.numero, anulacion.registro?.moduloDeOrigen)"
       :errores="anulacion.errores"
       :enviando="anulacion.enviando"
       @cerrar="anulacion.cerrar"

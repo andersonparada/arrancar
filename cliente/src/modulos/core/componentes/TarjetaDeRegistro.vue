@@ -55,9 +55,14 @@ const emit = defineEmits<{ editar: []; eliminar: [] }>();
         </div>
       </div>
       <dl v-if="detalles.length" class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-        <div v-for="detalle in detalles" :key="detalle.etiqueta" class="min-w-0">
+        <div
+          v-for="detalle in detalles"
+          :key="detalle.etiqueta"
+          class="min-w-0"
+          :class="{ 'col-span-2': detalle.largo }"
+        >
           <dt class="text-xs text-tierra-500">{{ detalle.etiqueta }}</dt>
-          <dd class="truncate">{{ detalle.valor }}</dd>
+          <dd :class="detalle.largo ? 'wrap-break-word' : 'truncate'">{{ detalle.valor }}</dd>
         </div>
       </dl>
       <div v-if="!destino && !soloLectura" class="mt-auto flex justify-end gap-1">

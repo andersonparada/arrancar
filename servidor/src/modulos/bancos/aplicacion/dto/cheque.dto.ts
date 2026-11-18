@@ -15,6 +15,8 @@ export interface ChequeDto {
   motivoDeAnulacion: string | null;
   /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */
+  moduloDeOrigen: string | null;
   /** Lo calcula el servidor (ver `accionesDeCheque`): si se puede anular. */
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede blanquear (emitido, con movimiento limpio). */
@@ -62,6 +64,8 @@ export interface ChequeListadoDto {
   motivoDeAnulacion: string | null;
   /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */
+  moduloDeOrigen: string | null;
   puedeAnular: boolean;
   puedeBlanquear: boolean;
 }

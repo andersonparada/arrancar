@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import {
   detallesDeDesglose,
+  esperaACuentasPorPagarInactivo,
   explicacionDeOrigen,
   insigniaDeNota,
   ofreceCasillaDeMarca,
@@ -58,5 +59,14 @@ describe('marca de la nota', () => {
 
   it('el resumen nombra la nota y el monto', () => {
     expect(resumenDeMarcado({ monto: '50.00', referencia: 'Seguro', beneficiario: null })).toContain('«Seguro»');
+  });
+});
+
+describe('Cuentas por pagar apagado', () => {
+  it('bloquea lo que generó o marcó ese módulo, y solo eso', () => {
+    expect(esperaACuentasPorPagarInactivo({ ...base, marcadaParaCuentasPorPagar: true }, false)).toBe(true);
+    expect(esperaACuentasPorPagarInactivo({ ...base, moduloDeOrigen: 'cuentas-por-pagar' }, false)).toBe(true);
+    expect(esperaACuentasPorPagarInactivo({ ...base, marcadaParaCuentasPorPagar: true }, true)).toBe(false);
+    expect(esperaACuentasPorPagarInactivo(base, false)).toBe(false);
   });
 });

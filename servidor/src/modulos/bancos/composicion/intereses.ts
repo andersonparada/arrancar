@@ -21,6 +21,7 @@ function intercambioDelReporte(reporte: ReporteDeIntereses) {
       if (!filtro) throw new Error('El reporte necesita su filtro.');
       return aFilasExportadasDeIntereses(await reporte.ejecutar(operador, filtro));
     },
+    soloExportar: true,
     crear: () => {
       throw new Error('El reporte de intereses no se importa.');
     },

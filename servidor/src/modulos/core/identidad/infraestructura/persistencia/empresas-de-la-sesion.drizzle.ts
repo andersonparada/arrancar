@@ -8,6 +8,7 @@ import type { EmpresasDeLaSesion } from '../../aplicacion/puertos/empresas-de-la
 const columnasDeEmpresa = {
   id: empresas.id,
   nombre: empresas.nombre,
+  nit: empresas.nit,
   cuentaId: empresas.cuentaId,
   cuentaNombre: cuentas.nombre,
 };

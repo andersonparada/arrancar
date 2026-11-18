@@ -25,6 +25,19 @@ export const generoOtroModulo = (nota: Pick<Movimiento, 'moduloDeOrigen'>): bool
 export const sePuedeCorregir = (nota: Pick<Movimiento, 'moduloDeOrigen'> & ConMarca): boolean =>
   marcaDeReversion(nota) === undefined && !generoOtroModulo(nota);
 
+/**
+ * Con Cuentas por pagar apagado, lo que ese módulo generó o marcó no se cambia (no hay quien revise sus reglas): el
+ * servidor lo rechazaría, así que la tarjeta no ofrece Anular, Desmarcar, Eliminar ni Editar y lo explica.
+ */
+export const esperaACuentasPorPagarInactivo = (
+  nota: Pick<Movimiento, 'moduloDeOrigen' | 'marcadaParaCuentasPorPagar'>,
+  cuentasPorPagarActivo: boolean,
+): boolean =>
+  !cuentasPorPagarActivo && (nota.marcadaParaCuentasPorPagar || nota.moduloDeOrigen === 'cuentas-por-pagar');
+
+export const TEXTO_DE_CUENTAS_POR_PAGAR_INACTIVO =
+  'Active Cuentas por pagar para cambiar este movimiento: lo generó o lo marcó ese módulo.';
+
 /** Por qué no hay «Corregir» ni «Eliminar» en un movimiento de otro módulo; `null` si no aplica. */
 export function explicacionDeOrigen(nota: Pick<Movimiento, 'moduloDeOrigen'>): string | null {
   if (!nota.moduloDeOrigen) return null;
