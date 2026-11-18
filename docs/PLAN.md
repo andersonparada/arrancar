@@ -2244,3 +2244,4 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   emisiones y la fecha de inicio, y el servidor valida igual) y la bancarización se anticipa solo como «el mes llega al
   umbral» (el efecto fiscal lo decide el servidor al registrar). Sin enlace «Pagar en efectivo» ni a la ficha del pago (CP4-E5 y
   CP4-10).
+- **2026-11-18 — Pruebas del libro con qpdf opcional.** Sin qpdf 11+ (`RUTA_QPDF` apunta a un binario inexistente) se saltan las 8 pruebas del PDF del libro que emiten o revisan con qpdf (`it.skipIf(!hayQpdf)`); el Excel, el permiso de emitir y los límites siguen corriendo. Sin cambios de producto.
