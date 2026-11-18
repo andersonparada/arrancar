@@ -46,6 +46,7 @@ const NOMBRE_DEL_TRAMO: Record<TramoDeAntiguedad, string> = {
 const NOMBRE_DEL_ESTADO: Record<EstadoDePago, string> = {
   pendiente: 'Pendiente',
   en_parte: 'Pagado en parte',
+  comprometido_en_parte: 'Comprometido en parte',
   comprometido: 'Comprometido',
   pagado: 'Pagado',
 };

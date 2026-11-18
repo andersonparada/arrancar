@@ -8,9 +8,9 @@ import { PERMISO_DE_FORMA } from '../pagos/opciones-del-pago';
 export const cargoConPagos = (cargo: Pick<CargoDeContrasena, 'pagado' | 'comprometido'>): boolean =>
   (centavosDe(cargo.pagado) ?? 0) > 0 || (centavosDe(cargo.comprometido) ?? 0) > 0;
 
-/** Los cargos que el servidor ya autorizó y todavía deben algo: lo que «Registrar pago» ofrecería. */
+/** Los cargos que el servidor ya autorizó y todavía tienen algo disponible por pagar: lo que «Registrar pago» ofrecería. */
 export const cargosPagables = (ficha: Pick<FichaDeContrasena, 'cargos'>): CargoDeContrasena[] =>
-  ficha.cargos.filter((cargo) => cargo.estado === 'autorizado' && (centavosDe(cargo.saldo) ?? 0) > 0);
+  ficha.cargos.filter((cargo) => cargo.estado === 'autorizado' && (centavosDe(cargo.disponible) ?? 0) > 0);
 
 /**
  * «Registrar pago» se ofrece en una contraseña vigente con algo autorizado por pagar, si el usuario puede ver Pagos

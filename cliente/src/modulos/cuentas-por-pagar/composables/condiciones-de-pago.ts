@@ -1,6 +1,7 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { CondicionesDeProveedor, SaldoDelProveedor } from '../servicios/tipos';
+import { detallesDeLoQueSeDebe, hayMontoPositivo } from './comprometido';
 
 /** Lo que vale para un proveedor que nunca guardó sus condiciones. */
 export const condicionesPorOmision = (): CondicionesDeProveedor => ({
@@ -43,7 +44,7 @@ export function textoDelPlazo(
 export const marcaDeDiasVacios = (meses: number | null): string =>
   meses === null ? 'Vacío = el plazo por omisión' : `Vacío = ${textoDeMeses(meses).toLowerCase()}`;
 
-const hayMonto = (monto: string): boolean => Number(monto) > 0;
+const hayMonto = hayMontoPositivo;
 
 /** Los datos de la ficha del proveedor: el plazo y, si se puede ver, lo que se le debe con la empresa activa. */
 export function detallesDeCondiciones(
@@ -55,8 +56,7 @@ export function detallesDeCondiciones(
     { etiqueta: 'Plazo de pago', valor: textoDelPlazo(condiciones, mesesPorOmision) },
   ];
   if (!saldo) return detalles;
-  detalles.push({ etiqueta: 'Por pagar', valor: formatearMonto(saldo.porPagar) });
-  detalles.push({ etiqueta: 'Vencido', valor: formatearMonto(saldo.vencido) });
+  detalles.push(...detallesDeLoQueSeDebe(saldo));
   if (hayMonto(saldo.saldosDeudores)) {
     detalles.push({
       etiqueta: 'A favor de la empresa (notas de crédito)',

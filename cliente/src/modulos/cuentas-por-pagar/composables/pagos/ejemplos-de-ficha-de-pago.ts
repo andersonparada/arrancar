@@ -15,6 +15,7 @@ export const lineaDeEjemplo = (id: string, cambios: Partial<LineaDeLaFicha> = {}
   cubre: '600.00',
   notasAplicadas: '0.00',
   saldoDelDocumento: '400.00',
+  disponibleDelDocumento: '400.00',
   diferenciaOfrecible: '0.00',
   retencionesDelLibro: [],
   ...cambios,

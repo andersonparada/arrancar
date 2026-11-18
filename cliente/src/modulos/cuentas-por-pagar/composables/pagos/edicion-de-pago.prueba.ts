@@ -18,6 +18,14 @@ const a = cargoDeEjemplo('a');
 const b = cargoDeEjemplo('b', { saldo: '250.50', propuesto: '250.50', contrasenaId: 'c2' });
 const inicial = cargoDeEjemplo('i', { origen: 'saldo_inicial', saldo: '80.00' });
 
+describe('residuo con lo comprometido', () => {
+  it('se calcula sobre lo disponible, no sobre la deuda', () => {
+    const cargo = cargoDeEjemplo('c', { saldo: '500.00', comprometido: '200.00', disponible: '300.00' });
+    expect(residuoDelCargo(cargo, '299.99')).toBe(1);
+    expect(residuoDelCargo(cargo, '300.00')).toBe(0);
+  });
+});
+
 describe('montos propuestos', () => {
   it('propone todo el saldo de las contraseñas incluidas y no pisa lo escrito', () => {
     const montos = proponerMontos([a, b], ['c1'], {});

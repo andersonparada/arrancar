@@ -2817,3 +2817,30 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   de excepción; «pagó el total y no retuvo» se asigna por el total con cuenta por cobrar; check sin retención en notas de
   crédito; V-12 sin cambio. *RLS del núcleo:* todas las recomendaciones de `diseno-rls-de-core.md` (R-1 a R-3 ya, R-4
   después). Detalle al final de cada diseño.
+- **2026-11-18, CP4-D1, D3 y D4 (servidor): deuda, comprometido y disponible.** En los DTO de operación (ficha y lista de
+  documentos, resumen del proveedor, contraseña con su lista e impresión, cargos para pagar y para aplicar, proveedores por
+  pagar, ficha del pago y comprobante) `saldo` es la **deuda** (la cifra de R1) y van al lado `comprometido`, `disponible` y
+  `comprometidoHasta`; `vencido` cuenta lo comprometido (el proveedor trae además `vencidoComprometido` y hasta 10
+  `posfechados`). `SaldoDelDocumento` pasa a `deudaCentavos`, `comprometidoCentavos` y `disponibleCentavos`; lo que limita un
+  pago, una nota o un ajuste sigue usando lo disponible, así que la protección contra el doble pago no cambia. **Cinco
+  estados de pago** (`pendiente`, `en_parte`, `comprometido_en_parte`, `comprometido`, `pagado`) en un solo lugar
+  (`estadoDePagoDe`, `dominio/pagos.ts`) y una sola expresión de SQL (`expresionDeEstadoDePago`) para R2 y el filtro de la
+  lista; R2 ya no dice «Pagado en parte» con Pagado 0.00. `puedeCambiarVencimiento` y `cambiar-vencimiento` miran la deuda:
+  un cargo comprometido entero aún se debe y su plazo se puede corregir. Los pagos de la ficha traen `numeroDeCheque`. Sin
+  migración. Pendiente: D5 a D7 (cliente), D6 servidor (`disponible` en R2 y R1, a la espera de la respuesta a A.7).
+- **2026-11-18, CP4-D5 y D7 (cliente): deuda, comprometido y disponible.** La ficha del proveedor dice «Por pagar Q…, de lo cual
+  comprometido con cheque N al dd/mm Q…, Disponible para pagar Q…» y lo vencido con su nota (lo comprometido vencido sigue siendo
+  deuda hasta que el cheque se cobre; si el servidor mandó solo 10 cheques, lo avisa). Lista y ficha del documento: Saldo (la deuda),
+  «Comprometido — cheque al dd/mm/aaaa» (con varios cheques, cuántos y la fecha del último) y Disponible, este último solo si hay
+  algo comprometido. Cinco estados con etiqueta y color (nuevo «Comprometida en parte») y el filtro de Documentos por pagar con los
+  cinco. La contraseña (cargos y totales) muestra lo comprometido y lo disponible. NuevoPago, el reparto de efectivo y la
+  reaplicación proponen y limitan por lo **disponible**; el error dice cuánto está disponible y cuánto ya está comprometido; el
+  selector de proveedor agrega «(disponible Q…)» solo si difiere. Lógica pura en `composables/comprometido.ts` con pruebas.
+  Pendiente: D6 (R2 y R1 con `disponible`, a la espera de A.7) y los reportes que no se tocaron.
+
+- **2026-11-18, correcciones de la revisión de posfechado.** R2 (cliente) acepta el quinto estado `comprometido_en_parte`
+  (tipo compartido con Pagos, texto, tono y filtro). «Registrar pago» y «Pagar en efectivo» de la contraseña filtran los cargos por
+  `disponible > 0` y no por `saldo` (la deuda). En el selector de Nuevo pago, `porPagar` suma la deuda de todos los cargos
+  autorizados del proveedor y `disponible` solo los cargos con algo disponible (`having bool_or(disponible > 0)`). Quedan
+  pendientes, por menores: unificar en `textos.ts` los nombres de estado, «comprometido con cheque N al dd/mm» en la contraseña,
+  columnas Pagado y Comprometido en la contraseña impresa, y actualizar la adenda A.4 (`hechosDe` usa la deuda, a propósito).

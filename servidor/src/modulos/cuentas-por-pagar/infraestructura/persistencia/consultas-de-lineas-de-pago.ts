@@ -1,6 +1,7 @@
 import { asc, eq, inArray, type SQL } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
+import { cheques } from '../../../bancos/infraestructura/persistencia/cheques.tablas.js';
 import type { LineaDePago, LineaDeReintegro } from '../../dominio/pagos.js';
 import { aplicacionesDePagos } from './aplicaciones-de-pagos.tablas.js';
 import { aplicacionesDeReintegros } from './aplicaciones-de-reintegros.tablas.js';
@@ -10,16 +11,18 @@ import { reintegros } from './reintegros.tablas.js';
 /** Las líneas de pago (vigentes y anuladas) que cumplen la condición, de la más antigua a la más nueva. */
 export async function lineasDePagoDonde(condicion: SQL): Promise<LineaDePago[]> {
   const filas = await transaccionEnCurso()
-    .select({ linea: aplicacionesDePagos, pago: pagos })
+    .select({ linea: aplicacionesDePagos, pago: pagos, numeroDeCheque: cheques.numero })
     .from(aplicacionesDePagos)
     .innerJoin(pagos, eq(pagos.id, aplicacionesDePagos.pagoId))
+    .leftJoin(cheques, eq(cheques.movimientoId, pagos.movimientoId))
     .where(condicion)
     .orderBy(asc(pagos.creadoEn), asc(aplicacionesDePagos.creadoEn));
-  return filas.map(({ linea, pago }) => ({
+  return filas.map(({ linea, pago, numeroDeCheque }) => ({
     pagoId: pago.id,
     numero: pago.numero,
     anioDeNumero: pago.anioDeNumero,
     forma: pago.forma,
+    numeroDeCheque,
     fecha: pago.fecha,
     estado: pago.estado,
     contrasenaId: linea.contrasenaId,

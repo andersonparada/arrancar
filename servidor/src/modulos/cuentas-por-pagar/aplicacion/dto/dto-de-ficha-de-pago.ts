@@ -1,6 +1,6 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { RetencionDelLibro } from '../../dominio/avisos-de-pagos.js';
-import { numeroDelPago } from '../../dominio/pagos.js';
+import { numeroDelPago, pagadoYComprometido } from '../../dominio/pagos.js';
 import type { LineaConRetencion } from '../casos-uso/pagos/avisos-del-pago.js';
 import type { FichaDelMovimiento } from '../puertos/puertos-de-pagos.js';
 import type { ExtrasDelPago, FilaDeListaDePagos } from '../puertos/puertos-de-lista-de-pagos.js';
@@ -34,6 +34,8 @@ export interface DatosDeLaFicha {
   movimiento: (FichaDelMovimiento & { id: string }) | null;
   extras: ExtrasDelPago;
   retenciones: ReadonlyMap<string, RetencionDelLibro[]>;
+  /** `AAAA-MM-DD` de la empresa: separa lo comprometido (pagos posfechados) de lo pagado. */
+  hoy: string;
   /** El tope de la diferencia de centavos de la empresa; 0 la apaga. */
   topeDeDiferenciaCentavos: number;
   puedeAnular: boolean;
@@ -47,12 +49,17 @@ function diferenciaOfrecible(datos: DatosDeLaFicha, saldoCentavos: number): numb
   return sirve && saldoCentavos > 0 && saldoCentavos <= topeDeDiferenciaCentavos ? saldoCentavos : 0;
 }
 
+/** Lo del documento cubierto con pagos de fecha posterior a hoy. */
+const comprometidoDe = ({ fila }: LineaConRetencion, hoy: string): number =>
+  pagadoYComprometido(fila.pagosVigentes, hoy).comprometidoCentavos;
+
 function dtoDeLaAplicacion(datos: DatosDeLaFicha, indice: number): AplicacionDeLaFichaDto {
   const linea = datos.lineas[indice]!;
   return {
     ...datos.base.aplicaciones[indice]!,
     notasAplicadas: deCentavos(linea.fila.aplicadoAlCargoCentavos),
-    saldoDelDocumento: deCentavos(linea.saldoCentavos),
+    saldoDelDocumento: deCentavos(linea.saldoCentavos + comprometidoDe(linea, datos.hoy)),
+    disponibleDelDocumento: deCentavos(linea.saldoCentavos),
     diferenciaOfrecible: deCentavos(diferenciaOfrecible(datos, linea.saldoCentavos)),
     retencionesDelLibro: (datos.retenciones.get(linea.fila.documento.id) ?? []).map(dtoDeRetencion),
   };

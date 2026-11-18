@@ -11,6 +11,11 @@ export interface AplicadoAlDocumento {
   ajustadoCentavos: number;
   /** Lo que los pagos vigentes entregaron a este cargo, también los posfechados (ya están comprometidos). */
   pagadoCentavos: number;
+  /**
+   * La parte de `pagadoCentavos` con fecha posterior a hoy (cheques posfechados). Quien llama la saca con
+   * `pagadoYComprometido`. Sin ella (cero) la deuda sale igual a lo disponible: sirve a quien solo limita un pago.
+   */
+  comprometidoCentavos?: number;
   /** Lo que los reintegros vigentes devolvieron contra esta nota. */
   reintegradoCentavos: number;
 }
@@ -27,24 +32,43 @@ export interface SaldoDelDocumento {
   /** Solo una nota: lo que los reintegros vigentes devolvieron; cero en un cargo. */
   reintegradoCentavos: number;
   /**
-   * Un cargo: lo que todavía se debe (el neto menos lo aplicado, lo pagado y lo ajustado). Una nota de crédito: su
-   * saldo libre, a favor de la empresa (la base menos lo aplicado, lo ajustado y lo reintegrado). Un documento anulado
-   * no debe nada ni deja nada a favor.
+   * Un cargo: lo que se debe hoy (el neto menos lo aplicado, lo ajustado y lo pagado hasta hoy; lo posfechado sigue
+   * siendo deuda). Una nota de crédito: su saldo libre, a favor de la empresa (la base menos lo aplicado, lo ajustado y
+   * lo reintegrado). Un documento anulado no debe nada ni deja nada a favor.
    */
-  saldoCentavos: number;
+  deudaCentavos: number;
+  /** Un cargo: la parte de la deuda ya cubierta con pagos de fecha posterior a hoy. Cero en una nota. */
+  comprometidoCentavos: number;
+  /** Lo que aún se puede pagar o aplicar: la deuda menos lo comprometido. Es el tope de un pago, nota o ajuste. */
+  disponibleCentavos: number;
+}
+
+/** Lo que rebajó cada cosa según el documento sea un cargo o una nota de crédito. */
+function rebajasDelDocumento(esCargo: boolean, aplicado: AplicadoAlDocumento) {
+  return {
+    aplicadoCentavos: esCargo ? aplicado.alCargoCentavos : aplicado.porLaNotaCentavos,
+    ajustadoCentavos: aplicado.ajustadoCentavos,
+    pagadoCentavos: esCargo ? aplicado.pagadoCentavos : 0,
+    reintegradoCentavos: esCargo ? 0 : aplicado.reintegradoCentavos,
+  };
 }
 
 /** Los saldos de un documento; salen de sus montos y de las aplicaciones, no se guardan. */
 export function saldoDe(documento: DocumentoPorPagar, aplicado: AplicadoAlDocumento): SaldoDelDocumento {
   const esCargo = claseDe(documento.tipo) === 'cargo';
   const netoCentavos = esCargo ? netoDe(documento) : (documento.saldoAlInicioCentavos ?? documento.totalCentavos);
-  const aplicadoCentavos = esCargo ? aplicado.alCargoCentavos : aplicado.porLaNotaCentavos;
-  const { ajustadoCentavos } = aplicado;
-  const pagadoCentavos = esCargo ? aplicado.pagadoCentavos : 0;
-  const reintegradoCentavos = esCargo ? 0 : aplicado.reintegradoCentavos;
-  const rebajado = aplicadoCentavos + ajustadoCentavos + pagadoCentavos + reintegradoCentavos;
-  const saldoCentavos = documento.estado === 'anulado' ? 0 : netoCentavos - rebajado;
-  return { netoCentavos, aplicadoCentavos, ajustadoCentavos, pagadoCentavos, reintegradoCentavos, saldoCentavos };
+  const rebajas = rebajasDelDocumento(esCargo, aplicado);
+  const rebajado = Object.values(rebajas).reduce((suma, monto) => suma + monto, 0);
+  const anulado = documento.estado === 'anulado';
+  const disponibleCentavos = anulado ? 0 : netoCentavos - rebajado;
+  const comprometidoCentavos = esCargo && !anulado ? (aplicado.comprometidoCentavos ?? 0) : 0;
+  return {
+    netoCentavos,
+    ...rebajas,
+    deudaCentavos: disponibleCentavos + comprometidoCentavos,
+    comprometidoCentavos,
+    disponibleCentavos,
+  };
 }
 
 /**
@@ -58,8 +82,11 @@ export function anterioresAlInicioDe(documento: DocumentoPorPagar): number | nul
   return (esCargo ? totalCentavos - retencionesCentavos : totalCentavos) - saldoAlInicioCentavos;
 }
 
-/** Un cargo vence cuando aún se debe algo y su fecha de vencimiento ya pasó (`hoy` lo da quien llama). */
-export function estaVencido(documento: DocumentoPorPagar, saldoCentavos: number, hoy: string): boolean {
+/**
+ * Un cargo vence cuando aún se debe algo (también lo comprometido con cheques posfechados) y su fecha de vencimiento
+ * ya pasó (`hoy` lo da quien llama).
+ */
+export function estaVencido(documento: DocumentoPorPagar, deudaCentavos: number, hoy: string): boolean {
   if (claseDe(documento.tipo) !== 'cargo' || documento.estado === 'anulado') return false;
-  return saldoCentavos > 0 && documento.vencimiento !== null && documento.vencimiento < hoy;
+  return deudaCentavos > 0 && documento.vencimiento !== null && documento.vencimiento < hoy;
 }

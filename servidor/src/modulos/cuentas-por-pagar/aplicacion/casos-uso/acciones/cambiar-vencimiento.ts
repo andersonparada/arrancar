@@ -27,13 +27,14 @@ export class CambiarVencimiento {
    * @throws VencimientoDeCargoSaldado si el cargo ya no tiene saldo.
    */
   ejecutar(operador: Operador, pedido: { id: string; vencimiento: string }): Promise<DocumentoPorPagarDto> {
-    const { unidadDeTrabajo, documentos, consultas, auditoria } = this.dependencias;
+    const { unidadDeTrabajo, documentos, consultas, auditoria, reloj } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const etiqueta = etiquetaDe((await filaDe(consultas, pedido.id)).documento);
       const guardado = await bloquear(documentos, pedido.id);
       exigirVencimientoNuevoValido(guardado.documento, pedido.vencimiento, etiqueta);
       const fila = await filaDe(consultas, pedido.id);
-      exigirCargoConSaldo(saldoDe(fila.documento, aplicadoDe(fila)).saldoCentavos, etiqueta);
+      const hoy = await reloj.hoy(operador);
+      exigirCargoConSaldo(saldoDe(fila.documento, aplicadoDe(fila, hoy)).deudaCentavos, etiqueta);
       await auditoria.registrar({
         recurso: 'cuentas-por-pagar.documentos',
         registroId: pedido.id,

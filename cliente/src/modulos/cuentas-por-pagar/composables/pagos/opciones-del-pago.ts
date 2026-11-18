@@ -40,9 +40,11 @@ const porTexto = (a: { texto: string }, b: { texto: string }): number =>
 /** Los proveedores con algo por pagar, por nombre (con su NIT y lo que se les debe, para no confundir homónimos). */
 export function opcionesDeProveedores(proveedores: readonly ProveedorPorPagar[]): OpcionBuscable<string>[] {
   return proveedores
-    .map(({ proveedorId, nombre, nit, porPagar }) => ({
+    .map(({ proveedorId, nombre, nit, porPagar, disponible }) => ({
       valor: proveedorId,
-      texto: `${nombre}${nit ? ` · NIT ${nit}` : ''} · por pagar ${formatearMonto(porPagar)}`,
+      texto: `${nombre}${nit ? ` · NIT ${nit}` : ''} · por pagar ${formatearMonto(porPagar)}${
+        porPagar === disponible ? '' : ` (disponible ${formatearMonto(disponible)})`
+      }`,
     }))
     .sort(porTexto);
 }

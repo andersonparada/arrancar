@@ -21,8 +21,12 @@ export interface DocumentoDelComprobanteDto {
   pagado: string;
   /** Lo que cubre: lo pagado más la retención. */
   cubre: string;
-  /** Lo que le queda por pagar hoy. */
+  /** La deuda del documento hoy: lo que falta por pagar, también lo comprometido con cheques posfechados. */
   saldo: string;
+  /** La parte de `saldo` cubierta con pagos de fecha posterior a hoy. */
+  comprometido: string;
+  /** Lo que aún se puede pagar: `saldo` menos `comprometido`. */
+  disponible: string;
 }
 
 export interface ContrasenaDelComprobanteDto {

@@ -15,6 +15,8 @@ export interface LineaDePago {
   numero: number;
   anioDeNumero: number;
   forma: FormaDePago;
+  /** El número del cheque de Bancos con que se pagó; `null` si la forma no es cheque. */
+  numeroDeCheque?: number | null;
   /** `AAAA-MM-DD`: la del pago; si es posterior a hoy, el pago está comprometido (cheque posfechado). */
   fecha: string;
   estado: EstadoDeUnPago;
@@ -45,7 +47,16 @@ export interface PagoVigenteDelCargo {
 }
 
 /** Cómo va el pago de un cargo; sale del saldo y de lo pagado, no se guarda. */
-export type EstadoDePago = 'pendiente' | 'en_parte' | 'comprometido' | 'pagado';
+export type EstadoDePago = 'pendiente' | 'en_parte' | 'comprometido_en_parte' | 'comprometido' | 'pagado';
+
+/** Los estados de pago, en el orden en que se ofrecen; `estadoDePagoDe` y el SQL de los filtros los dan. */
+export const ESTADOS_DE_PAGO = [
+  'pendiente',
+  'en_parte',
+  'comprometido_en_parte',
+  'comprometido',
+  'pagado',
+] as const satisfies readonly EstadoDePago[];
 
 /** El número del pago como se lee: `15` o `2026-15`, igual que el de las contraseñas. */
 export const numeroDelPago = numeroDeContrasena;
@@ -67,18 +78,32 @@ export function pagadoYComprometido(
   return { pagadoCentavos, comprometidoCentavos };
 }
 
-/** Lo que `estadoDePagoDe` necesita: el saldo que queda y lo pagado y comprometido. */
+/** Lo que `estadoDePagoDe` necesita: la deuda y lo pagado (hasta hoy o al corte) y lo comprometido (fecha posterior). */
 export interface CifrasDelPago {
-  saldoCentavos: number;
+  deudaCentavos: number;
   pagadoCentavos: number;
   comprometidoCentavos: number;
 }
 
 /**
- * `pagado` si ya no se debe nada y nada está comprometido; `comprometido` si ya no se debe nada pero hay pagos con fecha
- * futura; `en_parte` si se pagó o comprometió algo y queda saldo; `pendiente` si no.
+ * El único lugar donde se decide el estado de pago (lista, ficha, contraseña y R2). Con deuda D, pagado P, comprometido
+ * C y disponible = D - C: `pagado` si D = 0; `comprometido` si el disponible es 0; con disponible, `en_parte` si hay
+ * pagado, `comprometido_en_parte` si solo hay comprometido y `pendiente` si no hay ninguno. Una nota aplicada o un
+ * ajuste no cuentan como pagado.
  */
-export function estadoDePagoDe({ saldoCentavos, pagadoCentavos, comprometidoCentavos }: CifrasDelPago): EstadoDePago {
-  if (saldoCentavos <= 0) return comprometidoCentavos > 0 ? 'comprometido' : 'pagado';
-  return pagadoCentavos + comprometidoCentavos > 0 ? 'en_parte' : 'pendiente';
+export function estadoDePagoDe({ deudaCentavos, pagadoCentavos, comprometidoCentavos }: CifrasDelPago): EstadoDePago {
+  if (deudaCentavos <= 0) return 'pagado';
+  if (deudaCentavos - comprometidoCentavos <= 0) return 'comprometido';
+  if (pagadoCentavos > 0) return 'en_parte';
+  return comprometidoCentavos > 0 ? 'comprometido_en_parte' : 'pendiente';
+}
+
+/** La fecha del cheque posfechado más lejano y cuántos pagos posfechados hay; sin ninguno, `null` y 0. */
+export function posfechadosDe(
+  pagosVigentes: readonly PagoVigenteDelCargo[],
+  hoy: string,
+): { comprometidoHasta: string | null; chequesPosfechados: number } {
+  const fechas = pagosVigentes.filter((pago) => estaPosfechado(pago, hoy)).map(({ fecha }) => fecha);
+  const comprometidoHasta = fechas.length > 0 ? fechas.reduce((a, b) => (a > b ? a : b)) : null;
+  return { comprometidoHasta, chequesPosfechados: fechas.length };
 }

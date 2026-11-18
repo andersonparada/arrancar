@@ -3,6 +3,7 @@ import { contadorDeCaracteres } from '@/modulos/core/utilidades/contador-de-cara
 import { formatearFecha, formatearFechaHora, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import type { CambiosDeContrasena, FichaDeContrasena } from '../../servicios/tipos-de-contrasenas';
 import { errorDelMotivo } from '../reglas-de-acciones';
+import { hayMontoPositivo } from '../comprometido';
 import { MAXIMO_DE_OBSERVACIONES } from './edicion-de-contrasena';
 
 /** Lo que se ve en la ventana «Cambiar fecha de pago»; el motivo solo se pide si cambia la fecha prometida. */
@@ -99,10 +100,13 @@ export function detallesDeTotalesDeContrasena(ficha: FichaDeContrasena): Detalle
     { etiqueta: 'Retenciones', valor: formatearMonto(totales.retenciones) },
     { etiqueta: 'Rebajado (notas y pagos anteriores al inicio)', valor: formatearMonto(totales.rebajado) },
     { etiqueta: 'Pagado', valor: formatearMonto(totales.pagado) },
-    ...(Number(totales.comprometido) > 0
-      ? [{ etiqueta: 'Comprometido (cheques posfechados)', valor: formatearMonto(totales.comprometido) }]
-      : []),
     { etiqueta: 'Saldo por pagar', valor: formatearMonto(totales.saldo) },
+    ...(hayMontoPositivo(totales.comprometido)
+      ? [
+          { etiqueta: 'De lo cual comprometido (cheques posfechados)', valor: formatearMonto(totales.comprometido) },
+          { etiqueta: 'Disponible para pagar', valor: formatearMonto(totales.disponible) },
+        ]
+      : []),
   ];
 }
 

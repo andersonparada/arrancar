@@ -71,7 +71,13 @@ describe('pagar con cheque', () => {
     expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
     expect(respuesta.cuerpo.posfechado).toBe(true);
     expect(respuesta.cuerpo.avisos.join(' ')).toContain('se paga a la vista');
-    expect(await ficha(cargo)).toMatchObject({ estadoDePago: 'comprometido', comprometido: '1120.00', saldo: '0.00' });
+    expect(await ficha(cargo)).toMatchObject({
+      estadoDePago: 'comprometido',
+      comprometido: '1120.00',
+      saldo: '1120.00',
+      disponible: '0.00',
+      pagos: [expect.objectContaining({ comprometido: true, numeroDeCheque: expect.any(String) })],
+    });
   });
 
   it('un cheque para dos contraseñas del mismo proveedor pasa y uno con un cargo de otro proveedor se rechaza', async () => {

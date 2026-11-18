@@ -31,6 +31,8 @@ function dtoDelDocumento(linea: AplicacionDeLaFichaDto): DocumentoDelComprobante
     pagado: linea.monto,
     cubre: linea.cubre,
     saldo: linea.saldoDelDocumento,
+    comprometido: deCentavos(aCentavos(linea.saldoDelDocumento) - aCentavos(linea.disponibleDelDocumento)),
+    disponible: linea.disponibleDelDocumento,
   };
 }
 

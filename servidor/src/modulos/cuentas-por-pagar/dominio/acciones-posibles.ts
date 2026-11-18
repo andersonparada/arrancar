@@ -12,7 +12,10 @@ export interface HechosDelDocumento {
   notasEnTotal: number;
   /** Solo una nota de crédito: lo que queda libre tras aplicaciones y ajustes vigentes (en un cargo no se usa). */
   saldoLibreCentavos: number;
-  /** Solo un cargo: lo que todavía se debe; con cero ya no se cambia su vencimiento. */
+  /**
+   * Solo un cargo: la deuda, también lo comprometido con cheques posfechados (sigue debiéndose hasta que el cheque se
+   * haga efectivo); con cero, porque ya se pagó, no se cambia su vencimiento.
+   */
   saldoDelCargoCentavos: number;
   /** Ajustes vigentes de una nota de crédito. */
   ajustesVigentes: number;

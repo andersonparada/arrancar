@@ -47,12 +47,19 @@ export interface DocumentoPorPagarDto extends AccionesDelDocumento {
   ajustado: string;
   /** Solo una nota de crédito: lo que los reintegros vigentes devolvieron (cero en un cargo). */
   reintegrado: string;
+  /** Un cargo: la deuda (la misma cifra de R1: lo comprometido con cheques posfechados sigue debiéndose). Una nota: su saldo libre. */
   saldo: string;
+  /** Lo que todavía se puede pagar: `saldo` menos `comprometido`. Es el tope de un pago, de una nota aplicada o de un ajuste. */
+  disponible: string;
+  /** La fecha del cheque posfechado más lejano; `null` si no hay ninguno. */
+  comprometidoHasta: string | null;
+  /** Cuántos pagos posfechados vigentes tiene el cargo. */
+  chequesPosfechados: number;
   /** Solo un cargo: lo que los pagos vigentes entregaron con fecha de hoy o anterior (cero en una nota). */
   pagado: string;
-  /** Solo un cargo: lo de pagos vigentes con fecha posterior a hoy (cheques posfechados): el saldo ya lo resta. */
+  /** Solo un cargo: lo de pagos vigentes con fecha posterior a hoy (cheques posfechados): parte de la deuda cubierta de antemano. */
   comprometido: string;
-  /** Solo un cargo vigente: `pendiente`, `en_parte`, `comprometido` o `pagado`; `null` en una nota o un documento anulado. */
+  /** Solo un cargo vigente: uno de `ESTADOS_DE_PAGO` (`pendiente`, `en_parte`, `comprometido_en_parte`, `comprometido`, `pagado`); `null` en una nota o un documento anulado. */
   estadoDePago: EstadoDePagoDto;
   /** Solo un saldo inicial (nulos en los demás): lo que faltaba pagar al corte, sin retenciones. */
   saldoAlInicio: string | null;
@@ -186,14 +193,30 @@ export interface SaldoDeudorDto {
 export interface SaldoDelProveedorDto {
   proveedorId: string;
   proveedorNombre: string;
-  /** Suma de lo que falta por pagar de sus cargos vigentes. */
+  /** La deuda: suma de lo que falta por pagar de sus cargos vigentes, también lo comprometido (la cifra de R1). */
   porPagar: string;
-  /** La parte de `porPagar` que ya venció. */
+  /** La parte de `porPagar` que ya venció; cuenta lo comprometido. */
   vencido: string;
+  /** La parte de `porPagar` cubierta con cheques posfechados. */
+  comprometido: string;
+  /** Lo que aún se puede pagar: `porPagar` menos `comprometido`. */
+  disponible: string;
+  /** La parte vencida de `comprometido`. */
+  vencidoComprometido: string;
+  /** Hasta 10 cheques posfechados, del más próximo al más lejano. */
+  posfechados: PosfechadoDelProveedorDto[];
+  /** Cuántos cargos con deuda tiene. */
   cargosConSaldo: number;
   /** Suma de los saldos libres de sus notas de crédito vigentes. */
   saldosDeudores: string;
   notasConSaldoLibre: SaldoDeudorDto[];
+}
+
+/** Un cheque posfechado de un proveedor. */
+export interface PosfechadoDelProveedorDto {
+  numeroDeCheque: string | null;
+  fecha: string;
+  monto: string;
 }
 
 /** Un proveedor con documentos por pagar en la empresa: lo que necesita el filtro de la lista. */

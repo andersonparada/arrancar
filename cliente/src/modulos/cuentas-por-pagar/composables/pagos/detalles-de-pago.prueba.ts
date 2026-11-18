@@ -53,6 +53,9 @@ describe('nombres', () => {
     expect(nombreDeLaForma('nota_ligada')).toBe('Nota de débito ya registrada');
     expect(nombreDelEstadoDePago('en_parte')).toBe('Pagada en parte');
     expect(nombreDelEstadoDePago('comprometido')).toBe('Comprometida');
+    expect(nombreDelEstadoDePago('comprometido_en_parte')).toBe('Comprometida en parte');
+    expect(nombreDelEstadoDePago('pendiente')).toBe('Sin pagar');
+    expect(tonoDelEstadoDePago('comprometido_en_parte')).toBe('trigo');
     expect(tonoDelEstadoDePago('pagado')).toBe('campo');
   });
 
