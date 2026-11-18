@@ -6,7 +6,13 @@ import { anticipos } from './anticipos.tablas.js';
 
 /** Las columnas de `gastos` que usan sus llaves. */
 type T = Record<
-  'empresaId' | 'anticipoId' | 'conceptoDeGastoId' | 'documentoDeCompraId' | 'proveedorId' | 'destinoDelDocumento',
+  | 'empresaId'
+  | 'cuentaId'
+  | 'anticipoId'
+  | 'conceptoDeGastoId'
+  | 'documentoDeCompraId'
+  | 'proveedorId'
+  | 'destinoDelDocumento',
   AnyPgColumn
 >;
 
@@ -30,5 +36,9 @@ export const llavesDelGasto = (t: T) => [
     columns: [t.documentoDeCompraId, t.empresaId, t.proveedorId, t.destinoDelDocumento],
     foreignColumns: [documentos.id, documentos.empresaId, documentos.proveedorId, documentos.destino],
   }),
-  foreignKey({ name: 'gastos_proveedor_fk', columns: [t.proveedorId], foreignColumns: [proveedores.id] }),
+  foreignKey({
+    name: 'gastos_proveedor_fk',
+    columns: [t.proveedorId, t.cuentaId],
+    foreignColumns: [proveedores.id, proveedores.cuentaId],
+  }),
 ];

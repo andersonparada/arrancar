@@ -75,7 +75,11 @@ export const restriccionesDelGastoSinDocumento = (t: T) => [
 export const restriccionesDeLaRetencionDelGasto = (t: T) => [
   check('gastos_retenido_no_negativo', sql`${t.montoRetenido} >= 0`),
   check('gastos_retencion_con_monto', sql`${t.conRetencion} = (${t.montoRetenido} > 0)`),
-  check('gastos_retencion_con_motivo', sql`${t.conRetencion} = (${t.motivoConRetencion} is not null)`),
+  // El motivo es de la excepción y se escribe al asignar: en la bandeja la factura con retención va sin motivo.
+  check(
+    'gastos_retencion_con_motivo',
+    sql`(${t.conRetencion} and ${t.anticipoId} is not null) = (${t.motivoConRetencion} is not null)`,
+  ),
   check('gastos_motivo_con_retencion_rango', textoRecortado(t.motivoConRetencion, 300)),
   check('gastos_retencion_solo_en_documentos', sql`not ${t.conRetencion} or ${t.clase} = 'documento'`),
   check('gastos_destino_del_documento_fijo', sql`${t.destinoDelDocumento} = 'cuentas-por-liquidar'`),

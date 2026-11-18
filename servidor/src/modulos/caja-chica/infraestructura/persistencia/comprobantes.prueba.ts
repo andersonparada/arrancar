@@ -96,6 +96,32 @@ describe('comprobantes: documento del libro', () => {
     );
   });
 
+  it('el proveedor es de la misma cuenta, incluso en un vale de gasto (llave compuesta con la cuenta)', async () => {
+    expect(await hacerQue(valeDeGastoValido(e, fondoId, { proveedorId: e.proveedorB }))).toBe(
+      'comprobantes_proveedor_fk',
+    );
+    expect(await hacerQue(valorDeDocumento(e, fondoId, { proveedorId: e.proveedorB }))).toBe(
+      'comprobantes_documento_fk',
+    );
+    await expect(
+      crearComprobante(e, valeDeGastoValido(e, fondoId, { proveedorId: e.proveedorA })),
+    ).resolves.toMatchObject({ cuentaId: e.cuentaA });
+  });
+
+  it('la factura con retención en la bandeja va sin motivo; asignada lo exige; el motivo sin retención no cabe', async () => {
+    const retenida = { conRetencion: true, montoRetenido: '5.60', monto: '106.40' };
+
+    await expect(crearComprobante(e, await valorDeDocumento(e, null, retenida))).resolves.toMatchObject({
+      fondoId: null,
+      conRetencion: true,
+      motivoConRetencion: null,
+    });
+    expect(await hacerQue(valorDeDocumento(e, fondoId, retenida))).toBe('comprobantes_retencion_con_motivo');
+    expect(await hacerQue(valorDeDocumento(e, fondoId, { motivoConRetencion: 'Sin retención' }))).toBe(
+      'comprobantes_retencion_con_motivo',
+    );
+  });
+
   it('el proveedor debe existir y el monto es positivo', async () => {
     expect(await hacerQue(valeDeGastoValido(e, fondoId, { proveedorId: crypto.randomUUID() }))).toBe(
       'comprobantes_proveedor_fk',

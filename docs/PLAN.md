@@ -2472,3 +2472,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   check del motivo solo con el documento asignado. Para el contador: V-12 (nota de crédito en la suma de bancarización) y
   V-13 (check opcional que prohíba retención en una nota de crédito). Pendiente P-CCL-7 (cuenta coherente con la empresa
   y beneficiario por cuenta).
+- **2026-11-18 (CC-1c y CL-1c, datos):** migración `0003_cl1c_cuenta_y_motivo_al_asignar` en Caja chica y en Cuentas por
+  liquidar: `cuenta_id` (no nula, `default` de la transacción, FK a `core.cuentas` on delete cascade) en
+  `caja_chica.comprobantes` y `cuentas_por_liquidar.gastos`, rellenada a mano desde `core.empresas` antes de pedirla no
+  nula (sirve en bases con filas); llave `(proveedor_id, cuenta_id)` a `terceros.proveedores` (el único
+  `proveedores_id_cuenta_unico` ya existía: sin migración de Terceros); índices `(proveedor_id, cuenta_id)` parcial y
+  `(cuenta_id)`; y el check del motivo solo con el documento asignado. No hay columna nueva de quién autorizó: es
+  `asignado_por` (diseño §5.4 g). Pruebas de tablas: proveedor de otra cuenta rechazado en vales de gasto, gastos sin
+  documento y documentos; retención en la bandeja sin motivo, asignada sin motivo y motivo sin retención. Sin migraciones
+  del core ni de Bancos. Pendientes: los casos de uso y mapeadores no escriben `cuenta_id` (lo pone la transacción);
+  la prueba de la migración sobre una base con filas no está automatizada.

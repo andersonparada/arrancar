@@ -3,7 +3,14 @@ import { index, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
 
 /** Las columnas de `gastos` que usan estos índices. */
 type T = Record<
-  'empresaId' | 'anticipoId' | 'documentoDeCompraId' | 'proveedorId' | 'conceptoDeGastoId' | 'fecha' | 'estado',
+  | 'empresaId'
+  | 'cuentaId'
+  | 'anticipoId'
+  | 'documentoDeCompraId'
+  | 'proveedorId'
+  | 'conceptoDeGastoId'
+  | 'fecha'
+  | 'estado',
   AnyPgColumn
 >;
 
@@ -17,8 +24,9 @@ export const indicesDelGasto = (t: T) => [
     .on(t.conceptoDeGastoId)
     .where(sql`${t.conceptoDeGastoId} is not null`),
   index('gastos_proveedor_idx')
-    .on(t.proveedorId)
+    .on(t.proveedorId, t.cuentaId)
     .where(sql`${t.proveedorId} is not null`),
+  index('gastos_cuenta_idx').on(t.cuentaId),
   index('gastos_bandeja_idx')
     .on(t.empresaId)
     .where(sql`${t.anticipoId} is null and ${t.estado} = 'vigente'`),

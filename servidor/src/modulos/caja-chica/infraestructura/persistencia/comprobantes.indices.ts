@@ -5,6 +5,7 @@ import { index, unique, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-cor
 type T = Record<
   | 'id'
   | 'empresaId'
+  | 'cuentaId'
   | 'fondoId'
   | 'documentoDeCompraId'
   | 'proveedorId'
@@ -32,8 +33,9 @@ const busquedasDeComprobante = (t: T) => [
     .on(t.conceptoDeGastoId)
     .where(sql`${t.conceptoDeGastoId} is not null`),
   index('comprobantes_proveedor_idx')
-    .on(t.proveedorId)
+    .on(t.proveedorId, t.cuentaId)
     .where(sql`${t.proveedorId} is not null`),
+  index('comprobantes_cuenta_idx').on(t.cuentaId),
   index('comprobantes_documento_afectado_idx')
     .on(t.documentoAfectadoId)
     .where(sql`${t.documentoAfectadoId} is not null`),

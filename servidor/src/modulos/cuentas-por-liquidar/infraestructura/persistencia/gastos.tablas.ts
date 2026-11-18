@@ -1,5 +1,12 @@
 import { boolean, date, numeric, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
+import {
+  autoria,
+  deLaTransaccion,
+  idPrimario,
+  marcasDeTiempo,
+  politicaPorEmpresa,
+} from '../../../core/base-datos/columnas.js';
+import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { esquemaCuentasPorLiquidar } from './esquema.tablas.js';
 import { indicesDelGasto } from './gastos.indices.js';
@@ -18,6 +25,11 @@ export const gastos = esquemaCuentasPorLiquidar.table(
     empresaId: uuid()
       .notNull()
       .references(() => empresas.id, { onDelete: 'cascade' }),
+    /** La pone la transacción; solo sirve para la llave al proveedor de la misma cuenta. */
+    cuentaId: uuid()
+      .notNull()
+      .default(deLaTransaccion.cuenta())
+      .references(() => cuentas.id, { onDelete: 'cascade' }),
     /** Nulo: el documento está en la bandeja. */
     anticipoId: uuid(),
     clase: text().$type<'documento' | 'sin_documento'>().notNull(),

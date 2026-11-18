@@ -34,6 +34,8 @@ export interface Escenario {
   empresaA2: string;
   empresaB: string;
   proveedorA: string;
+  /** Un proveedor de la otra cuenta (B). */
+  proveedorB: string;
   localidadA1: string;
   localidadA2: string;
   conceptoDeGastoA1: string;
@@ -190,6 +192,7 @@ export async function prepararEscenario(): Promise<Escenario> {
   return {
     ...base,
     proveedorA: await crearProveedor(deA1),
+    proveedorB: await crearProveedor(contextoDe(parcial, empresaB)),
     localidadA1: await crearLocalidad(deA1, 'A1'),
     localidadA2: await crearLocalidad(deA2, 'A2'),
     conceptoDeGastoA1: await crearConceptoDeGasto(deA1),

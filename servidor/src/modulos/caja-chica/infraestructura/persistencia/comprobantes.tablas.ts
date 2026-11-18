@@ -1,7 +1,14 @@
 import { boolean, date, integer, numeric, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { politicaPorAlcanceOpcional } from '../../../core/base-datos/alcance.js';
-import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
+import {
+  autoria,
+  deLaTransaccion,
+  idPrimario,
+  marcasDeTiempo,
+  politicaPorEmpresa,
+} from '../../../core/base-datos/columnas.js';
 import { fechaDeAnulacionPosterior, restriccionesDeAnulacion } from '../../../core/base-datos/restricciones.js';
+import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { ALCANCE_DE_FONDOS } from './alcance-de-fondos.js';
 import { llavesDeComprobante } from './comprobantes.llaves.js';
@@ -29,6 +36,11 @@ export const comprobantes = esquemaCajaChica.table(
     empresaId: uuid()
       .notNull()
       .references(() => empresas.id, { onDelete: 'cascade' }),
+    /** La pone la transacción; solo sirve para la llave al proveedor de la misma cuenta. */
+    cuentaId: uuid()
+      .notNull()
+      .default(deLaTransaccion.cuenta())
+      .references(() => cuentas.id, { onDelete: 'cascade' }),
     fondoId: uuid(),
     clase: text().$type<ClaseDeComprobante>().notNull(),
     documentoDeCompraId: uuid(),

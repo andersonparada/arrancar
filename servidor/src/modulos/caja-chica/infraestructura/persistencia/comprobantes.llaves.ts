@@ -10,6 +10,7 @@ import { valesProvisionales } from './vales-provisionales.tablas.js';
 type T = Record<
   | 'id'
   | 'empresaId'
+  | 'cuentaId'
   | 'fondoId'
   | 'documentoAfectadoId'
   | 'conceptoDeGastoId'
@@ -41,8 +42,8 @@ const llavesDeLaEmpresa = (t: T) => [
   }),
   foreignKey({
     name: 'comprobantes_proveedor_fk',
-    columns: [t.proveedorId],
-    foreignColumns: [proveedores.id],
+    columns: [t.proveedorId, t.cuentaId],
+    foreignColumns: [proveedores.id, proveedores.cuentaId],
   }),
 ];
 

@@ -77,6 +77,25 @@ describe('gastos: documento del libro', () => {
     expect(await hacerQue(sinDocumento({ resta: true }))).toBe('gastos_resta_solo_en_documentos');
   });
 
+  it('el proveedor es de la misma cuenta, incluso en un gasto sin documento (llave compuesta con la cuenta)', async () => {
+    expect(await hacerQue(sinDocumento({ proveedorId: e.proveedorB }))).toBe('gastos_proveedor_fk');
+    expect(await hacerQue(deDocumento({ proveedorId: e.proveedorB }))).toBe('gastos_documento_fk');
+    await expect(crearGasto(e, await sinDocumento({ proveedorId: e.proveedorA }))).resolves.toMatchObject({
+      cuentaId: e.cuentaA,
+    });
+  });
+
+  it('la factura con retención en la bandeja va sin motivo; asignada lo exige; el motivo sin retención no cabe', async () => {
+    const retenida = { conRetencion: true, montoRetenido: '5.60' };
+
+    await expect(crearGasto(e, await deDocumento(retenida, null))).resolves.toMatchObject({
+      anticipoId: null,
+      motivoConRetencion: null,
+    });
+    expect(await hacerQue(deDocumento(retenida))).toBe('gastos_retencion_con_motivo');
+    expect(await hacerQue(deDocumento({ motivoConRetencion: 'Sin retención' }))).toBe('gastos_retencion_con_motivo');
+  });
+
   it('en la bandeja (sin anticipo) caben documentos, sin datos de asignación', async () => {
     await expect(crearGasto(e, await deDocumento({}, null))).resolves.toMatchObject({ anticipoId: null });
 
