@@ -196,15 +196,20 @@ export interface ConsultasDePagos {
   pagosDelMes(proveedorId: string, fecha: string): Promise<PagoDelMes[]>;
   /** Número y fecha de cada contraseña, por id. */
   contrasenas(ids: readonly string[]): Promise<Map<string, { numero: string; fecha: string }>>;
-  /** Los proveedores con cargos autorizados con saldo en contraseñas vigentes, por nombre. */
-  proveedoresPorPagar(filtro: { buscar?: string; pagina: number; limite: number }): Promise<ProveedoresPorPagar>;
+  /** Los proveedores con cargos autorizados con saldo disponible en contraseñas vigentes, por nombre; `hoy` separa lo comprometido. */
+  proveedoresPorPagar(
+    filtro: { buscar?: string; pagina: number; limite: number },
+    hoy: string,
+  ): Promise<ProveedoresPorPagar>;
 }
 
 export interface ProveedorPorPagar {
   proveedorId: string;
   nombre: string;
   nit: string | null;
+  /** La deuda (también lo comprometido). */
   porPagarCentavos: number;
+  disponibleCentavos: number;
   contrasenas: number;
 }
 

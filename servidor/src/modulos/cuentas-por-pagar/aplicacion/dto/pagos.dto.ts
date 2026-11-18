@@ -18,6 +18,8 @@ export interface LineaDePagoDto {
 /** Un pago en la ficha del cargo; `comprometido` es un pago vigente con fecha posterior a hoy (cheque posfechado). */
 export interface PagoDelDocumentoDto extends LineaDePagoDto {
   comprometido: boolean;
+  /** El número del cheque con que se pagó; `null` si no fue con cheque. */
+  numeroDeCheque: string | null;
 }
 
 /** Lo que un reintegro devolvió contra una nota de crédito. */
@@ -40,6 +42,8 @@ export interface PagoDeLaContrasenaDto {
   /** Lo que este pago entregó dentro de esta contraseña. */
   monto: string;
   comprometido: boolean;
+  /** El número del cheque con que se pagó; `null` si no fue con cheque. */
+  numeroDeCheque: string | null;
 }
 
 /** Cómo va el pago de un cargo o de una contraseña; `null` en lo que no se paga (notas, anulados). */

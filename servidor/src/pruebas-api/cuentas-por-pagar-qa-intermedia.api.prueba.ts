@@ -2,9 +2,8 @@
  * Lo que dejó la QA intermedia del 2026-11-18 (informe `docs/modulos/informe-qa-intermedia-2026-11-18.md`):
  * - una nota ligada a pagos sigue ofreciendo «Desmarcar», «Eliminar» y «Reclasificar» aunque el servidor las rechaza
  *   (error conocido: las pruebas `it.fails` pasan mientras siga así; al corregirlo, quitar `.fails`);
- * - un cheque posfechado se ve distinto en la ficha del documento (comprometido, saldo cero) y en el reporte de
- *   documentos a una fecha (en parte, con el saldo completo): es a propósito (NIIF para las Pymes, sección 11), así que
- *   se fija para que un cambio no pase desapercibido.
+ * - un cheque posfechado se ve igual en la ficha, el proveedor y R2 (adenda 2026-11-18): la deuda sigue entera, lo
+ *   comprometido va aparte, nada queda disponible y el estado es «Comprometido».
  */
 
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -69,7 +68,7 @@ describe('las acciones que ofrece una nota ligada', () => {
 });
 
 describe('un cheque posfechado en la ficha y en los reportes', () => {
-  it('la ficha lo da por comprometido y el reporte a una fecha deja el saldo entero (por diseño)', async () => {
+  it('la ficha y R2 dan la misma deuda y el mismo estado', async () => {
     const { proveedor, cargo } = await e.proveedorConCargo();
     const pago = await e.pagar(
       e.cheque(proveedor.proveedorId, [{ cargoId: cargo, monto: '1120.00' }], { fecha: haceDias(-5) }),
@@ -87,9 +86,19 @@ describe('un cheque posfechado en la ficha y en los reportes', () => {
     ).cuerpo;
     const fila = reporte.filas.find((f: { id: string }) => f.id === cargo);
 
-    expect(ficha).toMatchObject({ estadoDePago: 'comprometido', saldo: '0.00', comprometido: '1120.00' });
-    expect(saldoDelProveedor).toMatchObject({ porPagar: '0.00', cargosConSaldo: 0 });
-    expect(fila).toMatchObject({ estadoDePago: 'en_parte', saldo: '1120.00', comprometido: '1120.00' });
+    expect(ficha).toMatchObject({
+      estadoDePago: 'comprometido',
+      saldo: '1120.00',
+      disponible: '0.00',
+      comprometido: '1120.00',
+    });
+    expect(saldoDelProveedor).toMatchObject({
+      porPagar: '1120.00',
+      comprometido: '1120.00',
+      disponible: '0.00',
+      cargosConSaldo: 1,
+    });
+    expect(fila).toMatchObject({ estadoDePago: 'comprometido', saldo: ficha.saldo, comprometido: '1120.00' });
   });
 });
 

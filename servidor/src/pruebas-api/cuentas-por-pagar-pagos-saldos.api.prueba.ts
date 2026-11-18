@@ -89,7 +89,7 @@ describe('el saldo de un cargo con pagos', () => {
     expect(saldo.cuerpo).toMatchObject({ porPagar: '1120.00', cargosConSaldo: 1 });
   });
 
-  it('un cheque posfechado compromete el documento hoy y se da por pagado en su fecha', async () => {
+  it('un cheque posfechado compromete el documento hoy (la deuda sigue) y se da por pagado en su fecha', async () => {
     const { cargo, contrasena, proveedor } = await contrasenaConUnCargo();
     const pago = await pagar(contrasena.id, cargo, '1120.00', haceDias(-5));
 
@@ -97,11 +97,20 @@ describe('el saldo de un cargo con pagos', () => {
       pagado: '0.00',
       comprometido: '1120.00',
       estadoDePago: 'comprometido',
-      saldo: '0.00',
+      saldo: '1120.00',
+      disponible: '0.00',
+      chequesPosfechados: 1,
+      comprometidoHasta: haceDias(-5),
       pagos: [expect.objectContaining({ comprometido: true })],
     });
     const saldo = await propietario().get(`${RUTA_CXP}/proveedores/${proveedor.proveedorId}/saldo`);
-    expect(saldo.cuerpo.porPagar).toBe('0.00');
+    expect(saldo.cuerpo).toMatchObject({
+      porPagar: '1120.00',
+      comprometido: '1120.00',
+      disponible: '0.00',
+      cargosConSaldo: 1,
+      posfechados: [expect.objectContaining({ fecha: haceDias(-5), monto: '1120.00' })],
+    });
 
     await consultar('update cuentas_por_pagar.pagos set fecha = $2 where id = $1', [pago.id, HOY]);
 
@@ -192,8 +201,19 @@ describe('la contraseña con pagos', () => {
 
     const { cuerpo } = await propietario().get(`${RUTA}/${contrasena.id}`);
 
-    expect(cuerpo.cargos[0]).toMatchObject({ pagado: '300.00', comprometido: '120.00', saldo: '700.00' });
-    expect(cuerpo.totales).toMatchObject({ pagado: '300.00', comprometido: '120.00', saldo: '700.00' });
+    expect(cuerpo.cargos[0]).toMatchObject({
+      pagado: '300.00',
+      comprometido: '120.00',
+      saldo: '820.00',
+      disponible: '700.00',
+      comprometidoHasta: haceDias(-3),
+    });
+    expect(cuerpo.totales).toMatchObject({
+      pagado: '300.00',
+      comprometido: '120.00',
+      saldo: '820.00',
+      disponible: '700.00',
+    });
     expect(cuerpo).toMatchObject({ estadoDePago: 'en_parte', puedeEditar: true, puedeAnular: false });
     expect(
       cuerpo.pagos.map((p: { pagoId: string; estado: string; comprometido: boolean }) => [
@@ -228,14 +248,14 @@ describe('la contraseña con pagos', () => {
     expect(cuerpo).toMatchObject({ estadoDePago: 'pendiente', puedeAnular: true });
   });
 
-  it('la impresión suma la columna «Pagado» y marca el cheque posfechado', async () => {
+  it('la impresión separa «Pagado» y «Comprometido», deja la deuda en «Saldo» y marca el cheque posfechado', async () => {
     const { cargo, contrasena } = await contrasenaConUnCargo();
     await pagar(contrasena.id, cargo, '300.00');
     const cheque = await pagar(contrasena.id, cargo, '120.00', haceDias(-3));
 
     const { cuerpo } = await propietario().get(`${RUTA}/${contrasena.id}/impresion`);
 
-    expect(cuerpo.cargos[0]).toMatchObject({ pagado: '420.00', saldo: '700.00' });
+    expect(cuerpo.cargos[0]).toMatchObject({ pagado: '300.00', comprometido: '120.00', saldo: '820.00' });
     expect(cuerpo.chequesPosfechados).toEqual([
       {
         pagoId: cheque.id,

@@ -48,7 +48,7 @@ function montosDe(fila: FilaDeDocumento) {
     retencionesPorPracticar: deCentavos(documento.retencionesPorPracticarCentavos ?? 0),
     saldoPendiente: deCentavos(documento.saldoAlInicioCentavos ?? 0),
     anterioresAlInicio: deCentavos(anterioresAlInicioDe(documento) ?? 0),
-    saldo: deCentavos(saldoDe(documento, aplicadoDe(fila)).saldoCentavos),
+    saldo: deCentavos(saldoDe(documento, aplicadoDe(fila)).disponibleCentavos),
   };
 }
 

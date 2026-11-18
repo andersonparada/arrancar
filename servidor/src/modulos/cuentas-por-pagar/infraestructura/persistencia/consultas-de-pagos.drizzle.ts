@@ -75,8 +75,11 @@ export class ConsultasDePagosDrizzle implements ConsultasDePagos {
     );
   }
 
-  async proveedoresPorPagar(filtro: { buscar?: string; pagina: number; limite: number }): Promise<ProveedoresPorPagar> {
-    const filas = await this.proveedoresConSaldo(filtro);
+  async proveedoresPorPagar(
+    filtro: { buscar?: string; pagina: number; limite: number },
+    hoy: string,
+  ): Promise<ProveedoresPorPagar> {
+    const filas = await this.proveedoresConSaldo(filtro, hoy);
     return {
       total: filas[0]?.total ?? 0,
       filas: filas.map((fila) => ({
@@ -84,18 +87,22 @@ export class ConsultasDePagosDrizzle implements ConsultasDePagos {
         nombre: fila.nombre,
         nit: fila.nit,
         porPagarCentavos: aCentavos(fila.porPagar),
+        disponibleCentavos: aCentavos(fila.disponible),
         contrasenas: fila.contrasenas,
       })),
     };
   }
 
   /** Los cargos autorizados con saldo dentro de una contraseña vigente, sumados por proveedor. */
-  private proveedoresConSaldo({ buscar, pagina, limite }: { buscar?: string; pagina: number; limite: number }) {
-    const base = new ConsultaBaseDeDocumentos();
-    const saldo = base.saldoDelCargo();
-    const autorizadosConSaldo = condicionDeProveedoresPorPagar(saldo, buscar);
+  private proveedoresConSaldo(
+    { buscar, pagina, limite }: { buscar?: string; pagina: number; limite: number },
+    hoy: string,
+  ) {
+    const base = new ConsultaBaseDeDocumentos(hoy);
+    const disponible = base.disponibleDelCargo();
+    const autorizadosConSaldo = condicionDeProveedoresPorPagar(disponible, buscar);
     return transaccionEnCurso()
-      .select(columnasDeProveedor(saldo))
+      .select(columnasDeProveedor({ deuda: base.deudaDelCargo(), disponible }))
       .from(documentos)
       .innerJoin(contrasenaDocumentos, enContrasenaVigente)
       .innerJoin(proveedores, eq(proveedores.id, documentos.proveedorId))
@@ -125,11 +132,12 @@ const condicionDeProveedoresPorPagar = (saldo: SQL, buscar: string | undefined) 
     buscar ? ilike(terceros.nombreMostrar, `%${buscar}%`) : undefined,
   );
 
-const columnasDeProveedor = (saldo: SQL) => ({
+const columnasDeProveedor = ({ deuda, disponible }: { deuda: SQL; disponible: SQL }) => ({
   proveedorId: proveedores.id,
   nombre: terceros.nombreMostrar,
   nit: terceros.nit,
-  porPagar: sql<string>`sum(${saldo})`,
+  porPagar: sql<string>`sum(${deuda})`,
+  disponible: sql<string>`sum(${disponible})`,
   contrasenas: sql<number>`count(distinct ${contrasenaDocumentos.contrasenaId})`.mapWith(Number),
   total: sql<number>`count(*) over ()`.mapWith(Number),
 });

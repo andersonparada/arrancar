@@ -2739,3 +2739,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   partes y la suma del mes se vuelve a traer cuando la fecha cambia de mes. En la ficha del retiro solo el enlace depende
   de `pagos.ver` (la lista se ve con `retiros.ver`) y se avisa si hay más de 20 recibos. Pendiente: ocultar «Retirar
   efectivo» y «Pagar en efectivo» a quien no tiene `pagos.ver` (los medios salen de `GET /pagos/medios`).
+- **2026-11-18, CP4-D1, D3 y D4 (servidor): deuda, comprometido y disponible.** En los DTO de operación (ficha y lista de
+  documentos, resumen del proveedor, contraseña con su lista e impresión, cargos para pagar y para aplicar, proveedores por
+  pagar, ficha del pago y comprobante) `saldo` es la **deuda** (la cifra de R1) y van al lado `comprometido`, `disponible` y
+  `comprometidoHasta`; `vencido` cuenta lo comprometido (el proveedor trae además `vencidoComprometido` y hasta 10
+  `posfechados`). `SaldoDelDocumento` pasa a `deudaCentavos`, `comprometidoCentavos` y `disponibleCentavos`; lo que limita un
+  pago, una nota o un ajuste sigue usando lo disponible, así que la protección contra el doble pago no cambia. **Cinco
+  estados de pago** (`pendiente`, `en_parte`, `comprometido_en_parte`, `comprometido`, `pagado`) en un solo lugar
+  (`estadoDePagoDe`, `dominio/pagos.ts`) y una sola expresión de SQL (`expresionDeEstadoDePago`) para R2 y el filtro de la
+  lista; R2 ya no dice «Pagado en parte» con Pagado 0.00. `puedeCambiarVencimiento` y `cambiar-vencimiento` miran la deuda:
+  un cargo comprometido entero aún se debe y su plazo se puede corregir. Los pagos de la ficha traen `numeroDeCheque`. Sin
+  migración. Pendiente: D5 a D7 (cliente), D6 servidor (`disponible` en R2 y R1, a la espera de la respuesta a A.7).

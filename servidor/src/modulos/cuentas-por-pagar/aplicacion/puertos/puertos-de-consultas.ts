@@ -124,9 +124,23 @@ export interface AjusteConDatos {
 /** Las cuentas del proveedor en la empresa: lo que se debe y lo que las notas dejaron a favor. */
 export interface TotalesDelProveedor {
   proveedorNombre: string;
+  /** La deuda de sus cargos vigentes (también lo comprometido con cheques posfechados). */
   porPagarCentavos: number;
+  /** La parte de la deuda cuyo cargo ya venció (cuenta lo comprometido). */
   vencidoCentavos: number;
+  /** La parte de la deuda cubierta con pagos de fecha posterior a hoy. */
+  comprometidoCentavos: number;
+  /** La parte vencida de lo comprometido. */
+  vencidoComprometidoCentavos: number;
   cargosConSaldo: number;
+  posfechados: PosfechadoDelProveedor[];
+}
+
+/** Un cheque posfechado del proveedor, con lo que entregó a sus cargos sumado. */
+export interface PosfechadoDelProveedor {
+  numeroDeCheque: string | null;
+  fecha: string;
+  montoCentavos: number;
 }
 
 export interface NotaConSaldoLibre {
