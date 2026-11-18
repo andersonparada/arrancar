@@ -6,6 +6,7 @@ import { rutasDeAjustesComponidas } from './composicion/ajustes.js';
 import { rutasDeBajasComponidas } from './composicion/bajas.js';
 import { rutasDeCondicionesComponidas } from './composicion/condiciones.js';
 import { rutasDeConsultasComponidas } from './composicion/consultas.js';
+import { rutasDeConsultaDePagosComponidas } from './composicion/consulta-de-pagos.js';
 import { rutasDeContrasenasComponidas } from './composicion/contrasenas.js';
 import { rutasDeDocumentosComponidas } from './composicion/documentos.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
@@ -52,6 +53,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeReportesDeSaldosComponidas(),
     rutasDeReportesDeProveedorComponidas(),
     rutasDeReportesDePagosComponidas(),
+    rutasDeConsultaDePagosComponidas(),
     rutasDePagosEnEfectivoComponidas(),
     // generador: rutas
   ]),

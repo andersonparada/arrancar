@@ -2139,6 +2139,23 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   días de atraso, autorizado y sin autorizar. Los tres: tarjetas en celular, tabla desde `lg` y en papel, Excel con `.exportar`.
   Desviaciones: el cliente solo valida que las fechas estén completas y `desde <= hasta`; el tope de 24 meses y de 2,000 líneas
   lo informa el servidor (su mensaje sale como aviso). R3 no enlaza todavía desde R1 y R2 (proveedor → R3).
+- **2026-11-16 — CP4-8 (servidor, lista, ficha y comprobante de pagos).** Sin migración ni permisos nuevos (`pagos.ver`).
+  `GET /cuentas-por-pagar/pagos` (`ListarPagos`: `proveedorId`, `contrasenaId` por las líneas, `retiroId`, `forma`, `estado`
+  `vigente` por omisión, `posfechado`, `desde`, `hasta`, `cuentaBancariaId`, página; fila con proveedor, contraseñas, forma,
+  cuenta y número del cheque o nota, retiro y custodio), `GET …/pagos/:id` (`ObtenerPago`: `FichaDePagoDto` = el `PagoDto` más
+  el cheque o nota de Bancos con `conciliado` y `anulado`, `referencia`, `recibidoPor`, `retiro`, las líneas juntas por
+  contraseña con `saldoDelDocumento`, `notasAplicadas`, `diferenciaOfrecible` y las retenciones del libro con constancia o
+  `porEmitir`, `creadoPorNombre`, `creadoEn`, y `puedeAnular`, `puedeReaplicar` y `puedeSaldarDiferencia`; los dos primeros
+  corren las mismas listas de reglas que anular y reaplicar, así que Contabilidad sumará la suya sin tocar la ficha) y
+  `GET …/pagos/:id/comprobante` (`ObtenerComprobanteDePago`, sale de la ficha: empresa por el mediador
+  `empresas.obtener_datos_de_empresa`, documentos por contraseña con su retención y sus constancias solo donde este pago la
+  descuenta, total en números y en letras, leyendas «Las retenciones se documentan con su constancia.» y «Este comprobante no es un
+  documento tributario.» («Este recibo…» en efectivo), `hojas` Original y Copia, firmas «Entregado por» y «Recibí conforme»; la forma
+  `efectivo` es el «Recibo de pago en efectivo» con el retiro y el custodio que entrega y `recibido_por` como quien recibe). Reutiliza
+  `montoEnLetras` del core (`core/compartido/dominio/monto-en-letras.ts`, de CP4-7) para el total en letras. Desviaciones: el
+  comprobante de un pago anulado se puede pedir y sale marcado (`pago.estado`, `anulacion`); el saldo de cada documento es el de
+  hoy, no el que quedó tras este pago; el pago en efectivo se probó con datos sembrados en la base (la lista y la ficha leen `retiro_id`, `recibido_por` y `referencia` de `pagos`); rutas, controlador y composición van en
+  archivos propios (`consulta-de-pagos.*`) para no chocar con los pasos que tocan `pagos.controlador`.
 - **2026-11-16 — CP4-E3 (servidor, repartir y pagar en efectivo).** Sin migración. `RegistrarPagosEnEfectivo`
   (`POST /cuentas-por-pagar/retiros/:id/pagos`, `pagos.pagar-en-efectivo`; con diferencias pide `ajustes.crear` y con
   `motivoSinBancarizar`, `pagos.efectivo-sin-bancarizar`): de 1 a 20 pagos, uno por proveedor y hasta 300 cargos, todo o nada,
