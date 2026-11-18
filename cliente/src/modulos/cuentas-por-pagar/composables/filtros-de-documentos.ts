@@ -5,6 +5,7 @@ import type {
   ProveedorParaFiltro,
   TipoDeDocumento,
 } from '../servicios/tipos';
+import type { EstadoDePago } from '../servicios/tipos-de-pagos';
 import { TIPOS_DE_DOCUMENTO } from '../textos';
 
 export const DOCUMENTOS_POR_PAGINA = 50;
@@ -13,6 +14,8 @@ export const DOCUMENTOS_POR_PAGINA = 50;
 export interface FiltrosDeDocumentos {
   proveedorId: string;
   estado: EstadoBuscado;
+  /** Solo cargos: cómo va su pago; vacío es «todos». */
+  estadoDePago: EstadoDePago | '';
   tipo: TipoDeDocumento | '';
   origen: OrigenDelDocumento | '';
   emitidosDesde: string;
@@ -30,6 +33,7 @@ export interface OpcionDeFiltro<T extends string> {
 export const filtrosIniciales = (): FiltrosDeDocumentos => ({
   proveedorId: '',
   estado: 'vigente',
+  estadoDePago: '',
   tipo: '',
   origen: '',
   emitidosDesde: '',
@@ -38,17 +42,20 @@ export const filtrosIniciales = (): FiltrosDeDocumentos => ({
   sinContrasena: false,
 });
 
+const sinVacio = <T>(valor: T | '' | false): T | undefined => (valor === '' || valor === false ? undefined : valor);
+
 /** Lo que se manda al servidor: nada de lo que quedó en «todos». */
 export function consultaDeDocumentos(filtros: FiltrosDeDocumentos, pagina: number): ConsultaDeDocumentos {
   return {
-    proveedorId: filtros.proveedorId || undefined,
+    proveedorId: sinVacio(filtros.proveedorId),
     estado: filtros.estado,
-    tipo: filtros.tipo || undefined,
-    origen: filtros.origen || undefined,
-    emitidosDesde: filtros.emitidosDesde || undefined,
-    emitidosHasta: filtros.emitidosHasta || undefined,
-    soloVencidos: filtros.soloVencidos || undefined,
-    sinContrasena: filtros.sinContrasena || undefined,
+    estadoDePago: sinVacio(filtros.estadoDePago),
+    tipo: sinVacio(filtros.tipo),
+    origen: sinVacio(filtros.origen),
+    emitidosDesde: sinVacio(filtros.emitidosDesde),
+    emitidosHasta: sinVacio(filtros.emitidosHasta),
+    soloVencidos: sinVacio(filtros.soloVencidos),
+    sinContrasena: sinVacio(filtros.sinContrasena),
     pagina,
     limite: DOCUMENTOS_POR_PAGINA,
   };
@@ -56,7 +63,14 @@ export function consultaDeDocumentos(filtros: FiltrosDeDocumentos, pagina: numbe
 
 /** Cuántos filtros distintos de la forma de abrir hay (el estado cuenta solo si no es el de omisión). */
 export function cantidadDeFiltros(filtros: FiltrosDeDocumentos): number {
-  const puestos = [filtros.proveedorId, filtros.tipo, filtros.origen, filtros.emitidosDesde, filtros.emitidosHasta];
+  const puestos = [
+    filtros.proveedorId,
+    filtros.estadoDePago,
+    filtros.tipo,
+    filtros.origen,
+    filtros.emitidosDesde,
+    filtros.emitidosHasta,
+  ];
   const interruptores = [filtros.soloVencidos, filtros.sinContrasena].filter(Boolean).length;
   return puestos.filter(Boolean).length + interruptores + (filtros.estado === 'vigente' ? 0 : 1);
 }
@@ -68,6 +82,15 @@ export const OPCIONES_DE_ESTADO: OpcionDeFiltro<EstadoBuscado>[] = [
   { valor: 'autorizado', texto: 'Autorizados' },
   { valor: 'anulado', texto: 'Anulados' },
   { valor: 'todos', texto: 'Todos' },
+];
+
+/** «Comprometido» es el de los cheques posfechados: el documento ya no se puede volver a pagar y se da por pagado en su fecha. */
+export const OPCIONES_DE_ESTADO_DE_PAGO: OpcionDeFiltro<EstadoDePago | ''>[] = [
+  { valor: '', texto: 'Todos los estados de pago' },
+  { valor: 'comprometido', texto: 'Comprometidos (cheque posfechado)' },
+  { valor: 'pagado', texto: 'Pagados' },
+  { valor: 'en_parte', texto: 'Pagados en parte' },
+  { valor: 'pendiente', texto: 'Sin pagar' },
 ];
 
 export const OPCIONES_DE_ORIGEN: OpcionDeFiltro<OrigenDelDocumento | ''>[] = [

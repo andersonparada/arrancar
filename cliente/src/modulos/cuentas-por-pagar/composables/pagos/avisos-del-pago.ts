@@ -27,6 +27,10 @@ function avisosDeLaRetencion(cargo: CargoParaPagar, fecha: string): string[] {
   return avisos;
 }
 
+/** Algún aviso habla de una constancia de retención sin emitir: se ofrece el enlace a las pendientes (R12). */
+export const hayAvisoDeConstancia = (avisos: readonly string[]): boolean =>
+  avisos.some((aviso) => /constancia/i.test(aviso));
+
 function avisoDeRetencionesPorPracticar(cargo: CargoParaPagar): string[] {
   if ((centavosDe(cargo.retencionesPorPracticar) ?? 0) <= 0) return [];
   return [

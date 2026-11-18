@@ -9,6 +9,8 @@ import EnlacesDeLaFicha from '../componentes/EnlacesDeLaFicha.vue';
 import AvisoDeLoPropio from '../componentes/AvisoDeLoPropio.vue';
 import AccionesDeLaNota from '../componentes/AccionesDeLaNota.vue';
 import NotasDelDocumento from '../componentes/NotasDelDocumento.vue';
+import SeccionDePagosDelDocumento from '../componentes/SeccionDePagosDelDocumento.vue';
+import SeccionDeReintegros from '../componentes/SeccionDeReintegros.vue';
 import SeccionDeAjustes from '../componentes/SeccionDeAjustes.vue';
 import SeccionDeAplicaciones from '../componentes/SeccionDeAplicaciones.vue';
 import SeccionDeFicha from '../componentes/SeccionDeFicha.vue';
@@ -53,6 +55,7 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
         :abriendo="nota.aplicacion.abriendo.value"
         @aplicar="nota.aplicacion.abrir"
         @ajustar="nota.ajuste.abrir"
+        @reintegrar="nota.reintegro.abrir([ficha])"
       />
       <AccionesDeLaFicha
         :ficha="ficha"
@@ -103,6 +106,8 @@ const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.documentos.titulo, ruta: { na
     <NotasDelDocumento :ficha="ficha" />
     <SeccionDeAplicaciones :ficha="ficha" @quitar="nota.quitar.abrir" />
     <SeccionDeAjustes :ajustes="ficha.ajustes" @anular="nota.anularAjuste.abrir" />
+    <SeccionDeReintegros :reintegros="ficha.reintegros" @anular="nota.anularReintegro.abrir" />
+    <SeccionDePagosDelDocumento :pagos="ficha.pagos" />
     <EnlacesDeLaFicha :ficha="ficha" />
 
     <VentanasDeLaNota :ficha="ficha" :acciones="nota" />

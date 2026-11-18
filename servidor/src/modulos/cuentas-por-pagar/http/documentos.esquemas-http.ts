@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ESTADOS_DE_PAGO } from '../dominio/saldo-al-corte.js';
 import { ESTADOS_DE_DOCUMENTO, ORIGENES_DE_DOCUMENTO, TIPOS_DE_DOCUMENTO } from '../dominio/tipos-de-documento.js';
 
 const LIMITE_POR_OMISION = 50;
@@ -11,7 +12,7 @@ const comoBooleano = z.enum(['true', 'false']).transform((valor) => valor === 't
 
 /**
  * Filtros de la lista, todos opcionales. `estado` es uno de los estados, `vigente` (todo menos lo anulado, por
- * omisión) o `todos`. `origen` limita a `libro_de_compras` o `saldo_inicial`. Las fechas son de emisión, incluidas; `soloVencidos` trae los cargos con saldo ya vencidos; `conSaldo`, los cargos con saldo por pagar y las notas con saldo libre; `sinContrasena`, lo que no está en una contraseña vigente.
+ * omisión) o `todos`. `origen` limita a `libro_de_compras` o `saldo_inicial`. Las fechas son de emisión, incluidas; `soloVencidos` trae los cargos con saldo ya vencidos; `conSaldo`, los cargos con saldo por pagar y las notas con saldo libre; `sinContrasena`, lo que no está en una contraseña vigente; `estadoDePago` limita los cargos vigentes a ese estado de pago (`comprometido` es el de los cheques posfechados).
  * `pagina` empieza en 1 y `limite` es de 50 por omisión (máximo 200).
  */
 export const esquemaFiltroDeDocumentos = z.object({
@@ -24,6 +25,7 @@ export const esquemaFiltroDeDocumentos = z.object({
   soloVencidos: comoBooleano.optional(),
   conSaldo: comoBooleano.optional(),
   sinContrasena: comoBooleano.optional(),
+  estadoDePago: z.enum(ESTADOS_DE_PAGO).optional(),
   pagina: z.coerce.number().int().min(1).default(1),
   limite: z.coerce.number().int().min(1).max(LIMITE_MAXIMO).default(LIMITE_POR_OMISION),
 });

@@ -74,6 +74,13 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       component: () => import('./paginas/NuevoPago.vue'),
       meta: { permiso: 'cuentas-por-pagar.pagos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.nuevo },
     },
+    {
+      path: '/cuentas-por-pagar/reintegros/:id/recibo',
+      name: 'cuentas-por-pagar.reintegros.recibo',
+      component: () => import('./paginas/ReciboDeReintegro.vue'),
+      props: ({ params }) => ({ id: String(params.id) }),
+      meta: { permiso: 'cuentas-por-pagar.documentos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.notasDeCredito.recibo },
+    },
     ...rutasDeReportes,
     // generador: rutas
   ],
