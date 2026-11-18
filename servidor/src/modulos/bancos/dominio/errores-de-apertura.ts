@@ -164,7 +164,7 @@ export class FechaDeInicioConSaldosDeBancos extends ReglaDeNegocioInfringida {
 
 /** Aviso (sin bloquear) de un cheque que, al corte, ya tiene `meses` desde su fecha (Código de Comercio, art. 508). */
 export const mensajeDeChequeAntiguo = (cheque: { numero: number; fecha: string; corte: string; meses: number }) =>
-  `El cheque ${cheque.numero} es del ${fechaLegible(cheque.fecha)}: al ${fechaLegible(cheque.corte)} tiene ${cheque.meses} meses. Desde los 6 meses de su fecha el banco puede negarse a pagarlo (Código de Comercio, art. 508): revise si sigue en circulación.`;
+  `El cheque ${cheque.numero} es del ${fechaLegible(cheque.fecha)}: al ${fechaLegible(cheque.corte)} tiene ${cheque.meses} meses. Pasados 6 meses de su fecha, el banco ya no está obligado a pagarlo (Código de Comercio, art. 508). Revise si sigue en circulación o si conviene anularlo y reponerlo.`;
 
 /** Aviso (sin bloquear) de un depósito en tránsito con demasiados días al corte. */
 export const mensajeDeDepositoViejo = (deposito: { fecha: string; dias: number }) =>
