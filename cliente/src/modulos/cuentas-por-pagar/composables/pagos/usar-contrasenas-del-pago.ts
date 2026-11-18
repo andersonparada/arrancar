@@ -15,7 +15,10 @@ function usarEleccionDelProveedor(edicion: EdicionDePago, cargos: Cargos, inicio
 
   async function elegirProveedor(proveedorId: string): Promise<void> {
     Object.assign(edicion, { contrasenasIncluidas: [], montos: {}, diferencias: [], movimientoId: '' });
-    const datos = await cargos.traer(proveedorId, abierta ?? undefined);
+    const datos = await cargos.traer(proveedorId, {
+      contrasenaId: abierta ?? undefined,
+      fecha: edicion.fecha || undefined,
+    });
     if (!datos) return;
     edicion.contrasenasIncluidas = contrasenasIniciales(datos, abierta);
     edicion.montos = proponerMontos(datos.cargos, edicion.contrasenasIncluidas, {});

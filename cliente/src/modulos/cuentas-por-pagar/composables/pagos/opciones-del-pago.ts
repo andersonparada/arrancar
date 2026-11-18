@@ -20,12 +20,15 @@ export const PERMISO_DE_FORMA: Record<FormaDePagoNuevo, string> = {
 
 const ORDEN_DE_FORMAS: FormaDePagoNuevo[] = ['cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura'];
 
-/** Las pestañas que el usuario puede usar: por permiso y, la apertura, solo si hay saldos iniciales por pagar. */
+/**
+ * Las pestañas que el usuario puede usar: por permiso y, la apertura, solo si el proveedor elegido tiene saldos
+ * iniciales por pagar. Con `cargos` en `null` (todavía sin proveedor) solo cuenta el permiso.
+ */
 export function formasDisponibles(
   puede: (permiso: string) => boolean,
-  cargos: readonly CargoParaPagar[],
+  cargos: readonly CargoParaPagar[] | null,
 ): FormaDePagoNuevo[] {
-  const hayInicial = cargos.some(({ origen }) => origen === 'saldo_inicial');
+  const hayInicial = cargos === null || cargos.some(({ origen }) => origen === 'saldo_inicial');
   return ORDEN_DE_FORMAS.filter(
     (forma) => puede(PERMISO_DE_FORMA[forma]) && (forma !== 'cuenta_de_apertura' || hayInicial),
   );

@@ -39,7 +39,7 @@ function usarMedioPorOmision(edicion: EdicionDePago, medios: Ref<MediosDePago | 
 /** Las pestañas que el usuario puede usar según sus permisos y si puede saldar diferencias de centavos. */
 function usarFormasDelPago(edicion: EdicionDePago, cargos: ReturnType<typeof usarCargosParaPagar>) {
   const sesion = usarSesion();
-  const formas = computed(() => formasDisponibles(sesion.puede, cargos.datos.value?.cargos ?? []));
+  const formas = computed(() => formasDisponibles(sesion.puede, cargos.datos.value?.cargos ?? null));
   mantenerUnaFormaValida(edicion, () => formas.value);
   return { formas, puedeSaldar: computed(() => sesion.puede('cuentas-por-pagar.ajustes.crear')) };
 }

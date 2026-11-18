@@ -3,6 +3,7 @@ import type { NotaParaLigar, ParaPagar } from '../../servicios/tipos-de-pagos';
 import { montoDeCentavos } from './errores-del-pago';
 import {
   diferenciasMarcadas,
+  fechaFijaDeApertura,
   lineasDelPago,
   retencionDelPago,
   totalDelPago,
@@ -33,7 +34,7 @@ export interface ContextoDelResumen {
 /** Lo que va a pasar al confirmar: con qué, a nombre de quién, cuánto, a qué documentos y con qué fecha. */
 export function resumenDelPago(edicion: EdicionDePago, { datos, nota, hoy }: ContextoDelResumen): string {
   const lineas = lineasDelPago(edicion, datos);
-  const fecha = edicion.fecha || fechaMinimaDelPago(lineas, datos)?.fecha || hoy;
+  const fecha = fechaFijaDeApertura(edicion, datos) || edicion.fecha || fechaMinimaDelPago(lineas, datos)?.fecha || hoy;
   const contrasenas = new Set(lineas.map(({ cargo }) => cargo.contrasenaId));
   const partes = [
     `${conQueSePaga(edicion, nota)} por ${montoDeCentavos(totalDelPago(lineas))}, fecha ${formatearFecha(fecha)}.`,

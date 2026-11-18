@@ -2326,3 +2326,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Todas las recomendaciones, salvo en Caja chica: una factura con retención se rechaza **con permiso de excepción**
   (lo del contador, CC-f A′) y la bancarización solo **avisa y marca** (lo del arquitecto, CC-h A). Detalle al final de
   cada diseño. Los tres quedan **aprobados** para programar (orden de la hoja de ruta: Multimoneda antes que Caja chica).
+- **2026-11-18 (correcciones de la revisión de CP4-9, solo cliente).** «Nuevo pago»: la pestaña «Cuenta de apertura» ya
+  no depende de los cargos antes de elegir proveedor (solo del permiso; con proveedor, de que tenga saldos iniciales), y
+  si el proveedor no los tiene se explica en vez de mostrar una interfaz sin pestañas. «Registrar pago» en la ficha de la
+  contraseña pide `pagos.ver` (lo que exige la ruta) y cuenta la apertura solo si hay saldos iniciales por pagar. El
+  selector de proveedores junta todas las páginas (antes cortaba en 200) y las notas por ligar piden el máximo del
+  servidor (200) con aviso si se llega al tope, porque esa ruta no pagina. La suma del mes del proveedor sale de la fecha
+  escrita y no se pisa con la de un proveedor anterior; el resumen de la apertura dice la fecha de inicio. Sin cambios en
+  el servidor ni en rótulos de saldo o estados de pago.

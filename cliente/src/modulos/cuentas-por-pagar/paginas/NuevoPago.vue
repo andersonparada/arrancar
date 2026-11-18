@@ -63,7 +63,15 @@ const volver = texto(route.query.contrasenaId)
         </p>
       </TarjetaBase>
 
-      <template v-if="datos">
+      <p
+        v-if="datos && pago.formas.value.length === 0"
+        class="rounded-lg bg-trigo-100 p-3 text-sm text-tierra-800 dark:bg-tierra-800 dark:text-tierra-100"
+        role="status"
+      >
+        Este proveedor no tiene saldos iniciales por pagar, y su permiso solo le deja pagarlos con cuenta de apertura.
+        Pida a quien administra los permisos que le habilite pagar con cheque o nota de débito.
+      </p>
+      <template v-else-if="datos">
         <PestanasDeFormaDePago v-model="edicion.forma" :formas="pago.formas.value" />
         <TarjetaBase>
           <h2 class="mb-4 font-semibold">Documentos que se pagan</h2>
