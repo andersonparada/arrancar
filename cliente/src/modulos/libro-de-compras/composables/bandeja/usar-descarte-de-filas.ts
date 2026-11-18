@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiDteRecibidos } from '../../servicios/dte-recibidos.api';
+import { enGrupos, FILAS_POR_SOLICITUD } from './datos-de-la-bandeja';
 
 /** Lo que la ventana de descarte tiene escrito y a qué filas se aplica. */
 function usarVentanaDeDescarte(limpiarErrores: () => void) {
@@ -19,8 +20,19 @@ function usarVentanaDeDescarte(limpiarErrores: () => void) {
   return { abierta, motivo, ids, abrir, cerrar: () => (abierta.value = false) };
 }
 
-/** Descartar con motivo y restaurar; sirve para la bandeja y para la conciliación. `alTerminar` recarga la lista. */
-export function usarDescarteDeFilas(alTerminar: () => unknown) {
+/** Descarta de a 500 (el tope del servidor) y deja en `hechos` los que ya se descartaron, aunque un grupo falle. */
+async function descartarPorGrupos(ids: readonly string[], motivo: string, hechos: string[]): Promise<void> {
+  for (const grupo of enGrupos(ids, FILAS_POR_SOLICITUD)) {
+    await apiDteRecibidos.descartar(grupo, motivo);
+    hechos.push(...grupo);
+  }
+}
+
+/**
+ * Descartar con motivo y restaurar; sirve para la bandeja y para la conciliación. Descarta de a 500 por solicitud
+ * (el tope del servidor); `alTerminar` recibe los ids ya descartados y recarga la lista.
+ */
+export function usarDescarteDeFilas(alTerminar: (descartados: string[]) => unknown) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
   const ventana = usarVentanaDeDescarte(() => (errores.value = {}));
@@ -32,16 +44,18 @@ export function usarDescarteDeFilas(alTerminar: () => unknown) {
       return;
     }
     const cantidad = ventana.ids.value.length;
-    if (!(await enviar(() => apiDteRecibidos.descartar(ventana.ids.value, motivo)))) return;
+    const hechos: string[] = [];
+    const todo = await enviar(() => descartarPorGrupos(ventana.ids.value, motivo, hechos));
+    if (hechos.length) await alTerminar(hechos);
+    if (!todo) return;
     avisos.exito(cantidad === 1 ? 'Se descartó el DTE.' : `Se descartaron ${cantidad} DTE.`);
     ventana.cerrar();
-    await alTerminar();
   }
 
   async function restaurar(id: string): Promise<void> {
     if (!(await enviar(() => apiDteRecibidos.restaurar(id)))) return;
     avisos.exito('Se restauró el DTE.');
-    await alTerminar();
+    await alTerminar([id]);
   }
 
   return { ...ventana, enviando, errores, descartar, restaurar };

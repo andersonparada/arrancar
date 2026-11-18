@@ -15,6 +15,7 @@ import { facturaAnteriorDeLaNota, notasLibresDelSistemaAnterior } from './consul
 import { ajustesConDatos } from './consultas-de-ajustes.drizzle.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
 import { aFilaDeDocumento, ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
+import { condicionDeEstadoDePago } from './filtro-de-estado-de-pago.js';
 import { documentos } from './documentos.tablas.js';
 import { lineasDeReintegroDeLaNota, lineasDePagoDelCargo } from './consultas-de-lineas-de-pago.js';
 
@@ -52,6 +53,7 @@ function condicionesDeSaldo(filtro: FiltroDeDocumentosPorPagar, hoy: string, bas
       : undefined,
     filtro.conSaldo ? conSaldo(base) : undefined,
     filtro.sinContrasena ? isNull(base.contrasenaVigente.id) : undefined,
+    filtro.estadoDePago ? condicionDeEstadoDePago(filtro.estadoDePago, hoy, base) : undefined,
   );
 }
 

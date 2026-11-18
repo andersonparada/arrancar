@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { FileMinus } from 'lucide-vue-next';
+import { FileMinus, Landmark } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
+import BarraDeSeleccion from '../componentes/BarraDeSeleccion.vue';
 import FiltrosDeNotasDeCredito from '../componentes/FiltrosDeNotasDeCredito.vue';
 import PaginacionDeLista from '../componentes/PaginacionDeLista.vue';
 import ResumenDeSaldosAFavor from '../componentes/ResumenDeSaldosAFavor.vue';
 import TarjetaDeNotaDeCredito from '../componentes/TarjetaDeNotaDeCredito.vue';
+import VentanaDeReintegro from '../componentes/VentanaDeReintegro.vue';
 import { usarNotasDeCredito } from '../composables/usar-notas-de-credito';
 import { VENTANAS_CUENTAS_POR_PAGAR } from '../textos';
 
@@ -43,7 +45,12 @@ const lista = usarNotasDeCredito();
         :aria-busy="lista.cargando.value"
       >
         <li v-for="nota in lista.notas.value" :key="nota.id">
-          <TarjetaDeNotaDeCredito :nota="nota" />
+          <TarjetaDeNotaDeCredito
+            :nota="nota"
+            :puede-marcar="lista.sePuedeMarcar(nota)"
+            :marcado="lista.seleccion.value.includes(nota.id)"
+            @alternar="lista.alternar(nota.id)"
+          />
         </li>
       </ul>
       <PaginacionDeLista
@@ -52,6 +59,27 @@ const lista = usarNotasDeCredito();
         :limite="lista.limite"
         :total="lista.total.value"
       />
+      <BarraDeSeleccion
+        v-if="lista.puedeReintegrar && lista.seleccion.value.length > 0"
+        :cantidad="lista.seleccion.value.length"
+        accion="Registrar reintegro"
+        :icono="Landmark"
+        invitacion=""
+        aviso="Solo se juntan notas del mismo proveedor."
+        @accion="lista.reintegrarEscogidas"
+        @limpiar="lista.limpiar"
+      />
     </template>
+    <VentanaDeReintegro
+      v-model="lista.reintegro.edicion.value"
+      :resumen="lista.reintegro.resumen.value"
+      :cuentas="lista.reintegro.cuentas.value"
+      :sin-cuentas="lista.reintegro.sinCuentas.value"
+      :aviso-de-efectivo="lista.reintegro.avisoDeEfectivo"
+      :errores="lista.reintegro.errores.value"
+      :enviando="lista.reintegro.enviando.value"
+      @cerrar="lista.reintegro.cerrar"
+      @guardar="lista.reintegro.registrar"
+    />
   </div>
 </template>
