@@ -5,7 +5,11 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
-import { compararSaldo, normalizarMonto } from '../../composables/conciliaciones/comparacion-de-saldo';
+import {
+  compararSaldo,
+  normalizarMonto,
+  textoDeDiferencia,
+} from '../../composables/conciliaciones/comparacion-de-saldo';
 import type { Conciliacion } from '../../servicios/conciliaciones.api';
 
 /** El saldo final del estado de cuenta del banco, transcrito por el usuario y comparado en vivo con el calculado. */
@@ -87,8 +91,7 @@ function guardar(): void {
         role="status"
         class="text-sm font-medium text-red-700 dark:text-red-400"
       >
-        Difiere en {{ formatearMonto(comparacion.diferencia) }} del saldo calculado: revise las marcas o registre la
-        nota que falte.
+        {{ textoDeDiferencia(comparacion.diferencia) }}
       </p>
     </template>
   </TarjetaBase>

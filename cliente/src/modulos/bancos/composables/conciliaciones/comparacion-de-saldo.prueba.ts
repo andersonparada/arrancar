@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compararSaldo, faltaParaTerminar, normalizarMonto } from './comparacion-de-saldo';
+import { compararSaldo, faltaParaTerminar, normalizarMonto, textoDeDiferencia } from './comparacion-de-saldo';
 
 describe('normalizarMonto', () => {
   it('quita comas, espacios y la Q', () => {
@@ -54,5 +54,20 @@ describe('faltaParaTerminar', () => {
   });
   it('junta varios motivos', () => {
     expect(faltaParaTerminar(base, true)).toHaveLength(2);
+  });
+});
+
+describe('textoDeDiferencia', () => {
+  const sinEspacioDuro = (texto: string): string => texto.replaceAll('\u00a0', ' ');
+
+  it('con el banco por encima del calculado no muestra monto negativo', () => {
+    const texto = sinEspacioDuro(textoDeDiferencia('-33.00'));
+    expect(texto).toContain('Difiere en Q 33.00');
+    expect(texto).toContain('muestra Q 33.00 más');
+    expect(texto).not.toContain('-');
+  });
+
+  it('con el banco por debajo del calculado dice menos', () => {
+    expect(sinEspacioDuro(textoDeDiferencia('0.20'))).toContain('muestra Q 0.20 menos');
   });
 });

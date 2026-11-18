@@ -14,13 +14,17 @@ export class FaltaElSaldoDelEstadoDeCuenta extends DatoInvalido {
   }
 }
 
+/** `12270.5` como «Q 12,270.50», igual que la pantalla. */
+const enQuetzales = (monto: string): string =>
+  `Q ${Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 /** El saldo transcrito del estado de cuenta no es el que calculan las marcas. */
 export class SaldoDelEstadoDeCuentaNoCoincide extends ReglaDeNegocioInfringida {
   readonly codigo = 'saldo_del_estado_de_cuenta_no_coincide';
 
   constructor(transcrito: string, calculado: string, diferencia: string) {
     super(
-      `El saldo del estado de cuenta (Q${transcrito}) no coincide con el calculado (Q${calculado}); revise las marcas o registre la nota que falte.`,
+      `El saldo del estado de cuenta (${enQuetzales(transcrito)}) no coincide con el calculado (${enQuetzales(calculado)}); revise las marcas o registre la nota que falte.`,
       { transcrito, calculado, diferencia },
     );
   }

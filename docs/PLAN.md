@@ -2221,3 +2221,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   notas de la cuenta hasta fin de mes y se queda con las que el servidor dice `puedeDesmarcar`. Quitar la marca no cambia
   montos: no se recarga la conciliación y las marcas sin guardar se conservan. Lógica pura en `notas-marcadas.ts`;
   `usarDesmarcado` de Notas se reutiliza con un envío propio. Pruebas del cliente: +6.
+- **2026-11-18 — Observaciones menores de la QA de H2 (corregidas las que no esperan decisión).** «Difiere en» ya no muestra un
+  monto negativo: dice el monto y si el estado de cuenta muestra más o menos que el calculado (`textoDeDiferencia`); el mensaje
+  del servidor al terminar con diferencia escribe «Q 12,270.00» como la pantalla; un archivo que no se puede leer ni como foto
+  (por ejemplo un texto llamado `.pdf`) responde `documento_ilegible` («El archivo no es un PDF ni una foto válidos, o está
+  dañado…»); `demasiadas_subidas` pasa a usted; el cuadro «Según libros / Según banco» cabe en 380 px sin desplazarse; y «Ver»
+  de la lista de conciliaciones se alinea con los demás botones. Siguen esperando al usuario la impresión en modo oscuro y la
+  huella.

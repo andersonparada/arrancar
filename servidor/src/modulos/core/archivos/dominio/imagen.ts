@@ -46,7 +46,7 @@ export class DemasiadasSubidas extends DemasiadasSolicitudes {
   readonly codigo = 'demasiadas_subidas';
 
   constructor() {
-    super('Subiste demasiados archivos en poco tiempo. Espera un minuto e inténtalo de nuevo.');
+    super('Subió demasiados archivos en poco tiempo. Espere un minuto e inténtelo de nuevo.');
   }
 }
 
