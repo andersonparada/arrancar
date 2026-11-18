@@ -188,6 +188,9 @@ segundo, de Q5,000.00, cubre Q5,000.00. «Pagado» y «pagado en parte» siguen 
 
 ### 2.4 Cheque posfechado: comprometido hasta su fecha (C-CP4-1)
 
+> **Cambia con la adenda del 2026-11-18 (al final):** en las pantallas, `saldo` es la deuda (como R1). Lo que esta
+> sección llama `saldo` pasa a llamarse `disponible`, y `estadoDePago` tiene cinco valores.
+
 El cheque se paga **a la vista** (Código de Comercio art. 501): el proveedor puede cobrarlo antes de la fecha escrita.
 Por eso el pago posfechado **compromete** el documento desde hoy (nadie lo puede volver a pagar: el saldo ya lo resta) y
 el documento queda **pagado en la fecha del cheque** (NIIF para las Pymes 11.36: el pasivo se da de baja cuando se
@@ -1291,3 +1294,330 @@ art. 20, AG 425-2006 art. 32 reformado) se cotejan con el texto oficial antes de
 - **P-CP4-5 (para el coordinador):** el aviso `movimiento_por_cambiar` «al desmarcar en la conciliación» se entendió como
   la nota marcada que se desmarca desde la conciliación (CP4-B2b). Quitar la marca de **conciliado** a un movimiento no
   necesita aviso: Cuentas por pagar lee `conciliado` en vivo.
+
+## Adenda 2026-11-18: deuda, comprometido y disponible
+
+Arquitecto de datos, con el Tema 3 de `dictamen-em2-cheques-y-posfechado-2026-11-18.md` y las decisiones que el usuario
+tomó el mismo día (bitácora de `PLAN.md`). **Sin migración:** cambian el dominio, los DTO, algunas consultas y la
+presentación. Lo contable no cambia (C-CP4-1, dictamen 5 de CP5, `pagos.fecha <= corte`), y la protección contra el doble
+pago tampoco.
+
+### A.1 Lo decidido
+
+1. En las pantallas de operación, **«Por pagar» y «Saldo» son la deuda**, la misma cifra de R1. Esas pantallas son:
+   - la ficha del proveedor (la sección de Cuentas por pagar dentro de la ficha de Terceros);
+   - la lista y la ficha del documento;
+   - la contraseña (ficha, lista e impresión);
+   - Nuevo pago;
+   - la ficha y el comprobante del pago (CP4-10).
+
+   Al lado van **«comprometido con cheque N al dd/mm»** y **«Disponible para pagar»**. Sin nada comprometido no se agrega
+   nada, porque la deuda y lo disponible son iguales.
+2. **Lo vencido cuenta lo comprometido**, con su nota («de lo cual Q X comprometido con cheques posfechados»), igual que R5.
+3. **Cinco estados de pago**, iguales en la lista, la ficha, la contraseña y R2, **calculados en un solo lugar del dominio**:
+
+| Clave | Nombre | Regla (deuda = `saldo`; disponible = deuda − comprometido) |
+|---|---|---|
+| `pendiente` | Pendiente | deuda > 0, pagado = 0 y comprometido = 0 |
+| `en_parte` | Pagado en parte | deuda > 0, pagado > 0 y disponible > 0 |
+| `comprometido_en_parte` | Comprometido en parte | pagado = 0, comprometido > 0 y disponible > 0 |
+| `comprometido` | Comprometido | deuda > 0 y disponible = 0 (con o sin algo pagado) |
+| `pagado` | Pagado | deuda = 0 |
+
+Lo comprometido es parte de la deuda (comprometido ≤ deuda), así que las cinco reglas no se cruzan y cubren todos los
+casos. Una nota de crédito aplicada o un ajuste no cuentan como «pagado»: un cargo con una nota aplicada y sin pagos sigue
+`pendiente`, como hoy.
+
+Lo pagado y lo comprometido se separan con una fecha:
+- en operación, con la de hoy de la empresa (`reloj.hoy`);
+- en R2, con la fecha de efecto al corte (CP5 §2.1).
+
+### A.2 Lo que hay hoy en el código (`main` al 2026-11-18)
+
+**Dominio:**
+- `dominio/saldos.ts`: `SaldoDelDocumento.saldoCentavos` resta **todos** los pagos vigentes, porque `pagadoCentavos` lleva
+  también los posfechados. Esa cifra es lo **disponible**, aunque se llame «saldo».
+- `estaVencido` recibe ese saldo. Por eso un cargo vencido y comprometido entero **no** sale vencido.
+- `dominio/pagos.ts`: `estadoDePagoDe` tiene cuatro estados y solo da `comprometido` con saldo 0.
+- El SQL de R2 (`saldos-al-corte.sql.ts`, `ESTADO_DE_PAGO`) copia esa regla, pero allí el saldo es la deuda. Por eso un
+  cargo cubierto con un posfechado sale «Pagado en parte» con «Pagado 0.00», lo que observó el dictamen.
+
+**SQL.** `ConsultaBaseDeDocumentos.saldoDelCargo()` es lo disponible y no conoce «hoy». La usan:
+- `consultas-de-documentos.drizzle.ts`: los filtros `soloVencidos` y `conSaldo`, y `cargosConSaldoDe`;
+- `consultas-de-saldos.drizzle.ts`: `porPagar`, `vencido` y `cargosConSaldo` del proveedor, con `saldo > 0`, que **deja
+  fuera** el cargo comprometido entero;
+- `consultas-de-contrasenas.drizzle.ts`: `disponiblesDe`;
+- `consultas-de-pagos.drizzle.ts`: `proveedoresPorPagar`.
+
+**DTO cuyo `saldo` es lo disponible:**
+- `DocumentoPorPagarDto` (lista y ficha);
+- `SaldoDelProveedorDto` (`porPagar`, `vencido`, `cargosConSaldo`);
+- `CargoDeContrasenaDto`, los totales de la contraseña y la fila de su lista (`saldo`, `pagoVencido`);
+- `ImpresionDeContrasenaDto`: `pagado` es lo pagado más lo comprometido, y `saldo` es lo disponible;
+- `CargoParaPagarDto` (`saldo` y `propuesto`) y `ProveedorPorPagarDto.porPagar`;
+- la línea de la ficha del pago (`saldoDelDocumento`) y la del comprobante (`saldo`);
+- el DTO de los cargos para aplicar una nota (`listar-cargos-para-aplicar.ts`).
+
+**Lo que no cambia:** R1, R3, R4 (`contrasenas-por-pagar.drizzle.ts`) y R5 ya usan la deuda al corte.
+
+**Terceros** no calcula saldos. Su ficha del proveedor muestra la sección `FichaCondicionesDePago.vue` de Cuentas por
+pagar (`secciones` de su `modulo.ts`), que arma `detallesDeCondiciones` en `composables/condiciones-de-pago.ts`. **No se
+toca código de Terceros.**
+
+**Pruebas que fijan lo viejo:**
+- `servidor/src/pruebas-api/cuentas-por-pagar-qa-intermedia.api.prueba.ts`. Está en la rama `integracion` (commit
+  `daaf6c22`), todavía **no en `main`**. Su caso «un cheque posfechado en la ficha y en los reportes» espera:
+  - en la ficha, `saldo: '0.00'` y `estadoDePago: 'comprometido'`;
+  - en el proveedor, `porPagar: '0.00'` y `cargosConSaldo: 0`;
+  - en R2, `estadoDePago: 'en_parte'`.
+- `cuentas-por-pagar-pagos-registro.api.prueba.ts`: el posfechado con `saldo: '0.00'`.
+- `cuentas-por-pagar-pagos-saldos.api.prueba.ts`: la ficha comprometida con saldo 0, y la contraseña con saldo 700 menos
+  los 120 comprometidos.
+- `dominio/pagos.prueba.ts`.
+- El bucle de cuatro estados de `cuentas-por-pagar-reportes-saldos-dominio.api.prueba.ts`.
+
+**Verificación de R1, que pidió el contador:** R1 **sí** muestra las dos cifras.
+- El DTO `CifrasDeSaldoDto` trae `comprometido` y `disponible` (nulo en los deudores).
+- La tabla de escritorio y de impresión (`TablaDeSaldos.vue`, `FilaDeTablaDeSaldo.vue`) tiene las columnas «Comprometido»
+  y «Disponible», en las filas y en el total.
+- La tarjeta de celular (`TarjetaDeSaldo.vue`) muestra «Comprometido» si no es cero y «Disponible para pagar» si no es
+  nulo.
+- El Excel (`saldos-por-proveedor.columnas.ts`) trae «Comprometido (cheques posfechados)» y «Disponible para pagar».
+
+Hay tres diferencias con el diseño:
+1. La columna de la tabla dice «Disponible», no «Disponible para pagar».
+2. El resumen de arriba (`totalesDeSaldos`) solo trae «Comprometido (posfechados)», sin lo disponible.
+3. **`disponible = saldo neto − comprometido`** (`cifrasDto` en `dto-de-saldos-al-corte.ts`). El saldo neto ya resta los
+   saldos a favor, así que en el caso de la QA da −336.00. No coincide con el «Disponible para pagar» de la ficha del
+   proveedor, que es la deuda de los cargos menos lo comprometido (0.00), con lo que está a favor aparte. Ver la
+   pregunta A.7.
+
+### A.3 Modelo (dominio, un solo lugar)
+
+- **Saldo del documento.**
+  - `AplicadoAlDocumento` recibe `comprometidoCentavos`, que quien llama saca con `pagadoYComprometido(pagosVigentes, hoy)`.
+  - `SaldoDelDocumento` **deja de tener `saldoCentavos`** y trae tres cifras: `deudaCentavos` (neto − aplicado − ajustado −
+    pagado hasta hoy), `comprometidoCentavos` y `disponibleCentavos` (deuda − comprometido, lo de hoy).
+  - El nombre viejo se quita para que `tsc` marque **cada** uso y en cada uno se decida qué cifra va (lista de A.4). Así
+    ningún uso se queda, sin que se note, con el significado equivocado.
+  - En una nota de crédito, deuda = disponible = saldo libre, y lo comprometido es cero.
+- **Estado de pago.** `estadoDePagoDe({ deudaCentavos, pagadoCentavos, comprometidoCentavos })`, en `dominio/pagos.ts`,
+  aplica la tabla de A.1. `ESTADOS_DE_PAGO` pasa de `saldo-al-corte.ts` a `pagos.ts` con los cinco valores. El nombre que
+  ve la persona se define **una sola vez** en el cliente (`textos.ts`) y una vez en el Excel de R2.
+- **Vencido.** `estaVencido(documento, deudaCentavos, hoy)`.
+- **Rótulo «cheque al dd/mm».** El dominio saca de `pagosVigentes`, sin consulta nueva, `comprometidoHasta` (la fecha del
+  posfechado más lejano) y `chequesPosfechados` (cuántos hay).
+- **SQL con la misma regla.**
+  - `ConsultaBaseDeDocumentos` recibe `hoy` en el constructor. Es opcional; solo lo exigen los métodos nuevos.
+  - `SubconsultasDePagos.pagadoAlCargo` suma `comprometido = sum(monto) filter (where pagos.fecha > hoy)`.
+  - `saldoDelCargo()` pasa a llamarse `disponibleDelCargo()`, y se agrega `deudaDelCargo()` (disponible + comprometido).
+  - Un solo armador, `expresionDeEstadoDePago({ deuda, pagado, comprometido })` en `infraestructura/persistencia/`, lo
+    usan R2 (`saldos-al-corte.sql.ts`) y el filtro de la lista (`filtro-de-estado-de-pago.ts`, de CP4-11).
+  - El SQL copia la regla del dominio, y una prueba compara los dos sobre una grilla de casos (A.6).
+  - «Hoy» es el de la empresa (`reloj.hoy`), no `now()`: así las pruebas con reloj fijo valen igual.
+
+### A.4 Qué cifra usa cada lugar
+
+**Siguen con lo disponible** los lugares que limitan un pago, una nota aplicada o un ajuste, así que la protección no
+cambia:
+- registro del pago: `registro-de-pago.ts`, `revisor-del-pago.ts`, `comunes-del-registro.ts` y `lector-del-pago.ts`;
+- diferencias: `saldar-diferencia-del-pago.ts` y `diferenciaOfrecible` de `dto-de-ficha-de-pago.ts`;
+- notas aplicadas: `aplicar-nota.ts`, el tope de `listar-cargos-para-aplicar.ts` y `aplicacion-manual.ts`;
+- contraseñas: `reparto-de-contrasena.ts`, `reglas-de-contrasena.ts` y `documentos-de-la-contrasena.ts`;
+- `ajustar-saldo.ts`, el `propuesto` de `listar-cargos-para-pagar.ts` y `hechosDe` de `accionesDelDocumento`;
+- en SQL: `cargosConSaldoDe`, `disponiblesDe` y la condición de `proveedoresPorPagar` (quién aparece en Nuevo pago). El
+  filtro `estadoDePago` de la lista usa lo disponible dentro de su regla.
+
+**Pasan a la deuda** los lugares que muestran el saldo o lo que se debe:
+
+| DTO / consulta | Cambio |
+|---|---|
+| `DocumentoPorPagarDto` (lista y ficha) | `saldo` = deuda. Nuevos `disponible`, `comprometidoHasta` y `chequesPosfechados`. `vencido` con la deuda. `estadoDePago` de cinco valores |
+| `PagoDelDocumentoDto` (pagos en la ficha del documento) | Nuevo `numeroDeCheque: string \| null`: se lee de `bancos.cheques` por `pagos.movimiento_id`, como `movimientos-de-pagos.drizzle.ts` |
+| Filtros `soloVencidos` y `conSaldo` de la lista | `deudaDelCargo() > 0`: un cargo comprometido tiene saldo y puede estar vencido |
+| `SaldoDelProveedorDto` (`totalesDelProveedor`) | `porPagar`, `vencido` y `cargosConSaldo` con la deuda (`where deuda > 0`). Nuevos `comprometido`, `disponible`, `vencidoComprometido` y `posfechados: { numeroDeCheque, fecha, monto }[]` (hasta 10, por fecha, con las líneas sumadas por pago) |
+| `CargoDeContrasenaDto`, totales y fila de la lista de contraseñas | `saldo` = deuda. Nuevos `disponible` y `comprometidoHasta`. `pagoVencido` con la deuda. `estadoDePago` de cinco valores, con las sumas de los cargos |
+| `PagoDeLaContrasenaDto` | Nuevo `numeroDeCheque` |
+| `ImpresionDeContrasenaDto` | `pagado` = solo lo pagado. Nueva columna `comprometido`, con la marca «posfechado al dd/mm» que ya existe. `saldo` = deuda. En cada fila, total − retenciones − rebajado − pagado = saldo; lo comprometido va como «de lo cual» |
+| `CargoParaPagarDto` (Nuevo pago) y el de cargos para aplicar | `saldo` = deuda. Nuevos `comprometido`, `disponible` y `comprometidoHasta`. `propuesto` = disponible |
+| `ProveedorPorPagarDto` | `porPagar` = deuda. Nuevo `disponible`. El filtro sigue siendo disponible > 0 |
+| Ficha del pago (`saldoDelDocumento`) y comprobante (`saldo`) | `saldoDelDocumento` = deuda, y nuevo `disponibleDelDocumento`. En el comprobante, «Saldo» = deuda; si hay comprometido, también «Comprometido» y «Disponible» |
+| R2 (`documentos-al-corte`) | `estadoDePago` de cinco valores. Nuevo `disponible` por fila y en el total (saldo − comprometido al corte), con su columna «Disponible para pagar» en el Excel |
+
+**Contrato de la API.** Solo lo usa la PWA, pero una pestaña abierta durante el despliegue seguiría con el cliente viejo.
+Por eso el cambio va en dos tiempos:
+1. Primero se **agregan** los campos (`disponible` y los demás) y el cliente pasa a usarlos donde se paga.
+2. Después, `saldo` cambia de significado.
+
+Aun con un cliente viejo, el servidor rechaza pagar de más, porque sus reglas usan lo disponible.
+
+### A.5 Pantallas (cliente)
+
+- **Ficha del proveedor** (`condiciones-de-pago.ts`), en este orden:
+  1. «Por pagar» (la deuda).
+  2. Si hay comprometido: «de lo cual, comprometido con cheques posfechados: Q X (cheque N, dd/mm/aaaa; …)». Con más de 10
+     cheques, un enlace al reporte de cheques posfechados filtrado por el proveedor, que solo ve quien tiene el permiso de
+     ese reporte (`v-permiso`).
+  3. «Disponible para pagar».
+  4. «Vencido», con la nota de lo comprometido si `vencidoComprometido > 0`.
+  5. «A favor de la empresa».
+
+  El permiso para ver la sección no cambia (`cuentas-por-pagar.documentos.ver`).
+- **Lista de documentos** (`detallesDeLista`, `TarjetaDeDocumentoPorPagar.vue`): «Saldo» (la deuda). Si hay comprometido,
+  también «Disponible» y la insignia «Comprometido — cheque al dd/mm/aaaa»; con dos o más cheques, «N cheques, el último
+  al …». La insignia del estado de pago usa el diccionario único.
+- **Ficha del documento** (`detallesDeMontos`, `detallesDeFicha` y `SeccionDePagosDelDocumento.vue`, de CP4-11): «Saldo»,
+  «Comprometido con cheque N al dd/mm/aaaa» (una línea por posfechado), «Disponible para pagar» y «Estado de pago». La
+  sección de pagos muestra el número de cheque.
+- **Contraseña** (`ficha-de-contrasena.ts`, `ResumenDeContrasena.vue`, `DocumentosDeLaContrasena.vue`,
+  `filtros-de-contrasenas.ts`, `HojaDeContrasena.vue`, `TablaDeCargosImpresos.vue`):
+  - «Saldo por pagar» es la deuda, con «Comprometido» y «Disponible para pagar» al lado.
+  - En cada cargo, «comprometido con cheque N al dd/mm» en vez de «+ X comprometido».
+  - En la hoja impresa, las columnas Pagado, Comprometido y Saldo.
+  - Los cargos por pagar desde la contraseña (`cargosPorPagar` de `pagos-de-la-contrasena.ts`) se filtran con
+    `disponible > 0`.
+- **Nuevo pago** (`FilaDeCargoDelPago.vue`, `CargosDelPago.vue`, `grupos-del-pago.ts`, `edicion-de-pago.ts`,
+  `errores-del-pago.ts`, `opciones-del-pago.ts`):
+  - cada cargo dice «debe X» (la deuda) y, si hay comprometido, «· comprometido Y (cheque al dd/mm) · disponible Z»;
+  - «Todo», lo propuesto, el tope del monto y la suma del grupo usan lo disponible, y el total del grupo se rotula
+    «disponible»;
+  - el selector de proveedores dice «por pagar X», y agrega «disponible Z» si es distinto.
+- **Pagos (CP4-10):** la ficha del pago muestra «Saldo del documento» (la deuda) y «Disponible». Para reaplicar, el tope
+  sale de `disponibleDelDocumento + monto` y de `cargo.disponible`. El comprobante, como en A.4.
+- **Diccionario único** en `textos.ts`: `NOMBRES_DE_ESTADO_DE_PAGO` (los cinco de A.1, en masculino porque describen el
+  pago) y `TONOS_DE_ESTADO_DE_PAGO`. Reemplazan:
+  - los de `pagos/detalles-de-pago.ts`, que hoy dicen «Pagada en parte» y «Comprometida»;
+  - los de `reportes/vistas-de-documentos.ts` y `reportes/detalles-de-documentos-al-corte.ts`;
+  - `OPCIONES_DE_ESTADO_DE_PAGO`, de CP4-11.
+
+  Las opciones de los filtros salen del diccionario, en el orden de A.1.
+- **Excel:** las pantallas de operación no tienen Excel (sección operación). Solo cambian el de R2 (los nombres de los
+  estados y la columna «Disponible para pagar») y el de R1, según lo que se responda en A.7.
+- **Permisos, auditoría y RLS:** nada nuevo, porque todo son lecturas. Leer `bancos.cheques` desde `infraestructura` ya
+  está permitido por el `dependeDe`, con RLS por empresa.
+
+### A.6 Pasos (un commit cada uno; después de CP4-10 y CP4-11 en `main`)
+
+| Paso | Va después de |
+|---|---|
+| CP4-D1 | CP4-10 y CP4-11 en `main` |
+| CP4-D2 | CP4-D1 |
+| CP4-D3 | CP4-D2, y la QA intermedia unida de `integracion` a `main` (por su prueba) |
+| CP4-D4 | CP4-D3 |
+| CP4-D5 | CP4-D4. No en paralelo con CP4-E5, que toca las mismas pantallas de Nuevo pago |
+| CP4-D6 | CP4-D4 y la respuesta a A.7 |
+| CP4-D7 | CP4-D6 |
+| CP4-12 (QA) | Suma los casos de esta adenda |
+
+1. **CP4-D1 (servidor: agregar, sin cambiar lo que se ve).**
+   - Dominio de A.3: `deudaCentavos`, `comprometidoCentavos` y `disponibleCentavos`. Se quita `saldoCentavos` y cada uso
+     se decide según A.4.
+   - En los DTO, `saldo` **sigue** siendo lo disponible y se **agregan** `disponible`, `comprometido`,
+     `comprometidoHasta`, `chequesPosfechados`, `numeroDeCheque`, `vencidoComprometido`, `posfechados` y
+     `disponibleDelDocumento`.
+   - `ConsultaBaseDeDocumentos` con `hoy`, `disponibleDelCargo()` y `deudaDelCargo()`.
+   - **Pruebas:**
+     - puras de `saldoDe`: posfechado entero, parcial, junto con un pago de hoy, con nota aplicada y con ajuste;
+     - de API: los campos nuevos en la ficha, la lista, la contraseña, los cargos para pagar y el saldo del proveedor, con
+       un posfechado;
+     - las pruebas que ya existen pasan sin tocarlas, y eso prueba que no cambió nada.
+2. **CP4-D2 (cliente: pagar con lo disponible).**
+   - Tipos de `servicios/`.
+   - Pasan a `disponible`: `FilaDeCargoDelPago` («Todo» y el monto inicial), `errores-del-pago`, `edicion-de-pago` (la
+     línea del tope), `grupos-del-pago`, `pagos-de-la-contrasena`, `aplicacion-de-nota`, `aplicaciones-de-la-ficha`,
+     `reparto-de-contrasena`, `reglas-de-acciones`, `edicion-de-contrasena` y la reaplicación de CP4-10.
+   - No cambia nada de lo que se ve.
+   - **Pruebas:** los `*.prueba.ts` de esos archivos, con datos donde `saldo` ≠ `disponible`. Por ejemplo, con saldo 2,240
+     y disponible 1,000, «Todo» escribe 1,000 y 1,500 da error.
+3. **CP4-D3 (servidor: `saldo` es la deuda).**
+   - `saldo`, `porPagar`, `vencido`, `cargosConSaldo`, `pagoVencido`, la impresión de la contraseña, la ficha del pago y
+     el comprobante pasan a la deuda (A.4).
+   - Los filtros `soloVencidos` y `conSaldo`, con `deudaDelCargo()`.
+   - **Pruebas:**
+     - El caso de la QA intermedia se invierte y se renombra «la ficha y R2 dan la misma deuda». Espera, en la ficha,
+       `saldo: '1120.00'` y `disponible: '0.00'`; en el proveedor, `porPagar: '1120.00'`, `comprometido: '1120.00'`,
+       `disponible: '0.00'` y `cargosConSaldo: 1`; y el saldo de la ficha igual al de R2 con corte de hoy.
+     - Se ajustan `pagos-registro` (la línea del posfechado) y `pagos-saldos` (ficha y contraseña: `saldo: '820.00'`,
+       `disponible: '700.00'`).
+     - Casos nuevos: un cargo vencido y comprometido entero sale en «Solo vencidos» y en el `vencido` del proveedor, con
+       `vencidoComprometido`; la impresión trae la columna de lo comprometido; pagar sobre lo comprometido sigue
+       rechazado (doble pago).
+4. **CP4-D4 (servidor: cinco estados).**
+   - `estadoDePagoDe` de A.1 y `ESTADOS_DE_PAGO` en `pagos.ts`.
+   - `expresionDeEstadoDePago`, única para R2 y para el filtro de la lista.
+   - `NOMBRE_DEL_ESTADO` del Excel de R2.
+   - Estado de la contraseña con las sumas de sus cargos.
+   - **Pruebas:**
+     - tabla pura de los cinco estados y sus bordes: pagado y comprometido con disponible 0 da `comprometido`; con
+       disponible > 0 da `en_parte`; nota aplicada sin pagos da `pendiente`;
+     - grilla de SQL contra dominio: el bucle de `reportes-saldos-dominio`, con cinco estados, y
+       `filtro-de-estado-de-pago.prueba.ts`;
+     - el caso de la QA en R2 da `comprometido` y ya no `en_parte`;
+     - el esquema http rechaza un estado desconocido.
+5. **CP4-D5 (cliente: presentación).** Las pantallas de A.5 y el diccionario único.
+   - **Pruebas:**
+     - `condiciones-de-pago.prueba.ts`: con y sin comprometido, y vencido comprometido;
+     - `detalles-de-montos.prueba.ts` y `estado-de-pago-en-documentos.prueba.ts`: la insignia y los cinco estados;
+     - `ficha-de-contrasena.prueba.ts` e `impresion-de-contrasena.prueba.ts`;
+     - `resumen-del-pago.prueba.ts` y `grupos-del-pago.prueba.ts`: los textos;
+     - `vistas-de-documentos.prueba.ts`: las cinco opciones.
+6. **CP4-D6 (servidor, reportes).** `disponible` en R2 (fila, total y Excel), y R1 según A.7.
+   - **Pruebas:** R2 con un posfechado (`disponible` = saldo − comprometido); R1 con el caso de la QA (la Ferretería).
+7. **CP4-D7 (cliente, reportes).**
+   - R2: columna «Disponible para pagar», en la tabla y en la tarjeta.
+   - R1: la columna se rotula «Disponible para pagar» y se agrega al resumen de arriba.
+   - **Pruebas:** `resumen-de-reportes.prueba.ts` y `detalles-de-documentos-al-corte.prueba.ts`.
+
+**Lo que habrá que ajustar de CP4-11** (rama `worktree-wf_d318640d-7a5-2`, commit `8155ebc8`), cuando esté en `main`:
+- `infraestructura/persistencia/filtro-de-estado-de-pago.ts` repite la regla de cuatro estados y busca los posfechados con
+  `jsonb_array_elements` sobre `pagadoAlCargo.pagos`. Pasa a `expresionDeEstadoDePago`, con `deudaDelCargo()` y la columna
+  `comprometido` de la subconsulta (D1 y D4). Su prueba, `filtro-de-estado-de-pago.prueba.ts`, gana `comprometido_en_parte`
+  y cambia lo que espera del cargo comprometido entero.
+- `http/documentos.esquemas-http.ts` importa `ESTADOS_DE_PAGO` de `saldo-al-corte.js`. Pasa a importarlo de `pagos.js`, con
+  cinco valores (D4).
+- `composables/filtros-de-documentos.ts`: `OPCIONES_DE_ESTADO_DE_PAGO` (cuatro opciones, con «Sin pagar») sale del
+  diccionario único, con los cinco nombres de A.1 (D5).
+- `TarjetaDeDocumentoPorPagar.vue` y `detalles-de-documento.ts`. La insignia usa `nombreDelEstadoDePago` de
+  `pagos/detalles-de-pago.ts`, con los nombres en femenino de la contraseña, y `montosDePago` agrega una fila
+  «Comprometido». Pasan al diccionario único y a «Saldo / Disponible / insignia del cheque» (D5).
+- `SeccionDePagosDelDocumento.vue`: el número de cheque del posfechado (D5, con el `numeroDeCheque` de D1).
+- `estado-de-pago-en-documentos.prueba.ts` y `detalles-de-montos.prueba.ts`: datos con `saldo` = deuda y con `disponible`
+  (D5).
+
+**Lo de CP4-10** (rama `worktree-wf_d318640d-7a5-1`, commit `2514f3b9`):
+- La reaplicación calcula lo disponible con `saldoDelDocumento + monto` y `cargo.saldo`. Pasa a `disponibleDelDocumento` y
+  `cargo.disponible` (D2).
+- La ficha del pago y la hoja del comprobante cambian de rótulos (D5).
+
+**CP4-12 (QA)** suma estos casos:
+- El proveedor con el posfechado de la QA intermedia muestra 2,240 por pagar, 2,240 comprometidos con el número de cheque,
+  0 disponible y el vencido con su nota. Su estado, «Comprometido», sale igual en la lista, la ficha y R2.
+- Un cargo pagado en parte hoy y en parte con un posfechado sale «Pagado en parte» si le queda disponible, y
+  «Comprometido» si no.
+- Un cargo con solo un posfechado parcial sale «Comprometido en parte».
+- La impresión de la contraseña y el comprobante salen con las tres cifras.
+
+### A.7 Pregunta para el usuario (solo frena CP4-D6 y CP4-D7)
+
+**¿Qué es «Disponible para pagar» en R1?** Hoy es el saldo neto menos lo comprometido: resta los saldos a favor y puede
+dar negativo (−336.00 en la QA). En la ficha del proveedor (A.5) es la deuda de los cargos menos lo comprometido, con lo
+que está a favor aparte.
+
+| Opción | Efecto |
+|---|---|
+| (a) Igual que la ficha: total de cargos − comprometido | Una sola definición: la suma de lo disponible en la lista coincide con R1, como prometía CP5 §2.5 (invariante 3). Lo que está a favor ya tiene su columna |
+| (b) Dejarlo como está: neto − comprometido | Tiene en cuenta la compensación con notas, pero no coincide con la ficha y puede salir negativo |
+| (c) Neto − comprometido, sin bajar de cero | No sale negativo, pero esconde cuánto pasa lo comprometido del neto |
+
+**Recomendación: (a).** Aplica en R1 la misma regla de la operación (disponible = deuda − comprometido). Además, no mezcla
+la compensación con notas, que es una decisión aparte (U13), con lo que todavía se puede pagar. Como la cifra sale en un
+reporte, conviene que el contador lo confirme.
+
+### A.8 Notas a otros diseños
+
+- `diseno-cp5-reportes.md` §2.1 dice que la lista resta lo comprometido y que «Disponible para pagar» coincide con la
+  lista; la invariante 3 de §2.5 dice que, con corte de hoy, lo disponible de cada documento es el saldo de la lista.
+  Después de CP4-D3, con corte de hoy, el **saldo** de R2 es igual al saldo de la lista, y lo disponible de R2, a lo
+  disponible de la lista.
+- §2.2 y §2.4 de este diseño: el `saldo` que «resta todo lo vigente, también lo comprometido» ahora se llama `disponible`.
+  El `saldo` es la deuda, y `estadoDePago` tiene los cinco valores de A.1.
