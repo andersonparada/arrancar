@@ -42,6 +42,8 @@ export interface SaldoInicialResumenDto {
   cuentaBancariaId: string;
   cuentaNombre: string;
   bancoNombre: string | null;
+  /** Si la cuenta bancaria está activa (la revisión del cierre solo cuenta las activas). */
+  activa: boolean;
   forma: FormaDelSaldoInicial;
   fechaDeCorte: string | null;
   saldoSegunEstadoDeCuenta: string | null;
