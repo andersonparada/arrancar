@@ -2271,3 +2271,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   motivo» y se guarda y exporta la revisión con las cifras del cuadre de cada módulo; adjunto opcional del balance de
   apertura firmado (PDF revisado con qpdf, auditoría); después de EM-2, paso de U8 para transcribir del balance el saldo de
   proveedores y el de anticipos (dos cifras) y tener «no cuadra» con motivo.
+- **2026-11-18 — Impresión de cheques: diseño final con el dictamen.** `diseno-impresion-de-cheques.md` queda aprobado y con
+  los ajustes del contador: `movimientos.para_abono_en_cuenta` (falso por omisión; va con el pago al pasar a otro
+  formulario), relleno tras el beneficiario y en el primer renglón de las letras, campos de la cara del cheque cerrados (sin
+  anotaciones), `preimpreso` para «NO NEGOCIABLE» y «PARA ABONO EN CUENTA», fecha en texto o en casillas, causas de
+  anulación `inutilizado` (con confirmación de custodia y del papel conservado) y `extraviado` (anulación con aviso al
+  banco), reporte de correlativos por chequera con cuadro de conteo físico, comprobante con retenciones y «Aplicación
+  contable» vacía. Pasos IC-1 a IC-11; empiezan cuando BS-3, BS-4 y BS-R1 estén en `main` (la migración toma la siguiente
+  libre tras la `0035`). Falta cotejar la remisión del art. 495 antes de citarlo.
