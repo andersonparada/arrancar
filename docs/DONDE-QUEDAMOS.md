@@ -8,7 +8,7 @@ decisiones e investigación con Opus).
 
 ## Estado para retomar (se actualiza en cada unión a `main`)
 
-Actualizado: **2026-11-18**. Por pedido del usuario se terminan solo los pasos en curso; no se lanzan pasos nuevos. Si otra sesión o cuenta retoma el trabajo, empiece aquí.
+Actualizado: **2026-11-18** (tarde). El usuario pidió retomar la programación. Si otra sesión o cuenta retoma el trabajo, empiece aquí.
 
 **Cómo se trabaja:** cada paso lo programa un agente en su propio worktree (`.claude/worktrees/agent-<id>`, rama
 `worktree-agent-<id>`), que parte de `main` con `git reset --hard main`, usa su propia base de pruebas
@@ -23,7 +23,13 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
 **`main`:** `3959e95` y lo que le siga solo de docs (sin `git push`; lo hace el usuario). Última corrida completa en verde
-(con CP4-8 y BS-1 unidos): servidor 4829, cliente 1179, generador 46, y `npm run revisar` limpio. **No hay agentes en curso.**
+(con CP4-8 y BS-1 unidos): servidor 4829, cliente 1179, generador 46, y `npm run revisar` limpio. **Agentes en curso (lanzados el 2026-11-18, cada uno en su worktree `.claude/worktrees/agent-<id>` desde `main`):**
+- **CP4-9** (cliente, pagar): `programador-frontend` (Sonnet), base `arrancar_pruebas_cp49`.
+- **BS-2** (servidor, saldos iniciales por partidas): `programador-backend` (Sonnet), base `arrancar_pruebas_bs2`;
+  conserva el `GET` viejo de `/bancos/saldos-iniciales` hasta BS-5.
+- **CP4-E4** (servidor, liquidar y reabrir el retiro, recibo de efectivo): `programador-backend` (Sonnet), base
+  `arrancar_pruebas_cpe4`.
+Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
 
