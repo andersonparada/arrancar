@@ -1622,3 +1622,55 @@ Plan: `plan-hallazgos-contables.md`, H8, y la respuesta del usuario: la nota de 
 - **Pruebas**: dominio (`intereses.prueba.ts`), casos de uso (`casos-uso-de-intereses-en-notas.prueba.ts`, `calculo-de-intereses.prueba.ts`), API
   (`bancos-intereses.api.prueba.ts`: guardar, cuadre, `check` de la base, corregir, reporte, notas sin datos, permisos, Excel y aislamiento;
   `bancos-migracion-de-permisos-de-intereses`) y cliente (`intereses-de-nota.prueba.ts`, `edicion-de-nota.prueba.ts`).
+
+## H2 Evidencia del estado de cuenta en la conciliación (hecho; QA en el navegador el 2026-11-18)
+
+Diseño y decisiones del usuario: `diseno-h2-evidencia-de-conciliacion.md` (con las notas de cada paso). Informe de la prueba en el
+navegador: `informe-qa-h2-2026-11-18.md`. Pasos: 1 (core: revisar el PDF fuera de la transacción, archivos huérfanos, fila de
+revisión de qpdf), 2 y 3 (H2a, saldo transcrito), 4 y 5 (H2b, archivo adjunto).
+
+### Qué hace
+
+- **Saldo transcrito (H2a).** Quien elabora escribe el saldo final que muestra el estado de cuenta del banco
+  (`PUT /api/bancos/conciliaciones/:id/saldo-del-estado-de-cuenta`, `{ saldoEstadoDeCuenta: "1250.50" | null }`, puede ser negativo).
+  Solo se **compara** con el saldo calculado (que sale de lo marcado): la pantalla dice en vivo «Coincide con el saldo calculado» o
+  «Difiere en Q…». Se puede ir guardando con diferencia, pero **no se puede terminar** (422 `saldo_del_estado_de_cuenta_no_coincide`) ni
+  autorizar (un `check` de la base lo garantiza). Terminar sin saldo da 400 `falta_el_saldo_del_estado_de_cuenta`. Siempre obligatorio.
+- **Archivo (H2b).** PDF (hasta 10 MB, 300 páginas, revisado con qpdf) o foto JPEG, PNG o WebP (hasta 15 MB; HEIC se rechaza; queda como
+  WebP). Rutas bajo `/api/bancos/conciliaciones/:id/estado-de-cuenta`: `POST` (multipart, un solo archivo en el campo `archivo`, sin otros
+  campos; sube o reemplaza), `DELETE` (quita) y `GET` (contenido, `Cache-Control: private, no-store`, nombre armado por el servidor
+  `estado-de-cuenta-AAAA-MM.pdf|webp`). Permisos: `conciliar` sube, reemplaza y quita; `ver` lo abre; `autorizar` no sube (si falta,
+  devuelve). `GET /api/archivos/:id` no lo sirve.
+- **Obligatorio al terminar, apagable por empresa.** Variable `bancos.conciliaciones.exigir_estado_de_cuenta` (booleana, `true` por
+  omisión, empresa e instalación, pública). Se mira solo al terminar; autorizar no la mira. Sin archivo y con la variable en `true`,
+  400 `falta_el_estado_de_cuenta`.
+- **Pantalla.** `ConciliarCuenta` en dos columnas desde 1024 px: el documento a la izquierda; saldo transcrito, archivo adjunto y visor a
+  la derecha (en el celular, en ese orden hacia abajo). El PDF se ve en un `iframe` (sin `sandbox`, mismo origen, cubierto por
+  `default-src 'self'`) y la foto en `<img>`; «Abrir en otra pestaña» como respaldo. «Terminar» queda deshabilitado con la lista de lo que
+  falta. En la lista de conciliaciones, un ícono marca las que tienen archivo (`tieneEstadoDeCuenta`).
+- **Al imprimir:** se oculta el visor y los botones; salen el saldo transcrito, «Coincide…» y los datos del archivo (nombre, tipo, páginas,
+  quién y cuándo, huella).
+- **Eliminar la conciliación** borra la fila y el archivo del disco; la auditoría conserva el DTO con `estadoDeCuenta` (`sha256`,
+  `nombreOriginal`). **Reemplazar o quitar** audita `quitar` con `{ estadoDeCuenta }`. Cambiar el saldo en proceso no se audita.
+- **Conciliaciones anteriores a H2.** Las `elaborada` y `autorizada` de antes llevan `previa_al_saldo_transcrito = true` (migración
+  `0030`): una autorizada se queda así; una elaborada **no se puede autorizar** (400 con «Devuélvala para que quien la elaboró lo
+  transcriba») y la pantalla solo ofrece «Devolver»; al devolverla sigue el flujo nuevo.
+
+### Migraciones y errores
+
+Migraciones de bancos `0030_h2_saldo_del_estado_de_cuenta` y `0031_h2_archivo_del_estado_de_cuenta`; de core `0023` (fila de revisión y
+limpieza diaria de huérfanos, variable `DEPURAR_HUERFANOS`). Errores de subida con su mensaje en pantalla: `documento_no_aceptado`,
+`foto_heic_no_aceptada`, `documento_demasiado_grande` (413), `pdf_con_contrasena`, `pdf_con_contenido_activo`, `pdf_danado`,
+`pdf_con_demasiadas_paginas`, `demasiadas_subidas` (429, 30 por minuto por usuario, compartido con las fotos) y
+`revision_de_pdf_saturada` (429, `Retry-After: 30`, con `detalles.motivo`: `cuenta_al_tope` con más de 2 PDF a la vez por cuenta,
+`fila_llena` o `espera_agotada`).
+
+### Decisiones abiertas del usuario (QA del 2026-11-18)
+
+1. Tope de tamaño de solicitud en Caddy (~20 MB para toda la instalación; hoy el tope de 10/15 MB lo pone la app).
+2. Conservar 60 meses el `nombreOriginal` del archivo en la auditoría (seguridad lo recomienda).
+3. Si Firefox o Safari no muestran el PDF dentro de la página (no se pudo comprobar: ver el informe): CSP propia de esa respuesta
+   o solo «Abrir en otra pestaña». No se relaja la CSP global ni se pone `sandbox`.
+4. La «huella» que muestra la pantalla es el SHA-256 del PDF **ya normalizado por qpdf** y cambia en cada subida del mismo archivo;
+   el de lo recibido (`sha256_recibido`) no se muestra. Decidir cuál mostrar o si qpdf debe dar un resultado estable.
+5. Desmarcar una nota para Cuentas por pagar desde la conciliación (CP4-B2b) existe solo en el servidor; en pantalla se hace desde Notas.

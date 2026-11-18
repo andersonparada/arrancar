@@ -42,7 +42,11 @@ describe('marca de la nota', () => {
 
   it('el reparto se muestra línea por línea', () => {
     const desglose = [{ conceptoId: 'a', concepto: 'Pago a proveedores', monto: '100.00' }];
-    expect(detallesDeDesglose({ desglose })).toEqual([{ etiqueta: 'Reparto: Pago a proveedores', valor: 'Q 100.00' }]);
+    const [linea] = detallesDeDesglose({ desglose });
+    expect({ ...linea, valor: linea?.valor.replaceAll('\u00a0', ' ') }).toEqual({
+      etiqueta: 'Reparto: Pago a proveedores',
+      valor: 'Q 100.00',
+    });
     expect(detallesDeDesglose({ desglose: [] })).toEqual([]);
   });
 

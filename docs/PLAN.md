@@ -2180,3 +2180,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   muestran. Lógica pura en `marca-de-nota.ts` y `avisos-de-bancos.ts` con pruebas. Los rechazos `MovimientoDeOtroModulo` y
   `ModuloDeOrigenInactivo` se muestran tal como los manda el servidor. Pendiente: el enlace del origen a `/cuentas-por-pagar/pagos/:id`
   (la ruta no existe aún, CP4-10: hoy es texto) y CP4-B3b en la conciliación.
+- **2026-11-18 — Bancos H2: documentación y QA en el navegador (pasos 6 y 7).** Sección H2 en `bancos.md` y remisiones en
+  `plan-hallazgos-contables.md` y `plan-archivos-y-h2.md`. QA de punta a punta (`informe-qa-h2-2026-11-18.md`): saldo transcrito,
+  archivo (subir, reemplazar, ver, quitar), terminar con y sin `exigir_estado_de_cuenta`, devolver, autorizar, previa elaborada,
+  eliminar, permisos, celular, oscuro e impresión; el PDF se ve dentro del `iframe` en Chromium con la CSP global. Sin errores que
+  bloqueen; 8 observaciones menores (el signo de «Difiere en», la huella que cambia en cada subida, la impresión en modo oscuro…).
+  Firefox y Safari no se pudieron comprobar. Decisiones abiertas: tope de solicitud en Caddy, conservar 60 meses el
+  `nombreOriginal`, CSP propia o «Abrir en otra pestaña» si Firefox o Safari no muestran el PDF, y qué huella mostrar.
