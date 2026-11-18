@@ -38,6 +38,8 @@ export const conciliaciones = esquemaBancos.table(
     fotoTotalChequesEnCirculacion: numeric({ precision: 14, scale: 2 }),
     fotoTotalOtrosDebitosEnTransito: numeric({ precision: 14, scale: 2 }),
     fotoTotalCreditosEnTransito: numeric({ precision: 14, scale: 2 }),
+    /** Cheques marcados con fecha posterior al fin de mes; nula en las autorizadas antes de la 0034 (se lee como cero). */
+    fotoTotalCobradosAntesDeSuFecha: numeric({ precision: 14, scale: 2 }),
     /** Lo transcribe quien elabora; solo se compara con el calculado (puede ser negativo). */
     saldoEstadoDeCuenta: numeric({ precision: 14, scale: 2 }),
     /** Solo la migración de H2 la pone en `true`: elaboradas o autorizadas antes de pedir el saldo. */

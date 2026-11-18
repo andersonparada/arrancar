@@ -29,6 +29,7 @@ describe('conceptos iniciales', () => {
     const claves = CONCEPTOS_INICIALES.map((c) => c.claveDeSistema).filter(Boolean);
 
     expect(claves.sort()).toEqual([
+      'anulacion_de_apertura',
       'devolucion_de_efectivo_para_pagos',
       'efectivo_para_pagos',
       'faltante_de_efectivo',

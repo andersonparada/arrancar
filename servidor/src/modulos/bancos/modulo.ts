@@ -52,6 +52,11 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.transferencias.crear', descripcion: 'Registrar transferencias entre cuentas propias' },
     { clave: 'bancos.transferencias.anular', descripcion: 'Anular transferencias (crea los dos inversos)' },
     { clave: 'bancos.transferencias.eliminar', descripcion: 'Eliminar transferencias limpias' },
+    {
+      clave: 'bancos.saldos-iniciales.ver',
+      descripcion: 'Ver los saldos iniciales de las cuentas, sus partidas y su cuadre',
+    },
+    { clave: 'bancos.saldos-iniciales.anular', descripcion: 'Anular partidas de apertura desde saldos iniciales' },
     { clave: 'bancos.saldos-iniciales.crear', descripcion: 'Registrar el saldo inicial de las cuentas' },
     { clave: 'bancos.saldos-iniciales.editar', descripcion: 'Corregir el saldo inicial de las cuentas' },
     { clave: 'bancos.saldos-iniciales.eliminar', descripcion: 'Eliminar el saldo inicial de las cuentas' },

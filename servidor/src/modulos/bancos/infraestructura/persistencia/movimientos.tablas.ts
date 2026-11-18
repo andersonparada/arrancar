@@ -19,6 +19,7 @@ import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { esquemaBancos } from './esquema.tablas.js';
+import { restriccionesDeApertura, type ParteDeApertura } from './restricciones-de-apertura.js';
 import { transferencias } from './transferencias.tablas.js';
 
 /** El índice del flujo por concepto y la llave compuesta con la empresa: el concepto es siempre de la misma empresa. */
@@ -120,6 +121,12 @@ export const movimientos = esquemaBancos.table(
     /** Anulación a la antigua: solo la usan los cheques en un mes abierto (sin inverso, fuera del saldo). */
     anuladoEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
+    /**
+     * La parte del saldo inicial que es (`restricciones-de-apertura.ts`) y la cabecera de la que cuelga: las dos juntas
+     * o ninguna. El posfechado cuelga de la cabecera pero no es saldo inicial.
+     */
+    parteDeApertura: text().$type<ParteDeApertura>(),
+    saldoInicialId: uuid(),
     /** La transferencia que la creó, si es una de sus dos notas. */
     transferenciaId: uuid().references((): AnyPgColumn => transferencias.id),
     /** La conciliación donde quedó marcado; null si sigue pendiente. */
@@ -149,9 +156,7 @@ export const movimientos = esquemaBancos.table(
     ...restriccionesDelConcepto(t),
     ...indicesDeChequesEnCirculacion(t),
     ...restriccionesDeIntereses(t),
-    uniqueIndex('movimientos_un_saldo_inicial')
-      .on(t.cuentaBancariaId)
-      .where(sql`${t.saldoInicial} and ${t.anuladoEn} is null`),
+    ...restriccionesDeApertura(t),
     uniqueIndex('movimientos_numero_unico')
       .on(t.empresaId, t.tipo, t.anioDeNumero, t.numero)
       .where(sql`${t.numero} is not null`),

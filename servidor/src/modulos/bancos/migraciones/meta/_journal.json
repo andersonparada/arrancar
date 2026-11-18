@@ -239,6 +239,13 @@
       "when": 1794690461288,
       "tag": "0033_cp4_efectivo_para_pagos",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794887142268,
+      "tag": "0034_saldos_iniciales_con_partidas",
+      "breakpoints": true
     }
   ]
 }

@@ -2180,3 +2180,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   muestran. Lógica pura en `marca-de-nota.ts` y `avisos-de-bancos.ts` con pruebas. Los rechazos `MovimientoDeOtroModulo` y
   `ModuloDeOrigenInactivo` se muestran tal como los manda el servidor. Pendiente: el enlace del origen a `/cuentas-por-pagar/pagos/:id`
   (la ruta no existe aún, CP4-10: hoy es texto) y CP4-B3b en la conciliación.
+- **2026-11-16 — BS-1 (Bancos, segunda parte, datos).** Migración de Bancos `0034_saldos_iniciales_con_partidas`: tabla
+  `bancos.saldos_iniciales` (cabecera por cuenta, con `evidencia_archivo_id`), `movimientos.parte_de_apertura` (siete
+  partes) y `saldo_inicial_id` con sus checks e índices, `chequeras.de_apertura`,
+  `conciliaciones.foto_total_cobrados_antes_de_su_fecha`, concepto de sistema `anulacion_de_apertura` y permisos
+  `bancos.saldos-iniciales.ver` y `.anular` (por rol y por usuario). Los saldos iniciales existentes quedan como
+  `saldo_global` sin cambiar ningún saldo ni conciliación (probado). Puente hasta BS-2: `RepositorioMovimientosDrizzle`
+  crea la cabecera y marca `saldo_global` al agregar un saldo inicial, y la borra al eliminar el último. Los casos de uso,
+  rutas y pantallas nuevos siguen en BS-2 a BS-9.
