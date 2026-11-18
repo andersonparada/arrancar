@@ -12,6 +12,7 @@ import CargosDelPago from '../componentes/CargosDelPago.vue';
 import MedioDePago from '../componentes/MedioDePago.vue';
 import PestanasDeFormaDePago from '../componentes/PestanasDeFormaDePago.vue';
 import ResultadoDelPago from '../componentes/ResultadoDelPago.vue';
+import { TEXTO_DE_LISTA_INCOMPLETA } from '../composables/pagos/paginas-de-proveedores';
 import { usarNuevoPago } from '../composables/pagos/usar-nuevo-pago';
 import { VENTANAS_CUENTAS_POR_PAGAR } from '../textos';
 
@@ -38,7 +39,7 @@ const volver = texto(route.query.contrasenaId)
     <EncabezadoPagina :titulo="ventana.nuevo" :descripcion="ventana.descripcionDelNuevo" :volver="volver" />
 
     <EstadoVacio
-      v-if="!pago.cargandoProveedores.value && pago.formas.value.length === 0 && !datos"
+      v-if="pago.sinPermisosDePago.value"
       :icono="HandCoins"
       titulo="No tiene permiso para registrar pagos"
       descripcion="Pida a quien administra los permisos que le habilite pagar con cheque, nota de débito o cuenta de apertura."
@@ -54,6 +55,9 @@ const volver = texto(route.query.contrasenaId)
           :opciones="pago.opcionesDeProveedores.value"
           :error="pago.errores.value.proveedorId && !datos ? pago.errores.value.proveedorId : undefined"
         />
+        <p v-if="pago.listaIncompleta.value" class="mt-2 text-sm text-red-700 dark:text-red-400" role="alert">
+          {{ TEXTO_DE_LISTA_INCOMPLETA }}
+        </p>
         <p
           v-if="!pago.cargandoProveedores.value && pago.proveedores.value.length === 0"
           class="mt-2 text-sm text-tierra-600 dark:text-tierra-300"
@@ -88,8 +92,11 @@ const volver = texto(route.query.contrasenaId)
           <h2 class="font-semibold">Cómo se paga</h2>
           <MedioDePago
             v-model="pago.edicion"
+            v-model:filtro-de-notas="pago.filtroDeNotas"
             :medios="pago.medios.value"
             :notas="pago.notas.value"
+            :notas-al-tope="pago.notasAlTope.value"
+            :cargando-notas="pago.cargandoNotas.value"
             :errores="pago.errores.value"
             :cargando="pago.cargandoCatalogos.value"
             :beneficiario="datos.beneficiario"

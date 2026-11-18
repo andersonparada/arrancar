@@ -5,7 +5,9 @@ import { edicionDePagoVacia, type EdicionDePago } from './edicion-de-pago';
 import type { MediosDePago } from '../../servicios/tipos-de-pagos';
 import { formasDisponibles, opcionesDeChequeras, opcionesDeCuentas, opcionesDeProveedores } from './opciones-del-pago';
 import { usarContrasenasDelPago, type PuntoDeInicio } from './usar-contrasenas-del-pago';
-import { usarCargosParaPagar, usarCatalogosDelPago, usarProveedoresPorPagar } from './usar-datos-del-pago';
+import { notaSigueEnLista } from './filtro-de-notas';
+import { usarCatalogosDelPago } from './usar-catalogos-del-pago';
+import { usarCargosParaPagar, usarProveedoresPorPagar } from './usar-datos-del-pago';
 import { usarRegistroDePago } from './usar-registro-de-pago';
 import { usarVistaDelPago } from './usar-vista-del-pago';
 
@@ -41,17 +43,23 @@ function usarFormasDelPago(edicion: EdicionDePago, cargos: ReturnType<typeof usa
   const sesion = usarSesion();
   const formas = computed(() => formasDisponibles(sesion.puede, cargos.datos.value?.cargos ?? null));
   mantenerUnaFormaValida(edicion, () => formas.value);
-  return { formas, puedeSaldar: computed(() => sesion.puede('cuentas-por-pagar.ajustes.crear')) };
+  // Sin ningún permiso de pago no hay pestañas, sin importar el proveedor.
+  const sinPermisosDePago = computed(() => formasDisponibles(sesion.puede, null).length === 0);
+  return { formas, sinPermisosDePago, puedeSaldar: computed(() => sesion.puede('cuentas-por-pagar.ajustes.crear')) };
 }
 
-/** Las cuentas y notas de Bancos, solo si el usuario puede usarlas. */
-function usarCatalogosDelUsuario() {
+/** Las cuentas y notas de Bancos, solo si el usuario puede usarlas; si el filtro saca a la nota elegida, se suelta. */
+function usarCatalogosDelUsuario(edicion: EdicionDePago) {
   const sesion = usarSesion();
-  return usarCatalogosDelPago(
+  const catalogos = usarCatalogosDelPago(
     () => sesion.puede('cuentas-por-pagar.pagos.emitir'),
     () => sesion.puede('cuentas-por-pagar.pagos.ligar-notas-de-debito'),
     fechaDeHoy,
   );
+  watch(catalogos.notas, (notas) => {
+    if (!notaSigueEnLista(edicion.movimientoId, notas)) edicion.movimientoId = '';
+  });
+  return catalogos;
 }
 
 /**
@@ -61,7 +69,7 @@ function usarCatalogosDelUsuario() {
 export function usarNuevoPago(inicio: PuntoDeInicio) {
   const edicion = reactive(edicionDePagoVacia(fechaDeHoy()));
   const proveedores = usarProveedoresPorPagar();
-  const catalogos = usarCatalogosDelUsuario();
+  const catalogos = usarCatalogosDelUsuario(edicion);
   const cargos = usarCargosParaPagar();
   usarMedioPorOmision(edicion, catalogos.medios);
   const registro = usarRegistroDePago(edicion, cargos.datos, catalogos.notas);

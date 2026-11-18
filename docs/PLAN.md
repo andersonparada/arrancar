@@ -2334,3 +2334,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   servidor (200) con aviso si se llega al tope, porque esa ruta no pagina. La suma del mes del proveedor sale de la fecha
   escrita y no se pisa con la de un proveedor anterior; el resumen de la apertura dice la fecha de inicio. Sin cambios en
   el servidor ni en rótulos de saldo o estados de pago.
+- **2026-11-18 (segunda revisión de CP4-9).** «Nuevo pago»: el aviso del tope de notas ya no sale como emergente (ni al
+  pagar con cheque ni en cada «Pagar otro»); en la pestaña «Nota ya registrada» hay filtros por cuenta bancaria y por
+  fechas, que se mandan al servidor (`cuentaBancariaId`, `desde`, `hasta`), y al llegar al tope dice «Hay más notas:
+  filtre por cuenta o por fechas». Si el filtro saca a la nota elegida, se suelta. La suma del mes usa un control de
+  solicitudes propio (`control-de-suma.ts`): la respuesta solo vale si es la última y su proveedor y mes siguen vigentes,
+  y si la fecha cambió de mes mientras cargaba el proveedor, se vuelve a pedir. El estado vacío de sin permiso sale por
+  no tener ningún permiso de pago, aunque se entre con `?proveedorId=`; el texto de «solo apertura» queda para quien sí
+  tiene ese permiso. Si la lista de proveedores llega al tope de 50 páginas, se avisa que está incompleta. Servidor:
+  `proveedoresPorPagar` desempata por id (paginación estable), con prueba de API de proveedores con el mismo nombre.

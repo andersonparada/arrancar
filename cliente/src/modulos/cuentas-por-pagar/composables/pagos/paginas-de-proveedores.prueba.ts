@@ -10,7 +10,8 @@ describe('juntar proveedores por pagar', () => {
       elementos: pagina === 1 ? [proveedor('a'), proveedor('b')] : [proveedor('c')],
       total: 3,
     }));
-    const todos = await juntarProveedoresPorPagar(traer);
+    const { proveedores: todos, incompleta } = await juntarProveedoresPorPagar(traer);
+    expect(incompleta).toBe(false);
     expect(todos.map(({ proveedorId }) => proveedorId)).toEqual(['a', 'b', 'c']);
     expect(traer).toHaveBeenCalledTimes(2);
   });
@@ -23,7 +24,15 @@ describe('juntar proveedores por pagar', () => {
 
   it('se detiene si el servidor devuelve una página vacía', async () => {
     const traer = vi.fn(async () => ({ elementos: [], total: 5 }));
-    expect(await juntarProveedoresPorPagar(traer)).toEqual([]);
+    expect((await juntarProveedoresPorPagar(traer)).proveedores).toEqual([]);
     expect(traer).toHaveBeenCalledTimes(1);
+  });
+
+  it('si llega al tope de páginas con proveedores sin traer, avisa que la lista está incompleta', async () => {
+    const traer = vi.fn(async (pagina: number) => ({ elementos: [proveedor(`p${pagina}`)], total: 1000 }));
+    const resultado = await juntarProveedoresPorPagar(traer);
+    expect(traer).toHaveBeenCalledTimes(50);
+    expect(resultado.proveedores).toHaveLength(50);
+    expect(resultado.incompleta).toBe(true);
   });
 });

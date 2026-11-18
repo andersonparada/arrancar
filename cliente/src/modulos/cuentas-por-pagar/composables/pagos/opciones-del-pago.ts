@@ -1,6 +1,12 @@
 import type { OpcionBuscable } from '@/modulos/core/utilidades/busqueda-de-opciones';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
-import type { CargoParaPagar, FormaDePagoNuevo, MediosDePago, ProveedorPorPagar } from '../../servicios/tipos-de-pagos';
+import type {
+  CargoParaPagar,
+  FormaDePagoNuevo,
+  MediosDePago,
+  NotaParaLigar,
+  ProveedorPorPagar,
+} from '../../servicios/tipos-de-pagos';
 import { textoDeCentavos } from '../dinero';
 
 export const ETIQUETAS_DE_FORMA: Record<FormaDePagoNuevo, string> = {
@@ -72,4 +78,18 @@ export function opcionesDeCuentas(medios: MediosDePago | null): OpcionBuscable<s
       texto: `${cuenta.nombre} · saldo ${formatearMonto(textoDeCentavos(cuenta.saldoCentavos))}`,
     }))
     .sort(porTexto);
+}
+
+/**
+ * Las cuentas por las que filtrar las notas: las de Bancos y, si el usuario no puede verlas (solo liga notas), las
+ * cuentas de las notas que ya se ven.
+ */
+export function opcionesDeCuentasParaNotas(
+  medios: MediosDePago | null,
+  notas: readonly NotaParaLigar[],
+): OpcionBuscable<string>[] {
+  const deBancos = (medios?.cuentas ?? []).map((cuenta) => ({ valor: cuenta.cuentaBancariaId, texto: cuenta.nombre }));
+  const deNotas = notas.map((nota) => ({ valor: nota.cuentaBancariaId, texto: nota.cuentaBancariaNombre }));
+  const unicas = new Map((deBancos.length > 0 ? deBancos : deNotas).map((opcion) => [opcion.valor, opcion]));
+  return [...unicas.values()].sort(porTexto);
 }

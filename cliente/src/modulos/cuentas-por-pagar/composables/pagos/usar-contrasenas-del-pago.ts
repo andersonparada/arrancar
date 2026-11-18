@@ -7,6 +7,9 @@ export interface PuntoDeInicio {
   contrasenaId?: string;
 }
 
+/** El proveedor y la fecha que hay ahora en el formulario. */
+const vigente = (edicion: EdicionDePago) => ({ proveedorId: edicion.proveedorId, fecha: edicion.fecha });
+
 type Cargos = ReturnType<typeof usarCargosParaPagar>;
 
 /** Al elegir proveedor: trae lo que se le puede pagar y deja incluida la contraseña de la que se vino (o todas). */
@@ -15,11 +18,14 @@ function usarEleccionDelProveedor(edicion: EdicionDePago, cargos: Cargos, inicio
 
   async function elegirProveedor(proveedorId: string): Promise<void> {
     Object.assign(edicion, { contrasenasIncluidas: [], montos: {}, diferencias: [], movimientoId: '' });
+    const mesPedido = edicion.fecha.slice(0, 7);
     const datos = await cargos.traer(proveedorId, {
       contrasenaId: abierta ?? undefined,
       fecha: edicion.fecha || undefined,
     });
     if (!datos) return;
+    // Si la fecha cambió de mes mientras cargaba, la suma que llegó es de otro mes: se vuelve a pedir.
+    if (edicion.fecha.slice(0, 7) !== mesPedido) void cargos.actualizarSumaDelMes(() => vigente(edicion));
     edicion.contrasenasIncluidas = contrasenasIniciales(datos, abierta);
     edicion.montos = proponerMontos(datos.cargos, edicion.contrasenasIncluidas, {});
     abierta = null;
@@ -47,7 +53,7 @@ export function usarContrasenasDelPago(edicion: EdicionDePago, cargos: Cargos, i
   // La suma pagada en el mes cambia con el mes de la fecha del pago.
   watch(
     () => edicion.fecha.slice(0, 7),
-    () => cargos.actualizarSumaDelMes(edicion.proveedorId, edicion.fecha),
+    () => cargos.actualizarSumaDelMes(() => vigente(edicion)),
   );
   return { elegirProveedor, agregarContrasena, quitarContrasena };
 }

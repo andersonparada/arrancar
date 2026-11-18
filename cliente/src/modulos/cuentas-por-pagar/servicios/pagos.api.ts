@@ -44,9 +44,10 @@ export class ApiPagos {
     return this.http.obtener<MediosDePago>(`${RUTA}/pagos/medios`, fecha ? { fecha } : {});
   }
 
-  /** Las más recientes con algo disponible, hasta el máximo del servidor (que no pagina estas notas). */
-  notasParaLigar() {
+  /** Las más recientes con algo disponible (acotadas por cuenta y fechas), hasta el máximo del servidor. */
+  notasParaLigar(filtro: Record<string, string> = {}) {
     return this.http.obtener<{ elementos: NotaParaLigar[] }>(`${RUTA}/pagos/notas-para-ligar`, {
+      ...filtro,
       limite: LIMITE_DE_PAGINA,
     });
   }
