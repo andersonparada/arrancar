@@ -32,6 +32,19 @@ export function opcionesDeConcepto(
   return [{ valor: null, texto: 'Elija un concepto' }, ...elegibles.sort(porNombre).map(comoOpcion)];
 }
 
+/**
+ * Las opciones de siempre, pero el concepto guardado cuenta como elegible (aunque hoy esté inactivo) mientras siga
+ * siendo compatible con los tipos: sirve para decidir si al cambiar de tipo se conserva o se limpia.
+ */
+export function opcionesCompatiblesConElGuardado(
+  conceptos: readonly Concepto[],
+  tipos: readonly TipoDeMovimiento[],
+  guardado: string | null,
+): OpcionDeRegistro[] {
+  const revivido = conceptos.map((c) => (c.id === guardado ? { ...c, activo: true, claveDeSistema: null } : c));
+  return opcionesDeConcepto(revivido, tipos);
+}
+
 /** La clave del concepto de sistema «Pago a proveedores» (lo fija Cuentas por pagar cuando está activo). */
 export const CLAVE_DE_PAGO_A_PROVEEDORES = 'pago_a_proveedor';
 

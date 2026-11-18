@@ -31,6 +31,27 @@ export function totalesDeDocumentos({ totales, total }: ReporteDeDocumentosAUnaF
   ];
 }
 
+export interface FilaDeConciliacion {
+  etiqueta: string;
+  valor: string;
+  /** La última línea: lo que se presenta como Proveedores. */
+  total?: boolean;
+}
+
+/** La conciliación al pie de R1; no hay si se filtró por proveedor o por autorización (el servidor no la manda). */
+export function filasDeConciliacion({ conciliacion }: ReporteDeSaldosPorProveedor): FilaDeConciliacion[] | null {
+  if (!conciliacion) return null;
+  return [
+    { etiqueta: 'Saldo neto de Proveedores (auxiliar)', valor: formatearMonto(conciliacion.saldoNetoDelAuxiliar) },
+    { etiqueta: 'Menos: pagos a proveedores por aplicar', valor: formatearMonto(conciliacion.pagosPorAplicar) },
+    {
+      etiqueta: 'Proveedores, neto de pagos por aplicar',
+      valor: formatearMonto(conciliacion.proveedoresNetoDePagosPorAplicar),
+      total: true,
+    },
+  ];
+}
+
 /** El reporte de saldos está vacío cuando no hay proveedores con saldo en ninguno de los dos bloques. */
 export const reporteDeSaldosVacio = (reporte: ReporteDeSaldosPorProveedor): boolean =>
   reporte.acreedores.length === 0 && reporte.deudores.length === 0;

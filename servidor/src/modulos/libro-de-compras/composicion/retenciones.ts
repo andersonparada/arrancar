@@ -76,6 +76,7 @@ function excelDeRetenciones(reporte: ConsultarRetencionesDelMes) {
       if (!filtro) throw new Error('El reporte necesita su filtro.');
       return aFilasExportadasDeRetenciones(await reporte.ejecutar(operador, filtro));
     },
+    soloExportar: true,
     crear: noSeImporta,
   });
 }

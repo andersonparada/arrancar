@@ -8,17 +8,34 @@ import type { PublicadorEventos } from '../aplicacion/publicador-eventos.js';
 import type { Reloj } from '../aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../aplicacion/unidad-de-trabajo.js';
 import type { EventoDominio } from '../dominio/evento-dominio.js';
+import { ConsultaFueraDeUnidadDeTrabajo, EmpresaNoEsNueva } from '../infraestructura/unidad-de-trabajo-postgres.js';
 
 /** Ejecuta el trabajo tal cual y recuerda con qué contexto se pidió, para comprobarlo en las pruebas. */
 export class UnidadDeTrabajoEnMemoria implements UnidadDeTrabajo {
   readonly contextos: ContextoEmpresa[] = [];
+  /** Ids con que se pidió `ejecutarEnEmpresaNueva`. */
+  readonly empresasNuevas: string[] = [];
 
-  ejecutar<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
+  private abiertas = 0;
+
+  async ejecutar<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
     this.contextos.push(contexto);
-    return trabajo();
+    this.abiertas++;
+    try {
+      return await trabajo();
+    } finally {
+      this.abiertas--;
+    }
   }
 
   aislar<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado> {
+    return trabajo();
+  }
+
+  ejecutarEnEmpresaNueva<Resultado>(empresaId: string, trabajo: () => Promise<Resultado>): Promise<Resultado> {
+    if (this.abiertas === 0) throw new ConsultaFueraDeUnidadDeTrabajo();
+    if (this.empresasNuevas.includes(empresaId)) throw new EmpresaNoEsNueva();
+    this.empresasNuevas.push(empresaId);
     return trabajo();
   }
 }

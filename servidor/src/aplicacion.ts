@@ -23,6 +23,7 @@ import { respuestaDeLimiteExcedido } from './modulos/core/compartido/http/limite
 import { establecerRegistroModulos } from './modulos/core/modulos-sistema/registro-global.js';
 import { RegistroModulos } from './modulos/core/modulos-sistema/registro-modulos.js';
 import { definicionesModulos } from './modulos/indice.js';
+import { REDACCION_DEL_REGISTRO } from './registro-seguro.js';
 
 const TAMANO_MAXIMO_IMAGEN = 15 * 1024 * 1024;
 const METODOS_SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -60,8 +61,12 @@ async function servirCliente(app: FastifyInstance): Promise<void> {
 /** En pruebas no se registra nada; en desarrollo, todo y legible; en producción, lo importante. */
 function opcionesDeRegistro() {
   if (esPrueba) return false;
-  if (esProduccion) return { level: 'info' };
-  return { level: 'debug', transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss' } } };
+  if (esProduccion) return { level: 'info', redact: REDACCION_DEL_REGISTRO };
+  return {
+    level: 'debug',
+    redact: REDACCION_DEL_REGISTRO,
+    transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss' } },
+  };
 }
 
 /** Solo lo propio de la app: nada de otros sitios, salvo imágenes en línea y estilos de Vue. */

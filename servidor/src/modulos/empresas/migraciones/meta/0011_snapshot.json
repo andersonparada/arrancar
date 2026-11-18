@@ -1,6 +1,6 @@
 {
-  "id": "7b77151b-9f25-49df-8cdc-4f639c00de4c",
-  "prevId": "d804fe8b-91d9-4087-8135-5e812005c9f3",
+  "id": "d804fe8b-91d9-4087-8135-5e812005c9f3",
+  "prevId": "c580bd89-c981-4b59-801b-8daac17a9d54",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -67,57 +67,57 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "accesos_a_localidades_empresa_id_empresas_id_fk": {
           "name": "accesos_a_localidades_empresa_id_empresas_id_fk",
           "tableFrom": "accesos_a_localidades",
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "accesos_a_localidades_localidad_fk": {
           "name": "accesos_a_localidades_localidad_fk",
           "tableFrom": "accesos_a_localidades",
-          "tableTo": "localidades",
-          "schemaTo": "empresas",
           "columnsFrom": [
             "localidad_id",
             "empresa_id"
           ],
+          "tableTo": "localidades",
+          "schemaTo": "empresas",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "accesos_a_localidades_miembro_fk": {
           "name": "accesos_a_localidades_miembro_fk",
           "tableFrom": "accesos_a_localidades",
-          "tableTo": "empresa_usuarios",
-          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id",
             "usuario_id"
           ],
+          "tableTo": "empresa_usuarios",
+          "schemaTo": "core",
           "columnsTo": [
             "empresa_id",
             "usuario_id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {
@@ -202,12 +202,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "balance_de_apertura_archivo_id": {
-          "name": "balance_de_apertura_archivo_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "creado_en": {
           "name": "creado_en",
           "type": "timestamp with time zone",
@@ -242,42 +236,20 @@
         "cargas_iniciales_empresa_id_empresas_id_fk": {
           "name": "cargas_iniciales_empresa_id_empresas_id_fk",
           "tableFrom": "cargas_iniciales",
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "cargas_iniciales_balance_de_apertura_archivo_id_archivos_id_fk": {
-          "name": "cargas_iniciales_balance_de_apertura_archivo_id_archivos_id_fk",
-          "tableFrom": "cargas_iniciales",
-          "tableTo": "archivos",
+          "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "balance_de_apertura_archivo_id"
-          ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "cargas_iniciales_balance_de_apertura_unico": {
-          "name": "cargas_iniciales_balance_de_apertura_unico",
-          "nullsNotDistinct": false,
-          "columns": [
-            "balance_de_apertura_archivo_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {
         "aislamiento_por_empresa": {
           "name": "aislamiento_por_empresa",
@@ -354,16 +326,16 @@
         "datos_fiscales_empresa_id_empresas_id_fk": {
           "name": "datos_fiscales_empresa_id_empresas_id_fk",
           "tableFrom": "datos_fiscales",
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -475,15 +447,15 @@
             },
             {
               "expression": "core.nombre_normalizado(\"nombre\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "departamentos_localidad_idx": {
           "name": "departamentos_localidad_idx",
@@ -496,60 +468,60 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "departamentos_empresa_id_empresas_id_fk": {
           "name": "departamentos_empresa_id_empresas_id_fk",
           "tableFrom": "departamentos",
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "departamentos_localidad_fk": {
           "name": "departamentos_localidad_fk",
           "tableFrom": "departamentos",
-          "tableTo": "localidades",
-          "schemaTo": "empresas",
           "columnsFrom": [
             "localidad_id",
             "empresa_id"
           ],
+          "tableTo": "localidades",
+          "schemaTo": "empresas",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "departamentos_codigo_unico": {
           "name": "departamentos_codigo_unico",
-          "nullsNotDistinct": false,
           "columns": [
             "empresa_id",
             "codigo"
-          ]
+          ],
+          "nullsNotDistinct": false
         },
         "departamentos_id_empresa_unico": {
           "name": "departamentos_id_empresa_unico",
-          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {
@@ -699,15 +671,15 @@
             },
             {
               "expression": "core.nombre_normalizado(\"nombre\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "localidades_establecimiento_sat_unico": {
           "name": "localidades_establecimiento_sat_unico",
@@ -726,10 +698,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"empresas\".\"localidades\".\"codigo_establecimiento_sat\" is not null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"empresas\".\"localidades\".\"codigo_establecimiento_sat\" is not null",
+          "concurrently": false
         },
         "localidades_tipo_idx": {
           "name": "localidades_tipo_idx",
@@ -742,76 +714,76 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "localidades_empresa_id_empresas_id_fk": {
           "name": "localidades_empresa_id_empresas_id_fk",
           "tableFrom": "localidades",
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "localidades_tipo_fk": {
           "name": "localidades_tipo_fk",
           "tableFrom": "localidades",
-          "tableTo": "tipos_de_localidad",
-          "schemaTo": "empresas",
           "columnsFrom": [
             "tipo_id",
             "empresa_id"
           ],
+          "tableTo": "tipos_de_localidad",
+          "schemaTo": "empresas",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "localidades_municipio_fk": {
           "name": "localidades_municipio_fk",
           "tableFrom": "localidades",
-          "tableTo": "municipios",
-          "schemaTo": "core",
           "columnsFrom": [
             "departamento_codigo",
             "municipio_codigo"
           ],
+          "tableTo": "municipios",
+          "schemaTo": "core",
           "columnsTo": [
             "departamento_codigo",
             "codigo"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "localidades_codigo_unico": {
           "name": "localidades_codigo_unico",
-          "nullsNotDistinct": false,
           "columns": [
             "empresa_id",
             "codigo"
-          ]
+          ],
+          "nullsNotDistinct": false
         },
         "localidades_id_empresa_unico": {
           "name": "localidades_id_empresa_unico",
-          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {
@@ -957,42 +929,42 @@
             },
             {
               "expression": "core.nombre_normalizado(\"nombre\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "tipos_de_localidad_empresa_id_empresas_id_fk": {
           "name": "tipos_de_localidad_empresa_id_empresas_id_fk",
           "tableFrom": "tipos_de_localidad",
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "tipos_de_localidad_id_empresa_unico": {
           "name": "tipos_de_localidad_id_empresa_unico",
-          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {
@@ -1020,10 +992,10 @@
   "schemas": {
     "empresas": "empresas"
   },
+  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

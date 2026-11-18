@@ -8,7 +8,7 @@ import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 import type { ClienteApi } from './soporte/cliente-api.js';
 
-const MIGRACION = new URL('../modulos/empresas/migraciones/0010_em2_cierre_de_la_carga.sql', import.meta.url);
+const MIGRACION = new URL('../modulos/empresas/migraciones/0011_em2_cierre_de_la_carga.sql', import.meta.url);
 const entorno = usarEntornoApi();
 let cuenta: CuentaDePrueba;
 let otraEmpresaId: string;

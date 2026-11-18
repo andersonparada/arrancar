@@ -23,6 +23,7 @@ import { RepositorioTiposDeLocalidadDrizzle } from './infraestructura/persistenc
 import { rutasDeLocalidades } from './composicion/localidades.js';
 import { rutasDeAccesosALocalidades } from './composicion/accesos-a-localidades.js';
 import { ALCANCE_DE_LOCALIDADES } from './infraestructura/persistencia/accesos-a-localidades.tablas.js';
+import { intercambioDeEmpresas } from './composicion/intercambio-de-empresas.js';
 import { rutasDeDepartamentos } from './composicion/departamentos.js';
 // generador: importaciones
 
@@ -35,28 +36,30 @@ function componerEmpresas(compartidas: DependenciasCompartidas) {
   const alcance = new AlcanceDelOperador(accesos);
   const avisos = new AvisosDeEmpresaEnMediador();
 
+  const listar = new ListarEmpresas({ unidadDeTrabajo, consultas, alcance });
+  const registrar = new RegistrarEmpresa({
+    unidadDeTrabajo,
+    repositorio,
+    consultas,
+    accesos,
+    publicadorEventos,
+    tiposDeLocalidad: new SembrarTiposDeLocalidad(new RepositorioTiposDeLocalidadDrizzle()),
+    avisos,
+  });
   const controlador = new EmpresasControlador({
-    listar: new ListarEmpresas({ unidadDeTrabajo, consultas, alcance }),
+    listar,
     obtener: new ObtenerEmpresa({ unidadDeTrabajo, consultas, alcance }),
-    registrar: new RegistrarEmpresa({
-      unidadDeTrabajo,
-      repositorio,
-      consultas,
-      accesos,
-      publicadorEventos,
-      tiposDeLocalidad: new SembrarTiposDeLocalidad(new RepositorioTiposDeLocalidadDrizzle()),
-      avisos,
-    }),
+    registrar,
     actualizar: new ActualizarEmpresa({ unidadDeTrabajo, repositorio, consultas, alcance, auditoria, avisos }),
   });
-  return { controlador, consultas, alcance };
+  return { controlador, consultas, alcance, intercambio: intercambioDeEmpresas({ listar, registrar }) };
 }
 
 /** Raíz de composición: el único lugar donde se eligen las implementaciones concretas. */
 function componerRutas(compartidas: DependenciasCompartidas) {
-  const { controlador, consultas, alcance } = componerEmpresas(compartidas);
+  const { controlador, consultas, alcance, intercambio } = componerEmpresas(compartidas);
   return rutasDelModulo([
-    rutasEmpresas(controlador),
+    rutasEmpresas(controlador, intercambio),
     rutasDeDatosDeEmpresaComponidas(compartidas, { consultas, alcance }),
     rutasDeCierresDeCargaComponidas(compartidas, { consultas, alcance }),
     rutasDelBalanceDeAperturaComponidas(compartidas, { consultas, alcance }),
@@ -77,6 +80,8 @@ export const moduloEmpresas: DefinicionModulo = {
     { clave: 'empresas.ver', descripcion: 'Ver las empresas de la cuenta' },
     { clave: 'empresas.crear', descripcion: 'Crear empresas' },
     { clave: 'empresas.editar', descripcion: 'Editar empresas, sus datos fiscales y su fecha de inicio' },
+    { clave: 'empresas.importar', descripcion: 'Importar empresas desde Excel (crea una empresa por fila)' },
+    { clave: 'empresas.exportar', descripcion: 'Exportar las empresas a Excel' },
     {
       clave: 'empresas.carga-inicial.cerrar',
       descripcion: 'Cerrar la carga inicial de una empresa (deja fija su fecha de inicio)',

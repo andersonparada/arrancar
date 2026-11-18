@@ -12,11 +12,34 @@ export const cargoConPagos = (cargo: Pick<CargoDeContrasena, 'pagado' | 'comprom
 export const cargosPagables = (ficha: Pick<FichaDeContrasena, 'cargos'>): CargoDeContrasena[] =>
   ficha.cargos.filter((cargo) => cargo.estado === 'autorizado' && (centavosDe(cargo.saldo) ?? 0) > 0);
 
-/** «Registrar pago» se ofrece en una contraseña vigente con algo autorizado por pagar y alguna forma permitida. */
+/**
+ * «Registrar pago» se ofrece en una contraseña vigente con algo autorizado por pagar, si el usuario puede ver Pagos
+ * (la ruta lo exige) y usar alguna forma; la apertura solo cuenta si hay saldos iniciales por pagar.
+ */
 export function puedeRegistrarPago(ficha: FichaDeContrasena, puede: (permiso: string) => boolean): boolean {
-  const formas = [PERMISO_DE_FORMA.cheque, PERMISO_DE_FORMA.nota_ligada, PERMISO_DE_FORMA.cuenta_de_apertura];
-  return ficha.estado === 'vigente' && cargosPagables(ficha).length > 0 && formas.some(puede);
+  const pagables = cargosPagables(ficha);
+  const hayInicial = pagables.some(({ origen }) => origen === 'saldo_inicial');
+  const formas = [PERMISO_DE_FORMA.cheque, PERMISO_DE_FORMA.nota_ligada];
+  if (hayInicial) formas.push(PERMISO_DE_FORMA.cuenta_de_apertura);
+  return (
+    ficha.estado === 'vigente' && pagables.length > 0 && puede('cuentas-por-pagar.pagos.ver') && formas.some(puede)
+  );
 }
+
+/**
+ * «Pagar en efectivo» se ofrece en una contraseña vigente con algo autorizado por pagar, a quien puede repartir efectivo y ver
+ * los retiros (de ahí se elige el de donde sale el dinero).
+ */
+export function puedePagarEnEfectivo(ficha: FichaDeContrasena, puede: (permiso: string) => boolean): boolean {
+  const permitido = puede('cuentas-por-pagar.pagos.pagar-en-efectivo') && puede('cuentas-por-pagar.retiros.ver');
+  return permitido && ficha.estado === 'vigente' && cargosPagables(ficha).length > 0;
+}
+
+/** Al reparto de efectivo con el proveedor y esta contraseña ya elegidos; ahí se escoge el retiro. */
+export const destinoDePagoEnEfectivo = (ficha: Pick<FichaDeContrasena, 'id' | 'proveedorId'>) => ({
+  name: 'cuentas-por-pagar.pagos.efectivo',
+  query: { proveedorId: ficha.proveedorId, contrasenaId: ficha.id },
+});
 
 /** A «Nuevo pago» con el proveedor y esta contraseña abiertos. */
 export const destinoDeNuevoPago = (ficha: Pick<FichaDeContrasena, 'id' | 'proveedorId'>) => ({

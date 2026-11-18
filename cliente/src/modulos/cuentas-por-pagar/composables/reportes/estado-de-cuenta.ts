@@ -32,6 +32,22 @@ export const filtrosDeEstadoIniciales = (hoy: string, proveedorId = '', hasta = 
   presentacion: 'interna',
 });
 
+/**
+ * Lo que un enlace pide además del proveedor y el corte (`?desde=…&hasta=…&presentacion=para_el_proveedor`); lo que
+ * no sirve se descarta. «Para el proveedor» no muestra anulados.
+ */
+export function ajustesDeEstadoDesdeLaRuta(consulta: Record<string, unknown>): Partial<FiltrosDeEstadoDeCuenta> {
+  const fecha = (valor: unknown): string | undefined =>
+    typeof valor === 'string' && esFechaCompleta(valor) ? valor : undefined;
+  const presentacion = OPCIONES_DE_PRESENTACION.find((o) => o.valor === consulta.presentacion)?.valor;
+  const ajustes: Partial<FiltrosDeEstadoDeCuenta> = {
+    desde: fecha(consulta.desde),
+    hasta: fecha(consulta.hasta),
+    presentacion,
+  };
+  return Object.fromEntries(Object.entries(ajustes).filter(([, valor]) => valor !== undefined));
+}
+
 /** Por qué las fechas no sirven, o `undefined`. El tope de meses y el resto de las reglas son del servidor. */
 export function errorDelRango(filtros: Pick<FiltrosDeEstadoDeCuenta, 'desde' | 'hasta'>): string | undefined {
   if (!esFechaCompleta(filtros.desde) || !esFechaCompleta(filtros.hasta)) return 'Escriba las dos fechas completas.';

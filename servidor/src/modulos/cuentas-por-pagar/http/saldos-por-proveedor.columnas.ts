@@ -66,6 +66,17 @@ function filasDelBloque(titulo: string, filas: FilaDeSaldoDto[]): FilaExportadaD
 
 const nota = (texto: string): FilaExportadaDeSaldos => ({ ...VACIA, seccion: 'Nota', proveedor: texto });
 
+/** La conciliación al pie: el auxiliar, la transitoria de R11 y lo que se presenta como Proveedores. */
+function filasDeConciliacion({ conciliacion }: ReporteDeSaldosPorProveedorDto): FilaExportadaDeSaldos[] {
+  if (!conciliacion) return [];
+  const fila = (seccion: string, proveedor: string, saldoNeto: string) => ({ ...VACIA, seccion, proveedor, saldoNeto });
+  return [
+    fila('Conciliación', 'Saldo neto de Proveedores (auxiliar)', conciliacion.saldoNetoDelAuxiliar),
+    fila('Conciliación', 'Pagos a proveedores por aplicar (R11 al mismo corte)', conciliacion.pagosPorAplicar),
+    fila('Conciliación', 'Proveedores, neto de pagos por aplicar', conciliacion.proveedoresNetoDePagosPorAplicar),
+  ];
+}
+
 /** El renglón del porcentaje de cada tramo sobre el total de cargos. */
 function filaDePorcentajes(porcentajes: TramosDto): FilaExportadaDeSaldos {
   return {
@@ -91,6 +102,7 @@ export function aFilasExportadasDeSaldos(reporte: ReporteDeSaldosPorProveedorDto
       saldoNeto: totales.saldoNeto,
     },
     filaDePorcentajes(totales.porcentajesPorTramo),
+    ...filasDeConciliacion(reporte),
     nota(`Saldos al ${fechaLegible(reporte.corte)}.`),
     ...reporte.avisos.map(({ mensaje }) => nota(mensaje)),
     ...reporte.leyendas.map(nota),

@@ -103,7 +103,8 @@ describe('registrar una empresa', () => {
   it('la registra y siembra sus tipos de localidad en una sola transacción, con la empresa nueva como activa', async () => {
     const empresa = await casos.registrar.ejecutar(propietario, solicitud());
 
-    expect(unidadDeTrabajo.contextos).toEqual([{ ...propietario, empresaId: empresa.id }]);
+    expect(unidadDeTrabajo.contextos).toEqual([propietario]);
+    expect(unidadDeTrabajo.empresasNuevas).toEqual([empresa.id]);
     expect((await tiposDeLocalidad.listar()).map((tipo) => tipo.nombre).sort()).toEqual(
       [...TIPOS_DE_LOCALIDAD_INICIALES].sort(),
     );

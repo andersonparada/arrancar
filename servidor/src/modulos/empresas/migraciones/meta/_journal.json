@@ -75,15 +75,22 @@
     {
       "idx": 10,
       "version": "7",
-      "when": 1795032627208,
-      "tag": "0010_em2_cierre_de_la_carga",
+      "when": 1795027558650,
+      "tag": "0010_permisos_de_excel_de_empresas",
       "breakpoints": true
     },
     {
       "idx": 11,
       "version": "7",
+      "when": 1795032627208,
+      "tag": "0011_em2_cierre_de_la_carga",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
       "when": 1795034502659,
-      "tag": "0011_em2_balance_de_apertura",
+      "tag": "0012_em2_balance_de_apertura",
       "breakpoints": true
     }
   ]

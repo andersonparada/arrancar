@@ -39,6 +39,7 @@ function intercambios(flujo: ReporteDeFlujoDeEfectivo, porConcepto: ReporteDeMov
       columnas: columnasDelFlujoDeEfectivo,
       validar: () => ({ errores: [] }),
       listar: async (operador, filtro) => aFilasExportadasDelFlujo(await flujo.ejecutar(operador, conFiltro(filtro))),
+      soloExportar: true,
       crear: noSeImporta,
     }),
     movimientosPorConcepto: crearIntercambio<FilaExportadaPorConcepto, never, FiltroPorConceptoSolicitado>({
@@ -47,6 +48,7 @@ function intercambios(flujo: ReporteDeFlujoDeEfectivo, porConcepto: ReporteDeMov
       validar: () => ({ errores: [] }),
       listar: async (operador, filtro) =>
         aFilasExportadasPorConcepto(await porConcepto.ejecutar(operador, aFiltroDeTotales(conFiltro(filtro)))),
+      soloExportar: true,
       crear: noSeImporta,
     }),
   };

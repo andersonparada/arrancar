@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Download, FileSearch, History } from 'lucide-vue-next';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import { textoDeAvisosDelCierre, textoDelUltimoCierre } from '../composables/resumen-de-cierre';
 import type { CargaInicial } from '../servicios/cierre-de-carga.tipos';
@@ -9,9 +10,14 @@ import type { CargaInicial } from '../servicios/cierre-de-carga.tipos';
 const props = defineProps<{ carga: CargaInicial; exportando: boolean }>();
 const emit = defineEmits<{ verRevision: []; exportar: []; verHistorial: [] }>();
 
+const sesion = usarSesion();
 const linea = computed(() => textoDelUltimoCierre(props.carga));
 const avisos = computed(() => textoDeAvisosDelCierre(props.carga));
 const hayRevision = computed(() => props.carga.ultimoCierre?.revisionGuardada ?? false);
+/** Exportar el último cierre busca su id en el historial, así que pide también el permiso de verlo. */
+const puedeExportar = computed(
+  () => sesion.puede('empresas.carga-inicial.exportar') && sesion.puede('empresas.carga-inicial.ver-cierres'),
+);
 </script>
 
 <template>
@@ -31,8 +37,7 @@ const hayRevision = computed(() => props.carga.ultimoCierre?.revisionGuardada ??
         Ver revisión
       </BotonBase>
       <BotonBase
-        v-if="hayRevision"
-        v-permiso="'empresas.carga-inicial.exportar'"
+        v-if="hayRevision && puedeExportar"
         variante="secundario"
         pequeno
         :icono="Download"

@@ -107,6 +107,15 @@ export class VencimientoNoEditable extends ReglaDeNegocioInfringida {
   }
 }
 
+/** El vencimiento de un cargo ya pagado o compensado del todo no se mueve: reescribiría la antigüedad de saldos ya entregada. */
+export class VencimientoDeCargoSaldado extends ReglaDeNegocioInfringida {
+  readonly codigo = 'vencimiento_de_cargo_saldado';
+
+  constructor(etiqueta: string) {
+    super(`El documento ${etiqueta} ya no tiene saldo: no se puede cambiar su vencimiento.`);
+  }
+}
+
 /** El vencimiento que llegó contradice al documento: una nota de crédito no vence, y ningún cargo vence antes de emitirse. */
 export class VencimientoInvalido extends DatoInvalido {
   readonly codigo = 'vencimiento_invalido';

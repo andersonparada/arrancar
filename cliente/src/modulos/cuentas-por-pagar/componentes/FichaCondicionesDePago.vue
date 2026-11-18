@@ -9,7 +9,11 @@ import { usarFichaDeCondiciones } from '../composables/usar-condiciones-de-pago'
 /** El plazo de pago del proveedor y lo que se le debe con la empresa activa, con el acceso a su estado de cuenta. */
 const props = defineProps<{ registroId: string }>();
 const { datos, cargando } = usarFichaDeCondiciones(() => props.registroId);
-const detalles = computed(() => (datos.value ? detallesDeCondiciones(datos.value.condiciones, datos.value.saldo) : []));
+const detalles = computed(() =>
+  datos.value
+    ? detallesDeCondiciones(datos.value.condiciones, datos.value.saldo, datos.value.condiciones.mesesPorOmision)
+    : [],
+);
 </script>
 
 <template>

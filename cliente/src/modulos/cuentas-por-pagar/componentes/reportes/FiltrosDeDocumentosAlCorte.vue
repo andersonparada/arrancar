@@ -7,6 +7,7 @@ import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import { OPCIONES_DE_ORIGEN, opcionesDeProveedor, opcionesDeTipo } from '../../composables/filtros-de-documentos';
+import { resumenDeFiltrosEscondidos } from '../../composables/reportes/filtros-escondidos-de-documentos';
 import { OPCIONES_DE_AUTORIZACION } from '../../composables/reportes/filtros-de-saldos';
 import {
   OPCIONES_DE_ESTADO_DE_PAGO,
@@ -24,6 +25,7 @@ defineEmits<{ cambiarVista: [vista: VistaDeDocumentos]; quitar: [] }>();
 const opcionesDeVista = VISTAS_DE_DOCUMENTOS.map(({ valor, texto }) => ({ valor, texto }));
 const opcionesDeProveedores = computed(() => opcionesDeProveedor(props.proveedores));
 const ayudaDeLaVista = computed(() => VISTAS_DE_DOCUMENTOS.find((v) => v.valor === filtros.value.vista)?.ayuda);
+const escondidos = computed(() => resumenDeFiltrosEscondidos(filtros.value));
 const tipos = opcionesDeTipo().filter((opcion) => opcion.valor !== 'nota_de_credito');
 </script>
 
@@ -42,11 +44,14 @@ const tipos = opcionesDeTipo().filter((opcion) => opcion.valor !== 'nota_de_cred
       <FiltroDeCorte v-model="filtros.corte" :error="errorDelCorte" />
       <CampoSelector v-model="filtros.proveedorId" etiqueta="Proveedor" :opciones="opcionesDeProveedores" />
     </div>
+    <p v-if="escondidos.length > 0" class="mt-3 text-sm text-tierra-700 dark:text-tierra-200" role="status">
+      <span class="font-medium">También filtra por:</span> {{ escondidos.join(' · ') }}.
+    </p>
     <details class="mt-3">
       <summary
         class="cursor-pointer rounded text-sm font-medium text-tierra-700 focus-visible:ring-2 focus-visible:ring-campo-500 focus-visible:outline-none dark:text-tierra-200"
       >
-        Más filtros
+        Más filtros<template v-if="escondidos.length > 0"> ({{ escondidos.length }})</template>
       </summary>
       <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <CampoSelector v-model="filtros.autorizacion" etiqueta="Documentos" :opciones="OPCIONES_DE_AUTORIZACION" />

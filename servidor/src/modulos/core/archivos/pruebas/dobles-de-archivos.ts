@@ -5,7 +5,7 @@ import type {
   MedidasDeImagen,
   OptimizadorDeImagenes,
 } from '../aplicacion/puertos/optimizador-de-imagenes.js';
-import { FormatoDeImagenNoAceptado } from '../dominio/imagen.js';
+import { FormatoDeImagenNoAceptado, ImagenIlegible } from '../dominio/imagen.js';
 import type { InspectorDePdf, PdfInspeccionado, TurnoDeRevision } from '../aplicacion/puertos/inspector-de-pdf.js';
 import type { ArchivoGuardado, NuevoArchivo, RepositorioArchivos } from '../aplicacion/puertos/repositorio-archivos.js';
 
@@ -25,6 +25,13 @@ export class OptimizadorFalso implements OptimizadorDeImagenes {
 export class OptimizadorQueRechaza implements OptimizadorDeImagenes {
   async optimizar(): Promise<ImagenesOptimizadas> {
     throw new FormatoDeImagenNoAceptado();
+  }
+}
+
+/** Falla como el optimizador real con un archivo que parece foto pero no se puede leer (un texto llamado `.pdf`). */
+export class OptimizadorQueNoPuedeLeer implements OptimizadorDeImagenes {
+  async optimizar(): Promise<ImagenesOptimizadas> {
+    throw new ImagenIlegible();
   }
 }
 

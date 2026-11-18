@@ -18,6 +18,7 @@ const columnasGuardadas = {
   ancho: archivos.ancho,
   alto: archivos.alto,
   sha256: archivos.sha256,
+  sha256Recibido: archivos.sha256Recibido,
   paginas: archivos.paginas,
   recursoDueno: archivos.recursoDueno,
   creadoEn: archivos.creadoEn,

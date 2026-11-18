@@ -128,7 +128,7 @@ describe('qué notas se pueden ligar y quién puede', () => {
     expect(await ficha(cargo)).toMatchObject({ saldo: '1120.00' });
   });
 
-  it('pide su permiso propio, y la lista de notas, el de ver', async () => {
+  it('pide su permiso propio, y la lista de notas, el mismo de ligar', async () => {
     const { proveedor, cargo } = await e.proveedorConCargo();
     const id = await nota('300.00');
 
@@ -139,7 +139,7 @@ describe('qué notas se pueden ligar y quién puede', () => {
     const lista = await sinPermiso.get(`${RUTA_DE_PAGOS}/notas-para-ligar`);
 
     expect(sinLigar.estado).toBe(403);
-    expect(lista.estado).toBe(200);
+    expect(lista.estado).toBe(403);
   });
 
   it('la fecha de aplicar la nota no puede ser futura ni anterior a la emisión de los documentos', async () => {

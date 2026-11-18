@@ -1,7 +1,7 @@
 import { computed, reactive, ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
-import { apiNotas } from '../../servicios/notas.api';
+import { apiNotas, type DatosDeDesmarcado } from '../../servicios/notas.api';
 import type { Movimiento } from '../../servicios/movimientos.api';
 import { opcionesDeConcepto } from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
@@ -47,8 +47,12 @@ function usarDatosDeDesmarcado() {
   return { registro, motivo, conceptoId, opciones, abrir };
 }
 
-/** Quitar la marca: pide el motivo y el concepto con que sigue la nota. */
-function usarDesmarcado(alTerminar: () => Promise<void>) {
+type EnvioDeDesmarcado = (nota: Movimiento, cuerpo: DatosDeDesmarcado) => Promise<unknown>;
+
+const desmarcarDesdeNotas: EnvioDeDesmarcado = (nota, cuerpo) => apiNotas.desmarcar(nota.id, cuerpo);
+
+/** Quitar la marca: por omisión desde Notas; la conciliación pasa su propio envío. Pide el motivo y el concepto. */
+export function usarDesmarcado(alTerminar: () => Promise<void>, enviarDesmarcado = desmarcarDesdeNotas) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
   const { abrir, ...datos } = usarDatosDeDesmarcado();
@@ -57,23 +61,18 @@ function usarDesmarcado(alTerminar: () => Promise<void>) {
     const nota = datos.registro.value;
     if (!nota) return;
     const cuerpo = { motivo: datos.motivo.value, conceptoId: datos.conceptoId.value ?? '' };
-    if (!(await enviar(() => apiNotas.desmarcar(nota.id, cuerpo)))) return;
+    if (!(await enviar(() => enviarDesmarcado(nota, cuerpo)))) return;
     avisos.exito('Se quitó la marca de la nota.');
     datos.registro.value = null;
     await alTerminar();
   }
 
-  return reactive({
-    ...datos,
-    enviando,
-    errores,
-    abrir: (nota: Movimiento) => {
-      abrir(nota);
-      errores.value = {};
-    },
-    confirmar,
-    cerrar: () => (datos.registro.value = null),
-  });
+  const abrirLimpio = (nota: Movimiento): void => {
+    abrir(nota);
+    errores.value = {};
+  };
+  const cerrar = (): void => void (datos.registro.value = null);
+  return reactive({ ...datos, enviando, errores, abrir: abrirLimpio, confirmar, cerrar });
 }
 
 /** Las dos acciones de la marca de una nota: marcar (con confirmación) y desmarcar (con motivo y concepto). */

@@ -1,4 +1,5 @@
-import { fechaLegible, quetzales } from '../../../dominio/avisos.js';
+import { montoLegible } from '../../../../core/compartido/dominio/monto-legible.js';
+import { fechaLegible } from '../../../dominio/avisos.js';
 import { nitEnVariasFichas, type SaldoDeNit } from '../../../dominio/saldos-por-nit.js';
 import type { AvisoDelReporteDto } from '../../dto/saldos-al-corte.dto.js';
 import type { ChequeCobradoAntes, DatosParaAvisosDelCorte } from '../../puertos/puertos-de-saldos-al-corte.js';
@@ -16,7 +17,7 @@ function avisoDeAnterioresAlInicio({ anterioresAlInicio }: DatosParaAvisosDelCor
   return [
     {
       codigo: 'emitidos_antes_del_inicio',
-      mensaje: `Emitidos antes de la fecha de inicio: ${documentos(anterioresAlInicio.cantidad)} (${quetzales(anterioresAlInicio.totalCentavos)}) cuentan desde el ${fechaLegible(inicio)}. No estaban en la carga inicial: revise si faltaban en el saldo de apertura.`,
+      mensaje: `Emitidos antes de la fecha de inicio: ${documentos(anterioresAlInicio.cantidad)} (${montoLegible(anterioresAlInicio.totalCentavos / 100)}) cuentan desde el ${fechaLegible(inicio)}. No estaban en la carga inicial: revise si faltaban en el saldo de apertura.`,
     },
   ];
 }
@@ -26,7 +27,7 @@ function avisoDeRegistrosTardios({ registradosDespues }: DatosParaAvisosDelCorte
   return [
     {
       codigo: 'registrados_despues_del_corte',
-      mensaje: `${documentos(registradosDespues.cantidad)} con fecha hasta el ${fechaLegible(corte)} se registraron después (${quetzales(registradosDespues.totalCentavos)}): si ya cerró ese mes con este reporte, el saldo cambió.`,
+      mensaje: `${documentos(registradosDespues.cantidad)} con fecha hasta el ${fechaLegible(corte)} se registraron después (${montoLegible(registradosDespues.totalCentavos / 100)}): si ya cerró ese mes con este reporte, el saldo cambió.`,
     },
   ];
 }

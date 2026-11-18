@@ -7,6 +7,7 @@
  * `descartar`: se apartó una fila de una bandeja de trabajo sin registrarla, con su motivo (Libro de compras: DTE recibidos).
  * `autorizar`: se autorizó algo que la misma persona ingresó o completó, excepción a la separación de funciones (Cuentas por pagar).
  * `ajustar`: se dio de baja o se trasladó un saldo a favor, con su causa (Cuentas por pagar: ajustes de notas de crédito).
+ * `cambiar_vencimiento`: se movió el vencimiento de un cargo, con el antes y el después (Cuentas por pagar).
  */
 export type AccionAuditada =
   | 'eliminar'
@@ -22,7 +23,8 @@ export type AccionAuditada =
   | 'autorizar'
   | 'asignar'
   | 'quitar'
-  | 'ajustar';
+  | 'ajustar'
+  | 'cambiar_vencimiento';
 
 /** Una baja (o su reversa): qué registro, qué se hizo, por qué y cómo estaba antes. */
 export interface EntradaDeAuditoria {
