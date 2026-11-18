@@ -1,8 +1,9 @@
 import { FuenteNoDisponible } from '../dominio/errores.js';
-import type { ResultadoDeConsulta } from '../dominio/publicacion.js';
+import type { MonedaDelBanguat, ResultadoDeConsulta } from '../dominio/publicacion.js';
 import type {
   FuenteDeTiposDeCambio,
   OpcionesDeConsulta,
+  OpcionesDeMoneda,
   OpcionesDeRango,
 } from './puertos/fuente-de-tipos-de-cambio.js';
 
@@ -40,7 +41,15 @@ export class FuenteConReintentos implements FuenteDeTiposDeCambio {
     return this.conReintentos(() => this.fuente.tiposDelRango(opciones));
   }
 
-  private async conReintentos(consulta: () => Promise<ResultadoDeConsulta>): Promise<ResultadoDeConsulta> {
+  tiposDeLaMoneda(opciones: OpcionesDeMoneda): Promise<ResultadoDeConsulta> {
+    return this.conReintentos(() => this.fuente.tiposDeLaMoneda(opciones));
+  }
+
+  monedasDisponibles(): Promise<readonly MonedaDelBanguat[]> {
+    return this.conReintentos(() => this.fuente.monedasDisponibles());
+  }
+
+  private async conReintentos<T>(consulta: () => Promise<T>): Promise<T> {
     for (const espera of this.esperasMs) {
       try {
         return await consulta();

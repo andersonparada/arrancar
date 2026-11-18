@@ -1,40 +1,17 @@
-import { RespuestaInvalida } from '../../dominio/errores.js';
-import type { PublicacionRechazada, ResultadoDeConsulta } from '../../dominio/publicacion.js';
+import type {
+  MonedaDelBanguat,
+  MonedaPedida,
+  PublicacionRechazada,
+  ResultadoDeConsulta,
+} from '../../dominio/publicacion.js';
 import { validarPublicacion, type ValorCrudo } from '../../dominio/reglas-de-publicacion.js';
+import { bloquesDe, resultadoDe, sinEntidadesBasicas, textoDe } from './lectura-de-xml.js';
 
-/** Código de moneda del Banguat → código ISO. El USD es el 2; las demás se verifican con `VariablesDisponibles`. */
-export const MONEDAS_POR_CODIGO_BANGUAT: ReadonlyMap<string, string> = new Map([['2', 'USD']]);
+/** El dólar: se lee siempre en `TipoCambioDia` y `TipoCambioRango`. */
+export const DOLAR: MonedaPedida = { moneda: 'USD', codigoBanguat: 2 };
+const LARGO_MAXIMO_DE_DESCRIPCION = 120;
 
-const ENTIDADES_PROHIBIDAS = /<!\s*(DOCTYPE|ENTITY)/i;
-const FALLA_SOAP = /<(?:[\w-]+:)?Fault[\s>]/;
-
-/** El contenido del primer `<etiqueta>…</etiqueta>` (con o sin prefijo de espacio de nombres), recortado. */
-function textoDe(bloque: string, etiqueta: string): string | undefined {
-  const patron = new RegExp(`<(?:[\\w-]+:)?${etiqueta}>([^<]*)</(?:[\\w-]+:)?${etiqueta}>`);
-  return patron.exec(bloque)?.[1]?.trim();
-}
-
-/** Los contenidos de cada `<etiqueta>…</etiqueta>` (sin anidar el mismo nombre) del bloque. */
-function bloquesDe(bloque: string, etiqueta: string): string[] {
-  const patron = new RegExp(`<(?:[\\w-]+:)?${etiqueta}(?:\\s[^>]*)?>([\\s\\S]*?)</(?:[\\w-]+:)?${etiqueta}>`, 'g');
-  return [...bloque.matchAll(patron)].map((coincidencia) => coincidencia[1]!);
-}
-
-/**
- * Revisa que el XML sea seguro y traiga el resultado de `operacion`; devuelve lo que hay dentro de él.
- * Rechaza todo XML con `<!DOCTYPE` o `<!ENTITY` y no usa un analizador: solo se leen los elementos esperados.
- * @throws RespuestaInvalida si trae entidades, una falla SOAP o no tiene la estructura del servicio.
- */
-function resultadoDe(xml: string, operacion: string): string {
-  if (ENTIDADES_PROHIBIDAS.test(xml)) throw new RespuestaInvalida('La respuesta del Banguat trae entidades XML.');
-  if (FALLA_SOAP.test(xml)) throw new RespuestaInvalida('El Banguat respondió con una falla SOAP.');
-  const resultado = bloquesDe(xml, `${operacion}Result`)[0];
-  if (resultado !== undefined) return resultado;
-  if (new RegExp(`<(?:[\\w-]+:)?${operacion}Result\\s*/>`).test(xml)) return '';
-  throw new RespuestaInvalida(`La respuesta del Banguat no trae ${operacion}Result.`);
-}
-
-/** Quita lo rechazado de las publicaciones repetidas de una fecha: si hay dos de la misma moneda y fecha, queda la primera. */
+/** De las publicaciones repetidas de una moneda y fecha queda la primera. */
 function sinRepetidas(resultado: ResultadoDeConsulta): ResultadoDeConsulta {
   const vistas = new Set<string>();
   const publicaciones = resultado.publicaciones.filter((p) => {
@@ -58,45 +35,78 @@ function resultadoDeValidar(valores: readonly ValorCrudo[], hoy: string): Result
   return sinRepetidas({ publicaciones, rechazadas });
 }
 
+/** Una fila `Var` (`moneda`, `fecha`, `venta`, `compra`) a un valor crudo; `undefined` si es de una moneda no pedida. */
+function valorDeUnaFila(bloque: string, pedidas: ReadonlyMap<string, MonedaPedida>): ValorCrudo | undefined {
+  const pedida = pedidas.get(textoDe(bloque, 'moneda') ?? '');
+  if (!pedida) return undefined;
+  const venta = textoDe(bloque, 'venta') ?? '';
+  const compra = textoDe(bloque, 'compra') ?? '';
+  return { ...pedida, fecha: textoDe(bloque, 'fecha') ?? '', referencia: venta, compra, venta };
+}
+
+function valoresDeLasFilas(resultado: string, monedas: readonly MonedaPedida[]): ValorCrudo[] {
+  const pedidas = new Map(monedas.map((m) => [String(m.codigoBanguat), m]));
+  return bloquesDe(resultado, 'Var').flatMap((bloque) => valorDeUnaFila(bloque, pedidas) ?? []);
+}
+
 /**
- * Extrae la respuesta de `TipoCambioDia`: el USD en `CambioDolar/VarDolar{fecha, referencia}`.
+ * Extrae la respuesta de `TipoCambioDia`: el USD en `CambioDolar/VarDolar{fecha, referencia}` y, si el día
+ * las trae en `CambioDia/Var`, las `monedas` pedidas (las demás se ignoran).
  * @throws RespuestaInvalida
  */
-export function extraerTipoDelDia(xml: string, hoy: string): ResultadoDeConsulta {
+export function extraerTipoDelDia(
+  xml: string,
+  hoy: string,
+  monedas: readonly MonedaPedida[] = [],
+): ResultadoDeConsulta {
   const resultado = resultadoDe(xml, 'TipoCambioDia');
-  const valores = bloquesDe(resultado, 'VarDolar').map((bloque) => ({
-    moneda: 'USD',
+  const dolares = bloquesDe(resultado, 'VarDolar').map((bloque) => ({
+    ...DOLAR,
     fecha: textoDe(bloque, 'fecha') ?? '',
     referencia: textoDe(bloque, 'referencia') ?? '',
   }));
-  return resultadoDeValidar(valores, hoy);
-}
-
-/** Una fila `Var` del rango a un valor crudo; `undefined` si es de una moneda que no se maneja. */
-function valorDelRango(bloque: string): ValorCrudo | 'sin_referencia' | undefined {
-  const moneda = MONEDAS_POR_CODIGO_BANGUAT.get(textoDe(bloque, 'moneda') ?? '');
-  if (!moneda) return undefined;
-  const compra = textoDe(bloque, 'compra') ?? '';
-  const venta = textoDe(bloque, 'venta') ?? '';
-  if (compra !== venta) return 'sin_referencia';
-  return { moneda, fecha: textoDe(bloque, 'fecha') ?? '', referencia: venta };
+  const otras = monedas.filter((m) => m.codigoBanguat !== DOLAR.codigoBanguat);
+  return resultadoDeValidar([...dolares, ...valoresDeLasFilas(resultado, otras)], hoy);
 }
 
 /**
- * Extrae la respuesta de `TipoCambioRango`. El rango no trae `referencia`: para el USD `compra` y `venta` son
- * iguales a ella (comprobado con el servicio real, V-13); si difieren, la fila se rechaza como `sin_referencia`.
+ * Extrae la respuesta de `TipoCambioRango` (solo el dólar) o de `TipoCambioRangoMoneda` (la moneda pedida).
+ * El rango no trae `referencia`: `compra` y `venta` son iguales a ella (comprobado con el servicio real, V-13);
+ * si difieren, la fila se rechaza como `valor_ambiguo`. Un código que no se pidió se ignora.
  * @throws RespuestaInvalida
  */
-export function extraerTiposDelRango(xml: string, hoy: string): ResultadoDeConsulta {
-  const resultado = resultadoDe(xml, 'TipoCambioRango');
-  const valores: ValorCrudo[] = [];
-  const sinReferencia: PublicacionRechazada[] = [];
-  for (const bloque of bloquesDe(resultado, 'Var')) {
-    const valor = valorDelRango(bloque);
-    if (valor === 'sin_referencia') {
-      sinReferencia.push({ moneda: 'USD', fecha: textoDe(bloque, 'fecha') ?? '', motivo: 'sin_referencia' });
-    } else if (valor) valores.push(valor);
-  }
-  const validado = resultadoDeValidar(valores, hoy);
-  return { publicaciones: validado.publicaciones, rechazadas: [...validado.rechazadas, ...sinReferencia] };
+export function extraerTiposDelRango(
+  xml: string,
+  hoy: string,
+  opciones: { operacion: string; monedas: readonly MonedaPedida[] },
+): ResultadoDeConsulta {
+  const resultado = resultadoDe(xml, opciones.operacion);
+  return resultadoDeValidar(valoresDeLasFilas(resultado, opciones.monedas), hoy);
+}
+
+/** Una fila `Variable` a una moneda; `undefined` si el código no es un entero positivo de `smallint` o no hay descripción. */
+function monedaDeLaLista(bloque: string): MonedaDelBanguat | undefined {
+  const codigo = Number(textoDe(bloque, 'moneda') ?? '');
+  const descripcion = sinEntidadesBasicas(textoDe(bloque, 'descripcion') ?? '')
+    .trim()
+    .slice(0, LARGO_MAXIMO_DE_DESCRIPCION);
+  if (!Number.isInteger(codigo) || codigo < 1 || codigo > 32_767 || !descripcion) return undefined;
+  return { codigo, descripcion };
+}
+
+/**
+ * Extrae la lista de `VariablesDisponibles`. Descarta las filas inválidas y las repetidas (queda la primera).
+ * Una respuesta sin monedas es una lista vacía.
+ * @throws RespuestaInvalida
+ */
+export function extraerMonedasDisponibles(xml: string): MonedaDelBanguat[] {
+  const resultado = resultadoDe(xml, 'VariablesDisponibles');
+  const vistas = new Set<number>();
+  return bloquesDe(resultado, 'Variable')
+    .map(monedaDeLaLista)
+    .filter((moneda): moneda is MonedaDelBanguat => {
+      if (!moneda || vistas.has(moneda.codigo)) return false;
+      vistas.add(moneda.codigo);
+      return true;
+    });
 }

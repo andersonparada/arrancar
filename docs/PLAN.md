@@ -2385,6 +2385,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Todas las recomendaciones, salvo en Caja chica: una factura con retención se rechaza **con permiso de excepción**
   (lo del contador, CC-f A′) y la bancarización solo **avisa y marca** (lo del arquitecto, CC-h A). Detalle al final de
   cada diseño. Los tres quedan **aprobados** para programar (orden de la hoja de ruta: Multimoneda antes que Caja chica).
+- **2026-11-18 (MM-3a′, todas las monedas del Banguat en el cliente, sin base de datos).** En `core/monedas`, según la
+  adenda del diseño de Multimoneda: el puerto `FuenteDeTiposDeCambio` suma `tiposDeLaMoneda` (`TipoCambioRangoMoneda`
+  por código del Banguat) y `monedasDisponibles` (`VariablesDisponibles`); `tipoDelDia` lee también `CambioDia/Var` de
+  las monedas pedidas. Se quitó el mapa fijo `2 → USD`: el extractor recibe las monedas pedidas e ignora otros códigos.
+  `referenciaEscalada` (ahora en `valores-decimales.ts`) acepta notación científica y más de 8 decimales (redondea
+  desde la mitad, con `bigint`, sin `number`; tope 99999999.99999999). `sin_referencia` pasó a `valor_ambiguo` con la
+  moneda real; las publicaciones llevan `codigoBanguat` (y `compra`/`venta` en los rangos). Constantes nuevas
+  `VARIACION_PARA_RECHAZAR_EN_PORCIENTO = 25`, `variacionSuperaElRechazo` y `cruceImplicito`; `fechasSinPublicacion`
+  recibe un objeto con `diasEsperados` (el USD, todos; las demás, hábiles, que calcula quien llama con el
+  calendario). `FuenteConReintentos` y el doble en memoria cubren lo nuevo. Pruebas con respuestas grabadas (no se
+  llamó al Banguat real: **C-1 a C-4 de la adenda siguen pendientes**, así que `CODIGOS_DEL_BANGUAT_EXCLUIDOS` y la hora
+  de la vuelta de noche quedan para MM-3b; la forma de `VariablesDisponibles` y de `TipoCambioRangoMoneda` se supuso
+  igual a la del dictamen y debe confirmarse con la llamada real). Sigue para después de la migración del core: MM-1,
+  MM-2 y MM-3b (bitácora, candado, vueltas, carga nocturna).
 - **2026-11-18 (MM-3, primera parte: cliente del Banguat sin base de datos).** En `core/monedas`: puerto
   `FuenteDeTiposDeCambio` (`tipoDelDia`, `tiposDelRango`), `ClienteBanguat` (SOAP 1.1 con `fetch`, HTTPS obligatorio, 10 s,
   256 KB, sin seguir redirecciones, sin analizador XML: rechaza `<!DOCTYPE`/`<!ENTITY` y extrae solo lo esperado),

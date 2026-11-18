@@ -3,7 +3,9 @@ import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { FuenteNoDisponible, RespuestaInvalida } from '../../dominio/errores.js';
 import {
+  LISTA_DE_MONEDAS,
   RANGO_CON_FIN_DE_SEMANA,
+  RANGO_DEL_EUR,
   RESPUESTA_CON_DOCTYPE,
   respuestaDelDia,
   respuestaDelRango,
@@ -53,7 +55,9 @@ describe('ClienteBanguat contra un servidor local falso', () => {
   it('pide el tipo del día con SOAP 1.1 y lo extrae', async () => {
     manejador = responder(200, respuestaDelDia('18/11/2026', '7.64489'));
     const resultado = await cliente().tipoDelDia({ hoy: HOY });
-    expect(resultado.publicaciones).toEqual([{ moneda: 'USD', fecha: '2026-11-18', referencia: '7.64489' }]);
+    expect(resultado.publicaciones).toEqual([
+      { moneda: 'USD', codigoBanguat: 2, fecha: '2026-11-18', referencia: '7.64489' },
+    ]);
     expect(recibidas[0]?.accion).toBe('"http://www.banguat.gob.gt/variables/ws/TipoCambioDia"');
   });
 
@@ -62,6 +66,40 @@ describe('ClienteBanguat contra un servidor local falso', () => {
     const resultado = await cliente().tiposDelRango({ hoy: HOY, desde: '2026-11-13', hasta: '2026-11-18' });
     expect(resultado.publicaciones).toHaveLength(6);
     expect(recibidas[0]?.cuerpo).toContain('<fechainit>13/11/2026</fechainit><fechafin>18/11/2026</fechafin>');
+  });
+
+  it('pide el rango de una moneda por su código y lo extrae', async () => {
+    manejador = responder(200, RANGO_DEL_EUR);
+    const resultado = await cliente().tiposDeLaMoneda({
+      hoy: HOY,
+      desde: '2026-11-13',
+      hasta: '2026-11-18',
+      moneda: 'EUR',
+      codigoBanguat: 28,
+    });
+    expect(resultado.publicaciones).toHaveLength(4);
+    expect(resultado.rechazadas).toHaveLength(1);
+    expect(recibidas[0]?.accion).toBe('"http://www.banguat.gob.gt/variables/ws/TipoCambioRangoMoneda"');
+    expect(recibidas[0]?.cuerpo).toContain('<fechafin>18/11/2026</fechafin><moneda>28</moneda>');
+  });
+
+  it('rechaza un código de moneda que no es entero positivo antes de salir a la red', async () => {
+    const opciones = { hoy: HOY, desde: HOY, hasta: HOY, moneda: 'EUR' };
+    await expect(cliente().tiposDeLaMoneda({ ...opciones, codigoBanguat: 1.5 })).rejects.toBeInstanceOf(RangeError);
+    await expect(cliente().tiposDeLaMoneda({ ...opciones, codigoBanguat: 0 })).rejects.toBeInstanceOf(RangeError);
+    expect(recibidas).toHaveLength(0);
+  });
+
+  it('pide la lista de monedas disponibles', async () => {
+    manejador = responder(200, LISTA_DE_MONEDAS);
+    const monedas = await cliente().monedasDisponibles();
+    expect(monedas.map((m) => m.codigo)).toEqual([2, 28, 9]);
+    expect(recibidas[0]?.accion).toBe('"http://www.banguat.gob.gt/variables/ws/VariablesDisponibles"');
+  });
+
+  it('un error del servicio al pedir la lista es fuente no disponible', async () => {
+    manejador = responder(503, 'No disponible');
+    await expect(cliente().monedasDisponibles()).rejects.toBeInstanceOf(FuenteNoDisponible);
   });
 
   it('un rango sin datos devuelve un resultado vacío', async () => {

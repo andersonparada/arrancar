@@ -7,7 +7,7 @@ const HOY = '2026-11-18';
 
 function armar() {
   const base = new FuenteDeTiposDeCambioEnMemoria();
-  base.publicaciones.push({ moneda: 'USD', fecha: HOY, referencia: '7.64489' });
+  base.publicaciones.push({ moneda: 'USD', codigoBanguat: 2, fecha: HOY, referencia: '7.64489' });
   const esperas: number[] = [];
   const fuente = new FuenteConReintentos(base, {
     esperasMs: [10, 20],
@@ -32,6 +32,24 @@ describe('FuenteConReintentos', () => {
     const resultado = await fuente.tiposDelRango({ hoy: HOY, desde: HOY, hasta: HOY });
     expect(resultado.publicaciones).toHaveLength(1);
     expect([base.consultas, esperas]).toEqual([3, [10, 20]]);
+  });
+
+  it('reintenta también la lista de monedas y el rango de una moneda', async () => {
+    const { base, fuente, esperas } = armar();
+    base.monedasDelBanguat.push({ codigo: 28, descripcion: 'Euro' });
+    base.publicaciones.push({ moneda: 'EUR', codigoBanguat: 28, fecha: HOY, referencia: '8.8' });
+    base.fallosPendientes.push(new FuenteNoDisponible('x'), new FuenteNoDisponible('x'));
+    expect(await fuente.monedasDisponibles()).toEqual([{ codigo: 28, descripcion: 'Euro' }]);
+    base.fallosPendientes.push(new FuenteNoDisponible('x'));
+    const resultado = await fuente.tiposDeLaMoneda({
+      hoy: HOY,
+      desde: HOY,
+      hasta: HOY,
+      moneda: 'EUR',
+      codigoBanguat: 28,
+    });
+    expect(resultado.publicaciones).toHaveLength(1);
+    expect([base.consultas, esperas]).toEqual([5, [10, 20, 10]]);
   });
 
   it('se rinde tras agotar los reintentos y lanza el último error', async () => {

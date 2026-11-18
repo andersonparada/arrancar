@@ -1,13 +1,25 @@
 import type {
   FuenteDeTiposDeCambio,
   OpcionesDeConsulta,
+  OpcionesDeMoneda,
   OpcionesDeRango,
 } from '../../aplicacion/puertos/fuente-de-tipos-de-cambio.js';
 import { FuenteNoDisponible } from '../../dominio/errores.js';
-import type { ResultadoDeConsulta } from '../../dominio/publicacion.js';
-import { extraerTipoDelDia, extraerTiposDelRango } from './extractor-de-respuestas.js';
+import type { MonedaDelBanguat, ResultadoDeConsulta } from '../../dominio/publicacion.js';
+import {
+  DOLAR,
+  extraerMonedasDisponibles,
+  extraerTipoDelDia,
+  extraerTiposDelRango,
+} from './extractor-de-respuestas.js';
 import { leerTextoAcotado } from './lector-acotado.js';
-import { solicitudDelDia, solicitudDelRango, type SolicitudSoap } from './sobres-soap.js';
+import {
+  solicitudDeLasVariables,
+  solicitudDelDia,
+  solicitudDelRango,
+  solicitudDelRangoDeMoneda,
+  type SolicitudSoap,
+} from './sobres-soap.js';
 
 /** URL del servicio del Banguat; se cambia con `URL_TIPO_DE_CAMBIO_BANGUAT`. */
 export const URL_BANGUAT_POR_OMISION = 'https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx';
@@ -41,11 +53,25 @@ export class ClienteBanguat implements FuenteDeTiposDeCambio {
   }
 
   async tipoDelDia(opciones: OpcionesDeConsulta): Promise<ResultadoDeConsulta> {
-    return extraerTipoDelDia(await this.enviar(solicitudDelDia()), opciones.hoy);
+    return extraerTipoDelDia(await this.enviar(solicitudDelDia()), opciones.hoy, opciones.monedas);
   }
 
   async tiposDelRango(opciones: OpcionesDeRango): Promise<ResultadoDeConsulta> {
-    return extraerTiposDelRango(await this.enviar(solicitudDelRango(opciones.desde, opciones.hasta)), opciones.hoy);
+    const xml = await this.enviar(solicitudDelRango(opciones.desde, opciones.hasta));
+    return extraerTiposDelRango(xml, opciones.hoy, { operacion: 'TipoCambioRango', monedas: [DOLAR] });
+  }
+
+  async tiposDeLaMoneda(opciones: OpcionesDeMoneda): Promise<ResultadoDeConsulta> {
+    const { desde, hasta, codigoBanguat, moneda } = opciones;
+    const xml = await this.enviar(solicitudDelRangoDeMoneda(desde, hasta, codigoBanguat));
+    return extraerTiposDelRango(xml, opciones.hoy, {
+      operacion: 'TipoCambioRangoMoneda',
+      monedas: [{ moneda, codigoBanguat }],
+    });
+  }
+
+  async monedasDisponibles(): Promise<readonly MonedaDelBanguat[]> {
+    return extraerMonedasDisponibles(await this.enviar(solicitudDeLasVariables()));
   }
 
   private async enviar(solicitud: SolicitudSoap): Promise<string> {

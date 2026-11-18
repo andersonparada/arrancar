@@ -34,3 +34,18 @@ export function solicitudDelRango(desde: string, hasta: string): SolicitudSoap {
     `<fechainit>${fechaIsoAlBanguat(desde)}</fechainit><fechafin>${fechaIsoAlBanguat(hasta)}</fechafin>`,
   );
 }
+
+/** Solicitud de `TipoCambioRangoMoneda` para la moneda con ese código del Banguat. */
+export function solicitudDelRangoDeMoneda(desde: string, hasta: string, codigoBanguat: number): SolicitudSoap {
+  if (!Number.isInteger(codigoBanguat) || codigoBanguat < 1) throw new RangeError(`Código inválido: ${codigoBanguat}`);
+  return sobre(
+    'TipoCambioRangoMoneda',
+    `<fechainit>${fechaIsoAlBanguat(desde)}</fechainit><fechafin>${fechaIsoAlBanguat(hasta)}</fechafin>` +
+      `<moneda>${codigoBanguat}</moneda>`,
+  );
+}
+
+/** Solicitud de `VariablesDisponibles` (sin parámetros). */
+export function solicitudDeLasVariables(): SolicitudSoap {
+  return sobre('VariablesDisponibles', '');
+}
