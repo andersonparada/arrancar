@@ -2250,5 +2250,4 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `terceros.categorias-de-proveedor.*` (`importar`, `exportar`); la migración `0008_permisos_de_excel` da importar a quien tenía
   `clientes.crear` / `proveedores.crear` y exportar a quien tenía `terceros.ver`, en roles y permisos directos. Cada fila entra por
   `RegistrarTercero` (aviso de parecidos incluido: una fila parecida a un tercero existente se rechaza, sin confirmar duplicado),
-  con el papel de la hoja; sin contactos ni secciones de otros módulos. La categoría se escribe por nombre. Pendiente: botones en
-  el cliente.
+  con el papel de la hoja; sin contactos ni secciones de otros módulos. La categoría se escribe por nombre. Cliente: botones de Excel en las listas de Clientes, Proveedores y Categorías de proveedor (`AccionesDeIntercambio`, `VentanaDeImportacion`, `usarIntercambio`).
