@@ -122,6 +122,11 @@ Cuentas por pagar, CP5-10); que el servidor devuelva el aviso de fecha de inicio
 
 ### Avisos técnicos
 
+- **Dependencias y worktrees:** los worktrees están dentro del repositorio y Node resuelve los paquetes que les falten desde
+  el `node_modules` del checkout principal (el de integración incluso lo enlaza), así que las pruebas **no detectan** un
+  `package-lock.json` roto. Toda rama que cambie `package.json` o el lock se prueba también en un **clon limpio fuera del
+  repositorio** con `npm ci`, `npm ci --omit=dev -w servidor` (como el Dockerfile) y el servidor arrancado.
+
 - **Migraciones y fechas (todos los módulos):** el migrador de Drizzle solo aplica las migraciones con `when` mayor que el de
   la última aplicada y no compara hashes. Al unir dos ramas que agregan migraciones al mismo módulo, la de fecha anterior se
   saltaría sin aviso (también en producción). El coordinador revisa el `when` de cada migración unida y lo corrige antes de
