@@ -6,6 +6,7 @@ import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import AccionesDeLaContrasena from '../componentes/AccionesDeLaContrasena.vue';
 import DocumentosDeLaContrasena from '../componentes/DocumentosDeLaContrasena.vue';
 import SeccionDeFicha from '../componentes/SeccionDeFicha.vue';
+import SeccionDePagosDeLaContrasena from '../componentes/SeccionDePagosDeLaContrasena.vue';
 import VentanasDeLaContrasena from '../componentes/VentanasDeLaContrasena.vue';
 import {
   detallesDeAnulacionDeContrasena,
@@ -14,6 +15,8 @@ import {
   resumenDeAnularContrasena,
   resumenDeQuitarDocumento,
 } from '../composables/contrasenas/ficha-de-contrasena';
+import { destinoDeNuevoPago } from '../composables/contrasenas/pagos-de-la-contrasena';
+import { nombreDelEstadoDePago, tonoDelEstadoDePago } from '../composables/pagos/detalles-de-pago';
 import { usarFichaDeContrasena } from '../composables/contrasenas/usar-ficha-de-contrasena';
 import { VENTANAS_CUENTAS_POR_PAGAR } from '../textos';
 
@@ -28,6 +31,7 @@ const volver = {
 };
 
 const imprimir = () => router.push({ name: 'cuentas-por-pagar.contrasenas.imprimir', params: { id: props.id } });
+const pagar = () => ficha.value && router.push(destinoDeNuevoPago(ficha.value));
 const quitar = (documentoId: string, nombre: string) =>
   ficha.value && contrasena.quitar.abrir(documentoId, resumenDeQuitarDocumento(ficha.value, nombre));
 const anular = () => ficha.value && contrasena.anular.abrir(props.id, resumenDeAnularContrasena(ficha.value));
@@ -40,9 +44,17 @@ const anular = () => ficha.value && contrasena.anular.abrir(props.id, resumenDeA
       <InsigniaBase v-else class="self-center" :tono="ficha.impresa ? 'campo' : 'tierra'">
         {{ ficha.impresa ? 'Impresa' : 'Sin imprimir' }}
       </InsigniaBase>
+      <InsigniaBase
+        v-if="ficha.estadoDePago && ficha.estadoDePago !== 'pendiente'"
+        class="self-center"
+        :tono="tonoDelEstadoDePago(ficha.estadoDePago)"
+      >
+        {{ nombreDelEstadoDePago(ficha.estadoDePago) }}
+      </InsigniaBase>
       <AccionesDeLaContrasena
         :ficha="ficha"
         @imprimir="imprimir"
+        @pagar="pagar"
         @cambiar-fecha="contrasena.cambio.abrir"
         @agregar="contrasena.agregar.abrir"
         @anular="anular"
@@ -62,6 +74,9 @@ const anular = () => ficha.value && contrasena.anular.abrir(props.id, resumenDeA
         :puede-quitar="ficha.puedeEditar"
         @quitar="quitar"
       />
+    </SeccionDeFicha>
+    <SeccionDeFicha v-permiso="'cuentas-por-pagar.pagos.ver'" titulo="Pagos">
+      <SeccionDePagosDeLaContrasena :pagos="ficha.pagos" />
     </SeccionDeFicha>
     <SeccionDeFicha titulo="Totales de hoy">
       <DatosDelRegistro :detalles="detallesDeTotalesDeContrasena(ficha)" />

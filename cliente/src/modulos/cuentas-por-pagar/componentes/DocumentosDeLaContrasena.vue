@@ -5,6 +5,7 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import { etiquetaDeDocumento } from '../composables/contrasenas/edicion-de-contrasena';
+import { cargoConPagos } from '../composables/contrasenas/pagos-de-la-contrasena';
 import { textoDeEstado, tonoDeEstado } from '../composables/detalles-de-documento';
 import type { CargoDeContrasena, NotaDeContrasena } from '../servicios/tipos-de-contrasenas';
 import { TIPOS_DE_DOCUMENTO } from '../textos';
@@ -37,7 +38,7 @@ const nombreDelCargo = (cargo: CargoDeContrasena) => `${TIPOS_DE_DOCUMENTO[cargo
             <p class="mt-1 text-sm text-tierra-600 dark:text-tierra-300">
               Emitida {{ formatearFecha(cargo.fechaEmision) }}
             </p>
-            <dl class="mt-2 grid grid-cols-3 gap-2 text-sm">
+            <dl class="mt-2 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
               <div>
                 <dt class="text-xs text-tierra-500">Total</dt>
                 <dd>{{ formatearMonto(cargo.total) }}</dd>
@@ -50,6 +51,15 @@ const nombreDelCargo = (cargo: CargoDeContrasena) => `${TIPOS_DE_DOCUMENTO[cargo
                 <dt class="text-xs text-tierra-500">Rebajado</dt>
                 <dd>{{ formatearMonto(cargo.rebajado) }}</dd>
               </div>
+              <div>
+                <dt class="text-xs text-tierra-500">Pagado</dt>
+                <dd>
+                  {{ formatearMonto(cargo.pagado) }}
+                  <span v-if="Number(cargo.comprometido) > 0" class="block text-xs text-tierra-500">
+                    + {{ formatearMonto(cargo.comprometido) }} comprometido
+                  </span>
+                </dd>
+              </div>
             </dl>
           </div>
           <div class="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
@@ -57,7 +67,10 @@ const nombreDelCargo = (cargo: CargoDeContrasena) => `${TIPOS_DE_DOCUMENTO[cargo
               <span class="block text-lg font-semibold">{{ formatearMonto(cargo.saldo) }}</span>
               <span class="block text-xs text-tierra-500">por pagar</span>
             </p>
-            <span v-if="puedeQuitar" v-permiso="'cuentas-por-pagar.contrasenas.editar'" class="contents">
+            <p v-if="puedeQuitar && cargoConPagos(cargo)" class="max-w-40 text-right text-xs text-tierra-500">
+              Tiene pagos: no se quita mientras no se anulen.
+            </p>
+            <span v-else-if="puedeQuitar" v-permiso="'cuentas-por-pagar.contrasenas.editar'" class="contents">
               <BotonBase
                 variante="fantasma"
                 pequeno

@@ -2221,3 +2221,26 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   en el mes conciliado Bancos lo rechaza y el retiro sigue liquidado) y el recibo de un reparto real (agrupado por contraseña,
   un recibo por proveedor, total en letras, leyenda). Aclaración del diseño: «depósito conciliado (no reabre)» solo ocurre si
   Bancos rechaza el inverso; una nota conciliada sí se anula con inverso.
+- **2026-11-18 — CP4-9 (cliente, pagar).** Sin cambios en el servidor. Pantalla `NuevoPago`
+  (`/cuentas-por-pagar/pagos/nuevo?proveedorId=&contrasenaId=`, entrada «Nuevo pago» en Operación, `pagos.ver`): se escoge el
+  proveedor (selector de `pagos/proveedores-por-pagar`, por nombre con NIT y lo que se le debe), pestañas por forma según los
+  permisos reales (`pagos.emitir` para cheque y transferencia o débito, `pagos.ligar-notas-de-debito`, `pagos.aplicar-a-apertura`
+  solo si hay saldos iniciales), cargos autorizados **agrupados por contraseña** (M2: de la ficha se abre solo esa y «Agregar
+  otra contraseña del proveedor» suma las demás; desde el menú entran todas), monto propuesto editable con casilla y «Todo»,
+  retención que se descontará, no autorizados apagados con la razón, casilla de diferencia de centavos (con `ajustes.crear`,
+  hasta el tope que manda el servidor), chequera con el siguiente número o cuenta con su saldo, notas ya registradas con lo que
+  les queda, beneficiario de solo lectura, fecha (mínima, posfechado, fija en la apertura con la carga abierta), no negociable,
+  referencia, motivo de la apertura y sus avisos fijos, avisos de §5.5 antes de confirmar, resumen de lo que va a pasar en la
+  confirmación y, al registrar, los avisos de Cuentas por pagar y de Bancos tal como los responde el servidor. Barra pegada
+  abajo con el total (celular). Lógica pura en `composables/pagos/` (`edicion-de-pago`, `fechas-del-pago`, `avisos-del-pago`,
+  `errores-del-pago`, `resumen-del-pago`, `opciones-del-pago`, `grupos-del-pago`, `detalles-de-pago`) con pruebas; los
+  errores del servidor (`aplicaciones.N.monto`, `chequeraId`…) vuelven a su documento o campo. Ficha de la contraseña: sección
+  «Pagos» (con `pagos.ver`), botón «Registrar pago» (si el servidor dice que hay cargos autorizados con saldo y el usuario puede
+  pagar de alguna forma), columna «Pagado» y «comprometido», etiqueta «Pagada / Pagada en parte / Comprometida» (también en la
+  tarjeta de la lista), «Quitar» oculto en lo que tiene pagos; el aviso de «REIMPRESIÓN» al editar, quitar o agregar ya existía
+  de CP3 y se mantiene con pagos. `CapaAvisos` respeta los saltos de línea del mensaje de confirmación. Desviaciones del diseño
+  frente a la API real: `GET …/para-pagar` no trae `tieneMovimientos` (el servidor rechaza con `CorrijaElSaldoInicial` y el
+  mensaje sale en el campo), `fechaMinima` solo cubre la contraseña abierta (la pantalla calcula la de lo que se paga con las
+  emisiones y la fecha de inicio, y el servidor valida igual) y la bancarización se anticipa solo como «el mes llega al
+  umbral» (el efecto fiscal lo decide el servidor al registrar). Sin enlace «Pagar en efectivo» ni a la ficha del pago (CP4-E5 y
+  CP4-10).
