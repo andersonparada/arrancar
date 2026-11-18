@@ -666,7 +666,7 @@ Pasos (un commit cada uno, con sus pruebas):
 9. **H3c** Reportes Flujo de efectivo y Movimientos por concepto. **Hecho (2026-09-29)**: ver `bancos.md`, sección H3c.
 10. **H8** Interés bruto e ISR retenido. **Hecho (2026-09-29)**, servidor y cliente: ver `bancos.md`, sección H8.
 11. **Archivos PDF** en `core/archivos`.
-12. **H2** Saldo del estado de cuenta y archivo en la conciliación.
+12. **H2** Saldo del estado de cuenta y archivo en la conciliación. **Hecho (2026-11-18)**, servidor, cliente y QA en el navegador: ver `bancos.md`, sección H2, y `informe-qa-h2-2026-11-18.md`.
 13. **H6a** Reporte de cheques caducos (índice, filtros, imprimir, exportar).
 14. **H6b** Anulación en lote. **Hecho (2026-09-29)**, servidor y cliente: ver `bancos.md`, sección H6b.
 15. **H5a** Datos fiscales de la empresa, fecha de inicio y carga inicial.

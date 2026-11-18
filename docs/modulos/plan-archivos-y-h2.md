@@ -1,5 +1,8 @@
 # Plan de implementación: Archivos y H2 (estado de cuenta en la conciliación)
 
+> **Nota (2026-11-18):** los pasos H2a a H2d de este documento los reemplaza `diseno-h2-evidencia-de-conciliacion.md` y ya están
+> hechos; lo que quedó está en `bancos.md` (sección H2) y en `informe-qa-h2-2026-11-18.md`. Se conserva por su análisis de seguridad.
+
 _Agente de seguridad, 2026-09-29. Se basa en `seguridad-de-archivos.md` (incluida la
 decisión sobre HEIC), en la fila «Archivos» y la sección H2 de
 `plan-hallazgos-contables.md`, en B5.1 de `bancos.md` y en el código actual._

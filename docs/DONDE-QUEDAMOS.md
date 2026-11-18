@@ -383,14 +383,16 @@ usuario). Pruebas completas en verde: servidor 3383, cliente 865, generador 46. 
    1. **Paso 5, cliente de H2b: hecho** (2026-11-16): `EstadoDeCuentaAdjunto`, `VisorDeEstadoDeCuenta`,
       `ColumnaDelEstadoDeCuenta`, `usar-estado-de-cuenta`, dos columnas en `ConciliarCuenta`, ícono en la lista y el
       motivo «falta el archivo» en `faltaParaTerminar`. Sin ver aún en el navegador (paso 7).
-   2. **Paso 6, documentación:** `bancos.md` (sección H2), `plan-hallazgos-contables.md` y `plan-archivos-y-h2.md`.
-   3. **Paso 7, QA en el navegador** (`pruebas-qa`) de todo H2: PDF real de banco, foto del celular, PDF con
-      JavaScript y con contraseña, visor en `iframe` en Chrome, Firefox y Safari, imprimir, celular y modo oscuro.
-   **Decisiones pendientes del usuario** (ninguna frena el paso 5): tope de tamaño de solicitud en Caddy (~20 MB
-   para toda la instalación); si algún navegador no muestra el PDF dentro de la página, CSP propia de esa respuesta o
-   solo «Abrir en otra pestaña»; el nombre original del archivo se conserva 60 meses en la auditoría (seguridad
-   recomienda conservarlo). **Coordinación:** la otra sesión programará CP4-B1 a B3 en Bancos (migración `0032`)
-   después de H2b; el aviso al «desmarcar» en la conciliación toca los mismos archivos.
+   2. **Paso 6, documentación: hecho** (2026-11-18): `bancos.md` (sección H2), `plan-hallazgos-contables.md` y `plan-archivos-y-h2.md`.
+   3. **Paso 7, QA en el navegador: hecho** (2026-11-18, `docs/modulos/informe-qa-h2-2026-11-18.md`): sin errores que bloqueen,
+      8 observaciones menores; PDF visible en el `iframe` en Chromium con la CSP global. **Falta a mano** probar el visor en
+      Firefox y Safari reales (Playwright no trae visor de PDF en Firefox y WebKit no arranca aquí) y con un PDF real de banco.
+   **Decisiones pendientes del usuario** (ninguna frena nada): tope de tamaño de solicitud en Caddy (~20 MB para toda la
+   instalación); si algún navegador no muestra el PDF dentro de la página, CSP propia de esa respuesta o solo «Abrir en otra
+   pestaña»; el nombre original del archivo se conserva 60 meses en la auditoría (seguridad recomienda conservarlo); qué «huella»
+   mostrar (hoy la del PDF normalizado por qpdf, que cambia en cada subida; la de lo recibido no se ve); si hace falta el botón de
+   desmarcar para Cuentas por pagar dentro de la conciliación (hoy solo servidor); impresión en modo oscuro de toda la app
+   (`@media print`).
 9. **Con el módulo de Ventas (futuro):** cálculo del SAT-2046 y aviso del límite anual (ya no Q150,000: 125 salarios mínimos no agrícolas, Q500,285 en 2026).
 
 Forma de trabajo que funcionó: cada agente en su propio worktree (`.claude/worktrees/<nombre>`) con su base de pruebas
