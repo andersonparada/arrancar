@@ -1,0 +1,20 @@
+{
+  "id": "2b407cc9-8ce8-4bd3-9324-a67bb248703f",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {},
+  "enums": {},
+  "schemas": {
+    "cuentas_por_liquidar": "cuentas_por_liquidar"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -2421,6 +2421,28 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `diseno-cp4-pagos.md` actualizado): quien solo tiene `pagos.ver` recibe 403. El cliente ya no pide las notas sin ese permiso.
   `usarSelectorConBusqueda` reinicia la opción resaltada solo con `enServidor`, con prueba de que sin él no se reinicia.
 
+- **2026-11-18 — CC-1 y CL-1 (Caja chica y Cuentas por liquidar, datos).** Dos módulos nuevos con el generador
+  (`caja-chica`, icono `Wallet`, depende de Libro de compras y Bancos; `cuentas-por-liquidar`, icono `HandCoins`, suma
+  Terceros). Esquemas `caja_chica` (migraciones `0000_esquema` y `0001_cc1_fondos_y_comprobantes`: fondos con alcance por
+  fondo y su tabla de accesos, custodios, cambios de monto, comprobantes con bandeja, reposiciones y sus líneas con
+  llaves al mismo fondo, arqueos, vales provisionales, y los disparadores `asignar_al_creador` y
+  `asignar_fondo_al_custodio`) y `cuentas_por_liquidar` (`0000_esquema` y `0001_cl1_anticipos_y_gastos`). Permisos
+  declarados, incluidos los de excepción de retención (`caja-chica.comprobantes.con-retencion` y
+  `cuentas-por-liquidar.gastos.con-retencion`, CC-f A′); sin permiso de efectivo sin bancarizar (CC-h A). Ayudas comunes de
+  restricciones en `core/base-datos/restricciones.ts`. Pruebas de tablas: cada check, llaves compuestas, únicos,
+  RLS de otra empresa, fondo no asignado invisible, bandeja visible, disparador del custodio; `politicas-de-los-modulos` y
+  `llaves-entre-esquemas` en verde. **Quedan para después** (anotado en los dos `docs/modulos/*.md`): la configuración
+  (§9.5), todo el servidor y el cliente (CC-2 en adelante, CL-2 en adelante) y lo que depende de CCL-M (`preguntarATodos`),
+  CCL-B1 (conceptos de sistema de Bancos, `0035`), CCL-L1 (referencia de destino del libro) y CCL-BZ (bancarización
+  compartida, función `security definer` de la suma de Caja chica, que revisa `seguridad`, V-S1 y V-S2).
+- **2026-11-18 — CC-1 y CL-1, correcciones de la revisión.** Migraciones `0002` de Caja chica y Cuentas por liquidar
+  (la `0001` no se tocó). La excepción de CC-f (A′, factura con retención con permiso y motivo) ahora cabe en las
+  tablas: `con_retencion`, `monto_retenido` y `motivo_con_retencion` en `comprobantes` y `gastos`; `monto` pasa a ser
+  lo que salió del fondo o anticipo (el neto), así que la ecuación del fondo y la reposición no se inflan con la
+  retención, que la entera la empresa. El documento del libro se liga con la llave compuesta
+  `(id, empresa_id, proveedor_id, destino)` (columna fija `destino_del_documento`), como ya hace Cuentas por pagar.
+  Se quitó `comprobantes.motivo_sin_bancarizar` (CC-h = A), se agregaron los índices de las llaves que cruzan de
+  módulo y entre tablas, y el check `fecha_de_liquidacion >= fecha` en anticipos y vales provisionales.
 - **2026-11-18 (respuestas del usuario al plazo de crédito).** Todas las recomendaciones de
   `docs/modulos/diseno-plazo-de-credito-del-proveedor.md` (detalle al final del diseño). Aprobado para programar PC-1 a PC-6;
   PC-4 y PC-5 (Excel de plazos) van después de que el Excel de Terceros esté en `main`.
@@ -2538,3 +2560,29 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `EENVELOPE`/`EMESSAGE` son permanentes y los de TLS/certificado no gastan intento. El saneado quita caracteres de
   ancho cero y corta por puntos de código; la plantilla rechaza `{ marcador }` con espacios; la redacción de pino cubre
   dos niveles y más nombres de secretos.
+- **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
+  `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
+  «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
+  factura con retención queda en la bandeja del destino (también la que viene de «Agregar factura» con referencia o de la
+  bandeja de DTE del libro) y solo entra al fondo o al anticipo al **asignarla** con `…con-retencion` y motivo; quien
+  autorizó es `asignado_por` (sin columna aparte: es el mismo acto) más una auditoría `autorizar`. El motivo no viaja en
+  la orden del libro. Bancarización: Caja chica y Cuentas por liquidar suman `monto + monto_retenido` (§5.4 h). Paso
+  nuevo **CC-1c / CL-1c** (§4.10, migraciones `0003`): `cuenta_id` con `deLaTransaccion.cuenta()` (con relleno desde
+  `core.empresas` para las bases con filas), llave `(proveedor_id, cuenta_id)` a `terceros.proveedores` e índices, y el
+  check del motivo solo con el documento asignado. Para el contador: V-12 (nota de crédito en la suma de bancarización) y
+  V-13 (check opcional que prohíba retención en una nota de crédito). Pendiente P-CCL-7 (cuenta coherente con la empresa
+  y beneficiario por cuenta).
+- **2026-11-18 (CC-1c y CL-1c, datos):** migración `0003_cl1c_cuenta_y_motivo_al_asignar` en Caja chica y en Cuentas por
+  liquidar: `cuenta_id` (no nula, `default` de la transacción, FK a `core.cuentas` on delete cascade) en
+  `caja_chica.comprobantes` y `cuentas_por_liquidar.gastos`, rellenada a mano desde `core.empresas` antes de pedirla no
+  nula (sirve en bases con filas); llave `(proveedor_id, cuenta_id)` a `terceros.proveedores` (el único
+  `proveedores_id_cuenta_unico` ya existía: sin migración de Terceros); índices `(proveedor_id, cuenta_id)` parcial y
+  `(cuenta_id)`; y el check del motivo solo con el documento asignado. No hay columna nueva de quién autorizó: es
+  `asignado_por` (diseño §5.4 g). Pruebas de tablas: proveedor de otra cuenta rechazado en vales de gasto, gastos sin
+  documento y documentos; retención en la bandeja sin motivo, asignada sin motivo y motivo sin retención. Sin migraciones
+  del core ni de Bancos. Pendientes: los casos de uso y mapeadores no escriben `cuenta_id` (lo pone la transacción);
+  la prueba de la migración sobre una base con filas no está automatizada.
+- **2026-11-18** (CC-1c / CL-1c, cierre): las descripciones de `caja-chica.comprobantes.con-retencion` y
+  `cuentas-por-liquidar.gastos.con-retencion` pasan a «Asignar a un fondo / a un anticipo un documento con retención
+  (excepción)…», porque con CC-f = A′ registrar no pide el permiso, lo pide quien asigna. Solo texto, sin migración. Las
+  migraciones `0003` con `cuenta_id`, la llave `(proveedor_id, cuenta_id)` y los checks ya estaban en el commit anterior.
