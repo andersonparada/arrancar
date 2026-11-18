@@ -86,5 +86,10 @@ export const VENTANAS_BANCOS = {
     descripcion:
       'Total de entradas, salidas y cantidad por concepto en un rango de fechas, con el detalle de cada uno.',
   },
+  saldosIniciales: {
+    titulo: 'Saldos iniciales',
+    descripcion:
+      'El saldo de cada cuenta bancaria a la fecha de corte: el del estado de cuenta y las partidas que el banco aún no ve (cheques en circulación, depósitos en tránsito).',
+  },
   // generador: ventanas
 } as const;

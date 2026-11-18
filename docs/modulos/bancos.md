@@ -1702,5 +1702,12 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
 - **Rutas heredadas hasta BS-5** (el cliente actual): `POST /bancos/saldos-iniciales`, `GET /bancos/saldos-iniciales?cuentaBancariaId=…` y
   `PUT|DELETE /bancos/saldos-iniciales/global/:movimientoId` registran y leen el saldo «de antes» (`saldo_global`). `RepositorioDeMovimientosConSaldoGlobal`
   reemplaza al puente de BS-1. El Excel viejo (Tipo, Fecha, Monto…) ya no existe.
+- **Cliente (BS-5, 2026-11-18)**: pantalla `/bancos/saldos-iniciales` (menú Administración, permiso `.ver`) y ficha `/bancos/saldos-iniciales/:cuentaBancariaId`
+  (código en `cliente/src/modulos/bancos/{paginas,componentes/saldos-iniciales,composables/saldos-iniciales}`). Las acciones salen con el permiso (`.crear`,
+  `.editar`, `.eliminar`, `.anular`) y lo que dicen `puedeEditar`, `puedeEliminar` y, por partida, `puedeCorregir`, `puedeEliminar` y `puedeAnular`; el cliente no
+  decide reglas. Con el saldo global, «Separar en partidas» usa el mismo `PUT` de la cabecera y, si la cuenta tiene movimientos anteriores, el servidor lo rechaza y
+  dice qué hacer. Todos los textos con artículos de ley están en `cliente/src/modulos/bancos/textos-de-apertura.ts` (del dictamen
+  `dictamen-textos-legales-de-bancos-2026-11-18.md`); el cliente no usa el texto de los avisos de cheque antiguo y depósito viejo que manda el servidor, arma el suyo
+  con la fecha de corte. Las rutas heredadas ya no tienen cliente: BS-3 puede borrarlas.
 - **Pendiente**: BS-3 (anular con inverso, movimientos antes del corte, `parteDeApertura` en los DTO), BS-4 (conciliación: hoy el saldo del
-  banco todavía aparece como candidato, como el global), BS-5 a BS-9 (cliente y evidencia).
+  banco todavía aparece como candidato, como el global), BS-6 a BS-9 (otras pantallas, conciliación, QA y evidencia).

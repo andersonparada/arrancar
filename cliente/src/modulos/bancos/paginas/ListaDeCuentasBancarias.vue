@@ -17,12 +17,8 @@ const PERMISOS_DE_INTERCAMBIO = {
   importar: 'bancos.cuentas-bancarias.importar',
   exportar: 'bancos.cuentas-bancarias.exportar',
 };
-const PERMISOS_DE_SALDOS_INICIALES = {
-  importar: 'bancos.saldos-iniciales.importar',
-  exportar: 'bancos.saldos-iniciales.exportar',
-};
 const router = useRouter();
-const { registros, cargando, intercambio, intercambioDeSaldosIniciales } = usarListaDeCuentasBancarias();
+const { registros, cargando, intercambio } = usarListaDeCuentasBancarias();
 </script>
 
 <template>
@@ -32,12 +28,6 @@ const { registros, cargando, intercambio, intercambioDeSaldosIniciales } = usarL
         :permisos="PERMISOS_DE_INTERCAMBIO"
         @exportar="intercambio.exportar"
         @importar="intercambio.abrir"
-      />
-      <AccionesDeIntercambio
-        :permisos="PERMISOS_DE_SALDOS_INICIALES"
-        nombre="saldos iniciales"
-        @exportar="intercambioDeSaldosIniciales.exportar"
-        @importar="intercambioDeSaldosIniciales.abrir"
       />
       <BotonBase
         v-permiso="'bancos.cuentas-bancarias.crear'"
@@ -74,14 +64,6 @@ const { registros, cargando, intercambio, intercambioDeSaldosIniciales } = usarL
       @plantilla="intercambio.bajarPlantilla"
       @importar="intercambio.importar"
       @cerrar="intercambio.cerrar"
-    />
-    <VentanaDeImportacion
-      :estado="intercambioDeSaldosIniciales.estado"
-      titulo="Importar saldos iniciales"
-      @elegir="intercambioDeSaldosIniciales.elegir"
-      @plantilla="intercambioDeSaldosIniciales.bajarPlantilla"
-      @importar="intercambioDeSaldosIniciales.importar"
-      @cerrar="intercambioDeSaldosIniciales.cerrar"
     />
   </div>
 </template>

@@ -7,10 +7,10 @@ import {
   Landmark,
   ListChecks,
   NotebookTabs,
-  Tags,
   WalletCards,
 } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
+import { ENTRADAS_DE_ADMINISTRACION, RUTAS_DE_ADMINISTRACION } from './administracion-del-modulo';
 import { ENTRADAS_DE_REPORTES, RUTAS_DE_REPORTES } from './reportes-del-modulo';
 import { NOMBRE_BANCOS, VENTANAS_BANCOS } from './textos';
 // generador: importaciones
@@ -119,12 +119,7 @@ export const moduloBancos: DefinicionModuloCliente = {
       component: () => import('./paginas/BandejaDeSinClasificar.vue'),
       meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.sinClasificar.titulo },
     },
-    {
-      path: '/bancos/conceptos',
-      name: 'bancos.conceptos',
-      component: () => import('./paginas/ListaDeConceptos.vue'),
-      meta: { permiso: 'bancos.conceptos.ver', titulo: VENTANAS_BANCOS.conceptos.titulo },
-    },
+    ...RUTAS_DE_ADMINISTRACION,
     ...RUTAS_DE_REPORTES,
     // generador: rutas
   ],
@@ -191,13 +186,7 @@ export const moduloBancos: DefinicionModuloCliente = {
           permiso: 'bancos.conciliaciones.ver',
         },
         ...ENTRADAS_DE_REPORTES,
-        {
-          titulo: VENTANAS_BANCOS.conceptos.titulo,
-          ruta: '/bancos/conceptos',
-          icono: Tags,
-          seccion: 'administracion',
-          permiso: 'bancos.conceptos.ver',
-        },
+        ...ENTRADAS_DE_ADMINISTRACION,
         // generador: menu
       ],
     },
