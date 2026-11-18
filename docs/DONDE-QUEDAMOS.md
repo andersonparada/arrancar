@@ -81,6 +81,10 @@ Cuentas por pagar, CP5-10); que el servidor devuelva el aviso de fecha de inicio
 
 ### Avisos técnicos
 
+- qpdf 12.4.2 está en `~/.local/opt/qpdf/bin/qpdf` y el `.env` de la raíz lo indica en `RUTA_QPDF`; los worktrees no
+  tienen `.env` (git lo ignora), así que buscan `/usr/bin/qpdf`. Arreglo: `sudo ln -sf ~/.local/opt/qpdf/bin/qpdf
+  /usr/bin/qpdf` (lo corre el usuario) o copiar el `.env` al worktree.
+
 - Si `localhost:5433` da `ECONNRESET`: puentes de Docker huérfanos (`sudo ip link delete br-…` o `wsl --shutdown`).
 - La prueba de rendimiento de Cuentas por pagar necesita `analyze` de todas las tablas que siembra.
 - Hay muchos worktrees viejos en `.claude/worktrees/` ya unidos a `main`; se pueden borrar los que no tengan cambios ni
