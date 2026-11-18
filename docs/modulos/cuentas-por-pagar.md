@@ -245,3 +245,12 @@ Contradicciones o huecos que quedan tras las respuestas del 2026-09-29:
    proveedor, pero lo acordado para los datos de un módulo (H5, datos fiscales) es
    guardarlos en el esquema del módulo que los usa. ¿Van en `cuentas_por_pagar` (por
    cuenta o por empresa) en vez de en `terceros`?
+
+## Revisión al cerrar la carga inicial (EM-2.7)
+
+Cuentas por pagar responde `empresas.revisar_cierre_de_carga` en `composicion/cuadre-de-saldos-iniciales.ts`
+(`RevisarCierreDeCargaEnCuentasPorPagar` y `dominio/revision-de-cierre.ts`). Solo avisos, nunca pide motivo (dictamen del 2026-11-18):
+`sin_saldos_iniciales`, `retenciones_por_practicar`, `documentos_del_libro_anteriores` (origen libro de compras, emisión anterior a la fecha
+de inicio, no anulados; monto = cargos menos notas) y `proveedores_con_saldo_a_favor`. Cifras: documentos, proveedores, cargos, notas a favor,
+**saldo de proveedores** (Σ de los netos positivos), **saldo a favor de la empresa** (Σ de los netos negativos en valor absoluto, sin compensar)
+y retenciones por practicar. `ConsultasDeCuadre` ganó `documentosDelLibroAnterioresA` y `documentosConRetenciones`. Sin migración.

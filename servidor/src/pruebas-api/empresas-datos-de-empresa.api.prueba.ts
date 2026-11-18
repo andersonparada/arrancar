@@ -134,7 +134,7 @@ describe('carga inicial', () => {
     const reabierta = await cuenta.propietario.post(ruta_, { motivo: 'Faltó el saldo de una cuenta' });
     const otraVez = await cuenta.propietario.post(ruta_, { motivo: 'Otra vez' });
     const auditoria = await comoPropietario<{ accion: string; motivo: string; anterior: { cerrada: boolean } }>(
-      `select accion, motivo, anterior from core.auditoria where recurso = 'empresas.cargas-iniciales' and empresa_id = $1`,
+      `select accion, motivo, anterior from core.auditoria where recurso = 'empresas.cargas-iniciales' and accion = 'reabrir' and empresa_id = $1`,
       [cuenta.empresaId],
     );
 

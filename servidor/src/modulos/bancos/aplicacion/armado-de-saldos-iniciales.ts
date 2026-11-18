@@ -64,6 +64,7 @@ export function resumenDeLaCuenta(
     cuentaBancariaId: cuenta.cuentaBancariaId,
     cuentaNombre: cuenta.cuentaNombre,
     bancoNombre: cuenta.bancoNombre,
+    activa: cuenta.activa,
     forma: formaDe(cuenta, partidas),
     fechaDeCorte: corte,
     ...cuadre,

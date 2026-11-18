@@ -1704,3 +1704,13 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
   reemplaza al puente de BS-1. El Excel viejo (Tipo, Fecha, Monto…) ya no existe.
 - **Pendiente**: BS-3 (anular con inverso, movimientos antes del corte, `parteDeApertura` en los DTO), BS-4 (conciliación: hoy el saldo del
   banco todavía aparece como candidato, como el global), BS-5 a BS-9 (cliente y evidencia).
+
+## Revisión al cerrar la carga inicial (EM-2.6)
+
+Bancos responde la pregunta `empresas.revisar_cierre_de_carga` en `composicion/saldos-iniciales.ts` con un adaptador
+(`ResponderRevisionDeCierreDeCarga`) sobre `ListarSaldosIniciales`; el contrato está en `core/contratos/empresas.contratos.ts`.
+Los hallazgos de BS-2 pasan tal cual (`no_cuadra` y `sin_dato_de_libros` piden motivo; `sin_evidencia`, `saldo_global` y
+`sobregiro_sin_permiso` avisan). Se suma `sin_saldos_iniciales` (aviso) si hay cuentas activas y ninguna con saldo. Cifras: cuentas con
+saldo inicial, Total bancos y Total sobregiros (sin compensar) y, por cuenta con saldo, saldo en libros al corte, saldo según libros
+anteriores y diferencia (solo los totales si hay más de 60 cuentas, por el tope de 200 cifras). Sin cuentas activas ni saldos responde `null`.
+`SaldoInicialResumenDto` ganó `activa` para contar solo las activas. Sin migración.

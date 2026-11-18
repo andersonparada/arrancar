@@ -9,12 +9,14 @@ import { EstablecerFechaDeInicio } from '../aplicacion/casos-uso/datos-de-empres
 import { GuardarDatosFiscales } from '../aplicacion/casos-uso/datos-de-empresa/guardar-datos-fiscales.js';
 import { ObtenerCargaInicial } from '../aplicacion/casos-uso/datos-de-empresa/obtener-carga-inicial.js';
 import { ObtenerDatosFiscales } from '../aplicacion/casos-uso/datos-de-empresa/obtener-datos-fiscales.js';
+import { RevisarCierreDeCargaInicial } from '../aplicacion/casos-uso/datos-de-empresa/revisar-cierre-de-carga-inicial.js';
 import { ReabrirCargaInicial } from '../aplicacion/casos-uso/datos-de-empresa/reabrir-carga-inicial.js';
 import { EjecutorEnEmpresa } from '../aplicacion/ejecutor-en-empresa.js';
 import type { ConsultasEmpresas } from '../aplicacion/puertos/consultas-empresas.js';
 import { DatosDeEmpresaControlador } from '../http/datos-de-empresa.controlador.js';
 import { rutasDeDatosDeEmpresa } from '../http/datos-de-empresa.rutas.js';
 import { AvisosDeEmpresaEnMediador } from '../infraestructura/avisos-de-empresa-en-mediador.js';
+import { PreguntasDeCierreEnMediador } from '../infraestructura/preguntas-de-cierre-en-mediador.js';
 import { ConsultasDeDatosDeEmpresaDrizzle } from '../infraestructura/persistencia/consultas-de-datos-de-empresa.drizzle.js';
 import { RepositorioDeCargasInicialesDrizzle } from '../infraestructura/persistencia/repositorio-de-cargas-iniciales.drizzle.js';
 import { RepositorioDeDatosFiscalesDrizzle } from '../infraestructura/persistencia/repositorio-de-datos-fiscales.drizzle.js';
@@ -36,6 +38,7 @@ function dependenciasDe(
     consultas: new ConsultasDeDatosDeEmpresaDrizzle(),
     auditoria,
     avisos: new AvisosDeEmpresaEnMediador(),
+    preguntas: new PreguntasDeCierreEnMediador(),
   };
 }
 
@@ -60,6 +63,7 @@ export function rutasDeDatosDeEmpresaComponidas(compartidas: DependenciasCompart
       guardarDatosFiscales: new GuardarDatosFiscales(dependencias),
       obtenerCargaInicial: new ObtenerCargaInicial(dependencias),
       establecerFechaDeInicio: new EstablecerFechaDeInicio(dependencias),
+      revisarCierreDeCargaInicial: new RevisarCierreDeCargaInicial(dependencias),
       cerrarCargaInicial: new CerrarCargaInicial(dependencias),
       reabrirCargaInicial: new ReabrirCargaInicial(dependencias),
     }),

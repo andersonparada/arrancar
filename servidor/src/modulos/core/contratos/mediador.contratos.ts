@@ -20,6 +20,13 @@
 export interface OrdenesEntreModulos {}
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AvisosEntreModulos {}
+/**
+ * Preguntas que se hacen a todos los módulos a la vez (`mediador.preguntarATodos`): cada módulo activo que tiene algo
+ * que decir responde; el que no, responde `null` y se omite.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface PreguntasEntreModulos {}
 
 export type NombreDeOrden = keyof OrdenesEntreModulos;
 export type NombreDeAviso = keyof AvisosEntreModulos;
+export type NombreDePregunta = keyof PreguntasEntreModulos;

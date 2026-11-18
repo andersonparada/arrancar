@@ -169,6 +169,13 @@
       "when": 1794603082498,
       "tag": "0023_rutas_de_archivos_registradas",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795031658431,
+      "tag": "0024_auditoria_permanente",
+      "breakpoints": true
     }
   ]
 }
