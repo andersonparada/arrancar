@@ -119,6 +119,11 @@ Cuentas por pagar, CP5-10); que el servidor devuelva el aviso de fecha de inicio
 
 ### Avisos técnicos
 
+- **Migraciones y fechas (todos los módulos):** el migrador de Drizzle solo aplica las migraciones con `when` mayor que el de
+  la última aplicada y no compara hashes. Al unir dos ramas que agregan migraciones al mismo módulo, la de fecha anterior se
+  saltaría sin aviso (también en producción). El coordinador revisa el `when` de cada migración unida y lo corrige antes de
+  pasar a `main`.
+
 - qpdf 12.4.2 está en `~/.local/opt/qpdf/bin/qpdf` y el `.env` de la raíz lo indica en `RUTA_QPDF`; los worktrees no
   tienen `.env` (git lo ignora), así que buscan `/usr/bin/qpdf`. Arreglo: `sudo ln -sf ~/.local/opt/qpdf/bin/qpdf
   /usr/bin/qpdf` (lo corre el usuario) o copiar el `.env` al worktree.
