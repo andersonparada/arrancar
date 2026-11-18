@@ -111,7 +111,10 @@ export const CAUSAS_DE_ANULACION: Record<CausaDeAnulacion, string> = {
 };
 
 export const AYUDA_DE_DIAS_DE_CREDITO =
-  'Días que da el proveedor para pagar, contados desde la fecha de emisión de cada factura. Vacío es un mes; 0 es de contado.';
+  'Días que da el proveedor para pagar, contados desde la fecha de emisión de cada factura. Vacío usa el plazo por omisión de la empresa; 0 es de contado.';
+
+export const AYUDA_DEL_PLAZO_NUEVO =
+  'Vale para los documentos que se reciban desde ahora; los ya recibidos conservan su vencimiento.';
 
 export const AYUDA_DE_CONTAR_DESDE_LA_RECEPCION =
   'Úselo si el plazo de este proveedor corre desde que la empresa recibe la factura y no desde que se emite.';

@@ -2338,3 +2338,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   suma `mesesPorOmision` (de la empresa activa, por `PlazoPorOmision`) para que el cliente escriba el plazo real (PC-3). Prueba
   de regresión de API: cambiar los días del proveedor no cambia el vencimiento de sus documentos ya recibidos ni la fecha de
   sus retenciones en Libro de compras. Pendiente: PC-3 (cliente), PC-4 y PC-5 (Excel), PC-6 (QA y documentos).
+- **2026-11-18 (PC-3, plazo de crédito: cliente).** El texto del plazo y el campo de días usan `mesesPorOmision` («Un mes», «2 meses»,
+  «De contado» con 0; en un proveedor nuevo, aún sin leer, el campo dice «Vacío = el plazo por omisión»). La sección de
+  condiciones de Proveedores dice «Vale para los documentos que se reciban desde ahora; los ya recibidos conservan su
+  vencimiento». En la ficha del documento, un cargo registrado o autorizado sin saldo muestra «Cambiar vencimiento»
+  deshabilitado con su motivo visible; en lo demás el botón sigue oculto si el servidor no lo permite. Lógica pura con pruebas.
+  Pendiente: PC-4 y PC-5 (Excel), PC-6 (QA y documentos).
