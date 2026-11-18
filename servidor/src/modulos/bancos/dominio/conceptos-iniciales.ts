@@ -46,6 +46,7 @@ export const CONCEPTOS_DE_SISTEMA: readonly ConceptoInicial[] = [
   }),
   concepto('faltante_de_efectivo', 'Faltante de efectivo', { aplicaA: 'debito', ...operacion('Faltante de efectivo') }),
   concepto('saldo_inicial', 'Saldo inicial', { aplicaA: 'ambos', ...sinFlujo }),
+  concepto('anulacion_de_apertura', 'Partidas de apertura anuladas', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('sin_clasificar', 'Sin clasificar', { aplicaA: 'ambos', ...sinFlujo }),
 ];
 

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, integer, text, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { boolean, check, index, integer, text, uniqueIndex, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
@@ -23,6 +23,8 @@ export const chequeras = esquemaBancos.table(
     desde: integer().notNull(),
     hasta: integer().notNull(),
     activa: boolean().default(true).notNull(),
+    /** La que crea el sistema para los cheques de la carga inicial: solo tiene los que se cargan y nunca se ofrece para emitir. */
+    deApertura: boolean().default(false).notNull(),
     ...marcasDeTiempo,
     ...autoria,
   },
@@ -30,6 +32,10 @@ export const chequeras = esquemaBancos.table(
     index('chequeras_cuenta_idx').on(t.cuentaBancariaId),
     check('chequeras_desde_positivo', sql`${t.desde} > 0`),
     check('chequeras_hasta_valido', sql`${t.hasta} >= ${t.desde}`),
+    check('chequeras_apertura_inactiva', sql`not ${t.deApertura} or not ${t.activa}`),
+    uniqueIndex('chequeras_de_apertura_unica')
+      .on(t.cuentaBancariaId, sql`coalesce(${t.serie}, '')`)
+      .where(sql`${t.deApertura}`),
     politicaPorEmpresa(),
   ],
 );
