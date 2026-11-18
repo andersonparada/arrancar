@@ -125,10 +125,13 @@ describe('R1: saldos por proveedor al 31 de octubre', () => {
 
     expect(r1.avisos).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ codigo: 'emitidos_antes_del_inicio', mensaje: expect.stringContaining('Q1,120.00') }),
+        expect.objectContaining({
+          codigo: 'emitidos_antes_del_inicio',
+          mensaje: expect.stringContaining('Q 1,120.00'),
+        }),
         expect.objectContaining({
           codigo: 'registrados_despues_del_corte',
-          mensaje: expect.stringContaining('Q80.00'),
+          mensaje: expect.stringContaining('Q 80.00'),
         }),
       ]),
     );

@@ -2363,3 +2363,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ofrece en los vigentes y el servidor decide; anular no pide la fecha del inverso (el servidor usa la de hoy); las cuentas del
   depósito salen de `GET /pagos/medios` (pide `pagos.ver`; sin ellas solo se ofrece el efectivo); el enlace a constancias no
   lleva el mes ni el filtro porque esa pantalla no lee parámetros de la ruta.
+
+- **2026-11-18 — Correcciones de la QA intermedia** (`informe-qa-intermedia-2026-11-18.md`). Corregidos: error 1 (el concepto guardado de una
+  nota marcada o con concepto inactivo ya no se borra al abrir la corrección; las dos `it.fails` pasaron a `it`); 3 (R3 con rango
+  inválido limpia el reporte y deja el mensaje junto al campo «Desde»); 4 («Mostrar anulados» se apaga y se deshabilita en «Para el
+  proveedor»); 5 (R2 dice con palabras lo que filtra desde «Más filtros»); 6 (NIT de la empresa en el encabezado impreso, que llega
+  en `empresa.nit` de la sesión, y sin «Emitido por» en «Para el proveedor»); 7 (Excel de R12 con columna Sección, filas `Total` y
+  `Nota` —mes, filtros y leyenda— y el documento como en pantalla); 8 y 9 (`moduloDeOrigen` en el cheque de Bancos: el diálogo de
+  anular avisa que también se anula el pago de Cuentas por pagar y la tarjeta dice el origen); 10 (`montoLegible` en
+  `core/compartido/dominio`: «Q 12,360.00» y «-Q 16,010.00» en el saldo insuficiente y en los avisos de saldos de CP5); 11 (una sola
+  entrada del menú a las constancias pendientes: la de Libro de compras); 12 (Estado de cuenta lee `desde`, `hasta` y `presentacion`
+  del enlace; la lista de Cheques lee `cuentaBancariaId`, `estado`, `desde` y `hasta`, y su «Hasta» queda vacío para que entren los
+  posfechados); 13 (aviso de saldos proyectados con un corte futuro en R1); 14 (la explicación de la tarjeta de la nota se lee
+  completa: `DetalleDeRegistro.largo`); 16 (columna «Acciones» pegada al borde en Movimientos; los Excel de reportes llevan una sola
+  hoja, sin «Instrucciones», con `soloExportar`; nombre del proveedor más grande que el NIT al imprimir R1). Parcial: error 15 (con
+  Cuentas por pagar apagado la tarjeta ya no ofrece lo que el servidor rechazaría). **Pendientes:** 15 (nota ligada a un pago: Bancos
+  no sabe que está ligada, hace falta decidir cómo se lo dice Cuentas por pagar; sigue el `it.fails` de la API), 2 (adenda en cola) y
+  el formato «Q 1,000.00» en el resto de los mensajes del servidor (~56 usos de `quetzales()` y los de Libro de compras: cambia
+  muchas pruebas de otros pasos).
