@@ -45,12 +45,21 @@ export interface TotalesDeSaldos {
   totalCargos: string;
 }
 
+/** La conciliación al pie de R1: el neto del auxiliar menos los pagos por aplicar (R11) es lo que se presenta. */
+export interface ConciliacionDeSaldos {
+  saldoNetoDelAuxiliar: string;
+  pagosPorAplicar: string;
+  proveedoresNetoDePagosPorAplicar: string;
+}
+
 export interface ReporteDeSaldosPorProveedor {
   corte: string;
   fechaDeInicio: string | null;
   acreedores: FilaDeSaldo[];
   deudores: FilaDeSaldo[];
   totales: TotalesDeSaldos;
+  /** Falta si se filtró por proveedor o por autorización. */
+  conciliacion?: ConciliacionDeSaldos;
   avisos: AvisoDelReporte[];
   leyendas: string[];
 }

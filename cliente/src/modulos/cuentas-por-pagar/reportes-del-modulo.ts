@@ -2,10 +2,13 @@ import {
   Banknote,
   CalendarClock,
   ClipboardCheck,
+  FileMinus,
+  HandCoins,
   Hourglass,
   PiggyBank,
   ReceiptText,
   ScrollText,
+  ShieldAlert,
 } from 'lucide-vue-next';
 import type { Component } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
@@ -72,10 +75,31 @@ const REPORTES: Reporte[] = [
     permiso: PERMISO_DE_PAGOS,
   },
   {
+    ruta: 'retiros-por-liquidar',
+    titulo: VENTANAS_CUENTAS_POR_PAGAR.retirosPorLiquidar.titulo,
+    icono: HandCoins,
+    pagina: () => import('./paginas/RetirosPorLiquidar.vue'),
+    permiso: PERMISO_DE_PAGOS,
+  },
+  {
+    ruta: 'notas-sin-aplicar',
+    titulo: VENTANAS_CUENTAS_POR_PAGAR.notasSinAplicar.titulo,
+    icono: FileMinus,
+    pagina: () => import('./paginas/NotasSinAplicar.vue'),
+    permiso: PERMISO_DE_PAGOS,
+  },
+  {
     ruta: 'ajustes-del-mes',
     titulo: VENTANAS_CUENTAS_POR_PAGAR.ajustesDelMes.titulo,
     icono: ClipboardCheck,
     pagina: () => import('./paginas/AjustesDelMes.vue'),
+    permiso: PERMISO_DE_CONTROL,
+  },
+  {
+    ruta: 'bancarizacion',
+    titulo: VENTANAS_CUENTAS_POR_PAGAR.bancarizacion.titulo,
+    icono: ShieldAlert,
+    pagina: () => import('./paginas/PagosEnEfectivoSobreElUmbral.vue'),
     permiso: PERMISO_DE_CONTROL,
   },
 ];
