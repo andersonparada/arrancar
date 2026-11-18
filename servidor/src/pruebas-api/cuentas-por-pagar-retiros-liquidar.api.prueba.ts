@@ -15,6 +15,12 @@ import {
   RUTA_DE_RETIROS,
   sembrarPagoDelRetiro,
 } from './soporte/cuentas-por-pagar-retiros.js';
+import {
+  cerrarEnero,
+  cuentaConFondos,
+  iniciarEnero,
+  MES_CONCILIADO,
+} from './soporte/cuentas-por-pagar-pagos-cambios.js';
 import { EscenarioDePagos } from './soporte/cuentas-por-pagar-pagar.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { consultar, haceDias, HOY } from './soporte/escenario-de-documentos.js';
@@ -24,9 +30,15 @@ import { auditoriaDe, desgloseDe } from './soporte/ordenes-de-bancos.js';
 
 const entorno = usarEntornoApi();
 let e: EscenarioDePagos;
+let autoriza: ClienteApi;
 
 beforeAll(async () => {
   e = await EscenarioDePagos.preparar(entorno, 'cxpretirosliq');
+  autoriza = await crearUsuarioConPermisos(entorno, e.mundo.escenario.cuenta, {
+    nombres: 'Autoriza',
+    apellidos: 'Liquidar',
+    permisos: ['bancos.conciliaciones.ver', 'bancos.conciliaciones.autorizar'],
+  });
 });
 
 const liquidar = (id: string, cuerpo: Record<string, unknown>, cliente: ClienteApi = e.propietario()) =>
@@ -240,5 +252,47 @@ describe('reabrir', () => {
     expect(await auditoriaDe(retiro.id)).toMatchObject([{ accion: 'reabrir', motivo: 'Boleta de otro banco' }]);
     expect((await movimientoDelRetiro(retiro.movimiento.id)).tipo).toBe('cheque');
     expect((await ficha(retiro.id)).estado).toBe('abierto');
+  });
+
+  it('un depósito de un mes conciliado se anula con inverso y el retiro se reabre', async () => {
+    const cuenta = await cuentaConFondos(e.propietario(), 'Cuenta de depósitos conciliados');
+    const retiro = await registrarRetiro(
+      e.propietario(),
+      retiroConCheque(e, '300.00', { chequeraId: cuenta.chequeraId }),
+    );
+    await liquidar(retiro.id, { devuelto: '300.00' });
+    const deposito = await depositoDe(retiro.id);
+    await consultar('update bancos.movimientos set fecha = $2 where id = $1', [deposito!.id, MES_CONCILIADO]);
+    await cerrarEnero(e.propietario(), autoriza, await iniciarEnero(e.propietario(), cuenta.cuentaBancariaId));
+
+    const anulado = await e.propietario().post(`/api/bancos/notas/${deposito!.id}/anular`, {
+      motivo: 'Boleta rechazada',
+      fecha: HOY,
+    });
+
+    expect(anulado.estado, JSON.stringify(anulado.cuerpo)).toBe(200);
+    expect(await retiroEnBase(retiro.id)).toMatchObject({ estado: 'abierto', devuelto: '0.00' });
+    expect(await auditoriaDe(retiro.id)).toMatchObject([{ accion: 'reabrir', motivo: 'Boleta rechazada' }]);
+  });
+
+  it('si Bancos rechaza el inverso en el mes conciliado, el retiro sigue liquidado', async () => {
+    const cuenta = await cuentaConFondos(e.propietario(), 'Cuenta de depósitos bloqueados');
+    const retiro = await registrarRetiro(
+      e.propietario(),
+      retiroConCheque(e, '300.00', { chequeraId: cuenta.chequeraId }),
+    );
+    await liquidar(retiro.id, { devuelto: '300.00' });
+    const deposito = await depositoDe(retiro.id);
+    await consultar('update bancos.movimientos set fecha = $2 where id = $1', [deposito!.id, MES_CONCILIADO]);
+    await cerrarEnero(e.propietario(), autoriza, await iniciarEnero(e.propietario(), cuenta.cuentaBancariaId));
+
+    const anulado = await e.propietario().post(`/api/bancos/notas/${deposito!.id}/anular`, {
+      motivo: 'Boleta rechazada',
+      fecha: MES_CONCILIADO,
+    });
+
+    expect(anulado.estado, JSON.stringify(anulado.cuerpo)).toBeGreaterThanOrEqual(400);
+    expect(await retiroEnBase(retiro.id)).toMatchObject({ estado: 'liquidado', devuelto: '300.00' });
+    expect((await auditoriaDe(retiro.id)).map(({ accion }) => accion)).not.toContain('reabrir');
   });
 });
