@@ -43,6 +43,7 @@ function intercambios(saldos: ReporteDeSaldosPorProveedor, documentos: ReporteDe
       columnas: columnasDeSaldosPorProveedor,
       validar: () => ({ errores: [] }),
       listar: async (operador, filtro) => aFilasExportadasDeSaldos(await saldos.ejecutar(operador, conFiltro(filtro))),
+      soloExportar: true,
       crear: noSeImporta,
     }),
     documentos: crearIntercambio<FilaExportadaDeDocumentos, never, FiltroDeDocumentosAUnaFechaSolicitado>({
@@ -53,6 +54,7 @@ function intercambios(saldos: ReporteDeSaldosPorProveedor, documentos: ReporteDe
         const { solicitud } = separarPaginacion(conFiltro(filtro));
         return aFilasExportadasDeDocumentos(await documentos.ejecutar(operador, solicitud, null));
       },
+      soloExportar: true,
       crear: noSeImporta,
     }),
   };

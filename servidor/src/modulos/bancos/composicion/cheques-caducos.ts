@@ -23,6 +23,7 @@ function intercambioDelReporte(reporte: ReporteDeChequesCaducos) {
     validar: () => ({ errores: [] }),
     listar: async (operador, filtro) =>
       aFilasExportadasDeChequesCaducos(await reporte.ejecutar(operador, filtro ?? {})),
+    soloExportar: true,
     crear: () => {
       throw new Error('El reporte de cheques caducos no se importa.');
     },

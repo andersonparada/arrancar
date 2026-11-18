@@ -18,6 +18,7 @@ function intercambioDelCuadre(cuadre: ObtenerCuadreDeSaldosIniciales) {
     columnas: columnasDelCuadreDeSaldosIniciales,
     validar: () => ({ errores: [] }),
     listar: async (operador) => aFilasExportadasDeCuadre(await cuadre.ejecutar(operador)),
+    soloExportar: true,
     crear: () => {
       throw new Error('El cuadre de saldos iniciales no se importa.');
     },

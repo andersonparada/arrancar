@@ -43,6 +43,7 @@ function intercambioDelReporte(casos: ReturnType<typeof casosDeUso>) {
       const reporte = await casos.reporte.ejecutar(operador, filtro ?? {});
       return reporte.filas.map(aFilaExportadaDelReporte);
     },
+    soloExportar: true,
     crear: () => {
       throw new Error('El reporte de movimientos no se importa.');
     },
