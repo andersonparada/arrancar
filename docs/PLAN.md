@@ -2739,3 +2739,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   partes y la suma del mes se vuelve a traer cuando la fecha cambia de mes. En la ficha del retiro solo el enlace depende
   de `pagos.ver` (la lista se ve con `retiros.ver`) y se avisa si hay más de 20 recibos. Pendiente: ocultar «Retirar
   efectivo» y «Pagar en efectivo» a quien no tiene `pagos.ver` (los medios salen de `GET /pagos/medios`).
+- **2026-11-18 (EM-2, revisión de seguridad y decisión del usuario).** Cada subida del balance de apertura se audita con la
+  acción `adjuntar` en `empresas.cargas-iniciales` (también con la carga cerrada) y se ve en el historial; exportar un cierre
+  exige en el servidor `empresas.carga-inicial.exportar` **y** `.ver-cierres`. *Decisión del usuario:* la línea «Cerrada el …
+  por …, con N diferencias» la ve quien ve la empresa; **el texto del motivo y el detalle piden `ver-cierres`**.
