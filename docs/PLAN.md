@@ -2277,3 +2277,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   pedir cuando la conciliación pasa a «en proceso» en la misma pantalla; `enQuetzales` del servidor escribe «-Q 5.00» con
   saldo negativo; los mensajes de foto HEIC e imagen demasiado grande pasan a usted. Sin resolver: filtro `desde` y aviso
   de error al listar notas, y montos de 9+ cifras en el cuadro a 380 px.
+- **2026-11-18 — CP5-9 (cliente), primera parte: R6, R7 y R8.** Páginas `PagosRealizados`, `ChequesPosfechados` y `AjustesDelMes`
+  (`/cuentas-por-pagar/reportes/pagos`, `…/cheques-posfechados`, `…/ajustes-del-mes`) en `seccion: 'reportes'`, con los permisos
+  `reportes-de-pagos.ver` (R6, R7) y `reportes-de-control.ver` (R8); Excel con `.exportar` de su grupo (`AccionesDelReporte` ahora
+  recibe `recurso`). R6: filtros (rango del mes en curso, máximo 24 meses con mensaje que dice cómo corregirlo, proveedor, forma,
+  estado, posfechados y «misma persona»), totales de todo lo filtrado y por forma, tabla con «Registró el documento», «Autorizó» y
+  «Registró el pago», paginada de 50 en 50 e impresión de hasta 2,000 filas (`usarImpresionDeFilas`). R7: corte, totales por cuenta y
+  por semana, marca «Cobrado». R8: mes escogido de una lista (por omisión el anterior), las seis secciones (5a anulados y 5b devueltos
+  a revisión), estado vacío si no hay cambios. En celular, tarjetas (R6, R7) y tablas que se deslizan dentro de su tarjeta (R8). El
+  nombre del proveedor lleva a R3 solo si el usuario puede abrirlo. Pendientes: la ficha del pago (CP4-10) y de la contraseña desde R6
+  quedan como texto; el filtro por cuenta bancaria de R6 y R7 espera un listado de cuentas que Cuentas por pagar pueda leer sin
+  importar Bancos. R9, R10, R11 y la conciliación de R1 siguen en espera de CP5-5.
+- **2026-11-18 — CP5-9 (cliente), correcciones de la revisión.** R8: «Ajustes vigentes del mes» y su cantidad salen de la suma de `totales.porCausa` (el total de la sección incluye anulados); nuevo cuadro «por causa y efecto» (pérdida, transitoria, otros ingresos); el resumen suma anulaciones de otros meses y muestra monto de documentos anulados y devueltos; «Pagos a la apertura» aclara que suma vigentes y anulados. R6: el tope de 24 meses del cliente usa la misma regla que el servidor (`mesesEntre`). Sigue pendiente el filtro `cuentaBancariaId` de R6 y R7 (espera listado de cuentas legible sin importar Bancos).

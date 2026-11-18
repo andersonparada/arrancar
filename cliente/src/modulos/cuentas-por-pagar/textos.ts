@@ -67,6 +67,17 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     nuevo: 'Nuevo pago',
     descripcionDelNuevo:
       'Pague a un proveedor lo que ya autorizó: con cheque, transferencia o débito, una nota que ya está en Bancos, o dando por pagado lo que ya estaba pagado antes de la fecha de inicio.',
+  pagosRealizados: {
+    titulo: 'Pagos realizados',
+    descripcion: 'Los pagos de un rango de fechas, una fila por documento pagado, con quién lo registró y autorizó.',
+  },
+  chequesPosfechados: {
+    titulo: 'Cheques posfechados',
+    descripcion: 'Cheques ya entregados cuya fecha aún no llega: lo que está comprometido a una fecha de corte.',
+  },
+  ajustesDelMes: {
+    titulo: 'Ajustes del mes',
+    descripcion: 'Lo que cambió en Cuentas por pagar durante un mes, para revisarlo al cerrar.',
   },
   // generador: ventanas
 } as const;
