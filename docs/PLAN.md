@@ -2259,3 +2259,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   las fotos de cheques: no habrá, las plantillas van con medidas aproximadas. Detalle al final de
   `docs/modulos/diseno-em2-cierre-de-la-carga.md` y `docs/modulos/diseno-impresion-de-cheques.md`. Falta el dictamen del
   contador sobre lo marcado para él antes de programar.
+- **2026-11-18 (decisiones del usuario con el dictamen `dictamen-em2-cheques-y-posfechado-2026-11-18.md`).**
+  *Posfechado en Cuentas por pagar:* las pantallas de operación muestran la **deuda** (la misma cifra de R1) con
+  «comprometido con cheque N al dd/mm» y «Disponible para pagar» al lado; lo vencido cuenta lo comprometido, con su nota;
+  **cinco estados de pago** iguales en lista, ficha y R2 (Pendiente, Pagado en parte, Comprometido en parte, Comprometido,
+  Pagado). Sin migración: cambian DTO y presentación. *Impresión de cheques:* casilla «PARA ABONO EN CUENTA» (art. 521)
+  por cheque, apagada por omisión (cruzado, después); relleno de asteriscos tras el beneficiario y en el primer renglón de
+  las letras; confirmar que el formulario está en la empresa antes de inutilizarlo (si no, extraviado) y reporte de
+  correlativos por chequera; «Aplicación contable» vacía en el comprobante. *EM-2:* las auditorías de cierre y reapertura de
+  la carga se conservan **mientras exista la empresa**; tras cerrar se muestra «Cerrada el … por …, con N diferencias:
+  motivo» y se guarda y exporta la revisión con las cifras del cuadre de cada módulo; adjunto opcional del balance de
+  apertura firmado (PDF revisado con qpdf, auditoría); después de EM-2, paso de U8 para transcribir del balance el saldo de
+  proveedores y el de anticipos (dos cifras) y tener «no cuadra» con motivo.
