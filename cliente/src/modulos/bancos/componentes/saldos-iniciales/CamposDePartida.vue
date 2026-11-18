@@ -88,7 +88,6 @@ const OPCIONES_DE_SENTIDO = [
           : 'Observaciones'
       "
       multilinea
-      :requerido="edicion.parte === 'error_del_banco'"
       :error="errores.observaciones"
     />
   </div>

@@ -68,6 +68,10 @@ export const textoDeChequeAntiguo = (cheque: { numero: number; fecha: string; co
 export const textoDeDepositoViejo = (deposito: { fecha: string; dias: number }) =>
   `El depósito del ${deposito.fecha} tiene ${deposito.dias} días al corte: un depósito tarda uno o dos días en verse en el banco. Revise que de verdad se haya depositado.`;
 
+/** Dictamen, arts. 501 (Código de Comercio) y 268 (Código Penal): el aviso de fondos al agregar un posfechado. */
+export const TEXTO_DE_POSFECHADO_SIN_FONDOS =
+  'El cheque se paga a la vista aunque tenga fecha posterior: si el beneficiario lo presenta hoy, el banco lo paga hoy (Código de Comercio, art. 501), y la cuenta no tiene fondos para cubrirlo. Dar en pago un cheque sin fondos, o retirar los fondos antes de que venza el plazo para cobrarlo, puede ser estafa (Código Penal, art. 268).';
+
 export const INSIGNIAS_DE_AVISO = { antiguo: 'Antiguo', deposito_viejo: 'Revisar' } as const;
 
 /** §9.2 y dictamen 408/410: qué pasa al anular y que la deuda sigue. */

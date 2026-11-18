@@ -1,4 +1,4 @@
-import { textoDeChequeAntiguo, textoDeDepositoViejo } from '../../textos-de-apertura';
+import { TEXTO_DE_POSFECHADO_SIN_FONDOS, textoDeChequeAntiguo, textoDeDepositoViejo } from '../../textos-de-apertura';
 import type { AvisoDeApertura, PartidaDeApertura } from '../../servicios/tipos-de-saldos-iniciales';
 
 const MS_POR_DIA = 86_400_000;
@@ -52,7 +52,7 @@ const CODIGOS_CON_TEXTO_PROPIO = { cheque_antiguo: 'antiguo', deposito_viejo: 'd
 
 /**
  * Los avisos que devolvió el servidor al guardar una partida, con el texto de ley del cliente cuando es el de cheque
- * antiguo o depósito viejo (el servidor pone solo su propio mensaje); los demás avisos van tal cual.
+ * antiguo, depósito viejo o posfechado sin fondos (el servidor pone solo su propio mensaje); los demás avisos van tal cual.
  */
 export function mensajesDeAvisosAlGuardar(
   avisos: readonly AvisoDeApertura[],
@@ -61,6 +61,7 @@ export function mensajesDeAvisosAlGuardar(
 ): string[] {
   const { corte, dar } = contexto;
   return avisos.map((aviso) => {
+    if (aviso.codigo === 'cheque_posfechado_sin_fondos') return TEXTO_DE_POSFECHADO_SIN_FONDOS;
     const propio = CODIGOS_CON_TEXTO_PROPIO[aviso.codigo as keyof typeof CODIGOS_CON_TEXTO_PROPIO];
     if (!propio || corte === null) return aviso.mensaje;
     return textoDelAvisoDeLaFicha(propio, partida, { corte, dar });

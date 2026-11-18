@@ -39,6 +39,14 @@ describe('textoDelAvisoDeLaFicha', () => {
 });
 
 describe('mensajesDeAvisosAlGuardar', () => {
+  it('cambia el aviso de posfechado sin fondos por el texto del dictamen, aunque no haya corte', () => {
+    const avisos = [{ codigo: 'cheque_posfechado_sin_fondos', mensaje: 'Texto del servidor con proveedor' }];
+    const [mensaje] = mensajesDeAvisosAlGuardar(avisos, cheque, { corte: null, dar });
+    expect(mensaje).toContain('art. 501');
+    expect(mensaje).toContain('puede ser estafa (Código Penal, art. 268)');
+    expect(mensaje).not.toContain('proveedor');
+  });
+
   const cheque = partidaDeEjemplo({ fecha: '2026-04-30', avisos: ['antiguo'] });
 
   it('cambia el texto del servidor por el de ley del cliente en cheque antiguo y depósito viejo', () => {
