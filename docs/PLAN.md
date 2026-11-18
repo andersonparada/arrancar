@@ -2586,3 +2586,50 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `cuentas-por-liquidar.gastos.con-retencion` pasan a «Asignar a un fondo / a un anticipo un documento con retención
   (excepción)…», porque con CC-f = A′ registrar no pide el permiso, lo pide quien asigna. Solo texto, sin migración. Las
   migraciones `0003` con `cuenta_id`, la llave `(proveedor_id, cuenta_id)` y los checks ya estaban en el commit anterior.
+- 2026-11-18 — **Excel de Empresas (exportar e importar)**: `GET /empresas/exportar`, `GET /empresas/plantilla` y
+  `POST /empresas/importar` con los permisos `empresas.exportar` y `empresas.importar` (migración `0010` en `empresas`: quien
+  tenía `empresas.editar` recibe exportar y quien tenía `empresas.crear` recibe importar, en roles y permisos directos).
+  Columnas: nombre, NIT, dirección, teléfono, correo y activa (las del formulario de crear). Fuera quedan los datos fiscales
+  (`secciones` de Libro de compras) y la fecha de inicio, que se completan en la ficha de la empresa, y las empresas
+  existentes (importar solo crea, no actualiza). Cada fila pasa por `RegistrarEmpresa` (acceso del creador, tipos de
+  localidad iniciales y avisos a los módulos). Para que fuera todo o nada con una empresa distinta por fila,
+  `UnidadDeTrabajo` gana `ejecutarEnEmpresaNueva` (punto de guardado dentro de la transacción en curso, solo para la misma
+  cuenta y usuario, que devuelve la empresa anterior al terminar); `RegistrarEmpresa` la usa en vez de `ejecutar`. Pruebas
+  de API (ensayo, semilla, todo o nada, 403) y de la unidad de trabajo.
+- 2026-11-18 — **Excel de Empresas en el cliente**: la lista de Empresas muestra `AccionesDeIntercambio` y
+  `VentanaDeImportacion` con `empresas.importar` y `empresas.exportar`; al importar se recarga la lista y la sesión (para que
+  el selector de empresa vea las nuevas).
+- 2026-11-18 — **Selector de empresa del encabezado con buscador**: `SelectorEmpresa` usa `CampoSelector` (buscador
+  desde 8 empresas, teclado y panel flotante que cabe en celular). Las opciones salen de `opcionesDeEmpresa` (lógica pura
+  con pruebas): ordenadas por nombre y agrupadas por cuenta solo si hay más de una. El cambio sigue siendo
+  `sesion.cambiarEmpresa` y llevar al inicio; elegir la empresa ya activa no hace nada.
+- 2026-11-18 — **Acotar el cambio de empresa de la unidad de trabajo**: `ejecutarEnOtraEmpresa` pasa a ser
+  `ejecutarEnEmpresaNueva`: solo acepta una empresa que no existe aún en `core.empresas` ni se abrió antes en la misma
+  transacción (si no, lanza `EmpresaNoEsNueva`, con o sin acceso del usuario); mantiene misma cuenta y mismo usuario y
+  devuelve la empresa anterior al salir (el punto de guardado deshace también las variables si el trabajo falla). Así ningún
+  caso de uso puede saltar a una empresa existente. Pruebas: dos empresas en un libro (todo o nada) y rechazos. Además,
+  `SelectorEmpresa` recupera la apariencia de marca con `CampoSelector variante="marca"` y el texto «Elija una empresa».
+- **Revisión de seguridad de `ejecutarEnEmpresaNueva`:** (1) firma acotada `ejecutarEnEmpresaNueva(empresaId, trabajo)`: el
+  contexto sale de la transacción en curso (`{ ...contexto, empresaId }`), así no se cambia de cuenta, usuario ni alcance;
+  sin transacción falla (`RegistrarEmpresa` abre la suya con `ejecutar`). (2) La comprobación de que el id no existe
+  consulta `core.empresas`, que hoy no tiene RLS; queda documentado en TSDoc y una prueba falla si alguien se la pone. Sin
+  migración; la alternativa si algún día se le pone RLS es una función `security definer` `core.empresa_existe(uuid)`.
+  (3) Al salir se exige que la empresa exista con la `cuenta_id` del contexto y `creado_en = now()` (inicio de la
+  transacción; `marcasDeTiempo` usa `defaultNow()`), si no, `EmpresaNoEsNueva`. (4) Pruebas: empresa de otra cuenta, usuario
+  con acceso real a una empresa existente, trabajo que no crea la empresa, que la crea en otra cuenta, y sin transacción.
+- **Defensa en profundidad de `ejecutarEnEmpresaNueva`:** (1) se comprueba **antes** de cambiar `app.empresa_id`: quien
+  llama inserta la empresa en `core.empresas` con la empresa de afuera (la tabla no tiene RLS) y el método exige que exista
+  con ese id, la `cuenta_id` del contexto y `creado_en = now()`; si no, `EmpresaNoEsNueva` y nunca se trabaja en una empresa
+  no probada. `RegistrarEmpresa` agrega la empresa afuera y siembra acceso, tipos de localidad y secciones adentro. Si
+  `core.empresas` llega a tener RLS, la consulta debe ir por una función `security definer`. (2) `creado_en` lo pone la base
+  (`defaultNow()`), amarrado con pruebas de la tabla y del mapeador. (3) Una segunda empresa nueva mientras otra sigue
+  abierta en la misma transacción se rechaza con `EmpresaNuevaYaEnCurso` (prueba con llamadas en paralelo). (4) Los dobles
+  `UnidadDeTrabajoEnMemoria` y `UnidadQueDeshace` fallan como el real: sin transacción abierta lanzan y rechazan un id repetido.
+  (5) `aislar` y `ejecutarEnEmpresaNueva` recortan las tareas de `despuesDeConfirmar` y `siSeDeshace` registradas dentro de
+  un punto de guardado que se deshace (no corren).
+- **2026-11-18, corrección a lo anterior (5): las compensaciones de `siSeDeshace` no se descartan.** Al deshacerse un
+  punto de guardado (`aislar`, `ejecutarEnEmpresaNueva`) solo se recortan las tareas de `despuesDeConfirmar`; las de
+  `siSeDeshace` (borrar un archivo ya escrito, `GestorDeDocumentos`) se sacan de la lista y **corren en ese momento**,
+  después del rollback del punto, con el mismo manejo de errores (registrar y seguir), y no vuelven a correr si luego se
+  deshace toda la transacción. Antes el archivo quedaba huérfano en disco si la transacción de afuera confirmaba. Pruebas:
+  unidad de trabajo (orden, una sola vez, fallo registrado) y de punta a punta con `GestorDeDocumentos`.

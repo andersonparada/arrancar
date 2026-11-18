@@ -119,6 +119,22 @@ describe('documentos protegidos con la unidad de trabajo real', () => {
     expect(almacenamiento.contenidos.size).toBe(0);
   });
 
+  it('un archivo guardado dentro de un punto de guardado que falla se borra aunque la transacción de afuera confirme', async () => {
+    const revisado = await gestor.revisar(contexto, pdf, null);
+
+    await unidadDeTrabajo.ejecutar(contexto, async () => {
+      await unidadDeTrabajo
+        .aislar(async () => {
+          await gestor.guardarRevisado(contexto, revisado, { recursoDueno: DUENO });
+          expect(almacenamiento.contenidos.size).toBe(1);
+          throw new FalloProvocado();
+        })
+        .catch(() => undefined);
+    });
+
+    expect(almacenamiento.contenidos.size).toBe(0);
+  });
+
   it('si la transacción se confirma, el archivo y la fila quedan', async () => {
     const revisado = await gestor.revisar(contexto, pdf, 'estado.pdf');
 

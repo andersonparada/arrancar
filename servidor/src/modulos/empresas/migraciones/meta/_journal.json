@@ -71,6 +71,13 @@
       "when": 1790717786876,
       "tag": "0009_nombres_sin_mayusculas_ni_acentos",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795027558650,
+      "tag": "0010_permisos_de_excel_de_empresas",
+      "breakpoints": true
     }
   ]
 }

@@ -3,23 +3,17 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { usarAvisos } from '../almacenes/avisos';
 import { usarSesion } from '../almacenes/sesion';
+import { opcionesDeEmpresa } from '../utilidades/opciones-de-empresa';
+import CampoSelector from './CampoSelector.vue';
 
 const sesion = usarSesion();
 const avisos = usarAvisos();
 const router = useRouter();
 
-const grupos = computed(() => {
-  const porCuenta = new Map<string, { cuenta: string; empresas: typeof sesion.empresasDisponibles }>();
-  for (const empresa of sesion.empresasDisponibles) {
-    const grupo = porCuenta.get(empresa.cuentaId) ?? { cuenta: empresa.cuentaNombre, empresas: [] };
-    grupo.empresas.push(empresa);
-    porCuenta.set(empresa.cuentaId, grupo);
-  }
-  return [...porCuenta.values()];
-});
+const opciones = computed(() => opcionesDeEmpresa(sesion.empresasDisponibles));
 
-async function cambiar(evento: Event): Promise<void> {
-  const empresaId = (evento.target as HTMLSelectElement).value;
+async function cambiar(empresaId: string | undefined): Promise<void> {
+  if (!empresaId || empresaId === sesion.empresa?.id) return;
   try {
     await sesion.cambiarEmpresa(empresaId);
     await router.push({ name: 'inicio' });
@@ -31,19 +25,13 @@ async function cambiar(evento: Event): Promise<void> {
 </script>
 
 <template>
-  <label class="block">
-    <span class="sr-only">Empresa activa</span>
-    <select
-      :value="sesion.empresa?.id ?? ''"
-      class="w-full truncate rounded-lg border-0 bg-marca-oscuro/60 py-2 pr-8 pl-3 text-sm font-medium text-marca-texto ring-1 ring-marca-texto/15 focus:ring-2 focus:ring-acento"
-      @change="cambiar"
-    >
-      <option v-if="!sesion.empresa" value="" disabled>Elija una empresa</option>
-      <optgroup v-for="grupo in grupos" :key="grupo.cuenta" :label="grupo.cuenta">
-        <option v-for="empresa in grupo.empresas" :key="empresa.id" :value="empresa.id" class="text-tierra-900">
-          {{ empresa.nombre }}
-        </option>
-      </optgroup>
-    </select>
-  </label>
+  <CampoSelector
+    :model-value="sesion.empresa?.id ?? ''"
+    etiqueta="Empresa activa"
+    ocultar-etiqueta
+    variante="marca"
+    texto-vacio="Elija una empresa"
+    :opciones="opciones"
+    @update:model-value="cambiar"
+  />
 </template>
