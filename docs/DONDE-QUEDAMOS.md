@@ -43,6 +43,7 @@ cliente 1034, generador 46.
 |---|---|---|
 | BS-1 Bancos, segunda parte: datos (`0034`) | `agent-a7143c581f35d7d4b` | programando |
 | CP4-8 lista, ficha y comprobante de pagos | `agent-ad73d5cef330cdfa6` | programando |
+| Bancos H2 pasos 6 (docs) y 7 (QA de todo H2) | `agent-a536a989849810df2` | probando (la otra sesión cedió estos pasos) |
 
 En `main`: CP4-6 (en verde: servidor 4563, cliente 1124, generador 46) y CP4-E2 (retiros de efectivo, `400e7f1`);
 pruebas corriendo con CP4-E2.
