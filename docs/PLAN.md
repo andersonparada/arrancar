@@ -2429,3 +2429,4 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   filtro» toma el total de la respuesta del servidor (no del último listado); la ventana «Confirmar» no se cierra con
   Escape ni clic fuera mientras envía. Sin cambio: la barra cuenta como «se registrarán» lo no anulado (la letra de la
   decisión) y «Confirmar» descuenta además lo que la vista previa rechaza.
+- **2026-11-18 — Pruebas del libro con qpdf opcional.** Sin qpdf 11+ (`RUTA_QPDF` apunta a un binario inexistente) se saltan las 8 pruebas del PDF del libro que emiten o revisan con qpdf (`it.skipIf(!hayQpdf)`); el Excel, el permiso de emitir y los límites siguen corriendo. Sin cambios de producto.
