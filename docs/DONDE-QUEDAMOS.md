@@ -29,6 +29,12 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
   conserva el `GET` viejo de `/bancos/saldos-iniciales` hasta BS-5.
 - **CP4-E4** (servidor, liquidar y reabrir el retiro, recibo de efectivo): `programador-backend` (Sonnet), base
   `arrancar_pruebas_cpe4`.
+- **Workflow `arrancar-pasos-independientes`** (run `wf_01c5093b-22c`, reanudable con `resumeFromRunId`):
+  CP4-B3b (+ observaciones menores de la QA de H2, base `arrancar_pruebas_b3b`) y CP5-9a (R6 a R8, cliente, base
+  `arrancar_pruebas_cp59`), cada uno con revisión de Opus y corrección de Sonnet; QA intermedia en el navegador de
+  CP4-B3a, CP5-7, CP5-8, CP5-10 y EM-1 (informe `informe-qa-intermedia-2026-11-18.md`, base `arrancar_pruebas_qa1`);
+  cotejo del contador de los artículos del Código de Comercio (§15.8 de Bancos, segunda parte); diseños cortos de EM-2
+  (`diseno-em2-cierre-de-la-carga.md`) e impresión de cheques (`diseno-impresion-de-cheques.md`).
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
