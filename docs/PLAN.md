@@ -2267,3 +2267,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   devuelve la empresa anterior al salir (el punto de guardado deshace también las variables si el trabajo falla). Así ningún
   caso de uso puede saltar a una empresa existente. Pruebas: dos empresas en un libro (todo o nada) y rechazos. Además,
   `SelectorEmpresa` recupera la apariencia de marca con `CampoSelector variante="marca"` y el texto «Elija una empresa».
+- **Revisión de seguridad de `ejecutarEnEmpresaNueva`:** (1) firma acotada `ejecutarEnEmpresaNueva(empresaId, trabajo)`: el
+  contexto sale de la transacción en curso (`{ ...contexto, empresaId }`), así no se cambia de cuenta, usuario ni alcance;
+  sin transacción falla (`RegistrarEmpresa` abre la suya con `ejecutar`). (2) La comprobación de que el id no existe
+  consulta `core.empresas`, que hoy no tiene RLS; queda documentado en TSDoc y una prueba falla si alguien se la pone. Sin
+  migración; la alternativa si algún día se le pone RLS es una función `security definer` `core.empresa_existe(uuid)`.
+  (3) Al salir se exige que la empresa exista con la `cuenta_id` del contexto y `creado_en = now()` (inicio de la
+  transacción; `marcasDeTiempo` usa `defaultNow()`), si no, `EmpresaNoEsNueva`. (4) Pruebas: empresa de otra cuenta, usuario
+  con acceso real a una empresa existente, trabajo que no crea la empresa, que la crea en otra cuenta, y sin transacción.

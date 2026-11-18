@@ -12,6 +12,8 @@ import type { EventoDominio } from '../dominio/evento-dominio.js';
 /** Ejecuta el trabajo tal cual y recuerda con qué contexto se pidió, para comprobarlo en las pruebas. */
 export class UnidadDeTrabajoEnMemoria implements UnidadDeTrabajo {
   readonly contextos: ContextoEmpresa[] = [];
+  /** Ids con que se pidió `ejecutarEnEmpresaNueva`. */
+  readonly empresasNuevas: string[] = [];
 
   ejecutar<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
     this.contextos.push(contexto);
@@ -22,8 +24,9 @@ export class UnidadDeTrabajoEnMemoria implements UnidadDeTrabajo {
     return trabajo();
   }
 
-  ejecutarEnEmpresaNueva<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
-    return this.ejecutar(contexto, trabajo);
+  ejecutarEnEmpresaNueva<Resultado>(empresaId: string, trabajo: () => Promise<Resultado>): Promise<Resultado> {
+    this.empresasNuevas.push(empresaId);
+    return trabajo();
   }
 }
 

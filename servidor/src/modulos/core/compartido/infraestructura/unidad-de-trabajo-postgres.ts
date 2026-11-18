@@ -50,7 +50,7 @@ export class ContextoDistintoEnLaTransaccion extends Error {
   }
 }
 
-/** Error de programación: se pidió trabajar como «empresa nueva» con una empresa que ya existía en la transacción. */
+/** Error de programación: se pidió trabajar como «empresa nueva» con una empresa que ya existía o que el trabajo no creó. */
 export class EmpresaNoEsNueva extends Error {
   constructor() {
     super('Solo se puede cambiar a una empresa recién creada en esta transacción, no a una que ya existía.');
@@ -101,28 +101,38 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
     return enCurso.transaccion.transaction((punto) => trabajoEnCurso.run({ ...enCurso, transaccion: punto }, trabajo));
   }
 
-  async ejecutarEnEmpresaNueva<Resultado>(
-    contexto: ContextoEmpresa,
-    trabajo: () => Promise<Resultado>,
-  ): Promise<Resultado> {
+  async ejecutarEnEmpresaNueva<Resultado>(empresaId: string, trabajo: () => Promise<Resultado>): Promise<Resultado> {
     const enCurso = trabajoEnCurso.getStore();
-    if (!enCurso) return this.ejecutar(contexto, () => this.ejecutarEnEmpresaNueva(contexto, trabajo));
-    const { cuentaId, usuarioId } = enCurso.contexto;
-    if (contexto.cuentaId !== cuentaId || contexto.usuarioId !== usuarioId) throw new ContextoDistintoEnLaTransaccion();
+    if (!enCurso) throw new ConsultaFueraDeUnidadDeTrabajo();
+    const contexto: ContextoEmpresa = { ...enCurso.contexto, empresaId };
     return enCurso.transaccion.transaction(async (punto) => {
-      await this.exigirQueNoExista(punto, enCurso, contexto.empresaId);
+      await this.exigirQueNoExista(punto, enCurso, empresaId);
       await fijarVariablesDeSeguridad(punto, contexto);
       const resultado = await trabajoEnCurso.run({ ...enCurso, transaccion: punto, contexto }, trabajo);
+      await this.exigirQueSeCreoAqui(punto, contexto);
       await fijarVariablesDeSeguridad(punto, enCurso.contexto);
       return resultado;
     });
   }
 
-  /** La empresa no debe existir en la base ni haberse abierto ya como nueva en esta transacción. */
+  /**
+   * La empresa no debe existir en la base ni haberse abierto ya como nueva en esta transacción. La consulta a
+   * `core.empresas` debe ver **todas las cuentas**: hoy esa tabla no tiene seguridad por filas, y la prueba
+   * «core.empresas no tiene seguridad por filas» falla si alguien se la pone (habría que usar una función
+   * `security definer`, p. ej. `core.empresa_existe(uuid)`). Aun así, la comprobación al salir cubre ese caso.
+   */
   private async exigirQueNoExista(punto: Transaccion, enCurso: TrabajoEnCurso, empresaId: string): Promise<void> {
     const filas = await punto.execute(sql`select 1 from core.empresas where id = ${empresaId}`);
     if (filas.rows.length > 0 || enCurso.empresasNuevas.has(empresaId)) throw new EmpresaNoEsNueva();
     enCurso.empresasNuevas.add(empresaId);
+  }
+
+  /** Al salir, la empresa debe ser de la cuenta del contexto y haberse creado en esta transacción (`now()` es el inicio de la transacción). */
+  private async exigirQueSeCreoAqui(punto: Transaccion, contexto: ContextoEmpresa): Promise<void> {
+    const filas = await punto.execute(
+      sql`select 1 from core.empresas where id = ${contexto.empresaId} and cuenta_id = ${contexto.cuentaId} and creado_en = now()`,
+    );
+    if (filas.rows.length === 0) throw new EmpresaNoEsNueva();
   }
 
   private async ejecutarEnTransaccion<Resultado>(

@@ -45,17 +45,19 @@ export class RegistrarEmpresa {
     const empresa = Empresa.registrar(Identificador.desde(operador.cuentaId), datosDeEmpresa(solicitud));
     const enLaNueva = { ...operador, empresaId: empresa.id.valor };
 
-    const registrada = await unidadDeTrabajo.ejecutarEnEmpresaNueva(enLaNueva, async () => {
-      await this.dependencias.repositorio.agregar(empresa);
-      await this.darAccesoAlCreador(operador, empresa);
-      await this.dependencias.tiposDeLocalidad.ejecutar(enLaNueva);
-      await avisos.empresaGuardada(enLaNueva, { empresaId: empresa.id.valor, secciones });
-      const guardada = await consultas.obtenerEnCuenta(empresa.id.valor, operador.cuentaId);
-      return {
-        ...guardada,
-        avisos: await avisosDeNitRepetido(consultas, { ...guardada, cuentaId: operador.cuentaId }),
-      };
-    });
+    const registrada = await unidadDeTrabajo.ejecutar(operador, () =>
+      unidadDeTrabajo.ejecutarEnEmpresaNueva(empresa.id.valor, async () => {
+        await this.dependencias.repositorio.agregar(empresa);
+        await this.darAccesoAlCreador(operador, empresa);
+        await this.dependencias.tiposDeLocalidad.ejecutar(enLaNueva);
+        await avisos.empresaGuardada(enLaNueva, { empresaId: empresa.id.valor, secciones });
+        const guardada = await consultas.obtenerEnCuenta(empresa.id.valor, operador.cuentaId);
+        return {
+          ...guardada,
+          avisos: await avisosDeNitRepetido(consultas, { ...guardada, cuentaId: operador.cuentaId }),
+        };
+      }),
+    );
     await publicadorEventos.publicar(empresa.extraerEventos());
     return registrada;
   }

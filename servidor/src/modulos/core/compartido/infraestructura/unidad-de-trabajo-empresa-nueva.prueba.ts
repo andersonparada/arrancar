@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../../../../configuracion.js';
@@ -8,11 +8,11 @@ import { bd, grupoConexiones } from '../../base-datos/conexion.js';
 import { migrarModulos } from '../../base-datos/migrador.js';
 import { correlativos } from './persistencia/correlativos.tablas.js';
 import { cuentas } from '../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
-import { empresas } from '../../cuentas/infraestructura/persistencia/empresas.tablas.js';
+import { empresaUsuarios, empresas } from '../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import { usuarios } from '../../identidad/infraestructura/persistencia/usuarios.tablas.js';
 import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import {
-  ContextoDistintoEnLaTransaccion,
+  ConsultaFueraDeUnidadDeTrabajo,
   EmpresaNoEsNueva,
   UnidadDeTrabajoPostgres,
   transaccionEnCurso,
@@ -21,6 +21,7 @@ import {
 const unidadDeTrabajo = new UnidadDeTrabajoPostgres(bd);
 let enEmpresaA: ContextoEmpresa;
 let enEmpresaB: ContextoEmpresa;
+let empresaDeOtraCuentaId: string;
 
 class FalloProvocado extends Error {}
 
@@ -54,6 +55,9 @@ beforeAll(async () => {
       { cuentaId: cuenta!.id, nombre: 'Empresa B' },
     ])
     .returning();
+  const [otraCuenta] = await bd.insert(cuentas).values({ nombre: 'Otra cuenta' }).returning();
+  const [ajena] = await bd.insert(empresas).values({ cuentaId: otraCuenta!.id, nombre: 'Empresa ajena' }).returning();
+  empresaDeOtraCuentaId = ajena!.id;
   enEmpresaA = { empresaId: a!.id, cuentaId: cuenta!.id, usuarioId: usuario!.id };
   enEmpresaB = { empresaId: b!.id, cuentaId: cuenta!.id, usuarioId: usuario!.id };
   await unidadDeTrabajo.ejecutar(enEmpresaA, async () => void (await registrarAcceso(enEmpresaA, 'de-a')));
@@ -80,7 +84,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
   it('ve la empresa nueva dentro y vuelve a la anterior al terminar, en la misma transacción', async () => {
     const nueva = nuevaDe(enEmpresaA);
     const [dentro, despues] = await unidadDeTrabajo.ejecutar(enEmpresaA, async () => [
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva, () => crearYSembrar(nueva, 'de-nueva')),
+      await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva.empresaId, () => crearYSembrar(nueva, 'de-nueva')),
       await recursosVisibles(),
     ]);
 
@@ -91,8 +95,8 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
   it('crear dos empresas en un mismo libro es todo o nada', async () => {
     const [primera, segunda] = [nuevaDe(enEmpresaA), nuevaDe(enEmpresaA)];
     const libro = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(primera, () => crearYSembrar(primera, 'primera'));
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(segunda, async () => {
+      await unidadDeTrabajo.ejecutarEnEmpresaNueva(primera.empresaId, () => crearYSembrar(primera, 'primera'));
+      await unidadDeTrabajo.ejecutarEnEmpresaNueva(segunda.empresaId, async () => {
         await crearYSembrar(segunda, 'segunda');
         throw new FalloProvocado();
       });
@@ -109,8 +113,8 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
   it('dos empresas nuevas en el mismo libro se guardan juntas', async () => {
     const [primera, segunda] = [nuevaDe(enEmpresaA), nuevaDe(enEmpresaA)];
     await unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(primera, () => crearYSembrar(primera, 'primera'));
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(segunda, () => crearYSembrar(segunda, 'segunda'));
+      await unidadDeTrabajo.ejecutarEnEmpresaNueva(primera.empresaId, () => crearYSembrar(primera, 'primera'));
+      await unidadDeTrabajo.ejecutarEnEmpresaNueva(segunda.empresaId, () => crearYSembrar(segunda, 'segunda'));
     });
 
     const guardadas = await bd
@@ -124,7 +128,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     const nueva = nuevaDe(enEmpresaA);
     const resultado = await unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
       await unidadDeTrabajo
-        .ejecutarEnEmpresaNueva(nueva, async () => {
+        .ejecutarEnEmpresaNueva(nueva.empresaId, async () => {
           await crearYSembrar(nueva, 'fallida');
           throw new FalloProvocado();
         })
@@ -137,10 +141,10 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
 
   it('rechaza una empresa que ya existía en la cuenta, con o sin acceso del usuario', async () => {
     const existente = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
-      unidadDeTrabajo.ejecutarEnEmpresaNueva(enEmpresaB, recursosVisibles),
+      unidadDeTrabajo.ejecutarEnEmpresaNueva(enEmpresaB.empresaId, recursosVisibles),
     );
     const propia = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
-      unidadDeTrabajo.ejecutarEnEmpresaNueva(enEmpresaA, recursosVisibles),
+      unidadDeTrabajo.ejecutarEnEmpresaNueva(enEmpresaA.empresaId, recursosVisibles),
     );
 
     await expect(existente).rejects.toThrow(EmpresaNoEsNueva);
@@ -150,29 +154,63 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
   it('rechaza abrir dos veces la misma empresa nueva en una transacción', async () => {
     const nueva = nuevaDe(enEmpresaA);
     const repetida = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva, async () => undefined);
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva, async () => undefined);
+      await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva.empresaId, async () => undefined);
+      await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva.empresaId, async () => undefined);
     });
 
     await expect(repetida).rejects.toThrow(EmpresaNoEsNueva);
   });
 
-  it('no deja cambiar de cuenta ni de usuario', async () => {
-    const deOtraCuenta = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
-      unidadDeTrabajo.ejecutarEnEmpresaNueva(
-        { ...nuevaDe(enEmpresaA), cuentaId: enEmpresaA.usuarioId },
-        recursosVisibles,
-      ),
+  it('rechaza una empresa de otra cuenta', async () => {
+    const ajena = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
+      unidadDeTrabajo.ejecutarEnEmpresaNueva(empresaDeOtraCuentaId, async () => undefined),
     );
 
-    await expect(deOtraCuenta).rejects.toThrow(ContextoDistintoEnLaTransaccion);
+    await expect(ajena).rejects.toThrow(EmpresaNoEsNueva);
   });
 
-  it('sin transacción en curso, abre una y también exige una empresa nueva', async () => {
-    const nueva = nuevaDe(enEmpresaA);
-    expect(await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva, () => crearYSembrar(nueva, 'sola'))).toEqual(['sola']);
-    await expect(unidadDeTrabajo.ejecutarEnEmpresaNueva(enEmpresaB, recursosVisibles)).rejects.toThrow(
-      EmpresaNoEsNueva,
+  it('rechaza una empresa existente de la cuenta aunque el usuario tenga acceso real a ella', async () => {
+    await bd.insert(empresaUsuarios).values({ empresaId: enEmpresaB.empresaId, usuarioId: enEmpresaA.usuarioId });
+    const conAcceso = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
+      unidadDeTrabajo.ejecutarEnEmpresaNueva(enEmpresaB.empresaId, recursosVisibles),
     );
+
+    await expect(conAcceso).rejects.toThrow(EmpresaNoEsNueva);
+  });
+
+  it('rechaza un trabajo que no crea la empresa', async () => {
+    const sinCrear = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
+      unidadDeTrabajo.ejecutarEnEmpresaNueva(randomUUID(), async () => undefined),
+    );
+
+    await expect(sinCrear).rejects.toThrow(EmpresaNoEsNueva);
+  });
+
+  it('rechaza un trabajo que crea la empresa en otra cuenta', async () => {
+    const id = randomUUID();
+    const enOtraCuenta = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
+      unidadDeTrabajo.ejecutarEnEmpresaNueva(id, async () => {
+        const [otra] = await transaccionEnCurso().select({ id: cuentas.id }).from(cuentas).limit(2);
+        await transaccionEnCurso()
+          .insert(empresas)
+          .values({ id, cuentaId: otra!.id === enEmpresaA.cuentaId ? empresaDeOtraCuentaId : otra!.id, nombre: 'x' });
+      }),
+    );
+
+    await expect(enOtraCuenta).rejects.toThrow();
+  });
+
+  it('core.empresas no tiene seguridad por filas: la comprobación debe ver todas las cuentas', async () => {
+    const vistas = await unidadDeTrabajo.ejecutar(enEmpresaA, () =>
+      transaccionEnCurso().select({ id: empresas.id }).from(empresas).where(eq(empresas.id, empresaDeOtraCuentaId)),
+    );
+
+    expect(vistas).toHaveLength(1);
+  });
+
+  it('sin transacción en curso falla: no abre una por su cuenta', async () => {
+    const sola = unidadDeTrabajo.ejecutarEnEmpresaNueva(randomUUID(), async () => undefined);
+
+    await expect(sola).rejects.toThrow(ConsultaFueraDeUnidadDeTrabajo);
   });
 });
