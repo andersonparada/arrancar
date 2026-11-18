@@ -15,6 +15,13 @@ describe('PlantillaDeCorreo', () => {
   it('rechaza un marcador desconocido y uno vacío', () => {
     expect(() => PlantillaDeCorreo.crear('Hola {nit}', PERMITIDOS)).toThrow(MarcadorDesconocido);
     expect(() => PlantillaDeCorreo.crear('Hola {}', PERMITIDOS)).toThrow(MarcadorDesconocido);
+    expect(() => PlantillaDeCorreo.crear('Hola { proveedor }', PERMITIDOS)).toThrow(MarcadorDesconocido);
+    expect(() => PlantillaDeCorreo.crear('Hola {pro veedor}', PERMITIDOS)).toThrow(MarcadorDesconocido);
+  });
+
+  it('corta el marcador que informa en el error', () => {
+    const largo = `{${'x'.repeat(500)}}`;
+    expect(() => PlantillaDeCorreo.crear(largo, PERMITIDOS)).toThrowError(/^.{0,200}$/s);
   });
 
   it('no vuelve a expandir un valor que parezca marcador y le quita los controles', () => {

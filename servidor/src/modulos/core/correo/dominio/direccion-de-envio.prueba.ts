@@ -58,11 +58,9 @@ describe('DireccionDeEnvio', () => {
   });
 
   it('el mensaje de error no repite el texto recibido', () => {
-    try {
-      DireccionDeEnvio.crear('a@x.com\r\nBcc: b@victima.com');
-    } catch (error) {
-      expect((error as Error).message).not.toContain('Bcc');
-    }
+    expect(() => DireccionDeEnvio.crear('a@x.com\r\nBcc: b@victima.com')).toThrowError(
+      expect.not.stringContaining('Bcc'),
+    );
   });
 
   it('dos direcciones iguales son iguales aunque el dominio venga en otra caja', () => {

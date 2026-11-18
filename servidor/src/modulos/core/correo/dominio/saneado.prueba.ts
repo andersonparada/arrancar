@@ -6,6 +6,11 @@ describe('sanearTexto', () => {
     expect(sanearTexto('Pago\r\nBcc: x@y.com\u0000  \u202Efinal', 150)).toBe('Pago Bcc: x@y.com final');
   });
 
+  it('quita caracteres de ancho cero y no parte un emoji al cortar', () => {
+    expect(sanearTexto('Fi\u200Bnca\uFEFF', 150)).toBe('Finca');
+    expect(sanearTexto('😀😀😀', 2)).toBe('😀😀');
+  });
+
   it('corta al máximo', () => {
     expect(sanearTexto('a'.repeat(300), 150)).toHaveLength(150);
   });

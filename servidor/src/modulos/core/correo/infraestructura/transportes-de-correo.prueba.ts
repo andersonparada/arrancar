@@ -2,7 +2,12 @@ import { createTransport } from 'nodemailer';
 import { describe, expect, it } from 'vitest';
 import type { MensajeDeSalida, PersonaDeCorreo } from '../aplicacion/transporte-de-correo.js';
 import { DireccionDeEnvio } from '../dominio/direccion-de-envio.js';
-import { clasificarError, opcionesDeMensaje, opcionesDeTransporte } from './opciones-de-nodemailer.js';
+import {
+  TIEMPOS_DE_ESPERA_SMTP,
+  clasificarError,
+  opcionesDeMensaje,
+  opcionesDeTransporte,
+} from './opciones-de-nodemailer.js';
 import { TransporteEnMemoria } from './transporte-en-memoria.js';
 import { TransporteNodemailer } from './transporte-nodemailer.js';
 
@@ -41,6 +46,31 @@ describe('opcionesDeTransporte', () => {
   });
 });
 
+describe('opcionesDeTransporte: defensas', () => {
+  const base = { servidor: 'smtp.proveedor.com', puerto: 587, usuario: 'u', contrasena: 'clave' };
+
+  it('fija tiempos de espera menores que el arriendo de 5 minutos', () => {
+    const opciones = opcionesDeTransporte({ ...base, seguridad: 'starttls' });
+    expect(opciones).toMatchObject({
+      connectionTimeout: 15_000,
+      greetingTimeout: 15_000,
+      socketTimeout: 60_000,
+      dnsTimeout: 10_000,
+    });
+    expect(Object.values(TIEMPOS_DE_ESPERA_SMTP).every((ms) => ms < 5 * 60_000)).toBe(true);
+  });
+
+  it('sin cifrado no manda credenciales y en producción se rechaza', () => {
+    const opciones = opcionesDeTransporte({ ...base, seguridad: 'ninguna' }, false);
+    expect(opciones.auth).toBeUndefined();
+    expect(() => opcionesDeTransporte({ ...base, seguridad: 'ninguna' }, true)).toThrow(/producción/);
+  });
+
+  it('con cifrado manda las credenciales', () => {
+    expect(opcionesDeTransporte({ ...base, seguridad: 'starttls' }).auth).toEqual({ user: 'u', pass: 'clave' });
+  });
+});
+
 describe('opcionesDeMensaje', () => {
   it('arma direcciones como objetos, envelope explícito y cabecera de envío automático', () => {
     const opciones = opcionesDeMensaje(mensajeDePrueba());
@@ -65,6 +95,10 @@ describe('clasificarError', () => {
     [{ code: 'EENVELOPE', responseCode: 550 }, 'permanente', '550'],
     [{ code: 'EMESSAGE', responseCode: 451 }, 'temporal', '451'],
     [{ code: 'ETIMEDOUT' }, 'temporal', 'ETIMEDOUT'],
+    [{ code: 'EENVELOPE' }, 'permanente', 'EENVELOPE'],
+    [{ code: 'EMESSAGE' }, 'permanente', 'EMESSAGE'],
+    [{ code: 'ETLS' }, 'autenticacion', 'ETLS'],
+    [{ code: 'CERT_HAS_EXPIRED' }, 'autenticacion', 'CERT_HAS_EXPIRED'],
     [new Error('algo raro con datos personales'), 'temporal', null],
   ])('%j es %s', (error, resultado, codigo) => {
     expect(clasificarError(error, 5)).toEqual({ resultado, codigo, rechazados: [], duracionMs: 5 });

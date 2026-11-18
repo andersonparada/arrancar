@@ -26,6 +26,15 @@ describe('redacción de los registros', () => {
     expect(salida).toContain('[Redacted]');
   });
 
+  it('oculta también dos niveles adentro y otros nombres de secretos', () => {
+    const salida = registrar({
+      err: { config: { auth: { pass: 'secreta-1' } } },
+      datos: { servidor: { contrasena: 'secreta-2' } },
+      cuerpo: { password: 'secreta-3', contrasenaNueva: 'secreta-4', token: 'secreta-5', clave: 'secreta-6' },
+    });
+    for (const numero of [1, 2, 3, 4, 5, 6]) expect(salida).not.toContain(`secreta-${numero}`);
+  });
+
   it('no toca el resto de los datos', () => {
     expect(registrar({ servidor: 'smtp.proveedor.com' })).toContain('smtp.proveedor.com');
   });

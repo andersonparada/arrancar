@@ -1,3 +1,4 @@
+import { esProduccion } from '../../../../configuracion.js';
 import type { SMTPPoolOptions, SendMailOptions } from 'nodemailer';
 import type {
   MensajeDeSalida,
@@ -8,7 +9,8 @@ import type {
 
 /**
  * `ninguna` existe solo para el Mailpit de desarrollo (puerto 1025, sin cifrado): la tabla del servidor de
- * Soporte no la admite, así que en producción siempre se cifra.
+ * Soporte solo debe admitir `tls_directo` y `starttls`. Aun así el adaptador se defiende: en producción
+ * lanza error y sin cifrado nunca manda credenciales.
  */
 export type SeguridadDelServidor = 'tls_directo' | 'starttls' | 'ninguna';
 
@@ -23,10 +25,40 @@ export interface ConfiguracionDelServidor {
 /** Nombre con que el transporte se presenta (EHLO): fijo en código, nunca viene de datos (GHSA-vvjj). */
 const NOMBRE_DE_PRESENTACION = 'arrancar';
 
-/** Opciones del único transporte por proceso (C2, C8, C10). */
-export function opcionesDeTransporte(configuracion: ConfiguracionDelServidor): SMTPPoolOptions {
-  const { servidor, puerto, seguridad, usuario, contrasena } = configuracion;
+/**
+ * Tiempos de espera del servidor SMTP. Deben quedar por debajo del arriendo de `core.correos_salientes`
+ * (`bloqueado_hasta`, 5 minutos): un envío que tarde más se volvería a tomar y saldría duplicado.
+ */
+export const TIEMPOS_DE_ESPERA_SMTP = {
+  connectionTimeout: 15_000,
+  greetingTimeout: 15_000,
+  socketTimeout: 60_000,
+  dnsTimeout: 10_000,
+} as const;
+
+function credenciales({ seguridad, usuario, contrasena }: ConfiguracionDelServidor): SMTPPoolOptions['auth'] {
+  if (seguridad === 'ninguna' || !usuario || !contrasena) return undefined;
+  return { user: usuario, pass: contrasena };
+}
+
+function rechazarSinCifradoEnProduccion(seguridad: SeguridadDelServidor, esProduccionActual: boolean): void {
+  if (seguridad === 'ninguna' && esProduccionActual) {
+    throw new Error('El servidor de correo sin cifrado no se permite en producción.');
+  }
+}
+
+/**
+ * Opciones del único transporte por proceso (C2, C8, C10). Sin cifrado solo se permite fuera de producción
+ * (`esProduccionActual` existe para probar la regla).
+ */
+export function opcionesDeTransporte(
+  configuracion: ConfiguracionDelServidor,
+  esProduccionActual: boolean = esProduccion,
+): SMTPPoolOptions {
+  const { servidor, puerto, seguridad } = configuracion;
+  rechazarSinCifradoEnProduccion(seguridad, esProduccionActual);
   return {
+    ...TIEMPOS_DE_ESPERA_SMTP,
     pool: true,
     maxConnections: 2,
     host: servidor,
@@ -36,7 +68,7 @@ export function opcionesDeTransporte(configuracion: ConfiguracionDelServidor): S
     ignoreTLS: seguridad === 'ninguna',
     name: NOMBRE_DE_PRESENTACION,
     tls: { minVersion: 'TLSv1.2', rejectUnauthorized: true },
-    auth: usuario && contrasena ? { user: usuario, pass: contrasena } : undefined,
+    auth: credenciales(configuracion),
     logger: false,
     debug: false,
     disableFileAccess: true,
@@ -85,10 +117,18 @@ function codigoDelError({ code, responseCode }: ErrorDeNodemailer): string | nul
   return typeof code === 'string' ? code : null;
 }
 
+const CODIGOS_DE_CONFIGURACION = ['EAUTH', 'ENOAUTH', 'ETLS'];
+const CODIGOS_DE_MENSAJE_INVALIDO = ['EENVELOPE', 'EMESSAGE'];
+
+function esFalloDeCertificado(code: unknown): boolean {
+  return typeof code === 'string' && code.includes('CERT');
+}
+
 function resultadoDelError({ code, responseCode }: ErrorDeNodemailer): ResultadoDeEnvio {
-  if (code === 'EAUTH' || code === 'ENOAUTH' || responseCode === 535) return 'autenticacion';
-  const permanente = typeof responseCode === 'number' && responseCode >= 500 && responseCode < 600;
-  return permanente ? 'permanente' : 'temporal';
+  const esCodigo = (lista: readonly string[]): boolean => typeof code === 'string' && lista.includes(code);
+  if (esCodigo(CODIGOS_DE_CONFIGURACION) || esFalloDeCertificado(code) || responseCode === 535) return 'autenticacion';
+  if (typeof responseCode === 'number') return responseCode >= 500 && responseCode < 600 ? 'permanente' : 'temporal';
+  return esCodigo(CODIGOS_DE_MENSAJE_INVALIDO) ? 'permanente' : 'temporal';
 }
 
 /** Clasifica un fallo de envío. Solo conserva códigos: el texto del servidor no se registra ni se muestra. */

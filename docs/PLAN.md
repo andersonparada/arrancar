@@ -2337,3 +2337,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `redact` de pino para contraseñas, `auth` y cookies (`registro-seguro.ts`). `EnviarPrueba` queda para el paso 2
   (necesita el servidor guardado). El transporte admite `seguridad: 'ninguna'` solo para Mailpit; la tabla de Soporte
   no deberá permitirla en producción.
+- **2026-11-18 (aviso de pago por correo, correcciones de la revisión de los pasos 1 y 3).** Mailpit en v1.34.0 y
+  publicado solo en `127.0.0.1`. El transporte fija tiempos de espera (conexión 15 s, saludo 15 s, DNS 10 s, socket
+  60 s), siempre menores que el arriendo `bloqueado_hasta` de 5 minutos. `seguridad: 'ninguna'` lanza error en
+  producción y nunca manda `auth`; el check de la tabla del paso 2 solo admite `tls_directo` y `starttls`. Los errores
+  `EENVELOPE`/`EMESSAGE` son permanentes y los de TLS/certificado no gastan intento. El saneado quita caracteres de
+  ancho cero y corta por puntos de código; la plantilla rechaza `{ marcador }` con espacios; la redacción de pino cubre
+  dos niveles y más nombres de secretos.

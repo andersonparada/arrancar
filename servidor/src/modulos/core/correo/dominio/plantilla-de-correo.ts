@@ -1,7 +1,8 @@
 import { MarcadorDesconocido } from './errores-de-correo.js';
 import { sanearParaCuerpo } from './saneado.js';
 
-const MARCADOR = /\{([^{}\s]*)\}/g;
+const MARCADOR = /\{([^{}]*)\}/g;
+const MAXIMO_DEL_MARCADOR_INFORMADO = 40;
 
 /**
  * Texto con marcadores `{nombre}` que se reemplazan por valores. Cada tipo de correo declara la lista
@@ -19,7 +20,8 @@ export class PlantillaDeCorreo {
   static crear(texto: string, permitidos: readonly string[]): PlantillaDeCorreo {
     const usados = [...texto.matchAll(MARCADOR)].map((coincidencia) => coincidencia[1] as string);
     const desconocido = usados.find((marcador) => !permitidos.includes(marcador));
-    if (desconocido !== undefined) throw new MarcadorDesconocido(desconocido, permitidos);
+    if (desconocido !== undefined)
+      throw new MarcadorDesconocido(desconocido.slice(0, MAXIMO_DEL_MARCADOR_INFORMADO), permitidos);
     return new PlantillaDeCorreo(texto, [...new Set(usados)]);
   }
 
