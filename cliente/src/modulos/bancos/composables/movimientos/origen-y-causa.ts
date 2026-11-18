@@ -21,6 +21,20 @@ export function textoDeOrigen(movimiento: { moduloDeOrigen: string | null }): st
   return movimiento.moduloDeOrigen ? `Origen: ${nombreDeModuloDeOrigen(movimiento.moduloDeOrigen)}` : null;
 }
 
+const MODULO_CUENTAS_POR_PAGAR = 'cuentas-por-pagar';
+
+/**
+ * A la ficha del pago de Cuentas por pagar que generó el movimiento; `null` si el origen es otro módulo o falta el
+ * documento. El origen guarda solo el id: si fuera de otro documento de ese módulo (un reintegro), la ficha lo dice.
+ */
+export function destinoDeOrigenDelPago(movimiento: {
+  moduloDeOrigen: string | null;
+  documentoDeOrigenId: string | null;
+}) {
+  if (movimiento.moduloDeOrigen !== MODULO_CUENTAS_POR_PAGAR || !movimiento.documentoDeOrigenId) return null;
+  return { name: 'cuentas-por-pagar.pagos.ficha', params: { id: movimiento.documentoDeOrigenId } };
+}
+
 const TEXTO_DE_CAUSA: Record<CausaDeAnulacion, string> = { manual: 'Manual', caducidad: 'Por caducidad' };
 
 /** La causa de anulación de un cheque anulado; `null` si no está anulado. */

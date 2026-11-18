@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { nombreDeModuloDeOrigen, textoDeCausaDeAnulacion, textoDeOrigen } from './origen-y-causa';
+import {
+  destinoDeOrigenDelPago,
+  nombreDeModuloDeOrigen,
+  textoDeCausaDeAnulacion,
+  textoDeOrigen,
+} from './origen-y-causa';
 
 describe('origen y causa', () => {
   it('nombra el módulo de origen, conocido o no', () => {
@@ -10,6 +15,15 @@ describe('origen y causa', () => {
   it('solo muestra origen si otro módulo generó el movimiento', () => {
     expect(textoDeOrigen({ moduloDeOrigen: 'planilla' })).toBe('Origen: Planilla');
     expect(textoDeOrigen({ moduloDeOrigen: null })).toBeNull();
+  });
+
+  it('el origen de Cuentas por pagar lleva a la ficha del pago; otro origen, a ninguna parte', () => {
+    expect(destinoDeOrigenDelPago({ moduloDeOrigen: 'cuentas-por-pagar', documentoDeOrigenId: 'p1' })).toEqual({
+      name: 'cuentas-por-pagar.pagos.ficha',
+      params: { id: 'p1' },
+    });
+    expect(destinoDeOrigenDelPago({ moduloDeOrigen: 'planilla', documentoDeOrigenId: 'x' })).toBeNull();
+    expect(destinoDeOrigenDelPago({ moduloDeOrigen: 'cuentas-por-pagar', documentoDeOrigenId: null })).toBeNull();
   });
 
   it('traduce la causa de anulación', () => {

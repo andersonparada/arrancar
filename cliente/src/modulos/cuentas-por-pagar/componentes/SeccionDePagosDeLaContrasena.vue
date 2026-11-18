@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { RouterLink } from 'vue-router';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { filasDePagosDeLaContrasena } from '../composables/contrasenas/pagos-de-la-contrasena';
 import type { PagoDeLaContrasena } from '../servicios/tipos-de-pagos';
@@ -22,7 +23,12 @@ const filas = computed(() => filasDePagosDeLaContrasena({ pagos: props.pagos }))
     >
       <div class="min-w-0">
         <p class="flex flex-wrap items-center gap-2 font-medium" :class="{ 'line-through': fila.anulado }">
-          {{ fila.titulo }}
+          <RouterLink
+            :to="{ name: 'cuentas-por-pagar.pagos.ficha', params: { id: fila.id } }"
+            class="underline-offset-2 hover:underline"
+          >
+            {{ fila.titulo }}
+          </RouterLink>
           <InsigniaBase v-if="fila.anulado" tono="rojo">Anulado</InsigniaBase>
           <InsigniaBase v-if="fila.marcas.includes('Posfechado')" tono="trigo">Posfechado</InsigniaBase>
         </p>
