@@ -2318,3 +2318,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   bd:limpiar-pruebas -w servidor` borra solo `<prefijo>_plantilla` y `<prefijo>_<número>`. No correr dos corridas con el mismo prefijo a la vez.
   Medido con 8 workers y la máquina compartida (carga de 17 a 25): 360 s, 382 s y 373 s en tres corridas seguidas, todas en verde (544 archivos,
   4910 pruebas), contra 26–29 min en serie.
+- **2026-11-18 — Pruebas en paralelo, correcciones de la revisión.** El prefijo `BD_PRUEBAS` se valida (`validarPrefijoDeBases`: `^[a-z][a-z0-9_]{0,40}$`,
+  distinto de `arrancar`, error si viene vacío) desde `nombres-de-bases.ts`, usado por el `globalSetup`, la configuración y el script de limpieza; este
+  último ya no usa expresiones regulares en SQL: lista las bases y filtra en JavaScript (`esBaseDePruebasDelPrefijo`: prefijo exacto más `_plantilla` o
+  `_` y solo dígitos), con los identificadores escapados. El número de bases sigue al `maxWorkers` que Vitest resuelve (`setup(proyecto)` lee
+  `proyecto.config.maxWorkers`: sirven `--maxWorkers` y `VITEST_MAX_WORKERS=50%`; `vitest.config.ts` solo fija el valor por omisión si no hay variable).
+  `globalSetup` compara el historial de `drizzle.migraciones_<modulo>` de la plantilla y de cada base de worker con el código (`historial-de-migraciones.ts`:
+  hash aplicado que ya no existe, o migración pendiente con fecha anterior a la última aplicada, que drizzle saltaría); si no concuerda, borra y vuelve a
+  crear las bases del prefijo. `RUTA_ALMACENAMIENTO` es por base (`almacenamiento-pruebas/<base>`). Borrar bases puede tardar mucho con la máquina
+  cargada (correr `bd:limpiar-pruebas` en segundo plano) y no deben correr dos suites con el mismo prefijo.

@@ -14,7 +14,7 @@ process.env.DATABASE_URL = urlDeLaAplicacion(base);
 process.env.DATABASE_URL_PROPIETARIO = urlDelPropietario(base);
 // Las pruebas no necesitan esperar el flush a disco de cada commit (con la máquina cargada pesa mucho).
 process.env.PGOPTIONS = '-c synchronous_commit=off';
-process.env.RUTA_ALMACENAMIENTO = resolve(`./almacenamiento-pruebas/worker-${idDelWorker}`);
+process.env.RUTA_ALMACENAMIENTO = resolve(`./almacenamiento-pruebas/${base}`);
 
 if (!process.env.TMPDIR?.includes('arrancar-pruebas-')) {
   const temporal = join(tmpdir(), `arrancar-pruebas-${base}`);

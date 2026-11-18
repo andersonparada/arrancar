@@ -47,11 +47,13 @@ Las pruebas de integración usan PostgreSQL real, así que la base de desarrollo
 levantada. **Corren en paralelo**: cada worker de Vitest tiene su propia base
 `${BD_PRUEBAS}_${VITEST_POOL_ID}` (por omisión `arrancar_pruebas_1`, `_2`…), clonada de
 `${BD_PRUEBAS}_plantilla` por `globalSetup` y conservada entre corridas; también tiene su carpeta
-de archivos (`almacenamiento-pruebas/worker-<n>`) y su `TMPDIR`
-(`servidor/src/pruebas-api/paralelo/`). Cada agente usa su prefijo con `BD_PRUEBAS=<prefijo>` y no
-corre dos suites a la vez con el mismo. Workers: `VITEST_MAX_WORKERS=<n>` (por omisión la mitad de los
-núcleos, máximo 8). Para borrar las bases sobrantes de un prefijo:
-`BD_PRUEBAS=<prefijo> npm run bd:limpiar-pruebas -w servidor`. Una prueba nueva no debe depender de
+de archivos (`almacenamiento-pruebas/<base>`) y su `TMPDIR`
+(`servidor/src/pruebas-api/paralelo/`). Cada agente usa su prefijo con `BD_PRUEBAS=<prefijo>` (se valida: minúsculas, dígitos y `_`, hasta 41
+caracteres, nunca `arrancar`; basta elegirlo, las bases se crean solas) y no corre dos suites a la vez con el mismo.
+Si el historial de migraciones de las bases no concuerda con el código, `globalSetup` las vuelve a crear. Workers: `--maxWorkers` o `VITEST_MAX_WORKERS` (por omisión la mitad de los
+núcleos, máximo 8); se crean tantas bases como workers. Para borrar las bases sobrantes de un prefijo:
+`BD_PRUEBAS=<prefijo> npm run bd:limpiar-pruebas -w servidor` (con la máquina cargada puede tardar
+mucho: córralo en segundo plano). Una prueba nueva no debe depender de
 datos de otro archivo ni de recursos globales (puertos, carpetas fijas).
 
 ## Arquitectura
