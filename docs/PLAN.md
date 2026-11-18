@@ -2520,3 +2520,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   vencimiento». En la ficha del documento, un cargo registrado o autorizado sin saldo muestra «Cambiar vencimiento»
   deshabilitado con su motivo visible; en lo demás el botón sigue oculto si el servidor no lo permite. Lógica pura con pruebas.
   Pendiente: PC-4 y PC-5 (Excel), PC-6 (QA y documentos).
+- **2026-11-18 (aviso de pago por correo, paso 1: dominio del correo en core).** Contexto `core/correo` con
+  `DireccionDeEnvio` (estricta: ASCII, `atext`, sin comas, comillas, `<>`, CR/LF ni bidi; dominio a punycode), saneado
+  de asuntos, nombres y adjuntos, `PlantillaDeCorreo` (marcadores cerrados; uno desconocido es error) y el diseño HTML
+  fijo y escapado, sin enlaces ni imágenes. Sin tablas ni migraciones. Diseño: `docs/modulos/diseno-aviso-de-pago-por-correo.md`.
+- **2026-11-18 (aviso de pago por correo, paso 3: transporte y prueba).** `nodemailer` 10.6.0 fijo (trae sus propios
+  tipos; `npm audit` sin avisos de nodemailer), puerto `TransporteDeCorreo` con `TransporteNodemailer` (un transporte
+  agrupado, TLS 1.2 mínimo y certificado válido, sin registros, `envelope` explícito, adjuntos solo en memoria, errores
+  reducidos a código) y el doble `TransporteEnMemoria`. Mailpit en `infra/docker-compose.dev.yml` (SMTP 1025, web 8025).
+  `redact` de pino para contraseñas, `auth` y cookies (`registro-seguro.ts`). `EnviarPrueba` queda para el paso 2
+  (necesita el servidor guardado). El transporte admite `seguridad: 'ninguna'` solo para Mailpit; la tabla de Soporte
+  no deberá permitirla en producción.
+- **2026-11-18 (aviso de pago por correo, correcciones de la revisión de los pasos 1 y 3).** Mailpit en v1.34.0 y
+  publicado solo en `127.0.0.1`. El transporte fija tiempos de espera (conexión 15 s, saludo 15 s, DNS 10 s, socket
+  60 s), siempre menores que el arriendo `bloqueado_hasta` de 5 minutos. `seguridad: 'ninguna'` lanza error en
+  producción y nunca manda `auth`; el check de la tabla del paso 2 solo admite `tls_directo` y `starttls`. Los errores
+  `EENVELOPE`/`EMESSAGE` son permanentes y los de TLS/certificado no gastan intento. El saneado quita caracteres de
+  ancho cero y corta por puntos de código; la plantilla rechaza `{ marcador }` con espacios; la redacción de pino cubre
+  dos niveles y más nombres de secretos.
