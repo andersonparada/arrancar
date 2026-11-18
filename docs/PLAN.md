@@ -2212,3 +2212,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   bloqueen; 8 observaciones menores (el signo de «Difiere en», la huella que cambia en cada subida, la impresión en modo oscuro…).
   Firefox y Safari no se pudieron comprobar. Decisiones abiertas: tope de solicitud en Caddy, conservar 60 meses el
   `nombreOriginal`, CSP propia o «Abrir en otra pestaña» si Firefox o Safari no muestran el PDF, y qué huella mostrar.
+- **2026-11-18 — CP4-E4 (servidor, liquidar y recibo): cierre de lo adelantado.** Sin migración ni código de producción nuevo:
+  al revisar el paso contra `main` se encontró que `LiquidarRetiro`, `ReabrirRetiro`, el caso de la devolución del manejador de
+  `bancos.movimiento_por_cambiar`, el permiso `retiros.liquidar` (nuevo, sin migración de permisos: ningún rol lo tenía antes),
+  la auditoría (`ajustar` solo con faltante, `reabrir`), los eventos `retiro_liquidado` y `retiro_reabierto`, las rutas y el
+  recibo de efectivo en `ComprobanteDePago` ya estaban hechos en CP4-E2, CP4-E3 y CP4-8. Lo que faltaba de la lista de pruebas
+  del diseño se agregó: depósito de un mes conciliado (Bancos lo anula **con inverso** y el retiro se reabre; si el inverso cae
+  en el mes conciliado Bancos lo rechaza y el retiro sigue liquidado) y el recibo de un reparto real (agrupado por contraseña,
+  un recibo por proveedor, total en letras, leyenda). Aclaración del diseño: «depósito conciliado (no reabre)» solo ocurre si
+  Bancos rechaza el inverso; una nota conciliada sí se anula con inverso.
