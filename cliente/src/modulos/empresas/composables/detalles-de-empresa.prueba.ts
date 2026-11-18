@@ -39,6 +39,8 @@ describe('fecha de inicio y carga inicial en la ficha', () => {
     cerrada: false,
     cerradaEn: null,
     cerradaPor: null,
+    ultimoCierre: null,
+    balanceDeApertura: null,
   };
   const porEtiqueta = (c: CargaInicial) =>
     Object.fromEntries(detallesDeCargaInicial(c).map((d) => [d.etiqueta, d.valor]));

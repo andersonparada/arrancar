@@ -9,23 +9,7 @@ import { usarEmpresas } from '../composables/usar-empresas';
 import { VENTANAS_EMPRESAS } from '../textos';
 
 const sesion = usarSesion();
-const {
-  empresas,
-  edicion,
-  enviando,
-  errores,
-  abrir,
-  guardar,
-  carga,
-  motivo,
-  reaperturaAbierta,
-  enviandoCierre,
-  erroresDeReapertura,
-  enviandoReapertura,
-  cerrar,
-  abrirReapertura,
-  reabrir,
-} = usarEmpresas();
+const { empresas, edicion, enviando, errores, abrir, guardar, cargaInicial } = usarEmpresas();
 </script>
 
 <template>
@@ -45,20 +29,11 @@ const {
 
     <VentanaDeEmpresa
       v-model="edicion"
-      v-model:motivo="motivo"
       :errores="errores"
       :enviando="enviando"
-      :carga="carga"
-      :enviando-cierre="enviandoCierre"
-      :errores-de-reapertura="erroresDeReapertura"
-      :enviando-reapertura="enviandoReapertura"
-      :reapertura-abierta="reaperturaAbierta"
+      :carga-inicial="cargaInicial"
       @cerrar="edicion.abierta = false"
       @guardar="guardar"
-      @cerrar-carga="cerrar"
-      @abrir-reapertura="abrirReapertura"
-      @cancelar-reapertura="reaperturaAbierta = false"
-      @reabrir="reabrir"
     />
   </div>
 </template>

@@ -19,6 +19,8 @@ const carga = (cambios: Partial<CargaInicial> = {}): CargaInicial => ({
   cerrada: false,
   cerradaEn: null,
   cerradaPor: null,
+  ultimoCierre: null,
+  balanceDeApertura: null,
   ...cambios,
 });
 

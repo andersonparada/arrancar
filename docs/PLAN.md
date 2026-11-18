@@ -2308,3 +2308,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Cuentas por pagar con `sin_saldos_iniciales`, `retenciones_por_practicar`, `documentos_del_libro_anteriores` y
   `proveedores_con_saldo_a_favor` más las cifras (saldo de proveedores y saldo a favor, sin compensar); Libro de compras con `mes_partido`
   (o `null` si la fecha es día 1). Sin migraciones de Bancos. Falta el cliente (EM-2.9 a EM-2.13) y U8-B.
+- **2026-11-18 (EM-2.9 a EM-2.12, cliente de Empresas y piezas comunes).** Core: `DocumentoAdjunto` y `VisorDeDocumento`
+  (`core/componentes/archivos/`) con `utilidades/documentos.ts` (tamaño, tope y tipo; Bancos no se tocó). Empresas: «Cerrar la
+  carga inicial» abre una ventana con la revisión de cada módulo (diferencias en rojo y avisos en ámbar, con icono y texto, cifras del
+  cuadre, «Revisar en <módulo>» solo si el usuario puede entrar a esa pantalla), motivo obligatorio solo si algún hallazgo lo pide
+  (contador 0/500) y botón «Cerrar con N diferencias»; manda la huella y, si el servidor dice `revision_de_cierre_desactualizada`,
+  muestra la revisión nueva con el aviso «Los saldos cambiaron mientras revisaba…» sin cerrar la ventana. Tras cerrar, la sección muestra
+  «Cerrada el … por …, con N diferencias: motivo» (o «antes de que se guardara la revisión»), «Ver revisión», «Exportar revisión»
+  (Excel) e «Historial» (cierres, reaperturas y balances quitados), con `ver-cierres` y `exportar`. Balance de apertura firmado: solo PDF,
+  subir/reemplazar/quitar con la carga abierta, y con la carga cerrada solo subir si falta; verlo con `ver-cierres`. Lógica pura con
+  pruebas (`revision-de-cierre`, `resumen-de-cierre`, `balance-de-apertura`, `documentos`) y del composable de cierre. Falta EM-2.13 (QA
+  en el navegador y docs de Bancos y Cuentas por pagar) y U8-B.
