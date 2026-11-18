@@ -2251,7 +2251,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (`secciones` de Libro de compras) y la fecha de inicio, que se completan en la ficha de la empresa, y las empresas
   existentes (importar solo crea, no actualiza). Cada fila pasa por `RegistrarEmpresa` (acceso del creador, tipos de
   localidad iniciales y avisos a los módulos). Para que fuera todo o nada con una empresa distinta por fila,
-  `UnidadDeTrabajo` gana `ejecutarEnOtraEmpresa` (punto de guardado dentro de la transacción en curso, solo para la misma
+  `UnidadDeTrabajo` gana `ejecutarEnEmpresaNueva` (punto de guardado dentro de la transacción en curso, solo para la misma
   cuenta y usuario, que devuelve la empresa anterior al terminar); `RegistrarEmpresa` la usa en vez de `ejecutar`. Pruebas
   de API (ensayo, semilla, todo o nada, 403) y de la unidad de trabajo.
 - 2026-11-18 — **Excel de Empresas en el cliente**: la lista de Empresas muestra `AccionesDeIntercambio` y
@@ -2261,3 +2261,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   desde 8 empresas, teclado y panel flotante que cabe en celular). Las opciones salen de `opcionesDeEmpresa` (lógica pura
   con pruebas): ordenadas por nombre y agrupadas por cuenta solo si hay más de una. El cambio sigue siendo
   `sesion.cambiarEmpresa` y llevar al inicio; elegir la empresa ya activa no hace nada.
+- 2026-11-18 — **Acotar el cambio de empresa de la unidad de trabajo**: `ejecutarEnOtraEmpresa` pasa a ser
+  `ejecutarEnEmpresaNueva`: solo acepta una empresa que no existe aún en `core.empresas` ni se abrió antes en la misma
+  transacción (si no, lanza `EmpresaNoEsNueva`, con o sin acceso del usuario); mantiene misma cuenta y mismo usuario y
+  devuelve la empresa anterior al salir (el punto de guardado deshace también las variables si el trabajo falla). Así ningún
+  caso de uso puede saltar a una empresa existente. Pruebas: dos empresas en un libro (todo o nada) y rechazos. Además,
+  `SelectorEmpresa` recupera la apariencia de marca con `CampoSelector variante="marca"` y el texto «Elija una empresa».

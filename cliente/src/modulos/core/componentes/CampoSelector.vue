@@ -14,6 +14,10 @@ const props = defineProps<{
   ocultarEtiqueta?: boolean;
   /** Se ve pero no se puede cambiar (p. ej. la cuenta de un movimiento al corregirlo). */
   deshabilitado?: boolean;
+  /** `marca` es para la estructura (menú, encabezados) con los colores de la instalación; `campo` es el de formularios. */
+  variante?: 'campo' | 'marca';
+  /** Lo que se ve cuando no hay nada elegido (p. ej. «Elija una empresa»). */
+  textoVacio?: string;
 }>();
 
 const modelo = defineModel<T>();
@@ -21,6 +25,11 @@ const id = useId();
 const error = usarErrorDescartable(
   () => props.error,
   () => modelo.value,
+);
+const clasesDelBoton = computed(() =>
+  props.variante === 'marca'
+    ? 'bg-marca-oscuro/60 text-marca-texto ring-marca-texto/15 focus:ring-acento disabled:opacity-60 text-sm font-medium'
+    : 'bg-white ring-tierra-200 focus:ring-campo-500 disabled:bg-tierra-100 disabled:text-tierra-600 sm:text-sm dark:bg-tierra-800 dark:ring-tierra-700 dark:disabled:bg-tierra-900',
 );
 const idLista = `${id}-lista`;
 const idDeOpcion = (indice: number): string => `${id}-opcion-${indice}`;
@@ -78,12 +87,17 @@ function elegir(opcion: OpcionBuscable<T>): void {
         :aria-activedescendant="selector.indiceActivo.value >= 0 ? idDeOpcion(selector.indiceActivo.value) : undefined"
         :disabled="deshabilitado"
         :aria-invalid="!!error"
-        class="flex w-full items-center justify-between gap-2 truncate rounded-lg border-0 bg-white px-3 py-2.5 text-left text-base ring-1 ring-tierra-200 focus:ring-2 focus:ring-campo-500 aria-invalid:ring-red-500 disabled:cursor-not-allowed disabled:bg-tierra-100 disabled:text-tierra-600 sm:text-sm dark:bg-tierra-800 dark:ring-tierra-700 dark:disabled:bg-tierra-900"
+        :class="clasesDelBoton"
+        class="flex w-full items-center justify-between gap-2 truncate rounded-lg border-0 px-3 py-2.5 text-left text-base ring-1 focus:ring-2 aria-invalid:ring-red-500 disabled:cursor-not-allowed"
         @click="selector.abierto.value ? selector.cerrar() : selector.abrir()"
         @keydown="alPresionarTecla"
       >
-        <span class="truncate">{{ selector.textoElegido.value }}</span>
-        <ChevronDown class="size-4 shrink-0 text-tierra-400" aria-hidden="true" />
+        <span class="truncate">{{ selector.textoElegido.value || textoVacio }}</span>
+        <ChevronDown
+          :class="variante === 'marca' ? 'text-marca-texto/70' : 'text-tierra-400'"
+          class="size-4 shrink-0"
+          aria-hidden="true"
+        />
       </button>
 
       <Teleport to="body">

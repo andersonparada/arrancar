@@ -29,6 +29,8 @@ async function cambiar(empresaId: string | undefined): Promise<void> {
     :model-value="sesion.empresa?.id ?? ''"
     etiqueta="Empresa activa"
     ocultar-etiqueta
+    variante="marca"
+    texto-vacio="Elija una empresa"
     :opciones="opciones"
     @update:model-value="cambiar"
   />

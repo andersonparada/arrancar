@@ -15,9 +15,12 @@ export interface UnidadDeTrabajo {
   aislar<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado>;
 
   /**
-   * Corre el trabajo con otra empresa de la misma cuenta y usuario como activa (para sembrar lo de una empresa recién
-   * creada). Con una transacción en curso trabaja en un punto de guardado de ella y, al terminar, devuelve la empresa
-   * anterior; así una importación sigue siendo todo o nada. Sin transacción, es como `ejecutar`.
+   * Corre el trabajo con una empresa **recién creada** de la misma cuenta y usuario como activa. Existe solo porque la
+   * seguridad por filas únicamente deja escribir en la empresa activa: quien registra una empresa debe sembrar sus datos
+   * iniciales en la misma transacción (así importar varias empresas es todo o nada). Por eso exige que la empresa no
+   * exista aún en la base ni se haya abierto antes en la transacción; cualquier otra, con o sin acceso del usuario,
+   * se rechaza con `EmpresaNoEsNueva`, y una cuenta o usuario distintos con `ContextoDistintoEnLaTransaccion`.
+   * Trabaja en un punto de guardado y, al terminar, devuelve la empresa anterior. Sin transacción, abre una.
    */
-  ejecutarEnOtraEmpresa<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado>;
+  ejecutarEnEmpresaNueva<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado>;
 }

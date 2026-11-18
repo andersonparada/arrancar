@@ -22,7 +22,7 @@ export class UnidadDeTrabajoEnMemoria implements UnidadDeTrabajo {
     return trabajo();
   }
 
-  ejecutarEnOtraEmpresa<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
+  ejecutarEnEmpresaNueva<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
     return this.ejecutar(contexto, trabajo);
   }
 }

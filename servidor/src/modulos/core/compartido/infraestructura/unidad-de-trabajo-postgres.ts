@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { sql } from 'drizzle-orm';
 import type { BaseDatos, Transaccion } from '../../base-datos/conexion.js';
 import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import type { UnidadDeTrabajo } from '../aplicacion/unidad-de-trabajo.js';
@@ -29,6 +30,8 @@ interface TrabajoEnCurso {
   alConfirmar: TareaPendiente[];
   /** Lo que espera a que la transacción más externa se deshaga. */
   alDeshacer: TareaPendiente[];
+  /** Empresas que ya se abrieron como nuevas en esta transacción (se comparte entre los puntos de guardado). */
+  empresasNuevas: Set<string>;
 }
 
 const trabajoEnCurso = new AsyncLocalStorage<TrabajoEnCurso>();
@@ -44,6 +47,13 @@ export class ConsultaFueraDeUnidadDeTrabajo extends Error {
 export class ContextoDistintoEnLaTransaccion extends Error {
   constructor() {
     super('Una unidad de trabajo anidada no puede cambiar de empresa, cuenta o usuario.');
+  }
+}
+
+/** Error de programación: se pidió trabajar como «empresa nueva» con una empresa que ya existía en la transacción. */
+export class EmpresaNoEsNueva extends Error {
+  constructor() {
+    super('Solo se puede cambiar a una empresa recién creada en esta transacción, no a una que ya existía.');
   }
 }
 
@@ -74,7 +84,12 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
     const enCurso = trabajoEnCurso.getStore();
     if (enCurso) return this.unirseAl(enCurso, contexto, trabajo);
 
-    const trabajoNuevo = { contexto, alConfirmar: [] as TareaPendiente[], alDeshacer: [] as TareaPendiente[] };
+    const trabajoNuevo = {
+      contexto,
+      alConfirmar: [] as TareaPendiente[],
+      alDeshacer: [] as TareaPendiente[],
+      empresasNuevas: new Set<string>(),
+    };
     const resultado = await this.ejecutarEnTransaccion(trabajoNuevo, trabajo);
     await this.correr(trabajoNuevo.alConfirmar, 'al_confirmar');
     return resultado;
@@ -86,20 +101,28 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
     return enCurso.transaccion.transaction((punto) => trabajoEnCurso.run({ ...enCurso, transaccion: punto }, trabajo));
   }
 
-  async ejecutarEnOtraEmpresa<Resultado>(
+  async ejecutarEnEmpresaNueva<Resultado>(
     contexto: ContextoEmpresa,
     trabajo: () => Promise<Resultado>,
   ): Promise<Resultado> {
     const enCurso = trabajoEnCurso.getStore();
-    if (!enCurso) return this.ejecutar(contexto, trabajo);
+    if (!enCurso) return this.ejecutar(contexto, () => this.ejecutarEnEmpresaNueva(contexto, trabajo));
     const { cuentaId, usuarioId } = enCurso.contexto;
     if (contexto.cuentaId !== cuentaId || contexto.usuarioId !== usuarioId) throw new ContextoDistintoEnLaTransaccion();
     return enCurso.transaccion.transaction(async (punto) => {
+      await this.exigirQueNoExista(punto, enCurso, contexto.empresaId);
       await fijarVariablesDeSeguridad(punto, contexto);
       const resultado = await trabajoEnCurso.run({ ...enCurso, transaccion: punto, contexto }, trabajo);
       await fijarVariablesDeSeguridad(punto, enCurso.contexto);
       return resultado;
     });
+  }
+
+  /** La empresa no debe existir en la base ni haberse abierto ya como nueva en esta transacción. */
+  private async exigirQueNoExista(punto: Transaccion, enCurso: TrabajoEnCurso, empresaId: string): Promise<void> {
+    const filas = await punto.execute(sql`select 1 from core.empresas where id = ${empresaId}`);
+    if (filas.rows.length > 0 || enCurso.empresasNuevas.has(empresaId)) throw new EmpresaNoEsNueva();
+    enCurso.empresasNuevas.add(empresaId);
   }
 
   private async ejecutarEnTransaccion<Resultado>(
