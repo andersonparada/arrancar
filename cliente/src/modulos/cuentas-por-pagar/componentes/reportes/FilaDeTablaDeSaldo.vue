@@ -14,7 +14,7 @@ defineProps<{ fila: FilaDeSaldo; corte: string; ficha?: boolean }>();
 
 <template>
   <tr :class="ficha ? 'text-xs text-tierra-600 dark:text-tierra-300' : 'font-medium'">
-    <th scope="row" class="px-3 py-2 text-left font-normal" :class="ficha ? 'pl-8' : ''">
+    <th scope="row" class="px-3 py-2 text-left font-normal print:text-[10px]" :class="ficha ? 'pl-8' : ''">
       <RouterLink
         v-if="proveedorParaRevisar(fila)"
         :to="rutaDeDocumentosDelProveedor(proveedorParaRevisar(fila)!, corte)"
@@ -23,7 +23,7 @@ defineProps<{ fila: FilaDeSaldo; corte: string; ficha?: boolean }>();
         {{ fila.nombre }}
       </RouterLink>
       <span v-else class="font-medium">{{ fila.nombre }}</span>
-      <span class="block text-xs font-normal text-tierra-500 dark:text-tierra-300">
+      <span class="block text-xs font-normal text-tierra-500 dark:text-tierra-300 print:text-[8px]">
         {{ ficha ? 'Ficha de proveedor' : `NIT ${formatearNit(fila.nit)}` }}
       </span>
     </th>

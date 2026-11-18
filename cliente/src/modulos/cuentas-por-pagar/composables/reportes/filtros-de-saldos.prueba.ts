@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  avisoDeCorteFuturo,
   cantidadDeFiltrosDeSaldos,
   consultaDeSaldos,
   errorDeCorte,
@@ -62,5 +63,17 @@ describe('filtros de saldos por proveedor', () => {
       'Documentos: Todos los documentos',
       'Incluye proveedores sin saldo',
     ]);
+  });
+});
+
+describe('aviso de un corte futuro', () => {
+  it('avisa que son saldos proyectados si el corte es posterior a hoy', () => {
+    expect(avisoDeCorteFuturo('2027-06-30', HOY)).toMatch(/saldos proyectados/);
+  });
+
+  it('no avisa con el corte de hoy, uno anterior o incompleto', () => {
+    expect(avisoDeCorteFuturo(HOY, HOY)).toBeUndefined();
+    expect(avisoDeCorteFuturo('2026-10-31', HOY)).toBeUndefined();
+    expect(avisoDeCorteFuturo('2027-06', HOY)).toBeUndefined();
   });
 });

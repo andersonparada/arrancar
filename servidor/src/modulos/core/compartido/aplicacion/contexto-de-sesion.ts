@@ -10,6 +10,8 @@ export interface EmpresaSesion {
   nombre: string;
   cuentaId: string;
   cuentaNombre: string;
+  /** NIT de la empresa, para los encabezados de lo que se imprime (vacío si aún no se registró). */
+  nit?: string | null;
 }
 
 /** Lo que el servidor sabe de quién hace la petición y con qué empresa trabaja. */

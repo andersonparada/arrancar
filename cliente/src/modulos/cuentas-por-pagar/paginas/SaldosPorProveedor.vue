@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Hourglass } from 'lucide-vue-next';
+import { Hourglass, Info } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
@@ -43,6 +43,14 @@ const imprimir = (): void => window.print();
     <p v-if="!r.reporte.value && r.cargando.value" class="text-sm text-tierra-500" role="status">Cargando…</p>
     <template v-else-if="r.reporte.value">
       <div :class="{ 'opacity-60': r.cargando.value }" :aria-busy="r.cargando.value" class="space-y-4">
+        <p
+          v-if="r.avisoDelCorte.value"
+          class="flex gap-2 rounded-xl bg-trigo-300/30 px-3 py-2 text-sm text-tierra-800 dark:bg-trigo-500/15 dark:text-trigo-300"
+          role="status"
+        >
+          <Info class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>{{ r.avisoDelCorte.value }}</span>
+        </p>
         <TotalesDelReporte :totales="totalesDeSaldos(r.reporte.value)" titulo="Totales" />
         <EstadoVacio
           v-if="reporteDeSaldosVacio(r.reporte.value)"

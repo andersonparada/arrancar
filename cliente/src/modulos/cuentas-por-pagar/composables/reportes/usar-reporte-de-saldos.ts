@@ -7,6 +7,7 @@ import { usarProveedoresDelFiltro } from '../usar-lista-de-documentos';
 import {
   cantidadDeFiltrosDeSaldos,
   consultaDeSaldos,
+  avisoDeCorteFuturo,
   errorDeCorte,
   filtrosDeSaldosIniciales,
 } from './filtros-de-saldos';
@@ -22,6 +23,7 @@ function usarFiltrosDeSaldos(hoy: string) {
     filtros,
     proveedores: usarProveedoresDelFiltro(),
     cantidadDeFiltros: computed(() => cantidadDeFiltrosDeSaldos(filtros, hoy)),
+    avisoDelCorte: computed(() => avisoDeCorteFuturo(filtros.corte, hoy)),
     quitarFiltros: () => Object.assign(filtros, filtrosDeSaldosIniciales(hoy)),
   };
 }
