@@ -22,9 +22,12 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `3959e95` y lo que le siga solo de docs (sin `git push`; lo hace el usuario). Última corrida completa en verde
-(con CP4-8 y BS-1 unidos): servidor 4829, cliente 1179, generador 46, y `npm run revisar` limpio. **Agentes en curso (lanzados el 2026-11-18, cada uno en su worktree `.claude/worktrees/agent-<id>` desde `main`):**
-- **CP4-9** (cliente, pagar): `programador-frontend` (Sonnet), base `arrancar_pruebas_cp49`.
+**`main`:** `b7bcd70`, subido a GitHub (desde el 2026-11-18 el coordinador hace el push tras cada unión en verde). Última
+corrida completa en verde (con CP4-E4 y CP4-9): servidor 4832, cliente 1264, generador 46, y `npm run revisar` limpio.
+Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-carga.md`) e impresión de cheques
+(`diseno-impresion-de-cheques.md`).
+
+**Agentes en curso (lanzados el 2026-11-18, cada uno en su worktree `.claude/worktrees/agent-<id>` desde `main`):**
 - **BS-2** (servidor, saldos iniciales por partidas): `programador-backend` (Sonnet), base `arrancar_pruebas_bs2`;
   conserva el `GET` viejo de `/bancos/saldos-iniciales` hasta BS-5.
 - **CP4-E4** (servidor, liquidar y reabrir el retiro, recibo de efectivo): `programador-backend` (Sonnet), base
