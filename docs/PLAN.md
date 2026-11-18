@@ -2271,3 +2271,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   motivo» y se guarda y exporta la revisión con las cifras del cuadre de cada módulo; adjunto opcional del balance de
   apertura firmado (PDF revisado con qpdf, auditoría); después de EM-2, paso de U8 para transcribir del balance el saldo de
   proveedores y el de anticipos (dos cifras) y tener «no cuadra» con motivo.
+- **2026-11-18 (diseño de EM-2 actualizado con el dictamen).** `diseno-em2-cierre-de-la-carga.md` revisado: la auditoría
+  de `empresas.cargas-iniciales` no se depura mientras la entrada tenga empresa (catálogo
+  `core.recursos_de_auditoria_permanente` con RLS de solo lectura y excepción en `core.depurar_auditoria`, migración core
+  `0024`); la revisión guardada lleva hallazgos y cifras del cuadre de cada módulo, con historial y Excel de tres hojas;
+  `CargaInicialDto.ultimoCierre` para «Cerrada el … por …, con N diferencias: motivo»; balance de apertura en PDF
+  (`cargas_iniciales.balance_de_apertura_archivo_id`); avisos nuevos (retenciones con el texto del dictamen, documentos del
+  libro anteriores a la fecha de inicio, proveedores con saldo a favor, mes partido de Libro de compras); dos permisos
+  nuevos (`empresas.carga-inicial.ver-cierres` y `.exportar`). Trece pasos (EM-2.1 a EM-2.13) y U8-B aparte. Preguntas
+  P-6 a P-8 con recomendación.
