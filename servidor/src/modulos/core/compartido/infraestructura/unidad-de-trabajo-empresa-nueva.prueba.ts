@@ -14,7 +14,10 @@ import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import {
   ConsultaFueraDeUnidadDeTrabajo,
   EmpresaNoEsNueva,
+  EmpresaNuevaYaEnCurso,
   UnidadDeTrabajoPostgres,
+  despuesDeConfirmar,
+  siSeDeshace,
   transaccionEnCurso,
 } from './unidad-de-trabajo-postgres.js';
 
@@ -27,6 +30,14 @@ class FalloProvocado extends Error {}
 
 function registrarAcceso(contexto: ContextoEmpresa, recurso: string) {
   return transaccionEnCurso().insert(correlativos).values({ empresaId: contexto.empresaId, clave: recurso });
+}
+
+async function cuentaAjenaId(): Promise<string> {
+  const [ajena] = await bd
+    .select({ cuentaId: empresas.cuentaId })
+    .from(empresas)
+    .where(eq(empresas.id, empresaDeOtraCuentaId));
+  return ajena!.cuentaId;
 }
 
 function recursosVisibles(): Promise<string[]> {
@@ -72,19 +83,29 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     return { ...base, empresaId: randomUUID() };
   }
 
-  /** Crea la empresa en la transacción en curso y deja un dato suyo, como hace `RegistrarEmpresa`. */
-  async function crearYSembrar(nueva: ContextoEmpresa, clave: string): Promise<string[]> {
-    await transaccionEnCurso()
-      .insert(empresas)
-      .values({ id: nueva.empresaId, cuentaId: nueva.cuentaId, nombre: clave });
-    await registrarAcceso(nueva, clave);
-    return recursosVisibles();
+  /** Inserta la empresa con la transacción de afuera, como hace `RegistrarEmpresa`. */
+  function crear(nueva: ContextoEmpresa, nombre: string) {
+    return transaccionEnCurso().insert(empresas).values({ id: nueva.empresaId, cuentaId: nueva.cuentaId, nombre });
+  }
+
+  /** Abre la empresa (que se crea antes, afuera) y deja un dato suyo. */
+  async function abrirYSembrar(
+    nueva: ContextoEmpresa,
+    clave: string,
+    despues?: () => Promise<void>,
+  ): Promise<string[]> {
+    await crear(nueva, clave);
+    return unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva.empresaId, async () => {
+      await registrarAcceso(nueva, clave);
+      await despues?.();
+      return recursosVisibles();
+    });
   }
 
   it('ve la empresa nueva dentro y vuelve a la anterior al terminar, en la misma transacción', async () => {
     const nueva = nuevaDe(enEmpresaA);
     const [dentro, despues] = await unidadDeTrabajo.ejecutar(enEmpresaA, async () => [
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva.empresaId, () => crearYSembrar(nueva, 'de-nueva')),
+      await abrirYSembrar(nueva, 'de-nueva'),
       await recursosVisibles(),
     ]);
 
@@ -95,9 +116,8 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
   it('crear dos empresas en un mismo libro es todo o nada', async () => {
     const [primera, segunda] = [nuevaDe(enEmpresaA), nuevaDe(enEmpresaA)];
     const libro = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(primera.empresaId, () => crearYSembrar(primera, 'primera'));
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(segunda.empresaId, async () => {
-        await crearYSembrar(segunda, 'segunda');
+      await abrirYSembrar(primera, 'primera');
+      await abrirYSembrar(segunda, 'segunda', async () => {
         throw new FalloProvocado();
       });
     });
@@ -113,8 +133,8 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
   it('dos empresas nuevas en el mismo libro se guardan juntas', async () => {
     const [primera, segunda] = [nuevaDe(enEmpresaA), nuevaDe(enEmpresaA)];
     await unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(primera.empresaId, () => crearYSembrar(primera, 'primera'));
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(segunda.empresaId, () => crearYSembrar(segunda, 'segunda'));
+      await abrirYSembrar(primera, 'primera');
+      await abrirYSembrar(segunda, 'segunda');
     });
 
     const guardadas = await bd
@@ -128,10 +148,11 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     const nueva = nuevaDe(enEmpresaA);
     const resultado = await unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
       await unidadDeTrabajo
-        .ejecutarEnEmpresaNueva(nueva.empresaId, async () => {
-          await crearYSembrar(nueva, 'fallida');
-          throw new FalloProvocado();
-        })
+        .aislar(() =>
+          abrirYSembrar(nueva, 'fallida', async () => {
+            throw new FalloProvocado();
+          }),
+        )
         .catch(() => undefined);
       return recursosVisibles();
     });
@@ -154,7 +175,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
   it('rechaza abrir dos veces la misma empresa nueva en una transacción', async () => {
     const nueva = nuevaDe(enEmpresaA);
     const repetida = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
-      await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva.empresaId, async () => undefined);
+      await abrirYSembrar(nueva, 'repetida');
       await unidadDeTrabajo.ejecutarEnEmpresaNueva(nueva.empresaId, async () => undefined);
     });
 
@@ -178,7 +199,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     await expect(conAcceso).rejects.toThrow(EmpresaNoEsNueva);
   });
 
-  it('rechaza un trabajo que no crea la empresa', async () => {
+  it('rechaza una empresa que no se creó antes, sin cambiar de empresa', async () => {
     const sinCrear = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
       unidadDeTrabajo.ejecutarEnEmpresaNueva(randomUUID(), async () => undefined),
     );
@@ -186,18 +207,66 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     await expect(sinCrear).rejects.toThrow(EmpresaNoEsNueva);
   });
 
-  it('rechaza un trabajo que crea la empresa en otra cuenta', async () => {
+  it('rechaza una empresa creada en otra cuenta, sin entrar a ella', async () => {
     const id = randomUUID();
-    const enOtraCuenta = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
-      unidadDeTrabajo.ejecutarEnEmpresaNueva(id, async () => {
-        const [otra] = await transaccionEnCurso().select({ id: cuentas.id }).from(cuentas).limit(2);
-        await transaccionEnCurso()
-          .insert(empresas)
-          .values({ id, cuentaId: otra!.id === enEmpresaA.cuentaId ? empresaDeOtraCuentaId : otra!.id, nombre: 'x' });
-      }),
-    );
+    let entro = false;
+    const enOtraCuenta = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      await crear({ ...enEmpresaA, empresaId: id, cuentaId: await cuentaAjenaId() }, 'x');
+      await unidadDeTrabajo.ejecutarEnEmpresaNueva(id, async () => void (entro = true));
+    });
 
-    await expect(enOtraCuenta).rejects.toThrow();
+    await expect(enOtraCuenta).rejects.toThrow(EmpresaNoEsNueva);
+    expect(entro).toBe(false);
+  });
+
+  it('rechaza una segunda empresa nueva mientras otra sigue abierta (llamadas en paralelo)', async () => {
+    const [primera, segunda] = [nuevaDe(enEmpresaA), nuevaDe(enEmpresaA)];
+    const paralelas = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      await crear(primera, 'primera');
+      await crear(segunda, 'segunda');
+      const resultados = await Promise.allSettled([
+        unidadDeTrabajo.ejecutarEnEmpresaNueva(primera.empresaId, () => registrarAcceso(primera, 'p')),
+        unidadDeTrabajo.ejecutarEnEmpresaNueva(segunda.empresaId, () => registrarAcceso(segunda, 's')),
+      ]);
+      const rechazo = resultados.find((resultado) => resultado.status === 'rejected');
+      if (rechazo) throw rechazo.reason;
+    });
+
+    await expect(paralelas).rejects.toThrow(EmpresaNuevaYaEnCurso);
+  });
+
+  it('el momento de creación lo pone la base con su valor por omisión', () => {
+    expect(empresas.creadoEn.hasDefault).toBe(true);
+    expect(empresas.creadoEn.notNull).toBe(true);
+  });
+
+  it('las tareas registradas en un punto de guardado que se deshace no corren, las de afuera sí', async () => {
+    const corridas: string[] = [];
+    await unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      despuesDeConfirmar(async () => void corridas.push('confirmar-afuera'));
+      await unidadDeTrabajo
+        .aislar(async () => {
+          despuesDeConfirmar(async () => void corridas.push('confirmar-adentro'));
+          siSeDeshace(async () => void corridas.push('deshacer-adentro'));
+          throw new FalloProvocado();
+        })
+        .catch(() => undefined);
+    });
+
+    expect(corridas).toEqual(['confirmar-afuera']);
+  });
+
+  it('las tareas de una empresa nueva que se deshace tampoco corren', async () => {
+    const nueva = nuevaDe(enEmpresaA);
+    const corridas: string[] = [];
+    await unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      await abrirYSembrar(nueva, 'con-tareas', async () => {
+        despuesDeConfirmar(async () => void corridas.push('confirmar-adentro'));
+        throw new FalloProvocado();
+      }).catch(() => undefined);
+    });
+
+    expect(corridas).toEqual([]);
   });
 
   it('core.empresas no tiene seguridad por filas: la comprobación debe ver todas las cuentas', async () => {

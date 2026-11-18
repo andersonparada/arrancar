@@ -32,8 +32,8 @@ export class RegistrarEmpresa {
   constructor(private readonly dependencias: Dependencias) {}
 
   /**
-   * Todo en una sola transacción, con la empresa nueva como activa (la seguridad por filas solo deja escribir
-   * en la empresa activa): la empresa, su acceso, sus tipos de localidad y las secciones de los demás módulos.
+   * Todo en una sola transacción: la empresa se agrega con la empresa del operador como activa (la tabla no tiene
+   * seguridad por filas) y, ya comprobada como nueva, se pasa a ella para su acceso, sus tipos de localidad y las secciones de los demás módulos.
    * Si una sección es inválida, no se guarda nada.
    */
   async ejecutar(
@@ -45,9 +45,9 @@ export class RegistrarEmpresa {
     const empresa = Empresa.registrar(Identificador.desde(operador.cuentaId), datosDeEmpresa(solicitud));
     const enLaNueva = { ...operador, empresaId: empresa.id.valor };
 
-    const registrada = await unidadDeTrabajo.ejecutar(operador, () =>
-      unidadDeTrabajo.ejecutarEnEmpresaNueva(empresa.id.valor, async () => {
-        await this.dependencias.repositorio.agregar(empresa);
+    const registrada = await unidadDeTrabajo.ejecutar(operador, async () => {
+      await this.dependencias.repositorio.agregar(empresa);
+      return unidadDeTrabajo.ejecutarEnEmpresaNueva(empresa.id.valor, async () => {
         await this.darAccesoAlCreador(operador, empresa);
         await this.dependencias.tiposDeLocalidad.ejecutar(enLaNueva);
         await avisos.empresaGuardada(enLaNueva, { empresaId: empresa.id.valor, secciones });
@@ -56,8 +56,8 @@ export class RegistrarEmpresa {
           ...guardada,
           avisos: await avisosDeNitRepetido(consultas, { ...guardada, cuentaId: operador.cuentaId }),
         };
-      }),
-    );
+      });
+    });
     await publicadorEventos.publicar(empresa.extraerEventos());
     return registrada;
   }

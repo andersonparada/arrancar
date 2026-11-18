@@ -2275,3 +2275,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (3) Al salir se exige que la empresa exista con la `cuenta_id` del contexto y `creado_en = now()` (inicio de la
   transacción; `marcasDeTiempo` usa `defaultNow()`), si no, `EmpresaNoEsNueva`. (4) Pruebas: empresa de otra cuenta, usuario
   con acceso real a una empresa existente, trabajo que no crea la empresa, que la crea en otra cuenta, y sin transacción.
+- **Defensa en profundidad de `ejecutarEnEmpresaNueva`:** (1) se comprueba **antes** de cambiar `app.empresa_id`: quien
+  llama inserta la empresa en `core.empresas` con la empresa de afuera (la tabla no tiene RLS) y el método exige que exista
+  con ese id, la `cuenta_id` del contexto y `creado_en = now()`; si no, `EmpresaNoEsNueva` y nunca se trabaja en una empresa
+  no probada. `RegistrarEmpresa` agrega la empresa afuera y siembra acceso, tipos de localidad y secciones adentro. Si
+  `core.empresas` llega a tener RLS, la consulta debe ir por una función `security definer`. (2) `creado_en` lo pone la base
+  (`defaultNow()`), amarrado con pruebas de la tabla y del mapeador. (3) Una segunda empresa nueva mientras otra sigue
+  abierta en la misma transacción se rechaza con `EmpresaNuevaYaEnCurso` (prueba con llamadas en paralelo). (4) Los dobles
+  `UnidadDeTrabajoEnMemoria` y `UnidadQueDeshace` fallan como el real: sin transacción abierta lanzan y rechazan un id repetido.
+  (5) `aislar` y `ejecutarEnEmpresaNueva` recortan las tareas de `despuesDeConfirmar` y `siSeDeshace` registradas dentro de
+  un punto de guardado que se deshace (no corren).

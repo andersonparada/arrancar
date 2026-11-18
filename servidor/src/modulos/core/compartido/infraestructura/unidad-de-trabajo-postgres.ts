@@ -30,8 +30,14 @@ interface TrabajoEnCurso {
   alConfirmar: TareaPendiente[];
   /** Lo que espera a que la transacción más externa se deshaga. */
   alDeshacer: TareaPendiente[];
-  /** Empresas que ya se abrieron como nuevas en esta transacción (se comparte entre los puntos de guardado). */
-  empresasNuevas: Set<string>;
+  /** Estado de las empresas nuevas de esta transacción (se comparte entre los puntos de guardado). */
+  nuevas: EstadoDeEmpresasNuevas;
+}
+
+/** Empresas ya abiertas como nuevas en la transacción y si hay una abierta ahora mismo. */
+interface EstadoDeEmpresasNuevas {
+  abiertas: Set<string>;
+  enCurso: boolean;
 }
 
 const trabajoEnCurso = new AsyncLocalStorage<TrabajoEnCurso>();
@@ -47,6 +53,13 @@ export class ConsultaFueraDeUnidadDeTrabajo extends Error {
 export class ContextoDistintoEnLaTransaccion extends Error {
   constructor() {
     super('Una unidad de trabajo anidada no puede cambiar de empresa, cuenta o usuario.');
+  }
+}
+
+/** Error de programación: se abrió una empresa nueva mientras otra seguía abierta en la misma transacción. */
+export class EmpresaNuevaYaEnCurso extends Error {
+  constructor() {
+    super('Ya hay una empresa nueva en curso en esta transacción: no se puede abrir otra al mismo tiempo.');
   }
 }
 
@@ -88,7 +101,7 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
       contexto,
       alConfirmar: [] as TareaPendiente[],
       alDeshacer: [] as TareaPendiente[],
-      empresasNuevas: new Set<string>(),
+      nuevas: { abiertas: new Set<string>(), enCurso: false },
     };
     const resultado = await this.ejecutarEnTransaccion(trabajoNuevo, trabajo);
     await this.correr(trabajoNuevo.alConfirmar, 'al_confirmar');
@@ -98,36 +111,59 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
   async aislar<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado> {
     const enCurso = trabajoEnCurso.getStore();
     if (!enCurso) return trabajo();
-    return enCurso.transaccion.transaction((punto) => trabajoEnCurso.run({ ...enCurso, transaccion: punto }, trabajo));
+    return this.enPuntoDeGuardado(enCurso, (punto) => trabajoEnCurso.run({ ...enCurso, transaccion: punto }, trabajo));
   }
 
   async ejecutarEnEmpresaNueva<Resultado>(empresaId: string, trabajo: () => Promise<Resultado>): Promise<Resultado> {
     const enCurso = trabajoEnCurso.getStore();
     if (!enCurso) throw new ConsultaFueraDeUnidadDeTrabajo();
+    const { nuevas } = enCurso;
+    if (nuevas.enCurso) throw new EmpresaNuevaYaEnCurso();
+    if (nuevas.abiertas.has(empresaId)) throw new EmpresaNoEsNueva();
+    nuevas.enCurso = true;
+    nuevas.abiertas.add(empresaId);
     const contexto: ContextoEmpresa = { ...enCurso.contexto, empresaId };
-    return enCurso.transaccion.transaction(async (punto) => {
-      await this.exigirQueNoExista(punto, enCurso, empresaId);
-      await fijarVariablesDeSeguridad(punto, contexto);
-      const resultado = await trabajoEnCurso.run({ ...enCurso, transaccion: punto, contexto }, trabajo);
-      await this.exigirQueSeCreoAqui(punto, contexto);
-      await fijarVariablesDeSeguridad(punto, enCurso.contexto);
-      return resultado;
-    });
+    try {
+      return await this.enPuntoDeGuardado(enCurso, async (punto) => {
+        await this.exigirQueSeCreoAqui(punto, contexto);
+        await fijarVariablesDeSeguridad(punto, contexto);
+        const resultado = await trabajoEnCurso.run({ ...enCurso, transaccion: punto, contexto }, trabajo);
+        await fijarVariablesDeSeguridad(punto, enCurso.contexto);
+        return resultado;
+      });
+    } finally {
+      nuevas.enCurso = false;
+    }
   }
 
   /**
-   * La empresa no debe existir en la base ni haberse abierto ya como nueva en esta transacción. La consulta a
-   * `core.empresas` debe ver **todas las cuentas**: hoy esa tabla no tiene seguridad por filas, y la prueba
-   * «core.empresas no tiene seguridad por filas» falla si alguien se la pone (habría que usar una función
-   * `security definer`, p. ej. `core.empresa_existe(uuid)`). Aun así, la comprobación al salir cubre ese caso.
+   * Abre un punto de guardado; si se deshace, descarta también las tareas de `despuesDeConfirmar` y `siSeDeshace`
+   * que se registraron dentro, porque lo que las pidió ya no existe.
    */
-  private async exigirQueNoExista(punto: Transaccion, enCurso: TrabajoEnCurso, empresaId: string): Promise<void> {
-    const filas = await punto.execute(sql`select 1 from core.empresas where id = ${empresaId}`);
-    if (filas.rows.length > 0 || enCurso.empresasNuevas.has(empresaId)) throw new EmpresaNoEsNueva();
-    enCurso.empresasNuevas.add(empresaId);
+  private async enPuntoDeGuardado<Resultado>(
+    enCurso: TrabajoEnCurso,
+    abrir: (punto: Transaccion) => Promise<Resultado>,
+  ): Promise<Resultado> {
+    const alConfirmar = enCurso.alConfirmar.length;
+    const alDeshacer = enCurso.alDeshacer.length;
+    try {
+      return await enCurso.transaccion.transaction(abrir);
+    } catch (error) {
+      enCurso.alConfirmar.length = Math.min(enCurso.alConfirmar.length, alConfirmar);
+      enCurso.alDeshacer.length = Math.min(enCurso.alDeshacer.length, alDeshacer);
+      throw error;
+    }
   }
 
-  /** Al salir, la empresa debe ser de la cuenta del contexto y haberse creado en esta transacción (`now()` es el inicio de la transacción). */
+  /**
+   * Comprobación previa, **antes** de cambiar las variables de seguridad: quien llama ya insertó la empresa en
+   * `core.empresas` (con la transacción de afuera) y debe existir con ese id, en la cuenta del contexto y con
+   * `creado_en = now()` (lo pone la base con su valor por omisión; `now()` es el inicio de la transacción, así
+   * que una empresa anterior no pasa). Nunca se trabaja en una empresa que no se probó como nueva.
+   * La seguridad descansa en esta comprobación y en que la consulta vea todas las cuentas: hoy `core.empresas`
+   * no tiene seguridad por filas (una prueba lo vigila); si algún día la tiene, la consulta debe ir por una
+   * función `security definer`.
+   */
   private async exigirQueSeCreoAqui(punto: Transaccion, contexto: ContextoEmpresa): Promise<void> {
     const filas = await punto.execute(
       sql`select 1 from core.empresas where id = ${contexto.empresaId} and cuenta_id = ${contexto.cuentaId} and creado_en = now()`,
