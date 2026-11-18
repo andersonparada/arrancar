@@ -15,6 +15,7 @@ import {
   DocumentosEnMemoria,
   PlazoFijo,
 } from '../../../pruebas/dobles-de-documentos.js';
+import { lineaDePago } from '../../../pruebas/lineas-de-pago.js';
 import { RecibirDocumento } from '../recibir-documento.js';
 import { AutorizarDocumentos } from './autorizar-documentos.js';
 import { CambiarVencimiento } from './cambiar-vencimiento.js';
@@ -53,7 +54,7 @@ beforeEach(() => {
     plazo: new PlazoFijo(1),
   });
   completar = new CompletarDocumentos(base);
-  cambiarVencimiento = new CambiarVencimiento(base);
+  cambiarVencimiento = new CambiarVencimiento(conAutorizacion);
   autorizar = new AutorizarDocumentos(conAutorizacion);
   desautorizar = new DesautorizarDocumento(conAutorizacion);
 });
@@ -146,7 +147,27 @@ describe('cambiar el vencimiento', () => {
     const dto = await cambiarVencimiento.ejecutar(ana, { id, vencimiento: '2026-05-01' });
 
     expect(dto.vencimiento).toBe('2026-05-01');
-    expect(auditoria.entradas).toEqual([]);
+    expect(auditoria.entradas).toHaveLength(1);
+    expect(auditoria.entradas[0]).toMatchObject({
+      recurso: 'cuentas-por-pagar.documentos',
+      registroId: id,
+      accion: 'cambiar_vencimiento',
+      anterior: { vencimiento: '2026-04-10', vencimientoNuevo: '2026-05-01' },
+    });
+  });
+
+  it('rechaza el de un cargo pagado del todo, sin cambiarlo ni auditar; con saldo pendiente lo permite', async () => {
+    const id = await completada();
+    documentos.pagos.push(lineaDePago({ cargoId: id, montoCentavos: 5000 }));
+    await cambiarVencimiento.ejecutar(ana, { id, vencimiento: '2026-05-01' });
+    documentos.pagos.push(lineaDePago({ cargoId: id, montoCentavos: 6200 }));
+
+    await expect(cambiarVencimiento.ejecutar(ana, { id, vencimiento: '2026-06-01' })).rejects.toMatchObject({
+      codigo: 'vencimiento_de_cargo_saldado',
+    });
+
+    expect(guardado(id).vencimiento).toBe('2026-05-01');
+    expect(auditoria.entradas).toHaveLength(1);
   });
 });
 

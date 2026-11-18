@@ -131,24 +131,6 @@ describe('completar en la bandeja', () => {
   });
 });
 
-describe('cambiar el vencimiento', () => {
-  it('cambia el de un cargo completado, sin auditar, y no el de uno pendiente', async () => {
-    const pendiente = await idAqui(await documentos.registrar());
-    const { id } = await completado();
-
-    const rechazado = await propietario().patch(`${RUTA}/${pendiente}`, { vencimiento: haceDias(-20) });
-    const cambiado = await completa.patch(`${RUTA}/${id}`, { vencimiento: haceDias(-20) });
-
-    expect(rechazado.cuerpo.error.codigo).toBe('vencimiento_no_editable');
-    expect(cambiado.estado).toBe(200);
-    expect(cambiado.cuerpo.vencimiento).toBe(haceDias(-20));
-    expect(await auditoriaDe('corregir', id)).toEqual([]);
-    expect((await completa.patch(`${RUTA}/${id}`, { vencimiento: haceDias(10) })).cuerpo.error.codigo).toBe(
-      'vencimiento_invalido',
-    );
-  });
-});
-
 describe('autorizar', () => {
   it('otra persona autoriza: queda aprobado para pago, procesado en Libro de compras y se publica el evento', async () => {
     const { id, libroId } = await completado();

@@ -8,6 +8,7 @@ const hechos = (cambios: Partial<HechosDelDocumento> = {}): HechosDelDocumento =
   notasVigentes: 0,
   notasEnTotal: 0,
   saldoLibreCentavos: 0,
+  saldoDelCargoCentavos: 1000,
   ajustesVigentes: 0,
   aplicacionesManualesRecibidas: 0,
   enContrasena: false,
@@ -39,6 +40,13 @@ describe('acciones posibles de un documento por pagar', () => {
       puedeAnular: true,
       puedeEliminar: true,
     });
+  });
+
+  it('un cargo sin saldo (pagado o compensado del todo) ya no cambia de vencimiento', () => {
+    const sinSaldo = hechos({ estado: 'autorizado', saldoDelCargoCentavos: 0 });
+
+    expect(accionesDelDocumento(sinSaldo).puedeCambiarVencimiento).toBe(false);
+    expect(accionesDelDocumento({ ...sinSaldo, saldoDelCargoCentavos: 1 }).puedeCambiarVencimiento).toBe(true);
   });
 
   it('uno autorizado se desautoriza y se anula, pero ya no se elimina', () => {

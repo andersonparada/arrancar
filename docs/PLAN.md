@@ -2329,3 +2329,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-18 (respuestas del usuario al plazo de crédito).** Todas las recomendaciones de
   `docs/modulos/diseno-plazo-de-credito-del-proveedor.md` (detalle al final del diseño). Aprobado para programar PC-1 a PC-6;
   PC-4 y PC-5 (Excel de plazos) van después de que el Excel de Terceros esté en `main`.
+- **2026-11-18 (PC-1, plazo de crédito: cambiar el vencimiento).** `CambiarVencimiento` rechaza un cargo sin saldo (pagado,
+  compensado o ajustado del todo) con `VencimientoDeCargoSaldado` (`vencimiento_de_cargo_saldado`, regla de negocio) y audita
+  la acción nueva `cambiar_vencimiento` (recurso `cuentas-por-pagar.documentos`) en la misma transacción: `anterior` es la
+  ficha como estaba más `vencimientoNuevo`. `puedeCambiarVencimiento` exige saldo del cargo mayor que cero
+  (`saldoDelCargoCentavos`). El ajuste de la auditoría no pide migración (la columna `accion` no tiene restricción).
