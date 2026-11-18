@@ -5,10 +5,11 @@ import type { FichaDelDocumento } from '../servicios/tipos';
 import VentanaDeAjuste from './VentanaDeAjuste.vue';
 import VentanaDeAplicacion from './VentanaDeAplicacion.vue';
 import VentanaDeMotivo from './VentanaDeMotivo.vue';
+import VentanaDeReintegro from './VentanaDeReintegro.vue';
 
-/** Las cuatro ventanas del saldo a favor de una nota: aplicar, ajustar, quitar una aplicación y anular un ajuste. */
+/** Las ventanas del saldo a favor de una nota: aplicar, ajustar, reintegrar, quitar una aplicación y anular un ajuste o un reintegro. */
 const props = defineProps<{ ficha: FichaDelDocumento; acciones: AccionesDeNota }>();
-const { aplicacion, ajuste, quitar, anularAjuste } = props.acciones;
+const { aplicacion, ajuste, quitar, anularAjuste, reintegro, anularReintegro } = props.acciones;
 </script>
 
 <template>
@@ -45,5 +46,25 @@ const { aplicacion, ajuste, quitar, anularAjuste } = props.acciones;
     :enviando="anularAjuste.enviando.value"
     @cerrar="anularAjuste.cerrar"
     @guardar="anularAjuste.confirmar"
+  />
+  <VentanaDeReintegro
+    v-model="reintegro.edicion.value"
+    :resumen="reintegro.resumen.value"
+    :cuentas="reintegro.cuentas.value"
+    :sin-cuentas="reintegro.sinCuentas.value"
+    :aviso-de-efectivo="reintegro.avisoDeEfectivo"
+    :errores="reintegro.errores.value"
+    :enviando="reintegro.enviando.value"
+    @cerrar="reintegro.cerrar"
+    @guardar="reintegro.registrar"
+  />
+  <VentanaDeMotivo
+    v-model="anularReintegro.edicion.value"
+    titulo="Anular el reintegro"
+    texto-del-boton="Anular el reintegro"
+    :errores="anularReintegro.errores.value"
+    :enviando="anularReintegro.enviando.value"
+    @cerrar="anularReintegro.cerrar"
+    @guardar="anularReintegro.confirmar"
   />
 </template>

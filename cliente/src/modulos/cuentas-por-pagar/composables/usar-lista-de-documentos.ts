@@ -1,5 +1,6 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { alDejarDeEscribir } from '@/modulos/core/composables/al-dejar-de-escribir';
 import {
   apiCuentasPorPagar,
@@ -12,8 +13,11 @@ import { consultaDeDocumentos, DOCUMENTOS_POR_PAGINA, filtrosIniciales, paginasE
 /** Los proveedores para el filtro; si falla, el filtro queda solo con «Todos» y se avisa por qué. */
 export function usarProveedoresDelFiltro() {
   const avisos = usarAvisos();
+  const sesion = usarSesion();
   const proveedores = ref<ProveedorParaFiltro[]>([]);
   onMounted(async () => {
+    // Quien no ve documentos (p. ej. solo pagos) no puede pedir esta lista: el filtro queda con «Todos».
+    if (!sesion.puede('cuentas-por-pagar.documentos.ver')) return;
     try {
       proveedores.value = await apiCuentasPorPagar.listarProveedores();
     } catch (error) {

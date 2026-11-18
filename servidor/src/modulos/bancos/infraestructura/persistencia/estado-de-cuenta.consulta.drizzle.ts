@@ -12,7 +12,7 @@ export async function estadoDeCuentaDeLaConciliacion(conciliacionId: string): Pr
       tipoMime: archivos.tipoMime,
       tamanoBytes: archivos.tamanoBytes,
       paginas: archivos.paginas,
-      sha256: archivos.sha256,
+      sha256: sql<string | null>`coalesce(${archivos.sha256Recibido}, ${archivos.sha256})`,
       nombreOriginal: archivos.nombreOriginal,
       subidoEn: archivos.creadoEn,
       subidoPorNombre: sql<string | null>`trim(${usuarios.nombres} || ' ' || ${usuarios.apellidos})`,

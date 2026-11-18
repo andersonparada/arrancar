@@ -262,7 +262,8 @@ Hecho:
 - [x] PWA instalable: manifiesto, íconos generados desde `cliente/public/logo.svg`,
       service worker que solo guarda la estructura de la app.
 - [x] Docker de producción (Caddy + app + PostgreSQL + respaldo diario), probado:
-      la app usa unos 72 MB de RAM.
+      la app usa unos 72 MB de RAM. El tope de **20 MB por solicitud** (toda la instalación) está en
+      `infra/Caddyfile` (`request_body { max_size 20MB }`); al pasarse responde 413 con el mensaje en el formato de la API.
 - [x] `CLAUDE.md` del proyecto.
 - [x] `app.cuenta_id` en `ejecutarEnEmpresa` (se fija junto a `app.empresa_id`, a partir
       de `cuentaId` en `ContextoEmpresa`) y `politicaPorCuenta()` en `columnas.ts`, para
@@ -2127,6 +2128,25 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Dominio nuevo: `meses-de-reporte.ts`. Desviaciones: «de un mes anterior» se decide por la fecha de emisión del documento (el
   periodo del libro es de otro módulo); la diferencia de centavos de un cargo sale con efecto `ingreso`; el filtro de
   `mismaPersona` usa la misma marca completa (registró, completó o autorizó); R7 solo toma pagos de forma cheque (como el diseño).
+- **2026-11-18 — CP5-5 (servidor, efectivo y cuenta transitoria: R9, R10, R11 y conciliación al pie de R1).** Rutas
+  `GET /cuentas-por-pagar/reportes/bancarizacion` (R9, `reportes-de-control`), `…/retiros-por-liquidar` (R10) y
+  `…/notas-sin-aplicar` (R11, ambos `reportes-de-pagos`), cada una con su `…/exportar`; sin permisos nuevos, sin migración ni
+  índices. R9 en vivo: por proveedor y mes (rango `AAAA-MM`, por omisión los últimos 12, máximo 48) lista los meses cuya
+  suma llega al umbral con pagos en efectivo, usando **la misma consulta de CP4** (`ConsultasDePagos.pagosDelMes`), y aparte
+  los cargos de Q30,000 o más (`coalesce(saldo_al_inicio, total)`) con alguna línea de efectivo vigente en el rango, con todos
+  sus pagos; cada cargo con el efecto de CP4-E3 (`DatosFiscalesDeLaEmpresa.efectoDe`): «Crédito fiscal en riesgo por
+  bancarización» con el **IVA completo** (`iva − iva_no_acreditable`), «Costo no deducible» con el cargo **sin IVA** (en un
+  saldo inicial, su neto y «IVA no conocido»); la excepción con permiso sale con su motivo; `soloConEfecto` (sí por omisión);
+  totales por sección y total sin repetir cargos; leyendas E-6, art. 106 y «verifique el umbral vigente». R10 reutiliza
+  `ConsultasDeRetiros.listar` con corte (le agrega el filtro `custodio`) y suma días abierto y «de un mes anterior» (respecto al
+  corte). R11: notas de débito de Bancos marcadas (`pago_a_proveedor`), con fecha hasta el corte, no anuladas al corte (sin
+  inverso con fecha hasta el corte y sin `anulado_en`), menos pagos `nota_ligada` vigentes al corte; solo las que tienen
+  disponible; corte por omisión, fin del mes anterior. R1 trae `conciliacion` (saldo neto del auxiliar − R11 al mismo corte =
+  Proveedores neto de pagos por aplicar) y su Excel, **solo** sin filtro de proveedor ni de autorización (la transitoria es de la
+  empresa). Dominio nuevo: `rango-de-bancarizacion.ts` y `marcas-de-bancarizacion.ts`. Desviaciones: una nota de Bancos anulada
+  sin inverso se trata como «nunca existió» (como los pagos); R9 hace una consulta de suma del mes por cada proveedor y mes con
+  efectivo (pocos en la práctica) en vez de una agregación propia, para no tener otra fórmula; no se hizo prueba de volumen
+  (el paso no la pide).
 - **2026-11-15 — CP5-8 (cliente, estado de cuenta, saldos a favor y contraseñas: R3, R4 y R5).** Páginas
   `EstadoDeCuentaDelProveedor`, `SaldosAFavor` y `ContrasenasPorPagar` (`/cuentas-por-pagar/reportes/estado-de-cuenta`,
   `…/saldos-a-favor`, `…/contrasenas-por-pagar`; las cinco rutas y entradas de **Reportes** salen ahora de
@@ -2305,6 +2325,45 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   quedan como texto; el filtro por cuenta bancaria de R6 y R7 espera un listado de cuentas que Cuentas por pagar pueda leer sin
   importar Bancos. R9, R10, R11 y la conciliación de R1 siguen en espera de CP5-5.
 - **2026-11-18 — CP5-9 (cliente), correcciones de la revisión.** R8: «Ajustes vigentes del mes» y su cantidad salen de la suma de `totales.porCausa` (el total de la sección incluye anulados); nuevo cuadro «por causa y efecto» (pérdida, transitoria, otros ingresos); el resumen suma anulaciones de otros meses y muestra monto de documentos anulados y devueltos; «Pagos a la apertura» aclara que suma vigentes y anulados. R6: el tope de 24 meses del cliente usa la misma regla que el servidor (`mesesEntre`). Sigue pendiente el filtro `cuentaBancariaId` de R6 y R7 (espera listado de cuentas legible sin importar Bancos).
+- **2026-11-18 — CP4-10 (cliente, pagos).** Sin cambios en el servidor. Pantallas: **Pagos**
+  (`/cuentas-por-pagar/pagos`, entrada «Pagos» en Operación, `pagos.ver`): tarjetas con número, proveedor, forma («Cheque 1523 ·
+  Banco X», «Efectivo · Retiro N»), fecha, monto y contraseñas, marca «Anulado» o «Posfechado»; filtros de proveedor, forma,
+  estado (vigentes por omisión), **cheques posfechados**, fechas y cuenta bancaria. **Ficha del pago**
+  (`/pagos/:id`): datos, documento de Bancos (cheque o nota, conciliado o no), retiro y quien recibió si es efectivo, documentos
+  que cubre con retención descontada y constancias (o «constancia por emitir»), lo que debe cada documento hoy, «Dar por saldada
+  la diferencia de Qx» por línea (`puedeSaldarDiferencia` del servidor, `ajustes.crear`, con confirmación y el aviso de la
+  retención), **Reaplicar** (ventana con los cargos de las contraseñas vigentes del proveedor, tope por cargo sin contar este
+  pago, suma que dice cuánto falta o sobra, motivo, resumen de confirmación, errores del servidor al cargo que los causó y avisos
+  de la respuesta), **Anular** (resumen de lo que pasará según la forma, motivo y fecha del inverso opcional si mueve dinero) y
+  «Cobrado: reaplíquelo o registre un reintegro» cuando el movimiento está conciliado. **Comprobante**
+  (`/pagos/:id/comprobante`, `window.print()`, original y copia, no registra nada): título, leyendas y monto en letras tal como
+  los devuelve el servidor, documentos por contraseña con constancias, notas aplicadas, pagado y saldo, firmas. Enlaces: los pagos
+  de la sección «Pagos» de la contraseña y el resultado de «Nuevo pago» (con «Imprimir el comprobante») llevan a la ficha; el
+  «Origen: Cuentas por pagar» de Bancos (tabla de movimientos y tarjeta de nota) es enlace a la ficha del pago con `pagos.ver`.
+  Lógica pura con pruebas en `composables/pagos/` (`lista-de-pagos`, `ficha-de-pago`, `reaplicacion`, `comprobante-de-pago`).
+  Diferencias con el diseño: la reaplicación se hizo como ventana; el enlace al movimiento de Bancos de la ficha es texto (Bancos
+  no tiene ficha de cheque ni de nota); el origen de Bancos solo guarda el id, así que si es de un reintegro o un retiro el enlace
+  lleva a una ficha que dice «No se encontró este pago» (pendiente: campo de tipo de origen en Bancos). El efectivo (CP4-E5) no
+  se programó: la lista y la ficha ya muestran un pago en efectivo si llega.
+- **2026-11-18 — CP4-10 (correcciones de la revisión).** Bancos ya no enlaza a la ficha del pago las notas de crédito (los reintegros
+  nacen en Cuentas por pagar sin ser pagos) y rotula «Ver en Cuentas por pagar»; las notas de débito de retiros siguen
+  pendientes hasta que Bancos guarde el tipo del documento de origen. La lista de Pagos ya no pide los proveedores sin
+  `documentos.ver` (el filtro queda con «Todos», sin aviso). El comprobante muestra estado vacío con enlace para volver y la
+  sección de pagos de la contraseña solo enlaza con `pagos.ver`. Pendiente: tope de la reaplicación con diferencias saldadas
+  (el cliente no suma esa diferencia) y enlace del movimiento de Bancos en la ficha.
+- 2026-11-18 · **Cuentas por pagar CP4-11 (cliente, documentos, notas y reintegros).** Documentos por pagar: filtro «Estado de pago»
+  (con «Comprometidos (cheque posfechado)»), etiqueta de estado en la tarjeta y «Pagado» y «Comprometido» en la tarjeta y la
+  ficha; la ficha del cargo gana la sección «Pagos» (enlace a `/cuentas-por-pagar/pagos/:id`, «Posfechado», retención descontada
+  y por qué no se anula) y la de la nota, «Reintegrado» y la sección «Reintegros» con «Recibo» y «Anular» (motivo). Notas de
+  crédito: «Registrar reintegro» en la ficha y casillas en la lista (solo del mismo proveedor y solo lo que el servidor dice que
+  se puede), `VentanaDeReintegro` (depósito o efectivo; referencia obligatoria en efectivo; resumen de lo que va a pasar; aviso
+  del efectivo) que al registrar lleva al recibo, y `ReciboDeReintegro` (impresión con la leyenda no tributaria). Los avisos del
+  pago con constancia sin emitir enlazan a «Constancias de retención pendientes» (R12). **Servidor (mínimo):** `GET /documentos`
+  acepta `estadoDePago`, con la misma regla de `estadoDePagoDe` en SQL (`filtro-de-estado-de-pago.ts`, con prueba de integración).
+  Diferencias con el diseño: la ficha de la nota trae solo el `estado` de cada reintegro (no `puedeAnular`), así que «Anular» se
+  ofrece en los vigentes y el servidor decide; anular no pide la fecha del inverso (el servidor usa la de hoy); las cuentas del
+  depósito salen de `GET /pagos/medios` (pide `pagos.ver`; sin ellas solo se ofrece el efectivo); el enlace a constancias no
+  lleva el mes ni el filtro porque esa pantalla no lee parámetros de la ruta.
 - **2026-11-18 (diseño de EM-2 actualizado con el dictamen).** `diseno-em2-cierre-de-la-carga.md` revisado: la auditoría
   de `empresas.cargas-iniciales` no se depura mientras la entrada tenga empresa (catálogo
   `core.recursos_de_auditoria_permanente` con RLS de solo lectura y excepción en `core.depurar_auditoria`, migración core
@@ -2335,3 +2394,56 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   MM-1/MM-2 (necesitan tablas):** bitácora `core.consultas_al_banguat`, candado `pg_try_advisory_lock`, horario y
   temporizador, relleno contra lo guardado, `principal.ts`, variables `URL_TIPO_DE_CAMBIO_BANGUAT` y
   `CARGAR_TIPOS_DE_CAMBIO`, `POST …/cargar`, y avisar la variación (usa `variacionSuperaElLimite`).
+- **2026-11-18 (respuestas del usuario al plazo de crédito).** Todas las recomendaciones de
+  `docs/modulos/diseno-plazo-de-credito-del-proveedor.md` (detalle al final del diseño). Aprobado para programar PC-1 a PC-6;
+  PC-4 y PC-5 (Excel de plazos) van después de que el Excel de Terceros esté en `main`.
+- **2026-11-18 (H2, tope en Caddy).** `infra/Caddyfile`: `request_body { max_size 20MB }` para todo el sitio y `handle_errors 413`
+  que responde `SOLICITUD_DEMASIADO_GRANDE` en el formato de errores de la API. Configuración validada con `caddy validate`.
+  Los topes de la app (PDF 10 MB, foto 15 MB, Excel 5 MB) siguen igual; para cambiar el de Caddy se edita ese archivo y se reinicia el contenedor.
+- **2026-11-18 (H2, huella del archivo recibido).** La huella que se informa y se muestra del estado de cuenta es la sha256 **del archivo
+  tal como llegó** (`sha256_recibido`), estable aunque qpdf reescriba el PDF y comparable con `sha256sum` del original. El gestor de
+  documentos (`core/archivos`) la devuelve al guardar y al abrir (con respaldo a `sha256` si falta) y la consulta del estado de cuenta
+  de bancos la lee de ahí. Sin migración ni datos que corregir: `sha256_recibido` ya se guardaba en cada documento (las filas de
+  desarrollo anteriores a H2b que no la tengan siguen mostrando la huella guardada). La auditoría conserva el `nombreOriginal` igual.
+  Pruebas: el mismo PDF dos veces da la misma huella y coincide con `createHash('sha256')` del original.
+- **2026-11-18 (impresión siempre en claro).** `cliente/src/estilos.css`: regla `@media print` global (fuera de las capas de
+  Tailwind, para ganarle a `dark:`): `html`/`body` con fondo blanco y texto negro, y con el modo oscuro puesto (`html.oscuro`) todo
+  elemento pasa a fondo transparente, texto negro, bordes grises y sin sombras; el menú lateral no se imprime. Las hojas existentes
+  (reportes de bancos y de cuentas por pagar, contraseña, conciliación) ya imprimían en claro con `print:*`; la regla solo cubre lo
+  que `dark:` les cambiaba.
+- **2026-11-18 — Libro de compras, bandeja de DTE (errores 4, 5 y 6 de la QA).** Solo cliente; no hizo falta ruta nueva en el
+  servidor (para «Marcar los N del filtro» el cliente pide las páginas del filtro de a 200, el máximo del listado, y así
+  tiene la fila completa que necesitan completar, confirmar y descartar). **4:** el criterio vive en
+  `composables/bandeja/criterio-de-registro.ts` (anulado en la SAT fuera, nota de crédito resta, nota de débito suma) y lo
+  usan la barra (`resumen-de-la-barra.ts`: «17 marcados: se registrarán 15 por Q…, 2 no se registran») y «Confirmar»
+  (`resumen-de-la-confirmacion.ts`). **6:** la selección guarda la fila completa (`seleccion-entre-paginas.ts`) y se
+  conserva entre páginas y filtros; «Marcar los N del filtro» (`MarcarEnLaBandeja.vue`); «Confirmar» envía en tandas de
+  100 con avance (`confirmar-por-tandas.ts`). Una fila con error dentro de una tanda no detiene el envío (el servidor
+  responde fila por fila y esa fila queda pendiente); si la **solicitud** de una tanda falla, se detiene y la ventana dice
+  cuántas tandas y documentos quedaron registrados y cuáles no se confirmaron (los de esa tanda pueden haberse registrado en
+  parte: el servidor no alcanzó a contestar). Lo registrado sale de la selección y lo demás sigue marcado. **5:** ya estaba
+  en un solo aviso desde la corrección del 2026-11-08 (el resultado se ve una vez en la ventana); ahora cada advertencia
+  agrupada lleva «N documentos. Ver cuáles».
+- **2026-11-18 — Libro de compras, bandeja de DTE (correcciones de la revisión).** Solo cliente. **Topes:** completar y
+  descartar parten lo marcado en solicitudes de 500 (el tope del servidor; antes «Marcar los N del filtro» podía pasarlo y
+  daba 400); cada grupo hecho se refleja aunque otro falle, y descartar solo desmarca lo ya descartado. «Confirmar» lleva
+  como máximo **500** documentos por ventana (la vista previa gasta 5 de las 20 solicitudes por minuto del servidor y el
+  envío otras 5, con margen para recalcular); los demás siguen marcados y la ventana lo avisa. **Corte de una tanda:** el
+  servidor confirma **fila por fila** (cada una en su transacción), así que «todo o nada por tanda» no se puede garantizar
+  desde el cliente; para no adivinar, tras un corte el cliente le pregunta al servidor qué sigue pendiente
+  (`comprobar-la-tanda-cortada.ts`), dice cuántos de esa tanda sí se registraron y los saca de la selección. **Pendiente de
+  decidir con el usuario:** si se quiere de verdad «todo o nada» por tanda, hay que cambiar el servidor
+  (`ConfirmarDteRecibidos`) a una sola transacción por solicitud, perdiendo el «una fila con error no frena a las demás».
+  **Menores:** la barra de marcados sigue visible si hay marcadas aunque el filtro no traiga filas; «Marcar los N del
+  filtro» toma el total de la respuesta del servidor (no del último listado); la ventana «Confirmar» no se cierra con
+  Escape ni clic fuera mientras envía. Sin cambio: la barra cuenta como «se registrarán» lo no anulado (la letra de la
+  decisión) y «Confirmar» descuenta además lo que la vista previa rechaza.
+- **2026-11-18 (decisión del usuario, Multimoneda, cambia PU-4).** Se soportan **todas las monedas que publica el Banguat**:
+  cada moneda guarda (opcional) su código del Banguat, la ventana de Monedas lo elige con un selector, y toda moneda con
+  código actualiza su tipo de cambio **cada noche** de forma automática. El contador revisa qué tipo vale para documentos en
+  monedas distintas del USD y el arquitecto escribe la adenda en `docs/modulos/diseno-multimoneda.md`.
+- **2026-11-18 (decisiones del usuario).** *Caja chica y Cuentas por liquidar:* el permiso de excepción para una factura con
+  retención y su motivo los pide **quien asigna la factura al fondo o al anticipo** (desde la ficha o desde la bandeja); sin
+  el permiso, la factura queda pendiente en la bandeja y se registra quién la autorizó. *Cuentas por pagar:*
+  `GET /pagos/notas-para-ligar` pasa a exigir `cuentas-por-pagar.pagos.ligar-notas-de-debito` (cambia §8 de
+  `diseno-cp4-pagos.md`, que decía `pagos.ver`).

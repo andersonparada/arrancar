@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, gte, inArray, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, ilike, inArray, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { cheques } from '../../../bancos/infraestructura/persistencia/cheques.tablas.js';
@@ -46,6 +46,7 @@ function condiciones(filtro: FiltroDeRetiros): SQL[] {
   else if (filtro.estado !== 'todos') lista.push(eq(retiros.estado, filtro.estado));
   if (filtro.desde) lista.push(gte(retiros.fecha, filtro.desde));
   if (filtro.hasta) lista.push(lte(retiros.fecha, filtro.hasta));
+  if (filtro.custodio) lista.push(ilike(retiros.custodio, `%${filtro.custodio}%`));
   if (filtro.soloConDisponible) lista.push(sql`${disponible(filtro.corte)} > 0`);
   return lista;
 }

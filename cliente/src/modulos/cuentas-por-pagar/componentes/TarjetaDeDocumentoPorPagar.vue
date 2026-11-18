@@ -11,6 +11,7 @@ import {
   tituloDeDocumento,
   tonoDeEstado,
 } from '../composables/detalles-de-documento';
+import { nombreDelEstadoDePago, tonoDelEstadoDePago } from '../composables/pagos/detalles-de-pago';
 import type { DocumentoPorPagar } from '../servicios/tipos';
 
 /**
@@ -58,6 +59,12 @@ const destino = computed(() => ({
       </span>
       <span class="flex flex-wrap gap-1.5">
         <InsigniaBase :tono="tonoDeEstado(documento.estado)">{{ textoDeEstado(documento.estado) }}</InsigniaBase>
+        <InsigniaBase
+          v-if="documento.estadoDePago && documento.estadoDePago !== 'pendiente'"
+          :tono="tonoDelEstadoDePago(documento.estadoDePago)"
+        >
+          {{ nombreDelEstadoDePago(documento.estadoDePago) }}
+        </InsigniaBase>
         <InsigniaBase v-if="documento.vencido" tono="rojo">Vencido</InsigniaBase>
         <InsigniaBase v-if="documento.origen === 'saldo_inicial'" tono="tierra">Saldo inicial</InsigniaBase>
         <InsigniaBase v-if="documento.contrasena" tono="trigo">

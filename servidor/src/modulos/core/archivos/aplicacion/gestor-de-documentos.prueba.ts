@@ -48,10 +48,11 @@ describe('guardar un PDF', () => {
     const guardado = await gestor.guardar(operador, pdf, { nombre: 'estado.pdf', recursoDueno: DUENO });
 
     const limpio = Buffer.concat([pdf, Buffer.from('\n%limpio')]);
-    expect(guardado).toMatchObject({ tipoMime: 'application/pdf', paginas: 3, sha256: huella(limpio) });
+    expect(guardado).toMatchObject({ tipoMime: 'application/pdf', paginas: 3, sha256: huella(pdf) });
     expect(repositorio.guardados[0]).toMatchObject({
       clase: 'documento',
       recursoDueno: DUENO,
+      sha256: huella(limpio),
       sha256Recibido: huella(pdf),
       rutaMiniatura: null,
       empresaId: operador.empresaId,
@@ -60,6 +61,16 @@ describe('guardar un PDF', () => {
     const [ruta] = [...almacenamiento.contenidos.keys()];
     expect(ruta).toMatch(new RegExp(`^${operador.empresaId}/\\d{4}/\\d{2}/[\\w-]+\\.pdf$`));
     expect(almacenamiento.contenidos.get(ruta!)).toEqual(limpio);
+  });
+
+  it('la huella informada es la del archivo recibido: el mismo PDF subido dos veces da la misma', async () => {
+    const primera = await gestor.guardar(operador, pdf, { nombre: 'a.pdf', recursoDueno: DUENO });
+    const segunda = await gestor.guardar(operador, pdf, { nombre: 'b.pdf', recursoDueno: DUENO });
+
+    expect(primera.sha256).toBe(huella(pdf));
+    expect(segunda.sha256).toBe(primera.sha256);
+    const abierto = await gestor.abrir(primera.id, DUENO);
+    expect(abierto.sha256).toBe(huella(pdf));
   });
 
   it('un PDF presentado con nombre y tipo de imagen se trata como PDF: manda el contenido', async () => {

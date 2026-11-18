@@ -5,6 +5,8 @@ import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue'
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { CLASE_DE_TIPO, SIGNO_DE_TIPO, detallesDeNota, tituloDeNota } from '../../composables/notas/detalles-de-nota';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
+import { RouterLink } from 'vue-router';
+import { destinoDeOrigenDelPago } from '../../composables/movimientos/origen-y-causa';
 import { esDeSoloLectura } from '../../composables/movimientos/estado-de-reversion';
 import { insigniaDeNota, ofreceMarcar, sePuedeCorregir } from '../../composables/notas/marca-de-nota';
 import type { Movimiento } from '../../servicios/movimientos.api';
@@ -36,6 +38,13 @@ const conMarcar = computed(() => ofreceMarcar(props.registro, sesion.moduloActiv
       <p class="text-sm font-semibold" :class="CLASE_DE_TIPO[registro.tipo as 'credito' | 'debito']">
         {{ SIGNO_DE_TIPO[registro.tipo as 'credito' | 'debito'] }} {{ formatearMonto(registro.monto) }}
       </p>
+      <RouterLink
+        v-if="destinoDeOrigenDelPago(registro) && sesion.puede('cuentas-por-pagar.pagos.ver')"
+        :to="destinoDeOrigenDelPago(registro)!"
+        class="text-xs font-medium underline underline-offset-2"
+      >
+        Ver en Cuentas por pagar
+      </RouterLink>
     </template>
     <template #acciones-extra>
       <BotonBase v-if="conMarcar" v-permiso="'bancos.notas.editar'" variante="fantasma" pequeno @click="emit('marcar')">

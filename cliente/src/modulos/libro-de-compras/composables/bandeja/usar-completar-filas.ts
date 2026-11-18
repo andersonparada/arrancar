@@ -6,9 +6,10 @@ import { apiRegistroDeDocumentos } from '../../servicios/registro-de-documentos.
 import { apiDteRecibidos, type DteRecibido } from '../../servicios/dte-recibidos.api';
 import { esNotaDeDebito } from '../documentos/tipos-de-documento-sat';
 import { opcionesDeFacturas } from '../documentos/reglas-del-formulario-de-documento';
-import { valoresDeLaFila } from './datos-de-la-bandeja';
+import { enGrupos, FILAS_POR_SOLICITUD, valoresDeLaFila } from './datos-de-la-bandeja';
 import {
   edicionDeCompletarVacia,
+  type EdicionDeCompletar,
   hayAlgoQueCompletar,
   notaPorCompletar,
   peticionDeCompletar,
@@ -46,6 +47,17 @@ function usarEstadoDeCompletar(limpiarErrores: () => void) {
   return { edicion, filas, facturas, abrir, cerrar };
 }
 
+/** Completa de a 500 (el tope del servidor); cada grupo que se guarda se refleja en la lista aunque otro falle. */
+async function completarPorGrupos(
+  ids: string[],
+  edicion: EdicionDeCompletar,
+  alCompletar: (filas: DteRecibido[]) => void,
+): Promise<void> {
+  for (const grupo of enGrupos(ids, FILAS_POR_SOLICITUD)) {
+    alCompletar((await apiDteRecibidos.completar(peticionDeCompletar(grupo, edicion))).elementos);
+  }
+}
+
 /** La ventana «Completar»: lo escogido se aplica a todas las filas marcadas, y lo vacío no toca nada. */
 export function usarCompletarFilas(alCompletar: (filas: DteRecibido[]) => void) {
   const avisos = usarAvisos();
@@ -58,9 +70,7 @@ export function usarCompletarFilas(alCompletar: (filas: DteRecibido[]) => void) 
       return;
     }
     const ids = estado.filas.value.map(({ id }) => id);
-    const guardado = await enviar(async () => {
-      alCompletar((await apiDteRecibidos.completar(peticionDeCompletar(ids, estado.edicion.value))).elementos);
-    });
+    const guardado = await enviar(() => completarPorGrupos(ids, estado.edicion.value, alCompletar));
     if (!guardado) return;
     avisos.exito(ids.length === 1 ? 'Se completó el DTE.' : `Se completaron ${ids.length} DTE.`);
     estado.cerrar();

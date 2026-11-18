@@ -9,16 +9,23 @@ import {
   esquemaFiltroDePagosRealizados,
 } from './reportes-de-pagos.esquemas-http.js';
 
-type Intercambio = OpcionesDeIntercambio['intercambio'];
+export type Intercambio = OpcionesDeIntercambio['intercambio'];
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
 
 const PREFIJO = '/cuentas-por-pagar/reportes';
 const tags = ['Cuentas por pagar'];
 
+/** Un reporte: su ruta, el recurso de permisos (`reportes-de-pagos`, `reportes-de-control`…) y su filtro. */
+export interface RutaDeReporte {
+  ruta: string;
+  recurso: string;
+  filtro: ZodType;
+}
+
 type ClaveDeReporte = 'pagosRealizados' | 'chequesPosfechados' | 'ajustesDelMes';
 
-/** Cada reporte: su ruta, el recurso de permisos (`reportes-de-pagos` o `reportes-de-control`) y su filtro. */
-const REPORTES: Array<{ clave: ClaveDeReporte; ruta: string; recurso: string; filtro: ZodType }> = [
+/** Cada reporte de este archivo, con su clave en el controlador. */
+const REPORTES: Array<RutaDeReporte & { clave: ClaveDeReporte }> = [
   { clave: 'pagosRealizados', ruta: 'pagos', recurso: 'reportes-de-pagos', filtro: esquemaFiltroDePagosRealizados },
   {
     clave: 'chequesPosfechados',
@@ -35,13 +42,9 @@ const REPORTES: Array<{ clave: ClaveDeReporte; ruta: string; recurso: string; fi
 ];
 
 /** Una ruta de reporte con su Excel: se ve con `ver` y se exporta con `exportar`. */
-function rutaDeReporte(
+export function rutaDeReporte(
   app: Aplicacion,
-  {
-    reporte,
-    handler,
-    excel,
-  }: { reporte: (typeof REPORTES)[number]; handler: (solicitud: never) => unknown; excel: Intercambio },
+  { reporte, handler, excel }: { reporte: RutaDeReporte; handler: (solicitud: never) => unknown; excel: Intercambio },
 ) {
   const completa = `${PREFIJO}/${reporte.ruta}`;
   const permisos = `cuentas-por-pagar.${reporte.recurso}`;
