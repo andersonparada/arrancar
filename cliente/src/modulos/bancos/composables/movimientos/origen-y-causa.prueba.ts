@@ -22,6 +22,9 @@ describe('origen y causa', () => {
       name: 'cuentas-por-pagar.pagos.ficha',
       params: { id: 'p1' },
     });
+    expect(
+      destinoDeOrigenDelPago({ moduloDeOrigen: 'cuentas-por-pagar', documentoDeOrigenId: 'p1', tipo: 'credito' }),
+    ).toBeNull();
     expect(destinoDeOrigenDelPago({ moduloDeOrigen: 'planilla', documentoDeOrigenId: 'x' })).toBeNull();
     expect(destinoDeOrigenDelPago({ moduloDeOrigen: 'cuentas-por-pagar', documentoDeOrigenId: null })).toBeNull();
   });

@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { filasDePagosDeLaContrasena } from '../composables/contrasenas/pagos-de-la-contrasena';
 import type { PagoDeLaContrasena } from '../servicios/tipos-de-pagos';
 
 /** Los pagos que entregaron algo a esta contraseña (vigentes y anulados) con lo que cada uno entregó dentro de ella. */
 const props = defineProps<{ pagos: PagoDeLaContrasena[] }>();
+const sesion = usarSesion();
 const filas = computed(() => filasDePagosDeLaContrasena({ pagos: props.pagos }));
 </script>
 
@@ -24,11 +26,13 @@ const filas = computed(() => filasDePagosDeLaContrasena({ pagos: props.pagos }))
       <div class="min-w-0">
         <p class="flex flex-wrap items-center gap-2 font-medium" :class="{ 'line-through': fila.anulado }">
           <RouterLink
+            v-if="sesion.puede('cuentas-por-pagar.pagos.ver')"
             :to="{ name: 'cuentas-por-pagar.pagos.ficha', params: { id: fila.id } }"
             class="underline-offset-2 hover:underline"
           >
             {{ fila.titulo }}
           </RouterLink>
+          <span v-else>{{ fila.titulo }}</span>
           <InsigniaBase v-if="fila.anulado" tono="rojo">Anulado</InsigniaBase>
           <InsigniaBase v-if="fila.marcas.includes('Posfechado')" tono="trigo">Posfechado</InsigniaBase>
         </p>

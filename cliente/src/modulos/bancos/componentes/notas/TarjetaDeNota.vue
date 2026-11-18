@@ -43,7 +43,7 @@ const conMarcar = computed(() => ofreceMarcar(props.registro, sesion.moduloActiv
         :to="destinoDeOrigenDelPago(registro)!"
         class="text-xs font-medium underline underline-offset-2"
       >
-        Ver el pago en Cuentas por pagar
+        Ver en Cuentas por pagar
       </RouterLink>
     </template>
     <template #acciones-extra>

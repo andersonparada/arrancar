@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Printer } from 'lucide-vue-next';
+import { Banknote, Printer } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import HojaDelComprobante from '../componentes/HojaDelComprobante.vue';
 import { usarComprobanteDePago } from '../composables/pagos/usar-comprobante-de-pago';
 
@@ -41,4 +42,12 @@ const volver = {
     </div>
   </div>
   <p v-else-if="cargando" class="text-sm text-tierra-500 print:hidden" role="status">Preparando el comprobante…</p>
+  <div v-else class="space-y-4 print:hidden">
+    <EncabezadoPagina titulo="Imprimir el pago" :volver="volver" />
+    <EstadoVacio
+      :icono="Banknote"
+      titulo="No se encontró este pago"
+      descripcion="Puede que el enlace no corresponda a un pago o que usted no tenga permiso para verlo. Vuelva a la lista de pagos."
+    />
+  </div>
 </template>

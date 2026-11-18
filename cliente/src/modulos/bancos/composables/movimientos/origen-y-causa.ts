@@ -25,13 +25,16 @@ const MODULO_CUENTAS_POR_PAGAR = 'cuentas-por-pagar';
 
 /**
  * A la ficha del pago de Cuentas por pagar que generó el movimiento; `null` si el origen es otro módulo o falta el
- * documento. El origen guarda solo el id: si fuera de otro documento de ese módulo (un reintegro), la ficha lo dice.
+ * documento. El origen guarda solo el id y los reintegros (notas de crédito) también nacen en ese módulo sin ser
+ * pagos: por eso las notas de crédito no se enlazan. Pendiente: que Bancos guarde el tipo del documento de origen.
  */
 export function destinoDeOrigenDelPago(movimiento: {
   moduloDeOrigen: string | null;
   documentoDeOrigenId: string | null;
+  tipo?: string;
 }) {
   if (movimiento.moduloDeOrigen !== MODULO_CUENTAS_POR_PAGAR || !movimiento.documentoDeOrigenId) return null;
+  if (movimiento.tipo === 'credito') return null;
   return { name: 'cuentas-por-pagar.pagos.ficha', params: { id: movimiento.documentoDeOrigenId } };
 }
 
