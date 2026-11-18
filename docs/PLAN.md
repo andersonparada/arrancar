@@ -2326,3 +2326,17 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Todas las recomendaciones, salvo en Caja chica: una factura con retención se rechaza **con permiso de excepción**
   (lo del contador, CC-f A′) y la bancarización solo **avisa y marca** (lo del arquitecto, CC-h A). Detalle al final de
   cada diseño. Los tres quedan **aprobados** para programar (orden de la hoja de ruta: Multimoneda antes que Caja chica).
+- **2026-11-18 — CC-1 y CL-1 (Caja chica y Cuentas por liquidar, datos).** Dos módulos nuevos con el generador
+  (`caja-chica`, icono `Wallet`, depende de Libro de compras y Bancos; `cuentas-por-liquidar`, icono `HandCoins`, suma
+  Terceros). Esquemas `caja_chica` (migraciones `0000_esquema` y `0001_cc1_fondos_y_comprobantes`: fondos con alcance por
+  fondo y su tabla de accesos, custodios, cambios de monto, comprobantes con bandeja, reposiciones y sus líneas con
+  llaves al mismo fondo, arqueos, vales provisionales, y los disparadores `asignar_al_creador` y
+  `asignar_fondo_al_custodio`) y `cuentas_por_liquidar` (`0000_esquema` y `0001_cl1_anticipos_y_gastos`). Permisos
+  declarados, incluidos los de excepción de retención (`caja-chica.comprobantes.con-retencion` y
+  `cuentas-por-liquidar.gastos.con-retencion`, CC-f A′); sin permiso de efectivo sin bancarizar (CC-h A). Ayudas comunes de
+  restricciones en `core/base-datos/restricciones.ts`. Pruebas de tablas: cada check, llaves compuestas, únicos,
+  RLS de otra empresa, fondo no asignado invisible, bandeja visible, disparador del custodio; `politicas-de-los-modulos` y
+  `llaves-entre-esquemas` en verde. **Quedan para después** (anotado en los dos `docs/modulos/*.md`): la configuración
+  (§9.5), todo el servidor y el cliente (CC-2 en adelante, CL-2 en adelante) y lo que depende de CCL-M (`preguntarATodos`),
+  CCL-B1 (conceptos de sistema de Bancos, `0035`), CCL-L1 (referencia de destino del libro) y CCL-BZ (bancarización
+  compartida, función `security definer` de la suma de Caja chica, que revisa `seguridad`, V-S1 y V-S2).
