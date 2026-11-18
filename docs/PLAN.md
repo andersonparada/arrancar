@@ -2381,3 +2381,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   no sabe que está ligada, hace falta decidir cómo se lo dice Cuentas por pagar; sigue el `it.fails` de la API), 2 (adenda en cola) y
   el formato «Q 1,000.00» en el resto de los mensajes del servidor (~56 usos de `quetzales()` y los de Libro de compras: cambia
   muchas pruebas de otros pasos).
+- 2026-11-18 · QA intermedia, segunda ronda de correcciones. Se recortó el archivo de pruebas de saldos de Cuentas por pagar al
+  límite de ESLint; el concepto de una nota guardada se conserva al cambiar el tipo solo si sigue siendo compatible; el NIT del
+  encabezado de impresión sale con guion (`formatearNit`) también en el encabezado de `core` (Constancias pendientes); el error
+  del rango del estado de cuenta ya no mezcla fallos del servidor con las fechas.

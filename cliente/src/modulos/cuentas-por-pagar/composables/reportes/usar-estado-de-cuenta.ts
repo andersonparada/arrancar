@@ -38,12 +38,12 @@ function usarFiltrosDelEstado(hoy: string) {
 /** R3, estado de cuenta de un proveedor: filtros, reporte (se pide con proveedor y rango válidos) y Excel. */
 export function usarEstadoDeCuenta() {
   const { filtros, ...deLosFiltros } = usarFiltrosDelEstado(fechaDeHoy());
-  const { reporte, cargando, cargar, rechazo } = usarPeticionDeReporte(
+  const { reporte, cargando, cargar } = usarPeticionDeReporte(
     () => apiReportesDeCuentasPorPagar.estadoDeCuenta(consultaDeEstadoDeCuenta(filtros)),
     'No se pudo cargar el estado de cuenta.',
     true,
   );
-  const errorDelRango = computed(() => errorDeLasFechas(filtros) ?? rechazo.value);
+  const errorDelRango = computed(() => errorDeLasFechas(filtros));
   const cargarSiSirve = (): void => {
     if (puedePedirElEstado(filtros)) void cargar();
   };
