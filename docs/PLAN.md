@@ -2438,3 +2438,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   el permiso, la factura queda pendiente en la bandeja y se registra quién la autorizó. *Cuentas por pagar:*
   `GET /pagos/notas-para-ligar` pasa a exigir `cuentas-por-pagar.pagos.ligar-notas-de-debito` (cambia §8 de
   `diseno-cp4-pagos.md`, que decía `pagos.ver`).
+- **2026-11-18 — Pruebas del libro con qpdf opcional.** Sin qpdf 11+ (`RUTA_QPDF` apunta a un binario inexistente) se saltan las 8 pruebas del PDF del libro que emiten o revisan con qpdf (`it.skipIf(!hayQpdf)`); el Excel, el permiso de emitir y los límites siguen corriendo. Sin cambios de producto.
+
+- **Excel de Clientes, Proveedores y Categorías de proveedor (servidor).** Rutas `GET /terceros/clientes|proveedores/exportar|plantilla`,
+  `POST …/importar?ensayo=` y lo mismo en `/proveedores/categorias`. Permisos `terceros.clientes.*`, `terceros.proveedores.*` y
+  `terceros.categorias-de-proveedor.*` (`importar`, `exportar`); la migración `0008_permisos_de_excel` da importar a quien tenía
+  `clientes.crear` / `proveedores.crear` y exportar a quien tenía `terceros.ver`, en roles y permisos directos. Cada fila entra por
+  `RegistrarTercero` (aviso de parecidos incluido: una fila parecida a un tercero existente se rechaza, sin confirmar duplicado),
+  con el papel de la hoja; sin contactos ni secciones de otros módulos. La categoría se escribe por nombre. Cliente: botones de Excel en las listas de Clientes, Proveedores y Categorías de proveedor (`AccionesDeIntercambio`, `VentanaDeImportacion`, `usarIntercambio`).
+- **Corrección de la revisión del Excel de terceros.** La migración `0008_permisos_de_excel` da `importar` de clientes y proveedores solo a quien tiene el papel `.crear` **y** `terceros.crear` (en el mismo rol, o en el mismo usuario de la cuenta), como pide el formulario; antes un rol con solo `clientes.crear` podía crear terceros por Excel. HOJA-DE-RUTA al día y la prueba de exportar proveedores revisa el contenido. Pendiente (bajo): la columna «Activo» exporta el estado del tercero, no el del papel.

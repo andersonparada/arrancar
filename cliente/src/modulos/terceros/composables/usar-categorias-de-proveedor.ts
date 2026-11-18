@@ -1,4 +1,5 @@
 import { onMounted, reactive, ref } from 'vue';
+import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiTerceros, type CategoriaProveedor } from '../servicios/terceros.api';
 
@@ -30,7 +31,9 @@ export function usarCategoriasDeProveedor() {
   const categorias = ref<CategoriaProveedor[]>([]);
   const edicion = reactive<EdicionDeCategoria>({ abierta: false, id: null, nombre: '', activo: true });
 
-  const cargar = async () => (categorias.value = await apiTerceros.listarCategoriasProveedor());
+  const cargar = async (): Promise<void> => {
+    categorias.value = await apiTerceros.listarCategoriasProveedor();
+  };
   const abrir = (existente?: CategoriaProveedor) => Object.assign(edicion, edicionDe(existente));
 
   async function guardar(): Promise<void> {
@@ -40,5 +43,6 @@ export function usarCategoriasDeProveedor() {
   }
 
   onMounted(cargar);
-  return { categorias, edicion, enviando, errores, abrir, guardar };
+  const intercambio = usarIntercambio(apiTerceros.intercambioDeCategorias, cargar);
+  return { categorias, edicion, enviando, errores, abrir, guardar, intercambio };
 }
