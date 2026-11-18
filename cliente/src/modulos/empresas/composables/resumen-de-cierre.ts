@@ -27,6 +27,7 @@ const TITULO_DE_ACCION: Record<AccionDelHistorial, string> = {
   cerrar: 'Cierre',
   reabrir: 'Reapertura',
   quitar: 'Balance de apertura quitado',
+  adjuntar: 'Balance de apertura adjuntado',
 };
 
 /** Una entrada del historial lista para mostrar: título, quién y cuándo, detalle y si se puede abrir su revisión. */

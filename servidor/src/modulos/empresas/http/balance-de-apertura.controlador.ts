@@ -4,6 +4,7 @@ import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.
 import type { AbrirBalanceDeApertura } from '../aplicacion/casos-uso/balance-de-apertura/abrir-balance-de-apertura.js';
 import type { QuitarBalanceDeApertura } from '../aplicacion/casos-uso/balance-de-apertura/quitar-balance-de-apertura.js';
 import type { SubirBalanceDeApertura } from '../aplicacion/casos-uso/balance-de-apertura/subir-balance-de-apertura.js';
+import { cargaSegunPermiso } from './carga-segun-permiso.js';
 import type { ParamsEmpresa } from './empresas.esquemas-http.js';
 
 export interface CasosDeUsoDelBalanceDeApertura {
@@ -20,14 +21,19 @@ export class BalanceDeAperturaControlador {
 
   subir = async (solicitud: Solicitud) => {
     const { contenido, nombre } = await leerDocumentoDeSolicitud(solicitud);
-    return this.casosDeUso.subir.ejecutar(operadorDe(solicitud), {
+    const carga = await this.casosDeUso.subir.ejecutar(operadorDe(solicitud), {
       empresaId: solicitud.params.empresaId,
       contenido,
       nombre,
     });
+    return cargaSegunPermiso(solicitud, carga);
   };
 
-  quitar = (solicitud: Solicitud) => this.casosDeUso.quitar.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
+  quitar = async (solicitud: Solicitud) =>
+    cargaSegunPermiso(
+      solicitud,
+      await this.casosDeUso.quitar.ejecutar(operadorDe(solicitud), solicitud.params.empresaId),
+    );
 
   abrir = async (solicitud: Solicitud, respuesta: FastifyReply) => {
     const archivo = await this.casosDeUso.abrir.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);

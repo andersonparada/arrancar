@@ -2789,3 +2789,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   acción `adjuntar` en `empresas.cargas-iniciales` (también con la carga cerrada) y se ve en el historial; exportar un cierre
   exige en el servidor `empresas.carga-inicial.exportar` **y** `.ver-cierres`. *Decisión del usuario:* la línea «Cerrada el …
   por …, con N diferencias» la ve quien ve la empresa; **el texto del motivo y el detalle piden `ver-cierres`**.
+- **2026-11-18 (EM-2, correcciones de la revisión de seguridad, hecho).** M-1: cada subida del balance deja la entrada
+  `adjuntar` (acción nueva de `AccionAuditada`; `anterior` lleva el balance como quedó) y el historial de la carga la
+  muestra («Balance de apertura adjuntado», servidor y cliente). B-1: la firma `%PDF` se comprueba antes de `revisar`, sin
+  pasar una foto por sharp; el tipo se sigue comprobando después. B-2: exportar un cierre exige `exportar` y `ver-cierres`
+  en la ruta. Decisión del usuario: `CargaInicialDto.ultimoCierre` sale con `motivo` y `avisos` en `null` para quien no
+  tiene `ver-cierres` (`http/carga-segun-permiso.ts`, aplicado en todo lo que devuelve la carga); la línea con las
+  diferencias se sigue viendo y el cliente no muestra avisos ni motivo cuando no llegan. B-4: la prueba de cabeceras del
+  balance comprueba `nosniff` y la CSP.

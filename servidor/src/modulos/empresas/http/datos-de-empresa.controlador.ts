@@ -13,6 +13,7 @@ import type {
   FechaDeInicioSolicitada,
   ReaperturaSolicitada,
 } from './datos-de-empresa.esquemas-http.js';
+import { cargaSegunPermiso } from './carga-segun-permiso.js';
 import type { ParamsEmpresa } from './empresas.esquemas-http.js';
 
 export interface CasosDeUsoDeDatosDeEmpresa {
@@ -40,28 +41,40 @@ export class DatosDeEmpresaControlador {
       solicitud: solicitud.body,
     });
 
-  obtenerCargaInicial = (solicitud: Solicitud) =>
-    this.casosDeUso.obtenerCargaInicial.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
+  obtenerCargaInicial = async (solicitud: Solicitud) =>
+    cargaSegunPermiso(
+      solicitud,
+      await this.casosDeUso.obtenerCargaInicial.ejecutar(operadorDe(solicitud), solicitud.params.empresaId),
+    );
 
-  establecerFechaDeInicio = (solicitud: Solicitud<FechaDeInicioSolicitada>) =>
-    this.casosDeUso.establecerFechaDeInicio.ejecutar(operadorDe(solicitud), {
-      empresaId: solicitud.params.empresaId,
-      fechaDeInicio: solicitud.body.fechaDeInicio,
-    });
+  establecerFechaDeInicio = async (solicitud: Solicitud<FechaDeInicioSolicitada>) =>
+    cargaSegunPermiso(
+      solicitud,
+      await this.casosDeUso.establecerFechaDeInicio.ejecutar(operadorDe(solicitud), {
+        empresaId: solicitud.params.empresaId,
+        fechaDeInicio: solicitud.body.fechaDeInicio,
+      }),
+    );
 
   revisarCierreDeCargaInicial = (solicitud: Solicitud) =>
     this.casosDeUso.revisarCierreDeCargaInicial.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
 
-  cerrarCargaInicial = (solicitud: Solicitud<CierreSolicitado | null | undefined>) =>
-    this.casosDeUso.cerrarCargaInicial.ejecutar(operadorDe(solicitud), {
-      empresaId: solicitud.params.empresaId,
-      motivo: solicitud.body?.motivo,
-      huella: solicitud.body?.huella,
-    });
+  cerrarCargaInicial = async (solicitud: Solicitud<CierreSolicitado | null | undefined>) =>
+    cargaSegunPermiso(
+      solicitud,
+      await this.casosDeUso.cerrarCargaInicial.ejecutar(operadorDe(solicitud), {
+        empresaId: solicitud.params.empresaId,
+        motivo: solicitud.body?.motivo,
+        huella: solicitud.body?.huella,
+      }),
+    );
 
-  reabrirCargaInicial = (solicitud: Solicitud<ReaperturaSolicitada>) =>
-    this.casosDeUso.reabrirCargaInicial.ejecutar(operadorDe(solicitud), {
-      empresaId: solicitud.params.empresaId,
-      motivo: solicitud.body.motivo,
-    });
+  reabrirCargaInicial = async (solicitud: Solicitud<ReaperturaSolicitada>) =>
+    cargaSegunPermiso(
+      solicitud,
+      await this.casosDeUso.reabrirCargaInicial.ejecutar(operadorDe(solicitud), {
+        empresaId: solicitud.params.empresaId,
+        motivo: solicitud.body.motivo,
+      }),
+    );
 }

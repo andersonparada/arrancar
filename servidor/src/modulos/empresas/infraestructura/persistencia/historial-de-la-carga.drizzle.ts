@@ -34,7 +34,7 @@ async function entradasDe(empresaId: string, ...condiciones: SQL[]): Promise<Ent
     eq(auditoria.recurso, RECURSO_DE_LA_CARGA_INICIAL),
     eq(auditoria.registroId, empresaId),
     eq(auditoria.empresaId, empresaId),
-    inArray(auditoria.accion, ['cerrar', 'reabrir', 'quitar']),
+    inArray(auditoria.accion, ['cerrar', 'reabrir', 'quitar', 'adjuntar']),
     ...condiciones,
   );
   const filas = await transaccionEnCurso()

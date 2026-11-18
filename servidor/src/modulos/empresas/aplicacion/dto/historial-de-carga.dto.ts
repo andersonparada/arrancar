@@ -6,13 +6,15 @@ import type { RevisionDeCierreDeModulo } from '../../../core/contratos/empresas.
  */
 export interface UltimoCierreDto {
   diferencias: number;
-  avisos: number;
+  /** `null` si quien mira no tiene `ver-cierres`: el servidor no lo manda. */
+  avisos: number | null;
+  /** `null` si no hubo motivo o si quien mira no tiene `ver-cierres`. */
   motivo: string | null;
   revisionGuardada: boolean;
 }
 
 /** Lo que se hizo con la carga o con su balance de apertura, de la más nueva a la más vieja. */
-export type AccionDelHistorialDeCarga = 'cerrar' | 'reabrir' | 'quitar';
+export type AccionDelHistorialDeCarga = 'cerrar' | 'reabrir' | 'quitar' | 'adjuntar';
 
 export interface EntradaDelHistorialDeCargaDto {
   /** Id de la entrada de auditoría: con él se abre la revisión guardada de un cierre. */

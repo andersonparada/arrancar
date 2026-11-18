@@ -38,7 +38,9 @@ export interface BalanceDeApertura {
 /** Lo que dijo el último cierre; `null` mientras la carga esté abierta. */
 export interface UltimoCierre {
   diferencias: number;
-  avisos: number;
+  /** `null` si quien mira no puede ver los cierres: el servidor no lo manda. */
+  avisos: number | null;
+  /** `null` si no hubo motivo o si quien mira no puede ver los cierres. */
   motivo: string | null;
   /** Falso en las cargas cerradas antes de que se guardara la revisión. */
   revisionGuardada: boolean;
@@ -66,7 +68,7 @@ export interface RevisionDeCierre {
   huella: string;
 }
 
-export type AccionDelHistorial = 'cerrar' | 'reabrir' | 'quitar';
+export type AccionDelHistorial = 'cerrar' | 'reabrir' | 'quitar' | 'adjuntar';
 
 export interface EntradaDelHistorial {
   id: string;

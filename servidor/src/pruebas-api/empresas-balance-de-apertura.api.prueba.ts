@@ -97,6 +97,8 @@ describe.skipIf(!hayQpdf)('con la carga abierta', () => {
     expect(abierto.cabeceras['content-type']).toContain('application/pdf');
     expect(abierto.cabeceras['content-disposition']).toBe('inline; filename="balance-de-apertura-2026-01-01.pdf"');
     expect(abierto.cabeceras['cache-control']).toBe('private, no-store');
+    expect(abierto.cabeceras['x-content-type-options']).toBe('nosniff');
+    expect(abierto.cabeceras['content-security-policy']).toContain("default-src 'self'");
     expect(String(abierto.cuerpo).startsWith('%PDF')).toBe(true);
   });
 

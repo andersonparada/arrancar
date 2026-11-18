@@ -67,6 +67,18 @@ describe('textoDelUltimoCierre', () => {
   });
 });
 
+describe('sin permiso para ver los cierres (el servidor no manda el motivo ni los avisos)', () => {
+  const sinDetalle = cerrada(cierre({ diferencias: 2, avisos: null, motivo: null }));
+
+  it('la línea queda con las diferencias y sin motivo', () => {
+    expect(textoDelUltimoCierre(sinDetalle)).toBe('Cerrada el 18/11/2026 por Ana Pérez, con 2 diferencias.');
+  });
+
+  it('no dice nada de los avisos', () => {
+    expect(textoDeAvisosDelCierre(sinDetalle)).toBe('');
+  });
+});
+
 describe('textoDeAvisosDelCierre', () => {
   it('dice cuántos avisos quedaron', () => {
     expect(textoDeAvisosDelCierre(cerrada(cierre({ avisos: 1 })))).toBe('Además quedó 1 aviso.');
@@ -114,6 +126,11 @@ describe('lineaDelHistorial', () => {
     expect(lineaDelHistorial(entrada({ accion: 'quitar', porNombre: null })).titulo).toBe(
       'Balance de apertura quitado',
     );
+    expect(lineaDelHistorial(entrada({ accion: 'adjuntar' }))).toMatchObject({
+      titulo: 'Balance de apertura adjuntado',
+      detalle: null,
+      conRevision: false,
+    });
   });
 });
 
