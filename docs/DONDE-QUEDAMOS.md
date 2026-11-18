@@ -67,6 +67,9 @@ decisiones de H2 (Caddy 20 MB, huella del recibido, impresión en claro) y bande
 - Integración: falla la preparación de dos pruebas de CP5-5 contra la regla de BS-2 (fecha de inicio); un agente lo corrige en
   la rama `integracion`. Después entran las decisiones de H2 y la bandeja de DTE.
 - **En integración ahora** (suite corriendo): qpdf en las pruebas del PDF y Excel de Terceros.
+- **Listos para integrar** (revisados): correo pasos 1 y 3 (`worktree-wf_af6cd921-5c2-1`) y MM-3a, cliente del Banguat
+  (`worktree-wf_af6cd921-5c2-3`). En revisión: CC-1/CL-1 (`worktree-wf_af6cd921-5c2-2`, arquitecto), CP4-9 tercera
+  corrección, empresa nueva (seguridad). En curso: actualización de dependencias con avisos (zod < 4.6.6, vite).
 - **Cola para la próxima integración** (cada rama con su revisión de Opus): corrección de CP4-9
   (`worktree-wf_0b4d5815-3ec-3`, en revisión), qpdf en las pruebas del PDF (`worktree-agent-a9590755fda19cc8d`), Excel de
   Terceros (`worktree-wf_f6224bdf-ffe-1`, corregido), Excel de Empresas y selector (`worktree-wf_f6224bdf-ffe-2`: se acota
