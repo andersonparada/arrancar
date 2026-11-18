@@ -2255,3 +2255,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   advertencias **agrupadas** (una vez cada una, con cuántos documentos y «Ver cuáles»). El coordinador hace el
   `git push origin main` después de cada unión en verde.
 - **2026-11-18 — BS-2 (Bancos, segunda parte, servidor: saldos iniciales por partidas).** Puertos y casos de uso (`aplicacion/casos-uso/saldos-iniciales/`: listar, obtener, guardar, eliminar, agregar, corregir y eliminar partida, revisión de cierre y oyente de la fecha de inicio), cuadre con Bancos y Sobregiros sin compensar, hallazgos de cierre, chequera de apertura (§2.3), avisos (antigüedad con la variable y el art. 508, depósito de más de 30 días, sobregiro, posfechado sin fondos), auditoría, rutas y los dos Excel (`core/intercambio` gana `columnasSoloAlExportar`). Reemplaza el puente de BS-1 por `RepositorioDeMovimientosConSaldoGlobal`. Las rutas viejas siguen para el cliente actual hasta BS-5: `POST` y `GET ?cuentaBancariaId=` en la misma ruta y `PUT|DELETE` en `/global/:movimientoId`; el Excel viejo desaparece. Anular una partida (ruta y reglas) queda en BS-3. Detalle en `bancos.md`.
+- **2026-11-18 (respuestas del usuario a EM-2 e impresión de cheques).** Todas las recomendaciones del arquitecto, salvo
+  las fotos de cheques: no habrá, las plantillas van con medidas aproximadas. Detalle al final de
+  `docs/modulos/diseno-em2-cierre-de-la-carga.md` y `docs/modulos/diseno-impresion-de-cheques.md`. Falta el dictamen del
+  contador sobre lo marcado para él antes de programar.

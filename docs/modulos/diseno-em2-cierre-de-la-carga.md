@@ -196,3 +196,12 @@ EM-2.3 y EM-2.4 son independientes entre sí; EM-2.5 puede ir en paralelo con el
 - Confirmar que cerrar con diferencias, con motivo y auditoría, es suficiente control antes de que exista
   Contabilidad (C-7) y que la entrada de auditoría (carga, hallazgos con su texto y motivo, quién y cuándo) sirve como
   respaldo ante una revisión.
+
+## Respuestas del usuario (2026-11-18)
+
+- **P-1:** A, una «pregunta a todos» en el mediador; cada módulo activo responde y Empresas no los conoce.
+- **P-2:** (a), solo quien tiene el permiso de cerrar la carga ve la revisión.
+- **P-3:** sí, se avisa (sin pedir motivo) cuando un módulo activo no tiene ningún saldo inicial.
+- **P-4:** si los hallazgos cambian entre abrir la ventana y confirmar, se rechaza y se vuelve a revisar.
+- **P-5:** (a), sin hallazgos que lo exijan el motivo es opcional y se audita si se escribe.
+- Lo marcado para el contador se consultó el 2026-11-18 (dictamen aparte).

@@ -286,3 +286,15 @@ Cambiar a otro formulario usa `bancos.cheques.anular`. Asignar formato a una che
 | **IC-8** (QA) | Chrome, Edge y Firefox: prueba de alineación, cheque suelto y voucher, posfechado, monto con dos renglones, lote con hueco, reimprimir solo el comprobante, cambiar formulario de un cheque de CP4 (el pago sigue igual), blanqueo bloqueado, 403 por permiso, modo oscuro | IC-7 |
 
 Ninguno toca `ConciliarCuenta.vue` ni los saldos iniciales: puede ir en paralelo con BS-* una vez aprobado.
+
+## Respuestas del usuario (2026-11-18)
+
+- **P-1 y P-3:** tres acciones separadas (imprimir, reimprimir con motivo y pasar el pago a otro formulario cuando el papel
+  se arruina); reimprimir pide `bancos.cheques.reimprimir`, que recibe quien ya puede anular cheques.
+- **P-2 y P-9:** el comprobante de egreso trae el detalle de Cuentas por pagar (opción A; sin el módulo, sin detalle), con
+  las firmas Elaboró, Revisó, Autorizó y Recibí conforme con DPI.
+- **P-4:** no habrá fotos de cheques reales: las plantillas se hacen con **medidas aproximadas** y se ajustan con la prueba
+  de alineación.
+- **P-5 a P-8:** solo advertir si el formato no pasó la prueba de alineación; editor en mm (arrastrar, después); lote de
+  hasta 50 cheques de una misma chequera; `bancos.cheques.lugar_de_emision` por empresa («Guatemala» por omisión).
+- Lo marcado para el contador se consultó el 2026-11-18 (dictamen aparte).
