@@ -836,6 +836,7 @@ Paso de documentos aparte (sin código): corregir C-10 en Bancos si el usuario l
 | V-11 | ISR retenido por el banco sobre intereses de una cuenta en dólares: conversión y constancia | MM-B3 |
 | V-12 | Libro de compras de la SAT: ¿pide la moneda o el total original? Bancarización de un pago en dólares: tipo de qué fecha | MM-L2, MM-C3 |
 | V-13 | (Técnico, en MM-3) `TipoCambioRango` del USD: ¿`compra = venta = referencia`?; un fin de semana y un asueto; códigos y unidades de las otras monedas (¿quetzales por unidad?) | MM-3 |
+|  | **Resuelto en parte (2026-11-18, llamada real):** en el rango el USD (moneda `2`) trae `compra = venta`, y coincide con la `referencia` de `TipoCambioDia` (7.64489 el 18/11/2026). El sábado 14 y el domingo 15 de noviembre traen el valor vigente del viernes (7.64312): **hay una fila por día calendario**. Un rango futuro responde `<Vars />` con `TotalItems` 0 (sin error). `TipoCambioDia` solo trajo el USD (`CambioDolar/VarDolar`). **Pendiente:** un asueto entre semana y los códigos y unidades de las otras monedas | MM-3 |
 | V-14 | ¿El reporte mensual del diferencial (impreso o exportado) sirve como el «registro mensual» del art. 21 num. 28? | MM-D1 |
 
 ## Respuestas del usuario (2026-11-18)
@@ -846,3 +847,323 @@ el módulo activable «multimoneda»; **PU-3** (a) solo soporte, para toda la in
 por omisión y C por empresa; **PU-8** (a) solo el reporte calculado en la versión 1; **PU-9** (a) sugerencia de
 deducibilidad con la leyenda; **PU-10** (a) el anterior hasta 7 días con aviso y lista, luego bloqueo; **PU-11** a
 **PU-15** (a); **PU-16** (a) corregir C-10 en el diseño y el dictamen de Bancos con una nota.
+
+## Adenda 2026-11-18: todas las monedas del Banguat
+
+_Agente `arquitecto-de-datos`. Decisión del usuario (2026-11-18), que **reemplaza PU-4 (a)** («solo USD activo»):
+«soportemos todos los tipos de cambio que da el Banguat; guardar los ids de cada uno y un select en la ventana de monedas;
+los que tengan ese dato en el select se van a actualizar el tipo de cambio cada noche con un cron». Base fiscal:
+`dictamen-multimoneda-monedas-del-banguat-2026-11-18.md` (contador, mismo día; veredicto «correcto con ajustes», A-1 a
+A-6 y D-1 a D-7). Lo que esta adenda no toca queda como está arriba. MM-1 y MM-2 aún no se programaron, así que los
+cambios entran en su migración original (no hace falta una migración de corrección)._
+
+### A.1 Qué cambia, en una tabla
+
+| Antes (§4.3, §6.1, PU-4) | Ahora |
+|---|---|
+| Solo el USD tiene `codigo_banguat` (= 2, sembrado); las demás se siembran inactivas «si se acuerdan» | Se siembran inactivas y **sin código** las monedas ISO de la lista del Banguat (A.4). Soporte asigna el código con un **selector** en la ventana de Monedas, que se llena con `VariablesDisponibles` guardado en la tabla nueva `core.monedas_del_banguat` (A.3) |
+| Se cargan «las activas con `codigo_banguat`» | Se carga **toda moneda con código** (lo dijo el usuario; D-1 en A.13). Activar sigue siendo aparte y solo para monedas de dos decimales |
+| Una vuelta a las 06:00 con reintentos hasta las 20:00 | Tres vueltas al día en la hora de `core.regional.zona_horaria` (D-5): 06:00 el USD (con sus reintentos), 09:30 las demás y una vuelta de noche que adelanta el USD de mañana y repite las demás que faltaron. **Solo el USD reintenta** (A-4) |
+| Banda 5 a 15 para el USD; 3 % de variación con aviso | USD igual. Las demás: sin banda; aviso con más de 3 %, **rechazo** con más de 25 % (protege de un cambio de unidad o de un código mal puesto) y aviso por el cruce implícito contra el USD (A-5) |
+| Referencia del rango = `compra` = `venta` del USD (comprobado en MM-3a) | Para toda moneda: `compra = venta` → esa es la referencia; si difieren, `valor_ambiguo` y no se guarda (A-6, D-3) |
+| Regla de 7 días igual para todas | Además, para las demás monedas, un «día sin cálculo» (fin de semana o asueto) usa el último publicado **sin pedir confirmación** (D-4) |
+
+### A.2 Lo que ya hizo MM-3a y qué hay que cambiarle
+
+MM-3a (rama `worktree-wf_af6cd921-5c2-3`, commit `9c022cbe`, revisada y lista para integrar) programó en `core/monedas`,
+sin base de datos: el puerto `FuenteDeTiposDeCambio` (`tipoDelDia`, `tiposDelRango`), `ClienteBanguat` (SOAP 1.1 con
+`fetch`, HTTPS, 10 s, 256 KB, sin redirecciones, sin analizador XML), la extracción (`extractor-de-respuestas.ts`), la
+validación (`reglas-de-publicacion.ts`: fecha, formato `^\d{1,6}(\.\d{1,8})?$`, banda del USD, variación de 3 %),
+`FuenteConReintentos`, el rango de relleno de 45 días (`huecos-de-publicacion.ts`) y el doble en memoria. Una llamada real
+cerró parte de V-13: el rango del USD trae una fila **por día calendario** (el fin de semana repite el viernes) y
+`compra = venta = referencia`.
+
+**Recomendación: integrar MM-3a tal como está** (ya revisada) y hacer los cambios en un paso nuevo, MM-3a′, encima. Lo
+que cambia MM-3a′:
+
+| Pieza de MM-3a | Hoy | Cambio |
+|---|---|---|
+| `MONEDAS_POR_CODIGO_BANGUAT` (extractor) | Mapa fijo `2 → USD` | Se quita. Las operaciones reciben las monedas a pedir como argumento (`{ moneda: 'EUR', codigoBanguat: 28 }[]`), que salen de `core.monedas` en MM-3b. Un código que llega sin haberse pedido se ignora |
+| Puerto `FuenteDeTiposDeCambio` | `tipoDelDia`, `tiposDelRango` (solo USD) | Suma `tiposDeLaMoneda({ hoy, desde, hasta, moneda, codigoBanguat })` (`TipoCambioRangoMoneda`) y `monedasDisponibles()` (`VariablesDisponibles` → `{ codigo, descripcion }[]`). `tipoDelDia` lee también `CambioDia/Var` si viene, solo de las monedas pedidas |
+| `PublicacionDeTipoDeCambio` | `moneda`, `fecha`, `referencia` | Suma `codigoBanguat`, `compra` y `venta` (texto; se guardan en `core.tipos_de_cambio`) |
+| Rechazo `sin_referencia` | Escribe `moneda: 'USD'` fijo | Se renombra `valor_ambiguo` (dictamen A-6) y lleva la moneda real de la fila |
+| `referenciaEscalada` | Solo `^\d{1,6}(\.\d{1,8})?$` | Acepta también notación científica y más de 8 decimales: `^\d{1,6}(\.\d{1,20})?([eE][-+]?\d{1,2})?$`, texto de hasta 32 caracteres, convertido **sin pasar por `number`** (mantisa y exponente a `bigint`) y redondeado desde la mitad a 8 decimales. Si queda en 0 o pasa de `99999999.99999999`, `dato_invalido` |
+| Reglas por moneda | `BANDAS_DE_CORDURA` solo USD | Igual para el USD. Constante nueva `VARIACION_PARA_RECHAZAR_EN_PORCIENTO = 25` para las demás (A.7) y función `cruceImplicito(valor, referenciaUsd)` para el aviso |
+| `fechasSinPublicacion` | Cuenta todo día calendario | Recibe qué días se esperan: todos para el USD; para las demás, los hábiles (lunes a viernes sin los asuetos de `calendarioLaboral`) mientras C-2 no diga otra cosa |
+| Grabaciones de prueba | USD del día y del rango | Suman `VariablesDisponibles`, `TipoCambioRangoMoneda` del EUR con fin de semana, un valor en notación científica, `compra ≠ venta` y un código no pedido |
+
+Las **comprobaciones reales** del dictamen (C-1 a C-4, A.12) se hacen al empezar MM-3a′ y su resultado se anota en esta
+adenda. C-1 da la lista definitiva de códigos y fija `CODIGOS_DEL_BANGUAT_EXCLUIDOS` (A.3).
+
+### A.3 De dónde sale la lista del selector
+
+| Opción | Cómo | A favor | En contra |
+|---|---|---|---|
+| A. Consultar al abrir la ventana | El servidor llama a `VariablesDisponibles` cada vez | Siempre al día | Lento; el servicio corta conexiones (le pasó al contador); sin el Banguat no se puede ni ver la lista; no permite llave foránea |
+| B. Caché en memoria | La primera llamada se guarda unas horas | Rápido | Se pierde al reiniciar; con dos instancias, dos copias; tampoco permite llave |
+| **C. Tabla `core.monedas_del_banguat`** | La llena la tarea (una vez por semana, y al arrancar si está vacía o vieja) y un botón «Actualizar lista» | Funciona sin el Banguat; `core.monedas.codigo_banguat` lleva **llave foránea** (no se puede guardar un código que el Banguat nunca dio); queda la historia de lo que ofreció | Una tabla más (pequeña: unas 30 filas) |
+
+**Recomendada: C.**
+
+**`core.monedas_del_banguat` (nueva).** Catálogo de toda la instalación, sin RLS (como `core.monedas`) y sin autoría (la
+escribe la tarea, sin usuario).
+
+| Columna | Tipo | Nulo | Notas |
+|---|---|---|---|
+| `codigo` | `smallint` PK | no | El `moneda:int` del Banguat. `check (codigo > 0)` |
+| `descripcion` | `text` | no | Tal como llega, sin espacios en los extremos y recortada a 120. `check (char_length(descripcion) between 1 and 120)` |
+| `disponible` | `boolean` | no, `default true` | `false` si dejó de venir en `VariablesDisponibles`. La fila **no se borra**: la puede usar una moneda y tiene historia |
+| `vista_por_primera_vez` | `timestamptz` | no, `default now()` | |
+| `vista_por_ultima_vez` | `timestamptz` | no, `default now()` | Última actualización en que vino |
+
+- Sin índices extra: la llave desde `core.monedas` apunta a la PK, y del otro lado la cubre su índice único.
+- **Semilla:** solo `(2, 'Dólares de EE.UU.')` (el USD ya comprobado en MM-3a), para que el USD nazca con su código. La
+  primera actualización corrige la descripción.
+- **Actualización** (`ActualizarMonedasDelBanguat`): `insert … on conflict (codigo) do update set descripcion,
+  disponible = true, vista_por_ultima_vez`, y luego `disponible = false` a las que no vinieron. Si la respuesta viene vacía
+  o con error, **no toca nada** (un Banguat caído no deja la lista «no disponible»). Cada actualización deja su fila en la
+  bitácora (`operacion = 'VariablesDisponibles'`, `vuelta = 'lista'`).
+- **Cuándo:** al arrancar, si la tabla solo tiene la semilla o la última vista pasa de 7 días; los lunes, en la vuelta de
+  las 09:30; y con «Actualizar lista» (soporte).
+- **Qué ofrece el selector:** las `disponible`, menos las de `CODIGOS_DEL_BANGUAT_EXCLUIDOS` (constante del dominio que se
+  llena con C-1 según D-2: DEG, los bolívares retirados y el colón salvadoreño), y las asignadas a otra moneda se muestran
+  deshabilitadas («Euro (28), ya es de EUR»). Si una moneda ya tiene un código que luego quedó excluido o no disponible,
+  se sigue mostrando, marcado.
+
+### A.4 `core.monedas` (cambia lo dicho en §6.1)
+
+| Columna | Tipo | Nulo | Cambio |
+|---|---|---|---|
+| `activa` | `boolean` | no | **`default false`** (antes `true`): con unas 25 monedas sembradas, lo seguro es que nazcan apagadas. La migración pone `true` a GTQ y USD |
+| `codigo_banguat` | `smallint` | sí | Ahora con **llave foránea** a `core.monedas_del_banguat(codigo)`, `on delete restrict`; sigue `unique` (el índice único sirve a la llave) |
+| `letras_singular`, `letras_plural` | `text` | sí | Sin cambio |
+
+Restricción nueva: `monedas_gtq_sin_codigo check (codigo <> 'GTQ' or codigo_banguat is null)`. Las de §6.1 siguen:
+`monedas_activa_con_dos_decimales` impide activar JPY o KRW en v1 (D-6), pero **sí** pueden tener código, y su serie se
+carga (A.6).
+
+**Código estable (A-2).** `core.tipos_de_cambio` guarda también el código con que se cargó cada fila (A.5). Regla: una
+moneda con filas `banguat` solo puede quedar con **ese mismo código o sin código**; otro mezclaría dos series. Se hace
+cumplir en dos lugares:
+- Dominio (`EditarMoneda`): `CodigoDelBanguatConOtraSerie` (Conflicto, 409, `detalles: { moneda, codigoDeLaSerie }`).
+- Base: disparador `core.monedas_codigo_banguat_estable` (`before update of codigo_banguat`): si `new.codigo_banguat is not
+  null` y existe una fila de `core.tipos_de_cambio` con `moneda = new.codigo`, `origen = 'banguat'` y `codigo_banguat <>
+  new.codigo_banguat`, `raise exception` con su `errcode` propio. Usa `tipos_de_cambio_vigente_idx` (empieza por `moneda`).
+  Si un día se comprueba que un código estaba mal, el arreglo es un procedimiento de soporte documentado, no una
+  pantalla: las filas no se borran.
+
+**Semilla de MM-1** (todas con `activa = false`, `codigo_banguat = null` y sin letras; nombres y decimales de ISO 4217).
+Son las monedas de la lista pública del Banguat (dictamen §1) menos DEG, bolívares y colón salvadoreño (D-2 b). Así el
+selector solo **une**, y en v1 no hace falta crear monedas desde la pantalla (si el Banguat agrega una, va en una
+migración de datos). Símbolos que no se confunden con `US$` ni con `Q`:
+
+| Código | Nombre | Símbolo | Decimales |
+|---|---|---|---|
+| EUR | Euro | € | 2 |
+| GBP | Libra esterlina | £ | 2 |
+| CHF | Franco suizo | CHF | 2 |
+| CAD | Dólar canadiense | CA$ | 2 |
+| MXN | Peso mexicano | MX$ | 2 |
+| JPY | Yen japonés | JP¥ | 0 |
+| HNL | Lempira | L | 2 |
+| NIO | Córdoba | C$ | 2 |
+| CRC | Colón costarricense | ₡ | 2 |
+| DKK, NOK, SEK | Corona danesa, noruega y sueca | DKK, NOK, SEK | 2 |
+| ARS | Peso argentino | AR$ | 2 |
+| BRL | Real brasileño | R$ | 2 |
+| KRW | Won surcoreano | ₩ | 0 |
+| HKD | Dólar de Hong Kong | HK$ | 2 |
+| TWD | Nuevo dólar taiwanés | NT$ | 2 |
+| CNY | Yuan renminbi | CN¥ | 2 |
+| PKR, INR | Rupia pakistaní e india | PKR, ₹ | 2 |
+| COP | Peso colombiano | COL$ | 2 |
+| DOP | Peso dominicano | RD$ | 2 |
+| MYR | Ringgit malayo | RM | 2 |
+
+Si C-1 trae una moneda que no está aquí (por ejemplo AUD, que aparece en la tabla 158-2023), se agrega a la semilla
+antes de programar MM-1 (si MM-1 ya salió, en una migración de datos aparte).
+
+### A.5 `core.tipos_de_cambio` y `core.consultas_al_banguat` (cambian lo dicho en §6.1)
+
+**`core.tipos_de_cambio`**: una columna y una restricción más.
+
+| Columna | Tipo | Nulo | Notas |
+|---|---|---|---|
+| `codigo_banguat` | `smallint` | sí | El código con que se pidió la fila; FK `core.monedas_del_banguat(codigo)`. `tipos_de_cambio_banguat_con_codigo check (origen <> 'banguat' or codigo_banguat is not null)`; nulo en las `manual` |
+
+Índice de la llave: `tipos_de_cambio_codigo_banguat_idx (codigo_banguat)`. `referencia`, `compra` y `venta` siguen en
+`numeric(16,8)`: con 8 decimales, el yen (unos 0.05) conserva 6 a 7 cifras significativas, las mismas que da el
+`xs:float` del servicio. Siempre **quetzales por una unidad**; si C-3 encuentra una moneda publicada por cada 100, la
+carga divide con una constante del dominio por código (sin columna nueva).
+
+**`core.consultas_al_banguat`**: ahora una fila por **llamada** (por moneda en las de rango), no por vuelta.
+
+| Columna | Cambio |
+|---|---|
+| `operacion` | Admite además `TipoCambioRangoMoneda`, `TipoCambioFechaInicialMoneda` y `VariablesDisponibles` (check) |
+| `vuelta` (nueva) | `text not null`, check en `madrugada`, `manana`, `noche`, `arranque`, `relleno`, `manual`, `lista`, `muestra` |
+| `moneda` (nueva) | `char(3)` nula, FK `core.monedas(codigo)`; nula en `VariablesDisponibles` y en `TipoCambioDia` (puede traer varias) |
+| `codigo_banguat` (nueva) | `smallint` nula, sin llave (una muestra puede ser de un código que luego sale de la lista) |
+| `resultado` | Admite además `valor_ambiguo` y `variacion_excesiva` (check) |
+| `filas_rechazadas` (nueva) | `smallint not null default 0` |
+
+Índice nuevo `consultas_al_banguat_moneda_idx (moneda, iniciada_en desc)`: sirve a la llave y al estado «última carga
+por moneda». Volumen: unas 25 monedas × 2 a 3 llamadas al día ≈ 25,000 filas al año. Sigue sin depurarse (no es
+auditoría; si un día pesa, se decide una retención).
+
+### A.6 Qué se carga y cuándo
+
+**Qué monedas.** Toda moneda de `core.monedas` con `codigo_banguat`, activa o no (decisión del usuario). Diferencia con el
+dictamen (A-3, D-1 a), que pide solo las activas. Mi lectura: la regla de los dos decimales es para **usar** la moneda
+(activarla), no para guardar su serie; cargar una inactiva no la ofrece a nadie y deja ver su serie (unidad, huecos)
+**antes** de activarla. El costo son unas 2 llamadas al día por moneda. Si el usuario prefiere (a), es un filtro (`and
+activa`) en una sola consulta del repositorio: no cambia tablas.
+
+**Horario**, en la hora de `core.regional.zona_horaria` leída en el nivel **instalación** (la tarea no tiene empresa). Un
+temporizador cada 15 minutos en `principal.ts` llama a `CargarTiposDeCambio.siTocaAhora()`; qué toca lo decide una
+función pura del dominio (`vueltaQueToca(ahora, zona, ultimasConsultas)`), con pruebas de reloj fijo.
+
+| Vuelta | Hora | Qué pide | Reintentos |
+|---|---|---|---|
+| `madrugada` | 06:00 | USD: `TipoCambioDia` | Si falta el USD de hoy: 06:30, 07:00, 08:00, 09:30, 11:00, 13:00, 16:00 y 20:00 (como §4.3) |
+| `manana` | 09:30 | Cada otra moneda con código: `TipoCambioRangoMoneda(hoy − 6, hoy)` (trae hoy y rellena la semana) | **Ninguno**. Si no está el de hoy, la bitácora dice `sin_datos` |
+| `noche` | 21:00 (C-4 puede moverla) | USD: `TipoCambioRango(hoy, mañana)` (adelanta el de mañana, ya publicado); y, una vez, las otras monedas a las que les falte el de hoy | Ninguno |
+| `arranque` y `relleno` | Al arrancar y una vez al día (en la vuelta `manana`) | Por moneda, **solo si tiene huecos** en los últimos 45 días: el USD contra días calendario y las demás contra días hábiles (A.2). Una llamada de rango por moneda | Ninguno |
+
+- **Moneda recién asignada:** al guardar el código, después del `commit`, se pide en segundo plano su relleno de 45 días
+  (`vuelta = 'relleno'`). El historial más viejo, con «Cargar ahora» por rango (máximo 366 días, §4.4).
+- **Ritmo:** las llamadas van **una tras otra**, con 1 s entre monedas; cada una con `FuenteConReintentos` (2 y 5 s) solo
+  ante `FuenteNoDisponible`. Con 25 monedas, una vuelta dura menos de un minuto si el Banguat responde.
+- **Candado:** la vuelta completa toma `pg_try_advisory_lock` con una clave fija propia en una conexión dedicada, como
+  `cerrojo-de-depuracion.drizzle.ts`. Otra instancia no hace nada; un «Cargar ahora» simultáneo responde 409
+  `CargaDelBanguatEnCurso`. El índice único parcial `(moneda, fecha) where origen = 'banguat'` impide duplicados aunque el
+  candado fallara (`on conflict do nothing`).
+- **Aviso de moneda sin publicar (A-4):** el estado de `GET /api/tipos-de-cambio/consultas` marca toda moneda con código
+  cuya última fecha cargada tenga más de **3 días hábiles** de atraso (constante del dominio); para el USD, más de 1 día.
+
+### A.7 Qué valor se guarda por moneda
+
+| Caso | Se guarda | Resultado en la bitácora |
+|---|---|---|
+| USD del día (`VarDolar.referencia`) | `referencia`; `compra` y `venta` nulas | `exito` |
+| Cualquier moneda en un rango con `compra = venta` (comparadas ya normalizadas a 8 decimales) | `referencia = compra = venta` | `exito` |
+| `compra ≠ venta` | **Nada** (D-3 a); soporte puede ingresarlo a mano con motivo | `valor_ambiguo` |
+| USD fuera de 5 a 15 | Nada | `valor_fuera_de_rango` |
+| Otra moneda que cambia más de 25 % contra su último valor de los 7 días anteriores | Nada; aviso en el panel | `variacion_excesiva` |
+| Otra moneda que cambia entre 3 % y 25 %, o cuyo cruce implícito (valor ÷ referencia del USD del mismo día) cambia más de 3 % | Se guarda; el panel lo muestra con aviso (se calcula al leer, sin columna) | `exito` |
+| Primera carga de una moneda (sin valor anterior) | Se guarda | `exito` |
+
+`fecha` es siempre el día en que rige (§4.1): para el USD, la que trae el servicio; para las demás, el día de su cálculo
+(dictamen §1, vigencia), que es la fecha que trae la fila.
+
+### A.8 Uso del tipo: `tiposDeCambio.vigente` (cambia MM-2)
+
+`TipoVigente` suma `motivoDelAnterior: 'dia_sin_calculo' | 'falta_publicacion' | null`:
+- **USD:** como §4.1 (todo anterior es `falta_publicacion`: aviso, confirmación y lista «por revisar»).
+- **Otras monedas (D-4 b):** si la fecha pedida es sábado, domingo o asueto de `calendarioLaboral` y el tipo usado es del
+  último día hábil anterior, `dia_sin_calculo`: se usa **sin pedir confirmación** y no entra en «por revisar» (sí guarda
+  `fecha_del_tipo_de_cambio`). Si es un día hábil sin publicación (también **hoy antes de las 09:30**),
+  `falta_publicacion`, con la regla de §4.1. El tope de 7 días sigue para todas.
+- Si C-2 muestra que el Banguat publica todos los días también las demás monedas, `dia_sin_calculo` no se da nunca y todo
+  queda como el USD, sin cambiar el contrato.
+
+### A.9 API, permisos, errores, auditoría y Excel
+
+**API del núcleo (cambia §14):**
+- `GET /api/monedas` suma `descripcionBanguat` (de A.3) y `tieneSerieDelBanguat` (la pantalla bloquea cambiar el código).
+- `PATCH /api/monedas/:codigo` igual (`codigoBanguat: number | null`), con los errores de abajo.
+- `GET /api/monedas/banguat` (`configuracion.monedas.editar`) → `{ codigo, descripcion, disponible, excluida, asignadaA,
+  vistaPorUltimaVez }[]`: lo que llena el selector.
+- `POST /api/monedas/banguat/actualizar` (`configuracion.monedas.editar`) → corre la actualización de A.3 y devuelve la
+  lista y la consulta hecha (409 `CargaDelBanguatEnCurso` si hay una vuelta en curso).
+- `GET /api/monedas/banguat/:codigo/muestra` (`configuracion.monedas.editar`) → los valores de los últimos 7 días de ese
+  código (`TipoCambioRangoMoneda`) **sin guardarlos** (la consulta queda con `vuelta = 'muestra'`). Sirve para que
+  soporte vea «8.81 Q por unidad» antes de unir «Euro» con EUR (riesgo «código mal asignado»). Límite de 10 por minuto por
+  usuario (429), porque sale a un servicio externo.
+
+**Permisos:** ninguno nuevo; todo lo anterior usa `configuracion.monedas.editar` (`soloSuperacceso`). Leer monedas sigue
+siendo solo de sesión.
+
+**Errores nuevos:**
+
+| Clase (familia) | Código | HTTP | Cuándo |
+|---|---|---|---|
+| `CodigoDelBanguatConOtraSerie` (Conflicto) | `codigo_del_banguat_con_otra_serie` | 409 | A.4 |
+| `CodigoDelBanguatEnUso` (Conflicto) | `codigo_del_banguat_en_uso` | 409 | Otra moneda ya lo tiene; `detalles: { moneda }` |
+| `CodigoDelBanguatNoOfrecido` (Regla) | `codigo_del_banguat_no_ofrecido` | 422 | No está en la lista, no está disponible o está excluido (salvo que ya fuera el de esa moneda) |
+| `CodigoDelBanguatEnGtq` (Regla) | `codigo_del_banguat_en_gtq` | 422 | Ponerle código al quetzal |
+| `CargaDelBanguatEnCurso` (Conflicto) | `carga_del_banguat_en_curso` | 409 | «Cargar ahora» o «Actualizar lista» con el candado tomado |
+
+**Auditoría.** Como los asuetos (`QuitarAsueto`, precedente del core): `EditarMoneda` llama a `auditoria.registrar` dentro
+de su unidad de trabajo con `recurso: 'core.monedas'`, `registroId` el código y `anterior` la moneda como estaba:
+`inactivar` o `reactivar` al cambiar `activa`, y `corregir` al **quitar o cambiar** `codigo_banguat` (la moneda deja de
+cargarse: es lo más parecido a inactivar la carga). Asignar un código por primera vez no se audita (no quita nada).
+`core.monedas_del_banguat` no se audita: es copia de lo que dice el Banguat y nunca se borra (queda `disponible = false`).
+`core.tipos_de_cambio` y la bitácora siguen siendo su propio rastro (§6.1).
+
+**Excel:** sin cambios. La ventana de Monedas es de Soporte/Plataforma (no es Administración de una empresa): no importa
+ni exporta. El reporte «Tipos de cambio» de Multimoneda (Reportes: imprime y exporta) ya filtra por moneda; ahora su
+selector ofrece toda moneda con serie, activa o no.
+
+### A.10 Pantalla de Monedas (cambia MM-4)
+
+`PlataformaMonedas.vue` (la página solo arma) con `usarMonedasDePlataforma` y la lógica pura `edicion-de-moneda.ts` (con
+pruebas):
+- Lista: código, nombre, símbolo, decimales, **activa**, **moneda del Banguat** («Euro (28)» o «—»), última fecha cargada y
+  aviso de atraso (A.6). Filtros «Con código» y «Activas».
+- Ventana de edición (`v-model`; emite `guardar` y `cerrar`): interruptor **Activa** (deshabilitado si los decimales no
+  son 2, con el porqué); **selector «Moneda del Banguat»** con las opciones de `GET /api/monedas/banguat` (descripción y
+  código; las de otra moneda, deshabilitadas con el nombre de su dueña; opción «Sin código: no se carga») y botón «Ver
+  muestra», que trae los 7 días antes de guardar. Con `tieneSerieDelBanguat`, el selector solo deja el mismo código o
+  quitarlo, con el texto «Ya tiene tipos cargados con este código». Letras singular y plural.
+- Botón «Actualizar lista del Banguat» con la fecha de la última actualización.
+- Quitar el código o desactivar piden confirmación con `usarAvisos().confirmar`.
+- `PlataformaTiposDeCambio.vue` (MM-4, como estaba) suma la vuelta y la moneda en la bitácora, y los avisos de A.7.
+
+### A.11 Convivencia y riesgos (suma a §17)
+
+- **MM-3a sin integrar todavía:** si se integra antes de MM-3a′, nada se rompe (solo carga el USD). Rehacerla en su rama
+  perdería su revisión: no lo recomiendo.
+- **Orden del core:** sigue EM-2 → correo → MM-1; el número de la migración se toma al programar (no tiene por qué ser
+  `0024`).
+- **Fuente no oficial:** el servicio web «no es un servicio oficial» (dictamen §1). Por eso el ingreso manual de soporte
+  sigue siendo la vía para corregir, y la leyenda «Fuente: Banco de Guatemala» va en toda pantalla y reporte.
+- **Carga al Banguat:** de 50 a 75 llamadas al día con 25 monedas, en serie: aceptable. Si C-1 a C-4 muestran cortes
+  frecuentes, se sube la pausa entre monedas (constante).
+- **Seguridad:** las salidas nuevas (`VariablesDisponibles`, la muestra) usan el mismo `ClienteBanguat` (URL fija, topes y
+  extracción sin entidades). Las descripciones del Banguat llegan al navegador: se recortan, se guardan como texto y Vue
+  las escapa. La muestra tiene su límite por minuto. Revisión de `seguridad` en MM-3a′ y MM-3b.
+
+### A.12 Comprobaciones con llamadas reales (amplían V-13; al empezar MM-3a′)
+
+| # | Qué | Decide |
+|---|---|---|
+| C-1 | `VariablesDisponibles` completa: códigos y descripciones | La semilla de A.4 y `CODIGOS_DEL_BANGUAT_EXCLUIDOS` |
+| C-2 | `TipoCambioRangoMoneda` del EUR y del JPY en una semana con fin de semana y un asueto: unidad, `compra = venta`, decimales, huecos, notación científica | A.2 (días esperados), A.7 y A.8 |
+| C-3 | ¿Alguna moneda publicada por cada 100 unidades? | La constante de división de A.5 |
+| C-4 | Desde qué hora de la noche `TipoCambioDia` o `TipoCambioRango` ya dan el USD de mañana | La hora de la vuelta `noche` |
+| C-5 | Un DTE real en EUR y lo que la SAT precarga (contador, V-2) | MM-L2; no bloquea la fase A |
+
+### A.13 Decisiones pendientes del usuario (del dictamen, con la posición del arquitecto)
+
+| # | Pregunta | Contador | Arquitecto | Qué se asumió aquí |
+|---|---|---|---|---|
+| D-1 | ¿Cargar todas las monedas con código o solo las activas con código? | Solo las activas | **Todas con código**, como pidió el usuario (A.6) | Todas con código |
+| D-2 | ¿Qué entra en el selector? | Todas menos DEG, bolívares y colón salvadoreño | Igual | (b) |
+| D-3 | Si `compra ≠ venta` | No cargar automático | Igual | (a) |
+| D-4 | Documento en otra moneda de un día sin cálculo | Último publicado sin confirmar; aviso solo si faltó una publicación esperada | Igual | (b) |
+| D-5 | ¿Solo de noche? | 06:00 el USD, 09:30 las demás y una vuelta de noche | Igual: con solo la de noche, todo documento de la mañana en otra moneda sale con aviso | (b) |
+| D-6 | ¿Cero decimales (JPY, KRW) en v1? | No se activan | Igual (su serie sí se carga) | (a) |
+| D-7 | ¿Consultar a la SAT por los DTE en EUR? | Sí, si un cliente real factura en EUR | Igual | Pendiente; no bloquea |
+
+### A.14 Pasos (reemplazan las filas MM-1 a MM-4 de §18; un commit cada uno)
+
+| Paso | Qué | Pruebas clave | Depende de |
+|---|---|---|---|
+| **MM-1** (servidor, datos del núcleo) | Lo de §6.1 más: `core.monedas_del_banguat` y su semilla; `core.monedas` con `activa default false`, la llave y el check del GTQ, y la semilla de A.4; disparador `monedas_codigo_banguat_estable`; `codigo_banguat` en `core.tipos_de_cambio`; columnas, checks e índice nuevos de `core.consultas_al_banguat`; `TipoDeCambio` | Las de §18 más: la llave rechaza un código inexistente; dos monedas con el mismo código; GTQ con código; activar JPY falla; el disparador rechaza cambiar el código con filas `banguat` y deja quitarlo o dejar el mismo; una fila `banguat` sin código falla | C-1 (para la semilla) |
+| **MM-2** (servidor, núcleo) | Lo de §18 más: `EditarMoneda` con las reglas de A.4 y A.9 y su auditoría; `tiposDeCambio.vigente` con `motivoDelAnterior` (A.8); `GET /api/monedas/banguat` | Código ofrecido, en uso, excluido, con otra serie (en el dominio y en el disparador) y en GTQ; auditoría de inactivar, reactivar y quitar el código; vigente del EUR un sábado (`dia_sin_calculo`), un martes sin publicación (`falta_publicacion`), y del USD un domingo | MM-1 |
+| **MM-3a′** (servidor, sin base) | Comprobaciones C-1 a C-4 (se anotan aquí) y los cambios de A.2 al cliente, al extractor y a las reglas | Notación científica (`5.1E-05` → `0.00005100`); más de 8 decimales, con redondeo; `compra ≠ venta` → `valor_ambiguo` con su moneda; código no pedido, ignorado; `VariablesDisponibles` con y sin filas; `<!DOCTYPE>` en las operaciones nuevas; días esperados del USD y de las demás | MM-3a integrada |
+| **MM-3b** (servidor, carga) | Lo que MM-3a dejó para después, para todas las monedas: bitácora por llamada, candado, `vueltaQueToca` y temporizador de 15 min, vueltas de A.6, relleno contra lo guardado, rechazos y avisos de A.7, actualización de la lista (A.3), relleno al asignar un código, `principal.ts`, variables de entorno, `POST …/cargar`, `POST /api/monedas/banguat/actualizar` y `GET …/muestra` con su límite | Con reloj fijo: cada vuelta a su hora en `America/Guatemala` y con otra zona; el USD reintenta y las demás no; una moneda sin publicación el sábado no reintenta ni avisa; 4 días hábiles de atraso avisan; 30 % de variación no se guarda; el relleno solo pide con huecos; dos vueltas a la vez (la segunda no hace nada; la manual da 409); lista vacía o con error no marca nada «no disponible»; una moneda que desaparece queda `disponible = false` | MM-2, MM-3a′ |
+| **MM-4** (cliente, Plataforma) | `PlataformaTiposDeCambio.vue` (como estaba, más A.10) y `PlataformaMonedas.vue` con el selector, la muestra y «Actualizar lista» | Unitarias de `edicion-de-moneda.ts` (qué opciones se habilitan, bloqueo con serie, activa con decimales ≠ 2); QA en el navegador con el servidor falso del Banguat | MM-3b |
+
+MM-5 y los siguientes no cambian.

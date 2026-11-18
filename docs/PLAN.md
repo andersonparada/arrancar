@@ -2443,6 +2443,29 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `(id, empresa_id, proveedor_id, destino)` (columna fija `destino_del_documento`), como ya hace Cuentas por pagar.
   Se quitó `comprobantes.motivo_sin_bancarizar` (CC-h = A), se agregaron los índices de las llaves que cruzan de
   módulo y entre tablas, y el check `fecha_de_liquidacion >= fecha` en anticipos y vales provisionales.
+- **2026-11-18 (MM-3a′, todas las monedas del Banguat en el cliente, sin base de datos).** En `core/monedas`, según la
+  adenda del diseño de Multimoneda: el puerto `FuenteDeTiposDeCambio` suma `tiposDeLaMoneda` (`TipoCambioRangoMoneda`
+  por código del Banguat) y `monedasDisponibles` (`VariablesDisponibles`); `tipoDelDia` lee también `CambioDia/Var` de
+  las monedas pedidas. Se quitó el mapa fijo `2 → USD`: el extractor recibe las monedas pedidas e ignora otros códigos.
+  `referenciaEscalada` (ahora en `valores-decimales.ts`) acepta notación científica y más de 8 decimales (redondea
+  desde la mitad, con `bigint`, sin `number`; tope 99999999.99999999). `sin_referencia` pasó a `valor_ambiguo` con la
+  moneda real; las publicaciones llevan `codigoBanguat` (y `compra`/`venta` en los rangos). Constantes nuevas
+  `VARIACION_PARA_RECHAZAR_EN_PORCIENTO = 25`, `variacionSuperaElRechazo` y `cruceImplicito`; `fechasSinPublicacion`
+  recibe un objeto con `diasEsperados` (el USD, todos; las demás, hábiles, que calcula quien llama con el
+  calendario). `FuenteConReintentos` y el doble en memoria cubren lo nuevo. Pruebas con respuestas grabadas (no se
+  llamó al Banguat real: **C-1 a C-4 de la adenda siguen pendientes**, así que `CODIGOS_DEL_BANGUAT_EXCLUIDOS` y la hora
+  de la vuelta de noche quedan para MM-3b; la forma de `VariablesDisponibles` y de `TipoCambioRangoMoneda` se supuso
+  igual a la del dictamen y debe confirmarse con la llamada real). Sigue para después de la migración del core: MM-1,
+  MM-2 y MM-3b (bitácora, candado, vueltas, carga nocturna).
+- **2026-11-18 (MM-3, primera parte: cliente del Banguat sin base de datos).** En `core/monedas`: puerto
+  `FuenteDeTiposDeCambio` (`tipoDelDia`, `tiposDelRango`), `ClienteBanguat` (SOAP 1.1 con `fetch`, HTTPS obligatorio, 10 s,
+  256 KB, sin seguir redirecciones, sin analizador XML: rechaza `<!DOCTYPE`/`<!ENTITY` y extrae solo lo esperado),
+  validación de dominio (fecha real y no posterior a mañana, referencia `^\d{1,6}(\.\d{1,8})?$` y > 0, banda 5 a 15 del
+  USD, variación de 3 % con enteros), `FuenteConReintentos` (decorador con esperas), huecos y rango de relleno de 45 días y
+  el doble `FuenteDeTiposDeCambioEnMemoria`. Una llamada real cerró casi todo V-13 (ver el diseño). **Para después de
+  MM-1/MM-2 (necesitan tablas):** bitácora `core.consultas_al_banguat`, candado `pg_try_advisory_lock`, horario y
+  temporizador, relleno contra lo guardado, `principal.ts`, variables `URL_TIPO_DE_CAMBIO_BANGUAT` y
+  `CARGAR_TIPOS_DE_CAMBIO`, `POST …/cargar`, y avisar la variación (usa `variacionSuperaElLimite`).
 - **2026-11-18 (respuestas del usuario al plazo de crédito).** Todas las recomendaciones de
   `docs/modulos/diseno-plazo-de-credito-del-proveedor.md` (detalle al final del diseño). Aprobado para programar PC-1 a PC-6;
   PC-4 y PC-5 (Excel de plazos) van después de que el Excel de Terceros esté en `main`.
