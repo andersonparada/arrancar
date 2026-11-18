@@ -2305,3 +2305,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   quedan como texto; el filtro por cuenta bancaria de R6 y R7 espera un listado de cuentas que Cuentas por pagar pueda leer sin
   importar Bancos. R9, R10, R11 y la conciliación de R1 siguen en espera de CP5-5.
 - **2026-11-18 — CP5-9 (cliente), correcciones de la revisión.** R8: «Ajustes vigentes del mes» y su cantidad salen de la suma de `totales.porCausa` (el total de la sección incluye anulados); nuevo cuadro «por causa y efecto» (pérdida, transitoria, otros ingresos); el resumen suma anulaciones de otros meses y muestra monto de documentos anulados y devueltos; «Pagos a la apertura» aclara que suma vigentes y anulados. R6: el tope de 24 meses del cliente usa la misma regla que el servidor (`mesesEntre`). Sigue pendiente el filtro `cuentaBancariaId` de R6 y R7 (espera listado de cuentas legible sin importar Bancos).
+- **2026-11-18 — Pruebas del servidor en paralelo (infraestructura).** La suite (~540 archivos, ~4900 pruebas) tardaba 26–29 min porque
+  `fileParallelism` estaba apagado desde el primer commit: todos los archivos compartían la base `arrancar_pruebas`. Ahora cada worker de
+  Vitest usa **su propia base** `${BD_PRUEBAS}_${VITEST_POOL_ID}`. `globalSetup` (`servidor/src/pruebas-api/paralelo/preparar-bases-paralelas.ts`)
+  crea las que falten clonándolas de `${BD_PRUEBAS}_plantilla` (migrada con el migrador real, que da los GRANT a `arrancar_app`); las bases
+  se **conservan entre corridas** (borrarlas fuerza un checkpoint de PostgreSQL que con la máquina cargada tardó más de 10 minutos) y cada
+  archivo las migra y limpia al empezar, como antes. `setupFiles` (`entorno-por-worker.ts`) fija por worker `DATABASE_URL`,
+  `DATABASE_URL_PROPIETARIO`, `RUTA_ALMACENAMIENTO` (`almacenamiento-pruebas/worker-<n>`), `TMPDIR` propio (la prueba de qpdf cuenta archivos
+  temporales) y `PGOPTIONS=-c synchronous_commit=off`. Workers: `VITEST_MAX_WORKERS`, por omisión la mitad de los núcleos con tope de 8.
+  `BD_PRUEBAS` sigue siendo el prefijo propio de cada agente. Los tiempos de espera suben (`testTimeout` 30 s, `hookTimeout` 60 s) porque las
+  pruebas de imágenes de 20000 x 20000 y de 20,000 documentos pasaban de 5 s al compartir CPU. Limpieza: `BD_PRUEBAS=<prefijo> npm run
+  bd:limpiar-pruebas -w servidor` borra solo `<prefijo>_plantilla` y `<prefijo>_<número>`. No correr dos corridas con el mismo prefijo a la vez.
+  Medido con 8 workers y la máquina compartida (carga de 17 a 25): 360 s, 382 s y 373 s en tres corridas seguidas, todas en verde (544 archivos,
+  4910 pruebas), contra 26–29 min en serie.
