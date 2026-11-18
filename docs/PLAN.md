@@ -2286,3 +2286,25 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `retirarManejadoresDe` también quita las preguntas. Migración core `0024_auditoria_permanente`: catálogo
   `core.recursos_de_auditoria_permanente` (solo lectura para la app por RLS) y `core.depurar_auditoria` que no borra las
   entradas con empresa de esos recursos; el mínimo de 60 meses sigue.
+- **2026-11-18 (EM-2.3, servidor de Empresas: revisar y cerrar).** Contrato `empresas.revisar_cierre_de_carga`
+  (`RevisionDeCierreDeModulo`, `HallazgoDeCierre`, `CifraDelCuadre`, tope de 200 cifras por módulo). `GET
+  …/carga-inicial/revision-de-cierre` (permiso de cerrar) junta los avisos propios de Empresas (fecha que no es día 1 y
+  sin balance de apertura) con lo que respondan los módulos activos, más una huella sha256 de hallazgos y cifras. `POST
+  …/cerrar` acepta `{ motivo?, huella? }`, vuelve a revisar con la carga bloqueada, pide motivo si hay diferencias,
+  rechaza una huella vieja y audita `cerrar` (versión 1 con la revisión). Migración de Empresas `0010`: fila
+  `empresas.cargas-iniciales` en el catálogo de auditoría permanente y los permisos `ver-cierres` y `exportar` para quien
+  podía cerrar o reabrir.
+- **2026-11-18 (EM-2.4 y EM-2.5, servidor de Empresas: lo que se ve después y el balance de apertura).** `CargaInicialDto` gana
+  `ultimoCierre` (diferencias, avisos, motivo y `revisionGuardada`; una carga cerrada antes de EM-2 sale con `revisionGuardada` falso)
+  y `balanceDeApertura`. Puerto `HistorialDeLaCarga` (lee `core.auditoria` desde infraestructura y rechaza una versión desconocida) y los
+  casos de uso `ListarHistorialDeCargaInicial`, `ObtenerCierreDeCargaInicial` y `ExportarCierreDeCargaInicial` (Excel de tres hojas: Cierre,
+  Hallazgos y Cifras, con los montos como número): rutas `GET …/historial`, `…/cierres/:cierreId` y `…/cierres/:cierreId/exportar`
+  (permisos `ver-cierres` y `exportar`). Migración de Empresas `0011`: `cargas_iniciales.balance_de_apertura_archivo_id` (FK sin `on delete`
+  a `core.archivos`, `unique`). `SubirBalanceDeApertura` en tres tiempos (solo PDF; una foto deshace la transacción y borra el archivo),
+  `QuitarBalanceDeApertura` y `AbrirBalanceDeApertura`; con la carga cerrada solo se sube si falta (`balance_de_apertura_fijo`); reemplazar
+  y quitar auditan `quitar`; el cierre guarda el sha256 del balance. Pendiente: la revisión del agente `seguridad` antes de unirlo.
+- **2026-11-18 (EM-2.6 a EM-2.8, respuestas de los módulos).** Bancos responde la revisión con un adaptador sobre `ListarSaldosIniciales`
+  (hallazgos de BS-2 con su nivel, `sin_saldos_iniciales`, totales sin compensar y cifras por cuenta; `activa` en el resumen de cuenta);
+  Cuentas por pagar con `sin_saldos_iniciales`, `retenciones_por_practicar`, `documentos_del_libro_anteriores` y
+  `proveedores_con_saldo_a_favor` más las cifras (saldo de proveedores y saldo a favor, sin compensar); Libro de compras con `mes_partido`
+  (o `null` si la fecha es día 1). Sin migraciones de Bancos. Falta el cliente (EM-2.9 a EM-2.13) y U8-B.

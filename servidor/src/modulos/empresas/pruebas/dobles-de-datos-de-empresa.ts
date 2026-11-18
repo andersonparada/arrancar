@@ -42,6 +42,8 @@ function datosDelCierre(cierre: CierreDeCarga | null) {
     cerrada: cierre !== null,
     cerradaEn: cierre?.cerradaEn ?? null,
     cerradaPor: cierre?.cerradaPor ?? null,
+    ultimoCierre: null,
+    balanceDeApertura: null,
   };
 }
 
@@ -74,6 +76,10 @@ export class ConsultasDeDatosDeEmpresaEnMemoria implements ConsultasDeDatosDeEmp
   async cargaInicialBloqueandoElCierre(empresaId: string): Promise<CargaInicialDto> {
     this.lecturasConBloqueo += 1;
     return this.cargaInicial(empresaId);
+  }
+
+  async archivoDelBalanceDeApertura(empresaId: string): Promise<string | null> {
+    return this.cargas.guardadas.get(empresaId)?.instantanea().balanceDeAperturaArchivoId ?? null;
   }
 
   async datosDeIdentificacion(empresaId: string): Promise<DatosDeIdentificacionDto> {

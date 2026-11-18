@@ -71,3 +71,45 @@ export class FechaDeInicioRequerida extends ReglaDeNegocioInfringida {
     super('Registre primero la fecha de inicio de la empresa para poder cerrar su carga inicial.');
   }
 }
+
+export class MotivoDeCierreInvalido extends DatoInvalido {
+  readonly codigo = 'motivo_de_cierre_invalido';
+
+  constructor() {
+    super('El motivo del cierre no es válido: escriba de 1 a 500 caracteres.');
+  }
+}
+
+/** Algún módulo encontró diferencias: para cerrar hay que escribir el motivo. `detalles` lleva la revisión. */
+export class MotivoDeCierreRequerido extends ReglaDeNegocioInfringida {
+  readonly codigo = 'motivo_de_cierre_requerido';
+
+  constructor(revision: unknown) {
+    super('La revisión encontró diferencias: escriba el motivo para cerrar la carga inicial.', revision);
+  }
+}
+
+/** Los saldos cambiaron entre que se revisó y se confirmó el cierre. `detalles` lleva la revisión nueva. */
+export class RevisionDeCierreDesactualizada extends ReglaDeNegocioInfringida {
+  readonly codigo = 'revision_de_cierre_desactualizada';
+
+  constructor(revision: unknown) {
+    super('Los saldos cambiaron mientras revisaba: vuelva a revisar antes de cerrar.', revision);
+  }
+}
+
+export class BalanceDeAperturaNoEsPdf extends DatoInvalido {
+  readonly codigo = 'balance_de_apertura_no_es_pdf';
+
+  constructor() {
+    super('Adjunte el balance en PDF; si lo tiene en papel, escanéelo como PDF.');
+  }
+}
+
+export class BalanceDeAperturaFijo extends ReglaDeNegocioInfringida {
+  readonly codigo = 'balance_de_apertura_fijo';
+
+  constructor() {
+    super('Con la carga cerrada no se puede quitar ni reemplazar el balance de apertura: reábrala primero.');
+  }
+}

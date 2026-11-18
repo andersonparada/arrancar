@@ -71,6 +71,20 @@
       "when": 1790717786876,
       "tag": "0009_nombres_sin_mayusculas_ni_acentos",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795032627208,
+      "tag": "0010_em2_cierre_de_la_carga",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795034502659,
+      "tag": "0011_em2_balance_de_apertura",
+      "breakpoints": true
     }
   ]
 }

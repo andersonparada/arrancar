@@ -5,8 +5,10 @@ import type { EstablecerFechaDeInicio } from '../aplicacion/casos-uso/datos-de-e
 import type { GuardarDatosFiscales } from '../aplicacion/casos-uso/datos-de-empresa/guardar-datos-fiscales.js';
 import type { ObtenerCargaInicial } from '../aplicacion/casos-uso/datos-de-empresa/obtener-carga-inicial.js';
 import type { ObtenerDatosFiscales } from '../aplicacion/casos-uso/datos-de-empresa/obtener-datos-fiscales.js';
+import type { RevisarCierreDeCargaInicial } from '../aplicacion/casos-uso/datos-de-empresa/revisar-cierre-de-carga-inicial.js';
 import type { ReabrirCargaInicial } from '../aplicacion/casos-uso/datos-de-empresa/reabrir-carga-inicial.js';
 import type {
+  CierreSolicitado,
   DatosFiscalesSolicitados,
   FechaDeInicioSolicitada,
   ReaperturaSolicitada,
@@ -18,6 +20,7 @@ export interface CasosDeUsoDeDatosDeEmpresa {
   guardarDatosFiscales: GuardarDatosFiscales;
   obtenerCargaInicial: ObtenerCargaInicial;
   establecerFechaDeInicio: EstablecerFechaDeInicio;
+  revisarCierreDeCargaInicial: RevisarCierreDeCargaInicial;
   cerrarCargaInicial: CerrarCargaInicial;
   reabrirCargaInicial: ReabrirCargaInicial;
 }
@@ -46,8 +49,15 @@ export class DatosDeEmpresaControlador {
       fechaDeInicio: solicitud.body.fechaDeInicio,
     });
 
-  cerrarCargaInicial = (solicitud: Solicitud) =>
-    this.casosDeUso.cerrarCargaInicial.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
+  revisarCierreDeCargaInicial = (solicitud: Solicitud) =>
+    this.casosDeUso.revisarCierreDeCargaInicial.ejecutar(operadorDe(solicitud), solicitud.params.empresaId);
+
+  cerrarCargaInicial = (solicitud: Solicitud<CierreSolicitado | null | undefined>) =>
+    this.casosDeUso.cerrarCargaInicial.ejecutar(operadorDe(solicitud), {
+      empresaId: solicitud.params.empresaId,
+      motivo: solicitud.body?.motivo,
+      huella: solicitud.body?.huella,
+    });
 
   reabrirCargaInicial = (solicitud: Solicitud<ReaperturaSolicitada>) =>
     this.casosDeUso.reabrirCargaInicial.ejecutar(operadorDe(solicitud), {

@@ -3,6 +3,7 @@ import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/uni
 import type { AvisosDeFechaDeInicio } from '../../puertos/avisos-de-empresa.js';
 import type { EjecutorEnEmpresa } from '../../ejecutor-en-empresa.js';
 import type { ConsultasDeDatosDeEmpresa } from '../../puertos/consultas-de-datos-de-empresa.js';
+import type { PreguntasDeCierre } from '../../puertos/preguntas-de-cierre.js';
 import type { RepositorioDeCargasIniciales } from '../../puertos/repositorio-de-cargas-iniciales.js';
 import type { RepositorioDeDatosFiscales } from '../../puertos/repositorio-de-datos-fiscales.js';
 
@@ -15,4 +16,5 @@ export interface DependenciasDeDatosDeEmpresa {
   consultas: ConsultasDeDatosDeEmpresa;
   auditoria: Auditoria;
   avisos: AvisosDeFechaDeInicio;
+  preguntas: PreguntasDeCierre;
 }
