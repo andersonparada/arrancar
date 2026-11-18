@@ -240,7 +240,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     expect(empresas.creadoEn.notNull).toBe(true);
   });
 
-  it('las tareas registradas en un punto de guardado que se deshace no corren, las de afuera sí', async () => {
+  it('en un punto de guardado que se deshace, las de confirmar se descartan y las de deshacer corren una sola vez', async () => {
     const corridas: string[] = [];
     await unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
       despuesDeConfirmar(async () => void corridas.push('confirmar-afuera'));
@@ -253,7 +253,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
         .catch(() => undefined);
     });
 
-    expect(corridas).toEqual(['confirmar-afuera']);
+    expect(corridas).toEqual(['deshacer-adentro', 'confirmar-afuera']);
   });
 
   it('las tareas de una empresa nueva que se deshace tampoco corren', async () => {

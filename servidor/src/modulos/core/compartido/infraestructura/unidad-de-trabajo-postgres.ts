@@ -137,8 +137,10 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
   }
 
   /**
-   * Abre un punto de guardado; si se deshace, descarta también las tareas de `despuesDeConfirmar` y `siSeDeshace`
-   * que se registraron dentro, porque lo que las pidió ya no existe.
+   * Abre un punto de guardado. Si se deshace: las tareas de `despuesDeConfirmar` registradas dentro se descartan
+   * (lo que las pidió ya no existe) y las de `siSeDeshace` se sacan de la lista y **se ejecutan** ahí mismo,
+   * después del rollback del punto, porque compensan efectos fuera de la base (un archivo ya escrito) que el
+   * rollback no deshace. Así no vuelven a correr si después se deshace toda la transacción.
    */
   private async enPuntoDeGuardado<Resultado>(
     enCurso: TrabajoEnCurso,
@@ -150,7 +152,8 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
       return await enCurso.transaccion.transaction(abrir);
     } catch (error) {
       enCurso.alConfirmar.length = Math.min(enCurso.alConfirmar.length, alConfirmar);
-      enCurso.alDeshacer.length = Math.min(enCurso.alDeshacer.length, alDeshacer);
+      const compensaciones = enCurso.alDeshacer.splice(alDeshacer);
+      await this.correr(compensaciones, 'al_deshacer');
       throw error;
     }
   }
@@ -229,7 +232,9 @@ export function despuesDeConfirmar(tarea: Tarea, descripcion = 'tarea'): boolean
 }
 
 /**
- * Deja una tarea para si se deshace la transacción más externa (si se confirma, se descarta). Sin unidad de trabajo
+ * Deja una tarea para si se deshace la transacción más externa (si se confirma, se descarta). Si lo que se deshace
+ * es un punto de guardado (`aislar`, `ejecutarEnEmpresaNueva`) que la contiene, corre en ese momento (después del
+ * rollback del punto) y no vuelve a correr. Sin unidad de trabajo
  * en curso devuelve `false` y no hace nada: no hay nada que deshacer. Una tarea que falla se registra y no tapa el error original.
  */
 export function siSeDeshace(tarea: Tarea, descripcion = 'tarea'): boolean {

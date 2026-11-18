@@ -2285,3 +2285,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `UnidadDeTrabajoEnMemoria` y `UnidadQueDeshace` fallan como el real: sin transacción abierta lanzan y rechazan un id repetido.
   (5) `aislar` y `ejecutarEnEmpresaNueva` recortan las tareas de `despuesDeConfirmar` y `siSeDeshace` registradas dentro de
   un punto de guardado que se deshace (no corren).
+- **2026-11-18, corrección a lo anterior (5): las compensaciones de `siSeDeshace` no se descartan.** Al deshacerse un
+  punto de guardado (`aislar`, `ejecutarEnEmpresaNueva`) solo se recortan las tareas de `despuesDeConfirmar`; las de
+  `siSeDeshace` (borrar un archivo ya escrito, `GestorDeDocumentos`) se sacan de la lista y **corren en ese momento**,
+  después del rollback del punto, con el mismo manejo de errores (registrar y seguir), y no vuelven a correr si luego se
+  deshace toda la transacción. Antes el archivo quedaba huérfano en disco si la transacción de afuera confirmaba. Pruebas:
+  unidad de trabajo (orden, una sola vez, fallo registrado) y de punta a punta con `GestorDeDocumentos`.
