@@ -25,7 +25,7 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `d53673e` (subido; con EM-2 y el Excel de plazos). Suite en paralelo (~4 min):
+**`main`:** `e291c08` (subido; con EM-2, Excel de plazos y la adenda del posfechado). Suite en paralelo (~4–5 min):
 prefijo, las bases se crean solas). Última suite completa en verde (integración): servidor 5301, cliente 1540, generador 46.
 En `main` además de lo anterior: CP4-9 corregido (tres revisiones), CP4-E5, CP5-9a y CP5-9b (R6 a R11), plazo de crédito
 PC-1 a PC-3, correo pasos 1 y 3, Caja chica y Cuentas por liquidar (datos: CC-1, CL-1, CC-1c), Excel de Terceros y de
@@ -92,6 +92,12 @@ del Banguat para todas las monedas (MM-3a), correcciones de la QA intermedia.
   después de la 0024) y paso 7 (Terceros), con revisión de seguridad. **MM-1 de Multimoneda va después** de que el correo
   esté en `main` (siguiente migración del core libre).
 - Preguntas pendientes para el usuario: diseño de RLS del core (5) y dictamen de Caja chica (V-12, V-13, V-8, V-3/V-4).
+- **Adenda del posfechado: en `main`.** Workflow `arrancar-cp4-d6-y-qa` (run `wf_a302f831-cea`): CP4-D6 (R1 y R2 con
+  disponible, A.7 = igual que la ficha) y QA CP4-12 en el navegador (informe `informe-qa-cp4-12-2026-11-18.md`).
+- **Diseño de Activos fijos** (workflow `arrancar-diseno-activos-fijos`, run `wf_9f5b1891-dae`): contador y arquitecto;
+  `diseno-activos-fijos.md` con preguntas para el usuario.
+- **En cola (orden de migraciones del core):** correo 2-4-5-6 (en curso) → RLS del núcleo R-1 a R-3 → MM-1.
+- El coordinador está en **/loop** (pedido del usuario el 2026-11-18).
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
