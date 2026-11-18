@@ -204,7 +204,6 @@ Quedan preguntas abiertas en la sección «Preguntas para el usuario» de cada p
 - Conciliación: probarla completa en el navegador (la demo de septiembre es del
   diseño viejo: eliminarla y rehacerla).
 - Excel de Clientes, Proveedores y Categorías de proveedor (sin empezar; el de Empresas ya está hecho).
-- Selector de empresa del encabezado sin buscador (no usa `CampoSelector`).
 - Con Contabilidad: en qué otros casos se permite eliminar (registros no
   contabilizados de un período abierto); cuenta contable por defecto del proveedor
   por empresa; partidas de provisión y reversión.

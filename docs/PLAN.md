@@ -2257,3 +2257,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - 2026-11-18 — **Excel de Empresas en el cliente**: la lista de Empresas muestra `AccionesDeIntercambio` y
   `VentanaDeImportacion` con `empresas.importar` y `empresas.exportar`; al importar se recarga la lista y la sesión (para que
   el selector de empresa vea las nuevas).
+- 2026-11-18 — **Selector de empresa del encabezado con buscador**: `SelectorEmpresa` usa `CampoSelector` (buscador
+  desde 8 empresas, teclado y panel flotante que cabe en celular). Las opciones salen de `opcionesDeEmpresa` (lógica pura
+  con pruebas): ordenadas por nombre y agrupadas por cuenta solo si hay más de una. El cambio sigue siendo
+  `sesion.cambiarEmpresa` y llevar al inicio; elegir la empresa ya activa no hace nada.
