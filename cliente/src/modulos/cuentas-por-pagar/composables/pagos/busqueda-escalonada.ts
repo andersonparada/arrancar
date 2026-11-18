@@ -1,3 +1,5 @@
+import { getCurrentScope, onScopeDispose } from 'vue';
+
 /** Espera, en milisegundos, desde la última tecla antes de pedir la búsqueda al servidor. */
 export const ESPERA_DE_BUSQUEDA_MS = 300;
 
@@ -26,6 +28,8 @@ export function crearBusquedaEscalonada<T>(opciones: OpcionesDeBusquedaEscalonad
       if (numero === ultimo) opciones.alFallar(error);
     }
   }
+
+  if (getCurrentScope()) onScopeDispose(() => (clearTimeout(temporizador), ultimo++));
 
   return (texto) => {
     clearTimeout(temporizador);

@@ -47,6 +47,14 @@ export function opcionesDeProveedores(proveedores: readonly ProveedorPorPagar[])
     .sort(porTexto);
 }
 
+/** Agrega el proveedor elegido si la lista no lo trae (se compara por id: el mismo proveedor puede llegar como otro objeto). */
+export function conProveedorElegido(
+  lista: readonly ProveedorPorPagar[],
+  elegido: ProveedorPorPagar | undefined,
+): readonly ProveedorPorPagar[] {
+  return elegido && !lista.some((p) => p.proveedorId === elegido.proveedorId) ? [...lista, elegido] : lista;
+}
+
 /** Cada chequera activa con su siguiente cheque; sin cheques disponibles se ve apagada. */
 export function opcionesDeChequeras(medios: MediosDePago | null): OpcionBuscable<string>[] {
   const opciones = (medios?.cuentas ?? []).flatMap((cuenta) =>

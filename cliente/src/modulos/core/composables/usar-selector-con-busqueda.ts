@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from 'vue';
+import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
 import {
   filtrarOpciones,
   indiceDeOpcionElegida,
@@ -94,6 +94,11 @@ export function usarSelectorConBusqueda<T extends string | number | null>(
   const opcionesFiltradas = computed(() => opcionesFiltradasDe(estado));
   const muestraBuscador = computed(() => enServidor.value || opciones.value.length > UMBRAL_PARA_MOSTRAR_BUSCADOR);
   const textoElegido = computed(() => opciones.value.find((opcion) => opcion.valor === modelo.value)?.texto ?? '');
+
+  // Si llegan otras opciones mientras se busca, la resaltada ya no es la que el usuario vio.
+  watch(opciones, () => {
+    if (abierto.value && busqueda.value) indiceActivo.value = -1;
+  });
 
   function alPresionarTecla(evento: KeyboardEvent): void {
     if (abierto.value) manejarTeclaConAbierto(estado, evento);

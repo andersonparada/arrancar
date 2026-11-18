@@ -7,7 +7,7 @@ import { apiPagos, type ParaPagar } from '../../servicios/pagos.api';
 import type { ProveedorPorPagar } from '../../servicios/tipos-de-pagos';
 import { claveDeSuma, crearControlDeSuma } from './control-de-suma';
 import { mensajeDe } from './mensaje-de-error';
-import { opcionesDeProveedores } from './opciones-del-pago';
+import { conProveedorElegido, opcionesDeProveedores } from './opciones-del-pago';
 
 /** Los proveedores que se han visto, para que el elegido no salga del selector cuando una búsqueda ya no lo trae. */
 function usarProveedoresVistos() {
@@ -47,8 +47,7 @@ export function usarProveedoresPorPagar(elegido: () => string) {
   const incompleta = computed(() => datos.value.incompleta);
   const opciones = computed(() => {
     const lista = (encontrados.value ?? datos.value).proveedores;
-    const propio = vistos.get(elegido());
-    return opcionesDeProveedores(propio && !lista.includes(propio) ? [...lista, propio] : lista);
+    return opcionesDeProveedores(conProveedorElegido(lista, vistos.get(elegido())));
   });
 
   return {

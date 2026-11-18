@@ -2353,3 +2353,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   200 para quien solo ve; `ligar-notas-de-debito` es de la acción de ligar (`POST /pagos/ligar`), que no cambia. Prueba de API
   de los filtros `cuentaBancariaId`, `desde` y `hasta`. La tarjeta del proveedor sale de la página a
   `SeleccionDeProveedorDelPago`.
+- 2026-11-18 · Correcciones de la revisión del selector de proveedores del pago: el proveedor elegido ya no sale repetido
+  (se compara por id en `conProveedorElegido`, con prueba); la búsqueda escalonada cancela su temporizador y descarta
+  pedidos en vuelo al salir de la pantalla; `usarSelectorConBusqueda` reinicia la opción resaltada cuando llegan otras
+  opciones mientras se busca. Queda pendiente (no es regresión): el texto del botón si se entra con `?proveedorId=` de un
+  proveedor fuera de la carga inicial.
