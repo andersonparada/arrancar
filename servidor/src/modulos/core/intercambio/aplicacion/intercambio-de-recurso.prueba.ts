@@ -50,6 +50,10 @@ class UnidadQueDeshace implements UnidadDeTrabajo {
     }
   }
 
+  ejecutarEnOtraEmpresa<Resultado>(contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
+    return this.ejecutar(contexto, trabajo);
+  }
+
   async aislar<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado> {
     const antes = [...this.guardados];
     try {

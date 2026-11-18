@@ -2244,3 +2244,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   emisiones y la fecha de inicio, y el servidor valida igual) y la bancarización se anticipa solo como «el mes llega al
   umbral» (el efecto fiscal lo decide el servidor al registrar). Sin enlace «Pagar en efectivo» ni a la ficha del pago (CP4-E5 y
   CP4-10).
+- 2026-11-18 — **Excel de Empresas (exportar e importar)**: `GET /empresas/exportar`, `GET /empresas/plantilla` y
+  `POST /empresas/importar` con los permisos `empresas.exportar` y `empresas.importar` (migración `0010` en `empresas`: quien
+  tenía `empresas.editar` recibe exportar y quien tenía `empresas.crear` recibe importar, en roles y permisos directos).
+  Columnas: nombre, NIT, dirección, teléfono, correo y activa (las del formulario de crear). Fuera quedan los datos fiscales
+  (`secciones` de Libro de compras) y la fecha de inicio, que se completan en la ficha de la empresa, y las empresas
+  existentes (importar solo crea, no actualiza). Cada fila pasa por `RegistrarEmpresa` (acceso del creador, tipos de
+  localidad iniciales y avisos a los módulos). Para que fuera todo o nada con una empresa distinta por fila,
+  `UnidadDeTrabajo` gana `ejecutarEnOtraEmpresa` (punto de guardado dentro de la transacción en curso, solo para la misma
+  cuenta y usuario, que devuelve la empresa anterior al terminar); `RegistrarEmpresa` la usa en vez de `ejecutar`. Pruebas
+  de API (ensayo, semilla, todo o nada, 403) y de la unidad de trabajo.

@@ -122,6 +122,45 @@ describe('unidad de trabajo sobre PostgreSQL', () => {
   });
 });
 
+describe('ejecutar en otra empresa de la cuenta', () => {
+  it('ve la otra empresa dentro y vuelve a la anterior al terminar, en la misma transacción', async () => {
+    const [dentro, despues] = await unidadDeTrabajo.ejecutar(enEmpresaA, async () => [
+      await unidadDeTrabajo.ejecutarEnOtraEmpresa(enEmpresaB, recursosVisibles),
+      await recursosVisibles(),
+    ]);
+
+    expect(dentro).toEqual(['de-b']);
+    expect(despues).toEqual(['de-a']);
+  });
+
+  it('si falla dentro, deshace solo lo suyo y la empresa anterior sigue activa', async () => {
+    const resultado = await unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      await unidadDeTrabajo
+        .ejecutarEnOtraEmpresa(enEmpresaB, async () => {
+          await registrarAcceso(enEmpresaB, 'de-b-fallido');
+          throw new FalloProvocado();
+        })
+        .catch(() => undefined);
+      return recursosVisibles();
+    });
+
+    expect(resultado).toEqual(['de-a']);
+    expect(await unidadDeTrabajo.ejecutar(enEmpresaB, recursosVisibles)).toEqual(['de-b']);
+  });
+
+  it('no deja cambiar de cuenta ni de usuario', async () => {
+    const deOtraCuenta = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
+      unidadDeTrabajo.ejecutarEnOtraEmpresa({ ...enEmpresaB, cuentaId: enEmpresaA.usuarioId }, recursosVisibles),
+    );
+
+    await expect(deOtraCuenta).rejects.toThrow(ContextoDistintoEnLaTransaccion);
+  });
+
+  it('sin transacción en curso, es como ejecutar', async () => {
+    expect(await unidadDeTrabajo.ejecutarEnOtraEmpresa(enEmpresaB, recursosVisibles)).toEqual(['de-b']);
+  });
+});
+
 describe('tareas para después de confirmar', () => {
   it('corren cuando se confirma la transacción más externa, no antes', async () => {
     const orden: string[] = [];

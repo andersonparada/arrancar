@@ -86,6 +86,22 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
     return enCurso.transaccion.transaction((punto) => trabajoEnCurso.run({ ...enCurso, transaccion: punto }, trabajo));
   }
 
+  async ejecutarEnOtraEmpresa<Resultado>(
+    contexto: ContextoEmpresa,
+    trabajo: () => Promise<Resultado>,
+  ): Promise<Resultado> {
+    const enCurso = trabajoEnCurso.getStore();
+    if (!enCurso) return this.ejecutar(contexto, trabajo);
+    const { cuentaId, usuarioId } = enCurso.contexto;
+    if (contexto.cuentaId !== cuentaId || contexto.usuarioId !== usuarioId) throw new ContextoDistintoEnLaTransaccion();
+    return enCurso.transaccion.transaction(async (punto) => {
+      await fijarVariablesDeSeguridad(punto, contexto);
+      const resultado = await trabajoEnCurso.run({ ...enCurso, transaccion: punto, contexto }, trabajo);
+      await fijarVariablesDeSeguridad(punto, enCurso.contexto);
+      return resultado;
+    });
+  }
+
   private async ejecutarEnTransaccion<Resultado>(
     nuevo: Omit<TrabajoEnCurso, 'transaccion'>,
     trabajo: () => Promise<Resultado>,

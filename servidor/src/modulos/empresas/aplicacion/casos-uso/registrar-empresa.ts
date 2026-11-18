@@ -45,7 +45,7 @@ export class RegistrarEmpresa {
     const empresa = Empresa.registrar(Identificador.desde(operador.cuentaId), datosDeEmpresa(solicitud));
     const enLaNueva = { ...operador, empresaId: empresa.id.valor };
 
-    const registrada = await unidadDeTrabajo.ejecutar(enLaNueva, async () => {
+    const registrada = await unidadDeTrabajo.ejecutarEnOtraEmpresa(enLaNueva, async () => {
       await this.dependencias.repositorio.agregar(empresa);
       await this.darAccesoAlCreador(operador, empresa);
       await this.dependencias.tiposDeLocalidad.ejecutar(enLaNueva);
