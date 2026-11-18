@@ -1,5 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import {
   detallesDeDesglose,
   explicacionDeOrigen,
@@ -42,7 +43,9 @@ describe('marca de la nota', () => {
 
   it('el reparto se muestra línea por línea', () => {
     const desglose = [{ conceptoId: 'a', concepto: 'Pago a proveedores', monto: '100.00' }];
-    expect(detallesDeDesglose({ desglose })).toEqual([{ etiqueta: 'Reparto: Pago a proveedores', valor: 'Q 100.00' }]);
+    expect(detallesDeDesglose({ desglose })).toEqual([
+      { etiqueta: 'Reparto: Pago a proveedores', valor: formatearMonto('100.00') },
+    ]);
     expect(detallesDeDesglose({ desglose: [] })).toEqual([]);
   });
 
