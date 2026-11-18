@@ -236,7 +236,9 @@ CP5): marcar las aplicaciones de notas **no vigentes** en vez de borrarlas, para
 
 1. Σ saldos netos por proveedor (R1) = Σ saldos de cargos − Σ saldos libres (R2 y R4) al mismo corte.
 2. Saldo final del estado de cuenta (R3) del proveedor P al día `hasta` = saldo neto de P en R1 con `corte = hasta`.
-3. Con `corte = hoy`, «Disponible para pagar» de cada documento = saldo de la lista de Documentos.
+3. Con `corte = hoy`, «Disponible para pagar» de cada documento = saldo de la lista de Documentos. **Cambia con la
+   adenda del 2026-11-18 de `diseno-cp4-pagos.md`:** después de CP4-D3, el saldo de R2 es igual al saldo de la lista (la
+   deuda), y lo disponible de R2, a lo disponible de la lista.
 4. Un corte pasado no cambia al anular después un pago, un reintegro, un ajuste o un documento (§2.3). Excepciones
    esperadas, con su aviso o leyenda: un documento con fecha de efecto hasta el corte registrado después (§2.2) y un
    cheque posfechado cuya conciliación se autoriza después (§2.1).

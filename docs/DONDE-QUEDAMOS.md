@@ -10,6 +10,10 @@ decisiones e investigación con Opus).
 
 Actualizado: **2026-11-18** (tarde). El usuario pidió retomar la programación. Si otra sesión o cuenta retoma el trabajo, empiece aquí.
 
+**Desde el 2026-11-18 (velocidad):** los agentes corren `npm run revisar` y solo las pruebas de lo que tocan; la suite
+completa la corre el coordinador una vez en el worktree de integración. Un agente prepara las pruebas del servidor en
+paralelo (una base por worker; hoy ~27 min en serie).
+
 **Cómo se trabaja:** cada paso lo programa un agente en su propio worktree (`.claude/worktrees/agent-<id>`, rama
 `worktree-agent-<id>`), que parte de `main` con `git reset --hard main`, usa su propia base de pruebas
 (`BD_PRUEBAS=arrancar_pruebas_<algo>`, creada con `docker compose -f infra/docker-compose.dev.yml exec -T postgres psql
@@ -52,7 +56,17 @@ Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-ca
   BS-R1 en main) y el arreglo del posfechado (después de CP4-10 y CP4-11 en main).
 - **Worktree de integración** `.claude/worktrees/integracion` (rama `integracion`, base `arrancar_pruebas_integracion`,
   `node_modules` enlazados al checkout principal): ahí se unen y prueban las ramas terminadas mientras `main` corre otra
-  suite; luego se pasa a `main`. Tiene CP4-B3b, CP5-9a y la QA intermedia.
+  suite; luego se pasa a `main`. CP4-B3b, CP5-9a y la QA intermedia ya pasaron a `main`; ahora tiene CP4-10, CP4-11 y CP5-5 (`8a0cd15f`) con
+  su suite corriendo.
+- **Workflow `arrancar-cp4e5-cp59b-qa`** (run `wf_2e5dd345-87d`, desde `8a0cd15f`): CP4-E5, CP5-9b (R9 a R11 cliente) y
+  correcciones de la QA intermedia, con revisión.
+- **Aprobados el 2026-11-18:** Multimoneda, Caja chica y Cuentas por liquidar, y aviso de pago por correo (respuestas al
+  final de cada diseño). **Orden de las migraciones del core:** EM-2 (en curso) → correo (pasos 2 y 4) → Multimoneda (MM-1).
+  Caja chica espera `preguntarATodos` de EM-2 (CCL-M) y la migración de Bancos de CCL-B1 (después de BS-R1).
+- **Workflow `arrancar-modulos-nuevos-fase1`** (run `wf_af6cd921-5c2`): correo pasos 1 y 3, CC-1 y CL-1 (datos de los dos
+  módulos nuevos) y MM-3a (cliente del Banguat sin base), con revisión de seguridad o del arquitecto.
+- Integración: falla la preparación de dos pruebas de CP5-5 contra la regla de BS-2 (fecha de inicio); un agente lo corrige en
+  la rama `integracion`. Después entran las decisiones de H2 y la bandeja de DTE.
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)

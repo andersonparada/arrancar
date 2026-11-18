@@ -2363,3 +2363,24 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ofrece en los vigentes y el servidor decide; anular no pide la fecha del inverso (el servidor usa la de hoy); las cuentas del
   depósito salen de `GET /pagos/medios` (pide `pagos.ver`; sin ellas solo se ofrece el efectivo); el enlace a constancias no
   lleva el mes ni el filtro porque esa pantalla no lee parámetros de la ruta.
+- **2026-11-18 (diseño de EM-2 actualizado con el dictamen).** `diseno-em2-cierre-de-la-carga.md` revisado: la auditoría
+  de `empresas.cargas-iniciales` no se depura mientras la entrada tenga empresa (catálogo
+  `core.recursos_de_auditoria_permanente` con RLS de solo lectura y excepción en `core.depurar_auditoria`, migración core
+  `0024`); la revisión guardada lleva hallazgos y cifras del cuadre de cada módulo, con historial y Excel de tres hojas;
+  `CargaInicialDto.ultimoCierre` para «Cerrada el … por …, con N diferencias: motivo»; balance de apertura en PDF
+  (`cargas_iniciales.balance_de_apertura_archivo_id`); avisos nuevos (retenciones con el texto del dictamen, documentos del
+  libro anteriores a la fecha de inicio, proveedores con saldo a favor, mes partido de Libro de compras); dos permisos
+  nuevos (`empresas.carga-inicial.ver-cierres` y `.exportar`). Trece pasos (EM-2.1 a EM-2.13) y U8-B aparte. Preguntas
+  P-6 a P-8 con recomendación.
+- **2026-11-18 — Impresión de cheques: diseño final con el dictamen.** `diseno-impresion-de-cheques.md` queda aprobado y con
+  los ajustes del contador: `movimientos.para_abono_en_cuenta` (falso por omisión; va con el pago al pasar a otro
+  formulario), relleno tras el beneficiario y en el primer renglón de las letras, campos de la cara del cheque cerrados (sin
+  anotaciones), `preimpreso` para «NO NEGOCIABLE» y «PARA ABONO EN CUENTA», fecha en texto o en casillas, causas de
+  anulación `inutilizado` (con confirmación de custodia y del papel conservado) y `extraviado` (anulación con aviso al
+  banco), reporte de correlativos por chequera con cuadro de conteo físico, comprobante con retenciones y «Aplicación
+  contable» vacía. Pasos IC-1 a IC-11; empiezan cuando BS-3, BS-4 y BS-R1 estén en `main` (la migración toma la siguiente
+  libre tras la `0035`). Falta cotejar la remisión del art. 495 antes de citarlo.
+- **2026-11-18 (respuestas del usuario a Multimoneda, Caja chica y Cuentas por liquidar, y aviso de pago por correo).**
+  Todas las recomendaciones, salvo en Caja chica: una factura con retención se rechaza **con permiso de excepción**
+  (lo del contador, CC-f A′) y la bancarización solo **avisa y marca** (lo del arquitecto, CC-h A). Detalle al final de
+  cada diseño. Los tres quedan **aprobados** para programar (orden de la hoja de ruta: Multimoneda antes que Caja chica).

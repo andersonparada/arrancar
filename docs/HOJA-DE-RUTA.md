@@ -71,6 +71,9 @@ fecha de corte por empresa** y deben cuadrar entre sí y con el balance de apert
   avisos de pago»), copia a la empresa, plantilla del correo, adjuntos (constancia de retención,
   comprobante), servidor de correo por instalación (SMTP en la configuración, solo superacceso),
   bitácora de envíos y reintentos. Relacionado: el correo de usuarios es opcional (solo informes).
+- **Diseño propuesto (2026-11-18), pendiente de las respuestas del usuario:**
+  `docs/modulos/diseno-aviso-de-pago-por-correo.md` (correo saliente en `core/correo`, marca en contactos y aviso en
+  Cuentas por pagar; 18 preguntas en su §12). Revisión de seguridad: `docs/modulos/revision-seguridad-correo-2026-11-18.md`.
 
 ### Plazo de crédito del proveedor (2026-10-04)
 
