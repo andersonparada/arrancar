@@ -2322,3 +2322,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   banco), reporte de correlativos por chequera con cuadro de conteo físico, comprobante con retenciones y «Aplicación
   contable» vacía. Pasos IC-1 a IC-11; empiezan cuando BS-3, BS-4 y BS-R1 estén en `main` (la migración toma la siguiente
   libre tras la `0035`). Falta cotejar la remisión del art. 495 antes de citarlo.
+- **2026-11-18 (respuestas del usuario a Multimoneda, Caja chica y Cuentas por liquidar, y aviso de pago por correo).**
+  Todas las recomendaciones, salvo en Caja chica: una factura con retención se rechaza **con permiso de excepción**
+  (lo del contador, CC-f A′) y la bancarización solo **avisa y marca** (lo del arquitecto, CC-h A). Detalle al final de
+  cada diseño. Los tres quedan **aprobados** para programar (orden de la hoja de ruta: Multimoneda antes que Caja chica).

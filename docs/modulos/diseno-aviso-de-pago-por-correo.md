@@ -542,3 +542,15 @@ Cada una con opciones y la recomendación. Las marcadas (S) repiten las de la re
 - Que el rol dueño de las funciones `security definer` sea también dueño de `core.archivos` en producción (§3.5).
 - Que la pantalla genérica de configuración muestre bien un texto largo de 2,000 caracteres con saltos de línea
   (si no, ajuste menor del cliente en el paso 13).
+
+## Respuestas del usuario (2026-11-18)
+
+Todas las recomendaciones: **P1** botón siempre más envío automático configurable por empresa (apagado por omisión);
+**P2** solo correos registrados; **P3** el principal solo si ningún contacto tiene la marca; **P4** una marca por tipo;
+**P5** PDF adjunto, configurable (sí por omisión); **P6** cuerpo con número, fecha, forma, monto y facturas, asunto solo
+número y empresa; **P7** copia visible configurable y «Responder a» la empresa; **P8** todas las formas menos la cuenta de
+apertura; **P9** cancelar pendientes y recordatorio; **P10** reenviar con el botón; **P11** plantilla como configuración
+de la empresa; **P12** 100/hora y 500/día por cuenta, 20/día por destinatario, 1,000/hora la instalación; **P13**
+proveedor de correo transaccional por 587 con cifrado obligatorio, remitente `notificaciones@<dominio>` con SPF, DKIM y
+DMARC; **P14** llave en el `.env`, respaldada aparte; **P15** contenido 30 días, metadatos 60 meses; **P16** historial
+con `correos.ver`; **P17** Mailpit en desarrollo; **P18** `correos.cancelar` y `correos.reintentar`.

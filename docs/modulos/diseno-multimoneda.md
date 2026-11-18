@@ -837,3 +837,12 @@ Paso de documentos aparte (sin código): corregir C-10 en Bancos si el usuario l
 | V-12 | Libro de compras de la SAT: ¿pide la moneda o el total original? Bancarización de un pago en dólares: tipo de qué fecha | MM-L2, MM-C3 |
 | V-13 | (Técnico, en MM-3) `TipoCambioRango` del USD: ¿`compra = venta = referencia`?; un fin de semana y un asueto; códigos y unidades de las otras monedas (¿quetzales por unidad?) | MM-3 |
 | V-14 | ¿El reporte mensual del diferencial (impreso o exportado) sirve como el «registro mensual» del art. 21 num. 28? | MM-D1 |
+
+## Respuestas del usuario (2026-11-18)
+
+Todas las recomendaciones: **PU-1** (a) quetzal fijo como moneda de libros; **PU-2** (a) monedas y tipos en el núcleo más
+el módulo activable «multimoneda»; **PU-3** (a) solo soporte, para toda la instalación; **PU-4** (a) solo USD activo;
+**PU-5** (a) referencia del Banguat de la emisión, fija; **PU-6** (a) editable solo con conversión real; **PU-7** (a) B
+por omisión y C por empresa; **PU-8** (a) solo el reporte calculado en la versión 1; **PU-9** (a) sugerencia de
+deducibilidad con la leyenda; **PU-10** (a) el anterior hasta 7 días con aviso y lista, luego bloqueo; **PU-11** a
+**PU-15** (a); **PU-16** (a) corregir C-10 en el diseño y el dictamen de Bancos con una nota.

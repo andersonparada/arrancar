@@ -985,3 +985,15 @@ devolvió efectivo al fondo).
 - **P-CCL-5:** «cambiar destino» de un documento del libro sin anularlo (hoy se anula con causa `error_de_captura` y se
   vuelve a registrar).
 - **P-CCL-6:** Planilla: escuchar `anticipo_liquidado` (cuotas y renta del trabajo) cuando exista.
+
+## Respuestas del usuario (2026-11-18)
+
+- **CC-f:** **A′ (lo del contador):** una factura con retención se rechaza en Caja chica y en Cuentas por liquidar, salvo
+  con un **permiso de excepción** y motivo (auditado).
+- **CC-h:** **A (lo del arquitecto):** al llegar al umbral de bancarización, aviso y marca «sin bancarizar» (y sale en el
+  reporte), sin bloquear.
+- **CCL-a, CCL-b, CCL-y, CCL-z, CC-d y CC-e:** las recomendaciones: dos módulos; el retiro de CP4 se queda en Cuentas por
+  pagar; «Agregar factura» desde la ficha y, si no, bandeja; Libro de compras evalúa la bancarización y los tres módulos
+  responden; alcance propio por fondo; el custodio usuario recibe el acceso al nombrarlo.
+- **Lo demás (CC-g, CC-i, CC-k, CC-c, CC-l, CC-m, CC-j, CC-n, CC-p, CL-r, CL-s, CL-t, CL-u, CL-v, CL-w):** todas las
+  recomendaciones.
