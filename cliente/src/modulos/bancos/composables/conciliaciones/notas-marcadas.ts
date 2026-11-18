@@ -29,5 +29,5 @@ export function notasMarcadasDeLaConciliacion<T extends NotaConMarca>(
 /** El resumen de la lista: cuántas hay, en singular o plural. */
 export const resumenDeNotasMarcadas = (cantidad: number): string =>
   cantidad === 1
-    ? 'Hay 1 nota marcada para Cuentas por pagar que todavía no se aplica.'
-    : `Hay ${cantidad} notas marcadas para Cuentas por pagar que todavía no se aplican.`;
+    ? 'Hay 1 nota marcada para Cuentas por pagar. Si ya se ligó a un pago, no se puede desmarcar.'
+    : `Hay ${cantidad} notas marcadas para Cuentas por pagar. Las que ya se ligaron a un pago no se pueden desmarcar.`;

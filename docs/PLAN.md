@@ -2228,3 +2228,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   dañado…»); `demasiadas_subidas` pasa a usted; el cuadro «Según libros / Según banco» cabe en 380 px sin desplazarse; y «Ver»
   de la lista de conciliaciones se alinea con los demás botones. Siguen esperando al usuario la impresión en modo oscuro y la
   huella.
+- 2026-11-18, Bancos CP4-B3b, correcciones de la revisión: la prueba de `comparacion-de-saldo` activa Pinia (las 2 fallidas
+  pasan); el resumen de las notas marcadas ya no afirma que no están aplicadas («las que ya se ligaron a un pago no se pueden
+  desmarcar»; saber cuáles están ligadas exigiría un dato de Cuentas por pagar y queda por acordar); la lista se vuelve a
+  pedir cuando la conciliación pasa a «en proceso» en la misma pantalla; `enQuetzales` del servidor escribe «-Q 5.00» con
+  saldo negativo; los mensajes de foto HEIC e imagen demasiado grande pasan a usted. Sin resolver: filtro `desde` y aviso
+  de error al listar notas, y montos de 9+ cifras en el cuadro a 380 px.

@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, type Ref } from 'vue';
+import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { apiConciliaciones, type Conciliacion } from '../../servicios/conciliaciones.api';
 import type { Movimiento } from '../../servicios/movimientos.api';
@@ -35,5 +35,8 @@ export function usarNotasMarcadas(conciliacion: Ref<Conciliacion | null>) {
     apiConciliaciones.desmarcarNota(conciliacion.value?.id ?? '', nota.id, cuerpo),
   );
   onMounted(cargar);
+  watch(disponible, (ahora) => {
+    if (ahora) void cargar();
+  });
   return { notas, disponible, desmarcado };
 }

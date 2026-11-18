@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { compararSaldo, faltaParaTerminar, normalizarMonto, textoDeDiferencia } from './comparacion-de-saldo';
+
+beforeEach(() => setActivePinia(createPinia()));
 
 describe('normalizarMonto', () => {
   it('quita comas, espacios y la Q', () => {
