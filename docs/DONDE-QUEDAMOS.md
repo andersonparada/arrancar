@@ -76,12 +76,12 @@ Cuentas por pagar, CP5-10); que el servidor devuelva el aviso de fecha de inicio
 
 ### Esperan al usuario
 
-- `git push origin main`.
 - Frase FEL 9-22 (ver «Pendiente del usuario»).
-- Informe de QA del 2026-11-08 sin commit en `agent-a19777c26d783baf6`; errores 4 y 6 de esa QA.
-- Bancos H2: tope de tamaño de solicitud en Caddy (~20 MB); conservar 60 meses el `nombreOriginal` en la auditoría; qué
-  huella mostrar (la de lo recibido o `qpdf --deterministic-id`); botón de desmarcar dentro de la conciliación; impresión
-  en modo oscuro de toda la app (`@media print`); probar a mano Firefox y Safari.
+- Probar a mano el visor de PDF de H2 en Firefox y Safari reales (también en el celular).
+- Respuestas de los diseños nuevos (Multimoneda, Caja chica, aviso por correo, plazo de crédito, EM-2, impresión de cheques)
+  cuando lleguen.
+- Decididos el 2026-11-18 (ver bitácora de `PLAN.md`): Caddy, `nombreOriginal`, huella, impresión en claro, bandeja de DTE
+  (errores 4, 5 y 6 de la QA del 2026-11-08) y `git push` (lo hace el coordinador).
 
 ### Avisos técnicos
 

@@ -2244,3 +2244,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   emisiones y la fecha de inicio, y el servidor valida igual) y la bancarización se anticipa solo como «el mes llega al
   umbral» (el efecto fiscal lo decide el servidor al registrar). Sin enlace «Pagar en efectivo» ni a la ficha del pago (CP4-E5 y
   CP4-10).
+- **2026-11-18 (decisiones del usuario).** Bancos H2: tope de **20 MB por solicitud en Caddy** (además de los topes de la
+  app); el `nombreOriginal` del archivo se **conserva** los 60 meses de la auditoría (como hoy); la huella que se muestra es
+  la **del archivo recibido** (estable, comparable con el archivo del usuario); **toda la app imprime siempre en claro**
+  (`@media print` global: fondo blanco, texto negro, sin menú). El botón de desmarcar en la conciliación lo hace CP4-B3b.
+  Libro de compras, bandeja de DTE (QA del 2026-11-08, informe en `docs/modulos/informe-qa-2026-11-08.md`): la barra de
+  marcados usa **el criterio de «Confirmar»** («17 marcados: se registrarán 15 por Q…, 2 no se registran»); la selección
+  **se conserva entre páginas** con «Marcar los N del filtro», y al confirmar se envía en **tandas de 100** con avance (cada
+  tanda todo o nada; si una falla, se detiene y dice cuáles quedaron); tras confirmar, **un solo aviso** de éxito con las
+  advertencias **agrupadas** (una vez cada una, con cuántos documentos y «Ver cuáles»). El coordinador hace el
+  `git push origin main` después de cada unión en verde.
