@@ -92,6 +92,7 @@ export const TEXTOS_DE_LAS_ACCIONES = {
   descartar: 'Descartar',
   restaurar: 'Restaurar',
   marcarTodas: 'Marcar todas las de esta página',
+  marcarElFiltro: (total: number): string => `Marcar los ${total} del filtro`,
   quitarMarcas: 'Quitar marcas',
   verFactura: 'Ver factura',
 } as const;

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { hayQpdf } from '../modulos/core/archivos/pruebas/soporte-de-qpdf.js';
 import type { ClienteApi } from './soporte/cliente-api.js';
@@ -78,6 +79,19 @@ describe('subir y abrir el estado de cuenta', () => {
       expect(abierto.cabeceras['content-disposition']).toBe('inline; filename="estado-de-cuenta-2026-01.pdf"');
       expect(abierto.cabeceras['cache-control']).toBe('private, no-store');
       expect(abierto.cabeceras['x-content-type-options']).toBe('nosniff');
+    },
+  );
+
+  it.skipIf(!hayQpdf)(
+    'la huella es la del archivo recibido: igual al sha256 del original y estable al repetir',
+    async () => {
+      const original = pdf('huella.pdf');
+      const esperada = createHash('sha256').update(original.contenido).digest('hex');
+      const primera = await subir(propietario, await iniciar('Huella uno'), original);
+      const segunda = await subir(propietario, await iniciar('Huella dos'), original);
+
+      expect(primera.cuerpo.estadoDeCuenta.sha256).toBe(esperada);
+      expect(segunda.cuerpo.estadoDeCuenta.sha256).toBe(esperada);
     },
   );
 

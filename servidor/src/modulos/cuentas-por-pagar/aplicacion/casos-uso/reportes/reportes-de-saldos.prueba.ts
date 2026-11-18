@@ -12,6 +12,7 @@ import type {
   DatosParaAvisosDelCorte,
   FiltroDeDocumentosAlCorte,
 } from '../../puertos/puertos-de-saldos-al-corte.js';
+import type { ConsultasDeNotasSinAplicar, NotaSinAplicar } from '../../puertos/puertos-de-notas-sin-aplicar.js';
 import { ReporteDeDocumentosAUnaFecha } from './reporte-de-documentos-a-una-fecha.js';
 import { ReporteDeSaldosPorProveedor } from './reporte-de-saldos-por-proveedor.js';
 
@@ -64,8 +65,25 @@ class ConsultasDeLaPrueba implements ConsultasDeSaldosAlCorte {
   }
 }
 
-function dependencias(consultas: ConsultasDeLaPrueba, carga = new CargaInicialEnMemoria()) {
+/** R11 de la prueba: devuelve las notas dadas y guarda el corte con que se le pidió. */
+class NotasDeLaPrueba implements ConsultasDeNotasSinAplicar {
+  corte: string | undefined;
+
+  constructor(private readonly notas: NotaSinAplicar[] = []) {}
+
+  async notasSinAplicar({ corte }: { corte: string }) {
+    this.corte = corte;
+    return this.notas;
+  }
+}
+
+function dependencias(
+  consultas: ConsultasDeLaPrueba,
+  carga = new CargaInicialEnMemoria(),
+  notasSinAplicar: ConsultasDeNotasSinAplicar = new NotasDeLaPrueba(),
+) {
   return {
+    notasSinAplicar,
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     reloj: new RelojFijo('2026-03-15'),
     cargaInicial: carga,
@@ -74,6 +92,49 @@ function dependencias(consultas: ConsultasDeLaPrueba, carga = new CargaInicialEn
 }
 
 const solicitud = { autorizacion: 'todos' as const, incluirSinSaldo: false, orden: 'nombre' as const };
+
+const notaPorAplicar: NotaSinAplicar = {
+  movimientoId: 'm1',
+  cuentaBancariaId: 'c1',
+  cuenta: 'Cuenta',
+  fecha: '2026-02-01',
+  numero: 7,
+  referencia: null,
+  montoCentavos: 100_000,
+  aplicadoCentavos: 25_000,
+  conciliada: false,
+};
+
+describe('ReporteDeSaldosPorProveedor: conciliación al pie', () => {
+  it('resta la transitoria de R11 al mismo corte del saldo neto del auxiliar', async () => {
+    const consultas = new ConsultasDeLaPrueba([proveedor({ proveedorId: 'p1', neto: 500_000 })]);
+    const notas = new NotasDeLaPrueba([notaPorAplicar]);
+
+    const reporte = await new ReporteDeSaldosPorProveedor(dependencias(consultas, undefined, notas)).ejecutar(
+      operadorDePrueba(),
+      { ...solicitud, corte: '2026-02-28' },
+    );
+
+    expect(notas.corte).toBe('2026-02-28');
+    expect(reporte.conciliacion).toEqual({
+      saldoNetoDelAuxiliar: '5000.00',
+      pagosPorAplicar: '750.00',
+      proveedoresNetoDePagosPorAplicar: '4250.00',
+    });
+  });
+
+  it('no concilia si se filtró por proveedor o por autorización', async () => {
+    const consultas = new ConsultasDeLaPrueba();
+    consultas.proveedoresQueExisten.add('p1');
+    const caso = new ReporteDeSaldosPorProveedor(dependencias(consultas));
+
+    const deUno = await caso.ejecutar(operadorDePrueba(), { ...solicitud, proveedorId: 'p1' });
+    const autorizados = await caso.ejecutar(operadorDePrueba(), { ...solicitud, autorizacion: 'autorizados' });
+
+    expect(deUno.conciliacion).toBeUndefined();
+    expect(autorizados.conciliacion).toBeUndefined();
+  });
+});
 
 describe('ReporteDeSaldosPorProveedor', () => {
   it('sin corte usa el día de hoy de la empresa y lleva la fecha de inicio a la consulta', async () => {

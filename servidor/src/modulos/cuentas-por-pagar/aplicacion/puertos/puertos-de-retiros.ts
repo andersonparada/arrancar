@@ -72,6 +72,8 @@ export interface FiltroDeRetiros {
   corte?: string;
   desde?: string;
   hasta?: string;
+  /** Parte del nombre del custodio, sin distinguir mayúsculas. */
+  custodio?: string;
   soloConDisponible: boolean;
   pagina: number;
   limite: number;

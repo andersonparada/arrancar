@@ -21,6 +21,18 @@ defineEmits<{ otro: [] }>();
     <DatosDelRegistro :detalles="detallesDelPagoRegistrado(pago)" />
     <AvisosDelPago :avisos="pago.avisos" titulo="Revise estos avisos" />
     <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+      <RouterLink
+        :to="{ name: 'cuentas-por-pagar.pagos.ficha', params: { id: pago.id } }"
+        class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-tierra-800 ring-1 ring-tierra-200 hover:bg-tierra-100 dark:bg-tierra-800 dark:text-tierra-100 dark:ring-tierra-700 dark:hover:bg-tierra-700"
+      >
+        Ver el pago {{ pago.numero }}
+      </RouterLink>
+      <RouterLink
+        :to="{ name: 'cuentas-por-pagar.pagos.comprobante', params: { id: pago.id } }"
+        class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-tierra-800 ring-1 ring-tierra-200 hover:bg-tierra-100 dark:bg-tierra-800 dark:text-tierra-100 dark:ring-tierra-700 dark:hover:bg-tierra-700"
+      >
+        Imprimir el comprobante
+      </RouterLink>
       <span v-permiso="'cuentas-por-pagar.contrasenas.ver'" class="contents">
         <RouterLink
           v-for="contrasena in pago.contrasenas"

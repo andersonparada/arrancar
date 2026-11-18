@@ -20,7 +20,7 @@ const ficha = (cambios: Partial<FichaDelDocumento>): FichaDelDocumento =>
   }) as FichaDelDocumento;
 
 describe('detallesDeMontos de una nota de crédito', () => {
-  it('muestra Ajustado entre Aplicado y el saldo a favor, de modo que todo suma el total', () => {
+  it('muestra Ajustado y Reintegrado entre Aplicado y el saldo a favor, de modo que todo suma el total', () => {
     const detalles = detallesDeMontos(ficha({}));
     const etiquetas = detalles.map((detalle) => detalle.etiqueta);
     expect(etiquetas).toEqual([
@@ -29,6 +29,7 @@ describe('detallesDeMontos de una nota de crédito', () => {
       'Neto a pagar',
       'Aplicado a otros documentos',
       'Ajustado (dado de baja)',
+      'Reintegrado por el proveedor',
       'Saldo a favor',
     ]);
     expect(detalles.find((detalle) => detalle.etiqueta === 'Ajustado (dado de baja)')?.valor).toMatch(/25\.00/);

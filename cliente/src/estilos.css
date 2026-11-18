@@ -53,3 +53,27 @@
     @apply outline-2 outline-offset-2 outline-campo-500;
   }
 }
+
+/* Todo lo que se imprime sale en claro (fondo blanco, texto negro, sin sombras), aun con el modo
+   oscuro puesto. Va fuera de las capas de Tailwind para ganarle a sus utilidades `dark:`. */
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    color-scheme: light;
+  }
+
+  html.oscuro * {
+    background-color: transparent !important;
+    color: #000 !important;
+    border-color: #999 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* El menú no se imprime (el encabezado móvil ya lo oculta el diseño principal). */
+  aside[aria-label='Menú principal'] {
+    display: none !important;
+  }
+}
