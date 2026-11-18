@@ -1,4 +1,14 @@
-import { Banknote, ClipboardCheck, FileClock, FileMinus, HandCoins, Inbox, Receipt, Scale } from 'lucide-vue-next';
+import {
+  Banknote,
+  CalendarClock,
+  ClipboardCheck,
+  FileClock,
+  FileMinus,
+  HandCoins,
+  Inbox,
+  Receipt,
+  Scale,
+} from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_CUENTAS_POR_PAGAR, TITULO_SECCION_DE_PAGO, VENTANAS_CUENTAS_POR_PAGAR } from './textos';
 import { entradasDeReportes, rutasDeReportes } from './reportes-del-modulo';
@@ -102,6 +112,12 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       props: ({ params }) => ({ id: String(params.id) }),
       meta: { permiso: 'cuentas-por-pagar.documentos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.notasDeCredito.recibo },
     },
+    {
+      path: '/cuentas-por-pagar/plazos',
+      name: 'cuentas-por-pagar.plazos',
+      component: () => import('./paginas/PlazosDeProveedores.vue'),
+      meta: { permiso: 'terceros.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.plazos.titulo },
+    },
     ...rutasDeRetiros,
     ...rutasDeReportes,
     // generador: rutas
@@ -156,6 +172,13 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           icono: Scale,
           seccion: 'administracion',
           permiso: 'cuentas-por-pagar.saldos-iniciales.ver',
+        },
+        {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.plazos.titulo,
+          ruta: '/cuentas-por-pagar/plazos',
+          icono: CalendarClock,
+          seccion: 'administracion',
+          permiso: 'terceros.ver',
         },
         {
           titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.titulo,

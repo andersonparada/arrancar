@@ -140,12 +140,8 @@
           "tableFrom": "ajustes_de_saldo",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -154,16 +150,8 @@
           "tableFrom": "ajustes_de_saldo",
           "tableTo": "documentos",
           "schemaTo": "cuentas_por_pagar",
-          "columnsFrom": [
-            "documento_id",
-            "empresa_id",
-            "proveedor_id"
-          ],
-          "columnsTo": [
-            "id",
-            "empresa_id",
-            "proveedor_id"
-          ],
+          "columnsFrom": ["documento_id", "empresa_id", "proveedor_id"],
+          "columnsTo": ["id", "empresa_id", "proveedor_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -175,9 +163,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -389,12 +375,8 @@
           "tableFrom": "aplicaciones_de_notas",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -403,16 +385,8 @@
           "tableFrom": "aplicaciones_de_notas",
           "tableTo": "documentos",
           "schemaTo": "cuentas_por_pagar",
-          "columnsFrom": [
-            "nota_id",
-            "empresa_id",
-            "proveedor_id"
-          ],
-          "columnsTo": [
-            "id",
-            "empresa_id",
-            "proveedor_id"
-          ],
+          "columnsFrom": ["nota_id", "empresa_id", "proveedor_id"],
+          "columnsTo": ["id", "empresa_id", "proveedor_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -421,16 +395,8 @@
           "tableFrom": "aplicaciones_de_notas",
           "tableTo": "documentos",
           "schemaTo": "cuentas_por_pagar",
-          "columnsFrom": [
-            "cargo_id",
-            "empresa_id",
-            "proveedor_id"
-          ],
-          "columnsTo": [
-            "id",
-            "empresa_id",
-            "proveedor_id"
-          ],
+          "columnsFrom": ["cargo_id", "empresa_id", "proveedor_id"],
+          "columnsTo": ["id", "empresa_id", "proveedor_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -439,12 +405,8 @@
           "tableFrom": "aplicaciones_de_notas",
           "tableTo": "contrasenas",
           "schemaTo": "cuentas_por_pagar",
-          "columnsFrom": [
-            "contrasena_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["contrasena_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -456,9 +418,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -560,12 +520,8 @@
           "tableFrom": "condiciones_de_proveedor",
           "tableTo": "cuentas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "cuenta_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cuenta_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -574,14 +530,8 @@
           "tableFrom": "condiciones_de_proveedor",
           "tableTo": "proveedores",
           "schemaTo": "terceros",
-          "columnsFrom": [
-            "proveedor_id",
-            "cuenta_id"
-          ],
-          "columnsTo": [
-            "id",
-            "cuenta_id"
-          ],
+          "columnsFrom": ["proveedor_id", "cuenta_id"],
+          "columnsTo": ["id", "cuenta_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -591,9 +541,7 @@
         "condiciones_proveedor_unico": {
           "name": "condiciones_proveedor_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "proveedor_id"
-          ]
+          "columns": ["proveedor_id"]
         }
       },
       "policies": {
@@ -601,9 +549,7 @@
           "name": "aislamiento_por_cuenta",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid",
           "withCheck": "cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid"
         }
@@ -726,12 +672,8 @@
           "tableFrom": "contrasena_documentos",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -740,16 +682,8 @@
           "tableFrom": "contrasena_documentos",
           "tableTo": "contrasenas",
           "schemaTo": "cuentas_por_pagar",
-          "columnsFrom": [
-            "contrasena_id",
-            "empresa_id",
-            "proveedor_id"
-          ],
-          "columnsTo": [
-            "id",
-            "empresa_id",
-            "proveedor_id"
-          ],
+          "columnsFrom": ["contrasena_id", "empresa_id", "proveedor_id"],
+          "columnsTo": ["id", "empresa_id", "proveedor_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -758,16 +692,8 @@
           "tableFrom": "contrasena_documentos",
           "tableTo": "documentos",
           "schemaTo": "cuentas_por_pagar",
-          "columnsFrom": [
-            "documento_id",
-            "empresa_id",
-            "proveedor_id"
-          ],
-          "columnsTo": [
-            "id",
-            "empresa_id",
-            "proveedor_id"
-          ],
+          "columnsFrom": ["documento_id", "empresa_id", "proveedor_id"],
+          "columnsTo": ["id", "empresa_id", "proveedor_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -777,10 +703,7 @@
         "contrasena_documentos_par_unico": {
           "name": "contrasena_documentos_par_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "contrasena_id",
-            "documento_id"
-          ]
+          "columns": ["contrasena_id", "documento_id"]
         }
       },
       "policies": {
@@ -788,9 +711,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -984,12 +905,8 @@
           "tableFrom": "contrasenas",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -998,12 +915,8 @@
           "tableFrom": "contrasenas",
           "tableTo": "proveedores",
           "schemaTo": "terceros",
-          "columnsFrom": [
-            "proveedor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["proveedor_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1013,20 +926,12 @@
         "contrasenas_numero_unico": {
           "name": "contrasenas_numero_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "empresa_id",
-            "anio_de_numero",
-            "numero"
-          ]
+          "columns": ["empresa_id", "anio_de_numero", "numero"]
         },
         "contrasenas_id_proveedor_unico": {
           "name": "contrasenas_id_proveedor_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "empresa_id",
-            "proveedor_id"
-          ]
+          "columns": ["id", "empresa_id", "proveedor_id"]
         }
       },
       "policies": {
@@ -1034,9 +939,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }
@@ -1506,12 +1409,8 @@
           "tableFrom": "documentos",
           "tableTo": "empresas",
           "schemaTo": "core",
-          "columnsFrom": [
-            "empresa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["empresa_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1520,18 +1419,8 @@
           "tableFrom": "documentos",
           "tableTo": "documentos",
           "schemaTo": "libro_de_compras",
-          "columnsFrom": [
-            "documento_id",
-            "empresa_id",
-            "proveedor_id",
-            "destino"
-          ],
-          "columnsTo": [
-            "id",
-            "empresa_id",
-            "proveedor_id",
-            "destino"
-          ],
+          "columnsFrom": ["documento_id", "empresa_id", "proveedor_id", "destino"],
+          "columnsTo": ["id", "empresa_id", "proveedor_id", "destino"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1540,12 +1429,8 @@
           "tableFrom": "documentos",
           "tableTo": "proveedores",
           "schemaTo": "terceros",
-          "columnsFrom": [
-            "proveedor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["proveedor_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1555,27 +1440,17 @@
         "documentos_documento_unico": {
           "name": "documentos_documento_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "documento_id"
-          ]
+          "columns": ["documento_id"]
         },
         "documentos_para_notas_unico": {
           "name": "documentos_para_notas_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "documento_id",
-            "empresa_id",
-            "proveedor_id"
-          ]
+          "columns": ["documento_id", "empresa_id", "proveedor_id"]
         },
         "documentos_id_proveedor_unico": {
           "name": "documentos_id_proveedor_unico",
           "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "empresa_id",
-            "proveedor_id"
-          ]
+          "columns": ["id", "empresa_id", "proveedor_id"]
         }
       },
       "policies": {
@@ -1583,9 +1458,7 @@
           "name": "aislamiento_por_empresa",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "arrancar_app"
-          ],
+          "to": ["arrancar_app"],
           "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
           "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
         }

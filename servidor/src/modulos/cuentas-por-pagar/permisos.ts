@@ -157,5 +157,13 @@ export const PERMISOS_DE_CUENTAS_POR_PAGAR: DefinicionPermiso[] = [
     clave: 'cuentas-por-pagar.reintegros.anular',
     descripcion: 'Anular un reintegro del proveedor (anula también su nota de crédito en Bancos)',
   },
+  {
+    clave: 'cuentas-por-pagar.condiciones.importar',
+    descripcion: 'Importar desde Excel los plazos de crédito de los proveedores (también bajar la plantilla)',
+  },
+  {
+    clave: 'cuentas-por-pagar.condiciones.exportar',
+    descripcion: 'Exportar a Excel los plazos de crédito de los proveedores',
+  },
   // generador: permisos
 ];

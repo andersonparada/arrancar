@@ -2797,3 +2797,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   tiene `ver-cierres` (`http/carga-segun-permiso.ts`, aplicado en todo lo que devuelve la carga); la línea con las
   diferencias se sigue viendo y el cliente no muestra avisos ni motivo cuando no llegan. B-4: la prueba de cabeceras del
   balance comprueba `nosniff` y la CSP.
+
+- **2026-11-18 · PC-4 (servidor): Excel «Plazos de proveedores».** `GET/POST /api/cuentas-por-pagar/condiciones/{exportar,plantilla,importar}`
+  con `core/intercambio`, permisos `cuentas-por-pagar.condiciones.importar` (migración `0013`: quien tenía
+  `proveedores.editar`) y `.exportar` (quien tenía `terceros.ver`), en `core.rol_permisos` y `core.usuario_permisos`.
+  Columnas NIT, Proveedor, Días de crédito y Contar desde la recepción; la validación reutiliza el esquema de la sección
+  del formulario. El proveedor se halla por NIT o, sin NIT, por nombre exacto y único en la cuenta (nombre repetido,
+  proveedor inexistente y proveedor repetido en el archivo son errores de fila); nunca se crean proveedores. Días vacíos
+  vuelven al plazo por omisión y «contar desde la recepción» vacío es No. Todo o nada, con ensayo.
+- **2026-11-18 (PC-5, plazos de proveedores: cliente).** Página «Plazos de proveedores» en Administración de Cuentas por
+  pagar (`/cuentas-por-pagar/plazos`, permiso `terceros.ver`): tarjetas de solo lectura con proveedor, NIT, días de crédito
+  («De contado», «Plazo por omisión de la empresa») y desde cuándo corren, búsqueda por nombre o NIT sin tildes y estados vacíos
+  distintos (sin proveedores / sin coincidencias). `AccionesDeIntercambio` y `VentanaDeImportacion` con
+  `cuentas-por-pagar.condiciones.importar` y `.exportar`; el texto de la página manda a Proveedores para editar uno por uno.
+  El servidor suma `GET /api/cuentas-por-pagar/condiciones` (lista de la cuenta, mismo caso de uso del Excel, permiso
+  `terceros.ver`); sin migración. Lógica pura con pruebas.
