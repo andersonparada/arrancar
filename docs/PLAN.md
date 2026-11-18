@@ -2254,3 +2254,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `UnidadDeTrabajo` gana `ejecutarEnOtraEmpresa` (punto de guardado dentro de la transacción en curso, solo para la misma
   cuenta y usuario, que devuelve la empresa anterior al terminar); `RegistrarEmpresa` la usa en vez de `ejecutar`. Pruebas
   de API (ensayo, semilla, todo o nada, 403) y de la unidad de trabajo.
+- 2026-11-18 — **Excel de Empresas en el cliente**: la lista de Empresas muestra `AccionesDeIntercambio` y
+  `VentanaDeImportacion` con `empresas.importar` y `empresas.exportar`; al importar se recarga la lista y la sesión (para que
+  el selector de empresa vea las nuevas).

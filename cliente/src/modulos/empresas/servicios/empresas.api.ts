@@ -1,4 +1,5 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
+import { intercambioDe } from '@/modulos/core/servicios/intercambio';
 
 export interface Empresa {
   id: string;
@@ -30,6 +31,11 @@ export interface DatosEmpresa {
 
 export class ApiEmpresas {
   constructor(private readonly http: ClienteHttp) {}
+
+  /** Exportar e importar en Excel. */
+  get intercambio() {
+    return intercambioDe(this.http, '/empresas');
+  }
 
   listar() {
     return this.http.obtener<Empresa[]>('/empresas');
