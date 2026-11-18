@@ -26,7 +26,7 @@ const conAntiguedad =
   (cheque: ChequeEnCirculacionCrudo): ChequeEnCirculacionDto => ({
     ...cheque,
     diasDeAntiguedad: diasDeAntiguedad(cheque.fecha, hoy),
-    origen: 'suelto',
+    origen: cheque.parteDeApertura === null ? 'suelto' : 'apertura',
   });
 
 function armarReporte(
@@ -40,7 +40,7 @@ function armarReporte(
 /**
  * Los cheques emitidos que el banco no ha cobrado y ya tienen más meses que el plazo (la variable de la
  * empresa, 7 por omisión, o el filtro). Nunca entran los cheques disponibles (no tienen movimiento), los
- * cobrados, los anulados ni los revertidos. Hoy todos son sueltos: aún no hay pagos de Cuentas por pagar.
+ * cobrados, los anulados ni los revertidos. Los de la carga inicial salen con origen `apertura` (anularlos siempre crea su inverso).
  */
 export class ReporteDeChequesCaducos {
   constructor(private readonly dependencias: DependenciasDelReporteDeChequesCaducos) {}

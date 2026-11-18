@@ -12,6 +12,7 @@ import { RepositorioConceptosDrizzle } from '../infraestructura/persistencia/rep
 import { RepositorioDeMovimientosConSaldoGlobal } from '../infraestructura/persistencia/repositorio-de-saldos-globales.drizzle.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 import { piezasDeOrigen } from './piezas-de-origen.js';
+import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 
 function dependenciasDeSaldosGlobales() {
   const { unidadDeTrabajo, auditoria, correlativos } = dependenciasCompartidas();
@@ -25,7 +26,11 @@ function dependenciasDeSaldosGlobales() {
     ...piezasDeOrigen(conceptos),
     consultas,
     repositorio: new RepositorioDeMovimientosConSaldoGlobal(),
-    reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro: new PoliticaDeSobregiroEnConfiguracion() }),
+    reglas: new ReglasDeLaCuenta({
+      consultas,
+      politicaDeSobregiro: new PoliticaDeSobregiroEnConfiguracion(),
+      cargaInicial: new CargaInicialEnMediador(),
+    }),
   };
 }
 

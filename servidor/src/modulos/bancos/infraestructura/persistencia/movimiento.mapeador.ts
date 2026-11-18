@@ -18,12 +18,8 @@ interface DatosDeLaConsulta extends Pick<
   desglose: LineaDeDesgloseDto[];
 }
 
-/** La parte de apertura y su cabecera todavía no viajan en el DTO de movimientos (lo hace BS-3): se quitan. */
-function sinDatosDeApertura<T extends { parteDeApertura: unknown; saldoInicialId: unknown }>({
-  parteDeApertura: _parteDeApertura,
-  saldoInicialId: _saldoInicialId,
-  ...resto
-}: T) {
+/** La parte de apertura viaja en el DTO; la cabecera de la que cuelga, no. */
+function sinLaCabecera<T extends { saldoInicialId: unknown }>({ saldoInicialId: _saldoInicialId, ...resto }: T) {
   return resto;
 }
 
@@ -66,7 +62,7 @@ export const mapeadorDeMovimiento = {
       anuladoEn,
       revertidoEn,
       ...dto
-    } = sinDatosDeApertura(fila);
+    } = sinLaCabecera(fila);
     const hechos = hechosDeLaFila(fila);
     return {
       ...dto,

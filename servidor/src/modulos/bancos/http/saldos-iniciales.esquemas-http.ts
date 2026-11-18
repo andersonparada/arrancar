@@ -46,8 +46,16 @@ export const esquemaPartida = z.object({
 /** La parte de una partida no se cambia al corregirla. */
 export const esquemaCorreccionDePartida = z.object(camposDeLaPartida);
 
+/** Anular una partida: el motivo, la fecha del inverso (posterior al corte; por omisión, hoy) y, en el depósito, el pagador. */
+export const esquemaAnulacionDePartida = z.object({
+  motivo: z.string().trim().min(1).max(500),
+  fecha: z.iso.date().optional(),
+  pagador: z.string().trim().max(150).nullish(),
+});
+
 export type ParamsDeCuenta = z.infer<typeof esquemaParamsDeCuenta>;
 export type ParamsDePartida = z.infer<typeof esquemaParamsDePartida>;
 export type GuardarSaldoInicialSolicitado = z.infer<typeof esquemaGuardarSaldoInicial>;
 export type PartidaSolicitada = z.infer<typeof esquemaPartida>;
+export type AnulacionDePartidaSolicitada = z.infer<typeof esquemaAnulacionDePartida>;
 export type CorreccionDePartidaSolicitada = z.infer<typeof esquemaCorreccionDePartida>;

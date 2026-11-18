@@ -11,6 +11,7 @@ import { rutasDeSaldosGlobales } from './saldos-globales.rutas.js';
 import { esquemaFiltroDeSaldosGlobales } from './saldos-globales.esquemas-http.js';
 import type { SaldosInicialesControlador } from './saldos-iniciales.controlador.js';
 import {
+  esquemaAnulacionDePartida,
   esquemaCorreccionDePartida,
   esquemaGuardarSaldoInicial,
   esquemaParamsDeCuenta,
@@ -87,9 +88,17 @@ function rutasDeLasPartidas(app: Aplicacion, controlador: SaldosInicialesControl
   });
 }
 
+function rutaDeAnularPartida(app: Aplicacion, controlador: SaldosInicialesControlador) {
+  app.post(`${RUTA}/:cuentaBancariaId/partidas/:movimientoId/anular`, {
+    schema: { ...conPartida, body: esquemaAnulacionDePartida },
+    preHandler: proteger({ permiso: 'bancos.saldos-iniciales.anular' }),
+    handler: controlador.anularPartida,
+  });
+}
+
 /**
  * Los saldos iniciales con partidas (docs/modulos/diseno-bancos-segunda-parte.md §8). Los dos Excel (saldos por cuenta
- * y partidas de apertura) importan con `.importar` y exportan con `.exportar`. Anular una partida llega con BS-3.
+ * y partidas de apertura) importan con `.importar` y exportan con `.exportar`. Anular una partida lleva su propio permiso (`.anular`).
  */
 export function rutasSaldosIniciales(
   controlador: SaldosInicialesControlador,
@@ -102,6 +111,7 @@ export function rutasSaldosIniciales(
     await app.register(rutasDeSaldosGlobales(heredado));
     rutasDeLaCabecera(app, controlador);
     rutasDeLasPartidas(app, controlador);
+    rutaDeAnularPartida(app, controlador);
     rutasDeIntercambio(app, { ruta: RUTA, archivo: 'saldos-iniciales', permisos, intercambio: intercambios.saldos });
     rutasDeIntercambio(app, {
       ruta: `${RUTA}/partidas`,

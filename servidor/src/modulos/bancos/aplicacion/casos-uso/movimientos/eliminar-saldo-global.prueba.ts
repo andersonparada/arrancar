@@ -22,6 +22,7 @@ import { CrearMovimiento } from './crear-movimiento.js';
 import { EliminarSaldoGlobal } from './eliminar-saldo-global.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { PoliticaDeSobregiroFija } from '../../../pruebas/dobles-de-movimientos.js';
+import { CARGA_SIN_FECHA_DE_INICIO } from '../../../pruebas/dobles-de-carga-inicial.js';
 
 const operador = operadorDePrueba();
 const CUENTA = '00000000-0000-4000-8000-000000000001';
@@ -60,6 +61,7 @@ beforeEach(() => {
   const reglas = new ReglasDeLaCuenta({
     consultas: registros,
     politicaDeSobregiro: new PoliticaDeSobregiroFija(false),
+    cargaInicial: CARGA_SIN_FECHA_DE_INICIO,
   });
   const dependencias = {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),

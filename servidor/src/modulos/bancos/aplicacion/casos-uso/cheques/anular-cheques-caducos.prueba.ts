@@ -24,6 +24,7 @@ const crudo = (chequeId: string, numero: number): ChequeEnCirculacionCrudo => ({
   beneficiario: 'Proveedor S.A.',
   monto: '100.00',
   mesConciliado: false,
+  parteDeApertura: null,
 });
 
 const armarLote = (caducos: ChequeEnCirculacionCrudo[]) =>
@@ -33,6 +34,7 @@ const armarLote = (caducos: ChequeEnCirculacionCrudo[]) =>
     politicaDeVencimiento: new PoliticaDeVencimientoFija(7),
     reloj: new RelojFijo('2026-09-29'),
     anularCheque: entorno.anular,
+    publicadorEventos: entorno.eventos,
   });
 
 beforeEach(async () => {

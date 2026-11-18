@@ -1,5 +1,7 @@
-/** De dónde salió el cheque: de un pago de Cuentas por pagar o emitido suelto desde Bancos. */
-export type OrigenDeCheque = 'cuentas_por_pagar' | 'suelto';
+import type { ParteDeApertura } from '../../dominio/partes-de-apertura.js';
+
+/** De dónde salió el cheque: de un pago de Cuentas por pagar, de la carga inicial (en circulación al corte) o emitido suelto desde Bancos. */
+export type OrigenDeCheque = 'cuentas_por_pagar' | 'apertura' | 'suelto';
 
 /** Un cheque emitido que el banco no ha cobrado y ya pasó el plazo de vencimiento. */
 export interface ChequeEnCirculacionDto {
@@ -16,6 +18,8 @@ export interface ChequeEnCirculacionDto {
   /** Si el mes del cheque ya está conciliado (autorizado): anularlo obliga a crear una nota inversa. */
   mesConciliado: boolean;
   origen: OrigenDeCheque;
+  /** La parte de la carga inicial que es (cheque en circulación al corte); `null` si se emitió en Arrancar. */
+  parteDeApertura: ParteDeApertura | null;
 }
 
 export interface ReporteDeChequesCaducosDto {

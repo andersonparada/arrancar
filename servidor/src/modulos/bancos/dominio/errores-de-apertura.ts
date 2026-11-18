@@ -70,7 +70,7 @@ export class NumeroDeChequeObligatorio extends DatoDeAperturaInvalido {
 export class PagadorObligatorio extends DatoDeAperturaInvalido {
   readonly codigo = 'pagador_obligatorio';
   constructor() {
-    super('Escriba quién debe ese dinero (el pagador del depósito rechazado).', 'pagador');
+    super('Escriba quién debe ese dinero (el pagador del depósito rechazado, hasta 150 caracteres).', 'pagador');
   }
 }
 
@@ -134,6 +134,22 @@ export class NoSeAnulaElSaldoDelBanco extends ReglaDeNegocioInfringida {
   readonly codigo = 'no_se_anula_el_saldo_del_banco';
   constructor() {
     super('El saldo del banco no se anula: se corrige o se elimina mientras la carga inicial esté abierta.');
+  }
+}
+
+export class ElPosfechadoSeAnulaComoCheque extends ReglaDeNegocioInfringida {
+  readonly codigo = 'el_posfechado_se_anula_como_cheque';
+  constructor() {
+    super(
+      'Un cheque posfechado no es una partida de apertura: con la carga abierta corríjalo o elimínelo aquí; con la carga cerrada anúlelo en Cheques.',
+    );
+  }
+}
+
+export class PartidaDeAperturaNoEncontrada extends ReglaDeNegocioInfringida {
+  readonly codigo = 'no_es_una_partida_de_apertura';
+  constructor() {
+    super('Este movimiento no es una partida de la carga inicial.');
   }
 }
 

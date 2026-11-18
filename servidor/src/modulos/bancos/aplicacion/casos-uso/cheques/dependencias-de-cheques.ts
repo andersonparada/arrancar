@@ -1,5 +1,6 @@
 import type { Correlativos } from '../../../../core/compartido/aplicacion/correlativos.js';
 import type { ConceptosDeMovimientos } from '../../conceptos-de-movimientos.js';
+import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
@@ -29,6 +30,8 @@ export interface DependenciasDeCheques {
   correlativos: Correlativos;
   conceptos: ConceptosDeMovimientos;
   reloj: Reloj;
+  /** Publica al confirmar lo que otros módulos escuchan (una partida de apertura anulada). */
+  publicadorEventos: PublicadorEventos;
   cuentasPorPagar: CuentasPorPagarActivo;
   /** Avisa al módulo de origen antes de cambiar un movimiento suyo o marcado (CP4). */
   revisor: RevisorDeCambios;

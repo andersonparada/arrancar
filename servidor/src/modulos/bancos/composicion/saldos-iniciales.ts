@@ -1,5 +1,8 @@
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { AgregarPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/agregar-partida-de-apertura.js';
+import { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque.js';
+import { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anular-movimiento.js';
+import { AnularPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/anular-partida-de-apertura.js';
 import { CorregirPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/corregir-partida-de-apertura.js';
 import { EliminarPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/eliminar-partida-de-apertura.js';
 import { EliminarSaldoInicial } from '../aplicacion/casos-uso/saldos-iniciales/eliminar-saldo-inicial.js';
@@ -28,6 +31,8 @@ import { RepositorioDeSaldosInicialesDrizzle } from '../infraestructura/persiste
 import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/repositorio-movimientos.drizzle.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
 import { PoliticaDeVencimientoDeChequesEnConfiguracion } from '../infraestructura/politica-de-vencimiento-de-cheques.configuracion.js';
+import { dependenciasDeCheques } from './cheques.js';
+import { dependenciasDeNotas } from './notas.js';
 import { piezasDeOrigen } from './piezas-de-origen.js';
 import { saldosGlobalesHeredados } from './saldos-globales-heredados.js';
 import { intercambioDePartidas, intercambioDeSaldosIniciales } from './saldos-iniciales-excel.js';
@@ -61,7 +66,7 @@ function dependenciasDeSaldosIniciales() {
     cabeceras: new RepositorioDeSaldosInicialesDrizzle(),
     consultasConciliaciones: new ConsultasConciliacionesDrizzle(),
     repositorioMovimientos: new RepositorioMovimientosDrizzle(),
-    reglas: new ReglasDeLaCuenta({ consultas: consultasMovimientos, politicaDeSobregiro }),
+    reglas: new ReglasDeLaCuenta({ consultas: consultasMovimientos, politicaDeSobregiro, cargaInicial }),
     ficha: fichaDeSaldoInicial(consultas, cargaInicial),
     armador: new ArmadorDePartidas({ conceptos, cuentasPorPagar }),
     chequesDeApertura: chequesDeApertura(),
@@ -79,6 +84,11 @@ const casosDeUso = (dependencias: Dependencias) => ({
   agregarPartida: new AgregarPartidaDeApertura(dependencias, dependencias.fondos),
   corregirPartida: new CorregirPartidaDeApertura(dependencias),
   eliminarPartida: new EliminarPartidaDeApertura(dependencias),
+  anularPartida: new AnularPartidaDeApertura(dependencias, {
+    anularCheque: new AnularCheque(dependenciasDeCheques()),
+    anularMovimiento: new AnularMovimiento(dependenciasDeNotas()),
+    publicadorEventos: dependenciasCompartidas().publicadorEventos,
+  }),
   revisarCierre: new RevisarCierreDeCargaEnBancos(dependencias),
   listarPartidas: new ListarPartidasDeApertura(dependencias),
 });

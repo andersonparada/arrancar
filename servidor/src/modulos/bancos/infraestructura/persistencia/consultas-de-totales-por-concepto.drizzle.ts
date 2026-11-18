@@ -2,6 +2,7 @@ import { and, asc, eq, gte, inArray, isNull, lte, sql, type SQL } from 'drizzle-
 import { alias } from 'drizzle-orm/pg-core';
 import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir-que-exista.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
+import { CLAVE_DE_ANULACION_DE_APERTURA } from '../../dominio/anulacion-de-apertura.js';
 import type {
   FiltroDeTotalesPorConcepto,
   SaldosDelRango,
@@ -37,9 +38,18 @@ const efecto = sql`case when ${esCredito} then ${movimientos.monto} else -${movi
 const saldoHasta = (condicion: SQL) =>
   sql<string>`(coalesce(sum(${efecto}) filter (where ${condicion}), 0))::numeric(14,2)::text`;
 
-/** El reparto de un inverso es el de su original. */
-const idDelReparto = sql`coalesce(${original.id}, ${movimientos.id})`;
-const conceptoDeLaLinea = sql`coalesce(${desgloseDeMovimientos.conceptoId}, ${original.conceptoId}, ${movimientos.conceptoId})`;
+/**
+ * El inverso de una partida de la carga inicial que se anuló lleva su propio concepto («Partidas de apertura anuladas»,
+ * sin actividad): no mueve efectivo y no debe contarse como el saldo inicial de su original.
+ */
+const esAnulacionDeApertura = sql`exists (
+  select 1 from ${conceptos} propio
+  where propio.id = ${movimientos.conceptoId} and propio.clave_de_sistema = ${CLAVE_DE_ANULACION_DE_APERTURA}
+)`;
+
+/** El reparto de un inverso es el de su original (salvo la anulación de una partida de apertura). */
+const idDelReparto = sql`case when ${esAnulacionDeApertura} then ${movimientos.id} else coalesce(${original.id}, ${movimientos.id}) end`;
+const conceptoDeLaLinea = sql`coalesce(${desgloseDeMovimientos.conceptoId}, case when ${esAnulacionDeApertura} then null else ${original.conceptoId} end, ${movimientos.conceptoId})`;
 
 const columnasDeTotales = {
   conceptoId: conceptos.id,

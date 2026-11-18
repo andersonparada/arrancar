@@ -20,6 +20,7 @@ import { RepositorioConceptosDrizzle } from '../infraestructura/persistencia/rep
 import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/repositorio-movimientos.drizzle.js';
 import { PoliticaDeMismaFechaEnAnulacionEnConfiguracion } from '../infraestructura/politica-de-misma-fecha-en-anulacion.configuracion.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
+import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 
 /** Las dependencias de las notas; también las usan las órdenes de otros módulos (`ordenes.ts`). */
 export function dependenciasDeNotas() {
@@ -36,7 +37,7 @@ export function dependenciasDeNotas() {
     repositorio: new RepositorioMovimientosDrizzle(),
     conceptos,
     ...piezasDeOrigen(conceptos),
-    reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro }),
+    reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro, cargaInicial: new CargaInicialEnMediador() }),
     politicaDeMismaFecha: new PoliticaDeMismaFechaEnAnulacionEnConfiguracion(),
   };
 }

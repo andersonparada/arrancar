@@ -1,3 +1,4 @@
+import { PARTES_QUE_SE_ANULAN } from '../dominio/anulacion-de-apertura.js';
 import { avisosDeLaPartida } from '../dominio/apertura.js';
 import { aCentavos } from '../dominio/centavos.js';
 import { calcularCuadre, compararConLibros } from '../dominio/cuadre-de-apertura.js';
@@ -20,6 +21,12 @@ function sePuedeCambiar(partida: PartidaDeLaBase, { corte, cerrada }: ContextoDe
   return partida.conciliadaEn === null && !partida.anulada && !partida.revertida;
 }
 
+/** Se anula con un inverso (§5.3): una partida vigente de las que se anulan, que el banco todavía no ha visto en una conciliación. */
+function sePuedeAnular(partida: PartidaDeLaBase, { corte }: ContextoDeLaFicha): boolean {
+  if (corte === null || !(PARTES_QUE_SE_ANULAN as readonly string[]).includes(partida.parte)) return false;
+  return partida.conciliadaEn === null && !partida.anulada && !partida.revertida;
+}
+
 const AVISO_EN_LA_FICHA = { cheque_antiguo: 'antiguo', deposito_viejo: 'deposito_viejo' } as const;
 
 /** Las insignias de la ficha («Antiguo», «Revisar»): los mismos avisos que se dan al guardar. */
@@ -28,7 +35,7 @@ function avisosDeLaFicha(partida: PartidaDeLaBase, { corte, mesesDeVencimiento }
   return avisosDeLaPartida(partida, { corte, mesesDeVencimiento }).map(({ codigo }) => AVISO_EN_LA_FICHA[codigo]);
 }
 
-/** La partida como la ve la pantalla; `puedeAnular` llega con BS-3. */
+/** La partida como la ve la pantalla. */
 export function partidaDeApertura(partida: PartidaDeLaBase, contexto: ContextoDeLaFicha): PartidaDeAperturaDto {
   const { conciliacionId: _conciliacionId, cuentaBancariaId: _cuentaBancariaId, ...datos } = partida;
   const esPosfechado = partida.parte === 'cheque_posfechado';
@@ -40,7 +47,7 @@ export function partidaDeApertura(partida: PartidaDeLaBase, contexto: ContextoDe
     avisos: avisosDeLaFicha(partida, contexto),
     puedeCorregir: puedeCambiar,
     puedeEliminar: puedeCambiar,
-    puedeAnular: false,
+    puedeAnular: sePuedeAnular(partida, contexto),
   };
 }
 

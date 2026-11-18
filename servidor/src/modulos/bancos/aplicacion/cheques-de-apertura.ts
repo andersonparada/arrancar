@@ -39,6 +39,13 @@ export class ChequesDeApertura {
     await chequeras.ajustarRango(chequera.id.valor);
   }
 
+  /** El cheque enlazado a la partida (su id y su número); `null` si la partida no es un cheque. */
+  async chequeDe(movimientoId: string): Promise<{ chequeId: string; numero: number } | null> {
+    const ubicado = await this.dependencias.chequeras.ubicarPorMovimiento(movimientoId);
+    if (!ubicado) return null;
+    return { chequeId: ubicado.cheque.id.valor, numero: ubicado.cheque.instantanea().numero };
+  }
+
   /**
    * Suelta el cheque de la partida que se corrige o se elimina: en la chequera de apertura se borra la fila (no se
    * reutiliza el número); en una chequera registrada vuelve a estar disponible.
