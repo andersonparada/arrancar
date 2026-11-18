@@ -46,6 +46,13 @@ Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-ca
 - **Workflow `arrancar-cp4-10-11-cp5-5`** (run `wf_d318640d-7a5`): CP4-10 (base `arrancar_pruebas_cp410`), CP4-11
   (`arrancar_pruebas_cp411`) y CP5-5 servidor (`arrancar_pruebas_cp55`), con revisión de Opus y corrección de Sonnet.
 - Guarda `skipIf(!hayQpdf)` en las pruebas del libro en PDF: agente Haiku (base `arrancar_pruebas_qpdf`).
+- **Workflow `arrancar-adendas-y-em2`** (run `wf_cb030595-d4b`): el arquitecto incorpora las decisiones del 2026-11-18 a
+  EM-2, impresión de cheques y CP4 (adenda del posfechado: deuda, comprometido y disponible; cinco estados); luego EM-2
+  servidor y cliente (base `arrancar_pruebas_em2`) con revisión. **En cola:** impresión de cheques (después de BS-3, BS-4 y
+  BS-R1 en main) y el arreglo del posfechado (después de CP4-10 y CP4-11 en main).
+- **Worktree de integración** `.claude/worktrees/integracion` (rama `integracion`, base `arrancar_pruebas_integracion`,
+  `node_modules` enlazados al checkout principal): ahí se unen y prueban las ramas terminadas mientras `main` corre otra
+  suite; luego se pasa a `main`. Tiene CP4-B3b, CP5-9a y la QA intermedia.
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
