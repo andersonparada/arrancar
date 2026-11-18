@@ -86,19 +86,50 @@ export const consultaDeAjustes = (filtros: FiltrosDeAjustes): Consulta => ({
 export const cantidadDeFiltrosDeAjustes = (filtros: FiltrosDeAjustes, hoy: string): number =>
   [filtros.mes !== mesAntesDe(hoy, 1), !!filtros.proveedorId, !!filtros.causa].filter(Boolean).length;
 
+const aCentavos = (monto: string): number => Math.round(Number(monto) * 100);
+
+/** Lo vigente de la sección de ajustes: la suma por causa (el total de la sección incluye los anulados). */
+export function vigenteDeAjustes({ totales }: ReporteDeAjustesDelMes): { cantidad: number; monto: string } {
+  const cantidad = totales.porCausa.reduce((suma, t) => suma + t.cantidad, 0);
+  const centavos = totales.porCausa.reduce((suma, t) => suma + aCentavos(t.monto), 0);
+  return { cantidad, monto: (centavos / 100).toFixed(2) };
+}
+
+/** Filas del cuadro «por causa y efecto» (vigentes), para saber a dónde va cada monto al cerrar. */
+export const totalesPorCausaYEfecto = (
+  r: ReporteDeAjustesDelMes,
+): { clave: string; causa: string; efecto: string; cantidad: number; monto: string }[] =>
+  r.totales.porCausa.map((t) => ({
+    clave: `${t.causa}-${t.efecto}`,
+    causa: TEXTOS_DE_CAUSA[t.causa],
+    efecto: TEXTOS_DE_EFECTO[t.efecto],
+    cantidad: t.cantidad,
+    monto: formatearMonto(t.monto),
+  }));
+
 /** Las cifras de arriba de R8: lo que el contador revisa primero. */
-export function totalesDeAjustes({ totales }: ReporteDeAjustesDelMes): TotalDelReporte[] {
+export function totalesDeAjustes(r: ReporteDeAjustesDelMes): TotalDelReporte[] {
+  const { totales } = r;
   const { porSeccion } = totales;
+  const vigente = vigenteDeAjustes(r);
   return [
-    { etiqueta: 'Ajustes vigentes del mes', valor: formatearMonto(porSeccion.ajustes.monto), destacado: true },
-    { etiqueta: 'Cantidad de ajustes', valor: String(porSeccion.ajustes.cantidad) },
+    { etiqueta: 'Ajustes vigentes del mes', valor: formatearMonto(vigente.monto), destacado: true },
+    { etiqueta: 'Cantidad de ajustes vigentes', valor: String(vigente.cantidad) },
     { etiqueta: 'Ajustes anulados', valor: formatearMonto(totales.ajustesAnulados.monto) },
+    {
+      etiqueta: 'Anulaciones de ajustes de otros meses',
+      valor: formatearMonto(porSeccion.anulacionesDeOtrosMeses.monto),
+    },
     { etiqueta: 'Compensaciones sin dinero', valor: formatearMonto(porSeccion.aplicacionesManuales.monto) },
-    { etiqueta: 'Pagos a la apertura', valor: formatearMonto(porSeccion.pagosAApertura.monto) },
-    { etiqueta: 'Documentos anulados', valor: String(porSeccion.documentosAnulados.cantidad) },
-    { etiqueta: 'Documentos devueltos a revisión', valor: String(porSeccion.documentosDesautorizados.cantidad) },
+    { etiqueta: 'Pagos a la apertura (vigentes y anulados)', valor: formatearMonto(porSeccion.pagosAApertura.monto) },
+    { etiqueta: 'Documentos anulados', ...resumenDe(porSeccion.documentosAnulados) },
+    { etiqueta: 'Documentos devueltos a revisión', ...resumenDe(porSeccion.documentosDesautorizados) },
   ];
 }
+
+const resumenDe = (t: { cantidad: number; monto: string }): { valor: string } => ({
+  valor: `${t.cantidad} · ${formatearMonto(t.monto)}`,
+});
 
 /** Cuántas filas trae el reporte en todas sus secciones. */
 export const cantidadDeFilasDeAjustes = (r: ReporteDeAjustesDelMes): number =>

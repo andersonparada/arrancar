@@ -12,6 +12,7 @@ import {
   textoDeLaBaja,
   textoDeMes,
   totalesDeAjustes,
+  totalesPorCausaYEfecto,
 } from './ajustes-del-mes';
 import type { ReporteDeAjustesDelMes } from '../../servicios/tipos-de-reportes-de-control';
 
@@ -74,9 +75,18 @@ describe('ajustes del mes', () => {
 
   it('resume el mes y cuenta las filas de todas las secciones', () => {
     const reporte = vacio();
-    expect(totalesDeAjustes(reporte)[1]).toEqual({ etiqueta: 'Cantidad de ajustes', valor: '2' });
+    expect(totalesDeAjustes(reporte)[1]).toEqual({ etiqueta: 'Cantidad de ajustes vigentes', valor: '0' });
     expect(cantidadDeFilasDeAjustes(reporte)).toBe(0);
     expect(lineasDeImpresionDeAjustes(filtrosDeAjustesIniciales(HOY), 'Agro')[0]).toBe('Ajustes de octubre de 2026');
+  });
+
+  it('separa lo vigente de lo anulado y lo desglosa por causa y efecto', () => {
+    const r = vacio();
+    r.totales.porSeccion.ajustes = { cantidad: 2, monto: '130.00' };
+    r.totales.ajustesAnulados = { cantidad: 1, monto: '30.00' };
+    r.totales.porCausa = [{ causa: 'no_recuperable', efecto: 'perdida', cantidad: 1, monto: '100.00' }];
+    expect(totalesDeAjustes(r)[0]?.valor).toMatch(/100\.00/);
+    expect(totalesPorCausaYEfecto(r)[0]).toMatchObject({ causa: 'No recuperable', efecto: 'Pérdida', cantidad: 1 });
   });
 
   it('dice qué se hizo con el documento', () => {

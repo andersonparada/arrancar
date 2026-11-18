@@ -57,7 +57,8 @@ describe('pagos realizados', () => {
     expect(errorDeRangoDePagos('2026-11-1', '2026-11-18')).toMatch(/completas/);
     expect(errorDeRangoDePagos('2026-11-19', '2026-11-18')).toMatch(/posterior/);
     expect(errorDeRangoDePagos('2024-11-18', '2026-11-18')).toBeUndefined();
-    expect(errorDeRangoDePagos('2024-11-18', '2026-11-19')).toMatch(/24 meses/);
+    expect(errorDeRangoDePagos('2024-11-18', '2026-12-17')).toBeUndefined();
+    expect(errorDeRangoDePagos('2024-11-18', '2026-12-18')).toMatch(/24 meses/);
   });
 
   it('ordena las formas por nombre después de «todas»', () => {

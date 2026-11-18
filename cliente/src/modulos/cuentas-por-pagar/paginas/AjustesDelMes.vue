@@ -9,12 +9,14 @@ import EncabezadoDeImpresion from '../componentes/reportes/EncabezadoDeImpresion
 import FiltrosDeAjustesDelMes from '../componentes/reportes/FiltrosDeAjustesDelMes.vue';
 import LeyendasDelReporte from '../componentes/reportes/LeyendasDelReporte.vue';
 import SeccionesDeAjustesDelMes from '../componentes/reportes/SeccionesDeAjustesDelMes.vue';
+import TotalesDeAjustesPorCausa from '../componentes/reportes/TotalesDeAjustesPorCausa.vue';
 import TotalesDelReporte from '../componentes/reportes/TotalesDelReporte.vue';
 import {
   cantidadDeFilasDeAjustes,
   lineasDeImpresionDeAjustes,
   textoDeMes,
   totalesDeAjustes,
+  totalesPorCausaYEfecto,
 } from '../composables/reportes/ajustes-del-mes';
 import { usarAjustesDelMes } from '../composables/reportes/usar-ajustes-del-mes';
 import { VENTANAS_CUENTAS_POR_PAGAR } from '../textos';
@@ -49,6 +51,7 @@ const imprimir = (): void => window.print();
           :totales="totalesDeAjustes(r.reporte.value)"
           :titulo="`Totales de ${textoDeMes(r.reporte.value.mes)}`"
         />
+        <TotalesDeAjustesPorCausa :filas="totalesPorCausaYEfecto(r.reporte.value)" />
         <EstadoVacio
           v-if="cantidadDeFilasDeAjustes(r.reporte.value) === 0"
           :icono="ClipboardCheck"

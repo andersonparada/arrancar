@@ -75,12 +75,11 @@ export const consultaDePagos = (filtros: FiltrosDePagos, pagina: number, limite:
   limite,
 });
 
-/** El rango pasa de 24 meses si `hasta` queda después de `desde` más 24 meses. */
+/** Igual que el servidor: los meses completos de `desde` a `hasta` no pasan del máximo. */
 function superaElMaximo(desde: string, hasta: string): boolean {
-  const [anio, mes, dia] = desde.split('-').map(Number) as [number, number, number];
-  const limite = new Date(Date.UTC(anio, mes - 1 + MESES_MAXIMOS + 1, 0));
-  limite.setUTCDate(Math.min(dia, limite.getUTCDate()));
-  return hasta > limite.toISOString().slice(0, 10);
+  const [a1, m1, d1] = desde.split('-').map(Number) as [number, number, number];
+  const [a2, m2, d2] = hasta.split('-').map(Number) as [number, number, number];
+  return (a2 - a1) * 12 + (m2 - m1) - (d2 < d1 ? 1 : 0) > MESES_MAXIMOS;
 }
 
 /** Qué decirle a quien escribió mal el rango; `undefined` si sirve. */
