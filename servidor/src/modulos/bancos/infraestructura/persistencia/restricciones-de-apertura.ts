@@ -1,18 +1,9 @@
 import { sql } from 'drizzle-orm';
 import { check, foreignKey, index, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { PARTES_DE_APERTURA, type ParteDeApertura } from '../../dominio/partes-de-apertura.js';
 import { saldosIniciales } from './saldos-iniciales.tablas.js';
 
-/** Las siete partes en que se descompone el saldo inicial de una cuenta (docs/modulos/diseno-bancos-segunda-parte.md §2). */
-export const PARTES_DE_APERTURA = [
-  'saldo_del_banco',
-  'cheque_en_circulacion',
-  'deposito_en_transito',
-  'debito_en_transito',
-  'error_del_banco',
-  'saldo_global',
-  'cheque_posfechado',
-] as const;
-export type ParteDeApertura = (typeof PARTES_DE_APERTURA)[number];
+export type { ParteDeApertura };
 
 const partesEnTexto = PARTES_DE_APERTURA.map((parte) => `'${parte}'`).join(', ');
 

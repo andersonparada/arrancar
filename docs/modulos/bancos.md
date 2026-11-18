@@ -1674,3 +1674,33 @@ limpieza diaria de huérfanos, variable `DEPURAR_HUERFANOS`). Errores de subida 
 4. La «huella» que muestra la pantalla es el SHA-256 del PDF **ya normalizado por qpdf** y cambia en cada subida del mismo archivo;
    el de lo recibido (`sha256_recibido`) no se muestra. Decidir cuál mostrar o si qpdf debe dar un resultado estable.
 5. Desmarcar una nota para Cuentas por pagar desde la conciliación (CP4-B2b) existe solo en el servidor; en pantalla se hace desde Notas.
+
+## Bancos, segunda parte: saldos iniciales con partidas (BS-1 y BS-2, servidor hecho el 2026-11-18)
+
+Diseño en `diseno-bancos-segunda-parte.md`; esta sección dice lo que ya está en el servidor. **El saldo inicial de una cuenta ya no es
+una sola nota**: es una cabecera (`bancos.saldos_iniciales`, una por cuenta) con partidas que son movimientos con `parte_de_apertura`:
+`saldo_del_banco` (el del estado de cuenta, fechado el corte = el día anterior a la fecha de inicio de la empresa), `cheque_en_circulacion`,
+`deposito_en_transito`, `debito_en_transito`, `error_del_banco` (crédito o débito), `cheque_posfechado` (no es partida de apertura: cuenta en
+su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que ya existía: se puede convertir).
+
+- **Rutas** (`/bancos/saldos-iniciales`): `GET` (lista de todas las cuentas con su cuadre, totales **Bancos** y **Sobregiros** sin compensar y
+  hallazgos de cierre), `GET /:cuentaBancariaId` (ficha), `PUT /:cuentaBancariaId` (crea con `.crear` o corrige con `.editar`; el signo del saldo
+  dice crédito o débito; con un saldo global lo convierte), `DELETE /:cuentaBancariaId` (con motivo; borra todas las partidas y los cheques de
+  la chequera de apertura), `POST|PUT|DELETE /:cuentaBancariaId/partidas[/:movimientoId]`, `GET /revision-de-cierre` y los dos Excel
+  (`/exportar|plantilla|importar` para los saldos por cuenta y `/partidas/exportar|plantilla|importar` para las seis clases). Anular una
+  partida (`.../anular`) llega con BS-3.
+- **Reglas**: solo con fecha de inicio y la carga **abierta** (también el posfechado); partida del corte o antes (posfechado, posterior); la
+  cuenta no tiene movimientos normales `<=` corte ni conciliaciones; el cheque lleva número y beneficiario («solo cheques entregados»); error
+  del banco con sentido y descripción. Avisos que no bloquean: cheque antiguo con la variable `bancos.cheques.meses_de_vencimiento` y el art.
+  508, depósito de más de 30 días, saldo negativo sin sobregiro, no cuadra y, en el posfechado, sin fondos. Los textos con artículos del Código
+  de Comercio están solo en `dominio/errores-de-apertura.ts`.
+- **Cheques**: viven en `bancos.cheques`. Si el número está disponible en una chequera registrada de la cuenta y serie se usa; si no, en la
+  **chequera de apertura** (una por cuenta y serie, inactiva, con `desde`/`hasta` mantenidos). Una chequera nueva que incluya uno de esos
+  números se rechaza (`rango_de_cheques_traslapado`).
+- **Fecha de inicio**: Bancos escucha `empresas.fecha_de_inicio_por_cambiar` y rechaza el cambio con saldos del estado de cuenta cargados o con un
+  saldo global posterior a la fecha nueva (uno de la misma fecha pasa: el diseño pedía rechazarlo también, pero los saldos de antes ya cargados llevan la fecha de inicio).
+- **Rutas heredadas hasta BS-5** (el cliente actual): `POST /bancos/saldos-iniciales`, `GET /bancos/saldos-iniciales?cuentaBancariaId=…` y
+  `PUT|DELETE /bancos/saldos-iniciales/global/:movimientoId` registran y leen el saldo «de antes» (`saldo_global`). `RepositorioDeMovimientosConSaldoGlobal`
+  reemplaza al puente de BS-1. El Excel viejo (Tipo, Fecha, Monto…) ya no existe.
+- **Pendiente**: BS-3 (anular con inverso, movimientos antes del corte, `parteDeApertura` en los DTO), BS-4 (conciliación: hoy el saldo del
+  banco todavía aparece como candidato, como el global), BS-5 a BS-9 (cliente y evidencia).

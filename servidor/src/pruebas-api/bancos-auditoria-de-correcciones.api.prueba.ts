@@ -86,7 +86,10 @@ describe('auditoría de correcciones de Bancos', () => {
     const ruta = RUTA_SALDOS_INICIALES;
     const inicial = await cuenta.propietario.post(ruta, datos({ fecha: '2025-01-01', monto: '1000.00' }));
 
-    await cuenta.propietario.put(`${ruta}/${inicial.cuerpo.id}`, datos({ fecha: '2025-01-01', monto: '1500.00' }));
+    await cuenta.propietario.put(
+      `${ruta}/global/${inicial.cuerpo.id}`,
+      datos({ fecha: '2025-01-01', monto: '1500.00' }),
+    );
 
     expect((await correccionesAuditadas()).at(-1)).toMatchObject({
       registro_id: inicial.cuerpo.id,
@@ -96,7 +99,7 @@ describe('auditoría de correcciones de Bancos', () => {
 
   it('una corrección rechazada no deja rastro', async () => {
     const antes = (await correccionesAuditadas()).length;
-    const iniciales = await cuenta.propietario.get(RUTA_SALDOS_INICIALES);
+    const iniciales = await cuenta.propietario.get(`${RUTA_SALDOS_INICIALES}?cuentaBancariaId=${cuentaBancariaId}`);
     const inicial = { cuerpo: iniciales.cuerpo[0] as { id: string } };
 
     const rechazada = await cuenta.propietario.put(

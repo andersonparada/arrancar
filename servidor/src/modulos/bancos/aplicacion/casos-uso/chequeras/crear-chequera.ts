@@ -41,5 +41,8 @@ export class CrearChequera {
       (rango) => rango.serie === serie && solicitud.desde <= rango.hasta && solicitud.hasta >= rango.desde,
     );
     if (seTraslapan) throw new RangoDeChequesTraslapado();
+    const { cuentaBancariaId, desde, hasta } = solicitud;
+    const [deLaCarga] = await repositorio.numerosDeAperturaEnRango(cuentaBancariaId, { serie, desde, hasta });
+    if (deLaCarga !== undefined) throw new RangoDeChequesTraslapado({ numeroDeLaCargaInicial: deLaCarga });
   }
 }

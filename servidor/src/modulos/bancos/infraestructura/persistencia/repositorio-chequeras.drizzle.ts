@@ -1,8 +1,9 @@
-import { eq } from 'drizzle-orm';
+import { and, between, asc, eq, sql } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { RepositorioChequeras } from '../../aplicacion/puertos/repositorio-chequeras.js';
 import type { Chequera, ChequeraId } from '../../dominio/chequera.js';
 import { chequeras } from './chequeras.tablas.js';
+import { cheques } from './cheques.tablas.js';
 import { mapeadorDeChequera } from './chequera.mapeador.js';
 
 /** La tabla tiene seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
@@ -23,10 +24,31 @@ export class RepositorioChequerasDrizzle implements RepositorioChequeras {
       .where(eq(chequeras.id, chequera.id.valor));
   }
 
+  /** Las chequeras de apertura no cuentan aquí: su rango es solo el menor y el mayor de sus cheques, con huecos. */
   async rangosDeLaCuenta(cuentaBancariaId: string) {
     return transaccionEnCurso()
       .select({ serie: chequeras.serie, desde: chequeras.desde, hasta: chequeras.hasta })
       .from(chequeras)
-      .where(eq(chequeras.cuentaBancariaId, cuentaBancariaId));
+      .where(and(eq(chequeras.cuentaBancariaId, cuentaBancariaId), eq(chequeras.deApertura, false)));
+  }
+
+  async numerosDeAperturaEnRango(
+    cuentaBancariaId: string,
+    rango: { serie: string | null; desde: number; hasta: number },
+  ): Promise<number[]> {
+    const filas = await transaccionEnCurso()
+      .select({ numero: cheques.numero })
+      .from(cheques)
+      .innerJoin(chequeras, eq(chequeras.id, cheques.chequeraId))
+      .where(
+        and(
+          eq(chequeras.cuentaBancariaId, cuentaBancariaId),
+          eq(chequeras.deApertura, true),
+          sql`coalesce(${chequeras.serie}, '') = ${rango.serie ?? ''}`,
+          between(cheques.numero, rango.desde, rango.hasta),
+        ),
+      )
+      .orderBy(asc(cheques.numero));
+    return filas.map((fila) => fila.numero);
   }
 }

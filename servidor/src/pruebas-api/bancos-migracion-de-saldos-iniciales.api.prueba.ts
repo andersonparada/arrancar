@@ -170,7 +170,9 @@ describe('migración 0034: los saldos iniciales existentes quedan como globales'
     expect(await cabeceras()).toHaveLength(1);
     const lista = await cuenta.propietario.get(`/api/bancos/saldos-iniciales?cuentaBancariaId=${cuentaId}`);
     const id = (lista.cuerpo as Array<{ id: string }>)[0]!.id;
-    const eliminado = await cuenta.propietario.delete(`/api/bancos/saldos-iniciales/${id}`, { motivo: 'prueba' });
+    const eliminado = await cuenta.propietario.delete(`/api/bancos/saldos-iniciales/global/${id}`, {
+      motivo: 'prueba',
+    });
     expect(eliminado.estado).toBe(204);
     expect(await cabeceras()).toEqual([]);
   });

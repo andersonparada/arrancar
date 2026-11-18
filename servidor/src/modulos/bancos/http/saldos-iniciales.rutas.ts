@@ -1,56 +1,113 @@
+import type { preHandlerAsyncHookHandler } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { AccesoDenegado } from '../../core/compartido/aplicacion/errores.js';
+import { contextoDe } from '../../core/compartido/http/contexto-de-la-solicitud.js';
 import { proteger } from '../../core/compartido/http/guardias.js';
+import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import { rutasDeIntercambio, type OpcionesDeIntercambio } from '../../core/intercambio/http/rutas-de-intercambio.js';
-import { esquemaEliminacion, esquemaParamsMovimiento } from './movimientos.esquemas-http.js';
+import { esquemaEliminacion } from './movimientos.esquemas-http.js';
+import type { SaldosGlobalesControlador } from './saldos-globales.controlador.js';
+import { rutasDeSaldosGlobales } from './saldos-globales.rutas.js';
+import { esquemaFiltroDeSaldosGlobales } from './saldos-globales.esquemas-http.js';
 import type { SaldosInicialesControlador } from './saldos-iniciales.controlador.js';
-import { esquemaFiltroDeSaldosIniciales, esquemaSaldoInicial } from './saldos-iniciales.esquemas-http.js';
+import {
+  esquemaCorreccionDePartida,
+  esquemaGuardarSaldoInicial,
+  esquemaParamsDeCuenta,
+  esquemaParamsDePartida,
+  esquemaPartida,
+} from './saldos-iniciales.esquemas-http.js';
 
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
+type Intercambio = OpcionesDeIntercambio['intercambio'];
 
 const etiquetas = ['Bancos'];
 const RUTA = '/bancos/saldos-iniciales';
-const conId = { tags: etiquetas, params: esquemaParamsMovimiento };
-/** Importar y exportar (es administración): se ve en la ficha de la cuenta y en la lista de cuentas. */
-const EN_EXCEL = {
-  ruta: RUTA,
-  archivo: 'saldos-iniciales',
-  permisos: { importar: 'bancos.saldos-iniciales.importar', exportar: 'bancos.saldos-iniciales.exportar' },
+const conCuenta = { tags: etiquetas, params: esquemaParamsDeCuenta };
+const conPartida = { tags: etiquetas, params: esquemaParamsDePartida };
+
+/** Guardar la cabecera: la ruta deja pasar con crear o con editar y el caso de uso exige el que corresponde. */
+const crearOEditar: preHandlerAsyncHookHandler = async (solicitud) => {
+  const { permisos } = contextoDe(solicitud);
+  if (!permisos.has('bancos.saldos-iniciales.crear') && !permisos.has('bancos.saldos-iniciales.editar')) {
+    throw new AccesoDenegado();
+  }
 };
 
-/** No se anula (no aplica el inverso a un saldo inicial): se corrige o, si la cuenta sigue sin conciliaciones, se elimina. */
-function rutasDeEscritura(app: Aplicacion, controlador: SaldosInicialesControlador) {
-  const crear = proteger({ permiso: 'bancos.saldos-iniciales.crear' });
-  const editar = proteger({ permiso: 'bancos.saldos-iniciales.editar' });
-  const eliminar = proteger({ permiso: 'bancos.saldos-iniciales.eliminar' });
-  app.post(RUTA, {
-    schema: { tags: etiquetas, body: esquemaSaldoInicial },
-    preHandler: crear,
-    handler: controlador.crear,
+function rutasDeLectura(app: Aplicacion, controlador: SaldosInicialesControlador, heredado: SaldosGlobalesControlador) {
+  const ver = proteger({ permiso: 'bancos.saldos-iniciales.ver' });
+  // Con `?cuentaBancariaId` responde lo de siempre (el cliente actual, hasta BS-5); sin él, la lista nueva.
+  app.get(RUTA, {
+    schema: { tags: etiquetas, querystring: esquemaFiltroDeSaldosGlobales },
+    preHandler: ver,
+    handler: (solicitud) =>
+      solicitud.query.cuentaBancariaId
+        ? heredado.listarDeLaCuenta(operadorDe(solicitud), solicitud.query.cuentaBancariaId)
+        : controlador.listar(solicitud),
   });
-  app.put(`${RUTA}/:movimientoId`, {
-    schema: { ...conId, body: esquemaSaldoInicial },
-    preHandler: editar,
-    handler: controlador.actualizar,
+  app.get(`${RUTA}/revision-de-cierre`, {
+    schema: { tags: etiquetas },
+    preHandler: ver,
+    handler: controlador.revisionDeCierre,
   });
-  app.delete(`${RUTA}/:movimientoId`, {
-    schema: { ...conId, body: esquemaEliminacion },
-    preHandler: eliminar,
+  app.get(`${RUTA}/:cuentaBancariaId`, { schema: conCuenta, preHandler: ver, handler: controlador.obtener });
+}
+
+function rutasDeLaCabecera(app: Aplicacion, controlador: SaldosInicialesControlador) {
+  app.put(`${RUTA}/:cuentaBancariaId`, {
+    schema: { ...conCuenta, body: esquemaGuardarSaldoInicial },
+    preHandler: [proteger({ modulo: 'bancos' }), crearOEditar],
+    handler: controlador.guardar,
+  });
+  app.delete(`${RUTA}/:cuentaBancariaId`, {
+    schema: { ...conCuenta, body: esquemaEliminacion },
+    preHandler: proteger({ permiso: 'bancos.saldos-iniciales.eliminar' }),
     handler: controlador.eliminar,
   });
 }
 
-/** Se ve con `bancos.cuentas-bancarias.ver` (aparece en la ficha de la cuenta); registrar, corregir y eliminar con `crear`, `editar` y `eliminar`. */
+function rutasDeLasPartidas(app: Aplicacion, controlador: SaldosInicialesControlador) {
+  const crear = proteger({ permiso: 'bancos.saldos-iniciales.crear' });
+  const editar = proteger({ permiso: 'bancos.saldos-iniciales.editar' });
+  const eliminar = proteger({ permiso: 'bancos.saldos-iniciales.eliminar' });
+  app.post(`${RUTA}/:cuentaBancariaId/partidas`, {
+    schema: { ...conCuenta, body: esquemaPartida },
+    preHandler: crear,
+    handler: controlador.agregarPartida,
+  });
+  app.put(`${RUTA}/:cuentaBancariaId/partidas/:movimientoId`, {
+    schema: { ...conPartida, body: esquemaCorreccionDePartida },
+    preHandler: editar,
+    handler: controlador.corregirPartida,
+  });
+  app.delete(`${RUTA}/:cuentaBancariaId/partidas/:movimientoId`, {
+    schema: { ...conPartida, body: esquemaEliminacion },
+    preHandler: eliminar,
+    handler: controlador.eliminarPartida,
+  });
+}
+
+/**
+ * Los saldos iniciales con partidas (docs/modulos/diseno-bancos-segunda-parte.md §8). Los dos Excel (saldos por cuenta
+ * y partidas de apertura) importan con `.importar` y exportan con `.exportar`. Anular una partida llega con BS-3.
+ */
 export function rutasSaldosIniciales(
   controlador: SaldosInicialesControlador,
-  intercambio: OpcionesDeIntercambio['intercambio'],
+  heredado: SaldosGlobalesControlador,
+  intercambios: { saldos: Intercambio; partidas: Intercambio },
 ): FastifyPluginAsyncZod {
+  const permisos = { importar: 'bancos.saldos-iniciales.importar', exportar: 'bancos.saldos-iniciales.exportar' };
   return async (app) => {
-    app.get(RUTA, {
-      schema: { tags: etiquetas, querystring: esquemaFiltroDeSaldosIniciales },
-      preHandler: proteger({ permiso: 'bancos.cuentas-bancarias.ver' }),
-      handler: controlador.listar,
+    rutasDeLectura(app, controlador, heredado);
+    await app.register(rutasDeSaldosGlobales(heredado));
+    rutasDeLaCabecera(app, controlador);
+    rutasDeLasPartidas(app, controlador);
+    rutasDeIntercambio(app, { ruta: RUTA, archivo: 'saldos-iniciales', permisos, intercambio: intercambios.saldos });
+    rutasDeIntercambio(app, {
+      ruta: `${RUTA}/partidas`,
+      archivo: 'partidas-de-apertura',
+      permisos,
+      intercambio: intercambios.partidas,
     });
-    rutasDeEscritura(app, controlador);
-    rutasDeIntercambio(app, { ...EN_EXCEL, intercambio });
   };
 }

@@ -1,5 +1,6 @@
 import type { Identificador } from '../../core/compartido/dominio/identificador.js';
 import type { DatosDeIntereses, PropiedadesDeIntereses } from './intereses.js';
+import type { ParteDeApertura } from './partes-de-apertura.js';
 
 export type MovimientoId = Identificador<'Movimiento'>;
 
@@ -39,4 +40,10 @@ export interface PropiedadesDeMovimiento
   moduloDeOrigen: string | null;
   /** El documento de ese módulo que lo generó (sin llave foránea: vive en otro esquema). */
   documentoDeOrigenId: string | null;
+  /**
+   * La parte del saldo inicial que es (docs/modulos/diseno-bancos-segunda-parte.md §2) y la cabecera de la que cuelga:
+   * las dos juntas o ninguna.
+   */
+  parteDeApertura: ParteDeApertura | null;
+  saldoInicialId: string | null;
 }
