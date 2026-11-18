@@ -10,6 +10,10 @@ decisiones e investigación con Opus).
 
 Actualizado: **2026-11-18** (tarde). El usuario pidió retomar la programación. Si otra sesión o cuenta retoma el trabajo, empiece aquí.
 
+**Desde el 2026-11-18 (velocidad):** los agentes corren `npm run revisar` y solo las pruebas de lo que tocan; la suite
+completa la corre el coordinador una vez en el worktree de integración. Un agente prepara las pruebas del servidor en
+paralelo (una base por worker; hoy ~27 min en serie).
+
 **Cómo se trabaja:** cada paso lo programa un agente en su propio worktree (`.claude/worktrees/agent-<id>`, rama
 `worktree-agent-<id>`), que parte de `main` con `git reset --hard main`, usa su propia base de pruebas
 (`BD_PRUEBAS=arrancar_pruebas_<algo>`, creada con `docker compose -f infra/docker-compose.dev.yml exec -T postgres psql
