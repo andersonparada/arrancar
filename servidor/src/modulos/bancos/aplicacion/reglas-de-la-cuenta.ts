@@ -64,14 +64,14 @@ export class ReglasDeLaCuenta {
 
   private async revisarSaldoInicial(
     operador: Operador,
-    { cuentaBancariaId, movimientoId }: CambioEnLaCuenta,
+    { cuentaBancariaId, movimientoId, fechas }: CambioEnLaCuenta,
     { fecha, saldoInicial }: { fecha: string; saldoInicial: boolean },
   ): Promise<void> {
     const { consultas } = this.dependencias;
     const principal = await consultas.saldoPrincipalDe(cuentaBancariaId, movimientoId);
     if (saldoInicial) return this.revisarElSaldoInicialNuevo({ cuentaBancariaId, movimientoId, fecha, principal });
     if (principal) return this.revisarContraElSaldoPrincipal(fecha, principal);
-    if (!movimientoId) await this.revisarLaFechaDeInicio(operador, fecha);
+    await this.revisarLaFechaDeInicio(operador, fecha, movimientoId ? fechas[0] : undefined);
   }
 
   /** El saldo inicial es único y el primero por fecha. */
@@ -82,7 +82,11 @@ export class ReglasDeLaCuenta {
     principal: SaldoPrincipalDeLaCuenta | null;
   }): Promise<void> {
     const { cuentaBancariaId, movimientoId, fecha, principal } = datos;
-    if (principal) throw new SaldoInicialRepetido();
+    if (
+      principal ||
+      (!movimientoId && (await this.dependencias.consultas.tieneCabeceraDeSaldoInicial(cuentaBancariaId)))
+    )
+      throw new SaldoInicialRepetido();
     const masAntigua = await this.dependencias.consultas.fechaMasAntigua(cuentaBancariaId, movimientoId);
     if (masAntigua && fecha > masAntigua) throw new SaldoInicialNoEsElPrimero();
   }
@@ -93,10 +97,14 @@ export class ReglasDeLaCuenta {
     if (parte === 'saldo_global' && fecha < delSaldo) throw new MovimientoAntesDelSaldoInicial();
   }
 
-  /** Sin saldo inicial en la cuenta, un movimiento nuevo no puede ser anterior a la fecha de inicio de la empresa (P-6). */
-  private async revisarLaFechaDeInicio(operador: Operador, fecha: string): Promise<void> {
+  /**
+   * Sin saldo inicial en la cuenta, un movimiento no puede quedar antes de la fecha de inicio de la empresa (P-6);
+   * al corregir uno que ya estaba antes, la fecha se mueve libremente.
+   */
+  private async revisarLaFechaDeInicio(operador: Operador, fecha: string, anterior?: string): Promise<void> {
     const { fechaDeInicio } = await this.dependencias.cargaInicial.obtener(operador);
-    if (fechaDeInicio !== null && fecha < fechaDeInicio) throw new MovimientoAntesDeLaFechaDeInicio(fechaDeInicio);
+    if (fechaDeInicio === null || (anterior !== undefined && anterior < fechaDeInicio)) return;
+    if (fecha < fechaDeInicio) throw new MovimientoAntesDeLaFechaDeInicio(fechaDeInicio);
   }
 
   /** Nada se toca con fecha en un mes ya conciliado (o antes) de la cuenta. */

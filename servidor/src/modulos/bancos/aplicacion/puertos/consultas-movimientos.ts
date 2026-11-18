@@ -27,6 +27,8 @@ export interface ConsultasMovimientos {
   saldoDe(cuentaBancariaId: string): Promise<string>;
   /** El saldo principal vigente de la cuenta (el del banco al corte o el global de antes), sin contar `excluir`; null si no tiene. */
   saldoPrincipalDe(cuentaBancariaId: string, excluir?: string): Promise<SaldoPrincipalDeLaCuenta | null>;
+  /** Si la cuenta tiene cabecera de saldo inicial (con el saldo del banco en cero no hay movimiento principal, pero sí cabecera). */
+  tieneCabeceraDeSaldoInicial(cuentaBancariaId: string): Promise<boolean>;
   /** La fecha del movimiento vigente más antiguo, sin contar `excluir`; null si no hay. */
   fechaMasAntigua(cuentaBancariaId: string, excluir?: string): Promise<string | null>;
   /** Fin de mes de la última conciliación AUTORIZADA de la cuenta; `null` si no tiene ninguna. */

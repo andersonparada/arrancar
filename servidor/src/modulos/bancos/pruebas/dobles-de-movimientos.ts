@@ -143,6 +143,8 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
     return deCentavos(efectos.reduce((suma, efecto) => suma + efecto, 0));
   }
 
+  tieneCabeceraDeSaldoInicial = async (): Promise<boolean> => false;
+
   async saldoPrincipalDe(cuentaBancariaId: string, excluir?: string): Promise<SaldoPrincipalDeLaCuenta | null> {
     const inicial = this.vigentes(cuentaBancariaId, excluir).find((dto) => dto.saldoInicial);
     const parte = inicial?.parteDeApertura === 'saldo_del_banco' ? 'saldo_del_banco' : 'saldo_global';

@@ -1,10 +1,12 @@
-import { sql, type AnyColumn } from 'drizzle-orm';
+import { eq, sql, type AnyColumn } from 'drizzle-orm';
 import type { alias } from 'drizzle-orm/pg-core';
 import type { HechosDeUnMovimiento } from '../../aplicacion/acciones-posibles.js';
 import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../dominio/asignacion-de-concepto.js';
 import type { ParteDeApertura } from '../../dominio/partes-de-apertura.js';
 import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
+import { saldosIniciales } from './saldos-iniciales.tablas.js';
+import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { movimientos } from './movimientos.tablas.js';
 
 /**
@@ -39,6 +41,15 @@ export const mesConciliadoDe = (cuentaBancariaId: AnyColumn, fecha: AnyColumn) =
 /** Si la cuenta tiene alguna conciliación, de cualquier estado. */
 export const cuentaConConciliacionesDe = (cuentaBancariaId: AnyColumn) =>
   sql<boolean>`exists (select 1 from ${conciliaciones} where ${conciliaciones.cuentaBancariaId} = ${cuentaBancariaId})`;
+
+/** Si la cuenta tiene cabecera de saldo inicial (con el saldo del banco en cero no hay movimiento, pero sí cabecera). */
+export async function hayCabeceraDeSaldoInicial(cuentaBancariaId: string): Promise<boolean> {
+  const filas = await transaccionEnCurso()
+    .select()
+    .from(saldosIniciales)
+    .where(eq(saldosIniciales.cuentaBancariaId, cuentaBancariaId));
+  return filas.length > 0;
+}
 
 /** Si el concepto del movimiento es el de sistema «Pago a proveedores» (la marca de una nota para Cuentas por pagar). */
 export const conceptoEsDePagoDe = (conceptoId: AnyColumn) =>

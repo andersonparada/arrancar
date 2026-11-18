@@ -141,6 +141,25 @@ describe('una cuenta sin saldo inicial en una empresa con fecha de inicio (P-6)'
     expect(deInicio.estado).toBe(201);
   });
 
+  it('corregir una nota posterior a la fecha de inicio hacia una fecha anterior se rechaza (422)', async () => {
+    const cuentaId = await crearCuentaSinSaldo(usuario());
+    const registrada = await nota(cuentaId, '2026-01-10');
+
+    const corregida = await usuario().put(`/api/bancos/notas/${registrada.cuerpo.id}`, {
+      cuentaBancariaId: cuentaId,
+      tipo: 'credito',
+      fecha: '2025-06-01',
+      monto: '50.00',
+      referencia: null,
+      beneficiario: null,
+      observaciones: null,
+      conceptoId,
+    });
+
+    expect(corregida.estado).toBe(422);
+    expect(corregida.cuerpo.error.codigo).toBe('movimiento_antes_de_la_fecha_de_inicio');
+  });
+
   it('los movimientos que ya existían antes de la fecha de inicio no se tocan: se pueden corregir', async () => {
     const vieja = await darDeAltaCuenta(entorno, {
       nombre: 'Historia previa',

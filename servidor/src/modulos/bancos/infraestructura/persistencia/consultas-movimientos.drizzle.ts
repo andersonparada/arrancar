@@ -19,7 +19,7 @@ import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { desgloseDeMovimientos } from './desglose-de-movimientos.tablas.js';
-import { cuentaConConciliacionesDe, mesConciliadoDe } from './hechos-de-movimiento.js';
+import { cuentaConConciliacionesDe, hayCabeceraDeSaldoInicial, mesConciliadoDe } from './hechos-de-movimiento.js';
 import { mapeadorDeMovimiento } from './movimiento.mapeador.js';
 import { movimientos } from './movimientos.tablas.js';
 import { saldoVigente } from './saldo-vigente.js';
@@ -136,6 +136,10 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
       .orderBy(asc(movimientos.fecha))
       .limit(1);
     return fila ? { parte: fila.parte as SaldoPrincipalDeLaCuenta['parte'], fecha: fila.fecha } : null;
+  }
+
+  tieneCabeceraDeSaldoInicial(cuentaBancariaId: string): Promise<boolean> {
+    return hayCabeceraDeSaldoInicial(cuentaBancariaId);
   }
 
   fechaMasAntigua(cuentaBancariaId: string, excluir?: string): Promise<string | null> {

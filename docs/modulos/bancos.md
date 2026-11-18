@@ -1713,7 +1713,7 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
   y devuelve `{ parte, fecha }`): con `saldo_del_banco`, un movimiento normal con fecha del corte o anterior se rechaza con
   `MovimientoAntesDeLaApertura` (el mensaje trae la ayuda de las notas del banco descubiertas después); con `saldo_global`, la regla de siempre;
   **sin saldo principal** (también con el saldo del banco en cero) un movimiento **nuevo** anterior a la fecha de inicio de la empresa se rechaza con
-  `MovimientoAntesDeLaFechaDeInicio` (P-6; corregir uno que ya existía no se toca). Vale para notas, cheques, transferencias y las órdenes de otros módulos
+  `MovimientoAntesDeLaFechaDeInicio` (P-6; corregir uno que ya existía antes de esa fecha no se toca; corregir uno posterior no lo deja antes); un saldo inicial nuevo (no su corrección) también se rechaza si la cuenta ya tiene cabecera (saldo del banco en cero). Vale para notas, cheques, transferencias y las órdenes de otros módulos
   (todos pasan por `reglas.revisar`).
 - **Anular una partida (§5.3)**: `POST /bancos/saldos-iniciales/:cuentaBancariaId/partidas/:movimientoId/anular` (`.anular`; cuerpo `{ motivo, fecha?, pagador? }`;
   responde `{ partida, inversoId }`) con `AnularPartidaDeApertura`, que delega en `AnularCheque` (cheque en circulación) o

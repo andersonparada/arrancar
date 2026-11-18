@@ -26,7 +26,7 @@ const conAntiguedad =
   (cheque: ChequeEnCirculacionCrudo): ChequeEnCirculacionDto => ({
     ...cheque,
     diasDeAntiguedad: diasDeAntiguedad(cheque.fecha, hoy),
-    origen: cheque.parteDeApertura === null ? 'suelto' : 'apertura',
+    origen: cheque.parteDeApertura === null || cheque.parteDeApertura === 'cheque_posfechado' ? 'suelto' : 'apertura',
   });
 
 function armarReporte(

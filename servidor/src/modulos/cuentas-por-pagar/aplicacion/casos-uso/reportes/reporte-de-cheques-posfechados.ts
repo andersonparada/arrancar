@@ -12,7 +12,7 @@ import { baseDelCorte } from './base-del-corte.js';
 import type { DependenciasDeReportesDePagos } from './reporte-de-pagos-realizados.js';
 
 export const LEYENDAS_DE_CHEQUES = [
-  'El cheque se paga a la vista (Código de Comercio art. 501): el proveedor puede cobrarlo antes de su fecha.',
+  'El cheque se paga a la vista aunque tenga fecha posterior (Código de Comercio, art. 501): el proveedor puede cobrarlo antes de su fecha.',
   'El total es el «Comprometido» de los reportes de saldos al mismo corte.',
 ];
 
