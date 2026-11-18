@@ -20,7 +20,7 @@ export const PERMISOS_DE_CUENTAS_POR_LIQUIDAR: DefinicionPermiso[] = [
   { clave: 'cuentas-por-liquidar.gastos.anular', descripcion: 'Quitar gastos de un anticipo abierto' },
   {
     clave: 'cuentas-por-liquidar.gastos.con-retencion',
-    descripcion: 'Registrar en un anticipo un documento con retención (excepción), con motivo; queda en la auditoría',
+    descripcion: 'Asignar a un anticipo un documento con retención (excepción), con motivo; queda en la auditoría',
   },
   { clave: 'cuentas-por-liquidar.reportes.ver', descripcion: 'Ver los reportes de cuentas por liquidar' },
   { clave: 'cuentas-por-liquidar.reportes.exportar', descripcion: 'Exportar los reportes de cuentas por liquidar' },

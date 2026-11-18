@@ -2482,3 +2482,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   documento y documentos; retención en la bandeja sin motivo, asignada sin motivo y motivo sin retención. Sin migraciones
   del core ni de Bancos. Pendientes: los casos de uso y mapeadores no escriben `cuenta_id` (lo pone la transacción);
   la prueba de la migración sobre una base con filas no está automatizada.
+- **2026-11-18** (CC-1c / CL-1c, cierre): las descripciones de `caja-chica.comprobantes.con-retencion` y
+  `cuentas-por-liquidar.gastos.con-retencion` pasan a «Asignar a un fondo / a un anticipo un documento con retención
+  (excepción)…», porque con CC-f = A′ registrar no pide el permiso, lo pide quien asigna. Solo texto, sin migración. Las
+  migraciones `0003` con `cuenta_id`, la llave `(proveedor_id, cuenta_id)` y los checks ya estaban en el commit anterior.

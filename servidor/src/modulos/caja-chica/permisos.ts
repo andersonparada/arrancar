@@ -29,7 +29,7 @@ export const PERMISOS_DE_CAJA_CHICA: DefinicionPermiso[] = [
   },
   {
     clave: 'caja-chica.comprobantes.con-retencion',
-    descripcion: 'Registrar en caja chica un documento con retención (excepción), con motivo; queda en la auditoría',
+    descripcion: 'Asignar a un fondo un documento con retención (excepción), con motivo; queda en la auditoría',
   },
   { clave: 'caja-chica.vales.crear', descripcion: 'Entregar vales provisionales' },
   { clave: 'caja-chica.vales.liquidar', descripcion: 'Liquidar vales provisionales' },
