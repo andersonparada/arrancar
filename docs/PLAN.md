@@ -2331,3 +2331,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `documentos.ver` (el filtro queda con «Todos», sin aviso). El comprobante muestra estado vacío con enlace para volver y la
   sección de pagos de la contraseña solo enlaza con `pagos.ver`. Pendiente: tope de la reaplicación con diferencias saldadas
   (el cliente no suma esa diferencia) y enlace del movimiento de Bancos en la ficha.
+- 2026-11-18 · **Cuentas por pagar CP4-11 (cliente, documentos, notas y reintegros).** Documentos por pagar: filtro «Estado de pago»
+  (con «Comprometidos (cheque posfechado)»), etiqueta de estado en la tarjeta y «Pagado» y «Comprometido» en la tarjeta y la
+  ficha; la ficha del cargo gana la sección «Pagos» (enlace a `/cuentas-por-pagar/pagos/:id`, «Posfechado», retención descontada
+  y por qué no se anula) y la de la nota, «Reintegrado» y la sección «Reintegros» con «Recibo» y «Anular» (motivo). Notas de
+  crédito: «Registrar reintegro» en la ficha y casillas en la lista (solo del mismo proveedor y solo lo que el servidor dice que
+  se puede), `VentanaDeReintegro` (depósito o efectivo; referencia obligatoria en efectivo; resumen de lo que va a pasar; aviso
+  del efectivo) que al registrar lleva al recibo, y `ReciboDeReintegro` (impresión con la leyenda no tributaria). Los avisos del
+  pago con constancia sin emitir enlazan a «Constancias de retención pendientes» (R12). **Servidor (mínimo):** `GET /documentos`
+  acepta `estadoDePago`, con la misma regla de `estadoDePagoDe` en SQL (`filtro-de-estado-de-pago.ts`, con prueba de integración).
+  Diferencias con el diseño: la ficha de la nota trae solo el `estado` de cada reintegro (no `puedeAnular`), así que «Anular» se
+  ofrece en los vigentes y el servidor decide; anular no pide la fecha del inverso (el servidor usa la de hoy); las cuentas del
+  depósito salen de `GET /pagos/medios` (pide `pagos.ver`; sin ellas solo se ofrece el efectivo); el enlace a constancias no
+  lleva el mes ni el filtro porque esa pantalla no lee parámetros de la ruta.

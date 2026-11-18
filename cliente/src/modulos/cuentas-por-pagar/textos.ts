@@ -24,7 +24,9 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
   },
   notasDeCredito: {
     titulo: 'Notas de crédito',
-    descripcion: 'Las notas de crédito de los proveedores y lo que queda a favor de la empresa en cada una.',
+    descripcion:
+      'Las notas de crédito de los proveedores y lo que queda a favor de la empresa en cada una. Marque las de un proveedor para registrar su reintegro.',
+    recibo: 'Recibo de reintegro',
   },
   saldosIniciales: {
     titulo: 'Saldos iniciales',
