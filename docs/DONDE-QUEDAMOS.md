@@ -8,7 +8,7 @@ decisiones e investigación con Opus).
 
 ## Estado para retomar (se actualiza en cada unión a `main`)
 
-Actualizado: **2026-11-14**. Si otra sesión o cuenta retoma el trabajo, empiece aquí.
+Actualizado: **2026-11-18**. Por pedido del usuario se terminan solo los pasos en curso; no se lanzan pasos nuevos. Si otra sesión o cuenta retoma el trabajo, empiece aquí.
 
 **Cómo se trabaja:** cada paso lo programa un agente en su propio worktree (`.claude/worktrees/agent-<id>`, rama
 `worktree-agent-<id>`), que parte de `main` con `git reset --hard main`, usa su propia base de pruebas
@@ -22,57 +22,53 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `96b7ce2` (sin `git push`; lo hace el usuario). Última corrida completa en verde (con CP3-8): servidor 4126,
-cliente 1034, generador 46.
+**`main`:** `55be365` (sin `git push`; lo hace el usuario). Última corrida completa en verde: servidor 4678, cliente 1158,
+generador 46 (antes de unir CP4-E3, CP4-7, CP4-B2b, H2 paso 5 y CP4-B3a; la corrida con esas cinco está en curso).
 
-**Cuentas por pagar, avance por diseño** (cada diseño en `docs/modulos/`, con su dictamen):
+### Cuentas por pagar (≈ 85 %)
 
-| Parte | Diseño | Hecho | Falta |
+| Parte | Diseño (en `docs/modulos/`) | Hecho | Falta |
 |---|---|---|---|
-| U8 saldos iniciales | `diseno-u8-…` | U8-1 a U8-12 y correcciones de QA | — |
-| CP2 notas de crédito | `diseno-cp2-…` | CP2-1 a CP2-8 (QA incluida) | — |
-| CP3 contraseñas | `diseno-cp3-…` | CP3-1 a CP3-8 (QA incluida) y el arreglo E3 | — |
-| U8-l notas sobre facturas del sistema anterior | `diseno-u8l-…` | P1-1, P1-2, U8l-1 a U8l-8 (QA incluida) | detalles menores de la QA (en curso) |
-| CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | CP4-B1, CP4-B2a, CP4-1, CP4-EB | CP4-2 (en curso), CP4-V1 (varias contraseñas por pago, antes de CP4-3), CP4-3 a CP4-12, CP4-E1 a E5 (efectivo), CP4-B2b y B3 (Bancos, después del cliente de H2b de la otra sesión) |
-| CP5 reportes | `diseno-cp5-reportes.md` (aprobado 2026-11-15, dictamen `dictamen-cp5-2026-11-15.md`) | CP5-1 a CP5-4, CP5-6 a CP5-8, CP5-10 | CP5-5 (espera CP4-E3), CP5-9, CP5-11 |
-| CP5 reportes | `diseno-cp5-reportes.md` (aprobado, listo para programar, 2026-11-15) | — | **CP5-1** (migración `0011_cp5_fecha_de_anulacion`, **antes de CP4-4**), CP5-2 a CP5-11 (§11 del diseño) |
+| U8 saldos iniciales | `diseno-u8-…` | todo, con QA | — |
+| CP2 notas de crédito | `diseno-cp2-…` | todo, con QA | — |
+| CP3 contraseñas | `diseno-cp3-…` | todo, con QA | — |
+| U8-l facturas del sistema anterior | `diseno-u8l-…` | todo, con QA y correcciones | — |
+| CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | servidor: B1, B2a, B2b, EB, V1, 1 a 7, E1 a E3; cliente de Bancos B3a | CP4-8 (en curso), CP4-9 a CP4-11 (**pantallas de pagos**), CP4-E4 y E5 (recibos y pantallas de efectivo), CP4-B3b (Bancos, conciliación), CP4-12 (QA) |
+| CP5 reportes | `diseno-cp5-reportes.md` | CP5-1 a CP5-4, CP5-6 a CP5-8, CP5-10 | CP5-5 (efectivo y transitoria, servidor), CP5-9 (pantallas de pagos y control), CP5-11 (QA) |
 
-**Agentes al 2026-11-16 (varios cortados por el límite de uso; retomar cada uno con un mensaje, sin `git reset`)** (si se cortan, retomarlos sin `git reset`, o relanzar el paso desde `main`):
+Pendientes menores anotados: enlaces de R1/R2 al estado de cuenta (CP5-8); el origen de un movimiento de Bancos como
+enlace al pago (llega con CP4-10); unificar `EncabezadoDeImpresion` y `TotalesDelReporte` (copias en `core` y en
+Cuentas por pagar, CP5-10); que el servidor devuelva el aviso de fecha de inicio (EM-1).
+
+### Bancos
+
+- **H2:** pasos 1 a 5 en `main`; pasos 6 (docs) y 7 (QA de todo H2) en curso desde esta sesión (la otra sesión los cedió).
+- **Bancos, segunda parte:** diseño aprobado (`diseno-bancos-segunda-parte.md`, dictamen
+  `dictamen-bancos-segunda-parte-2026-11-16.md`). BS-1 (datos, migración `0034`) en curso; siguen BS-2 a BS-9, BS-R1,
+  BS-R2 y EM-2 (orden en §14). Diseños cortos pendientes: CP-AP (cheque de apertura anulado; incluye N-2, ligar el
+  posfechado de apertura a su factura, con el contador), aprobaciones, impresión de cheques.
+
+### Agentes en curso al cerrar (retomar con un mensaje, sin `git reset`)
 
 | Paso | Worktree / rama | Estado |
 |---|---|---|
-| BS-1 Bancos, segunda parte: datos (`0034`) | `agent-a7143c581f35d7d4b` | programando |
-| CP4-8 lista, ficha y comprobante de pagos | `agent-ad73d5cef330cdfa6` | programando |
-| Bancos H2 pasos 6 (docs) y 7 (QA de todo H2) | `agent-a536a989849810df2` | probando (la otra sesión cedió estos pasos) |
+| CP4-8 lista, ficha y comprobante de pagos | `agent-ad73d5cef330cdfa6` | programando; debe hacer `git merge main` y reutilizar `montoEnLetras` |
+| BS-1 Bancos, saldos iniciales por partidas (`0034`) | `agent-a7143c581f35d7d4b` | programando |
+| Bancos H2 pasos 6 y 7 | `agent-a536a989849810df2` | documentando y probando en el navegador |
 
-En `main`: CP4-6 (en verde: servidor 4563, cliente 1124, generador 46) y CP4-E2 (retiros de efectivo, `400e7f1`);
-pruebas corriendo con CP4-E2.
+### Esperan al usuario
 
-Siguiente en pagos: **CP5-1** (migración `0011` de Cuentas por pagar; nadie más genera migraciones de Cuentas por pagar a la vez) y después CP4-4 en adelante en el orden de la adenda (CP4-E1 → CP4-3 → CP5-1 → 4 → 5 → E2 → E3 → CP4-6 → 7 → 8 → E4 →
-CP4-9 → 10 → 11 → E5 → CP4-12). Pendiente menor: hacer que el error de **todos** los formularios
-se limpie al escribir (hoy solo en las ventanas con motivo; `quitarErrorAlCambiar` en `usar-formulario.ts`).
+- `git push origin main`.
+- Frase FEL 9-22 (ver «Pendiente del usuario»).
+- Informe de QA del 2026-11-08 sin commit en `agent-a19777c26d783baf6`; errores 4 y 6 de esa QA.
+- Bancos H2: tope de tamaño de solicitud en Caddy (~20 MB) y conservar 60 meses el `nombreOriginal` en la auditoría.
 
-**Bloqueo de PostgreSQL resuelto (2026-11-16):** el usuario reinició la WSL; si vuelve `ECONNRESET` en `localhost:5433`,
-son puentes de Docker huérfanos (`sudo ip link delete br-…` o `wsl --shutdown`). Todos los agentes se retomaron.
+### Avisos técnicos
 
-**Siguiente módulo (decidido 2026-11-16): Bancos, segunda parte — diseño aprobado** (`diseno-bancos-segunda-parte.md`,
-dictamen `dictamen-bancos-segunda-parte-2026-11-16.md`); orden de pasos en su §14 (BS-1 a BS-9, BS-R1, BS-R2, EM-1, EM-2). Lanzar al arquitecto para
-`docs/modulos/diseno-bancos-segunda-parte.md` (el primer intento falló por un error transitorio del clasificador de
-permisos); luego el contador. Estado de H2 según la otra sesión (2026-11-16): sin trabajo en curso; faltan el paso 5
-(cliente de H2b: `EstadoDeCuentaAdjunto`, `VisorDeEstadoDeCuenta`, `usar-estado-de-cuenta`, columnas en
-`ConciliarCuenta.vue`, ícono, motivo «falta el archivo»), el 6 (docs) y el 7 (QA de todo H2). CP4-B2b se puede
-planificar sobre `main`; lo que toque `ConciliarCuenta.vue` o `AccionesDeConciliacion.vue` va después del paso 5.
-
-**Otra sesión («Siguiente módulo independiente»)** lleva Bancos H2: el servidor de H2b está en `main` (migración de
-bancos `0031`); le falta el cliente de la conciliación y su QA. Acordado: la `0032`/`0033` de bancos son de CP4; el
-aviso al desmarcar desde la conciliación (CP4-B2b) va después del cliente de H2b.
-
-**Esperan al usuario:** `git push origin main`; la frase FEL 9-22 (ver «Pendiente del usuario»); el informe de QA del
-2026-11-08 sin commit en `agent-a19777c26d783baf6`; errores 4 y 6 de esa QA; Bancos H2 P1–P5 (si la otra sesión no los
-resolvió).
-
-**Limpieza pendiente:** hay muchos worktrees viejos en `.claude/worktrees/` ya unidos a `main`; se pueden borrar los que
-no tengan cambios ni commits fuera de `main`.
+- Si `localhost:5433` da `ECONNRESET`: puentes de Docker huérfanos (`sudo ip link delete br-…` o `wsl --shutdown`).
+- La prueba de rendimiento de Cuentas por pagar necesita `analyze` de todas las tablas que siembra.
+- Hay muchos worktrees viejos en `.claude/worktrees/` ya unidos a `main`; se pueden borrar los que no tengan cambios ni
+  commits fuera de `main`.
 
 ## Hecho (en `main`)
 
