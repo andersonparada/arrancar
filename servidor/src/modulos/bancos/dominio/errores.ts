@@ -131,8 +131,12 @@ export class ChequeraDemasiadoGrande extends DatoInvalido {
 export class RangoDeChequesTraslapado extends ReglaDeNegocioInfringida {
   readonly codigo = 'rango_de_cheques_traslapado';
 
-  constructor() {
-    super('Ese rango de cheques se traslapa con otra chequera de la misma cuenta.');
+  constructor({ numeroDeLaCargaInicial }: { numeroDeLaCargaInicial?: number } = {}) {
+    super(
+      numeroDeLaCargaInicial === undefined
+        ? 'Ese rango de cheques se traslapa con otra chequera de la misma cuenta.'
+        : `Ese rango de cheques se traslapa con la carga inicial: el cheque ${numeroDeLaCargaInicial} es de la carga inicial, empiece la chequera en el siguiente.`,
+    );
   }
 }
 

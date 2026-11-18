@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, getTableColumns, gt, gte, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, gt, gte, inArray, isNull, lte, ne, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir-que-exista.js';
@@ -62,8 +62,11 @@ const vigentesDe = (cuentaBancariaId: string, excluir?: string, ...mas: SQL[]) =
     ...mas,
   );
 
+/** El saldo «principal» de la cuenta (el del banco al corte o el global de antes): el que fija desde qué fecha se mueve. */
+const enLaPartePrincipal = inArray(movimientos.parteDeApertura, ['saldo_del_banco', 'saldo_global']);
+
 const condicionDeLaClase = (clase: FiltroDeMovimientos['clase']) => {
-  if (clase === 'saldosIniciales') return eq(movimientos.saldoInicial, true);
+  if (clase === 'saldosIniciales') return enLaPartePrincipal;
   if (clase === 'notas')
     return and(
       ne(movimientos.tipo, 'cheque'),
@@ -126,7 +129,7 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
   }
 
   fechaDelSaldoInicial(cuentaBancariaId: string, excluir?: string): Promise<string | null> {
-    return this.primeraFecha(vigentesDe(cuentaBancariaId, excluir, eq(movimientos.saldoInicial, true)));
+    return this.primeraFecha(vigentesDe(cuentaBancariaId, excluir, enLaPartePrincipal));
   }
 
   fechaMasAntigua(cuentaBancariaId: string, excluir?: string): Promise<string | null> {

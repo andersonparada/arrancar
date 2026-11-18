@@ -16,6 +16,7 @@ import { rutasDeCorrelativos } from './composicion/correlativos.js';
 import { rutasDeCuentasBancarias } from './composicion/cuentas-bancarias.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { rutasDeNotas } from './composicion/notas.js';
+import { escuchasDeFechaDeInicioDeBancos } from './composicion/fecha-de-inicio.js';
 import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 import { rutasDeTransferencias } from './composicion/transferencias.js';
 import { rutasDeIntereses } from './composicion/intereses.js';
@@ -175,6 +176,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeReportesPorConcepto(),
     rutasDeIntereses(),
     ordenesDeBancos(),
+    escuchasDeFechaDeInicioDeBancos(),
     // generador: rutas
   ]),
 };

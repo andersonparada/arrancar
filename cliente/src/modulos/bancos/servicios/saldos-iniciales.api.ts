@@ -34,12 +34,12 @@ export class ApiSaldosIniciales {
   }
 
   actualizar(id: string, datos: DatosSaldoInicial) {
-    return this.http.reemplazar<Movimiento>(`${RUTA}/${id}`, datos);
+    return this.http.reemplazar<Movimiento>(`${RUTA}/global/${id}`, datos);
   }
 
   /** Elimina de verdad el saldo inicial (solo si la cuenta nunca se concilió); el motivo queda en la auditoría. */
   eliminar(id: string, motivo: string) {
-    return this.http.eliminar(`${RUTA}/${id}`, { motivo });
+    return this.http.eliminar(`${RUTA}/global/${id}`, { motivo });
   }
 }
 

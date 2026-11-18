@@ -47,6 +47,11 @@ export class ChequerasEnMemoria implements RepositorioChequeras, ConsultasCheque
       });
   }
 
+  /** La carga inicial no se simula en memoria: se prueba con la base real. */
+  async numerosDeAperturaEnRango(): Promise<number[]> {
+    return [];
+  }
+
   async listarDeLaCuenta(cuentaBancariaId: string): Promise<ChequeraDto[]> {
     return [...this.registros.values()]
       .filter((c) => c.instantanea().cuentaBancariaId === cuentaBancariaId)

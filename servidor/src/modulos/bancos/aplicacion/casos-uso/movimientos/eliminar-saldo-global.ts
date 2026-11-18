@@ -7,13 +7,13 @@ import type { ConsultasMovimientos } from '../../puertos/consultas-movimientos.j
 import type { RepositorioMovimientos } from '../../puertos/repositorio-movimientos.js';
 import { movimientoExistente } from './dependencias-de-movimientos.js';
 
-interface EliminacionDeSaldoInicial {
+interface EliminacionDeSaldoGlobal {
   movimientoId: string;
   motivo: string;
 }
 
-/** Lo que usa `EliminarSaldoInicial`. */
-export interface DependenciasDeEliminarSaldoInicial {
+/** Lo que usa `EliminarSaldoGlobal`. */
+export interface DependenciasDeEliminarSaldoGlobal {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioMovimientos;
   consultas: ConsultasMovimientos;
@@ -21,15 +21,18 @@ export interface DependenciasDeEliminarSaldoInicial {
   auditoria: Auditoria;
 }
 
-/** Elimina de verdad el saldo inicial de una cuenta, solo si esta nunca tuvo ninguna conciliación. */
-export class EliminarSaldoInicial {
-  constructor(private readonly dependencias: DependenciasDeEliminarSaldoInicial) {}
+/**
+ * HEREDADO, hasta que el cliente use la pantalla nueva (BS-5): elimina de verdad el saldo global «de antes» de una
+ * cuenta, solo si esta nunca tuvo ninguna conciliación. El nuevo es `saldos-iniciales/EliminarSaldoInicial`.
+ */
+export class EliminarSaldoGlobal {
+  constructor(private readonly dependencias: DependenciasDeEliminarSaldoGlobal) {}
 
   /**
    * @throws NoEsUnSaldoInicial si el movimiento es una nota.
    * @throws CuentaConConciliaciones si la cuenta ya tiene alguna conciliación.
    */
-  ejecutar(operador: Operador, { movimientoId, motivo }: EliminacionDeSaldoInicial): Promise<void> {
+  ejecutar(operador: Operador, { movimientoId, motivo }: EliminacionDeSaldoGlobal): Promise<void> {
     const { unidadDeTrabajo, repositorio, consultas, consultasConciliaciones, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const movimiento = await movimientoExistente(repositorio, movimientoId);

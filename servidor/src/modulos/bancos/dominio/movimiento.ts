@@ -1,6 +1,7 @@
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
-import { Identificador } from '../../core/compartido/dominio/identificador.js';
+import type { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { aCentavos } from './centavos.js';
+
 import {
   NoSeReclasificaElSaldoInicial,
   NoSeReclasificaLoDeOtroModulo,
@@ -9,8 +10,6 @@ import {
 } from './errores-de-conceptos.js';
 import {
   FechaDeReversionAnterior,
-  MontoInvalido,
-  MotivoDeAnulacionInvalido,
   MovimientoAnulado,
   MovimientoDeCheque,
   MovimientoDeTransferencia,
@@ -24,26 +23,20 @@ import {
   NoSeEliminaUnMovimientoRevertido,
   NoSeRevierteUnInverso,
 } from './errores.js';
-import type { DatosDeIntereses } from './intereses.js';
 import { MovimientoDeOtroModulo, NotaNoMarcable } from './errores-de-origen.js';
+import {
+  datosDeLasPropiedades,
+  datosValidos,
+  motivoValido,
+  propiedadesDeUnMovimientoNuevo,
+  type VinculosDeUnMovimiento,
+} from './nuevo-movimiento.js';
 import type { Numeracion } from './numeracion.js';
-import type { OrigenDeMovimiento } from './origen-de-movimiento.js';
+import type { ParteDeApertura } from './partes-de-apertura.js';
 import type { DatosDeMovimiento, MovimientoId, PropiedadesDeMovimiento } from './propiedades-de-movimiento.js';
 
 export type { DatosDeMovimiento, MovimientoId, PropiedadesDeMovimiento } from './propiedades-de-movimiento.js';
-
-const MAXIMO_DEL_MOTIVO = 500;
-
-function datosValidos(datos: DatosDeMovimiento): DatosDeMovimiento & Required<DatosDeIntereses> {
-  if (aCentavos(datos.monto) <= 0) throw new MontoInvalido();
-  return { ...datos, interesBruto: datos.interesBruto ?? null, isrRetenido: datos.isrRetenido ?? null };
-}
-
-function motivoValido(motivo: string): string {
-  const limpio = motivo.trim();
-  if (!limpio || limpio.length > MAXIMO_DEL_MOTIVO) throw new MotivoDeAnulacionInvalido();
-  return limpio;
-}
+export type { VinculosDeUnMovimiento } from './nuevo-movimiento.js';
 
 /**
  * Una nota de crédito (entra dinero), de débito o un cheque (sale). El monto siempre es positivo:
@@ -61,28 +54,15 @@ export class Movimiento extends Entidad<MovimientoId> {
    * `vinculos.transferenciaId` solo lo pasa `RegistrarTransferencia` (o lo hereda el inverso de una de sus notas);
    * `vinculos.revierteAId` solo lo
    * arma `revertirSinRevisar` al crear el inverso; `vinculos.origen` solo lo pasa el módulo que genera el
-   * movimiento (P6). Ninguno de los tres llega del usuario. El inverso no hereda el origen.
+   * movimiento (P6); `vinculos.apertura` lo pasan solo los casos de uso de saldos iniciales. Ninguno llega del
+   * usuario. El inverso no hereda el origen ni la parte de apertura.
    */
   static crear(
     empresaId: Identificador<'Empresa'>,
     datos: DatosDeMovimiento,
-    vinculos: { transferenciaId?: string | null; revierteAId?: string | null; origen?: OrigenDeMovimiento } = {},
+    vinculos: VinculosDeUnMovimiento = {},
   ): Movimiento {
-    return new Movimiento({
-      ...datosValidos(datos),
-      empresaId,
-      id: Identificador.nuevo(),
-      anuladoEn: null,
-      motivoDeAnulacion: null,
-      transferenciaId: vinculos.transferenciaId ?? null,
-      revertidoEn: null,
-      motivoDeReversion: null,
-      revierteAId: vinculos.revierteAId ?? null,
-      numero: null,
-      anioDeNumero: 0,
-      moduloDeOrigen: vinculos.origen?.modulo ?? null,
-      documentoDeOrigenId: vinculos.origen?.documentoId ?? null,
-    });
+    return new Movimiento(propiedadesDeUnMovimientoNuevo(empresaId, datos, vinculos));
   }
 
   static reconstruir(propiedades: PropiedadesDeMovimiento): Movimiento {
@@ -102,6 +82,28 @@ export class Movimiento extends Entidad<MovimientoId> {
     this.exigirSuelto();
     const { cuentaBancariaId, saldoInicial } = this.propiedades;
     this.propiedades = { ...this.propiedades, ...datosValidos({ ...datos, cuentaBancariaId, saldoInicial }) };
+  }
+
+  /**
+   * Corrige una partida de la apertura (cualquier parte menos el saldo global de antes): a diferencia de `corregir`,
+   * también acepta un cheque (en circulación o posfechado). La cuenta, la parte y `saldoInicial` no cambian.
+   * @throws NoEsUnSaldoInicial si el movimiento no es una partida; MovimientoAnulado o MovimientoYaRevertido si ya no
+   *   está vigente; MontoInvalido si el monto no es mayor que cero.
+   */
+  corregirPartida(datos: DatosDeMovimiento): void {
+    if (this.propiedades.parteDeApertura === null) throw new NoEsUnSaldoInicial();
+    this.exigirVigente();
+    const { cuentaBancariaId, saldoInicial } = this.propiedades;
+    this.propiedades = { ...this.propiedades, ...datosValidos({ ...datos, cuentaBancariaId, saldoInicial }) };
+  }
+
+  /**
+   * Convierte el saldo global de antes en el saldo del estado de cuenta al corte (la ventana de saldos iniciales
+   * nueva): cambia de parte, fecha, tipo y monto.
+   */
+  convertirASaldoDelBanco(datos: Pick<DatosDeMovimiento, 'tipo' | 'fecha' | 'monto'>): void {
+    this.corregirPartida({ ...datosDeLasPropiedades(this.propiedades), ...datos });
+    this.propiedades = { ...this.propiedades, parteDeApertura: 'saldo_del_banco' };
   }
 
   /**
@@ -146,6 +148,9 @@ export class Movimiento extends Entidad<MovimientoId> {
   exigirClase(esSaldoInicial: boolean): void {
     if (this.propiedades.saldoInicial && !esSaldoInicial) throw new NoEsUnaNota();
     if (!this.propiedades.saldoInicial && esSaldoInicial) throw new NoEsUnSaldoInicial();
+    const { parteDeApertura } = this.propiedades;
+    if (esSaldoInicial && parteDeApertura !== null && parteDeApertura !== 'saldo_global')
+      throw new NoEsUnSaldoInicial();
   }
 
   /**
@@ -234,6 +239,11 @@ export class Movimiento extends Entidad<MovimientoId> {
   numerar({ numero, anio }: Numeracion): void {
     if (!this.llevaNumero) throw new MovimientoSinNumero();
     this.propiedades = { ...this.propiedades, numero, anioDeNumero: anio };
+  }
+
+  /** La parte del saldo inicial que es; `null` si es un movimiento normal. */
+  get parteDeApertura(): ParteDeApertura | null {
+    return this.propiedades.parteDeApertura;
   }
 
   get estaAnulado(): boolean {

@@ -18,7 +18,7 @@ interface DatosDeLaConsulta extends Pick<
   desglose: LineaDeDesgloseDto[];
 }
 
-/** Hasta BS-2 la parte de apertura y su cabecera son cosa de la base: ni la entidad ni la API las ven. */
+/** La parte de apertura y su cabecera todavía no viajan en el DTO de movimientos (lo hace BS-3): se quitan. */
 function sinDatosDeApertura<T extends { parteDeApertura: unknown; saldoInicialId: unknown }>({
   parteDeApertura: _parteDeApertura,
   saldoInicialId: _saldoInicialId,
@@ -38,8 +38,6 @@ export const mapeadorDeMovimiento = {
     actualizadoPor,
     conciliacionId: _conciliacionId,
     beneficiarioParaComparar: _beneficiarioParaComparar,
-    parteDeApertura: _parteDeApertura,
-    saldoInicialId: _saldoInicialId,
     ...campos
   }: Fila): Movimiento {
     return Movimiento.reconstruir({

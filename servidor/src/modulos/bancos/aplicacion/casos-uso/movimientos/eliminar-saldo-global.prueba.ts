@@ -19,7 +19,7 @@ import type { SolicitudDeMovimiento } from '../../dto/movimiento.dto.js';
 import { CuentasPorPagarFijo } from '../../../pruebas/dobles-de-cheques.js';
 import { piezasDeOrigenEnMemoria } from '../../../pruebas/dobles-de-origen.js';
 import { CrearMovimiento } from './crear-movimiento.js';
-import { EliminarSaldoInicial } from './eliminar-saldo-inicial.js';
+import { EliminarSaldoGlobal } from './eliminar-saldo-global.js';
 import { ReglasDeLaCuenta } from '../../reglas-de-la-cuenta.js';
 import { PoliticaDeSobregiroFija } from '../../../pruebas/dobles-de-movimientos.js';
 
@@ -51,7 +51,7 @@ let registros: MovimientosEnMemoria;
 let auditoria: AuditoriaEnMemoria;
 let consultasConciliaciones: ConsultasConciliacionesFijas;
 let crear: CrearMovimiento;
-let eliminar: EliminarSaldoInicial;
+let eliminar: EliminarSaldoGlobal;
 
 beforeEach(() => {
   registros = new MovimientosEnMemoria();
@@ -72,7 +72,7 @@ beforeEach(() => {
     ...piezasDeOrigenEnMemoria(conceptosDeMovimientosDe(conceptosSembrados()), new CuentasPorPagarFijo(false)),
   };
   crear = new CrearMovimiento(dependencias);
-  eliminar = new EliminarSaldoInicial({
+  eliminar = new EliminarSaldoGlobal({
     unidadDeTrabajo: dependencias.unidadDeTrabajo,
     repositorio: registros,
     consultas: registros,
@@ -81,7 +81,7 @@ beforeEach(() => {
   });
 });
 
-describe('EliminarSaldoInicial', () => {
+describe('EliminarSaldoGlobal', () => {
   it('elimina el saldo inicial si la cuenta no tiene conciliaciones', async () => {
     const creado = await crear.ejecutar(operador, saldoInicial());
 

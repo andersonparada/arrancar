@@ -84,9 +84,11 @@ describe('anular notas con fecha y eliminar lo limpio, por API', () => {
     });
 
     expect(saldos[0]).toMatchObject({ puedeAnular: false, puedeEliminar: true });
-    expect((await sinPermiso.delete(`/api/bancos/saldos-iniciales/${saldos[0].id}`, { motivo: 'x' })).estado).toBe(403);
     expect(
-      (await cuenta.propietario.delete(`/api/bancos/saldos-iniciales/${saldos[0].id}`, { motivo: 'x' })).estado,
+      (await sinPermiso.delete(`/api/bancos/saldos-iniciales/global/${saldos[0].id}`, { motivo: 'x' })).estado,
+    ).toBe(403);
+    expect(
+      (await cuenta.propietario.delete(`/api/bancos/saldos-iniciales/global/${saldos[0].id}`, { motivo: 'x' })).estado,
     ).toBe(204);
   });
 });

@@ -17,6 +17,8 @@ export interface PropiedadesDeChequera extends DatosDeChequera {
   id: ChequeraId;
   empresaId: Identificador<'Empresa'>;
   activa: boolean;
+  /** La que crea el sistema para los cheques de la carga inicial: solo tiene los que se cargan y nunca está activa. */
+  deApertura: boolean;
 }
 
 /** Un dato de la chequera no cumple sus reglas. */
@@ -59,6 +61,28 @@ export class Chequera extends Entidad<ChequeraId> {
       empresaId,
       id: Identificador.nuevo(),
       activa: true,
+      deApertura: false,
+    });
+  }
+
+  /**
+   * La chequera de apertura de una serie: la crea el sistema al cargar el primer cheque de la carga inicial. Nace
+   * inactiva y con solo ese número; el rango lo mantiene quien carga cheques.
+   */
+  static deApertura(
+    empresaId: Identificador<'Empresa'>,
+    datos: { cuentaBancariaId: string; serie: string | null; numero: number },
+  ): Chequera {
+    const { cuentaBancariaId, serie, numero } = datos;
+    return new Chequera({
+      cuentaBancariaId,
+      serie: serieNormalizada(serie),
+      desde: numero,
+      hasta: numero,
+      empresaId,
+      id: Identificador.nuevo(),
+      activa: false,
+      deApertura: true,
     });
   }
 
@@ -76,6 +100,17 @@ export class Chequera extends Entidad<ChequeraId> {
 
   get estaActiva(): boolean {
     return this.propiedades.activa;
+  }
+
+  get esDeApertura(): boolean {
+    return this.propiedades.deApertura;
+  }
+
+  /** Cómo se nombra en un mensaje: «de la carga inicial» o su serie y rango. */
+  get descripcion(): string {
+    if (this.propiedades.deApertura) return 'de la carga inicial';
+    const { serie, desde, hasta } = this.propiedades;
+    return `${serie ?? ''}${desde}-${hasta}`;
   }
 
   /** Todos los números del rango, de `desde` a `hasta`. */

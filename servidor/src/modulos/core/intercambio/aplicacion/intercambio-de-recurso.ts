@@ -33,6 +33,11 @@ export interface DatosDelRecurso<Registro, Solicitud, Filtro = void> {
   /** El nombre de la hoja: `Animales`. */
   nombre: string;
   columnas: Columna[];
+  /**
+   * Columnas que solo se escriben al exportar, después de las de `columnas` (datos calculados que no se importan: un
+   * cuadre, un total). No están en la plantilla ni en la hoja de instrucciones.
+   */
+  columnasSoloAlExportar?: Columna[];
   validar: Validador<Solicitud>;
   listar: (operador: Operador, filtro?: Filtro) => Promise<Registro[]>;
   crear: (operador: Operador, solicitud: Solicitud) => Promise<unknown>;
@@ -85,12 +90,13 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
   constructor(private readonly dependencias: Dependencias<Registro, Solicitud, Filtro>) {}
 
   async exportar(operador: Operador, filtro?: Filtro): Promise<Buffer> {
-    const { columnas, listar } = this.dependencias;
+    const { columnas, columnasSoloAlExportar = [], listar } = this.dependencias;
+    const todas = [...columnas, ...columnasSoloAlExportar];
     const registros = await listar(operador, filtro);
     const filas = registros.map((registro) =>
-      columnas.map((columna) => escribirCelda(registro as Record<string, unknown>, columna)),
+      todas.map((columna) => escribirCelda(registro as Record<string, unknown>, columna)),
     );
-    return this.escribir(filas);
+    return this.escribir(filas, todas);
   }
 
   plantilla(): Promise<Buffer> {
@@ -185,11 +191,11 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
     return this.dependencias.columnas.find((columna) => columna.clave === clave)?.titulo ?? null;
   }
 
-  private escribir(filas: unknown[][]): Promise<Buffer> {
+  private escribir(filas: unknown[][], conLasDeExportar?: Columna[]): Promise<Buffer> {
     const { nombre, columnas, libro } = this.dependencias;
     return libro.escribir({
       nombre,
-      encabezados: columnas.map((columna) => columna.titulo),
+      encabezados: (conLasDeExportar ?? columnas).map((columna) => columna.titulo),
       filas,
       instrucciones: instruccionesDe(columnas, this.dependencias.notasDeInstrucciones),
     });

@@ -174,7 +174,7 @@ describe('saldos iniciales por API', () => {
 
     const creado = await cuenta.propietario.post(RUTA_SALDOS_INICIALES, saldoInicialDatos({ ...nueva }));
     const cambiado = await cuenta.propietario.put(
-      `${RUTA_SALDOS_INICIALES}/${creado.cuerpo.id}`,
+      `${RUTA_SALDOS_INICIALES}/global/${creado.cuerpo.id}`,
       saldoInicialDatos({ ...nueva, monto: '2000.00' }),
     );
 
@@ -196,7 +196,7 @@ describe('saldos iniciales por API', () => {
     expect(
       (await cuenta.propietario.post(`${RUTA_SALDOS_INICIALES}/${creado.cuerpo.id}/anular`, { motivo: 'x' })).estado,
     ).toBe(404);
-    const eliminado = await cuenta.propietario.delete(`${RUTA_SALDOS_INICIALES}/${creado.cuerpo.id}`, {
+    const eliminado = await cuenta.propietario.delete(`${RUTA_SALDOS_INICIALES}/global/${creado.cuerpo.id}`, {
       motivo: 'Error de captura',
     });
 
@@ -209,8 +209,11 @@ describe('saldos iniciales por API', () => {
   it('no acepta tocar una nota suelta', async () => {
     const creada = await cuenta.propietario.post(RUTA_NOTAS, notaDatos({ fecha: '2026-06-01' }));
 
-    const corregido = await cuenta.propietario.put(`${RUTA_SALDOS_INICIALES}/${creada.cuerpo.id}`, saldoInicialDatos());
-    const eliminado = await cuenta.propietario.delete(`${RUTA_SALDOS_INICIALES}/${creada.cuerpo.id}`, {
+    const corregido = await cuenta.propietario.put(
+      `${RUTA_SALDOS_INICIALES}/global/${creada.cuerpo.id}`,
+      saldoInicialDatos(),
+    );
+    const eliminado = await cuenta.propietario.delete(`${RUTA_SALDOS_INICIALES}/global/${creada.cuerpo.id}`, {
       motivo: 'x',
     });
 
@@ -218,11 +221,11 @@ describe('saldos iniciales por API', () => {
     expect(eliminado.cuerpo.error.codigo).toBe('no_es_un_saldo_inicial');
   });
 
-  it('para escribir hacen falta los permisos bancos.saldos-iniciales.*; ver usa el permiso de cuentas bancarias', async () => {
+  it('para escribir hacen falta los permisos bancos.saldos-iniciales.*; ver usa bancos.saldos-iniciales.ver', async () => {
     const lector = await crearUsuarioConPermisos(entorno, cuenta, {
-      nombres: 'SoloCuentas',
-      apellidos: 'VeCuentas',
-      permisos: ['bancos.cuentas-bancarias.ver'],
+      nombres: 'SoloSaldos',
+      apellidos: 'VeSaldos',
+      permisos: ['bancos.saldos-iniciales.ver'],
     });
 
     expect((await lector.get(RUTA_SALDOS_INICIALES)).estado).toBe(200);
