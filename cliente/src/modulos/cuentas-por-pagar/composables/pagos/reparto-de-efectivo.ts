@@ -18,6 +18,8 @@ import { opcionesDeProveedores } from './opciones-del-pago';
 /** Un reparto lleva de 1 a 20 proveedores y, entre todos, hasta 300 documentos (lo mismo que revisa el servidor). */
 export const MAXIMO_DE_PROVEEDORES_EN_EL_REPARTO = 20;
 export const MAXIMO_DE_DOCUMENTOS_EN_EL_REPARTO = 300;
+/** Un pago (el de un proveedor) lleva hasta 100 documentos. */
+export const MAXIMO_DE_DOCUMENTOS_POR_PAGO = 100;
 export const MAXIMO_DE_QUIEN_RECIBE = 150;
 export const MAXIMO_DEL_MOTIVO_SIN_BANCARIZAR = 300;
 
@@ -40,6 +42,8 @@ export interface ProveedorDelReparto {
   /** Lo que dijo el servidor al bloquear este pago por bancarización; se queda a la vista mientras se decide. */
   bloqueo: string | null;
   abierto: boolean;
+  /** El mes (`AAAA-MM`) al que corresponde lo ya pagado del mes que trae `datos`. */
+  mesDeLaSuma: string;
 }
 
 /** Un proveedor recién agregado, con la fecha de todos y sin datos hasta que lleguen del servidor. */
@@ -56,6 +60,7 @@ export function proveedorDelReparto(proveedor: ProveedorPorPagar, fecha: string)
     pedirMotivo: false,
     bloqueo: null,
     abierto: true,
+    mesDeLaSuma: fecha.slice(0, 7),
   };
 }
 
@@ -66,6 +71,13 @@ export function conLosCargos(proveedor: ProveedorDelReparto, datos: ParaPagar, a
   proveedor.edicion.contrasenasIncluidas = contrasenasIniciales(datos, abierta);
   proveedor.edicion.montos = proponerMontos(datos.cargos, proveedor.edicion.contrasenasIncluidas, {});
 }
+
+/** Los proveedores cuya fecha cambió de mes: lo pagado del mes que traen ya no es el de su fecha. */
+export const conSumaDeOtroMes = (proveedores: readonly ProveedorDelReparto[]): ProveedorDelReparto[] =>
+  proveedores.filter(
+    (proveedor) =>
+      proveedor.datos && proveedor.edicion.fecha && proveedor.edicion.fecha.slice(0, 7) !== proveedor.mesDeLaSuma,
+  );
 
 /** Suma una contraseña del proveedor al pago, con todo el saldo de sus documentos propuesto (sin pisar lo ya escrito). */
 export function agregarContrasena(proveedor: ProveedorDelReparto, contrasenaId: string): void {

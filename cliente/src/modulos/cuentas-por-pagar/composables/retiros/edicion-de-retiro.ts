@@ -51,9 +51,17 @@ const huella = (texto: string): string =>
 /** Un cheque sin beneficiario o «al portador» se cobraría sin identificarse; el servidor lo rechaza igual. */
 export const esAlPortador = (texto: string): boolean => ['', 'alportador', 'portador'].includes(huella(texto));
 
-/** El beneficiario que se va a mandar: el escrito o, si se dejó en blanco, el custodio. */
-export const beneficiarioEfectivo = (edicion: Pick<EdicionDeRetiro, 'beneficiario' | 'custodio'>): string =>
-  edicion.beneficiario.trim() || edicion.custodio.trim();
+/**
+ * El beneficiario que se va a mandar: el escrito o, si se dejó en blanco, el custodio. Si el custodio es un usuario, su
+ * nombre es `nombreDelUsuario` (el texto escrito del custodio no cuenta); si no se conoce, el servidor lo resuelve.
+ */
+export const beneficiarioEfectivo = (
+  edicion: Pick<EdicionDeRetiro, 'beneficiario' | 'custodio'> & { custodioUsuarioId?: string },
+  nombreDelUsuario = '',
+): string => {
+  const custodio = edicion.custodioUsuarioId ? nombreDelUsuario.trim() || 'usuario' : edicion.custodio.trim();
+  return edicion.beneficiario.trim() || custodio;
+};
 
 function erroresDelCustodio(edicion: EdicionDeRetiro): Record<string, string> {
   if (!edicion.custodioUsuarioId && !edicion.custodio.trim()) {
@@ -71,14 +79,14 @@ function erroresDelMonto(edicion: EdicionDeRetiro): Record<string, string> {
   return centavos > 0 ? {} : { monto: 'Escriba el monto del retiro: debe ser mayor que cero.' };
 }
 
-function erroresDelMedio(edicion: EdicionDeRetiro): Record<string, string> {
+function erroresDelMedio(edicion: EdicionDeRetiro, nombreDelUsuario: string): Record<string, string> {
   if (!edicion.medio) {
     return {
       medio:
         edicion.forma === 'cheque' ? 'Escoja la chequera del cheque.' : 'Escoja la cuenta bancaria de donde se retira.',
     };
   }
-  if (edicion.forma === 'cheque' && esAlPortador(beneficiarioEfectivo(edicion))) {
+  if (edicion.forma === 'cheque' && esAlPortador(beneficiarioEfectivo(edicion, nombreDelUsuario))) {
     return {
       beneficiario: 'Escriba a nombre de quién va el cheque (el custodio o la empresa); no se emite al portador.',
     };
@@ -87,8 +95,12 @@ function erroresDelMedio(edicion: EdicionDeRetiro): Record<string, string> {
 }
 
 /** Los errores por campo antes de molestar al servidor; vacío si todo está bien. `hoy` es `AAAA-MM-DD`. */
-export function erroresDelRetiro(edicion: EdicionDeRetiro, hoy: string): Record<string, string> {
-  const errores = { ...erroresDelCustodio(edicion), ...erroresDelMonto(edicion), ...erroresDelMedio(edicion) };
+export function erroresDelRetiro(edicion: EdicionDeRetiro, hoy: string, nombreDelUsuario = ''): Record<string, string> {
+  const errores = {
+    ...erroresDelCustodio(edicion),
+    ...erroresDelMonto(edicion),
+    ...erroresDelMedio(edicion, nombreDelUsuario),
+  };
   if (!edicion.fecha) errores.fecha = 'Escriba la fecha del retiro.';
   else if (edicion.fecha > hoy)
     errores.fecha = 'El retiro no puede tener fecha futura: el efectivo no se retira por adelantado.';

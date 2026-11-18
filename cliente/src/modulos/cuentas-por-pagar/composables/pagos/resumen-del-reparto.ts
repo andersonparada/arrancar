@@ -9,19 +9,39 @@ import {
   type ProveedorDelReparto,
 } from './reparto-de-efectivo';
 
-/** Lo que el pago de este proveedor sumaría al mes, para anticipar la bancarización (el servidor decide si bloquea). */
+/** La regla y lo que se pierde (texto E-5 de §5.3, cotejado por el contador); el servidor dice qué efecto aplica de verdad. */
+function reglaDeBancarizacion(umbral: string): string {
+  return (
+    `Los pagos de ${formatearMonto(umbral)} o más (el umbral de bancarización) a un mismo proveedor en el mes, o de una operación de ese monto aunque se ` +
+    'pague por partes, deben hacerse por cheque, transferencia o tarjeta a nombre del proveedor. Si se paga en efectivo, ' +
+    'según el régimen de la empresa y el documento se pierde el costo deducible del ISR, el crédito fiscal del IVA o ambos; ' +
+    'si ya lo tomó, rectifique la declaración de ese mes (Código Tributario, art. 106). Arrancar solo suma los pagos ' +
+    'registrados en Cuentas por pagar. Si a la empresa le afecta, el sistema no deja pagar en efectivo: pague con cheque o ' +
+    'transferencia, o, con permiso, escriba el motivo.'
+  );
+}
+
+/**
+ * Anticipa la bancarización: el mes del proveedor con este pago llega al umbral, o algún documento pagado es de ese monto o
+ * más (aunque se pague por partes). No bloquea: el servidor decide según el régimen y el documento.
+ */
 export function avisoDeUmbral(proveedor: ProveedorDelReparto): string | null {
   const { datos } = proveedor;
   if (!datos) return null;
   const umbral = centavosDe(datos.umbralDeBancarizacion) ?? 0;
   const suma = (centavosDe(datos.sumaDelMesAlProveedor) ?? 0) + totalDelProveedor(proveedor);
-  if (umbral === 0 || suma < umbral) return null;
-  return (
-    `Con este pago, lo pagado a ${proveedor.nombre} en el mes llega a ${formatearMonto(textoDeCentavos(suma))} y el umbral de ` +
-    `bancarización es ${formatearMonto(datos.umbralDeBancarizacion)}. Si a la empresa le afecta (costo o crédito fiscal), el ` +
-    'sistema no dejará pagarlo en efectivo: pague con cheque o transferencia, o, con permiso, escriba el motivo.'
-  );
+  const unaFactura = lineasDelProveedor(proveedor).some(({ cargo }) => cargo.sobreUmbralDeBancarizacion);
+  if (umbral === 0 || (suma < umbral && !unaFactura)) return null;
+  const motivo = unaFactura
+    ? 'uno de los documentos que paga es de ese monto o más'
+    : `lo pagado a ${proveedor.nombre} en el mes llega a ${formatearMonto(textoDeCentavos(suma))}`;
+  return `Bancarización (Decreto 20-2006, art. 20): ${motivo}. ${reglaDeBancarizacion(datos.umbralDeBancarizacion)}`;
 }
+
+/** El texto de la regla para quien debe escribir el motivo: el anticipo si lo hay y, si no, la regla general. */
+export const explicacionDeBancarizacion = (proveedor: ProveedorDelReparto): string =>
+  avisoDeUmbral(proveedor) ??
+  `Bancarización (Decreto 20-2006, art. 20): ${reglaDeBancarizacion(proveedor.datos?.umbralDeBancarizacion ?? '30000.00')}`;
 
 const CUANTOS = (cantidad: number, uno: string, varios: string): string =>
   `${cantidad} ${cantidad === 1 ? uno : varios}`;

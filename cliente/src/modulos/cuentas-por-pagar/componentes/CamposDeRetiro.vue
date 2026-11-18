@@ -32,6 +32,13 @@ const opcionesDelMedio = computed(() =>
 );
 const sinMedios = computed(() => !props.cargando && opcionesDelMedio.value.length === 0);
 const hoy = fechaDeHoy();
+/** A nombre de quién irá el cheque si se deja en blanco: el usuario elegido o el nombre escrito. */
+const custodioDelCheque = computed(() =>
+  edicion.value.custodioUsuarioId
+    ? (props.custodios.find(({ valor }) => valor === edicion.value.custodioUsuarioId)?.texto.replace(/ \(.*\)$/, '') ??
+      'El custodio')
+    : edicion.value.custodio.trim() || 'El custodio',
+);
 </script>
 
 <template>
@@ -101,7 +108,7 @@ const hoy = fechaDeHoy();
       <CampoTexto
         v-model="edicion.beneficiario"
         etiqueta="Cheque a nombre de"
-        :placeholder="edicion.custodio || 'El custodio'"
+        :placeholder="custodioDelCheque"
         ayuda="Si lo deja en blanco, va a nombre del custodio. Escriba el de la empresa si el banco lo pide. No se emite al portador."
         :error="errores.beneficiario"
       />

@@ -63,6 +63,12 @@ function resumenAntesDeConfirmar(edicion: EdicionDeRetiro, catalogos: Catalogos)
   return resumenDelRetiro(edicion, nombre, medio ?? 'la cuenta elegida');
 }
 
+/** Los errores de lo escrito; si el custodio es un usuario, su nombre decide a nombre de quién va el cheque. */
+function erroresAntesDeEnviar(edicion: EdicionDeRetiro, catalogos: Catalogos): Record<string, string> {
+  const usuario = edicion.custodioUsuarioId ? catalogos.usuarioPorId(edicion.custodioUsuarioId) : null;
+  return erroresDelRetiro(edicion, fechaDeHoy(), usuario ? nombreDelUsuario(usuario) : '');
+}
+
 /** El estado de la ventana: se abre con la fecha de hoy y, al cambiar de forma, la chequera de una no sirve de cuenta en la otra. */
 function usarEstadoDeLaVentana(catalogos: Catalogos) {
   const edicion = ref<EdicionDeLaVentanaDeRetiro>(cerrada());
@@ -95,7 +101,7 @@ export function usarVentanaDeRetiro(alRegistrar: () => Promise<void>) {
   const { edicion, resultado, abrir, cerrar } = usarEstadoDeLaVentana(catalogos);
 
   async function guardar(): Promise<void> {
-    errores.value = erroresDelRetiro(edicion.value, fechaDeHoy());
+    errores.value = erroresAntesDeEnviar(edicion.value, catalogos);
     if (Object.keys(errores.value).length > 0) return;
     const confirmado = await usarAvisos().confirmar({
       titulo: 'Confirmar el retiro',

@@ -121,3 +121,21 @@ describe('el resumen de lo que va a pasar', () => {
     expect(nota).toContain('una nota de débito en Cuenta monetaria');
   });
 });
+
+describe('el cheque con un usuario como custodio', () => {
+  const conUsuario = completa({ custodio: '', custodioUsuarioId: 'u1', forma: 'cheque' });
+
+  it('a nombre de queda en blanco: va a nombre del usuario, sin error', () => {
+    expect(erroresDelRetiro(conUsuario, HOY, 'Ana López')).toEqual({});
+    expect(beneficiarioEfectivo(conUsuario, 'Ana López')).toBe('Ana López');
+  });
+
+  it('un nombre escrito antes de elegir el usuario no cuenta', () => {
+    const viejo = { ...conUsuario, custodio: 'Al portador' };
+    expect(erroresDelRetiro(viejo, HOY, 'Ana López')).toEqual({});
+  });
+
+  it('si no se conoce el nombre del usuario, el servidor lo resuelve', () => {
+    expect(erroresDelRetiro(conUsuario, HOY)).toEqual({});
+  });
+});

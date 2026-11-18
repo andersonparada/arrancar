@@ -20,6 +20,8 @@ defineProps<{
   puedeSinBancarizar: boolean;
   /** Anticipo no bloqueante: el mes del proveedor llega al umbral. */
   aviso: string | null;
+  /** La regla y lo que se pierde, para quien debe escribir el motivo de la excepción. */
+  explicacion: string;
 }>();
 const proveedor = defineModel<ProveedorDelReparto>({ required: true });
 
@@ -72,6 +74,7 @@ const descartarBloqueo = (): void => {
       role="alert"
     >
       <p>{{ proveedor.bloqueo }}</p>
+      <p v-if="puedeSinBancarizar">{{ explicacion }}</p>
       <template v-if="puedeSinBancarizar">
         <CampoTexto
           v-model="proveedor.motivoSinBancarizar"

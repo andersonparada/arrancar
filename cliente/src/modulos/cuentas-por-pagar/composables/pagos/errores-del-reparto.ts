@@ -7,6 +7,7 @@ import {
   documentosDelReparto,
   lineasDelProveedor,
   MAXIMO_DE_DOCUMENTOS_EN_EL_REPARTO,
+  MAXIMO_DE_DOCUMENTOS_POR_PAGO,
   MAXIMO_DE_PROVEEDORES_EN_EL_REPARTO,
   MAXIMO_DE_QUIEN_RECIBE,
   MAXIMO_DEL_MOTIVO_SIN_BANCARIZAR,
@@ -71,6 +72,17 @@ function erroresDeLosTextos(proveedor: ProveedorDelReparto): Errores {
   return errores;
 }
 
+/** Un pago lleva hasta 100 documentos; por omisión se propone el saldo de todos, así que se avisa cómo reducirlos. */
+function erroresDeLaCantidad(proveedor: ProveedorDelReparto): Errores {
+  const cuantos = lineasDelProveedor(proveedor).length;
+  if (cuantos <= MAXIMO_DE_DOCUMENTOS_POR_PAGO) return {};
+  return {
+    [claveDeProveedor(proveedor.proveedorId, 'general')]:
+      `Un pago lleva hasta ${MAXIMO_DE_DOCUMENTOS_POR_PAGO} documentos y este lleva ${cuantos}: quite contraseñas o ` +
+      'borre el monto de algunos documentos y págueles después en otro reparto.',
+  };
+}
+
 function erroresDelProveedor(proveedor: ProveedorDelReparto, hoy: string, fechaDelRetiro: string): Errores {
   if (!proveedor.datos) {
     return { [claveDeProveedor(proveedor.proveedorId, 'sinDatos')]: 'Espere a que carguen sus documentos.' };
@@ -83,6 +95,7 @@ function erroresDelProveedor(proveedor: ProveedorDelReparto, hoy: string, fechaD
     };
   }
   return {
+    ...erroresDeLaCantidad(proveedor),
     ...erroresDeMontosMayoresAlSaldo(proveedor),
     ...erroresDeMontosMalEscritos(proveedor),
     ...erroresDeLaFecha(proveedor, hoy, fechaDelRetiro),

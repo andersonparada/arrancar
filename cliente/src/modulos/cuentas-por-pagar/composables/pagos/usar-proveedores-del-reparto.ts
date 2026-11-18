@@ -1,9 +1,10 @@
-import { computed, onMounted, reactive, ref, type Ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch, type Ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { apiPagos, type ProveedorPorPagar } from '../../servicios/pagos.api';
 import { fechaDeHoy } from '../dinero';
 import {
   conLosCargos,
+  conSumaDeOtroMes,
   MAXIMO_DE_PROVEEDORES_EN_EL_REPARTO,
   opcionesParaAgregar,
   proveedorDelReparto,
@@ -52,6 +53,27 @@ function usarListaDelReparto() {
 
 type ListaDelReparto = ReturnType<typeof usarListaDelReparto>;
 
+/** Si la fecha de un proveedor pasa a otro mes, se trae de nuevo lo pagado en ese mes para el aviso de bancarización. */
+function usarSumaDelMes(proveedores: ProveedorDelReparto[]): void {
+  watch(
+    () => proveedores.map(({ proveedorId, edicion }) => `${proveedorId}|${edicion.fecha.slice(0, 7)}`).join(),
+    async () => {
+      for (const proveedor of conSumaDeOtroMes(proveedores)) {
+        const fecha = proveedor.edicion.fecha;
+        proveedor.mesDeLaSuma = fecha.slice(0, 7);
+        try {
+          const respuesta = await apiPagos.paraPagar(proveedor.proveedorId, { fecha });
+          if (proveedor.datos && proveedor.mesDeLaSuma === fecha.slice(0, 7)) {
+            proveedor.datos = { ...proveedor.datos, sumaDelMesAlProveedor: respuesta.sumaDelMesAlProveedor };
+          }
+        } catch {
+          // Solo afina un aviso: el servidor vuelve a revisar todo al registrar.
+        }
+      }
+    },
+  );
+}
+
 /** Agregar un proveedor: entra de una vez y se le traen sus cargos; si falla, se avisa y no queda a medias. */
 function usarAgregadoDeProveedor(
   disponibles: Ref<ProveedorPorPagar[]>,
@@ -84,6 +106,7 @@ function usarAgregadoDeProveedor(
 export function usarProveedoresDelReparto(inicio: PuntoDeInicioDelReparto) {
   const disponibles = usarProveedoresDisponibles();
   const lista = usarListaDelReparto();
+  usarSumaDelMes(lista.proveedores);
   const agregar = usarAgregadoDeProveedor(disponibles.datos, lista, inicio.contrasenaId ?? null);
 
   /** Al abrir: carga los proveedores y mete al de la contraseña de la que se vino, si se vino de una. */

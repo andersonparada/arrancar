@@ -2390,3 +2390,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   prometía), por eso el bloqueo se atiende cuando el servidor lo dice y no se anticipa por régimen; el ensayo de la fecha en el reparto
   usa el mes de la fecha de cada proveedor solo al agregarlo. Pendiente: cotejar el texto de la ayuda IVE-BA-03 con la Ley contra el
   Lavado de Dinero (E-9) y la prueba de punta a punta en navegador (CP4-12).
+- **2026-11-18 — CP4-E5, correcciones de la revisión (cliente).** «A nombre de» del cheque toma el nombre del usuario elegido
+  como custodio (ya no valida el texto viejo del custodio). Los errores generales de un proveedor del reparto
+  (`general`, `sinDatos`, p. ej. más de 100 documentos por pago, que ahora se avisa antes de enviar) se muestran en su
+  proveedor. Quien puede pagar sin bancarizar ve el texto legal (E-5: art. 20 del Decreto 20-2006, ISR/IVA, rectificar
+  según el art. 106 del Código Tributario) junto al bloqueo; el anticipo cubre la factura de Q30,000 o más pagada por
+  partes y la suma del mes se vuelve a traer cuando la fecha cambia de mes. En la ficha del retiro solo el enlace depende
+  de `pagos.ver` (la lista se ve con `retiros.ver`) y se avisa si hay más de 20 recibos. Pendiente: ocultar «Retirar
+  efectivo» y «Pagar en efectivo» a quien no tiene `pagos.ver` (los medios salen de `GET /pagos/medios`).

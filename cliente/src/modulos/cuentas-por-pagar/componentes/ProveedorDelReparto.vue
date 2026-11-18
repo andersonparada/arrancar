@@ -13,7 +13,7 @@ import {
   totalDelProveedor,
   type ProveedorDelReparto,
 } from '../composables/pagos/reparto-de-efectivo';
-import { avisoDeUmbral } from '../composables/pagos/resumen-del-reparto';
+import { avisoDeUmbral, explicacionDeBancarizacion } from '../composables/pagos/resumen-del-reparto';
 import CamposDelProveedorDelReparto from './CamposDelProveedorDelReparto.vue';
 import CargosDelPago from './CargosDelPago.vue';
 
@@ -29,6 +29,7 @@ const idDelCuerpo = useId();
 const total = computed(() => formatearMonto(textoDeCentavos(totalDelProveedor(proveedor.value))));
 const cuantos = computed(() => lineasDelProveedor(proveedor.value).length);
 const aviso = computed(() => avisoDeUmbral(proveedor.value));
+const explicacion = computed(() => explicacionDeBancarizacion(proveedor.value));
 const alternar = (): void => {
   proveedor.value.abierto = !proveedor.value.abierto;
 };
@@ -61,6 +62,15 @@ const alternar = (): void => {
     </div>
 
     <div v-show="proveedor.abierto" :id="idDelCuerpo" class="mt-4 space-y-4">
+      <p
+        v-for="campo in ['general', 'sinDatos']"
+        v-show="errores[claveDeProveedor(proveedor.proveedorId, campo)]"
+        :key="campo"
+        class="text-sm text-red-700 dark:text-red-400"
+        role="alert"
+      >
+        {{ errores[claveDeProveedor(proveedor.proveedorId, campo)] }}
+      </p>
       <p v-if="proveedor.cargando" class="text-sm text-tierra-500" role="status">Cargando sus documentos…</p>
       <template v-else-if="proveedor.datos">
         <p
@@ -84,6 +94,7 @@ const alternar = (): void => {
           :hoy="hoy"
           :puede-sin-bancarizar="puedeSinBancarizar"
           :aviso="aviso"
+          :explicacion="explicacion"
         />
       </template>
     </div>
