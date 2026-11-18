@@ -51,12 +51,24 @@ export interface TotalesDeSaldosDto {
   totalCargos: string;
 }
 
+/**
+ * La conciliación al pie de R1 (dictamen 12): el saldo neto del auxiliar menos la transitoria «Pagos a proveedores por
+ * aplicar» (R11 al mismo corte) es lo que se presenta como Proveedores. Solo con todos los proveedores y toda autorización.
+ */
+export interface ConciliacionDeSaldosDto {
+  saldoNetoDelAuxiliar: string;
+  pagosPorAplicar: string;
+  proveedoresNetoDePagosPorAplicar: string;
+}
+
 export interface ReporteDeSaldosPorProveedorDto {
   corte: string;
   fechaDeInicio: string | null;
   acreedores: FilaDeSaldoDto[];
   deudores: FilaDeSaldoDto[];
   totales: TotalesDeSaldosDto;
+  /** Falta si se filtró por proveedor o por autorización: la transitoria no es de un proveedor. */
+  conciliacion?: ConciliacionDeSaldosDto;
   avisos: AvisoDelReporteDto[];
   leyendas: string[];
 }

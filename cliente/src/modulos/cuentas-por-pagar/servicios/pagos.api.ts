@@ -1,5 +1,14 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import type {
+  ComprobanteDePago,
+  ConsultaDePagos,
+  FichaDePago,
+  PaginaDePagos,
+  SolicitudDeAnulacion,
+  SolicitudDeDiferencia,
+  SolicitudDeReaplicacion,
+} from './tipos-de-consulta-de-pagos';
+import type {
   FormaDePagoNuevo,
   MediosDePago,
   NotaParaLigar,
@@ -55,6 +64,30 @@ export class ApiPagos {
 
   registrar(solicitud: SolicitudDePago) {
     return this.http.crear<PagoRegistrado>(RUTA_POR_FORMA[solicitud.forma], solicitud);
+  }
+
+  listar(consulta: ConsultaDePagos) {
+    return this.http.obtener<PaginaDePagos>(`${RUTA}/pagos`, { ...consulta });
+  }
+
+  obtener(id: string) {
+    return this.http.obtener<FichaDePago>(`${RUTA}/pagos/${id}`);
+  }
+
+  comprobante(id: string) {
+    return this.http.obtener<ComprobanteDePago>(`${RUTA}/pagos/${id}/comprobante`);
+  }
+
+  anular(id: string, solicitud: SolicitudDeAnulacion) {
+    return this.http.crear<PagoRegistrado>(`${RUTA}/pagos/${id}/anular`, solicitud);
+  }
+
+  reaplicar(id: string, solicitud: SolicitudDeReaplicacion) {
+    return this.http.crear<PagoRegistrado>(`${RUTA}/pagos/${id}/reaplicar`, solicitud);
+  }
+
+  saldarDiferencia(id: string, solicitud: SolicitudDeDiferencia) {
+    return this.http.crear<PagoRegistrado>(`${RUTA}/pagos/${id}/diferencias`, solicitud);
   }
 }
 

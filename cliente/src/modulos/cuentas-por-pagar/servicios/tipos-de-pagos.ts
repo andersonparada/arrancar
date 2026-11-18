@@ -1,5 +1,7 @@
 import type { OrigenDelDocumento, TipoDeDocumento } from './tipos';
 
+export type * from './tipos-de-consulta-de-pagos';
+
 /** Las formas que se registran desde «Nuevo pago»; el efectivo tiene su propia pantalla. */
 export type FormaDePagoNuevo = 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura';
 export type FormaDePago = FormaDePagoNuevo | 'efectivo';

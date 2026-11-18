@@ -1,7 +1,7 @@
 import type { CausaDeAjuste } from '../../dominio/ajustes.js';
 import type { NotaLibreDelSistemaAnterior } from '../../dominio/notas-posteriores.js';
 import type { DocumentoPorPagar, FormaDeAplicacion } from '../../dominio/documento-por-pagar.js';
-import type { LineaDePago, LineaDeReintegro, PagoVigenteDelCargo } from '../../dominio/pagos.js';
+import type { EstadoDePago, LineaDePago, LineaDeReintegro, PagoVigenteDelCargo } from '../../dominio/pagos.js';
 import type { ProveedorConDocumentosDto } from '../dto/documento-por-pagar.dto.js';
 import type { EstadoDeDocumento, OrigenDeDocumento, TipoDeDocumento } from '../../dominio/tipos-de-documento.js';
 
@@ -21,6 +21,8 @@ export interface FiltroDeDocumentosPorPagar {
   conSaldo?: boolean;
   /** Solo los documentos que no están en una contraseña vigente. */
   sinContrasena?: boolean;
+  /** Solo los cargos vigentes en ese estado de pago (§2.4). */
+  estadoDePago?: EstadoDePago;
 }
 
 /** Qué página de la lista se pide: de 1 en adelante, con hasta `limite` documentos. */

@@ -3,11 +3,8 @@ import { computed } from 'vue';
 import { Inbox } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
-import {
-  cantidadDeFiltrosDeLaBandeja,
-  FILAS_POR_PAGINA,
-  resumenDeLaSeleccion,
-} from '../../composables/bandeja/datos-de-la-bandeja';
+import { cantidadDeFiltrosDeLaBandeja, FILAS_POR_PAGINA } from '../../composables/bandeja/datos-de-la-bandeja';
+import { resumenDeLaBarra } from '../../composables/bandeja/resumen-de-la-barra';
 import { algunaPideLaRecepcion } from '../../composables/bandeja/datos-de-completar';
 import { usarBandeja } from '../../composables/bandeja/usar-bandeja';
 import { avisoDeLaBandeja } from '../../composables/bandeja/anteriores-a-la-fecha-de-inicio';
@@ -18,6 +15,7 @@ import PaginacionDeLista from '../documentos/PaginacionDeLista.vue';
 import AvisoDeAnterioresDeLaBandeja from './AvisoDeAnterioresDeLaBandeja.vue';
 import BarraDeSeleccionDeLaBandeja from './BarraDeSeleccionDeLaBandeja.vue';
 import FiltrosDeLaBandeja from './FiltrosDeLaBandeja.vue';
+import MarcarEnLaBandeja from './MarcarEnLaBandeja.vue';
 import TarjetaDeDteRecibido from './TarjetaDeDteRecibido.vue';
 import VentanaDeCompletarDte from './VentanaDeCompletarDte.vue';
 import VentanaDeConfirmarDte from './VentanaDeConfirmarDte.vue';
@@ -27,7 +25,8 @@ import VentanaDeDescarteDeDte from './VentanaDeDescarteDeDte.vue';
 const props = defineProps<{ estado: EstadoDeDte; busquedaInicial: string }>();
 const router = useRouter();
 const bandeja = usarBandeja(props.estado, props.busquedaInicial);
-const { filtros, filas, total, cargando, pagina, seleccion, marcadas, completar, confirmacion, descarte } = bandeja;
+const { filtros, filas, total, cargando, pagina, marcas, completar, confirmacion, descarte } = bandeja;
+const marcadas = marcas.marcadas;
 const avisoDeAnteriores = computed(() =>
   avisoDeLaBandeja(props.estado, filtros.anteriores, {
     fechaDeInicio: bandeja.fechaDeInicio.value,
@@ -35,7 +34,7 @@ const avisoDeAnteriores = computed(() =>
   }),
 );
 const explicacion = PESTANAS_DE_LA_BANDEJA.find(({ clave }) => clave === props.estado)?.explicacion;
-const resumen = computed(() => resumenDeLaSeleccion(marcadas.value));
+const resumen = computed(() => resumenDeLaBarra(marcadas.value));
 const sinFiltros = computed(() => cantidadDeFiltrosDeLaBandeja(filtros) === 0);
 const vacio = computed(() =>
   sinFiltros.value && props.estado === 'pendiente'
@@ -65,15 +64,15 @@ const vacio = computed(() =>
       :descripcion="vacio.descripcion"
     />
     <template v-else>
-      <label v-if="bandeja.sePuedeMarcar" class="mb-3 flex min-h-11 w-fit cursor-pointer items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          class="size-5 rounded border-tierra-300 text-campo-600 focus:ring-campo-500"
-          :checked="bandeja.todasMarcadas.value"
-          @change="bandeja.alternarTodas"
-        />
-        Marcar todas las de esta página
-      </label>
+      <MarcarEnLaBandeja
+        v-if="bandeja.sePuedeMarcar"
+        :pagina-marcada="marcas.paginaMarcada.value"
+        :total="total"
+        :en-la-pagina="filas.length"
+        :trayendo="marcas.trayendo.value"
+        @alternar-pagina="marcas.alternarPagina"
+        @marcar-el-filtro="marcas.marcarElFiltro"
+      />
       <ul
         class="grid grid-cols-1 gap-3 transition-opacity md:grid-cols-2"
         :class="{ 'opacity-60': cargando }"
@@ -84,9 +83,9 @@ const vacio = computed(() =>
             :fila="fila"
             :conceptos="bandeja.nombresDeConceptos.value"
             :marcable="bandeja.sePuedeMarcar"
-            :marcada="seleccion.estaMarcada(fila.id)"
+            :marcada="marcas.estaMarcada(fila.id)"
             :con-fecha-de-inicio="bandeja.fechaDeInicio.value !== null"
-            @alternar="seleccion.alternar(fila.id)"
+            @alternar="marcas.alternar(fila)"
             @abrir="router.push({ name: 'libro-de-compras.documentos.nuevo', query: { desdeDte: fila.id } })"
             @descartar="descarte.abrir([fila.id])"
             @restaurar="descarte.restaurar(fila.id)"
@@ -102,10 +101,10 @@ const vacio = computed(() =>
     />
 
     <BarraDeSeleccionDeLaBandeja
-      v-if="bandeja.sePuedeMarcar && filas.length"
+      v-if="bandeja.sePuedeMarcar && (filas.length || marcadas.length)"
       :resumen="resumen"
       :solo-descartar="estado !== 'pendiente'"
-      @quitar="seleccion.limpiar"
+      @quitar="marcas.limpiar"
       @completar="completar.abrir(marcadas)"
       @confirmar="confirmacion.abrir(marcadas)"
       @descartar="descarte.abrir(marcadas.map(({ id }) => id))"
@@ -127,7 +126,9 @@ const vacio = computed(() =>
       v-model="confirmacion.previa.respuestas.value"
       :abierta="confirmacion.abierta.value"
       :filas="confirmacion.filas.value"
+      :sin-incluir="confirmacion.sinIncluir.value"
       :resumen="confirmacion.resumen.value"
+      :avance="confirmacion.avance.value"
       :calculando="confirmacion.previa.calculando.value"
       :enviando="confirmacion.enviando.value"
       :listas="confirmacion.previa.listas.value"

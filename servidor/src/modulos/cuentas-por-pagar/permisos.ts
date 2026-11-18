@@ -123,7 +123,8 @@ export const PERMISOS_DE_CUENTAS_POR_PAGAR: DefinicionPermiso[] = [
   },
   {
     clave: 'cuentas-por-pagar.reportes-de-pagos.ver',
-    descripcion: 'Ver e imprimir los reportes de pagos: pagos realizados y cheques posfechados',
+    descripcion:
+      'Ver e imprimir los reportes de pagos: pagos realizados, cheques posfechados, retiros de efectivo por liquidar y notas de débito sin aplicar',
   },
   {
     clave: 'cuentas-por-pagar.reportes-de-pagos.exportar',
@@ -131,7 +132,8 @@ export const PERMISOS_DE_CUENTAS_POR_PAGAR: DefinicionPermiso[] = [
   },
   {
     clave: 'cuentas-por-pagar.reportes-de-control.ver',
-    descripcion: 'Ver e imprimir los reportes de control: ajustes del mes (para el contador)',
+    descripcion:
+      'Ver e imprimir los reportes de control: ajustes del mes y pagos en efectivo sobre el umbral de bancarización (para el contador)',
   },
   {
     clave: 'cuentas-por-pagar.reportes-de-control.exportar',

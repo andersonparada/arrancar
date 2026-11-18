@@ -12,6 +12,13 @@ import { CODIGO_DE_RECIBO, llevaFacturaAfectada, opcionesDeTipoSat } from '../do
 /** Filas por página de la bandeja y por solicitud de confirmación (tope del servidor). */
 export const FILAS_POR_PAGINA = 50;
 export const FILAS_POR_CONFIRMACION = 100;
+/** Filas por solicitud de completar y de descartar (tope del servidor). */
+export const FILAS_POR_SOLICITUD = 500;
+/**
+ * Lo máximo que entra en una ventana «Confirmar». El servidor deja 20 solicitudes por minuto entre vista previa y
+ * confirmar (cada una de hasta 100 filas): con 500, la vista previa gasta 5 y el envío 5, y sobra para recalcular.
+ */
+export const MAXIMO_POR_CONFIRMACION = 500;
 
 /** Lo que el usuario escoge para acotar la lista; vacío es «todos». `proveedor` distingue los que se crearán al confirmar. */
 export interface FiltrosDeLaBandeja {
