@@ -8,7 +8,12 @@ import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { RouterLink } from 'vue-router';
 import { destinoDeOrigenDelPago } from '../../composables/movimientos/origen-y-causa';
 import { esDeSoloLectura } from '../../composables/movimientos/estado-de-reversion';
-import { insigniaDeNota, ofreceMarcar, sePuedeCorregir } from '../../composables/notas/marca-de-nota';
+import {
+  esperaACuentasPorPagarInactivo,
+  insigniaDeNota,
+  ofreceMarcar,
+  sePuedeCorregir,
+} from '../../composables/notas/marca-de-nota';
 import type { Movimiento } from '../../servicios/movimientos.api';
 
 /**
@@ -21,17 +26,19 @@ const emit = defineEmits<{ editar: []; anular: []; eliminar: []; marcar: []; des
 
 const sesion = usarSesion();
 const insignia = computed(() => insigniaDeNota(props.registro));
+const cuentasPorPagarActivo = computed(() => sesion.moduloActivo('cuentas-por-pagar'));
+const bloqueada = computed(() => esperaACuentasPorPagarInactivo(props.registro, cuentasPorPagarActivo.value));
 const conMarcar = computed(() => ofreceMarcar(props.registro, sesion.moduloActivo('cuentas-por-pagar')));
 </script>
 
 <template>
   <TarjetaDeRegistro
     :titulo="tituloDeNota(registro)"
-    :detalles="detallesDeNota(registro)"
+    :detalles="detallesDeNota(registro, cuentasPorPagarActivo)"
     permiso="bancos.notas.editar"
     :insignia="insignia"
     :solo-lectura="esDeSoloLectura(registro)"
-    :sin-editar="!sePuedeCorregir(registro)"
+    :sin-editar="!sePuedeCorregir(registro) || bloqueada"
     @editar="emit('editar')"
   >
     <template #destacado>
@@ -51,7 +58,7 @@ const conMarcar = computed(() => ofreceMarcar(props.registro, sesion.moduloActiv
         Marcar
       </BotonBase>
       <BotonBase
-        v-if="registro.puedeDesmarcar"
+        v-if="registro.puedeDesmarcar && !bloqueada"
         v-permiso="'bancos.notas.editar'"
         variante="fantasma"
         pequeno
@@ -60,7 +67,7 @@ const conMarcar = computed(() => ofreceMarcar(props.registro, sesion.moduloActiv
         Desmarcar
       </BotonBase>
       <BotonBase
-        v-if="registro.puedeAnular"
+        v-if="registro.puedeAnular && !bloqueada"
         v-permiso="'bancos.notas.anular'"
         variante="fantasma"
         pequeno
@@ -69,7 +76,7 @@ const conMarcar = computed(() => ofreceMarcar(props.registro, sesion.moduloActiv
         Anular
       </BotonBase>
       <BotonBase
-        v-if="registro.puedeEliminar"
+        v-if="registro.puedeEliminar && !bloqueada"
         v-permiso="'bancos.notas.eliminar'"
         variante="fantasma"
         pequeno

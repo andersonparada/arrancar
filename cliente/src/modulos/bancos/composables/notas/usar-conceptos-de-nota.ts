@@ -30,7 +30,7 @@ export function usarConceptosDeNota(edicion: Ref<EdicionDeNota>, conceptoGuardad
 
   watch(
     () => edicion.value.tipo,
-    () => (edicion.value.conceptoId = conceptoVigente(paraElegir.value, edicion.value.conceptoId)),
+    () => (edicion.value.conceptoId = conceptoVigente(opcionesDeConceptos.value, edicion.value.conceptoId)),
   );
 
   return { opcionesDeConceptos, sugerencia, pideIntereses };

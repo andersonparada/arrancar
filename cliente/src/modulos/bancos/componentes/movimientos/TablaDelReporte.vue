@@ -26,6 +26,10 @@ const emit = defineEmits<{ reclasificar: [fila: FilaDelReporte] }>();
 const sesion = usarSesion();
 const conAcciones = computed(() => props.reporte.filas.some(props.puedeReclasificar));
 
+/** La columna de acciones queda fija al borde derecho: no se pierde al desplazar una tabla ancha (1280 px). */
+const PEGADA_A_LA_DERECHA =
+  'sticky right-0 bg-white px-3 shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.15)] print:hidden dark:bg-tierra-800';
+
 const CLASE_DE_MARCA = {
   Anulado: 'text-red-500',
   Revertido: 'text-amber-600 dark:text-amber-400',
@@ -49,7 +53,9 @@ const CLASE_DE_MARCA = {
           <th class="px-4 py-3 text-right font-medium">Débito</th>
           <th class="px-4 py-3 text-right font-medium">Crédito</th>
           <th v-if="conCuenta" class="px-4 py-3 text-right font-medium">Saldo</th>
-          <th v-if="conAcciones" class="px-4 py-3 font-medium print:hidden"><span class="sr-only">Acciones</span></th>
+          <th v-if="conAcciones" :class="[PEGADA_A_LA_DERECHA, 'py-3 font-medium']">
+            <span class="sr-only">Acciones</span>
+          </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-tierra-100 dark:divide-tierra-700">
@@ -99,7 +105,7 @@ const CLASE_DE_MARCA = {
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(debitoDeFila(fila)) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(creditoDeFila(fila)) }}</td>
           <td v-if="conCuenta" class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(fila.saldo) }}</td>
-          <td v-if="conAcciones" class="px-4 py-2.5 text-right whitespace-nowrap no-underline print:hidden">
+          <td v-if="conAcciones" :class="[PEGADA_A_LA_DERECHA, 'py-2.5 text-right whitespace-nowrap no-underline']">
             <BotonBase
               v-if="puedeReclasificar(fila)"
               variante="secundario"

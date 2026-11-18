@@ -72,4 +72,6 @@ declare module 'vue-router' {
 export interface DetalleDeRegistro {
   etiqueta: string;
   valor: string;
+  /** Un texto largo (una explicación): ocupa todo el ancho y se lee completo, sin cortarse con «…». */
+  largo?: boolean;
 }
