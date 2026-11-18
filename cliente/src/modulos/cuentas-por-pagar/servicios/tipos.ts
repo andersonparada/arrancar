@@ -27,6 +27,11 @@ export interface CondicionesDeProveedor {
   contarDesdeLaRecepcion: boolean;
 }
 
+/** Lo que trae la lectura: las condiciones y el plazo por omisión (meses, 0 = de contado) de la empresa activa. */
+export interface CondicionesConPlazoPorOmision extends CondicionesDeProveedor {
+  mesesPorOmision: number;
+}
+
 /** Lo que el servidor dice que se puede hacer con un documento (el permiso del usuario se revisa aparte). */
 export interface AccionesDelDocumento {
   puedeRegistrar: boolean;

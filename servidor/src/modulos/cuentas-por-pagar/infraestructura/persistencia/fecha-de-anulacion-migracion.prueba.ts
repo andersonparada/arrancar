@@ -166,9 +166,13 @@ describe('migración 0011: relleno de la fecha de anulación', () => {
 
   it('la migración completa deja las columnas, los checks y el índice', async () => {
     const { rows } = await conexion.query(
-      `select conname from pg_constraint where conname like '%_fecha_de_anulacion_%' order by conname`,
+      `select conname from pg_constraint
+       where conname like '%_fecha_de_anulacion_%'
+         and connamespace = 'cuentas_por_pagar'::regnamespace
+       order by conname`,
     );
-    const indice = await conexion.query(`select 1 from pg_indexes where indexname = 'pagos_anulados_corte_idx'`);
+    const indice = await conexion.query(`select 1 from pg_indexes
+       where schemaname = 'cuentas_por_pagar' and indexname = 'pagos_anulados_corte_idx'`);
 
     expect(rows.map((r) => r.conname)).toEqual([
       'pagos_fecha_de_anulacion_de_su_estado',

@@ -12,6 +12,8 @@ export interface HechosDelDocumento {
   notasEnTotal: number;
   /** Solo una nota de crédito: lo que queda libre tras aplicaciones y ajustes vigentes (en un cargo no se usa). */
   saldoLibreCentavos: number;
+  /** Solo un cargo: lo que todavía se debe; con cero ya no se cambia su vencimiento. */
+  saldoDelCargoCentavos: number;
   /** Ajustes vigentes de una nota de crédito. */
   ajustesVigentes: number;
   /** Aplicaciones manuales que recibió un cargo (también una nota de débito). */
@@ -31,7 +33,7 @@ export interface AccionesDelDocumento {
   puedeAutorizar: boolean;
   /** Devolverlo de autorizado a registrado; con pagos vigentes ya no. */
   puedeDesautorizar: boolean;
-  /** Un cargo registrado o autorizado; una nota de crédito no vence. */
+  /** Un cargo registrado o autorizado y con saldo; una nota de crédito no vence. */
   puedeCambiarVencimiento: boolean;
   puedeAnular: boolean;
   puedeEliminar: boolean;
@@ -61,7 +63,10 @@ export function accionesDelDocumento(hechos: HechosDelDocumento): AccionesDelDoc
     puedeRegistrar: estado === 'pendiente',
     puedeAutorizar: estado === 'registrado',
     puedeDesautorizar: estado === 'autorizado' && hechos.pagosVigentes === 0,
-    puedeCambiarVencimiento: claseDe(tipo) === 'cargo' && ESTADOS_CON_VENCIMIENTO_EDITABLE.includes(estado),
+    puedeCambiarVencimiento:
+      claseDe(tipo) === 'cargo' &&
+      ESTADOS_CON_VENCIMIENTO_EDITABLE.includes(estado) &&
+      hechos.saldoDelCargoCentavos > 0,
   };
 }
 

@@ -1,3 +1,4 @@
+import { formatearFecha } from '@/modulos/core/utilidades/formato';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { cargoDeEjemplo, datosDeEjemplo, edicionDeEjemplo, notaDeEjemplo } from './ejemplos-de-pago';
@@ -53,6 +54,13 @@ describe('resumen antes de confirmar', () => {
     expect(resumen).not.toMatch(/posfechado/);
   });
 
+  it('la apertura con la carga abierta dice la fecha de inicio, no la de hoy', () => {
+    const inicial = cargoDeEjemplo('i', { origen: 'saldo_inicial' });
+    const edicion = edicionDeEjemplo({ forma: 'cuenta_de_apertura', montos: { i: '10.00' }, fecha: hoy });
+    const datos = datosDeEjemplo([inicial], { fechaDeInicio: '2026-01-01' });
+    expect(resumenDelPago(edicion, { datos, nota: null, hoy })).toContain(`fecha ${formatearFecha('2026-01-01')}`);
+  });
+
   it('menciona la diferencia de centavos que se salda', () => {
     const edicion = edicionDeEjemplo({ montos: { a: '999.98' }, diferencias: ['a'] });
     expect(resumenDelPago(edicion, { datos, nota: null, hoy })).toMatch(/diferencia de centavos de 1 documento/);
@@ -81,6 +89,12 @@ describe('pestañas por permiso', () => {
 
   it('la apertura solo si hay saldos iniciales por pagar', () => {
     expect(formasDisponibles(todos, [a])).not.toContain('cuenta_de_apertura');
+  });
+
+  it('antes de elegir proveedor solo cuenta el permiso, también el de la apertura', () => {
+    const soloApertura = (permiso: string) => permiso === 'cuentas-por-pagar.pagos.aplicar-a-apertura';
+    expect(formasDisponibles(soloApertura, null)).toEqual(['cuenta_de_apertura']);
+    expect(formasDisponibles(soloApertura, [a])).toEqual([]);
   });
 
   it('cada forma tiene su nombre', () => {

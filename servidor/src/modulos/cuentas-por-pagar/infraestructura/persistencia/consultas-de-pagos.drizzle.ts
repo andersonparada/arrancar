@@ -105,7 +105,7 @@ export class ConsultasDePagosDrizzle implements ConsultasDePagos {
       .leftJoin(base.ajustadoDeLaNota, eq(base.ajustadoDeLaNota.notaId, documentos.id))
       .where(autorizadosConSaldo)
       .groupBy(proveedores.id, terceros.nombreMostrar, terceros.nit)
-      .orderBy(asc(terceros.nombreMostrar))
+      .orderBy(asc(terceros.nombreMostrar), asc(proveedores.id))
       .limit(limite)
       .offset((pagina - 1) * limite);
   }

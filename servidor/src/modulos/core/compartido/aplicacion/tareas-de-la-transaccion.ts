@@ -12,7 +12,8 @@ export interface TareasDeLaTransaccion {
   despuesDeConfirmar(tarea: () => Promise<void>, descripcion: string): Promise<void>;
   /**
    * Corre si la transacción más externa se deshace (error del caso de uso o del `commit`); si se confirma, se
-   * descarta. Sin transacción en curso no hay nada que deshacer y no corre.
+   * descarta. Si lo deshecho es solo un punto de guardado (`aislar`), corre en ese momento y no vuelve a correr.
+   * Sin transacción en curso no hay nada que deshacer y no corre.
    */
   siSeDeshace(tarea: () => Promise<void>, descripcion: string): void;
 }

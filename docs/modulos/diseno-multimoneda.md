@@ -836,6 +836,7 @@ Paso de documentos aparte (sin código): corregir C-10 en Bancos si el usuario l
 | V-11 | ISR retenido por el banco sobre intereses de una cuenta en dólares: conversión y constancia | MM-B3 |
 | V-12 | Libro de compras de la SAT: ¿pide la moneda o el total original? Bancarización de un pago en dólares: tipo de qué fecha | MM-L2, MM-C3 |
 | V-13 | (Técnico, en MM-3) `TipoCambioRango` del USD: ¿`compra = venta = referencia`?; un fin de semana y un asueto; códigos y unidades de las otras monedas (¿quetzales por unidad?) | MM-3 |
+|  | **Resuelto en parte (2026-11-18, llamada real):** en el rango el USD (moneda `2`) trae `compra = venta`, y coincide con la `referencia` de `TipoCambioDia` (7.64489 el 18/11/2026). El sábado 14 y el domingo 15 de noviembre traen el valor vigente del viernes (7.64312): **hay una fila por día calendario**. Un rango futuro responde `<Vars />` con `TotalItems` 0 (sin error). `TipoCambioDia` solo trajo el USD (`CambioDolar/VarDolar`). **Pendiente:** un asueto entre semana y los códigos y unidades de las otras monedas | MM-3 |
 | V-14 | ¿El reporte mensual del diferencial (impreso o exportado) sirve como el «registro mensual» del art. 21 num. 28? | MM-D1 |
 
 ## Respuestas del usuario (2026-11-18)

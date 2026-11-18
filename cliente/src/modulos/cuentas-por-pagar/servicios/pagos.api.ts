@@ -22,6 +22,9 @@ export type * from './tipos-de-pagos';
 
 const RUTA = '/cuentas-por-pagar';
 
+/** El máximo que el servidor deja pedir de una vez. */
+export const LIMITE_DE_PAGINA = 200;
+
 /** Cada forma tiene su ruta (y su permiso en el servidor). */
 const RUTA_POR_FORMA: Record<FormaDePagoNuevo, string> = {
   cheque: `${RUTA}/pagos`,
@@ -33,9 +36,13 @@ const RUTA_POR_FORMA: Record<FormaDePagoNuevo, string> = {
 export class ApiPagos {
   constructor(private readonly http: ClienteHttp) {}
 
-  /** Los proveedores con algo autorizado por pagar, para elegir a quién se paga. */
-  proveedoresPorPagar() {
-    return this.http.obtener<PaginaDeProveedoresPorPagar>(`${RUTA}/pagos/proveedores-por-pagar`, { limite: 200 });
+  /** Los proveedores con algo autorizado por pagar (los que lleven `buscar` en el nombre), para elegir a quién se paga. */
+  proveedoresPorPagar(pagina = 1, buscar = '') {
+    return this.http.obtener<PaginaDeProveedoresPorPagar>(`${RUTA}/pagos/proveedores-por-pagar`, {
+      pagina,
+      limite: LIMITE_DE_PAGINA,
+      ...(buscar ? { buscar } : {}),
+    });
   }
 
   /** Lo que se puede pagar del proveedor; `contrasenaId` es la que se abre primero y `fecha` fija el mes de la suma. */
@@ -47,8 +54,12 @@ export class ApiPagos {
     return this.http.obtener<MediosDePago>(`${RUTA}/pagos/medios`, fecha ? { fecha } : {});
   }
 
-  notasParaLigar() {
-    return this.http.obtener<{ elementos: NotaParaLigar[] }>(`${RUTA}/pagos/notas-para-ligar`);
+  /** Las más recientes con algo disponible (acotadas por cuenta y fechas), hasta el máximo del servidor. */
+  notasParaLigar(filtro: Record<string, string> = {}) {
+    return this.http.obtener<{ elementos: NotaParaLigar[] }>(`${RUTA}/pagos/notas-para-ligar`, {
+      ...filtro,
+      limite: LIMITE_DE_PAGINA,
+    });
   }
 
   registrar(solicitud: SolicitudDePago) {

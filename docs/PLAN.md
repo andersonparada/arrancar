@@ -2385,6 +2385,87 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Todas las recomendaciones, salvo en Caja chica: una factura con retención se rechaza **con permiso de excepción**
   (lo del contador, CC-f A′) y la bancarización solo **avisa y marca** (lo del arquitecto, CC-h A). Detalle al final de
   cada diseño. Los tres quedan **aprobados** para programar (orden de la hoja de ruta: Multimoneda antes que Caja chica).
+- **2026-11-18 (correcciones de la revisión de CP4-9, solo cliente).** «Nuevo pago»: la pestaña «Cuenta de apertura» ya
+  no depende de los cargos antes de elegir proveedor (solo del permiso; con proveedor, de que tenga saldos iniciales), y
+  si el proveedor no los tiene se explica en vez de mostrar una interfaz sin pestañas. «Registrar pago» en la ficha de la
+  contraseña pide `pagos.ver` (lo que exige la ruta) y cuenta la apertura solo si hay saldos iniciales por pagar. El
+  selector de proveedores junta todas las páginas (antes cortaba en 200) y las notas por ligar piden el máximo del
+  servidor (200) con aviso si se llega al tope, porque esa ruta no pagina. La suma del mes del proveedor sale de la fecha
+  escrita y no se pisa con la de un proveedor anterior; el resumen de la apertura dice la fecha de inicio. Sin cambios en
+  el servidor ni en rótulos de saldo o estados de pago.
+- **2026-11-18 (segunda revisión de CP4-9).** «Nuevo pago»: el aviso del tope de notas ya no sale como emergente (ni al
+  pagar con cheque ni en cada «Pagar otro»); en la pestaña «Nota ya registrada» hay filtros por cuenta bancaria y por
+  fechas, que se mandan al servidor (`cuentaBancariaId`, `desde`, `hasta`), y al llegar al tope dice «Hay más notas:
+  filtre por cuenta o por fechas». Si el filtro saca a la nota elegida, se suelta. La suma del mes usa un control de
+  solicitudes propio (`control-de-suma.ts`): la respuesta solo vale si es la última y su proveedor y mes siguen vigentes,
+  y si la fecha cambió de mes mientras cargaba el proveedor, se vuelve a pedir. El estado vacío de sin permiso sale por
+  no tener ningún permiso de pago, aunque se entre con `?proveedorId=`; el texto de «solo apertura» queda para quien sí
+  tiene ese permiso. Si la lista de proveedores llega al tope de 50 páginas, se avisa que está incompleta. Servidor:
+  `proveedoresPorPagar` desempata por id (paginación estable), con prueba de API de proveedores con el mismo nombre.
+- **2026-11-18, Cuentas por pagar: revisión de «Nuevo pago» (filtros de notas y proveedores).** Con la lista de proveedores
+  incompleta (tope de 50 páginas), el selector busca en el servidor (`CampoSelector` con `busquedaEnServidor` y el evento
+  `buscar`; retardo de 300 ms y respuestas viejas descartadas en `busqueda-escalonada.ts`) y el proveedor elegido no sale de
+  las opciones aunque la búsqueda ya no lo traiga; la ruta busca solo por nombre, y el aviso lo dice. Las cuentas del filtro
+  de notas se acumulan entre cargas (quien solo liga notas ya no ve encogerse el selector al filtrar). Con el rango de fechas
+  al revés se limpia la lista de notas y se invalida el pedido en vuelo. `GET /pagos/notas-para-ligar` sigue con
+  `pagos.ver`: el diseño de CP4 (§8, tabla de rutas) la asigna expresamente a ese permiso y la prueba de nota ligada fija
+  200 para quien solo ve; `ligar-notas-de-debito` es de la acción de ligar (`POST /pagos/ligar`), que no cambia. Prueba de API
+  de los filtros `cuentaBancariaId`, `desde` y `hasta`. La tarjeta del proveedor sale de la página a
+  `SeleccionDeProveedorDelPago`.
+- 2026-11-18 · Correcciones de la revisión del selector de proveedores del pago: el proveedor elegido ya no sale repetido
+  (se compara por id en `conProveedorElegido`, con prueba); la búsqueda escalonada cancela su temporizador y descarta
+  pedidos en vuelo al salir de la pantalla; `usarSelectorConBusqueda` reinicia la opción resaltada cuando llegan otras
+  opciones mientras se busca. Queda pendiente (no es regresión): el texto del botón si se entra con `?proveedorId=` de un
+  proveedor fuera de la carga inicial.
+- 2026-11-18 · `GET /pagos/notas-para-ligar` exige `cuentas-por-pagar.pagos.ligar-notas-de-debito` (decisión del usuario; §8 de
+  `diseno-cp4-pagos.md` actualizado): quien solo tiene `pagos.ver` recibe 403. El cliente ya no pide las notas sin ese permiso.
+  `usarSelectorConBusqueda` reinicia la opción resaltada solo con `enServidor`, con prueba de que sin él no se reinicia.
+
+- **2026-11-18 — CC-1 y CL-1 (Caja chica y Cuentas por liquidar, datos).** Dos módulos nuevos con el generador
+  (`caja-chica`, icono `Wallet`, depende de Libro de compras y Bancos; `cuentas-por-liquidar`, icono `HandCoins`, suma
+  Terceros). Esquemas `caja_chica` (migraciones `0000_esquema` y `0001_cc1_fondos_y_comprobantes`: fondos con alcance por
+  fondo y su tabla de accesos, custodios, cambios de monto, comprobantes con bandeja, reposiciones y sus líneas con
+  llaves al mismo fondo, arqueos, vales provisionales, y los disparadores `asignar_al_creador` y
+  `asignar_fondo_al_custodio`) y `cuentas_por_liquidar` (`0000_esquema` y `0001_cl1_anticipos_y_gastos`). Permisos
+  declarados, incluidos los de excepción de retención (`caja-chica.comprobantes.con-retencion` y
+  `cuentas-por-liquidar.gastos.con-retencion`, CC-f A′); sin permiso de efectivo sin bancarizar (CC-h A). Ayudas comunes de
+  restricciones en `core/base-datos/restricciones.ts`. Pruebas de tablas: cada check, llaves compuestas, únicos,
+  RLS de otra empresa, fondo no asignado invisible, bandeja visible, disparador del custodio; `politicas-de-los-modulos` y
+  `llaves-entre-esquemas` en verde. **Quedan para después** (anotado en los dos `docs/modulos/*.md`): la configuración
+  (§9.5), todo el servidor y el cliente (CC-2 en adelante, CL-2 en adelante) y lo que depende de CCL-M (`preguntarATodos`),
+  CCL-B1 (conceptos de sistema de Bancos, `0035`), CCL-L1 (referencia de destino del libro) y CCL-BZ (bancarización
+  compartida, función `security definer` de la suma de Caja chica, que revisa `seguridad`, V-S1 y V-S2).
+- **2026-11-18 — CC-1 y CL-1, correcciones de la revisión.** Migraciones `0002` de Caja chica y Cuentas por liquidar
+  (la `0001` no se tocó). La excepción de CC-f (A′, factura con retención con permiso y motivo) ahora cabe en las
+  tablas: `con_retencion`, `monto_retenido` y `motivo_con_retencion` en `comprobantes` y `gastos`; `monto` pasa a ser
+  lo que salió del fondo o anticipo (el neto), así que la ecuación del fondo y la reposición no se inflan con la
+  retención, que la entera la empresa. El documento del libro se liga con la llave compuesta
+  `(id, empresa_id, proveedor_id, destino)` (columna fija `destino_del_documento`), como ya hace Cuentas por pagar.
+  Se quitó `comprobantes.motivo_sin_bancarizar` (CC-h = A), se agregaron los índices de las llaves que cruzan de
+  módulo y entre tablas, y el check `fecha_de_liquidacion >= fecha` en anticipos y vales provisionales.
+- **2026-11-18 (MM-3a′, todas las monedas del Banguat en el cliente, sin base de datos).** En `core/monedas`, según la
+  adenda del diseño de Multimoneda: el puerto `FuenteDeTiposDeCambio` suma `tiposDeLaMoneda` (`TipoCambioRangoMoneda`
+  por código del Banguat) y `monedasDisponibles` (`VariablesDisponibles`); `tipoDelDia` lee también `CambioDia/Var` de
+  las monedas pedidas. Se quitó el mapa fijo `2 → USD`: el extractor recibe las monedas pedidas e ignora otros códigos.
+  `referenciaEscalada` (ahora en `valores-decimales.ts`) acepta notación científica y más de 8 decimales (redondea
+  desde la mitad, con `bigint`, sin `number`; tope 99999999.99999999). `sin_referencia` pasó a `valor_ambiguo` con la
+  moneda real; las publicaciones llevan `codigoBanguat` (y `compra`/`venta` en los rangos). Constantes nuevas
+  `VARIACION_PARA_RECHAZAR_EN_PORCIENTO = 25`, `variacionSuperaElRechazo` y `cruceImplicito`; `fechasSinPublicacion`
+  recibe un objeto con `diasEsperados` (el USD, todos; las demás, hábiles, que calcula quien llama con el
+  calendario). `FuenteConReintentos` y el doble en memoria cubren lo nuevo. Pruebas con respuestas grabadas (no se
+  llamó al Banguat real: **C-1 a C-4 de la adenda siguen pendientes**, así que `CODIGOS_DEL_BANGUAT_EXCLUIDOS` y la hora
+  de la vuelta de noche quedan para MM-3b; la forma de `VariablesDisponibles` y de `TipoCambioRangoMoneda` se supuso
+  igual a la del dictamen y debe confirmarse con la llamada real). Sigue para después de la migración del core: MM-1,
+  MM-2 y MM-3b (bitácora, candado, vueltas, carga nocturna).
+- **2026-11-18 (MM-3, primera parte: cliente del Banguat sin base de datos).** En `core/monedas`: puerto
+  `FuenteDeTiposDeCambio` (`tipoDelDia`, `tiposDelRango`), `ClienteBanguat` (SOAP 1.1 con `fetch`, HTTPS obligatorio, 10 s,
+  256 KB, sin seguir redirecciones, sin analizador XML: rechaza `<!DOCTYPE`/`<!ENTITY` y extrae solo lo esperado),
+  validación de dominio (fecha real y no posterior a mañana, referencia `^\d{1,6}(\.\d{1,8})?$` y > 0, banda 5 a 15 del
+  USD, variación de 3 % con enteros), `FuenteConReintentos` (decorador con esperas), huecos y rango de relleno de 45 días y
+  el doble `FuenteDeTiposDeCambioEnMemoria`. Una llamada real cerró casi todo V-13 (ver el diseño). **Para después de
+  MM-1/MM-2 (necesitan tablas):** bitácora `core.consultas_al_banguat`, candado `pg_try_advisory_lock`, horario y
+  temporizador, relleno contra lo guardado, `principal.ts`, variables `URL_TIPO_DE_CAMBIO_BANGUAT` y
+  `CARGAR_TIPOS_DE_CAMBIO`, `POST …/cargar`, y avisar la variación (usa `variacionSuperaElLimite`).
 - **2026-11-18 (respuestas del usuario al plazo de crédito).** Todas las recomendaciones de
   `docs/modulos/diseno-plazo-de-credito-del-proveedor.md` (detalle al final del diseño). Aprobado para programar PC-1 a PC-6;
   PC-4 y PC-5 (Excel de plazos) van después de que el Excel de Terceros esté en `main`.
@@ -2450,3 +2531,141 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-18 (respuestas del usuario a la adenda de Multimoneda).** Solo las monedas activas con código del Banguat se
   cargan solas, en tres vueltas (06:00 dólar, 09:30 las demás, noche); el selector excluye DEG, bolívares retirados y colón
   salvadoreño; lo demás según el contador (detalle al final de la adenda en `docs/modulos/diseno-multimoneda.md`).
+- **2026-11-18 — Pruebas del servidor en paralelo (infraestructura).** La suite (~540 archivos, ~4900 pruebas) tardaba 26–29 min porque
+  `fileParallelism` estaba apagado desde el primer commit: todos los archivos compartían la base `arrancar_pruebas`. Ahora cada worker de
+  Vitest usa **su propia base** `${BD_PRUEBAS}_${VITEST_POOL_ID}`. `globalSetup` (`servidor/src/pruebas-api/paralelo/preparar-bases-paralelas.ts`)
+  crea las que falten clonándolas de `${BD_PRUEBAS}_plantilla` (migrada con el migrador real, que da los GRANT a `arrancar_app`); las bases
+  se **conservan entre corridas** (borrarlas fuerza un checkpoint de PostgreSQL que con la máquina cargada tardó más de 10 minutos) y cada
+  archivo las migra y limpia al empezar, como antes. `setupFiles` (`entorno-por-worker.ts`) fija por worker `DATABASE_URL`,
+  `DATABASE_URL_PROPIETARIO`, `RUTA_ALMACENAMIENTO` (`almacenamiento-pruebas/worker-<n>`), `TMPDIR` propio (la prueba de qpdf cuenta archivos
+  temporales) y `PGOPTIONS=-c synchronous_commit=off`. Workers: `VITEST_MAX_WORKERS`, por omisión la mitad de los núcleos con tope de 8.
+  `BD_PRUEBAS` sigue siendo el prefijo propio de cada agente. Los tiempos de espera suben (`testTimeout` 30 s, `hookTimeout` 60 s) porque las
+  pruebas de imágenes de 20000 x 20000 y de 20,000 documentos pasaban de 5 s al compartir CPU. Limpieza: `BD_PRUEBAS=<prefijo> npm run
+  bd:limpiar-pruebas -w servidor` borra solo `<prefijo>_plantilla` y `<prefijo>_<número>`. No correr dos corridas con el mismo prefijo a la vez.
+  Medido con 8 workers y la máquina compartida (carga de 17 a 25): 360 s, 382 s y 373 s en tres corridas seguidas, todas en verde (544 archivos,
+  4910 pruebas), contra 26–29 min en serie.
+- **2026-11-18 — Pruebas en paralelo, correcciones de la revisión.** El prefijo `BD_PRUEBAS` se valida (`validarPrefijoDeBases`: `^[a-z][a-z0-9_]{0,40}$`,
+  distinto de `arrancar`, error si viene vacío) desde `nombres-de-bases.ts`, usado por el `globalSetup`, la configuración y el script de limpieza; este
+  último ya no usa expresiones regulares en SQL: lista las bases y filtra en JavaScript (`esBaseDePruebasDelPrefijo`: prefijo exacto más `_plantilla` o
+  `_` y solo dígitos), con los identificadores escapados. El número de bases sigue al `maxWorkers` que Vitest resuelve (`setup(proyecto)` lee
+  `proyecto.config.maxWorkers`: sirven `--maxWorkers` (admite `50%`: `npm run probar -w servidor -- --maxWorkers=50%`) y `VITEST_MAX_WORKERS`, que solo acepta un número entero porque Vitest la lee con `parseInt` (`50%` daría 50 workers); ambas rutas rechazan lo que no sea un entero positivo con un error claro; `vitest.config.ts` solo fija el valor por omisión si no hay variable).
+  `globalSetup` compara el historial de `drizzle.migraciones_<modulo>` de la plantilla y de cada base de worker con el código (`historial-de-migraciones.ts`:
+  hash aplicado que ya no existe, o migración pendiente con fecha anterior a la última aplicada, que drizzle saltaría); si no concuerda, borra y vuelve a
+  crear las bases del prefijo. `RUTA_ALMACENAMIENTO` es por base (`almacenamiento-pruebas/<base>`). Borrar bases puede tardar mucho con la máquina
+  cargada (correr `bd:limpiar-pruebas` en segundo plano) y no deben correr dos suites con el mismo prefijo.
+- **2026-11-18 (PC-1, plazo de crédito: cambiar el vencimiento).** `CambiarVencimiento` rechaza un cargo sin saldo (pagado,
+  compensado o ajustado del todo) con `VencimientoDeCargoSaldado` (`vencimiento_de_cargo_saldado`, regla de negocio) y audita
+  la acción nueva `cambiar_vencimiento` (recurso `cuentas-por-pagar.documentos`) en la misma transacción: `anterior` es la
+  ficha como estaba más `vencimientoNuevo`. `puedeCambiarVencimiento` exige saldo del cargo mayor que cero
+  (`saldoDelCargoCentavos`). El ajuste de la auditoría no pide migración (la columna `accion` no tiene restricción).
+- **2026-11-18 (PC-2, plazo de crédito: plazo por omisión en la lectura).** `GET /api/cuentas-por-pagar/proveedores/:id/condiciones`
+  suma `mesesPorOmision` (de la empresa activa, por `PlazoPorOmision`) para que el cliente escriba el plazo real (PC-3). Prueba
+  de regresión de API: cambiar los días del proveedor no cambia el vencimiento de sus documentos ya recibidos ni la fecha de
+  sus retenciones en Libro de compras. Pendiente: PC-3 (cliente), PC-4 y PC-5 (Excel), PC-6 (QA y documentos).
+- **2026-11-18 (PC-3, plazo de crédito: cliente).** El texto del plazo y el campo de días usan `mesesPorOmision` («Un mes», «2 meses»,
+  «De contado» con 0; en un proveedor nuevo, aún sin leer, el campo dice «Vacío = el plazo por omisión»). La sección de
+  condiciones de Proveedores dice «Vale para los documentos que se reciban desde ahora; los ya recibidos conservan su
+  vencimiento». En la ficha del documento, un cargo registrado o autorizado sin saldo muestra «Cambiar vencimiento»
+  deshabilitado con su motivo visible; en lo demás el botón sigue oculto si el servidor no lo permite. Lógica pura con pruebas.
+  Pendiente: PC-4 y PC-5 (Excel), PC-6 (QA y documentos).
+- **2026-11-18 (aviso de pago por correo, paso 1: dominio del correo en core).** Contexto `core/correo` con
+  `DireccionDeEnvio` (estricta: ASCII, `atext`, sin comas, comillas, `<>`, CR/LF ni bidi; dominio a punycode), saneado
+  de asuntos, nombres y adjuntos, `PlantillaDeCorreo` (marcadores cerrados; uno desconocido es error) y el diseño HTML
+  fijo y escapado, sin enlaces ni imágenes. Sin tablas ni migraciones. Diseño: `docs/modulos/diseno-aviso-de-pago-por-correo.md`.
+- **2026-11-18 (aviso de pago por correo, paso 3: transporte y prueba).** `nodemailer` 10.6.0 fijo (trae sus propios
+  tipos; `npm audit` sin avisos de nodemailer), puerto `TransporteDeCorreo` con `TransporteNodemailer` (un transporte
+  agrupado, TLS 1.2 mínimo y certificado válido, sin registros, `envelope` explícito, adjuntos solo en memoria, errores
+  reducidos a código) y el doble `TransporteEnMemoria`. Mailpit en `infra/docker-compose.dev.yml` (SMTP 1025, web 8025).
+  `redact` de pino para contraseñas, `auth` y cookies (`registro-seguro.ts`). `EnviarPrueba` queda para el paso 2
+  (necesita el servidor guardado). El transporte admite `seguridad: 'ninguna'` solo para Mailpit; la tabla de Soporte
+  no deberá permitirla en producción.
+- **2026-11-18 (aviso de pago por correo, correcciones de la revisión de los pasos 1 y 3).** Mailpit en v1.34.0 y
+  publicado solo en `127.0.0.1`. El transporte fija tiempos de espera (conexión 15 s, saludo 15 s, DNS 10 s, socket
+  60 s), siempre menores que el arriendo `bloqueado_hasta` de 5 minutos. `seguridad: 'ninguna'` lanza error en
+  producción y nunca manda `auth`; el check de la tabla del paso 2 solo admite `tls_directo` y `starttls`. Los errores
+  `EENVELOPE`/`EMESSAGE` son permanentes y los de TLS/certificado no gastan intento. El saneado quita caracteres de
+  ancho cero y corta por puntos de código; la plantilla rechaza `{ marcador }` con espacios; la redacción de pino cubre
+  dos niveles y más nombres de secretos.
+- **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
+  `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
+  «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
+  factura con retención queda en la bandeja del destino (también la que viene de «Agregar factura» con referencia o de la
+  bandeja de DTE del libro) y solo entra al fondo o al anticipo al **asignarla** con `…con-retencion` y motivo; quien
+  autorizó es `asignado_por` (sin columna aparte: es el mismo acto) más una auditoría `autorizar`. El motivo no viaja en
+  la orden del libro. Bancarización: Caja chica y Cuentas por liquidar suman `monto + monto_retenido` (§5.4 h). Paso
+  nuevo **CC-1c / CL-1c** (§4.10, migraciones `0003`): `cuenta_id` con `deLaTransaccion.cuenta()` (con relleno desde
+  `core.empresas` para las bases con filas), llave `(proveedor_id, cuenta_id)` a `terceros.proveedores` e índices, y el
+  check del motivo solo con el documento asignado. Para el contador: V-12 (nota de crédito en la suma de bancarización) y
+  V-13 (check opcional que prohíba retención en una nota de crédito). Pendiente P-CCL-7 (cuenta coherente con la empresa
+  y beneficiario por cuenta).
+- **2026-11-18 (CC-1c y CL-1c, datos):** migración `0003_cl1c_cuenta_y_motivo_al_asignar` en Caja chica y en Cuentas por
+  liquidar: `cuenta_id` (no nula, `default` de la transacción, FK a `core.cuentas` on delete cascade) en
+  `caja_chica.comprobantes` y `cuentas_por_liquidar.gastos`, rellenada a mano desde `core.empresas` antes de pedirla no
+  nula (sirve en bases con filas); llave `(proveedor_id, cuenta_id)` a `terceros.proveedores` (el único
+  `proveedores_id_cuenta_unico` ya existía: sin migración de Terceros); índices `(proveedor_id, cuenta_id)` parcial y
+  `(cuenta_id)`; y el check del motivo solo con el documento asignado. No hay columna nueva de quién autorizó: es
+  `asignado_por` (diseño §5.4 g). Pruebas de tablas: proveedor de otra cuenta rechazado en vales de gasto, gastos sin
+  documento y documentos; retención en la bandeja sin motivo, asignada sin motivo y motivo sin retención. Sin migraciones
+  del core ni de Bancos. Pendientes: los casos de uso y mapeadores no escriben `cuenta_id` (lo pone la transacción);
+  la prueba de la migración sobre una base con filas no está automatizada.
+- **2026-11-18** (CC-1c / CL-1c, cierre): las descripciones de `caja-chica.comprobantes.con-retencion` y
+  `cuentas-por-liquidar.gastos.con-retencion` pasan a «Asignar a un fondo / a un anticipo un documento con retención
+  (excepción)…», porque con CC-f = A′ registrar no pide el permiso, lo pide quien asigna. Solo texto, sin migración. Las
+  migraciones `0003` con `cuenta_id`, la llave `(proveedor_id, cuenta_id)` y los checks ya estaban en el commit anterior.
+- 2026-11-18 — **Excel de Empresas (exportar e importar)**: `GET /empresas/exportar`, `GET /empresas/plantilla` y
+  `POST /empresas/importar` con los permisos `empresas.exportar` y `empresas.importar` (migración `0010` en `empresas`: quien
+  tenía `empresas.editar` recibe exportar y quien tenía `empresas.crear` recibe importar, en roles y permisos directos).
+  Columnas: nombre, NIT, dirección, teléfono, correo y activa (las del formulario de crear). Fuera quedan los datos fiscales
+  (`secciones` de Libro de compras) y la fecha de inicio, que se completan en la ficha de la empresa, y las empresas
+  existentes (importar solo crea, no actualiza). Cada fila pasa por `RegistrarEmpresa` (acceso del creador, tipos de
+  localidad iniciales y avisos a los módulos). Para que fuera todo o nada con una empresa distinta por fila,
+  `UnidadDeTrabajo` gana `ejecutarEnEmpresaNueva` (punto de guardado dentro de la transacción en curso, solo para la misma
+  cuenta y usuario, que devuelve la empresa anterior al terminar); `RegistrarEmpresa` la usa en vez de `ejecutar`. Pruebas
+  de API (ensayo, semilla, todo o nada, 403) y de la unidad de trabajo.
+- 2026-11-18 — **Excel de Empresas en el cliente**: la lista de Empresas muestra `AccionesDeIntercambio` y
+  `VentanaDeImportacion` con `empresas.importar` y `empresas.exportar`; al importar se recarga la lista y la sesión (para que
+  el selector de empresa vea las nuevas).
+- 2026-11-18 — **Selector de empresa del encabezado con buscador**: `SelectorEmpresa` usa `CampoSelector` (buscador
+  desde 8 empresas, teclado y panel flotante que cabe en celular). Las opciones salen de `opcionesDeEmpresa` (lógica pura
+  con pruebas): ordenadas por nombre y agrupadas por cuenta solo si hay más de una. El cambio sigue siendo
+  `sesion.cambiarEmpresa` y llevar al inicio; elegir la empresa ya activa no hace nada.
+- 2026-11-18 — **Acotar el cambio de empresa de la unidad de trabajo**: `ejecutarEnOtraEmpresa` pasa a ser
+  `ejecutarEnEmpresaNueva`: solo acepta una empresa que no existe aún en `core.empresas` ni se abrió antes en la misma
+  transacción (si no, lanza `EmpresaNoEsNueva`, con o sin acceso del usuario); mantiene misma cuenta y mismo usuario y
+  devuelve la empresa anterior al salir (el punto de guardado deshace también las variables si el trabajo falla). Así ningún
+  caso de uso puede saltar a una empresa existente. Pruebas: dos empresas en un libro (todo o nada) y rechazos. Además,
+  `SelectorEmpresa` recupera la apariencia de marca con `CampoSelector variante="marca"` y el texto «Elija una empresa».
+- **Revisión de seguridad de `ejecutarEnEmpresaNueva`:** (1) firma acotada `ejecutarEnEmpresaNueva(empresaId, trabajo)`: el
+  contexto sale de la transacción en curso (`{ ...contexto, empresaId }`), así no se cambia de cuenta, usuario ni alcance;
+  sin transacción falla (`RegistrarEmpresa` abre la suya con `ejecutar`). (2) La comprobación de que el id no existe
+  consulta `core.empresas`, que hoy no tiene RLS; queda documentado en TSDoc y una prueba falla si alguien se la pone. Sin
+  migración; la alternativa si algún día se le pone RLS es una función `security definer` `core.empresa_existe(uuid)`.
+  (3) Al salir se exige que la empresa exista con la `cuenta_id` del contexto y `creado_en = now()` (inicio de la
+  transacción; `marcasDeTiempo` usa `defaultNow()`), si no, `EmpresaNoEsNueva`. (4) Pruebas: empresa de otra cuenta, usuario
+  con acceso real a una empresa existente, trabajo que no crea la empresa, que la crea en otra cuenta, y sin transacción.
+- **Defensa en profundidad de `ejecutarEnEmpresaNueva`:** (1) se comprueba **antes** de cambiar `app.empresa_id`: quien
+  llama inserta la empresa en `core.empresas` con la empresa de afuera (la tabla no tiene RLS) y el método exige que exista
+  con ese id, la `cuenta_id` del contexto y `creado_en = now()`; si no, `EmpresaNoEsNueva` y nunca se trabaja en una empresa
+  no probada. `RegistrarEmpresa` agrega la empresa afuera y siembra acceso, tipos de localidad y secciones adentro. Si
+  `core.empresas` llega a tener RLS, la consulta debe ir por una función `security definer`. (2) `creado_en` lo pone la base
+  (`defaultNow()`), amarrado con pruebas de la tabla y del mapeador. (3) Una segunda empresa nueva mientras otra sigue
+  abierta en la misma transacción se rechaza con `EmpresaNuevaYaEnCurso` (prueba con llamadas en paralelo). (4) Los dobles
+  `UnidadDeTrabajoEnMemoria` y `UnidadQueDeshace` fallan como el real: sin transacción abierta lanzan y rechazan un id repetido.
+  (5) `aislar` y `ejecutarEnEmpresaNueva` recortan las tareas de `despuesDeConfirmar` y `siSeDeshace` registradas dentro de
+  un punto de guardado que se deshace (no corren).
+- **2026-11-18, corrección a lo anterior (5): las compensaciones de `siSeDeshace` no se descartan.** Al deshacerse un
+  punto de guardado (`aislar`, `ejecutarEnEmpresaNueva`) solo se recortan las tareas de `despuesDeConfirmar`; las de
+  `siSeDeshace` (borrar un archivo ya escrito, `GestorDeDocumentos`) se sacan de la lista y **corren en ese momento**,
+  después del rollback del punto, con el mismo manejo de errores (registrar y seguir), y no vuelven a correr si luego se
+  deshace toda la transacción. Antes el archivo quedaba huérfano en disco si la transacción de afuera confirmaba. Pruebas:
+  unidad de trabajo (orden, una sola vez, fallo registrado) y de punta a punta con `GestorDeDocumentos`.
+
+- **2026-11-18 — Dependencias: avisos de `npm audit`.** Antes: 25 (2 bajas, 21 moderadas, 2 altas: zod < 4.6.6 y vite
+  8.3.0–8.3.2). Después: 13, todas moderadas y solo de desarrollo, ninguna alta. Subidas dentro de la misma versión mayor:
+  zod 4.6.5 → 4.6.7 (`servidor`), vite 8.3.1 → 8.3.8 (`cliente`), y en el `package-lock.json` fastify 5.12.8, vitest 5.1.1
+  (con `@vitest/mocker`), fast-uri 3.1.9/4.x, ip-address y serialize-javascript. Sin cambios de código: las notas de zod 4.6.x
+  y vite 8.3.x son solo correcciones. `npm audit fix` y `npm update` fallan con un error del propio npm 10.9.9
+  (`edgesOut`), así que se instaló zod y vite con `npm install <paquete>@<versión> -w <workspace>` y se re-resolvieron las
+  demás quitando sus entradas del lock. **Pendientes (versión mayor, no se hizo):** `minimatch` 10.2.6 (por eslint 10 y
+  typescript-eslint; el parche es 11.0.9, mayor) y sus dependientes `glob`/`@eslint/config-array`; `esbuild` 0.18 dentro de
+  `@esbuild-kit` (de drizzle-kit; `audit fix --force` bajaría drizzle-kit a 0.18.1, no se hace). Ambos solo en desarrollo.

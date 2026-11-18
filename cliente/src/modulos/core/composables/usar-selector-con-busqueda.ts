@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from 'vue';
+import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
 import {
   filtrarOpciones,
   indiceDeOpcionElegida,
@@ -13,9 +13,12 @@ interface EstadoSelector<T> {
   indiceActivo: Ref<number>;
   opciones: Ref<OpcionBuscable<T>[]>;
   modelo: Ref<T | undefined>;
+  /** Si las opciones ya vienen filtradas por el servidor, no se vuelven a filtrar aquí. */
+  enServidor: Ref<boolean>;
 }
 
 function opcionesFiltradasDe<T>(estado: EstadoSelector<T>): OpcionBuscable<T>[] {
+  if (estado.enServidor.value) return estado.opciones.value;
   return filtrarOpciones(estado.opciones.value, estado.busqueda.value);
 }
 
@@ -81,15 +84,21 @@ function manejarTeclaConAbierto<T>(estado: EstadoSelector<T>, evento: KeyboardEv
 export function usarSelectorConBusqueda<T extends string | number | null>(
   opciones: Ref<OpcionBuscable<T>[]>,
   modelo: Ref<T | undefined>,
+  enServidor: Ref<boolean> = ref(false),
 ) {
   const abierto = ref(false);
   const busqueda = ref('');
   const indiceActivo = ref(-1);
-  const estado: EstadoSelector<T> = { abierto, busqueda, indiceActivo, opciones, modelo };
+  const estado: EstadoSelector<T> = { abierto, busqueda, indiceActivo, opciones, modelo, enServidor };
 
   const opcionesFiltradas = computed(() => opcionesFiltradasDe(estado));
-  const muestraBuscador = computed(() => opciones.value.length > UMBRAL_PARA_MOSTRAR_BUSCADOR);
+  const muestraBuscador = computed(() => enServidor.value || opciones.value.length > UMBRAL_PARA_MOSTRAR_BUSCADOR);
   const textoElegido = computed(() => opciones.value.find((opcion) => opcion.valor === modelo.value)?.texto ?? '');
+
+  // Solo con búsqueda en el servidor: si llegan otras opciones mientras se busca, la resaltada ya no es la que el usuario vio.
+  watch(opciones, () => {
+    if (enServidor.value && abierto.value && busqueda.value) indiceActivo.value = -1;
+  });
 
   function alPresionarTecla(evento: KeyboardEvent): void {
     if (abierto.value) manejarTeclaConAbierto(estado, evento);

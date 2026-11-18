@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   documentoDelLibro,
   esDeLoPropio,
+  exigirCargoConSaldo,
   exigirAnulable,
   exigirEliminable,
   exigirAutorizado,
@@ -116,6 +117,14 @@ describe('cambiar el vencimiento', () => {
     for (const caso of casos) {
       expect(() => exigirVencimientoNuevoValido(caso, '2026-06-01', 'A-1')).toThrow(/A-1/);
     }
+  });
+});
+
+describe('cambiar el vencimiento de un cargo con saldo', () => {
+  it('con saldo pasa; sin saldo lanza vencimiento_de_cargo_saldado con la etiqueta', () => {
+    expect(() => exigirCargoConSaldo(1, 'A-1')).not.toThrow();
+    expect(() => exigirCargoConSaldo(0, 'A-1')).toThrow(/A-1/);
+    expect(() => exigirCargoConSaldo(-5, 'A-1')).toThrow(/ya no tiene saldo/);
   });
 });
 

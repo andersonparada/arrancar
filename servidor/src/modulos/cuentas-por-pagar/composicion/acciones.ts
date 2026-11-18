@@ -25,7 +25,7 @@ export function rutasDeAccionesComponidas(): FastifyPluginAsync {
   return rutasDeAcciones(
     new AccionesControlador({
       completar: new CompletarDocumentos(dependencias),
-      cambiarVencimiento: new CambiarVencimiento(dependencias),
+      cambiarVencimiento: new CambiarVencimiento(conAutorizacion),
       autorizar: new AutorizarDocumentos(conAutorizacion),
       desautorizar: new DesautorizarDocumento(conAutorizacion),
     }),

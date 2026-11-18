@@ -1,6 +1,7 @@
 # Diseño de Caja chica y Cuentas por liquidar — arquitecto de datos, 2026-11-18
 
-Estado: **propuesta, por aprobar**. No se programa nada hasta que el usuario responda §15. Aterriza el punto 7 de
+Estado: **aprobado** (respuestas del usuario al final). CC-1 y CL-1 programados; la revisión del commit 670b81a4 y
+las decisiones del 2026-11-18 sobre CC-f están en §4.10 y §5.4 g (paso CC-1c / CL-1c antes de CC-3 y CL-3). Aterriza el punto 7 de
 `HOJA-DE-RUTA.md` («Caja chica y Cuentas por liquidar») con la investigación del contador
 (`dictamen-caja-chica-2026-11-18.md`, «correcto con ajustes») y el §9 de la adenda de efectivo de CP4
 (`diseno-cp4-pagos-en-efectivo.md`, «Encaje con la futura Caja chica»). Lo que el arquitecto no comparte del dictamen, o
@@ -149,9 +150,10 @@ lo que sobra se devuelve o queda como «no liquidado» con su destino; lo que fa
 | B. Solo bandeja | Todo llega sin asignar | Sin tocar el libro | Dos pasos siempre |
 | C. Selector de fondo en Ingreso de facturas | El libro pregunta los fondos al destino | Un paso | El libro conocería campos del destino (contra «la pantalla de ingreso no conoce los campos de cada módulo») |
 
-**Recomendado: A.** Si con la referencia no se puede asignar (fondo cerrado, tope, fecha), el documento **no se pierde**:
-queda en la bandeja con el aviso. Solo la retención (CC-f) **rechaza** el registro, porque ese documento nunca puede ir
-a caja chica.
+**Recomendado: A** (aprobado). Si con la referencia no se puede asignar (fondo cerrado, tope, fecha, **o la factura lleva
+retención**), el documento **no se pierde**: queda en la bandeja con el aviso. **Recibir nunca rechaza por retención**
+(CC-f = A′, decisión del 2026-11-18): la factura con retención solo entra a un fondo o a un anticipo por la
+**asignación**, con el permiso de excepción y un motivo, y la autoriza quien asigna (§5.4 g).
 
 ## 3. Cambios fuera de los dos módulos
 
@@ -177,7 +179,10 @@ Con tres módulos pagando en efectivo hace falta que **cada uno vea a los otros*
   `{ efectivoCentavos, bancarizadoCentavos, comprobantes: string[] }` (vigentes al momento, antes de retenciones; las
   etiquetas son «Recibo N», «Caja chica F, vale N», «Anticipo N»). Cuentas por pagar responde con sus pagos (como hoy la
   suma de CP4 §5.3); Caja chica con sus comprobantes de documento del proveedor; Cuentas por liquidar con sus gastos de
-  documento del proveedor (como efectivo: §16, V-5).
+  documento del proveedor (como efectivo: §16, V-5). **Caja chica y Cuentas por liquidar suman `monto + monto_retenido`**
+  (el valor antes de retenciones, como CP4 §5.3 suma el `monto` aplicado a cargos): desde la excepción de CC-f, `monto`
+  es el neto que salió del fondo o del anticipo y sumarlo solo dejaría corta la operación con el proveedor. Qué filas
+  entran, en §5.4 h.
 - Orden `libro-de-compras.evaluar_bancarizacion` — datos `{ proveedorId, proveedorNombre, fecha, montoEnEfectivoCentavos,
   cargos: Array<{ documentoDeCompraId: string | null; etiqueta; totalCentavos; efectoDeSaldoInicial? }> }`; respuesta
   `{ resultado: 'libre' | 'avisar' | 'bloquear', mensaje: string | null, efecto: { iva, isr } | null, pagadoEnElMesCentavos }`.
@@ -328,9 +333,13 @@ asignación). Lo revisa `seguridad` (§16).
 | `documento_de_compra_id` | uuid | sí | FK `libro_de_compras.documentos (id)`; único parcial; `(clase = 'documento') = (documento_de_compra_id is not null)` |
 | `resta` | boolean | no | Nota de crédito o sobrante; check `resta = (clase = 'sobrante' or es_nota_de_credito)` con `es_nota_de_credito boolean` copiada al recibir |
 | `documento_afectado_id` | uuid | sí | Comprobante de la factura que rebaja la nota (FK compuesta a `comprobantes`), solo en notas |
-| `proveedor_id` | uuid | sí | FK `terceros.proveedores (id)`; obligatorio en documentos (copiado del libro) |
+| `cuenta_id` | uuid | no | **Paso CC-1c** (§4.10): `default` de la transacción (`deLaTransaccion.cuenta()`), FK `core.cuentas` on delete cascade; solo para la llave al proveedor, como `libro_de_compras.documentos` |
+| `proveedor_id` | uuid | sí | FK compuesta `(proveedor_id, cuenta_id) → terceros.proveedores (id, cuenta_id)` (desde CC-1c; hoy solo `(id)`); obligatorio en documentos (copiado del libro) |
 | `fecha` | date | no | La del gasto (pago en efectivo): por omisión, la emisión del documento; no futura; no anterior a la apertura del fondo |
-| `monto` | numeric(14,2) | no | `> 0`; en documentos, su total (sin retenciones: CC-f) |
+| `monto` | numeric(14,2) | no | `> 0`; lo que sale (o salió) del fondo: en documentos, `total − retenciones` del libro (igual al total si no lleva retención). Se fija **al recibir**, también en la bandeja |
+| `con_retencion`, `monto_retenido` | boolean, numeric(14,2) | no, no | Hecho del documento, copiado del libro **al recibir** (`retencionesCentavos`): `con_retencion = (monto_retenido > 0)`; solo en documentos. La retención la entera la empresa y no sale del fondo |
+| `motivo_con_retencion` | text | sí | La excepción de CC-f (A′): **desde CC-1c**, obligatorio solo con el documento **asignado** (`(con_retencion and fondo_id is not null) = (motivo_con_retencion is not null)`); en la bandeja va nulo. Quien autorizó es `asignado_por` (§5.4 g) |
+| `destino_del_documento` | text | no | Fijo `caja-chica`; con él la llave `(documento_de_compra_id, empresa_id, proveedor_id, destino)` exige que el documento sea de la misma empresa, el mismo proveedor y este destino (decisión: llave compuesta, no solo `(id)`) |
 | `con_activo_fijo` | boolean | no | `default false`; del documento |
 | `numero`, `anio_de_numero` | integer | sí, no | Solo vales de gasto (correlativo `caja-chica.vales`); único `(empresa_id, anio_de_numero, numero)` parcial |
 | `descripcion` | text | sí | Obligatoria salvo en documentos; 1–300 |
@@ -338,11 +347,11 @@ asignación). Lo revisa `seguridad` (§16).
 | `concepto_de_gasto_id` | uuid | sí | FK compuesta `(concepto_de_gasto_id, empresa_id) → libro_de_compras.conceptos_de_gasto (id, empresa_id)`; obligatorio en vales de gasto |
 | `motivo_sin_documento` | text | sí | Vale de gasto: por qué no hay factura (1–300); `(clase = 'vale_de_gasto') = (motivo_sin_documento is not null)` |
 | `sobre_el_tope`, `motivo_sobre_el_tope` | boolean, text | no, sí | `(sobre_el_tope) = (motivo_sobre_el_tope is not null)` (CC-i) |
-| `sin_bancarizar`, `motivo_sin_bancarizar` | boolean, text | no, sí | Marca de CC-h; el motivo solo si se elige B |
+| `sin_bancarizar` | boolean | no | Marca de CC-h (A); sin motivo: la columna `motivo_sin_bancarizar` se quitó porque solo existía con la opción B |
 | `arqueo_id` | uuid | sí | FK compuesta a `arqueos`; `(clase in ('faltante', 'sobrante')) = (arqueo_id is not null)` |
 | `destino_del_faltante` | text | sí | `in ('perdida', 'cobrar_al_custodio')`; `(clase = 'faltante') = (destino_del_faltante is not null)` |
 | `vale_provisional_id` | uuid | sí | FK compuesta a `vales_provisionales` (CC-6) |
-| `asignado_en`, `asignado_por` | timestamptz, uuid | sí | `(fondo_id is null) = (asignado_en is null)` |
+| `asignado_en`, `asignado_por` | timestamptz, uuid | sí | `(fondo_id is null) = (asignado_en is null)`; sin FK, como `anulado_por` y `creado_por`. Con retención, `asignado_por` es **quien autorizó la excepción** (§5.4 g) |
 | `estado`, `anulado_en`, `anulado_por`, `motivo_de_anulacion`, `fecha_de_anulacion` | | | `vigente`/`anulado` (vale anulado, documento anulado en el libro) con los checks completos |
 
 Únicos e índices: `comprobantes_llave_unica (id, empresa_id, fondo_id)` (destino desde `reposicion_comprobantes`);
@@ -417,6 +426,55 @@ empresa + alcance.
 `0000_esquema` (el esquema y sus permisos, como los demás) y `0001_cc1_fondos_y_comprobantes` (todas las tablas,
 checks, llaves, índices, RLS y los dos disparadores). **Sin datos que convertir** (módulo nuevo). Sin migración de
 permisos (todos nuevos: el rol con acceso total los recibe solo). Los correlativos no necesitan fila previa.
+La `0002_cc1_retencion_llaves_y_indices` (revisión de CC-1) agregó la retención, la llave compuesta al libro y los
+índices de las llaves.
+
+### 4.10 Cambio de datos que viene ahora (paso **CC-1c** y **CL-1c**, revisión del commit 670b81a4)
+
+Dos cosas, en una migración nueva por módulo: **`caja_chica` `0003_cc1c_cuenta_y_motivo_al_asignar`** y
+**`cuentas_por_liquidar` `0003_cl1c_cuenta_y_motivo_al_asignar`** (no se edita la `0002`: ya la aplicaron las bases de
+desarrollo y de los worktrees, aunque no esté en producción).
+
+**a) El proveedor, de la misma cuenta (como el libro y `condiciones-de-proveedor`).** Hoy
+`comprobantes_proveedor_fk` y `gastos_proveedor_fk` apuntan solo a `terceros.proveedores (id)`: nada impide, en la base,
+un proveedor de otra cuenta en un comprobante que no sea documento (el documento ya queda cubierto de forma transitiva por
+`comprobantes_documento_fk`, porque el libro liga `(proveedor_id, cuenta_id)`). Se hace igual que
+`libro_de_compras.documentos` y `cuentas_por_pagar.condiciones_de_proveedor`:
+
+| Tabla | Cambio |
+|---|---|
+| `caja_chica.comprobantes` y `cuentas_por_liquidar.gastos` | Columna `cuenta_id uuid not null default (deLaTransaccion.cuenta())`, FK `core.cuentas (id)` on delete cascade. La pone la unidad de trabajo (`app.cuenta_id`, que siempre sale de la empresa activa); ni el repositorio ni el caso de uso la escriben y los mapeadores la dejan fuera de la entidad y del DTO |
+| Ídem | `comprobantes_proveedor_fk` / `gastos_proveedor_fk` pasan a `(proveedor_id, cuenta_id) → terceros.proveedores (id, cuenta_id)` (el único `proveedores_id_cuenta_unico` ya existe), `on delete no action` como hoy |
+| Ídem | El índice de la llave: `comprobantes_proveedor_idx` / `gastos_proveedor_idx` pasan a `(proveedor_id, cuenta_id) where proveedor_id is not null` (cubren la llave completa; el borrado de un proveedor no recorre la tabla). Índice `(cuenta_id)` para la FK a `core.cuentas`, como `datos_fiscales_de_proveedor_cuenta_idx` |
+
+RLS sin cambio: las dos tablas siguen con `politicaPorEmpresa()` (y el alcance en Caja chica); `cuenta_id` solo sirve para
+la llave, igual que en el libro. No se agrega FK `(empresa_id, cuenta_id) → core.empresas`: el libro tampoco la tiene y
+`core.empresas` no tiene ese único (si se quiere, es un endurecimiento general para otro paso, P-CCL-7).
+
+**Datos existentes.** En producción no hay filas (módulos nuevos). Las bases de desarrollo y de pruebas pueden tener
+filas de prueba, y el `default` de la transacción vale `null` dentro de la migración (no hay `app.cuenta_id`), así que la
+migración generada se completa **antes de aplicarla por primera vez** (`bd:generar` y luego a mano, como la `0012` del
+libro): `add column cuenta_id uuid` (nula) → `update … set cuenta_id = e.cuenta_id from core.empresas e where e.id =
+empresa_id` (el migrador es el propietario: RLS no lo frena) → `set not null` → `set default` → llaves e índices. Es
+repetible en una base vacía y en una con filas.
+
+**b) El motivo de la retención, solo al asignar** (§5.4 g). Se cambia el check de las dos tablas:
+
+| Restricción | Antes (`0002`) | Ahora (`0003`) |
+|---|---|---|
+| `…_retencion_con_monto` | `con_retencion = (monto_retenido > 0)` | Igual |
+| `…_retencion_con_motivo` | `con_retencion = (motivo_con_retencion is not null)` | `(con_retencion and <fondo_id \| anticipo_id> is not null) = (motivo_con_retencion is not null)` |
+| `…_retencion_solo_en_documentos` | Igual | Igual |
+| `…_motivo_con_retencion_rango` | 1–300 recortado | Igual |
+
+Así un documento con retención puede **estar en la bandeja** (sin fondo y sin motivo), que es lo que pide la decisión
+(«sin el permiso, la factura queda pendiente en la bandeja»); con la `0002` no cabía. Devolverlo a la bandeja limpia el
+motivo junto con `asignado_en` y `asignado_por` (lo anterior queda en la auditoría). Sin datos que convertir: ninguna
+fila vigente puede violar el check nuevo (es más débil que el viejo).
+
+Pruebas de tablas que se suman: proveedor de otra cuenta (rechazo por la llave, en un comprobante que no es documento);
+`cuenta_id` puesto solo por la transacción; documento con retención en la bandeja sin motivo (pasa); asignado con
+retención sin motivo (rechazo); motivo sin retención (rechazo); la migración sobre una base con filas (rellena la cuenta).
 
 ## 5. Reglas de Caja chica
 
@@ -448,19 +506,24 @@ entrega en el mismo paso (aviso si no se hace). Auditoría `corregir`, recurso `
 
 **a) Recibir un documento del libro** (`caja-chica.recibir_documento`, dentro de la transacción del libro):
 
-1. **Retención** (CC-f): `retencionesCentavos > 0` → `DocumentoConRetencionEnCajaChica` («Este documento lleva retención:
-   regístrelo con destino Cuentas por pagar; si lo paga en efectivo, use un retiro de efectivo.»). Se deshace el registro.
-2. Crea el comprobante (`clase = 'documento'`, `monto = total`, proveedor, activo fijo, nota de crédito con su factura si
-   está aquí; si su factura no está en caja chica: `FacturaDeLaNotaNoRecibida`, como Cuentas por pagar).
-3. Con `referenciaDeDestino`: intenta asignarlo al fondo (b). Si no se puede, queda en la bandeja y responde el aviso
-   («Quedó en la bandeja de Caja chica: …»). Sin referencia, a la bandeja.
+1. Crea el comprobante (`clase = 'documento'`, `monto = total − retencionesCentavos`, `monto_retenido =
+   retencionesCentavos`, `con_retencion = retencionesCentavos > 0`, proveedor, activo fijo, nota de crédito con su
+   factura si está aquí; si su factura no está en caja chica: `FacturaDeLaNotaNoRecibida`, como Cuentas por pagar).
+   **No rechaza por retención** (CC-f = A′): el documento se registra en el libro y queda en Caja chica.
+2. **Con retención**, aunque traiga `referenciaDeDestino`, **no se asigna aquí**: queda en la bandeja y responde el aviso
+   «Quedó en la bandeja de Caja chica: lleva retención de Q… (la entera la empresa). Para pagarla del fondo, asígnela con
+   el permiso de excepción y un motivo.» (§5.4 g). Así la excepción se autoriza siempre en el mismo caso de uso y nunca
+   dentro de la transacción del libro.
+3. Sin retención y con `referenciaDeDestino`: intenta asignarlo al fondo (b). Si no se puede, queda en la bandeja y
+   responde el aviso («Quedó en la bandeja de Caja chica: …»). Sin referencia, a la bandeja.
 4. Sin auditoría (alta). Responde `{ avisos }` (los de b, incluida la bancarización).
 
 **b) Asignar documentos de la bandeja a un fondo** (`AsignarDocumentos`, `comprobantes.crear`, 1–100 a la vez, todo o
 nada): fondo abierto y visible; `fecha` (por omisión la emisión; editable) no futura ni anterior a la apertura; la nota
 de crédito va al fondo de su factura (`NotaEnOtroFondo`); **tope** (CC-i): `monto > tope` exige
-`comprobantes.sobre-el-tope` y motivo (`ComprobanteSobreElTope`); **bancarización** (CC-h) con la orden del libro: con
-`bloquear`, marca `sin_bancarizar` y da el aviso (A) o exige permiso y motivo (B); con `avisar`, solo el aviso. Aviso
+`comprobantes.sobre-el-tope` y motivo (`ComprobanteSobreElTope`); **retención** (CC-f): exige
+`comprobantes.con-retencion` y motivo (§5.4 g); **bancarización** (CC-h = A) con la orden del libro: con `bloquear`,
+marca `sin_bancarizar` y da el aviso; con `avisar`, solo el aviso (nunca bloquea: el efectivo ya salió). Aviso
 (no bloquea) si el documento está **fuera del libro** («No da crédito fiscal ni es deducible: …», del motivo del libro;
 cubre C6). Evento `comprobante_asignado`.
 
@@ -477,7 +540,45 @@ motivo, pasa), descripción, pagado a, concepto de gasto (activo, del libro) y m
 
 **f) Que el efectivo alcance:** ninguna asignación puede dejar el **efectivo esperado** negativo
 (`ComprobantesMayoresQueElEfectivo`: «Con esto el fondo gastaría Q… más de lo que tiene: registre el faltante con un
-arqueo o revise los montos.»). Con el fondo bloqueado (`for update`).
+arqueo o revise los montos.»). Con el fondo bloqueado (`for update`). Lo que cuenta es `monto` (el neto): la retención
+no sale del fondo.
+
+**g) La excepción de retención (CC-f = A′; decisiones del usuario del 2026-11-18).** Una sola regla para Caja chica y
+Cuentas por liquidar:
+
+> Una factura con retención **no entra** a un fondo ni a un anticipo, salvo que **quien la asigna** tenga el permiso de
+> excepción y escriba un motivo. Sin el permiso, queda pendiente en la bandeja del destino. Queda registrado quién la
+> autorizó.
+
+| Paso | Qué pasa |
+|---|---|
+| Registrar en el libro (Ingreso de facturas, desde «Agregar factura» de la ficha o suelto; bandeja de DTE del libro; Excel) | Siempre se registra. El destino crea el comprobante (o gasto) **en su bandeja** con `monto_retenido` y el aviso de §5.4 a 2. Un DTE confirmado en la bandeja de DTE del libro con destino `caja-chica` llega igual, sin referencia y sin motivo: **queda pendiente** en la bandeja de Caja chica |
+| Asignar (`AsignarDocumentos`, desde la bandeja de Caja chica o desde la ficha del fondo: «Pendientes con retención») | Por cada documento con `con_retencion`: sin `caja-chica.comprobantes.con-retencion` → `RetencionSinPermiso` (403, como el motivo sin permiso de CP4 §5.3; como la asignación es todo o nada, no se asigna ninguno de la tanda y todos siguen en la bandeja; el cliente no deja marcarlos sin el permiso); con el permiso y sin motivo → `MotivoConRetencionObligatorio`; con los dos, se asigna |
+| Quién autorizó | `asignado_por` y `asignado_en` (los pone el caso de uso con el usuario de la sesión) + una entrada de auditoría `autorizar` (recurso `caja-chica.comprobantes`, `anterior` = `ComprobanteDto` en la bandeja, `motivo` = el de la excepción) |
+| Devolver a la bandeja | Limpia `fondo_id`, `asignado_*` y `motivo_con_retencion` (auditoría `corregir`, como hoy). Reasignarlo pide otra vez el permiso y un motivo |
+| Ruta | `POST /fondos/:id/comprobantes/documentos` con `{ documentos: [{ comprobanteId, fecha?, motivoSobreElTope?, motivoConRetencion? }] }`. Un `motivoConRetencion` en un documento sin retención → `DatoInvalido` (no se guarda un motivo que no aplica) |
+| Cliente | La bandeja marca «Con retención Q…» y, al asignar, la ventana pide el motivo solo para esos documentos y solo si el usuario tiene el permiso (`v-permiso`; sin él, el documento se ve pero «Asignar» lo explica: «Necesita el permiso de excepción»). En la ficha del fondo, la factura agregada con retención vuelve con el aviso y un botón «Asignar con retención» que abre la misma ventana |
+
+**Por qué el motivo no viaja en la orden del libro** (opción descartada: un `motivoConRetencion` opaco en
+`DocumentoParaDestino`, pedido en Ingreso de facturas). Obligaría a la pantalla del libro a saber cuándo pedirlo (destino
+y retención) y a revisar un permiso de otro módulo dentro de la transacción del libro; y el DTE de la bandeja del libro
+no lo traería nunca. Con la regla de arriba la excepción se autoriza **en un solo caso de uso** y la orden de recibir no
+cambia de contrato (CCL-L1 sigue con solo `referenciaDeDestino`). El costo: desde la ficha, la factura con retención pide
+un clic más («Asignar con retención»), que es justo el momento de la autorización.
+
+**Por qué `asignado_por` y no una columna `con_retencion_autorizada_por`.** La decisión dice que autoriza **quien
+asigna**: es el mismo acto, el mismo usuario y el mismo momento. Una columna aparte siempre valdría lo mismo que
+`asignado_por` (un dato repetido que puede desfasarse) y habría que mantenerla en devolver y reasignar. El check de
+§4.10 b ata el motivo a la asignación, y la entrada `autorizar` de `core.auditoria` (que nunca se borra) conserva quién
+autorizó aunque luego se devuelva a la bandeja o se anule. Es el mismo criterio de CP4 §5.3 (motivo en el registro,
+quién en la autoría). Si algún día la autorización se separa de la asignación (un segundo usuario que aprueba), entonces
+sí haría falta la columna: se agregaría con su migración.
+
+**h) Respuesta a la bancarización** (`libro-de-compras.pagado_al_proveedor_en_el_mes`, paso CC-3, con la función
+`security definer` de §13.1): suma **`monto + monto_retenido`** de los comprobantes `clase = 'documento'`, `estado =
+'vigente'`, **asignados** (`fondo_id is not null`: el que está en la bandeja todavía no se sabe si se pagó del fondo),
+`resta = false`, del proveedor y con `fecha` en el mes. Va en `efectivoCentavos`. La nota de crédito no resta de lo
+pagado (la bancarización mide pagos, no saldos; **por validar**, V-12). Usa `comprobantes_proveedor_fecha_idx`.
 
 ### 5.5 Vales provisionales (paso CC-6)
 
@@ -598,13 +699,18 @@ Como `caja_chica.comprobantes` reducido: `id`; `anticipo_id` nulo (**bandeja**) 
 `fecha`; `monto > 0`; `con_activo_fijo`; `descripcion`, `pagado_a`, `concepto_de_gasto_id` (FK compuesta al libro),
 `motivo_sin_documento`, **`tratamiento_sin_documento in ('no_deducible', 'renta_del_trabajo')`** (por validar, V-6;
 `renta_del_trabajo` solo si el anticipo es de un empleado, lo revisa el dominio); `sin_bancarizar`; `asignado_en`,
-`asignado_por`; estado y anulación. Índices: `(anticipo_id)`, bandeja parcial, `(proveedor_id, fecha)` parcial. RLS por
-empresa.
+`asignado_por`; estado y anulación. Desde la `0002`: `destino_del_documento` fijo y la llave compuesta al libro, y la
+retención como en Caja chica (`monto` = el neto que salió del anticipo; `con_retencion`, `monto_retenido`,
+`motivo_con_retencion`). Desde la `0003` (CL-1c, §4.10): `cuenta_id` con la llave `(proveedor_id, cuenta_id)` al
+proveedor, y el motivo obligatorio solo con el gasto asignado (`(con_retencion and anticipo_id is not null) =
+(motivo_con_retencion is not null)`); `asignado_por` es quien autorizó la excepción. Índices: `(anticipo_id)`, bandeja
+parcial, `(proveedor_id, fecha)` parcial, `(proveedor_id, cuenta_id)` parcial y `(cuenta_id)`. RLS por empresa.
 
 ### 6.3 Migraciones
 
-`generar -- modulo cuentas-por-liquidar`; `0000_esquema` y `0001_cl1_anticipos_y_gastos`. Sin datos que convertir; sin
-migración de permisos.
+`generar -- modulo cuentas-por-liquidar`; `0000_esquema`, `0001_cl1_anticipos_y_gastos`,
+`0002_cl1_retencion_llaves_y_indices` y `0003_cl1c_cuenta_y_motivo_al_asignar` (§4.10, con el relleno de `cuenta_id`).
+Sin datos de producción que convertir; sin migración de permisos.
 
 ## 7. Reglas de Cuentas por liquidar
 
@@ -619,10 +725,16 @@ Orden a Bancos con `conceptos = [{ anticipo_por_liquidar, monto }]`. Evento `ant
 
 ### 7.2 Gastos
 
-- `cuentas-por-liquidar.recibir_documento`: igual que 5.4 a (retención → `DocumentoConRetencionEnAnticipo`, V-4;
-  referencia = el anticipo abierto; si no, bandeja).
-- **Asignar** (`gastos.crear`): anticipo abierto; fecha no anterior a la entrega; bancarización con la orden del libro
-  (CC-h, igual que caja chica); aviso si el documento está fuera del libro (C6).
+- `cuentas-por-liquidar.recibir_documento`: igual que 5.4 a (referencia = el anticipo abierto; si no, bandeja). **No
+  rechaza por retención**: la factura con retención queda en la bandeja con el aviso, aunque traiga referencia.
+- **Asignar** (`gastos.crear`): anticipo abierto; fecha no anterior a la entrega; **retención** con la regla de 5.4 g
+  (permiso `cuentas-por-liquidar.gastos.con-retencion` y motivo; sin él, `RetencionSinPermiso` y el gasto sigue en la
+  bandeja; quien autorizó es `asignado_por`, más la auditoría `autorizar` con recurso `cuentas-por-liquidar.gastos`);
+  bancarización con la orden del libro (CC-h = A, igual que caja chica); aviso si el documento está fuera del libro (C6).
+  Lo que se suma al anticipo (`por justificar`) es `monto` (el neto).
+- **Respuesta a la bancarización** (paso CL-3): como 5.4 h, sobre `gastos` asignados (`anticipo_id is not null`),
+  vigentes, de documento, que no restan, del proveedor y del mes: suma `monto + monto_retenido`. Sin función `security
+  definer` (no hay alcance por registro).
 - **Gasto sin documento** (`gastos.crear`): con `cuentas-por-liquidar.gastos_sin_documento.permitidos`; concepto, motivo
   y tratamiento (por omisión `no_deducible`; ver V-6).
 - **Quitar** (`gastos.anular`): solo con el anticipo abierto; documento a la bandeja o gasto sin documento anulado;
@@ -708,7 +820,7 @@ aparece. Leyendas de §3.2 d. Debe resolverse antes de los estados financieros d
 | `caja-chica.comprobantes.crear` | Asignar documentos, devolverlos a la bandeja, registrar vales de gasto |
 | `caja-chica.comprobantes.anular` | Anular vales de gasto |
 | `caja-chica.comprobantes.sobre-el-tope` | Asignar o registrar sobre el tope, con motivo |
-| `caja-chica.comprobantes.efectivo-sin-bancarizar` | Solo si CC-h = B |
+| `caja-chica.comprobantes.con-retencion` | Asignar a un fondo un documento con retención (excepción de CC-f), con motivo; lo pide quien asigna (§5.4 g) |
 | `caja-chica.vales.crear` / `.liquidar` / `.anular` | Vales provisionales |
 | `caja-chica.reposiciones.crear` / `.anular` | Reponer y anular |
 | `caja-chica.arqueos.crear` / `.anular` | Arqueos |
@@ -718,7 +830,12 @@ aparece. Leyendas de §3.2 d. Debe resolverse antes de los estados financieros d
 'caja-chica.fondos.asignar', alcance: ALCANCE_DE_FONDOS }`.
 
 **Cuentas por liquidar:** `anticipos.ver`, `.crear`, `.anular`, `.liquidar` (también reabrir), `.con-vencidos`;
-`gastos.crear`, `.anular`; `reportes.ver`, `.exportar` (todos con prefijo `cuentas-por-liquidar.`).
+`gastos.crear`, `.anular`, `.con-retencion` (asignar a un anticipo un documento con retención, con motivo; §7.2);
+`reportes.ver`, `.exportar` (todos con prefijo `cuentas-por-liquidar.`).
+
+Sin permiso de efectivo sin bancarizar (CC-h = A: solo aviso y marca). Las descripciones de los dos `con-retencion`
+ya declarados en CC-1 dicen «Registrar en caja chica / en un anticipo»; en CC-1c pasan a «Asignar a un fondo / a un
+anticipo un documento con retención (excepción), con motivo; queda en la auditoría» (solo texto, sin migración).
 
 Ninguno `soloSuperacceso`; sin `eliminar` (todo se anula). Sin Excel de importación (Operación); los reportes exportan.
 
@@ -731,24 +848,29 @@ Ninguno `soloSuperacceso`; sin `eliminar` (todo se anula). Sin Excel de importac
 | Disminuir | `ajustar` | `caja-chica.fondos` | `FondoDto` |
 | Cerrar el fondo / anular la apertura | `cerrar` / `anular` | `caja-chica.fondos` | `FondoDto`; motivo |
 | Devolver un documento a la bandeja / anular un vale de gasto o un comprobante por aviso del libro | `corregir` / `anular` | `caja-chica.comprobantes` | `ComprobanteDto`; motivo |
+| Asignar un documento con retención (excepción de CC-f, §5.4 g) | `autorizar` | `caja-chica.comprobantes` | `ComprobanteDto` en la bandeja; motivo de la excepción |
 | Arqueo con diferencia / anular arqueo | `ajustar` / `anular` | `caja-chica.arqueos` | `FondoDto` / `ArqueoDto` |
 | Anular reposición (aquí o por aviso) | `anular` | `caja-chica.reposiciones` | `ReposicionDto` |
 | Anular vale provisional | `anular` | `caja-chica.vales-provisionales` | `ValeProvisionalDto` |
 | Liquidar con no liquidado / reabrir / anular anticipo | `ajustar` / `reabrir` / `anular` | `cuentas-por-liquidar.anticipos` | `AnticipoDto`; motivo |
 | Quitar un gasto | `corregir` / `anular` | `cuentas-por-liquidar.gastos` | `GastoDto` |
+| Asignar un documento con retención (§7.2) | `autorizar` | `cuentas-por-liquidar.gastos` | `GastoDto` en la bandeja; motivo de la excepción |
 
 ### 9.3 Errores nuevos (código propio; familias del core)
 
 Caja chica (`dominio/errores-*.ts`): `CustodioInvalido`, `BeneficiarioInvalido` (al portador), `FondoNoDisponible`
-(cerrado o no visible), `FechaDelComprobanteInvalida`, `DocumentoConRetencionEnCajaChica`, `FacturaDeLaNotaNoRecibida`,
+(cerrado o no visible), `FechaDelComprobanteInvalida`, `FacturaDeLaNotaNoRecibida`,
 `NotaEnOtroFondo`, `ComprobanteSobreElTope`, `ValeDeGastoSobreElTope`, `ValesDeGastoNoPermitidos`,
 `ComprobantesMayoresQueElEfectivo`, `ComprobanteRepuesto`, `ReposicionSinMonto`, `ReposicionCobrada`,
 `ReposicionYaAnulada`, `DisminucionMayorQueElEfectivo`, `FondoConValesAbiertos`, `SeparacionDeFunciones` (CC-k con
 bloqueo), `MotivoDeDiferenciaObligatorio`, `ArqueoConComprobanteRepuesto`, `MovimientoDeCajaChica`. Cuentas por
-liquidar: `BeneficiarioConVencidos`, `DocumentoConRetencionEnAnticipo`, `AnticipoNoDisponible`, `AnticipoLiquidado`,
+liquidar: `BeneficiarioConVencidos`, `AnticipoNoDisponible`, `AnticipoLiquidado`,
 `AnticipoCobrado`, `AnticipoConGastos`, `LiquidacionNoCuadra`, `RentaDelTrabajoSoloEmpleados`, `CuotasInsuficientes`,
-`GastosSinDocumentoNoPermitidos`, `MovimientoDeCuentasPorLiquidar`. Los mensajes van en el paso de cada uno (en
-español, con el número y el monto).
+`GastosSinDocumentoNoPermitidos`, `MovimientoDeCuentasPorLiquidar`. De los dos (cada módulo el suyo, por la excepción de
+CC-f): `RetencionSinPermiso` («La factura S-N lleva retención de Q…: para pagarla del fondo [del anticipo] hace falta el
+permiso de excepción. Queda en la bandeja.») y `MotivoConRetencionObligatorio`. Ya **no existen**
+`DocumentoConRetencionEnCajaChica` ni `DocumentoConRetencionEnAnticipo`: recibir no rechaza por retención. Los mensajes
+van en el paso de cada uno (en español, con el número y el monto).
 
 ### 9.4 Contratos y eventos (`core/contratos/caja-chica.contratos.ts` y `cuentas-por-liquidar.contratos.ts`)
 
@@ -790,9 +912,9 @@ español, con el número y el monto).
 | `POST /fondos/:id/custodio` | `fondos.editar` | `{ custodio?, custodioUsuarioId?, fecha?, motivo, arqueo? }` | `FondoDto` |
 | `POST /fondos/:id/aumentar` · `/disminuir` | `fondos.cambiar-monto` | forma, monto, cuenta o chequera, fecha, referencia | `FondoDto` |
 | `POST /fondos/:id/cerrar` · `/anular-apertura` | `fondos.cerrar` | `{ motivo, fecha?, cuentaBancariaId?, referencia? }` | `FondoDto` |
-| `GET /bandeja` | `fondos.ver` | `proveedorId?`, `desde?`, `hasta?` | Documentos sin fondo |
+| `GET /bandeja` | `fondos.ver` | `proveedorId?`, `desde?`, `hasta?`, `conRetencion?` | Documentos sin fondo (con `montoRetenido` y `puedeAsignarConRetencion`) |
 | `GET /fondos/:id/comprobantes` | `fondos.ver` | `estado? (pendiente \| repuesto \| anulado)`, `corte?` | `ComprobanteDto[]` con totales |
-| `POST /fondos/:id/comprobantes/documentos` | `comprobantes.crear` (+ `sobre-el-tope` si trae motivo) | `{ documentos: [{ comprobanteId, fecha?, motivoSobreElTope?, motivoSinBancarizar? }] }` (1–100) | 201, comprobantes y avisos |
+| `POST /fondos/:id/comprobantes/documentos` | `comprobantes.crear` (+ `sobre-el-tope` o `con-retencion` según el documento, §5.4 g) | `{ documentos: [{ comprobanteId, fecha?, motivoSobreElTope?, motivoConRetencion? }] }` (1–100) | 201, comprobantes y avisos |
 | `POST /comprobantes/:id/devolver-a-la-bandeja` | `comprobantes.crear` | `{ motivo }` | `ComprobanteDto` |
 | `POST /fondos/:id/vales-de-gasto` | `comprobantes.crear` | `{ fecha?, monto, descripcion, pagadoA, conceptoDeGastoId, motivoSinDocumento, motivoSobreElTope?, valeProvisionalId? }` | 201 |
 | `POST /comprobantes/:id/anular` | `comprobantes.anular` | `{ motivo }` | `ComprobanteDto` |
@@ -809,7 +931,7 @@ español, con el número y el monto).
 
 **Cuentas por liquidar** (`/api/cuentas-por-liquidar`): `GET /anticipos` (`estado?`, `corte?`, `beneficiarioId?`,
 `vencidos?`), `GET /anticipos/:id`, `POST /anticipos`, `POST /anticipos/:id/anular`, `GET /bandeja`, `POST
-/anticipos/:id/gastos/documentos`, `POST /anticipos/:id/gastos/sin-documento`, `POST /gastos/:id/quitar`, `POST
+/anticipos/:id/gastos/documentos` (`{ documentos: [{ gastoId, fecha?, motivoConRetencion? }] }`), `POST /anticipos/:id/gastos/sin-documento`, `POST /gastos/:id/quitar`, `POST
 /anticipos/:id/liquidar` (`{ fecha?, devuelto, cuentaBancariaId?, referencia?, noLiquidado, destinoDeNoLiquidado?,
 cuotas?, motivoDeNoLiquidado?, reembolso?: { forma, chequeraId?, cuentaBancariaId? } }`), `POST /anticipos/:id/reabrir`,
 reportes. La prueba de API cubre cada ruta sin su permiso (403) y un fondo no asignado (404 por RLS, no 403).
@@ -862,12 +984,14 @@ Pendiente (P-CCL-3): el reporte de bancarización consolidado (los tres módulos
 1. **Suma de bancarización y alcance:** la respuesta de Caja chica a la pregunta debe sumar **todos** los fondos de la
    empresa, también los que el usuario no ve. Con RLS por alcance la suma saldría corta. Propuesta: una función
    `caja_chica.pagado_en_efectivo_al_proveedor(proveedor uuid, desde date, hasta date) returns numeric`, `security definer`,
-   que toma la empresa de `app.empresa_id` (no por parámetro) y devuelve **solo el total**. Lo revisa `seguridad` (V-S1).
+   que toma la empresa de `app.empresa_id` (no por parámetro) y devuelve **solo el total** (Σ `monto + monto_retenido`
+   con los filtros de §5.4 h). Lo revisa `seguridad` (V-S1).
    Cuentas por liquidar no tiene alcance: no lo necesita.
 2. **Orden de bloqueo:** movimiento en Bancos → fondo o anticipo → bancarización (advisory del libro) → comprobantes o
    gastos → documentos del libro (`marcar_procesado`). Igual que CP4; no invierte ningún orden existente.
 3. **Libro de compras:** `referenciaDeDestino` es opcional; destinos viejos y pruebas no la traen. La orden de recibir
-   corre en la transacción del libro: la retención rechaza todo; lo demás, aviso y bandeja.
+   corre en la transacción del libro: nada la rechaza salvo un error de datos (nota de una factura que no está aquí);
+   la retención, el tope, la fecha o el fondo cerrado dejan el documento en la bandeja con su aviso.
 4. **Bancos:** el cambio de `RevisorDeCambios` y de los conceptos reservados toca reglas de Cuentas por pagar: sus
    pruebas (P3, cheque manual sin Cuentas por pagar) deben seguir en verde.
 5. **Cuentas por pagar:** CCL-BZ mueve su evaluador; no va en paralelo con otro paso de Cuentas por pagar que toque la
@@ -893,22 +1017,23 @@ uno por módulo a la vez.
 | **CCL-B1** (Bancos, servidor) | Migración **`0035`** (nueve conceptos, §3.2 a), `ClaveDeConceptoDeSistema`, conceptos reservados por módulo (§3.2 b), `ModulosDeOrigen` (§3.2 c), leyendas (§3.2 d). Pruebas: migración repetible (y la clave puesta al sugerido del mismo nombre), concepto reservado a mano con y sin su módulo, movimiento con origen de un módulo inactivo (rechazo), las de P3 siguen | Aprobación; nunca con otra migración de Bancos (BS-x) |
 | **CC-1** (Caja chica, datos) | Esqueleto del módulo, migraciones `0000` y `0001`, tablas, RLS, alcance, disparadores, permisos declarados. Pruebas de tablas: cada check, llaves compuestas (mismo fondo en la reposición), único vigente de custodio y de reposición por comprobante, bandeja visible sin fondo, fondo no asignado invisible, disparador del custodio, `politicas-de-los-modulos`, `llaves-entre-esquemas` | Aprobación (puede ir antes de CCL-B1: solo usa tablas que existen) |
 | **CL-1** (Cuentas por liquidar, datos) | Igual para su esquema | En paralelo con CC-1 |
+| **CC-1c / CL-1c** (datos, uno por módulo) | Migración `0003` de cada uno (§4.10): `cuenta_id` con relleno, llave `(proveedor_id, cuenta_id)` e índices, check del motivo solo al asignar; descripción de `con-retencion`. Pruebas de §4.10 | CC-1 y CL-1; antes de CC-3 y CL-3 |
 | **CCL-BZ** (Libro y Cuentas por pagar, servidor) | Orden `evaluar_bancarizacion`, pregunta, umbral movido (`0037`), clave del bloqueo, Cuentas por pagar responde y llama la orden. Pruebas: las de CP4-E3 sin cambio de resultado; un pago en efectivo de Cuentas por pagar que ve lo de un destino de prueba | CCL-M; sin otro paso de Cuentas por pagar sobre la bancarización |
 | **CC-2** (fondos) | Abrir, custodio, aumentar, disminuir, editar, anular apertura, lista, ficha, accesos, manejador de Bancos, eventos | CC-1 y CCL-B1 |
-| **CC-3** (comprobantes) | Recibir, bandeja, asignar, devolver, vales de gasto, tope, retención, ecuación, avisos del libro, bancarización y su respuesta (función `security definer`) | CC-2, CCL-L1 y CCL-BZ |
+| **CC-3** (comprobantes) | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención y su auditoría `autorizar`, §5.4 g), devolver, vales de gasto, tope, ecuación con el neto, avisos del libro, bancarización y su respuesta con `monto + monto_retenido` (función `security definer`, §5.4 h). Pruebas: factura con retención desde la ficha (queda en la bandeja), asignarla sin permiso (403, sigue en la bandeja), con permiso sin motivo (rechazo), con los dos (asignada, `asignado_por` y auditoría), devolverla y reasignar (pide otra vez), la suma del mes con una factura con retención (cuenta el total) | CC-2, CCL-L1 y CCL-BZ |
 | **CC-4** (reposiciones) | Reponer con desglose, anular (aquí y por aviso), `marcar_procesado`, datos de las impresiones | CC-3 |
 | **CC-5** (arqueos) | Propuesta, registrar con diferencia (faltante o sobrante), anular, avisos | CC-3 |
 | **CC-6** (vales provisionales) | Entregar, liquidar, anular, aviso de vale viejo | CC-3 |
 | **CC-7** (cierre) | Cerrar con reposición compensada y depósito | CC-4, CC-5 y CC-6 |
 | **CC-8 / CC-9** (cliente) | 8: fondos, ficha, bandeja, comprobantes, vales de gasto, Ingreso con referencia. 9: reposición, arqueo, vales provisionales, cierre, impresiones | CC-4 (8) y CC-7 (9) |
 | **CC-10** (reportes, servidor y cliente) | CC-R1 a R5 | CC-7 |
-| **CC-11** (QA) | Abrir con cheque no negociable; factura desde la ficha; factura con retención (rechazo); vale sobre el tope (permiso); reponer (desglose en Bancos); arqueo con faltante; custodio que repone (aviso); usuario sin el fondo asignado (no lo ve); bancarización con una factura de caja chica y un cheque de Cuentas por pagar al mismo proveedor; cerrar; celular | CC-9 y CC-10 |
+| **CC-11** (QA) | Abrir con cheque no negociable; factura desde la ficha; factura con retención (queda en la bandeja; la asigna quien tiene el permiso, con motivo); vale sobre el tope (permiso); reponer (desglose en Bancos); arqueo con faltante; custodio que repone (aviso); usuario sin el fondo asignado (no lo ve); bancarización con una factura de caja chica y un cheque de Cuentas por pagar al mismo proveedor; cerrar; celular | CC-9 y CC-10 |
 | **CL-2** (anticipos) | Entregar (vencidos, aviso C8), anular, lista con corte, manejador de Bancos, eventos | CL-1 y CCL-B1 |
-| **CL-3** (gastos) | Recibir, bandeja, asignar, sin documento, quitar, bancarización y su respuesta | CL-2, CCL-L1 y CCL-BZ |
+| **CL-3** (gastos) | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención, §7.2), sin documento, quitar, bancarización y su respuesta con `monto + monto_retenido` | CL-2, CCL-L1 y CCL-BZ |
 | **CL-4** (liquidar) | Liquidar (devuelto, reembolso, no liquidado), desglose, reabrir, impresión | CL-3 |
 | **CL-5** (cliente) | Pantallas de §11 | CL-4 |
 | **CL-6** (reportes) | CL-R1 y CL-R2 | CL-4 |
-| **CL-7** (QA) | Viático con dos facturas y un gasto sin documento; devolución; reembolso; no liquidado en cuotas (5 o más) y como renta (solo empleado); vencidos con bloqueo; anular desde Bancos (rechazo con gastos) | CL-5 y CL-6 |
+| **CL-7** (QA) | Viático con dos facturas y un gasto sin documento; devolución; reembolso; no liquidado en cuotas (5 o más) y como renta (solo empleado); vencidos con bloqueo; anular desde Bancos (rechazo con gastos); factura con retención (bandeja; asignada con permiso y motivo) | CL-5 y CL-6 |
 | CC-AP / CL-AP (después) | Fondos y anticipos que ya existían a la fecha de inicio (`origen = 'saldo_inicial'`, carga abierta) y su respuesta a `empresas.revisar_cierre_de_carga` | Si el usuario elige CC-p = A; con EM-2 |
 
 ## 15. Preguntas para el usuario
@@ -922,7 +1047,7 @@ uno por módulo a la vez.
 | **CC-c** (P1) | Tipo de fondo | Solo fijo / fijo y fluctuante | **Solo fijo** |
 | **CC-d** (P2) | ¿Quién ve y opera un fondo? | A. Alcance propio por fondo (asignación por usuario). B. Por localidad (quien ve la localidad ve sus fondos). C. Las dos | **A**, con la localidad informativa: el custodio de un fondo no necesita ver toda la localidad |
 | **CC-e** | ¿El custodio usuario recibe acceso a su fondo solo? | A. Sí, con un disparador al nombrarlo. B. No: lo asigna quien tiene `fondos.asignar` | **A** (revisión de seguridad) |
-| **CC-f** (P3) | Factura con retención con destino Caja chica (o Cuentas por liquidar) | A. Rechazarla al registrar, sin excepción. A′. Rechazar con permiso de excepción. B. Permitir el neto. C. Aviso | **A** [corrige el dictamen, que pedía A′]: si hay que pagarla en efectivo, Cuentas por pagar ya lo hace con el retiro (constancia y entero incluidos) |
+| **CC-f** (P3) | Factura con retención con destino Caja chica (o Cuentas por liquidar) | A. Rechazarla al registrar, sin excepción. A′. Rechazar con permiso de excepción. B. Permitir el neto. C. Aviso | **Decidido: A′** (el usuario eligió lo del contador; el arquitecto recomendaba A). Regla única en §5.4 g: se registra en el libro, queda en la bandeja del destino y solo entra al fondo o al anticipo cuando **quien asigna** tiene `…con-retencion` y escribe el motivo; queda `asignado_por` y la auditoría `autorizar` |
 | **CC-g** (P4) | Gastos sin factura (vale de gasto) | Permitir (no deducible, motivo, tope Q200) / No | **Permitir**, configurable por empresa |
 | **CC-h** | Bancarización en caja chica y anticipos (el efectivo **ya salió** cuando se registra) | A. Aviso y marca «sin bancarizar». B. Bloqueo con permiso y motivo, como CP4. C. Nada | **A** [corrige el dictamen, que pedía B]: bloquear después de pagar solo impide registrar lo que ya pasó |
 | **CC-i** | Pasarse del tope por comprobante (Q2,000 por omisión, por fondo o por empresa) | A. Permiso y motivo. B. Aviso. C. Rechazo | **A** |
@@ -948,9 +1073,11 @@ uno por módulo a la vez.
 - **V-1.** Momento del gasto de caja chica: al asignar el documento al fondo (contra Caja chica) en vez de al reponer
   (§8); y si con eso basta para C3.
 - **V-2.** CC-h: aviso y marca en vez de bloqueo (el pago en efectivo ya ocurrió al registrar).
-- **V-3.** CC-f: rechazo sin excepción, porque el retiro de CP4 ya paga en efectivo con retención y constancia.
-- **V-4.** Facturas con retención en un anticipo (p. ej. un empleado de un agente de retención que compra a un pequeño
-  contribuyente sobre Q2,500): ¿rechazar igual que en caja chica?
+- **V-3.** ~~CC-f: rechazo sin excepción~~ **Resuelta** por el usuario (A′, 2026-11-18). Queda para el contador solo
+  confirmar el tratamiento: `monto` = neto pagado del fondo, la retención la entera la empresa (constancia de Cuentas por
+  pagar o de Libro de compras, no de Caja chica) y la bancarización mide el total (§5.4 h).
+- **V-4.** ~~¿Rechazar igual que en caja chica?~~ **Resuelta**: misma regla A′ en anticipos (§7.2). Al contador: si el
+  beneficiario pagó el neto, quién entrega la constancia al proveedor.
 - **V-5.** Gasto de un anticipo pagado por el empleado con **su** tarjeta: ¿cuenta como efectivo para la suma de
   bancarización (el pagador no es el contribuyente) o como bancarizado?
 - **V-6.** Gasto sin documento de un empleado en un viático: ¿solo no deducible para la empresa o también renta del
@@ -958,12 +1085,22 @@ uno por módulo a la vez.
 - **V-7.** Flujo de efectivo de `anticipo_no_liquidado` (Operación) y de la cuenta por cobrar al empleado (Operación o
   Inversión, NIC 7 párr. 16; P4 de los conceptos).
 - **V-8.** C9 está desactualizado: el libro **ya registra** la factura especial emitida fuera de Arrancar, con retención
-  de IVA 100 % e ISR 5 %. ¿Sirve para documentar viáticos en Cuentas por liquidar, y cómo se trata su retención si V-4
-  la rechaza?
+  de IVA 100 % e ISR 5 %. ¿Sirve para documentar viáticos en Cuentas por liquidar? Con A′ entra como cualquier factura
+  con retención (bandeja, permiso y motivo); ¿basta, o la FESP debería entrar sin el permiso porque su retención es
+  siempre la regla y no una excepción?
 - **V-9.** C6: el libro ya deja fuera del libro una FEL a CF o a otro NIT (con `nit_receptor`); el aviso al asignar basta.
 - **V-10.** Texto de la autorización del descuento en cuotas (Código de Trabajo art. 99) para la impresión de la
   liquidación.
 - **V-11.** Los cinco puntos de §7 del dictamen (texto oficial) antes de ponerlos en las ayudas.
+- **V-12.** Bancarización (§5.4 h): ¿la nota de crédito de un proveedor resta de lo pagado en el mes, o no (la
+  propuesta: no resta, se mide lo pagado)? Que coincida con lo que hace hoy CP4 §5.3.
+- **V-13.** ¿Conviene **prohibir la retención en una nota de crédito** que llega a Caja chica o a Cuentas por liquidar?
+  Hoy el check permite `monto_retenido > 0` en cualquier documento. Opción: check opcional `not es_nota_de_credito or
+  monto_retenido = 0` en `comprobantes` (y su par en `gastos`), en la `0003` o después. A favor: la retención la hace el
+  agente al **pagar**, y una nota de crédito no se paga; si la nota rebaja una factura con retención, el ajuste de la
+  retención va por la constancia (Cuentas por pagar o el libro), no por el fondo. En contra: si el libro alguna vez fija
+  retención negativa o positiva en una nota (reversa), el check la rechazaría al recibir y deshace el registro en el
+  libro. Pedido al contador: ¿el libro puede fijar retención en una nota de crédito? Si no, el check es una defensa barata.
 
 **Con `seguridad`:**
 
@@ -985,6 +1122,10 @@ devolvió efectivo al fondo).
 - **P-CCL-5:** «cambiar destino» de un documento del libro sin anularlo (hoy se anula con causa `error_de_captura` y se
   vuelve a registrar).
 - **P-CCL-6:** Planilla: escuchar `anticipo_liquidado` (cuotas y renta del trabajo) cuando exista.
+- **P-CCL-7:** endurecimiento general (no solo estos módulos): que `cuenta_id` coincida con la de `empresa_id` por llave
+  `(empresa_id, cuenta_id) → core.empresas (id, cuenta_id)` (falta ese único en `core.empresas`). Igual en el libro.
+  También `anticipos.beneficiario_id` apunta solo a `terceros.terceros (id)`: la misma llave por cuenta necesita un único
+  `(id, cuenta_id)` en `terceros.terceros`.
 
 ## Respuestas del usuario (2026-11-18)
 
@@ -997,3 +1138,7 @@ devolvió efectivo al fondo).
   responden; alcance propio por fondo; el custodio usuario recibe el acceso al nombrarlo.
 - **Lo demás (CC-g, CC-i, CC-k, CC-c, CC-l, CC-m, CC-j, CC-n, CC-p, CL-r, CL-s, CL-t, CL-u, CL-v, CL-w):** todas las
   recomendaciones.
+- **CC-f, quién pide el permiso (2026-11-18, segunda tanda):** el permiso de excepción y el motivo los pide **quien asigna
+  la factura al fondo o al anticipo** (desde «Agregar factura» en la ficha o desde la bandeja); sin el permiso, la
+  factura queda pendiente en la bandeja; queda registrado quién la autorizó. Diseño en §5.4 g (regla única), §4.10 b
+  (check) y §7.2.

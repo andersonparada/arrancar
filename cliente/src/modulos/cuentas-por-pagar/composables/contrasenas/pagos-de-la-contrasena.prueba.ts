@@ -46,9 +46,20 @@ describe('registrar pago desde la contraseña', () => {
 
   it('se ofrece con cargos autorizados con saldo y algún permiso de pagar', () => {
     expect(puedeRegistrarPago(ficha(), puedeTodo)).toBe(true);
-    expect(puedeRegistrarPago(ficha(), (permiso) => permiso === 'cuentas-por-pagar.pagos.aplicar-a-apertura')).toBe(
-      true,
-    );
+    const soloApertura = (permiso: string) =>
+      ['cuentas-por-pagar.pagos.ver', 'cuentas-por-pagar.pagos.aplicar-a-apertura'].includes(permiso);
+    const inicial = ficha({ cargos: [cargo('a', { origen: 'saldo_inicial' })] });
+    expect(puedeRegistrarPago(inicial, soloApertura)).toBe(true);
+  });
+
+  it('con solo la apertura no se ofrece si la contraseña no tiene saldos iniciales', () => {
+    const soloApertura = (permiso: string) =>
+      ['cuentas-por-pagar.pagos.ver', 'cuentas-por-pagar.pagos.aplicar-a-apertura'].includes(permiso);
+    expect(puedeRegistrarPago(ficha(), soloApertura)).toBe(false);
+  });
+
+  it('sin poder ver Pagos no se ofrece, porque la pantalla lo exige', () => {
+    expect(puedeRegistrarPago(ficha(), (permiso) => permiso !== 'cuentas-por-pagar.pagos.ver')).toBe(false);
   });
 
   it('no se ofrece sin permiso, sin saldo, sin autorizar ni en una contraseña anulada', () => {

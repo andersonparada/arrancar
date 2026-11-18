@@ -20,12 +20,15 @@ export const PERMISO_DE_FORMA: Record<FormaDePagoNuevo, string> = {
 
 const ORDEN_DE_FORMAS: FormaDePagoNuevo[] = ['cheque', 'nota_de_debito', 'nota_ligada', 'cuenta_de_apertura'];
 
-/** Las pestañas que el usuario puede usar: por permiso y, la apertura, solo si hay saldos iniciales por pagar. */
+/**
+ * Las pestañas que el usuario puede usar: por permiso y, la apertura, solo si el proveedor elegido tiene saldos
+ * iniciales por pagar. Con `cargos` en `null` (todavía sin proveedor) solo cuenta el permiso.
+ */
 export function formasDisponibles(
   puede: (permiso: string) => boolean,
-  cargos: readonly CargoParaPagar[],
+  cargos: readonly CargoParaPagar[] | null,
 ): FormaDePagoNuevo[] {
-  const hayInicial = cargos.some(({ origen }) => origen === 'saldo_inicial');
+  const hayInicial = cargos === null || cargos.some(({ origen }) => origen === 'saldo_inicial');
   return ORDEN_DE_FORMAS.filter(
     (forma) => puede(PERMISO_DE_FORMA[forma]) && (forma !== 'cuenta_de_apertura' || hayInicial),
   );
@@ -42,6 +45,14 @@ export function opcionesDeProveedores(proveedores: readonly ProveedorPorPagar[])
       texto: `${nombre}${nit ? ` · NIT ${nit}` : ''} · por pagar ${formatearMonto(porPagar)}`,
     }))
     .sort(porTexto);
+}
+
+/** Agrega el proveedor elegido si la lista no lo trae (se compara por id: el mismo proveedor puede llegar como otro objeto). */
+export function conProveedorElegido(
+  lista: readonly ProveedorPorPagar[],
+  elegido: ProveedorPorPagar | undefined,
+): readonly ProveedorPorPagar[] {
+  return elegido && !lista.some((p) => p.proveedorId === elegido.proveedorId) ? [...lista, elegido] : lista;
 }
 
 /** Cada chequera activa con su siguiente cheque; sin cheques disponibles se ve apagada. */
@@ -69,4 +80,35 @@ export function opcionesDeCuentas(medios: MediosDePago | null): OpcionBuscable<s
       texto: `${cuenta.nombre} · saldo ${formatearMonto(textoDeCentavos(cuenta.saldoCentavos))}`,
     }))
     .sort(porTexto);
+}
+
+/** Una cuenta de Bancos vista en alguna nota ya registrada. */
+export interface CuentaDeNota {
+  cuentaBancariaId: string;
+  cuentaBancariaNombre: string;
+}
+
+/** Suma a las cuentas ya vistas las de las notas nuevas, sin repetir; sin cambios devuelve la misma lista. */
+export function juntarCuentasDeNotas(
+  vistas: readonly CuentaDeNota[],
+  notas: readonly CuentaDeNota[],
+): readonly CuentaDeNota[] {
+  const conocidas = new Set(vistas.map(({ cuentaBancariaId }) => cuentaBancariaId));
+  const nuevas = notas.filter(({ cuentaBancariaId }) => !conocidas.has(cuentaBancariaId));
+  const unicas = [...new Map(nuevas.map((cuenta) => [cuenta.cuentaBancariaId, cuenta])).values()];
+  return unicas.length === 0 ? vistas : [...vistas, ...unicas];
+}
+
+/**
+ * Las cuentas por las que filtrar las notas: las de Bancos y, si el usuario no puede verlas (solo liga notas), las
+ * cuentas que se han visto en las notas, acumuladas para que el selector no se encoja al filtrar.
+ */
+export function opcionesDeCuentasParaNotas(
+  medios: MediosDePago | null,
+  vistas: readonly CuentaDeNota[],
+): OpcionBuscable<string>[] {
+  const deBancos = (medios?.cuentas ?? []).map((cuenta) => ({ valor: cuenta.cuentaBancariaId, texto: cuenta.nombre }));
+  const deNotas = vistas.map((cuenta) => ({ valor: cuenta.cuentaBancariaId, texto: cuenta.cuentaBancariaNombre }));
+  const unicas = new Map((deBancos.length > 0 ? deBancos : deNotas).map((opcion) => [opcion.valor, opcion]));
+  return [...unicas.values()].sort(porTexto);
 }

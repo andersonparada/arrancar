@@ -7,6 +7,7 @@ import { ObtenerCondicionesDeProveedor } from '../aplicacion/casos-uso/condicion
 import { CondicionesControlador } from '../http/condiciones.controlador.js';
 import { seccionDeCondiciones } from '../http/condiciones.esquemas-http.js';
 import { rutasDeCondiciones } from '../http/condiciones.rutas.js';
+import { PlazoPorOmisionEnConfiguracion } from '../infraestructura/plazo-por-omision-en-configuracion.js';
 import { CondicionesDeProveedoresDrizzle } from '../infraestructura/persistencia/condiciones-de-proveedores.drizzle.js';
 
 /**
@@ -27,6 +28,8 @@ export function rutasDeCondicionesComponidas(): FastifyPluginAsync {
     },
   );
   return rutasDeCondiciones(
-    new CondicionesControlador(new ObtenerCondicionesDeProveedor({ unidadDeTrabajo, condiciones })),
+    new CondicionesControlador(
+      new ObtenerCondicionesDeProveedor({ unidadDeTrabajo, condiciones, plazo: new PlazoPorOmisionEnConfiguracion() }),
+    ),
   );
 }

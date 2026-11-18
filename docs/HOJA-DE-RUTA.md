@@ -206,8 +206,8 @@ Quedan preguntas abiertas en la sección «Preguntas para el usuario» de cada p
   cuenta, impresión de cheques y vouchers.
 - Conciliación: probarla completa en el navegador (la demo de septiembre es del
   diseño viejo: eliminarla y rehacerla).
-- Excel de Clientes, Proveedores y Categorías de proveedor: hecho (servidor y botones en las pantallas). Excel de Empresas: sin empezar.
-- Selector de empresa del encabezado sin buscador (no usa `CampoSelector`).
+- Excel de Clientes, Proveedores, Categorías de proveedor y Empresas: hecho (2026-11-18).
+- Selector de empresa del encabezado con buscador (`CampoSelector`, variante de marca): hecho (2026-11-18).
 - Con Contabilidad: en qué otros casos se permite eliminar (registros no
   contabilizados de un período abierto); cuenta contable por defecto del proveedor
   por empresa; partidas de provisión y reversión.
