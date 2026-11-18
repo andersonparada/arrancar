@@ -25,7 +25,7 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `96829c6` (subido). Desde el 2026-11-18 la suite del servidor corre **en paralelo** (~4–6 min; `BD_PRUEBAS` es un
+**`main`:** `d53673e` (subido; con EM-2 y el Excel de plazos). Suite en paralelo (~4 min):
 prefijo, las bases se crean solas). Última suite completa en verde (integración): servidor 5301, cliente 1540, generador 46.
 En `main` además de lo anterior: CP4-9 corregido (tres revisiones), CP4-E5, CP5-9a y CP5-9b (R6 a R11), plazo de crédito
 PC-1 a PC-3, correo pasos 1 y 3, Caja chica y Cuentas por liquidar (datos: CC-1, CL-1, CC-1c), Excel de Terceros y de
@@ -87,6 +87,11 @@ del Banguat para todas las monedas (MM-3a), correcciones de la QA intermedia.
 - **Workflow `arrancar-siguientes`** (run `wf_c2e6b7b7-306`): adenda del posfechado (servidor y cliente), Excel de plazos
   (PC-4 y PC-5), diseño de RLS de `core` (`diseno-rls-de-core.md`) y preguntas del contador de Caja chica (V-12, V-13, V-8,
   V-3/V-4). Después: QA CP4-12 (cuando entre el posfechado) y CP5-11.
+- **EM-2 y Excel de plazos: en `main`** (2026-11-18). La migración del core de EM-2 es `0024_auditoria_permanente`.
+- **Workflow `arrancar-correo-fase2`** (run `wf_a34c71c6-cef`): correo pasos 2, 4, 5 y 6 (migraciones del core en esa rama,
+  después de la 0024) y paso 7 (Terceros), con revisión de seguridad. **MM-1 de Multimoneda va después** de que el correo
+  esté en `main` (siguiente migración del core libre).
+- Preguntas pendientes para el usuario: diseño de RLS del core (5) y dictamen de Caja chica (V-12, V-13, V-8, V-3/V-4).
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
