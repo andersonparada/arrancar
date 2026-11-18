@@ -2305,3 +2305,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   quedan como texto; el filtro por cuenta bancaria de R6 y R7 espera un listado de cuentas que Cuentas por pagar pueda leer sin
   importar Bancos. R9, R10, R11 y la conciliación de R1 siguen en espera de CP5-5.
 - **2026-11-18 — CP5-9 (cliente), correcciones de la revisión.** R8: «Ajustes vigentes del mes» y su cantidad salen de la suma de `totales.porCausa` (el total de la sección incluye anulados); nuevo cuadro «por causa y efecto» (pérdida, transitoria, otros ingresos); el resumen suma anulaciones de otros meses y muestra monto de documentos anulados y devueltos; «Pagos a la apertura» aclara que suma vigentes y anulados. R6: el tope de 24 meses del cliente usa la misma regla que el servidor (`mesesEntre`). Sigue pendiente el filtro `cuentaBancariaId` de R6 y R7 (espera listado de cuentas legible sin importar Bancos).
+- **2026-11-18 (diseño de EM-2 actualizado con el dictamen).** `diseno-em2-cierre-de-la-carga.md` revisado: la auditoría
+  de `empresas.cargas-iniciales` no se depura mientras la entrada tenga empresa (catálogo
+  `core.recursos_de_auditoria_permanente` con RLS de solo lectura y excepción en `core.depurar_auditoria`, migración core
+  `0024`); la revisión guardada lleva hallazgos y cifras del cuadre de cada módulo, con historial y Excel de tres hojas;
+  `CargaInicialDto.ultimoCierre` para «Cerrada el … por …, con N diferencias: motivo»; balance de apertura en PDF
+  (`cargas_iniciales.balance_de_apertura_archivo_id`); avisos nuevos (retenciones con el texto del dictamen, documentos del
+  libro anteriores a la fecha de inicio, proveedores con saldo a favor, mes partido de Libro de compras); dos permisos
+  nuevos (`empresas.carga-inicial.ver-cierres` y `.exportar`). Trece pasos (EM-2.1 a EM-2.13) y U8-B aparte. Preguntas
+  P-6 a P-8 con recomendación.
