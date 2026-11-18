@@ -16,5 +16,14 @@ services:
       - datos-postgres:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
 
+  # Servidor de correo de mentira para desarrollo: recibe todo y no manda nada afuera.
+  # SMTP en el 1025 (sin cifrado) y bandeja en http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.21
+    restart: unless-stopped
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
 volumes:
   datos-postgres:

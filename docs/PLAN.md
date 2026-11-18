@@ -2330,3 +2330,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `DireccionDeEnvio` (estricta: ASCII, `atext`, sin comas, comillas, `<>`, CR/LF ni bidi; dominio a punycode), saneado
   de asuntos, nombres y adjuntos, `PlantillaDeCorreo` (marcadores cerrados; uno desconocido es error) y el diseño HTML
   fijo y escapado, sin enlaces ni imágenes. Sin tablas ni migraciones. Diseño: `docs/modulos/diseno-aviso-de-pago-por-correo.md`.
+- **2026-11-18 (aviso de pago por correo, paso 3: transporte y prueba).** `nodemailer` 10.6.0 fijo (trae sus propios
+  tipos; `npm audit` sin avisos de nodemailer), puerto `TransporteDeCorreo` con `TransporteNodemailer` (un transporte
+  agrupado, TLS 1.2 mínimo y certificado válido, sin registros, `envelope` explícito, adjuntos solo en memoria, errores
+  reducidos a código) y el doble `TransporteEnMemoria`. Mailpit en `infra/docker-compose.dev.yml` (SMTP 1025, web 8025).
+  `redact` de pino para contraseñas, `auth` y cookies (`registro-seguro.ts`). `EnviarPrueba` queda para el paso 2
+  (necesita el servidor guardado). El transporte admite `seguridad: 'ninguna'` solo para Mailpit; la tabla de Soporte
+  no deberá permitirla en producción.
