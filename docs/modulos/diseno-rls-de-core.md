@@ -253,3 +253,11 @@ lectores son de la sesión y ya irían por esas funciones; el riesgo restante es
 | P-3 | ¿El usuario de soporte solo lo crea el dueño de la base (siembra con `DATABASE_URL_PROPIETARIO`)? | (a) Sí, y la aplicación nunca puede crear ni volver superacceso a nadie; (b) se deja como hoy | **(a)**: un superacceso creado por error ve todas las cuentas. Exige que en producción la siembra tenga la URL del dueño (ya la tiene el migrador) |
 | P-4 | ¿`core.configuraciones` también lleva RLS (por cuenta y empresa, con el nivel instalación solo para soporte)? | (a) No por ahora: solo privilegios por columna; (b) sí, pasando el repositorio a la unidad de trabajo | **(a)**: el riesgo es menor (cada fila ya está atada a su nivel por un `check`) y (b) cambia la lectura de la configuración pública de la sesión, que hoy se hace sin empresa. Queda como pendiente |
 | P-5 | ¿La bitácora de superacceso queda como la auditoría: solo crece, nunca se cambia ni se borra desde la aplicación? | (a) Sí; (b) se le define una conservación con depuración como la auditoría | **(a)** ahora; si después se quiere depurar, se hace con una función `security definer` como `core.depurar_auditoria` |
+
+## Respuestas del usuario (2026-11-18)
+
+Todas las recomendaciones: protección completa en dos tiempos (R-1 a R-3 ya; R-4, RLS de lectura por cuenta con funciones
+`security definer`, después y con revisión de seguridad); una empresa **nunca** se mueve de cuenta por ahora (si hace falta,
+procedimiento de soporte con el dueño de la base y auditoría en las dos cuentas); el superacceso **solo lo crea el dueño de
+la base** (la siembra con `DATABASE_URL_PROPIETARIO`); `core.configuraciones` por ahora solo con privilegios por columna
+(RLS pendiente); la bitácora de superacceso solo crece y la aplicación no la cambia ni la borra.

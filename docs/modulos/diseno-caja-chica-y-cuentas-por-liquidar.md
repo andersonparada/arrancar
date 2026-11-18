@@ -1142,3 +1142,13 @@ devolvió efectivo al fondo).
   la factura al fondo o al anticipo** (desde «Agregar factura» en la ficha o desde la bandeja); sin el permiso, la
   factura queda pendiente en la bandeja; queda registrado quién la autorizó. Diseño en §5.4 g (regla única), §4.10 b
   (check) y §7.2.
+
+## Respuestas del usuario al dictamen del 2026-11-18 (V-12, V-13, V-8, V-3/V-4)
+
+- **V-8:** la factura especial que emite la empresa entra al fondo o al anticipo **sin** el permiso de excepción de
+  retención (la retención es parte del documento).
+- **V-3/V-4:** si el custodio o el beneficiario **pagó el total y no retuvo**, el documento se asigna **por el total**, la
+  empresa entera la retención y emite la constancia, y lo retenido queda como cuenta por cobrar al proveedor o al custodio;
+  al asignar con retención hay una casilla obligatoria «El custodio (o beneficiario) pagó Q[neto] y retuvo Q[retención]».
+- **V-13:** se agrega el check que prohíbe la retención en una nota de crédito.
+- **V-12:** sin cambio (opción A del contador). Dictamen completo: `dictamen-caja-chica-v12-v13-v8-v3-2026-11-18.md`.

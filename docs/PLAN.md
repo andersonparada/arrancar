@@ -2812,3 +2812,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `cuentas-por-pagar.condiciones.importar` y `.exportar`; el texto de la página manda a Proveedores para editar uno por uno.
   El servidor suma `GET /api/cuentas-por-pagar/condiciones` (lista de la cuenta, mismo caso de uso del Excel, permiso
   `terceros.ver`); sin migración. Lógica pura con pruebas.
+- **2026-11-18 (respuestas del usuario).** *Posfechado, A.7:* «Disponible para pagar» en R1 es igual que en la ficha
+  (deuda de los cargos menos lo comprometido; lo que está a favor en su columna). *Caja chica:* factura especial sin permiso
+  de excepción; «pagó el total y no retuvo» se asigna por el total con cuenta por cobrar; check sin retención en notas de
+  crédito; V-12 sin cambio. *RLS del núcleo:* todas las recomendaciones de `diseno-rls-de-core.md` (R-1 a R-3 ya, R-4
+  después). Detalle al final de cada diseño.
