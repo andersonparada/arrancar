@@ -1,12 +1,23 @@
 import { foreignKey, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { documentos } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import { conceptosDeGasto } from '../../../libro-de-compras/infraestructura/persistencia/conceptos-de-gasto.tablas.js';
+import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { arqueos } from './arqueos.tablas.js';
 import { fondos } from './fondos.tablas.js';
 import { valesProvisionales } from './vales-provisionales.tablas.js';
 
 /** Las columnas de `comprobantes` que usan sus llaves. */
 type T = Record<
-  'id' | 'empresaId' | 'fondoId' | 'documentoAfectadoId' | 'conceptoDeGastoId' | 'arqueoId' | 'valeProvisionalId',
+  | 'id'
+  | 'empresaId'
+  | 'fondoId'
+  | 'documentoAfectadoId'
+  | 'conceptoDeGastoId'
+  | 'arqueoId'
+  | 'valeProvisionalId'
+  | 'documentoDeCompraId'
+  | 'proveedorId'
+  | 'destinoDelDocumento',
   AnyPgColumn
 >;
 
@@ -21,6 +32,17 @@ const llavesDeLaEmpresa = (t: T) => [
     name: 'comprobantes_concepto_de_gasto_fk',
     columns: [t.conceptoDeGastoId, t.empresaId],
     foreignColumns: [conceptosDeGasto.id, conceptosDeGasto.empresaId],
+  }),
+  // Documento de la misma empresa, del mismo proveedor y con destino caja chica (lo que luego suma la bancarización).
+  foreignKey({
+    name: 'comprobantes_documento_fk',
+    columns: [t.documentoDeCompraId, t.empresaId, t.proveedorId, t.destinoDelDocumento],
+    foreignColumns: [documentos.id, documentos.empresaId, documentos.proveedorId, documentos.destino],
+  }),
+  foreignKey({
+    name: 'comprobantes_proveedor_fk',
+    columns: [t.proveedorId],
+    foreignColumns: [proveedores.id],
   }),
 ];
 

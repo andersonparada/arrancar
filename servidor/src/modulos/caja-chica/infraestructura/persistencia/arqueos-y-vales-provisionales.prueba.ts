@@ -146,6 +146,7 @@ describe('vales provisionales', () => {
     expect(await vale({ estado: 'liquidado' })).toBe('vales_liquidacion_completa');
     expect(await vale({ fechaDeLiquidacion: '2026-03-12' })).toBe('vales_liquidacion_completa');
     expect(await vale(liquidado({ liquidadoPor: null }))).toBe('vales_liquidacion_completa');
+    expect(await vale(liquidado({ fechaDeLiquidacion: '2026-03-01' }))).toBe('vales_liquidacion_posterior');
   });
 
   it('lo devuelto no es negativo ni pasa del monto, y un vale abierto no lleva devuelto', async () => {

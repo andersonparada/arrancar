@@ -15,6 +15,13 @@
       "when": 1795036715735,
       "tag": "0001_cc1_fondos_y_comprobantes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795037713641,
+      "tag": "0002_cc1_retencion_llaves_y_indices",
+      "breakpoints": true
     }
   ]
 }

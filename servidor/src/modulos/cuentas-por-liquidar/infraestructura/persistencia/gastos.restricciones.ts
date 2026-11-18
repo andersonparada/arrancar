@@ -24,6 +24,10 @@ type T = Record<
   | 'conceptoDeGastoId'
   | 'motivoSinDocumento'
   | 'tratamientoSinDocumento'
+  | 'conRetencion'
+  | 'montoRetenido'
+  | 'motivoConRetencion'
+  | 'destinoDelDocumento'
   | 'asignadoEn'
   | 'asignadoPor'
   | 'estado',
@@ -67,9 +71,20 @@ export const restriccionesDelGastoSinDocumento = (t: T) => [
   ),
 ];
 
-/** Todas las restricciones del gasto: su clase, lo propio del gasto sin documento y la anulación completa. */
+/** La factura con retención (excepción de CC-f): monto retenido, motivo y solo en documentos. */
+export const restriccionesDeLaRetencionDelGasto = (t: T) => [
+  check('gastos_retenido_no_negativo', sql`${t.montoRetenido} >= 0`),
+  check('gastos_retencion_con_monto', sql`${t.conRetencion} = (${t.montoRetenido} > 0)`),
+  check('gastos_retencion_con_motivo', sql`${t.conRetencion} = (${t.motivoConRetencion} is not null)`),
+  check('gastos_motivo_con_retencion_rango', textoRecortado(t.motivoConRetencion, 300)),
+  check('gastos_retencion_solo_en_documentos', sql`not ${t.conRetencion} or ${t.clase} = 'documento'`),
+  check('gastos_destino_del_documento_fijo', sql`${t.destinoDelDocumento} = 'cuentas-por-liquidar'`),
+];
+
+/** Todas las restricciones del gasto: su clase, la retención, lo propio del gasto sin documento y la anulación. */
 export const restriccionesDelGasto = (t: T) => [
   ...restriccionesDeLaClaseDelGasto(t),
+  ...restriccionesDeLaRetencionDelGasto(t),
   ...restriccionesDelGastoSinDocumento(t),
   ...restriccionesDeAnulacion('gastos', t),
   fechaDeAnulacionPosterior('gastos', t),

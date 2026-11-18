@@ -6,7 +6,13 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { grupoConexiones } from '../../../core/base-datos/conexion.js';
 import type { comprobantes } from './comprobantes.tablas.js';
 import { crearComprobante, crearFondo, valeDeGastoValido, valorDeDocumento } from './datos-de-caja-chica.soporte.js';
-import { prepararEscenario, restriccion, type Escenario } from './escenario.soporte.js';
+import {
+  contextoDe,
+  crearDocumentoDeLibro,
+  prepararEscenario,
+  restriccion,
+  type Escenario,
+} from './escenario.soporte.js';
 
 let e: Escenario;
 let fondoId: string;
@@ -40,8 +46,42 @@ describe('comprobantes: documento del libro', () => {
 
     expect(await hacerQue({ ...valores, fecha: '2026-03-11' })).toBe('comprobantes_documento_unico');
     expect(await hacerQue(valorDeDocumento(e, fondoId, { documentoDeCompraId: crypto.randomUUID() }))).toBe(
-      'comprobantes_documento_de_compra_id_documentos_id_fk',
+      'comprobantes_documento_fk',
     );
+  });
+
+  it('el documento es de la misma empresa y con destino caja chica (llave compuesta)', async () => {
+    const deOtraEmpresa = await crearDocumentoDeLibro(e, contextoDe(e, e.empresaA2));
+
+    expect(await hacerQue(valorDeDocumento(e, fondoId, { documentoDeCompraId: deOtraEmpresa }))).toBe(
+      'comprobantes_documento_fk',
+    );
+    expect(await hacerQue(valorDeDocumento(e, fondoId, { destinoDelDocumento: 'otro' as never }))).toBe(
+      'comprobantes_destino_del_documento_fijo',
+    );
+  });
+
+  it('la factura con retención (excepción de CC-f) lleva monto retenido y motivo, y solo en documentos', async () => {
+    await expect(
+      documento({
+        conRetencion: true,
+        montoRetenido: '5.60',
+        motivoConRetencion: 'Proveedor retenedor',
+        monto: '106.40',
+      }),
+    ).resolves.toMatchObject({ conRetencion: true, montoRetenido: '5.60' });
+
+    expect(await hacerQue(valorDeDocumento(e, fondoId, { conRetencion: true, motivoConRetencion: 'Sin monto' }))).toBe(
+      'comprobantes_retencion_con_monto',
+    );
+    expect(await hacerQue(valorDeDocumento(e, fondoId, { conRetencion: true, montoRetenido: '5' }))).toBe(
+      'comprobantes_retencion_con_motivo',
+    );
+    expect(await hacerQue(valorDeDocumento(e, fondoId, { montoRetenido: '-1' }))).toBe(
+      'comprobantes_retenido_no_negativo',
+    );
+    const vale = valeDeGastoValido(e, fondoId, { conRetencion: true, montoRetenido: '5', motivoConRetencion: 'No' });
+    expect(await hacerQue(vale)).toBe('comprobantes_retencion_solo_en_documentos');
   });
 
   it('la clase documento lleva su documento y proveedor; las otras no llevan documento', async () => {
@@ -57,8 +97,8 @@ describe('comprobantes: documento del libro', () => {
   });
 
   it('el proveedor debe existir y el monto es positivo', async () => {
-    expect(await hacerQue(valorDeDocumento(e, fondoId, { proveedorId: crypto.randomUUID() }))).toBe(
-      'comprobantes_proveedor_id_proveedores_id_fk',
+    expect(await hacerQue(valeDeGastoValido(e, fondoId, { proveedorId: crypto.randomUUID() }))).toBe(
+      'comprobantes_proveedor_fk',
     );
     expect(await hacerQue(valorDeDocumento(e, fondoId, { monto: '0' }))).toBe('comprobantes_monto_positivo');
   });

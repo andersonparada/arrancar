@@ -44,6 +44,7 @@ export const reposicionComprobantes = esquemaCajaChica.table(
     uniqueIndex('reposicion_comprobantes_vigente_unico')
       .on(t.comprobanteId)
       .where(sql`${t.vigente}`),
+    index('reposicion_comprobantes_comprobante_idx').on(t.comprobanteId),
     index('reposicion_comprobantes_fondo_idx').on(t.fondoId),
     politicaPorEmpresa(),
     politicaPorAlcance(ALCANCE_DE_FONDOS, 'fondo_id'),

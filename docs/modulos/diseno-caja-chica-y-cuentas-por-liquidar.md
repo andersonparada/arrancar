@@ -330,7 +330,9 @@ asignación). Lo revisa `seguridad` (§16).
 | `documento_afectado_id` | uuid | sí | Comprobante de la factura que rebaja la nota (FK compuesta a `comprobantes`), solo en notas |
 | `proveedor_id` | uuid | sí | FK `terceros.proveedores (id)`; obligatorio en documentos (copiado del libro) |
 | `fecha` | date | no | La del gasto (pago en efectivo): por omisión, la emisión del documento; no futura; no anterior a la apertura del fondo |
-| `monto` | numeric(14,2) | no | `> 0`; en documentos, su total (sin retenciones: CC-f) |
+| `monto` | numeric(14,2) | no | `> 0`; lo que salió del fondo: en documentos, su total, o el neto si es la excepción de CC-f |
+| `con_retencion`, `monto_retenido`, `motivo_con_retencion` | boolean, numeric(14,2), text | no, no, sí | Excepción de CC-f (A′): `con_retencion` = `monto_retenido > 0` = tener motivo; solo en documentos. La retención la entera la empresa y no sale del fondo |
+| `destino_del_documento` | text | no | Fijo `caja-chica`; con él la llave `(documento_de_compra_id, empresa_id, proveedor_id, destino)` exige que el documento sea de la misma empresa, el mismo proveedor y este destino (decisión: llave compuesta, no solo `(id)`) |
 | `con_activo_fijo` | boolean | no | `default false`; del documento |
 | `numero`, `anio_de_numero` | integer | sí, no | Solo vales de gasto (correlativo `caja-chica.vales`); único `(empresa_id, anio_de_numero, numero)` parcial |
 | `descripcion` | text | sí | Obligatoria salvo en documentos; 1–300 |
@@ -338,7 +340,7 @@ asignación). Lo revisa `seguridad` (§16).
 | `concepto_de_gasto_id` | uuid | sí | FK compuesta `(concepto_de_gasto_id, empresa_id) → libro_de_compras.conceptos_de_gasto (id, empresa_id)`; obligatorio en vales de gasto |
 | `motivo_sin_documento` | text | sí | Vale de gasto: por qué no hay factura (1–300); `(clase = 'vale_de_gasto') = (motivo_sin_documento is not null)` |
 | `sobre_el_tope`, `motivo_sobre_el_tope` | boolean, text | no, sí | `(sobre_el_tope) = (motivo_sobre_el_tope is not null)` (CC-i) |
-| `sin_bancarizar`, `motivo_sin_bancarizar` | boolean, text | no, sí | Marca de CC-h; el motivo solo si se elige B |
+| `sin_bancarizar` | boolean | no | Marca de CC-h (A); sin motivo: la columna `motivo_sin_bancarizar` se quitó porque solo existía con la opción B |
 | `arqueo_id` | uuid | sí | FK compuesta a `arqueos`; `(clase in ('faltante', 'sobrante')) = (arqueo_id is not null)` |
 | `destino_del_faltante` | text | sí | `in ('perdida', 'cobrar_al_custodio')`; `(clase = 'faltante') = (destino_del_faltante is not null)` |
 | `vale_provisional_id` | uuid | sí | FK compuesta a `vales_provisionales` (CC-6) |

@@ -36,6 +36,10 @@ export const restriccionesDeLaEntrega = (t: T) => [
   check('anticipos_clase_valida', sql`${t.clase} in ('viatico', 'compra', 'otro')`),
   check('anticipos_descripcion_valida', sql`${t.descripcion} is not null and ${textoRecortado(t.descripcion, 300)}`),
   check('anticipos_monto_positivo', sql`${t.monto} > 0`),
+  check(
+    'anticipos_liquidacion_posterior',
+    sql`${t.fechaDeLiquidacion} is null or ${t.fechaDeLiquidacion} >= ${t.fecha}`,
+  ),
   check('anticipos_fecha_limite_valida', sql`${t.fechaLimite} >= ${t.fecha}`),
   check('anticipos_forma_valida', sql`${t.forma} in ('cheque', 'nota_de_debito')`),
   check('anticipos_motivo_con_vencidos_valido', textoRecortado(t.motivoConVencidos, 300)),

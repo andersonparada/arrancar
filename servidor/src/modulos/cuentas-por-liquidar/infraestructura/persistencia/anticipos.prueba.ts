@@ -125,6 +125,7 @@ describe('anticipos: estado y liquidación', () => {
     expect(await anticipo({ estado: 'liquidado' })).toBe('anticipos_liquidacion_completa');
     expect(await anticipo({ fechaDeLiquidacion: '2026-03-20' })).toBe('anticipos_liquidacion_completa');
     expect(await anticipo(liquidado({ liquidadoPor: null }))).toBe('anticipos_liquidacion_completa');
+    expect(await anticipo(liquidado({ fechaDeLiquidacion: '2020-01-01' }))).toBe('anticipos_liquidacion_posterior');
   });
 
   it('un anticipo abierto no lleva devuelto, reembolso ni no liquidado', async () => {

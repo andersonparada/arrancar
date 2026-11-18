@@ -46,17 +46,32 @@ describe('gastos: documento del libro', () => {
     await crearGasto(e, valores);
 
     expect(await hacerQue({ ...valores, fecha: '2026-03-12' })).toBe('gastos_documento_unico');
-    expect(await hacerQue(deDocumento({ documentoDeCompraId: crypto.randomUUID() }))).toBe(
-      'gastos_documento_de_compra_id_documentos_id_fk',
+    expect(await hacerQue(deDocumento({ documentoDeCompraId: crypto.randomUUID() }))).toBe('gastos_documento_fk');
+  });
+
+  it('la factura con retención (excepción de CC-f) lleva monto retenido y motivo, y solo en documentos', async () => {
+    await expect(
+      crearGasto(
+        e,
+        await deDocumento({ conRetencion: true, montoRetenido: '5.60', motivoConRetencion: 'Proveedor retenedor' }),
+      ),
+    ).resolves.toMatchObject({ conRetencion: true, montoRetenido: '5.60' });
+
+    expect(await hacerQue(deDocumento({ conRetencion: true, motivoConRetencion: 'Sin monto' }))).toBe(
+      'gastos_retencion_con_monto',
     );
+    expect(await hacerQue(deDocumento({ conRetencion: true, montoRetenido: '5' }))).toBe('gastos_retencion_con_motivo');
+    expect(await hacerQue(deDocumento({ destinoDelDocumento: 'otro' as never }))).toBe(
+      'gastos_destino_del_documento_fijo',
+    );
+    const vale = sinDocumento({ conRetencion: true, montoRetenido: '5', motivoConRetencion: 'No' });
+    expect(await hacerQue(vale)).toBe('gastos_retencion_solo_en_documentos');
   });
 
   it('el documento lleva su proveedor, el monto es positivo y solo el documento resta', async () => {
     expect(await hacerQue(deDocumento({ documentoDeCompraId: null }))).toBe('gastos_documento_de_su_clase');
     expect(await hacerQue(deDocumento({ proveedorId: null }))).toBe('gastos_documento_con_proveedor');
-    expect(await hacerQue(deDocumento({ proveedorId: crypto.randomUUID() }))).toBe(
-      'gastos_proveedor_id_proveedores_id_fk',
-    );
+    expect(await hacerQue(sinDocumento({ proveedorId: crypto.randomUUID() }))).toBe('gastos_proveedor_fk');
     expect(await hacerQue(deDocumento({ monto: '0' }))).toBe('gastos_monto_positivo');
     await expect(crearGasto(e, await deDocumento({ resta: true }))).resolves.toMatchObject({ resta: true });
     expect(await hacerQue(sinDocumento({ resta: true }))).toBe('gastos_resta_solo_en_documentos');

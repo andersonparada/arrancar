@@ -1,0 +1,1139 @@
+{
+  "id": "1b683fa0-f35c-43ea-b152-e89e286a5818",
+  "prevId": "cce85fde-c883-4945-a7d0-ecd97755eb37",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "cuentas_por_liquidar.anticipos": {
+      "name": "anticipos",
+      "schema": "cuentas_por_liquidar",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anio_de_numero": {
+          "name": "anio_de_numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "beneficiario_id": {
+          "name": "beneficiario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "beneficiario": {
+          "name": "beneficiario",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "es_empleado": {
+          "name": "es_empleado",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "beneficiario_usuario_id": {
+          "name": "beneficiario_usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "clase": {
+          "name": "clase",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "localidad_id": {
+          "name": "localidad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_limite": {
+          "name": "fecha_limite",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "forma": {
+          "name": "forma",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "movimiento_id": {
+          "name": "movimiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "motivo_con_vencidos": {
+          "name": "motivo_con_vencidos",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'abierto'"
+        },
+        "fecha_de_liquidacion": {
+          "name": "fecha_de_liquidacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "liquidado_en": {
+          "name": "liquidado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "liquidado_por": {
+          "name": "liquidado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "devuelto": {
+          "name": "devuelto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "movimiento_de_devolucion_id": {
+          "name": "movimiento_de_devolucion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reembolsado": {
+          "name": "reembolsado",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "movimiento_de_reembolso_id": {
+          "name": "movimiento_de_reembolso_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "no_liquidado": {
+          "name": "no_liquidado",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "destino_de_no_liquidado": {
+          "name": "destino_de_no_liquidado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cuotas": {
+          "name": "cuotas",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_no_liquidado": {
+          "name": "motivo_de_no_liquidado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_de_anulacion": {
+          "name": "fecha_de_anulacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "anticipos_devolucion_unica": {
+          "name": "anticipos_devolucion_unica",
+          "columns": [
+            {
+              "expression": "movimiento_de_devolucion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"cuentas_por_liquidar\".\"anticipos\".\"movimiento_de_devolucion_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "anticipos_reembolso_unico": {
+          "name": "anticipos_reembolso_unico",
+          "columns": [
+            {
+              "expression": "movimiento_de_reembolso_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"cuentas_por_liquidar\".\"anticipos\".\"movimiento_de_reembolso_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "anticipos_lista_idx": {
+          "name": "anticipos_lista_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "estado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha_limite",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "anticipos_beneficiario_idx": {
+          "name": "anticipos_beneficiario_idx",
+          "columns": [
+            {
+              "expression": "beneficiario_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "estado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "anticipos_beneficiario_usuario_idx": {
+          "name": "anticipos_beneficiario_usuario_idx",
+          "columns": [
+            {
+              "expression": "beneficiario_usuario_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_liquidar\".\"anticipos\".\"beneficiario_usuario_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "anticipos_localidad_idx": {
+          "name": "anticipos_localidad_idx",
+          "columns": [
+            {
+              "expression": "localidad_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_liquidar\".\"anticipos\".\"localidad_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "anticipos_empresa_id_empresas_id_fk": {
+          "name": "anticipos_empresa_id_empresas_id_fk",
+          "tableFrom": "anticipos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "anticipos_beneficiario_id_terceros_id_fk": {
+          "name": "anticipos_beneficiario_id_terceros_id_fk",
+          "tableFrom": "anticipos",
+          "tableTo": "terceros",
+          "schemaTo": "terceros",
+          "columnsFrom": [
+            "beneficiario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "anticipos_beneficiario_usuario_id_usuarios_id_fk": {
+          "name": "anticipos_beneficiario_usuario_id_usuarios_id_fk",
+          "tableFrom": "anticipos",
+          "tableTo": "usuarios",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "beneficiario_usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "anticipos_movimiento_id_movimientos_id_fk": {
+          "name": "anticipos_movimiento_id_movimientos_id_fk",
+          "tableFrom": "anticipos",
+          "tableTo": "movimientos",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "movimiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "anticipos_movimiento_de_devolucion_id_movimientos_id_fk": {
+          "name": "anticipos_movimiento_de_devolucion_id_movimientos_id_fk",
+          "tableFrom": "anticipos",
+          "tableTo": "movimientos",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "movimiento_de_devolucion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "anticipos_movimiento_de_reembolso_id_movimientos_id_fk": {
+          "name": "anticipos_movimiento_de_reembolso_id_movimientos_id_fk",
+          "tableFrom": "anticipos",
+          "tableTo": "movimientos",
+          "schemaTo": "bancos",
+          "columnsFrom": [
+            "movimiento_de_reembolso_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "anticipos_localidad_fk": {
+          "name": "anticipos_localidad_fk",
+          "tableFrom": "anticipos",
+          "tableTo": "localidades",
+          "schemaTo": "empresas",
+          "columnsFrom": [
+            "localidad_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "anticipos_numero_unico": {
+          "name": "anticipos_numero_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "empresa_id",
+            "anio_de_numero",
+            "numero"
+          ]
+        },
+        "anticipos_movimiento_unico": {
+          "name": "anticipos_movimiento_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "movimiento_id"
+          ]
+        },
+        "anticipos_llave_unica": {
+          "name": "anticipos_llave_unica",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "anticipos_numero_positivo": {
+          "name": "anticipos_numero_positivo",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"numero\" > 0"
+        },
+        "anticipos_beneficiario_valido": {
+          "name": "anticipos_beneficiario_valido",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"beneficiario\" is not null and (\"cuentas_por_liquidar\".\"anticipos\".\"beneficiario\" is null or (char_length(\"cuentas_por_liquidar\".\"anticipos\".\"beneficiario\") between 1 and 150 and \"cuentas_por_liquidar\".\"anticipos\".\"beneficiario\" = btrim(\"cuentas_por_liquidar\".\"anticipos\".\"beneficiario\")))"
+        },
+        "anticipos_clase_valida": {
+          "name": "anticipos_clase_valida",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"clase\" in ('viatico', 'compra', 'otro')"
+        },
+        "anticipos_descripcion_valida": {
+          "name": "anticipos_descripcion_valida",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"descripcion\" is not null and (\"cuentas_por_liquidar\".\"anticipos\".\"descripcion\" is null or (char_length(\"cuentas_por_liquidar\".\"anticipos\".\"descripcion\") between 1 and 300 and \"cuentas_por_liquidar\".\"anticipos\".\"descripcion\" = btrim(\"cuentas_por_liquidar\".\"anticipos\".\"descripcion\")))"
+        },
+        "anticipos_monto_positivo": {
+          "name": "anticipos_monto_positivo",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"monto\" > 0"
+        },
+        "anticipos_liquidacion_posterior": {
+          "name": "anticipos_liquidacion_posterior",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"fecha_de_liquidacion\" is null or \"cuentas_por_liquidar\".\"anticipos\".\"fecha_de_liquidacion\" >= \"cuentas_por_liquidar\".\"anticipos\".\"fecha\""
+        },
+        "anticipos_fecha_limite_valida": {
+          "name": "anticipos_fecha_limite_valida",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"fecha_limite\" >= \"cuentas_por_liquidar\".\"anticipos\".\"fecha\""
+        },
+        "anticipos_forma_valida": {
+          "name": "anticipos_forma_valida",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"forma\" in ('cheque', 'nota_de_debito')"
+        },
+        "anticipos_motivo_con_vencidos_valido": {
+          "name": "anticipos_motivo_con_vencidos_valido",
+          "value": "(\"cuentas_por_liquidar\".\"anticipos\".\"motivo_con_vencidos\" is null or (char_length(\"cuentas_por_liquidar\".\"anticipos\".\"motivo_con_vencidos\") between 1 and 300 and \"cuentas_por_liquidar\".\"anticipos\".\"motivo_con_vencidos\" = btrim(\"cuentas_por_liquidar\".\"anticipos\".\"motivo_con_vencidos\")))"
+        },
+        "anticipos_estado_valido": {
+          "name": "anticipos_estado_valido",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"estado\" in ('abierto', 'liquidado', 'anulado')"
+        },
+        "anticipos_liquidacion_completa": {
+          "name": "anticipos_liquidacion_completa",
+          "value": "(\"cuentas_por_liquidar\".\"anticipos\".\"estado\" = 'liquidado') = (\"cuentas_por_liquidar\".\"anticipos\".\"fecha_de_liquidacion\" is not null) and (\"cuentas_por_liquidar\".\"anticipos\".\"fecha_de_liquidacion\" is not null) = (\"cuentas_por_liquidar\".\"anticipos\".\"liquidado_en\" is not null) and (\"cuentas_por_liquidar\".\"anticipos\".\"liquidado_en\" is not null) = (\"cuentas_por_liquidar\".\"anticipos\".\"liquidado_por\" is not null)"
+        },
+        "anticipos_abierto_sin_liquidar": {
+          "name": "anticipos_abierto_sin_liquidar",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"estado\" = 'liquidado' or (\"cuentas_por_liquidar\".\"anticipos\".\"devuelto\" = 0 and \"cuentas_por_liquidar\".\"anticipos\".\"reembolsado\" = 0 and \"cuentas_por_liquidar\".\"anticipos\".\"no_liquidado\" = 0 and \"cuentas_por_liquidar\".\"anticipos\".\"movimiento_de_devolucion_id\" is null and \"cuentas_por_liquidar\".\"anticipos\".\"movimiento_de_reembolso_id\" is null)"
+        },
+        "anticipos_montos_liquidados_validos": {
+          "name": "anticipos_montos_liquidados_validos",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"devuelto\" >= 0 and \"cuentas_por_liquidar\".\"anticipos\".\"reembolsado\" >= 0 and \"cuentas_por_liquidar\".\"anticipos\".\"no_liquidado\" >= 0"
+        },
+        "anticipos_devolucion_con_deposito": {
+          "name": "anticipos_devolucion_con_deposito",
+          "value": "(\"cuentas_por_liquidar\".\"anticipos\".\"devuelto\" > 0) = (\"cuentas_por_liquidar\".\"anticipos\".\"movimiento_de_devolucion_id\" is not null)"
+        },
+        "anticipos_reembolso_con_movimiento": {
+          "name": "anticipos_reembolso_con_movimiento",
+          "value": "(\"cuentas_por_liquidar\".\"anticipos\".\"reembolsado\" > 0) = (\"cuentas_por_liquidar\".\"anticipos\".\"movimiento_de_reembolso_id\" is not null)"
+        },
+        "anticipos_reembolso_sin_sobrante": {
+          "name": "anticipos_reembolso_sin_sobrante",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"reembolsado\" = 0 or (\"cuentas_por_liquidar\".\"anticipos\".\"devuelto\" = 0 and \"cuentas_por_liquidar\".\"anticipos\".\"no_liquidado\" = 0)"
+        },
+        "anticipos_liquidacion_no_pasa_del_monto": {
+          "name": "anticipos_liquidacion_no_pasa_del_monto",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"devuelto\" + \"cuentas_por_liquidar\".\"anticipos\".\"no_liquidado\" <= \"cuentas_por_liquidar\".\"anticipos\".\"monto\""
+        },
+        "anticipos_destino_valido": {
+          "name": "anticipos_destino_valido",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"destino_de_no_liquidado\" is null or \"cuentas_por_liquidar\".\"anticipos\".\"destino_de_no_liquidado\" in ('cobrar', 'renta_del_trabajo', 'perdida')"
+        },
+        "anticipos_destino_de_lo_no_liquidado": {
+          "name": "anticipos_destino_de_lo_no_liquidado",
+          "value": "(\"cuentas_por_liquidar\".\"anticipos\".\"no_liquidado\" > 0) = (\"cuentas_por_liquidar\".\"anticipos\".\"destino_de_no_liquidado\" is not null)"
+        },
+        "anticipos_renta_solo_de_empleados": {
+          "name": "anticipos_renta_solo_de_empleados",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"destino_de_no_liquidado\" is distinct from 'renta_del_trabajo' or \"cuentas_por_liquidar\".\"anticipos\".\"es_empleado\""
+        },
+        "anticipos_cuotas_solo_al_cobrar": {
+          "name": "anticipos_cuotas_solo_al_cobrar",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"cuotas\" is null or (\"cuentas_por_liquidar\".\"anticipos\".\"destino_de_no_liquidado\" = 'cobrar' and \"cuentas_por_liquidar\".\"anticipos\".\"cuotas\" >= 1)"
+        },
+        "anticipos_motivo_de_lo_no_liquidado": {
+          "name": "anticipos_motivo_de_lo_no_liquidado",
+          "value": "(\"cuentas_por_liquidar\".\"anticipos\".\"no_liquidado\" > 0) = (\"cuentas_por_liquidar\".\"anticipos\".\"motivo_de_no_liquidado\" is not null)"
+        },
+        "anticipos_motivo_de_lo_no_liquidado_rango": {
+          "name": "anticipos_motivo_de_lo_no_liquidado_rango",
+          "value": "(\"cuentas_por_liquidar\".\"anticipos\".\"motivo_de_no_liquidado\" is null or (char_length(\"cuentas_por_liquidar\".\"anticipos\".\"motivo_de_no_liquidado\") between 1 and 300 and \"cuentas_por_liquidar\".\"anticipos\".\"motivo_de_no_liquidado\" = btrim(\"cuentas_por_liquidar\".\"anticipos\".\"motivo_de_no_liquidado\")))"
+        },
+        "anticipos_anulacion_completa": {
+          "name": "anticipos_anulacion_completa",
+          "value": "(\"cuentas_por_liquidar\".\"anticipos\".\"estado\" = 'anulado') = (\"cuentas_por_liquidar\".\"anticipos\".\"anulado_en\" is not null) and (\"cuentas_por_liquidar\".\"anticipos\".\"anulado_en\" is not null) = (\"cuentas_por_liquidar\".\"anticipos\".\"anulado_por\" is not null) and (\"cuentas_por_liquidar\".\"anticipos\".\"anulado_por\" is not null) = (\"cuentas_por_liquidar\".\"anticipos\".\"motivo_de_anulacion\" is not null)"
+        },
+        "anticipos_motivo_de_anulacion_rango": {
+          "name": "anticipos_motivo_de_anulacion_rango",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"motivo_de_anulacion\" is null or char_length(\"cuentas_por_liquidar\".\"anticipos\".\"motivo_de_anulacion\") between 1 and 300"
+        },
+        "anticipos_fecha_de_anulacion_de_su_estado": {
+          "name": "anticipos_fecha_de_anulacion_de_su_estado",
+          "value": "(\"cuentas_por_liquidar\".\"anticipos\".\"estado\" = 'anulado') = (\"cuentas_por_liquidar\".\"anticipos\".\"fecha_de_anulacion\" is not null)"
+        },
+        "anticipos_fecha_de_anulacion_valida": {
+          "name": "anticipos_fecha_de_anulacion_valida",
+          "value": "\"cuentas_por_liquidar\".\"anticipos\".\"fecha_de_anulacion\" is null or \"cuentas_por_liquidar\".\"anticipos\".\"fecha_de_anulacion\" >= \"cuentas_por_liquidar\".\"anticipos\".\"fecha\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "cuentas_por_liquidar.gastos": {
+      "name": "gastos",
+      "schema": "cuentas_por_liquidar",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anticipo_id": {
+          "name": "anticipo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "clase": {
+          "name": "clase",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "documento_de_compra_id": {
+          "name": "documento_de_compra_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "destino_del_documento": {
+          "name": "destino_del_documento",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'cuentas-por-liquidar'"
+        },
+        "resta": {
+          "name": "resta",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "proveedor_id": {
+          "name": "proveedor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "monto": {
+          "name": "monto",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "con_retencion": {
+          "name": "con_retencion",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "monto_retenido": {
+          "name": "monto_retenido",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "motivo_con_retencion": {
+          "name": "motivo_con_retencion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "con_activo_fijo": {
+          "name": "con_activo_fijo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pagado_a": {
+          "name": "pagado_a",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "concepto_de_gasto_id": {
+          "name": "concepto_de_gasto_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_sin_documento": {
+          "name": "motivo_sin_documento",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tratamiento_sin_documento": {
+          "name": "tratamiento_sin_documento",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sin_bancarizar": {
+          "name": "sin_bancarizar",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "asignado_en": {
+          "name": "asignado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asignado_por": {
+          "name": "asignado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'vigente'"
+        },
+        "fecha_de_anulacion": {
+          "name": "fecha_de_anulacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "gastos_documento_unico": {
+          "name": "gastos_documento_unico",
+          "columns": [
+            {
+              "expression": "documento_de_compra_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"cuentas_por_liquidar\".\"gastos\".\"documento_de_compra_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "gastos_anticipo_idx": {
+          "name": "gastos_anticipo_idx",
+          "columns": [
+            {
+              "expression": "anticipo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "gastos_concepto_de_gasto_idx": {
+          "name": "gastos_concepto_de_gasto_idx",
+          "columns": [
+            {
+              "expression": "concepto_de_gasto_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_liquidar\".\"gastos\".\"concepto_de_gasto_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "gastos_proveedor_idx": {
+          "name": "gastos_proveedor_idx",
+          "columns": [
+            {
+              "expression": "proveedor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_liquidar\".\"gastos\".\"proveedor_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "gastos_bandeja_idx": {
+          "name": "gastos_bandeja_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_liquidar\".\"gastos\".\"anticipo_id\" is null and \"cuentas_por_liquidar\".\"gastos\".\"estado\" = 'vigente'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "gastos_proveedor_fecha_idx": {
+          "name": "gastos_proveedor_fecha_idx",
+          "columns": [
+            {
+              "expression": "proveedor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"cuentas_por_liquidar\".\"gastos\".\"proveedor_id\" is not null and \"cuentas_por_liquidar\".\"gastos\".\"estado\" = 'vigente'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "gastos_empresa_id_empresas_id_fk": {
+          "name": "gastos_empresa_id_empresas_id_fk",
+          "tableFrom": "gastos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "gastos_anticipo_fk": {
+          "name": "gastos_anticipo_fk",
+          "tableFrom": "gastos",
+          "tableTo": "anticipos",
+          "schemaTo": "cuentas_por_liquidar",
+          "columnsFrom": [
+            "anticipo_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "gastos_concepto_de_gasto_fk": {
+          "name": "gastos_concepto_de_gasto_fk",
+          "tableFrom": "gastos",
+          "tableTo": "conceptos_de_gasto",
+          "schemaTo": "libro_de_compras",
+          "columnsFrom": [
+            "concepto_de_gasto_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "gastos_documento_fk": {
+          "name": "gastos_documento_fk",
+          "tableFrom": "gastos",
+          "tableTo": "documentos",
+          "schemaTo": "libro_de_compras",
+          "columnsFrom": [
+            "documento_de_compra_id",
+            "empresa_id",
+            "proveedor_id",
+            "destino_del_documento"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id",
+            "proveedor_id",
+            "destino"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "gastos_proveedor_fk": {
+          "name": "gastos_proveedor_fk",
+          "tableFrom": "gastos",
+          "tableTo": "proveedores",
+          "schemaTo": "terceros",
+          "columnsFrom": [
+            "proveedor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "gastos_clase_valida": {
+          "name": "gastos_clase_valida",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"clase\" in ('documento', 'sin_documento')"
+        },
+        "gastos_documento_de_su_clase": {
+          "name": "gastos_documento_de_su_clase",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"clase\" = 'documento') = (\"cuentas_por_liquidar\".\"gastos\".\"documento_de_compra_id\" is not null)"
+        },
+        "gastos_documento_con_proveedor": {
+          "name": "gastos_documento_con_proveedor",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"clase\" <> 'documento' or \"cuentas_por_liquidar\".\"gastos\".\"proveedor_id\" is not null"
+        },
+        "gastos_sin_documento_exige_anticipo": {
+          "name": "gastos_sin_documento_exige_anticipo",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"clase\" = 'documento' or \"cuentas_por_liquidar\".\"gastos\".\"anticipo_id\" is not null"
+        },
+        "gastos_monto_positivo": {
+          "name": "gastos_monto_positivo",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"monto\" > 0"
+        },
+        "gastos_resta_solo_en_documentos": {
+          "name": "gastos_resta_solo_en_documentos",
+          "value": "not \"cuentas_por_liquidar\".\"gastos\".\"resta\" or \"cuentas_por_liquidar\".\"gastos\".\"clase\" = 'documento'"
+        },
+        "gastos_asignacion_completa": {
+          "name": "gastos_asignacion_completa",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"anticipo_id\" is null) = (\"cuentas_por_liquidar\".\"gastos\".\"asignado_en\" is null) and (\"cuentas_por_liquidar\".\"gastos\".\"asignado_en\" is null) = (\"cuentas_por_liquidar\".\"gastos\".\"asignado_por\" is null)"
+        },
+        "gastos_estado_valido": {
+          "name": "gastos_estado_valido",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"estado\" in ('vigente', 'anulado')"
+        },
+        "gastos_retenido_no_negativo": {
+          "name": "gastos_retenido_no_negativo",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"monto_retenido\" >= 0"
+        },
+        "gastos_retencion_con_monto": {
+          "name": "gastos_retencion_con_monto",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"con_retencion\" = (\"cuentas_por_liquidar\".\"gastos\".\"monto_retenido\" > 0)"
+        },
+        "gastos_retencion_con_motivo": {
+          "name": "gastos_retencion_con_motivo",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"con_retencion\" = (\"cuentas_por_liquidar\".\"gastos\".\"motivo_con_retencion\" is not null)"
+        },
+        "gastos_motivo_con_retencion_rango": {
+          "name": "gastos_motivo_con_retencion_rango",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"motivo_con_retencion\" is null or (char_length(\"cuentas_por_liquidar\".\"gastos\".\"motivo_con_retencion\") between 1 and 300 and \"cuentas_por_liquidar\".\"gastos\".\"motivo_con_retencion\" = btrim(\"cuentas_por_liquidar\".\"gastos\".\"motivo_con_retencion\")))"
+        },
+        "gastos_retencion_solo_en_documentos": {
+          "name": "gastos_retencion_solo_en_documentos",
+          "value": "not \"cuentas_por_liquidar\".\"gastos\".\"con_retencion\" or \"cuentas_por_liquidar\".\"gastos\".\"clase\" = 'documento'"
+        },
+        "gastos_destino_del_documento_fijo": {
+          "name": "gastos_destino_del_documento_fijo",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"destino_del_documento\" = 'cuentas-por-liquidar'"
+        },
+        "gastos_descripcion_obligatoria": {
+          "name": "gastos_descripcion_obligatoria",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"clase\" = 'documento' or \"cuentas_por_liquidar\".\"gastos\".\"descripcion\" is not null"
+        },
+        "gastos_descripcion_valida": {
+          "name": "gastos_descripcion_valida",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"descripcion\" is null or (char_length(\"cuentas_por_liquidar\".\"gastos\".\"descripcion\") between 1 and 300 and \"cuentas_por_liquidar\".\"gastos\".\"descripcion\" = btrim(\"cuentas_por_liquidar\".\"gastos\".\"descripcion\")))"
+        },
+        "gastos_pagado_a_de_su_clase": {
+          "name": "gastos_pagado_a_de_su_clase",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"clase\" = 'sin_documento') = (\"cuentas_por_liquidar\".\"gastos\".\"pagado_a\" is not null)"
+        },
+        "gastos_pagado_a_valido": {
+          "name": "gastos_pagado_a_valido",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"pagado_a\" is null or (char_length(\"cuentas_por_liquidar\".\"gastos\".\"pagado_a\") between 1 and 150 and \"cuentas_por_liquidar\".\"gastos\".\"pagado_a\" = btrim(\"cuentas_por_liquidar\".\"gastos\".\"pagado_a\")))"
+        },
+        "gastos_concepto_del_gasto": {
+          "name": "gastos_concepto_del_gasto",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"clase\" <> 'sin_documento' or \"cuentas_por_liquidar\".\"gastos\".\"concepto_de_gasto_id\" is not null"
+        },
+        "gastos_motivo_sin_documento_de_su_clase": {
+          "name": "gastos_motivo_sin_documento_de_su_clase",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"clase\" = 'sin_documento') = (\"cuentas_por_liquidar\".\"gastos\".\"motivo_sin_documento\" is not null)"
+        },
+        "gastos_motivo_sin_documento_rango": {
+          "name": "gastos_motivo_sin_documento_rango",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"motivo_sin_documento\" is null or (char_length(\"cuentas_por_liquidar\".\"gastos\".\"motivo_sin_documento\") between 1 and 300 and \"cuentas_por_liquidar\".\"gastos\".\"motivo_sin_documento\" = btrim(\"cuentas_por_liquidar\".\"gastos\".\"motivo_sin_documento\")))"
+        },
+        "gastos_tratamiento_de_su_clase": {
+          "name": "gastos_tratamiento_de_su_clase",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"clase\" = 'sin_documento') = (\"cuentas_por_liquidar\".\"gastos\".\"tratamiento_sin_documento\" is not null)"
+        },
+        "gastos_tratamiento_valido": {
+          "name": "gastos_tratamiento_valido",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"tratamiento_sin_documento\" is null or \"cuentas_por_liquidar\".\"gastos\".\"tratamiento_sin_documento\" in ('no_deducible', 'renta_del_trabajo')"
+        },
+        "gastos_anulacion_completa": {
+          "name": "gastos_anulacion_completa",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"estado\" = 'anulado') = (\"cuentas_por_liquidar\".\"gastos\".\"anulado_en\" is not null) and (\"cuentas_por_liquidar\".\"gastos\".\"anulado_en\" is not null) = (\"cuentas_por_liquidar\".\"gastos\".\"anulado_por\" is not null) and (\"cuentas_por_liquidar\".\"gastos\".\"anulado_por\" is not null) = (\"cuentas_por_liquidar\".\"gastos\".\"motivo_de_anulacion\" is not null)"
+        },
+        "gastos_motivo_de_anulacion_rango": {
+          "name": "gastos_motivo_de_anulacion_rango",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"motivo_de_anulacion\" is null or char_length(\"cuentas_por_liquidar\".\"gastos\".\"motivo_de_anulacion\") between 1 and 300"
+        },
+        "gastos_fecha_de_anulacion_de_su_estado": {
+          "name": "gastos_fecha_de_anulacion_de_su_estado",
+          "value": "(\"cuentas_por_liquidar\".\"gastos\".\"estado\" = 'anulado') = (\"cuentas_por_liquidar\".\"gastos\".\"fecha_de_anulacion\" is not null)"
+        },
+        "gastos_fecha_de_anulacion_valida": {
+          "name": "gastos_fecha_de_anulacion_valida",
+          "value": "\"cuentas_por_liquidar\".\"gastos\".\"fecha_de_anulacion\" is null or \"cuentas_por_liquidar\".\"gastos\".\"fecha_de_anulacion\" >= \"cuentas_por_liquidar\".\"gastos\".\"fecha\""
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "cuentas_por_liquidar": "cuentas_por_liquidar"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

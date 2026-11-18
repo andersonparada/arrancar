@@ -55,18 +55,8 @@ describe('comprobantes: marcas del tope y de la bancarización', () => {
     );
   });
 
-  it('el motivo de no bancarizar solo cabe en un comprobante marcado, y la marca no lo exige (CC-h = A)', async () => {
+  it('la marca de no bancarizar no exige motivo (CC-h = A)', async () => {
     await expect(documento({ sinBancarizar: true })).resolves.toMatchObject({ sinBancarizar: true });
-    await expect(
-      documento({ sinBancarizar: true, motivoSinBancarizar: 'Sin banco en el pueblo' }),
-    ).resolves.toBeDefined();
-
-    expect(await hacerQue(valorDeDocumento(e, fondoId, { motivoSinBancarizar: 'Sin marca' }))).toBe(
-      'comprobantes_motivo_sin_bancarizar_solo_marcado',
-    );
-    expect(await hacerQue(valorDeDocumento(e, fondoId, { sinBancarizar: true, motivoSinBancarizar: '' }))).toBe(
-      'comprobantes_motivo_sin_bancarizar_rango',
-    );
   });
 });
 

@@ -11,6 +11,7 @@ import { empresas } from '../../../core/cuentas/infraestructura/persistencia/emp
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { ALCANCE_DE_FONDOS } from './alcance-de-fondos.js';
 import { esquemaCajaChica } from './esquema.tablas.js';
+import { restriccionesDeLaLiquidacion } from './vales-provisionales.restricciones.js';
 import { fondos } from './fondos.tablas.js';
 
 /**
@@ -58,12 +59,7 @@ export const valesProvisionales = esquemaCajaChica.table(
     check('vales_monto_positivo', sql`${t.monto} > 0`),
     check('vales_motivo_valido', sql`${t.motivo} is not null and ${textoRecortado(t.motivo, 300)}`),
     check('vales_estado_valido', sql`${t.estado} in ('abierto', 'liquidado', 'anulado')`),
-    check(
-      'vales_liquidacion_completa',
-      sql`(${t.estado} = 'liquidado') = (${t.fechaDeLiquidacion} is not null) and (${t.fechaDeLiquidacion} is not null) = (${t.liquidadoEn} is not null) and (${t.liquidadoEn} is not null) = (${t.liquidadoPor} is not null)`,
-    ),
-    check('vales_devuelto_valido', sql`${t.devuelto} >= 0 and ${t.devuelto} <= ${t.monto}`),
-    check('vales_abierto_sin_devuelto', sql`${t.estado} = 'liquidado' or ${t.devuelto} = 0`),
+    ...restriccionesDeLaLiquidacion(t),
     ...restriccionesDeAnulacion('vales', t),
     fechaDeAnulacionPosterior('vales', t),
     unique('vales_numero_unico').on(t.empresaId, t.anioDeNumero, t.numero),

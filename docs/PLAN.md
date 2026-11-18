@@ -2340,3 +2340,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (§9.5), todo el servidor y el cliente (CC-2 en adelante, CL-2 en adelante) y lo que depende de CCL-M (`preguntarATodos`),
   CCL-B1 (conceptos de sistema de Bancos, `0035`), CCL-L1 (referencia de destino del libro) y CCL-BZ (bancarización
   compartida, función `security definer` de la suma de Caja chica, que revisa `seguridad`, V-S1 y V-S2).
+- **2026-11-18 — CC-1 y CL-1, correcciones de la revisión.** Migraciones `0002` de Caja chica y Cuentas por liquidar
+  (la `0001` no se tocó). La excepción de CC-f (A′, factura con retención con permiso y motivo) ahora cabe en las
+  tablas: `con_retencion`, `monto_retenido` y `motivo_con_retencion` en `comprobantes` y `gastos`; `monto` pasa a ser
+  lo que salió del fondo o anticipo (el neto), así que la ecuación del fondo y la reposición no se inflan con la
+  retención, que la entera la empresa. El documento del libro se liga con la llave compuesta
+  `(id, empresa_id, proveedor_id, destino)` (columna fija `destino_del_documento`), como ya hace Cuentas por pagar.
+  Se quitó `comprobantes.motivo_sin_bancarizar` (CC-h = A), se agregaron los índices de las llaves que cruzan de
+  módulo y entre tablas, y el check `fecha_de_liquidacion >= fecha` en anticipos y vales provisionales.

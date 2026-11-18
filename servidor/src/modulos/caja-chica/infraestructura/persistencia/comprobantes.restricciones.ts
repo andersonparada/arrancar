@@ -20,7 +20,10 @@ type T = Record<
   | 'sobreElTope'
   | 'motivoSobreElTope'
   | 'sinBancarizar'
-  | 'motivoSinBancarizar'
+  | 'conRetencion'
+  | 'montoRetenido'
+  | 'motivoConRetencion'
+  | 'destinoDelDocumento'
   | 'arqueoId'
   | 'destinoDelFaltante'
   | 'valeProvisionalId'
@@ -67,12 +70,20 @@ export const restriccionesDelValeDeGasto = (t: T) => [
   check('comprobantes_motivo_sin_documento_rango', textoRecortado(t.motivoSinDocumento, 300)),
 ];
 
-/** Pasarse del tope, el efectivo sin bancarizar y la asignación al fondo: cada marca lleva su motivo. */
+/** La factura con retención (excepción de CC-f): monto retenido, motivo y solo en documentos. */
+export const restriccionesDeLaRetencion = (t: T) => [
+  check('comprobantes_retenido_no_negativo', sql`${t.montoRetenido} >= 0`),
+  check('comprobantes_retencion_con_monto', sql`${t.conRetencion} = (${t.montoRetenido} > 0)`),
+  check('comprobantes_retencion_con_motivo', sql`${t.conRetencion} = (${t.motivoConRetencion} is not null)`),
+  check('comprobantes_motivo_con_retencion_rango', textoRecortado(t.motivoConRetencion, 300)),
+  check('comprobantes_retencion_solo_en_documentos', sql`not ${t.conRetencion} or ${t.clase} = 'documento'`),
+  check('comprobantes_destino_del_documento_fijo', sql`${t.destinoDelDocumento} = 'caja-chica'`),
+];
+
+/** Pasarse del tope y la asignación al fondo: el tope lleva su motivo. */
 export const restriccionesDeMarcas = (t: T) => [
   check('comprobantes_tope_con_motivo', sql`${t.sobreElTope} = (${t.motivoSobreElTope} is not null)`),
   check('comprobantes_motivo_sobre_el_tope_rango', textoRecortado(t.motivoSobreElTope, 300)),
-  check('comprobantes_motivo_sin_bancarizar_solo_marcado', sql`${t.motivoSinBancarizar} is null or ${t.sinBancarizar}`),
-  check('comprobantes_motivo_sin_bancarizar_rango', textoRecortado(t.motivoSinBancarizar, 300)),
   check(
     'comprobantes_asignacion_completa',
     sql`(${t.fondoId} is null) = (${t.asignadoEn} is null) and (${t.asignadoEn} is null) = (${t.asignadoPor} is null)`,
