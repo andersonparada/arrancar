@@ -1,4 +1,5 @@
 import type { OrigenDelDocumento, TipoDeDocumento } from './tipos';
+import type { EstadoDePago } from './tipos-de-pagos';
 
 /** Lo que el reporte avisa sin frenarlo: `codigo` estable y el texto para leer. */
 export interface AvisoDelReporte {
@@ -66,7 +67,7 @@ export interface ReporteDeSaldosPorProveedor {
 
 export type TramoDeAntiguedad =
   'por_vencer' | 'de_1_a_30' | 'de_31_a_60' | 'de_61_a_90' | 'mas_de_90' | 'sin_vencimiento';
-export type EstadoDePago = 'pendiente' | 'en_parte' | 'comprometido' | 'pagado';
+export type { EstadoDePago };
 export type AutorizacionDelReporte = 'todos' | 'autorizados' | 'sin_autorizar';
 export type TipoDeCargo = Exclude<TipoDeDocumento, 'nota_de_credito'>;
 

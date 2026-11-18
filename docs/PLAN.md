@@ -2759,3 +2759,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   reaplicación proponen y limitan por lo **disponible**; el error dice cuánto está disponible y cuánto ya está comprometido; el
   selector de proveedor agrega «(disponible Q…)» solo si difiere. Lógica pura en `composables/comprometido.ts` con pruebas.
   Pendiente: D6 (R2 y R1 con `disponible`, a la espera de A.7) y los reportes que no se tocaron.
+
+- **2026-11-18, correcciones de la revisión de posfechado.** R2 (cliente) acepta el quinto estado `comprometido_en_parte`
+  (tipo compartido con Pagos, texto, tono y filtro). «Registrar pago» y «Pagar en efectivo» de la contraseña filtran los cargos por
+  `disponible > 0` y no por `saldo` (la deuda). En el selector de Nuevo pago, `porPagar` suma la deuda de todos los cargos
+  autorizados del proveedor y `disponible` solo los cargos con algo disponible (`having bool_or(disponible > 0)`). Quedan
+  pendientes, por menores: unificar en `textos.ts` los nombres de estado, «comprometido con cheque N al dd/mm» en la contraseña,
+  columnas Pagado y Comprometido en la contraseña impresa, y actualizar la adenda A.4 (`hechosDe` usa la deuda, a propósito).

@@ -78,6 +78,12 @@ describe('registrar pago desde la contraseña', () => {
     expect(cargosPagables({ cargos }).map(({ documentoId }) => documentoId)).toEqual(['a']);
   });
 
+  it('un cargo todo comprometido con posfechado debe, pero no se ofrece pagar', () => {
+    const cubierto = cargo('a', { comprometido: '100.00', disponible: '0.00' });
+    expect(cargosPagables({ cargos: [cubierto] })).toEqual([]);
+    expect(puedeRegistrarPago(ficha({ cargos: [cubierto] }), puedeTodo)).toBe(false);
+  });
+
   it('lleva al pago nuevo con el proveedor y la contraseña abiertos', () => {
     expect(destinoDeNuevoPago(ficha())).toEqual({
       name: 'cuentas-por-pagar.pagos.nuevo',
