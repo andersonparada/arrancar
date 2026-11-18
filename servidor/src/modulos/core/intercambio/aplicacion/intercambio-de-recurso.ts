@@ -51,6 +51,11 @@ export interface DatosDelRecurso<Registro, Solicitud, Filtro = void> {
    * propuso. Sale en `avisos` del resultado, sin impedir importar.
    */
   avisarDeFila?: (solicitud: Solicitud, creado: unknown) => AvisoDeFila | null;
+  /**
+   * Es un reporte que solo se exporta: el Excel lleva una sola hoja de datos, sin la de «Instrucciones» (que solo
+   * tiene sentido para llenar una plantilla de importación).
+   */
+  soloExportar?: boolean;
   /** Avisos al final de la hoja de instrucciones, uno por fila, para lo que las columnas no explican. */
   notasDeInstrucciones?: string[];
 }
@@ -192,10 +197,12 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
   }
 
   private escribir(filas: unknown[][], conLasDeExportar?: Columna[]): Promise<Buffer> {
-    const { nombre, columnas, libro } = this.dependencias;
+    const { nombre, columnas, libro, soloExportar } = this.dependencias;
+    const encabezados = (conLasDeExportar ?? columnas).map((columna) => columna.titulo);
+    if (soloExportar) return libro.escribirVarias([{ nombre, encabezados, filas }]);
     return libro.escribir({
       nombre,
-      encabezados: (conLasDeExportar ?? columnas).map((columna) => columna.titulo),
+      encabezados,
       filas,
       instrucciones: instruccionesDe(columnas, this.dependencias.notasDeInstrucciones),
     });

@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { ReporteDeDocumentosAUnaFecha, ReporteDeSaldosPorProveedor } from '../../servicios/tipos-de-reportes';
-import { reporteDeSaldosVacio, totalesDeDocumentos, totalesDeSaldos } from './resumen-de-reportes';
+import { filasDeConciliacion, reporteDeSaldosVacio, totalesDeDocumentos, totalesDeSaldos } from './resumen-de-reportes';
 
 beforeEach(() => setActivePinia(createPinia()));
 
@@ -58,5 +58,23 @@ describe('resumen de los reportes', () => {
     expect(totalesDeDocumentos(documentos)[0]).toMatchObject({ etiqueta: 'Saldo', valor: formatearMonto('900.00') });
     expect(totalesDeDocumentos(documentos)[1]?.etiqueta).toBe('Documento');
     expect(totalesDeDocumentos({ ...documentos, total: 2 })[1]?.etiqueta).toBe('Documentos');
+  });
+
+  it('R1 muestra la conciliación con los pagos por aplicar solo si el servidor la manda', () => {
+    expect(filasDeConciliacion(saldos)).toBeNull();
+    const filas = filasDeConciliacion({
+      ...saldos,
+      conciliacion: {
+        saldoNetoDelAuxiliar: '1200.00',
+        pagosPorAplicar: '200.00',
+        proveedoresNetoDePagosPorAplicar: '1000.00',
+      },
+    });
+    expect(filas?.map((f) => f.valor)).toEqual([
+      formatearMonto('1200.00'),
+      formatearMonto('200.00'),
+      formatearMonto('1000.00'),
+    ]);
+    expect(filas?.filter((f) => f.total)).toHaveLength(1);
   });
 });

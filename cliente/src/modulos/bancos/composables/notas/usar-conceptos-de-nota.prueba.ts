@@ -72,16 +72,13 @@ describe('el concepto al abrir la corrección de una nota (QA intermedia 2026-11
     expect(opcionesDeConceptos.value.map((opcion) => opcion.valor)).toContain(PAGO_A_PROVEEDORES.id);
   });
 
-  // Error conocido: al pasar la ventana de «crédito» (valor inicial) a «débito» el observador del tipo limpia el
-  // concepto con las opciones SIN el guardado, así que una nota marcada (concepto de sistema) o con un concepto ya
-  // inactivo se abre con «Elija un concepto» y obliga a escoger otro. Cuando se corrija, quitar `.fails`.
-  it.fails('no borra el concepto de sistema de una nota marcada al abrirla', async () => {
+  it('no borra el concepto de sistema de una nota marcada al abrirla', async () => {
     const { edicion } = await abrirParaCorregir(notaDeDebito(PAGO_A_PROVEEDORES.id));
 
     expect(edicion.value.conceptoId).toBe(PAGO_A_PROVEEDORES.id);
   });
 
-  it.fails('no borra un concepto que ya está inactivo al abrir la nota', async () => {
+  it('no borra un concepto que ya está inactivo al abrir la nota', async () => {
     const { edicion } = await abrirParaCorregir(notaDeDebito(VIEJO.id));
 
     expect(edicion.value.conceptoId).toBe(VIEJO.id);

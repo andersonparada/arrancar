@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Banknote, CalendarClock, FilePlus, Printer, Ban } from 'lucide-vue-next';
+import { Banknote, CalendarClock, FilePlus, Printer, Ban, Wallet } from 'lucide-vue-next';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
-import { puedeRegistrarPago } from '../composables/contrasenas/pagos-de-la-contrasena';
+import { puedePagarEnEfectivo, puedeRegistrarPago } from '../composables/contrasenas/pagos-de-la-contrasena';
 import type { FichaDeContrasena } from '../servicios/tipos-de-contrasenas';
 
 /**
@@ -10,7 +10,7 @@ import type { FichaDeContrasena } from '../servicios/tipos-de-contrasenas';
  * registrar el pago si hay algo autorizado por pagar y el usuario puede pagar de alguna forma.
  */
 defineProps<{ ficha: FichaDeContrasena }>();
-defineEmits<{ imprimir: []; pagar: []; cambiarFecha: []; agregar: []; anular: [] }>();
+defineEmits<{ imprimir: []; pagar: []; pagarEnEfectivo: []; cambiarFecha: []; agregar: []; anular: [] }>();
 const sesion = usarSesion();
 </script>
 
@@ -18,6 +18,14 @@ const sesion = usarSesion();
   <BotonBase variante="secundario" :icono="Printer" @click="$emit('imprimir')">Imprimir</BotonBase>
   <BotonBase v-if="puedeRegistrarPago(ficha, sesion.puede)" :icono="Banknote" @click="$emit('pagar')">
     Registrar pago
+  </BotonBase>
+  <BotonBase
+    v-if="puedePagarEnEfectivo(ficha, sesion.puede)"
+    variante="secundario"
+    :icono="Wallet"
+    @click="$emit('pagarEnEfectivo')"
+  >
+    Pagar en efectivo
   </BotonBase>
   <template v-if="ficha.puedeEditar">
     <span v-permiso="'cuentas-por-pagar.contrasenas.editar'" class="contents">

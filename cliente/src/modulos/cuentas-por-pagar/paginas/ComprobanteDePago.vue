@@ -19,8 +19,12 @@ const volver = {
   <div v-if="comprobante" class="space-y-4">
     <div class="print:hidden">
       <EncabezadoPagina
-        :titulo="`Imprimir el pago ${comprobante.pago.numero}`"
-        descripcion="Se imprimen dos hojas: el original para el proveedor y la copia para la empresa, que firma quien recibe."
+        :titulo="`${comprobante.esReciboDeEfectivo ? 'Imprimir el recibo' : 'Imprimir el pago'} ${comprobante.pago.numero}`"
+        :descripcion="
+          comprobante.esReciboDeEfectivo
+            ? 'Se imprimen dos hojas: el original, que firma quien recibe el efectivo y se queda en la empresa, y la copia para el proveedor.'
+            : 'Se imprimen dos hojas: el original para el proveedor y la copia para la empresa, que firma quien recibe.'
+        "
         :volver="volver"
       >
         <BotonBase :icono="Printer" @click="imprimir">Imprimir</BotonBase>

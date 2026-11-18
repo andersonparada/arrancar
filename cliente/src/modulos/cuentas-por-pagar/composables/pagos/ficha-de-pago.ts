@@ -68,6 +68,9 @@ function efectoEnBancos(ficha: FichaDePago): string {
     return 'Bancos anulará el cheque o, si su mes ya está conciliado, creará un movimiento inverso.';
   if (ficha.forma === 'nota_de_debito') return 'Bancos creará el movimiento inverso de la nota de débito.';
   if (ficha.forma === 'nota_ligada') return 'La nota de Bancos no se anula: vuelve a quedar disponible para otro pago.';
+  if (ficha.forma === 'efectivo') {
+    return `El efectivo vuelve al retiro${ficha.retiro ? ` ${ficha.retiro.numero}` : ''} para usarlo en otro pago; no se mueve dinero en Bancos.`;
+  }
   return 'No se mueve dinero en Bancos.';
 }
 

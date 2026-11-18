@@ -5,6 +5,8 @@ export interface EmpresaDisponible {
   nombre: string;
   cuentaId: string;
   cuentaNombre: string;
+  /** NIT de la empresa para los encabezados impresos. */
+  nit?: string | null;
 }
 
 export interface ResumenSesion {

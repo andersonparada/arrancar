@@ -2669,3 +2669,73 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   demás quitando sus entradas del lock. **Pendientes (versión mayor, no se hizo):** `minimatch` 10.2.6 (por eslint 10 y
   typescript-eslint; el parche es 11.0.9, mayor) y sus dependientes `glob`/`@eslint/config-array`; `esbuild` 0.18 dentro de
   `@esbuild-kit` (de drizzle-kit; `audit fix --force` bajaría drizzle-kit a 0.18.1, no se hace). Ambos solo en desarrollo.
+- **2026-11-18 — CP5-9b (cliente, efectivo y transitoria: R9, R10, R11 y conciliación al pie de R1).** Sin cambios de contrato en el
+  servidor; solo se corrige el Excel: la columna «Forma» de R9 (y la de R6, que tenía el mismo defecto) sale con su nombre («Nota de
+  débito ligada», «Efectivo»…) desde `dominio/nombres-de-formas.ts`, con prueba. Pantallas en `seccion: 'reportes'`: **Pagos en
+  efectivo sobre el umbral** (R9, `reportes-de-control`; desde y hasta como mes de una lista de 60, máximo 48 con el error dicho antes de
+  pedir; «Solo con efecto fiscal» sí por omisión; una tarjeta por proveedor y mes con sus pagos y cargos, marcas de IVA en riesgo y
+  costo no deducible, «IVA no conocido», la excepción con su motivo; sección propia de documentos sobre el umbral con todos sus pagos
+  por forma; sin tablas, así que no hay desplazamiento horizontal), **Retiros de efectivo por liquidar** (R10, filtros de corte y
+  custodio, «de un mes anterior») y **Notas de débito sin aplicar** (R11, corte por omisión al fin del mes anterior, cuenta bancaria;
+  el selector de cuentas se arma con las cuentas que ya trajo el reporte, sin importar Bancos). R10 y R11 son de `reportes-de-pagos`;
+  tarjetas en celular y tabla en pantalla grande. R1 gana al pie «Conciliación con pagos por aplicar» (auxiliar − R11 = Proveedores
+  neto) solo cuando el servidor la manda, con enlace a R11 al mismo corte (visible con el permiso de pagos). Los rótulos de saldo y de
+  estado de pago no se tocaron (adenda del posfechado). Pendiente: los retiros no tienen pantalla propia en Cuentas por pagar, así que
+  R10 muestra su número como texto.
+
+- **2026-11-18 — Correcciones de la QA intermedia** (`informe-qa-intermedia-2026-11-18.md`). Corregidos: error 1 (el concepto guardado de una
+  nota marcada o con concepto inactivo ya no se borra al abrir la corrección; las dos `it.fails` pasaron a `it`); 3 (R3 con rango
+  inválido limpia el reporte y deja el mensaje junto al campo «Desde»); 4 («Mostrar anulados» se apaga y se deshabilita en «Para el
+  proveedor»); 5 (R2 dice con palabras lo que filtra desde «Más filtros»); 6 (NIT de la empresa en el encabezado impreso, que llega
+  en `empresa.nit` de la sesión, y sin «Emitido por» en «Para el proveedor»); 7 (Excel de R12 con columna Sección, filas `Total` y
+  `Nota` —mes, filtros y leyenda— y el documento como en pantalla); 8 y 9 (`moduloDeOrigen` en el cheque de Bancos: el diálogo de
+  anular avisa que también se anula el pago de Cuentas por pagar y la tarjeta dice el origen); 10 (`montoLegible` en
+  `core/compartido/dominio`: «Q 12,360.00» y «-Q 16,010.00» en el saldo insuficiente y en los avisos de saldos de CP5); 11 (una sola
+  entrada del menú a las constancias pendientes: la de Libro de compras); 12 (Estado de cuenta lee `desde`, `hasta` y `presentacion`
+  del enlace; la lista de Cheques lee `cuentaBancariaId`, `estado`, `desde` y `hasta`, y su «Hasta» queda vacío para que entren los
+  posfechados); 13 (aviso de saldos proyectados con un corte futuro en R1); 14 (la explicación de la tarjeta de la nota se lee
+  completa: `DetalleDeRegistro.largo`); 16 (columna «Acciones» pegada al borde en Movimientos; los Excel de reportes llevan una sola
+  hoja, sin «Instrucciones», con `soloExportar`; nombre del proveedor más grande que el NIT al imprimir R1). Parcial: error 15 (con
+  Cuentas por pagar apagado la tarjeta ya no ofrece lo que el servidor rechazaría). **Pendientes:** 15 (nota ligada a un pago: Bancos
+  no sabe que está ligada, hace falta decidir cómo se lo dice Cuentas por pagar; sigue el `it.fails` de la API), 2 (adenda en cola) y
+  el formato «Q 1,000.00» en el resto de los mensajes del servidor (~56 usos de `quetzales()` y los de Libro de compras: cambia
+  muchas pruebas de otros pasos).
+- 2026-11-18 · QA intermedia, segunda ronda de correcciones. Se recortó el archivo de pruebas de saldos de Cuentas por pagar al
+  límite de ESLint; el concepto de una nota guardada se conserva al cambiar el tipo solo si sigue siendo compatible; el NIT del
+  encabezado de impresión sale con guion (`formatearNit`) también en el encabezado de `core` (Constancias pendientes); el error
+  del rango del estado de cuenta ya no mezcla fallos del servidor con las fechas.
+- **2026-11-18 — CP4-E5 (cliente, pagos en efectivo).** Sin servidor ni migración. **Retiros** (`/cuentas-por-pagar/retiros`,
+  menú «Retiros de efectivo», Operación): lista «por liquidar» con filtros de estado, **fecha de corte** (el disponible es el de ese
+  día), «solo los que aún tienen efectivo», total disponible, antigüedad del efectivo y el aviso de fin de mes del servidor;
+  `VentanaDeRetiro` (cheque o retiro en ventanilla/cajero, chequera o cuenta con su siguiente cheque, monto, fecha no futura, custodio
+  escrito o usuario de Arrancar —solo con `usuarios.ver`—, beneficiario por omisión el custodio y sin «al portador», «no negociable»
+  encendido, boleta, ayuda IVE-BA-03, resumen para confirmar) que al registrar muestra los avisos de bancarización y de Bancos y lleva
+  a «Pagar en efectivo»; `FichaDeRetiro` (datos, liquidación, anulación, pagos con enlace y «Imprimir los recibos»), `VentanaDeLiquidacion`
+  (sobrante calculado; lo devuelto y el faltante se completan entre sí para que siempre cuadren; motivo del faltante; cuenta y boleta del
+  depósito; aviso si liquida el custodio), reabrir y anular con `VentanaDeCambioDeRetiro` (resumen, motivo y fecha opcional del movimiento
+  en Bancos). **Reparto** (`/cuentas-por-pagar/retiros/:id/pagar`; desde la contraseña, «Pagar en efectivo» lleva a
+  `/cuentas-por-pagar/pagos/efectivo`, que escoge el retiro o pasa directo si hay uno solo): retiro con «Disponible» y «Quedará» en vivo
+  (rojo si se pasa), «Agregar un proveedor» (selector por nombre, solo los que aún no están), una sección plegable por proveedor que
+  **reutiliza `CargosDelPago`/`FilaDeCargoDelPago` de CP4-9** (cargos por contraseña, varias contraseñas, montos propuestos, diferencias
+  de centavos), quién recibe, recibo del proveedor y fecha (una para todos, cambiable por proveedor), resumen de confirmación con una
+  línea por proveedor y un solo «Registrar los pagos» (todo o nada; límites de 20 proveedores y 300 documentos revisados antes). Los
+  errores del servidor (`pagos.<i>.…`) vuelven a su proveedor y a su documento. **Bancarización:** el cliente no adivina la regla ni el
+  régimen; solo anticipa con un aviso neutro que lo del mes llega al umbral (`sumaDelMesAlProveedor` + el pago); si el servidor bloquea
+  (`efectivo_sobre_el_umbral`), el proveedor muestra el texto del bloqueo y, con `pagos.efectivo-sin-bancarizar`, pide el motivo (se
+  reenvía), y sin el permiso dice que lo pague con cheque. Al terminar: pagos con su número, «Imprimir los recibos» (`/pagos/recibos?pagos=id,id`,
+  `RecibosDeEfectivo`: original y copia de cada recibo con `HojaDelComprobante`; el que falle no impide imprimir los demás) y «Repartir otra
+  vez». `ComprobanteDePago` titula «Recibo» y explica que el original firmado se queda en la empresa; anular un pago en efectivo dice
+  que el efectivo vuelve al retiro (sin fecha de inverso). Lógica pura con pruebas: `edicion-de-retiro`, `liquidacion`, `retiros`
+  (lista, ficha y opciones), `reparto-de-efectivo` (totales, errores, cuerpo, errores del servidor, resumen), `recibos-de-efectivo`.
+  Diferencias con el diseño: `GET /proveedores/:id/para-pagar` aún no devuelve `efectoFiscal` ni `sinDatosFiscales` (el diseño §7.5 lo
+  prometía), por eso el bloqueo se atiende cuando el servidor lo dice y no se anticipa por régimen; el ensayo de la fecha en el reparto
+  usa el mes de la fecha de cada proveedor solo al agregarlo. Pendiente: cotejar el texto de la ayuda IVE-BA-03 con la Ley contra el
+  Lavado de Dinero (E-9) y la prueba de punta a punta en navegador (CP4-12).
+- **2026-11-18 — CP4-E5, correcciones de la revisión (cliente).** «A nombre de» del cheque toma el nombre del usuario elegido
+  como custodio (ya no valida el texto viejo del custodio). Los errores generales de un proveedor del reparto
+  (`general`, `sinDatos`, p. ej. más de 100 documentos por pago, que ahora se avisa antes de enviar) se muestran en su
+  proveedor. Quien puede pagar sin bancarizar ve el texto legal (E-5: art. 20 del Decreto 20-2006, ISR/IVA, rectificar
+  según el art. 106 del Código Tributario) junto al bloqueo; el anticipo cubre la factura de Q30,000 o más pagada por
+  partes y la suma del mes se vuelve a traer cuando la fecha cambia de mes. En la ficha del retiro solo el enlace depende
+  de `pagos.ver` (la lista se ve con `retiros.ver`) y se avisa si hay más de 20 recibos. Pendiente: ocultar «Retirar
+  efectivo» y «Pagar en efectivo» a quien no tiene `pagos.ver` (los medios salen de `GET /pagos/medios`).

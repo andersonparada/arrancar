@@ -21,6 +21,7 @@ const base: ChequeListado = {
   anuladoEn: null,
   motivoDeAnulacion: null,
   causaDeAnulacion: null,
+  moduloDeOrigen: null,
   puedeAnular: true,
   puedeBlanquear: true,
 };
@@ -55,5 +56,13 @@ describe('detalles del cheque listado', () => {
 
   it('sin motivo de anulación no lo agrega', () => {
     expect(detallesDeChequeListado(base).map((d) => d.etiqueta)).not.toContain('Motivo de anulación');
+  });
+
+  it('dice el módulo que lo generó y lo calla si nació en Bancos', () => {
+    expect(detallesDeChequeListado({ ...base, moduloDeOrigen: 'cuentas-por-pagar' })).toContainEqual({
+      etiqueta: 'Origen',
+      valor: 'Cuentas por pagar',
+    });
+    expect(detallesDeChequeListado(base).map((d) => d.etiqueta)).not.toContain('Origen');
   });
 });

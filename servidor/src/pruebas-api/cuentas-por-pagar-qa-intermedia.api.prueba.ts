@@ -92,3 +92,15 @@ describe('un cheque posfechado en la ficha y en los reportes', () => {
     expect(fila).toMatchObject({ estadoDePago: 'en_parte', saldo: '1120.00', comprometido: '1120.00' });
   });
 });
+
+describe('el origen de un cheque de Cuentas por pagar (QA intermedia, error 9)', () => {
+  it('la lista de cheques de la empresa dice que lo generó Cuentas por pagar', async () => {
+    const { proveedor, cargo } = await e.proveedorConCargo();
+    const pago = await e.pagar(e.cheque(proveedor.proveedorId, [{ cargoId: cargo, monto: '1120.00' }]));
+    expect(pago.estado, JSON.stringify(pago.cuerpo)).toBe(201);
+
+    const lista = (await e.propietario().get('/api/bancos/cheques')).cuerpo as { moduloDeOrigen: string | null }[];
+
+    expect(lista.some((cheque) => cheque.moduloDeOrigen === 'cuentas-por-pagar')).toBe(true);
+  });
+});

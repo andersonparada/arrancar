@@ -6,6 +6,7 @@ import type {
   PagoEnEfectivoDto,
   ReporteDeBancarizacionDto,
 } from '../aplicacion/dto/reportes-de-bancarizacion.dto.js';
+import { NOMBRES_DE_FORMAS } from '../dominio/nombres-de-formas.js';
 import { dinero, fecha, seccion, siNo, texto } from './columnas-de-reporte.js';
 
 /** Una fila del Excel de R9: un mes, un pago en efectivo, un documento sobre el umbral, un total o una nota. */
@@ -101,7 +102,7 @@ const filasDelDocumento = (documento: DocumentoSobreElUmbralDto): FilaExportadaD
     proveedor: documento.proveedorNombre,
     documento: documento.documento,
     pago: pago.numero,
-    forma: pago.forma,
+    forma: NOMBRES_DE_FORMAS[pago.forma],
     fecha: pago.fecha,
     monto: pago.monto,
   })),

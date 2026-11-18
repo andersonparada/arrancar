@@ -1,3 +1,4 @@
+import { montoLegible } from '../../core/compartido/dominio/monto-legible.js';
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
 
 /** Falta el saldo final que muestra el estado de cuenta del banco. */
@@ -14,12 +15,7 @@ export class FaltaElSaldoDelEstadoDeCuenta extends DatoInvalido {
   }
 }
 
-/** `12270.5` como «Q 12,270.50», igual que la pantalla. */
-const enQuetzales = (monto: string): string => {
-  const valor = Number(monto);
-  const texto = Math.abs(valor).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return `${valor < 0 ? '-' : ''}Q ${texto}`;
-};
+const enQuetzales = montoLegible;
 
 /** El saldo transcrito del estado de cuenta no es el que calculan las marcas. */
 export class SaldoDelEstadoDeCuentaNoCoincide extends ReglaDeNegocioInfringida {

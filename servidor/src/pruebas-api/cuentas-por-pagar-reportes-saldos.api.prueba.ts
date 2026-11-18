@@ -6,11 +6,7 @@
 import ExcelJS from 'exceljs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { anularAjuste } from './soporte/cuentas-por-pagar-notas.js';
-import {
-  anularDocumentoEnLaBase,
-  anularPagoEnLaBase,
-  anularReintegroEnLaBase,
-} from './soporte/cuentas-por-pagar-reportes.js';
+import * as anulaciones from './soporte/cuentas-por-pagar-reportes.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { HOY, nitValido } from './soporte/escenario-de-documentos.js';
 import { CORTE, prepararMundoDeSaldos, type MundoDeSaldos } from './soporte/escenario-de-reportes-de-saldos.js';
@@ -125,10 +121,13 @@ describe('R1: saldos por proveedor al 31 de octubre', () => {
 
     expect(r1.avisos).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ codigo: 'emitidos_antes_del_inicio', mensaje: expect.stringContaining('Q1,120.00') }),
+        expect.objectContaining({
+          codigo: 'emitidos_antes_del_inicio',
+          mensaje: expect.stringContaining('Q 1,120.00'),
+        }),
         expect.objectContaining({
           codigo: 'registrados_despues_del_corte',
-          mensaje: expect.stringContaining('Q80.00'),
+          mensaje: expect.stringContaining('Q 80.00'),
         }),
       ]),
     );
@@ -273,10 +272,10 @@ describe('4: un corte pasado no cambia al anular después', () => {
     const antes = await saldos(`corte=${CORTE}`);
     const documentosAntes = await documentos(`corte=${CORTE}&limite=200`);
 
-    await anularPagoEnLaBase(m.pagoQueSeAnula);
+    await anulaciones.anularPagoEnLaBase(m.pagoQueSeAnula);
     await anularAjuste(m.escenario, m.ajusteQueSeAnula);
-    await anularReintegroEnLaBase(m.reintegroQueSeAnula);
-    await anularDocumentoEnLaBase(m.delLibro);
+    await anulaciones.anularReintegroEnLaBase(m.reintegroQueSeAnula);
+    await anulaciones.anularDocumentoEnLaBase(m.delLibro);
 
     expect(await saldos(`corte=${CORTE}`)).toEqual(antes);
     expect(await documentos(`corte=${CORTE}&limite=200`)).toEqual(documentosAntes);
