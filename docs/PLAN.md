@@ -2433,3 +2433,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   cada moneda guarda (opcional) su código del Banguat, la ventana de Monedas lo elige con un selector, y toda moneda con
   código actualiza su tipo de cambio **cada noche** de forma automática. El contador revisa qué tipo vale para documentos en
   monedas distintas del USD y el arquitecto escribe la adenda en `docs/modulos/diseno-multimoneda.md`.
+- **2026-11-18 (decisiones del usuario).** *Caja chica y Cuentas por liquidar:* el permiso de excepción para una factura con
+  retención y su motivo los pide **quien asigna la factura al fondo o al anticipo** (desde la ficha o desde la bandeja); sin
+  el permiso, la factura queda pendiente en la bandeja y se registra quién la autorizó. *Cuentas por pagar:*
+  `GET /pagos/notas-para-ligar` pasa a exigir `cuentas-por-pagar.pagos.ligar-notas-de-debito` (cambia §8 de
+  `diseno-cp4-pagos.md`, que decía `pagos.ver`).
