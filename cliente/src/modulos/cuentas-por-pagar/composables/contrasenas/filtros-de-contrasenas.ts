@@ -4,6 +4,7 @@ import type {
   ContrasenaResumen,
   EstadoBuscadoDeContrasena,
 } from '../../servicios/tipos-de-contrasenas';
+import { nombreDelEstadoDePago } from '../pagos/detalles-de-pago';
 
 export const CONTRASENAS_POR_PAGINA = 24;
 
@@ -53,10 +54,12 @@ export function cantidadDeFiltrosDeContrasenas(filtros: FiltrosDeContrasenas): n
   return puestos.filter(Boolean).length + (filtros.estado === 'vigente' ? 0 : 1);
 }
 
-/** El texto corto de la marca de la tarjeta: lo anulado pesa más que el pago vencido. */
+/** El texto corto de la marca de la tarjeta: lo anulado pesa más que el pago vencido y este, más que cómo va el pago. */
 export function marcaDeContrasena(contrasena: ContrasenaResumen): string | undefined {
   if (contrasena.estado === 'anulada') return 'Anulada';
-  return contrasena.pagoVencido ? 'Pago vencido' : undefined;
+  if (contrasena.pagoVencido) return 'Pago vencido';
+  const estado = contrasena.estadoDePago;
+  return estado && estado !== 'pendiente' ? nombreDelEstadoDePago(estado) : undefined;
 }
 
 /** Los datos de una tarjeta de la lista. */

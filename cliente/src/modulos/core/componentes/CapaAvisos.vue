@@ -51,7 +51,7 @@ const colores = {
     encima="maxima"
     @cerrar="avisos.responderConfirmacion(false)"
   >
-    <p class="text-sm text-tierra-700 dark:text-tierra-200">{{ avisos.confirmacion?.mensaje }}</p>
+    <p class="text-sm whitespace-pre-line text-tierra-700 dark:text-tierra-200">{{ avisos.confirmacion?.mensaje }}</p>
     <template #pie>
       <BotonBase variante="secundario" @click="avisos.responderConfirmacion(false)">Cancelar</BotonBase>
       <BotonBase

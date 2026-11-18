@@ -1,4 +1,5 @@
 import type { EstadoDeDocumento, OrigenDelDocumento, TipoDeDocumento } from './tipos';
+import type { EstadoDePago, PagoDeLaContrasena } from './tipos-de-pagos';
 
 export type EstadoDeContrasena = 'vigente' | 'anulada';
 export type EstadoBuscadoDeContrasena = EstadoDeContrasena | 'todas';
@@ -17,6 +18,10 @@ export interface CargoDeContrasena {
   retenciones: string;
   rebajado: string;
   saldo: string;
+  /** Lo que los pagos vigentes con fecha de hoy o anterior entregaron. */
+  pagado: string;
+  /** Lo de pagos vigentes con fecha posterior a hoy (cheques posfechados). */
+  comprometido: string;
   retencionesPorPracticar: string | null;
   sobreUmbralDeBancarizacion: boolean;
 }
@@ -48,6 +53,7 @@ export interface ContrasenaResumen {
   saldo: string;
   estado: EstadoDeContrasena;
   pagoVencido: boolean;
+  estadoDePago: EstadoDePago | null;
 }
 
 export interface PaginaDeContrasenas {
@@ -99,6 +105,12 @@ export interface TotalesDeContrasena {
   saldo: string;
 }
 
+/** Los totales de la ficha suman lo pagado y lo comprometido por cheques posfechados. */
+export interface TotalesDeLaFicha extends TotalesDeContrasena {
+  pagado: string;
+  comprometido: string;
+}
+
 export interface AnulacionDeContrasena {
   motivo: string;
   anuladaPorNombre: string | null;
@@ -118,7 +130,7 @@ export interface FichaDeContrasena {
   estado: EstadoDeContrasena;
   cargos: CargoDeContrasena[];
   notas: NotaDeContrasena[];
-  totales: TotalesDeContrasena;
+  totales: TotalesDeLaFicha;
   impresa: boolean;
   impresaEn: string | null;
   anulacion: AnulacionDeContrasena | null;
@@ -126,6 +138,10 @@ export interface FichaDeContrasena {
   creadoEn: string;
   puedeEditar: boolean;
   puedeAnular: boolean;
+  /** Los pagos de la contraseña (vigentes y anulados), del más antiguo al más nuevo. */
+  pagos: PagoDeLaContrasena[];
+  /** `null` en una contraseña anulada. */
+  estadoDePago: EstadoDePago | null;
 }
 
 /** Lo que se cambia de una contraseña vigente; el motivo es obligatorio si cambia la fecha prometida. */

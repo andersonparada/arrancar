@@ -19,6 +19,7 @@ const resumen = (cambios: Partial<ContrasenaResumen> = {}): ContrasenaResumen =>
   saldo: '1250.00',
   estado: 'vigente',
   pagoVencido: false,
+  estadoDePago: 'pendiente',
   ...cambios,
 });
 
@@ -48,6 +49,13 @@ describe('tarjeta de contraseña', () => {
     expect(marcaDeContrasena(resumen({ estado: 'anulada', pagoVencido: true }))).toBe('Anulada');
     expect(marcaDeContrasena(resumen({ pagoVencido: true }))).toBe('Pago vencido');
     expect(marcaDeContrasena(resumen())).toBeUndefined();
+  });
+
+  it('muestra cómo va el pago salvo que no se haya pagado nada', () => {
+    expect(marcaDeContrasena(resumen({ estadoDePago: 'en_parte' }))).toBe('Pagada en parte');
+    expect(marcaDeContrasena(resumen({ estadoDePago: 'pagado' }))).toBe('Pagada');
+    expect(marcaDeContrasena(resumen({ estadoDePago: 'comprometido' }))).toBe('Comprometida');
+    expect(marcaDeContrasena(resumen({ estadoDePago: 'en_parte', pagoVencido: true }))).toBe('Pago vencido');
   });
 
   it('muestra proveedor, fechas, documentos y saldo', () => {

@@ -97,7 +97,11 @@ export function detallesDeTotalesDeContrasena(ficha: FichaDeContrasena): Detalle
   return [
     { etiqueta: 'Total de las facturas', valor: formatearMonto(totales.total) },
     { etiqueta: 'Retenciones', valor: formatearMonto(totales.retenciones) },
-    { etiqueta: 'Rebajado (notas y pagos)', valor: formatearMonto(totales.rebajado) },
+    { etiqueta: 'Rebajado (notas y pagos anteriores al inicio)', valor: formatearMonto(totales.rebajado) },
+    { etiqueta: 'Pagado', valor: formatearMonto(totales.pagado) },
+    ...(Number(totales.comprometido) > 0
+      ? [{ etiqueta: 'Comprometido (cheques posfechados)', valor: formatearMonto(totales.comprometido) }]
+      : []),
     { etiqueta: 'Saldo por pagar', valor: formatearMonto(totales.saldo) },
   ];
 }

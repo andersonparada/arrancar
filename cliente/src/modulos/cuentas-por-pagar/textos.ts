@@ -62,6 +62,12 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     titulo: 'Contraseñas con pago vencido',
     descripcion: 'Contraseñas con saldo cuyo pago prometido ya pasó, para cobrar o reprogramar.',
   },
+  pagos: {
+    titulo: 'Pagos',
+    nuevo: 'Nuevo pago',
+    descripcionDelNuevo:
+      'Pague a un proveedor lo que ya autorizó: con cheque, transferencia o débito, una nota que ya está en Bancos, o dando por pagado lo que ya estaba pagado antes de la fecha de inicio.',
+  },
   // generador: ventanas
 } as const;
 

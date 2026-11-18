@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileClock, FileMinus, HandCoins, Inbox, Scale } from 'lucide-vue-next';
+import { Banknote, ClipboardCheck, FileClock, FileMinus, HandCoins, Inbox, Scale } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_CUENTAS_POR_PAGAR, TITULO_SECCION_DE_PAGO, VENTANAS_CUENTAS_POR_PAGAR } from './textos';
 import { entradasDeReportes, rutasDeReportes } from './reportes-del-modulo';
@@ -68,6 +68,12 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       props: ({ params }) => ({ id: String(params.id) }),
       meta: { permiso: 'cuentas-por-pagar.contrasenas.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.contrasenas.imprimir },
     },
+    {
+      path: '/cuentas-por-pagar/pagos/nuevo',
+      name: 'cuentas-por-pagar.pagos.nuevo',
+      component: () => import('./paginas/NuevoPago.vue'),
+      meta: { permiso: 'cuentas-por-pagar.pagos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.nuevo },
+    },
     ...rutasDeReportes,
     // generador: rutas
   ],
@@ -121,6 +127,13 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           icono: Scale,
           seccion: 'administracion',
           permiso: 'cuentas-por-pagar.saldos-iniciales.ver',
+        },
+        {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.nuevo,
+          ruta: '/cuentas-por-pagar/pagos/nuevo',
+          icono: Banknote,
+          seccion: 'operacion',
+          permiso: 'cuentas-por-pagar.pagos.ver',
         },
         ...entradasDeReportes,
         // R12 vive en Libro de compras (CP5-f): aquí solo se enlaza, con el permiso de esa pantalla.
