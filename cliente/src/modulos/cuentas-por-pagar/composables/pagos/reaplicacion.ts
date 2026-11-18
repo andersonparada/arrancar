@@ -32,14 +32,14 @@ export const edicionDeReaplicacionVacia = (): EdicionDeReaplicacion => ({ abiert
 
 const centavos = (texto: string): number => centavosDe(texto) ?? 0;
 
-/** Los cargos que el pago ya cubre: lo disponible es su saldo de hoy más lo que este pago le entrega. */
+/** Los cargos que el pago ya cubre: lo disponible es lo que hoy se puede pagar más lo que este pago le entrega. */
 function candidatosDeLasLineas(ficha: FichaDePago): CandidatoDeReaplicacion[] {
   return ficha.aplicaciones.map((linea) => ({
     id: linea.documentoId,
     titulo: tituloDeDocumento(linea),
     contrasenaNumero: linea.contrasena.numero,
     actual: centavos(linea.monto),
-    disponible: centavos(linea.saldoDelDocumento) + centavos(linea.monto),
+    disponible: centavos(linea.disponibleDelDocumento) + centavos(linea.monto),
   }));
 }
 
@@ -48,7 +48,7 @@ const candidatoDeCargo = (cargo: CargoParaPagar, numeros: Map<string, string>): 
   titulo: tituloDeDocumento(cargo),
   contrasenaNumero: numeros.get(cargo.contrasenaId) ?? '',
   actual: 0,
-  disponible: centavos(cargo.saldo),
+  disponible: centavos(cargo.disponible),
 });
 
 /**

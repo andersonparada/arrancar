@@ -6,6 +6,7 @@ import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import { etiquetaDeDocumento } from '../composables/contrasenas/edicion-de-contrasena';
 import { cargoConPagos } from '../composables/contrasenas/pagos-de-la-contrasena';
+import { etiquetaDeComprometido, hayMontoPositivo } from '../composables/comprometido';
 import { textoDeEstado, tonoDeEstado } from '../composables/detalles-de-documento';
 import type { CargoDeContrasena, NotaDeContrasena } from '../servicios/tipos-de-contrasenas';
 import { TIPOS_DE_DOCUMENTO } from '../textos';
@@ -55,7 +56,7 @@ const nombreDelCargo = (cargo: CargoDeContrasena) => `${TIPOS_DE_DOCUMENTO[cargo
                 <dt class="text-xs text-tierra-500">Pagado</dt>
                 <dd>
                   {{ formatearMonto(cargo.pagado) }}
-                  <span v-if="Number(cargo.comprometido) > 0" class="block text-xs text-tierra-500">
+                  <span v-if="hayMontoPositivo(cargo.comprometido)" class="block text-xs text-tierra-500">
                     + {{ formatearMonto(cargo.comprometido) }} comprometido
                   </span>
                 </dd>
@@ -66,6 +67,15 @@ const nombreDelCargo = (cargo: CargoDeContrasena) => `${TIPOS_DE_DOCUMENTO[cargo
             <p class="text-right">
               <span class="block text-lg font-semibold">{{ formatearMonto(cargo.saldo) }}</span>
               <span class="block text-xs text-tierra-500">por pagar</span>
+              <span
+                v-if="hayMontoPositivo(cargo.comprometido)"
+                class="block text-xs text-trigo-800 dark:text-trigo-200"
+              >
+                {{ etiquetaDeComprometido(cargo.comprometidoHasta) }}: {{ formatearMonto(cargo.comprometido) }}
+              </span>
+              <span v-if="hayMontoPositivo(cargo.comprometido)" class="block text-xs text-tierra-500">
+                disponible {{ formatearMonto(cargo.disponible) }}
+              </span>
             </p>
             <p v-if="puedeQuitar && cargoConPagos(cargo)" class="max-w-40 text-right text-xs text-tierra-500">
               Tiene pagos: no se quita mientras no se anulen.

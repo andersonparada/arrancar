@@ -59,7 +59,10 @@ export interface LineaDeLaFicha {
   monto: string;
   cubre: string;
   notasAplicadas: string;
+  /** La deuda del documento hoy (también lo comprometido). */
   saldoDelDocumento: string;
+  /** Lo que aún se puede pagar del documento. */
+  disponibleDelDocumento: string;
   /** Residuo de centavos que se puede dar por saldado; `0.00` si no hay o no se puede. */
   diferenciaOfrecible: string;
   retencionesDelLibro: RetencionDeLaLinea[];

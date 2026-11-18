@@ -26,6 +26,8 @@ const cargo = (id: string, cambios: Partial<CargoDeContrasena> = {}): CargoDeCon
   saldo: '100.00',
   pagado: '0.00',
   comprometido: '0.00',
+  disponible: cambios.saldo ?? '100.00',
+  comprometidoHasta: null,
   retencionesPorPracticar: null,
   sobreUmbralDeBancarizacion: false,
   ...cambios,

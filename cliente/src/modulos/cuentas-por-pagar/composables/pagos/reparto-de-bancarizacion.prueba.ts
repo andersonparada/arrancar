@@ -9,7 +9,7 @@ beforeEach(() => setActivePinia(createPinia()));
 
 function proveedor(id: string, nombre: string, cargos = [cargoDeEjemplo(`${id}-a`)]) {
   const nuevo = proveedorDelReparto(
-    { proveedorId: id, nombre, nit: '1234567', porPagar: '1000.00', contrasenas: 1 },
+    { proveedorId: id, nombre, nit: '1234567', porPagar: '1000.00', disponible: '1000.00', contrasenas: 1 },
     HOY,
   );
   conLosCargos(nuevo, datosDeEjemplo(cargos), null);

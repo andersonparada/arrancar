@@ -84,13 +84,17 @@ export const OPCIONES_DE_ESTADO: OpcionDeFiltro<EstadoBuscado>[] = [
   { valor: 'todos', texto: 'Todos' },
 ];
 
-/** «Comprometido» es el de los cheques posfechados: el documento ya no se puede volver a pagar y se da por pagado en su fecha. */
+/**
+ * Los cinco estados de pago, del que no tiene nada hasta el pagado. «Comprometido» es el de los cheques posfechados: la
+ * deuda sigue en pie, pero ya no se puede volver a pagar y se da por pagada en la fecha del cheque.
+ */
 export const OPCIONES_DE_ESTADO_DE_PAGO: OpcionDeFiltro<EstadoDePago | ''>[] = [
   { valor: '', texto: 'Todos los estados de pago' },
+  { valor: 'pendiente', texto: 'Sin pagar' },
+  { valor: 'en_parte', texto: 'Pagados en parte' },
+  { valor: 'comprometido_en_parte', texto: 'Comprometidos en parte (cheque posfechado)' },
   { valor: 'comprometido', texto: 'Comprometidos (cheque posfechado)' },
   { valor: 'pagado', texto: 'Pagados' },
-  { valor: 'en_parte', texto: 'Pagados en parte' },
-  { valor: 'pendiente', texto: 'Sin pagar' },
 ];
 
 export const OPCIONES_DE_ORIGEN: OpcionDeFiltro<OrigenDelDocumento | ''>[] = [

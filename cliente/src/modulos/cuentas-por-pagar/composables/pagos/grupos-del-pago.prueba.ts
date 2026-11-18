@@ -16,6 +16,12 @@ describe('grupos por contraseña (M2)', () => {
     expect(gruposPorAgregar(edicion, datos).map(({ id, porPagar }) => [id, porPagar])).toEqual([['c2', '330.50']]);
   });
 
+  it('lo que se puede pagar de un grupo es lo disponible, sin lo comprometido', () => {
+    const comprometido = cargoDeEjemplo('c', { saldo: '500.00', comprometido: '200.00', disponible: '300.00' });
+    const grupos = gruposIncluidos(edicionDeEjemplo({ montos: {} }), datosDeEjemplo([comprometido]));
+    expect(grupos[0]?.porPagar).toBe('300.00');
+  });
+
   it('al agregarla pasa a los incluidos con lo que se paga dentro de ella', () => {
     const edicion = edicionDeEjemplo({
       contrasenasIncluidas: ['c1', 'c2'],

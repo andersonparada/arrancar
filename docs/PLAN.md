@@ -2750,3 +2750,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   lista; R2 ya no dice «Pagado en parte» con Pagado 0.00. `puedeCambiarVencimiento` y `cambiar-vencimiento` miran la deuda:
   un cargo comprometido entero aún se debe y su plazo se puede corregir. Los pagos de la ficha traen `numeroDeCheque`. Sin
   migración. Pendiente: D5 a D7 (cliente), D6 servidor (`disponible` en R2 y R1, a la espera de la respuesta a A.7).
+- **2026-11-18, CP4-D5 y D7 (cliente): deuda, comprometido y disponible.** La ficha del proveedor dice «Por pagar Q…, de lo cual
+  comprometido con cheque N al dd/mm Q…, Disponible para pagar Q…» y lo vencido con su nota (lo comprometido vencido sigue siendo
+  deuda hasta que el cheque se cobre; si el servidor mandó solo 10 cheques, lo avisa). Lista y ficha del documento: Saldo (la deuda),
+  «Comprometido — cheque al dd/mm/aaaa» (con varios cheques, cuántos y la fecha del último) y Disponible, este último solo si hay
+  algo comprometido. Cinco estados con etiqueta y color (nuevo «Comprometida en parte») y el filtro de Documentos por pagar con los
+  cinco. La contraseña (cargos y totales) muestra lo comprometido y lo disponible. NuevoPago, el reparto de efectivo y la
+  reaplicación proponen y limitan por lo **disponible**; el error dice cuánto está disponible y cuánto ya está comprometido; el
+  selector de proveedor agrega «(disponible Q…)» solo si difiere. Lógica pura en `composables/comprometido.ts` con pruebas.
+  Pendiente: D6 (R2 y R1 con `disponible`, a la espera de A.7) y los reportes que no se tocaron.

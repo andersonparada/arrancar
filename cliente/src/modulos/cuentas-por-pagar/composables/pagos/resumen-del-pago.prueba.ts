@@ -141,8 +141,8 @@ describe('opciones de los selectores, por nombre', () => {
 
   it('los proveedores van por nombre con su NIT y lo que se les debe', () => {
     const opciones = opcionesDeProveedores([
-      { proveedorId: '2', nombre: 'Zeta', nit: null, porPagar: '10.00', contrasenas: 1 },
-      { proveedorId: '1', nombre: 'Álamo', nit: '123-4', porPagar: '500.00', contrasenas: 2 },
+      { proveedorId: '2', nombre: 'Zeta', nit: null, porPagar: '10.00', disponible: '10.00', contrasenas: 1 },
+      { proveedorId: '1', nombre: 'Álamo', nit: '123-4', porPagar: '500.00', disponible: '500.00', contrasenas: 2 },
     ]);
     expect(opciones.map(({ valor }) => valor)).toEqual(['1', '2']);
     expect(opciones[0]!.texto).toMatch(/NIT 123-4.*500\.00/);

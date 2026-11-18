@@ -23,6 +23,9 @@ function cargo(cambios: Partial<DocumentoPorPagar> = {}): DocumentoPorPagar {
     vencimiento: '2026-11-01',
     neto: '1000.00',
     saldo: '400.00',
+    disponible: '100.00',
+    comprometidoHasta: '2026-12-20',
+    chequesPosfechados: 1,
     pagado: '300.00',
     comprometido: '300.00',
     estadoDePago: 'en_parte',
@@ -43,10 +46,16 @@ describe('filtro de estado de pago', () => {
     expect(cantidadDeFiltros(filtros)).toBe(1);
   });
 
-  it('ofrece los cuatro estados, con el comprometido explicado', () => {
+  it('ofrece los cinco estados, con el comprometido explicado', () => {
     const valores = OPCIONES_DE_ESTADO_DE_PAGO.map(({ valor }) => valor);
-    expect(valores).toEqual(['', 'comprometido', 'pagado', 'en_parte', 'pendiente']);
-    expect(OPCIONES_DE_ESTADO_DE_PAGO[1]?.texto).toMatch(/posfechado/);
+    expect(valores).toEqual(['', 'pendiente', 'en_parte', 'comprometido_en_parte', 'comprometido', 'pagado']);
+    expect(OPCIONES_DE_ESTADO_DE_PAGO[3]?.texto).toMatch(/en parte.*posfechado/);
+    expect(OPCIONES_DE_ESTADO_DE_PAGO[4]?.texto).toMatch(/posfechado/);
+  });
+
+  it('manda al servidor el estado comprometido en parte', () => {
+    const filtros = { ...filtrosIniciales(), estadoDePago: 'comprometido_en_parte' as const };
+    expect(consultaDeDocumentos(filtros, 1).estadoDePago).toBe('comprometido_en_parte');
   });
 });
 
@@ -57,10 +66,18 @@ describe('lo pagado en la lista y la ficha', () => {
       'Vence',
       'Neto a pagar',
       'Pagado',
-      'Comprometido',
+      'Comprometido — cheque al 20/12/2026',
       'Saldo',
+      'Disponible',
     ]);
-    expect(etiquetas(detallesDeLista(cargo({ comprometido: '0.00' })))).not.toContain('Comprometido');
+    const sinCheque = etiquetas(detallesDeLista(cargo({ comprometido: '0.00', comprometidoHasta: null })));
+    expect(sinCheque).toEqual(['Emisión', 'Vence', 'Neto a pagar', 'Pagado', 'Saldo']);
+  });
+
+  it('el saldo es la deuda y el disponible lo que aún se puede pagar', () => {
+    const detalles = detallesDeLista(cargo());
+    expect(detalles).toContainEqual({ etiqueta: 'Saldo', valor: 'Q\u00a0400.00' });
+    expect(detalles).toContainEqual({ etiqueta: 'Disponible', valor: 'Q\u00a0100.00' });
   });
 
   it('una nota de crédito y un documento anulado no muestran pagos', () => {
