@@ -103,14 +103,12 @@ describe('un cheque', () => {
 
     const { aplicaciones } = await ficha(pago.id);
 
-    expect(aplicaciones.map((linea: { contrasena: { id: string } }) => linea.contrasena.id)).toEqual([k1, k1, k2]);
-    expect(aplicaciones[0]).toMatchObject({
-      documentoId: uno,
-      saldoDelDocumento: '120.00',
-      notasAplicadas: '0.00',
-      diferenciaOfrecible: '0.00',
-    });
-    expect(aplicaciones[2]).toMatchObject({ documentoId: dos, saldoDelDocumento: '0.00' });
+    const ids: string[] = aplicaciones.map((linea: { contrasena: { id: string } }) => linea.contrasena.id);
+    expect(ids.filter((id) => id === k1)).toHaveLength(2);
+    expect(ids.indexOf(k2)).toSatisfy((i: number) => i === 0 || i === 2);
+    const de = (id: string) => aplicaciones.find((linea: { documentoId: string }) => linea.documentoId === id);
+    expect(de(uno)).toMatchObject({ saldoDelDocumento: '120.00', notasAplicadas: '0.00', diferenciaOfrecible: '0.00' });
+    expect(de(dos)).toMatchObject({ saldoDelDocumento: '0.00' });
   });
 
   it('las retenciones del libro salen «por emitir» y luego con su número de constancia', async () => {

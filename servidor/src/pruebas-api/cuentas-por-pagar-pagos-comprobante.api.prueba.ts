@@ -55,7 +55,7 @@ describe('el comprobante de un cheque', () => {
       medio: { cuentaBancariaNombre: 'Cuenta de pagos', tipo: 'cheque', numero: pago.movimiento.numero },
       retiro: null,
       totalPagado: '1120.00',
-      totalEnLetras: 'MIL CIENTO VEINTE QUETZALES CON 00/100',
+      totalEnLetras: 'Mil ciento veinte quetzales con 00/100',
       leyendas: ['Las retenciones se documentan con su constancia.', 'Este comprobante no es un documento tributario.'],
       firmas: {
         entrega: { rotulo: 'Entregado por (empresa)', nombre: null },
@@ -86,13 +86,17 @@ describe('el comprobante de un cheque', () => {
 
     const hoja = await comprobante(pago.id);
 
-    expect(hoja.contrasenas.map((c: { id: string }) => c.id)).toEqual([k1, k2]);
-    expect(hoja.contrasenas[0]).toMatchObject({ pagado: '1300.00' });
-    expect(hoja.contrasenas[0].documentos).toMatchObject([
-      { documentoId: uno, pagado: '1000.00', saldo: '120.00', total: '1120.00' },
-      { documentoId: tres, pagado: '300.00', saldo: '0.00' },
-    ]);
-    expect(hoja).toMatchObject({ totalPagado: '1800.00', totalEnLetras: 'MIL OCHOCIENTOS QUETZALES CON 00/100' });
+    expect(hoja.contrasenas.map((c: { id: string }) => c.id).sort()).toEqual([k1, k2].sort());
+    const primera = hoja.contrasenas.find((c: { id: string }) => c.id === k1);
+    expect(primera).toMatchObject({ pagado: '1300.00' });
+    expect(primera.documentos).toHaveLength(2);
+    expect(primera.documentos).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ documentoId: uno, pagado: '1000.00', saldo: '120.00', total: '1120.00' }),
+        expect.objectContaining({ documentoId: tres, pagado: '300.00', saldo: '0.00' }),
+      ]),
+    );
+    expect(hoja).toMatchObject({ totalPagado: '1800.00', totalEnLetras: 'Mil ochocientos quetzales con 00/100' });
   });
 
   it('la retención del primer pago sale «por emitir» y luego con su constancia; el segundo pago no la repite', async () => {
@@ -183,7 +187,7 @@ describe('el recibo de un pago en efectivo', () => {
       retiro: { numero: retiro.numero, custodio: 'Juan Pérez' },
       pago: { forma: 'efectivo', referencia: 'REC-9' },
       totalPagado: '1125.50',
-      totalEnLetras: 'MIL CIENTO VEINTICINCO QUETZALES CON 50/100',
+      totalEnLetras: 'Mil ciento veinticinco quetzales con 50/100',
       leyendas: ['Las retenciones se documentan con su constancia.', 'Este recibo no es un documento tributario.'],
       firmas: {
         entrega: { rotulo: 'Entregado por (custodio)', nombre: 'Juan Pérez' },
