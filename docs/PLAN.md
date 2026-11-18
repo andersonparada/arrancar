@@ -2747,3 +2747,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   del formulario. El proveedor se halla por NIT o, sin NIT, por nombre exacto y único en la cuenta (nombre repetido,
   proveedor inexistente y proveedor repetido en el archivo son errores de fila); nunca se crean proveedores. Días vacíos
   vuelven al plazo por omisión y «contar desde la recepción» vacío es No. Todo o nada, con ensayo.
+- **2026-11-18 (PC-5, plazos de proveedores: cliente).** Página «Plazos de proveedores» en Administración de Cuentas por
+  pagar (`/cuentas-por-pagar/plazos`, permiso `terceros.ver`): tarjetas de solo lectura con proveedor, NIT, días de crédito
+  («De contado», «Plazo por omisión de la empresa») y desde cuándo corren, búsqueda por nombre o NIT sin tildes y estados vacíos
+  distintos (sin proveedores / sin coincidencias). `AccionesDeIntercambio` y `VentanaDeImportacion` con
+  `cuentas-por-pagar.condiciones.importar` y `.exportar`; el texto de la página manda a Proveedores para editar uno por uno.
+  El servidor suma `GET /api/cuentas-por-pagar/condiciones` (lista de la cuenta, mismo caso de uso del Excel, permiso
+  `terceros.ver`); sin migración. Lógica pura con pruebas.

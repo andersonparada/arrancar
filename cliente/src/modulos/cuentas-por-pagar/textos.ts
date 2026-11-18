@@ -28,6 +28,11 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
       'Las notas de crédito de los proveedores y lo que queda a favor de la empresa en cada una. Marque las de un proveedor para registrar su reintegro.',
     recibo: 'Recibo de reintegro',
   },
+  plazos: {
+    titulo: 'Plazos de proveedores',
+    descripcion:
+      'Los días de crédito de cada proveedor y desde cuándo se cuentan. Para cambiarlos en bloque, exporte el Excel, corríjalo e impórtelo; uno por uno se editan en Proveedores.',
+  },
   saldosIniciales: {
     titulo: 'Saldos iniciales',
     descripcion: 'Lo que la empresa debía a sus proveedores al cierre del día anterior a la fecha de inicio.',

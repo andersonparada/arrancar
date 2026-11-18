@@ -125,6 +125,15 @@ describe('plantilla, exportar y permisos', () => {
     expect(filas.length).toBeGreaterThanOrEqual(5);
   });
 
+  it('la lista de plazos la ve quien puede ver proveedores y nadie más', async () => {
+    const lista = await soloVer.get(RUTA);
+    const filas = lista.cuerpo as Array<{ nit: string | null; proveedorNombre: string }>;
+
+    expect(lista.estado).toBe(200);
+    expect(filas.map(({ nit }) => nit)).toEqual(expect.arrayContaining([nitConPlazo, nitSinPlazo]));
+    expect((await exportador.get(RUTA)).estado).toBe(403);
+  });
+
   it('plantilla e importar piden importar; exportar pide exportar; ver no da ninguna', async () => {
     const respuestas = [
       await soloVer.get(`${RUTA}/plantilla`),

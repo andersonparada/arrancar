@@ -13,6 +13,7 @@ import {
   type PlazoEnExcel,
 } from '../http/condiciones.columnas.js';
 import { rutasDeExcelDePlazos } from '../http/condiciones.excel.rutas.js';
+import { rutasDeListaDePlazos } from '../http/condiciones.lista.rutas.js';
 import { ProveedoresDeLosPlazosDrizzle } from '../infraestructura/persistencia/proveedores-de-los-plazos.drizzle.js';
 
 /** El Excel «Plazos de proveedores»: cada fila pasa por el mismo guardado del formulario, sin crear proveedores. */
@@ -39,10 +40,16 @@ export function excelDePlazos(dependencias: {
 }): FastifyPluginAsync {
   const proveedores = new ProveedoresDeLosPlazosDrizzle();
   const { unidadDeTrabajo, guardar } = dependencias;
-  return rutasDeExcelDePlazos(
+  const listar = new ListarPlazosDeProveedores({ unidadDeTrabajo, proveedores });
+  const excel = rutasDeExcelDePlazos(
     intercambioDePlazos({
-      listar: new ListarPlazosDeProveedores({ unidadDeTrabajo, proveedores }),
+      listar,
       importar: new ImportarPlazoDeProveedor({ unidadDeTrabajo, proveedores, guardar }),
     }),
   );
+  const lista = rutasDeListaDePlazos(listar);
+  return async (app) => {
+    await app.register(lista);
+    await app.register(excel);
+  };
 }
