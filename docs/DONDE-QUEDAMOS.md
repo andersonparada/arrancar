@@ -67,6 +67,12 @@ Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-ca
   módulos nuevos) y MM-3a (cliente del Banguat sin base), con revisión de seguridad o del arquitecto.
 - Integración: falla la preparación de dos pruebas de CP5-5 contra la regla de BS-2 (fecha de inicio); un agente lo corrige en
   la rama `integracion`. Después entran las decisiones de H2 y la bandeja de DTE.
+- **Cola para la próxima integración** (cada rama con su revisión de Opus): corrección de CP4-9
+  (`worktree-wf_0b4d5815-3ec-3`, en revisión), qpdf en las pruebas del PDF (`worktree-agent-a9590755fda19cc8d`), Excel de
+  Terceros (`worktree-wf_f6224bdf-ffe-1`, corregido), Excel de Empresas y selector (`worktree-wf_f6224bdf-ffe-2`: se acota
+  `ejecutarEnOtraEmpresa` a la empresa recién creada, con revisión de seguridad) y pruebas en paralelo
+  (`worktree-agent-a4cd39b30a6deca11`, en revisión). CP4-E4 revisado: bien.
+- Diseño del plazo de crédito: relanzado (el flujo anterior lo descartó por un error del coordinador).
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
