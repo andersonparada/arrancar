@@ -2363,3 +2363,30 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ofrece en los vigentes y el servidor decide; anular no pide la fecha del inverso (el servidor usa la de hoy); las cuentas del
   depósito salen de `GET /pagos/medios` (pide `pagos.ver`; sin ellas solo se ofrece el efectivo); el enlace a constancias no
   lleva el mes ni el filtro porque esa pantalla no lee parámetros de la ruta.
+- **2026-11-18 — CP4-E5 (cliente, pagos en efectivo).** Sin servidor ni migración. **Retiros** (`/cuentas-por-pagar/retiros`,
+  menú «Retiros de efectivo», Operación): lista «por liquidar» con filtros de estado, **fecha de corte** (el disponible es el de ese
+  día), «solo los que aún tienen efectivo», total disponible, antigüedad del efectivo y el aviso de fin de mes del servidor;
+  `VentanaDeRetiro` (cheque o retiro en ventanilla/cajero, chequera o cuenta con su siguiente cheque, monto, fecha no futura, custodio
+  escrito o usuario de Arrancar —solo con `usuarios.ver`—, beneficiario por omisión el custodio y sin «al portador», «no negociable»
+  encendido, boleta, ayuda IVE-BA-03, resumen para confirmar) que al registrar muestra los avisos de bancarización y de Bancos y lleva
+  a «Pagar en efectivo»; `FichaDeRetiro` (datos, liquidación, anulación, pagos con enlace y «Imprimir los recibos»), `VentanaDeLiquidacion`
+  (sobrante calculado; lo devuelto y el faltante se completan entre sí para que siempre cuadren; motivo del faltante; cuenta y boleta del
+  depósito; aviso si liquida el custodio), reabrir y anular con `VentanaDeCambioDeRetiro` (resumen, motivo y fecha opcional del movimiento
+  en Bancos). **Reparto** (`/cuentas-por-pagar/retiros/:id/pagar`; desde la contraseña, «Pagar en efectivo» lleva a
+  `/cuentas-por-pagar/pagos/efectivo`, que escoge el retiro o pasa directo si hay uno solo): retiro con «Disponible» y «Quedará» en vivo
+  (rojo si se pasa), «Agregar un proveedor» (selector por nombre, solo los que aún no están), una sección plegable por proveedor que
+  **reutiliza `CargosDelPago`/`FilaDeCargoDelPago` de CP4-9** (cargos por contraseña, varias contraseñas, montos propuestos, diferencias
+  de centavos), quién recibe, recibo del proveedor y fecha (una para todos, cambiable por proveedor), resumen de confirmación con una
+  línea por proveedor y un solo «Registrar los pagos» (todo o nada; límites de 20 proveedores y 300 documentos revisados antes). Los
+  errores del servidor (`pagos.<i>.…`) vuelven a su proveedor y a su documento. **Bancarización:** el cliente no adivina la regla ni el
+  régimen; solo anticipa con un aviso neutro que lo del mes llega al umbral (`sumaDelMesAlProveedor` + el pago); si el servidor bloquea
+  (`efectivo_sobre_el_umbral`), el proveedor muestra el texto del bloqueo y, con `pagos.efectivo-sin-bancarizar`, pide el motivo (se
+  reenvía), y sin el permiso dice que lo pague con cheque. Al terminar: pagos con su número, «Imprimir los recibos» (`/pagos/recibos?pagos=id,id`,
+  `RecibosDeEfectivo`: original y copia de cada recibo con `HojaDelComprobante`; el que falle no impide imprimir los demás) y «Repartir otra
+  vez». `ComprobanteDePago` titula «Recibo» y explica que el original firmado se queda en la empresa; anular un pago en efectivo dice
+  que el efectivo vuelve al retiro (sin fecha de inverso). Lógica pura con pruebas: `edicion-de-retiro`, `liquidacion`, `retiros`
+  (lista, ficha y opciones), `reparto-de-efectivo` (totales, errores, cuerpo, errores del servidor, resumen), `recibos-de-efectivo`.
+  Diferencias con el diseño: `GET /proveedores/:id/para-pagar` aún no devuelve `efectoFiscal` ni `sinDatosFiscales` (el diseño §7.5 lo
+  prometía), por eso el bloqueo se atiende cuando el servidor lo dice y no se anticipa por régimen; el ensayo de la fecha en el reparto
+  usa el mes de la fecha de cada proveedor solo al agregarlo. Pendiente: cotejar el texto de la ayuda IVE-BA-03 con la Ley contra el
+  Lavado de Dinero (E-9) y la prueba de punta a punta en navegador (CP4-12).

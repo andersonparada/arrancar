@@ -64,6 +64,13 @@ describe('ficha de un pago', () => {
     );
   });
 
+  it('anular un pago en efectivo dice que el efectivo vuelve al retiro', () => {
+    const retiro = { id: 'r1', numero: '2026-4', custodio: 'Juan', estado: 'abierto' };
+    const texto = resumenDeAnularPago(fichaDeEjemplo({ forma: 'efectivo', movimiento: null, retiro }));
+    expect(texto).toContain('El efectivo vuelve al retiro 2026-4');
+    expect(texto).not.toContain('Bancos anulará');
+  });
+
   it('saldar la diferencia: solo si el servidor la ofrece y la línea tiene residuo', () => {
     const con = lineaDeEjemplo('d1', { diferenciaOfrecible: '0.03' });
     const sin = lineaDeEjemplo('d2');
