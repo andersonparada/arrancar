@@ -6,6 +6,7 @@ import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { tituloDeLaFila, type ResumenDeLaSeleccion } from '../../composables/bandeja/datos-de-la-bandeja';
 import { fraseDelResumen, resumenDeLoRegistrable } from '../../composables/bandeja/resumen-de-la-confirmacion';
+import { textoDeLasTandas, type CorteDeTandas } from '../../composables/bandeja/confirmar-por-tandas';
 import type {
   FilaConError,
   FilaRegistrada,
@@ -35,7 +36,9 @@ const props = defineProps<{
   faltaContestar: boolean;
   proveedoresNuevos: EdicionDeProveedorNuevo[];
   intentosConProblemas: number;
-  resultado: { registradas: FilaRegistrada[]; conError: FilaConError[] } | null;
+  resultado: { registradas: FilaRegistrada[]; conError: FilaConError[]; corte: CorteDeTandas | null } | null;
+  /** «Registrando la tanda 2 de 5…» mientras se envía; `null` si no se está enviando. */
+  avance: string | null;
 }>();
 const respuestas = defineModel<Record<string, RespuestasFiscales>>({ required: true });
 const emit = defineEmits<{ cerrar: []; confirmar: []; recalcular: [] }>();
@@ -44,6 +47,7 @@ const titulos = computed(() => new Map(props.filas.map((fila) => [fila.id, titul
 const tipos = computed(() => new Map(props.filas.map((fila) => [fila.id, fila.tipoDte])));
 const registrable = computed(() => resumenDeLoRegistrable(props.listas, tipos.value, props.resumen.cantidad));
 const frase = computed(() => fraseDelResumen(registrable.value));
+const tandas = computed(() => textoDeLasTandas(props.listas.length));
 const contestar = (nit: string, valor: RespuestasFiscales): void => {
   respuestas.value = { ...respuestas.value, [nit]: valor };
 };
@@ -56,6 +60,7 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
       :titulos="titulos"
       :registradas="resultado.registradas"
       :con-error="resultado.conError"
+      :corte="resultado.corte"
     />
     <div v-else class="space-y-4">
       <p v-if="calculando" class="text-sm text-tierra-500" role="status">Calculando lo que se registraría…</p>
@@ -64,6 +69,15 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
         Se registrarán <strong>{{ frase.texto }}</strong>
         <template v-if="frase.desglose"> ({{ frase.desglose }})</template> por
         {{ formatearMonto(registrable.total) }} en total, cada uno con su cálculo de IVA y retenciones.
+      </p>
+      <p v-if="tandas && !calculando" class="text-sm text-tierra-600 dark:text-tierra-300">{{ tandas }}</p>
+      <p
+        v-if="avance"
+        class="rounded-lg bg-campo-50 p-3 text-sm font-medium dark:bg-campo-900/40"
+        role="status"
+        aria-live="polite"
+      >
+        {{ avance }}
       </p>
       <ProveedoresNuevosDelDte :proveedores="proveedoresNuevos" :intentos="intentosConProblemas" />
       <p
@@ -104,7 +118,9 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
       </section>
     </div>
     <template #pie>
-      <BotonBase variante="secundario" @click="emit('cerrar')">{{ resultado ? 'Cerrar' : 'Cancelar' }}</BotonBase>
+      <BotonBase variante="secundario" :deshabilitado="enviando" @click="emit('cerrar')">{{
+        resultado ? 'Cerrar' : 'Cancelar'
+      }}</BotonBase>
       <BotonBase
         v-if="!resultado"
         :deshabilitado="calculando || listas.length === 0"

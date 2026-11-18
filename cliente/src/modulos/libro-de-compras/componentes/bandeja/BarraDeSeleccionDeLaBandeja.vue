@@ -1,16 +1,19 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { CircleCheckBig, ListChecks, Trash2 } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
-import type { ResumenDeLaSeleccion } from '../../composables/bandeja/datos-de-la-bandeja';
+import { fraseDeLaBarra, type ResumenDeLaBarra } from '../../composables/bandeja/resumen-de-la-barra';
 import { TEXTOS_DE_LAS_ACCIONES as acciones } from '../../textos-de-la-bandeja';
 
 /**
- * La barra fija de abajo: cuánto hay marcado y lo que se puede hacer con ello. Solo las pendientes se completan y se
- * confirman; las bloqueadas solo se descartan. Cada botón exige su permiso.
+ * La barra fija de abajo: cuánto hay marcado, con el mismo criterio que «Confirmar» (lo que se registraría y por cuánto),
+ * y lo que se puede hacer con ello. Solo las pendientes se completan y se confirman; las bloqueadas solo se descartan.
+ * Cada botón exige su permiso.
  */
-defineProps<{ resumen: ResumenDeLaSeleccion; soloDescartar: boolean }>();
+const props = defineProps<{ resumen: ResumenDeLaBarra; soloDescartar: boolean }>();
 const emit = defineEmits<{ completar: []; confirmar: []; descartar: []; quitar: [] }>();
+const frase = computed(() => fraseDeLaBarra(props.resumen));
 </script>
 
 <template>
@@ -19,17 +22,21 @@ const emit = defineEmits<{ completar: []; confirmar: []; descartar: []; quitar: 
   >
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
       <p class="text-sm sm:flex-1" aria-live="polite">
-        <template v-if="resumen.cantidad">
-          <strong>{{ resumen.cantidad }}</strong> {{ resumen.cantidad === 1 ? 'marcado' : 'marcados' }} por
-          {{ formatearMonto(resumen.total) }}.
-          <span v-if="resumen.conFaltantes && !soloDescartar" class="text-amber-700 dark:text-amber-400">
-            A {{ resumen.conFaltantes }} le{{ resumen.conFaltantes === 1 ? '' : 's' }} falta algo.
-          </span>
+        <template v-if="resumen.marcados">
+          <strong>{{ frase.marcados }}</strong>
+          <template v-if="soloDescartar">.</template>
+          <template v-else>
+            : {{ frase.seRegistran }} <template v-if="frase.conMonto">{{ formatearMonto(resumen.total) }}</template
+            >{{ frase.noSeRegistran }}.
+            <span v-if="resumen.conFaltantes" class="text-amber-700 dark:text-amber-400">
+              A {{ resumen.conFaltantes }} le{{ resumen.conFaltantes === 1 ? '' : 's' }} falta algo.
+            </span>
+          </template>
         </template>
         <template v-else>Marque los DTE con los que quiere trabajar.</template>
       </p>
       <div class="flex flex-wrap gap-2">
-        <BotonBase v-if="resumen.cantidad" variante="fantasma" @click="emit('quitar')">
+        <BotonBase v-if="resumen.marcados" variante="fantasma" @click="emit('quitar')">
           {{ acciones.quitarMarcas }}
         </BotonBase>
         <BotonBase
@@ -37,7 +44,7 @@ const emit = defineEmits<{ completar: []; confirmar: []; descartar: []; quitar: 
           v-permiso="'libro-de-compras.documentos.importar'"
           variante="secundario"
           :icono="ListChecks"
-          :deshabilitado="!resumen.cantidad"
+          :deshabilitado="!resumen.marcados"
           @click="emit('completar')"
         >
           {{ acciones.completar }}
@@ -46,7 +53,7 @@ const emit = defineEmits<{ completar: []; confirmar: []; descartar: []; quitar: 
           v-permiso="'libro-de-compras.dte-recibidos.descartar'"
           variante="secundario"
           :icono="Trash2"
-          :deshabilitado="!resumen.cantidad"
+          :deshabilitado="!resumen.marcados"
           @click="emit('descartar')"
         >
           {{ acciones.descartar }}
@@ -55,7 +62,7 @@ const emit = defineEmits<{ completar: []; confirmar: []; descartar: []; quitar: 
           v-if="!soloDescartar"
           v-permiso="'libro-de-compras.documentos.crear'"
           :icono="CircleCheckBig"
-          :deshabilitado="!resumen.cantidad"
+          :deshabilitado="!resumen.marcados"
           @click="emit('confirmar')"
         >
           {{ acciones.confirmar }}

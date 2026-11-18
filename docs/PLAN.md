@@ -2254,3 +2254,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   tanda todo o nada; si una falla, se detiene y dice cuáles quedaron); tras confirmar, **un solo aviso** de éxito con las
   advertencias **agrupadas** (una vez cada una, con cuántos documentos y «Ver cuáles»). El coordinador hace el
   `git push origin main` después de cada unión en verde.
+- **2026-11-18 — Libro de compras, bandeja de DTE (errores 4, 5 y 6 de la QA).** Solo cliente; no hizo falta ruta nueva en el
+  servidor (para «Marcar los N del filtro» el cliente pide las páginas del filtro de a 200, el máximo del listado, y así
+  tiene la fila completa que necesitan completar, confirmar y descartar). **4:** el criterio vive en
+  `composables/bandeja/criterio-de-registro.ts` (anulado en la SAT fuera, nota de crédito resta, nota de débito suma) y lo
+  usan la barra (`resumen-de-la-barra.ts`: «17 marcados: se registrarán 15 por Q…, 2 no se registran») y «Confirmar»
+  (`resumen-de-la-confirmacion.ts`). **6:** la selección guarda la fila completa (`seleccion-entre-paginas.ts`) y se
+  conserva entre páginas y filtros; «Marcar los N del filtro» (`MarcarEnLaBandeja.vue`); «Confirmar» envía en tandas de
+  100 con avance (`confirmar-por-tandas.ts`). Una fila con error dentro de una tanda no detiene el envío (el servidor
+  responde fila por fila y esa fila queda pendiente); si la **solicitud** de una tanda falla, se detiene y la ventana dice
+  cuántas tandas y documentos quedaron registrados y cuáles no se confirmaron (los de esa tanda pueden haberse registrado en
+  parte: el servidor no alcanzó a contestar). Lo registrado sale de la selección y lo demás sigue marcado. **5:** ya estaba
+  en un solo aviso desde la corrección del 2026-11-08 (el resultado se ve una vez en la ventana); ahora cada advertencia
+  agrupada lleva «N documentos. Ver cuáles».
