@@ -22,7 +22,7 @@ export class FotoHeicNoAceptada extends DatoInvalido {
   readonly codigo = 'foto_heic_no_aceptada';
 
   constructor() {
-    super('Convierte la foto a JPEG: en el iPhone, Ajustes > Cámara > Formatos > Más compatible, y vuelve a tomarla.');
+    super('Convierta la foto a JPEG: en el iPhone, Ajustes > Cámara > Formatos > Más compatible, y vuelva a tomarla.');
   }
 }
 
@@ -30,7 +30,7 @@ export class ImagenDemasiadoGrande extends CargaDemasiadoGrande {
   readonly codigo = 'imagen_demasiado_grande';
 
   constructor() {
-    super('La imagen tiene demasiados píxeles (máximo 100 megapíxeles). Redúcela e inténtalo de nuevo.');
+    super('La imagen tiene demasiados píxeles (máximo 100 megapíxeles). Redúzcala e inténtelo de nuevo.');
   }
 }
 
@@ -46,7 +46,7 @@ export class DemasiadasSubidas extends DemasiadasSolicitudes {
   readonly codigo = 'demasiadas_subidas';
 
   constructor() {
-    super('Subiste demasiados archivos en poco tiempo. Espera un minuto e inténtalo de nuevo.');
+    super('Subió demasiados archivos en poco tiempo. Espere un minuto e inténtelo de nuevo.');
   }
 }
 

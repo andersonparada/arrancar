@@ -8,6 +8,7 @@ import ColumnaDelEstadoDeCuenta from '../componentes/conciliaciones/ColumnaDelEs
 import CuadroCuadratico from '../componentes/conciliaciones/CuadroCuadratico.vue';
 import EncabezadoDeConciliacion from '../componentes/conciliaciones/EncabezadoDeConciliacion.vue';
 import ListaDeMovimientosConciliables from '../componentes/conciliaciones/ListaDeMovimientosConciliables.vue';
+import NotasMarcadasEnConciliacion from '../componentes/conciliaciones/NotasMarcadasEnConciliacion.vue';
 import PartidasDeConciliacion from '../componentes/conciliaciones/PartidasDeConciliacion.vue';
 import SaldoDelEstadoDeCuenta from '../componentes/conciliaciones/SaldoDelEstadoDeCuenta.vue';
 
@@ -68,6 +69,7 @@ const imprimir = (): void => window.print();
         <div class="min-w-0 space-y-4">
           <SaldoDelEstadoDeCuenta :saldo="conciliacion.saldoQueDebeMostrarElEstadoDeCuenta" />
           <PartidasDeConciliacion :partidas="conciliacion.partidas" />
+          <NotasMarcadasEnConciliacion :conciliacion="conciliacion" />
           <div v-if="enProceso" v-permiso="'bancos.conciliaciones.conciliar'" class="flex justify-end print:hidden">
             <button
               type="button"

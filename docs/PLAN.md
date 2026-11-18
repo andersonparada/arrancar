@@ -2271,3 +2271,37 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   motivo» y se guarda y exporta la revisión con las cifras del cuadre de cada módulo; adjunto opcional del balance de
   apertura firmado (PDF revisado con qpdf, auditoría); después de EM-2, paso de U8 para transcribir del balance el saldo de
   proveedores y el de anticipos (dos cifras) y tener «no cuadra» con motivo.
+- **2026-11-18 — CP4-B3b (cliente, Bancos: notas marcadas en la conciliación).** Sin migración ni cambios de servidor.
+  `ConciliarCuenta` gana `NotasMarcadasEnConciliacion` (solo en proceso, con Cuentas por pagar activo y los permisos
+  `conciliar`, `bancos.notas.ver` y `bancos.notas.editar`): lista las notas marcadas para Cuentas por pagar que son candidatas
+  del mes, con «Desmarcar» (ventana `VentanaDeDesmarcar` de Notas, con concepto y motivo, que el servidor exige) por
+  `POST /bancos/conciliaciones/:id/notas/:movimientoId/desmarcar`; el rechazo por nota ligada a un pago sale como aviso con el
+  mensaje del servidor. Como `candidatos` no trae la marca (desviación de CP4-B2b), el cliente cruza sus ids con la lista de
+  notas de la cuenta hasta fin de mes y se queda con las que el servidor dice `puedeDesmarcar`. Quitar la marca no cambia
+  montos: no se recarga la conciliación y las marcas sin guardar se conservan. Lógica pura en `notas-marcadas.ts`;
+  `usarDesmarcado` de Notas se reutiliza con un envío propio. Pruebas del cliente: +6.
+- **2026-11-18 — Observaciones menores de la QA de H2 (corregidas las que no esperan decisión).** «Difiere en» ya no muestra un
+  monto negativo: dice el monto y si el estado de cuenta muestra más o menos que el calculado (`textoDeDiferencia`); el mensaje
+  del servidor al terminar con diferencia escribe «Q 12,270.00» como la pantalla; un archivo que no se puede leer ni como foto
+  (por ejemplo un texto llamado `.pdf`) responde `documento_ilegible` («El archivo no es un PDF ni una foto válidos, o está
+  dañado…»); `demasiadas_subidas` pasa a usted; el cuadro «Según libros / Según banco» cabe en 380 px sin desplazarse; y «Ver»
+  de la lista de conciliaciones se alinea con los demás botones. Siguen esperando al usuario la impresión en modo oscuro y la
+  huella.
+- 2026-11-18, Bancos CP4-B3b, correcciones de la revisión: la prueba de `comparacion-de-saldo` activa Pinia (las 2 fallidas
+  pasan); el resumen de las notas marcadas ya no afirma que no están aplicadas («las que ya se ligaron a un pago no se pueden
+  desmarcar»; saber cuáles están ligadas exigiría un dato de Cuentas por pagar y queda por acordar); la lista se vuelve a
+  pedir cuando la conciliación pasa a «en proceso» en la misma pantalla; `enQuetzales` del servidor escribe «-Q 5.00» con
+  saldo negativo; los mensajes de foto HEIC e imagen demasiado grande pasan a usted. Sin resolver: filtro `desde` y aviso
+  de error al listar notas, y montos de 9+ cifras en el cuadro a 380 px.
+- **2026-11-18 — CP5-9 (cliente), primera parte: R6, R7 y R8.** Páginas `PagosRealizados`, `ChequesPosfechados` y `AjustesDelMes`
+  (`/cuentas-por-pagar/reportes/pagos`, `…/cheques-posfechados`, `…/ajustes-del-mes`) en `seccion: 'reportes'`, con los permisos
+  `reportes-de-pagos.ver` (R6, R7) y `reportes-de-control.ver` (R8); Excel con `.exportar` de su grupo (`AccionesDelReporte` ahora
+  recibe `recurso`). R6: filtros (rango del mes en curso, máximo 24 meses con mensaje que dice cómo corregirlo, proveedor, forma,
+  estado, posfechados y «misma persona»), totales de todo lo filtrado y por forma, tabla con «Registró el documento», «Autorizó» y
+  «Registró el pago», paginada de 50 en 50 e impresión de hasta 2,000 filas (`usarImpresionDeFilas`). R7: corte, totales por cuenta y
+  por semana, marca «Cobrado». R8: mes escogido de una lista (por omisión el anterior), las seis secciones (5a anulados y 5b devueltos
+  a revisión), estado vacío si no hay cambios. En celular, tarjetas (R6, R7) y tablas que se deslizan dentro de su tarjeta (R8). El
+  nombre del proveedor lleva a R3 solo si el usuario puede abrirlo. Pendientes: la ficha del pago (CP4-10) y de la contraseña desde R6
+  quedan como texto; el filtro por cuenta bancaria de R6 y R7 espera un listado de cuentas que Cuentas por pagar pueda leer sin
+  importar Bancos. R9, R10, R11 y la conciliación de R1 siguen en espera de CP5-5.
+- **2026-11-18 — CP5-9 (cliente), correcciones de la revisión.** R8: «Ajustes vigentes del mes» y su cantidad salen de la suma de `totales.porCausa` (el total de la sección incluye anulados); nuevo cuadro «por causa y efecto» (pérdida, transitoria, otros ingresos); el resumen suma anulaciones de otros meses y muestra monto de documentos anulados y devueltos; «Pagos a la apertura» aclara que suma vigentes y anulados. R6: el tope de 24 meses del cliente usa la misma regla que el servidor (`mesesEntre`). Sigue pendiente el filtro `cuentaBancariaId` de R6 y R7 (espera listado de cuentas legible sin importar Bancos).

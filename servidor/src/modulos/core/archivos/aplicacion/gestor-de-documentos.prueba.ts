@@ -4,6 +4,7 @@ import { RecursoNoEncontrado } from '../../compartido/aplicacion/errores.js';
 import { AlmacenamientoEnMemoria, operadorDePrueba } from '../../compartido/pruebas/dobles-compartidos.js';
 import {
   DocumentoDemasiadoGrande,
+  DocumentoIlegible,
   DocumentoNoAceptado,
   PdfConContenidoActivo,
   RevisionDePdfSaturada,
@@ -11,6 +12,7 @@ import {
 import {
   InspectorDePdfFalso,
   OptimizadorFalso,
+  OptimizadorQueNoPuedeLeer,
   OptimizadorQueRechaza,
   RepositorioArchivosEnMemoria,
   TareasEnMemoria,
@@ -216,6 +218,14 @@ describe('guardar una foto de un documento', () => {
     await expect(
       estricto.guardar(operador, Buffer.from('texto'), { nombre: null, recursoDueno: DUENO }),
     ).rejects.toBeInstanceOf(DocumentoNoAceptado);
+  });
+
+  it('un archivo que no se puede leer ni como foto dice que no es PDF ni foto válidos', async () => {
+    const ilegible = armar(new OptimizadorQueNoPuedeLeer());
+
+    await expect(
+      ilegible.guardar(operador, Buffer.from('texto'), { nombre: 'estado.pdf', recursoDueno: DUENO }),
+    ).rejects.toBeInstanceOf(DocumentoIlegible);
   });
 
   it('rechaza más de 15 MB', async () => {
