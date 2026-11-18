@@ -292,7 +292,8 @@ El contenedor `respaldo` (`infra/respaldo.sh`) hace cada día un `pg_dump` y un
   del mes) se copia a `infra/respaldos/mensuales/` y se conserva
   `MESES_RETENCION_MENSUAL` meses (60 = 5 años, por omisión). Sirven para recuperarse
   de un desastre y como evidencia histórica; la auditoría de la app se conserva
-  además 60 meses como mínimo en la base (`core.depurar_auditoria`).
+  además 60 meses como mínimo en la base (`core.depurar_auditoria`), salvo los recursos de
+  `core.recursos_de_auditoria_permanente`, que se conservan mientras exista la empresa.
 
 Ambas variables van en `infra/.env` (ver `infra/.env.ejemplo`). **Un respaldo que solo
 está en el servidor no sirve si el servidor se pierde**, así que los archivos deben
@@ -2280,3 +2281,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   libro anteriores a la fecha de inicio, proveedores con saldo a favor, mes partido de Libro de compras); dos permisos
   nuevos (`empresas.carga-inicial.ver-cierres` y `.exportar`). Trece pasos (EM-2.1 a EM-2.13) y U8-B aparte. Preguntas
   P-6 a P-8 con recomendación.
+- **2026-11-18 (EM-2.1 y EM-2.2, servidor del core).** Mediador: `preguntarATodos` y `responder` (`PreguntasEntreModulos`,
+  `NombreDePregunta`); las respuestas `null` se omiten, un módulo inactivo se salta, si uno lanza el error se propaga y
+  `retirarManejadoresDe` también quita las preguntas. Migración core `0024_auditoria_permanente`: catálogo
+  `core.recursos_de_auditoria_permanente` (solo lectura para la app por RLS) y `core.depurar_auditoria` que no borra las
+  entradas con empresa de esos recursos; el mínimo de 60 meses sigue.
