@@ -21,7 +21,12 @@ const OPCIONES_DE_ESTADO = [
       <CampoSelector v-model="filtros.cuentaBancariaId" etiqueta="Cuenta" :opciones="opcionesDeCuenta" />
       <CampoSelector v-model="filtros.estado" etiqueta="Estado" :opciones="OPCIONES_DE_ESTADO" />
       <CampoTexto v-model="filtros.desde" etiqueta="Desde" tipo="date" />
-      <CampoTexto v-model="filtros.hasta" etiqueta="Hasta" tipo="date" />
+      <CampoTexto
+        v-model="filtros.hasta"
+        etiqueta="Hasta"
+        tipo="date"
+        ayuda="Vacío: incluye también los cheques posfechados."
+      />
     </div>
   </TarjetaBase>
 </template>

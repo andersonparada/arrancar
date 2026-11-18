@@ -15,7 +15,7 @@ const copia = (cheque: Cheque) => Cheque.reconstruir(cheque.instantanea());
 
 function aDto(cheque: Cheque, acciones: AccionesDeCheque): ChequeDto {
   const { id, empresaId: _empresaId, anuladoEn, ...datos } = cheque.instantanea();
-  return { ...datos, id: id.valor, anuladoEn: anuladoEn?.toISOString() ?? null, ...acciones };
+  return { ...datos, id: id.valor, anuladoEn: anuladoEn?.toISOString() ?? null, moduloDeOrigen: null, ...acciones };
 }
 
 const cumpleFiltro =
@@ -137,6 +137,7 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
       anuladoEn: anuladoEn?.toISOString() ?? null,
       motivoDeAnulacion: propiedades.motivoDeAnulacion,
       causaDeAnulacion: propiedades.causaDeAnulacion,
+      moduloDeOrigen: null,
       ...this.accionesDe(cheque),
     };
   }
