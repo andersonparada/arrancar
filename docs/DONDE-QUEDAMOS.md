@@ -35,6 +35,10 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
   CP4-B3a, CP5-7, CP5-8, CP5-10 y EM-1 (informe `informe-qa-intermedia-2026-11-18.md`, base `arrancar_pruebas_qa1`);
   cotejo del contador de los artículos del Código de Comercio (§15.8 de Bancos, segunda parte); diseños cortos de EM-2
   (`diseno-em2-cierre-de-la-carga.md`) e impresión de cheques (`diseno-impresion-de-cheques.md`).
+- **CP4-E4 y CP4-9: unidos a `main`** (2026-11-18).
+- **Workflow `arrancar-cp4-10-11-cp5-5`** (run `wf_d318640d-7a5`): CP4-10 (base `arrancar_pruebas_cp410`), CP4-11
+  (`arrancar_pruebas_cp411`) y CP5-5 servidor (`arrancar_pruebas_cp55`), con revisión de Opus y corrección de Sonnet.
+- Guarda `skipIf(!hayQpdf)` en las pruebas del libro en PDF: agente Haiku (base `arrancar_pruebas_qpdf`).
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
