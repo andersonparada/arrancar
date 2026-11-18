@@ -258,6 +258,17 @@ describe('ValidarFechaDeInicioEnBancos', () => {
     expect((error as Error).message).toContain('2 cuentas bancarias tienen saldo inicial al 31/12/2025');
   });
 
+  it('una cuenta con su cabecera y el saldo en cero (sin movimiento) también rechaza', async () => {
+    consultas.cuentasDeLaEmpresa = [cuenta('cero')];
+
+    const error = await validar()
+      .ejecutar(operador, aviso('2026-03-01'))
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(FechaDeInicioConSaldosDeBancos);
+    expect((error as Error).message).toContain('1 cuentas bancarias tienen saldo inicial:');
+  });
+
   it('un saldo global rechaza si quedaría posterior a la fecha nueva; con la misma fecha o una posterior, pasa', async () => {
     consultas.partidasDeLaEmpresa = [parte('g', { parte: 'saldo_global', monto: '1.00', fecha: '2026-03-01' })];
 

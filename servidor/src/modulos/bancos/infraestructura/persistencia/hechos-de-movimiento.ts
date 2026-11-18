@@ -2,6 +2,7 @@ import { sql, type AnyColumn } from 'drizzle-orm';
 import type { alias } from 'drizzle-orm/pg-core';
 import type { HechosDeUnMovimiento } from '../../aplicacion/acciones-posibles.js';
 import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../dominio/asignacion-de-concepto.js';
+import type { ParteDeApertura } from '../../dominio/partes-de-apertura.js';
 import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import type { movimientos } from './movimientos.tablas.js';
@@ -14,6 +15,7 @@ type AliasDeMovimientos = Pick<
   ReturnType<typeof alias<typeof movimientos, string>>,
   | 'tipo'
   | 'saldoInicial'
+  | 'parteDeApertura'
   | 'transferenciaId'
   | 'conciliacionId'
   | 'anuladoEn'
@@ -49,6 +51,7 @@ export const conceptoEsDePagoDe = (conceptoId: AnyColumn) =>
 interface FilaConHechos {
   tipo: string;
   saldoInicial: boolean;
+  parteDeApertura: ParteDeApertura | null;
   transferenciaId: string | null;
   conciliacionId: string | null;
   anuladoEn: Date | null;
@@ -64,6 +67,7 @@ interface FilaConHechos {
 export const columnasDeHechos = (movimiento: AliasDeMovimientos) => ({
   tipo: movimiento.tipo,
   saldoInicial: movimiento.saldoInicial,
+  parteDeApertura: movimiento.parteDeApertura,
   transferenciaId: movimiento.transferenciaId,
   conciliacionId: movimiento.conciliacionId,
   anuladoEn: movimiento.anuladoEn,
@@ -81,6 +85,7 @@ export function hechosDeLaFila(fila: FilaConHechos | null): HechosDeUnMovimiento
   return {
     tipo: fila.tipo as HechosDeUnMovimiento['tipo'],
     saldoInicial: fila.saldoInicial,
+    parteDeApertura: fila.parteDeApertura,
     esDeTransferencia: fila.transferenciaId !== null,
     marcadoEnConciliacion: fila.conciliacionId !== null,
     anulado: fila.anuladoEn !== null,

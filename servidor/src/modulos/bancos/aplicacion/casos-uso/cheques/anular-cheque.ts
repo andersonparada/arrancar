@@ -69,7 +69,8 @@ export class AnularCheque {
     const { fecha: fechaDelCheque, cuentaBancariaId } = movimiento.instantanea();
     const conciliadaHasta = await consultasMovimientos.conciliadaHasta(cuentaBancariaId);
     const mesConciliado = conciliadaHasta !== null && fechaDelCheque <= conciliadaHasta;
-    const conInverso = mesConciliado || conInversoSiempre === true;
+    const deLaApertura = movimiento.parteDeApertura === 'cheque_en_circulacion';
+    const conInverso = mesConciliado || conInversoSiempre === true || deLaApertura;
     const fechaDelInverso = conInverso ? (fecha ?? (await this.dependencias.reloj.hoy(operador))) : undefined;
     await this.dependencias.revisor.revisar(operador, {
       movimiento: await consultasMovimientos.obtener(movimientoId),

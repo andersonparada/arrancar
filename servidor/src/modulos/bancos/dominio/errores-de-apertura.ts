@@ -153,11 +153,11 @@ export class PrimeraConciliacionDeOtroMes extends ReglaDeNegocioInfringida {
 
 export class FechaDeInicioConSaldosDeBancos extends ReglaDeNegocioInfringida {
   readonly codigo = 'fecha_de_inicio_con_saldos_de_bancos';
-  constructor({ cantidad, fecha, global }: { cantidad: number; fecha: string; global: boolean }) {
+  constructor({ cantidad, fecha, global }: { cantidad: number; fecha: string | null; global: boolean }) {
     super(
       global
-        ? `${cantidad} cuentas bancarias tienen un saldo inicial del ${fechaLegible(fecha)}, posterior a la fecha de inicio nueva. Corríjalos en Bancos → Saldos iniciales antes de cambiar la fecha de inicio.`
-        : `${cantidad} cuentas bancarias tienen saldo inicial al ${fechaLegible(fecha)}: el saldo del estado de cuenta es de esa fecha. Elimínelos en Bancos → Saldos iniciales antes de cambiar la fecha de inicio.`,
+        ? `${cantidad} cuentas bancarias tienen un saldo inicial del ${fechaLegible(fecha ?? '')}, posterior a la fecha de inicio nueva. Corríjalos en Bancos → Saldos iniciales antes de cambiar la fecha de inicio.`
+        : `${cantidad} cuentas bancarias tienen saldo inicial${fecha ? ` al ${fechaLegible(fecha)}` : ''}: el saldo del estado de cuenta es de esa fecha. Elimínelos en Bancos → Saldos iniciales antes de cambiar la fecha de inicio.`,
     );
   }
 }

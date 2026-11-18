@@ -60,13 +60,15 @@ export function resumenDeLaCuenta(
   const cuadre = calcularCuadre(partidas);
   const comparacion = compararConLibros(cuadre.saldoEnLibrosAlCorte, cuenta.saldoSegunLibrosAnteriores);
   const { corte, cerrada } = contexto;
+  const forma = formaDe(cuenta, partidas);
   return {
     cuentaBancariaId: cuenta.cuentaBancariaId,
     cuentaNombre: cuenta.cuentaNombre,
     bancoNombre: cuenta.bancoNombre,
-    forma: formaDe(cuenta, partidas),
+    forma,
     fechaDeCorte: corte,
     ...cuadre,
+    saldoSegunEstadoDeCuenta: cuadre.saldoSegunEstadoDeCuenta ?? (forma === 'con_partidas' ? '0.00' : null),
     saldoSegunLibrosAnteriores: cuenta.saldoSegunLibrosAnteriores,
     ...comparacion,
     tieneEvidencia: cuenta.tieneEvidencia,

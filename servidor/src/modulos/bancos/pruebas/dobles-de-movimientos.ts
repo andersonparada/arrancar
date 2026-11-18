@@ -24,10 +24,11 @@ function hechosDe(
   conciliacionId: string | null,
   cuenta: HechosDeLaCuenta,
 ): HechosDeUnMovimiento {
-  const { tipo, saldoInicial, transferenciaId } = movimiento.instantanea();
+  const { tipo, saldoInicial, transferenciaId, parteDeApertura } = movimiento.instantanea();
   return {
     tipo,
     saldoInicial,
+    parteDeApertura,
     esDeTransferencia: transferenciaId !== null,
     marcadoEnConciliacion: conciliacionId !== null,
     anulado: movimiento.estaAnulado,

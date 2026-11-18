@@ -2,6 +2,7 @@ import { AccesoDenegado } from '../../../../core/compartido/aplicacion/errores.j
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { saldoDelBancoComoMovimiento } from '../../../dominio/apertura.js';
+import { aCentavos } from '../../../dominio/centavos.js';
 import { CuentaBancariaInactiva, SaldoInicialRepetido } from '../../../dominio/errores.js';
 import { CuentaConMovimientosAnteriores } from '../../../dominio/errores-de-apertura.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
@@ -33,7 +34,7 @@ export class GuardarSaldoInicial {
 
   /**
    * @throws SinFechaDeInicio, CargaInicialCerrada, CuentaBancariaInactiva, CuentaConMovimientosAnteriores,
-   *   AperturaConConciliacion, MontoInvalido (un saldo de cero no se registra) o AccesoDenegado.
+   *   AperturaConConciliacion o AccesoDenegado. Un saldo de cero es válido: la cabecera sola lo dice.
    */
   ejecutar(operador: Operador, guardado: GuardadoDeSaldoInicial): Promise<SaldoInicialGuardadoDto> {
     const { unidadDeTrabajo, ficha } = this.dependencias;
@@ -55,24 +56,33 @@ export class GuardarSaldoInicial {
   }
 
   private async crear(operador: Operador, { corte, solicitud }: { corte: string; solicitud: SolicitudDeSaldoInicial }) {
-    const { consultas, consultasConciliaciones, cabeceras, repositorioMovimientos, reglas, armador } =
-      this.dependencias;
+    const { consultas, consultasConciliaciones, cabeceras, reglas } = this.dependencias;
     const { cuentaBancariaId } = solicitud;
     const anteriores = await consultas.contarMovimientosNormalesHasta(cuentaBancariaId, corte);
     if (anteriores > 0) throw new CuentaConMovimientosAnteriores(anteriores);
     await exigirSinConciliaciones(consultasConciliaciones, cuentaBancariaId);
     await reglas.revisar(operador, { cuentaBancariaId, fechas: [corte], diferencia: 0 });
     const cabecera = await cabeceras.agregar(operador.empresaId, cuentaBancariaId, solicitud);
-    const movimiento = Movimiento.crear(
-      Identificador.desde<'Empresa'>(operador.empresaId),
-      await armador.datosDelSaldoDelBanco(operador, {
-        cuentaBancariaId,
-        corte,
-        saldo: solicitud.saldoSegunEstadoDeCuenta,
-      }),
-      { apertura: { parte: 'saldo_del_banco', saldoInicialId: cabecera.id } },
+    await this.agregarElSaldoDelBanco(operador, { cabecera, corte, solicitud });
+  }
+
+  /** Un saldo de cero no es un movimiento (el monto es mayor que cero): la cabecera sola dice que es cero. */
+  private async agregarElSaldoDelBanco(
+    operador: Operador,
+    {
+      cabecera,
+      corte,
+      solicitud,
+    }: { cabecera: CabeceraDeSaldoInicial; corte: string; solicitud: SolicitudDeSaldoInicial },
+  ) {
+    const { repositorioMovimientos, armador } = this.dependencias;
+    const { cuentaBancariaId, saldoSegunEstadoDeCuenta: saldo } = solicitud;
+    if (esCero(saldo)) return;
+    const datos = await armador.datosDelSaldoDelBanco(operador, { cuentaBancariaId, corte, saldo });
+    const apertura = { parte: 'saldo_del_banco', saldoInicialId: cabecera.id } as const;
+    await repositorioMovimientos.agregar(
+      Movimiento.crear(Identificador.desde<'Empresa'>(operador.empresaId), datos, { apertura }),
     );
-    await repositorioMovimientos.agregar(movimiento);
   }
 
   private async corregir(
@@ -85,7 +95,7 @@ export class GuardarSaldoInicial {
   ) {
     const { cabeceras, ficha, auditoria } = this.dependencias;
     const { partidas: _partidas, ...anterior } = await ficha.deLaCuenta(operador, solicitud.cuentaBancariaId);
-    await this.cambiarElSaldoDelBanco(operador, { corte, solicitud });
+    await this.cambiarElSaldoDelBanco(operador, { cabecera, corte, solicitud });
     await cabeceras.guardar({ ...cabecera, ...porComparar(solicitud) });
     await auditoria.registrar({
       recurso: RECURSO_DE_SALDOS_INICIALES,
@@ -98,25 +108,34 @@ export class GuardarSaldoInicial {
   /** Convierte el saldo global o corrige el del banco; la cabecera y las observaciones se cambian siempre. */
   private async cambiarElSaldoDelBanco(
     operador: Operador,
-    { corte, solicitud }: { corte: string; solicitud: SolicitudDeSaldoInicial },
+    {
+      cabecera,
+      corte,
+      solicitud,
+    }: { cabecera: CabeceraDeSaldoInicial; corte: string; solicitud: SolicitudDeSaldoInicial },
   ) {
-    const { consultas, consultasConciliaciones, repositorioMovimientos, armador } = this.dependencias;
-    const { cuentaBancariaId } = solicitud;
+    const { consultas, consultasConciliaciones } = this.dependencias;
+    const { cuentaBancariaId, saldoSegunEstadoDeCuenta: saldo } = solicitud;
     const principal = (await consultas.partidas(cuentaBancariaId)).find(esElSaldoPrincipal);
-    const nuevo = saldoDelBancoComoMovimiento(solicitud.saldoSegunEstadoDeCuenta);
-    if (!principal) return;
-    const esGlobal = principal.parte === 'saldo_global';
-    if (!esGlobal && principal.tipo === nuevo.tipo && principal.monto === nuevo.monto) return;
+    if (principal ? esElMismoSaldo(principal, saldo) : esCero(saldo)) return;
     await exigirSinConciliaciones(consultasConciliaciones, cuentaBancariaId);
+    if (principal?.parte === 'saldo_global') await this.exigirSinMovimientosAnteriores(cuentaBancariaId, corte);
+    if (!principal) return this.agregarElSaldoDelBanco(operador, { cabecera, corte, solicitud });
+    await this.reemplazarElSaldo(operador, { principal, corte, solicitud });
+  }
+
+  /** El saldo nuevo cambia el movimiento principal; con cero, el movimiento sobra y se borra. */
+  private async reemplazarElSaldo(
+    operador: Operador,
+    { principal, corte, solicitud }: { principal: PartidaDeLaBase; corte: string; solicitud: SolicitudDeSaldoInicial },
+  ) {
+    const { repositorioMovimientos, armador } = this.dependencias;
+    const { cuentaBancariaId, saldoSegunEstadoDeCuenta: saldo } = solicitud;
     const movimiento = await repositorioMovimientos.buscar(Identificador.desde(principal.movimientoId));
     if (!movimiento) return;
-    if (esGlobal) await this.exigirSinMovimientosAnteriores(cuentaBancariaId, corte);
-    const datos = await armador.datosDelSaldoDelBanco(operador, {
-      cuentaBancariaId,
-      corte,
-      saldo: solicitud.saldoSegunEstadoDeCuenta,
-    });
-    if (esGlobal) movimiento.convertirASaldoDelBanco(datos);
+    if (esCero(saldo)) return repositorioMovimientos.eliminar(movimiento.id);
+    const datos = await armador.datosDelSaldoDelBanco(operador, { cuentaBancariaId, corte, saldo });
+    if (principal.parte === 'saldo_global') movimiento.convertirASaldoDelBanco(datos);
     else movimiento.corregirPartida(datos);
     await repositorioMovimientos.guardar(movimiento);
   }
@@ -126,6 +145,13 @@ export class GuardarSaldoInicial {
     if (anteriores > 0) throw new CuentaConMovimientosAnteriores(anteriores);
   }
 }
+
+const esCero = (saldo: string) => aCentavos(saldo) === 0;
+
+const esElMismoSaldo = (principal: PartidaDeLaBase, saldo: string) => {
+  const nuevo = saldoDelBancoComoMovimiento(saldo);
+  return principal.parte === 'saldo_del_banco' && principal.tipo === nuevo.tipo && principal.monto === nuevo.monto;
+};
 
 const esElSaldoPrincipal = (partida: PartidaDeLaBase) =>
   !partida.anulada && (partida.parte === 'saldo_del_banco' || partida.parte === 'saldo_global');

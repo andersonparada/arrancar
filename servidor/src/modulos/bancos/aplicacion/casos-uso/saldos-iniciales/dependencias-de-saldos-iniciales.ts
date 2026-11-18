@@ -71,14 +71,18 @@ export async function exigirSinConciliaciones(
   if (reciente) throw new AperturaConConciliacion(mesLegible(reciente));
 }
 
-/** @throws SinSaldoInicial si la cuenta no tiene el saldo según el estado de cuenta (el del banco al corte). */
+/**
+ * La cuenta ya tiene su saldo según el estado de cuenta (la cabecera, con el movimiento del banco o, si el saldo es
+ * cero, sin él). Un saldo global de antes todavía no lo es: se convierte primero.
+ * @throws SinSaldoInicial si la cuenta solo tiene el saldo global.
+ */
 export async function exigirSaldoDelBanco(
   consultas: ConsultasDeSaldosIniciales,
   cuentaBancariaId: string,
 ): Promise<void> {
   const principales = await consultas.saldosPrincipales();
-  const tiene = principales.some((p) => p.cuentaBancariaId === cuentaBancariaId && p.parte === 'saldo_del_banco');
-  if (!tiene) throw new SinSaldoInicial();
+  const esGlobal = principales.some((p) => p.cuentaBancariaId === cuentaBancariaId && p.parte === 'saldo_global');
+  if (esGlobal) throw new SinSaldoInicial();
 }
 
 /** La partida de la ficha de la cuenta. @throws RecursoNoEncontrado si no existe en esa cuenta. */

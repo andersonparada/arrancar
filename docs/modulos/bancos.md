@@ -1704,3 +1704,7 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
   reemplaza al puente de BS-1. El Excel viejo (Tipo, Fecha, Monto…) ya no existe.
 - **Pendiente**: BS-3 (anular con inverso, movimientos antes del corte, `parteDeApertura` en los DTO), BS-4 (conciliación: hoy el saldo del
   banco todavía aparece como candidato, como el global), BS-5 a BS-9 (cliente y evidencia).
+- **Correcciones posteriores a BS-2 (2026-11-18)**: un saldo según el estado de cuenta de cero es válido (cabecera sin movimiento del banco; el cuadre lo
+  rellena con `0.00`; `exigirSaldoDelBanco` solo rechaza el saldo global; al corregir de cero a otro valor se crea el movimiento y a cero se borra). Un
+  cheque de la carga inicial no se blanquea (`puedeBlanquear` falso, `NoSeBlanqueaUnChequeDeApertura`) y `AnularCheque` crea siempre su inverso. Los
+  textos con artículos siguen el dictamen del contador del 2026-11-18.
