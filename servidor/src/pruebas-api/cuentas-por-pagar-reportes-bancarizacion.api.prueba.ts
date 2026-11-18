@@ -43,7 +43,7 @@ beforeAll(async () => {
   e = await EscenarioDePagos.preparar(entorno, 'cxprepbancariza');
   const { cuenta } = e.mundo.escenario;
   const inicio = await cuenta.propietario.put(`/api/empresas/${cuenta.empresaId}/carga-inicial`, {
-    fechaDeInicio: '2020-01-01',
+    fechaDeInicio: '2026-01-01',
   });
   expect(inicio.estado, JSON.stringify(inicio.cuerpo)).toBe(200);
   await e.fondear('300000.00');
@@ -196,7 +196,7 @@ describe('R9: sin efecto fiscal', () => {
       agenteDeRetencionIva: 'ninguno',
     });
     const { cuenta } = pequeno.mundo.escenario;
-    await cuenta.propietario.put(`/api/empresas/${cuenta.empresaId}/carga-inicial`, { fechaDeInicio: '2020-01-01' });
+    await cuenta.propietario.put(`/api/empresas/${cuenta.empresaId}/carga-inicial`, { fechaDeInicio: '2026-01-01' });
     await pequeno.fondear('50000.00');
     const { proveedor, cargo } = await pequeno.proveedorConCargo('30000.00');
     const retiro = await unRetiro(pequeno, '35000.00');
