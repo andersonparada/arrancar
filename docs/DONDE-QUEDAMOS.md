@@ -26,10 +26,9 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `b7bcd70`, subido a GitHub (desde el 2026-11-18 el coordinador hace el push tras cada unión en verde). Última
-corrida completa en verde (con CP4-E4 y CP4-9): servidor 4832, cliente 1264, generador 46, y `npm run revisar` limpio.
-Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-carga.md`) e impresión de cheques
-(`diseno-impresion-de-cheques.md`).
+**`main`:** `18bc719` (subido). En `main`: CP4-E4, CP4-9, BS-2, CP4-B3b, CP5-9a, QA intermedia, CP4-10, CP4-11, CP5-5,
+decisiones de H2 (Caddy 20 MB, huella del recibido, impresión en claro) y bandeja de DTE. Última suite completa en verde
+(integración, 2026-11-18): servidor 4958, cliente 1370, generador 46.
 
 **Agentes en curso (lanzados el 2026-11-18, cada uno en su worktree `.claude/worktrees/agent-<id>` desde `main`):**
 - **BS-2: unido a `main`** (2026-11-18). Rutas heredadas marcadas «HEREDADO» hasta BS-5; anular partidas llega con BS-3.
@@ -67,6 +66,7 @@ Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-ca
   módulos nuevos) y MM-3a (cliente del Banguat sin base), con revisión de seguridad o del arquitecto.
 - Integración: falla la preparación de dos pruebas de CP5-5 contra la regla de BS-2 (fecha de inicio); un agente lo corrige en
   la rama `integracion`. Después entran las decisiones de H2 y la bandeja de DTE.
+- **En integración ahora** (suite corriendo): qpdf en las pruebas del PDF y Excel de Terceros.
 - **Cola para la próxima integración** (cada rama con su revisión de Opus): corrección de CP4-9
   (`worktree-wf_0b4d5815-3ec-3`, en revisión), qpdf en las pruebas del PDF (`worktree-agent-a9590755fda19cc8d`), Excel de
   Terceros (`worktree-wf_f6224bdf-ffe-1`, corregido), Excel de Empresas y selector (`worktree-wf_f6224bdf-ffe-2`: se acota
