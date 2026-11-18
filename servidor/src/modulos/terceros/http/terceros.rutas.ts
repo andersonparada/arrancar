@@ -1,8 +1,10 @@
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { AccesoDenegado } from '../../core/compartido/aplicacion/errores.js';
+import { rutasDeIntercambio, type OpcionesDeIntercambio } from '../../core/intercambio/http/rutas-de-intercambio.js';
 import { contextoDe } from '../../core/compartido/http/contexto-de-la-solicitud.js';
 import { proteger } from '../../core/compartido/http/guardias.js';
+import type { IntercambiosDeTerceros } from '../composicion/intercambios.js';
 import type { CategoriasControlador, ContactosControlador } from './contactos-y-categorias.controlador.js';
 import type { TercerosControlador } from './terceros.controlador.js';
 import {
@@ -24,6 +26,7 @@ export interface ControladoresDeTerceros {
   terceros: TercerosControlador;
   contactos: ContactosControlador;
   categorias: CategoriasControlador;
+  intercambios: IntercambiosDeTerceros;
 }
 
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
@@ -135,6 +138,20 @@ function rutasDeCategorias(app: Aplicacion, categorias: CategoriasControlador): 
   });
 }
 
+/** Excel de clientes, proveedores y categorías, cada uno con su permiso de importar y de exportar. */
+function rutasDeExcel(app: Aplicacion, intercambios: IntercambiosDeTerceros): void {
+  const de = (ruta: string, intercambio: OpcionesDeIntercambio['intercambio'], recurso: string) =>
+    rutasDeIntercambio(app, {
+      ruta,
+      archivo: recurso,
+      permisos: { importar: `terceros.${recurso}.importar`, exportar: `terceros.${recurso}.exportar` },
+      intercambio,
+    });
+  de('/terceros/clientes', intercambios.clientes, 'clientes');
+  de('/terceros/proveedores', intercambios.proveedores, 'proveedores');
+  de('/proveedores/categorias', intercambios.categorias, 'categorias-de-proveedor');
+}
+
 export function rutasTerceros(controladores: ControladoresDeTerceros): FastifyPluginAsyncZod {
   return async (app) => {
     rutasDeDatosGenerales(app, controladores.terceros);
@@ -142,5 +159,6 @@ export function rutasTerceros(controladores: ControladoresDeTerceros): FastifyPl
     rutasDelPapelDeProveedor(app, controladores.terceros);
     rutasDeContactos(app, controladores.contactos);
     rutasDeCategorias(app, controladores.categorias);
+    rutasDeExcel(app, controladores.intercambios);
   };
 }

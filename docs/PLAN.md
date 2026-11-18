@@ -2244,3 +2244,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   emisiones y la fecha de inicio, y el servidor valida igual) y la bancarización se anticipa solo como «el mes llega al
   umbral» (el efecto fiscal lo decide el servidor al registrar). Sin enlace «Pagar en efectivo» ni a la ficha del pago (CP4-E5 y
   CP4-10).
+
+- **Excel de Clientes, Proveedores y Categorías de proveedor (servidor).** Rutas `GET /terceros/clientes|proveedores/exportar|plantilla`,
+  `POST …/importar?ensayo=` y lo mismo en `/proveedores/categorias`. Permisos `terceros.clientes.*`, `terceros.proveedores.*` y
+  `terceros.categorias-de-proveedor.*` (`importar`, `exportar`); la migración `0008_permisos_de_excel` da importar a quien tenía
+  `clientes.crear` / `proveedores.crear` y exportar a quien tenía `terceros.ver`, en roles y permisos directos. Cada fila entra por
+  `RegistrarTercero` (aviso de parecidos incluido: una fila parecida a un tercero existente se rechaza, sin confirmar duplicado),
+  con el papel de la hoja; sin contactos ni secciones de otros módulos. La categoría se escribe por nombre. Pendiente: botones en
+  el cliente.
