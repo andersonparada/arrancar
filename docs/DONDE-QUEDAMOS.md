@@ -28,8 +28,12 @@ Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-ca
 (`diseno-impresion-de-cheques.md`).
 
 **Agentes en curso (lanzados el 2026-11-18, cada uno en su worktree `.claude/worktrees/agent-<id>` desde `main`):**
-- **BS-2** (servidor, saldos iniciales por partidas): `programador-backend` (Sonnet), base `arrancar_pruebas_bs2`;
-  conserva el `GET` viejo de `/bancos/saldos-iniciales` hasta BS-5.
+- **BS-2: unido a `main`** (2026-11-18). Rutas heredadas marcadas «HEREDADO» hasta BS-5; anular partidas llega con BS-3.
+  El cambio de fecha de inicio se rechaza solo si el saldo global es **posterior** (el coordinador lo aprobó: en Bancos el
+  saldo inicial puede tener fecha igual a la de inicio).
+- **Workflow `arrancar-bancos-cadena`** (run `wf_b0177bcf-706`): revisión de BS-2 → BS-3 (con las correcciones y los textos
+  legales del dictamen `dictamen-textos-legales-de-bancos-2026-11-18.md`) → BS-4 y BS-R1 desde la rama de BS-3; BS-5 en
+  paralelo. Unir en orden BS-3, BS-4/BS-R1, BS-5.
 - **CP4-E4** (servidor, liquidar y reabrir el retiro, recibo de efectivo): `programador-backend` (Sonnet), base
   `arrancar_pruebas_cpe4`.
 - **Workflow `arrancar-pasos-independientes`** (run `wf_01c5093b-22c`, reanudable con `resumeFromRunId`):
