@@ -2326,3 +2326,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Todas las recomendaciones, salvo en Caja chica: una factura con retención se rechaza **con permiso de excepción**
   (lo del contador, CC-f A′) y la bancarización solo **avisa y marca** (lo del arquitecto, CC-h A). Detalle al final de
   cada diseño. Los tres quedan **aprobados** para programar (orden de la hoja de ruta: Multimoneda antes que Caja chica).
+- **2026-11-18 (MM-3, primera parte: cliente del Banguat sin base de datos).** En `core/monedas`: puerto
+  `FuenteDeTiposDeCambio` (`tipoDelDia`, `tiposDelRango`), `ClienteBanguat` (SOAP 1.1 con `fetch`, HTTPS obligatorio, 10 s,
+  256 KB, sin seguir redirecciones, sin analizador XML: rechaza `<!DOCTYPE`/`<!ENTITY` y extrae solo lo esperado),
+  validación de dominio (fecha real y no posterior a mañana, referencia `^\d{1,6}(\.\d{1,8})?$` y > 0, banda 5 a 15 del
+  USD, variación de 3 % con enteros), `FuenteConReintentos` (decorador con esperas), huecos y rango de relleno de 45 días y
+  el doble `FuenteDeTiposDeCambioEnMemoria`. Una llamada real cerró casi todo V-13 (ver el diseño). **Para después de
+  MM-1/MM-2 (necesitan tablas):** bitácora `core.consultas_al_banguat`, candado `pg_try_advisory_lock`, horario y
+  temporizador, relleno contra lo guardado, `principal.ts`, variables `URL_TIPO_DE_CAMBIO_BANGUAT` y
+  `CARGAR_TIPOS_DE_CAMBIO`, `POST …/cargar`, y avisar la variación (usa `variacionSuperaElLimite`).
