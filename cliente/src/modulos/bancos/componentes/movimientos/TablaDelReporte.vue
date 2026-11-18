@@ -3,7 +3,9 @@ import { computed } from 'vue';
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import { formatearNumeroDeComprobante } from '../../composables/comunes/numero-de-comprobante';
 import { marcaDeReversion } from '../../composables/movimientos/estado-de-reversion';
-import { textoDeOrigen } from '../../composables/movimientos/origen-y-causa';
+import { RouterLink } from 'vue-router';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
+import { destinoDeOrigenDelPago, textoDeOrigen } from '../../composables/movimientos/origen-y-causa';
 import { creditoDeFila, debitoDeFila, documentoDeFila } from '../../composables/movimientos/fila-del-reporte';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import type { FilaDelReporte, ReporteDeMovimientos } from '../../servicios/movimientos.api';
@@ -21,6 +23,7 @@ const props = defineProps<{
   puedeReclasificar: (fila: FilaDelReporte) => boolean;
 }>();
 const emit = defineEmits<{ reclasificar: [fila: FilaDelReporte] }>();
+const sesion = usarSesion();
 const conAcciones = computed(() => props.reporte.filas.some(props.puedeReclasificar));
 
 const CLASE_DE_MARCA = {
@@ -81,7 +84,16 @@ const CLASE_DE_MARCA = {
             <p v-for="linea in fila.desglose" :key="linea.conceptoId" class="text-xs text-tierra-500 no-underline">
               {{ linea.concepto }}: {{ formatearMonto(linea.monto) }}
             </p>
-            <p v-if="textoDeOrigen(fila)" class="text-xs text-tierra-500 no-underline">{{ textoDeOrigen(fila) }}</p>
+            <p v-if="textoDeOrigen(fila)" class="text-xs text-tierra-500 no-underline">
+              <RouterLink
+                v-if="destinoDeOrigenDelPago(fila) && sesion.puede('cuentas-por-pagar.pagos.ver')"
+                :to="destinoDeOrigenDelPago(fila)!"
+                class="underline underline-offset-2 print:no-underline"
+              >
+                {{ textoDeOrigen(fila) }}
+              </RouterLink>
+              <template v-else>{{ textoDeOrigen(fila) }}</template>
+            </p>
           </td>
           <td class="px-4 py-2.5">{{ formatearTexto(fila.beneficiario) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(debitoDeFila(fila)) }}</td>

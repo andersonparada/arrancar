@@ -2305,3 +2305,29 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   quedan como texto; el filtro por cuenta bancaria de R6 y R7 espera un listado de cuentas que Cuentas por pagar pueda leer sin
   importar Bancos. R9, R10, R11 y la conciliación de R1 siguen en espera de CP5-5.
 - **2026-11-18 — CP5-9 (cliente), correcciones de la revisión.** R8: «Ajustes vigentes del mes» y su cantidad salen de la suma de `totales.porCausa` (el total de la sección incluye anulados); nuevo cuadro «por causa y efecto» (pérdida, transitoria, otros ingresos); el resumen suma anulaciones de otros meses y muestra monto de documentos anulados y devueltos; «Pagos a la apertura» aclara que suma vigentes y anulados. R6: el tope de 24 meses del cliente usa la misma regla que el servidor (`mesesEntre`). Sigue pendiente el filtro `cuentaBancariaId` de R6 y R7 (espera listado de cuentas legible sin importar Bancos).
+- **2026-11-18 — CP4-10 (cliente, pagos).** Sin cambios en el servidor. Pantallas: **Pagos**
+  (`/cuentas-por-pagar/pagos`, entrada «Pagos» en Operación, `pagos.ver`): tarjetas con número, proveedor, forma («Cheque 1523 ·
+  Banco X», «Efectivo · Retiro N»), fecha, monto y contraseñas, marca «Anulado» o «Posfechado»; filtros de proveedor, forma,
+  estado (vigentes por omisión), **cheques posfechados**, fechas y cuenta bancaria. **Ficha del pago**
+  (`/pagos/:id`): datos, documento de Bancos (cheque o nota, conciliado o no), retiro y quien recibió si es efectivo, documentos
+  que cubre con retención descontada y constancias (o «constancia por emitir»), lo que debe cada documento hoy, «Dar por saldada
+  la diferencia de Qx» por línea (`puedeSaldarDiferencia` del servidor, `ajustes.crear`, con confirmación y el aviso de la
+  retención), **Reaplicar** (ventana con los cargos de las contraseñas vigentes del proveedor, tope por cargo sin contar este
+  pago, suma que dice cuánto falta o sobra, motivo, resumen de confirmación, errores del servidor al cargo que los causó y avisos
+  de la respuesta), **Anular** (resumen de lo que pasará según la forma, motivo y fecha del inverso opcional si mueve dinero) y
+  «Cobrado: reaplíquelo o registre un reintegro» cuando el movimiento está conciliado. **Comprobante**
+  (`/pagos/:id/comprobante`, `window.print()`, original y copia, no registra nada): título, leyendas y monto en letras tal como
+  los devuelve el servidor, documentos por contraseña con constancias, notas aplicadas, pagado y saldo, firmas. Enlaces: los pagos
+  de la sección «Pagos» de la contraseña y el resultado de «Nuevo pago» (con «Imprimir el comprobante») llevan a la ficha; el
+  «Origen: Cuentas por pagar» de Bancos (tabla de movimientos y tarjeta de nota) es enlace a la ficha del pago con `pagos.ver`.
+  Lógica pura con pruebas en `composables/pagos/` (`lista-de-pagos`, `ficha-de-pago`, `reaplicacion`, `comprobante-de-pago`).
+  Diferencias con el diseño: la reaplicación se hizo como ventana; el enlace al movimiento de Bancos de la ficha es texto (Bancos
+  no tiene ficha de cheque ni de nota); el origen de Bancos solo guarda el id, así que si es de un reintegro o un retiro el enlace
+  lleva a una ficha que dice «No se encontró este pago» (pendiente: campo de tipo de origen en Bancos). El efectivo (CP4-E5) no
+  se programó: la lista y la ficha ya muestran un pago en efectivo si llega.
+- **2026-11-18 — CP4-10 (correcciones de la revisión).** Bancos ya no enlaza a la ficha del pago las notas de crédito (los reintegros
+  nacen en Cuentas por pagar sin ser pagos) y rotula «Ver en Cuentas por pagar»; las notas de débito de retiros siguen
+  pendientes hasta que Bancos guarde el tipo del documento de origen. La lista de Pagos ya no pide los proveedores sin
+  `documentos.ver` (el filtro queda con «Todos», sin aviso). El comprobante muestra estado vacío con enlace para volver y la
+  sección de pagos de la contraseña solo enlaza con `pagos.ver`. Pendiente: tope de la reaplicación con diferencias saldadas
+  (el cliente no suma esa diferencia) y enlace del movimiento de Bancos en la ficha.

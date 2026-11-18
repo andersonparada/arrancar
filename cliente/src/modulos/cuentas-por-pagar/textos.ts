@@ -65,6 +65,10 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
   pagos: {
     titulo: 'Pagos',
     nuevo: 'Nuevo pago',
+    descripcionDeLaLista:
+      'Lo pagado a los proveedores: busque un pago, vea qué documentos cubrió y, si hace falta, corríjalo, anúlelo o imprima su comprobante.',
+    ficha: 'Pago a proveedor',
+    comprobante: 'Comprobante de pago',
     descripcionDelNuevo:
       'Pague a un proveedor lo que ya autorizó: con cheque, transferencia o débito, una nota que ya está en Bancos, o dando por pagado lo que ya estaba pagado antes de la fecha de inicio.',
   },
