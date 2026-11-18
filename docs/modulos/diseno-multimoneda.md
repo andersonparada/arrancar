@@ -1166,3 +1166,14 @@ pruebas):
 | **MM-4** (cliente, Plataforma) | `PlataformaTiposDeCambio.vue` (como estaba, más A.10) y `PlataformaMonedas.vue` con el selector, la muestra y «Actualizar lista» | Unitarias de `edicion-de-moneda.ts` (qué opciones se habilitan, bloqueo con serie, activa con decimales ≠ 2); QA en el navegador con el servidor falso del Banguat | MM-3b |
 
 MM-5 y los siguientes no cambian.
+
+### Respuestas del usuario a la adenda (2026-11-18)
+
+- **D-1:** se actualizan **solo las monedas activas que tengan código** del Banguat (lo del contador).
+- **D-5:** **tres vueltas** en hora de Guatemala: 06:00 el dólar, 09:30 las demás monedas y una vuelta de noche que adelanta
+  el dólar de mañana.
+- **D-2:** el selector ofrece todas las monedas de `VariablesDisponibles` **menos** el DEG, los tres bolívares retirados y
+  el colón salvadoreño.
+- **D-3, D-4, D-6 y comprobaciones:** con compra ≠ venta no se carga sola (solo a mano); en días sin cálculo del Banguat se
+  usa el último publicado sin pedir confirmación (aviso solo si faltó una publicación esperada); las monedas sin decimales
+  tienen código pero no se activan en v1; antes de MM-3b se hacen las llamadas reales C-1 a C-4 al Banguat.

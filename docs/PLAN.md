@@ -2447,3 +2447,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `RegistrarTercero` (aviso de parecidos incluido: una fila parecida a un tercero existente se rechaza, sin confirmar duplicado),
   con el papel de la hoja; sin contactos ni secciones de otros módulos. La categoría se escribe por nombre. Cliente: botones de Excel en las listas de Clientes, Proveedores y Categorías de proveedor (`AccionesDeIntercambio`, `VentanaDeImportacion`, `usarIntercambio`).
 - **Corrección de la revisión del Excel de terceros.** La migración `0008_permisos_de_excel` da `importar` de clientes y proveedores solo a quien tiene el papel `.crear` **y** `terceros.crear` (en el mismo rol, o en el mismo usuario de la cuenta), como pide el formulario; antes un rol con solo `clientes.crear` podía crear terceros por Excel. HOJA-DE-RUTA al día y la prueba de exportar proveedores revisa el contenido. Pendiente (bajo): la columna «Activo» exporta el estado del tercero, no el del papel.
+- **2026-11-18 (respuestas del usuario a la adenda de Multimoneda).** Solo las monedas activas con código del Banguat se
+  cargan solas, en tres vueltas (06:00 dólar, 09:30 las demás, noche); el selector excluye DEG, bolívares retirados y colón
+  salvadoreño; lo demás según el contador (detalle al final de la adenda en `docs/modulos/diseno-multimoneda.md`).
