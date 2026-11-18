@@ -2429,3 +2429,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   filtro» toma el total de la respuesta del servidor (no del último listado); la ventana «Confirmar» no se cierra con
   Escape ni clic fuera mientras envía. Sin cambio: la barra cuenta como «se registrarán» lo no anulado (la letra de la
   decisión) y «Confirmar» descuenta además lo que la vista previa rechaza.
+
+- **2026-11-18 — Dependencias: avisos de `npm audit`.** Antes: 25 (2 bajas, 21 moderadas, 2 altas: zod < 4.6.6 y vite
+  8.3.0–8.3.2). Después: 13, todas moderadas y solo de desarrollo, ninguna alta. Subidas dentro de la misma versión mayor:
+  zod 4.6.5 → 4.6.7 (`servidor`), vite 8.3.1 → 8.3.8 (`cliente`), y en el `package-lock.json` fastify 5.12.8, vitest 5.1.1
+  (con `@vitest/mocker`), fast-uri 3.1.9/4.x, ip-address y serialize-javascript. Sin cambios de código: las notas de zod 4.6.x
+  y vite 8.3.x son solo correcciones. `npm audit fix` y `npm update` fallan con un error del propio npm 10.9.9
+  (`edgesOut`), así que se instaló zod y vite con `npm install <paquete>@<versión> -w <workspace>` y se re-resolvieron las
+  demás quitando sus entradas del lock. **Pendientes (versión mayor, no se hizo):** `minimatch` 10.2.6 (por eslint 10 y
+  typescript-eslint; el parche es 11.0.9, mayor) y sus dependientes `glob`/`@eslint/config-array`; `esbuild` 0.18 dentro de
+  `@esbuild-kit` (de drizzle-kit; `audit fix --force` bajaría drizzle-kit a 0.18.1, no se hace). Ambos solo en desarrollo.
