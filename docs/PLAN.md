@@ -2212,3 +2212,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   bloqueen; 8 observaciones menores (el signo de «Difiere en», la huella que cambia en cada subida, la impresión en modo oscuro…).
   Firefox y Safari no se pudieron comprobar. Decisiones abiertas: tope de solicitud en Caddy, conservar 60 meses el
   `nombreOriginal`, CSP propia o «Abrir en otra pestaña» si Firefox o Safari no muestran el PDF, y qué huella mostrar.
+- **2026-11-18 — CP5-9 (cliente), primera parte: R6, R7 y R8.** Páginas `PagosRealizados`, `ChequesPosfechados` y `AjustesDelMes`
+  (`/cuentas-por-pagar/reportes/pagos`, `…/cheques-posfechados`, `…/ajustes-del-mes`) en `seccion: 'reportes'`, con los permisos
+  `reportes-de-pagos.ver` (R6, R7) y `reportes-de-control.ver` (R8); Excel con `.exportar` de su grupo (`AccionesDelReporte` ahora
+  recibe `recurso`). R6: filtros (rango del mes en curso, máximo 24 meses con mensaje que dice cómo corregirlo, proveedor, forma,
+  estado, posfechados y «misma persona»), totales de todo lo filtrado y por forma, tabla con «Registró el documento», «Autorizó» y
+  «Registró el pago», paginada de 50 en 50 e impresión de hasta 2,000 filas (`usarImpresionDeFilas`). R7: corte, totales por cuenta y
+  por semana, marca «Cobrado». R8: mes escogido de una lista (por omisión el anterior), las seis secciones (5a anulados y 5b devueltos
+  a revisión), estado vacío si no hay cambios. En celular, tarjetas (R6, R7) y tablas que se deslizan dentro de su tarjeta (R8). El
+  nombre del proveedor lleva a R3 solo si el usuario puede abrirlo. Pendientes: la ficha del pago (CP4-10) y de la contraseña desde R6
+  quedan como texto; el filtro por cuenta bancaria de R6 y R7 espera un listado de cuentas que Cuentas por pagar pueda leer sin
+  importar Bancos. R9, R10, R11 y la conciliación de R1 siguen en espera de CP5-5.

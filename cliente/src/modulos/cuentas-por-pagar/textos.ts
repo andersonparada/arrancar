@@ -62,6 +62,18 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     titulo: 'Contraseñas con pago vencido',
     descripcion: 'Contraseñas con saldo cuyo pago prometido ya pasó, para cobrar o reprogramar.',
   },
+  pagosRealizados: {
+    titulo: 'Pagos realizados',
+    descripcion: 'Los pagos de un rango de fechas, una fila por documento pagado, con quién lo registró y autorizó.',
+  },
+  chequesPosfechados: {
+    titulo: 'Cheques posfechados',
+    descripcion: 'Cheques ya entregados cuya fecha aún no llega: lo que está comprometido a una fecha de corte.',
+  },
+  ajustesDelMes: {
+    titulo: 'Ajustes del mes',
+    descripcion: 'Lo que cambió en Cuentas por pagar durante un mes, para revisarlo al cerrar.',
+  },
   // generador: ventanas
 } as const;
 
