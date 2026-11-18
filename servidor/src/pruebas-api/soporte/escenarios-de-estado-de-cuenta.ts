@@ -31,7 +31,7 @@ export async function iniciarConciliacionConSaldo(usuario: ClienteApi, nombre: s
 /** Los archivos de estados de cuenta de la empresa, vistos como propietario de la base (sin RLS). */
 export function archivosDelEstadoDeCuenta(empresaId: string) {
   return comoPropietario<{ id: string; ruta_original: string; sha256: string }>(
-    "select id, ruta_original, sha256 from core.archivos where recurso_dueno = 'bancos.conciliaciones' and empresa_id = $1",
+    "select id, ruta_original, coalesce(sha256_recibido, sha256) as sha256 from core.archivos where recurso_dueno = 'bancos.conciliaciones' and empresa_id = $1",
     [empresaId],
   );
 }

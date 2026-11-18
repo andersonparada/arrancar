@@ -2258,3 +2258,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-18 (H2, tope en Caddy).** `infra/Caddyfile`: `request_body { max_size 20MB }` para todo el sitio y `handle_errors 413`
   que responde `SOLICITUD_DEMASIADO_GRANDE` en el formato de errores de la API. Configuración validada con `caddy validate`.
   Los topes de la app (PDF 10 MB, foto 15 MB, Excel 5 MB) siguen igual; para cambiar el de Caddy se edita ese archivo y se reinicia el contenedor.
+- **2026-11-18 (H2, huella del archivo recibido).** La huella que se informa y se muestra del estado de cuenta es la sha256 **del archivo
+  tal como llegó** (`sha256_recibido`), estable aunque qpdf reescriba el PDF y comparable con `sha256sum` del original. El gestor de
+  documentos (`core/archivos`) la devuelve al guardar y al abrir (con respaldo a `sha256` si falta) y la consulta del estado de cuenta
+  de bancos la lee de ahí. Sin migración ni datos que corregir: `sha256_recibido` ya se guardaba en cada documento (las filas de
+  desarrollo anteriores a H2b que no la tengan siguen mostrando la huella guardada). La auditoría conserva el `nombreOriginal` igual.
+  Pruebas: el mismo PDF dos veces da la misma huella y coincide con `createHash('sha256')` del original.
