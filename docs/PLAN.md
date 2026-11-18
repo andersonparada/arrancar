@@ -2632,6 +2632,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `EENVELOPE`/`EMESSAGE` son permanentes y los de TLS/certificado no gastan intento. El saneado quita caracteres de
   ancho cero y corta por puntos de código; la plantilla rechaza `{ marcador }` con espacios; la redacción de pino cubre
   dos niveles y más nombres de secretos.
+- **2026-11-18 (aviso de pago por correo, paso 2: servidor de correo de la instalación).** `CLAVE_SECRETOS` (32 bytes en
+  base64, opcional; si llega mal formada la app no arranca) y `CLAVE_SECRETOS_ANTERIOR` para rotar;
+  `CORREO_PERMITIR_RED_INTERNA` (solo desarrollo; se rechaza en producción). `CifradorAesGcm` (AES-256-GCM, IV de 12
+  bytes, el contexto como AAD, versión de llave = 15 bits de su huella). Tabla `core.servidor_de_correo` (migración
+  0025; una fila; sin `empresa_id` ni RLS; checks: solo 465 con `tls_directo` o 587 con `starttls`, **no admite
+  `ninguna`**, no se activa sin contraseña). Rutas de Soporte (`soloSuperacceso`) `GET`/`PUT /api/soporte/correo/servidor`
+  y `POST /api/soporte/correo/prueba` (`EnviarPrueba`, 5 por hora por usuario). La contraseña solo se escribe: la API
+  devuelve `contrasenaConfigurada`; al cambiar servidor, puerto o usuario hay que escribirla otra vez (así no se
+  desvía la guardada); el servidor no puede ser de la red interna (C12). Cada guardado y cada prueba van a
+  `core.bitacora_superacceso` en la misma transacción, sin contraseña. Decisión: las rutas usan `/api/soporte/…` como
+  dice el diseño y no `/api/plataforma/…` como las demás de Soporte. Pendiente: re-cifrar con la llave nueva al rotar
+  (hoy ocurre al volver a escribir la contraseña) y cómo apunta el desarrollo a Mailpit (puerto 1025, sin cifrado),
+  que la tabla no admite.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la

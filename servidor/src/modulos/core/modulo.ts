@@ -7,6 +7,7 @@ import { componerArchivos } from './archivos/contexto.js';
 import { esquemaColorHex } from './apariencia/http/apariencia.esquemas-http.js';
 import { MESES_DE_AUDITORIA } from './bitacora/aplicacion/casos-uso/depurar-auditoria.js';
 import { componerBitacora } from './bitacora/contexto.js';
+import { componerCorreo } from './correo/contexto.js';
 import { componerConfiguracion } from './configuracion/contexto.js';
 import { variablesRegionales } from './configuracion/variables-regionales.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
@@ -26,6 +27,7 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(componerGeografia(dependenciasCompartidas()));
   await app.register(componerCalendario(dependenciasCompartidas()));
   await app.register(componerBitacora());
+  await app.register(componerCorreo());
 };
 
 export const moduloCore: DefinicionModulo = {

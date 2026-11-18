@@ -26,6 +26,8 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       URL_PUBLICA: 'http://localhost:5180',
+      // Llave fija solo de pruebas para cifrar la contraseña del servidor de correo.
+      CLAVE_SECRETOS: 'kK6Yh4OfNHcE6AmUHPRSLMxubql1WgrHt+/SUhX832c=',
       ...(rutaQpdf ? { RUTA_QPDF: rutaQpdf } : {}),
     },
   },
