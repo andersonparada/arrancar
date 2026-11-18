@@ -2447,3 +2447,25 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `RegistrarTercero` (aviso de parecidos incluido: una fila parecida a un tercero existente se rechaza, sin confirmar duplicado),
   con el papel de la hoja; sin contactos ni secciones de otros módulos. La categoría se escribe por nombre. Cliente: botones de Excel en las listas de Clientes, Proveedores y Categorías de proveedor (`AccionesDeIntercambio`, `VentanaDeImportacion`, `usarIntercambio`).
 - **Corrección de la revisión del Excel de terceros.** La migración `0008_permisos_de_excel` da `importar` de clientes y proveedores solo a quien tiene el papel `.crear` **y** `terceros.crear` (en el mismo rol, o en el mismo usuario de la cuenta), como pide el formulario; antes un rol con solo `clientes.crear` podía crear terceros por Excel. HOJA-DE-RUTA al día y la prueba de exportar proveedores revisa el contenido. Pendiente (bajo): la columna «Activo» exporta el estado del tercero, no el del papel.
+- **2026-11-18 — Pruebas del servidor en paralelo (infraestructura).** La suite (~540 archivos, ~4900 pruebas) tardaba 26–29 min porque
+  `fileParallelism` estaba apagado desde el primer commit: todos los archivos compartían la base `arrancar_pruebas`. Ahora cada worker de
+  Vitest usa **su propia base** `${BD_PRUEBAS}_${VITEST_POOL_ID}`. `globalSetup` (`servidor/src/pruebas-api/paralelo/preparar-bases-paralelas.ts`)
+  crea las que falten clonándolas de `${BD_PRUEBAS}_plantilla` (migrada con el migrador real, que da los GRANT a `arrancar_app`); las bases
+  se **conservan entre corridas** (borrarlas fuerza un checkpoint de PostgreSQL que con la máquina cargada tardó más de 10 minutos) y cada
+  archivo las migra y limpia al empezar, como antes. `setupFiles` (`entorno-por-worker.ts`) fija por worker `DATABASE_URL`,
+  `DATABASE_URL_PROPIETARIO`, `RUTA_ALMACENAMIENTO` (`almacenamiento-pruebas/worker-<n>`), `TMPDIR` propio (la prueba de qpdf cuenta archivos
+  temporales) y `PGOPTIONS=-c synchronous_commit=off`. Workers: `VITEST_MAX_WORKERS`, por omisión la mitad de los núcleos con tope de 8.
+  `BD_PRUEBAS` sigue siendo el prefijo propio de cada agente. Los tiempos de espera suben (`testTimeout` 30 s, `hookTimeout` 60 s) porque las
+  pruebas de imágenes de 20000 x 20000 y de 20,000 documentos pasaban de 5 s al compartir CPU. Limpieza: `BD_PRUEBAS=<prefijo> npm run
+  bd:limpiar-pruebas -w servidor` borra solo `<prefijo>_plantilla` y `<prefijo>_<número>`. No correr dos corridas con el mismo prefijo a la vez.
+  Medido con 8 workers y la máquina compartida (carga de 17 a 25): 360 s, 382 s y 373 s en tres corridas seguidas, todas en verde (544 archivos,
+  4910 pruebas), contra 26–29 min en serie.
+- **2026-11-18 — Pruebas en paralelo, correcciones de la revisión.** El prefijo `BD_PRUEBAS` se valida (`validarPrefijoDeBases`: `^[a-z][a-z0-9_]{0,40}$`,
+  distinto de `arrancar`, error si viene vacío) desde `nombres-de-bases.ts`, usado por el `globalSetup`, la configuración y el script de limpieza; este
+  último ya no usa expresiones regulares en SQL: lista las bases y filtra en JavaScript (`esBaseDePruebasDelPrefijo`: prefijo exacto más `_plantilla` o
+  `_` y solo dígitos), con los identificadores escapados. El número de bases sigue al `maxWorkers` que Vitest resuelve (`setup(proyecto)` lee
+  `proyecto.config.maxWorkers`: sirven `--maxWorkers` (admite `50%`: `npm run probar -w servidor -- --maxWorkers=50%`) y `VITEST_MAX_WORKERS`, que solo acepta un número entero porque Vitest la lee con `parseInt` (`50%` daría 50 workers); ambas rutas rechazan lo que no sea un entero positivo con un error claro; `vitest.config.ts` solo fija el valor por omisión si no hay variable).
+  `globalSetup` compara el historial de `drizzle.migraciones_<modulo>` de la plantilla y de cada base de worker con el código (`historial-de-migraciones.ts`:
+  hash aplicado que ya no existe, o migración pendiente con fecha anterior a la última aplicada, que drizzle saltaría); si no concuerda, borra y vuelve a
+  crear las bases del prefijo. `RUTA_ALMACENAMIENTO` es por base (`almacenamiento-pruebas/<base>`). Borrar bases puede tardar mucho con la máquina
+  cargada (correr `bd:limpiar-pruebas` en segundo plano) y no deben correr dos suites con el mismo prefijo.

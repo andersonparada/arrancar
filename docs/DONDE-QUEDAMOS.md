@@ -16,8 +16,7 @@ paralelo (una base por worker; hoy ~27 min en serie).
 
 **Cómo se trabaja:** cada paso lo programa un agente en su propio worktree (`.claude/worktrees/agent-<id>`, rama
 `worktree-agent-<id>`), que parte de `main` con `git reset --hard main`, usa su propia base de pruebas
-(`BD_PRUEBAS=arrancar_pruebas_<algo>`, creada con `docker compose -f infra/docker-compose.dev.yml exec -T postgres psql
--U arrancar -d arrancar -c "create database …"`) y hace un commit sin Co-Authored-By. El coordinador revisa el
+(`BD_PRUEBAS=arrancar_pruebas_<algo>`: basta elegir un prefijo propio, las bases se crean solas) y hace un commit sin Co-Authored-By. El coordinador revisa el
 reporte, une con `git merge --no-ff` (los conflictos de `docs/PLAN.md` y `docs/DONDE-QUEDAMOS.md` se resuelven
 conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run revisar` y
 `BD_PRUEBAS=arrancar_pruebas_cxp npm run probar` en el checkout principal y solo sigue con todo en verde. Agentes:

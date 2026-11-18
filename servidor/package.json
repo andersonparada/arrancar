@@ -10,7 +10,8 @@
     "probar": "vitest run",
     "bd:generar": "tsx --env-file=../.env scripts/generar-migracion.ts",
     "bd:migrar": "tsx --env-file=../.env src/modulos/core/base-datos/migrar.ts",
-    "bd:sembrar": "tsx --env-file=../.env src/modulos/core/base-datos/sembrar.ts"
+    "bd:sembrar": "tsx --env-file=../.env src/modulos/core/base-datos/sembrar.ts",
+    "bd:limpiar-pruebas": "tsx scripts/limpiar-bases-de-pruebas.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.2",
