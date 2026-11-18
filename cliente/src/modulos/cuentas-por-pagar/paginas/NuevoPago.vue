@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { HandCoins } from 'lucide-vue-next';
 import { useRoute, useRouter } from 'vue-router';
-import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
@@ -12,7 +11,7 @@ import CargosDelPago from '../componentes/CargosDelPago.vue';
 import MedioDePago from '../componentes/MedioDePago.vue';
 import PestanasDeFormaDePago from '../componentes/PestanasDeFormaDePago.vue';
 import ResultadoDelPago from '../componentes/ResultadoDelPago.vue';
-import { TEXTO_DE_LISTA_INCOMPLETA } from '../composables/pagos/paginas-de-proveedores';
+import SeleccionDeProveedorDelPago from '../componentes/SeleccionDeProveedorDelPago.vue';
 import { usarNuevoPago } from '../composables/pagos/usar-nuevo-pago';
 import { VENTANAS_CUENTAS_POR_PAGAR } from '../textos';
 
@@ -47,25 +46,14 @@ const volver = texto(route.query.contrasenaId)
     <ResultadoDelPago v-else-if="pago.resultado.value" :pago="pago.resultado.value" @otro="pago.pagarOtro" />
 
     <form v-else class="space-y-4" novalidate @submit.prevent="pago.registrar">
-      <TarjetaBase>
-        <CampoSelector
-          v-model="edicion.proveedorId"
-          etiqueta="Proveedor"
-          requerido
-          :opciones="pago.opcionesDeProveedores.value"
-          :error="pago.errores.value.proveedorId && !datos ? pago.errores.value.proveedorId : undefined"
-        />
-        <p v-if="pago.listaIncompleta.value" class="mt-2 text-sm text-red-700 dark:text-red-400" role="alert">
-          {{ TEXTO_DE_LISTA_INCOMPLETA }}
-        </p>
-        <p
-          v-if="!pago.cargandoProveedores.value && pago.proveedores.value.length === 0"
-          class="mt-2 text-sm text-tierra-600 dark:text-tierra-300"
-        >
-          Ningún proveedor tiene documentos autorizados por pagar. Autorícelos en Documentos por pagar y entréguelos en
-          una contraseña.
-        </p>
-      </TarjetaBase>
+      <SeleccionDeProveedorDelPago
+        v-model="edicion.proveedorId"
+        :opciones="pago.opcionesDeProveedores.value"
+        :incompleta="pago.listaIncompleta.value"
+        :sin-proveedores="!pago.cargandoProveedores.value && pago.proveedores.value.length === 0"
+        :error="pago.errores.value.proveedorId && !datos ? pago.errores.value.proveedorId : undefined"
+        @buscar="pago.alBuscarProveedor"
+      />
 
       <p
         v-if="datos && pago.formas.value.length === 0"
@@ -95,6 +83,7 @@ const volver = texto(route.query.contrasenaId)
             v-model:filtro-de-notas="pago.filtroDeNotas"
             :medios="pago.medios.value"
             :notas="pago.notas.value"
+            :cuentas-de-notas="pago.cuentasDeNotas.value"
             :notas-al-tope="pago.notasAlTope.value"
             :cargando-notas="pago.cargandoNotas.value"
             :errores="pago.errores.value"

@@ -2343,3 +2343,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   no tener ningún permiso de pago, aunque se entre con `?proveedorId=`; el texto de «solo apertura» queda para quien sí
   tiene ese permiso. Si la lista de proveedores llega al tope de 50 páginas, se avisa que está incompleta. Servidor:
   `proveedoresPorPagar` desempata por id (paginación estable), con prueba de API de proveedores con el mismo nombre.
+- **2026-11-18, Cuentas por pagar: revisión de «Nuevo pago» (filtros de notas y proveedores).** Con la lista de proveedores
+  incompleta (tope de 50 páginas), el selector busca en el servidor (`CampoSelector` con `busquedaEnServidor` y el evento
+  `buscar`; retardo de 300 ms y respuestas viejas descartadas en `busqueda-escalonada.ts`) y el proveedor elegido no sale de
+  las opciones aunque la búsqueda ya no lo traiga; la ruta busca solo por nombre, y el aviso lo dice. Las cuentas del filtro
+  de notas se acumulan entre cargas (quien solo liga notas ya no ve encogerse el selector al filtrar). Con el rango de fechas
+  al revés se limpia la lista de notas y se invalida el pedido en vuelo. `GET /pagos/notas-para-ligar` sigue con
+  `pagos.ver`: el diseño de CP4 (§8, tabla de rutas) la asigna expresamente a ese permiso y la prueba de nota ligada fija
+  200 para quien solo ve; `ligar-notas-de-debito` es de la acción de ligar (`POST /pagos/ligar`), que no cambia. Prueba de API
+  de los filtros `cuentaBancariaId`, `desde` y `hasta`. La tarjeta del proveedor sale de la página a
+  `SeleccionDeProveedorDelPago`.

@@ -11,7 +11,7 @@ export interface ProveedoresJuntados {
 
 /** El aviso cuando la lista quedó incompleta. */
 export const TEXTO_DE_LISTA_INCOMPLETA =
-  'La lista de proveedores está incompleta: hay demasiados para mostrarlos todos. Escriba el nombre del proveedor en el buscador o use «Pagar» desde su contraseña.';
+  'La lista de proveedores está incompleta: hay demasiados para mostrarlos todos. Abra el selector y escriba parte del nombre del proveedor para buscarlo entre todos, o use «Pagar» desde su contraseña.';
 
 /**
  * Junta todas las páginas de proveedores por pagar: el selector filtra en el navegador, así que necesita la lista

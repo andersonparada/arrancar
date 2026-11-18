@@ -1,12 +1,6 @@
 import type { OpcionBuscable } from '@/modulos/core/utilidades/busqueda-de-opciones';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
-import type {
-  CargoParaPagar,
-  FormaDePagoNuevo,
-  MediosDePago,
-  NotaParaLigar,
-  ProveedorPorPagar,
-} from '../../servicios/tipos-de-pagos';
+import type { CargoParaPagar, FormaDePagoNuevo, MediosDePago, ProveedorPorPagar } from '../../servicios/tipos-de-pagos';
 import { textoDeCentavos } from '../dinero';
 
 export const ETIQUETAS_DE_FORMA: Record<FormaDePagoNuevo, string> = {
@@ -80,16 +74,33 @@ export function opcionesDeCuentas(medios: MediosDePago | null): OpcionBuscable<s
     .sort(porTexto);
 }
 
+/** Una cuenta de Bancos vista en alguna nota ya registrada. */
+export interface CuentaDeNota {
+  cuentaBancariaId: string;
+  cuentaBancariaNombre: string;
+}
+
+/** Suma a las cuentas ya vistas las de las notas nuevas, sin repetir; sin cambios devuelve la misma lista. */
+export function juntarCuentasDeNotas(
+  vistas: readonly CuentaDeNota[],
+  notas: readonly CuentaDeNota[],
+): readonly CuentaDeNota[] {
+  const conocidas = new Set(vistas.map(({ cuentaBancariaId }) => cuentaBancariaId));
+  const nuevas = notas.filter(({ cuentaBancariaId }) => !conocidas.has(cuentaBancariaId));
+  const unicas = [...new Map(nuevas.map((cuenta) => [cuenta.cuentaBancariaId, cuenta])).values()];
+  return unicas.length === 0 ? vistas : [...vistas, ...unicas];
+}
+
 /**
  * Las cuentas por las que filtrar las notas: las de Bancos y, si el usuario no puede verlas (solo liga notas), las
- * cuentas de las notas que ya se ven.
+ * cuentas que se han visto en las notas, acumuladas para que el selector no se encoja al filtrar.
  */
 export function opcionesDeCuentasParaNotas(
   medios: MediosDePago | null,
-  notas: readonly NotaParaLigar[],
+  vistas: readonly CuentaDeNota[],
 ): OpcionBuscable<string>[] {
   const deBancos = (medios?.cuentas ?? []).map((cuenta) => ({ valor: cuenta.cuentaBancariaId, texto: cuenta.nombre }));
-  const deNotas = notas.map((nota) => ({ valor: nota.cuentaBancariaId, texto: nota.cuentaBancariaNombre }));
+  const deNotas = vistas.map((cuenta) => ({ valor: cuenta.cuentaBancariaId, texto: cuenta.cuentaBancariaNombre }));
   const unicas = new Map((deBancos.length > 0 ? deBancos : deNotas).map((opcion) => [opcion.valor, opcion]));
   return [...unicas.values()].sort(porTexto);
 }

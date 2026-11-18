@@ -3,7 +3,7 @@ import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { fechaDeHoy } from '../dinero';
 import { edicionDePagoVacia, type EdicionDePago } from './edicion-de-pago';
 import type { MediosDePago } from '../../servicios/tipos-de-pagos';
-import { formasDisponibles, opcionesDeChequeras, opcionesDeCuentas, opcionesDeProveedores } from './opciones-del-pago';
+import { formasDisponibles, opcionesDeChequeras, opcionesDeCuentas } from './opciones-del-pago';
 import { usarContrasenasDelPago, type PuntoDeInicio } from './usar-contrasenas-del-pago';
 import { notaSigueEnLista } from './filtro-de-notas';
 import { usarCatalogosDelPago } from './usar-catalogos-del-pago';
@@ -68,7 +68,7 @@ function usarCatalogosDelUsuario(edicion: EdicionDePago) {
  */
 export function usarNuevoPago(inicio: PuntoDeInicio) {
   const edicion = reactive(edicionDePagoVacia(fechaDeHoy()));
-  const proveedores = usarProveedoresPorPagar();
+  const proveedores = usarProveedoresPorPagar(() => edicion.proveedorId);
   const catalogos = usarCatalogosDelUsuario(edicion);
   const cargos = usarCargosParaPagar();
   usarMedioPorOmision(edicion, catalogos.medios);
@@ -84,7 +84,6 @@ export function usarNuevoPago(inicio: PuntoDeInicio) {
   return {
     edicion,
     ...proveedores,
-    opcionesDeProveedores: computed(() => opcionesDeProveedores(proveedores.proveedores.value)),
     ...usarFormasDelPago(edicion, cargos),
     datos: cargos.datos,
     ...catalogos,

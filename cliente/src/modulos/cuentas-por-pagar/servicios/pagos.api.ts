@@ -27,11 +27,12 @@ const RUTA_POR_FORMA: Record<FormaDePagoNuevo, string> = {
 export class ApiPagos {
   constructor(private readonly http: ClienteHttp) {}
 
-  /** Los proveedores con algo autorizado por pagar, para elegir a quién se paga. */
-  proveedoresPorPagar(pagina = 1) {
+  /** Los proveedores con algo autorizado por pagar (los que lleven `buscar` en el nombre), para elegir a quién se paga. */
+  proveedoresPorPagar(pagina = 1, buscar = '') {
     return this.http.obtener<PaginaDeProveedoresPorPagar>(`${RUTA}/pagos/proveedores-por-pagar`, {
       pagina,
       limite: LIMITE_DE_PAGINA,
+      ...(buscar ? { buscar } : {}),
     });
   }
 

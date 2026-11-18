@@ -1,22 +1,62 @@
 import { computed, ref, type Ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
+import { crearBusquedaEscalonada } from './busqueda-escalonada';
 import { juntarProveedoresPorPagar, type ProveedoresJuntados } from './paginas-de-proveedores';
 import { apiPagos, type ParaPagar } from '../../servicios/pagos.api';
+import type { ProveedorPorPagar } from '../../servicios/tipos-de-pagos';
 import { claveDeSuma, crearControlDeSuma } from './control-de-suma';
 import { mensajeDe } from './mensaje-de-error';
+import { opcionesDeProveedores } from './opciones-del-pago';
 
-/** Los proveedores con algo autorizado por pagar. */
-export function usarProveedoresPorPagar() {
+/** Los proveedores que se han visto, para que el elegido no salga del selector cuando una búsqueda ya no lo trae. */
+function usarProveedoresVistos() {
+  const vistos = new Map<string, ProveedorPorPagar>();
+  const recordar = (juntados: ProveedoresJuntados): ProveedoresJuntados => {
+    juntados.proveedores.forEach((proveedor) => vistos.set(proveedor.proveedorId, proveedor));
+    return juntados;
+  };
+  return { vistos, recordar };
+}
+
+/** La búsqueda en el servidor del selector, mientras se escribe: deja su resultado en `encontrados`. */
+function usarBusquedaDeProveedores(recordar: (juntados: ProveedoresJuntados) => ProveedoresJuntados) {
+  const avisos = usarAvisos();
+  const encontrados = ref<ProveedoresJuntados | null>(null);
+  const buscar = crearBusquedaEscalonada<ProveedoresJuntados>({
+    traer: async (texto) =>
+      recordar(await juntarProveedoresPorPagar((pagina) => apiPagos.proveedoresPorPagar(pagina, texto))),
+    alResolver: (resultado) => (encontrados.value = resultado),
+    alFallar: (error) => avisos.error(mensajeDe(error, 'No se pudo buscar el proveedor.')),
+  });
+  return { encontrados, buscar };
+}
+
+/**
+ * Los proveedores con algo autorizado por pagar. Si son demasiados para traerlos todos, el selector busca en el
+ * servidor mientras se escribe; el proveedor elegido (`elegido`) nunca desaparece de las opciones.
+ */
+export function usarProveedoresPorPagar(elegido: () => string) {
+  const { vistos, recordar } = usarProveedoresVistos();
   const { datos, cargando } = usarCarga<ProveedoresJuntados>(
-    () => juntarProveedoresPorPagar((pagina) => apiPagos.proveedoresPorPagar(pagina)),
+    async () => recordar(await juntarProveedoresPorPagar((pagina) => apiPagos.proveedoresPorPagar(pagina))),
     { proveedores: [], incompleta: false },
     'No se pudo cargar la lista de proveedores.',
   );
+  const { encontrados, buscar } = usarBusquedaDeProveedores(recordar);
+  const incompleta = computed(() => datos.value.incompleta);
+  const opciones = computed(() => {
+    const lista = (encontrados.value ?? datos.value).proveedores;
+    const propio = vistos.get(elegido());
+    return opcionesDeProveedores(propio && !lista.includes(propio) ? [...lista, propio] : lista);
+  });
+
   return {
     proveedores: computed(() => datos.value.proveedores),
-    listaIncompleta: computed(() => datos.value.incompleta),
+    listaIncompleta: incompleta,
     cargandoProveedores: cargando,
+    opcionesDeProveedores: opciones,
+    alBuscarProveedor: (texto: string) => incompleta.value && buscar(texto),
   };
 }
 

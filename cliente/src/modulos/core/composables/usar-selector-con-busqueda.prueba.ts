@@ -25,3 +25,18 @@ describe('selector con opciones deshabilitadas', () => {
     expect(modelo.value).toBe('A');
   });
 });
+
+describe('selector con búsqueda en el servidor', () => {
+  const opciones = ref<OpcionBuscable<string>[]>([
+    { valor: 'A', texto: 'Alfa' },
+    { valor: 'B', texto: 'Beta' },
+  ]);
+
+  it('no filtra las opciones aquí y muestra el buscador aunque sean pocas', () => {
+    const selector = usarSelectorConBusqueda(opciones, ref<string | undefined>(), ref(true));
+    selector.abrir();
+    selector.busqueda.value = 'zzz';
+    expect(selector.opcionesFiltradas.value).toHaveLength(2);
+    expect(selector.muestraBuscador.value).toBe(true);
+  });
+});

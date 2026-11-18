@@ -14,7 +14,10 @@ const props = defineProps<{
   ocultarEtiqueta?: boolean;
   /** Se ve pero no se puede cambiar (p. ej. la cuenta de un movimiento al corregirlo). */
   deshabilitado?: boolean;
+  /** Las opciones se buscan en el servidor: el buscador siempre se ve y avisa con `buscar` lo que se escribe. */
+  busquedaEnServidor?: boolean;
 }>();
+const emit = defineEmits<{ buscar: [texto: string] }>();
 
 const modelo = defineModel<T>();
 const id = useId();
@@ -26,7 +29,14 @@ const idLista = `${id}-lista`;
 const idDeOpcion = (indice: number): string => `${id}-opcion-${indice}`;
 
 const opcionesRef = computed(() => props.opciones);
-const selector = usarSelectorConBusqueda(opcionesRef, modelo);
+const selector = usarSelectorConBusqueda(
+  opcionesRef,
+  modelo,
+  computed(() => !!props.busquedaEnServidor),
+);
+watch(selector.busqueda, (texto) => {
+  if (props.busquedaEnServidor) emit('buscar', texto.trim());
+});
 
 const boton = ref<HTMLButtonElement | null>(null);
 const raiz = ref<HTMLElement | null>(null);

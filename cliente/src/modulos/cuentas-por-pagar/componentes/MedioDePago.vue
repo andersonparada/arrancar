@@ -11,12 +11,15 @@ import {
 import type { FiltroDeNotas } from '../composables/pagos/filtro-de-notas';
 import type { EdicionDePago } from '../composables/pagos/edicion-de-pago';
 import type { MediosDePago, NotaParaLigar } from '../servicios/tipos-de-pagos';
+import type { CuentaDeNota } from '../composables/pagos/opciones-del-pago';
 import NotasParaLigar from './NotasParaLigar.vue';
 
 /** Con qué se paga: la chequera (cheque), la cuenta (nota de débito) o la nota que ya está en Bancos. */
 const props = defineProps<{
   medios: MediosDePago | null;
   notas: NotaParaLigar[];
+  /** Las cuentas de todas las notas vistas, para que el filtro por cuenta no se encoja al filtrar. */
+  cuentasDeNotas: readonly CuentaDeNota[];
   /** Si la lista de notas llegó al tope del servidor y puede haber más. */
   notasAlTope: boolean;
   cargandoNotas: boolean;
@@ -31,7 +34,7 @@ const filtroDeNotas = defineModel<FiltroDeNotas>('filtroDeNotas', { required: tr
 const opciones = computed(() =>
   edicion.value.forma === 'cheque' ? opcionesDeChequeras(props.medios) : opcionesDeCuentas(props.medios),
 );
-const cuentasParaNotas = computed(() => opcionesDeCuentasParaNotas(props.medios, props.notas));
+const cuentasParaNotas = computed(() => opcionesDeCuentasParaNotas(props.medios, props.cuentasDeNotas));
 const sinCuentas = computed(() => !props.cargando && opciones.value.length === 0);
 </script>
 
