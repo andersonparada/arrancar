@@ -1,12 +1,13 @@
 import { createHash } from 'node:crypto';
 import {
   DocumentoDemasiadoGrande,
+  DocumentoIlegible,
   DocumentoNoAceptado,
   esPdfPorFirma,
   LIMITE_DE_BYTES_DE_FOTO_DE_DOCUMENTO,
   LIMITE_DE_BYTES_DE_PDF,
 } from '../dominio/documento.js';
-import { FormatoDeImagenNoAceptado } from '../dominio/imagen.js';
+import { FormatoDeImagenNoAceptado, ImagenIlegible } from '../dominio/imagen.js';
 import type { InspectorDePdf, TurnoDeRevision } from './puertos/inspector-de-pdf.js';
 import type { OptimizadorDeImagenes } from './puertos/optimizador-de-imagenes.js';
 
@@ -62,7 +63,8 @@ export class PreparadorDeDocumentos {
       const { ancho, alto } = original;
       return { contenido: original.contenido, tipoMime: 'image/webp', extension: 'webp', paginas: null, ancho, alto };
     } catch (error) {
-      throw error instanceof FormatoDeImagenNoAceptado ? new DocumentoNoAceptado() : error;
+      if (error instanceof FormatoDeImagenNoAceptado) throw new DocumentoNoAceptado();
+      throw error instanceof ImagenIlegible ? new DocumentoIlegible() : error;
     }
   }
 }

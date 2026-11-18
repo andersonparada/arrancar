@@ -2255,3 +2255,25 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   advertencias **agrupadas** (una vez cada una, con cuántos documentos y «Ver cuáles»). El coordinador hace el
   `git push origin main` después de cada unión en verde.
 - **2026-11-18 — BS-2 (Bancos, segunda parte, servidor: saldos iniciales por partidas).** Puertos y casos de uso (`aplicacion/casos-uso/saldos-iniciales/`: listar, obtener, guardar, eliminar, agregar, corregir y eliminar partida, revisión de cierre y oyente de la fecha de inicio), cuadre con Bancos y Sobregiros sin compensar, hallazgos de cierre, chequera de apertura (§2.3), avisos (antigüedad con la variable y el art. 508, depósito de más de 30 días, sobregiro, posfechado sin fondos), auditoría, rutas y los dos Excel (`core/intercambio` gana `columnasSoloAlExportar`). Reemplaza el puente de BS-1 por `RepositorioDeMovimientosConSaldoGlobal`. Las rutas viejas siguen para el cliente actual hasta BS-5: `POST` y `GET ?cuentaBancariaId=` en la misma ruta y `PUT|DELETE` en `/global/:movimientoId`; el Excel viejo desaparece. Anular una partida (ruta y reglas) queda en BS-3. Detalle en `bancos.md`.
+- **2026-11-18 — CP4-B3b (cliente, Bancos: notas marcadas en la conciliación).** Sin migración ni cambios de servidor.
+  `ConciliarCuenta` gana `NotasMarcadasEnConciliacion` (solo en proceso, con Cuentas por pagar activo y los permisos
+  `conciliar`, `bancos.notas.ver` y `bancos.notas.editar`): lista las notas marcadas para Cuentas por pagar que son candidatas
+  del mes, con «Desmarcar» (ventana `VentanaDeDesmarcar` de Notas, con concepto y motivo, que el servidor exige) por
+  `POST /bancos/conciliaciones/:id/notas/:movimientoId/desmarcar`; el rechazo por nota ligada a un pago sale como aviso con el
+  mensaje del servidor. Como `candidatos` no trae la marca (desviación de CP4-B2b), el cliente cruza sus ids con la lista de
+  notas de la cuenta hasta fin de mes y se queda con las que el servidor dice `puedeDesmarcar`. Quitar la marca no cambia
+  montos: no se recarga la conciliación y las marcas sin guardar se conservan. Lógica pura en `notas-marcadas.ts`;
+  `usarDesmarcado` de Notas se reutiliza con un envío propio. Pruebas del cliente: +6.
+- **2026-11-18 — Observaciones menores de la QA de H2 (corregidas las que no esperan decisión).** «Difiere en» ya no muestra un
+  monto negativo: dice el monto y si el estado de cuenta muestra más o menos que el calculado (`textoDeDiferencia`); el mensaje
+  del servidor al terminar con diferencia escribe «Q 12,270.00» como la pantalla; un archivo que no se puede leer ni como foto
+  (por ejemplo un texto llamado `.pdf`) responde `documento_ilegible` («El archivo no es un PDF ni una foto válidos, o está
+  dañado…»); `demasiadas_subidas` pasa a usted; el cuadro «Según libros / Según banco» cabe en 380 px sin desplazarse; y «Ver»
+  de la lista de conciliaciones se alinea con los demás botones. Siguen esperando al usuario la impresión en modo oscuro y la
+  huella.
+- 2026-11-18, Bancos CP4-B3b, correcciones de la revisión: la prueba de `comparacion-de-saldo` activa Pinia (las 2 fallidas
+  pasan); el resumen de las notas marcadas ya no afirma que no están aplicadas («las que ya se ligaron a un pago no se pueden
+  desmarcar»; saber cuáles están ligadas exigiría un dato de Cuentas por pagar y queda por acordar); la lista se vuelve a
+  pedir cuando la conciliación pasa a «en proceso» en la misma pantalla; `enQuetzales` del servidor escribe «-Q 5.00» con
+  saldo negativo; los mensajes de foto HEIC e imagen demasiado grande pasan a usted. Sin resolver: filtro `desde` y aviso
+  de error al listar notas, y montos de 9+ cifras en el cuadro a 380 px.

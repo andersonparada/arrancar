@@ -37,7 +37,7 @@ const textoDeIr = computed(() => (props.registro.estado === 'en_proceso' ? 'Conc
       </span>
       <RouterLink
         :to="{ name: 'bancos.conciliaciones.conciliar', params: { conciliacionId: registro.id } }"
-        class="text-sm font-medium text-campo-700 hover:underline dark:text-campo-400"
+        class="inline-flex items-center px-2.5 py-1.5 text-sm font-medium text-campo-700 hover:underline dark:text-campo-400"
       >
         {{ textoDeIr }}
       </RouterLink>
