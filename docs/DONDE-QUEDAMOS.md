@@ -25,9 +25,12 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `18bc719` (subido). En `main`: CP4-E4, CP4-9, BS-2, CP4-B3b, CP5-9a, QA intermedia, CP4-10, CP4-11, CP5-5,
-decisiones de H2 (Caddy 20 MB, huella del recibido, impresión en claro) y bandeja de DTE. Última suite completa en verde
-(integración, 2026-11-18): servidor 4958, cliente 1370, generador 46.
+**`main`:** `96829c6` (subido). Desde el 2026-11-18 la suite del servidor corre **en paralelo** (~4–6 min; `BD_PRUEBAS` es un
+prefijo, las bases se crean solas). Última suite completa en verde (integración): servidor 5301, cliente 1540, generador 46.
+En `main` además de lo anterior: CP4-9 corregido (tres revisiones), CP4-E5, CP5-9a y CP5-9b (R6 a R11), plazo de crédito
+PC-1 a PC-3, correo pasos 1 y 3, Caja chica y Cuentas por liquidar (datos: CC-1, CL-1, CC-1c), Excel de Terceros y de
+Empresas, selector de empresa con buscador, `ejecutarEnEmpresaNueva`, dependencias seguras (zod 4.6.7, vite 8.3.8), cliente
+del Banguat para todas las monedas (MM-3a), correcciones de la QA intermedia.
 
 **Agentes en curso (lanzados el 2026-11-18, cada uno en su worktree `.claude/worktrees/agent-<id>` desde `main`):**
 - **BS-2: unido a `main`** (2026-11-18). Rutas heredadas marcadas «HEREDADO» hasta BS-5; anular partidas llega con BS-3.
@@ -81,6 +84,9 @@ decisiones de H2 (Caddy 20 MB, huella del recibido, impresión en claro) y bande
   `ejecutarEnOtraEmpresa` a la empresa recién creada, con revisión de seguridad) y pruebas en paralelo
   (`worktree-agent-a4cd39b30a6deca11`, en revisión). CP4-E4 revisado: bien.
 - Diseño del plazo de crédito: relanzado (el flujo anterior lo descartó por un error del coordinador).
+- **Workflow `arrancar-siguientes`** (run `wf_c2e6b7b7-306`): adenda del posfechado (servidor y cliente), Excel de plazos
+  (PC-4 y PC-5), diseño de RLS de `core` (`diseno-rls-de-core.md`) y preguntas del contador de Caja chica (V-12, V-13, V-8,
+  V-3/V-4). Después: QA CP4-12 (cuando entre el posfechado) y CP5-11.
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
