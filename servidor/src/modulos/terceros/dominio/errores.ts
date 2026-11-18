@@ -4,6 +4,16 @@ export class FaltaElNombre extends DatoInvalido {
   readonly codigo = 'falta_el_nombre';
 }
 
+export class CorreoDeContactoNoSirveParaAvisos extends DatoInvalido {
+  readonly codigo = 'correo_de_contacto_no_sirve_para_avisos';
+
+  constructor(correo: string) {
+    super(
+      `El correo ${correo} no sirve para enviar avisos de pago (solo letras, números y los signos habituales, sin espacios ni comillas). Corríjalo o quite la marca de avisos de pago.`,
+    );
+  }
+}
+
 export class TerceroInactivo extends ReglaDeNegocioInfringida {
   readonly codigo = 'tercero_inactivo';
 

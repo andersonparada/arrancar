@@ -1,0 +1,2 @@
+ALTER TABLE "terceros"."contactos" ADD COLUMN "recibe_avisos_de_pago" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "terceros"."contactos" ADD CONSTRAINT "contactos_aviso_con_correo" CHECK (not "terceros"."contactos"."recibe_avisos_de_pago" or "terceros"."contactos"."correo" is not null);

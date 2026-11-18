@@ -112,6 +112,7 @@ describe('registrar un tercero', () => {
       whatsapp: null,
       correo: null,
       notas: null,
+      recibeAvisosDePago: false,
     };
     const papel = { tipo: 'cliente' as const, clase: 'intermediario' as const, activo: true, notas: null };
 
