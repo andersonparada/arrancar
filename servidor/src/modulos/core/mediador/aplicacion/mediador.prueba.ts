@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { operadorDePrueba } from '../../compartido/pruebas/dobles-compartidos.js';
-import { ManejadorDuplicadoParaLaOrden, ModuloNoDisponible } from './errores.js';
+import { ManejadorDuplicadoParaLaOrden, ManejadorDuplicadoParaLaPregunta, ModuloNoDisponible } from './errores.js';
 import { Mediador } from './mediador.js';
 import type { ModulosActivosDeLaCuenta } from './puertos/modulos-activos-de-la-cuenta.js';
 
@@ -10,6 +10,9 @@ declare module '../../contratos/mediador.contratos.js' {
   }
   interface AvisosEntreModulos {
     'prueba.avisar': { mensaje: string };
+  }
+  interface PreguntasEntreModulos {
+    'prueba.opinar': { datos: { tema: string }; respuesta: string | null };
   }
 }
 
@@ -123,6 +126,66 @@ describe('Mediador', () => {
 
       await expect(mediador.enviar(operador, 'prueba.sumar', { a: 2, b: 3 })).resolves.toBe(6);
       expect(recibidos).toEqual(['otro']);
+    });
+  });
+
+  describe('pregunta a todos', () => {
+    it('junta las respuestas en el orden de registro y omite las nulas', async () => {
+      const mediador = mediadorCon(['uno', 'dos', 'tres']);
+      mediador.responder('uno', 'prueba.opinar', async ({ tema }) => `uno:${tema}`);
+      mediador.responder('dos', 'prueba.opinar', async () => null);
+      mediador.responder('tres', 'prueba.opinar', async ({ tema }) => `tres:${tema}`);
+
+      await expect(mediador.preguntarATodos(operador, 'prueba.opinar', { tema: 'x' })).resolves.toEqual([
+        { modulo: 'uno', respuesta: 'uno:x' },
+        { modulo: 'tres', respuesta: 'tres:x' },
+      ]);
+    });
+
+    it('se salta los módulos inactivos', async () => {
+      const mediador = mediadorCon(['uno']);
+      mediador.responder('uno', 'prueba.opinar', async () => 'uno');
+      mediador.responder('dos', 'prueba.opinar', async () => 'dos');
+
+      const respuestas = await mediador.preguntarATodos(operador, 'prueba.opinar', { tema: 'x' });
+
+      expect(respuestas.map((r) => r.modulo)).toEqual(['uno']);
+    });
+
+    it('si nadie responde, devuelve una lista vacía', async () => {
+      const mediador = mediadorCon(['uno']);
+
+      await expect(mediador.preguntarATodos(operador, 'prueba.opinar', { tema: 'x' })).resolves.toEqual([]);
+    });
+
+    it('si uno lanza, el error se propaga', async () => {
+      const mediador = mediadorCon(['uno', 'dos']);
+      mediador.responder('uno', 'prueba.opinar', async () => 'uno');
+      mediador.responder('dos', 'prueba.opinar', async () => {
+        throw new FalloProvocado();
+      });
+
+      await expect(mediador.preguntarATodos(operador, 'prueba.opinar', { tema: 'x' })).rejects.toThrow(FalloProvocado);
+    });
+
+    it('retirar los manejadores de un módulo quita su respuesta', async () => {
+      const mediador = mediadorCon(['uno', 'dos']);
+      mediador.responder('uno', 'prueba.opinar', async () => 'uno');
+      mediador.responder('dos', 'prueba.opinar', async () => 'dos');
+
+      mediador.retirarManejadoresDe('uno');
+
+      const respuestas = await mediador.preguntarATodos(operador, 'prueba.opinar', { tema: 'x' });
+      expect(respuestas.map((r) => r.modulo)).toEqual(['dos']);
+    });
+
+    it('un módulo no puede responder dos veces la misma pregunta', () => {
+      const mediador = mediadorCon(['uno']);
+      mediador.responder('uno', 'prueba.opinar', async () => 'a');
+
+      expect(() => mediador.responder('uno', 'prueba.opinar', async () => 'b')).toThrow(
+        ManejadorDuplicadoParaLaPregunta,
+      );
     });
   });
 });
