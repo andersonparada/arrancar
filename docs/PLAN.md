@@ -262,7 +262,8 @@ Hecho:
 - [x] PWA instalable: manifiesto, íconos generados desde `cliente/public/logo.svg`,
       service worker que solo guarda la estructura de la app.
 - [x] Docker de producción (Caddy + app + PostgreSQL + respaldo diario), probado:
-      la app usa unos 72 MB de RAM.
+      la app usa unos 72 MB de RAM. El tope de **20 MB por solicitud** (toda la instalación) está en
+      `infra/Caddyfile` (`request_body { max_size 20MB }`); al pasarse responde 413 con el mensaje en el formato de la API.
 - [x] `CLAUDE.md` del proyecto.
 - [x] `app.cuenta_id` en `ejecutarEnEmpresa` (se fija junto a `app.empresa_id`, a partir
       de `cuentaId` en `ContextoEmpresa`) y `politicaPorCuenta()` en `columnas.ts`, para
@@ -2254,3 +2255,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   tanda todo o nada; si una falla, se detiene y dice cuáles quedaron); tras confirmar, **un solo aviso** de éxito con las
   advertencias **agrupadas** (una vez cada una, con cuántos documentos y «Ver cuáles»). El coordinador hace el
   `git push origin main` después de cada unión en verde.
+- **2026-11-18 (H2, tope en Caddy).** `infra/Caddyfile`: `request_body { max_size 20MB }` para todo el sitio y `handle_errors 413`
+  que responde `SOLICITUD_DEMASIADO_GRANDE` en el formato de errores de la API. Configuración validada con `caddy validate`.
+  Los topes de la app (PDF 10 MB, foto 15 MB, Excel 5 MB) siguen igual; para cambiar el de Caddy se edita ese archivo y se reinicia el contenedor.
