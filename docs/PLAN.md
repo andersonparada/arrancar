@@ -2363,3 +2363,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ofrece en los vigentes y el servidor decide; anular no pide la fecha del inverso (el servidor usa la de hoy); las cuentas del
   depósito salen de `GET /pagos/medios` (pide `pagos.ver`; sin ellas solo se ofrece el efectivo); el enlace a constancias no
   lleva el mes ni el filtro porque esa pantalla no lee parámetros de la ruta.
+- **2026-11-18 — CP5-9b (cliente, efectivo y transitoria: R9, R10, R11 y conciliación al pie de R1).** Sin cambios de contrato en el
+  servidor; solo se corrige el Excel: la columna «Forma» de R9 (y la de R6, que tenía el mismo defecto) sale con su nombre («Nota de
+  débito ligada», «Efectivo»…) desde `dominio/nombres-de-formas.ts`, con prueba. Pantallas en `seccion: 'reportes'`: **Pagos en
+  efectivo sobre el umbral** (R9, `reportes-de-control`; desde y hasta como mes de una lista de 60, máximo 48 con el error dicho antes de
+  pedir; «Solo con efecto fiscal» sí por omisión; una tarjeta por proveedor y mes con sus pagos y cargos, marcas de IVA en riesgo y
+  costo no deducible, «IVA no conocido», la excepción con su motivo; sección propia de documentos sobre el umbral con todos sus pagos
+  por forma; sin tablas, así que no hay desplazamiento horizontal), **Retiros de efectivo por liquidar** (R10, filtros de corte y
+  custodio, «de un mes anterior») y **Notas de débito sin aplicar** (R11, corte por omisión al fin del mes anterior, cuenta bancaria;
+  el selector de cuentas se arma con las cuentas que ya trajo el reporte, sin importar Bancos). R10 y R11 son de `reportes-de-pagos`;
+  tarjetas en celular y tabla en pantalla grande. R1 gana al pie «Conciliación con pagos por aplicar» (auxiliar − R11 = Proveedores
+  neto) solo cuando el servidor la manda, con enlace a R11 al mismo corte (visible con el permiso de pagos). Los rótulos de saldo y de
+  estado de pago no se tocaron (adenda del posfechado). Pendiente: los retiros no tienen pantalla propia en Cuentas por pagar, así que
+  R10 muestra su número como texto.

@@ -86,6 +86,19 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
     titulo: 'Ajustes del mes',
     descripcion: 'Lo que cambió en Cuentas por pagar durante un mes, para revisarlo al cerrar.',
   },
+  retirosPorLiquidar: {
+    titulo: 'Retiros de efectivo por liquidar',
+    descripcion: 'El efectivo que los custodios tenían sin liquidar a una fecha de corte, para cuadrar la caja.',
+  },
+  notasSinAplicar: {
+    titulo: 'Notas de débito sin aplicar',
+    descripcion:
+      'Notas de débito pagadas en Bancos que aún no se aplicaron a un documento: el saldo de la transitoria.',
+  },
+  bancarizacion: {
+    titulo: 'Pagos en efectivo sobre el umbral',
+    descripcion: 'Pagos en efectivo que pueden hacer perder crédito fiscal o costo deducible, por mes y por documento.',
+  },
   // generador: ventanas
 } as const;
 
