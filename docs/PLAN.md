@@ -2429,3 +2429,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   filtro» toma el total de la respuesta del servidor (no del último listado); la ventana «Confirmar» no se cierra con
   Escape ni clic fuera mientras envía. Sin cambio: la barra cuenta como «se registrarán» lo no anulado (la letra de la
   decisión) y «Confirmar» descuenta además lo que la vista previa rechaza.
+- **2026-11-18 (decisión del usuario, Multimoneda, cambia PU-4).** Se soportan **todas las monedas que publica el Banguat**:
+  cada moneda guarda (opcional) su código del Banguat, la ventana de Monedas lo elige con un selector, y toda moneda con
+  código actualiza su tipo de cambio **cada noche** de forma automática. El contador revisa qué tipo vale para documentos en
+  monedas distintas del USD y el arquitecto escribe la adenda en `docs/modulos/diseno-multimoneda.md`.
