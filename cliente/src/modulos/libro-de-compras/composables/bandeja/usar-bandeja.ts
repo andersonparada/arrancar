@@ -12,10 +12,10 @@ export const SE_PUEDE_MARCAR: readonly EstadoDeDte[] = ['pendiente', 'bloqueado'
 /** Una pestaña de la bandeja con todo lo que se hace en ella: la lista filtrada, lo marcado, completar, confirmar y descartar. */
 export function usarBandeja(estado: EstadoDeDte, busquedaInicial: string) {
   const lista = usarListaDeLaBandeja(estado, busquedaInicial);
-  const marcas = usarMarcas(estado, lista.filas, { filtros: lista.filtros, total: lista.total });
+  const marcas = usarMarcas(estado, lista.filas, { filtros: lista.filtros });
 
-  const descarte = usarDescarteDeFilas(async () => {
-    marcas.limpiar();
+  const descarte = usarDescarteDeFilas(async (descartados) => {
+    marcas.quitar(descartados);
     await lista.cargar();
   });
 

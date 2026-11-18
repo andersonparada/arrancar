@@ -101,7 +101,7 @@ const vacio = computed(() =>
     />
 
     <BarraDeSeleccionDeLaBandeja
-      v-if="bandeja.sePuedeMarcar && filas.length"
+      v-if="bandeja.sePuedeMarcar && (filas.length || marcadas.length)"
       :resumen="resumen"
       :solo-descartar="estado !== 'pendiente'"
       @quitar="marcas.limpiar"
@@ -126,6 +126,7 @@ const vacio = computed(() =>
       v-model="confirmacion.previa.respuestas.value"
       :abierta="confirmacion.abierta.value"
       :filas="confirmacion.filas.value"
+      :sin-incluir="confirmacion.sinIncluir.value"
       :resumen="confirmacion.resumen.value"
       :avance="confirmacion.avance.value"
       :calculando="confirmacion.previa.calculando.value"

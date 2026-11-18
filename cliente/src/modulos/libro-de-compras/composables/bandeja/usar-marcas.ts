@@ -15,22 +15,24 @@ import {
 /** Filas por pedido al traer todo un filtro: el máximo que acepta el servidor. */
 const FILAS_POR_PEDIDO = 200;
 
-/** El filtro de una pestaña: lo que se pide al servidor y cuántas filas tiene en total. */
+/** El filtro de una pestaña tal como estaba al pulsar el botón. */
 interface FiltroPorTraer {
   estado: EstadoDeDte;
   filtros: FiltrosDeLaBandeja;
-  total: number;
 }
 
 /** Trae todas las filas de un filtro, página por página, y avisa cuántas lleva. */
 async function traerElFiltro(
-  { estado, filtros, total }: FiltroPorTraer,
+  { estado, filtros }: FiltroPorTraer,
   alAvanzar: (llevadas: number) => void,
 ): Promise<DteRecibido[]> {
   const traidas: DteRecibido[] = [];
-  for (let pagina = 1; pagina <= paginasParaTraer(total, FILAS_POR_PEDIDO); pagina++) {
+  // El total sale de la respuesta del servidor, no del último listado cargado: el filtro pudo cambiar hace un instante.
+  for (let pagina = 1, paginas = 1; pagina <= paginas; pagina++) {
     const consulta = { ...consultaDeLaBandeja(estado, filtros, pagina), limite: FILAS_POR_PEDIDO };
-    traidas.push(...(await apiDteRecibidos.listar(consulta)).elementos);
+    const respuesta = await apiDteRecibidos.listar(consulta);
+    traidas.push(...respuesta.elementos);
+    paginas = paginasParaTraer(respuesta.total, FILAS_POR_PEDIDO);
     alAvanzar(traidas.length);
   }
   return traidas;
@@ -62,18 +64,14 @@ function usarElegidas(filas: Ref<DteRecibido[]>) {
  * Lo marcado en una pestaña de la bandeja. Se conserva al cambiar de página y de filtro, y «Marcar los N del filtro»
  * trae todas las filas del filtro, no solo las de la página.
  */
-export function usarMarcas(
-  estado: EstadoDeDte,
-  filas: Ref<DteRecibido[]>,
-  consulta: { filtros: FiltrosDeLaBandeja; total: Ref<number> },
-) {
+export function usarMarcas(estado: EstadoDeDte, filas: Ref<DteRecibido[]>, consulta: { filtros: FiltrosDeLaBandeja }) {
   const avisos = usarAvisos();
   const elegidas = usarElegidas(filas);
   const trayendo = ref<number | null>(null);
 
   async function marcarElFiltro(): Promise<void> {
     trayendo.value = 0;
-    const filtro = { estado, filtros: { ...consulta.filtros }, total: consulta.total.value };
+    const filtro = { estado, filtros: { ...consulta.filtros } };
     try {
       elegidas.agregar(await traerElFiltro(filtro, (n) => (trayendo.value = n)));
     } catch (error) {

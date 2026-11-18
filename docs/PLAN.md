@@ -2267,3 +2267,17 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   parte: el servidor no alcanzó a contestar). Lo registrado sale de la selección y lo demás sigue marcado. **5:** ya estaba
   en un solo aviso desde la corrección del 2026-11-08 (el resultado se ve una vez en la ventana); ahora cada advertencia
   agrupada lleva «N documentos. Ver cuáles».
+- **2026-11-18 — Libro de compras, bandeja de DTE (correcciones de la revisión).** Solo cliente. **Topes:** completar y
+  descartar parten lo marcado en solicitudes de 500 (el tope del servidor; antes «Marcar los N del filtro» podía pasarlo y
+  daba 400); cada grupo hecho se refleja aunque otro falle, y descartar solo desmarca lo ya descartado. «Confirmar» lleva
+  como máximo **500** documentos por ventana (la vista previa gasta 5 de las 20 solicitudes por minuto del servidor y el
+  envío otras 5, con margen para recalcular); los demás siguen marcados y la ventana lo avisa. **Corte de una tanda:** el
+  servidor confirma **fila por fila** (cada una en su transacción), así que «todo o nada por tanda» no se puede garantizar
+  desde el cliente; para no adivinar, tras un corte el cliente le pregunta al servidor qué sigue pendiente
+  (`comprobar-la-tanda-cortada.ts`), dice cuántos de esa tanda sí se registraron y los saca de la selección. **Pendiente de
+  decidir con el usuario:** si se quiere de verdad «todo o nada» por tanda, hay que cambiar el servidor
+  (`ConfirmarDteRecibidos`) a una sola transacción por solicitud, perdiendo el «una fila con error no frena a las demás».
+  **Menores:** la barra de marcados sigue visible si hay marcadas aunque el filtro no traiga filas; «Marcar los N del
+  filtro» toma el total de la respuesta del servidor (no del último listado); la ventana «Confirmar» no se cierra con
+  Escape ni clic fuera mientras envía. Sin cambio: la barra cuenta como «se registrarán» lo no anulado (la letra de la
+  decisión) y «Confirmar» descuenta además lo que la vista previa rechaza.

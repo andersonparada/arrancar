@@ -4,6 +4,7 @@ import {
   confirmarPorTandas,
   textoDeLasTandas,
   textoDelAvance,
+  conLaTandaComprobada,
   textoDelCorte,
   type AvanceDeTandas,
 } from './confirmar-por-tandas';
@@ -89,10 +90,31 @@ describe('textos de las tandas', () => {
       mensaje: 'Sin conexión.',
       sinConfirmar: ids(230),
       deLaTandaQueFallo: ids(100),
+      registradosDeLaTanda: null,
     };
     const texto = textoDelCorte(corte, 200).join(' ');
     expect(texto).toContain('tanda 3 de 5');
-    expect(texto).toContain('200 documentos (2 tandas completas)');
+    expect(texto).toContain('200 documentos');
+    expect(texto).toContain('pudo registrarse en parte');
     expect(texto).toContain('230 documentos');
+  });
+
+  it('con la tanda comprobada, lo registrado sale de lo que quedó sin confirmar', () => {
+    const corte = {
+      tanda: 2,
+      tandas: 3,
+      mensaje: 'Sin conexión.',
+      sinConfirmar: ids(200),
+      deLaTandaQueFallo: ids(100),
+      registradosDeLaTanda: null,
+    };
+    const comprobado = conLaTandaComprobada(corte, ids(30));
+    expect(comprobado.sinConfirmar).toHaveLength(170);
+    expect(comprobado.deLaTandaQueFallo).toHaveLength(70);
+    const texto = textoDelCorte(comprobado, 100).join(' ');
+    expect(texto).toContain('130 documentos');
+    expect(texto).toContain('se registraron 30');
+    expect(texto).not.toContain('en parte');
+    expect(conLaTandaComprobada(corte, null)).toBe(corte);
   });
 });

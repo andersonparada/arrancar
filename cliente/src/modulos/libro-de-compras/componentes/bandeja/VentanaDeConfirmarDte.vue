@@ -27,6 +27,8 @@ import ResultadosDeLaConfirmacion from './ResultadosDeLaConfirmacion.vue';
 const props = defineProps<{
   abierta: boolean;
   filas: DteRecibido[];
+  /** Marcadas que no caben en esta ventana y siguen marcadas. */
+  sinIncluir: number;
   resumen: ResumenDeLaSeleccion;
   calculando: boolean;
   enviando: boolean;
@@ -42,6 +44,10 @@ const props = defineProps<{
 }>();
 const respuestas = defineModel<Record<string, RespuestasFiscales>>({ required: true });
 const emit = defineEmits<{ cerrar: []; confirmar: []; recalcular: [] }>();
+// Mientras se envía no se cierra (Escape o clic fuera): se perdería de vista el avance y el resultado.
+const cerrar = (): void => {
+  if (!props.enviando) emit('cerrar');
+};
 
 const titulos = computed(() => new Map(props.filas.map((fila) => [fila.id, tituloDeLaFila(fila)])));
 const tipos = computed(() => new Map(props.filas.map((fila) => [fila.id, fila.tipoDte])));
@@ -54,7 +60,7 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
 </script>
 
 <template>
-  <VentanaModal :abierta="abierta" titulo="Confirmar los DTE marcados" ancha @cerrar="emit('cerrar')">
+  <VentanaModal :abierta="abierta" titulo="Confirmar los DTE marcados" ancha @cerrar="cerrar">
     <ResultadosDeLaConfirmacion
       v-if="resultado"
       :titulos="titulos"
@@ -69,6 +75,13 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
         Se registrarán <strong>{{ frase.texto }}</strong>
         <template v-if="frase.desglose"> ({{ frase.desglose }})</template> por
         {{ formatearMonto(registrable.total) }} en total, cada uno con su cálculo de IVA y retenciones.
+      </p>
+      <p
+        v-if="sinIncluir && !resultado"
+        class="rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+      >
+        Hay {{ filas.length + sinIncluir }} marcados, pero cada confirmación lleva hasta {{ filas.length }}. Se
+        confirman los primeros {{ filas.length }}; los otros {{ sinIncluir }} siguen marcados para la siguiente vez.
       </p>
       <p v-if="tandas && !calculando" class="text-sm text-tierra-600 dark:text-tierra-300">{{ tandas }}</p>
       <p
@@ -118,7 +131,7 @@ const contestar = (nit: string, valor: RespuestasFiscales): void => {
       </section>
     </div>
     <template #pie>
-      <BotonBase variante="secundario" :deshabilitado="enviando" @click="emit('cerrar')">{{
+      <BotonBase variante="secundario" :deshabilitado="enviando" @click="cerrar">{{
         resultado ? 'Cerrar' : 'Cancelar'
       }}</BotonBase>
       <BotonBase

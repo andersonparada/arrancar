@@ -21,11 +21,24 @@ export interface CorteDeTandas {
   sinConfirmar: string[];
   /** Los de la tanda que falló (el servidor pudo registrar algunos antes de fallar). */
   deLaTandaQueFallo: string[];
+  /** Los de esa tanda que, al preguntarle al servidor, sí quedaron registrados; `null` si no se pudo comprobar. */
+  registradosDeLaTanda: string[] | null;
 }
 
 export interface ResultadoPorTandas {
   resultados: ResultadoDeConfirmacion[];
   corte: CorteDeTandas | null;
+}
+
+function corteDe(error: unknown, tandas: string[][], indice: number): CorteDeTandas {
+  return {
+    tanda: indice + 1,
+    tandas: tandas.length,
+    mensaje: error instanceof Error ? error.message : 'Ocurrió un error inesperado.',
+    sinConfirmar: tandas.slice(indice).flat(),
+    deLaTandaQueFallo: tandas[indice] ?? [],
+    registradosDeLaTanda: null,
+  };
 }
 
 /**
@@ -44,15 +57,22 @@ export async function confirmarPorTandas(
     try {
       resultados.push(...(await enviarTanda(tanda)));
     } catch (error) {
-      const mensaje = error instanceof Error ? error.message : 'Ocurrió un error inesperado.';
-      const sinConfirmar = tandas.slice(indice).flat();
-      return {
-        resultados,
-        corte: { tanda: indice + 1, tandas: tandas.length, mensaje, sinConfirmar, deLaTandaQueFallo: tanda },
-      };
+      return { resultados, corte: corteDe(error, tandas, indice) };
     }
   }
   return { resultados, corte: null };
+}
+
+/** Pone en el corte lo que el servidor dijo de la tanda que falló: lo registrado sale de lo que quedó sin confirmar. */
+export function conLaTandaComprobada(corte: CorteDeTandas, registrados: readonly string[] | null): CorteDeTandas {
+  if (!registrados) return corte;
+  const hechos = new Set(registrados);
+  return {
+    ...corte,
+    registradosDeLaTanda: [...registrados],
+    sinConfirmar: corte.sinConfirmar.filter((id) => !hechos.has(id)),
+    deLaTandaQueFallo: corte.deLaTandaQueFallo.filter((id) => !hechos.has(id)),
+  };
 }
 
 const plural = (cantidad: number, singular: string, pluralDe: string): string =>
@@ -68,13 +88,19 @@ export const textoDeLasTandas = (documentos: number): string | null => {
   return tandas > 1 ? `Se envían en ${tandas} tandas de hasta ${DOCUMENTOS_POR_TANDA}.` : null;
 };
 
-/** Lo que el usuario debe saber cuando el envío se detuvo, sin adivinar lo que el servidor no pudo contestar. */
+/** Lo que el usuario debe saber cuando el envío se detuvo, con lo que el servidor confirmó de la tanda que falló. */
 export function textoDelCorte(corte: CorteDeTandas, registrados: number): string[] {
-  const { tanda, tandas, mensaje, sinConfirmar, deLaTandaQueFallo } = corte;
-  const completas = tanda - 1;
+  const { tanda, tandas, mensaje, sinConfirmar, deLaTandaQueFallo, registradosDeLaTanda } = corte;
+  const delCorte = registradosDeLaTanda?.length ?? 0;
+  const registradosEnTotal = registrados + delCorte;
+  const sobreLaTanda = registradosDeLaTanda
+    ? delCorte
+      ? ` Además, de la tanda ${tanda} se registraron ${delCorte} antes de cortarse.`
+      : ''
+    : ` La tanda ${tanda} pudo registrarse en parte: revise la lista.`;
   return [
     `El envío se detuvo en la tanda ${tanda} de ${tandas}: ${mensaje}`,
-    `Quedaron registrados ${plural(registrados, 'documento', 'documentos')} (${plural(completas, 'tanda completa', 'tandas completas')}).`,
-    `No se confirmaron ${plural(sinConfirmar.length, 'documento', 'documentos')}: los de la tanda ${tanda} (${deLaTandaQueFallo.length}), que pudo registrarse en parte (revise la lista), y los de las tandas siguientes. Siguen pendientes y marcados: vuelva a confirmar.`,
+    `Quedaron registrados ${plural(registradosEnTotal, 'documento', 'documentos')}.${sobreLaTanda}`,
+    `No se confirmaron ${plural(sinConfirmar.length, 'documento', 'documentos')}: ${deLaTandaQueFallo.length} de la tanda ${tanda} y los de las tandas siguientes. Siguen pendientes y marcados: vuelva a confirmar.`,
   ];
 }
