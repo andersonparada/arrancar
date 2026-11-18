@@ -22,8 +22,8 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `55be365` (sin `git push`; lo hace el usuario). Última corrida completa en verde: servidor 4678, cliente 1158,
-generador 46 (antes de unir CP4-E3, CP4-7, CP4-B2b, H2 paso 5 y CP4-B3a; la corrida con esas cinco está en curso).
+**`main`:** `3959e95` y lo que le siga solo de docs (sin `git push`; lo hace el usuario). Última corrida completa en verde
+(con CP4-8 y BS-1 unidos): servidor 4829, cliente 1179, generador 46, y `npm run revisar` limpio. **No hay agentes en curso.**
 
 ### Cuentas por pagar (≈ 85 %)
 
@@ -33,35 +33,39 @@ generador 46 (antes de unir CP4-E3, CP4-7, CP4-B2b, H2 paso 5 y CP4-B3a; la corr
 | CP2 notas de crédito | `diseno-cp2-…` | todo, con QA | — |
 | CP3 contraseñas | `diseno-cp3-…` | todo, con QA | — |
 | U8-l facturas del sistema anterior | `diseno-u8l-…` | todo, con QA y correcciones | — |
-| CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | servidor: B1, B2a, B2b, EB, V1, 1 a 7, E1 a E3; cliente de Bancos B3a | CP4-8 (en curso), CP4-9 a CP4-11 (**pantallas de pagos**), CP4-E4 y E5 (recibos y pantallas de efectivo), CP4-B3b (Bancos, conciliación), CP4-12 (QA) |
+| CP4 pagos | `diseno-cp4-pagos.md` + adenda `diseno-cp4-pagos-en-efectivo.md` | servidor: B1, B2a, B2b, EB, V1, 1 a 8, E1 a E3; cliente de Bancos B3a | CP4-9 a CP4-11 (**pantallas de pagos**), CP4-E4 y E5 (recibos y pantallas de efectivo), CP4-B3b (Bancos, conciliación), CP4-12 (QA) |
 | CP5 reportes | `diseno-cp5-reportes.md` | CP5-1 a CP5-4, CP5-6 a CP5-8, CP5-10 | CP5-5 (efectivo y transitoria, servidor), CP5-9 (pantallas de pagos y control), CP5-11 (QA) |
 
 Pendientes menores anotados: enlaces de R1/R2 al estado de cuenta (CP5-8); el origen de un movimiento de Bancos como
-enlace al pago (llega con CP4-10); unificar `EncabezadoDeImpresion` y `TotalesDelReporte` (copias en `core` y en
+enlace al pago (llega con CP4-10; la ficha del pago ya existe en el servidor con CP4-8); unificar `EncabezadoDeImpresion` y `TotalesDelReporte` (copias en `core` y en
 Cuentas por pagar, CP5-10); que el servidor devuelva el aviso de fecha de inicio (EM-1).
 
 ### Bancos
 
-- **H2:** pasos 1 a 5 en `main`; pasos 6 (docs) y 7 (QA de todo H2) en curso desde esta sesión (la otra sesión los cedió).
+- **H2: terminado** (pasos 1 a 7). QA en `informe-qa-h2-2026-11-18.md`: sin errores que bloqueen, 8 observaciones
+  menores (monto negativo en «Difiere en», formato del mensaje de diferencia, texto para `.pdf` que no es PDF, tuteo en
+  `demasiadas_subidas`, cuadro cortado a 380 px, alineación de «Ver»; y dos de peso: impresión en modo oscuro y huella
+  inestable). Falta probar a mano el visor en Firefox y Safari reales y con un PDF real de banco.
 - **Bancos, segunda parte:** diseño aprobado (`diseno-bancos-segunda-parte.md`, dictamen
-  `dictamen-bancos-segunda-parte-2026-11-16.md`). BS-1 (datos, migración `0034`) en curso; siguen BS-2 a BS-9, BS-R1,
+  `dictamen-bancos-segunda-parte-2026-11-16.md`). **BS-1 hecho** (datos, migración `0034`, con un puente en
+  `RepositorioMovimientosDrizzle.agregar` que crea la cabecera `saldo_global` hasta que BS-2 lo reemplace); siguen BS-2 a BS-9, BS-R1,
   BS-R2 y EM-2 (orden en §14). Diseños cortos pendientes: CP-AP (cheque de apertura anulado; incluye N-2, ligar el
   posfechado de apertura a su factura, con el contador), aprobaciones, impresión de cheques.
 
-### Agentes en curso al cerrar (retomar con un mensaje, sin `git reset`)
+### Siguiente (cuando el usuario diga)
 
-| Paso | Worktree / rama | Estado |
-|---|---|---|
-| CP4-8 lista, ficha y comprobante de pagos | `agent-ad73d5cef330cdfa6` | programando; debe hacer `git merge main` y reutilizar `montoEnLetras` |
-| BS-1 Bancos, saldos iniciales por partidas (`0034`) | `agent-a7143c581f35d7d4b` | programando |
-| Bancos H2 pasos 6 y 7 | `agent-a536a989849810df2` | documentando y probando en el navegador |
+1. CP4-9 a CP4-11, pantallas de pagos (el servidor ya está completo para la lista, la ficha y el comprobante).
+2. BS-2 (casos de uso de saldos iniciales por partidas; quita el puente de BS-1).
+3. CP4-E4 y E5, CP5-5 y CP5-9; luego QA CP4-12 y CP5-11.
 
 ### Esperan al usuario
 
 - `git push origin main`.
 - Frase FEL 9-22 (ver «Pendiente del usuario»).
 - Informe de QA del 2026-11-08 sin commit en `agent-a19777c26d783baf6`; errores 4 y 6 de esa QA.
-- Bancos H2: tope de tamaño de solicitud en Caddy (~20 MB) y conservar 60 meses el `nombreOriginal` en la auditoría.
+- Bancos H2: tope de tamaño de solicitud en Caddy (~20 MB); conservar 60 meses el `nombreOriginal` en la auditoría; qué
+  huella mostrar (la de lo recibido o `qpdf --deterministic-id`); botón de desmarcar dentro de la conciliación; impresión
+  en modo oscuro de toda la app (`@media print`); probar a mano Firefox y Safari.
 
 ### Avisos técnicos
 
