@@ -52,7 +52,10 @@ Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-ca
   BS-R1 en main) y el arreglo del posfechado (después de CP4-10 y CP4-11 en main).
 - **Worktree de integración** `.claude/worktrees/integracion` (rama `integracion`, base `arrancar_pruebas_integracion`,
   `node_modules` enlazados al checkout principal): ahí se unen y prueban las ramas terminadas mientras `main` corre otra
-  suite; luego se pasa a `main`. Tiene CP4-B3b, CP5-9a y la QA intermedia.
+  suite; luego se pasa a `main`. CP4-B3b, CP5-9a y la QA intermedia ya pasaron a `main`; ahora tiene CP4-10, CP4-11 y CP5-5 (`8a0cd15f`) con
+  su suite corriendo.
+- **Workflow `arrancar-cp4e5-cp59b-qa`** (run `wf_2e5dd345-87d`, desde `8a0cd15f`): CP4-E5, CP5-9b (R9 a R11 cliente) y
+  correcciones de la QA intermedia, con revisión.
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
