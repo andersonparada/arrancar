@@ -610,7 +610,7 @@ Prefijo `/api/cuentas-por-pagar/reportes`. Dinero como texto con dos decimales; 
 
 | Ruta | Permiso (ver / exportar) | Consulta | Respuesta |
 |---|---|---|---|
-| `GET /saldos-por-proveedor` | `reportes-de-saldos` | `corte?`, `proveedorId?`, `autorizacion?`, `incluirSinSaldo?`, `orden?` | `{ corte, acreedores: FilaDeSaldoDto[], deudores: FilaDeSaldoDto[], totales, conciliacion?, avisos, leyendas }` (cada fila es un NIT con `fichas: FilaDeSaldoDto[]` si tiene más de una; `conciliacion` llega con CP5-5) |
+| `GET /saldos-por-proveedor` | `reportes-de-saldos` | `corte?`, `proveedorId?`, `autorizacion?`, `incluirSinSaldo?`, `orden?` | `{ corte, acreedores: FilaDeSaldoDto[], deudores: FilaDeSaldoDto[], totales, conciliacion?, avisos, leyendas }` (cada fila es un NIT con `fichas: FilaDeSaldoDto[]` si tiene más de una; `conciliacion: { saldoNetoDelAuxiliar, pagosPorAplicar, proveedoresNetoDePagosPorAplicar }` solo sin filtro de proveedor ni de autorización; CP5-5) |
 | `GET /documentos` | `reportes-de-saldos` | §4 R2 (`vista?` solo la usa el cliente para preajustar) | página `{ filas, total, totales }` |
 | `GET /estado-de-cuenta` | `reportes-de-saldos` | `proveedorId`, `desde`, `hasta`, `mostrarAnulados?`, `presentacion?` | `{ proveedor, presentacion, saldoAnterior, lineas, totales, alCorte?: { comprometido, disponible } }` (`alCorte` solo en la interna) |
 | `GET /saldos-a-favor` | `reportes-de-saldos` | `corte?`, `proveedorId?`, `incluirSinSaldo?` | `{ filas, totalesPorTramo, total }` |
@@ -620,7 +620,7 @@ Prefijo `/api/cuentas-por-pagar/reportes`. Dinero como texto con dos decimales; 
 | `GET /retiros-por-liquidar` | `reportes-de-pagos` | `corte?`, `custodio?` | `{ filas, total }` |
 | `GET /notas-sin-aplicar` | `reportes-de-pagos` | `corte?`, `cuentaBancariaId?` | `{ filas, total }` |
 | `GET /ajustes-del-mes` | `reportes-de-control` | `mes?`, `proveedorId?`, `causa?` | `{ mes, ajustes, anulacionesDeOtrosMeses, aplicacionesManuales, pagosAApertura, totales }` |
-| `GET /bancarizacion` | `reportes-de-control` | `desde?`, `hasta?`, `proveedorId?`, `soloConEfecto?` | `{ meses: [{ proveedor, mes, sumaDelMes, efectivo, pagos: [...] }], totales, umbral, leyendas }` |
+| `GET /bancarizacion` | `reportes-de-control` | `desde?`, `hasta?`, `proveedorId?`, `soloConEfecto?` | `{ desde, hasta, umbral, meses: [{ proveedorId, proveedorNombre, mes, sumaDelMes, efectivo, ivaEnRiesgo, costoNoDeducible, pagos: [...] }], documentosSobreElUmbral: [...], totales: { meses, documentos, total }, leyendas }` (CP5-5: `desde` y `hasta` son meses `AAAA-MM`; `soloConEfecto` sí por omisión) |
 | `GET /api/libro-de-compras/retenciones/pendientes` | `libro-de-compras.retenciones` | `hasta?`, `grupo?`, `proveedorId?` | `{ grupos, retenciones, porResolver }` |
 
 Errores nuevos (`dominio/errores-de-reportes.ts`, código propio, familia `DatoInvalido`): `CorteAnteriorAlInicio`

@@ -2127,6 +2127,25 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Dominio nuevo: `meses-de-reporte.ts`. Desviaciones: «de un mes anterior» se decide por la fecha de emisión del documento (el
   periodo del libro es de otro módulo); la diferencia de centavos de un cargo sale con efecto `ingreso`; el filtro de
   `mismaPersona` usa la misma marca completa (registró, completó o autorizó); R7 solo toma pagos de forma cheque (como el diseño).
+- **2026-11-18 — CP5-5 (servidor, efectivo y cuenta transitoria: R9, R10, R11 y conciliación al pie de R1).** Rutas
+  `GET /cuentas-por-pagar/reportes/bancarizacion` (R9, `reportes-de-control`), `…/retiros-por-liquidar` (R10) y
+  `…/notas-sin-aplicar` (R11, ambos `reportes-de-pagos`), cada una con su `…/exportar`; sin permisos nuevos, sin migración ni
+  índices. R9 en vivo: por proveedor y mes (rango `AAAA-MM`, por omisión los últimos 12, máximo 48) lista los meses cuya
+  suma llega al umbral con pagos en efectivo, usando **la misma consulta de CP4** (`ConsultasDePagos.pagosDelMes`), y aparte
+  los cargos de Q30,000 o más (`coalesce(saldo_al_inicio, total)`) con alguna línea de efectivo vigente en el rango, con todos
+  sus pagos; cada cargo con el efecto de CP4-E3 (`DatosFiscalesDeLaEmpresa.efectoDe`): «Crédito fiscal en riesgo por
+  bancarización» con el **IVA completo** (`iva − iva_no_acreditable`), «Costo no deducible» con el cargo **sin IVA** (en un
+  saldo inicial, su neto y «IVA no conocido»); la excepción con permiso sale con su motivo; `soloConEfecto` (sí por omisión);
+  totales por sección y total sin repetir cargos; leyendas E-6, art. 106 y «verifique el umbral vigente». R10 reutiliza
+  `ConsultasDeRetiros.listar` con corte (le agrega el filtro `custodio`) y suma días abierto y «de un mes anterior» (respecto al
+  corte). R11: notas de débito de Bancos marcadas (`pago_a_proveedor`), con fecha hasta el corte, no anuladas al corte (sin
+  inverso con fecha hasta el corte y sin `anulado_en`), menos pagos `nota_ligada` vigentes al corte; solo las que tienen
+  disponible; corte por omisión, fin del mes anterior. R1 trae `conciliacion` (saldo neto del auxiliar − R11 al mismo corte =
+  Proveedores neto de pagos por aplicar) y su Excel, **solo** sin filtro de proveedor ni de autorización (la transitoria es de la
+  empresa). Dominio nuevo: `rango-de-bancarizacion.ts` y `marcas-de-bancarizacion.ts`. Desviaciones: una nota de Bancos anulada
+  sin inverso se trata como «nunca existió» (como los pagos); R9 hace una consulta de suma del mes por cada proveedor y mes con
+  efectivo (pocos en la práctica) en vez de una agregación propia, para no tener otra fórmula; no se hizo prueba de volumen
+  (el paso no la pide).
 - **2026-11-15 — CP5-8 (cliente, estado de cuenta, saldos a favor y contraseñas: R3, R4 y R5).** Páginas
   `EstadoDeCuentaDelProveedor`, `SaldosAFavor` y `ContrasenasPorPagar` (`/cuentas-por-pagar/reportes/estado-de-cuenta`,
   `…/saldos-a-favor`, `…/contrasenas-por-pagar`; las cinco rutas y entradas de **Reportes** salen ahora de
