@@ -1,5 +1,6 @@
 import { onMounted, reactive, ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
 import { alDejarDeEscribir } from '@/modulos/core/composables/al-dejar-de-escribir';
 import { apiTerceros, type FiltrosTerceros, type PapelTercero, type TerceroEnListado } from '../servicios/terceros.api';
 
@@ -40,5 +41,6 @@ export function usarListadoDeTerceros(papel: PapelTercero) {
   alDejarDeEscribir(filtros, cargar);
   onMounted(cargar);
 
-  return { terceros, cargando, filtros };
+  const origen = papel === 'cliente' ? apiTerceros.intercambioDeClientes : apiTerceros.intercambioDeProveedores;
+  return { terceros, cargando, filtros, intercambio: usarIntercambio(origen, cargar) };
 }
