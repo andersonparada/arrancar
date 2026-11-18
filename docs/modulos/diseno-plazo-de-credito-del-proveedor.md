@@ -159,3 +159,10 @@ formulario.
   recalcula). (b) Recalcular solo los pendientes de ese proveedor al guardar el plazo.
   **Recomendación: (a).** Es predecible y el usuario revisa el vencimiento al completar; (b) cambia documentos de todas
   las empresas de la cuenta desde un formulario de cuenta, sin que lo vean.
+
+## Respuestas del usuario (2026-11-18)
+
+Todas las recomendaciones: **P1** (a) por cuenta, como hoy; **P2** (b) auditoría del cambio de vencimiento con el antes y
+el después, sin motivo obligatorio (y se rechaza cambiarlo en un cargo pagado); **P3** (a) de 0 a 12 meses por empresa;
+**P4** (a) Excel propio «Plazos de proveedores» en Administración de Cuentas por pagar; **P5** (a) por NIT y, sin NIT, por
+nombre exacto y único en la cuenta; **P6** (a) no se recalcula nada y la sección lo avisa.
