@@ -2334,3 +2334,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   la acción nueva `cambiar_vencimiento` (recurso `cuentas-por-pagar.documentos`) en la misma transacción: `anterior` es la
   ficha como estaba más `vencimientoNuevo`. `puedeCambiarVencimiento` exige saldo del cargo mayor que cero
   (`saldoDelCargoCentavos`). El ajuste de la auditoría no pide migración (la columna `accion` no tiene restricción).
+- **2026-11-18 (PC-2, plazo de crédito: plazo por omisión en la lectura).** `GET /api/cuentas-por-pagar/proveedores/:id/condiciones`
+  suma `mesesPorOmision` (de la empresa activa, por `PlazoPorOmision`) para que el cliente escriba el plazo real (PC-3). Prueba
+  de regresión de API: cambiar los días del proveedor no cambia el vencimiento de sus documentos ya recibidos ni la fecha de
+  sus retenciones en Libro de compras. Pendiente: PC-3 (cliente), PC-4 y PC-5 (Excel), PC-6 (QA y documentos).
