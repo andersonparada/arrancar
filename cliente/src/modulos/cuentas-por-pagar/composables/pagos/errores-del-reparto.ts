@@ -1,5 +1,6 @@
 import { contadorDeCaracteres } from '@/modulos/core/utilidades/contador-de-caracteres';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
+import { textoDeMontoMayorAlDisponible } from '../comprometido';
 import { centavosDe, textoDeCentavos } from '../dinero';
 import { MAXIMO_DE_REFERENCIA } from './edicion-de-pago';
 import { fechaMinimaDelPago } from './fechas-del-pago';
@@ -38,9 +39,8 @@ function erroresDeLaFecha(proveedor: ProveedorDelReparto, hoy: string, fechaDelR
 function erroresDeMontosMayoresAlSaldo(proveedor: ProveedorDelReparto): Errores {
   const errores: Errores = {};
   for (const { cargo, centavos } of lineasDelProveedor(proveedor)) {
-    if (centavos <= (centavosDe(cargo.saldo) ?? 0)) continue;
-    errores[`monto.${cargo.id}`] =
-      `Este documento solo debe ${formatearMonto(cargo.saldo)}: escriba ese monto o menos.`;
+    if (centavos <= (centavosDe(cargo.disponible) ?? 0)) continue;
+    errores[`monto.${cargo.id}`] = textoDeMontoMayorAlDisponible(cargo);
   }
   return errores;
 }

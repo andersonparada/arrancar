@@ -14,7 +14,8 @@ import type {
 import type { EstadoDeContrasena } from '../../dominio/contrasena.js';
 import type { LineaDePago } from '../../dominio/pagos.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
-import { aFilaDeDocumento, ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
+import { ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
+import { aFilaDeDocumento } from './fila-de-documento.mapeador.js';
 import { contrasenaDocumentos } from './contrasena-documentos.tablas.js';
 import { lineasDePagoPorContrasena } from './consultas-de-lineas-de-pago.js';
 import { contrasenas } from './contrasenas.tablas.js';
@@ -157,7 +158,7 @@ export class ConsultasDeContrasenasDrizzle implements ConsultasDeContrasenas {
     const sinContrasena = sql`not exists (select 1 from ${contrasenaDocumentos}
       where ${contrasenaDocumentos.documentoId} = ${documentos.id} and ${contrasenaDocumentos.vigente})`;
     const conSaldo = sql`(case when ${documentos.tipo} = 'nota_de_credito' then ${base.saldoLibreDeLaNota()}
-      else ${base.saldoDelCargo()} end) > 0`;
+      else ${base.disponibleDelCargo()} end) > 0`;
     const filas = await base
       .seleccionar()
       .where(and(eq(documentos.proveedorId, proveedorId), ne(documentos.estado, 'anulado'), sinContrasena, conSaldo));

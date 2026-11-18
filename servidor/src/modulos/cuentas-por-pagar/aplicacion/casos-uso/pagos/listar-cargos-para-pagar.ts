@@ -1,11 +1,12 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import { superaElUmbralDeBancarizacion } from '../../../dominio/aplicacion-manual.js';
+import { posfechadosDe } from '../../../dominio/pagos.js';
 import { fechaMinimaDelPago, retencionPorDescontar } from '../../../dominio/registro-de-pago.js';
 import type { CargoParaPagarDto, CargosParaPagarDto } from '../../dto/cargos-para-pagar.dto.js';
 import type { FilaDeDocumento } from '../../puertos/puertos-de-consultas.js';
 import type { RetencionDelLibro } from '../../../dominio/avisos-de-pagos.js';
-import { saldoDeLaFila } from '../aplicaciones/dependencias-de-aplicaciones.js';
+import { saldosDeLaFila } from '../aplicaciones/dependencias-de-aplicaciones.js';
 import type { DependenciasParaPagar } from './dependencias-de-pagos.js';
 
 export interface OpcionesParaPagar {
@@ -15,7 +16,12 @@ export interface OpcionesParaPagar {
   fecha?: string;
 }
 
-type Conexion = { delLibro: Map<string, RetencionDelLibro[]>; yaDescontadas: Set<string>; umbralCentavos: number };
+type Conexion = {
+  delLibro: Map<string, RetencionDelLibro[]>;
+  yaDescontadas: Set<string>;
+  umbralCentavos: number;
+  hoy: string;
+};
 
 const esPagable = ({ fila }: { fila: FilaDeDocumento }) => fila.documento.estado === 'autorizado';
 
@@ -49,7 +55,8 @@ function datosDeLaRetencion(fila: FilaDeDocumento, conexion: Conexion) {
 
 function dtoDeCargo(fila: FilaDeDocumento, conexion: Conexion): CargoParaPagarDto {
   const { documento, libro } = fila;
-  const saldo = deCentavos(saldoDeLaFila(fila));
+  const saldos = saldosDeLaFila(fila, conexion.hoy);
+  const disponible = deCentavos(saldos.disponibleCentavos);
   return {
     id: documento.id,
     contrasenaId: fila.contrasena!.id,
@@ -61,8 +68,11 @@ function dtoDeCargo(fila: FilaDeDocumento, conexion: Conexion): CargoParaPagarDt
     fechaDeRecepcion: libro.fechaRecepcion,
     vencimiento: documento.vencimiento,
     total: deCentavos(documento.totalCentavos),
-    saldo,
-    propuesto: saldo,
+    saldo: deCentavos(saldos.deudaCentavos),
+    comprometido: deCentavos(saldos.comprometidoCentavos),
+    disponible,
+    comprometidoHasta: posfechadosDe(fila.pagosVigentes, conexion.hoy).comprometidoHasta,
+    propuesto: disponible,
     ...datosDeLaRetencion(fila, conexion),
     tieneActivoFijo: documento.tieneActivoFijo,
     sobreUmbralDeBancarizacion: superaElUmbralDeBancarizacion(documento.totalCentavos, conexion.umbralCentavos),
@@ -142,6 +152,7 @@ export class ListarCargosParaPagar {
       delLibro: await retenciones.deCargos(ids),
       yaDescontadas: await pagos.conRetencionYaDescontada(ids),
       umbralCentavos: await umbral.centavos(operador),
+      hoy: await this.dependencias.reloj.hoy(operador),
     };
   }
 

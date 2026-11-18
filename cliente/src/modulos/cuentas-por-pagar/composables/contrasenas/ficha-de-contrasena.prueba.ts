@@ -32,6 +32,7 @@ const ficha = (cambios: Partial<FichaDeContrasena> = {}): FichaDeContrasena => (
     rebajado: '0.00',
     pagado: '0.00',
     comprometido: '0.00',
+    disponible: '0.00',
     saldo: '1000.00',
   },
   pagos: [],

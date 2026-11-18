@@ -14,8 +14,10 @@ export interface RetencionDeLaLineaDto {
 export interface AplicacionDeLaFichaDto extends AplicacionDelPagoDto {
   /** Lo que las notas de crédito rebajaron del documento. */
   notasAplicadas: string;
-  /** Lo que le queda por pagar hoy (con todos sus pagos vigentes). */
+  /** La deuda del documento hoy: lo que falta por pagar, también lo comprometido con cheques posfechados. */
   saldoDelDocumento: string;
+  /** Lo que aún se puede pagar del documento: `saldoDelDocumento` menos lo comprometido. */
+  disponibleDelDocumento: string;
   /** El residuo de centavos que se puede dar por saldado desde este pago; `0.00` si no hay o no se puede. */
   diferenciaOfrecible: string;
   retencionesDelLibro: RetencionDeLaLineaDto[];

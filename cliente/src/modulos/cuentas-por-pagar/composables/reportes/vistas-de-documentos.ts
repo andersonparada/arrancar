@@ -64,6 +64,7 @@ export const OPCIONES_DE_ESTADO_DE_PAGO: { valor: EstadoDePago | ''; texto: stri
   { valor: '', texto: 'Cualquiera con saldo' },
   { valor: 'pagado', texto: 'Pagado' },
   { valor: 'en_parte', texto: 'Pagado en parte' },
+  { valor: 'comprometido_en_parte', texto: 'Comprometido en parte (cheque posfechado)' },
   { valor: 'comprometido', texto: 'Comprometido (cheque posfechado)' },
   { valor: 'pendiente', texto: 'Pendiente' },
 ];
@@ -71,6 +72,7 @@ export const OPCIONES_DE_ESTADO_DE_PAGO: { valor: EstadoDePago | ''; texto: stri
 export const TEXTOS_DE_ESTADO_DE_PAGO: Record<EstadoDePago, string> = {
   pagado: 'Pagado',
   en_parte: 'Pagado en parte',
+  comprometido_en_parte: 'Comprometido en parte',
   comprometido: 'Comprometido',
   pendiente: 'Pendiente',
 };

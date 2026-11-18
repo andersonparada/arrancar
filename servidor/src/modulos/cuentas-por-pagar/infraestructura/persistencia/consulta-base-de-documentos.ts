@@ -1,23 +1,15 @@
 import { eq, isNotNull, sql } from 'drizzle-orm';
-import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
-import { numeroDeContrasena } from '../../dominio/contrasena.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { documentos as documentosDeCompra } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
-import type { DatosDelLibro, FilaDeDocumento } from '../../aplicacion/puertos/puertos-de-consultas.js';
 import { contrasenaDocumentos } from './contrasena-documentos.tablas.js';
 import { contrasenas } from './contrasenas.tablas.js';
 import { ajustesDeSaldo } from './ajustes-de-saldo.tablas.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
-import { mapeadorDeDocumento } from './documento.mapeador.js';
 import { documentos } from './documentos.tablas.js';
-import { pagosVigentesDe, SubconsultasDePagos } from './subconsultas-de-pagos.js';
-
-/** Nombres y apellidos juntos; `null` si el usuario no se pudo leer. */
-const nombreCompleto = (nombres: string | null, apellidos: string | null): string | null =>
-  nombres ? `${nombres} ${apellidos ?? ''}`.trim() : null;
+import { SubconsultasDePagos } from './subconsultas-de-pagos.js';
 
 /**
  * Cada documento con lo que se calcula de las otras tablas: de dónde viene (proveedor y, si es del libro, su recepción), lo que
@@ -26,11 +18,25 @@ const nombreCompleto = (nombres: string | null, apellidos: string | null): strin
  */
 export class ConsultaBaseDeDocumentos {
   private readonly transaccion = transaccionEnCurso();
-  private readonly deLosPagos = new SubconsultasDePagos();
-  /** Lo que los pagos vigentes entregaron, por cargo (con la fecha de cada uno). */
-  readonly pagadoAlCargo = this.deLosPagos.pagadoAlCargo;
+  private readonly deLosPagos: SubconsultasDePagos;
+
+  /**
+   * @param hoy `AAAA-MM-DD` de la empresa. Opcional: solo lo exigen `comprometido` y `deudaDelCargo`, que separan lo
+   * pagado de lo posfechado.
+   */
+  constructor(hoy?: string) {
+    this.deLosPagos = new SubconsultasDePagos(hoy);
+  }
+
+  /** Lo que los pagos vigentes entregaron, por cargo (con la fecha de cada uno y lo comprometido a esa fecha). */
+  get pagadoAlCargo() {
+    return this.deLosPagos.pagadoAlCargo;
+  }
+
   /** Lo que los reintegros vigentes devolvieron, por nota de crédito. */
-  readonly reintegradoDeLaNota = this.deLosPagos.reintegradoDeLaNota;
+  get reintegradoDeLaNota() {
+    return this.deLosPagos.reintegradoDeLaNota;
+  }
 
   /** Lo que las notas de crédito rebajaron, por cargo. */
   readonly alCargo = this.transaccion
@@ -182,13 +188,18 @@ export class ConsultaBaseDeDocumentos {
   }
 
   /**
-   * Lo que falta por pagar de un cargo, en SQL: el saldo al inicio (si es un saldo inicial) o el total menos las
+   * Lo que todavía se puede pagar de un cargo, en SQL: el saldo al inicio (si es un saldo inicial) o el total menos las
    * retenciones, menos lo que le rebajaron las notas, lo pagado (también lo posfechado, que ya está comprometido) y las
    * diferencias menores. Las retenciones por practicar no entran. Quien lo usa une las tres subconsultas.
    */
-  saldoDelCargo() {
+  disponibleDelCargo() {
     const neto = sql`coalesce(${documentos.saldoAlInicio}, ${documentos.total} - ${documentos.retenciones})`;
     return sql`(${neto} - coalesce(${this.alCargo.monto}, 0) - coalesce(${this.pagadoAlCargo.monto}, 0) - coalesce(${this.ajustadoDeLaNota.monto}, 0))`;
+  }
+
+  /** Lo que se debe de un cargo, en SQL: lo disponible más lo comprometido con pagos posfechados (exige `hoy`). */
+  deudaDelCargo() {
+    return sql`(${this.disponibleDelCargo()} + coalesce(${this.pagadoAlCargo.comprometido}, 0))`;
   }
 
   /** El saldo libre de una nota de crédito, en SQL: su base menos lo que aplicó, lo que se ajustó y lo que se reintegró. */
@@ -196,54 +207,4 @@ export class ConsultaBaseDeDocumentos {
     const base = sql`coalesce(${documentos.saldoAlInicio}, ${documentos.total})`;
     return sql`(${base} - coalesce(${this.porLaNota.monto}, 0) - coalesce(${this.ajustadoDeLaNota.monto}, 0) - coalesce(${this.reintegradoDeLaNota.monto}, 0))`;
   }
-}
-
-type FilaSeleccionada = Awaited<ReturnType<ReturnType<ConsultaBaseDeDocumentos['seleccionar']>['limit']>>[number];
-
-function datosDelLibroDe(fila: FilaSeleccionada): DatosDelLibro {
-  return {
-    proveedorNombre: fila.proveedorNombre,
-    proveedorNit: fila.proveedorNit,
-    fechaRecepcion: fila.fechaRecepcion,
-    periodo: fila.periodo,
-    anulacion: {
-      causa: fila.causaDeAnulacion,
-      motivo: fila.motivoDeAnulacion,
-      anuladoPor: fila.anuladoPorEnElLibro,
-      anuladoPorNombre: nombreCompleto(fila.anuladoPorNombres, fila.anuladoPorApellidos),
-      anuladoEn: fila.anuladoEnElLibro,
-    },
-  };
-}
-
-function contrasenaDe(fila: FilaSeleccionada): FilaDeDocumento['contrasena'] {
-  if (fila.contrasenaId === null || fila.contrasenaNumero === null) return null;
-  return { id: fila.contrasenaId, numero: numeroDeContrasena(fila.contrasenaNumero, fila.contrasenaAnio ?? 0) };
-}
-
-/** Lo que las notas, los pagos, los ajustes y los reintegros rebajaron, y cuántos ajustes y reintegros vigentes hay. */
-function rebajasDe(fila: FilaSeleccionada) {
-  return {
-    aplicadoAlCargoCentavos: aCentavos(fila.alCargo ?? '0'),
-    aplicadoPorLaNotaCentavos: aCentavos(fila.porLaNota ?? '0'),
-    ajustadoCentavos: aCentavos(fila.ajustado ?? '0'),
-    ajustesVigentes: fila.ajustesVigentes ?? 0,
-    pagosVigentes: pagosVigentesDe(fila.pagos),
-    reintegradoCentavos: aCentavos(fila.reintegrado ?? '0'),
-    reintegrosVigentes: fila.reintegrosVigentes ?? 0,
-  };
-}
-
-/** De la fila de SQL al documento con sus cuentas, en centavos. */
-export function aFilaDeDocumento(fila: FilaSeleccionada): FilaDeDocumento {
-  return {
-    documento: mapeadorDeDocumento.aDominio(fila.documento),
-    libro: datosDelLibroDe(fila),
-    creadoEn: fila.documento.creadoEn.toISOString(),
-    ...rebajasDe(fila),
-    aplicacionesManualesRecibidas: fila.manuales ?? 0,
-    notasVigentes: fila.notasVigentes ?? 0,
-    notasEnTotal: fila.notasEnTotal ?? 0,
-    contrasena: contrasenaDe(fila),
-  };
 }

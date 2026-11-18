@@ -1,4 +1,4 @@
-import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
+import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { EmpresaDeLaImpresion } from '../puertos/puertos-de-impresion-de-contrasenas.js';
 import type { CargoDeContrasenaDto, ContrasenaDto, NotaDeContrasenaDto } from './contrasena.dto.js';
 import { fechaLegible } from '../../dominio/avisos.js';
@@ -39,7 +39,8 @@ const dtoDeCargoImpreso = (cargo: CargoDeContrasenaDto): CargoImpresoDto => ({
   total: cargo.total,
   retenciones: cargo.retenciones,
   rebajado: cargo.rebajado,
-  pagado: deCentavos(aCentavos(cargo.pagado) + aCentavos(cargo.comprometido)),
+  pagado: cargo.pagado,
+  comprometido: cargo.comprometido,
   saldo: cargo.saldo,
 });
 

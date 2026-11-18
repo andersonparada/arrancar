@@ -26,6 +26,8 @@ const cargo = (id: string, cambios: Partial<CargoDeContrasena> = {}): CargoDeCon
   saldo: '100.00',
   pagado: '0.00',
   comprometido: '0.00',
+  disponible: cambios.saldo ?? '100.00',
+  comprometidoHasta: null,
   retencionesPorPracticar: null,
   sobreUmbralDeBancarizacion: false,
   ...cambios,
@@ -74,6 +76,12 @@ describe('registrar pago desde la contraseña', () => {
   it('solo cuenta lo autorizado con saldo', () => {
     const cargos = [cargo('a'), cargo('b', { estado: 'registrado' }), cargo('c', { saldo: '0.00' })];
     expect(cargosPagables({ cargos }).map(({ documentoId }) => documentoId)).toEqual(['a']);
+  });
+
+  it('un cargo todo comprometido con posfechado debe, pero no se ofrece pagar', () => {
+    const cubierto = cargo('a', { comprometido: '100.00', disponible: '0.00' });
+    expect(cargosPagables({ cargos: [cubierto] })).toEqual([]);
+    expect(puedeRegistrarPago(ficha({ cargos: [cubierto] }), puedeTodo)).toBe(false);
   });
 
   it('lleva al pago nuevo con el proveedor y la contraseña abiertos', () => {

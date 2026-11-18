@@ -100,7 +100,7 @@ export function contrasenasIniciales(datos: ParaPagar, abierta: string | null): 
 /** Lo que queda sin pagar de un cargo cuando se le paga `monto`, en centavos; cero si no se le paga nada. */
 export function residuoDelCargo(cargo: CargoParaPagar, monto: string): number {
   const pagado = centavosDe(monto) ?? 0;
-  return pagado > 0 ? Math.max(0, (centavosDe(cargo.saldo) ?? 0) - pagado) : 0;
+  return pagado > 0 ? Math.max(0, (centavosDe(cargo.disponible) ?? 0) - pagado) : 0;
 }
 
 /**

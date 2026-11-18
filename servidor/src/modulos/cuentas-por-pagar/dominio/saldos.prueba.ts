@@ -46,7 +46,9 @@ describe('saldo de un documento', () => {
       ajustadoCentavos: 0,
       pagadoCentavos: 0,
       reintegradoCentavos: 0,
-      saldoCentavos: 10000,
+      deudaCentavos: 10000,
+      comprometidoCentavos: 0,
+      disponibleCentavos: 10000,
     });
     expect(saldoDe(documento(), { ...nada, alCargoCentavos: 2500, porLaNotaCentavos: 99 })).toEqual({
       netoCentavos: 10000,
@@ -54,7 +56,9 @@ describe('saldo de un documento', () => {
       ajustadoCentavos: 0,
       pagadoCentavos: 0,
       reintegradoCentavos: 0,
-      saldoCentavos: 7500,
+      deudaCentavos: 7500,
+      comprometidoCentavos: 0,
+      disponibleCentavos: 7500,
     });
   });
 
@@ -67,13 +71,15 @@ describe('saldo de un documento', () => {
       ajustadoCentavos: 0,
       pagadoCentavos: 0,
       reintegradoCentavos: 0,
-      saldoCentavos: 1200,
+      deudaCentavos: 1200,
+      comprometidoCentavos: 0,
+      disponibleCentavos: 1200,
     });
   });
 
   it('un documento anulado no debe nada ni deja nada a favor', () => {
-    expect(saldoDe(documento({ estado: 'anulado' }), nada).saldoCentavos).toBe(0);
-    expect(saldoDe(documento({ tipo: 'nota_de_credito', estado: 'anulado' }), nada).saldoCentavos).toBe(0);
+    expect(saldoDe(documento({ estado: 'anulado' }), nada).disponibleCentavos).toBe(0);
+    expect(saldoDe(documento({ tipo: 'nota_de_credito', estado: 'anulado' }), nada).disponibleCentavos).toBe(0);
   });
 });
 
@@ -86,12 +92,12 @@ describe('saldo con pagos, ajustes y reintegros', () => {
       ajustadoCentavos: 3,
     });
 
-    expect(resultado).toMatchObject({ pagadoCentavos: 6000, ajustadoCentavos: 3, saldoCentavos: 2997 });
+    expect(resultado).toMatchObject({ pagadoCentavos: 6000, ajustadoCentavos: 3, disponibleCentavos: 2997 });
   });
 
   it('un cargo pagado del todo queda en cero y con un pago de más queda negativo (el dominio lo evita antes)', () => {
-    expect(saldoDe(documento(), { ...nada, pagadoCentavos: 10000 }).saldoCentavos).toBe(0);
-    expect(saldoDe(documento(), { ...nada, pagadoCentavos: 10001 }).saldoCentavos).toBe(-1);
+    expect(saldoDe(documento(), { ...nada, pagadoCentavos: 10000 }).disponibleCentavos).toBe(0);
+    expect(saldoDe(documento(), { ...nada, pagadoCentavos: 10001 }).disponibleCentavos).toBe(-1);
   });
 
   it('una nota resta lo reintegrado de su saldo libre y no cuenta pagos', () => {
@@ -105,17 +111,17 @@ describe('saldo con pagos, ajustes y reintegros', () => {
       pagadoCentavos: 99,
     });
 
-    expect(resultado).toMatchObject({ reintegradoCentavos: 1500, pagadoCentavos: 0, saldoCentavos: 2000 });
+    expect(resultado).toMatchObject({ reintegradoCentavos: 1500, pagadoCentavos: 0, disponibleCentavos: 2000 });
   });
 
   it('un cargo no resta reintegros', () => {
-    expect(saldoDe(documento(), { ...nada, reintegradoCentavos: 500 }).saldoCentavos).toBe(10000);
+    expect(saldoDe(documento(), { ...nada, reintegradoCentavos: 500 }).disponibleCentavos).toBe(10000);
   });
 
   it('un saldo inicial paga contra su saldo al inicio', () => {
     const inicial = documento({ origen: 'saldo_inicial', documentoId: null, saldoAlInicioCentavos: 7000 });
 
-    expect(saldoDe(inicial, { ...nada, pagadoCentavos: 7000 }).saldoCentavos).toBe(0);
+    expect(saldoDe(inicial, { ...nada, pagadoCentavos: 7000 }).disponibleCentavos).toBe(0);
   });
 });
 
@@ -138,12 +144,14 @@ describe('saldo de un saldo inicial', () => {
       ajustadoCentavos: 0,
       pagadoCentavos: 0,
       reintegradoCentavos: 0,
-      saldoCentavos: 7000,
+      deudaCentavos: 7000,
+      comprometidoCentavos: 0,
+      disponibleCentavos: 7000,
     });
   });
 
   it('las notas aplicadas se restan del saldo al inicio', () => {
-    expect(saldoDe(saldoInicial(), { ...nada, alCargoCentavos: 2000 }).saldoCentavos).toBe(5000);
+    expect(saldoDe(saldoInicial(), { ...nada, alCargoCentavos: 2000 }).disponibleCentavos).toBe(5000);
   });
 
   it('una nota de crédito cargada como saldo inicial tiene a favor su saldo al inicio', () => {
@@ -154,7 +162,7 @@ describe('saldo de un saldo inicial', () => {
       vencimiento: null,
     });
 
-    expect(saldoDe(nota, { ...nada, porLaNotaCentavos: 1000 }).saldoCentavos).toBe(2000);
+    expect(saldoDe(nota, { ...nada, porLaNotaCentavos: 1000 }).disponibleCentavos).toBe(2000);
   });
 });
 

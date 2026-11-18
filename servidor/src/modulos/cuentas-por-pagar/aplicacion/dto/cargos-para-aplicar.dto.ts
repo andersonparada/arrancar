@@ -12,8 +12,14 @@ export interface CargoParaAplicarDto {
   vencimiento: string | null;
   estado: EstadoDeDocumento;
   total: string;
-  /** Lo que todavía se debe del cargo. */
+  /** La deuda del cargo: lo que falta por pagar, también lo comprometido con cheques posfechados. */
   saldo: string;
+  /** La parte de la deuda cubierta con pagos de fecha posterior a hoy. */
+  comprometido: string;
+  /** Lo que una nota todavía puede rebajar: `saldo` menos `comprometido`. */
+  disponible: string;
+  /** La fecha del cheque posfechado más lejano; `null` si no hay. */
+  comprometidoHasta: string | null;
   /** Lo que se propone aplicar (cero si ya no queda saldo libre); la persona lo cambia. */
   propuesto: string;
   origen: OrigenDeDocumento;

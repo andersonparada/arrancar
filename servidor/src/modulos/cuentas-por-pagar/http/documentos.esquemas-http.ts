@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ESTADOS_DE_PAGO } from '../dominio/saldo-al-corte.js';
+import { ESTADOS_DE_PAGO } from '../dominio/pagos.js';
 import { ESTADOS_DE_DOCUMENTO, ORIGENES_DE_DOCUMENTO, TIPOS_DE_DOCUMENTO } from '../dominio/tipos-de-documento.js';
 
 const LIMITE_POR_OMISION = 50;

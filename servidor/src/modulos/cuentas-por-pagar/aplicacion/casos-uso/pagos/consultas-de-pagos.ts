@@ -17,19 +17,24 @@ export interface FiltroDeProveedoresPorPagar {
 /** Los proveedores con cargos autorizados con saldo en contraseñas vigentes: el selector de la ventana de pago. */
 export class ListarProveedoresPorPagar {
   constructor(
-    private readonly dependencias: { unidadDeTrabajo: UnidadDeTrabajo; consultasDePagos: ConsultasDePagos },
+    private readonly dependencias: {
+      unidadDeTrabajo: UnidadDeTrabajo;
+      consultasDePagos: ConsultasDePagos;
+      reloj: Reloj;
+    },
   ) {}
 
   ejecutar(
     operador: Operador,
     filtro: FiltroDeProveedoresPorPagar,
   ): Promise<{ elementos: ProveedorPorPagarDto[]; total: number }> {
-    const { unidadDeTrabajo, consultasDePagos } = this.dependencias;
+    const { unidadDeTrabajo, consultasDePagos, reloj } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
-      const { filas, total } = await consultasDePagos.proveedoresPorPagar(filtro);
-      const elementos = filas.map(({ porPagarCentavos, ...proveedor }) => ({
+      const { filas, total } = await consultasDePagos.proveedoresPorPagar(filtro, await reloj.hoy(operador));
+      const elementos = filas.map(({ porPagarCentavos, disponibleCentavos, ...proveedor }) => ({
         ...proveedor,
         porPagar: deCentavos(porPagarCentavos),
+        disponible: deCentavos(disponibleCentavos),
       }));
       return { elementos, total };
     });

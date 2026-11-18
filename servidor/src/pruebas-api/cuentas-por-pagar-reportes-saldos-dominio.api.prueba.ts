@@ -1,11 +1,12 @@
 /**
  * El SQL de `ConsultaDeSaldosAlCorte` contra las reglas del dominio (`dominio/saldo-al-corte.ts`): en el escenario con todo
  * (saldos iniciales, un documento del libro anterior a la fecha de inicio, notas, ajustes, pagos hechos, posfechados y
- * anulados, y reintegros) el saldo, lo pagado y lo comprometido de cada cargo salen iguales por las dos vías, a varios
+ * anulados, y reintegros) el saldo, lo pagado, lo comprometido y el estado de pago de cada cargo salen iguales por las dos vías, a varios
  * cortes, antes y después de anular.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { aCentavos, deCentavos } from '../modulos/core/compartido/dominio/centavos.js';
+import { ESTADOS_DE_PAGO, estadoDePagoDe } from '../modulos/cuentas-por-pagar/dominio/pagos.js';
 import {
   fechaDeEfectoDelDocumento,
   fechaDeEfectoDelPago,
@@ -82,9 +83,17 @@ async function leerDatos(): Promise<Datos> {
 
 const suma = (filas: Array<{ monto: string }>) => filas.reduce((total, { monto }) => total + aCentavos(monto), 0);
 
+/** Las cifras de un cargo que el SQL y el dominio deben dar iguales, con su estado de pago. */
+interface CifrasDelReporte {
+  saldo: string;
+  pagado: string;
+  comprometido: string;
+  estadoDePago: string;
+}
+
 /** Lo que el dominio dice de cada cargo al corte: saldo, pagado y comprometido por número de documento. */
 function esperadoAl(corte: string, datos: Datos) {
-  const esperado = new Map<string, { saldo: string; pagado: string; comprometido: string }>();
+  const esperado = new Map<string, CifrasDelReporte>();
   for (const documento of datos.documentos.filter(({ tipo }) => tipo !== 'nota_de_credito')) {
     const efecto = fechaDeEfectoDelDocumento({ origen: documento.origen, fechaEmision: documento.emision }, INICIO);
     if (efecto > corte || !vigenteAlCorte(documento.anulado, corte)) continue;
@@ -105,6 +114,11 @@ function esperadoAl(corte: string, datos: Datos) {
       saldo: deCentavos(saldoCentavos),
       pagado: deCentavos(suma(hechos)),
       comprometido: deCentavos(suma(comprometidos)),
+      estadoDePago: estadoDePagoDe({
+        deudaCentavos: saldoCentavos,
+        pagadoCentavos: suma(hechos),
+        comprometidoCentavos: suma(comprometidos),
+      }),
     });
   }
   return esperado;
@@ -112,8 +126,8 @@ function esperadoAl(corte: string, datos: Datos) {
 
 /** Lo que dice el reporte: todos los cargos, también los pagados (un pedido por estado de pago). */
 async function delReporte(corte: string) {
-  const filas: Array<{ numero: string; saldo: string; pagado: string; comprometido: string }> = [];
-  for (const estado of ['pendiente', 'en_parte', 'comprometido', 'pagado']) {
+  const filas: Array<CifrasDelReporte & { numero: string }> = [];
+  for (const estado of ESTADOS_DE_PAGO) {
     const respuesta = await m.soloVer.get(`${R2}?corte=${corte}&estadoDePago=${estado}&limite=500`);
     expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(200);
     filas.push(...respuesta.cuerpo.filas);
@@ -121,7 +135,12 @@ async function delReporte(corte: string) {
   return new Map(
     filas.map(({ numero, ...cifras }) => [
       numero,
-      { saldo: cifras.saldo, pagado: cifras.pagado, comprometido: cifras.comprometido },
+      {
+        saldo: cifras.saldo,
+        pagado: cifras.pagado,
+        comprometido: cifras.comprometido,
+        estadoDePago: cifras.estadoDePago,
+      },
     ]),
   );
 }

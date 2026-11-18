@@ -8,6 +8,7 @@ type Tono = 'campo' | 'trigo' | 'tierra' | 'rojo';
 const TONOS_DE_PAGO: Record<EstadoDePago, Tono> = {
   pagado: 'campo',
   en_parte: 'trigo',
+  comprometido_en_parte: 'trigo',
   comprometido: 'tierra',
   pendiente: 'tierra',
 };

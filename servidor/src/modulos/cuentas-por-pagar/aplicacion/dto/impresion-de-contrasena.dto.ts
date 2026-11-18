@@ -20,8 +20,11 @@ export interface CargoImpresoDto {
   total: string;
   retenciones: string;
   rebajado: string;
-  /** Lo pagado más lo comprometido (cheques posfechados, que llevan su marca aparte), «al» día de la impresión. */
+  /** Lo pagado con fecha de la impresión o anterior. */
   pagado: string;
+  /** Lo pagado con cheques posfechados (llevan su marca aparte): parte del saldo, «de lo cual». */
+  comprometido: string;
+  /** La deuda: total menos retenciones, rebajado y pagado; lo comprometido sigue en ella. */
   saldo: string;
 }
 
@@ -36,7 +39,7 @@ export interface CompensacionImpresaDto {
   texto: string;
 }
 
-/** Un pago vigente con fecha posterior a la impresión: se suma en «Pagado» con su marca. */
+/** Un pago vigente con fecha posterior a la impresión: va en «Comprometido» con su marca. */
 export interface ChequePosfechadoImpresoDto {
   pagoId: string;
   monto: string;

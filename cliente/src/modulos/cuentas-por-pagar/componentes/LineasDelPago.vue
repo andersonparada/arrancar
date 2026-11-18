@@ -64,6 +64,10 @@ const hayRetencion = (linea: LineaDeLaFicha): boolean => linea.retencionesDelLib
           <dt class="text-xs text-tierra-500">Debe hoy</dt>
           <dd>{{ formatearMonto(linea.saldoDelDocumento) }}</dd>
         </div>
+        <div v-if="linea.disponibleDelDocumento !== linea.saldoDelDocumento">
+          <dt class="text-xs text-tierra-500">Disponible para pagar</dt>
+          <dd>{{ formatearMonto(linea.disponibleDelDocumento) }}</dd>
+        </div>
       </dl>
 
       <ul v-if="hayRetencion(linea)" class="mt-2 space-y-0.5 text-xs text-tierra-600 dark:text-tierra-300">

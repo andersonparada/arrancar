@@ -2,7 +2,7 @@ import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import { formatearFecha, formatearFechaHora, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import type { DocumentoPorPagar, EstadoDeDocumento, FichaDelDocumento } from '../servicios/tipos';
 import { nombreDelEstadoDePago } from './pagos/detalles-de-pago';
-import { centavosDe } from './dinero';
+import { etiquetaDeComprometido, hayMontoPositivo } from './comprometido';
 import { CAUSAS_DE_ANULACION, ESTADOS_DE_DOCUMENTO, TIPOS_DE_DOCUMENTO } from '../textos';
 
 type Identificable = Pick<DocumentoPorPagar, 'tipo' | 'serie' | 'numero'>;
@@ -38,14 +38,26 @@ export function detallesDeBandeja(documento: DocumentoPorPagar): DetalleDeRegist
   ];
 }
 
-const hayMonto = (monto: string): boolean => (centavosDe(monto) ?? 0) > 0;
-
-/** Lo pagado y, si hay un cheque posfechado, lo comprometido: solo en un cargo que ya tiene pagos. */
+/** Lo pagado y, si hay un cheque posfechado, lo comprometido con su fecha: solo en un cargo vigente. */
 function montosDePago(documento: DocumentoPorPagar): DetalleDeRegistro[] {
   if (documento.clase !== 'cargo' || documento.estado === 'anulado') return [];
   const detalles: DetalleDeRegistro[] = [{ etiqueta: 'Pagado', valor: formatearMonto(documento.pagado) }];
-  if (hayMonto(documento.comprometido)) {
-    detalles.push({ etiqueta: 'Comprometido', valor: formatearMonto(documento.comprometido) });
+  if (hayMontoPositivo(documento.comprometido)) {
+    detalles.push({
+      etiqueta: etiquetaDeComprometido(documento.comprometidoHasta, documento.chequesPosfechados),
+      valor: formatearMonto(documento.comprometido),
+    });
+  }
+  return detalles;
+}
+
+/** El saldo (la deuda) y, si parte está comprometida, lo que todavía se puede pagar. */
+function montosDeSaldo(documento: DocumentoPorPagar): DetalleDeRegistro[] {
+  const detalles: DetalleDeRegistro[] = [
+    { etiqueta: etiquetaDelSaldo(documento), valor: formatearMonto(documento.saldo) },
+  ];
+  if (documento.clase === 'cargo' && hayMontoPositivo(documento.comprometido)) {
+    detalles.push({ etiqueta: 'Disponible', valor: formatearMonto(documento.disponible) });
   }
   return detalles;
 }
@@ -57,7 +69,7 @@ export function detallesDeLista(documento: DocumentoPorPagar): DetalleDeRegistro
     { etiqueta: 'Vence', valor: documento.vencimiento ? formatearFecha(documento.vencimiento) : '—' },
     { etiqueta: 'Neto a pagar', valor: formatearMonto(documento.neto) },
     ...montosDePago(documento),
-    { etiqueta: etiquetaDelSaldo(documento), valor: formatearMonto(documento.saldo) },
+    ...montosDeSaldo(documento),
   ];
 }
 
@@ -115,7 +127,7 @@ export function detallesDeMontos(ficha: FichaDelDocumento): DetalleDeRegistro[] 
     { etiqueta: 'Retenciones', valor: formatearMonto(ficha.retenciones) },
     { etiqueta: 'Neto a pagar', valor: formatearMonto(ficha.neto) },
     ...montosAplicadosYAjustados(ficha),
-    { etiqueta: etiquetaDelSaldo(ficha), valor: formatearMonto(ficha.saldo) },
+    ...montosDeSaldo(ficha),
   ];
 }
 

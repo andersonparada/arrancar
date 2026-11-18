@@ -11,6 +11,7 @@ import type {
 } from '../../aplicacion/puertos/puertos-de-consultas.js';
 import { ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
 import { documentos } from './documentos.tablas.js';
+import { posfechadosDelProveedor } from './posfechados-del-proveedor.drizzle.js';
 
 const esUnaNotaVigente = and(ne(documentos.estado, 'anulado'), eq(documentos.tipo, 'nota_de_credito'));
 
@@ -22,7 +23,24 @@ const esUnCargoVigenteDe = (proveedorId: string) =>
     ne(documentos.tipo, 'nota_de_credito'),
   );
 
+/** Cuántos cheques posfechados se listan en la ficha del proveedor. */
+const LIMITE_DE_POSFECHADOS = 10;
+
 type SumasDeLosCargos = Omit<TotalesDelProveedor, 'proveedorNombre'>;
+
+/** Las sumas de la deuda de un proveedor: total, vencida y comprometida con posfechados, y cuántos cargos. */
+function columnasDeSumas(base: ConsultaBaseDeDocumentos, hoy: string) {
+  const deuda = base.deudaDelCargo();
+  const comprometido = sql`coalesce(${base.pagadoAlCargo.comprometido}, 0)`;
+  const vence = sql`${documentos.vencimiento} < ${hoy}`;
+  return {
+    porPagar: sql<string>`coalesce(sum(${deuda}), 0)`,
+    vencido: sql<string>`coalesce(sum(${deuda}) filter (where ${vence}), 0)`,
+    comprometido: sql<string>`coalesce(sum(${comprometido}), 0)`,
+    vencidoComprometido: sql<string>`coalesce(sum(${comprometido}) filter (where ${vence}), 0)`,
+    cargos: sql<number>`count(*)`.mapWith(Number),
+  };
+}
 
 /** Las cuentas de un proveedor en la empresa activa; los saldos se calculan, no se guardan (RLS limita a la empresa). */
 export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
@@ -36,25 +54,23 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
     return { proveedorNombre: proveedor.nombre, ...(await this.sumasDeLosCargos(proveedorId, hoy)) };
   }
 
-  /** Lo que falta por pagar de los cargos vigentes con saldo, y la parte ya vencida. */
+  /** Lo que se debe de los cargos vigentes con deuda, la parte ya vencida y la comprometida con posfechados. */
   private async sumasDeLosCargos(proveedorId: string, hoy: string): Promise<SumasDeLosCargos> {
-    const base = new ConsultaBaseDeDocumentos();
-    const saldo = base.saldoDelCargo();
+    const base = new ConsultaBaseDeDocumentos(hoy);
     const [sumas] = await transaccionEnCurso()
-      .select({
-        porPagar: sql<string>`coalesce(sum(${saldo}), 0)`,
-        vencido: sql<string>`coalesce(sum(${saldo}) filter (where ${documentos.vencimiento} < ${hoy}), 0)`,
-        cargos: sql<number>`count(*)`.mapWith(Number),
-      })
+      .select(columnasDeSumas(base, hoy))
       .from(documentos)
       .leftJoin(base.alCargo, eq(base.alCargo.cargoId, documentos.id))
       .leftJoin(base.pagadoAlCargo, eq(base.pagadoAlCargo.cargoId, documentos.id))
       .leftJoin(base.ajustadoDeLaNota, eq(base.ajustadoDeLaNota.notaId, documentos.id))
-      .where(and(esUnCargoVigenteDe(proveedorId), sql`${saldo} > 0`));
+      .where(and(esUnCargoVigenteDe(proveedorId), sql`${base.deudaDelCargo()} > 0`));
     return {
       porPagarCentavos: aCentavos(sumas!.porPagar),
       vencidoCentavos: aCentavos(sumas!.vencido),
+      comprometidoCentavos: aCentavos(sumas!.comprometido),
+      vencidoComprometidoCentavos: aCentavos(sumas!.vencidoComprometido),
       cargosConSaldo: sumas!.cargos,
+      posfechados: await posfechadosDelProveedor(proveedorId, hoy, LIMITE_DE_POSFECHADOS),
     };
   }
 

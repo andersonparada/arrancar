@@ -8,7 +8,7 @@ import {
   type AplicadoAlDocumento,
   type SaldoDelDocumento,
 } from '../../dominio/saldos.js';
-import { estadoDePagoDe, pagadoYComprometido } from '../../dominio/pagos.js';
+import { estadoDePagoDe, pagadoYComprometido, posfechadosDe } from '../../dominio/pagos.js';
 import { claseDe } from '../../dominio/tipos-de-documento.js';
 import type { AplicacionConDatos, FilaDeDocumento, NotaDeUnDocumento } from '../puertos/puertos-de-consultas.js';
 import { textoONulo } from './ficha-del-documento.dto.js';
@@ -68,9 +68,14 @@ function pagosDe(fila: FilaDeDocumento, saldo: SaldoDelDocumento, hoy: string) {
   const { pagadoCentavos, comprometidoCentavos } = pagadoYComprometido(fila.pagosVigentes, hoy);
   const sePaga = claseDe(fila.documento.tipo) === 'cargo' && fila.documento.estado !== 'anulado';
   const estadoDePago: EstadoDePagoDto = sePaga
-    ? estadoDePagoDe({ saldoCentavos: saldo.saldoCentavos, pagadoCentavos, comprometidoCentavos })
+    ? estadoDePagoDe({ deudaCentavos: saldo.deudaCentavos, pagadoCentavos, comprometidoCentavos })
     : null;
-  return { pagado: deCentavos(pagadoCentavos), comprometido: deCentavos(comprometidoCentavos), estadoDePago };
+  return {
+    pagado: deCentavos(pagadoCentavos),
+    comprometido: deCentavos(comprometidoCentavos),
+    ...posfechadosDe(fila.pagosVigentes, hoy),
+    estadoDePago,
+  };
 }
 
 const montosDe = (documento: DocumentoPorPagar, saldo: SaldoDelDocumento) => ({
@@ -80,7 +85,8 @@ const montosDe = (documento: DocumentoPorPagar, saldo: SaldoDelDocumento) => ({
   aplicado: deCentavos(saldo.aplicadoCentavos),
   ajustado: deCentavos(saldo.ajustadoCentavos),
   reintegrado: deCentavos(saldo.reintegradoCentavos),
-  saldo: deCentavos(saldo.saldoCentavos),
+  saldo: deCentavos(saldo.deudaCentavos),
+  disponible: deCentavos(saldo.disponibleCentavos),
   saldoAlInicio: textoONulo(documento.saldoAlInicioCentavos),
   retencionesPorPracticar: textoONulo(documento.retencionesPorPracticarCentavos),
   referencia: documento.referencia,
@@ -94,8 +100,12 @@ const seguimientoDe = (documento: DocumentoPorPagar, usuarioId: string) => ({
   autorizacionPropia: documento.autorizacionPropia,
 });
 
-/** Lo que rebajaron las notas, los pagos, los ajustes y los reintegros, tal como viene en la fila. */
-export const aplicadoDe = (fila: FilaDeDocumento): AplicadoAlDocumento => ({
+/**
+ * Lo que rebajaron las notas, los pagos, los ajustes y los reintegros, tal como viene en la fila. Con `hoy` separa lo
+ * comprometido (pagos posfechados) y el saldo trae la deuda; sin él, solo es fiable lo disponible.
+ */
+export const aplicadoDe = (fila: FilaDeDocumento, hoy?: string): AplicadoAlDocumento => ({
+  comprometidoCentavos: hoy === undefined ? 0 : pagadoYComprometido(fila.pagosVigentes, hoy).comprometidoCentavos,
   alCargoCentavos: fila.aplicadoAlCargoCentavos,
   porLaNotaCentavos: fila.aplicadoPorLaNotaCentavos,
   ajustadoCentavos: fila.ajustadoCentavos,
@@ -122,7 +132,7 @@ const hechosDe = (fila: FilaDeDocumento, saldoCentavos: number): HechosDelDocume
 /** El documento tal como lo ven la bandeja, la lista y la ficha, con sus saldos y lo que se puede hacer con él. */
 export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVista): DocumentoPorPagarDto {
   const { documento } = fila;
-  const saldo = saldoDe(documento, aplicadoDe(fila));
+  const saldo = saldoDe(documento, aplicadoDe(fila, vista.hoy));
   return {
     ...identificacionDe(documento),
     ...origenDe(fila),
@@ -130,9 +140,9 @@ export function dtoDeDocumentoPorPagar(fila: FilaDeDocumento, vista: PuntoDeVist
     ...pagosDe(fila, saldo, vista.hoy),
     ...seguimientoDe(documento, vista.usuarioId),
     vencimiento: documento.vencimiento,
-    vencido: estaVencido(documento, saldo.saldoCentavos, vista.hoy),
+    vencido: estaVencido(documento, saldo.deudaCentavos, vista.hoy),
     contrasena: fila.contrasena,
-    ...accionesDelDocumento(hechosDe(fila, saldo.saldoCentavos)),
+    ...accionesDelDocumento(hechosDe(fila, saldo.deudaCentavos)),
   };
 }
 

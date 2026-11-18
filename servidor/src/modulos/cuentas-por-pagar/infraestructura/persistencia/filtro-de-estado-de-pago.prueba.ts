@@ -5,7 +5,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { grupoConexiones } from '../../../core/base-datos/conexion.js';
 import { enTransaccionSegura } from '../../../core/compartido/pruebas/en-transaccion-segura.js';
-import type { EstadoDePago } from '../../dominio/pagos.js';
+import { sql } from 'drizzle-orm';
+import { estadoDePagoDe, type CifrasDelPago, type EstadoDePago } from '../../dominio/pagos.js';
+import { expresionDeEstadoDePago } from './expresion-de-estado-de-pago.js';
 import { aplicacionesDePagos } from './aplicaciones-de-pagos.tablas.js';
 import { contrasenaDocumentos } from './contrasena-documentos.tablas.js';
 import { contrasenas } from './contrasenas.tablas.js';
@@ -99,16 +101,39 @@ afterAll(async () => {
 });
 
 describe('filtro de estado de pago de la lista de documentos', () => {
-  it('separa pendiente, en parte, comprometido y pagado', async () => {
+  it('separa los cinco estados', async () => {
     const pendiente = await cargoConPago();
     const enParte = await cargoConPago({ monto: '50', fecha: '2026-03-15' });
     const pagado = await cargoConPago({ monto: '112', fecha: '2026-03-15' });
     const comprometido = await cargoConPago({ monto: '112', fecha: '2026-04-01' });
-    const parteComprometida = await cargoConPago({ monto: '50', fecha: '2026-04-01' });
+    const comprometidoEnParte = await cargoConPago({ monto: '50', fecha: '2026-04-01' });
 
     expect(await idsConEstado('pendiente')).toEqual([pendiente]);
-    expect((await idsConEstado('en_parte')).sort()).toEqual([enParte, parteComprometida].sort());
+    expect(await idsConEstado('en_parte')).toEqual([enParte]);
     expect(await idsConEstado('pagado')).toEqual([pagado]);
     expect(await idsConEstado('comprometido')).toEqual([comprometido]);
+    expect(await idsConEstado('comprometido_en_parte')).toEqual([comprometidoEnParte]);
+  });
+});
+
+describe('la expresión de SQL y el dominio dan el mismo estado de pago', () => {
+  it('coinciden en una grilla de casos', async () => {
+    const casos: CifrasDelPago[] = [0, 5000, 10000].flatMap((deudaCentavos) =>
+      [0, 3000].flatMap((pagadoCentavos) =>
+        [0, 5000, 10000]
+          .filter((comprometidoCentavos) => comprometidoCentavos <= deudaCentavos)
+          .map((comprometidoCentavos) => ({ deudaCentavos, pagadoCentavos, comprometidoCentavos })),
+      ),
+    );
+
+    for (const caso of casos) {
+      const expresion = expresionDeEstadoDePago({
+        deuda: sql.raw(String(caso.deudaCentavos)),
+        pagado: sql.raw(String(caso.pagadoCentavos)),
+        comprometido: sql.raw(String(caso.comprometidoCentavos)),
+      });
+      const resultado = await enTransaccionSegura(contexto(), (tx) => tx.execute(sql`select ${expresion} as estado`));
+      expect((resultado.rows[0] as { estado: string }).estado, JSON.stringify(caso)).toBe(estadoDePagoDe(caso));
+    }
   });
 });

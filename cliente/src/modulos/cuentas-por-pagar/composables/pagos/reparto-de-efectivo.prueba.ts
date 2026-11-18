@@ -30,6 +30,7 @@ const porPagar = (id: string, nombre: string): ProveedorPorPagar => ({
   nombre,
   nit: '1234567',
   porPagar: '1000.00',
+  disponible: '1000.00',
   contrasenas: 1,
 });
 
@@ -133,7 +134,7 @@ describe('errores antes de enviar', () => {
   it('un monto mayor al saldo o mal escrito se marca en su documento', () => {
     const p = proveedor('p1', 'Agro');
     p.edicion.montos['p1-a'] = '1500.00';
-    expect(erroresDelReparto([p], CONTEXTO)['monto.p1-a']).toContain('solo debe Q\u00a01,000.00');
+    expect(erroresDelReparto([p], CONTEXTO)['monto.p1-a']).toContain('solo tiene Q\u00a01,000.00 disponible');
     p.edicion.montos['p1-a'] = '12,5';
     expect(erroresDelReparto([p], CONTEXTO)['monto.p1-a']).toContain('dos decimales');
   });

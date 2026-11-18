@@ -21,22 +21,41 @@ export function pagosVigentesDe(pagosEnJson: PagoComoJson[] | null): PagoVigente
 export class SubconsultasDePagos {
   private readonly transaccion = transaccionEnCurso();
 
+  /**
+   * @param hoy `AAAA-MM-DD` de la empresa: con él, `pagadoAlCargo.comprometido` suma los pagos con fecha posterior; sin
+   * él vale cero.
+   */
+  constructor(private readonly hoy?: string) {}
+
   /** Lo que los pagos vigentes entregaron a cada cargo, y cuándo. */
-  readonly pagadoAlCargo = this.transaccion
-    .select({
-      cargoId: aplicacionesDePagos.cargoId,
-      monto: sql<string>`sum(${aplicacionesDePagos.monto})`.as('monto_pagado'),
-      pagos: sql<
-        PagoComoJson[]
-      >`jsonb_agg(jsonb_build_object('fecha', ${pagos.fecha}, 'monto', ${aplicacionesDePagos.monto}::text))`.as(
-        'pagos_vigentes',
-      ),
-    })
-    .from(aplicacionesDePagos)
-    .innerJoin(pagos, eq(pagos.id, aplicacionesDePagos.pagoId))
-    .where(eq(aplicacionesDePagos.vigente, true))
-    .groupBy(aplicacionesDePagos.cargoId)
-    .as('pagado_al_cargo');
+  get pagadoAlCargo() {
+    this.pagadoEnCache ??= this.armarPagadoAlCargo();
+    return this.pagadoEnCache;
+  }
+
+  private pagadoEnCache?: ReturnType<SubconsultasDePagos['armarPagadoAlCargo']>;
+
+  private armarPagadoAlCargo() {
+    const comprometido = this.hoy
+      ? sql<string>`coalesce(sum(${aplicacionesDePagos.monto}) filter (where ${pagos.fecha} > ${this.hoy}::date), 0)`
+      : sql<string>`0`;
+    return this.transaccion
+      .select({
+        cargoId: aplicacionesDePagos.cargoId,
+        monto: sql<string>`sum(${aplicacionesDePagos.monto})`.as('monto_pagado'),
+        comprometido: comprometido.as('monto_comprometido'),
+        pagos: sql<
+          PagoComoJson[]
+        >`jsonb_agg(jsonb_build_object('fecha', ${pagos.fecha}, 'monto', ${aplicacionesDePagos.monto}::text))`.as(
+          'pagos_vigentes',
+        ),
+      })
+      .from(aplicacionesDePagos)
+      .innerJoin(pagos, eq(pagos.id, aplicacionesDePagos.pagoId))
+      .where(eq(aplicacionesDePagos.vigente, true))
+      .groupBy(aplicacionesDePagos.cargoId)
+      .as('pagado_al_cargo');
+  }
 
   /** Lo que los reintegros vigentes devolvieron contra cada nota de crédito, y cuántos son. */
   readonly reintegradoDeLaNota = this.transaccion

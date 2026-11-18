@@ -1,6 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { MediosDePago } from '../../servicios/tipos-de-pagos';
-import { conProveedorElegido, juntarCuentasDeNotas, opcionesDeCuentasParaNotas } from './opciones-del-pago';
+import {
+  conProveedorElegido,
+  juntarCuentasDeNotas,
+  opcionesDeCuentasParaNotas,
+  opcionesDeProveedores,
+} from './opciones-del-pago';
 
 const cuenta = (id: string, nombre: string) => ({ cuentaBancariaId: id, cuentaBancariaNombre: nombre });
 
@@ -27,8 +33,28 @@ describe('cuentas para filtrar las notas', () => {
   });
 });
 
+describe('proveedores del pago', () => {
+  beforeEach(() => setActivePinia(createPinia()));
+
+  const base = { proveedorId: 'p', nombre: 'Agro', nit: null, contrasenas: 1 };
+
+  it('dice lo disponible solo si parte está comprometida', () => {
+    const [con] = opcionesDeProveedores([{ ...base, porPagar: '1000.00', disponible: '700.00' }]);
+    const [sin] = opcionesDeProveedores([{ ...base, porPagar: '1000.00', disponible: '1000.00' }]);
+    expect(con?.texto).toMatch(/por pagar .*1,000\.00 \(disponible .*700\.00\)/);
+    expect(sin?.texto).not.toMatch(/disponible/);
+  });
+});
+
 describe('proveedor elegido en el selector', () => {
-  const proveedor = (id: string) => ({ proveedorId: id, nombre: id, nit: null, porPagar: '1.00', contrasenas: 0 });
+  const proveedor = (id: string) => ({
+    proveedorId: id,
+    nombre: id,
+    nit: null,
+    porPagar: '1.00',
+    disponible: '1.00',
+    contrasenas: 0,
+  });
 
   it('no lo repite si la lista ya trae al mismo proveedor como otro objeto', () => {
     const lista = [proveedor('x'), proveedor('y')];
