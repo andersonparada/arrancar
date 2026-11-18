@@ -2460,3 +2460,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   el permiso, la factura queda pendiente en la bandeja y se registra quién la autorizó. *Cuentas por pagar:*
   `GET /pagos/notas-para-ligar` pasa a exigir `cuentas-por-pagar.pagos.ligar-notas-de-debito` (cambia §8 de
   `diseno-cp4-pagos.md`, que decía `pagos.ver`).
+- **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
+  `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
+  «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
+  factura con retención queda en la bandeja del destino (también la que viene de «Agregar factura» con referencia o de la
+  bandeja de DTE del libro) y solo entra al fondo o al anticipo al **asignarla** con `…con-retencion` y motivo; quien
+  autorizó es `asignado_por` (sin columna aparte: es el mismo acto) más una auditoría `autorizar`. El motivo no viaja en
+  la orden del libro. Bancarización: Caja chica y Cuentas por liquidar suman `monto + monto_retenido` (§5.4 h). Paso
+  nuevo **CC-1c / CL-1c** (§4.10, migraciones `0003`): `cuenta_id` con `deLaTransaccion.cuenta()` (con relleno desde
+  `core.empresas` para las bases con filas), llave `(proveedor_id, cuenta_id)` a `terceros.proveedores` e índices, y el
+  check del motivo solo con el documento asignado. Para el contador: V-12 (nota de crédito en la suma de bancarización) y
+  V-13 (check opcional que prohíba retención en una nota de crédito). Pendiente P-CCL-7 (cuenta coherente con la empresa
+  y beneficiario por cuenta).
