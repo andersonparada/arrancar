@@ -1,4 +1,5 @@
 import { aCentavos, deCentavos } from '../retenciones/dinero';
+import { clasesDeDocumentos, esNotaDeCredito, totalConSigno } from './criterio-de-registro';
 import type { ResultadoDeVistaPrevia } from '../../servicios/dte-recibidos.api';
 
 type FilaLista = Extract<ResultadoDeVistaPrevia, { documento: unknown }>;
@@ -13,31 +14,17 @@ export interface ResumenDeLoRegistrable {
   total: string;
 }
 
-const esNotaDeCredito = (tipoDte: string | undefined): boolean => tipoDte === 'NCRE';
-const esNotaDeDebito = (tipoDte: string | undefined): boolean => tipoDte === 'NDEB';
-
-/** El monto de una nota de crédito resta aunque el servidor lo mande en positivo o en negativo. */
-const montoConSigno = (monto: string, tipoDte: string | undefined): number => {
-  const centavos = aCentavos(monto) ?? 0;
-  return esNotaDeCredito(tipoDte) ? -Math.abs(centavos) : centavos;
-};
-
 /** Cuenta y suma el total del documento de cada fila lista; `tipos` dice el tipo de DTE de cada fila por su id. */
 export function resumenDeLoRegistrable(
   listas: readonly ResultadoDeVistaPrevia[],
   tipos: ReadonlyMap<string, string>,
   marcadas: number,
 ): ResumenDeLoRegistrable {
-  const filas = listas.filter((fila): fila is FilaLista => 'documento' in fila);
-  const tipoDe = (fila: FilaLista) => tipos.get(fila.id);
-  const total = filas.reduce((suma, fila) => suma + montoConSigno(fila.documento.totales.total, tipoDe(fila)), 0);
-  return {
-    marcadas,
-    registrables: filas.length,
-    notasDeCredito: filas.filter((fila) => esNotaDeCredito(tipoDe(fila))).length,
-    notasDeDebito: filas.filter((fila) => esNotaDeDebito(tipoDe(fila))).length,
-    total: deCentavos(total),
-  };
+  const filas = listas
+    .filter((fila): fila is FilaLista => 'documento' in fila)
+    .map((fila) => ({ total: fila.documento.totales.total, tipoDte: tipos.get(fila.id) }));
+  const { notasDeCredito, notasDeDebito } = clasesDeDocumentos(filas.map(({ tipoDte }) => tipoDte));
+  return { marcadas, registrables: filas.length, notasDeCredito, notasDeDebito, total: totalConSigno(filas) };
 }
 
 const plural = (cantidad: number, singular: string, pluralDe: string): string =>
