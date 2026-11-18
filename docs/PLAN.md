@@ -2264,3 +2264,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   de bancos la lee de ahí. Sin migración ni datos que corregir: `sha256_recibido` ya se guardaba en cada documento (las filas de
   desarrollo anteriores a H2b que no la tengan siguen mostrando la huella guardada). La auditoría conserva el `nombreOriginal` igual.
   Pruebas: el mismo PDF dos veces da la misma huella y coincide con `createHash('sha256')` del original.
+- **2026-11-18 (impresión siempre en claro).** `cliente/src/estilos.css`: regla `@media print` global (fuera de las capas de
+  Tailwind, para ganarle a `dark:`): `html`/`body` con fondo blanco y texto negro, y con el modo oscuro puesto (`html.oscuro`) todo
+  elemento pasa a fondo transparente, texto negro, bordes grises y sin sombras; el menú lateral no se imprime. Las hojas existentes
+  (reportes de bancos y de cuentas por pagar, contraseña, conciliación) ya imprimían en claro con `print:*`; la regla solo cubre lo
+  que `dark:` les cambiaba.
