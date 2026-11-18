@@ -11,6 +11,7 @@ import {
   DocumentoYaAutorizado,
   EsUnSaldoInicial,
   MotivoInvalido,
+  VencimientoDeCargoSaldado,
   VencimientoInvalido,
   VencimientoNoEditable,
 } from './errores.js';
@@ -78,6 +79,11 @@ export function exigirVencimientoNuevoValido(
   const editable = claseDe(documento.tipo) === 'cargo' && ['registrado', 'autorizado'].includes(documento.estado);
   if (!editable) throw new VencimientoNoEditable(etiqueta);
   exigirVencimientoDeCargo(documento, vencimiento);
+}
+
+/** @throws VencimientoDeCargoSaldado si el cargo ya no debe nada (pagado, compensado o ajustado del todo). */
+export function exigirCargoConSaldo(saldoCentavos: number, etiqueta: string): void {
+  if (saldoCentavos <= 0) throw new VencimientoDeCargoSaldado(etiqueta);
 }
 
 const MAXIMO_DEL_MOTIVO = 300;

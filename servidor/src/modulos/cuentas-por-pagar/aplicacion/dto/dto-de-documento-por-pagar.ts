@@ -111,6 +111,7 @@ const hechosDe = (fila: FilaDeDocumento, saldoCentavos: number): HechosDelDocume
   notasVigentes: fila.notasVigentes,
   notasEnTotal: fila.notasEnTotal,
   saldoLibreCentavos: saldoCentavos,
+  saldoDelCargoCentavos: saldoCentavos,
   ajustesVigentes: fila.ajustesVigentes,
   aplicacionesManualesRecibidas: fila.aplicacionesManualesRecibidas,
   enContrasena: fila.contrasena !== null,

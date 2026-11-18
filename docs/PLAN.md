@@ -2505,3 +2505,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   hash aplicado que ya no existe, o migración pendiente con fecha anterior a la última aplicada, que drizzle saltaría); si no concuerda, borra y vuelve a
   crear las bases del prefijo. `RUTA_ALMACENAMIENTO` es por base (`almacenamiento-pruebas/<base>`). Borrar bases puede tardar mucho con la máquina
   cargada (correr `bd:limpiar-pruebas` en segundo plano) y no deben correr dos suites con el mismo prefijo.
+- **2026-11-18 (PC-1, plazo de crédito: cambiar el vencimiento).** `CambiarVencimiento` rechaza un cargo sin saldo (pagado,
+  compensado o ajustado del todo) con `VencimientoDeCargoSaldado` (`vencimiento_de_cargo_saldado`, regla de negocio) y audita
+  la acción nueva `cambiar_vencimiento` (recurso `cuentas-por-pagar.documentos`) en la misma transacción: `anterior` es la
+  ficha como estaba más `vencimientoNuevo`. `puedeCambiarVencimiento` exige saldo del cargo mayor que cero
+  (`saldoDelCargoCentavos`). El ajuste de la auditoría no pide migración (la columna `accion` no tiene restricción).
+- **2026-11-18 (PC-2, plazo de crédito: plazo por omisión en la lectura).** `GET /api/cuentas-por-pagar/proveedores/:id/condiciones`
+  suma `mesesPorOmision` (de la empresa activa, por `PlazoPorOmision`) para que el cliente escriba el plazo real (PC-3). Prueba
+  de regresión de API: cambiar los días del proveedor no cambia el vencimiento de sus documentos ya recibidos ni la fecha de
+  sus retenciones en Libro de compras. Pendiente: PC-3 (cliente), PC-4 y PC-5 (Excel), PC-6 (QA y documentos).
+- **2026-11-18 (PC-3, plazo de crédito: cliente).** El texto del plazo y el campo de días usan `mesesPorOmision` («Un mes», «2 meses»,
+  «De contado» con 0; en un proveedor nuevo, aún sin leer, el campo dice «Vacío = el plazo por omisión»). La sección de
+  condiciones de Proveedores dice «Vale para los documentos que se reciban desde ahora; los ya recibidos conservan su
+  vencimiento». En la ficha del documento, un cargo registrado o autorizado sin saldo muestra «Cambiar vencimiento»
+  deshabilitado con su motivo visible; en lo demás el botón sigue oculto si el servidor no lo permite. Lógica pura con pruebas.
+  Pendiente: PC-4 y PC-5 (Excel), PC-6 (QA y documentos).
