@@ -67,7 +67,13 @@ decisiones de H2 (Caddy 20 MB, huella del recibido, impresión en claro) y bande
 - Integración: falla la preparación de dos pruebas de CP5-5 contra la regla de BS-2 (fecha de inicio); un agente lo corrige en
   la rama `integracion`. Después entran las decisiones de H2 y la bandeja de DTE.
 - **En integración ahora** (suite corriendo): qpdf en las pruebas del PDF y Excel de Terceros.
-- **Listos para integrar** (revisados): plazo de crédito PC-1 a PC-3 (`worktree-wf_caddab94-389-1`), correo pasos 1 y 3 (`worktree-wf_af6cd921-5c2-1`) y MM-3a, cliente del Banguat
+- **Pendiente de diseño (seguridad, defensa en profundidad):** `core.empresas` no tiene RLS ni check/disparador que impida
+  insertar una empresa con otra `cuenta_id` o mover `cuenta_id`/`creado_en` con un UPDATE (hoy lo cumple el código, con
+  pruebas). Paso aparte para `arquitecto-de-datos`: RLS con política por cuenta (lectura por función `security definer`) o
+  disparador; revisar también si `arrancar_app` necesita DELETE.
+- **Listos para integrar** (revisados): Excel de Empresas y selector con buscador (`worktree-wf_f6224bdf-ffe-2`, revisión
+  final de seguridad «unir»), Caja chica y Cuentas por liquidar datos CC-1/CL-1 con CC-1c (`worktree-wf_af6cd921-5c2-2`),
+  CP4-9 corregido (`worktree-wf_0b4d5815-3ec-3`), pruebas en paralelo (`worktree-agent-a4cd39b30a6deca11`), plazo de crédito PC-1 a PC-3 (`worktree-wf_caddab94-389-1`), correo pasos 1 y 3 (`worktree-wf_af6cd921-5c2-1`) y MM-3a, cliente del Banguat
   (`worktree-wf_af6cd921-5c2-3`). En revisión: CC-1/CL-1 (`worktree-wf_af6cd921-5c2-2`, arquitecto), CP4-9 tercera
   corrección, empresa nueva (seguridad). En curso: actualización de dependencias con avisos (zod < 4.6.6, vite).
 - **Cola para la próxima integración** (cada rama con su revisión de Opus): corrección de CP4-9
