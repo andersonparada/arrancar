@@ -941,7 +941,7 @@ dos decimales.
 | Paso | Qué | Quién | Estado |
 |---|---|---|---|
 | **AF-0** | Libro de compras: E1 (checks, dominio, Zod, cliente), `categoriaSql`, único de líneas; pruebas del libro, del SAT-2237 y del análisis | backend (+ ajuste chico de frontend) | **Programado, en integración** |
-| **AF-1** | Esqueleto del módulo, `0001_af1_clases`, auditoría permanente (seis recursos, cita CT arts. 112 «A» y 47), configuración, semilla perezosa (con la ayuda de «Programas y licencias», V-2), `clases_por_concepto`, Excel de clases; pruebas de tablas y de API | backend | Siguiente |
+| **AF-1** | Esqueleto del módulo, `0001_af1_clases`, auditoría permanente (seis recursos, cita CT arts. 112 «A» y 47), configuración, semilla perezosa (con la ayuda de «Programas y licencias», V-2), `clases_por_concepto`, Excel de clases; pruebas de tablas y de API | backend | **Programado, en integración** |
 | AF-1c | Clases de activos (catálogo con Excel) | frontend | |
 | **AF-2** | `activos` (con ocioso y motivo, matrícula y catastro) y `traslados` (fila del alta), alta manual sin costos, editar, marcar ocioso, eliminar; RLS solo por empresa; prueba de aislamiento entre dos empresas de la misma cuenta y «Localidad sin acceso» (R-5) | backend | |
 | AF-2c | Lista (etiquetas «En construcción o en tránsito», «Ocioso», «Depreciado contable» y «Depreciado fiscal»), ficha (datos) y alta manual | frontend | |
