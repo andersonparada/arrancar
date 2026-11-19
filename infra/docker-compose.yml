@@ -35,6 +35,10 @@ services:
       SUPERACCESO_CONTRASENA: ${SUPERACCESO_CONTRASENA:-}
       RUTA_CONFIG_INSTALACION: ${RUTA_CONFIG_INSTALACION:-}
       DEPURAR_HUERFANOS: ${DEPURAR_HUERFANOS:-true}
+      # Correo: sin CLAVE_SECRETOS no se puede leer la contraseña del servidor SMTP y el envío queda apagado.
+      # CORREO_DESARROLLO_SERVIDOR y CORREO_PERMITIR_RED_INTERNA no se pasan: son solo de desarrollo y la app los rechaza.
+      CLAVE_SECRETOS: ${CLAVE_SECRETOS:-}
+      CLAVE_SECRETOS_ANTERIOR: ${CLAVE_SECRETOS_ANTERIOR:-}
     volumes:
       - archivos:/datos/archivos
       - ./config:/config:ro

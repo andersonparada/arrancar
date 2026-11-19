@@ -7,6 +7,7 @@ import type { UnidadDeTrabajo } from '../compartido/aplicacion/unidad-de-trabajo
 import { almacenamiento } from '../compartido/infraestructura/almacenamiento-local.js';
 import { TareasDeLaTransaccionPostgres } from '../compartido/infraestructura/tareas-de-la-transaccion-postgres.js';
 import type { BandejaDeSalida } from './aplicacion/bandeja-de-salida.js';
+import { DiagnosticarLlaveDeCorreo } from './aplicacion/casos-uso/diagnosticar-llave-de-correo.js';
 import { DepurarCorreos } from './aplicacion/casos-uso/depurar-correos.js';
 import { BandejaDeSalidaDeCore } from './aplicacion/bandeja-de-salida-de-core.js';
 import { CancelarCorreo } from './aplicacion/casos-uso/cancelar-correo.js';
@@ -85,3 +86,6 @@ export function crearProcesadorDeBandeja(registro: RegistroDeErrores): ProcesarB
   despertador.alDespertar(() => procesador.despertar());
   return procesador;
 }
+
+/** Lo que `principal.ts` consulta al arrancar sin `CLAVE_SECRETOS`, para avisar si ya hay un servidor guardado. */
+export const diagnosticarLlaveDeCorreo = new DiagnosticarLlaveDeCorreo(new ServidorDeCorreoDrizzle(bd));
