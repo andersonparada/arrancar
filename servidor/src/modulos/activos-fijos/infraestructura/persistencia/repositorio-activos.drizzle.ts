@@ -1,9 +1,11 @@
-import { and, eq, ne, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, ne, sql } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { RepositorioActivos } from '../../aplicacion/puertos/repositorio-activos.js';
 import type { Activo, ActivoId } from '../../dominio/activo.js';
 import { mapeadorDeActivo } from './activo.mapeador.js';
 import { activos } from './activos.tablas.js';
+import { costos } from './costos.tablas.js';
+import { enTandas } from './en-tandas.js';
 import { traslados } from './traslados.tablas.js';
 
 /** Las tablas tienen seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
@@ -14,20 +16,35 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
   }
 
   async agregar(activo: Activo): Promise<void> {
+    await this.agregarVarios([activo]);
+  }
+
+  async agregarVarios(nuevos: readonly Activo[]): Promise<void> {
     const transaccion = transaccionEnCurso();
-    await transaccion.insert(activos).values(mapeadorDeActivo.aFila(activo));
-    const { id, empresaId, fechaDeAdquisicion, localidadId, departamentoId, responsable, enBodega } =
-      activo.instantanea();
-    await transaccion.insert(traslados).values({
-      empresaId: empresaId.valor,
-      activoId: id.valor,
-      esAlta: true,
-      fecha: fechaDeAdquisicion,
-      localidadId,
-      departamentoId,
-      responsable,
-      aBodega: enBodega,
-    });
+    for (const tanda of enTandas(nuevos)) {
+      await transaccion.insert(activos).values(tanda.map((activo) => mapeadorDeActivo.aFila(activo)));
+      await transaccion.insert(traslados).values(tanda.map(filaDeAlta));
+    }
+  }
+
+  async buscarBloqueando(ids: readonly string[]): Promise<Activo[]> {
+    if (ids.length === 0) return [];
+    const filas = await transaccionEnCurso()
+      .select()
+      .from(activos)
+      .where(inArray(activos.id, [...ids]))
+      .orderBy(asc(activos.id))
+      .for('update');
+    return filas.map((fila) => mapeadorDeActivo.aEntidad(fila));
+  }
+
+  async vigentesDeAltaConjunta(altaConjuntaId: string): Promise<Activo[]> {
+    const filas = await transaccionEnCurso()
+      .select({ id: activos.id })
+      .from(activos)
+      .where(and(eq(activos.altaConjuntaId, altaConjuntaId), ne(activos.estado, 'dado_de_baja')));
+    const bloqueados = await this.buscarBloqueando(filas.map((fila) => fila.id));
+    return bloqueados.sort((a, b) => a.instantanea().codigo.localeCompare(b.instantanea().codigo));
   }
 
   async guardar(activo: Activo): Promise<void> {
@@ -39,6 +56,7 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
 
   async eliminar(activo: Activo): Promise<void> {
     const transaccion = transaccionEnCurso();
+    await transaccion.delete(costos).where(eq(costos.activoId, activo.id.valor));
     await transaccion.delete(traslados).where(eq(traslados.activoId, activo.id.valor));
     await transaccion.delete(activos).where(eq(activos.id, activo.id.valor));
   }
@@ -52,6 +70,21 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
     return fila !== undefined;
   }
 
+  async codigosUsados(codigos: readonly string[]): Promise<Set<string>> {
+    if (codigos.length === 0) return new Set();
+    const mayusculas = sql<string>`upper(${activos.codigo})`;
+    const filas = await transaccionEnCurso()
+      .select({ codigo: mayusculas })
+      .from(activos)
+      .where(
+        inArray(
+          mayusculas,
+          codigos.map((codigo) => codigo.toUpperCase()),
+        ),
+      );
+    return new Set(filas.map((fila) => fila.codigo));
+  }
+
   async tieneComponentes(id: ActivoId): Promise<boolean> {
     const [fila] = await transaccionEnCurso()
       .select({ id: activos.id })
@@ -62,11 +95,33 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
   }
 
   async tieneMovimientos(id: ActivoId): Promise<boolean> {
-    const [fila] = await transaccionEnCurso()
+    const transaccion = transaccionEnCurso();
+    const [traslado] = await transaccion
       .select({ id: traslados.id })
       .from(traslados)
       .where(and(eq(traslados.activoId, id.valor), ne(traslados.esAlta, true)))
       .limit(1);
-    return fila !== undefined;
+    const [costo] = await transaccion
+      .select({ id: costos.id })
+      .from(costos)
+      .where(and(eq(costos.activoId, id.valor), eq(costos.estado, 'vigente'), isNotNull(costos.lineaDeDocumentoId)))
+      .limit(1);
+    return traslado !== undefined || costo !== undefined;
   }
+}
+
+/** La fila de alta del historial de traslados: la ubicación con la que nace el activo. */
+function filaDeAlta(activo: Activo): typeof traslados.$inferInsert {
+  const { id, empresaId, fechaDeAdquisicion, localidadId, departamentoId, responsable, enBodega } =
+    activo.instantanea();
+  return {
+    empresaId: empresaId.valor,
+    activoId: id.valor,
+    esAlta: true,
+    fecha: fechaDeAdquisicion,
+    localidadId,
+    departamentoId,
+    responsable,
+    aBodega: enBodega,
+  };
 }

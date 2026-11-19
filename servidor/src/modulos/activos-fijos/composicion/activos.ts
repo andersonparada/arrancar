@@ -11,6 +11,7 @@ import { MarcarOcioso } from '../aplicacion/casos-uso/activos/marcar-ocioso.js';
 import { ActivosControlador } from '../http/activos.controlador.js';
 import { rutasActivos } from '../http/activos.rutas.js';
 import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
+import { ConsultasCostosDrizzle } from '../infraestructura/persistencia/consultas-costos.drizzle.js';
 import { ConsultasActivosDrizzle } from '../infraestructura/persistencia/consultas-activos.drizzle.js';
 import { RepositorioActivosDrizzle } from '../infraestructura/persistencia/repositorio-activos.drizzle.js';
 import { RepositorioClasesDrizzle } from '../infraestructura/persistencia/repositorio-clases.drizzle.js';
@@ -26,6 +27,7 @@ function dependenciasDeActivos() {
     reloj: compartidas.reloj,
     repositorio: new RepositorioActivosDrizzle(),
     consultas: new ConsultasActivosDrizzle(),
+    consultasDeCostos: new ConsultasCostosDrizzle(),
     clases: new RepositorioClasesDrizzle(),
     ubicaciones: new UbicacionesEnEmpresas(),
     cargaInicial: new CargaInicialEnMediador(),

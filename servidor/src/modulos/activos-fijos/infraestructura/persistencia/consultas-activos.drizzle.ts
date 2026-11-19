@@ -1,10 +1,11 @@
-import { and, asc, desc, eq, getTableColumns, ilike, or, type AnyColumn, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, ilike, or, sql, type AnyColumn, type SQL } from 'drizzle-orm';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { ActivoDto, ActivoFichaDto, FiltrosDeActivos, TrasladoDto } from '../../aplicacion/dto/activo.dto.js';
 import type { ConsultasActivos } from '../../aplicacion/puertos/consultas-activos.js';
 import { activos } from './activos.tablas.js';
 import { clases } from './clases.tablas.js';
+import { costos } from './costos.tablas.js';
 import { nombresDeUbicaciones } from './nombres-de-ubicaciones.js';
 import { traslados } from './traslados.tablas.js';
 import { UbicacionesEnEmpresas } from './ubicaciones-en-empresas.drizzle.js';
@@ -44,7 +45,16 @@ function buscarEnTextos(buscado: string): SQL | undefined {
   );
 }
 
-const columnas = { ...getTableColumns(activos), claseNombre: clases.nombre, incisoFiscal: clases.incisoFiscal };
+/** Σ de los costos vigentes del activo (no se guarda en el activo: sale de `costos`). */
+const costoVigente = sql<string>`(select round(coalesce(sum(${costos.monto}), 0), 2)::text from ${costos}
+  where ${costos.activoId} = ${activos.id} and ${costos.estado} = 'vigente')`;
+
+const columnas = {
+  ...getTableColumns(activos),
+  claseNombre: clases.nombre,
+  incisoFiscal: clases.incisoFiscal,
+  costo: costoVigente,
+};
 type FilaDeActivo = Awaited<ReturnType<ConsultasActivosDrizzle['filas']>>[number];
 
 /** Lecturas de los activos; los nombres de la ubicación salen de las funciones de Empresas (AF-P22 b). */

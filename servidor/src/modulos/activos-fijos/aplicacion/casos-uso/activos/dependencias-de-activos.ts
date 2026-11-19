@@ -7,6 +7,7 @@ import { Identificador } from '../../../../core/compartido/dominio/identificador
 import type { Activo } from '../../../dominio/activo.js';
 import type { CargaInicial } from '../../puertos/carga-inicial.js';
 import type { ConsultasActivos } from '../../puertos/consultas-activos.js';
+import type { ConsultasCostos } from '../../puertos/consultas-costos.js';
 import type { LectorDePrefijo } from '../../puertos/lector-de-prefijo.js';
 import type { LectorDeUbicaciones } from '../../puertos/lector-de-ubicaciones.js';
 import type { RepositorioActivos } from '../../puertos/repositorio-activos.js';
@@ -17,6 +18,8 @@ export interface DependenciasDeActivos {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioActivos;
   consultas: ConsultasActivos;
+  /** Los costos del activo que se elimina quedan en su auditoría. */
+  consultasDeCostos: ConsultasCostos;
   clases: RepositorioClases;
   auditoria: Auditoria;
   ubicaciones: LectorDeUbicaciones;
