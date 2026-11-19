@@ -92,7 +92,7 @@ export function opcionesDelBanguat(lista: OpcionDelBanguat[], moneda: Moneda): O
 export function ayudaDelCodigo(form: FormularioDeMoneda): string {
   if (form.moneda?.tieneSerieDelBanguat)
     return 'Ya tiene tipos cargados con este código: solo puede dejarlo igual o quitarlo.';
-  return 'Antes de guardar, «Ver muestra» trae lo publicado en los últimos 7 días y lo que da en quetzales: un euro ronda Q 8 a 9 por unidad.';
+  return 'Antes de guardar, «Ver muestra» trae lo publicado en los últimos 7 días y lo que da ya convertido a quetzales con el dólar de cada día (un euro ronda Q 8 a 9; si sale Q 1, el cruce no se convirtió).';
 }
 
 /** Qué pasará con la carga automática al guardar: lo que ve soporte antes de decidir. */

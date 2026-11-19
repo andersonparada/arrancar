@@ -3952,6 +3952,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   fechas futuras (distorsiona «Último tipo») y compra mayor que venta; el mismo error de validación no vuelve a verse
   (`usarErrorDescartable`); «Actualizar lista» y «Cargar ahora» tardan hasta 48 s dentro de la solicitud con el Banguat
   lento; gramática («1 nuevos», «Noviembre De»). Pruebas `it.fails` agregadas; no se corrigió código de la aplicación.
+- **2026-11-19 (corrección de la QA de Multimoneda, sobre la Adenda B ya programada):** E-1 estaba casi resuelto por MM-3c y
+  MM-4b (la muestra convierte el cruce con el dólar de cada día y el reporte y el Excel rotulan lo publicado y lo convertido);
+  quedaban los textos: la ayuda de la ventana de moneda (ya no promete «Q 8 a 9» sin decir que es lo convertido), la ayuda del
+  ingreso manual (quetzales ya convertidos, no el cruce), el nombre accesible del día del calendario («Q 8.81 por unidad») y el
+  euro en 24 en el diseño (decía 28 en tres lugares). E-2: `POST /api/tipos-de-cambio` rechaza una fecha posterior a hoy
+  (`fecha_de_tipo_futura`, 400; la `it.fails` pasó a `it`). E-5: «Cargar ahora» y «Actualizar lista» responden **202** con
+  `{ enCurso, iniciadaEn }` en cuanto toman el candado de la carga (409 si otra corre) y siguen en segundo plano
+  (`iniciarSiLibre`); `GET /api/tipos-de-cambio/consultas` agrega `enCurso` (lee `pg_locks`, vale con varias instancias) y la
+  pantalla pregunta cada 2 segundos hasta que termine, muestra el avance en la ventana y toma el resultado de la bitácora. E-6:
+  singular de «nuevo», «rechazado», «día con tipo» y «día hábil sin tipo»; «Noviembre de 2026» sin mayúscula de más. Sin
+  migraciones. Siguen abiertos: E-3 (aviso contra el último tipo anterior), E-4 (`usarErrorDescartable`, del núcleo), E-7, E-8
+  (compra mayor que venta; sigue la `it.fails`), E-9 (¿exportar sin ver?, decisión del usuario) y E-10 (códigos excluidos, C-1).
 - **2026-11-19 (Libro de ventas y Cuentas por cobrar, respuestas y validación del contador):** el usuario aceptó todas las
   recomendaciones VC-P1 a VC-P24 de `docs/modulos/diseno-cuentas-por-cobrar-y-ventas.md` §17; faltan sus datos de VC-P3
   (archivo real de «DTE emitidos»), VC-P4 (certificador FEL), VC-P22 (liquidación y constancia del tabaco) y VC-P24, que el
