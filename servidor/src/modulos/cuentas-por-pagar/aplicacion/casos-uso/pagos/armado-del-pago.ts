@@ -35,6 +35,9 @@ export interface PagoParaElDto {
 /** Todo lo que el pago ya tiene resuelto al terminar de guardarse. */
 export interface PagoGuardado extends PagoParaElDto {
   empresaId: string;
+  cuentaId: string;
+  /** Quien registró el pago. */
+  usuarioId: string;
   /** Se pagó en efectivo sobre el umbral con la excepción de bancarización (Contabilidad lo marca sin deducción ni crédito). */
   sinBancarizar: boolean;
 }
@@ -123,6 +126,8 @@ export function eventoDelPago(pago: PagoGuardado): PagoRegistrado {
   const { fila } = pago.lineas[0]!;
   return new PagoRegistrado({
     empresaId: pago.empresaId,
+    cuentaId: pago.cuentaId,
+    usuarioId: pago.usuarioId,
     pagoId: pago.pagoId,
     numero: pago.numero.numero,
     contrasenaIds: [...new Set(pago.lineas.map(({ contrasena }) => contrasena.id))],

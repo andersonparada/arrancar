@@ -91,6 +91,9 @@ declare module '../eventos/bus-eventos.js' {
      */
     'cuentas-por-pagar.pago_registrado': {
       empresaId: string;
+      /** La cuenta dueña de la empresa y quien registró el pago: con ellos un suscriptor arma su unidad de trabajo. */
+      cuentaId: string;
+      usuarioId: string;
       pagoId: string;
       numero: number;
       contrasenaIds: string[];
@@ -134,6 +137,9 @@ declare module '../eventos/bus-eventos.js' {
      */
     'cuentas-por-pagar.pago_anulado': {
       empresaId: string;
+      /** La cuenta dueña de la empresa y quien anuló el pago. */
+      cuentaId: string;
+      usuarioId: string;
       pagoId: string;
       fecha: string;
       fechaOriginal: string;

@@ -2680,6 +2680,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (100), `tope_por_dia_por_cuenta` (500), `tope_por_dia_por_destinatario` (20), `tope_por_hora_de_la_instalacion`
   (1,000) y `dias_de_conservacion_del_contenido` (30). Pruebas con el doble de transporte y fallos simulados, y de
   integración contra la base (encolar, deshacer, concurrencia de cupos, reintentos, arriendo vencido, depuración).
+- **2026-11-18 (aviso de pago por correo, paso 6: eventos).** `BusEventos.suscribirSinRomper(evento, suscriptor,
+  descripcion)` atrapa el fallo del suscriptor, lo registra (evento, quién y el error, nunca los datos) y deja seguir a
+  los demás: así un fallo después de confirmar un pago no responde 500 ni se pierde la notificación al resto. Todo
+  suscriptor con efectos de negocio (correo, Contabilidad) debe usarlo; `suscribir` queda para las pruebas.
+  `aplicacion.ts` apunta el registro del bus a pino (`BusEventos.usarRegistro`). `cuentas-por-pagar.pago_registrado` y
+  `pago_anulado` suman `cuentaId` y `usuarioId` (cambio aditivo del contrato, en `eventos-de-pagos.ts` y
+  `cuentas-por-pagar.contratos.ts`); Cuentas por pagar los llena desde el operador del caso de uso (registrar, todas las
+  formas, y anular). Sin migración.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la

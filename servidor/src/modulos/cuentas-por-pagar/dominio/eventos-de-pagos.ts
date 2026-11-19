@@ -17,6 +17,9 @@ export type EfectoDePago = 'banco' | 'transitoria_por_aplicar' | 'apertura' | 'c
 
 export interface DatosDePagoRegistrado {
   empresaId: string;
+  /** La cuenta dueña de la empresa y quien registró el pago (para que un suscriptor arme su unidad de trabajo). */
+  cuentaId: string;
+  usuarioId: string;
   pagoId: string;
   numero: number;
   contrasenaIds: string[];
@@ -66,6 +69,9 @@ export class PagoReaplicado extends EventoDominio<DatosDePagoReaplicado> {
 
 export interface DatosDePagoAnulado {
   empresaId: string;
+  /** La cuenta dueña de la empresa y quien anuló el pago. */
+  cuentaId: string;
+  usuarioId: string;
   pagoId: string;
   /** La fecha contable de la anulación (CP5-a). */
   fecha: string;
