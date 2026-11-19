@@ -138,6 +138,26 @@ export function transaccionEnCurso(): Transaccion {
 }
 ```
 
+### 4.1.1 Defensa en profundidad de las tablas de `core`
+
+Diseño y razones: `docs/modulos/diseno-rls-de-core.md`. Cubre errores de programación, no una inyección de SQL.
+
+- **Privilegios.** `arrancar_app` recibe `select, insert, update, delete` de cada esquema, y el migrador quita en la
+  misma consulta lo que sobra según `RESTRICCIONES_DE_PRIVILEGIOS` (`core/base-datos/privilegios-restringidos.ts`):
+  `delete` de empresas, cuentas y usuarios; `update` por columna donde se edita; bitácora de superacceso y auditoría solo
+  crecen; geografía sin escritura. Disparadores: `core.proteger_columnas()` (id, cuenta y creación de empresas y roles no
+  cambian, ni para el dueño) y `core.proteger_superacceso()`.
+- **RLS de escritura por cuenta** en `empresas`, `empresa_usuarios`, `roles`, `rol_permisos`, `usuario_roles` y
+  `usuario_permisos`: insertar, cambiar y borrar exigen la cuenta de la transacción (`app.cuenta_id`).
+- **RLS de lectura por cuenta** solo en `core.empresas` (política `leer_en_la_cuenta`). Antes de saber la empresa activa
+  (inicio de sesión, cambio de empresa, superacceso, panel de soporte, bitácora, conteo de empresas por cuenta y
+  `usuarioDeLaCuenta`) no hay variables `app.*`, así que esas lecturas usan seis funciones `security definer`
+  (`language sql stable`, `search_path = pg_catalog, core`, `execute` solo para `arrancar_app`) que devuelven únicamente
+  las columnas que el llamador usa. `pertenencia_del_usuario` dice si el usuario trabaja en la cuenta y en cuántas otras,
+  sin revelar cuáles. `ListarUsuarios` corre dentro de la unidad de trabajo.
+- Siguen sin RLS (solo privilegios): `cuentas`, `cuenta_modulos`, `usuarios`, `sesiones`, `configuraciones`, bitácora de
+  superacceso y catálogos.
+
 ### 4.2 Entidad con invariantes
 
 ```ts
@@ -479,7 +499,7 @@ entrega como un commit propio.
   nuevas de dominio y casos de uso corren sin base de datos. Decisiones:
   - Las tablas siguen en `core.empresas` y `core.empresa_usuarios` (el core las
     necesita para la sesión y el alta de cuentas; moverlas cambiaría la base). Como
-    `core.empresas` no tiene RLS, el repositorio filtra siempre por cuenta.
+    `core.empresas` no tenía RLS, el repositorio filtra siempre por cuenta (desde R-3 y R-4, 2026-11, sí tiene: ver §4.1.1).
   - La regla "no desactivar la empresa en uso" vive en la entidad
     (`cambiarDatos(datos, empresaEnUso)`); su código de error pasa de
     `regla_negocio` a `empresa_en_uso` (mismo estado 422 y mismo mensaje; el
