@@ -30,6 +30,7 @@ const base: Movimiento = {
   revertidoEn: null,
   motivoDeReversion: null,
   revierteAId: null,
+  parteDeApertura: null,
   puedeAnular: true,
   puedeEliminar: true,
   conceptoId: 'concepto-1',

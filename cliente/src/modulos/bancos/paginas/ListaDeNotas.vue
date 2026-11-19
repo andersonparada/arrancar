@@ -20,7 +20,7 @@ const { registros, cargando, filtros, cargar } = usarListaDeNotas();
 const { campos: referencias, filtroDeCuenta: opcionesDeCuenta } = usarReferenciasDeCuenta();
 const { edicion, enviando, errores, opcionesDeConceptos, pideIntereses, sugerencia, nueva, editar, guardar } =
   usarFormularioDeNota(cargar);
-const { anulacion, eliminacion } = usarBajasDeNota(cargar);
+const { anulacion, eliminacion, anular, textoDeAnulacion, ayudaDeFecha } = usarBajasDeNota(cargar);
 const { marcar, desmarcado } = usarMarcasDeNota(cargar);
 </script>
 
@@ -39,7 +39,7 @@ const { marcar, desmarcado } = usarMarcasDeNota(cargar);
         <TarjetaDeNota
           :registro="registro"
           @editar="editar(registro)"
-          @anular="anulacion.abrir(registro)"
+          @anular="anular(registro)"
           @eliminar="eliminacion.abrir(registro)"
           @marcar="marcar(registro)"
           @desmarcar="desmarcado.abrir(registro)"
@@ -74,7 +74,8 @@ const { marcar, desmarcado } = usarMarcasDeNota(cargar);
       con-fecha
       :abierta="!!anulacion.registro"
       titulo="Anular nota"
-      :texto="`Se creará el movimiento inverso de la nota${anulacion.registro?.referencia ? ` «${anulacion.registro.referencia}»` : ''}; nada se borra.`"
+      :texto="textoDeAnulacion()"
+      :ayuda-de-fecha="ayudaDeFecha()"
       :errores="anulacion.errores"
       :enviando="anulacion.enviando"
       @cerrar="anulacion.cerrar"

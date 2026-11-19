@@ -22,6 +22,7 @@ const base: ChequeListado = {
   motivoDeAnulacion: null,
   causaDeAnulacion: null,
   moduloDeOrigen: null,
+  parteDeApertura: null,
   puedeAnular: true,
   puedeBlanquear: true,
 };
@@ -64,5 +65,12 @@ describe('detalles del cheque listado', () => {
       valor: 'Cuentas por pagar',
     });
     expect(detallesDeChequeListado(base).map((d) => d.etiqueta)).not.toContain('Origen');
+  });
+
+  it('dice «Carga inicial» si es una partida de la carga inicial', () => {
+    expect(detallesDeChequeListado({ ...base, parteDeApertura: 'cheque_en_circulacion' })).toContainEqual({
+      etiqueta: 'Origen',
+      valor: 'Carga inicial',
+    });
   });
 });

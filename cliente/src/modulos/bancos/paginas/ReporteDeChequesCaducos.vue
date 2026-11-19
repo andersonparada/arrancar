@@ -87,6 +87,8 @@ const exportar = (): Promise<void> => intercambio.exportar(filtroDeLaConsulta(fi
       :abierta="anulacion.ventana.abierta.value"
       :cantidad="anulacion.total.value.cantidad"
       :monto="anulacion.total.value.monto"
+      :cantidad-de-apertura="anulacion.deApertura.value"
+      :corte="anulacion.corte.value"
       :errores="anulacion.ventana.errores.value"
       :problemas="anulacion.ventana.problemas.value"
       :enviando="anulacion.ventana.enviando.value"

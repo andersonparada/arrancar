@@ -17,6 +17,10 @@ export function totalDeLaSeleccion(cheques: ChequeCaduco[], seleccion: string[])
   return { cantidad: elegidos.length, monto: deCentavos(centavos) };
 }
 
+/** Cuántos de los seleccionados son de la carga inicial: su anulación siempre crea la nota inversa, después del corte. */
+export const cantidadDeApertura = (cheques: ChequeCaduco[], seleccion: string[]): number =>
+  cheques.filter((cheque) => cheque.origen === 'apertura' && seleccion.includes(cheque.chequeId)).length;
+
 /** Deja solo lo seleccionado que sigue en la lista: al filtrar o recargar, no se anula lo que ya no se ve. */
 export const seleccionVigente = (cheques: ChequeCaduco[], seleccion: string[]): string[] =>
   seleccion.filter((id) => cheques.some((cheque) => cheque.chequeId === id));

@@ -23,4 +23,8 @@ export function textoDeAntiguedad(dias: number): { dias: string; meses: string }
 export const numeroDeChequeConSerie = ({ serie, numero }: { serie: string | null; numero: number }): string =>
   serie ? `${serie}-${numero}` : String(numero);
 
-export const TEXTO_DEL_ORIGEN = { cuentas_por_pagar: 'Cuentas por pagar', suelto: 'Suelto' } as const;
+export const TEXTO_DEL_ORIGEN = {
+  cuentas_por_pagar: 'Cuentas por pagar',
+  apertura: 'Carga inicial',
+  suelto: 'Suelto',
+} as const;

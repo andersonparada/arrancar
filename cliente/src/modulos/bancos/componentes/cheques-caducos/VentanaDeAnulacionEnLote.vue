@@ -1,18 +1,24 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
+import { textoDeAnulacionEnLoteDeApertura } from '../../textos-de-apertura';
 
 /**
  * La ventana única de la anulación en lote: fecha común de las notas inversas, motivo (obligatorio), un resumen de
  * lo que se va a crear y una casilla que hay que marcar para confirmar. Si el servidor rechaza algún cheque, aquí
  * se listan sus problemas: no se anuló ninguno.
  */
-defineProps<{
+const props = defineProps<{
   abierta: boolean;
   cantidad: number;
   monto: string;
+  /** Cuántos de los cheques marcados son de la carga inicial. */
+  cantidadDeApertura: number;
+  /** La fecha de corte de la carga inicial, ya formateada; `null` si no se pudo traer. */
+  corte: string | null;
   errores: Record<string, string>;
   problemas: string[];
   enviando: boolean;
@@ -21,6 +27,8 @@ const emit = defineEmits<{ cerrar: []; confirmar: [] }>();
 const motivo = defineModel<string>('motivo', { required: true });
 const fecha = defineModel<string>('fecha', { required: true });
 const confirmado = defineModel<boolean>('confirmado', { required: true });
+
+const textoDeApertura = computed(() => textoDeAnulacionEnLoteDeApertura(props.cantidadDeApertura, props.corte));
 
 const AYUDA_DE_LA_FECHA =
   'Todas las notas inversas llevan esta fecha: no puede ser posterior a hoy, anterior a la de algún cheque ni caer en un mes conciliado.';
@@ -33,6 +41,12 @@ const AYUDA_DE_LA_FECHA =
         Se crearán {{ cantidad }} {{ cantidad === 1 ? 'nota de crédito' : 'notas de crédito' }} por
         {{ formatearMonto(monto) }} en la fecha {{ formatearFecha(fecha) }}. Los cheques quedan anulados y su número no
         se vuelve a usar. Anular no extingue la deuda con el beneficiario.
+      </p>
+      <p
+        v-if="cantidadDeApertura > 0"
+        class="rounded-lg bg-trigo-300/40 p-3 text-sm text-tierra-800 dark:bg-trigo-500/20 dark:text-trigo-300"
+      >
+        {{ textoDeApertura }}
       </p>
       <CampoTexto
         v-model="fecha"

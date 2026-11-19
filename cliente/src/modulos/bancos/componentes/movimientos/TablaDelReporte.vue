@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import { formatearNumeroDeComprobante } from '../../composables/comunes/numero-de-comprobante';
+import { INSIGNIA_DE_APERTURA } from '../../composables/comunes/de-apertura';
 import { marcaDeReversion } from '../../composables/movimientos/estado-de-reversion';
 import { RouterLink } from 'vue-router';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
@@ -84,6 +85,7 @@ const CLASE_DE_MARCA = {
             >
               {{ marcaDeReversion(fila) }}
             </p>
+            <p v-if="fila.parteDeApertura" class="text-xs text-tierra-500 no-underline">{{ INSIGNIA_DE_APERTURA }}</p>
           </td>
           <td class="px-4 py-2.5">
             <p>{{ formatearTexto(fila.conceptoNombre) }}</p>

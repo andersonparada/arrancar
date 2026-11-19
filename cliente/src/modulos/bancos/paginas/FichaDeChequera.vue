@@ -6,13 +6,13 @@ import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import VentanaDeMotivo from '../componentes/VentanaDeMotivo.vue';
 import TarjetaDeCheque from '../componentes/cheques/TarjetaDeCheque.vue';
 import { usarBajasDeCheque } from '../composables/cheques/usar-bajas-de-cheque';
-import { TEXTO_DE_ANULACION, TEXTO_DE_BLANQUEO } from '../composables/cheques/textos-de-baja-de-cheque';
+import { TEXTO_DE_BLANQUEO } from '../composables/cheques/textos-de-baja-de-cheque';
 import { usarListaDeCheques } from '../composables/cheques/usar-lista-de-cheques';
 import type { Cheque } from '../servicios/cheques.api';
 
 const props = defineProps<{ chequeraId: string }>();
 const { cheques, cargando, cargar, estado } = usarListaDeCheques(props.chequeraId);
-const { anulacion, blanqueo } = usarBajasDeCheque<Cheque>(cargar);
+const { anulacion, blanqueo, anular, textoDeAnulacion, ayudaDeFecha } = usarBajasDeCheque<Cheque>(cargar);
 
 const OPCIONES_DE_ESTADO = [
   { valor: '' as const, texto: 'Todos' },
@@ -36,11 +36,7 @@ const volver = { texto: 'Volver a cuentas bancarias', ruta: { name: 'bancos.cuen
     <EstadoVacio v-else-if="!cheques.length" :icono="Inbox" titulo="No hay cheques con ese filtro" />
     <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in cheques" :key="registro.id">
-        <TarjetaDeCheque
-          :registro="registro"
-          @anular="anulacion.abrir(registro)"
-          @blanquear="blanqueo.abrir(registro)"
-        />
+        <TarjetaDeCheque :registro="registro" @anular="anular(registro)" @blanquear="blanqueo.abrir(registro)" />
       </li>
     </ul>
 
@@ -50,7 +46,8 @@ const volver = { texto: 'Volver a cuentas bancarias', ruta: { name: 'bancos.cuen
       con-fecha
       :abierta="!!anulacion.registro"
       titulo="Anular cheque"
-      :texto="TEXTO_DE_ANULACION(anulacion.registro?.numero, anulacion.registro?.moduloDeOrigen)"
+      :texto="textoDeAnulacion()"
+      :ayuda-de-fecha="ayudaDeFecha()"
       :errores="anulacion.errores"
       :enviando="anulacion.enviando"
       @cerrar="anulacion.cerrar"

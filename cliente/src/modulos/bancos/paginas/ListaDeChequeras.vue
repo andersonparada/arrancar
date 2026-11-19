@@ -7,7 +7,7 @@ import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/Accion
 import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
-import TarjetaDeChequera from '../componentes/chequeras/TarjetaDeChequera.vue';
+import ListaDeTarjetasDeChequeras from '../componentes/chequeras/ListaDeTarjetasDeChequeras.vue';
 import VentanaDeChequera from '../componentes/chequeras/VentanaDeChequera.vue';
 import { usarListaDeChequeras } from '../composables/chequeras/usar-lista-de-chequeras';
 import { VENTANAS_BANCOS } from '../textos';
@@ -52,11 +52,7 @@ const {
 
     <p v-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
     <EstadoVacio v-else-if="!chequeras.length" :icono="Inbox" titulo="Todavía no hay chequeras" />
-    <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
-      <li v-for="registro in chequeras" :key="registro.id">
-        <TarjetaDeChequera :registro="registro" @cambiar-estado="cambiarEstado(registro)" />
-      </li>
-    </ul>
+    <ListaDeTarjetasDeChequeras v-else :chequeras="chequeras" @cambiar-estado="cambiarEstado" />
 
     <VentanaDeChequera
       v-model="edicion"

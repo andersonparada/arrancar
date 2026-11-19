@@ -2,6 +2,7 @@
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
+import { insigniaDeChequeListado } from '../../composables/cheques/insignia-de-cheque';
 import { detallesDeChequeListado, tituloDeChequeListado } from '../../composables/cheques/detalles-de-cheque-listado';
 import type { ChequeListado } from '../../servicios/cheques.api';
 
@@ -9,10 +10,8 @@ import type { ChequeListado } from '../../servicios/cheques.api';
  * Un cheque de la lista de la empresa: monto con color (siempre sale dinero). «Anular» y «Blanquear»
  * aparecen solo si el servidor dice que se puede; los cheques no se eliminan.
  */
-const props = defineProps<{ registro: ChequeListado }>();
+defineProps<{ registro: ChequeListado }>();
 const emit = defineEmits<{ anular: []; blanquear: [] }>();
-
-const insignia = () => (props.registro.estado === 'anulado' ? 'Anulado' : undefined);
 </script>
 
 <template>
@@ -20,7 +19,7 @@ const insignia = () => (props.registro.estado === 'anulado' ? 'Anulado' : undefi
     :titulo="tituloDeChequeListado(registro)"
     :detalles="detallesDeChequeListado(registro)"
     permiso="bancos.cheques.anular"
-    :insignia="insignia()"
+    :insignia="insigniaDeChequeListado(registro)"
     sin-editar
   >
     <template #destacado>

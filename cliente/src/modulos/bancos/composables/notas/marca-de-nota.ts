@@ -1,4 +1,5 @@
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
+import { INSIGNIA_DE_APERTURA } from '../comunes/de-apertura';
 import { marcaDeReversion } from '../movimientos/estado-de-reversion';
 import { nombreDeModuloDeOrigen } from '../movimientos/origen-y-causa';
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
@@ -7,11 +8,15 @@ import type { EdicionDeNota } from './edicion-de-nota';
 
 export const ETIQUETA_DE_MARCA = 'Para Cuentas por pagar';
 
-type ConMarca = Pick<Movimiento, 'anuladoEn' | 'revertidoEn' | 'revierteAId' | 'marcadaParaCuentasPorPagar'>;
+type ConMarca = Pick<Movimiento, 'anuladoEn' | 'revertidoEn' | 'revierteAId' | 'marcadaParaCuentasPorPagar'> &
+  Partial<Pick<Movimiento, 'parteDeApertura'>>;
 
-/** La etiqueta de la tarjeta: lo revertido o anulado manda; si no, la marca para Cuentas por pagar. */
+/** La etiqueta de la tarjeta: lo revertido o anulado manda; luego la marca para Cuentas por pagar y la carga inicial. */
 export function insigniaDeNota(nota: ConMarca): string | undefined {
-  return marcaDeReversion(nota) ?? (nota.marcadaParaCuentasPorPagar ? ETIQUETA_DE_MARCA : undefined);
+  const reversion = marcaDeReversion(nota);
+  if (reversion) return reversion;
+  if (nota.marcadaParaCuentasPorPagar) return ETIQUETA_DE_MARCA;
+  return nota.parteDeApertura ? INSIGNIA_DE_APERTURA : undefined;
 }
 
 /** «Marcar» se ofrece si el servidor dice que se puede y Cuentas por pagar está activo (es quien usa la marca). */
@@ -21,9 +26,9 @@ export const ofreceMarcar = (nota: Pick<Movimiento, 'puedeMarcar'>, cuentasPorPa
 /** Lo generado por otro módulo no se corrige en Bancos (solo se anula con el aviso a ese módulo). */
 export const generoOtroModulo = (nota: Pick<Movimiento, 'moduloDeOrigen'>): boolean => nota.moduloDeOrigen !== null;
 
-/** La nota se corrige solo si no está revertida ni anulada y no la generó otro módulo. */
+/** La nota se corrige solo si no está revertida ni anulada y no la generó otro módulo ni la carga inicial (esa se corrige en Saldos iniciales). */
 export const sePuedeCorregir = (nota: Pick<Movimiento, 'moduloDeOrigen'> & ConMarca): boolean =>
-  marcaDeReversion(nota) === undefined && !generoOtroModulo(nota);
+  marcaDeReversion(nota) === undefined && !generoOtroModulo(nota) && !nota.parteDeApertura;
 
 /**
  * Con Cuentas por pagar apagado, lo que ese módulo generó o marcó no se cambia (no hay quien revise sus reglas): el

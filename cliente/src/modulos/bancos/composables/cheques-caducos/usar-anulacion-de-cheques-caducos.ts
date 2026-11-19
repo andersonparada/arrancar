@@ -3,8 +3,10 @@ import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiChequesCaducos, type ReporteDeChequesCaducos } from '../../servicios/cheques-caducos.api';
 import { fechaDeHoy } from '../comunes/baja-de-registro';
+import { usarCorteDeApertura } from '../comunes/usar-corte-de-apertura';
 import {
   avisoDeAnulacion,
+  cantidadDeApertura,
   conCheque,
   motivoSugerido,
   problemasDelError,
@@ -19,6 +21,7 @@ function usarSeleccion(reporte: Ref<ReporteDeChequesCaducos>) {
   const seleccion = ref<string[]>([]);
   watch(reporte, ({ cheques }) => (seleccion.value = seleccionVigente(cheques, seleccion.value)));
 
+  const deApertura = computed(() => cantidadDeApertura(reporte.value.cheques, seleccion.value));
   const total = computed(() => totalDeLaSeleccion(reporte.value.cheques, seleccion.value));
   const todosMarcados = computed(
     () => reporte.value.cheques.length > 0 && seleccion.value.length === reporte.value.cheques.length,
@@ -26,11 +29,11 @@ function usarSeleccion(reporte: Ref<ReporteDeChequesCaducos>) {
   const marcar = (chequeId: string, marcado: boolean) =>
     (seleccion.value = conCheque(seleccion.value, chequeId, marcado));
   const marcarTodos = (marcado: boolean) => (seleccion.value = seleccionDeTodos(reporte.value.cheques, marcado));
-  return { seleccion, total, todosMarcados, marcar, marcarTodos };
+  return { seleccion, total, deApertura, todosMarcados, marcar, marcarTodos };
 }
 
 /** Lo que se escribe en la ventana: fecha común, motivo sugerido con el plazo de la empresa y la casilla de confirmar. */
-function usarDatosDeLaVentana(mesesDeLaEmpresa: number) {
+function usarDatosDeLaVentana(mesesDeLaEmpresa: number, alAbrir: () => void) {
   const abierta = ref(false);
   const motivo = ref('');
   const fecha = ref('');
@@ -43,6 +46,7 @@ function usarDatosDeLaVentana(mesesDeLaEmpresa: number) {
     confirmado.value = false;
     problemas.value = [];
     abierta.value = true;
+    alAbrir();
   }
   return { abierta, motivo, fecha, confirmado, problemas, abrir };
 }
@@ -55,13 +59,16 @@ interface Opciones {
 
 /**
  * La selección de cheques del reporte y la ventana de anulación en lote: fecha común, motivo y una casilla
- * que confirma que se entiende lo que se va a crear. Al anular, el servidor lo hace todo o nada.
+ * que confirma que se entiende lo que se va a crear. Al anular, el servidor lo hace todo o nada. Si hay cheques de la
+ * carga inicial marcados, al abrir la ventana se trae la fecha de corte para explicarla.
  */
 export function usarAnulacionDeChequesCaducos({ reporte, mesesDeLaEmpresa, alTerminar }: Opciones) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
   const seleccion = usarSeleccion(reporte);
-  const datos = usarDatosDeLaVentana(mesesDeLaEmpresa);
+  const apertura = usarCorteDeApertura();
+  const alAbrir = (): void => void (seleccion.deApertura.value > 0 && apertura.cargar());
+  const datos = usarDatosDeLaVentana(mesesDeLaEmpresa, alAbrir);
 
   async function mandar(): Promise<void> {
     const chequeIds = seleccion.seleccion.value;
@@ -82,5 +89,5 @@ export function usarAnulacionDeChequesCaducos({ reporte, mesesDeLaEmpresa, alTer
     await alTerminar();
   }
 
-  return { ...seleccion, ventana: { ...datos, errores, enviando, anular } };
+  return { ...seleccion, corte: apertura.corte, ventana: { ...datos, errores, enviando, anular } };
 }

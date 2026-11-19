@@ -15,10 +15,12 @@ withDefaults(
     /** Lo que dice el botón de confirmar: «Anular», «Eliminar», «Blanquear». */
     accion?: string;
     conFecha?: boolean;
+    /** Reemplaza la ayuda de la fecha (p. ej. la de un cheque de la carga inicial). */
+    ayudaDeFecha?: string;
     errores: Record<string, string>;
     enviando: boolean;
   }>(),
-  { accion: 'Anular' },
+  { accion: 'Anular', ayudaDeFecha: undefined },
 );
 const emit = defineEmits<{ cerrar: []; confirmar: [] }>();
 const motivo = defineModel<string>('motivo', { required: true });
@@ -38,7 +40,7 @@ const AYUDA_DE_LA_FECHA =
         etiqueta="Fecha"
         tipo="date"
         requerido
-        :ayuda="AYUDA_DE_LA_FECHA"
+        :ayuda="ayudaDeFecha ?? AYUDA_DE_LA_FECHA"
         :error="errores.fecha"
       />
       <CampoTexto v-model="motivo" etiqueta="Motivo" multilinea requerido :error="errores.motivo" />
