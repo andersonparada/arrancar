@@ -145,7 +145,7 @@ const aFila = (p: PublicacionDeTipoDeCambio, consultaId: string) => ({
   referencia: p.referencia,
   compra: p.compra ?? null,
   venta: p.venta ?? null,
-  convencion: p.convencion ?? ('quetzales_por_unidad' as const),
+  convencion: p.convencion ?? (p.codigoBanguat === 2 ? ('quetzales_por_unidad' as const) : null),
   dolarUsadoId: p.dolarUsadoId ?? null,
   origen: 'banguat' as const,
   codigoBanguat: p.codigoBanguat,

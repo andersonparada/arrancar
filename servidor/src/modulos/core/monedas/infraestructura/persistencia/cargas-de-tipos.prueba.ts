@@ -42,6 +42,7 @@ const publicacion = (fecha: string, referencia: string): PublicacionDeTipoDeCamb
   referencia,
   compra: referencia,
   venta: referencia,
+  convencion: 'quetzales_por_unidad',
 });
 
 const consulta = (cambios: Partial<ConsultaHecha> = {}): ConsultaHecha => ({
@@ -86,6 +87,12 @@ describe('guardar', () => {
     );
     expect(nuevas).toBe(2);
     expect(rows).toEqual([{ filas_nuevas: 2, operacion: 'TipoCambioRangoMoneda', vuelta: 'manana', tipos: 2 }]);
+  });
+
+  it('una moneda distinta del dólar sin convención no se guarda: la base la rechaza hasta tener el cruce', async () => {
+    const { convencion: _omitida, ...sinConvencion } = publicacion('2026-11-20', '1.1257');
+
+    await expect(cargas.guardar(consulta({ detalle: 'sin-convencion' }), [sinConvencion])).rejects.toThrow();
   });
 
   it('no duplica ni reemplaza lo ya guardado: la segunda vez deja 0 filas nuevas', async () => {

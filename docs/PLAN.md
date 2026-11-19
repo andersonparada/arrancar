@@ -3631,3 +3631,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   sembrar y borrar los códigos 28, 29 y 30 (ahora son parte de la semilla) y usan el 24, el 9 y el 3. **Pendiente:**
   MM-3a″ (dominio), MM-3c (carga), MM-4 (cliente: la bitácora y el selector traducen los resultados nuevos).
 
+- **2026-11-19, Multimoneda MM-1b (corrección de la revisión).** `CargasDeTiposDrizzle.aFila` ya no pone
+  `quetzales_por_unidad` a toda publicación: solo al dólar (código 2); las demás monedas sin convención llegan nulas y el
+  check `tipos_de_cambio_banguat_con_convencion` las rechaza hasta MM-3c (así «Cargar ahora» no guarda un cruce crudo
+  como referencia en quetzales). Prueba nueva de que un EUR sin convención no se guarda.
