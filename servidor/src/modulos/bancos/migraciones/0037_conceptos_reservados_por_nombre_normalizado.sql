@@ -1,8 +1,9 @@
 -- CCL-B1 (corrección de la 0036): el nombre se compara como lo hace el índice único `conceptos_nombre_unico`
 -- (`core.nombre_normalizado`: sin mayúsculas, acentos ni espacios repetidos). Así «Devolucion de anticipos» o
 -- «Fondo de  caja chica» reciben la clave en vez de chocar con el índice y quedar sin el concepto de sistema. Al que
--- recibe la clave se le alinea la clasificación de §3.2 a (ya no se podrá cambiar a mano) y se reactiva. Después
--- se insertan los que sigan faltando. Repetible: no toca lo que ya tiene clave.
+-- recibe la clave se le alinea la clasificación de §3.2 a (ya no se podrá cambiar a mano) y se reactiva; lo mismo
+-- se hace con los que la 0036 ya había marcado (por `lower(nombre)`) sin alinearlos. Después se insertan los que
+-- sigan faltando. Repetible: converge siempre al mismo resultado.
 UPDATE "bancos"."conceptos" c
 SET "clave_de_sistema" = s."clave", "aplica_a" = s."aplica_a", "actividad_de_flujo" = s."actividad",
     "grupo_de_flujo" = s."grupo", "activo" = true
@@ -17,10 +18,13 @@ FROM (VALUES
     ('anticipo_no_liquidado', 'Anticipos no liquidados', 'debito', 'operacion', 'Anticipos no liquidados'),
     ('devolucion_de_anticipo', 'Devolución de anticipos', 'credito', 'ninguna', NULL)
 ) AS s("clave", "nombre", "aplica_a", "actividad", "grupo")
-WHERE c."clave_de_sistema" IS NULL
-  AND core.nombre_normalizado(c."nombre") = core.nombre_normalizado(s."nombre")
-  AND NOT EXISTS (
-    SELECT 1 FROM "bancos"."conceptos" x WHERE x."empresa_id" = c."empresa_id" AND x."clave_de_sistema" = s."clave"
+WHERE c."clave_de_sistema" = s."clave"
+  OR (
+    c."clave_de_sistema" IS NULL
+    AND core.nombre_normalizado(c."nombre") = core.nombre_normalizado(s."nombre")
+    AND NOT EXISTS (
+      SELECT 1 FROM "bancos"."conceptos" x WHERE x."empresa_id" = c."empresa_id" AND x."clave_de_sistema" = s."clave"
+    )
   );--> statement-breakpoint
 INSERT INTO "bancos"."conceptos"
   ("empresa_id", "clave_de_sistema", "nombre", "aplica_a", "actividad_de_flujo", "grupo_de_flujo",

@@ -2971,7 +2971,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   conserva al corregir la nota (`exigirConceptoElegible` con `yaAsignado` no lo rechaza, esté o no activo el módulo;
   «Sin clasificar» sigue sin poder elegirse) y `DesmarcarNota` ahora pasa los módulos activos. Migración
   `0037_conceptos_reservados_por_nombre_normalizado`: repara la `0036` comparando con `core.nombre_normalizado` (como el
-  índice único), alinea la clasificación de §3.2 a y reactiva al concepto que recibe la clave, e inserta lo que falte;
-  repetible. Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
+  índice único), alinea la clasificación de §3.2 a y reactiva al concepto que recibe la clave y también a los nueve que la `0036`
+  ya había marcado por `lower(nombre)`, e inserta lo que falte; repetible. Corregir una nota a otro concepto reservado
+  ahora pasa los módulos activos (como crear). Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
   posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
   cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { comoPropietario } from './soporte/consultas-de-propietario.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { conceptoDeSistema, crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
+import { conceptoDeSistema, conceptoGeneral, crearCuentaBancaria } from './soporte/escenarios-de-bancos.js';
 import { darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const MIGRACION = new URL('../modulos/bancos/migraciones/0036_caja_chica_y_cuentas_por_liquidar.sql', import.meta.url);
@@ -113,6 +113,29 @@ describe('migración 0037: el nombre se compara normalizado', () => {
   });
 });
 
+describe('migración 0037: los conceptos que la 0036 ya marcó se alinean', () => {
+  it('un sugerido con clave, modificado e inactivo, recupera su clasificación y vuelve a estar activo', async () => {
+    await comoPropietario(
+      `update bancos.conceptos set aplica_a = 'ambos', actividad_de_flujo = 'financiamiento', grupo_de_flujo = 'Otro',
+       activo = false where empresa_id = $1 and clave_de_sistema = 'reintegro_de_caja_chica'`,
+      [cuenta.empresaId],
+    );
+    const sql = readFileSync(MIGRACION_37, 'utf8').replaceAll('--> statement-breakpoint', '');
+
+    await comoPropietario(sql, []);
+    await comoPropietario(sql, []);
+
+    const filas = await comoPropietario<Record<string, string | boolean | null>>(
+      `select aplica_a, actividad_de_flujo, grupo_de_flujo, activo from bancos.conceptos
+       where empresa_id = $1 and clave_de_sistema = 'reintegro_de_caja_chica'`,
+      [cuenta.empresaId],
+    );
+    expect(filas).toEqual([
+      { aplica_a: 'debito', actividad_de_flujo: 'operacion', grupo_de_flujo: 'Reintegros de caja chica', activo: true },
+    ]);
+  });
+});
+
 describe('conceptos reservados elegidos a mano sin su módulo', () => {
   it('una nota de débito acepta «Fondo de caja chica» y una de crédito, «Devolución de anticipos»', async () => {
     const cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Caja chica A');
@@ -160,5 +183,47 @@ describe('conceptos reservados elegidos a mano sin su módulo', () => {
 
     expect(corregida.estado).toBe(200);
     expect(corregida.cuerpo.conceptoId).toBe(concepto.id);
+  });
+
+  it('corregir una nota a otro concepto reservado: pasa sin su módulo y se rechaza con su módulo activo', async () => {
+    const cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Caja chica C');
+    const normal = { id: await conceptoGeneral(cuenta.propietario) };
+    const reservado = await conceptoDeSistema(cuenta.propietario, 'fondo_de_caja_chica');
+    const datos = {
+      cuentaBancariaId,
+      tipo: 'debito',
+      fecha: '2026-04-10',
+      monto: '25.00',
+      referencia: null,
+      beneficiario: null,
+      observaciones: null,
+      conceptoId: normal.id,
+    };
+    const creada = await cuenta.propietario.post('/api/bancos/notas', datos);
+    expect(creada.estado).toBe(201);
+
+    const sinModulo = await cuenta.propietario.put(`/api/bancos/notas/${creada.cuerpo.id}`, {
+      ...datos,
+      conceptoId: reservado.id,
+    });
+    expect(sinModulo.estado).toBe(200);
+
+    const conModulo = await darDeAltaCuenta(entorno, {
+      nombre: 'Con Caja chica',
+      usuario: 'propietarioconcajachica',
+      modulos: ['terceros', 'bancos', 'libro-de-compras', 'caja-chica'],
+    });
+    const cuentaB = await crearCuentaBancaria(conModulo.propietario, 'Caja chica D');
+    const normalB = { id: await conceptoGeneral(conModulo.propietario) };
+    const reservadoB = await conceptoDeSistema(conModulo.propietario, 'fondo_de_caja_chica');
+    const datosB = { ...datos, cuentaBancariaId: cuentaB, conceptoId: normalB.id };
+    const creadaB = await conModulo.propietario.post('/api/bancos/notas', datosB);
+    expect(creadaB.estado).toBe(201);
+
+    const rechazada = await conModulo.propietario.put(`/api/bancos/notas/${creadaB.cuerpo.id}`, {
+      ...datosB,
+      conceptoId: reservadoB.id,
+    });
+    expect(rechazada.estado).toBe(422);
   });
 });
