@@ -3,6 +3,7 @@ import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiChequeras, type Chequera } from '../../servicios/chequeras.api';
 import { rangoDeChequera } from './detalles-de-chequera';
+import { usarFormatoDeChequera } from './usar-formato-de-chequera';
 import { usarFormularioDeChequera } from './usar-formulario-de-chequera';
 
 /** Pide confirmación antes de inactivar o reactivar una chequera. */
@@ -38,5 +39,5 @@ export function usarChequeras(cuentaBancariaId: string) {
     await cargar();
   }
 
-  return { chequeras, cargando, cargar, cambiarEstado, ...formulario };
+  return { chequeras, cargando, cargar, cambiarEstado, ...formulario, ...usarFormatoDeChequera(cargar) };
 }

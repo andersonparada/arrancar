@@ -9,6 +9,7 @@ import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import TarjetaDeChequera from '../componentes/chequeras/TarjetaDeChequera.vue';
 import VentanaDeChequera from '../componentes/chequeras/VentanaDeChequera.vue';
+import VentanaDeFormatoDeChequera from '../componentes/chequeras/VentanaDeFormatoDeChequera.vue';
 import { usarListaDeChequeras } from '../composables/chequeras/usar-lista-de-chequeras';
 import { VENTANAS_BANCOS } from '../textos';
 
@@ -30,6 +31,10 @@ const {
   errores,
   nueva,
   guardar,
+  formato,
+  abrirFormato,
+  guardarFormato,
+  cerrarFormato,
 } = usarListaDeChequeras();
 </script>
 
@@ -54,7 +59,11 @@ const {
     <EstadoVacio v-else-if="!chequeras.length" :icono="Inbox" titulo="Todavía no hay chequeras" />
     <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in chequeras" :key="registro.id">
-        <TarjetaDeChequera :registro="registro" @cambiar-estado="cambiarEstado(registro)" />
+        <TarjetaDeChequera
+          :registro="registro"
+          @cambiar-estado="cambiarEstado(registro)"
+          @formato="abrirFormato(registro)"
+        />
       </li>
     </ul>
 
@@ -65,6 +74,15 @@ const {
       :opciones-de-cuenta="opcionesDeCuenta.cuentaBancariaId"
       @cerrar="edicion.abierta = false"
       @guardar="guardar"
+    />
+    <VentanaDeFormatoDeChequera
+      v-model="formato.valor"
+      :chequera="formato.chequera"
+      :opciones="formato.opciones"
+      :enviando="formato.enviando"
+      :errores="formato.errores"
+      @cerrar="cerrarFormato"
+      @guardar="guardarFormato"
     />
     <VentanaDeImportacion
       :estado="intercambio.estado"

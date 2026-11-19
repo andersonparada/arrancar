@@ -76,4 +76,11 @@
   aside[aria-label='Menú principal'] {
     display: none !important;
   }
+
+  /* Hojas a la medida en milímetros (cheques): sin relleno alrededor, para que lo de la hoja caiga donde se pidió. */
+  html.impresion-exacta main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
 }

@@ -6,6 +6,7 @@ import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-int
 import { apiChequeras, type Chequera } from '../../servicios/chequeras.api';
 import { usarReferenciasDeCuenta } from '../cuentas-bancarias/referencias-de-cuenta';
 import { rangoDeChequera } from './detalles-de-chequera';
+import { usarFormatoDeChequera } from './usar-formato-de-chequera';
 import { usarFormularioDeChequeraDeLaEmpresa } from './usar-formulario-de-chequera-de-la-empresa';
 
 /** Pide confirmación antes de inactivar o reactivar una chequera. */
@@ -71,5 +72,6 @@ export function usarListaDeChequeras() {
     cambiarEstado,
     intercambio,
     ...formulario,
+    ...usarFormatoDeChequera(cargar),
   };
 }
