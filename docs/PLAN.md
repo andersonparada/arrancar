@@ -3243,3 +3243,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Decisiones: recibir con referencia no vuelve a pedir `gastos.crear` (lo exigió la ruta del libro, como en Cuentas por
   pagar); se agregó `GET /anticipos/:id/gastos` (la ficha lo necesita en CL-5); la fecha de un documento en la bandeja es la
   de emisión y al asignar se puede cambiar (no anterior a la entrega ni futura).
+- **2026-11-19 (CL-4, Cuentas por liquidar, servidor):** liquidar y reabrir anticipos, sin migraciones (la liquidación ya estaba
+  en las tablas de CL-1). `LiquidarAnticipo` (`anticipos.liquidar`): con el anticipo bloqueado (Bancos antes), lo que falta por
+  justificar (`monto − gastos`, las notas de crédito restan) debe ser `devuelto + noLiquidado` (`liquidacion_no_cuadra`,
+  400); lo devuelto es una nota de crédito en Bancos (concepto `devolucion_de_anticipo`, a la cuenta de la entrega o a otra);
+  lo no liquidado pide destino (`cobrar` con 5 cuotas o más salvo `pagoVoluntario`, `renta_del_trabajo` solo de un empleado,
+  `perdida`) y motivo; si se gastó de más, el reembolso (`gastado − monto`) se ordena a Bancos con cheque a nombre del
+  beneficiario (no negociable por omisión) o nota de débito, con concepto `gasto_de_anticipo` o `…_de_activo`. Fija de nuevo
+  el reparto de la entrega (`gasto_de_anticipo`/`…_de_activo` hasta el monto, `anticipo_no_liquidado`, `anticipo_por_liquidar`
+  el resto), marca procesados los documentos en el libro, audita `ajustar` solo si hay no liquidado y publica
+  `anticipo_liquidado`; avisa (E-8) si liquida el propio beneficiario. `ReabrirAnticipo`: con motivo, anula por orden el
+  depósito o el reembolso (si Bancos rechaza, no se reabre), deja el anticipo abierto, vuelve a fijar la entrega como «por
+  liquidar», devuelve los documentos a pendiente, audita `reabrir` y publica `anticipo_reabierto`. El aviso de Bancos sobre la
+  devolución o el reembolso (`anular`) reabre el anticipo sin volver a ordenar; otros cambios se rechazan. Rutas
+  `POST /anticipos/:id/liquidar` y `/reabrir` (`anticipos.liquidar`). Decisiones: `pagoVoluntario` es un dato de la petición
+  (no se guarda: queda en el motivo y en la auditoría); cuotas hasta 120; la impresión «Liquidación del anticipo N» es del
+  cliente (CL-5) con la ficha y `GET /anticipos/:id/gastos`, no hay endpoint de impresión; un gasto cuyo documento fue
+  anulado ya salió del anticipo por el aviso del libro, así que no se marca; `LiquidacionNoCuadra` es 400 como en el retiro.
+
