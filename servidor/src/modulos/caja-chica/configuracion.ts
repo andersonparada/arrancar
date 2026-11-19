@@ -29,4 +29,13 @@ export const configuracionDeCajaChica: readonly DefinicionConfiguracion[] = [
     niveles: ['instalacion', 'empresa'],
     publica: false,
   }),
+  definirConfiguracion({
+    clave: 'caja-chica.control.separacion_de_funciones',
+    descripcion:
+      'Qué hacer cuando el custodio de un fondo es quien lo repone o lo arquea: avisar (queda registrado) o bloquear.',
+    esquema: z.enum(['avisar', 'bloquear']),
+    predeterminado: 'avisar',
+    niveles: ['instalacion', 'empresa'],
+    publica: false,
+  }),
 ];

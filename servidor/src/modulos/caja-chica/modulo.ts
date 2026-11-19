@@ -6,6 +6,7 @@ import { PERMISOS_DE_CAJA_CHICA } from './permisos.js';
 import { rutasDeAccesosAFondosComponidas } from './composicion/accesos-a-fondos.js';
 import { rutasDeComprobantesComponidas } from './composicion/comprobantes.js';
 import { rutasDeFondosComponidas } from './composicion/fondos.js';
+import { rutasDeReposicionesComponidas } from './composicion/reposiciones.js';
 // generador: importaciones
 
 /**
@@ -32,6 +33,7 @@ export const moduloCajaChica: DefinicionModulo = {
     rutasDeFondosComponidas(),
     rutasDeAccesosAFondosComponidas(),
     rutasDeComprobantesComponidas(),
+    rutasDeReposicionesComponidas(),
     // generador: rutas
   ]),
 };
