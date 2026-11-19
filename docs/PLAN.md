@@ -3939,3 +3939,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   el de esta 0034 (el migrador la saltaría en bases que ya tienen la 0034) y los snapshots 0033 y 0034 apuntan ambos
   al 0032; unir Multimoneda antes o junto con esta rama, rehacer el snapshot de la 0034 con `prevId` = id de la 0033 y
   en la base de desarrollo aplicar la 0033 a mano o quitar la fila de la 0034 y volver a migrar.
+- **2026-11-19** (BS-8, QA de la carga inicial de Bancos): recorrido de punta a punta en el navegador (escritorio claro y
+  celular oscuro, impresión y Excel) con tres cuentas (con partidas, sin saldo, sobregirada), cierre y reapertura de la
+  carga, primera conciliación de enero, anulación en febrero y permisos. Todo cuadra a mano. Errores abiertos: BS8-1
+  (número de cheque negativo o enorme da 500; prueba `it.fails` en `bancos-qa-bs8-bordes.api.prueba.ts`) y BS8-2
+  (conciliación con la carga se desborda en celular); el resto, de gravedad baja. Informe:
+  `docs/modulos/informe-qa-bancos-carga-inicial-2026-11-19.md`. Sin cambios en el código de la app ni migraciones.
