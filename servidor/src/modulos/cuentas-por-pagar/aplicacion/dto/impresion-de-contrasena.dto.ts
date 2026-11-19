@@ -43,7 +43,7 @@ export interface CompensacionImpresaDto {
 export interface ChequePosfechadoImpresoDto {
   pagoId: string;
   monto: string;
-  /** «Pago N: cheque al dd/mm/aaaa». */
+  /** «Cheque N al dd/mm/aaaa» (con otra forma de pago, «Pago N al dd/mm/aaaa»). */
   texto: string;
 }
 

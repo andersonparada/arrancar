@@ -6,7 +6,7 @@ import type {
   FiltroDeChequesPosfechados,
 } from '../../aplicacion/puertos/puertos-de-reportes-de-pagos.js';
 import { numeroDelPago } from '../../dominio/pagos.js';
-import { FIN_DE_MES_COBRADO } from './saldos-al-corte.sql.js';
+import { FIN_DE_MES_COBRADO, pagoCuentaAlCorte } from './saldos-al-corte.sql.js';
 
 type Fila = Record<string, string | number | boolean | null>;
 
@@ -54,7 +54,7 @@ export async function chequesPosfechados(
   const delaCuenta = cuentaBancariaId ? sql`and m.cuenta_bancaria_id = ${cuentaBancariaId}::uuid` : sql``;
   const { rows } = await transaccion.execute(sql`${SELECCION_DE_CHEQUES}
      where p.empresa_id = ${empresaId}::uuid and p.forma = 'cheque' and p.fecha > ${corte}::date
-       and (p.estado = 'vigente' or p.fecha_de_anulacion > ${corte}::date)
+       and ${pagoCuentaAlCorte(corte)}
        and (p.creado_en at time zone 'America/Guatemala')::date <= ${corte}::date
        and least(p.fecha, coalesce(${FIN_DE_MES_COBRADO}, p.fecha)) > ${corte}::date
        ${delProveedor} ${delaCuenta}

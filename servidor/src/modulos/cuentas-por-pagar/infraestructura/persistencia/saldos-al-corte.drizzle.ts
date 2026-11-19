@@ -25,7 +25,7 @@ import { numeroDelPago } from '../../dominio/pagos.js';
 import type { SaldoDeProveedor } from '../../dominio/saldos-por-nit.js';
 import type { TramoDeAntiguedad } from '../../dominio/saldo-al-corte.js';
 import { documentosAlCorte } from './documentos-al-corte.drizzle.js';
-import { condicionDeAutorizacion, parametrosDe, saldosAlCorte } from './saldos-al-corte.sql.js';
+import { condicionDeAutorizacion, pagoCuentaAlCorte, parametrosDe, saldosAlCorte } from './saldos-al-corte.sql.js';
 
 type Fila = Record<string, string | number | boolean | null>;
 
@@ -143,7 +143,7 @@ export class ConsultaDeSaldosAlCorte implements ConsultasDeSaldosAlCorte, Consul
         join bancos.conciliaciones cn on cn.id = m.conciliacion_id and cn.estado = 'autorizada'
        where p.empresa_id = ${empresaId}::uuid and p.forma = 'cheque' ${delProveedor}
          and p.fecha > ${corte}::date
-         and (p.estado = 'vigente' or p.fecha_de_anulacion > ${corte}::date)
+         and ${pagoCuentaAlCorte(corte)}
          and (p.creado_en at time zone 'America/Guatemala')::date <= ${corte}::date
          and make_date(cn.anio, cn.mes, 1) <= ${corte}::date
          and (make_date(cn.anio, cn.mes, 1) + interval '1 month' - interval '1 day')::date > ${corte}::date

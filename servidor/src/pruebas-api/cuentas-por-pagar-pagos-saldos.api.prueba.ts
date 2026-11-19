@@ -260,7 +260,7 @@ describe('la contraseña con pagos', () => {
       {
         pagoId: cheque.id,
         monto: '120.00',
-        texto: `Pago ${cheque.numero}: cheque al ${haceDias(-3).split('-').reverse().join('/')}`,
+        texto: `Pago ${cheque.numero} al ${haceDias(-3).split('-').reverse().join('/')}`,
       },
     ]);
   });
