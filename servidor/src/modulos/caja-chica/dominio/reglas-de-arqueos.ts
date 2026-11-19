@@ -110,7 +110,7 @@ export function exigirArqueoAnulable(arqueo: Pick<Arqueo, 'estado' | 'numero'>, 
   if (reposicionNumero !== null) throw new ArqueoConComprobanteRepuesto(arqueo.numero, reposicionNumero);
 }
 
-const diasEntre = (desde: string, hasta: string): number =>
+export const diasEntre = (desde: string, hasta: string): number =>
   Math.floor((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / MILISEGUNDOS_POR_DIA);
 
 /**

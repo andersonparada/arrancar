@@ -30,6 +30,15 @@ export const configuracionDeCajaChica: readonly DefinicionConfiguracion[] = [
     publica: false,
   }),
   definirConfiguracion({
+    clave: 'caja-chica.vales_provisionales.dias_para_avisar',
+    descripcion:
+      'Días que un vale provisional puede estar abierto antes de que el sistema avise que hay que liquidarlo. Con 0 no se avisa nunca.',
+    esquema: z.number().int().min(0).max(60),
+    predeterminado: 5,
+    niveles: ['instalacion', 'empresa'],
+    publica: false,
+  }),
+  definirConfiguracion({
     clave: 'caja-chica.control.separacion_de_funciones',
     descripcion:
       'Qué hacer cuando el custodio de un fondo es quien lo repone o lo arquea: avisar (queda registrado) o bloquear.',
