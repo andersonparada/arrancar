@@ -3034,10 +3034,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 
 - **2026-11-18** (correo 8 a 13, revisión):
   - Anular un pago cancela también los avisos `enviando` y `fallido` (no solo `pendiente`), con auditoría y motivo «Pago
-    anulado»; un `fallido` cancelado ya no se puede reintentar (409). La migración core `0028_cancelacion_durante_el_envio`
+    anulado»; un `fallido` cancelado ya no se puede reintentar (409). La migración core `0031_cancelacion_durante_el_envio`
     cambia `core.resolver_correo`: si el correo se canceló mientras se enviaba, anota el intento y lo deja `cancelado` (no
     vuelve a `pendiente`). Se quita `bloqueado_hasta` al cancelar (restricción de la tabla).
-  - Integración: las ramas `f43-1` y `f43-10` también crean una migración core 0027; quien se una después debe regenerar
+  - Integración: las ramas `f43-1` y `f43-10` también crean una migración core 0027; quien se una después debe regenerar (Hecho: la bandeja para Soporte quedó en 0030 y la cancelación en 0031, tras la RLS 0027-0028 y Multimoneda 0029.)
     la suya con el número siguiente y rehacer `_journal.json`, el snapshot y el `prevId` (nunca juntar dos entradas idx 27).
   - `correo.servidor.gestionar` queda declarado sin que lo exija ninguna ruta (Soporte usa `soloSuperacceso`); anotado en el diseño.
 - **2026-11-18, RLS del núcleo R-1 (privilegios y disparadores de `core`).** `core/base-datos/privilegios-restringidos.ts`
