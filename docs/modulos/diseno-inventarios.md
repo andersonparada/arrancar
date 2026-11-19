@@ -1113,3 +1113,18 @@ aislamiento por bodega con `movimientos` sin política de alcance (R-3).
 - Alertas de vencimiento por correo cuando exista el correo saliente para avisos (PLAN §6).
 - Con Contabilidad: cuentas por tipo de inventario, cuenta de mercadería en tránsito, partidas de los eventos de §9 y el
   Libro de inventarios completo.
+
+## Respuestas del usuario (2026-11-18)
+
+Todas las recomendaciones: **INV-P1** promedio y PEPS (por serie después); **INV-P2** un método por empresa; **INV-A4** costo
+por artículo en toda la empresa; **INV-P5** varias bodegas por localidad; **INV-A3** alcance propio por bodega (el cierre
+exige ver todas); **INV-A7** permiso aparte para ver costos; **INV-P4** nunca existencias negativas; **INV-A5** fecha anterior
+en meses abiertos con recálculo y aviso; **INV-A6** ajustes aprobados por otro usuario, configurable (sí por omisión);
+**INV-A8** el conteo bloquea la bodega, configurable; **INV-A15** solo se reabre el último mes, con motivo y auditoría;
+**INV-P6** lotes y vencimientos opcionales; **INV-P9** costos adicionales repartidos; **INV-P10** deterioro a VNR manual al
+cierre; **INV-A12** salidas especiales con aviso de IVA; **INV-P7** la FEL se emite afuera y se anota; **INV-A11** traslados
+sin tránsito por omisión; **INV-A10** concepto de gasto obligatorio en la salida a gasto; **INV-P11** sobrante a otros
+ingresos por omisión (configurable); **INV-A2** artículos por empresa; **INV-A1** depende solo de Libro de compras;
+**INV-A9** casilla `es_inventario` excluyente con activo fijo; **INV-A13** lector de códigos de barras; **INV-P3** el
+préstamo de herramientas vive en Activos fijos; **INV-P8** reporte semestral cuando haya plantilla oficial (mientras,
+existencias valuadas en Excel); **INV-A14** un cambio de método rige desde el 1 de enero.
