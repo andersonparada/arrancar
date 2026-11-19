@@ -3225,3 +3225,35 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `fecha_anterior_a_la_apertura`, campo `fecha`). Cuando Bancos anula un aumento, `AnuladorDeCambios.revisar` calcula el
   monto y el efectivo esperado sin ese aumento y rechaza si quedan <= 0 (`anulacion_deja_el_fondo_sin_monto`), de modo que
   no se puede anular un aumento ya «consumido» por disminuciones posteriores. Sin migración.
+- **2026-11-19 (CC-3, Caja chica, comprobantes, servidor)**: orden `caja-chica.recibir_documento` (la atiende el módulo en la
+  transacción del libro): el documento **siempre** entra a la bandeja (`fondo_id` nulo) con `monto = total − retenciones`,
+  `monto_retenido`, proveedor, activo fijo y, en la nota de crédito, el comprobante de su factura (si no está aquí,
+  `factura_de_la_nota_no_recibida_en_caja_chica`; una factura del sistema anterior tampoco puede estar aquí). Con retención
+  no se asigna nunca al recibir (aviso «Quedó en la bandeja de Caja chica: lleva retención de Q…»); sin retención y con
+  `referenciaDeDestino` intenta asignarlo y, si no puede (referencia que no es uuid, fondo ajeno o cerrado, fecha, tope,
+  efectivo), queda en la bandeja y el libro recibe el porqué como aviso. Rutas (`/api/caja-chica`): `GET /bandeja`
+  (`fondos.ver`, filtros proveedor, fechas y `conRetencion`, con `puedeAsignarConRetencion`), `GET /fondos/:id/comprobantes`
+  (`estado` pendiente | repuesto | anulado | todos, con totales), `POST /fondos/:id/comprobantes/documentos` (1–100 a la vez,
+  todo o nada, las notas después de sus facturas), `POST /fondos/:id/vales-de-gasto`, `POST /comprobantes/:id/devolver-a-la-bandeja`
+  (`comprobantes.crear`) y `POST /comprobantes/:id/anular` (`comprobantes.anular`, solo vales de gasto). Reglas al asignar: fecha
+  no futura ni anterior a la apertura, la nota al fondo de su factura (`nota_en_otro_fondo`), tope (`fondo.tope` o
+  `caja-chica.comprobantes.tope_por_omision`, cero = sin tope; lo que resta no pasa de tope) con `sobre-el-tope` y motivo,
+  **excepción de retención** (§5.4 g: `retencion_sin_permiso` 403, `motivo_con_retencion_obligatorio`, un motivo sin retención
+  es `motivo_con_retencion_sin_retencion`; `asignado_por` es quien autorizó y entra una auditoría `autorizar` con el
+  comprobante de la bandeja y el motivo), que el efectivo esperado no quede negativo (`comprobantes_mayores_que_el_efectivo`,
+  con el neto) y la bancarización con la orden del libro (con `bloquear` marca `sin_bancarizar` y avisa; con `avisar` solo
+  avisa; la nota de crédito no se evalúa; va `monto + monto_retenido`). Devolver a la bandeja (auditoría `corregir`, limpia
+  fondo, motivos y marcas y vuelve a la fecha de emisión; no si está repuesto, ni una factura con notas en el fondo, ni sacar una
+  nota que deje el efectivo en negativo). Vales de gasto: número `caja-chica.vales`, no deducible, tope
+  `caja-chica.vales_de_gasto.tope` con el mismo permiso de excepción, apagables con `caja-chica.vales_de_gasto.permitidos`
+  (variables nuevas en `configuracion.ts`, niveles empresa e instalación). Avisos del libro `documento_por_anular` (anula el
+  comprobante, auditoría `anular`) y `documento_por_eliminar` (audita `eliminar` y borra el comprobante); repuesto lo rechaza
+  (`comprobante_repuesto`). Respuesta a `libro-de-compras.pagado_al_proveedor_en_el_mes`: migración `0004` de `caja_chica` con la
+  función `security definer` `caja_chica.pagado_en_efectivo_al_proveedor` (toma la empresa de `app.empresa_id`, suma **todos**
+  los fondos aunque el usuario no los vea, devuelve solo total y cantidad; comprobantes asignados, vigentes, que no restan,
+  `monto + monto_retenido`). Eventos nuevos `caja-chica.comprobante_asignado` y `comprobante_quitado`. Decisiones:
+  `documento_por_eliminar` **elimina** el comprobante (en vez de anularlo, como dice §5.9) porque la llave al libro es
+  `no action` y borraría imposible; la etiqueta de la pregunta es genérica («Caja chica: N comprobantes») para no mostrar fondos
+  que el usuario no ve; la lista de un fondo trae todos los de su estado, sin paginar ni `corte` (el corte es de CC-10);
+  `DatoInvalido` del motivo sin retención responde 400. Pendiente: si el usuario del libro no ve el fondo del comprobante, el
+  aviso de anular no lo encuentra (RLS) y el libro anula el documento dejando el comprobante vigente.

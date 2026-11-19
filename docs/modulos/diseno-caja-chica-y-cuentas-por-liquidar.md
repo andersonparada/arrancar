@@ -1,6 +1,6 @@
 # Diseño de Caja chica y Cuentas por liquidar — arquitecto de datos, 2026-11-18
 
-Estado: **aprobado** (respuestas del usuario al final). CC-1 y CL-1 programados; la revisión del commit 670b81a4 y
+Estado: **aprobado** (respuestas del usuario al final). CC-1, CL-1, CC-1c, CL-1c, CC-2 y CC-3 (servidor) programados; la revisión del commit 670b81a4 y
 las decisiones del 2026-11-18 sobre CC-f están en §4.10 y §5.4 g (paso CC-1c / CL-1c antes de CC-3 y CL-3). Aterriza el punto 7 de
 `HOJA-DE-RUTA.md` («Caja chica y Cuentas por liquidar») con la investigación del contador
 (`dictamen-caja-chica-2026-11-18.md`, «correcto con ajustes») y el §9 de la adenda de efectivo de CP4
@@ -642,7 +642,7 @@ comprobantes, arqueos ni cambios vigentes (`fondos.cerrar`; orden `anular_movimi
 
 | Aviso | Comprobante o movimiento | Qué hace Caja chica |
 |---|---|---|
-| `libro-de-compras.documento_por_anular` / `…_por_eliminar` (destino `caja-chica`) | Comprobante no repuesto | Lo anula (`estado = 'anulado'`, motivo del aviso); auditoría `anular` |
+| `libro-de-compras.documento_por_anular` / `…_por_eliminar` (destino `caja-chica`) | Comprobante no repuesto | `por_anular`: lo anula (`estado = 'anulado'`, motivo del aviso); auditoría `anular`. `por_eliminar` (CC-3): como la llave al libro es `no action`, **elimina** el comprobante con auditoría `eliminar` y el comprobante como estaba |
 | Ídem | Comprobante repuesto | Rechaza `ComprobanteRepuesto` («Está en la reposición N: anúlela primero.») |
 | `bancos.movimiento_por_cambiar` `anular` | Apertura o aumento | Rechaza si el fondo tiene comprobantes, arqueos o reposiciones vigentes; si no, anula el cambio (y el fondo, si era la apertura) |
 | Ídem | Disminución o depósito de cierre | Rechaza `MovimientoDeCajaChica` (se corrige desde Caja chica) |
@@ -1020,7 +1020,7 @@ uno por módulo a la vez.
 | **CC-1c / CL-1c** (datos, uno por módulo) | Migración `0003` de cada uno (§4.10): `cuenta_id` con relleno, llave `(proveedor_id, cuenta_id)` e índices, check del motivo solo al asignar; descripción de `con-retencion`. Pruebas de §4.10 | CC-1 y CL-1; antes de CC-3 y CL-3 |
 | **CCL-BZ** (Libro y Cuentas por pagar, servidor) | Orden `evaluar_bancarizacion`, pregunta, umbral movido (`0037`), clave del bloqueo, Cuentas por pagar responde y llama la orden. Pruebas: las de CP4-E3 sin cambio de resultado; un pago en efectivo de Cuentas por pagar que ve lo de un destino de prueba | CCL-M; sin otro paso de Cuentas por pagar sobre la bancarización |
 | **CC-2** (fondos) | Abrir, custodio, aumentar, disminuir, editar, anular apertura, lista, ficha, accesos, manejador de Bancos, eventos | CC-1 y CCL-B1 |
-| **CC-3** (comprobantes) | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención y su auditoría `autorizar`, §5.4 g), devolver, vales de gasto, tope, ecuación con el neto, avisos del libro, bancarización y su respuesta con `monto + monto_retenido` (función `security definer`, §5.4 h). Pruebas: factura con retención desde la ficha (queda en la bandeja), asignarla sin permiso (403, sigue en la bandeja), con permiso sin motivo (rechazo), con los dos (asignada, `asignado_por` y auditoría), devolverla y reasignar (pide otra vez), la suma del mes con una factura con retención (cuenta el total) | CC-2, CCL-L1 y CCL-BZ |
+| **CC-3** (comprobantes) — **hecho 2026-11-19 (servidor)** | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención y su auditoría `autorizar`, §5.4 g), devolver, vales de gasto, tope, ecuación con el neto, avisos del libro, bancarización y su respuesta con `monto + monto_retenido` (función `security definer`, §5.4 h). Pruebas: factura con retención desde la ficha (queda en la bandeja), asignarla sin permiso (403, sigue en la bandeja), con permiso sin motivo (rechazo), con los dos (asignada, `asignado_por` y auditoría), devolverla y reasignar (pide otra vez), la suma del mes con una factura con retención (cuenta el total) | CC-2, CCL-L1 y CCL-BZ |
 | **CC-4** (reposiciones) | Reponer con desglose, anular (aquí y por aviso), `marcar_procesado`, datos de las impresiones | CC-3 |
 | **CC-5** (arqueos) | Propuesta, registrar con diferencia (faltante o sobrante), anular, avisos | CC-3 |
 | **CC-6** (vales provisionales) | Entregar, liquidar, anular, aviso de vale viejo | CC-3 |
