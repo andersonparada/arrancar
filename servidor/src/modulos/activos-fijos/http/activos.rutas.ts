@@ -7,6 +7,7 @@ import {
   esquemaFiltrosDeActivos,
   esquemaOcioDeActivo,
   esquemaParamsActivo,
+  esquemaPonerEnUso,
 } from './activos.esquemas-http.js';
 
 type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
@@ -14,6 +15,17 @@ type Aplicacion = Parameters<FastifyPluginAsyncZod>[0];
 const etiquetas = ['Activos fijos'];
 const RUTA = '/activos-fijos/activos';
 const conId = { tags: etiquetas, params: esquemaParamsActivo };
+
+/** Poner en uso y quitar de uso comparten el permiso `poner-en-uso`. */
+function rutasDeUso(app: Aplicacion, controlador: ActivosControlador) {
+  const preHandler = proteger({ permiso: 'activos-fijos.activos.poner-en-uso' });
+  app.post(`${RUTA}/:activoId/poner-en-uso`, {
+    schema: { ...conId, body: esquemaPonerEnUso },
+    preHandler,
+    handler: controlador.ponerEnUso,
+  });
+  app.post(`${RUTA}/:activoId/quitar-de-uso`, { schema: conId, preHandler, handler: controlador.quitarDeUso });
+}
 
 /** Cada acción de escritura exige su propio permiso. */
 function rutasDeEscritura(app: Aplicacion, controlador: ActivosControlador) {
@@ -58,5 +70,6 @@ export function rutasActivos(controlador: ActivosControlador): FastifyPluginAsyn
     });
     app.get(`${RUTA}/:activoId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
     rutasDeEscritura(app, controlador);
+    rutasDeUso(app, controlador);
   };
 }

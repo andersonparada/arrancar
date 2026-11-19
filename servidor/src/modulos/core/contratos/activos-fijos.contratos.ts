@@ -1,0 +1,47 @@
+/**
+ * Eventos de `activos-fijos` (ver `docs/modulos/diseno-activos-fijos.md` §9), de después de confirmar, para la futura
+ * Contabilidad y quien quiera escucharlos. El dinero va en centavos enteros (quetzales). Todos llevan la clase, el inciso
+ * fiscal, la ubicación del activo y el período (primer día del mes `aaaa-mm-01`).
+ */
+declare module '../eventos/bus-eventos.js' {
+  interface EventosDominio {
+    /** Se guardaron costos de un activo (alta o suma a uno existente, también en construcción). */
+    'activos-fijos.activo_capitalizado': {
+      empresaId: string;
+      activoId: string;
+      claseId: string;
+      incisoFiscal: string;
+      localidadId: string | null;
+      departamentoId: string | null;
+      fecha: string;
+      periodo: string;
+      /** El id de la compra conjunta si el activo se creó junto con otros. */
+      altaConjuntaId: string | null;
+      costos: {
+        costoId: string;
+        origen: 'linea_de_compra' | 'manual' | 'saldo_inicial';
+        claseDeCosto: string;
+        documentoDeCompraId: string | null;
+        lineaDeDocumentoId: string | null;
+        montoCentavos: number;
+        aplicaAlLibroFiscal: boolean;
+        noEsEdificacion: boolean;
+      }[];
+    };
+    /** Se anuló un costo de un activo. */
+    'activos-fijos.costo_anulado': {
+      empresaId: string;
+      activoId: string;
+      claseId: string;
+      incisoFiscal: string;
+      localidadId: string | null;
+      departamentoId: string | null;
+      fecha: string;
+      periodo: string;
+      costoId: string;
+      montoCentavos: number;
+    };
+  }
+}
+
+export {};

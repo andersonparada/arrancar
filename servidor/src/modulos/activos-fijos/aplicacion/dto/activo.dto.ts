@@ -1,3 +1,4 @@
+import type { CausaDeTramo } from '../../dominio/depreciacion/tramo.js';
 import type { IncisoFiscal } from '../../dominio/incisos-fiscales.js';
 import type { DatosEditables, UbicacionDeActivo } from '../../dominio/activo.js';
 import type { DatosDeActivo } from '../../dominio/reglas-de-activo.js';
@@ -35,6 +36,8 @@ export interface ActivoDto {
   numeroDeSerie: string | null;
   placa: string | null;
   cantidad: number;
+  /** Σ de sus costos vigentes, con dos decimales. */
+  costo: string;
   enBodega: boolean;
   altaConjuntaId: string | null;
   localidadId: string | null;
@@ -59,9 +62,35 @@ export interface TrasladoDto {
   estado: 'vigente' | 'anulado';
 }
 
-/** La ficha del activo: sus datos y su historial de ubicación. */
+/** Un tramo de depreciación vigente del activo (§5.8); el contable lleva `meses` y el fiscal, `porcentaje` y su base. */
+export interface TramoDto {
+  libro: 'contable' | 'fiscal';
+  desdePeriodo: string;
+  causa: CausaDeTramo;
+  porDepreciar: string;
+  valorResidual: string;
+  meses: number | null;
+  porcentaje: string | null;
+  baseDelPorcentaje: string | null;
+  cuotaMensual: string;
+  excesoDeNotaDeCredito: string;
+}
+
+/** La ficha del activo: sus datos, su historial de ubicación y los tramos de depreciación vigentes. */
 export interface ActivoFichaDto extends ActivoDto {
   traslados: TrasladoDto[];
+  tramos: TramoDto[];
+}
+
+/**
+ * Lo que se recibe para poner un activo en uso. Lo que no se escribe lo propone la clase: porcentaje fiscal, vida
+ * útil contable y valor residual (en monto, con dos decimales).
+ */
+export interface SolicitudDePonerEnUso {
+  fechaDeInicioDeUso: string;
+  porcentajeFiscal?: string | null;
+  vidaUtilContableMeses?: number | null;
+  valorResidual?: string | null;
 }
 
 /** Lo que se recibe para dar de alta un activo a mano; sin código, se propone el siguiente. */

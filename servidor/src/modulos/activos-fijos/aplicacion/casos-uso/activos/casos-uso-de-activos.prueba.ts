@@ -24,6 +24,7 @@ import {
   UbicacionesEnMemoria,
 } from '../../../pruebas/dobles-de-activos.js';
 import { ClasesEnMemoria } from '../../../pruebas/dobles-de-clases.js';
+import { CostosEnMemoria } from '../../../pruebas/dobles-de-costos.js';
 import type { SolicitudDeActivo } from '../../dto/activo.dto.js';
 import { CrearActivo } from './crear-activo.js';
 import { EditarActivo } from './editar-activo.js';
@@ -111,6 +112,7 @@ async function armar() {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     repositorio: activos,
     consultas: activos,
+    consultasDeCostos: new CostosEnMemoria(activos),
     clases,
     auditoria,
     ubicaciones,

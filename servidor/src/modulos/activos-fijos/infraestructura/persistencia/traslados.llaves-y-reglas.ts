@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, foreignKey, index, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { check, foreignKey, index, uniqueIndex, type AnyPgColumn, type ExtraConfigColumn } from 'drizzle-orm/pg-core';
 import { departamentos } from '../../../empresas/infraestructura/persistencia/departamentos.tablas.js';
 import { localidades } from '../../../empresas/infraestructura/persistencia/localidades.tablas.js';
 import { activos } from './activos.tablas.js';
@@ -46,13 +46,13 @@ export function llavesDeTraslado(t: Columnas) {
 }
 
 /** Únicos e índices de §5.11: un alta por activo y un renglón por activo en cada boleta. */
-export function indicesDeTraslado(t: Columnas) {
+export function indicesDeTraslado(t: Columnas & { fecha: ExtraConfigColumn }) {
   const con = (columna: AnyPgColumn) => sql`${columna} is not null`;
   return [
     uniqueIndex('traslados_alta_unica')
       .on(t.activoId)
       .where(sql`${t.esAlta}`),
-    index('traslados_activo_fecha_idx').on(t.activoId, t.fecha),
+    index('traslados_activo_fecha_idx').on(t.activoId, t.fecha.desc()),
     index('traslados_grupo_idx').on(t.grupoId).where(con(t.grupoId)),
     index('traslados_localidad_idx').on(t.localidadId).where(con(t.localidadId)),
     index('traslados_departamento_idx').on(t.departamentoId).where(con(t.departamentoId)),

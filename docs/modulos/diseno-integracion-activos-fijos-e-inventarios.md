@@ -492,7 +492,7 @@ Se intercalan en los pasos ya previstos de Activos fijos e Inventarios.
 |---|---|---|---|
 | **AFI-0** | Llevar este diseño a `diseno-activos-fijos.md` y `diseno-inventarios.md` (§7), a `PLAN.md` (bitácora) y a `DONDE-QUEDAMOS.md`, con las respuestas del usuario | arquitecto | Antes de AF-1 |
 | **AFI-1** | `en_bodega`, `alta_conjunta_id`, `a_bodega` y el índice de existencias en la migración de activos y traslados | backend | AF-2 |
-| **AFI-2** | Capitalizar en N unidades, cuadrícula de unidades, destino alta conjunta; pruebas del reparto y del sobrante, de códigos repetidos y de la regla de la línea | backend | AF-3 |
+| **AFI-2** | Capitalizar en N unidades, cuadrícula de unidades, destino alta conjunta; pruebas del reparto y del sobrante, de códigos repetidos y de la regla de la línea | backend | AF-3 (**programado, en revisión**, 2026-11-19) |
 | AFI-2c | Ventana «Capitalizar» con unidades | frontend | AF-3c |
 | **AFI-3** | `PonerEnUsoVarios` y textos de «Disponible para uso» | backend | AF-4 |
 | **AFI-4** | Traslados a bodega y devolución con ocioso; responsiva configurable en la boleta; boleta firmada (si I-8 b) | backend | AF-8 |

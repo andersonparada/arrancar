@@ -40,6 +40,13 @@ describe('errores de PostgreSQL que en realidad son esperados', () => {
     expect(interpretarErrorDePostgres(errorDePostgres('23503'))).toBeInstanceOf(RecursoEnUso);
   });
 
+  it('la llave de los costos de Activos fijos a la línea del libro explica por qué no se elimina el documento', () => {
+    const error = interpretarErrorDePostgres(errorDePostgres('23503', 'costos_linea_fk'));
+
+    expect(error).toBeInstanceOf(RecursoEnUso);
+    expect(error?.message).toContain('costos capitalizados en Activos fijos');
+  });
+
   it('un rango que se traslapa es una regla de negocio infringida, con mensaje propio si se conoce la restricción', () => {
     const error = interpretarErrorDePostgres(errorDePostgres('23P01', 'vigencias_de_combustible_sin_traslape'));
 

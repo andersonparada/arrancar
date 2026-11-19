@@ -1309,11 +1309,11 @@ dos decimales.
 | **AF-2** | `activos` (con ocioso y motivo, matrícula y catastro; **AFI-1**: `en_bodega`, `alta_conjunta_id`, `activos_existencias_idx`) y `traslados` (fila del alta, con `a_bodega`), alta manual sin costos, editar, marcar ocioso, eliminar; RLS solo por empresa; prueba de aislamiento entre dos empresas de la misma cuenta | backend | |
 | **AF-P22** | Empresas: `00xx_nombres_de_ubicaciones` (custom) con `empresas.nombres_de_localidades` y `empresas.nombres_de_departamentos` (§6.13), sus pruebas de aislamiento y la ruta `GET /activos-fijos/ubicaciones`. **Antes, la revisión de `seguridad`** | backend | |
 | AF-2c | Lista (etiquetas «En construcción o en tránsito», «Ocioso», «Depreciado contable», «Depreciado fiscal» y «En bodega»), ficha (datos, con el nombre de la localidad de §6.13) y alta manual | frontend | |
-| **AF-3** | `costos` (V-8 con motivo, `no_es_edificacion`, nunca negativos por activo) y `descartes`, bandeja, capitalizar, costos manuales, avisos del libro (R-1), mensaje del error de llave en el libro; prueba de concurrencia de la línea y del total del activo | backend | |
-| **AFI-2** (con AF-3) | Capitalizar en N unidades, cuadrícula de unidades (códigos, series, placas), destino alta conjunta; pruebas del reparto y del sobrante, de códigos repetidos, del tope de 200 y de la regla de la línea | backend | |
+| **AF-3** | `costos` (V-8 con motivo, `no_es_edificacion`, nunca negativos por activo) y `descartes`, bandeja, capitalizar, costos manuales, avisos del libro (R-1), mensaje del error de llave en el libro; prueba de concurrencia de la línea y del total del activo | backend | **Programado, en revisión** (2026-11-19; notas abajo; revisión: capitalizar toma FOR SHARE del documento y la prueba «capitalizar y anular a la vez» lo cubre) |
+| **AFI-2** (con AF-3) | Capitalizar en N unidades, cuadrícula de unidades (códigos, series, placas), destino alta conjunta; pruebas del reparto y del sobrante, de códigos repetidos, del tope de 200 y de la regla de la línea | backend | **Programado, en revisión** (2026-11-19) |
 | AF-3c | Bandeja «Por capitalizar» (aviso de software y suscripciones, V-2) y pestaña Costos | frontend | |
 | AFI-2c (con AF-3c) | Ventana «Capitalizar» con unidades, costo por unidad y cuadrícula | frontend | |
-| **AF-4** | Dominio de depreciación (§7, pruebas puras con los ejemplos: tope del inmueble con el mayor y el 70 %, reproductores, ocioso, exceso de nota de crédito por libro), `tramos`, poner en uso y quitar de uso | backend | |
+| **AF-4** | Dominio de depreciación (§7, pruebas puras con los ejemplos: tope del inmueble con el mayor y el 70 %, reproductores, ocioso, exceso de nota de crédito por libro), `tramos`, poner en uso y quitar de uso | backend | **Programado, en revisión** (2026-11-19; migración `0004_af4_tramos`) |
 | **AFI-3** (con AF-4) | `PonerEnUsoVarios`, ubicación y «En bodega de activos» al ponerlo disponible, textos de «Disponible para uso» | backend | |
 | **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | |
 | AF-5c | Cierre de depreciación y pestaña Depreciación | frontend | |
@@ -1343,6 +1343,23 @@ dos decimales.
 | AFI-QA (con AF-QA) | Factura de 3 tractores y 50 sillas → bandeja en unidades y grupo → disponibles en bodega → entregar 1 tractor y 20 sillas → cierre → devolver a bodega → baja de 3 sillas → reportes de existencias y responsiva | pruebas-qa | |
 | AF-14 | (Después de v1, AF-P18) Pólizas de seguro: `polizas` y `activos_de_polizas`, vencimientos | backend y frontend | |
 | AF-15 | (Después de v1, P-A) «Sustituir documento»: pasar los costos de un documento del libro a otro que lo reemplaza, con auditoría | backend y frontend | |
+
+**Notas de lo programado en AF-3 y AFI-2 (servidor, migración `0003_af3_costos_y_descartes`):**
+
+- `costos` trae solo lo que ya existe: orígenes `linea_de_compra`, `manual` y `saldo_inicial`, y las clases de costo sin las de
+  división. `mejora_id` (con su llave) llega con AF-7; `division_id`, el origen y las clases de división, con AFI-5;
+  `referencia_de_origen` y el origen `inventario`, con INV-AF.
+- `descartes_de_lineas` borra el descarte **en cascada** con su línea (cambia §5.5): con la llave sin acción, un documento con
+  una línea descartada no se podría eliminar nunca (devolverla a la bandeja deja la fila). El rastro queda en la auditoría
+  (`descartar` y `devolver`).
+- Un activo del balance solo recibe costos mientras está `en_construccion`; uno en uso con libros (llega con AF-4) los recibe
+  como mejora o costo posterior (AF-7, error `costo_posterior_no_disponible` mientras tanto). Un bien de control recibe costos de
+  referencia; uno de terceros no.
+- `unidades` se valida antes de abrir la transacción (`demasiadas_unidades`) y el tope cuenta las de **toda** la operación. Los
+  códigos de la cuadrícula se revisan juntos antes de insertar (error por renglón) y los propuestos salen de un solo bloque del
+  correlativo. Las unidades de una asignación comparten `alta_conjunta_id` solo si son más de una.
+- El archivo del costo manual (`archivo_id`) tiene su columna, pero la ruta de subida queda pendiente (revisión de `seguridad`).
+- La lista de costos de un activo y su ficha usan `activos.ver`; la ficha trae `costo` (Σ de los vigentes).
 
 AF-6 puede adelantarse a AF-5 si se quiere cargar saldos antes de cerrar meses. El paso **AF-P22** va antes de AF-2c y
 necesita la revisión de `seguridad` de §6.13. **AFI-1** no es un paso aparte: son columnas de la migración de AF-2. AFI-0

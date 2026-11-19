@@ -18,10 +18,12 @@ function aFicha(activo: Activo): ActivoFichaDto {
     ...datos,
     id: id.valor,
     claseNombre: 'Clase de prueba',
+    costo: '0.00',
     incisoFiscal: 'maquinaria_y_vehiculos',
     localidadNombre: null,
     departamentoNombre: null,
     traslados: [],
+    tramos: [],
   };
 }
 
@@ -37,6 +39,27 @@ export class ActivosEnMemoria implements RepositorioActivos, ConsultasActivos {
 
   async agregar(activo: Activo): Promise<void> {
     this.registros.set(activo.id.valor, activo);
+  }
+
+  async agregarVarios(activos: readonly Activo[]): Promise<void> {
+    for (const activo of activos) this.registros.set(activo.id.valor, activo);
+  }
+
+  async buscarBloqueando(ids: readonly string[]): Promise<Activo[]> {
+    return ids.flatMap((id) => this.registros.get(id) ?? []);
+  }
+
+  async vigentesDeAltaConjunta(altaConjuntaId: string): Promise<Activo[]> {
+    return [...this.registros.values()].filter((activo) => {
+      const { altaConjuntaId: alta, estado } = activo.instantanea();
+      return alta === altaConjuntaId && estado !== 'dado_de_baja';
+    });
+  }
+
+  async codigosUsados(codigos: readonly string[]): Promise<Set<string>> {
+    const buscados = new Set(codigos.map((codigo) => codigo.toUpperCase()));
+    const usados = [...this.registros.values()].map((a) => a.instantanea().codigo.toUpperCase());
+    return new Set(usados.filter((codigo) => buscados.has(codigo)));
   }
 
   async guardar(activo: Activo): Promise<void> {
