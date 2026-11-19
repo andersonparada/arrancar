@@ -1,14 +1,13 @@
-import { fechasDelRango, sumarDiasAFecha } from '../../dominio/fechas-de-publicacion.js';
+import { diasDePublicacionDeCruces, fechasDelRango, sumarDiasAFecha } from '../../dominio/fechas-de-publicacion.js';
 import type {
   BitacoraDelBanguat,
   ConsultaGuardada,
   MonedaConCodigoDelBanguat,
 } from '../puertos/bitacora-del-banguat.js';
-import type { DiasHabilesParaTipos, HoyDeLaInstalacion } from '../tipos-de-cambio.js';
+import type { HoyDeLaInstalacion } from '../tipos-de-cambio.js';
 
 interface Dependencias {
   bitacora: BitacoraDelBanguat;
-  calendario: DiasHabilesParaTipos;
   reloj: HoyDeLaInstalacion;
 }
 
@@ -19,7 +18,7 @@ export interface EstadoDeLaSerie {
   codigoBanguat: number;
   activa: boolean;
   ultimaFecha: string | null;
-  /** Días de atraso: del calendario para el dólar y hábiles para las demás; nulo si nunca se cargó. */
+  /** Días de atraso: del calendario para el dólar y de lunes a viernes para las demás; nulo si nunca se cargó. */
   diasDeAtraso: number | null;
   /** Es una moneda activa y su atraso pasa del límite (dólar: 1 día; demás: 3 días hábiles). */
   atrasada: boolean;
@@ -52,18 +51,15 @@ export class ConsultarEstadoDeLaCarga {
   private async estadoDe(moneda: MonedaConCodigoDelBanguat, hoy: string): Promise<EstadoDeLaSerie> {
     const { ultimaFecha } = moneda;
     const esElDolar = moneda.codigoBanguat === CODIGO_DEL_DOLAR;
-    const diasDeAtraso = ultimaFecha ? await this.atraso(ultimaFecha, hoy, esElDolar) : null;
+    const diasDeAtraso = ultimaFecha ? this.atraso(ultimaFecha, hoy, esElDolar) : null;
     const limite = esElDolar ? DIAS_DE_ATRASO_DEL_DOLAR : DIAS_HABILES_DE_ATRASO_DE_LAS_DEMAS;
     return { ...moneda, diasDeAtraso, atrasada: moneda.activa && (diasDeAtraso === null || diasDeAtraso > limite) };
   }
 
-  /** El dólar cuenta días del calendario; las demás, solo los hábiles después de la última fecha cargada. */
-  private async atraso(ultimaFecha: string, hoy: string, calendario: boolean): Promise<number> {
+  /** El dólar cuenta días del calendario; las demás, solo de lunes a viernes después de la última fecha cargada. */
+  private atraso(ultimaFecha: string, hoy: string, esElDolar: boolean): number {
     if (ultimaFecha >= hoy) return 0;
-    const dias = fechasDelRango(sumarDiasAFecha(ultimaFecha, 1), hoy);
-    if (calendario) return dias.length;
-    let habiles = 0;
-    for (const dia of dias) if (await this.dependencias.calendario.esHabil(dia)) habiles++;
-    return habiles;
+    const desde = sumarDiasAFecha(ultimaFecha, 1);
+    return esElDolar ? fechasDelRango(desde, hoy).length : diasDePublicacionDeCruces(desde, hoy).size;
   }
 }

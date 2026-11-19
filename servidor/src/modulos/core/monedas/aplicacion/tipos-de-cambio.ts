@@ -1,5 +1,9 @@
 import { TipoDeCambioNoDisponible } from '../dominio/errores.js';
-import { sumarDiasAFecha } from '../dominio/fechas-de-publicacion.js';
+import {
+  esDiaDePublicacionDeCruces,
+  sumarDiasAFecha,
+  ultimoDiaDePublicacionDeCrucesAntesDe,
+} from '../dominio/fechas-de-publicacion.js';
 import { MONEDA_BASE } from '../dominio/moneda.js';
 import {
   clasificarTipo,
@@ -9,17 +13,11 @@ import {
 } from '../dominio/tipo-vigente.js';
 import type { TipoDeCambioDto, TiposDeCambioGuardados } from './puertos/tipos-de-cambio-guardados.js';
 
-/** La moneda cuyo tipo se publica todos los días del calendario; las demás no se calculan en fin de semana ni asueto. */
+/** La moneda cuyo tipo se publica todos los días del calendario; las demás no se publican sábado ni domingo. */
 const MONEDA_DE_TODOS_LOS_DIAS = 'USD';
-const DIAS_A_REVISAR_PARA_EL_ULTIMO_HABIL = 14;
 const MAXIMO_DE_FILAS_EN_MEMORIA = 500;
 /** Lo leído caduca pronto: así una corrección hecha en otra instancia llega sin reiniciar. */
 const VIDA_DE_LO_LEIDO_EN_MS = 60_000;
-
-/** Lo que el servicio necesita saber del calendario laboral. */
-export interface DiasHabilesParaTipos {
-  esHabil(fecha: string): Promise<boolean>;
-}
 
 /** La fecha de hoy en la zona horaria de la instalación. */
 export interface HoyDeLaInstalacion {
@@ -28,7 +26,6 @@ export interface HoyDeLaInstalacion {
 
 interface Dependencias {
   guardados: TiposDeCambioGuardados;
-  calendario: DiasHabilesParaTipos;
   reloj: HoyDeLaInstalacion;
 }
 
@@ -77,7 +74,7 @@ export class TiposDeCambio {
       fecha,
       hoy: await this.dependencias.reloj.hoy(),
       fechaDelTipo: fila?.fecha ?? null,
-      diaSinCalculo: fila ? await this.esDiaSinCalculo(moneda, fecha, fila.fecha) : false,
+      diaSinCalculo: fila ? esDiaSinCalculo(moneda, fecha, fila.fecha) : false,
     });
     return { ...vacia(moneda, fecha), ...datosDe(fila), ...clasificacion };
   }
@@ -112,23 +109,15 @@ export class TiposDeCambio {
     if (this.leidos.size >= MAXIMO_DE_FILAS_EN_MEMORIA) this.leidos.clear();
     this.leidos.set(llave, { fila, vence: Date.now() + VIDA_DE_LO_LEIDO_EN_MS });
   }
+}
 
-  /** Fin de semana o asueto con el tipo del último día hábil anterior, en una moneda que no se calcula esos días. */
-  private async esDiaSinCalculo(moneda: string, fecha: string, fechaDelTipo: string): Promise<boolean> {
-    const { calendario } = this.dependencias;
-    if (fechaDelTipo === fecha || moneda === MONEDA_DE_TODOS_LOS_DIAS || (await calendario.esHabil(fecha)))
-      return false;
-    return fechaDelTipo >= (await this.ultimoHabilAntes(fecha));
-  }
-
-  private async ultimoHabilAntes(fecha: string): Promise<string> {
-    let dia = fecha;
-    for (let revisados = 0; revisados < DIAS_A_REVISAR_PARA_EL_ULTIMO_HABIL; revisados++) {
-      dia = sumarDiasAFecha(dia, -1);
-      if (await this.dependencias.calendario.esHabil(dia)) return dia;
-    }
-    return dia;
-  }
+/**
+ * Sábado o domingo, con el tipo del último día de publicación, en una moneda que no se calcula esos días. Un asueto
+ * entre semana sin la fila esperada no es «día sin cálculo»: el Banguat publica también en asuetos (adenda B.9).
+ */
+function esDiaSinCalculo(moneda: string, fecha: string, fechaDelTipo: string): boolean {
+  if (fechaDelTipo === fecha || moneda === MONEDA_DE_TODOS_LOS_DIAS || esDiaDePublicacionDeCruces(fecha)) return false;
+  return fechaDelTipo >= ultimoDiaDePublicacionDeCrucesAntesDe(fecha);
 }
 
 const vacia = (moneda: string, fecha: string): ConsultaDeTipo => ({

@@ -17,7 +17,7 @@ const consulta = (extra: Partial<ConsultaDeLaCarga>): ConsultaDeLaCarga => ({
   operacion: 'TipoCambioRangoMoneda',
   vuelta: 'manana',
   moneda: 'EUR',
-  codigoBanguat: 28,
+  codigoBanguat: 24,
   desde: '2026-11-12',
   hasta: '2026-11-18',
   resultado: 'exito',
@@ -43,8 +43,29 @@ describe('la bitácora de la carga', () => {
       'valor_fuera_de_rango',
       'valor_ambiguo',
       'variacion_excesiva',
+      'sin_dolar_del_dia',
+      'convencion_dudosa',
+      'sin_convencion',
     ] as const)
       expect(quehacerConElResultado(resultado)).toBeTruthy();
+  });
+
+  it('traduce los resultados de los cruces y dice la salida de una variación real', () => {
+    expect(resultadoDeLaConsulta('sin_dolar_del_dia')).toEqual({ texto: 'Falta el dólar del día', tono: 'trigo' });
+    expect(resultadoDeLaConsulta('convencion_dudosa').texto).toBe('Convención dudosa');
+    expect(resultadoDeLaConsulta('sin_convencion').texto).toBe('Código sin convención');
+    expect(quehacerConElResultado('variacion_excesiva')).toMatch(/ingrese el tipo a mano con su motivo/);
+    expect(lineasDelDetalle('EUR 2026-11-17: sin_dolar_del_dia | EUR 2026-11-18: convencion_dudosa', alReves)).toEqual([
+      'EUR 17/11/2026: sin el dólar de esa fecha, no se guardó (queda como hueco)',
+      'EUR 18/11/2026: parece venir al revés, no se guardó',
+    ]);
+  });
+
+  it('valor_ambiguo se dice distinto en el dólar y en las cruzadas', () => {
+    expect(lineasDelDetalle('USD 2026-11-17: valor_ambiguo | CRC 2026-11-17: valor_ambiguo', alReves)).toEqual([
+      'USD 17/11/2026: compra distinta de venta, no se guardó',
+      'CRC 17/11/2026: compra y venta con más de 3 % de diferencia, no se guardó',
+    ]);
   });
 
   it('el detalle sale línea por línea, con los rechazos en palabras y las fechas con el formato de la empresa', () => {

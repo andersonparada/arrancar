@@ -1,16 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { CalendarioLaboral } from '../../calendario/aplicacion/calendario-laboral.js';
 import { TipoDeCambioNoDisponible } from '../dominio/errores.js';
 import { TiposDeCambioEnMemoria } from '../pruebas/tipos-de-cambio-en-memoria.js';
 import { TiposDeCambio } from './tipos-de-cambio.js';
 
-/** Hoy es miércoles 18 de noviembre de 2026; sábado 14 y domingo 15 no son hábiles (el 13, viernes, sí). */
+/** Hoy es miércoles 18 de noviembre de 2026; sábado 14 y domingo 15 no se publican (el 13, viernes, sí). */
 const HOY = '2026-11-18';
 
 function armar(hoy = HOY) {
   const guardados = new TiposDeCambioEnMemoria();
-  const calendario = new CalendarioLaboral({ delAnio: async () => [] });
-  const servicio = new TiposDeCambio({ guardados, calendario, reloj: { hoy: async () => hoy } });
+  const servicio = new TiposDeCambio({ guardados, reloj: { hoy: async () => hoy } });
   return { guardados, servicio };
 }
 
@@ -130,13 +128,13 @@ describe('días sin cálculo de las monedas distintas del dólar', () => {
     }
   });
 
-  it('un asueto entre semana también es día sin cálculo: usa el último día hábil', async () => {
+  it('un asueto entre semana sin su fila es falta de publicación: el Banguat sí publica en asuetos', async () => {
     const { servicio, guardados } = armar();
     guardados.poner('EUR', '2026-10-19', '8.80');
 
     const tipo = await servicio.vigente('EUR', '2026-10-20');
 
-    expect(tipo).toMatchObject({ fechaDelTipo: '2026-10-19', motivoDelAnterior: 'dia_sin_calculo' });
+    expect(tipo).toMatchObject({ fechaDelTipo: '2026-10-19', motivoDelAnterior: 'falta_publicacion' });
   });
 
   it('un día hábil sin publicación sí pide confirmación', async () => {

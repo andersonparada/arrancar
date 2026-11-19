@@ -1,4 +1,9 @@
-import type { MonedaDelBanguat, MonedaPedida, PublicacionDeTipoDeCambio } from '../../dominio/publicacion.js';
+import type {
+  ConvencionDePublicacion,
+  MonedaACargar,
+  MonedaDelBanguat,
+  PublicacionDeTipoDeCambio,
+} from '../../dominio/publicacion.js';
 
 export type OperacionDelBanguat =
   | 'TipoCambioDia'
@@ -10,7 +15,15 @@ export type OperacionDelBanguat =
 export type VueltaDeCarga = 'madrugada' | 'manana' | 'noche' | 'arranque' | 'relleno' | 'manual' | 'lista' | 'muestra';
 
 export type ResultadoDeLaConsulta =
-  'exito' | 'sin_datos' | 'error' | 'valor_fuera_de_rango' | 'valor_ambiguo' | 'variacion_excesiva';
+  | 'exito'
+  | 'sin_datos'
+  | 'error'
+  | 'valor_fuera_de_rango'
+  | 'valor_ambiguo'
+  | 'variacion_excesiva'
+  | 'sin_dolar_del_dia'
+  | 'convencion_dudosa'
+  | 'sin_convencion';
 
 /** Una llamada al Banguat tal como queda en `core.consultas_al_banguat` (las filas nuevas las cuenta quien guarda). */
 export interface ConsultaHecha {
@@ -30,6 +43,21 @@ export interface ConsultaHecha {
   disparadaPor: string | null;
 }
 
+/** La fila del dólar del Banguat de una fecha. */
+export interface DolarGuardado {
+  id: string;
+  fecha: string;
+  /** Quetzales por dólar, texto decimal. */
+  referencia: string;
+}
+
+export interface BusquedaDelPublicado {
+  moneda: string;
+  convencion: ConvencionDePublicacion;
+  desde: string;
+  antesDe: string;
+}
+
 /** Lo que el horario necesita saber de la bitácora. */
 export interface ConsultaReciente {
   vuelta: string;
@@ -47,12 +75,22 @@ export interface ResultadoDeActualizarLista {
  * transacción (la tarea no tiene usuario ni empresa).
  */
 export interface CargasDeTipos {
-  /** Las monedas activas con código del Banguat (el dólar es el 2). */
-  monedasACargar(): Promise<MonedaPedida[]>;
+  /**
+   * Las monedas activas con código del Banguat **y con convención** (las demás no se cargan), con el dólar (código 2)
+   * primero: así el relleno tiene el dólar de cada día antes de pasar las otras monedas a quetzales.
+   */
+  monedasACargar(): Promise<MonedaACargar[]>;
+  /** El dólar del Banguat guardado entre dos fechas (ambas incluidas): con él se pasan los cruces a quetzales. */
+  dolaresDelBanguat(desde: string, hasta: string): Promise<DolarGuardado[]>;
   /** Fechas con tipo del Banguat ya guardado para la moneda entre dos fechas, ambas incluidas. */
   fechasConTipoDelBanguat(moneda: string, desde: string, hasta: string): Promise<string[]>;
   /** El valor vigente más reciente de la moneda con fecha desde `desde` y antes de `antesDe`, si hay. */
   valorAnterior(moneda: string, desde: string, antesDe: string): Promise<string | null>;
+  /**
+   * El valor publicado (promedio de compra y venta, en su convención) de la fila `banguat` más reciente de la moneda
+   * con fecha desde `desde` y antes de `antesDe`; nulo si no hay o es de otra convención.
+   */
+  publicadoAnterior(consulta: BusquedaDelPublicado): Promise<string | null>;
   /** Lo registrado en la bitácora desde ese instante. */
   consultasDesde(desde: Date): Promise<ConsultaReciente[]>;
   /**

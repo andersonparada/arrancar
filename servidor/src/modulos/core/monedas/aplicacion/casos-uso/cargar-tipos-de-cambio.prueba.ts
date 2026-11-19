@@ -49,9 +49,9 @@ describe('la madrugada (el dólar)', () => {
 describe('la mañana (las demás monedas)', () => {
   it('a las 09:30 pide cada otra moneda activa con la semana hasta hoy y no vuelve a pedir el dólar', async () => {
     const { carga, cargas, fuente, reloj } = armar();
-    cargas.poner('USD', '2026-11-18');
-    await completar(cargas, '2026-11-18');
-    fuente.publicaciones.push(publicacion('EUR', '2026-11-18', '9.10'));
+    cargas.poner('USD', '2026-11-18', '7.65');
+    completar(cargas, '2026-11-18');
+    fuente.publicaciones.push(publicacion('EUR', '2026-11-18', '1.19'));
     reloj.ir('09:30');
 
     expect(await carga.siTocaAhora()).toBe('manana');
@@ -59,8 +59,10 @@ describe('la mañana (las demás monedas)', () => {
     expect(cargas.tipos.at(-1)).toMatchObject({
       moneda: 'EUR',
       fecha: '2026-11-18',
-      referencia: '9.10',
-      compra: '9.10',
+      referencia: '9.1035',
+      compra: '1.19',
+      convencion: 'usd_por_unidad',
+      dolarUsadoId: 'USD-2026-11-18',
     });
     expect(cargas.consultas).toMatchObject([
       { operacion: 'TipoCambioRangoMoneda', vuelta: 'manana', moneda: 'EUR', desde: '2026-11-12', hasta: '2026-11-18' },
@@ -71,7 +73,7 @@ describe('la mañana (las demás monedas)', () => {
   it('las demás monedas no reintentan: la falla queda en la bitácora y la vuelta siguiente es la del día siguiente', async () => {
     const { carga, cargas, fuente, reloj } = armar();
     cargas.poner('USD', '2026-11-18');
-    await completar(cargas, '2026-11-18');
+    completar(cargas, '2026-11-18');
     fuente.publicaciones.push(publicacion('EUR', '2026-11-18', '9.10'));
     fuente.fallosPendientes.push(fallo());
     reloj.ir('09:30');
@@ -87,7 +89,7 @@ describe('la mañana (las demás monedas)', () => {
   it('una moneda sin publicación el sábado no reintenta ni avisa', async () => {
     const { carga, cargas, fuente, reloj } = armar();
     cargas.poner('USD', '2026-11-21');
-    await completar(cargas, '2026-11-21');
+    completar(cargas, '2026-11-21');
     reloj.ir('09:30', '21');
 
     await carga.siTocaAhora();
@@ -100,10 +102,10 @@ describe('la mañana (las demás monedas)', () => {
 
   it('una moneda que cambia 30 % no se guarda', async () => {
     const { carga, cargas, fuente, reloj } = armar();
-    cargas.poner('USD', '2026-11-18');
+    cargas.poner('USD', '2026-11-18', '7.65');
     cargas.poner('EUR', '2026-11-17', '9.00');
-    await completar(cargas, '2026-11-18');
-    fuente.publicaciones.push(publicacion('EUR', '2026-11-18', '11.70'));
+    completar(cargas, '2026-11-18');
+    fuente.publicaciones.push(publicacion('EUR', '2026-11-18', '1.5'));
     reloj.ir('09:30');
 
     await carga.siTocaAhora();
@@ -114,9 +116,9 @@ describe('la mañana (las demás monedas)', () => {
 
   it('solo se piden las monedas activas con código: sin otras, la vuelta no pide nada', async () => {
     const { carga, cargas, fuente, reloj } = armar();
-    cargas.monedas = [{ moneda: 'USD', codigoBanguat: 2 }];
+    cargas.monedas = [{ moneda: 'USD', codigoBanguat: 2, convencion: 'quetzales_por_unidad' }];
     cargas.poner('USD', '2026-11-18');
-    await completar(cargas, '2026-11-18');
+    completar(cargas, '2026-11-18');
     reloj.ir('09:30');
 
     expect(await carga.siTocaAhora()).toBe('manana');
@@ -130,14 +132,14 @@ describe('la mañana (las demás monedas)', () => {
 describe('la noche', () => {
   it('adelanta el dólar de mañana y pide las demás que aún no tienen el de hoy', async () => {
     const { carga, cargas, fuente, reloj } = armar();
-    cargas.poner('USD', '2026-11-18');
-    await completar(cargas, '2026-11-18');
+    cargas.poner('USD', '2026-11-18', '7.65');
+    completar(cargas, '2026-11-18');
     cargas.consultas.push({
       ...{ iniciadaEn: new Date('2026-11-18T09:31:00-06:00'), terminadaEn: new Date('2026-11-18T09:31:01-06:00') },
       operacion: 'TipoCambioRangoMoneda',
       vuelta: 'manana',
       moneda: 'EUR',
-      codigoBanguat: 28,
+      codigoBanguat: 24,
       desde: '2026-11-12',
       hasta: '2026-11-18',
       resultado: 'sin_datos',
@@ -145,7 +147,7 @@ describe('la noche', () => {
       detalle: null,
       disparadaPor: null,
     });
-    fuente.publicaciones.push(publicacion('USD', '2026-11-19', '7.66'), publicacion('EUR', '2026-11-18', '9.10'));
+    fuente.publicaciones.push(publicacion('USD', '2026-11-19', '7.66'), publicacion('EUR', '2026-11-18', '1.19'));
     reloj.ir('21:00');
 
     expect(await carga.siTocaAhora()).toBe('noche');
@@ -164,7 +166,7 @@ describe('la noche', () => {
 describe('el relleno y el arranque', () => {
   it('solo pide a las monedas con huecos en los últimos 45 días', async () => {
     const { carga, cargas, fuente } = armar();
-    await completar(cargas, '2026-11-18');
+    completar(cargas, '2026-11-18');
 
     await carga.alArrancar();
     expect(fuente.consultas).toBe(0);
@@ -182,7 +184,7 @@ describe('el relleno y el arranque', () => {
 
   it('para las demás monedas solo cuentan como hueco los días hábiles', async () => {
     const { carga, cargas, fuente } = armar();
-    await completar(cargas, '2026-11-18');
+    completar(cargas, '2026-11-18');
     cargas.tipos.splice(
       cargas.tipos.findIndex((t) => t.moneda === 'EUR' && t.fecha === '2026-11-13'),
       1,
@@ -200,13 +202,13 @@ describe('el relleno y el arranque', () => {
 
   it('al arrancar actualiza la lista si solo tiene la semilla o es vieja', async () => {
     const { carga, cargas, fuente } = armar();
-    await completar(cargas, '2026-11-18');
+    completar(cargas, '2026-11-18');
     cargas.estadoDeLista = { vistaPorUltimaVez: null, monedas: 1 };
-    fuente.monedasDelBanguat.push({ codigo: 28, descripcion: '  Euro  ' });
+    fuente.monedasDelBanguat.push({ codigo: 24, descripcion: '  Euro  ' });
 
     await carga.alArrancar();
 
-    expect(cargas.listas).toEqual([[{ codigo: 28, descripcion: 'Euro' }]]);
+    expect(cargas.listas).toEqual([[{ codigo: 24, descripcion: 'Euro' }]]);
     expect(cargas.consultas).toMatchObject([
       { operacion: 'VariablesDisponibles', vuelta: 'lista', resultado: 'exito' },
     ]);
@@ -214,7 +216,7 @@ describe('el relleno y el arranque', () => {
 
   it('una lista vacía o con error no toca nada y queda en la bitácora', async () => {
     const { carga, cargas, fuente } = armar();
-    await completar(cargas, '2026-11-18');
+    completar(cargas, '2026-11-18');
     cargas.estadoDeLista = { vistaPorUltimaVez: null, monedas: 1 };
 
     await carga.alArrancar();
@@ -238,7 +240,7 @@ describe('una sola carga a la vez y «Cargar ahora»', () => {
 
   it('carga el rango pedido de todas las monedas activas con código, a nombre de quien la pidió', async () => {
     const { carga, cargas, fuente, guardados } = armar();
-    fuente.publicaciones.push(publicacion('USD', '2026-11-17', '7.65'), publicacion('EUR', '2026-11-17', '9.10'));
+    fuente.publicaciones.push(publicacion('USD', '2026-11-17', '7.65'), publicacion('EUR', '2026-11-17', '1.19'));
 
     const resumenes = await carga.cargarAhora({ usuarioId: 'u1', desde: '2026-11-16', hasta: '2026-11-18' });
 

@@ -59,10 +59,41 @@ export class CatalogoDeMonedasEnMemoria implements CatalogoDeMonedas {
 /** La lista del Banguat de la prueba: dólar, euro y libra disponibles, y un código que dejó de venir. */
 export class MonedasDelBanguatEnMemoria implements MonedasDelBanguat {
   readonly ofrecidas: MonedaDelBanguatGuardada[] = [
-    { codigo: 2, descripcion: 'Dólares de EE.UU.', disponible: true, vistaPorUltimaVez: '2026-11-18T06:00:00.000Z' },
-    { codigo: 28, descripcion: 'Euro', disponible: true, vistaPorUltimaVez: '2026-11-18T06:00:00.000Z' },
-    { codigo: 29, descripcion: 'Libra', disponible: true, vistaPorUltimaVez: '2026-11-18T06:00:00.000Z' },
-    { codigo: 99, descripcion: 'Retirada', disponible: false, vistaPorUltimaVez: '2026-01-01T06:00:00.000Z' },
+    {
+      codigo: 2,
+      descripcion: 'Dólares de EE.UU.',
+      disponible: true,
+      convencion: 'quetzales_por_unidad',
+      vistaPorUltimaVez: '2026-11-18T06:00:00.000Z',
+    },
+    {
+      codigo: 24,
+      descripcion: 'Euro',
+      disponible: true,
+      convencion: 'usd_por_unidad',
+      vistaPorUltimaVez: '2026-11-18T06:00:00.000Z',
+    },
+    {
+      codigo: 9,
+      descripcion: 'Libra',
+      disponible: true,
+      convencion: 'usd_por_unidad',
+      vistaPorUltimaVez: '2026-11-18T06:00:00.000Z',
+    },
+    {
+      codigo: 98,
+      descripcion: 'Sin comprobar',
+      disponible: true,
+      convencion: null,
+      vistaPorUltimaVez: '2026-11-18T06:00:00.000Z',
+    },
+    {
+      codigo: 99,
+      descripcion: 'Retirada',
+      disponible: false,
+      convencion: null,
+      vistaPorUltimaVez: '2026-01-01T06:00:00.000Z',
+    },
   ];
 
   async listar(): Promise<MonedaDelBanguatGuardada[]> {

@@ -29,6 +29,9 @@ export const RESULTADOS_DE_CONSULTA = [
   'valor_fuera_de_rango',
   'valor_ambiguo',
   'variacion_excesiva',
+  'sin_dolar_del_dia',
+  'convencion_dudosa',
+  'sin_convencion',
 ] as const;
 
 const enLista = (columna: unknown, valores: readonly string[]) =>

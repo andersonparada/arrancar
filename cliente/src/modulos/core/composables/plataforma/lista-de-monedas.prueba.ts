@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ConsultaDeLaLista, Moneda, MuestraDelBanguat } from '../../servicios/monedas.api';
+import type { ConsultaDeLaLista, Moneda, MuestraDelBanguat, OpcionDelBanguat } from '../../servicios/monedas.api';
 import type { EstadoDeLaSerie } from '../../servicios/tipos-de-cambio.api';
 import {
   avisoDeAtraso,
@@ -29,7 +29,7 @@ const moneda = (codigo: string, nombre: string, extra: Partial<Moneda> = {}): Mo
 const monedas = [
   moneda('USD', 'Dólar', { activa: true, codigoBanguat: 2, descripcionBanguat: 'Dólares de EE.UU.' }),
   moneda('GTQ', 'Quetzal', { activa: true }),
-  moneda('EUR', 'Euro', { codigoBanguat: 28, descripcionBanguat: 'Euro' }),
+  moneda('EUR', 'Euro', { codigoBanguat: 24, descripcionBanguat: 'Euro' }),
   moneda('GBP', 'Libra esterlina'),
 ];
 
@@ -56,8 +56,10 @@ describe('filtrarMonedas', () => {
 });
 
 describe('textoDelCodigo', () => {
-  it('«Euro (28)», o una raya sin código', () => {
-    expect(textoDelCodigo(monedas[2]!)).toBe('Euro (28)');
+  it('«Euro (24)», o una raya sin código', () => {
+    expect(textoDelCodigo(monedas[2]!)).toBe('Euro (24)');
+    const lista = [{ codigo: 24, convencion: 'usd_por_unidad' }] as OpcionDelBanguat[];
+    expect(textoDelCodigo(monedas[2]!, lista)).toBe('Euro (24) · USD por unidad');
     expect(textoDelCodigo(monedas[3]!)).toBe('—');
     expect(textoDelCodigo(moneda('JPY', 'Yen', { codigoBanguat: 7 }))).toBe('Código 7');
   });
@@ -66,7 +68,7 @@ describe('textoDelCodigo', () => {
 const serie = (extra: Partial<EstadoDeLaSerie>): EstadoDeLaSerie => ({
   moneda: 'EUR',
   nombre: 'Euro',
-  codigoBanguat: 28,
+  codigoBanguat: 24,
   activa: true,
   ultimaFecha: '2026-11-10',
   diasDeAtraso: 5,
@@ -97,6 +99,8 @@ describe('ultimaActualizacionDeLaLista', () => {
       descripcion: 'x',
       disponible: true,
       excluida: false,
+      convencion: null,
+      ofrecida: false,
       asignadaA: null,
       vistaPorUltimaVez: vista,
     });
@@ -137,13 +141,23 @@ describe('mensajeDeActualizacion', () => {
 });
 
 const muestra = (extra: Partial<MuestraDelBanguat>): MuestraDelBanguat => ({
-  codigo: 28,
+  codigo: 24,
   descripcion: 'Euro',
   moneda: 'EUR',
   desde: '2026-11-12',
   hasta: '2026-11-18',
   resultado: 'exito',
-  valores: [{ fecha: '2026-11-17', referencia: '8.80000000' }],
+  convencion: 'usd_por_unidad',
+  valores: [
+    {
+      fecha: '2026-11-17',
+      compra: '1.1',
+      venta: '1.2',
+      promedio: '1.15',
+      dolar: '7.64489',
+      referencia: '8.79162350',
+    },
+  ],
   rechazadas: [],
   mensaje: null,
   ...extra,
@@ -154,10 +168,26 @@ describe('mensajeDeMuestra', () => {
     expect(mensajeDeMuestra(muestra({}))).toEqual({ tipo: 'exito', mensaje: '1 valor en los últimos 7 días.' });
   });
 
+  it('si algún día no tiene dólar guardado, avisa que no se puede pasar a quetzales', () => {
+    const [valor] = muestra({}).valores;
+    const sinDolar = { ...valor!, dolar: null, referencia: null };
+
+    expect(mensajeDeMuestra(muestra({ valores: [valor!, sinDolar] }))).toEqual({
+      tipo: 'info',
+      mensaje:
+        '2 valores en los últimos 7 días; en 1 día aún no está guardado el dólar y no se puede pasar a quetzales.',
+    });
+  });
+
   it('sin valores, con error y con compra distinta de venta, dice qué hacer', () => {
     expect(mensajeDeMuestra(muestra({ resultado: 'sin_datos', valores: [] })).tipo).toBe('info');
     expect(mensajeDeMuestra(muestra({ resultado: 'error', valores: [] })).tipo).toBe('error');
-    expect(mensajeDeMuestra(muestra({ resultado: 'valor_ambiguo', valores: [] })).mensaje).toMatch(/compra y venta/);
+    expect(mensajeDeMuestra(muestra({ resultado: 'valor_ambiguo', moneda: 'USD', valores: [] })).mensaje).toMatch(
+      /compra distinta de venta/,
+    );
+    expect(mensajeDeMuestra(muestra({ resultado: 'valor_ambiguo', moneda: 'CRC', valores: [] })).mensaje).toMatch(
+      /más de 3 %/,
+    );
   });
 });
 

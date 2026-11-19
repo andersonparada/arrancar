@@ -16,13 +16,13 @@ const yen: Moneda = { ...euro, codigo: 'JPY', decimales: 0 };
 
 describe('aplicarCambios', () => {
   it('aplica lo que viene y deja lo demás como estaba', () => {
-    const nueva = aplicarCambios(euro, { activa: true, codigoBanguat: 28 });
+    const nueva = aplicarCambios(euro, { activa: true, codigoBanguat: 24 });
 
-    expect(nueva).toEqual({ ...euro, activa: true, codigoBanguat: 28 });
+    expect(nueva).toEqual({ ...euro, activa: true, codigoBanguat: 24 });
   });
 
   it('lo que falta (undefined) no se toca, y null sí quita el valor', () => {
-    const conCodigo = { ...euro, codigoBanguat: 28 };
+    const conCodigo = { ...euro, codigoBanguat: 24 };
 
     expect(aplicarCambios(conCodigo, { activa: undefined })).toEqual(conCodigo);
     expect(aplicarCambios(conCodigo, { codigoBanguat: null }).codigoBanguat).toBeNull();

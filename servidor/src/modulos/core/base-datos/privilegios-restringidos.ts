@@ -62,7 +62,10 @@ export const RESTRICCIONES_DE_PRIVILEGIOS: Readonly<Record<string, RestriccionDe
     sin: ['delete'],
     actualizarSolo: ['activa', 'codigo_banguat', 'letras_singular', 'letras_plural'],
   },
-  'core.monedas_del_banguat': { sin: ['delete'] },
+  'core.monedas_del_banguat': {
+    sin: ['delete'],
+    actualizarSolo: ['descripcion', 'disponible', 'vista_por_ultima_vez'],
+  },
   'core.tipos_de_cambio': { sin: ['update', 'delete'] },
   'core.consultas_al_banguat': { sin: ['update', 'delete'] },
   'core.archivos': null,

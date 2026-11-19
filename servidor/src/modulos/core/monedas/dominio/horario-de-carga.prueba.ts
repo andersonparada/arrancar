@@ -9,11 +9,14 @@ const intento = (vuelta: string, hora: string): IntentoHecho => ({ vuelta, inici
 interface Situacion {
   intentos?: IntentoHecho[];
   hayDolarDeHoy?: boolean;
+  hayDolarDeManana?: boolean;
   zona?: string;
 }
 
-const toca = (hora: string, { intentos = [], hayDolarDeHoy = false, zona = GUATEMALA }: Situacion = {}) =>
-  vueltaQueToca({ ahora: enGuatemala(hora), zona, intentos, hayDolarDeHoy });
+const toca = (
+  hora: string,
+  { intentos = [], hayDolarDeHoy = false, hayDolarDeManana = true, zona = GUATEMALA }: Situacion = {},
+) => vueltaQueToca({ ahora: enGuatemala(hora), zona, intentos, hayDolarDeHoy, hayDolarDeManana });
 
 describe('vueltaQueToca', () => {
   it('antes de las 06:00 no toca nada', () => {
@@ -51,6 +54,24 @@ describe('vueltaQueToca', () => {
     expect(toca('20:59', { intentos: hechas, hayDolarDeHoy: true })).toBeNull();
     expect(toca('21:00', { intentos: hechas, hayDolarDeHoy: true })).toBe('noche');
     expect(toca('21:15', { intentos: [...hechas, intento('noche', '21:00')], hayDolarDeHoy: true })).toBeNull();
+  });
+
+  it('si el dólar de mañana no llegó, la noche lo reintenta a las 22:00 y a las 23:30, y no entre medias', () => {
+    const base = { hayDolarDeHoy: true, hayDolarDeManana: false };
+    const hechas = [intento('manana', '09:31'), intento('noche', '21:00')];
+    expect(toca('21:45', { ...base, intentos: hechas })).toBeNull();
+    expect(toca('22:00', { ...base, intentos: hechas })).toBe('dolarDeManana');
+    expect(toca('22:15', { ...base, intentos: [...hechas, intento('noche', '22:00')] })).toBeNull();
+    expect(toca('23:30', { ...base, intentos: [...hechas, intento('noche', '22:00')] })).toBe('dolarDeManana');
+    expect(toca('23:45', { ...base, intentos: [...hechas, intento('noche', '23:30')] })).toBeNull();
+  });
+
+  it('no reintenta el dólar de mañana si ya llegó ni antes de que corra la noche', () => {
+    const hechas = [intento('manana', '09:31'), intento('noche', '21:00')];
+    expect(toca('22:00', { hayDolarDeHoy: true, hayDolarDeManana: true, intentos: hechas })).toBeNull();
+    expect(
+      toca('22:00', { hayDolarDeHoy: true, hayDolarDeManana: false, intentos: [intento('manana', '09:31')] }),
+    ).toBe('noche');
   });
 
   it('lo hecho ayer no cuenta para hoy', () => {

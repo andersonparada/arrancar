@@ -1,4 +1,5 @@
 import { and, asc, between, desc, eq, lte } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import type { BaseDatos } from '../../../base-datos/conexion.js';
 import { transaccionEnCurso } from '../../../compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { usuarios } from '../../../identidad/infraestructura/persistencia/usuarios.tablas.js';
@@ -10,6 +11,8 @@ import type {
 import { ejecutorActual } from './ejecutor-actual.js';
 import { tiposDeCambio } from './tipos-de-cambio.tablas.js';
 
+const dolar = alias(tiposDeCambio, 'dolar_usado');
+
 const COLUMNAS = {
   id: tiposDeCambio.id,
   moneda: tiposDeCambio.moneda,
@@ -17,6 +20,8 @@ const COLUMNAS = {
   referencia: tiposDeCambio.referencia,
   compra: tiposDeCambio.compra,
   venta: tiposDeCambio.venta,
+  convencion: tiposDeCambio.convencion,
+  dolarUsado: dolar.referencia,
   origen: tiposDeCambio.origen,
   motivo: tiposDeCambio.motivo,
   registradoPor: usuarios.usuario,
@@ -35,6 +40,7 @@ const aDto = (fila: Fila): TipoDeCambioDto => ({
   referencia: sinCeros(fila.referencia),
   compra: fila.compra && sinCeros(fila.compra),
   venta: fila.venta && sinCeros(fila.venta),
+  dolarUsado: fila.dolarUsado && sinCeros(fila.dolarUsado),
   registradoEn: fila.registradoEn.toISOString(),
 });
 
@@ -46,7 +52,8 @@ export class TiposDeCambioDrizzle implements TiposDeCambioGuardados {
     return ejecutor
       .select(COLUMNAS)
       .from(tiposDeCambio)
-      .leftJoin(usuarios, eq(tiposDeCambio.registradoPor, usuarios.id));
+      .leftJoin(usuarios, eq(tiposDeCambio.registradoPor, usuarios.id))
+      .leftJoin(dolar, eq(tiposDeCambio.dolarUsadoId, dolar.id));
   }
 
   async vigenteHasta(moneda: string, fecha: string): Promise<TipoDeCambioDto | null> {

@@ -38,3 +38,27 @@ export function fechasDelRango(desde: string, hasta: string): string[] {
   for (let dia = desde; dia <= hasta; dia = sumarDiasAFecha(dia, 1)) fechas.push(dia);
   return fechas;
 }
+
+/**
+ * Si el Banguat publica las monedas distintas del dólar ese día: de lunes a viernes, también en los asuetos de
+ * Guatemala y del mercado (jueves santo, 25 de diciembre) y nunca en sábado ni domingo (adenda B.2 y B.9).
+ * @throws RangeError si la fecha no existe.
+ */
+export function esDiaDePublicacionDeCruces(fecha: string): boolean {
+  const instante = enUtc(fecha);
+  if (!instante) throw new RangeError(`Fecha inválida: ${fecha}`);
+  const diaDeLaSemana = instante.getUTCDay();
+  return diaDeLaSemana !== 0 && diaDeLaSemana !== 6;
+}
+
+/** Los días de `desde` a `hasta` (ambos incluidos) en que se espera la publicación de las demás monedas. */
+export function diasDePublicacionDeCruces(desde: string, hasta: string): Set<string> {
+  return new Set(fechasDelRango(desde, hasta).filter(esDiaDePublicacionDeCruces));
+}
+
+/** El último día de publicación de las demás monedas anterior a `fecha` (de lunes a viernes). */
+export function ultimoDiaDePublicacionDeCrucesAntesDe(fecha: string): string {
+  let dia = sumarDiasAFecha(fecha, -1);
+  while (!esDiaDePublicacionDeCruces(dia)) dia = sumarDiasAFecha(dia, -1);
+  return dia;
+}

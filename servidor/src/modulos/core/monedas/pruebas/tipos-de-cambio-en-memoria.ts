@@ -33,6 +33,8 @@ export class TiposDeCambioEnMemoria implements TiposDeCambioGuardados {
       referencia,
       compra: null,
       venta: null,
+      convencion: null,
+      dolarUsado: null,
       origen,
       motivo: origen === 'manual' ? 'Prueba' : null,
       registradoPor: origen === 'manual' ? 'soporte' : null,

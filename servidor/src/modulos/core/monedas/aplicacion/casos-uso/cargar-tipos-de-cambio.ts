@@ -115,15 +115,16 @@ export class CargarTiposDeCambio {
       ahora,
       zona,
       intentos: [...(await cargas.consultasDesde(desde)), ...this.sinTrabajo],
-      hayDolarDeHoy: await this.hayDolarDeHoy(hoy),
+      hayDolarDeHoy: await this.hayDolarEn(hoy),
+      hayDolarDeManana: await this.hayDolarEn(sumarDiasAFecha(hoy, 1)),
     });
   }
 
   /** Sin el dólar activo con código no hay nada que esperar de él. */
-  private async hayDolarDeHoy(hoy: string): Promise<boolean> {
+  private async hayDolarEn(fecha: string): Promise<boolean> {
     const { cargas } = this.dependencias;
     if (!(await cargas.monedasACargar()).some((m) => m.moneda === 'USD')) return true;
-    return (await cargas.fechasConTipoDelBanguat('USD', hoy, hoy)).length > 0;
+    return (await cargas.fechasConTipoDelBanguat('USD', fecha, fecha)).length > 0;
   }
 
   private async correr(vuelta: VueltaProgramada): Promise<void> {
@@ -134,10 +135,13 @@ export class CargarTiposDeCambio {
       await vueltas.rellenar('relleno', hoy);
       if (new Date(`${hoy}T00:00:00Z`).getUTCDay() === LUNES) await lista.ejecutar();
     }
-    if (resumenes.length === 0) this.sinTrabajo.push({ vuelta, iniciadaEn: reloj.ahora() });
+    if (resumenes.length === 0) this.sinTrabajo.push({ vuelta: etiquetaDe(vuelta), iniciadaEn: reloj.ahora() });
     this.dependencias.alGuardar();
   }
 }
+
+/** Cómo queda la vuelta en la bitácora: el reintento del dólar de mañana es una vuelta `noche`. */
+const etiquetaDe = (vuelta: VueltaProgramada): string => (vuelta === 'dolarDeManana' ? 'noche' : vuelta);
 
 function revisarRango({ hoy, desde, hasta }: { hoy: string; desde: string; hasta: string }): void {
   if (desde > hasta) throw new RangoDeCargaInvalido('La fecha inicial no puede ser posterior a la final.');

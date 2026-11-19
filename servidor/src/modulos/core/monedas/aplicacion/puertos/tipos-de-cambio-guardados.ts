@@ -4,9 +4,15 @@ export interface TipoDeCambioDto {
   moneda: string;
   /** El día en que rige, `AAAA-MM-DD`. */
   fecha: string;
+  /** Quetzales por una unidad. */
   referencia: string;
+  /** Lo que publicó el Banguat, en su convención (en el dólar coinciden con quetzales). */
   compra: string | null;
   venta: string | null;
+  /** Con que se calculó una fila del Banguat; nula en las manuales. */
+  convencion: 'quetzales_por_unidad' | 'usd_por_unidad' | 'unidades_por_usd' | null;
+  /** La referencia del dólar del Banguat usado para pasar un cruce a quetzales; nula en el dólar y en las manuales. */
+  dolarUsado: string | null;
   origen: 'banguat' | 'manual';
   /** Solo las versiones manuales. */
   motivo: string | null;

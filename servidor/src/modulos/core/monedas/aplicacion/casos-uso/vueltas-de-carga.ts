@@ -1,8 +1,11 @@
 import { rangoDeRelleno, fechasSinPublicacion } from '../../dominio/huecos-de-publicacion.js';
-import { fechasDelRango, sumarDiasAFecha } from '../../dominio/fechas-de-publicacion.js';
-import type { MonedaPedida } from '../../dominio/publicacion.js';
+import {
+  diasDePublicacionDeCruces,
+  esDiaDePublicacionDeCruces,
+  sumarDiasAFecha,
+} from '../../dominio/fechas-de-publicacion.js';
+import type { MonedaACargar } from '../../dominio/publicacion.js';
 import type { CargasDeTipos } from '../puertos/cargas-de-tipos.js';
-import type { DiasHabilesParaTipos } from '../tipos-de-cambio.js';
 import type { ConsultarAlBanguat, PedidoAlBanguat, ResumenDeConsulta } from './consultar-al-banguat.js';
 
 const CODIGO_DEL_DOLAR = 2;
@@ -12,7 +15,6 @@ const PAUSA_ENTRE_MONEDAS_EN_MS = 1_000;
 interface Dependencias {
   consultar: ConsultarAlBanguat;
   cargas: CargasDeTipos;
-  calendario: DiasHabilesParaTipos;
   /** Las llamadas van una tras otra; esta pausa va entre una moneda y la siguiente. */
   esperar?: (milisegundos: number) => Promise<void>;
   /** Un fallo que no es del Banguat (la base de datos, por ejemplo) no detiene a las demás monedas. */
@@ -30,7 +32,7 @@ export interface RangoManual {
 const esperarDeVerdad = (milisegundos: number): Promise<void> =>
   new Promise((resolver) => setTimeout(resolver, milisegundos));
 
-const esElDolar = (moneda: MonedaPedida): boolean => moneda.codigoBanguat === CODIGO_DEL_DOLAR;
+const esElDolar = (moneda: MonedaACargar): boolean => moneda.codigoBanguat === CODIGO_DEL_DOLAR;
 
 /**
  * Qué se pide al Banguat en cada vuelta. Solo se cargan las monedas activas con código; las llamadas van en serie con
@@ -53,15 +55,22 @@ export class VueltasDeCarga {
     return this.pedirA(demas, { vuelta: 'manana', hoy, desde, hasta: hoy });
   }
 
-  /** De noche: el dólar de mañana (ya publicado) y, una vez, las demás monedas que aún no tienen el de hoy. */
+  /** De noche: el dólar de mañana (ya publicado) y, una vez, las demás monedas que aún no tienen el de hoy (lunes a viernes). */
   async noche(hoy: string): Promise<ResumenDeConsulta[]> {
     const monedas = await this.dependencias.cargas.monedasACargar();
     const dolar = monedas.filter(esElDolar);
     const resumenes = await this.pedirA(dolar, { vuelta: 'noche', hoy, desde: hoy, hasta: sumarDiasAFecha(hoy, 1) });
-    const demas = (await this.dependencias.calendario.esHabil(hoy)) ? monedas.filter((m) => !esElDolar(m)) : [];
+    const demas = esDiaDePublicacionDeCruces(hoy) ? monedas.filter((m) => !esElDolar(m)) : [];
     const sinElDeHoy = await this.sinTipoEn(demas, hoy);
     const desde = sumarDiasAFecha(hoy, -DIAS_DE_LA_SEMANA_EN_LA_MANANA);
     return [...resumenes, ...(await this.pedirA(sinElDeHoy, { vuelta: 'noche', hoy, desde, hasta: hoy }))];
+  }
+
+  /** Reintento de la noche (22:00 y 23:30): solo el dólar de mañana, que aún no llegó. */
+  async dolarDeManana(hoy: string): Promise<ResumenDeConsulta[]> {
+    const dolar = (await this.dependencias.cargas.monedasACargar()).filter(esElDolar);
+    const manana = sumarDiasAFecha(hoy, 1);
+    return this.pedirA(dolar, { vuelta: 'noche', hoy, desde: manana, hasta: manana });
   }
 
   /** Al arrancar y una vez al día: por moneda y solo si tiene huecos en los últimos 45 días hasta ayer. */
@@ -89,27 +98,20 @@ export class VueltasDeCarga {
     return this.pedirA(monedas, { vuelta: 'manual', hoy, desde, hasta, disparadaPor: usuarioId });
   }
 
-  private async rangoConHuecos(moneda: MonedaPedida, hoy: string): Promise<{ desde: string; hasta: string } | null> {
+  private async rangoConHuecos(moneda: MonedaACargar, hoy: string): Promise<{ desde: string; hasta: string } | null> {
     const rango = rangoDeRelleno(sumarDiasAFecha(hoy, -1));
     const tenidas = await this.dependencias.cargas.fechasConTipoDelBanguat(moneda.moneda, rango.desde, rango.hasta);
     const huecos = fechasSinPublicacion({
       rango,
       moneda: moneda.moneda,
       conocidas: tenidas.map((fecha) => ({ moneda: moneda.moneda, fecha })),
-      diasEsperados: esElDolar(moneda) ? undefined : await this.diasHabiles(rango),
+      diasEsperados: esElDolar(moneda) ? undefined : diasDePublicacionDeCruces(rango.desde, rango.hasta),
     });
     return huecos.length > 0 ? { desde: huecos[0]!, hasta: huecos.at(-1)! } : null;
   }
 
-  private async diasHabiles(rango: { desde: string; hasta: string }): Promise<Set<string>> {
-    const habiles = new Set<string>();
-    for (const fecha of fechasDelRango(rango.desde, rango.hasta))
-      if (await this.dependencias.calendario.esHabil(fecha)) habiles.add(fecha);
-    return habiles;
-  }
-
-  private async sinTipoEn(monedas: readonly MonedaPedida[], fecha: string): Promise<MonedaPedida[]> {
-    const faltan: MonedaPedida[] = [];
+  private async sinTipoEn(monedas: readonly MonedaACargar[], fecha: string): Promise<MonedaACargar[]> {
+    const faltan: MonedaACargar[] = [];
     for (const moneda of monedas) {
       const tenidas = await this.dependencias.cargas.fechasConTipoDelBanguat(moneda.moneda, fecha, fecha);
       if (tenidas.length === 0) faltan.push(moneda);
@@ -119,7 +121,7 @@ export class VueltasDeCarga {
 
   /** Pide a cada moneda su consulta, una tras otra; el USD usa `TipoCambioDia` o `TipoCambioRango`, las demás el rango. */
   private async pedirA(
-    monedas: readonly MonedaPedida[],
+    monedas: readonly MonedaACargar[],
     base: Omit<PedidoAlBanguat, 'moneda' | 'operacion'> & { operacion?: PedidoAlBanguat['operacion'] },
   ): Promise<ResumenDeConsulta[]> {
     const { consultar, alFallar, esperar = esperarDeVerdad } = this.dependencias;

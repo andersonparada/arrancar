@@ -3647,3 +3647,60 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   configuración usa su propia conexión, así que no comparte la transacción: si guardar falla, la auditoría se deshace).
   Por decisión de producto, y en coherencia con C9, el asunto y el mensaje rechazan `http:`, `www.`, `@` y dominios con
   terminación común (`.com`, `.gt`…); también rige para la configuración genérica de Soporte. Sin migraciones.
+- **2026-11-19, Multimoneda MM-1b (cruces del Banguat, datos del núcleo).** Migración `core/0033_cruces_del_banguat`
+  según la adenda B (B.4, B.7, B.8 y B.12; respuestas del usuario anotadas en `diseno-multimoneda.md`: P-B2 promedio como
+  política contable sin cargar si pasa de 3 %, P-B3 A, P-B7 sí, Q-1 b y Q-2 a): `core.monedas_del_banguat.convencion`
+  con los 40 códigos de C-1 (quetzales por unidad el 2; dólares por unidad el 9 y el 24; unidades por dólar los
+  demás ofrecidos; nula en los 15 excluidos), que la app no puede escribir; `core.tipos_de_cambio` suma `convencion`,
+  `dolar_usado_id` (llave a la misma tabla, `restrict`) y los checks de cruce (dólar, compra y venta con `venta >= compra`,
+  convención obligatoria en `banguat`); `consultas_al_banguat.resultado` suma `sin_dolar_del_dia`, `convencion_dudosa` y
+  `sin_convencion`; PLN inactivo; guarda que detiene la migración si hay filas `banguat` de otra moneda. Las filas del
+  dólar existentes pasan a `quetzales_por_unidad`. `PublicacionDeTipoDeCambio` suma `convencion` y `dolarUsadoId`
+  opcionales (la carga actual del dólar guarda `quetzales_por_unidad`). Las pruebas de base de datos y de API dejan de
+  sembrar y borrar los códigos 28, 29 y 30 (ahora son parte de la semilla) y usan el 24, el 9 y el 3. **Pendiente:**
+  MM-3a″ (dominio), MM-3c (carga), MM-4 (cliente: la bitácora y el selector traducen los resultados nuevos).
+
+- **2026-11-19, Multimoneda MM-1b (corrección de la revisión).** `CargasDeTiposDrizzle.aFila` ya no pone
+  `quetzales_por_unidad` a toda publicación: solo al dólar (código 2); las demás monedas sin convención llegan nulas y el
+  check `tipos_de_cambio_banguat_con_convencion` las rechaza hasta MM-3c (así «Cargar ahora» no guarda un cruce crudo
+  como referencia en quetzales). Prueba nueva de que un EUR sin convención no se guarda.
+
+- **2026-11-19, Multimoneda MM-3a″ (dominio de los cruces, sin base).** En `core/monedas`: `CODIGOS_DEL_BANGUAT_EXCLUIDOS`
+  con los 15 códigos de B.8 (el selector ya los esconde); `URL_BANGUAT_POR_OMISION` sin `www`; el euro es el 24 (y la
+  libra el 9) en todo el código y las pruebas, servidor y cliente. Dominio nuevo `cruces-del-banguat.ts`:
+  `promedioPublicado` (exacto, con un decimal más), `revisarCompraYVenta` (`venta >= compra > 0`, diferencial de hasta
+  3 %), `normalizarAQuetzales` (`dólar × promedio` o `dólar ÷ promedio`, enteros y un solo redondeo a 8 decimales) e
+  `inversionProbable` (B.6, comprobación 5). `validarPublicacion` ya no rechaza `compra ≠ venta`: toma el promedio y solo
+  da `valor_ambiguo` si el diferencial pasa de 3 %; el dólar sigue exigiendo que sean iguales (una sola referencia). Se
+  quitó `cruceImplicito`. `esDiaDePublicacionDeCruces` y `diasDePublicacionDeCruces`: lunes a viernes, también en
+  asuetos. `valores-decimales.ts` generaliza la escala (9 decimales para lo publicado). Las grabaciones de prueba son
+  recortes de las respuestas reales de B.1 y B.2. **Pendiente:** MM-3c conecta todo a la carga (hoy `referencia` de un
+  cruce sale como el promedio publicado, sin normalizar, y la base lo rechaza sin convención).
+
+- **2026-11-19, Multimoneda MM-3c (carga de los cruces del Banguat).** `ConsultarAlBanguat` normaliza cada moneda distinta
+  del dólar con la fila `banguat` del dólar de la misma fecha (`normalizarPublicaciones`, `normalizarAQuetzales`) y guarda
+  `convencion`, `dolar_usado_id` y lo publicado (`compra`, `venta`); las comprobaciones de B.6 corren en orden
+  (`sin_convencion`, `sin_dolar_del_dia`, `convencion_dudosa` por inversión probable, `variacion_excesiva`, aviso de 3 %).
+  `monedasACargar` solo trae monedas con convención y el dólar primero; días y atraso de lunes a viernes sin asuetos
+  (`VueltasDeCarga`, `ConsultarEstadoDeLaCarga`, `TiposDeCambio` ya no reciben el calendario); `vigente` da
+  `dia_sin_calculo` solo sábado y domingo; reintento del dólar de mañana a las 22:00 y 23:30 (`dolarDeManana`).
+  `GET /api/monedas/banguat` suma `convencion` y `ofrecida`; `EditarMoneda` no deja quitarle el código al dólar mientras
+  otra moneda tenga el suyo (`codigo_del_dolar_necesario`); la muestra devuelve lo publicado, el dólar del día y el valor en
+  quetzales; la serie suma `convencion` y `dolarUsado`; el Excel del reporte suma «Compra publicada», «Venta publicada»,
+  «Convención» y «Dólar usado» y la hoja «Notas» (fuente y política contable; corrección de revisión: los reportes de solo
+  exportar no escribían `notasDeInstrucciones`, ahora van en una segunda hoja). Respuestas del usuario a la Adenda B anotadas en el
+  diseño (P-B2 promedio con tope de 3 %, Q-1 sin clientes en CRC/DOP/HNL, Q-2 sin consulta a la SAT). La carga sigue
+  apagada. **Pendiente:** MM-4 (la muestra y la bitácora del cliente usan la forma nueva; nota impresa del reporte) y MM-3d
+  (C-5, `curl` desde producción y encender).
+- **2026-11-19, Multimoneda MM-4 (pantallas de Plataforma con la convención).** El selector de monedas solo habilita las
+  `ofrecida` y dice la convención («Euro (24) · USD por unidad»); la tarjeta de Monedas también. «Ver muestra» enseña lo
+  publicado, el valor en quetzales y la cuenta del servidor («1.31645 USD por GBP × 7.64489 = Q 10.06411544»), con
+  «Sin dólar de ese día» cuando falta. En Tipos de cambio, el historial del día muestra lo publicado, la convención y el
+  dólar usado; la bitácora traduce `sin_dolar_del_dia`, `convencion_dudosa` y `sin_convencion`; la nota de la política
+  contable (B.5) aparece en la muestra, en el detalle y bajo el calendario de las monedas distintas del USD. Lógica pura
+  nueva: `convenciones-del-banguat.ts`. **Pendiente:** QA en el navegador con el servidor falso devolviendo cruces; la nota
+  impresa y la página del reporte de tipos de cambio (MM-5); MM-3d.
+- **2026-11-19 · Multimoneda MM-4b, corrección de la revisión.** `valor_ambiguo` ya no se traduce siempre como «compra y
+  venta distintas»: en el dólar es compra distinta de venta y en las monedas cruzadas, un diferencial de más de 3 % (B.5,
+  B.6 n.º 3). La bitácora (insignia «Compra y venta dudosas», qué hacer y motivo por línea según el código) y la muestra de
+  `lista-de-monedas.ts` (según la moneda) lo dicen bien; pruebas ajustadas y nuevas.

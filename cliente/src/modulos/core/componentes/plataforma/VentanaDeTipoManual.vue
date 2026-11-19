@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import {
+  detalleDeLaFila,
+  esCruce,
+  NOTA_DE_LA_POLITICA_DE_CRUCES,
+} from '../../composables/plataforma/convenciones-del-banguat';
 import { vigenteDelDia, type FormularioDeTipo } from '../../composables/plataforma/edicion-de-tipo-manual';
 import { formatearFecha, formatearFechaHora, formatearTipoDeCambio } from '../../utilidades/formato';
 import BotonBase from '../BotonBase.vue';
@@ -73,6 +78,16 @@ const vigente = computed(() => vigenteDelDia(tipo.value));
           <p class="text-xs text-tierra-600 dark:text-tierra-300">
             {{ formatearFechaHora(version.registradoEn) }}
             <template v-if="version.registradoPor"> · {{ version.registradoPor }}</template>
+          </p>
+          <p
+            v-for="linea in detalleDeLaFila(version)"
+            :key="linea"
+            class="text-xs wrap-break-word text-tierra-600 dark:text-tierra-300"
+          >
+            {{ linea }}
+          </p>
+          <p v-if="esCruce(version.convencion)" class="text-xs text-tierra-500 dark:text-tierra-400">
+            {{ NOTA_DE_LA_POLITICA_DE_CRUCES }}
           </p>
           <p v-if="version.motivo" class="text-xs wrap-break-word text-tierra-600 dark:text-tierra-300">
             {{ version.motivo }}

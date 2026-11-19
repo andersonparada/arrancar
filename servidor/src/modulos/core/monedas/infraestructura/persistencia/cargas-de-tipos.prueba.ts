@@ -19,8 +19,8 @@ let listaOriginal: { codigo: number; descripcion: string; disponible: boolean; v
 beforeAll(async () => {
   await escenario.preparar();
   listaOriginal = (await escenario.propietario.query(`select * from core.monedas_del_banguat`)).rows;
-  await escenario.propietario.query(`update core.monedas set activa = true, codigo_banguat = 28 where codigo = 'EUR'`);
-  await escenario.propietario.query(`update core.monedas set codigo_banguat = 29 where codigo = 'GBP'`);
+  await escenario.propietario.query(`update core.monedas set activa = true, codigo_banguat = 24 where codigo = 'EUR'`);
+  await escenario.propietario.query(`update core.monedas set codigo_banguat = 9 where codigo = 'GBP'`);
 });
 
 afterAll(async () => {
@@ -37,11 +37,12 @@ afterAll(async () => {
 
 const publicacion = (fecha: string, referencia: string): PublicacionDeTipoDeCambio => ({
   moneda: 'EUR',
-  codigoBanguat: 28,
+  codigoBanguat: 24,
   fecha,
   referencia,
   compra: referencia,
   venta: referencia,
+  convencion: 'quetzales_por_unidad',
 });
 
 const consulta = (cambios: Partial<ConsultaHecha> = {}): ConsultaHecha => ({
@@ -50,7 +51,7 @@ const consulta = (cambios: Partial<ConsultaHecha> = {}): ConsultaHecha => ({
   operacion: 'TipoCambioRangoMoneda',
   vuelta: 'manana',
   moneda: 'EUR',
-  codigoBanguat: 28,
+  codigoBanguat: 24,
   desde: '2026-11-10',
   hasta: '2026-11-12',
   resultado: 'exito',
@@ -68,7 +69,28 @@ describe('monedasACargar', () => {
     expect(monedas).toContain('EUR');
     expect(monedas).not.toContain('GBP');
     expect(monedas).not.toContain('GTQ');
-    expect(await cargas.monedasACargar()).toContainEqual({ moneda: 'EUR', codigoBanguat: 28 });
+    expect(await cargas.monedasACargar()).toContainEqual({
+      moneda: 'EUR',
+      codigoBanguat: 24,
+      convencion: 'usd_por_unidad',
+    });
+  });
+
+  it('el dólar va primero, para tener su tipo antes de pasar las demás monedas a quetzales', async () => {
+    const monedas = await cargas.monedasACargar();
+
+    expect(monedas[0]).toEqual({ moneda: 'USD', codigoBanguat: 2, convencion: 'quetzales_por_unidad' });
+  });
+
+  it('una moneda con código pero sin convención no se carga', async () => {
+    await escenario.propietario.query(`update core.monedas_del_banguat set convencion = null where codigo = 24`);
+    try {
+      expect((await cargas.monedasACargar()).map((m) => m.moneda)).not.toContain('EUR');
+    } finally {
+      await escenario.propietario.query(
+        `update core.monedas_del_banguat set convencion = 'usd_por_unidad' where codigo = 24`,
+      );
+    }
   });
 });
 
@@ -86,6 +108,12 @@ describe('guardar', () => {
     );
     expect(nuevas).toBe(2);
     expect(rows).toEqual([{ filas_nuevas: 2, operacion: 'TipoCambioRangoMoneda', vuelta: 'manana', tipos: 2 }]);
+  });
+
+  it('una moneda distinta del dólar sin convención no se guarda: la base la rechaza hasta tener el cruce', async () => {
+    const { convencion: _omitida, ...sinConvencion } = publicacion('2026-11-20', '1.1257');
+
+    await expect(cargas.guardar(consulta({ detalle: 'sin-convencion' }), [sinConvencion])).rejects.toThrow();
   });
 
   it('no duplica ni reemplaza lo ya guardado: la segunda vez deja 0 filas nuevas', async () => {
@@ -139,7 +167,7 @@ describe('actualizarLista', () => {
     const ahora = new Date();
     const resultado = await cargas.actualizarLista(
       [
-        { codigo: 28, descripcion: 'Euro de la zona euro' },
+        { codigo: 24, descripcion: 'Euro de la zona euro' },
         { codigo: 777, descripcion: 'Moneda nueva' },
       ],
       ahora,
@@ -147,16 +175,24 @@ describe('actualizarLista', () => {
     );
 
     const { rows } = await escenario.propietario.query(
-      `select codigo, descripcion, disponible from core.monedas_del_banguat where codigo in (2, 28, 29, 30, 777) order by codigo`,
+      `select codigo, descripcion, disponible from core.monedas_del_banguat where codigo in (2, 3, 9, 24, 777) order by codigo`,
     );
     expect(resultado.nuevas).toBe(1);
     expect(resultado.noDisponibles).toBeGreaterThanOrEqual(3);
     expect(rows).toEqual([
       { codigo: 2, descripcion: expect.any(String), disponible: false },
-      { codigo: 28, descripcion: 'Euro de la zona euro', disponible: true },
-      { codigo: 29, descripcion: 'Libra', disponible: false },
-      { codigo: 30, descripcion: 'Otra', disponible: false },
+      { codigo: 3, descripcion: expect.any(String), disponible: false },
+      { codigo: 9, descripcion: expect.any(String), disponible: false },
+      { codigo: 24, descripcion: 'Euro de la zona euro', disponible: true },
       { codigo: 777, descripcion: 'Moneda nueva', disponible: true },
+    ]);
+    const convenciones = await escenario.propietario.query(
+      `select codigo, convencion from core.monedas_del_banguat where codigo in (2, 24, 777) order by codigo`,
+    );
+    expect(convenciones.rows).toEqual([
+      { codigo: 2, convencion: 'quetzales_por_unidad' },
+      { codigo: 24, convencion: 'usd_por_unidad' },
+      { codigo: 777, convencion: null },
     ]);
     const estado = await cargas.estadoDeLaLista();
     expect(estado.monedas).toBeGreaterThanOrEqual(5);

@@ -15,19 +15,34 @@ export interface Moneda {
   tieneSerieDelBanguat: boolean;
 }
 
+/** Cómo publica el Banguat un código; lo fija una migración, nunca el usuario. */
+export type ConvencionDelBanguat = 'quetzales_por_unidad' | 'usd_por_unidad' | 'unidades_por_usd';
+
 /** Una opción del selector «Moneda del Banguat». */
 export interface OpcionDelBanguat {
   codigo: number;
   descripcion: string;
   disponible: boolean;
   excluida: boolean;
+  /** Nula es «sin comprobar»: el código no se ofrece ni se carga. */
+  convencion: ConvencionDelBanguat | null;
+  /** Se puede unir a una moneda: disponible, no excluida y con convención. Solo estas se habilitan. */
+  ofrecida: boolean;
   /** La moneda que ya tiene este código, si alguna. */
   asignadaA: string | null;
   vistaPorUltimaVez: string;
 }
 
 export type ResultadoDeConsulta =
-  'exito' | 'sin_datos' | 'error' | 'valor_fuera_de_rango' | 'valor_ambiguo' | 'variacion_excesiva';
+  | 'exito'
+  | 'sin_datos'
+  | 'error'
+  | 'valor_fuera_de_rango'
+  | 'valor_ambiguo'
+  | 'variacion_excesiva'
+  | 'sin_dolar_del_dia'
+  | 'convencion_dudosa'
+  | 'sin_convencion';
 
 /** Cómo terminó la actualización de la lista de monedas del Banguat. */
 export interface ConsultaDeLaLista {
@@ -43,6 +58,19 @@ export interface ListaActualizada {
   lista: OpcionDelBanguat[];
 }
 
+/** Un día de la muestra: lo publicado, el dólar de ese día y lo que da en quetzales. Los decimales viajan como texto. */
+export interface ValorDeLaMuestra {
+  fecha: string;
+  compra: string | null;
+  venta: string | null;
+  /** El promedio de compra y venta, en la convención del código. */
+  promedio: string;
+  /** El dólar del Banguat guardado de esa fecha; nulo si aún no está. */
+  dolar: string | null;
+  /** Quetzales por unidad; nulo si falta el dólar de ese día. */
+  referencia: string | null;
+}
+
 /** Los valores de los últimos 7 días de un código del Banguat; no se guardan. */
 export interface MuestraDelBanguat {
   codigo: number;
@@ -51,7 +79,8 @@ export interface MuestraDelBanguat {
   desde: string;
   hasta: string;
   resultado: ResultadoDeConsulta;
-  valores: { fecha: string; referencia: string }[];
+  convencion: ConvencionDelBanguat;
+  valores: ValorDeLaMuestra[];
   rechazadas: { fecha: string; motivo: string }[];
   mensaje: string | null;
 }

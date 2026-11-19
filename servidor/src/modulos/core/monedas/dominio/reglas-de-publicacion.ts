@@ -1,5 +1,6 @@
 import { fechaDelBanguatAIso, sumarDiasAFecha } from './fechas-de-publicacion.js';
 import type { MotivoDeRechazo, PublicacionDeTipoDeCambio } from './publicacion.js';
+import { revisarCompraYVenta } from './cruces-del-banguat.js';
 import { ESCALA, referenciaEscalada, textoDeEscalado } from './valores-decimales.js';
 
 export { referenciaEscalada } from './valores-decimales.js';
@@ -41,24 +42,14 @@ export function variacionSuperaElRechazo(anterior: string, nueva: string): boole
   return variacionSupera(anterior, nueva, VARIACION_PARA_RECHAZAR_EN_PORCIENTO);
 }
 
-/**
- * El cruce implícito de una moneda contra el USD del mismo día: `valor ÷ referenciaUsd`, a 8 decimales.
- * Sirve para avisar si cambia más de {@link VARIACION_MAXIMA_EN_PORCIENTO} %. `undefined` si algún dato no es válido.
- */
-export function cruceImplicito(valor: string, referenciaUsd: string): string | undefined {
-  const arriba = referenciaEscalada(valor);
-  const abajo = referenciaEscalada(referenciaUsd);
-  if (arriba === undefined || abajo === undefined || abajo === 0n) return undefined;
-  return textoDeEscalado((arriba * 10n ** BigInt(ESCALA) + abajo / 2n) / abajo);
-}
-
 /** Valores tal como vienen del servicio, antes de validarse (la fecha en `dd/mm/aaaa`). */
 export interface ValorCrudo {
   readonly moneda: string;
   readonly codigoBanguat: number;
   readonly fecha: string;
-  readonly referencia: string;
-  /** Solo en los rangos: si ambas vienen y difieren, el valor es ambiguo. */
+  /** Solo si no vienen `compra` y `venta` (el valor único del día). */
+  readonly referencia?: string;
+  /** Solo en los rangos y en las demás monedas: con las dos, la referencia es su promedio. */
   readonly compra?: string;
   readonly venta?: string;
 }
@@ -68,34 +59,47 @@ export type Validacion =
   | { readonly valida: true; readonly publicacion: PublicacionDeTipoDeCambio }
   | { readonly valida: false; readonly motivo: MotivoDeRechazo; readonly fecha: string };
 
-function esAmbiguo(crudo: ValorCrudo): boolean {
-  if (crudo.compra === undefined || crudo.venta === undefined) return false;
-  const compra = referenciaEscalada(crudo.compra);
-  return compra === undefined || compra !== referenciaEscalada(crudo.venta);
+interface ValorResuelto {
+  readonly referencia: string;
+  readonly compra?: string;
+  readonly venta?: string;
 }
 
-function publicacionValida(crudo: ValorCrudo, fecha: string, referencia: bigint): PublicacionDeTipoDeCambio {
-  const texto = textoDeEscalado(referencia);
-  const base = { moneda: crudo.moneda, codigoBanguat: crudo.codigoBanguat, fecha, referencia: texto };
-  return crudo.compra === undefined ? base : { ...base, compra: texto, venta: texto };
+/** El dólar tiene una sola referencia: `compra` y `venta` deben ser iguales. Las demás monedas se promedian. */
+function resolverCompraYVenta(crudo: ValorCrudo, compra: string, venta: string): ValorResuelto | MotivoDeRechazo {
+  const revision = revisarCompraYVenta(compra, venta);
+  if (!revision.valida) return revision.motivo;
+  if (crudo.moneda === 'USD' && revision.compra !== revision.venta) return 'valor_ambiguo';
+  return { referencia: revision.promedio, compra: revision.compra, venta: revision.venta };
 }
 
-function motivoDeRechazo(crudo: ValorCrudo, referencia: bigint): MotivoDeRechazo | undefined {
-  if (esAmbiguo(crudo)) return 'valor_ambiguo';
-  return dentroDeLaBanda(crudo.moneda, referencia) ? undefined : 'valor_fuera_de_rango';
+function resolverValor(crudo: ValorCrudo): ValorResuelto | MotivoDeRechazo {
+  if (crudo.compra !== undefined && crudo.venta !== undefined) {
+    return resolverCompraYVenta(crudo, crudo.compra, crudo.venta);
+  }
+  const referencia = referenciaEscalada(crudo.referencia ?? '');
+  return referencia === undefined || referencia === 0n ? 'dato_invalido' : { referencia: textoDeEscalado(referencia) };
+}
+
+function fueraDeLaBanda(moneda: string, valor: ValorResuelto): boolean {
+  return !dentroDeLaBanda(moneda, referenciaEscalada(valor.referencia) ?? 0n);
 }
 
 /**
- * Valida un valor recibido: fecha `dd/mm/aaaa` real y no posterior a mañana, referencia con el formato
- * permitido y mayor que cero, `compra = venta` si vienen las dos, y dentro de la banda de cordura de su moneda.
+ * Valida un valor recibido: fecha `dd/mm/aaaa` real y no posterior a mañana; referencia con el formato permitido y
+ * mayor que cero o, si vienen `compra` y `venta`, `venta ≥ compra > 0` con un diferencial de hasta
+ * 3 % (la referencia es el promedio, adenda B.5; el dólar exige que sean
+ * iguales); y dentro de la banda de cordura de su moneda. `referencia`, `compra` y `venta` quedan tal como se
+ * publicaron, sin pasar a quetzales (eso lo hace `normalizarAQuetzales`).
  */
 export function validarPublicacion(crudo: ValorCrudo, hoy: string): Validacion {
   const fecha = fechaDelBanguatAIso(crudo.fecha);
-  const referencia = referenciaEscalada(crudo.referencia);
-  if (!fecha || referencia === undefined || referencia === 0n || fecha > sumarDiasAFecha(hoy, 1)) {
+  const valor = resolverValor(crudo);
+  if (!fecha || fecha > sumarDiasAFecha(hoy, 1)) {
     return { valida: false, motivo: 'dato_invalido', fecha: fecha ?? crudo.fecha.slice(0, 10) };
   }
-  const motivo = motivoDeRechazo(crudo, referencia);
-  if (motivo) return { valida: false, motivo, fecha };
-  return { valida: true, publicacion: publicacionValida(crudo, fecha, referencia) };
+  if (typeof valor === 'string') return { valida: false, motivo: valor, fecha };
+  if (fueraDeLaBanda(crudo.moneda, valor)) return { valida: false, motivo: 'valor_fuera_de_rango', fecha };
+  const base = { moneda: crudo.moneda, codigoBanguat: crudo.codigoBanguat, fecha, ...valor };
+  return { valida: true, publicacion: base };
 }

@@ -8,7 +8,7 @@ import {
   CatalogoDeMonedasEnMemoria,
   MonedasDelBanguatEnMemoria,
 } from '../../pruebas/catalogo-de-monedas-en-memoria.js';
-import { armar, completar, esHabil, fallo, publicacion } from '../../pruebas/escenario-de-carga.js';
+import { armar, completar, fallo, publicacion } from '../../pruebas/escenario-de-carga.js';
 import type { BitacoraDelBanguat, MonedaConCodigoDelBanguat } from '../puertos/bitacora-del-banguat.js';
 import { ConsultarEstadoDeLaCarga } from './consultar-estado-de-la-carga.js';
 import { EditarMoneda } from './editar-moneda.js';
@@ -23,7 +23,7 @@ function armarMuestra() {
     catalogo,
     cargas: base.cargas,
     reloj: base.reloj,
-    excluidos: new Set([29]),
+    excluidos: new Set([9]),
   });
   return { ...base, muestra };
 }
@@ -31,48 +31,57 @@ function armarMuestra() {
 describe('VerMuestraDelBanguat', () => {
   it('trae los últimos 7 días del código, ordenados, sin guardar tipos y con su fila en la bitácora', async () => {
     const { muestra, fuente, cargas } = armarMuestra();
-    fuente.publicaciones.push(publicacion('EUR', '2026-11-17', '8.80'), publicacion('EUR', '2026-11-16', '8.79'));
+    cargas.poner('USD', '2026-11-17', '7.64489');
+    fuente.publicaciones.push(publicacion('EUR', '2026-11-17', '1.1257'), publicacion('EUR', '2026-11-16', '1.125'));
 
-    const hecha = await muestra.ejecutar(28, { usuarioId: 'u1', moneda: 'EUR' });
+    const hecha = await muestra.ejecutar(24, { usuarioId: 'u1', moneda: 'EUR' });
 
     expect(hecha).toMatchObject({
-      codigo: 28,
+      codigo: 24,
       descripcion: 'Euro',
       moneda: 'EUR',
       desde: '2026-11-12',
       hasta: '2026-11-18',
       resultado: 'exito',
+      convencion: 'usd_por_unidad',
       valores: [
-        { fecha: '2026-11-16', referencia: '8.79' },
-        { fecha: '2026-11-17', referencia: '8.80' },
+        { fecha: '2026-11-16', compra: '1.125', venta: '1.125', promedio: '1.125', dolar: null, referencia: null },
+        {
+          fecha: '2026-11-17',
+          compra: '1.1257',
+          venta: '1.1257',
+          promedio: '1.1257',
+          dolar: '7.64489',
+          referencia: '8.60585267', // 1.1257 × 7.64489, un solo redondeo a 8 decimales
+        },
       ],
     });
-    expect(cargas.tipos).toEqual([]);
+    expect(cargas.tipos).toHaveLength(1);
     expect(cargas.consultas).toMatchObject([
-      { vuelta: 'muestra', operacion: 'TipoCambioRangoMoneda', moneda: 'EUR', codigoBanguat: 28, disparadaPor: 'u1' },
+      { vuelta: 'muestra', operacion: 'TipoCambioRangoMoneda', moneda: 'EUR', codigoBanguat: 24, disparadaPor: 'u1' },
     ]);
   });
 
   it('si el código no tiene valores en la semana dice sin_datos', async () => {
     const { muestra } = armarMuestra();
 
-    expect(await muestra.ejecutar(28, { usuarioId: 'u1' })).toMatchObject({ resultado: 'sin_datos', valores: [] });
+    expect(await muestra.ejecutar(24, { usuarioId: 'u1' })).toMatchObject({ resultado: 'sin_datos', valores: [] });
   });
 
   it('un fallo del Banguat no lanza: vuelve como error con su mensaje y queda en la bitácora', async () => {
     const { muestra, fuente, cargas } = armarMuestra();
     fuente.fallosPendientes.push(fallo());
 
-    const hecha = await muestra.ejecutar(28, { usuarioId: 'u1' });
+    const hecha = await muestra.ejecutar(24, { usuarioId: 'u1' });
 
     expect(hecha).toMatchObject({ resultado: 'error', mensaje: 'El Banguat no respondió.' });
     expect(cargas.consultas).toMatchObject([{ vuelta: 'muestra', resultado: 'error' }]);
   });
 
-  it('rechaza un código que no está en la lista, ya no está disponible o está excluido', async () => {
+  it('rechaza un código que no está en la lista, ya no está disponible, está excluido o no tiene convención', async () => {
     const { muestra, fuente } = armarMuestra();
 
-    for (const codigo of [77, 99, 29])
+    for (const codigo of [77, 99, 9, 98])
       await expect(muestra.ejecutar(codigo, { usuarioId: 'u1' })).rejects.toMatchObject({
         codigo: 'codigo_del_banguat_no_ofrecido',
       });
@@ -93,7 +102,7 @@ class BitacoraEnMemoria implements BitacoraDelBanguat {
 const serie = (moneda: string, extra: Partial<MonedaConCodigoDelBanguat>): MonedaConCodigoDelBanguat => ({
   moneda,
   nombre: moneda,
-  codigoBanguat: moneda === 'USD' ? 2 : 28,
+  codigoBanguat: moneda === 'USD' ? 2 : 24,
   activa: true,
   ultimaFecha: null,
   ...extra,
@@ -105,7 +114,6 @@ describe('ConsultarEstadoDeLaCarga', () => {
     bitacora.monedas = series;
     const caso = new ConsultarEstadoDeLaCarga({
       bitacora,
-      calendario: { esHabil },
       reloj: { hoy: async () => '2026-11-18' },
     });
     return (await caso.ejecutar({ limite: 50 })).series;
@@ -150,12 +158,10 @@ describe('ConsultarEstadoDeLaCarga', () => {
 describe('rellenar una moneda recién lista', () => {
   it('pide solo los 45 días con huecos de esa moneda, con la vuelta relleno', async () => {
     const { carga, cargas, fuente } = armar();
-    await completar(cargas, '2026-11-18');
+    completar(cargas, '2026-11-18');
     const hueco = cargas.tipos.findIndex((t) => t.moneda === 'EUR' && t.fecha === '2026-11-10');
     cargas.tipos.splice(hueco, 1);
-    const huecoDelDolar = cargas.tipos.findIndex((t) => t.moneda === 'USD' && t.fecha === '2026-11-10');
-    cargas.tipos.splice(huecoDelDolar, 1);
-    fuente.publicaciones.push(publicacion('EUR', '2026-11-10', '8.90'));
+    fuente.publicaciones.push(publicacion('EUR', '2026-11-10', '1.15'));
 
     await carga.rellenarMoneda('EUR');
 
@@ -178,12 +184,12 @@ describe('rellenar una moneda recién lista', () => {
 describe('«Actualizar lista» devuelve la consulta hecha', () => {
   it('con lista, dice cuántas monedas llegaron; con error o vacía, no toca nada y dice por qué', async () => {
     const { lista, fuente } = armar();
-    fuente.monedasDelBanguat.push({ codigo: 28, descripcion: 'Euro' });
+    fuente.monedasDelBanguat.push({ codigo: 24, descripcion: 'Euro' });
     const buena = await lista.ejecutarAPedido('u1');
     fuente.monedasDelBanguat.length = 0;
     const vacia = await lista.ejecutarAPedido('u1');
     fuente.fallosPendientes.push(fallo(), fallo(), fallo());
-    fuente.monedasDelBanguat.push({ codigo: 28, descripcion: 'Euro' });
+    fuente.monedasDelBanguat.push({ codigo: 24, descripcion: 'Euro' });
     const mala = await lista.ejecutarAPedido('u1');
 
     expect(buena).toMatchObject({ resultado: 'exito', nuevas: 1, noDisponibles: 0 });
@@ -211,11 +217,11 @@ describe('EditarMoneda avisa cuándo traer la serie', () => {
   it('al unir el código a una moneda activa o al activar una que ya lo tiene, y no al dejar el mismo estado', async () => {
     const { editar, avisos } = editor();
 
-    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 28 });
+    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 24 });
     expect(avisos).toEqual([]);
     await editar.ejecutar(operador, 'EUR', { activa: true });
     await editar.ejecutar(operador, 'EUR', { letrasSingular: 'EURO', letrasPlural: 'EUROS' });
-    await editar.ejecutar(operador, 'GBP', { activa: true, codigoBanguat: 29 });
+    await editar.ejecutar(operador, 'GBP', { activa: true, codigoBanguat: 9 });
 
     expect(avisos).toEqual(['EUR', 'GBP']);
   });

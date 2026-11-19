@@ -29,6 +29,8 @@ const tipo = (fecha: string, extra: Partial<TipoDeLaSerie> = {}): TipoDeLaSerie 
   referencia: '8.80000000',
   compra: null,
   venta: null,
+  convencion: null,
+  dolarUsado: null,
   origen: 'banguat',
   registradoEn: '2026-11-18T12:00:00Z',
   ...extra,

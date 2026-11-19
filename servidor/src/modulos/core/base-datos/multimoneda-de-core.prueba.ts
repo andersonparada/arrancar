@@ -56,15 +56,15 @@ describe('catálogo de monedas', () => {
 
   it('dos monedas no pueden tener el mismo código', async () => {
     const { propietario } = escenario;
-    await propietario.query(`update core.monedas set codigo_banguat = 28 where codigo = 'EUR'`);
-    const repetir = propietario.query(`update core.monedas set codigo_banguat = 28 where codigo = 'GBP'`);
+    await propietario.query(`update core.monedas set codigo_banguat = 24 where codigo = 'EUR'`);
+    const repetir = propietario.query(`update core.monedas set codigo_banguat = 24 where codigo = 'GBP'`);
 
     expect(await restriccionDeError(repetir)).toBe('monedas_codigo_banguat_unico');
     await propietario.query(`update core.monedas set codigo_banguat = null where codigo = 'EUR'`);
   });
 
   it('el quetzal no puede tener código del Banguat', async () => {
-    const asignar = escenario.propietario.query(`update core.monedas set codigo_banguat = 30 where codigo = 'GTQ'`);
+    const asignar = escenario.propietario.query(`update core.monedas set codigo_banguat = 3 where codigo = 'GTQ'`);
 
     expect(await restriccionDeError(asignar)).toBe('monedas_gtq_sin_codigo');
   });
@@ -89,11 +89,11 @@ describe('código estable de la moneda', () => {
     escenario.propietario.query(`update core.monedas set codigo_banguat = ${codigo} where codigo = 'EUR'`);
 
   it('con tipos del Banguat cargados, solo deja el mismo código o quitarlo', async () => {
-    await cambiarCodigo('28');
+    await cambiarCodigo('24');
     await escenario.tipoDelBanguat({ moneda: 'EUR', fecha: '2026-11-02' });
 
-    expect(await restriccionDeError(cambiarCodigo('29'))).toBe('monedas_codigo_banguat_estable');
-    expect(await codigoDeError(cambiarCodigo('28'))).toBeUndefined();
+    expect(await restriccionDeError(cambiarCodigo('9'))).toBe('monedas_codigo_banguat_estable');
+    expect(await codigoDeError(cambiarCodigo('24'))).toBeUndefined();
     expect(await codigoDeError(cambiarCodigo('null'))).toBeUndefined();
   });
 
@@ -101,7 +101,7 @@ describe('código estable de la moneda', () => {
     await escenario.propietario.query(`delete from core.tipos_de_cambio where moneda = 'EUR'`);
     await escenario.tipoManual({ moneda: 'EUR', fecha: '2026-11-03' });
 
-    expect(await codigoDeError(cambiarCodigo('29'))).toBeUndefined();
+    expect(await codigoDeError(cambiarCodigo('9'))).toBeUndefined();
     await cambiarCodigo('null');
   });
 });

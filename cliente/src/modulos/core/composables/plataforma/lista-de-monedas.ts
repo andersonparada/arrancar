@@ -1,5 +1,6 @@
 import type { ConsultaDeLaLista, Moneda, MuestraDelBanguat, OpcionDelBanguat } from '../../servicios/monedas.api';
 import type { EstadoDeLaSerie } from '../../servicios/tipos-de-cambio.api';
+import { textoDeLaConvencion } from './convenciones-del-banguat';
 
 export interface FiltrosDeMonedas {
   conCodigo: boolean;
@@ -26,12 +27,14 @@ export function monedaInicial(monedas: Moneda[]): string {
   return (disponibles.find((m) => m.codigo === 'USD') ?? disponibles[0])?.codigo ?? '';
 }
 
-/** «Euro (28)» o «—» si no tiene código. */
-export function textoDelCodigo(moneda: Moneda): string {
+/** «Euro (24) · USD por unidad» o «—» si no tiene código; la convención sale de la lista del Banguat. */
+export function textoDelCodigo(moneda: Moneda, lista: OpcionDelBanguat[] = []): string {
   if (moneda.codigoBanguat === null) return '—';
-  return moneda.descripcionBanguat
+  const base = moneda.descripcionBanguat
     ? `${moneda.descripcionBanguat} (${moneda.codigoBanguat})`
     : `Código ${moneda.codigoBanguat}`;
+  const convencion = textoDeLaConvencion(lista.find((o) => o.codigo === moneda.codigoBanguat)?.convencion);
+  return convencion ? `${base} · ${convencion}` : base;
 }
 
 /** El estado de la serie de una moneda, si tiene código del Banguat. */
@@ -78,6 +81,12 @@ export function mensajeDeActualizacion(consulta: ConsultaDeLaLista): MensajeDeRe
   return { tipo: 'exito', mensaje: `Lista actualizada: ${partes.join(' y ')}.` };
 }
 
+function motivoAmbiguo(moneda: string | null): string {
+  return moneda === 'USD'
+    ? 'El Banguat da compra distinta de venta para este código'
+    : 'El Banguat da compra y venta con más de 3 % de diferencia para este código';
+}
+
 /** Qué dice la muestra del código, con palabras; el último valor es lo que se compara con lo que se espera. */
 export function mensajeDeMuestra(muestra: MuestraDelBanguat): MensajeDeResultado {
   if (muestra.resultado === 'error')
@@ -85,10 +94,16 @@ export function mensajeDeMuestra(muestra: MuestraDelBanguat): MensajeDeResultado
   if (muestra.resultado === 'valor_ambiguo')
     return {
       tipo: 'error',
-      mensaje:
-        'El Banguat da compra y venta distintas para este código: no se cargaría solo. Revise que sea el correcto.',
+      mensaje: `${motivoAmbiguo(muestra.moneda)}: no se cargaría solo. Revise que sea el correcto.`,
     };
   if (muestra.valores.length === 0)
     return { tipo: 'info', mensaje: 'El Banguat no publicó valores para este código en los últimos 7 días.' };
-  return { tipo: 'exito', mensaje: `${plural(muestra.valores.length, 'valor', 'valores')} en los últimos 7 días.` };
+  const sinDolar = muestra.valores.filter((valor) => valor.referencia === null).length;
+  const base = `${plural(muestra.valores.length, 'valor', 'valores')} en los últimos 7 días`;
+  if (sinDolar === 0) return { tipo: 'exito', mensaje: `${base}.` };
+  const dias = plural(sinDolar, 'día', 'días');
+  return {
+    tipo: 'info',
+    mensaje: `${base}; en ${dias} aún no está guardado el dólar y no se puede pasar a quetzales.`,
+  };
 }

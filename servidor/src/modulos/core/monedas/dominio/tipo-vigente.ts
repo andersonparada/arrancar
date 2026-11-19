@@ -7,8 +7,8 @@ export const DIAS_MAXIMOS_CON_TIPO_ANTERIOR = 7;
 export type OrigenDelTipo = 'banguat' | 'manual' | 'base';
 
 /**
- * Por qué se usó un tipo anterior al de la fecha. `dia_sin_calculo`: el Banguat no calcula esa moneda en fin de semana
- * ni asueto y se usó el último publicado (no pide confirmación). `falta_publicacion`: se esperaba una publicación y no
+ * Por qué se usó un tipo anterior al de la fecha. `dia_sin_calculo`: el Banguat no publica esa moneda en sábado ni
+ * domingo y se usó el último publicado (no pide confirmación; un asueto entre semana sin su fila es `falta_publicacion`). `falta_publicacion`: se esperaba una publicación y no
  * está (pide confirmación y la operación queda en «por revisar»).
  */
 export type MotivoDelAnterior = 'dia_sin_calculo' | 'falta_publicacion';
@@ -37,7 +37,7 @@ export interface DatosParaClasificar {
   hoy: string;
   /** El día de la versión vigente más reciente hasta `fecha`, o `null` si no hay ninguna. */
   fechaDelTipo: string | null;
-  /** Si la moneda no se calcula ese día (fin de semana o asueto) y el tipo es del último día hábil anterior. */
+  /** Si la moneda no se calcula ese día (sábado o domingo) y el tipo es del último día de publicación anterior. */
   diaSinCalculo: boolean;
 }
 

@@ -53,7 +53,7 @@ describe('core.tipos_de_cambio', () => {
 
   it('uno del Banguat lleva consulta y código', async () => {
     const sinConsulta = escenario.propietario.query(
-      `insert into core.tipos_de_cambio (moneda, fecha, referencia, origen, codigo_banguat) values ('EUR', '2026-11-04', 8.8, 'banguat', 28)`,
+      `insert into core.tipos_de_cambio (moneda, fecha, referencia, origen, codigo_banguat) values ('EUR', '2026-11-04', 8.8, 'banguat', 24)`,
     );
     const sinCodigo = escenario.propietario.query(
       `insert into core.tipos_de_cambio (moneda, fecha, referencia, origen, consulta_id) values ('EUR', '2026-11-04', 8.8, 'banguat', $1)`,
@@ -75,9 +75,9 @@ describe('core.tipos_de_cambio', () => {
 
   it('solo una fila del Banguat por moneda y fecha, pero varias versiones manuales', async () => {
     const fecha = '2026-11-05';
-    await escenario.tipoDelBanguat({ moneda: 'GBP', fecha, referencia: '10.2' }, 29);
+    await escenario.tipoDelBanguat({ moneda: 'GBP', fecha, referencia: '10.2' }, 9);
 
-    const repetida = escenario.tipoDelBanguat({ moneda: 'GBP', fecha, referencia: '10.3' }, 29);
+    const repetida = escenario.tipoDelBanguat({ moneda: 'GBP', fecha, referencia: '10.3' }, 9);
     expect(await restriccionDeError(repetida)).toBe('tipos_de_cambio_banguat_unico');
     expect(await codigoDeError(escenario.tipoManual({ moneda: 'GBP', fecha, referencia: '10.25' }))).toBeUndefined();
     expect(await codigoDeError(escenario.tipoManual({ moneda: 'GBP', fecha, referencia: '10.26' }))).toBeUndefined();

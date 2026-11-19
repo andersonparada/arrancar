@@ -32,7 +32,7 @@ interface TipoDeCambioDePrueba {
 
 /**
  * Datos de las pruebas de los tipos de cambio del núcleo: dos conexiones (el dueño de la base y la aplicación), un
- * usuario, una consulta y las monedas 28, 29 y 30 del Banguat. Todo se borra al terminar.
+ * usuario, una consulta y las monedas del Banguat 24 (euro), 9 (libra) y 3 (yen), que ya trae la migración. Todo se borra al terminar.
  */
 export class EscenarioDeMultimoneda {
   propietario!: pg.Client;
@@ -47,9 +47,6 @@ export class EscenarioDeMultimoneda {
     await this.propietario.connect();
     await this.aplicacion.connect();
     await this.limpiar();
-    await this.propietario.query(
-      `insert into core.monedas_del_banguat (codigo, descripcion) values (28, 'Euro'), (29, 'Libra'), (30, 'Otra')`,
-    );
     this.usuarioId = await this.unaFila(
       `insert into core.usuarios (usuario, nombres, hash_contrasena) values ('multimonedacore', 'M', 'x') returning id`,
     );
@@ -64,7 +61,6 @@ export class EscenarioDeMultimoneda {
     await propietario.query(`delete from core.tipos_de_cambio where moneda in ('EUR', 'GBP')`);
     await propietario.query(`delete from core.consultas_al_banguat where moneda in ('EUR', 'GBP') or detalle = 'x'`);
     await propietario.query(`update core.monedas set codigo_banguat = null where codigo in ('EUR', 'GBP')`);
-    await propietario.query(`delete from core.monedas_del_banguat where codigo in (28, 29, 30)`);
     await propietario.query(`delete from core.usuarios where usuario = 'multimonedacore'`);
   }
 
@@ -79,11 +75,11 @@ export class EscenarioDeMultimoneda {
     return (await this.propietario.query<{ id: string }>(consulta, valores)).rows[0]!.id;
   }
 
-  /** Una fila `banguat` con el código 28 (o el indicado) y la consulta del escenario. */
-  tipoDelBanguat({ moneda, fecha, referencia = '8.81' }: TipoDeCambioDePrueba, codigo = 28) {
+  /** Una fila `banguat` con el código 24 (o el indicado), en quetzales por unidad, y la consulta del escenario. */
+  tipoDelBanguat({ moneda, fecha, referencia = '8.81' }: TipoDeCambioDePrueba, codigo = 24) {
     return this.propietario.query(
-      `insert into core.tipos_de_cambio (moneda, fecha, referencia, origen, codigo_banguat, consulta_id)
-       values ($1, $2, $3, 'banguat', $4, $5)`,
+      `insert into core.tipos_de_cambio (moneda, fecha, referencia, origen, codigo_banguat, consulta_id, convencion)
+       values ($1, $2, $3, 'banguat', $4, $5, 'quetzales_por_unidad')`,
       [moneda, fecha, referencia, codigo, this.consultaId],
     );
   }

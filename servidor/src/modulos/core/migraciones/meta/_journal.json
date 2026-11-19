@@ -232,6 +232,13 @@
       "when": 1795064210651,
       "tag": "0032_cupos_por_destinatarios",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795090084856,
+      "tag": "0033_cruces_del_banguat",
+      "breakpoints": true
     }
   ]
 }

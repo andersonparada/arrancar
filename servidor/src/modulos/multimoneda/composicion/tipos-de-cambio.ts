@@ -6,6 +6,7 @@ import {
 import {
   aFilasExportadasDeTipos,
   columnasDeTiposDeCambio,
+  NOTA_DE_LA_POLITICA_DE_CRUCES,
   type FilaExportadaDeTipo,
 } from '../http/tipos-de-cambio.columnas.js';
 import { TiposDeCambioControlador } from '../http/tipos-de-cambio.controlador.js';
@@ -20,7 +21,7 @@ function intercambioDelReporte(reporte: ReporteDeTiposDeCambio) {
     validar: () => ({ errores: [] }),
     listar: async (_operador, filtro) => (filtro ? aFilasExportadasDeTipos(await reporte.ejecutar(filtro)) : []),
     soloExportar: true,
-    notasDeInstrucciones: ['Fuente: Banco de Guatemala.'],
+    notasDeInstrucciones: ['Fuente: Banco de Guatemala.', NOTA_DE_LA_POLITICA_DE_CRUCES],
     crear: () => {
       throw new Error('El reporte de tipos de cambio no se importa.');
     },

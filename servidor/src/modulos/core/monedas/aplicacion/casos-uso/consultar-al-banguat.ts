@@ -1,20 +1,16 @@
 import { FuenteNoDisponible, RespuestaInvalida } from '../../dominio/errores.js';
 import { evaluarVariaciones } from '../../dominio/evaluar-variaciones.js';
 import { sumarDiasAFecha } from '../../dominio/fechas-de-publicacion.js';
-import type {
-  MonedaPedida,
-  PublicacionDeTipoDeCambio,
-  PublicacionRechazada,
-  ResultadoDeConsulta,
-} from '../../dominio/publicacion.js';
+import { normalizarPublicaciones, type DolarDelDia } from '../../dominio/normalizar-publicaciones.js';
+import type { MonedaACargar, PublicacionDeTipoDeCambio, ResultadoDeConsulta } from '../../dominio/publicacion.js';
 import type { FuenteDeTiposDeCambio } from '../puertos/fuente-de-tipos-de-cambio.js';
 import type {
   CargasDeTipos,
-  ConsultaHecha,
   OperacionDelBanguat,
   ResultadoDeLaConsulta,
   VueltaDeCarga,
 } from '../puertos/cargas-de-tipos.js';
+import { consultaDe, detalleDe, resultadoDe, type Hallazgo } from './registro-de-la-consulta.js';
 
 /** El dólar se pide con reintentos; las demás monedas, una sola vez (lo que falte lo trae la vuelta siguiente). */
 export interface FuentesDeCarga {
@@ -32,7 +28,7 @@ interface Dependencias {
 export interface PedidoAlBanguat {
   vuelta: VueltaDeCarga;
   operacion: Extract<OperacionDelBanguat, 'TipoCambioDia' | 'TipoCambioRango' | 'TipoCambioRangoMoneda'>;
-  moneda: MonedaPedida;
+  moneda: MonedaACargar;
   hoy: string;
   desde: string;
   hasta: string;
@@ -51,17 +47,22 @@ export interface ResumenDeConsulta {
 
 const CODIGO_DEL_DOLAR = 2;
 const DIAS_DEL_VALOR_ANTERIOR = 7;
-const LARGO_DEL_DETALLE = 500;
 
 /**
  * Hace una llamada al Banguat, valida y compara lo recibido, y deja la fila de la bitácora junto con lo nuevo en una
- * sola transacción. Un fallo de la fuente no lanza: queda en la bitácora como `error`.
+ * sola transacción. Las comprobaciones son las de la adenda B.6, en orden: convención, formato y diferencial (en la
+ * fuente), dólar de la misma fecha, inversión probable y variación. Un fallo de la fuente no lanza: queda en la
+ * bitácora como `error`.
  */
 export class ConsultarAlBanguat {
   constructor(private readonly dependencias: Dependencias) {}
 
   async ejecutar(pedido: PedidoAlBanguat): Promise<ResumenDeConsulta> {
     const iniciadaEn = this.dependencias.ahora();
+    if (!pedido.moneda.convencion) {
+      const detalle = `${pedido.moneda.moneda}: el código ${pedido.moneda.codigoBanguat} no tiene convención comprobada.`;
+      return this.dejarConstancia(pedido, iniciadaEn, { resultado: 'sin_convencion', detalle });
+    }
     try {
       const recibido = await this.pedir(pedido);
       return await this.guardar(pedido, iniciadaEn, recibido);
@@ -77,7 +78,7 @@ export class ConsultarAlBanguat {
       moneda.codigoBanguat === CODIGO_DEL_DOLAR ? this.dependencias.fuentes.dolar : this.dependencias.fuentes.demas;
     if (pedido.operacion === 'TipoCambioDia') return fuente.tipoDelDia({ hoy });
     if (pedido.operacion === 'TipoCambioRango') return fuente.tiposDelRango({ hoy, desde, hasta });
-    return fuente.tiposDeLaMoneda({ ...moneda, hoy, desde, hasta });
+    return fuente.tiposDeLaMoneda({ moneda: moneda.moneda, codigoBanguat: moneda.codigoBanguat, hoy, desde, hasta });
   }
 
   private async guardar(
@@ -86,26 +87,46 @@ export class ConsultarAlBanguat {
     recibido: ResultadoDeConsulta,
   ): Promise<ResumenDeConsulta> {
     const { cargas } = this.dependencias;
-    const { moneda } = pedido.moneda;
+    const { moneda, convencion } = pedido.moneda;
     const propias = recibido.publicaciones.filter((p) => p.moneda === moneda);
     const conTipo = new Set(await cargas.fechasConTipoDelBanguat(moneda, pedido.desde, pedido.hasta));
     const nuevas = propias.filter((p) => !conTipo.has(p.fecha));
-    const evaluacion = evaluarVariaciones({ publicaciones: nuevas, anterior: await this.anteriorDe(moneda, nuevas) });
+    const dolares = await this.dolaresDe(pedido);
+    const normalizacion = normalizarPublicaciones({ publicaciones: nuevas, convencion: convencion!, dolares });
+    const evaluacion = evaluarVariaciones({
+      publicaciones: normalizacion.normalizadas,
+      ...(await this.anterioresDe(pedido.moneda, normalizacion.normalizadas)),
+    });
     const propiasRechazadas = recibido.rechazadas.filter((r) => r.moneda === moneda);
-    const rechazadas = [...propiasRechazadas, ...evaluacion.rechazadas];
-    const resultado = resultadoDe(propias.length, evaluacion.aGuardar.length, rechazadas);
+    const rechazadas = [...propiasRechazadas, ...normalizacion.rechazadas, ...evaluacion.rechazadas];
     return this.dejarConstancia(pedido, iniciadaEn, {
-      resultado,
+      resultado: resultadoDe(propias.length, evaluacion.aGuardar.length, rechazadas),
       rechazadas,
       detalle: detalleDe(rechazadas, evaluacion.avisos),
       publicaciones: evaluacion.aGuardar,
     });
   }
 
-  private async anteriorDe(moneda: string, nuevas: readonly PublicacionDeTipoDeCambio[]): Promise<string | null> {
+  /** El dólar del Banguat guardado de cada fecha pedida; el dólar mismo no lo necesita. */
+  private async dolaresDe(pedido: PedidoAlBanguat): Promise<Map<string, DolarDelDia>> {
+    if (pedido.moneda.convencion === 'quetzales_por_unidad') return new Map();
+    const guardados = await this.dependencias.cargas.dolaresDelBanguat(pedido.desde, pedido.hasta);
+    return new Map(guardados.map((d) => [d.fecha, { id: d.id, referencia: d.referencia }]));
+  }
+
+  /** Lo anterior contra lo que se compara: el valor en quetzales y, en los cruces, lo publicado en su convención. */
+  private async anterioresDe(
+    pedida: MonedaACargar,
+    nuevas: readonly PublicacionDeTipoDeCambio[],
+  ): Promise<{ anterior: string | null; anteriorPublicado: string | null }> {
     const primera = nuevas.map((p) => p.fecha).sort()[0];
-    if (!primera) return null;
-    return this.dependencias.cargas.valorAnterior(moneda, sumarDiasAFecha(primera, -DIAS_DEL_VALOR_ANTERIOR), primera);
+    if (!primera) return { anterior: null, anteriorPublicado: null };
+    const { cargas } = this.dependencias;
+    const desde = sumarDiasAFecha(primera, -DIAS_DEL_VALOR_ANTERIOR);
+    const anterior = await cargas.valorAnterior(pedida.moneda, desde, primera);
+    if (pedida.convencion === 'quetzales_por_unidad') return { anterior, anteriorPublicado: null };
+    const busqueda = { moneda: pedida.moneda, convencion: pedida.convencion!, desde, antesDe: primera };
+    return { anterior, anteriorPublicado: await cargas.publicadoAnterior(busqueda) };
   }
 
   private async dejarConstancia(
@@ -124,49 +145,4 @@ export class ConsultarAlBanguat {
       hasta: pedido.hasta,
     };
   }
-}
-
-interface Hallazgo {
-  resultado: ResultadoDeLaConsulta;
-  detalle: string | null;
-  rechazadas?: readonly PublicacionRechazada[];
-  publicaciones?: readonly PublicacionDeTipoDeCambio[];
-}
-
-/** El resultado de la bitácora: si nada se guardó y algo se rechazó, el motivo del primer rechazo. */
-function resultadoDe(
-  recibidas: number,
-  guardadas: number,
-  rechazadas: readonly PublicacionRechazada[],
-): ResultadoDeLaConsulta {
-  const primera = rechazadas[0];
-  if (guardadas === 0 && primera) return primera.motivo === 'dato_invalido' ? 'error' : primera.motivo;
-  return recibidas === 0 && !primera ? 'sin_datos' : 'exito';
-}
-
-function detalleDe(rechazadas: readonly PublicacionRechazada[], avisos: readonly string[]): string | null {
-  const lineas = [...rechazadas.map((r) => `${r.moneda} ${r.fecha}: ${r.motivo}`), ...avisos];
-  return lineas.length > 0 ? lineas.join(' | ') : null;
-}
-
-/** La fila de la bitácora: `TipoCambioDia` puede traer varias monedas, así que no lleva moneda ni código. */
-function consultaDe(
-  pedido: PedidoAlBanguat,
-  horas: { iniciadaEn: Date; terminadaEn: Date },
-  hallazgo: Hallazgo,
-): ConsultaHecha {
-  const delDia = pedido.operacion === 'TipoCambioDia';
-  return {
-    ...horas,
-    operacion: pedido.operacion,
-    vuelta: pedido.vuelta,
-    moneda: delDia ? null : pedido.moneda.moneda,
-    codigoBanguat: delDia ? null : pedido.moneda.codigoBanguat,
-    desde: pedido.desde,
-    hasta: pedido.hasta,
-    resultado: hallazgo.resultado,
-    filasRechazadas: hallazgo.rechazadas?.length ?? 0,
-    detalle: hallazgo.detalle?.slice(0, LARGO_DEL_DETALLE) ?? null,
-    disparadaPor: pedido.disparadaPor ?? null,
-  };
 }

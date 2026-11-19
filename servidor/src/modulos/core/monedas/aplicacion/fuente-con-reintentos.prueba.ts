@@ -36,17 +36,17 @@ describe('FuenteConReintentos', () => {
 
   it('reintenta también la lista de monedas y el rango de una moneda', async () => {
     const { base, fuente, esperas } = armar();
-    base.monedasDelBanguat.push({ codigo: 28, descripcion: 'Euro' });
-    base.publicaciones.push({ moneda: 'EUR', codigoBanguat: 28, fecha: HOY, referencia: '8.8' });
+    base.monedasDelBanguat.push({ codigo: 24, descripcion: 'Euro' });
+    base.publicaciones.push({ moneda: 'EUR', codigoBanguat: 24, fecha: HOY, referencia: '8.8' });
     base.fallosPendientes.push(new FuenteNoDisponible('x'), new FuenteNoDisponible('x'));
-    expect(await fuente.monedasDisponibles()).toEqual([{ codigo: 28, descripcion: 'Euro' }]);
+    expect(await fuente.monedasDisponibles()).toEqual([{ codigo: 24, descripcion: 'Euro' }]);
     base.fallosPendientes.push(new FuenteNoDisponible('x'));
     const resultado = await fuente.tiposDeLaMoneda({
       hoy: HOY,
       desde: HOY,
       hasta: HOY,
       moneda: 'EUR',
-      codigoBanguat: 28,
+      codigoBanguat: 24,
     });
     expect(resultado.publicaciones).toHaveLength(1);
     expect([base.consultas, esperas]).toEqual([5, [10, 20, 10]]);
