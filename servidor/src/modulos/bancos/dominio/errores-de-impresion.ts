@@ -88,6 +88,14 @@ export class BeneficiarioNoCabe extends ReglaDeNegocioInfringida {
   }
 }
 
+export class MontoEnNumerosNoCabe extends ReglaDeNegocioInfringida {
+  readonly codigo = 'monto_en_numeros_no_cabe';
+
+  constructor() {
+    super('El monto en números no cabe en el renglón del formato: ajuste el formato.');
+  }
+}
+
 export class MontoEnLetrasNoCabe extends ReglaDeNegocioInfringida {
   readonly codigo = 'monto_en_letras_no_cabe';
 
