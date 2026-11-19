@@ -1178,3 +1178,460 @@ MM-5 y los siguientes no cambian.
 - **D-3, D-4, D-6 y comprobaciones:** con compra ≠ venta no se carga sola (solo a mano); en días sin cálculo del Banguat se
   usa el último publicado sin pedir confirmación (aviso solo si faltó una publicación esperada); las monedas sin decimales
   tienen código pero no se activan en v1; antes de MM-3b se hacen las llamadas reales C-1 a C-4 al Banguat.
+
+## Adenda B (2026-11-18): resultado de C-1 a C-4
+
+_Agente `arquitecto-de-datos`. Aquí va el resultado de las llamadas reales C-1 a C-4 (hechas al empezar MM-3a′), una
+segunda muestra de 15 llamadas (B.2) y el rediseño de lo que esas llamadas desmienten. La carga automática sigue
+**apagada por omisión** (`CARGAR_TIPOS_DE_CAMBIO`, commit `6a49e8cb` de la rama `worktree-wf_c1facbe4-e32-7`) hasta
+terminar los pasos de B.12. Lo que esta adenda no toca queda como está en la adenda A. Base: lo programado en `main`
+(MM-1, MM-2, MM-3a, MM-3a′ y la migración core `0029_multimoneda`) y en la rama `worktree-wf_c1facbe4-e32-7` (MM-3b y
+MM-5, sin integrar)._
+
+### B.1 Resultado de C-1 a C-4 (tal como se anotó)
+
+
+Llamadas reales con curl, SOAP 1.1, User-Agent genérico, 3 a 5 s entre llamadas (18 respuestas útiles más unos 10 intentos fallidos de conexión, dentro del tope de 30). Respuestas crudas en `scratchpad/banguat/` (`c1-variables.xml`, `c2-*`, `c3-*`, `c4-*`).
+
+**Falla de red anotada.** Desde esta máquina, `https://www.banguat.gob.gt/` se resolvía a 45.191.247.197 y 190.56.46.37: conectaba el TCP pero el saludo TLS nunca contestaba (tiempo agotado a 20 y 45 s, también con TLS 1.2, sin ALPN y con la otra IP; el HTTP plano sí responde 302 a https). El mismo servicio **sí responde en `https://banguat.gob.gt/variables/ws/TipoCambio.asmx`** (sin `www`; otra IP, detrás de Cloudflare). Todas las respuestas útiles vienen de ese nombre. Conviene confirmar desde producción que el `www` de la URL fija responde (si el `www` falla desde ciertas redes, `URL_TIPO_DE_CAMBIO_BANGUAT` debe poder apuntar al otro nombre).
+
+#### B.1 · C-1. `VariablesDisponibles` (40 filas; faltan los códigos 10 y 20)
+
+| Cód. | Descripción del Banguat | Moneda | ¿Se ofrece? |
+|---|---|---|---|
+| 1 | Quetzales | GTQ | No (es la moneda base) |
+| 2 | Dólares de EE.UU. | USD | Sí (ya sembrado) |
+| 3 | Yenes Japoneses | JPY | Sí |
+| 4 | Francos Belgas | BEF | Excluir (retirada por el euro) |
+| 5 | Francos Suizos | CHF | Sí |
+| 6 | Francos Franceses | FRF | Excluir (retirada) |
+| 7 | Dólares Canadienses | CAD | Sí |
+| 8 | Liras Italianas | ITL | Excluir (retirada) |
+| 9 | Libras Esterlinas | GBP | Sí |
+| 11 | Marcos Alemanes | DEM | Excluir (retirada) |
+| 12 | Pesetas Españolas | ESP | Excluir (retirada) |
+| 13 | Chelines Austríacos | ATS | Excluir (retirada) |
+| 14 | Florines Holandeses | NLG | Excluir (retirada) |
+| 15 | Coronas Suecas | SEK | Sí |
+| 16 | Colones Costarricenses | CRC | Sí |
+| 17 | Colones Salvadoreños | SVC | Excluir (D-2) |
+| 18 | Pesos Mexicanos | MXN | Sí |
+| 19 | Lempiras Hondureños | HNL | Sí |
+| 21 | Córdobas Nicaragüenses | NIO | Sí |
+| 22 | Bolivares Venezolanos | VEB/VEF | Excluir (D-2) |
+| 23 | Corona Danesa | DKK | Sí |
+| **24** | **Euro** | EUR | Sí (**el euro es el 24, no el 28**) |
+| 25 | Corona Noruega | NOK | Sí |
+| 26 | DEG | XDR | Excluir (D-2) |
+| 27 | Escudo Portugués | PTE | Excluir (retirada) |
+| **28** | **Unidad de Cuenta del BID** | (sin ISO común) | Excluir |
+| 29 | Peso Argentina | ARS | Sí |
+| 30 | Real Brasileño | BRL | Sí |
+| 31 | Won Coreano | KRW | Sí |
+| 32 | Dólar Hong Kong | HKD | Sí |
+| 33 | Dólar Taiwán | TWD | Sí |
+| 34 | Yuan China | CNY | Sí |
+| 35 | Rupia Pakistán | PKR | Sí |
+| 36 | Rupee India | INR | Sí |
+| 37 | Bolivar Fuerte | VEF | Excluir (D-2) |
+| 38 | Peso Colombiano | COP | Sí |
+| 39 | Peso Dominicano | DOP | Sí |
+| 40 | Ringgit Malasia | MYR | Sí |
+| 41 | Bolívar Soberano | VES | Excluir (D-2) |
+| **42** | **Zloty** | **PLN** | Sí (**falta en la semilla**) |
+
+Hallazgos de C-1:
+- No hay AUD, CLP ni CZK, etc.
+- **Error por corregir:** las pruebas de la rama de MM-3a usan `codigoBanguat: 28` como «Euro»; el 28 es la Unidad de Cuenta del BID. El euro es el **24**. Los datos de grabación y cualquier ejemplo de la adenda deben usar 24.
+- La descripción trae ortografía irregular («Peso Argentina», «Rupee India», «DEG»): se guarda tal cual (A.3) y no sirve para identificar la moneda; la unión con `core.monedas` la hace Soporte por código.
+
+**`CODIGOS_DEL_BANGUAT_EXCLUIDOS` propuesto:** `[1, 4, 6, 8, 11, 12, 13, 14, 17, 22, 26, 27, 28, 37, 41]`.
+
+**Semilla de A.4 contra `0029_multimoneda.sql`:** la migración siembra EUR, GBP, CHF, CAD, MXN, JPY, HNL, NIO, CRC, DKK, NOK, SEK, ARS, BRL, KRW, HKD, TWD, CNY, PKR, INR, COP, DOP y MYR (23). Con la lista de arriba, cada código ofrecido tiene su moneda **excepto el 42 (Zloty polaco, PLN, 2 decimales, símbolo `zł`)**: falta agregarla en una migración de datos de MM-1 (o en una nueva si MM-1 ya salió). Ninguna moneda de la semilla queda sin código en el Banguat.
+
+#### B.1 · C-2. `TipoCambioRangoMoneda` 2026-10-16 a 2026-10-23 (EUR = 24, JPY = 3)
+
+| Fecha | EUR compra / venta | JPY compra / venta |
+|---|---|---|
+| vie 16/10 | 1.1256 / 1.1257 | 157.75 / 157.76 |
+| sáb 17, dom 18 | sin fila | sin fila |
+| lun 19/10 | 1.1214 / 1.1215 | 158.43 / 158.44 |
+| mar 20/10 (asueto Día de la Revolución) | 1.1237 / 1.1238 | 158.16 / 158.18 |
+| mié 21/10 | 1.1227 / 1.1228 | 158.04 / 158.05 |
+| jue 22/10 | 1.1195 / 1.1195 | 157.28 / 157.29 |
+| vie 23/10 | 1.12 / 1.12 | 156.78 / 156.79 |
+
+- **Unidad: NO es quetzales por unidad.** Son **cruces contra el dólar** con la convención de mercado: el euro (24) y la libra (9) vienen como **dólares por una unidad** (EUR 1.1257, GBP 1.3199), y CHF, CAD, JPY, MXN, KRW, COP, CRC, HNL, PLN, INR y DOP vienen como **unidades de la moneda por un dólar** (JPY 157.76, CHF 0.84, CAD 1.43). Para pasar a quetzales hay que usar el USD del mismo día (`TipoCambioRangoMoneda` del 2): EUR = 1.1257 × 7.6xxx, JPY = 7.6xxx / 157.76. Esto contradice la hipótesis de A.5 («siempre quetzales por unidad») y el supuesto de «un valor por moneda» de A.7: **hay que decidir la normalización** (ver abajo).
+- `compra = venta`: **solo a veces**. Con 4 decimales difieren por 0.0001 (EUR) o 0.01 a 0.02 (JPY); en MXN, KRW, COP, CRC, HNL, DOP, INR y PLN difieren casi todos los días (CRC y DOP hasta 6 a 7 unidades de diferencia). En el USD siempre es igual. La regla de A.7 `compra ≠ venta → valor_ambiguo` **rechazaría casi todas las monedas**.
+- Decimales: EUR 4 (a veces menos: `1.12`), JPY 2, MXN 4, KRW 1 a 2 (`1336`), COP 2 a 4, USD 5. Sin ceros a la derecha fijos. Ninguno pasa de 5.
+- Días: **fin de semana sin fila** (a diferencia del USD, que repite el viernes). **El asueto del 20/10 sí trae fila con valor distinto**: el Banguat publica en los asuetos guatemaltecos (sigue el mercado internacional). Por tanto, «días esperados» = lunes a viernes **sin** descontar `calendarioLaboral`; con los asuetos esperados se daría un falso `dia_sin_calculo`. Semana Santa 2026 no se probó.
+- Notación científica: ninguna en estas respuestas (ni en la muestra de C-3).
+- Estructura: `<Var><moneda/><fecha dd/mm/aaaa/><venta/><compra/></Var>` dentro de `TipoCambioRangoMonedaResult`; el orden es **venta antes que compra**.
+
+#### B.1 · C-3. Muestra del 16 al 18/11/2026 (USD, CHF, CAD, GBP, MXN, KRW, COP, CRC, HNL, PLN, INR, DOP; 18/11, venta / compra)
+
+| Cód. | Moneda | 18/11 | Lectura |
+|---|---|---|---|
+| 2 | USD | 7.64489 (=) | quetzales por dólar |
+| 5 | CHF | 0.8427 / 0.8426 | CHF por USD |
+| 7 | CAD | 1.4312 / 1.4312 | CAD por USD |
+| 9 | GBP | 1.3165 / 1.3164 | **USD por GBP** |
+| 18 | MXN | 18.5717 / 18.5677 | MXN por USD |
+| 31 | KRW | 1333.1 / 1332.5 | KRW por USD |
+| 38 | COP | 3312.6 / 3311.25 | COP por USD |
+| 16 | CRC | 449.04 / 444.77 | CRC por USD |
+| 19 | HNL | 27.0502 / 26.9156 | HNL por USD |
+| 42 | PLN | 4.0202 / 4.0191 | PLN por USD |
+| 36 | INR | 93.45 / 93.44 | INR por USD |
+| 39 | DOP | 60.377 / 59.946 | DOP por USD |
+
+(Además, JPY 157.76 el 16/10 y EUR 1.1257, de C-2.) No se muestrearon 15, 21, 23, 25, 29, 30, 32 a 35, 40 (no se probaron para no pasar del tope). **No hay publicación «por cada 100 unidades»**: ningún valor es un múltiplo de 100 evidente ni la descripción lo dice; el yen y el won vienen por unidad (157.76 y 1336 por dólar). **Constante de división: ninguna** (el mapa queda vacío). Lo que sí hace falta es otra constante: **qué monedas se publican como «dólares por unidad»** (EUR y GBP comprobadas; en el resto, no verificadas: 24 y 9 en el mapa; sin verificar).
+
+#### B.1 · C-4. Hora local y «el de mañana»
+
+- Hora de la prueba: **23:19 (America/Guatemala, CST, UTC-6), 2026-11-18**.
+- `TipoCambioDia` a las 23:19: **solo el de hoy** (18/11/2026, 7.64489). No adelanta nada.
+- `TipoCambioRango` (18 a 20/11) a las 23:19: trae **18/11 (7.64489) y 19/11 (7.64682)**, **pero no el 20/11**. `TipoCambioRangoMoneda` del 2 dio lo mismo. O sea, **el tipo de mañana (2026-11-19) ya estaba publicado a las 23:19**, y se obtiene con el rango, no con `TipoCambioDia`.
+- **No se pudo comprobar desde qué hora** aparece (solo hubo una ventana, de 23:11 a 23:20). No hay base para mover la vuelta `noche` de las 21:00; si el Banguat publica el de mañana después de las 21:00, la vuelta de las 21:00 no lo encontraría. Hace falta una sonda repetida (por ejemplo cada hora desde las 14:00 durante 2 a 3 días) o dejar la vuelta con reintentos a las 21:00, 22:00 y 23:30. Para el USD, las fechas ya publicadas a futuro incluyen el siguiente día calendario/hábil (el 19/11 es jueves; no se probó un viernes, que debería dar el sábado, domingo y lunes).
+
+#### B.1 · Lo que decide cada comprobación
+
+1. **`CODIGOS_DEL_BANGUAT_EXCLUIDOS`** = `[1, 4, 6, 8, 11, 12, 13, 14, 17, 22, 26, 27, 28, 37, 41]`.
+2. **Semilla A.4:** agregar **PLN (Zloty, `zł`, 2 decimales)**; el resto coincide con `0029`. Euro = código 24.
+3. **Constante de división por 100:** ninguna.
+4. **Cambio de fondo (decisión pendiente del arquitecto y del contador):** las monedas distintas del USD no vienen en quetzales. Opciones: (a) guardar el cruce tal cual con una columna de «convención» (`usd_por_unidad` o `unidades_por_usd`) y calcular el tipo en quetzales al usarlo; (b) convertir al cargar a quetzales por unidad con el USD del mismo día y guardar eso (se pierde el cruce original; JPY queda en 0.0484, en el límite de `numeric(16,8)` con pocas cifras significativas; mejor `1/…` calculado con alta precisión y redondeo a 8 decimales). Debe revisarlo `contador-guatemala` (¿el tipo oficial para un DTE en EUR es el cruce × tipo USD del Banguat?).
+5. **A.7 `compra ≠ venta`:** no puede rechazar. Para las demás monedas hay que escoger una regla (por ejemplo el promedio, o la venta) con el contador; la regla actual dejaría sin cargar CRC, DOP, HNL, MXN, KRW, COP, INR y PLN.
+6. **Días esperados de las demás monedas:** lunes a viernes **sin** descontar asuetos (el 20/10 se publicó). `dia_sin_calculo` solo para sábado y domingo.
+7. **Banda del USD (5 a 15) y variación del 25 %:** el 25 % de A.7 sigue siendo razonable para cruces (variación diaria observada menor a 1 %); pero la banda y el `cruceImplicito` deben aplicarse sobre el valor ya normalizado.
+8. **Hora de la vuelta `noche`:** no cambia; ver «no comprobado».
+
+#### B.1 · Lo que no se pudo comprobar
+
+- La hora exacta en que el Banguat publica el USD (y el de las demás) del día siguiente (solo se probó a las 23:19).
+- Que `https://www.banguat.gob.gt` responda desde producción (aquí el TLS del `www` no contestó; se usó `banguat.gob.gt`).
+- La convención (dólares por unidad o unidades por dólar) de las monedas no muestreadas (15, 21, 23, 25, 29, 30, 32 a 35, 40) y de la EUR/GBP al revés en otras fechas; hay que revisar las 24 respuestas completas o la lista oficial del Banguat.
+- Semana Santa 2026 (solo se probó el asueto del 20/10), y cómo se ven los viernes para el USD de mañana.
+- `TipoCambioFechaInicialMoneda` y el `CambioDia/Var` de `TipoCambioDia` (no vino en esta respuesta: solo `VarDolar`).
+- Notación científica y valores muy pequeños: no aparecieron (el JPY por unidad en quetzales sí sería pequeño, pero el Banguat no lo publica así).
+
+### B.2 Segunda muestra (15 llamadas, 2026-11-18, 23:21 a 23:24 hora de Guatemala)
+
+Mismo método (curl, SOAP 1.1, `https://banguat.gob.gt/variables/ws/TipoCambio.asmx`, User-Agent genérico, 4 a 5 s entre
+llamadas). Respuestas crudas `b-moneda<código>.xml`, `b-semana-santa-24.xml`, `b-semana-santa-2.xml`,
+`b-navidad-24.xml` y `b-2015-24.xml` junto a las de B.1. Las 15 dieron HTTP 200.
+
+**Convención de los códigos que faltaban** (`TipoCambioRangoMoneda` del 16 al 18/11/2026; el 18/11, venta / compra):
+
+| Cód. | Moneda | 18/11 venta / compra | Convención | Decimales vistos |
+|---|---|---|---|---|
+| 15 | SEK | 10.1651 / 10.1634 | unidades por USD | 4 |
+| 21 | NIO | 36.6243 / 36.6243 (igual los tres días) | unidades por USD | 4 |
+| 23 | DKK | 6.8153 / 6.8148 | unidades por USD | 4 |
+| 25 | NOK | 9.6849 / 9.6829 | unidades por USD | 4 |
+| 29 | ARS | 1556.18018 / 1555.84009 | unidades por USD | hasta 5 |
+| 30 | BRL | 5.8 / 5.7991 | unidades por USD | 1 a 4 |
+| 32 | HKD | 7.8461 / 7.846 | unidades por USD | 4 |
+| 33 | TWD | 33.022 / 32.947 | unidades por USD | 3 |
+| 34 | CNY | 6.6683 / 6.6674 | unidades por USD | 4 |
+| 35 | PKR | 276.7 / 276.525 (igual los tres días) | unidades por USD | 1 a 3 |
+| 40 | MYR | 4.118 / 4.1115 | unidades por USD | 3 a 4 |
+
+Con esto, **todas las monedas ofrecidas tienen convención comprobada**: el euro (24) y la libra (9) vienen en **dólares
+por una unidad**; las otras 21 (3, 5, 7, 15, 16, 18, 19, 21, 23, 25, 29, 30, 31, 32 a 36, 38 a 40 y 42), en **unidades
+por un dólar**. Es la convención del mercado internacional (EUR/USD y GBP/USD «directas»; las demás «indirectas»).
+
+**El euro en 2015** (5 a 7/01/2015): 1.19275 / 1.19265: también dólares por euro. La convención **no cambió** en 11 años.
+
+**Días** (refuerza C-2):
+
+| Rango | USD (2) | EUR (24) |
+|---|---|---|
+| Semana Santa 2026 (30/03 a 06/04) | Fila los 8 días; **repite el 7.64121 del miércoles 1/04 el jueves y viernes santos, el sábado y el domingo** | Fila de lunes a viernes, **también el jueves 2/04 y el viernes 3/04 santos**; nada el sábado ni el domingo |
+| Navidad y Año Nuevo (22/12/2025 a 02/01/2026) | (no se pidió) | Fila **todos los días de lunes a viernes, incluso el 24, 25 y 31/12 y el 1/01**; con más diferencial esos días (25/12: 1.1792 / 1.1776) |
+
+Conclusión: las demás monedas se publican **de lunes a viernes, sin excepción por asuetos guatemaltecos ni por los
+feriados del mercado internacional**. El USD, en cambio, no se calcula en los asuetos guatemaltecos (repite el último).
+El cruce de un asueto se combina con ese USD repetido (B.3).
+
+**Lo que sigue sin comprobar:** desde qué hora sale el USD de mañana (las 30 llamadas fueron entre las 23:11 y las 23:24)
+y desde qué hora del día sale el cruce del día (el dictamen dice de 8:00 a 9:00; ninguna llamada se hizo de mañana).
+No hay más llamadas en este paso: las dos cosas se ven en la bitácora en producción (B.9).
+
+### B.3 Cómo se pasa a quetzales por unidad
+
+`core.tipos_de_cambio.referencia` es, y debe seguir siendo, **quetzales por una unidad** (§4.1, `TipoDeCambio` del
+núcleo, y lo que ya guardan o guardarán Bancos, Libro de compras y Cuentas por pagar). Lo que cambia es cómo se llega a
+ese número para las monedas distintas del USD.
+
+| Opción | Qué se guarda | A favor | En contra |
+|---|---|---|---|
+| **A. Normalizar al cargar, guardando lo publicado** | `referencia` en quetzales por unidad, calculada con el USD del Banguat **del mismo día**; además `compra` y `venta` tal como se publicaron, la `convencion` y la fila del USD usado | Los consumidores no cambian (siguen leyendo Q por unidad); cada valor se puede rehacer y explicar («1.31645 USD/GBP × 7.64489 = 10.06411544»); el reporte y la auditoría ven el dato original | Depende de que el USD del día esté cargado antes (orden de las vueltas); tres columnas más |
+| B. Normalizar al cargar y guardar solo el resultado | `referencia` en Q por unidad | Lo más simple | Se pierde lo que publicó el Banguat: no se puede revisar un valor raro ni detectar un error de convención después; contradice «guardar lo que dice la fuente» de §4.2 |
+| C. Guardar solo el cruce y convertir al usar | `referencia` en la convención publicada; `vigente` combina con el USD al leer | Fiel a la fuente | Cambia el significado de `referencia` según la moneda; `vigente`, `TipoDeCambio`, los reportes y el diferencial cambiario (§8) tendrían que conocer convenciones; un USD corregido cambiaría el EUR de días ya registrados. Rechazada |
+| D. Guardar el cruce en una tabla aparte y el Q por unidad en `tipos_de_cambio` | Dos tablas | Separa fuente y resultado | Duplica la versión, el índice único y la bitácora sin ganar nada sobre A |
+
+**Recomendada: A.** Fórmula, con aritmética entera (`bigint`, sin `number`), igual que `referenciaEscalada`:
+
+- `p` = valor publicado del día (B.5: el promedio de compra y venta), con todos sus decimales (hasta 9).
+- `d` = `referencia` del USD **del Banguat** para la **misma fecha** (`origen = 'banguat'`, código 2). El USD tiene fila
+  todos los días calendario (también en asuetos, repitiendo), así que todo día con cruce tiene su USD.
+- `usd_por_unidad` (EUR, GBP): `referencia = d × p`.
+- `unidades_por_usd` (las demás): `referencia = d ÷ p`.
+- El cálculo se hace con 20 decimales y se redondea **una sola vez**, desde la mitad, a 8 (`numeric(16,8)`). Si queda en
+  0 (no pasa con ninguna moneda de la lista: la menor es el COP, 0.00230829), `dato_invalido`.
+
+Comprobación con los datos de B.1 (18/11/2026, USD 7.64489):
+
+| Moneda | Publicado (compra / venta) | Promedio | Q por unidad |
+|---|---|---|---|
+| GBP | 1.3164 / 1.3165 USD por GBP | 1.31645 | 10.06411544 |
+| CHF | 0.8426 / 0.8427 CHF por USD | 0.84265 | 9.07243814 |
+| MXN | 18.5677 / 18.5717 MXN por USD | 18.5697 | 0.41168624 |
+| CRC | 444.77 / 449.04 CRC por USD | 446.905 | 0.01710630 |
+| COP | 3311.25 / 3312.6 COP por USD | 3311.925 | 0.00230829 |
+
+**Por qué el USD del Banguat y no el «vigente».** Si soporte corrigió a mano el USD de un día (§4.4), el cruce ya cargado
+no cambia solo (las filas no se editan). Usar siempre la fila `banguat` del USD hace el cálculo reproducible y es lo que
+hace el propio Banguat («el cálculo parte de su equivalencia con relación al dólar»). Si el USD del Banguat de ese día
+estaba mal, soporte corrige también las demás monedas de ese día con versiones `manual` (procedimiento de §4.4; el panel
+lo avisa: B.8).
+
+**Si falta el USD de esa fecha**, la fila de la otra moneda **no se guarda**: la consulta queda con resultado nuevo
+`sin_dolar_del_dia` y el día sigue siendo un hueco, que se vuelve a pedir en la vuelta `noche` o en el relleno del día
+siguiente (B.9). No se usa el USD de otro día: el dictamen pide no inventar la cotización (dictamen §3, vigencia).
+
+**Precisión (riesgo, no bloquea).** Con 8 decimales, el error relativo de redondeo es como mucho `0.5 × 10⁻⁸ ÷
+referencia`. En el COP (0.0023) es 2.2 × 10⁻⁶: un documento de Q100,000 en pesos colombianos puede diferir hasta Q0.22
+del cálculo con el cruce exacto; en el CRC, Q0.03; en el MXN, menos de un centavo. Ampliar la escala obligaría a cambiar
+`TipoDeCambio` (8 decimales) y las columnas de tipo de cambio de todos los módulos: no lo recomiendo en v1. Lo anoto
+como V-15 para el contador (B.13) y como pregunta P-B6.
+
+### B.4 Convención por código: columna en `core.monedas_del_banguat`
+
+| Opción | Cómo | A favor | En contra |
+|---|---|---|---|
+| **A. Columna `convencion` fijada por migración de datos** | La migración escribe la convención de los 40 códigos conocidos; la tarea que actualiza la lista **nunca** la toca; un código nuevo nace sin convención y no se ofrece hasta otra migración | Comprobada una vez con llamadas reales (B.1 y B.2), versionada en git, visible en la base; un código nuevo no se carga mal por defecto | Un código nuevo necesita un commit para usarse (raro: la lista no cambia en años) |
+| B. Constante del dominio (`USD_POR_UNIDAD = {9, 24}`) | Lo demás se asume `unidades_por_usd` | Sin migración | Un código nuevo se cargaría con una convención supuesta; la base no sabe cómo se calculó cada fila |
+| C. Adivinarla por magnitud (si el valor es menor que 2, es `usd_por_unidad`) | Al cargar | Sin datos | Falla con CHF (0.84, unidades por USD) y con cualquier moneda cerca de la paridad. Rechazada |
+| D. Que soporte la elija en la ventana | Selector | Flexible | Un error de un clic carga una serie entera mal; el usuario pidió solo **unir** códigos. Rechazada |
+
+**Recomendada: A**, con la comprobación de magnitud de B.6 como red.
+
+**Columna nueva** en `core.monedas_del_banguat`:
+
+| Columna | Tipo | Nulo | Notas |
+|---|---|---|---|
+| `convencion` | `text` | sí | `check (convencion in ('quetzales_por_unidad', 'usd_por_unidad', 'unidades_por_usd'))` (`monedas_del_banguat_convencion_valida`). Nula = sin comprobar: el código **no se ofrece ni se carga** |
+
+**Datos que pone la migración** (todos con su `descripcion` tal como la dio C-1, `disponible = true`; `on conflict
+(codigo) do update set convencion = excluded.convencion` para que la fila del 2 ya sembrada también la reciba):
+
+| Convención | Códigos |
+|---|---|
+| `quetzales_por_unidad` | 2 (USD) |
+| `usd_por_unidad` | 9 (GBP), 24 (EUR) |
+| `unidades_por_usd` | 3, 5, 7, 15, 16, 18, 19, 21, 23, 25, 29, 30, 31, 32, 33, 34, 35, 36, 38, 39, 40, 42 |
+| nula (excluidos, B.7) | 1, 4, 6, 8, 11, 12, 13, 14, 17, 22, 26, 27, 28, 37, 41 |
+
+- **`ActualizarMonedasDelBanguat`** (rama de MM-3b): su `on conflict do update` sigue tocando solo `descripcion`,
+  `disponible` y `vista_por_ultima_vez`. Una prueba de integración lo comprueba (la convención sobrevive a una
+  actualización; un código nuevo entra con convención nula).
+- **Permisos de la columna:** `arrancar_app` ya escribe la tabla (la tarea); no se le quita el `update` de la tabla, pero
+  el repositorio no expone `convencion` para escribir. Opción más estricta (P-B7): `revoke update (convencion)` por
+  columna. Recomiendo hacerlo: cuesta una línea en la migración y lo deja fijo también ante un error del código.
+- **Sin auditoría:** es catálogo de instalación escrito por migración (queda en git), como la semilla de monedas.
+- **Sin índice:** la tabla tiene unas 40 filas y se lee por la PK.
+
+### B.5 Compra distinta de venta
+
+Lo observado: en el USD siempre son iguales; en las demás difieren casi todos los días. El diferencial va de 0.008 %
+(GBP) a 0.96 % (CRC); los días de feriado internacional se abre (EUR del 25/12: 0.14 %). Ojo: «venta» es **el número
+mayor en la convención publicada**, no «la venta de la moneda extranjera»: en Q por unidad, la venta del GBP da el valor
+más alto (10.06449769) y la del CHF el más bajo (9.07189985). Elegir «venta» o «compra» no tiene el mismo sentido en el
+euro que en el peso mexicano.
+
+| Opción | Regla | A favor | En contra |
+|---|---|---|---|
+| a. No cargar (D-3 del usuario, regla de A.7) | `compra ≠ venta` → `valor_ambiguo` | Ya programado | Deja sin cargar casi todo (solo el NIO tuvo compra = venta los tres días; el EUR, a veces). Esa respuesta se dio suponiendo que el caso sería raro |
+| **b. Promedio de compra y venta** | `p = (compra + venta) ÷ 2`, exacto (a lo más un decimal más) | Es el «medio» del mercado, la referencia usual; trata igual las dos convenciones; con compra = venta da el mismo valor que hoy | No es un número que el Banguat imprima |
+| c. Venta | `p = venta` | Un número publicado | En Q por unidad, sube el EUR y baja el MXN: sesgo opuesto según la convención |
+| d. Compra | `p = compra` | Igual que c | Igual que c, al revés |
+
+**Recomendada: b (promedio)**, con dos salvaguardas:
+- Si el diferencial `(venta − compra) ÷ promedio` pasa de **3 %** (constante `DIFERENCIAL_MAXIMO_EN_PORCIENTO`), la fila
+  no se guarda y la consulta queda `valor_ambiguo` (se reutiliza el resultado; detalle con el diferencial). El mayor visto
+  fue 0.96 %.
+- Si `venta < compra`, `dato_invalido`.
+
+Es una decisión con efecto fiscal (qué tipo se aplica a un documento en otra moneda): **la revisa `contador-guatemala`
+(V-14) antes de preguntarla al usuario** (P-B2), y reemplaza la respuesta D-3 del usuario si la acepta.
+
+### B.6 Comprobaciones al cargar (reemplazan las filas de A.7 para las demás monedas)
+
+En orden; la primera que falla decide el resultado. El USD sigue como está (banda 5 a 15, aviso con 3 %).
+
+| # | Comprobación | Si falla |
+|---|---|---|
+| 1 | El código tiene `convencion` | No se pide (no entra en `monedasACargar`); si llega igual, `sin_convencion` (resultado nuevo) |
+| 2 | Formato, fecha, `venta ≥ compra > 0` | `dato_invalido` |
+| 3 | Diferencial de hasta 3 % (B.5) | `valor_ambiguo` |
+| 4 | Hay USD `banguat` de esa fecha (B.3) | `sin_dolar_del_dia` (resultado nuevo); queda como hueco |
+| 5 | **Inversión probable** contra el valor publicado anterior (promedio de la fila `banguat` más reciente de los 7 días anteriores, en la misma convención): si `p` cambió más de 5 % **y** `p × anterior` está más cerca de 1 que `p ÷ anterior` | `convencion_dudosa` (resultado nuevo): no se guarda; aviso en el panel |
+| 6 | Variación del valor en quetzales de más de 25 % contra el anterior | `variacion_excesiva` (como A.7) |
+| 7 | Variación de más de 3 % del **valor publicado** o del valor en quetzales | Se guarda con aviso (sustituye al «cruce implícito» de A.7, que ya no tiene sentido: el cruce es el dato de entrada) |
+
+Por qué la 5 y no solo la 6: si el euro llegara un día «al revés» (0.8883 EUR por USD en vez de 1.1257 USD por EUR), el
+valor en quetzales cambiaría 21 %, **por debajo** del 25 % de rechazo, y se guardaría. Con la 5: `0.8883 × 1.1257 ≈ 1`
+→ rechazo. El umbral de 5 % evita el falso positivo de una moneda cerca de la paridad (CHF 0.84; un movimiento normal de
+2 % no llega a evaluarse). Un salto real grande (el ARS de 800 a 1,500) no se confunde: `p × anterior` queda lejísimos
+de 1. Sin valor anterior (primera carga), solo valen la 1 a la 4: por eso la «muestra» de A.9 pasa a enseñar también el
+valor en quetzales (B.10) antes de unir el código.
+
+Cálculo entero: con `p` y `a` escalados × 10⁹, «más cerca de 1» compara `|P·A − 10¹⁸| × A` contra
+`|P − A| × 10¹⁸` (`P` y `A` son `p` y `a` × 10⁹). Función pura `inversionProbable(publicado, anterior)` en `dominio/reglas-de-publicacion.ts`, con pruebas
+de EUR invertido, CHF moviéndose 2 % cerca de la paridad y ARS devaluado 87 %.
+
+`core.consultas_al_banguat.resultado`: el check suma `sin_dolar_del_dia`, `convencion_dudosa` y `sin_convencion`.
+
+### B.7 `core.tipos_de_cambio`: columnas nuevas
+
+| Columna | Tipo | Nulo | Notas |
+|---|---|---|---|
+| `convencion` | `text` | sí | Copia de la convención con que se calculó (no se lee de `monedas_del_banguat` al usar: la fila se explica sola). Check de los tres valores. `tipos_de_cambio_banguat_con_convencion check (origen <> 'banguat' or convencion is not null)`; nula en `manual` |
+| `dolar_usado_id` | `uuid` | sí | FK `core.tipos_de_cambio(id)` (la fila del USD del Banguat usada), `on delete restrict`. Índice `tipos_de_cambio_dolar_usado_idx`. `tipos_de_cambio_cruce_con_dolar check ((coalesce(convencion, '') in ('usd_por_unidad', 'unidades_por_usd')) = (dolar_usado_id is not null))` |
+| `compra`, `venta` | `numeric(16,8)` | sí | **Cambia el significado**: ahora son **tal como los publicó el Banguat, en su convención** (en el USD coinciden con quetzales, así que para él nada cambia). `tipos_de_cambio_cruce_con_compra_y_venta check (coalesce(convencion, '') not in ('usd_por_unidad', 'unidades_por_usd') or (compra is not null and venta is not null and venta >= compra))`. El mayor visto (ARS 1556.18018) cabe |
+
+- Sin columna para el promedio: sale de `compra` y `venta`. `referencia` se rehace con `compra`, `venta`, `convencion` y
+  la fila `dolar_usado_id`; una prueba de integración lo comprueba fila por fila.
+- **RLS:** sin cambio (política de solo agregar en la instalación, `politicasDeSoloAgregarEnLaInstalacion`); la llave a
+  la misma tabla no necesita política nueva.
+- **Datos existentes.** En producción no hay filas `banguat` de otras monedas: MM-3b no está integrado y la carga está
+  apagada. Las del USD (si las hay, de pruebas o de carga manual por rango) reciben `convencion = 'quetzales_por_unidad'`
+  con un `update` de la migración. Si existe alguna fila `banguat` de otra moneda (una base de desarrollo que corrió la
+  rama de MM-3b), la migración **se detiene** con un `raise exception` que explica el procedimiento (recrear la base de
+  desarrollo); no borra nada sola. Las filas `manual` no cambian (Q por unidad, como siempre).
+- **Migración nueva**, no se edita `0029` (ya está en `main`, después vinieron `0030` y `0031`): `00xx_cruces_del_banguat`
+  en `core` (número al programar). Contiene B.4 (columna y datos de `monedas_del_banguat`, `revoke` de P-B7), B.7, el
+  check de resultados de B.6, la guarda de datos existentes y la moneda PLN (B.8).
+
+### B.8 PLN en la semilla y otras correcciones de datos
+
+- **PLN:** la misma migración agrega `('PLN', 'Zloty polaco', 'zł', 2)` a `core.monedas` (inactiva, sin código, sin
+  letras, `on conflict do nothing`). No se edita `0029`.
+- **Euro = 24.** El 28 es la Unidad de Cuenta del BID. Hay que cambiar 28 por 24 en todas las pruebas y dobles que lo
+  usan como euro, en `main` y en la rama de MM-3b: `moneda.prueba.ts`, `reglas-de-publicacion.prueba.ts`,
+  `extractor-de-respuestas.prueba.ts`, `cliente-banguat.prueba.ts`, `monedas.prueba.ts`, `fuente-con-reintentos.prueba.ts`,
+  `cargas-de-tipos.prueba.ts`, `cargas-de-tipos-en-memoria.ts`, `catalogo-de-monedas-en-memoria.ts`,
+  `cargar-tipos-de-cambio.prueba.ts`, `multimoneda-de-core.soporte.ts`, `tipos-de-cambio-de-core.prueba.ts` y
+  `pruebas-api/monedas.api.prueba.ts` (buscar `codigoBanguat: 28`, `codigo: 28` y «Euro (28)»; también el texto de A.3 y
+  A.10). Los valores de prueba del euro pasan a ser **dólares por euro** (1.1257), no 8.8.
+- **Grabaciones de prueba** (`respuestas-grabadas-del-banguat.ts`): se reemplazan por recortes de las respuestas reales de
+  B.1 y B.2 (EUR con fin de semana y asueto; CRC con compra ≠ venta; ARS con 5 decimales; USD de Semana Santa repetido),
+  sin datos de quien llamó.
+- **`CODIGOS_DEL_BANGUAT_EXCLUIDOS`** = `{1, 4, 6, 8, 11, 12, 13, 14, 17, 22, 26, 27, 28, 37, 41}`. D-2 del usuario
+  nombra el DEG (26), los tres bolívares (22, 37, 41) y el colón salvadoreño (17); además van el quetzal (1, es la base),
+  las monedas europeas retiradas por el euro (4, 6, 8, 11 a 14, 27) y la Unidad de Cuenta del BID (28), que no son
+  monedas en circulación (P-B5). El selector ofrece: `disponible` **y** no excluido **y** `convencion` no nula.
+- **El USD no puede quedarse sin código** mientras otra moneda tenga código (sin él no hay cruces): `EditarMoneda`
+  rechaza con `CodigoDelDolarNecesario` (Regla, 422, `codigo_del_dolar_necesario`, `detalles: { monedas }`).
+
+### B.9 Días esperados, horario y URL
+
+- **Días esperados de las demás monedas:** lunes a viernes, **sin** descontar asuetos (B.2). Función pura
+  `esDiaDePublicacionDeCruces(fecha)` en el dominio; deja de usarse `calendarioLaboral` para esto:
+  - `VueltasDeCarga.diasHabiles` y la condición de la vuelta `noche` (`esHabil(hoy)`) pasan a esa función.
+  - `tiposDeCambio.vigente` (A.8): `dia_sin_calculo` **solo** en sábado y domingo. Un asueto sin la fila esperada es
+    `falta_publicacion`. Así se respeta D-4 del usuario («aviso solo si faltó una publicación esperada») con los días
+    reales.
+  - El aviso de atraso de 3 días hábiles (A.6) cuenta lunes a viernes.
+- **Orden dentro de una vuelta:** el USD siempre primero (`monedasACargar` ordena el código 2 al inicio), para que el
+  relleno de 45 días tenga el USD antes de normalizar las demás. La vuelta `manana` (09:30) usa el USD que dejaron la
+  `noche` anterior o la `madrugada`; si falta, sus monedas quedan `sin_dolar_del_dia` y la vuelta `noche` las repite
+  (ya pide «las demás que faltaron hoy»).
+- **Hora del USD de mañana (C-4 sin cerrar):** a las 23:19 ya estaba. Recomiendo que la vuelta `noche` reintente solo el
+  USD de mañana a las **21:00, 22:00 y 23:30** si no llegó (2 llamadas más como mucho, solo el USD). La bitácora en
+  producción dirá en pocas semanas a qué hora aparece; entonces se ajusta la constante. Lo mismo para la vuelta de las
+  09:30: si la bitácora muestra `sin_datos` frecuentes de mañana, se mueve. El efecto de no tener el USD de mañana es
+  menor: la `madrugada` de las 06:00 lo trae igual.
+- **URL:** desde la red de prueba, `https://www.banguat.gob.gt` no completó el TLS y `https://banguat.gob.gt` sí (otra IP,
+  detrás de Cloudflare; responde 200 sin redirección, que `ClienteBanguat` no sigue).
+
+  | Opción | A favor | En contra |
+  |---|---|---|
+  | **a. Cambiar `URL_BANGUAT_POR_OMISION` a `https://banguat.gob.gt/variables/ws/TipoCambio.asmx`** | El único nombre que respondió; sigue la variable `URL_TIPO_DE_CAMBIO_BANGUAT` para volver al `www` | Si el Banguat cambia de proveedor, puede dejar de servir el nombre corto (igual que el `www` hoy) |
+  | b. Dejar `www` y fijar la variable en producción | Sin cambio de código | Toda instalación nueva nace con una URL que puede no responder |
+  | c. Dos URL con respaldo automático | Resiste la caída de una | Más código y un segundo destino que revisar en seguridad; no lo justifica un servicio que se consulta pocas veces al día |
+
+  **Recomendada: a**, y **comprobar desde el servidor de producción** con un `curl` antes de encender
+  `CARGAR_TIPOS_DE_CAMBIO`. El espacio de nombres SOAP (`http://www.banguat.gob.gt/variables/ws/`) **no cambia**: es un
+  identificador XML, no una dirección. Revisión de `seguridad` (cambia el destino de una salida a internet).
+
+### B.10 API, pantallas, Excel, permisos y auditoría
+
+- **API** (sin rutas nuevas):
+  - `GET /api/monedas/banguat` suma `convencion` y `ofrecida` (no excluida, disponible y con convención).
+  - `GET /api/monedas/banguat/:codigo/muestra` devuelve por fecha `compra`, `venta`, `convencion`, `promedio`, el USD del
+    Banguat guardado de esa fecha y la `referencia` en quetzales (nula si no hay USD guardado). No guarda nada (como A.9).
+  - `GET /api/tipos-de-cambio/...` (serie, versiones, consultas) suma `convencion`, `compra`, `venta` y la `referencia` del
+    USD usado; los resultados nuevos de B.6 en la bitácora.
+- **Pantallas (MM-4):** en Monedas, la columna «Moneda del Banguat» dice «Euro (24) · USD por unidad»; el selector solo
+  habilita las `ofrecida`; «Ver muestra» enseña lo publicado y el valor en quetzales, con la frase «1.31645 USD por GBP ×
+  7.64489 = Q10.06411544». En Tipos de cambio, el detalle de una fila muestra lo publicado, la convención y el USD usado; la
+  bitácora traduce `sin_dolar_del_dia`, `convencion_dudosa` y `sin_convencion`.
+- **Excel:** el reporte «Tipos de cambio» de Multimoneda (Reportes: imprime y exporta; rama de MM-5) suma las columnas
+  «Compra publicada», «Venta publicada», «Convención» y «Dólar usado» (`tipos-de-cambio.columnas.ts`). Las ventanas de
+  Plataforma no importan ni exportan (A.9).
+- **Permisos:** ninguno nuevo.
+- **Auditoría:** sin cambios; `core.tipos_de_cambio` y la bitácora son su propio rastro y nunca se borran; la convención
+  la fija una migración. `CodigoDelDolarNecesario` no deja rastro (rechaza; no cambia nada).
+
+### B.11 Convivencia con lo ya programado
+
+| Pieza | Dónde | Cambio |
+|---|---|---|
+| `PublicacionDeTipoDeCambio` | `main` | `referencia` sigue en Q por unidad; `compra` y `venta` pasan a ser lo publicado; suma `convencion` y `dolarUsadoId` |
+| `validarPublicacion` / `esAmbiguo` | `main` | Deja de rechazar `compra ≠ venta`; la validación de un cruce ya no da la referencia: devuelve el promedio y la convención, y la normalización (B.3) se hace en la carga, que tiene el USD guardado |
+| `cruceImplicito` | `main` | Se quita (B.6, regla 7) |
+| `CODIGOS_DEL_BANGUAT_EXCLUIDOS` | `main` | Se llena (B.8) |
+| `URL_BANGUAT_POR_OMISION` | `main` | B.9 |
+| `ConsultarAlBanguat`, `evaluarVariaciones`, `VueltasDeCarga`, `vueltaQueToca`, `CargasDeTipos` | rama MM-3b | Normalización con el USD guardado, comprobaciones de B.6, días de B.9, orden USD primero, reintentos de la noche |
+| `tipo-vigente.ts` | rama MM-3b | `dia_sin_calculo` solo sábado y domingo |
+| Reporte de tipos de cambio | rama MM-5 | Columnas de B.10 |
+| Bancos, Libro de compras, Cuentas por pagar | — | Nada: leen `referencia` (Q por unidad) por `tiposDeCambio.vigente` |
+
+**Recomendación sobre la rama `worktree-wf_c1facbe4-e32-7`:** integrarla **como está** (MM-3b y MM-5, con la carga
+apagada) y hacer encima los pasos de B.12, como se hizo con MM-3a → MM-3a′; rehacerla perdería su revisión. Lo único que
+no puede pasar es encender `CARGAR_TIPOS_DE_CAMBIO` antes de MM-3c (P-B8).
+
+### B.12 Pasos nuevos (un commit cada uno)
+
+| Paso | Qué | Pruebas clave | Depende de |
+|---|---|---|---|
+| **MM-1b** (servidor, datos del núcleo) | Migración `00xx_cruces_del_banguat`: `convencion` en `monedas_del_banguat` con los datos de B.4 y su `revoke`; `convencion`, `dolar_usado_id`, checks e índice en `tipos_de_cambio`; resultados nuevos en `consultas_al_banguat`; guarda de datos existentes; PLN. Tablas Drizzle | La convención sobrevive a `ActualizarMonedasDelBanguat`; un código nuevo nace sin convención; una fila de cruce sin USD, sin compra o con `venta < compra` falla; una `manual` sin convención pasa; la app no puede cambiar `convencion`; PLN existe inactiva; la guarda detiene la migración con una fila `banguat` de otra moneda | Nada (V-14 solo frena MM-3a″ y MM-3c) |
+| **MM-3a″** (servidor, dominio, sin base) | `CODIGOS_DEL_BANGUAT_EXCLUIDOS`; URL; 28 → 24 en `main`; grabaciones reales; `validarPublicacion` sin `valor_ambiguo` por `compra ≠ venta` (solo diferencial > 3 %); `promedioPublicado`, `normalizarAQuetzales`, `inversionProbable`, `esDiaDePublicacionDeCruces`; se quita `cruceImplicito` | Los cinco ejemplos de B.3 dan exactamente esos valores; promedio con un decimal más (ARS); diferencial de 3.01 % rechazado; `venta < compra` inválido; EUR invertido → inversión; CHF ±2 % y ARS +87 % no; jueves santo y 25/12 son días de publicación, el sábado no | MM-1b (tipos) o ninguno si se programa sin base |
+| **MM-3c** (servidor, carga; sobre la rama de MM-3b integrada) | `ConsultarAlBanguat` normaliza con el USD `banguat` de la fecha y guarda `convencion` y `dolar_usado_id`; comprobaciones de B.6 en orden; `monedasACargar` solo con convención y el USD primero; días de B.9; reintentos de la noche; `vigente` con `dia_sin_calculo` solo en fin de semana; `muestra` con el valor en quetzales; `CodigoDelDolarNecesario`; 28 → 24 en las pruebas de la rama; columnas del reporte (MM-5) | Con reloj fijo: EUR del lunes con el USD del lunes; EUR sin USD → `sin_dolar_del_dia` y se rellena al llegar el USD; EUR de un asueto con el USD repetido; EUR invertido → `convencion_dudosa`; un sábado no es hueco y un asueto sí; `vigente` del EUR un sábado (`dia_sin_calculo`) y un 20 de octubre sin fila (`falta_publicacion`); quitar el código del USD con el EUR unido → 422; la referencia guardada se rehace con su fila | MM-1b, MM-3a″, rama de MM-3b integrada |
+| **MM-4** (cliente, Plataforma) | Como A.14, más B.10 | Unitarias de `edicion-de-moneda.ts` (solo `ofrecida`; texto de la convención); QA con el servidor falso devolviendo cruces | MM-3c |
+| **MM-3d** (operación, sin código) | `curl` desde producción a la URL de B.9; encender `CARGAR_TIPOS_DE_CAMBIO`; revisar la bitácora la primera semana (horas de B.9) | — | MM-3c, MM-4, P-B8 |
+
+### B.13 Por validar con `contador-guatemala` (antes de MM-3c)
+
+| # | Qué | Por qué |
+|---|---|---|
+| V-14 | Que el tipo en quetzales de una moneda distinta del USD sea **promedio del cruce publicado × (o ÷) el USD de referencia del Banguat del mismo día**, y que el promedio de compra y venta sea aceptable como «referencia» | Reemplaza D-3 (a); afecta todo documento en otra moneda |
+| V-15 | Si el redondeo a 8 decimales en monedas de valor muy bajo (COP, ARS: hasta Q0.22 por cada Q100,000) es aceptable o si conviene impedir activarlas en v1 | B.3, precisión |
+| V-16 | Si en un asueto guatemalteco el cruce del día se combina con el USD repetido del día anterior (lo que hace la fórmula) o si debe usarse otro | B.2: el USD se repite en asuetos y el cruce no |
+
+### B.14 Preguntas para el usuario
+
+| # | Pregunta | Opciones | Recomendación |
+|---|---|---|---|
+| P-B1 | ¿Cómo pasamos las monedas distintas del dólar a quetzales? | A. Calcular al cargar con el dólar del Banguat del mismo día y guardar también lo publicado; B. Guardar solo el resultado; C. Guardar el cruce y convertir al usar | **A** (B.3): nada cambia para los módulos que usan el tipo y cada valor se puede explicar |
+| P-B2 | Cuando compra y venta son distintas (casi siempre), ¿qué valor tomamos? Su respuesta D-3 («no cargar») dejaría casi todas las monedas sin tipo | a. No cargar; b. Promedio; c. Venta; d. Compra | **b, promedio**, y no cargar si la diferencia pasa de 3 %; antes lo valida el contador (V-14) |
+| P-B3 | ¿Dónde se decide si una moneda viene «en dólares por unidad» o «en unidades por dólar»? | A. Columna fijada por migración; B. Constante en el código; C. Adivinarlo por el tamaño del número; D. Que soporte lo elija | **A**, con el rechazo automático si un día llega «al revés» (B.6) |
+| P-B4 | ¿Qué días se espera tipo de las demás monedas? | a. Lunes a viernes, también en asuetos (lo que muestra el Banguat); b. Lunes a viernes sin asuetos (lo de la adenda A) | **a** (B.2 y B.9): con b, un asueto con publicación pasaría sin aviso y uno sin publicación también |
+| P-B5 | ¿Excluimos del selector, además del DEG, los bolívares y el colón salvadoreño, el quetzal, las monedas europeas retiradas por el euro y la Unidad de Cuenta del BID? | Sí / No | **Sí** (B.8): no son monedas en circulación y se confundirían con el euro |
+| P-B6 | Las monedas de valor muy bajo (peso colombiano, peso argentino) pierden hasta Q0.22 por cada Q100,000 por el redondeo a 8 decimales. | a. Aceptarlo en v1; b. No dejar activarlas en v1; c. Ampliar los decimales del tipo en todos los módulos | **a** si el contador lo acepta (V-15); si no, **b** (una regla más, como la de los decimales) |
+| P-B7 | ¿Bloqueamos en la base que la app cambie la convención (solo la cambia una migración)? | Sí / No | **Sí**: una línea en la migración |
+| P-B8 | ¿Integramos MM-3b y MM-5 como están (con la carga apagada) y corregimos encima, o los corregimos antes en su rama? | Integrar y corregir encima / Corregir en la rama | **Integrar y corregir encima** (B.11); la carga sigue apagada hasta MM-3d |
+| P-B9 | La dirección `www.banguat.gob.gt` no respondió desde aquí y `banguat.gob.gt` sí. ¿Cambiamos la dirección por omisión? | a. Cambiar a `banguat.gob.gt`; b. Dejar `www` y configurarla en producción; c. Las dos con respaldo | **a**, y probar desde el servidor de producción antes de encender la carga |
+| P-B10 | ¿Agregamos el zloty polaco (PLN), que el Banguat publica y faltó en la lista? | Sí / No | **Sí**, inactivo y sin código, como las demás |
