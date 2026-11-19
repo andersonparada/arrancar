@@ -96,7 +96,7 @@ export function revisionDeCierreDeBancos(saldos: SaldosInicialesDto): RevisionDe
   return {
     nombreDelModulo: 'Bancos',
     resumen: resumenDe(conSaldo.length, saldos.fechaDeCorte),
-    ruta: '/bancos/cuentas-bancarias',
+    ruta: '/bancos/saldos-iniciales',
     hallazgos: [
       ...saldos.hallazgos.map(hallazgoParaEmpresas),
       ...(conSaldo.length === 0 && activas > 0 ? [sinSaldosIniciales(activas)] : []),
