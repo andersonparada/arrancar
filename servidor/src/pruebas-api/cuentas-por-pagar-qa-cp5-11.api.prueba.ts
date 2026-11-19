@@ -3,9 +3,7 @@
  * - R1 al cierre de un mes no cambia al anular después un pago de ese mes, y R3 (interna y para el proveedor) cierra con
  *   el mismo saldo que R1;
  * - R1 menos R11 al mismo corte cuadra con la transitoria de las notas marcadas sin aplicar;
- * - error conocido: un posfechado ya cobrado (conciliación autorizada) sigue contando como deuda y como comprometido
- *   en la ficha del proveedor, aunque R1 y R2 ya lo rebajan (las pruebas `it.fails` pasan mientras siga así; al
- *   corregirlo, quitar `.fails`).
+ * - un posfechado ya cobrado (conciliación autorizada) rebaja la deuda y no queda comprometido, igual que en R1/R2.
  */
 
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -135,9 +133,7 @@ describe('un posfechado cobrado antes de su fecha, con la conciliación autoriza
     expect(reporte.acreedores[0]).toMatchObject({ saldoNeto: '9020.00', comprometido: '0.00' });
   });
 
-  // Error conocido (QA CP5-11): la ficha del proveedor usa «hoy» y no mira la conciliación, así que la deuda es
-  // Q2,000.00 mayor que la de R1 y el cheque sigue como comprometido.
-  it.fails('la deuda de la ficha del proveedor es la misma de R1 hoy', async () => {
+  it('la deuda de la ficha del proveedor es la misma de R1 hoy', async () => {
     const proveedorId = await conPosfechadoCobrado();
 
     const ficha = (await e.propietario().get(`/api/cuentas-por-pagar/proveedores/${proveedorId}/saldo`)).cuerpo;

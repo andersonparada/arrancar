@@ -1,29 +1,40 @@
-import { asc, eq, inArray, type SQL } from 'drizzle-orm';
+import { asc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { cheques } from '../../../bancos/infraestructura/persistencia/cheques.tablas.js';
 import type { LineaDePago, LineaDeReintegro } from '../../dominio/pagos.js';
+import { conciliaciones } from '../../../bancos/infraestructura/persistencia/conciliaciones.tablas.js';
+import { movimientos } from '../../../bancos/infraestructura/persistencia/movimientos.tablas.js';
 import { aplicacionesDePagos } from './aplicaciones-de-pagos.tablas.js';
 import { aplicacionesDeReintegros } from './aplicaciones-de-reintegros.tablas.js';
+import { fechaDeEfectoDelPago, unionDeLaConciliacion } from './fecha-de-efecto-del-pago.sql.js';
 import { pagos } from './pagos.tablas.js';
 import { reintegros } from './reintegros.tablas.js';
 
 /** Las líneas de pago (vigentes y anuladas) que cumplen la condición, de la más antigua a la más nueva. */
 export async function lineasDePagoDonde(condicion: SQL): Promise<LineaDePago[]> {
   const filas = await transaccionEnCurso()
-    .select({ linea: aplicacionesDePagos, pago: pagos, numeroDeCheque: cheques.numero })
+    .select({
+      linea: aplicacionesDePagos,
+      pago: pagos,
+      numeroDeCheque: cheques.numero,
+      fechaDeEfecto: sql<string>`${fechaDeEfectoDelPago}`,
+    })
     .from(aplicacionesDePagos)
     .innerJoin(pagos, eq(pagos.id, aplicacionesDePagos.pagoId))
     .leftJoin(cheques, eq(cheques.movimientoId, pagos.movimientoId))
+    .leftJoin(movimientos, eq(movimientos.id, pagos.movimientoId))
+    .leftJoin(conciliaciones, unionDeLaConciliacion)
     .where(condicion)
     .orderBy(asc(pagos.creadoEn), asc(aplicacionesDePagos.creadoEn));
-  return filas.map(({ linea, pago, numeroDeCheque }) => ({
+  return filas.map(({ linea, pago, numeroDeCheque, fechaDeEfecto }) => ({
     pagoId: pago.id,
     numero: pago.numero,
     anioDeNumero: pago.anioDeNumero,
     forma: pago.forma,
     numeroDeCheque,
     fecha: pago.fecha,
+    fechaDeEfecto,
     estado: pago.estado,
     contrasenaId: linea.contrasenaId,
     cargoId: linea.cargoId,
