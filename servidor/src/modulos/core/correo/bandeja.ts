@@ -16,7 +16,10 @@ import { ProcesarBandeja } from './aplicacion/procesar-bandeja.js';
 import { ProveedorDeTransporte } from './aplicacion/proveedor-de-transporte.js';
 import { cifradorDeSecretos } from './infraestructura/cifrador-del-entorno.js';
 import { DespertadorDeBandeja } from './infraestructura/despertador-de-bandeja.js';
-import { FabricaDeTransporteNodemailer } from './infraestructura/fabrica-de-transporte-nodemailer.js';
+import {
+  FabricaDeTransporteNodemailer,
+  destinoDeDesarrolloDelEntorno,
+} from './infraestructura/fabrica-de-transporte-nodemailer.js';
 import { ParametrosEnConfiguracion } from './infraestructura/parametros-en-configuracion.js';
 import { ColaDeEnvioDrizzle } from './infraestructura/persistencia/cola-de-envio.drizzle.js';
 import { HistorialDeCorreosDrizzle } from './infraestructura/persistencia/historial-de-correos.drizzle.js';
@@ -72,7 +75,7 @@ export function crearProcesadorDeBandeja(registro: RegistroDeErrores): ProcesarB
   const proveedor = new ProveedorDeTransporte({
     repositorio: new ServidorDeCorreoDrizzle(bd),
     cifrador: cifradorDeSecretos,
-    fabrica: new FabricaDeTransporteNodemailer(),
+    fabrica: new FabricaDeTransporteNodemailer(destinoDeDesarrolloDelEntorno()),
   });
   const procesador = new ProcesarBandeja({
     lote: new EnviarLoteDeCorreos({ cola, proveedor, almacenamiento, registro }),

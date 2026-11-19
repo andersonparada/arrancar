@@ -17,7 +17,10 @@ import { rutasDeCorreos } from './http/correos.rutas.js';
 import { ServidorDeCorreoControlador } from './http/servidor-de-correo.controlador.js';
 import { rutasDelServidorDeCorreo } from './http/servidor-de-correo.rutas.js';
 import { cifradorDeSecretos } from './infraestructura/cifrador-del-entorno.js';
-import { FabricaDeTransporteNodemailer } from './infraestructura/fabrica-de-transporte-nodemailer.js';
+import {
+  FabricaDeTransporteNodemailer,
+  destinoDeDesarrolloDelEntorno,
+} from './infraestructura/fabrica-de-transporte-nodemailer.js';
 import { EstadoDeLaBandejaDrizzle } from './infraestructura/persistencia/estado-de-la-bandeja.drizzle.js';
 import { HistorialDeCorreosDrizzle } from './infraestructura/persistencia/historial-de-correos.drizzle.js';
 import { RepositorioDeCorreosDrizzle } from './infraestructura/persistencia/repositorio-de-correos.drizzle.js';
@@ -34,7 +37,11 @@ function controladorDeSoporte(): ServidorDeCorreoControlador {
       cifrador,
       permitirRedInterna: entorno.CORREO_PERMITIR_RED_INTERNA,
     }),
-    enviarPrueba: new EnviarPrueba({ repositorio, cifrador, fabrica: new FabricaDeTransporteNodemailer() }),
+    enviarPrueba: new EnviarPrueba({
+      repositorio,
+      cifrador,
+      fabrica: new FabricaDeTransporteNodemailer(destinoDeDesarrolloDelEntorno()),
+    }),
     bandeja: new ObtenerBandejaDeSoporte(new EstadoDeLaBandejaDrizzle(bd)),
   });
 }

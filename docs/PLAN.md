@@ -2752,6 +2752,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `cancelarPendientesDe`, `cancelar` y `deRegistro`. Errores: 409 `aviso_no_disponible` (anulado, cuenta de apertura,
   sin correo), 400 `direccion_no_utilizable`, 404 si el destinatario no es del proveedor del pago o es de otra cuenta, 429
   `cupo_de_correos_agotado` y `demasiados_avisos_de_pago`. Sin migración en este paso.
+- **2026-11-18 (correo, camino de desarrollo hacia Mailpit).** Variables de entorno `CORREO_DESARROLLO_SERVIDOR` y
+  `CORREO_DESARROLLO_PUERTO` (1025 por omisión), solo para desarrollo: con ellas `FabricaDeTransporteNodemailer` ignora el
+  servidor guardado y manda sin cifrado ni credenciales al Mailpit del `docker-compose.dev.yml` (bandeja en
+  `http://localhost:8025`). La app no arranca en producción con `CORREO_DESARROLLO_SERVIDOR` (validación del entorno, que
+  se vuelve a comprobar al crear la fábrica, y el rechazo de `seguridad: 'ninguna'` del transporte). Soporte igual debe
+  guardar y activar un servidor cualquiera (la tabla exige 465/587 y contraseña) y hace falta `CLAVE_SECRETOS`: así se
+  prueba de punta a punta, también el trabajador, sin tocar la función de la bandeja. Prueba contra un SMTP mínimo local.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
