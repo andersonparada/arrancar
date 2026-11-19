@@ -4024,3 +4024,31 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (inmuebles sin valores) se puede programar ya**; PA-0b espera PA-20 y PA-21, PA-1 espera PA-23 y los archivos van en
   PA-AR tras la revisión de `seguridad`. Preguntas nuevas PA-20 a PA-23 (§17.1, sin responder); pendientes P-1 a P-4
   (§18.1), ninguno bloquea un paso.
+- **2026-11-19 — AF-7 (Activos fijos, servidor): mejoras, costos posteriores, revisión de la estimación y cambio de
+  matrícula.** Migración `0007_af7_mejoras`: tabla `activos_fijos.mejoras` (§5.7: correlativo `activos-fijos.mejoras`,
+  `clase in ('mejora','costo_posterior')`, vida restante solo en mejora, `no_es_edificacion`, anulación completa; solo
+  `politicaPorEmpresa()`; ya estaba en la auditoría permanente) y la columna `mejora_id` (con llave compuesta a la empresa) en
+  `costos` y en `tramos`, con el check `(causa en mejora o costo_posterior) = (mejora_id no nulo)`. Dominio puro nuevo:
+  `estado-de-los-libros.ts` (primer mes abierto, `acumuladaAntesDe` con proyección de los meses abiertos que van antes del tramo
+  nuevo, meses que faltan, vida total) y `tramos-de-cambio.ts` (V-3: en una **mejora** el fiscal aplica el porcentaje sobre
+  «saldo no depreciado + mejora»; en un **costo posterior** y en el **cambio de matrícula**, sobre la base fiscal total
+  corregida **sin reiniciar la vida**; el contable sigue con los meses que quedaban o con la vida nueva; las notas de crédito dan
+  `exceso_de_nota_de_credito` por libro, V-6). Casos de uso: `RegistrarMejora` (costos de líneas del libro con su candado y la
+  regla de la línea, y costos manuales; `mejora_capitalizada`), `AnularMejora` (`costo_anulado` por costo, auditoría `anular`),
+  `RevisarEstimacion` y `CambiarValorFiscalDelInmueble` (auditoría `corregir` con la ficha y los tramos de antes; `base_fiscal_cambiada`).
+  Rutas: `POST /activos-fijos/mejoras`, `POST …/mejoras/:id/anular`, `GET …/activos/:id/mejoras`, `POST …/activos/:id/revisar-estimacion` y
+  `…/valor-fiscal-del-inmueble`; permisos nuevos `activos-fijos.mejoras.crear`, `.anular` y `activos-fijos.activos.revisar-estimacion`
+  (sin migración de permisos: son nuevos). Pruebas: 16 puras de los tramos y 24 de los casos de uso en memoria, y 11 de API
+  (dos archivos). Decisiones tomadas por la programación: (1) un tramo nuevo que cae en el mismo mes y libro que uno vigente lo
+  **sustituye** (el anterior queda `vigente = false`, nunca tuvo cuotas porque el mes está abierto) y anular la mejora **repone**
+  ese tramo; (2) una mejora solo se anula si ningún cierre usó sus tramos (reabrir el mes) y **si es el último cambio de
+  depreciación del activo** (`mejora_con_cambios_posteriores`), porque lo posterior parte de ella; (3) el tramo de la mejora
+  empieza en el mes que dice la regla de la empresa sobre su fecha, nunca antes del primer mes abierto, y la acumulada que usa
+  incluye lo que darían los meses abiertos anteriores con los tramos de hoy (se cerrarán así); la fecha no es futura ni anterior al
+  uso ni de un mes cerrado, ni anterior al último tramo (`cambio_anterior_al_ultimo_tramo`); (4) la revisión y el cambio de matrícula
+  empiezan en el primer mes abierto; sin cierres, el primer mes abierto es el del primer tramo del activo; (5) un terreno no recibe
+  mejoras (no se deprecia); (6) `QuitarDeUso` rechaza `activo_con_mejoras` y `tieneMovimientos` cuenta las mejoras; (7) la revisión
+  acepta `porcentajeFiscal` solo para constatar que no cambia: con un cierre previo da `porcentaje_fiscal_adoptado` (arts. 27 y 28) y
+  sin cierres pide quitar de uso y volver a poner; (8) el activo guarda la vida útil **total** y el residual de la estimación vigente
+  (se repone al anular). Lo que solo un cliente puede confirmar: si quieren corregir hacia atrás una estimación antes del primer
+  cierre (hoy sustituye el tramo inicial) y si anular una mejora fuera de orden debe permitirse (hoy no).
