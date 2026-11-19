@@ -946,3 +946,21 @@ Con `seguridad`: las dos dependencias nuevas del cliente (QR y lectura de QR), e
 - Orden `activos-fijos.dar_de_baja` para Ganadería y Cultivos (R-8).
 - Revaluación y deterioro (§3.10), pólizas (AF-14), arrendamiento financiero.
 - Con Contabilidad: cuentas por clase, cuenta puente de compras de activos, partidas de los eventos de §9.
+
+## Respuestas del usuario (2026-11-18)
+
+- **AF-P2:** **todos los activos de la empresa** los ve quien tenga acceso a la empresa y el permiso (opción a; sin alcance por
+  localidad), dicho por el usuario: «que todos puedan verlo toda vez tenga el acceso».
+- **AF-P3 y AF-P4:** dos libros (contable y fiscal, el contable igual al fiscal por omisión); se deprecia desde el mes en que
+  empieza a usarse y el mes de la baja no se deprecia (configurable por empresa).
+- **AF-P6 y AF-P7:** bandeja «Por capitalizar» y monto mínimo por empresa (0 por omisión) con «bien de control» debajo.
+- **AF-P5, AF-P8, AF-P9, AF-P13, AF-P14 y AF-P18:** servicios capitalizables (AF-0, ya programado); sin revaluación ni
+  deterioro en v1; biológicos al costo con depreciación fiscal (el resto en Ganadería y Cultivos); intangibles con amortización;
+  inventario físico con QR al final de v1; pólizas después.
+- **AF-P10:** grupos con cantidad informativa y baja total. **AF-P16:** código libre con el correlativo de la empresa como
+  propuesta.
+- **Del dictamen de validación (V-1 a V-13):** **P-A** «Sustituir documento» (puede ir después de v1); **P-B** la cuota fiscal
+  del ocioso es deducible por omisión, en línea aparte con aviso de riesgo. Los ajustes del contador (A1 `costo_fiscal` en
+  bajas, A2 ISO con el activo neto contable del cierre anual, A3/V-7 matrícula o catastro el mayor, V-2, V-3, V-4, V-6, V-8,
+  V-10, V-12, y la auditoría permanente con saldos iniciales y mejoras) se incorporan al diseño antes de AF-1.
+- Quedan por responder: AF-P1, AF-P11, AF-P12, AF-P15, AF-P17, AF-P19, AF-P20, AF-P21 y P-C.
