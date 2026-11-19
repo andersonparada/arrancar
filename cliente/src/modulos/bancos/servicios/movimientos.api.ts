@@ -62,8 +62,14 @@ export interface Movimiento {
   puedeDesmarcar: boolean;
 }
 
-/** Una fila del reporte, con su saldo corrido (`null` si el reporte no eligió una cuenta). */
-export type FilaDelReporte = Movimiento & { saldo: string | null };
+/** Un mes de conciliación autorizada: año y mes de 1 a 12. */
+export interface MesDeConciliacion {
+  anio: number;
+  mes: number;
+}
+
+/** Una fila del reporte, con su saldo corrido (`null` si no eligió una cuenta) y el mes en que se concilió. */
+export type FilaDelReporte = Movimiento & { saldo: string | null; conciliadoEn: MesDeConciliacion | null };
 
 /** Lo que falta clasificar (concepto «Sin clasificar»), sin contar los inversos. */
 export interface ResumenDeSinClasificar {

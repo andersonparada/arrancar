@@ -91,5 +91,15 @@ export const VENTANAS_BANCOS = {
     descripcion:
       'El saldo de cada cuenta bancaria a la fecha de corte: el del estado de cuenta y las partidas que el banco aún no ve (cheques en circulación, depósitos en tránsito).',
   },
+  saldosPorCuenta: {
+    titulo: 'Saldos por cuenta',
+    descripcion:
+      'El saldo de cada cuenta a una fecha: en libros, cheques posfechados, disponible y lo que el banco aún no ha visto.',
+  },
+  estadoDeCuenta: {
+    titulo: 'Estado de cuenta',
+    descripcion:
+      'Los movimientos de una cuenta en un rango de fechas, con su saldo y el mes en que se concilió cada uno.',
+  },
   // generador: ventanas
 } as const;

@@ -37,6 +37,7 @@ function fila(datos: Partial<FilaDelReporte> & Pick<FilaDelReporte, 'tipo' | 'mo
     puedeMarcar: false,
     puedeDesmarcar: false,
     saldo: null,
+    conciliadoEn: null,
     ...datos,
   };
 }

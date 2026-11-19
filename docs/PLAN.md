@@ -2983,3 +2983,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   útil (campos de solo lectura, como exige el servidor); el valor residual nuevo empieza en 0; «Programas y licencias» muestra la ayuda
   V-2. Lógica pura con pruebas en `reglas-de-clase.ts`. Pendiente: la ventana de conceptos de gasto que proponen la clase
   (`GET` y `PUT /activos-fijos/clases/:id/conceptos`), que el plan no lista en AF-1c.
+- **2026-11-18 · Bancos BS-R2 (cliente):** páginas «Saldos por cuenta» (`/bancos/saldos-por-cuenta`, `bancos.saldos-por-cuenta.ver`/`.exportar`) y
+  «Estado de cuenta» (`/bancos/estado-de-cuenta`, `bancos.movimientos.ver`/`.exportar`), en el menú Reportes, con imprimir y exportar.
+  Saldos: fecha de corte y cuenta, tarjeta por cuenta (libros, posfechados, disponible, en tránsito, saldo según el banco, última
+  conciliación y «atrasada», «Fondos insuficientes para los posfechados», detalle desplegable de partidas), totales Bancos y Sobregiros sin
+  compensar y la nota de fondos retenidos. Estado de cuenta: cuenta obligatoria (no pide nada hasta elegirla), encabezado con empresa,
+  banco, cuenta, periodo y la leyenda «Documento interno, no sustituye el estado de cuenta del banco», saldo anterior, movimientos con
+  «Conciliado en mm/aaaa» o «Sin conciliar», saldo final y totales por tipo. `FilaDelReporte` gana `conciliadoEn`. Pruebas de lógica pura.
