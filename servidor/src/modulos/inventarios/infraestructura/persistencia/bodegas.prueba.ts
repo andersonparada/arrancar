@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../../../../configuracion.js';
 import { bd, grupoConexiones } from '../../../core/base-datos/conexion.js';
 import { migrarModulos } from '../../../core/base-datos/migrador.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
 import type { ContextoEmpresa } from '../../../core/compartido/aplicacion/contexto-empresa.js';
 import { enTransaccionSegura } from '../../../core/compartido/pruebas/en-transaccion-segura.js';
 import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
