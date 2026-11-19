@@ -3003,6 +3003,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-18 (Inventarios aprobado).** Todas las recomendaciones de `docs/modulos/diseno-inventarios.md` (detalle al
   final del diseño). El préstamo de herramientas pasa a Activos fijos (corrige PLAN §6). Orden: INV-3 (motor puro) ya;
   INV-0 después de que la 0038 de CCL entre al libro; luego INV-1, INV-2, INV-4…
+- **2026-11-18 — INV-3 (Inventarios, motor de costeo puro).** `servidor/src/modulos/inventarios/dominio/costeo/` (sin módulo
+  registrado, tablas ni migraciones): `escalas` (BigInt: cantidades en diezmilésimas, costos unitarios en millonésimas,
+  dinero en centavos; redondeo al más cercano con la mitad alejándose de cero), `orden` (fecha, entradas, valores, salidas,
+  secuencia), `promedio` y `peps` (`recalcularPromedio` y `recalcularPeps` recorren una secuencia desde el saldo o las
+  capas anteriores al primer movimiento afectado; `ExistenciaNegativa` en cualquier punto), `cantidades-por-clave`
+  (línea del tiempo por bodega y lote), `diferencias` (para `inventarios.costo_recalculado`), `reparto` (reparto con
+  último renglón y absorción de costos adicionales y rebajas, el resto a resultados) y `sobrante` (promedio vigente o
+  última entrada; el faltante es una salida más). Los ejemplos de §7.6 son pruebas (25 en total). Decisiones: un
+  movimiento de valor en PEPS lleva `capaId` y falla con `capa_no_disponible` si la capa ya no tiene existencia; en
+  promedio, la rebaja se limita con el valor que queda que pasa quien llama.
 - **2026-11-18 (Activos fijos aprobado).** Todas las respuestas al final de `docs/modulos/diseno-activos-fijos.md`. Cambio
   respecto al diseño: **sin alcance por localidad** (AF-P2 = a). El arquitecto incorpora el cambio y los ajustes del contador
   (A1 a A3, V-2 a V-12, auditoría permanente) antes de AF-1.
@@ -3163,3 +3173,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `libro-de-compras.cambiar_marca_de_inventario`; V-10 donación con su valor razonable en el evento; kardex por bodega con
   su propio saldo; traslados neutros para el costeo y devolución con PEPS sobre su capa. Abiertas: P-1, P-3, INV-P14 e
   INV-A16 (usuario) y VC-1 a VC-4 (contador).
+- **2026-11-18 — INV-3 ajustado a la validación del contador.** El motor (`dominio/costeo/`) ahora: (1) absorbe costos
+  adicionales y rebajas por sí mismo: con promedio, factor exacto `Π (1 − q_s / C_s)` como fracción de enteros
+  (`factores.ts`) y `absorbido = round(parte × f)`, el resto a resultados; con PEPS, `restante / inicial` de la capa en
+  esa posición (`absorcion.ts`); un movimiento de valor con `reparto` se recalcula solo al recorrer de nuevo, y
+  `diferenciasDeReparto` da lo que va en `repartos` del evento `inventarios.costo_recalculado`; (2) traslados neutros
+  (tipos `traslado_de_entrada` y `traslado_de_salida`: no cambian `C`, `V` ni capas, costo informativo; orden 0 en el
+  destino y 2 en el origen); (3) devolución con PEPS sobre su propia capa y el resto de las siguientes al mismo costo
+  (`devolucion-peps.ts`), con el residuo de una capa vaciada a resultados (VC-1); con promedio, al costo de su
+  entrada; (4) sobrante: promedio con existencia, y si no la última entrada con costo real al costo ajustado
+  (`ultima-entrada.ts`). Pruebas con los dos contraejemplos del contador. Decisiones: el recálculo desde un punto recibe
+  los factores de las entradas anteriores en `estado.factores` (`entradasSeguidas`); una donación con costo mayor
+  que cero cuenta como costo real.
