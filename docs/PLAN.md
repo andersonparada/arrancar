@@ -310,6 +310,20 @@ copiarse fuera. Lo mínimo es copiar `mensuales/` cada mes (los diarios, si se p
 
 Cada cierto tiempo hay que **probar una restauración**
 (`pg_restore -d <base> archivo.dump`) y comprobar que la copia externa abre.
+
+### Llave de secretos del correo (`CLAVE_SECRETOS`)
+
+El envío de correo (aviso de pago al proveedor) guarda la contraseña del servidor SMTP cifrada en la base con
+AES-256-GCM; la llave vive solo en el entorno, fuera de la base y de los respaldos. Pasos en producción:
+
+1. Genérela una sola vez: `openssl rand -base64 32`, y póngala en `CLAVE_SECRETOS` de `infra/.env`
+   (`docker-compose.yml` la pasa al contenedor `app`, igual que `CLAVE_SECRETOS_ANTERIOR`).
+2. **Respáldela aparte** (gestor de contraseñas), nunca junto al respaldo de la base: quien tenga ambos lee la
+   contraseña SMTP. Si se pierde no se pierde otro dato: Soporte vuelve a escribir la contraseña SMTP.
+3. Sin ella la app arranca con el correo apagado; si ya hay un servidor guardado, lo dice como **error** en el registro
+   (`docker compose logs app`) y los correos esperan en la bandeja.
+4. Para rotarla: la vieja a `CLAVE_SECRETOS_ANTERIOR`, la nueva a `CLAVE_SECRETOS`, reiniciar y probar el servidor
+   desde Soporte (se vuelve a cifrar con la vigente); después se borra `CLAVE_SECRETOS_ANTERIOR`.
 La ubicación elegida por cliente queda pendiente de decidir con el usuario.
 
 **Antes de restaurar una base más vieja que los archivos**, apague la limpieza de archivos
@@ -3204,3 +3218,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ahora pasa los módulos activos (como crear). Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
   posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
   cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.
+- **2026-11-18 (correo, correcciones de la revisión de seguridad: tres hallazgos medios)**: (1) `infra/docker-compose.yml`
+  pasa `CLAVE_SECRETOS` y `CLAVE_SECRETOS_ANTERIOR` al contenedor `app` (las de desarrollo del correo no, la app las
+  rechaza); `infra/.env.ejemplo` y PLAN «Llave de secretos del correo» explican cómo generarla y respaldarla;
+  `DiagnosticarLlaveDeCorreo` hace que `principal.ts` registre como error (no solo aviso) que falta la llave si ya hay un
+  servidor guardado. (2) Migración `0032_cupos_por_destinatarios` (core): `core.reservar_cupo_de_correo` cuenta filas de
+  `destinatarios_de_correos` (para y copias) y `verificarCupos` suma las direcciones del correo nuevo, así 100/hora y
+  500/día por cuenta y 1,000/hora la instalación (P12) son en destinatarios; el tope por destinatario no cambia.
+  (3) El PDF del comprobante ya no copia `referencia`, `motivo` ni `observaciones` del pago (notas internas; el diseño no
+  las incluye en lo que ve el proveedor, P6); sí el documento bancario. `AVISO_DEL_PDF` de la ventana dice qué lleva y que
+  esas notas no. Decisión: la referencia también se omite porque el diseño no la autoriza.
