@@ -3375,3 +3375,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   subconsulta, por rendimiento) y en `estaPosfechado` (dominio, con `fechaDeEfecto`). (2) R2 impreso: `print:text-[8px]`,
   celdas con `px-1` y texto que se parte, para caber en carta horizontal. Bajos: el Excel de R1 y R2 lleva el corte en el
   nombre (`fechaDelNombre` en `rutasDeIntercambio`) y el doble clic en «Exportar» ya no baja dos archivos. Sin migraciones.
+- **2026-11-18** (correcciones de la QA del aviso de pago por correo, informe `docs/modulos/informe-qa-correo-2026-11-18.md`):
+  (E1) como `configuracion.ver/gestionar` son `soloSuperacceso`, ningún usuario de la empresa podía pasar el envío a
+  automático ni cambiar los textos: Cuentas por pagar tiene su pantalla «Avisos de pago» (`GET`/`PUT
+  /cuentas-por-pagar/avisos-de-pago/ajustes`) con el permiso por acción `cuentas-por-pagar.avisos-de-pago.configurar`
+  (asignable; sin migración de permisos porque es una acción nueva: los roles de acceso total lo reciben solos y el resto
+  se asigna a mano). Guarda en el nivel empresa con el esquema de cada variable (`ESQUEMAS_DE_AVISOS`) y sin abrir
+  `configuracion.gestionar`. (E5) el mensaje por omisión usa el marcador `{adjunto}` y no dice «Adjuntamos el comprobante»
+  si no se adjunta. Bajos: el interruptor «Enviar correos» de Soporte muestra su estado real; el pie de la ventana del
+  correo no sale si el usuario no puede usar ningún botón; sin doble punto en «Se anulará el pago … a Eco S.A.»; un aviso
+  de éxito retira los errores que siguen a la vista; la ventana de aviso advierte si ya hay uno pendiente y la ficha muestra
+  los últimos 3 avisos con «Ver todos». Sin migraciones de base de datos.

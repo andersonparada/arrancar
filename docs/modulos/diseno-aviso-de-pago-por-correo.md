@@ -301,6 +301,7 @@ El vínculo pago ↔ correos está en `core.correos_salientes` (`recurso_origen 
 | Clave | Quién | Para |
 |---|---|---|
 | `cuentas-por-pagar.pagos.enviar-aviso` (nuevo) | asignable | Enviar y reenviar el aviso de un pago, y cancelar uno pendiente. Ver el estado del aviso va con `pagos.ver` |
+| `cuentas-por-pagar.avisos-de-pago.configurar` (nuevo; QA E1) | asignable | Pantalla «Avisos de pago» de la empresa: envío manual o automático, asunto, mensaje, comprobante adjunto y copia a la empresa. Un solo permiso para ver y guardar (es un formulario). No abre `configuracion.gestionar` |
 | `correos.ver` (nuevo, core) | asignable | Historial de correos de la empresa activa (sin detalle técnico) |
 | `correos.cancelar` y `correos.reintentar` (nuevos, core) | asignables | Cancelar un pendiente y reintentar un fallido desde el historial (permisos por acción; P18) |
 | `correo.servidor.gestionar` (nuevo, core) | `soloSuperacceso: true` | Panel de Soporte: servidor, prueba, estado global de la bandeja |
@@ -308,8 +309,9 @@ El vínculo pago ↔ correos está en `core.correos_salientes` (`recurso_origen 
 Nota: las rutas de Soporte se protegen con `proteger({ soloSuperacceso: true })` (sin empresa activa no hay permisos que evaluar), que es más estricto que este permiso. Queda declarado para el catálogo y no lo exige ninguna ruta.
 
 
-El envío automático no pide permiso a quien registra el pago: es una política de la empresa (la variable la cambia quien
-tiene `configuracion` de la empresa). Migración de permisos: ninguna («quien tenía X recibe Y» no aplica: son acciones
+El envío automático no pide permiso a quien registra el pago: es una política de la empresa (la cambia quien tenga
+`avisos-de-pago.configurar`: `configuracion.ver/gestionar` son `soloSuperacceso`, así que ningún usuario de la empresa
+los tiene; QA E1). Migración de permisos: ninguna («quien tenía X recibe Y» no aplica: son acciones
 nuevas). Si el usuario lo pide, una migración que dé `pagos.enviar-aviso` a quien tiene `pagos.emitir`, en
 `core.rol_permisos` **y** `core.usuario_permisos`.
 
@@ -345,7 +347,9 @@ Mensaje por omisión (para revisar con el usuario):
 > {empresa} le informa que registró el pago {numero} del {fecha} por {monto}, con {forma}, de estos documentos:
 > {documentos}.
 >
-> Adjuntamos el comprobante del pago. Este correo no es un documento tributario.
+> {adjunto}Este correo no es un documento tributario.
+
+`{adjunto}` (QA E5) vale «Adjuntamos el comprobante del pago. » solo si la empresa adjunta el PDF; si no, queda vacío.
 
 El esquema Zod valida que los marcadores estén en la lista (refinamiento), así un error se ve al guardar y no al enviar.
 
@@ -391,8 +395,9 @@ La ruta `POST .../aviso` lleva su límite por usuario (20 por minuto, un manejad
   `VentanaDeAvisoDePago`: casillas de destinatarios (preseleccionadas), casilla «Copia a la empresa», vista previa del
   asunto y del mensaje, nombre del adjunto y la nota «El PDF lleva montos, NIT y retenciones». Lógica pura en
   `edicion-de-aviso-de-pago.ts` con pruebas. «Cancelar» en un pendiente pide motivo (`usarAvisos().confirmar`).
-- **Configuración de la empresa**: las variables de §6 salen en la pantalla genérica de configuración (como la leyenda de
-  la contraseña).
+- **Configuración de la empresa** (QA E1): pantalla propia **Cuentas por pagar → Avisos de pago**
+  (`/api/cuentas-por-pagar/avisos-de-pago/ajustes`, `GET`/`PUT`, permiso `avisos-de-pago.configurar`), con selector
+  manual/automático y los textos validados con el mismo esquema de las variables de §6. Guarda en el nivel empresa.
 - **Core, Administración → «Correos enviados»** (`correos.ver`): lista con filtros, ficha con cuerpo y destinatarios,
   acciones cancelar y reintentar. **Sin Excel en la primera versión** (es una bitácora: no se importa; exportar se puede
   agregar con `correos.exportar` si el usuario lo pide; P16).
@@ -454,6 +459,11 @@ La ruta `POST .../aviso` lleva su límite por usuario (20 por minuto, un manejad
 13. **Cliente, aviso en la ficha del pago** (frontend).
 14. **Revisión de seguridad** del conjunto (agente `seguridad`), **QA en el navegador** con Mailpit (agente
     `pruebas-qa`), documentación (`PLAN.md` bitácora, `HOJA-DE-RUTA.md`, `DONDE-QUEDAMOS.md`).
+
+15. **Correcciones de la QA** (hecho, 2026-11-18): E1 pantalla «Avisos de pago» con su permiso; E2 el interruptor «Enviar
+    correos» muestra su estado; E3 advertencia al reenviar con un aviso por salir y lista de la ficha acotada a los
+    últimos 3 con «Ver todos»; E4 sin franja vacía en el pie; E5 marcador `{adjunto}`; E6 sin doble punto; toast de error
+    retirado al salir bien la siguiente acción.
 
 Los pasos 1–6 no dependen de Cuentas por pagar y sirven para Cuentas por cobrar. El 7 puede ir en paralelo a 2–6.
 
