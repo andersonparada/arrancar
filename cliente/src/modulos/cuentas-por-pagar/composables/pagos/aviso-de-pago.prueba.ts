@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { CorreoResumen } from '@/modulos/core/servicios/correos.api';
 import type { AvisoDePago, DestinatarioPosible } from '../../servicios/tipos-de-avisos-de-pago';
 import {
+  AVISO_DEL_PDF,
   MAXIMO_DE_DESTINATARIOS,
   alternarDestinatario,
   edicionAbierta,
@@ -65,6 +66,13 @@ const aviso = (cambios: Partial<AvisoDePago> = {}): AvisoDePago => ({
   sePuedeEnviar: true,
   motivoSinAviso: null,
   ...cambios,
+});
+
+describe('lo que avisa la ventana sobre el PDF', () => {
+  it('dice qué datos lleva y que las notas internas no van', () => {
+    expect(AVISO_DEL_PDF).toMatch(/montos, NIT, retenciones/);
+    expect(AVISO_DEL_PDF).toMatch(/No lleva la referencia, el motivo ni las observaciones internas/);
+  });
 });
 
 describe('la ventana de enviar el aviso', () => {

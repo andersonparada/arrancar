@@ -225,6 +225,13 @@
       "when": 1795060572072,
       "tag": "0031_cancelacion_durante_el_envio",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1795064210651,
+      "tag": "0032_cupos_por_destinatarios",
+      "breakpoints": true
     }
   ]
 }

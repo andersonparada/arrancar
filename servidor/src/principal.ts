@@ -4,7 +4,7 @@ import { grupoConexiones } from './modulos/core/base-datos/conexion.js';
 import { crearDepuradorDeArchivosHuerfanos } from './modulos/core/archivos/contexto.js';
 import { verificarQpdf } from './modulos/core/archivos/infraestructura/qpdf/verificador-de-qpdf.js';
 import { depurarAuditoria } from './modulos/core/bitacora/contexto.js';
-import { crearProcesadorDeBandeja, depurarCorreos } from './modulos/core/correo/bandeja.js';
+import { crearProcesadorDeBandeja, depurarCorreos, diagnosticarLlaveDeCorreo } from './modulos/core/correo/bandeja.js';
 import { limpiarSesionesVencidas } from './modulos/core/identidad/contexto.js';
 import { cargaAutomaticaEncendida, cargaDeTiposDeCambio } from './modulos/core/monedas/contexto.js';
 
@@ -56,8 +56,19 @@ function programarCargaDeTiposDeCambio(): NodeJS.Timeout | null {
 function iniciarBandejaDeCorreo() {
   const procesador = crearProcesadorDeBandeja({ error: (mensaje, error) => app.log.error(error, mensaje) });
   if (procesador) procesador.iniciar();
-  else app.log.warn('El envío de correo está APAGADO: falta CLAVE_SECRETOS.');
+  else void avisarQueFaltaLaLlave();
   return procesador;
+}
+
+/** Con un servidor de correo ya guardado, el aviso sale como error: así no pasa desapercibido en producción. */
+async function avisarQueFaltaLaLlave(): Promise<void> {
+  try {
+    const { nivel, mensaje } = await diagnosticarLlaveDeCorreo.ejecutar();
+    if (nivel === 'error') app.log.error(mensaje);
+    else app.log.warn(mensaje);
+  } catch (error) {
+    app.log.warn(error, 'El envío de correo está APAGADO: falta CLAVE_SECRETOS.');
+  }
 }
 
 /** Con `DEPURAR_HUERFANOS=false` o con una carpeta de archivos insegura no se programa y queda dicho en el registro. */

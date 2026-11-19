@@ -81,16 +81,30 @@ describe('contenido del PDF del comprobante', () => {
     expect(contenido.tablas[0]?.filas[1]?.documento).toBe('Factura 9');
   });
 
+  it('no copia las notas internas del pago (referencia, motivo y observaciones)', () => {
+    const base = comprobanteDePrueba();
+    const contenido = contenidoDelComprobante({
+      ...base,
+      pago: { ...base.pago, referencia: 'REF-1', motivo: 'Ajuste interno', observaciones: 'Entregar en la bodega' },
+    });
+
+    const texto = JSON.stringify(contenido);
+    expect(texto).not.toMatch(/REF-1|Ajuste interno|Entregar en la bodega/);
+    expect(contenido.datos.map((dato) => dato.rotulo)).not.toEqual(
+      expect.arrayContaining(['Referencia', 'Motivo', 'Observaciones']),
+    );
+  });
+
   it('solo muestra los datos que existen', () => {
     const base = comprobanteDePrueba();
     const contenido = contenidoDelComprobante({
       ...base,
       proveedor: { ...base.proveedor, nit: null },
-      pago: { ...base.pago, referencia: 'REF-1', observaciones: 'Entregar en la bodega' },
+      pago: { ...base.pago, observaciones: 'Entregar en la bodega' },
     });
 
     const rotulos = contenido.datos.map((dato) => dato.rotulo);
-    expect(rotulos).toEqual(['Proveedor', 'A nombre de', 'Fecha', 'Documento bancario', 'Referencia', 'Observaciones']);
+    expect(rotulos).toEqual(['Proveedor', 'A nombre de', 'Fecha', 'Documento bancario']);
     expect(contenido.datos.find((dato) => dato.rotulo === 'Documento bancario')?.valor).toBe(
       'Cheque 1523 · Monetaria Q',
     );

@@ -15,7 +15,7 @@ export const MAXIMO_DE_DESTINATARIOS = 10;
 
 /** Lo que dice la ventana sobre el PDF: lleva datos que el proveedor verá. */
 export const AVISO_DEL_PDF =
-  'El PDF del comprobante lleva montos, NIT y retenciones del pago, y el proveedor lo recibe tal cual.';
+  'El PDF del comprobante lleva montos, NIT, retenciones y el documento bancario, y el proveedor lo recibe tal cual. No lleva la referencia, el motivo ni las observaciones internas del pago.';
 
 export const llaveDe = (posible: Pick<DestinatarioPosible, 'origen' | 'origenId'>): string =>
   `${posible.origen}:${posible.origenId}`;
