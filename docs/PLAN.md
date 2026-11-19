@@ -3485,3 +3485,79 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (las rutas del servidor la exigen para soporte, como el resto de `configuracion.*`). **Pendiente:** aviso de «cruce implícito»
   de A.7 (hoy solo se ven los avisos de más de 3 % que guarda la bitácora); que «Cargar ahora» no corra dentro de la
   solicitud HTTP; QA en el navegador con el servidor falso del Banguat; y C-1 a C-4 desde otra red antes de encender la carga.
+- **2026-11-19 (CC-3, Caja chica, comprobantes, servidor)**: orden `caja-chica.recibir_documento` (la atiende el módulo en la
+  transacción del libro): el documento **siempre** entra a la bandeja (`fondo_id` nulo) con `monto = total − retenciones`,
+  `monto_retenido`, proveedor, activo fijo y, en la nota de crédito, el comprobante de su factura (si no está aquí,
+  `factura_de_la_nota_no_recibida_en_caja_chica`; una factura del sistema anterior tampoco puede estar aquí). Con retención
+  no se asigna nunca al recibir (aviso «Quedó en la bandeja de Caja chica: lleva retención de Q…»); sin retención y con
+  `referenciaDeDestino` intenta asignarlo y, si no puede (referencia que no es uuid, fondo ajeno o cerrado, fecha, tope,
+  efectivo), queda en la bandeja y el libro recibe el porqué como aviso. Rutas (`/api/caja-chica`): `GET /bandeja`
+  (`fondos.ver`, filtros proveedor, fechas y `conRetencion`, con `puedeAsignarConRetencion`), `GET /fondos/:id/comprobantes`
+  (`estado` pendiente | repuesto | anulado | todos, con totales), `POST /fondos/:id/comprobantes/documentos` (1–100 a la vez,
+  todo o nada, las notas después de sus facturas), `POST /fondos/:id/vales-de-gasto`, `POST /comprobantes/:id/devolver-a-la-bandeja`
+  (`comprobantes.crear`) y `POST /comprobantes/:id/anular` (`comprobantes.anular`, solo vales de gasto). Reglas al asignar: fecha
+  no futura ni anterior a la apertura, la nota al fondo de su factura (`nota_en_otro_fondo`), tope (`fondo.tope` o
+  `caja-chica.comprobantes.tope_por_omision`, cero = sin tope; lo que resta no pasa de tope) con `sobre-el-tope` y motivo,
+  **excepción de retención** (§5.4 g: `retencion_sin_permiso` 403, `motivo_con_retencion_obligatorio`, un motivo sin retención
+  es `motivo_con_retencion_sin_retencion`; `asignado_por` es quien autorizó y entra una auditoría `autorizar` con el
+  comprobante de la bandeja y el motivo), que el efectivo esperado no quede negativo (`comprobantes_mayores_que_el_efectivo`,
+  con el neto) y la bancarización con la orden del libro (con `bloquear` marca `sin_bancarizar` y avisa; con `avisar` solo
+  avisa; la nota de crédito no se evalúa; va `monto + monto_retenido`). Devolver a la bandeja (auditoría `corregir`, limpia
+  fondo, motivos y marcas y vuelve a la fecha de emisión; no si está repuesto, ni una factura con notas en el fondo, ni sacar una
+  nota que deje el efectivo en negativo). Vales de gasto: número `caja-chica.vales`, no deducible, tope
+  `caja-chica.vales_de_gasto.tope` con el mismo permiso de excepción, apagables con `caja-chica.vales_de_gasto.permitidos`
+  (variables nuevas en `configuracion.ts`, niveles empresa e instalación). Avisos del libro `documento_por_anular` (anula el
+  comprobante, auditoría `anular`) y `documento_por_eliminar` (audita `eliminar` y borra el comprobante); repuesto lo rechaza
+  (`comprobante_repuesto`). Respuesta a `libro-de-compras.pagado_al_proveedor_en_el_mes`: migración `0004` de `caja_chica` con la
+  función `security definer` `caja_chica.pagado_en_efectivo_al_proveedor` (toma la empresa de `app.empresa_id`, suma **todos**
+  los fondos aunque el usuario no los vea, devuelve solo total y cantidad; comprobantes asignados, vigentes, que no restan,
+  `monto + monto_retenido`). Eventos nuevos `caja-chica.comprobante_asignado` y `comprobante_quitado`. Decisiones:
+  `documento_por_eliminar` **elimina** el comprobante (en vez de anularlo, como dice §5.9) porque la llave al libro es
+  `no action` y borraría imposible; la etiqueta de la pregunta es genérica («Caja chica: N comprobantes») para no mostrar fondos
+  que el usuario no ve; la lista de un fondo trae todos los de su estado, sin paginar ni `corte` (el corte es de CC-10);
+  `DatoInvalido` del motivo sin retención responde 400. Corregido
+  en la revisión (ver la entrada siguiente).
+- **2026-11-19 (CC-3, corrección de la revisión, avisos del libro)**: si quien anula o elimina en Libro de compras no tiene
+  asignado el fondo del comprobante, RLS lo oculta y el aviso lo tomaba por «no está aquí»: el libro anulaba el documento y el
+  comprobante seguía vigente (o el DELETE chocaba con la llave `no action` y salía un 500). Como todo documento con destino
+  `caja-chica` crea su comprobante al recibirse, no verlo se rechaza: error nuevo `ComprobanteEnFondoNoAsignado` (422,
+  `comprobante_en_fondo_no_asignado`, «El documento está en un fondo de Caja chica que usted no tiene asignado…»), en
+  `documento_por_anular` y en `documento_por_eliminar`; el libro no cambia nada. Decisión propia: se prefirió el error a abrir la
+  lectura del alcance (habría que dejar a Libro de compras modificar comprobantes de fondos ajenos). Ya no es idempotente ante un
+  comprobante que no existe (antes lo ignoraba); sí lo sigue siendo ante uno ya anulado. Prueba de API con un usuario del libro sin
+  el fondo. Sin migraciones.
+- **2026-11-19 (CC-4, Caja chica, reposiciones, servidor)**: reponer un fondo y anular la reposición, sin migraciones (las tablas
+  `reposiciones` y `reposicion_comprobantes` ya venían de CC-1). Rutas (`/api/caja-chica`): `GET /fondos/:id/reposiciones` (lista
+  sin líneas), `GET /fondos/:id/solicitud-de-reposicion` (lo pendiente con su total y su reparto, para presentarla antes de
+  reponer), `GET /reposiciones/:id` (ficha con líneas y desglose, para imprimir), las tres con `fondos.ver`;
+  `POST /fondos/:id/reposiciones` (`reposiciones.crear`) y `POST /reposiciones/:id/anular` (`reposiciones.anular`).
+  *Reponer*: el fondo abierto y bloqueado, los comprobantes bloqueados por id (del fondo, vigentes, sin otra reposición:
+  `comprobante_no_es_del_fondo`, `comprobante_ya_anulado`, `comprobante_repuesto`), total firmado mayor que cero
+  (`reposicion_sin_monto`; las notas de crédito y los sobrantes restan), fecha no futura ni anterior a la apertura ni a un
+  comprobante (`fecha_de_la_reposicion_invalida`). Desglose por concepto de Bancos (regla pura `desglosarLaReposicion`):
+  `reintegro_de_caja_chica` (sin activo fijo, menos lo que resta), `reintegro_de_caja_chica_de_activo` y
+  `faltante_de_efectivo`; si lo que resta deja una parte en negativo se rebaja de activo y luego de las otras; las partes en
+  cero no se mandan. Orden `emitir_cheque_de_origen` (a nombre del custodio vigente u otro, nunca al portador, no negociable
+  por omisión) o `registrar_nota_de_origen` (débito), con la reposición como origen (su `id` se genera antes); número
+  `caja-chica.reposiciones`; `libro-de-compras.marcar_procesado(true)` por cada documento. Separación de funciones (CC-k):
+  variable nueva `caja-chica.control.separacion_de_funciones` (`avisar` por omisión | `bloquear`, empresa e instalación);
+  si quien repone es el custodio vigente, `avisar` lo deja marcado (`la_hizo_el_custodio`) y lo avisa en la respuesta, y
+  `bloquear` lo rechaza (`separacion_de_funciones`, 422). *Anular*: fondo abierto, reposición vigente y no la del cierre
+  (`reposicion_ya_anulada`, `reposicion_del_cierre`), `reposicion_cobrada` si el movimiento está conciliado (se revisa en
+  Caja chica, con su mensaje, antes de pedir nada a Bancos), que el efectivo alcance para lo que vuelve a pendientes
+  (`comprobantes_mayores_que_el_efectivo`); orden `anular_movimiento_de_origen` y fecha contable como CP5-a (la del cheque sin
+  inverso, la del inverso con él); líneas `vigente = false`, `marcar_procesado(false)` de los documentos, auditoría `anular` con la
+  reposición como estaba (con líneas y desglose) y motivo. *Aviso de Bancos* `movimiento_por_cambiar`: el módulo lo escucha
+  una sola vez, así que `composicion/avisos-de-bancos.ts` lo reparte: si el movimiento es de una reposición que el usuario ve,
+  la anula con la forma y la fecha del aviso sin volver a ordenar a Bancos (cualquier otro cambio, `movimiento_de_caja_chica`);
+  si no, lo atiende el manejador de los fondos de CC-2 (un usuario de Bancos sin el fondo asignado sigue recibiendo
+  `movimiento_de_caja_chica`). Eventos `caja-chica.reposicion_registrada` y `reposicion_anulada` (líneas con documento,
+  concepto del vale, activo fijo y deducible, y el desglose). Decisiones: (1) la solicitud no agrupa por concepto de gasto del
+  libro (un documento puede tener varias líneas de concepto): agrupa por los tres conceptos de Bancos y lista los pendientes;
+  (2) anular exige el fondo abierto (un fondo cerrado no recupera pendientes); (3) la reposición compensada del cierre (CC-7) no
+  se anula desde aquí; (4) los vales provisionales abiertos (CC-6) no excluyen comprobantes: se escogen a mano por id.
+- **2026-11-19 (CC-4, corrección de la revisión)**: la línea de una reposición anulada (`vigente = false`) sigue atando al
+  comprobante por la llave `(comprobante_id, empresa_id, fondo_id)`, así que devolverlo a la bandeja (`fondo_id = null`) o
+  borrarlo (aviso `documento_por_eliminar` del libro) fallaba con 23503. Decisión: se conserva el historial y se rechaza
+  con el error propio `comprobante_con_reposicion_anulada` (422) en `DevolverALaBandeja` y `EliminarPorAviso`
+  (puerto nuevo `tuvoReposicionAnulada`); lo que sí cabe es anular el documento. Sin migración. Pruebas de API de ambos flujos.

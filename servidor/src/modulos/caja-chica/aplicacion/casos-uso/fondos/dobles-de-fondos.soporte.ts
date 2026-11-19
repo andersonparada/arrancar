@@ -1,5 +1,11 @@
 import type { CambioDeMonto, CustodioDelFondo, Fondo } from '../../../dominio/fondos.js';
-import type { ChequeAEmitir, FondosEnBancos, NotaARegistrar } from '../../puertos/puertos-de-bancos.js';
+import type {
+  AnulacionDeMovimiento,
+  ChequeAEmitir,
+  FondosEnBancos,
+  MovimientoAnulado,
+  NotaARegistrar,
+} from '../../puertos/puertos-de-bancos.js';
 import type {
   CambioNuevo,
   ConsultasDeFondos,
@@ -121,7 +127,7 @@ export class BancosFalso implements FondosEnBancos {
     return { movimientoId: crypto.randomUUID(), cuentaBancariaId: nota.cuentaBancariaId, avisos: [] };
   }
 
-  async anularMovimiento() {
-    return { forma: 'sin_inverso' as const, fechaDelInverso: null };
+  async anularMovimiento(_operador?: unknown, _anulacion?: AnulacionDeMovimiento): Promise<MovimientoAnulado> {
+    return { forma: 'sin_inverso', fechaDelInverso: null };
   }
 }

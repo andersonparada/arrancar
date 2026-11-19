@@ -29,6 +29,13 @@
       "when": 1795038943950,
       "tag": "0003_cl1c_cuenta_y_motivo_al_asignar",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795068980823,
+      "tag": "0004_pagado_en_efectivo_por_proveedor",
+      "breakpoints": true
     }
   ]
 }

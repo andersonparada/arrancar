@@ -2,10 +2,8 @@ import type { FastifyPluginAsync } from 'fastify';
 import '../../core/contratos/bancos.contratos.js';
 import '../../core/contratos/caja-chica.contratos.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
-import { mediador } from '../../core/mediador/contexto.js';
 import { AbrirFondo } from '../aplicacion/casos-uso/fondos/abrir-fondo.js';
 import { AnularApertura } from '../aplicacion/casos-uso/fondos/anular-apertura.js';
-import { AtenderMovimientoDeFondoPorCambiar } from '../aplicacion/casos-uso/fondos/atender-movimiento-por-cambiar.js';
 import { AumentarFondo } from '../aplicacion/casos-uso/fondos/aumentar-fondo.js';
 import { CambiarCustodio } from '../aplicacion/casos-uso/fondos/cambiar-custodio.js';
 import { ListarFondos, ObtenerFondo } from '../aplicacion/casos-uso/fondos/consultas-de-fondos.js';
@@ -25,14 +23,10 @@ import { RepositorioDeFondosDrizzle } from '../infraestructura/persistencia/repo
 
 /**
  * Raíz de composición de los fondos: abrir, editar, custodio, aumentar, disminuir, anular la apertura, lista y ficha.
- * También atiende el aviso de Bancos antes de cambiar el cheque o la nota de un fondo.
+ * El aviso de Bancos antes de cambiar un cheque o una nota se atiende en `avisos-de-bancos.ts` (fondos y reposiciones).
  */
 export function rutasDeFondosComponidas(): FastifyPluginAsync {
   const dependencias = dependenciasDeFondos();
-  const atender = new AtenderMovimientoDeFondoPorCambiar(dependencias);
-  mediador.escuchar('caja-chica', 'bancos.movimiento_por_cambiar', (aviso, operador) =>
-    atender.ejecutar(operador, aviso),
-  );
   return rutasDeFondos(
     new FondosControlador({
       abrir: new AbrirFondo(dependencias),
@@ -47,7 +41,7 @@ export function rutasDeFondosComponidas(): FastifyPluginAsync {
   );
 }
 
-function dependenciasDeFondos(): DependenciasDeFondos {
+export function dependenciasDeFondos(): DependenciasDeFondos {
   const { unidadDeTrabajo, reloj, auditoria, publicadorEventos } = dependenciasCompartidas();
   const movimientos = new MovimientosDeFondosDrizzle();
   return {
