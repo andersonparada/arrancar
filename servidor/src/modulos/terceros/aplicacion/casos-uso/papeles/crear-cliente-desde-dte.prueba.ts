@@ -1,0 +1,163 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { AccesoDenegado } from '../../../../core/compartido/aplicacion/errores.js';
+import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { Nit, NitInvalido } from '../../../../core/compartido/dominio/objetos-valor/nit.js';
+import { UnidadDeTrabajoEnMemoria, operadorDePrueba } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
+import { ClienteInactivo, FaltaElNombre } from '../../../dominio/errores.js';
+import { IdentidadDeTercero } from '../../../dominio/identidad-de-tercero.js';
+import { Tercero } from '../../../dominio/tercero.js';
+import { TercerosEnMemoria } from '../../../pruebas/dobles-de-terceros.js';
+import { CrearClienteDesdeDte, type PedidoDeClienteDesdeDte } from './crear-cliente-desde-dte.js';
+
+const NIT = '576937K';
+
+let terceros: TercerosEnMemoria;
+let caso: CrearClienteDesdeDte;
+
+async function registrarConNit(cambios: { cliente?: 'activo' | 'inactivo' } = {}): Promise<Tercero> {
+  const identidad = IdentidadDeTercero.crear('juridica', {
+    nombres: null,
+    apellidos: null,
+    razonSocial: 'Agro, S.A.',
+    nombreComercial: null,
+  });
+  const tercero = Tercero.registrar(Identificador.desde(crypto.randomUUID()), {
+    identidad,
+    nit: Nit.crear(NIT),
+    dpi: null,
+    telefono: null,
+    whatsapp: null,
+    correo: null,
+    ubicacion: { departamentoCodigo: null, municipioCodigo: null, direccion: null },
+    fotoArchivoId: null,
+    notas: null,
+    activo: true,
+  });
+  if (cambios.cliente) {
+    const activo = cambios.cliente === 'activo';
+    tercero.asignarPapel({ tipo: 'cliente', clase: 'directo', activo, notas: null });
+  }
+  await terceros.agregar(tercero);
+  return tercero;
+}
+
+function pedir(cambios: Partial<PedidoDeClienteDesdeDte> = {}) {
+  return caso.ejecutar(operadorDePrueba(), {
+    nit: NIT,
+    tipoDePersona: 'juridica',
+    nombres: null,
+    apellidos: null,
+    razonSocial: 'Agro, S.A.',
+    puedeCrearClientes: true,
+    ...cambios,
+  });
+}
+
+/** Para los casos que sí crean o reutilizan al cliente (nunca el consumidor final). */
+async function crear(cambios: Partial<PedidoDeClienteDesdeDte> = {}) {
+  return (await pedir(cambios))!;
+}
+
+beforeEach(() => {
+  terceros = new TercerosEnMemoria();
+  caso = new CrearClienteDesdeDte({
+    unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
+    repositorio: terceros,
+    consultas: terceros,
+  });
+});
+
+describe('crear el cliente de un DTE emitido', () => {
+  it('crea el tercero jurídico con razón social, NIT normalizado y papel de cliente activo', async () => {
+    const respuesta = await crear({ nit: ' 576937-k ' });
+
+    expect(respuesta.creado).toBe(true);
+    const tercero = (await terceros.buscarPorNit(NIT))!;
+    expect(tercero.id.valor).toBe(respuesta.terceroId);
+    expect(tercero.instantanea().identidad.nombres.razonSocial).toBe('Agro, S.A.');
+    expect(tercero.papel('cliente')?.activo).toBe(true);
+  });
+
+  it('una persona individual lleva sus nombres y apellidos', async () => {
+    const respuesta = await crear({
+      tipoDePersona: 'individual',
+      nombres: 'Juan Carlos',
+      apellidos: 'Pérez López',
+      razonSocial: null,
+    });
+
+    const identidad = (await terceros.buscarPorNit(NIT))!.instantanea().identidad;
+    expect(identidad.nombres).toMatchObject({ nombres: 'Juan Carlos', apellidos: 'Pérez López', razonSocial: null });
+    expect(respuesta.nombre).toBe('Juan Carlos Pérez López');
+  });
+
+  it('una empresa responde su razón social como nombre', async () => {
+    expect((await crear()).nombre).toBe('Agro, S.A.');
+  });
+
+  it('un tercero que ya existe responde su nombre y no cambia su identidad', async () => {
+    await registrarConNit();
+
+    const respuesta = await crear({ razonSocial: 'Otro nombre' });
+
+    expect(respuesta).toMatchObject({ creado: false, nombre: 'Agro, S.A.' });
+  });
+
+  it('no duplica por NIT: si ya es cliente devuelve el mismo', async () => {
+    const existente = await registrarConNit({ cliente: 'activo' });
+
+    const respuesta = await crear();
+
+    expect(respuesta).toMatchObject({ terceroId: existente.id.valor, creado: false });
+    expect(terceros.cantidad()).toBe(1);
+  });
+
+  it('a un tercero existente sin el papel se lo asigna', async () => {
+    const existente = await registrarConNit();
+
+    const respuesta = await crear();
+
+    expect(respuesta).toMatchObject({ terceroId: existente.id.valor, creado: false });
+    expect(existente.papel('cliente')?.activo).toBe(true);
+    expect(terceros.cantidad()).toBe(1);
+  });
+
+  it('un cliente inactivo se rechaza: se reactiva en Clientes', async () => {
+    await registrarConNit({ cliente: 'inactivo' });
+
+    await expect(crear()).rejects.toThrow(ClienteInactivo);
+  });
+
+  it('sin el permiso de crear clientes no hace nada', async () => {
+    await expect(crear({ puedeCrearClientes: false })).rejects.toThrow(AccesoDenegado);
+    expect(terceros.cantidad()).toBe(0);
+  });
+
+  it('sin el permiso, el rechazo dice si el NIT es nuevo o ya es de un tercero', async () => {
+    await expect(crear({ puedeCrearClientes: false })).rejects.toMatchObject({ detalles: { accion: 'crear' } });
+    await registrarConNit();
+
+    await expect(crear({ puedeCrearClientes: false })).rejects.toMatchObject({
+      detalles: { accion: 'agregar_papel' },
+    });
+  });
+
+  it('el cliente nuevo entra con clase directo', async () => {
+    await crear();
+
+    expect((await terceros.buscarPorNit(NIT))!.papel('cliente')).toMatchObject({ clase: 'directo', activo: true });
+  });
+
+  it('el consumidor final (CF) no crea nada y responde null, con o sin permiso', async () => {
+    expect(await pedir({ nit: 'CF' })).toBeNull();
+    expect(await pedir({ nit: ' cf ', puedeCrearClientes: false })).toBeNull();
+    expect(terceros.cantidad()).toBe(0);
+  });
+
+  it('rechaza NIT inválido y nombre vacío', async () => {
+    await expect(crear({ nit: '5769370' })).rejects.toThrow(NitInvalido);
+    await expect(crear({ razonSocial: '  ' })).rejects.toThrow(FaltaElNombre);
+    await expect(crear({ tipoDePersona: 'individual', nombres: null })).rejects.toThrow(FaltaElNombre);
+    expect(terceros.cantidad()).toBe(0);
+  });
+});

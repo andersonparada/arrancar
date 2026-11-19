@@ -71,6 +71,13 @@
       "when": 1795044816282,
       "tag": "0009_avisos_de_pago_en_contactos",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795097231620,
+      "tag": "0010_clientes_para_ventas",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { boolean, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, text, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
 import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { esquemaTerceros, terceros } from './terceros.tablas.js';
@@ -20,5 +20,10 @@ export const clientes = esquemaTerceros.table(
     ...marcasDeTiempo,
     ...autoria,
   },
-  (t) => [uniqueIndex('clientes_tercero_idx').on(t.terceroId), politicaPorCuenta()],
+  (t) => [
+    uniqueIndex('clientes_tercero_idx').on(t.terceroId),
+    /** Destino de la llave compuesta de otros módulos: garantiza que el cliente es de la misma cuenta. */
+    unique('clientes_id_cuenta_unico').on(t.id, t.cuentaId),
+    politicaPorCuenta(),
+  ],
 );

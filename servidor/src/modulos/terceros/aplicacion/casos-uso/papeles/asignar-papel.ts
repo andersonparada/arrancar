@@ -5,7 +5,7 @@ import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/uni
 import type { SeccionesAportadas } from '../../../../core/contratos/secciones.contratos.js';
 import type { PapelDeClienteDto, PapelDeProveedorDto, SolicitudDePapel } from '../../dto/tercero.dto.js';
 import { exigirCategoriaDelPapel, terceroExistente } from '../../existentes.js';
-import type { AvisosDeProveedor } from '../../puertos/avisos-de-proveedor.js';
+import type { AvisosDePapeles } from '../../puertos/avisos-de-papeles.js';
 import type { ConsultasTerceros } from '../../puertos/consultas.js';
 import type { RepositorioCategorias, RepositorioTerceros } from '../../puertos/repositorios.js';
 import { RECURSO_DEL_PAPEL } from './quitar-papel.js';
@@ -17,13 +17,13 @@ interface Dependencias {
   consultas: ConsultasTerceros;
   publicadorEventos: PublicadorEventos;
   auditoria: Auditoria;
-  avisos: AvisosDeProveedor;
+  avisos: AvisosDePapeles;
 }
 
 interface Asignacion {
   terceroId: string;
   papel: SolicitudDePapel;
-  /** Lo que otros módulos aportan al formulario de proveedores; solo se usa si el papel es de proveedor. */
+  /** Lo que otros módulos aportan al formulario del papel (proveedores o clientes). */
   secciones?: SeccionesAportadas;
 }
 
@@ -48,21 +48,23 @@ export class AsignarPapel {
       await repositorio.guardar(tercero);
       if (anterior) await this.auditar(asignacion, anterior);
       const asignado = await consultas.obtenerPapel(asignacion.terceroId, asignacion.papel.tipo);
-      await this.avisarProveedor(operador, asignacion, asignado);
+      await this.avisarPapel(operador, asignacion, asignado);
       return { tercero, asignado };
     });
     await publicadorEventos.publicar(tercero.extraerEventos());
     return asignado;
   }
 
-  /** Los módulos activos guardan su sección del formulario de proveedores, en esta misma transacción. */
-  private async avisarProveedor(
+  /** Los módulos activos guardan su sección del formulario del papel (proveedor o cliente), en esta misma transacción. */
+  private async avisarPapel(
     operador: Operador,
     { terceroId, papel, secciones = {} }: Asignacion,
     asignado: PapelDeClienteDto | PapelDeProveedorDto,
   ): Promise<void> {
-    if (papel.tipo !== 'proveedor') return;
-    await this.dependencias.avisos.proveedorGuardado(operador, { proveedorId: asignado.id, terceroId, secciones });
+    const { avisos } = this.dependencias;
+    if (papel.tipo === 'proveedor')
+      await avisos.proveedorGuardado(operador, { proveedorId: asignado.id, terceroId, secciones });
+    else await avisos.clienteGuardado(operador, { clienteId: asignado.id, terceroId, secciones });
   }
 
   /** Volver a asignar un papel que estaba inactivo lo reactiva. */

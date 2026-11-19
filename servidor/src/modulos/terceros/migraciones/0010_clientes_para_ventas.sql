@@ -1,0 +1,1 @@
+ALTER TABLE "terceros"."clientes" ADD CONSTRAINT "clientes_id_cuenta_unico" UNIQUE("id","cuenta_id");
