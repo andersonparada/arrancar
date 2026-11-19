@@ -10,7 +10,7 @@ import {
 import { PrimeraConciliacionDeOtroMes } from '../../../dominio/errores-de-apertura.js';
 import { periodoObligadoDeLaPrimera } from '../../periodo-de-la-primera-conciliacion.js';
 import type { ConciliacionDto, SolicitudDeInicioDeConciliacion } from '../../dto/conciliacion.dto.js';
-import type { DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
+import { documentoDeLaConciliacion, type DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
 
 /**
  * Inicia una conciliación sin ningún saldo que escribir: la primera de la
@@ -30,7 +30,7 @@ export class IniciarConciliacion {
    * @throws PeriodoInvalido si el año o el mes no son válidos.
    */
   ejecutar(operador: Operador, solicitud: SolicitudDeInicioDeConciliacion): Promise<ConciliacionDto> {
-    const { unidadDeTrabajo, repositorio, consultas, consultasMovimientos } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, consultasMovimientos } = this.dependencias;
     const empresaId = Identificador.desde<'Empresa'>(operador.empresaId);
     return unidadDeTrabajo.ejecutar(operador, async () => {
       if (!(await consultasMovimientos.cuentaEstaActiva(solicitud.cuentaBancariaId))) {
@@ -41,7 +41,7 @@ export class IniciarConciliacion {
       const conciliacion = Conciliacion.crear(empresaId, solicitud);
       await repositorio.agregar(conciliacion);
       await this.marcarCompensados(conciliacion);
-      return consultas.obtener(conciliacion.id.valor);
+      return documentoDeLaConciliacion(operador, this.dependencias, conciliacion.id.valor);
     });
   }
 

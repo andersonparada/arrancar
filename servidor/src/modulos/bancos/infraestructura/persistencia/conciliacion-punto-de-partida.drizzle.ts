@@ -11,6 +11,13 @@ import { saldosIniciales } from './saldos-iniciales.tablas.js';
 const vigentesDe = (cuentaBancariaId: string) =>
   and(eq(movimientos.cuentaBancariaId, cuentaBancariaId), isNull(movimientos.anuladoEn));
 
+/** El día anterior a una fecha `AAAA-MM-DD`. */
+function diaAnterior(fecha: string): string {
+  const dia = new Date(`${fecha}T00:00:00Z`);
+  dia.setUTCDate(dia.getUTCDate() - 1);
+  return dia.toISOString().slice(0, 10);
+}
+
 async function saldoDeLibrosAlFinDe(cuentaBancariaId: string, fecha: string): Promise<number> {
   const [fila] = await transaccionEnCurso()
     .select({ saldo: sql<string>`(${saldoVigente})::text` })
@@ -65,23 +72,17 @@ export async function conSaldoDelBancoDe(cuentaBancariaId: string): Promise<bool
   return !global;
 }
 
-/** El día anterior a la fecha de inicio de la empresa (la carga inicial no guarda el corte si el saldo del banco es cero). */
-async function corteDeLaCargaInicial(): Promise<string | null> {
-  const resultado = await transaccionEnCurso().execute<{ corte: string }>(
-    sql`select (fecha_de_inicio - 1)::text as corte from empresas.cargas_iniciales limit 1`,
-  );
-  return resultado.rows[0]?.corte ?? null;
-}
-
 /**
  * El saldo del banco de la carga inicial, también cuando es cero y no se guardó como movimiento (solo hay cabecera):
- * entonces su fecha es el corte de la carga y su monto, cero.
+ * entonces su fecha es el corte de la carga (el día anterior a la fecha de inicio) y su monto, cero.
  */
-async function saldoDelBancoOEnCeroDe(cuentaBancariaId: string): Promise<SaldoDelBancoDeLaApertura | null> {
+async function saldoDelBancoOEnCeroDe(
+  cuentaBancariaId: string,
+  fechaDeInicio: string | null,
+): Promise<SaldoDelBancoDeLaApertura | null> {
   const guardado = await saldoDelBancoDeLaAperturaDe(cuentaBancariaId);
   if (guardado || !(await conSaldoDelBancoDe(cuentaBancariaId))) return guardado;
-  const corte = await corteDeLaCargaInicial();
-  return corte ? { fecha: corte, monto: '0.00' } : null;
+  return fechaDeInicio ? { fecha: diaAnterior(fechaDeInicio), monto: '0.00' } : null;
 }
 
 /** La fecha del primer movimiento vigente de la cuenta; `null` si no tiene ninguno. */
@@ -101,10 +102,14 @@ export async function fechaDelPrimerMovimientoDe(cuentaBancariaId: string): Prom
  * de una cuenta con saldo del banco: el banco parte de ese saldo y los libros, del saldo al corte. Si el corte cae a
  * mitad del mes, el mes se toma desde el día siguiente al corte; si cae antes, desde el principio del mes.
  */
-export async function puntoDePartidaDe(cuentaBancariaId: string, periodo: Periodo): Promise<PuntoDePartida> {
+export async function puntoDePartidaDe(
+  cuentaBancariaId: string,
+  periodo: Periodo,
+  fechaDeInicio: string | null,
+): Promise<PuntoDePartida> {
   const finDelMesAnterior = finDelMesDe(periodoAnterior(periodo));
   const foto = await fotoDelPeriodoAnterior(cuentaBancariaId, periodo);
-  const delBanco = foto ? null : await saldoDelBancoOEnCeroDe(cuentaBancariaId);
+  const delBanco = foto ? null : await saldoDelBancoOEnCeroDe(cuentaBancariaId, fechaDeInicio);
   const despuesDe = delBanco && delBanco.fecha > finDelMesAnterior ? delBanco.fecha : finDelMesAnterior;
   return {
     librosEnCentavos: await saldoDeLibrosAlFinDe(cuentaBancariaId, despuesDe),

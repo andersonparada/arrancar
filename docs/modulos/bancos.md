@@ -1736,8 +1736,8 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
 - **Primera conciliación con saldo del banco (§2.4)**: `puntoDePartidaDe` (`conciliacion-punto-de-partida.drizzle.ts`) reemplaza a `saldosInicialesDe`. Sin la
   foto del mes anterior y con el movimiento `saldo_del_banco`, el banco parte de ese saldo (con su signo) y los libros, del saldo al corte; los movimientos del
   mes de libros son los posteriores al corte (a mitad de mes, desde el día siguiente; si el corte es anterior al fin del mes anterior, como siempre). Con el saldo
-  del banco en cero no hay movimiento: se trata como un saldo del banco de `0.00` con fecha del corte (día anterior a la fecha de inicio, leído de
-  `empresas.cargas_iniciales`), así que el corte a mitad de mes también se respeta y `saldoInicialDelBancoDeLaApertura` llega con `monto: '0.00'`.
+  del banco en cero no hay movimiento: se trata como un saldo del banco de `0.00` con fecha del corte (día anterior a la fecha de inicio, que el caso de uso lee por
+  el puerto `CargaInicial` y pasa a la consulta), así que el corte a mitad de mes también se respeta y `saldoInicialDelBancoDeLaApertura` llega con `monto: '0.00'`.
   `IniciarConciliacion` exige, en la primera de una cuenta con saldo del banco (`conSaldoDelBanco`: su movimiento, o la cabecera sin saldo global), el mes de la
   fecha de inicio (`PrimeraConciliacionDeOtroMes`, con `MM/AAAA`); la fecha de inicio llega por `CargaInicial` (mediador), ahora en `DependenciasDeConciliaciones`.
 - **Candidatos**: `candidatosDe`, `idsDeCandidatosDe` y los pares compensados excluyen `parte_de_apertura = 'saldo_del_banco'`. Se suman los **cheques de fecha
@@ -1745,10 +1745,11 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
   así «marcar todos» no los toma). Sin marcar no son partida; marcados forman `partidas.cobradosAntesDeSuFecha`, que **resta** del saldo que debe mostrar el
   estado de cuenta (también en los meses siguientes, mientras su fecha no llegue: los marcados en una conciliación anterior siguen restando, sin tocar
   el lado del banco, que ya los restó en su foto), y la foto guarda su total (`foto_total_cobrados_antes_de_su_fecha`; nulo en las de antes, se lee como `0.00`).
-- **Anular un cheque que el banco ya pagó**: si su movimiento está marcado en una conciliación, `AnularCheque` crea la nota inversa (como con un mes
-  conciliado), aunque la fecha del cheque sea posterior; así la conciliación autorizada no cambia.
+- **Anular un cheque que el banco ya pagó**: si su movimiento está marcado en una conciliación **autorizada** (como notas y transferencias; en proceso o
+  elaborada se puede rehacer), `AnularCheque` crea la nota inversa (como con un mes conciliado), aunque la fecha del cheque sea posterior; así la conciliación
+  autorizada no cambia. Lo decide `ConsultasMovimientos.marcadoEnConciliacionAutorizada`.
 - **DTO**: `Partida` gana `deApertura` (es `saldo_inicial`: todas las partes menos el posfechado) y `parteDeApertura`; `ConciliacionDto` gana
-  `saldoInicialDelBancoDeLaApertura` (`{ fecha, monto }`, solo en la primera de una cuenta con saldo del banco con movimiento; nulo si el saldo es cero) y
+  `saldoInicialDelBancoDeLaApertura` (`{ fecha, monto }`, solo en la primera de una cuenta con saldo del banco; con el saldo en cero llega con `monto: '0.00'` y la fecha del corte; nulo si la cuenta no tiene saldo del banco) y
   `posfechadosCandidatos`. `calcularConciliacion` recibe `finDelMes`.
 - **Periodo propuesto (§6.5)**: `GET /bancos/cuentas-bancarias/:id/conciliaciones` ahora responde `{ conciliaciones, periodoSiguiente }` (antes, solo la lista). El
   cliente actual solo desenvuelve `conciliaciones` (`ApiConciliaciones.listarDeLaCuenta`); BS-7 usará `periodoSiguiente`.

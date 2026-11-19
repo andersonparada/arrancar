@@ -12,11 +12,10 @@ import type {
 } from '../../aplicacion/dto/movimiento.dto.js';
 import type { ConsultasMovimientos, SaldoPrincipalDeLaCuenta } from '../../aplicacion/puertos/consultas-movimientos.js';
 import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../dominio/asignacion-de-concepto.js';
-import { finDelMesDe } from '../../dominio/conciliacion.js';
 import { cheques } from './cheques.tablas.js';
 import { esPendienteDeClasificar } from './condiciones-de-clasificacion.js';
 import { conceptos } from './conceptos.tablas.js';
-import { conciliaciones } from './conciliaciones.tablas.js';
+import { conciliadaHastaDe, marcadoEnConciliacionAutorizadaDe } from './marcas-de-conciliacion.drizzle.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { desgloseDeMovimientos } from './desglose-de-movimientos.tablas.js';
 import { cuentaConConciliacionesDe, hayCabeceraDeSaldoInicial, mesConciliadoDe } from './hechos-de-movimiento.js';
@@ -146,14 +145,12 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
     return this.primeraFecha(vigentesDe(cuentaBancariaId, excluir));
   }
 
-  async conciliadaHasta(cuentaBancariaId: string): Promise<string | null> {
-    const [fila] = await transaccionEnCurso()
-      .select({ anio: conciliaciones.anio, mes: conciliaciones.mes })
-      .from(conciliaciones)
-      .where(and(eq(conciliaciones.cuentaBancariaId, cuentaBancariaId), eq(conciliaciones.estado, 'autorizada')))
-      .orderBy(desc(conciliaciones.anio), desc(conciliaciones.mes))
-      .limit(1);
-    return fila ? finDelMesDe(fila) : null;
+  conciliadaHasta(cuentaBancariaId: string): Promise<string | null> {
+    return conciliadaHastaDe(cuentaBancariaId);
+  }
+
+  marcadoEnConciliacionAutorizada(movimientoId: string): Promise<boolean> {
+    return marcadoEnConciliacionAutorizadaDe(movimientoId);
   }
 
   async saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string> {

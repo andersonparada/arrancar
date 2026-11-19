@@ -122,11 +122,11 @@ async function filaDeLaConciliacion(conciliacionId: string) {
 }
 
 /** Arma el cálculo del documento: candidatos (los posfechados aparte), punto de partida y partidas. */
-async function documentoDe(fila: FilaEncabezado) {
+async function documentoDe(fila: FilaEncabezado, fechaDeInicio: string | null) {
   const periodo = { anio: fila.anio, mes: fila.mes };
   const finDelMes = finDelMesDe(periodo);
   const todos = await candidatosConMarcaDe(fila.cuentaBancariaId, finDelMes, fila.id);
-  const partida = await puntoDePartidaDe(fila.cuentaBancariaId, periodo);
+  const partida = await puntoDePartidaDe(fila.cuentaBancariaId, periodo, fechaDeInicio);
   const resultado = calcularConciliacion({
     saldoInicialLibrosEnCentavos: partida.librosEnCentavos,
     saldoInicialBancoEnCentavos: partida.bancoEnCentavos,
@@ -167,9 +167,9 @@ export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
     return filas.map(aResumen);
   }
 
-  async obtener(conciliacionId: string): Promise<ConciliacionDto> {
+  async obtener(conciliacionId: string, fechaDeInicio: string | null): Promise<ConciliacionDto> {
     const fila = await filaDeLaConciliacion(conciliacionId);
-    const documento = await documentoDe(fila);
+    const documento = await documentoDe(fila, fechaDeInicio);
     return {
       ...aEncabezado(fila),
       estadoDeCuenta: await estadoDeCuentaDeLaConciliacion(conciliacionId),

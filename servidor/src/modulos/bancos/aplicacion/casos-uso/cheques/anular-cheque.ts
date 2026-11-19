@@ -35,7 +35,7 @@ export interface ChequeAnulado {
  * siempre). Si su mes ya está conciliado (quedó en circulación y nunca se cobró), en cambio, crea
  * su nota de crédito inversa: el movimiento original sigue contando y el inverso lo compensa, así
  * no cambia ninguna conciliación ya autorizada. Lo mismo si el banco ya lo pagó antes de su fecha (marcado en una
- * conciliación, con fecha posterior a ella). Un cheque en circulación de la carga inicial siempre
+ * conciliación autorizada, con fecha posterior a ella; en proceso o elaborada se puede rehacer, como las notas). Un cheque en circulación de la carga inicial siempre
  * lleva inverso, con la fecha posterior al corte y el concepto «Partidas de apertura anuladas»; de eso se avisa al
  * confirmar (`bancos.partida_de_apertura_anulada`).
  */
@@ -117,11 +117,10 @@ export class AnularCheque {
     });
   }
 
-  /** Su mes está conciliado o el banco ya lo pagó (marcado en una conciliación, aunque su fecha sea posterior). */
+  /** Su mes está conciliado o el banco ya lo pagó (marcado en una conciliación autorizada, aunque su fecha sea posterior). */
   private async estaConciliado(movimiento: Movimiento, movimientoId: string): Promise<boolean> {
     const { fecha, cuentaBancariaId } = movimiento.instantanea();
-    const { conciliacionId } = await this.dependencias.consultasMovimientos.obtener(movimientoId);
-    if (conciliacionId) return true;
+    if (await this.dependencias.consultasMovimientos.marcadoEnConciliacionAutorizada(movimientoId)) return true;
     const conciliadaHasta = await this.dependencias.consultasMovimientos.conciliadaHasta(cuentaBancariaId);
     return conciliadaHasta !== null && fecha <= conciliadaHasta;
   }

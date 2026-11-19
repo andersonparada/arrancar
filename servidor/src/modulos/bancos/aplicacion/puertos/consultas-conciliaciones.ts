@@ -20,8 +20,12 @@ export interface PuntoDePartida {
 export interface ConsultasConciliaciones {
   /** De la más reciente a la más antigua. */
   listar(cuentaBancariaId: string): Promise<ConciliacionResumenDto[]>;
-  /** @throws RecursoNoEncontrado si no existe o no es de la empresa. */
-  obtener(conciliacionId: string): Promise<ConciliacionDto>;
+  /**
+   * `fechaDeInicio` es la de la empresa (de la carga inicial): con ella se halla el corte de una cuenta con saldo del
+   * banco en cero, que no guardó movimiento.
+   * @throws RecursoNoEncontrado si no existe o no es de la empresa.
+   */
+  obtener(conciliacionId: string, fechaDeInicio: string | null): Promise<ConciliacionDto>;
   /** Los datos del archivo del estado de cuenta, o `null` si no tiene; para la auditoría. */
   estadoDeCuentaDe(conciliacionId: string): Promise<EstadoDeCuentaDto | null>;
   /**

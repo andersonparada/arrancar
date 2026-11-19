@@ -4,10 +4,12 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { Conciliacion } from '../../../dominio/conciliacion.js';
 import type { CargaInicial } from '../../puertos/carga-inicial.js';
 import type { ConsultasConciliaciones } from '../../puertos/consultas-conciliaciones.js';
 import type { PoliticaDeEstadoDeCuenta } from '../../puertos/politica-de-estado-de-cuenta.js';
+import type { ConciliacionDto } from '../../dto/conciliacion.dto.js';
 import type { ConsultasMovimientos } from '../../puertos/consultas-movimientos.js';
 import type { RepositorioConciliaciones } from '../../puertos/repositorio-conciliaciones.js';
 
@@ -43,4 +45,14 @@ export async function conciliacionBloqueada(repositorio: RepositorioConciliacion
   const conciliacion = await repositorio.bloquear(Identificador.desde(id));
   if (!conciliacion) throw new RecursoNoEncontrado('La conciliación');
   return conciliacion;
+}
+
+/** El documento de la conciliación (con el cálculo en vivo); pasa la fecha de inicio de la empresa a la consulta. */
+export async function documentoDeLaConciliacion(
+  operador: Operador,
+  dependencias: Pick<DependenciasDeConciliaciones, 'consultas' | 'cargaInicial'>,
+  conciliacionId: string,
+): Promise<ConciliacionDto> {
+  const { fechaDeInicio } = await dependencias.cargaInicial.obtener(operador);
+  return dependencias.consultas.obtener(conciliacionId, fechaDeInicio);
 }

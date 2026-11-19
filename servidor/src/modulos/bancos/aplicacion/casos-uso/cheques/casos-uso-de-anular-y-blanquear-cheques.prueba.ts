@@ -72,6 +72,28 @@ describe('anular', () => {
     });
     expect(await casos.movimientos.saldoDe(CUENTA)).toBe('1000.00');
   });
+
+  it('marcado en una conciliación en proceso: se anula a la antigua, sin inverso', async () => {
+    const movimiento = await casos.emitir.ejecutar(operador, emision());
+    casos.movimientos.marcadosEnConciliacion.set(movimiento.id, randomUUID());
+
+    await casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Aún en proceso', fecha: '2026-03-05' });
+
+    expect((await casos.movimientos.obtener(movimiento.id)).anuladoEn).toEqual(expect.any(String));
+  });
+
+  it('marcado en una conciliación autorizada, aunque su fecha sea posterior, crea la nota inversa', async () => {
+    const movimiento = await casos.emitir.ejecutar(operador, emision());
+    const conciliacionId = randomUUID();
+    casos.movimientos.marcadosEnConciliacion.set(movimiento.id, conciliacionId);
+    casos.movimientos.conciliacionesAutorizadas.add(conciliacionId);
+
+    await casos.anular.ejecutar(operador, { chequeId: casos.chequeId, motivo: 'Ya lo pagó', fecha: '2026-03-05' });
+
+    const original = await casos.movimientos.obtener(movimiento.id);
+    expect(original.anuladoEn).toBeNull();
+    expect(original.revertidoEn).toEqual(expect.any(String));
+  });
 });
 
 describe('blanquear', () => {
