@@ -639,13 +639,13 @@ completo (con activo fijo, bancos y pasivos) será suyo y esta tabla podrá pasa
 - `npm run generar -- modulo inventarios --nombre "Inventarios" --descripcion "…" --icono Warehouse` crea el esqueleto y
   `0000_esquema`. Luego, con `bd:generar -w servidor -- inventarios <nombre>`: `0001_inv1_catalogos` (unidades,
   categorías, artículos, conversiones, lotes, auditoría permanente), `0003_inv2_bodegas_y_accesos` (el `0002` es el índice de búsqueda de artículos),
-  `0003_inv4_kardex` (métodos, documentos, movimientos, existencias, saldos, capas, consumos, recálculos),
+  `0004_inv4_kardex` (métodos, documentos, movimientos, existencias, saldos, capas, consumos, recálculos),
   `0004_inv5_recepciones` (repartos, descartes), `0005_inv8_cierres`, `0006_inv9_ajustes`, `0007_inv10_conteos`,
   `0008_inv12_deterioros`, `0009_inv13_autorizaciones_del_libro`. El `check` de clases de `documentos` se amplía en la
   migración del paso que trae la clase nueva.
 - Lo que agrega la validación del contador (2026-11-18) se **funde** en esas mismas migraciones, porque el módulo no
   tiene datos: el `check` de `metodos_de_costeo.desde` (V-1), `movimientos.tipo = 'traslado'` y `movimientos_bodega_idx`
-  (§2.5), las columnas nuevas de `recalculos` (V-2, V-1) en `0003_inv4_kardex`; `lineas_de_ajuste.movimiento_de_origen_id`
+  (§2.5), las columnas nuevas de `recalculos` (V-2, V-1) en `0004_inv4_kardex`; `lineas_de_ajuste.movimiento_de_origen_id`
   (V-6) en `0006_inv9_ajustes`; `existencias_al_cierre.en_transito_interno` en `0005_inv8_cierres`.
 - **Sin datos que convertir** ni migración de permisos (todos nuevos: el rol con acceso total los recibe solo).
 - Libro de compras: `00xx_inv_marca_de_inventario` (§4.1, el número libre al programar), **antes** de `0004_inv5`. La
@@ -1250,7 +1250,7 @@ texto.
 | **INV-2** | Bodegas con alcance, accesos, ventana de asignación, Excel con `sinAsignarAlCrear`; pruebas de aislamiento | backend — **hecho** (2026-11-19, migración `0003_inv2_bodegas_y_accesos`) |
 | INV-2c | Bodegas y asignación de usuarios | frontend |
 | **INV-3** | Motor de costeo puro (§7: promedio, PEPS, recálculo, redondeo, negativos, costos adicionales con el **factor exacto** de V-2 y su recálculo, **traslados neutros**, devolución PEPS sobre su capa, sobrante de V-5) con todos los ejemplos de §7.6; sin base de datos. **No se programa con la fórmula vieja** (`min(1, C/q)`) | backend |
-| **INV-4** | `0003_inv4_kardex`: métodos de costeo (elegir, con el `check` de `desde` de V-1), documentos, movimientos (con `tipo = 'traslado'` y `movimientos_bodega_idx`), existencias, saldos, capas, recálculos (con las columnas de repartos); entradas manuales (donación con valor razonable, V-10), salidas por consumo (destino `gasto`), anular; candados; kardex por bodega con su propio saldo y sin los saldos de la empresa para quien no ve todas; pruebas de concurrencia, de recálculo, de RLS con dos bodegueros (R-3) y de cuadre | backend |
+| **INV-4** | `0004_inv4_kardex`: métodos de costeo (elegir, con el `check` de `desde` de V-1), documentos, movimientos (con `tipo = 'traslado'` y `movimientos_bodega_idx`), existencias, saldos, capas, recálculos (con las columnas de repartos); entradas manuales (donación con valor razonable, V-10), salidas por consumo (destino `gasto`), anular; candados; kardex por bodega con su propio saldo y sin los saldos de la empresa para quien no ve todas; pruebas de concurrencia, de recálculo, de RLS con dos bodegueros (R-3) y de cuadre | backend — **hecho** (2026-11-19, migración `0004_inv4_kardex`; queda `CambiarMetodoDeCosteo`, los cierres reales y los repartos con INV-5, INV-8 y el cambio de método: ver la bitácora de `PLAN.md`) |
 | INV-4c | Existencias, ficha con kardex, Movimientos (entrada y salida), Política de costeo | frontend |
 | **INV-5** | Bandeja por recibir, recepciones, devoluciones (PEPS sobre su capa), rebajas, descartes **con la orden `libro-de-compras.cambiar_marca_de_inventario`** (V-8; la orden la programa el libro en este mismo paso, con su auditoría y su prueba), avisos del libro (R-1) y mensaje del error de llave en el libro | backend |
 | INV-5c | Por recibir | frontend |
