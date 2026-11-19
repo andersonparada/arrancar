@@ -2,6 +2,8 @@ import { DatabaseError } from 'pg';
 import { RecursoDuplicado, RecursoEnUso, RecursoNoEncontrado } from '../aplicacion/errores.js';
 import { ReglaDeNegocioInfringida, type ErrorEsperado } from '../dominio/errores.js';
 
+import { CAMPOS_DE_UNICOS_DE_CATALOGOS, MENSAJES_DE_UNICOS_DE_CATALOGOS } from './unicos-de-catalogos.js';
+
 const VIOLACION_DE_UNICIDAD = '23505';
 const VIOLACION_DE_LLAVE_FORANEA = '23503';
 const VIOLACION_DE_POLITICA_RLS = '42501';
@@ -47,6 +49,7 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   facturas_anteriores_del_proveedor_unica: MENSAJE_FACTURA_ANTERIOR_REPETIDA,
   facturas_anteriores_autorizacion_fel_unica: MENSAJE_FACTURA_ANTERIOR_REPETIDA,
   datos_fiscales_de_empresa_vigencia_unica: 'Ya hay un régimen registrado desde ese mes.',
+  ...MENSAJES_DE_UNICOS_DE_CATALOGOS,
 };
 
 /** Llaves foráneas que se rechazan con un mensaje que guía, en vez del genérico «está relacionado con otros datos». */
@@ -61,6 +64,7 @@ const MENSAJES_DE_LLAVE: Readonly<Record<string, string>> = {
 const CAMPOS_POR_RESTRICCION: Readonly<Record<string, string>> = {
   documentos_numero_por_proveedor_unico: 'numero',
   activos_codigo_unico: 'codigo',
+  ...CAMPOS_DE_UNICOS_DE_CATALOGOS,
 };
 
 /** Restricciones de exclusión (rangos que no pueden traslaparse) y lo que se le dice al usuario. */

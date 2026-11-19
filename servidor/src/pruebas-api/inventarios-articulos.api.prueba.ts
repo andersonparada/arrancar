@@ -61,6 +61,11 @@ describe('artículos por API', () => {
 
     expect([conEspacios.estado, sinLotes.estado]).toEqual([400, 400]);
     expect([codigoRepetido.estado, nombreRepetido.estado]).toEqual([409, 409]);
+    expect([codigoRepetido.cuerpo.error.detalles?.campo, nombreRepetido.cuerpo.error.detalles?.campo]).toEqual([
+      'codigo',
+      'nombre',
+    ]);
+    expect(nombreRepetido.cuerpo.error.mensaje).toBe('Ya existe un artículo con ese nombre.');
   });
 
   it('no acepta una categoría, unidad o concepto de otra cuenta', async () => {
@@ -160,6 +165,20 @@ describe('conversiones por API', () => {
 
     expect([base.estado, repetida.estado, ajena.estado]).toEqual([400, 400, 404]);
     expect(base.cuerpo.error.codigo).toBe('conversion_invalida');
+  });
+
+  it('rechaza una unidad de la misma magnitud que la base: ya se convierte sola', async () => {
+    const articulo = (await cuenta.propietario.post(RUTA, datos())).cuerpo.id;
+    const quintal = (await cuenta.propietario.get('/api/inventarios/unidades')).cuerpo.find(
+      (unidad: { nombre: string }) => unidad.nombre === 'Quintal',
+    ).id;
+
+    const respuesta = await cuenta.propietario.put(`${RUTA}/${articulo}/conversiones`, {
+      conversiones: [{ unidadId: quintal, factor: '100', paraCompras: false }],
+    });
+
+    expect(respuesta.estado).toBe(400);
+    expect(respuesta.cuerpo.error.codigo).toBe('conversion_invalida');
   });
 
   it('una unidad que está en una conversión no se elimina', async () => {

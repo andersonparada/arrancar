@@ -3,6 +3,7 @@ import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { ConversionDto, SolicitudDeConversiones } from '../../aplicacion/dto/conversion.dto.js';
 import type { AlmacenDeConversiones } from '../../aplicacion/puertos/almacen-de-conversiones.js';
+import type { Magnitud } from '../../dominio/magnitudes.js';
 import { conversiones } from './conversiones.tablas.js';
 import { unidades } from './unidades.tablas.js';
 
@@ -22,13 +23,15 @@ export class AlmacenDeConversionesDrizzle implements AlmacenDeConversiones {
       .orderBy(asc(unidades.nombre));
   }
 
-  async exigirUnidades(unidadIds: readonly string[]): Promise<void> {
-    if (unidadIds.length === 0) return;
+  async exigirUnidades(unidadIds: readonly string[]): Promise<ReadonlyMap<string, Magnitud>> {
+    const pedidas = [...new Set(unidadIds)];
+    if (pedidas.length === 0) return new Map();
     const halladas = await transaccionEnCurso()
-      .select({ id: unidades.id })
+      .select({ id: unidades.id, magnitud: unidades.magnitud })
       .from(unidades)
-      .where(inArray(unidades.id, [...unidadIds]));
-    if (halladas.length !== unidadIds.length) throw new RecursoNoEncontrado('La unidad de medida');
+      .where(inArray(unidades.id, pedidas));
+    if (halladas.length !== pedidas.length) throw new RecursoNoEncontrado('La unidad de medida');
+    return new Map(halladas.map(({ id, magnitud }) => [id, magnitud]));
   }
 
   async reemplazar(

@@ -80,14 +80,23 @@ function validarGanado(datos: DatosDeActivo, inciso: IncisoFiscal): void {
   const valor = datos.valorComoGanadoComun;
   if (valor !== null && Number(valor) < 0)
     throw new ActivoInvalido('El valor como ganado común no puede ser negativo.');
+  if (valor !== null && inciso !== 'reproductores')
+    throw new ActivoInvalido('El valor como ganado común es solo de los reproductores.');
   const exigido = inciso === 'reproductores' && datos.tipoDeRegistro === 'activo';
   if (exigido && valor === null) throw new ActivoInvalido('Un reproductor lleva su valor como ganado común.');
+}
+
+/** Un terreno no se va a gasto: siempre es un activo (o de terceros), nunca un bien de control (§3.4). */
+function validarTerreno(datos: DatosDeActivo, inciso: IncisoFiscal): void {
+  if (inciso === 'terrenos' && datos.tipoDeRegistro === 'bien_de_control')
+    throw new ActivoInvalido('Un terreno no puede ser un bien de control: regístrelo como activo.');
 }
 
 /** La matrícula, el catastro y el valor como ganado común dependen del inciso de la clase (§5.3, A3). */
 function validarValoresFiscales(datos: DatosDeActivo, inciso: IncisoFiscal): void {
   validarInmueble(datos, inciso);
   validarGanado(datos, inciso);
+  validarTerreno(datos, inciso);
 }
 
 function validarCantidad(cantidad: number): void {

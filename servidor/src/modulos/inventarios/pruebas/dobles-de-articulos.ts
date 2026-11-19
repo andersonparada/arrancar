@@ -10,6 +10,7 @@ import type { ConsultasArticulos } from '../aplicacion/puertos/consultas-articul
 import type { LectorDePrefijoDeCodigos } from '../aplicacion/puertos/lector-de-prefijo-de-codigos.js';
 import type { RepositorioArticulos } from '../aplicacion/puertos/repositorio-articulos.js';
 import type { Articulo, ArticuloId } from '../dominio/articulo.js';
+import type { Magnitud } from '../dominio/magnitudes.js';
 
 function aDto(articulo: Articulo): ArticuloDto {
   const { id, empresaId, ...datos } = articulo.instantanea();
@@ -73,9 +74,14 @@ export class ConversionesEnMemoria implements AlmacenDeConversiones {
     }));
   }
 
-  async exigirUnidades(unidadIds: readonly string[]): Promise<void> {
-    if (this.unidadesConocidas.size === 0) return;
-    if (unidadIds.some((id) => !this.unidadesConocidas.has(id))) throw new RecursoNoEncontrado('La unidad de medida');
+  /** La magnitud de las unidades que la prueba quiera fijar; las demás no tienen. */
+  readonly magnitudes = new Map<string, Magnitud>();
+
+  async exigirUnidades(unidadIds: readonly string[]): Promise<ReadonlyMap<string, Magnitud>> {
+    const conocidas = this.unidadesConocidas.size > 0;
+    if (conocidas && unidadIds.some((id) => !this.unidadesConocidas.has(id)))
+      throw new RecursoNoEncontrado('La unidad de medida');
+    return this.magnitudes;
   }
 
   async reemplazar(articuloId: string, _empresaId: string, conversiones: SolicitudDeConversiones['conversiones']) {

@@ -4340,3 +4340,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   cómo corregirse. **No se hizo:** el desplazamiento horizontal de Movimientos en celular (patrón común de tablas) ni cambiar
   «Fondos insuficientes» de Saldos por cuenta a una fecha anterior al corte (es consistente con las reglas). La verificación
   visual a 390 px no se repitió en navegador: queda para la QA de regreso.
+- **2026-11-19 — QA de Activos fijos e Inventarios: hallazgos bajos corregidos.** `valorComoGanadoComun` solo en clases
+  de reproductores (la `it.fails` pasó a `it`); un terreno no puede ser bien de control; la ficha del activo ocioso
+  muestra fecha y motivo (ya estaba en `detallesDeFicha`, ahora con prueba); `FichaNoEncontrada` (core) da estado vacío
+  con título y «Volver» en las fichas de activo y artículo; las conversiones con unidad de la misma magnitud que la base
+  (con factor a la referencia) se rechazan; los únicos de artículos, bodegas, categorías, unidades, lotes y clases dicen
+  qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
+  costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
+  Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.

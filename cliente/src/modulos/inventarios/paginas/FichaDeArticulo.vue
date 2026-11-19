@@ -4,6 +4,7 @@ import { Pencil } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+import FichaNoEncontrada from '@/modulos/core/componentes/FichaNoEncontrada.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import SeccionDeConversiones from '../componentes/articulos/SeccionDeConversiones.vue';
 import SeccionDeLotes from '../componentes/articulos/SeccionDeLotes.vue';
@@ -73,4 +74,5 @@ const detalles = computed(() => (registro.value ? detallesDeArticulo(registro.va
     />
   </div>
   <p v-else-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
+  <FichaNoEncontrada v-else titulo="Artículo" :volver="volver" />
 </template>
