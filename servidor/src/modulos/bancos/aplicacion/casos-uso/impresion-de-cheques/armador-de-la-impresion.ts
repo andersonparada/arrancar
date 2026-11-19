@@ -153,6 +153,7 @@ export class ArmadorDeLaImpresion {
       impreso: opciones.impreso,
       cheque: opciones.conCheque ? armado : null,
       comprobante: armarComprobanteDeEgreso({ cheque, empresa, detalle, esReimpresion: opciones.esReimpresion }),
+      zonaDelComprobante: formato.comprobante,
       avisos: [...(opciones.conCheque ? armado.avisos : []), ...(probado ? [] : [AVISO_SIN_PROBAR])],
     };
   }

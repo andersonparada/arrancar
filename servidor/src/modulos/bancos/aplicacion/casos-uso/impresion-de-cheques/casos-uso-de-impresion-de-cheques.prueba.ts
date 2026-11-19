@@ -124,8 +124,17 @@ describe('la vista previa', () => {
     expect(vista.cheques[0]!.cheque?.campos.find((c) => c.clave === 'montoEnLetras')?.texto).toMatch(
       /^MIL CIENTO VEINTE QUETZALES CON 00\/100\*+$/,
     );
+    expect(vista.cheques[0]!.zonaDelComprobante).toBeNull();
     expect(impresiones).toEqual([]);
     expect(entidades.get(cheque.chequeId)!.estaImpreso).toBe(false);
+  });
+
+  it('con un voucher dice dónde va el comprobante dentro de la hoja', async () => {
+    const cheque = agregar(chequeDe(1, { plantillaDeCheque: 'voucher_carta_arriba' }));
+
+    const vista = await casos.vista.ejecutar(operador, [cheque.chequeId]);
+
+    expect(vista.cheques[0]!.zonaDelComprobante).toEqual({ yMm: 100, altoMm: 170 });
   });
 
   it('un cheque ya impreso sale como copia, y los huecos del lote avisan', async () => {
