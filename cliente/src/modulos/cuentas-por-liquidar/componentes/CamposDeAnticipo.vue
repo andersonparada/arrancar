@@ -7,6 +7,7 @@ import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import type { OpcionBuscable } from '@/modulos/core/utilidades/busqueda-de-opciones';
+import { formatearFecha } from '@/modulos/core/utilidades/formato';
 import {
   MAXIMO_DE_LA_DESCRIPCION,
   MAXIMO_DE_REFERENCIA,
@@ -120,7 +121,7 @@ const hoy = fechaDeHoy();
         tipo="date"
         :ayuda="
           fechaLimitePropuesta
-            ? `Si la deja en blanco será el ${fechaLimitePropuesta}.`
+            ? `Si la deja en blanco será el ${formatearFecha(fechaLimitePropuesta)}.`
             : 'Si la deja en blanco se propone según la configuración de la empresa.'
         "
         :error="errores.fechaLimite"

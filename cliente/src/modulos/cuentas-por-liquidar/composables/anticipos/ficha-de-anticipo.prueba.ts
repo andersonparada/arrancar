@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { anticipoDeEjemplo, gastoDeEjemplo, gastoSinDocumentoDeEjemplo } from '../ejemplos.soporte';
 import { resumenDeQuitar } from './cambios-de-la-ficha';
 import {
+  avisosDeLaFicha,
   cifrasDelAnticipo,
   detallesDeLaAnulacion,
   detallesDeLaLiquidacion,
@@ -57,6 +58,15 @@ describe('las cifras', () => {
     expect(explicacionDelSaldo(anticipoDeEjemplo({ porJustificar: '0.00' }))).toContain('ya se puede liquidar');
     expect(explicacionDelSaldo(anticipoDeEjemplo({ porJustificar: '-1.00' }))).toContain('reembolsa');
     expect(explicacionDelSaldo(anticipoDeEjemplo())).toContain('300.00');
+  });
+});
+
+describe('los avisos de la ficha', () => {
+  it('no repiten el aviso de los vencidos que el servidor manda también en la lista', () => {
+    const aviso = 'El anticipo 6 venció el 15/11/2026.';
+    expect(avisosDeLaFicha(anticipoDeEjemplo({ aviso, avisos: [aviso] }))).toEqual([aviso]);
+    expect(avisosDeLaFicha(anticipoDeEjemplo({ aviso, avisos: ['Otro'] }))).toEqual(['Otro', aviso]);
+    expect(avisosDeLaFicha(anticipoDeEjemplo({ aviso: null, avisos: [] }))).toEqual([]);
   });
 });
 
