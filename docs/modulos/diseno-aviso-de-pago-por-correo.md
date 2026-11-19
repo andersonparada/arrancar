@@ -427,6 +427,7 @@ La ruta `POST .../aviso` lleva su límite por usuario (20 por minuto, un manejad
 | Reintentar un fallido | Cambio de estado: `auditarCambioDeEstado` con `accion = 'reabrir'` |
 | Depurar contenido y filas viejas | Política de conservación (como `core.depurar_auditoria`): conteos en el registro de la app; los metadatos viven 60 meses |
 | Guardar o probar el servidor | `core.bitacora_superacceso`, sin contraseña |
+| Cambiar los ajustes del aviso (pantalla «Avisos de pago») | Hecho: `auditoria.registrar` con `recurso = 'cuentas-por-pagar.avisos-de-pago'`, `accion = 'configurar'`, `registroId` = la empresa y `anterior = { antes, despues }` (solo si algo cambió). El asunto y el mensaje no admiten enlaces, dominios ni correos |
 | Marcar o desmarcar «recibe avisos de pago» | Edición normal (`actualizado_por`); no es baja |
 
 `core.auditoria` no se toca ni se borra.

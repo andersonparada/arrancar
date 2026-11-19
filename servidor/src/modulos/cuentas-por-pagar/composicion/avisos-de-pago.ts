@@ -84,6 +84,11 @@ function controladorDeAjustes(unidadDeTrabajo: ReturnType<typeof piezas>['unidad
   const configuracion = new ConfiguracionDelAvisoEnConfiguracion();
   return new AjustesDelAvisoControlador({
     obtener: new ObtenerAjustesDelAviso({ unidadDeTrabajo, configuracion }),
-    guardar: new GuardarAjustesDelAviso(configuracion),
+    guardar: new GuardarAjustesDelAviso({
+      unidadDeTrabajo,
+      auditoria: dependenciasCompartidas().auditoria,
+      configuracion,
+      guardador: configuracion,
+    }),
   });
 }

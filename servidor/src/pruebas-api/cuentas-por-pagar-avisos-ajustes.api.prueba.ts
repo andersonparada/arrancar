@@ -2,6 +2,7 @@
 
 import { beforeAll, describe, expect, it } from 'vitest';
 import { AvisosDePrueba } from './soporte/cuentas-por-pagar-avisos.js';
+import { comoPropietario } from './soporte/consultas-de-propietario.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 
 const entorno = usarEntornoApi();
@@ -40,6 +41,34 @@ describe('ajustes de los avisos de pago', () => {
     expect(marcador.estado).toBe(400);
     expect(envio.estado).toBe(400);
     expect((await a.e.propietario().get(RUTA)).cuerpo.asunto).toBe(ajustes.asunto);
+  });
+
+  it('un texto con enlaces, dominios o correos se rechaza', async () => {
+    for (const mensaje of [
+      'Baje su recibo en http://x.gt',
+      'Entre a www.banco.com',
+      'Escriba a pagos@x.gt',
+      'Vea banco.com',
+    ]) {
+      expect((await a.e.propietario().put(RUTA, { ...ajustes, mensaje })).estado).toBe(400);
+    }
+  });
+
+  it('cada cambio deja en la auditoría los valores de antes y de después, y quien no cambia nada no deja rastro', async () => {
+    const nuevo = { ...ajustes, asunto: 'Nuevo {numero}' };
+    expect((await a.e.propietario().put(RUTA, ajustes)).estado).toBe(200);
+    const sql =
+      "select anterior from core.auditoria where recurso = 'cuentas-por-pagar.avisos-de-pago' and accion = 'configurar' and empresa_id = $1";
+    const { empresaId } = a.e.mundo.escenario.cuenta;
+    const leer = () => comoPropietario<{ anterior: any }>(sql, [empresaId]);
+    const previas = (await leer()).length;
+    expect((await a.e.propietario().put(RUTA, nuevo)).estado).toBe(200);
+    const filas = await leer();
+    expect(filas).toHaveLength(previas + 1);
+    expect(filas.at(-1)!.anterior.antes.asunto).toBe(ajustes.asunto);
+    expect(filas.at(-1)!.anterior.despues.asunto).toBe('Nuevo {numero}');
+    expect((await a.e.propietario().put(RUTA, nuevo)).estado).toBe(200);
+    expect(await leer()).toHaveLength(previas + 1);
   });
 
   it('sin el permiso, ni se ven ni se guardan', async () => {

@@ -3386,3 +3386,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   correo no sale si el usuario no puede usar ningún botón; sin doble punto en «Se anulará el pago … a Eco S.A.»; un aviso
   de éxito retira los errores que siguen a la vista; la ventana de aviso advierte si ya hay uno pendiente y la ficha muestra
   los últimos 3 avisos con «Ver todos». Sin migraciones de base de datos.
+- **2026-11-19** (QA del correo, rastro de los ajustes del aviso): `GuardarAjustesDelAviso` lee los ajustes de antes y, si
+  algo cambia, audita `configurar` (acción nueva de `AccionAuditada`) con `recurso` `cuentas-por-pagar.avisos-de-pago`,
+  `registroId` la empresa y `anterior = { antes, despues }`, dentro de la unidad de trabajo y antes de guardar (la
+  configuración usa su propia conexión, así que no comparte la transacción: si guardar falla, la auditoría se deshace).
+  Por decisión de producto, y en coherencia con C9, el asunto y el mensaje rechazan `http:`, `www.`, `@` y dominios con
+  terminación común (`.com`, `.gt`…); también rige para la configuración genérica de Soporte. Sin migraciones.

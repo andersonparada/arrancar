@@ -20,6 +20,9 @@ export const MENSAJE_DEL_AVISO_POR_OMISION = `Estimado(a) {proveedor}:
 
 {adjunto}Este correo no es un documento tributario.`;
 
+/** Enlaces, dominios y correos: el aviso va con el remitente de la empresa y no lleva enlaces (C9). */
+const ENLACE_O_DOMINIO = /https?:|www\.|@|\b[\w-]+\.(com|net|org|info|gt|io|co|biz|app|me|link)\b/i;
+
 /** Un texto con marcadores: el problema (un marcador que no existe) se ve al guardar, no al enviar. */
 function conMarcadores(maximo: number, permitidos: readonly string[]) {
   return z
@@ -27,6 +30,7 @@ function conMarcadores(maximo: number, permitidos: readonly string[]) {
     .trim()
     .min(1)
     .max(maximo)
+    .refine((texto) => !ENLACE_O_DOMINIO.test(texto), 'No puede llevar enlaces, dominios ni correos.')
     .superRefine((texto, contexto) => {
       const problema = problemaEnLaPlantilla(texto, permitidos);
       if (problema) contexto.addIssue({ code: 'custom', message: problema });
