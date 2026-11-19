@@ -30,6 +30,10 @@ export interface ChequeDto {
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede blanquear (emitido, con movimiento limpio). */
   puedeBlanquear: boolean;
+  /** Lo calcula el servidor: si se puede imprimir por primera vez (ver `accionesDeCheque`). */
+  puedeImprimir: boolean;
+  puedeReimprimir: boolean;
+  puedePasarAOtroFormulario: boolean;
 }
 
 /** Lo que se recibe para emitir un cheque, ya validado en su forma. */
@@ -60,6 +64,8 @@ export type ChequeEmitidoDto = MovimientoDto & { avisos: AvisoDeBancos[] };
  */
 export interface ChequeListadoDto {
   id: string;
+  /** La chequera: un lote de impresión es de una sola. */
+  chequeraId: string;
   numero: number;
   serie: string | null;
   cuentaBancariaId: string;
@@ -86,6 +92,9 @@ export interface ChequeListadoDto {
   moduloDeOrigen: string | null;
   puedeAnular: boolean;
   puedeBlanquear: boolean;
+  puedeImprimir: boolean;
+  puedeReimprimir: boolean;
+  puedePasarAOtroFormulario: boolean;
 }
 
 /** Qué cheques listar: emitidos o anulados de una cuenta, entre dos fechas; lo que falte no filtra. */
