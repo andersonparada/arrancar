@@ -156,6 +156,16 @@ describe('GET /api/tipos-de-cambio', () => {
     ]);
   });
 
+  it('no muestra el motivo ni quién registró el tipo', async () => {
+    const respuesta = await serie('moneda=USD&desde=2026-01-01&hasta=2026-03-31');
+
+    expect(respuesta.cuerpo.length).toBeGreaterThan(0);
+    for (const tipo of respuesta.cuerpo) {
+      expect(tipo).not.toHaveProperty('motivo');
+      expect(tipo).not.toHaveProperty('registradoPor');
+    }
+  });
+
   it('el rango no pasa de 366 días ni va al revés', async () => {
     expect((await serie('moneda=USD&desde=2025-01-01&hasta=2026-03-31')).estado).toBe(400);
     expect((await serie('moneda=USD&desde=2026-01-01&hasta=2026-12-31')).estado).toBe(200);

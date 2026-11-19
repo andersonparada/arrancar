@@ -58,7 +58,10 @@ export const RESTRICCIONES_DE_PRIVILEGIOS: Readonly<Record<string, RestriccionDe
   'core.feriados': { sin: ['update'] },
   'core.departamentos': { sin: ['insert', 'update', 'delete'] },
   'core.municipios': { sin: ['insert', 'update', 'delete'] },
-  'core.monedas': { sin: ['delete'] },
+  'core.monedas': {
+    sin: ['delete'],
+    actualizarSolo: ['activa', 'codigo_banguat', 'letras_singular', 'letras_plural'],
+  },
   'core.monedas_del_banguat': { sin: ['delete'] },
   'core.tipos_de_cambio': { sin: ['update', 'delete'] },
   'core.consultas_al_banguat': { sin: ['update', 'delete'] },

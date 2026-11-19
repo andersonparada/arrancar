@@ -3021,3 +3021,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   core. `CODIGOS_DEL_BANGUAT_EXCLUIDOS` queda vacío hasta la comprobación C-1. **Quedan para MM-3b:** `POST …/cargar`,
   `GET …/consultas`, `POST /api/monedas/banguat/actualizar` y `GET …/muestra`, la carga automática (que debe llamar a
   `tiposDeCambio.invalidar()` al agregar versiones) y el uso de `ClienteBanguat`.
+- **2026-11-18, Multimoneda: correcciones de la revisión de MM-1 y MM-2.** La serie `GET /api/tipos-de-cambio` ya no
+  devuelve `motivo` ni `registradoPor` (solo `versiones` y `POST`, de soporte), con prueba de API. El servicio
+  `TiposDeCambio` guarda lo leído 60 s y no guarda una lectura que empezó antes de `invalidar` (generación). El código del
+  Banguat tiene tope de 32767 (400 en vez de 500). `arrancar_app` solo actualiza `activa`, `codigo_banguat` y las letras
+  de `core.monedas`. Pendiente para R-4: la auditoría de `EditarMoneda` queda en la cuenta de la empresa activa de
+  soporte, y la revisión del código por dos ediciones simultáneas sale como violación genérica de la base.

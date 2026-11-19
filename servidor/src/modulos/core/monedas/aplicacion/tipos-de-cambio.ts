@@ -13,6 +13,8 @@ import type { TipoDeCambioDto, TiposDeCambioGuardados } from './puertos/tipos-de
 const MONEDA_DE_TODOS_LOS_DIAS = 'USD';
 const DIAS_A_REVISAR_PARA_EL_ULTIMO_HABIL = 14;
 const MAXIMO_DE_FILAS_EN_MEMORIA = 500;
+/** Lo leído caduca pronto: así una corrección hecha en otra instancia llega sin reiniciar. */
+const VIDA_DE_LO_LEIDO_EN_MS = 60_000;
 
 /** Lo que el servicio necesita saber del calendario laboral. */
 export interface DiasHabilesParaTipos {
@@ -51,7 +53,9 @@ export interface ConsultaDeTipo {
  * `calendarioLaboral`. Lee con la transacción en curso si la hay.
  */
 export class TiposDeCambio {
-  private readonly leidos = new Map<string, TipoDeCambioDto>();
+  private readonly leidos = new Map<string, { fila: TipoDeCambioDto; vence: number }>();
+  /** Sube con cada `invalidar`: una lectura que empezó antes no se guarda. */
+  private generacion = 0;
 
   constructor(private readonly dependencias: Dependencias) {}
 
@@ -90,21 +94,23 @@ export class TiposDeCambio {
 
   /** Olvida lo leído; se llama al agregar una versión (la carga automática también lo hace). */
   invalidar(): void {
+    this.generacion++;
     this.leidos.clear();
   }
 
   private async vigenteHasta(moneda: string, fecha: string): Promise<TipoDeCambioDto | null> {
     const llave = `${moneda}|${fecha}`;
     const guardado = this.leidos.get(llave);
-    if (guardado) return guardado;
+    if (guardado && guardado.vence > Date.now()) return guardado.fila;
+    const generacion = this.generacion;
     const fila = await this.dependencias.guardados.vigenteHasta(moneda, fecha);
-    if (fila) this.recordar(llave, fila);
+    if (fila && generacion === this.generacion) this.recordar(llave, fila);
     return fila;
   }
 
   private recordar(llave: string, fila: TipoDeCambioDto): void {
     if (this.leidos.size >= MAXIMO_DE_FILAS_EN_MEMORIA) this.leidos.clear();
-    this.leidos.set(llave, fila);
+    this.leidos.set(llave, { fila, vence: Date.now() + VIDA_DE_LO_LEIDO_EN_MS });
   }
 
   /** Fin de semana o asueto con el tipo del último día hábil anterior, en una moneda que no se calcula esos días. */
