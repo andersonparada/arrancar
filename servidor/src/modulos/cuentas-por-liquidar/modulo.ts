@@ -2,6 +2,7 @@ import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { rutasDeAnticiposComponidas } from './composicion/anticipos.js';
 import { rutasDeGastosComponidas } from './composicion/gastos.js';
+import { rutasDeOpcionesComponidas } from './composicion/opciones.js';
 import { rutasDeReportesDeLiquidarComponidas } from './composicion/reportes.js';
 import { configuracionDeCuentasPorLiquidar } from './configuracion.js';
 import { PERMISOS_DE_CUENTAS_POR_LIQUIDAR } from './permisos.js';
@@ -22,6 +23,7 @@ export const moduloCuentasPorLiquidar: DefinicionModulo = {
   rutas: rutasDelModulo([
     rutasDeAnticiposComponidas(),
     rutasDeGastosComponidas(),
+    rutasDeOpcionesComponidas(),
     rutasDeReportesDeLiquidarComponidas(),
     // generador: rutas
   ]),
