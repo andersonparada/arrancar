@@ -3250,3 +3250,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   de avisos gana un enlace opcional (`EnlaceDeAviso`); (7) en Cuentas por pagar el enlace «Imprimir el cheque» lleva a la lista
   de cheques de la cuenta (la respuesta del pago no trae el id del cheque). Pendiente: IC-11 (QA en Chrome, Edge y Firefox, con
   papel real).
+- **2026-11-18 — IC-9, correcciones de la revisión (pasar a otro formulario y extraviado):** (1) el destino de «Pasar a otro
+  formulario» ya incluye los cheques disponibles de todas las chequeras activas de la misma cuenta bancaria (antes solo la del
+  cheque, y el último papel de una chequera no tenía destino); el servidor sigue validando; (2) el servidor agrega
+  `puedeDeclararExtraviado` (emitido en Arrancar e impreso, aunque su mes esté conciliado) aparte de `puedePasarAOtroFormulario`
+  (que sigue exigiendo el movimiento limpio); la ventana se abre solo con la opción de extraviado cuando no se puede pasar, y el
+  botón de la tarjeta dice «Papel extraviado». Sin migraciones.

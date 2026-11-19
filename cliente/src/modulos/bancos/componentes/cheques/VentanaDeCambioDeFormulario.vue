@@ -27,7 +27,7 @@ const caja = 'size-5 shrink-0 accent-campo-700';
     <form id="form-cambio-de-formulario" class="space-y-4" @submit.prevent="emit('confirmar')">
       <fieldset class="space-y-2">
         <legend class="text-sm font-medium">¿Dónde está el formulario?</legend>
-        <label class="flex items-start gap-3 text-sm">
+        <label v-if="edicion.puedePasar" class="flex items-start gap-3 text-sm">
           <input v-model="edicion.destino" type="radio" value="inutilizar" :class="caja" />
           <span>Sigue en la empresa (se arruinó o salió mal): el pago pasa a otro formulario.</span>
         </label>
@@ -46,8 +46,8 @@ const caja = 'size-5 shrink-0 accent-campo-700';
           :error="errores.chequeDestinoId"
         />
         <p v-if="!opciones.length" class="text-sm text-red-700 dark:text-red-300" role="alert">
-          La chequera no tiene cheques disponibles. Si el papel no se puede reponer, anúlelo como extraviado o registre
-          otra chequera.
+          La cuenta no tiene cheques disponibles en una chequera activa. Registre una chequera nueva en la cuenta o, si
+          el papel ya no está en la empresa, anúlelo como extraviado.
         </p>
         <label class="flex items-start gap-3 text-sm">
           <input v-model="edicion.enCustodia" type="checkbox" :class="caja" />
@@ -61,15 +61,20 @@ const caja = 'size-5 shrink-0 accent-campo-700';
           <span>Lo crucé con ANULADO, recorté la zona de firma y lo archivo con el comprobante de egreso.</span>
         </label>
       </template>
-      <CampoTexto
-        v-else
-        v-model="edicion.fecha"
-        etiqueta="Fecha"
-        tipo="date"
-        requerido
-        ayuda="Fecha del movimiento inverso: solo cuenta si el mes del cheque ya está conciliado."
-        :error="errores.fecha"
-      />
+      <template v-else>
+        <p v-if="!edicion.puedePasar" class="text-sm text-tierra-700 dark:text-tierra-300">
+          Este cheque ya no admite pasar su pago a otro formulario (su movimiento ya pasó por el banco), pero sí se
+          puede declarar extraviado.
+        </p>
+        <CampoTexto
+          v-model="edicion.fecha"
+          etiqueta="Fecha"
+          tipo="date"
+          requerido
+          ayuda="Fecha del movimiento inverso: solo cuenta si el mes del cheque ya está conciliado."
+          :error="errores.fecha"
+        />
+      </template>
 
       <p class="rounded-lg bg-trigo-300/30 p-3 text-sm text-tierra-900 dark:bg-trigo-500/10 dark:text-trigo-300">
         {{ resumenDelCambio(edicion) }}

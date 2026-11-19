@@ -68,6 +68,7 @@ const titulo = () => tituloDeChequeListado(props.registro);
         :puede-imprimir="registro.puedeImprimir"
         :puede-reimprimir="registro.puedeReimprimir"
         :puede-pasar-a-otro-formulario="registro.puedePasarAOtroFormulario"
+        :puede-declarar-extraviado="registro.puedeDeclararExtraviado"
         :impreso="registro.impresoEn !== null"
         @imprimir="emit('imprimir')"
         @reimprimir="emit('reimprimir')"

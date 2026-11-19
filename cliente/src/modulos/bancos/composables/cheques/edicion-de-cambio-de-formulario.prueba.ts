@@ -4,6 +4,7 @@ import {
   cambioNuevo,
   datosDeCambio,
   datosDeExtravio,
+  opcionesDeDestino,
   resumenDelCambio,
   sePuedeConfirmar,
   textoDeConfirmar,
@@ -86,5 +87,33 @@ describe('resumenDelCambio', () => {
     const texto = resumenDelCambio({ titulo: 'cheque 7', destino: 'extraviado' });
     expect(texto).toMatch(/también su pago/);
     expect(texto).toMatch(/avise al banco por escrito/);
+  });
+});
+
+describe('cuando el pago no puede pasar a otro formulario', () => {
+  it('abre directo en extraviado y puede confirmar con solo el motivo', () => {
+    const edicion = { ...cambioNuevo({ id: 'c1', chequeraId: 'q1' }, 'cheque 7', false), motivo: 'Lo perdió' };
+
+    expect(edicion).toMatchObject({ puedePasar: false, destino: 'extraviado' });
+    expect(sePuedeConfirmar(edicion)).toBe(true);
+  });
+});
+
+describe('destinos de otras chequeras de la cuenta', () => {
+  it('junta las chequeras y ordena por serie y número', () => {
+    const opciones = opcionesDeDestino([
+      { serie: 'B', cheques: [{ id: 'b2', numero: 2 }] },
+      { serie: null, cheques: [{ id: 'n9', numero: 9 }] },
+      {
+        serie: 'A',
+        cheques: [
+          { id: 'a10', numero: 10 },
+          { id: 'a3', numero: 3 },
+        ],
+      },
+    ]);
+
+    expect(opciones.map((o) => o.texto)).toEqual(['Cheque No. 9', 'Cheque No. A3', 'Cheque No. A10', 'Cheque No. B2']);
+    expect(opciones[0]?.valor).toBe('n9');
   });
 });

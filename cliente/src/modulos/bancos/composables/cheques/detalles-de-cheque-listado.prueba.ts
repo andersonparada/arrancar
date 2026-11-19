@@ -31,6 +31,7 @@ const base: ChequeListado = {
   puedeImprimir: true,
   puedeReimprimir: false,
   puedePasarAOtroFormulario: false,
+  puedeDeclararExtraviado: false,
 };
 
 describe('título del cheque listado', () => {

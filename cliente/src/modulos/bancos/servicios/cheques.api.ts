@@ -36,8 +36,10 @@ export interface Cheque {
   puedeImprimir: boolean;
   /** Lo calcula el servidor: si ya se imprimió y se puede reimprimir. */
   puedeReimprimir: boolean;
-  /** Lo calcula el servidor: si se puede pasar su pago a otro formulario o anular como extraviado. */
+  /** Lo calcula el servidor: si se puede pasar su pago a otro formulario (impreso, con el movimiento limpio). */
   puedePasarAOtroFormulario: boolean;
+  /** Lo calcula el servidor: si se puede anular como extraviado (impreso, aunque su mes ya esté conciliado). */
+  puedeDeclararExtraviado: boolean;
 }
 
 export interface DatosDeEmisionDeCheque {
@@ -82,8 +84,10 @@ export interface ChequeListado {
   puedeImprimir: boolean;
   /** Lo calcula el servidor: si ya se imprimió y se puede reimprimir. */
   puedeReimprimir: boolean;
-  /** Lo calcula el servidor: si se puede pasar su pago a otro formulario o anular como extraviado. */
+  /** Lo calcula el servidor: si se puede pasar su pago a otro formulario (impreso, con el movimiento limpio). */
   puedePasarAOtroFormulario: boolean;
+  /** Lo calcula el servidor: si se puede anular como extraviado (impreso, aunque su mes ya esté conciliado). */
+  puedeDeclararExtraviado: boolean;
 }
 
 export interface FiltroDeChequesDeLaEmpresa {

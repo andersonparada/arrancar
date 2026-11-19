@@ -119,6 +119,7 @@ describe('la primera impresión', () => {
       puedeImprimir: false,
       puedeReimprimir: true,
       puedePasarAOtroFormulario: true,
+      puedeDeclararExtraviado: true,
     });
     expect(cheque.impresoEn).not.toBeNull();
     const blanqueo = await e.propietario.post(`/api/bancos/cheques/${chequeId}/blanquear`, { motivo: 'Error' });

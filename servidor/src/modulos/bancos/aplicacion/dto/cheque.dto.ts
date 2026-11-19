@@ -34,6 +34,7 @@ export interface ChequeDto {
   puedeImprimir: boolean;
   puedeReimprimir: boolean;
   puedePasarAOtroFormulario: boolean;
+  puedeDeclararExtraviado: boolean;
 }
 
 /** Lo que se recibe para emitir un cheque, ya validado en su forma. */
@@ -95,6 +96,7 @@ export interface ChequeListadoDto {
   puedeImprimir: boolean;
   puedeReimprimir: boolean;
   puedePasarAOtroFormulario: boolean;
+  puedeDeclararExtraviado: boolean;
 }
 
 /** Qué cheques listar: emitidos o anulados de una cuenta, entre dos fechas; lo que falte no filtra. */

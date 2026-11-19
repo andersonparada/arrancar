@@ -122,7 +122,12 @@ describe('accionesDeTransferencia', () => {
 });
 
 describe('accionesDeCheque', () => {
-  const sinImpresion = { puedeImprimir: false, puedeReimprimir: false, puedePasarAOtroFormulario: false };
+  const sinImpresion = {
+    puedeImprimir: false,
+    puedeReimprimir: false,
+    puedePasarAOtroFormulario: false,
+    puedeDeclararExtraviado: false,
+  };
 
   it('disponible: se anula, no se blanquea (no tiene movimiento)', () => {
     expect(accionesDeCheque('disponible', null)).toEqual({
@@ -139,6 +144,7 @@ describe('accionesDeCheque', () => {
       puedeImprimir: true,
       puedeReimprimir: false,
       puedePasarAOtroFormulario: false,
+      puedeDeclararExtraviado: false,
     });
   });
 
@@ -164,15 +170,17 @@ describe('accionesDeCheque', () => {
       puedeImprimir: false,
       puedeReimprimir: true,
       puedePasarAOtroFormulario: true,
+      puedeDeclararExtraviado: true,
     });
   });
 
-  it('impreso con su mes conciliado: se reimprime, pero no pasa a otro formulario', () => {
+  it('impreso con su mes conciliado: se reimprime y se declara extraviado, pero no pasa a otro formulario', () => {
     const conciliado = limpia({ tipo: 'cheque', mesConciliado: true });
 
     expect(accionesDeCheque('emitido', conciliado, true)).toMatchObject({
       puedeReimprimir: true,
       puedePasarAOtroFormulario: false,
+      puedeDeclararExtraviado: true,
     });
   });
 
@@ -183,6 +191,7 @@ describe('accionesDeCheque', () => {
     expect(accionesDeCheque('emitido', deApertura, true)).toMatchObject({
       puedeReimprimir: false,
       puedePasarAOtroFormulario: false,
+      puedeDeclararExtraviado: false,
     });
   });
 });

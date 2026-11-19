@@ -3,12 +3,13 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 
 /**
  * Los botones de impresión de un cheque: solo aparecen los que el servidor dice que se pueden y a quien tiene el
- * permiso. «Imprimir» lleva a la vista previa; «Reimprimir» y «Pasar a otro formulario» abren su ventana.
+ * permiso. «Imprimir» lleva a la vista previa; «Reimprimir» y «Pasar a otro formulario» (o «Papel extraviado», si solo se puede declarar así) abren su ventana.
  */
 defineProps<{
   puedeImprimir: boolean;
   puedeReimprimir: boolean;
   puedePasarAOtroFormulario: boolean;
+  puedeDeclararExtraviado: boolean;
   impreso: boolean;
 }>();
 const emit = defineEmits<{ imprimir: []; reimprimir: []; pasar: []; historial: [] }>();
@@ -37,12 +38,12 @@ const emit = defineEmits<{ imprimir: []; reimprimir: []; pasar: []; historial: [
     Impresiones
   </BotonBase>
   <BotonBase
-    v-if="puedePasarAOtroFormulario"
+    v-if="puedePasarAOtroFormulario || puedeDeclararExtraviado"
     v-permiso="'bancos.cheques.anular'"
     variante="fantasma"
     pequeno
     @click="emit('pasar')"
   >
-    Pasar a otro formulario
+    {{ puedePasarAOtroFormulario ? 'Pasar a otro formulario' : 'Papel extraviado' }}
   </BotonBase>
 </template>
