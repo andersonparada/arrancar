@@ -1,6 +1,6 @@
 # Módulo `cuentas-por-liquidar` — se muestra como **Cuentas por liquidar**
 
-Estado: **en programación** (CL-1, datos, hecho el 2026-11-18). El diseño aprobado es
+Estado: **en programación** (CL-1, datos, y CL-2, anticipos del servidor, hechos el 2026-11-18). El diseño aprobado es
 `diseno-caja-chica-y-cuentas-por-liquidar.md` (con el dictamen `dictamen-caja-chica-2026-11-18.md` y las respuestas del
 usuario al final del diseño); lo que sigue de este documento resume lo ya programado.
 
@@ -33,8 +33,24 @@ gasto y la localidad, de la misma empresa.
 `cuentas-por-liquidar.anticipos.{ver, crear, anular, liquidar, con-vencidos}`,
 `cuentas-por-liquidar.gastos.{crear, anular, con-retencion}` y `cuentas-por-liquidar.reportes.{ver, exportar}`.
 
+## Anticipos (CL-2, servidor)
+
+- `POST /api/cuentas-por-liquidar/anticipos` (`anticipos.crear`): beneficiario (tercero de la cuenta, activo), `esEmpleado`,
+  usuario y localidad opcionales, clase, descripción, monto, fecha (no futura), fecha límite (por omisión la entrega más
+  `cuentas-por-liquidar.anticipos.dias_para_liquidar`, 15) y forma: cheque (a nombre del beneficiario, no negociable por
+  omisión, nunca al portador) o nota de débito. Ordena a Bancos con el anticipo como origen y el concepto «Anticipos por
+  liquidar». Responde con los avisos de Bancos, el de vencidos y el C8 (no empleado: facturas a nombre y NIT de la empresa).
+- **Vencidos:** aviso; con `cuentas-por-liquidar.anticipos.bloquear_con_vencidos` se rechaza (`BeneficiarioConVencidos`)
+  salvo con `anticipos.con-vencidos` y un motivo (queda en el anticipo).
+- `POST …/anticipos/:id/anular` (`anticipos.anular`): abierto, sin gastos vigentes y con el cheque sin cobrar; audita `anular`.
+  Lo mismo ocurre si se anula el cheque desde Bancos (aviso `bancos.movimiento_por_cambiar`); otros cambios en Bancos se
+  rechazan (`MovimientoDeCuentasPorLiquidar`).
+- `GET …/anticipos` (`estado`, `corte`, `beneficiarioId`, `vencidos`, paginación) con lo que falta por justificar y la
+  antigüedad (al corte o a hoy) y `GET …/anticipos/:id`.
+- Eventos: `cuentas-por-liquidar.anticipo_entregado` y `cuentas-por-liquidar.anticipo_anulado`.
+
 ## Pendiente (pasos siguientes del diseño §14)
 
-La configuración (§9.5), los casos de uso, la API y las pantallas (CL-2 en adelante) y los conceptos de sistema de Bancos
-(CCL-B1); la pregunta `libro-de-compras.pagado_al_proveedor_en_el_mes` (CCL-M, CCL-BZ) y la referencia de destino del
+Los gastos (CL-3), liquidar (CL-4), las pantallas (CL-5) y los reportes (CL-6); queda la configuración de gastos sin
+documento (CL-3); la pregunta `libro-de-compras.pagado_al_proveedor_en_el_mes` (CCL-M, CCL-BZ) y la referencia de destino del
 libro (CCL-L1).
