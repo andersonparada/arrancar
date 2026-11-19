@@ -48,6 +48,10 @@ export class CierresEnMemoria implements Cierres, RepositorioCierres, ConsultasD
     return this.cuotas.some((cuota) => cuota.activoId === activoId && cuota.vigente);
   }
 
+  async usaronTramosDeLaMejora(): Promise<boolean> {
+    return false;
+  }
+
   async bloquear(modo: 'compartido' | 'exclusivo'): Promise<void> {
     this.candados.push(modo);
   }
