@@ -3204,3 +3204,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ahora pasa los módulos activos (como crear). Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
   posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
   cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.
+- **2026-11-18 (CC-2, Caja chica, fondos, servidor)**: abrir (`POST /api/caja-chica/fondos`, `fondos.crear`) con cheque no
+  negociable (nunca al portador) o nota de débito, con el fondo como origen y el concepto `fondo_de_caja_chica`, y el
+  primer custodio (texto o usuario activo de la empresa, que recibe el acceso por el disparador); ficha y lista (`fondos.ver`,
+  solo los asignados, con monto, efectivo esperado, pendiente, vales, último arqueo); editar (`PATCH`, auditoría `corregir`
+  solo si cambia el tope); cambiar de custodio (cierra el tramo, abre otro con motivo, `corregir`; el anterior conserva su
+  acceso); aumentar (cheque o nota) y disminuir (nota de crédito `devolucion_de_fondo_de_caja_chica`, contra el efectivo
+  esperado y sin dejar el fondo en cero, `ajustar`); anular la apertura de un fondo sin uso (`fondos.cerrar`, orden
+  `anular_movimiento_de_origen`, deja el cambio anulado y **cierra el fondo con el motivo**, `anular`). Ventana de asignación
+  `/api/caja-chica/accesos-a-fondos` (`fondos.asignar`, operador «para asignar», `asignar`/`quitar` auditados). Manejador del
+  aviso `bancos.movimiento_por_cambiar`: anular la apertura o un aumento desde Bancos se rechaza si el fondo se usó (o tiene
+  más cambios) y, si no, anula el cambio (y cierra el fondo si era la apertura); la disminución y todo lo que no sea anular se
+  rechazan (`movimiento_de_caja_chica`); un movimiento que dice ser de Caja chica y que el usuario de Bancos no ve (fondo no
+  asignado, RLS) también se rechaza, para no dejar un cambio sin respaldo. Eventos nuevos `caja-chica.fondo_abierto`,
+  `monto_del_fondo_cambiado`, `cambio_de_monto_anulado` y `custodio_cambiado` (`core/contratos/caja-chica.contratos.ts`).
+  Sin migración. Decisiones: anular la apertura no agrega un estado de fondo (queda `cerrado` y la ficha trae
+  `aperturaAnulada`); el cambio de custodio no ofrece aún el arqueo de entrega (CC-5); un nombre de fondo anulado sigue
+  ocupando el nombre (índice único no parcial de CC-1).
