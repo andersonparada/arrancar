@@ -1115,7 +1115,7 @@ siguiente al programar.
 
 | Paso | Qué | Quién | Depende de | Espera del usuario |
 |---|---|---|---|---|
-| **VC-0a** | Terceros, migración `0010_clientes_para_ventas`: único `clientes_id_cuenta_unico (id, cuenta_id)`, aviso `terceros.cliente_guardado` con secciones, orden `terceros.crear_cliente_desde_dte` (§4.1); pruebas de la llave entre cuentas, del aviso y de la orden (CF no crea nada) | backend | — | — |
+| **VC-0a** (hecho 2026-11-19) | Terceros, migración `0010_clientes_para_ventas`: único `clientes_id_cuenta_unico (id, cuenta_id)`, aviso `terceros.cliente_guardado` con secciones, orden `terceros.crear_cliente_desde_dte` (§4.1); pruebas de la llave entre cuentas, del aviso y de la orden (CF no crea nada) | backend | — | — |
 | VC-0a-c | Secciones aportadas en el formulario y la ficha de Clientes | frontend | VC-0a | — |
 | **VC-0b** | Bancos, migración `0039_cobros_a_clientes`: conceptos de sistema de cobro (como la `0037`), mapa de nota marcada por módulo (`marcadaParaModulo`), conceptos reservados de `cuentas-por-cobrar`, `RevisorDeCambios` con el mapa (§4.2); pruebas | backend | — (CCL-B1 ya está en `main`) | — |
 | VC-0b-c | `marcadaParaModulo` en las pantallas de Bancos (etiqueta «Para Cuentas por cobrar») | frontend | VC-0b | — |
