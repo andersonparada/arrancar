@@ -55,7 +55,8 @@ en una bodega) ni la contabilidad.
 | `inventarios.unidades.*`, `.categorias.*`, `.articulos.*` | `ver`, `crear`, `editar` (inactivar y reactivar), `eliminar`, `importar` y `exportar` |
 
 Las conversiones y los lotes cuelgan del artículo: se leen con `articulos.ver` y se cambian con `articulos.editar`.
-El código propuesto pide `articulos.crear`.
+El código propuesto pide `articulos.crear`. `GET /inventarios/articulos/conceptos-de-gasto` ofrece al formulario los conceptos del
+Libro de compras con `articulos.ver`, para que quien registra artículos no necesite ver el libro.
 
 ## Configuración
 

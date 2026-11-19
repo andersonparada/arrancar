@@ -161,4 +161,19 @@ describe('permisos de artículos', () => {
     expect((await lector.get(`${RUTA}/exportar`)).estado).toBe(403);
     expect((await lector.get(`${RUTA}/plantilla`)).estado).toBe(403);
   });
+
+  it('quien solo ve artículos recibe los conceptos de gasto para elegir, sin necesitar el Libro de compras', async () => {
+    const lector = await crearUsuarioConPermisos(entorno, cuenta, {
+      nombres: 'Conceptista',
+      apellidos: 'Conceptos',
+      permisos: ['inventarios.articulos.ver'],
+    });
+
+    const conceptos = await lector.get(`${RUTA}/conceptos-de-gasto`);
+    const ajenos = await otraCuenta.propietario.get(`${RUTA}/conceptos-de-gasto`);
+
+    expect(conceptos.cuerpo).toEqual([{ id: referencias.conceptoDeGastoId, nombre: 'Alimento para animales' }]);
+    expect(ajenos.cuerpo).toHaveLength(1);
+    expect(ajenos.cuerpo[0].id).not.toBe(referencias.conceptoDeGastoId);
+  });
 });

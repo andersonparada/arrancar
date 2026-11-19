@@ -15,6 +15,7 @@ import { ActualizarArticulo } from '../aplicacion/casos-uso/articulos/actualizar
 import { CrearLoteDeArticulo } from '../aplicacion/casos-uso/articulos/crear-lote-de-articulo.js';
 import { EliminarArticulo } from '../aplicacion/casos-uso/articulos/eliminar-articulo.js';
 import { ListarConversionesDeArticulo } from '../aplicacion/casos-uso/articulos/listar-conversiones-de-articulo.js';
+import { ListarConceptosParaArticulos } from '../aplicacion/casos-uso/articulos/listar-conceptos-para-articulos.js';
 import { ListarLotesDeArticulo } from '../aplicacion/casos-uso/articulos/listar-lotes-de-articulo.js';
 import { ProponerCodigoDeArticulo } from '../aplicacion/casos-uso/articulos/proponer-codigo-de-articulo.js';
 import { ReemplazarConversionesDeArticulo } from '../aplicacion/casos-uso/articulos/reemplazar-conversiones-de-articulo.js';
@@ -47,6 +48,10 @@ const casosDeUso = (dependencias: Dependencias) => ({
   actualizar: new ActualizarArticulo(dependencias),
   eliminar: new EliminarArticulo(dependencias),
   proponerCodigo: new ProponerCodigoDeArticulo(dependencias),
+  listarConceptos: new ListarConceptosParaArticulos({
+    ...dependencias,
+    conceptos: new ConceptosParaArticulosDrizzle(),
+  }),
   listarConversiones: new ListarConversionesDeArticulo(dependencias),
   reemplazarConversiones: new ReemplazarConversionesDeArticulo(dependencias),
   listarLotes: new ListarLotesDeArticulo(dependencias),

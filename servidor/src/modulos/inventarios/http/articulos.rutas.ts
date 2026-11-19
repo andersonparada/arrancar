@@ -72,6 +72,11 @@ export function rutasArticulos(
       preHandler: crear,
       handler: controlador.proponerCodigo,
     });
+    app.get(`${RUTA}/conceptos-de-gasto`, {
+      schema: { tags: etiquetas },
+      preHandler: ver,
+      handler: controlador.listarConceptos,
+    });
     app.get(`${RUTA}/:articuloId`, { schema: conId, preHandler: ver, handler: controlador.obtener });
     rutasDeEscritura(app, controlador);
     rutasDeConversionesYLotes(app, controlador);

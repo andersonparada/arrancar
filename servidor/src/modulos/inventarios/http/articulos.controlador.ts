@@ -5,6 +5,7 @@ import type { CrearArticulo } from '../aplicacion/casos-uso/articulos/crear-arti
 import type { CrearLoteDeArticulo } from '../aplicacion/casos-uso/articulos/crear-lote-de-articulo.js';
 import type { EliminarArticulo } from '../aplicacion/casos-uso/articulos/eliminar-articulo.js';
 import type { ListarArticulos } from '../aplicacion/casos-uso/articulos/listar-articulos.js';
+import type { ListarConceptosParaArticulos } from '../aplicacion/casos-uso/articulos/listar-conceptos-para-articulos.js';
 import type { ListarConversionesDeArticulo } from '../aplicacion/casos-uso/articulos/listar-conversiones-de-articulo.js';
 import type { ListarLotesDeArticulo } from '../aplicacion/casos-uso/articulos/listar-lotes-de-articulo.js';
 import type { ObtenerArticulo } from '../aplicacion/casos-uso/articulos/obtener-articulo.js';
@@ -24,6 +25,7 @@ export interface CasosDeUsoDeArticulos {
   actualizar: ActualizarArticulo;
   eliminar: EliminarArticulo;
   proponerCodigo: ProponerCodigoDeArticulo;
+  listarConceptos: ListarConceptosParaArticulos;
   listarConversiones: ListarConversionesDeArticulo;
   reemplazarConversiones: ReemplazarConversionesDeArticulo;
   listarLotes: ListarLotesDeArticulo;
@@ -40,6 +42,8 @@ export class ArticulosControlador {
     this.casosDeUso.obtener.ejecutar(operadorDe(solicitud), solicitud.params.articuloId);
 
   proponerCodigo = (solicitud: FastifyRequest) => this.casosDeUso.proponerCodigo.ejecutar(operadorDe(solicitud));
+
+  listarConceptos = (solicitud: FastifyRequest) => this.casosDeUso.listarConceptos.ejecutar(operadorDe(solicitud));
 
   crear = async (solicitud: FastifyRequest<{ Body: ArticuloSolicitado }>, respuesta: FastifyReply) => {
     const articulo = await this.casosDeUso.crear.ejecutar(operadorDe(solicitud), solicitud.body);
