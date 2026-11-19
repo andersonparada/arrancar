@@ -13,3 +13,16 @@ export function textoDeCentavos(centavos: number): string {
 /** Suma montos escritos; los que no son un importe válido cuentan como cero. */
 export const sumarMontos = (montos: readonly string[]): string =>
   textoDeCentavos(montos.reduce((suma, monto) => suma + (centavosDe(monto) ?? 0), 0));
+
+/** Pasa un monto con posible signo («-50.25») a centavos enteros; `null` si no es un importe válido. */
+export function centavosConSigno(monto: string): number | null {
+  const texto = monto.trim();
+  const negativo = texto.startsWith('-');
+  const centavos = centavosDe(negativo ? texto.slice(1) : texto);
+  if (centavos === null) return null;
+  return negativo ? -centavos : centavos;
+}
+
+/** Centavos enteros, con signo si es negativo, como texto con dos decimales. */
+export const textoConSigno = (centavos: number): string =>
+  `${centavos < 0 ? '-' : ''}${textoDeCentavos(Math.abs(centavos))}`;

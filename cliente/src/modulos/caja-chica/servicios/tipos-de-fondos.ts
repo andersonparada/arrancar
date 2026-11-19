@@ -114,3 +114,11 @@ export interface AnulacionDeAperturaSolicitada {
   motivo: string;
   fecha?: string;
 }
+
+/** Cerrar: el motivo y, si queda efectivo, la cuenta del depósito (por omisión la del fondo) y su referencia. */
+export interface CierreSolicitado {
+  motivo: string;
+  fecha?: string;
+  cuentaBancariaId?: string | null;
+  referencia?: string | null;
+}
