@@ -3065,3 +3065,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (`elegirDestinoDelCosto`, `elegirDestinoDelCostoDelConcepto`); marcar inventario fija el tipo en «Bien». No hay Excel de líneas del
   libro, así que no se agregó esa columna.
 - **2026-11-18 — Correcciones de la QA de CP4-12 (Cuentas por pagar).** Errores medios del informe `informe-qa-cp4-12-2026-11-18.md`: (1) un cheque posfechado anulado ya no cuenta como comprometido en R1, R2 ni en cheques posfechados al corte de hoy: `pagoCuentaAlCorte` (`saldos-al-corte.sql.ts`) usa `fecha_de_anulacion` y, mientras esa fecha (la del cheque) sea posterior al corte, el día real de la anulación (`anulado_en`), así un corte pasado conserva su cifra; (2) la hoja de la contraseña muestra Pagado, Comprometido y Saldo, la lista «Cheque N al dd/mm/aaaa» (en vez de «Pago N: cheque al…») y el disponible; el comprobante agrega Comprometido y Disponible por documento cuando hay posfechados; (3) `pagos` y el reparto en efectivo topan `referencia` (100) y `observaciones` (500) en el esquema Zod: 400 por campo y no 500. Bajo 4: los cinco nombres de estado de pago son los mismos, en masculino, en la lista, la ficha, la contraseña y R2. Siguen abiertos 5 (origen en cheques caducos, `it.fails`), 6, 7, 8 y 9.
+- **2026-11-18 (AFI-0, docs del arquitecto).** La integración aprobada quedó en los dos diseños. `diseno-activos-fijos.md`
+  (marcado AFI): `activos.en_bodega` y `alta_conjunta_id`, `traslados.a_bodega`, tablas `divisiones` y `boletas_firmadas`,
+  división en `costos` y `tramos`, `acumuladaAl`, capitalizar en N unidades con el sobrante en el último, «Disponible para
+  uso» por lote, traslado y baja con cantidad parcial (**AF-P10 cambia**: división automática), cantidad esperada y
+  encontrada en el inventario físico, tres reportes (existencias de bienes de uso, en bodega, responsiva), dos variables
+  de empresa y la orden `activos-fijos.obtener_umbral_de_capitalizacion`; pasos AFI-1 a AFI-9 encajados en AF-n.
+  **AF-P22 = b**: Empresas da `empresas.nombres_de_localidades` y `empresas.nombres_de_departamentos` (`security definer`,
+  solo id, código, nombre y activo de la empresa de la transacción; §6.13), **para revisión de `seguridad`** antes del
+  paso AF-P22 (antes de AF-2c). `diseno-inventarios.md`: validación del contador aplicada — V-2 factor exacto
+  `Π(1 − q/C)` y recálculo de los repartos; V-1 rige el 1 de enero del año siguiente a la autorización, con recálculo si
+  se registra tarde y meses abiertos; V-3 débito solo en `general`; V-4 correspondencia tipo → clase de la SAT y
+  «tránsito» = compras sin recibir; V-5 sobrante a la última entrada con costo real; V-6 `error_de_registro` referido a
+  la salida que corrige; V-8 (P-2 a) descartar quita la marca en el libro con la orden
+  `libro-de-compras.cambiar_marca_de_inventario`; V-10 donación con su valor razonable en el evento; kardex por bodega con
+  su propio saldo; traslados neutros para el costeo y devolución con PEPS sobre su capa. Abiertas: P-1, P-3, INV-P14 e
+  INV-A16 (usuario) y VC-1 a VC-4 (contador).
