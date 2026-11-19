@@ -249,8 +249,11 @@ describe('saldos por cuenta con conciliaciones, cuenta atrasada y pares compensa
     }>;
 
     const marcadas = filas.filter((f) => f.conciliacionId === conciliacionId);
-    // Las cuatro partidas de la apertura y el posfechado, que se cobró antes de su fecha (candidato, §2.6).
-    expect(marcadas).toHaveLength(5);
+    // Solo las cuatro partidas de la apertura: el saldo del banco nunca es candidato (§6.4) y el posfechado
+    // (10 de febrero) no entra a enero porque aun no se cobra.
+    expect(marcadas).toHaveLength(4);
+    const saldoDelBanco = filas.find((f) => f.parteDeApertura === 'saldo_del_banco');
+    expect(saldoDelBanco).toMatchObject({ conciliacionId: null, conciliadoEn: null });
     expect(marcadas.every((f) => f.conciliadoEn?.anio === 2026 && f.conciliadoEn.mes === 1)).toBe(true);
     const sinMarca = filas.filter((f) => f.conciliacionId === null);
     expect(sinMarca.length).toBeGreaterThan(0);
