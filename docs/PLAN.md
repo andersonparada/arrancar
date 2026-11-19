@@ -3601,6 +3601,22 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   cliente (CL-5) con la ficha y `GET /anticipos/:id/gastos`, no hay endpoint de impresión; un gasto cuyo documento fue
   anulado ya salió del anticipo por el aviso del libro, así que no se marca; `LiquidacionNoCuadra` es 400 como en el retiro.
 
+- **2026-11-19 (CL-6, Cuentas por liquidar, reportes, servidor y cliente):** CL-R1 y CL-R2, sin migraciones. Rutas
+  `GET /cuentas-por-liquidar/reportes/anticipos-por-liquidar` (`corte?`, `beneficiarioId?`, `soloVencidos?`) y
+  `/no-liquidado` (`desde?`, `hasta?`, `destino?`), cada una con su `…/exportar` (Excel): se ven con
+  `cuentas-por-liquidar.reportes.ver` y se exportan con `.exportar`, permisos que ya estaban declarados. CL-R1 usa la misma
+  lectura que la lista de anticipos con corte, agrupa por beneficiario (por nombre), da lo por justificar al corte, los días
+  desde la entrega y de vencido, cinco tramos de antigüedad (dentro del plazo, 1–30, 31–60, 61–90, más de 90 días vencido) y
+  lo por justificar de lo vencido. CL-R2 lista los anticipos liquidados con algo no liquidado por su fecha de liquidación (por
+  omisión el mes de hoy hasta hoy; un anticipo reabierto deja de contar), siempre los tres destinos (o el pedido) con
+  subtotal y total, y para «cobrar» el valor de la cuota (redondeado hacia abajo; la última lleva lo que sobre). Período
+  invertido: 400 `periodo_invertido`. Cliente: las dos pantallas (filtros, totales, impresión y Excel) en la sección Reportes
+  del menú de Cuentas por liquidar. Decisiones: el corte de CL-R1 no pasa por la fecha de inicio de la carga inicial (Cuentas
+  por liquidar no tiene saldos iniciales todavía); el filtro por beneficiario solo está en la API (el cliente no lo ofrece
+  hasta que exista el selector de terceros de CL-5); las piezas genéricas de reportes del cliente (petición, exportación,
+  encabezado de impresión, totales) se copiaron en el módulo porque los módulos del cliente no se importan entre sí
+  (pendiente: subirlas a `core`).
+
 - **2026-11-18** (correcciones de la QA del aviso de pago por correo, informe `docs/modulos/informe-qa-correo-2026-11-18.md`):
   (E1) como `configuracion.ver/gestionar` son `soloSuperacceso`, ningún usuario de la empresa podía pasar el envío a
   automático ni cambiar los textos: Cuentas por pagar tiene su pantalla «Avisos de pago» (`GET`/`PUT
