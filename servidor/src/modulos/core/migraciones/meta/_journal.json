@@ -232,6 +232,13 @@
       "when": 1795064210651,
       "tag": "0032_cupos_por_destinatarios",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795090179158,
+      "tag": "0034_rls_de_lectura_de_empresas",
+      "breakpoints": true
     }
   ]
 }

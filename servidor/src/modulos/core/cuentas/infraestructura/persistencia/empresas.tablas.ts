@@ -31,7 +31,10 @@ export const empresas = esquemaCore.table(
     ...marcasDeTiempo,
     ...autoria,
   },
-  (t) => [index('empresas_cuenta_idx').on(t.cuentaId), ...politicasDeEscrituraPorCuenta({ sinBorrar: true })],
+  (t) => [
+    index('empresas_cuenta_idx').on(t.cuentaId),
+    ...politicasDeEscrituraPorCuenta({ sinBorrar: true, lecturaPorCuenta: true }),
+  ],
 );
 
 /** En qué empresas trabaja un usuario. Sus roles y permisos son de la cuenta (`usuario_roles`, `usuario_permisos`). */

@@ -75,7 +75,7 @@ function controladorDeUsuarios({ unidadDeTrabajo, auditoria }: DependenciasCompa
   const catalogo = new CatalogoDePermisosAsignablesEnRegistro();
   const permisos = new AsignadorDePermisos({ asignaciones, catalogo, auditoria });
   return new UsuariosControlador({
-    listar: new ListarUsuarios({ consultas: new ConsultasUsuariosDrizzle(bd) }),
+    listar: new ListarUsuarios({ unidadDeTrabajo, consultas: new ConsultasUsuariosDrizzle() }),
     sugerirNombre: new SugerirNombreDeUsuario({ unidadDeTrabajo, asignador }),
     crear: new CrearUsuario({ unidadDeTrabajo, repositorio, empresas, permisos, asignador, cifrador }),
     actualizar: new ActualizarUsuario({ unidadDeTrabajo, repositorio, empresas, sesiones, auditoria }),

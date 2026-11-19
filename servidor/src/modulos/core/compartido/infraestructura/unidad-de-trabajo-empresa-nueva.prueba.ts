@@ -127,7 +127,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     });
 
     await expect(libro).rejects.toThrow(FalloProvocado);
-    const guardadas = await bd
+    const guardadas = await bdPropietario
       .select()
       .from(empresas)
       .where(inArray(empresas.id, [primera.empresaId, segunda.empresaId]));
@@ -141,7 +141,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
       await abrirYSembrar(segunda, 'segunda');
     });
 
-    const guardadas = await bd
+    const guardadas = await bdPropietario
       .select()
       .from(empresas)
       .where(inArray(empresas.id, [primera.empresaId, segunda.empresaId]));
@@ -276,12 +276,12 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     expect(corridas).toEqual([]);
   });
 
-  it('la lectura de core.empresas sigue abierta a todas las cuentas: la comprobación debe ver la empresa ajena', async () => {
+  it('una empresa de otra cuenta no se ve ni se puede pasar por nueva: la lectura de core.empresas es por cuenta', async () => {
     const vistas = await unidadDeTrabajo.ejecutar(enEmpresaA, () =>
       transaccionEnCurso().select({ id: empresas.id }).from(empresas).where(eq(empresas.id, empresaDeOtraCuentaId)),
     );
 
-    expect(vistas).toHaveLength(1);
+    expect(vistas).toEqual([]);
   });
 
   it('sin transacción en curso falla: no abre una por su cuenta', async () => {

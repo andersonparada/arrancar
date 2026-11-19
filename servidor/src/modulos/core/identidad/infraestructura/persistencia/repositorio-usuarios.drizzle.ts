@@ -1,8 +1,7 @@
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import type { Ejecutor } from '../../../base-datos/conexion.js';
 import { transaccionEnCurso } from '../../../compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import { empresas, empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
-import type { RepositorioUsuarios } from '../../aplicacion/puertos/repositorio-usuarios.js';
+import type { PertenenciaEnCuentas, RepositorioUsuarios } from '../../aplicacion/puertos/repositorio-usuarios.js';
 import type { NombreDeUsuario } from '../../dominio/nombre-de-usuario.js';
 import type { Usuario, UsuarioId } from '../../dominio/usuario.js';
 import { mapeadorDeUsuario } from './usuario.mapeador.js';
@@ -35,13 +34,12 @@ export class RepositorioUsuariosDrizzle implements RepositorioUsuarios {
     return new Set(filas.map((fila) => fila.usuario));
   }
 
-  async cuentasDe(id: UsuarioId): Promise<string[]> {
-    const filas = await this.ejecutor()
-      .selectDistinct({ cuentaId: empresas.cuentaId })
-      .from(empresaUsuarios)
-      .innerJoin(empresas, eq(empresas.id, empresaUsuarios.empresaId))
-      .where(eq(empresaUsuarios.usuarioId, id.valor));
-    return filas.map((fila) => fila.cuentaId);
+  /** Pasa por una función `security definer`: la lectura de `core.empresas` solo alcanza la cuenta de la transacción. */
+  async pertenenciaEn(id: UsuarioId, cuentaId: string): Promise<PertenenciaEnCuentas> {
+    const { rows } = await this.ejecutor().execute<{ en_la_cuenta: boolean; otras_cuentas: number }>(
+      sql`select * from core.pertenencia_del_usuario(${id.valor}::uuid, ${cuentaId}::uuid)`,
+    );
+    return { enLaCuenta: rows[0]?.en_la_cuenta ?? false, otrasCuentas: rows[0]?.otras_cuentas ?? 0 };
   }
 
   async agregar(usuario: Usuario): Promise<void> {

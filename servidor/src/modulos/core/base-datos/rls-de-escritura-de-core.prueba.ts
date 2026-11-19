@@ -175,10 +175,10 @@ describe('en la cuenta A sí se escribe en la A', () => {
     expect(asignados).toHaveLength(1);
   });
 
-  it('la lectura sigue abierta: la sesión ve las empresas de todas las cuentas sin variables', async () => {
+  it('la lectura de empresas es por cuenta: sin variables no se ve ninguna', async () => {
     const vistas = await bd.select({ id: empresas.id }).from(empresas).where(eq(empresas.id, empresaA2));
 
-    expect(vistas).toHaveLength(1);
+    expect(vistas).toEqual([]);
   });
 
   it('una empresa vieja no pasa por nueva: la base no deja cambiar su fecha de creación', async () => {
