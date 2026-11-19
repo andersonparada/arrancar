@@ -1,0 +1,45 @@
+import type { SecretoCifrado } from '../aplicacion/puertos/cifrador-de-secretos.js';
+import type {
+  CambioDelServidor,
+  EntradaDeSoporte,
+  ServidorDeCorreoRepositorio,
+  ServidorGuardado,
+} from '../aplicacion/puertos/servidor-de-correo-repositorio.js';
+import type { ResultadoDeEnvio } from '../aplicacion/transporte-de-correo.js';
+
+/** Repositorio en memoria: guarda lo que se le pide y anota las entradas de bitácora. */
+export class ServidorDeCorreoEnMemoria implements ServidorDeCorreoRepositorio {
+  guardado: ServidorGuardado | null = null;
+  recifrados = 0;
+  readonly bitacora: EntradaDeSoporte[] = [];
+
+  async obtener(): Promise<ServidorGuardado | null> {
+    return this.guardado;
+  }
+
+  async guardar({ datos, contrasena }: CambioDelServidor, entrada: EntradaDeSoporte): Promise<void> {
+    this.guardado = {
+      ultimaPruebaEn: null,
+      ultimaPruebaResultado: null,
+      ...this.guardado,
+      ...datos,
+      contrasena: contrasena ?? this.guardado?.contrasena ?? null,
+      actualizadoEn: new Date(),
+    };
+    this.bitacora.push(entrada);
+  }
+
+  async recifrar(anterior: SecretoCifrado, nuevo: SecretoCifrado): Promise<boolean> {
+    const actual = this.guardado?.contrasena;
+    if (!this.guardado || !actual?.iv.equals(anterior.iv)) return false;
+    this.guardado = { ...this.guardado, contrasena: nuevo };
+    this.recifrados += 1;
+    return true;
+  }
+
+  async registrarPrueba(resultado: ResultadoDeEnvio, entrada: EntradaDeSoporte): Promise<void> {
+    if (this.guardado)
+      this.guardado = { ...this.guardado, ultimaPruebaEn: new Date(), ultimaPruebaResultado: resultado };
+    this.bitacora.push(entrada);
+  }
+}

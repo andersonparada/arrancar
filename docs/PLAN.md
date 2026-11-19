@@ -2647,6 +2647,70 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   cuando falta el correo o no sirve (`avisos-de-pago.ts`), y etiqueta en la lista de contactos de la ficha. El Excel de
   Terceros no maneja contactos y no cambia.
   dos niveles y más nombres de secretos.
+- **2026-11-18 (aviso de pago por correo, paso 2: servidor de correo de la instalación).** `CLAVE_SECRETOS` (32 bytes en
+  base64, opcional; si llega mal formada la app no arranca) y `CLAVE_SECRETOS_ANTERIOR` para rotar;
+  `CORREO_PERMITIR_RED_INTERNA` (solo desarrollo; se rechaza en producción). `CifradorAesGcm` (AES-256-GCM, IV de 12
+  bytes, el contexto como AAD, versión de llave = 15 bits de su huella). Tabla `core.servidor_de_correo` (migración
+  0025; una fila; sin `empresa_id` ni RLS; checks: solo 465 con `tls_directo` o 587 con `starttls`, **no admite
+  `ninguna`**, no se activa sin contraseña). Rutas de Soporte (`soloSuperacceso`) `GET`/`PUT /api/soporte/correo/servidor`
+  y `POST /api/soporte/correo/prueba` (`EnviarPrueba`, 5 por hora por usuario). La contraseña solo se escribe: la API
+  devuelve `contrasenaConfigurada`; al cambiar servidor, puerto o usuario hay que escribirla otra vez (así no se
+  desvía la guardada); el servidor no puede ser de la red interna (C12). Cada guardado y cada prueba van a
+  `core.bitacora_superacceso` en la misma transacción, sin contraseña. Decisión: las rutas usan `/api/soporte/…` como
+  dice el diseño y no `/api/plataforma/…` como las demás de Soporte. Pendiente: re-cifrar con la llave nueva al rotar
+  (hoy ocurre al volver a escribir la contraseña) y cómo apunta el desarrollo a Mailpit (puerto 1025, sin cifrado),
+  que la tabla no admite.
+- **2026-11-18 (aviso de pago por correo, paso 4: bandeja de salida).** Migración 0026: `core.correos_salientes`,
+  `core.destinatarios_de_correos` y `core.intentos_de_correos`, con RLS por empresa y **sin política de borrado** (la
+  app solo lee, inserta y, en los correos, actualiza para cancelar o reintentar; destinatarios e intentos no se
+  actualizan). Checks: asunto y nombre sin controles, estados, arriendo solo en `enviando`, cancelación completa,
+  `ultimo_error_codigo` y `codigo` solo con forma de código (nunca el texto del servidor), máximo 8 intentos.
+  Funciones `security definer` con `row_security = off` y `EXECUTE` solo para `arrancar_app`:
+  `reservar_cupo_de_correo` (candado por cuenta con `pg_advisory_xact_lock`; la cuenta sale de `app.cuenta_id`, máximo 10
+  direcciones, el cupo por destinatario no distingue mayúsculas), `tomar_correos_pendientes` (`FOR UPDATE SKIP LOCKED`,
+  arriendo de 1 a 30 minutos, no toma nada con el servidor apagado, y un arriendo vencido que ya gastó los 8 intentos
+  queda `fallido`), `resolver_correo` (esperas 1 min, 5 min, 30 min, 2 h, 12 h, 24 h, 24 h con ±20 % de azar; autenticación
+  o sin servidor no gastan intento y esperan 15 min; el número del intento es seguido aunque se devuelva el contador) y
+  `depurar_correos` (contenido a los `dias` ≥ 7, filas terminadas a los `meses` ≥ 60; borra la fila de `core.archivos`
+  del adjunto y conserva su huella). Decisión: el índice del cupo por destinatario es sobre `lower(direccion)`. Pruebas
+  de RLS (otra empresa, otra cuenta, sin `delete`, sin escribir intentos) y de cada función, incluida la concurrencia.
+- **2026-11-18 (aviso de pago por correo, paso 5: encolar, trabajador y depuración).** Puerto público
+  `BandejaDeSalida` (en `DependenciasCompartidas.bandeja`, junto a `documentos`) con `encolar(operador, mensaje)`:
+  valida cada dirección con `DireccionDeEnvio`, junta repetidas, exige 1 a 10 destinatarios con al menos un «para», arma
+  asunto y cuerpos con la plantilla (el módulo da la lista cerrada de marcadores del asunto y del mensaje, y los
+  valores), cuenta cupos con `core.reservar_cupo_de_correo` (candado por cuenta; 429 `cupo_de_correos_agotado` con el
+  tope que se pasó), guarda el PDF (solo PDF generado por la app, hasta 5 MB) con `DocumentosProtegidos.guardar` dueño
+  `core.correos_salientes`, inserta el correo y sus destinatarios en la misma transacción y despierta al trabajador al
+  confirmarse. `ProcesarBandeja` (iniciado en `principal.ts`, con SIGTERM: deja de tomar, espera el lote en curso hasta
+  20 s y cierra el transporte) revisa cada 30 s y cuando lo despiertan, nunca corre dos lotes a la vez y sigue mientras
+  los lotes salgan llenos (10 por lote, arriendo de 5 minutos). `EnviarLoteDeCorreos` toma el lote, envía con el
+  transporte de la instalación (un solo transporte, que se rearma si Soporte cambia la conexión), lee el PDF del
+  almacenamiento y anota cada resultado con `core.resolver_correo`; un `autenticacion` detiene el lote y lo que falta
+  vuelve sin gastar intento, y pasados 3 minutos del lote lo que falta también vuelve (para no pasarse del arriendo).
+  Fallos propios: PDF perdido = permanente `ADJUNTO`, dirección guardada inservible = permanente `DIRECCION`, error
+  inesperado = temporal `ERROR_INTERNO`. Sin `CLAVE_SECRETOS` el trabajador no arranca y `principal.ts` lo dice.
+  Depuración diaria (`DepurarCorreos`): contenido a los `core.correo.dias_de_conservacion_del_contenido` (30, de 7 a
+  365) y filas terminadas a los `core.auditoria.meses_de_conservacion` (60); el archivo en disco del PDF lo quita la
+  depuración de huérfanos al día siguiente. Variables nuevas, solo de instalación: `core.correo.tope_por_hora_por_cuenta`
+  (100), `tope_por_dia_por_cuenta` (500), `tope_por_dia_por_destinatario` (20), `tope_por_hora_de_la_instalacion`
+  (1,000) y `dias_de_conservacion_del_contenido` (30). Pruebas con el doble de transporte y fallos simulados, y de
+  integración contra la base (encolar, deshacer, concurrencia de cupos, reintentos, arriendo vencido, depuración).
+- **2026-11-18 (aviso de pago por correo, paso 6: eventos).** `BusEventos.suscribirSinRomper(evento, suscriptor,
+  descripcion)` atrapa el fallo del suscriptor, lo registra (evento, quién y el error, nunca los datos) y deja seguir a
+  los demás: así un fallo después de confirmar un pago no responde 500 ni se pierde la notificación al resto. Todo
+  suscriptor con efectos de negocio (correo, Contabilidad) debe usarlo; `suscribir` queda para las pruebas.
+  `aplicacion.ts` apunta el registro del bus a pino (`BusEventos.usarRegistro`). `cuentas-por-pagar.pago_registrado` y
+  `pago_anulado` suman `cuentaId` y `usuarioId` (cambio aditivo del contrato, en `eventos-de-pagos.ts` y
+  `cuentas-por-pagar.contratos.ts`); Cuentas por pagar los llena desde el operador del caso de uso (registrar, todas las
+  formas, y anular). Sin migración.
+- **2026-11-18 (correo, correcciones de la revisión de seguridad).** Rotación de la llave completada: si el secreto del
+  servidor no se cifró con `CLAVE_SECRETOS`, `ProveedorDeTransporte` y `EnviarPrueba` lo vuelven a cifrar con la vigente
+  (`recifrarSiHaceFalta`; `CifradorDeSecretos.esVigente`, `ServidorDeCorreoRepositorio.recifrar` con `update … where`
+  de la versión y el IV viejos) y anotan `correo.servidor.recifrar` en `core.bitacora_superacceso` a nombre de quien
+  guardó el servidor (sin contraseña). `EnviarLoteDeCorreos` registra por qué no hay transporte (no cuando solo falta
+  configurar el servidor). Rangos 192.0.0.0/24 y 198.18.0.0/15 rechazados como destino. Prueba de rotación A, A+B, B.
+  Pendientes de bajo riesgo: permisos por columnas y llaves compuestas en la 0026, señal de parada del lote, ficha del
+  arriendo en `resolver_correo`, bitácora de pruebas fallidas, DNS al conectar, y plazo de los correos pendientes.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la

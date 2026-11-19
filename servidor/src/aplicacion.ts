@@ -19,6 +19,7 @@ import { archivoDeInstalacion } from './modulos/core/configuracion/infraestructu
 import { AccesoDenegado } from './modulos/core/compartido/aplicacion/errores.js';
 import { interpretarErrorDePostgres } from './modulos/core/compartido/infraestructura/errores-de-postgres.js';
 import { crearManejadorDeErrores } from './modulos/core/compartido/http/manejador-errores.js';
+import { busEventos } from './modulos/core/eventos/bus-eventos.js';
 import { respuestaDeLimiteExcedido } from './modulos/core/compartido/http/limite-de-solicitudes.js';
 import { establecerRegistroModulos } from './modulos/core/modulos-sistema/registro-global.js';
 import { RegistroModulos } from './modulos/core/modulos-sistema/registro-modulos.js';
@@ -142,6 +143,9 @@ export async function construirAplicacion(): Promise<FastifyInstance> {
   }).withTypeProvider<ZodTypeProvider>();
 
   prepararPeticiones(app);
+  busEventos.usarRegistro((evento, suscriptor, error) =>
+    app.log.error({ err: error, evento, suscriptor }, 'Falló un suscriptor de eventos'),
+  );
   cargarModulos();
   await registrarSeguridad(app);
   await registrarDocumentacion(app);

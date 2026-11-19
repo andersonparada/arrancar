@@ -3,30 +3,56 @@ import { configurarMensajesDeValidacion } from './modulos/core/compartido/http/m
 
 configurarMensajesDeValidacion();
 
-const esquemaConfiguracion = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PUERTO: z.coerce.number().int().positive().default(3100),
-  URL_PUBLICA: z.url(),
-  DATABASE_URL: z.string().min(1),
-  DATABASE_URL_PROPIETARIO: z.string().min(1).optional(),
-  RUTA_ALMACENAMIENTO: z.string().default('./almacenamiento'),
-  /** Programa qpdf (versión 11 o posterior) con que se revisan los PDF; ruta absoluta. */
-  RUTA_QPDF: z.string().default('/usr/bin/qpdf'),
-  /** `false` apaga la tarea diaria que borra archivos sueltos (apáguela antes de restaurar una base más vieja que los archivos). */
-  DEPURAR_HUERFANOS: z
-    .enum(['true', 'false'])
-    .default('true')
-    .transform((valor) => valor === 'true'),
-  RUTA_CLIENTE: z.string().optional(),
-  /** Archivo JSON con la configuración propia de este servidor (nivel instalación). */
-  RUTA_CONFIG_INSTALACION: z.string().optional(),
-  DURACION_SESION_DIAS: z.coerce.number().int().positive().default(30),
-  SUPERACCESO_USUARIO: z
-    .string()
-    .regex(/^[a-z]{3,30}$/, 'Solo letras minúsculas, de 3 a 30.')
-    .optional(),
-  SUPERACCESO_CONTRASENA: z.string().min(12).optional(),
+/** Llave de 32 bytes en base64 (`openssl rand -base64 32`). */
+const esquemaLlaveDeSecretos = z.string().refine((valor) => /^[A-Za-z0-9+/]{43}=$/.test(valor), {
+  message: 'Debe ser una llave de 32 bytes en base64 (openssl rand -base64 32).',
 });
+
+const esquemaConfiguracion = z
+  .object({
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    PUERTO: z.coerce.number().int().positive().default(3100),
+    URL_PUBLICA: z.url(),
+    DATABASE_URL: z.string().min(1),
+    DATABASE_URL_PROPIETARIO: z.string().min(1).optional(),
+    RUTA_ALMACENAMIENTO: z.string().default('./almacenamiento'),
+    /** Programa qpdf (versión 11 o posterior) con que se revisan los PDF; ruta absoluta. */
+    RUTA_QPDF: z.string().default('/usr/bin/qpdf'),
+    /** `false` apaga la tarea diaria que borra archivos sueltos (apáguela antes de restaurar una base más vieja que los archivos). */
+    DEPURAR_HUERFANOS: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((valor) => valor === 'true'),
+    RUTA_CLIENTE: z.string().optional(),
+    /** Archivo JSON con la configuración propia de este servidor (nivel instalación). */
+    RUTA_CONFIG_INSTALACION: z.string().optional(),
+    DURACION_SESION_DIAS: z.coerce.number().int().positive().default(30),
+    SUPERACCESO_USUARIO: z
+      .string()
+      .regex(/^[a-z]{3,30}$/, 'Solo letras minúsculas, de 3 a 30.')
+      .optional(),
+    SUPERACCESO_CONTRASENA: z.string().min(12).optional(),
+    /**
+     * Llave con que se cifra la contraseña del servidor de correo (AES-256-GCM). Vive solo en el entorno, fuera de la
+     * base y de los respaldos; sin ella no se puede guardar esa contraseña ni enviar correos.
+     */
+    CLAVE_SECRETOS: esquemaLlaveDeSecretos.optional(),
+    /** La llave anterior, mientras se rota: lo cifrado con ella se sigue leyendo. */
+    CLAVE_SECRETOS_ANTERIOR: esquemaLlaveDeSecretos.optional(),
+    /** Solo desarrollo: deja apuntar el servidor de correo a nombres y direcciones de la red interna (Mailpit). */
+    CORREO_PERMITIR_RED_INTERNA: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((valor) => valor === 'true'),
+  })
+  .refine((c) => !(c.NODE_ENV === 'production' && c.CORREO_PERMITIR_RED_INTERNA), {
+    path: ['CORREO_PERMITIR_RED_INTERNA'],
+    message: 'No se permite en producción.',
+  })
+  .refine((c) => !c.CLAVE_SECRETOS_ANTERIOR || c.CLAVE_SECRETOS, {
+    path: ['CLAVE_SECRETOS_ANTERIOR'],
+    message: 'Solo tiene sentido junto con CLAVE_SECRETOS.',
+  });
 
 export type Configuracion = z.infer<typeof esquemaConfiguracion>;
 
