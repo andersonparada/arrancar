@@ -18,6 +18,7 @@ function dtoDeLinea(linea: LineaDeDocumento): LineaDeDocumentoDto {
     descripcion: linea.descripcion,
     tipo: linea.tipo,
     esActivoFijo: linea.esActivoFijo,
+    esInventario: linea.esInventario,
     combustible: linea.combustible,
     total: deCentavos(linea.total),
     exento: deCentavos(linea.exento),

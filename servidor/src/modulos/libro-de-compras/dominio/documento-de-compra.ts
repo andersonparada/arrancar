@@ -24,6 +24,7 @@ export interface LineaDeDocumento extends LineaCalculada {
   descripcion: string | null;
   tipo: 'bien' | 'servicio';
   esActivoFijo: boolean;
+  esInventario: boolean;
   combustible: CombustibleDeLineaGuardada | null;
 }
 

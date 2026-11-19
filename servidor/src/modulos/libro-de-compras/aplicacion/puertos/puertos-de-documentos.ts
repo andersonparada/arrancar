@@ -34,6 +34,7 @@ export interface ConceptoParaLinea {
   tipoPorOmision: 'bien' | 'servicio';
   esProductoAgropecuario: boolean;
   esActivoFijo: boolean;
+  esInventario: boolean;
   activo: boolean;
 }
 

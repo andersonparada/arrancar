@@ -34,6 +34,10 @@ const esquemaLinea = z.object({
     .boolean()
     .nullish()
     .transform((valor) => valor ?? null),
+  esInventario: z
+    .boolean()
+    .nullish()
+    .transform((valor) => valor ?? null),
   combustibleId: idOpcional(),
   galones: decimalOpcional(3),
   total: decimalObligatorio(2),

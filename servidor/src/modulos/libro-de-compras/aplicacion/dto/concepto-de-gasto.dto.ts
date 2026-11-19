@@ -5,6 +5,7 @@ export interface ConceptoDeGastoDto {
   tipoPorOmision: 'bien' | 'servicio';
   esProductoAgropecuario: boolean;
   esActivoFijo: boolean;
+  esInventario: boolean;
   activo: boolean;
 }
 

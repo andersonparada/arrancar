@@ -11,6 +11,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'bien',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -18,6 +19,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -25,6 +27,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -32,6 +35,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -39,6 +43,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -46,6 +51,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -53,6 +59,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -60,6 +67,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'bien',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -67,6 +75,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -74,6 +83,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -81,6 +91,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -88,6 +99,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'bien',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -95,6 +107,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'servicio',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   },
   {
@@ -102,6 +115,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'bien',
     esProductoAgropecuario: false,
     esActivoFijo: true,
+    esInventario: false,
     activo: true,
   },
   {
@@ -109,6 +123,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'bien',
     esProductoAgropecuario: false,
     esActivoFijo: true,
+    esInventario: false,
     activo: true,
   },
   {
@@ -116,6 +131,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'bien',
     esProductoAgropecuario: false,
     esActivoFijo: true,
+    esInventario: false,
     activo: true,
   },
   {
@@ -123,6 +139,7 @@ export const CONCEPTOS_DE_GASTO_SUGERIDOS: readonly DatosDeConceptoDeGasto[] = [
     tipoPorOmision: 'bien',
     esProductoAgropecuario: false,
     esActivoFijo: true,
+    esInventario: false,
     activo: true,
   },
 ];

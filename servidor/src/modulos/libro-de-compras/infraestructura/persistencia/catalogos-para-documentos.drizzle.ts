@@ -28,6 +28,7 @@ export class CatalogosParaDocumentosDrizzle implements CatalogosParaDocumentos {
         tipoPorOmision: conceptosDeGasto.tipoPorOmision,
         esProductoAgropecuario: conceptosDeGasto.esProductoAgropecuario,
         esActivoFijo: conceptosDeGasto.esActivoFijo,
+        esInventario: conceptosDeGasto.esInventario,
         activo: conceptosDeGasto.activo,
       })
       .from(conceptosDeGasto)

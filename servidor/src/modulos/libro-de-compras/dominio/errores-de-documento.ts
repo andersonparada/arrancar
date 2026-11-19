@@ -71,6 +71,24 @@ export class LineaDeDocumentoInvalida extends DatoInvalido {
   readonly codigo = 'linea_de_documento_invalida';
 }
 
+/** El costo de una línea no puede ir a la vez a activo fijo y a inventario. */
+export class LineaConDosDestinosDelCosto extends DatoInvalido {
+  readonly codigo = 'linea_con_dos_destinos_del_costo';
+
+  constructor(numero: number) {
+    super(`La línea ${numero} no puede ser a la vez activo fijo e inventario.`);
+  }
+}
+
+/** Una línea de inventario es siempre un bien: un servicio no entra a una bodega. */
+export class InventarioNoEsBien extends DatoInvalido {
+  readonly codigo = 'inventario_no_es_bien';
+
+  constructor(numero: number) {
+    super(`La línea ${numero} es de inventario: debe ser un bien.`);
+  }
+}
+
 /** Un catálogo (concepto de gasto o combustible) está inactivo y no se puede usar en documentos nuevos. */
 export class CatalogoInactivo extends ReglaDeNegocioInfringida {
   readonly codigo = 'catalogo_inactivo';

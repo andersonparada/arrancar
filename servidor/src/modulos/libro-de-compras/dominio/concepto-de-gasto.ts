@@ -10,6 +10,7 @@ export interface DatosDeConceptoDeGasto {
   tipoPorOmision: 'bien' | 'servicio';
   esProductoAgropecuario: boolean;
   esActivoFijo: boolean;
+  esInventario: boolean;
   activo: boolean;
 }
 
@@ -30,8 +31,17 @@ function textoObligatorio(texto: string, campo: string): string {
   return limpio;
 }
 
-/** Los textos obligatorios no pueden quedar vacíos; un servicio también puede capitalizarse como activo fijo. */
+/**
+ * Los textos obligatorios no pueden quedar vacíos; un servicio también puede capitalizarse como activo fijo,
+ * pero no es inventario, y el costo no puede ir a la vez a activo fijo y a inventario.
+ */
 function datosValidos(datos: DatosDeConceptoDeGasto): DatosDeConceptoDeGasto {
+  if (datos.esActivoFijo && datos.esInventario) {
+    throw new ConceptoDeGastoInvalido('Un concepto no puede ser a la vez activo fijo e inventario.');
+  }
+  if (datos.esInventario && datos.tipoPorOmision !== 'bien') {
+    throw new ConceptoDeGastoInvalido('Un concepto de inventario debe ser un bien.');
+  }
   return { ...datos, nombre: textoObligatorio(datos.nombre, 'Nombre') };
 }
 
