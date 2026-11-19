@@ -7,7 +7,7 @@ const CONSULTAS_A_MOSTRAR = 50;
 /** El estado de cada serie y la bitácora reciente; puede limitarse a la moneda elegida. */
 export function usarEstadoDeLaCarga(moneda: Ref<string>) {
   const avisos = usarAvisos();
-  const estado = ref<EstadoDeLaCarga>({ hoy: '', series: [], consultas: [] });
+  const estado = ref<EstadoDeLaCarga>({ hoy: '', enCurso: false, series: [], consultas: [] });
   const soloDeLaMoneda = ref(false);
 
   async function pedirEstado(): Promise<void> {

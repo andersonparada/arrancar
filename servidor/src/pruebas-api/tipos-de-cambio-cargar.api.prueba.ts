@@ -76,30 +76,58 @@ describe('POST /api/tipos-de-cambio/cargar', () => {
     }
   });
 
-  it('con el Banguat fuera de alcance responde la consulta hecha y deja el error en la bitácora, sin tipos', async () => {
+  it('«Cargar ahora» responde 202 enseguida; con el Banguat fuera de alcance deja el error en la bitácora, sin tipos', async () => {
     const respuesta = await entorno.soporte.post('/api/tipos-de-cambio/cargar', {});
+    const durante = await entorno.soporte.get('/api/tipos-de-cambio/consultas?limite=5');
+    await esperarElFinDeLaCarga();
 
     const { rows } = await propietario.query(
       `select vuelta, resultado, disparada_por is not null as con_usuario from core.consultas_al_banguat where vuelta = 'manual'`,
     );
     const tipos = await propietario.query(`select 1 from core.tipos_de_cambio where moneda = 'USD'`);
-    expect(respuesta.estado).toBe(200);
-    expect(respuesta.cuerpo).toEqual([expect.objectContaining({ moneda: 'USD', resultado: 'error', filasNuevas: 0 })]);
+    expect(respuesta.estado).toBe(202);
+    expect(respuesta.cuerpo).toEqual({ enCurso: true, iniciadaEn: expect.any(String) });
+    expect(durante.cuerpo).toEqual(expect.objectContaining({ enCurso: expect.any(Boolean) }));
     expect(rows).toEqual([{ vuelta: 'manual', resultado: 'error', con_usuario: true }]);
     expect(tipos.rowCount).toBe(0);
   });
 
-  it('actualizar la lista con el Banguat fuera de alcance no toca la lista y queda en la bitácora', async () => {
+  it('actualizar la lista responde 202; con el Banguat fuera de alcance no toca la lista y queda en la bitácora', async () => {
     const antes = await propietario.query(`select count(*)::int as n from core.monedas_del_banguat where disponible`);
 
     const respuesta = await entorno.soporte.post('/api/monedas/banguat/actualizar', {});
+    await esperarElFinDeLaCarga();
 
     const despues = await propietario.query(`select count(*)::int as n from core.monedas_del_banguat where disponible`);
     const bitacora = await propietario.query(`select resultado from core.consultas_al_banguat where vuelta = 'lista'`);
-    expect(respuesta.estado).toBe(200);
-    expect(respuesta.cuerpo.consulta).toMatchObject({ resultado: 'error', nuevas: 0, noDisponibles: 0 });
-    expect(respuesta.cuerpo.lista).toEqual(expect.arrayContaining([expect.objectContaining({ codigo: 2 })]));
+    expect(respuesta.estado).toBe(202);
+    expect(respuesta.cuerpo).toEqual({ enCurso: true, iniciadaEn: expect.any(String) });
     expect(despues.rows[0].n).toBe(antes.rows[0].n);
     expect(bitacora.rows).toEqual([{ resultado: 'error' }]);
   });
+
+  it('el estado de la carga dice que está en curso mientras otra instancia tiene el cerrojo', async () => {
+    const otra = new pg.Client({ connectionString: configuracion.DATABASE_URL_PROPIETARIO });
+    await otra.connect();
+    await otra.query('select pg_advisory_lock($1)', [CLAVE_DEL_CERROJO]);
+    try {
+      const ocupado = await entorno.soporte.get('/api/tipos-de-cambio/consultas?limite=1');
+      expect(ocupado.cuerpo.enCurso).toBe(true);
+    } finally {
+      await otra.query('select pg_advisory_unlock($1)', [CLAVE_DEL_CERROJO]);
+      await otra.end();
+    }
+    const libre = await entorno.soporte.get('/api/tipos-de-cambio/consultas?limite=1');
+    expect(libre.cuerpo.enCurso).toBe(false);
+  });
 });
+
+/** La carga corre en segundo plano: se espera a que el estado deje de decir «en curso». */
+async function esperarElFinDeLaCarga(): Promise<void> {
+  for (let intento = 0; intento < 200; intento++) {
+    const estado = await entorno.soporte.get('/api/tipos-de-cambio/consultas?limite=1');
+    if (!estado.cuerpo.enCurso) return;
+    await new Promise((seguir) => setTimeout(seguir, 100));
+  }
+  throw new Error('La carga en segundo plano no terminó.');
+}

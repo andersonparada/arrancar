@@ -1,6 +1,7 @@
 import { FuenteNoDisponible, RespuestaInvalida } from '../../dominio/errores.js';
 import type { MonedaDelBanguat } from '../../dominio/publicacion.js';
 import { CargaDelBanguatEnCurso } from '../errores.js';
+import { iniciarSiLibre } from '../iniciar-si-libre.js';
 import type {
   CargasDeTipos,
   CerrojoDeCarga,
@@ -14,6 +15,8 @@ interface Dependencias {
   cargas: CargasDeTipos;
   cerrojo: CerrojoDeCarga;
   ahora: () => Date;
+  /** Registra el fallo inesperado de una actualización que corre en segundo plano. */
+  alFallar: (mensaje: string, error: unknown) => void;
 }
 
 export interface OpcionesDeActualizacion {
@@ -78,6 +81,23 @@ export class ActualizarMonedasDelBanguat {
     );
     if (resultado === null) throw new CargaDelBanguatEnCurso();
     return resultado.hecho;
+  }
+
+  /**
+   * A pedido de soporte y sin esperar: toma el cerrojo y deja la actualización corriendo en segundo plano; el resultado
+   * queda en la bitácora (vuelta `lista`). Si otra carga corre, falla con 409.
+   * @returns el instante en que arrancó, para reconocer su fila en la bitácora.
+   */
+  async iniciarAPedido(usuarioId: string): Promise<Date> {
+    const { cerrojo, ahora, alFallar } = this.dependencias;
+    const iniciadaEn = ahora();
+    const arranco = await iniciarSiLibre(
+      cerrojo,
+      () => this.ejecutar({ disparadaPor: usuarioId }),
+      (error) => alFallar('«Actualizar lista» falló', error),
+    );
+    if (!arranco) throw new CargaDelBanguatEnCurso();
+    return iniciadaEn;
   }
 
   /** Al arrancar: si la lista solo tiene la semilla o se vio por última vez hace más de 7 días. */

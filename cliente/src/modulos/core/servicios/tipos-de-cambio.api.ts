@@ -1,5 +1,5 @@
 import { clienteHttp, type ClienteHttp } from './cliente-http';
-import type { ConvencionDelBanguat, ResultadoDeConsulta } from './monedas.api';
+import type { CargaIniciada, ConvencionDelBanguat, ResultadoDeConsulta } from './monedas.api';
 
 /** Un tipo de cambio de la serie de un día (la versión vigente). Los decimales viajan como texto. */
 export interface TipoDeLaSerie {
@@ -56,6 +56,8 @@ export interface EstadoDeLaSerie {
 
 export interface EstadoDeLaCarga {
   hoy: string;
+  /** Una carga o la actualización de la lista corre ahora mismo. */
+  enCurso: boolean;
   series: EstadoDeLaSerie[];
   consultas: ConsultaDeLaCarga[];
 }
@@ -100,7 +102,7 @@ export class ApiTiposDeCambio {
   }
 
   cargarAhora(desde?: string, hasta?: string) {
-    return this.http.crear<ResumenDeCarga[]>('/tipos-de-cambio/cargar', { desde, hasta });
+    return this.http.crear<CargaIniciada>('/tipos-de-cambio/cargar', { desde, hasta });
   }
 }
 

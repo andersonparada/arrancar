@@ -3,6 +3,7 @@ import { RangoDeCargaInvalido } from '../../dominio/errores.js';
 import { sumarDiasAFecha } from '../../dominio/fechas-de-publicacion.js';
 import { vueltaQueToca, type IntentoHecho, type VueltaProgramada } from '../../dominio/horario-de-carga.js';
 import { CargaDelBanguatEnCurso } from '../errores.js';
+import { iniciarSiLibre } from '../iniciar-si-libre.js';
 import type { CargasDeTipos, CerrojoDeCarga } from '../puertos/cargas-de-tipos.js';
 import type { ActualizarMonedasDelBanguat } from './actualizar-monedas-del-banguat.js';
 import type { ResumenDeConsulta } from './consultar-al-banguat.js';
@@ -22,6 +23,8 @@ interface Dependencias {
   reloj: RelojDeCarga;
   /** Se avisa cuando se guardó algo, para que el servicio de tipos olvide lo que tenía leído. */
   alGuardar: () => void;
+  /** Registra el fallo inesperado de una carga que corre en segundo plano. */
+  alFallar: (mensaje: string, error: unknown) => void;
 }
 
 /** Lo que pide soporte en «Cargar ahora»: sin fechas, hoy. */
@@ -77,6 +80,31 @@ export class CargarTiposDeCambio {
     if (hecho === null) throw new CargaDelBanguatEnCurso();
     this.dependencias.alGuardar();
     return hecho.resumenes;
+  }
+
+  /**
+   * «Cargar ahora» sin esperar: valida el rango, toma el cerrojo y deja la carga corriendo en segundo plano. Lo que
+   * trajo cada moneda queda en la bitácora; la pantalla lo consulta al terminar.
+   * @returns el instante en que arrancó, para reconocer en la bitácora las consultas de esta carga.
+   * @throws CargaDelBanguatEnCurso si otra carga corre.
+   * @throws RangoDeCargaInvalido si el rango no sirve.
+   */
+  async iniciarCargaAhora(pedido: PedidoDeCargaManual): Promise<Date> {
+    const hoy = await this.hoy();
+    const { desde = hoy, hasta = hoy } = pedido;
+    revisarRango({ hoy, desde, hasta });
+    const { cerrojo, vueltas, reloj, alGuardar, alFallar } = this.dependencias;
+    const iniciadaEn = reloj.ahora();
+    const arranco = await iniciarSiLibre(
+      cerrojo,
+      async () => {
+        await vueltas.manual({ hoy, desde, hasta, usuarioId: pedido.usuarioId });
+        alGuardar();
+      },
+      (error) => alFallar('«Cargar ahora» falló', error),
+    );
+    if (!arranco) throw new CargaDelBanguatEnCurso();
+    return iniciadaEn;
   }
 
   /**
