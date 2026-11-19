@@ -4,6 +4,13 @@ _Agente `contador-guatemala`, a pedido del usuario (cambia PU-4 de `diseno-multi
 adenda del diseño que lo aplica está al final de `diseno-multimoneda.md` («Adenda 2026-11-18: todas las monedas del
 Banguat»)._
 
+> **Fe de erratas (2026-11-18, del propio contador en `dictamen-multimoneda-cruces-2026-11-18.md`, §2, última fila).**
+> (1) La nota «Corrección a una fuente que circula» (§2) era falsa: la frase de la «equivalencia de la moneda extranjera
+> con relación al dólar» **no es de México**; es la metodología oficial de Guatemala (JM-126-2006, numeral 2, reformada
+> por JM-55-2010, y antes JM-130-2001, numeral 2). Se tacha abajo. (2) La fila «Unidad de `compra` y `venta` en las demás
+> monedas» (§1) suponía quetzales por unidad; C-1 a C-4 lo desmintieron: el servicio web publica el cruce contra el
+> dólar (Adenda B, B.1). (3) En «Libros» (§2) el artículo del Código de Comercio es el **369**, no el 368.
+
 # Dictamen: tipos de cambio de todas las monedas que publica el Banguat (cambia PU-4)
 
 **Veredicto: correcto con ajustes.** Se pueden cargar todas las monedas del Banguat. Pero «todas las que tengan código se actualizan cada noche» no se puede aplicar tal cual. Hay 6 ajustes (sección 5) y 5 cosas que hay que comprobar con una llamada real antes de MM-3 (amplían V-13).
@@ -24,7 +31,7 @@ Advertencia: el servicio web del Banguat me cortó la conexión en todas las lla
 | Monedas «prioritarias» | Euro, libra esterlina, franco suizo, dólar canadiense, peso mexicano, yen, colón salvadoreño, lempira, córdoba y colón costarricense. Se pueden agregar otras si hay cotización internacional. | Misma página | Alta |
 | Lista que ofrece la consulta pública | 29 opciones, entre ellas Bolívar Venezolano, Bolívar Fuerte y Bolívar Soberano (monedas ya retiradas o redenominadas), DEG (no es una moneda: es una unidad de cuenta del FMI), coronas danesa, noruega y sueca, peso argentino, real, won, dólar de Hong Kong, dólar de Taiwán, yuan, rupias de Pakistán y de la India, pesos colombiano y dominicano, ringgit. | https://www.banguat.gob.gt/tipo_cambio/TipoCambio/ | Alta |
 | Códigos | La Resolución de Gerencia General 158-2023 da códigos con su sigla ISO: 01 GTQ, 02 USD, 03 JPY, 05 CHF, 07 CAD, 09 GBP, 15 SEK, 16 CRC, 18 MXN, 19 HNL, 20 DKK, 21 NIO, 22 VED, 27 AUD, 28 EUR. **Es la tabla del sistema de pagos.** El orden de la lista de la consulta pública no coincide con ella, así que no garantizo que sean los mismos códigos del servicio web. | https://banguat.gob.gt/sites/default/files/banguat/Publica/SPagos/codmonedas.pdf | Alta en la tabla, **baja** en que sirva para el servicio web |
-| Unidad de `compra` y `venta` en las demás monedas | Por cómo se calculan deberían ser **quetzales por una unidad** (con el euro, alrededor de 8.8). La descripción del servicio dice «en dólares» en `TipoCambioFechaInicial`, lo que es ambiguo. | Inferencia propia | **Baja: comprobar** |
+| Unidad de `compra` y `venta` en las demás monedas | **(Desmentido por C-1 a C-4: es el cruce contra el dólar; fe de erratas.)** Por cómo se calculan deberían ser **quetzales por una unidad** (con el euro, alrededor de 8.8). La descripción del servicio dice «en dólares» en `TipoCambioFechaInicial`, lo que es ambiguo. | Inferencia propia | **Baja: comprobar** |
 | ¿Compra y venta distintas? | No está documentado para las demás monedas. | — | Baja |
 | Fines de semana y feriados | No está documentado. Como dependen de una cotización tomada entre las 8:00 y las 9:00, lo más probable es que **no haya publicación** los días sin cálculo. En ese caso la serie tendría huecos, a diferencia del USD, que parece repetir el vigente. | Inferencia propia | Baja: comprobar |
 | Oficialidad | El servicio web «no constituye un servicio oficial de información». La fuente oficial es la página del Banguat. | https://www.banguat.gob.gt/tipo_cambio/TipoCambio/OtrosServicios | Alta |
@@ -41,9 +48,9 @@ Advertencia: el servicio web del Banguat me cortó la conexión en todas las lla
 | Qué tipo usa la precarga de Declaraguate para un DTE en EUR | **No lo encontré documentado.** | Comprobarlo con un DTE real en EUR y su libro precargado, o con una consulta a la SAT (Código Tributario, art. 102). | — |
 | Retención de IVA (constancias) | La SAT usa el último tipo publicado, tomando como base la **fecha de certificación** de la factura. | Para otras monedas lo más probable es que sea igual, pero sin confirmar. | Media / baja |
 | ISR a no domiciliados pagado en EUR | La referencia de la fecha del pago o del acreditamiento (art. 4). | Para EUR: la referencia del EUR de esa fecha. | Media |
-| Libros | Código de Comercio, art. 368: cuentas en moneda nacional. Sin cambio: GTQ como moneda de libros. | — | Alta |
+| Libros | Código de Comercio, ~~art. 368~~ **art. 369** (fe de erratas): cuentas en moneda nacional. Sin cambio: GTQ como moneda de libros. | — | Alta |
 
-**Corrección a una fuente que circula.** El buscador me atribuyó a la ley de Guatemala la frase «el tipo de cambio se determinará por la equivalencia de la moneda extranjera… con relación al dólar». **Es de México** (las tablas de equivalencias del Banco de México). No hay que citarla ni ponerla en el diseño.
+~~**Corrección a una fuente que circula.** El buscador me atribuyó a la ley de Guatemala la frase «el tipo de cambio se determinará por la equivalencia de la moneda extranjera… con relación al dólar». **Es de México** (las tablas de equivalencias del Banco de México). No hay que citarla ni ponerla en el diseño.~~ **Falso (fe de erratas):** es JM-126-2006, numeral 2, y JM-130-2001, numeral 2, de Guatemala; se cita en la Adenda B, B.3.
 
 ---
 
