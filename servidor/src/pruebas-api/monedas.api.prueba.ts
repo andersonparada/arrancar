@@ -26,7 +26,6 @@ async function limpiar(): Promise<void> {
   await propietario.query(
     `update core.monedas set activa = false, codigo_banguat = null where codigo in ('EUR', 'GBP')`,
   );
-  await propietario.query(`delete from core.monedas_del_banguat where codigo in (28, 29)`);
 }
 
 beforeAll(async () => {
@@ -35,9 +34,6 @@ beforeAll(async () => {
   propietario = new pg.Client({ connectionString: configuracion.DATABASE_URL_PROPIETARIO });
   await propietario.connect();
   await limpiar();
-  await propietario.query(
-    `insert into core.monedas_del_banguat (codigo, descripcion) values (28, 'Euro'), (29, 'Libra esterlina')`,
-  );
 });
 
 afterAll(async () => {
@@ -73,7 +69,7 @@ describe('GET /api/monedas/banguat', () => {
     expect(propia.estado).toBe(403);
     expect(soporte.estado).toBe(200);
     expect(soporte.cuerpo.find((o: Opcion) => o.codigo === 2)).toMatchObject({ asignadaA: 'USD', disponible: true });
-    expect(soporte.cuerpo.find((o: Opcion) => o.codigo === 28)).toMatchObject({ asignadaA: null, excluida: false });
+    expect(soporte.cuerpo.find((o: Opcion) => o.codigo === 24)).toMatchObject({ asignadaA: null, excluida: false });
   });
 });
 
@@ -111,7 +107,7 @@ describe('PATCH /api/monedas/:codigo', () => {
   it('no activa monedas sin dos decimales ni desactiva el quetzal', async () => {
     const yen = await entorno.soporte.patch('/api/monedas/JPY', { activa: true });
     const quetzal = await entorno.soporte.patch('/api/monedas/GTQ', { activa: false });
-    const conCodigo = await entorno.soporte.patch('/api/monedas/GTQ', { codigoBanguat: 28 });
+    const conCodigo = await entorno.soporte.patch('/api/monedas/GTQ', { codigoBanguat: 24 });
 
     expect(yen.cuerpo.error.codigo).toBe('moneda_sin_dos_decimales');
     expect(quetzal.cuerpo.error.codigo).toBe('moneda_base_no_se_desactiva');
@@ -136,28 +132,28 @@ describe('PATCH /api/monedas/:codigo', () => {
   });
 
   it('une el euro con su código; con tipos cargados no deja cambiarlo; quitarlo se audita', async () => {
-    const unida = await entorno.soporte.patch('/api/monedas/EUR', { codigoBanguat: 28 });
-    expect(unida.cuerpo).toMatchObject({ codigoBanguat: 28, descripcionBanguat: 'Euro', tieneSerieDelBanguat: false });
+    const unida = await entorno.soporte.patch('/api/monedas/EUR', { codigoBanguat: 24 });
+    expect(unida.cuerpo).toMatchObject({ codigoBanguat: 24, descripcionBanguat: 'Euro', tieneSerieDelBanguat: false });
 
     const consulta = await propietario.query(
       `insert into core.consultas_al_banguat (iniciada_en, terminada_en, operacion, vuelta, moneda, resultado)
        values (now(), now(), 'TipoCambioRangoMoneda', 'manana', 'EUR', 'exito') returning id`,
     );
     await propietario.query(
-      `insert into core.tipos_de_cambio (moneda, fecha, referencia, origen, codigo_banguat, consulta_id)
-       values ('EUR', '2026-01-05', 8.8, 'banguat', 28, $1)`,
+      `insert into core.tipos_de_cambio (moneda, fecha, referencia, origen, codigo_banguat, consulta_id, convencion)
+       values ('EUR', '2026-01-05', 8.8, 'banguat', 24, $1, 'quetzales_por_unidad')`,
       [consulta.rows[0].id],
     );
 
     const lista = await cuenta.propietario.get('/api/monedas');
-    const otro = await entorno.soporte.patch('/api/monedas/EUR', { codigoBanguat: 29 });
+    const otro = await entorno.soporte.patch('/api/monedas/EUR', { codigoBanguat: 9 });
     const quitada = await entorno.soporte.patch('/api/monedas/EUR', { codigoBanguat: null });
 
     expect(lista.cuerpo.find((m: Moneda) => m.codigo === 'EUR')).toMatchObject({ tieneSerieDelBanguat: true });
     expect(otro.estado).toBe(409);
     expect(otro.cuerpo.error).toMatchObject({
       codigo: 'codigo_del_banguat_con_otra_serie',
-      detalles: { moneda: 'EUR', codigoDeLaSerie: 28 },
+      detalles: { moneda: 'EUR', codigoDeLaSerie: 24 },
     });
     expect(quitada.cuerpo.codigoBanguat).toBeNull();
     expect(await auditoriaDeMoneda('EUR')).toContain('corregir');

@@ -19,8 +19,8 @@ let listaOriginal: { codigo: number; descripcion: string; disponible: boolean; v
 beforeAll(async () => {
   await escenario.preparar();
   listaOriginal = (await escenario.propietario.query(`select * from core.monedas_del_banguat`)).rows;
-  await escenario.propietario.query(`update core.monedas set activa = true, codigo_banguat = 28 where codigo = 'EUR'`);
-  await escenario.propietario.query(`update core.monedas set codigo_banguat = 29 where codigo = 'GBP'`);
+  await escenario.propietario.query(`update core.monedas set activa = true, codigo_banguat = 24 where codigo = 'EUR'`);
+  await escenario.propietario.query(`update core.monedas set codigo_banguat = 9 where codigo = 'GBP'`);
 });
 
 afterAll(async () => {
@@ -37,7 +37,7 @@ afterAll(async () => {
 
 const publicacion = (fecha: string, referencia: string): PublicacionDeTipoDeCambio => ({
   moneda: 'EUR',
-  codigoBanguat: 28,
+  codigoBanguat: 24,
   fecha,
   referencia,
   compra: referencia,
@@ -50,7 +50,7 @@ const consulta = (cambios: Partial<ConsultaHecha> = {}): ConsultaHecha => ({
   operacion: 'TipoCambioRangoMoneda',
   vuelta: 'manana',
   moneda: 'EUR',
-  codigoBanguat: 28,
+  codigoBanguat: 24,
   desde: '2026-11-10',
   hasta: '2026-11-12',
   resultado: 'exito',
@@ -68,7 +68,7 @@ describe('monedasACargar', () => {
     expect(monedas).toContain('EUR');
     expect(monedas).not.toContain('GBP');
     expect(monedas).not.toContain('GTQ');
-    expect(await cargas.monedasACargar()).toContainEqual({ moneda: 'EUR', codigoBanguat: 28 });
+    expect(await cargas.monedasACargar()).toContainEqual({ moneda: 'EUR', codigoBanguat: 24 });
   });
 });
 
@@ -139,7 +139,7 @@ describe('actualizarLista', () => {
     const ahora = new Date();
     const resultado = await cargas.actualizarLista(
       [
-        { codigo: 28, descripcion: 'Euro de la zona euro' },
+        { codigo: 24, descripcion: 'Euro de la zona euro' },
         { codigo: 777, descripcion: 'Moneda nueva' },
       ],
       ahora,
@@ -147,16 +147,24 @@ describe('actualizarLista', () => {
     );
 
     const { rows } = await escenario.propietario.query(
-      `select codigo, descripcion, disponible from core.monedas_del_banguat where codigo in (2, 28, 29, 30, 777) order by codigo`,
+      `select codigo, descripcion, disponible from core.monedas_del_banguat where codigo in (2, 3, 9, 24, 777) order by codigo`,
     );
     expect(resultado.nuevas).toBe(1);
     expect(resultado.noDisponibles).toBeGreaterThanOrEqual(3);
     expect(rows).toEqual([
       { codigo: 2, descripcion: expect.any(String), disponible: false },
-      { codigo: 28, descripcion: 'Euro de la zona euro', disponible: true },
-      { codigo: 29, descripcion: 'Libra', disponible: false },
-      { codigo: 30, descripcion: 'Otra', disponible: false },
+      { codigo: 3, descripcion: expect.any(String), disponible: false },
+      { codigo: 9, descripcion: expect.any(String), disponible: false },
+      { codigo: 24, descripcion: 'Euro de la zona euro', disponible: true },
       { codigo: 777, descripcion: 'Moneda nueva', disponible: true },
+    ]);
+    const convenciones = await escenario.propietario.query(
+      `select codigo, convencion from core.monedas_del_banguat where codigo in (2, 24, 777) order by codigo`,
+    );
+    expect(convenciones.rows).toEqual([
+      { codigo: 2, convencion: 'quetzales_por_unidad' },
+      { codigo: 24, convencion: 'usd_por_unidad' },
+      { codigo: 777, convencion: null },
     ]);
     const estado = await cargas.estadoDeLaLista();
     expect(estado.monedas).toBeGreaterThanOrEqual(5);

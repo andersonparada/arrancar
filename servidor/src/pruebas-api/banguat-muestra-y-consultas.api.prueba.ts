@@ -10,7 +10,6 @@ let propietario: pg.Client;
 
 async function limpiar(): Promise<void> {
   await propietario.query(`delete from core.consultas_al_banguat where vuelta = 'muestra'`);
-  await propietario.query(`delete from core.monedas_del_banguat where codigo = 28`);
 }
 
 beforeAll(async () => {
@@ -19,7 +18,6 @@ beforeAll(async () => {
   propietario = new pg.Client({ connectionString: configuracion.DATABASE_URL_PROPIETARIO });
   await propietario.connect();
   await limpiar();
-  await propietario.query(`insert into core.monedas_del_banguat (codigo, descripcion) values (28, 'Euro')`);
 });
 
 afterAll(async () => {
@@ -57,7 +55,7 @@ describe('GET /api/tipos-de-cambio/consultas', () => {
 
 describe('GET /api/monedas/banguat/:codigo/muestra', () => {
   it('el propietario de la cuenta no la ve', async () => {
-    expect((await cuenta.propietario.get('/api/monedas/banguat/28/muestra')).estado).toBe(403);
+    expect((await cuenta.propietario.get('/api/monedas/banguat/24/muestra')).estado).toBe(403);
   });
 
   it('un código que el Banguat no ofrece da 422 y no llama al servicio', async () => {
@@ -68,18 +66,18 @@ describe('GET /api/monedas/banguat/:codigo/muestra', () => {
   });
 
   it('con el Banguat fuera de alcance responde el error, deja su fila y no guarda tipos; la 11.ª en un minuto da 429', async () => {
-    const respuesta = await entorno.soporte.get('/api/monedas/banguat/28/muestra?moneda=EUR');
+    const respuesta = await entorno.soporte.get('/api/monedas/banguat/24/muestra?moneda=EUR');
 
     const bitacora = await propietario.query(
       `select moneda, codigo_banguat, resultado, disparada_por is not null as con_usuario
-         from core.consultas_al_banguat where vuelta = 'muestra' and codigo_banguat = 28`,
+         from core.consultas_al_banguat where vuelta = 'muestra' and codigo_banguat = 24`,
     );
     expect(respuesta.estado).toBe(200);
-    expect(respuesta.cuerpo).toMatchObject({ codigo: 28, descripcion: 'Euro', resultado: 'error', valores: [] });
-    expect(bitacora.rows).toEqual([{ moneda: 'EUR', codigo_banguat: 28, resultado: 'error', con_usuario: true }]);
+    expect(respuesta.cuerpo).toMatchObject({ codigo: 24, descripcion: 'Euro', resultado: 'error', valores: [] });
+    expect(bitacora.rows).toEqual([{ moneda: 'EUR', codigo_banguat: 24, resultado: 'error', con_usuario: true }]);
 
     const estados: number[] = [];
-    for (let i = 0; i < 10; i++) estados.push((await entorno.soporte.get('/api/monedas/banguat/28/muestra')).estado);
+    for (let i = 0; i < 10; i++) estados.push((await entorno.soporte.get('/api/monedas/banguat/24/muestra')).estado);
     expect(estados.at(-1)).toBe(429);
   });
 });
