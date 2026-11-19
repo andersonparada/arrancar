@@ -11,6 +11,11 @@ import type { VerificadorDeFotos } from './verificador-de-fotos.js';
 export interface DependenciasCompartidas {
   unidadDeTrabajo: UnidadDeTrabajo;
   publicadorEventos: PublicadorEventos;
+  /**
+   * Publica dentro de la unidad de trabajo y deja el evento en `core.registro_de_eventos` (lanza fuera de una
+   * transacción). Convive con `publicadorEventos` mientras los módulos cambian a este (CT-0a2 y CT-0a3).
+   */
+  publicadorDeEventos: PublicadorEventos;
   auditoria: Auditoria;
   correlativos: Correlativos;
   reloj: Reloj;
