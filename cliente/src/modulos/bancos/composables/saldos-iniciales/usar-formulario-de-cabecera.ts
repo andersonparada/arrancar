@@ -7,6 +7,7 @@ import {
   datosDeCabecera,
   edicionDeSaldoInicial,
   edicionNuevaDeSaldoInicial,
+  erroresDeCabecera,
   type EdicionDeSaldoInicial,
 } from './edicion-de-saldo-inicial';
 
@@ -22,6 +23,8 @@ export function usarFormularioDeCabecera(cuentaBancariaId: string, alGuardar: ()
   }
 
   async function guardar(): Promise<void> {
+    errores.value = erroresDeCabecera(edicion.value);
+    if (Object.keys(errores.value).length) return;
     const resultado = ref<CabeceraGuardada | null>(null);
     const separando = edicion.value.separando;
     const guardado = await enviar(async () => {

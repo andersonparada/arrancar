@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { resumenDeEjemplo } from './ejemplos-de-saldos-iniciales';
-import { datosDeCabecera, edicionDeSaldoInicial, edicionNuevaDeSaldoInicial } from './edicion-de-saldo-inicial';
+import {
+  datosDeCabecera,
+  edicionDeSaldoInicial,
+  edicionNuevaDeSaldoInicial,
+  erroresDeCabecera,
+} from './edicion-de-saldo-inicial';
 
 const ficha = (cambios = {}) => ({
   ...resumenDeEjemplo(),
@@ -56,5 +61,16 @@ describe('datosDeCabecera', () => {
       saldoSegunEstadoDeCuenta: '1500',
       saldoSegunLibrosAnteriores: '0',
     });
+  });
+});
+
+describe('erroresDeCabecera', () => {
+  it('un saldo vacío dice cómo corregirlo', () => {
+    expect(erroresDeCabecera(edicionNuevaDeSaldoInicial()).saldoSegunEstadoDeCuenta).toContain('escriba 0');
+  });
+
+  it('el cero y los negativos son saldos válidos', () => {
+    expect(erroresDeCabecera({ ...edicionNuevaDeSaldoInicial(), saldoSegunEstadoDeCuenta: 0 })).toEqual({});
+    expect(erroresDeCabecera({ ...edicionNuevaDeSaldoInicial(), saldoSegunEstadoDeCuenta: '-2500' })).toEqual({});
   });
 });
