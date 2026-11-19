@@ -53,6 +53,15 @@ export class FechaAnteriorAlInicio extends DatoInvalido {
   }
 }
 
+/** No se halló un código libre al proponerlo: hay que escribirlo a mano. */
+export class CodigoNoDisponible extends ReglaDeNegocioInfringida {
+  readonly codigo = 'codigo_de_activo_no_disponible';
+
+  constructor() {
+    super('No se encontró un código libre para el activo. Escríbalo a mano.');
+  }
+}
+
 /** El activo ya tiene movimientos, costos o componentes: no se elimina. */
 export class ActivoConMovimientos extends ReglaDeNegocioInfringida {
   readonly codigo = 'activo_con_movimientos';

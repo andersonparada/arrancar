@@ -11,13 +11,21 @@ import {
 } from '../../../dominio/errores-de-activo.js';
 import type { DependenciasDeActivos } from './dependencias-de-activos.js';
 
-type Comprobador = Pick<DependenciasDeActivos, 'repositorio' | 'clases' | 'ubicaciones' | 'cargaInicial'>;
+type Comprobador = Pick<DependenciasDeActivos, 'repositorio' | 'clases' | 'ubicaciones' | 'cargaInicial' | 'reloj'>;
 
-/** @throws RecursoNoEncontrado si la clase no existe; ActivoInvalido si está inactiva. */
-export async function claseParaActivo({ clases }: Comprobador, claseId: string): Promise<Clase> {
+/**
+ * @throws RecursoNoEncontrado si la clase no existe; ActivoInvalido si está inactiva, salvo que sea la que el activo
+ * ya tiene (`claseActualId`): inactivar una clase no impide corregir sus activos.
+ */
+export async function claseParaActivo(
+  { clases }: Comprobador,
+  claseId: string,
+  claseActualId: string | null = null,
+): Promise<Clase> {
   const clase = await clases.buscar(Identificador.desde(claseId));
   if (!clase) throw new RecursoNoEncontrado('La clase de activo');
-  if (!clase.instantanea().activo) throw new ActivoInvalido('La clase de activo está inactiva: elija otra.');
+  if (!clase.instantanea().activo && claseId !== claseActualId)
+    throw new ActivoInvalido('La clase de activo está inactiva: elija otra.');
   return clase;
 }
 
@@ -63,11 +71,15 @@ export async function validarUbicacion(
   await departamentoCoherente(comprobador, ubicacion);
 }
 
-/** @throws FechaAnteriorAlInicio si es anterior a la fecha de inicio de la empresa (va como saldo inicial). */
+/**
+ * @throws FechaAnteriorAlInicio si es anterior a la fecha de inicio de la empresa (va como saldo inicial).
+ * @throws ActivoInvalido si es posterior a hoy.
+ */
 export async function validarFechaDeAdquisicion(
-  { cargaInicial }: Comprobador,
+  { cargaInicial, reloj }: Comprobador,
   { operador, fecha }: { operador: Operador; fecha: string },
 ): Promise<void> {
+  if (fecha > (await reloj.hoy(operador))) throw new ActivoInvalido('La fecha de adquisición no puede ser futura.');
   const { fechaDeInicio } = await cargaInicial.obtener(operador);
   if (fechaDeInicio && fecha < fechaDeInicio) throw new FechaAnteriorAlInicio(fechaDeInicio);
 }

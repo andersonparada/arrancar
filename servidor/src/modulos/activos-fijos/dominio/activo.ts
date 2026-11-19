@@ -126,10 +126,11 @@ export class Activo extends Entidad<ActivoId> {
 
   /**
    * Un activo ocioso sigue depreciándose; solo se deja constancia de cuándo y por qué (NIIF 17.20).
-   * @throws ActivoNoEnUso, MotivoDeOcioRequerido, ActivoInvalido si la fecha es futura o anterior al uso.
+   * @throws ActivoNoEnUso, MotivoDeOcioRequerido, ActivoInvalido si ya es ocioso o la fecha es futura o anterior al uso.
    */
   marcarOcioso({ fecha, motivo }: { fecha: string; motivo: string }, hoy: string): void {
     this.exigirEnUso();
+    if (this.propiedades.ocioso) throw new ActivoInvalido('El activo ya está marcado como ocioso.');
     const limpio = motivo.trim();
     if (!limpio) throw new MotivoDeOcioRequerido();
     if (limpio.length > MOTIVO_MAXIMO)
@@ -138,9 +139,10 @@ export class Activo extends Entidad<ActivoId> {
     this.propiedades = { ...this.propiedades, ocioso: true, ociosoDesde: fecha, motivoDeOcio: limpio };
   }
 
-  /** @throws ActivoNoEnUso, ActivoInvalido si la fecha es futura o anterior a cuando se marcó. */
+  /** @throws ActivoNoEnUso, ActivoInvalido si no es ocioso o la fecha es futura o anterior a cuando se marcó. */
   quitarOcioso(fecha: string, hoy: string): void {
     this.exigirEnUso();
+    if (!this.propiedades.ocioso) throw new ActivoInvalido('El activo no está marcado como ocioso.');
     this.exigirFechaDeOcio(fecha, hoy);
     if (this.propiedades.ociosoDesde && fecha < this.propiedades.ociosoDesde)
       throw new ActivoInvalido('La fecha no puede ser anterior a la de la marca de ocioso.');

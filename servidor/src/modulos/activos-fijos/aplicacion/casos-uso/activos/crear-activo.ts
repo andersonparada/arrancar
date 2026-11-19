@@ -25,8 +25,7 @@ export class CrearActivo {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const clase = await this.comprobar(operador, solicitud);
-      const fecha = solicitud.fechaDeAdquisicion;
-      const codigo = solicitud.codigo?.trim() || (await proponerCodigo(this.dependencias, operador, fecha));
+      const codigo = solicitud.codigo?.trim() || (await proponerCodigo(this.dependencias, operador));
       const { enBodega, localidadId, departamentoId, responsable, ...datos } = solicitud;
       const activo = Activo.crear(
         Identificador.desde(operador.empresaId),

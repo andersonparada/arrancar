@@ -3023,3 +3023,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   siempre (AF-P22 b). Lógica pura con pruebas en `edicion-de-activo.ts`, `etiquetas-de-activo.ts` y `filtros-de-activos.ts`.
   Pendiente: editar, marcar ocioso y eliminar desde la ficha (el servidor ya los tiene) y las etiquetas «Depreciado contable» y
   «Depreciado fiscal», que dependen de las cuotas (AF-5).
+- **2026-11-19 — Correcciones de la revisión de AF-2 (Activos fijos, servidor).** Editar un activo ya no exige clase activa si la
+  clase no cambia (inactivar una clase no bloquea corregir sus activos). El código propuesto usa siempre el mismo contador
+  (fecha fija), sin depender del reinicio anual ni de la fecha de adquisición; si no halla uno libre lanza
+  `CodigoNoDisponible` (regla de negocio, no 500). La fecha de adquisición futura se rechaza. `marcarOcioso` sobre uno ya ocioso
+  y `quitarOcioso` sobre uno que no lo es se rechazan. Quedan pendientes los bajos de cliente (casilla de bodega, mover
+  `fechaDeHoyEn` a core, permisos de los selectores) y del índice `include` y el check de `recibido_por`.

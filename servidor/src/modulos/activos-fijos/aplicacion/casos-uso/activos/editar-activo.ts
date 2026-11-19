@@ -21,7 +21,7 @@ export class EditarActivo {
     const { unidadDeTrabajo, repositorio, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const activo = await activoExistente(repositorio, activoId);
-      const clase = await claseParaActivo(this.dependencias, solicitud.claseId);
+      const clase = await claseParaActivo(this.dependencias, solicitud.claseId, activo.instantanea().claseId);
       const { fechaDeAdquisicion: fecha, activoPadreId: padreId } = solicitud;
       if (fecha !== activo.instantanea().fechaDeAdquisicion)
         await validarFechaDeAdquisicion(this.dependencias, { operador, fecha });
