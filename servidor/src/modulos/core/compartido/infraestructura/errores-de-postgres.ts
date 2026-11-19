@@ -41,6 +41,12 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   datos_fiscales_de_empresa_vigencia_unica: 'Ya hay un régimen registrado desde ese mes.',
 };
 
+/** Llaves foráneas que se rechazan con un mensaje que guía, en vez del genérico «está relacionado con otros datos». */
+const MENSAJES_DE_LLAVE: Readonly<Record<string, string>> = {
+  costos_linea_fk:
+    'El documento tiene costos capitalizados en Activos fijos, aunque estén anulados, y no se puede eliminar: anúlelo en su lugar.',
+};
+
 /** Restricciones únicas cuyo valor repetido lo escribe el usuario en un campo: el cliente lo marca ahí. */
 const CAMPOS_POR_RESTRICCION: Readonly<Record<string, string>> = {
   documentos_numero_por_proveedor_unico: 'numero',
@@ -80,7 +86,7 @@ const INTERPRETES_POR_CODIGO: Readonly<Record<string, (restriccion: string) => E
       MENSAJES_POR_RESTRICCION[restriccion] ?? 'El registro ya existe.',
       restriccion in CAMPOS_POR_RESTRICCION ? { campo: CAMPOS_POR_RESTRICCION[restriccion] } : undefined,
     ),
-  [VIOLACION_DE_LLAVE_FORANEA]: () => new RecursoEnUso(),
+  [VIOLACION_DE_LLAVE_FORANEA]: (restriccion) => new RecursoEnUso(MENSAJES_DE_LLAVE[restriccion]),
   [VIOLACION_DE_EXCLUSION]: (restriccion) =>
     new RangoTraslapado(MENSAJES_DE_EXCLUSION[restriccion] ?? 'El registro se traslapa con otro.'),
   [VIOLACION_DE_POLITICA_RLS]: () => new RecursoNoEncontrado('El registro'),
