@@ -10,7 +10,15 @@ export type OperacionDelBanguat =
 export type VueltaDeCarga = 'madrugada' | 'manana' | 'noche' | 'arranque' | 'relleno' | 'manual' | 'lista' | 'muestra';
 
 export type ResultadoDeLaConsulta =
-  'exito' | 'sin_datos' | 'error' | 'valor_fuera_de_rango' | 'valor_ambiguo' | 'variacion_excesiva';
+  | 'exito'
+  | 'sin_datos'
+  | 'error'
+  | 'valor_fuera_de_rango'
+  | 'valor_ambiguo'
+  | 'variacion_excesiva'
+  | 'sin_dolar_del_dia'
+  | 'convencion_dudosa'
+  | 'sin_convencion';
 
 /** Una llamada al Banguat tal como queda en `core.consultas_al_banguat` (las filas nuevas las cuenta quien guarda). */
 export interface ConsultaHecha {

@@ -13,6 +13,9 @@ export interface MonedaDelBanguat {
   readonly descripcion: string;
 }
 
+/** Cómo publica el Banguat una moneda (adenda B.4 de `diseno-multimoneda.md`). */
+export type ConvencionDePublicacion = 'quetzales_por_unidad' | 'usd_por_unidad' | 'unidades_por_usd';
+
 /** Un tipo de cambio de referencia ya validado, tal como lo publicó la fuente. */
 export interface PublicacionDeTipoDeCambio {
   /** Código ISO 4217, por ejemplo `USD`. */
@@ -26,6 +29,10 @@ export interface PublicacionDeTipoDeCambio {
   /** Solo en los rangos, donde `compra = venta = referencia`. */
   readonly compra?: string;
   readonly venta?: string;
+  /** Con que se calculó `referencia`; sin indicar es el dólar (`quetzales_por_unidad`). */
+  readonly convencion?: ConvencionDePublicacion;
+  /** La fila del dólar del Banguat usada para pasar un cruce a quetzales; nula en el dólar. */
+  readonly dolarUsadoId?: string;
 }
 
 /** Por qué se descartó un valor recibido; es lo que se anota en la bitácora de consultas. */
