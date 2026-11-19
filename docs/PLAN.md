@@ -2962,3 +2962,24 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   de activos muestra el nombre de la localidad aunque el usuario no tenga acceso a ella (consulta de Empresas solo con id y
   nombre, revisada por seguridad). Validación del contador de Inventarios guardada en
   `dictamen-inventarios-validacion-2026-11-18.md` (V-2: la fórmula de absorción con promedio del diseño es incorrecta).
+- **2026-11-19 — AF-1 (Activos fijos, servidor).** Esqueleto del módulo `activos-fijos` (`dependeDe: ['libro-de-compras']`), esquema
+  `activos_fijos` con `clases` (único por nombre normalizado, `check` de inciso, porcentaje 0 a 100, terrenos en 0 % y sin vida útil,
+  vida 1 a 1200 meses y residual 0 a 99.99) y `clases_por_concepto` (llaves compuestas con la empresa; la del concepto en cascada),
+  ambas con RLS solo por empresa. Migraciones `0000_af1_clases` y `0001_af1_auditoria_permanente` (inserta en
+  `core.recursos_de_auditoria_permanente` los seis recursos del diseño con la cita de los arts. 112 «A» y 47 del Código Tributario).
+  Configuración del módulo: los diez topes de ley `activos-fijos.isr.maximo.<inciso>` (solo instalación) y `primer_mes`, `umbral`,
+  `codigos.prefijo` (pública) y `meses_de_aviso`; el dominio rechaza el porcentaje sobre el tope (`clase_con_porcentaje_sobre_el_maximo`).
+  Casos de uso: crear, editar (inactivar y reactivar con auditoría), eliminar (`clase_en_uso` si tiene conceptos ligados; los activos
+  se suman en AF-2), listar con la **semilla** de 14 clases al abrir el catálogo vacío (el tope de la instalación recorta la sugerida),
+  y los conceptos de gasto que proponen la clase (`GET` y `PUT /activos-fijos/clases/:id/conceptos`; un concepto propone una sola
+  clase y lo que se quita o se mueve queda en la auditoría como `quitar`). Excel de clases con `core/intercambio`. Permisos de clases:
+  `ver`, `crear`, `editar`, `eliminar`, `importar` y `exportar`. Sin pantallas (AF-1c). Decisiones: la semilla es perezosa y no
+  puede estar en el alta de la empresa (los módulos no se importan entre sí); la ayuda de «Programas y licencias» (V-2) queda como
+  constante de dominio para el cliente; el esqueleto del cliente queda vacío para AF-1c.
+- **2026-11-19 — AF-1c (Activos fijos, cliente).** Catálogo «Clases de activos» (`/activos-fijos/clases`, menú Administración del módulo)
+  generado con `npm run generar -- recurso activos-fijos/clase` y completado a mano: lista por nombre con tarjeta propia, ventana de
+  alta y edición, Inactivar o Reactivar con confirmación, Eliminar con confirmación (el servidor responde `clase_en_uso` si tiene
+  conceptos o activos) y Excel (importar y exportar, con sus permisos). Al elegir «Terrenos» el porcentaje queda en 0 y se quita la vida
+  útil (campos de solo lectura, como exige el servidor); el valor residual nuevo empieza en 0; «Programas y licencias» muestra la ayuda
+  V-2. Lógica pura con pruebas en `reglas-de-clase.ts`. Pendiente: la ventana de conceptos de gasto que proponen la clase
+  (`GET` y `PUT /activos-fijos/clases/:id/conceptos`), que el plan no lista en AF-1c.

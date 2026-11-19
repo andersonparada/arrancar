@@ -1,0 +1,331 @@
+{
+  "id": "e33bab68-0a4c-4e48-b229-56fa62783060",
+  "prevId": "4fb0bda1-321b-41ed-9181-f967c0befb47",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "activos_fijos.clases_por_concepto": {
+      "name": "clases_por_concepto",
+      "schema": "activos_fijos",
+      "columns": {
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "concepto_de_gasto_id": {
+          "name": "concepto_de_gasto_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clase_id": {
+          "name": "clase_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "clases_por_concepto_clase_idx": {
+          "name": "clases_por_concepto_clase_idx",
+          "columns": [
+            {
+              "expression": "clase_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "clases_por_concepto_empresa_id_empresas_id_fk": {
+          "name": "clases_por_concepto_empresa_id_empresas_id_fk",
+          "tableFrom": "clases_por_concepto",
+          "columnsFrom": ["empresa_id"],
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "clases_por_concepto_concepto_fk": {
+          "name": "clases_por_concepto_concepto_fk",
+          "tableFrom": "clases_por_concepto",
+          "columnsFrom": ["concepto_de_gasto_id", "empresa_id"],
+          "tableTo": "conceptos_de_gasto",
+          "schemaTo": "libro_de_compras",
+          "columnsTo": ["id", "empresa_id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "clases_por_concepto_clase_fk": {
+          "name": "clases_por_concepto_clase_fk",
+          "tableFrom": "clases_por_concepto",
+          "columnsFrom": ["clase_id", "empresa_id"],
+          "tableTo": "clases",
+          "schemaTo": "activos_fijos",
+          "columnsTo": ["id", "empresa_id"],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "clases_por_concepto_pk": {
+          "name": "clases_por_concepto_pk",
+          "columns": ["empresa_id", "concepto_de_gasto_id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "activos_fijos.clases": {
+      "name": "clases",
+      "schema": "activos_fijos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inciso_fiscal": {
+          "name": "inciso_fiscal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "porcentaje_fiscal": {
+          "name": "porcentaje_fiscal",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vida_util_contable_meses": {
+          "name": "vida_util_contable_meses",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_residual_porcentaje": {
+          "name": "valor_residual_porcentaje",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "clases_nombre_unico": {
+          "name": "clases_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "isExpression": true,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "clases_empresa_activo_idx": {
+          "name": "clases_empresa_activo_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "activo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "clases_empresa_id_empresas_id_fk": {
+          "name": "clases_empresa_id_empresas_id_fk",
+          "tableFrom": "clases",
+          "columnsFrom": ["empresa_id"],
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsTo": ["id"],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "clases_id_empresa_unico": {
+          "name": "clases_id_empresa_unico",
+          "columns": ["id", "empresa_id"],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["arrancar_app"],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "clases_nombre_largo": {
+          "name": "clases_nombre_largo",
+          "value": "char_length(btrim(\"activos_fijos\".\"clases\".\"nombre\")) between 1 and 80"
+        },
+        "clases_inciso_fiscal": {
+          "name": "clases_inciso_fiscal",
+          "value": "\"activos_fijos\".\"clases\".\"inciso_fiscal\" in ('edificios', 'plantaciones', 'instalaciones_y_mobiliario', 'maquinaria_y_vehiculos', 'computo', 'herramientas', 'reproductores', 'otros_muebles', 'intangibles', 'llave', 'terrenos')"
+        },
+        "clases_porcentaje_fiscal": {
+          "name": "clases_porcentaje_fiscal",
+          "value": "\"activos_fijos\".\"clases\".\"porcentaje_fiscal\" between 0 and 100"
+        },
+        "clases_terrenos_sin_porcentaje": {
+          "name": "clases_terrenos_sin_porcentaje",
+          "value": "(\"activos_fijos\".\"clases\".\"inciso_fiscal\" = 'terrenos') = (\"activos_fijos\".\"clases\".\"porcentaje_fiscal\" = 0)"
+        },
+        "clases_vida_util": {
+          "name": "clases_vida_util",
+          "value": "\"activos_fijos\".\"clases\".\"vida_util_contable_meses\" between 1 and 1200"
+        },
+        "clases_terrenos_sin_vida_util": {
+          "name": "clases_terrenos_sin_vida_util",
+          "value": "\"activos_fijos\".\"clases\".\"inciso_fiscal\" <> 'terrenos' or \"activos_fijos\".\"clases\".\"vida_util_contable_meses\" is null"
+        },
+        "clases_valor_residual": {
+          "name": "clases_valor_residual",
+          "value": "\"activos_fijos\".\"clases\".\"valor_residual_porcentaje\" between 0 and 99.99"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "activos_fijos": "activos_fijos"
+  },
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

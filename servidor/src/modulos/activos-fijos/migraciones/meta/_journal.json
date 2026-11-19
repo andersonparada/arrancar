@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1795054784890,
+      "tag": "0000_af1_clases",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795054788309,
+      "tag": "0001_af1_auditoria_permanente",
+      "breakpoints": true
+    }
+  ]
+}
