@@ -12,7 +12,7 @@ export const FORMULARIO_DE_DOCUMENTO = {
   } as Partial<Record<TipoDeDocumento, string>>,
   volver: 'Ingreso de facturas',
   /** Cuando se llega desde un destino (un fondo, un anticipo): a dónde va el documento y cómo volver. */
-  paraElDestino: (etiqueta: string) => `Destino: ${etiqueta}`,
+  paraElDestino: (etiqueta: string) => `Para: ${etiqueta}`,
   volverAlDestino: 'Volver',
   registrar: 'Registrar',
   cancelar: 'Cancelar',

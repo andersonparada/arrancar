@@ -5,7 +5,7 @@ const ID = '3f2b8c1e-5d4a-4e6f-9a7b-1c2d3e4f5a6b';
 
 describe('referenciaDeLaRuta', () => {
   it('sin referencia no hay nada', () => {
-    expect(referenciaDeLaRuta({})).toEqual({ referencia: null, etiqueta: null, volver: null });
+    expect(referenciaDeLaRuta({})).toEqual({ destino: null, referencia: null, etiqueta: null, volver: null });
     expect(referenciaDeLaRuta({ etiqueta: 'Finca', volver: '/x' }).referencia).toBeNull();
   });
 
@@ -14,8 +14,14 @@ describe('referenciaDeLaRuta', () => {
   });
 
   it('toma la referencia, la etiqueta y la ruta de vuelta', () => {
-    const query = { referencia: ID, etiqueta: ' Finca El Roble ', volver: '/caja-chica/fondos/1' };
+    const query = {
+      destino: 'caja-chica',
+      referencia: ID,
+      etiqueta: ' Finca El Roble ',
+      volver: '/caja-chica/fondos/1',
+    };
     expect(referenciaDeLaRuta(query)).toEqual({
+      destino: 'caja-chica',
       referencia: ID,
       etiqueta: 'Finca El Roble',
       volver: '/caja-chica/fondos/1',
@@ -26,5 +32,10 @@ describe('referenciaDeLaRuta', () => {
     expect(referenciaDeLaRuta({ referencia: ID, volver: '//mal.com' }).volver).toBeNull();
     expect(referenciaDeLaRuta({ referencia: ID, volver: 'https://mal.com' }).volver).toBeNull();
     expect(referenciaDeLaRuta({ referencia: ID, volver: '/\\mal.com' }).volver).toBeNull();
+  });
+
+  it('un destino desconocido se ignora', () => {
+    expect(referenciaDeLaRuta({ destino: 'otro', referencia: ID }).destino).toBeNull();
+    expect(referenciaDeLaRuta({ referencia: ID }).destino).toBeNull();
   });
 });

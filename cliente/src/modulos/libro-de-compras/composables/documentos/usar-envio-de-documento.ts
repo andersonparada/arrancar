@@ -68,8 +68,21 @@ function crearRegistrador(edicion: EdicionDeDocumento, avisos: Avisos, estado: E
   return intentar;
 }
 
-/** Tras registrar: deja los avisos del servidor para la ficha y va a ella. */
-function irAlDocumento(router: Router, avisos: Avisos, { documento, avisos: delServidor }: RespuestaDeDocumento): void {
+/** Tras registrar desde un destino (un anticipo, un fondo): vuelve a él y dice lo que el servidor avisó. */
+function volverAlDestino(router: Router, avisos: Avisos, vuelta: { a: string; avisos: readonly string[] }): void {
+  avisos.exito('Documento registrado.');
+  vuelta.avisos.forEach((aviso) => avisos.info(aviso));
+  void router.push(vuelta.a);
+}
+
+/** Tras registrar: deja los avisos del servidor para la ficha y va a ella (o vuelve al destino de donde se llegó). */
+function irAlDocumento(
+  router: Router,
+  avisos: Avisos,
+  { respuesta, volver }: { respuesta: RespuestaDeDocumento; volver: string | null },
+): void {
+  const { documento, avisos: delServidor } = respuesta;
+  if (volver) return volverAlDestino(router, avisos, { a: volver, avisos: delServidor });
   avisos.exito('Documento registrado.');
   if (!documento.id) {
     void router.push({ name: 'libro-de-compras.documentos' });
@@ -100,7 +113,7 @@ export function usarEnvioDeDocumento(edicion: EdicionDeDocumento, retenciones: R
   const estado = crearEstadoDelEnvio();
   const registrado = ref(false);
   const intentar = crearRegistrador(edicion, avisos, estado);
-  const { referencia } = referenciaDeLaRuta(useRoute().query);
+  const { referencia, volver } = referenciaDeLaRuta(useRoute().query);
 
   // Corregir cualquier campo da por atendido el problema anterior.
   watch(edicion, estado.limpiar, { deep: true });
@@ -113,7 +126,7 @@ export function usarEnvioDeDocumento(edicion: EdicionDeDocumento, retenciones: R
     await enviar(async () => (respuesta.value = await intentar(cuerpo)));
     if (!respuesta.value) return;
     registrado.value = true;
-    irAlDocumento(router, avisos, respuesta.value);
+    irAlDocumento(router, avisos, { respuesta: respuesta.value, volver });
   }
 
   const erroresDelEnvio = computed(() => ({ ...errores.value, ...estado.delTipo.value }));
