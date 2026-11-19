@@ -6,6 +6,7 @@ import { mapeadorDeActivo } from './activo.mapeador.js';
 import { activos } from './activos.tablas.js';
 import { costos } from './costos.tablas.js';
 import { enTandas } from './en-tandas.js';
+import { tramos } from './tramos.tablas.js';
 import { traslados } from './traslados.tablas.js';
 
 /** Las tablas tienen seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
@@ -56,6 +57,7 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
 
   async eliminar(activo: Activo): Promise<void> {
     const transaccion = transaccionEnCurso();
+    await transaccion.delete(tramos).where(eq(tramos.activoId, activo.id.valor));
     await transaccion.delete(costos).where(eq(costos.activoId, activo.id.valor));
     await transaccion.delete(traslados).where(eq(traslados.activoId, activo.id.valor));
     await transaccion.delete(activos).where(eq(activos.id, activo.id.valor));

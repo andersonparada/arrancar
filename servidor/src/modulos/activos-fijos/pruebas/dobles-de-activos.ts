@@ -23,6 +23,7 @@ function aFicha(activo: Activo): ActivoFichaDto {
     localidadNombre: null,
     departamentoNombre: null,
     traslados: [],
+    tramos: [],
   };
 }
 

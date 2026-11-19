@@ -3,6 +3,8 @@ import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.
 import type { CrearActivo } from '../aplicacion/casos-uso/activos/crear-activo.js';
 import type { EditarActivo } from '../aplicacion/casos-uso/activos/editar-activo.js';
 import type { EliminarActivo } from '../aplicacion/casos-uso/activos/eliminar-activo.js';
+import type { PonerEnUso } from '../aplicacion/casos-uso/activos/poner-en-uso.js';
+import type { QuitarDeUso } from '../aplicacion/casos-uso/activos/quitar-de-uso.js';
 import type { MarcarOcioso } from '../aplicacion/casos-uso/activos/marcar-ocioso.js';
 import type {
   ListarActivos,
@@ -15,6 +17,7 @@ import type {
   FiltrosDeActivosSolicitados,
   OcioDeActivoSolicitado,
   ParamsActivo,
+  PonerEnUsoSolicitado,
 } from './activos.esquemas-http.js';
 
 export interface CasosDeUsoDeActivos {
@@ -23,6 +26,8 @@ export interface CasosDeUsoDeActivos {
   crear: CrearActivo;
   editar: EditarActivo;
   marcarOcioso: MarcarOcioso;
+  ponerEnUso: PonerEnUso;
+  quitarDeUso: QuitarDeUso;
   eliminar: EliminarActivo;
   ubicaciones: ListarUbicaciones;
 }
@@ -55,6 +60,15 @@ export class ActivosControlador {
       activoId: solicitud.params.activoId,
       solicitud: solicitud.body,
     });
+
+  ponerEnUso = (solicitud: FastifyRequest<{ Params: ParamsActivo; Body: PonerEnUsoSolicitado }>) =>
+    this.casosDeUso.ponerEnUso.ejecutar(operadorDe(solicitud), {
+      activoId: solicitud.params.activoId,
+      solicitud: solicitud.body,
+    });
+
+  quitarDeUso = (solicitud: FastifyRequest<{ Params: ParamsActivo }>) =>
+    this.casosDeUso.quitarDeUso.ejecutar(operadorDe(solicitud), solicitud.params.activoId);
 
   eliminar = async (solicitud: FastifyRequest<{ Params: ParamsActivo }>, respuesta: FastifyReply) => {
     await this.casosDeUso.eliminar.ejecutar(operadorDe(solicitud), solicitud.params.activoId);

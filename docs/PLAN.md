@@ -3050,3 +3050,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   espera a AF-7 (`costo_posterior_no_disponible`); la ruta de subida del archivo del costo manual queda pendiente (revisión de
   `seguridad`); el índice `traslados_activo_fecha_idx` del esquema vuelve a ser descendente, como lo creó la migración 0002.
 - **2026-11-19 — AF-3, corrección de la revisión (carrera con R-1).** Capitalizar leía el documento sin bloquearlo mientras `AnularDocumento` lo bloquea con FOR UPDATE y revisa los costos: podía quedar un documento anulado con costos vigentes. `LineasDelLibroDrizzle.buscar` toma ahora `FOR SHARE` de los documentos de las líneas, en orden por id, antes de leerlas, de modo que la anulación espera y ve los costos o la capitalización lee el documento ya anulado. Prueba nueva de concurrencia «capitalizar y anular el documento a la vez».
+
+- **2026-11-19 — AF-4 (Activos fijos, servidor).** Migración `0004_af4_tramos`: `activos_fijos.tramos` (§5.8, sin `mejora_id` ni
+  `division_id`, que llegan con AF-7 y AFI-5). Dominio puro de depreciación en `dominio/depreciacion/` (centavos enteros, mitad
+  hacia arriba con BigInt): primer mes (§7.1), tramo contable con la última cuota que absorbe el redondeo (§7.2), tramo fiscal
+  (§7.3), exceso de nota de crédito uno por libro (§7.4), base fiscal con el tope del inmueble (mayor de matrícula y catastro, 70 %
+  si es inmueble completo, «no es edificación» aparte) y el reproductor sin su ganado común, y parámetros propuestos por la
+  clase (vida = `round(1200 / %)` si la clase no la da; residual = ganado común en reproductores). Pruebas puras con los ejemplos
+  de §7.5 (pick-up: 59 cuotas fiscales de 4,166.67 y la 60.ª de 4,166.47; diferencia temporaria de 4,166.70 en dic-2027). Casos de
+  uso `PonerEnUso` (`POST …/:id/poner-en-uso`) y `QuitarDeUso` (`POST …/:id/quitar-de-uso`, auditoría `devolver` con la ficha y sus
+  tramos), permiso `activos-fijos.activos.poner-en-uso`; la ficha trae `tramos`. Eliminar un activo en uso borra sus tramos y los
+  deja en la auditoría. Decisiones: los cierres no existen hasta AF-5, así que el puerto `Cierres` (último mes cerrado y tramos
+  usados) tiene una implementación `CierresDrizzle` que responde «nada cerrado» y AF-5 la reemplaza; terrenos se ponen en uso con
+  porcentaje 0 y sin tramos ni costo; el máximo de ley se valida al poner en uso (el porcentaje de la clase puede ser menor).
+  Pendiente: `QuitarDeUso` debe rechazar activos con tramos de otra causa (mejora, saldo inicial) cuando existan (AF-6, AF-7);
+  ubicación y «En bodega de activos» al poner disponible son AFI-3.

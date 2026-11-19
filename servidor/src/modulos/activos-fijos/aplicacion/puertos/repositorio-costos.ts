@@ -14,6 +14,8 @@ export interface RepositorioCostos {
   bloquearLineas(lineaIds: readonly string[]): Promise<void>;
   /** Σ de los costos vigentes de cada activo, en centavos; el activo debe estar bloqueado por quien llama. */
   totalesVigentes(activoIds: readonly string[]): Promise<Map<string, number>>;
+  /** Los costos vigentes del activo (con signo); el activo debe estar bloqueado por quien llama. */
+  vigentesDeActivo(activoId: string): Promise<Costo[]>;
   /** Los códigos de los activos con costos vigentes de las líneas del documento (para frenar su anulación). */
   codigosDeActivosConCostosDelDocumento(documentoId: string): Promise<string[]>;
 }

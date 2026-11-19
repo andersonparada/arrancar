@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   decimalOpcional,
   enteroObligatorio,
+  enteroOpcional,
   fechaObligatoria,
   idObligatorio,
   idOpcional,
@@ -58,6 +59,14 @@ export const esquemaOcioDeActivo = z.object({
   motivo: textoOpcional(300),
 });
 
+/** Poner en uso: lo que no se escribe lo propone la clase del activo. */
+export const esquemaPonerEnUso = z.object({
+  fechaDeInicioDeUso: fechaObligatoria(),
+  porcentajeFiscal: decimalOpcional(2),
+  vidaUtilContableMeses: enteroOpcional(),
+  valorResidual: decimalOpcional(2),
+});
+
 export const esquemaParamsActivo = z.object({ activoId: z.uuid() });
 
 const booleanoDeConsulta = z.enum(['true', 'false']).transform((valor) => valor === 'true');
@@ -78,5 +87,6 @@ export const esquemaFiltrosDeActivos = z.object({
 export type ActivoSolicitado = z.infer<typeof esquemaActivo>;
 export type EdicionDeActivoSolicitada = z.infer<typeof esquemaEdicionDeActivo>;
 export type OcioDeActivoSolicitado = z.infer<typeof esquemaOcioDeActivo>;
+export type PonerEnUsoSolicitado = z.infer<typeof esquemaPonerEnUso>;
 export type ParamsActivo = z.infer<typeof esquemaParamsActivo>;
 export type FiltrosDeActivosSolicitados = z.infer<typeof esquemaFiltrosDeActivos>;

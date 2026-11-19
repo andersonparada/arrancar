@@ -1,12 +1,19 @@
 import { and, asc, desc, eq, getTableColumns, ilike, or, sql, type AnyColumn, type SQL } from 'drizzle-orm';
 import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
-import type { ActivoDto, ActivoFichaDto, FiltrosDeActivos, TrasladoDto } from '../../aplicacion/dto/activo.dto.js';
+import type {
+  ActivoDto,
+  ActivoFichaDto,
+  FiltrosDeActivos,
+  TramoDto,
+  TrasladoDto,
+} from '../../aplicacion/dto/activo.dto.js';
 import type { ConsultasActivos } from '../../aplicacion/puertos/consultas-activos.js';
 import { activos } from './activos.tablas.js';
 import { clases } from './clases.tablas.js';
 import { costos } from './costos.tablas.js';
 import { nombresDeUbicaciones } from './nombres-de-ubicaciones.js';
+import { tramos } from './tramos.tablas.js';
 import { traslados } from './traslados.tablas.js';
 import { UbicacionesEnEmpresas } from './ubicaciones-en-empresas.drizzle.js';
 
@@ -69,7 +76,7 @@ export class ConsultasActivosDrizzle implements ConsultasActivos {
     const filas = await this.filas(eq(activos.id, activoId));
     const [activo] = await this.conNombres(filas);
     if (!activo) throw new RecursoNoEncontrado('El activo');
-    return { ...activo, traslados: await this.trasladosDe(activoId) };
+    return { ...activo, traslados: await this.trasladosDe(activoId), tramos: await this.tramosDe(activoId) };
   }
 
   async filas(donde: SQL | undefined) {
@@ -88,6 +95,29 @@ export class ConsultasActivosDrizzle implements ConsultasActivos {
       localidadNombre: nombres.localidad(fila.localidadId),
       departamentoNombre: nombres.departamento(fila.departamentoId),
     }));
+  }
+
+  private async tramosDe(activoId: string): Promise<TramoDto[]> {
+    const filas = await transaccionEnCurso()
+      .select()
+      .from(tramos)
+      .where(and(eq(tramos.activoId, activoId), eq(tramos.vigente, true)))
+      .orderBy(asc(tramos.desdePeriodo), asc(tramos.libro));
+    return filas.map(
+      ({
+        id,
+        empresaId,
+        activoId: _activo,
+        vigente,
+        creadoEn,
+        actualizadoEn,
+        creadoPor,
+        actualizadoPor,
+        ...tramo
+      }) => ({
+        ...tramo,
+      }),
+    );
   }
 
   private async trasladosDe(activoId: string): Promise<TrasladoDto[]> {

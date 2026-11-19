@@ -25,6 +25,10 @@ export const moduloActivosFijos: DefinicionModulo = {
     { clave: 'activos-fijos.activos.ver', descripcion: 'Ver activos fijos y su ficha' },
     { clave: 'activos-fijos.activos.crear', descripcion: 'Dar de alta activos fijos' },
     { clave: 'activos-fijos.activos.editar', descripcion: 'Editar activos fijos y marcarlos como ociosos' },
+    {
+      clave: 'activos-fijos.activos.poner-en-uso',
+      descripcion: 'Poner activos fijos en uso (disponibles para uso) y deshacerlo',
+    },
     { clave: 'activos-fijos.activos.eliminar', descripcion: 'Eliminar activos fijos sin movimientos' },
     {
       clave: 'activos-fijos.bandeja.ver',
