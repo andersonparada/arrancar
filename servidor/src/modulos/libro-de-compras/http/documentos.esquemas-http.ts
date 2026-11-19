@@ -83,6 +83,8 @@ export const esquemaDocumento = z.object({
   documentoAfectadoId: idOpcional(),
   /** Una nota sobre una factura del sistema anterior lleva esto en lugar de `documentoAfectadoId`. */
   facturaAnterior: esquemaFacturaAnterior,
+  /** Qué registro del destino lo recibe (el fondo de Caja chica…); no se guarda aquí, solo se pasa al destino. */
+  referenciaDeDestino: idOpcional(),
   /** Solo en facturas: no dio crédito por otra causa; exige explicarla en `observaciones`. */
   otraCausaSinCredito: z.boolean().default(false),
   /** Solo en la nota de débito; no se guarda. */

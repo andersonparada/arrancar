@@ -49,6 +49,11 @@ export interface DocumentoParaDestino {
    * (opcional al leerlo: los destinos viejos y las pruebas no la traen).
    */
   facturaAnterior?: FacturaAnteriorDeLaNota | null;
+  /**
+   * El registro del destino al que el usuario mandó el documento (el fondo de Caja chica, el anticipo…), tal como vino
+   * en el cuerpo. Libro de compras no la guarda ni la valida (no es suya): solo la pasa. Opcional al leerla.
+   */
+  referenciaDeDestino?: string | null;
   /** `AAAA-MM-DD`. */
   fechaEmision: string;
   totalCentavos: number;

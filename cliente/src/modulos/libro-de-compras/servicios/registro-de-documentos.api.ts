@@ -62,6 +62,8 @@ export interface SolicitudDeDocumento {
   documentoAfectadoId: string | null;
   /** Solo en una nota: la factura del sistema anterior que corrige (excluyente con `documentoAfectadoId`). */
   facturaAnterior?: FacturaAnteriorSolicitada | null;
+  /** El registro del destino (fondo, anticipo…) que lo recibe; el libro solo la pasa. Ausente: como siempre. */
+  referenciaDeDestino?: string;
   /** Solo en una factura: no dio crédito fiscal por otra causa (exige las observaciones). */
   otraCausaSinCredito?: boolean;
   /** Solo en una nota de débito. */

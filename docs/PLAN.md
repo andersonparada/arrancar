@@ -2851,3 +2851,5 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   autorizados del proveedor y `disponible` solo los cargos con algo disponible (`having bool_or(disponible > 0)`). Quedan
   pendientes, por menores: unificar en `textos.ts` los nombres de estado, «comprometido con cheque N al dd/mm» en la contraseña,
   columnas Pagado y Comprometido en la contraseña impresa, y actualizar la adenda A.4 (`hechosDe` usa la deuda, a propósito).
+
+- **2026-11-18, CCL-L1: referencia de destino en el libro.** `POST /libro-de-compras/documentos` acepta `referenciaDeDestino` (uuid, opcional) y el libro la pasa tal cual en `DocumentoParaDestino` a `<destino>.recibir_documento` (no la guarda ni la valida; sin migración). Ingreso de facturas lee `?referencia=&etiqueta=&volver=` (`referencia-de-destino.ts`: la referencia debe ser uuid y la vuelta una ruta interna); la etiqueta se muestra como «Destino: …», `volver` pone el enlace «Volver» y la referencia viaja en el cuerpo de registrar. Sin la referencia todo queda igual. Decisión: el evento `documento_registrado` no la lleva (solo la orden al destino).

@@ -82,6 +82,8 @@ export interface SolicitudDeDocumento {
   documentoAfectadoId: string | null;
   /** La factura del sistema anterior que corrige, en lugar de `documentoAfectadoId`; solo en las notas. */
   facturaAnterior?: FacturaAnteriorSolicitada | null;
+  /** Registro del destino (fondo, anticipo…) al que va el documento; el libro solo la pasa al destino. */
+  referenciaDeDestino?: string | null;
   /**
    * La factura no dio crédito fiscal por otra causa (requisitos del art. 18, bancarización…): se marca a mano y exige
    * explicarla en `observaciones`. Solo en las facturas.
