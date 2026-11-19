@@ -8,7 +8,7 @@ export interface TopesDeCorreo {
   readonly porHoraDeLaInstalacion: number;
 }
 
-/** Lo ya encolado, según `core.reservar_cupo_de_correo`: sin contar el correo que se va a agregar. */
+/** Lo ya encolado, según `core.reservar_cupo_de_correo`, en destinatarios (para y copias), sin contar los del correo que se va a agregar. */
 export interface UsoDeCupos {
   readonly porHora: number;
   readonly porDia: number;
@@ -18,19 +18,20 @@ export interface UsoDeCupos {
 }
 
 /**
- * Comprueba que un correo más cabe en los topes. El orden importa para el mensaje: primero lo que depende de la
+ * Comprueba que los destinatarios de un correo más caben en los topes: cada dirección (para o copia) gasta un cupo. El orden importa para el mensaje: primero lo que depende de la
  * cuenta, después lo de la dirección y al final lo de la instalación (que no revela datos de otras cuentas).
  * @throws CupoDeCorreosAgotado
  */
 export function verificarCupos(uso: UsoDeCupos, topes: TopesDeCorreo, direcciones: readonly string[]): void {
+  const nuevos = direcciones.length;
   const pasados: ReadonlyArray<readonly [boolean, LimiteDeCorreos]> = [
-    [uso.porHora + 1 > topes.porHoraPorCuenta, 'hora'],
-    [uso.porDia + 1 > topes.porDiaPorCuenta, 'dia'],
+    [uso.porHora + nuevos > topes.porHoraPorCuenta, 'hora'],
+    [uso.porDia + nuevos > topes.porDiaPorCuenta, 'dia'],
     [
       direcciones.some((d) => (uso.porDestinatario[d.toLowerCase()] ?? 0) + 1 > topes.porDiaPorDestinatario),
       'destinatario',
     ],
-    [uso.deLaInstalacionPorHora + 1 > topes.porHoraDeLaInstalacion, 'instalacion'],
+    [uso.deLaInstalacionPorHora + nuevos > topes.porHoraDeLaInstalacion, 'instalacion'],
   ];
   const excedido = pasados.find(([paso]) => paso);
   if (excedido) throw new CupoDeCorreosAgotado(excedido[1]);
