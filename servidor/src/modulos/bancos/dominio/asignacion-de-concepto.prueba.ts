@@ -112,5 +112,22 @@ describe('exigirConceptoElegible', () => {
         /Cuentas por liquidar/,
       );
     });
+
+    it('el movimiento que ya lo tiene lo conserva al corregirlo, con o sin su módulo activo', () => {
+      const cajaChica = new Set(['caja-chica']);
+
+      expect(() => exigirConceptoElegible(fondo, 'debito', { yaAsignado: true })).not.toThrow();
+      expect(() =>
+        exigirConceptoElegible(fondo, 'debito', { yaAsignado: true, modulosActivos: cajaChica }),
+      ).not.toThrow();
+    });
+
+    it('conservarlo no libera a «Sin clasificar»', () => {
+      const sinClasificar = concepto({ claveDeSistema: 'sin_clasificar' });
+
+      expect(() => exigirConceptoElegible(sinClasificar, 'debito', { yaAsignado: true })).toThrow(
+        ConceptoDeSistemaNoSeElige,
+      );
+    });
   });
 });

@@ -26,7 +26,7 @@ export class DesmarcarNota {
    * @throws ModuloDeOrigenInactivo o lo que rechace Cuentas por pagar (por ejemplo, nota ligada a un pago).
    */
   ejecutar(operador: Operador, { movimientoId, motivo, conceptoId }: Desmarcado): Promise<MovimientoDto> {
-    const { unidadDeTrabajo, repositorio, consultas, conceptos, auditoria, revisor, desglose } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, consultas, auditoria, revisor, desglose } = this.dependencias;
     const motivoLimpio = motivo.trim();
     return unidadDeTrabajo.ejecutar(operador, async () => {
       if (!motivoLimpio || motivoLimpio.length > MAXIMO_DEL_MOTIVO) throw new MotivoObligatorio();
@@ -35,9 +35,8 @@ export class DesmarcarNota {
       movimiento.exigirNotaDeDebitoMarcable();
       const anterior = await consultas.obtener(movimientoId);
       if (!anterior.marcadaParaCuentasPorPagar) throw new NotaNoMarcada();
-      const nuevo = await conceptos.elegido(conceptoId, 'debito');
+      const nuevo = await this.conceptoElegido(operador, conceptoId);
       await revisor.revisar(operador, { movimiento: anterior, cambio: 'desmarcar', motivo: motivoLimpio });
-
       movimiento.reclasificar(nuevo.id.valor);
       await repositorio.guardar(movimiento);
       await desglose.quitar(operador, movimientoId);
@@ -50,5 +49,11 @@ export class DesmarcarNota {
       });
       return consultas.obtener(movimientoId);
     });
+  }
+
+  /** El concepto nuevo de una débito: uno reservado por un módulo se elige solo si ese módulo no está activo. */
+  private async conceptoElegido(operador: Operador, conceptoId: string) {
+    const modulosActivos = await this.dependencias.modulosDeOrigen.activos(operador);
+    return this.dependencias.conceptos.elegido(conceptoId, 'debito', { modulosActivos });
   }
 }

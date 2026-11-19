@@ -6,6 +6,10 @@ import { conceptoDeSistema, crearCuentaBancaria } from './soporte/escenarios-de-
 import { darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 
 const MIGRACION = new URL('../modulos/bancos/migraciones/0036_caja_chica_y_cuentas_por_liquidar.sql', import.meta.url);
+const MIGRACION_37 = new URL(
+  '../modulos/bancos/migraciones/0037_conceptos_reservados_por_nombre_normalizado.sql',
+  import.meta.url,
+);
 const CLAVES_NUEVAS = [
   'anticipo_no_liquidado',
   'anticipo_por_liquidar',
@@ -89,6 +93,26 @@ describe('migración 0036: conceptos de sistema de Caja chica y Cuentas por liqu
   });
 });
 
+describe('migración 0037: el nombre se compara normalizado', () => {
+  it('«Devolucion de anticipos» (sin tilde) recibe la clave y la clasificación en vez de quedar sin el concepto', async () => {
+    await comoPropietario(
+      `update bancos.conceptos set clave_de_sistema = null, nombre = 'Devolucion  de anticipos', aplica_a = 'ambos',
+       activo = false where empresa_id = $1 and clave_de_sistema = 'devolucion_de_anticipo'`,
+      [cuenta.empresaId],
+    );
+    const sql = readFileSync(MIGRACION_37, 'utf8').replaceAll('--> statement-breakpoint', '');
+
+    await comoPropietario(sql, []);
+    await comoPropietario(sql, []);
+
+    const filas = await comoPropietario<Record<string, string | boolean>>(
+      `select nombre, aplica_a, activo from bancos.conceptos where empresa_id = $1 and clave_de_sistema = $2`,
+      [cuenta.empresaId, 'devolucion_de_anticipo'],
+    );
+    expect(filas).toEqual([{ nombre: 'Devolucion  de anticipos', aplica_a: 'credito', activo: true }]);
+  });
+});
+
 describe('conceptos reservados elegidos a mano sin su módulo', () => {
   it('una nota de débito acepta «Fondo de caja chica» y una de crédito, «Devolución de anticipos»', async () => {
     const cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Caja chica A');
@@ -110,5 +134,31 @@ describe('conceptos reservados elegidos a mano sin su módulo', () => {
     expect((await registrar('credito', 'devolucion_de_anticipo')).estado).toBe(201);
     const sinClasificar = await registrar('debito', 'sin_clasificar');
     expect(sinClasificar.estado).toBe(422);
+  });
+
+  it('corregir una nota que ya tiene un concepto reservado la deja corregirse (fecha y monto)', async () => {
+    const cuentaBancariaId = await crearCuentaBancaria(cuenta.propietario, 'Caja chica B');
+    const concepto = await conceptoDeSistema(cuenta.propietario, 'reintegro_de_caja_chica');
+    const datos = {
+      cuentaBancariaId,
+      tipo: 'debito',
+      fecha: '2026-04-10',
+      monto: '25.00',
+      referencia: null,
+      beneficiario: null,
+      observaciones: null,
+      conceptoId: concepto.id,
+    };
+    const creada = await cuenta.propietario.post('/api/bancos/notas', datos);
+    expect(creada.estado).toBe(201);
+
+    const corregida = await cuenta.propietario.put(`/api/bancos/notas/${creada.cuerpo.id}`, {
+      ...datos,
+      fecha: '2026-04-11',
+      monto: '30.00',
+    });
+
+    expect(corregida.estado).toBe(200);
+    expect(corregida.cuerpo.conceptoId).toBe(concepto.id);
   });
 });

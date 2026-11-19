@@ -4,7 +4,12 @@ import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiMovimientos, type FilaDelReporte } from '../../servicios/movimientos.api';
 import { apiNotas } from '../../servicios/notas.api';
-import { conceptoSinClasificar, conceptoVigente, opcionesParaClasificar } from '../conceptos/opciones-de-concepto';
+import {
+  conceptoSinClasificar,
+  conceptoVigente,
+  liberarReservados,
+  opcionesParaClasificar,
+} from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
 import { cantidadConSugerido, conSugerido, type SugerenciasPorMovimiento } from '../sugerencias/lote-de-sugerencias';
 import { filtroDeLaConsulta, type FiltrosDeMovimientos } from './filtros-de-movimientos';
@@ -49,7 +54,7 @@ function usarSeleccion(filas: Ref<FilaDelReporte[]>) {
   const resumen = computed(() => resumenDeSeleccion(filas.value, seleccion.value));
   const opciones = computed(() =>
     opcionesParaClasificar(
-      conceptos.value,
+      liberarReservados(conceptos.value, sesion.moduloActivo),
       tiposDeSeleccion(filas.value, seleccion.value),
       sesion.moduloActivo('cuentas-por-pagar'),
     ),

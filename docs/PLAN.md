@@ -2967,3 +2967,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (`estaActivo(operador, modulo)` y `activos(operador)`) reemplaza a `CuentasPorPagarActivo`; `RevisorDeCambios` rechaza
   cualquier movimiento con origen en un módulo inactivo (`ModuloDeOrigenInactivo` con el nombre del módulo). Leyendas del
   flujo de efectivo de caja chica y de anticipos (`aplicacion/leyendas-del-flujo.ts`; varias se unen en una sola nota).
+- **2026-11-18 (CCL-B1, correcciones de la revisión, Bancos)**: quien ya tiene un concepto reservado por un módulo lo
+  conserva al corregir la nota (`exigirConceptoElegible` con `yaAsignado` no lo rechaza, esté o no activo el módulo;
+  «Sin clasificar» sigue sin poder elegirse) y `DesmarcarNota` ahora pasa los módulos activos. Migración
+  `0037_conceptos_reservados_por_nombre_normalizado`: repara la `0036` comparando con `core.nombre_normalizado` (como el
+  índice único), alinea la clasificación de §3.2 a y reactiva al concepto que recibe la clave, e inserta lo que falte;
+  repetible. Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
+  posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
+  cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.

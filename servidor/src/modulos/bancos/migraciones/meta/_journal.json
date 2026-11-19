@@ -260,6 +260,13 @@
       "when": 1795055166177,
       "tag": "0036_caja_chica_y_cuentas_por_liquidar",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1795056261162,
+      "tag": "0037_conceptos_reservados_por_nombre_normalizado",
+      "breakpoints": true
     }
   ]
 }

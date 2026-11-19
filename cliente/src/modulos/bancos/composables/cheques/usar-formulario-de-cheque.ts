@@ -5,7 +5,7 @@ import { apiCheques } from '../../servicios/cheques.api';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { apiSugerencias } from '../../servicios/sugerencias.api';
 import { usarSugerenciaAlCapturar } from '../sugerencias/usar-sugerencia-al-capturar';
-import { opcionesDeConceptoDeCheque } from '../conceptos/opciones-de-concepto';
+import { liberarReservados, opcionesDeConceptoDeCheque } from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
 import { mensajesDeAvisos } from '../movimientos/avisos-de-bancos';
 import { datosDeEmisionDeCheque, edicionDeCheque, type EdicionDeCheque } from './edicion-de-cheque';
@@ -16,7 +16,10 @@ function usarConceptosDeCheque(edicion: Ref<EdicionDeCheque>) {
   const sesion = usarSesion();
   const { conceptos } = usarCatalogoDeConceptos();
   const opcionesDeConceptos = computed(() =>
-    opcionesDeConceptoDeCheque(conceptos.value, sesion.moduloActivo('cuentas-por-pagar')),
+    opcionesDeConceptoDeCheque(
+      liberarReservados(conceptos.value, sesion.moduloActivo),
+      sesion.moduloActivo('cuentas-por-pagar'),
+    ),
   );
   const { sugerencia } = usarSugerenciaAlCapturar({
     edicion,

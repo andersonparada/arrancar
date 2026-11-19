@@ -13,7 +13,7 @@ export type TipoDeMovimiento = 'credito' | 'debito' | 'cheque';
 type ConceptoElegido = Pick<PropiedadesDeConcepto, 'aplicaA' | 'activo' | 'claveDeSistema'>;
 
 interface Tolerancias {
-  /** El movimiento ya tenía este concepto (al corregirlo): no se le exige que siga activo. */
+  /** El movimiento ya tenía este concepto (al corregirlo): no se le exige que siga activo ni que su módulo no lo reserve. */
   yaAsignado?: boolean;
   /**
    * Los módulos activos de la cuenta. Un concepto de sistema reservado por un módulo (`CONCEPTOS_RESERVADOS_POR_MODULO`)
@@ -36,10 +36,15 @@ export function exigirConceptoElegible(
   tipo: TipoDeMovimiento,
   { yaAsignado = false, modulosActivos }: Tolerancias = {},
 ): void {
-  exigirQueSeaElegible(concepto.claveDeSistema, tipo, modulosActivos);
+  if (!yaAsignado || !esReservado(concepto.claveDeSistema)) {
+    exigirQueSeaElegible(concepto.claveDeSistema, tipo, modulosActivos);
+  }
   if (!concepto.activo && !yaAsignado) throw new ConceptoInactivo();
   exigirCompatibilidad(concepto.aplicaA, tipo);
 }
+
+/** Los movimientos que ya tienen un concepto reservado por un módulo lo conservan, esté o no activo el módulo. */
+const esReservado = (clave: string | null): boolean => clave !== null && clave in CONCEPTOS_RESERVADOS_POR_MODULO;
 
 /** Ningún concepto de sistema se elige, salvo el reservado por un módulo que no está activo. */
 function exigirQueSeaElegible(
