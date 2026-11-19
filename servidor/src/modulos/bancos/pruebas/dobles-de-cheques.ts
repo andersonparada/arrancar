@@ -14,11 +14,12 @@ import type { MovimientosEnMemoria } from './dobles-de-movimientos.js';
 const copia = (cheque: Cheque) => Cheque.reconstruir(cheque.instantanea());
 
 function aDto(cheque: Cheque, acciones: AccionesDeCheque): ChequeDto {
-  const { id, empresaId: _empresaId, anuladoEn, ...datos } = cheque.instantanea();
+  const { id, empresaId: _empresaId, anuladoEn, impresoEn, ...datos } = cheque.instantanea();
   return {
     ...datos,
     id: id.valor,
     anuladoEn: anuladoEn?.toISOString() ?? null,
+    impresoEn: impresoEn?.toISOString() ?? null,
     parteDeApertura: null,
     moduloDeOrigen: null,
     ...acciones,
@@ -144,6 +145,7 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
       anuladoEn: anuladoEn?.toISOString() ?? null,
       motivoDeAnulacion: propiedades.motivoDeAnulacion,
       causaDeAnulacion: propiedades.causaDeAnulacion,
+      impresoEn: propiedades.impresoEn?.toISOString() ?? null,
       parteDeApertura: null,
       moduloDeOrigen: null,
       ...this.accionesDe(cheque),

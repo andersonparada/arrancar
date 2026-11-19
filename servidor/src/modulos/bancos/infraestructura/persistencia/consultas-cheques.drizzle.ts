@@ -44,6 +44,7 @@ const columnasDeLaEmpresa = {
   anuladoEn: cheques.anuladoEn,
   motivoDeAnulacion: cheques.motivoDeAnulacion,
   causaDeAnulacion: cheques.causaDeAnulacion,
+  impresoEn: cheques.impresoEn,
   movimientoId: cheques.movimientoId,
   hechosDelMovimiento: columnasDeHechos(movimientos),
 };
@@ -65,6 +66,7 @@ const aListado = ({ movimientoId, hechosDelMovimiento, ...fila }: FilaDelListado
     ...fila,
     estado,
     anuladoEn: fila.anuladoEn ? fila.anuladoEn.toISOString() : null,
+    impresoEn: fila.impresoEn ? fila.impresoEn.toISOString() : null,
     parteDeApertura: hechos?.parteDeApertura ?? null,
     moduloDeOrigen: hechos ? hechosDelMovimiento.moduloDeOrigen : null,
     ...accionesDeCheque(estado, hechos),

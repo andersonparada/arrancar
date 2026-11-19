@@ -36,12 +36,14 @@ export const mapeadorDeCheque = {
     actualizadoPor: _actualizadoPor,
     hechosDelMovimiento,
     anuladoEn,
+    impresoEn,
     ...dto
   }: Fila & { hechosDelMovimiento: HechosDelMovimiento }): ChequeDto {
     const movimiento = hechosDelMovimientoDelCheque(dto.movimientoId, hechosDelMovimiento);
     return {
       ...dto,
       anuladoEn: anuladoEn ? anuladoEn.toISOString() : null,
+      impresoEn: impresoEn ? impresoEn.toISOString() : null,
       parteDeApertura: movimiento?.parteDeApertura ?? null,
       moduloDeOrigen: movimiento ? (hechosDelMovimiento?.moduloDeOrigen ?? null) : null,
       ...accionesDeCheque(dto.estado, movimiento),

@@ -14,8 +14,10 @@ export interface ChequeDto {
   movimientoId: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
-  /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
+  /** Por qué se anuló; `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** Cuándo se imprimió por primera vez; `null` si no se ha impreso. */
+  impresoEn: string | null;
   /** La parte de la carga inicial que es su movimiento (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
   parteDeApertura: ParteDeApertura | null;
   /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */
@@ -65,8 +67,10 @@ export interface ChequeListadoDto {
   referencia: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
-  /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
+  /** Por qué se anuló; `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** Cuándo se imprimió por primera vez; `null` si no se ha impreso. */
+  impresoEn: string | null;
   /** La parte de la carga inicial que es (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
   parteDeApertura: ParteDeApertura | null;
   /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */

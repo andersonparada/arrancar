@@ -1,11 +1,15 @@
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { ChequeAnulado, ChequeNoDisponible, ChequeNoEmitido, MotivoDeAnulacionInvalido } from './errores.js';
+import { ChequeImpresoNoSeBlanquea } from './errores-de-impresion.js';
 
 export type ChequeId = Identificador<'Cheque'>;
 export type EstadoDelCheque = 'disponible' | 'emitido' | 'anulado';
-/** Por qué se anuló un cheque (P1): a mano o por caducidad. La caducidad no cambia su concepto. */
-export type CausaDeAnulacion = 'manual' | 'caducidad';
+/**
+ * Por qué se anuló un cheque: a mano, por caducidad (no cambia su concepto), `inutilizado` (el papel se arruinó y el pago
+ * pasó a otro formulario: queda sin movimiento) o `extraviado` (el título pudo circular: sí anula el pago).
+ */
+export type CausaDeAnulacion = 'manual' | 'caducidad' | 'inutilizado' | 'extraviado';
 
 export interface PropiedadesDeCheque {
   id: ChequeId;
@@ -19,6 +23,8 @@ export interface PropiedadesDeCheque {
   motivoDeAnulacion: string | null;
   /** Nula mientras no esté anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** La primera impresión; nula mientras no se imprima. No vuelve a cambiar. */
+  impresoEn: Date | null;
 }
 
 const MAXIMO_DEL_MOTIVO = 500;
@@ -45,6 +51,7 @@ export class Cheque extends Entidad<ChequeId> {
       anuladoEn: null,
       motivoDeAnulacion: null,
       causaDeAnulacion: null,
+      impresoEn: null,
     });
   }
 
@@ -79,16 +86,20 @@ export class Cheque extends Entidad<ChequeId> {
    * Lo blanquea: se registró por error y nunca se imprimió ni se entregó. Vuelve a `disponible`
    * (se olvida su beneficiario, fecha y monto, y su número se puede volver a usar); el movimiento
    * lo elimina de verdad quien llama, en la misma transacción.
-   * TODO: cuando exista la impresión de cheques, bloquear el blanqueo si ya se imprimió.
-   * @throws ChequeNoEmitido si no está emitido.
+   * @throws ChequeNoEmitido si no está emitido; ChequeImpresoNoSeBlanquea si ya se imprimió.
    */
   blanquear(): void {
     if (this.propiedades.estado !== 'emitido') throw new ChequeNoEmitido();
+    if (this.estaImpreso) throw new ChequeImpresoNoSeBlanquea();
     this.propiedades = { ...this.propiedades, estado: 'disponible', movimientoId: null, noNegociable: true };
   }
 
   get estaDisponible(): boolean {
     return this.propiedades.estado === 'disponible';
+  }
+
+  get estaImpreso(): boolean {
+    return this.propiedades.impresoEn !== null;
   }
 
   get estaEmitido(): boolean {

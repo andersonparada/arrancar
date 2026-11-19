@@ -118,6 +118,8 @@ export const movimientos = esquemaBancos.table(
      */
     interesBruto: numeric({ precision: 14, scale: 2 }),
     isrRetenido: numeric({ precision: 14, scale: 2 }),
+    /** «PARA ABONO EN CUENTA» (C. Com. art. 521): condición del pago que eligió quien emitió el cheque; viaja con el movimiento. */
+    paraAbonoEnCuenta: boolean().default(false).notNull(),
     /** Anulación a la antigua: solo la usan los cheques en un mes abierto (sin inverso, fuera del saldo). */
     anuladoEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
@@ -160,6 +162,7 @@ export const movimientos = esquemaBancos.table(
     uniqueIndex('movimientos_numero_unico')
       .on(t.empresaId, t.tipo, t.anioDeNumero, t.numero)
       .where(sql`${t.numero} is not null`),
+    check('movimientos_abono_en_cuenta_solo_cheque', sql`not ${t.paraAbonoEnCuenta} or ${t.tipo} = 'cheque'`),
     check('movimientos_monto_positivo', sql`${t.monto} > 0`),
     check('movimientos_origen_completo', sql`(${t.moduloDeOrigen} is null) = (${t.documentoDeOrigenId} is null)`),
     check('movimientos_tipo_valido', sql`${t.tipo} in ('credito', 'debito', 'cheque')`),
