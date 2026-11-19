@@ -143,3 +143,14 @@ export function hallazgoDeMesAnteriorSinCerrar(siguiente: string): Hallazgo {
     detalle: [],
   };
 }
+
+/** El hallazgo de pedir un mes posterior al mes en curso: no se calcula nada de un mes que no ha llegado. */
+export function hallazgoDeMesPorLlegar(periodo: string): Hallazgo {
+  return {
+    nivel: 'bloquea',
+    codigo: 'mes_por_llegar',
+    mensaje: `El mes ${periodo.slice(0, 7)} todavía no llega: solo se cierra el mes en curso o uno anterior.`,
+    cantidad: 1,
+    detalle: [],
+  };
+}

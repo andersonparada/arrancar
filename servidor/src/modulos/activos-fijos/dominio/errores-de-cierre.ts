@@ -11,6 +11,15 @@ export class MesAnteriorSinCerrar extends ReglaDeNegocioInfringida {
   }
 }
 
+/** Se pidió cerrar un mes posterior al mes en curso: la depreciación de un mes que no ha llegado no se congela. */
+export class MesPorLlegar extends ReglaDeNegocioInfringida {
+  readonly codigo = 'mes_por_llegar';
+
+  constructor(periodo: string) {
+    super(`El mes ${mesDe(periodo)} todavía no llega: solo se cierra el mes en curso o uno anterior.`, { periodo });
+  }
+}
+
 /** El mes pedido es anterior al primero que se puede cerrar (la fecha de inicio de la empresa o el primer uso). */
 export class MesAnteriorAlInicio extends ReglaDeNegocioInfringida {
   readonly codigo = 'mes_anterior_al_inicio';

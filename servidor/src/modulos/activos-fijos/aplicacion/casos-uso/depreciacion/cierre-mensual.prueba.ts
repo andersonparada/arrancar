@@ -3,6 +3,7 @@ import {
   CierreConBloqueos,
   MesAnteriorAlInicio,
   MesAnteriorSinCerrar,
+  MesPorLlegar,
   MotivoDeReaperturaInvalido,
   RevisionDelCierreDesactualizada,
   SinMesPorCerrar,
@@ -45,6 +46,18 @@ describe('orden de los cierres', () => {
     expect(revision.totales).toEqual({ contable: '0.00', fiscal: '0.00', activosDepreciados: 0 });
     await expect(e.cerrarMes('2027-05-01')).rejects.toMatchObject({ detalles: { siguiente: '2027-03-01' } });
     expect(e.memoria.cuotas).toHaveLength(0);
+  });
+
+  it('no se cierra un mes posterior al mes en curso: la revisión lo bloquea y cerrar se rechaza', async () => {
+    e.reloj.fecha = '2027-04-15';
+    await e.cerrarMes('2027-03-01');
+
+    const revision = await e.revisarMes('2027-05-01');
+    expect(revision.puedeCerrar).toBe(false);
+    expect(revision.hallazgos.map((h) => h.codigo)).toEqual(['mes_por_llegar']);
+    await expect(e.cerrarMes('2027-05-01')).rejects.toBeInstanceOf(MesPorLlegar);
+    await e.cerrarMes('2027-04-01');
+    expect(e.memoria.cuotas.filter((cuota) => cuota.libro === 'fiscal')).toHaveLength(2);
   });
 
   it('cierra un año completo en orden y las cuotas de cada mes siguen la acumulada del anterior', async () => {

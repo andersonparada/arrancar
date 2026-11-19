@@ -3,6 +3,7 @@ import { DepreciacionCerrada } from '../../../dominio/eventos.js';
 import {
   CierreConBloqueos,
   MesAnteriorSinCerrar,
+  MesPorLlegar,
   RevisionDelCierreDesactualizada,
 } from '../../../dominio/errores-de-cierre.js';
 import type { CierreDto } from '../../dto/cierre.dto.js';
@@ -28,6 +29,7 @@ export class CerrarMes {
    * cuotas (una por activo y libro, sin duplicar) y deja constancia en la auditoría. Al confirmar publica
    * `depreciacion_cerrada`. Cerrar de nuevo un mes cerrado se rechaza sin tocar nada.
    * @throws MesCerrado, MesAnteriorAlInicio o SinMesPorCerrar si el mes no es el que toca.
+   * @throws MesPorLlegar si el mes es posterior al mes en curso.
    * @throws MesAnteriorSinCerrar si antes hay un mes sin cerrar.
    * @throws RevisionDelCierreDesactualizada si llegó una huella y ya no coincide.
    * @throws CierreConBloqueos si la revisión tiene hallazgos que bloquean.
@@ -65,6 +67,7 @@ export class CerrarMes {
   }
 
   private exigirCerrable(armado: CierreArmado, huella: string | null | undefined): void {
+    if (armado.porLlegar) throw new MesPorLlegar(armado.periodo);
     if (armado.siguiente !== armado.periodo) throw new MesAnteriorSinCerrar(armado.siguiente);
     if (huella && huella !== armado.huella) throw new RevisionDelCierreDesactualizada(revisionADto(armado));
     if (armado.hallazgos.some((hallazgo) => hallazgo.nivel === 'bloquea'))

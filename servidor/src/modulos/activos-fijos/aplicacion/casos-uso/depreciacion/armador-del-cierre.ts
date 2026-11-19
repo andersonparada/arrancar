@@ -1,12 +1,14 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import {
   calcularCierre,
+  type CierreCalculado,
   totalesDelCierre,
   type CuotaDelMes,
   type TotalesDelCierre,
 } from '../../../dominio/depreciacion/cierre-del-mes.js';
 import {
   hallazgoDeMesAnteriorSinCerrar,
+  hallazgoDeMesPorLlegar,
   hallazgosDelCierre,
   type Hallazgo,
 } from '../../../dominio/depreciacion/hallazgos-del-cierre.js';
@@ -21,6 +23,8 @@ export interface CierreArmado {
   periodo: string;
   /** El mes que toca cerrar (el siguiente al último cerrado). */
   siguiente: string;
+  /** Es posterior al mes en curso: no se calcula ni se puede cerrar. */
+  porLlegar: boolean;
   hallazgos: Hallazgo[];
   cuotas: CuotaDelMes[];
   totales: TotalesDelCierre;
@@ -51,6 +55,7 @@ export class ArmadorDelCierre {
    * @throws MesCerrado si el mes ya está cerrado.
    * @throws MesAnteriorAlInicio si es anterior al primer mes por cerrar.
    * @throws SinMesPorCerrar si no hay de dónde empezar a cerrar.
+   * Un mes posterior al mes en curso vuelve con el bloqueo `mes_por_llegar`.
    */
   async armar(operador: Operador, periodo: string): Promise<CierreArmado> {
     const ultimo = await this.dependencias.cierres.ultimoMesCerrado();
@@ -58,24 +63,37 @@ export class ArmadorDelCierre {
     const siguiente = await this.siguienteMes(operador);
     if (!siguiente) throw new SinMesPorCerrar();
     if (periodo < siguiente) throw new MesAnteriorAlInicio(siguiente);
-    if (periodo > siguiente) return this.sinCalcular(periodo, siguiente);
+    const mesEnCurso = periodoDe(await this.dependencias.reloj.hoy(operador));
+    if (periodo > mesEnCurso) return this.sinCalcular(periodo, siguiente, hallazgoDeMesPorLlegar(periodo));
+    if (periodo > siguiente) return this.sinCalcular(periodo, siguiente, hallazgoDeMesAnteriorSinCerrar(siguiente));
     return this.calcular(operador, periodo);
   }
 
-  /** Un mes que no es el siguiente no se calcula: sus cuotas dependen de las del mes que falta. */
-  private sinCalcular(periodo: string, siguiente: string): CierreArmado {
-    const hallazgos = [hallazgoDeMesAnteriorSinCerrar(siguiente)];
+  /** Un mes que no se puede cerrar todavía no se calcula: sus cuotas dependen de un mes que falta o que no llega. */
+  private sinCalcular(periodo: string, siguiente: string, bloqueo: Hallazgo): CierreArmado {
+    const hallazgos = [bloqueo];
     const totales = totalesDelCierre([]);
     const huella = huellaDelCierre({ periodo, hallazgos, totales, regimenIsr: null, cuotas: 0 });
-    return { periodo, siguiente, hallazgos, cuotas: [], totales, regimenIsr: null, huella };
+    const porLlegar = bloqueo.codigo === 'mes_por_llegar';
+    return { periodo, siguiente, porLlegar, hallazgos, cuotas: [], totales, regimenIsr: null, huella };
   }
 
   private async calcular(operador: Operador, periodo: string): Promise<CierreArmado> {
-    const { consultas, bandeja, primerMes, mesesDeConstruccion, cargaInicial } = this.dependencias;
+    const { consultas, primerMes } = this.dependencias;
     const conBajasDelMes = (await primerMes.paraEmpresa(operador)) === 'mes_siguiente';
     const calculado = calcularCierre(periodo, await consultas.activosParaCerrar(periodo, conBajasDelMes));
+    const hallazgos = await this.hallazgosDe(operador, periodo, calculado);
+    const totales = totalesDelCierre(calculado.cuotas);
+    const regimenIsr = await consultas.regimenIsr(periodo);
+    const huella = huellaDelCierre({ periodo, hallazgos, totales, regimenIsr, cuotas: calculado.cuotas.length });
+    const cuotas = calculado.cuotas;
+    return { periodo, siguiente: periodo, porLlegar: false, hallazgos, cuotas, totales, regimenIsr, huella };
+  }
+
+  private async hallazgosDe(operador: Operador, periodo: string, calculado: CierreCalculado): Promise<Hallazgo[]> {
+    const { consultas, bandeja, mesesDeConstruccion, cargaInicial } = this.dependencias;
     const meses = await mesesDeConstruccion.paraEmpresa(operador);
-    const hallazgos = hallazgosDelCierre(
+    return hallazgosDelCierre(
       {
         ...(await consultas.hallazgosDeActivos(periodo, meses)),
         lineasEnLaBandeja: (await bandeja.listar({ hasta: periodo })).length,
@@ -84,9 +102,5 @@ export class ArmadorDelCierre {
       },
       calculado,
     );
-    const totales = totalesDelCierre(calculado.cuotas);
-    const regimenIsr = await consultas.regimenIsr(periodo);
-    const huella = huellaDelCierre({ periodo, hallazgos, totales, regimenIsr, cuotas: calculado.cuotas.length });
-    return { periodo, siguiente: periodo, hallazgos, cuotas: calculado.cuotas, totales, regimenIsr, huella };
   }
 }

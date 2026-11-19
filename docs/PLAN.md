@@ -3471,6 +3471,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   se deprecia también a los dados de baja en el mes (§3.6; las bajas llegan con AF-8). Pendientes: los hallazgos «inventario en
   curso» (AF-10) y «N bienes llevan más de X meses en bodega» (AFI-7, que trae `activos-fijos.bodega.meses_de_aviso`) y el
   bloqueo de «cerrar el primer mes» por saldos iniciales usa `activos.origen = 'saldo_inicial'` hasta que exista AF-6.
+- **2026-11-19 — AF-5, corrección de revisión (Activos fijos).** No se puede cerrar un mes posterior al mes en curso (el de
+  `reloj.hoy` de la empresa): la revisión devuelve solo el bloqueo `mes_por_llegar` (como con `mes_anterior_sin_cerrar`, sin
+  calcular) y cerrar responde `422 mes_por_llegar` (`MesPorLlegar`); antes se podían congelar cuotas y publicar
+  `depreciacion_cerrada` de meses que no han ocurrido, y luego poner en uso, bajas y traslados chocaban con `mes_cerrado`. Decisión
+  por cuenta propia (lo mínimo pedido): el **mes en curso sí se puede cerrar**; si debe exigirse que haya terminado (como el
+  Libro de compras) lo decide el usuario o el contador. Las pruebas de API usan septiembre y octubre de 2026.
 - **2026-11-19 — INV-2 (Inventarios, servidor).** Bodegas con alcance de registros propio `inventarios.bodegas`: tablas
   `bodegas` y `accesos_a_bodegas` (migración `0003_inv2_bodegas_y_accesos`, con el disparador `asignar_al_creador` del core
   y `asignar_bodega_al_responsable`, que da acceso al responsable que es usuario de la empresa sin pedirle el permiso de

@@ -53,10 +53,11 @@ export function armarCierre() {
   const publicador = new PublicadorEventosEnMemoria();
   const carga = new CargaInicialFija();
   const bandeja = new BandejaFija();
+  const reloj = new RelojFijo('2027-12-31');
   const dependencias: DependenciasDeCierre = {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     auditoria,
-    reloj: new RelojFijo('2027-12-31'),
+    reloj,
     publicadorEventos: publicador,
     cierres: memoria,
     repositorioCierres: memoria,
@@ -71,6 +72,7 @@ export function armarCierre() {
   const reabrir = new ReabrirMes(dependencias);
   return {
     memoria,
+    reloj,
     auditoria,
     publicador,
     carga,
