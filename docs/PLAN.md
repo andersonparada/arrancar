@@ -2766,6 +2766,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   donde se escribe una dirección; usa lo guardado) y tarjeta de la bandeja global (conteos por estado, pendiente más
   antiguo y fallidos recientes con empresa, tipo y código). Lógica pura en `composables/correo/servidor-de-correo.ts` con
   pruebas; servicio `correo-de-soporte.api.ts`. Sin cambios en el servidor.
+- **2026-11-18 (aviso de pago por correo, paso 12: cliente, Correos enviados).** Pantalla `/correos` (Administración,
+  permiso `correos.ver`): lista de tarjetas con filtros (desde, hasta, estado, tipo), paginada de 50 en 50, y la ficha en
+  una ventana (a quién con el resultado de cada dirección, remitente, «Responder a», adjunto, el texto enviado o el
+  aviso de que ya se depuró, y el motivo si se canceló). Desde la ficha, «Cancelar envío» (solo pendientes, pide el motivo;
+  `correos.cancelar`) y «Reintentar» (solo fallidos con contenido, con confirmación; `correos.reintentar`). Un pendiente que
+  ya falló dice «Pendiente: se reintentará». La lógica pura (`estado-del-correo.ts`, `filtro-de-correos.ts`) tiene
+  pruebas; `usarCancelacionDeCorreo` y `usarReintentoDeCorreo` y la ventana de cancelación quedan para reusarse en la
+  ficha del pago (paso 13). Sin Excel (es una bitácora). Sin cambios en el servidor.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la

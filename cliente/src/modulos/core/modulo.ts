@@ -43,6 +43,12 @@ export const moduloCore: DefinicionModuloCliente = {
       meta: { permiso: 'roles.ver', titulo: VENTANAS_CORE.roles.titulo },
     },
     {
+      path: '/correos',
+      name: 'correos',
+      component: () => import('./paginas/CorreosEnviados.vue'),
+      meta: { permiso: 'correos.ver', titulo: VENTANAS_CORE.correos.titulo },
+    },
+    {
       path: '/configuracion',
       name: 'configuracion',
       component: () => import('./paginas/ConfiguracionCuenta.vue'),
@@ -92,6 +98,13 @@ export const moduloCore: DefinicionModuloCliente = {
           icono: ShieldCheck,
           seccion: 'administracion',
           permiso: 'roles.ver',
+        },
+        {
+          titulo: VENTANAS_CORE.correos.titulo,
+          ruta: '/correos',
+          icono: Mail,
+          seccion: 'administracion',
+          permiso: 'correos.ver',
         },
         {
           titulo: VENTANAS_CORE.configuracion.titulo,

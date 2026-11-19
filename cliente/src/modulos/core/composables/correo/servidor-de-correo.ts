@@ -90,5 +90,11 @@ export const NOMBRES_DE_ESTADO: Record<EstadoDelCorreo, string> = {
 
 const TIPOS_CONOCIDOS: Record<string, string> = { 'cuentas-por-pagar.aviso_de_pago': 'Aviso de pago' };
 
+/** Los tipos de correo que se pueden filtrar; uno nuevo se agrega en `TIPOS_CONOCIDOS`. */
+export const TIPOS_PARA_FILTRAR: OpcionBuscable<string>[] = [
+  { valor: '', texto: 'Todos los tipos' },
+  ...Object.entries(TIPOS_CONOCIDOS).map(([valor, texto]) => ({ valor, texto })),
+];
+
 /** Cómo se lee el tipo de un correo; uno nuevo sin traducir se muestra con su código. */
 export const nombreDelTipoDeCorreo = (tipo: string): string => TIPOS_CONOCIDOS[tipo] ?? tipo;

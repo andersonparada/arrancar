@@ -34,6 +34,11 @@ export const VENTANAS_CORE = {
     descripcion: (empresa: string) =>
       `Ajustes de la cuenta y de ${empresa}. El valor de la empresa tiene prioridad sobre el de la cuenta, y este sobre el del servidor.`,
   },
+  correos: {
+    titulo: 'Correos enviados',
+    descripcion:
+      'Lo que esta empresa ha mandado por correo (por ejemplo, avisos de pago a proveedores): a quién, cómo salió y el texto enviado durante 30 días.',
+  },
   cuentas: {
     titulo: 'Cuentas suscriptoras',
     menu: 'Cuentas',
