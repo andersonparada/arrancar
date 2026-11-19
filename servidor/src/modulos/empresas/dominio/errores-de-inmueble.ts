@@ -9,3 +9,12 @@ export class InmuebleInvalido extends DatoInvalido {
 export class InmuebleRegistroIncompleto extends InmuebleInvalido {
   override readonly codigo = 'inmueble_registro_incompleto';
 }
+
+/** El departamento o el municipio elegido no existe en el catálogo oficial. */
+export class UbicacionGeograficaInexistente extends DatoInvalido {
+  readonly codigo = 'ubicacion_geografica_inexistente';
+
+  constructor(lugar: string) {
+    super(`${lugar} no existe: revise el código.`);
+  }
+}

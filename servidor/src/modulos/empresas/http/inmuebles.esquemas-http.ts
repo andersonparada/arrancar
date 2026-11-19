@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  codigoGeografico,
   decimalOpcional,
   enteroOpcional,
   idOpcional,
@@ -17,7 +18,7 @@ export const esquemaInmueble = z.object({
   numeroDeFinca: textoOpcional(20),
   folio: textoOpcional(20),
   libro: textoOpcional(20),
-  departamentoRegistral: textoOpcional(2),
+  departamentoRegistral: codigoGeografico,
   documentoPosesorio: textoOpcional(300),
   titulacionSupletoriaEnTramite: z.boolean().default(false),
   titularidad: opcionObligatoria(['propia', 'copropiedad', 'de_tercero']),
@@ -26,8 +27,8 @@ export const esquemaInmueble = z.object({
   matriculaFiscal: textoOpcional(30),
   administraIusi: opcionOpcional(['dicabi', 'municipalidad']),
   codigoCatastral: textoOpcional(40),
-  departamentoCodigo: textoOpcional(2),
-  municipioCodigo: textoOpcional(2),
+  departamentoCodigo: codigoGeografico,
+  municipioCodigo: codigoGeografico,
   direccion: textoOpcional(300),
   superficieRegistralM2: decimalOpcional(2),
   cantidadOriginal: decimalOpcional(4),

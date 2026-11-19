@@ -78,6 +78,32 @@ describe('inmuebles por API', () => {
     expect(posesorioSinDocumento.cuerpo.error.codigo).toBe('inmueble_registro_incompleto');
   });
 
+  it('un código geográfico mal escrito o inexistente responde 400 en su campo, no 409', async () => {
+    const malEscrito = await cuenta.propietario.post(
+      RUTA,
+      datos({ nombre: 'Código corto', departamentoRegistral: '1' }),
+    );
+    const inexistente = await cuenta.propietario.post(
+      RUTA,
+      datos({ nombre: 'Código 99', departamentoRegistral: '99' }),
+    );
+    const municipioAjeno = await cuenta.propietario.post(
+      RUTA,
+      datos({ nombre: 'Municipio 99', departamentoCodigo: '01', municipioCodigo: '99' }),
+    );
+    const valido = await cuenta.propietario.post(
+      RUTA,
+      datos({ nombre: 'Con ubicación', numeroDeFinca: '778', departamentoCodigo: '01', municipioCodigo: '01' }),
+    );
+
+    expect(malEscrito.estado).toBe(400);
+    expect(inexistente.estado).toBe(400);
+    expect(inexistente.cuerpo.error.codigo).toBe('ubicacion_geografica_inexistente');
+    expect(municipioAjeno.estado).toBe(400);
+    expect(municipioAjeno.cuerpo.error.codigo).toBe('ubicacion_geografica_inexistente');
+    expect(valido.estado).toBe(201);
+  });
+
   it('la copropiedad lleva su porcentaje y la base lo respalda', async () => {
     const sin = await cuenta.propietario.post(RUTA, datos({ nombre: 'Copropiedad sola', titularidad: 'copropiedad' }));
     const con = await cuenta.propietario.post(

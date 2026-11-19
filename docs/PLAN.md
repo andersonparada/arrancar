@@ -4037,3 +4037,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   reactivar y eliminar. Los archivos (escritura) siguen en PA-AR; la columna `escritura_archivo_id` se crea allí.
   Pendiente de cliente real: confirmar con quien lleve fincas si el libro admite otros caracteres (hoy letras, dígitos,
   espacio, punto, diagonal y guion) y si hace falta un aviso al repetir la matrícula fiscal en dos inmuebles.
+- **PA-0a, corrección de revisión (códigos geográficos de inmuebles).** `departamentoRegistral`, `departamentoCodigo` y
+  `municipioCodigo` usan ahora `codigoGeografico` (movido a `core/compartido/http/esquemas-comunes.ts`, compartido con
+  localidades y terceros): un código mal escrito («1») da 400 en su campo. `exigirReferencias` comprueba que el
+  departamento y el municipio (dentro de su departamento) existan y, si no, responde 400 `ubicacion_geografica_inexistente`
+  en vez del 409 de la llave foránea. Prueba de API incluida. Localidades y terceros siguen sin comprobar la existencia.

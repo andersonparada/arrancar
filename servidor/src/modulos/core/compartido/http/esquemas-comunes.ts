@@ -105,3 +105,10 @@ export const opcionObligatoria = <const Opciones extends readonly [string, ...st
 
 export const opcionOpcional = <const Opciones extends readonly [string, ...string[]]>(opciones: Opciones) =>
   z.enum(opciones).nullish().transform(nuloSiFalta);
+
+/** Código oficial de 2 dígitos de un departamento o municipio (por ejemplo «01»); vacío es sin dato. */
+export const codigoGeografico = z
+  .string()
+  .regex(/^\d{2}$/, 'Código inválido: son dos dígitos, por ejemplo 01.')
+  .nullish()
+  .transform((codigo) => codigo || null);
