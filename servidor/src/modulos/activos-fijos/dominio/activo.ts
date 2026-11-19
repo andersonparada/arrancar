@@ -1,6 +1,7 @@
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { ActivoDeTercerosSinCostos, CostoPosteriorNoDisponible } from './errores-de-costo.js';
+import { ActivoNoEnConstruccion, ActivoSinLibros, FechaDeUsoInvalida } from './errores-de-depreciacion.js';
 import { ActivoDadoDeBaja, ActivoInvalido, ActivoNoEnUso, MotivoDeOcioRequerido } from './errores-de-activo.js';
 import type { IncisoFiscal } from './incisos-fiscales.js';
 import { datosDeActivoValidos, textoOpcional, type DatosDeActivo } from './reglas-de-activo.js';
@@ -77,6 +78,25 @@ const SIN_HISTORIA = {
   valorResidual: null,
   responsableUsuarioId: null,
   fotoArchivoId: null,
+} as const;
+
+/** Lo que se guarda al poner en uso: la fecha y los parámetros con que se depreciará (el residual, en monto). */
+export interface DatosDeUso {
+  fechaDeInicioDeUso: string;
+  porcentajeFiscal: string;
+  vidaUtilContableMeses: number | null;
+  valorResidual: string;
+}
+
+/** Lo que un activo en construcción no tiene: uso, parámetros de depreciación ni marca de ocioso. */
+const SIN_USO = {
+  fechaDeInicioDeUso: null,
+  ocioso: false,
+  ociosoDesde: null,
+  motivoDeOcio: null,
+  porcentajeFiscal: null,
+  vidaUtilContableMeses: null,
+  valorResidual: null,
 } as const;
 
 const MOTIVO_MAXIMO = 300;
@@ -159,6 +179,34 @@ export class Activo extends Entidad<ActivoId> {
     if (this.propiedades.ociosoDesde && fecha < this.propiedades.ociosoDesde)
       throw new ActivoInvalido('La fecha no puede ser anterior a la de la marca de ocioso.');
     this.propiedades = { ...this.propiedades, ocioso: false, ociosoDesde: null, motivoDeOcio: null };
+  }
+
+  /**
+   * Pone el activo en uso (en la pantalla, «Disponible para uso»): guarda los parámetros con que se depreciará.
+   * @throws ActivoNoEnConstruccion si no es un activo del balance en construcción.
+   * @throws FechaDeUsoInvalida si la fecha es anterior a la de adquisición.
+   */
+  ponerEnUso(datos: DatosDeUso): void {
+    this.exigirEnConstruccion();
+    if (datos.fechaDeInicioDeUso < this.propiedades.fechaDeAdquisicion)
+      throw new FechaDeUsoInvalida('La fecha de inicio de uso no puede ser anterior a la de adquisición.');
+    this.propiedades = { ...this.propiedades, ...datos, estado: 'en_uso' };
+  }
+
+  /** @throws ActivoNoEnConstruccion si no es un activo del balance en construcción. */
+  exigirEnConstruccion(): void {
+    if (this.propiedades.tipoDeRegistro !== 'activo' || this.propiedades.estado !== 'en_construccion')
+      throw new ActivoNoEnConstruccion();
+  }
+
+  /**
+   * Deshace «poner en uso»: vuelve a construcción y borra los parámetros de depreciación y la marca de ocioso.
+   * @throws ActivoSinLibros si no es un activo del balance en uso.
+   */
+  quitarDeUso(): void {
+    if (this.propiedades.tipoDeRegistro !== 'activo' || this.propiedades.estado !== 'en_uso')
+      throw new ActivoSinLibros();
+    this.propiedades = { ...this.propiedades, ...SIN_USO, estado: 'en_construccion' };
   }
 
   /**
