@@ -42,13 +42,25 @@ describe('costos adicionales y rebajas (§7.5)', () => {
     expect(r).toEqual({ absorbido: -2_000n, aResultados: -3_000n });
   });
 
-  it('el reparto suma exactamente el monto: el último renglón absorbe el redondeo', () => {
+  it('el reparto suma exactamente el monto: con redondeo acumulado', () => {
     const partes = repartirMonto(1_000n, [
       { entradaId: 'a', base: 1n },
       { entradaId: 'b', base: 1n },
       { entradaId: 'c', base: 1n },
     ]);
-    expect([...partes.values()]).toEqual([333n, 333n, 334n]);
+    expect([...partes.values()]).toEqual([333n, 334n, 333n]);
+  });
+
+  it('con bases iguales ninguna parte se desvía más de un centavo ni sale negativa', () => {
+    const base = (n: number) => Array.from({ length: n }, (_, i) => ({ entradaId: `e${i}`, base: 1n }));
+    for (const [monto, n] of [
+      [2n, 4],
+      [10n, 20],
+    ] as const) {
+      const partes = [...repartirMonto(monto, base(n)).values()];
+      expect(partes.reduce((a, b) => a + b, 0n)).toBe(monto);
+      expect(partes.every((p) => p >= 0n && p <= 1n)).toBe(true);
+    }
   });
 
   it('rechaza repartir sobre una base que suma cero', () => {

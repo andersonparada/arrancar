@@ -49,7 +49,9 @@ export function consumirCapas(
 
 function sumarValor(capas: readonly Capa[], m: MovimientoDeCosto): Capa[] {
   const capa = capas.find((c) => c.id === m.capaId);
-  if (!capa || capa.cantidadRestante === 0n) throw new CapaNoDisponible(m.capaId);
+  if (!capa) throw new CapaNoDisponible(m.capaId);
+  // Capa ya agotada por una salida anterior en el recálculo: lo que no tiene existencia va a resultados (§7.5).
+  if (capa.cantidadRestante === 0n) return [...capas];
   return capas.map((c) => (c === capa ? { ...c, valorRestante: c.valorRestante + m.valor } : c));
 }
 

@@ -126,6 +126,23 @@ describe('PEPS (§7.6)', () => {
     ]);
   });
 
+  it('un movimiento de valor sobre una capa ya agotada por una salida anterior no tumba el recálculo', () => {
+    const salida = mov({ id: 's', tipo: 'salida', cantidad: lb(100), fecha: '2026-01-02', secuencia: 3 });
+    const flete = mov({
+      id: 'f',
+      tipo: 'valor',
+      cantidad: 0n,
+      valor: 500n,
+      capaId: 'e1',
+      fecha: '2026-01-03',
+      secuencia: 4,
+    });
+    const { resultados, estado } = recalcularPeps([e1, salida, flete]);
+    expect(resultados[1]?.costo).toBe(20_000n);
+    expect(estado[0]?.cantidadRestante).toBe(0n);
+    expect(estado[0]?.valorRestante).toBe(0n);
+  });
+
   it('recalcula desde las capas previas (deshace los consumos)', () => {
     const primera = recalcularPeps([e1, e2]).estado;
     const salida = mov({ id: 's', tipo: 'salida', cantidad: lb(120), valor: 0n, fecha: '2026-01-02', secuencia: 3 });
@@ -159,18 +176,6 @@ describe('PEPS (§7.6)', () => {
       },
     ]);
     expect(estado[0]?.valorRestante).toBe(20_300n);
-  });
-
-  it('rechaza el valor sobre una entrada sin existencia', () => {
-    const lista = [
-      e1,
-      mov({ id: 's', tipo: 'salida', cantidad: lb(100), valor: 0n, fecha: '2026-01-02', secuencia: 2 }),
-      {
-        ...mov({ id: 'm', tipo: 'valor', cantidad: 0n, valor: 300n, fecha: '2026-01-03', secuencia: 3 }),
-        capaId: 'e1',
-      },
-    ];
-    expect(() => recalcularPeps(lista)).toThrow(/ya no tiene existencia/);
   });
 
   it('rechaza la salida que no alcanza', () => {
