@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RotateCcw, Ban } from 'lucide-vue-next';
+import { usarSesion } from '../../almacenes/sesion';
 import {
   fechaDelEstado,
   nombreDelEstado,
@@ -17,6 +18,15 @@ import VentanaModal from '../VentanaModal.vue';
 /** La ficha de un correo: a quién, cómo salió, el texto enviado (30 días) y, según su estado, cancelarlo o reintentarlo. */
 defineProps<{ correo: CorreoFicha | null; reintentando: boolean }>();
 const emit = defineEmits<{ cerrar: []; cancelar: []; reintentar: [] }>();
+const sesion = usarSesion();
+
+/** El pie solo se muestra si hay un botón que el usuario pueda usar: sin permisos quedaría una franja vacía. */
+function hayAcciones(correo: CorreoFicha): boolean {
+  return (
+    (sePuedeCancelar(correo) && sesion.puede('correos.cancelar')) ||
+    (sePuedeReintentar(correo) && sesion.puede('correos.reintentar'))
+  );
+}
 </script>
 
 <template>
@@ -73,7 +83,7 @@ const emit = defineEmits<{ cerrar: []; cancelar: []; reintentar: [] }>();
         <p v-else class="text-tierra-500">El texto ya se depuró: solo se conservan los datos del envío.</p>
       </div>
     </div>
-    <template v-if="correo && (sePuedeCancelar(correo) || sePuedeReintentar(correo))" #pie>
+    <template v-if="correo && hayAcciones(correo)" #pie>
       <BotonBase
         v-if="sePuedeCancelar(correo)"
         v-permiso="'correos.cancelar'"

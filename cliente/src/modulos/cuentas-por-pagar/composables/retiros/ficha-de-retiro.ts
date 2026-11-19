@@ -1,4 +1,5 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
+import { conPuntoFinal } from '@/modulos/core/utilidades/frases';
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { Retiro } from '../../servicios/tipos-de-retiros';
 import { centavosDe } from '../dinero';
@@ -68,7 +69,7 @@ export function resumenDeReabrir(retiro: Retiro): string {
 /** Qué pasará al anular, para confirmarlo; solo un retiro sin pagos se puede anular. */
 export function resumenDeAnularRetiro(retiro: Retiro): string {
   return (
-    `Se anulará el retiro ${retiro.numero} de ${formatearMonto(retiro.monto)} a cargo de ${retiro.custodio}. ` +
+    `Se anulará el retiro ${retiro.numero} de ${formatearMonto(retiro.monto)} a cargo de ${conPuntoFinal(retiro.custodio)} ` +
     `Bancos anulará el ${documentoDelRetiro(retiro.forma, retiro.movimiento.numero).toLowerCase()} o, si su mes ya está ` +
     'conciliado, creará un movimiento inverso. Esto no se puede deshacer.'
   );

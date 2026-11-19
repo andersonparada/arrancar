@@ -69,6 +69,20 @@ export function estadoDelUltimoAviso(enviados: readonly CorreoResumen[]): string
   return nombreDelEstado(ultimo);
 }
 
+/** Cuántos avisos muestra la ficha antes del «Ver todos»: los últimos. */
+export const AVISOS_VISIBLES_EN_LA_FICHA = 3;
+
+/** Los avisos que se ven en la ficha: los últimos (vienen del más nuevo al más viejo) o todos. */
+export const avisosVisibles = (enviados: readonly CorreoResumen[], verTodos: boolean): readonly CorreoResumen[] =>
+  verTodos ? enviados : enviados.slice(0, AVISOS_VISIBLES_EN_LA_FICHA);
+
+/** Hay un aviso que todavía no sale: enviar otro mandaría dos correos iguales al proveedor. */
+export const hayAvisoPorSalir = (enviados: readonly CorreoResumen[]): boolean =>
+  enviados.some((correo) => correo.estado === 'pendiente' || correo.estado === 'enviando');
+
+export const ADVERTENCIA_DE_AVISO_POR_SALIR =
+  'Ya hay un aviso de este pago esperando salir. Si envía otro, el proveedor recibirá los dos. Cancele el pendiente desde la ficha si no lo quiere.';
+
 /** Un pago anulado cuyo aviso ya salió: el correo no se puede detener, hay que avisar a mano. */
 export const RECORDATORIO_DE_ANULACION = 'El aviso ya se envió; avise al proveedor de la anulación.';
 

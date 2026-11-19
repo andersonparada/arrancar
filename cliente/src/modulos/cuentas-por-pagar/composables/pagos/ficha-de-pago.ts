@@ -1,4 +1,5 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
+import { conPuntoFinal } from '@/modulos/core/utilidades/frases';
 import { formatearFecha, formatearFechaHora, formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { FichaDePago, LineaDeLaFicha, SolicitudDeDiferencia } from '../../servicios/tipos-de-pagos';
 import { tituloDeDocumento } from '../detalles-de-documento';
@@ -80,7 +81,7 @@ export function resumenDeAnularPago(ficha: FichaDePago): string {
   const diferencias =
     ficha.diferencias.length > 0 ? ' Las diferencias que se dieron por saldadas también se anulan.' : '';
   return (
-    `Se anulará el pago ${ficha.numero} de ${formatearMonto(ficha.monto)} a ${ficha.proveedor.nombre}. ` +
+    `Se anulará el pago ${ficha.numero} de ${formatearMonto(ficha.monto)} a ${conPuntoFinal(ficha.proveedor.nombre)} ` +
     `${documentos === 1 ? 'El documento que cubría recupera' : `Los ${documentos} documentos que cubría recuperan`} su saldo. ` +
     `${efectoEnBancos(ficha)}${diferencias} Esto no se puede deshacer.`
   );

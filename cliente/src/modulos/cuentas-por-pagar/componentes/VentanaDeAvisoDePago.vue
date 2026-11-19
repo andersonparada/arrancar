@@ -4,8 +4,10 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import VentanaModal from '@/modulos/core/componentes/VentanaModal.vue';
 import {
+  ADVERTENCIA_DE_AVISO_POR_SALIR,
   AVISO_DEL_PDF,
   MAXIMO_DE_DESTINATARIOS,
+  hayAvisoPorSalir,
   llaveDe,
   sePuedeEnviarLaEdicion,
   type EdicionDeAviso,
@@ -24,6 +26,13 @@ const edicion = defineModel<EdicionDeAviso>({ required: true });
 <template>
   <VentanaModal :abierta="edicion.abierta" titulo="Enviar aviso de pago" ancha @cerrar="emit('cerrar')">
     <form id="form-aviso-de-pago" class="space-y-4 text-sm" novalidate @submit.prevent="emit('enviar')">
+      <p
+        v-if="hayAvisoPorSalir(aviso.enviados)"
+        class="rounded-xl bg-trigo-300/30 p-3 dark:bg-trigo-500/10"
+        role="alert"
+      >
+        {{ ADVERTENCIA_DE_AVISO_POR_SALIR }}
+      </p>
       <fieldset>
         <legend class="mb-1 font-medium">Enviar a</legend>
         <ul class="space-y-1.5">

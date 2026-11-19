@@ -71,6 +71,12 @@ export function textoDelEstadoDelServidor(servidor: ServidorDeCorreo): string {
     : 'Apagado: los correos esperan en la bandeja.';
 }
 
+/** Lo que dice el interruptor «Enviar correos» según su posición, para que el texto nunca contradiga lo que se ve. */
+export const descripcionDelInterruptor = (encendido: boolean): string =>
+  encendido
+    ? 'Encendido: los correos pendientes salen por este servidor al guardar.'
+    : 'Apagado: todo queda pendiente en la bandeja hasta que se active.';
+
 const TEXTOS_DE_LA_PRUEBA: Record<ResultadoDelEnvio, string> = {
   enviado: 'El servidor aceptó el correo de prueba.',
   temporal: 'No se pudo conectar con el servidor o tardó demasiado. Revise el nombre, el puerto y la red.',
