@@ -44,6 +44,12 @@ export interface SaldoPrincipal {
   fecha: string;
 }
 
+/** Los cheques posfechados de apertura que ningún módulo ha ligado a un pago (AP-0). */
+export interface PosfechadosSinLigar {
+  cantidad: number;
+  totalCentavos: number;
+}
+
 /** Lecturas de los saldos iniciales para las pantallas, el cuadre y las reglas. */
 export interface ConsultasDeSaldosIniciales {
   /** Todas las cuentas de la empresa por nombre, con su cabecera si la tienen. */
@@ -54,6 +60,8 @@ export interface ConsultasDeSaldosIniciales {
   contarMovimientosNormalesHasta(cuentaBancariaId: string, corte: string): Promise<number>;
   /** Los saldos principales vigentes de todas las cuentas (el del banco y el global). */
   saldosPrincipales(): Promise<SaldoPrincipal[]>;
+  /** Los posfechados de apertura vigentes sin origen (ni anulados, ni revertidos, ni inversos): cuántos y cuánto suman. */
+  posfechadosSinLigar(): Promise<PosfechadosSinLigar>;
   /** El id del archivo de la evidencia de la cuenta (solo para abrirlo en el servidor); `null` si no tiene. */
   archivoDeLaEvidencia(cuentaBancariaId: string): Promise<string | null>;
   /** Los datos de la evidencia de la cuenta (nunca su ruta ni su id); `null` si no tiene. */

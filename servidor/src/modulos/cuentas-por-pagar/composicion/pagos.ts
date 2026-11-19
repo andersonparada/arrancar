@@ -23,6 +23,7 @@ import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-medi
 import { MovimientosDePagosDrizzle } from '../infraestructura/persistencia/movimientos-de-pagos.drizzle.js';
 import { NotasParaLigarDrizzle } from '../infraestructura/persistencia/notas-para-ligar.drizzle.js';
 import { PagosEnBancosEnMediador } from '../infraestructura/pagos-en-bancos-en-mediador.js';
+import { ConsultasDeChequesDeAperturaDrizzle } from '../infraestructura/persistencia/cheques-de-apertura-sin-ligar.drizzle.js';
 import { ConsultasDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-documentos.drizzle.js';
 import { ConsultasDePagosDrizzle } from '../infraestructura/persistencia/consultas-de-pagos.drizzle.js';
 import { FechasDeEntradaDrizzle } from '../infraestructura/persistencia/fechas-de-entrada.drizzle.js';
@@ -88,6 +89,7 @@ function piezasParaConsultar() {
     topeDeDiferencia: new TopeDeDiferenciaDelPagoEnConfiguracion(),
     cargaInicial: new CargaInicialEnMediador(),
     fechasDeEntrada: new FechasDeEntradaDrizzle(),
+    chequesDeApertura: new ConsultasDeChequesDeAperturaDrizzle(),
   };
 }
 

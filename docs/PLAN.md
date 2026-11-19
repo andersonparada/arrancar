@@ -4180,3 +4180,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
     y `core/contratos/contabilidad.contratos.ts` (roles de §3.9 y las cuatro preguntas). Nadie publica todavía por el
     publicador nuevo. Lo que solo un cliente puede confirmar: el volumen real del registro y el tamaño típico de
     `datos` (hoy se supone un evento por operación).
+- **2026-11-19 — AP-0 programado (servidor y cliente).** Primer paso de `diseno-bancos-aprobaciones-tarjeta-y-cp-ap.md`: los
+  posfechados de apertura sin ligar (`parte_de_apertura = 'cheque_posfechado'`, sin `modulo_de_origen`, ni anulados, ni
+  revertidos, ni inversos) ya se avisan. **Bancos:** `ConsultasDeSaldosIniciales.posfechadosSinLigar()` y el hallazgo
+  `posfechados_sin_ligar` (aviso, sin motivo) en la respuesta de `empresas.revisar_cierre_de_carga`, solo si Cuentas por
+  pagar está activo (`ModulosDeOrigen.estaActivo`). **Cuentas por pagar:** `chequesDeAperturaSinLigar {cantidad, total}` en
+  el saldo del proveedor (ficha) y en `para-pagar` (ventana de pago); cuenta los que llevan el nombre del proveedor como
+  beneficiario (`bancos.nombre_para_comparar`) o, si el proveedor tiene cargos de saldo inicial con deuda, todos. Lectura de
+  `bancos.movimientos` desde la infraestructura de CP (`dependeDe: ['bancos']`). **Cliente:** aviso en la ficha del
+  proveedor (condiciones de pago) y en «Nuevo pago», con el texto «…se podrán ligar pronto» hasta AP-3/AP-5. Sin migración.

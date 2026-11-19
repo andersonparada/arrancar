@@ -1,6 +1,7 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { CondicionesDeProveedor, SaldoDelProveedor } from '../servicios/tipos';
+import { avisoDeChequesDeAperturaSinLigar } from './cheques-de-apertura-sin-ligar';
 import { detallesDeLoQueSeDebe, hayMontoPositivo } from './comprometido';
 
 /** Lo que vale para un proveedor que nunca guardó sus condiciones. */
@@ -57,6 +58,8 @@ export function detallesDeCondiciones(
   ];
   if (!saldo) return detalles;
   detalles.push(...detallesDeLoQueSeDebe(saldo));
+  const sinLigar = avisoDeChequesDeAperturaSinLigar(saldo.chequesDeAperturaSinLigar);
+  if (sinLigar) detalles.push({ etiqueta: 'Cheques de apertura', valor: sinLigar, largo: true });
   if (hayMonto(saldo.saldosDeudores)) {
     detalles.push({
       etiqueta: 'A favor de la empresa (notas de crédito)',

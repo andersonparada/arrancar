@@ -204,6 +204,12 @@ export interface PosfechadoDelProveedor {
   monto: string;
 }
 
+/** Los cheques posfechados de apertura que ningún pago ha ligado y que podrían ser de un proveedor (AP-0). */
+export interface ChequesDeAperturaSinLigar {
+  cantidad: number;
+  total: string;
+}
+
 /** Lo que la empresa debe a un proveedor; los saldos deudores van aparte y no se restan. */
 export interface SaldoDelProveedor {
   proveedorId: string;
@@ -221,6 +227,7 @@ export interface SaldoDelProveedor {
   /** Hasta 10 cheques posfechados, del más próximo al más lejano. */
   posfechados: PosfechadoDelProveedor[];
   cargosConSaldo: number;
+  chequesDeAperturaSinLigar: ChequesDeAperturaSinLigar;
   saldosDeudores: string;
   notasConSaldoLibre: SaldoDeudor[];
 }

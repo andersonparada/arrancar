@@ -66,4 +66,24 @@ describe('revisión de Bancos para Empresas', () => {
 
     expect(revision!.cifras.length).toBeLessThanOrEqual(MAXIMO_DE_CIFRAS_POR_MODULO);
   });
+
+  it('con posfechados sin ligar agrega el aviso, sin pedir motivo, y ya no es una revisión vacía', () => {
+    const revision = revisionDeCierreDeBancos(saldos([]), { cantidad: 2, totalCentavos: 35050 });
+
+    expect(revision?.hallazgos).toEqual([
+      expect.objectContaining({
+        codigo: 'posfechados_sin_ligar',
+        nivel: 'aviso',
+        mensaje: expect.stringContaining('Hay 2 cheques posfechados de apertura sin ligar (Q 350.50)'),
+      }),
+    ]);
+  });
+
+  it('sin posfechados sin ligar, o sin dato de ellos, no agrega nada', () => {
+    const conCuenta = saldos([cuenta()]);
+
+    expect(revisionDeCierreDeBancos(conCuenta, { cantidad: 0, totalCentavos: 0 })?.hallazgos).toEqual([]);
+    expect(revisionDeCierreDeBancos(conCuenta)?.hallazgos).toEqual([]);
+    expect(revisionDeCierreDeBancos(saldos([]), { cantidad: 0, totalCentavos: 0 })).toBeNull();
+  });
 });

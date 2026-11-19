@@ -54,6 +54,8 @@ export interface CargosParaPagarDto {
   sumaDelMesAlProveedor: string;
   umbralDeBancarizacion: string;
   topeDiferencia: string;
+  /** Posfechados de apertura sin ligar que podrían ser de este proveedor (AP-0); `cantidad` 0 si no hay. */
+  chequesDeAperturaSinLigar: { cantidad: number; total: string };
 }
 
 export interface ProveedorPorPagarDto {

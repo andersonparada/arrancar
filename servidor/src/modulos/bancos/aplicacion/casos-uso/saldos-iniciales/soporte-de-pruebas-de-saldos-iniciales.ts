@@ -17,6 +17,11 @@ export class ConsultasEnMemoria implements ConsultasDeSaldosIniciales {
   async partidas(cuentaBancariaId?: string) {
     return this.partidasDeLaEmpresa.filter((p) => !cuentaBancariaId || p.cuentaBancariaId === cuentaBancariaId);
   }
+  posfechados = { cantidad: 0, totalCentavos: 0 };
+
+  async posfechadosSinLigar() {
+    return this.posfechados;
+  }
   async contarMovimientosNormalesHasta() {
     return 0;
   }

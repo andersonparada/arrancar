@@ -9,6 +9,7 @@ import type {
   NotaConSaldoLibre,
   TotalesDelProveedor,
 } from '../../aplicacion/puertos/puertos-de-consultas.js';
+import { chequesDeAperturaSinLigarDelProveedor } from './cheques-de-apertura-sin-ligar.drizzle.js';
 import { ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
 import { documentos } from './documentos.tablas.js';
 import { posfechadosDelProveedor } from './posfechados-del-proveedor.drizzle.js';
@@ -26,7 +27,7 @@ const esUnCargoVigenteDe = (proveedorId: string) =>
 /** Cuántos cheques posfechados se listan en la ficha del proveedor. */
 const LIMITE_DE_POSFECHADOS = 10;
 
-type SumasDeLosCargos = Omit<TotalesDelProveedor, 'proveedorNombre'>;
+type SumasDeLosCargos = Omit<TotalesDelProveedor, 'proveedorNombre' | 'chequesDeAperturaSinLigar'>;
 
 /** Las sumas de la deuda de un proveedor: total, vencida y comprometida con posfechados, y cuántos cargos. */
 function columnasDeSumas(base: ConsultaBaseDeDocumentos, hoy: string) {
@@ -51,7 +52,11 @@ export class ConsultasDeSaldosDrizzle implements ConsultasDeSaldos {
       .innerJoin(terceros, eq(terceros.id, proveedores.terceroId))
       .where(eq(proveedores.id, proveedorId));
     if (!proveedor) return null;
-    return { proveedorNombre: proveedor.nombre, ...(await this.sumasDeLosCargos(proveedorId, hoy)) };
+    return {
+      proveedorNombre: proveedor.nombre,
+      ...(await this.sumasDeLosCargos(proveedorId, hoy)),
+      chequesDeAperturaSinLigar: await chequesDeAperturaSinLigarDelProveedor(proveedorId, hoy),
+    };
   }
 
   /** Lo que se debe de los cargos vigentes con deuda, la parte ya vencida y la comprometida con posfechados. */
