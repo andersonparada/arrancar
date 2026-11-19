@@ -71,7 +71,7 @@ describe('R1: saldos por proveedor al 31 de octubre', () => {
       disponible: '1310.00',
       sinAutorizar: '1160.00',
     });
-    expect(r1.deudores[0]).toMatchObject({ saldoNeto: '200.00', disponible: null });
+    expect(r1.deudores[0]).toMatchObject({ saldoNeto: '200.00', disponible: '0.00' });
     expect(r1.totales).toMatchObject({
       saldoNeto: '2880.00',
       totalCargos: '3280.00',

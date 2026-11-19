@@ -2852,3 +2852,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   tabla de R1. Prueba de API de la QA intermedia: 0.00 en R1, R2 y ficha, y la invariante 3 de CP5 §2.5 (lo disponible de R2 con
   corte de hoy es el de la lista). Pendiente: el estado de cuenta del proveedor (`alCorte.disponible`) sigue siendo neto menos
   comprometido; la adenda no lo menciona.
+- **2026-11-18 · CP4-D6, corrección de la revisión (disponible del deudor).** `cifrasDto` calcula `disponible` (cargos menos
+  comprometido) también en el bloque de deudores y en `totales.deudores`, ya no va `null`: un proveedor con cargo 100 y a favor
+  500 muestra 100.00 como su ficha, y lo a favor nunca resta (A.7). Excepción que queda: el proveedor con neto exactamente 0 sigue
+  fuera de R1 sin «incluir sin saldo» (y entra en acreedores con la opción). Prueba nueva en `reportes-de-saldos.prueba.ts`.

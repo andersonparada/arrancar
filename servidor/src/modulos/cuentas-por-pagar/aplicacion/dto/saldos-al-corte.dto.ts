@@ -26,7 +26,7 @@ export interface CifrasDeSaldoDto extends TramosDto {
   /** Cheques posfechados ya entregados. */
   comprometido: string;
   /** `totalCargos - comprometido` (como en la ficha del proveedor; lo que está a favor no resta); nulo en los deudores, que no se pagan. */
-  disponible: string | null;
+  disponible: string;
   /** La parte de los cargos que todavía no está autorizada. */
   sinAutorizar: string;
 }

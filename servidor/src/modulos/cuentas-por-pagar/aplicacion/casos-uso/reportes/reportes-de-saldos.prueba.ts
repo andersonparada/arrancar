@@ -198,12 +198,26 @@ describe('ReporteDeSaldosPorProveedor', () => {
 
     expect(reporte.acreedores.map((fila) => fila.nombre)).toEqual(['Alfa']);
     expect(reporte.deudores.map((fila) => fila.nombre)).toEqual(['Beta']);
-    expect(reporte.deudores[0]).toMatchObject({ saldoNeto: '200.00', disponible: null });
+    expect(reporte.deudores[0]).toMatchObject({ saldoNeto: '200.00', disponible: '0.00' });
+    expect(reporte.totales.deudores.disponible).toBe('0.00');
     expect(reporte.totales).toMatchObject({
       saldoNeto: '500.00',
       totalCargos: '1000.00',
       porcentajesPorTramo: { porVencer: '75.00', de1a30: '25.00', masDe90: '0.00' },
     });
+  });
+
+  it('el deudor con cargos conserva su disponible: lo que está a favor no lo resta', async () => {
+    const gama = proveedor({ proveedorId: 'g', nombre: 'Gama', nit: '3', neto: -40_000, totalCargos: 10_000 });
+    const consultas = new ConsultasDeLaPrueba([gama]);
+
+    const reporte = await new ReporteDeSaldosPorProveedor(dependencias(consultas)).ejecutar(
+      operadorDePrueba(),
+      solicitud,
+    );
+
+    expect(reporte.deudores[0]).toMatchObject({ saldoNeto: '400.00', disponible: '100.00' });
+    expect(reporte.totales.deudores.disponible).toBe('100.00');
   });
 
   it('suma al aviso de cheques y a los demás el del NIT repetido', async () => {
