@@ -48,8 +48,10 @@ describe('ReporteDeTiposDeCambio', () => {
     fecha,
     moneda: 'EUR',
     referencia: '9.1',
-    compra: '9.1',
-    venta: '9.1',
+    compra: '1.18',
+    venta: '1.18',
+    convencion: origen === 'banguat' ? 'usd_por_unidad' : null,
+    dolarUsado: origen === 'banguat' ? '7.7' : null,
     origen,
   });
 

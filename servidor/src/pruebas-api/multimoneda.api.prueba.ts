@@ -104,7 +104,17 @@ describe('GET /api/multimoneda/tipos-de-cambio', () => {
 
     const filas = await filasDeExcel(respuesta.cuerpo as Buffer);
     expect(respuesta.estado).toBe(200);
-    expect(filas[0]).toEqual(expect.arrayContaining(['Fecha', 'Moneda', 'Fuente']));
+    expect(filas[0]).toEqual(
+      expect.arrayContaining([
+        'Fecha',
+        'Moneda',
+        'Compra publicada',
+        'Venta publicada',
+        'Convención',
+        'Dólar usado',
+        'Fuente',
+      ]),
+    );
     expect(filas).toHaveLength(3);
     expect(filas[1]).toEqual(expect.arrayContaining(['USD', 'Ingreso manual de soporte']));
   });

@@ -4,8 +4,13 @@ export interface TipoDeLaSerieDto {
   fecha: string;
   moneda: string;
   referencia: string;
+  /** Lo publicado por el Banguat, en su convención. */
   compra: string | null;
   venta: string | null;
+  /** Con que se calculó la referencia: quetzales por unidad, dólares por unidad o unidades por dólar. */
+  convencion: 'quetzales_por_unidad' | 'usd_por_unidad' | 'unidades_por_usd' | null;
+  /** La referencia del dólar del Banguat usado, en las monedas que se cruzan. */
+  dolarUsado: string | null;
   origen: 'banguat' | 'manual';
 }
 
