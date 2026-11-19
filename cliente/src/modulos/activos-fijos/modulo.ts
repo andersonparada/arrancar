@@ -1,7 +1,7 @@
 import { Landmark } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_ACTIVOS_FIJOS } from './textos';
-import { Shapes } from 'lucide-vue-next';
+import { Package, Shapes } from 'lucide-vue-next';
 import { VENTANAS_ACTIVOS_FIJOS } from './textos';
 // generador: importaciones
 
@@ -15,6 +15,25 @@ export const moduloActivosFijos: DefinicionModuloCliente = {
       component: () => import('./paginas/ListaDeClases.vue'),
       meta: { permiso: 'activos-fijos.clases.ver', titulo: VENTANAS_ACTIVOS_FIJOS.clases.titulo },
     },
+    {
+      path: '/activos-fijos/activos',
+      name: 'activos-fijos.activos',
+      component: () => import('./paginas/ListaDeActivos.vue'),
+      meta: { permiso: 'activos-fijos.activos.ver', titulo: VENTANAS_ACTIVOS_FIJOS.activos.titulo },
+    },
+    {
+      path: '/activos-fijos/activos/nuevo',
+      name: 'activos-fijos.activos.nuevo',
+      component: () => import('./paginas/FormularioDeActivo.vue'),
+      meta: { permiso: 'activos-fijos.activos.crear', titulo: VENTANAS_ACTIVOS_FIJOS.activos.nuevo },
+    },
+    {
+      path: '/activos-fijos/activos/:activoId',
+      name: 'activos-fijos.activos.ficha',
+      component: () => import('./paginas/FichaDeActivo.vue'),
+      props: true,
+      meta: { permiso: 'activos-fijos.activos.ver', titulo: VENTANAS_ACTIVOS_FIJOS.activos.titulo },
+    },
     // generador: rutas
   ],
   menu: [
@@ -23,6 +42,13 @@ export const moduloActivosFijos: DefinicionModuloCliente = {
       titulo: NOMBRE_ACTIVOS_FIJOS,
       icono: Landmark,
       entradas: [
+        {
+          titulo: VENTANAS_ACTIVOS_FIJOS.activos.titulo,
+          ruta: '/activos-fijos/activos',
+          icono: Package,
+          seccion: 'operacion',
+          permiso: 'activos-fijos.activos.ver',
+        },
         {
           titulo: VENTANAS_ACTIVOS_FIJOS.clases.titulo,
           ruta: '/activos-fijos/clases',

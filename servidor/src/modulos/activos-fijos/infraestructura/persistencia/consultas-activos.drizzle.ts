@@ -1,0 +1,103 @@
+import { and, asc, desc, eq, getTableColumns, ilike, or, type AnyColumn, type SQL } from 'drizzle-orm';
+import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores.js';
+import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
+import type { ActivoDto, ActivoFichaDto, FiltrosDeActivos, TrasladoDto } from '../../aplicacion/dto/activo.dto.js';
+import type { ConsultasActivos } from '../../aplicacion/puertos/consultas-activos.js';
+import { activos } from './activos.tablas.js';
+import { clases } from './clases.tablas.js';
+import { nombresDeUbicaciones } from './nombres-de-ubicaciones.js';
+import { traslados } from './traslados.tablas.js';
+import { UbicacionesEnEmpresas } from './ubicaciones-en-empresas.drizzle.js';
+
+const COMODINES = /[\\%_]/g;
+const contiene = (texto: string) => `%${texto.trim().replace(COMODINES, '\\$&')}%`;
+
+/** Filtros que se resuelven con una igualdad sobre su columna. */
+const IGUALDADES = {
+  estado: activos.estado,
+  claseId: activos.claseId,
+  tipoDeRegistro: activos.tipoDeRegistro,
+  localidadId: activos.localidadId,
+  departamentoId: activos.departamentoId,
+  ocioso: activos.ocioso,
+  enBodega: activos.enBodega,
+} as const;
+
+/** Condiciones de la lista; cada filtro presente suma una. */
+function condiciones(filtros: FiltrosDeActivos): SQL[] {
+  const iguales = (Object.keys(IGUALDADES) as (keyof typeof IGUALDADES)[]).flatMap((clave) =>
+    filtros[clave] === undefined ? [] : [eq(IGUALDADES[clave] as AnyColumn, filtros[clave])],
+  );
+  const parecidos = [
+    filtros.responsable ? ilike(activos.responsable, contiene(filtros.responsable)) : undefined,
+    filtros.texto?.trim() ? buscarEnTextos(contiene(filtros.texto)) : undefined,
+  ];
+  return [...iguales, ...parecidos.filter((condicion): condicion is SQL => condicion !== undefined)];
+}
+
+function buscarEnTextos(buscado: string): SQL | undefined {
+  return or(
+    ilike(activos.codigo, buscado),
+    ilike(activos.descripcion, buscado),
+    ilike(activos.numeroDeSerie, buscado),
+    ilike(activos.placa, buscado),
+  );
+}
+
+const columnas = { ...getTableColumns(activos), claseNombre: clases.nombre, incisoFiscal: clases.incisoFiscal };
+type FilaDeActivo = Awaited<ReturnType<ConsultasActivosDrizzle['filas']>>[number];
+
+/** Lecturas de los activos; los nombres de la ubicación salen de las funciones de Empresas (AF-P22 b). */
+export class ConsultasActivosDrizzle implements ConsultasActivos {
+  private readonly ubicaciones = new UbicacionesEnEmpresas();
+
+  async listar(filtros: FiltrosDeActivos): Promise<ActivoDto[]> {
+    return this.conNombres(await this.filas(and(...condiciones(filtros))));
+  }
+
+  async obtener(activoId: string): Promise<ActivoFichaDto> {
+    const filas = await this.filas(eq(activos.id, activoId));
+    const [activo] = await this.conNombres(filas);
+    if (!activo) throw new RecursoNoEncontrado('El activo');
+    return { ...activo, traslados: await this.trasladosDe(activoId) };
+  }
+
+  async filas(donde: SQL | undefined) {
+    return transaccionEnCurso()
+      .select(columnas)
+      .from(activos)
+      .innerJoin(clases, eq(clases.id, activos.claseId))
+      .where(donde)
+      .orderBy(asc(activos.codigo));
+  }
+
+  private async conNombres(filas: FilaDeActivo[]): Promise<ActivoDto[]> {
+    const nombres = await nombresDeUbicaciones(this.ubicaciones, filas);
+    return filas.map(({ empresaId, creadoEn, actualizadoEn, creadoPor, actualizadoPor, ...fila }) => ({
+      ...fila,
+      localidadNombre: nombres.localidad(fila.localidadId),
+      departamentoNombre: nombres.departamento(fila.departamentoId),
+    }));
+  }
+
+  private async trasladosDe(activoId: string): Promise<TrasladoDto[]> {
+    const filas = await transaccionEnCurso()
+      .select()
+      .from(traslados)
+      .where(eq(traslados.activoId, activoId))
+      .orderBy(desc(traslados.fecha), desc(traslados.creadoEn));
+    const nombres = await nombresDeUbicaciones(this.ubicaciones, filas);
+    return filas.map((fila) => ({
+      id: fila.id,
+      esAlta: fila.esAlta,
+      fecha: fila.fecha,
+      localidadNombre: nombres.localidad(fila.localidadId),
+      departamentoNombre: nombres.departamento(fila.departamentoId),
+      responsable: fila.responsable,
+      recibidoPor: fila.recibidoPor,
+      motivo: fila.motivo,
+      aBodega: fila.aBodega,
+      estado: fila.estado,
+    }));
+  }
+}
