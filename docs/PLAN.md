@@ -2844,3 +2844,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   autorizados del proveedor y `disponible` solo los cargos con algo disponible (`having bool_or(disponible > 0)`). Quedan
   pendientes, por menores: unificar en `textos.ts` los nombres de estado, «comprometido con cheque N al dd/mm» en la contraseña,
   columnas Pagado y Comprometido en la contraseña impresa, y actualizar la adenda A.4 (`hechosDe` usa la deuda, a propósito).
+- **2026-11-18 · CP4-D6 y D7 (reportes, adenda del posfechado, respuesta a A.7).** «Disponible para pagar» en R1 es igual que
+  en la ficha del proveedor: total de cargos menos comprometido (`cifrasDto`); lo que está a favor va en su columna y no resta
+  (en la QA intermedia: cargo 2,240, a favor 336, posfechado por el total da 0.00, ya no −336.00). R2 (`documentos`) trae
+  `disponible` por fila, en el total y en el Excel («Disponible para pagar»), igual a saldo menos comprometido. Cliente: columna
+  en la tabla y línea en la tarjeta de R2, resumen de arriba de R1 y R2 con la cifra y rótulo «Disponible para pagar» en la
+  tabla de R1. Prueba de API de la QA intermedia: 0.00 en R1, R2 y ficha, y la invariante 3 de CP5 §2.5 (lo disponible de R2 con
+  corte de hoy es el de la lista). Pendiente: el estado de cuenta del proveedor (`alCorte.disponible`) sigue siendo neto menos
+  comprometido; la adenda no lo menciona.
