@@ -3296,3 +3296,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   libro (un documento puede tener varias líneas de concepto): agrupa por los tres conceptos de Bancos y lista los pendientes;
   (2) anular exige el fondo abierto (un fondo cerrado no recupera pendientes); (3) la reposición compensada del cierre (CC-7) no
   se anula desde aquí; (4) los vales provisionales abiertos (CC-6) no excluyen comprobantes: se escogen a mano por id.
+- **2026-11-19 (CC-4, corrección de la revisión)**: la línea de una reposición anulada (`vigente = false`) sigue atando al
+  comprobante por la llave `(comprobante_id, empresa_id, fondo_id)`, así que devolverlo a la bandeja (`fondo_id = null`) o
+  borrarlo (aviso `documento_por_eliminar` del libro) fallaba con 23503. Decisión: se conserva el historial y se rechaza
+  con el error propio `comprobante_con_reposicion_anulada` (422) en `DevolverALaBandeja` y `EliminarPorAviso`
+  (puerto nuevo `tuvoReposicionAnulada`); lo que sí cabe es anular el documento. Sin migración. Pruebas de API de ambos flujos.

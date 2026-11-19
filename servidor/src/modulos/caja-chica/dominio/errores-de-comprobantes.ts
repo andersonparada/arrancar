@@ -49,6 +49,20 @@ export class ComprobanteRepuesto extends ReglaDeNegocioInfringida {
   }
 }
 
+/**
+ * El comprobante estuvo en una reposición anulada: su línea de historial lo ata al fondo (llave foránea), así que ni
+ * sale del fondo ni se borra. Lo que sí cabe es anularlo.
+ */
+export class ComprobanteConReposicionAnulada extends ReglaDeNegocioInfringida {
+  override readonly codigo = 'comprobante_con_reposicion_anulada';
+
+  constructor() {
+    super(
+      'Este comprobante estuvo en una reposición anulada: no puede devolverse a la bandeja ni eliminarse; anúlelo.',
+    );
+  }
+}
+
 export class ComprobanteYaAnulado extends ReglaDeNegocioInfringida {
   override readonly codigo = 'comprobante_ya_anulado';
 

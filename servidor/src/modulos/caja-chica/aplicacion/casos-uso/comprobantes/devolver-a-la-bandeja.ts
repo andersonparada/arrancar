@@ -2,6 +2,7 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { RECURSO_DE_COMPROBANTES, etiquetaDelComprobante, type Comprobante } from '../../../dominio/comprobantes.js';
 import {
+  ComprobanteConReposicionAnulada,
   ComprobanteRepuesto,
   ComprobanteYaAnulado,
   DocumentoYaEstaEnLaBandeja,
@@ -35,7 +36,7 @@ export class DevolverALaBandeja {
 
   /**
    * @throws RecursoNoEncontrado, DocumentoYaEstaEnLaBandeja, SoloUnDocumentoVuelveALaBandeja, ComprobanteRepuesto,
-   * FacturaConNotasEnElFondo, FondoNoDisponible, ComprobantesMayoresQueElEfectivo
+   * ComprobanteConReposicionAnulada, FacturaConNotasEnElFondo, FondoNoDisponible, ComprobantesMayoresQueElEfectivo
    */
   async ejecutar(operador: Operador, pedido: PeticionDeDevolver): Promise<ComprobanteDto> {
     const { unidadDeTrabajo, publicadorEventos } = this.dependencias;
@@ -71,6 +72,7 @@ export class DevolverALaBandeja {
     if (comprobante.estado === 'anulado') throw new ComprobanteYaAnulado();
     if (comprobante.reposicionNumero !== null) throw new ComprobanteRepuesto(comprobante.reposicionNumero);
     const { comprobantes, consultasDeFondos } = this.dependencias;
+    if (await comprobantes.tuvoReposicionAnulada(comprobante.id)) throw new ComprobanteConReposicionAnulada();
     if (!comprobante.esNotaDeCredito && (await comprobantes.contarNotasVigentes(comprobante.id)) > 0) {
       throw new FacturaConNotasEnElFondo(etiquetaDelComprobante(comprobante));
     }

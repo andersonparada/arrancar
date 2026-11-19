@@ -1,7 +1,11 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
 import { RECURSO_DE_COMPROBANTES, type Comprobante } from '../../../dominio/comprobantes.js';
-import { ComprobanteEnFondoNoAsignado, ComprobanteRepuesto } from '../../../dominio/errores-de-comprobantes.js';
+import {
+  ComprobanteConReposicionAnulada,
+  ComprobanteEnFondoNoAsignado,
+  ComprobanteRepuesto,
+} from '../../../dominio/errores-de-comprobantes.js';
 import { LectorDelFondo } from '../fondos/lector-del-fondo.js';
 import { AnuladorDeComprobantes } from './anulador-de-comprobantes.js';
 import { comprobanteDto } from './armado-del-comprobante.js';
@@ -68,13 +72,13 @@ export class AnularPorAviso {
 /**
  * Responde al aviso `libro-de-compras.documento_por_eliminar` (§5.9), antes de que el libro borre su fila: la llave obliga
  * a borrar primero el comprobante, así que aquí se elimina (no se anula) con auditoría `eliminar` y el comprobante como
- * estaba. Repuesto lo rechaza (`ComprobanteRepuesto`). Sin comprobante visible lanza `ComprobanteEnFondoNoAsignado`. Si estaba en un fondo vigente publica
+ * estaba. Repuesto lo rechaza (`ComprobanteRepuesto`), y también el que estuvo en una reposición anulada (`ComprobanteConReposicionAnulada`: su línea de historial lo ata). Sin comprobante visible lanza `ComprobanteEnFondoNoAsignado`. Si estaba en un fondo vigente publica
  * `comprobante_quitado` (para Contabilidad equivale a anulado).
  */
 export class EliminarPorAviso {
   constructor(private readonly dependencias: DependenciasDeComprobantes) {}
 
-  /** @throws ComprobanteRepuesto, ComprobanteEnFondoNoAsignado */
+  /** @throws ComprobanteRepuesto, ComprobanteConReposicionAnulada, ComprobanteEnFondoNoAsignado */
   async ejecutar(operador: Operador, aviso: AvisoDeBajaDelLibro): Promise<void> {
     if (aviso.destino !== DESTINO_PROPIO) return;
     const { unidadDeTrabajo, publicadorEventos } = this.dependencias;
@@ -85,6 +89,9 @@ export class EliminarPorAviso {
   private async eliminar(operador: Operador, aviso: AvisoDeBajaDelLibro): Promise<EventoDominio[]> {
     const comprobante = await bloquearElDelDocumento(this.dependencias, aviso.documentoId);
     if (comprobante.reposicionNumero !== null) throw new ComprobanteRepuesto(comprobante.reposicionNumero);
+    if (await this.dependencias.comprobantes.tuvoReposicionAnulada(comprobante.id)) {
+      throw new ComprobanteConReposicionAnulada();
+    }
     await this.dependencias.auditoria.registrar({
       recurso: RECURSO_DE_COMPROBANTES,
       registroId: comprobante.id,

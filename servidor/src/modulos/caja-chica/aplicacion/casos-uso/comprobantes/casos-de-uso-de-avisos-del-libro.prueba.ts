@@ -64,6 +64,16 @@ describe('los avisos del libro', () => {
     );
   });
 
+  it('eliminar uno con una reposición anulada en su historial: ComprobanteConReposicionAnulada', async () => {
+    const { id, documentoId } = await enElFondo();
+    m.comprobantes.conReposicionAnulada.add(id);
+
+    await expect(new EliminarPorAviso(m.dependencias).ejecutar(operador, aviso(documentoId))).rejects.toMatchObject({
+      codigo: 'comprobante_con_reposicion_anulada',
+    });
+    expect(m.comprobantes.filas.has(id)).toBe(true);
+  });
+
   it('un comprobante repuesto impide anular y eliminar: ComprobanteRepuesto', async () => {
     const { id, documentoId } = await enElFondo();
     m.comprobantes.filas.set(id, { ...m.comprobantes.filas.get(id)!, reposicionNumero: 7 });

@@ -161,6 +161,10 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
     this.filas.delete(id);
   }
 
+  readonly conReposicionAnulada = new Set<string>();
+
+  tuvoReposicionAnulada = async (id: string): Promise<boolean> => this.conReposicionAnulada.has(id);
+
   async contarNotasVigentes(facturaId: string): Promise<number> {
     return [...this.filas.values()].filter(
       (c) => c.documentoAfectadoId === facturaId && c.estado === 'vigente' && c.fondoId !== null,

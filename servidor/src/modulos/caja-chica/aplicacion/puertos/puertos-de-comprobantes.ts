@@ -65,6 +65,8 @@ export interface RepositorioDeComprobantes {
   eliminar(id: string): Promise<void>;
   /** Cuántas notas de crédito vigentes tiene la factura dentro de un fondo (las de la bandeja no la atan). */
   contarNotasVigentes(facturaId: string): Promise<number>;
+  /** Si el comprobante estuvo en una reposición ya anulada: esa línea de historial lo ata al fondo y a la fila. */
+  tuvoReposicionAnulada(id: string): Promise<boolean>;
 }
 
 export interface FiltroDeBandeja {

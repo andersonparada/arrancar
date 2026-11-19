@@ -14,6 +14,7 @@ import type {
 import type { Comprobante } from '../../dominio/comprobantes.js';
 import { aComprobante, comprobantesConSuContexto } from './comprobantes.lectura.js';
 import { comprobantes } from './comprobantes.tablas.js';
+import { reposicionComprobantes } from './reposicion-comprobantes.tablas.js';
 
 /** Las tablas tienen seguridad por empresa y, las de un fondo, por el alcance de fondos (RLS). */
 export class RepositorioDeComprobantesDrizzle implements RepositorioDeComprobantes {
@@ -130,5 +131,13 @@ export class RepositorioDeComprobantesDrizzle implements RepositorioDeComprobant
         ),
       );
     return fila?.total ?? 0;
+  }
+
+  async tuvoReposicionAnulada(id: string): Promise<boolean> {
+    const [fila] = await transaccionEnCurso()
+      .select({ total: count() })
+      .from(reposicionComprobantes)
+      .where(and(eq(reposicionComprobantes.comprobanteId, id), eq(reposicionComprobantes.vigente, false)));
+    return (fila?.total ?? 0) > 0;
   }
 }
