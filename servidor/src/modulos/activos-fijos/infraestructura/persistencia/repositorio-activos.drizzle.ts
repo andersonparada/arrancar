@@ -5,6 +5,7 @@ import type { Activo, ActivoId } from '../../dominio/activo.js';
 import { mapeadorDeActivo } from './activo.mapeador.js';
 import { activos } from './activos.tablas.js';
 import { costos } from './costos.tablas.js';
+import { cuotas } from './cuotas.tablas.js';
 import { enTandas } from './en-tandas.js';
 import { tramos } from './tramos.tablas.js';
 import { traslados } from './traslados.tablas.js';
@@ -108,7 +109,12 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
       .from(costos)
       .where(and(eq(costos.activoId, id.valor), eq(costos.estado, 'vigente'), isNotNull(costos.lineaDeDocumentoId)))
       .limit(1);
-    return traslado !== undefined || costo !== undefined;
+    const [cuota] = await transaccion
+      .select({ id: cuotas.id })
+      .from(cuotas)
+      .where(eq(cuotas.activoId, id.valor))
+      .limit(1);
+    return traslado !== undefined || costo !== undefined || cuota !== undefined;
   }
 }
 

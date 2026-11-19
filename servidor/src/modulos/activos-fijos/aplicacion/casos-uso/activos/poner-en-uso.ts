@@ -36,6 +36,7 @@ export class PonerEnUso {
 
   private async poner(operador: Operador, pedido: PedidoDePonerEnUso, reglas: ReglasDeLaEmpresa) {
     const { repositorio, consultas, clases, costos, tramos, cierres } = this.dependencias;
+    await cierres.bloquear('compartido');
     const [activo] = await repositorio.buscarBloqueando([pedido.activoId]);
     if (!activo) throw new RecursoNoEncontrado('El activo');
     activo.exigirEnConstruccion();

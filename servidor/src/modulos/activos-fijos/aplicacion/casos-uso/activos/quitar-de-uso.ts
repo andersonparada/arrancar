@@ -17,6 +17,7 @@ export class QuitarDeUso {
   ejecutar(operador: Operador, activoId: string): Promise<ActivoFichaDto> {
     const { unidadDeTrabajo, repositorio, consultas, tramos, cierres, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
+      await cierres.bloquear('compartido');
       const [activo] = await repositorio.buscarBloqueando([activoId]);
       if (!activo) throw new RecursoNoEncontrado('El activo');
       const anterior = await consultas.obtener(activoId);

@@ -4,6 +4,7 @@ import { configuracionDeActivosFijos } from './configuracion.js';
 import { rutasDeActivos } from './composicion/activos.js';
 import { rutasDeClases } from './composicion/clases.js';
 import { rutasDeBandeja, rutasDeCostos } from './composicion/costos.js';
+import { rutasDeDepreciacion } from './composicion/depreciacion.js';
 // generador: importaciones
 
 /** Control, capitalización y depreciación contable y fiscal de los bienes de la empresa. Ver `docs/modulos/activos-fijos.md`. */
@@ -40,6 +41,9 @@ export const moduloActivosFijos: DefinicionModulo = {
     },
     { clave: 'activos-fijos.costos.crear', descripcion: 'Capitalizar líneas de la bandeja y registrar costos a mano' },
     { clave: 'activos-fijos.costos.anular', descripcion: 'Anular costos de los activos' },
+    { clave: 'activos-fijos.depreciacion.ver', descripcion: 'Ver los cierres de depreciación y revisar un mes' },
+    { clave: 'activos-fijos.depreciacion.cerrar', descripcion: 'Cerrar un mes de depreciación' },
+    { clave: 'activos-fijos.depreciacion.reabrir', descripcion: 'Reabrir el último mes de depreciación cerrado' },
     // generador: permisos
   ],
   configuracion: configuracionDeActivosFijos,
@@ -48,6 +52,7 @@ export const moduloActivosFijos: DefinicionModulo = {
     rutasDeActivos(),
     rutasDeBandeja(),
     rutasDeCostos(),
+    rutasDeDepreciacion(),
     // generador: rutas
   ]),
 };
