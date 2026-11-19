@@ -4012,6 +4012,26 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `vales.liquidar` y `fondos.cerrar` (quien liquida un vale sin factura, lo entrega o cierra el fondo elige conceptos, cuentas y
   usuarios sin recibir 403; prueba nueva). «Imprimir solicitud de reposición» pasa a `AccionesDeMovimientos` (ficha, con
   `fondos.ver`): el custodio la imprime y firma sin tener `reposiciones.crear`; se conserva también en la página de reponer.
+- **2026-11-19 (CC-10, Caja chica, reportes, servidor y cliente)**: CC-R1 a CC-R5 sin migraciones, solo lectura, bajo
+  `/api/caja-chica/reportes/{pendientes-de-reponer,reposiciones,sin-documento-fiscal,estado-de-fondos,arqueos}` con su
+  `…/exportar` (Excel) y los permisos `reportes.ver` y `reportes.exportar` ya declarados; la RLS por alcance de fondo limita
+  cada reporte a los fondos que el usuario ve y `fondoId` los acota a uno. **CC-R1** y **CC-R4** son «al corte» (`corte`, hoy
+  por omisión) y siguen §5.10: comprobante con `fecha <= corte`, vigente o anulado después del corte, y sin línea en una
+  reposición con `fecha <= corte` no anulada al corte (también las compensadas al cerrar). R4 calcula con la misma regla el
+  monto (cambios vigentes al corte), lo pendiente, los vales provisionales abiertos al corte, el custodio de ese día y el
+  último arqueo vigente al corte con su diferencia; el efectivo esperado es `monto - pendiente - vales`. **CC-R2**, **CC-R3**
+  y **CC-R5** son «del período» (`desde`/`hasta`, por omisión el mes de hoy; `periodo_invertido` si van al revés): R2 cuenta
+  las reposiciones vigentes por la fecha de la reposición y reparte sus líneas por concepto de gasto en deducible y no
+  deducible; R3 trae vales de gasto y documentos fuera del libro, vigentes, con su motivo; R5 cuenta los arqueos vigentes por
+  el día de la zona horaria de la empresa, con diferencia, resultado y destino del faltante. Deducible = documento dentro del
+  libro (`muestra_en_reportes_sat`); vale, faltante y sobrante nunca. Cliente: cinco pantallas en la sección Reportes
+  (`MarcoDeReporte` común, filtros al corte o de período con selector de fondo, imprimir y Excel). Pruebas: dominio, casos de
+  uso, API (alcance, otra empresa, Excel, permisos) y lógica pura del cliente. Decisiones: (1) el concepto de un documento sale
+  de las líneas del libro: si tiene uno solo es ese, si tiene varios «Varios conceptos» (el monto del comprobante no se
+  prorratea entre sus líneas), el vale usa el suyo y faltante y sobrante, «Faltante/Sobrante de arqueo»; (2) las reposiciones
+  y arqueos anulados no cuentan en R2 ni R5 (sin columna de anulados); (3) el «cheque o nota» de R2 sale de la referencia o el
+  número del movimiento de Bancos (nadie tiene todavía datos reales con que confirmar el formato); (4) los reportes de Caja
+  chica copian los constructores de columnas y los composables de reporte de Cuentas por liquidar (los módulos no se importan).
 - **2026-11-19 (Bancos: aprobaciones, tarjeta y CP-AP, respuestas y validación del contador; docs):** el usuario aceptó
   todas las recomendaciones de §16 de `diseno-bancos-aprobaciones-tarjeta-y-cp-ap.md` (Q-A1 a Q-A9, Q-T2 a Q-T7, Q-N2,
   Q-N3, Q-AP1, Q-AP2 y Q-O1; §17). El contador validó el diseño

@@ -1,6 +1,6 @@
 # Diseño de Caja chica y Cuentas por liquidar — arquitecto de datos, 2026-11-18
 
-Estado: **aprobado** (respuestas del usuario al final). CC-1, CL-1, CC-1c, CL-1c, CC-2, CC-3 y CC-4 (servidor) y CC-8 y CC-9 (cliente) programados; la revisión del commit 670b81a4 y
+Estado: **aprobado** (respuestas del usuario al final). CC-1, CL-1, CC-1c, CL-1c, CC-2, CC-3 y CC-4 (servidor) y CC-8, CC-9 y CC-10 (cliente y reportes) programados; la revisión del commit 670b81a4 y
 las decisiones del 2026-11-18 sobre CC-f están en §4.10 y §5.4 g (paso CC-1c / CL-1c antes de CC-3 y CL-3). Aterriza el punto 7 de
 `HOJA-DE-RUTA.md` («Caja chica y Cuentas por liquidar») con la investigación del contador
 (`dictamen-caja-chica-2026-11-18.md`, «correcto con ajustes») y el §9 de la adenda de efectivo de CP4
@@ -1034,7 +1034,7 @@ uno por módulo a la vez.
 | **CC-6** (vales provisionales) — **hecho 2026-11-19 (servidor)** | Entregar, liquidar, anular, aviso de vale viejo | CC-3 |
 | **CC-7** (cierre) — **hecho 2026-11-19 (servidor)** | Cerrar con reposición compensada y depósito | CC-4, CC-5 y CC-6 |
 | **CC-8 / CC-9** (cliente) | 8: fondos, ficha, bandeja, comprobantes, vales de gasto, Ingreso con referencia — **CC-8 hecho 2026-11-19; CC-9 hecho 2026-11-19** (con catálogos propios `GET /caja-chica/catalogos` y edición del fondo, correcciones de la revisión). 9: reposición, arqueo, vales provisionales, cierre, impresiones | CC-4 (8) y CC-7 (9) |
-| **CC-10** (reportes, servidor y cliente) | CC-R1 a R5 | CC-7 |
+| **CC-10** (reportes, servidor y cliente) — **hecho el 2026-11-19** | CC-R1 a R5 | CC-7 |
 | **CC-11** (QA) | Abrir con cheque no negociable; factura desde la ficha; factura con retención (queda en la bandeja; la asigna quien tiene el permiso, con motivo); vale sobre el tope (permiso); reponer (desglose en Bancos); arqueo con faltante; custodio que repone (aviso); usuario sin el fondo asignado (no lo ve); bancarización con una factura de caja chica y un cheque de Cuentas por pagar al mismo proveedor; cerrar; celular | CC-9 y CC-10 |
 | **CL-2** (anticipos) | Entregar (vencidos, aviso C8), anular, lista con corte, manejador de Bancos, eventos | CL-1 y CCL-B1 |
 | **CL-3** (gastos) — **hecho el 2026-11-19 (servidor)** | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención, §7.2), sin documento, quitar, bancarización y su respuesta con `monto + monto_retenido` (más los avisos de baja del libro, §7.5, y `GET /anticipos/:id/gastos`) | CL-2, CCL-L1 y CCL-BZ |
