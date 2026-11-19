@@ -1,9 +1,10 @@
-import { and, between, asc, eq, sql } from 'drizzle-orm';
+import { and, between, asc, desc, eq, or, sql } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { RepositorioChequeras } from '../../aplicacion/puertos/repositorio-chequeras.js';
-import type { Chequera, ChequeraId } from '../../dominio/chequera.js';
+import type { Chequera, ChequeraId, FormatoDeLaChequera } from '../../dominio/chequera.js';
 import { chequeras } from './chequeras.tablas.js';
 import { cheques } from './cheques.tablas.js';
+import { formatosDeCheque } from './formatos-de-cheque.tablas.js';
 import { mapeadorDeChequera } from './chequera.mapeador.js';
 
 /** La tabla tiene seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
@@ -30,6 +31,24 @@ export class RepositorioChequerasDrizzle implements RepositorioChequeras {
       .select({ serie: chequeras.serie, desde: chequeras.desde, hasta: chequeras.hasta })
       .from(chequeras)
       .where(and(eq(chequeras.cuentaBancariaId, cuentaBancariaId), eq(chequeras.deApertura, false)));
+  }
+
+  /** La plantilla de fábrica, o el formato guardado si sigue activo, de la chequera más reciente que tenga uno. */
+  async ultimoFormatoDeLaCuenta(cuentaBancariaId: string): Promise<FormatoDeLaChequera | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ formatoDeChequeId: chequeras.formatoDeChequeId, plantillaDeCheque: chequeras.plantillaDeCheque })
+      .from(chequeras)
+      .leftJoin(formatosDeCheque, eq(formatosDeCheque.id, chequeras.formatoDeChequeId))
+      .where(
+        and(
+          eq(chequeras.cuentaBancariaId, cuentaBancariaId),
+          eq(chequeras.deApertura, false),
+          or(sql`${chequeras.plantillaDeCheque} is not null`, eq(formatosDeCheque.activo, true)),
+        ),
+      )
+      .orderBy(desc(chequeras.creadoEn))
+      .limit(1);
+    return fila ?? null;
   }
 
   async numerosDeAperturaEnRango(

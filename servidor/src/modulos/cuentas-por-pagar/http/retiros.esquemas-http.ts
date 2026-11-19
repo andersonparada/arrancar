@@ -24,6 +24,7 @@ export const esquemaRetiro = z.discriminatedUnion('forma', [
     chequeraId: z.uuid({ error: 'Escoja la chequera.' }),
     chequeId: z.uuid().optional(),
     noNegociable: z.boolean().optional(),
+    paraAbonoEnCuenta: z.boolean().optional(),
     /** El vacío no es nulo: el dominio lo rechaza como cheque al portador. */
     beneficiario: z.string().trim().max(150, 'El beneficiario admite hasta 150 caracteres.').nullable().optional(),
     ...comun,

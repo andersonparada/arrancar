@@ -20,6 +20,7 @@ export interface PeticionDeRetiroEnCheque extends PeticionBase {
   chequeraId: string;
   chequeId?: string;
   noNegociable?: boolean;
+  paraAbonoEnCuenta?: boolean;
   beneficiario?: string | null;
 }
 
@@ -77,5 +78,6 @@ export function ordenarElRetiro(
     ...conTexto('chequeId', pedido.chequeId),
     chequeraId: pedido.chequeraId,
     noNegociable: pedido.noNegociable ?? true,
+    paraAbonoEnCuenta: pedido.paraAbonoEnCuenta ?? false,
   });
 }

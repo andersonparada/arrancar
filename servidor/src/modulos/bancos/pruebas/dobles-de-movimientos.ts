@@ -216,6 +216,11 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
     );
   }
 
+  /** La condición «para abono en cuenta» del movimiento; para el doble de cheques. */
+  paraAbonoEnCuentaDe(movimientoId: string): boolean {
+    return this.registros.get(movimientoId)?.instantanea().paraAbonoEnCuenta ?? false;
+  }
+
   private aDtoMarcado(movimiento: Movimiento): MovimientoDto {
     const conciliacionId = this.marcadosEnConciliacion.get(movimiento.id.valor) ?? null;
     const dto = aDto(movimiento, conciliacionId, this.hechosDeLaCuenta(movimiento));

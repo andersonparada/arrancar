@@ -161,6 +161,7 @@ describe('lo que generó otro módulo y las notas marcadas (CP4)', () => {
       puedeDesmarcar: false,
     });
     expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque', esDeOtroModulo: true })).puedeBlanquear).toBe(false);
+    expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque' }), true).puedeBlanquear).toBe(false);
     expect(
       accionesDeCheque('emitido', limpia({ tipo: 'cheque', parteDeApertura: 'cheque_en_circulacion' })).puedeBlanquear,
     ).toBe(false);

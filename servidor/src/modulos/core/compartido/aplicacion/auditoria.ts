@@ -8,6 +8,8 @@
  * `autorizar`: se autorizó algo que la misma persona ingresó o completó, excepción a la separación de funciones (Cuentas por pagar).
  * `adjuntar`: se adjuntó un documento de respaldo; `anterior` lleva el documento como quedó (Empresas: balance de apertura).
  * `ajustar`: se dio de baja o se trasladó un saldo a favor, con su causa (Cuentas por pagar: ajustes de notas de crédito).
+ * `reimprimir`: se volvió a imprimir un cheque o su comprobante, con su motivo; `anterior` lleva el cheque y sus impresiones (Bancos).
+ * `inutilizar`: el pago de un cheque pasó a otro formulario porque el papel quedó inservible; `anterior` lleva el cheque como estaba (Bancos).
  * `cambiar_vencimiento`: se movió el vencimiento de un cargo, con el antes y el después (Cuentas por pagar).
  */
 export type AccionAuditada =
@@ -26,7 +28,9 @@ export type AccionAuditada =
   | 'quitar'
   | 'adjuntar'
   | 'ajustar'
-  | 'cambiar_vencimiento';
+  | 'cambiar_vencimiento'
+  | 'reimprimir'
+  | 'inutilizar';
 
 /** Una baja (o su reversa): qué registro, qué se hizo, por qué y cómo estaba antes. */
 export interface EntradaDeAuditoria {

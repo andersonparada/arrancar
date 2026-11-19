@@ -1,6 +1,22 @@
 import type { DocumentoParaDestino, TipoDeDocumentoDeCompra } from './libro-de-compras.contratos.js';
 
 /**
+ * Lo que Cuentas por pagar responde a Bancos para el comprobante de egreso de un cheque suyo: el pago y, por documento, lo
+ * que se pagó y sus retenciones (con la constancia si ya la tiene). El dinero va en centavos enteros.
+ */
+export interface DetalleDeEgresoDeCuentasPorPagar {
+  pagoNumero: string;
+  documentos: Array<{
+    tipo: string;
+    serie: string | null;
+    numero: string;
+    montoCentavos: number;
+    retenciones: Array<{ impuesto: 'iva' | 'isr'; montoCentavos: number; constanciaNumero: string | null }>;
+  }>;
+  totalRetenidoCentavos: number;
+}
+
+/**
  * Órdenes y eventos de `cuentas-por-pagar` (ver `mediador.contratos.ts`). Por ahora la orden que llama Libro de compras
  * al registrar un documento y el evento de después de anular uno.
  */
@@ -12,6 +28,14 @@ declare module './mediador.contratos.js' {
      * Libro de compras suma a los suyos.
      */
     'cuentas-por-pagar.recibir_documento': { datos: DocumentoParaDestino; respuesta: { avisos: string[] } };
+    /**
+     * Bancos pide el detalle del pago de un cheque suyo para el comprobante de egreso (`null` si no hay pago de ese
+     * movimiento). Si el módulo no está activo, el mediador lanza `ModuloNoDisponible` y Bancos imprime sin detalle.
+     */
+    'cuentas-por-pagar.detalle_para_comprobante_de_egreso': {
+      datos: { movimientoId: string };
+      respuesta: DetalleDeEgresoDeCuentasPorPagar | null;
+    };
   }
 }
 

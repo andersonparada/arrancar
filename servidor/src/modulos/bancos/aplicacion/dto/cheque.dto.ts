@@ -11,11 +11,17 @@ export interface ChequeDto {
   numero: number;
   estado: EstadoDelCheque;
   noNegociable: boolean;
+  /** «PARA ABONO EN CUENTA» (art. 521), leído de su movimiento; `false` si no se ha emitido. */
+  paraAbonoEnCuenta: boolean;
   movimientoId: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
-  /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
+  /** Por qué se anuló; `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** Un aviso fijo según por qué se anuló (extraviado: avisar al banco por escrito); `null` si no lleva. */
+  aviso: string | null;
+  /** Cuándo se imprimió por primera vez; `null` si no se ha impreso. */
+  impresoEn: string | null;
   /** La parte de la carga inicial que es su movimiento (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
   parteDeApertura: ParteDeApertura | null;
   /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */
@@ -33,6 +39,8 @@ export interface SolicitudDeEmisionDeCheque {
   monto: string;
   beneficiario: string;
   noNegociable: boolean;
+  /** «PARA ABONO EN CUENTA» (art. 521); por omisión, no. Solo en cheques. */
+  paraAbonoEnCuenta?: boolean;
   referencia: string | null;
   observaciones: string | null;
   /** El concepto que clasifica el pago; un cheque cuenta como débito. Sin él solo si lo emite otro módulo (`origen`). */
@@ -58,6 +66,7 @@ export interface ChequeListadoDto {
   cuentaBancariaNombre: string;
   estado: Exclude<EstadoDelCheque, 'disponible'>;
   noNegociable: boolean;
+  paraAbonoEnCuenta: boolean;
   /** La fecha del movimiento; si nunca se emitió, la de su anulación. */
   fecha: string;
   monto: string | null;
@@ -65,8 +74,12 @@ export interface ChequeListadoDto {
   referencia: string | null;
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
-  /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
+  /** Por qué se anuló; `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** Un aviso fijo según por qué se anuló (extraviado: avisar al banco por escrito); `null` si no lleva. */
+  aviso: string | null;
+  /** Cuándo se imprimió por primera vez; `null` si no se ha impreso. */
+  impresoEn: string | null;
   /** La parte de la carga inicial que es (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
   parteDeApertura: ParteDeApertura | null;
   /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */
@@ -81,4 +94,11 @@ export interface FiltroDeChequesDeLaEmpresa {
   estado?: Exclude<EstadoDelCheque, 'disponible'>;
   desde?: string;
   hasta?: string;
+}
+
+/** El resultado de pasar el pago a otro formulario: el cheque inutilizado, el que recibió el pago y los avisos. */
+export interface ChequePasadoDto {
+  inutilizado: ChequeDto;
+  destino: ChequeDto;
+  avisos: string[];
 }

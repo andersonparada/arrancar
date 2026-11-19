@@ -30,7 +30,9 @@ import { ActualizarMovimiento } from '../movimientos/actualizar-movimiento.js';
 import { AnularMovimiento } from '../movimientos/anular-movimiento.js';
 import { AnularCheque } from './anular-cheque.js';
 import { BlanquearCheque } from './blanquear-cheque.js';
+import { CorregirCondicionesDelCheque } from './corregir-condiciones-del-cheque.js';
 import { EmitirCheque } from './emitir-cheque.js';
+import { PasarChequeAOtroFormulario } from './pasar-cheque-a-otro-formulario.js';
 import { ListarChequesDeLaEmpresa } from './listar-cheques-de-la-empresa.js';
 import { SiguienteChequeDisponible } from './siguiente-cheque-disponible.js';
 import { CARGA_SIN_FECHA_DE_INICIO } from '../../../pruebas/dobles-de-carga-inicial.js';
@@ -163,25 +165,31 @@ function dependenciasDe(dobles: Dobles, { permiteSobregiro, reloj, cuentasPorPag
   };
 }
 
-/** Todo lo que las pruebas de cheques necesitan: los casos de uso y los dobles con que se armaron. */
-export async function armarEntorno(opciones: Partial<OpcionesDelEntorno> = {}) {
-  const dobles = await armarDobles();
-  const { permiteSobregiro = false, reloj = new RelojFijo(), cuentasPorPagarActivo = false } = opciones;
-  const { eventos, deChequeras, deCheques, deMovimientos } = dependenciasDe(dobles, {
-    permiteSobregiro,
-    reloj,
-    cuentasPorPagarActivo,
-  });
+/** La chequera del 1 al 5 de la cuenta de prueba y su primer cheque. */
+async function primeraChequera(dobles: Dobles, deChequeras: ReturnType<typeof dependenciasDeChequeras>) {
   const datosDeChequera = { cuentaBancariaId: CUENTA, serie: null, desde: 1, hasta: 5 };
   const chequera = await new CrearChequera(deChequeras).ejecutar(operador, datosDeChequera);
   const primerCheque = (await dobles.cheques.listarDeLaChequera(chequera.id))[0]!;
+  return { chequeraId: chequera.id, chequeId: primerCheque.id };
+}
+
+/** Todo lo que las pruebas de cheques necesitan: los casos de uso y los dobles con que se armaron. */
+export async function armarEntorno(opciones: Partial<OpcionesDelEntorno> = {}) {
+  const dobles = await armarDobles();
+  const { eventos, deChequeras, deCheques, deMovimientos } = dependenciasDe(dobles, {
+    permiteSobregiro: false,
+    reloj: new RelojFijo(),
+    cuentasPorPagarActivo: false,
+    ...opciones,
+  });
   return {
     ...dobles,
     eventos,
-    chequeraId: chequera.id,
-    chequeId: primerCheque.id,
+    ...(await primeraChequera(dobles, deChequeras)),
     emitir: new EmitirCheque(deCheques),
     anular: new AnularCheque(deCheques),
+    corregirCondiciones: new CorregirCondicionesDelCheque(deCheques),
+    pasar: new PasarChequeAOtroFormulario(deCheques),
     blanquear: new BlanquearCheque(deCheques),
     siguiente: new SiguienteChequeDisponible(deCheques),
     listar: new ListarChequesDeLaEmpresa(deCheques),

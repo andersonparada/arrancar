@@ -28,7 +28,9 @@ export const cheques = esquemaBancos.table(
     anuladoEn: timestamp({ withTimezone: true }),
     motivoDeAnulacion: text(),
     /** Por qué se anuló (P1): a mano o por caducidad. Nulo mientras no esté anulado. La caducidad no cambia el concepto del cheque. */
-    causaDeAnulacion: text().$type<'manual' | 'caducidad'>(),
+    causaDeAnulacion: text().$type<'manual' | 'caducidad' | 'inutilizado' | 'extraviado'>(),
+    /** La primera impresión (no vuelve a cambiar); nulo mientras no se imprima. Un cheque impreso no se blanquea. */
+    impresoEn: timestamp({ withTimezone: true }),
     ...marcasDeTiempo,
     ...autoria,
   },
@@ -36,7 +38,11 @@ export const cheques = esquemaBancos.table(
     unique('cheques_chequera_numero_unico').on(t.chequeraId, t.numero),
     check(
       'cheques_causa_de_anulacion_valida',
-      sql`${t.causaDeAnulacion} is null or ${t.causaDeAnulacion} in ('manual', 'caducidad')`,
+      sql`${t.causaDeAnulacion} is null or ${t.causaDeAnulacion} in ('manual', 'caducidad', 'inutilizado', 'extraviado')`,
+    ),
+    check(
+      'cheques_inutilizado_sin_movimiento',
+      sql`${t.causaDeAnulacion} is distinct from 'inutilizado' or ${t.movimientoId} is null`,
     ),
     check('cheques_estado_valido', sql`${t.estado} in ('disponible', 'emitido', 'anulado')`),
     politicaPorEmpresa(),

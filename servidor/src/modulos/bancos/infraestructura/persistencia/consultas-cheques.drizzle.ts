@@ -3,6 +3,7 @@ import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { ChequeDto, ChequeListadoDto, FiltroDeChequesDeLaEmpresa } from '../../aplicacion/dto/cheque.dto.js';
 import type { ConsultasCheques } from '../../aplicacion/puertos/consultas-cheques.js';
+import { avisoDeAnulacion } from '../../dominio/cheque.js';
 import { accionesDeCheque } from '../../aplicacion/acciones-posibles.js';
 import { hechosDelMovimientoDelCheque, mapeadorDeCheque } from './cheque.mapeador.js';
 import { cheques } from './cheques.tablas.js';
@@ -11,7 +12,14 @@ import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { columnasDeHechos } from './hechos-de-movimiento.js';
 import { movimientos } from './movimientos.tablas.js';
 
-const columnas = { ...getTableColumns(cheques), hechosDelMovimiento: columnasDeHechos(movimientos) };
+/** La condición «para abono en cuenta» sale del movimiento; sin movimiento, `false`. */
+const paraAbonoEnCuenta = sql<boolean>`coalesce(${movimientos.paraAbonoEnCuenta}, false)`;
+
+const columnas = {
+  ...getTableColumns(cheques),
+  paraAbonoEnCuenta,
+  hechosDelMovimiento: columnasDeHechos(movimientos),
+};
 
 /** El cheque con lo necesario de su movimiento (si lo tiene) para saber qué se puede hacer con él. */
 const consultaBase = () =>
@@ -37,6 +45,7 @@ const columnasDeLaEmpresa = {
   cuentaBancariaNombre: cuentasBancarias.nombre,
   estado: cheques.estado,
   noNegociable: cheques.noNegociable,
+  paraAbonoEnCuenta,
   fecha: fechaEfectiva,
   monto: movimientos.monto,
   beneficiario: movimientos.beneficiario,
@@ -44,6 +53,7 @@ const columnasDeLaEmpresa = {
   anuladoEn: cheques.anuladoEn,
   motivoDeAnulacion: cheques.motivoDeAnulacion,
   causaDeAnulacion: cheques.causaDeAnulacion,
+  impresoEn: cheques.impresoEn,
   movimientoId: cheques.movimientoId,
   hechosDelMovimiento: columnasDeHechos(movimientos),
 };
@@ -65,9 +75,11 @@ const aListado = ({ movimientoId, hechosDelMovimiento, ...fila }: FilaDelListado
     ...fila,
     estado,
     anuladoEn: fila.anuladoEn ? fila.anuladoEn.toISOString() : null,
+    impresoEn: fila.impresoEn ? fila.impresoEn.toISOString() : null,
+    aviso: avisoDeAnulacion(fila.causaDeAnulacion, fila.numero),
     parteDeApertura: hechos?.parteDeApertura ?? null,
     moduloDeOrigen: hechos ? hechosDelMovimiento.moduloDeOrigen : null,
-    ...accionesDeCheque(estado, hechos),
+    ...accionesDeCheque(estado, hechos, fila.impresoEn !== null),
   };
 };
 

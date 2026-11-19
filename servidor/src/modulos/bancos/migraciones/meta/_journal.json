@@ -267,6 +267,13 @@
       "when": 1795056261162,
       "tag": "0037_conceptos_reservados_por_nombre_normalizado",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1795057343166,
+      "tag": "0038_impresion_de_cheques",
+      "breakpoints": true
     }
   ]
 }

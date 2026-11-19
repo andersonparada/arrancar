@@ -2,7 +2,7 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import { BeneficiarioObligatorio, ChequeraInactiva, CuentaBancariaInactiva } from '../../../dominio/errores.js';
-import type { Cheque } from '../../../dominio/cheque.js';
+import { referenciaAutomaticaDeCheque, type Cheque } from '../../../dominio/cheque.js';
 import type { Chequera } from '../../../dominio/chequera.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
 import type { ChequeEmitidoDto, SolicitudDeEmisionDeCheque } from '../../dto/cheque.dto.js';
@@ -121,7 +121,7 @@ export class EmitirCheque {
     { chequera, numeroDeCheque, conceptoId }: { chequera: Chequera; numeroDeCheque: number; conceptoId: string },
   ): Movimiento {
     const { cuentaBancariaId, serie } = chequera.instantanea();
-    const referencia = solicitud.referencia?.trim() || `Cheque ${serie ?? ''}${numeroDeCheque}`;
+    const referencia = solicitud.referencia?.trim() || referenciaAutomaticaDeCheque(serie, numeroDeCheque);
     const datos = {
       cuentaBancariaId,
       tipo: 'cheque' as const,
@@ -133,6 +133,7 @@ export class EmitirCheque {
       observaciones: solicitud.observaciones,
       conceptoId,
     };
-    return Movimiento.crear(Identificador.desde<'Empresa'>(operador.empresaId), datos, { origen: solicitud.origen });
+    const vinculos = { origen: solicitud.origen, paraAbonoEnCuenta: solicitud.paraAbonoEnCuenta ?? false };
+    return Movimiento.crear(Identificador.desde<'Empresa'>(operador.empresaId), datos, vinculos);
   }
 }

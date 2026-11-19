@@ -47,6 +47,14 @@ export class ChequerasEnMemoria implements RepositorioChequeras, ConsultasCheque
       });
   }
 
+  async ultimoFormatoDeLaCuenta(cuentaBancariaId: string) {
+    const conFormato = [...this.registros.values()]
+      .filter((c) => c.instantanea().cuentaBancariaId === cuentaBancariaId && !c.esDeApertura)
+      .map((c) => c.formato)
+      .filter((formato) => formato.formatoDeChequeId !== null || formato.plantillaDeCheque !== null);
+    return conFormato.at(-1) ?? null;
+  }
+
   /** La carga inicial no se simula en memoria: se prueba con la base real. */
   async numerosDeAperturaEnRango(): Promise<number[]> {
     return [];
@@ -99,6 +107,7 @@ export class ChequerasEnMemoria implements RepositorioChequeras, ConsultasCheque
       ...datos,
       id: id.valor,
       cuentaBancariaNombre: this.nombresDeCuenta.get(datos.cuentaBancariaId) ?? datos.cuentaBancariaId,
+      formatoNombre: null,
       disponibles: contar('disponible'),
       emitidos: contar('emitido'),
       anulados: contar('anulado'),

@@ -2,6 +2,8 @@ import { sql } from 'drizzle-orm';
 import { boolean, check, index, integer, text, uniqueIndex, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
+import type { ClaveDePlantilla } from '../../dominio/formatos-de-cheque/plantillas.js';
+import { formatosDeCheque, PLANTILLAS_EN_SQL } from './formatos-de-cheque.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { esquemaBancos } from './esquema.tablas.js';
 
@@ -25,11 +27,24 @@ export const chequeras = esquemaBancos.table(
     activa: boolean().default(true).notNull(),
     /** La que crea el sistema para los cheques de la carga inicial: solo tiene los que se cargan y nunca se ofrece para emitir. */
     deApertura: boolean().default(false).notNull(),
+    /** Cómo se imprimen sus cheques: un formato de la cuenta o una plantilla de fábrica sin ajustes (a lo sumo uno). */
+    formatoDeChequeId: uuid().references((): AnyPgColumn => formatosDeCheque.id, { onDelete: 'restrict' }),
+    plantillaDeCheque: text().$type<ClaveDePlantilla>(),
     ...marcasDeTiempo,
     ...autoria,
   },
   (t) => [
     index('chequeras_cuenta_idx').on(t.cuentaBancariaId),
+    index('chequeras_formato_idx').on(t.formatoDeChequeId),
+    check('chequeras_un_formato', sql`not (${t.formatoDeChequeId} is not null and ${t.plantillaDeCheque} is not null)`),
+    check(
+      'chequeras_plantilla_valida',
+      sql.raw(`plantilla_de_cheque is null or plantilla_de_cheque in (${PLANTILLAS_EN_SQL})`),
+    ),
+    check(
+      'chequeras_apertura_sin_formato',
+      sql`not ${t.deApertura} or (${t.formatoDeChequeId} is null and ${t.plantillaDeCheque} is null)`,
+    ),
     check('chequeras_desde_positivo', sql`${t.desde} > 0`),
     check('chequeras_hasta_valido', sql`${t.hasta} >= ${t.desde}`),
     check('chequeras_apertura_inactiva', sql`not ${t.deApertura} or not ${t.activa}`),

@@ -2,6 +2,8 @@ import { DatoInvalido } from '../../core/compartido/dominio/errores.js';
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { ChequeraDemasiadoGrande } from './errores.js';
+import { ChequeraDeAperturaSinFormato } from './errores-de-impresion.js';
+import type { ClaveDePlantilla } from './formatos-de-cheque/plantillas.js';
 
 export type ChequeraId = Identificador<'Chequera'>;
 
@@ -19,6 +21,15 @@ export interface PropiedadesDeChequera extends DatosDeChequera {
   activa: boolean;
   /** La que crea el sistema para los cheques de la carga inicial: solo tiene los que se cargan y nunca está activa. */
   deApertura: boolean;
+  /** Cómo se imprimen sus cheques: un formato de la cuenta suscriptora o una plantilla de fábrica sin ajustes; a lo sumo uno. */
+  formatoDeChequeId: string | null;
+  plantillaDeCheque: ClaveDePlantilla | null;
+}
+
+/** Cómo se imprime: un formato guardado o una plantilla de fábrica (o ninguno). */
+export interface FormatoDeLaChequera {
+  formatoDeChequeId: string | null;
+  plantillaDeCheque: ClaveDePlantilla | null;
 }
 
 /** Un dato de la chequera no cumple sus reglas. */
@@ -62,6 +73,8 @@ export class Chequera extends Entidad<ChequeraId> {
       id: Identificador.nuevo(),
       activa: true,
       deApertura: false,
+      formatoDeChequeId: null,
+      plantillaDeCheque: null,
     });
   }
 
@@ -83,11 +96,32 @@ export class Chequera extends Entidad<ChequeraId> {
       id: Identificador.nuevo(),
       activa: false,
       deApertura: true,
+      formatoDeChequeId: null,
+      plantillaDeCheque: null,
     });
   }
 
   static reconstruir(propiedades: PropiedadesDeChequera): Chequera {
     return new Chequera(propiedades);
+  }
+
+  /**
+   * Elige cómo se imprimen sus cheques. Un formato guardado o una plantilla, no los dos; la chequera de la carga inicial
+   * nunca se imprime.
+   * @throws ChequeraInvalida si pide los dos; ChequeraDeAperturaSinFormato si es de la carga inicial.
+   */
+  asignarFormato({ formatoDeChequeId, plantillaDeCheque }: FormatoDeLaChequera): void {
+    if (this.propiedades.deApertura) throw new ChequeraDeAperturaSinFormato();
+    if (formatoDeChequeId && plantillaDeCheque) {
+      throw new ChequeraInvalida('Elija un formato o una plantilla de fábrica, no los dos.');
+    }
+    this.propiedades = { ...this.propiedades, formatoDeChequeId, plantillaDeCheque };
+  }
+
+  /** El formato con que se imprime, o `null` si todavía no tiene. */
+  get formato(): FormatoDeLaChequera {
+    const { formatoDeChequeId, plantillaDeCheque } = this.propiedades;
+    return { formatoDeChequeId, plantillaDeCheque };
   }
 
   inactivar(): void {

@@ -3,6 +3,7 @@ import { proteger } from '../../core/compartido/http/guardias.js';
 import { rutasDeIntercambio, type OpcionesDeIntercambio } from '../../core/intercambio/http/rutas-de-intercambio.js';
 import {
   esquemaChequera,
+  esquemaFormatoDeChequera,
   esquemaFiltroDeCheques,
   esquemaFiltroDeChequeras,
   esquemaParamsChequera,
@@ -49,6 +50,15 @@ function rutasDeLectura(app: Aplicacion, controlador: ChequerasControlador) {
   });
 }
 
+/** Con qué formato se imprimen los cheques de una chequera (editar la chequera). */
+function rutaDelFormato(app: Aplicacion, controlador: ChequerasControlador) {
+  app.patch(`${RUTA}/:chequeraId/formato`, {
+    schema: { tags: etiquetas, params: esquemaParamsChequera, body: esquemaFormatoDeChequera },
+    preHandler: proteger({ permiso: 'bancos.chequeras.editar' }),
+    handler: controlador.asignarFormato,
+  });
+}
+
 /**
  * Chequeras: se ven y se crean también desde la ficha de la cuenta bancaria,
  * pero "Chequeras" es su propia pantalla de administración, con Excel.
@@ -59,6 +69,7 @@ export function rutasChequeras(
 ): FastifyPluginAsyncZod {
   return async (app) => {
     rutasDeLectura(app, controlador);
+    rutaDelFormato(app, controlador);
     rutasDeIntercambio(app, { ...EN_EXCEL, intercambio });
   };
 }

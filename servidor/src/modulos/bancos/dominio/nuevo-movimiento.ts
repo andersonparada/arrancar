@@ -1,6 +1,7 @@
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { aCentavos } from './centavos.js';
 import { MontoInvalido, MotivoDeAnulacionInvalido } from './errores.js';
+import { AbonoEnCuentaSoloEnCheque } from './errores-de-impresion.js';
 import type { DatosDeIntereses } from './intereses.js';
 import type { OrigenDeMovimiento } from './origen-de-movimiento.js';
 import type { ParteDeApertura } from './partes-de-apertura.js';
@@ -13,6 +14,14 @@ export interface VinculosDeUnMovimiento {
   origen?: OrigenDeMovimiento;
   /** La parte de la apertura que es y la cabecera de la que cuelga (solo los saldos iniciales). */
   apertura?: { parte: ParteDeApertura; saldoInicialId: string };
+  /** Solo un cheque puede llevarla (la casilla «Para abono en cuenta» de quien lo emite); por omisión, no. */
+  paraAbonoEnCuenta?: boolean;
+}
+
+/** @throws AbonoEnCuentaSoloEnCheque si pide «para abono en cuenta» sin ser un cheque. */
+export function exigirAbonoEnCuentaSoloEnCheque(tipo: DatosDeMovimiento['tipo'], paraAbonoEnCuenta: boolean): boolean {
+  if (paraAbonoEnCuenta && tipo !== 'cheque') throw new AbonoEnCuentaSoloEnCheque();
+  return paraAbonoEnCuenta;
 }
 
 /** @throws MontoInvalido si el monto no es mayor que cero. */
@@ -63,6 +72,7 @@ export function propiedadesDeUnMovimientoNuevo(
     anioDeNumero: 0,
     ...origenDe(vinculos),
     ...aperturaDe(vinculos),
+    paraAbonoEnCuenta: exigirAbonoEnCuentaSoloEnCheque(datos.tipo, vinculos.paraAbonoEnCuenta ?? false),
   };
 }
 

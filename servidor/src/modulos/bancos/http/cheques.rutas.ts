@@ -6,6 +6,8 @@ import { esquemaSugerenciaDeCheque } from './sugerencias.esquemas-http.js';
 import {
   esquemaAnulacionDeCheque,
   esquemaBlanqueoDeCheque,
+  esquemaCambioDeFormulario,
+  esquemaCondicionesDeCheque,
   esquemaEmisionDeCheque,
   esquemaFiltroDeChequesDeLaEmpresa,
   esquemaParamsCheque,
@@ -43,17 +45,31 @@ function rutasDeConcepto(app: Aplicacion, controlador: ChequesControlador) {
   });
 }
 
-/** Emitir, anular y blanquear: cada uno con su permiso. */
-function rutasDeEscritura(app: Aplicacion, controlador: ChequesControlador) {
+/** Emitir y corregir lo emitido (antes de imprimir): con el permiso de emitir. */
+function rutasDeEmision(app: Aplicacion, controlador: ChequesControlador) {
   app.post('/bancos/cheques/:chequeId/emitir', {
     schema: { tags: etiquetas, params: esquemaParamsCheque, body: esquemaEmisionDeCheque },
     preHandler: proteger({ permiso: 'bancos.cheques.emitir' }),
     handler: controlador.emitir,
   });
+  app.patch('/bancos/cheques/:chequeId/condiciones', {
+    schema: { tags: etiquetas, params: esquemaParamsCheque, body: esquemaCondicionesDeCheque },
+    preHandler: proteger({ permiso: 'bancos.cheques.emitir' }),
+    handler: controlador.corregirCondiciones,
+  });
+}
+
+/** Anular (también como extraviado), pasar a otro formulario y blanquear: cada uno con su permiso. */
+function rutasDeEscritura(app: Aplicacion, controlador: ChequesControlador) {
   app.post('/bancos/cheques/:chequeId/anular', {
     schema: { tags: etiquetas, params: esquemaParamsCheque, body: esquemaAnulacionDeCheque },
     preHandler: proteger({ permiso: 'bancos.cheques.anular' }),
     handler: controlador.anular,
+  });
+  app.post('/bancos/cheques/:chequeId/cambiar-formulario', {
+    schema: { tags: etiquetas, params: esquemaParamsCheque, body: esquemaCambioDeFormulario },
+    preHandler: proteger({ permiso: 'bancos.cheques.anular' }),
+    handler: controlador.cambiarFormulario,
   });
   app.post('/bancos/cheques/:chequeId/blanquear', {
     schema: { tags: etiquetas, params: esquemaParamsCheque, body: esquemaBlanqueoDeCheque },
@@ -67,6 +83,7 @@ export function rutasCheques(controlador: ChequesControlador): FastifyPluginAsyn
   return async (app) => {
     rutasDeLectura(app, controlador);
     rutasDeConcepto(app, controlador);
+    rutasDeEmision(app, controlador);
     rutasDeEscritura(app, controlador);
   };
 }

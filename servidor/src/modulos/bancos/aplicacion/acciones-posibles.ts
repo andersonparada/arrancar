@@ -118,13 +118,18 @@ export interface AccionesDeCheque {
 
 /**
  * Un cheque se anula si no está anulado; se blanquea si está emitido y su movimiento está limpio y no es de la carga
- * inicial (no se emitió en Arrancar). Los cheques nunca se eliminan: su número ya se consumió.
+ * inicial (no se emitió en Arrancar) y no se imprimió. Los cheques nunca se eliminan: su número ya se consumió.
  */
-export function accionesDeCheque(estado: EstadoDelCheque, movimiento: HechosDeUnMovimiento | null): AccionesDeCheque {
+export function accionesDeCheque(
+  estado: EstadoDelCheque,
+  movimiento: HechosDeUnMovimiento | null,
+  impreso = false,
+): AccionesDeCheque {
   return {
     puedeAnular: estado !== 'anulado',
     puedeBlanquear:
       estado === 'emitido' &&
+      !impreso &&
       movimiento !== null &&
       estaLimpio(movimiento) &&
       !movimiento.esDeOtroModulo &&

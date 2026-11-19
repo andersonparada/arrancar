@@ -46,4 +46,6 @@ export interface PropiedadesDeMovimiento
    */
   parteDeApertura: ParteDeApertura | null;
   saldoInicialId: string | null;
+  /** «PARA ABONO EN CUENTA» (C. Com. art. 521): solo un cheque; viaja con el movimiento al pasar a otro formulario. */
+  paraAbonoEnCuenta: boolean;
 }
