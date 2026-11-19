@@ -6,6 +6,7 @@ import type { DatosDeLectura } from '../../puertos/puertos-de-fondos.js';
 import { DENOMINACIONES_EN_CENTAVOS } from '../../../dominio/conteo-de-efectivo.js';
 import { efectivoEsperado } from '../../../dominio/monto-del-fondo.js';
 import { avisoDeArqueoVencido } from '../../../dominio/reglas-de-arqueos.js';
+import { avisoDeValeViejo } from '../../../dominio/reglas-de-vales-provisionales.js';
 import type { ArqueoDto, ArqueoResumenDto, PropuestaDeArqueoDto } from '../../dto/arqueos.dto.js';
 import { comprobanteDto } from '../comprobantes/armado-del-comprobante.js';
 import { custodioVigente, LectorDelFondo } from '../fondos/lector-del-fondo.js';
@@ -74,13 +75,7 @@ export class ProponerArqueo {
     por: { fondo: Fondo; lectura: DatosDeLectura },
   ): Promise<PropuestaDeArqueoDto> {
     const { fondo, lectura } = por;
-    const { configuracion, reloj, consultas, fondos } = this.dependencias;
-    const aviso = avisoDeArqueoVencido({
-      fondo,
-      ultimoArqueo: lectura.ultimoArqueo,
-      hoy: await reloj.hoy(operador),
-      diasParaAvisar: await configuracion.diasParaAvisar(operador),
-    });
+    const { consultas, fondos } = this.dependencias;
     return {
       fondoId: fondo.id,
       fondoNombre: fondo.nombre,
@@ -91,7 +86,29 @@ export class ProponerArqueo {
       efectivoEsperado: deCentavos(efectivoEsperado(lectura)),
       denominaciones: DENOMINACIONES_EN_CENTAVOS.map(deCentavos),
       pendientes: (await consultas.pendientesDelFondo(fondo.id)).map(comprobanteDto),
-      avisos: aviso ? [aviso] : [],
+      avisos: await this.avisos(operador, por),
     };
+  }
+
+  /** «Sin arqueo» y «vale viejo», si tocan. */
+  private async avisos(operador: Operador, por: { fondo: Fondo; lectura: DatosDeLectura }): Promise<string[]> {
+    const { fondo, lectura } = por;
+    const { configuracion, reloj } = this.dependencias;
+    const hoy = await reloj.hoy(operador);
+    const sinArqueo = avisoDeArqueoVencido({
+      fondo,
+      ultimoArqueo: lectura.ultimoArqueo,
+      hoy,
+      diasParaAvisar: await configuracion.diasParaAvisar(operador),
+    });
+    const valeViejo =
+      lectura.valeMasViejo === null
+        ? null
+        : avisoDeValeViejo({
+            fecha: lectura.valeMasViejo,
+            hoy,
+            diasParaAvisar: await configuracion.diasParaAvisarDeVales(operador),
+          });
+    return [sinArqueo, valeViejo].filter((aviso) => aviso !== null);
   }
 }

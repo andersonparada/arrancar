@@ -27,5 +27,5 @@ export interface DependenciasDeFondos {
   publicadorEventos: PublicadorEventos;
   reloj: Reloj;
   /** Cuántos días sin arquear para avisar en la lista y la ficha. */
-  configuracionDeArqueos: Pick<ConfiguracionDeArqueos, 'diasParaAvisar'>;
+  configuracionDeArqueos: Pick<ConfiguracionDeArqueos, 'diasParaAvisar' | 'diasParaAvisarDeVales'>;
 }

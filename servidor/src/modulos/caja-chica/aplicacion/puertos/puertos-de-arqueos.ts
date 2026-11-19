@@ -56,4 +56,6 @@ export interface ComprobantesDelArqueo {
 export interface ConfiguracionDeArqueos extends ConfiguracionDeControl {
   /** Días sin arqueo para avisar; 0 = sin aviso. */
   diasParaAvisar(operador: Operador): Promise<number>;
+  /** Días con un vale provisional abierto para avisar en el fondo y en el arqueo; 0 = sin aviso. */
+  diasParaAvisarDeVales(operador: Operador): Promise<number>;
 }

@@ -151,7 +151,10 @@ describe('el aviso «sin arqueo»', () => {
     fondos: m.fondos,
     consultas: m.dependencias.consultasDeFondos,
     reloj: m.dependencias.reloj,
-    configuracionDeArqueos: { diasParaAvisar: async () => m.valores.dias },
+    configuracionDeArqueos: {
+      diasParaAvisar: async () => m.valores.dias,
+      diasParaAvisarDeVales: async () => m.valores.diasDeVales,
+    },
   });
   const ficha = () => new ObtenerFondo(dependenciasDeFondos()).ejecutar(operador, FONDO_ID);
 

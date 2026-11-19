@@ -11,4 +11,11 @@ export class ConfiguracionDeArqueosEnConfiguracion
   diasParaAvisar({ cuentaId, empresaId }: Operador): Promise<number> {
     return configuracion.lector.obtener<number>('caja-chica.arqueos.dias_para_avisar', { cuentaId, empresaId });
   }
+
+  diasParaAvisarDeVales({ cuentaId, empresaId }: Operador): Promise<number> {
+    return configuracion.lector.obtener<number>('caja-chica.vales_provisionales.dias_para_avisar', {
+      cuentaId,
+      empresaId,
+    });
+  }
 }

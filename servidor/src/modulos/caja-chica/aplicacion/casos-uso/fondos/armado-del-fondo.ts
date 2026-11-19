@@ -6,7 +6,9 @@ import type { DatosDeLectura } from '../../puertos/puertos-de-fondos.js';
 
 /** Un fondo cerrado ya no tiene efectivo a su cargo: su monto es cero. */
 function cifrasDe(fondo: Fondo, datos: DatosDeLectura): DatosDeLectura {
-  return fondo.estado === 'cerrado' ? { ...datos, montoCentavos: 0, pendienteCentavos: 0, valesCentavos: 0 } : datos;
+  return fondo.estado === 'cerrado'
+    ? { ...datos, montoCentavos: 0, pendienteCentavos: 0, valesCentavos: 0, valeMasViejo: null }
+    : datos;
 }
 
 /** La fila de la lista: lo del fondo con sus cifras (§2.3 del diseño). */
@@ -26,6 +28,7 @@ export function resumenDelFondo(fondo: Fondo, lectura: DatosDeLectura): FondoRes
     efectivoEsperado: deCentavos(efectivoEsperado(datos)),
     pendienteDeReponer: deCentavos(datos.pendienteCentavos),
     valesAbiertos: deCentavos(datos.valesCentavos),
+    valeMasViejo: datos.valeMasViejo,
     ultimoArqueo: datos.ultimoArqueo,
     avisos: [],
   };

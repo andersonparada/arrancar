@@ -103,7 +103,7 @@ export async function armarEscenarioDeArqueos(custodioUsuarioId: string | null =
   const base = await armarEscenarioDeReposiciones(custodioUsuarioId);
   const arqueos = new ArqueosEnMemoria();
   const ajustes = new AjustesEnMemoria(base.comprobantes);
-  const valores = { dias: 30, ahora: new Date('2026-11-18T20:00:00Z') };
+  const valores = { dias: 30, diasDeVales: 5, ahora: new Date('2026-11-18T20:00:00Z') };
   const consultas: ConsultasDeArqueos = {
     delFondo: async (fondoId) => [...arqueos.filas.values()].filter((a) => a.fondoId === fondoId),
     pendientesDelFondo: async (fondoId) => base.dependenciasDeReposiciones.consultas.pendientesDelFondo(fondoId),
@@ -118,6 +118,7 @@ export async function armarEscenarioDeArqueos(custodioUsuarioId: string | null =
     configuracion: {
       separacionDeFunciones: async () => base.control.separacion as SeparacionDeFuncionesConfigurada,
       diasParaAvisar: async () => valores.dias,
+      diasParaAvisarDeVales: async () => valores.diasDeVales,
     },
     correlativos: base.dependencias.correlativos,
     auditoria: base.auditoria,

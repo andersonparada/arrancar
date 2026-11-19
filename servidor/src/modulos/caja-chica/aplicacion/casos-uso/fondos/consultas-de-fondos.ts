@@ -1,5 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { avisoDeArqueoVencido } from '../../../dominio/reglas-de-arqueos.js';
+import { avisoDeValeViejo } from '../../../dominio/reglas-de-vales-provisionales.js';
 import type { Fondo } from '../../../dominio/fondos.js';
 import type { FondoDto, FondoResumenDto, PaginaDeFondosDto } from '../../dto/fondos.dto.js';
 import type { FiltroDeFondos } from '../../puertos/puertos-de-fondos.js';
@@ -9,19 +10,31 @@ import { LectorDelFondo } from './lector-del-fondo.js';
 
 type DependenciasDeAvisos = Pick<DependenciasDeFondos, 'reloj' | 'configuracionDeArqueos'>;
 
-/** Suma a la fila o la ficha el aviso «sin arqueo», si toca (`caja-chica.arqueos.dias_para_avisar`). */
+/**
+ * Suma a la fila o la ficha los avisos «sin arqueo» (`caja-chica.arqueos.dias_para_avisar`) y «vale viejo»
+ * (`caja-chica.vales_provisionales.dias_para_avisar`), si tocan.
+ */
 async function conAvisoDeArqueo<T extends FondoResumenDto>(
   { reloj, configuracionDeArqueos }: DependenciasDeAvisos,
   por: { operador: Operador; fondo: Fondo; fila: T },
 ): Promise<T> {
   const { operador, fondo, fila } = por;
-  const aviso = avisoDeArqueoVencido({
+  const hoy = await reloj.hoy(operador);
+  const sinArqueo = avisoDeArqueoVencido({
     fondo,
     ultimoArqueo: fila.ultimoArqueo,
-    hoy: await reloj.hoy(operador),
+    hoy,
     diasParaAvisar: await configuracionDeArqueos.diasParaAvisar(operador),
   });
-  return aviso ? { ...fila, avisos: [...fila.avisos, aviso] } : fila;
+  const valeViejo =
+    fila.valeMasViejo === null
+      ? null
+      : avisoDeValeViejo({
+          fecha: fila.valeMasViejo,
+          hoy,
+          diasParaAvisar: await configuracionDeArqueos.diasParaAvisarDeVales(operador),
+        });
+  return { ...fila, avisos: [...fila.avisos, ...[sinArqueo, valeViejo].filter((aviso) => aviso !== null)] };
 }
 
 /** La lista de los fondos que ve el usuario (`fondos.ver`), con sus cifras; por omisión los abiertos. */

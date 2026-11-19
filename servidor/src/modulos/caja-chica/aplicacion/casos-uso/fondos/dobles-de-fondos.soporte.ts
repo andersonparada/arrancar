@@ -98,6 +98,7 @@ export const consultas = (cifras: Partial<DatosDeLectura> = {}): ConsultasDeFond
           montoCentavos: 100_000,
           pendienteCentavos: 0,
           valesCentavos: 0,
+          valeMasViejo: null,
           ultimoArqueo: null,
           aperturaAnulada: false,
           ...cifras,
