@@ -24,6 +24,7 @@ export const mapeadorDeContacto = {
       whatsapp: crearSiHayTexto(fila.whatsapp, Telefono.crear),
       correo: crearSiHayTexto(fila.correo, Correo.crear),
       notas: fila.notas,
+      recibeAvisosDePago: fila.recibeAvisosDePago,
     });
   },
 
@@ -40,8 +41,9 @@ export const mapeadorDeContacto = {
     };
   },
 
-  aDto({ id, nombre, cargo, telefono, whatsapp, correo, notas }: FilaContacto): ContactoDto {
-    return { id, nombre, cargo, telefono, whatsapp, correo, notas };
+  aDto(fila: FilaContacto): ContactoDto {
+    const { id, nombre, cargo, telefono, whatsapp, correo, notas, recibeAvisosDePago } = fila;
+    return { id, nombre, cargo, telefono, whatsapp, correo, notas, recibeAvisosDePago };
   },
 };
 

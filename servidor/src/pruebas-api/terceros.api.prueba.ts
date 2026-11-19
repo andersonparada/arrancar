@@ -172,6 +172,36 @@ describe('contactos', () => {
     expect(lista.cuerpo).toEqual([expect.objectContaining({ nombre: 'Jefe de compras' })]);
     expect(eliminado.estado).toBe(204);
   });
+
+  it('guarda la marca de avisos de pago y la quita sola si no hay correo', async () => {
+    const tercero = await cuenta.propietario.post('/api/terceros', { tipo: 'juridica', razonSocial: 'Acopio Sur' });
+    const url = `/api/terceros/${tercero.cuerpo.id}/contactos`;
+
+    const sinMarca = await cuenta.propietario.post(url, { nombre: 'Ana', correo: 'ana@acopio.com' });
+    const conMarca = await cuenta.propietario.post(url, {
+      nombre: 'Beto',
+      correo: 'beto@acopio.com',
+      recibeAvisosDePago: true,
+    });
+    const sinCorreo = await cuenta.propietario.post(url, { nombre: 'Carla', recibeAvisosDePago: true });
+    const sinCorreoAhora = await cuenta.propietario.put(`${url}/${conMarca.cuerpo.id}`, {
+      nombre: 'Beto',
+      recibeAvisosDePago: true,
+    });
+    const rara = await cuenta.propietario.post(url, {
+      nombre: 'Dora',
+      correo: 'dó@acopio.com',
+      recibeAvisosDePago: true,
+    });
+    const ficha = await cuenta.propietario.get(`/api/terceros/${tercero.cuerpo.id}`);
+
+    expect(sinMarca.cuerpo.recibeAvisosDePago).toBe(false);
+    expect(conMarca.cuerpo.recibeAvisosDePago).toBe(true);
+    expect(sinCorreo.cuerpo.recibeAvisosDePago).toBe(false);
+    expect(sinCorreoAhora.cuerpo.recibeAvisosDePago).toBe(false);
+    expect(rara.estado).toBe(400);
+    expect(ficha.cuerpo.contactos).toHaveLength(3);
+  });
 });
 
 describe('permisos del módulo', () => {

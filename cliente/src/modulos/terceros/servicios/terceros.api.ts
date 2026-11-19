@@ -54,6 +54,7 @@ export interface Contacto {
   whatsapp: string | null;
   correo: string | null;
   notas: string | null;
+  recibeAvisosDePago: boolean;
 }
 
 export interface Cliente {
@@ -109,6 +110,7 @@ export interface DatosContacto {
   whatsapp: string | null;
   correo: string | null;
   notas: string | null;
+  recibeAvisosDePago: boolean;
 }
 
 export interface FiltrosTerceros {

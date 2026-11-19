@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Plus, Trash2 } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
+import { motivoSinAvisosDePago } from '../composables/avisos-de-pago';
 import { contactoVacio } from '../composables/datos-de-tercero';
 import type { DatosContacto } from '../servicios/terceros.api';
 
@@ -22,8 +24,19 @@ const contactos = defineModel<DatosContacto[]>({ required: true });
       <CampoTexto v-model="contacto.nombre" etiqueta="Nombre" requerido />
       <CampoTexto v-model="contacto.cargo" etiqueta="Cargo" />
       <CampoTexto v-model="contacto.telefono" etiqueta="Teléfono" tipo="tel" />
+      <CampoTexto v-model="contacto.correo" etiqueta="Correo" tipo="email" class="sm:col-span-2" />
+      <div class="sm:col-span-2">
+        <CampoInterruptor
+          v-model="contacto.recibeAvisosDePago"
+          etiqueta="Recibe avisos de pago"
+          :deshabilitado="motivoSinAvisosDePago(contacto.correo) !== null"
+        />
+        <p v-if="motivoSinAvisosDePago(contacto.correo)" class="mt-1 text-xs text-tierra-500">
+          {{ motivoSinAvisosDePago(contacto.correo) }}
+        </p>
+      </div>
       <BotonBase
-        class="self-end"
+        class="self-end sm:col-start-4 sm:row-start-1"
         variante="fantasma"
         :icono="Trash2"
         :aria-label="`Quitar a ${contacto.nombre || 'este contacto'}`"

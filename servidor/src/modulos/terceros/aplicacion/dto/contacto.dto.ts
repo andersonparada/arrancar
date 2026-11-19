@@ -6,6 +6,7 @@ export interface ContactoDto {
   whatsapp: string | null;
   correo: string | null;
   notas: string | null;
+  recibeAvisosDePago: boolean;
 }
 
 export type SolicitudDeContacto = Omit<ContactoDto, 'id'>;
