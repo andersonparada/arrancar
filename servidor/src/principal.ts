@@ -36,7 +36,7 @@ const depuracionDeArchivos = programarDepuracionDeArchivos();
 const cargaDeTipos = programarCargaDeTiposDeCambio();
 
 /**
- * Con `CARGAR_TIPOS_DE_CAMBIO=true` (por omisión en producción): al arrancar revisa la lista de monedas y los huecos, y cada
+ * Con `CARGAR_TIPOS_DE_CAMBIO=true` (apagada por omisión): al arrancar revisa la lista de monedas y los huecos, y cada
  * 15 minutos pregunta qué vuelta toca (06:00 el dólar, 09:30 las demás, de noche el dólar de mañana).
  */
 function programarCargaDeTiposDeCambio(): NodeJS.Timeout | null {

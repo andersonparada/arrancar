@@ -58,8 +58,11 @@ const listaDelBanguat = new ActualizarMonedasDelBanguat({
   ahora: () => reloj.ahora(),
 });
 
-/** Si la carga automática está encendida: `CARGAR_TIPOS_DE_CAMBIO`, o sí en producción y no en las demás. */
-export const cargaAutomaticaEncendida = entorno.CARGAR_TIPOS_DE_CAMBIO ?? esProduccion;
+/**
+ * Si la carga automática está encendida: solo con `CARGAR_TIPOS_DE_CAMBIO=true`. Apagada por omisión hasta hacer las
+ * comprobaciones reales C-1 a C-4 contra el Banguat desde una red que lo alcance.
+ */
+export const cargaAutomaticaEncendida = entorno.CARGAR_TIPOS_DE_CAMBIO ?? false;
 
 /** El catálogo de monedas para los módulos que lo leen (Multimoneda): el mismo caso de uso de la API. */
 export const listarMonedas = new ListarMonedas({ catalogo });

@@ -91,7 +91,8 @@ export class ConsultarAlBanguat {
     const conTipo = new Set(await cargas.fechasConTipoDelBanguat(moneda, pedido.desde, pedido.hasta));
     const nuevas = propias.filter((p) => !conTipo.has(p.fecha));
     const evaluacion = evaluarVariaciones({ publicaciones: nuevas, anterior: await this.anteriorDe(moneda, nuevas) });
-    const rechazadas = [...recibido.rechazadas, ...evaluacion.rechazadas];
+    const propiasRechazadas = recibido.rechazadas.filter((r) => r.moneda === moneda);
+    const rechazadas = [...propiasRechazadas, ...evaluacion.rechazadas];
     const resultado = resultadoDe(propias.length, evaluacion.aGuardar.length, rechazadas);
     return this.dejarConstancia(pedido, iniciadaEn, {
       resultado,

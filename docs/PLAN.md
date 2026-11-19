@@ -3067,7 +3067,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   pide si hay huecos (el dólar contra días calendario; las demás, contra días hábiles de `calendarioLaboral`).
   `POST /api/tipos-de-cambio/cargar` (`desde`/`hasta`, máximo 366 días, 409 `carga_del_banguat_en_curso`) y
   `POST /api/monedas/banguat/actualizar`, de soporte. `principal.ts` programa un temporizador de 15 minutos y el arranque; las
-  variables `CARGAR_TIPOS_DE_CAMBIO` (por omisión sí en producción y no en las demás) y `URL_TIPO_DE_CAMBIO_BANGUAT`
+  variables `CARGAR_TIPOS_DE_CAMBIO` (apagada por omisión en todas partes hasta hacer C-1 a C-4; se enciende con `true`) y `URL_TIPO_DE_CAMBIO_BANGUAT`
   (`vitest.config.ts` la apunta a un puerto cerrado: las pruebas nunca llegan al Banguat). Sin migraciones.
   **Las comprobaciones reales C-1 a C-4 NO se pudieron hacer:** desde este entorno la conexión TCP a
   `www.banguat.gob.gt:443` abre pero el saludo TLS no responde (se probó con `curl` en TLS 1.2 y 1.3 y en las dos IP, con
@@ -3075,6 +3075,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   días esperados de las demás monedas siguen siendo los hábiles (C-2) y no se confirmó la unidad (C-3). Hay que repetirlas
   desde otra red. **Pendiente de MM-3b:** `GET …/consultas` (estado y aviso de 4 días hábiles de atraso), `GET …/muestra` con su
   límite, y el relleno inmediato al asignar un código (hoy lo cubre la vuelta de las 09:30 del día siguiente).
+- **2026-11-18, Multimoneda MM-3b, corrección de la revisión.** La carga automática de tipos de cambio queda **apagada por
+  omisión en todas partes** (`CARGAR_TIPOS_DE_CAMBIO` vacío = no) hasta hacer las comprobaciones C-1 a C-4 desde una red que
+  alcance al Banguat; con ella encendida, el primer arranque llenaría la lista con el DEG, los bolívares y el colón contra la
+  decisión D-2. **Decisión para el usuario:** cuándo y desde qué red se hacen C-1 a C-4 antes de encender `true` en
+  producción. Además: la vuelta de noche no pide las demás monedas en día inhábil, y la bitácora de una moneda solo suma sus
+  propios rechazos. Siguen pendientes (antes de MM-4): `GET …/consultas`, `GET …/muestra`, devolver la consulta en
+  `POST …/banguat/actualizar`, el relleno al asignar un código, y que «Cargar ahora» no corra dentro de la solicitud HTTP.
 - **2026-11-18, Multimoneda MM-5 (módulo `multimoneda`).** Creado con `npm run generar -- modulo multimoneda` (esqueleto del
   servidor y del cliente, registrado en los dos `indice.ts`, y `docs/modulos/multimoneda.md` completado). Sin tablas ni
   migraciones: lee las monedas y los tipos del núcleo por adaptadores en `infraestructura/nucleo-de-monedas.ts`

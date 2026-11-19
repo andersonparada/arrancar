@@ -58,10 +58,8 @@ export class VueltasDeCarga {
     const monedas = await this.dependencias.cargas.monedasACargar();
     const dolar = monedas.filter(esElDolar);
     const resumenes = await this.pedirA(dolar, { vuelta: 'noche', hoy, desde: hoy, hasta: sumarDiasAFecha(hoy, 1) });
-    const sinElDeHoy = await this.sinTipoEn(
-      monedas.filter((m) => !esElDolar(m)),
-      hoy,
-    );
+    const demas = (await this.dependencias.calendario.esHabil(hoy)) ? monedas.filter((m) => !esElDolar(m)) : [];
+    const sinElDeHoy = await this.sinTipoEn(demas, hoy);
     const desde = sumarDiasAFecha(hoy, -DIAS_DE_LA_SEMANA_EN_LA_MANANA);
     return [...resumenes, ...(await this.pedirA(sinElDeHoy, { vuelta: 'noche', hoy, desde, hasta: hoy }))];
   }

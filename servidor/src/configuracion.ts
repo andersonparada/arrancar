@@ -25,7 +25,7 @@ const esquemaConfiguracion = z
       .transform((valor) => valor === 'true'),
     /** Servicio de tipo de cambio del Banguat (HTTPS); vacía, la URL oficial. Las pruebas apuntan a un servidor local. */
     URL_TIPO_DE_CAMBIO_BANGUAT: z.url().optional(),
-    /** Si el servidor carga solo los tipos de cambio del Banguat; vacía, sí en producción y no en las demás. */
+    /** Si el servidor carga solo los tipos de cambio del Banguat; vacía, apagada hasta hacer las comprobaciones C-1 a C-4. */
     CARGAR_TIPOS_DE_CAMBIO: z
       .enum(['true', 'false'])
       .optional()
