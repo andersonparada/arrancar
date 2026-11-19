@@ -41,6 +41,17 @@ export class ActivoDeSaldoInicial extends ReglaDeNegocioInfringida {
   }
 }
 
+/** El activo ya recibió costos o se puso en uso después de la carga: sus libros ya no salen solo del saldo inicial. */
+export class SaldoConMovimientosPosteriores extends ReglaDeNegocioInfringida {
+  readonly codigo = 'saldo_con_movimientos_posteriores';
+
+  constructor() {
+    super(
+      'El activo ya recibió costos o se puso en uso después de cargar su saldo. Devuélvalo a construcción o anule esos costos antes de corregir el saldo.',
+    );
+  }
+}
+
 /** Cambiar la fecha de inicio dejaría activos con fechas que no caben en la carga inicial. */
 export class ActivosConFechaFueraDeLaCarga extends ReglaDeNegocioInfringida {
   readonly codigo = 'activos_con_fecha_fuera_de_la_carga';

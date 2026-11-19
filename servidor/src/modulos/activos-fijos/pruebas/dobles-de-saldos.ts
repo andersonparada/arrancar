@@ -6,6 +6,7 @@ import type {
   ConsultasSaldosIniciales,
 } from '../aplicacion/puertos/consultas-saldos-iniciales.js';
 import type {
+  FiscalDelSaldo,
   RegistroDeSaldoInicial,
   RepositorioSaldosIniciales,
 } from '../aplicacion/puertos/repositorio-saldos-iniciales.js';
@@ -57,6 +58,10 @@ export class SaldosEnMemoria implements RepositorioSaldosIniciales, ConsultasSal
 
   async agregar(registro: RegistroDeSaldoInicial): Promise<void> {
     this.registros.set(registro.activoId, registro);
+  }
+
+  async fiscalDeActivo(activoId: string): Promise<FiscalDelSaldo | null> {
+    return this.registros.get(activoId)?.datos ?? null;
   }
 
   async reemplazar(registro: RegistroDeSaldoInicial): Promise<void> {

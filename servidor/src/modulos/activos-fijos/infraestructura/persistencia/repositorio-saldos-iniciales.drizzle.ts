@@ -1,7 +1,8 @@
 import { and, eq } from 'drizzle-orm';
-import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
+import { aCentavos, deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
+  FiscalDelSaldo,
   RegistroDeSaldoInicial,
   RepositorioSaldosIniciales,
 } from '../../aplicacion/puertos/repositorio-saldos-iniciales.js';
@@ -29,6 +30,15 @@ function aFila({ empresaId, activoId, fechaDeCorte, datos }: RegistroDeSaldoInic
 export class RepositorioSaldosInicialesDrizzle implements RepositorioSaldosIniciales {
   async agregar(registro: RegistroDeSaldoInicial): Promise<void> {
     await transaccionEnCurso().insert(saldosIniciales).values(aFila(registro));
+  }
+
+  async fiscalDeActivo(activoId: string): Promise<FiscalDelSaldo | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ costoFiscal: saldosIniciales.costoFiscal, baseFiscal: saldosIniciales.baseFiscal })
+      .from(saldosIniciales)
+      .where(eq(saldosIniciales.activoId, activoId));
+    if (!fila) return null;
+    return { costoFiscalCentavos: aCentavos(fila.costoFiscal), baseFiscalCentavos: aCentavos(fila.baseFiscal) };
   }
 
   async reemplazar(registro: RegistroDeSaldoInicial): Promise<void> {

@@ -3504,6 +3504,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ocio, y reescribe la fila de alta del historial; (6) las obras en construcción entran con acumuladas en 0 y sin tramos; (7) en
   Excel las filas se crean en orden, así que el padre va antes que su componente. Pendiente: la ficha del activo no muestra aún el
   saldo inicial (costo fiscal y acumuladas), que llega con AF-6c.
+- **2026-11-19 — AF-6, correcciones de la revisión (Activos fijos, servidor).** (1) `PonerEnUso` de una obra de saldo inicial
+  ya no abre el tramo fiscal sobre el costo contable: `baseFiscalDeUso` toma el costo fiscal de `saldos_iniciales` en lugar del
+  monto del costo `saldo_inicial` y le resta lo que la carga dejó fuera de la base (costo fiscal menos base fiscal); los demás
+  costos suman normal (puerto `RepositorioSaldosIniciales.fiscalDeActivo`). (2) `CorregirSaldoInicial` se rechaza con
+  `saldo_con_movimientos_posteriores` si el activo tiene costos vigentes de otro origen o tramos de otra causa (p. ej.
+  `inicio_de_uso`). (3) `QuitarDeUso` bloquea (`activo_de_saldo_inicial`) solo si los tramos son `saldo_inicial`: una obra cargada
+  y puesta en uso se puede devolver. Sin migraciones. La decisión (1) de AF-6 nombra ahora también a AF-4.
 - **2026-11-19 — INV-2 (Inventarios, servidor).** Bodegas con alcance de registros propio `inventarios.bodegas`: tablas
   `bodegas` y `accesos_a_bodegas` (migración `0003_inv2_bodegas_y_accesos`, con el disparador `asignar_al_creador` del core
   y `asignar_bodega_al_responsable`, que da acceso al responsable que es usuario de la empresa sin pedirle el permiso de

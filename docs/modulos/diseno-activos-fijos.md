@@ -1364,12 +1364,15 @@ dos decimales.
 **Notas de lo programado en AF-6 (servidor, migración `0006_af6_saldos_iniciales`):**
 
 - El costo `saldo_inicial` queda con `aplica_al_libro_fiscal = true` (los checks de `costos` exigen que lo demás vaya al libro
-  fiscal) y **no cuenta** en el costo fiscal del activo: este es `saldos_iniciales.costo_fiscal` + Σ costos fiscales posteriores. AF-7
+  fiscal) y **no cuenta** en el costo fiscal del activo: este es `saldos_iniciales.costo_fiscal` + Σ costos fiscales posteriores. AF-4
+  (`PonerEnUso` de una obra de saldo inicial: base = costo fiscal del saldo menos lo que la carga dejó fuera de la base), AF-7
   (mejoras y costos posteriores) y AF-9 (venta) deben leer de ahí.
 - El inicio de uso debe ser igual o posterior a la adquisición y ambos anteriores a la fecha de inicio de la empresa. Una obra sin
   terminar (`enConstruccion`) y un terreno entran sin depreciación acumulada; la obra queda sin tramos y se pone en uso después.
 - Vida útil restante en 0: sin tramo contable (solo fiscal) y el aviso `vida_agotada_con_saldo` al cerrar la carga. Un activo de
-  saldo inicial no se elimina ni se quita de uso por las rutas generales de activos (`activo_de_saldo_inicial`).
+  saldo inicial no se elimina por las rutas generales ni se quita de uso mientras sus tramos sean los del saldo
+  (`activo_de_saldo_inicial`); si ya se puso en uso (tramos `inicio_de_uso`) sí se devuelve. **Corregir** un saldo se rechaza
+  (`saldo_con_movimientos_posteriores`) si el activo recibió costos de otro origen o tiene tramos de otra causa.
 - Excel: las filas se crean en orden; el padre se escribe por su código y debe ir antes que su componente o ya estar cargado.
 - Falta para AF-6c: mostrar el saldo inicial (costo fiscal y acumuladas) en la ficha del activo.
 

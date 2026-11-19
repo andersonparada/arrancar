@@ -20,6 +20,7 @@ import { RepositorioClasesDrizzle } from '../infraestructura/persistencia/reposi
 import { UbicacionesEnEmpresas } from '../infraestructura/persistencia/ubicaciones-en-empresas.drizzle.js';
 import { CierresDrizzle } from '../infraestructura/persistencia/cierres.drizzle.js';
 import { RepositorioCostosDrizzle } from '../infraestructura/persistencia/repositorio-costos.drizzle.js';
+import { RepositorioSaldosInicialesDrizzle } from '../infraestructura/persistencia/repositorio-saldos-iniciales.drizzle.js';
 import { RepositorioTramosDrizzle } from '../infraestructura/persistencia/repositorio-tramos.drizzle.js';
 import { PrefijoEnConfiguracion } from '../infraestructura/prefijo-en-configuracion.js';
 import { PrimerMesEnConfiguracion } from '../infraestructura/primer-mes-en-configuracion.js';
@@ -48,6 +49,7 @@ function dependenciasDeUso(base: ReturnType<typeof dependenciasDeActivos>) {
     ...base,
     costos: new RepositorioCostosDrizzle(),
     tramos: new RepositorioTramosDrizzle(),
+    saldos: new RepositorioSaldosInicialesDrizzle(),
     cierres: new CierresDrizzle(),
     topes: new TopesEnConfiguracion(),
     primerMes: new PrimerMesEnConfiguracion(),

@@ -15,6 +15,7 @@ import type { IncisoFiscal } from '../dominio/incisos-fiscales.js';
 import { ActivosEnMemoria } from './dobles-de-activos.js';
 import { ClasesEnMemoria, TopesFijos } from './dobles-de-clases.js';
 import { CostosEnMemoria } from './dobles-de-costos.js';
+import { SaldosEnMemoria } from './dobles-de-saldos.js';
 import { CierresDePrueba, PrimerMesFijo, TramosEnMemoria } from './dobles-de-uso.js';
 
 export const operador = operadorDePrueba();
@@ -64,6 +65,7 @@ export function armarUso() {
   const activos = new ActivosEnMemoria();
   const costos = new CostosEnMemoria(activos);
   const tramos = new TramosEnMemoria();
+  const saldos = new SaldosEnMemoria(activos);
   const cierres = new CierresDePrueba();
   const primerMes = new PrimerMesFijo();
   const auditoria = new AuditoriaEnMemoria();
@@ -76,6 +78,7 @@ export function armarUso() {
     auditoria,
     costos,
     tramos,
+    saldos,
     cierres,
     topes: new TopesFijos(),
     primerMes,
@@ -124,6 +127,9 @@ export function armarUso() {
     auditoria,
     cierres,
     primerMes,
+    saldos,
+    tramos,
+    costos,
     ponerEnUso,
     quitarDeUso: new QuitarDeUso(dependencias),
     claseDe,
