@@ -3972,3 +3972,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   V-13 y V-14. La tabla de pasos (§16) quedó lista para programar: CCL-B1 ya está en `main`, así que VC-0b no espera nada;
   el primer paso es **VC-0a** (Terceros, `0010_clientes_para_ventas`), en paralelo con VC-0b, VC-0c1 y VC-0d. Solo LV-4,
   LV-5b, LV-7, LV-8 y CXC-5t esperan datos del usuario. `docs/HOJA-DE-RUTA.md`: Cuentas por cobrar y Ventas, planificado.
+- **2026-11-19 (Contabilidad, diseño validado y listo para programar).** El usuario aceptó todas las recomendaciones
+  CT-P1 a CT-P18 de `docs/modulos/diseno-contabilidad.md` §16, y el contador validó §17 en
+  `docs/modulos/dictamen-contabilidad-validacion-2026-11-19.md` («correcto con ajustes»). Incorporado al diseño: el pago
+  `correccion_de_error` va a la transitoria `apertura_por_regularizar` y no a patrimonio (V-4); la reversa de un documento
+  anulado en período cerrado manda el IVA a `iva_por_rectificar` si el período ya se declaró y los resultados a
+  `ajustes_de_ejercicios_anteriores` si el ejercicio está cerrado (V-5); al asignar, Debe Documentos por asignar / Haber
+  Caja chica, con la transitoria neta en el balance y su cuadratura y antigüedad en el cierre (V-2); `periodos` con
+  `definitivo_por` en vez del check que dejaba el 13 siempre definitivo (E-1); la nota de crédito depende del ejercicio
+  cerrado y no del régimen, y en activo fijo rebaja el costo (E-2); `isr_sobre_intereses` es gasto de rentas de capital
+  (E-3); rubros y tratamientos fiscales completos (V-7); nombres legales de los libros («Libro de Inventarios»), firmantes en
+  `inicios`, habilitación en `folios`, anexo del Diario resumido y constancia de la hoja anulada (V-6, CT-P14); marco
+  contable con vigencia por ejercicio en la tabla `contabilidad.marcos` (CT-P9); «Revisar» el cierre reprocesa antes
+  (CT-P16, sin contradecir CT-P13). La tabla de pasos (§15) tiene ahora «Espera» y «Pendiente»: CT-0a es el primer paso y
+  no espera nada; CT-0a3 cubre los módulos que ya publican (Bancos, Caja chica, Cuentas por liquidar, Activos fijos); las
+  plantillas pasan a CT-1p (esperan la plantilla del contador) para que CT-1 no espere. Quedan para el usuario P-1 a P-7
+  (ninguna bloquea CT-0a ni CT-1 a CT-2) y para el contador la plantilla de cuentas, los artículos de la LAT sobre los
+  intereses, el texto oficial del art. 382 y el canal vigente de la habilitación. Solo documentación.
