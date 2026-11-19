@@ -91,6 +91,10 @@ function tablaDe(contrasena: ContrasenaDelComprobanteDto): TablaDelPdf {
   };
 }
 
+/**
+ * Los datos que ve el proveedor. `referencia`, `motivo` y `observaciones` del pago son notas internas de la empresa
+ * y no van en el PDF del aviso (diseño del aviso de pago por correo, P6: minimización de datos).
+ */
 function datosDe(comprobante: ComprobanteDePagoDto): Array<{ rotulo: string; valor: string }> {
   const { proveedor, pago, medio, retiro } = comprobante;
   const posibles: Array<[string, string | null]> = [
@@ -103,9 +107,6 @@ function datosDe(comprobante: ComprobanteDePagoDto): Array<{ rotulo: string; val
       medio && `${TIPOS_DE_MEDIO[medio.tipo] ?? medio.tipo} ${medio.numero} · ${medio.cuentaBancariaNombre}`,
     ],
     ['Retiro de efectivo', retiro && `${retiro.numero} · custodio ${retiro.custodio}`],
-    ['Referencia', pago.referencia],
-    ['Motivo', pago.motivo],
-    ['Observaciones', pago.observaciones],
   ];
   return posibles.flatMap(([rotulo, valor]) => (valor ? [{ rotulo, valor }] : []));
 }
