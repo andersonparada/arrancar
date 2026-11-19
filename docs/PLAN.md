@@ -2878,3 +2878,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `ver`, `crear`, `editar`, `eliminar`, `importar` y `exportar`. Sin pantallas (AF-1c). Decisiones: la semilla es perezosa y no
   puede estar en el alta de la empresa (los módulos no se importan entre sí); la ayuda de «Programas y licencias» (V-2) queda como
   constante de dominio para el cliente; el esqueleto del cliente queda vacío para AF-1c.
+- **2026-11-19 — AF-1c (Activos fijos, cliente).** Catálogo «Clases de activos» (`/activos-fijos/clases`, menú Administración del módulo)
+  generado con `npm run generar -- recurso activos-fijos/clase` y completado a mano: lista por nombre con tarjeta propia, ventana de
+  alta y edición, Inactivar o Reactivar con confirmación, Eliminar con confirmación (el servidor responde `clase_en_uso` si tiene
+  conceptos o activos) y Excel (importar y exportar, con sus permisos). Al elegir «Terrenos» el porcentaje queda en 0 y se quita la vida
+  útil (campos de solo lectura, como exige el servidor); el valor residual nuevo empieza en 0; «Programas y licencias» muestra la ayuda
+  V-2. Lógica pura con pruebas en `reglas-de-clase.ts`. Pendiente: la ventana de conceptos de gasto que proponen la clase
+  (`GET` y `PUT /activos-fijos/clases/:id/conceptos`), que el plan no lista en AF-1c.
