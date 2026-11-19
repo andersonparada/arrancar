@@ -1940,6 +1940,42 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "destinatarios_de_correos_cuenta_fecha_idx": {
+          "name": "destinatarios_de_correos_cuenta_fecha_idx",
+          "columns": [
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "creado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "destinatarios_de_correos_fecha_idx": {
+          "name": "destinatarios_de_correos_fecha_idx",
+          "columns": [
+            {
+              "expression": "creado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -2181,6 +2217,205 @@
         "intentos_de_correos_duracion_valida": {
           "name": "intentos_de_correos_duracion_valida",
           "value": "\"core\".\"intentos_de_correos\".\"duracion_ms\" is null or \"core\".\"intentos_de_correos\".\"duracion_ms\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "core.reintentos_de_correos": {
+      "name": "reintentos_de_correos",
+      "schema": "core",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "correo_saliente_id": {
+          "name": "correo_saliente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "cuenta_id": {
+          "name": "cuenta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "nullif(current_setting('app.cuenta_id', true), '')::uuid"
+        },
+        "direccion": {
+          "name": "direccion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "reintentos_de_correos_cuenta_fecha_idx": {
+          "name": "reintentos_de_correos_cuenta_fecha_idx",
+          "columns": [
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "creado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "reintentos_de_correos_fecha_idx": {
+          "name": "reintentos_de_correos_fecha_idx",
+          "columns": [
+            {
+              "expression": "creado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "reintentos_de_correos_cupo_idx": {
+          "name": "reintentos_de_correos_cupo_idx",
+          "columns": [
+            {
+              "expression": "cuenta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lower(\"direccion\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "creado_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "reintentos_de_correos_correo_idx": {
+          "name": "reintentos_de_correos_correo_idx",
+          "columns": [
+            {
+              "expression": "correo_saliente_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "reintentos_de_correos_correo_saliente_id_correos_salientes_id_fk": {
+          "name": "reintentos_de_correos_correo_saliente_id_correos_salientes_id_fk",
+          "tableFrom": "reintentos_de_correos",
+          "tableTo": "correos_salientes",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "correo_saliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reintentos_de_correos_empresa_id_empresas_id_fk": {
+          "name": "reintentos_de_correos_empresa_id_empresas_id_fk",
+          "tableFrom": "reintentos_de_correos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reintentos_de_correos_cuenta_id_cuentas_id_fk": {
+          "name": "reintentos_de_correos_cuenta_id_cuentas_id_fk",
+          "tableFrom": "reintentos_de_correos",
+          "tableTo": "cuentas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "cuenta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "agregar_en_la_empresa": {
+          "name": "agregar_en_la_empresa",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "arrancar_app"
+          ],
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        },
+        "leer_en_la_empresa": {
+          "name": "leer_en_la_empresa",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "reintentos_de_correos_direccion_larga": {
+          "name": "reintentos_de_correos_direccion_larga",
+          "value": "char_length(\"core\".\"reintentos_de_correos\".\"direccion\") between 3 and 254"
         }
       },
       "isRLSEnabled": false
@@ -3263,7 +3498,7 @@
         },
         "consultas_al_banguat_resultado_valido": {
           "name": "consultas_al_banguat_resultado_valido",
-          "value": "\"core\".\"consultas_al_banguat\".\"resultado\" in ('exito', 'sin_datos', 'error', 'valor_fuera_de_rango', 'valor_ambiguo', 'variacion_excesiva')"
+          "value": "\"core\".\"consultas_al_banguat\".\"resultado\" in ('exito', 'sin_datos', 'error', 'valor_fuera_de_rango', 'valor_ambiguo', 'variacion_excesiva', 'sin_dolar_del_dia', 'convencion_dudosa', 'sin_convencion')"
         },
         "consultas_al_banguat_detalle_corto": {
           "name": "consultas_al_banguat_detalle_corto",
@@ -3295,6 +3530,12 @@
           "notNull": true,
           "default": true
         },
+        "convencion": {
+          "name": "convencion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "vista_por_primera_vez": {
           "name": "vista_por_primera_vez",
           "type": "timestamp with time zone",
@@ -3323,6 +3564,10 @@
         "monedas_del_banguat_descripcion_valida": {
           "name": "monedas_del_banguat_descripcion_valida",
           "value": "char_length(\"core\".\"monedas_del_banguat\".\"descripcion\") between 1 and 120"
+        },
+        "monedas_del_banguat_convencion_valida": {
+          "name": "monedas_del_banguat_convencion_valida",
+          "value": "\"core\".\"monedas_del_banguat\".\"convencion\" is null or \"core\".\"monedas_del_banguat\".\"convencion\" in ('quetzales_por_unidad', 'usd_por_unidad', 'unidades_por_usd')"
         }
       },
       "isRLSEnabled": false
@@ -3471,6 +3716,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "convencion": {
+          "name": "convencion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dolar_usado_id": {
+          "name": "dolar_usado_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "origen": {
           "name": "origen",
           "type": "text",
@@ -3603,6 +3860,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "tipos_de_cambio_dolar_usado_idx": {
+          "name": "tipos_de_cambio_dolar_usado_idx",
+          "columns": [
+            {
+              "expression": "dolar_usado_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -3618,6 +3890,20 @@
             "codigo"
           ],
           "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tipos_de_cambio_dolar_usado_id_tipos_de_cambio_id_fk": {
+          "name": "tipos_de_cambio_dolar_usado_id_tipos_de_cambio_id_fk",
+          "tableFrom": "tipos_de_cambio",
+          "tableTo": "tipos_de_cambio",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "dolar_usado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
           "onUpdate": "no action"
         },
         "tipos_de_cambio_codigo_banguat_monedas_del_banguat_codigo_fk": {
@@ -3717,6 +4003,22 @@
         "tipos_de_cambio_banguat_con_codigo": {
           "name": "tipos_de_cambio_banguat_con_codigo",
           "value": "\"core\".\"tipos_de_cambio\".\"origen\" <> 'banguat' or \"core\".\"tipos_de_cambio\".\"codigo_banguat\" is not null"
+        },
+        "tipos_de_cambio_convencion_valida": {
+          "name": "tipos_de_cambio_convencion_valida",
+          "value": "\"core\".\"tipos_de_cambio\".\"convencion\" is null or \"core\".\"tipos_de_cambio\".\"convencion\" in ('quetzales_por_unidad', 'usd_por_unidad', 'unidades_por_usd')"
+        },
+        "tipos_de_cambio_banguat_con_convencion": {
+          "name": "tipos_de_cambio_banguat_con_convencion",
+          "value": "\"core\".\"tipos_de_cambio\".\"origen\" <> 'banguat' or \"core\".\"tipos_de_cambio\".\"convencion\" is not null"
+        },
+        "tipos_de_cambio_cruce_con_dolar": {
+          "name": "tipos_de_cambio_cruce_con_dolar",
+          "value": "(coalesce(\"core\".\"tipos_de_cambio\".\"convencion\", '') in ('usd_por_unidad', 'unidades_por_usd')) = (\"core\".\"tipos_de_cambio\".\"dolar_usado_id\" is not null)"
+        },
+        "tipos_de_cambio_cruce_con_compra_y_venta": {
+          "name": "tipos_de_cambio_cruce_con_compra_y_venta",
+          "value": "coalesce(\"core\".\"tipos_de_cambio\".\"convencion\", '') not in ('usd_por_unidad', 'unidades_por_usd') or (\"core\".\"tipos_de_cambio\".\"compra\" is not null and \"core\".\"tipos_de_cambio\".\"venta\" is not null and \"core\".\"tipos_de_cambio\".\"venta\" >= \"core\".\"tipos_de_cambio\".\"compra\")"
         }
       },
       "isRLSEnabled": false
