@@ -18,15 +18,6 @@ export const configuracionDeCuentasPorPagar: readonly DefinicionConfiguracion[] 
     publica: false,
   }),
   definirConfiguracion({
-    clave: 'cuentas-por-pagar.bancarizacion.umbral',
-    descripcion:
-      'Total (en quetzales) desde el cual compensar un cargo con una nota de crédito pide guardar por escrito el acuerdo con el proveedor (bancarización, Decreto 20-2006).',
-    esquema: z.number().positive().multipleOf(0.01),
-    predeterminado: 30000,
-    niveles: ['instalacion'],
-    publica: false,
-  }),
-  definirConfiguracion({
     clave: 'cuentas-por-pagar.ajustes.tope_diferencia_menor',
     descripcion:
       'Monto máximo (en quetzales) de un ajuste con causa «Diferencia menor» al dar de baja el saldo a favor de una nota de crédito. Con 0 esa causa no se puede usar.',

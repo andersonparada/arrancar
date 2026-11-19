@@ -7,6 +7,7 @@ import { PagosEnEfectivoControlador } from '../http/pagos-en-efectivo.controlado
 import { rutasDePagosEnEfectivo } from '../http/pagos-en-efectivo.rutas.js';
 import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 import { PagosEnBancosEnMediador } from '../infraestructura/pagos-en-bancos-en-mediador.js';
+import { BancarizacionDelLibroEnMediador } from '../infraestructura/bancarizacion-del-libro-en-mediador.js';
 import { BloqueoDeBancarizacionDrizzle } from '../infraestructura/persistencia/bloqueo-de-bancarizacion.drizzle.js';
 import { ConsultasDeDocumentosDrizzle } from '../infraestructura/persistencia/consultas-de-documentos.drizzle.js';
 import { ConsultasDePagosDrizzle } from '../infraestructura/persistencia/consultas-de-pagos.drizzle.js';
@@ -45,6 +46,7 @@ function dependencias(): DependenciasDeEfectivo {
     consultasDeRetiros: new ConsultasDeRetirosDrizzle(),
     movimientos,
     bloqueoDeBancarizacion: new BloqueoDeBancarizacionDrizzle(),
+    bancarizacionDelLibro: new BancarizacionDelLibroEnMediador(),
   };
 }
 

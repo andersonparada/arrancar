@@ -61,8 +61,65 @@ export interface DocumentoParaDestino {
   tieneActivoFijo: boolean;
 }
 
+/** Qué pierde la empresa si un pago en efectivo no está bancarizado: el crédito fiscal del IVA y/o el costo del ISR. */
+export interface EfectoFiscalDeBancarizacion {
+  iva: boolean;
+  isr: boolean;
+}
+
+/** Lo que un módulo dice haber pagado a un proveedor en un mes, en efectivo y por medios bancarios (vigente, antes de retenciones). */
+export interface PagadoAlProveedorEnElMes {
+  efectivoCentavos: number;
+  bancarizadoCentavos: number;
+  /** Etiquetas para leer de dónde sale: «Recibo N», «Caja chica F, vale N», «Anticipo N». */
+  comprobantes: string[];
+}
+
+/** Un cargo del pago en efectivo a evaluar; `documentoDeCompraId` es el del libro (`null` en un saldo inicial). */
+export interface CargoPorBancarizar {
+  documentoDeCompraId: string | null;
+  etiqueta: string;
+  totalCentavos: number;
+  /** Solo en un saldo inicial: lo que pierde según el régimen de la fecha de inicio; ausente o nulo si no se sabe. */
+  efectoDeSaldoInicial?: EfectoFiscalDeBancarizacion | null;
+}
+
+/** Qué hacer con un pago en efectivo según la bancarización: el módulo que llama decide qué pasa con `bloquear`. */
+export interface EvaluacionDeBancarizacion {
+  resultado: 'libre' | 'avisar' | 'bloquear';
+  mensaje: string | null;
+  efecto: EfectoFiscalDeBancarizacion | null;
+  /** Lo pagado al proveedor en el mes por todos los módulos (efectivo y bancarizado), sin este pago. */
+  pagadoEnElMesCentavos: number;
+}
+
 declare module './mediador.contratos.js' {
+  interface PreguntasEntreModulos {
+    /**
+     * Cada módulo que paga a proveedores (Cuentas por pagar, Caja chica, Cuentas por liquidar) dice lo pagado al
+     * proveedor en el mes (`mes` es `AAAA-MM-01`); responde `null` si no tiene nada que decir.
+     */
+    'libro-de-compras.pagado_al_proveedor_en_el_mes': {
+      datos: { proveedorId: string; mes: string };
+      respuesta: PagadoAlProveedorEnElMes | null;
+    };
+  }
   interface OrdenesEntreModulos {
+    /**
+     * Evalúa la bancarización de un pago en efectivo con lo pagado por todos los módulos. Primero toma el bloqueo por
+     * proveedor (`libro-de-compras.bancarizacion:<empresa>:<proveedor>`), así que quien llama ya queda en su turno.
+     */
+    'libro-de-compras.evaluar_bancarizacion': {
+      datos: {
+        proveedorId: string;
+        proveedorNombre: string;
+        /** `AAAA-MM-DD`: la fecha del pago, que fija el mes. */
+        fecha: string;
+        montoEnEfectivoCentavos: number;
+        cargos: CargoPorBancarizar[];
+      };
+      respuesta: EvaluacionDeBancarizacion;
+    };
     /** El destino marca el documento como procesado (`true`) o lo devuelve a pendiente (`false`). */
     'libro-de-compras.marcar_procesado': { datos: { documentoId: string; procesado: boolean }; respuesta: void };
     /**

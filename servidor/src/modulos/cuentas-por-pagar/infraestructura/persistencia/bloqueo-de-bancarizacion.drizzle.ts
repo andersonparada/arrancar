@@ -13,7 +13,7 @@ export class BloqueoDeBancarizacionDrizzle implements BloqueoDeBancarizacion {
   async bloquear(proveedorIds: readonly string[]): Promise<void> {
     const { empresaId } = contextoEnCurso();
     for (const proveedorId of [...new Set(proveedorIds)].sort()) {
-      const clave = `cuentas-por-pagar.bancarizacion:${empresaId}:${proveedorId}`;
+      const clave = `libro-de-compras.bancarizacion:${empresaId}:${proveedorId}`;
       await transaccionEnCurso().execute(sql`select pg_advisory_xact_lock(hashtextextended(${clave}, 0))`);
     }
   }

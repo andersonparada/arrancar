@@ -30,7 +30,7 @@ export interface CargoParaAplicarDto {
 /** Lo que la ventana de aplicar necesita: el saldo libre de la nota, desde cuándo puede aplicarse y los cargos. */
 export interface CargosParaAplicarDto {
   saldoLibre: string;
-  /** El umbral de bancarización vigente (`cuentas-por-pagar.bancarizacion.umbral`), para mostrarlo en el aviso. */
+  /** El umbral de bancarización vigente (`libro-de-compras.bancarizacion.umbral`), para mostrarlo en el aviso. */
   umbralDeBancarizacion: string;
   /** `AAAA-MM-DD`; nula si nada limita la fecha de la nota. La ventana la sube según los cargos que se elijan. */
   fechaMinima: string | null;

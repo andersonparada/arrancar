@@ -1,4 +1,4 @@
-import type { BloqueoDeBancarizacion } from '../../puertos/puertos-de-efectivo.js';
+import type { BancarizacionDelLibro, BloqueoDeBancarizacion } from '../../puertos/puertos-de-efectivo.js';
 import type { MovimientosDePagos } from '../../puertos/puertos-de-pagos.js';
 import type { ConsultasDeRetiros, RepositorioDeRetiros } from '../../puertos/puertos-de-retiros.js';
 import type { DependenciasDeRegistrarPago } from '../pagos/dependencias-de-pagos.js';
@@ -10,4 +10,6 @@ export interface DependenciasDeEfectivo extends DependenciasDeRegistrarPago {
   /** Lo que se lee de Bancos sin orden: bloquear el cheque o la nota del retiro, su cuenta y su número. */
   movimientos: MovimientosDePagos;
   bloqueoDeBancarizacion: BloqueoDeBancarizacion;
+  /** La bancarización de cada pago la evalúa el libro (suma lo pagado por todos los módulos). */
+  bancarizacionDelLibro: BancarizacionDelLibro;
 }

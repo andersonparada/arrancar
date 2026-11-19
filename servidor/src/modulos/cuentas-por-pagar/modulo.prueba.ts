@@ -58,17 +58,6 @@ describe('módulo de Cuentas por pagar', () => {
     ]);
   });
 
-  it('el umbral de bancarización es de Q30,000, solo de instalación y positivo a centavos', () => {
-    const umbral = configuracionDeCuentasPorPagar.find(
-      ({ clave }) => clave === 'cuentas-por-pagar.bancarizacion.umbral',
-    );
-
-    expect(umbral?.predeterminado).toBe(30000);
-    expect(umbral?.niveles).toEqual(['instalacion']);
-    expect([30000, 25000.5].map((v) => umbral?.esquema.safeParse(v).success)).toEqual([true, true]);
-    expect([0, -1, 10.005].map((v) => umbral?.esquema.safeParse(v).success)).toEqual([false, false, false]);
-  });
-
   it('el plazo por omisión es de un mes, solo de instalación y empresa, y acepta de 0 a 12', () => {
     const [meses] = configuracionDeCuentasPorPagar;
 

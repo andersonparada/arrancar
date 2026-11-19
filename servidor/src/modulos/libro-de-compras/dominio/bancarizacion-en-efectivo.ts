@@ -1,5 +1,14 @@
-import { quetzales } from './avisos.js';
-import { mesLegible, type EfectoFiscal } from './bancarizacion-de-pagos.js';
+import type { EfectoFiscalDeBancarizacion as EfectoFiscal } from '../../core/contratos/libro-de-compras.contratos.js';
+import { deCentavos } from '../../core/compartido/dominio/centavos.js';
+
+/** Centavos como quetzales para un mensaje: `120000` → `Q1,200.00`. */
+function quetzales(centavos: number): string {
+  const [enteros = '0', decimales = '00'] = deCentavos(centavos).split('.');
+  return `Q${enteros.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${decimales}`;
+}
+
+/** `AAAA-MM-DD` como `mm/aaaa`. */
+const mesLegible = (fecha: string): string => `${fecha.slice(5, 7)}/${fecha.slice(0, 4)}`;
 
 /** Un cargo del pago con lo que importa para la bancarización. */
 export interface CargoDelPagoEnEfectivo {
@@ -78,7 +87,7 @@ function textoDelBloqueo(entrada: EntradaDeBancarizacionEnEfectivo, motivoDelDis
   return (
     `Bancarización (Decreto 20-2006, art. 20): ${motivoDelDisparo}. Los pagos de ${tope} o más a un mismo proveedor en el mes, ` +
     `o de una operación de ese monto aunque se pague por partes, deben hacerse por cheque, transferencia o tarjeta a nombre del proveedor. ` +
-    `Si paga en efectivo, ${loQuePierde(entrada, efecto)}. Arrancar solo suma los pagos registrados en Cuentas por pagar.`
+    `Si paga en efectivo, ${loQuePierde(entrada, efecto)}. Arrancar solo suma los pagos registrados en Arrancar.`
   );
 }
 
