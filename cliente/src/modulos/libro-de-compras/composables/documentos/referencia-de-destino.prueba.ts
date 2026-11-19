@@ -33,6 +33,11 @@ describe('referenciaDeLaRuta', () => {
     expect(referenciaDeLaRuta({ referencia: ID, volver: 'https://mal.com' }).volver).toBeNull();
     expect(referenciaDeLaRuta({ referencia: ID, volver: '/\\mal.com' }).volver).toBeNull();
   });
+
+  it('un destino desconocido se ignora', () => {
+    expect(referenciaDeLaRuta({ destino: 'otro', referencia: ID }).destino).toBeNull();
+    expect(referenciaDeLaRuta({ referencia: ID }).destino).toBeNull();
+  });
 });
 
 describe('destino de la ruta', () => {

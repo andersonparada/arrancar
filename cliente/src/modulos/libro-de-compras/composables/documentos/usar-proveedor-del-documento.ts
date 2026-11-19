@@ -12,6 +12,7 @@ import {
 } from './reglas-del-formulario-de-documento';
 import { proponerConceptoDeIntereses } from './notas-de-debito';
 import { llevaFacturaAfectada } from './tipos-de-documento-sat';
+import { usarDestinoDeLaRuta } from './usar-destino-de-la-ruta';
 import type { SaltosDeLaPrecarga } from './usar-precarga-desde-dte';
 
 interface Datos {
@@ -22,12 +23,19 @@ interface Datos {
   nitDeLaEmpresa: Readonly<Ref<string | null>>;
   /** Si el formulario se llenó desde un DTE de la SAT, el primer cambio de proveedor y de tipo no pisa lo traído. */
   saltos?: SaltosDeLaPrecarga;
+  /** Si se llegó desde un destino (un anticipo, un fondo), el documento va a él: no se propone otro. */
+  destinoFijo?: DestinoDeDocumento | null;
 }
 
 /** Propone el destino de la última factura de ese proveedor, si sigue activo. Si no se puede traer, no pasa nada. */
-function crearProponedorDeDestino({ edicion, destinos }: Pick<Datos, 'edicion' | 'destinos'>) {
+function crearProponedorDeDestino({
+  edicion,
+  destinos,
+  destinoFijo,
+}: Pick<Datos, 'edicion' | 'destinos' | 'destinoFijo'>) {
   let numeroDePeticion = 0;
   return async (proveedorId: string): Promise<void> => {
+    if (destinoFijo) return;
     const peticion = ++numeroDePeticion;
     const sugerido = await apiRegistroDeDocumentos.destinoSugerido(proveedorId).catch(() => null);
     const destino = sugerido?.destino;
@@ -94,8 +102,8 @@ type Facturas = ReturnType<typeof usarFacturasDeLaNota>;
 
 /** Al elegir el proveedor: su NIT, sus facturas (si es una nota) y el destino de su último documento. */
 function vigilarElProveedor(datos: Datos, facturas: Facturas): void {
-  const { edicion, proveedores, destinos, saltos } = datos;
-  const proponerElDestino = crearProponedorDeDestino({ edicion, destinos });
+  const { edicion, proveedores, destinos, saltos, destinoFijo } = datos;
+  const proponerElDestino = crearProponedorDeDestino({ edicion, destinos, destinoFijo });
   watch(
     () => edicion.proveedorId,
     async (proveedorId) => {
@@ -136,7 +144,7 @@ export function usarProveedorDelDocumento(datos: Datos) {
   const facturas = usarFacturasDeLaNota(edicion);
   elegirElUnicoDestino(edicion, destinos);
   proponerElGastoFinanciero(edicion, conceptos);
-  vigilarElProveedor(datos, facturas);
+  vigilarElProveedor({ ...datos, destinoFijo: usarDestinoDeLaRuta(edicion, destinos) }, facturas);
   vigilarElTipo(datos, facturas);
   // El NIT de la empresa puede llegar después del tipo: el recibo FEL lo toma cuando ya está.
   watch(nitDeLaEmpresa, (nit) => proponerElNitDeLaEmpresa(edicion, nit));
