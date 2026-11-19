@@ -1,5 +1,7 @@
 import {
   Building,
+  Coins,
+  Landmark,
   CircleUserRound,
   LifeBuoy,
   Palette,
@@ -60,6 +62,18 @@ export const moduloCore: DefinicionModuloCliente = {
       meta: { ...DE_SOPORTE, titulo: VENTANAS_CORE.apariencia.titulo },
     },
     {
+      path: '/plataforma/monedas',
+      name: 'plataforma-monedas',
+      component: () => import('./paginas/PlataformaMonedas.vue'),
+      meta: { soloSuperacceso: true, titulo: VENTANAS_CORE.monedas.titulo },
+    },
+    {
+      path: '/plataforma/tipos-de-cambio',
+      name: 'plataforma-tipos-de-cambio',
+      component: () => import('./paginas/PlataformaTiposDeCambio.vue'),
+      meta: { soloSuperacceso: true, titulo: VENTANAS_CORE.tiposDeCambio.titulo },
+    },
+    {
       path: '/plataforma/bitacora',
       name: 'plataforma-bitacora',
       component: () => import('./paginas/PlataformaBitacora.vue'),
@@ -106,6 +120,13 @@ export const moduloCore: DefinicionModuloCliente = {
           titulo: VENTANAS_CORE.apariencia.titulo,
           ruta: '/plataforma/apariencia',
           icono: Palette,
+          seccion: 'administracion',
+        },
+        { titulo: VENTANAS_CORE.monedas.titulo, ruta: '/plataforma/monedas', icono: Coins, seccion: 'administracion' },
+        {
+          titulo: VENTANAS_CORE.tiposDeCambio.titulo,
+          ruta: '/plataforma/tipos-de-cambio',
+          icono: Landmark,
           seccion: 'administracion',
         },
         { titulo: VENTANAS_CORE.bitacora.menu, ruta: '/plataforma/bitacora', icono: ScrollText, seccion: 'reportes' },

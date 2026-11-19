@@ -44,6 +44,16 @@ export const VENTANAS_CORE = {
     descripcion:
       'Nombre, logo y colores de esta instalación. Se aplican a todas las cuentas del servidor: menú, encabezados e inicio de sesión.',
   },
+  monedas: {
+    titulo: 'Monedas',
+    descripcion:
+      'Soporte: qué monedas están activas y con qué moneda del Banguat se une cada una para cargar su tipo de cambio cada día.',
+  },
+  tiposDeCambio: {
+    titulo: 'Tipos de cambio',
+    descripcion:
+      'Soporte: el tipo de cambio de cada día, qué falta y cómo ingresar o corregir un valor. Fuente: Banco de Guatemala.',
+  },
   bitacora: {
     titulo: 'Bitácora de soporte',
     menu: 'Bitácora',
