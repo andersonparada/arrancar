@@ -120,6 +120,15 @@ declare module './mediador.contratos.js' {
       };
       respuesta: EvaluacionDeBancarizacion;
     };
+    /**
+     * Inventarios quita (o vuelve a poner) la marca de inventario de una línea al descartarla de su bandeja o devolverla
+     * a ella (V-8). Cambia solo `es_inventario` de una línea de un documento vigente, aunque el período esté cerrado:
+     * ninguna cifra declarada mira esa marca. Audita `corregir` en el libro con la línea antes y el motivo.
+     */
+    'libro-de-compras.cambiar_marca_de_inventario': {
+      datos: { lineaId: string; documentoId: string; esInventario: boolean; motivo: string };
+      respuesta: void;
+    };
     /** El destino marca el documento como procesado (`true`) o lo devuelve a pendiente (`false`). */
     'libro-de-compras.marcar_procesado': { datos: { documentoId: string; procesado: boolean }; respuesta: void };
     /**

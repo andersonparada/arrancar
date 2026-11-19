@@ -14,6 +14,9 @@ const MENSAJE_DOCUMENTO_DE_LA_CUENTA =
 
 const MENSAJE_FACTURA_ANTERIOR_REPETIDA = 'Otra persona acaba de registrar esa factura anterior; vuelva a intentar.';
 
+const MENSAJE_DE_DOCUMENTO_CON_MOVIMIENTOS =
+  'El documento tiene movimientos en Inventarios, aunque estén anulados, y no se puede eliminar: anúlelo en su lugar.';
+
 const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   usuarios_usuario_unico: 'Ese nombre de usuario ya está en uso.',
   roles_nombre_por_cuenta: 'Ya existe un rol con ese nombre.',
@@ -47,6 +50,8 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
 const MENSAJES_DE_LLAVE: Readonly<Record<string, string>> = {
   costos_linea_fk:
     'El documento tiene costos capitalizados en Activos fijos, aunque estén anulados, y no se puede eliminar: anúlelo en su lugar.',
+  movimientos_linea_de_compra_fk: MENSAJE_DE_DOCUMENTO_CON_MOVIMIENTOS,
+  documentos_compra_fk: MENSAJE_DE_DOCUMENTO_CON_MOVIMIENTOS,
 };
 
 /** Restricciones únicas cuyo valor repetido lo escribe el usuario en un campo: el cliente lo marca ahí. */
