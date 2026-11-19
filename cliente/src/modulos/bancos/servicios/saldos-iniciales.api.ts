@@ -7,6 +7,7 @@ import type {
   DatosDePartida,
   ParteQueSeAgrega,
   PartidaGuardada,
+  EvidenciaDeApertura,
   SaldoInicialDeCuenta,
   SaldosIniciales,
 } from './tipos-de-saldos-iniciales';
@@ -55,6 +56,21 @@ export class ApiSaldosIniciales {
 
   eliminarPartida(cuentaBancariaId: string, movimientoId: string, motivo: string) {
     return this.http.eliminar(`${RUTA}/${cuentaBancariaId}/partidas/${movimientoId}`, { motivo });
+  }
+
+  /** Sube (o reemplaza) la evidencia de la apertura, un solo archivo; solo con la carga abierta. */
+  subirEvidencia(cuentaBancariaId: string, archivo: File) {
+    return this.http.subirParaReemplazar<EvidenciaDeApertura>(`${RUTA}/${cuentaBancariaId}/evidencia`, archivo);
+  }
+
+  /** Quita la evidencia; solo con la carga abierta. */
+  quitarEvidencia(cuentaBancariaId: string) {
+    return this.http.eliminar(`${RUTA}/${cuentaBancariaId}/evidencia`);
+  }
+
+  /** La dirección desde la que se abre el archivo en otra pestaña (la sesión viaja en la cookie). */
+  direccionDeLaEvidencia(cuentaBancariaId: string): string {
+    return `/api/bancos/saldos-iniciales/${cuentaBancariaId}/evidencia`;
   }
 
   /** Anula con inverso; llega con BS-3 en el servidor, y el cliente solo la ofrece si `puedeAnular`. */

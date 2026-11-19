@@ -88,6 +88,13 @@ export class ClienteHttp {
     return this.enviar<T>({ metodo: 'POST', ruta, consulta, cuerpo: formulario });
   }
 
+  /** Sube un archivo con `PUT`: reemplaza el que ya tenía el recurso (la evidencia de la apertura). */
+  subirParaReemplazar<T>(ruta: string, archivo: File): Promise<T> {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo);
+    return this.enviar<T>({ metodo: 'PUT', ruta, cuerpo: formulario });
+  }
+
   /** Baja un archivo (un Excel, por ejemplo) con el nombre que le da el servidor. */
   async descargar(ruta: string, consulta?: Consulta): Promise<ArchivoDescargado> {
     const respuesta = await this.llamar({ metodo: 'GET', ruta, consulta });

@@ -115,3 +115,7 @@ export const ayudaDelGrupo = (parte: string, corte: string): string =>
 
 export const AYUDA_DE_CONCILIACIONES =
   'La cuenta ya tiene conciliaciones: para cambiar el saldo del banco o eliminar el saldo inicial, elimine primero esas conciliaciones.';
+
+/** P-15: la evidencia es opcional; si falta, el cierre de la carga solo avisa. */
+export const AYUDA_DE_LA_EVIDENCIA =
+  'Último estado de cuenta o última conciliación del sistema anterior, opcional. PDF hasta 10 MB o foto JPEG, PNG o WebP hasta 15 MB. Un solo archivo.';

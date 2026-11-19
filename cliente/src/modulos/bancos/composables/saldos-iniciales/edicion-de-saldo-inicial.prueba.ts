@@ -5,6 +5,7 @@ import { datosDeCabecera, edicionDeSaldoInicial, edicionNuevaDeSaldoInicial } fr
 const ficha = (cambios = {}) => ({
   ...resumenDeEjemplo(),
   observaciones: 'Cierre de diciembre',
+  evidencia: null,
   partidas: [],
   ...cambios,
 });
