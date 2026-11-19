@@ -3462,3 +3462,26 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   búsqueda de artículos); la regla «no se inactiva con existencias, conteos ni traslados en tránsito» y la guardia de
   eliminar con documentos llegan con las tablas de INV-4 (hoy eliminar solo lo impiden las llaves); el responsable con
   usuario no va en el Excel (se elige en el formulario); la lista de usuarios de una bodega exige `asignar`.
+- **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
+  `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
+  con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de
+  3 días hábiles, solo si están activas) y la bitácora reciente (sin quién la disparó, solo `aPedido`; tope de 200 filas).
+  `GET /api/monedas/banguat/:codigo/muestra?moneda=` (soporte, 10 por minuto por usuario, 429 `demasiadas_muestras_del_banguat`):
+  los últimos 7 días del código sin guardar nada y con su fila en la bitácora (`vuelta = 'muestra'`, con quién la pidió); un
+  Banguat caído vuelve como `resultado: 'error'` y no como error HTTP; código fuera de la lista, retirado o excluido da 422.
+  `POST /api/monedas/banguat/actualizar` ahora responde `{ consulta, lista }` (`consulta` = resultado, nuevas, no disponibles y
+  hora). Relleno al unir un código: `EditarMoneda` avisa, ya confirmada la transacción, cuando la moneda queda **activa con
+  código** (se le unió el código o se activó) y `CargarTiposDeCambio.rellenarMoneda` trae sus 45 días con huecos en segundo
+  plano (si otra carga corre no hace nada: lo cubre el relleno diario); solo con `CARGAR_TIPOS_DE_CAMBIO=true`, porque la carga
+  automática sigue apagada por omisión. **Cliente** (`modulos/core`, rutas `/plataforma/monedas` y `/plataforma/tipos-de-cambio`,
+  menú Soporte): `PlataformaMonedas.vue` (tarjetas con filtros «Con código» y «Activas», aviso de atraso, ventana de edición
+  con interruptor Activa deshabilitado con su porqué, selector «Moneda del Banguat» ordenado por nombre con las de otra moneda
+  deshabilitadas, «Ver muestra», letras, confirmación al desactivar o quitar el código y «Actualizar lista del Banguat» con su
+  última fecha) y `PlataformaTiposDeCambio.vue` (estado de cada serie, calendario del mes por moneda con origen por día y lista en
+  el celular, ingresar o corregir con historial de versiones, resumen y variación contra el vigente antes de guardar, «Cargar
+  ahora» con resultado por moneda y bitácora con vuelta, moneda, qué hacer ante cada resultado y los avisos de variación). Lógica
+  pura con pruebas: `edicion-de-moneda.ts`, `lista-de-monedas.ts`, `calendario-de-tipos.ts`, `edicion-de-tipo-manual.ts`,
+  `bitacora-del-banguat.ts`; `formatearTipoDeCambio` en `utilidades/formato.ts`. Las dos páginas piden empresa activa
+  (las rutas del servidor la exigen para soporte, como el resto de `configuracion.*`). **Pendiente:** aviso de «cruce implícito»
+  de A.7 (hoy solo se ven los avisos de más de 3 % que guarda la bitácora); que «Cargar ahora» no corra dentro de la
+  solicitud HTTP; QA en el navegador con el servidor falso del Banguat; y C-1 a C-4 desde otra red antes de encender la carga.

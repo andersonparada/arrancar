@@ -33,5 +33,13 @@ export const esquemaMonedaEditada = z.object({
   letrasPlural: letras(),
 });
 
+/** La muestra se pide por código del Banguat; `moneda` (opcional) es la que se está editando. */
+export const esquemaParamsMuestra = z.object({
+  codigo: z.coerce.number().int().positive().max(32767, 'El código del Banguat no es válido.'),
+});
+export const esquemaQueryMuestra = z.object({ moneda: codigoDeMoneda().optional() });
+
+export type ParamsMuestra = z.infer<typeof esquemaParamsMuestra>;
+export type QueryMuestra = z.infer<typeof esquemaQueryMuestra>;
 export type ParamsMoneda = z.infer<typeof esquemaParamsMoneda>;
 export type MonedaEditada = z.infer<typeof esquemaMonedaEditada>;

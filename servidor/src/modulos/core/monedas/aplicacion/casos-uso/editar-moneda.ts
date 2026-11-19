@@ -13,6 +13,14 @@ interface Dependencias {
   delBanguat: MonedasDelBanguat;
   auditoria: Auditoria;
   excluidos: ReadonlySet<number>;
+  /** Se avisa, ya con la transacción confirmada, cuando la moneda quedó activa con código y hay que traer su serie. */
+  alQuedarParaCargar?: (moneda: string) => void;
+}
+
+/** Quedó activa con código y es nuevo: se le unió el código o se activó (el dólar y las demás se cargan igual). */
+function quedoParaCargar(antes: MonedaDto, despues: MonedaDto): boolean {
+  if (!despues.activa || despues.codigoBanguat === null) return false;
+  return !antes.activa || antes.codigoBanguat !== despues.codigoBanguat;
 }
 
 /**
@@ -28,15 +36,17 @@ export class EditarMoneda {
    */
   async ejecutar(operador: Operador, codigo: string, cambios: CambiosDeMoneda): Promise<MonedaDto> {
     const { unidadDeTrabajo, catalogo } = this.dependencias;
-    return unidadDeTrabajo.ejecutar(operador, async () => {
+    const { antes, despues } = await unidadDeTrabajo.ejecutar(operador, async () => {
       const antes = await catalogo.buscar(codigo);
       if (!antes) throw new RecursoNoEncontrado('La moneda');
       const despues = aplicarCambios(antes, cambios);
       if (despues.codigoBanguat !== antes.codigoBanguat) await this.revisarCodigo(antes, despues.codigoBanguat);
       await catalogo.actualizar(codigo, cambios);
       await this.auditar(antes, despues);
-      return (await catalogo.buscar(codigo))!;
+      return { antes, despues: (await catalogo.buscar(codigo))! };
     });
+    if (quedoParaCargar(antes, despues)) this.dependencias.alQuedarParaCargar?.(codigo);
+    return despues;
   }
 
   /** Desactivar o reactivar, y quitar o cambiar el código (la moneda deja de cargarse): quedan en la auditoría. */

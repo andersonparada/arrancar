@@ -54,6 +54,16 @@ export const VENTANAS_CORE = {
     descripcion:
       'El servidor de correo de esta instalación, una prueba de envío y el estado de la bandeja de todas las empresas.',
   },
+  monedas: {
+    titulo: 'Monedas',
+    descripcion:
+      'Soporte: qué monedas están activas y con qué moneda del Banguat se une cada una para cargar su tipo de cambio cada día.',
+  },
+  tiposDeCambio: {
+    titulo: 'Tipos de cambio',
+    descripcion:
+      'Soporte: el tipo de cambio de cada día, qué falta y cómo ingresar o corregir un valor. Fuente: Banco de Guatemala.',
+  },
   bitacora: {
     titulo: 'Bitácora de soporte',
     menu: 'Bitácora',

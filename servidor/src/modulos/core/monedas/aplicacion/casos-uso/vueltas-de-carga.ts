@@ -75,6 +75,14 @@ export class VueltasDeCarga {
     return resumenes;
   }
 
+  /** Una moneda recién unida a su código (o recién activada): sus últimos 45 días, solo si tienen huecos. */
+  async rellenarMoneda(codigo: string, hoy: string): Promise<ResumenDeConsulta[]> {
+    const moneda = (await this.dependencias.cargas.monedasACargar()).find((m) => m.moneda === codigo);
+    const rango = moneda ? await this.rangoConHuecos(moneda, hoy) : null;
+    if (!moneda || !rango) return [];
+    return this.pedirA([moneda], { vuelta: 'relleno', hoy, ...rango });
+  }
+
   /** «Cargar ahora» de soporte: el rango pedido, para todas las monedas activas con código. */
   async manual({ hoy, desde, hasta, usuarioId }: RangoManual): Promise<ResumenDeConsulta[]> {
     const monedas = await this.dependencias.cargas.monedasACargar();

@@ -60,3 +60,18 @@ export const formatearSiNo = (valor: boolean) => (valor ? 'Sí' : 'No');
 /** El texto de una opción de lista a partir de su valor guardado. */
 export const formatearOpcion = (opciones: Record<string, string>, valor: string | null) =>
   valor === null ? SIN_VALOR : (opciones[valor] ?? valor);
+
+const DECIMALES_DEL_TIPO_DE_CAMBIO = 5;
+
+/**
+ * Un tipo de cambio («quetzales por unidad») con al menos 5 decimales y sin ceros sobrantes más allá de ellos:
+ * `7.64489000` se ve `7.64489` y `0.0512` se ve `0.05120`. Recibe el texto del servidor para no perder precisión.
+ */
+export function formatearTipoDeCambio(
+  valor: string | number | null | undefined,
+  decimales = DECIMALES_DEL_TIPO_DE_CAMBIO,
+): string {
+  if (valor === null || valor === undefined || valor === '' || Number.isNaN(Number(valor))) return SIN_VALOR;
+  const [entera = '0', fraccion = ''] = String(valor).trim().split('.');
+  return `${entera}.${fraccion.replace(/0+$/, '').padEnd(decimales, '0')}`;
+}

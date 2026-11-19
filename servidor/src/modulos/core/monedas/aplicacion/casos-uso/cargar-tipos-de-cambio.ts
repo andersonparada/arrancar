@@ -79,6 +79,17 @@ export class CargarTiposDeCambio {
     return hecho.resumenes;
   }
 
+  /**
+   * Una moneda quedó lista para cargarse (se le unió un código o se activó): trae sus últimos 45 días con huecos.
+   * Si otra carga corre no hace nada: el relleno diario de las 09:30 lo cubre.
+   */
+  async rellenarMoneda(moneda: string): Promise<void> {
+    await this.dependencias.cerrojo.ejecutarSiLibre(async () => {
+      await this.dependencias.vueltas.rellenarMoneda(moneda, await this.hoy());
+      this.dependencias.alGuardar();
+    });
+  }
+
   private async hoy(): Promise<string> {
     return fechaLocalEn(this.dependencias.reloj.ahora(), await this.dependencias.reloj.zona());
   }

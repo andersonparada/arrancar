@@ -753,7 +753,7 @@ cuentas y cargos por moneda, pide el tipo solo si cruza monedas y muestra el dif
 | **MM-1** (servidor, datos del núcleo) | Migración `core/0024_multimoneda`: columnas de `core.monedas` y semilla, `core.tipos_de_cambio`, `core.consultas_al_banguat`, `politicasDeSoloAgregarEnLaInstalacion`; objeto de valor `TipoDeCambio` | `update` y `delete` rechazados por RLS; únicos y checks; conversiones y redondeo (0.01, mitades, montos máximos de `numeric(14,2)`, ida y vuelta) | — |
 | **MM-2** (servidor, núcleo) | Contexto `core/monedas`: puertos, servicio `tiposDeCambio` (vigente, exacto, anterior, 7 días, futura), casos de uso y rutas de §14 (sin la carga), permisos `soloSuperacceso` | Vigente con versiones, con hueco, de 7 y de 8 días, GTQ; corregir crea versión; 403 sin superacceso | MM-1 |
 | **MM-3** (servidor, carga del Banguat) | Cliente SOAP y extracción, validación, banda, variación, horario y reintentos, relleno de 45 días, candado, bitácora, `principal.ts`, variables de entorno, `POST …/cargar`. **Antes:** una llamada real de prueba para cerrar V-13 y anotar el resultado en este documento | Servidor falso local: éxito, sin datos, 500, demora, respuesta enorme, `<!DOCTYPE>`, valor fuera de banda, fin de semana, reintento; dos cargas a la vez | MM-2 |
-| **MM-4** (cliente, Plataforma) | Páginas de tipos de cambio y monedas | Unitarias de la lógica; QA en el navegador | MM-3 |
+| **MM-4** (cliente, Plataforma) — hecho | Páginas de tipos de cambio y monedas | Unitarias de la lógica; QA en el navegador | MM-3 |
 | **MM-5** (servidor, módulo) | `npm run generar -- modulo multimoneda`; permisos, configuración, orden `monedas_disponibles`, reporte de tipos (ver y exportar) | Orden con módulo activo e inactivo; Excel del reporte | MM-2 |
 | **MM-6** (cliente, módulo y piezas comunes) | Menú, reporte de tipos, `almacenes/monedas`, `CampoDeMoneda`, `TipoDeCambioDeLaOperacion`, `conversion-de-montos.ts` | Pruebas de la lógica pura | MM-5 |
 
@@ -1074,8 +1074,8 @@ función pura del dominio (`vueltaQueToca(ahora, zona, ultimasConsultas)`), con 
 - `PATCH /api/monedas/:codigo` igual (`codigoBanguat: number | null`), con los errores de abajo.
 - `GET /api/monedas/banguat` (`configuracion.monedas.editar`) → `{ codigo, descripcion, disponible, excluida, asignadaA,
   vistaPorUltimaVez }[]`: lo que llena el selector.
-- `POST /api/monedas/banguat/actualizar` (`configuracion.monedas.editar`) → corre la actualización de A.3 y devuelve la
-  lista y la consulta hecha (409 `CargaDelBanguatEnCurso` si hay una vuelta en curso).
+- `POST /api/monedas/banguat/actualizar` (`configuracion.monedas.editar`) → corre la actualización de A.3 y devuelve
+  `{ consulta, lista }` (la consulta hecha y la lista) (409 `CargaDelBanguatEnCurso` si hay una vuelta en curso).
 - `GET /api/monedas/banguat/:codigo/muestra` (`configuracion.monedas.editar`) → los valores de los últimos 7 días de ese
   código (`TipoCambioRangoMoneda`) **sin guardarlos** (la consulta queda con `vuelta = 'muestra'`). Sirve para que
   soporte vea «8.81 Q por unidad» antes de unir «Euro» con EUR (riesgo «código mal asignado»). Límite de 10 por minuto por
@@ -1171,7 +1171,9 @@ activar la carga en producción.
 | **MM-2** (servidor, núcleo) | Lo de §18 más: `EditarMoneda` con las reglas de A.4 y A.9 y su auditoría; `tiposDeCambio.vigente` con `motivoDelAnterior` (A.8); `GET /api/monedas/banguat` | Código ofrecido, en uso, excluido, con otra serie (en el dominio y en el disparador) y en GTQ; auditoría de inactivar, reactivar y quitar el código; vigente del EUR un sábado (`dia_sin_calculo`), un martes sin publicación (`falta_publicacion`), y del USD un domingo | MM-1 |
 | **MM-3a′** (servidor, sin base) | Comprobaciones C-1 a C-4 (se anotan aquí) y los cambios de A.2 al cliente, al extractor y a las reglas | Notación científica (`5.1E-05` → `0.00005100`); más de 8 decimales, con redondeo; `compra ≠ venta` → `valor_ambiguo` con su moneda; código no pedido, ignorado; `VariablesDisponibles` con y sin filas; `<!DOCTYPE>` en las operaciones nuevas; días esperados del USD y de las demás | MM-3a integrada |
 | **MM-3b** (servidor, carga) | Lo que MM-3a dejó para después, para todas las monedas: bitácora por llamada, candado, `vueltaQueToca` y temporizador de 15 min, vueltas de A.6, relleno contra lo guardado, rechazos y avisos de A.7, actualización de la lista (A.3), relleno al asignar un código, `principal.ts`, variables de entorno, `POST …/cargar`, `POST /api/monedas/banguat/actualizar` y `GET …/muestra` con su límite | Con reloj fijo: cada vuelta a su hora en `America/Guatemala` y con otra zona; el USD reintenta y las demás no; una moneda sin publicación el sábado no reintenta ni avisa; 4 días hábiles de atraso avisan; 30 % de variación no se guarda; el relleno solo pide con huecos; dos vueltas a la vez (la segunda no hace nada; la manual da 409); lista vacía o con error no marca nada «no disponible»; una moneda que desaparece queda `disponible = false` | MM-2, MM-3a′ |
-| **MM-4** (cliente, Plataforma) | `PlataformaTiposDeCambio.vue` (como estaba, más A.10) y `PlataformaMonedas.vue` con el selector, la muestra y «Actualizar lista» | Unitarias de `edicion-de-moneda.ts` (qué opciones se habilitan, bloqueo con serie, activa con decimales ≠ 2); QA en el navegador con el servidor falso del Banguat | MM-3b |
+| **MM-4** (cliente, Plataforma) — hecho | `PlataformaTiposDeCambio.vue` (como estaba, más A.10) y `PlataformaMonedas.vue` con el selector, la muestra y «Actualizar lista» | Unitarias de `edicion-de-moneda.ts` (qué opciones se habilitan, bloqueo con serie, activa con decimales ≠ 2); QA en el navegador con el servidor falso del Banguat | MM-3b |
+
+**MM-4 hecho (2026-11-18)**: servidor (`GET /api/tipos-de-cambio/consultas`, `GET /api/monedas/banguat/:codigo/muestra?moneda=` con 10 por minuto, relleno al activar con código, `POST /api/monedas/banguat/actualizar` → `{ consulta, lista }`) y las dos páginas de Plataforma. Falta el QA en el navegador, el aviso de cruce implícito de A.7 y mover «Cargar ahora» fuera de la solicitud HTTP.
 
 MM-5 y los siguientes no cambian.
 
