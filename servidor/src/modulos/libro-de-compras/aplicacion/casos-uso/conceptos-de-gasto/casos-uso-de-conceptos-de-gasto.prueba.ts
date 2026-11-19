@@ -21,6 +21,7 @@ const solicitud = (cambios: Partial<SolicitudDeConceptoDeGasto> = {}): Solicitud
   tipoPorOmision: 'bien',
   esProductoAgropecuario: false,
   esActivoFijo: false,
+  esInventario: false,
   activo: true,
   ...cambios,
 });
@@ -88,6 +89,20 @@ describe('conceptos de gasto', () => {
     const creado = await casos.crear.ejecutar(operador, solicitud({ esActivoFijo: true }));
 
     expect(creado.esActivoFijo).toBe(true);
+  });
+
+  it('un concepto de inventario de tipo bien se registra', async () => {
+    const creado = await casos.crear.ejecutar(operador, solicitud({ esInventario: true }));
+
+    expect(creado).toMatchObject({ esInventario: true, esActivoFijo: false });
+  });
+
+  it('un concepto no es activo fijo e inventario a la vez, ni un servicio es inventario', async () => {
+    const dosDestinos = casos.crear.ejecutar(operador, solicitud({ esActivoFijo: true, esInventario: true }));
+    const servicio = casos.crear.ejecutar(operador, solicitud({ esInventario: true, tipoPorOmision: 'servicio' }));
+
+    await expect(dosDestinos).rejects.toThrow(ConceptoDeGastoInvalido);
+    await expect(servicio).rejects.toThrow(ConceptoDeGastoInvalido);
   });
 
   it('se reactiva y queda auditado', async () => {

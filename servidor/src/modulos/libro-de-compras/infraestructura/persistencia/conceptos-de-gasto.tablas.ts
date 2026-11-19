@@ -17,6 +17,7 @@ export const conceptosDeGasto = esquemaLibroDeCompras.table(
     tipoPorOmision: text().$type<'bien' | 'servicio'>().notNull(),
     esProductoAgropecuario: boolean().default(false).notNull(),
     esActivoFijo: boolean().default(false).notNull(),
+    esInventario: boolean().default(false).notNull(),
     activo: boolean().default(true).notNull(),
     ...marcasDeTiempo,
     ...autoria,
@@ -26,6 +27,8 @@ export const conceptosDeGasto = esquemaLibroDeCompras.table(
     unique('conceptos_de_gasto_id_empresa_unico').on(t.id, t.empresaId),
     check('conceptos_de_gasto_nombre_largo', sql`char_length(btrim(${t.nombre})) between 1 and 120`),
     check('conceptos_de_gasto_tipo', sql`${t.tipoPorOmision} in ('bien', 'servicio')`),
+    check('conceptos_de_gasto_inventario_es_bien', sql`not ${t.esInventario} or ${t.tipoPorOmision} = 'bien'`),
+    check('conceptos_de_gasto_un_solo_destino_del_costo', sql`not (${t.esActivoFijo} and ${t.esInventario})`),
     politicaPorEmpresa(),
   ],
 );

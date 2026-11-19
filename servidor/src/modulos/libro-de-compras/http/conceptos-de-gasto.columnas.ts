@@ -12,5 +12,6 @@ export const columnasDeConceptosDeGasto = (): Columna[] => [
   },
   { clave: 'esProductoAgropecuario', titulo: 'Es producto agropecuario', requerido: true, tipo: 'siNo' },
   { clave: 'esActivoFijo', titulo: 'Es activo fijo', requerido: true, tipo: 'siNo' },
+  { clave: 'esInventario', titulo: 'Es inventario', requerido: true, tipo: 'siNo' },
   { clave: 'activo', titulo: 'Activo', requerido: true, tipo: 'siNo' },
 ];

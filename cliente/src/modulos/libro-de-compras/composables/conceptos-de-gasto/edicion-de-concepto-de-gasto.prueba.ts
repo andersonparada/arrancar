@@ -7,6 +7,7 @@ const datos: DatosConceptoDeGasto = {
   tipoPorOmision: 'bien',
   esProductoAgropecuario: false,
   esActivoFijo: false,
+  esInventario: false,
   activo: true,
 };
 const conceptoDeGasto: ConceptoDeGasto = { id: 'registro-1', ...datos };

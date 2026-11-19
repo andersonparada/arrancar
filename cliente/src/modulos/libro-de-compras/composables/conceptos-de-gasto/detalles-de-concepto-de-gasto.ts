@@ -8,4 +8,5 @@ export const detallesDeConceptoDeGasto = (registro: ConceptoDeGasto): DetalleDeR
   { etiqueta: 'Tipo por omisión', valor: formatearOpcion(OPCIONES_DE_TIPO_POR_OMISION, registro.tipoPorOmision) },
   { etiqueta: 'Producto agropecuario', valor: formatearSiNo(registro.esProductoAgropecuario) },
   { etiqueta: 'Activo fijo', valor: formatearSiNo(registro.esActivoFijo) },
+  { etiqueta: 'Inventario', valor: formatearSiNo(registro.esInventario) },
 ];

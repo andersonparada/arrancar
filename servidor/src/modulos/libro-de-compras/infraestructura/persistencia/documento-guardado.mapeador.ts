@@ -65,6 +65,7 @@ function lineaDeDominio(fila: FilaDeLinea): LineaDeDocumento {
     descripcion: fila.descripcion,
     tipo: fila.tipo,
     esActivoFijo: fila.esActivoFijo,
+    esInventario: fila.esInventario,
     combustible: combustibleDeDominio(fila),
     total: aCentavos(fila.total),
     exento: aCentavos(fila.exento),

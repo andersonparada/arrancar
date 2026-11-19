@@ -27,6 +27,7 @@ type Columnas = Record<
   | 'descripcion'
   | 'tipo'
   | 'esActivoFijo'
+  | 'esInventario'
   | 'vigenciaDeCombustibleId'
   | 'galones'
   | 'idpPorGalon'
@@ -102,6 +103,12 @@ const restriccionesDeCombustible = (t: Columnas) => [
   check('lineas_de_documento_idp_escrito_positivo', sql`not ${t.idpEscrito} or (${t.idp} > 0 and ${t.tipo} = 'bien')`),
 ];
 
+/** El costo tiene un solo destino: o se capitaliza como activo fijo, o entra a una bodega como inventario (que es un bien). */
+const restriccionesDeDestinoDelCosto = (t: Columnas) => [
+  check('lineas_de_documento_inventario_es_bien', sql`not ${t.esInventario} or ${t.tipo} = 'bien'`),
+  check('lineas_de_documento_un_solo_destino_del_costo', sql`not (${t.esActivoFijo} and ${t.esInventario})`),
+];
+
 /** Una línea del documento con sus montos ya calculados; la llave foránea es compuesta con la empresa. */
 export const lineasDeDocumento = esquemaLibroDeCompras.table(
   'lineas_de_documento',
@@ -116,6 +123,7 @@ export const lineasDeDocumento = esquemaLibroDeCompras.table(
     descripcion: text(),
     tipo: text().$type<'bien' | 'servicio'>().notNull(),
     esActivoFijo: boolean().default(false).notNull(),
+    esInventario: boolean().default(false).notNull(),
     vigenciaDeCombustibleId: uuid(),
     galones: numeric({ precision: 12, scale: 3 }),
     idpPorGalon: numeric({ precision: 8, scale: 2 }),
@@ -135,6 +143,7 @@ export const lineasDeDocumento = esquemaLibroDeCompras.table(
     ...llavesDeLinea(t),
     ...restriccionesDeMontosDeLinea(t),
     ...restriccionesDeCombustible(t),
+    ...restriccionesDeDestinoDelCosto(t),
     index('lineas_de_documento_concepto_idx').on(t.conceptoId),
     index('lineas_de_documento_vigencia_idx')
       .on(t.vigenciaDeCombustibleId)

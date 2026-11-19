@@ -120,6 +120,8 @@ describe('líneas: cada check', () => {
     ['galones_positivos', { ...COMBUSTIBLE, galones: '0', total: '112' }],
     ['combustible_completo', { galones: '5' }],
     ['combustible_es_bien', { ...COMBUSTIBLE, tipo: 'servicio', idp: '47', total: '159' }],
+    ['inventario_es_bien', { tipo: 'servicio', esInventario: true }],
+    ['un_solo_destino_del_costo', { esActivoFijo: true, esInventario: true }],
     ['idp_calculado', { ...COMBUSTIBLE, idp: '40', total: '152' }],
   ])('rechaza %s', async (regla, cambios) => {
     const restriccion = await restriccionDeLinea({ numero: 9, ...cambios });
@@ -137,6 +139,10 @@ describe('líneas: cada check', () => {
 
   it('acepta un servicio capitalizado como activo fijo', async () => {
     await expect(insertarLinea({ numero: 8, tipo: 'servicio', esActivoFijo: true })).resolves.toBeTruthy();
+  });
+
+  it('acepta una línea de inventario que es un bien', async () => {
+    await expect(insertarLinea({ numero: 7, esInventario: true })).resolves.toBeTruthy();
   });
 
   it('acepta el combustible con IDP calculado: galones x tasa x (100 - etanol) / 100', async () => {

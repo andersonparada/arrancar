@@ -14,6 +14,7 @@ const concepto = (id: string, nombre: string, activo = true): ConceptoDeGasto =>
   tipoPorOmision: 'servicio',
   esProductoAgropecuario: false,
   esActivoFijo: false,
+  esInventario: false,
   activo,
 });
 

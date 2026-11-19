@@ -10,6 +10,7 @@ const linea = (cambios: Partial<LineaDeSolicitudDeDte> = {}): LineaDeSolicitudDe
   descripcion: 'Concentrado',
   tipo: 'bien',
   esActivoFijo: false,
+  esInventario: false,
   combustibleId: null,
   galones: null,
   total: '112.00',

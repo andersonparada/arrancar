@@ -3053,3 +3053,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Banguat tiene tope de 32767 (400 en vez de 500). `arrancar_app` solo actualiza `activa`, `codigo_banguat` y las letras
   de `core.monedas`. Pendiente para R-4: la auditoría de `EditarMoneda` queda en la cuenta de la empresa activa de
   soporte, y la revisión del código por dos ediciones simultáneas sale como violación genérica de la base.
+
+- **2026-11-18, Inventarios INV-0 e INV-0c (Libro de compras).** Migración `0039_inv_marca_de_inventario`:
+  `es_inventario boolean not null default false` en `lineas_de_documento` y en `conceptos_de_gasto`, con los checks
+  `*_inventario_es_bien` (no es inventario o es bien) y `*_un_solo_destino_del_costo` (no es activo fijo e inventario a la vez).
+  La llave única de líneas ya la trajo la 0037 de AF-0. Dominio: el concepto rechaza los dos destinos y el inventario de
+  servicio (`ConceptoDeGastoInvalido`); el resolutor de líneas hereda la marca del concepto (la línea puede cambiarla) y lanza
+  `linea_con_dos_destinos_del_costo` o `inventario_no_es_bien`. Zod, DTO, Excel de conceptos (columna «Es inventario»), definición
+  del generador y bandeja de DTE (`esInventario: null`) al día. SAT-2237 y libro sin cambio: una línea de inventario es una compra
+  de bienes. Cliente: casilla «Inventario (entra a una bodega)» en la línea y en el concepto, excluyente con «Activo fijo»
+  (`elegirDestinoDelCosto`, `elegirDestinoDelCostoDelConcepto`); marcar inventario fija el tipo en «Bien». No hay Excel de líneas del
+  libro, así que no se agregó esa columna.

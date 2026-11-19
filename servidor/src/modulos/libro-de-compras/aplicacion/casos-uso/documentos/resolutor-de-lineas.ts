@@ -2,7 +2,12 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { LineaEscrita } from '../../../dominio/calculo-de-linea.js';
 import type { CombustibleDeLineaGuardada } from '../../../dominio/documento-de-compra.js';
-import { CatalogoInactivo, LineaDeDocumentoInvalida } from '../../../dominio/errores-de-documento.js';
+import {
+  CatalogoInactivo,
+  InventarioNoEsBien,
+  LineaConDosDestinosDelCosto,
+  LineaDeDocumentoInvalida,
+} from '../../../dominio/errores-de-documento.js';
 import type { DatosDeLineaParaRetencion } from '../../../dominio/retencion-propuesta.js';
 import type { SolicitudDeLinea } from '../../dto/solicitud-de-documento.js';
 import type {
@@ -19,6 +24,7 @@ export interface DescripcionDeLinea {
   descripcion: string | null;
   tipo: 'bien' | 'servicio';
   esActivoFijo: boolean;
+  esInventario: boolean;
   combustible: CombustibleDeLineaGuardada | null;
   /** El exento que fija la vigencia exenta de IVA (Decreto 22-2026); `null` si el usuario manda el exento. */
   exentoDelCombustible: number | null;
@@ -93,6 +99,19 @@ class LineaNoEsBien extends LineaDeDocumentoInvalida {
   }
 }
 
+/** La línea propone el destino del costo con el del concepto; no puede ser activo fijo e inventario, ni un servicio. */
+function destinoDelCosto(
+  linea: SolicitudDeLinea,
+  concepto: ConceptoParaLinea,
+  { numero, tipo }: { numero: number; tipo: string },
+): { esActivoFijo: boolean; esInventario: boolean } {
+  const esActivoFijo = linea.esActivoFijo ?? concepto.esActivoFijo;
+  const esInventario = linea.esInventario ?? concepto.esInventario;
+  if (esActivoFijo && esInventario) throw new LineaConDosDestinosDelCosto(numero);
+  if (esInventario && tipo !== 'bien') throw new InventarioNoEsBien(numero);
+  return { esActivoFijo, esInventario };
+}
+
 function describir(
   linea: SolicitudDeLinea,
   numero: number,
@@ -101,7 +120,7 @@ function describir(
   const concepto = conceptoDe(linea, catalogos);
   const conIdp = idpEscritoDe(linea) !== null;
   const tipo = linea.tipo ?? (conIdp ? 'bien' : concepto.tipoPorOmision);
-  const esActivoFijo = linea.esActivoFijo ?? concepto.esActivoFijo;
+  const destino = destinoDelCosto(linea, concepto, { numero, tipo });
   const { combustible, exento, avisos } = resolverCombustible(linea, {
     combustibles: catalogos.combustibles,
     fechaDeEmision,
@@ -112,7 +131,7 @@ function describir(
     conceptoId: concepto.id,
     descripcion: linea.descripcion,
     tipo,
-    esActivoFijo,
+    ...destino,
     combustible,
     exentoDelCombustible: exento,
   };

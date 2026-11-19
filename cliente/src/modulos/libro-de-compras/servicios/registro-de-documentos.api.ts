@@ -13,6 +13,7 @@ export interface LineaSolicitada {
   descripcion: string | null;
   tipo: 'bien' | 'servicio' | null;
   esActivoFijo: boolean | null;
+  esInventario: boolean | null;
   combustibleId: string | null;
   galones: string | null;
   total: string;

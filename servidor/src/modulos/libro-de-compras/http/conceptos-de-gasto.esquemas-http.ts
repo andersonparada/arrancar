@@ -7,6 +7,7 @@ export const esquemaConceptoDeGasto = z.object({
   tipoPorOmision: opcionObligatoria(['bien', 'servicio']),
   esProductoAgropecuario: z.boolean().default(false),
   esActivoFijo: z.boolean().default(false),
+  esInventario: z.boolean().default(false),
   activo: z.boolean().default(true),
 });
 
