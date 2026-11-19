@@ -1,7 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { FechaDeInicioConSaldosDeBancos } from '../../../dominio/errores-de-apertura.js';
-import type { ConsultasDeSaldosIniciales } from '../../puertos/consultas-de-saldos-iniciales.js';
+import type { ConsultasDeSaldosIniciales, SaldoPrincipal } from '../../puertos/consultas-de-saldos-iniciales.js';
 
 interface Dependencias {
   unidadDeTrabajo: UnidadDeTrabajo;
@@ -24,18 +24,23 @@ export interface AvisoDeFechaDeInicio {
 export class ValidarFechaDeInicioEnBancos {
   constructor(private readonly dependencias: Dependencias) {}
 
+  /** Cuántas cuentas tienen su cabecera y un saldo del estado de cuenta de cero (sin movimiento que lo diga). */
+  private async cuentasConSaldoEnCero(principales: SaldoPrincipal[]): Promise<number> {
+    const conSaldo = new Set(principales.map((saldo) => saldo.cuentaBancariaId));
+    const cuentas = await this.dependencias.consultas.cuentas();
+    return cuentas.filter((cuenta) => cuenta.cabeceraId !== null && !conSaldo.has(cuenta.cuentaBancariaId)).length;
+  }
+
   /** @throws FechaDeInicioConSaldosDeBancos si algún saldo inicial de Bancos impide el cambio. */
   ejecutar(operador: Operador, aviso: AvisoDeFechaDeInicio): Promise<void> {
     const { unidadDeTrabajo, consultas } = this.dependencias;
     return unidadDeTrabajo.ejecutar({ ...operador, empresaId: aviso.empresaId }, async () => {
       const principales = await consultas.saldosPrincipales();
       const delBanco = principales.filter((saldo) => saldo.parte === 'saldo_del_banco');
-      if (delBanco[0]) {
-        throw new FechaDeInicioConSaldosDeBancos({
-          cantidad: delBanco.length,
-          fecha: delBanco[0].fecha,
-          global: false,
-        });
+      const enCero = await this.cuentasConSaldoEnCero(principales);
+      if (delBanco.length + enCero > 0) {
+        const fecha = delBanco[0]?.fecha ?? null;
+        throw new FechaDeInicioConSaldosDeBancos({ cantidad: delBanco.length + enCero, fecha, global: false });
       }
       const globales = principales.filter((s) => s.parte === 'saldo_global' && s.fecha > aviso.fechaDeInicio);
       if (globales[0]) {

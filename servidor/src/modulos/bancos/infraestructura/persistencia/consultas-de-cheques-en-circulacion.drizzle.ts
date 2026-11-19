@@ -51,6 +51,7 @@ export class ConsultasDeChequesEnCirculacionDrizzle implements ConsultasDeCheque
         beneficiario: movimientos.beneficiario,
         monto: movimientos.monto,
         mesConciliado: mesConciliadoDe(movimientos.cuentaBancariaId, movimientos.fecha),
+        parteDeApertura: movimientos.parteDeApertura,
       })
       .from(cheques)
       .innerJoin(movimientos, eq(movimientos.id, cheques.movimientoId))

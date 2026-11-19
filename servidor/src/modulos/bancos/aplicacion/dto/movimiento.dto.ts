@@ -1,5 +1,6 @@
 import type { LineaDeConcepto } from '../../../core/contratos/bancos.contratos.js';
 import type { OrigenDeMovimiento } from '../../dominio/origen-de-movimiento.js';
+import type { ParteDeApertura } from '../../dominio/partes-de-apertura.js';
 
 /** Una línea del reparto por concepto de un movimiento (CP4): el concepto y la parte del monto que clasifica. */
 export interface LineaDeDesgloseDto {
@@ -16,6 +17,8 @@ export interface MovimientoDto {
   fecha: string;
   monto: string;
   saldoInicial: boolean;
+  /** La parte de la carga inicial que es (saldo del banco, depósito en tránsito…); `null` si es un movimiento normal. */
+  parteDeApertura: ParteDeApertura | null;
   referencia: string | null;
   beneficiario: string | null;
   observaciones: string | null;
@@ -67,6 +70,7 @@ export interface MovimientoDto {
 export type SolicitudDeMovimiento = Omit<
   MovimientoDto,
   | 'id'
+  | 'parteDeApertura'
   | 'anuladoEn'
   | 'motivoDeAnulacion'
   | 'cuentaBancariaNombre'

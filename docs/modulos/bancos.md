@@ -1687,8 +1687,7 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
   hallazgos de cierre), `GET /:cuentaBancariaId` (ficha), `PUT /:cuentaBancariaId` (crea con `.crear` o corrige con `.editar`; el signo del saldo
   dice crédito o débito; con un saldo global lo convierte), `DELETE /:cuentaBancariaId` (con motivo; borra todas las partidas y los cheques de
   la chequera de apertura), `POST|PUT|DELETE /:cuentaBancariaId/partidas[/:movimientoId]`, `GET /revision-de-cierre` y los dos Excel
-  (`/exportar|plantilla|importar` para los saldos por cuenta y `/partidas/exportar|plantilla|importar` para las seis clases). Anular una
-  partida (`.../anular`) llega con BS-3.
+  (`/exportar|plantilla|importar` para los saldos por cuenta y `/partidas/exportar|plantilla|importar` para las seis clases).
 - **Reglas**: solo con fecha de inicio y la carga **abierta** (también el posfechado); partida del corte o antes (posfechado, posterior); la
   cuenta no tiene movimientos normales `<=` corte ni conciliaciones; el cheque lleva número y beneficiario («solo cheques entregados»); error
   del banco con sentido y descripción. Avisos que no bloquean: cheque antiguo con la variable `bancos.cheques.meses_de_vencimiento` y el art.
@@ -1702,8 +1701,35 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
 - **Rutas heredadas hasta BS-5** (el cliente actual): `POST /bancos/saldos-iniciales`, `GET /bancos/saldos-iniciales?cuentaBancariaId=…` y
   `PUT|DELETE /bancos/saldos-iniciales/global/:movimientoId` registran y leen el saldo «de antes» (`saldo_global`). `RepositorioDeMovimientosConSaldoGlobal`
   reemplaza al puente de BS-1. El Excel viejo (Tipo, Fecha, Monto…) ya no existe.
-- **Pendiente**: BS-3 (anular con inverso, movimientos antes del corte, `parteDeApertura` en los DTO), BS-4 (conciliación: hoy el saldo del
-  banco todavía aparece como candidato, como el global), BS-5 a BS-9 (cliente y evidencia).
+- **Pendiente**: BS-4 (conciliación: hoy el saldo del banco todavía aparece como candidato, como el global), BS-5 a BS-9 (cliente y evidencia).
+- **Correcciones posteriores a BS-2 (2026-11-18)**: un saldo según el estado de cuenta de cero es válido (cabecera sin movimiento del banco; el cuadre lo
+  rellena con `0.00`; `exigirSaldoDelBanco` solo rechaza el saldo global; al corregir de cero a otro valor se crea el movimiento y a cero se borra). Un
+  cheque de la carga inicial no se blanquea (`puedeBlanquear` falso, `NoSeBlanqueaUnChequeDeApertura`) y `AnularCheque` crea siempre su inverso. Los
+  textos con artículos siguen el dictamen del contador del 2026-11-18.
+
+### Bancos, segunda parte: reglas transversales (BS-3, servidor hecho el 2026-11-18)
+
+- **Movimientos y la apertura (§5.2)** en `ReglasDeLaCuenta` (ahora lleva `cargaInicial`; `consultas.saldoPrincipalDe` reemplaza a `fechaDelSaldoInicial`
+  y devuelve `{ parte, fecha }`): con `saldo_del_banco`, un movimiento normal con fecha del corte o anterior se rechaza con
+  `MovimientoAntesDeLaApertura` (el mensaje trae la ayuda de las notas del banco descubiertas después); con `saldo_global`, la regla de siempre;
+  **sin saldo principal** (también con el saldo del banco en cero) un movimiento **nuevo** anterior a la fecha de inicio de la empresa se rechaza con
+  `MovimientoAntesDeLaFechaDeInicio` (P-6; corregir uno que ya existía antes de esa fecha no se toca; corregir uno posterior no lo deja antes); un saldo inicial nuevo (no su corrección) también se rechaza si la cuenta ya tiene cabecera (saldo del banco en cero). Vale para notas, cheques, transferencias y las órdenes de otros módulos
+  (todos pasan por `reglas.revisar`).
+- **Anular una partida (§5.3)**: `POST /bancos/saldos-iniciales/:cuentaBancariaId/partidas/:movimientoId/anular` (`.anular`; cuerpo `{ motivo, fecha?, pagador? }`;
+  responde `{ partida, inversoId }`) con `AnularPartidaDeApertura`, que delega en `AnularCheque` (cheque en circulación) o
+  `AnularMovimiento.anularPartidaDeApertura` (depósito y débito en tránsito, error del banco). Siempre con inverso, con la carga abierta o cerrada; la fecha del
+  inverso debe ser posterior al corte (`InversoDentroDeLaApertura`, hoy por omisión); el inverso lleva el concepto de sistema `anulacion_de_apertura` (actividad
+  «ninguna») y, en el depósito, el **pagador** (obligatorio, 1 a 150 caracteres) como beneficiario. No se anula el saldo del banco ni el global
+  (`NoSeAnulaElSaldoDelBanco`) ni una partida marcada en una conciliación; el posfechado no es partida de apertura (`ElPosfechadoSeAnulaComoCheque`): se anula en
+  Cheques como cualquier cheque (a la antigua con el mes abierto, con inverso si está conciliado). `AnularCheque` ya trata así a un cheque en circulación de la
+  carga inicial desde la pantalla de Cheques y en el lote de caducos (siempre con inverso). Un cheque de la carga inicial no se blanquea.
+- **Evento** `bancos.partida_de_apertura_anulada` (en `core/contratos/bancos.contratos.ts`; se publica al confirmar): `empresaId`, `cuentaBancariaId`,
+  `movimientoId`, `inversoId`, `parte`, `fecha` (la del inverso), `montoCentavos`, `beneficiario`, `numeroDeCheque`, `pagador` (solo el depósito) y `motivo`.
+  `AnularCheque.anularSinPublicar` devuelve los eventos para que el lote de caducos los publique solo si todo se confirma.
+- **Flujo de efectivo**: las consultas por concepto usan el concepto propio del inverso cuando es `anulacion_de_apertura` (antes tomaban siempre el de su original,
+  `saldo_inicial`, y lo contaban como apertura): el inverso sale en «Otros movimientos sin actividad» y el control cuadra.
+- **DTO**: `MovimientoDto`, `ChequeDto`, `ChequeListadoDto` y `ChequeEnCirculacionDto` traen `parteDeApertura`; `OrigenDeCheque` suma `'apertura'` (el cheque en
+  circulación de la carga inicial; el posfechado sigue «suelto» con su `parteDeApertura`); `PartidaDeAperturaDto.puedeAnular` ya es real.
 
 ## Revisión al cerrar la carga inicial (EM-2.6)
 

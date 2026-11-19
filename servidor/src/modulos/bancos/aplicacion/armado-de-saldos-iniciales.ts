@@ -1,3 +1,4 @@
+import { PARTES_QUE_SE_ANULAN } from '../dominio/anulacion-de-apertura.js';
 import { avisosDeLaPartida } from '../dominio/apertura.js';
 import { aCentavos } from '../dominio/centavos.js';
 import { calcularCuadre, compararConLibros } from '../dominio/cuadre-de-apertura.js';
@@ -20,6 +21,12 @@ function sePuedeCambiar(partida: PartidaDeLaBase, { corte, cerrada }: ContextoDe
   return partida.conciliadaEn === null && !partida.anulada && !partida.revertida;
 }
 
+/** Se anula con un inverso (§5.3): una partida vigente de las que se anulan, que el banco todavía no ha visto en una conciliación. */
+function sePuedeAnular(partida: PartidaDeLaBase, { corte }: ContextoDeLaFicha): boolean {
+  if (corte === null || !(PARTES_QUE_SE_ANULAN as readonly string[]).includes(partida.parte)) return false;
+  return partida.conciliadaEn === null && !partida.anulada && !partida.revertida;
+}
+
 const AVISO_EN_LA_FICHA = { cheque_antiguo: 'antiguo', deposito_viejo: 'deposito_viejo' } as const;
 
 /** Las insignias de la ficha («Antiguo», «Revisar»): los mismos avisos que se dan al guardar. */
@@ -28,7 +35,7 @@ function avisosDeLaFicha(partida: PartidaDeLaBase, { corte, mesesDeVencimiento }
   return avisosDeLaPartida(partida, { corte, mesesDeVencimiento }).map(({ codigo }) => AVISO_EN_LA_FICHA[codigo]);
 }
 
-/** La partida como la ve la pantalla; `puedeAnular` llega con BS-3. */
+/** La partida como la ve la pantalla. */
 export function partidaDeApertura(partida: PartidaDeLaBase, contexto: ContextoDeLaFicha): PartidaDeAperturaDto {
   const { conciliacionId: _conciliacionId, cuentaBancariaId: _cuentaBancariaId, ...datos } = partida;
   const esPosfechado = partida.parte === 'cheque_posfechado';
@@ -40,7 +47,7 @@ export function partidaDeApertura(partida: PartidaDeLaBase, contexto: ContextoDe
     avisos: avisosDeLaFicha(partida, contexto),
     puedeCorregir: puedeCambiar,
     puedeEliminar: puedeCambiar,
-    puedeAnular: false,
+    puedeAnular: sePuedeAnular(partida, contexto),
   };
 }
 
@@ -51,6 +58,10 @@ const formaDe = (cuenta: CuentaConSuCabecera, partidas: PartidaDeLaBase[]) => {
     : ('con_partidas' as const);
 };
 
+/** Una cuenta con partidas y sin saldo del banco cargado lo tiene en cero. */
+const saldoDelBanco = (saldo: string | null, forma: ReturnType<typeof formaDe>) =>
+  saldo ?? (forma === 'con_partidas' ? '0.00' : null);
+
 /** El cuadre de una cuenta con las partidas que tiene (las de todas las partes, el posfechado incluido). */
 export function resumenDeLaCuenta(
   cuenta: CuentaConSuCabecera,
@@ -59,21 +70,22 @@ export function resumenDeLaCuenta(
 ): SaldoInicialResumenDto {
   const cuadre = calcularCuadre(partidas);
   const comparacion = compararConLibros(cuadre.saldoEnLibrosAlCorte, cuenta.saldoSegunLibrosAnteriores);
-  const { corte, cerrada } = contexto;
+  const forma = formaDe(cuenta, partidas);
   return {
     cuentaBancariaId: cuenta.cuentaBancariaId,
     cuentaNombre: cuenta.cuentaNombre,
     bancoNombre: cuenta.bancoNombre,
     activa: cuenta.activa,
-    forma: formaDe(cuenta, partidas),
-    fechaDeCorte: corte,
+    forma,
+    fechaDeCorte: contexto.corte,
     ...cuadre,
+    saldoSegunEstadoDeCuenta: saldoDelBanco(cuadre.saldoSegunEstadoDeCuenta, forma),
     saldoSegunLibrosAnteriores: cuenta.saldoSegunLibrosAnteriores,
     ...comparacion,
     tieneEvidencia: cuenta.tieneEvidencia,
     tieneConciliaciones: cuenta.tieneConciliaciones,
-    puedeEditar: !cerrada && corte !== null,
-    puedeEliminar: cuenta.cabeceraId !== null && !cerrada && !cuenta.tieneConciliaciones,
+    puedeEditar: !contexto.cerrada && contexto.corte !== null,
+    puedeEliminar: cuenta.cabeceraId !== null && !contexto.cerrada && !cuenta.tieneConciliaciones,
   };
 }
 

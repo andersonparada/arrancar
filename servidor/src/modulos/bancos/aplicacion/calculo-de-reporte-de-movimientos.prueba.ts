@@ -8,6 +8,7 @@ function movimiento(datos: Partial<MovimientoDto> & Pick<MovimientoDto, 'tipo' |
     cuentaBancariaId: crypto.randomUUID(),
     fecha: '2026-01-15',
     saldoInicial: false,
+    parteDeApertura: null,
     referencia: null,
     beneficiario: null,
     observaciones: null,

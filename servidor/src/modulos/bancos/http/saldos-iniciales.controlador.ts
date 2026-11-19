@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { contextoDe } from '../../core/compartido/http/contexto-de-la-solicitud.js';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { AgregarPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/agregar-partida-de-apertura.js';
+import type { AnularPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/anular-partida-de-apertura.js';
 import type { CorregirPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/corregir-partida-de-apertura.js';
 import type { EliminarPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/eliminar-partida-de-apertura.js';
 import type { EliminarSaldoInicial } from '../aplicacion/casos-uso/saldos-iniciales/eliminar-saldo-inicial.js';
@@ -11,6 +12,7 @@ import type { ObtenerSaldoInicial } from '../aplicacion/casos-uso/saldos-inicial
 import type { RevisarCierreDeCargaEnBancos } from '../aplicacion/casos-uso/saldos-iniciales/revisar-cierre-de-carga-en-bancos.js';
 import type { SolicitudDeEliminacion } from './movimientos.esquemas-http.js';
 import type {
+  AnulacionDePartidaSolicitada,
   CorreccionDePartidaSolicitada,
   GuardarSaldoInicialSolicitado,
   ParamsDeCuenta,
@@ -26,6 +28,7 @@ export interface CasosDeUsoDeSaldosIniciales {
   agregarPartida: AgregarPartidaDeApertura;
   corregirPartida: CorregirPartidaDeApertura;
   eliminarPartida: EliminarPartidaDeApertura;
+  anularPartida: AnularPartidaDeApertura;
   revisarCierre: RevisarCierreDeCargaEnBancos;
 }
 
@@ -73,6 +76,9 @@ export class SaldosInicialesControlador {
 
   corregirPartida = (solicitud: FastifyRequest<{ Params: ParamsDePartida; Body: CorreccionDePartidaSolicitada }>) =>
     this.casosDeUso.corregirPartida.ejecutar(operadorDe(solicitud), { ...solicitud.body, ...solicitud.params });
+
+  anularPartida = (solicitud: FastifyRequest<{ Params: ParamsDePartida; Body: AnulacionDePartidaSolicitada }>) =>
+    this.casosDeUso.anularPartida.ejecutar(operadorDe(solicitud), { ...solicitud.body, ...solicitud.params });
 
   eliminarPartida = async (
     solicitud: FastifyRequest<{ Params: ParamsDePartida; Body: SolicitudDeEliminacion }>,

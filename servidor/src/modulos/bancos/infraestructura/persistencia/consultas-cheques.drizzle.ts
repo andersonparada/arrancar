@@ -60,12 +60,14 @@ type FilaDelListado = Awaited<ReturnType<typeof consultaDelListado>>[number];
 
 const aListado = ({ movimientoId, hechosDelMovimiento, ...fila }: FilaDelListado): ChequeListadoDto => {
   const estado = fila.estado as ChequeListadoDto['estado'];
+  const hechos = hechosDelMovimientoDelCheque(movimientoId, hechosDelMovimiento);
   return {
     ...fila,
     estado,
     anuladoEn: fila.anuladoEn ? fila.anuladoEn.toISOString() : null,
-    moduloDeOrigen: movimientoId ? hechosDelMovimiento.moduloDeOrigen : null,
-    ...accionesDeCheque(estado, hechosDelMovimientoDelCheque(movimientoId, hechosDelMovimiento)),
+    parteDeApertura: hechos?.parteDeApertura ?? null,
+    moduloDeOrigen: hechos ? hechosDelMovimiento.moduloDeOrigen : null,
+    ...accionesDeCheque(estado, hechos),
   };
 };
 

@@ -10,7 +10,7 @@ import type {
   ResumenDeSinClasificar,
   SolicitudDeMovimiento,
 } from '../../aplicacion/dto/movimiento.dto.js';
-import type { ConsultasMovimientos } from '../../aplicacion/puertos/consultas-movimientos.js';
+import type { ConsultasMovimientos, SaldoPrincipalDeLaCuenta } from '../../aplicacion/puertos/consultas-movimientos.js';
 import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../dominio/asignacion-de-concepto.js';
 import { finDelMesDe } from '../../dominio/conciliacion.js';
 import { cheques } from './cheques.tablas.js';
@@ -19,7 +19,7 @@ import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { desgloseDeMovimientos } from './desglose-de-movimientos.tablas.js';
-import { cuentaConConciliacionesDe, mesConciliadoDe } from './hechos-de-movimiento.js';
+import { cuentaConConciliacionesDe, hayCabeceraDeSaldoInicial, mesConciliadoDe } from './hechos-de-movimiento.js';
 import { mapeadorDeMovimiento } from './movimiento.mapeador.js';
 import { movimientos } from './movimientos.tablas.js';
 import { saldoVigente } from './saldo-vigente.js';
@@ -128,8 +128,18 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
     return fila?.saldo ?? '0.00';
   }
 
-  fechaDelSaldoInicial(cuentaBancariaId: string, excluir?: string): Promise<string | null> {
-    return this.primeraFecha(vigentesDe(cuentaBancariaId, excluir, enLaPartePrincipal));
+  async saldoPrincipalDe(cuentaBancariaId: string, excluir?: string): Promise<SaldoPrincipalDeLaCuenta | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ parte: movimientos.parteDeApertura, fecha: movimientos.fecha })
+      .from(movimientos)
+      .where(vigentesDe(cuentaBancariaId, excluir, enLaPartePrincipal))
+      .orderBy(asc(movimientos.fecha))
+      .limit(1);
+    return fila ? { parte: fila.parte as SaldoPrincipalDeLaCuenta['parte'], fecha: fila.fecha } : null;
+  }
+
+  tieneCabeceraDeSaldoInicial(cuentaBancariaId: string): Promise<boolean> {
+    return hayCabeceraDeSaldoInicial(cuentaBancariaId);
   }
 
   fechaMasAntigua(cuentaBancariaId: string, excluir?: string): Promise<string | null> {

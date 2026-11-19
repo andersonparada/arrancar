@@ -5,6 +5,12 @@ import type {
   SolicitudDeMovimiento,
 } from '../dto/movimiento.dto.js';
 
+/** El saldo principal de una cuenta: de qué parte es y su fecha. */
+export interface SaldoPrincipalDeLaCuenta {
+  parte: 'saldo_del_banco' | 'saldo_global';
+  fecha: string;
+}
+
 /** Lecturas para pantallas y para las reglas de la cuenta; solo cuentan los movimientos vigentes (sin anular). */
 export interface ConsultasMovimientos {
   /** De la fecha más reciente a la más antigua. */
@@ -19,8 +25,10 @@ export interface ConsultasMovimientos {
   cuentaEstaActiva(cuentaBancariaId: string): Promise<boolean>;
   /** Créditos menos débitos vigentes, como texto con dos decimales. */
   saldoDe(cuentaBancariaId: string): Promise<string>;
-  /** La fecha del saldo inicial vigente de la cuenta, sin contar `excluir`; null si no tiene. */
-  fechaDelSaldoInicial(cuentaBancariaId: string, excluir?: string): Promise<string | null>;
+  /** El saldo principal vigente de la cuenta (el del banco al corte o el global de antes), sin contar `excluir`; null si no tiene. */
+  saldoPrincipalDe(cuentaBancariaId: string, excluir?: string): Promise<SaldoPrincipalDeLaCuenta | null>;
+  /** Si la cuenta tiene cabecera de saldo inicial (con el saldo del banco en cero no hay movimiento principal, pero sí cabecera). */
+  tieneCabeceraDeSaldoInicial(cuentaBancariaId: string): Promise<boolean>;
   /** La fecha del movimiento vigente más antiguo, sin contar `excluir`; null si no hay. */
   fechaMasAntigua(cuentaBancariaId: string, excluir?: string): Promise<string | null>;
   /** Fin de mes de la última conciliación AUTORIZADA de la cuenta; `null` si no tiene ninguna. */

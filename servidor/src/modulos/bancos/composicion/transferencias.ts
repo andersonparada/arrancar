@@ -16,6 +16,7 @@ import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/r
 import { RepositorioTransferenciasDrizzle } from '../infraestructura/persistencia/repositorio-transferencias.drizzle.js';
 import { PoliticaDeMismaFechaEnAnulacionEnConfiguracion } from '../infraestructura/politica-de-misma-fecha-en-anulacion.configuracion.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
+import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 
 function dependenciasDeTransferencias() {
   const { unidadDeTrabajo, auditoria, correlativos, reloj } = dependenciasCompartidas();
@@ -32,7 +33,11 @@ function dependenciasDeTransferencias() {
     consultas: new ConsultasTransferenciasDrizzle(),
     consultasMovimientos,
     consultasCuentasBancarias: new ConsultasCuentasBancariasDrizzle(),
-    reglas: new ReglasDeLaCuenta({ consultas: consultasMovimientos, politicaDeSobregiro }),
+    reglas: new ReglasDeLaCuenta({
+      consultas: consultasMovimientos,
+      politicaDeSobregiro,
+      cargaInicial: new CargaInicialEnMediador(),
+    }),
     politicaDeMismaFecha: new PoliticaDeMismaFechaEnAnulacionEnConfiguracion(),
   };
 }

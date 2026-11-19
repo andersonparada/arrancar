@@ -1,7 +1,9 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { ErrorEsperado } from '../../../../core/compartido/dominio/errores.js';
+import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
 import { aCentavos, deCentavos } from '../../../dominio/centavos.js';
 import { fechaDeCorteDeCheques } from '../../../dominio/cheques-en-circulacion.js';
 import {
@@ -23,6 +25,7 @@ export interface DependenciasDeAnularChequesCaducos {
   politicaDeVencimiento: PoliticaDeVencimientoDeCheques;
   reloj: Reloj;
   anularCheque: AnularCheque;
+  publicadorEventos: PublicadorEventos;
 }
 
 export interface AnulacionEnLote {
@@ -55,17 +58,22 @@ export class AnularChequesCaducos {
 
   /** @throws AnulacionEnLoteConProblemas si algún cheque no se puede anular (la transacción se deshace). */
   ejecutar(operador: Operador, solicitud: AnulacionEnLote): Promise<ResultadoDeAnulacionEnLote> {
-    const { unidadDeTrabajo, reloj } = this.dependencias;
-    return unidadDeTrabajo.ejecutar(operador, async () => {
-      const hoy = await reloj.hoy(operador);
-      const fecha = solicitud.fecha ?? hoy;
-      if (fecha > hoy) throw new FechaDeAnulacionFutura();
-      const caducos = await this.caducosDe(operador, solicitud.chequeIds, hoy);
-      const problemas = await this.anularUnoPorUno(operador, { ...solicitud, fecha }, caducos);
-      if (problemas.length > 0) throw new AnulacionEnLoteConProblemas(problemas);
-      const centavos = [...caducos.values()].reduce((suma, { monto }) => suma + aCentavos(monto), 0);
-      return { totalDeCheques: caducos.size, montoTotal: deCentavos(centavos), fecha };
-    });
+    const { unidadDeTrabajo, reloj, publicadorEventos } = this.dependencias;
+    return unidadDeTrabajo
+      .ejecutar(operador, async () => {
+        const hoy = await reloj.hoy(operador);
+        const fecha = solicitud.fecha ?? hoy;
+        if (fecha > hoy) throw new FechaDeAnulacionFutura();
+        const caducos = await this.caducosDe(operador, solicitud.chequeIds, hoy);
+        const { problemas, eventos } = await this.anularUnoPorUno(operador, { ...solicitud, fecha }, caducos);
+        if (problemas.length > 0) throw new AnulacionEnLoteConProblemas(problemas);
+        const centavos = [...caducos.values()].reduce((suma, { monto }) => suma + aCentavos(monto), 0);
+        return { resultado: { totalDeCheques: caducos.size, montoTotal: deCentavos(centavos), fecha }, eventos };
+      })
+      .then(async ({ resultado, eventos }) => {
+        await publicadorEventos.publicar(eventos);
+        return resultado;
+      });
   }
 
   private async caducosDe(
@@ -84,23 +92,25 @@ export class AnularChequesCaducos {
     operador: Operador,
     { chequeIds, motivo, fecha }: Required<AnulacionEnLote>,
     caducos: Map<string, ChequeEnCirculacionCrudo>,
-  ): Promise<ProblemaDeAnulacionEnLote[]> {
+  ): Promise<{ problemas: ProblemaDeAnulacionEnLote[]; eventos: EventoDominio[] }> {
     const problemas: ProblemaDeAnulacionEnLote[] = [];
+    const eventos: EventoDominio[] = [];
     for (const chequeId of new Set(chequeIds)) {
       try {
         if (!caducos.has(chequeId)) throw new ChequeNoEsCaduco();
-        await this.dependencias.anularCheque.ejecutar(operador, {
+        const anulado = await this.dependencias.anularCheque.anularSinPublicar(operador, {
           chequeId,
           motivo,
           fecha,
           causa: 'caducidad',
           conInversoSiempre: true,
         });
+        eventos.push(...anulado.eventos);
       } catch (error) {
         if (!(error instanceof ErrorEsperado)) throw error;
         problemas.push(comoProblema(chequeId, error));
       }
     }
-    return problemas;
+    return { problemas, eventos };
   }
 }

@@ -18,10 +18,11 @@ import { RepositorioChequesDrizzle } from '../infraestructura/persistencia/repos
 import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/repositorio-movimientos.drizzle.js';
 import { piezasDeOrigen } from './piezas-de-origen.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
+import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 
 /** Las dependencias de los casos de uso de cheques; también las usa la anulación en lote de caducos. */
 export function dependenciasDeCheques() {
-  const { unidadDeTrabajo, auditoria, correlativos, reloj } = dependenciasCompartidas();
+  const { unidadDeTrabajo, auditoria, correlativos, reloj, publicadorEventos } = dependenciasCompartidas();
   const consultasMovimientos = new ConsultasMovimientosDrizzle();
   const politicaDeSobregiro = new PoliticaDeSobregiroEnConfiguracion();
   const conceptos = new ConceptosDeMovimientos(new RepositorioConceptosDrizzle());
@@ -30,6 +31,7 @@ export function dependenciasDeCheques() {
     auditoria,
     correlativos,
     reloj,
+    publicadorEventos,
     conceptos,
     ...piezasDeOrigen(conceptos),
     repositorio: new RepositorioChequesDrizzle(),
@@ -37,7 +39,11 @@ export function dependenciasDeCheques() {
     repositorioMovimientos: new RepositorioMovimientosDrizzle(),
     consultas: new ConsultasChequesDrizzle(),
     consultasMovimientos,
-    reglas: new ReglasDeLaCuenta({ consultas: consultasMovimientos, politicaDeSobregiro }),
+    reglas: new ReglasDeLaCuenta({
+      consultas: consultasMovimientos,
+      politicaDeSobregiro,
+      cargaInicial: new CargaInicialEnMediador(),
+    }),
   };
 }
 

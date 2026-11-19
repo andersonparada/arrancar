@@ -11,6 +11,7 @@ import {
 const limpia = (cambios: Partial<HechosDeUnMovimiento> = {}): HechosDeUnMovimiento => ({
   tipo: 'credito',
   saldoInicial: false,
+  parteDeApertura: null,
   esDeTransferencia: false,
   marcadoEnConciliacion: false,
   anulado: false,
@@ -160,6 +161,12 @@ describe('lo que generó otro módulo y las notas marcadas (CP4)', () => {
       puedeDesmarcar: false,
     });
     expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque', esDeOtroModulo: true })).puedeBlanquear).toBe(false);
+    expect(
+      accionesDeCheque('emitido', limpia({ tipo: 'cheque', parteDeApertura: 'cheque_en_circulacion' })).puedeBlanquear,
+    ).toBe(false);
+    expect(
+      accionesDeCheque('emitido', limpia({ tipo: 'cheque', parteDeApertura: 'cheque_posfechado' })).puedeBlanquear,
+    ).toBe(false);
   });
 
   it('una nota de débito suelta con el concepto de pago a proveedores está marcada: se desmarca, no se marca', () => {

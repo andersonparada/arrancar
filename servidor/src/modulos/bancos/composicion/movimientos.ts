@@ -12,6 +12,7 @@ import { rutasMovimientos } from '../http/movimientos.rutas.js';
 import { ConsultasMovimientosDrizzle } from '../infraestructura/persistencia/consultas-movimientos.drizzle.js';
 import { RepositorioMovimientosDrizzle } from '../infraestructura/persistencia/repositorio-movimientos.drizzle.js';
 import { PoliticaDeSobregiroEnConfiguracion } from '../infraestructura/politica-de-sobregiro.configuracion.js';
+import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 
 function dependenciasDeMovimientos() {
   const { unidadDeTrabajo, auditoria, correlativos, reloj } = dependenciasCompartidas();
@@ -24,7 +25,7 @@ function dependenciasDeMovimientos() {
     reloj,
     consultas,
     repositorio: new RepositorioMovimientosDrizzle(),
-    reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro }),
+    reglas: new ReglasDeLaCuenta({ consultas, politicaDeSobregiro, cargaInicial: new CargaInicialEnMediador() }),
   };
 }
 

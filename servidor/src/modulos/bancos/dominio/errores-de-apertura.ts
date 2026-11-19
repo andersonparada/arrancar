@@ -70,7 +70,7 @@ export class NumeroDeChequeObligatorio extends DatoDeAperturaInvalido {
 export class PagadorObligatorio extends DatoDeAperturaInvalido {
   readonly codigo = 'pagador_obligatorio';
   constructor() {
-    super('Escriba quién debe ese dinero (el pagador del depósito rechazado).', 'pagador');
+    super('Escriba quién debe ese dinero (el pagador del depósito rechazado, hasta 150 caracteres).', 'pagador');
   }
 }
 
@@ -137,6 +137,22 @@ export class NoSeAnulaElSaldoDelBanco extends ReglaDeNegocioInfringida {
   }
 }
 
+export class ElPosfechadoSeAnulaComoCheque extends ReglaDeNegocioInfringida {
+  readonly codigo = 'el_posfechado_se_anula_como_cheque';
+  constructor() {
+    super(
+      'Un cheque posfechado no es una partida de apertura: con la carga abierta corríjalo o elimínelo aquí; con la carga cerrada anúlelo en Cheques.',
+    );
+  }
+}
+
+export class PartidaDeAperturaNoEncontrada extends ReglaDeNegocioInfringida {
+  readonly codigo = 'no_es_una_partida_de_apertura';
+  constructor() {
+    super('Este movimiento no es una partida de la carga inicial.');
+  }
+}
+
 export class NoSeBlanqueaUnChequeDeApertura extends ReglaDeNegocioInfringida {
   readonly codigo = 'no_se_blanquea_un_cheque_de_apertura';
   constructor() {
@@ -153,18 +169,18 @@ export class PrimeraConciliacionDeOtroMes extends ReglaDeNegocioInfringida {
 
 export class FechaDeInicioConSaldosDeBancos extends ReglaDeNegocioInfringida {
   readonly codigo = 'fecha_de_inicio_con_saldos_de_bancos';
-  constructor({ cantidad, fecha, global }: { cantidad: number; fecha: string; global: boolean }) {
+  constructor({ cantidad, fecha, global }: { cantidad: number; fecha: string | null; global: boolean }) {
     super(
       global
-        ? `${cantidad} cuentas bancarias tienen un saldo inicial del ${fechaLegible(fecha)}, posterior a la fecha de inicio nueva. Corríjalos en Bancos → Saldos iniciales antes de cambiar la fecha de inicio.`
-        : `${cantidad} cuentas bancarias tienen saldo inicial al ${fechaLegible(fecha)}: el saldo del estado de cuenta es de esa fecha. Elimínelos en Bancos → Saldos iniciales antes de cambiar la fecha de inicio.`,
+        ? `${cantidad} cuentas bancarias tienen un saldo inicial del ${fechaLegible(fecha ?? '')}, posterior a la fecha de inicio nueva. Corríjalos en Bancos → Saldos iniciales antes de cambiar la fecha de inicio.`
+        : `${cantidad} cuentas bancarias tienen saldo inicial${fecha ? ` al ${fechaLegible(fecha)}` : ''}: el saldo del estado de cuenta es de esa fecha. Elimínelos en Bancos → Saldos iniciales antes de cambiar la fecha de inicio.`,
     );
   }
 }
 
 /** Aviso (sin bloquear) de un cheque que, al corte, ya tiene `meses` desde su fecha (Código de Comercio, art. 508). */
 export const mensajeDeChequeAntiguo = (cheque: { numero: number; fecha: string; corte: string; meses: number }) =>
-  `El cheque ${cheque.numero} es del ${fechaLegible(cheque.fecha)}: al ${fechaLegible(cheque.corte)} tiene ${cheque.meses} meses. Desde los 6 meses de su fecha el banco puede negarse a pagarlo (Código de Comercio, art. 508): revise si sigue en circulación.`;
+  `El cheque ${cheque.numero} es del ${fechaLegible(cheque.fecha)}: al ${fechaLegible(cheque.corte)} tiene ${cheque.meses} meses. Pasados 6 meses de su fecha, el banco ya no está obligado a pagarlo (Código de Comercio, art. 508). Revise si sigue en circulación o si conviene anularlo y reponerlo.`;
 
 /** Aviso (sin bloquear) de un depósito en tránsito con demasiados días al corte. */
 export const mensajeDeDepositoViejo = (deposito: { fecha: string; dias: number }) =>

@@ -36,6 +36,7 @@ import { QuitarEstadoDeCuenta } from './quitar-estado-de-cuenta.js';
 import { SubirEstadoDeCuenta } from './subir-estado-de-cuenta.js';
 import { TerminarConciliacion } from './terminar-conciliacion.js';
 import { TranscribirSaldo } from './transcribir-saldo.js';
+import { CARGA_SIN_FECHA_DE_INICIO } from '../../../pruebas/dobles-de-carga-inicial.js';
 
 export const operador = operadorDePrueba();
 /** Otra persona de la misma empresa: la que autoriza (no puede ser quien elaboró). */
@@ -73,9 +74,16 @@ interface DoblesDePrueba {
   politicaDeEstadoDeCuenta: PoliticaDeEstadoDeCuentaFija;
 }
 
+const reglasSinSobregiro = (movimientos: MovimientosEnMemoria) =>
+  new ReglasDeLaCuenta({
+    consultas: movimientos,
+    politicaDeSobregiro: SIN_SOBREGIRO,
+    cargaInicial: CARGA_SIN_FECHA_DE_INICIO,
+  });
+
 function dependenciasDePrueba(dobles: DoblesDePrueba) {
   const { movimientos, conciliaciones, auditoria, documentos, politicaDeEstadoDeCuenta } = dobles;
-  const reglas = new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro: SIN_SOBREGIRO });
+  const reglas = reglasSinSobregiro(movimientos);
   const comunes = dependenciasComunes(auditoria);
   const deConciliaciones = {
     ...comunes,
