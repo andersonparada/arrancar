@@ -39,4 +39,10 @@ describe('detallesDeChequera', () => {
     expect(etiquetas(chequera('a', false))).toContain('Disponibles');
     expect(etiquetas(chequera('b', true))).not.toContain('Disponibles');
   });
+
+  it('la chequera de la carga inicial no muestra con qué se imprime: no se imprime', () => {
+    const etiquetas = (registro: Chequera) => detallesDeChequera(registro).map((d) => d.etiqueta);
+    expect(etiquetas(chequera('a', false))).toContain('Se imprime con');
+    expect(etiquetas(chequera('b', true))).not.toContain('Se imprime con');
+  });
 });

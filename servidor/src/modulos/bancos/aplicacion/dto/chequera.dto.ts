@@ -12,6 +12,8 @@ export interface ChequeraDto {
   disponibles: number;
   emitidos: number;
   anulados: number;
+  /** La chequera de la carga inicial: no se emite, no se imprime ni se inactiva. */
+  deApertura: boolean;
   /** El formato guardado con que se imprimen sus cheques (y su nombre) o la plantilla de fábrica; los dos `null` si todavía no tiene. */
   formatoDeChequeId: string | null;
   formatoNombre: string | null;

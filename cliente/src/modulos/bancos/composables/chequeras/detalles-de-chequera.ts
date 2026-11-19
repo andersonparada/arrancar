@@ -8,7 +8,7 @@ export const rangoDeChequera = (registro: Pick<Chequera, 'serie' | 'desde' | 'ha
 
 /**
  * Lo que muestra la tarjeta de una chequera: su cuenta (útil en la pantalla de
- * administración, que junta las de toda la empresa) y sus conteos por estado (la de la carga inicial no tiene disponibles: no se emite).
+ * administración, que junta las de toda la empresa) y sus conteos por estado (la de la carga inicial no tiene disponibles ni formato: no se emite ni se imprime).
  */
 export function detallesDeChequera(registro: Chequera): DetalleDeRegistro[] {
   const disponibles = { etiqueta: 'Disponibles', valor: String(registro.disponibles) };
@@ -17,6 +17,6 @@ export function detallesDeChequera(registro: Chequera): DetalleDeRegistro[] {
     ...(registro.deApertura ? [] : [disponibles]),
     { etiqueta: 'Emitidos', valor: String(registro.emitidos) },
     { etiqueta: 'Anulados', valor: String(registro.anulados) },
-    { etiqueta: 'Se imprime con', valor: textoDelFormatoDeChequera(registro) },
+    ...(registro.deApertura ? [] : [{ etiqueta: 'Se imprime con', valor: textoDelFormatoDeChequera(registro) }]),
   ];
 }
