@@ -5,6 +5,7 @@ import { rutasDeActivos } from './composicion/activos.js';
 import { rutasDeClases } from './composicion/clases.js';
 import { rutasDeBandeja, rutasDeCostos } from './composicion/costos.js';
 import { rutasDeDepreciacion } from './composicion/depreciacion.js';
+import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
 // generador: importaciones
 
 /** Control, capitalización y depreciación contable y fiscal de los bienes de la empresa. Ver `docs/modulos/activos-fijos.md`. */
@@ -44,6 +45,30 @@ export const moduloActivosFijos: DefinicionModulo = {
     { clave: 'activos-fijos.depreciacion.ver', descripcion: 'Ver los cierres de depreciación y revisar un mes' },
     { clave: 'activos-fijos.depreciacion.cerrar', descripcion: 'Cerrar un mes de depreciación' },
     { clave: 'activos-fijos.depreciacion.reabrir', descripcion: 'Reabrir el último mes de depreciación cerrado' },
+    {
+      clave: 'activos-fijos.saldos-iniciales.ver',
+      descripcion: 'Ver los saldos iniciales de activos fijos y su cuadre',
+    },
+    {
+      clave: 'activos-fijos.saldos-iniciales.crear',
+      descripcion: 'Cargar saldos iniciales de activos fijos (con la carga inicial abierta)',
+    },
+    {
+      clave: 'activos-fijos.saldos-iniciales.editar',
+      descripcion: 'Corregir saldos iniciales de activos fijos (con la carga abierta y sin meses cerrados)',
+    },
+    {
+      clave: 'activos-fijos.saldos-iniciales.eliminar',
+      descripcion: 'Eliminar saldos iniciales de activos fijos (con la carga abierta y sin meses cerrados)',
+    },
+    {
+      clave: 'activos-fijos.saldos-iniciales.importar',
+      descripcion: 'Importar saldos iniciales de activos fijos desde Excel (y bajar la plantilla)',
+    },
+    {
+      clave: 'activos-fijos.saldos-iniciales.exportar',
+      descripcion: 'Exportar saldos iniciales de activos fijos a Excel',
+    },
     // generador: permisos
   ],
   configuracion: configuracionDeActivosFijos,
@@ -53,6 +78,7 @@ export const moduloActivosFijos: DefinicionModulo = {
     rutasDeBandeja(),
     rutasDeCostos(),
     rutasDeDepreciacion(),
+    rutasDeSaldosIniciales(),
     // generador: rutas
   ]),
 };

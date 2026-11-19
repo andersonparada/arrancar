@@ -56,6 +56,14 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
       .where(eq(activos.id, activo.id.valor));
   }
 
+  async actualizarAlta(activo: Activo): Promise<void> {
+    const { esAlta: _esAlta, empresaId: _empresaId, activoId: _activoId, ...cambios } = filaDeAlta(activo);
+    await transaccionEnCurso()
+      .update(traslados)
+      .set(cambios)
+      .where(and(eq(traslados.activoId, activo.id.valor), eq(traslados.esAlta, true)));
+  }
+
   async eliminar(activo: Activo): Promise<void> {
     const transaccion = transaccionEnCurso();
     await transaccion.delete(tramos).where(eq(tramos.activoId, activo.id.valor));
@@ -71,6 +79,15 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
       .where(sql`upper(${activos.codigo}) = upper(${codigo})`)
       .limit(1);
     return fila !== undefined;
+  }
+
+  async idPorCodigo(codigo: string): Promise<string | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ id: activos.id })
+      .from(activos)
+      .where(sql`upper(${activos.codigo}) = upper(${codigo.trim()})`)
+      .limit(1);
+    return fila?.id ?? null;
   }
 
   async codigosUsados(codigos: readonly string[]): Promise<Set<string>> {
