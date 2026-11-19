@@ -1321,8 +1321,8 @@ dos decimales.
 | AF-6c | Saldos iniciales (Administración) | frontend | |
 | **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend **Programado, en revisión** (2026-11-19; migración `0007_af7_mejoras`; notas abajo) |
 | AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | |
-| **AF-8** | Traslados con boleta (grupo), anular | backend | |
-| **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | |
+| **AF-8** | Traslados con boleta (grupo), anular | backend | **Programado, en revisión** (2026-11-19; sin migración; notas abajo) |
+| **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | **Parcial** (2026-11-19): hecho `aBodega`, `marcarOcioso` y el título configurable; falta subir el escaneo firmado (espera a `seguridad`) |
 | AF-8c | Traslados y boleta imprimible | frontend | |
 | AFI-4c (con AF-8c) | Entregar y devolver; casilla «A la bodega»; selección múltiple; subir la boleta firmada | frontend | |
 | **AFI-5** (después de AF-7 y AF-8) | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl` (y su uso en cierre, ficha y bajas), dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §7.6 y 50 divisiones de 1, y de integración (cierre después de dividir, baja después de dividir, anular) | backend | |
@@ -1360,6 +1360,17 @@ dos decimales.
   correlativo. Las unidades de una asignación comparten `alta_conjunta_id` solo si son más de una.
 - El archivo del costo manual (`archivo_id`) tiene su columna, pero la ruta de subida queda pendiente (revisión de `seguridad`).
 - La lista de costos de un activo y su ficha usan `activos.ver`; la ficha trae `costo` (Σ de los vigentes).
+
+**Notas de lo programado en AF-8 (servidor, sin migración):**
+
+- Anular es por **boleta** (`POST …/traslados/:grupoId/anular`): anula todos los renglones, devuelve cada activo a la fila vigente
+  anterior de su historial y solo se puede si es el último traslado de cada uno y el mes está abierto. La auditoría `anular` lleva la
+  boleta como estaba (`registro_id` = el `grupoId`). Un componente se traslada con su principal, no solo.
+- El renglón acepta `cantidad` solo si es la del activo entero (`traslado_parcial_no_disponible`): la división llega con AFI-5 y AFI-6.
+- `activos-fijos.documentos.nombre_de_responsiva` (empresa, pública) es el título de la boleta; `GET …/boleta` devuelve los datos que
+  la pantalla imprime (AF-8c). Eventos `activo_trasladado` y `traslado_anulado` (este no estaba en §9).
+- Falta para AFI-4: subir y bajar el escaneo firmado (`boletas_firmadas`, §5.16). Falta para AF-8c: pantalla de traslados y boleta
+  imprimible. `GET /activos-fijos/ubicaciones` sigue con `activos.ver` (el diseño dice `traslados.crear` o `inventarios.crear`).
 
 **Notas de lo programado en AF-7 (servidor, migración `0007_af7_mejoras`):**
 

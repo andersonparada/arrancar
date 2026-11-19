@@ -4057,3 +4057,24 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   saldos iniciales, sigue siendo la vida restante desde el saldo). `aplicarEstimacion` recibe los tramos vigentes, no
   reescribe el activo si la vida y el residual no cambian (anular un costo posterior ya no lo toca) y rechaza con
   `VidaUtilTotalExcedida` una vida guardada de más de 1,200 meses (antes era un 500 por el check de la tabla).
+- **2026-11-19 — AF-8 (Activos fijos, servidor): traslados con boleta y anular.** Sin migración (la tabla `traslados`, con
+  `grupo_id`, `numero`, `a_bodega` y la anulación completa, ya estaba en `0002`). Dominio: `Traslado` (renglón de una boleta; fecha no
+  futura, quien recibe y motivo obligatorios, anular con motivo) y `Activo.moverA`. Casos de uso: `TrasladarActivos` (varios activos con
+  una boleta numerada por el correlativo `activos-fijos.traslados`, uno por boleta; los componentes se mueven con su principal;
+  `aBodega` copiado a `en_bodega`; `marcarOcioso` solo con `aBodega`, con la fecha y el motivo del traslado y auditoría `corregir`),
+  `AnularTraslado` (anula **la boleta entera**: cada activo vuelve a la fila vigente anterior de su historial; auditoría `anular` con la
+  boleta como estaba) y `ObtenerBoleta`. Rutas: `POST /activos-fijos/traslados`, `POST …/traslados/:grupoId/anular`,
+  `GET …/traslados/:grupoId/boleta`; permisos nuevos `activos-fijos.traslados.crear` y `.anular` (la boleta se ve con `activos.ver`);
+  variable de empresa `activos-fijos.documentos.nombre_de_responsiva` (pública, «Responsiva de bienes»); eventos
+  `activo_trasladado` y `traslado_anulado`. Pruebas: 25 de dominio y casos de uso en memoria (más 2 de `Activo.moverA`) y 7 de API. Decisiones tomadas
+  por la programación: (1) anular es por **boleta** (`:grupoId`), no por activo, porque la boleta es un solo documento numerado y
+  «boleta anulada» es lo que impide subir la firmada; falla entera si algún activo ya tiene un traslado posterior
+  (`traslado_no_es_el_ultimo`); (2) un componente no se traslada solo (`componente_se_traslada_con_su_principal`); el principal lo
+  lleva y la boleta lo lista «componente de AF-xxxx»; (3) `cantidad` se acepta en el renglón pero solo si es la del activo entero
+  (`traslado_parcial_no_disponible`): la división automática llega con AFI-5 y AFI-6; (4) el responsable del traslado es texto (el
+  usuario responsable queda en nulo; pendiente un selector de usuarios si se quiere); (5) anular no quita la marca de ocioso que puso
+  el traslado (se quita desde la ficha); (6) se agregó el evento `traslado_anulado`, que el diseño no listaba, para que quien
+  escuche el centro de costo sepa que el activo volvió; (7) el traslado no entra en la auditoría permanente (el diseño solo
+  lista activos, costos, mejoras, saldos, bajas, cierres y divisiones). Pendiente de AFI-4: subir y bajar el escaneo firmado
+  (`00xx_af8_boletas_firmadas`), que espera la revisión de `seguridad` (archivos, qpdf, límite de subidas). Lo que solo un cliente
+  puede confirmar: si anular por activo (no por boleta entera) les hace falta.
