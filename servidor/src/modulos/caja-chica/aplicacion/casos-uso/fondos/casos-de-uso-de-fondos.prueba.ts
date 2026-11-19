@@ -39,6 +39,7 @@ function armar(cifras: Partial<DatosDeLectura> = {}) {
     auditoria,
     publicadorEventos: publicador,
     reloj: new RelojFijo('2026-11-18'),
+    configuracionDeArqueos: { diasParaAvisar: async () => 30 },
   };
 }
 
