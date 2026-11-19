@@ -10,4 +10,8 @@ describe('duracionDeAviso', () => {
     expect(duracionDeAviso('a'.repeat(200))).toBe(16000);
     expect(duracionDeAviso('a'.repeat(1000))).toBe(20000);
   });
+
+  it('con un enlace se agregan 8 segundos para decidir si se sigue', () => {
+    expect(duracionDeAviso('Cheque emitido.', true)).toBe(4500 + 8000);
+  });
 });

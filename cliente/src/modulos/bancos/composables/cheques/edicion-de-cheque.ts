@@ -10,12 +10,13 @@ export interface EdicionDeCheque {
   monto: string | number;
   beneficiario: string;
   noNegociable: boolean;
+  paraAbonoEnCuenta: boolean;
   conceptoId: string | null;
   referencia: string;
   observaciones: string;
 }
 
-/** La ventana recién abierta, vacía y con "No negociable" marcado por omisión. */
+/** La ventana recién abierta, vacía, con «No negociable» marcado y «Para abono en cuenta» sin marcar. */
 export function edicionDeCheque(): EdicionDeCheque {
   return {
     abierta: true,
@@ -25,6 +26,7 @@ export function edicionDeCheque(): EdicionDeCheque {
     monto: '',
     beneficiario: '',
     noNegociable: true,
+    paraAbonoEnCuenta: false,
     conceptoId: null,
     referencia: '',
     observaciones: '',
@@ -37,6 +39,7 @@ export const datosDeEmisionDeCheque = (edicion: EdicionDeCheque): DatosDeEmision
   monto: textoDeEdicion(edicion.monto),
   beneficiario: edicion.beneficiario.trim(),
   noNegociable: edicion.noNegociable,
+  paraAbonoEnCuenta: edicion.paraAbonoEnCuenta,
   conceptoId: edicion.conceptoId ?? '',
   referencia: textoONulo(edicion.referencia),
   observaciones: textoONulo(edicion.observaciones),

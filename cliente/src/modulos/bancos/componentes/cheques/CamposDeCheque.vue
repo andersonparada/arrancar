@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
+import CondicionesDelCheque from '@/modulos/core/componentes/CondicionesDelCheque.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import AvisoDeFecha from '../comunes/AvisoDeFecha.vue';
@@ -48,7 +48,10 @@ const edicion = defineModel<EdicionDeCheque>({ required: true });
       :error="errores.conceptoId"
     />
     <SugerenciaAlCapturar :sugerencia="sugerencia" @usar="edicion.conceptoId = $event" />
-    <CampoInterruptor v-model="edicion.noNegociable" etiqueta="No negociable" />
+    <CondicionesDelCheque
+      v-model:no-negociable="edicion.noNegociable"
+      v-model:para-abono-en-cuenta="edicion.paraAbonoEnCuenta"
+    />
     <CampoTexto v-model="edicion.referencia" etiqueta="Referencia" :error="errores.referencia" />
     <CampoTexto v-model="edicion.observaciones" etiqueta="Observaciones" multilinea :error="errores.observaciones" />
   </div>

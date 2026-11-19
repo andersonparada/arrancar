@@ -1,19 +1,21 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ChequeListado } from '../../servicios/cheques.api';
-import { detallesDeChequeListado, tituloDeChequeListado } from './detalles-de-cheque-listado';
+import { detallesDeChequeListado, insigniaDeChequeListado, tituloDeChequeListado } from './detalles-de-cheque-listado';
 
 // `detallesDeChequeListado` da formato con `formatearFecha`, que lee la sesión (Pinia).
 beforeEach(() => setActivePinia(createPinia()));
 
 const base: ChequeListado = {
   id: 'cheque-1',
+  chequeraId: 'chequera-1',
   numero: 7,
   serie: 'A',
   cuentaBancariaId: 'cuenta-1',
   cuentaBancariaNombre: 'Cuenta monetaria',
   estado: 'emitido',
   noNegociable: true,
+  paraAbonoEnCuenta: false,
   fecha: '2026-09-27',
   monto: '150.00',
   beneficiario: 'Un proveedor',
@@ -21,9 +23,14 @@ const base: ChequeListado = {
   anuladoEn: null,
   motivoDeAnulacion: null,
   causaDeAnulacion: null,
+  aviso: null,
+  impresoEn: null,
   moduloDeOrigen: null,
   puedeAnular: true,
   puedeBlanquear: true,
+  puedeImprimir: true,
+  puedeReimprimir: false,
+  puedePasarAOtroFormulario: false,
 };
 
 describe('título del cheque listado', () => {
@@ -54,6 +61,21 @@ describe('detalles del cheque listado', () => {
     expect(detalles).toContainEqual({ etiqueta: 'Causa de anulación', valor: 'Por caducidad' });
   });
 
+  it('agrega «Para abono en cuenta» solo si el cheque lo lleva', () => {
+    expect(detallesDeChequeListado({ ...base, paraAbonoEnCuenta: true })).toContainEqual({
+      etiqueta: 'Para abono en cuenta',
+      valor: 'Sí',
+    });
+    expect(detallesDeChequeListado(base).map((d) => d.etiqueta)).not.toContain('Para abono en cuenta');
+  });
+
+  it('agrega cuándo se imprimió solo si ya se imprimió', () => {
+    expect(detallesDeChequeListado(base).map((d) => d.etiqueta)).not.toContain('Impreso');
+    expect(
+      detallesDeChequeListado({ ...base, impresoEn: '2026-09-27T10:00:00.000Z' }).map((d) => d.etiqueta),
+    ).toContain('Impreso');
+  });
+
   it('sin motivo de anulación no lo agrega', () => {
     expect(detallesDeChequeListado(base).map((d) => d.etiqueta)).not.toContain('Motivo de anulación');
   });
@@ -64,5 +86,25 @@ describe('detalles del cheque listado', () => {
       valor: 'Cuentas por pagar',
     });
     expect(detallesDeChequeListado(base).map((d) => d.etiqueta)).not.toContain('Origen');
+  });
+});
+
+describe('insignia del cheque listado', () => {
+  it('un emitido sin imprimir no lleva marca y uno impreso dice «Impreso»', () => {
+    expect(insigniaDeChequeListado(base)).toBeUndefined();
+    expect(insigniaDeChequeListado({ ...base, impresoEn: '2026-09-27T10:00:00.000Z' })).toBe('Impreso');
+  });
+
+  it('un anulado dice cómo terminó: inutilizado, extraviado o anulado', () => {
+    const anulado = { ...base, estado: 'anulado' as const };
+    expect(insigniaDeChequeListado({ ...anulado, causaDeAnulacion: 'inutilizado' })).toBe('Inutilizado');
+    expect(insigniaDeChequeListado({ ...anulado, causaDeAnulacion: 'extraviado' })).toBe('Extraviado');
+    expect(insigniaDeChequeListado({ ...anulado, causaDeAnulacion: 'manual' })).toBe('Anulado');
+    expect(insigniaDeChequeListado({ ...anulado, causaDeAnulacion: null })).toBe('Anulado');
+  });
+
+  it('el aviso del extraviado sale en los detalles, a lo ancho', () => {
+    const detalles = detallesDeChequeListado({ ...base, aviso: 'Avise al banco por escrito.' });
+    expect(detalles).toContainEqual({ etiqueta: 'Aviso', valor: 'Avise al banco por escrito.', largo: true });
   });
 });

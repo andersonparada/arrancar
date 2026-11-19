@@ -65,6 +65,14 @@ const clase =
           Ver el retiro
         </RouterLink>
         <RouterLink
+          v-if="resultado.forma === 'cheque'"
+          v-permiso="'bancos.cheques.imprimir'"
+          :to="{ name: 'bancos.cheques', query: { cuentaBancariaId: resultado.movimiento.cuentaBancariaId } }"
+          :class="clase"
+        >
+          Imprimir el cheque
+        </RouterLink>
+        <RouterLink
           v-permiso="'cuentas-por-pagar.pagos.pagar-en-efectivo'"
           :to="{ name: 'cuentas-por-pagar.retiros.pagar', params: { id: resultado.id } }"
           class="inline-flex items-center justify-center rounded-lg bg-campo-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-campo-800 dark:bg-campo-600 dark:hover:bg-campo-500"

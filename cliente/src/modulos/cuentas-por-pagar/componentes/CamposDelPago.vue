@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
+import CondicionesDelCheque from '@/modulos/core/componentes/CondicionesDelCheque.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import {
   MAXIMO_DE_REFERENCIA,
@@ -64,12 +64,11 @@ const nombreDeLaReferencia = (forma: EdicionDePago['forma']): string =>
       ayuda="Por qué se da por pagado: por ejemplo, «se pagó en enero con el cheque 123 del sistema anterior»."
       :error="errores.motivo"
     />
-    <CampoInterruptor
+    <CondicionesDelCheque
       v-if="edicion.forma === 'cheque'"
-      v-model="edicion.noNegociable"
+      v-model:no-negociable="edicion.noNegociable"
+      v-model:para-abono-en-cuenta="edicion.paraAbonoEnCuenta"
       class="sm:col-span-2"
-      etiqueta="Cheque no negociable"
-      descripcion="Solo se puede depositar en la cuenta del beneficiario. Se recomienda dejarlo encendido."
     />
     <CampoTexto v-model="edicion.observaciones" class="sm:col-span-2" etiqueta="Observaciones" multilinea />
   </div>

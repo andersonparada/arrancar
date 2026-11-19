@@ -8,6 +8,7 @@ import { usarSugerenciaAlCapturar } from '../sugerencias/usar-sugerencia-al-capt
 import { liberarReservados, opcionesDeConceptoDeCheque } from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
 import { mensajesDeAvisos } from '../movimientos/avisos-de-bancos';
+import { enlaceParaImprimir } from '../impresion-de-cheques/enlace-de-impresion';
 import { datosDeEmisionDeCheque, edicionDeCheque, type EdicionDeCheque } from './edicion-de-cheque';
 import { usarSeleccionDeCheque } from './usar-seleccion-de-cheque';
 
@@ -33,6 +34,7 @@ function usarConceptosDeCheque(edicion: Ref<EdicionDeCheque>) {
 /** Enviar la emisión: avisar, cerrar la ventana y recargar; los errores se reparten por campo. */
 function usarEmision(edicion: Ref<EdicionDeCheque>, alGuardar: () => Promise<void>) {
   const avisos = usarAvisos();
+  const sesion = usarSesion();
   const { enviando, errores, enviar } = usarFormulario();
 
   async function guardar(): Promise<void> {
@@ -43,7 +45,7 @@ function usarEmision(edicion: Ref<EdicionDeCheque>, alGuardar: () => Promise<voi
       respuesta = await apiCheques.emitir(chequeId, datosDeEmisionDeCheque(edicion.value));
     });
     if (!emitido) return;
-    avisos.exito('Cheque emitido.');
+    avisos.exito('Cheque emitido.', enlaceParaImprimir(chequeId, sesion.puede('bancos.cheques.imprimir')));
     mensajesDeAvisos(respuesta).forEach((mensaje) => avisos.info(mensaje));
     edicion.value.abierta = false;
     await alGuardar();

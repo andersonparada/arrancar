@@ -2,6 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   beneficiarioEfectivo,
+  condicionesDelCheque,
   edicionDeRetiroVacia,
   erroresDelRetiro,
   esAlPortador,
@@ -90,6 +91,7 @@ describe('el cuerpo para el servidor', () => {
       observaciones: null,
       chequeraId: 'ch1',
       noNegociable: true,
+      paraAbonoEnCuenta: false,
       beneficiario: null,
     });
   });
@@ -108,6 +110,21 @@ describe('el cuerpo para el servidor', () => {
   it('apagar «no negociable» y escribir otro beneficiario se respeta', () => {
     const cuerpo = solicitudDeRetiro(completa({ noNegociable: false, beneficiario: ' Finca S.A. ' }));
     expect(cuerpo).toMatchObject({ noNegociable: false, beneficiario: 'Finca S.A.' });
+  });
+});
+
+describe('las condiciones del cheque', () => {
+  it('se dicen en la confirmación, juntas o por separado', () => {
+    expect(condicionesDelCheque({ noNegociable: true, paraAbonoEnCuenta: false })).toBe(' no negociable');
+    expect(condicionesDelCheque({ noNegociable: false, paraAbonoEnCuenta: true })).toBe(' para abono en cuenta');
+    expect(condicionesDelCheque({ noNegociable: true, paraAbonoEnCuenta: true })).toBe(
+      ' no negociable y para abono en cuenta',
+    );
+    expect(condicionesDelCheque({ noNegociable: false, paraAbonoEnCuenta: false })).toBe('');
+  });
+
+  it('el cheque para abono en cuenta viaja marcado', () => {
+    expect(solicitudDeRetiro(completa({ paraAbonoEnCuenta: true }))).toMatchObject({ paraAbonoEnCuenta: true });
   });
 });
 

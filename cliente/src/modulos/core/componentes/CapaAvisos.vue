@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CircleCheck, CircleAlert, Info, X } from 'lucide-vue-next';
+import { RouterLink } from 'vue-router';
 import { usarAvisos } from '../almacenes/avisos';
 import BotonBase from './BotonBase.vue';
 import VentanaModal from './VentanaModal.vue';
@@ -32,7 +33,17 @@ const colores = {
         :role="aviso.tipo === 'error' ? 'alert' : 'status'"
       >
         <component :is="iconos[aviso.tipo]" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        <p class="flex-1">{{ aviso.mensaje }}</p>
+        <p class="flex-1">
+          {{ aviso.mensaje }}
+          <RouterLink
+            v-if="aviso.enlace"
+            :to="aviso.enlace.ruta"
+            class="ml-1 font-semibold underline underline-offset-2 hover:no-underline"
+            @click="avisos.cerrar(aviso.id)"
+          >
+            {{ aviso.enlace.texto }}
+          </RouterLink>
+        </p>
         <button
           type="button"
           class="opacity-80 hover:opacity-100"

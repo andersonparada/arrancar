@@ -100,6 +100,8 @@ export type SolicitudDeRetiro =
       forma: 'cheque';
       chequeraId: string;
       noNegociable: boolean;
+      /** «PARA ABONO EN CUENTA» (art. 521): apagado por omisión. */
+      paraAbonoEnCuenta: boolean;
       beneficiario: string | null;
     })
   | (SolicitudBaseDeRetiro & { forma: 'nota_de_debito'; cuentaBancariaId: string; referencia: string | null });
