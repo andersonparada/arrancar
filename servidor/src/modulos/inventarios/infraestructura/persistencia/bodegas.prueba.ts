@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { configuracion } from '../../../../configuracion.js';
 import { bd, grupoConexiones } from '../../../core/base-datos/conexion.js';
 import { migrarModulos } from '../../../core/base-datos/migrador.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
 import type { ContextoEmpresa } from '../../../core/compartido/aplicacion/contexto-empresa.js';
 import { enTransaccionSegura } from '../../../core/compartido/pruebas/en-transaccion-segura.js';
 import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
@@ -108,7 +109,7 @@ beforeAll(async () => {
       ['bodeguerouno', 'bodegueroodos', 'bodegueroajeno'].map((u) => ({ usuario: u, nombres: u, hashContrasena: 'x' })),
     )
     .returning();
-  const filas = await bd
+  const filas = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: cuenta!.id, nombre: 'Empresa A1' },
@@ -118,7 +119,7 @@ beforeAll(async () => {
   cuentaId = cuenta!.id;
   [uno, dos, ajeno] = personas.map((p) => p.id) as [string, string, string];
   [empresaA1, empresaA2] = filas.map((f) => f.id) as [string, string];
-  await bd.insert(empresaUsuarios).values([
+  await bdPropietario.insert(empresaUsuarios).values([
     { empresaId: empresaA1, usuarioId: uno },
     { empresaId: empresaA1, usuarioId: dos },
     { empresaId: empresaA2, usuarioId: ajeno },
