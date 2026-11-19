@@ -3413,3 +3413,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   pasos). Decisiones: los puertos y las órdenes a Bancos son propios del módulo (no se importa Cuentas por pagar); la
   devolución y el reembolso aún no existen, así que el aviso de Bancos sobre ellos se rechaza igual (CL-4 los reabrirá);
   `gastos_sin_documento.permitidos` se declara en CL-3, con su caso de uso.
+- **2026-11-19 (Bancos: aprobaciones, tarjeta y CP-AP, respuestas y validación del contador; docs):** el usuario aceptó
+  todas las recomendaciones de §16 de `diseno-bancos-aprobaciones-tarjeta-y-cp-ap.md` (Q-A1 a Q-A9, Q-T2 a Q-T7, Q-N2,
+  Q-N3, Q-AP1, Q-AP2 y Q-O1; §17). El contador validó el diseño
+  (`dictamen-bancos-aprobaciones-tarjeta-validacion-2026-11-19.md`, «correcto con ajustes»; §18), incorporado con la marca
+  **[contador 19/11]**: tipo de referencia del Banguat para los niveles; ayuda de `niveles` (CP lleva dos personas) y de
+  las variables de tipo (los anticipos de Cuentas por liquidar no pasan por aprobación); cita de NIIF 7.18 corregida y
+  ayuda del concepto del pago de la tarjeta; interés de las cuotas como cargo aparte y parte no corriente sin columna
+  nueva; avisos de retención de la forma `tarjeta` separados por impuesto (IVA lo retiene el emisor); en la bandeja,
+  `ya_pagada` liga el **movimiento del pago sustituto** (`movimiento_de_pago_id`, órdenes
+  `bancos.ligar_/desligar_pago_sustituto_de_apertura`, concepto `pago_a_proveedor`) o el documento en efectivo, causa
+  nueva `pagada_antes_del_corte`, columna `naturaleza`, prescripción sin plazos fijos y con fecha elegida, texto de
+  `no_se_debe` sobre el IVA, aviso de NIT nulo desde Q30,000 y aviso del posfechado cobrado en la primera conciliación.
+  Los datos de CP-AP se parten en AP-1 (pagos) y **AP-4a** (bandeja), con **AP-4b** (órdenes del pago sustituto en Bancos).
+  Textos legales con la marca `pendienteDeCotejo` (V-14): no bloquean programar, sí terminar la QA. Ninguna corrección
+  contradice una respuesta del usuario; quedan abiertas **P-1 a P-5** (§19), que solo esperan AP-4a, AP-4b, AP-4 y AP-6 (y
+  textos de TC). **Primer paso programable: AP-0.** Pendiente para el contador: VC-AP1 (pago sustituto registrado por otro
+  módulo).
