@@ -71,8 +71,7 @@ describe('cuerpoDeDocumento', () => {
       {
         conceptoId: 'c-1',
         descripcion: null,
-        tipo: 'bien',
-        esActivoFijo: false,
+        ...{ tipo: 'bien', esActivoFijo: false, esInventario: false },
         combustibleId: null,
         galones: null,
         total: '112.00',

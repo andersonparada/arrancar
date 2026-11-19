@@ -13,6 +13,7 @@ export interface LineaDeDocumentoDto {
   descripcion: string | null;
   tipo: 'bien' | 'servicio';
   esActivoFijo: boolean;
+  esInventario: boolean;
   combustible: {
     vigenciaDeCombustibleId: string;
     galones: string;

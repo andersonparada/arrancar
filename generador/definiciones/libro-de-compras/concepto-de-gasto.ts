@@ -22,5 +22,6 @@ export const recurso = definirRecurso({
     tipoPorOmision: lista({ bien: 'Bien', servicio: 'Servicio' }, { requerido: true, etiqueta: 'Tipo por omisión' }),
     esProductoAgropecuario: siNo({ etiqueta: 'Es producto agropecuario' }),
     esActivoFijo: siNo({ etiqueta: 'Es activo fijo' }),
+    esInventario: siNo({ etiqueta: 'Es inventario' }),
   },
 });

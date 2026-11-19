@@ -1,6 +1,11 @@
 import { boolean, primaryKey, text, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { esquemaCore } from '../../../compartido/infraestructura/persistencia/esquema-core.tablas.js';
-import { idPrimario, marcasDeTiempo } from '../../../base-datos/columnas.js';
+import {
+  idPrimario,
+  marcasDeTiempo,
+  politicasDeEscrituraPorCuenta,
+  politicasDeEscrituraPorCuentaDe,
+} from '../../../base-datos/columnas.js';
 import { nombreNormalizado } from '../../../base-datos/nombre-normalizado.js';
 import { cuentas } from '../../../cuentas/infraestructura/persistencia/cuentas.tablas.js';
 
@@ -24,6 +29,7 @@ export const roles = esquemaCore.table(
     uniqueIndex('roles_nombre_por_cuenta').on(t.cuentaId, nombreNormalizado(t.nombre)),
     /** Destino de la llave compuesta de `usuario_roles`: un usuario solo recibe roles de su cuenta. */
     unique('roles_id_cuenta_unico').on(t.id, t.cuentaId),
+    ...politicasDeEscrituraPorCuenta(),
   ],
 );
 
@@ -35,5 +41,5 @@ export const rolPermisos = esquemaCore.table(
       .references(() => roles.id, { onDelete: 'cascade' }),
     permiso: text().notNull(),
   },
-  (t) => [primaryKey({ columns: [t.rolId, t.permiso] })],
+  (t) => [primaryKey({ columns: [t.rolId, t.permiso] }), ...politicasDeEscrituraPorCuentaDe('core.roles', 'rol_id')],
 );

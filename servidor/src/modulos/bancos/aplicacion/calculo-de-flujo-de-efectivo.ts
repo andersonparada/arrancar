@@ -10,6 +10,7 @@ import type {
   SaldosDelRango,
   TotalesDeUnConcepto,
 } from './dto/reportes-por-concepto.dto.js';
+import { leyendasDelFlujo } from './leyendas-del-flujo.js';
 
 /** Dónde cae un concepto en el reporte: en una actividad, en una línea aparte o en la apertura de cuentas. */
 export type Ubicacion =
@@ -128,17 +129,7 @@ function armarControl(saldos: SaldosDelRango, apertura: number, flujoNeto: numbe
   };
 }
 
-/** Los pagos en efectivo salen del banco en la fecha del retiro, no en la del pago: el reporte lo avisa (CP4-EB). */
-export const LEYENDA_DE_PAGOS_EN_EFECTIVO =
-  'Los pagos en efectivo a proveedores se muestran en la fecha del retiro del banco, no en la del pago. ' +
-  'Es un reporte de gestión.';
-
-const CLAVES_CON_LEYENDA: readonly string[] = ['efectivo_para_pagos', 'faltante_de_efectivo'];
-
-const leyendaDe = (totales: readonly TotalesDeUnConcepto[]): string | null =>
-  totales.some((t) => t.claveDeSistema && CLAVES_CON_LEYENDA.includes(t.claveDeSistema))
-    ? LEYENDA_DE_PAGOS_EN_EFECTIVO
-    : null;
+export { LEYENDA_DE_PAGOS_EN_EFECTIVO } from './leyendas-del-flujo.js';
 
 export interface MarcoDelFlujo {
   desde: string;
@@ -165,6 +156,6 @@ export function armarFlujoDeEfectivo(
     actividades: ACTIVIDADES.map((actividad) => armarActividad(actividad, ubicados)),
     lineasAparte: armarLineasAparte(ubicados, marco.cuentaBancariaId === null),
     control: armarControl(saldos, apertura, flujoNeto),
-    leyenda: leyendaDe(totales),
+    leyenda: leyendasDelFlujo(totales),
   };
 }

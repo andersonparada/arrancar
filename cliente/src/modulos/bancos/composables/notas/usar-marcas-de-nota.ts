@@ -1,9 +1,10 @@
 import { computed, reactive, ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiNotas, type DatosDeDesmarcado } from '../../servicios/notas.api';
 import type { Movimiento } from '../../servicios/movimientos.api';
-import { opcionesDeConcepto } from '../conceptos/opciones-de-concepto';
+import { liberarReservados, opcionesDeConcepto } from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
 import { resumenDeMarcado } from './marca-de-nota';
 
@@ -32,11 +33,14 @@ function usarMarcado(alTerminar: () => Promise<void>) {
 
 /** Lo que se escribe en la ventana de desmarcar: la nota, el motivo y el concepto con que sigue (débitos, por nombre). */
 function usarDatosDeDesmarcado() {
+  const sesion = usarSesion();
   const { conceptos } = usarCatalogoDeConceptos();
   const registro = ref<Movimiento | null>(null);
   const motivo = ref('');
   const conceptoId = ref<string | null>(null);
-  const opciones = computed(() => opcionesDeConcepto(conceptos.value, ['debito']));
+  const opciones = computed(() =>
+    opcionesDeConcepto(liberarReservados(conceptos.value, sesion.moduloActivo), ['debito']),
+  );
 
   function abrir(nota: Movimiento): void {
     registro.value = nota;

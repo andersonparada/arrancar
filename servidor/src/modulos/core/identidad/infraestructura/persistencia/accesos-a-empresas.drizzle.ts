@@ -4,7 +4,7 @@ import { transaccionEnCurso } from '../../../compartido/infraestructura/unidad-d
 import { empresas, empresaUsuarios } from '../../../cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { AccesosAEmpresas } from '../../aplicacion/puertos/accesos-a-empresas.js';
 
-/** `core.empresa_usuarios` no tiene seguridad por filas: se filtra por cuenta. */
+/** `core.empresa_usuarios` tiene la lectura abierta: se filtra por cuenta; escribir exige una empresa de la cuenta de la transacción. */
 export class AccesosAEmpresasDrizzle implements AccesosAEmpresas {
   constructor(private readonly ejecutor: () => Ejecutor = transaccionEnCurso) {}
 

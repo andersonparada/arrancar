@@ -22,6 +22,7 @@ import { ObtenerPermisosDeUsuario } from './aplicacion/casos-uso/obtener-permiso
 import { ObtenerResumenDeSesion } from './aplicacion/casos-uso/obtener-resumen-de-sesion.js';
 import { SugerirNombreDeUsuario } from './aplicacion/casos-uso/sugerir-nombre-de-usuario.js';
 import { ValidarSesion } from './aplicacion/casos-uso/validar-sesion.js';
+import { ResolverOperadorDeUsuario } from './aplicacion/casos-uso/resolver-operador-de-usuario.js';
 import { ResolutorDeAcceso } from './aplicacion/resolutor-de-acceso.js';
 import { VigenciaDeSesion } from './dominio/vigencia-de-sesion.js';
 import { SesionControlador } from './http/sesion.controlador.js';
@@ -51,6 +52,16 @@ export function usuariosEn(tx: Ejecutor) {
   const repositorio = new RepositorioUsuariosDrizzle(() => tx);
   return { repositorio, asignador: new AsignadorDeNombreDeUsuario({ usuarios: repositorio }) };
 }
+
+/** El operador de un usuario en una empresa, para quien actúa sin petición (suscriptores de eventos). */
+export const operadorDeUsuario = new ResolverOperadorDeUsuario({
+  usuarios: usuariosSinTransaccion,
+  resolutor: new ResolutorDeAcceso({
+    empresas: new EmpresasDeLaSesionDrizzle(bd),
+    modulos: new CatalogoDeModulosEnRegistro(),
+    permisosDeUsuario,
+  }),
+});
 
 /** El servidor la ejecuta cada hora. */
 export const limpiarSesionesVencidas = new LimpiarSesionesVencidas({ sesiones });

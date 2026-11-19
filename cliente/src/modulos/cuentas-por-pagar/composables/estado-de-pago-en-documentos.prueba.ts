@@ -87,7 +87,7 @@ describe('lo pagado en la lista y la ficha', () => {
 
   it('la ficha del cargo dice el estado de pago y la de la nota, lo reintegrado', () => {
     const ficha = cargo() as FichaDelDocumento;
-    expect(detallesDeFicha(ficha)).toContainEqual({ etiqueta: 'Estado de pago', valor: 'Pagada en parte' });
+    expect(detallesDeFicha(ficha)).toContainEqual({ etiqueta: 'Estado de pago', valor: 'Pagado en parte' });
     expect(etiquetas(detallesDeMontos(ficha))).toContain('Pagado');
     const nota = cargo({ clase: 'abono', estadoDePago: null }) as FichaDelDocumento;
     expect(etiquetas(detallesDeMontos(nota))).toContain('Reintegrado por el proveedor');

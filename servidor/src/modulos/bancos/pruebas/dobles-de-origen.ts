@@ -2,7 +2,7 @@ import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import type { ConceptosDeMovimientos } from '../aplicacion/conceptos-de-movimientos.js';
 import { DesgloseDeMovimientos } from '../aplicacion/desglose-de-movimientos.js';
 import type { AvisoDeMovimientoPorCambiar, AvisosDeMovimientos } from '../aplicacion/puertos/avisos-de-movimientos.js';
-import type { CuentasPorPagarActivo } from '../aplicacion/puertos/cuentas-por-pagar-activo.js';
+import type { ModulosDeOrigen } from '../aplicacion/puertos/modulos-de-origen.js';
 import type { LineaDeDesgloseGuardada, RepositorioDeDesglose } from '../aplicacion/puertos/repositorio-de-desglose.js';
 import { RevisorDeCambios } from '../aplicacion/revisor-de-cambios.js';
 
@@ -29,14 +29,14 @@ export class DesglosesEnMemoria implements RepositorioDeDesglose {
 }
 
 /** Lo que los casos de uso necesitan para tocar movimientos de otro módulo o notas marcadas, con dobles. */
-export function piezasDeOrigenEnMemoria(conceptos: ConceptosDeMovimientos, cuentasPorPagar: CuentasPorPagarActivo) {
+export function piezasDeOrigenEnMemoria(conceptos: ConceptosDeMovimientos, modulosDeOrigen: ModulosDeOrigen) {
   const avisos = new AvisosEnMemoria();
   const desgloses = new DesglosesEnMemoria();
   return {
     avisos,
     desgloses,
-    cuentasPorPagar,
-    revisor: new RevisorDeCambios({ avisos, cuentasPorPagar }),
+    modulosDeOrigen,
+    revisor: new RevisorDeCambios({ avisos, modulosDeOrigen }),
     desglose: new DesgloseDeMovimientos({ conceptos, repositorio: desgloses }),
   };
 }

@@ -9,6 +9,7 @@ import { MESES_DE_AUDITORIA } from './bitacora/aplicacion/casos-uso/depurar-audi
 import { componerBitacora } from './bitacora/contexto.js';
 import { variablesDeCorreo } from './correo/configuracion.js';
 import { componerCorreo } from './correo/contexto.js';
+import { componerMonedas } from './monedas/contexto.js';
 import { componerConfiguracion } from './configuracion/contexto.js';
 import { variablesRegionales } from './configuracion/variables-regionales.js';
 import { dependenciasCompartidas } from './compartido/infraestructura/dependencias-compartidas.js';
@@ -27,8 +28,9 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(componerApariencia());
   await app.register(componerGeografia(dependenciasCompartidas()));
   await app.register(componerCalendario(dependenciasCompartidas()));
+  await app.register(componerMonedas(dependenciasCompartidas()));
   await app.register(componerBitacora());
-  await app.register(componerCorreo());
+  await app.register(componerCorreo(dependenciasCompartidas()));
 };
 
 export const moduloCore: DefinicionModulo = {
@@ -45,6 +47,14 @@ export const moduloCore: DefinicionModulo = {
     { clave: 'roles.crear', descripcion: 'Crear roles' },
     { clave: 'roles.editar', descripcion: 'Editar los permisos y datos de los roles' },
     { clave: 'roles.eliminar', descripcion: 'Eliminar roles' },
+    { clave: 'correos.ver', descripcion: 'Ver el historial de correos enviados por la empresa' },
+    { clave: 'correos.cancelar', descripcion: 'Cancelar un correo pendiente antes de que salga' },
+    { clave: 'correos.reintentar', descripcion: 'Volver a mandar un correo que falló' },
+    {
+      clave: 'correo.servidor.gestionar',
+      descripcion: 'Configurar el servidor de correo de la instalación y ver la bandeja global (Soporte)',
+      soloSuperacceso: true,
+    },
     {
       clave: 'configuracion.ver',
       descripcion: 'Ver la configuración de la cuenta y la empresa',
@@ -63,6 +73,16 @@ export const moduloCore: DefinicionModulo = {
     {
       clave: 'configuracion.feriados.eliminar',
       descripcion: 'Quitar asuetos nacionales del calendario de feriados',
+      soloSuperacceso: true,
+    },
+    {
+      clave: 'configuracion.monedas.editar',
+      descripcion: 'Activar y desactivar monedas, unirlas con el código del Banguat y completar sus letras',
+      soloSuperacceso: true,
+    },
+    {
+      clave: 'configuracion.tipos-de-cambio.crear',
+      descripcion: 'Ingresar o corregir a mano el tipo de cambio de un día y revisar sus versiones',
       soloSuperacceso: true,
     },
   ],

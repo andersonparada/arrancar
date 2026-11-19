@@ -1413,12 +1413,10 @@ Manda la tabla «Respuestas del usuario (2026-09-29)» de `plan-hallazgos-contab
   migración 0022 agrega los nuevos donde ya hay catálogo (sin tocar lo que tenga ese nombre) y cambia el grupo de «Cheque
   rechazado» solo si sigue en el original «Cheques rechazados». Las empresas sin catálogo lo reciben completo al abrir Conceptos
   (`SembrarConceptos`). Si cambia la lista, cambiar también el SQL de 0022 (y el de 0016/0018 no se toca).
-- **P3 «Pago a proveedores» en un cheque manual**: es de sistema y no se elige (regla de H3b), con una excepción solo para el
-  cheque: `exigirConceptoElegible(..., { pagoAProveedores })` lo acepta si Cuentas por pagar **no** está activo (`'permitido'`) y
-  lo rechaza con 422 `pago_a_proveedores_lo_fija_cuentas_por_pagar` si lo está (`'reservado'`). Las notas siguen sin poder
-  elegirlo. El puerto `CuentasPorPagarActivo` (`aplicacion/puertos`) lo implementa
-  `CuentasPorPagarActivoEnModulosActivos` sobre `ModulosActivosDeLaCuenta` del mediador, con la clave `cuentas-por-pagar`
-  (hoy no existe: siempre `permitido`).
+- **P3 «Pago a proveedores» en un cheque manual** (generalizado por CCL-B1): un concepto reservado por un módulo
+  (`CONCEPTOS_RESERVADOS_POR_MODULO`) se elige a mano en un cheque (y en una nota, salvo «Pago a proveedores») solo si ese
+  módulo no está activo; activo, responde 422 `concepto_reservado_por_su_modulo`. El puerto `ModulosDeOrigen`
+  (`estaActivo` y `activos`) reemplazó a `CuentasPorPagarActivo`. Quien ya tiene el concepto lo conserva al corregirse.
 - **P7 Sugerencias de «Sin clasificar»**: el servidor se hizo después con el diseño de
   `docs/modulos/diseno-sugerencias-de-concepto.md` (ver la sección «P7: sugerencias de concepto (servidor hecho el 2026-09-29)»
   al final de este archivo). El cliente (C1 a C3 y «Reclasificar» del reporte) se hizo el 2026-09-29: ver «Cliente de P7» al final.
@@ -1428,7 +1426,7 @@ Manda la tabla «Respuestas del usuario (2026-09-29)» de `plan-hallazgos-contab
   Con origen no se ofrece reclasificar porque el cliente sigue `puedeReclasificar`. En el cheque manual, el selector suma
   «Pago a proveedores» (clave `pago_a_proveedor`, `opcionesDeConceptoDeCheque`) solo si `sesion.moduloActivo('cuentas-por-pagar')`
   es falso (la sesión ya trae `modulosActivos`; no hizo falta tocar el servidor). Los 422 nuevos
-  (`no_se_reclasifica_lo_de_otro_modulo`, `pago_a_proveedores_lo_fija_cuentas_por_pagar`) se muestran con el mensaje del
+  (`no_se_reclasifica_lo_de_otro_modulo`, `concepto_reservado_por_su_modulo`) se muestran con el mensaje del
   servidor en el aviso de error del formulario.
 - **Pruebas**: dominio (`asignacion-de-concepto`, `cheque`, `movimiento-y-concepto`, `conceptos-iniciales`,
   `acciones-posibles`), casos de uso (`casos-uso-de-conceptos-en-cheques`: P3 y causa) y API
@@ -1524,7 +1522,7 @@ la parte de servidor de dos respuestas más; falta solo S5 (`pg_trgm`, «despué
   repetir movimiento, todo o nada; con `porSugerencia` el motivo de la auditoría termina en « (sugerencia aceptada)»). El paso por
   movimiento se extrajo a `ReclasificadorDeUnMovimiento`, que comparten los dos casos de uso.
 - **«Pago a proveedores» en la bandeja**: al reclasificar un **cheque** rige la regla de P3 (se acepta si Cuentas por pagar no está
-  activo; si lo está, 422 `pago_a_proveedores_lo_fija_cuentas_por_pagar`). Una nota nunca lo recibe.
+  activo; si lo está, 422 `concepto_reservado_por_su_modulo`). Una nota nunca lo recibe.
 - **Reclasificar un cheque desde el reporte**: `POST /api/bancos/cheques/reclasificar` con el permiso nuevo
   `bancos.cheques.reclasificar` (migración `0026`: lo reciben los roles que ya tenían `bancos.notas.editar`), auditoría `corregir`
   con el concepto anterior y arrastre al inverso. Las rutas de notas aceptan notas y cheques **pendientes** (la bandeja), pero

@@ -2,7 +2,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { OrdenesEntreModulos } from '../../../../core/contratos/mediador.contratos.js';
-import { MODULO_CUENTAS_POR_PAGAR } from '../../../dominio/origen-de-movimiento.js';
+import { nombreDelModulo } from '../../../dominio/conceptos-reservados.js';
 import type { ConsultasMovimientos } from '../../puertos/consultas-movimientos.js';
 import type { RepositorioMovimientos } from '../../puertos/repositorio-movimientos.js';
 import type { AnularCheque } from '../cheques/anular-cheque.js';
@@ -17,8 +17,6 @@ export interface DependenciasDeAnularMovimientoDeOrigen {
   anularCheque: AnularCheque;
   anularMovimiento: AnularMovimiento;
 }
-
-const NOMBRES_DE_MODULO: Record<string, string> = { [MODULO_CUENTAS_POR_PAGAR]: 'Cuentas por pagar' };
 
 /**
  * La orden `bancos.anular_movimiento_de_origen`: anula el cheque (a la antigua o con inverso, según su mes) o la nota
@@ -43,7 +41,7 @@ export class AnularMovimientoDeOrigen {
   private async anular(operador: Operador, { origen, movimientoId, motivo, fecha }: Orden['datos']): Promise<void> {
     const { consultas, anularCheque, anularMovimiento } = this.dependencias;
     const movimiento = await consultas.obtener(movimientoId);
-    const rotulado = `Anulado desde ${NOMBRES_DE_MODULO[origen.modulo] ?? origen.modulo}: ${motivo}`;
+    const rotulado = `Anulado desde ${nombreDelModulo(origen.modulo)}: ${motivo}`;
     const pedido = { motivo: rotulado, fecha, pedidoPor: origen };
     if (movimiento.chequeId) await anularCheque.ejecutar(operador, { ...pedido, chequeId: movimiento.chequeId });
     else await anularMovimiento.ejecutar(operador, { ...pedido, movimientoId });

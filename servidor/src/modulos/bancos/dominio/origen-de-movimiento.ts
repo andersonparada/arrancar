@@ -4,5 +4,4 @@ export interface OrigenDeMovimiento {
   documentoId: string;
 }
 
-/** La clave de Cuentas por pagar: genera los pagos y marca las notas que aplica a facturas (CP4). */
-export const MODULO_CUENTAS_POR_PAGAR = 'cuentas-por-pagar';
+export { MODULO_CUENTAS_POR_PAGAR } from './conceptos-reservados.js';

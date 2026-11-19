@@ -4,11 +4,11 @@ import { ModuloDeOrigenInactivo, OrigenDelMovimientoNoCoincide } from '../domini
 import { MODULO_CUENTAS_POR_PAGAR, type OrigenDeMovimiento } from '../dominio/origen-de-movimiento.js';
 import type { MovimientoDto } from './dto/movimiento.dto.js';
 import type { AvisosDeMovimientos } from './puertos/avisos-de-movimientos.js';
-import type { CuentasPorPagarActivo } from './puertos/cuentas-por-pagar-activo.js';
+import type { ModulosDeOrigen } from './puertos/modulos-de-origen.js';
 
 interface Dependencias {
   avisos: AvisosDeMovimientos;
-  cuentasPorPagar: CuentasPorPagarActivo;
+  modulosDeOrigen: ModulosDeOrigen;
 }
 
 export interface CambioPorRevisar {
@@ -23,8 +23,8 @@ export interface CambioPorRevisar {
 }
 
 /**
- * Antes de cambiar un movimiento con origen en otro módulo o marcado para Cuentas por pagar (CP4, diseño §6.3): si
- * Cuentas por pagar está inactivo no hay quien revise sus reglas y se rechaza; si no, se le manda el aviso
+ * Antes de cambiar un movimiento con origen en otro módulo o marcado para Cuentas por pagar (CP4, diseño §6.3; CCL-B1
+ * lo generaliza a cualquier módulo): si ese módulo está inactivo no hay quien revise sus reglas y se rechaza; si no, se le manda el aviso
  * `bancos.movimiento_por_cambiar`, que puede rechazar. Un movimiento de Bancos a secas pasa sin avisar.
  */
 export class RevisorDeCambios {
@@ -32,7 +32,7 @@ export class RevisorDeCambios {
 
   /**
    * @throws OrigenDelMovimientoNoCoincide si `pedidoPor` no es el origen del movimiento.
-   * @throws ModuloDeOrigenInactivo si lo generó o lo marcó Cuentas por pagar y ese módulo está inactivo.
+   * @throws ModuloDeOrigenInactivo si lo generó o lo marcó un módulo que está inactivo.
    */
   async revisar(operador: Operador, cambio: CambioPorRevisar): Promise<void> {
     const { movimiento, pedidoPor } = cambio;
@@ -50,12 +50,16 @@ export class RevisorDeCambios {
     });
   }
 
-  /** Lo que generó o marcó Cuentas por pagar no se cambia sin ese módulo: es quien revisa si el pago lo permite. */
+  /** Lo que generó o marcó un módulo no se cambia sin él: es quien revisa si el cambio lo permite. */
   private async exigirModuloDeOrigenActivo(operador: Operador, movimiento: CambioPorRevisar['movimiento']) {
-    const deCuentasPorPagar =
-      movimiento.moduloDeOrigen === MODULO_CUENTAS_POR_PAGAR || movimiento.marcadaParaCuentasPorPagar;
-    if (deCuentasPorPagar && !(await this.dependencias.cuentasPorPagar.estaActivo(operador))) {
-      throw new ModuloDeOrigenInactivo();
+    const modulos = [
+      ...(movimiento.moduloDeOrigen ? [movimiento.moduloDeOrigen] : []),
+      ...(movimiento.marcadaParaCuentasPorPagar ? [MODULO_CUENTAS_POR_PAGAR] : []),
+    ];
+    for (const modulo of new Set(modulos)) {
+      if (!(await this.dependencias.modulosDeOrigen.estaActivo(operador, modulo))) {
+        throw new ModuloDeOrigenInactivo(modulo);
+      }
     }
   }
 

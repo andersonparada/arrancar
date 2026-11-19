@@ -20,6 +20,7 @@ import {
   siSeDeshace,
   transaccionEnCurso,
 } from './unidad-de-trabajo-postgres.js';
+import { bdPropietario } from '../../base-datos/sembrado-de-prueba.soporte.js';
 
 const unidadDeTrabajo = new UnidadDeTrabajoPostgres(bd);
 let enEmpresaA: ContextoEmpresa;
@@ -59,7 +60,7 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'prueba', nombres: 'Prueba', hashContrasena: 'x' })
     .returning();
-  const [a, b] = await bd
+  const [a, b] = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: cuenta!.id, nombre: 'Empresa A' },
@@ -67,7 +68,10 @@ beforeAll(async () => {
     ])
     .returning();
   const [otraCuenta] = await bd.insert(cuentas).values({ nombre: 'Otra cuenta' }).returning();
-  const [ajena] = await bd.insert(empresas).values({ cuentaId: otraCuenta!.id, nombre: 'Empresa ajena' }).returning();
+  const [ajena] = await bdPropietario
+    .insert(empresas)
+    .values({ cuentaId: otraCuenta!.id, nombre: 'Empresa ajena' })
+    .returning();
   empresaDeOtraCuentaId = ajena!.id;
   enEmpresaA = { empresaId: a!.id, cuentaId: cuenta!.id, usuarioId: usuario!.id };
   enEmpresaB = { empresaId: b!.id, cuentaId: cuenta!.id, usuarioId: usuario!.id };
@@ -191,7 +195,9 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
   });
 
   it('rechaza una empresa existente de la cuenta aunque el usuario tenga acceso real a ella', async () => {
-    await bd.insert(empresaUsuarios).values({ empresaId: enEmpresaB.empresaId, usuarioId: enEmpresaA.usuarioId });
+    await bdPropietario
+      .insert(empresaUsuarios)
+      .values({ empresaId: enEmpresaB.empresaId, usuarioId: enEmpresaA.usuarioId });
     const conAcceso = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
       unidadDeTrabajo.ejecutarEnEmpresaNueva(enEmpresaB.empresaId, recursosVisibles),
     );
@@ -207,7 +213,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     await expect(sinCrear).rejects.toThrow(EmpresaNoEsNueva);
   });
 
-  it('rechaza una empresa creada en otra cuenta, sin entrar a ella', async () => {
+  it('no deja crear una empresa en otra cuenta: la base lo rechaza antes de poder abrirla', async () => {
     const id = randomUUID();
     let entro = false;
     const enOtraCuenta = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
@@ -215,8 +221,9 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
       await unidadDeTrabajo.ejecutarEnEmpresaNueva(id, async () => void (entro = true));
     });
 
-    await expect(enOtraCuenta).rejects.toThrow(EmpresaNoEsNueva);
+    await expect(enOtraCuenta).rejects.toThrow();
     expect(entro).toBe(false);
+    expect(await bd.select().from(empresas).where(eq(empresas.id, id))).toEqual([]);
   });
 
   it('rechaza una segunda empresa nueva mientras otra sigue abierta (llamadas en paralelo)', async () => {
@@ -269,7 +276,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     expect(corridas).toEqual([]);
   });
 
-  it('core.empresas no tiene seguridad por filas: la comprobación debe ver todas las cuentas', async () => {
+  it('la lectura de core.empresas sigue abierta a todas las cuentas: la comprobación debe ver la empresa ajena', async () => {
     const vistas = await unidadDeTrabajo.ejecutar(enEmpresaA, () =>
       transaccionEnCurso().select({ id: empresas.id }).from(empresas).where(eq(empresas.id, empresaDeOtraCuentaId)),
     );

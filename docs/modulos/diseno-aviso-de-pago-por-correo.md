@@ -305,6 +305,9 @@ El vínculo pago ↔ correos está en `core.correos_salientes` (`recurso_origen 
 | `correos.cancelar` y `correos.reintentar` (nuevos, core) | asignables | Cancelar un pendiente y reintentar un fallido desde el historial (permisos por acción; P18) |
 | `correo.servidor.gestionar` (nuevo, core) | `soloSuperacceso: true` | Panel de Soporte: servidor, prueba, estado global de la bandeja |
 
+Nota: las rutas de Soporte se protegen con `proteger({ soloSuperacceso: true })` (sin empresa activa no hay permisos que evaluar), que es más estricto que este permiso. Queda declarado para el catálogo y no lo exige ninguna ruta.
+
+
 El envío automático no pide permiso a quien registra el pago: es una política de la empresa (la variable la cambia quien
 tiene `configuracion` de la empresa). Migración de permisos: ninguna («quien tenía X recibe Y» no aplica: son acciones
 nuevas). Si el usuario lo pide, una migración que dé `pagos.enviar-aviso` a quien tiene `pagos.emitir`, en

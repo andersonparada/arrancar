@@ -274,6 +274,13 @@
       "when": 1795053554631,
       "tag": "0038_bancarizacion_compartida",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1795054968167,
+      "tag": "0039_inv_marca_de_inventario",
+      "breakpoints": true
     }
   ]
 }

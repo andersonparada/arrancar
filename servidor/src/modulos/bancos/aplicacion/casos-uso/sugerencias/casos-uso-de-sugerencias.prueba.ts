@@ -39,7 +39,7 @@ function armar(cuentasPorPagar = false) {
       consultasDeSugerencias: consultas,
       consultasDeConceptos: conceptosSembrados(),
       politicaDeSugerencias: politica,
-      cuentasPorPagar: new CuentasPorPagarFijo(cuentasPorPagar),
+      modulosDeOrigen: new CuentasPorPagarFijo(cuentasPorPagar),
     }),
   };
   return {

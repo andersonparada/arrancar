@@ -137,6 +137,21 @@ describe('pagar con nota de débito', () => {
     });
     expect(await ficha(cargo)).toMatchObject({ estadoDePago: 'en_parte', saldo: '520.00' });
   });
+
+  it.each([
+    ['vacías', '', null],
+    ['solo espacios', '   ', null],
+    ['con espacios a los lados', ' hola ', 'hola'],
+  ])('observaciones %s no rompen la restricción de la tabla', async (_caso, enviado, guardado) => {
+    const { proveedor, cargo } = await e.proveedorConCargo();
+
+    const respuesta = await e.pagar(
+      e.nota(proveedor.proveedorId, [{ cargoId: cargo, monto: '100.00' }], { observaciones: enviado }),
+    );
+
+    expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
+    expect(respuesta.cuerpo.observaciones ?? null).toBe(guardado);
+  });
 });
 
 describe('un saldo inicial', () => {

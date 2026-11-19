@@ -3,6 +3,7 @@ import type { Concepto } from '../../servicios/conceptos.api';
 import {
   conceptoSinClasificar,
   conceptoVigente,
+  liberarReservados,
   opcionesDeConcepto,
   opcionesDeConceptoDeCheque,
   opcionesDeFiltroDeConcepto,
@@ -145,5 +146,29 @@ describe('opcionesParaClasificar', () => {
   it('con notas, o notas y cheques juntos, nunca lo ofrece', () => {
     expect(textos(opcionesParaClasificar(conPago, ['debito'], false))).not.toContain('Pago a proveedores');
     expect(textos(opcionesParaClasificar(conPago, ['cheque', 'debito'], false))).not.toContain('Pago a proveedores');
+  });
+});
+
+describe('liberarReservados', () => {
+  const fondo = concepto({
+    id: 'fondo',
+    nombre: 'Fondo de caja chica',
+    aplicaA: 'debito',
+    claveDeSistema: 'fondo_de_caja_chica',
+  });
+  const pago = { ...fondo, id: 'pago', nombre: 'Pago a proveedores', claveDeSistema: 'pago_a_proveedor' };
+
+  it('ofrece el reservado cuando su módulo no está activo', () => {
+    const libres = liberarReservados([fondo], () => false);
+    expect(textos(opcionesDeConcepto(libres, ['debito']))).toContain('Fondo de caja chica');
+  });
+
+  it('lo oculta cuando su módulo está activo', () => {
+    const libres = liberarReservados([fondo], (modulo) => modulo === 'caja-chica');
+    expect(textos(opcionesDeConcepto(libres, ['debito']))).not.toContain('Fondo de caja chica');
+  });
+
+  it('no toca «Pago a proveedores»', () => {
+    expect(liberarReservados([pago], () => false)[0]!.claveDeSistema).toBe('pago_a_proveedor');
   });
 });

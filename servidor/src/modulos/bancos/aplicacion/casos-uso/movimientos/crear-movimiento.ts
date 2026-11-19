@@ -3,6 +3,7 @@ import { Identificador } from '../../../../core/compartido/dominio/identificador
 import { CuentaBancariaInactiva } from '../../../dominio/errores.js';
 import { CuentasPorPagarInactivo, NotaNoMarcable } from '../../../dominio/errores-de-origen.js';
 import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../../dominio/asignacion-de-concepto.js';
+import { MODULO_CUENTAS_POR_PAGAR } from '../../../dominio/conceptos-reservados.js';
 import { exigirInteresesCoherentes } from '../../../dominio/intereses.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
 import { numerarSiCorresponde } from '../../numeracion-de-comprobantes.js';
@@ -75,10 +76,13 @@ export class CrearMovimiento {
 
   /** Una nota marcada lleva el concepto «Pago a proveedores» (la marca); las demás, el que eligió el usuario. */
   private async conceptoDeLaNota(operador: Operador, solicitud: SolicitudDeMovimiento) {
-    const { conceptos, cuentasPorPagar } = this.dependencias;
-    if (!solicitud.marcarParaCuentasPorPagar) return conceptos.elegido(solicitud.conceptoId, solicitud.tipo);
+    const { conceptos, modulosDeOrigen } = this.dependencias;
+    if (!solicitud.marcarParaCuentasPorPagar) {
+      const modulosActivos = await modulosDeOrigen.activos(operador);
+      return conceptos.elegido(solicitud.conceptoId, solicitud.tipo, { modulosActivos });
+    }
     if (solicitud.tipo !== 'debito') throw new NotaNoMarcable();
-    if (!(await cuentasPorPagar.estaActivo(operador))) throw new CuentasPorPagarInactivo();
+    if (!(await modulosDeOrigen.estaActivo(operador, MODULO_CUENTAS_POR_PAGAR))) throw new CuentasPorPagarInactivo();
     return conceptos.deSistema(operador, CLAVE_DE_PAGO_A_PROVEEDORES);
   }
 }

@@ -59,7 +59,7 @@ function dependenciasDeSaldosIniciales() {
   const consultasMovimientos = new ConsultasMovimientosDrizzle();
   const cargaInicial = new CargaInicialEnMediador();
   const conceptos = new ConceptosDeMovimientos(new RepositorioConceptosDrizzle());
-  const { cuentasPorPagar } = piezasDeOrigen(conceptos);
+  const { modulosDeOrigen } = piezasDeOrigen(conceptos);
   const politicaDeSobregiro = new PoliticaDeSobregiroEnConfiguracion();
   return {
     unidadDeTrabajo,
@@ -71,7 +71,7 @@ function dependenciasDeSaldosIniciales() {
     repositorioMovimientos: new RepositorioMovimientosDrizzle(),
     reglas: new ReglasDeLaCuenta({ consultas: consultasMovimientos, politicaDeSobregiro, cargaInicial }),
     ficha: fichaDeSaldoInicial(consultas, cargaInicial),
-    armador: new ArmadorDePartidas({ conceptos, cuentasPorPagar }),
+    armador: new ArmadorDePartidas({ conceptos, modulosDeOrigen }),
     chequesDeApertura: chequesDeApertura(),
     fondos: new AvisoDeFondosDePosfechados({ consultas: consultasMovimientos, reloj }),
   };

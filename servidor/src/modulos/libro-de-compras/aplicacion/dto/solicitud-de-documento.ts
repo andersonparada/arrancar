@@ -13,6 +13,7 @@ export interface SolicitudDeLinea {
   tipo: 'bien' | 'servicio' | null;
   /** `null`: lo que diga el concepto. */
   esActivoFijo: boolean | null;
+  esInventario: boolean | null;
   /** Con combustible van también los galones; la tasa de IDP sale de su vigencia en la fecha de emisión. */
   combustibleId: string | null;
   galones: string | null;

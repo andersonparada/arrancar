@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { operadorDePrueba } from '../../core/compartido/pruebas/dobles-compartidos.js';
 import { ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
 import { ModuloDeOrigenInactivo, OrigenDelMovimientoNoCoincide } from '../dominio/errores-de-origen.js';
-import { CuentasPorPagarFijo } from '../pruebas/dobles-de-cheques.js';
+import { CuentasPorPagarFijo, ModulosDeOrigenFijos } from '../pruebas/dobles-de-cheques.js';
 import { AvisosEnMemoria } from '../pruebas/dobles-de-origen.js';
 import { RevisorDeCambios, type CambioPorRevisar } from './revisor-de-cambios.js';
 
@@ -14,7 +14,7 @@ const operador = operadorDePrueba();
 const DOCUMENTO = '00000000-0000-4000-8000-0000000000bb';
 let avisos: AvisosEnMemoria;
 
-const revisor = (activo: boolean) => new RevisorDeCambios({ avisos, cuentasPorPagar: new CuentasPorPagarFijo(activo) });
+const revisor = (activo: boolean) => new RevisorDeCambios({ avisos, modulosDeOrigen: new CuentasPorPagarFijo(activo) });
 const movimiento = (cambios: Partial<CambioPorRevisar['movimiento']> = {}): CambioPorRevisar['movimiento'] => ({
   id: 'movimiento-1',
   moduloDeOrigen: null,
@@ -78,13 +78,32 @@ describe('RevisorDeCambios', () => {
     expect(avisos.recibidos).toEqual([]);
   });
 
-  it('el origen de otro módulo se avisa sin pedir que Cuentas por pagar esté activo', async () => {
-    await revisor(false).revisar(operador, {
+  it('el origen de otro módulo activo se avisa, aunque Cuentas por pagar esté inactivo', async () => {
+    const conCajaChica = new RevisorDeCambios({ avisos, modulosDeOrigen: new ModulosDeOrigenFijos(['caja-chica']) });
+
+    await conCajaChica.revisar(operador, {
       movimiento: movimiento({ moduloDeOrigen: 'caja-chica', documentoDeOrigenId: DOCUMENTO }),
       cambio: 'anular',
     });
 
     expect(avisos.recibidos).toHaveLength(1);
+  });
+
+  it('un movimiento con origen en un módulo inactivo se rechaza con su nombre, sin avisar (CCL-B1)', async () => {
+    const sinCajaChica = revisor(true);
+    const deCajaChica = movimiento({ moduloDeOrigen: 'caja-chica', documentoDeOrigenId: DOCUMENTO });
+    const deLiquidar = movimiento({ moduloDeOrigen: 'cuentas-por-liquidar', documentoDeOrigenId: DOCUMENTO });
+
+    await expect(sinCajaChica.revisar(operador, { movimiento: deCajaChica, cambio: 'anular' })).rejects.toThrow(
+      ModuloDeOrigenInactivo,
+    );
+    await expect(sinCajaChica.revisar(operador, { movimiento: deCajaChica, cambio: 'anular' })).rejects.toThrow(
+      /Caja chica/,
+    );
+    await expect(sinCajaChica.revisar(operador, { movimiento: deLiquidar, cambio: 'eliminar' })).rejects.toThrow(
+      /Cuentas por liquidar/,
+    );
+    expect(avisos.recibidos).toEqual([]);
   });
 
   it('lo que rechaza el módulo de origen llega a quien pidió el cambio', async () => {

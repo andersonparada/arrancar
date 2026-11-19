@@ -3,7 +3,7 @@ import type { ConceptosDeMovimientos } from '../aplicacion/conceptos-de-movimien
 import { DesgloseDeMovimientos } from '../aplicacion/desglose-de-movimientos.js';
 import { RevisorDeCambios } from '../aplicacion/revisor-de-cambios.js';
 import { AvisosDeMovimientosEnMediador } from '../infraestructura/avisos-de-movimientos-en-mediador.js';
-import { CuentasPorPagarActivoEnModulosActivos } from '../infraestructura/cuentas-por-pagar-activo-en-modulos-activos.js';
+import { ModulosDeOrigenEnModulosActivos } from '../infraestructura/modulos-de-origen-en-modulos-activos.js';
 import { RepositorioDeDesgloseDrizzle } from '../infraestructura/persistencia/repositorio-de-desglose.drizzle.js';
 
 /**
@@ -11,10 +11,10 @@ import { RepositorioDeDesgloseDrizzle } from '../infraestructura/persistencia/re
  * por pagar está activo, avisarle antes de un cambio y guardar el reparto por concepto.
  */
 export function piezasDeOrigen(conceptos: ConceptosDeMovimientos) {
-  const cuentasPorPagar = new CuentasPorPagarActivoEnModulosActivos(new ModulosActivosDeLaCuentaEnRegistro());
+  const modulosDeOrigen = new ModulosDeOrigenEnModulosActivos(new ModulosActivosDeLaCuentaEnRegistro());
   return {
-    cuentasPorPagar,
-    revisor: new RevisorDeCambios({ avisos: new AvisosDeMovimientosEnMediador(), cuentasPorPagar }),
+    modulosDeOrigen,
+    revisor: new RevisorDeCambios({ avisos: new AvisosDeMovimientosEnMediador(), modulosDeOrigen }),
     desglose: new DesgloseDeMovimientos({ conceptos, repositorio: new RepositorioDeDesgloseDrizzle() }),
   };
 }

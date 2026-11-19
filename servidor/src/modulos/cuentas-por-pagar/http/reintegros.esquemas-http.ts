@@ -1,12 +1,11 @@
 import { z } from 'zod';
+import { textoOpcional } from './texto-opcional.js';
 
 const DINERO = /^\d{1,12}(\.\d{1,2})?$/;
 const MAXIMO_DE_NOTAS = 100;
 
 const monto = z.string().trim().regex(DINERO, 'Escriba el monto con hasta dos decimales.');
 const fecha = z.iso.date({ error: 'Escriba la fecha como AAAA-MM-DD.' });
-const texto = (maximo: number, campo: string) =>
-  z.string().trim().min(1).max(maximo, `${campo} admite hasta ${maximo} caracteres.`).nullable().optional();
 
 /**
  * El reintegro del proveedor: por depósito (cuenta bancaria) o en efectivo (referencia del recibo). Que cada forma lleve lo
@@ -17,8 +16,8 @@ export const esquemaReintegro = z.object({
   forma: z.enum(['deposito', 'efectivo'], { error: 'Escoja si fue un depósito o efectivo.' }),
   fecha: fecha.optional(),
   cuentaBancariaId: z.uuid({ error: 'Escoja la cuenta bancaria.' }).nullable().optional(),
-  referencia: texto(100, 'La referencia'),
-  observaciones: texto(500, 'Las observaciones'),
+  referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
+  observaciones: textoOpcional(500, 'Las observaciones admiten hasta 500 caracteres.'),
   notas: z
     .array(z.object({ notaId: z.uuid({ error: 'Escoja la nota de crédito.' }), monto }))
     .max(MAXIMO_DE_NOTAS, `Un reintegro admite hasta ${MAXIMO_DE_NOTAS} notas de crédito.`),

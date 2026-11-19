@@ -20,7 +20,7 @@ import { RepositorioDeAjustesDrizzle } from '../infraestructura/persistencia/rep
 import { RepositorioDePagosDrizzle } from '../infraestructura/persistencia/repositorio-de-pagos.drizzle.js';
 import { TopeDeDiferenciaDelPagoEnConfiguracion } from '../infraestructura/tope-de-diferencia-del-pago-en-configuracion.js';
 
-function armadorDeLaFicha(): ArmadorDeLaFichaDelPago {
+export function armadorDeLaFicha(): ArmadorDeLaFichaDelPago {
   const { unidadDeTrabajo, reloj } = dependenciasCompartidas();
   return new ArmadorDeLaFichaDelPago({
     unidadDeTrabajo,

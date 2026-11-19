@@ -1,6 +1,7 @@
 import type { FastifyRequest } from 'fastify';
 import { contextoDe } from '../../compartido/http/contexto-de-la-solicitud.js';
 import type { EnviarPrueba } from '../aplicacion/casos-uso/enviar-prueba.js';
+import type { ObtenerBandejaDeSoporte } from '../aplicacion/casos-uso/obtener-bandeja-de-soporte.js';
 import type { GuardarServidorDeCorreo } from '../aplicacion/casos-uso/guardar-servidor-de-correo.js';
 import type { ObtenerServidorDeCorreo } from '../aplicacion/casos-uso/obtener-servidor-de-correo.js';
 import type { Solicitante } from '../aplicacion/solicitante.js';
@@ -10,6 +11,7 @@ export interface CasosDeUsoDelServidorDeCorreo {
   obtener: ObtenerServidorDeCorreo;
   guardar: GuardarServidorDeCorreo;
   enviarPrueba: EnviarPrueba;
+  bandeja: ObtenerBandejaDeSoporte;
 }
 
 const solicitanteDe = (solicitud: FastifyRequest): Solicitante => ({
@@ -21,6 +23,8 @@ export class ServidorDeCorreoControlador {
   constructor(private readonly casosDeUso: CasosDeUsoDelServidorDeCorreo) {}
 
   obtener = () => this.casosDeUso.obtener.ejecutar();
+
+  bandeja = () => this.casosDeUso.bandeja.ejecutar();
 
   guardar = (solicitud: FastifyRequest<{ Body: ServidorDeCorreoSolicitado }>) =>
     this.casosDeUso.guardar.ejecutar(solicitanteDe(solicitud), solicitud.body);

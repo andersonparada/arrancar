@@ -45,6 +45,34 @@ export const CONCEPTOS_DE_SISTEMA: readonly ConceptoInicial[] = [
     ...sinFlujo,
   }),
   concepto('faltante_de_efectivo', 'Faltante de efectivo', { aplicaA: 'debito', ...operacion('Faltante de efectivo') }),
+  // CCL-B1: Caja chica y Cuentas por liquidar (los dos «de caja chica» ya existían como sugeridos sin clave).
+  concepto('fondo_de_caja_chica', 'Fondo de caja chica', { aplicaA: 'debito', ...sinFlujo }),
+  concepto('devolucion_de_fondo_de_caja_chica', 'Devolución de fondo de caja chica', {
+    aplicaA: 'credito',
+    ...sinFlujo,
+  }),
+  concepto('reintegro_de_caja_chica', 'Reintegro de caja chica', {
+    aplicaA: 'debito',
+    ...operacion('Reintegros de caja chica'),
+  }),
+  concepto('reintegro_de_caja_chica_de_activo', 'Reintegro de caja chica de activo fijo', {
+    aplicaA: 'debito',
+    ...inversion('Compra de activos'),
+  }),
+  concepto('anticipo_por_liquidar', 'Anticipos por liquidar', { aplicaA: 'debito', ...sinFlujo }),
+  concepto('gasto_de_anticipo', 'Gastos liquidados de anticipos', {
+    aplicaA: 'debito',
+    ...operacion('Gastos liquidados de anticipos'),
+  }),
+  concepto('gasto_de_anticipo_de_activo', 'Gastos liquidados de anticipos de activo fijo', {
+    aplicaA: 'debito',
+    ...inversion('Compra de activos'),
+  }),
+  concepto('anticipo_no_liquidado', 'Anticipos no liquidados', {
+    aplicaA: 'debito',
+    ...operacion('Anticipos no liquidados'),
+  }),
+  concepto('devolucion_de_anticipo', 'Devolución de anticipos', { aplicaA: 'credito', ...sinFlujo }),
   concepto('saldo_inicial', 'Saldo inicial', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('anulacion_de_apertura', 'Partidas de apertura anuladas', { aplicaA: 'ambos', ...sinFlujo }),
   concepto('sin_clasificar', 'Sin clasificar', { aplicaA: 'ambos', ...sinFlujo }),
@@ -78,8 +106,6 @@ export const CONCEPTOS_SUGERIDOS: readonly ConceptoInicial[] = [
   concepto(null, 'Impuestos', { aplicaA: 'debito', ...operacion('Pago de impuestos') }),
   // Agregados con P5 y P8 (las empresas ya sembradas los reciben con la migración 0022).
   concepto(null, 'Anticipo a proveedores', { aplicaA: 'debito', ...operacion('Anticipos a proveedores') }),
-  concepto(null, 'Fondo de caja chica', { aplicaA: 'debito', ...sinFlujo }),
-  concepto(null, 'Reintegro de caja chica', { aplicaA: 'debito', ...operacion('Reintegros de caja chica') }),
   concepto(null, 'IGSS, IRTRA e INTECAP', { aplicaA: 'debito', ...operacion('Cuotas de IGSS, IRTRA e INTECAP') }),
   concepto(null, 'Dividendos pagados', { aplicaA: 'debito', ...financiamiento('Dividendos pagados') }),
   concepto(null, 'Venta de activo', { aplicaA: 'credito', ...inversion('Venta de activos') }),

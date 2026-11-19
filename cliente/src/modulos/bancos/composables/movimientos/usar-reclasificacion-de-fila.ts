@@ -5,7 +5,7 @@ import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiCheques } from '../../servicios/cheques.api';
 import type { FilaDelReporte } from '../../servicios/movimientos.api';
 import { apiNotas } from '../../servicios/notas.api';
-import { opcionesParaClasificar } from '../conceptos/opciones-de-concepto';
+import { liberarReservados, opcionesParaClasificar } from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
 import { sePuedeReclasificar, sinElConceptoActual } from './reclasificacion-de-fila';
 
@@ -15,7 +15,8 @@ function usarOpciones(fila: Ref<FilaDelReporte | null>, conceptoId: Ref<string |
   const { conceptos } = usarCatalogoDeConceptos();
   const opciones = computed(() => {
     if (!fila.value) return [];
-    const base = opcionesParaClasificar(conceptos.value, [fila.value.tipo], sesion.moduloActivo('cuentas-por-pagar'));
+    const libres = liberarReservados(conceptos.value, sesion.moduloActivo);
+    const base = opcionesParaClasificar(libres, [fila.value.tipo], sesion.moduloActivo('cuentas-por-pagar'));
     return sinElConceptoActual(base, fila.value.conceptoId);
   });
   const nombreElegido = computed(() => opciones.value.find((o) => o.valor === conceptoId.value)?.texto ?? null);

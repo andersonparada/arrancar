@@ -190,6 +190,41 @@
       "when": 1795046160000,
       "tag": "0026_bandeja_de_correos",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1795055018627,
+      "tag": "0027_columnas_fijas_y_superacceso",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1795056213447,
+      "tag": "0028_rls_de_escritura_de_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795057656679,
+      "tag": "0029_multimoneda",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795060567899,
+      "tag": "0030_bandeja_de_correos_para_soporte",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795060572072,
+      "tag": "0031_cancelacion_durante_el_envio",
+      "breakpoints": true
     }
   ]
 }

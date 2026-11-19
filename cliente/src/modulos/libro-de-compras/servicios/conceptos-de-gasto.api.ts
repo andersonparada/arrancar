@@ -8,6 +8,7 @@ export interface ConceptoDeGasto {
   tipoPorOmision: 'bien' | 'servicio';
   esProductoAgropecuario: boolean;
   esActivoFijo: boolean;
+  esInventario: boolean;
   activo: boolean;
 }
 

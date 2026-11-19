@@ -90,11 +90,11 @@ export const OPCIONES_DE_ESTADO: OpcionDeFiltro<EstadoBuscado>[] = [
  */
 export const OPCIONES_DE_ESTADO_DE_PAGO: OpcionDeFiltro<EstadoDePago | ''>[] = [
   { valor: '', texto: 'Todos los estados de pago' },
-  { valor: 'pendiente', texto: 'Sin pagar' },
-  { valor: 'en_parte', texto: 'Pagados en parte' },
-  { valor: 'comprometido_en_parte', texto: 'Comprometidos en parte (cheque posfechado)' },
-  { valor: 'comprometido', texto: 'Comprometidos (cheque posfechado)' },
-  { valor: 'pagado', texto: 'Pagados' },
+  { valor: 'pendiente', texto: 'Pendiente' },
+  { valor: 'en_parte', texto: 'Pagado en parte' },
+  { valor: 'comprometido_en_parte', texto: 'Comprometido en parte (cheque posfechado)' },
+  { valor: 'comprometido', texto: 'Comprometido (cheque posfechado)' },
+  { valor: 'pagado', texto: 'Pagado' },
 ];
 
 export const OPCIONES_DE_ORIGEN: OpcionDeFiltro<OrigenDelDocumento | ''>[] = [

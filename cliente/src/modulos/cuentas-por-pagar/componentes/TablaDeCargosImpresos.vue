@@ -7,7 +7,7 @@ import {
 } from '../composables/contrasenas/impresion-de-contrasena';
 import type { ImpresionDeContrasena } from '../servicios/tipos-de-contrasenas';
 
-/** Los cargos en el papel: total y retenciones son fijos; rebajado y saldo son de ese día y así se rotulan. */
+/** Los cargos en el papel: total y retenciones son fijos; rebajado, pagado y saldo son de ese día y así se rotulan; comprometido es parte del saldo. */
 defineProps<{ impresion: ImpresionDeContrasena }>();
 const celda = 'border border-black px-2 py-1';
 const celdaNumerica = `${celda} text-right tabular-nums`;
@@ -26,6 +26,8 @@ const celdaNumerica = `${celda} text-right tabular-nums`;
           <th scope="col" :class="celdaNumerica">Total</th>
           <th scope="col" :class="celdaNumerica">Retenciones</th>
           <th scope="col" :class="celdaNumerica">Rebajado {{ textoAlDia(impresion.alDia) }}</th>
+          <th scope="col" :class="celdaNumerica">Pagado {{ textoAlDia(impresion.alDia) }}</th>
+          <th scope="col" :class="celdaNumerica">Comprometido</th>
           <th scope="col" :class="celdaNumerica">Saldo {{ textoAlDia(impresion.alDia) }}</th>
         </tr>
       </thead>
@@ -41,6 +43,8 @@ const celdaNumerica = `${celda} text-right tabular-nums`;
           <td :class="celdaNumerica">{{ formatearMonto(cargo.total) }}</td>
           <td :class="celdaNumerica">{{ formatearMonto(cargo.retenciones) }}</td>
           <td :class="celdaNumerica">{{ formatearMonto(cargo.rebajado) }}</td>
+          <td :class="celdaNumerica">{{ formatearMonto(cargo.pagado) }}</td>
+          <td :class="celdaNumerica">{{ formatearMonto(cargo.comprometido) }}</td>
           <td :class="celdaNumerica">{{ formatearMonto(cargo.saldo) }}</td>
         </tr>
       </tbody>
@@ -50,6 +54,8 @@ const celdaNumerica = `${celda} text-right tabular-nums`;
           <td :class="celdaNumerica">{{ formatearMonto(impresion.totales.total) }}</td>
           <td :class="celdaNumerica">{{ formatearMonto(impresion.totales.retenciones) }}</td>
           <td :class="celdaNumerica">{{ formatearMonto(impresion.totales.rebajado) }}</td>
+          <td :class="celdaNumerica">{{ formatearMonto(impresion.totales.pagado) }}</td>
+          <td :class="celdaNumerica">{{ formatearMonto(impresion.totales.comprometido) }}</td>
           <td :class="celdaNumerica">{{ formatearMonto(impresion.totales.saldo) }}</td>
         </tr>
       </tfoot>

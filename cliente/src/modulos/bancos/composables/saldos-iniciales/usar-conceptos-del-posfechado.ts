@@ -2,7 +2,7 @@ import { computed, ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { apiConceptos, type Concepto } from '../../servicios/conceptos.api';
-import { opcionesDeConceptoDeCheque } from '../conceptos/opciones-de-concepto';
+import { liberarReservados, opcionesDeConceptoDeCheque } from '../conceptos/opciones-de-concepto';
 
 /**
  * Los conceptos de egreso del cheque posfechado, por nombre. Se piden la primera vez que hacen falta (al abrir esa
@@ -26,7 +26,10 @@ export function usarConceptosDelPosfechado() {
   }
 
   const opciones = computed(() =>
-    opcionesDeConceptoDeCheque(conceptos.value, sesion.moduloActivo('cuentas-por-pagar')),
+    opcionesDeConceptoDeCheque(
+      liberarReservados(conceptos.value, sesion.moduloActivo),
+      sesion.moduloActivo('cuentas-por-pagar'),
+    ),
   );
   return { opciones, cargar };
 }

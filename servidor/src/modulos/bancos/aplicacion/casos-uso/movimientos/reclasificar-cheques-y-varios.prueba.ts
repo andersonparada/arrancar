@@ -5,7 +5,7 @@ import {
   ConceptoDeSistemaNoSeElige,
   ConceptoIncompatible,
   NoEsUnChequeParaReclasificar,
-  PagoAProveedoresLoFijaCuentasPorPagar,
+  ConceptoReservadoPorSuModulo,
   UnChequeSeReclasificaComoCheque,
   CantidadInvalidaParaReclasificar,
 } from '../../../dominio/errores-de-conceptos.js';
@@ -76,7 +76,7 @@ describe('«Pago a proveedores» al reclasificar un cheque (P3)', () => {
 
     await expect(
       casos.reclasificar.ejecutar(operador, { movimientoIds: [id], conceptoId: PAGO_A_PROVEEDORES }),
-    ).rejects.toThrow(PagoAProveedoresLoFijaCuentasPorPagar);
+    ).rejects.toThrow(ConceptoReservadoPorSuModulo);
   });
 
   it('una nota de débito nunca lo recibe: es de los cheques', async () => {

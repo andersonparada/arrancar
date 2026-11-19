@@ -21,3 +21,17 @@ export async function fijarVariablesDeSeguridad(transaccion: Transaccion, contex
                set_config('app.sin_asignar_al_crear', ${sinAsignar}, true)`,
   );
 }
+
+/**
+ * Fija solo la cuenta y el usuario, para el alta de una cuenta nueva: todavía no hay empresa. Sin usuario (la
+ * siembra) `app.usuario_id` queda vacío y la autoría, nula.
+ */
+export async function fijarVariablesDeCuenta(
+  transaccion: Transaccion,
+  origen: { cuentaId: string; usuarioId: string | null },
+): Promise<void> {
+  await transaccion.execute(
+    sql`select set_config('app.cuenta_id', ${origen.cuentaId}, true),
+               set_config('app.usuario_id', ${origen.usuarioId ?? ''}, true)`,
+  );
+}
