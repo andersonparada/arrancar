@@ -2487,7 +2487,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   RLS de otra empresa, fondo no asignado invisible, bandeja visible, disparador del custodio; `politicas-de-los-modulos` y
   `llaves-entre-esquemas` en verde. **Quedan para después** (anotado en los dos `docs/modulos/*.md`): la configuración
   (§9.5), todo el servidor y el cliente (CC-2 en adelante, CL-2 en adelante) y lo que depende de CCL-M (`preguntarATodos`),
-  CCL-B1 (conceptos de sistema de Bancos, `0035`), CCL-L1 (referencia de destino del libro) y CCL-BZ (bancarización
+  CCL-B1 (conceptos de sistema de Bancos, `0036`), CCL-L1 (referencia de destino del libro) y CCL-BZ (bancarización
   compartida, función `security definer` de la suma de Caja chica, que revisa `seguridad`, V-S1 y V-S2).
 - **2026-11-18 — CC-1 y CL-1, correcciones de la revisión.** Migraciones `0002` de Caja chica y Cuentas por liquidar
   (la `0001` no se tocó). La excepción de CC-f (A′, factura con retención con permiso y motivo) ahora cabe en las
@@ -2957,3 +2957,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   'bien'`; el servicio capitalizado queda en servicios del SAT-2237. El análisis «Activos fijos comprados» muestra todos y suma la
   columna «Es un» (bien o servicio, también en el Excel). Cliente: ya no se fuerza «Bien» al marcar activo fijo y el texto es
   «Activo fijo (se capitaliza)».
+- **2026-11-18 (CCL-B1, Bancos)**: migración `0036_caja_chica_y_cuentas_por_liquidar` (la `0035` ya la ocupaba
+  `saldos_por_cuenta_permisos`): nueve conceptos de sistema de Caja chica y Cuentas por liquidar (clave puesta a
+  «Fondo de caja chica» y «Reintegro de caja chica» sin clave; repetible). `ClaveDeConceptoDeSistema` y
+  `CONCEPTOS_DE_SISTEMA` los incluyen (los dos sugeridos pasan a sistema). `CONCEPTOS_RESERVADOS_POR_MODULO`
+  (`dominio/conceptos-reservados.ts`) generaliza P3: un concepto reservado se elige a mano en un cheque o una nota solo
+  si su módulo no está activo; activo, `ConceptoReservadoPorSuModulo` (reemplaza a `PagoAProveedoresLoFijaCuentasPorPagar`;
+  «Pago a proveedores» sigue solo en cheques porque en una nota es la marca de Cuentas por pagar). `ModulosDeOrigen`
+  (`estaActivo(operador, modulo)` y `activos(operador)`) reemplaza a `CuentasPorPagarActivo`; `RevisorDeCambios` rechaza
+  cualquier movimiento con origen en un módulo inactivo (`ModuloDeOrigenInactivo` con el nombre del módulo). Leyendas del
+  flujo de efectivo de caja chica y de anticipos (`aplicacion/leyendas-del-flujo.ts`; varias se unen en una sola nota).

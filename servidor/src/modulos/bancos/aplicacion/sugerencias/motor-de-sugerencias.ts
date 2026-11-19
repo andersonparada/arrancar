@@ -7,14 +7,14 @@ import type { Ejemplo, Pendiente, ResultadoDeVotacion } from '../../dominio/suge
 import { votar } from '../../dominio/sugerencias/votacion.js';
 import type { ConsultasConceptos } from '../puertos/consultas-conceptos.js';
 import type { ConsultasDeSugerencias, RangoDeFechas } from '../puertos/consultas-de-sugerencias.js';
-import type { CuentasPorPagarActivo } from '../puertos/cuentas-por-pagar-activo.js';
+import type { ModulosDeOrigen } from '../puertos/modulos-de-origen.js';
 import type { ParametrosDeSugerencias, PoliticaDeSugerencias } from '../puertos/politica-de-sugerencias.js';
 
 export interface DependenciasDelMotor {
   consultasDeSugerencias: ConsultasDeSugerencias;
   consultasDeConceptos: ConsultasConceptos;
   politicaDeSugerencias: PoliticaDeSugerencias;
-  cuentasPorPagar: CuentasPorPagarActivo;
+  modulosDeOrigen: ModulosDeOrigen;
 }
 
 export interface PendienteConTipo {
@@ -47,9 +47,9 @@ export class MotorDeSugerencias {
       parametros,
     );
     const conceptos = await this.dependencias.consultasDeConceptos.listar();
-    const conCuentasPorPagar = await this.dependencias.cuentasPorPagar.estaActivo(operador);
+    const modulosActivos = await this.dependencias.modulosDeOrigen.activos(operador);
     return pendientes.map(({ pendiente, tipo }) => {
-      const ofrecibles = conceptos.filter((c) => sePuedeOfrecer(c, tipo, conCuentasPorPagar));
+      const ofrecibles = conceptos.filter((c) => sePuedeOfrecer(c, tipo, modulosActivos));
       const casos = armarCasos(pendiente, ejemplos, parametros.vidaMediaDias);
       return votar(casos, ofrecibles, { confianzaMinima: parametros.confianzaMinima });
     });

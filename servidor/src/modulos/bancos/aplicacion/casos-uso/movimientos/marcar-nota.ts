@@ -1,5 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../../dominio/asignacion-de-concepto.js';
+import { MODULO_CUENTAS_POR_PAGAR } from '../../../dominio/conceptos-reservados.js';
 import { CuentasPorPagarInactivo, NotaNoMarcable, NotaYaMarcada } from '../../../dominio/errores-de-origen.js';
 import type { MovimientoDto } from '../../dto/movimiento.dto.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
@@ -20,12 +21,12 @@ export class MarcarNota {
    *   NotaYaMarcada si ya lo está.
    */
   ejecutar(operador: Operador, movimientoId: string): Promise<MovimientoDto> {
-    const { unidadDeTrabajo, repositorio, consultas, conceptos, auditoria, cuentasPorPagar } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, consultas, conceptos, auditoria, modulosDeOrigen } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const movimiento = await movimientoExistente(repositorio, movimientoId);
       movimiento.exigirClase(false);
       movimiento.exigirNotaDeDebitoMarcable();
-      if (!(await cuentasPorPagar.estaActivo(operador))) throw new CuentasPorPagarInactivo();
+      if (!(await modulosDeOrigen.estaActivo(operador, MODULO_CUENTAS_POR_PAGAR))) throw new CuentasPorPagarInactivo();
       const anterior = await consultas.obtener(movimientoId);
       if (anterior.marcadaParaCuentasPorPagar) throw new NotaYaMarcada();
       if (anterior.interesBruto !== null) throw new NotaNoMarcable();

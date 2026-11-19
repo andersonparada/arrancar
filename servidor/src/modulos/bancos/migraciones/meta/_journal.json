@@ -253,6 +253,13 @@
       "when": 1795045430386,
       "tag": "0035_saldos_por_cuenta_permisos",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1795055166177,
+      "tag": "0036_caja_chica_y_cuentas_por_liquidar",
+      "breakpoints": true
     }
   ]
 }

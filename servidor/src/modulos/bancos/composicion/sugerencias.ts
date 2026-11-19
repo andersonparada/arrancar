@@ -4,7 +4,7 @@ import { ModulosActivosDeLaCuentaEnRegistro } from '../../core/mediador/infraest
 import { SugerirConceptoAlCapturar } from '../aplicacion/casos-uso/sugerencias/sugerir-concepto-al-capturar.js';
 import { SugerirConceptosDeSinClasificar } from '../aplicacion/casos-uso/sugerencias/sugerir-conceptos-de-sin-clasificar.js';
 import { MotorDeSugerencias } from '../aplicacion/sugerencias/motor-de-sugerencias.js';
-import { CuentasPorPagarActivoEnModulosActivos } from '../infraestructura/cuentas-por-pagar-activo-en-modulos-activos.js';
+import { ModulosDeOrigenEnModulosActivos } from '../infraestructura/modulos-de-origen-en-modulos-activos.js';
 import { ConsultasConceptosDrizzle } from '../infraestructura/persistencia/consultas-conceptos.drizzle.js';
 import { ConsultasDeSugerenciasDrizzle } from '../infraestructura/persistencia/consultas-de-sugerencias.drizzle.js';
 import { PoliticaDeSugerenciasEnConfiguracion } from '../infraestructura/politica-de-sugerencias.configuracion.js';
@@ -17,7 +17,7 @@ export function casosDeSugerencias(dependencias: { unidadDeTrabajo: UnidadDeTrab
     consultasDeSugerencias,
     consultasDeConceptos: new ConsultasConceptosDrizzle(),
     politicaDeSugerencias,
-    cuentasPorPagar: new CuentasPorPagarActivoEnModulosActivos(new ModulosActivosDeLaCuentaEnRegistro()),
+    modulosDeOrigen: new ModulosDeOrigenEnModulosActivos(new ModulosActivosDeLaCuentaEnRegistro()),
   });
   const compartidas = { ...dependencias, consultasDeSugerencias, motor };
   return {

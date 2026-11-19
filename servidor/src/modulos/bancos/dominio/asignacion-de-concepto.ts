@@ -1,9 +1,10 @@
 import type { PropiedadesDeConcepto } from './concepto.js';
+import { CONCEPTOS_RESERVADOS_POR_MODULO } from './conceptos-reservados.js';
 import {
   ConceptoDeSistemaNoSeElige,
   ConceptoIncompatible,
   ConceptoInactivo,
-  PagoAProveedoresLoFijaCuentasPorPagar,
+  ConceptoReservadoPorSuModulo,
 } from './errores-de-conceptos.js';
 
 /** Lo que una nota o un cheque original le exige al concepto que se elige. El cheque cuenta como débito. */
@@ -15,36 +16,43 @@ interface Tolerancias {
   /** El movimiento ya tenía este concepto (al corregirlo): no se le exige que siga activo. */
   yaAsignado?: boolean;
   /**
-   * Solo para un cheque manual (P3): «Pago a proveedores» es de sistema, pero se puede elegir a mano si Cuentas
-   * por pagar no está activo (`'permitido'`); si lo está (`'reservado'`) lo fija ese módulo.
+   * Los módulos activos de la cuenta. Un concepto de sistema reservado por un módulo (`CONCEPTOS_RESERVADOS_POR_MODULO`)
+   * se puede elegir a mano si ese módulo no está activo; activo, lo registra él. Sin este dato ninguno se elige.
    */
-  pagoAProveedores?: 'permitido' | 'reservado';
+  modulosActivos?: ReadonlySet<string>;
 }
 
-/** La clave del concepto de sistema que un cheque manual puede elegir cuando no hay Cuentas por pagar. */
+/** La clave de «Pago a proveedores», que Cuentas por pagar reserva. */
 export const CLAVE_DE_PAGO_A_PROVEEDORES = 'pago_a_proveedor';
 
 /**
  * Las reglas para elegir el concepto de una nota o un cheque **original** (informe del contador, C2 y C5):
- * no de sistema (así `sin_clasificar` nunca se elige; la excepción de P3 es de los cheques), activo y compatible con `aplica_a`. Los inversos
+ * no de sistema (así `sin_clasificar` nunca se elige; la excepción son los reservados de un módulo inactivo), activo y compatible con `aplica_a`. Los inversos
  * no pasan por aquí: heredan el concepto de su original sin validar nada.
  * @throws ConceptoDeSistemaNoSeElige, ConceptoInactivo o ConceptoIncompatible.
  */
 export function exigirConceptoElegible(
   concepto: ConceptoElegido,
   tipo: TipoDeMovimiento,
-  { yaAsignado = false, pagoAProveedores }: Tolerancias = {},
+  { yaAsignado = false, modulosActivos }: Tolerancias = {},
 ): void {
-  exigirQueSeaElegible(concepto.claveDeSistema, pagoAProveedores);
+  exigirQueSeaElegible(concepto.claveDeSistema, tipo, modulosActivos);
   if (!concepto.activo && !yaAsignado) throw new ConceptoInactivo();
   exigirCompatibilidad(concepto.aplicaA, tipo);
 }
 
-/** Ningún concepto de sistema se elige, salvo «Pago a proveedores» en un cheque manual sin Cuentas por pagar. */
-function exigirQueSeaElegible(clave: string | null, pagoAProveedores: Tolerancias['pagoAProveedores']): void {
+/** Ningún concepto de sistema se elige, salvo el reservado por un módulo que no está activo. */
+function exigirQueSeaElegible(
+  clave: string | null,
+  tipo: TipoDeMovimiento,
+  modulosActivos: Tolerancias['modulosActivos'],
+): void {
   if (clave === null) return;
-  if (clave !== CLAVE_DE_PAGO_A_PROVEEDORES || pagoAProveedores === undefined) throw new ConceptoDeSistemaNoSeElige();
-  if (pagoAProveedores === 'reservado') throw new PagoAProveedoresLoFijaCuentasPorPagar();
+  const modulo = CONCEPTOS_RESERVADOS_POR_MODULO[clave];
+  if (modulo === undefined || modulosActivos === undefined) throw new ConceptoDeSistemaNoSeElige();
+  // «Pago a proveedores» sigue siendo solo de los cheques (P3): en una nota es la marca de Cuentas por pagar.
+  if (clave === CLAVE_DE_PAGO_A_PROVEEDORES && tipo !== 'cheque') throw new ConceptoDeSistemaNoSeElige();
+  if (modulosActivos.has(modulo)) throw new ConceptoReservadoPorSuModulo(modulo);
 }
 
 /** El cheque cuenta como débito; un concepto «ambos» sirve para cualquiera. */

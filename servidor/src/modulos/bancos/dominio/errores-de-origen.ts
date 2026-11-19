@@ -1,4 +1,5 @@
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
+import { nombreDelModulo } from './conceptos-reservados.js';
 
 /** Lo que generó otro módulo no se corrige, elimina ni blanquea en Bancos: solo se anula (con el aviso al módulo). */
 export class MovimientoDeOtroModulo extends ReglaDeNegocioInfringida {
@@ -13,8 +14,8 @@ export class MovimientoDeOtroModulo extends ReglaDeNegocioInfringida {
 export class ModuloDeOrigenInactivo extends ReglaDeNegocioInfringida {
   readonly codigo = 'modulo_de_origen_inactivo';
 
-  constructor() {
-    super('Active Cuentas por pagar para cambiar este movimiento: lo generó o lo marcó ese módulo.');
+  constructor(modulo: string) {
+    super(`Active ${nombreDelModulo(modulo)} para cambiar este movimiento: lo generó o lo marcó ese módulo.`);
   }
 }
 

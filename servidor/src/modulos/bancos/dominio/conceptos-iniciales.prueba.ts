@@ -29,12 +29,21 @@ describe('conceptos iniciales', () => {
     const claves = CONCEPTOS_INICIALES.map((c) => c.claveDeSistema).filter(Boolean);
 
     expect(claves.sort()).toEqual([
+      'anticipo_no_liquidado',
+      'anticipo_por_liquidar',
       'anulacion_de_apertura',
+      'devolucion_de_anticipo',
       'devolucion_de_efectivo_para_pagos',
+      'devolucion_de_fondo_de_caja_chica',
       'efectivo_para_pagos',
       'faltante_de_efectivo',
+      'fondo_de_caja_chica',
+      'gasto_de_anticipo',
+      'gasto_de_anticipo_de_activo',
       'pago_a_proveedor',
       'pago_a_proveedor_de_activo',
+      'reintegro_de_caja_chica',
+      'reintegro_de_caja_chica_de_activo',
       'reintegro_de_proveedor',
       'reintegro_de_proveedor_de_activo',
       'saldo_inicial',

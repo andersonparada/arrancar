@@ -2,8 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { totalesDe } from '../pruebas/dobles-de-totales-por-concepto.js';
 import { aFilasExportadasDelFlujo } from '../http/flujo-de-efectivo.columnas.js';
 import { armarFlujoDeEfectivo, ubicarEnElFlujo } from './calculo-de-flujo-de-efectivo.js';
+import { LEYENDA_DE_ANTICIPOS, LEYENDA_DE_CAJA_CHICA, LEYENDA_DE_PAGOS_EN_EFECTIVO } from './leyendas-del-flujo.js';
 import type { SaldosDelRango, TotalesDeUnConcepto } from './dto/reportes-por-concepto.dto.js';
 
+const retiroDeEfectivo = totalesDe({
+  conceptoId: 'efectivo',
+  claveDeSistema: 'efectivo_para_pagos',
+  actividadDeFlujo: 'ninguna',
+  salidas: '15.00',
+});
 const marcoDeTodas = { desde: '2026-02-01', hasta: '2026-02-28', cuentaBancariaId: null };
 const marcoDeUna = { ...marcoDeTodas, cuentaBancariaId: 'cb-1' };
 const saldos = (saldoAlInicio: string, saldoAlFinal: string): SaldosDelRango => ({ saldoAlInicio, saldoAlFinal });
@@ -202,5 +209,46 @@ describe('leyenda de los pagos en efectivo (CP4-EB)', () => {
     const reporte = armarFlujoDeEfectivo([retiro], saldos('0.00', '-15.00'), marcoDeTodas);
 
     expect(aFilasExportadasDelFlujo(reporte).at(-1)).toMatchObject({ seccion: 'Nota', linea: reporte.leyenda });
+  });
+});
+
+describe('leyendas de caja chica y de anticipos (CCL-B1)', () => {
+  const con = (...totales: TotalesDeUnConcepto[]) =>
+    armarFlujoDeEfectivo(totales, saldos('0.00', '0.00'), marcoDeTodas).leyenda;
+  const concepto = (claveDeSistema: string) =>
+    totalesDe({ conceptoId: claveDeSistema, claveDeSistema, salidas: '9.00' });
+
+  it('los reintegros de caja chica avisan que el gasto se muestra en la fecha de la reposición', () => {
+    expect(con(concepto('reintegro_de_caja_chica'))).toBe(LEYENDA_DE_CAJA_CHICA);
+    expect(con(concepto('reintegro_de_caja_chica_de_activo'))).toBe(LEYENDA_DE_CAJA_CHICA);
+  });
+
+  it('los anticipos y sus gastos avisan que se muestran en la fecha de entrega', () => {
+    expect(con(concepto('anticipo_por_liquidar'))).toBe(LEYENDA_DE_ANTICIPOS);
+    expect(con(concepto('gasto_de_anticipo'))).toBe(LEYENDA_DE_ANTICIPOS);
+    expect(con(concepto('gasto_de_anticipo_de_activo'))).toBe(LEYENDA_DE_ANTICIPOS);
+  });
+
+  it('el fondo, su devolución, lo no liquidado y la devolución de anticipos no llevan leyenda', () => {
+    for (const clave of [
+      'fondo_de_caja_chica',
+      'devolucion_de_fondo_de_caja_chica',
+      'anticipo_no_liquidado',
+      'devolucion_de_anticipo',
+    ]) {
+      expect(con(concepto(clave))).toBeNull();
+    }
+  });
+
+  it('varias leyendas se muestran juntas, cada una una sola vez', () => {
+    const leyenda = con(concepto('reintegro_de_caja_chica'), concepto('gasto_de_anticipo'), retiroDeEfectivo);
+
+    expect(leyenda).toBe(`${LEYENDA_DE_PAGOS_EN_EFECTIVO} ${LEYENDA_DE_CAJA_CHICA} ${LEYENDA_DE_ANTICIPOS}`);
+  });
+
+  it('el Excel lleva la leyenda de caja chica como nota', () => {
+    const reporte = armarFlujoDeEfectivo([concepto('reintegro_de_caja_chica')], saldos('0.00', '-9.00'), marcoDeTodas);
+
+    expect(aFilasExportadasDelFlujo(reporte).at(-1)).toMatchObject({ seccion: 'Nota', linea: LEYENDA_DE_CAJA_CHICA });
   });
 });

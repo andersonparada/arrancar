@@ -4,11 +4,11 @@ import { esParteDeCheque, esSaldoInicialLaParte, type ParteQueSeAgrega } from '.
 import type { DatosDeMovimiento } from '../dominio/propiedades-de-movimiento.js';
 import type { ConceptosDeMovimientos } from './conceptos-de-movimientos.js';
 import type { SolicitudDePartida } from './dto/saldo-inicial.dto.js';
-import type { CuentasPorPagarActivo } from './puertos/cuentas-por-pagar-activo.js';
+import type { ModulosDeOrigen } from './puertos/modulos-de-origen.js';
 
 interface Dependencias {
   conceptos: ConceptosDeMovimientos;
-  cuentasPorPagar: CuentasPorPagarActivo;
+  modulosDeOrigen: ModulosDeOrigen;
 }
 
 /** Lo que se escribe de una partida, ya limpio: lo que no aplica a su parte queda nulo. */
@@ -93,10 +93,10 @@ export class ArmadorDePartidas {
   }
 
   private async conceptoDe(operador: Operador, partida: PartidaNormalizada, actual?: string): Promise<string> {
-    const { conceptos, cuentasPorPagar } = this.dependencias;
+    const { conceptos, modulosDeOrigen } = this.dependencias;
     if (partida.parte !== 'cheque_posfechado') return (await conceptos.deSistema(operador, 'saldo_inicial')).id.valor;
-    const pagoAProveedores = (await cuentasPorPagar.estaActivo(operador)) ? 'reservado' : 'permitido';
-    const concepto = await conceptos.elegido(partida.conceptoId ?? undefined, 'cheque', { actual, pagoAProveedores });
+    const modulosActivos = await modulosDeOrigen.activos(operador);
+    const concepto = await conceptos.elegido(partida.conceptoId ?? undefined, 'cheque', { actual, modulosActivos });
     return concepto.id.valor;
   }
 }

@@ -7,7 +7,7 @@ import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Cheque } from '../../../dominio/cheque.js';
-import type { CuentasPorPagarActivo } from '../../puertos/cuentas-por-pagar-activo.js';
+import type { ModulosDeOrigen } from '../../puertos/modulos-de-origen.js';
 import type { ConsultasCheques } from '../../puertos/consultas-cheques.js';
 import type { ConsultasMovimientos } from '../../puertos/consultas-movimientos.js';
 import type { RepositorioCheques } from '../../puertos/repositorio-cheques.js';
@@ -32,7 +32,7 @@ export interface DependenciasDeCheques {
   reloj: Reloj;
   /** Publica al confirmar lo que otros módulos escuchan (una partida de apertura anulada). */
   publicadorEventos: PublicadorEventos;
-  cuentasPorPagar: CuentasPorPagarActivo;
+  modulosDeOrigen: ModulosDeOrigen;
   /** Avisa al módulo de origen antes de cambiar un movimiento suyo o marcado (CP4). */
   revisor: RevisorDeCambios;
   /** El reparto por concepto de lo que emite otro módulo (CP4). */

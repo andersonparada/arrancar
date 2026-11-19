@@ -4,7 +4,7 @@ import {
   ConceptoDeSistemaNoSeElige,
   ConceptoIncompatible,
   ConceptoInactivo,
-  PagoAProveedoresLoFijaCuentasPorPagar,
+  ConceptoReservadoPorSuModulo,
 } from './errores-de-conceptos.js';
 
 const concepto = (cambios: Partial<Parameters<typeof exigirConceptoElegible>[0]> = {}) => ({
@@ -45,27 +45,29 @@ describe('exigirConceptoElegible', () => {
     expect(() => exigirConceptoElegible(concepto({ aplicaA: 'credito' }), 'debito')).toThrow(ConceptoIncompatible);
   });
 
-  describe('«Pago a proveedores» en un cheque manual (P3)', () => {
+  const sinModulos = new Set<string>();
+
+  describe('«Pago a proveedores» en un cheque o nota manual (P3)', () => {
     const pago = concepto({ claveDeSistema: 'pago_a_proveedor', aplicaA: 'debito' });
 
     it('se elige si Cuentas por pagar no está activo', () => {
-      expect(() => exigirConceptoElegible(pago, 'cheque', { pagoAProveedores: 'permitido' })).not.toThrow();
+      expect(() => exigirConceptoElegible(pago, 'cheque', { modulosActivos: sinModulos })).not.toThrow();
     });
 
     it('lo fija Cuentas por pagar si está activo', () => {
-      expect(() => exigirConceptoElegible(pago, 'cheque', { pagoAProveedores: 'reservado' })).toThrow(
-        PagoAProveedoresLoFijaCuentasPorPagar,
+      expect(() => exigirConceptoElegible(pago, 'cheque', { modulosActivos: new Set(['cuentas-por-pagar']) })).toThrow(
+        ConceptoReservadoPorSuModulo,
       );
     });
 
-    it('sin la tolerancia (notas, transferencias) sigue siendo de sistema', () => {
+    it('sin la lista de módulos activos (transferencias) sigue siendo de sistema', () => {
       expect(() => exigirConceptoElegible(pago, 'debito')).toThrow(ConceptoDeSistemaNoSeElige);
     });
 
     it('la excepción es solo de ese concepto: los demás de sistema no se eligen ni en un cheque', () => {
       const sinClasificar = concepto({ claveDeSistema: 'sin_clasificar' });
 
-      expect(() => exigirConceptoElegible(sinClasificar, 'cheque', { pagoAProveedores: 'permitido' })).toThrow(
+      expect(() => exigirConceptoElegible(sinClasificar, 'cheque', { modulosActivos: sinModulos })).toThrow(
         ConceptoDeSistemaNoSeElige,
       );
     });
@@ -74,11 +76,40 @@ describe('exigirConceptoElegible', () => {
       const inactivo = concepto({ claveDeSistema: 'pago_a_proveedor', aplicaA: 'debito', activo: false });
       const decredito = concepto({ claveDeSistema: 'pago_a_proveedor', aplicaA: 'credito' });
 
-      expect(() => exigirConceptoElegible(inactivo, 'cheque', { pagoAProveedores: 'permitido' })).toThrow(
+      expect(() => exigirConceptoElegible(inactivo, 'cheque', { modulosActivos: sinModulos })).toThrow(
         ConceptoInactivo,
       );
-      expect(() => exigirConceptoElegible(decredito, 'cheque', { pagoAProveedores: 'permitido' })).toThrow(
+      expect(() => exigirConceptoElegible(decredito, 'cheque', { modulosActivos: sinModulos })).toThrow(
         ConceptoIncompatible,
+      );
+    });
+  });
+
+  describe('conceptos reservados de Caja chica y Cuentas por liquidar (CCL-B1)', () => {
+    const fondo = concepto({ claveDeSistema: 'fondo_de_caja_chica', aplicaA: 'debito' });
+    const devolucion = concepto({ claveDeSistema: 'devolucion_de_anticipo', aplicaA: 'credito' });
+
+    it('se eligen en un cheque o una nota si su módulo no está activo', () => {
+      expect(() => exigirConceptoElegible(fondo, 'cheque', { modulosActivos: sinModulos })).not.toThrow();
+      expect(() => exigirConceptoElegible(fondo, 'debito', { modulosActivos: sinModulos })).not.toThrow();
+      expect(() => exigirConceptoElegible(devolucion, 'credito', { modulosActivos: sinModulos })).not.toThrow();
+    });
+
+    it('con su módulo activo, lo registra ese módulo y dice cuál', () => {
+      const cajaChica = new Set(['caja-chica']);
+
+      expect(() => exigirConceptoElegible(fondo, 'cheque', { modulosActivos: cajaChica })).toThrow(
+        ConceptoReservadoPorSuModulo,
+      );
+      expect(() => exigirConceptoElegible(fondo, 'cheque', { modulosActivos: cajaChica })).toThrow(/Caja chica/);
+    });
+
+    it('el módulo del otro concepto no lo reserva', () => {
+      const liquidar = new Set(['cuentas-por-liquidar']);
+
+      expect(() => exigirConceptoElegible(fondo, 'cheque', { modulosActivos: liquidar })).not.toThrow();
+      expect(() => exigirConceptoElegible(devolucion, 'credito', { modulosActivos: liquidar })).toThrow(
+        /Cuentas por liquidar/,
       );
     });
   });

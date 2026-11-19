@@ -3,7 +3,7 @@ import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js
 import type { ChequeDto, ChequeListadoDto, FiltroDeChequesDeLaEmpresa } from '../aplicacion/dto/cheque.dto.js';
 import type { MovimientoDto } from '../aplicacion/dto/movimiento.dto.js';
 import type { Operador } from '../../core/compartido/aplicacion/operador.js';
-import type { CuentasPorPagarActivo } from '../aplicacion/puertos/cuentas-por-pagar-activo.js';
+import type { ModulosDeOrigen } from '../aplicacion/puertos/modulos-de-origen.js';
 import type { ConsultasCheques } from '../aplicacion/puertos/consultas-cheques.js';
 import type { LimiteDeChequera } from '../aplicacion/puertos/limite-de-chequera.js';
 import type { RepositorioCheques } from '../aplicacion/puertos/repositorio-cheques.js';
@@ -174,11 +174,22 @@ export class LimiteDeChequeraFijo implements LimiteDeChequera {
   }
 }
 
-/** Un Cuentas por pagar que está activo o no, según se le diga (P3). */
-export class CuentasPorPagarFijo implements CuentasPorPagarActivo {
-  constructor(private readonly activo: boolean) {}
+/** Los módulos activos que se le digan (P3, CCL-B1). */
+export class ModulosDeOrigenFijos implements ModulosDeOrigen {
+  constructor(private readonly modulos: readonly string[]) {}
 
-  async estaActivo(_operador: Operador): Promise<boolean> {
-    return this.activo;
+  async estaActivo(_operador: Operador, modulo: string): Promise<boolean> {
+    return this.modulos.includes(modulo);
+  }
+
+  async activos(_operador: Operador): Promise<ReadonlySet<string>> {
+    return new Set(this.modulos);
+  }
+}
+
+/** Un Cuentas por pagar que está activo o no, según se le diga (P3). */
+export class CuentasPorPagarFijo extends ModulosDeOrigenFijos {
+  constructor(activo: boolean) {
+    super(activo ? ['cuentas-por-pagar'] : []);
   }
 }
