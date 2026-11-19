@@ -3561,6 +3561,30 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   borrarlo (aviso `documento_por_eliminar` del libro) fallaba con 23503. Decisión: se conserva el historial y se rechaza
   con el error propio `comprobante_con_reposicion_anulada` (422) en `DevolverALaBandeja` y `EliminarPorAviso`
   (puerto nuevo `tuvoReposicionAnulada`); lo que sí cabe es anular el documento. Sin migración. Pruebas de API de ambos flujos.
+- **2026-11-19 (CC-5, Caja chica, arqueos, servidor)**: arqueos del fondo, sin migraciones (las tablas `arqueos` y el
+  faltante/sobrante como comprobante ya venían de CC-1). Rutas (`/api/caja-chica`): `GET /fondos/:id/arqueos` (lista) y
+  `GET /arqueos/:id` (acta: conteo por denominación con subtotales, cifras que decía el sistema, motivo, destino y el
+  comprobante del ajuste), con `fondos.ver`; `GET /fondos/:id/arqueos/propuesta` (monto, pendiente, vales, efectivo
+  esperado, denominaciones y pendientes por ver) y `POST /fondos/:id/arqueos` con `arqueos.crear`; `POST /arqueos/:id/anular`
+  con `arqueos.anular`. *Registrar*: fondo abierto y bloqueado; conteo `[{ denominacionCentavos, cantidad }]` validado en el
+  dominio (denominaciones de Q200 a Q0.01, sin repetir, cantidades enteras; `conteo_invalido`); `realizadoEn` opcional con zona,
+  ni futuro ni anterior a la apertura (`fecha_del_arqueo_invalida`); `diferencia = contado + valoresPorCambiar - esperado`.
+  Con diferencia: `motivoDeDiferencia` obligatorio y, con faltante, `destinoDelFaltante` (`perdida` o `cobrar_al_custodio`,
+  C10); sin diferencia o con sobrante no se admiten motivo ni destino que no aplican (`dato_de_diferencia_que_no_aplica`).
+  Con diferencia nace el comprobante `faltante` (monto positivo) o `sobrante` (resta) del mismo fondo con `arqueo_id`, y se
+  audita `ajustar` (recurso `caja-chica.arqueos`, `anterior` = `FondoDto` antes del ajuste, motivo); sin diferencia no hay
+  auditoría. Número `caja-chica.arqueos`. CC-k: si quien arquea es el custodio vigente, la variable
+  `caja-chica.control.separacion_de_funciones` avisa (queda `lo_hizo_el_custodio`) o bloquea
+  (`separacion_de_funciones_en_el_arqueo`). *Anular*: fondo abierto, arqueo vigente, su faltante o sobrante no repuesto
+  (`arqueo_con_comprobante_repuesto`: primero se anula la reposición) y, si era un sobrante, el efectivo esperado no queda
+  negativo; anula el arqueo y su comprobante, audita `anular` con el `ArqueoDto` y publica `arqueo_anulado`. Aviso «sin arqueo»
+  (CC-l, opcional): variable nueva `caja-chica.arqueos.dias_para_avisar` (30; 0 = sin aviso; empresa e instalación); la lista,
+  la ficha del fondo y la propuesta lo agregan a `avisos` si pasaron más días desde el último arqueo vigente (o desde la
+  apertura si nunca se arqueó). Eventos `caja-chica.arqueo_registrado` (con diferencia y destino) y `arqueo_anulado`
+  (contrato en `caja-chica.contratos.ts`). `Comprobante` y `ComprobanteDto` ganan `destinoDelFaltante`. Decisiones:
+  (1) el día contable del arqueo es el de `realizadoEn` tal como se escribió (primeros diez caracteres), no el de UTC;
+  (2) el arqueo no guarda el destino: vive solo en el comprobante del faltante; (3) el arqueo no pide `comprobantes.anular`
+  para anular su ajuste: lo cubre `arqueos.anular` y su entrada de auditoría; (4) la propuesta pide `arqueos.crear`.
 - **2026-11-19 (CL-3, Cuentas por liquidar, servidor):** gastos de los anticipos, sin migraciones nuevas (la tabla `gastos` ya
   estaba en CL-1 y CL-1c). `RecibirDocumento` atiende `cuentas-por-liquidar.recibir_documento` (contrato nuevo): guarda el
   documento en la bandeja con `monto = total − retenciones` y `monto_retenido`; **no rechaza por retención** (queda en la

@@ -1022,7 +1022,7 @@ uno por módulo a la vez.
 | **CC-2** (fondos) | Abrir, custodio, aumentar, disminuir, editar, anular apertura, lista, ficha, accesos, manejador de Bancos, eventos | CC-1 y CCL-B1 |
 | **CC-3** (comprobantes) — **hecho 2026-11-19 (servidor; corregido: baja del libro con fondo no asignado se rechaza)** | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención y su auditoría `autorizar`, §5.4 g), devolver, vales de gasto, tope, ecuación con el neto, avisos del libro, bancarización y su respuesta con `monto + monto_retenido` (función `security definer`, §5.4 h). Pruebas: factura con retención desde la ficha (queda en la bandeja), asignarla sin permiso (403, sigue en la bandeja), con permiso sin motivo (rechazo), con los dos (asignada, `asignado_por` y auditoría), devolverla y reasignar (pide otra vez), la suma del mes con una factura con retención (cuenta el total) | CC-2, CCL-L1 y CCL-BZ |
 | **CC-4** (reposiciones) — **hecho 2026-11-19 (servidor)** | Reponer con desglose, anular (aquí y por aviso), `marcar_procesado`, datos de las impresiones | CC-3 |
-| **CC-5** (arqueos) | Propuesta, registrar con diferencia (faltante o sobrante), anular, avisos | CC-3 |
+| **CC-5** (arqueos) — **hecho 2026-11-19 (servidor)** | Propuesta, registrar con diferencia (faltante o sobrante), anular, avisos | CC-3 |
 | **CC-6** (vales provisionales) | Entregar, liquidar, anular, aviso de vale viejo | CC-3 |
 | **CC-7** (cierre) | Cerrar con reposición compensada y depósito | CC-4, CC-5 y CC-6 |
 | **CC-8 / CC-9** (cliente) | 8: fondos, ficha, bandeja, comprobantes, vales de gasto, Ingreso con referencia. 9: reposición, arqueo, vales provisionales, cierre, impresiones | CC-4 (8) y CC-7 (9) |
