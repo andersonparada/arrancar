@@ -74,6 +74,7 @@ const columnasDeLinea = {
   motivo: documentos.motivoSinCredito,
   numeroDeLinea: lineas.numero,
   concepto: conceptos.nombre,
+  tipoDeLinea: sql<'bien' | 'servicio'>`${lineas.tipo}`,
   descripcion: lineas.descripcion,
   ivaAlCosto: sql<string>`${lineas.ivaNoAcreditable} * ${signo}`,
   costo: sql<string>`(${costoDeLinea}) * ${signo}`,

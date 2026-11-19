@@ -193,7 +193,7 @@ Con tres módulos pagando en efectivo hace falta que **cada uno vea a los otros*
 - El texto de la limitación E-6 pasa a «Arrancar solo suma los pagos registrados en Arrancar».
 - **Variable:** `libro-de-compras.bancarizacion.umbral` (instalación, Q30,000) **reemplaza** a
   `cuentas-por-pagar.bancarizacion.umbral` (que también usa CP2 para compensar con notas: Cuentas por pagar la lee con
-  el `LectorDeConfiguracion` del core por su clave nueva). Migración de datos del libro (`0037_bancarizacion_compartida`,
+  el `LectorDeConfiguracion` del core por su clave nueva). Migración de datos del libro (`0038_bancarizacion_compartida`,
   `--custom`, repetible): copia a la clave nueva las filas de instalación de `core.configuraciones` con la clave vieja.
   El JSON de instalación (`RUTA_CONFIG_INSTALACION`) no se migra: el paso lo anota para soporte.
 - La regla con la caja: el **retiro** de CP4 no cuenta (es dinero de la empresa); sí cada pago en efectivo, cada

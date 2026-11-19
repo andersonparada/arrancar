@@ -10,10 +10,13 @@ import { lineasDeDocumento as lineas } from './lineas-de-documento.tablas.js';
 import { anuladoDelLibro, documentosDelLibro } from './libro.mapeador.js';
 import { vigenciasDeCombustible as vigencias } from './vigencias-de-combustible.tablas.js';
 
-/** Combustible por su vigencia o por su IDP; si no, activo fijo; si no, el tipo de la línea (bien o servicio). */
+/**
+ * Combustible por su vigencia o por su IDP; si no, activo fijo que es un bien; si no, el tipo de la línea.
+ * Un servicio capitalizado sigue en la casilla de servicios del SAT-2237.
+ */
 const categoriaSql = sql<CategoriaDeLinea>`case
   when ${lineas.vigenciaDeCombustibleId} is not null or ${lineas.idp} > 0 then 'combustible'
-  when ${lineas.esActivoFijo} then 'activo_fijo'
+  when ${lineas.esActivoFijo} and ${lineas.tipo} = 'bien' then 'activo_fijo'
   else ${lineas.tipo} end`;
 
 /** El NIT del proveedor; en la factura especial, el del vendedor, que se guarda como receptor. */

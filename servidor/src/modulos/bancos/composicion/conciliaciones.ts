@@ -16,6 +16,7 @@ import { DesmarcarNota } from '../aplicacion/casos-uso/movimientos/desmarcar-not
 import { ConciliacionesControlador } from '../http/conciliaciones.controlador.js';
 import { rutasConciliaciones } from '../http/conciliaciones.rutas.js';
 import { dependenciasDeNotas } from './notas.js';
+import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
 import { PoliticaDeEstadoDeCuentaEnConfiguracion } from '../infraestructura/politica-de-estado-de-cuenta.configuracion.js';
 import { ConsultasConciliacionesDrizzle } from '../infraestructura/persistencia/consultas-conciliaciones.drizzle.js';
 import { ConsultasMovimientosDrizzle } from '../infraestructura/persistencia/consultas-movimientos.drizzle.js';
@@ -32,6 +33,7 @@ function dependenciasDeConciliaciones() {
     repositorio: new RepositorioConciliacionesDrizzle(),
     consultas: new ConsultasConciliacionesDrizzle(),
     consultasMovimientos: new ConsultasMovimientosDrizzle(),
+    cargaInicial: new CargaInicialEnMediador(),
   };
 }
 

@@ -15,6 +15,7 @@ import { rutasDePagosComponidas } from './composicion/pagos.js';
 import { rutasDeReportesDeEfectivoComponidas } from './composicion/reportes-de-efectivo.js';
 import { rutasDeReportesDePagosComponidas } from './composicion/reportes-de-pagos.js';
 import { rutasDePagosEnEfectivoComponidas } from './composicion/pagos-en-efectivo.js';
+import { respuestaDePagadoAlProveedorComponida } from './composicion/pagado-al-proveedor.js';
 import { rutasDeReintegrosComponidas } from './composicion/reintegros.js';
 import { rutasDeReportesDeProveedorComponidas } from './composicion/reportes-de-proveedor.js';
 import { rutasDeReportesDeSaldosComponidas } from './composicion/reportes-de-saldos.js';
@@ -57,6 +58,7 @@ export const moduloCuentasPorPagar: DefinicionModulo = {
     rutasDeReportesDeEfectivoComponidas(),
     rutasDeConsultaDePagosComponidas(),
     rutasDePagosEnEfectivoComponidas(),
+    respuestaDePagadoAlProveedorComponida(),
     // generador: rutas
   ]),
 };

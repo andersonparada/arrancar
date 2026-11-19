@@ -11,6 +11,7 @@ import { rutasDeVigenciasDeCombustible } from './composicion/vigencias-de-combus
 import { rutasDeAnalisisComponidas } from './composicion/analisis.js';
 import { escuchasDeFechaDeInicioComponidas } from './composicion/fecha-de-inicio.js';
 import { respuestasDeCierreDeCargaComponidas } from './composicion/revision-de-cierre.js';
+import { ordenDeBancarizacionComponida } from './composicion/bancarizacion.js';
 import { rutasDeLibro } from './composicion/libro.js';
 import { rutasDePeriodosComponidas } from './composicion/periodos.js';
 import { rutasDeConstanciasPendientesComponidas } from './composicion/constancias-pendientes.js';
@@ -34,6 +35,7 @@ function componerRutas() {
     rutasDeAnalisisComponidas(),
     escuchasDeFechaDeInicioComponidas(),
     respuestasDeCierreDeCargaComponidas(),
+    ordenDeBancarizacionComponida(),
     // generador: rutas
   ]);
 }

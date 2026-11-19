@@ -57,8 +57,14 @@ describe('aplicarConcepto', () => {
 });
 
 describe('ajustarTipoDeLinea', () => {
-  it('un activo fijo o el combustible siempre son un bien', () => {
+  it('un servicio puede ser activo fijo y conserva su tipo', () => {
     const linea = { ...lineaVacia(), tipo: 'servicio' as const, esActivoFijo: true };
+    ajustarTipoDeLinea(linea);
+    expect(linea.tipo).toBe('servicio');
+  });
+
+  it('el combustible siempre es un bien', () => {
+    const linea = { ...lineaVacia(), tipo: 'servicio' as const, esCombustible: true };
     ajustarTipoDeLinea(linea);
     expect(linea.tipo).toBe('bien');
   });

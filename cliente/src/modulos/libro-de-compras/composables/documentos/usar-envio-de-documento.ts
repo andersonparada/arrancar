@@ -1,5 +1,5 @@
 import { computed, ref, watch, type Ref } from 'vue';
-import { useRouter, type Router } from 'vue-router';
+import { useRoute, useRouter, type Router } from 'vue-router';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import type { RetencionDeDocumento } from '../../servicios/documentos.api';
@@ -10,6 +10,7 @@ import {
 } from '../../servicios/registro-de-documentos.api';
 import { dejarAvisosDelRegistro } from './avisos-del-registro';
 import { cuerpoDeDocumento, type EdicionDeDocumento } from './edicion-de-documento';
+import { referenciaDeLaRuta } from './referencia-de-destino';
 import { errorDelTipo, problemaDeError, type ProblemaDelFormulario } from './errores-del-registro';
 
 type Avisos = ReturnType<typeof usarAvisos>;
@@ -78,6 +79,16 @@ function irAlDocumento(router: Router, avisos: Avisos, { documento, avisos: delS
   void router.push({ name: 'libro-de-compras.documentos.ficha', params: { documentoId: documento.id } });
 }
 
+/** El cuerpo de registrar; con `referencia` (se llegó desde un destino) la lleva, y sin ella queda como siempre. */
+function cuerpoParaRegistrar(
+  edicion: EdicionDeDocumento,
+  retenciones: RetencionDeDocumento[],
+  referencia: string | null,
+) {
+  const cuerpo = cuerpoDeDocumento(edicion, retenciones, 'registro');
+  return cuerpo && referencia ? { ...cuerpo, referenciaDeDestino: referencia } : cuerpo;
+}
+
 /**
  * El envío del formulario: registra el documento, explica dentro del formulario los errores que se pueden corregir
  * (datos fiscales del proveedor, repetido, empresa sin datos…) y, al terminar, va a la ficha del documento.
@@ -89,12 +100,13 @@ export function usarEnvioDeDocumento(edicion: EdicionDeDocumento, retenciones: R
   const estado = crearEstadoDelEnvio();
   const registrado = ref(false);
   const intentar = crearRegistrador(edicion, avisos, estado);
+  const { referencia } = referenciaDeLaRuta(useRoute().query);
 
   // Corregir cualquier campo da por atendido el problema anterior.
   watch(edicion, estado.limpiar, { deep: true });
 
   async function registrar(): Promise<void> {
-    const cuerpo = cuerpoDeDocumento(edicion, retenciones.value, 'registro');
+    const cuerpo = cuerpoParaRegistrar(edicion, retenciones.value, referencia);
     if (!cuerpo) return;
     estado.limpiar();
     const respuesta = ref<RespuestaDeDocumento | null>(null);

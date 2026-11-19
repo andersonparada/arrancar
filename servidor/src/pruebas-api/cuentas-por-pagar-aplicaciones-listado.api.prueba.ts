@@ -14,7 +14,7 @@ import { usarEntornoApi } from './soporte/entorno-api.js';
 import { haceDias, prepararEscenario, type EscenarioDeDocumentos } from './soporte/escenario-de-documentos.js';
 
 const RUTA = '/api/cuentas-por-pagar';
-const UMBRAL = 'cuentas-por-pagar.bancarizacion.umbral';
+const UMBRAL = 'libro-de-compras.bancarizacion.umbral';
 const entorno = usarEntornoApi();
 let escenario: EscenarioDeDocumentos;
 let documentos: DocumentosPorPagarDePrueba;

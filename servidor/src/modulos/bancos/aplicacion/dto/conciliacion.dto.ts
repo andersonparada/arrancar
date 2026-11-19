@@ -5,6 +5,13 @@ export type { Cuadratica, Partida, PartidasDeConciliacion };
 
 export type EstadoDeConciliacionDto = 'en_proceso' | 'elaborada' | 'autorizada';
 
+/** Las conciliaciones de una cuenta y el periodo que toca conciliar. */
+export interface ListaDeConciliacionesDto {
+  conciliaciones: ConciliacionResumenDto[];
+  /** El mes siguiente a la última; sin ninguna, el de la fecha de inicio o el del primer movimiento; `null` si no hay nada. */
+  periodoSiguiente: { anio: number; mes: number } | null;
+}
+
 /** Una conciliación en la lista de una cuenta. */
 export interface ConciliacionResumenDto {
   id: string;
@@ -60,8 +67,12 @@ export interface ConciliacionDto {
   elaboradaEn: string | null;
   autorizadaPorNombre: string | null;
   autorizadaEn: string | null;
-  /** Los movimientos que se pueden marcar (o desmarcar) en esta conciliación. */
+  /** Los movimientos que se pueden marcar (o desmarcar) en esta conciliación, con fecha hasta el fin del mes. */
   candidatos: MovimientoConMarcaDto[];
+  /** Los cheques con fecha posterior al fin del mes, marcados o no: el banco puede pagarlos antes. */
+  posfechadosCandidatos: MovimientoConMarcaDto[];
+  /** El saldo inicial del banco de la carga inicial, solo en la primera conciliación de la cuenta con saldo del banco. */
+  saldoInicialDelBancoDeLaApertura: { fecha: string; monto: string } | null;
   cuadratica: { libros: Cuadratica; banco: Cuadratica };
   partidas: PartidasDeConciliacion;
   saldoQueDebeMostrarElEstadoDeCuenta: string;

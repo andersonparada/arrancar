@@ -64,9 +64,9 @@ export function aplicarConcepto(linea: LineaEnEdicion, concepto: ConceptoDeGasto
   if (concepto.esActivoFijo) linea.esCombustible = false;
 }
 
-/** Un activo fijo o el combustible siempre son un bien: marcarlo fija el tipo. */
+/** El combustible siempre es un bien: marcarlo fija el tipo. Un activo fijo puede ser bien o servicio. */
 export function ajustarTipoDeLinea(linea: LineaEnEdicion): void {
-  if (linea.esActivoFijo || linea.esCombustible) linea.tipo = 'bien';
+  if (linea.esCombustible) linea.tipo = 'bien';
   if (!linea.esCombustible) {
     linea.combustibleId = null;
     linea.galones = '';

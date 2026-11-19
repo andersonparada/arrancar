@@ -1,14 +1,12 @@
-import { and, eq, getTableColumns, gte, isNull, lte, or, sql, type AnyColumn } from 'drizzle-orm';
+import { and, eq, getTableColumns, gt, gte, isNull, lte, ne, or, sql, type AnyColumn } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { MovimientoParaConciliar } from '../../aplicacion/calculo-de-conciliacion.js';
 import type { MovimientoConMarcaDto } from '../../aplicacion/dto/conciliacion.dto.js';
-import { aCentavos } from '../../dominio/centavos.js';
-import { finDelMesDe, inicioDelMesDe, periodoAnterior, type Periodo } from '../../dominio/conciliacion.js';
+import { finDelMesDe, inicioDelMesDe, type Periodo } from '../../dominio/conciliacion.js';
 import { cheques } from './cheques.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { movimientos } from './movimientos.tablas.js';
-import { saldoVigente } from './saldo-vigente.js';
 
 const chequeDelMovimiento = alias(cheques, 'cheque_de_conciliacion');
 
@@ -32,16 +30,29 @@ const marcadoDespuesDe = (finDelMes: string) =>
       and make_date(${conciliaciones.anio}, ${conciliaciones.mes}, 1) > ${finDelMes}::date
   )`;
 
+/** Marcado en una conciliación de un mes anterior al de `finDelMes`. */
+const marcadoAntesDe = (finDelMes: string) =>
+  sql`exists (
+    select 1 from ${conciliaciones}
+    where ${conciliaciones.id} = ${movimientos.conciliacionId}
+      and make_date(${conciliaciones.anio}, ${conciliaciones.mes}, 1) < date_trunc('month', ${finDelMes}::date)
+  )`;
+
+/** El saldo del estado de cuenta de la carga inicial no se marca: es lo que el banco ya había visto al corte. */
+const noEsElSaldoDelBanco = (columna: AnyColumn) => or(isNull(columna), ne(columna, 'saldo_del_banco'));
+
 /**
  * Vigentes, de la cuenta, con fecha hasta el fin de mes, que no se marcaron en
  * una conciliación anterior: los marcados en esta, los pendientes y los que se
- * marcaron en un mes posterior.
+ * marcaron en un mes posterior. Se suman los cheques de fecha posterior, que el banco puede pagar
+ * antes (C. Com. art. 501); el saldo del banco de la carga inicial nunca es candidato.
  */
 const candidatosDe = (cuentaBancariaId: string, finDelMes: string, conciliacionId: string) =>
   and(
     eq(movimientos.cuentaBancariaId, cuentaBancariaId),
     isNull(movimientos.anuladoEn),
-    lte(movimientos.fecha, finDelMes),
+    noEsElSaldoDelBanco(movimientos.parteDeApertura),
+    or(lte(movimientos.fecha, finDelMes), and(eq(movimientos.tipo, 'cheque'), gt(movimientos.fecha, finDelMes))),
     or(isNull(movimientos.conciliacionId), eq(movimientos.conciliacionId, conciliacionId), marcadoDespuesDe(finDelMes)),
   );
 
@@ -70,7 +81,35 @@ function aMovimientoConMarca(fila: FilaDeMovimiento, conciliacionId: string): Mo
 /** Igual que `aMovimientoConMarca`, pero solo lo que necesita el cálculo puro. */
 export function aMovimientoParaConciliar(m: MovimientoConMarcaDto): MovimientoParaConciliar {
   const { id, tipo, fecha, monto, numeroDeCheque, beneficiario, referencia, marcado } = m;
-  return { id, tipo, fecha, monto, numeroDeCheque, beneficiario, referencia, marcado };
+  const { saldoInicial: deApertura, parteDeApertura } = m;
+  return { id, tipo, fecha, monto, numeroDeCheque, beneficiario, referencia, marcado, deApertura, parteDeApertura };
+}
+
+/**
+ * Los cheques de fecha posterior al fin de mes que el banco ya pagó en una conciliación de un mes anterior: no son
+ * candidatos (ya no se marcan), pero siguen restando del saldo del estado de cuenta hasta que llegue su fecha.
+ */
+export async function cobradosEnMesesAnterioresDe(
+  cuentaBancariaId: string,
+  finDelMes: string,
+): Promise<MovimientoParaConciliar[]> {
+  const filas = await transaccionEnCurso()
+    .select(columnasDeMovimiento)
+    .from(movimientos)
+    .leftJoin(chequeDelMovimiento, eq(chequeDelMovimiento.movimientoId, movimientos.id))
+    .where(
+      and(
+        eq(movimientos.cuentaBancariaId, cuentaBancariaId),
+        isNull(movimientos.anuladoEn),
+        eq(movimientos.tipo, 'cheque'),
+        gt(movimientos.fecha, finDelMes),
+        marcadoAntesDe(finDelMes),
+      ),
+    );
+  return filas.map((fila) => ({
+    ...aMovimientoParaConciliar(aMovimientoConMarca(fila, '')),
+    cobradoEnMesAnterior: true,
+  }));
 }
 
 export async function idsDeCandidatosDe(
@@ -99,10 +138,14 @@ export async function candidatosConMarcaDe(
   return filas.map((fila) => aMovimientoConMarca(fila, conciliacionId));
 }
 
-/** Los vigentes con fecha dentro de este mes (para el lado de libros); `marcado` no aplica y va en `false`. */
+/**
+ * Los vigentes con fecha dentro de este mes y posterior a `despuesDe` (el corte, si cae dentro del mes), para el lado
+ * de libros; `marcado` no aplica y va en `false`.
+ */
 export async function movimientosDelMesDe(
   cuentaBancariaId: string,
   periodo: Periodo,
+  despuesDe: string,
 ): Promise<MovimientoParaConciliar[]> {
   const filas = await transaccionEnCurso()
     .select(columnasDeMovimiento)
@@ -113,54 +156,11 @@ export async function movimientosDelMesDe(
         eq(movimientos.cuentaBancariaId, cuentaBancariaId),
         isNull(movimientos.anuladoEn),
         gte(movimientos.fecha, inicioDelMesDe(periodo)),
+        gt(movimientos.fecha, despuesDe),
         lte(movimientos.fecha, finDelMesDe(periodo)),
       ),
     );
   return filas.map((fila) => aMovimientoParaConciliar(aMovimientoConMarca(fila, '')));
-}
-
-async function saldoDeLibrosAlFinDe(cuentaBancariaId: string, fecha: string): Promise<number> {
-  const [fila] = await transaccionEnCurso()
-    .select({ saldo: sql<string>`(${saldoVigente})::text` })
-    .from(movimientos)
-    .where(
-      and(
-        eq(movimientos.cuentaBancariaId, cuentaBancariaId),
-        isNull(movimientos.anuladoEn),
-        lte(movimientos.fecha, fecha),
-      ),
-    );
-  return aCentavos(fila?.saldo ?? '0.00');
-}
-
-/** El saldo calculado del estado de cuenta de la conciliación de ese periodo exacto; `null` si no existe. */
-async function fotoDelPeriodoAnterior(cuentaBancariaId: string, periodo: Periodo): Promise<string | null> {
-  const anterior = periodoAnterior(periodo);
-  const [fila] = await transaccionEnCurso()
-    .select({ foto: conciliaciones.fotoSaldoCalculadoEstadoDeCuenta })
-    .from(conciliaciones)
-    .where(
-      and(
-        eq(conciliaciones.cuentaBancariaId, cuentaBancariaId),
-        eq(conciliaciones.anio, anterior.anio),
-        eq(conciliaciones.mes, anterior.mes),
-      ),
-    );
-  return fila?.foto ?? null;
-}
-
-/**
- * Saldo inicial de libros = saldo vigente al fin del mes anterior. Saldo
- * inicial de banco = saldo calculado del estado de cuenta de la conciliación
- * autorizada del mes anterior; si no hay ninguna (es la primera), se toma
- * cero: el banco todavía no ha "visto" nada, y el saldo inicial de la cuenta es un documento
- * más que se marca (o queda como crédito en tránsito); sumarlo aquí lo contaría dos veces.
- */
-export async function saldosInicialesDe(cuentaBancariaId: string, periodo: Periodo) {
-  const librosEnCentavos = await saldoDeLibrosAlFinDe(cuentaBancariaId, finDelMesDe(periodoAnterior(periodo)));
-  const foto = await fotoDelPeriodoAnterior(cuentaBancariaId, periodo);
-  const bancoEnCentavos = foto ? aCentavos(foto) : 0;
-  return { librosEnCentavos, bancoEnCentavos };
 }
 
 /** Si la cuenta ya tiene alguna conciliación, de cualquier estado. */
@@ -197,6 +197,7 @@ export async function paresCompensadosPendientesDe(
         eq(inverso.cuentaBancariaId, cuentaBancariaId),
         sinPasarPorElBanco(inverso.conciliacionId, conciliacionId),
         sinPasarPorElBanco(original.conciliacionId, conciliacionId),
+        noEsElSaldoDelBanco(original.parteDeApertura),
         lte(inverso.fecha, finDelMes),
         lte(original.fecha, finDelMes),
       ),

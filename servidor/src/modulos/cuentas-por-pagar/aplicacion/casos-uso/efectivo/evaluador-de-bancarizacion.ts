@@ -1,9 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import type { CargoPorBancarizar } from '../../../../core/contratos/libro-de-compras.contratos.js';
 import { etiquetaDe } from '../../../dominio/documento-por-pagar.js';
-import {
-  evaluarBancarizacionEnEfectivo,
-  type CargoDelPagoEnEfectivo,
-} from '../../../dominio/bancarizacion-en-efectivo.js';
 import {
   EfectivoSobreElUmbral,
   MotivoSinBancarizarObligatorio,
@@ -12,7 +9,7 @@ import type { LineaRevisada } from '../pagos/dependencias-de-pagos.js';
 import type { DependenciasDeEfectivo } from './dependencias-de-efectivo.js';
 import type { PagoRevisado } from './peticion-de-efectivo.js';
 
-type Dependencias = Pick<DependenciasDeEfectivo, 'consultasDePagos' | 'fiscal' | 'umbral'>;
+type Dependencias = Pick<DependenciasDeEfectivo, 'fiscal' | 'bancarizacionDelLibro'>;
 
 /** Lo que resuelve la bancarización de un pago en efectivo: los avisos, y el motivo si se usó la excepción. */
 export interface BancarizacionDelPago {
@@ -31,9 +28,10 @@ export interface PagoPorBancarizar {
 }
 
 /**
- * La bancarización de un pago en efectivo (§5.3): suma lo pagado al proveedor en el mes con todas las formas, mira qué
- * perdería la empresa según su régimen y el documento (§5.2) y, si el pago llegó al umbral y la empresa perdería algo, lo
- * rechaza salvo que traiga el motivo de quien tiene el permiso. Sin datos fiscales solo avisa.
+ * La bancarización de un pago en efectivo (§5.3): le pide al libro que la evalúe (`libro-de-compras.evaluar_bancarizacion`:
+ * suma lo pagado al proveedor en el mes por todos los módulos, mira qué perdería la empresa según su régimen y el documento y
+ * dice si el pago llega al umbral). Si el libro dice `bloquear`, el pago se rechaza salvo que traiga el motivo de quien tiene
+ * el permiso. Sin datos fiscales solo avisa.
  */
 export class EvaluadorDeBancarizacion {
   constructor(private readonly dependencias: Dependencias) {}
@@ -42,20 +40,18 @@ export class EvaluadorDeBancarizacion {
    * @throws EfectivoSobreElUmbral, MotivoSinBancarizarObligatorio
    */
   async evaluar(operador: Operador, por: PagoPorBancarizar): Promise<BancarizacionDelPago> {
-    const { consultasDePagos, umbral } = this.dependencias;
     const { pago, fecha } = por;
-    const delMes = await consultasDePagos.pagosDelMes(pago.peticion.proveedorId, fecha);
-    const resultado = evaluarBancarizacionEnEfectivo({
+    const evaluacion = await this.dependencias.bancarizacionDelLibro.evaluar(operador, {
+      proveedorId: pago.peticion.proveedorId,
       proveedorNombre: pago.lineas[0]!.fila.libro.proveedorNombre,
       fecha,
-      umbralCentavos: await umbral.centavos(operador),
-      montoDelPagoCentavos: pago.lineas.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0),
-      pagadoEnElMesCentavos: delMes.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0),
+      montoEnEfectivoCentavos: pago.lineas.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0),
       cargos: await this.cargos(pago.lineas, por.fechaDeInicio),
     });
-    if (resultado.tipo === 'libre') return { avisos: [], motivoSinBancarizar: null };
-    if (resultado.tipo === 'avisar') return { avisos: [resultado.mensaje], motivoSinBancarizar: null };
-    return { avisos: [resultado.mensaje], motivoSinBancarizar: this.motivo(por, resultado.mensaje) };
+    if (evaluacion.resultado === 'libre') return { avisos: [], motivoSinBancarizar: null };
+    const mensaje = evaluacion.mensaje ?? '';
+    if (evaluacion.resultado === 'avisar') return { avisos: [mensaje], motivoSinBancarizar: null };
+    return { avisos: [mensaje], motivoSinBancarizar: this.motivo(por, mensaje) };
   }
 
   /** El motivo de la excepción; sin él, quien tiene el permiso lo escribe y quien no lo tiene no puede pagar así. */
@@ -66,19 +62,21 @@ export class EvaluadorDeBancarizacion {
     throw new EfectivoSobreElUmbral(mensaje, pago.indice);
   }
 
-  private async cargos(
-    lineas: readonly LineaRevisada[],
-    fechaDeInicio: string | null,
-  ): Promise<CargoDelPagoEnEfectivo[]> {
-    const efectos = await this.dependencias.fiscal.efectoDe(
-      lineas.map(({ fila }) => fila.documento.id),
-      fechaDeInicio,
-    );
+  /** Los cargos para el libro: el id de su documento y, en un saldo inicial, lo que pierde según la fecha de inicio. */
+  private async cargos(lineas: readonly LineaRevisada[], fechaDeInicio: string | null): Promise<CargoPorBancarizar[]> {
+    const delSaldoInicial = lineas.some(({ fila }) => fila.documento.documentoId === null)
+      ? await this.efectoDelSaldoInicial(fechaDeInicio)
+      : null;
     return lineas.map(({ fila: { documento } }) => ({
+      documentoDeCompraId: documento.documentoId,
       etiqueta: etiquetaDe(documento),
       totalCentavos: documento.totalCentavos,
-      efecto: efectos.get(documento.id) ?? null,
-      esSaldoInicial: documento.origen === 'saldo_inicial',
+      ...(documento.documentoId === null ? { efectoDeSaldoInicial: delSaldoInicial } : {}),
     }));
+  }
+
+  /** Un saldo inicial pierde lo que dice el régimen de la empresa en su fecha de inicio; sin ella no se sabe. */
+  private efectoDelSaldoInicial(fechaDeInicio: string | null) {
+    return fechaDeInicio === null ? Promise.resolve(null) : this.dependencias.fiscal.efectoDeLaEmpresa(fechaDeInicio);
   }
 }

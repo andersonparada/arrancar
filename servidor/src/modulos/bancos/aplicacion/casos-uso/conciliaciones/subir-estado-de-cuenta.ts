@@ -1,6 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { ConciliacionDto, EstadoDeCuentaDto } from '../../dto/conciliacion.dto.js';
 import {
+  documentoDeLaConciliacion,
   conciliacionBloqueada,
   conciliacionExistente,
   RECURSO_DE_ESTADOS_DE_CUENTA,
@@ -42,7 +43,7 @@ export class SubirEstadoDeCuenta {
       const idAnterior = conciliacion.adjuntarEstadoDeCuenta(guardado.id);
       await this.dependencias.repositorio.guardar(conciliacion);
       if (idAnterior) await this.borrarElAnterior({ archivoId: idAnterior, conciliacionId, anterior });
-      return this.dependencias.consultas.obtener(conciliacionId);
+      return documentoDeLaConciliacion(operador, this.dependencias, conciliacionId);
     });
   }
 

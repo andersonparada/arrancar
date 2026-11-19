@@ -86,6 +86,7 @@ describe('conciliaciones por API', () => {
       chequesEnCirculacion: [],
       otrosDebitosEnTransito: [],
       creditosEnTransito: [],
+      cobradosAntesDeSuFecha: [],
     });
 
     // Termina el propietario: pasa a elaborada.
@@ -129,7 +130,8 @@ describe('conciliaciones por API', () => {
     expect(febrero.cuerpo.candidatos).toHaveLength(0);
 
     const lista = await cuenta.propietario.get(`/api/bancos/cuentas-bancarias/${cuentaBancariaId}/conciliaciones`);
-    expect(lista.cuerpo).toHaveLength(2);
+    expect(lista.cuerpo.conciliaciones).toHaveLength(2);
+    expect(lista.cuerpo.periodoSiguiente).toEqual({ anio: 2026, mes: 3 });
 
     // Se elimina la última (febrero): reabre el mes.
     const eliminada = await cuenta.propietario.post(`/api/bancos/conciliaciones/${febrero.cuerpo.id}/eliminar`, {

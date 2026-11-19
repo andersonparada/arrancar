@@ -14,6 +14,7 @@ import ProblemaDelRegistro from '../componentes/registro/ProblemaDelRegistro.vue
 import VistaPreviaDelDocumento from '../componentes/registro/VistaPreviaDelDocumento.vue';
 import { usarRegistroDeDocumento } from '../composables/documentos/usar-registro-de-documento';
 import { tituloDelRegistro } from '../composables/documentos/tipos-de-documento-sat';
+import { usarEncabezadoDeOrigen } from '../composables/documentos/usar-encabezado-de-origen';
 import { usarProblemaALaVista } from '../composables/documentos/usar-problema-a-la-vista';
 import { FORMULARIO_DE_DOCUMENTO as textos } from '../textos-del-registro';
 
@@ -21,6 +22,7 @@ import { FORMULARIO_DE_DOCUMENTO as textos } from '../textos-del-registro';
 const router = useRouter();
 const registro = usarRegistroDeDocumento();
 const { edicion, catalogos, previa, propuestas, precarga } = registro;
+const encabezado = usarEncabezadoDeOrigen(precarga.volver);
 const zonaDelProblema = usarProblemaALaVista(registro.problema);
 /** Enter en un campo de texto no registra: se registra con el botón, así un Enter de más no guarda a medias. */
 function alPresionarEnter(evento: KeyboardEvent): void {
@@ -36,11 +38,7 @@ function alPresionarEnter(evento: KeyboardEvent): void {
     @focusout="previa.calcularYa"
     @keydown.enter="alPresionarEnter"
   >
-    <EncabezadoPagina
-      :titulo="tituloDelRegistro(edicion.tipoDte)"
-      :descripcion="textos.descripcion"
-      :volver="precarga.volver.value"
-    />
+    <EncabezadoPagina :titulo="tituloDelRegistro(edicion.tipoDte)" v-bind="encabezado" />
 
     <AvisosDelDteDeLaSat
       v-if="precarga.dteId"

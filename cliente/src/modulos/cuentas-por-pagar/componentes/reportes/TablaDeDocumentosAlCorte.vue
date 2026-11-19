@@ -39,6 +39,7 @@ const columnas = ['Emisión', 'Vence', 'Tramo', 'Total', 'Retenciones', 'Notas',
           </th>
           <th scope="col" class="px-3 py-2 text-right font-medium">Saldo</th>
           <th scope="col" class="px-3 py-2 text-right font-medium">Comprometido</th>
+          <th scope="col" class="px-3 py-2 text-right font-medium">Disponible para pagar</th>
           <th scope="col" class="px-3 py-2 text-left font-medium">Estado</th>
           <th scope="col" class="px-3 py-2 text-left font-medium">Contraseña</th>
         </tr>
@@ -73,6 +74,7 @@ const columnas = ['Emisión', 'Vence', 'Tramo', 'Total', 'Retenciones', 'Notas',
           <td class="px-3 py-2 text-right tabular-nums">{{ formatearMonto(fila.ajustado) }}</td>
           <td class="px-3 py-2 text-right font-semibold tabular-nums">{{ formatearMonto(fila.saldo) }}</td>
           <td class="px-3 py-2 text-right tabular-nums">{{ formatearMonto(fila.comprometido) }}</td>
+          <td class="px-3 py-2 text-right tabular-nums">{{ formatearMonto(fila.disponible) }}</td>
           <td class="px-3 py-2 whitespace-nowrap">{{ TEXTOS_DE_ESTADO_DE_PAGO[fila.estadoDePago] }}</td>
           <td class="px-3 py-2">{{ textoDeContrasena(fila) ?? '—' }}</td>
         </tr>
@@ -88,6 +90,7 @@ const columnas = ['Emisión', 'Vence', 'Tramo', 'Total', 'Retenciones', 'Notas',
           <td></td>
           <td class="px-3 py-2 text-right tabular-nums">{{ formatearMonto(totales.saldo) }}</td>
           <td class="px-3 py-2 text-right tabular-nums">{{ formatearMonto(totales.comprometido) }}</td>
+          <td class="px-3 py-2 text-right tabular-nums">{{ formatearMonto(totales.disponible) }}</td>
           <td colspan="2"></td>
         </tr>
       </tfoot>

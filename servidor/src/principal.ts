@@ -4,6 +4,7 @@ import { grupoConexiones } from './modulos/core/base-datos/conexion.js';
 import { crearDepuradorDeArchivosHuerfanos } from './modulos/core/archivos/contexto.js';
 import { verificarQpdf } from './modulos/core/archivos/infraestructura/qpdf/verificador-de-qpdf.js';
 import { depurarAuditoria } from './modulos/core/bitacora/contexto.js';
+import { crearProcesadorDeBandeja, depurarCorreos } from './modulos/core/correo/bandeja.js';
 import { limpiarSesionesVencidas } from './modulos/core/identidad/contexto.js';
 
 const UNA_HORA = 60 * 60 * 1000;
@@ -21,7 +22,22 @@ const depurar = () =>
 const depuracionDiaria = setInterval(depurar, UN_DIA);
 void depurar();
 
+const depurarElCorreo = () =>
+  depurarCorreos.ejecutar().catch((error: unknown) => app.log.error(error, 'Depuración de la bandeja de correos'));
+const depuracionDeCorreos = setInterval(depurarElCorreo, UN_DIA);
+void depurarElCorreo();
+
+const bandejaDeCorreo = iniciarBandejaDeCorreo();
+
 const depuracionDeArchivos = programarDepuracionDeArchivos();
+
+/** Sin `CLAVE_SECRETOS` no arranca: no se podría leer la contraseña del servidor de correo. Los correos esperan en la bandeja. */
+function iniciarBandejaDeCorreo() {
+  const procesador = crearProcesadorDeBandeja({ error: (mensaje, error) => app.log.error(error, mensaje) });
+  if (procesador) procesador.iniciar();
+  else app.log.warn('El envío de correo está APAGADO: falta CLAVE_SECRETOS.');
+  return procesador;
+}
 
 /** Con `DEPURAR_HUERFANOS=false` o con una carpeta de archivos insegura no se programa y queda dicho en el registro. */
 function programarDepuracionDeArchivos(): NodeJS.Timeout | null {
@@ -58,7 +74,9 @@ async function detener(senal: string): Promise<void> {
   app.log.info(`Recibida ${senal}, cerrando…`);
   clearInterval(limpiezaSesiones);
   clearInterval(depuracionDiaria);
+  clearInterval(depuracionDeCorreos);
   if (depuracionDeArchivos) clearInterval(depuracionDeArchivos);
+  await bandejaDeCorreo?.detener();
   await app.close();
   await grupoConexiones.end();
   process.exit(0);

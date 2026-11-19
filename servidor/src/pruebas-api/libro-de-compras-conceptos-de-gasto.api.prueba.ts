@@ -41,7 +41,7 @@ describe('conceptos de gasto por API', () => {
     expect(inactivo.cuerpo).toEqual({ ...creado.cuerpo, activo: false });
   });
 
-  it('un activo fijo que es servicio se rechaza y el nombre no se repite', async () => {
+  it('un activo fijo puede ser servicio y el nombre no se repite', async () => {
     const activoFijoServicio = await cuenta.propietario.post(
       RUTA,
       datos({ nombre: 'Maquinaria', esActivoFijo: true, tipoPorOmision: 'servicio' }),
@@ -49,7 +49,7 @@ describe('conceptos de gasto por API', () => {
     const primero = await cuenta.propietario.post(RUTA, datos({ nombre: 'Unico' }));
     const repetido = await cuenta.propietario.post(RUTA, datos({ nombre: 'Unico' }));
 
-    expect(activoFijoServicio.estado).toBe(400);
+    expect(activoFijoServicio.estado).toBe(201);
     expect(primero.estado).toBe(201);
     expect(repetido.estado).toBe(409);
   });

@@ -6,7 +6,13 @@ import { definicionesModulos } from '../../modulos/indice.js';
 
 export const CREDENCIALES_SOPORTE = { usuario: 'supergod', contrasena: 'contrasena-de-soporte' } as const;
 
-const TABLAS_CON_DATOS = ['core.cuentas', 'core.usuarios', 'core.configuraciones', 'core.bitacora_superacceso'];
+const TABLAS_CON_DATOS = [
+  'core.cuentas',
+  'core.usuarios',
+  'core.configuraciones',
+  'core.bitacora_superacceso',
+  'core.servidor_de_correo',
+];
 
 function urlPropietario(): string {
   if (!configuracion.DATABASE_URL_PROPIETARIO) throw new Error('Falta DATABASE_URL_PROPIETARIO para las pruebas.');

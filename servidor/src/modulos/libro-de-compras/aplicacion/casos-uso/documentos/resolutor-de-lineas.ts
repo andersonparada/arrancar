@@ -50,7 +50,7 @@ export class ResolutorDeLineas {
    * @throws RecursoNoEncontrado si un concepto o combustible no existe en la empresa.
    * @throws CatalogoInactivo si alguno está inactivo.
    * @throws CombustibleSinTasaVigente si el IDP se calcula y el combustible no tiene tasa en la fecha de emisión.
-   * @throws LineaDeDocumentoInvalida si la línea se contradice (activo fijo que no es bien, galones sin combustible...).
+   * @throws LineaDeDocumentoInvalida si la línea se contradice (combustible que no es bien, galones sin combustible...).
    */
   async resolver(lineas: readonly SolicitudDeLinea[], fechaDeEmision: string): Promise<LineasResueltas> {
     const catalogos = await this.cargar(lineas, fechaDeEmision);
@@ -89,7 +89,7 @@ function conceptoDe(linea: SolicitudDeLinea, catalogos: Catalogos): ConceptoPara
 
 class LineaNoEsBien extends LineaDeDocumentoInvalida {
   constructor(numero: number) {
-    super(`La línea ${numero} es un activo fijo, combustible o lleva IDP: debe ser un bien.`);
+    super(`La línea ${numero} es combustible o lleva IDP: debe ser un bien.`);
   }
 }
 
@@ -106,7 +106,7 @@ function describir(
     combustibles: catalogos.combustibles,
     fechaDeEmision,
   });
-  if ((esActivoFijo || combustible || conIdp) && tipo !== 'bien') throw new LineaNoEsBien(numero);
+  if ((combustible || conIdp) && tipo !== 'bien') throw new LineaNoEsBien(numero);
   const descripcion = {
     numero,
     conceptoId: concepto.id,

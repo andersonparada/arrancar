@@ -34,6 +34,8 @@ export interface ConsultasMovimientos {
   fechaMasAntigua(cuentaBancariaId: string, excluir?: string): Promise<string | null>;
   /** Fin de mes de la última conciliación AUTORIZADA de la cuenta; `null` si no tiene ninguna. */
   conciliadaHasta(cuentaBancariaId: string): Promise<string | null>;
+  /** Si el movimiento está marcado en una conciliación ya AUTORIZADA (una en proceso o elaborada aún se puede rehacer). */
+  marcadoEnConciliacionAutorizada(movimientoId: string): Promise<boolean>;
   /** Créditos menos débitos vigentes con fecha hasta (incluida) `fecha`, como texto con dos decimales. */
   saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string>;
   /** El mes de cada conciliación AUTORIZADA (por su id), de la cuenta si se da o de todas: lo que muestra «Conciliado en». */

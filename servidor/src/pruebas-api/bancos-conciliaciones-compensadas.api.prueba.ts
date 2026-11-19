@@ -59,6 +59,7 @@ describe('conciliar un original y su inverso que nunca pasaron por el banco, por
       chequesEnCirculacion: [],
       otrosDebitosEnTransito: [],
       creditosEnTransito: [],
+      cobradosAntesDeSuFecha: [],
     });
     expect(marcada.cuerpo.saldoQueDebeMostrarElEstadoDeCuenta).toBe('1000.00');
   });

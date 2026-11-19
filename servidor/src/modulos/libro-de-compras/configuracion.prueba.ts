@@ -23,6 +23,7 @@ const PREDETERMINADOS: Record<string, number | boolean | string> = {
   'libro-de-compras.plazos.dias_habiles_entero_iva': 15,
   'libro-de-compras.plazos.dias_habiles_entero_isr': 10,
   'libro-de-compras.periodos.control_de_declarados': false,
+  'libro-de-compras.bancarizacion.umbral': 30000,
   'libro-de-compras.regimenes.fecha_de_derogacion': '2025-07-09',
   'libro-de-compras.dte.encabezados_adicionales': '{}',
 };
@@ -51,7 +52,7 @@ describe('configuración del libro de compras (§8)', () => {
       moduloLibroDeCompras,
       { clave: 'terceros', nombre: 'T', descripcion: '', permisos: [] },
     ]);
-    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(21);
+    expect(registro.configuracionesDe(['libro-de-compras'])).toHaveLength(22);
     expect(registro.definicionConfiguracion('libro-de-compras.iva.tasa')?.predeterminado).toBe(12);
   });
 
@@ -59,6 +60,15 @@ describe('configuración del libro de compras (§8)', () => {
     const tasa = configuracionDelLibroDeCompras.find((c) => c.clave === 'libro-de-compras.iva.tasa');
     expect([12.5, 0.07, 100, 0].map((v) => tasa?.esquema.safeParse(v).success)).toEqual([true, true, true, true]);
     expect([100.01, -1, 0.005].map((v) => tasa?.esquema.safeParse(v).success)).toEqual([false, false, false]);
+  });
+
+  it('el umbral de bancarización (compartido por los módulos que pagan) es de Q30,000, de instalación y positivo a centavos', () => {
+    const umbral = configuracionDelLibroDeCompras.find((c) => c.clave === 'libro-de-compras.bancarizacion.umbral');
+
+    expect(umbral?.predeterminado).toBe(30000);
+    expect(umbral?.niveles).toEqual(['instalacion']);
+    expect([30000, 25000.5].map((v) => umbral?.esquema.safeParse(v).success)).toEqual([true, true]);
+    expect([0, -1, 10.005].map((v) => umbral?.esquema.safeParse(v).success)).toEqual([false, false, false]);
   });
 
   it('los plazos son días enteros positivos', () => {
