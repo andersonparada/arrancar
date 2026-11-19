@@ -183,6 +183,13 @@
       "when": 1795045080986,
       "tag": "0025_servidor_de_correo",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795046160000,
+      "tag": "0026_bandeja_de_correos",
+      "breakpoints": true
     }
   ]
 }

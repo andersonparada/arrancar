@@ -2645,6 +2645,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   dice el diseño y no `/api/plataforma/…` como las demás de Soporte. Pendiente: re-cifrar con la llave nueva al rotar
   (hoy ocurre al volver a escribir la contraseña) y cómo apunta el desarrollo a Mailpit (puerto 1025, sin cifrado),
   que la tabla no admite.
+- **2026-11-18 (aviso de pago por correo, paso 4: bandeja de salida).** Migración 0026: `core.correos_salientes`,
+  `core.destinatarios_de_correos` y `core.intentos_de_correos`, con RLS por empresa y **sin política de borrado** (la
+  app solo lee, inserta y, en los correos, actualiza para cancelar o reintentar; destinatarios e intentos no se
+  actualizan). Checks: asunto y nombre sin controles, estados, arriendo solo en `enviando`, cancelación completa,
+  `ultimo_error_codigo` y `codigo` solo con forma de código (nunca el texto del servidor), máximo 8 intentos.
+  Funciones `security definer` con `row_security = off` y `EXECUTE` solo para `arrancar_app`:
+  `reservar_cupo_de_correo` (candado por cuenta con `pg_advisory_xact_lock`; la cuenta sale de `app.cuenta_id`, máximo 10
+  direcciones, el cupo por destinatario no distingue mayúsculas), `tomar_correos_pendientes` (`FOR UPDATE SKIP LOCKED`,
+  arriendo de 1 a 30 minutos, no toma nada con el servidor apagado, y un arriendo vencido que ya gastó los 8 intentos
+  queda `fallido`), `resolver_correo` (esperas 1 min, 5 min, 30 min, 2 h, 12 h, 24 h, 24 h con ±20 % de azar; autenticación
+  o sin servidor no gastan intento y esperan 15 min; el número del intento es seguido aunque se devuelva el contador) y
+  `depurar_correos` (contenido a los `dias` ≥ 7, filas terminadas a los `meses` ≥ 60; borra la fila de `core.archivos`
+  del adjunto y conserva su huella). Decisión: el índice del cupo por destinatario es sobre `lower(direccion)`. Pruebas
+  de RLS (otra empresa, otra cuenta, sin `delete`, sin escribir intentos) y de cada función, incluida la concurrencia.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
