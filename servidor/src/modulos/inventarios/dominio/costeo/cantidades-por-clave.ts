@@ -1,5 +1,5 @@
 import { ExistenciaNegativa } from './errores.js';
-import { ordenarKardex } from './orden.js';
+import { ordenarKardex, sumaExistencia } from './orden.js';
 import type { PosicionEnKardex } from './tipos.js';
 
 /** Un movimiento de cantidad en una línea del tiempo propia (bodega y lote), sin costo. */
@@ -19,7 +19,7 @@ export function verificarCantidadesPorClave(movimientos: readonly MovimientoDeCa
   for (const m of ordenarKardex(movimientos)) {
     if (m.tipo === 'valor') continue;
     const actual = saldos.get(m.clave) ?? 0n;
-    const nuevo = m.tipo === 'entrada' ? actual + m.cantidad : actual - m.cantidad;
+    const nuevo = sumaExistencia(m.tipo) ? actual + m.cantidad : actual - m.cantidad;
     if (nuevo < 0n) throw new ExistenciaNegativa(m.fecha, -nuevo, m.id);
     saldos.set(m.clave, nuevo);
   }

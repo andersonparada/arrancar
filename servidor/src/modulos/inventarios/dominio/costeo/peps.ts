@@ -1,6 +1,8 @@
 import { CapaNoDisponible, ExistenciaNegativa } from './errores.js';
-import { proporcion } from './escalas.js';
-import { compararEnKardex, ordenarKardex } from './orden.js';
+import { costoUnitarioDe, proporcion, valorDe } from './escalas.js';
+import { absorberConFactor } from './absorcion.js';
+import { consumirParaDevolucion } from './devolucion-peps.js';
+import { compararCapas, ordenarKardex } from './orden.js';
 import type { Capa, ConsumoDeCapa, MovimientoDeCosto, Recorrido, ResultadoDeMovimiento } from './tipos.js';
 
 /** Saldo del artículo: suma de lo que queda en las capas. */
@@ -8,13 +10,6 @@ export function saldoDeCapas(capas: readonly Capa[]): { cantidad: bigint; valor:
   return capas.reduce(
     (suma, c) => ({ cantidad: suma.cantidad + c.cantidadRestante, valor: suma.valor + c.valorRestante }),
     { cantidad: 0n, valor: 0n },
-  );
-}
-
-function compararCapas(a: Capa, b: Capa): number {
-  return compararEnKardex(
-    { fecha: a.fecha, secuencia: a.secuencia, tipo: 'entrada' },
-    { fecha: b.fecha, secuencia: b.secuencia, tipo: 'entrada' },
   );
 }
 
@@ -66,12 +61,50 @@ function capaNueva(m: MovimientoDeCosto): Capa {
   };
 }
 
-function aplicar(capas: readonly Capa[], m: MovimientoDeCosto) {
-  if (m.tipo === 'entrada') return { capas: [...capas, capaNueva(m)], costo: m.valor, consumos: [] };
-  if (m.tipo === 'valor') return { capas: sumarValor(capas, m), costo: m.valor, consumos: [] };
+interface PasoPeps {
+  readonly capas: Capa[];
+  readonly costo: bigint;
+  readonly consumos: ConsumoDeCapa[];
+  readonly aResultados: bigint;
+}
+
+/** Reparto: absorbe lo que queda de la capa en esta posición, `cantidad restante / cantidad inicial` (§7.5). */
+function repartir(capas: readonly Capa[], m: MovimientoDeCosto): PasoPeps {
+  const entradaId = m.reparto?.entradaId;
+  const capa = capas.find((c) => c.id === entradaId);
+  if (!capa || !m.reparto) throw new CapaNoDisponible(entradaId);
+  const factor = { numerador: capa.cantidadRestante, denominador: capa.cantidadInicial };
+  const a = absorberConFactor(m.reparto.parte, factor, capa.valorRestante);
+  const nuevas = capas.map((c) => (c === capa ? { ...c, valorRestante: c.valorRestante + a.absorbido } : c));
+  return { capas: nuevas, costo: a.absorbido, consumos: [], aResultados: a.aResultados };
+}
+
+function ajustarValor(capas: readonly Capa[], m: MovimientoDeCosto): PasoPeps {
+  if (m.reparto) return repartir(capas, m);
+  return { capas: sumarValor(capas, m), costo: m.valor, consumos: [], aResultados: 0n };
+}
+
+function sacar(capas: readonly Capa[], m: MovimientoDeCosto): PasoPeps {
+  if (m.devolucion) return consumirParaDevolucion(capas, m);
   const salida = consumirCapas(capas, m.cantidad, m);
   const costo = salida.consumos.reduce((suma, c) => suma + c.valor, 0n);
-  return { capas: salida.capas, costo, consumos: salida.consumos };
+  return { capas: salida.capas, costo, consumos: salida.consumos, aResultados: 0n };
+}
+
+/** Un traslado no toca las capas: su costo es informativo, el costo unitario vigente de la empresa. */
+function trasladar(capas: readonly Capa[], m: MovimientoDeCosto): PasoPeps {
+  const saldo = saldoDeCapas(capas);
+  const costo = saldo.cantidad > 0n ? valorDe(costoUnitarioDe(saldo.valor, saldo.cantidad), m.cantidad) : 0n;
+  return { capas: [...capas], costo, consumos: [], aResultados: 0n };
+}
+
+function aplicar(capas: readonly Capa[], m: MovimientoDeCosto): PasoPeps {
+  if (m.tipo === 'entrada') {
+    return { capas: [...capas, capaNueva(m)], costo: m.valor, consumos: [], aResultados: 0n };
+  }
+  if (m.tipo === 'valor') return ajustarValor(capas, m);
+  if (m.tipo === 'salida') return sacar(capas, m);
+  return trasladar(capas, m);
 }
 
 /**
@@ -91,6 +124,7 @@ export function recalcularPeps(
     resultados.push({
       id: m.id,
       costo: paso.costo,
+      aResultados: paso.aResultados,
       saldoCantidad: saldo.cantidad,
       saldoValor: saldo.valor,
       consumos: paso.consumos,

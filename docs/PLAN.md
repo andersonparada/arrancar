@@ -2988,3 +2988,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `libro-de-compras.cambiar_marca_de_inventario`; V-10 donación con su valor razonable en el evento; kardex por bodega con
   su propio saldo; traslados neutros para el costeo y devolución con PEPS sobre su capa. Abiertas: P-1, P-3, INV-P14 e
   INV-A16 (usuario) y VC-1 a VC-4 (contador).
+- **2026-11-18 — INV-3 ajustado a la validación del contador.** El motor (`dominio/costeo/`) ahora: (1) absorbe costos
+  adicionales y rebajas por sí mismo: con promedio, factor exacto `Π (1 − q_s / C_s)` como fracción de enteros
+  (`factores.ts`) y `absorbido = round(parte × f)`, el resto a resultados; con PEPS, `restante / inicial` de la capa en
+  esa posición (`absorcion.ts`); un movimiento de valor con `reparto` se recalcula solo al recorrer de nuevo, y
+  `diferenciasDeReparto` da lo que va en `repartos` del evento `inventarios.costo_recalculado`; (2) traslados neutros
+  (tipos `traslado_de_entrada` y `traslado_de_salida`: no cambian `C`, `V` ni capas, costo informativo; orden 0 en el
+  destino y 2 en el origen); (3) devolución con PEPS sobre su propia capa y el resto de las siguientes al mismo costo
+  (`devolucion-peps.ts`), con el residuo de una capa vaciada a resultados (VC-1); con promedio, al costo de su
+  entrada; (4) sobrante: promedio con existencia, y si no la última entrada con costo real al costo ajustado
+  (`ultima-entrada.ts`). Pruebas con los dos contraejemplos del contador. Decisiones: el recálculo desde un punto recibe
+  los factores de las entradas anteriores en `estado.factores` (`entradasSeguidas`); una donación con costo mayor
+  que cero cuenta como costo real.

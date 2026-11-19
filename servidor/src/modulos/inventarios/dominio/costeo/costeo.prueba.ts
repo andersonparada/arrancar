@@ -49,7 +49,7 @@ describe('promedio ponderado móvil (§7.6)', () => {
     expect(resultados[1]).toMatchObject({ saldoCantidad: lb(150), saldoValor: 31_500n });
     expect(resultados[2]).toMatchObject({ costo: 8_400n, saldoCantidad: lb(110), saldoValor: 23_100n });
     expect(resultados[3]?.costo).toBe(23_100n);
-    expect(estado).toEqual({ cantidad: 0n, valor: 0n });
+    expect(estado).toMatchObject({ cantidad: 0n, valor: 0n });
   });
 
   it('recalcula la salida cuando entra una compra anterior del mismo día', () => {
@@ -85,7 +85,7 @@ describe('promedio ponderado móvil (§7.6)', () => {
       e1,
       mov({ id: 'm', tipo: 'valor', cantidad: 0n, valor: 500n, fecha: '2026-01-02', secuencia: 2 }),
     ]);
-    expect(estado).toEqual({ cantidad: lb(100), valor: 20_500n });
+    expect(estado).toMatchObject({ cantidad: lb(100), valor: 20_500n });
   });
 
   it('rechaza una salida con fecha anterior a la única entrada aunque hoy haya existencia', () => {
