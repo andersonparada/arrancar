@@ -2957,3 +2957,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   'bien'`; el servicio capitalizado queda en servicios del SAT-2237. El análisis «Activos fijos comprados» muestra todos y suma la
   columna «Es un» (bien o servicio, también en el Excel). Cliente: ya no se fuerza «Bien» al marcar activo fijo y el texto es
   «Activo fijo (se capitaliza)».
+
+- **2026-11-18, RLS del núcleo R-1 (privilegios y disparadores de `core`).** `core/base-datos/privilegios-restringidos.ts`
+  (`RESTRICCIONES_DE_PRIVILEGIOS`) clasifica las 24 tablas de `core` y el migrador, en la misma consulta del `grant`
+  general (`otorgarPermisosAplicacion`), quita a `arrancar_app` lo que nunca usa: `delete` de empresas, cuentas y usuarios;
+  `update` de las tablas de solo agregar o borrar; `update` por columna en empresas, cuentas, usuarios, sesiones, roles y
+  configuraciones; bitácora de superacceso y auditoría solo crecen; geografía y el catálogo de auditoría permanente sin
+  escritura; monedas sin `delete`. Migración `0027_columnas_fijas_y_superacceso` (custom): `core.proteger_columnas()` en
+  `empresas` (id, cuenta, creación, creador) y `roles` (id, cuenta, creación), que vale también para el dueño, y
+  `core.proteger_superacceso()` en `usuarios` (la aplicación no crea ni promueve superacceso; la siembra de `supergod` usa
+  `DATABASE_URL_PROPIETARIO`). Un `42501` por privilegio negado ya no es «no encontrado» sino fallo inesperado (solo el de
+  RLS lo es). Las pruebas de auditoría que esperaban 0 filas ahora esperan `permission denied`. Prueba nueva
+  `seguridad-de-core.prueba.ts` (tabla clasificada, RLS esperada, privilegios por tabla y columna, también tras migrar dos
+  veces, y cada caso del diseño). R-2 y R-3 siguen.

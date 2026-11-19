@@ -4,8 +4,12 @@ import { RecursoDuplicado, RecursoEnUso, RecursoNoEncontrado } from '../aplicaci
 import { ReglaDeNegocioInfringida } from '../dominio/errores.js';
 import { interpretarErrorDePostgres } from './errores-de-postgres.js';
 
-function errorDePostgres(codigo: string, restriccion?: string): DatabaseError {
-  const error = new DatabaseError('rechazado por la base de datos', 0, 'error');
+function errorDePostgres(
+  codigo: string,
+  restriccion?: string,
+  mensaje = 'rechazado por la base de datos',
+): DatabaseError {
+  const error = new DatabaseError(mensaje, 0, 'error');
   error.code = codigo;
   error.constraint = restriccion;
   return error;
@@ -48,7 +52,15 @@ describe('errores de PostgreSQL que en realidad son esperados', () => {
   });
 
   it('una fila fuera del alcance (política RLS) se responde como no encontrada', () => {
-    expect(interpretarErrorDePostgres(errorDePostgres('42501'))).toBeInstanceOf(RecursoNoEncontrado);
+    const mensaje = 'new row violates row-level security policy for table "empresas"';
+    expect(interpretarErrorDePostgres(errorDePostgres('42501', undefined, mensaje))).toBeInstanceOf(
+      RecursoNoEncontrado,
+    );
+  });
+
+  it('un privilegio negado es un error de programación: no se interpreta (sale como fallo inesperado)', () => {
+    const mensaje = 'permission denied for table empresas';
+    expect(interpretarErrorDePostgres(errorDePostgres('42501', undefined, mensaje))).toBeNull();
   });
 
   it('cualquier otro error no se interpreta', () => {

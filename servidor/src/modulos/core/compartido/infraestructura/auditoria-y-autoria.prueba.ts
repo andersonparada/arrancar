@@ -91,13 +91,12 @@ describe('auditoría', () => {
     expect(await leerAuditoria(enB)).toEqual([]);
   });
 
-  it('nadie puede cambiarla ni borrarla', async () => {
-    const intento = await enTransaccionSegura(enA, async (tx) => ({
-      cambiadas: await tx.update(auditoria).set({ motivo: 'borrar huellas' }).returning(),
-      borradas: await tx.delete(auditoria).returning(),
-    }));
+  it('nadie puede cambiarla ni borrarla: la aplicación no tiene esos privilegios', async () => {
+    const cambiar = enTransaccionSegura(enA, (tx) => tx.update(auditoria).set({ motivo: 'borrar huellas' }));
+    const borrar = enTransaccionSegura(enA, (tx) => tx.delete(auditoria));
 
-    expect(intento).toEqual({ cambiadas: [], borradas: [] });
+    await expect(cambiar).rejects.toThrow();
+    await expect(borrar).rejects.toThrow();
     expect(await leerAuditoria(enA)).toEqual([expect.objectContaining({ motivo: null })]);
   });
 });
