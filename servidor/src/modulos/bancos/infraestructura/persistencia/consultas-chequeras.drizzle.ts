@@ -7,6 +7,7 @@ import { mapeadorDeChequera } from './chequera.mapeador.js';
 import { chequeras } from './chequeras.tablas.js';
 import { cheques } from './cheques.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
+import { formatosDeCheque } from './formatos-de-cheque.tablas.js';
 
 const conteo = (estado: 'disponible' | 'emitido' | 'anulado') =>
   sql<number>`count(*) filter (where ${cheques.estado} = ${estado})::int`;
@@ -14,6 +15,7 @@ const conteo = (estado: 'disponible' | 'emitido' | 'anulado') =>
 const columnas = {
   ...getTableColumns(chequeras),
   cuentaBancariaNombre: cuentasBancarias.nombre,
+  formatoNombre: formatosDeCheque.nombre,
   disponibles: conteo('disponible'),
   emitidos: conteo('emitido'),
   anulados: conteo('anulado'),
@@ -47,6 +49,7 @@ export class ConsultasChequerasDrizzle implements ConsultasChequeras {
       .from(chequeras)
       .leftJoin(cheques, eq(cheques.chequeraId, chequeras.id))
       .innerJoin(cuentasBancarias, eq(cuentasBancarias.id, chequeras.cuentaBancariaId))
-      .groupBy(chequeras.id, cuentasBancarias.nombre);
+      .leftJoin(formatosDeCheque, eq(formatosDeCheque.id, chequeras.formatoDeChequeId))
+      .groupBy(chequeras.id, cuentasBancarias.nombre, formatosDeCheque.nombre);
   }
 }

@@ -24,6 +24,7 @@ import { rutasDeConceptos } from './composicion/conceptos.js';
 import { ordenesDeBancos } from './composicion/ordenes.js';
 import { rutasDeReportesPorConcepto } from './composicion/reportes-por-concepto.js';
 import { rutasDeSaldosPorCuenta } from './composicion/saldos-por-cuenta.js';
+import { rutasDeFormatosDeCheque } from './composicion/formatos-de-cheque.js';
 import { configuracionDeImpresionDeCheques, permisosDeImpresionDeCheques } from './impresion-de-cheques.modulo.js';
 // generador: importaciones
 
@@ -174,6 +175,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeSaldosIniciales(),
     rutasDeTransferencias(),
     rutasDeChequeras(),
+    rutasDeFormatosDeCheque(),
     rutasDeCheques(),
     rutasDeConciliaciones(),
     rutasDeCorrelativos(),

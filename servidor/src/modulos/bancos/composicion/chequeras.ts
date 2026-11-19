@@ -2,6 +2,7 @@ import { dependenciasCompartidas } from '../../core/compartido/infraestructura/d
 import { crearIntercambio } from '../../core/intercambio/contexto.js';
 import { opcionesDe } from '../../core/intercambio/aplicacion/columnas.js';
 import { validadorDeZod } from '../../core/intercambio/http/rutas-de-intercambio.js';
+import { AsignarFormatoALaChequera } from '../aplicacion/casos-uso/chequeras/asignar-formato-a-la-chequera.js';
 import { CambiarEstadoDeChequera } from '../aplicacion/casos-uso/chequeras/cambiar-estado-de-chequera.js';
 import { CrearChequera } from '../aplicacion/casos-uso/chequeras/crear-chequera.js';
 import { ListarChequeras } from '../aplicacion/casos-uso/chequeras/listar-chequeras.js';
@@ -16,6 +17,7 @@ import { ConsultasChequerasDrizzle } from '../infraestructura/persistencia/consu
 import { ConsultasChequesDrizzle } from '../infraestructura/persistencia/consultas-cheques.drizzle.js';
 import { ConsultasCuentasBancariasDrizzle } from '../infraestructura/persistencia/consultas-cuentas-bancarias.drizzle.js';
 import { ConsultasMovimientosDrizzle } from '../infraestructura/persistencia/consultas-movimientos.drizzle.js';
+import { RepositorioFormatosDeChequeDrizzle } from '../infraestructura/persistencia/repositorio-formatos-de-cheque.drizzle.js';
 import { RepositorioChequerasDrizzle } from '../infraestructura/persistencia/repositorio-chequeras.drizzle.js';
 import { RepositorioChequesDrizzle } from '../infraestructura/persistencia/repositorio-cheques.drizzle.js';
 import { LimiteDeChequeraEnConfiguracion } from '../infraestructura/limite-de-chequera.configuracion.js';
@@ -40,6 +42,12 @@ function casosDeUsoDeChequeras(dependencias: ReturnType<typeof dependenciasDeChe
     listarTodas: new ListarChequerasDeLaEmpresa(dependencias),
     crear: new CrearChequera(dependencias),
     cambiarEstado: new CambiarEstadoDeChequera(dependencias),
+    asignarFormato: new AsignarFormatoALaChequera({
+      unidadDeTrabajo: dependencias.unidadDeTrabajo,
+      repositorio: dependencias.repositorio,
+      repositorioDeFormatos: new RepositorioFormatosDeChequeDrizzle(),
+      consultas: dependencias.consultas,
+    }),
     listarCheques: new ListarCheques({ unidadDeTrabajo: dependencias.unidadDeTrabajo, consultas: consultasCheques }),
   };
 }

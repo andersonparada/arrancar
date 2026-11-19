@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import { boolean, check, index, integer, text, uniqueIndex, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
+import type { ClaveDePlantilla } from '../../dominio/formatos-de-cheque/plantillas.js';
 import { formatosDeCheque, PLANTILLAS_EN_SQL } from './formatos-de-cheque.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { esquemaBancos } from './esquema.tablas.js';
@@ -28,7 +29,7 @@ export const chequeras = esquemaBancos.table(
     deApertura: boolean().default(false).notNull(),
     /** Cómo se imprimen sus cheques: un formato de la cuenta o una plantilla de fábrica sin ajustes (a lo sumo uno). */
     formatoDeChequeId: uuid().references((): AnyPgColumn => formatosDeCheque.id, { onDelete: 'restrict' }),
-    plantillaDeCheque: text(),
+    plantillaDeCheque: text().$type<ClaveDePlantilla>(),
     ...marcasDeTiempo,
     ...autoria,
   },

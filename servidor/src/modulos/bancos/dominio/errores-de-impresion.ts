@@ -76,6 +76,14 @@ export class ChequeraSinFormatoDeImpresion extends ReglaDeNegocioInfringida {
   }
 }
 
+export class ChequeraDeAperturaSinFormato extends ReglaDeNegocioInfringida {
+  readonly codigo = 'chequera_de_apertura_sin_formato';
+
+  constructor() {
+    super('La chequera de la carga inicial no se imprime: no lleva formato.');
+  }
+}
+
 export class LoteDeChequesInvalido extends DatoInvalido {
   readonly codigo = 'lote_de_cheques_invalido';
 }
@@ -132,11 +140,11 @@ export class FormatoDeChequeEnUso extends ReglaDeNegocioInfringida {
   }
 }
 
-export class NombreDeFormatoRepetido extends ReglaDeNegocioInfringida {
-  readonly codigo = 'nombre_de_formato_repetido';
+export class NombreDeFormatoInvalido extends DatoInvalido {
+  readonly codigo = 'nombre_de_formato_invalido';
 
-  constructor() {
-    super('Ya hay un formato de cheque con ese nombre.');
+  constructor(maximo: number) {
+    super(`Escriba el nombre del formato (hasta ${maximo} caracteres).`, { campo: 'nombre' });
   }
 }
 

@@ -19,6 +19,8 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   roles_nombre_por_cuenta: 'Ya existe un rol con ese nombre.',
   cuentas_bancarias_numero_por_banco_unico: 'Ya existe una cuenta con ese número en ese banco.',
   conceptos_nombre_unico: 'Ya existe un concepto con ese nombre.',
+  formatos_de_cheque_nombre_unico: 'Ya existe un formato de cheque con ese nombre.',
+  impresiones_de_cheques_un_original: 'Otra persona acaba de imprimir ese cheque; vuelva a abrir la ventana.',
   tipos_de_localidad_nombre_unico: 'Ya existe un tipo de localidad con ese nombre.',
   localidades_codigo_unico: `Ya existe una localidad con ese código. ${PEDIR_ACCESO_A_LOCALIDADES}`,
   localidades_nombre_unico: `Ya existe una localidad con ese nombre. ${PEDIR_ACCESO_A_LOCALIDADES}`,

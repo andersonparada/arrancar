@@ -26,11 +26,19 @@ export class CrearChequera {
       await this.exigirSinTraslape(solicitud);
       const maximo = await limiteDeChequera.maximoDeCheques(operador);
       const chequera = Chequera.crear(empresaId, solicitud, maximo);
+      await this.proponerElFormatoDeLaUltima(chequera);
       await repositorio.agregar(chequera);
       const cheques = chequera.numeros.map((numero) => Cheque.crear(empresaId, chequera.id.valor, numero));
       await repositorioCheques.agregarVarios(cheques);
       return consultas.obtener(chequera.id.valor);
     });
+  }
+
+  /** La chequera nueva se imprime como la última de su cuenta (la oficina casi siempre usa la misma impresora y papel). */
+  private async proponerElFormatoDeLaUltima(chequera: Chequera): Promise<void> {
+    const { repositorio } = this.dependencias;
+    const formato = await repositorio.ultimoFormatoDeLaCuenta(chequera.instantanea().cuentaBancariaId);
+    if (formato) chequera.asignarFormato(formato);
   }
 
   private async exigirSinTraslape(solicitud: SolicitudDeChequera): Promise<void> {
