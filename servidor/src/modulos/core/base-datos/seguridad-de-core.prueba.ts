@@ -13,11 +13,17 @@ import { grupoConexiones } from './conexion.js';
 import { migrarModulos } from './migrador.js';
 import { RESTRICCIONES_DE_PRIVILEGIOS } from './privilegios-restringidos.js';
 
-/** Tablas de `core` con RLS. Las demás se protegen con privilegios (por qué, en `diseno-rls-de-core.md` §4). */
+/** Tablas de `core` con RLS (las seis de R-3 son de escritura por cuenta). Las demás, solo con privilegios (§4 del diseño). */
 const CON_RLS = [
   'archivos',
   'auditoria',
   'correlativos',
+  'empresas',
+  'empresa_usuarios',
+  'roles',
+  'rol_permisos',
+  'usuario_roles',
+  'usuario_permisos',
   'recursos_de_auditoria_permanente',
   'correos_salientes',
   'destinatarios_de_correos',

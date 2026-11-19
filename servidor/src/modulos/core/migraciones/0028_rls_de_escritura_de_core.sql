@@ -1,0 +1,29 @@
+ALTER TABLE "core"."usuario_permisos" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "core"."usuario_roles" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "core"."rol_permisos" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "core"."roles" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "core"."empresa_usuarios" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "core"."empresas" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE POLICY "leer_sin_filtro" ON "core"."usuario_permisos" AS PERMISSIVE FOR SELECT TO "arrancar_app" USING (true);--> statement-breakpoint
+CREATE POLICY "crear_en_la_cuenta" ON "core"."usuario_permisos" AS PERMISSIVE FOR INSERT TO "arrancar_app" WITH CHECK (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "cambiar_en_la_cuenta" ON "core"."usuario_permisos" AS PERMISSIVE FOR UPDATE TO "arrancar_app" USING (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid) WITH CHECK (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "borrar_en_la_cuenta" ON "core"."usuario_permisos" AS PERMISSIVE FOR DELETE TO "arrancar_app" USING (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "leer_sin_filtro" ON "core"."usuario_roles" AS PERMISSIVE FOR SELECT TO "arrancar_app" USING (true);--> statement-breakpoint
+CREATE POLICY "crear_en_la_cuenta" ON "core"."usuario_roles" AS PERMISSIVE FOR INSERT TO "arrancar_app" WITH CHECK (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "cambiar_en_la_cuenta" ON "core"."usuario_roles" AS PERMISSIVE FOR UPDATE TO "arrancar_app" USING (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid) WITH CHECK (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "borrar_en_la_cuenta" ON "core"."usuario_roles" AS PERMISSIVE FOR DELETE TO "arrancar_app" USING (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "leer_sin_filtro" ON "core"."rol_permisos" AS PERMISSIVE FOR SELECT TO "arrancar_app" USING (true);--> statement-breakpoint
+CREATE POLICY "crear_en_la_cuenta" ON "core"."rol_permisos" AS PERMISSIVE FOR INSERT TO "arrancar_app" WITH CHECK (exists (select 1 from core.roles p where p.id = rol_id and p.cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid));--> statement-breakpoint
+CREATE POLICY "cambiar_en_la_cuenta" ON "core"."rol_permisos" AS PERMISSIVE FOR UPDATE TO "arrancar_app" USING (exists (select 1 from core.roles p where p.id = rol_id and p.cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid)) WITH CHECK (exists (select 1 from core.roles p where p.id = rol_id and p.cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid));--> statement-breakpoint
+CREATE POLICY "borrar_en_la_cuenta" ON "core"."rol_permisos" AS PERMISSIVE FOR DELETE TO "arrancar_app" USING (exists (select 1 from core.roles p where p.id = rol_id and p.cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid));--> statement-breakpoint
+CREATE POLICY "leer_sin_filtro" ON "core"."roles" AS PERMISSIVE FOR SELECT TO "arrancar_app" USING (true);--> statement-breakpoint
+CREATE POLICY "crear_en_la_cuenta" ON "core"."roles" AS PERMISSIVE FOR INSERT TO "arrancar_app" WITH CHECK (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "cambiar_en_la_cuenta" ON "core"."roles" AS PERMISSIVE FOR UPDATE TO "arrancar_app" USING (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid) WITH CHECK (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "borrar_en_la_cuenta" ON "core"."roles" AS PERMISSIVE FOR DELETE TO "arrancar_app" USING (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "leer_sin_filtro" ON "core"."empresa_usuarios" AS PERMISSIVE FOR SELECT TO "arrancar_app" USING (true);--> statement-breakpoint
+CREATE POLICY "crear_en_la_cuenta" ON "core"."empresa_usuarios" AS PERMISSIVE FOR INSERT TO "arrancar_app" WITH CHECK (exists (select 1 from core.empresas p where p.id = empresa_id and p.cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid));--> statement-breakpoint
+CREATE POLICY "cambiar_en_la_cuenta" ON "core"."empresa_usuarios" AS PERMISSIVE FOR UPDATE TO "arrancar_app" USING (exists (select 1 from core.empresas p where p.id = empresa_id and p.cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid)) WITH CHECK (exists (select 1 from core.empresas p where p.id = empresa_id and p.cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid));--> statement-breakpoint
+CREATE POLICY "borrar_en_la_cuenta" ON "core"."empresa_usuarios" AS PERMISSIVE FOR DELETE TO "arrancar_app" USING (exists (select 1 from core.empresas p where p.id = empresa_id and p.cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid));--> statement-breakpoint
+CREATE POLICY "leer_sin_filtro" ON "core"."empresas" AS PERMISSIVE FOR SELECT TO "arrancar_app" USING (true);--> statement-breakpoint
+CREATE POLICY "crear_en_la_cuenta" ON "core"."empresas" AS PERMISSIVE FOR INSERT TO "arrancar_app" WITH CHECK (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);--> statement-breakpoint
+CREATE POLICY "cambiar_en_la_cuenta" ON "core"."empresas" AS PERMISSIVE FOR UPDATE TO "arrancar_app" USING (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid) WITH CHECK (cuenta_id = nullif(current_setting('app.cuenta_id', true), '')::uuid);

@@ -2978,3 +2978,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   alta quedaban con `creado_por` nulo. Los andamios de pruebas que sembraban empresas y accesos con `bd` pasan a
   `core/base-datos/sembrado-de-prueba.soporte.ts` (`bdPropietario`, conexión del dueño): así no dependen de las
   variables de la transacción cuando R-3 active la RLS de escritura. Prueba nueva en `plataforma.api.prueba.ts`.
+
+- **2026-11-18, RLS del núcleo R-3 (RLS de escritura por cuenta).** `base-datos/columnas.ts` suma
+  `politicasDeEscrituraPorCuenta({ sinBorrar })` y `politicasDeEscrituraPorCuentaDe(padre, llave)`: lectura abierta
+  (`leer_sin_filtro`) y `insert`/`update`/`delete` solo si `cuenta_id` (o el de su padre) es `app.cuenta_id`. Migración
+  `0028_rls_de_escritura_de_core` (generada) en `empresas` (sin política de `delete`), `empresa_usuarios` (por
+  `core.empresas`), `roles`, `rol_permisos` (por `core.roles`), `usuario_roles` y `usuario_permisos`. `cuentas`,
+  `cuenta_modulos`, `usuarios`, `sesiones`, `configuraciones`, `bitacora_superacceso`, `feriados`, `monedas` y geografía
+  siguen sin RLS (solo privilegios). Comentarios corregidos en `ejecutarEnEmpresaNueva`, `RegistrarEmpresa` y los
+  repositorios. Pruebas: `rls-de-escritura-de-core.prueba.ts` (A no escribe en B y sí en A) y, en
+  `unidad-de-trabajo-empresa-nueva`, la empresa creada en otra cuenta y la empresa vieja que intenta pasar por nueva
+  ahora las rechaza la base. Suite completa del servidor sin fallos. **Quedan:** R-4 (RLS de lectura, con revisión de
+  `seguridad`) y R-5 (CLAUDE.md y ARQUITECTURA.md); las tablas nuevas de `core` deben clasificarse en
+  `RESTRICCIONES_DE_PRIVILEGIOS` (la prueba lo exige).

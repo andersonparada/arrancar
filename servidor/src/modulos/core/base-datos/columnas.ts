@@ -63,6 +63,49 @@ export const politicaPorCuenta = () =>
     withCheck: sql.raw(`cuenta_id = ${cuentaDeLaTransaccion}`),
   });
 
+/** Condición de cuenta para tablas sin `cuenta_id` propio: el registro padre (por su llave) es de la cuenta. */
+const delPadreEnLaCuenta = (padre: string, llave: string) =>
+  `exists (select 1 from ${padre} p where p.id = ${llave} and p.cuenta_id = ${cuentaDeLaTransaccion})`;
+
+function politicasDeEscrituraConCondicion(condicion: string, opciones: { sinBorrar?: boolean }) {
+  const leer = pgPolicy('leer_sin_filtro', { as: 'permissive', for: 'select', to: rolAplicacion, using: sql`true` });
+  const crear = pgPolicy('crear_en_la_cuenta', {
+    as: 'permissive',
+    for: 'insert',
+    to: rolAplicacion,
+    withCheck: sql.raw(condicion),
+  });
+  const cambiar = pgPolicy('cambiar_en_la_cuenta', {
+    as: 'permissive',
+    for: 'update',
+    to: rolAplicacion,
+    using: sql.raw(condicion),
+    withCheck: sql.raw(condicion),
+  });
+  const borrar = pgPolicy('borrar_en_la_cuenta', {
+    as: 'permissive',
+    for: 'delete',
+    to: rolAplicacion,
+    using: sql.raw(condicion),
+  });
+  return opciones.sinBorrar ? [leer, crear, cambiar] : [leer, crear, cambiar, borrar];
+}
+
+/**
+ * Para tablas de `core` que la sesión lee antes de saber la empresa (por eso la lectura queda abierta) pero que solo se
+ * escriben dentro de la cuenta de la transacción: insertar, cambiar y borrar exigen `cuenta_id` igual a `app.cuenta_id`.
+ * Un error que escriba en otra cuenta lo rechaza la base. Con `sinBorrar` no hay política de `delete` (nadie borra).
+ */
+export const politicasDeEscrituraPorCuenta = (opciones: { sinBorrar?: boolean } = {}) =>
+  politicasDeEscrituraConCondicion(`cuenta_id = ${cuentaDeLaTransaccion}`, opciones);
+
+/**
+ * Como `politicasDeEscrituraPorCuenta`, para tablas sin `cuenta_id`: la fila pertenece a la cuenta si su registro
+ * padre (`<padre>.id = <llave>`) es de la cuenta de la transacción. La subconsulta va a otra tabla, sin recursión.
+ */
+export const politicasDeEscrituraPorCuentaDe = (padre: string, llave: string) =>
+  politicasDeEscrituraConCondicion(delPadreEnLaCuenta(padre, llave), {});
+
 /**
  * Como `politicasDeSoloAgregar`, pero por empresa: para registros de una empresa que solo crecen, como las
  * emisiones del libro de compras. Sin política de cambio ni de borrado, RLS los rechaza.

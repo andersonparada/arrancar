@@ -213,7 +213,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     await expect(sinCrear).rejects.toThrow(EmpresaNoEsNueva);
   });
 
-  it('rechaza una empresa creada en otra cuenta, sin entrar a ella', async () => {
+  it('no deja crear una empresa en otra cuenta: la base lo rechaza antes de poder abrirla', async () => {
     const id = randomUUID();
     let entro = false;
     const enOtraCuenta = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
@@ -221,8 +221,9 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
       await unidadDeTrabajo.ejecutarEnEmpresaNueva(id, async () => void (entro = true));
     });
 
-    await expect(enOtraCuenta).rejects.toThrow(EmpresaNoEsNueva);
+    await expect(enOtraCuenta).rejects.toThrow();
     expect(entro).toBe(false);
+    expect(await bd.select().from(empresas).where(eq(empresas.id, id))).toEqual([]);
   });
 
   it('rechaza una segunda empresa nueva mientras otra sigue abierta (llamadas en paralelo)', async () => {
@@ -275,7 +276,7 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
     expect(corridas).toEqual([]);
   });
 
-  it('core.empresas no tiene seguridad por filas: la comprobación debe ver todas las cuentas', async () => {
+  it('la lectura de core.empresas sigue abierta a todas las cuentas: la comprobación debe ver la empresa ajena', async () => {
     const vistas = await unidadDeTrabajo.ejecutar(enEmpresaA, () =>
       transaccionEnCurso().select({ id: empresas.id }).from(empresas).where(eq(empresas.id, empresaDeOtraCuentaId)),
     );

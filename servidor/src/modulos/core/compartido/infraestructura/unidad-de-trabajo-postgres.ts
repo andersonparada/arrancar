@@ -163,9 +163,10 @@ export class UnidadDeTrabajoPostgres implements UnidadDeTrabajo {
    * `core.empresas` (con la transacción de afuera) y debe existir con ese id, en la cuenta del contexto y con
    * `creado_en = now()` (lo pone la base con su valor por omisión; `now()` es el inicio de la transacción, así
    * que una empresa anterior no pasa). Nunca se trabaja en una empresa que no se probó como nueva.
-   * La seguridad descansa en esta comprobación y en que la consulta vea todas las cuentas: hoy `core.empresas`
-   * no tiene seguridad por filas (una prueba lo vigila); si algún día la tiene, la consulta debe ir por una
-   * función `security definer`.
+   * La seguridad descansa en esta comprobación y en dos defensas de la base: `core.empresas` tiene RLS de escritura
+   * por cuenta (nadie inserta una empresa en otra cuenta) y un disparador más el privilegio por columna impiden
+   * cambiar `cuenta_id` y `creado_en`, así que una empresa vieja no puede pasar por nueva. Su lectura sigue abierta
+   * a todas las cuentas; si algún día se filtra (R-4), la consulta debe ir por una función `security definer`.
    */
   private async exigirQueSeCreoAqui(punto: Transaccion, contexto: ContextoEmpresa): Promise<void> {
     const filas = await punto.execute(
