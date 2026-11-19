@@ -1749,7 +1749,7 @@ de mañana no llegó (pide solo el dólar; en la bitácora queda como vuelta `no
 
 **Series y reporte (B.10).** `TipoDeCambioDto` (y la serie) suman `convencion` y `dolarUsado` (la referencia del dólar de
 `dolar_usado_id`). El Excel del reporte «Tipos de cambio» suma «Compra publicada», «Venta publicada», «Convención» y
-«Dólar usado» y la nota de la política contable de B.5. La nota impresa y las pantallas son de MM-4.
+«Dólar usado» y, en una segunda hoja «Notas» (los reportes de solo exportar no llevan «Instrucciones»), la fuente y la nota de la política contable de B.5. La nota impresa y las pantallas son de MM-4.
 
 **Pruebas.** Unitarias (`evaluar-variaciones`, `normalizar-publicaciones`, `horario-de-carga`, `monedas`,
 `cruces-de-la-carga`, `cargar-tipos-de-cambio`, `muestra-y-estado-de-la-carga`, `tipos-de-cambio`), integración contra

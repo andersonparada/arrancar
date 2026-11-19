@@ -52,11 +52,11 @@ export interface DatosDelRecurso<Registro, Solicitud, Filtro = void> {
    */
   avisarDeFila?: (solicitud: Solicitud, creado: unknown) => AvisoDeFila | null;
   /**
-   * Es un reporte que solo se exporta: el Excel lleva una sola hoja de datos, sin la de «Instrucciones» (que solo
-   * tiene sentido para llenar una plantilla de importación).
+   * Es un reporte que solo se exporta: el Excel lleva la hoja de datos, sin la de «Instrucciones» (que solo tiene
+   * sentido para llenar una plantilla de importación); si hay `notasDeInstrucciones`, van en una segunda hoja «Notas».
    */
   soloExportar?: boolean;
-  /** Avisos al final de la hoja de instrucciones, uno por fila, para lo que las columnas no explican. */
+  /** Avisos al final de la hoja de instrucciones (o en la hoja «Notas» de un reporte), uno por fila. */
   notasDeInstrucciones?: string[];
 }
 
@@ -197,14 +197,18 @@ export class IntercambioDeRecurso<Registro, Solicitud, Filtro = void> {
   }
 
   private escribir(filas: unknown[][], conLasDeExportar?: Columna[]): Promise<Buffer> {
-    const { nombre, columnas, libro, soloExportar } = this.dependencias;
+    const { nombre, columnas, libro, soloExportar, notasDeInstrucciones = [] } = this.dependencias;
     const encabezados = (conLasDeExportar ?? columnas).map((columna) => columna.titulo);
-    if (soloExportar) return libro.escribirVarias([{ nombre, encabezados, filas }]);
+    if (soloExportar) {
+      const notas = notasDeInstrucciones.map((nota) => [nota]);
+      const hojaDeNotas = { nombre: 'Notas', encabezados: ['Notas'], filas: notas };
+      return libro.escribirVarias([{ nombre, encabezados, filas }, ...(notas.length ? [hojaDeNotas] : [])]);
+    }
     return libro.escribir({
       nombre,
       encabezados,
       filas,
-      instrucciones: instruccionesDe(columnas, this.dependencias.notasDeInstrucciones),
+      instrucciones: instruccionesDe(columnas, notasDeInstrucciones),
     });
   }
 }

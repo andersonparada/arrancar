@@ -3658,7 +3658,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `GET /api/monedas/banguat` suma `convencion` y `ofrecida`; `EditarMoneda` no deja quitarle el código al dólar mientras
   otra moneda tenga el suyo (`codigo_del_dolar_necesario`); la muestra devuelve lo publicado, el dólar del día y el valor en
   quetzales; la serie suma `convencion` y `dolarUsado`; el Excel del reporte suma «Compra publicada», «Venta publicada»,
-  «Convención» y «Dólar usado» y la nota de la política contable. Respuestas del usuario a la Adenda B anotadas en el
+  «Convención» y «Dólar usado» y la hoja «Notas» (fuente y política contable; corrección de revisión: los reportes de solo
+  exportar no escribían `notasDeInstrucciones`, ahora van en una segunda hoja). Respuestas del usuario a la Adenda B anotadas en el
   diseño (P-B2 promedio con tope de 3 %, Q-1 sin clientes en CRC/DOP/HNL, Q-2 sin consulta a la SAT). La carga sigue
   apagada. **Pendiente:** MM-4 (la muestra y la bitácora del cliente usan la forma nueva; nota impresa del reporte) y MM-3d
   (C-5, `curl` desde producción y encender).

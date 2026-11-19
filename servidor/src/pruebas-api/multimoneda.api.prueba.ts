@@ -5,6 +5,7 @@ import { configuracion } from '../configuracion.js';
 import type { Operador } from '../modulos/core/compartido/aplicacion/operador.js';
 import '../modulos/core/contratos/multimoneda.contratos.js';
 import { mediador } from '../modulos/core/mediador/contexto.js';
+import { NOTA_DE_LA_POLITICA_DE_CRUCES } from '../modulos/multimoneda/http/tipos-de-cambio.columnas.js';
 import { filasDeExcel } from './soporte/apertura-por-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { crearUsuarioConPermisos, darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
@@ -125,6 +126,15 @@ describe('GET /api/multimoneda/tipos-de-cambio', () => {
 
     expect(largo.estado).toBe(400);
     expect(plantilla.estado).toBe(404);
+  });
+
+  it('exporta en la hoja «Notas» la fuente y la política de cruces', async () => {
+    const respuesta = await con.propietario.get(`${RUTA}/exportar${consulta}`);
+
+    const notas = (await filasDeExcel(respuesta.cuerpo as Buffer, 1)).map((fila) => String(fila[0]));
+    expect(notas[0]).toBe('Notas');
+    expect(notas).toContain('Fuente: Banco de Guatemala.');
+    expect(notas).toContain(NOTA_DE_LA_POLITICA_DE_CRUCES);
   });
 
   it('pide el permiso de ver y, aparte, el de exportar', async () => {

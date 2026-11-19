@@ -93,11 +93,11 @@ export const importarExcel = (
     contenido,
   });
 
-/** Lo que dice cada celda de la primera hoja de un Excel exportado, por fila (la primera son los encabezados). */
-export async function filasDeExcel(contenido: Buffer): Promise<unknown[][]> {
+/** Lo que dice cada celda de una hoja (la primera por omisión) de un Excel exportado, por fila (la primera son los encabezados). */
+export async function filasDeExcel(contenido: Buffer, hoja = 0): Promise<unknown[][]> {
   const libro = new ExcelJS.Workbook();
   await libro.xlsx.load(contenido as unknown as ExcelJS.Buffer);
   const filas: unknown[][] = [];
-  libro.worksheets[0]!.eachRow((fila) => filas.push((fila.values as unknown[]).slice(1)));
+  libro.worksheets[hoja]!.eachRow((fila) => filas.push((fila.values as unknown[]).slice(1)));
   return filas;
 }
