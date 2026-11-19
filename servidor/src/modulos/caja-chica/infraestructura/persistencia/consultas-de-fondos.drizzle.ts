@@ -30,6 +30,7 @@ interface Fuentes {
 }
 
 const total = (totales: Map<string, number>, id: string): number => totales.get(id) ?? 0;
+const texto = (textos: Map<string, string>, id: string): string | null => textos.get(id) ?? null;
 
 /** Lo de un fondo sacado de cada consulta agrupada. */
 function datosDe(id: string, fuentes: Fuentes): DatosDeLectura {
@@ -37,13 +38,13 @@ function datosDe(id: string, fuentes: Fuentes): DatosDeLectura {
   return {
     custodio: custodio?.custodio ?? null,
     custodioUsuarioId: custodio?.usuarioId ?? null,
-    localidadNombre: fuentes.nombres.get(id) ?? null,
-    cuentaBancariaNombre: fuentes.cuentas.get(id) ?? null,
+    localidadNombre: texto(fuentes.nombres, id),
+    cuentaBancariaNombre: texto(fuentes.cuentas, id),
     montoCentavos: total(fuentes.montos, id),
     pendienteCentavos: total(fuentes.pendientes, id),
     valesCentavos: total(fuentes.vales, id),
-    valeMasViejo: fuentes.valesViejos.get(id) ?? null,
-    ultimoArqueo: fuentes.arqueados.get(id) ?? null,
+    valeMasViejo: texto(fuentes.valesViejos, id),
+    ultimoArqueo: texto(fuentes.arqueados, id),
     aperturaAnulada: fuentes.anuladas.has(id),
   };
 }
