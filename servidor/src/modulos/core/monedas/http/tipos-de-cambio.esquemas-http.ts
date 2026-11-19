@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { fechaObligatoria, textoObligatorio } from '../../compartido/http/esquemas-comunes.js';
+import { MAXIMO_DE_CONSULTAS } from '../aplicacion/casos-uso/consultar-estado-de-la-carga.js';
 import { diasEntre } from '../dominio/tipo-vigente.js';
 import { codigoDeMoneda } from './monedas.esquemas-http.js';
 
@@ -29,6 +30,12 @@ export const esquemaTipoManual = z.object({
   motivo: textoObligatorio(300),
 });
 
+/** La bitácora de la carga: las últimas consultas, de todas las monedas o de una. */
+export const esquemaConsultasDeLaCarga = z.object({
+  limite: z.coerce.number().int().min(1).max(MAXIMO_DE_CONSULTAS).default(50),
+  moneda: codigoDeMoneda().optional(),
+});
+
 /** «Cargar ahora»: sin fechas es hoy; el rango se revisa en el caso de uso. */
 export const esquemaCargaManual = z.object({
   desde: fechaObligatoria().optional(),
@@ -37,6 +44,7 @@ export const esquemaCargaManual = z.object({
 
 export type CargaManual = z.infer<typeof esquemaCargaManual>;
 export type ConsultaSerie = z.infer<typeof esquemaConsultaSerie>;
+export type ConsultasDeLaCarga = z.infer<typeof esquemaConsultasDeLaCarga>;
 export type ConsultaVigente = z.infer<typeof esquemaConsultaVigente>;
 export type ParamsVersiones = z.infer<typeof esquemaParamsVersiones>;
 export type TipoManual = z.infer<typeof esquemaTipoManual>;

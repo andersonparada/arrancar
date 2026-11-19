@@ -3,6 +3,7 @@ import { proteger } from '../../compartido/http/guardias.js';
 import type { TiposDeCambioControlador } from './tipos-de-cambio.controlador.js';
 import {
   esquemaCargaManual,
+  esquemaConsultasDeLaCarga,
   esquemaConsultaSerie,
   esquemaConsultaVigente,
   esquemaParamsVersiones,
@@ -36,6 +37,11 @@ function rutasDeSoporte(tipos: TiposDeCambioControlador): FastifyPluginAsyncZod 
       schema: { tags, params: esquemaParamsVersiones },
       preHandler,
       handler: tipos.versiones,
+    });
+    app.get('/tipos-de-cambio/consultas', {
+      schema: { tags, querystring: esquemaConsultasDeLaCarga },
+      preHandler,
+      handler: tipos.consultas,
     });
     app.post('/tipos-de-cambio/cargar', {
       schema: { tags, body: esquemaCargaManual },

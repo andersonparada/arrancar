@@ -1,4 +1,5 @@
 import { RecursoDuplicado } from '../../compartido/aplicacion/errores.js';
+import { DemasiadasSolicitudes } from '../../compartido/dominio/errores.js';
 
 /** Otra moneda ya tiene ese código del Banguat. */
 export class CodigoDelBanguatEnUso extends RecursoDuplicado {
@@ -27,5 +28,14 @@ export class CodigoDelBanguatConOtraSerie extends RecursoDuplicado {
       moneda,
       codigoDeLaSerie,
     });
+  }
+}
+
+/** La muestra sale a un servicio externo: se limita por usuario. */
+export class DemasiadasMuestrasDelBanguat extends DemasiadasSolicitudes {
+  readonly codigo = 'demasiadas_muestras_del_banguat';
+
+  constructor() {
+    super('Pidió demasiadas muestras del Banguat en poco tiempo. Espere un minuto e inténtelo de nuevo.');
   }
 }

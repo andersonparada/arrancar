@@ -6,7 +6,9 @@ import type { DependenciasCompartidas } from '../compartido/aplicacion/dependenc
 import { TiposDeCambio } from './aplicacion/tipos-de-cambio.js';
 import { ActualizarMonedasDelBanguat } from './aplicacion/casos-uso/actualizar-monedas-del-banguat.js';
 import { CargarTiposDeCambio } from './aplicacion/casos-uso/cargar-tipos-de-cambio.js';
+import { ConsultarEstadoDeLaCarga } from './aplicacion/casos-uso/consultar-estado-de-la-carga.js';
 import { ConsultarAlBanguat } from './aplicacion/casos-uso/consultar-al-banguat.js';
+import { VerMuestraDelBanguat } from './aplicacion/casos-uso/ver-muestra-del-banguat.js';
 import { VueltasDeCarga } from './aplicacion/casos-uso/vueltas-de-carga.js';
 import { FuenteConReintentos } from './aplicacion/fuente-con-reintentos.js';
 import { ConsultarTipoVigente } from './aplicacion/casos-uso/consultar-tipo-vigente.js';
@@ -22,6 +24,7 @@ import { rutasMonedas } from './http/monedas.rutas.js';
 import { TiposDeCambioControlador } from './http/tipos-de-cambio.controlador.js';
 import { rutasTiposDeCambio } from './http/tipos-de-cambio.rutas.js';
 import { ClienteBanguat } from './infraestructura/banguat/cliente-banguat.js';
+import { BitacoraDelBanguatDrizzle } from './infraestructura/persistencia/bitacora-del-banguat.drizzle.js';
 import { CargasDeTiposDrizzle } from './infraestructura/persistencia/cargas-de-tipos.drizzle.js';
 import { CerrojoDeCargaPostgres } from './infraestructura/persistencia/cerrojo-de-carga.drizzle.js';
 import { MonedasDelBanguatDrizzle } from './infraestructura/persistencia/monedas-del-banguat.drizzle.js';
@@ -90,14 +93,27 @@ export const cargaDeTiposDeCambio = new CargarTiposDeCambio({
   alGuardar: () => tiposDeCambio.invalidar(),
 });
 
+const estadoDeLaCarga = new ConsultarEstadoDeLaCarga({
+  bitacora: new BitacoraDelBanguatDrizzle(bd),
+  calendario: calendarioLaboral,
+  reloj,
+});
+
+/** Al unir un código a una moneda activa se trae su serie en segundo plano; con la carga apagada no se llama al Banguat. */
+function alQuedarParaCargar(moneda: string): void {
+  if (!cargaAutomaticaEncendida) return;
+  cargaDeTiposDeCambio.rellenarMoneda(moneda).catch((error: unknown) => alFallar(`Relleno de ${moneda}`, error));
+}
+
 /** Raíz de composición de las monedas: la API del catálogo y de los tipos de cambio. */
 export function componerMonedas({ unidadDeTrabajo, auditoria }: DependenciasCompartidas): FastifyPluginAsync {
   const excluidos = CODIGOS_DEL_BANGUAT_EXCLUIDOS;
   const monedas = new MonedasControlador({
     listar: listarMonedas,
     listarDelBanguat: new ListarMonedasDelBanguat({ catalogo, delBanguat, excluidos }),
-    editar: new EditarMoneda({ unidadDeTrabajo, catalogo, delBanguat, auditoria, excluidos }),
+    editar: new EditarMoneda({ unidadDeTrabajo, catalogo, delBanguat, auditoria, excluidos, alQuedarParaCargar }),
     actualizarLista: listaDelBanguat,
+    muestra: new VerMuestraDelBanguat({ fuente: clienteBanguat, delBanguat, catalogo, cargas, reloj, excluidos }),
   });
   const tipos = new TiposDeCambioControlador({
     serie: new ListarSerieDeTipos({ tiposDeCambio }),
@@ -105,6 +121,7 @@ export function componerMonedas({ unidadDeTrabajo, auditoria }: DependenciasComp
     versiones: new ListarVersionesDeTipo({ guardados }),
     registrar: new RegistrarTipoDeCambio({ unidadDeTrabajo, guardados, catalogo, tiposDeCambio }),
     cargar: cargaDeTiposDeCambio,
+    estadoDeLaCarga,
   });
   return async (app) => {
     await app.register(rutasMonedas(monedas));

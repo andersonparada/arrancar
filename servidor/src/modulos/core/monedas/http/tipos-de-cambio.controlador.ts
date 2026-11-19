@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../compartido/http/operador-de-la-solicitud.js';
 import type { CargarTiposDeCambio } from '../aplicacion/casos-uso/cargar-tipos-de-cambio.js';
+import type { ConsultarEstadoDeLaCarga } from '../aplicacion/casos-uso/consultar-estado-de-la-carga.js';
 import type { ConsultarTipoVigente } from '../aplicacion/casos-uso/consultar-tipo-vigente.js';
 import type { ListarSerieDeTipos } from '../aplicacion/casos-uso/listar-serie-de-tipos.js';
 import type { ListarVersionesDeTipo } from '../aplicacion/casos-uso/listar-versiones-de-tipo.js';
@@ -8,6 +9,7 @@ import type { RegistrarTipoDeCambio } from '../aplicacion/casos-uso/registrar-ti
 import type {
   CargaManual,
   ConsultaSerie,
+  ConsultasDeLaCarga,
   ConsultaVigente,
   ParamsVersiones,
   TipoManual,
@@ -19,6 +21,7 @@ export interface CasosDeUsoDeTiposDeCambio {
   versiones: ListarVersionesDeTipo;
   registrar: RegistrarTipoDeCambio;
   cargar: CargarTiposDeCambio;
+  estadoDeLaCarga: ConsultarEstadoDeLaCarga;
 }
 
 export class TiposDeCambioControlador {
@@ -32,6 +35,9 @@ export class TiposDeCambioControlador {
 
   versiones = ({ params }: FastifyRequest<{ Params: ParamsVersiones }>) =>
     this.casosDeUso.versiones.ejecutar(params.moneda, params.fecha);
+
+  consultas = ({ query }: FastifyRequest<{ Querystring: ConsultasDeLaCarga }>) =>
+    this.casosDeUso.estadoDeLaCarga.ejecutar(query);
 
   cargar = (solicitud: FastifyRequest<{ Body: CargaManual }>) =>
     this.casosDeUso.cargar.cargarAhora({ ...solicitud.body, usuarioId: operadorDe(solicitud).usuarioId });

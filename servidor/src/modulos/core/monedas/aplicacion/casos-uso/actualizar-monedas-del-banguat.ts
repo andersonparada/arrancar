@@ -5,7 +5,6 @@ import type {
   CargasDeTipos,
   CerrojoDeCarga,
   ConsultaHecha,
-  ResultadoDeActualizarLista,
   ResultadoDeLaConsulta,
 } from '../puertos/cargas-de-tipos.js';
 import type { FuenteDeTiposDeCambio } from '../puertos/fuente-de-tipos-de-cambio.js';
@@ -19,6 +18,15 @@ interface Dependencias {
 
 export interface OpcionesDeActualizacion {
   disparadaPor?: string | null;
+}
+
+/** Lo que dejó la actualización de la lista: cómo terminó, cuántas monedas cambiaron y cuándo se hizo. */
+export interface ResultadoDeLaActualizacion {
+  resultado: ResultadoDeLaConsulta;
+  nuevas: number;
+  noDisponibles: number;
+  detalle: string | null;
+  hechaEn: Date;
 }
 
 interface Intento {
@@ -49,13 +57,14 @@ export class ActualizarMonedasDelBanguat {
   constructor(private readonly dependencias: Dependencias) {}
 
   /** Sin el cerrojo: lo usa quien ya lo tiene (la carga del arranque y la vuelta de la mañana). */
-  async ejecutar(opciones: OpcionesDeActualizacion = {}): Promise<ResultadoDeActualizarLista | null> {
+  async ejecutar(opciones: OpcionesDeActualizacion = {}): Promise<ResultadoDeLaActualizacion> {
     const { fuente, cargas, ahora } = this.dependencias;
     const intento: Intento = { iniciadaEn: ahora(), disparadaPor: opciones.disparadaPor ?? null };
     try {
       const lista = listaLimpia(await fuente.monedasDisponibles());
       if (lista.length === 0) return await this.sinCambios(intento, 'sin_datos', null);
-      return await cargas.actualizarLista(lista, ahora(), this.consulta(intento, 'exito', null));
+      const cambios = await cargas.actualizarLista(lista, ahora(), this.consulta(intento, 'exito', null));
+      return { ...cambios, resultado: 'exito', detalle: null, hechaEn: ahora() };
     } catch (error) {
       if (!(error instanceof FuenteNoDisponible || error instanceof RespuestaInvalida)) throw error;
       return this.sinCambios(intento, 'error', error.message);
@@ -63,7 +72,7 @@ export class ActualizarMonedasDelBanguat {
   }
 
   /** A pedido de soporte: si otra carga corre, falla con 409. */
-  async ejecutarAPedido(usuarioId: string): Promise<ResultadoDeActualizarLista | null> {
+  async ejecutarAPedido(usuarioId: string): Promise<ResultadoDeLaActualizacion> {
     const resultado = await this.dependencias.cerrojo.ejecutarSiLibre(() =>
       this.ejecutar({ disparadaPor: usuarioId }).then((hecho) => ({ hecho })),
     );
@@ -80,9 +89,13 @@ export class ActualizarMonedasDelBanguat {
     );
   }
 
-  private async sinCambios(intento: Intento, resultado: ResultadoDeLaConsulta, detalle: string | null): Promise<null> {
+  private async sinCambios(
+    intento: Intento,
+    resultado: ResultadoDeLaConsulta,
+    detalle: string | null,
+  ): Promise<ResultadoDeLaActualizacion> {
     await this.dependencias.cargas.guardar(this.consulta(intento, resultado, detalle), []);
-    return null;
+    return { resultado, nuevas: 0, noDisponibles: 0, detalle, hechaEn: this.dependencias.ahora() };
   }
 
   private consulta(intento: Intento, resultado: ResultadoDeLaConsulta, detalle: string | null): ConsultaHecha {

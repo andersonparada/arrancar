@@ -97,6 +97,8 @@ describe('POST /api/tipos-de-cambio/cargar', () => {
     const despues = await propietario.query(`select count(*)::int as n from core.monedas_del_banguat where disponible`);
     const bitacora = await propietario.query(`select resultado from core.consultas_al_banguat where vuelta = 'lista'`);
     expect(respuesta.estado).toBe(200);
+    expect(respuesta.cuerpo.consulta).toMatchObject({ resultado: 'error', nuevas: 0, noDisponibles: 0 });
+    expect(respuesta.cuerpo.lista).toEqual(expect.arrayContaining([expect.objectContaining({ codigo: 2 })]));
     expect(despues.rows[0].n).toBe(antes.rows[0].n);
     expect(bitacora.rows).toEqual([{ resultado: 'error' }]);
   });
