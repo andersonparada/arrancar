@@ -16,6 +16,7 @@ import { empresas } from '../../../core/cuentas/infraestructura/persistencia/emp
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { definicionesModulos } from '../../../indice.js';
 import { terceros } from './terceros.tablas.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
 
 let usuarioId: string;
 let cuentaA: string;
@@ -43,7 +44,7 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'prueba', nombres: 'Prueba', hashContrasena: 'x' })
     .returning();
-  const [empresaDeA, empresaDeB] = await bd
+  const [empresaDeA, empresaDeB] = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: a!.id, nombre: 'Empresa de A' },

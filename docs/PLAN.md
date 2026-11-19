@@ -2970,3 +2970,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   RLS lo es). Las pruebas de auditoría que esperaban 0 filas ahora esperan `permission denied`. Prueba nueva
   `seguridad-de-core.prueba.ts` (tabla clasificada, RLS esperada, privilegios por tabla y columna, también tras migrar dos
   veces, y cada caso del diseño). R-2 y R-3 siguen.
+
+- **2026-11-18, RLS del núcleo R-2 (alta con cuenta y usuario; andamios como dueño).** El alta de cuenta fija
+  `app.cuenta_id` y `app.usuario_id` (sin empresa) al abrir su transacción: `TransaccionDeAlta.ejecutar(origen, trabajo)`
+  recibe la cuenta nueva (el caso de uso la crea con `Cuenta.registrar` antes de abrirla) y el usuario de soporte, que
+  sale de la sesión en el controlador (la siembra no tiene usuario). Arregla de paso que la empresa inicial y los roles del
+  alta quedaban con `creado_por` nulo. Los andamios de pruebas que sembraban empresas y accesos con `bd` pasan a
+  `core/base-datos/sembrado-de-prueba.soporte.ts` (`bdPropietario`, conexión del dueño): así no dependen de las
+  variables de la transacción cuando R-3 active la RLS de escritura. Prueba nueva en `plataforma.api.prueba.ts`.

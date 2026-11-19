@@ -27,7 +27,7 @@ export class CuentasControlador {
   listar = () => this.casosDeUso.listar.ejecutar();
 
   darDeAlta = async (solicitud: FastifyRequest<{ Body: AltaCuenta }>, respuesta: FastifyReply) => {
-    const resultado = await this.casosDeUso.darDeAlta.ejecutar(solicitud.body);
+    const resultado = await this.casosDeUso.darDeAlta.ejecutar(solicitud.body, solicitud.contexto?.usuario.id ?? null);
     return respuesta.status(201).send(resultado);
   };
 

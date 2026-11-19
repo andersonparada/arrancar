@@ -18,6 +18,7 @@ import type { ContextoEmpresa } from '../aplicacion/contexto-empresa.js';
 import { enTransaccionSegura } from '../pruebas/en-transaccion-segura.js';
 import { AuditoriaPostgres } from './auditoria-postgres.js';
 import { auditoria } from './persistencia/auditoria.tablas.js';
+import { bdPropietario } from '../../base-datos/sembrado-de-prueba.soporte.js';
 
 let enA: ContextoEmpresa;
 let enB: ContextoEmpresa;
@@ -42,7 +43,7 @@ async function prepararDosCuentas(): Promise<void> {
       { usuario: 'luis', nombres: 'Luis', hashContrasena: 'x' },
     ])
     .returning();
-  const [empresaDeA, empresaDeB] = await bd
+  const [empresaDeA, empresaDeB] = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: a!.id, nombre: 'Empresa de A' },

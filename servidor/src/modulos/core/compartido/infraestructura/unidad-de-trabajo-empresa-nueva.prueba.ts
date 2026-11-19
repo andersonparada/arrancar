@@ -20,6 +20,7 @@ import {
   siSeDeshace,
   transaccionEnCurso,
 } from './unidad-de-trabajo-postgres.js';
+import { bdPropietario } from '../../base-datos/sembrado-de-prueba.soporte.js';
 
 const unidadDeTrabajo = new UnidadDeTrabajoPostgres(bd);
 let enEmpresaA: ContextoEmpresa;
@@ -59,7 +60,7 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'prueba', nombres: 'Prueba', hashContrasena: 'x' })
     .returning();
-  const [a, b] = await bd
+  const [a, b] = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: cuenta!.id, nombre: 'Empresa A' },
@@ -67,7 +68,10 @@ beforeAll(async () => {
     ])
     .returning();
   const [otraCuenta] = await bd.insert(cuentas).values({ nombre: 'Otra cuenta' }).returning();
-  const [ajena] = await bd.insert(empresas).values({ cuentaId: otraCuenta!.id, nombre: 'Empresa ajena' }).returning();
+  const [ajena] = await bdPropietario
+    .insert(empresas)
+    .values({ cuentaId: otraCuenta!.id, nombre: 'Empresa ajena' })
+    .returning();
   empresaDeOtraCuentaId = ajena!.id;
   enEmpresaA = { empresaId: a!.id, cuentaId: cuenta!.id, usuarioId: usuario!.id };
   enEmpresaB = { empresaId: b!.id, cuentaId: cuenta!.id, usuarioId: usuario!.id };
@@ -191,7 +195,9 @@ describe('ejecutar en una empresa nueva de la cuenta', () => {
   });
 
   it('rechaza una empresa existente de la cuenta aunque el usuario tenga acceso real a ella', async () => {
-    await bd.insert(empresaUsuarios).values({ empresaId: enEmpresaB.empresaId, usuarioId: enEmpresaA.usuarioId });
+    await bdPropietario
+      .insert(empresaUsuarios)
+      .values({ empresaId: enEmpresaB.empresaId, usuarioId: enEmpresaA.usuarioId });
     const conAcceso = unidadDeTrabajo.ejecutar(enEmpresaA, () =>
       unidadDeTrabajo.ejecutarEnEmpresaNueva(enEmpresaB.empresaId, recursosVisibles),
     );
