@@ -16,6 +16,8 @@ const props = defineProps<{
   enviando: boolean;
   errores: Record<string, string>;
   conceptos: readonly ConceptoParaElVale[];
+  /** Al liquidar un vale provisional el gasto no se registra todavía: solo se agrega a la lista. */
+  textoDelBoton?: string;
 }>();
 const edicion = defineModel<EdicionDeVale>({ required: true });
 const emit = defineEmits<{ cerrar: []; guardar: [] }>();
@@ -25,7 +27,11 @@ const puedeSobreElTope = usarSesion().puede('caja-chica.comprobantes.sobre-el-to
 </script>
 
 <template>
-  <VentanaModal :abierta="abierta" titulo="Vale de gasto" @cerrar="emit('cerrar')">
+  <VentanaModal
+    :abierta="abierta"
+    :titulo="textoDelBoton ? 'Gasto sin factura' : 'Vale de gasto'"
+    @cerrar="emit('cerrar')"
+  >
     <form id="form-de-vale" class="space-y-4" novalidate @submit.prevent="emit('guardar')">
       <p class="text-sm text-tierra-600 dark:text-tierra-300">{{ AYUDA_DEL_VALE }}</p>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -89,7 +95,9 @@ const puedeSobreElTope = usarSesion().puede('caja-chica.comprobantes.sobre-el-to
     </form>
     <template #pie>
       <BotonBase variante="secundario" @click="emit('cerrar')">Cancelar</BotonBase>
-      <BotonBase tipo="submit" form="form-de-vale" :cargando="enviando">Registrar vale</BotonBase>
+      <BotonBase tipo="submit" form="form-de-vale" :cargando="enviando">{{
+        textoDelBoton ?? 'Registrar vale'
+      }}</BotonBase>
     </template>
   </VentanaModal>
 </template>
