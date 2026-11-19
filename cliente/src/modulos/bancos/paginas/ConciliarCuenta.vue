@@ -7,7 +7,7 @@ import AccionesDeConciliacion from '../componentes/conciliaciones/AccionesDeConc
 import ColumnaDelEstadoDeCuenta from '../componentes/conciliaciones/ColumnaDelEstadoDeCuenta.vue';
 import CuadroCuadratico from '../componentes/conciliaciones/CuadroCuadratico.vue';
 import EncabezadoDeConciliacion from '../componentes/conciliaciones/EncabezadoDeConciliacion.vue';
-import ListaDeMovimientosConciliables from '../componentes/conciliaciones/ListaDeMovimientosConciliables.vue';
+import CandidatosDeConciliacion from '../componentes/conciliaciones/CandidatosDeConciliacion.vue';
 import NotasMarcadasEnConciliacion from '../componentes/conciliaciones/NotasMarcadasEnConciliacion.vue';
 import PartidasDeConciliacion from '../componentes/conciliaciones/PartidasDeConciliacion.vue';
 import SaldoDelEstadoDeCuenta from '../componentes/conciliaciones/SaldoDelEstadoDeCuenta.vue';
@@ -26,7 +26,7 @@ const { datos: conciliacion, cargando } = usarCarga(
   null as Conciliacion | null,
   'No se pudo cargar la conciliación.',
 );
-const { marcados, candidatosConMarca, alternar } = usarMarcadoDeMovimientos(conciliacion);
+const { marcados, candidatosConMarca, posfechadosConMarca, alternar } = usarMarcadoDeMovimientos(conciliacion);
 const {
   guardando,
   errores: erroresDelGuardado,
@@ -64,7 +64,11 @@ const imprimir = (): void => window.print();
       </EncabezadoPagina>
 
       <EncabezadoDeConciliacion :conciliacion="conciliacion" />
-      <CuadroCuadratico :libros="conciliacion.cuadratica.libros" :banco="conciliacion.cuadratica.banco" />
+      <CuadroCuadratico
+        :libros="conciliacion.cuadratica.libros"
+        :banco="conciliacion.cuadratica.banco"
+        :saldo-inicial-del-banco="conciliacion.saldoInicialDelBancoDeLaApertura"
+      />
       <div class="grid gap-4 lg:grid-cols-2 lg:items-start print:grid-cols-1">
         <div class="min-w-0 space-y-4">
           <SaldoDelEstadoDeCuenta :saldo="conciliacion.saldoQueDebeMostrarElEstadoDeCuenta" />
@@ -79,8 +83,9 @@ const imprimir = (): void => window.print();
               Guardar marcas
             </button>
           </div>
-          <ListaDeMovimientosConciliables
+          <CandidatosDeConciliacion
             :movimientos="candidatosConMarca"
+            :posfechados="posfechadosConMarca"
             :editable="enProceso"
             @alternar="alternar"
           />

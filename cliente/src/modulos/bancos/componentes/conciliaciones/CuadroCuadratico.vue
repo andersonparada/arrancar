@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
+import { rotuloDelSaldoInicialDelBanco } from '../../composables/conciliaciones/textos-de-carga-inicial';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { Cuadratica } from '../../servicios/conciliaciones.api';
 
 /** El cuadro cuadrático: saldo inicial, ingresos, egresos y saldo final, de libros y de banco. */
-defineProps<{ libros: Cuadratica; banco: Cuadratica }>();
+defineProps<{
+  libros: Cuadratica;
+  banco: Cuadratica;
+  saldoInicialDelBanco?: { fecha: string; monto: string } | null;
+}>();
 
 const FILAS: { clave: keyof Cuadratica; etiqueta: string }[] = [
   { clave: 'saldoInicial', etiqueta: 'Saldo inicial' },
@@ -36,5 +41,9 @@ const FILAS: { clave: keyof Cuadratica; etiqueta: string }[] = [
         </tr>
       </tbody>
     </table>
+    <p v-if="saldoInicialDelBanco" class="mt-2 text-xs text-tierra-600 dark:text-tierra-300">
+      Saldo inicial según banco: {{ rotuloDelSaldoInicialDelBanco(saldoInicialDelBanco.fecha) }},
+      {{ formatearMonto(saldoInicialDelBanco.monto) }}.
+    </p>
   </TarjetaBase>
 </template>

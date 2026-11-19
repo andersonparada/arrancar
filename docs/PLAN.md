@@ -3210,3 +3210,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `parteDeApertura !== null`), la anulación en lote cuenta solo `origen === 'apertura'` y la fila de cheques caducos
   usa el mismo origen que la columna. `usarCorteDeApertura` comprueba `bancos.saldos-iniciales.ver` antes de pedir el
   corte. Se quita `insigniaConApertura` (código muerto). Sin cambios: lógica de notas de apertura (inofensiva).
+- **2026-11-18 · BS-7 (cliente de Bancos, conciliación).** `ConciliarCuenta.vue` muestra el saldo inicial del banco
+  rotulado en el cuadro («Saldo anterior del estado de cuenta» si el corte es fin de mes; «Saldo del banco al
+  dd/mm/aaaa (carga inicial)» si no), la insignia «De la carga inicial» en partidas y candidatos, el grupo «Cheques con
+  fecha posterior (posfechados)» con su aviso por cheque (marcables como cualquier candidato) y la partida «Cheques
+  cobrados antes de su fecha» (resta; sale en pantalla e impresión solo si tiene partidas). `ListaDeConciliaciones` usa
+  `periodoSiguiente` del servidor (se borra `periodo-propuesto.ts`); sin periodo no se ofrece «Nueva conciliación».
+  Lógica pura con pruebas en `textos-de-carga-inicial.ts`.

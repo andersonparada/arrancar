@@ -3,11 +3,17 @@ import { CLASE_DE_TIPO, SIGNO_DE_TIPO } from '../../composables/movimientos/esti
 import { formatearFecha, formatearMonto } from '@/modulos/core/utilidades/formato';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import { Inbox } from 'lucide-vue-next';
+import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
+import {
+  avisoDeCheque,
+  ROTULO_DE_CARGA_INICIAL,
+  TITULO_DE_POSFECHADOS,
+} from '../../composables/conciliaciones/textos-de-carga-inicial';
 import type { MovimientoConMarca } from '../../servicios/conciliaciones.api';
 
 /** Los candidatos: fecha, referencia/beneficiario (con el número si es cheque) y monto, con su casilla de marcar. */
-defineProps<{ movimientos: MovimientoConMarca[]; editable: boolean }>();
+defineProps<{ movimientos: MovimientoConMarca[]; editable: boolean; posfechados?: boolean }>();
 const emit = defineEmits<{ alternar: [movimientoId: string] }>();
 
 const descripcion = (m: MovimientoConMarca): string =>
@@ -17,8 +23,10 @@ const descripcion = (m: MovimientoConMarca): string =>
 </script>
 
 <template>
-  <EstadoVacio v-if="!movimientos.length" :icono="Inbox" titulo="No hay documentos para marcar en este mes" />
+  <template v-if="posfechados && !movimientos.length" />
+  <EstadoVacio v-else-if="!movimientos.length" :icono="Inbox" titulo="No hay documentos para marcar en este mes" />
   <TarjetaBase v-else class="divide-y divide-tierra-100 p-0 dark:divide-tierra-800">
+    <p v-if="posfechados" class="px-4 py-3 text-sm font-semibold">{{ TITULO_DE_POSFECHADOS }}</p>
     <label
       v-for="movimiento in movimientos"
       :key="movimiento.id"
@@ -33,7 +41,13 @@ const descripcion = (m: MovimientoConMarca): string =>
         @change="emit('alternar', movimiento.id)"
       />
       <span class="w-24 shrink-0 text-tierra-500">{{ formatearFecha(movimiento.fecha) }}</span>
-      <span class="min-w-0 flex-1 truncate">{{ descripcion(movimiento) }}</span>
+      <span class="min-w-0 flex-1">
+        <span class="block truncate">{{ descripcion(movimiento) }}</span>
+        <span v-if="posfechados" class="block text-xs text-tierra-600 dark:text-tierra-300">
+          {{ avisoDeCheque(movimiento.fecha) }}
+        </span>
+      </span>
+      <InsigniaBase v-if="movimiento.parteDeApertura" class="shrink-0">{{ ROTULO_DE_CARGA_INICIAL }}</InsigniaBase>
       <span class="font-semibold" :class="CLASE_DE_TIPO[movimiento.tipo]">
         {{ SIGNO_DE_TIPO[movimiento.tipo] }} {{ formatearMonto(movimiento.monto) }}
       </span>

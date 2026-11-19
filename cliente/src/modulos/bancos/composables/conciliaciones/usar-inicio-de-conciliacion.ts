@@ -1,10 +1,9 @@
 import { ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
-import { apiConciliaciones, type ConciliacionResumen } from '../../servicios/conciliaciones.api';
-import { periodoPropuesto } from './periodo-propuesto';
+import { apiConciliaciones, type Periodo } from '../../servicios/conciliaciones.api';
 
-/** La ventana "Nueva conciliación": propone el periodo (mes siguiente a la última); sin saldo que escribir. */
+/** La ventana "Nueva conciliación": propone el periodo que da el servidor; sin saldo que escribir. */
 export function usarInicioDeConciliacion(cuentaBancariaId: () => string | null, alGuardar: () => Promise<void>) {
   const avisos = usarAvisos();
   const { enviando, errores, enviar } = usarFormulario();
@@ -12,8 +11,8 @@ export function usarInicioDeConciliacion(cuentaBancariaId: () => string | null, 
   const anio = ref(0);
   const mes = ref(0);
 
-  function abrir(ultima: ConciliacionResumen | null): void {
-    ({ anio: anio.value, mes: mes.value } = periodoPropuesto(ultima, new Date()));
+  function abrir(propuesto: Periodo): void {
+    ({ anio: anio.value, mes: mes.value } = propuesto);
     errores.value = {};
     abierta.value = true;
   }
