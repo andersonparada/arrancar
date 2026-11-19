@@ -10,7 +10,10 @@ export const MOTIVO_DE_CANCELACION_POR_ANULACION = 'Pago anulado';
 
 /** El asunto no admite el monto ni los documentos (minimización de datos, P6). */
 export const MARCADORES_DEL_ASUNTO = ['proveedor', 'empresa', 'numero', 'fecha', 'forma', 'fecha_de_cobro'] as const;
-export const MARCADORES_DEL_MENSAJE = [...MARCADORES_DEL_ASUNTO, 'monto', 'documentos'] as const;
+export const MARCADORES_DEL_MENSAJE = [...MARCADORES_DEL_ASUNTO, 'monto', 'documentos', 'adjunto'] as const;
+
+/** Lo que dice el marcador `{adjunto}`: la frase solo si el correo lleva el comprobante (con su espacio final). */
+export const FRASE_DEL_ADJUNTO = 'Adjuntamos el comprobante del pago. ';
 
 const MAXIMO_DE_DOCUMENTOS_EN_EL_TEXTO = 20;
 

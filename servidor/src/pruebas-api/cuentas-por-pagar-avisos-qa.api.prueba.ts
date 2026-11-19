@@ -15,8 +15,7 @@ beforeAll(async () => {
 });
 
 describe('aviso de pago, hallazgos de la QA', () => {
-  // Pendiente de corregir: el texto por omisión dice «Adjuntamos el comprobante» aunque no se adjunte.
-  it.fails('sin adjuntar el comprobante, el mensaje no dice que se adjunta', async () => {
+  it('sin adjuntar el comprobante, el mensaje no dice que se adjunta', async () => {
     const { pagoId } = await a.pagoConProveedor({ principal: 'ventas@proveedor.com' });
     const clave = 'cuentas-por-pagar.avisos_de_pago.adjuntar_comprobante';
     const puesto = await entorno.soporte.put(`/api/configuracion/${clave}`, { nivel: 'empresa', valor: false });

@@ -7,6 +7,7 @@ import { fechaLegible, quetzales } from '../../../dominio/avisos.js';
 import {
   MARCADORES_DEL_ASUNTO,
   MARCADORES_DEL_MENSAJE,
+  FRASE_DEL_ADJUNTO,
   RECURSO_DE_AVISOS,
   TIPO_DE_AVISO,
   destinatariosPosibles,
@@ -92,7 +93,7 @@ export class ArmadorDelAviso {
       posibles,
       correoDeLaEmpresa: correoUtilizable(empresa.correo),
       motivo: motivoSinAviso(comprobante.pago) ?? sinCorreo,
-      valores: valoresDe(comprobante, empresa),
+      valores: { ...valoresDe(comprobante, empresa), adjunto: ajustes.adjuntarComprobante ? FRASE_DEL_ADJUNTO : '' },
     };
   }
 
