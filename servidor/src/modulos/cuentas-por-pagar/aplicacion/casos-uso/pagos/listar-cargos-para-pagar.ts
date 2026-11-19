@@ -133,8 +133,10 @@ export class ListarCargosParaPagar {
       fecha,
     }: { proveedorId: string; filas: readonly FilaDeDocumento[]; fecha: string | undefined },
   ) {
-    const { consultasDePagos, nombreDelNit, topeDeDiferencia, reloj } = this.dependencias;
-    const delMes = await consultasDePagos.pagosDelMes(proveedorId, fecha ?? (await reloj.hoy(operador)));
+    const { consultasDePagos, nombreDelNit, topeDeDiferencia, chequesDeApertura, reloj } = this.dependencias;
+    const hoy = await reloj.hoy(operador);
+    const delMes = await consultasDePagos.pagosDelMes(proveedorId, fecha ?? hoy);
+    const sinLigar = await chequesDeApertura.sinLigarDe(proveedorId, hoy);
     return {
       beneficiario: await nombreDelNit.de(
         proveedorId,
@@ -142,6 +144,7 @@ export class ListarCargosParaPagar {
       ),
       sumaDelMesAlProveedor: deCentavos(delMes.reduce((suma, { montoCentavos }) => suma + montoCentavos, 0)),
       topeDiferencia: deCentavos(await topeDeDiferencia.centavos(operador)),
+      chequesDeAperturaSinLigar: { cantidad: sinLigar.cantidad, total: deCentavos(sinLigar.totalCentavos) },
     };
   }
 

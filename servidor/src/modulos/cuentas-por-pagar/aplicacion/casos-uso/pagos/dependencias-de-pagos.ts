@@ -5,7 +5,11 @@ import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import type { RepositorioDeAjustes } from '../../puertos/puertos-de-ajustes.js';
 import type { RepositorioDeContrasenas } from '../../puertos/puertos-de-contrasenas.js';
-import type { ConsultasDeDocumentos, FilaDeDocumento } from '../../puertos/puertos-de-consultas.js';
+import type {
+  ConsultasDeChequesDeApertura,
+  ConsultasDeDocumentos,
+  FilaDeDocumento,
+} from '../../puertos/puertos-de-consultas.js';
 import type {
   FechasDeEntrada,
   RepositorioDeDocumentos,
@@ -67,6 +71,7 @@ export interface DependenciasParaPagar {
   topeDeDiferencia: TopeDeDiferenciaDelPago;
   cargaInicial: CargaInicial;
   fechasDeEntrada: FechasDeEntrada;
+  chequesDeApertura: ConsultasDeChequesDeApertura;
   reloj: Reloj;
 }
 

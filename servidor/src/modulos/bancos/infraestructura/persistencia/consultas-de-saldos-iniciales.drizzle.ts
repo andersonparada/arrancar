@@ -1,7 +1,9 @@
 import { and, asc, count, eq, inArray, isNotNull, isNull, lte, sql } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
+import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type {
   ConsultasDeSaldosIniciales,
+  PosfechadosSinLigar,
   CuentaConSuCabecera,
   PartidaDeLaBase,
   SaldoPrincipal,
@@ -111,6 +113,22 @@ export class ConsultasDeSaldosInicialesDrizzle implements ConsultasDeSaldosInici
         and(inArray(movimientos.parteDeApertura, ['saldo_del_banco', 'saldo_global']), isNull(movimientos.anuladoEn)),
       );
     return filas.map((fila) => ({ ...fila, parte: fila.parte as SaldoPrincipal['parte'] }));
+  }
+
+  async posfechadosSinLigar(): Promise<PosfechadosSinLigar> {
+    const [fila] = await transaccionEnCurso()
+      .select({ cantidad: count(), total: sql<string>`coalesce(sum(${movimientos.monto}), 0)` })
+      .from(movimientos)
+      .where(
+        and(
+          eq(movimientos.parteDeApertura, 'cheque_posfechado'),
+          isNull(movimientos.moduloDeOrigen),
+          isNull(movimientos.anuladoEn),
+          isNull(movimientos.revertidoEn),
+          isNull(movimientos.revierteAId),
+        ),
+      );
+    return { cantidad: fila?.cantidad ?? 0, totalCentavos: aCentavos(fila?.total ?? '0') };
   }
 
   archivoDeLaEvidencia(cuentaBancariaId: string) {

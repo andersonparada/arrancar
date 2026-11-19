@@ -20,6 +20,10 @@ function cifrasDeLaDeuda(totales: TotalesDelProveedor) {
       monto: deCentavos(montoCentavos),
     })),
     cargosConSaldo: totales.cargosConSaldo,
+    chequesDeAperturaSinLigar: {
+      cantidad: totales.chequesDeAperturaSinLigar.cantidad,
+      total: deCentavos(totales.chequesDeAperturaSinLigar.totalCentavos),
+    },
   };
 }
 

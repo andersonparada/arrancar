@@ -134,6 +134,20 @@ export interface TotalesDelProveedor {
   vencidoComprometidoCentavos: number;
   cargosConSaldo: number;
   posfechados: PosfechadoDelProveedor[];
+  /** Los posfechados de apertura de Bancos que ningún pago ha ligado y que podrían ser de este proveedor (AP-0). */
+  chequesDeAperturaSinLigar: ChequesDeAperturaSinLigar;
+}
+
+/** Cuántos cheques posfechados de apertura siguen sin ligar y cuánto suman. */
+export interface ChequesDeAperturaSinLigar {
+  cantidad: number;
+  totalCentavos: number;
+}
+
+/** Los posfechados de apertura de Bancos que ningún pago ha ligado (AP-0). */
+export interface ConsultasDeChequesDeApertura {
+  /** Los que podrían ser del proveedor: con su nombre de beneficiario o, si tiene saldos iniciales con deuda, todos. */
+  sinLigarDe(proveedorId: string, hoy: string): Promise<ChequesDeAperturaSinLigar>;
 }
 
 /** Un cheque posfechado del proveedor, con lo que entregó a sus cargos sumado. */

@@ -68,6 +68,7 @@ function dependenciasDeSaldosIniciales() {
     unidadDeTrabajo,
     auditoria,
     documentos,
+    modulosDeOrigen,
     cargaInicial,
     consultas,
     cabeceras: new RepositorioDeSaldosInicialesDrizzle(),
@@ -105,8 +106,15 @@ const casosDeUso = (dependencias: Dependencias) => ({
 
 /** Raíz de composición de los saldos iniciales con partidas: el único lugar donde se eligen las implementaciones concretas. */
 export function rutasDeSaldosIniciales() {
-  const casos = casosDeUso(dependenciasDeSaldosIniciales());
-  const revision = new ResponderRevisionDeCierreDeCarga(casos.listar);
+  const dependencias = dependenciasDeSaldosIniciales();
+  const casos = casosDeUso(dependencias);
+  const { consultas, modulosDeOrigen, unidadDeTrabajo } = dependencias;
+  const revision = new ResponderRevisionDeCierreDeCarga({
+    saldos: casos.listar,
+    consultas,
+    modulosDeOrigen,
+    unidadDeTrabajo,
+  });
   mediador.responder('bancos', 'empresas.revisar_cierre_de_carga', (_datos, operador) => revision.ejecutar(operador));
   const heredado = new SaldosGlobalesControlador(saldosGlobalesHeredados());
   return rutasSaldosIniciales(new SaldosInicialesControlador(casos), heredado, {

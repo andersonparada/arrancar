@@ -207,6 +207,8 @@ export interface SaldoDelProveedorDto {
   posfechados: PosfechadoDelProveedorDto[];
   /** Cuántos cargos con deuda tiene. */
   cargosConSaldo: number;
+  /** Posfechados de apertura sin ligar que podrían ser de este proveedor (AP-0); `cantidad` 0 si no hay. */
+  chequesDeAperturaSinLigar: { cantidad: number; total: string };
   /** Suma de los saldos libres de sus notas de crédito vigentes. */
   saldosDeudores: string;
   notasConSaldoLibre: SaldoDeudorDto[];
