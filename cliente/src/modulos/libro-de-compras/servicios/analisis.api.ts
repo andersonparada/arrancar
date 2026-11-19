@@ -52,6 +52,7 @@ export interface LineaDeIvaAlCosto extends DocumentoDeLinea {
 export interface ActivoFijoComprado extends DocumentoDeLinea {
   numeroDeLinea: number;
   concepto: string;
+  tipoDeLinea: 'bien' | 'servicio';
   descripcion: string | null;
   costo: string;
   ivaConCredito: string;

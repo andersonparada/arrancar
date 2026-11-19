@@ -19,6 +19,7 @@ import { esquemaLibroDeCompras } from './esquema.tablas.js';
 import { vigenciasDeCombustible } from './vigencias-de-combustible.tablas.js';
 
 type Columnas = Record<
+  | 'id'
   | 'empresaId'
   | 'documentoId'
   | 'numero'
@@ -44,6 +45,7 @@ type Columnas = Record<
 /** Llaves únicas y foráneas: todas compuestas con la empresa, así la línea nunca cruza de empresa. */
 const llavesDeLinea = (t: Columnas) => [
   unique('lineas_de_documento_numero_unico').on(t.documentoId, t.numero),
+  unique('lineas_de_documento_llave_unica').on(t.id, t.documentoId, t.empresaId),
   foreignKey({
     name: 'lineas_de_documento_documento_fk',
     columns: [t.documentoId, t.empresaId],
@@ -82,7 +84,7 @@ const restriccionesDeMontosDeLinea = (t: Columnas) => [
   ),
 ];
 
-/** Combustible (galones, IDP por galón y etanol) y activo fijo: solo para bienes. */
+/** Combustible (galones, IDP por galón y etanol): solo para bienes. */
 const restriccionesDeCombustible = (t: Columnas) => [
   check('lineas_de_documento_galones_positivos', sql`${t.galones} is null or ${t.galones} > 0`),
   check(
@@ -91,7 +93,6 @@ const restriccionesDeCombustible = (t: Columnas) => [
         or (${t.vigenciaDeCombustibleId} is not null and ${t.galones} is not null and ${t.idpPorGalon} is not null and ${t.porcentajeDeEtanol} is not null)`,
   ),
   check('lineas_de_documento_combustible_es_bien', sql`${t.vigenciaDeCombustibleId} is null or ${t.tipo} = 'bien'`),
-  check('lineas_de_documento_activo_fijo_es_bien', sql`not ${t.esActivoFijo} or ${t.tipo} = 'bien'`),
   check(
     'lineas_de_documento_idp_calculado',
     sql`${t.idpEscrito}

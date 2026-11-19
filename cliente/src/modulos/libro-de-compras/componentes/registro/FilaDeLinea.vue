@@ -40,9 +40,9 @@ const opcionesDeCombustible = computed(() => [
   { valor: null, texto: 'Elija el combustible' },
   ...props.combustibles.map(({ id, nombre }) => ({ valor: id, texto: nombre })),
 ]);
-const fijaElTipo = computed(() => linea.value.esActivoFijo || linea.value.esCombustible);
+const fijaElTipo = computed(() => linea.value.esCombustible);
 
-// Un activo fijo o el combustible siempre son un bien; sin combustible no hay galones.
+// El combustible siempre es un bien; sin combustible no hay galones.
 watch(
   () => [linea.value.esActivoFijo, linea.value.esCombustible],
   () => ajustarTipoDeLinea(linea.value),
@@ -118,7 +118,7 @@ function elegirConcepto(id: string | null | undefined): void {
           :error="errores.tipo"
         />
         <div class="flex flex-col justify-end gap-3">
-          <CampoInterruptor v-model="linea.esActivoFijo" etiqueta="Es activo fijo" />
+          <CampoInterruptor v-model="linea.esActivoFijo" etiqueta="Activo fijo (se capitaliza)" />
           <CampoInterruptor v-model="linea.esCombustible" etiqueta="Es combustible" />
         </div>
         <template v-if="linea.esCombustible">

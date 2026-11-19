@@ -20,6 +20,7 @@ defineProps<{ datos: ResultadosDelAnalisis['activos-fijos'] }>();
           <th scope="col" class="px-3 py-2 font-semibold">Documento</th>
           <th scope="col" class="px-3 py-2 font-semibold">Proveedor</th>
           <th scope="col" class="px-3 py-2 font-semibold">Concepto</th>
+          <th scope="col" class="px-3 py-2 font-semibold">Es un</th>
           <th scope="col" class="px-3 py-2 font-semibold">Descripción</th>
           <th scope="col" class="px-3 py-2 text-right font-semibold">Costo</th>
           <th scope="col" class="px-3 py-2 text-right font-semibold">IVA con crédito</th>
@@ -37,6 +38,7 @@ defineProps<{ datos: ResultadosDelAnalisis['activos-fijos'] }>();
             <span class="block text-xs text-tierra-500 dark:text-tierra-300">{{ fila.nitDelProveedor ?? '—' }}</span>
           </td>
           <td class="px-3 py-2">{{ fila.concepto }}</td>
+          <td class="px-3 py-2">{{ fila.tipoDeLinea === 'bien' ? 'Bien' : 'Servicio' }}</td>
           <td class="px-3 py-2">{{ formatearTexto(fila.descripcion) }}</td>
           <td
             class="px-3 py-2 text-right tabular-nums"
@@ -49,7 +51,7 @@ defineProps<{ datos: ResultadosDelAnalisis['activos-fijos'] }>();
       </tbody>
       <tfoot class="bg-tierra-50 font-semibold dark:bg-tierra-800">
         <tr>
-          <th scope="row" colspan="6" class="px-3 py-2 text-left">{{ textos.total }}</th>
+          <th scope="row" colspan="7" class="px-3 py-2 text-left">{{ textos.total }}</th>
           <td class="px-3 py-2 text-right tabular-nums">{{ formatearMonto(datos.total.costo) }}</td>
           <td class="px-3 py-2 text-right tabular-nums">{{ formatearMonto(datos.total.ivaConCredito) }}</td>
         </tr>

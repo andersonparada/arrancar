@@ -2851,3 +2851,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   autorizados del proveedor y `disponible` solo los cargos con algo disponible (`having bool_or(disponible > 0)`). Quedan
   pendientes, por menores: unificar en `textos.ts` los nombres de estado, «comprometido con cheque N al dd/mm» en la contraseña,
   columnas Pagado y Comprometido en la contraseña impresa, y actualizar la adenda A.4 (`hechosDe` usa la deuda, a propósito).
+- **2026-11-18, Activos fijos AF-0 (Libro de compras).** Un servicio puede ser activo fijo (AF-P5 = b, dictamen E1). Migración
+  `0037_af_servicio_capitalizable`: se quitan los checks `lineas_de_documento_activo_fijo_es_bien` y
+  `conceptos_de_gasto_activo_fijo_es_bien` y se agrega el único `lineas_de_documento_llave_unica (id, documento_id, empresa_id)`,
+  destino de la llave compuesta de `activos_fijos.costos`. Se quitaron la regla del dominio del concepto y la del resolutor de
+  líneas (combustible e IDP siguen exigiendo bien). `categoriaSql` manda a la casilla de activos solo `es_activo_fijo and tipo =
+  'bien'`; el servicio capitalizado queda en servicios del SAT-2237. El análisis «Activos fijos comprados» muestra todos y suma la
+  columna «Es un» (bien o servicio, también en el Excel). Cliente: ya no se fuerza «Bien» al marcar activo fijo y el texto es
+  «Activo fijo (se capitaliza)».

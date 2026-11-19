@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ConceptoDeGasto } from '../../servicios/conceptos-de-gasto.api';
 import { edicionDe } from './edicion-de-concepto-de-gasto';
-import { ajustarTipoSegunActivoFijo, datosParaCambiarEstado, tipoBloqueado } from './reglas-de-concepto-de-gasto';
+import { datosParaCambiarEstado } from './reglas-de-concepto-de-gasto';
 
 const concepto: ConceptoDeGasto = {
   id: 'c-1',
@@ -13,22 +13,13 @@ const concepto: ConceptoDeGasto = {
 };
 
 describe('activo fijo y tipo por omisión', () => {
-  it('sin la marca el tipo se puede elegir', () => {
-    expect(tipoBloqueado(edicionDe(concepto))).toBe(false);
-  });
-
-  it('al marcar activo fijo el tipo queda en Bien y no se puede cambiar', () => {
-    const edicion = edicionDe(concepto);
-    edicion.esActivoFijo = true;
-    ajustarTipoSegunActivoFijo(edicion);
-    expect(edicion.tipoPorOmision).toBe('bien');
-    expect(tipoBloqueado(edicion)).toBe(true);
-  });
-
-  it('al desmarcar no se cambia el tipo que había', () => {
-    const edicion = edicionDe(concepto);
-    ajustarTipoSegunActivoFijo(edicion);
+  it('un servicio puede ser activo fijo sin cambiar su tipo', () => {
+    const edicion = edicionDe({ ...concepto, esActivoFijo: true });
     expect(edicion.tipoPorOmision).toBe('servicio');
+    expect(datosParaCambiarEstado({ ...concepto, esActivoFijo: true })).toMatchObject({
+      esActivoFijo: true,
+      tipoPorOmision: 'servicio',
+    });
   });
 });
 
