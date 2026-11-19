@@ -28,6 +28,8 @@ export interface OpcionesDeIntercambio {
   intercambio: Pick<IntercambioDeRecurso<unknown, unknown, unknown>, 'exportar' | 'plantilla' | 'importar'>;
   /** Si se pasa, la ruta de exportar valida `?querystring` con este esquema y se lo pasa a `intercambio.exportar`. */
   filtro?: z.ZodType;
+  /** Si la ruta lleva parámetros (`/bancos/chequeras/:chequeraId/...`), su esquema: se unen al filtro que recibe `exportar`. */
+  params?: z.ZodType;
 }
 
 /** El esquema Zod de la solicitud, como validador de filas importadas. */
@@ -59,18 +61,27 @@ export function rutasDeIntercambio(app: Aplicacion, opciones: OpcionesDeIntercam
   if (opciones.permisos.importar) rutasDeImportar(app, opciones, opciones.permisos.importar);
 }
 
-function rutaDeExportar(
-  app: Aplicacion,
-  { ruta, archivo, intercambio, filtro }: OpcionesDeIntercambio,
-  permiso: string,
+/** El filtro de la exportación: lo de la ruta y lo de la consulta, si el recurso los declara. */
+function filtroDeLaSolicitud(
+  { filtro, params }: OpcionesDeIntercambio,
+  solicitud: { query: unknown; params: unknown },
 ) {
+  if (!filtro && !params) return undefined;
+  return { ...(filtro ? (solicitud.query as object) : {}), ...(params ? (solicitud.params as object) : {}) };
+}
+
+function rutaDeExportar(app: Aplicacion, opciones: OpcionesDeIntercambio, permiso: string) {
+  const { ruta, archivo, intercambio, filtro, params } = opciones;
   app.get(
     `${ruta}/exportar`,
-    { schema: filtro ? { querystring: filtro } : {}, preHandler: proteger({ permiso }) },
+    {
+      schema: { ...(filtro ? { querystring: filtro } : {}), ...(params ? { params } : {}) },
+      preHandler: proteger({ permiso }),
+    },
     async (solicitud, respuesta) => {
       const operador = operadorDe(solicitud);
       const fecha = fechaLocalEn(new Date(), ZONA_HORARIA_POR_OMISION);
-      const contenido = await intercambio.exportar(operador, filtro ? solicitud.query : undefined);
+      const contenido = await intercambio.exportar(operador, filtroDeLaSolicitud(opciones, solicitud));
       return enviarExcel(respuesta, `${archivo}-${fecha}`, contenido);
     },
   );

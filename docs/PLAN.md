@@ -2975,3 +2975,26 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   repetible. Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
   posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
   cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.
+- **2026-11-18 (IC-1 a IC-7, Bancos, servidor: impresión de cheques y comprobante de egreso)**: según
+  `diseno-impresion-de-cheques.md`. Migración `0038_impresion_de_cheques` (la siguiente libre tras la `0037` de CCL-B1):
+  `formatos_de_cheque` (por cuenta, RLS `politicaPorCuenta`), `impresiones_de_cheques` (solo agrega; un `original` por cheque),
+  `chequeras.formato_de_cheque_id` y `plantilla_de_cheque` (checks de uno solo y de apertura sin formato), `cheques.impreso_en`,
+  causas `inutilizado` y `extraviado` (y `cheques_inutilizado_sin_movimiento`) y `movimientos.para_abono_en_cuenta`
+  (solo cheques); permisos de §7 repartidos en `rol_permisos` y `usuario_permisos`; variable `bancos.cheques.lugar_de_emision`.
+  Dominio: cuatro plantillas de fábrica con medidas aproximadas, `armarCheque` (fecha en texto y en casillas, relleno con
+  asteriscos del beneficiario, de la cifra y de las letras en dos renglones, «NO NEGOCIABLE» y «PARA ABONO EN CUENTA» con sus
+  avisos); `montoEnLetras` sin cambios (pruebas de 21, 21,000, 1,000,001, 1,500,000 y el máximo de `numeric(14,2)`: todas daban
+  lo esperado). Aplicación: catálogo de formatos, prueba de alineación (`probado_en` se pierde al cambiar la base o los
+  ajustes), formato por chequera (la nueva toma el de la última de su cuenta), vista previa, imprimir (lote de hasta 50 de
+  una chequera, todo o nada), reimprimir con motivo, historia, bloqueo del blanqueo de un cheque impreso, corregir las
+  condiciones de un cheque sin imprimir (`PATCH /bancos/cheques/:id/condiciones`), pasar a otro formulario (auditoría
+  `inutilizar`) y anular como extraviado (con su aviso al banco), reporte de correlativos por chequera con su Excel.
+  Cuentas por pagar atiende la orden `cuentas-por-pagar.detalle_para_comprobante_de_egreso` (pago, documentos, retenciones
+  con constancia y total retenido). Decisiones: (1) el esquema Zod estricto del formato vive en `aplicacion/` y no en el
+  dominio (ESLint prohíbe `zod` en el dominio); el dominio solo tiene los tipos; (2) las llaves del JSON de formatos van en
+  camelCase (`anchoMm`, `montoEnLetras`); (3) `DELETE /bancos/formatos-de-cheque/:id` pide `motivo` (como conceptos); (4) las dos
+  confirmaciones de custodia van en el `anterior` de la auditoría `inutilizar` (`pasoAOtroFormulario`), porque la auditoría no
+  tiene columna de detalle; (5) al pasar el pago a otro formulario, la referencia automática («Cheque 5») toma el número
+  nuevo y una escrita a mano no se toca; (6) `core/intercambio` gana `params` en `rutasDeIntercambio` para exportar un
+  reporte cuya ruta lleva parámetros; (7) el comprobante sin detalle de origen dice «Pago de Cuentas por pagar»; (8) los
+  «anulados» del resumen de correlativos no incluyen a los inutilizados (van aparte, así la suma da el total del rango).
