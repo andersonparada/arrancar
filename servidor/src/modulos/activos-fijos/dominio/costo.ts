@@ -15,6 +15,8 @@ export interface PropiedadesDeCosto {
   claseDeCosto: ClaseDeCosto;
   documentoDeCompraId: string | null;
   lineaDeDocumentoId: string | null;
+  /** La mejora o el costo posterior que lo agrupa (activo en uso); nulo si es de la capitalización. */
+  mejoraId: string | null;
   fecha: string;
   montoCentavos: number;
   aplicaAlLibroFiscal: boolean;
@@ -39,6 +41,8 @@ export interface DatosDeCostoManual {
   aplicaAlLibroFiscal: boolean;
   motivoFueraDelLibroFiscal: string | null;
   noEsEdificacion: boolean;
+  /** La mejora o el costo posterior al que pertenece. */
+  mejoraId?: string | null;
 }
 
 const MOTIVO_MAXIMO = 300;
@@ -60,6 +64,7 @@ function datosFiscalesValidos({ aplicaAlLibroFiscal, motivoFueraDelLibroFiscal }
 
 /** Lo que un costo nuevo trae de fábrica: vigente, sin archivo, sin anulación ni soporte. */
 const PROPIEDADES_INICIALES = {
+  mejoraId: null,
   noEsEdificacion: false,
   documentoDeSoporte: null,
   archivoId: null,
@@ -84,6 +89,7 @@ export class Costo extends Entidad<CostoId> {
     claseDeCosto: ClaseDeCosto;
     montoCentavos: number;
     noEsEdificacion: boolean;
+    mejoraId?: string;
   }): Costo {
     const { linea, ...resto } = entrada;
     return new Costo({
@@ -121,6 +127,7 @@ export class Costo extends Entidad<CostoId> {
       fecha: datos.fecha,
       montoCentavos: datos.montoCentavos,
       noEsEdificacion: datos.noEsEdificacion,
+      mejoraId: datos.mejoraId ?? null,
       documentoDeSoporte: soporte,
       descripcion: textoLimitado(datos.descripcion, 'Descripción', MOTIVO_MAXIMO),
     });

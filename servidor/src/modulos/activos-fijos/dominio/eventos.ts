@@ -4,6 +4,8 @@ import '../../core/contratos/activos-fijos.contratos.js';
 
 export type DatosDeActivoCapitalizado = EventosDominio['activos-fijos.activo_capitalizado'];
 export type DatosDeCostoAnulado = EventosDominio['activos-fijos.costo_anulado'];
+export type DatosDeMejoraCapitalizada = EventosDominio['activos-fijos.mejora_capitalizada'];
+export type DatosDeBaseFiscalCambiada = EventosDominio['activos-fijos.base_fiscal_cambiada'];
 export type DatosDeDepreciacionCerrada = EventosDominio['activos-fijos.depreciacion_cerrada'];
 export type DatosDeDepreciacionReabierta = EventosDominio['activos-fijos.depreciacion_reabierta'];
 
@@ -39,6 +41,24 @@ export class DepreciacionReabierta extends EventoDominio<DatosDeDepreciacionReab
   readonly nombre = 'activos-fijos.depreciacion_reabierta';
 
   constructor(datos: DatosDeDepreciacionReabierta) {
+    super(datos);
+  }
+}
+
+/** Se registró una mejora o un costo posterior de un activo en uso. Se publica tras confirmar. */
+export class MejoraCapitalizada extends EventoDominio<DatosDeMejoraCapitalizada> {
+  readonly nombre = 'activos-fijos.mejora_capitalizada';
+
+  constructor(datos: DatosDeMejoraCapitalizada) {
+    super(datos);
+  }
+}
+
+/** Cambió la matrícula o el catastro de un edificio. Se publica tras confirmar. */
+export class BaseFiscalCambiada extends EventoDominio<DatosDeBaseFiscalCambiada> {
+  readonly nombre = 'activos-fijos.base_fiscal_cambiada';
+
+  constructor(datos: DatosDeBaseFiscalCambiada) {
     super(datos);
   }
 }
