@@ -54,6 +54,7 @@ export const RESTRICCIONES_DE_PRIVILEGIOS: Readonly<Record<string, RestriccionDe
   'core.configuraciones': { sin: [], actualizarSolo: ['valor', 'actualizado_por', 'actualizado_en'] },
   'core.bitacora_superacceso': { sin: ['update', 'delete'] },
   'core.auditoria': { sin: ['update', 'delete'] },
+  'core.reintentos_de_correos': { sin: ['update', 'delete'] },
   'core.recursos_de_auditoria_permanente': { sin: ['insert', 'update', 'delete'] },
   'core.feriados': { sin: ['update'] },
   'core.departamentos': { sin: ['insert', 'update', 'delete'] },

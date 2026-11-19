@@ -3630,3 +3630,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   puesta, `principal.ts` comprueba al arrancar que descifre la contraseña guardada y, si no, registra un error claro sin
   secreto ni causa. (4) Diseño del aviso §3.3, §3.3 bis y §3.5 al día; la sección de la llave de secretos pasó a §3.10
   (ya no está entre los respaldos).
+- 2026-11-19 · Correo pendientes, correcciones de la revisión: `core.reintentos_de_correos` entra en
+  `RESTRICCIONES_DE_PRIVILEGIOS` (`sin: update, delete`, como `core.auditoria`) y en `CON_RLS` de
+  `seguridad-de-core.prueba.ts`. Pendiente del coordinador al integrar: la 0033 de Multimoneda tiene `when` menor que
+  el de esta 0034 (el migrador la saltaría en bases que ya tienen la 0034) y los snapshots 0033 y 0034 apuntan ambos
+  al 0032; unir Multimoneda antes o junto con esta rama, rehacer el snapshot de la 0034 con `prevId` = id de la 0033 y
+  en la base de desarrollo aplicar la 0033 a mano o quitar la fila de la 0034 y volver a migrar.
