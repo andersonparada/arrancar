@@ -33,6 +33,7 @@ export class EmitirChequeDeOrigen {
         monto: deCentavos(datos.montoCentavos),
         beneficiario: datos.beneficiario,
         noNegociable: datos.noNegociable,
+        paraAbonoEnCuenta: datos.paraAbonoEnCuenta ?? false,
         referencia: datos.referencia ?? null,
         observaciones: datos.observaciones ?? null,
         origen: datos.origen,

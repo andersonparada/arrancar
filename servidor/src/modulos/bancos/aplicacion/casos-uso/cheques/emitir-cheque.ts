@@ -133,6 +133,7 @@ export class EmitirCheque {
       observaciones: solicitud.observaciones,
       conceptoId,
     };
-    return Movimiento.crear(Identificador.desde<'Empresa'>(operador.empresaId), datos, { origen: solicitud.origen });
+    const vinculos = { origen: solicitud.origen, paraAbonoEnCuenta: solicitud.paraAbonoEnCuenta ?? false };
+    return Movimiento.crear(Identificador.desde<'Empresa'>(operador.empresaId), datos, vinculos);
   }
 }

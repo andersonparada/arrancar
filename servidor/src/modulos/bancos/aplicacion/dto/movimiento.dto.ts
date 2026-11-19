@@ -51,6 +51,8 @@ export interface MovimientoDto {
   /** El módulo que generó el movimiento (P6) y su documento; `null` si nació en Bancos. */
   moduloDeOrigen: string | null;
   documentoDeOrigenId: string | null;
+  /** «PARA ABONO EN CUENTA» (art. 521): condición del cheque que eligió quien lo emitió; `false` fuera de los cheques. */
+  paraAbonoEnCuenta: boolean;
   /** Lo calcula el servidor (ver `accionesDeMovimiento`): si se puede anular con un movimiento inverso. */
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede eliminar de verdad (está limpio). */
@@ -85,6 +87,7 @@ export type SolicitudDeMovimiento = Omit<
   | 'anioDeNumero'
   | 'moduloDeOrigen'
   | 'documentoDeOrigenId'
+  | 'paraAbonoEnCuenta'
   | 'puedeAnular'
   | 'puedeEliminar'
   | 'puedeReclasificar'

@@ -1,7 +1,7 @@
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { ChequeAnulado, ChequeNoDisponible, ChequeNoEmitido, MotivoDeAnulacionInvalido } from './errores.js';
-import { ChequeImpresoNoSeBlanquea } from './errores-de-impresion.js';
+import { ChequeImpresoNoSeBlanquea, ChequeImpresoNoSeCorrige, ChequeNoEstaEmitido } from './errores-de-impresion.js';
 
 export type ChequeId = Identificador<'Cheque'>;
 export type EstadoDelCheque = 'disponible' | 'emitido' | 'anulado';
@@ -96,6 +96,22 @@ export class Cheque extends Entidad<ChequeId> {
 
   get estaDisponible(): boolean {
     return this.propiedades.estado === 'disponible';
+  }
+
+  /** Marca la primera impresión; las siguientes no la cambian. */
+  marcarImpreso(cuando: Date): void {
+    if (this.propiedades.impresoEn === null) this.propiedades = { ...this.propiedades, impresoEn: cuando };
+  }
+
+  /**
+   * Corrige «no negociable» de un cheque emitido y todavía sin imprimir (la otra condición, «para abono en cuenta», va
+   * en su movimiento).
+   * @throws ChequeNoEstaEmitido si no está emitido; ChequeImpresoNoSeCorrige si ya se imprimió.
+   */
+  corregirNoNegociable(noNegociable: boolean): void {
+    if (this.propiedades.estado !== 'emitido') throw new ChequeNoEstaEmitido();
+    if (this.estaImpreso) throw new ChequeImpresoNoSeCorrige();
+    this.propiedades = { ...this.propiedades, noNegociable };
   }
 
   get estaImpreso(): boolean {

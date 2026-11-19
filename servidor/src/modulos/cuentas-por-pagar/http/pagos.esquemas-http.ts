@@ -27,6 +27,7 @@ export const esquemaPago = z.discriminatedUnion('forma', [
     chequeraId: z.uuid({ error: 'Escoja la chequera.' }),
     chequeId: z.uuid().optional(),
     noNegociable: z.boolean().optional(),
+    paraAbonoEnCuenta: z.boolean().optional(),
     ...comun,
   }),
   z.object({

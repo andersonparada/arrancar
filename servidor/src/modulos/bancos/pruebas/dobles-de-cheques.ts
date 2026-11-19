@@ -13,13 +13,14 @@ import type { MovimientosEnMemoria } from './dobles-de-movimientos.js';
 
 const copia = (cheque: Cheque) => Cheque.reconstruir(cheque.instantanea());
 
-function aDto(cheque: Cheque, acciones: AccionesDeCheque): ChequeDto {
+function aDto(cheque: Cheque, acciones: AccionesDeCheque, paraAbonoEnCuenta: boolean): ChequeDto {
   const { id, empresaId: _empresaId, anuladoEn, impresoEn, ...datos } = cheque.instantanea();
   return {
     ...datos,
     id: id.valor,
     anuladoEn: anuladoEn?.toISOString() ?? null,
     impresoEn: impresoEn?.toISOString() ?? null,
+    paraAbonoEnCuenta,
     parteDeApertura: null,
     moduloDeOrigen: null,
     ...acciones,
@@ -88,6 +89,11 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
     return accionesDeCheque(estado, hechos);
   }
 
+  private abonoDe(cheque: Cheque): boolean {
+    const { movimientoId } = cheque.instantanea();
+    return movimientoId && this.movimientos ? this.movimientos.paraAbonoEnCuentaDe(movimientoId) : false;
+  }
+
   async buscar(id: ChequeId): Promise<Cheque | null> {
     const guardado = this.registros.get(id.valor);
     return guardado ? copia(guardado) : null;
@@ -105,7 +111,7 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
     return [...this.registros.values()]
       .filter((c) => c.instantanea().chequeraId === chequeraId)
       .filter((c) => !estado || c.instantanea().estado === estado)
-      .map((c) => aDto(c, this.accionesDe(c)))
+      .map((c) => aDto(c, this.accionesDe(c), this.abonoDe(c)))
       .sort((a, b) => a.numero - b.numero);
   }
 
@@ -116,7 +122,7 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
   async obtener(chequeId: string): Promise<ChequeDto> {
     const cheque = this.registros.get(chequeId);
     if (!cheque) throw new RecursoNoEncontrado('El cheque');
-    return aDto(cheque, this.accionesDe(cheque));
+    return aDto(cheque, this.accionesDe(cheque), this.abonoDe(cheque));
   }
 
   /** Los cheques emitidos y anulados, opcionalmente filtrados; los disponibles no se incluyen. */
@@ -140,6 +146,7 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
       cuentaBancariaNombre,
       estado: estado as ChequeListadoDto['estado'],
       noNegociable: propiedades.noNegociable,
+      paraAbonoEnCuenta: movimiento?.paraAbonoEnCuenta ?? false,
       fecha: fechaDelListado(movimiento, anuladoEn),
       ...datosDelChequeEmitido(movimiento),
       anuladoEn: anuladoEn?.toISOString() ?? null,
@@ -163,7 +170,8 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
           (a.chequera.serie ?? '').localeCompare(b.chequera.serie ?? '') ||
           a.cheque.instantanea().numero - b.cheque.instantanea().numero,
       );
-    return candidatos[0] ? aDto(candidatos[0].cheque, this.accionesDe(candidatos[0].cheque)) : null;
+    const elegido = candidatos[0]?.cheque;
+    return elegido ? aDto(elegido, this.accionesDe(elegido), this.abonoDe(elegido)) : null;
   }
 }
 

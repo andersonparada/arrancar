@@ -19,6 +19,8 @@ export interface PeticionDeCheque extends PeticionBase {
   chequeId?: string;
   /** Por omisión, `true`. */
   noNegociable?: boolean;
+  /** Por omisión, `false`. */
+  paraAbonoEnCuenta?: boolean;
 }
 
 export interface PeticionDeNotaDeDebito extends PeticionBase {

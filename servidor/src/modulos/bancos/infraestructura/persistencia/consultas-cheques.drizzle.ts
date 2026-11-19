@@ -11,7 +11,14 @@ import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { columnasDeHechos } from './hechos-de-movimiento.js';
 import { movimientos } from './movimientos.tablas.js';
 
-const columnas = { ...getTableColumns(cheques), hechosDelMovimiento: columnasDeHechos(movimientos) };
+/** La condición «para abono en cuenta» sale del movimiento; sin movimiento, `false`. */
+const paraAbonoEnCuenta = sql<boolean>`coalesce(${movimientos.paraAbonoEnCuenta}, false)`;
+
+const columnas = {
+  ...getTableColumns(cheques),
+  paraAbonoEnCuenta,
+  hechosDelMovimiento: columnasDeHechos(movimientos),
+};
 
 /** El cheque con lo necesario de su movimiento (si lo tiene) para saber qué se puede hacer con él. */
 const consultaBase = () =>
@@ -37,6 +44,7 @@ const columnasDeLaEmpresa = {
   cuentaBancariaNombre: cuentasBancarias.nombre,
   estado: cheques.estado,
   noNegociable: cheques.noNegociable,
+  paraAbonoEnCuenta,
   fecha: fechaEfectiva,
   monto: movimientos.monto,
   beneficiario: movimientos.beneficiario,

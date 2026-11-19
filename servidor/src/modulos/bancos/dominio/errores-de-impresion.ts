@@ -12,6 +12,30 @@ export class ChequeImpresoNoSeBlanquea extends ReglaDeNegocioInfringida {
   }
 }
 
+export class AbonoEnCuentaSoloEnCheque extends DatoInvalido {
+  readonly codigo = 'abono_en_cuenta_solo_en_cheque';
+
+  constructor() {
+    super('«Para abono en cuenta» solo se puede poner en un cheque.', { campo: 'paraAbonoEnCuenta' });
+  }
+}
+
+export class ChequeImpresoNoSeCorrige extends ReglaDeNegocioInfringida {
+  readonly codigo = 'cheque_impreso_no_se_corrige';
+
+  constructor() {
+    super('El cheque ya se imprimió: el papel dice lo que dice y sus condiciones ya no se corrigen.');
+  }
+}
+
+export class ChequeNoEstaEmitido extends ReglaDeNegocioInfringida {
+  readonly codigo = 'cheque_no_esta_emitido';
+
+  constructor() {
+    super('El cheque no está emitido.');
+  }
+}
+
 export class ChequeYaImpreso extends ReglaDeNegocioInfringida {
   readonly codigo = 'cheque_ya_impreso';
 

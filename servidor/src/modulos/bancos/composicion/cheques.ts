@@ -3,6 +3,7 @@ import { RepositorioConceptosDrizzle } from '../infraestructura/persistencia/rep
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
 import { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque.js';
 import { BlanquearCheque } from '../aplicacion/casos-uso/cheques/blanquear-cheque.js';
+import { CorregirCondicionesDelCheque } from '../aplicacion/casos-uso/cheques/corregir-condiciones-del-cheque.js';
 import { EmitirCheque } from '../aplicacion/casos-uso/cheques/emitir-cheque.js';
 import { ListarChequesDeLaEmpresa } from '../aplicacion/casos-uso/cheques/listar-cheques-de-la-empresa.js';
 import { SiguienteChequeDisponible } from '../aplicacion/casos-uso/cheques/siguiente-cheque-disponible.js';
@@ -55,6 +56,7 @@ export function rutasDeCheques() {
     siguienteDisponible: new SiguienteChequeDisponible(dependencias),
     emitir: new EmitirCheque(dependencias),
     anular: new AnularCheque(dependencias),
+    corregirCondiciones: new CorregirCondicionesDelCheque(dependencias),
     blanquear: new BlanquearCheque(dependencias),
     reclasificar: new ReclasificarMovimientos(
       {

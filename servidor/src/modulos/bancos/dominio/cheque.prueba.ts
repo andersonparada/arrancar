@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { Cheque } from './cheque.js';
 import { ChequeAnulado, ChequeNoEmitido, MotivoDeAnulacionInvalido } from './errores.js';
+import { ChequeImpresoNoSeBlanquea, ChequeImpresoNoSeCorrige, ChequeNoEstaEmitido } from './errores-de-impresion.js';
 
 const empresaId = Identificador.desde<'Empresa'>('00000000-0000-4000-8000-0000000000aa');
 
@@ -92,5 +93,45 @@ describe('Cheque.anular: causa de la anulación (P1)', () => {
     cheque.anular('Uno', 'caducidad');
 
     expect(() => cheque.anular('Dos')).toThrow(ChequeAnulado);
+  });
+});
+
+describe('Cheque: impresión', () => {
+  it('la primera impresión se guarda y las siguientes no la cambian', () => {
+    const cheque = chequeEmitido();
+    expect(cheque.estaImpreso).toBe(false);
+
+    cheque.marcarImpreso(new Date('2026-11-18T10:00:00Z'));
+    cheque.marcarImpreso(new Date('2026-11-19T10:00:00Z'));
+
+    expect(cheque.estaImpreso).toBe(true);
+    expect(cheque.instantanea().impresoEn).toEqual(new Date('2026-11-18T10:00:00Z'));
+  });
+
+  it('un cheque impreso no se blanquea', () => {
+    const cheque = chequeEmitido();
+    cheque.marcarImpreso(new Date());
+
+    expect(() => cheque.blanquear()).toThrow(ChequeImpresoNoSeBlanquea);
+  });
+
+  it('«no negociable» se corrige solo en un cheque emitido y sin imprimir', () => {
+    const cheque = chequeEmitido();
+    cheque.corregirNoNegociable(true);
+    expect(cheque.instantanea().noNegociable).toBe(true);
+
+    expect(() => chequeDisponible().corregirNoNegociable(true)).toThrow(ChequeNoEstaEmitido);
+    cheque.marcarImpreso(new Date());
+    expect(() => cheque.corregirNoNegociable(false)).toThrow(ChequeImpresoNoSeCorrige);
+  });
+
+  it('puede anularse como inutilizado o extraviado', () => {
+    const inutilizado = chequeEmitido();
+    inutilizado.anular('Se arrugó en la impresora', 'inutilizado');
+    const extraviado = chequeEmitido();
+    extraviado.anular('Se perdió', 'extraviado');
+
+    expect(inutilizado.instantanea().causaDeAnulacion).toBe('inutilizado');
+    expect(extraviado.instantanea().causaDeAnulacion).toBe('extraviado');
   });
 });

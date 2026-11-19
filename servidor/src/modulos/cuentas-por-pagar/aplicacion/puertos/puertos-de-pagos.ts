@@ -21,6 +21,8 @@ export interface ChequeAEmitir {
   montoCentavos: number;
   beneficiario: string;
   noNegociable: boolean;
+  /** «PARA ABONO EN CUENTA»; por omisión, no. */
+  paraAbonoEnCuenta?: boolean;
   conceptos: LineaDeConcepto[];
   referencia?: string;
   observaciones?: string;

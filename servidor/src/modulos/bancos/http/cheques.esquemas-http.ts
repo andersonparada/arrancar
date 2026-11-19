@@ -13,6 +13,7 @@ export const esquemaEmisionDeCheque = z.object({
   monto: decimalObligatorio(2),
   beneficiario: textoObligatorio(150),
   noNegociable: z.boolean().default(true),
+  paraAbonoEnCuenta: z.boolean().default(false),
   conceptoId: idObligatorio(),
   referencia: textoOpcional(150),
   observaciones: textoOpcional(2000),
@@ -23,6 +24,9 @@ export const esquemaAnulacionDeCheque = z.object({
   motivo: z.string().trim().min(1).max(500),
   fecha: z.iso.date().optional(),
 });
+
+/** Las condiciones de un cheque emitido y todavía sin imprimir. */
+export const esquemaCondicionesDeCheque = z.object({ noNegociable: z.boolean(), paraAbonoEnCuenta: z.boolean() });
 
 export const esquemaBlanqueoDeCheque = z.object({ motivo: z.string().trim().min(1).max(500) });
 
@@ -39,6 +43,7 @@ export const esquemaFiltroDeChequesDeLaEmpresa = z.object({
 
 export type EmisionDeChequeSolicitada = z.infer<typeof esquemaEmisionDeCheque>;
 export type SolicitudDeAnulacionDeCheque = z.infer<typeof esquemaAnulacionDeCheque>;
+export type CondicionesDeChequeSolicitadas = z.infer<typeof esquemaCondicionesDeCheque>;
 export type SolicitudDeBlanqueoDeCheque = z.infer<typeof esquemaBlanqueoDeCheque>;
 export type ParamsCuentaBancariaDeCheques = z.infer<typeof esquemaParamsCuentaBancariaDeCheques>;
 export type ParamsCheque = z.infer<typeof esquemaParamsCheque>;

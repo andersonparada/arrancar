@@ -29,6 +29,7 @@ function movimiento(datos: Partial<MovimientoDto> & Pick<MovimientoDto, 'tipo' |
     revierteAId: null,
     numero: null,
     anioDeNumero: 0,
+    paraAbonoEnCuenta: false,
     moduloDeOrigen: null,
     documentoDeOrigenId: null,
     puedeAnular: false,

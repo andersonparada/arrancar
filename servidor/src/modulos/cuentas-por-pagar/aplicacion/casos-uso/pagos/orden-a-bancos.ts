@@ -61,5 +61,6 @@ export function ordenarABancos(
     ...conTexto('chequeId', pedido.chequeId),
     chequeraId: pedido.chequeraId,
     noNegociable: pedido.noNegociable ?? true,
+    paraAbonoEnCuenta: pedido.paraAbonoEnCuenta ?? false,
   });
 }

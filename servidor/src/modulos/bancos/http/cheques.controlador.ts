@@ -2,6 +2,7 @@ import type { FastifyRequest } from 'fastify';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
 import type { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque.js';
 import type { BlanquearCheque } from '../aplicacion/casos-uso/cheques/blanquear-cheque.js';
+import type { CorregirCondicionesDelCheque } from '../aplicacion/casos-uso/cheques/corregir-condiciones-del-cheque.js';
 import type { EmitirCheque } from '../aplicacion/casos-uso/cheques/emitir-cheque.js';
 import type { ListarChequesDeLaEmpresa } from '../aplicacion/casos-uso/cheques/listar-cheques-de-la-empresa.js';
 import type { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
@@ -10,6 +11,7 @@ import type { SiguienteChequeDisponible } from '../aplicacion/casos-uso/cheques/
 import type { ReclasificacionSolicitada } from './notas.esquemas-http.js';
 import type { SugerenciaDeChequeSolicitada } from './sugerencias.esquemas-http.js';
 import type {
+  CondicionesDeChequeSolicitadas,
   EmisionDeChequeSolicitada,
   FiltroDeChequesDeLaEmpresaSolicitado,
   ParamsCheque,
@@ -23,6 +25,7 @@ export interface CasosDeUsoDeCheques {
   siguienteDisponible: SiguienteChequeDisponible;
   emitir: EmitirCheque;
   anular: AnularCheque;
+  corregirCondiciones: CorregirCondicionesDelCheque;
   blanquear: BlanquearCheque;
   reclasificar: ReclasificarMovimientos;
   sugerirAlCapturar: SugerirConceptoAlCapturar;
@@ -40,6 +43,12 @@ export class ChequesControlador {
 
   emitir = (solicitud: FastifyRequest<{ Params: ParamsCheque; Body: EmisionDeChequeSolicitada }>) =>
     this.casosDeUso.emitir.ejecutar(operadorDe(solicitud), {
+      ...solicitud.body,
+      chequeId: solicitud.params.chequeId,
+    });
+
+  corregirCondiciones = (solicitud: FastifyRequest<{ Params: ParamsCheque; Body: CondicionesDeChequeSolicitadas }>) =>
+    this.casosDeUso.corregirCondiciones.ejecutar(operadorDe(solicitud), {
       ...solicitud.body,
       chequeId: solicitud.params.chequeId,
     });

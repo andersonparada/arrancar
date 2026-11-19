@@ -115,6 +115,8 @@ declare module './mediador.contratos.js' {
         montoCentavos: number;
         beneficiario: string;
         noNegociable: boolean;
+        /** «PARA ABONO EN CUENTA» (art. 521); por omisión, no. */
+        paraAbonoEnCuenta?: boolean;
         conceptos: LineaDeConcepto[];
         referencia?: string;
         observaciones?: string;

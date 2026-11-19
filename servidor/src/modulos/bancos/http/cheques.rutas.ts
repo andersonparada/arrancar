@@ -6,6 +6,7 @@ import { esquemaSugerenciaDeCheque } from './sugerencias.esquemas-http.js';
 import {
   esquemaAnulacionDeCheque,
   esquemaBlanqueoDeCheque,
+  esquemaCondicionesDeCheque,
   esquemaEmisionDeCheque,
   esquemaFiltroDeChequesDeLaEmpresa,
   esquemaParamsCheque,
@@ -49,6 +50,11 @@ function rutasDeEscritura(app: Aplicacion, controlador: ChequesControlador) {
     schema: { tags: etiquetas, params: esquemaParamsCheque, body: esquemaEmisionDeCheque },
     preHandler: proteger({ permiso: 'bancos.cheques.emitir' }),
     handler: controlador.emitir,
+  });
+  app.patch('/bancos/cheques/:chequeId/condiciones', {
+    schema: { tags: etiquetas, params: esquemaParamsCheque, body: esquemaCondicionesDeCheque },
+    preHandler: proteger({ permiso: 'bancos.cheques.emitir' }),
+    handler: controlador.corregirCondiciones,
   });
   app.post('/bancos/cheques/:chequeId/anular', {
     schema: { tags: etiquetas, params: esquemaParamsCheque, body: esquemaAnulacionDeCheque },

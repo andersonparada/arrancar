@@ -38,7 +38,7 @@ export const mapeadorDeCheque = {
     anuladoEn,
     impresoEn,
     ...dto
-  }: Fila & { hechosDelMovimiento: HechosDelMovimiento }): ChequeDto {
+  }: Fila & { hechosDelMovimiento: HechosDelMovimiento; paraAbonoEnCuenta: boolean }): ChequeDto {
     const movimiento = hechosDelMovimientoDelCheque(dto.movimientoId, hechosDelMovimiento);
     return {
       ...dto,
