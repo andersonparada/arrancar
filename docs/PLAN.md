@@ -2962,3 +2962,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   de activos muestra el nombre de la localidad aunque el usuario no tenga acceso a ella (consulta de Empresas solo con id y
   nombre, revisada por seguridad). Validación del contador de Inventarios guardada en
   `dictamen-inventarios-validacion-2026-11-18.md` (V-2: la fórmula de absorción con promedio del diseño es incorrecta).
+- **2026-11-18 (AFI-0, docs del arquitecto).** La integración aprobada quedó en los dos diseños. `diseno-activos-fijos.md`
+  (marcado AFI): `activos.en_bodega` y `alta_conjunta_id`, `traslados.a_bodega`, tablas `divisiones` y `boletas_firmadas`,
+  división en `costos` y `tramos`, `acumuladaAl`, capitalizar en N unidades con el sobrante en el último, «Disponible para
+  uso» por lote, traslado y baja con cantidad parcial (**AF-P10 cambia**: división automática), cantidad esperada y
+  encontrada en el inventario físico, tres reportes (existencias de bienes de uso, en bodega, responsiva), dos variables
+  de empresa y la orden `activos-fijos.obtener_umbral_de_capitalizacion`; pasos AFI-1 a AFI-9 encajados en AF-n.
+  **AF-P22 = b**: Empresas da `empresas.nombres_de_localidades` y `empresas.nombres_de_departamentos` (`security definer`,
+  solo id, código, nombre y activo de la empresa de la transacción; §6.13), **para revisión de `seguridad`** antes del
+  paso AF-P22 (antes de AF-2c). `diseno-inventarios.md`: validación del contador aplicada — V-2 factor exacto
+  `Π(1 − q/C)` y recálculo de los repartos; V-1 rige el 1 de enero del año siguiente a la autorización, con recálculo si
+  se registra tarde y meses abiertos; V-3 débito solo en `general`; V-4 correspondencia tipo → clase de la SAT y
+  «tránsito» = compras sin recibir; V-5 sobrante a la última entrada con costo real; V-6 `error_de_registro` referido a
+  la salida que corrige; V-8 (P-2 a) descartar quita la marca en el libro con la orden
+  `libro-de-compras.cambiar_marca_de_inventario`; V-10 donación con su valor razonable en el evento; kardex por bodega con
+  su propio saldo; traslados neutros para el costeo y devolución con PEPS sobre su capa. Abiertas: P-1, P-3, INV-P14 e
+  INV-A16 (usuario) y VC-1 a VC-4 (contador).
