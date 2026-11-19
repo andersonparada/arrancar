@@ -1,6 +1,5 @@
 /**
- * BS-8 (QA): bordes de la carga inicial de Bancos encontrados a mano. Los `it.fails` fijan errores abiertos: cuando se
- * corrijan, la prueba pasa y hay que quitarle el `.fails`.
+ * BS-8 (QA): bordes de la carga inicial de Bancos encontrados a mano (BS8-1: número de cheque fuera de rango).
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { usarEntornoApi } from './soporte/entorno-api.js';
@@ -20,7 +19,7 @@ beforeAll(async () => {
 
 describe('número de cheque de una partida de la apertura', () => {
   // Error BS8-1: un número negativo o mayor que el entero de la base revienta con 500 en vez de un 400 con mensaje.
-  it.fails.each([-3, 2147483648, 99999999999])('el número %d se rechaza con 400 y no con 500', async (numero) => {
+  it.each([-3, 2147483648, 99999999999])('el número %d se rechaza con 400 y no con 500', async (numero) => {
     const respuesta = await agregarPartida(
       cuenta.propietario,
       cuentaId,
