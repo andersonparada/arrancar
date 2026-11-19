@@ -176,4 +176,21 @@ describe('permisos de artículos', () => {
     expect(ajenos.cuerpo).toHaveLength(1);
     expect(ajenos.cuerpo[0].id).not.toBe(referencias.conceptoDeGastoId);
   });
+
+  it('no ofrece conceptos inactivos ni los que llevan el costo a inventario o a activo fijo', async () => {
+    const concepto = (cambios: Record<string, unknown>) =>
+      cuenta.propietario.post('/api/libro-de-compras/conceptos-de-gasto', {
+        tipoPorOmision: 'bien',
+        esProductoAgropecuario: false,
+        activo: true,
+        ...cambios,
+      });
+    await concepto({ nombre: 'Mercadería para la venta', esInventario: true });
+    await concepto({ nombre: 'Tractores', esActivoFijo: true });
+    await concepto({ nombre: 'Concepto viejo', activo: false });
+
+    const conceptos = await cuenta.propietario.get(`${RUTA}/conceptos-de-gasto`);
+
+    expect(conceptos.cuerpo).toEqual([{ id: referencias.conceptoDeGastoId, nombre: 'Alimento para animales' }]);
+  });
 });
