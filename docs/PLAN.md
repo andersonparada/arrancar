@@ -3618,3 +3618,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   configuración usa su propia conexión, así que no comparte la transacción: si guardar falla, la auditoría se deshace).
   Por decisión de producto, y en coherencia con C9, el asunto y el mensaje rechazan `http:`, `www.`, `@` y dominios con
   terminación común (`.com`, `.gt`…); también rige para la configuración genérica de Soporte. Sin migraciones.
+- **2026-11-19 (QA de Multimoneda MM-1 a MM-5 y MM-4, en el navegador con un Banguat falso):** informe en
+  `docs/modulos/informe-qa-multimoneda-2026-11-19.md`. Sin errores graves; hallazgos: la muestra, el calendario y los textos
+  dan por hecho «quetzales por unidad» y chocan con la Adenda B (cruce contra el dólar, euro = 24); el ingreso manual acepta
+  fechas futuras (distorsiona «Último tipo») y compra mayor que venta; el mismo error de validación no vuelve a verse
+  (`usarErrorDescartable`); «Actualizar lista» y «Cargar ahora» tardan hasta 48 s dentro de la solicitud con el Banguat
+  lento; gramática («1 nuevos», «Noviembre De»). Pruebas `it.fails` agregadas; no se corrigió código de la aplicación.
