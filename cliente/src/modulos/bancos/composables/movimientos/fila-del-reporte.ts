@@ -22,3 +22,21 @@ export const debitoDeFila = (fila: FilaDelReporte): string | null => (fila.tipo 
 
 /** El monto en la columna Crédito, o `null` si la fila es un débito o un cheque. */
 export const creditoDeFila = (fila: FilaDelReporte): string | null => (fila.tipo === 'credito' ? fila.monto : null);
+
+/** «Documento — concepto»; si ambos dicen lo mismo (p. ej. «Saldo inicial») se escribe una sola vez. */
+export function documentoYConcepto(fila: FilaDelReporte): string {
+  const titulo = documentoDeFila(fila).titulo;
+  const concepto = fila.conceptoNombre?.trim() ?? '';
+  if (!concepto || concepto.toLowerCase() === titulo.toLowerCase()) return titulo;
+  return `${titulo} — ${concepto}`;
+}
+
+/**
+ * Si el reporte trae partidas de la carga inicial (menos el saldo del banco): conservan su fecha original, anterior al
+ * corte, y por eso el saldo corrido a su paso puede salir negativo aunque el saldo final sea correcto.
+ */
+export const hayPartidasDeLaCarga = (filas: FilaDelReporte[]): boolean =>
+  filas.some((f) => f.parteDeApertura !== null && f.parteDeApertura !== 'saldo_del_banco');
+
+export const LEYENDA_DEL_SALDO_CORRIDO =
+  'Las filas «Carga inicial» (cheques y depósitos en tránsito, errores del banco) conservan su fecha original, anterior al corte: el saldo corrido a su paso puede salir distinto del real. El saldo final es el correcto.';

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { FilaDelReporte } from '../../servicios/movimientos.api';
-import { creditoDeFila, debitoDeFila, documentoDeFila } from './fila-del-reporte';
+import {
+  creditoDeFila,
+  debitoDeFila,
+  documentoDeFila,
+  documentoYConcepto,
+  hayPartidasDeLaCarga,
+} from './fila-del-reporte';
 
 function fila(datos: Partial<FilaDelReporte> & Pick<FilaDelReporte, 'tipo' | 'monto'>): FilaDelReporte {
   return {
@@ -75,5 +81,27 @@ describe('débito y crédito de la fila', () => {
     expect(debitoDeFila(fila({ tipo: 'debito', monto: '10.00' }))).toBe('10.00');
     expect(debitoDeFila(fila({ tipo: 'cheque', monto: '10.00' }))).toBe('10.00');
     expect(creditoDeFila(fila({ tipo: 'cheque', monto: '10.00' }))).toBeNull();
+  });
+});
+
+describe('documentoYConcepto', () => {
+  it('escribe documento y concepto', () => {
+    expect(documentoYConcepto(fila({ tipo: 'debito', monto: '10.00', conceptoNombre: 'Servicios' }))).toBe(
+      'Nota de débito — Servicios',
+    );
+  });
+
+  it('no repite lo que documento y concepto dicen igual', () => {
+    const inicial = fila({ tipo: 'credito', monto: '10.00', saldoInicial: true, conceptoNombre: 'Saldo inicial' });
+    expect(documentoYConcepto(inicial)).toBe('Saldo inicial');
+  });
+});
+
+describe('hayPartidasDeLaCarga', () => {
+  it('el saldo del banco solo no cuenta; una partida de la carga sí', () => {
+    const banco = fila({ tipo: 'credito', monto: '10.00', parteDeApertura: 'saldo_del_banco' });
+    const cheque = fila({ tipo: 'cheque', monto: '5.00', parteDeApertura: 'cheque_en_circulacion' });
+    expect(hayPartidasDeLaCarga([banco])).toBe(false);
+    expect(hayPartidasDeLaCarga([banco, cheque])).toBe(true);
   });
 });
