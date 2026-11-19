@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, isNull, lte, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNull, lte, notExists, or, sql } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { EstadoDeFondoAlCorte, FiltroDeFondosAlCorte } from '../../aplicacion/puertos/puertos-de-reportes.js';
@@ -34,6 +34,30 @@ async function montosAlCorte(ids: readonly string[], corte: string): Promise<Tot
   return aTotales(filas);
 }
 
+/** Los vales provisionales entregados al corte que seguían sin liquidar ni anular. */
+function valeAbiertoAlCorte(corte: string) {
+  return and(
+    lte(valesProvisionales.fecha, corte),
+    or(
+      eq(valesProvisionales.estado, 'abierto'),
+      and(eq(valesProvisionales.estado, 'liquidado'), gt(valesProvisionales.fechaDeLiquidacion, corte)),
+      and(eq(valesProvisionales.estado, 'anulado'), gt(valesProvisionales.fechaDeAnulacion, corte)),
+    ),
+  );
+}
+
+/**
+ * Los comprobantes de un vale que al corte seguía abierto: ya están contados dentro del vale, no como pendientes
+ * (si no, el mismo efectivo se restaría dos veces).
+ */
+function sinContarEnUnValeAbierto(corte: string) {
+  const delVale = transaccionEnCurso()
+    .select({ uno: sql`1` })
+    .from(valesProvisionales)
+    .where(and(eq(valesProvisionales.id, comprobantes.valeProvisionalId), valeAbiertoAlCorte(corte)));
+  return notExists(delVale);
+}
+
 /** Lo pendiente de reponer al corte (§5.10): las notas y los sobrantes restan. */
 async function pendientesAlCorte(ids: readonly string[], corte: string): Promise<TotalesPorFondo> {
   const total = sql<string>`coalesce(sum(case when ${comprobantes.resta} then -${comprobantes.monto} else ${comprobantes.monto} end), 0)::text`;
@@ -46,6 +70,7 @@ async function pendientesAlCorte(ids: readonly string[], corte: string): Promise
         lte(comprobantes.fecha, corte),
         or(eq(comprobantes.estado, 'vigente'), gt(comprobantes.fechaDeAnulacion, corte)),
         cubiertoAlCorte(corte),
+        sinContarEnUnValeAbierto(corte),
       ),
     )
     .groupBy(comprobantes.fondoId);
@@ -55,15 +80,10 @@ async function pendientesAlCorte(ids: readonly string[], corte: string): Promise
 /** Los vales provisionales que al corte ya se habían entregado y seguían sin liquidar ni anular. */
 async function valesAbiertosAlCorte(ids: readonly string[], corte: string): Promise<TotalesPorFondo> {
   const total = sql<string>`coalesce(sum(${valesProvisionales.monto}), 0)::text`;
-  const sinCerrarAlCorte = or(
-    eq(valesProvisionales.estado, 'abierto'),
-    and(eq(valesProvisionales.estado, 'liquidado'), gt(valesProvisionales.fechaDeLiquidacion, corte)),
-    and(eq(valesProvisionales.estado, 'anulado'), gt(valesProvisionales.fechaDeAnulacion, corte)),
-  );
   const filas = await transaccionEnCurso()
     .select({ fondoId: valesProvisionales.fondoId, total })
     .from(valesProvisionales)
-    .where(and(inArray(valesProvisionales.fondoId, [...ids]), lte(valesProvisionales.fecha, corte), sinCerrarAlCorte))
+    .where(and(inArray(valesProvisionales.fondoId, [...ids]), valeAbiertoAlCorte(corte)))
     .groupBy(valesProvisionales.fondoId);
   return aTotales(filas);
 }

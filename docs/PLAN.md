@@ -4032,6 +4032,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   y arqueos anulados no cuentan en R2 ni R5 (sin columna de anulados); (3) el «cheque o nota» de R2 sale de la referencia o el
   número del movimiento de Bancos (nadie tiene todavía datos reales con que confirmar el formato); (4) los reportes de Caja
   chica copian los constructores de columnas y los composables de reporte de Cuentas por liquidar (los módulos no se importan).
+- **2026-11-19 (CC-10, corrección de la revisión)**: CC-R4 contaba dos veces el efectivo de un vale provisional liquidado
+  después del corte: el vale seguía abierto al corte y además sus comprobantes (con fecha de la factura, anterior al corte)
+  entraban como pendientes. Ahora el pendiente al corte excluye los comprobantes de un vale que al corte seguía abierto
+  (`sinContarEnUnValeAbierto`, con la misma regla de vale abierto que usa el total de vales). Prueba de API nueva
+  `caja-chica-reportes-vale-liquidado` (falla sin la corrección). CC-R1 no cambia: el comprobante sí es pendiente de reponer
+  una vez liquidado el vale; al corte anterior a la liquidación R1 sigue listándolo (decisión: solo R4 evita el doble conteo).
 - **2026-11-19 (Bancos: aprobaciones, tarjeta y CP-AP, respuestas y validación del contador; docs):** el usuario aceptó
   todas las recomendaciones de §16 de `diseno-bancos-aprobaciones-tarjeta-y-cp-ap.md` (Q-A1 a Q-A9, Q-T2 a Q-T7, Q-N2,
   Q-N3, Q-AP1, Q-AP2 y Q-O1; §17). El contador validó el diseño
