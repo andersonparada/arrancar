@@ -1763,3 +1763,12 @@ anteriores y diferencia (solo los totales si hay más de 60 cuentas, por el tope
 - **Rendimiento** (`bancos-saldos-por-cuenta-rendimiento.api.prueba.ts`, 100,000 movimientos con 500 pares compensados): el endpoint responde en unos 400 ms y la consulta de partidas en
   unos 130 ms según `explain analyze`. Los pares compensados van en un conjunto aparte (`id not in (…)`, partiendo de los pocos inversos); con una subconsulta por fila PostgreSQL estimaba un costo
   enorme y activaba el JIT (más de 1 s). Los índices existentes bastan; no hay índice nuevo.
+- **Cliente (BS-5, 2026-11-18)**: pantalla `/bancos/saldos-iniciales` (menú Administración, permiso `.ver`) y ficha `/bancos/saldos-iniciales/:cuentaBancariaId`
+  (código en `cliente/src/modulos/bancos/{paginas,componentes/saldos-iniciales,composables/saldos-iniciales}`). Las acciones salen con el permiso (`.crear`,
+  `.editar`, `.eliminar`, `.anular`) y lo que dicen `puedeEditar`, `puedeEliminar` y, por partida, `puedeCorregir`, `puedeEliminar` y `puedeAnular`; el cliente no
+  decide reglas. Con el saldo global, «Separar en partidas» usa el mismo `PUT` de la cabecera y, si la cuenta tiene movimientos anteriores, el servidor lo rechaza y
+  dice qué hacer. Todos los textos con artículos de ley están en `cliente/src/modulos/bancos/textos-de-apertura.ts` (del dictamen
+  `dictamen-textos-legales-de-bancos-2026-11-18.md`); el cliente no usa el texto de los avisos de cheque antiguo y depósito viejo que manda el servidor, arma el suyo
+  con la fecha de corte. Las rutas heredadas ya no tienen cliente: BS-3 puede borrarlas.
+- **Pendiente**: BS-3 (anular con inverso, movimientos antes del corte, `parteDeApertura` en los DTO), BS-4 (conciliación: hoy el saldo del
+  banco todavía aparece como candidato, como el global), BS-6 a BS-9 (otras pantallas, conciliación, QA y evidencia).

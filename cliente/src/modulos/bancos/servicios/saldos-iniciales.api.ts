@@ -1,45 +1,65 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import { intercambioDe } from '@/modulos/core/servicios/intercambio';
-import type { Movimiento } from './movimientos.api';
-
-/** Lo que se manda al registrar o corregir el saldo inicial de una cuenta; sin beneficiario (no aplica). */
-export interface DatosSaldoInicial {
-  cuentaBancariaId: string;
-  tipo: 'credito' | 'debito';
-  fecha: string;
-  monto: string;
-  referencia: string | null;
-  observaciones: string | null;
-}
+import type {
+  CabeceraGuardada,
+  DatosDeAnulacionDePartida,
+  DatosDeCabecera,
+  DatosDePartida,
+  ParteQueSeAgrega,
+  PartidaGuardada,
+  SaldoInicialDeCuenta,
+  SaldosIniciales,
+} from './tipos-de-saldos-iniciales';
 
 const RUTA = '/bancos/saldos-iniciales';
 
-/** El saldo inicial de las cuentas bancarias: registrarlo, corregirlo, eliminarlo e importarlo/exportarlo en Excel. */
+/** Los saldos iniciales por cuenta con sus partidas de apertura (docs/modulos/diseno-bancos-segunda-parte.md §8). */
 export class ApiSaldosIniciales {
   constructor(private readonly http: ClienteHttp) {}
 
-  /** Importar y exportar en Excel (es administración): se ve en la ficha de la cuenta y en la lista de cuentas. */
+  /** Excel de los saldos por cuenta (administración: importa y exporta). */
   get intercambio() {
     return intercambioDe(this.http, RUTA);
   }
 
-  /** El saldo inicial vigente de la cuenta, si lo tiene. */
-  async deLaCuenta(cuentaBancariaId: string): Promise<Movimiento | null> {
-    const lista = await this.http.obtener<Movimiento[]>(RUTA, { cuentaBancariaId });
-    return lista.find((movimiento) => !movimiento.anuladoEn) ?? null;
+  /** Excel de las partidas de apertura. */
+  get intercambioDePartidas() {
+    return intercambioDe(this.http, `${RUTA}/partidas`);
   }
 
-  crear(datos: DatosSaldoInicial) {
-    return this.http.crear<Movimiento>(RUTA, datos);
+  listar() {
+    return this.http.obtener<SaldosIniciales>(RUTA);
   }
 
-  actualizar(id: string, datos: DatosSaldoInicial) {
-    return this.http.reemplazar<Movimiento>(`${RUTA}/global/${id}`, datos);
+  obtener(cuentaBancariaId: string) {
+    return this.http.obtener<SaldoInicialDeCuenta>(`${RUTA}/${cuentaBancariaId}`);
   }
 
-  /** Elimina de verdad el saldo inicial (solo si la cuenta nunca se concilió); el motivo queda en la auditoría. */
-  eliminar(id: string, motivo: string) {
-    return this.http.eliminar(`${RUTA}/global/${id}`, { motivo });
+  /** Crea o corrige la cabecera (y el saldo del banco); también convierte un saldo «de antes» en partidas. */
+  guardar(cuentaBancariaId: string, datos: DatosDeCabecera) {
+    return this.http.reemplazar<CabeceraGuardada>(`${RUTA}/${cuentaBancariaId}`, datos);
+  }
+
+  /** Elimina la cabecera con todas sus partidas; el motivo queda en la auditoría. */
+  eliminar(cuentaBancariaId: string, motivo: string) {
+    return this.http.eliminar(`${RUTA}/${cuentaBancariaId}`, { motivo });
+  }
+
+  agregarPartida(cuentaBancariaId: string, parte: ParteQueSeAgrega, datos: DatosDePartida) {
+    return this.http.crear<PartidaGuardada>(`${RUTA}/${cuentaBancariaId}/partidas`, { parte, ...datos });
+  }
+
+  corregirPartida(cuentaBancariaId: string, movimientoId: string, datos: DatosDePartida) {
+    return this.http.reemplazar<PartidaGuardada>(`${RUTA}/${cuentaBancariaId}/partidas/${movimientoId}`, datos);
+  }
+
+  eliminarPartida(cuentaBancariaId: string, movimientoId: string, motivo: string) {
+    return this.http.eliminar(`${RUTA}/${cuentaBancariaId}/partidas/${movimientoId}`, { motivo });
+  }
+
+  /** Anula con inverso; llega con BS-3 en el servidor, y el cliente solo la ofrece si `puedeAnular`. */
+  anularPartida(cuentaBancariaId: string, movimientoId: string, datos: DatosDeAnulacionDePartida) {
+    return this.http.crear(`${RUTA}/${cuentaBancariaId}/partidas/${movimientoId}/anular`, datos);
   }
 }
 
