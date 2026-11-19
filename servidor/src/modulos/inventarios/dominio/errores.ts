@@ -27,3 +27,12 @@ export class ConversionInvalida extends DatoInvalido {
 export class LoteInvalido extends DatoInvalido {
   readonly codigo = 'lote_invalido';
 }
+
+/** No se encontró un código libre para proponer: que el usuario escriba uno. */
+export class SinCodigoLibre extends ReglaDeNegocioInfringida {
+  readonly codigo = 'sin_codigo_libre';
+
+  constructor() {
+    super('No se pudo proponer un código libre para el artículo. Escríbalo a mano.');
+  }
+}

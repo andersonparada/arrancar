@@ -1,4 +1,4 @@
-import { asc } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   ConceptoParaArticulo,
@@ -16,6 +16,7 @@ export class ConceptosParaArticulosDrizzle implements ConceptosParaArticulos {
     return transaccionEnCurso()
       .select({ id: conceptosDeGasto.id, nombre: conceptosDeGasto.nombre })
       .from(conceptosDeGasto)
+      .where(and(eq(conceptosDeGasto.activo, true), eq(conceptosDeGasto.esActivoFijo, false)))
       .orderBy(asc(conceptosDeGasto.nombre));
   }
 }

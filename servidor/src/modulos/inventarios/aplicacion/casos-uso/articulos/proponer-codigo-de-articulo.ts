@@ -1,9 +1,12 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
+import { SinCodigoLibre } from '../../../dominio/errores.js';
 import type { DependenciasDeArticulos } from './dependencias-de-articulos.js';
 
 const CLAVE_DE_ARTICULOS = 'inventarios.articulos';
 const INTENTOS = 50;
 const DIGITOS = 4;
+/** Fecha fija: el catálogo de artículos no se reinicia por año aunque la empresa reinicie sus comprobantes. */
+const FECHA_SIN_REINICIO = '2000-01-01';
 
 /** Propone el código del próximo artículo: el prefijo de la empresa y el correlativo, sin repetir uno que ya exista. */
 export class ProponerCodigoDeArticulo {
@@ -14,16 +17,15 @@ export class ProponerCodigoDeArticulo {
    * editable. Nunca propone un código que ya tenga otro artículo.
    */
   ejecutar(operador: Operador): Promise<{ codigo: string }> {
-    const { unidadDeTrabajo, consultas, correlativos, prefijo, reloj } = this.dependencias;
+    const { unidadDeTrabajo, consultas, correlativos, prefijo } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const inicio = await prefijo.paraEmpresa(operador);
-      const hoy = await reloj.hoy(operador);
       for (let intento = 0; intento < INTENTOS; intento++) {
-        const { numero } = await correlativos.siguiente(CLAVE_DE_ARTICULOS, hoy);
+        const { numero } = await correlativos.siguiente(CLAVE_DE_ARTICULOS, FECHA_SIN_REINICIO);
         const codigo = `${inicio}${String(numero).padStart(DIGITOS, '0')}`;
         if (!(await consultas.existeCodigo(codigo))) return { codigo };
       }
-      throw new Error('No se pudo proponer un código libre para el artículo.');
+      throw new SinCodigoLibre();
     });
   }
 }

@@ -3024,3 +3024,4 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (ventana con la «para compras») y los **lotes** (ventana de alta). Lógica pura con pruebas (`edicion-de-*`,
   `reglas-de-articulo`, `textos-de-catalogo`, `cantidades`, `opciones-de-referencias`). Pendiente: la ficha sin kardex hasta
   INV-4c; las bodegas y su asignación son de INV-2c.
+- 2026-11-18 — **INV-1, correcciones de revisión**: el código propuesto del artículo usa una fecha fija para que el correlativo no se reinicie por año aunque la empresa reinicie los suyos, y si no hay código libre responde el error esperado `sin_codigo_libre` (antes un 500). Los conceptos que ofrece el artículo son solo activos y que no sean de activo fijo. Pendientes bajos: conversiones con unidad inactiva, formato de factores, Docena y coherencia de lotes al llegar el kardex (INV-4).
