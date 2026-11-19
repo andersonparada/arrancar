@@ -11,16 +11,16 @@ export interface FilaExportadaDeSaldos {
   cuenta: string;
   banco: string | null;
   numero: string | null;
-  saldoEnLibros: string;
-  chequesPosfechados: string;
-  disponible: string;
+  saldoEnLibros: string | null;
+  chequesPosfechados: string | null;
+  disponible: string | null;
   chequesEnCirculacion: string | null;
   depositosEnTransito: string | null;
   debitosEnTransito: string | null;
   erroresDelBanco: string | null;
   saldoSegunBanco: string | null;
   ultimaConciliacion: string | null;
-  atrasada: boolean;
+  atrasada: boolean | null;
   observacion: string | null;
 }
 
@@ -60,8 +60,17 @@ const deTotal = (nombre: string, total: TotalDeSaldosDto): FilaExportadaDeSaldos
   erroresDelBanco: null,
   saldoSegunBanco: null,
   ultimaConciliacion: null,
-  atrasada: false,
+  atrasada: null,
   observacion: null,
+});
+
+/** El renglón de la nota: solo texto, sin cifras ni «Atrasada». */
+const deNota = (nota: string): FilaExportadaDeSaldos => ({
+  ...deTotal('Nota', { cantidadDeCuentas: 0, saldoEnLibros: '0.00', chequesPosfechados: '0.00', disponible: '0.00' }),
+  saldoEnLibros: null,
+  chequesPosfechados: null,
+  disponible: null,
+  observacion: nota,
 });
 
 /** Las cuentas y, al final, los dos totales sin compensar; la última fila repite la nota del disponible. */
@@ -69,10 +78,7 @@ export const aFilasExportadasDeSaldos = (reporte: ReporteDeSaldosPorCuentaDto): 
   ...reporte.cuentas.map(deCuenta),
   deTotal('Total Bancos', reporte.bancos),
   deTotal('Total Sobregiros bancarios', reporte.sobregiros),
-  {
-    ...deTotal('Nota', { cantidadDeCuentas: 0, saldoEnLibros: '0.00', chequesPosfechados: '0.00', disponible: '0.00' }),
-    observacion: reporte.nota,
-  },
+  deNota(reporte.nota),
 ];
 
 const decimal = (clave: keyof FilaExportadaDeSaldos, titulo: string, requerido = false): Columna => ({
