@@ -55,9 +55,21 @@ function programarCargaDeTiposDeCambio(): NodeJS.Timeout | null {
 /** Sin `CLAVE_SECRETOS` no arranca: no se podría leer la contraseña del servidor de correo. Los correos esperan en la bandeja. */
 function iniciarBandejaDeCorreo() {
   const procesador = crearProcesadorDeBandeja({ error: (mensaje, error) => app.log.error(error, mensaje) });
-  if (procesador) procesador.iniciar();
-  else void avisarQueFaltaLaLlave();
+  if (procesador) {
+    procesador.iniciar();
+    void avisarSiLaLlaveNoDescifra();
+  } else void avisarQueFaltaLaLlave();
   return procesador;
+}
+
+/** La llave está, pero puede ser otra que la del cifrado: el error sale al arrancar, no en el primer envío. */
+async function avisarSiLaLlaveNoDescifra(): Promise<void> {
+  try {
+    const diagnostico = await diagnosticarLlaveDeCorreo.verificarContrasena();
+    if (diagnostico) app.log.error(diagnostico.mensaje);
+  } catch (error) {
+    app.log.warn(error, 'No se pudo comprobar la contraseña del servidor de correo.');
+  }
 }
 
 /** Con un servidor de correo ya guardado, el aviso sale como error: así no pasa desapercibido en producción. */

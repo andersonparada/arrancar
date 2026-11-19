@@ -20,6 +20,8 @@ export interface CorreoNuevo {
 export interface RepositorioDeCorreos {
   /** Toma el candado de la cuenta (hasta el final de la transacción) y cuenta lo ya encolado. */
   reservarCupo(direcciones: readonly string[]): Promise<UsoDeCupos>;
+  /** Deja una marca por destinatario del reintento a mano de un correo: gasta cupo como un envío más. */
+  marcarReintento(correoId: string, direcciones: readonly string[]): Promise<void>;
   /** Guarda el correo y sus destinatarios; devuelve el id. */
   insertar(correo: CorreoNuevo): Promise<string>;
 }

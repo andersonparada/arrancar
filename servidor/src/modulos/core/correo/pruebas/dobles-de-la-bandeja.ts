@@ -19,10 +19,15 @@ export class RepositorioDeCorreosEnMemoria implements RepositorioDeCorreos {
   uso: UsoDeCupos = SIN_USO;
   readonly insertados: CorreoNuevo[] = [];
   readonly cuposPedidos: string[][] = [];
+  readonly reintentosMarcados: { correoId: string; direcciones: string[] }[] = [];
 
   async reservarCupo(direcciones: readonly string[]): Promise<UsoDeCupos> {
     this.cuposPedidos.push([...direcciones]);
     return this.uso;
+  }
+
+  async marcarReintento(correoId: string, direcciones: readonly string[]): Promise<void> {
+    this.reintentosMarcados.push({ correoId, direcciones: [...direcciones] });
   }
 
   async insertar(correo: CorreoNuevo): Promise<string> {

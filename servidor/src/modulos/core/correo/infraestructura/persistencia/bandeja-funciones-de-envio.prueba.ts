@@ -101,6 +101,22 @@ describe('core.reservar_cupo_de_correo', () => {
     expect(rows[0]?.por_destinatario).toEqual({ 'ana@prueba.com': 1, 'nadie@prueba.com': 0 });
   });
 
+  it('suma las marcas de reintento a los conteos de la cuenta, de la instalación y por destinatario', async () => {
+    const id = await unCorreo('A1');
+    for (const creadoEn of [enMinutos(-5), enMinutos(-180)]) {
+      await propietario.query(
+        `insert into core.reintentos_de_correos (correo_saliente_id, empresa_id, cuenta_id, direccion, creado_en)
+         values ($1, $2, $3, 'Ana@prueba.com', $4)`,
+        [id, escenario.empresaA1, escenario.cuentaA, creadoEn],
+      );
+    }
+
+    const { rows } = await reservar(contextoA(), ['ana@prueba.com']);
+
+    expect(rows[0]).toMatchObject({ por_hora: 2, por_dia: 3, de_la_instalacion_por_hora: 2 });
+    expect(rows[0]?.por_destinatario).toEqual({ 'ana@prueba.com': 2 });
+  });
+
   it('acepta como máximo 10 direcciones', async () => {
     const once = Array.from({ length: 11 }, (_, i) => `d${i}@prueba.com`);
 

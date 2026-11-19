@@ -40,6 +40,9 @@ export const destinatariosDeCorreos = esquemaCore.table(
     unique('destinatarios_de_correos_direccion_unica').on(t.correoSalienteId, t.direccion),
     // Cupo por destinatario: sin distinguir mayúsculas de la parte local (`A@x.com` y `a@x.com` son uno solo).
     index('destinatarios_de_correos_cupo_idx').on(t.cuentaId, sql`lower(${t.direccion})`, t.creadoEn),
+    // Conteos por cuenta y por instalación de los cupos por hora y por día (`core.reservar_cupo_de_correo`).
+    index('destinatarios_de_correos_cuenta_fecha_idx').on(t.cuentaId, t.creadoEn),
+    index('destinatarios_de_correos_fecha_idx').on(t.creadoEn),
     check('destinatarios_de_correos_clase_valida', sql`${t.clase} in ('para', 'copia')`),
     check('destinatarios_de_correos_direccion_larga', sql`char_length(${t.direccion}) between 3 and 254`),
     check('destinatarios_de_correos_nombre_largo', sql`${t.nombre} is null or char_length(${t.nombre}) <= 150`),

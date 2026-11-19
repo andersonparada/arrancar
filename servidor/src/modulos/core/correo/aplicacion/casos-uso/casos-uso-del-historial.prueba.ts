@@ -111,6 +111,22 @@ describe('ReintentarCorreo', () => {
     expect(contexto.despertar).toHaveBeenCalledOnce();
   });
 
+  it('deja una marca del reintento por destinatario para que gaste cupo', async () => {
+    const contexto = preparar(correoDePrueba({ estado: 'fallido' }));
+
+    await armar(contexto).ejecutar(operador, 'correo-1');
+
+    expect(contexto.repositorio.reintentosMarcados).toEqual([{ correoId: 'correo-1', direcciones: ['a@ejemplo.com'] }]);
+  });
+
+  it('si no caben los cupos no deja marca', async () => {
+    const contexto = preparar(correoDePrueba({ estado: 'fallido' }));
+    contexto.repositorio.uso = { porHora: 100, porDia: 0, deLaInstalacionPorHora: 0, porDestinatario: {} };
+
+    await expect(armar(contexto).ejecutar(operador, 'correo-1')).rejects.toBeInstanceOf(CupoDeCorreosAgotado);
+    expect(contexto.repositorio.reintentosMarcados).toHaveLength(0);
+  });
+
   it('un fallido con el contenido depurado no se reintenta', async () => {
     const contexto = preparar(correoDePrueba({ estado: 'fallido', contenidoDepurado: true, cuerpoTexto: null }));
 

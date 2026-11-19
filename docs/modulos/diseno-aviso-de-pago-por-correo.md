@@ -200,10 +200,19 @@ depuración usan las funciones de §3.5.
 | `resultado` | `text` | sí | check `in ('aceptado', 'rechazado')`; lo pone el trabajador |
 | `creado_en` | `timestamptz` | no | Para el cupo por destinatario |
 
-`unique (correo_saliente_id, direccion)`; índices `(correo_saliente_id)` (el `unique` sirve) y
-`(cuenta_id, direccion, creado_en)` (cupo por destinatario). Máximo 10 por correo (lo cuida el dominio y
+`unique (correo_saliente_id, direccion)`; índices `(correo_saliente_id)` (el `unique` sirve),
+`(cuenta_id, lower(direccion), creado_en)` (cupo por destinatario, sin distinguir mayúsculas), `(cuenta_id, creado_en)`
+(cupos por hora y por día de la cuenta) y `(creado_en)` (cupo por hora de la instalación; migración 0034). Máximo 10 por correo (lo cuida el dominio y
 `core.reservar_cupo_de_correo`). RLS: `select` e `insert` por empresa; sin `update` ni `delete` para la app (el
 `resultado` lo pone `core.resolver_correo`).
+
+### 3.3 bis `core.reintentos_de_correos` (nueva, migración 0034; gasto de cupo de los reintentos)
+
+Una fila por destinatario cada vez que `ReintentarCorreo` vuelve a poner en la bandeja un correo `fallido`: `id`,
+`correo_saliente_id` (`cascade`), `empresa_id`, `cuenta_id`, `direccion` (la del destinatario) y `creado_en`. La app solo
+agrega y lee (RLS por empresa, sin `update` ni `delete`). Índices `(cuenta_id, creado_en)`, `(creado_en)`,
+`(cuenta_id, lower(direccion), creado_en)` y `(correo_saliente_id)`. Se marca solo si los cupos alcanzaron y el
+reintento se hizo, en la misma transacción.
 
 ### 3.4 `core.intentos_de_correos` (nueva; bitácora técnica)
 
@@ -227,7 +236,7 @@ Todas con `SET search_path = core, pg_temp`, `SET row_security = off`, `REVOKE A
 
 | Función | Qué hace | Límites |
 |---|---|---|
-| `core.reservar_cupo_de_correo(direcciones text[])` → `(por_hora int, por_dia int, de_la_instalacion_por_hora int, por_destinatario jsonb)` | Toma `pg_advisory_xact_lock(hashtextextended('core.correo:' \|\| cuenta, 0))` con la cuenta de `app.cuenta_id` (**nunca** un parámetro) y cuenta los correos de la cuenta (todas sus empresas) en la última hora y día, el total de la instalación en la última hora y, por cada dirección pedida, cuántos recibió de esa cuenta en 24 h. El caso de uso compara con los topes de configuración y responde 429 si se pasa | Máximo 10 direcciones; sin cuenta en la transacción, error |
+| `core.reservar_cupo_de_correo(direcciones text[])` → `(por_hora int, por_dia int, de_la_instalacion_por_hora int, por_destinatario jsonb)` | Toma `pg_advisory_xact_lock(hashtextextended('core.correo:' \|\| cuenta, 0))` con la cuenta de `app.cuenta_id` (**nunca** un parámetro) y cuenta los **destinatarios** (para y copias, no correos) de la cuenta (todas sus empresas) en la última hora y día, el total de la instalación en la última hora y, por cada dirección pedida (sin distinguir mayúsculas), cuántos recibió de esa cuenta en 24 h. A cada conteo suma las marcas de `core.reintentos_de_correos` (un reintento gasta cupo otra vez). Los conteos van por los índices `(cuenta_id, creado_en)`, `(creado_en)` y `(cuenta_id, lower(direccion), creado_en)` de ambas tablas El caso de uso compara con los topes de configuración y responde 429 si se pasa | Máximo 10 direcciones; sin cuenta en la transacción, error |
 | `core.tomar_correos_pendientes(limite int, minutos int)` → filas con lo necesario para enviar (id, empresa, asunto, cuerpos, remitente visible, responder a, message_id, destinatarios en jsonb, ruta del adjunto) | `FOR UPDATE SKIP LOCKED` sobre `pendiente` con `proximo_intento <= now()` y `enviando` con arriendo vencido; los pasa a `enviando`, `bloqueado_hasta = now() + minutos`, `intentos + 1`. No toma nada si `core.servidor_de_correo.activo` es falso | `limite` ≤ 50; `minutos` entre 1 y 30 |
 | `core.resolver_correo(id uuid, resultado text, codigo text, rechazados text[], duracion_ms int)` | Inserta el intento; deja `enviado` (con `resultado` por destinatario), `pendiente` con la espera siguiente, o `fallido`; con `autenticacion`/`sin_servidor` devuelve el intento (`intentos - 1`) y espera 15 min | Solo filas en `enviando` |
 | `core.depurar_correos(dias int, meses int)` → `(contenido int, filas int)` | Borra cuerpo, HTML y la fila de `core.archivos` del adjunto (el archivo en disco lo quita la depuración de huérfanos) de los correos terminados (`enviado`, `fallido`, `cancelado`) con más de `dias`; borra las filas (con destinatarios e intentos) de más de `meses` | `dias` ≥ 7, `meses` ≥ 60 (igual que la auditoría) |
@@ -274,7 +283,8 @@ El vínculo pago ↔ correos está en `core.correos_salientes` (`recurso_origen 
 - **Adjunto**: solo PDF generado por la app, ≤ 5 MB (el comprobante de 100 líneas ronda 100 KB); no pasa por qpdf (es
   nuestro), igual que el libro foliado.
 - **Cancelar**: solo `pendiente` (no `enviando`); motivo 1–300.
-- **Reintentar a mano**: solo `fallido`; vuelve a `pendiente` con `intentos = 0`; cuenta otra vez el cupo.
+- **Reintentar a mano**: solo `fallido`; vuelve a `pendiente` con `intentos = 0`; cuenta otra vez el cupo: deja una marca por destinatario en
+  `core.reintentos_de_correos` (§3.3 bis) que `core.reservar_cupo_de_correo` suma.
 
 ### 4.1 Aviso de pago (Cuentas por pagar)
 

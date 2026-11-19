@@ -241,6 +241,13 @@
       "breakpoints": true
     },
     {
+      "idx": 34,
+      "version": "7",
+      "when": 1795090110371,
+      "tag": "0034_cupos_con_reintentos",
+      "breakpoints": true
+    },
+    {
       "idx": 35,
       "version": "7",
       "when": 1795090179158,

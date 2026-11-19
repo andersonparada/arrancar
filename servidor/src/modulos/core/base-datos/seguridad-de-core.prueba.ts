@@ -17,6 +17,7 @@ import { RESTRICCIONES_DE_PRIVILEGIOS } from './privilegios-restringidos.js';
 const CON_RLS = [
   'archivos',
   'auditoria',
+  'reintentos_de_correos',
   'correlativos',
   'empresas',
   'empresa_usuarios',

@@ -225,6 +225,22 @@ su color para que la app se entienda igual en todas las instalaciones.
 - Validación de entrada con Zod en `validaciones/`.
 - Respuestas de error uniformes: `{ error: { codigo, mensaje, detalles } }`.
 
+### 3.10 Llave de secretos del correo (`CLAVE_SECRETOS`)
+
+El envío de correo (aviso de pago al proveedor) guarda la contraseña del servidor SMTP cifrada en la base con
+AES-256-GCM; la llave vive solo en el entorno, fuera de la base y de los respaldos. Pasos en producción:
+
+1. Genérela una sola vez: `openssl rand -base64 32`, y póngala en `CLAVE_SECRETOS` de `infra/.env`
+   (`docker-compose.yml` la pasa al contenedor `app`, igual que `CLAVE_SECRETOS_ANTERIOR`).
+2. **Respáldela aparte** (gestor de contraseñas), nunca junto al respaldo de la base: quien tenga ambos lee la
+   contraseña SMTP. Si se pierde no se pierde otro dato: Soporte vuelve a escribir la contraseña SMTP.
+3. Sin ella la app arranca con el correo apagado; si ya hay un servidor guardado, lo dice como **error** en el registro
+   (`docker compose logs app`) y los correos esperan en la bandeja.
+4. Para rotarla: la vieja a `CLAVE_SECRETOS_ANTERIOR`, la nueva a `CLAVE_SECRETOS`, reiniciar y probar el servidor
+   desde Soporte (se vuelve a cifrar con la vigente); después se borra `CLAVE_SECRETOS_ANTERIOR`.
+5. Con la llave puesta, al arrancar se comprueba que abra la contraseña guardada; si no la abre (llave equivocada o rotada
+   sin `CLAVE_SECRETOS_ANTERIOR`), el registro lo dice como **error** sin mostrar el secreto, y los envíos fallan.
+
 ## 4. Estado de los módulos
 
 | Módulo                                      | Estado                   | Notas                                                   |
@@ -311,19 +327,6 @@ copiarse fuera. Lo mínimo es copiar `mensuales/` cada mes (los diarios, si se p
 Cada cierto tiempo hay que **probar una restauración**
 (`pg_restore -d <base> archivo.dump`) y comprobar que la copia externa abre.
 
-### Llave de secretos del correo (`CLAVE_SECRETOS`)
-
-El envío de correo (aviso de pago al proveedor) guarda la contraseña del servidor SMTP cifrada en la base con
-AES-256-GCM; la llave vive solo en el entorno, fuera de la base y de los respaldos. Pasos en producción:
-
-1. Genérela una sola vez: `openssl rand -base64 32`, y póngala en `CLAVE_SECRETOS` de `infra/.env`
-   (`docker-compose.yml` la pasa al contenedor `app`, igual que `CLAVE_SECRETOS_ANTERIOR`).
-2. **Respáldela aparte** (gestor de contraseñas), nunca junto al respaldo de la base: quien tenga ambos lee la
-   contraseña SMTP. Si se pierde no se pierde otro dato: Soporte vuelve a escribir la contraseña SMTP.
-3. Sin ella la app arranca con el correo apagado; si ya hay un servidor guardado, lo dice como **error** en el registro
-   (`docker compose logs app`) y los correos esperan en la bandeja.
-4. Para rotarla: la vieja a `CLAVE_SECRETOS_ANTERIOR`, la nueva a `CLAVE_SECRETOS`, reiniciar y probar el servidor
-   desde Soporte (se vuelve a cifrar con la vigente); después se borra `CLAVE_SECRETOS_ANTERIOR`.
 La ubicación elegida por cliente queda pendiente de decidir con el usuario.
 
 **Antes de restaurar una base más vieja que los archivos**, apague la limpieza de archivos
@@ -3405,7 +3408,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   pantallas del cliente, y para los pasos siguientes el diferencial, el cierre y las demás órdenes.
 - **2026-11-18 (correo, correcciones de la revisión de seguridad: tres hallazgos medios)**: (1) `infra/docker-compose.yml`
   pasa `CLAVE_SECRETOS` y `CLAVE_SECRETOS_ANTERIOR` al contenedor `app` (las de desarrollo del correo no, la app las
-  rechaza); `infra/.env.ejemplo` y PLAN «Llave de secretos del correo» explican cómo generarla y respaldarla;
+  rechaza); `infra/.env.ejemplo` y PLAN §3.10 «Llave de secretos del correo» explican cómo generarla y respaldarla;
   `DiagnosticarLlaveDeCorreo` hace que `principal.ts` registre como error (no solo aviso) que falta la llave si ya hay un
   servidor guardado. (2) Migración `0032_cupos_por_destinatarios` (core): `core.reservar_cupo_de_correo` cuenta filas de
   `destinatarios_de_correos` (para y copias) y `verificarCupos` suma las direcciones del correo nuevo, así 100/hora y
@@ -3921,3 +3924,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (`caja-chica.fondos.editar` y `puedeEditar` del servidor, nuevo en el DTO), ventana con nombre, localidad, tope y cuenta que se
   propone al reponer; el motivo del tope solo se pide si el tope cambia. La ficha muestra la «Cuenta para reponer» con el nombre
   que ahora da el servidor (`cuentaBancariaNombre` en el DTO del fondo).
+- **2026-11-19 (correo, pendientes bajos de la revisión de seguridad)**: migración `0034_cupos_con_reintentos` (core).
+  (1) Índices `destinatarios_de_correos (cuenta_id, creado_en)` y `(creado_en)` para los conteos por hora y día de
+  `core.reservar_cupo_de_correo`. EXPLAIN con 600,000 destinatarios: el conteo de la instalación pasó de
+  un recorrido paralelo de la tabla (51 ms) a un recorrido por índice (1.4 ms) y el de la cuenta por día de 23 a 11 ms. (2) Tabla nueva `core.reintentos_de_correos` (una marca por destinatario, la app solo
+  agrega y lee): `ReintentarCorreo` la llena (`marcarReintento`) cuando los cupos alcanzan y la función los suma a todos
+  sus conteos, así un reintento gasta cupo otra vez. (3) `DiagnosticarLlaveDeCorreo.verificarContrasena`: con la llave
+  puesta, `principal.ts` comprueba al arrancar que descifre la contraseña guardada y, si no, registra un error claro sin
+  secreto ni causa. (4) Diseño del aviso §3.3, §3.3 bis y §3.5 al día; la sección de la llave de secretos pasó a §3.10
+  (ya no está entre los respaldos).
+- 2026-11-19 · Correo pendientes, correcciones de la revisión: `core.reintentos_de_correos` entra en
+  `RESTRICCIONES_DE_PRIVILEGIOS` (`sin: update, delete`, como `core.auditoria`) y en `CON_RLS` de
+  `seguridad-de-core.prueba.ts`. Pendiente del coordinador al integrar: la 0033 de Multimoneda tiene `when` menor que
+  el de esta 0034 (el migrador la saltaría en bases que ya tienen la 0034) y los snapshots 0033 y 0034 apuntan ambos
+  al 0032; unir Multimoneda antes o junto con esta rama, rehacer el snapshot de la 0034 con `prevId` = id de la 0033 y
+  en la base de desarrollo aplicar la 0033 a mano o quitar la fila de la 0034 y volver a migrar.

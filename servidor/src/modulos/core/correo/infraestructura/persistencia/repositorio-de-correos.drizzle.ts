@@ -4,6 +4,7 @@ import type { UsoDeCupos } from '../../dominio/cupos-de-correo.js';
 import type { CorreoNuevo, RepositorioDeCorreos } from '../../aplicacion/puertos/repositorio-de-correos.js';
 import { correosSalientes } from './correos-salientes.tablas.js';
 import { destinatariosDeCorreos } from './destinatarios-de-correos.tablas.js';
+import { reintentosDeCorreos } from './reintentos-de-correos.tablas.js';
 
 interface FilaDeCupo extends Record<string, unknown> {
   por_hora: number;
@@ -32,6 +33,13 @@ export class RepositorioDeCorreosDrizzle implements RepositorioDeCorreos {
       deLaInstalacionPorHora: fila.de_la_instalacion_por_hora,
       porDestinatario: fila.por_destinatario,
     };
+  }
+
+  async marcarReintento(correoId: string, direcciones: readonly string[]): Promise<void> {
+    if (direcciones.length === 0) return;
+    await transaccionEnCurso()
+      .insert(reintentosDeCorreos)
+      .values(direcciones.map((direccion) => ({ correoSalienteId: correoId, direccion })));
   }
 
   async insertar(correo: CorreoNuevo): Promise<string> {
