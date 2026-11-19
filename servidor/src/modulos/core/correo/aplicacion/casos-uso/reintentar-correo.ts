@@ -30,14 +30,16 @@ export class ReintentarCorreo {
    * @throws RecursoNoEncontrado, CorreoNoReintentable, CorreoSinContenido (409), CupoDeCorreosAgotado (429).
    */
   ejecutar(operador: Operador, id: string): Promise<CorreoDto> {
-    const { unidadDeTrabajo, historial, auditoria, tareas, despertador } = this.dependencias;
+    const { unidadDeTrabajo, historial, auditoria, tareas, despertador, repositorio } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const antes = await historial.buscar(id);
       if (!antes) throw new RecursoNoEncontrado('El correo');
       if (antes.estado !== 'fallido') throw new CorreoNoReintentable();
       if (antes.contenidoDepurado) throw new CorreoSinContenido();
-      await this.exigirCupo(antes);
+      const direcciones = antes.destinatarios.map((destinatario) => destinatario.direccion);
+      await this.exigirCupo(direcciones);
       if (!(await historial.reintentar(id))) throw new CorreoNoReintentable();
+      await repositorio.marcarReintento(id, direcciones);
       await auditoria.registrar({
         recurso: RECURSO_DE_CORREOS,
         registroId: id,
@@ -49,9 +51,8 @@ export class ReintentarCorreo {
     });
   }
 
-  private async exigirCupo(correo: CorreoDto): Promise<void> {
+  private async exigirCupo(direcciones: string[]): Promise<void> {
     const { repositorio, parametros } = this.dependencias;
-    const direcciones = correo.destinatarios.map((destinatario) => destinatario.direccion);
     const [uso, topes] = await Promise.all([repositorio.reservarCupo(direcciones), parametros.topes()]);
     verificarCupos(uso, topes, direcciones);
   }
