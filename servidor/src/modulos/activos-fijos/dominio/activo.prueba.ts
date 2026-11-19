@@ -181,3 +181,21 @@ describe('Activo: ocioso', () => {
     expect(() => activo.quitarOcioso('2026-11-05', HOY)).toThrow(ActivoInvalido);
   });
 });
+
+describe('Activo: moverA', () => {
+  it('deja la ubicación vigente y quita al usuario responsable', () => {
+    const activo = Activo.reconstruir({ ...crear().instantanea(), responsableUsuarioId: crypto.randomUUID() });
+
+    activo.moverA({ localidadId: null, departamentoId: null, responsable: 'Marta', enBodega: true });
+
+    expect(activo.instantanea()).toMatchObject({ responsable: 'Marta', enBodega: true, responsableUsuarioId: null });
+  });
+
+  it('un activo dado de baja no se mueve', () => {
+    const baja = Activo.reconstruir({ ...crear().instantanea(), estado: 'dado_de_baja', fechaDeBaja: HOY });
+
+    expect(() => baja.moverA({ localidadId: null, departamentoId: null, responsable: null, enBodega: false })).toThrow(
+      ActivoDadoDeBaja,
+    );
+  });
+});
