@@ -15,8 +15,8 @@ const FILAS: { clave: keyof Cuadratica; etiqueta: string }[] = [
 </script>
 
 <template>
-  <TarjetaBase class="overflow-x-auto">
-    <table class="w-full min-w-[24rem] text-sm">
+  <TarjetaBase>
+    <table class="w-full table-fixed text-xs sm:text-sm">
       <thead>
         <tr class="text-left text-xs text-tierra-500">
           <th class="pb-2 font-medium"></th>

@@ -1,9 +1,10 @@
-import { computed, watch, type Ref } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarLecturaDeSeccion } from '@/modulos/core/composables/usar-lectura-de-seccion';
 import {
   apiCuentasPorPagar,
+  type CondicionesConPlazoPorOmision,
   type CondicionesDeProveedor,
   type SaldoDelProveedor,
 } from '../servicios/cuentas-por-pagar.api';
@@ -16,11 +17,14 @@ export function usarCondicionesDePago(
   modelo: Ref<CondicionesDeProveedor | undefined>,
   registroId: () => string | null,
 ) {
+  /** Meses del plazo por omisión de la empresa; sin saberse (proveedor nuevo o lectura fallida) es `null`. */
+  const mesesPorOmision = ref<number | null>(null);
   const lectura = usarLecturaDeSeccion(modelo, {
     registroId,
     traer: async (id) => {
-      const { diasDeCredito, contarDesdeLaRecepcion } = await apiCuentasPorPagar.obtenerCondiciones(id);
-      return { diasDeCredito, contarDesdeLaRecepcion };
+      const { mesesPorOmision: meses, ...condiciones } = await apiCuentasPorPagar.obtenerCondiciones(id);
+      mesesPorOmision.value = meses;
+      return { diasDeCredito: condiciones.diasDeCredito, contarDesdeLaRecepcion: condiciones.contarDesdeLaRecepcion };
     },
     porOmision: condicionesPorOmision,
   });
@@ -31,11 +35,11 @@ export function usarCondicionesDePago(
       if (modelo.value) modelo.value = { ...modelo.value, diasDeCredito: diasDesdeTexto(texto) };
     },
   });
-  return { ...lectura, dias };
+  return { ...lectura, dias, mesesPorOmision };
 }
 
 interface CondicionesYSaldo {
-  condiciones: CondicionesDeProveedor;
+  condiciones: CondicionesConPlazoPorOmision;
   saldo: SaldoDelProveedor | null;
 }
 

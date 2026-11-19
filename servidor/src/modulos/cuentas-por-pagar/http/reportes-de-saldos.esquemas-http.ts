@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ESTADOS_DE_PAGO } from '../dominio/saldo-al-corte.js';
+import { ESTADOS_DE_PAGO } from '../dominio/pagos.js';
 import { ORIGENES_DE_DOCUMENTO, TIPOS_DE_DOCUMENTO, type TipoDeDocumento } from '../dominio/tipos-de-documento.js';
 import type { SolicitudDeDocumentosAUnaFecha } from '../aplicacion/casos-uso/reportes/reporte-de-documentos-a-una-fecha.js';
 

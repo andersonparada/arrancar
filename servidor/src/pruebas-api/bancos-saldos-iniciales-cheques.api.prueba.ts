@@ -167,9 +167,11 @@ describe('carga inicial cerrada', () => {
     await guardarSaldo(cerrada.propietario, cuentaId, '500.00');
     const concepto = await conceptoGeneral(cerrada.propietario);
     const deposito = await agregarPartida(cerrada.propietario, cuentaId, partida('deposito_en_transito'));
-    expect((await cerrada.propietario.post(`/api/empresas/${cerrada.empresaId}/carga-inicial/cerrar`, {})).estado).toBe(
-      200,
-    );
+    // Sin el saldo de los libros anteriores la revisión de Bancos pide un motivo para cerrar (EM-2).
+    const cierre = await cerrada.propietario.post(`/api/empresas/${cerrada.empresaId}/carga-inicial/cerrar`, {
+      motivo: 'Sin el dato de los libros anteriores',
+    });
+    expect(cierre.estado).toBe(200);
 
     const intentos = [
       await guardarSaldo(cerrada.propietario, cuentaId, '600.00'),

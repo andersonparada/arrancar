@@ -1,13 +1,13 @@
 import { ref, type Ref } from 'vue';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
+import { usarIntercambio } from '@/modulos/core/composables/intercambio/usar-intercambio';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { usarFormulario } from '@/modulos/core/composables/usar-formulario';
 import { apiEmpresas, type Empresa } from '../servicios/empresas.api';
 import { datosDeLaEmpresa, edicionDe, type EdicionDeEmpresa } from './edicion-de-empresa';
-import { usarCierreDeCarga } from './usar-cierre-de-carga';
+import { usarCargaInicial } from './usar-carga-inicial';
 import { usarDatosDeEmpresa } from './usar-datos-de-empresa';
-import { usarReaperturaDeCarga } from './usar-reapertura-de-carga';
 
 const guardarEmpresa = (edicion: EdicionDeEmpresa) =>
   edicion.empresaId
@@ -53,9 +53,13 @@ function usarFormularioDeEmpresa({ edicion, guardarDatos, recargar }: Formulario
   return { enviando, errores, abrir, guardar };
 }
 
-/** Las empresas de la cuenta: listarlas, crearlas y editarlas en una ventana, con cierre y reapertura de la carga inicial. */
+/** Las empresas de la cuenta: listarlas, crearlas y editarlas en una ventana, con la carga inicial (cierre, reapertura, historial y balance). */
 export function usarEmpresas() {
   const { datos: empresas, cargar } = listarEmpresas();
+  const sesion = usarSesion();
+  const intercambio = usarIntercambio(apiEmpresas.intercambio, async () => {
+    await Promise.all([cargar(), sesion.cargar()]);
+  });
   const edicion = ref<EdicionDeEmpresa>({ ...edicionDe(), abierta: false });
   const { carga, guardar: guardarDatos } = usarDatosDeEmpresa(edicion);
   const idEnEdicion = () => edicion.value.empresaId;
@@ -63,10 +67,10 @@ export function usarEmpresas() {
 
   return {
     empresas,
+    intercambio,
     edicion,
     carga,
     ...formulario,
-    ...usarCierreDeCarga(idEnEdicion, carga),
-    ...usarReaperturaDeCarga(idEnEdicion, carga),
+    cargaInicial: usarCargaInicial(idEnEdicion, carga),
   };
 }

@@ -1,8 +1,9 @@
 import { reactive, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiCheques, type ChequeListado } from '../../servicios/cheques.api';
 import { usarReferenciasDeCuenta } from '../cuentas-bancarias/referencias-de-cuenta';
-import { filtroDeLaConsulta, filtrosPorOmision, type FiltrosDeCheques } from './filtros-de-cheques';
+import { filtroDeLaConsulta, filtrosDesdeLaRuta, type FiltrosDeCheques } from './filtros-de-cheques';
 import { usarFormularioDeCheque } from './usar-formulario-de-cheque';
 
 /**
@@ -10,7 +11,7 @@ import { usarFormularioDeCheque } from './usar-formulario-de-cheque';
  * nuevo (los disponibles se ven en su chequera, no aquí).
  */
 export function usarListaDeChequesDeLaEmpresa() {
-  const filtros = reactive<FiltrosDeCheques>(filtrosPorOmision());
+  const filtros = reactive<FiltrosDeCheques>(filtrosDesdeLaRuta(useRoute().query));
   const {
     datos: cheques,
     cargando,

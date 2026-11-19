@@ -7,12 +7,14 @@ import { ObtenerCondicionesDeProveedor } from '../aplicacion/casos-uso/condicion
 import { CondicionesControlador } from '../http/condiciones.controlador.js';
 import { seccionDeCondiciones } from '../http/condiciones.esquemas-http.js';
 import { rutasDeCondiciones } from '../http/condiciones.rutas.js';
+import { excelDePlazos } from './condiciones-excel.js';
+import { PlazoPorOmisionEnConfiguracion } from '../infraestructura/plazo-por-omision-en-configuracion.js';
 import { CondicionesDeProveedoresDrizzle } from '../infraestructura/persistencia/condiciones-de-proveedores.drizzle.js';
 
 /**
  * Raíz de composición de las condiciones de pago de los proveedores. Este módulo aporta su sección al formulario de
  * Proveedores: cuando Terceros avisa que guardó, valida y guarda la suya en la misma transacción (una sección inválida
- * deshace todo el formulario). Devuelve la ruta de lectura.
+ * deshace todo el formulario). Devuelve la ruta de lectura y el Excel «Plazos de proveedores».
  */
 export function rutasDeCondicionesComponidas(): FastifyPluginAsync {
   const { unidadDeTrabajo } = dependenciasCompartidas();
@@ -26,7 +28,14 @@ export function rutasDeCondicionesComponidas(): FastifyPluginAsync {
       if (cambio) await guardar.ejecutar(operador, proveedorId, cambio);
     },
   );
-  return rutasDeCondiciones(
-    new CondicionesControlador(new ObtenerCondicionesDeProveedor({ unidadDeTrabajo, condiciones })),
+  const lectura = rutasDeCondiciones(
+    new CondicionesControlador(
+      new ObtenerCondicionesDeProveedor({ unidadDeTrabajo, condiciones, plazo: new PlazoPorOmisionEnConfiguracion() }),
+    ),
   );
+  const excel = excelDePlazos({ unidadDeTrabajo, guardar });
+  return async (app) => {
+    await app.register(lectura);
+    await app.register(excel);
+  };
 }

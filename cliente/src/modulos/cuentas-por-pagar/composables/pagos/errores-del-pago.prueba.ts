@@ -36,7 +36,25 @@ describe('errores antes de enviar', () => {
   });
 
   it('un monto mayor que el saldo dice cuánto se debe', () => {
-    expect(errores({ montos: { a: '1000.01' } })['monto.a']).toMatch(/solo debe .*1,000\.00/);
+    expect(errores({ montos: { a: '1000.01' } })['monto.a']).toMatch(/solo tiene .*1,000\.00 disponible/);
+  });
+
+  it('con parte comprometida solo se puede pagar lo disponible', () => {
+    const comprometido = cargoDeEjemplo('a', { saldo: '1000.00', comprometido: '300.00', disponible: '700.00' });
+    const mensaje = erroresDelPago(edicionDeEjemplo({ montos: { a: '700.01' } }), {
+      datos: datosDeEjemplo([comprometido]),
+      notas: [],
+      hoy,
+    })['monto.a'];
+    expect(mensaje).toMatch(/solo tiene .*700\.00 disponible/);
+    expect(mensaje).toMatch(/300\.00 ya está comprometido/);
+    expect(
+      erroresDelPago(edicionDeEjemplo({ montos: { a: '700.00' } }), {
+        datos: datosDeEjemplo([comprometido]),
+        notas: [],
+        hoy,
+      })['monto.a'],
+    ).toBeUndefined();
   });
 
   it('el cheque pide chequera y la nota de débito pide cuenta', () => {

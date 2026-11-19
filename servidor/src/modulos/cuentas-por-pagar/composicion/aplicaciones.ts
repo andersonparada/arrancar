@@ -30,7 +30,11 @@ function casosDeUso(): CasosDeUsoDeAplicaciones {
   };
   const documentos = new RepositorioDeDocumentosDrizzle(aplicaciones);
   return {
-    listarCargos: new ListarCargosParaAplicar({ ...comunes, umbral: new UmbralDeBancarizacionEnConfiguracion() }),
+    listarCargos: new ListarCargosParaAplicar({
+      ...comunes,
+      umbral: new UmbralDeBancarizacionEnConfiguracion(),
+      reloj,
+    }),
     aplicar: new AplicarNota({ ...comunes, documentos, aplicaciones, reloj }),
     quitar: new QuitarAplicacion({ ...comunes, documentos, aplicaciones, auditoria }),
   };

@@ -1,4 +1,5 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
+import { intercambioDe } from '@/modulos/core/servicios/intercambio';
 
 export type TipoTercero = 'individual' | 'juridica';
 export type ClaseCliente = 'directo' | 'intermediario' | 'empresa' | 'subasta';
@@ -145,6 +146,19 @@ export type SeccionesDelFormulario = Record<string, unknown>;
 
 export class ApiTerceros {
   constructor(private readonly http: ClienteHttp) {}
+
+  /** Exportar e importar en Excel los clientes, los proveedores y las categorías de proveedor. */
+  get intercambioDeClientes() {
+    return intercambioDe(this.http, '/terceros/clientes');
+  }
+
+  get intercambioDeProveedores() {
+    return intercambioDe(this.http, '/terceros/proveedores');
+  }
+
+  get intercambioDeCategorias() {
+    return intercambioDe(this.http, '/proveedores/categorias');
+  }
 
   listar(filtros: FiltrosTerceros = {}) {
     return this.http.obtener<TerceroEnListado[]>('/terceros', filtros);

@@ -15,7 +15,7 @@ const codigoGeografico = z
   .nullish()
   .transform((codigo) => codigo || null);
 
-const idOpcional = z
+export const idOpcional = z
   .uuid()
   .nullish()
   .transform((id) => id || null);
@@ -23,7 +23,7 @@ const idOpcional = z
 /** En la URL todo llega como texto: solo "true" y "false" son válidos. */
 const booleanoDeConsulta = z.enum(['true', 'false']).transform((texto) => texto === 'true');
 
-const camposDeTercero = z.object({
+export const camposDeTercero = z.object({
   tipo: z.enum(['individual', 'juridica']),
   nombres: textoOpcional(80),
   apellidos: textoOpcional(80),
@@ -44,10 +44,10 @@ const camposDeTercero = z.object({
 });
 
 /** Una persona necesita nombres; una empresa, razón social o nombre comercial. */
-const tieneNombre = (datos: z.infer<typeof camposDeTercero>) =>
+export const tieneNombre = (datos: z.infer<typeof camposDeTercero>) =>
   datos.tipo === 'individual' ? !!datos.nombres : !!(datos.razonSocial || datos.nombreComercial);
 
-const FALTA_EL_NOMBRE = { message: 'Falta el nombre del tercero.', path: ['nombres'] };
+export const FALTA_EL_NOMBRE = { message: 'Falta el nombre del tercero.', path: ['nombres'] };
 
 export const esquemaTercero = camposDeTercero.refine(tieneNombre, FALTA_EL_NOMBRE);
 

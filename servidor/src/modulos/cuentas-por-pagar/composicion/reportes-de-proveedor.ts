@@ -61,6 +61,7 @@ function intercambioDe<Fila extends object, Filtro>(
     columnas,
     validar: () => ({ errores: [] }),
     listar: (operador, filtro) => listar(operador, conFiltro(filtro)),
+    soloExportar: true,
     crear: noSeImporta,
   });
 }

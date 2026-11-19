@@ -4,6 +4,10 @@ import type { ContextoEmpresa } from '../../compartido/aplicacion/contexto-empre
 import { RecursoDuplicado } from '../../compartido/aplicacion/errores.js';
 import type { UnidadDeTrabajo } from '../../compartido/aplicacion/unidad-de-trabajo.js';
 import { operadorDePrueba } from '../../compartido/pruebas/dobles-compartidos.js';
+import {
+  ConsultaFueraDeUnidadDeTrabajo,
+  EmpresaNoEsNueva,
+} from '../../compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { validadorDeZod } from '../http/rutas-de-intercambio.js';
 import { LibroDeExcelJs } from '../infraestructura/libro-de-excel.exceljs.js';
 import type { Columna } from './columnas.js';
@@ -38,16 +42,29 @@ const COLUMNAS: Columna[] = [
 
 /** Una unidad de trabajo que deshace lo guardado si el trabajo falla, como una transacción. */
 class UnidadQueDeshace implements UnidadDeTrabajo {
+  private abiertas = 0;
+  private readonly empresasNuevas = new Set<string>();
+
   constructor(private readonly guardados: Animal[]) {}
 
   async ejecutar<Resultado>(_contexto: ContextoEmpresa, trabajo: () => Promise<Resultado>): Promise<Resultado> {
     const antes = [...this.guardados];
+    this.abiertas++;
     try {
       return await trabajo();
     } catch (error) {
       this.guardados.splice(0, this.guardados.length, ...antes);
       throw error;
+    } finally {
+      this.abiertas--;
     }
+  }
+
+  ejecutarEnEmpresaNueva<Resultado>(empresaId: string, trabajo: () => Promise<Resultado>): Promise<Resultado> {
+    if (this.abiertas === 0) throw new ConsultaFueraDeUnidadDeTrabajo();
+    if (this.empresasNuevas.has(empresaId)) throw new EmpresaNoEsNueva();
+    this.empresasNuevas.add(empresaId);
+    return trabajo();
   }
 
   async aislar<Resultado>(trabajo: () => Promise<Resultado>): Promise<Resultado> {

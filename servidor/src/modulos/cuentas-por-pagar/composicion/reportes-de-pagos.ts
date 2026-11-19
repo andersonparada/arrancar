@@ -49,7 +49,7 @@ function conFiltro<Filtro>(filtro: Filtro | undefined): Filtro {
 }
 
 /** El Excel de un reporte con el mismo filtro que la pantalla. */
-function intercambioDe<Fila extends object, Filtro>(
+export function intercambioDe<Fila extends object, Filtro>(
   nombre: string,
   columnas: Columna[],
   listar: (operador: Operador, filtro: Filtro) => Promise<Fila[]>,
@@ -59,6 +59,7 @@ function intercambioDe<Fila extends object, Filtro>(
     columnas,
     validar: () => ({ errores: [] }),
     listar: (operador, filtro) => listar(operador, conFiltro(filtro)),
+    soloExportar: true,
     crear: noSeImporta,
   });
 }

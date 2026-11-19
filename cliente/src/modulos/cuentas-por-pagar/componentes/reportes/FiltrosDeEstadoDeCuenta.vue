@@ -32,7 +32,12 @@ const opciones = computed(() => [
       <CampoInterruptor
         v-model="filtros.mostrarAnulados"
         etiqueta="Mostrar anulados dentro del rango"
-        descripcion="Salen en gris y no suman al saldo."
+        :descripcion="
+          filtros.presentacion === 'para_el_proveedor'
+            ? 'No disponible en el estado que se manda al proveedor.'
+            : 'Salen en gris y no suman al saldo.'
+        "
+        :deshabilitado="filtros.presentacion === 'para_el_proveedor'"
       />
       <BotonBase v-if="cantidad > 0" variante="fantasma" pequeno :icono="FilterX" @click="$emit('quitar')">
         Quitar filtros

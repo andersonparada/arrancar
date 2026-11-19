@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { hayQpdf } from '../modulos/core/archivos/pruebas/soporte-de-qpdf.js';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { clonarDocumento } from './soporte/clonar-documentos.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
@@ -83,7 +84,7 @@ describe('PDF del libro con folios', () => {
     expect((await soloVer.post(`${RUTA}/emisiones`, { periodo: PERIODO })).estado).toBe(403);
   });
 
-  it('la primera emisión gasta los folios de sus hojas y guarda el PDF', async () => {
+  it.skipIf(!hayQpdf)('la primera emisión gasta los folios de sus hojas y guarda el PDF', async () => {
     const respuesta = await emisor.post(`${RUTA}/emisiones`, { periodo: PERIODO });
 
     expect(respuesta.estado, JSON.stringify(respuesta.cuerpo)).toBe(201);
@@ -95,7 +96,7 @@ describe('PDF del libro con folios', () => {
     expect(guardados).toEqual([{ paginas: 2 }]);
   });
 
-  it('la copia es el mismo PDF y no gasta folios', async () => {
+  it.skipIf(!hayQpdf)('la copia es el mismo PDF y no gasta folios', async () => {
     const emisiones = (await soloVer.get(`${RUTA}/emisiones?periodo=${PERIODO}`)).cuerpo;
     const url = `${RUTA}/emisiones/${emisiones.emisiones[0].id}/pdf`;
 
@@ -108,7 +109,7 @@ describe('PDF del libro con folios', () => {
     expect(await ultimoFolioGuardado()).toBe(2);
   });
 
-  it('emitir de nuevo sin cambios responde 409 y ofrece la copia', async () => {
+  it.skipIf(!hayQpdf)('emitir de nuevo sin cambios responde 409 y ofrece la copia', async () => {
     const respuesta = await emisor.post(`${RUTA}/emisiones`, { periodo: PERIODO });
 
     expect(respuesta.estado).toBe(409);
@@ -117,7 +118,7 @@ describe('PDF del libro con folios', () => {
     expect(await ultimoFolioGuardado()).toBe(2);
   });
 
-  it('el borrador no guarda nada ni gasta folios', async () => {
+  it.skipIf(!hayQpdf)('el borrador no guarda nada ni gasta folios', async () => {
     const respuesta = await soloVer.get(`${RUTA}/pdf?periodo=${PERIODO}`);
 
     expect(respuesta.estado).toBe(200);
@@ -126,7 +127,7 @@ describe('PDF del libro con folios', () => {
     expect((await soloVer.get(`${RUTA}/emisiones`)).cuerpo.emisiones).toHaveLength(1);
   });
 
-  it('con datos nuevos exige el motivo y sigue la numeración', async () => {
+  it.skipIf(!hayQpdf)('con datos nuevos exige el motivo y sigue la numeración', async () => {
     await registrar();
 
     const sinMotivo = await emisor.post(`${RUTA}/emisiones`, { periodo: PERIODO });
@@ -143,7 +144,7 @@ describe('PDF del libro con folios', () => {
 });
 
 describe('corregir el último folio', () => {
-  it('no baja de lo ya emitido (422) y exige libro.emitir', async () => {
+  it.skipIf(!hayQpdf)('no baja de lo ya emitido (422) y exige libro.emitir', async () => {
     const cuerpo = { ultimoFolio: 3, motivo: 'Prueba' };
 
     expect((await soloVer.put(`${RUTA}/foliacion`, cuerpo)).estado).toBe(403);
@@ -152,7 +153,7 @@ describe('corregir el último folio', () => {
     expect(respuesta.cuerpo.error.codigo).toBe('folio_menor_que_lo_emitido');
   });
 
-  it('sube el último folio, deja la auditoría y la siguiente emisión sigue desde ahí', async () => {
+  it.skipIf(!hayQpdf)('sube el último folio, deja la auditoría y la siguiente emisión sigue desde ahí', async () => {
     const respuesta = await emisor.put(`${RUTA}/foliacion`, { ultimoFolio: 50, motivo: 'Venía de hojas usadas' });
 
     expect(respuesta.cuerpo).toEqual({ ultimoFolio: 50 });
@@ -165,7 +166,7 @@ describe('corregir el último folio', () => {
     expect(siguiente.cuerpo).toMatchObject({ folioDesde: 51, folioHasta: 52 });
   });
 
-  it('dos emisiones a la vez de períodos distintos usan folios seguidos, sin repetir', async () => {
+  it.skipIf(!hayQpdf)('dos emisiones a la vez de períodos distintos usan folios seguidos, sin repetir', async () => {
     const otro = await usuario('Otro emisor', ['libro-de-compras.libro.emitir']);
     await registrar({ fechaEmision: primerDiaDelMes(-2), fechaRecepcion: primerDiaDelMes(-2) });
 

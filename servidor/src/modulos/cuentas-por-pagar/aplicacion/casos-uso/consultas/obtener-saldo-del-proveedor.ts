@@ -2,10 +2,26 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { SaldoDelProveedorDto } from '../../dto/documento-por-pagar.dto.js';
-import type { ConsultasDeSaldos } from '../../puertos/puertos-de-consultas.js';
+import type { ConsultasDeSaldos, TotalesDelProveedor } from '../../puertos/puertos-de-consultas.js';
 import type { DependenciasDeConsultas } from './dependencias-de-consultas.js';
 
 type Dependencias = Omit<DependenciasDeConsultas, 'consultas'> & { saldos: ConsultasDeSaldos };
+
+/** La deuda del proveedor con lo vencido, lo comprometido con posfechados y lo disponible. */
+function cifrasDeLaDeuda(totales: TotalesDelProveedor) {
+  return {
+    porPagar: deCentavos(totales.porPagarCentavos),
+    vencido: deCentavos(totales.vencidoCentavos),
+    comprometido: deCentavos(totales.comprometidoCentavos),
+    disponible: deCentavos(totales.porPagarCentavos - totales.comprometidoCentavos),
+    vencidoComprometido: deCentavos(totales.vencidoComprometidoCentavos),
+    posfechados: totales.posfechados.map(({ montoCentavos, ...cheque }) => ({
+      ...cheque,
+      monto: deCentavos(montoCentavos),
+    })),
+    cargosConSaldo: totales.cargosConSaldo,
+  };
+}
 
 /**
  * Lo que la empresa activa le debe a un proveedor. Los saldos deudores (el saldo libre de las notas de crédito, que el
@@ -26,9 +42,7 @@ export class ObtenerSaldoDelProveedor {
       return {
         proveedorId,
         proveedorNombre: totales.proveedorNombre,
-        porPagar: deCentavos(totales.porPagarCentavos),
-        vencido: deCentavos(totales.vencidoCentavos),
-        cargosConSaldo: totales.cargosConSaldo,
+        ...cifrasDeLaDeuda(totales),
         saldosDeudores: deCentavos(aFavor),
         notasConSaldoLibre: notas.map(({ saldoLibreCentavos, ...nota }) => ({
           ...nota,

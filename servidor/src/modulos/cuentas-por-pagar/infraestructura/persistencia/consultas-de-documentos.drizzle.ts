@@ -14,7 +14,9 @@ import type { DocumentoPorPagar, FormaDeAplicacion } from '../../dominio/documen
 import { facturaAnteriorDeLaNota, notasLibresDelSistemaAnterior } from './consultas-del-sistema-anterior.drizzle.js';
 import { ajustesConDatos } from './consultas-de-ajustes.drizzle.js';
 import { aplicacionesDeNotas } from './aplicaciones-de-notas.tablas.js';
-import { aFilaDeDocumento, ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
+import { ConsultaBaseDeDocumentos } from './consulta-base-de-documentos.js';
+import { aFilaDeDocumento } from './fila-de-documento.mapeador.js';
+import { condicionDeEstadoDePago } from './filtro-de-estado-de-pago.js';
 import { documentos } from './documentos.tablas.js';
 import { lineasDeReintegroDeLaNota, lineasDePagoDelCargo } from './consultas-de-lineas-de-pago.js';
 
@@ -48,17 +50,18 @@ function condicionesDe(filtro: FiltroDeDocumentosPorPagar, hoy: string, base: Co
 function condicionesDeSaldo(filtro: FiltroDeDocumentosPorPagar, hoy: string, base: ConsultaBaseDeDocumentos) {
   return and(
     filtro.soloVencidos
-      ? and(ne(documentos.estado, 'anulado'), lt(documentos.vencimiento, hoy), sql`${base.saldoDelCargo()} > 0`)
+      ? and(ne(documentos.estado, 'anulado'), lt(documentos.vencimiento, hoy), sql`${base.deudaDelCargo()} > 0`)
       : undefined,
     filtro.conSaldo ? conSaldo(base) : undefined,
     filtro.sinContrasena ? isNull(base.contrasenaVigente.id) : undefined,
+    filtro.estadoDePago ? condicionDeEstadoDePago(filtro.estadoDePago, base) : undefined,
   );
 }
 
 /** Un cargo con saldo por pagar, o una nota de crédito vigente con saldo libre. */
 function conSaldo(base: ConsultaBaseDeDocumentos): SQL {
   return sql`(${documentos.estado} <> 'anulado' and case when ${documentos.tipo} = 'nota_de_credito'
-    then ${base.saldoLibreDeLaNota()} > 0 else ${base.saldoDelCargo()} > 0 end)`;
+    then ${base.saldoLibreDeLaNota()} > 0 else ${base.deudaDelCargo()} > 0 end)`;
 }
 
 type FilaDeNota = {
@@ -121,7 +124,7 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
     { pagina, limite }: PaginacionDeDocumentos,
     hoy: string,
   ): Promise<Pagina> {
-    const base = new ConsultaBaseDeDocumentos();
+    const base = new ConsultaBaseDeDocumentos(hoy);
     const filas = await base
       .seleccionar()
       .where(condicionesDe(filtro, hoy, base))
@@ -200,7 +203,7 @@ export class ConsultasDeDocumentosDrizzle implements ConsultasDeDocumentos {
           eq(documentos.proveedorId, proveedorId),
           ne(documentos.estado, 'anulado'),
           ne(documentos.tipo, 'nota_de_credito'),
-          sql`${base.saldoDelCargo()} > 0`,
+          sql`${base.disponibleDelCargo()} > 0`,
         ),
       );
     return filas.map(aFilaDeDocumento);

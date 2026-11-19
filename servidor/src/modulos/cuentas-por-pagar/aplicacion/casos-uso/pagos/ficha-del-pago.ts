@@ -54,7 +54,7 @@ export class ArmadorDeLaFichaDelPago {
 
   /** @throws RecursoNoEncontrado si el pago no existe o es de otra empresa. */
   async armarDe(operador: Operador, pagoId: string): Promise<FichaDePagoDto> {
-    const { pagos, retenciones, extras, topeDeDiferencia, movimientos } = this.dependencias;
+    const { pagos, retenciones, extras, topeDeDiferencia, movimientos, reloj } = this.dependencias;
     const pago = await pagos.buscar(pagoId);
     const complemento = await extras.extrasDe(pagoId);
     if (!pago || !complemento) throw new RecursoNoEncontrado('El pago');
@@ -65,6 +65,7 @@ export class ArmadorDeLaFichaDelPago {
       lineas,
       movimiento: ficha && { ...ficha, id: pago.movimientoId! },
       extras: complemento,
+      hoy: await reloj.hoy(operador),
       retenciones: await retenciones.deCargos(pago.lineas.map(({ cargoId }) => cargoId)),
       topeDeDiferenciaCentavos: await topeDeDiferencia.centavos(operador),
       ...(await this.loQueSePuede(pago, ficha?.conciliado ?? false)),

@@ -1730,3 +1730,13 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
   `saldo_inicial`, y lo contaban como apertura): el inverso sale en «Otros movimientos sin actividad» y el control cuadra.
 - **DTO**: `MovimientoDto`, `ChequeDto`, `ChequeListadoDto` y `ChequeEnCirculacionDto` traen `parteDeApertura`; `OrigenDeCheque` suma `'apertura'` (el cheque en
   circulación de la carga inicial; el posfechado sigue «suelto» con su `parteDeApertura`); `PartidaDeAperturaDto.puedeAnular` ya es real.
+
+## Revisión al cerrar la carga inicial (EM-2.6)
+
+Bancos responde la pregunta `empresas.revisar_cierre_de_carga` en `composicion/saldos-iniciales.ts` con un adaptador
+(`ResponderRevisionDeCierreDeCarga`) sobre `ListarSaldosIniciales`; el contrato está en `core/contratos/empresas.contratos.ts`.
+Los hallazgos de BS-2 pasan tal cual (`no_cuadra` y `sin_dato_de_libros` piden motivo; `sin_evidencia`, `saldo_global` y
+`sobregiro_sin_permiso` avisan). Se suma `sin_saldos_iniciales` (aviso) si hay cuentas activas y ninguna con saldo. Cifras: cuentas con
+saldo inicial, Total bancos y Total sobregiros (sin compensar) y, por cuenta con saldo, saldo en libros al corte, saldo según libros
+anteriores y diferencia (solo los totales si hay más de 60 cuentas, por el tope de 200 cifras). Sin cuentas activas ni saldos responde `null`.
+`SaldoInicialResumenDto` ganó `activa` para contar solo las activas. Sin migración.

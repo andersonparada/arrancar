@@ -2,7 +2,7 @@ import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-
 import type {
   Bandeja,
   CargosParaAplicar,
-  CondicionesDeProveedor,
+  CondicionesConPlazoPorOmision,
   ConsultaDeDocumentos,
   DatosDeAjuste,
   DatosDeAnulacion,
@@ -25,7 +25,7 @@ export class ApiCuentasPorPagar {
   constructor(private readonly http: ClienteHttp) {}
 
   obtenerCondiciones(proveedorId: string) {
-    return this.http.obtener<CondicionesDeProveedor>(`${RUTA}/proveedores/${proveedorId}/condiciones`);
+    return this.http.obtener<CondicionesConPlazoPorOmision>(`${RUTA}/proveedores/${proveedorId}/condiciones`);
   }
 
   obtenerSaldoDelProveedor(proveedorId: string) {

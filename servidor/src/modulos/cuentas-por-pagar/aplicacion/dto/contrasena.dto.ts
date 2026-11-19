@@ -17,12 +17,16 @@ export interface CargoDeContrasenaDto {
   retenciones: string;
   /** Lo que las notas y los pagos anteriores al inicio rebajaron del neto. */
   rebajado: string;
-  /** Lo que falta por pagar de este cargo. */
+  /** La deuda de este cargo: lo que falta por pagar, también lo comprometido con cheques posfechados. */
   saldo: string;
+  /** Lo que aún se puede pagar: `saldo` menos `comprometido`. */
+  disponible: string;
   /** Lo que los pagos vigentes entregaron con fecha de hoy o anterior. */
   pagado: string;
-  /** Lo de pagos vigentes con fecha posterior a hoy (cheques posfechados); el saldo ya lo resta. */
+  /** Lo de pagos vigentes con fecha posterior a hoy (cheques posfechados): parte de la deuda cubierta de antemano. */
   comprometido: string;
+  /** La fecha del cheque posfechado más lejano; `null` si no hay. */
+  comprometidoHasta: string | null;
   /** Solo un saldo inicial: retenciones que la empresa todavía no practicó (informativo). */
   retencionesPorPracticar: string | null;
   /** El total llega al umbral de bancarización. */
@@ -45,7 +49,10 @@ export interface TotalesDeContrasenaDto {
   rebajado: string;
   pagado: string;
   comprometido: string;
+  /** La deuda: lo que falta por pagar, también lo comprometido. */
   saldo: string;
+  /** Lo que aún se puede pagar: `saldo` menos `comprometido`. */
+  disponible: string;
 }
 
 export interface AnulacionDeContrasenaDto {
@@ -95,7 +102,10 @@ export interface ContrasenaResumenDto {
   proveedorNombre: string;
   /** Cuántos documentos lleva (cargos y notas). */
   documentos: number;
+  /** La deuda de sus cargos (también lo comprometido con posfechados). */
   saldo: string;
+  /** Lo que aún se puede pagar de sus cargos. */
+  disponible: string;
   estado: EstadoDeContrasena;
   /** Vigente, con saldo y con la fecha prometida de pago ya pasada. */
   pagoVencido: boolean;

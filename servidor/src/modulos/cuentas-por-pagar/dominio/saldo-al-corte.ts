@@ -1,5 +1,4 @@
 import { diasEntre, ultimoDiaDelMes } from './fechas-de-corte.js';
-import type { EstadoDePago } from './pagos.js';
 import type { OrigenDeDocumento } from './tipos-de-documento.js';
 
 /**
@@ -104,11 +103,3 @@ export function porcentajeDelTramo(tramoCentavos: number, totalDeCargosCentavos:
   const centesimas = Math.round((tramoCentavos * 10_000) / totalDeCargosCentavos);
   return `${Math.trunc(centesimas / 100)}.${String(Math.abs(centesimas % 100)).padStart(2, '0')}`;
 }
-
-/** Los estados de pago por los que se puede filtrar (R2); se calculan con la misma regla que `estadoDePagoDe`. */
-export const ESTADOS_DE_PAGO = [
-  'pendiente',
-  'en_parte',
-  'comprometido',
-  'pagado',
-] as const satisfies readonly EstadoDePago[];

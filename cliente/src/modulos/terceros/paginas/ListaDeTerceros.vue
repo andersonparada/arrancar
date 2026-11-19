@@ -6,10 +6,12 @@ import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
+import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/AccionesDeIntercambio.vue';
+import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import FiltrosDelListado from '../componentes/FiltrosDelListado.vue';
 import TarjetaDeTercero from '../componentes/TarjetaDeTercero.vue';
 import { usarListadoDeTerceros } from '../composables/usar-listado-de-terceros';
-import { PERMISOS_DEL_PAPEL, RUTAS_DEL_PAPEL } from '../papeles';
+import { PERMISOS_DE_EXCEL, PERMISOS_DEL_PAPEL, RUTAS_DEL_PAPEL } from '../papeles';
 import type { PapelTercero, TerceroEnListado } from '../servicios/terceros.api';
 import { CLASES_DE_CLIENTE, VENTANA_DEL_PAPEL } from '../textos';
 
@@ -18,7 +20,7 @@ const props = defineProps<{ papel: PapelTercero }>();
 
 const router = useRouter();
 const sesion = usarSesion();
-const { terceros, cargando, filtros } = usarListadoDeTerceros(props.papel);
+const { terceros, cargando, filtros, intercambio } = usarListadoDeTerceros(props.papel);
 const ventana = VENTANA_DEL_PAPEL[props.papel];
 const rutas = RUTAS_DEL_PAPEL[props.papel];
 const icono = props.papel === 'cliente' ? ShoppingCart : Briefcase;
@@ -39,6 +41,11 @@ function detalle({ cliente, proveedor }: TerceroEnListado): string {
 <template>
   <div>
     <EncabezadoPagina :titulo="ventana.titulo" :descripcion="ventana.descripcion">
+      <AccionesDeIntercambio
+        :permisos="PERMISOS_DE_EXCEL[papel]"
+        @exportar="intercambio.exportar"
+        @importar="intercambio.abrir"
+      />
       <BotonBase v-if="puedeRegistrar" :icono="Plus" @click="router.push({ name: `${rutas}.nuevo` })">
         {{ ventana.nuevo }}
       </BotonBase>
@@ -62,5 +69,13 @@ function detalle({ cliente, proveedor }: TerceroEnListado): string {
         />
       </li>
     </ul>
+    <VentanaDeImportacion
+      :estado="intercambio.estado"
+      :titulo="`Importar ${ventana.titulo.toLowerCase()}`"
+      @elegir="intercambio.elegir"
+      @plantilla="intercambio.bajarPlantilla"
+      @importar="intercambio.importar"
+      @cerrar="intercambio.cerrar"
+    />
   </div>
 </template>

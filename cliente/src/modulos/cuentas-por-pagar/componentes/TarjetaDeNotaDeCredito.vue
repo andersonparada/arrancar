@@ -9,8 +9,12 @@ import { textoDeEstado, tituloDeDocumento, tonoDeEstado } from '../composables/d
 import { detallesDeNota } from '../composables/notas-de-credito';
 import type { DocumentoPorPagar } from '../servicios/tipos';
 
-/** Una nota de crédito de la lista: lo que se aplicó, lo que se dio de baja y lo que queda libre. Lleva a su ficha. */
-const props = defineProps<{ nota: DocumentoPorPagar }>();
+/**
+ * Una nota de crédito de la lista: lo que se aplicó, lo que se dio de baja y lo que queda libre. Lleva a su ficha. La
+ * casilla (para registrar un reintegro de varias notas) va aparte del enlace, para que marcar no abra la ficha.
+ */
+const props = defineProps<{ nota: DocumentoPorPagar; puedeMarcar: boolean; marcado: boolean }>();
+defineEmits<{ alternar: [] }>();
 const destino = computed(() => ({
   name: 'cuentas-por-pagar.documentos.ficha',
   params: { documentoId: props.nota.id },
@@ -18,10 +22,21 @@ const destino = computed(() => ({
 </script>
 
 <template>
-  <TarjetaBase class="h-full" :class="nota.estado === 'anulado' ? 'opacity-80' : ''">
+  <TarjetaBase
+    class="flex h-full items-start gap-3"
+    :class="[marcado ? 'ring-2 ring-campo-500' : '', nota.estado === 'anulado' ? 'opacity-80' : '']"
+  >
+    <input
+      v-if="puedeMarcar"
+      type="checkbox"
+      class="mt-1 size-5 shrink-0 rounded border-tierra-300 text-campo-600 focus:ring-campo-500"
+      :checked="marcado"
+      :aria-label="`Escoger ${tituloDeDocumento(nota)} para registrar un reintegro`"
+      @change="$emit('alternar')"
+    />
     <RouterLink
       :to="destino"
-      class="flex h-full min-w-0 flex-col gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-campo-500 focus-visible:outline-none"
+      class="flex h-full min-w-0 flex-1 flex-col gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-campo-500 focus-visible:outline-none"
     >
       <span class="flex items-start justify-between gap-2">
         <span class="min-w-0">

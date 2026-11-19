@@ -182,9 +182,13 @@ describe('el cheque posfechado se anula como cualquier cheque', () => {
     const conceptoId = await conceptoGeneral(aparte.propietario);
     const cargado = await agregarPartida(aparte.propietario, cuentaId, partida('cheque_posfechado', { conceptoId }));
     const movimientoId = cargado.cuerpo.partida.movimientoId as string;
-    expect((await aparte.propietario.post(`/api/empresas/${aparte.empresaId}/carga-inicial/cerrar`, {})).estado).toBe(
-      200,
-    );
+    expect(
+      (
+        await aparte.propietario.post(`/api/empresas/${aparte.empresaId}/carga-inicial/cerrar`, {
+          motivo: 'Sin el dato de los libros anteriores',
+        })
+      ).estado,
+    ).toBe(200);
 
     const desdeSaldos = await anularPartida(aparte.propietario, { cuentaId, movimientoId });
     const anulado = await aparte.propietario.post(

@@ -1,9 +1,10 @@
-import { and, asc, eq, ne, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, lt, ne, sql, type SQL } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
 import type { ConsultasDeCuadre, SumasDeProveedorEnElCuadre } from '../../aplicacion/puertos/puertos-de-cuadre.js';
+import type { DocumentosDelLibroAnteriores } from '../../dominio/revision-de-cierre.js';
 import { notasPosterioresDe, tieneNotasPosteriores } from '../../dominio/notas-posteriores.js';
 import { notasLibresDelSistemaAnterior } from './consultas-del-sistema-anterior.drizzle.js';
 import { documentos } from './documentos.tablas.js';
@@ -20,6 +21,7 @@ export class ConsultasDeCuadreDrizzle implements ConsultasDeCuadre {
       proveedorNombre: fila.proveedorNombre,
       proveedorNit: fila.proveedorNit,
       documentos: fila.documentos,
+      documentosConRetenciones: fila.documentosConRetenciones,
       cargosCentavos: aCentavos(fila.cargos),
       notasAFavorCentavos: aCentavos(fila.notasAFavor),
       retencionesPorPracticarCentavos: aCentavos(fila.retenciones),
@@ -46,6 +48,27 @@ export class ConsultasDeCuadreDrizzle implements ConsultasDeCuadre {
     return cuantos;
   }
 
+  async documentosDelLibroAnterioresA(fechaDeInicio: string): Promise<DocumentosDelLibroAnteriores> {
+    const [fila] = await transaccionEnCurso()
+      .select({
+        cantidad: sql<number>`count(*)`.mapWith(Number),
+        cargos: sql<string>`coalesce(sum(${documentos.total}) filter (where ${documentos.tipo} <> 'nota_de_credito'), 0)`,
+        notas: sql<string>`coalesce(sum(${documentos.total}) filter (where ${documentos.tipo} = 'nota_de_credito'), 0)`,
+      })
+      .from(documentos)
+      .where(
+        and(
+          eq(documentos.origen, 'libro_de_compras'),
+          ne(documentos.estado, 'anulado'),
+          lt(documentos.fechaEmision, fechaDeInicio),
+        ),
+      );
+    return {
+      cantidad: fila?.cantidad ?? 0,
+      montoCentavos: aCentavos(fila?.cargos ?? '0') - aCentavos(fila?.notas ?? '0'),
+    };
+  }
+
   private sumasEnTexto() {
     return transaccionEnCurso()
       .select({
@@ -53,6 +76,8 @@ export class ConsultasDeCuadreDrizzle implements ConsultasDeCuadre {
         proveedorNombre: terceros.nombreMostrar,
         proveedorNit: terceros.nit,
         documentos: sql<number>`count(*)`.mapWith(Number),
+        documentosConRetenciones:
+          sql<number>`count(*) filter (where ${documentos.retencionesPorPracticar} > 0)`.mapWith(Number),
         cargos: saldosDonde(sql`${documentos.tipo} <> 'nota_de_credito'`),
         notasAFavor: saldosDonde(sql`${documentos.tipo} = 'nota_de_credito'`),
         retenciones: sql<string>`coalesce(sum(${documentos.retencionesPorPracticar}), 0)`,

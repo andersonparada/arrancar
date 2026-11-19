@@ -31,3 +31,14 @@ export const volverALaFicha = (papel: PapelTercero, terceroId: string) => ({
   texto: 'Volver a la ficha',
   ruta: { name: `${RUTAS_DEL_PAPEL[papel]}.ficha`, params: { terceroId } },
 });
+
+/** Los permisos de Excel de cada papel (los de `terceros.*` que declara el servidor). */
+export const PERMISOS_DE_EXCEL: Record<PapelTercero, { importar: string; exportar: string }> = {
+  cliente: { importar: 'terceros.clientes.importar', exportar: 'terceros.clientes.exportar' },
+  proveedor: { importar: 'terceros.proveedores.importar', exportar: 'terceros.proveedores.exportar' },
+};
+
+export const PERMISOS_DE_EXCEL_DE_CATEGORIAS = {
+  importar: 'terceros.categorias-de-proveedor.importar',
+  exportar: 'terceros.categorias-de-proveedor.exportar',
+};

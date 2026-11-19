@@ -8,7 +8,13 @@ import {
 } from '../../../dominio/aplicacion-manual.js';
 import type { CargoParaAplicarDto, CargosParaAplicarDto } from '../../dto/cargos-para-aplicar.dto.js';
 import type { FilaDeDocumento } from '../../puertos/puertos-de-consultas.js';
-import { filaExistente, saldoDeLaFila, type DependenciasParaListarCargos } from './dependencias-de-aplicaciones.js';
+import { posfechadosDe } from '../../../dominio/pagos.js';
+import {
+  filaExistente,
+  saldoDeLaFila,
+  saldosDeLaFila,
+  type DependenciasParaListarCargos,
+} from './dependencias-de-aplicaciones.js';
 
 type CargoConFila = {
   id: string;
@@ -32,19 +38,20 @@ export class ListarCargosParaAplicar {
    * @throws NoEsNotaConSaldo si no es una nota de crédito vigente.
    */
   ejecutar(operador: Operador, notaId: string): Promise<CargosParaAplicarDto> {
-    const { unidadDeTrabajo, consultas, umbral } = this.dependencias;
+    const { unidadDeTrabajo, consultas, umbral, reloj } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const nota = await filaExistente(consultas, notaId);
       exigirNotaQueSeAplica(nota.documento);
       const saldoLibre = saldoDeLaFila(nota);
       const umbralCentavos = await umbral.centavos(operador);
+      const hoy = await reloj.hoy(operador);
       const cargos = (await consultas.cargosConSaldoDe(nota.documento.proveedorId)).map(comoCargoOrdenable);
       return {
         saldoLibre: deCentavos(Math.max(saldoLibre, 0)),
         umbralDeBancarizacion: deCentavos(umbralCentavos),
         fechaMinima: await this.fechaMinima(operador, nota),
         cargos: proponerReparto(saldoLibre, cargos).map(({ cargo, propuestoCentavos }) =>
-          dtoDeCargo(cargo.fila, propuestoCentavos, umbralCentavos),
+          dtoDeCargo({ fila: cargo.fila, propuestoCentavos, umbralCentavos, hoy }),
         ),
       };
     });
@@ -71,7 +78,25 @@ function comoCargoOrdenable(fila: FilaDeDocumento): CargoConFila {
   };
 }
 
-function dtoDeCargo(fila: FilaDeDocumento, propuestoCentavos: number, umbralCentavos: number): CargoParaAplicarDto {
+/** La deuda, lo comprometido y lo disponible del cargo, con la fecha del cheque posfechado más lejano. */
+function montosDelCargo(fila: FilaDeDocumento, hoy: string) {
+  const saldos = saldosDeLaFila(fila, hoy);
+  return {
+    saldo: deCentavos(saldos.deudaCentavos),
+    comprometido: deCentavos(saldos.comprometidoCentavos),
+    disponible: deCentavos(saldos.disponibleCentavos),
+    comprometidoHasta: posfechadosDe(fila.pagosVigentes, hoy).comprometidoHasta,
+  };
+}
+
+/** Un cargo para aplicar: `saldo` es la deuda; lo que una nota puede rebajar (y se propone) es lo disponible. */
+function dtoDeCargo(datos: {
+  fila: FilaDeDocumento;
+  propuestoCentavos: number;
+  umbralCentavos: number;
+  hoy: string;
+}): CargoParaAplicarDto {
+  const { fila, propuestoCentavos, umbralCentavos, hoy } = datos;
   const { documento, libro } = fila;
   return {
     id: documento.id,
@@ -83,7 +108,7 @@ function dtoDeCargo(fila: FilaDeDocumento, propuestoCentavos: number, umbralCent
     vencimiento: documento.vencimiento,
     estado: documento.estado,
     total: deCentavos(documento.totalCentavos),
-    saldo: deCentavos(saldoDeLaFila(fila)),
+    ...montosDelCargo(fila, hoy),
     propuesto: deCentavos(propuestoCentavos),
     origen: documento.origen,
     sobreUmbralDeBancarizacion: superaElUmbralDeBancarizacion(documento.totalCentavos, umbralCentavos),

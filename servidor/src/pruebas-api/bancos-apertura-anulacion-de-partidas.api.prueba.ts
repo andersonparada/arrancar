@@ -153,7 +153,9 @@ describe('lo que no se anula desde aquí', () => {
     await guardarSaldo(aparte.propietario, cuentaId, '500.00');
     const cargada = await agregarPartida(aparte.propietario, cuentaId, partida('debito_en_transito'));
     const movimientoId = cargada.cuerpo.partida.movimientoId as string;
-    await aparte.propietario.post(`/api/empresas/${aparte.empresaId}/carga-inicial/cerrar`, {});
+    await aparte.propietario.post(`/api/empresas/${aparte.empresaId}/carga-inicial/cerrar`, {
+      motivo: 'Sin el dato de los libros anteriores',
+    });
 
     const anulada = await anularPartida(aparte.propietario, { cuentaId, movimientoId });
 

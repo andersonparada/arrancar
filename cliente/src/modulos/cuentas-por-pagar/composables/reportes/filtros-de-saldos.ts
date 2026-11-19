@@ -56,6 +56,15 @@ export function errorDeCorte(corte: string, fechaDeInicio: string | null): strin
   return `El corte no puede ser anterior al ${formatearFecha(primerCorte)}, el día antes de la fecha de inicio de la empresa.`;
 }
 
+/**
+ * El aviso de un corte que todavía no llega: sale lo vencido y lo que vencería a esa fecha, no lo que se debe hoy
+ * (por ejemplo, un cheque posfechado ya habría vencido). Vacío si el corte es de hoy o anterior.
+ */
+export function avisoDeCorteFuturo(corte: string, hoy: string): string | undefined {
+  if (!esFechaCompleta(corte) || corte <= hoy) return undefined;
+  return `El corte es posterior a hoy: son saldos proyectados al ${formatearFecha(corte)} (lo que seguiría pendiente y vencido a esa fecha), no lo que se debe hoy.`;
+}
+
 /** Cuántos filtros se salen de lo que trae el reporte al abrir (para ofrecer «Quitar filtros»). */
 export function cantidadDeFiltrosDeSaldos(filtros: FiltrosDeSaldos, hoy: string): number {
   const cambios = [

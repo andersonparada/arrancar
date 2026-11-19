@@ -21,6 +21,15 @@ export class DocumentoNoAceptado extends DatoInvalido {
   }
 }
 
+/** Un archivo que no se pudo leer como foto (por ejemplo, un texto con extensión `.pdf`) ni empieza como PDF. */
+export class DocumentoIlegible extends DatoInvalido {
+  readonly codigo = 'documento_ilegible';
+
+  constructor() {
+    super('El archivo no es un PDF ni una foto válidos, o está dañado. Use un PDF o una foto JPG, PNG o WebP.');
+  }
+}
+
 export class DocumentoDemasiadoGrande extends CargaDemasiadoGrande {
   readonly codigo = 'documento_demasiado_grande';
 

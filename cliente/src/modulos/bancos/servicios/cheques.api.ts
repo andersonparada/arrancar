@@ -20,6 +20,8 @@ export interface Cheque {
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** El módulo que generó el cheque (`cuentas-por-pagar`…); `null` si nació en Bancos. */
+  moduloDeOrigen: string | null;
   /** Lo calcula el servidor: si se puede anular. */
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede blanquear (emitido, con su movimiento limpio). */
@@ -53,6 +55,8 @@ export interface ChequeListado {
   anuladoEn: string | null;
   motivoDeAnulacion: string | null;
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** El módulo que generó el cheque (`cuentas-por-pagar`…); `null` si nació en Bancos. */
+  moduloDeOrigen: string | null;
   puedeAnular: boolean;
   puedeBlanquear: boolean;
 }

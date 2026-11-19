@@ -421,3 +421,9 @@ Contradicciones o huecos que quedan tras las respuestas del 2026-09-29:
 5. **Mínimo de la retención del 5 %:** investigado (mayor a Q2,500.00 por factura, art.
    49 del AG 5-2013; ver `validacion-h7-h11-retenciones.md`). Falta decidir qué pasa
    si una nota de crédito deja la factura en Q2,500.00 o menos después de retenida.
+
+## Revisión al cerrar la carga inicial (EM-2.8)
+
+Libro de compras responde `empresas.revisar_cierre_de_carga` (`composicion/revision-de-cierre.ts`) solo con el aviso `mes_partido` cuando la
+fecha de inicio no es día 1 («las compras del 1 al dd no están en el Libro de compras de Arrancar»); con día 1 responde `null`. El texto lo arma
+este módulo y no Empresas porque con el Libro apagado la frase sería falsa.

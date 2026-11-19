@@ -92,6 +92,13 @@
       "when": 1794796223469,
       "tag": "0012_cp5_indices_de_corte",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795042133285,
+      "tag": "0013_pc4_permisos_de_plazos",
+      "breakpoints": true
     }
   ]
 }

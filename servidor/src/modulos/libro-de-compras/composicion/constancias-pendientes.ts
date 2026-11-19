@@ -27,6 +27,7 @@ function excelDeConstanciasPendientes(consulta: ConsultarConstanciasPendientes) 
     columnas: columnasDeConstanciasPendientes,
     validar: () => ({ errores: [] }),
     listar: async (operador, filtro) => aFilasDeConstanciasPendientes(await consulta.ejecutar(operador, filtro)),
+    soloExportar: true,
     crear: noSeImporta,
   });
 }

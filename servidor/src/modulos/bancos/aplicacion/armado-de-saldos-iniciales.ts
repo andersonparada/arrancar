@@ -58,6 +58,10 @@ const formaDe = (cuenta: CuentaConSuCabecera, partidas: PartidaDeLaBase[]) => {
     : ('con_partidas' as const);
 };
 
+/** Una cuenta con partidas y sin saldo del banco cargado lo tiene en cero. */
+const saldoDelBanco = (saldo: string | null, forma: ReturnType<typeof formaDe>) =>
+  saldo ?? (forma === 'con_partidas' ? '0.00' : null);
+
 /** El cuadre de una cuenta con las partidas que tiene (las de todas las partes, el posfechado incluido). */
 export function resumenDeLaCuenta(
   cuenta: CuentaConSuCabecera,
@@ -66,22 +70,22 @@ export function resumenDeLaCuenta(
 ): SaldoInicialResumenDto {
   const cuadre = calcularCuadre(partidas);
   const comparacion = compararConLibros(cuadre.saldoEnLibrosAlCorte, cuenta.saldoSegunLibrosAnteriores);
-  const { corte, cerrada } = contexto;
   const forma = formaDe(cuenta, partidas);
   return {
     cuentaBancariaId: cuenta.cuentaBancariaId,
     cuentaNombre: cuenta.cuentaNombre,
     bancoNombre: cuenta.bancoNombre,
+    activa: cuenta.activa,
     forma,
-    fechaDeCorte: corte,
+    fechaDeCorte: contexto.corte,
     ...cuadre,
-    saldoSegunEstadoDeCuenta: cuadre.saldoSegunEstadoDeCuenta ?? (forma === 'con_partidas' ? '0.00' : null),
+    saldoSegunEstadoDeCuenta: saldoDelBanco(cuadre.saldoSegunEstadoDeCuenta, forma),
     saldoSegunLibrosAnteriores: cuenta.saldoSegunLibrosAnteriores,
     ...comparacion,
     tieneEvidencia: cuenta.tieneEvidencia,
     tieneConciliaciones: cuenta.tieneConciliaciones,
-    puedeEditar: !cerrada && corte !== null,
-    puedeEliminar: cuenta.cabeceraId !== null && !cerrada && !cuenta.tieneConciliaciones,
+    puedeEditar: !contexto.cerrada && contexto.corte !== null,
+    puedeEliminar: cuenta.cabeceraId !== null && !contexto.cerrada && !cuenta.tieneConciliaciones,
   };
 }
 

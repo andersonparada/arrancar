@@ -2,6 +2,7 @@ import type { Columna } from '../../core/intercambio/aplicacion/columnas.js';
 import type { ReporteDePagosRealizadosDto } from '../aplicacion/dto/reportes-de-pagos.dto.js';
 import type { LineaDePagoRealizado } from '../aplicacion/puertos/puertos-de-reportes-de-pagos.js';
 import { fechaLegible } from '../dominio/avisos.js';
+import { NOMBRES_DE_FORMAS } from '../dominio/nombres-de-formas.js';
 import { dinero, fecha, seccion, siNo, texto } from './columnas-de-reporte.js';
 
 /** Una fila del Excel de R6: una línea de pago, un total o una nota (rango y leyendas). */
@@ -57,6 +58,7 @@ function filaDeLinea(linea: LineaDePagoRealizado): FilaExportadaDePagos {
   return {
     ...VACIA,
     ...linea,
+    forma: NOMBRES_DE_FORMAS[linea.forma],
     seccion: 'Pagos',
     pago: linea.numeroDelPago,
     proveedor: linea.proveedorNombre,
@@ -70,7 +72,7 @@ function filasDeTotales({ totales }: ReporteDePagosRealizadosDto): FilaExportada
   const porForma = totales.porForma.map((total) => ({
     ...VACIA,
     seccion: `Total ${total.estado === 'vigente' ? 'vigentes' : 'anulados'}`,
-    forma: total.forma,
+    forma: NOMBRES_DE_FORMAS[total.forma],
     monto: total.monto,
     retencion: total.retencion,
     cubre: total.cubre,

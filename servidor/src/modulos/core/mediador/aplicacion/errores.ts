@@ -14,3 +14,10 @@ export class ManejadorDuplicadoParaLaOrden extends Error {
     super(`Ya hay un manejador para la orden "${orden}": una orden la atiende un solo módulo.`);
   }
 }
+
+/** Error de programación: un módulo registró dos respuestas para la misma pregunta. */
+export class ManejadorDuplicadoParaLaPregunta extends Error {
+  constructor(pregunta: string, modulo: string) {
+    super(`El módulo "${modulo}" ya responde la pregunta "${pregunta}".`);
+  }
+}

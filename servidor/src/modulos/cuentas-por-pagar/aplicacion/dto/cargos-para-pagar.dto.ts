@@ -15,8 +15,15 @@ export interface CargoParaPagarDto {
   fechaDeRecepcion: string | null;
   vencimiento: string | null;
   total: string;
+  /** La deuda: lo que falta por pagar, también lo comprometido con cheques posfechados. */
   saldo: string;
-  /** Lo que se propone pagar: todo el saldo; el usuario lo cambia. */
+  /** La parte de la deuda cubierta con pagos de fecha posterior a hoy. */
+  comprometido: string;
+  /** Lo que aún se puede pagar (`saldo` menos `comprometido`): el tope del monto de la línea. */
+  disponible: string;
+  /** La fecha del cheque posfechado más lejano; `null` si no hay. */
+  comprometidoHasta: string | null;
+  /** Lo que se propone pagar: todo lo disponible; el usuario lo cambia. */
   propuesto: string;
   /** Las retenciones que este cargo descontaría en su primer pago (cero si ya se descontaron o es saldo inicial). */
   retencionPorDescontar: string;
@@ -53,6 +60,9 @@ export interface ProveedorPorPagarDto {
   proveedorId: string;
   nombre: string;
   nit: string | null;
+  /** La deuda con el proveedor en los cargos que puede pagar (también lo comprometido). */
   porPagar: string;
+  /** Lo que aún se puede pagar: `porPagar` menos lo comprometido. */
+  disponible: string;
   contrasenas: number;
 }

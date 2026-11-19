@@ -1,7 +1,11 @@
 import { computed, watch, type Ref } from 'vue';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { apiSugerencias } from '../../servicios/sugerencias.api';
-import { conceptoVigente, opcionesDeConcepto } from '../conceptos/opciones-de-concepto';
+import {
+  conceptoVigente,
+  opcionesCompatiblesConElGuardado,
+  opcionesDeConcepto,
+} from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
 import { usarSugerenciaAlCapturar } from '../sugerencias/usar-sugerencia-al-capturar';
 import type { EdicionDeNota } from './edicion-de-nota';
@@ -28,9 +32,12 @@ export function usarConceptosDeNota(edicion: Ref<EdicionDeNota>, conceptoGuardad
     habilitada: () => edicion.value.abierta && !edicion.value.id && sesion.puede('bancos.notas.crear'),
   });
 
+  const compatibles = computed(() =>
+    opcionesCompatiblesConElGuardado(conceptos.value, [edicion.value.tipo], conceptoGuardado.value),
+  );
   watch(
     () => edicion.value.tipo,
-    () => (edicion.value.conceptoId = conceptoVigente(paraElegir.value, edicion.value.conceptoId)),
+    () => (edicion.value.conceptoId = conceptoVigente(compatibles.value, edicion.value.conceptoId)),
   );
 
   return { opcionesDeConceptos, sugerencia, pideIntereses };

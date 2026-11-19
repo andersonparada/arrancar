@@ -1,10 +1,13 @@
 import type { OrigenDelDocumento, TipoDeDocumento } from './tipos';
 
+export type * from './tipos-de-consulta-de-pagos';
+
 /** Las formas que se registran desde «Nuevo pago»; el efectivo tiene su propia pantalla. */
 export type FormaDePagoNuevo = 'cheque' | 'nota_de_debito' | 'nota_ligada' | 'cuenta_de_apertura';
 export type FormaDePago = FormaDePagoNuevo | 'efectivo';
 export type EstadoDeUnPago = 'vigente' | 'anulado';
-export type EstadoDePago = 'pendiente' | 'en_parte' | 'comprometido' | 'pagado';
+/** Los cinco estados de pago de un cargo, iguales en la lista, la ficha, la contraseña y los reportes. */
+export type EstadoDePago = 'pendiente' | 'en_parte' | 'comprometido_en_parte' | 'comprometido' | 'pagado';
 
 /** Un pago de la contraseña, con lo que entregó dentro de ella. */
 export interface PagoDeLaContrasena {
@@ -27,7 +30,10 @@ export interface ProveedorPorPagar {
   proveedorId: string;
   nombre: string;
   nit: string | null;
+  /** La deuda con el proveedor (también lo comprometido con cheques posfechados). */
   porPagar: string;
+  /** Lo que aún se puede pagar: `porPagar` menos lo comprometido. */
+  disponible: string;
   contrasenas: number;
 }
 
@@ -48,7 +54,14 @@ export interface CargoParaPagar {
   fechaDeRecepcion: string | null;
   vencimiento: string | null;
   total: string;
+  /** La deuda: también lo comprometido con cheques posfechados. */
   saldo: string;
+  /** La parte de la deuda cubierta con cheques posfechados. */
+  comprometido: string;
+  /** Lo que aún se puede pagar (`saldo` menos `comprometido`): el tope del monto. */
+  disponible: string;
+  /** La fecha del cheque posfechado más lejano; `null` si no hay. */
+  comprometidoHasta: string | null;
   propuesto: string;
   retencionPorDescontar: string;
   retencionesPorPracticar: string;

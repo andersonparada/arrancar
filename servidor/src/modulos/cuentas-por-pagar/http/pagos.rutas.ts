@@ -58,7 +58,7 @@ function consultas(app: FastifyInstance, controlador: PagosControlador): void {
   });
   app.get(`${RUTA}/pagos/notas-para-ligar`, {
     schema: { tags, querystring: esquemaNotasParaLigar },
-    preHandler: ver,
+    preHandler: proteger({ permiso: 'cuentas-por-pagar.pagos.ligar-notas-de-debito' }),
     handler: controlador.notasParaLigar,
   });
   app.get(`${RUTA}/proveedores/:proveedorId/para-pagar`, {

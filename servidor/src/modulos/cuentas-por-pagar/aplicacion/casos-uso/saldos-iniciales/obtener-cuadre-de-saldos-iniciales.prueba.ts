@@ -9,6 +9,7 @@ const proveedor = (cambios: Partial<SumasDeProveedorEnElCuadre>): SumasDeProveed
   proveedorNombre: 'Proveedor',
   proveedorNit: null,
   documentos: 1,
+  documentosConRetenciones: 0,
   cargosCentavos: 0,
   notasAFavorCentavos: 0,
   retencionesPorPracticarCentavos: 0,
@@ -23,6 +24,7 @@ function cuadreCon(
   const consultas: ConsultasDeCuadre = {
     sumasPorProveedor: async () => filas,
     saldosConNotasPosteriores: async () => conNotas,
+    documentosDelLibroAnterioresA: async () => ({ cantidad: 0, montoCentavos: 0 }),
   };
   const caso = new ObtenerCuadreDeSaldosIniciales({
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),

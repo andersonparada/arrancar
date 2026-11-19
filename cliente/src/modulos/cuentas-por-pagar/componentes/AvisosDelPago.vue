@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { TriangleAlert } from 'lucide-vue-next';
+import { ExternalLink, TriangleAlert } from 'lucide-vue-next';
+import { RouterLink } from 'vue-router';
+import { hayAvisoDeConstancia } from '../composables/pagos/avisos-del-pago';
 
 /** Los avisos que no bloquean: se leen antes de confirmar (o, ya registrado, los que dijo el servidor y Bancos). */
 defineProps<{ avisos: string[]; titulo?: string }>();
+const RUTA_DE_CONSTANCIAS = { name: 'libro-de-compras.retenciones.constancias-pendientes' };
 </script>
 
 <template>
@@ -19,5 +22,14 @@ defineProps<{ avisos: string[]; titulo?: string }>();
     <ul class="list-disc space-y-1.5 pl-5 text-sm text-tierra-800 dark:text-tierra-100">
       <li v-for="aviso in avisos" :key="aviso">{{ aviso }}</li>
     </ul>
+    <RouterLink
+      v-if="hayAvisoDeConstancia(avisos)"
+      v-permiso="'libro-de-compras.retenciones.ver'"
+      :to="RUTA_DE_CONSTANCIAS"
+      class="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-campo-700 underline dark:text-campo-300"
+    >
+      <ExternalLink class="size-4" aria-hidden="true" />
+      Ver las constancias de retención pendientes
+    </RouterLink>
   </section>
 </template>

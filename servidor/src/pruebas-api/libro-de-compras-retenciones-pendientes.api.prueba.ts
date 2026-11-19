@@ -1,3 +1,4 @@
+import ExcelJS from 'exceljs';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { ClienteApi } from './soporte/cliente-api.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
@@ -133,6 +134,19 @@ describe('constancias de retención pendientes', () => {
     expect(respuesta.estado).toBe(200);
     expect(String(respuesta.cabeceras['content-type'])).toContain('spreadsheetml');
     expect(Buffer.isBuffer(respuesta.cuerpo) && respuesta.cuerpo.subarray(0, 2).toString()).toBe('PK');
+  });
+
+  it('el Excel trae las notas, el documento como en pantalla y una sola hoja (QA intermedia, error 7)', async () => {
+    const respuesta = await e.propietario.get(`${RUTA}/exportar`);
+    const libro = new ExcelJS.Workbook();
+    await libro.xlsx.load(respuesta.cuerpo as unknown as ExcelJS.Buffer);
+    const filas: string[][] = [];
+    libro.worksheets[0]!.eachRow((fila) => filas.push((fila.values as unknown[]).slice(1).map(String)));
+
+    expect(libro.worksheets.map((hoja) => hoja.name)).toEqual(['Constancias pendientes']);
+    expect(filas.filter((fila) => fila[0] === 'Nota').length).toBeGreaterThanOrEqual(3);
+    expect(filas.some((fila) => fila[0] === 'Total')).toBe(true);
+    expect(filas.flat().some((celda) => /^[A-Z]+ [A-Z]+-\d+/.test(celda) || /^[A-Z]+ \d+/.test(celda))).toBe(true);
   });
 });
 

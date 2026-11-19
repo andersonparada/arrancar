@@ -58,7 +58,7 @@ describe('pagado, comprometido y estado de pago de un cargo', () => {
     });
   });
 
-  it('un cheque posfechado compromete el documento: el saldo ya lo resta y se paga en su fecha', async () => {
+  it('un cheque posfechado compromete el documento: la deuda sigue entera y nada queda disponible', async () => {
     const { documento, dto } = await dtoDe();
     documentos.pagos.push(lineaDePago({ cargoId: documento.id, fecha: '2026-06-10', montoCentavos: 10000 }));
 
@@ -66,7 +66,10 @@ describe('pagado, comprometido y estado de pago de un cargo', () => {
       pagado: '0.00',
       comprometido: '100.00',
       estadoDePago: 'comprometido',
-      saldo: '0.00',
+      saldo: '100.00',
+      disponible: '0.00',
+      chequesPosfechados: 1,
+      comprometidoHasta: '2026-06-10',
     });
     documentos.pagos[0]!.fecha = HOY;
     expect(await dto()).toMatchObject({ pagado: '100.00', comprometido: '0.00', estadoDePago: 'pagado' });
