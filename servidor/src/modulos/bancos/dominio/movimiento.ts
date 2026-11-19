@@ -252,8 +252,11 @@ export class Movimiento extends Entidad<MovimientoId> {
   }
 
   /** @throws MovimientoMarcadoEnConciliacion si `conciliacionId` no es nulo. */
-  exigirNoMarcadoEnConciliacion(conciliacionId: string | null): void {
-    if (conciliacionId) throw new MovimientoMarcadoEnConciliacion();
+  exigirNoMarcadoEnConciliacion(
+    conciliacionId: string | null,
+    accion: 'eliminar' | 'anular' | 'corregir' = 'eliminar',
+  ): void {
+    if (conciliacionId) throw new MovimientoMarcadoEnConciliacion(accion);
   }
 
   /**

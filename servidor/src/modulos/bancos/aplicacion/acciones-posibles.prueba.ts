@@ -155,6 +155,14 @@ describe('accionesDeCheque', () => {
     expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque', marcadoEnConciliacion: true }))).toEqual(esperado);
   });
 
+  it('de la carga inicial y marcado en una conciliación: no se anula (primero se desmarca)', () => {
+    const marcado = limpia({ tipo: 'cheque', parteDeApertura: 'cheque_en_circulacion', marcadoEnConciliacion: true });
+    const sinMarca = limpia({ tipo: 'cheque', parteDeApertura: 'cheque_en_circulacion' });
+
+    expect(accionesDeCheque('emitido', marcado).puedeAnular).toBe(false);
+    expect(accionesDeCheque('emitido', sinMarca).puedeAnular).toBe(true);
+  });
+
   it('anulado: no se anula, ni se blanquea, ni se imprime', () => {
     expect(accionesDeCheque('anulado', limpia({ tipo: 'cheque', anulado: true }))).toEqual({
       puedeAnular: false,
