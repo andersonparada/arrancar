@@ -9,6 +9,10 @@ import { CancelarAvisosDePagoAnulado } from '../aplicacion/casos-uso/avisos-de-p
 import { EnviarAvisoDePago } from '../aplicacion/casos-uso/avisos-de-pago/enviar-aviso-de-pago.js';
 import { PrepararAvisoDePago } from '../aplicacion/casos-uso/avisos-de-pago/preparar-aviso-de-pago.js';
 import { ObtenerComprobanteDePago } from '../aplicacion/casos-uso/pagos/consultas-de-la-ficha-de-pagos.js';
+import { GuardarAjustesDelAviso } from '../aplicacion/casos-uso/avisos-de-pago/guardar-ajustes-del-aviso.js';
+import { ObtenerAjustesDelAviso } from '../aplicacion/casos-uso/avisos-de-pago/obtener-ajustes-del-aviso.js';
+import { AjustesDelAvisoControlador } from '../http/ajustes-del-aviso.controlador.js';
+import { rutasDeAjustesDelAviso } from '../http/ajustes-del-aviso.rutas.js';
 import { AvisosDePagoControlador } from '../http/avisos-de-pago.controlador.js';
 import { rutasDeAvisosDePago } from '../http/avisos-de-pago.rutas.js';
 import { ConfiguracionDelAvisoEnConfiguracion } from '../infraestructura/configuracion-del-aviso-en-configuracion.js';
@@ -62,11 +66,29 @@ export function rutasDeAvisosDePagoComponidas(): FastifyPluginAsync {
   const compuestas = piezas();
   suscribirEventos(compuestas);
   const { unidadDeTrabajo, bandeja, armador } = compuestas;
-  return rutasDeAvisosDePago(
+  const rutasDelAviso = rutasDeAvisosDePago(
     new AvisosDePagoControlador({
       preparar: new PrepararAvisoDePago({ unidadDeTrabajo, armador, bandeja }),
       enviar: new EnviarAvisoDePago({ unidadDeTrabajo, armador, bandeja }),
       cancelar: new CancelarAvisoDePago({ unidadDeTrabajo, bandeja }),
     }),
   );
+  const rutasDeAjustes = rutasDeAjustesDelAviso(controladorDeAjustes(unidadDeTrabajo));
+  return async (app) => {
+    await app.register(rutasDelAviso);
+    await app.register(rutasDeAjustes);
+  };
+}
+
+function controladorDeAjustes(unidadDeTrabajo: ReturnType<typeof piezas>['unidadDeTrabajo']) {
+  const configuracion = new ConfiguracionDelAvisoEnConfiguracion();
+  return new AjustesDelAvisoControlador({
+    obtener: new ObtenerAjustesDelAviso({ unidadDeTrabajo, configuracion }),
+    guardar: new GuardarAjustesDelAviso({
+      unidadDeTrabajo,
+      auditoria: dependenciasCompartidas().auditoria,
+      configuracion,
+      guardador: configuracion,
+    }),
+  });
 }

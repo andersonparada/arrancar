@@ -92,6 +92,11 @@ export const PERMISOS_DE_CUENTAS_POR_PAGAR: DefinicionPermiso[] = [
     descripcion: 'Enviar y reenviar por correo el aviso de un pago al proveedor, y cancelar uno pendiente',
   },
   {
+    clave: 'cuentas-por-pagar.avisos-de-pago.configurar',
+    descripcion:
+      'Cambiar los avisos de pago por correo de la empresa: si salen solos o con el botón, el asunto, el mensaje, el comprobante adjunto y la copia a la empresa',
+  },
+  {
     clave: 'cuentas-por-pagar.pagos.reaplicar',
     descripcion: 'Reaplicar un pago vigente a otros documentos de las contraseñas vigentes de su proveedor',
   },

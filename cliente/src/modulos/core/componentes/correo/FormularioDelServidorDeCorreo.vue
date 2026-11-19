@@ -2,6 +2,7 @@
 import { Save } from 'lucide-vue-next';
 import {
   OPCIONES_DE_PUERTO,
+  descripcionDelInterruptor,
   textoDelEstadoDelServidor,
   type BorradorDelServidor,
 } from '../../composables/correo/servidor-de-correo';
@@ -84,7 +85,7 @@ const borrador = defineModel<BorradorDelServidor>({ required: true });
       <CampoInterruptor
         v-model="borrador.activo"
         etiqueta="Enviar correos"
-        descripcion="Apagado, todo queda pendiente en la bandeja hasta que se active."
+        :descripcion="descripcionDelInterruptor(borrador.activo)"
       />
       <p v-if="sinContrasena" class="text-sm text-red-700 dark:text-red-300" role="alert">
         Escriba la contraseña para poder activar el servidor.

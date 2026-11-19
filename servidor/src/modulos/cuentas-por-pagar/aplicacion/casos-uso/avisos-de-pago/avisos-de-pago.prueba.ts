@@ -90,6 +90,7 @@ describe('ArmadorDelAviso', () => {
       documentos: 'A-123',
       fecha_de_cobro: '',
       empresa: 'Rancho Ñandú',
+      adjunto: 'Adjuntamos el comprobante del pago. ',
     });
     expect(mensaje.adjunto).toEqual({ nombre: 'comprobante-de-pago-2026-15.pdf', contenido: PDF });
   });
@@ -105,6 +106,7 @@ describe('ArmadorDelAviso', () => {
     });
 
     expect(mensaje.adjunto).toBeNull();
+    expect(mensaje.plantilla.valores.adjunto).toBe('');
     expect(mensaje.responderA).toBeNull();
     expect(mensaje.destinatarios.map((d) => d.clase)).toEqual(['para']);
   });

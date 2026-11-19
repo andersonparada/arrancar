@@ -18,7 +18,10 @@ export const MENSAJE_DEL_AVISO_POR_OMISION = `Estimado(a) {proveedor}:
 {empresa} le informa que registró el pago {numero} del {fecha} por {monto}, con {forma}, de estos documentos:
 {documentos}.
 
-Adjuntamos el comprobante del pago. Este correo no es un documento tributario.`;
+{adjunto}Este correo no es un documento tributario.`;
+
+/** Enlaces, dominios y correos: el aviso va con el remitente de la empresa y no lleva enlaces (C9). */
+const ENLACE_O_DOMINIO = /https?:|www\.|@|\b[\w-]+\.(com|net|org|info|gt|io|co|biz|app|me|link)\b/i;
 
 /** Un texto con marcadores: el problema (un marcador que no existe) se ve al guardar, no al enviar. */
 function conMarcadores(maximo: number, permitidos: readonly string[]) {
@@ -27,6 +30,7 @@ function conMarcadores(maximo: number, permitidos: readonly string[]) {
     .trim()
     .min(1)
     .max(maximo)
+    .refine((texto) => !ENLACE_O_DOMINIO.test(texto), 'No puede llevar enlaces, dominios ni correos.')
     .superRefine((texto, contexto) => {
       const problema = problemaEnLaPlantilla(texto, permitidos);
       if (problema) contexto.addIssue({ code: 'custom', message: problema });
@@ -34,6 +38,15 @@ function conMarcadores(maximo: number, permitidos: readonly string[]) {
 }
 
 const NIVELES = ['instalacion', 'empresa'] as const;
+
+/** Los esquemas de las variables: la pantalla «Avisos de pago» valida con los mismos que la configuración genérica. */
+export const ESQUEMAS_DE_AVISOS = {
+  envio: z.enum(['manual', 'automatico']),
+  asunto: conMarcadores(150, MARCADORES_DEL_ASUNTO),
+  mensaje: conMarcadores(2000, MARCADORES_DEL_MENSAJE),
+  adjuntarComprobante: z.boolean(),
+  copiaALaEmpresa: z.boolean(),
+} as const;
 
 /**
  * Los avisos de pago por correo (solo niveles instalación y empresa). Por omisión el envío es manual: la empresa lo
@@ -44,7 +57,7 @@ export const configuracionDeAvisos: readonly DefinicionConfiguracion[] = [
     clave: CLAVES_DE_AVISOS.envio,
     descripcion:
       'Cuándo se manda el aviso de pago al proveedor: «manual» (con el botón de la ficha del pago) o «automatico» (al registrar el pago, a los contactos con la marca de avisos).',
-    esquema: z.enum(['manual', 'automatico']),
+    esquema: ESQUEMAS_DE_AVISOS.envio,
     predeterminado: 'manual',
     niveles: [...NIVELES],
     publica: true,
@@ -52,7 +65,7 @@ export const configuracionDeAvisos: readonly DefinicionConfiguracion[] = [
   definirConfiguracion({
     clave: CLAVES_DE_AVISOS.asunto,
     descripcion: `Asunto del aviso de pago. Marcadores: ${MARCADORES_DEL_ASUNTO.map((m) => `{${m}}`).join(', ')}. No admite el monto ni los documentos.`,
-    esquema: conMarcadores(150, MARCADORES_DEL_ASUNTO),
+    esquema: ESQUEMAS_DE_AVISOS.asunto,
     predeterminado: ASUNTO_DEL_AVISO_POR_OMISION,
     niveles: [...NIVELES],
     publica: false,
@@ -60,7 +73,7 @@ export const configuracionDeAvisos: readonly DefinicionConfiguracion[] = [
   definirConfiguracion({
     clave: CLAVES_DE_AVISOS.mensaje,
     descripcion: `Mensaje del aviso de pago, en texto con saltos de línea. Marcadores: ${MARCADORES_DEL_MENSAJE.map((m) => `{${m}}`).join(', ')}.`,
-    esquema: conMarcadores(2000, MARCADORES_DEL_MENSAJE),
+    esquema: ESQUEMAS_DE_AVISOS.mensaje,
     predeterminado: MENSAJE_DEL_AVISO_POR_OMISION,
     niveles: [...NIVELES],
     publica: false,
@@ -68,7 +81,7 @@ export const configuracionDeAvisos: readonly DefinicionConfiguracion[] = [
   definirConfiguracion({
     clave: CLAVES_DE_AVISOS.adjuntarComprobante,
     descripcion: 'Adjunta al aviso el PDF del comprobante del pago (lleva montos, NIT y retenciones).',
-    esquema: z.boolean(),
+    esquema: ESQUEMAS_DE_AVISOS.adjuntarComprobante,
     predeterminado: true,
     niveles: [...NIVELES],
     publica: false,
@@ -76,7 +89,7 @@ export const configuracionDeAvisos: readonly DefinicionConfiguracion[] = [
   definirConfiguracion({
     clave: CLAVES_DE_AVISOS.copiaALaEmpresa,
     descripcion: 'Manda copia visible del aviso al correo de la empresa (también es el «Responder a»).',
-    esquema: z.boolean(),
+    esquema: ESQUEMAS_DE_AVISOS.copiaALaEmpresa,
     predeterminado: true,
     niveles: [...NIVELES],
     publica: false,

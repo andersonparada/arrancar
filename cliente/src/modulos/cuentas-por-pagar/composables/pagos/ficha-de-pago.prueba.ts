@@ -52,6 +52,13 @@ describe('ficha de un pago', () => {
     expect(mueveDinero({ forma: 'efectivo' })).toBe(false);
   });
 
+  it('el resumen de anular no duplica el punto si el proveedor termina en uno', () => {
+    const ficha = fichaDeEjemplo({});
+    const texto = resumenDeAnularPago({ ...ficha, proveedor: { ...ficha.proveedor, nombre: 'Eco S.A.' } });
+    expect(texto).toContain('a Eco S.A. ');
+    expect(texto).not.toContain('..');
+  });
+
   it('el resumen de anular dice qué pasa con los documentos y con Bancos', () => {
     const texto = resumenDeAnularPago(fichaDeEjemplo({ diferencias: [{ cargoId: 'd1', monto: '0.03' }] }));
     expect(texto).toContain('Se anulará el pago 2026-7');

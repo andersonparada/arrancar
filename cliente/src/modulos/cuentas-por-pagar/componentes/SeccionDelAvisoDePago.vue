@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Mail, Send } from 'lucide-vue-next';
+import { ref } from 'vue';
 import {
   fechaDelEstado,
   nombreDelEstado,
@@ -11,7 +12,9 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import {
+  AVISOS_VISIBLES_EN_LA_FICHA,
   RECORDATORIO_DE_ANULACION,
+  avisosVisibles,
   estadoDelUltimoAviso,
   hayQueAvisarLaAnulacion,
   textoDelBotonDeAviso,
@@ -23,6 +26,7 @@ import type { AvisoDePago } from '../servicios/tipos-de-avisos-de-pago';
  * para enviar o reenviar. Cada envío es un correo nuevo; lo que ya salió no se puede detener.
  */
 defineProps<{ aviso: AvisoDePago | null; cargando: boolean; anulado: boolean }>();
+const verTodos = ref(false);
 const emit = defineEmits<{ enviar: []; cancelar: [correoId: string] }>();
 </script>
 
@@ -60,7 +64,11 @@ const emit = defineEmits<{ enviar: []; cancelar: [correoId: string] }>();
       Esta empresa manda el aviso sola al registrar el pago; si este no salió, envíelo con el botón.
     </p>
     <ul v-if="aviso.enviados.length" class="divide-y divide-tierra-100 text-sm dark:divide-tierra-700">
-      <li v-for="correo in aviso.enviados" :key="correo.id" class="flex flex-wrap items-center gap-2 py-2">
+      <li
+        v-for="correo in avisosVisibles(aviso.enviados, verTodos)"
+        :key="correo.id"
+        class="flex flex-wrap items-center gap-2 py-2"
+      >
         <InsigniaBase :tono="tonoDelEstado(correo.estado)">{{ nombreDelEstado(correo) }}</InsigniaBase>
         <span class="min-w-0 break-all">{{ resumenDeDestinatarios(correo) }}</span>
         <span class="text-xs text-tierra-500">{{ fechaDelEstado(correo) }}</span>
@@ -76,6 +84,14 @@ const emit = defineEmits<{ enviar: []; cancelar: [correoId: string] }>();
         </BotonBase>
       </li>
     </ul>
+    <BotonBase
+      v-if="aviso.enviados.length > AVISOS_VISIBLES_EN_LA_FICHA"
+      variante="fantasma"
+      pequeno
+      @click="verTodos = !verTodos"
+    >
+      {{ verTodos ? 'Ver solo los últimos' : `Ver todos (${aviso.enviados.length})` }}
+    </BotonBase>
   </TarjetaBase>
   <p v-else-if="cargando" class="text-sm text-tierra-500" role="status">Cargando el aviso…</p>
 </template>

@@ -11,6 +11,7 @@
  * `reimprimir`: se volvió a imprimir un cheque o su comprobante, con su motivo; `anterior` lleva el cheque y sus impresiones (Bancos).
  * `inutilizar`: el pago de un cheque pasó a otro formulario porque el papel quedó inservible; `anterior` lleva el cheque como estaba (Bancos).
  * `cambiar_vencimiento`: se movió el vencimiento de un cargo, con el antes y el después (Cuentas por pagar).
+ * `configurar`: se cambió una configuración de la empresa; `anterior` lleva los valores de antes y de después (Cuentas por pagar: avisos de pago).
  */
 export type AccionAuditada =
   | 'eliminar'
@@ -30,7 +31,8 @@ export type AccionAuditada =
   | 'ajustar'
   | 'cambiar_vencimiento'
   | 'reimprimir'
-  | 'inutilizar';
+  | 'inutilizar'
+  | 'configurar';
 
 /** Una baja (o su reversa): qué registro, qué se hizo, por qué y cómo estaba antes. */
 export interface EntradaDeAuditoria {

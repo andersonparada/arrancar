@@ -11,6 +11,7 @@ import {
 } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_CUENTAS_POR_PAGAR, TITULO_SECCION_DE_PAGO, VENTANAS_CUENTAS_POR_PAGAR } from './textos';
+import { entradasDeAvisos, rutasDeAvisos } from './avisos-del-modulo';
 import { entradasDeReportes, rutasDeReportes } from './reportes-del-modulo';
 import { entradasDeRetiros, rutasDeRetiros } from './retiros-del-modulo';
 // generador: importaciones
@@ -118,6 +119,7 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       component: () => import('./paginas/PlazosDeProveedores.vue'),
       meta: { permiso: 'terceros.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.plazos.titulo },
     },
+    ...rutasDeAvisos,
     ...rutasDeRetiros,
     ...rutasDeReportes,
     // generador: rutas
@@ -194,6 +196,7 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           seccion: 'operacion',
           permiso: 'cuentas-por-pagar.pagos.ver',
         },
+        ...entradasDeAvisos,
         ...entradasDeRetiros,
         ...entradasDeReportes,
         // R12 (constancias pendientes) vive en el menú de Libro de compras; aquí no se repite.

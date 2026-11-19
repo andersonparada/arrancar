@@ -7,6 +7,7 @@ import {
   hayCambios,
   nombreDelTipoDeCorreo,
   textoDeLaPrueba,
+  descripcionDelInterruptor,
   textoDelEstadoDelServidor,
 } from './servidor-de-correo';
 
@@ -86,6 +87,11 @@ describe('textos', () => {
     expect(textoDelEstadoDelServidor({ ...GUARDADO, configurado: false })).toContain('Sin configurar');
     expect(textoDelEstadoDelServidor({ ...GUARDADO, activo: false })).toContain('Apagado');
     expect(textoDelEstadoDelServidor(GUARDADO)).toContain('Activo');
+  });
+
+  it('la descripción del interruptor coincide con su posición', () => {
+    expect(descripcionDelInterruptor(true)).toContain('Encendido');
+    expect(descripcionDelInterruptor(false)).toContain('Apagado');
   });
 
   it('explica cada resultado de la prueba', () => {

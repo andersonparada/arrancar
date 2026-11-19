@@ -28,7 +28,9 @@ function usarMensajesEmergentes() {
 
   const cerrar = (id: number) => (avisos.value = avisos.value.filter((aviso) => aviso.id !== id));
 
+  /** Un éxito retira los errores que siguen a la vista: la acción ya salió bien y el error viejo confunde. */
   function mostrar(tipo: TipoAviso, mensaje: string): void {
+    if (tipo === 'exito') avisos.value = avisos.value.filter((aviso) => aviso.tipo !== 'error');
     const id = siguienteId++;
     avisos.value.push({ id, tipo, mensaje });
     setTimeout(() => cerrar(id), duracionDeAviso(mensaje));

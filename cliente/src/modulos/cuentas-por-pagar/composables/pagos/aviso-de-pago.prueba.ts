@@ -4,11 +4,14 @@ import type { CorreoResumen } from '@/modulos/core/servicios/correos.api';
 import type { AvisoDePago, DestinatarioPosible } from '../../servicios/tipos-de-avisos-de-pago';
 import {
   AVISO_DEL_PDF,
+  AVISOS_VISIBLES_EN_LA_FICHA,
   MAXIMO_DE_DESTINATARIOS,
   alternarDestinatario,
   edicionAbierta,
   edicionCerrada,
+  avisosVisibles,
   estadoDelUltimoAviso,
+  hayAvisoPorSalir,
   hayQueAvisarLaAnulacion,
   llaveDe,
   sePuedeEnviarLaEdicion,
@@ -149,5 +152,19 @@ describe('estado del aviso en la ficha', () => {
     expect(hayQueAvisarLaAnulacion(true, [correo({ estado: 'enviado' })])).toBe(true);
     expect(hayQueAvisarLaAnulacion(true, [correo({ estado: 'cancelado' })])).toBe(false);
     expect(hayQueAvisarLaAnulacion(false, [correo({ estado: 'enviado' })])).toBe(false);
+  });
+
+  it('advierte solo si hay un aviso pendiente o enviándose', () => {
+    expect(hayAvisoPorSalir([])).toBe(false);
+    expect(hayAvisoPorSalir([correo({ estado: 'enviado' }), correo({ estado: 'fallido' })])).toBe(false);
+    expect(hayAvisoPorSalir([correo({ estado: 'pendiente' })])).toBe(true);
+    expect(hayAvisoPorSalir([correo({ estado: 'enviando' })])).toBe(true);
+  });
+
+  it('la ficha muestra los últimos avisos y, con «ver todos», la lista completa', () => {
+    const muchos = Array.from({ length: 18 }, (_, i) => correo({ id: `c-${i}` }));
+    expect(avisosVisibles(muchos, false)).toHaveLength(AVISOS_VISIBLES_EN_LA_FICHA);
+    expect(avisosVisibles(muchos, false)[0]?.id).toBe('c-0');
+    expect(avisosVisibles(muchos, true)).toHaveLength(18);
   });
 });

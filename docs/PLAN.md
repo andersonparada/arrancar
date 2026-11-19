@@ -3601,3 +3601,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   cliente (CL-5) con la ficha y `GET /anticipos/:id/gastos`, no hay endpoint de impresión; un gasto cuyo documento fue
   anulado ya salió del anticipo por el aviso del libro, así que no se marca; `LiquidacionNoCuadra` es 400 como en el retiro.
 
+- **2026-11-18** (correcciones de la QA del aviso de pago por correo, informe `docs/modulos/informe-qa-correo-2026-11-18.md`):
+  (E1) como `configuracion.ver/gestionar` son `soloSuperacceso`, ningún usuario de la empresa podía pasar el envío a
+  automático ni cambiar los textos: Cuentas por pagar tiene su pantalla «Avisos de pago» (`GET`/`PUT
+  /cuentas-por-pagar/avisos-de-pago/ajustes`) con el permiso por acción `cuentas-por-pagar.avisos-de-pago.configurar`
+  (asignable; sin migración de permisos porque es una acción nueva: los roles de acceso total lo reciben solos y el resto
+  se asigna a mano). Guarda en el nivel empresa con el esquema de cada variable (`ESQUEMAS_DE_AVISOS`) y sin abrir
+  `configuracion.gestionar`. (E5) el mensaje por omisión usa el marcador `{adjunto}` y no dice «Adjuntamos el comprobante»
+  si no se adjunta. Bajos: el interruptor «Enviar correos» de Soporte muestra su estado real; el pie de la ventana del
+  correo no sale si el usuario no puede usar ningún botón; sin doble punto en «Se anulará el pago … a Eco S.A.»; un aviso
+  de éxito retira los errores que siguen a la vista; la ventana de aviso advierte si ya hay uno pendiente y la ficha muestra
+  los últimos 3 avisos con «Ver todos». Sin migraciones de base de datos.
+- **2026-11-19** (QA del correo, rastro de los ajustes del aviso): `GuardarAjustesDelAviso` lee los ajustes de antes y, si
+  algo cambia, audita `configurar` (acción nueva de `AccionAuditada`) con `recurso` `cuentas-por-pagar.avisos-de-pago`,
+  `registroId` la empresa y `anterior = { antes, despues }`, dentro de la unidad de trabajo y antes de guardar (la
+  configuración usa su propia conexión, así que no comparte la transacción: si guardar falla, la auditoría se deshace).
+  Por decisión de producto, y en coherencia con C9, el asunto y el mensaje rechazan `http:`, `www.`, `@` y dominios con
+  terminación común (`.com`, `.gt`…); también rige para la configuración genérica de Soporte. Sin migraciones.
