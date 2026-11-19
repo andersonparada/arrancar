@@ -11,6 +11,37 @@ function sirveParaTodos(concepto: Concepto, tipos: readonly TipoDeMovimiento[]):
   return concepto.aplicaA === 'ambos' || tipos.every((tipo) => direccionDe(tipo) === concepto.aplicaA);
 }
 
+/**
+ * Concepto de sistema de Caja chica o de Cuentas por liquidar → su módulo (como `CONCEPTOS_RESERVADOS_POR_MODULO` del
+ * servidor). «Pago a proveedores» no está aquí: solo lo eligen los cheques (`opcionesDeConceptoDeCheque`).
+ */
+const MODULO_DE_CONCEPTO_RESERVADO: Readonly<Record<string, string>> = {
+  fondo_de_caja_chica: 'caja-chica',
+  devolucion_de_fondo_de_caja_chica: 'caja-chica',
+  reintegro_de_caja_chica: 'caja-chica',
+  reintegro_de_caja_chica_de_activo: 'caja-chica',
+  anticipo_por_liquidar: 'cuentas-por-liquidar',
+  gasto_de_anticipo: 'cuentas-por-liquidar',
+  gasto_de_anticipo_de_activo: 'cuentas-por-liquidar',
+  anticipo_no_liquidado: 'cuentas-por-liquidar',
+  devolucion_de_anticipo: 'cuentas-por-liquidar',
+};
+
+/**
+ * Los conceptos reservados por un módulo que **no** está activo se vuelven elegibles a mano (el servidor los acepta
+ * igual): se les quita la clave de sistema para que las opciones no los descarten. Con el módulo activo siguen
+ * ocultos, porque ese módulo los registra.
+ */
+export function liberarReservados(
+  conceptos: readonly Concepto[],
+  moduloActivo: (modulo: string) => boolean,
+): Concepto[] {
+  return conceptos.map((concepto) => {
+    const modulo = concepto.claveDeSistema ? MODULO_DE_CONCEPTO_RESERVADO[concepto.claveDeSistema] : undefined;
+    return modulo !== undefined && !moduloActivo(modulo) ? { ...concepto, claveDeSistema: null } : concepto;
+  });
+}
+
 const porNombre = (a: Concepto, b: Concepto): number => a.nombre.localeCompare(b.nombre, 'es');
 
 const comoOpcion = (concepto: Concepto): OpcionDeRegistro => ({ valor: concepto.id, texto: concepto.nombre });

@@ -202,7 +202,7 @@ Con tres módulos pagando en efectivo hace falta que **cada uno vea a los otros*
 **c) Avisos que ya existen:** `documento_por_anular` y `documento_por_eliminar` los escuchan también los dos módulos
 nuevos (§5.9, §7.6). Sin cambio en el libro.
 
-### 3.2 Bancos (paso CCL-B1, migración `0035_caja_chica_y_cuentas_por_liquidar`)
+### 3.2 Bancos (paso CCL-B1, migración `0036_caja_chica_y_cuentas_por_liquidar`)
 
 **a) Conceptos de sistema nuevos** (en `CONCEPTOS_DE_SISTEMA`, `ClaveDeConceptoDeSistema` y, en las empresas que ya
 tienen catálogo, por `insert`; a uno **sin clave con el mismo nombre** se le pone la clave; repetible, como la `0033`):
@@ -1014,7 +1014,7 @@ uno por módulo a la vez.
 | **CCL-0** (docs) | Este diseño y el dictamen | — |
 | **CCL-M** (core) | `preguntarATodos` y `PreguntasEntreModulos` (EM-2 §2), con pruebas | Aprobación (lo comparte con EM-2: el primero que llegue) |
 | **CCL-L1** (Libro, servidor y cliente) | `referenciaDeDestino` en el cuerpo y en `DocumentoParaDestino`; Ingreso de facturas con `referencia`, `etiqueta` y `volver`. Pruebas: pasa tal cual al destino; sin ella, igual que hoy | Aprobación; en paralelo con CCL-B1 |
-| **CCL-B1** (Bancos, servidor) | Migración **`0035`** (nueve conceptos, §3.2 a), `ClaveDeConceptoDeSistema`, conceptos reservados por módulo (§3.2 b), `ModulosDeOrigen` (§3.2 c), leyendas (§3.2 d). Pruebas: migración repetible (y la clave puesta al sugerido del mismo nombre), concepto reservado a mano con y sin su módulo, movimiento con origen de un módulo inactivo (rechazo), las de P3 siguen | Aprobación; nunca con otra migración de Bancos (BS-x) |
+| **CCL-B1** (Bancos, servidor) | Migración **`0036`** (nueve conceptos, §3.2 a), `ClaveDeConceptoDeSistema`, conceptos reservados por módulo (§3.2 b), `ModulosDeOrigen` (§3.2 c), leyendas (§3.2 d). Pruebas: migración repetible (y la clave puesta al sugerido del mismo nombre), concepto reservado a mano con y sin su módulo, movimiento con origen de un módulo inactivo (rechazo), las de P3 siguen | Aprobación; nunca con otra migración de Bancos (BS-x) |
 | **CC-1** (Caja chica, datos) | Esqueleto del módulo, migraciones `0000` y `0001`, tablas, RLS, alcance, disparadores, permisos declarados. Pruebas de tablas: cada check, llaves compuestas (mismo fondo en la reposición), único vigente de custodio y de reposición por comprobante, bandeja visible sin fondo, fondo no asignado invisible, disparador del custodio, `politicas-de-los-modulos`, `llaves-entre-esquemas` | Aprobación (puede ir antes de CCL-B1: solo usa tablas que existen) |
 | **CL-1** (Cuentas por liquidar, datos) | Igual para su esquema | En paralelo con CC-1 |
 | **CC-1c / CL-1c** (datos, uno por módulo) | Migración `0003` de cada uno (§4.10): `cuenta_id` con relleno, llave `(proveedor_id, cuenta_id)` e índices, check del motivo solo al asignar; descripción de `con-retencion`. Pruebas de §4.10 | CC-1 y CL-1; antes de CC-3 y CL-3 |

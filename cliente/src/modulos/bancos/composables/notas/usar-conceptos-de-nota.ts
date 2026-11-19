@@ -4,6 +4,7 @@ import { apiSugerencias } from '../../servicios/sugerencias.api';
 import {
   conceptoVigente,
   opcionesCompatiblesConElGuardado,
+  liberarReservados,
   opcionesDeConcepto,
 } from '../conceptos/opciones-de-concepto';
 import { usarCatalogoDeConceptos } from '../conceptos/usar-catalogo-de-conceptos';
@@ -19,8 +20,9 @@ import { usarInteresesDeNota } from './usar-intereses-de-nota';
  */
 export function usarConceptosDeNota(edicion: Ref<EdicionDeNota>, conceptoGuardado: Ref<string | null>) {
   const sesion = usarSesion();
-  const { conceptos } = usarCatalogoDeConceptos();
-  const { pideIntereses } = usarInteresesDeNota(edicion, conceptos);
+  const { conceptos: catalogo } = usarCatalogoDeConceptos();
+  const conceptos = computed(() => liberarReservados(catalogo.value, sesion.moduloActivo));
+  const { pideIntereses } = usarInteresesDeNota(edicion, catalogo);
   const paraElegir = computed(() => opcionesDeConcepto(conceptos.value, [edicion.value.tipo]));
   const opcionesDeConceptos = computed(() =>
     opcionesDeConcepto(conceptos.value, [edicion.value.tipo], conceptoGuardado.value),

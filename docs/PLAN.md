@@ -2487,7 +2487,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   RLS de otra empresa, fondo no asignado invisible, bandeja visible, disparador del custodio; `politicas-de-los-modulos` y
   `llaves-entre-esquemas` en verde. **Quedan para después** (anotado en los dos `docs/modulos/*.md`): la configuración
   (§9.5), todo el servidor y el cliente (CC-2 en adelante, CL-2 en adelante) y lo que depende de CCL-M (`preguntarATodos`),
-  CCL-B1 (conceptos de sistema de Bancos, `0035`), CCL-L1 (referencia de destino del libro) y CCL-BZ (bancarización
+  CCL-B1 (conceptos de sistema de Bancos, `0036`), CCL-L1 (referencia de destino del libro) y CCL-BZ (bancarización
   compartida, función `security definer` de la suma de Caja chica, que revisa `seguridad`, V-S1 y V-S2).
 - **2026-11-18 — CC-1 y CL-1, correcciones de la revisión.** Migraciones `0002` de Caja chica y Cuentas por liquidar
   (la `0001` no se tocó). La excepción de CC-f (A′, factura con retención con permiso y motivo) ahora cabe en las
@@ -3185,3 +3185,22 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (`ultima-entrada.ts`). Pruebas con los dos contraejemplos del contador. Decisiones: el recálculo desde un punto recibe
   los factores de las entradas anteriores en `estado.factores` (`entradasSeguidas`); una donación con costo mayor
   que cero cuenta como costo real.
+- **2026-11-18 (CCL-B1, Bancos)**: migración `0036_caja_chica_y_cuentas_por_liquidar` (la `0035` ya la ocupaba
+  `saldos_por_cuenta_permisos`): nueve conceptos de sistema de Caja chica y Cuentas por liquidar (clave puesta a
+  «Fondo de caja chica» y «Reintegro de caja chica» sin clave; repetible). `ClaveDeConceptoDeSistema` y
+  `CONCEPTOS_DE_SISTEMA` los incluyen (los dos sugeridos pasan a sistema). `CONCEPTOS_RESERVADOS_POR_MODULO`
+  (`dominio/conceptos-reservados.ts`) generaliza P3: un concepto reservado se elige a mano en un cheque o una nota solo
+  si su módulo no está activo; activo, `ConceptoReservadoPorSuModulo` (reemplaza a `PagoAProveedoresLoFijaCuentasPorPagar`;
+  «Pago a proveedores» sigue solo en cheques porque en una nota es la marca de Cuentas por pagar). `ModulosDeOrigen`
+  (`estaActivo(operador, modulo)` y `activos(operador)`) reemplaza a `CuentasPorPagarActivo`; `RevisorDeCambios` rechaza
+  cualquier movimiento con origen en un módulo inactivo (`ModuloDeOrigenInactivo` con el nombre del módulo). Leyendas del
+  flujo de efectivo de caja chica y de anticipos (`aplicacion/leyendas-del-flujo.ts`; varias se unen en una sola nota).
+- **2026-11-18 (CCL-B1, correcciones de la revisión, Bancos)**: quien ya tiene un concepto reservado por un módulo lo
+  conserva al corregir la nota (`exigirConceptoElegible` con `yaAsignado` no lo rechaza, esté o no activo el módulo;
+  «Sin clasificar» sigue sin poder elegirse) y `DesmarcarNota` ahora pasa los módulos activos. Migración
+  `0037_conceptos_reservados_por_nombre_normalizado`: repara la `0036` comparando con `core.nombre_normalizado` (como el
+  índice único), alinea la clasificación de §3.2 a y reactiva al concepto que recibe la clave y también a los nueve que la `0036`
+  ya había marcado por `lower(nombre)`, e inserta lo que falte; repetible. Corregir una nota a otro concepto reservado
+  ahora pasa los módulos activos (como crear). Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
+  posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
+  cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.

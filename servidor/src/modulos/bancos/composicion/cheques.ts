@@ -63,7 +63,7 @@ export function rutasDeCheques() {
         consultas: dependencias.consultasMovimientos,
         auditoria: dependencias.auditoria,
         conceptos: dependencias.conceptos,
-        cuentasPorPagar: dependencias.cuentasPorPagar,
+        modulosDeOrigen: dependencias.modulosDeOrigen,
         revisor: dependencias.revisor,
       },
       'cheques',

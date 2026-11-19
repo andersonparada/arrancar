@@ -1,4 +1,5 @@
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
+import { nombreDelModulo } from './conceptos-reservados.js';
 
 /** Los conceptos que el sistema usa por su cuenta no se editan, inactivan ni eliminan. */
 export class ConceptoDeSistema extends ReglaDeNegocioInfringida {
@@ -105,12 +106,12 @@ export class CantidadInvalidaParaReclasificar extends DatoInvalido {
   }
 }
 
-/** Con Cuentas por pagar activo, «Pago a proveedores» lo fija ese módulo al pagar: no se elige en un cheque manual (P3). */
-export class PagoAProveedoresLoFijaCuentasPorPagar extends ReglaDeNegocioInfringida {
-  readonly codigo = 'pago_a_proveedores_lo_fija_cuentas_por_pagar';
+/** Con su módulo activo, el concepto lo fija ese módulo al registrar el movimiento: no se elige a mano (P3, CCL-B1). */
+export class ConceptoReservadoPorSuModulo extends ReglaDeNegocioInfringida {
+  readonly codigo = 'concepto_reservado_por_su_modulo';
 
-  constructor() {
-    super('«Pago a proveedores» lo asigna Cuentas por pagar al pagar una contraseña: elija otro concepto.');
+  constructor(modulo: string) {
+    super(`Este concepto lo registra ${nombreDelModulo(modulo)}: elija otro concepto.`);
   }
 }
 

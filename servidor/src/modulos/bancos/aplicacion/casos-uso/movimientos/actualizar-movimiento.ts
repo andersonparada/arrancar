@@ -56,7 +56,10 @@ export class ActualizarMovimiento {
     const { repositorio, reglas } = this.dependencias;
     const efectoAnterior = movimiento.efectoEnCentavos;
     const { fecha: fechaAnterior, tipo: tipoAnterior } = movimiento.instantanea();
-    const { conceptoId, pideIntereses } = await this.conceptoDeLaCorreccion(movimiento, { solicitud, marcada });
+    const { conceptoId, pideIntereses } = await this.conceptoDeLaCorreccion(operador, movimiento, {
+      solicitud,
+      marcada,
+    });
     exigirInteresesCoherentes(solicitud, pideIntereses);
     movimiento.corregir({ ...solicitud, conceptoId });
     if (solicitud.tipo !== tipoAnterior) await numerarSiCorresponde(this.dependencias.correlativos, movimiento);
@@ -76,13 +79,18 @@ export class ActualizarMovimiento {
    * nota lleva el elegido, que se revisa con su nuevo tipo.
    */
   private async conceptoDeLaCorreccion(
+    operador: Operador,
     movimiento: Movimiento,
     { solicitud, marcada }: { solicitud: SolicitudDeMovimiento; marcada: boolean },
   ): Promise<{ conceptoId: string; pideIntereses: boolean }> {
     const { conceptoId: actual, saldoInicial } = movimiento.instantanea();
     if (marcada && solicitud.tipo !== 'debito') throw new NotaNoMarcable();
     if (saldoInicial || marcada) return { conceptoId: actual, pideIntereses: false };
-    const elegido = await this.dependencias.conceptos.elegido(solicitud.conceptoId, solicitud.tipo, { actual });
+    const modulosActivos = await this.dependencias.modulosDeOrigen.activos(operador);
+    const elegido = await this.dependencias.conceptos.elegido(solicitud.conceptoId, solicitud.tipo, {
+      actual,
+      modulosActivos,
+    });
     return { conceptoId: elegido.id.valor, pideIntereses: elegido.instantanea().pideDatosDeIntereses };
   }
 }

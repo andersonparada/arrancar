@@ -8,13 +8,13 @@ import {
 import { NotaMarcadaConDesglose } from '../../../dominio/errores-de-origen.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
 import type { MovimientoDto } from '../../dto/movimiento.dto.js';
-import type { CuentasPorPagarActivo } from '../../puertos/cuentas-por-pagar-activo.js';
+import type { ModulosDeOrigen } from '../../puertos/modulos-de-origen.js';
 import { movimientoExistente, type DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
 
 export type DependenciasDelReclasificador = Pick<
   DependenciasDeMovimientos,
   'repositorio' | 'consultas' | 'auditoria' | 'conceptos' | 'revisor'
-> & { cuentasPorPagar: CuentasPorPagarActivo };
+> & { modulosDeOrigen: ModulosDeOrigen };
 
 /**
  * Quién pide la reclasificación: las notas (y la bandeja «Sin clasificar», que también trae cheques pendientes)
@@ -79,11 +79,10 @@ export class ReclasificadorDeUnMovimiento {
     }
   }
 
-  /** «Pago a proveedores» solo a un cheque (P3): se puede elegir si Cuentas por pagar no está activo. */
+  /** Un concepto reservado por un módulo se puede elegir si ese módulo no está activo (P3, CCL-B1). */
   private async exigirConceptoElegible(operador: Operador, concepto: Concepto, tipo: TipoDeMovimiento) {
-    if (tipo !== 'cheque') return exigirConceptoElegible(concepto.instantanea(), tipo);
-    const reservado = await this.dependencias.cuentasPorPagar.estaActivo(operador);
-    exigirConceptoElegible(concepto.instantanea(), tipo, { pagoAProveedores: reservado ? 'reservado' : 'permitido' });
+    const modulosActivos = await this.dependencias.modulosDeOrigen.activos(operador);
+    exigirConceptoElegible(concepto.instantanea(), tipo, { modulosActivos });
   }
 
   private async arrastrarAlInverso(original: Movimiento, concepto: Concepto): Promise<void> {

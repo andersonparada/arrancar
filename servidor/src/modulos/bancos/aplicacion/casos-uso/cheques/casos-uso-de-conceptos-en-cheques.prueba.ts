@@ -4,7 +4,7 @@ import {
   ConceptoInactivo,
   ConceptoIncompatible,
   ConceptoObligatorio,
-  PagoAProveedoresLoFijaCuentasPorPagar,
+  ConceptoReservadoPorSuModulo,
 } from '../../../dominio/errores-de-conceptos.js';
 import {
   CONCEPTO_DE_CREDITO,
@@ -75,7 +75,7 @@ describe('«Pago a proveedores» en un cheque manual (P3)', () => {
 
     await expect(
       conModulo.emitir.ejecutar(operador, emisionDe(conModulo.chequeId, { conceptoId: PAGO_A_PROVEEDOR })),
-    ).rejects.toThrow(PagoAProveedoresLoFijaCuentasPorPagar);
+    ).rejects.toThrow(ConceptoReservadoPorSuModulo);
     const conConceptoPropio = await conModulo.emitir.ejecutar(
       operador,
       emisionDe(conModulo.chequeId, { conceptoId: CONCEPTO_DE_DEBITO }),

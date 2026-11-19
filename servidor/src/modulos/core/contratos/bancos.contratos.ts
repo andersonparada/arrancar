@@ -20,7 +20,16 @@ export type ClaveDeConceptoDeSistema =
   | 'reintegro_de_proveedor_de_activo'
   | 'efectivo_para_pagos'
   | 'devolucion_de_efectivo_para_pagos'
-  | 'faltante_de_efectivo';
+  | 'faltante_de_efectivo'
+  | 'fondo_de_caja_chica'
+  | 'devolucion_de_fondo_de_caja_chica'
+  | 'reintegro_de_caja_chica'
+  | 'reintegro_de_caja_chica_de_activo'
+  | 'anticipo_por_liquidar'
+  | 'gasto_de_anticipo'
+  | 'gasto_de_anticipo_de_activo'
+  | 'anticipo_no_liquidado'
+  | 'devolucion_de_anticipo';
 
 /** Una parte del movimiento clasificada con un concepto de sistema; las partes suman el monto. */
 export interface LineaDeConcepto {
