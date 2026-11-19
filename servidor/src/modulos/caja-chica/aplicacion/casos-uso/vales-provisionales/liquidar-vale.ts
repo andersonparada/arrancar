@@ -7,6 +7,7 @@ import { exigirFondoAbierto } from '../../../dominio/reglas-del-fondo.js';
 import {
   devueltoDelVale,
   exigirFechaDeLiquidacion,
+  exigirGastoNoNegativo,
   exigirValeAbierto,
 } from '../../../dominio/reglas-de-vales-provisionales.js';
 import type { Fondo } from '../../../dominio/fondos.js';
@@ -62,7 +63,7 @@ export class LiquidarVale {
   }
 
   /**
-   * @throws RecursoNoEncontrado, FondoNoDisponible, ValeNoEstaAbierto, FechaDelValeInvalida y lo que rechacen los
+   * @throws RecursoNoEncontrado, FondoNoDisponible, ValeNoEstaAbierto, FechaDelValeInvalida, NotasDeCreditoSinGasto y lo que rechacen los
    * comprobantes (`ComprobantesMayoresQueElEfectivo`, `ComprobanteSobreElTope`, `RetencionSinPermiso`…): no se asigna nada.
    */
   async ejecutar(operador: Operador, pedido: PeticionDeLiquidarVale): Promise<ValeProvisionalDto> {
@@ -79,6 +80,7 @@ export class LiquidarVale {
     const fecha = pedido.fecha ?? hoy;
     exigirFechaDeLiquidacion(fecha, { hoy, vale });
     const gastado = gastadoDe(cargados, pedido.valesDeGasto);
+    exigirGastoNoNegativo(gastado);
     await this.dependencias.vales.liquidar(vale.id, {
       devueltoCentavos: devueltoDelVale(vale.montoCentavos, gastado),
       fechaDeLiquidacion: fecha,

@@ -3612,6 +3612,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   excepción (`sobre-el-tope`, `con-retencion`) sí cuentan; (3) la anulación de un comprobante de un vale ya liquidado no cambia
   el `devuelto` (el arqueo lo absorbe); (4) `ConfiguracionDeArqueos` lleva también `diasParaAvisarDeVales` para no sumar una
   dependencia más a fondos y arqueos.
+- **2026-11-19 (CC-6, corrección de la revisión)**: liquidar un vale cuyas notas de crédito superan lo gastado (la factura ya estaba
+  en el fondo, no en el vale) daba `devuelto > monto` y un 500 por el check `vales_devuelto_valido`. Ahora se rechaza antes con
+  `notas_de_credito_sin_gasto` (`exigirGastoNoNegativo`): la nota debe llegar con su factura en la misma liquidación.
 - **2026-11-19 (CL-3, Cuentas por liquidar, servidor):** gastos de los anticipos, sin migraciones nuevas (la tabla `gastos` ya
   estaba en CL-1 y CL-1c). `RecibirDocumento` atiende `cuentas-por-liquidar.recibir_documento` (contrato nuevo): guarda el
   documento en la bandeja con `monto = total − retenciones` y `monto_retenido`; **no rechaza por retención** (queda en la

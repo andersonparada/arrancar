@@ -121,6 +121,17 @@ describe('LiquidarVale', () => {
     expect(dto).toMatchObject({ gastado: '250.00', devuelto: '250.00' });
   });
 
+  it('una nota de crédito sin su factura en la liquidación no justifica el vale', async () => {
+    const vale = await entregar();
+    const factura = await enLaBandeja(30_000);
+    const facturaDelLibro = [...m.comprobantes.filas.values()].find((c) => c.id === factura)!.documentoDeCompraId;
+    const nota = await enLaBandeja(5_000, { tipo: 'nota_de_credito', documentoAfectadoId: facturaDelLibro });
+
+    await expect(liquidar(vale.id, { documentos: [{ comprobanteId: nota }] })).rejects.toMatchObject({
+      codigo: 'notas_de_credito_sin_gasto',
+    });
+  });
+
   it('solo se liquida un vale abierto, con una fecha entre su entrega y hoy', async () => {
     const vale = await entregar({ fecha: '2026-11-05' });
 

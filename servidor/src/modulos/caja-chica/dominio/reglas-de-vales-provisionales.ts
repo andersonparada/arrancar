@@ -1,5 +1,6 @@
 import {
   FechaDelValeInvalida,
+  NotasDeCreditoSinGasto,
   ReceptorDelValeObligatorio,
   ValeConComprobantes,
   ValeMayorQueElEfectivo,
@@ -50,6 +51,11 @@ export function exigirValeAbierto(vale: Pick<ValeProvisional, 'estado' | 'numero
 export function exigirValeAnulable(vale: Pick<ValeProvisional, 'estado' | 'numero'>, comprobantes: number): void {
   exigirValeAbierto(vale);
   if (comprobantes > 0) throw new ValeConComprobantes(vale.numero);
+}
+
+/** @throws NotasDeCreditoSinGasto si lo gastado queda negativo (una nota sin la factura que compensa en el mismo vale). */
+export function exigirGastoNoNegativo(gastadoCentavos: number): void {
+  if (gastadoCentavos < 0) throw new NotasDeCreditoSinGasto(gastadoCentavos);
 }
 
 /**
