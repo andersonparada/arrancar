@@ -1,5 +1,7 @@
 import { EventoDominio } from '../../core/compartido/dominio/evento-dominio.js';
+import type { LineaDeReposicionEmitida } from './eventos-de-reposiciones.js';
 import type { FormaDeEntrega, TipoDeCambioDeMonto } from './fondos.js';
+import type { DesgloseDeReposicion } from './reposiciones.js';
 
 export interface DatosDeFondoAbierto {
   empresaId: string;
@@ -79,6 +81,36 @@ export class CustodioCambiado extends EventoDominio<DatosDeCustodioCambiado> {
   readonly nombre = 'caja-chica.custodio_cambiado';
 
   constructor(datos: DatosDeCustodioCambiado) {
+    super(datos);
+  }
+}
+
+/** La reposición compensada con que se liquidó lo pendiente al cerrar (sin cheque ni nota). */
+export interface ReposicionCompensadaEmitida {
+  reposicionId: string;
+  numero: number;
+  montoCentavos: number;
+  desglose: DesgloseDeReposicion;
+  lineas: LineaDeReposicionEmitida[];
+}
+
+export interface DatosDeFondoCerrado {
+  empresaId: string;
+  fondoId: string;
+  fecha: string;
+  motivo: string;
+  /** Lo que el custodio depositó (cero si no quedó efectivo). */
+  depositoCentavos: number;
+  movimientoId: string | null;
+  cuentaBancariaId: string | null;
+  reposicionCompensada: ReposicionCompensadaEmitida | null;
+}
+
+/** Se cerró el fondo: lo pendiente se liquidó en una reposición compensada y el efectivo se depositó. Se publica tras confirmar. */
+export class FondoCerrado extends EventoDominio<DatosDeFondoCerrado> {
+  readonly nombre = 'caja-chica.fondo_cerrado';
+
+  constructor(datos: DatosDeFondoCerrado) {
     super(datos);
   }
 }

@@ -3,17 +3,20 @@ import {
   AperturaYaAnulada,
   BeneficiarioInvalido,
   CustodioObligatorio,
+  EfectivoNegativoAlCerrar,
   DisminucionDejaElFondoEnCero,
   DisminucionMayorQueElEfectivo,
   FechaAnteriorALaApertura,
   FechaDelFondoInvalida,
   FondoConMovimientos,
+  FondoConValesAbiertos,
   FondoNoDisponible,
   MontoDelFondoInvalido,
   NombreDelFondoInvalido,
   TopeDelFondoInvalido,
 } from './errores-de-fondos.js';
-import type { Fondo, UsoDelFondo } from './fondos.js';
+import type { CifrasDelFondo, Fondo, UsoDelFondo } from './fondos.js';
+import { efectivoEsperado } from './monto-del-fondo.js';
 
 const MAXIMO_DEL_NOMBRE = 80;
 const MAXIMO_DEL_CUSTODIO = 150;
@@ -153,4 +156,17 @@ export function fechaDeAnulacionDelCambio(datos: DatosDeLaFechaDeAnulacion): str
   if (enBancos === 'sin_inverso') return fecha;
   if (enBancos === 'con_inverso' && fechaDelInverso !== null) return fechaDelInverso;
   return hoy > fecha ? hoy : fecha;
+}
+
+/**
+ * Cerrar: sin vales provisionales abiertos y con efectivo esperado que no sea negativo. Lo pendiente se liquida en la
+ * reposición compensada; lo que queda en la caja (el efectivo esperado) es lo que se deposita (§5.8).
+ * @returns el depósito, en centavos (cero si no queda efectivo).
+ * @throws FondoConValesAbiertos, EfectivoNegativoAlCerrar
+ */
+export function depositoAlCerrar(cifras: CifrasDelFondo): number {
+  if (cifras.valesCentavos > 0) throw new FondoConValesAbiertos(cifras.valesCentavos);
+  const esperadoCentavos = efectivoEsperado(cifras);
+  if (esperadoCentavos < 0) throw new EfectivoNegativoAlCerrar(esperadoCentavos);
+  return esperadoCentavos;
 }

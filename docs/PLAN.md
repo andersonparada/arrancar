@@ -3615,6 +3615,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-19 (CC-6, corrección de la revisión)**: liquidar un vale cuyas notas de crédito superan lo gastado (la factura ya estaba
   en el fondo, no en el vale) daba `devuelto > monto` y un 500 por el check `vales_devuelto_valido`. Ahora se rechaza antes con
   `notas_de_credito_sin_gasto` (`exigirGastoNoNegativo`): la nota debe llegar con su factura en la misma liquidación.
+- **2026-11-19 (CC-7, Caja chica, cierre del fondo, servidor):** sin migraciones (la forma `compensada_al_cerrar`, el cambio
+  `cierre` y las columnas de cierre ya estaban en CC-1). `CerrarFondo` (`POST /caja-chica/fondos/:id/cerrar`, `fondos.cerrar`,
+  cuerpo `{ motivo, fecha?, cuentaBancariaId?, referencia? }`, responde el `FondoDto`): fondo abierto y bloqueado; rechaza con
+  vales provisionales abiertos (`fondo_con_vales_abiertos`) y con efectivo esperado negativo (`efectivo_negativo_al_cerrar`);
+  `ReponedorAlCerrar` liquida todos los comprobantes pendientes en una reposición `compensada_al_cerrar` (sin movimiento,
+  mismo correlativo `caja-chica.reposiciones`, documentos del libro a `marcar_procesado`); el efectivo esperado se deposita con
+  una nota de crédito de `devolucion_de_fondo_de_caja_chica` (origen = el fondo; cuenta del cuerpo o la del fondo, si no
+  `cuenta_del_deposito_obligatoria`) y el cambio `cierre` (`nota_de_credito`); sin efectivo, `sin_deposito` con monto 0 y sin
+  nota. Deja el fondo `cerrado` con motivo y fecha, audita `cerrar` (`anterior` = `FondoDto`) en la misma transacción y publica
+  `caja-chica.fondo_cerrado` (con el depósito y la reposición compensada: líneas y desglose). Decisiones: (1) «si hay diferencia
+  con lo contado, se pide antes un arqueo» no se valida en el servidor (el cierre no recibe el conteo): el arqueo previo mete su
+  faltante o sobrante en lo pendiente y el cliente (CC-9) lo sugiere; (2) si lo pendiente suma cero o menos (solo notas de crédito
+  o sobrantes) no se crea reposición compensada (el check exige monto > 0), esos comprobantes quedan sin reponer y su efectivo
+  entra al depósito; (3) un fondo cerrado rechaza todo con `fondo_no_disponible` (incluido anular la compensada o la apertura);
+  el depósito del cierre se corrige solo desde Caja chica: Bancos rechaza `movimiento_de_caja_chica`.
 - **2026-11-19 (CL-3, Cuentas por liquidar, servidor):** gastos de los anticipos, sin migraciones nuevas (la tabla `gastos` ya
   estaba en CL-1 y CL-1c). `RecibirDocumento` atiende `cuentas-por-liquidar.recibir_documento` (contrato nuevo): guarda el
   documento en la bandeja con `monto = total − retenciones` y `monto_retenido`; **no rechaza por retención** (queda en la

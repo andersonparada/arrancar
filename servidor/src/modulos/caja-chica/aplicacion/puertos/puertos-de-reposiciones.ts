@@ -1,6 +1,6 @@
 import type { Operador } from '../../../core/compartido/aplicacion/operador.js';
 import type { Comprobante } from '../../dominio/comprobantes.js';
-import type { LineaDeReposicion, Reposicion } from '../../dominio/reposiciones.js';
+import type { FormaDeReposicion, LineaDeReposicion, Reposicion } from '../../dominio/reposiciones.js';
 import type { SeparacionDeFuncionesConfigurada } from '../../dominio/reglas-de-reposiciones.js';
 
 /** Una reposición por guardar: su `id` ya se usó como documento de origen del cheque o la nota. */
@@ -10,9 +10,10 @@ export interface ReposicionNueva {
   numero: number;
   anioDeNumero: number;
   fecha: string;
-  forma: 'cheque' | 'nota_de_debito';
+  forma: FormaDeReposicion;
   montoCentavos: number;
-  movimientoId: string;
+  /** Nulo solo en la `compensada_al_cerrar`. */
+  movimientoId: string | null;
   custodio: string;
   laHizoElCustodio: boolean;
   lineas: LineaDeReposicion[];

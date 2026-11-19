@@ -66,6 +66,27 @@ declare module '../eventos/bus-eventos.js' {
       montoCentavos: number;
       anulacionEnBancos: 'sin_inverso' | 'con_inverso' | null;
     };
+    /**
+     * Se cerró el fondo. `depositoCentavos` es lo que el custodio depositó (nota de crédito `movimientoId`; cero y sin
+     * movimiento si no quedó efectivo). Lo pendiente se liquidó en `reposicionCompensada` (sin cheque ni nota: el
+     * dinero ya salió de la caja); `lineas` y `desglose` como en `reposicion_registrada`. Sin pendiente, es `null`.
+     */
+    'caja-chica.fondo_cerrado': {
+      empresaId: string;
+      fondoId: string;
+      fecha: string;
+      motivo: string;
+      depositoCentavos: number;
+      movimientoId: string | null;
+      cuentaBancariaId: string | null;
+      reposicionCompensada: {
+        reposicionId: string;
+        numero: number;
+        montoCentavos: number;
+        desglose: { operacionCentavos: number; activoCentavos: number; faltanteCentavos: number };
+        lineas: LineaDeReposicionEmitida[];
+      } | null;
+    };
     /** Cambió quién lleva el efectivo del fondo. */
     'caja-chica.custodio_cambiado': {
       empresaId: string;

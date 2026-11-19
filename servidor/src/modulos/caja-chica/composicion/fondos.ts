@@ -8,8 +8,10 @@ import { AumentarFondo } from '../aplicacion/casos-uso/fondos/aumentar-fondo.js'
 import { CambiarCustodio } from '../aplicacion/casos-uso/fondos/cambiar-custodio.js';
 import { ListarFondos, ObtenerFondo } from '../aplicacion/casos-uso/fondos/consultas-de-fondos.js';
 import type { DependenciasDeFondos } from '../aplicacion/casos-uso/fondos/dependencias-de-fondos.js';
+import { CerrarFondo } from '../aplicacion/casos-uso/fondos/cerrar-fondo.js';
 import { DisminuirFondo } from '../aplicacion/casos-uso/fondos/disminuir-fondo.js';
 import { EditarFondo } from '../aplicacion/casos-uso/fondos/editar-fondo.js';
+import type { DependenciasDeCierre } from '../aplicacion/casos-uso/fondos/cerrar-fondo.js';
 import { FondosControlador } from '../http/fondos.controlador.js';
 import { rutasDeFondos } from '../http/fondos.rutas.js';
 import { ConfiguracionDeArqueosEnConfiguracion } from '../infraestructura/apoyos-de-arqueos.js';
@@ -19,8 +21,14 @@ import {
   MovimientosDeFondosDrizzle,
   ReferenciasDeFondosDrizzle,
 } from '../infraestructura/persistencia/apoyos-de-fondos.drizzle.js';
+import { LibroParaReponerEnMediador } from '../infraestructura/apoyos-de-reposiciones.js';
 import { ConsultasDeFondosDrizzle } from '../infraestructura/persistencia/consultas-de-fondos.drizzle.js';
+import {
+  ComprobantesParaReponerDrizzle,
+  ConsultasDeReposicionesDrizzle,
+} from '../infraestructura/persistencia/consultas-de-reposiciones.drizzle.js';
 import { RepositorioDeFondosDrizzle } from '../infraestructura/persistencia/repositorio-de-fondos.drizzle.js';
+import { RepositorioDeReposicionesDrizzle } from '../infraestructura/persistencia/repositorio-de-reposiciones.drizzle.js';
 
 /**
  * Raíz de composición de los fondos: abrir, editar, custodio, aumentar, disminuir, anular la apertura, lista y ficha.
@@ -38,6 +46,7 @@ export function rutasDeFondosComponidas(): FastifyPluginAsync {
       aumentar: new AumentarFondo(dependencias),
       disminuir: new DisminuirFondo(dependencias),
       anularApertura: new AnularApertura(dependencias),
+      cerrar: new CerrarFondo(dependenciasDeCierre()),
     }),
   );
 }
@@ -57,5 +66,19 @@ export function dependenciasDeFondos(): DependenciasDeFondos {
     publicadorEventos,
     reloj,
     configuracionDeArqueos: new ConfiguracionDeArqueosEnConfiguracion(),
+  };
+}
+
+/** Los fondos más lo que el cierre usa de las reposiciones (la compensada, sus comprobantes y el libro). */
+function dependenciasDeCierre(): DependenciasDeCierre {
+  return {
+    fondos: dependenciasDeFondos(),
+    compensada: {
+      reposiciones: new RepositorioDeReposicionesDrizzle(),
+      consultas: new ConsultasDeReposicionesDrizzle(),
+      comprobantes: new ComprobantesParaReponerDrizzle(),
+      libro: new LibroParaReponerEnMediador(),
+      correlativos: dependenciasCompartidas().correlativos,
+    },
   };
 }

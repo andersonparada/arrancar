@@ -6,6 +6,7 @@ import {
   esquemaAnularApertura,
   esquemaApertura,
   esquemaAumento,
+  esquemaCierre,
   esquemaCustodio,
   esquemaDisminucion,
   esquemaEdicion,
@@ -18,7 +19,7 @@ const RUTA = '/caja-chica/fondos';
 
 /**
  * Los fondos: lista y ficha (`fondos.ver`, solo los asignados al usuario), abrir (`fondos.crear`), editar y cambiar el
- * custodio (`fondos.editar`), aumentar y disminuir (`fondos.cambiar-monto`) y anular la apertura (`fondos.cerrar`).
+ * custodio (`fondos.editar`), aumentar y disminuir (`fondos.cambiar-monto`) y anular la apertura y cerrar (`fondos.cerrar`).
  */
 export function rutasDeFondos(controlador: FondosControlador): FastifyPluginAsyncZod {
   return async (app) => {
@@ -64,6 +65,11 @@ function cambios(app: FastifyInstance, controlador: FondosControlador): void {
     schema: { tags, params, body: esquemaAnularApertura },
     preHandler: proteger({ permiso: 'caja-chica.fondos.cerrar' }),
     handler: controlador.anularApertura,
+  });
+  app.post(`${RUTA}/:id/cerrar`, {
+    schema: { tags, params, body: esquemaCierre },
+    preHandler: proteger({ permiso: 'caja-chica.fondos.cerrar' }),
+    handler: controlador.cerrar,
   });
 }
 

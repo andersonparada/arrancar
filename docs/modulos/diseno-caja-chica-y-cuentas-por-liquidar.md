@@ -1031,7 +1031,7 @@ uno por módulo a la vez.
 | **CC-4** (reposiciones) — **hecho 2026-11-19 (servidor)** | Reponer con desglose, anular (aquí y por aviso), `marcar_procesado`, datos de las impresiones | CC-3 |
 | **CC-5** (arqueos) — **hecho 2026-11-19 (servidor; corregido: el día del conteo sale de la zona de la empresa)** | Propuesta, registrar con diferencia (faltante o sobrante), anular, avisos | CC-3 |
 | **CC-6** (vales provisionales) — **hecho 2026-11-19 (servidor)** | Entregar, liquidar, anular, aviso de vale viejo | CC-3 |
-| **CC-7** (cierre) | Cerrar con reposición compensada y depósito | CC-4, CC-5 y CC-6 |
+| **CC-7** (cierre) — **hecho 2026-11-19 (servidor)** | Cerrar con reposición compensada y depósito | CC-4, CC-5 y CC-6 |
 | **CC-8 / CC-9** (cliente) | 8: fondos, ficha, bandeja, comprobantes, vales de gasto, Ingreso con referencia. 9: reposición, arqueo, vales provisionales, cierre, impresiones | CC-4 (8) y CC-7 (9) |
 | **CC-10** (reportes, servidor y cliente) | CC-R1 a R5 | CC-7 |
 | **CC-11** (QA) | Abrir con cheque no negociable; factura desde la ficha; factura con retención (queda en la bandeja; la asigna quien tiene el permiso, con motivo); vale sobre el tope (permiso); reponer (desglose en Bancos); arqueo con faltante; custodio que repone (aviso); usuario sin el fondo asignado (no lo ve); bancarización con una factura de caja chica y un cheque de Cuentas por pagar al mismo proveedor; cerrar; celular | CC-9 y CC-10 |

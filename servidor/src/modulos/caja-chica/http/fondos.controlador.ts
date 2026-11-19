@@ -3,6 +3,7 @@ import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.
 import type { AbrirFondo } from '../aplicacion/casos-uso/fondos/abrir-fondo.js';
 import type { AnularApertura } from '../aplicacion/casos-uso/fondos/anular-apertura.js';
 import type { AumentarFondo } from '../aplicacion/casos-uso/fondos/aumentar-fondo.js';
+import type { CerrarFondo } from '../aplicacion/casos-uso/fondos/cerrar-fondo.js';
 import type { CambiarCustodio } from '../aplicacion/casos-uso/fondos/cambiar-custodio.js';
 import type { ListarFondos, ObtenerFondo } from '../aplicacion/casos-uso/fondos/consultas-de-fondos.js';
 import type { DisminuirFondo } from '../aplicacion/casos-uso/fondos/disminuir-fondo.js';
@@ -11,6 +12,7 @@ import type {
   AnularAperturaSolicitada,
   AperturaSolicitada,
   AumentoSolicitado,
+  CierreSolicitado,
   CustodioSolicitado,
   DisminucionSolicitada,
   EdicionSolicitada,
@@ -27,6 +29,7 @@ export interface CasosDeUsoDeFondos {
   aumentar: AumentarFondo;
   disminuir: DisminuirFondo;
   anularApertura: AnularApertura;
+  cerrar: CerrarFondo;
 }
 
 type ConId<Cuerpo> = FastifyRequest<{ Params: ParamsDeFondo; Body: Cuerpo }>;
@@ -66,4 +69,7 @@ export class FondosControlador {
       fondoId: solicitud.params.id,
       ...solicitud.body,
     });
+
+  cerrar = (solicitud: ConId<CierreSolicitado>) =>
+    this.casosDeUso.cerrar.ejecutar(operadorDe(solicitud), { fondoId: solicitud.params.id, ...solicitud.body });
 }
