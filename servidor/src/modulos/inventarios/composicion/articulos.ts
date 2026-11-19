@@ -24,6 +24,7 @@ import { ListarArticulos } from '../aplicacion/casos-uso/articulos/listar-articu
 import { ObtenerArticulo } from '../aplicacion/casos-uso/articulos/obtener-articulo.js';
 import { ArticulosControlador } from '../http/articulos.controlador.js';
 import { rutasArticulos } from '../http/articulos.rutas.js';
+import { ConsultasDeUsoDelKardexDrizzle } from '../infraestructura/persistencia/consultas-de-uso-del-kardex.drizzle.js';
 import { ConsultasArticulosDrizzle } from '../infraestructura/persistencia/consultas-articulos.drizzle.js';
 import { RepositorioArticulosDrizzle } from '../infraestructura/persistencia/repositorio-articulos.drizzle.js';
 
@@ -32,6 +33,7 @@ const dependenciasDeArticulos = () => ({
   auditoria: dependenciasCompartidas().auditoria,
   repositorio: new RepositorioArticulosDrizzle(),
   consultas: new ConsultasArticulosDrizzle(),
+  uso: new ConsultasDeUsoDelKardexDrizzle(),
   conversiones: new AlmacenDeConversionesDrizzle(),
   lotes: new AlmacenDeLotesDrizzle(),
   correlativos: dependenciasCompartidas().correlativos,

@@ -8,6 +8,8 @@ import {
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 import { type Bodega, BodegaInvalido } from '../../../dominio/bodega.js';
 import { BodegasEnMemoria } from '../../../pruebas/dobles-de-bodegas.js';
+import { UsoDelKardexEnMemoria } from '../../../pruebas/dobles-de-uso-del-kardex.js';
+import { BodegaConExistencias } from '../../../dominio/errores.js';
 import type { SolicitudDeBodega } from '../../dto/bodega.dto.js';
 import type { ConsultasDeAccesosABodegas, UsuarioConAcceso } from '../../puertos/consultas-de-accesos-a-bodegas.js';
 import { ActualizarBodega } from './actualizar-bodega.js';
@@ -62,15 +64,18 @@ class AccesosEnMemoria extends BodegasEnMemoria implements ConsultasDeAccesosABo
 
 let auditoria: AuditoriaEnMemoria;
 let registros: AccesosEnMemoria;
+let uso: UsoDelKardexEnMemoria;
 
 function casosDeUso() {
   registros = new AccesosEnMemoria();
   auditoria = new AuditoriaEnMemoria();
+  uso = new UsoDelKardexEnMemoria();
   const dependencias = {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     repositorio: registros,
     consultas: registros,
     accesos: registros,
+    uso,
     auditoria,
   };
   return {
@@ -116,6 +121,18 @@ describe('bodegas', () => {
     await expect(casos.crear.ejecutar(operador, solicitud({ codigo: 'bodega número uno' }))).rejects.toThrow(
       BodegaInvalido,
     );
+  });
+
+  it('con existencias no se inactiva; sin ellas sí', async () => {
+    const casos = casosDeUso();
+    const creado = await casos.crear.ejecutar(operador, solicitud());
+    uso.bodegasConExistencias.add(creado.id);
+    const inactivar = () =>
+      casos.actualizar.ejecutar(operador, { bodegaId: creado.id, solicitud: solicitud({ activo: false }) });
+
+    await expect(inactivar()).rejects.toBeInstanceOf(BodegaConExistencias);
+    uso.bodegasConExistencias.clear();
+    expect((await inactivar()).activo).toBe(false);
   });
 
   it('se inactiva sin perder sus datos y queda en la auditoría', async () => {

@@ -38,7 +38,7 @@ export function consumirCapas(
       valorRestante: capa.valorRestante - consumo.valor,
     };
   });
-  if (pendiente > 0n) throw new ExistenciaNegativa(movimiento.fecha, pendiente, movimiento.id);
+  if (pendiente > 0n) throw new ExistenciaNegativa(movimiento.fecha, pendiente, { movimientoId: movimiento.id });
   return { capas: nuevas, consumos };
 }
 

@@ -20,7 +20,7 @@ export function verificarCantidadesPorClave(movimientos: readonly MovimientoDeCa
     if (m.tipo === 'valor') continue;
     const actual = saldos.get(m.clave) ?? 0n;
     const nuevo = sumaExistencia(m.tipo) ? actual + m.cantidad : actual - m.cantidad;
-    if (nuevo < 0n) throw new ExistenciaNegativa(m.fecha, -nuevo, m.id);
+    if (nuevo < 0n) throw new ExistenciaNegativa(m.fecha, -nuevo, { movimientoId: m.id });
     saldos.set(m.clave, nuevo);
   }
 }

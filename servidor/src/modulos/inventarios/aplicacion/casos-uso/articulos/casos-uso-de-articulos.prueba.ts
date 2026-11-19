@@ -7,7 +7,7 @@ import {
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 import { ArticuloInvalido } from '../../../dominio/articulo.js';
-import { ConversionInvalida, LoteInvalido } from '../../../dominio/errores.js';
+import { ArticuloConExistencias, ConversionInvalida, LoteInvalido, UnidadBaseFija } from '../../../dominio/errores.js';
 import {
   ArticulosEnMemoria,
   ConversionesEnMemoria,
@@ -16,6 +16,7 @@ import {
   prefijoDePrueba,
   relojDePrueba,
 } from '../../../pruebas/dobles-de-articulos.js';
+import { UsoDelKardexEnMemoria } from '../../../pruebas/dobles-de-uso-del-kardex.js';
 import type { SolicitudDeArticulo } from '../../dto/articulo.dto.js';
 import { ActualizarArticulo } from './actualizar-articulo.js';
 import { CrearArticulo } from './crear-articulo.js';
@@ -52,14 +53,17 @@ const solicitud = (cambios: Partial<SolicitudDeArticulo> = {}): SolicitudDeArtic
 
 let auditoria: AuditoriaEnMemoria;
 let registros: ArticulosEnMemoria;
+let uso: UsoDelKardexEnMemoria;
 
 function casosDeUso() {
   registros = new ArticulosEnMemoria();
   auditoria = new AuditoriaEnMemoria();
+  uso = new UsoDelKardexEnMemoria();
   const dependencias = {
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
     repositorio: registros,
     consultas: registros,
+    uso,
     auditoria,
     conversiones: new ConversionesEnMemoria(),
     lotes: new LotesEnMemoria(),
@@ -117,6 +121,30 @@ describe('artículos', () => {
     ['con peso en cero', { pesoKgPorUnidadBase: '0' }],
   ])('no se registra %s', async (_caso, cambios) => {
     await expect(casos.crear.ejecutar(operador, solicitud(cambios))).rejects.toThrow(ArticuloInvalido);
+  });
+
+  it('con movimientos no cambia su unidad base ni si maneja lotes, pero sí otros datos', async () => {
+    const casos = casosDeUso();
+    const creado = await casos.crear.ejecutar(operador, solicitud());
+    uso.articulosConMovimientos.add(creado.id);
+    const cambio = (cambios: Partial<SolicitudDeArticulo>) =>
+      casos.actualizar.ejecutar(operador, { articuloId: creado.id, solicitud: solicitud(cambios) });
+
+    await expect(cambio({ unidadBaseId: CAJA })).rejects.toBeInstanceOf(UnidadBaseFija);
+    await expect(cambio({ manejaLotes: true })).rejects.toBeInstanceOf(UnidadBaseFija);
+    expect((await cambio({ nombre: 'Otro nombre' })).nombre).toBe('Otro nombre');
+  });
+
+  it('con existencias no se inactiva; sin ellas sí', async () => {
+    const casos = casosDeUso();
+    const creado = await casos.crear.ejecutar(operador, solicitud());
+    uso.articulosConExistencias.add(creado.id);
+    const inactivar = () =>
+      casos.actualizar.ejecutar(operador, { articuloId: creado.id, solicitud: solicitud({ activo: false }) });
+
+    await expect(inactivar()).rejects.toBeInstanceOf(ArticuloConExistencias);
+    uso.articulosConExistencias.clear();
+    expect((await inactivar()).activo).toBe(false);
   });
 
   it('se inactiva sin perder sus datos y queda en la auditoría', async () => {

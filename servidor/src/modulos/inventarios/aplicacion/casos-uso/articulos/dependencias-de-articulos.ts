@@ -7,6 +7,7 @@ import { Identificador } from '../../../../core/compartido/dominio/identificador
 import type { Articulo } from '../../../dominio/articulo.js';
 import type { AlmacenDeConversiones } from '../../puertos/almacen-de-conversiones.js';
 import type { AlmacenDeLotes } from '../../puertos/almacen-de-lotes.js';
+import type { ConsultasDeUsoDelKardex } from '../../puertos/consultas-de-uso-del-kardex.js';
 import type { ConsultasArticulos } from '../../puertos/consultas-articulos.js';
 import type { LectorDePrefijoDeCodigos } from '../../puertos/lector-de-prefijo-de-codigos.js';
 import type { RepositorioArticulos } from '../../puertos/repositorio-articulos.js';
@@ -16,6 +17,7 @@ export interface DependenciasDeArticulos {
   unidadDeTrabajo: UnidadDeTrabajo;
   repositorio: RepositorioArticulos;
   consultas: ConsultasArticulos;
+  uso: ConsultasDeUsoDelKardex;
   auditoria: Auditoria;
   conversiones: AlmacenDeConversiones;
   lotes: AlmacenDeLotes;

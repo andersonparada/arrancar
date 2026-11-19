@@ -1,15 +1,26 @@
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../../core/compartido/dominio/errores.js';
 
+/** De dónde viene el faltante: el movimiento que no alcanza y, cuando se sabe, su artículo. */
+export interface OrigenDelFaltante {
+  movimientoId?: string;
+  articuloId?: string;
+}
+
 /** En algún punto de la línea del tiempo la existencia quedaría negativa (INV-P4: nunca se permite). */
 export class ExistenciaNegativa extends ReglaDeNegocioInfringida {
   readonly codigo = 'existencia_negativa';
 
-  constructor(fecha: string, faltante: bigint, movimientoId?: string) {
-    super(`La existencia quedaría negativa el ${fecha}.`, {
-      fecha,
-      movimientoId,
-      faltante: faltante.toString(),
-    });
+  constructor(
+    readonly fecha: string,
+    readonly faltante: bigint,
+    readonly origen: OrigenDelFaltante = {},
+  ) {
+    super(`La existencia quedaría negativa el ${fecha}.`, { fecha, faltante: faltante.toString(), ...origen });
+  }
+
+  /** El mismo error, diciendo de qué artículo se trata (el motor no conoce el artículo). */
+  paraElArticulo(articuloId: string): ExistenciaNegativa {
+    return new ExistenciaNegativa(this.fecha, this.faltante, { ...this.origen, articuloId });
   }
 }
 

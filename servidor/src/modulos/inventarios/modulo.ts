@@ -6,6 +6,7 @@ import { rutasDeCategorias } from './composicion/categorias.js';
 import { rutasDeArticulos } from './composicion/articulos.js';
 import { rutasDeBodegas } from './composicion/bodegas.js';
 import { rutasDeAccesosABodegas } from './composicion/accesos-a-bodegas.js';
+import { rutasDeMovimientos } from './composicion/movimientos.js';
 import { ALCANCE_DE_BODEGAS } from './infraestructura/persistencia/accesos-a-bodegas.tablas.js';
 // generador: importaciones
 
@@ -54,6 +55,23 @@ export const moduloInventarios: DefinicionModulo = {
     },
     { clave: 'inventarios.bodegas.importar', descripcion: 'Importar bodegas desde Excel' },
     { clave: 'inventarios.bodegas.exportar', descripcion: 'Exportar bodegas a Excel' },
+    {
+      clave: 'inventarios.existencias.ver',
+      descripcion: 'Ver las existencias, el kardex y los documentos de las bodegas que tiene',
+    },
+    {
+      clave: 'inventarios.costos.ver',
+      descripcion: 'Ver los costos y valores del inventario (sin este permiso solo ve cantidades)',
+    },
+    { clave: 'inventarios.metodo-de-costeo.ver', descripcion: 'Ver la política de costeo del inventario' },
+    {
+      clave: 'inventarios.metodo-de-costeo.elegir',
+      descripcion: 'Elegir el método de costeo antes del primer movimiento',
+    },
+    { clave: 'inventarios.entradas.crear', descripcion: 'Registrar entradas manuales de mercadería' },
+    { clave: 'inventarios.entradas.anular', descripcion: 'Anular entradas manuales de mercadería' },
+    { clave: 'inventarios.salidas.crear', descripcion: 'Registrar salidas de mercadería por consumo' },
+    { clave: 'inventarios.salidas.anular', descripcion: 'Anular salidas de mercadería por consumo' },
     // generador: permisos
   ],
   recursosConAlcance: [
@@ -72,6 +90,7 @@ export const moduloInventarios: DefinicionModulo = {
     rutasDeArticulos(),
     rutasDeBodegas(),
     rutasDeAccesosABodegas(),
+    rutasDeMovimientos(),
     // generador: rutas
   ]),
 };

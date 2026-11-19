@@ -3571,6 +3571,51 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   búsqueda de artículos); la regla «no se inactiva con existencias, conteos ni traslados en tránsito» y la guardia de
   eliminar con documentos llegan con las tablas de INV-4 (hoy eliminar solo lo impiden las llaves); el responsable con
   usuario no va en el Excel (se elige en el formulario); la lista de usuarios de una bodega exige `asignar`.
+- **2026-11-19 — INV-4 (Inventarios, servidor): el kardex.** Migración `0004_inv4_kardex`: `metodos_de_costeo` (check de
+  `desde` de V-1: 1 de enero del año siguiente a la autorización), `documentos` (alcance por bodega, nunca se borran),
+  `movimientos` (el kardex, solo RLS de empresa: el recálculo toca todas las bodegas; con `tipo = 'traslado'` y
+  `movimientos_bodega_idx`), `existencias` (alcance por bodega), `saldos_de_articulos`, `capas` y `consumos_de_capas`
+  (derivados de PEPS, se regeneran) y `recalculos` (con las columnas de repartos). Casos de uso sobre el motor de INV-3:
+  `RegistrarEntradaManual` (causa, soporte, costo escrito; donación recibida a costo cero con aviso y valor razonable en el
+  evento, V-10), `RegistrarSalida` (por consumo a `gasto`, concepto propuesto por el artículo), `AnularDocumento` (entradas y
+  salidas, con motivo, auditoría `anular` en `inventarios.entradas` o `.salidas` y recálculo), `ElegirMetodoDeCosteo` y
+  `ObtenerPoliticaDeCosteo`, y las consultas de documentos, existencias y kardex. Candados de §6: el compartido del cierre y
+  uno por artículo, ordenados por id. Cada documento recalcula el artículo (`RecalculadorDeArticulo`): recorre todo su
+  historial con el motor (promedio o PEPS), revisa la existencia de la empresa y la de cada bodega y lote, y escribe solo las
+  filas que cambian, más capas, saldo y `recalculos`; las existencias por bodega se mueven después, para que la existencia
+  negativa salga como `existencia_negativa` con artículo y fecha y no como el check de la tabla. El kardex por bodega calcula
+  su propio saldo y no devuelve los de la empresa a quien no ve todas las bodegas (`GET /inventarios/articulos/:id/kardex`;
+  sin bodega, 403); sin `inventarios.costos.ver` los DTO llevan solo cantidades. Permisos: `existencias.ver`, `costos.ver`,
+  `metodo-de-costeo.ver` y `.elegir`, `entradas.crear` y `.anular`, `salidas.crear` y `.anular`. Eventos
+  `inventarios.entrada_registrada`, `salida_registrada`, `documento_anulado` y `costo_recalculado`. Rutas: `/inventarios/entradas`,
+  `/inventarios/salidas` (con `…/:id/anular`), `/inventarios/documentos`, `/inventarios/existencias`,
+  `/inventarios/metodo-de-costeo`. Pruebas: dominio (decimales, conversión de unidades, entrada y salida, cambios del
+  recorrido), casos de uso con el kardex en memoria, tablas (checks), API del promedio (§7.6), PEPS, concurrencia, aislamiento con
+  dos bodegueros (R-3), documentos, anulaciones y recálculo de 5,000 movimientos; todas cierran con el «Cuadre del kardex»
+  (`soporte/cuadre-del-kardex.ts`: existencias, saldos y capas contra los movimientos). Decisiones: la primera fila del método
+  rige desde `2000-01-01`; el método del recálculo es el del día del documento (una sola fila hasta que exista el cambio de
+  método); los cierres no existen hasta INV-8 (el puerto `MesesCerrados` responde «ninguno cerrado», como Activos fijos); una
+  salida a gasto sin concepto, cuyo artículo tampoco lo propone, falla; `consumos_de_capas.valor` admite cero (una capa de donación a costo
+  cero); `documentos` lleva `bodega_id` obligatorio hasta que lleguen los de solo valor (INV-5). **Pendiente:**
+  `CambiarMetodoDeCosteo` (con autorización de la SAT y recálculo desde el 1 de enero), `repartos_de_costo` y los costos
+  adicionales (INV-5), el cierre mensual (INV-8), `estado_de_traslado` y `ajuste_id` en `documentos` (INV-6 e INV-9), el reporte
+  «Cuadre del kardex» (INV-13: hoy solo está en las pruebas), el destino a Activos fijos y las salidas especiales (INV-AF y
+  §6.6). Riesgo anotado: los candados de artículo mantienen una conexión del grupo (10) mientras esperan; con 10 documentos
+  a la vez sobre un mismo artículo, quien tiene el candado puede no conseguir la conexión que necesita para leer la
+  configuración (la prueba de concurrencia usa 8). Se corrigió también `bodegas.prueba.ts` (INV-2), que insertaba empresas con
+  el rol de la aplicación y la RLS del núcleo R-3 ya no lo permite.
+- **2026-11-19 — INV-4, correcciones de revisión.** Faltaban tres guardias que INV-1 e INV-2 dejaron para INV-4. (1) Un
+  artículo con movimientos no cambia su unidad base ni `maneja_lotes` (`unidad_base_fija`); la revisión toma el candado del
+  artículo del kardex, para que un movimiento en camino no se cuele. (2) Un artículo con existencias (suma de
+  `saldos_de_articulos` mayor que cero) no se inactiva (`articulo_con_existencias`) y una bodega con existencias tampoco
+  (`bodega_con_existencias`, error nuevo; el diseño solo nombraba el del artículo). Conteos y traslados en tránsito de la
+  bodega llegan con INV-6 e INV-9. (3) Carrera del método de costeo: `ElegirMetodoDeCosteo` toma el candado
+  `inventarios.metodo:<empresa>` y `MetodoDeLaEmpresa.usarParaMover` lo toma solo mientras la fila del día no esté fijada
+  (con la fila fijada no bloquea a nadie), vuelve a leer y recién entonces crea o fija; además `cambiar` solo actualiza filas
+  sin `fijado_en` y, si no tocó ninguna, responde `metodo_fijado`. Con esto dos primeros documentos de artículos distintos ya
+  no chocan con `metodos_de_costeo_desde_unico`. Pruebas: casos de uso y API (`inventarios-guardias-de-catalogos`,
+  `inventarios-guardias-de-metodo`). **Pendiente:** la guardia de bodega no toma candado, así que un movimiento simultáneo
+  a la inactivación podría colarse (el registrador lo rechaza si ve la bodega inactiva ya confirmada).
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de
