@@ -3470,13 +3470,40 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   costo de la cuota es el del activo al cerrar (el historial de traslados llega con AF-8); (8) con `primer_mes = mes_siguiente`
   se deprecia también a los dados de baja en el mes (§3.6; las bajas llegan con AF-8). Pendientes: los hallazgos «inventario en
   curso» (AF-10) y «N bienes llevan más de X meses en bodega» (AFI-7, que trae `activos-fijos.bodega.meses_de_aviso`) y el
-  bloqueo de «cerrar el primer mes» por saldos iniciales usa `activos.origen = 'saldo_inicial'` hasta que exista AF-6.
+  bloqueo de «cerrar el primer mes» por saldos iniciales usa `activos.origen = 'saldo_inicial'` (con AF-6 sigue igual).
 - **2026-11-19 — AF-5, corrección de revisión (Activos fijos).** No se puede cerrar un mes posterior al mes en curso (el de
   `reloj.hoy` de la empresa): la revisión devuelve solo el bloqueo `mes_por_llegar` (como con `mes_anterior_sin_cerrar`, sin
   calcular) y cerrar responde `422 mes_por_llegar` (`MesPorLlegar`); antes se podían congelar cuotas y publicar
   `depreciacion_cerrada` de meses que no han ocurrido, y luego poner en uso, bajas y traslados chocaban con `mes_cerrado`. Decisión
   por cuenta propia (lo mínimo pedido): el **mes en curso sí se puede cerrar**; si debe exigirse que haya terminado (como el
   Libro de compras) lo decide el usuario o el contador. Las pruebas de API usan septiembre y octubre de 2026.
+- **2026-11-19 — AF-6 (Activos fijos, servidor): saldos iniciales.** Migración `0006_af6_saldos_iniciales`:
+  `activos_fijos.saldos_iniciales` (§5.6; PK `activo_id`, llave compuesta con la empresa **on delete cascade**, checks de
+  costo, acumuladas, base fiscal y vida restante, solo `politicaPorEmpresa()`). Dominio puro: `validarSaldoInicial` (terrenos y
+  obras en construcción se normalizan sin depreciar), `tramosDeSaldoInicial` (los dos tramos `saldo_inicial` desde el mes de la
+  fecha de inicio; el ejemplo del camión de 120,000 con 50,000 depreciados y 36 meses por delante da cuotas de 1,944.44 y, en el
+  fiscal al 20 % con 72,000 depreciados, de 2,000.00), `crearActivoDeSaldoInicial` / `corregirActivoDeSaldoInicial` y
+  `Costo.deSaldoInicial`. Casos de uso `GuardarSaldoInicial`, `CorregirSaldoInicial` (auditoría `corregir`),
+  `EliminarSaldoInicial` (auditoría `eliminar`), `ListarSaldosIniciales` (estado de la carga, cuadre y por clase),
+  `ObtenerSaldoInicial` y `GuardarSaldoInicialPorCodigo` (Excel: el padre por su código). Rutas `GET/POST /activos-fijos/saldos-iniciales`,
+  `GET/PUT/DELETE …/:activoId`, `GET …/exportar`, `GET …/plantilla` y `POST …/importar` con permisos
+  `activos-fijos.saldos-iniciales.ver/.crear/.editar/.eliminar/.importar/.exportar`. Solo se escribe con la carga abierta y
+  sin ningún mes cerrado (`carga_inicial_cerrada`, `saldos_con_cierres`; se toma el candado compartido del cierre y se lee la
+  carga con su bloqueo `for share`). **Pregunta de EM-2:** `RevisarCierreDeCargaEnActivosFijos` responde por el mediador
+  (`empresas.revisar_cierre_de_carga`) con los avisos `sin_saldos_iniciales`, `vida_agotada_con_saldo`, `sin_ubicacion` y
+  `en_construccion` y las cifras del cuadre (general y por clase); **aviso `empresas.fecha_de_inicio_por_cambiar`:**
+  `ValidarFechaDeInicioEnActivosFijos` rechaza (`activos_con_fecha_fuera_de_la_carga`) si algún saldo quedaría con adquisición o
+  uso desde la fecha nueva, si un activo de otro origen quedaría anterior a ella o si hay un cierre; si no, mueve `fecha_de_corte`,
+  el `desde_periodo` de los tramos `saldo_inicial` y la fecha del costo. `acumuladasAntesDe` ya suma la acumulada del saldo
+  inicial. Decisiones por cuenta propia: (1) el costo `saldo_inicial` queda con `aplica_al_libro_fiscal = true` (los checks de
+  `costos` lo exigen fuera de lo manual) y el **costo fiscal real** vive en `saldos_iniciales.costo_fiscal`: la base fiscal y la
+  venta (AF-7/AF-9) deben leerlo de ahí y no sumar ese costo al fiscal; (2) el inicio de uso no puede ser anterior a la adquisición (se
+  reutiliza `ponerEnUso`); (3) la vida útil restante en 0 deja solo el tramo fiscal (hallazgo `vida_agotada_con_saldo`); (4) un
+  activo de saldo inicial no se elimina ni se quita de uso por las rutas generales (`activo_de_saldo_inicial`) y su ficha no
+  cambia clase, cantidad, origen ni fecha de adquisición; (5) corregir rehace el activo conservando su id, código y marca de
+  ocio, y reescribe la fila de alta del historial; (6) las obras en construcción entran con acumuladas en 0 y sin tramos; (7) en
+  Excel las filas se crean en orden, así que el padre va antes que su componente. Pendiente: la ficha del activo no muestra aún el
+  saldo inicial (costo fiscal y acumuladas), que llega con AF-6c.
 - **2026-11-19 — INV-2 (Inventarios, servidor).** Bodegas con alcance de registros propio `inventarios.bodegas`: tablas
   `bodegas` y `accesos_a_bodegas` (migración `0003_inv2_bodegas_y_accesos`, con el disparador `asignar_al_creador` del core
   y `asignar_bodega_al_responsable`, que da acceso al responsable que es usuario de la empresa sin pedirle el permiso de

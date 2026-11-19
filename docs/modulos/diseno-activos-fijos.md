@@ -1317,7 +1317,7 @@ dos decimales.
 | **AFI-3** (con AF-4) | `PonerEnUsoVarios`, ubicación y «En bodega de activos» al ponerlo disponible, textos de «Disponible para uso» | backend | |
 | **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | **Programado, en revisión** (2026-11-19; migración `0005_af5_cierres_y_cuotas`; faltan los hallazgos de inventario en curso (AF-10) y de bodega (AFI-7)) |
 | AF-5c | Cierre de depreciación y pestaña Depreciación | frontend | |
-| **AF-6** | Saldos iniciales (con costo fiscal, A1; con «Cantidad» y «En bodega», AFI), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | |
+| **AF-6** | Saldos iniciales (con costo fiscal, A1; con «Cantidad» y «En bodega», AFI), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | **Programado, en revisión** (2026-11-19; migración `0006_af6_saldos_iniciales`; notas abajo) |
 | AF-6c | Saldos iniciales (Administración) | frontend | |
 | **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend | |
 | AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | |
@@ -1360,6 +1360,18 @@ dos decimales.
   correlativo. Las unidades de una asignación comparten `alta_conjunta_id` solo si son más de una.
 - El archivo del costo manual (`archivo_id`) tiene su columna, pero la ruta de subida queda pendiente (revisión de `seguridad`).
 - La lista de costos de un activo y su ficha usan `activos.ver`; la ficha trae `costo` (Σ de los vigentes).
+
+**Notas de lo programado en AF-6 (servidor, migración `0006_af6_saldos_iniciales`):**
+
+- El costo `saldo_inicial` queda con `aplica_al_libro_fiscal = true` (los checks de `costos` exigen que lo demás vaya al libro
+  fiscal) y **no cuenta** en el costo fiscal del activo: este es `saldos_iniciales.costo_fiscal` + Σ costos fiscales posteriores. AF-7
+  (mejoras y costos posteriores) y AF-9 (venta) deben leer de ahí.
+- El inicio de uso debe ser igual o posterior a la adquisición y ambos anteriores a la fecha de inicio de la empresa. Una obra sin
+  terminar (`enConstruccion`) y un terreno entran sin depreciación acumulada; la obra queda sin tramos y se pone en uso después.
+- Vida útil restante en 0: sin tramo contable (solo fiscal) y el aviso `vida_agotada_con_saldo` al cerrar la carga. Un activo de
+  saldo inicial no se elimina ni se quita de uso por las rutas generales de activos (`activo_de_saldo_inicial`).
+- Excel: las filas se crean en orden; el padre se escribe por su código y debe ir antes que su componente o ya estar cargado.
+- Falta para AF-6c: mostrar el saldo inicial (costo fiscal y acumuladas) en la ficha del activo.
 
 AF-6 puede adelantarse a AF-5 si se quiere cargar saldos antes de cerrar meses. El paso **AF-P22** va antes de AF-2c y
 necesita la revisión de `seguridad` de §6.13. **AFI-1** no es un paso aparte: son columnas de la migración de AF-2. AFI-0
