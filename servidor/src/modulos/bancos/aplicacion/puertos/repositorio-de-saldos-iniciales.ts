@@ -5,6 +5,8 @@ export interface CabeceraDeSaldoInicial {
   /** El saldo de la cuenta contable en los libros anteriores, solo para comparar; nulo = sin dato. */
   saldoSegunLibrosAnteriores: string | null;
   observaciones: string | null;
+  /** El archivo de la evidencia (último estado de cuenta del sistema anterior), si se subió. */
+  evidenciaArchivoId: string | null;
 }
 
 /** Lo que se escribe de la cabecera. */
@@ -23,4 +25,6 @@ export interface RepositorioDeSaldosIniciales {
   agregar(empresaId: string, cuentaBancariaId: string, datos: DatosDeCabecera): Promise<CabeceraDeSaldoInicial>;
   guardar(cabecera: CabeceraDeSaldoInicial): Promise<void>;
   eliminar(id: string): Promise<void>;
+  /** Pone (o quita, con `null`) el archivo de la evidencia de la cabecera. */
+  ponerEvidencia(id: string, archivoId: string | null): Promise<void>;
 }

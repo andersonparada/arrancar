@@ -1,6 +1,8 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { leerDocumentoDeSolicitud } from '../../core/archivos/http/leer-documento.js';
 import { contextoDe } from '../../core/compartido/http/contexto-de-la-solicitud.js';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
+import type { AbrirEvidenciaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/abrir-evidencia-de-apertura.js';
 import type { AgregarPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/agregar-partida-de-apertura.js';
 import type { AnularPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/anular-partida-de-apertura.js';
 import type { CorregirPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/corregir-partida-de-apertura.js';
@@ -9,7 +11,9 @@ import type { EliminarSaldoInicial } from '../aplicacion/casos-uso/saldos-inicia
 import type { GuardarSaldoInicial } from '../aplicacion/casos-uso/saldos-iniciales/guardar-saldo-inicial.js';
 import type { ListarSaldosIniciales } from '../aplicacion/casos-uso/saldos-iniciales/listar-saldos-iniciales.js';
 import type { ObtenerSaldoInicial } from '../aplicacion/casos-uso/saldos-iniciales/obtener-saldo-inicial.js';
+import type { QuitarEvidenciaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/quitar-evidencia-de-apertura.js';
 import type { RevisarCierreDeCargaEnBancos } from '../aplicacion/casos-uso/saldos-iniciales/revisar-cierre-de-carga-en-bancos.js';
+import type { SubirEvidenciaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/subir-evidencia-de-apertura.js';
 import type { SolicitudDeEliminacion } from './movimientos.esquemas-http.js';
 import type {
   AnulacionDePartidaSolicitada,
@@ -30,6 +34,9 @@ export interface CasosDeUsoDeSaldosIniciales {
   eliminarPartida: EliminarPartidaDeApertura;
   anularPartida: AnularPartidaDeApertura;
   revisarCierre: RevisarCierreDeCargaEnBancos;
+  subirEvidencia: SubirEvidenciaDeApertura;
+  quitarEvidencia: QuitarEvidenciaDeApertura;
+  abrirEvidencia: AbrirEvidenciaDeApertura;
 }
 
 /** Traduce las peticiones HTTP de los saldos iniciales con partidas a casos de uso. Controlador delgado. */
@@ -89,5 +96,31 @@ export class SaldosInicialesControlador {
       motivo: solicitud.body.motivo,
     });
     return respuesta.status(204).send();
+  };
+
+  subirEvidencia = async (solicitud: FastifyRequest<{ Params: ParamsDeCuenta }>) => {
+    const { contenido, nombre } = await leerDocumentoDeSolicitud(solicitud);
+    return this.casosDeUso.subirEvidencia.ejecutar(operadorDe(solicitud), {
+      cuentaBancariaId: solicitud.params.cuentaBancariaId,
+      contenido,
+      nombre,
+    });
+  };
+
+  quitarEvidencia = async (solicitud: FastifyRequest<{ Params: ParamsDeCuenta }>, respuesta: FastifyReply) => {
+    await this.casosDeUso.quitarEvidencia.ejecutar(operadorDe(solicitud), solicitud.params.cuentaBancariaId);
+    return respuesta.status(204).send();
+  };
+
+  abrirEvidencia = async (solicitud: FastifyRequest<{ Params: ParamsDeCuenta }>, respuesta: FastifyReply) => {
+    const archivo = await this.casosDeUso.abrirEvidencia.ejecutar(
+      operadorDe(solicitud),
+      solicitud.params.cuentaBancariaId,
+    );
+    return respuesta
+      .header('Content-Type', archivo.tipoMime)
+      .header('Content-Disposition', `inline; filename="${archivo.nombre}"`)
+      .header('Cache-Control', 'private, no-store')
+      .send(archivo.contenido);
   };
 }

@@ -11,7 +11,8 @@ import {
 
 /**
  * Elimina de verdad el saldo inicial de una cuenta con todas sus partidas (y los cheques de la chequera de apertura),
- * con motivo, solo con la carga abierta y la cuenta sin conciliaciones. Audita `eliminar` con la ficha completa.
+ * con motivo, solo con la carga abierta y la cuenta sin conciliaciones. Audita `eliminar` con la ficha completa y
+ * borra también el archivo de la evidencia, si lo hay.
  */
 export class EliminarSaldoInicial {
   constructor(private readonly dependencias: DependenciasDeSaldosIniciales) {}
@@ -37,6 +38,9 @@ export class EliminarSaldoInicial {
       });
       await this.eliminarLasPartidas(cuentaBancariaId);
       await cabeceras.eliminar(cabecera.id);
+      if (cabecera.evidenciaArchivoId) {
+        await this.dependencias.documentos.eliminar(cabecera.evidenciaArchivoId, RECURSO_DE_SALDOS_INICIALES);
+      }
     });
   }
 

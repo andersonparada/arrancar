@@ -1,3 +1,4 @@
+import type { EvidenciaDto } from '../dto/saldo-inicial.dto.js';
 import type { ParteDeApertura } from '../../dominio/partes-de-apertura.js';
 
 /** Una cuenta bancaria de la empresa con lo de su saldo inicial (la cabecera, si la tiene). */
@@ -53,4 +54,8 @@ export interface ConsultasDeSaldosIniciales {
   contarMovimientosNormalesHasta(cuentaBancariaId: string, corte: string): Promise<number>;
   /** Los saldos principales vigentes de todas las cuentas (el del banco y el global). */
   saldosPrincipales(): Promise<SaldoPrincipal[]>;
+  /** El id del archivo de la evidencia de la cuenta (solo para abrirlo en el servidor); `null` si no tiene. */
+  archivoDeLaEvidencia(cuentaBancariaId: string): Promise<string | null>;
+  /** Los datos de la evidencia de la cuenta (nunca su ruta ni su id); `null` si no tiene. */
+  evidenciaDe(cuentaBancariaId: string): Promise<EvidenciaDto | null>;
 }

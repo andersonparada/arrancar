@@ -1,4 +1,5 @@
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
+import type { DocumentosProtegidos } from '../../../../core/compartido/aplicacion/documentos-protegidos.js';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
@@ -35,6 +36,7 @@ export interface DependenciasDeSaldosIniciales {
   ficha: FichaDeSaldoInicial;
   armador: ArmadorDePartidas;
   chequesDeApertura: ChequesDeApertura;
+  documentos: DocumentosProtegidos;
 }
 
 /** La cuenta lista para cambiar su apertura: la carga abierta, la cuenta bloqueada y su cabecera, si la tiene. */
