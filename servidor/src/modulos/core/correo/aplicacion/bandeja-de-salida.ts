@@ -1,6 +1,7 @@
 import type { Operador } from '../../compartido/aplicacion/operador.js';
 import type { PlantillaPorEncolar } from '../dominio/contenido-de-correo.js';
 import type { ClaseDeDestinatario, DestinatarioPorEncolar } from '../dominio/destinatarios-de-correo.js';
+import type { CorreoResumenDto } from './dto/correo.dto.js';
 import type { AdjuntoDeCorreo } from './transporte-de-correo.js';
 
 export interface OrigenDeCorreo {
@@ -47,4 +48,20 @@ export interface BandejaDeSalida {
    * ContenidoDeCorreoNoValido, AdjuntoNoValido (400), CupoDeCorreosAgotado (429).
    */
   encolar(operador: Operador, mensaje: MensajePorEncolar): Promise<CorreoEncoladoDto>;
+
+  /**
+   * Cancela los correos **pendientes** de un registro (p. ej. un pago anulado), cada uno con su auditoría `anular`.
+   * Lo ya enviado o en camino no se toca. Devuelve cuántos canceló.
+   */
+  cancelarPendientesDe(operador: Operador, origen: OrigenDeCorreo, motivo: string): Promise<number>;
+
+  /** Cancela un correo pendiente de ese registro, con su motivo y su auditoría. */
+  cancelar(
+    operador: Operador,
+    origen: OrigenDeCorreo,
+    cancelacion: { correoId: string; motivo: string },
+  ): Promise<CorreoResumenDto>;
+
+  /** Los correos de un registro, del más nuevo al más viejo, para su ficha (sin cuerpo ni detalle técnico). */
+  deRegistro(operador: Operador, origen: OrigenDeCorreo): Promise<CorreoResumenDto[]>;
 }

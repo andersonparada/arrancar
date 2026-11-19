@@ -4,10 +4,13 @@ import { useRouter } from 'vue-router';
 import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
+import VentanaDeCancelacionDeCorreo from '@/modulos/core/componentes/correo/VentanaDeCancelacionDeCorreo.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import AccionesDelPago from '../componentes/AccionesDelPago.vue';
 import LineasDelPago from '../componentes/LineasDelPago.vue';
 import SeccionDeFicha from '../componentes/SeccionDeFicha.vue';
+import SeccionDelAvisoDePago from '../componentes/SeccionDelAvisoDePago.vue';
+import VentanaDeAvisoDePago from '../componentes/VentanaDeAvisoDePago.vue';
 import VentanaDeAnulacionDePago from '../componentes/VentanaDeAnulacionDePago.vue';
 import VentanaDeReaplicacion from '../componentes/VentanaDeReaplicacion.vue';
 import {
@@ -23,7 +26,7 @@ import { VENTANAS_CUENTAS_POR_PAGAR } from '../textos';
 const props = defineProps<{ id: string }>();
 const router = useRouter();
 const pago = usarFichaDePago(() => props.id);
-const { ficha, cargando } = pago;
+const { ficha, cargando, aviso } = pago;
 const volver = { texto: VENTANAS_CUENTAS_POR_PAGAR.pagos.titulo, ruta: { name: 'cuentas-por-pagar.pagos' } };
 const comprobante = () => router.push({ name: 'cuentas-por-pagar.pagos.comprobante', params: { id: props.id } });
 </script>
@@ -55,6 +58,16 @@ const comprobante = () => router.push({ name: 'cuentas-por-pagar.pagos.comproban
       <LineasDelPago :ficha="ficha" :ocupado="pago.saldar.procesando.value" @saldar="pago.saldar.saldar" />
     </SeccionDeFicha>
 
+    <SeccionDeFicha titulo="Aviso por correo">
+      <SeccionDelAvisoDePago
+        :aviso="aviso.aviso.value"
+        :cargando="aviso.cargando.value"
+        :anulado="ficha.estado === 'anulado'"
+        @enviar="aviso.envio.abrir"
+        @cancelar="aviso.cancelacion.abrir"
+      />
+    </SeccionDeFicha>
+
     <VentanaDeAnulacionDePago
       v-model="pago.anular.edicion.value"
       :titulo="`Anular el pago ${ficha.numero}`"
@@ -63,6 +76,25 @@ const comprobante = () => router.push({ name: 'cuentas-por-pagar.pagos.comproban
       @cerrar="pago.anular.cerrar"
       @guardar="pago.anular.confirmar"
     />
+    <template v-if="aviso.aviso.value">
+      <VentanaDeAvisoDePago
+        v-model="aviso.envio.edicion.value"
+        :aviso="aviso.aviso.value"
+        :enviando="aviso.envio.enviando.value"
+        @cerrar="aviso.envio.cerrar"
+        @alternar="aviso.envio.alternar"
+        @enviar="aviso.envio.confirmar"
+      />
+      <VentanaDeCancelacionDeCorreo
+        v-model="aviso.cancelacion.motivo.value"
+        :abierta="aviso.cancelacion.abierta.value"
+        :asunto="aviso.aviso.value.vistaPrevia.asunto"
+        :errores="aviso.cancelacion.errores.value"
+        :enviando="aviso.cancelacion.enviando.value"
+        @cerrar="aviso.cancelacion.cerrar"
+        @confirmar="aviso.cancelacion.confirmar"
+      />
+    </template>
     <VentanaDeReaplicacion
       v-model="pago.reaplicar.edicion.value"
       :numero="ficha.numero"

@@ -7,7 +7,7 @@ import { verificarCupos } from '../../dominio/cupos-de-correo.js';
 import { normalizarDestinatarios, type Destinatario } from '../../dominio/destinatarios-de-correo.js';
 import { DireccionDeEnvio } from '../../dominio/direccion-de-envio.js';
 import { AdjuntoNoValido } from '../../dominio/errores-de-la-bandeja.js';
-import type { BandejaDeSalida, CorreoEncoladoDto, MensajePorEncolar } from '../bandeja-de-salida.js';
+import type { CorreoEncoladoDto, MensajePorEncolar } from '../bandeja-de-salida.js';
 import type { ParametrosDeCorreo } from '../puertos/parametros-de-correo.js';
 import type { Despertador } from '../puertos/despertador.js';
 import type { RepositorioDeCorreos } from '../puertos/repositorio-de-correos.js';
@@ -87,12 +87,3 @@ export class EncolarCorreo {
 
 const aDestinatariosDto = (destinatarios: readonly Destinatario[]) =>
   destinatarios.map((d) => ({ direccion: d.direccion.valor, clase: d.clase }));
-
-/** El puerto público de core: delega en `EncolarCorreo`. */
-export class BandejaDeSalidaDeCore implements BandejaDeSalida {
-  constructor(private readonly encolarCorreo: EncolarCorreo) {}
-
-  encolar(operador: Operador, mensaje: MensajePorEncolar): Promise<CorreoEncoladoDto> {
-    return this.encolarCorreo.ejecutar(operador, mensaje);
-  }
-}

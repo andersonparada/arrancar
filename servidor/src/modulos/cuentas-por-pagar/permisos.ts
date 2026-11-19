@@ -88,6 +88,10 @@ export const PERMISOS_DE_CUENTAS_POR_PAGAR: DefinicionPermiso[] = [
     descripcion: 'Exportar a Excel los reportes de saldos de proveedores',
   },
   {
+    clave: 'cuentas-por-pagar.pagos.enviar-aviso',
+    descripcion: 'Enviar y reenviar por correo el aviso de un pago al proveedor, y cancelar uno pendiente',
+  },
+  {
     clave: 'cuentas-por-pagar.pagos.reaplicar',
     descripcion: 'Reaplicar un pago vigente a otros documentos de las contraseñas vigentes de su proveedor',
   },

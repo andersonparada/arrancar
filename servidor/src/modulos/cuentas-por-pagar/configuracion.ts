@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { definirConfiguracion, type DefinicionConfiguracion } from '../core/modulos-sistema/definicion-modulo.js';
+import { configuracionDeAvisos } from './configuracion-de-avisos.js';
 import { MESES_MAXIMOS_POR_OMISION, MESES_POR_OMISION } from './dominio/plazo-por-omision.js';
 
 /** La leyenda al pie de la contraseña impresa mientras la empresa no ponga la suya (dictamen C-CP3-1). */
@@ -44,4 +45,5 @@ export const configuracionDeCuentasPorPagar: readonly DefinicionConfiguracion[] 
     niveles: ['instalacion', 'empresa'],
     publica: false,
   }),
+  ...configuracionDeAvisos,
 ];

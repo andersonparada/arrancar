@@ -211,6 +211,20 @@
       "when": 1795057656679,
       "tag": "0029_multimoneda",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795060567899,
+      "tag": "0030_bandeja_de_correos_para_soporte",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795060572072,
+      "tag": "0031_cancelacion_durante_el_envio",
+      "breakpoints": true
     }
   ]
 }

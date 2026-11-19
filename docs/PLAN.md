@@ -2711,6 +2711,80 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   configurar el servidor). Rangos 192.0.0.0/24 y 198.18.0.0/15 rechazados como destino. Prueba de rotación A, A+B, B.
   Pendientes de bajo riesgo: permisos por columnas y llaves compuestas en la 0026, señal de parada del lote, ficha del
   arriendo en `resolver_correo`, bitácora de pruebas fallidas, DNS al conectar, y plazo de los correos pendientes.
+- **2026-11-18 (aviso de pago por correo, paso 8: historial y Soporte).** `core/correo` suma el historial de la empresa:
+  `GET /api/correos` (filtros `desde`, `hasta`, `estado`, `tipo`, paginado), `GET /api/correos/:id`, `POST
+  /api/correos/:id/cancelar` (solo pendientes, motivo de 1 a 300, auditoría `anular` sin el cuerpo) y `POST
+  /api/correos/:id/reintentar` (solo fallidos con el contenido sin depurar; vuelve a `pendiente` con intentos en cero,
+  vuelve a comprobar los cupos, auditoría `reabrir` y despierta al trabajador). El resumen nunca lleva el cuerpo ni el
+  código técnico del error. Permisos nuevos de core, sin migración de permisos (nadie los tenía): `correos.ver`,
+  `correos.cancelar`, `correos.reintentar` y `correo.servidor.gestionar` (`soloSuperacceso`; las rutas de Soporte siguen
+  protegidas con `soloSuperacceso` porque sin empresa activa la sesión no trae permisos). `GET
+  /api/soporte/correo/bandeja` da los conteos por estado de toda la instalación, el pendiente más antiguo y los últimos
+  50 fallidos (empresa, tipo, código; nunca direcciones ni textos) con dos funciones `security definer` de solo lectura:
+  migración 0027 de core (`core.resumen_de_la_bandeja` y `core.correos_fallidos_recientes`). Los errores de estado
+  responden 409 (`correo_no_pendiente`, `correo_no_reintentable`, `correo_sin_contenido`). El puerto `HistorialDeCorreos`
+  ya trae `deOrigen` y `cancelarPendientesDe`, que usará Cuentas por pagar (paso 10).
+- **2026-11-18 (aviso de pago por correo, paso 9: PDF del comprobante).** Cuentas por pagar genera el comprobante como
+  PDF con pdfkit (`infraestructura/pdf/`, puerto `GeneradorDePdfDelComprobante`, `nombreDelPdfDelComprobante`) sobre el
+  mismo `ComprobanteDePagoDto` que imprime la pantalla: una hoja carta por rótulo («Original» y «Copia»), con más
+  páginas si hay muchos documentos. Separa lo que dice (`contenidoDelComprobante`, función pura probada: título, anulado,
+  datos, tablas por contraseña con la constancia de cada retención o «constancia por emitir», cheque posfechado, totales,
+  leyendas y firmas) de cómo se dibuja. Siempre lleva la leyenda «no es un documento tributario» (se agrega si la lista
+  del comprobante viniera sin ella). Textos del usuario saneados (controles, marcas de dirección, glifos que Noto Sans no
+  tiene), sin enlaces, scripts ni archivos incrustados, una generación a la vez (`Semaforo`). El saneado y el pincel se
+  repiten en el módulo (no se importa de Libro de compras). Sin migración.
+- **2026-11-18 (aviso de pago por correo, paso 10: aviso en Cuentas por pagar).** Permiso nuevo
+  `cuentas-por-pagar.pagos.enviar-aviso` (enviar, reenviar y cancelar un aviso pendiente; ver el estado va con
+  `pagos.ver`), sin migración de permisos (nadie lo tenía). Variables `cuentas-por-pagar.avisos_de_pago.*` (instalación y
+  empresa): `envio` (`manual` por omisión, pública), `asunto`, `mensaje`, `adjuntar_comprobante` y `copia_a_la_empresa`;
+  el asunto no admite `{monto}` ni `{documentos}` y un marcador que no existe se rechaza al guardar. Rutas: `GET
+  /cuentas-por-pagar/pagos/:id/aviso` (`pagos.ver`: destinatarios registrados con `utilizable`, `preseleccionado` y su
+  motivo, copia a la empresa, vista previa, avisos enviados y por qué no se puede enviar), `POST …/aviso` (201,
+  destinatarios por id de contacto o de proveedor, 1 a 10, nunca direcciones; límite de 20 por minuto por usuario) y
+  `POST …/aviso/:correoId/cancelar`. Casos de uso `PrepararAvisoDePago`, `EnviarAvisoDePago`, `CancelarAvisoDePago` sobre
+  un `ArmadorDelAviso` común; el PDF sale de `GeneradorPdfkitDelComprobante`. Preselección: los contactos con la marca y,
+  si no hay, el correo principal. Suscriptores (con `suscribirSinRomper`): `pago_registrado` manda el aviso solo si la
+  empresa lo pasó a `automatico` (a los preseleccionados, con la copia que diga la configuración; sin destinatario
+  utilizable no hace nada) y `pago_anulado` cancela los avisos pendientes con el motivo «Pago anulado» (auditado). Para
+  armar el operador de quien registró el pago sin petición, core/identidad suma `operadorDeUsuario`
+  (`ResolverOperadorDeUsuario`: usuario activo, su acceso a la empresa y sus recursos de alcance). Terceros atiende la
+  orden nueva `terceros.obtener_correos_de_proveedor` (correo principal y contactos con su marca). `BandejaDeSalida` suma
+  `cancelarPendientesDe`, `cancelar` y `deRegistro`. Errores: 409 `aviso_no_disponible` (anulado, cuenta de apertura,
+  sin correo), 400 `direccion_no_utilizable`, 404 si el destinatario no es del proveedor del pago o es de otra cuenta, 429
+  `cupo_de_correos_agotado` y `demasiados_avisos_de_pago`. Sin migración en este paso.
+- **2026-11-18 (correo, camino de desarrollo hacia Mailpit).** Variables de entorno `CORREO_DESARROLLO_SERVIDOR` y
+  `CORREO_DESARROLLO_PUERTO` (1025 por omisión), solo para desarrollo: con ellas `FabricaDeTransporteNodemailer` ignora el
+  servidor guardado y manda sin cifrado ni credenciales al Mailpit del `docker-compose.dev.yml` (bandeja en
+  `http://localhost:8025`). La app no arranca en producción con `CORREO_DESARROLLO_SERVIDOR` (validación del entorno, que
+  se vuelve a comprobar al crear la fábrica, y el rechazo de `seguridad: 'ninguna'` del transporte). Soporte igual debe
+  guardar y activar un servidor cualquiera (la tabla exige 465/587 y contraseña) y hace falta `CLAVE_SECRETOS`: así se
+  prueba de punta a punta, también el trabajador, sin tocar la función de la bandeja. Prueba contra un SMTP mínimo local.
+- **2026-11-18 (aviso de pago por correo, paso 11: cliente, Soporte → Correo).** Pantalla `/plataforma/correo` (solo
+  superacceso, menú Soporte): formulario del servidor SMTP (servidor, puerto y cifrado en una sola lista: 587 con STARTTLS
+  o 465 con TLS directo, sin opción sin cifrado; usuario; contraseña de solo escritura, vacía conserva la guardada;
+  remitente; interruptor de enviar correos), aviso rojo si falta `CLAVE_SECRETOS`, tarjeta de prueba (única pantalla
+  donde se escribe una dirección; usa lo guardado) y tarjeta de la bandeja global (conteos por estado, pendiente más
+  antiguo y fallidos recientes con empresa, tipo y código). Lógica pura en `composables/correo/servidor-de-correo.ts` con
+  pruebas; servicio `correo-de-soporte.api.ts`. Sin cambios en el servidor.
+- **2026-11-18 (aviso de pago por correo, paso 12: cliente, Correos enviados).** Pantalla `/correos` (Administración,
+  permiso `correos.ver`): lista de tarjetas con filtros (desde, hasta, estado, tipo), paginada de 50 en 50, y la ficha en
+  una ventana (a quién con el resultado de cada dirección, remitente, «Responder a», adjunto, el texto enviado o el
+  aviso de que ya se depuró, y el motivo si se canceló). Desde la ficha, «Cancelar envío» (solo pendientes, pide el motivo;
+  `correos.cancelar`) y «Reintentar» (solo fallidos con contenido, con confirmación; `correos.reintentar`). Un pendiente que
+  ya falló dice «Pendiente: se reintentará». La lógica pura (`estado-del-correo.ts`, `filtro-de-correos.ts`) tiene
+  pruebas; `usarCancelacionDeCorreo` y `usarReintentoDeCorreo` y la ventana de cancelación quedan para reusarse en la
+  ficha del pago (paso 13). Sin Excel (es una bitácora). Sin cambios en el servidor.
+- **2026-11-18 (aviso de pago por correo, paso 13: cliente, aviso en la ficha del pago).** La ficha del pago suma la sección
+  «Aviso por correo»: cómo va el último («Sin aviso», «Pendiente», «No se pudo enviar; se reintentará», «Enviado el … a …»,
+  «Falló; avise a soporte», «Cancelado»), la lista de envíos con «Cancelar» en los pendientes (pide el motivo, reusa la
+  ventana de core) y el botón «Enviar aviso» / «Reenviar aviso» (`cuentas-por-pagar.pagos.enviar-aviso`). La ventana
+  `VentanaDeAvisoDePago` ofrece solo los correos registrados del proveedor (los contactos con la marca vienen
+  marcados; uno que no sirve para enviar sale sin poder marcarse y con su motivo), la casilla «Copia a la empresa» con
+  la dirección, la vista previa del asunto y del mensaje, el nombre del PDF y el aviso de que lleva montos, NIT y
+  retenciones. La solicitud lleva ids, nunca direcciones. Si el pago se anula con el aviso ya enviado, la sección
+  recuerda avisar al proveedor. Lógica pura en `composables/pagos/aviso-de-pago.ts` con pruebas. En la pantalla de
+  configuración, un texto largo (más de 80 caracteres por omisión, como el mensaje del aviso) se edita en varias líneas
+  (ajuste menor de §13 del diseño). Pendiente menor: `avisos_de_pago.envio` se escribe a mano (`manual` o `automatico`).
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
@@ -2984,6 +3058,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   V-2. Lógica pura con pruebas en `reglas-de-clase.ts`. Pendiente: la ventana de conceptos de gasto que proponen la clase
   (`GET` y `PUT /activos-fijos/clases/:id/conceptos`), que el plan no lista en AF-1c.
 
+- **2026-11-18** (correo 8 a 13, revisión):
+  - Anular un pago cancela también los avisos `enviando` y `fallido` (no solo `pendiente`), con auditoría y motivo «Pago
+    anulado»; un `fallido` cancelado ya no se puede reintentar (409). La migración core `0031_cancelacion_durante_el_envio`
+    cambia `core.resolver_correo`: si el correo se canceló mientras se enviaba, anota el intento y lo deja `cancelado` (no
+    vuelve a `pendiente`). Se quita `bloqueado_hasta` al cancelar (restricción de la tabla).
+  - Integración: las ramas `f43-1` y `f43-10` también crean una migración core 0027; quien se una después debe regenerar (Hecho: la bandeja para Soporte quedó en 0030 y la cancelación en 0031, tras la RLS 0027-0028 y Multimoneda 0029.)
+    la suya con el número siguiente y rehacer `_journal.json`, el snapshot y el `prevId` (nunca juntar dos entradas idx 27).
+  - `correo.servidor.gestionar` queda declarado sin que lo exija ninguna ruta (Soporte usa `soloSuperacceso`); anotado en el diseño.
 - **2026-11-18, RLS del núcleo R-1 (privilegios y disparadores de `core`).** `core/base-datos/privilegios-restringidos.ts`
   (`RESTRICCIONES_DE_PRIVILEGIOS`) clasifica las 24 tablas de `core` y el migrador, en la misma consulta del `grant`
   general (`otorgarPermisosAplicacion`), quita a `arrancar_app` lo que nunca usa: `delete` de empresas, cuentas y usuarios;
