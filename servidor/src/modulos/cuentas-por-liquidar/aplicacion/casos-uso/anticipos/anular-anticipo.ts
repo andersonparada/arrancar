@@ -39,7 +39,7 @@ export class AnularAnticipo {
       const hecha = await this.dependencias.bancos.anularMovimiento(operador, {
         origen: { modulo: MODULO_DE_ORIGEN, documentoId: anticipo.id },
         movimientoId: anticipo.movimientoId,
-        motivo: `Anulado desde Cuentas por liquidar: ${motivo}`,
+        motivo,
         ...(pedido.fecha ? { fecha: pedido.fecha } : {}),
       });
       const eventos = await this.anulador.anular(operador, anticipo, {
