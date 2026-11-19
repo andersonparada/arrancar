@@ -2,7 +2,8 @@
 export interface ConsultasDeUsoDelKardex {
   /**
    * Si el artículo tiene movimientos (vigentes o anulados). Toma el candado del artículo del kardex hasta el fin de la
-   * transacción, para que un movimiento en camino no se cuele después de la revisión.
+   * transacción. Los casos de uso que registran toman ese mismo candado antes de leer el artículo, así que un movimiento
+   * en camino lee el artículo ya con lo que confirmó quien lo cambió, y no se cuela después de la revisión.
    */
   articuloConMovimientos(articuloId: string): Promise<boolean>;
   /** Si el artículo tiene cantidad mayor que cero en alguna bodega (lee el saldo de toda la empresa). */

@@ -34,6 +34,7 @@ export class RegistrarSalida {
   async ejecutar(operador: Operador, solicitud: SolicitudDeSalida, vista: VistaDelKardex): Promise<DocumentoDto> {
     const { unidadDeTrabajo, publicadorEventos, consultas, catalogos } = this.dependencias;
     const { registro, articulos, dto } = await unidadDeTrabajo.ejecutar(operador, async () => {
+      await this.dependencias.almacen.bloquear(solicitud.renglones.map((renglon) => renglon.articuloId));
       const resueltos = await this.resolutor.resolver(solicitud.renglones);
       const conceptoDeGastoId = conceptoDeLaSalida(solicitud, resueltos);
       const plan = planDeSalida({ ...solicitud, conceptoDeGastoId, renglones: resueltos.renglones });

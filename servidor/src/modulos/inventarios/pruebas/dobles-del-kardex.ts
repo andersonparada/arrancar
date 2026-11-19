@@ -59,10 +59,13 @@ export class KardexEnMemoria
   readonly conversiones = new Map<string, ConversionDeArticulo[]>();
   readonly lotesDelCatalogo = new Map<string, LoteParaMovimiento>();
   readonly bodegasDelCatalogo = new Map<string, BodegaParaMovimiento>();
+  /** El orden de los candados y de la lectura de artículos, para probar que el candado va primero. */
+  readonly orden: string[] = [];
   private secuencia = 0;
 
   // AlmacenDelKardex
   async bloquear(articuloIds: readonly string[]): Promise<void> {
+    this.orden.push('bloquear');
     this.bloqueos.push([...new Set(articuloIds)].sort());
   }
 
@@ -162,6 +165,7 @@ export class KardexEnMemoria
 
   // CatalogosDelKardex
   async articulos(ids: readonly string[]): Promise<ArticuloParaMovimiento[]> {
+    this.orden.push('leer_articulos');
     return ids.flatMap((id) => this.articulosDelCatalogo.get(id) ?? []);
   }
 

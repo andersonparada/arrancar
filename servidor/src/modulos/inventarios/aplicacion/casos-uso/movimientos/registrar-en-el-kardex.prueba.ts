@@ -28,7 +28,14 @@ describe('RegistrarEntradaManual', () => {
       costoPromedio: 2_000_000n,
     });
     expect(e.publicador.nombres()).toEqual(['inventarios.entrada_registrada']);
-    expect(e.kardex.bloqueos).toEqual([[ARTICULO]]);
+    expect(e.kardex.bloqueos).toEqual([[ARTICULO], [ARTICULO]]);
+  });
+
+  it('toma el candado de los artículos antes de leerlos para pasarlos a la unidad base', async () => {
+    await e.registrarEntrada();
+
+    expect(e.kardex.orden[0]).toBe('bloquear');
+    expect(e.kardex.orden.indexOf('bloquear')).toBeLessThan(e.kardex.orden.indexOf('leer_articulos'));
   });
 
   it('pasa los quintales a libras y guarda lo escrito', async () => {
@@ -71,7 +78,7 @@ describe('RegistrarEntradaManual', () => {
     e.cierres.cerrados = ['2026-09-01'];
 
     await expect(e.registrarEntrada()).rejects.toThrow(MesCerrado);
-    expect(e.kardex.bloqueos).toEqual([[ARTICULO]]);
+    expect(e.kardex.bloqueos).toEqual([[ARTICULO], [ARTICULO]]);
   });
 
   it('un artículo que no existe es un recurso no encontrado', async () => {
@@ -145,6 +152,9 @@ describe('RegistrarSalida', () => {
 
     await e.registrarEntrada({ renglones });
 
-    expect(e.kardex.bloqueos).toEqual([[ARTICULO, OTRO_ARTICULO]]);
+    expect(e.kardex.bloqueos).toEqual([
+      [ARTICULO, OTRO_ARTICULO],
+      [ARTICULO, OTRO_ARTICULO],
+    ]);
   });
 });
