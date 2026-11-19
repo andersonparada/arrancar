@@ -82,6 +82,37 @@ describe('concurrencia de la línea', () => {
   });
 });
 
+describe('capitalizar y anular el documento a la vez', () => {
+  it('nunca queda un documento anulado con costos vigentes', async () => {
+    for (let vuelta = 0; vuelta < 4; vuelta++) {
+      const { documentoId, lineaIds } = await registrarDocumento(e);
+
+      const [capitalizacion, anulacion] = await Promise.all([
+        capitalizar(e, [asignacionNueva(e, { lineaId: lineaIds[0]!, monto: '600.00' })]),
+        e.cuenta.propietario.post(`/api/libro-de-compras/documentos/${documentoId}/anular`, {
+          causa: 'error_de_captura',
+          motivo: 'Se anula mientras se capitaliza',
+        }),
+      ]);
+
+      const [vigentes] = await comoPropietario<{ vigentes: string }>(
+        `select count(*) vigentes from activos_fijos.costos c
+           join libro_de_compras.lineas_de_documento l on l.id = c.linea_de_documento_id
+          where l.documento_id = $1 and c.estado = 'vigente'`,
+        [documentoId],
+      );
+      const [documento] = await comoPropietario<{ estado: string }>(
+        'select estado from libro_de_compras.documentos where id = $1',
+        [documentoId],
+      );
+      expect(
+        documento!.estado === 'anulado' && vigentes!.vigentes !== '0',
+        `${capitalizacion.estado}/${anulacion.estado}`,
+      ).toBe(false);
+    }
+  });
+});
+
 describe('concurrencia del total del activo', () => {
   it('dos notas de crédito a la vez que juntas dejarían el activo en negativo: pasa una', async () => {
     const factura = await registrarDocumento(e);

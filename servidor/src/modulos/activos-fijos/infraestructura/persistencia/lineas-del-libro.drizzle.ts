@@ -26,6 +26,7 @@ const columnas = {
 export class LineasDelLibroDrizzle implements LineasDelLibro {
   async buscar(lineaIds: readonly string[]): Promise<LineaConReferencia[]> {
     if (lineaIds.length === 0) return [];
+    await this.bloquearDocumentos(lineaIds);
     const filas = await transaccionEnCurso()
       .select(columnas)
       .from(lineasDeDocumento)
@@ -38,5 +39,22 @@ export class LineasDelLibroDrizzle implements LineasDelLibro {
       costoCentavos: aCentavos(costo),
       capitalizadoCentavos: aCentavos(capitalizado),
     }));
+  }
+
+  /**
+   * Toma FOR SHARE de los documentos de las líneas, en orden, antes de leerlos: anular el documento (FOR UPDATE)
+   * espera a esta operación y ve sus costos, o esta lee el documento ya anulado.
+   */
+  private async bloquearDocumentos(lineaIds: readonly string[]): Promise<void> {
+    const deLasLineas = transaccionEnCurso()
+      .select({ id: lineasDeDocumento.documentoId })
+      .from(lineasDeDocumento)
+      .where(inArray(lineasDeDocumento.id, [...lineaIds]));
+    await transaccionEnCurso()
+      .select({ id: documentos.id })
+      .from(documentos)
+      .where(inArray(documentos.id, deLasLineas))
+      .orderBy(documentos.id)
+      .for('share');
   }
 }
