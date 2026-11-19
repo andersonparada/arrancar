@@ -144,13 +144,19 @@ export class Activo extends Entidad<ActivoId> {
 
   /**
    * Cambia los datos descriptivos. La clase, el padre, la cantidad, el origen y la fecha de adquisición solo se
-   * cambian en construcción; la matrícula y el catastro, mientras no haya libros.
+   * cambian en construcción (y nunca en un saldo inicial, que se corrige en Saldos iniciales); la matrícula y el
+   * catastro, mientras no haya libros.
    * @throws ActivoDadoDeBaja si ya se dio de baja.
    * @throws ActivoInvalido si cambia algo que ya no se puede cambiar o no cumple las reglas.
    */
   cambiarDatos(datos: DatosEditables, inciso: IncisoFiscal): void {
     if (this.propiedades.estado === 'dado_de_baja') throw new ActivoDadoDeBaja();
-    this.exigirSinCambios(datos, SOLO_EN_CONSTRUCCION, this.propiedades.estado !== 'en_construccion');
+    const delSaldoInicial = this.propiedades.origen === 'saldo_inicial';
+    this.exigirSinCambios(
+      datos,
+      SOLO_EN_CONSTRUCCION,
+      this.propiedades.estado !== 'en_construccion' || delSaldoInicial,
+    );
     this.exigirSinCambios(datos, SOLO_SIN_LIBROS, this.propiedades.porcentajeFiscal !== null);
     const { codigo, tipoDeRegistro } = this.propiedades;
     this.propiedades = { ...this.propiedades, ...datosDeActivoValidos({ ...datos, codigo, tipoDeRegistro }, inciso) };

@@ -126,8 +126,36 @@ export class Costo extends Entidad<CostoId> {
     });
   }
 
+  /** El costo de un activo de saldo inicial: lo que costó, fechado el día de corte. Siempre suma. */
+  static deSaldoInicial(entrada: {
+    empresaId: Identificador<'Empresa'>;
+    activoId: string;
+    fecha: string;
+    montoCentavos: number;
+  }): Costo {
+    return new Costo({
+      ...PROPIEDADES_INICIALES,
+      ...entrada,
+      id: Identificador.nuevo(),
+      origen: 'saldo_inicial',
+      claseDeCosto: 'adquisicion',
+      documentoDeCompraId: null,
+      lineaDeDocumentoId: null,
+      aplicaAlLibroFiscal: true,
+      motivoFueraDelLibroFiscal: null,
+      descripcion: 'Saldo inicial',
+    });
+  }
+
   static reconstruir(propiedades: PropiedadesDeCosto): Costo {
     return new Costo(propiedades);
+  }
+
+  /** Corrige el monto y la fecha del costo de un saldo inicial (con la carga abierta y sin cierres). */
+  corregirSaldoInicial({ montoCentavos, fecha }: { montoCentavos: number; fecha: string }): void {
+    if (this.propiedades.origen !== 'saldo_inicial')
+      throw new CostoInvalido('Solo el costo de un saldo inicial se corrige así.');
+    this.propiedades = { ...this.propiedades, montoCentavos, fecha };
   }
 
   /**
