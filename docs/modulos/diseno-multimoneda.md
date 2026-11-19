@@ -1652,7 +1652,7 @@ no puede pasar es encender `CARGAR_TIPOS_DE_CAMBIO` antes de MM-3c (P-B8).
 |---|---|---|---|
 | **MM-1b** (servidor, datos del núcleo) **HECHO 2026-11-19** (migración `core/0033_cruces_del_banguat`) | Migración `00xx_cruces_del_banguat`: `convencion` en `monedas_del_banguat` con los datos de B.4 y su `revoke`; `convencion`, `dolar_usado_id`, checks e índice en `tipos_de_cambio`; resultados nuevos en `consultas_al_banguat`; guarda de datos existentes; PLN. Tablas Drizzle | La convención sobrevive a `ActualizarMonedasDelBanguat`; un código nuevo nace sin convención; una fila de cruce sin USD, sin compra o con `venta < compra` falla; una `manual` sin convención pasa; la app no puede cambiar `convencion`; PLN existe inactiva; la guarda detiene la migración con una fila `banguat` de otra moneda | Nada (V-14 ya resuelto) |
 | **MM-3a″** (servidor, dominio, sin base) **HECHO 2026-11-19** | `CODIGOS_DEL_BANGUAT_EXCLUIDOS`; URL; 28 → 24 en `main`; grabaciones reales; `validarPublicacion` sin `valor_ambiguo` por `compra ≠ venta` (solo diferencial > 3 %); `promedioPublicado`, `normalizarAQuetzales`, `inversionProbable`, `esDiaDePublicacionDeCruces`; se quita `cruceImplicito` | Los cinco ejemplos de B.3 dan exactamente esos valores; promedio con un decimal más (ARS); el CRC del 18/11 da 0.01710630 (promedio del cruce y luego conversión) y no 0.01710669 (B.5); diferencial de 3.01 % rechazado; `venta < compra` inválido; EUR invertido → inversión; CHF ±2 % y ARS +87 % no; jueves santo y 25/12 son días de publicación, el sábado no | MM-1b (tipos) o ninguno si se programa sin base |
-| **MM-3c** (servidor, carga; sobre la rama de MM-3b integrada) | `ConsultarAlBanguat` normaliza con el USD `banguat` de la fecha y guarda `convencion` y `dolar_usado_id`; comprobaciones de B.6 en orden; `monedasACargar` solo con convención y el USD primero; días de B.9; reintentos de la noche; `vigente` con `dia_sin_calculo` solo en fin de semana; `muestra` con el valor en quetzales; `CodigoDelDolarNecesario`; 28 → 24 en las pruebas de la rama; columnas del reporte (MM-5) | Con reloj fijo: EUR del lunes con el USD del lunes; EUR sin USD → `sin_dolar_del_dia` y se rellena al llegar el USD; EUR de un asueto con el USD repetido; EUR invertido → `convencion_dudosa`; un sábado no es hueco y un asueto sí; `vigente` del EUR un sábado (`dia_sin_calculo`) y un 20 de octubre sin fila (`falta_publicacion`); quitar el código del USD con el EUR unido → 422; la referencia guardada se rehace con su fila | MM-1b, MM-3a″, rama de MM-3b integrada |
+| **MM-3c** (servidor, carga; sobre la rama de MM-3b integrada) **HECHO 2026-11-19** | `ConsultarAlBanguat` normaliza con el USD `banguat` de la fecha y guarda `convencion` y `dolar_usado_id`; comprobaciones de B.6 en orden; `monedasACargar` solo con convención y el USD primero; días de B.9; reintentos de la noche; `vigente` con `dia_sin_calculo` solo en fin de semana; `muestra` con el valor en quetzales; `CodigoDelDolarNecesario`; 28 → 24 en las pruebas de la rama; columnas del reporte (MM-5) | Con reloj fijo: EUR del lunes con el USD del lunes; EUR sin USD → `sin_dolar_del_dia` y se rellena al llegar el USD; EUR de un asueto con el USD repetido; EUR invertido → `convencion_dudosa`; un sábado no es hueco y un asueto sí; `vigente` del EUR un sábado (`dia_sin_calculo`) y un 20 de octubre sin fila (`falta_publicacion`); quitar el código del USD con el EUR unido → 422; la referencia guardada se rehace con su fila | MM-1b, MM-3a″, rama de MM-3b integrada |
 | **MM-4** (cliente, Plataforma) | Como A.14, más B.10 | Unitarias de `edicion-de-moneda.ts` (solo `ofrecida`; texto de la convención); QA con el servidor falso devolviendo cruces | MM-3c |
 | **MM-3d** (operación, sin código) | **Antes de encender:** C-5 (la consulta pública del Banguat, ¿muestra quetzales para las demás monedas?; si sí, ajustar B.5) y, si hay clientes en CRC, DOP o HNL (Q-1), C-6. Luego `curl` desde producción a la URL de B.9; encender `CARGAR_TIPOS_DE_CAMBIO`; revisar la bitácora la primera semana (horas de B.9) | C-5: comparar en 3 a 5 fechas la consulta pública con la fórmula de B.3 | MM-3c, MM-4, P-B8, C-5 (C-6 según Q-1) |
 
@@ -1722,3 +1722,38 @@ de la migración, porque el migrador rehace los `grant` en cada corrida. Pruebas
 sale del extractor como el promedio publicado en su convención; MM-3c la normaliza con el dólar del día. Pruebas:
 `cruces-del-banguat.prueba.ts` (cinco ejemplos de B.3, CRC 0.0171063 y no 0.01710669, 3 % y 3.01 %, inversión, días) y
 las de `reglas-de-publicacion`, `extractor-de-respuestas` y `cliente-banguat`.
+
+### MM-3c: lo programado
+
+**Carga.** `ConsultarAlBanguat` aplica las comprobaciones de B.6 en orden: sin convención → `sin_convencion` (no llama al
+Banguat); formato, fecha y diferencial en la fuente; `normalizarPublicaciones` (dominio) pasa cada cruce a quetzales con la
+fila `banguat` del dólar **de la misma fecha** y guarda `convencion` y `dolar_usado_id` (sin dólar de esa fecha:
+`sin_dolar_del_dia`, queda como hueco); `evaluarVariaciones` suma la inversión probable contra el último valor publicado de
+los 7 días anteriores en la misma convención (`convencion_dudosa`), la variación de más de 25 % en quetzales
+(`variacion_excesiva`, con la salida «ingrese el tipo a mano con su motivo» en el detalle de la bitácora) y el aviso de más
+de 3 % en lo publicado o en quetzales. Puertos nuevos de `CargasDeTipos`: `dolaresDelBanguat` y `publicadoAnterior`;
+`monedasACargar` devuelve solo las monedas con convención (`MonedaACargar`) y el dólar primero. Los ayudantes de la
+bitácora están en `registro-de-la-consulta.ts`.
+
+**Días y horario (B.9).** `VueltasDeCarga`, `ConsultarEstadoDeLaCarga` y `TiposDeCambio` dejan de usar el calendario
+laboral: lunes a viernes (`esDiaDePublicacionDeCruces`) para los huecos, la vuelta `noche` y el atraso de 3 días hábiles; el
+sábado y el domingo no se sintetiza nada y `vigente` da `dia_sin_calculo` solo en fin de semana (un asueto sin su fila es
+`falta_publicacion`). Reintento de la noche: nueva vuelta programada `dolarDeManana` a las 22:00 y a las 23:30 si el dólar
+de mañana no llegó (pide solo el dólar; en la bitácora queda como vuelta `noche`, así que no hace falta migración).
+
+**Monedas.** `MonedaDelBanguatGuardada` trae `convencion`; el selector (`GET /api/monedas/banguat`) suma `convencion` y
+`ofrecida` (disponible, no excluida y con convención) y unir o pedir la muestra de un código no ofrecido da
+`codigo_del_banguat_no_ofrecido`. `EditarMoneda` rechaza quitarle el código al dólar mientras otra moneda tenga el suyo
+(`CodigoDelDolarNecesario`, 422, `detalles.monedas`). `muestra` devuelve por fecha `compra`, `venta`, `promedio`, `dolar`
+(el guardado de esa fecha) y `referencia` en quetzales (nula sin dólar), más la `convencion` del código.
+
+**Series y reporte (B.10).** `TipoDeCambioDto` (y la serie) suman `convencion` y `dolarUsado` (la referencia del dólar de
+`dolar_usado_id`). El Excel del reporte «Tipos de cambio» suma «Compra publicada», «Venta publicada», «Convención» y
+«Dólar usado» y la nota de la política contable de B.5. La nota impresa y las pantallas son de MM-4.
+
+**Pruebas.** Unitarias (`evaluar-variaciones`, `normalizar-publicaciones`, `horario-de-carga`, `monedas`,
+`cruces-de-la-carga`, `cargar-tipos-de-cambio`, `muestra-y-estado-de-la-carga`, `tipos-de-cambio`), integración contra
+PostgreSQL (`cruces-de-la-carga.prueba.ts`: euro del lunes con el dólar del lunes, sin dólar y su relleno, invertido,
+asueto, sin convención, y la referencia guardada que se rehace con su fila) y de API (`monedas.api.prueba.ts`,
+`multimoneda.api.prueba.ts`). **Decisión:** solo el código del dólar está protegido por `CodigoDelDolarNecesario`;
+desactivar el dólar con otras monedas unidas no se bloquea (queda en pendientes). La carga sigue **apagada** hasta MM-3d.

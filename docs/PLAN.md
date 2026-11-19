@@ -3647,3 +3647,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   asuetos. `valores-decimales.ts` generaliza la escala (9 decimales para lo publicado). Las grabaciones de prueba son
   recortes de las respuestas reales de B.1 y B.2. **Pendiente:** MM-3c conecta todo a la carga (hoy `referencia` de un
   cruce sale como el promedio publicado, sin normalizar, y la base lo rechaza sin convención).
+
+- **2026-11-19, Multimoneda MM-3c (carga de los cruces del Banguat).** `ConsultarAlBanguat` normaliza cada moneda distinta
+  del dólar con la fila `banguat` del dólar de la misma fecha (`normalizarPublicaciones`, `normalizarAQuetzales`) y guarda
+  `convencion`, `dolar_usado_id` y lo publicado (`compra`, `venta`); las comprobaciones de B.6 corren en orden
+  (`sin_convencion`, `sin_dolar_del_dia`, `convencion_dudosa` por inversión probable, `variacion_excesiva`, aviso de 3 %).
+  `monedasACargar` solo trae monedas con convención y el dólar primero; días y atraso de lunes a viernes sin asuetos
+  (`VueltasDeCarga`, `ConsultarEstadoDeLaCarga`, `TiposDeCambio` ya no reciben el calendario); `vigente` da
+  `dia_sin_calculo` solo sábado y domingo; reintento del dólar de mañana a las 22:00 y 23:30 (`dolarDeManana`).
+  `GET /api/monedas/banguat` suma `convencion` y `ofrecida`; `EditarMoneda` no deja quitarle el código al dólar mientras
+  otra moneda tenga el suyo (`codigo_del_dolar_necesario`); la muestra devuelve lo publicado, el dólar del día y el valor en
+  quetzales; la serie suma `convencion` y `dolarUsado`; el Excel del reporte suma «Compra publicada», «Venta publicada»,
+  «Convención» y «Dólar usado» y la nota de la política contable. Respuestas del usuario a la Adenda B anotadas en el
+  diseño (P-B2 promedio con tope de 3 %, Q-1 sin clientes en CRC/DOP/HNL, Q-2 sin consulta a la SAT). La carga sigue
+  apagada. **Pendiente:** MM-4 (la muestra y la bitácora del cliente usan la forma nueva; nota impresa del reporte) y MM-3d
+  (C-5, `curl` desde producción y encender).
+
