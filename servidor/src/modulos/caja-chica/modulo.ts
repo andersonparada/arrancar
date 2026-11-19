@@ -3,6 +3,7 @@ import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { ALCANCE_DE_FONDOS } from './infraestructura/persistencia/accesos-a-fondos.tablas.js';
 import { configuracionDeCajaChica } from './configuracion.js';
 import { PERMISOS_DE_CAJA_CHICA } from './permisos.js';
+import { rutasDeArqueosComponidas } from './composicion/arqueos.js';
 import { rutasDeAccesosAFondosComponidas } from './composicion/accesos-a-fondos.js';
 import { rutasDeComprobantesComponidas } from './composicion/comprobantes.js';
 import { rutasDeFondosComponidas } from './composicion/fondos.js';
@@ -34,6 +35,7 @@ export const moduloCajaChica: DefinicionModulo = {
     rutasDeAccesosAFondosComponidas(),
     rutasDeComprobantesComponidas(),
     rutasDeReposicionesComponidas(),
+    rutasDeArqueosComponidas(),
     // generador: rutas
   ]),
 };

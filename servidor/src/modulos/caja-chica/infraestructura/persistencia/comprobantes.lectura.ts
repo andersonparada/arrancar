@@ -79,6 +79,7 @@ function marcasDelComprobante(c: FilaDeComprobante['comprobante']) {
     sobreElTope: c.sobreElTope,
     motivoSobreElTope: c.motivoSobreElTope,
     sinBancarizar: c.sinBancarizar,
+    destinoDelFaltante: c.destinoDelFaltante,
     asignadoEn: c.asignadoEn?.toISOString() ?? null,
     asignadoPor: c.asignadoPor,
     motivoDeAnulacion: c.motivoDeAnulacion,

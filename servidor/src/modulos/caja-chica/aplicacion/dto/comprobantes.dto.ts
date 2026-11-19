@@ -33,6 +33,8 @@ export interface ComprobanteDto {
   sobreElTope: boolean;
   motivoSobreElTope: string | null;
   sinBancarizar: boolean;
+  /** Solo en el faltante de un arqueo. */
+  destinoDelFaltante: 'perdida' | 'cobrar_al_custodio' | null;
   numero: number | null;
   descripcion: string | null;
   pagadoA: string | null;

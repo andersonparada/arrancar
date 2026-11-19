@@ -3,6 +3,7 @@ import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/p
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import type { FondosEnBancos } from '../../puertos/puertos-de-bancos.js';
+import type { ConfiguracionDeArqueos } from '../../puertos/puertos-de-arqueos.js';
 import type {
   ConsultasDeFondos,
   CustodiosDeFondos,
@@ -25,4 +26,6 @@ export interface DependenciasDeFondos {
   /** Se publica después de confirmar la transacción de la propia petición (o de la de Bancos, si llegó por aviso). */
   publicadorEventos: PublicadorEventos;
   reloj: Reloj;
+  /** Cuántos días sin arquear para avisar en la lista y la ficha. */
+  configuracionDeArqueos: Pick<ConfiguracionDeArqueos, 'diasParaAvisar'>;
 }

@@ -12,6 +12,7 @@ import { DisminuirFondo } from '../aplicacion/casos-uso/fondos/disminuir-fondo.j
 import { EditarFondo } from '../aplicacion/casos-uso/fondos/editar-fondo.js';
 import { FondosControlador } from '../http/fondos.controlador.js';
 import { rutasDeFondos } from '../http/fondos.rutas.js';
+import { ConfiguracionDeArqueosEnConfiguracion } from '../infraestructura/apoyos-de-arqueos.js';
 import { FondosEnBancosEnMediador } from '../infraestructura/fondos-en-bancos-en-mediador.js';
 import {
   CustodiosDeFondosDrizzle,
@@ -55,5 +56,6 @@ export function dependenciasDeFondos(): DependenciasDeFondos {
     auditoria,
     publicadorEventos,
     reloj,
+    configuracionDeArqueos: new ConfiguracionDeArqueosEnConfiguracion(),
   };
 }
