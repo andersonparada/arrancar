@@ -16,6 +16,7 @@ export function rutasDelServidorDeCorreo(servidor: ServidorDeCorreoControlador):
       preHandler: soloSoporte,
       handler: servidor.guardar,
     });
+    app.get('/soporte/correo/bandeja', { schema: { tags }, preHandler: soloSoporte, handler: servidor.bandeja });
     app.post('/soporte/correo/prueba', {
       schema: { tags, body: esquemaPruebaDeCorreo },
       preHandler: [soloSoporte, limitarPruebasDeCorreo(app)],

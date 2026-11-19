@@ -18,9 +18,13 @@ import { ColaDeEnvioDrizzle } from './infraestructura/persistencia/cola-de-envio
 import { RepositorioDeCorreosDrizzle } from './infraestructura/persistencia/repositorio-de-correos.drizzle.js';
 import { ServidorDeCorreoDrizzle } from './infraestructura/persistencia/servidor-de-correo.drizzle.js';
 
-const parametros = new ParametrosEnConfiguracion(configuracion.lector);
+/** Lo que core.correo lee de la configuración de la instalación. */
+export const parametrosDeCorreo = new ParametrosEnConfiguracion(configuracion.lector);
+const parametros = parametrosDeCorreo;
 const cola = new ColaDeEnvioDrizzle(bd);
-const despertador = new DespertadorDeBandeja();
+/** Une a quien encola con el trabajador de la bandeja. */
+export const despertadorDeBandeja = new DespertadorDeBandeja();
+const despertador = despertadorDeBandeja;
 
 /** Lo usa el servidor una vez al día. */
 export const depurarCorreos = new DepurarCorreos({ depurador: cola, parametros });

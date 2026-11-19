@@ -2711,6 +2711,19 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   configurar el servidor). Rangos 192.0.0.0/24 y 198.18.0.0/15 rechazados como destino. Prueba de rotación A, A+B, B.
   Pendientes de bajo riesgo: permisos por columnas y llaves compuestas en la 0026, señal de parada del lote, ficha del
   arriendo en `resolver_correo`, bitácora de pruebas fallidas, DNS al conectar, y plazo de los correos pendientes.
+- **2026-11-18 (aviso de pago por correo, paso 8: historial y Soporte).** `core/correo` suma el historial de la empresa:
+  `GET /api/correos` (filtros `desde`, `hasta`, `estado`, `tipo`, paginado), `GET /api/correos/:id`, `POST
+  /api/correos/:id/cancelar` (solo pendientes, motivo de 1 a 300, auditoría `anular` sin el cuerpo) y `POST
+  /api/correos/:id/reintentar` (solo fallidos con el contenido sin depurar; vuelve a `pendiente` con intentos en cero,
+  vuelve a comprobar los cupos, auditoría `reabrir` y despierta al trabajador). El resumen nunca lleva el cuerpo ni el
+  código técnico del error. Permisos nuevos de core, sin migración de permisos (nadie los tenía): `correos.ver`,
+  `correos.cancelar`, `correos.reintentar` y `correo.servidor.gestionar` (`soloSuperacceso`; las rutas de Soporte siguen
+  protegidas con `soloSuperacceso` porque sin empresa activa la sesión no trae permisos). `GET
+  /api/soporte/correo/bandeja` da los conteos por estado de toda la instalación, el pendiente más antiguo y los últimos
+  50 fallidos (empresa, tipo, código; nunca direcciones ni textos) con dos funciones `security definer` de solo lectura:
+  migración 0027 de core (`core.resumen_de_la_bandeja` y `core.correos_fallidos_recientes`). Los errores de estado
+  responden 409 (`correo_no_pendiente`, `correo_no_reintentable`, `correo_sin_contenido`). El puerto `HistorialDeCorreos`
+  ya trae `deOrigen` y `cancelarPendientesDe`, que usará Cuentas por pagar (paso 10).
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la

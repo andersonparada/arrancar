@@ -28,7 +28,7 @@ const rutas: FastifyPluginAsync = async (app) => {
   await app.register(componerGeografia(dependenciasCompartidas()));
   await app.register(componerCalendario(dependenciasCompartidas()));
   await app.register(componerBitacora());
-  await app.register(componerCorreo());
+  await app.register(componerCorreo(dependenciasCompartidas()));
 };
 
 export const moduloCore: DefinicionModulo = {
@@ -45,6 +45,14 @@ export const moduloCore: DefinicionModulo = {
     { clave: 'roles.crear', descripcion: 'Crear roles' },
     { clave: 'roles.editar', descripcion: 'Editar los permisos y datos de los roles' },
     { clave: 'roles.eliminar', descripcion: 'Eliminar roles' },
+    { clave: 'correos.ver', descripcion: 'Ver el historial de correos enviados por la empresa' },
+    { clave: 'correos.cancelar', descripcion: 'Cancelar un correo pendiente antes de que salga' },
+    { clave: 'correos.reintentar', descripcion: 'Volver a mandar un correo que falló' },
+    {
+      clave: 'correo.servidor.gestionar',
+      descripcion: 'Configurar el servidor de correo de la instalación y ver la bandeja global (Soporte)',
+      soloSuperacceso: true,
+    },
     {
       clave: 'configuracion.ver',
       descripcion: 'Ver la configuración de la cuenta y la empresa',
