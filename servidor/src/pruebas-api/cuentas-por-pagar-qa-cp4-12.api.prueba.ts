@@ -11,7 +11,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { anularPago, moverFechaDelPago } from './soporte/cuentas-por-pagar-pagos-cambios.js';
 import { EscenarioDePagos } from './soporte/cuentas-por-pagar-pagar.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
-import { haceDias, HOY } from './soporte/escenario-de-documentos.js';
+import { consultar, haceDias, HOY } from './soporte/escenario-de-documentos.js';
 
 const entorno = usarEntornoApi();
 let e: EscenarioDePagos;
@@ -112,5 +112,42 @@ describe('un cheque posfechado anulado hoy', () => {
     expect(posfechados.total.monto).toBe('0.00');
     expect(r2.totales.comprometido).toBe('0.00');
     expect(r1.totales.acreedores.comprometido).toBe('0.00');
+  });
+});
+
+describe('el corte histórico de un cheque posfechado anulado hoy', () => {
+  const base = '/api/cuentas-por-pagar/reportes';
+
+  /** Un cargo y su cheque posfechado de Q700.00, hechos hace diez días y anulados hoy. */
+  async function posfechadoAnuladoHoy() {
+    const { proveedor, cargo } = await e.proveedorConCargo();
+    await consultar(
+      `update cuentas_por_pagar.documentos set fecha_emision = $2::date, vencimiento = $3::date, creado_en = $2::timestamptz where id = $1`,
+      [cargo, haceDias(10), haceDias(-30)],
+    );
+    const pago = await e.pagar(
+      e.cheque(proveedor.proveedorId, [{ cargoId: cargo, monto: '700.00' }], { fecha: haceDias(-20) }),
+    );
+    expect(pago.estado, JSON.stringify(pago.cuerpo)).toBe(201);
+    await consultar('update cuentas_por_pagar.pagos set creado_en = $2::timestamptz where id = $1', [
+      pago.cuerpo.id,
+      haceDias(5),
+    ]);
+    expect((await anularPago(e.propietario(), pago.cuerpo.id)).estado).toBe(200);
+    return proveedor.proveedorId as string;
+  }
+
+  it('antes de anularse sigue comprometido en R1, R2 y el reporte de posfechados, y desde hoy ya no', async () => {
+    const proveedorId = await posfechadoAnuladoHoy();
+    const al = async (ruta: string, corte: string) =>
+      (await e.propietario().get(`${base}/${ruta}?corte=${corte}&proveedorId=${proveedorId}`)).cuerpo;
+
+    const antes = haceDias(2);
+    expect((await al('cheques-posfechados', antes)).total.monto).toBe('700.00');
+    expect((await al('documentos', antes)).totales.comprometido).toBe('700.00');
+    expect((await al('saldos-por-proveedor', antes)).totales.acreedores.comprometido).toBe('700.00');
+    expect((await al('cheques-posfechados', HOY)).total.monto).toBe('0.00');
+    expect((await al('documentos', HOY)).totales.comprometido).toBe('0.00');
+    expect((await al('saldos-por-proveedor', HOY)).totales.acreedores.comprometido).toBe('0.00');
   });
 });
