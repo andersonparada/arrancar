@@ -50,7 +50,8 @@ defineProps<{ fila: FilaDeDocumentoAlCorte }>();
       <span class="text-sm tabular-nums text-tierra-600 dark:text-tierra-300">
         Total {{ formatearMonto(fila.total) }} · Pagado {{ formatearMonto(fila.pagado) }}
         <template v-if="Number(fila.comprometido) !== 0">
-          · Comprometido {{ formatearMonto(fila.comprometido) }}</template
+          · Comprometido {{ formatearMonto(fila.comprometido) }} · Disponible para pagar
+          {{ formatearMonto(fila.disponible) }}</template
         >
       </span>
       <span v-if="textoDeContrasena(fila)" class="text-sm text-tierra-600 dark:text-tierra-300">

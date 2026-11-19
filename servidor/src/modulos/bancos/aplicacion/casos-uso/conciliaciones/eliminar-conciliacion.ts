@@ -1,6 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { SoloSeEliminaLaUltima } from '../../../dominio/errores.js';
 import {
+  documentoDeLaConciliacion,
   conciliacionBloqueada,
   RECURSO_DE_ESTADOS_DE_CUENTA,
   type DependenciasDeConciliaciones,
@@ -21,14 +22,14 @@ export class EliminarConciliacion {
 
   /** @throws SoloSeEliminaLaUltima si no es la más reciente de su cuenta. */
   ejecutar(operador: Operador, { conciliacionId, motivo }: SolicitudDeEliminacion): Promise<void> {
-    const { unidadDeTrabajo, repositorio, consultas, auditoria, documentos } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, auditoria, documentos } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const conciliacion = await conciliacionBloqueada(repositorio, conciliacionId);
       const { cuentaBancariaId, estadoDeCuentaArchivoId } = conciliacion.instantanea();
       const ultima = await repositorio.ultimaDeLaCuenta(cuentaBancariaId);
       if (ultima?.id !== conciliacionId) throw new SoloSeEliminaLaUltima();
 
-      const anterior = await consultas.obtener(conciliacionId);
+      const anterior = await documentoDeLaConciliacion(operador, this.dependencias, conciliacionId);
       await repositorio.guardarMarcas(conciliacionId, []);
       await repositorio.eliminar(conciliacion.id);
       if (estadoDeCuentaArchivoId) await documentos.eliminar(estadoDeCuentaArchivoId, RECURSO_DE_ESTADOS_DE_CUENTA);

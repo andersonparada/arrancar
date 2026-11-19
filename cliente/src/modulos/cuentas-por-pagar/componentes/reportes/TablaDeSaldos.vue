@@ -33,7 +33,7 @@ defineProps<{ filas: FilaDeSaldo[]; totales: CifrasDeSaldo; corte: string; titul
           <th scope="col" class="px-3 py-2 text-right font-medium">Saldos a favor</th>
           <th scope="col" class="px-3 py-2 text-right font-medium">Saldo neto</th>
           <th scope="col" class="px-3 py-2 text-right font-medium">Comprometido</th>
-          <th scope="col" class="px-3 py-2 text-right font-medium">Disponible</th>
+          <th scope="col" class="px-3 py-2 text-right font-medium">Disponible para pagar</th>
           <th scope="col" class="px-3 py-2 text-right font-medium">Sin autorizar</th>
         </tr>
       </thead>

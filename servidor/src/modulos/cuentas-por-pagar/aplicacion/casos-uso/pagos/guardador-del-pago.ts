@@ -60,6 +60,9 @@ function datosDeEfectivo(pedido: PeticionGuardable) {
 const referenciaPropia = (pedido: PeticionGuardable): string | null =>
   pedido.forma === 'cheque' || pedido.forma === 'nota_de_debito' ? null : (pedido.referencia ?? null);
 
+/** La empresa, la cuenta y el usuario del pago: el evento los lleva para que un suscriptor arme su unidad de trabajo. */
+const dondeYQuien = ({ empresaId, cuentaId, usuarioId }: Operador) => ({ empresaId, cuentaId, usuarioId });
+
 /** El pago como quedó guardado, con lo que hace falta para su respuesta y su evento. */
 function pagoGuardado(
   operador: Operador,
@@ -67,7 +70,7 @@ function pagoGuardado(
   { asignado, lineas, avisos }: { asignado: NumeroAsignado; lineas: LineaConRetencion[]; avisos: string[] },
 ): PagoGuardado {
   return {
-    empresaId: operador.empresaId,
+    ...dondeYQuien(operador),
     pagoId: por.pagoId,
     numero: { numero: asignado.numero, anio: asignado.anio },
     forma: por.pedido.forma,

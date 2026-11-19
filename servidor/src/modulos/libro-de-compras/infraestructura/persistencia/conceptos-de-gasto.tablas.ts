@@ -26,7 +26,6 @@ export const conceptosDeGasto = esquemaLibroDeCompras.table(
     unique('conceptos_de_gasto_id_empresa_unico').on(t.id, t.empresaId),
     check('conceptos_de_gasto_nombre_largo', sql`char_length(btrim(${t.nombre})) between 1 and 120`),
     check('conceptos_de_gasto_tipo', sql`${t.tipoPorOmision} in ('bien', 'servicio')`),
-    check('conceptos_de_gasto_activo_fijo_es_bien', sql`not ${t.esActivoFijo} or ${t.tipoPorOmision} = 'bien'`),
     politicaPorEmpresa(),
   ],
 );

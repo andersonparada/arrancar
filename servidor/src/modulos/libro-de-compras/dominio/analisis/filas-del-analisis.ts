@@ -52,6 +52,8 @@ export interface IvaAlCostoDeLinea extends DocumentoDeLinea {
 export interface ActivoFijoComprado extends DocumentoDeLinea {
   numeroDeLinea: number;
   concepto: string;
+  /** Un servicio también puede capitalizarse como activo fijo. */
+  tipoDeLinea: 'bien' | 'servicio';
   descripcion: string | null;
   costo: number;
   ivaConCredito: number;

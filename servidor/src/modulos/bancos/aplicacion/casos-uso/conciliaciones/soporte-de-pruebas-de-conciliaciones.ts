@@ -6,6 +6,8 @@ import {
   operadorDePrueba,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { randomUUID } from 'node:crypto';
+import type { ParteDeApertura } from '../../../dominio/partes-de-apertura.js';
 import { Movimiento } from '../../../dominio/movimiento.js';
 import { ConciliacionesEnMemoria } from '../../../pruebas/dobles-de-conciliaciones.js';
 import { DocumentosEnMemoria, PoliticaDeEstadoDeCuentaFija } from '../../../pruebas/dobles-de-estado-de-cuenta.js';
@@ -36,6 +38,7 @@ import { QuitarEstadoDeCuenta } from './quitar-estado-de-cuenta.js';
 import { SubirEstadoDeCuenta } from './subir-estado-de-cuenta.js';
 import { TerminarConciliacion } from './terminar-conciliacion.js';
 import { TranscribirSaldo } from './transcribir-saldo.js';
+import type { CargaInicial } from '../../puertos/carga-inicial.js';
 import { CARGA_SIN_FECHA_DE_INICIO } from '../../../pruebas/dobles-de-carga-inicial.js';
 
 export const operador = operadorDePrueba();
@@ -67,6 +70,7 @@ function dependenciasComunes(auditoria: AuditoriaEnMemoria) {
 }
 
 interface DoblesDePrueba {
+  cargaInicial: CargaInicial;
   movimientos: MovimientosEnMemoria;
   conciliaciones: ConciliacionesEnMemoria;
   auditoria: AuditoriaEnMemoria;
@@ -82,7 +86,7 @@ const reglasSinSobregiro = (movimientos: MovimientosEnMemoria) =>
   });
 
 function dependenciasDePrueba(dobles: DoblesDePrueba) {
-  const { movimientos, conciliaciones, auditoria, documentos, politicaDeEstadoDeCuenta } = dobles;
+  const { movimientos, conciliaciones, auditoria, documentos, politicaDeEstadoDeCuenta, cargaInicial } = dobles;
   const reglas = reglasSinSobregiro(movimientos);
   const comunes = dependenciasComunes(auditoria);
   const deConciliaciones = {
@@ -92,6 +96,7 @@ function dependenciasDePrueba(dobles: DoblesDePrueba) {
     consultasMovimientos: movimientos,
     documentos,
     politicaDeEstadoDeCuenta,
+    cargaInicial,
   };
   const deMovimientos = {
     ...comunes,
@@ -123,7 +128,7 @@ function casosDeConciliaciones(deConciliaciones: ReturnType<typeof dependenciasD
 }
 
 /** Arma los casos de uso de conciliaciones sobre dobles en memoria frescos. */
-export function casosDeUsoDeConciliaciones() {
+export function casosDeUsoDeConciliaciones(cargaInicial: CargaInicial = CARGA_SIN_FECHA_DE_INICIO) {
   const movimientos = new MovimientosEnMemoria();
   const conciliaciones = new ConciliacionesEnMemoria();
   conciliaciones.vincularMovimientos(movimientos);
@@ -137,6 +142,7 @@ export function casosDeUsoDeConciliaciones() {
     auditoria,
     documentos,
     politicaDeEstadoDeCuenta,
+    cargaInicial,
   });
 
   const casos = {
@@ -155,19 +161,20 @@ export async function agregarMovimiento(
     tipo?: 'credito' | 'debito' | 'cheque';
     saldoInicial?: boolean;
     beneficiario?: string | null;
+    /** La parte de la carga inicial que es (el saldo del banco, un cheque posfechado…). */
+    parte?: ParteDeApertura;
   },
 ): Promise<string> {
-  const movimiento = Movimiento.crear(empresaId, {
-    cuentaBancariaId: CUENTA,
-    tipo: datos.tipo ?? 'credito',
-    fecha: datos.fecha,
-    monto: datos.monto,
-    saldoInicial: datos.saldoInicial ?? false,
-    referencia: null,
-    beneficiario: datos.beneficiario ?? null,
-    observaciones: null,
-    conceptoId: CONCEPTO_GENERAL,
-  });
+  const { fecha, monto, parte } = datos;
+  const movimiento = Movimiento.crear(
+    empresaId,
+    {
+      ...{ cuentaBancariaId: CUENTA, tipo: datos.tipo ?? 'credito', fecha, monto },
+      ...{ saldoInicial: datos.saldoInicial ?? false, referencia: null, observaciones: null },
+      ...{ beneficiario: datos.beneficiario ?? null, conceptoId: CONCEPTO_GENERAL },
+    },
+    parte ? { apertura: { parte, saldoInicialId: randomUUID() } } : {},
+  );
   await movimientos.agregar(movimiento);
   return movimiento.id.valor;
 }

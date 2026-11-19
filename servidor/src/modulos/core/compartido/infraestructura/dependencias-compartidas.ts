@@ -3,6 +3,7 @@ import { busEventos } from '../../eventos/bus-eventos.js';
 import type { DependenciasCompartidas } from '../aplicacion/dependencias-compartidas.js';
 import { crearDocumentosProtegidos } from '../../archivos/infraestructura/documentos-protegidos.js';
 import { VerificadorDeFotosDrizzle } from '../../archivos/infraestructura/verificador-de-fotos.drizzle.js';
+import { crearBandejaDeSalida } from '../../correo/bandeja.js';
 import { AuditoriaPostgres } from './auditoria-postgres.js';
 import { CorrelativosPostgres } from './correlativos-postgres.js';
 import { PoliticaDeReinicioAnualEnConfiguracion } from './politica-de-reinicio-anual.configuracion.js';
@@ -13,16 +14,22 @@ import { UnidadDeTrabajoPostgres } from './unidad-de-trabajo-postgres.js';
 
 let dependencias: DependenciasCompartidas | undefined;
 
-/** Implementaciones reales de las dependencias compartidas; se crean una sola vez. */
-export function dependenciasCompartidas(): DependenciasCompartidas {
-  dependencias ??= {
+function crearDependencias(): DependenciasCompartidas {
+  const documentos = crearDocumentosProtegidos();
+  return {
     unidadDeTrabajo: new UnidadDeTrabajoPostgres(bd),
     publicadorEventos: new PublicadorEventosEnBus(busEventos),
     auditoria: new AuditoriaPostgres(),
     correlativos: new CorrelativosPostgres(new PoliticaDeReinicioAnualEnConfiguracion()),
     reloj: new RelojEnZonaHoraria(new PoliticaDeZonaHorariaEnConfiguracion()),
     fotos: new VerificadorDeFotosDrizzle(),
-    documentos: crearDocumentosProtegidos(),
+    documentos,
+    bandeja: crearBandejaDeSalida(documentos),
   };
+}
+
+/** Implementaciones reales de las dependencias compartidas; se crean una sola vez. */
+export function dependenciasCompartidas(): DependenciasCompartidas {
+  dependencias ??= crearDependencias();
   return dependencias;
 }

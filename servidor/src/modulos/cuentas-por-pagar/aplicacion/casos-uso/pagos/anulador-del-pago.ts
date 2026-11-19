@@ -121,6 +121,8 @@ export class AnuladorDelPago {
   ): PagoAnulado {
     return new PagoAnulado({
       empresaId: operador.empresaId,
+      cuentaId: operador.cuentaId,
+      usuarioId: operador.usuarioId,
       pagoId: pago.id,
       fecha,
       fechaOriginal: pago.fecha,

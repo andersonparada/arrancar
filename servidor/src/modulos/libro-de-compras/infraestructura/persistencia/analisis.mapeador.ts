@@ -46,6 +46,7 @@ export interface FilaDeLinea {
   proveedor: string;
   numeroDeLinea: number;
   concepto: string;
+  tipoDeLinea: 'bien' | 'servicio';
   descripcion: string | null;
   motivo: string | null;
   ivaAlCosto: string;
@@ -118,6 +119,7 @@ export const activoFijoComprado = (fila: FilaDeLinea): ActivoFijoComprado => ({
   ...documentoDeLinea(fila),
   numeroDeLinea: fila.numeroDeLinea,
   concepto: fila.concepto,
+  tipoDeLinea: fila.tipoDeLinea,
   descripcion: fila.descripcion,
   costo: aCentavos(fila.costo),
   ivaConCredito: aCentavos(fila.ivaConCredito),

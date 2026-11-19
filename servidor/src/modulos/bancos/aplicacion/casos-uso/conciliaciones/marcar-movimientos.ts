@@ -1,7 +1,11 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { ConciliacionNoEstaEnProceso, MovimientoNoConciliable } from '../../../dominio/errores.js';
 import type { ConciliacionDto } from '../../dto/conciliacion.dto.js';
-import { conciliacionExistente, type DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
+import {
+  documentoDeLaConciliacion,
+  conciliacionExistente,
+  type DependenciasDeConciliaciones,
+} from './dependencias-de-conciliaciones.js';
 
 interface SolicitudDeMarcas {
   conciliacionId: string;
@@ -36,7 +40,7 @@ export class MarcarMovimientos {
       const marcados = [...new Set([...movimientoIds, ...compensados])];
 
       await repositorio.guardarMarcas(conciliacionId, marcados);
-      return consultas.obtener(conciliacionId);
+      return documentoDeLaConciliacion(operador, this.dependencias, conciliacionId);
     });
   }
 }

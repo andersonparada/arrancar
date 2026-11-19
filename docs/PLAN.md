@@ -2280,6 +2280,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-18 — BS-3 (Bancos, segunda parte, servidor: reglas transversales).** Movimientos antes del corte y antes de la fecha de inicio (§5.2, P-6, también en las órdenes de otros módulos, con la ayuda en el mensaje); `AnularPartidaDeApertura` y su ruta (§5.3: siempre con inverso, concepto `anulacion_de_apertura`, fecha posterior al corte, pagador del depósito; el posfechado se anula como cheque normal; no se blanquea); `OrigenDeCheque = 'apertura'` en caducos y lote; `parteDeApertura` en los DTO; evento `bancos.partida_de_apertura_anulada` con `pagador`. Decisión: las consultas por concepto cuentan el inverso de una partida de apertura con su propio concepto (si no, el flujo lo mandaba a «apertura»). Detalle en `bancos.md`.
 - **2026-11-18 — BS-3, correcciones de la revisión.** P-6 también al corregir un movimiento posterior a la fecha de inicio (no puede pasar a una fecha anterior); la cabecera con saldo del banco en cero cuenta como saldo inicial (la ruta heredada ya no acepta un saldo global encima); el posfechado sale como origen «suelto» en caducos; leyenda del art. 501 ajustada. Pendiente BS-4/BS-5: lo que decida según `saldo_del_banco` debe mirar también la cabecera.
 
+- **2026-11-18 — BS-4 (Bancos, segunda parte, servidor: conciliación).** Primera conciliación de una cuenta con saldo del banco (sale del saldo del estado de cuenta al corte; solo el mes de la fecha de inicio, `PrimeraConciliacionDeOtroMes`), el saldo del banco ya no es candidato, **cheques cobrados antes de su fecha** en todas las conciliaciones (grupo `posfechadosCandidatos`, partida `cobradosAntesDeSuFecha` que resta del saldo del estado de cuenta y su total en la foto), `deApertura`/`parteDeApertura` en las partidas, `saldoInicialDelBancoDeLaApertura` y `periodoSiguiente` en la lista de la cuenta (la ruta ahora responde `{ conciliaciones, periodoSiguiente }`; el cliente solo desenvuelve la lista hasta BS-7). Sin migración. Decisiones y detalle en `bancos.md`.
+- **2026-11-18 — BS-4, correcciones de la revisión.** Un cheque cobrado antes de su fecha sigue restando del saldo del estado de cuenta en los meses siguientes hasta que llega su fecha (antes, febrero no cuadraba con un cheque de marzo cobrado en enero); anular un cheque marcado en una conciliación lleva nota inversa en vez de anularlo a la antigua; con el saldo del banco en cero y el corte a mitad de mes, la primera conciliación parte del corte (la fecha sale de `empresas.cargas_iniciales` con una lectura directa, porque la consulta no tiene operador para el mediador). Sin migración.
+- **2026-11-18 — BS-4, segunda ronda de correcciones.** El punto de partida de la conciliación ya no lee `empresas.cargas_iniciales` con SQL: la fecha de inicio llega por el puerto `CargaInicial` (`documentoDeLaConciliacion` la pasa a `ConsultasConciliaciones.obtener`). `AnularCheque` anula con inverso por marca solo si la conciliación del movimiento está **autorizada** (`marcadoEnConciliacionAutorizada`). Corregida la contradicción de `bancos.md` sobre `saldoInicialDelBancoDeLaApertura` con saldo cero (`monto: '0.00'`). Sin migración.
+
 - **2026-11-18 (respuestas del usuario a EM-2 e impresión de cheques).** Todas las recomendaciones del arquitecto, salvo
   las fotos de cheques: no habrá, las plantillas van con medidas aproximadas. Detalle al final de
   `docs/modulos/diseno-em2-cierre-de-la-carga.md` y `docs/modulos/diseno-impresion-de-cheques.md`. Falta el dictamen del
@@ -2643,6 +2647,70 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   cuando falta el correo o no sirve (`avisos-de-pago.ts`), y etiqueta en la lista de contactos de la ficha. El Excel de
   Terceros no maneja contactos y no cambia.
   dos niveles y más nombres de secretos.
+- **2026-11-18 (aviso de pago por correo, paso 2: servidor de correo de la instalación).** `CLAVE_SECRETOS` (32 bytes en
+  base64, opcional; si llega mal formada la app no arranca) y `CLAVE_SECRETOS_ANTERIOR` para rotar;
+  `CORREO_PERMITIR_RED_INTERNA` (solo desarrollo; se rechaza en producción). `CifradorAesGcm` (AES-256-GCM, IV de 12
+  bytes, el contexto como AAD, versión de llave = 15 bits de su huella). Tabla `core.servidor_de_correo` (migración
+  0025; una fila; sin `empresa_id` ni RLS; checks: solo 465 con `tls_directo` o 587 con `starttls`, **no admite
+  `ninguna`**, no se activa sin contraseña). Rutas de Soporte (`soloSuperacceso`) `GET`/`PUT /api/soporte/correo/servidor`
+  y `POST /api/soporte/correo/prueba` (`EnviarPrueba`, 5 por hora por usuario). La contraseña solo se escribe: la API
+  devuelve `contrasenaConfigurada`; al cambiar servidor, puerto o usuario hay que escribirla otra vez (así no se
+  desvía la guardada); el servidor no puede ser de la red interna (C12). Cada guardado y cada prueba van a
+  `core.bitacora_superacceso` en la misma transacción, sin contraseña. Decisión: las rutas usan `/api/soporte/…` como
+  dice el diseño y no `/api/plataforma/…` como las demás de Soporte. Pendiente: re-cifrar con la llave nueva al rotar
+  (hoy ocurre al volver a escribir la contraseña) y cómo apunta el desarrollo a Mailpit (puerto 1025, sin cifrado),
+  que la tabla no admite.
+- **2026-11-18 (aviso de pago por correo, paso 4: bandeja de salida).** Migración 0026: `core.correos_salientes`,
+  `core.destinatarios_de_correos` y `core.intentos_de_correos`, con RLS por empresa y **sin política de borrado** (la
+  app solo lee, inserta y, en los correos, actualiza para cancelar o reintentar; destinatarios e intentos no se
+  actualizan). Checks: asunto y nombre sin controles, estados, arriendo solo en `enviando`, cancelación completa,
+  `ultimo_error_codigo` y `codigo` solo con forma de código (nunca el texto del servidor), máximo 8 intentos.
+  Funciones `security definer` con `row_security = off` y `EXECUTE` solo para `arrancar_app`:
+  `reservar_cupo_de_correo` (candado por cuenta con `pg_advisory_xact_lock`; la cuenta sale de `app.cuenta_id`, máximo 10
+  direcciones, el cupo por destinatario no distingue mayúsculas), `tomar_correos_pendientes` (`FOR UPDATE SKIP LOCKED`,
+  arriendo de 1 a 30 minutos, no toma nada con el servidor apagado, y un arriendo vencido que ya gastó los 8 intentos
+  queda `fallido`), `resolver_correo` (esperas 1 min, 5 min, 30 min, 2 h, 12 h, 24 h, 24 h con ±20 % de azar; autenticación
+  o sin servidor no gastan intento y esperan 15 min; el número del intento es seguido aunque se devuelva el contador) y
+  `depurar_correos` (contenido a los `dias` ≥ 7, filas terminadas a los `meses` ≥ 60; borra la fila de `core.archivos`
+  del adjunto y conserva su huella). Decisión: el índice del cupo por destinatario es sobre `lower(direccion)`. Pruebas
+  de RLS (otra empresa, otra cuenta, sin `delete`, sin escribir intentos) y de cada función, incluida la concurrencia.
+- **2026-11-18 (aviso de pago por correo, paso 5: encolar, trabajador y depuración).** Puerto público
+  `BandejaDeSalida` (en `DependenciasCompartidas.bandeja`, junto a `documentos`) con `encolar(operador, mensaje)`:
+  valida cada dirección con `DireccionDeEnvio`, junta repetidas, exige 1 a 10 destinatarios con al menos un «para», arma
+  asunto y cuerpos con la plantilla (el módulo da la lista cerrada de marcadores del asunto y del mensaje, y los
+  valores), cuenta cupos con `core.reservar_cupo_de_correo` (candado por cuenta; 429 `cupo_de_correos_agotado` con el
+  tope que se pasó), guarda el PDF (solo PDF generado por la app, hasta 5 MB) con `DocumentosProtegidos.guardar` dueño
+  `core.correos_salientes`, inserta el correo y sus destinatarios en la misma transacción y despierta al trabajador al
+  confirmarse. `ProcesarBandeja` (iniciado en `principal.ts`, con SIGTERM: deja de tomar, espera el lote en curso hasta
+  20 s y cierra el transporte) revisa cada 30 s y cuando lo despiertan, nunca corre dos lotes a la vez y sigue mientras
+  los lotes salgan llenos (10 por lote, arriendo de 5 minutos). `EnviarLoteDeCorreos` toma el lote, envía con el
+  transporte de la instalación (un solo transporte, que se rearma si Soporte cambia la conexión), lee el PDF del
+  almacenamiento y anota cada resultado con `core.resolver_correo`; un `autenticacion` detiene el lote y lo que falta
+  vuelve sin gastar intento, y pasados 3 minutos del lote lo que falta también vuelve (para no pasarse del arriendo).
+  Fallos propios: PDF perdido = permanente `ADJUNTO`, dirección guardada inservible = permanente `DIRECCION`, error
+  inesperado = temporal `ERROR_INTERNO`. Sin `CLAVE_SECRETOS` el trabajador no arranca y `principal.ts` lo dice.
+  Depuración diaria (`DepurarCorreos`): contenido a los `core.correo.dias_de_conservacion_del_contenido` (30, de 7 a
+  365) y filas terminadas a los `core.auditoria.meses_de_conservacion` (60); el archivo en disco del PDF lo quita la
+  depuración de huérfanos al día siguiente. Variables nuevas, solo de instalación: `core.correo.tope_por_hora_por_cuenta`
+  (100), `tope_por_dia_por_cuenta` (500), `tope_por_dia_por_destinatario` (20), `tope_por_hora_de_la_instalacion`
+  (1,000) y `dias_de_conservacion_del_contenido` (30). Pruebas con el doble de transporte y fallos simulados, y de
+  integración contra la base (encolar, deshacer, concurrencia de cupos, reintentos, arriendo vencido, depuración).
+- **2026-11-18 (aviso de pago por correo, paso 6: eventos).** `BusEventos.suscribirSinRomper(evento, suscriptor,
+  descripcion)` atrapa el fallo del suscriptor, lo registra (evento, quién y el error, nunca los datos) y deja seguir a
+  los demás: así un fallo después de confirmar un pago no responde 500 ni se pierde la notificación al resto. Todo
+  suscriptor con efectos de negocio (correo, Contabilidad) debe usarlo; `suscribir` queda para las pruebas.
+  `aplicacion.ts` apunta el registro del bus a pino (`BusEventos.usarRegistro`). `cuentas-por-pagar.pago_registrado` y
+  `pago_anulado` suman `cuentaId` y `usuarioId` (cambio aditivo del contrato, en `eventos-de-pagos.ts` y
+  `cuentas-por-pagar.contratos.ts`); Cuentas por pagar los llena desde el operador del caso de uso (registrar, todas las
+  formas, y anular). Sin migración.
+- **2026-11-18 (correo, correcciones de la revisión de seguridad).** Rotación de la llave completada: si el secreto del
+  servidor no se cifró con `CLAVE_SECRETOS`, `ProveedorDeTransporte` y `EnviarPrueba` lo vuelven a cifrar con la vigente
+  (`recifrarSiHaceFalta`; `CifradorDeSecretos.esVigente`, `ServidorDeCorreoRepositorio.recifrar` con `update … where`
+  de la versión y el IV viejos) y anotan `correo.servidor.recifrar` en `core.bitacora_superacceso` a nombre de quien
+  guardó el servidor (sin contraseña). `EnviarLoteDeCorreos` registra por qué no hay transporte (no cuando solo falta
+  configurar el servidor). Rangos 192.0.0.0/24 y 198.18.0.0/15 rechazados como destino. Prueba de rotación A, A+B, B.
+  Pendientes de bajo riesgo: permisos por columnas y llaves compuestas en la 0026, señal de parada del lote, ficha del
+  arriendo en `resolver_correo`, bitácora de pruebas fallidas, DNS al conectar, y plazo de los correos pendientes.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
@@ -2871,3 +2939,52 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   última entrada; el faltante es una salida más). Los ejemplos de §7.6 son pruebas (25 en total). Decisiones: un
   movimiento de valor en PEPS lleva `capaId` y falla con `capa_no_disponible` si la capa ya no tiene existencia; en
   promedio, la rebaja se limita con el valor que queda que pasa quien llama.
+- **2026-11-18 (Activos fijos aprobado).** Todas las respuestas al final de `docs/modulos/diseno-activos-fijos.md`. Cambio
+  respecto al diseño: **sin alcance por localidad** (AF-P2 = a). El arquitecto incorpora el cambio y los ajustes del contador
+  (A1 a A3, V-2 a V-12, auditoría permanente) antes de AF-1.
+- **2026-11-18 · CP4-D6 y D7 (reportes, adenda del posfechado, respuesta a A.7).** «Disponible para pagar» en R1 es igual que
+  en la ficha del proveedor: total de cargos menos comprometido (`cifrasDto`); lo que está a favor va en su columna y no resta
+  (en la QA intermedia: cargo 2,240, a favor 336, posfechado por el total da 0.00, ya no −336.00). R2 (`documentos`) trae
+  `disponible` por fila, en el total y en el Excel («Disponible para pagar»), igual a saldo menos comprometido. Cliente: columna
+  en la tabla y línea en la tarjeta de R2, resumen de arriba de R1 y R2 con la cifra y rótulo «Disponible para pagar» en la
+  tabla de R1. Prueba de API de la QA intermedia: 0.00 en R1, R2 y ficha, y la invariante 3 de CP5 §2.5 (lo disponible de R2 con
+  corte de hoy es el de la lista). Pendiente: el estado de cuenta del proveedor (`alCorte.disponible`) sigue siendo neto menos
+  comprometido; la adenda no lo menciona.
+- **2026-11-18 · CP4-D6, corrección de la revisión (disponible del deudor).** `cifrasDto` calcula `disponible` (cargos menos
+  comprometido) también en el bloque de deudores y en `totales.deudores`, ya no va `null`: un proveedor con cargo 100 y a favor
+  500 muestra 100.00 como su ficha, y lo a favor nunca resta (A.7). Excepción que queda: el proveedor con neto exactamente 0 sigue
+  fuera de R1 sin «incluir sin saldo» (y entra en acreedores con la opción). Prueba nueva en `reportes-de-saldos.prueba.ts`.
+
+- **2026-11-18, CCL-L1: referencia de destino en el libro.** `POST /libro-de-compras/documentos` acepta `referenciaDeDestino` (uuid, opcional) y el libro la pasa tal cual en `DocumentoParaDestino` a `<destino>.recibir_documento` (no la guarda ni la valida; sin migración). Ingreso de facturas lee `?referencia=&etiqueta=&volver=` (`referencia-de-destino.ts`: la referencia debe ser uuid y la vuelta una ruta interna); la etiqueta se muestra como «Destino: …», `volver` pone el enlace «Volver» y la referencia viaja en el cuerpo de registrar. Sin la referencia todo queda igual. Decisión: el evento `documento_registrado` no la lleva (solo la orden al destino).
+
+- **2026-11-18, CCL-BZ: bancarización compartida (Libro de compras y Cuentas por pagar, servidor).** Libro de compras atiende la orden `libro-de-compras.evaluar_bancarizacion` (`EvaluarBancarizacion`): toma primero el bloqueo `libro-de-compras.bancarizacion:<empresa>:<proveedor>`, pregunta `libro-de-compras.pagado_al_proveedor_en_el_mes` con `preguntarATodos` (suma efectivo + bancarizado de lo que respondan), mira el efecto fiscal por documento (régimen de IVA copiado y ISR del período) o, en un saldo inicial, el `efectoDeSaldoInicial` que trae quien llama, y responde `libre | avisar | bloquear` con mensaje, efecto y lo pagado. La regla pura (`bancarizacion-en-efectivo.ts` y su prueba) se mudó de Cuentas por pagar al libro; el texto dice «Arrancar solo suma los pagos registrados en Arrancar» (también el del cliente de Cuentas por pagar). El umbral es ahora `libro-de-compras.bancarizacion.umbral` (instalación, Q30,000) y Cuentas por pagar lo lee de ahí; migración de datos `0038_bancarizacion_compartida` (custom, repetible) copia la fila de instalación de la clave vieja; **el JSON de instalación (`RUTA_CONFIG_INSTALACION`) no se migra: soporte debe renombrar la clave a mano.** Cuentas por pagar responde la pregunta con sus pagos vigentes del mes (`ResponderPagadoAlProveedor`; etiquetas «Recibo N/AAAA»), su `EvaluadorDeBancarizacion` llama la orden en vez de sumar y su bloqueo usa la clave nueva. Caja chica y Cuentas por liquidar todavía no responden: solo queda el contrato. Decisiones: el aviso de bancarización de los pagos con cheque, nota de débito o nota ligada (`avisosDeBancarizacion`, CP4) y el reporte R9 siguen contando solo Cuentas por pagar (R9 hasta P-CCL-3); la orden evalúa solo efectivo. Pruebas: las de CP4-E3 sin cambios; nueva API con un destino de prueba que responde y hace que un pago de Cuentas por pagar llegue al umbral.
+
+- **2026-11-18, Activos fijos AF-0 (Libro de compras).** Un servicio puede ser activo fijo (AF-P5 = b, dictamen E1). Migración
+  `0037_af_servicio_capitalizable`: se quitan los checks `lineas_de_documento_activo_fijo_es_bien` y
+  `conceptos_de_gasto_activo_fijo_es_bien` y se agrega el único `lineas_de_documento_llave_unica (id, documento_id, empresa_id)`,
+  destino de la llave compuesta de `activos_fijos.costos`. Se quitaron la regla del dominio del concepto y la del resolutor de
+  líneas (combustible e IDP siguen exigiendo bien). `categoriaSql` manda a la casilla de activos solo `es_activo_fijo and tipo =
+  'bien'`; el servicio capitalizado queda en servicios del SAT-2237. El análisis «Activos fijos comprados» muestra todos y suma la
+  columna «Es un» (bien o servicio, también en el Excel). Cliente: ya no se fuerza «Bien» al marcar activo fijo y el texto es
+  «Activo fijo (se capitaliza)».
+- **2026-11-18 (respuestas del usuario).** Integración de Activos fijos e Inventarios aprobada (detalle al final de
+  `diseno-integracion-activos-fijos-e-inventarios.md`): el stock de bienes de uso vive en Activos fijos. *AF-P22:* la lista
+  de activos muestra el nombre de la localidad aunque el usuario no tenga acceso a ella (consulta de Empresas solo con id y
+  nombre, revisada por seguridad). Validación del contador de Inventarios guardada en
+  `dictamen-inventarios-validacion-2026-11-18.md` (V-2: la fórmula de absorción con promedio del diseño es incorrecta).
+- **2026-11-18 (AFI-0, docs del arquitecto).** La integración aprobada quedó en los dos diseños. `diseno-activos-fijos.md`
+  (marcado AFI): `activos.en_bodega` y `alta_conjunta_id`, `traslados.a_bodega`, tablas `divisiones` y `boletas_firmadas`,
+  división en `costos` y `tramos`, `acumuladaAl`, capitalizar en N unidades con el sobrante en el último, «Disponible para
+  uso» por lote, traslado y baja con cantidad parcial (**AF-P10 cambia**: división automática), cantidad esperada y
+  encontrada en el inventario físico, tres reportes (existencias de bienes de uso, en bodega, responsiva), dos variables
+  de empresa y la orden `activos-fijos.obtener_umbral_de_capitalizacion`; pasos AFI-1 a AFI-9 encajados en AF-n.
+  **AF-P22 = b**: Empresas da `empresas.nombres_de_localidades` y `empresas.nombres_de_departamentos` (`security definer`,
+  solo id, código, nombre y activo de la empresa de la transacción; §6.13), **para revisión de `seguridad`** antes del
+  paso AF-P22 (antes de AF-2c). `diseno-inventarios.md`: validación del contador aplicada — V-2 factor exacto
+  `Π(1 − q/C)` y recálculo de los repartos; V-1 rige el 1 de enero del año siguiente a la autorización, con recálculo si
+  se registra tarde y meses abiertos; V-3 débito solo en `general`; V-4 correspondencia tipo → clase de la SAT y
+  «tránsito» = compras sin recibir; V-5 sobrante a la última entrada con costo real; V-6 `error_de_registro` referido a
+  la salida que corrige; V-8 (P-2 a) descartar quita la marca en el libro con la orden
+  `libro-de-compras.cambiar_marca_de_inventario`; V-10 donación con su valor razonable en el evento; kardex por bodega con
+  su propio saldo; traslados neutros para el costeo y devolución con PEPS sobre su capa. Abiertas: P-1, P-3, INV-P14 e
+  INV-A16 (usuario) y VC-1 a VC-4 (contador).

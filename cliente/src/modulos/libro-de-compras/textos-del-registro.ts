@@ -11,6 +11,9 @@ export const FORMULARIO_DE_DOCUMENTO = {
     recibo: 'Registrar recibo',
   } as Partial<Record<TipoDeDocumento, string>>,
   volver: 'Ingreso de facturas',
+  /** Cuando se llega desde un destino (un fondo, un anticipo): a dónde va el documento y cómo volver. */
+  paraElDestino: (etiqueta: string) => `Destino: ${etiqueta}`,
+  volverAlDestino: 'Volver',
   registrar: 'Registrar',
   cancelar: 'Cancelar',
   sinDestinos:

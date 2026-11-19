@@ -94,6 +94,8 @@ export interface FilaDeDocumentoAlCorte {
   ajustado: string;
   saldo: string;
   comprometido: string;
+  /** `saldo - comprometido`. */
+  disponible: string;
   estadoDePago: EstadoDePago;
   autorizado: boolean;
   contrasena: { numero: string; pagoPrometido: string } | null;
@@ -106,6 +108,7 @@ export interface TotalesDeDocumentosAlCorte {
   pagado: string;
   saldo: string;
   comprometido: string;
+  disponible: string;
 }
 
 export interface ReporteDeDocumentosAUnaFecha {

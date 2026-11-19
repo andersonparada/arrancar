@@ -1,15 +1,14 @@
 import { accionesDeMovimiento, estaMarcada, type HechosDeUnMovimiento } from '../aplicacion/acciones-posibles.js';
-import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
 import { resumirSinClasificar } from '../aplicacion/calculo-de-reporte-de-movimientos.js';
 import type { FiltroDeMovimientos, MovimientoDto, ResumenDeSinClasificar } from '../aplicacion/dto/movimiento.dto.js';
 import type { ConsultasMovimientos, SaldoPrincipalDeLaCuenta } from '../aplicacion/puertos/consultas-movimientos.js';
-import type { PoliticaDeMismaFechaEnAnulacion } from '../aplicacion/puertos/politica-de-misma-fecha-en-anulacion.js';
-import type { PoliticaDeSobregiro } from '../aplicacion/puertos/politica-de-sobregiro.js';
 import type { RepositorioMovimientos } from '../aplicacion/puertos/repositorio-movimientos.js';
 import { deCentavos } from '../dominio/centavos.js';
 import { Movimiento, type MovimientoId } from '../dominio/movimiento.js';
 import { CONCEPTO_SIN_CLASIFICAR, idDeSistema, nombreDelConceptoDePrueba } from './conceptos-de-prueba.js';
+
+export { PoliticaDeMismaFechaFija, PoliticaDeSobregiroFija } from './politicas-fijas-de-prueba.js';
 
 const copia = (movimiento: Movimiento) => Movimiento.reconstruir(movimiento.instantanea());
 
@@ -87,6 +86,8 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
   fechaConciliadaHasta: string | null = null;
   /** Movimiento → conciliación donde las pruebas lo dan por marcado; lo que falte, sin marcar. */
   readonly marcadosEnConciliacion = new Map<string, string>();
+  /** Las conciliaciones de `marcadosEnConciliacion` que las pruebas dan por autorizadas. */
+  readonly conciliacionesAutorizadas = new Set<string>();
   /** Movimientos que las pruebas dan por con reparto por concepto (CP4); lo que falte, sin reparto. */
   readonly conDesglose = new Set<string>();
   /** Cuentas que las pruebas dan por con alguna conciliación (aunque no esté autorizada). */
@@ -159,9 +160,10 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
     );
   }
 
-  async conciliadaHasta(_cuentaBancariaId: string): Promise<string | null> {
-    return this.fechaConciliadaHasta;
-  }
+  conciliadaHasta = async (_cuentaBancariaId: string) => this.fechaConciliadaHasta;
+
+  marcadoEnConciliacionAutorizada = async (id: string) =>
+    this.conciliacionesAutorizadas.has(this.marcadosEnConciliacion.get(id) ?? '');
 
   /** Los dobles no concilian: ninguna marca pertenece a un mes autorizado. */
   mesesConciliados = async (): ReturnType<ConsultasMovimientos['mesesConciliados']> => new Map();
@@ -228,23 +230,5 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
       mesConciliado: conciliada !== null && fecha <= conciliada,
       cuentaConConciliaciones: conciliada !== null || this.cuentasConConciliaciones.has(cuentaBancariaId),
     };
-  }
-}
-
-/** La variable de sobregiro fija para la prueba. */
-export class PoliticaDeSobregiroFija implements PoliticaDeSobregiro {
-  constructor(private readonly permite: boolean) {}
-
-  async permiteSobregiro(_operador: Operador): Promise<boolean> {
-    return this.permite;
-  }
-}
-
-/** La variable `bancos.anulaciones.misma_fecha` fija para la prueba; `false` por omisión. */
-export class PoliticaDeMismaFechaFija implements PoliticaDeMismaFechaEnAnulacion {
-  constructor(private readonly aplicaSiempre: boolean = false) {}
-
-  async aplica(_operador: Operador): Promise<boolean> {
-    return this.aplicaSiempre;
   }
 }
