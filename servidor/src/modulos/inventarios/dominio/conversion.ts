@@ -1,4 +1,5 @@
 import { ConversionInvalida } from './errores.js';
+import { tieneFactorALaReferencia, type Magnitud } from './magnitudes.js';
 
 /** Cuántas unidades base trae una unidad de empaque de un artículo («caja de 24»). */
 export interface ConversionDeArticulo {
@@ -24,4 +25,22 @@ export function validarConversiones(unidadBaseId: string, conversiones: readonly
   }
   if (conversiones.filter((conversion) => conversion.paraCompras).length > 1)
     throw new ConversionInvalida('Solo una conversión puede ser la de compras.');
+}
+
+/**
+ * Una unidad de la misma magnitud que la base (quintal para un artículo en libras) ya se convierte sola por su
+ * factor a la referencia: una conversión propia podría contradecirlo. Las de empaque o cantidad sí se declaran.
+ * @throws ConversionInvalida si alguna conversión es de la magnitud de la base y esa magnitud tiene factor.
+ */
+export function validarMagnitudes(
+  unidadBaseId: string,
+  conversiones: readonly ConversionDeArticulo[],
+  magnitudes: ReadonlyMap<string, Magnitud>,
+): void {
+  const magnitudBase = magnitudes.get(unidadBaseId);
+  if (!magnitudBase || !tieneFactorALaReferencia(magnitudBase)) return;
+  if (conversiones.some(({ unidadId }) => magnitudes.get(unidadId) === magnitudBase))
+    throw new ConversionInvalida(
+      'Esa unidad es de la misma magnitud que la base y se convierte sola: no necesita una conversión propia.',
+    );
 }

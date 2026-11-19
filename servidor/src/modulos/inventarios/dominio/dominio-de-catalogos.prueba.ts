@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { Articulo, ArticuloInvalido, type DatosDeArticulo } from './articulo.js';
-import { validarConversiones } from './conversion.js';
+import { validarConversiones, validarMagnitudes } from './conversion.js';
 import { ConversionInvalida, LoteInvalido } from './errores.js';
 import { lotePermitido } from './lote.js';
 import { Unidad, UnidadInvalido, type DatosDeUnidad } from './unidad.js';
@@ -116,6 +116,24 @@ describe('conversiones', () => {
     expect(() => validarConversiones('base', [conversion('caja', '1', true), conversion('saco', '1', true)])).toThrow(
       ConversionInvalida,
     );
+  });
+});
+
+describe('conversiones y magnitudes', () => {
+  const conversion = (unidadId: string) => ({ unidadId, factor: '100', paraCompras: false });
+  const magnitudes = new Map<string, 'masa' | 'empaque'>([
+    ['libra', 'masa'],
+    ['quintal', 'masa'],
+    ['saco', 'empaque'],
+  ]);
+
+  it('rechaza una unidad de la misma magnitud que la base cuando esa magnitud tiene factor', () => {
+    expect(() => validarMagnitudes('libra', [conversion('quintal')], magnitudes)).toThrow(ConversionInvalida);
+  });
+
+  it('acepta una unidad de empaque y no revisa lo que no conoce', () => {
+    expect(() => validarMagnitudes('libra', [conversion('saco')], magnitudes)).not.toThrow();
+    expect(() => validarMagnitudes('libra', [conversion('quintal')], new Map())).not.toThrow();
   });
 });
 

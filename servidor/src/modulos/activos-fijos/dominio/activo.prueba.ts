@@ -109,6 +109,17 @@ describe('Activo: alta', () => {
   });
 });
 
+describe('Activo: valores que dependen de la clase', () => {
+  it('el valor como ganado común es solo de los reproductores', () => {
+    expect(() => crear({ valorComoGanadoComun: '5000.00' })).toThrow(ActivoInvalido);
+  });
+
+  it('un terreno no puede ser un bien de control', () => {
+    expect(() => crear({ tipoDeRegistro: 'bien_de_control' }, 'terrenos')).toThrow(ActivoInvalido);
+    expect(crear({}, 'terrenos').instantanea().estado).toBe('en_construccion');
+  });
+});
+
 describe('Activo: editar', () => {
   it('cambia lo descriptivo siempre, sin tocar el código ni el tipo', () => {
     const activo = crear();
