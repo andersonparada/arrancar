@@ -3014,3 +3014,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   de traslados e inventarios llegan en pasos posteriores); sin `include` en `activos_existencias_idx` (drizzle no lo soporta aún);
   cambiar el tipo de registro no se permite al editar; el candado compartido del cierre y la regla de mes abierto entran con AF-5.
   Eliminar una clase ahora también revisa que no tenga activos.
+- **2026-11-19 — AF-2c (Activos fijos, cliente).** Pantallas de activos en la sección Operación: lista con tarjetas y etiquetas
+  («En construcción o en tránsito», «Ocioso», «En bodega», «De terceros», «Control», «Dado de baja») y filtros (texto con pausa al
+  escribir, estado, tipo, clase y marca ocioso o en bodega), ficha con los datos (`DatosDelRegistro`) y el historial de ubicación
+  (alta y traslados), y alta manual en página completa con `CamposDeActivo` (tipo de registro, clase, componente de, procedencia,
+  matrícula y catastro solo en edificios, valor como ganado común solo en reproductores, ubicación con localidades y
+  departamentos de `GET /activos-fijos/ubicaciones`, responsable, bodega y datos del bien). El nombre de la localidad se muestra
+  siempre (AF-P22 b). Lógica pura con pruebas en `edicion-de-activo.ts`, `etiquetas-de-activo.ts` y `filtros-de-activos.ts`.
+  Pendiente: editar, marcar ocioso y eliminar desde la ficha (el servidor ya los tiene) y las etiquetas «Depreciado contable» y
+  «Depreciado fiscal», que dependen de las cuotas (AF-5).
