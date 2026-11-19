@@ -60,8 +60,8 @@ export class CatalogoDeMonedasEnMemoria implements CatalogoDeMonedas {
 export class MonedasDelBanguatEnMemoria implements MonedasDelBanguat {
   readonly ofrecidas: MonedaDelBanguatGuardada[] = [
     { codigo: 2, descripcion: 'Dólares de EE.UU.', disponible: true, vistaPorUltimaVez: '2026-11-18T06:00:00.000Z' },
-    { codigo: 28, descripcion: 'Euro', disponible: true, vistaPorUltimaVez: '2026-11-18T06:00:00.000Z' },
-    { codigo: 29, descripcion: 'Libra', disponible: true, vistaPorUltimaVez: '2026-11-18T06:00:00.000Z' },
+    { codigo: 24, descripcion: 'Euro', disponible: true, vistaPorUltimaVez: '2026-11-18T06:00:00.000Z' },
+    { codigo: 9, descripcion: 'Libra', disponible: true, vistaPorUltimaVez: '2026-11-18T06:00:00.000Z' },
     { codigo: 99, descripcion: 'Retirada', disponible: false, vistaPorUltimaVez: '2026-01-01T06:00:00.000Z' },
   ];
 

@@ -22,7 +22,7 @@ import {
 } from './sobres-soap.js';
 
 /** URL del servicio del Banguat; se cambia con `URL_TIPO_DE_CAMBIO_BANGUAT`. */
-export const URL_BANGUAT_POR_OMISION = 'https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx';
+export const URL_BANGUAT_POR_OMISION = 'https://banguat.gob.gt/variables/ws/TipoCambio.asmx';
 
 export interface OpcionesDelClienteBanguat {
   readonly url?: string;

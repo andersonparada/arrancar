@@ -4,7 +4,10 @@ import {
   FALLA_SOAP,
   RANGO_CON_FIN_DE_SEMANA,
   LISTA_DE_MONEDAS,
+  RANGO_DEL_ARS,
+  RANGO_DEL_CRC,
   RANGO_DEL_EUR,
+  RANGO_DE_SEMANA_SANTA,
   RESPUESTA_CON_DOCTYPE,
   respuestaDeLasVariables,
   filaDelRango,
@@ -19,7 +22,7 @@ import {
 } from './extractor-de-respuestas.js';
 
 const HOY = '2026-11-18';
-const EUR = { moneda: 'EUR', codigoBanguat: 28 };
+const EUR = { moneda: 'EUR', codigoBanguat: 24 };
 const DEL_DOLAR = { operacion: 'TipoCambioRango', monedas: [DOLAR] };
 const DEL_EURO = { operacion: 'TipoCambioRangoMoneda', monedas: [EUR] };
 
@@ -75,13 +78,13 @@ describe('extraerTiposDelRango', () => {
 
   it('ignora las monedas que no se pidieron', () => {
     const xml = respuestaDelRango([
-      filaDelRango({ moneda: '24', fecha: '18/11/2026', venta: '8.9' }),
+      filaDelRango({ moneda: '24', fecha: '18/11/2026', venta: '1.1257' }),
       filaDelRango({ fecha: '18/11/2026', venta: '7.64489' }),
     ]);
     expect(extraerTiposDelRango(xml, HOY, DEL_DOLAR).publicaciones).toHaveLength(1);
   });
 
-  it('si compra y venta difieren el valor es ambiguo y se rechaza la fila', () => {
+  it('si compra y venta del dólar difieren, la fila es ambigua y se rechaza (el dólar tiene una sola referencia)', () => {
     const xml = respuestaDelRango([filaDelRango({ fecha: '18/11/2026', venta: '7.65', compra: '7.60' })]);
     const resultado = extraerTiposDelRango(xml, HOY, DEL_DOLAR);
     expect(resultado.publicaciones).toEqual([]);
@@ -114,24 +117,26 @@ describe('extraerTiposDelRango', () => {
 });
 
 describe('extraerTiposDelRango de otra moneda', () => {
-  const resultado = extraerTiposDelRango(RANGO_DEL_EUR, HOY, DEL_EURO);
+  const resultado = extraerTiposDelRango(RANGO_DEL_EUR, '2026-10-23', DEL_EURO);
 
-  it('trae los valores del euro, con fin de semana, notación científica y redondeo a 8 decimales', () => {
+  it('trae el promedio de compra y venta del euro (dólares por euro), sin sábado ni domingo, con el asueto', () => {
     expect(resultado.publicaciones.map((p) => [p.fecha, p.referencia, p.codigoBanguat])).toEqual([
-      ['2026-11-13', '8.81234', 28],
-      ['2026-11-14', '8.81234', 28],
-      ['2026-11-16', '8.8', 28],
-      ['2026-11-17', '8.81234568', 28],
+      ['2026-10-16', '1.12565', 24],
+      ['2026-10-19', '1.12145', 24],
+      ['2026-10-20', '1.12375', 24],
+      ['2026-10-21', '1.12275', 24],
+      ['2026-10-22', '1.1195', 24],
+      ['2026-10-23', '1.12', 24],
     ]);
-    expect(resultado.publicaciones[0]).toMatchObject({ moneda: 'EUR', compra: '8.81234', venta: '8.81234' });
+    expect(resultado.publicaciones[0]).toMatchObject({ moneda: 'EUR', compra: '1.1256', venta: '1.1257' });
   });
 
-  it('rechaza como ambiguo el día con compra distinta de venta, con la moneda real', () => {
-    expect(resultado.rechazadas).toEqual([{ moneda: 'EUR', fecha: '2026-11-18', motivo: 'valor_ambiguo' }]);
+  it('compra distinta de venta ya no es ambigua: no se rechaza nada', () => {
+    expect(resultado.rechazadas).toEqual([]);
   });
 
   it('ignora el código que no se pidió (el 99)', () => {
-    expect(resultado.publicaciones.every((p) => p.codigoBanguat === 28)).toBe(true);
+    expect(resultado.publicaciones.every((p) => p.codigoBanguat === 24)).toBe(true);
   });
 
   it('el rango del dólar no toma filas del euro', () => {
@@ -141,10 +146,34 @@ describe('extraerTiposDelRango de otra moneda', () => {
   });
 });
 
+describe('extraerTiposDelRango del colón y del peso argentino', () => {
+  const CRC = { moneda: 'CRC', codigoBanguat: 16 };
+  const ARS = { moneda: 'ARS', codigoBanguat: 29 };
+
+  it('el colón del 18/11 queda en el promedio publicado, también en notación científica', () => {
+    const resultado = extraerTiposDelRango(RANGO_DEL_CRC, HOY, { operacion: 'TipoCambioRangoMoneda', monedas: [CRC] });
+    expect(resultado.publicaciones.map((p) => [p.fecha, p.referencia])).toEqual([
+      ['2026-11-17', '447.35'],
+      ['2026-11-18', '446.905'],
+      ['2026-11-19', '446.905'],
+    ]);
+  });
+
+  it('el peso argentino trae un decimal más que lo publicado', () => {
+    const resultado = extraerTiposDelRango(RANGO_DEL_ARS, HOY, { operacion: 'TipoCambioRangoMoneda', monedas: [ARS] });
+    expect(resultado.publicaciones[0]).toMatchObject({ referencia: '1556.010135', compra: '1555.84009' });
+  });
+
+  it('el dólar de Semana Santa se repite tal cual hasta el domingo', () => {
+    const resultado = extraerTiposDelRango(RANGO_DE_SEMANA_SANTA, HOY, DEL_DOLAR);
+    expect(resultado.publicaciones.map((p) => p.referencia)).toEqual(Array(5).fill('7.64121'));
+  });
+});
+
 describe('extraerTipoDelDia con otras monedas pedidas', () => {
   const xml = respuestaDelDia('18/11/2026', '7.64489').replace(
     '</CambioDolar>',
-    '</CambioDolar><CambioDia><Var><moneda>28</moneda><fecha>18/11/2026</fecha><venta>8.8</venta><compra>8.8</compra></Var>' +
+    '</CambioDolar><CambioDia><Var><moneda>24</moneda><fecha>18/11/2026</fecha><venta>1.1257</venta><compra>1.1256</compra></Var>' +
       '<Var><moneda>9</moneda><fecha>18/11/2026</fecha><venta>0.05</venta><compra>0.05</compra></Var></CambioDia>',
   );
 
@@ -162,8 +191,8 @@ describe('extraerMonedasDisponibles', () => {
   it('lee código y descripción, recorta, decodifica y descarta lo inválido o repetido', () => {
     expect(extraerMonedasDisponibles(LISTA_DE_MONEDAS)).toEqual([
       { codigo: 2, descripcion: 'Dólares de EE.UU.' },
-      { codigo: 28, descripcion: 'Euro' },
-      { codigo: 9, descripcion: 'Yen & otras' },
+      { codigo: 24, descripcion: 'Euro' },
+      { codigo: 3, descripcion: 'Yenes & otras' },
     ]);
   });
 

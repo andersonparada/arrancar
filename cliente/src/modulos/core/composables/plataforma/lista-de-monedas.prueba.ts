@@ -29,7 +29,7 @@ const moneda = (codigo: string, nombre: string, extra: Partial<Moneda> = {}): Mo
 const monedas = [
   moneda('USD', 'Dólar', { activa: true, codigoBanguat: 2, descripcionBanguat: 'Dólares de EE.UU.' }),
   moneda('GTQ', 'Quetzal', { activa: true }),
-  moneda('EUR', 'Euro', { codigoBanguat: 28, descripcionBanguat: 'Euro' }),
+  moneda('EUR', 'Euro', { codigoBanguat: 24, descripcionBanguat: 'Euro' }),
   moneda('GBP', 'Libra esterlina'),
 ];
 
@@ -56,8 +56,8 @@ describe('filtrarMonedas', () => {
 });
 
 describe('textoDelCodigo', () => {
-  it('«Euro (28)», o una raya sin código', () => {
-    expect(textoDelCodigo(monedas[2]!)).toBe('Euro (28)');
+  it('«Euro (24)», o una raya sin código', () => {
+    expect(textoDelCodigo(monedas[2]!)).toBe('Euro (24)');
     expect(textoDelCodigo(monedas[3]!)).toBe('—');
     expect(textoDelCodigo(moneda('JPY', 'Yen', { codigoBanguat: 7 }))).toBe('Código 7');
   });
@@ -66,7 +66,7 @@ describe('textoDelCodigo', () => {
 const serie = (extra: Partial<EstadoDeLaSerie>): EstadoDeLaSerie => ({
   moneda: 'EUR',
   nombre: 'Euro',
-  codigoBanguat: 28,
+  codigoBanguat: 24,
   activa: true,
   ultimaFecha: '2026-11-10',
   diasDeAtraso: 5,
@@ -137,7 +137,7 @@ describe('mensajeDeActualizacion', () => {
 });
 
 const muestra = (extra: Partial<MuestraDelBanguat>): MuestraDelBanguat => ({
-  codigo: 28,
+  codigo: 24,
   descripcion: 'Euro',
   moneda: 'EUR',
   desde: '2026-11-12',

@@ -41,7 +41,7 @@ function valorDeUnaFila(bloque: string, pedidas: ReadonlyMap<string, MonedaPedid
   if (!pedida) return undefined;
   const venta = textoDe(bloque, 'venta') ?? '';
   const compra = textoDe(bloque, 'compra') ?? '';
-  return { ...pedida, fecha: textoDe(bloque, 'fecha') ?? '', referencia: venta, compra, venta };
+  return { ...pedida, fecha: textoDe(bloque, 'fecha') ?? '', compra, venta };
 }
 
 function valoresDeLasFilas(resultado: string, monedas: readonly MonedaPedida[]): ValorCrudo[] {
@@ -71,8 +71,9 @@ export function extraerTipoDelDia(
 
 /**
  * Extrae la respuesta de `TipoCambioRango` (solo el dólar) o de `TipoCambioRangoMoneda` (la moneda pedida).
- * El rango no trae `referencia`: `compra` y `venta` son iguales a ella (comprobado con el servicio real, V-13);
- * si difieren, la fila se rechaza como `valor_ambiguo`. Un código que no se pidió se ignora.
+ * El rango no trae `referencia`, sino `compra` y `venta`: en el dólar son iguales (V-13); en las demás monedas
+ * difieren casi siempre y la referencia es su promedio (adenda B.5). Si se separan más de 3 %, la fila se rechaza
+ * como `valor_ambiguo`. Un código que no se pidió se ignora.
  * @throws RespuestaInvalida
  */
 export function extraerTiposDelRango(

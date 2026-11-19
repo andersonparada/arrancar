@@ -17,7 +17,7 @@ const consulta = (extra: Partial<ConsultaDeLaCarga>): ConsultaDeLaCarga => ({
   operacion: 'TipoCambioRangoMoneda',
   vuelta: 'manana',
   moneda: 'EUR',
-  codigoBanguat: 28,
+  codigoBanguat: 24,
   desde: '2026-11-12',
   hasta: '2026-11-18',
   resultado: 'exito',

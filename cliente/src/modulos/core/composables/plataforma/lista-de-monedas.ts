@@ -26,7 +26,7 @@ export function monedaInicial(monedas: Moneda[]): string {
   return (disponibles.find((m) => m.codigo === 'USD') ?? disponibles[0])?.codigo ?? '';
 }
 
-/** «Euro (28)» o «—» si no tiene código. */
+/** «Euro (24)» o «—» si no tiene código. */
 export function textoDelCodigo(moneda: Moneda): string {
   if (moneda.codigoBanguat === null) return '—';
   return moneda.descripcionBanguat

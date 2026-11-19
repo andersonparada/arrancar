@@ -137,7 +137,7 @@ describe('la noche', () => {
       operacion: 'TipoCambioRangoMoneda',
       vuelta: 'manana',
       moneda: 'EUR',
-      codigoBanguat: 28,
+      codigoBanguat: 24,
       desde: '2026-11-12',
       hasta: '2026-11-18',
       resultado: 'sin_datos',
@@ -202,11 +202,11 @@ describe('el relleno y el arranque', () => {
     const { carga, cargas, fuente } = armar();
     await completar(cargas, '2026-11-18');
     cargas.estadoDeLista = { vistaPorUltimaVez: null, monedas: 1 };
-    fuente.monedasDelBanguat.push({ codigo: 28, descripcion: '  Euro  ' });
+    fuente.monedasDelBanguat.push({ codigo: 24, descripcion: '  Euro  ' });
 
     await carga.alArrancar();
 
-    expect(cargas.listas).toEqual([[{ codigo: 28, descripcion: 'Euro' }]]);
+    expect(cargas.listas).toEqual([[{ codigo: 24, descripcion: 'Euro' }]]);
     expect(cargas.consultas).toMatchObject([
       { operacion: 'VariablesDisponibles', vuelta: 'lista', resultado: 'exito' },
     ]);

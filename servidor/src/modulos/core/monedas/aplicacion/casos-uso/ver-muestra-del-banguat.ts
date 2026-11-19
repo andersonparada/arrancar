@@ -45,8 +45,8 @@ function resultadoDe(valores: number, rechazadas: number): ResultadoDeLaConsulta
 }
 
 /**
- * Soporte ve qué publica el Banguat bajo un código antes de unírselo a una moneda («8.81 Q por unidad» es el euro,
- * 0.05 el yen). No guarda tipos; la consulta queda en la bitácora con la vuelta `muestra`. Un fallo del Banguat no
+ * Soporte ve qué publica el Banguat bajo un código antes de unírselo a una moneda («1.1257» es el euro, en dólares por
+ * euro; «157.76» el yen, en yenes por dólar). No guarda tipos; la consulta queda en la bitácora con la vuelta `muestra`. Un fallo del Banguat no
  * lanza: vuelve como `resultado: 'error'` con su mensaje.
  */
 export class VerMuestraDelBanguat {

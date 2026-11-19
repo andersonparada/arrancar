@@ -37,16 +37,16 @@ describe('EditarMoneda: el código del Banguat', () => {
   it('une una moneda con un código que el Banguat ofrece y devuelve la moneda con su descripción', async () => {
     const { editar, catalogo } = armar();
 
-    const euro = await editar.ejecutar(operador, 'EUR', { codigoBanguat: 28 });
+    const euro = await editar.ejecutar(operador, 'EUR', { codigoBanguat: 24 });
 
-    expect(euro.codigoBanguat).toBe(28);
-    expect((await catalogo.buscar('EUR'))?.codigoBanguat).toBe(28);
+    expect(euro.codigoBanguat).toBe(24);
+    expect((await catalogo.buscar('EUR'))?.codigoBanguat).toBe(24);
   });
 
   it('asignar un código por primera vez no se audita', async () => {
     const { editar, auditoria } = armar();
 
-    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 28 });
+    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 24 });
 
     expect(auditoria.entradas).toEqual([]);
   });
@@ -63,9 +63,9 @@ describe('EditarMoneda: el código del Banguat', () => {
   });
 
   it('rechaza un código excluido por soporte (DEG, bolívares, colón)', async () => {
-    const { editar } = armar(new Set([28]));
+    const { editar } = armar(new Set([24]));
 
-    await expect(editar.ejecutar(operador, 'EUR', { codigoBanguat: 28 })).rejects.toMatchObject({
+    await expect(editar.ejecutar(operador, 'EUR', { codigoBanguat: 24 })).rejects.toMatchObject({
       codigo: 'codigo_del_banguat_no_ofrecido',
     });
   });
@@ -81,30 +81,30 @@ describe('EditarMoneda: el código del Banguat', () => {
 
   it('con tipos ya cargados deja el mismo código o quitarlo, pero no cambiarlo', async () => {
     const { editar, catalogo } = armar();
-    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 28 });
-    catalogo.series.set('EUR', 28);
+    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 24 });
+    catalogo.series.set('EUR', 24);
 
-    await expect(editar.ejecutar(operador, 'EUR', { codigoBanguat: 29 })).rejects.toMatchObject({
+    await expect(editar.ejecutar(operador, 'EUR', { codigoBanguat: 9 })).rejects.toMatchObject({
       codigo: 'codigo_del_banguat_con_otra_serie',
-      detalles: { moneda: 'EUR', codigoDeLaSerie: 28 },
+      detalles: { moneda: 'EUR', codigoDeLaSerie: 24 },
     });
-    await expect(editar.ejecutar(operador, 'EUR', { codigoBanguat: 28 })).resolves.toBeDefined();
+    await expect(editar.ejecutar(operador, 'EUR', { codigoBanguat: 24 })).resolves.toBeDefined();
     expect((await editar.ejecutar(operador, 'EUR', { codigoBanguat: null })).codigoBanguat).toBeNull();
   });
 
   it('quitar o cambiar el código se audita como corrección, con la moneda como estaba', async () => {
     const { editar, auditoria } = armar();
-    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 28 });
+    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 24 });
 
-    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 29 });
+    await editar.ejecutar(operador, 'EUR', { codigoBanguat: 9 });
     await editar.ejecutar(operador, 'EUR', { codigoBanguat: null });
 
     expect(auditoria.acciones()).toEqual(['core.monedas:corregir', 'core.monedas:corregir']);
     expect(auditoria.entradas[0]).toMatchObject({
       registroId: 'EUR',
-      anterior: expect.objectContaining({ codigoBanguat: 28 }),
+      anterior: expect.objectContaining({ codigoBanguat: 24 }),
     });
-    expect(auditoria.entradas[1]).toMatchObject({ anterior: expect.objectContaining({ codigoBanguat: 29 }) });
+    expect(auditoria.entradas[1]).toMatchObject({ anterior: expect.objectContaining({ codigoBanguat: 9 }) });
   });
 
   it('el quetzal no admite código', async () => {
@@ -165,13 +165,13 @@ describe('EditarMoneda: activar y desactivar', () => {
 
 describe('ListarMonedasDelBanguat', () => {
   it('lista lo ofrecido con a quién pertenece cada código y qué está excluido', async () => {
-    const { listar } = armar(new Set([29]));
+    const { listar } = armar(new Set([9]));
 
     const opciones = await listar.ejecutar();
 
     expect(opciones.find((o) => o.codigo === 2)).toMatchObject({ asignadaA: 'USD', excluida: false });
-    expect(opciones.find((o) => o.codigo === 28)).toMatchObject({ asignadaA: null, excluida: false, disponible: true });
-    expect(opciones.find((o) => o.codigo === 29)).toMatchObject({ excluida: true });
+    expect(opciones.find((o) => o.codigo === 24)).toMatchObject({ asignadaA: null, excluida: false, disponible: true });
+    expect(opciones.find((o) => o.codigo === 9)).toMatchObject({ excluida: true });
     expect(opciones.find((o) => o.codigo === 99)).toMatchObject({ disponible: false });
   });
 });

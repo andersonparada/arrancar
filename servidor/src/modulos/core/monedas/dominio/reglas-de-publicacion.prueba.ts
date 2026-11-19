@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { CODIGOS_DEL_BANGUAT_EXCLUIDOS } from './codigos-del-banguat-excluidos.js';
 import { fechasDelRango, fechaDelBanguatAIso, fechaIsoAlBanguat } from './fechas-de-publicacion.js';
 import { DIAS_DE_RELLENO, fechasSinPublicacion, rangoDeRelleno } from './huecos-de-publicacion.js';
 import {
-  cruceImplicito,
   dentroDeLaBanda,
   referenciaEscalada,
   validarPublicacion,
@@ -81,19 +81,12 @@ describe('variación máxima', () => {
   });
 });
 
-describe('variación para rechazar y cruce implícito', () => {
+describe('variación para rechazar', () => {
   it('rechaza solo si pasa del 25 %', () => {
     expect(variacionSuperaElRechazo('8.00', '10.00')).toBe(false);
     expect(variacionSuperaElRechazo('8.00', '10.00001')).toBe(true);
     expect(variacionSuperaElRechazo('8.00', '6.00')).toBe(false);
     expect(variacionSuperaElRechazo('8.00', '5.99999')).toBe(true);
-  });
-
-  it('el cruce implícito es el valor entre el USD, a 8 decimales', () => {
-    expect(cruceImplicito('8.8', '8')).toBe('1.1');
-    expect(cruceImplicito('1', '3')).toBe('0.33333333');
-    expect(cruceImplicito('1', '0')).toBeUndefined();
-    expect(cruceImplicito('x', '7.6')).toBeUndefined();
   });
 });
 
@@ -143,24 +136,57 @@ describe('validarPublicacion', () => {
 });
 
 describe('valores de otras monedas', () => {
-  const euro = { moneda: 'EUR', codigoBanguat: 28, fecha: '18/11/2026' };
+  const euro = { moneda: 'EUR', codigoBanguat: 24, fecha: '18/11/2026' };
 
   it('una moneda sin banda acepta cualquier valor positivo', () => {
     expect(validarPublicacion({ ...euro, referencia: '0.05' }, HOY).valida).toBe(true);
   });
 
   it('con compra igual a venta guarda las tres, normalizadas', () => {
-    expect(validarPublicacion({ ...euro, referencia: '8.80', compra: '8.8E0', venta: '8.80' }, HOY)).toEqual({
+    expect(validarPublicacion({ ...euro, compra: '1.1257', venta: '1.12570' }, HOY)).toEqual({
       valida: true,
-      publicacion: { ...euro, fecha: '2026-11-18', referencia: '8.8', compra: '8.8', venta: '8.8' },
+      publicacion: { ...euro, fecha: '2026-11-18', referencia: '1.1257', compra: '1.1257', venta: '1.1257' },
     });
   });
 
-  it('con compra distinta de venta es valor ambiguo', () => {
-    expect(validarPublicacion({ ...euro, referencia: '8.82', compra: '8.81', venta: '8.82' }, HOY)).toEqual({
+  it('con compra distinta de venta toma el promedio de lo publicado, con un decimal más si hace falta', () => {
+    expect(validarPublicacion({ ...euro, compra: '1.1256', venta: '1.1257' }, HOY)).toEqual({
+      valida: true,
+      publicacion: { ...euro, fecha: '2026-11-18', referencia: '1.12565', compra: '1.1256', venta: '1.1257' },
+    });
+  });
+
+  it('el diferencial de 3 % exacto pasa y el de 3.01 % es valor ambiguo', () => {
+    expect(validarPublicacion({ ...euro, compra: '98.5', venta: '101.5' }, HOY).valida).toBe(true);
+    expect(validarPublicacion({ ...euro, compra: '100', venta: '103.06' }, HOY)).toEqual({
       valida: false,
       motivo: 'valor_ambiguo',
       fecha: '2026-11-18',
+    });
+  });
+
+  it('venta menor que compra, o compra en cero o ilegible, es dato inválido', () => {
+    for (const [compra, venta] of [
+      ['1.1257', '1.1256'],
+      ['0', '1'],
+      ['x', '1.1'],
+      ['1.1', ''],
+    ] as const) {
+      expect(validarPublicacion({ ...euro, compra, venta }, HOY), `${compra}/${venta}`).toMatchObject({
+        valida: false,
+        motivo: 'dato_invalido',
+      });
+    }
+  });
+
+  it('el dólar con compra distinta de venta sigue siendo ambiguo: tiene una sola referencia', () => {
+    const dolar = { moneda: 'USD', codigoBanguat: 2, fecha: '18/11/2026' };
+    expect(validarPublicacion({ ...dolar, compra: '7.60', venta: '7.65' }, HOY)).toMatchObject({
+      motivo: 'valor_ambiguo',
+    });
+    expect(validarPublicacion({ ...dolar, compra: '7.64489', venta: '7.64489' }, HOY)).toMatchObject({
+      valida: true,
+      publicacion: { referencia: '7.64489' },
     });
   });
 });
@@ -192,5 +218,12 @@ describe('relleno de huecos', () => {
       diasEsperados: new Set(['2026-11-13', '2026-11-16', '2026-11-17']),
     });
     expect(faltan).toEqual(['2026-11-13', '2026-11-16', '2026-11-17']);
+  });
+});
+
+describe('códigos del Banguat excluidos', () => {
+  it('son los 15 de la adenda B.8: el euro (24), el dólar (2) y la libra (9) no están', () => {
+    expect([...CODIGOS_DEL_BANGUAT_EXCLUIDOS]).toEqual([1, 4, 6, 8, 11, 12, 13, 14, 17, 22, 26, 27, 28, 37, 41]);
+    for (const ofrecido of [2, 9, 24, 42]) expect(CODIGOS_DEL_BANGUAT_EXCLUIDOS.has(ofrecido)).toBe(false);
   });
 });

@@ -23,7 +23,7 @@ export const esHabil = async (fecha: string) => ![0, 6].includes(new Date(`${fec
 
 export const publicacion = (moneda: string, fecha: string, referencia: string): PublicacionDeTipoDeCambio => ({
   moneda,
-  codigoBanguat: moneda === 'USD' ? 2 : 28,
+  codigoBanguat: moneda === 'USD' ? 2 : 24,
   fecha,
   referencia,
   ...(moneda === 'USD' ? {} : { compra: referencia, venta: referencia }),

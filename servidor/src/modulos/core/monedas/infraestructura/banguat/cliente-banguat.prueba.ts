@@ -10,7 +10,7 @@ import {
   respuestaDelDia,
   respuestaDelRango,
 } from '../../pruebas/respuestas-grabadas-del-banguat.js';
-import { ClienteBanguat } from './cliente-banguat.js';
+import { ClienteBanguat, URL_BANGUAT_POR_OMISION } from './cliente-banguat.js';
 
 const HOY = '2026-11-18';
 
@@ -72,15 +72,15 @@ describe('ClienteBanguat contra un servidor local falso', () => {
     manejador = responder(200, RANGO_DEL_EUR);
     const resultado = await cliente().tiposDeLaMoneda({
       hoy: HOY,
-      desde: '2026-11-13',
-      hasta: '2026-11-18',
+      desde: '2026-10-16',
+      hasta: '2026-10-23',
       moneda: 'EUR',
-      codigoBanguat: 28,
+      codigoBanguat: 24,
     });
-    expect(resultado.publicaciones).toHaveLength(4);
-    expect(resultado.rechazadas).toHaveLength(1);
+    expect(resultado.publicaciones).toHaveLength(6);
+    expect(resultado.rechazadas).toHaveLength(0);
     expect(recibidas[0]?.accion).toBe('"http://www.banguat.gob.gt/variables/ws/TipoCambioRangoMoneda"');
-    expect(recibidas[0]?.cuerpo).toContain('<fechafin>18/11/2026</fechafin><moneda>28</moneda>');
+    expect(recibidas[0]?.cuerpo).toContain('<fechafin>23/10/2026</fechafin><moneda>24</moneda>');
   });
 
   it('rechaza un código de moneda que no es entero positivo antes de salir a la red', async () => {
@@ -93,7 +93,7 @@ describe('ClienteBanguat contra un servidor local falso', () => {
   it('pide la lista de monedas disponibles', async () => {
     manejador = responder(200, LISTA_DE_MONEDAS);
     const monedas = await cliente().monedasDisponibles();
-    expect(monedas.map((m) => m.codigo)).toEqual([2, 28, 9]);
+    expect(monedas.map((m) => m.codigo)).toEqual([2, 24, 3]);
     expect(recibidas[0]?.accion).toBe('"http://www.banguat.gob.gt/variables/ws/VariablesDisponibles"');
   });
 
@@ -163,5 +163,9 @@ describe('ClienteBanguat contra un servidor local falso', () => {
   it('exige HTTPS salvo que se permita expresamente', () => {
     expect(() => new ClienteBanguat({ url: 'http://www.banguat.gob.gt/x' })).toThrow(RangeError);
     expect(() => new ClienteBanguat()).not.toThrow();
+  });
+
+  it('la dirección por omisión es la del Banguat sin www, la única que respondió (adenda B.9)', () => {
+    expect(URL_BANGUAT_POR_OMISION).toBe('https://banguat.gob.gt/variables/ws/TipoCambio.asmx');
   });
 });

@@ -49,24 +49,49 @@ export function respuestaDeLasVariables(monedas: readonly { moneda: string; desc
   );
 }
 
-/** Lista de monedas con forma del servicio real (descripciones inventadas para la prueba). */
+/** Lista de monedas con forma del servicio real (códigos y descripciones de la comprobación C-1, más lo inválido). */
 export const LISTA_DE_MONEDAS = respuestaDeLasVariables([
   { moneda: '2', descripcion: 'Dólares de EE.UU.' },
-  { moneda: '28', descripcion: '  Euro ' },
-  { moneda: '9', descripcion: 'Yen &amp; otras' },
+  { moneda: '24', descripcion: '  Euro ' },
+  { moneda: '3', descripcion: 'Yenes &amp; otras' },
   { moneda: '2', descripcion: 'Repetida' },
   { moneda: 'x', descripcion: 'Código inválido' },
   { moneda: '30', descripcion: '' },
 ]);
 
-/** Rango del EUR (código 28) con fin de semana repetido, un valor en notación científica y otro con más de 8 decimales. */
+/**
+ * Rango del euro (24) del 16 al 23 de octubre de 2026, como lo publicó el Banguat (dólares por euro): sin filas el
+ * sábado ni el domingo, con fila el martes 20 (asueto de Guatemala) y con un código que no se pidió (el 99).
+ */
 export const RANGO_DEL_EUR = respuestaDelRangoDeMoneda([
-  filaDelRango({ moneda: '28', fecha: '13/11/2026', venta: '8.81234' }),
-  filaDelRango({ moneda: '28', fecha: '14/11/2026', venta: '8.81234' }),
-  filaDelRango({ moneda: '28', fecha: '16/11/2026', venta: '8.8E0' }),
-  filaDelRango({ moneda: '28', fecha: '17/11/2026', venta: '8.812345678' }),
-  filaDelRango({ moneda: '28', fecha: '18/11/2026', venta: '8.82', compra: '8.81' }),
-  filaDelRango({ moneda: '99', fecha: '18/11/2026', venta: '1.5' }),
+  filaDelRango({ moneda: '24', fecha: '16/10/2026', venta: '1.1257', compra: '1.1256' }),
+  filaDelRango({ moneda: '24', fecha: '19/10/2026', venta: '1.1215', compra: '1.1214' }),
+  filaDelRango({ moneda: '24', fecha: '20/10/2026', venta: '1.1238', compra: '1.1237' }),
+  filaDelRango({ moneda: '24', fecha: '21/10/2026', venta: '1.1228', compra: '1.1227' }),
+  filaDelRango({ moneda: '24', fecha: '22/10/2026', venta: '1.1195' }),
+  filaDelRango({ moneda: '24', fecha: '23/10/2026', venta: '1.12' }),
+  filaDelRango({ moneda: '99', fecha: '23/10/2026', venta: '1.5' }),
+]);
+
+/** Rango del CRC (16) con compra distinta de venta (18/11/2026, diferencial de 0.96 %) y la notación científica de una moneda barata. */
+export const RANGO_DEL_CRC = respuestaDelRangoDeMoneda([
+  filaDelRango({ moneda: '16', fecha: '17/11/2026', venta: '449.5', compra: '445.2' }),
+  filaDelRango({ moneda: '16', fecha: '18/11/2026', venta: '449.04', compra: '444.77' }),
+  filaDelRango({ moneda: '16', fecha: '19/11/2026', venta: '4.4904E2', compra: '4.4477E2' }),
+]);
+
+/** Rango del ARS (29) con cinco decimales: el promedio de compra y venta necesita un decimal más. */
+export const RANGO_DEL_ARS = respuestaDelRangoDeMoneda([
+  filaDelRango({ moneda: '29', fecha: '18/11/2026', venta: '1556.18018', compra: '1555.84009' }),
+]);
+
+/** Rango del dólar de Semana Santa de 2026: el miércoles 1 de abril repetido el jueves, el viernes, el sábado y el domingo. */
+export const RANGO_DE_SEMANA_SANTA = respuestaDelRango([
+  filaDelRango({ fecha: '01/04/2026', venta: '7.64121' }),
+  filaDelRango({ fecha: '02/04/2026', venta: '7.64121' }),
+  filaDelRango({ fecha: '03/04/2026', venta: '7.64121' }),
+  filaDelRango({ fecha: '04/04/2026', venta: '7.64121' }),
+  filaDelRango({ fecha: '05/04/2026', venta: '7.64121' }),
 ]);
 
 /** Rango del 13 al 18 de noviembre de 2026: el sábado 14 y el domingo 15 repiten el valor del viernes. */

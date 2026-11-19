@@ -11,7 +11,7 @@ import type { MonedaDelBanguat, MonedaPedida, PublicacionDeTipoDeCambio } from '
 export class CargasDeTiposEnMemoria implements CargasDeTipos {
   monedas: MonedaPedida[] = [
     { moneda: 'USD', codigoBanguat: 2 },
-    { moneda: 'EUR', codigoBanguat: 28 },
+    { moneda: 'EUR', codigoBanguat: 24 },
   ];
   readonly tipos: PublicacionDeTipoDeCambio[] = [];
   readonly consultas: ConsultaHecha[] = [];
@@ -21,7 +21,7 @@ export class CargasDeTiposEnMemoria implements CargasDeTipos {
 
   /** Un valor del Banguat ya guardado. */
   poner(moneda: string, fecha: string, referencia = '1'): void {
-    this.tipos.push({ moneda, codigoBanguat: moneda === 'USD' ? 2 : 28, fecha, referencia });
+    this.tipos.push({ moneda, codigoBanguat: moneda === 'USD' ? 2 : 24, fecha, referencia });
   }
 
   async monedasACargar(): Promise<MonedaPedida[]> {
