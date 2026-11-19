@@ -15,7 +15,13 @@ const pagoEnEfectivo = z.object({
   fecha: z.iso.date({ error: 'Escriba la fecha como AAAA-MM-DD.' }).optional(),
   recibidoPor: texto(150, 'El nombre de quien recibe admite hasta 150 caracteres.'),
   referencia: texto(100, 'La referencia admite hasta 100 caracteres.'),
-  observaciones: z.string().max(500, 'Las observaciones admiten hasta 500 caracteres.').nullable().optional(),
+  observaciones: z
+    .string()
+    .trim()
+    .max(500, 'Las observaciones admiten hasta 500 caracteres.')
+    .transform((valor) => (valor === '' ? null : valor))
+    .nullable()
+    .optional(),
   motivoSinBancarizar: texto(300, 'El motivo admite hasta 300 caracteres.'),
   aplicaciones: lineas.max(MAXIMO_DE_DOCUMENTOS_EN_PAGO + 1),
   diferencias: lineas.max(MAXIMO_DE_DOCUMENTOS_EN_PAGO + 1).optional(),

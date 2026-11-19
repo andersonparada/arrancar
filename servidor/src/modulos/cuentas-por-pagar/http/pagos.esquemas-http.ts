@@ -10,8 +10,15 @@ const fecha = z.iso.date({ error: 'Escriba la fecha como AAAA-MM-DD.' });
 
 const lineas = z.array(z.object({ cargoId: z.uuid({ error: 'Escoja el documento.' }), monto })).min(1);
 
-/** Texto opcional con tope: el tope es el de la restricción de la tabla, para responder 400 por campo y no un 500. */
-const textoConTope = (maximo: number, aviso: string) => z.string().max(maximo, aviso).nullable().optional();
+/** Texto opcional con tope: sin espacios a los lados y el vacío es nulo, como pide la restricción de la tabla (400 por campo, no 500). */
+const textoConTope = (maximo: number, aviso: string) =>
+  z
+    .string()
+    .trim()
+    .max(maximo, aviso)
+    .transform((valor) => (valor === '' ? null : valor))
+    .nullable()
+    .optional();
 
 /** Lo común a toda forma de pago; las reglas de los montos, la fecha y las diferencias son del dominio y responden por campo. */
 const comun = {
