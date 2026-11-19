@@ -3585,6 +3585,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (1) el día contable del arqueo es el de `realizadoEn` tal como se escribió (primeros diez caracteres), no el de UTC;
   (2) el arqueo no guarda el destino: vive solo en el comprobante del faltante; (3) el arqueo no pide `comprobantes.anular`
   para anular su ajuste: lo cubre `arqueos.anular` y su entrada de auditoría; (4) la propuesta pide `arqueos.crear`.
+- **2026-11-19 (CC-5, corrección)**: el día contable de un conteo sale siempre de la zona horaria de la empresa
+  (`fechaLocalEn` con `PoliticaDeZonaHoraria`, en `dia-del-arqueo.ts`), no de los caracteres de `realizadoEn` ni de UTC: una
+  hora con `Z` ya no se rechaza como futura ni se fecha un día después, y la anulación de un arqueo cuadrado de la noche dice
+  el mismo día que `arqueo_registrado`. `DependenciasDeArqueos` agrega `zonaHoraria`.
 - **2026-11-19 (CL-3, Cuentas por liquidar, servidor):** gastos de los anticipos, sin migraciones nuevas (la tabla `gastos` ya
   estaba en CL-1 y CL-1c). `RecibirDocumento` atiende `cuentas-por-liquidar.recibir_documento` (contrato nuevo): guarda el
   documento en la bandeja con `monto = total − retenciones` y `monto_retenido`; **no rechaza por retención** (queda en la

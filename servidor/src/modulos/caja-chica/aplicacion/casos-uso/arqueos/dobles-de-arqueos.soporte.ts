@@ -1,3 +1,4 @@
+import { ZONA_HORARIA_POR_OMISION } from '../../../../core/compartido/dominio/fecha-local.js';
 import type { Arqueo } from '../../../dominio/arqueos.js';
 import type { Comprobante } from '../../../dominio/comprobantes.js';
 import type { SeparacionDeFuncionesConfigurada } from '../../../dominio/reglas-de-reposiciones.js';
@@ -122,6 +123,7 @@ export async function armarEscenarioDeArqueos(custodioUsuarioId: string | null =
     auditoria: base.auditoria,
     publicadorEventos: base.publicador,
     reloj: base.dependencias.reloj,
+    zonaHoraria: { zonaHoraria: async () => ZONA_HORARIA_POR_OMISION },
     ahora: () => valores.ahora,
   };
   return { ...base, dependenciasDeArqueos, arqueos, valores };

@@ -51,6 +51,23 @@ describe('AnularArqueo', () => {
     expect(m.publicador.nombres().at(-1)).toBe('caja-chica.arqueo_anulado');
   });
 
+  it('un arqueo cuadrado de la noche (ya es el día siguiente en UTC) se anula con el día de la empresa', async () => {
+    const noche = '2026-11-18T02:00:00Z';
+    const arqueo = await new RegistrarArqueo(m.dependenciasDeArqueos).ejecutar(operador, {
+      fondoId: FONDO_ID,
+      realizadoEn: noche,
+      conteo: cienesDeQuetzal(100),
+      comprobantesCompletos: true,
+    });
+
+    const anulado = await anular(arqueo.id);
+
+    const [registrado, anuladoEvento] = m.publicador.publicados.map((e) => (e.datos as { fecha: string }).fecha);
+    expect(registrado).toBe('2026-11-17');
+    expect(anuladoEvento).toBe('2026-11-17');
+    expect(anulado.fechaDeAnulacion).toBe('2026-11-18');
+  });
+
   it('un arqueo sin diferencia también se anula, y no se anula dos veces', async () => {
     const arqueo = await registrar(100);
 

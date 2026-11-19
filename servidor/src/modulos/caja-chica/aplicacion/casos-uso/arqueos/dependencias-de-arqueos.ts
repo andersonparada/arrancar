@@ -1,7 +1,7 @@
 import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria.js';
 import type { Correlativos } from '../../../../core/compartido/aplicacion/correlativos.js';
 import type { PublicadorEventos } from '../../../../core/compartido/aplicacion/publicador-eventos.js';
-import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
+import type { PoliticaDeZonaHoraria, Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import type {
   ComprobantesDelArqueo,
@@ -26,6 +26,8 @@ export interface DependenciasDeArqueos {
   /** Se publica después de confirmar la transacción de la petición. */
   publicadorEventos: PublicadorEventos;
   reloj: Reloj;
+  /** La zona horaria de la empresa, para dar el día contable de un conteo. */
+  zonaHoraria: PoliticaDeZonaHoraria;
   /** El instante de ahora (el reloj solo da el día); se inyecta para que las pruebas lo fijen. */
   ahora: () => Date;
 }

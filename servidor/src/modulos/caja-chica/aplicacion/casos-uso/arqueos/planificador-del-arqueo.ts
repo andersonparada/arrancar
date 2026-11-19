@@ -12,6 +12,7 @@ import {
 } from '../../../dominio/reglas-de-arqueos.js';
 import { custodioVigente } from '../fondos/lector-del-fondo.js';
 import type { DependenciasDeArqueos } from './dependencias-de-arqueos.js';
+import { diaDelConteo } from './dia-del-arqueo.js';
 
 export interface PeticionDeArqueo {
   fondoId: string;
@@ -50,7 +51,10 @@ export interface PlanDelArqueo {
   aviso: string | null;
 }
 
-type Dependencias = Pick<DependenciasDeArqueos, 'reloj' | 'ahora' | 'consultasDeFondos' | 'configuracion' | 'fondos'>;
+type Dependencias = Pick<
+  DependenciasDeArqueos,
+  'reloj' | 'zonaHoraria' | 'ahora' | 'consultasDeFondos' | 'configuracion' | 'fondos'
+>;
 
 /** Revisa y calcula todo lo del arqueo (fecha, conteo, diferencia, separación de funciones) sin escribir nada. */
 export class PlanificadorDelArqueo {
@@ -87,11 +91,11 @@ export class PlanificadorDelArqueo {
   }
 
   private async fechar(operador: Operador, por: { fondo: Fondo; pedido: PeticionDeArqueo }) {
-    const { reloj, ahora } = this.dependencias;
+    const { reloj, ahora, zonaHoraria } = this.dependencias;
     const { fondo, pedido } = por;
     const hoy = await reloj.hoy(operador);
     const realizadoEn = pedido.realizadoEn ? new Date(pedido.realizadoEn) : ahora();
-    const fecha = pedido.realizadoEn ? pedido.realizadoEn.slice(0, 10) : hoy;
+    const fecha = pedido.realizadoEn ? await diaDelConteo(zonaHoraria, { operador, realizadoEn }) : hoy;
     exigirFechaDelArqueo({ fecha, realizadoEn }, { hoy, ahora: ahora(), fondo });
     return { fecha, realizadoEn };
   }

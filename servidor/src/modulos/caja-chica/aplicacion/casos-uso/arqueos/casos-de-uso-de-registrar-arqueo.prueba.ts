@@ -136,6 +136,14 @@ describe('RegistrarArqueo: fecha y conteo', () => {
     expect(dto.comprobante).toMatchObject({ fecha: '2026-11-10' });
   });
 
+  it('una hora con «Z» se fecha con el día de la empresa: de tarde en Guatemala ya es mañana en UTC', async () => {
+    const deHoy = await arquear({ realizadoEn: '2026-11-18T02:00:00Z' });
+    const dePasado = await arquear({ realizadoEn: '2026-11-11T02:00:00Z', conteo: cienesDeQuetzal(99), ...faltante });
+
+    expect(deHoy.numero).toBe(1);
+    expect(dePasado.comprobante).toMatchObject({ fecha: '2026-11-10' });
+  });
+
   it('numera cada arqueo con el siguiente número', async () => {
     const primero = await arquear();
     const segundo = await arquear();

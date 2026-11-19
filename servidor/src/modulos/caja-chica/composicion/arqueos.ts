@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import '../../core/contratos/caja-chica.contratos.js';
 import { dependenciasCompartidas } from '../../core/compartido/infraestructura/dependencias-compartidas.js';
+import { PoliticaDeZonaHorariaEnConfiguracion } from '../../core/compartido/infraestructura/politica-de-zona-horaria.configuracion.js';
 import { PublicadorEventosTrasConfirmar } from '../../core/compartido/infraestructura/publicador-eventos-tras-confirmar.js';
 import { AnularArqueo } from '../aplicacion/casos-uso/arqueos/anular-arqueo.js';
 import { ListarArqueos, ObtenerArqueo, ProponerArqueo } from '../aplicacion/casos-uso/arqueos/consultas-de-arqueos.js';
@@ -45,6 +46,7 @@ export function dependenciasDeArqueos(): DependenciasDeArqueos {
     auditoria: compartidas.auditoria,
     publicadorEventos: new PublicadorEventosTrasConfirmar(compartidas.publicadorEventos),
     reloj: compartidas.reloj,
+    zonaHoraria: new PoliticaDeZonaHorariaEnConfiguracion(),
     ahora: () => new Date(),
   };
 }

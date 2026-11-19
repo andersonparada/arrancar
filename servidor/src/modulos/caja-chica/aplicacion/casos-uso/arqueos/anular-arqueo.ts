@@ -12,11 +12,8 @@ import { efectivoEsperadoDelFondo } from '../comprobantes/utilidades-de-comproba
 import { LectorDelFondo } from '../fondos/lector-del-fondo.js';
 import { arqueoDto } from './armado-del-arqueo.js';
 import type { DependenciasDeArqueos } from './dependencias-de-arqueos.js';
+import { diaDelConteo } from './dia-del-arqueo.js';
 import { LectorDeArqueos } from './lector-de-arqueos.js';
-
-/** El día contable del arqueo: el de su faltante o sobrante o, sin ellos, el de la fecha del conteo en UTC. */
-const diaDelArqueo = (arqueo: Arqueo, comprobante: Comprobante | null): string =>
-  comprobante?.fecha ?? arqueo.realizadoEn.slice(0, 10);
 
 export interface PeticionDeAnularArqueo {
   arqueoId: string;
@@ -68,7 +65,8 @@ export class AnularArqueo {
       anterior,
       motivo,
     });
-    const evento = this.evento(operador, { arqueo, comprobante, fechaDeAnulacion });
+    const dia = await this.diaDelArqueo(operador, { arqueo, comprobante });
+    const evento = this.evento(operador, { arqueo, comprobante, dia, fechaDeAnulacion });
     return { dto: await this.lector.leer((await arqueos.buscar(arqueoId))!), eventos: [evento] };
   }
 
@@ -87,7 +85,7 @@ export class AnularArqueo {
   ): Promise<string> {
     const { arqueo, comprobante, motivo } = por;
     const hoy = await this.dependencias.reloj.hoy(operador);
-    const dia = diaDelArqueo(arqueo, comprobante);
+    const dia = await this.diaDelArqueo(operador, { arqueo, comprobante });
     const fechaDeAnulacion = hoy < dia ? dia : hoy;
     const anulacion = { anuladoPor: operador.usuarioId, motivo, fechaDeAnulacion };
     if (comprobante && comprobante.estado === 'vigente') {
@@ -97,17 +95,27 @@ export class AnularArqueo {
     return fechaDeAnulacion;
   }
 
+  /** El día contable del arqueo: el de su faltante o sobrante o, sin ellos, el del conteo en la zona de la empresa. */
+  private async diaDelArqueo(
+    operador: Operador,
+    por: { arqueo: Arqueo; comprobante: Comprobante | null },
+  ): Promise<string> {
+    if (por.comprobante) return por.comprobante.fecha;
+    const realizadoEn = new Date(por.arqueo.realizadoEn);
+    return diaDelConteo(this.dependencias.zonaHoraria, { operador, realizadoEn });
+  }
+
   private evento(
     operador: Operador,
-    por: { arqueo: Arqueo; comprobante: Comprobante | null; fechaDeAnulacion: string },
+    por: { arqueo: Arqueo; comprobante: Comprobante | null; dia: string; fechaDeAnulacion: string },
   ): EventoDominio {
-    const { arqueo, comprobante, fechaDeAnulacion } = por;
+    const { arqueo, comprobante, dia, fechaDeAnulacion } = por;
     return new ArqueoAnulado({
       empresaId: operador.empresaId,
       fondoId: arqueo.fondoId,
       arqueoId: arqueo.id,
       numero: arqueo.numero,
-      fecha: diaDelArqueo(arqueo, comprobante),
+      fecha: dia,
       fechaDeAnulacion,
       diferenciaCentavos: arqueo.diferenciaCentavos,
       destinoDelFaltante: comprobante?.destinoDelFaltante ?? null,
