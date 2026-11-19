@@ -6,6 +6,8 @@ export type DatosDeActivoCapitalizado = EventosDominio['activos-fijos.activo_cap
 export type DatosDeCostoAnulado = EventosDominio['activos-fijos.costo_anulado'];
 export type DatosDeMejoraCapitalizada = EventosDominio['activos-fijos.mejora_capitalizada'];
 export type DatosDeBaseFiscalCambiada = EventosDominio['activos-fijos.base_fiscal_cambiada'];
+export type DatosDeActivoTrasladado = EventosDominio['activos-fijos.activo_trasladado'];
+export type DatosDeTrasladoAnulado = EventosDominio['activos-fijos.traslado_anulado'];
 export type DatosDeDepreciacionCerrada = EventosDominio['activos-fijos.depreciacion_cerrada'];
 export type DatosDeDepreciacionReabierta = EventosDominio['activos-fijos.depreciacion_reabierta'];
 
@@ -59,6 +61,24 @@ export class BaseFiscalCambiada extends EventoDominio<DatosDeBaseFiscalCambiada>
   readonly nombre = 'activos-fijos.base_fiscal_cambiada';
 
   constructor(datos: DatosDeBaseFiscalCambiada) {
+    super(datos);
+  }
+}
+
+/** Un activo cambió de ubicación con una boleta de traslado. Se publica tras confirmar. */
+export class ActivoTrasladado extends EventoDominio<DatosDeActivoTrasladado> {
+  readonly nombre = 'activos-fijos.activo_trasladado';
+
+  constructor(datos: DatosDeActivoTrasladado) {
+    super(datos);
+  }
+}
+
+/** Se anuló una boleta de traslado y el activo volvió a su ubicación anterior. Se publica tras confirmar. */
+export class TrasladoAnulado extends EventoDominio<DatosDeTrasladoAnulado> {
+  readonly nombre = 'activos-fijos.traslado_anulado';
+
+  constructor(datos: DatosDeTrasladoAnulado) {
     super(datos);
   }
 }

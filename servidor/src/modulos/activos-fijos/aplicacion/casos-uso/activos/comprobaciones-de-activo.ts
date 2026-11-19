@@ -42,7 +42,7 @@ export async function validarPadre(
   if (padre.instantanea().activoPadreId !== null || tieneComponentes) throw new ComponenteDeUnComponente();
 }
 
-async function localidadActiva({ ubicaciones }: Comprobador, id: string | null): Promise<void> {
+async function localidadActiva({ ubicaciones }: Pick<Comprobador, 'ubicaciones'>, id: string | null): Promise<void> {
   if (!id) return;
   const localidad = await ubicaciones.localidad(id);
   if (!localidad?.activo) throw new RecursoNoEncontrado('La localidad');
@@ -50,7 +50,7 @@ async function localidadActiva({ ubicaciones }: Comprobador, id: string | null):
 
 /** El departamento debe estar activo y ser de toda la empresa o de la localidad elegida. */
 async function departamentoCoherente(
-  { ubicaciones }: Comprobador,
+  { ubicaciones }: Pick<Comprobador, 'ubicaciones'>,
   { localidadId, departamentoId }: Pick<UbicacionDeActivo, 'localidadId' | 'departamentoId'>,
 ): Promise<void> {
   if (!departamentoId) return;
@@ -64,7 +64,7 @@ async function departamentoCoherente(
  * activos y ser coherentes entre sí.
  */
 export async function validarUbicacion(
-  comprobador: Comprobador,
+  comprobador: Pick<Comprobador, 'ubicaciones'>,
   ubicacion: Pick<UbicacionDeActivo, 'localidadId' | 'departamentoId'>,
 ): Promise<void> {
   await localidadActiva(comprobador, ubicacion.localidadId);

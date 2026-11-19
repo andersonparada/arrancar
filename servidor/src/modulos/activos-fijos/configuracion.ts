@@ -67,4 +67,12 @@ export const configuracionDeActivosFijos: DefinicionConfiguracion[] = [
     niveles: ['empresa', 'instalacion'],
     publica: false,
   }),
+  definirConfiguracion({
+    clave: 'activos-fijos.documentos.nombre_de_responsiva',
+    descripcion: 'Título de la boleta de traslado, que es también la responsiva de quien recibe los bienes.',
+    esquema: z.string().trim().min(1).max(60),
+    predeterminado: 'Responsiva de bienes',
+    niveles: ['empresa'],
+    publica: true,
+  }),
 ];

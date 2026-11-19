@@ -7,6 +7,7 @@ import { rutasDeBandeja, rutasDeCostos } from './composicion/costos.js';
 import { rutasDeDepreciacion } from './composicion/depreciacion.js';
 import { rutasDeMejoras } from './composicion/mejoras.js';
 import { rutasDeSaldosIniciales } from './composicion/saldos-iniciales.js';
+import { rutasDeTraslados } from './composicion/traslados.js';
 // generador: importaciones
 
 /** Control, capitalización y depreciación contable y fiscal de los bienes de la empresa. Ver `docs/modulos/activos-fijos.md`. */
@@ -80,6 +81,11 @@ export const moduloActivosFijos: DefinicionModulo = {
       descripcion: 'Registrar mejoras y costos posteriores de los activos en uso',
     },
     { clave: 'activos-fijos.mejoras.anular', descripcion: 'Anular mejoras y costos posteriores de los activos en uso' },
+    {
+      clave: 'activos-fijos.traslados.crear',
+      descripcion: 'Trasladar activos de ubicación o responsable con su boleta (entregar y devolver a la bodega)',
+    },
+    { clave: 'activos-fijos.traslados.anular', descripcion: 'Anular boletas de traslado' },
     // generador: permisos
   ],
   configuracion: configuracionDeActivosFijos,
@@ -91,6 +97,7 @@ export const moduloActivosFijos: DefinicionModulo = {
     rutasDeDepreciacion(),
     rutasDeSaldosIniciales(),
     rutasDeMejoras(),
+    rutasDeTraslados(),
     // generador: rutas
   ]),
 };

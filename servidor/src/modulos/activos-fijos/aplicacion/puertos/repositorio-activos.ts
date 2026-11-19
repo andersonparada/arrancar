@@ -12,6 +12,8 @@ export interface RepositorioActivos {
    * anula costos revisa su total sin que otro lo cambie a la vez.
    */
   buscarBloqueando(ids: readonly string[]): Promise<Activo[]>;
+  /** Los componentes de los activos dados que no se han dado de baja, por código y bloqueados (se mueven con su principal). */
+  componentesDe(ids: readonly string[]): Promise<Activo[]>;
   /** Los activos de una alta conjunta que no se han dado de baja, por código y bloqueados. */
   vigentesDeAltaConjunta(altaConjuntaId: string): Promise<Activo[]>;
   guardar(activo: Activo): Promise<void>;

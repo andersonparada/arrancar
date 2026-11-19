@@ -41,6 +41,16 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
     return filas.map((fila) => mapeadorDeActivo.aEntidad(fila));
   }
 
+  async componentesDe(ids: readonly string[]): Promise<Activo[]> {
+    if (ids.length === 0) return [];
+    const filas = await transaccionEnCurso()
+      .select({ id: activos.id })
+      .from(activos)
+      .where(and(inArray(activos.activoPadreId, [...ids]), ne(activos.estado, 'dado_de_baja')));
+    const bloqueados = await this.buscarBloqueando(filas.map((fila) => fila.id));
+    return bloqueados.sort((a, b) => a.instantanea().codigo.localeCompare(b.instantanea().codigo));
+  }
+
   async vigentesDeAltaConjunta(altaConjuntaId: string): Promise<Activo[]> {
     const filas = await transaccionEnCurso()
       .select({ id: activos.id })

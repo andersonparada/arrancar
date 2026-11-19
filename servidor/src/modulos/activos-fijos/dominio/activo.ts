@@ -195,6 +195,15 @@ export class Activo extends Entidad<ActivoId> {
   }
 
   /**
+   * Deja la ubicación vigente (traslado o anulación de uno): el responsable escrito reemplaza al usuario responsable.
+   * @throws ActivoDadoDeBaja si ya se dio de baja.
+   */
+  moverA(ubicacion: UbicacionDeActivo): void {
+    if (this.propiedades.estado === 'dado_de_baja') throw new ActivoDadoDeBaja();
+    this.propiedades = { ...this.propiedades, ...ubicacion, responsableUsuarioId: null };
+  }
+
+  /**
    * Pone el activo en uso (en la pantalla, «Disponible para uso»): guarda los parámetros con que se depreciará.
    * @throws ActivoNoEnConstruccion si no es un activo del balance en construcción.
    * @throws FechaDeUsoInvalida si la fecha es anterior a la de adquisición.
