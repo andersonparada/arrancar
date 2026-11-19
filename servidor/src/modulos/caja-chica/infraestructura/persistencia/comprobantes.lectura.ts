@@ -8,7 +8,7 @@ import { reposicionComprobantes } from './reposicion-comprobantes.tablas.js';
 import { reposiciones } from './reposiciones.tablas.js';
 
 /** Un comprobante con lo del libro y la reposición vigente, tal como lo devuelve la consulta de `comprobantesConSuContexto`. */
-interface FilaDeComprobante {
+export interface FilaDeComprobante {
   comprobante: typeof comprobantes.$inferSelect;
   documento: {
     tipo: string;
