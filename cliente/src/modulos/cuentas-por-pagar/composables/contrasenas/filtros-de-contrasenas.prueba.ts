@@ -17,6 +17,7 @@ const resumen = (cambios: Partial<ContrasenaResumen> = {}): ContrasenaResumen =>
   proveedorNombre: 'Agro',
   documentos: 3,
   saldo: '1250.00',
+  disponible: '1250.00',
   estado: 'vigente',
   pagoVencido: false,
   estadoDePago: 'pendiente',

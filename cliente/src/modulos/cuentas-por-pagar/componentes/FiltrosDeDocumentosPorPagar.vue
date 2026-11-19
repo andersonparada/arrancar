@@ -10,6 +10,7 @@ import {
   cantidadDeFiltros,
   opcionesDeProveedor,
   OPCIONES_DE_ESTADO,
+  OPCIONES_DE_ESTADO_DE_PAGO,
   OPCIONES_DE_ORIGEN,
   opcionesDeTipo,
   type FiltrosDeDocumentos,
@@ -29,6 +30,7 @@ const tipos = opcionesDeTipo();
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <CampoSelector v-model="filtros.proveedorId" etiqueta="Proveedor" :opciones="opcionesDeProveedores" />
       <CampoSelector v-model="filtros.estado" etiqueta="Estado" :opciones="OPCIONES_DE_ESTADO" />
+      <CampoSelector v-model="filtros.estadoDePago" etiqueta="Estado de pago" :opciones="OPCIONES_DE_ESTADO_DE_PAGO" />
       <CampoSelector v-model="filtros.tipo" etiqueta="Tipo" :opciones="tipos" />
       <CampoSelector v-model="filtros.origen" etiqueta="Origen" :opciones="OPCIONES_DE_ORIGEN" />
       <CampoTexto v-model="filtros.emitidosDesde" etiqueta="Emitidos desde" tipo="date" />

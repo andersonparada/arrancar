@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { estadoDePagoDe, estaPosfechado, numeroDelPago, pagadoYComprometido } from './pagos.js';
+import {
+  ESTADOS_DE_PAGO,
+  estadoDePagoDe,
+  estaPosfechado,
+  numeroDelPago,
+  pagadoYComprometido,
+  posfechadosDe,
+} from './pagos.js';
 
 const HOY = '2026-11-14';
 
@@ -29,8 +36,8 @@ describe('pagado y comprometido', () => {
 });
 
 describe('estado de pago', () => {
-  const cifras = (saldoCentavos: number, pagadoCentavos: number, comprometidoCentavos: number) => ({
-    saldoCentavos,
+  const cifras = (deudaCentavos: number, pagadoCentavos: number, comprometidoCentavos: number) => ({
+    deudaCentavos,
     pagadoCentavos,
     comprometidoCentavos,
   });
@@ -39,17 +46,55 @@ describe('estado de pago', () => {
     expect(estadoDePagoDe(cifras(10000, 0, 0))).toBe('pendiente');
   });
 
-  it('en parte si se pagó o se comprometió algo y queda saldo', () => {
+  it('un cargo con una nota aplicada y sin pagos sigue pendiente (la deuda ya la trae rebajada)', () => {
+    expect(estadoDePagoDe(cifras(7000, 0, 0))).toBe('pendiente');
+  });
+
+  it('pagado en parte si se pagó algo y queda disponible', () => {
     expect(estadoDePagoDe(cifras(4000, 6000, 0))).toBe('en_parte');
-    expect(estadoDePagoDe(cifras(4000, 0, 6000))).toBe('en_parte');
+    expect(estadoDePagoDe(cifras(4000, 2000, 1000))).toBe('en_parte');
   });
 
-  it('comprometido si ya no se debe nada pero hay un pago con fecha futura', () => {
-    expect(estadoDePagoDe(cifras(0, 4000, 6000))).toBe('comprometido');
+  it('comprometido en parte si solo hay cheques posfechados y queda disponible', () => {
+    expect(estadoDePagoDe(cifras(10000, 0, 6000))).toBe('comprometido_en_parte');
   });
 
-  it('pagado si ya no se debe nada y nada está comprometido', () => {
+  it('comprometido si la deuda está cubierta por cheques posfechados, con o sin algo pagado', () => {
+    expect(estadoDePagoDe(cifras(6000, 0, 6000))).toBe('comprometido');
+    expect(estadoDePagoDe(cifras(6000, 4000, 6000))).toBe('comprometido');
+  });
+
+  it('pagado si ya no se debe nada', () => {
     expect(estadoDePagoDe(cifras(0, 10000, 0))).toBe('pagado');
+  });
+
+  it('cubre todos los casos con los cinco estados', () => {
+    const grilla = [0, 5000, 10000].flatMap((deuda) =>
+      [0, 3000].flatMap((pagado) =>
+        [0, 5000, 10000].filter((comprometido) => comprometido <= deuda).map((c) => cifras(deuda, pagado, c)),
+      ),
+    );
+    const vistos = new Set(grilla.map(estadoDePagoDe));
+    expect([...vistos].sort()).toEqual([...ESTADOS_DE_PAGO].sort());
+  });
+});
+
+describe('posfechados de un cargo', () => {
+  it('da la fecha del cheque más lejano y cuántos hay', () => {
+    const pagos = [
+      { fecha: '2026-11-01', montoCentavos: 3000 },
+      { fecha: '2026-12-10', montoCentavos: 2000 },
+      { fecha: '2026-11-30', montoCentavos: 5000 },
+    ];
+
+    expect(posfechadosDe(pagos, HOY)).toEqual({ comprometidoHasta: '2026-12-10', chequesPosfechados: 2 });
+  });
+
+  it('sin posfechados no hay fecha', () => {
+    expect(posfechadosDe([{ fecha: HOY, montoCentavos: 1 }], HOY)).toEqual({
+      comprometidoHasta: null,
+      chequesPosfechados: 0,
+    });
   });
 });
 

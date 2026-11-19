@@ -29,7 +29,7 @@ npm run bd:migrar -w servidor             # aplica migraciones de todos los mód
 npm run bd:sembrar -w servidor -- --demo  # usuario de soporte + cuenta demo
 npm run dev:servidor                      # API en :3100, documentación en /api/documentacion
 npm run dev:cliente                       # PWA en :5180 (proxy de /api al :3100)
-npm run probar                            # pruebas del servidor (base arrancar_pruebas) y del cliente
+npm run probar                            # pruebas del servidor (en paralelo, bases arrancar_pruebas_<n>) y del cliente
 npm run verificar                         # tsc del servidor y vue-tsc del cliente
 npm run revisar                           # Prettier + ESLint + verificar: correr antes de cada commit
 npm run formatear                         # aplica Prettier y las correcciones automáticas de ESLint
@@ -43,8 +43,18 @@ Los PDF subidos se revisan con **qpdf 11+** (`RUTA_QPDF`, `/usr/bin/qpdf` por om
 `Dockerfile` y la app no arranca sin él). Si `apt` da la 10, baje el binario oficial de
 `github.com/qpdf/qpdf/releases` (verifique su sha256). Sin qpdf se saltan las pruebas que lo necesitan.
 
-Las pruebas de integración usan PostgreSQL real (`arrancar_pruebas`), así que la
-base de desarrollo debe estar levantada.
+Las pruebas de integración usan PostgreSQL real, así que la base de desarrollo debe estar
+levantada. **Corren en paralelo**: cada worker de Vitest tiene su propia base
+`${BD_PRUEBAS}_${VITEST_POOL_ID}` (por omisión `arrancar_pruebas_1`, `_2`…), clonada de
+`${BD_PRUEBAS}_plantilla` por `globalSetup` y conservada entre corridas; también tiene su carpeta
+de archivos (`almacenamiento-pruebas/<base>`) y su `TMPDIR`
+(`servidor/src/pruebas-api/paralelo/`). Cada agente usa su prefijo con `BD_PRUEBAS=<prefijo>` (se valida: minúsculas, dígitos y `_`, hasta 41
+caracteres, nunca `arrancar`; basta elegirlo, las bases se crean solas) y no corre dos suites a la vez con el mismo.
+Si el historial de migraciones de las bases no concuerda con el código, `globalSetup` las vuelve a crear. Workers: `--maxWorkers` o `VITEST_MAX_WORKERS` (esta solo acepta un número entero; para un porcentaje: `npm run probar -w servidor -- --maxWorkers=50%`; por omisión la mitad de los
+núcleos, máximo 8); se crean tantas bases como workers. Para borrar las bases sobrantes de un prefijo:
+`BD_PRUEBAS=<prefijo> npm run bd:limpiar-pruebas -w servidor` (con la máquina cargada puede tardar
+mucho: córralo en segundo plano). Una prueba nueva no debe depender de
+datos de otro archivo ni de recursos globales (puertos, carpetas fijas).
 
 ## Arquitectura
 
@@ -175,7 +185,9 @@ base de desarrollo debe estar levantada.
   trabajo, con `recurso` `<modulo>.<plural>` y el registro como estaba antes (el
   DTO, nunca contraseñas). `core.auditoria` solo se agrega y se lee (RLS); la
   depura una vez al día `core.depurar_auditoria` según
-  `core.auditoria.meses_de_conservacion` (60 por omisión, mínimo 60).
+  `core.auditoria.meses_de_conservacion` (60 por omisión, mínimo 60), salvo los recursos de
+  `core.recursos_de_auditoria_permanente` (catálogo que llenan las migraciones de cada módulo): sus entradas no se
+  depuran mientras exista la empresa.
 
 ### Usuarios
 Inicio de sesión con nombre de usuario (solo letras, único en el servidor), no

@@ -83,12 +83,13 @@ beforeEach(async () => {
         if (rechazo) throw rechazo;
       },
     },
+    preguntas: { revisar: async () => [] },
   };
 });
 
 const fijarFecha = (fechaDeInicio = '2026-01-01') =>
   new EstablecerFechaDeInicio(dependencias).ejecutar(operador, { empresaId, fechaDeInicio });
-const cerrar = () => new CerrarCargaInicial(dependencias).ejecutar(operador, empresaId);
+const cerrar = () => new CerrarCargaInicial(dependencias).ejecutar(operador, { empresaId });
 const reabrir = (motivo = 'Faltó un saldo') =>
   new ReabrirCargaInicial(dependencias).ejecutar(operador, { empresaId, motivo });
 
@@ -217,7 +218,7 @@ describe('reabrir la carga inicial', () => {
     const carga = await reabrir('  Faltó un saldo de bancos  ');
 
     expect(carga).toMatchObject({ fechaDeInicio: '2026-01-01', cerrada: false, cerradaEn: null });
-    expect(auditoria.entradas).toEqual([
+    expect(auditoria.entradas.filter((entrada) => entrada.accion === 'reabrir')).toEqual([
       expect.objectContaining({
         recurso: 'empresas.cargas-iniciales',
         registroId: empresaId,
@@ -243,7 +244,7 @@ describe('reabrir la carga inicial', () => {
     await cerrar();
 
     await expect(reabrir('   ')).rejects.toThrow(MotivoDeReaperturaInvalido);
-    expect(auditoria.entradas).toEqual([]);
+    expect(auditoria.entradas.map((entrada) => entrada.accion)).toEqual(['cerrar']);
   });
 
   it('no hay nada que reabrir si la carga está abierta o no existe', async () => {

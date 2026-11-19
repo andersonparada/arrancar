@@ -10,10 +10,13 @@ decisiones e investigación con Opus).
 
 Actualizado: **2026-11-18** (tarde). El usuario pidió retomar la programación. Si otra sesión o cuenta retoma el trabajo, empiece aquí.
 
+**Desde el 2026-11-18 (velocidad):** los agentes corren `npm run revisar` y solo las pruebas de lo que tocan; la suite
+completa la corre el coordinador una vez en el worktree de integración. Un agente prepara las pruebas del servidor en
+paralelo (una base por worker; hoy ~27 min en serie).
+
 **Cómo se trabaja:** cada paso lo programa un agente en su propio worktree (`.claude/worktrees/agent-<id>`, rama
 `worktree-agent-<id>`), que parte de `main` con `git reset --hard main`, usa su propia base de pruebas
-(`BD_PRUEBAS=arrancar_pruebas_<algo>`, creada con `docker compose -f infra/docker-compose.dev.yml exec -T postgres psql
--U arrancar -d arrancar -c "create database …"`) y hace un commit sin Co-Authored-By. El coordinador revisa el
+(`BD_PRUEBAS=arrancar_pruebas_<algo>`: basta elegir un prefijo propio, las bases se crean solas) y hace un commit sin Co-Authored-By. El coordinador revisa el
 reporte, une con `git merge --no-ff` (los conflictos de `docs/PLAN.md` y `docs/DONDE-QUEDAMOS.md` se resuelven
 conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run revisar` y
 `BD_PRUEBAS=arrancar_pruebas_cxp npm run probar` en el checkout principal y solo sigue con todo en verde. Agentes:
@@ -22,10 +25,12 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `b7bcd70`, subido a GitHub (desde el 2026-11-18 el coordinador hace el push tras cada unión en verde). Última
-corrida completa en verde (con CP4-E4 y CP4-9): servidor 4832, cliente 1264, generador 46, y `npm run revisar` limpio.
-Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-carga.md`) e impresión de cheques
-(`diseno-impresion-de-cheques.md`).
+**`main`:** `e291c08` (subido; con EM-2, Excel de plazos y la adenda del posfechado). Suite en paralelo (~4–5 min):
+prefijo, las bases se crean solas). Última suite completa en verde (integración): servidor 5301, cliente 1540, generador 46.
+En `main` además de lo anterior: CP4-9 corregido (tres revisiones), CP4-E5, CP5-9a y CP5-9b (R6 a R11), plazo de crédito
+PC-1 a PC-3, correo pasos 1 y 3, Caja chica y Cuentas por liquidar (datos: CC-1, CL-1, CC-1c), Excel de Terceros y de
+Empresas, selector de empresa con buscador, `ejecutarEnEmpresaNueva`, dependencias seguras (zod 4.6.7, vite 8.3.8), cliente
+del Banguat para todas las monedas (MM-3a), correcciones de la QA intermedia.
 
 **Agentes en curso (lanzados el 2026-11-18, cada uno en su worktree `.claude/worktrees/agent-<id>` desde `main`):**
 - **BS-2: unido a `main`** (2026-11-18). Rutas heredadas marcadas «HEREDADO» hasta BS-5; anular partidas llega con BS-3.
@@ -46,6 +51,53 @@ Diseños unidos con preguntas para el usuario: EM-2 (`diseno-em2-cierre-de-la-ca
 - **Workflow `arrancar-cp4-10-11-cp5-5`** (run `wf_d318640d-7a5`): CP4-10 (base `arrancar_pruebas_cp410`), CP4-11
   (`arrancar_pruebas_cp411`) y CP5-5 servidor (`arrancar_pruebas_cp55`), con revisión de Opus y corrección de Sonnet.
 - Guarda `skipIf(!hayQpdf)` en las pruebas del libro en PDF: agente Haiku (base `arrancar_pruebas_qpdf`).
+- **Workflow `arrancar-adendas-y-em2`** (run `wf_cb030595-d4b`): el arquitecto incorpora las decisiones del 2026-11-18 a
+  EM-2, impresión de cheques y CP4 (adenda del posfechado: deuda, comprometido y disponible; cinco estados); luego EM-2
+  servidor y cliente (base `arrancar_pruebas_em2`) con revisión. **En cola:** impresión de cheques (después de BS-3, BS-4 y
+  BS-R1 en main) y el arreglo del posfechado (después de CP4-10 y CP4-11 en main).
+- **Worktree de integración** `.claude/worktrees/integracion` (rama `integracion`, base `arrancar_pruebas_integracion`,
+  `node_modules` enlazados al checkout principal): ahí se unen y prueban las ramas terminadas mientras `main` corre otra
+  suite; luego se pasa a `main`. CP4-B3b, CP5-9a y la QA intermedia ya pasaron a `main`; ahora tiene CP4-10, CP4-11 y CP5-5 (`8a0cd15f`) con
+  su suite corriendo.
+- **Workflow `arrancar-cp4e5-cp59b-qa`** (run `wf_2e5dd345-87d`, desde `8a0cd15f`): CP4-E5, CP5-9b (R9 a R11 cliente) y
+  correcciones de la QA intermedia, con revisión.
+- **Aprobados el 2026-11-18:** Multimoneda, Caja chica y Cuentas por liquidar, y aviso de pago por correo (respuestas al
+  final de cada diseño). **Orden de las migraciones del core:** EM-2 (en curso) → correo (pasos 2 y 4) → Multimoneda (MM-1).
+  Caja chica espera `preguntarATodos` de EM-2 (CCL-M) y la migración de Bancos de CCL-B1 (después de BS-R1).
+- **Workflow `arrancar-modulos-nuevos-fase1`** (run `wf_af6cd921-5c2`): correo pasos 1 y 3, CC-1 y CL-1 (datos de los dos
+  módulos nuevos) y MM-3a (cliente del Banguat sin base), con revisión de seguridad o del arquitecto.
+- Integración: falla la preparación de dos pruebas de CP5-5 contra la regla de BS-2 (fecha de inicio); un agente lo corrige en
+  la rama `integracion`. Después entran las decisiones de H2 y la bandeja de DTE.
+- **En integración ahora** (suite corriendo): qpdf en las pruebas del PDF y Excel de Terceros.
+- **Pendiente de diseño (seguridad, defensa en profundidad):** `core.empresas` no tiene RLS ni check/disparador que impida
+  insertar una empresa con otra `cuenta_id` o mover `cuenta_id`/`creado_en` con un UPDATE (hoy lo cumple el código, con
+  pruebas). Paso aparte para `arquitecto-de-datos`: RLS con política por cuenta (lectura por función `security definer`) o
+  disparador; revisar también si `arrancar_app` necesita DELETE.
+- **Listos para integrar** (revisados): Excel de Empresas y selector con buscador (`worktree-wf_f6224bdf-ffe-2`, revisión
+  final de seguridad «unir»), Caja chica y Cuentas por liquidar datos CC-1/CL-1 con CC-1c (`worktree-wf_af6cd921-5c2-2`),
+  CP4-9 corregido (`worktree-wf_0b4d5815-3ec-3`), pruebas en paralelo (`worktree-agent-a4cd39b30a6deca11`), plazo de crédito PC-1 a PC-3 (`worktree-wf_caddab94-389-1`), correo pasos 1 y 3 (`worktree-wf_af6cd921-5c2-1`) y MM-3a, cliente del Banguat
+  (`worktree-wf_af6cd921-5c2-3`). En revisión: CC-1/CL-1 (`worktree-wf_af6cd921-5c2-2`, arquitecto), CP4-9 tercera
+  corrección, empresa nueva (seguridad). En curso: actualización de dependencias con avisos (zod < 4.6.6, vite).
+- **Cola para la próxima integración** (cada rama con su revisión de Opus): corrección de CP4-9
+  (`worktree-wf_0b4d5815-3ec-3`, en revisión), qpdf en las pruebas del PDF (`worktree-agent-a9590755fda19cc8d`), Excel de
+  Terceros (`worktree-wf_f6224bdf-ffe-1`, corregido), Excel de Empresas y selector (`worktree-wf_f6224bdf-ffe-2`: se acota
+  `ejecutarEnOtraEmpresa` a la empresa recién creada, con revisión de seguridad) y pruebas en paralelo
+  (`worktree-agent-a4cd39b30a6deca11`, en revisión). CP4-E4 revisado: bien.
+- Diseño del plazo de crédito: relanzado (el flujo anterior lo descartó por un error del coordinador).
+- **Workflow `arrancar-siguientes`** (run `wf_c2e6b7b7-306`): adenda del posfechado (servidor y cliente), Excel de plazos
+  (PC-4 y PC-5), diseño de RLS de `core` (`diseno-rls-de-core.md`) y preguntas del contador de Caja chica (V-12, V-13, V-8,
+  V-3/V-4). Después: QA CP4-12 (cuando entre el posfechado) y CP5-11.
+- **EM-2 y Excel de plazos: en `main`** (2026-11-18). La migración del core de EM-2 es `0024_auditoria_permanente`.
+- **Workflow `arrancar-correo-fase2`** (run `wf_a34c71c6-cef`): correo pasos 2, 4, 5 y 6 (migraciones del core en esa rama,
+  después de la 0024) y paso 7 (Terceros), con revisión de seguridad. **MM-1 de Multimoneda va después** de que el correo
+  esté en `main` (siguiente migración del core libre).
+- Preguntas pendientes para el usuario: diseño de RLS del core (5) y dictamen de Caja chica (V-12, V-13, V-8, V-3/V-4).
+- **Adenda del posfechado: en `main`.** Workflow `arrancar-cp4-d6-y-qa` (run `wf_a302f831-cea`): CP4-D6 (R1 y R2 con
+  disponible, A.7 = igual que la ficha) y QA CP4-12 en el navegador (informe `informe-qa-cp4-12-2026-11-18.md`).
+- **Diseño de Activos fijos** (workflow `arrancar-diseno-activos-fijos`, run `wf_9f5b1891-dae`): contador y arquitecto;
+  `diseno-activos-fijos.md` con preguntas para el usuario.
+- **En cola (orden de migraciones del core):** correo 2-4-5-6 (en curso) → RLS del núcleo R-1 a R-3 → MM-1.
+- El coordinador está en **/loop** (pedido del usuario el 2026-11-18).
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
@@ -91,6 +143,16 @@ Cuentas por pagar, CP5-10); que el servidor devuelva el aviso de fecha de inicio
   (errores 4, 5 y 6 de la QA del 2026-11-08) y `git push` (lo hace el coordinador).
 
 ### Avisos técnicos
+
+- **Dependencias y worktrees:** los worktrees están dentro del repositorio y Node resuelve los paquetes que les falten desde
+  el `node_modules` del checkout principal (el de integración incluso lo enlaza), así que las pruebas **no detectan** un
+  `package-lock.json` roto. Toda rama que cambie `package.json` o el lock se prueba también en un **clon limpio fuera del
+  repositorio** con `npm ci`, `npm ci --omit=dev -w servidor` (como el Dockerfile) y el servidor arrancado.
+
+- **Migraciones y fechas (todos los módulos):** el migrador de Drizzle solo aplica las migraciones con `when` mayor que el de
+  la última aplicada y no compara hashes. Al unir dos ramas que agregan migraciones al mismo módulo, la de fecha anterior se
+  saltaría sin aviso (también en producción). El coordinador revisa el `when` de cada migración unida y lo corrige antes de
+  pasar a `main`.
 
 - qpdf 12.4.2 está en `~/.local/opt/qpdf/bin/qpdf` y el `.env` de la raíz lo indica en `RUTA_QPDF`; los worktrees no
   tienen `.env` (git lo ignora), así que buscan `/usr/bin/qpdf`. Arreglo: `sudo ln -sf ~/.local/opt/qpdf/bin/qpdf

@@ -43,8 +43,18 @@ const imprimir = (): void => window.print();
       descripcion="El estado de cuenta es de un solo proveedor. Elíjalo arriba y escoja el período."
     />
     <p v-else-if="!estado && r.cargando.value" class="text-sm text-tierra-500" role="status">Cargando…</p>
+    <EstadoVacio
+      v-else-if="!estado && r.errorDelRango.value"
+      :icono="ScrollText"
+      titulo="No se puede mostrar el estado de cuenta"
+      :descripcion="`${r.errorDelRango.value} Corrija las fechas de arriba.`"
+    />
     <template v-else-if="estado">
-      <EncabezadoDeImpresion :titulo="ventana.titulo" :lineas="lineasDeImpresionDeEstado(estado)" />
+      <EncabezadoDeImpresion
+        :titulo="ventana.titulo"
+        :lineas="lineasDeImpresionDeEstado(estado)"
+        :sin-emisor="estado.presentacion === 'para_el_proveedor'"
+      />
       <div :class="{ 'opacity-60': r.cargando.value }" :aria-busy="r.cargando.value" class="space-y-4">
         <TotalesDelReporte :totales="totalesDeEstado(estado)" titulo="Totales del estado de cuenta" />
         <p v-if="estado.lineas.length === 0" class="text-sm text-tierra-600 dark:text-tierra-300" role="status">

@@ -1,5 +1,6 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import type { Movimiento } from './movimientos.api';
+import type { DatosDeDesmarcado } from './notas.api';
 
 export type EstadoDeConciliacion = 'en_proceso' | 'elaborada' | 'autorizada';
 
@@ -147,6 +148,14 @@ export class ApiConciliaciones {
   /** Devuelve una conciliación elaborada a en proceso, con motivo. */
   devolver(conciliacionId: string, motivo: string) {
     return this.http.crear<Conciliacion>(`/bancos/conciliaciones/${conciliacionId}/devolver`, { motivo });
+  }
+
+  /** Quita la marca de Cuentas por pagar a una nota candidata del mes; solo en proceso, y la rechaza si está ligada a un pago. */
+  desmarcarNota(conciliacionId: string, movimientoId: string, datos: DatosDeDesmarcado) {
+    return this.http.crear<Movimiento>(
+      `/bancos/conciliaciones/${conciliacionId}/notas/${movimientoId}/desmarcar`,
+      datos,
+    );
   }
 
   /** Elimina la conciliación (solo la última de su cuenta); no se puede deshacer. */

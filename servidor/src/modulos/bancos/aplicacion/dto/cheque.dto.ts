@@ -18,6 +18,8 @@ export interface ChequeDto {
   causaDeAnulacion: CausaDeAnulacion | null;
   /** La parte de la carga inicial que es su movimiento (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
   parteDeApertura: ParteDeApertura | null;
+  /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */
+  moduloDeOrigen: string | null;
   /** Lo calcula el servidor (ver `accionesDeCheque`): si se puede anular. */
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede blanquear (emitido, con movimiento limpio). */
@@ -67,6 +69,8 @@ export interface ChequeListadoDto {
   causaDeAnulacion: CausaDeAnulacion | null;
   /** La parte de la carga inicial que es (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
   parteDeApertura: ParteDeApertura | null;
+  /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */
+  moduloDeOrigen: string | null;
   puedeAnular: boolean;
   puedeBlanquear: boolean;
 }

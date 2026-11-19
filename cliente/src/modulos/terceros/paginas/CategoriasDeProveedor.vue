@@ -3,18 +3,20 @@ import { Pencil, Plus, Tags } from 'lucide-vue-next';
 import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+import AccionesDeIntercambio from '@/modulos/core/componentes/intercambio/AccionesDeIntercambio.vue';
+import VentanaDeImportacion from '@/modulos/core/componentes/intercambio/VentanaDeImportacion.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
 import TarjetaBase from '@/modulos/core/componentes/TarjetaBase.vue';
 import VentanaDeCategoria from '../componentes/VentanaDeCategoria.vue';
 import { usarCategoriasDeProveedor } from '../composables/usar-categorias-de-proveedor';
-import { PERMISOS_DEL_PAPEL } from '../papeles';
+import { PERMISOS_DE_EXCEL_DE_CATEGORIAS, PERMISOS_DEL_PAPEL } from '../papeles';
 import { VENTANAS_TERCEROS } from '../textos';
 
 const sesion = usarSesion();
 const puedeCrear = sesion.puede(PERMISOS_DEL_PAPEL.proveedor.crear);
 const puedeEditar = sesion.puede(PERMISOS_DEL_PAPEL.proveedor.editar);
-const { categorias, edicion, enviando, errores, abrir, guardar } = usarCategoriasDeProveedor();
+const { categorias, edicion, enviando, errores, abrir, guardar, intercambio } = usarCategoriasDeProveedor();
 </script>
 
 <template>
@@ -23,6 +25,11 @@ const { categorias, edicion, enviando, errores, abrir, guardar } = usarCategoria
       :titulo="VENTANAS_TERCEROS.categorias.titulo"
       :descripcion="VENTANAS_TERCEROS.categorias.descripcion"
     >
+      <AccionesDeIntercambio
+        :permisos="PERMISOS_DE_EXCEL_DE_CATEGORIAS"
+        @exportar="intercambio.exportar"
+        @importar="intercambio.abrir"
+      />
       <BotonBase v-if="puedeCrear" :icono="Plus" @click="abrir()">Nueva categoría</BotonBase>
     </EncabezadoPagina>
 
@@ -60,6 +67,14 @@ const { categorias, edicion, enviando, errores, abrir, guardar } = usarCategoria
       :enviando="enviando"
       @cerrar="edicion.abierta = false"
       @guardar="guardar"
+    />
+    <VentanaDeImportacion
+      :estado="intercambio.estado"
+      titulo="Importar categorías de proveedor"
+      @elegir="intercambio.elegir"
+      @plantilla="intercambio.bajarPlantilla"
+      @importar="intercambio.importar"
+      @cerrar="intercambio.cerrar"
     />
   </div>
 </template>

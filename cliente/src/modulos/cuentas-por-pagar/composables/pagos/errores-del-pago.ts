@@ -1,6 +1,7 @@
 import { contadorDeCaracteres } from '@/modulos/core/utilidades/contador-de-caracteres';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
-import type { NotaParaLigar, ParaPagar } from '../../servicios/tipos-de-pagos';
+import type { CargoParaPagar, NotaParaLigar, ParaPagar } from '../../servicios/tipos-de-pagos';
+import { textoDeMontoMayorAlDisponible } from '../comprometido';
 import { centavosDe, textoDeCentavos } from '../dinero';
 import {
   cargosIncluidos,
@@ -22,19 +23,18 @@ export interface ContextoDeErrores {
 type Errores = Record<string, string>;
 
 /** El error del monto escrito a un cargo, o `null`: vacío o cero es «no pagar este documento». */
-function errorDelMonto(texto: string, saldo: string): string | null {
+function errorDelMonto(texto: string, cargo: Pick<CargoParaPagar, 'disponible' | 'comprometido'>): string | null {
   if (texto.trim() === '') return null;
   const centavos = centavosDe(texto);
   if (centavos === null) return 'Escriba el monto con hasta dos decimales, por ejemplo 1250.50.';
-  if (centavos > (centavosDe(saldo) ?? 0))
-    return `Este documento solo debe ${formatearMonto(saldo)}: escriba ese monto o menos.`;
+  if (centavos > (centavosDe(cargo.disponible) ?? 0)) return textoDeMontoMayorAlDisponible(cargo);
   return null;
 }
 
 function erroresDeLosMontos(edicion: EdicionDePago, datos: ParaPagar): Errores {
   const errores: Errores = {};
   for (const cargo of cargosIncluidos(edicion, datos)) {
-    const error = errorDelMonto(edicion.montos[cargo.id] ?? '', cargo.saldo);
+    const error = errorDelMonto(edicion.montos[cargo.id] ?? '', cargo);
     if (error) errores[`monto.${cargo.id}`] = error;
   }
   return errores;

@@ -118,3 +118,18 @@ export function resumenDeAutorizacion(documentos: readonly DocumentoPorPagar[]):
   const aprobado = cargos.length > 0 ? ` Se aprueban a pagar ${formatearMonto((centavos / 100).toFixed(2))}.` : '';
   return `Se autorizarán ${cuantos}.${aprobado}`;
 }
+
+export const MOTIVO_DE_VENCIMIENTO_SALDADO =
+  'Este cargo ya no tiene saldo (está pagado o compensado), así que su vencimiento no se puede cambiar.';
+
+/**
+ * Por qué no se ofrece cambiar el vencimiento de un cargo vigente, o `null` si se puede o no hay nada que explicar.
+ * Solo explica el cargo registrado o autorizado sin saldo; el servidor es quien dice si la acción procede.
+ */
+export function motivoSinCambioDeVencimiento(
+  ficha: Pick<FichaDelDocumento, 'puedeCambiarVencimiento' | 'clase' | 'estado' | 'saldo'>,
+): string | null {
+  if (ficha.puedeCambiarVencimiento || ficha.clase !== 'cargo') return null;
+  if (ficha.estado !== 'registrado' && ficha.estado !== 'autorizado') return null;
+  return Number(ficha.saldo) > 0 ? null : MOTIVO_DE_VENCIMIENTO_SALDADO;
+}

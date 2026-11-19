@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import type { UnidadDeTrabajo } from '../../compartido/aplicacion/unidad-de-trabajo.js';
-import { operadorDePrueba } from '../../compartido/pruebas/dobles-compartidos.js';
+import { operadorDePrueba, UnidadDeTrabajoEnMemoria } from '../../compartido/pruebas/dobles-compartidos.js';
 import { validadorDeZod } from '../http/rutas-de-intercambio.js';
 import { LibroDeExcelJs } from '../infraestructura/libro-de-excel.exceljs.js';
 import type { Columna } from './columnas.js';
@@ -15,10 +14,7 @@ interface Cuenta {
 const COLUMNAS: Columna[] = [{ clave: 'nombre', titulo: 'Nombre', requerido: true, tipo: 'texto' }];
 const SOLO_AL_EXPORTAR: Columna[] = [{ clave: 'saldo', titulo: 'Saldo', requerido: false, tipo: 'entero' }];
 
-const unidadSimple: UnidadDeTrabajo = {
-  ejecutar: (_contexto, trabajo) => trabajo(),
-  aislar: (trabajo) => trabajo(),
-};
+const unidadSimple = new UnidadDeTrabajoEnMemoria();
 
 const libro = new LibroDeExcelJs();
 const operador = operadorDePrueba();

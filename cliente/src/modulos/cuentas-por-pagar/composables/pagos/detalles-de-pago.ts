@@ -15,6 +15,7 @@ export const nombreDeLaForma = (forma: FormaDePago): string => NOMBRES_DE_FORMA[
 const NOMBRES_DE_ESTADO: Record<EstadoDePago, string> = {
   pendiente: 'Sin pagar',
   en_parte: 'Pagada en parte',
+  comprometido_en_parte: 'Comprometida en parte',
   comprometido: 'Comprometida',
   pagado: 'Pagada',
 };
@@ -26,6 +27,7 @@ export type TonoDeInsignia = 'campo' | 'trigo' | 'tierra' | 'rojo';
 const TONOS_DE_ESTADO: Record<EstadoDePago, TonoDeInsignia> = {
   pendiente: 'tierra',
   en_parte: 'trigo',
+  comprometido_en_parte: 'trigo',
   comprometido: 'trigo',
   pagado: 'campo',
 };

@@ -22,6 +22,7 @@ import { ActualizarTercero } from './aplicacion/casos-uso/terceros/actualizar-te
 import { ListarTerceros } from './aplicacion/casos-uso/terceros/listar-terceros.js';
 import { ObtenerFichaDeTercero } from './aplicacion/casos-uso/terceros/obtener-ficha-de-tercero.js';
 import { RegistrarTercero } from './aplicacion/casos-uso/terceros/registrar-tercero.js';
+import { intercambiosDeTerceros } from './composicion/intercambios.js';
 import { CategoriasControlador, ContactosControlador } from './http/contactos-y-categorias.controlador.js';
 import { TercerosControlador } from './http/terceros.controlador.js';
 import { rutasTerceros, type ControladoresDeTerceros } from './http/terceros.rutas.js';
@@ -119,6 +120,7 @@ function componerControladores(compartidas: DependenciasCompartidas): Controlado
     terceros: controladorDeTerceros(piezas),
     contactos: controladorDeContactos(piezas),
     categorias: controladorDeCategorias(piezas),
+    intercambios: intercambiosDeTerceros({ ...piezas, consultasCategorias: piezas.consultasCategorias }),
   };
 }
 
@@ -148,6 +150,12 @@ export const moduloTerceros: DefinicionModulo = {
     },
     { clave: 'proveedores.editar', descripcion: 'Asignar o cambiar el papel de proveedor y editar sus categorías' },
     { clave: 'proveedores.eliminar', descripcion: 'Quitar el papel de proveedor' },
+    { clave: 'terceros.clientes.importar', descripcion: 'Importar clientes desde Excel' },
+    { clave: 'terceros.clientes.exportar', descripcion: 'Exportar clientes a Excel' },
+    { clave: 'terceros.proveedores.importar', descripcion: 'Importar proveedores desde Excel' },
+    { clave: 'terceros.proveedores.exportar', descripcion: 'Exportar proveedores a Excel' },
+    { clave: 'terceros.categorias-de-proveedor.importar', descripcion: 'Importar categorías de proveedor desde Excel' },
+    { clave: 'terceros.categorias-de-proveedor.exportar', descripcion: 'Exportar categorías de proveedor a Excel' },
   ],
   configuracion: [
     definirConfiguracion({

@@ -1,3 +1,4 @@
+import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { aCentavos, deCentavos } from '../comunes/centavos';
 
 export type ResultadoDeComparacion =
@@ -25,6 +26,17 @@ export function compararSaldo(escrito: string | null, calculado: string): Result
   if (monto === null) return { estado: 'sin_saldo' };
   const diferencia = aCentavos(calculado) - aCentavos(monto);
   return diferencia === 0 ? { estado: 'coincide' } : { estado: 'difiere', diferencia: deCentavos(diferencia) };
+}
+
+/**
+ * Lo que dice la pantalla cuando no coincide: el monto siempre positivo y hacia qué lado está el banco.
+ * `diferencia` es calculado menos transcrito: si es positiva, el estado de cuenta muestra menos.
+ */
+export function textoDeDiferencia(diferencia: string): string {
+  const centavos = aCentavos(diferencia);
+  const monto = formatearMonto(deCentavos(Math.abs(centavos)));
+  const lado = centavos > 0 ? 'menos' : 'más';
+  return `Difiere en ${monto}: el estado de cuenta muestra ${monto} ${lado} que el saldo calculado. Revise las marcas o registre la nota que falte.`;
 }
 
 /** Los motivos por los que aún no se puede terminar la conciliación; vacío si ya se puede. */

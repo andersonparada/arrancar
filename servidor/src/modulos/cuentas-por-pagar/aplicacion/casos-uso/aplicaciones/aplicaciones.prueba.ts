@@ -55,6 +55,7 @@ beforeEach(() => {
     cargaInicial: carga,
     fechasDeEntrada: fechas,
     umbral: new UmbralFijo(),
+    reloj: new RelojFijo('2026-06-01'),
   });
 });
 

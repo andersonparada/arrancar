@@ -66,6 +66,7 @@ const aListado = ({ movimientoId, hechosDelMovimiento, ...fila }: FilaDelListado
     estado,
     anuladoEn: fila.anuladoEn ? fila.anuladoEn.toISOString() : null,
     parteDeApertura: hechos?.parteDeApertura ?? null,
+    moduloDeOrigen: hechos ? hechosDelMovimiento.moduloDeOrigen : null,
     ...accionesDeCheque(estado, hechos),
   };
 };

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import type { EstadoDeCuenta, LineaDelEstado } from '../../servicios/tipos-de-reportes-de-proveedor';
 import {
+  ajustesDeEstadoDesdeLaRuta,
   cantidadDeFiltrosDeEstado,
   consultaDeEstadoDeCuenta,
   errorDelRango,
@@ -148,5 +149,17 @@ describe('totales y textos del estado de cuenta', () => {
 
   it('dice el saldo cuando no hubo movimientos', () => {
     expect(textoSinMovimientos(estado())).toContain(formatearMonto('130.00'));
+  });
+});
+
+describe('lo que el enlace pide al estado de cuenta', () => {
+  it('lee las fechas y la presentación', () => {
+    expect(
+      ajustesDeEstadoDesdeLaRuta({ desde: '2026-01-01', hasta: '2026-10-31', presentacion: 'para_el_proveedor' }),
+    ).toEqual({ desde: '2026-01-01', hasta: '2026-10-31', presentacion: 'para_el_proveedor' });
+  });
+
+  it('descarta lo que no sirve', () => {
+    expect(ajustesDeEstadoDesdeLaRuta({ desde: '1/1/2026', hasta: ['2026-10-31'], presentacion: 'otra' })).toEqual({});
   });
 });

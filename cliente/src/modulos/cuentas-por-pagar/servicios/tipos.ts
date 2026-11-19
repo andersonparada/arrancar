@@ -1,4 +1,6 @@
 import type { AjusteDelDocumento, AplicacionDelDocumento } from './tipos-de-notas';
+import type { EstadoDePago, EstadoDeUnPago, FormaDePago } from './tipos-de-pagos';
+import type { ReintegroDelDocumento } from './tipos-de-reintegros';
 
 export type * from './tipos-de-notas';
 
@@ -25,6 +27,11 @@ export interface CondicionesDeProveedor {
   contarDesdeLaRecepcion: boolean;
 }
 
+/** Lo que trae la lectura: las condiciones y el plazo por omisión (meses, 0 = de contado) de la empresa activa. */
+export interface CondicionesConPlazoPorOmision extends CondicionesDeProveedor {
+  mesesPorOmision: number;
+}
+
 /** Lo que el servidor dice que se puede hacer con un documento (el permiso del usuario se revisa aparte). */
 export interface AccionesDelDocumento {
   puedeRegistrar: boolean;
@@ -37,6 +44,23 @@ export interface AccionesDelDocumento {
   puedeAplicar: boolean;
   /** Una nota de crédito registrada o autorizada con saldo libre se puede ajustar. */
   puedeAjustar: boolean;
+  /** Una nota de crédito registrada o autorizada con saldo libre se puede reintegrar (el proveedor devuelve el dinero). */
+  puedeReintegrar: boolean;
+}
+
+/** Lo que un pago entregó a un cargo; `comprometido` es un pago vigente con fecha posterior a hoy (cheque posfechado). */
+export interface PagoDelDocumento {
+  pagoId: string;
+  /** Como se lee: `15` o `2026-15`. */
+  numero: string;
+  forma: FormaDePago;
+  fecha: string;
+  estado: EstadoDeUnPago;
+  contrasenaId: string;
+  monto: string;
+  /** La retención que este pago «descontó» (constancia); no resta del saldo. */
+  retencionDescontada: string;
+  comprometido: boolean;
 }
 
 /** Un documento tal como lo ven la bandeja, la lista y la ficha; el dinero viaja como texto. */
@@ -68,8 +92,22 @@ export interface DocumentoPorPagar extends AccionesDelDocumento {
   aplicado: string;
   /** Lo dado de baja con ajustes vigentes (solo notas de crédito; en un cargo es 0). */
   ajustado: string;
-  /** En un cargo, lo que falta pagar; en una nota de crédito, su saldo libre (a favor). */
+  /** En un cargo, la deuda (también lo comprometido con cheques posfechados); en una nota de crédito, su saldo libre (a favor). */
   saldo: string;
+  /** Lo que aún se puede pagar: `saldo` menos `comprometido`. */
+  disponible: string;
+  /** La fecha del cheque posfechado más lejano; `null` si no hay. */
+  comprometidoHasta: string | null;
+  /** Cuántos pagos posfechados vigentes tiene el cargo. */
+  chequesPosfechados: number;
+  /** Solo una nota de crédito: lo que los reintegros vigentes devolvieron. */
+  reintegrado: string;
+  /** Solo un cargo: lo que los pagos vigentes entregaron con fecha de hoy o anterior. */
+  pagado: string;
+  /** Solo un cargo: lo de pagos vigentes con fecha posterior a hoy (cheques posfechados); el saldo ya lo resta. */
+  comprometido: string;
+  /** Solo un cargo vigente; `null` en una nota de crédito o un documento anulado. */
+  estadoDePago: EstadoDePago | null;
   /** El usuario lo ingresó en Libro de compras o lo completó: para autorizarlo necesita `autorizar-propios`. */
   esPropio: boolean;
   registradoEn: string | null;
@@ -132,6 +170,10 @@ export interface FichaDelDocumento extends DocumentoPorPagar {
   fechaMinimaDeAjuste: string | null;
   /** Solo en una nota de crédito: lo más que puede ajustarse como «Diferencia menor» (cero la apaga). */
   topeDiferenciaMenor: string;
+  /** Solo en un cargo: lo que los pagos le entregaron, vigentes y anulados. */
+  pagos: PagoDelDocumento[];
+  /** Solo en una nota de crédito: sus reintegros, vigentes y anulados. */
+  reintegros: ReintegroDelDocumento[];
   /** `null` si el documento no está anulado. */
   anulacion: AnulacionDelDocumento | null;
   /** Solo una nota sobre una factura anterior que no tiene saldo inicial: los datos que citó en Libro de compras. */
@@ -155,12 +197,29 @@ export interface SaldoDeudor {
   saldoLibre: string;
 }
 
+/** Un cheque posfechado de un proveedor. */
+export interface PosfechadoDelProveedor {
+  numeroDeCheque: string | null;
+  fecha: string;
+  monto: string;
+}
+
 /** Lo que la empresa debe a un proveedor; los saldos deudores van aparte y no se restan. */
 export interface SaldoDelProveedor {
   proveedorId: string;
   proveedorNombre: string;
+  /** La deuda: también lo comprometido con cheques posfechados (la cifra de R1). */
   porPagar: string;
+  /** La parte vencida de la deuda; cuenta lo comprometido. */
   vencido: string;
+  /** La parte de la deuda cubierta con cheques posfechados. */
+  comprometido: string;
+  /** Lo que aún se puede pagar: `porPagar` menos `comprometido`. */
+  disponible: string;
+  /** La parte vencida de lo comprometido. */
+  vencidoComprometido: string;
+  /** Hasta 10 cheques posfechados, del más próximo al más lejano. */
+  posfechados: PosfechadoDelProveedor[];
   cargosConSaldo: number;
   saldosDeudores: string;
   notasConSaldoLibre: SaldoDeudor[];
@@ -179,6 +238,8 @@ export interface ConsultaDeDocumentos {
   sinContrasena?: boolean;
   /** Cargos con saldo por pagar y notas con saldo libre. */
   conSaldo?: boolean;
+  /** Solo los cargos vigentes en ese estado de pago. */
+  estadoDePago?: EstadoDePago;
   pagina?: number;
   limite?: number;
 }

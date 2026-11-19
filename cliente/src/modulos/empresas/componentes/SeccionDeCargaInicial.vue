@@ -4,31 +4,28 @@ import { LockKeyhole, LockKeyholeOpen } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import InsigniaBase from '@/modulos/core/componentes/InsigniaBase.vue';
-import { formatearFecha, formatearFechaHora } from '@/modulos/core/utilidades/formato';
+import { formatearFecha } from '@/modulos/core/utilidades/formato';
 import {
   AYUDA_DE_FECHA_DE_INICIO,
   avisoDeErrorEnSecciones,
   avisoDeFechaDeInicio,
 } from '../composables/datos-de-empresa';
-import type { CargaInicial } from '../servicios/datos-de-empresa.api';
+import type { CargaInicialEnEdicion } from '../composables/usar-carga-inicial';
+import BalanceDeApertura from './BalanceDeApertura.vue';
+import ResumenDelCierre from './ResumenDelCierre.vue';
 
 const props = defineProps<{
-  carga: CargaInicial | null;
+  estado: CargaInicialEnEdicion;
   errores: Record<string, string>;
-  enviando: boolean;
   /** Hay fecha guardada y sin cambios pendientes en el campo. */
   puedeCerrar: boolean;
 }>();
-const emit = defineEmits<{ cerrar: []; reabrir: [] }>();
 const fechaDeInicio = defineModel<string>('fechaDeInicio', { required: true });
 
-const cerrada = computed(() => props.carga?.cerrada ?? false);
+const carga = computed(() => props.estado.carga);
+const cerrada = computed(() => carga.value?.cerrada ?? false);
 const avisoDeFecha = computed(() => (cerrada.value ? null : avisoDeFechaDeInicio(fechaDeInicio.value)));
 const errorDeSecciones = computed(() => avisoDeErrorEnSecciones(props.errores));
-const detalleDelCierre = computed(() => {
-  const { cerradaEn, cerradaPor } = props.carga ?? {};
-  return cerradaEn ? `Cerrada el ${formatearFechaHora(cerradaEn)}${cerradaPor ? ` por ${cerradaPor}` : ''}.` : '';
-});
 </script>
 
 <template>
@@ -47,7 +44,7 @@ const detalleDelCierre = computed(() => {
       :error="errores.fechaDeInicio"
       :ayuda="
         cerrada
-          ? `Fija desde el ${formatearFecha(carga?.fechaDeInicio)}. ${detalleDelCierre}`
+          ? `Fija desde el ${formatearFecha(carga?.fechaDeInicio)}. Para cambiarla, reabra la carga.`
           : AYUDA_DE_FECHA_DE_INICIO
       "
     />
@@ -61,6 +58,27 @@ const detalleDelCierre = computed(() => {
     <p v-if="errorDeSecciones" role="alert" class="text-xs text-red-700 dark:text-red-400">
       {{ errorDeSecciones }}
     </p>
+    <ResumenDelCierre
+      v-if="carga"
+      :carga="carga"
+      :exportando="estado.guardados.exportando"
+      @ver-revision="estado.guardados.verUltimaRevision()"
+      @exportar="estado.guardados.exportarUltimo()"
+      @ver-historial="estado.guardados.abrirHistorial()"
+    />
+    <BalanceDeApertura
+      v-if="carga"
+      :balance="carga.balanceDeApertura"
+      :acciones="estado.balance.acciones"
+      :enviando="estado.balance.enviando"
+      :error="estado.balance.error"
+      :direccion="estado.balance.direccion"
+      :visor-abierto="estado.balance.visorAbierto"
+      @subir="estado.balance.subir($event)"
+      @quitar="estado.balance.quitar()"
+      @ver="estado.balance.abrirVisor()"
+      @cerrar-visor="estado.balance.cerrarVisor()"
+    />
     <div class="flex flex-wrap gap-2">
       <BotonBase
         v-if="!cerrada"
@@ -69,8 +87,8 @@ const detalleDelCierre = computed(() => {
         pequeno
         :icono="LockKeyhole"
         :deshabilitado="!puedeCerrar"
-        :cargando="enviando"
-        @click="emit('cerrar')"
+        :cargando="estado.cierre.cargandoRevision"
+        @click="estado.cierre.abrir()"
       >
         Cerrar carga inicial
       </BotonBase>
@@ -80,7 +98,7 @@ const detalleDelCierre = computed(() => {
         variante="secundario"
         pequeno
         :icono="LockKeyholeOpen"
-        @click="emit('reabrir')"
+        @click="estado.reapertura.abrir()"
       >
         Reabrir carga inicial
       </BotonBase>

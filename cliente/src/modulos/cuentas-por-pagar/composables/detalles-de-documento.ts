@@ -1,6 +1,8 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import { formatearFecha, formatearFechaHora, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import type { DocumentoPorPagar, EstadoDeDocumento, FichaDelDocumento } from '../servicios/tipos';
+import { nombreDelEstadoDePago } from './pagos/detalles-de-pago';
+import { etiquetaDeComprometido, hayMontoPositivo } from './comprometido';
 import { CAUSAS_DE_ANULACION, ESTADOS_DE_DOCUMENTO, TIPOS_DE_DOCUMENTO } from '../textos';
 
 type Identificable = Pick<DocumentoPorPagar, 'tipo' | 'serie' | 'numero'>;
@@ -36,13 +38,38 @@ export function detallesDeBandeja(documento: DocumentoPorPagar): DetalleDeRegist
   ];
 }
 
-/** Los datos de una tarjeta de la lista, con el saldo. */
+/** Lo pagado y, si hay un cheque posfechado, lo comprometido con su fecha: solo en un cargo vigente. */
+function montosDePago(documento: DocumentoPorPagar): DetalleDeRegistro[] {
+  if (documento.clase !== 'cargo' || documento.estado === 'anulado') return [];
+  const detalles: DetalleDeRegistro[] = [{ etiqueta: 'Pagado', valor: formatearMonto(documento.pagado) }];
+  if (hayMontoPositivo(documento.comprometido)) {
+    detalles.push({
+      etiqueta: etiquetaDeComprometido(documento.comprometidoHasta, documento.chequesPosfechados),
+      valor: formatearMonto(documento.comprometido),
+    });
+  }
+  return detalles;
+}
+
+/** El saldo (la deuda) y, si parte está comprometida, lo que todavía se puede pagar. */
+function montosDeSaldo(documento: DocumentoPorPagar): DetalleDeRegistro[] {
+  const detalles: DetalleDeRegistro[] = [
+    { etiqueta: etiquetaDelSaldo(documento), valor: formatearMonto(documento.saldo) },
+  ];
+  if (documento.clase === 'cargo' && hayMontoPositivo(documento.comprometido)) {
+    detalles.push({ etiqueta: 'Disponible', valor: formatearMonto(documento.disponible) });
+  }
+  return detalles;
+}
+
+/** Los datos de una tarjeta de la lista, con lo pagado y el saldo. */
 export function detallesDeLista(documento: DocumentoPorPagar): DetalleDeRegistro[] {
   return [
     { etiqueta: 'Emisión', valor: formatearFecha(documento.fechaEmision) },
     { etiqueta: 'Vence', valor: documento.vencimiento ? formatearFecha(documento.vencimiento) : '—' },
     { etiqueta: 'Neto a pagar', valor: formatearMonto(documento.neto) },
-    { etiqueta: etiquetaDelSaldo(documento), valor: formatearMonto(documento.saldo) },
+    ...montosDePago(documento),
+    ...montosDeSaldo(documento),
   ];
 }
 
@@ -70,6 +97,8 @@ export function detallesDeFicha(ficha: FichaDelDocumento): DetalleDeRegistro[] {
   }
   if (ficha.clase === 'cargo') detalles.push({ etiqueta: 'Vence', valor: formatearTexto(vencimientoEnLaFicha(ficha)) });
   detalles.push({ etiqueta: 'Estado', valor: textoDeEstado(ficha.estado) });
+  if (ficha.estadoDePago)
+    detalles.push({ etiqueta: 'Estado de pago', valor: nombreDelEstadoDePago(ficha.estadoDePago) });
   if (ficha.contrasena) detalles.push({ etiqueta: 'Contraseña de pago', valor: ficha.contrasena.numero });
   return detalles;
 }
@@ -98,17 +127,22 @@ export function detallesDeMontos(ficha: FichaDelDocumento): DetalleDeRegistro[] 
     { etiqueta: 'Retenciones', valor: formatearMonto(ficha.retenciones) },
     { etiqueta: 'Neto a pagar', valor: formatearMonto(ficha.neto) },
     ...montosAplicadosYAjustados(ficha),
-    { etiqueta: etiquetaDelSaldo(ficha), valor: formatearMonto(ficha.saldo) },
+    ...montosDeSaldo(ficha),
   ];
+}
+
+/** Lo que le rebajaron las notas y lo que se le pagó; el cheque posfechado se muestra aparte, como comprometido. */
+function montosDeUnCargo(ficha: FichaDelDocumento): DetalleDeRegistro[] {
+  return [{ etiqueta: 'Aplicado (notas de crédito)', valor: formatearMonto(ficha.aplicado) }, ...montosDePago(ficha)];
 }
 
 /** En una nota de crédito: aplicado + ajustado + saldo a favor = total; en un cargo, lo que le aplicaron las notas. */
 function montosAplicadosYAjustados(ficha: FichaDelDocumento): DetalleDeRegistro[] {
-  if (ficha.clase !== 'abono')
-    return [{ etiqueta: 'Aplicado (notas de crédito)', valor: formatearMonto(ficha.aplicado) }];
+  if (ficha.clase !== 'abono') return montosDeUnCargo(ficha);
   return [
     { etiqueta: 'Aplicado a otros documentos', valor: formatearMonto(ficha.aplicado) },
     { etiqueta: 'Ajustado (dado de baja)', valor: formatearMonto(ficha.ajustado) },
+    { etiqueta: 'Reintegrado por el proveedor', valor: formatearMonto(ficha.reintegrado) },
   ];
 }
 

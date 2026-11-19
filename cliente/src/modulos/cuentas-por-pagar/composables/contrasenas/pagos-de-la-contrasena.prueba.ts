@@ -5,8 +5,10 @@ import {
   cargoConPagos,
   cargosPagables,
   destinoDeNuevoPago,
+  destinoDePagoEnEfectivo,
   filasDePagosDeLaContrasena,
   puedeRegistrarPago,
+  puedePagarEnEfectivo,
 } from './pagos-de-la-contrasena';
 
 const cargo = (id: string, cambios: Partial<CargoDeContrasena> = {}): CargoDeContrasena => ({
@@ -24,6 +26,8 @@ const cargo = (id: string, cambios: Partial<CargoDeContrasena> = {}): CargoDeCon
   saldo: '100.00',
   pagado: '0.00',
   comprometido: '0.00',
+  disponible: cambios.saldo ?? '100.00',
+  comprometidoHasta: null,
   retencionesPorPracticar: null,
   sobreUmbralDeBancarizacion: false,
   ...cambios,
@@ -46,9 +50,20 @@ describe('registrar pago desde la contraseña', () => {
 
   it('se ofrece con cargos autorizados con saldo y algún permiso de pagar', () => {
     expect(puedeRegistrarPago(ficha(), puedeTodo)).toBe(true);
-    expect(puedeRegistrarPago(ficha(), (permiso) => permiso === 'cuentas-por-pagar.pagos.aplicar-a-apertura')).toBe(
-      true,
-    );
+    const soloApertura = (permiso: string) =>
+      ['cuentas-por-pagar.pagos.ver', 'cuentas-por-pagar.pagos.aplicar-a-apertura'].includes(permiso);
+    const inicial = ficha({ cargos: [cargo('a', { origen: 'saldo_inicial' })] });
+    expect(puedeRegistrarPago(inicial, soloApertura)).toBe(true);
+  });
+
+  it('con solo la apertura no se ofrece si la contraseña no tiene saldos iniciales', () => {
+    const soloApertura = (permiso: string) =>
+      ['cuentas-por-pagar.pagos.ver', 'cuentas-por-pagar.pagos.aplicar-a-apertura'].includes(permiso);
+    expect(puedeRegistrarPago(ficha(), soloApertura)).toBe(false);
+  });
+
+  it('sin poder ver Pagos no se ofrece, porque la pantalla lo exige', () => {
+    expect(puedeRegistrarPago(ficha(), (permiso) => permiso !== 'cuentas-por-pagar.pagos.ver')).toBe(false);
   });
 
   it('no se ofrece sin permiso, sin saldo, sin autorizar ni en una contraseña anulada', () => {
@@ -61,6 +76,12 @@ describe('registrar pago desde la contraseña', () => {
   it('solo cuenta lo autorizado con saldo', () => {
     const cargos = [cargo('a'), cargo('b', { estado: 'registrado' }), cargo('c', { saldo: '0.00' })];
     expect(cargosPagables({ cargos }).map(({ documentoId }) => documentoId)).toEqual(['a']);
+  });
+
+  it('un cargo todo comprometido con posfechado debe, pero no se ofrece pagar', () => {
+    const cubierto = cargo('a', { comprometido: '100.00', disponible: '0.00' });
+    expect(cargosPagables({ cargos: [cubierto] })).toEqual([]);
+    expect(puedeRegistrarPago(ficha({ cargos: [cubierto] }), puedeTodo)).toBe(false);
   });
 
   it('lleva al pago nuevo con el proveedor y la contraseña abiertos', () => {
@@ -115,5 +136,34 @@ describe('sección Pagos de la ficha', () => {
 
   it('sin pagos queda vacío', () => {
     expect(filasDePagosDeLaContrasena({ pagos: [] })).toEqual([]);
+  });
+});
+
+describe('pagar en efectivo desde la contraseña', () => {
+  const permisos =
+    (...dados: string[]) =>
+    (permiso: string) =>
+      dados.includes(permiso);
+  const TODOS = permisos('cuentas-por-pagar.pagos.pagar-en-efectivo', 'cuentas-por-pagar.retiros.ver');
+
+  it('se ofrece con cargos por pagar y los permisos de repartir efectivo y ver retiros', () => {
+    expect(puedePagarEnEfectivo(ficha(), TODOS)).toBe(true);
+  });
+
+  it('sin alguno de los dos permisos no se ofrece', () => {
+    expect(puedePagarEnEfectivo(ficha(), permisos('cuentas-por-pagar.pagos.pagar-en-efectivo'))).toBe(false);
+    expect(puedePagarEnEfectivo(ficha(), permisos('cuentas-por-pagar.retiros.ver'))).toBe(false);
+  });
+
+  it('no se ofrece en una contraseña anulada ni sin nada por pagar', () => {
+    expect(puedePagarEnEfectivo(ficha({ estado: 'anulada' }), TODOS)).toBe(false);
+    expect(puedePagarEnEfectivo(ficha({ cargos: [cargo('a', { saldo: '0.00' })] }), TODOS)).toBe(false);
+  });
+
+  it('lleva al reparto con el proveedor y la contraseña, y ahí se escoge el retiro', () => {
+    expect(destinoDePagoEnEfectivo({ id: 'c1', proveedorId: 'p1' })).toEqual({
+      name: 'cuentas-por-pagar.pagos.efectivo',
+      query: { proveedorId: 'p1', contrasenaId: 'c1' },
+    });
   });
 });

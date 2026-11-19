@@ -352,6 +352,13 @@ que su módulo esté **activo en la cuenta** del operador (puerto
 módulos inactivos. Registrar dos manejadores para la misma orden es un error de
 programación (`ManejadorDuplicadoParaLaOrden`, se detecta al registrar).
 
+**Pregunta a todos** (`mediador.preguntarATodos` y `mediador.responder`, mapa `PreguntasEntreModulos`): quien necesita
+juntar lo que todos los módulos activos tienen que decir de algo (hoy, Empresas antes de cerrar la carga inicial,
+`empresas.revisar_cierre_de_carga`) hace la pregunta y recibe las respuestas **no nulas** en el orden de registro; el
+módulo que no tiene nada que decir responde `null`. Corre en la transacción de quien pregunta, se salta los módulos
+inactivos y, si un manejador lanza, el error se propaga y se deshace todo. Un módulo no puede responder dos veces la misma
+pregunta (`ManejadorDuplicadoParaLaPregunta`). `retirarManejadoresDe` también quita las respuestas.
+
 ## 5. Cliente (Vue)
 
 ```

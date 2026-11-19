@@ -1,0 +1,3 @@
+ALTER TABLE "empresas"."cargas_iniciales" ADD COLUMN "balance_de_apertura_archivo_id" uuid;--> statement-breakpoint
+ALTER TABLE "empresas"."cargas_iniciales" ADD CONSTRAINT "cargas_iniciales_balance_de_apertura_archivo_id_archivos_id_fk" FOREIGN KEY ("balance_de_apertura_archivo_id") REFERENCES "core"."archivos"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "empresas"."cargas_iniciales" ADD CONSTRAINT "cargas_iniciales_balance_de_apertura_unico" UNIQUE("balance_de_apertura_archivo_id");

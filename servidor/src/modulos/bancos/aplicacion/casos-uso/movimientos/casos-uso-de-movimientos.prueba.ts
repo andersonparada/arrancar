@@ -121,7 +121,7 @@ describe('sobregiro', () => {
     await casos.crear.ejecutar(operador, nota({ monto: '100.10' }));
     await casos.crear.ejecutar(operador, nota({ tipo: 'debito', monto: '100.10' }));
 
-    await expect(casos.crear.ejecutar(operador, nota({ tipo: 'debito', monto: '0.01' }))).rejects.toThrow('Q -0.01');
+    await expect(casos.crear.ejecutar(operador, nota({ tipo: 'debito', monto: '0.01' }))).rejects.toThrow('-Q 0.01');
   });
 
   it('al corregir cuenta solo la diferencia', async () => {

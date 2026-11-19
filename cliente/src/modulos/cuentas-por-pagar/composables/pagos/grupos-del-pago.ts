@@ -10,7 +10,7 @@ export interface GrupoDelPago {
   cargos: CargoParaPagar[];
   /** Lo que el pago entrega dentro de esta contraseña, en centavos. */
   pagando: number;
-  /** Lo que se debe de sus cargos pagables, con dos decimales. */
+  /** Lo que se puede pagar de sus cargos (lo disponible, sin lo comprometido), con dos decimales. */
   porPagar: string;
 }
 
@@ -25,7 +25,7 @@ function grupoDe(edicion: EdicionDePago, contrasena: ParaPagar['contrasenas'][nu
     ...contrasena,
     cargos,
     pagando: sumar(cargos, (cargo) => centavosDe(edicion.montos[cargo.id] ?? '') ?? 0),
-    porPagar: textoDeCentavos(sumar(cargos, (cargo) => centavosDe(cargo.saldo) ?? 0)),
+    porPagar: textoDeCentavos(sumar(cargos, (cargo) => centavosDe(cargo.disponible) ?? 0)),
   };
 }
 

@@ -18,6 +18,7 @@ function intercambioDelReporte(reporte: ReporteDeCorrelativos) {
     columnas: columnasDelReporteDeCorrelativos,
     validar: () => ({ errores: [] }),
     listar: async (operador, filtro) => aFilasExportadasDeCorrelativos(await reporte.ejecutar(operador, filtro ?? {})),
+    soloExportar: true,
     crear: () => {
       throw new Error('El reporte de correlativos no se importa.');
     },

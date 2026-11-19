@@ -3,9 +3,11 @@ import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { CargaInicial } from './carga-inicial.js';
 import type { EmpresaId } from './empresa.js';
 import {
+  BalanceDeAperturaFijo,
   CargaInicialAbierta,
   CargaInicialCerrada,
   FechaDeInicioInvalida,
+  MotivoDeCierreInvalido,
   MotivoDeReaperturaInvalido,
 } from './errores.js';
 
@@ -22,7 +24,12 @@ describe('fecha de inicio', () => {
   it('nace abierta con la fecha indicada', () => {
     const carga = CargaInicial.iniciar(empresaId, '2026-01-01');
 
-    expect(carga.instantanea()).toEqual({ empresaId, fechaDeInicio: '2026-01-01', cierre: null });
+    expect(carga.instantanea()).toEqual({
+      empresaId,
+      fechaDeInicio: '2026-01-01',
+      cierre: null,
+      balanceDeAperturaArchivoId: null,
+    });
     expect(carga.estaCerrada).toBe(false);
   });
 
@@ -58,6 +65,53 @@ describe('cerrar la carga inicial', () => {
 
   it('no se cierra dos veces', () => {
     expect(() => cargaCerrada().cerrar(cierre)).toThrow(CargaInicialCerrada);
+  });
+});
+
+describe('motivo del cierre', () => {
+  it('es opcional y sin espacios sobrantes', () => {
+    expect(CargaInicial.motivoDeCierre(undefined)).toBeNull();
+    expect(CargaInicial.motivoDeCierre(null)).toBeNull();
+    expect(CargaInicial.motivoDeCierre('')).toBeNull();
+    expect(CargaInicial.motivoDeCierre('  Se cierra así  ')).toBe('Se cierra así');
+  });
+
+  it('rechaza solo espacios o más de 500 caracteres', () => {
+    expect(() => CargaInicial.motivoDeCierre('   ')).toThrow(MotivoDeCierreInvalido);
+    expect(() => CargaInicial.motivoDeCierre('x'.repeat(501))).toThrow(MotivoDeCierreInvalido);
+    expect(CargaInicial.motivoDeCierre('x'.repeat(500))).toHaveLength(500);
+  });
+});
+
+describe('balance de apertura', () => {
+  it('con la carga abierta se adjunta, se reemplaza (devuelve el anterior) y se quita', () => {
+    const carga = CargaInicial.iniciar(empresaId, '2026-01-01');
+
+    expect(carga.adjuntarBalanceDeApertura('a')).toBeNull();
+    expect(carga.adjuntarBalanceDeApertura('b')).toBe('a');
+    expect(carga.tieneBalanceDeApertura).toBe(true);
+    expect(carga.quitarBalanceDeApertura()).toBe('b');
+    expect(carga.tieneBalanceDeApertura).toBe(false);
+    expect(carga.quitarBalanceDeApertura()).toBeNull();
+  });
+
+  it('con la carga cerrada solo se adjunta si falta: reemplazar y quitar dan BalanceDeAperturaFijo', () => {
+    const sinBalance = cargaCerrada();
+    expect(sinBalance.adjuntarBalanceDeApertura('a')).toBeNull();
+
+    expect(() => sinBalance.adjuntarBalanceDeApertura('b')).toThrow(BalanceDeAperturaFijo);
+    expect(() => sinBalance.exigirPoderAdjuntarElBalance()).toThrow(BalanceDeAperturaFijo);
+    expect(() => sinBalance.quitarBalanceDeApertura()).toThrow(BalanceDeAperturaFijo);
+  });
+
+  it('reabrir no quita el balance', () => {
+    const carga = CargaInicial.iniciar(empresaId, '2026-01-01');
+    carga.adjuntarBalanceDeApertura('a');
+    carga.cerrar(cierre);
+
+    carga.reabrir('Corregir');
+
+    expect(carga.instantanea().balanceDeAperturaArchivoId).toBe('a');
   });
 });
 

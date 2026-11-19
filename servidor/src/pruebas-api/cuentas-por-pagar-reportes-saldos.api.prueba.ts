@@ -6,11 +6,7 @@
 import ExcelJS from 'exceljs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { anularAjuste } from './soporte/cuentas-por-pagar-notas.js';
-import {
-  anularDocumentoEnLaBase,
-  anularPagoEnLaBase,
-  anularReintegroEnLaBase,
-} from './soporte/cuentas-por-pagar-reportes.js';
+import * as anulaciones from './soporte/cuentas-por-pagar-reportes.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { HOY, nitValido } from './soporte/escenario-de-documentos.js';
 import { CORTE, prepararMundoDeSaldos, type MundoDeSaldos } from './soporte/escenario-de-reportes-de-saldos.js';
@@ -125,10 +121,13 @@ describe('R1: saldos por proveedor al 31 de octubre', () => {
 
     expect(r1.avisos).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ codigo: 'emitidos_antes_del_inicio', mensaje: expect.stringContaining('Q1,120.00') }),
+        expect.objectContaining({
+          codigo: 'emitidos_antes_del_inicio',
+          mensaje: expect.stringContaining('Q 1,120.00'),
+        }),
         expect.objectContaining({
           codigo: 'registrados_despues_del_corte',
-          mensaje: expect.stringContaining('Q80.00'),
+          mensaje: expect.stringContaining('Q 80.00'),
         }),
       ]),
     );
@@ -167,13 +166,15 @@ describe('invariantes entre R1, R2 y el cuadre de saldos iniciales', () => {
     );
   });
 
-  it('3: con el corte de hoy, el disponible de cada cargo es el saldo de la lista de Documentos', async () => {
+  it('3: con el corte de hoy, el saldo de cada cargo es el de la lista de Documentos y su disponible, el de la ficha', async () => {
     const r2 = await documentos(`corte=${HOY}&limite=200`);
 
     expect(r2.filas.length).toBeGreaterThan(0);
     for (const fila of r2.filas) {
       const ficha = await propietario().get(`/api/cuentas-por-pagar/documentos/${fila.id}`);
-      expect(Number(fila.saldo) - Number(fila.comprometido), fila.numero).toBe(Number(ficha.cuerpo.saldo));
+      expect(fila.saldo, fila.numero).toBe(ficha.cuerpo.saldo);
+      expect(Number(fila.saldo) - Number(fila.comprometido), fila.numero).toBe(Number(ficha.cuerpo.disponible));
+      expect(fila.estadoDePago, fila.numero).toBe(ficha.cuerpo.estadoDePago);
     }
   });
 });
@@ -207,7 +208,7 @@ describe('R2: documentos por pagar al 31 de octubre', () => {
       contrasena: null,
     });
     const f3 = r2.filas.find((fila: { numero: string }) => fila.numero === 'F3');
-    expect(f3).toMatchObject({ saldo: '300.00', comprometido: '100.00', estadoDePago: 'en_parte' });
+    expect(f3).toMatchObject({ saldo: '300.00', comprometido: '100.00', estadoDePago: 'comprometido_en_parte' });
     expect(f3.contrasena).toMatchObject({ pagoPrometido: '2026-03-01' });
   });
 
@@ -216,7 +217,8 @@ describe('R2: documentos por pagar al 31 de octubre', () => {
     expect(numeros(await documentos(`corte=${CORTE}&venceHasta=2026-11-15`))).toEqual(['F1', 'E1']);
     expect((await documentos(`corte=${CORTE}&sinContrasena=true`)).total).toBe(5);
     expect(numeros(await documentos(`corte=${CORTE}&estadoDePago=pagado`))).toEqual(['G1']);
-    expect((await documentos(`corte=${CORTE}&estadoDePago=en_parte`)).total).toBe(3);
+    expect((await documentos(`corte=${CORTE}&estadoDePago=en_parte`)).total).toBe(2);
+    expect(numeros(await documentos(`corte=${CORTE}&estadoDePago=comprometido_en_parte`))).toEqual(['F3']);
     expect(numeros(await documentos(`corte=${CORTE}&conRetencionesPorPracticar=true&origen=saldo_inicial`))).toEqual([
       'E1',
     ]);
@@ -273,10 +275,10 @@ describe('4: un corte pasado no cambia al anular después', () => {
     const antes = await saldos(`corte=${CORTE}`);
     const documentosAntes = await documentos(`corte=${CORTE}&limite=200`);
 
-    await anularPagoEnLaBase(m.pagoQueSeAnula);
+    await anulaciones.anularPagoEnLaBase(m.pagoQueSeAnula);
     await anularAjuste(m.escenario, m.ajusteQueSeAnula);
-    await anularReintegroEnLaBase(m.reintegroQueSeAnula);
-    await anularDocumentoEnLaBase(m.delLibro);
+    await anulaciones.anularReintegroEnLaBase(m.reintegroQueSeAnula);
+    await anulaciones.anularDocumentoEnLaBase(m.delLibro);
 
     expect(await saldos(`corte=${CORTE}`)).toEqual(antes);
     expect(await documentos(`corte=${CORTE}&limite=200`)).toEqual(documentosAntes);

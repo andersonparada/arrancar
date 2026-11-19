@@ -1,4 +1,5 @@
 import { sql, type SQL } from 'drizzle-orm';
+import { expresionDeEstadoDePago } from './expresion-de-estado-de-pago.js';
 import type { BaseDelCorte, FiltroDeAutorizacion } from '../../aplicacion/puertos/puertos-de-saldos-al-corte.js';
 
 /**
@@ -101,10 +102,6 @@ function reintegrosAlCorte({ empresaId, corte }: ParametrosDeCorte): SQL {
      group by ar.nota_id)`;
 }
 
-/** Cómo va el pago de un cargo: la misma regla de `estadoDePagoDe`, para poder filtrar por ella. */
-const ESTADO_DE_PAGO = `case when saldo <= 0 then case when comprometido > 0 then 'comprometido' else 'pagado' end
-       when pagado + comprometido > 0 then 'en_parte' else 'pendiente' end`;
-
 /** Cada documento con su saldo al corte (cargo: neto menos rebajas; nota: base menos rebajas) y sus rebajas. */
 function saldosPorDocumento({ corte }: ParametrosDeCorte): SQL {
   return sql`saldos_base as (
@@ -121,7 +118,7 @@ function saldosPorDocumento({ corte }: ParametrosDeCorte): SQL {
       left join ajustado aj on aj.id = d.id
       left join pagado pg on pg.id = d.id
       left join reintegrado re on re.id = d.id),
-  saldos as (select *, ${sql.raw(ESTADO_DE_PAGO)} as estado_de_pago from saldos_base)`;
+  saldos as (select *, ${expresionDeEstadoDePago({ deuda: sql.raw('saldo'), pagado: sql.raw('pagado'), comprometido: sql.raw('comprometido') })} as estado_de_pago from saldos_base)`;
 }
 
 /**

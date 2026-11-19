@@ -170,6 +170,19 @@ describe('tareas que fallan se registran (S4)', () => {
     expect(fallos).toEqual(['al_deshacer:a/b/c.pdf:sin permiso']);
   });
 
+  it('las de deshacer de un punto de guardado que se deshace corren ahí y, si fallan, se registran', async () => {
+    fallos.length = 0;
+    const conPunto = registrada.ejecutar(enEmpresaA, () =>
+      registrada.aislar(async () => {
+        siSeDeshace(async () => Promise.reject(new Error('sin permiso')), 'a/b/d.pdf');
+        throw new FalloProvocado();
+      }),
+    );
+
+    await expect(conPunto).rejects.toThrow(FalloProvocado);
+    expect(fallos).toEqual(['al_deshacer:a/b/d.pdf:sin permiso']);
+  });
+
   it('las de confirmar corren todas, las que fallan se registran y la respuesta no cambia', async () => {
     fallos.length = 0;
     const orden: string[] = [];
@@ -218,6 +231,23 @@ describe('tareas para si se deshace', () => {
 
     await expect(conFallo).rejects.toThrow(FalloProvocado);
     expect(orden).toEqual(['segunda']);
+  });
+
+  it('una compensación ya corrida por un punto de guardado no vuelve a correr si se deshace toda la transacción', async () => {
+    const corridas: string[] = [];
+    const todo = unidadDeTrabajo.ejecutar(enEmpresaA, async () => {
+      siSeDeshace(async () => void corridas.push('afuera'));
+      await unidadDeTrabajo
+        .aislar(async () => {
+          siSeDeshace(async () => void corridas.push('adentro'));
+          throw new FalloProvocado();
+        })
+        .catch(() => undefined);
+      throw new FalloProvocado();
+    });
+
+    await expect(todo).rejects.toThrow(FalloProvocado);
+    expect(corridas).toEqual(['adentro', 'afuera']);
   });
 
   it('fuera de una unidad de trabajo avisa que no la dejó pendiente', () => {

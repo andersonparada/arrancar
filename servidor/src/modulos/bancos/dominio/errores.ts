@@ -1,3 +1,4 @@
+import { montoLegible } from '../../core/compartido/dominio/monto-legible.js';
 import { DatoInvalido, ReglaDeNegocioInfringida } from '../../core/compartido/dominio/errores.js';
 
 export class MontoInvalido extends DatoInvalido {
@@ -60,7 +61,7 @@ export class SaldoInsuficiente extends ReglaDeNegocioInfringida {
   readonly codigo = 'saldo_insuficiente';
 
   constructor(saldoQueQuedaria: string) {
-    super(`La cuenta quedaría con saldo de Q ${saldoQueQuedaria} y esta empresa no permite sobregiros.`);
+    super(`La cuenta quedaría con saldo de ${montoLegible(saldoQueQuedaria)} y esta empresa no permite sobregiros.`);
   }
 }
 

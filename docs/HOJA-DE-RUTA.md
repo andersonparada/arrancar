@@ -71,6 +71,9 @@ fecha de corte por empresa** y deben cuadrar entre sí y con el balance de apert
   avisos de pago»), copia a la empresa, plantilla del correo, adjuntos (constancia de retención,
   comprobante), servidor de correo por instalación (SMTP en la configuración, solo superacceso),
   bitácora de envíos y reintentos. Relacionado: el correo de usuarios es opcional (solo informes).
+- **Diseño propuesto (2026-11-18), pendiente de las respuestas del usuario:**
+  `docs/modulos/diseno-aviso-de-pago-por-correo.md` (correo saliente en `core/correo`, marca en contactos y aviso en
+  Cuentas por pagar; 18 preguntas en su §12). Revisión de seguridad: `docs/modulos/revision-seguridad-correo-2026-11-18.md`.
 
 ### Plazo de crédito del proveedor (2026-10-04)
 
@@ -203,8 +206,8 @@ Quedan preguntas abiertas en la sección «Preguntas para el usuario» de cada p
   cuenta, impresión de cheques y vouchers.
 - Conciliación: probarla completa en el navegador (la demo de septiembre es del
   diseño viejo: eliminarla y rehacerla).
-- Excel de Clientes, Proveedores, Categorías de proveedor y Empresas (sin empezar).
-- Selector de empresa del encabezado sin buscador (no usa `CampoSelector`).
+- Excel de Clientes, Proveedores, Categorías de proveedor y Empresas: hecho (2026-11-18).
+- Selector de empresa del encabezado con buscador (`CampoSelector`, variante de marca): hecho (2026-11-18).
 - Con Contabilidad: en qué otros casos se permite eliminar (registros no
   contabilizados de un período abierto); cuenta contable por defecto del proveedor
   por empresa; partidas de provisión y reversión.

@@ -3,9 +3,12 @@
  * `blanquear`: un cheque emitido por error vuelve a disponible y su movimiento se elimina (Bancos).
  * `corregir`: se cambió dinero o fechas de un registro; `anterior` guarda cómo estaba (Bancos: notas y saldo inicial).
  * `reabrir`: se reabrió algo que estaba cerrado, con su motivo (Empresas: la carga inicial).
+ * `cerrar`: se cerró algo con su revisión como constancia (Empresas: la carga inicial; `anterior` lleva lo revisado).
  * `descartar`: se apartó una fila de una bandeja de trabajo sin registrarla, con su motivo (Libro de compras: DTE recibidos).
  * `autorizar`: se autorizó algo que la misma persona ingresó o completó, excepción a la separación de funciones (Cuentas por pagar).
+ * `adjuntar`: se adjuntó un documento de respaldo; `anterior` lleva el documento como quedó (Empresas: balance de apertura).
  * `ajustar`: se dio de baja o se trasladó un saldo a favor, con su causa (Cuentas por pagar: ajustes de notas de crédito).
+ * `cambiar_vencimiento`: se movió el vencimiento de un cargo, con el antes y el después (Cuentas por pagar).
  */
 export type AccionAuditada =
   | 'eliminar'
@@ -16,11 +19,14 @@ export type AccionAuditada =
   | 'blanquear'
   | 'corregir'
   | 'reabrir'
+  | 'cerrar'
   | 'descartar'
   | 'autorizar'
   | 'asignar'
   | 'quitar'
-  | 'ajustar';
+  | 'adjuntar'
+  | 'ajustar'
+  | 'cambiar_vencimiento';
 
 /** Una baja (o su reversa): qué registro, qué se hizo, por qué y cómo estaba antes. */
 export interface EntradaDeAuditoria {

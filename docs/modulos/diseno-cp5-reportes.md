@@ -236,7 +236,9 @@ CP5): marcar las aplicaciones de notas **no vigentes** en vez de borrarlas, para
 
 1. Σ saldos netos por proveedor (R1) = Σ saldos de cargos − Σ saldos libres (R2 y R4) al mismo corte.
 2. Saldo final del estado de cuenta (R3) del proveedor P al día `hasta` = saldo neto de P en R1 con `corte = hasta`.
-3. Con `corte = hoy`, «Disponible para pagar» de cada documento = saldo de la lista de Documentos.
+3. Con `corte = hoy`, «Disponible para pagar» de cada documento = saldo de la lista de Documentos. **Cambia con la
+   adenda del 2026-11-18 de `diseno-cp4-pagos.md`:** después de CP4-D3, el saldo de R2 es igual al saldo de la lista (la
+   deuda), y lo disponible de R2, a lo disponible de la lista.
 4. Un corte pasado no cambia al anular después un pago, un reintegro, un ajuste o un documento (§2.3). Excepciones
    esperadas, con su aviso o leyenda: un documento con fecha de efecto hasta el corte registrado después (§2.2) y un
    cheque posfechado cuya conciliación se autoriza después (§2.1).
@@ -610,7 +612,7 @@ Prefijo `/api/cuentas-por-pagar/reportes`. Dinero como texto con dos decimales; 
 
 | Ruta | Permiso (ver / exportar) | Consulta | Respuesta |
 |---|---|---|---|
-| `GET /saldos-por-proveedor` | `reportes-de-saldos` | `corte?`, `proveedorId?`, `autorizacion?`, `incluirSinSaldo?`, `orden?` | `{ corte, acreedores: FilaDeSaldoDto[], deudores: FilaDeSaldoDto[], totales, conciliacion?, avisos, leyendas }` (cada fila es un NIT con `fichas: FilaDeSaldoDto[]` si tiene más de una; `conciliacion` llega con CP5-5) |
+| `GET /saldos-por-proveedor` | `reportes-de-saldos` | `corte?`, `proveedorId?`, `autorizacion?`, `incluirSinSaldo?`, `orden?` | `{ corte, acreedores: FilaDeSaldoDto[], deudores: FilaDeSaldoDto[], totales, conciliacion?, avisos, leyendas }` (cada fila es un NIT con `fichas: FilaDeSaldoDto[]` si tiene más de una; `conciliacion: { saldoNetoDelAuxiliar, pagosPorAplicar, proveedoresNetoDePagosPorAplicar }` solo sin filtro de proveedor ni de autorización; CP5-5) |
 | `GET /documentos` | `reportes-de-saldos` | §4 R2 (`vista?` solo la usa el cliente para preajustar) | página `{ filas, total, totales }` |
 | `GET /estado-de-cuenta` | `reportes-de-saldos` | `proveedorId`, `desde`, `hasta`, `mostrarAnulados?`, `presentacion?` | `{ proveedor, presentacion, saldoAnterior, lineas, totales, alCorte?: { comprometido, disponible } }` (`alCorte` solo en la interna) |
 | `GET /saldos-a-favor` | `reportes-de-saldos` | `corte?`, `proveedorId?`, `incluirSinSaldo?` | `{ filas, totalesPorTramo, total }` |
@@ -620,7 +622,7 @@ Prefijo `/api/cuentas-por-pagar/reportes`. Dinero como texto con dos decimales; 
 | `GET /retiros-por-liquidar` | `reportes-de-pagos` | `corte?`, `custodio?` | `{ filas, total }` |
 | `GET /notas-sin-aplicar` | `reportes-de-pagos` | `corte?`, `cuentaBancariaId?` | `{ filas, total }` |
 | `GET /ajustes-del-mes` | `reportes-de-control` | `mes?`, `proveedorId?`, `causa?` | `{ mes, ajustes, anulacionesDeOtrosMeses, aplicacionesManuales, pagosAApertura, totales }` |
-| `GET /bancarizacion` | `reportes-de-control` | `desde?`, `hasta?`, `proveedorId?`, `soloConEfecto?` | `{ meses: [{ proveedor, mes, sumaDelMes, efectivo, pagos: [...] }], totales, umbral, leyendas }` |
+| `GET /bancarizacion` | `reportes-de-control` | `desde?`, `hasta?`, `proveedorId?`, `soloConEfecto?` | `{ desde, hasta, umbral, meses: [{ proveedorId, proveedorNombre, mes, sumaDelMes, efectivo, ivaEnRiesgo, costoNoDeducible, pagos: [...] }], documentosSobreElUmbral: [...], totales: { meses, documentos, total }, leyendas }` (CP5-5: `desde` y `hasta` son meses `AAAA-MM`; `soloConEfecto` sí por omisión) |
 | `GET /api/libro-de-compras/retenciones/pendientes` | `libro-de-compras.retenciones` | `hasta?`, `grupo?`, `proveedorId?` | `{ grupos, retenciones, porResolver }` |
 
 Errores nuevos (`dominio/errores-de-reportes.ts`, código propio, familia `DatoInvalido`): `CorteAnteriorAlInicio`

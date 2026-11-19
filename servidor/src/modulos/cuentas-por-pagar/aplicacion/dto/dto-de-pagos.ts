@@ -21,9 +21,13 @@ export const dtoDeLineaDePago = (linea: LineaDePago): LineaDePagoDto => ({
 const estaComprometido = ({ estado, fecha }: Pick<LineaDePago, 'estado' | 'fecha'>, hoy: string) =>
   estado === 'vigente' && fecha > hoy;
 
+const numeroDeChequeDe = ({ numeroDeCheque }: LineaDePago): string | null =>
+  typeof numeroDeCheque === 'number' ? String(numeroDeCheque) : null;
+
 export const dtoDePagoDelDocumento = (linea: LineaDePago, hoy: string): PagoDelDocumentoDto => ({
   ...dtoDeLineaDePago(linea),
   comprometido: estaComprometido(linea, hoy),
+  numeroDeCheque: numeroDeChequeDe(linea),
 });
 
 export const dtoDeReintegro = (linea: LineaDeReintegro): ReintegroDelDocumentoDto => ({
@@ -50,5 +54,6 @@ export function dtoDePagosDeLaContrasena(lineas: readonly LineaDePago[], hoy: st
     estado: linea.estado,
     monto: deCentavos(montoCentavos),
     comprometido: estaComprometido(linea, hoy),
+    numeroDeCheque: numeroDeChequeDe(linea),
   }));
 }

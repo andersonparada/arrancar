@@ -12,6 +12,7 @@ import {
 } from '../composables/pagos/avisos-del-pago';
 import { diferenciaOfrecible, residuoDelCargo } from '../composables/pagos/edicion-de-pago';
 import { centavosDe, textoDeCentavos } from '../composables/dinero';
+import { etiquetaDeComprometido, hayMontoPositivo } from '../composables/comprometido';
 import { tituloDeDocumento } from '../composables/detalles-de-documento';
 import type { CargoParaPagar } from '../servicios/tipos-de-pagos';
 
@@ -34,13 +35,14 @@ const pagando = computed(() => (centavosDe(monto.value) ?? 0) > 0);
 const diferencia = computed(() => diferenciaOfrecible(props.cargo, monto.value, props.tope));
 const sobrante = computed(() => residuoDelCargo(props.cargo, monto.value));
 const pasaDelTope = computed(() => sobrante.value > 0 && diferencia.value === null);
+const comprometido = computed(() => hayMontoPositivo(props.cargo.comprometido));
 const conRetencion = computed(() => (centavosDe(props.cargo.retencionPorDescontar) ?? 0) > 0);
 
 const escribir = (valor: string | number | null | undefined): void => {
   monto.value = valor === null || valor === undefined ? '' : String(valor);
 };
 const alternar = (): void => {
-  monto.value = pagando.value ? '' : props.cargo.saldo;
+  monto.value = pagando.value ? '' : props.cargo.disponible;
 };
 </script>
 
@@ -74,6 +76,11 @@ const alternar = (): void => {
           <template v-if="cargo.vencimiento"> · vence {{ formatearFecha(cargo.vencimiento) }}</template>
           · debe <strong>{{ formatearMonto(cargo.saldo) }}</strong>
         </p>
+        <p v-if="comprometido" class="mt-1 text-sm text-trigo-800 dark:text-trigo-200">
+          {{ etiquetaDeComprometido(cargo.comprometidoHasta) }}
+          {{ formatearMonto(cargo.comprometido) }} · disponible para pagar
+          <strong>{{ formatearMonto(cargo.disponible) }}</strong>
+        </p>
         <p v-if="conRetencion" class="mt-1 text-xs text-tierra-600 dark:text-tierra-300">
           Retención que se descontará con este pago: {{ formatearMonto(cargo.retencionPorDescontar) }} (el saldo ya
           viene sin ella).
@@ -92,7 +99,7 @@ const alternar = (): void => {
           @update:model-value="escribir"
         />
       </div>
-      <BotonBase variante="secundario" @click="escribir(cargo.saldo)">Todo</BotonBase>
+      <BotonBase variante="secundario" @click="escribir(cargo.disponible)">Todo</BotonBase>
     </div>
 
     <div v-if="puedeSaldar && diferencia !== null" class="mt-3 sm:ml-8">

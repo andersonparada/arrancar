@@ -24,7 +24,14 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
   },
   notasDeCredito: {
     titulo: 'Notas de crédito',
-    descripcion: 'Las notas de crédito de los proveedores y lo que queda a favor de la empresa en cada una.',
+    descripcion:
+      'Las notas de crédito de los proveedores y lo que queda a favor de la empresa en cada una. Marque las de un proveedor para registrar su reintegro.',
+    recibo: 'Recibo de reintegro',
+  },
+  plazos: {
+    titulo: 'Plazos de proveedores',
+    descripcion:
+      'Los días de crédito de cada proveedor y desde cuándo se cuentan. Para cambiarlos en bloque, exporte el Excel, corríjalo e impórtelo; uno por uno se editan en Proveedores.',
   },
   saldosIniciales: {
     titulo: 'Saldos iniciales',
@@ -65,8 +72,49 @@ export const VENTANAS_CUENTAS_POR_PAGAR = {
   pagos: {
     titulo: 'Pagos',
     nuevo: 'Nuevo pago',
+    descripcionDeLaLista:
+      'Lo pagado a los proveedores: busque un pago, vea qué documentos cubrió y, si hace falta, corríjalo, anúlelo o imprima su comprobante.',
+    ficha: 'Pago a proveedor',
+    comprobante: 'Comprobante de pago',
     descripcionDelNuevo:
       'Pague a un proveedor lo que ya autorizó: con cheque, transferencia o débito, una nota que ya está en Bancos, o dando por pagado lo que ya estaba pagado antes de la fecha de inicio.',
+  },
+  retiros: {
+    titulo: 'Retiros de efectivo',
+    descripcion:
+      'El efectivo que se sacó del banco para pagar a proveedores: cuánto queda en manos de cada custodio, qué falta por liquidar y a qué fecha.',
+    nuevo: 'Retirar efectivo',
+    ficha: 'Retiro de efectivo',
+    pagar: 'Pagar en efectivo',
+    descripcionDelPago:
+      'Reparta el efectivo de un retiro entre uno o varios proveedores: cada uno recibe su pago y su recibo para firmar.',
+    elegir: 'Pagar en efectivo: elija el retiro',
+    recibos: 'Recibos de pago en efectivo',
+  },
+  pagosRealizados: {
+    titulo: 'Pagos realizados',
+    descripcion: 'Los pagos de un rango de fechas, una fila por documento pagado, con quién lo registró y autorizó.',
+  },
+  chequesPosfechados: {
+    titulo: 'Cheques posfechados',
+    descripcion: 'Cheques ya entregados cuya fecha aún no llega: lo que está comprometido a una fecha de corte.',
+  },
+  ajustesDelMes: {
+    titulo: 'Ajustes del mes',
+    descripcion: 'Lo que cambió en Cuentas por pagar durante un mes, para revisarlo al cerrar.',
+  },
+  retirosPorLiquidar: {
+    titulo: 'Retiros de efectivo por liquidar',
+    descripcion: 'El efectivo que los custodios tenían sin liquidar a una fecha de corte, para cuadrar la caja.',
+  },
+  notasSinAplicar: {
+    titulo: 'Notas de débito sin aplicar',
+    descripcion:
+      'Notas de débito pagadas en Bancos que aún no se aplicaron a un documento: el saldo de la transitoria.',
+  },
+  bancarizacion: {
+    titulo: 'Pagos en efectivo sobre el umbral',
+    descripcion: 'Pagos en efectivo que pueden hacer perder crédito fiscal o costo deducible, por mes y por documento.',
   },
   // generador: ventanas
 } as const;
@@ -99,7 +147,10 @@ export const CAUSAS_DE_ANULACION: Record<CausaDeAnulacion, string> = {
 };
 
 export const AYUDA_DE_DIAS_DE_CREDITO =
-  'Días que da el proveedor para pagar, contados desde la fecha de emisión de cada factura. Vacío es un mes; 0 es de contado.';
+  'Días que da el proveedor para pagar, contados desde la fecha de emisión de cada factura. Vacío usa el plazo por omisión de la empresa; 0 es de contado.';
+
+export const AYUDA_DEL_PLAZO_NUEVO =
+  'Vale para los documentos que se reciban desde ahora; los ya recibidos conservan su vencimiento.';
 
 export const AYUDA_DE_CONTAR_DESDE_LA_RECEPCION =
   'Úselo si el plazo de este proveedor corre desde que la empresa recibe la factura y no desde que se emite.';

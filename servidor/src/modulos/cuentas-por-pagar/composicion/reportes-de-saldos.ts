@@ -22,6 +22,7 @@ import {
   type FilaExportadaDeSaldos,
 } from '../http/saldos-por-proveedor.columnas.js';
 import { CargaInicialEnMediador } from '../infraestructura/carga-inicial-en-mediador.js';
+import { NotasSinAplicarDrizzle } from '../infraestructura/persistencia/notas-sin-aplicar.drizzle.js';
 import { ConsultaDeSaldosAlCorte } from '../infraestructura/persistencia/saldos-al-corte.drizzle.js';
 
 const noSeImporta = () => {
@@ -42,6 +43,7 @@ function intercambios(saldos: ReporteDeSaldosPorProveedor, documentos: ReporteDe
       columnas: columnasDeSaldosPorProveedor,
       validar: () => ({ errores: [] }),
       listar: async (operador, filtro) => aFilasExportadasDeSaldos(await saldos.ejecutar(operador, conFiltro(filtro))),
+      soloExportar: true,
       crear: noSeImporta,
     }),
     documentos: crearIntercambio<FilaExportadaDeDocumentos, never, FiltroDeDocumentosAUnaFechaSolicitado>({
@@ -52,6 +54,7 @@ function intercambios(saldos: ReporteDeSaldosPorProveedor, documentos: ReporteDe
         const { solicitud } = separarPaginacion(conFiltro(filtro));
         return aFilasExportadasDeDocumentos(await documentos.ejecutar(operador, solicitud, null));
       },
+      soloExportar: true,
       crear: noSeImporta,
     }),
   };
@@ -66,7 +69,10 @@ export function rutasDeReportesDeSaldosComponidas(): FastifyPluginAsync {
     cargaInicial: new CargaInicialEnMediador(),
     consultas: new ConsultaDeSaldosAlCorte(),
   };
-  const saldosPorProveedor = new ReporteDeSaldosPorProveedor(dependencias);
+  const saldosPorProveedor = new ReporteDeSaldosPorProveedor({
+    ...dependencias,
+    notasSinAplicar: new NotasSinAplicarDrizzle(),
+  });
   const documentos = new ReporteDeDocumentosAUnaFecha(dependencias);
   return rutasDeReportesDeSaldos(
     new ReportesDeSaldosControlador({ saldosPorProveedor, documentos }),

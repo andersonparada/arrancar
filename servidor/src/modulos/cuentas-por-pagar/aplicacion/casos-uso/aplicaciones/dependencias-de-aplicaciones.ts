@@ -2,7 +2,7 @@ import type { Auditoria } from '../../../../core/compartido/aplicacion/auditoria
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
-import { saldoDe } from '../../../dominio/saldos.js';
+import { saldoDe, type SaldoDelDocumento } from '../../../dominio/saldos.js';
 import { aplicadoDe } from '../../dto/dto-de-documento-por-pagar.js';
 import type { ConsultasDeDocumentos, FilaDeDocumento } from '../../puertos/puertos-de-consultas.js';
 import type {
@@ -37,6 +37,7 @@ export interface DependenciasParaListarCargos {
   cargaInicial: CargaInicial;
   fechasDeEntrada: FechasDeEntrada;
   umbral: UmbralDeBancarizacion;
+  reloj: Reloj;
 }
 
 /** Lo que necesita quitar una aplicación hecha a mano. */
@@ -49,7 +50,12 @@ export interface DependenciasParaQuitar {
 }
 
 /** Lo que falta por pagar de un cargo, o el saldo libre de una nota, según la fila. */
-export const saldoDeLaFila = (fila: FilaDeDocumento): number => saldoDe(fila.documento, aplicadoDe(fila)).saldoCentavos;
+export const saldoDeLaFila = (fila: FilaDeDocumento): number =>
+  saldoDe(fila.documento, aplicadoDe(fila)).disponibleCentavos;
+
+/** Los saldos de la fila a `hoy`: la deuda, lo comprometido con pagos posfechados y lo disponible. */
+export const saldosDeLaFila = (fila: FilaDeDocumento, hoy: string): SaldoDelDocumento =>
+  saldoDe(fila.documento, aplicadoDe(fila, hoy));
 
 /** La fila de un documento con sus cuentas. @throws RecursoNoEncontrado si no existe o es de otra empresa. */
 export async function filaExistente(

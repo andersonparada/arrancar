@@ -3,7 +3,9 @@ import { computed } from 'vue';
 import { formatearFecha, formatearMonto, formatearTexto } from '@/modulos/core/utilidades/formato';
 import { formatearNumeroDeComprobante } from '../../composables/comunes/numero-de-comprobante';
 import { marcaDeReversion } from '../../composables/movimientos/estado-de-reversion';
-import { textoDeOrigen } from '../../composables/movimientos/origen-y-causa';
+import { RouterLink } from 'vue-router';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
+import { destinoDeOrigenDelPago, textoDeOrigen } from '../../composables/movimientos/origen-y-causa';
 import { creditoDeFila, debitoDeFila, documentoDeFila } from '../../composables/movimientos/fila-del-reporte';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import type { FilaDelReporte, ReporteDeMovimientos } from '../../servicios/movimientos.api';
@@ -21,7 +23,12 @@ const props = defineProps<{
   puedeReclasificar: (fila: FilaDelReporte) => boolean;
 }>();
 const emit = defineEmits<{ reclasificar: [fila: FilaDelReporte] }>();
+const sesion = usarSesion();
 const conAcciones = computed(() => props.reporte.filas.some(props.puedeReclasificar));
+
+/** La columna de acciones queda fija al borde derecho: no se pierde al desplazar una tabla ancha (1280 px). */
+const PEGADA_A_LA_DERECHA =
+  'sticky right-0 bg-white px-3 shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.15)] print:hidden dark:bg-tierra-800';
 
 const CLASE_DE_MARCA = {
   Anulado: 'text-red-500',
@@ -46,7 +53,9 @@ const CLASE_DE_MARCA = {
           <th class="px-4 py-3 text-right font-medium">Débito</th>
           <th class="px-4 py-3 text-right font-medium">Crédito</th>
           <th v-if="conCuenta" class="px-4 py-3 text-right font-medium">Saldo</th>
-          <th v-if="conAcciones" class="px-4 py-3 font-medium print:hidden"><span class="sr-only">Acciones</span></th>
+          <th v-if="conAcciones" :class="[PEGADA_A_LA_DERECHA, 'py-3 font-medium']">
+            <span class="sr-only">Acciones</span>
+          </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-tierra-100 dark:divide-tierra-700">
@@ -81,13 +90,22 @@ const CLASE_DE_MARCA = {
             <p v-for="linea in fila.desglose" :key="linea.conceptoId" class="text-xs text-tierra-500 no-underline">
               {{ linea.concepto }}: {{ formatearMonto(linea.monto) }}
             </p>
-            <p v-if="textoDeOrigen(fila)" class="text-xs text-tierra-500 no-underline">{{ textoDeOrigen(fila) }}</p>
+            <p v-if="textoDeOrigen(fila)" class="text-xs text-tierra-500 no-underline">
+              <RouterLink
+                v-if="destinoDeOrigenDelPago(fila) && sesion.puede('cuentas-por-pagar.pagos.ver')"
+                :to="destinoDeOrigenDelPago(fila)!"
+                class="underline underline-offset-2 print:no-underline"
+              >
+                {{ textoDeOrigen(fila) }}
+              </RouterLink>
+              <template v-else>{{ textoDeOrigen(fila) }}</template>
+            </p>
           </td>
           <td class="px-4 py-2.5">{{ formatearTexto(fila.beneficiario) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(debitoDeFila(fila)) }}</td>
           <td class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(creditoDeFila(fila)) }}</td>
           <td v-if="conCuenta" class="px-4 py-2.5 text-right whitespace-nowrap">{{ formatearMonto(fila.saldo) }}</td>
-          <td v-if="conAcciones" class="px-4 py-2.5 text-right whitespace-nowrap no-underline print:hidden">
+          <td v-if="conAcciones" :class="[PEGADA_A_LA_DERECHA, 'py-2.5 text-right whitespace-nowrap no-underline']">
             <BotonBase
               v-if="puedeReclasificar(fila)"
               variante="secundario"

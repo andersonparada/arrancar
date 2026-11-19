@@ -3,7 +3,7 @@ import { superaElUmbralDeBancarizacion } from '../../dominio/aplicacion-manual.j
 import { numeroDeContrasena, proponerFechaDePago } from '../../dominio/contrasena.js';
 import type { DocumentoPorPagar } from '../../dominio/documento-por-pagar.js';
 import { anterioresAlInicioDe, saldoDe } from '../../dominio/saldos.js';
-import { estadoDePagoDe, pagadoYComprometido } from '../../dominio/pagos.js';
+import { estadoDePagoDe, pagadoYComprometido, posfechadosDe } from '../../dominio/pagos.js';
 import { claseDe } from '../../dominio/tipos-de-documento.js';
 import type { ContrasenaConDocumentos, ContrasenaGuardada } from '../puertos/puertos-de-contrasenas.js';
 import type { FilaDeDocumento } from '../puertos/puertos-de-consultas.js';
@@ -23,7 +23,8 @@ import { textoONulo } from './ficha-del-documento.dto.js';
 
 const AL_FINAL = '9999-12-31';
 
-const saldoDeLaFila = (fila: FilaDeDocumento) => saldoDe(fila.documento, aplicadoDe(fila));
+/** Los saldos de la fila; con `hoy` la deuda separa lo comprometido, sin él solo es fiable lo disponible. */
+const saldoDeLaFila = (fila: FilaDeDocumento, hoy?: string) => saldoDe(fila.documento, aplicadoDe(fila, hoy));
 
 /** Lo rebajado del cargo: notas aplicadas y, en un saldo inicial, lo pagado o rebajado antes de la fecha de inicio. */
 const rebajadoDe = (fila: FilaDeDocumento): number =>
@@ -66,16 +67,18 @@ export function dtoDeCargoDeContrasena(
   { umbralCentavos, hoy }: VistaDeContrasena,
 ): CargoDeContrasenaDto {
   const { documento } = fila;
-  const saldo = saldoDeLaFila(fila);
+  const saldo = saldoDeLaFila(fila, hoy);
   const { pagadoCentavos, comprometidoCentavos } = pagosDeLaFila(fila, hoy);
   return {
     ...identificacionDelCargo(documento),
     total: deCentavos(documento.totalCentavos),
     retenciones: deCentavos(documento.retencionesCentavos),
     rebajado: deCentavos(rebajadoDe(fila)),
-    saldo: deCentavos(saldo.saldoCentavos),
+    saldo: deCentavos(saldo.deudaCentavos),
+    disponible: deCentavos(saldo.disponibleCentavos),
     pagado: deCentavos(pagadoCentavos),
     comprometido: deCentavos(comprometidoCentavos),
+    comprometidoHasta: posfechadosDe(fila.pagosVigentes, hoy).comprometidoHasta,
     retencionesPorPracticar: textoONulo(documento.retencionesPorPracticarCentavos),
     sobreUmbralDeBancarizacion: superaElUmbralDeBancarizacion(documento.totalCentavos, umbralCentavos),
   };
@@ -89,7 +92,7 @@ function dtoDeNota(fila: FilaDeDocumento, aplicadoCentavos: number): NotaDeContr
     numero: documento.numero,
     fechaEmision: documento.fechaEmision,
     aplicadoEnLaContrasena: deCentavos(aplicadoCentavos),
-    saldoLibre: deCentavos(Math.max(saldoDeLaFila(fila).saldoCentavos, 0)),
+    saldoLibre: deCentavos(Math.max(saldoDeLaFila(fila).disponibleCentavos, 0)),
   };
 }
 
@@ -101,7 +104,8 @@ function totalesDe(cargos: readonly FilaDeDocumento[], hoy: string): TotalesDeCo
     rebajado: suma(rebajadoDe),
     pagado: suma((fila) => pagosDeLaFila(fila, hoy).pagadoCentavos),
     comprometido: suma((fila) => pagosDeLaFila(fila, hoy).comprometidoCentavos),
-    saldo: suma((fila) => saldoDeLaFila(fila).saldoCentavos),
+    saldo: suma((fila) => saldoDeLaFila(fila, hoy).deudaCentavos),
+    disponible: suma((fila) => saldoDeLaFila(fila, hoy).disponibleCentavos),
   };
 }
 
@@ -109,7 +113,7 @@ function totalesDe(cargos: readonly FilaDeDocumento[], hoy: string): TotalesDeCo
 function estadoDePagoDeLaContrasena(cargos: readonly FilaDeDocumento[], hoy: string): EstadoDePagoDto {
   const suma = (valor: (fila: FilaDeDocumento) => number) => cargos.reduce((s, fila) => s + valor(fila), 0);
   return estadoDePagoDe({
-    saldoCentavos: suma((fila) => saldoDeLaFila(fila).saldoCentavos),
+    deudaCentavos: suma((fila) => saldoDeLaFila(fila, hoy).deudaCentavos),
     pagadoCentavos: suma((fila) => pagosDeLaFila(fila, hoy).pagadoCentavos),
     comprometidoCentavos: suma((fila) => pagosDeLaFila(fila, hoy).comprometidoCentavos),
   });
@@ -161,7 +165,9 @@ export function dtoResumenDeContrasena(
   hoy: string,
 ): ContrasenaResumenDto {
   const cargos = documentos.filter(esCargo);
-  const saldoCentavos = cargos.reduce((suma, fila) => suma + saldoDeLaFila(fila).saldoCentavos, 0);
+  const saldos = cargos.map((fila) => saldoDeLaFila(fila, hoy));
+  const saldoCentavos = saldos.reduce((suma, { deudaCentavos }) => suma + deudaCentavos, 0);
+  const disponibleCentavos = saldos.reduce((suma, { disponibleCentavos }) => suma + disponibleCentavos, 0);
   return {
     id: contrasena.id,
     numero: numeroDeContrasena(contrasena.numero, contrasena.anioDeNumero),
@@ -170,6 +176,7 @@ export function dtoResumenDeContrasena(
     proveedorNombre: contrasena.proveedorNombre,
     documentos: documentos.length,
     saldo: deCentavos(saldoCentavos),
+    disponible: deCentavos(disponibleCentavos),
     estado: contrasena.estado,
     pagoVencido: contrasena.estado === 'vigente' && saldoCentavos > 0 && contrasena.fechaDePago < hoy,
     estadoDePago: contrasena.estado === 'vigente' ? estadoDePagoDeLaContrasena(cargos, hoy) : null,
@@ -183,7 +190,7 @@ function dtoDeNotaDisponible(fila: FilaDeDocumento): NotaDisponibleDto {
     serie: documento.serie,
     numero: documento.numero,
     fechaEmision: documento.fechaEmision,
-    saldoLibre: deCentavos(saldoDeLaFila(fila).saldoCentavos),
+    saldoLibre: deCentavos(saldoDeLaFila(fila).disponibleCentavos),
   };
 }
 

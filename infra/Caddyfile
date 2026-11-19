@@ -1,4 +1,17 @@
 {$DOMINIO} {
 	encode zstd gzip
+
+	# Tope de 20 MB por solicitud para toda la instalación (un PDF de documento pesa hasta 10 MB y una
+	# foto hasta 15 MB; la app aplica además sus propios topes por tipo de archivo).
+	request_body {
+		max_size 20MB
+	}
+
 	reverse_proxy app:3100
+
+	# Si se pasan de 20 MB, Caddy responde 413; se devuelve en el formato de errores de la API.
+	handle_errors 413 {
+		header Content-Type application/json
+		respond `{"error":{"codigo":"SOLICITUD_DEMASIADO_GRANDE","mensaje":"El archivo es demasiado grande: el límite es de 20 MB por envío.","detalles":null}}` 413
+	}
 }

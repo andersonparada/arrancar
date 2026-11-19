@@ -149,3 +149,11 @@ describe('el archivo del estado de cuenta en la conciliación', () => {
     expect(buena.estaAutorizada).toBe(true);
   });
 });
+
+describe('el mensaje de saldo que no coincide', () => {
+  it('escribe los montos con miles y espacio, como la pantalla', () => {
+    const error = new SaldoDelEstadoDeCuentaNoCoincide('12270.01', '12270.00', '-0.01');
+    expect(error.message).toContain('(Q 12,270.01)');
+    expect(error.message).toContain('(Q 12,270.00)');
+  });
+});

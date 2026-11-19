@@ -1,7 +1,18 @@
-import { Banknote, ClipboardCheck, FileClock, FileMinus, HandCoins, Inbox, Scale } from 'lucide-vue-next';
+import {
+  Banknote,
+  CalendarClock,
+  ClipboardCheck,
+  FileClock,
+  FileMinus,
+  HandCoins,
+  Inbox,
+  Receipt,
+  Scale,
+} from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_CUENTAS_POR_PAGAR, TITULO_SECCION_DE_PAGO, VENTANAS_CUENTAS_POR_PAGAR } from './textos';
 import { entradasDeReportes, rutasDeReportes } from './reportes-del-modulo';
+import { entradasDeRetiros, rutasDeRetiros } from './retiros-del-modulo';
 // generador: importaciones
 
 /** Rutas y menú del módulo Cuentas por pagar. Un grupo sin opciones no se muestra. */
@@ -74,6 +85,40 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
       component: () => import('./paginas/NuevoPago.vue'),
       meta: { permiso: 'cuentas-por-pagar.pagos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.nuevo },
     },
+    {
+      path: '/cuentas-por-pagar/pagos',
+      name: 'cuentas-por-pagar.pagos',
+      component: () => import('./paginas/ListaDePagos.vue'),
+      meta: { permiso: 'cuentas-por-pagar.pagos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.titulo },
+    },
+    {
+      path: '/cuentas-por-pagar/pagos/:id',
+      name: 'cuentas-por-pagar.pagos.ficha',
+      component: () => import('./paginas/FichaDePago.vue'),
+      props: ({ params }) => ({ id: String(params.id) }),
+      meta: { permiso: 'cuentas-por-pagar.pagos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.ficha },
+    },
+    {
+      path: '/cuentas-por-pagar/pagos/:id/comprobante',
+      name: 'cuentas-por-pagar.pagos.comprobante',
+      component: () => import('./paginas/ComprobanteDePago.vue'),
+      props: ({ params }) => ({ id: String(params.id) }),
+      meta: { permiso: 'cuentas-por-pagar.pagos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.comprobante },
+    },
+    {
+      path: '/cuentas-por-pagar/reintegros/:id/recibo',
+      name: 'cuentas-por-pagar.reintegros.recibo',
+      component: () => import('./paginas/ReciboDeReintegro.vue'),
+      props: ({ params }) => ({ id: String(params.id) }),
+      meta: { permiso: 'cuentas-por-pagar.documentos.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.notasDeCredito.recibo },
+    },
+    {
+      path: '/cuentas-por-pagar/plazos',
+      name: 'cuentas-por-pagar.plazos',
+      component: () => import('./paginas/PlazosDeProveedores.vue'),
+      meta: { permiso: 'terceros.ver', titulo: VENTANAS_CUENTAS_POR_PAGAR.plazos.titulo },
+    },
+    ...rutasDeRetiros,
     ...rutasDeReportes,
     // generador: rutas
   ],
@@ -129,21 +174,29 @@ export const moduloCuentasPorPagar: DefinicionModuloCliente = {
           permiso: 'cuentas-por-pagar.saldos-iniciales.ver',
         },
         {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.plazos.titulo,
+          ruta: '/cuentas-por-pagar/plazos',
+          icono: CalendarClock,
+          seccion: 'administracion',
+          permiso: 'terceros.ver',
+        },
+        {
+          titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.titulo,
+          ruta: '/cuentas-por-pagar/pagos',
+          icono: Receipt,
+          seccion: 'operacion',
+          permiso: 'cuentas-por-pagar.pagos.ver',
+        },
+        {
           titulo: VENTANAS_CUENTAS_POR_PAGAR.pagos.nuevo,
           ruta: '/cuentas-por-pagar/pagos/nuevo',
           icono: Banknote,
           seccion: 'operacion',
           permiso: 'cuentas-por-pagar.pagos.ver',
         },
+        ...entradasDeRetiros,
         ...entradasDeReportes,
-        // R12 vive en Libro de compras (CP5-f): aquí solo se enlaza, con el permiso de esa pantalla.
-        {
-          titulo: 'Constancias de retención pendientes',
-          ruta: '/libro-de-compras/retenciones/constancias-pendientes',
-          icono: FileClock,
-          seccion: 'reportes',
-          permiso: 'libro-de-compras.retenciones.ver',
-        },
+        // R12 (constancias pendientes) vive en el menú de Libro de compras; aquí no se repite.
         // generador: menu
       ],
     },

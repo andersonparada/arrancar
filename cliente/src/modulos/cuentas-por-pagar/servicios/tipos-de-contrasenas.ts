@@ -17,7 +17,12 @@ export interface CargoDeContrasena {
   total: string;
   retenciones: string;
   rebajado: string;
+  /** La deuda: también lo comprometido con cheques posfechados. */
   saldo: string;
+  /** Lo que aún se puede pagar: `saldo` menos `comprometido`. */
+  disponible: string;
+  /** La fecha del cheque posfechado más lejano; `null` si no hay. */
+  comprometidoHasta: string | null;
   /** Lo que los pagos vigentes con fecha de hoy o anterior entregaron. */
   pagado: string;
   /** Lo de pagos vigentes con fecha posterior a hoy (cheques posfechados). */
@@ -51,6 +56,7 @@ export interface ContrasenaResumen {
   proveedorNombre: string;
   documentos: number;
   saldo: string;
+  disponible: string;
   estado: EstadoDeContrasena;
   pagoVencido: boolean;
   estadoDePago: EstadoDePago | null;
@@ -109,6 +115,8 @@ export interface TotalesDeContrasena {
 export interface TotalesDeLaFicha extends TotalesDeContrasena {
   pagado: string;
   comprometido: string;
+  /** Lo que aún se puede pagar: `saldo` menos `comprometido`. */
+  disponible: string;
 }
 
 export interface AnulacionDeContrasena {

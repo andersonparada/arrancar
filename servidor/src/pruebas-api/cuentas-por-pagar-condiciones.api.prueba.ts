@@ -1,9 +1,11 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { sumarDias } from '../modulos/cuentas-por-pagar/dominio/propuesta-de-vencimiento.js';
+import { EMISION_DE_PRUEBA, VendedoresDePrueba } from './soporte/factura-especial.js';
 import { DocumentosPorPagarDePrueba, MODULOS_DE_CUENTAS_POR_PAGAR } from './soporte/cuentas-por-pagar.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { darDeAltaCuenta, type CuentaDePrueba } from './soporte/escenarios.js';
 import {
+  configurarEmpresa,
   consultar,
   haceDias,
   nitValido,
@@ -43,6 +45,7 @@ describe('condiciones de pago con el formulario de Proveedores', () => {
       proveedorId,
       diasDeCredito: null,
       contarDesdeLaRecepcion: false,
+      mesesPorOmision: 1,
     });
     expect(await filasDe(proveedorId)).toEqual([]);
   });
@@ -137,3 +140,63 @@ describe('el vencimiento respeta las condiciones del proveedor', () => {
     expect((await documentos.fila(id))?.vencimiento).toBe(sumarDias(EMISION, 20));
   });
 });
+
+describe('el plazo por omisión de la empresa en la lectura de condiciones', () => {
+  const clave = '/api/configuracion/cuentas-por-pagar.vencimientos.meses_por_omision';
+
+  it('trae los meses por omisión de la empresa activa (0, 2 y de vuelta a 1)', async () => {
+    const { proveedorId } = await registrarProveedor(escenario.cuenta, 'Plazo de la empresa');
+    await entorno.soporte.put('/api/sesion/empresa-activa', { empresaId: escenario.cuenta.empresaId });
+
+    try {
+      for (const meses of [0, 2, 1]) {
+        const cambio = await entorno.soporte.put(clave, { nivel: 'empresa', valor: meses });
+        expect(cambio.estado, JSON.stringify(cambio.cuerpo)).toBe(204);
+        expect(await condicionesDe(proveedorId)).toMatchObject({ diasDeCredito: null, mesesPorOmision: meses });
+      }
+    } finally {
+      await entorno.soporte.put(clave, { nivel: 'empresa', valor: 1 });
+    }
+  });
+});
+
+describe('cambiar los días del proveedor no toca lo ya recibido', () => {
+  it('conserva el vencimiento de sus documentos y la fecha de sus retenciones', async () => {
+    await configurarEmpresa(escenario.cuenta, {
+      regimenIva: 'general',
+      regimenIsr: 'utilidades',
+      agenteDeRetencionIva: 'ninguno',
+      esAgenteDeRetencionIsr: true,
+    });
+    const vendedores = new VendedoresDePrueba(escenario);
+    const vendedor = await vendedores.nuevo({}, undefined);
+    await guardarSeccion(vendedor.terceroId, { diasDeCredito: 10 });
+    const recibido = await propietario().post(
+      '/api/libro-de-compras/documentos',
+      vendedores.cuerpo(vendedor.proveedorId, { nitReceptor: nitValido('4300001'), fechaEmision: EMISION_DE_PRUEBA }),
+    );
+    expect(recibido.estado, JSON.stringify(recibido.cuerpo)).toBe(201);
+    const documentoId = recibido.cuerpo.documento.id as string;
+    const instantanea = () => estadoDelDocumento(documentoId);
+    const antes = await instantanea();
+    expect(antes.vencimiento).toBe(sumarDias(EMISION_DE_PRUEBA, 10));
+    expect(antes.fechasDeRetencion.length).toBeGreaterThan(0);
+
+    await guardarSeccion(vendedor.terceroId, { diasDeCredito: 45, contarDesdeLaRecepcion: true });
+
+    expect(await condicionesDe(vendedor.proveedorId)).toMatchObject({ diasDeCredito: 45 });
+    expect(await instantanea()).toEqual(antes);
+  });
+});
+
+async function estadoDelDocumento(documentoId: string) {
+  const [documento] = await consultar<{ vencimiento: string }>(
+    'select vencimiento::text from cuentas_por_pagar.documentos where documento_id = $1',
+    [documentoId],
+  );
+  const retenciones = await consultar<{ fecha: string }>(
+    'select fecha::text from libro_de_compras.retenciones where documento_id = $1 order by fecha',
+    [documentoId],
+  );
+  return { vencimiento: documento!.vencimiento, fechasDeRetencion: retenciones.map(({ fecha }) => fecha) };
+}
