@@ -29,6 +29,29 @@ export const VENTANAS_CAJA_CHICA = {
     descripcion:
       'Justifique el efectivo entregado con las facturas de la bandeja y los gastos sin factura; lo que sobre regresa al fondo.',
   },
+  pendientesDeReponer: {
+    titulo: 'Pendientes de reponer',
+    descripcion:
+      'Lo gastado de cada fondo que, a la fecha de corte, todavía no estaba en una reposición: el gasto que Contabilidad reconoce en su período.',
+  },
+  reposicionesDelPeriodo: {
+    titulo: 'Reposiciones del período',
+    descripcion:
+      'Lo repuesto a cada fondo, con su cheque o nota de Bancos, por concepto de gasto, deducible y no deducible.',
+  },
+  gastosSinDocumento: {
+    titulo: 'Gastos sin documento fiscal',
+    descripcion: 'Los vales de gasto y los documentos que quedaron fuera del libro de compras: no son deducibles.',
+  },
+  estadoDeLosFondos: {
+    titulo: 'Estado de los fondos',
+    descripcion:
+      'El monto, el efectivo esperado, lo pendiente, los vales abiertos y el último arqueo de cada fondo al corte.',
+  },
+  arqueosDelPeriodo: {
+    titulo: 'Arqueos del período',
+    descripcion: 'Los arqueos con sus diferencias, quién contó y qué se hizo con lo que faltó.',
+  },
   // generador: ventanas
 } as const;
 
@@ -68,3 +91,14 @@ export const AYUDA_DEL_VALE_PROVISIONAL =
   'Un vale provisional es efectivo del fondo que se entrega a alguien por justificar: gasta, trae los comprobantes y devuelve lo que sobre. Mientras esté abierto, ese efectivo no cuenta como gasto.';
 
 export const MAXIMO_DEL_MOTIVO = 300;
+
+export const TEXTOS_DE_RESULTADO_DE_ARQUEO = {
+  cuadrado: 'Cuadrado',
+  faltante: 'Faltante',
+  sobrante: 'Sobrante',
+} as const;
+
+export const TEXTOS_DE_DESTINO_DEL_FALTANTE = {
+  perdida: 'Pérdida del fondo',
+  cobrar_al_custodio: 'Se cobra al custodio',
+} as const;
