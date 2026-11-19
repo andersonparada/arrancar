@@ -91,9 +91,23 @@ export interface SaldosIniciales {
   hallazgos: HallazgoDeCierre[];
 }
 
-/** La ficha de una cuenta: su resumen, sus observaciones y todas sus partidas. */
+/** El archivo de la evidencia; nunca trae la ruta ni el id: solo se abre por la ruta de la cuenta. */
+export interface EvidenciaDeApertura {
+  tipoMime: string;
+  tamanoBytes: number;
+  /** Solo los PDF cuentan páginas. */
+  paginas: number | null;
+  sha256: string;
+  nombreOriginal: string | null;
+  subidoEn: string;
+  subidoPorNombre: string | null;
+}
+
+/** La ficha de una cuenta: su resumen, sus observaciones, su evidencia y todas sus partidas. */
 export interface SaldoInicialDeCuenta extends ResumenDeSaldoInicial {
   observaciones: string | null;
+  /** El último estado de cuenta o la última conciliación del sistema anterior; `null` si no se subió. */
+  evidencia: EvidenciaDeApertura | null;
   partidas: PartidaDeApertura[];
 }
 

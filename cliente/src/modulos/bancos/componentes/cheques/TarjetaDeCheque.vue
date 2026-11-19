@@ -4,6 +4,8 @@ import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import { formatearTexto } from '@/modulos/core/utilidades/formato';
+import { detalleDeApertura } from '../../composables/comunes/de-apertura';
+import { insigniaDeCheque } from '../../composables/cheques/insignia-de-cheque';
 import { textoDeCausaDeAnulacion } from '../../composables/movimientos/origen-y-causa';
 import type { Cheque } from '../../servicios/cheques.api';
 import AccionesDeImpresionDeCheque from './AccionesDeImpresionDeCheque.vue';
@@ -19,21 +21,12 @@ const emit = defineEmits<{
   pasar: [];
 }>();
 
-const INSIGNIA_DE_ESTADO: Record<Cheque['estado'], string | undefined> = {
-  disponible: undefined,
-  emitido: 'Emitido',
-  anulado: 'Anulado',
-};
-
-/** Cómo terminó un anulado (inutilizado o extraviado), o si ya se imprimió un emitido. */
-function insignia(cheque: Cheque): string | undefined {
-  if (cheque.causaDeAnulacion === 'inutilizado') return 'Inutilizado';
-  if (cheque.causaDeAnulacion === 'extraviado') return 'Extraviado';
-  return cheque.impresoEn && cheque.estado === 'emitido' ? 'Impreso' : INSIGNIA_DE_ESTADO[cheque.estado];
-}
-
 const detalles = computed(() => {
-  const base: DetalleDeRegistro[] = [{ etiqueta: 'No negociable', valor: props.registro.noNegociable ? 'Sí' : 'No' }];
+  const apertura = detalleDeApertura(props.registro);
+  const base: DetalleDeRegistro[] = [
+    { etiqueta: 'No negociable', valor: props.registro.noNegociable ? 'Sí' : 'No' },
+    ...(apertura ? [apertura] : []),
+  ];
   if (props.registro.paraAbonoEnCuenta) base.push({ etiqueta: 'Para abono en cuenta', valor: 'Sí' });
   if (!props.registro.anuladoEn) return base;
   const causa = textoDeCausaDeAnulacion(props.registro.causaDeAnulacion);
@@ -53,7 +46,7 @@ const detalles = computed(() => {
     :titulo="`Cheque No. ${registro.numero}`"
     :detalles="detalles"
     permiso="bancos.cheques.anular"
-    :insignia="insignia(registro)"
+    :insignia="insigniaDeCheque(registro)"
     sin-editar
   >
     <template #acciones-extra>

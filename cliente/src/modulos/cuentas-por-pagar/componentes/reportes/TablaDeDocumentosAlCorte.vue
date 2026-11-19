@@ -25,7 +25,9 @@ const columnas = ['Emisión', 'Vence', 'Tramo', 'Total', 'Retenciones', 'Notas',
   <div
     class="overflow-x-auto rounded-2xl bg-white ring-1 ring-tierra-200/70 dark:bg-tierra-800/60 dark:ring-tierra-700 print:overflow-visible print:ring-0"
   >
-    <table class="w-full text-sm print:text-[9px]">
+    <table
+      class="w-full text-sm print:text-[8px] print:leading-tight print:[&_td]:px-1 print:[&_td]:whitespace-normal print:[&_th]:px-1"
+    >
       <caption class="sr-only">
         Cargos por pagar al corte
       </caption>
@@ -46,7 +48,7 @@ const columnas = ['Emisión', 'Vence', 'Tramo', 'Total', 'Retenciones', 'Notas',
       </thead>
       <tbody class="divide-y divide-tierra-100 dark:divide-tierra-700">
         <tr v-for="fila in filas" :key="fila.id" class="align-top print:break-inside-avoid">
-          <th scope="row" class="min-w-44 px-3 py-2 text-left font-normal">
+          <th scope="row" class="min-w-44 px-3 py-2 text-left font-normal print:min-w-0">
             <RouterLink
               :to="{ name: 'cuentas-por-pagar.documentos.ficha', params: { documentoId: fila.id } }"
               class="rounded font-medium text-campo-700 hover:underline focus-visible:ring-2 focus-visible:ring-campo-500 focus-visible:outline-none dark:text-campo-300 print:text-current print:no-underline"

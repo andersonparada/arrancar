@@ -13,12 +13,12 @@ import { usarBajasDeCheque } from '../composables/cheques/usar-bajas-de-cheque';
 import { usarListaDeChequesDeLaEmpresa } from '../composables/cheques/usar-lista-de-cheques-de-la-empresa';
 import type { ChequeListado } from '../servicios/cheques.api';
 import { VENTANAS_BANCOS } from '../textos';
-import { TEXTO_DE_ANULACION, TEXTO_DE_BLANQUEO } from '../composables/cheques/textos-de-baja-de-cheque';
+import { TEXTO_DE_BLANQUEO } from '../composables/cheques/textos-de-baja-de-cheque';
 
 const ventana = VENTANAS_BANCOS.cheques;
 const { cheques, cargando, filtros, opcionesDeCuenta, referencias, emision, cargar, lote, impresion } =
   usarListaDeChequesDeLaEmpresa();
-const { anulacion, blanqueo } = usarBajasDeCheque<ChequeListado>(cargar);
+const { anulacion, blanqueo, anular, textoDeAnulacion, ayudaDeFecha } = usarBajasDeCheque<ChequeListado>(cargar);
 </script>
 
 <template>
@@ -42,7 +42,7 @@ const { anulacion, blanqueo } = usarBajasDeCheque<ChequeListado>(cargar);
           @reimprimir="impresion.reimpresion.abrir(registro)"
           @historial="impresion.historial.abrir(registro)"
           @pasar="impresion.cambio.abrir(registro)"
-          @anular="anulacion.abrir(registro)"
+          @anular="anular(registro)"
           @blanquear="blanqueo.abrir(registro)"
         />
       </li>
@@ -73,7 +73,8 @@ const { anulacion, blanqueo } = usarBajasDeCheque<ChequeListado>(cargar);
       con-fecha
       :abierta="!!anulacion.registro"
       titulo="Anular cheque"
-      :texto="TEXTO_DE_ANULACION(anulacion.registro?.numero, anulacion.registro?.moduloDeOrigen)"
+      :texto="textoDeAnulacion()"
+      :ayuda-de-fecha="ayudaDeFecha()"
       :errores="anulacion.errores"
       :enviando="anulacion.enviando"
       @cerrar="anulacion.cerrar"

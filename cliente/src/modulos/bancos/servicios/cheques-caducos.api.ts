@@ -1,5 +1,6 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import { intercambioDe } from '@/modulos/core/servicios/intercambio';
+import type { ParteDeApertura } from './tipos-de-saldos-iniciales';
 
 /** Un cheque emitido que el banco no ha cobrado y ya pasó el plazo de vencimiento. */
 export interface ChequeCaduco {
@@ -15,7 +16,9 @@ export interface ChequeCaduco {
   monto: string;
   /** Si el mes del cheque ya está conciliado: anularlo exige una nota inversa. */
   mesConciliado: boolean;
-  origen: 'cuentas_por_pagar' | 'suelto';
+  origen: 'cuentas_por_pagar' | 'apertura' | 'suelto';
+  /** La parte de la carga inicial que es; `null` si se emitió en Arrancar. */
+  parteDeApertura: ParteDeApertura | null;
 }
 
 export interface ReporteDeChequesCaducos {

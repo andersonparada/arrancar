@@ -8,6 +8,8 @@ import { moduloCuentasPorPagar } from './cuentas-por-pagar/modulo.js';
 import { moduloCajaChica } from './caja-chica/modulo.js';
 import { moduloCuentasPorLiquidar } from './cuentas-por-liquidar/modulo.js';
 import { moduloActivosFijos } from './activos-fijos/modulo.js';
+import { moduloInventarios } from './inventarios/modulo.js';
+import { moduloMultimoneda } from './multimoneda/modulo.js';
 // generador: importaciones
 
 /** Módulos instalados. `npm run generar -- modulo <clave>` suma uno nuevo en la marca. */
@@ -21,5 +23,7 @@ export const definicionesModulos: readonly DefinicionModulo[] = [
   moduloCajaChica,
   moduloCuentasPorLiquidar,
   moduloActivosFijos,
+  moduloInventarios,
+  moduloMultimoneda,
   // generador: modulos
 ];

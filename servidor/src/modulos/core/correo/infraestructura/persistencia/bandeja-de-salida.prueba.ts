@@ -113,7 +113,8 @@ describe('encolar', () => {
 });
 
 describe('cupos', () => {
-  const topes = { porHoraPorCuenta: 1, porDiaPorCuenta: 500, porDiaPorDestinatario: 20, porHoraDeLaInstalacion: 1000 };
+  // El mensaje de prueba lleva dos destinatarios (para y copia): un tope de 2 por hora deja pasar exactamente uno.
+  const topes = { porHoraPorCuenta: 2, porDiaPorCuenta: 500, porDiaPorDestinatario: 20, porHoraDeLaInstalacion: 1000 };
 
   it('con dos peticiones a la vez de una cuenta con cupo para una, solo pasa una (candado por cuenta)', async () => {
     montaje = armarBandejaCompleta(topes);
@@ -125,6 +126,13 @@ describe('cupos', () => {
     const rechazado = resultados.find((r) => r.status === 'rejected') as PromiseRejectedResult;
     expect(rechazado.reason).toBeInstanceOf(CupoDeCorreosAgotado);
     expect(await filas('select 1 from core.correos_salientes')).toHaveLength(1);
+  });
+
+  it('el cupo cuenta destinatarios: un mensaje con para y copia no cabe en un tope de 1 por hora', async () => {
+    montaje = armarBandejaCompleta({ ...topes, porHoraPorCuenta: 1 });
+
+    await expect(encolar()).rejects.toMatchObject({ codigo: 'cupo_de_correos_agotado', detalles: { limite: 'hora' } });
+    expect(await filas('select 1 from core.correos_salientes')).toHaveLength(0);
   });
 
   it('otra cuenta tiene su propio cupo', async () => {

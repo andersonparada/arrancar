@@ -56,6 +56,22 @@ describe('core.reservar_cupo_de_correo', () => {
     expect(rows[0]).toMatchObject({ por_hora: 2, por_dia: 3, de_la_instalacion_por_hora: 3 });
   });
 
+  it('cuenta destinatarios y no correos: un correo con tres direcciones gasta tres', async () => {
+    const id = await unCorreo('A1');
+    for (const direccion of ['b@prueba.com', 'c@prueba.com']) {
+      await insertarDestinatario(propietario, {
+        correoId: id,
+        cuentaId: escenario.cuentaA,
+        empresaId: escenario.empresaA1,
+        direccion,
+      });
+    }
+
+    const { rows } = await reservar(contextoA(), []);
+
+    expect(rows[0]).toMatchObject({ por_hora: 3, por_dia: 3, de_la_instalacion_por_hora: 3 });
+  });
+
   it('cuenta por destinatario en 24 horas sin distinguir mayúsculas, solo de la propia cuenta', async () => {
     const id = await unCorreo('A1');
     await insertarDestinatario(propietario, {

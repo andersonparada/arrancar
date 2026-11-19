@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { RepositorioClases } from '../../aplicacion/puertos/repositorio-clases.js';
 import type { Clase, ClaseId } from '../../dominio/clase.js';
+import { activos } from './activos.tablas.js';
 import { mapeadorDeClase } from './clase.mapeador.js';
 import { clases } from './clases.tablas.js';
 import { clasesPorConcepto } from './clases-por-concepto.tablas.js';
@@ -25,14 +26,21 @@ export class RepositorioClasesDrizzle implements RepositorioClases {
     await transaccionEnCurso().delete(clases).where(eq(clases.id, clase.id.valor));
   }
 
-  /** Los conceptos ligados; los activos (AF-2) se suman aquí cuando exista su tabla. */
+  /** Los conceptos ligados y los activos de la clase. */
   async enUso(id: ClaseId): Promise<boolean> {
-    const [ligado] = await transaccionEnCurso()
+    const transaccion = transaccionEnCurso();
+    const [concepto] = await transaccion
       .select({ conceptoDeGastoId: clasesPorConcepto.conceptoDeGastoId })
       .from(clasesPorConcepto)
       .where(eq(clasesPorConcepto.claseId, id.valor))
       .limit(1);
-    return ligado !== undefined;
+    if (concepto) return true;
+    const [activo] = await transaccion
+      .select({ id: activos.id })
+      .from(activos)
+      .where(eq(activos.claseId, id.valor))
+      .limit(1);
+    return activo !== undefined;
   }
 
   async hayAlguna(): Promise<boolean> {

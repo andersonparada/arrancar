@@ -1,7 +1,8 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ChequeListado } from '../../servicios/cheques.api';
-import { detallesDeChequeListado, insigniaDeChequeListado, tituloDeChequeListado } from './detalles-de-cheque-listado';
+import { detallesDeChequeListado, tituloDeChequeListado } from './detalles-de-cheque-listado';
+import { insigniaDeChequeListado } from './insignia-de-cheque';
 
 // `detallesDeChequeListado` da formato con `formatearFecha`, que lee la sesión (Pinia).
 beforeEach(() => setActivePinia(createPinia()));
@@ -26,6 +27,7 @@ const base: ChequeListado = {
   aviso: null,
   impresoEn: null,
   moduloDeOrigen: null,
+  parteDeApertura: null,
   puedeAnular: true,
   puedeBlanquear: true,
   puedeImprimir: true,
@@ -87,6 +89,13 @@ describe('detalles del cheque listado', () => {
       valor: 'Cuentas por pagar',
     });
     expect(detallesDeChequeListado(base).map((d) => d.etiqueta)).not.toContain('Origen');
+  });
+
+  it('dice «Carga inicial» si es una partida de la carga inicial', () => {
+    expect(detallesDeChequeListado({ ...base, parteDeApertura: 'cheque_en_circulacion' })).toContainEqual({
+      etiqueta: 'Origen',
+      valor: 'Carga inicial',
+    });
   });
 });
 

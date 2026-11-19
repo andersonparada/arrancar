@@ -19,6 +19,8 @@ export interface LineaDePago {
   numeroDeCheque?: number | null;
   /** `AAAA-MM-DD`: la del pago; si es posterior a hoy, el pago está comprometido (cheque posfechado). */
   fecha: string;
+  /** Desde cuándo rebaja la deuda: la `fecha`, o el fin del mes de su conciliación autorizada si fue antes. */
+  fechaDeEfecto?: string;
   estado: EstadoDeUnPago;
   /** La contraseña de la línea (`aplicaciones_de_pagos.contrasena_id`), no la del pago. */
   contrasenaId: string;
@@ -43,6 +45,8 @@ export interface LineaDeReintegro {
 export interface PagoVigenteDelCargo {
   /** `AAAA-MM-DD`. */
   fecha: string;
+  /** Desde cuándo rebaja la deuda (cobro anticipado, dictamen 5 de CP5); sin ella, la `fecha`. */
+  fechaDeEfecto?: string;
   montoCentavos: number;
 }
 
@@ -61,8 +65,13 @@ export const ESTADOS_DE_PAGO = [
 /** El número del pago como se lee: `15` o `2026-15`, igual que el de las contraseñas. */
 export const numeroDelPago = numeroDeContrasena;
 
-/** Un pago con fecha posterior a hoy se hará efectivo en esa fecha: compromete el documento desde ya (§2.4). */
-export const estaPosfechado = ({ fecha }: PagoVigenteDelCargo, hoy: string): boolean => fecha > hoy;
+/**
+ * Un pago cuyo efecto es posterior a hoy compromete el documento desde ya (§2.4). El efecto es la fecha del pago, salvo
+ * que el cheque ya se cobró (conciliación autorizada anterior): entonces rebaja desde el fin de ese mes, igual que en
+ * los reportes. Es el único lugar donde las pantallas deciden si un pago está comprometido.
+ */
+export const estaPosfechado = <P extends { fecha: string; fechaDeEfecto?: string }>(pago: P, hoy: string): boolean =>
+  (pago.fechaDeEfecto ?? pago.fecha) > hoy;
 
 /** Lo pagado a la fecha y lo comprometido a una fecha posterior, en centavos. */
 export function pagadoYComprometido(

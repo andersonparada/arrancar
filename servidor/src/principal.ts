@@ -4,11 +4,13 @@ import { grupoConexiones } from './modulos/core/base-datos/conexion.js';
 import { crearDepuradorDeArchivosHuerfanos } from './modulos/core/archivos/contexto.js';
 import { verificarQpdf } from './modulos/core/archivos/infraestructura/qpdf/verificador-de-qpdf.js';
 import { depurarAuditoria } from './modulos/core/bitacora/contexto.js';
-import { crearProcesadorDeBandeja, depurarCorreos } from './modulos/core/correo/bandeja.js';
+import { crearProcesadorDeBandeja, depurarCorreos, diagnosticarLlaveDeCorreo } from './modulos/core/correo/bandeja.js';
 import { limpiarSesionesVencidas } from './modulos/core/identidad/contexto.js';
+import { cargaAutomaticaEncendida, cargaDeTiposDeCambio } from './modulos/core/monedas/contexto.js';
 
 const UNA_HORA = 60 * 60 * 1000;
 const UN_DIA = 24 * UNA_HORA;
+const QUINCE_MINUTOS = 15 * 60 * 1000;
 
 const app = await construirAplicacion();
 await revisarQpdf();
@@ -31,12 +33,42 @@ const bandejaDeCorreo = iniciarBandejaDeCorreo();
 
 const depuracionDeArchivos = programarDepuracionDeArchivos();
 
+const cargaDeTipos = programarCargaDeTiposDeCambio();
+
+/**
+ * Con `CARGAR_TIPOS_DE_CAMBIO=true` (apagada por omisión): al arrancar revisa la lista de monedas y los huecos, y cada
+ * 15 minutos pregunta qué vuelta toca (06:00 el dólar, 09:30 las demás, de noche el dólar de mañana).
+ */
+function programarCargaDeTiposDeCambio(): NodeJS.Timeout | null {
+  if (!cargaAutomaticaEncendida) {
+    app.log.warn('La carga automática de tipos de cambio está APAGADA (CARGAR_TIPOS_DE_CAMBIO).');
+    return null;
+  }
+  const alFallar = (error: unknown) => app.log.error(error, 'Carga de tipos de cambio del Banguat');
+  void cargaDeTiposDeCambio
+    .alArrancar()
+    .then(() => cargaDeTiposDeCambio.siTocaAhora())
+    .catch(alFallar);
+  return setInterval(() => void cargaDeTiposDeCambio.siTocaAhora().catch(alFallar), QUINCE_MINUTOS);
+}
+
 /** Sin `CLAVE_SECRETOS` no arranca: no se podría leer la contraseña del servidor de correo. Los correos esperan en la bandeja. */
 function iniciarBandejaDeCorreo() {
   const procesador = crearProcesadorDeBandeja({ error: (mensaje, error) => app.log.error(error, mensaje) });
   if (procesador) procesador.iniciar();
-  else app.log.warn('El envío de correo está APAGADO: falta CLAVE_SECRETOS.');
+  else void avisarQueFaltaLaLlave();
   return procesador;
+}
+
+/** Con un servidor de correo ya guardado, el aviso sale como error: así no pasa desapercibido en producción. */
+async function avisarQueFaltaLaLlave(): Promise<void> {
+  try {
+    const { nivel, mensaje } = await diagnosticarLlaveDeCorreo.ejecutar();
+    if (nivel === 'error') app.log.error(mensaje);
+    else app.log.warn(mensaje);
+  } catch (error) {
+    app.log.warn(error, 'El envío de correo está APAGADO: falta CLAVE_SECRETOS.');
+  }
 }
 
 /** Con `DEPURAR_HUERFANOS=false` o con una carpeta de archivos insegura no se programa y queda dicho en el registro. */
@@ -76,6 +108,7 @@ async function detener(senal: string): Promise<void> {
   clearInterval(depuracionDiaria);
   clearInterval(depuracionDeCorreos);
   if (depuracionDeArchivos) clearInterval(depuracionDeArchivos);
+  if (cargaDeTipos) clearInterval(cargaDeTipos);
   await bandejaDeCorreo?.detener();
   await app.close();
   await grupoConexiones.end();

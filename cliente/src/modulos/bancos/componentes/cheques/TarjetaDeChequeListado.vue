@@ -2,11 +2,8 @@
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
 import TarjetaDeRegistro from '@/modulos/core/componentes/TarjetaDeRegistro.vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
-import {
-  detallesDeChequeListado,
-  insigniaDeChequeListado,
-  tituloDeChequeListado,
-} from '../../composables/cheques/detalles-de-cheque-listado';
+import { insigniaDeChequeListado } from '../../composables/cheques/insignia-de-cheque';
+import { detallesDeChequeListado, tituloDeChequeListado } from '../../composables/cheques/detalles-de-cheque-listado';
 import type { ChequeListado } from '../../servicios/cheques.api';
 import AccionesDeImpresionDeCheque from './AccionesDeImpresionDeCheque.vue';
 

@@ -1,4 +1,14 @@
-import { Hourglass, ListChecks, ListOrdered, Percent, Sigma, Waves, ScrollText } from 'lucide-vue-next';
+import {
+  FileSpreadsheet,
+  Hourglass,
+  ListChecks,
+  ListOrdered,
+  Percent,
+  Scale,
+  ScrollText,
+  Sigma,
+  Waves,
+} from 'lucide-vue-next';
 import type { RouteRecordRaw } from 'vue-router';
 import type { EntradaMenu } from '@/modulos/core/tipos';
 import { VENTANAS_BANCOS } from './textos';
@@ -54,6 +64,20 @@ export const ENTRADAS_DE_REPORTES: EntradaMenu[] = [
     seccion: 'reportes',
     permiso: 'bancos.intereses.ver',
   },
+  {
+    titulo: VENTANAS_BANCOS.saldosPorCuenta.titulo,
+    ruta: '/bancos/saldos-por-cuenta',
+    icono: Scale,
+    seccion: 'reportes',
+    permiso: 'bancos.saldos-por-cuenta.ver',
+  },
+  {
+    titulo: VENTANAS_BANCOS.estadoDeCuenta.titulo,
+    ruta: '/bancos/estado-de-cuenta',
+    icono: FileSpreadsheet,
+    seccion: 'reportes',
+    permiso: 'bancos.movimientos.ver',
+  },
 ];
 
 /** Las rutas de los reportes que se abren en su propia página. */
@@ -84,5 +108,17 @@ export const RUTAS_DE_REPORTES: RouteRecordRaw[] = [
     name: 'bancos.intereses-y-retenciones',
     component: () => import('./paginas/ReporteDeIntereses.vue'),
     meta: { permiso: 'bancos.intereses.ver', titulo: VENTANAS_BANCOS.intereses.titulo },
+  },
+  {
+    path: '/bancos/saldos-por-cuenta',
+    name: 'bancos.saldos-por-cuenta',
+    component: () => import('./paginas/SaldosPorCuenta.vue'),
+    meta: { permiso: 'bancos.saldos-por-cuenta.ver', titulo: VENTANAS_BANCOS.saldosPorCuenta.titulo },
+  },
+  {
+    path: '/bancos/estado-de-cuenta',
+    name: 'bancos.estado-de-cuenta',
+    component: () => import('./paginas/EstadoDeCuenta.vue'),
+    meta: { permiso: 'bancos.movimientos.ver', titulo: VENTANAS_BANCOS.estadoDeCuenta.titulo },
   },
 ];

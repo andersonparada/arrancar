@@ -1,6 +1,10 @@
 import type { AvisoDePartida } from '../../dominio/apertura.js';
 import type { HallazgoDeCierre } from '../../dominio/hallazgos-de-cierre.js';
 import type { ParteDeApertura, ParteQueSeAgrega } from '../../dominio/partes-de-apertura.js';
+import type { EstadoDeCuentaDto } from './conciliacion.dto.js';
+
+/** El archivo de la evidencia de la apertura, sin la ruta en disco ni su id: solo se abre por la ruta de la cuenta. */
+export type EvidenciaDto = EstadoDeCuentaDto;
 
 /** Un aviso que no bloquea: lo que el servidor quiere que el usuario sepa al guardar. */
 export interface AvisoDeApertura {
@@ -80,6 +84,8 @@ export interface SaldosInicialesDto {
 /** La ficha de una cuenta: su resumen, sus observaciones y todas sus partidas. */
 export interface SaldoInicialDto extends SaldoInicialResumenDto {
   observaciones: string | null;
+  /** El archivo de la evidencia (último estado de cuenta del sistema anterior), o `null` si no se ha subido. */
+  evidencia: EvidenciaDto | null;
   partidas: PartidaDeAperturaDto[];
 }
 

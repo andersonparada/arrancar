@@ -4,6 +4,9 @@ import { dependenciasCompartidas } from '../../core/compartido/infraestructura/d
 import { AgregarPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/agregar-partida-de-apertura.js';
 import { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque.js';
 import { AnularMovimiento } from '../aplicacion/casos-uso/movimientos/anular-movimiento.js';
+import { AbrirEvidenciaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/abrir-evidencia-de-apertura.js';
+import { QuitarEvidenciaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/quitar-evidencia-de-apertura.js';
+import { SubirEvidenciaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/subir-evidencia-de-apertura.js';
 import { AnularPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/anular-partida-de-apertura.js';
 import { CorregirPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/corregir-partida-de-apertura.js';
 import { EliminarPartidaDeApertura } from '../aplicacion/casos-uso/saldos-iniciales/eliminar-partida-de-apertura.js';
@@ -54,7 +57,7 @@ const chequesDeApertura = () =>
   new ChequesDeApertura({ chequeras: new ChequerasDeAperturaDrizzle(), cheques: new RepositorioChequesDrizzle() });
 
 function dependenciasDeSaldosIniciales() {
-  const { unidadDeTrabajo, auditoria, reloj } = dependenciasCompartidas();
+  const { unidadDeTrabajo, auditoria, reloj, documentos } = dependenciasCompartidas();
   const consultas = new ConsultasDeSaldosInicialesDrizzle();
   const consultasMovimientos = new ConsultasMovimientosDrizzle();
   const cargaInicial = new CargaInicialEnMediador();
@@ -64,6 +67,7 @@ function dependenciasDeSaldosIniciales() {
   return {
     unidadDeTrabajo,
     auditoria,
+    documentos,
     cargaInicial,
     consultas,
     cabeceras: new RepositorioDeSaldosInicialesDrizzle(),
@@ -94,6 +98,9 @@ const casosDeUso = (dependencias: Dependencias) => ({
   }),
   revisarCierre: new RevisarCierreDeCargaEnBancos(dependencias),
   listarPartidas: new ListarPartidasDeApertura(dependencias),
+  subirEvidencia: new SubirEvidenciaDeApertura(dependencias),
+  quitarEvidencia: new QuitarEvidenciaDeApertura(dependencias),
+  abrirEvidencia: new AbrirEvidenciaDeApertura(dependencias),
 });
 
 /** Raíz de composición de los saldos iniciales con partidas: el único lugar donde se eligen las implementaciones concretas. */

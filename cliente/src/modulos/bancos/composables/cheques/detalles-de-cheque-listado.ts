@@ -1,5 +1,6 @@
 import { formatearFecha, formatearFechaHora, formatearTexto } from '@/modulos/core/utilidades/formato';
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
+import { detalleDeApertura } from '../comunes/de-apertura';
 import { textoDeCausaDeAnulacion, textoDeOrigen } from '../movimientos/origen-y-causa';
 import type { ChequeListado } from '../../servicios/cheques.api';
 
@@ -7,15 +8,12 @@ import type { ChequeListado } from '../../servicios/cheques.api';
 export const tituloDeChequeListado = (registro: Pick<ChequeListado, 'serie' | 'numero'>): string =>
   `Cheque No. ${registro.serie ?? ''}${registro.numero}`;
 
-/** La marca junto al título: cómo terminó un anulado (inutilizado, extraviado), si ya se imprimió o ninguna. */
-export function insigniaDeChequeListado(
-  registro: Pick<ChequeListado, 'estado' | 'causaDeAnulacion' | 'impresoEn'>,
-): string | undefined {
-  if (registro.estado === 'anulado') {
-    if (registro.causaDeAnulacion === 'inutilizado') return 'Inutilizado';
-    return registro.causaDeAnulacion === 'extraviado' ? 'Extraviado' : 'Anulado';
-  }
-  return registro.impresoEn ? 'Impreso' : undefined;
+/** Los datos de impresión del cheque: si es para abono en cuenta y cuándo se imprimió (si ya se imprimió). */
+function detallesDeImpresion(registro: ChequeListado): DetalleDeRegistro[] {
+  const detalles: DetalleDeRegistro[] = [];
+  if (registro.paraAbonoEnCuenta) detalles.push({ etiqueta: 'Para abono en cuenta', valor: 'Sí' });
+  if (registro.impresoEn) detalles.push({ etiqueta: 'Impreso', valor: formatearFechaHora(registro.impresoEn) });
+  return detalles;
 }
 
 /** Lo que muestra la tarjeta de un cheque de la lista de la empresa; el monto va aparte, destacado. */
@@ -27,8 +25,9 @@ export function detallesDeChequeListado(registro: ChequeListado): DetalleDeRegis
     { etiqueta: 'Referencia', valor: formatearTexto(registro.referencia) },
     { etiqueta: 'No negociable', valor: registro.noNegociable ? 'Sí' : 'No' },
   ];
-  if (registro.paraAbonoEnCuenta) detalles.push({ etiqueta: 'Para abono en cuenta', valor: 'Sí' });
-  if (registro.impresoEn) detalles.push({ etiqueta: 'Impreso', valor: formatearFechaHora(registro.impresoEn) });
+  const apertura = detalleDeApertura(registro);
+  if (apertura) detalles.push(apertura);
+  detalles.push(...detallesDeImpresion(registro));
   const origen = textoDeOrigen(registro);
   if (origen) detalles.push({ etiqueta: 'Origen', valor: origen.replace('Origen: ', '') });
   const causa = textoDeCausaDeAnulacion(registro.causaDeAnulacion);

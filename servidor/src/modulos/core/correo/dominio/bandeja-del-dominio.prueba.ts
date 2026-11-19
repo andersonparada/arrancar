@@ -44,6 +44,18 @@ describe('verificarCupos', () => {
     expect(limite(uso)).toBe(esperado);
   });
 
+  it.each([
+    ['la hora de la cuenta', { porHora: 98 }, 'hora'],
+    ['el día de la cuenta', { porDia: 498 }, 'dia'],
+    ['la hora de la instalación', { deLaInstalacionPorHora: 998 }, 'instalacion'],
+  ])('cuenta cada destinatario y cada copia: con 3 direcciones ya no caben en %s', (_caso, uso, esperado) => {
+    expect(limite(uso, ['a@x.com', 'b@x.com', 'c@x.com'])).toBe(esperado);
+  });
+
+  it('con 3 direcciones, 97 en la hora todavía deja pasar', () => {
+    expect(limite({ porHora: 97 }, ['a@x.com', 'b@x.com', 'c@x.com'])).toBeNull();
+  });
+
   it('cuenta al destinatario sin distinguir mayúsculas', () => {
     expect(limite({ porDestinatario: { 'ana@x.com': 20 } }, ['Ana@x.com'])).toBe('destinatario');
   });

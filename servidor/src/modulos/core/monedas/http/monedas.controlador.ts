@@ -1,5 +1,6 @@
 import type { FastifyRequest } from 'fastify';
 import { operadorDe } from '../../compartido/http/operador-de-la-solicitud.js';
+import type { ActualizarMonedasDelBanguat } from '../aplicacion/casos-uso/actualizar-monedas-del-banguat.js';
 import type { EditarMoneda } from '../aplicacion/casos-uso/editar-moneda.js';
 import type { ListarMonedas } from '../aplicacion/casos-uso/listar-monedas.js';
 import type { ListarMonedasDelBanguat } from '../aplicacion/casos-uso/listar-monedas-del-banguat.js';
@@ -9,6 +10,7 @@ export interface CasosDeUsoDeMonedas {
   listar: ListarMonedas;
   listarDelBanguat: ListarMonedasDelBanguat;
   editar: EditarMoneda;
+  actualizarLista: ActualizarMonedasDelBanguat;
 }
 
 export class MonedasControlador {
@@ -17,6 +19,11 @@ export class MonedasControlador {
   listar = () => this.casosDeUso.listar.ejecutar();
 
   listarDelBanguat = () => this.casosDeUso.listarDelBanguat.ejecutar();
+
+  actualizarLista = async (solicitud: FastifyRequest) => {
+    await this.casosDeUso.actualizarLista.ejecutarAPedido(operadorDe(solicitud).usuarioId);
+    return this.casosDeUso.listarDelBanguat.ejecutar();
+  };
 
   editar = (solicitud: FastifyRequest<{ Params: ParamsMoneda; Body: MonedaEditada }>) =>
     this.casosDeUso.editar.ejecutar(operadorDe(solicitud), solicitud.params.codigo, solicitud.body);

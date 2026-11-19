@@ -2,16 +2,23 @@ import { eq, sql } from 'drizzle-orm';
 import { aCentavos } from '../../../core/compartido/dominio/centavos.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { PagoVigenteDelCargo } from '../../dominio/pagos.js';
+import { conciliaciones } from '../../../bancos/infraestructura/persistencia/conciliaciones.tablas.js';
+import { movimientos } from '../../../bancos/infraestructura/persistencia/movimientos.tablas.js';
 import { aplicacionesDePagos } from './aplicaciones-de-pagos.tablas.js';
 import { aplicacionesDeReintegros } from './aplicaciones-de-reintegros.tablas.js';
+import { fechaDeEfectoDelPago, unionDeLaConciliacion } from './fecha-de-efecto-del-pago.sql.js';
 import { pagos } from './pagos.tablas.js';
 
 /** Lo que cada pago vigente entrega a un cargo, como lo arma `jsonb_agg` (el monto va como texto para no perder centavos). */
-type PagoComoJson = { fecha: string; monto: string };
+type PagoComoJson = { fecha: string; fechaDeEfecto: string; monto: string };
 
 /** Los pagos vigentes de un cargo como los trae la base: JSON, o nulo si el cargo no tiene. */
 export function pagosVigentesDe(pagosEnJson: PagoComoJson[] | null): PagoVigenteDelCargo[] {
-  return (pagosEnJson ?? []).map(({ fecha, monto }) => ({ fecha, montoCentavos: aCentavos(monto) }));
+  return (pagosEnJson ?? []).map(({ fecha, fechaDeEfecto, monto }) => ({
+    fecha,
+    fechaDeEfecto,
+    montoCentavos: aCentavos(monto),
+  }));
 }
 
 /**
@@ -36,8 +43,9 @@ export class SubconsultasDePagos {
   private pagadoEnCache?: ReturnType<SubconsultasDePagos['armarPagadoAlCargo']>;
 
   private armarPagadoAlCargo() {
+    const efecto = fechaDeEfectoDelPago;
     const comprometido = this.hoy
-      ? sql<string>`coalesce(sum(${aplicacionesDePagos.monto}) filter (where ${pagos.fecha} > ${this.hoy}::date), 0)`
+      ? sql<string>`coalesce(sum(${aplicacionesDePagos.monto}) filter (where ${efecto} > ${this.hoy}::date), 0)`
       : sql<string>`0`;
     return this.transaccion
       .select({
@@ -46,12 +54,14 @@ export class SubconsultasDePagos {
         comprometido: comprometido.as('monto_comprometido'),
         pagos: sql<
           PagoComoJson[]
-        >`jsonb_agg(jsonb_build_object('fecha', ${pagos.fecha}, 'monto', ${aplicacionesDePagos.monto}::text))`.as(
+        >`jsonb_agg(jsonb_build_object('fecha', ${pagos.fecha}, 'fechaDeEfecto', ${efecto}, 'monto', ${aplicacionesDePagos.monto}::text))`.as(
           'pagos_vigentes',
         ),
       })
       .from(aplicacionesDePagos)
       .innerJoin(pagos, eq(pagos.id, aplicacionesDePagos.pagoId))
+      .leftJoin(movimientos, eq(movimientos.id, pagos.movimientoId))
+      .leftJoin(conciliaciones, unionDeLaConciliacion)
       .where(eq(aplicacionesDePagos.vigente, true))
       .groupBy(aplicacionesDePagos.cargoId)
       .as('pagado_al_cargo');

@@ -3,6 +3,7 @@ import { ErrorApi } from '@/modulos/core/servicios/cliente-http';
 import type { ChequeCaduco } from '../../servicios/cheques-caducos.api';
 import {
   avisoDeAnulacion,
+  cantidadDeApertura,
   conCheque,
   motivoSugerido,
   problemasDelError,
@@ -25,11 +26,23 @@ const cheque = (chequeId: string, monto: string, numero = 1): ChequeCaduco => ({
   monto,
   mesConciliado: false,
   origen: 'suelto',
+  parteDeApertura: null,
 });
 
 const cheques = [cheque('a', '0.10', 1), cheque('b', '0.20', 2), cheque('c', '1250.50', 3)];
 
 describe('selección de cheques caducos', () => {
+  it('cuenta cuántos de los marcados son de la carga inicial', () => {
+    const conApertura = [
+      { ...cheques[0]!, parteDeApertura: 'cheque_en_circulacion' as const, origen: 'apertura' as const },
+      cheques[1]!,
+      { ...cheques[2]!, parteDeApertura: 'cheque_posfechado' as const, origen: 'suelto' as const },
+    ];
+    expect(cantidadDeApertura(conApertura, ['a', 'b', 'c'])).toBe(1);
+    expect(cantidadDeApertura(conApertura, ['b'])).toBe(0);
+    expect(cantidadDeApertura(conApertura, [])).toBe(0);
+  });
+
   it('suma en centavos enteros: 0.10 + 0.20 es exactamente 0.30', () => {
     expect(totalDeLaSeleccion(cheques, ['a', 'b'])).toEqual({ cantidad: 2, monto: '0.30' });
     expect(totalDeLaSeleccion(cheques, [])).toEqual({ cantidad: 0, monto: '0.00' });

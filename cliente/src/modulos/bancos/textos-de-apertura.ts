@@ -113,5 +113,18 @@ export const ayudaDelGrupo = (parte: string, corte: string): string =>
     cheque_posfechado: AYUDA_DEL_POSFECHADO,
   })[parte as 'cheque_en_circulacion'] ?? '';
 
+/** Anulación en lote: los cheques de la carga inicial siempre crean su nota inversa, con fecha posterior al corte. */
+export const textoDeAnulacionEnLoteDeApertura = (cantidad: number, corte: string | null): string =>
+  `${cantidad === 1 ? '1 de los cheques es' : `${cantidad} de los cheques son`} de la carga inicial: su nota de crédito inversa debe llevar una fecha posterior al ${corte ?? 'corte de la carga inicial'}. Anular no paga la deuda (Código de Comercio, arts. 408 y 410): si todavía se le debe al beneficiario, regístrelo en Cuentas por pagar.`;
+
+export const ETIQUETA_DE_CHEQUERAS_DE_APERTURA = 'De la carga inicial';
+
+export const AYUDA_DE_CHEQUERA_DE_APERTURA =
+  'Junta los cheques que estaban en circulación al corte. No se emite ni se inactiva: sus cheques se anulan uno por uno en Cheques.';
+
 export const AYUDA_DE_CONCILIACIONES =
   'La cuenta ya tiene conciliaciones: para cambiar el saldo del banco o eliminar el saldo inicial, elimine primero esas conciliaciones.';
+
+/** P-15: la evidencia es opcional; si falta, el cierre de la carga solo avisa. */
+export const AYUDA_DE_LA_EVIDENCIA =
+  'Último estado de cuenta o última conciliación del sistema anterior, opcional. PDF hasta 10 MB o foto JPEG, PNG o WebP hasta 15 MB. Un solo archivo.';

@@ -28,8 +28,21 @@ export interface EstadoDeCuentaAdjuntado {
   subidoPorNombre: string | null;
 }
 
-export interface MovimientoConMarca extends Omit<Movimiento, 'puedeAnular' | 'puedeEliminar'> {
+export interface MovimientoConMarca extends Omit<Movimiento, 'puedeAnular' | 'puedeEliminar' | 'parteDeApertura'> {
   marcado: boolean;
+  /** Nulo si no viene de la carga inicial. */
+  parteDeApertura?: string | null;
+}
+
+export interface Periodo {
+  anio: number;
+  mes: number;
+}
+
+/** Las conciliaciones de una cuenta y el periodo que toca conciliar (nulo si no hay nada que conciliar). */
+export interface ListaDeConciliaciones {
+  conciliaciones: ConciliacionResumen[];
+  periodoSiguiente: Periodo | null;
 }
 
 export interface Cuadratica {
@@ -46,12 +59,17 @@ export interface Partida {
   numeroDeCheque: number | null;
   beneficiario: string | null;
   referencia: string | null;
+  /** Viene de la carga inicial (saldos iniciales). */
+  deApertura?: boolean;
+  parteDeApertura?: string | null;
 }
 
 export interface PartidasDeConciliacion {
   chequesEnCirculacion: Partida[];
   otrosDebitosEnTransito: Partida[];
   creditosEnTransito: Partida[];
+  /** Cheques con fecha posterior que el banco ya pagó: restan en el saldo que debe mostrar el estado de cuenta. */
+  cobradosAntesDeSuFecha?: Partida[];
 }
 
 /** El documento de conciliación completo: encabezado, cuadro cuadrático, partidas y candidatos, ya resuelto por el servidor. */
@@ -70,6 +88,10 @@ export interface Conciliacion {
   autorizadaPorNombre: string | null;
   autorizadaEn: string | null;
   candidatos: MovimientoConMarca[];
+  /** Cheques con fecha posterior al fin del mes, marcados o no: el banco puede pagarlos antes de su fecha. */
+  posfechadosCandidatos?: MovimientoConMarca[];
+  /** El saldo del banco de la carga inicial, solo en la primera conciliación de la cuenta; `null` en las demás. */
+  saldoInicialDelBancoDeLaApertura?: { fecha: string; monto: string } | null;
   cuadratica: { libros: Cuadratica; banco: Cuadratica };
   partidas: PartidasDeConciliacion;
   saldoQueDebeMostrarElEstadoDeCuenta: string;
@@ -93,12 +115,9 @@ export interface DatosDeInicioDeConciliacion {
 export class ApiConciliaciones {
   constructor(private readonly http: ClienteHttp) {}
 
-  /** La API también da `periodoSiguiente`; la pantalla lo usará en BS-7 (hoy la lista solo toma las conciliaciones). */
-  async listarDeLaCuenta(cuentaBancariaId: string) {
-    const lista = await this.http.obtener<{ conciliaciones: ConciliacionResumen[] }>(
-      `/bancos/cuentas-bancarias/${cuentaBancariaId}/conciliaciones`,
-    );
-    return lista.conciliaciones;
+  /** Las conciliaciones de la cuenta y el periodo que propone el servidor para la siguiente. */
+  listarDeLaCuenta(cuentaBancariaId: string) {
+    return this.http.obtener<ListaDeConciliaciones>(`/bancos/cuentas-bancarias/${cuentaBancariaId}/conciliaciones`);
   }
 
   obtener(conciliacionId: string) {

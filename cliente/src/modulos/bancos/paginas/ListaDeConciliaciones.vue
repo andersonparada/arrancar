@@ -15,7 +15,7 @@ import { usarOpcionesDeCuenta } from '../composables/conciliaciones/usar-opcione
 
 const { cuentasBancarias, opciones } = usarOpcionesDeCuenta();
 const cuentaBancariaId = ref<string | null>(null);
-const { conciliaciones, cargando, cargar } = usarListaDeConciliaciones(cuentaBancariaId);
+const { conciliaciones, periodoSiguiente, cargando, cargar } = usarListaDeConciliaciones(cuentaBancariaId);
 
 const {
   abierta,
@@ -46,9 +46,9 @@ const ultimaId = computed(() => conciliaciones.value[0]?.id ?? null);
       descripcion="Conciliación mensual de cada cuenta con su estado de cuenta."
     >
       <BotonBase
-        v-if="cuentaBancariaId"
+        v-if="cuentaBancariaId && periodoSiguiente"
         v-permiso="'bancos.conciliaciones.conciliar'"
-        @click="abrirInicio(conciliaciones[0] ?? null)"
+        @click="abrirInicio(periodoSiguiente)"
       >
         Nueva conciliación
       </BotonBase>
@@ -68,6 +68,7 @@ const ultimaId = computed(() => conciliaciones.value[0]?.id ?? null);
         v-else-if="!conciliaciones.length"
         :icono="Inbox"
         titulo="Esta cuenta todavía no tiene conciliaciones"
+        :descripcion="periodoSiguiente ? undefined : 'No hay movimientos ni saldo inicial por conciliar.'"
       />
       <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <li v-for="registro in conciliaciones" :key="registro.id">

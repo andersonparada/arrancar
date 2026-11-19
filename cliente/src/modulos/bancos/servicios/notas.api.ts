@@ -21,6 +21,7 @@ export type DatosNota = Omit<
   | 'revertidoEn'
   | 'motivoDeReversion'
   | 'revierteAId'
+  | 'parteDeApertura'
   | 'puedeAnular'
   | 'puedeEliminar'
   | 'puedeReclasificar'

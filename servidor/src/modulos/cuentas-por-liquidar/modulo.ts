@@ -1,5 +1,7 @@
 import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo.js';
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
+import { rutasDeAnticiposComponidas } from './composicion/anticipos.js';
+import { configuracionDeCuentasPorLiquidar } from './configuracion.js';
 import { PERMISOS_DE_CUENTAS_POR_LIQUIDAR } from './permisos.js';
 // generador: importaciones
 
@@ -14,7 +16,9 @@ export const moduloCuentasPorLiquidar: DefinicionModulo = {
     'Anticipos de dinero a una persona que debe justificarlos con documentos, con liquidación, devolución o reembolso',
   dependeDe: ['libro-de-compras', 'bancos', 'terceros'],
   permisos: PERMISOS_DE_CUENTAS_POR_LIQUIDAR,
+  configuracion: configuracionDeCuentasPorLiquidar,
   rutas: rutasDelModulo([
+    rutasDeAnticiposComponidas(),
     // generador: rutas
   ]),
 };

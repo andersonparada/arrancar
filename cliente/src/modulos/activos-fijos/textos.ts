@@ -9,5 +9,11 @@ export const VENTANAS_ACTIVOS_FIJOS = {
     nuevo: 'Nueva clase de activo',
     editar: 'Editar clase de activo',
   },
+  activos: {
+    titulo: 'Activos fijos',
+    descripcion: 'Los bienes de la empresa: activos fijos, bienes de control y bienes de terceros.',
+    nuevo: 'Nuevo activo',
+    ficha: 'Ficha del activo',
+  },
   // generador: ventanas
 } as const;

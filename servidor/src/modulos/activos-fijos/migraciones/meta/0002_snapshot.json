@@ -1,0 +1,1463 @@
+{
+  "id": "0d001442-e7d3-47e2-a441-ff04c0bfd91a",
+  "prevId": "e33bab68-0a4c-4e48-b229-56fa62783060",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "activos_fijos.activos": {
+      "name": "activos",
+      "schema": "activos_fijos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codigo": {
+          "name": "codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clase_id": {
+          "name": "clase_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activo_padre_id": {
+          "name": "activo_padre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_de_registro": {
+          "name": "tipo_de_registro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "origen": {
+          "name": "origen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "propietario": {
+          "name": "propietario",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forma_de_tenencia": {
+          "name": "forma_de_tenencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ocioso": {
+          "name": "ocioso",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "ocioso_desde": {
+          "name": "ocioso_desde",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_ocio": {
+          "name": "motivo_de_ocio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_de_adquisicion": {
+          "name": "fecha_de_adquisicion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_de_inicio_de_uso": {
+          "name": "fecha_de_inicio_de_uso",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_de_baja": {
+          "name": "fecha_de_baja",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "porcentaje_fiscal": {
+          "name": "porcentaje_fiscal",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vida_util_contable_meses": {
+          "name": "vida_util_contable_meses",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_residual": {
+          "name": "valor_residual",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_como_ganado_comun": {
+          "name": "valor_como_ganado_comun",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_de_matricula": {
+          "name": "valor_de_matricula",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_catastral": {
+          "name": "valor_catastral",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valores_del_inmueble_completo": {
+          "name": "valores_del_inmueble_completo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "marca": {
+          "name": "marca",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "modelo": {
+          "name": "modelo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numero_de_serie": {
+          "name": "numero_de_serie",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placa": {
+          "name": "placa",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cantidad": {
+          "name": "cantidad",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "en_bodega": {
+          "name": "en_bodega",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "alta_conjunta_id": {
+          "name": "alta_conjunta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "localidad_id": {
+          "name": "localidad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "departamento_id": {
+          "name": "departamento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "responsable": {
+          "name": "responsable",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "responsable_usuario_id": {
+          "name": "responsable_usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "foto_archivo_id": {
+          "name": "foto_archivo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "activos_codigo_unico": {
+          "name": "activos_codigo_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "upper(\"codigo\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activos_foto_unica": {
+          "name": "activos_foto_unica",
+          "columns": [
+            {
+              "expression": "foto_archivo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"activos_fijos\".\"activos\".\"foto_archivo_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activos_existencias_idx": {
+          "name": "activos_existencias_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "clase_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "estado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activos_padre_idx": {
+          "name": "activos_padre_idx",
+          "columns": [
+            {
+              "expression": "activo_padre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"activos\".\"activo_padre_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activos_localidad_idx": {
+          "name": "activos_localidad_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "localidad_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"activos\".\"localidad_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activos_departamento_idx": {
+          "name": "activos_departamento_idx",
+          "columns": [
+            {
+              "expression": "departamento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"activos\".\"departamento_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activos_responsable_usuario_idx": {
+          "name": "activos_responsable_usuario_idx",
+          "columns": [
+            {
+              "expression": "responsable_usuario_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"activos\".\"responsable_usuario_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activos_en_bodega_idx": {
+          "name": "activos_en_bodega_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"activos\".\"en_bodega\" and \"activos_fijos\".\"activos\".\"estado\" <> 'dado_de_baja'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activos_alta_conjunta_idx": {
+          "name": "activos_alta_conjunta_idx",
+          "columns": [
+            {
+              "expression": "alta_conjunta_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"activos\".\"alta_conjunta_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "activos_serie_idx": {
+          "name": "activos_serie_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "upper(\"numero_de_serie\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"activos\".\"numero_de_serie\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "activos_empresa_id_empresas_id_fk": {
+          "name": "activos_empresa_id_empresas_id_fk",
+          "tableFrom": "activos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "activos_responsable_usuario_id_usuarios_id_fk": {
+          "name": "activos_responsable_usuario_id_usuarios_id_fk",
+          "tableFrom": "activos",
+          "tableTo": "usuarios",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "responsable_usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "activos_foto_archivo_id_archivos_id_fk": {
+          "name": "activos_foto_archivo_id_archivos_id_fk",
+          "tableFrom": "activos",
+          "tableTo": "archivos",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "foto_archivo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "activos_clase_fk": {
+          "name": "activos_clase_fk",
+          "tableFrom": "activos",
+          "tableTo": "clases",
+          "schemaTo": "activos_fijos",
+          "columnsFrom": [
+            "clase_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "activos_padre_fk": {
+          "name": "activos_padre_fk",
+          "tableFrom": "activos",
+          "tableTo": "activos",
+          "schemaTo": "activos_fijos",
+          "columnsFrom": [
+            "activo_padre_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "activos_localidad_fk": {
+          "name": "activos_localidad_fk",
+          "tableFrom": "activos",
+          "tableTo": "localidades",
+          "schemaTo": "empresas",
+          "columnsFrom": [
+            "localidad_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "activos_departamento_fk": {
+          "name": "activos_departamento_fk",
+          "tableFrom": "activos",
+          "tableTo": "departamentos",
+          "schemaTo": "empresas",
+          "columnsFrom": [
+            "departamento_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "activos_id_empresa_unico": {
+          "name": "activos_id_empresa_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "activos_tipo_de_registro": {
+          "name": "activos_tipo_de_registro",
+          "value": "\"activos_fijos\".\"activos\".\"tipo_de_registro\" in ('activo', 'bien_de_control', 'de_terceros')"
+        },
+        "activos_origen": {
+          "name": "activos_origen",
+          "value": "\"activos_fijos\".\"activos\".\"origen\" in ('compra', 'construccion', 'importacion', 'aporte', 'donacion', 'saldo_inicial', 'otro')"
+        },
+        "activos_forma_de_tenencia": {
+          "name": "activos_forma_de_tenencia",
+          "value": "\"activos_fijos\".\"activos\".\"forma_de_tenencia\" in ('arrendamiento', 'comodato', 'otra')"
+        },
+        "activos_estado": {
+          "name": "activos_estado",
+          "value": "\"activos_fijos\".\"activos\".\"estado\" in ('en_construccion', 'en_uso', 'dado_de_baja')"
+        },
+        "activos_en_construccion_solo_activos": {
+          "name": "activos_en_construccion_solo_activos",
+          "value": "\"activos_fijos\".\"activos\".\"estado\" <> 'en_construccion' or \"activos_fijos\".\"activos\".\"tipo_de_registro\" = 'activo'"
+        },
+        "activos_origen_de_terceros": {
+          "name": "activos_origen_de_terceros",
+          "value": "(\"activos_fijos\".\"activos\".\"tipo_de_registro\" = 'de_terceros') = (\"activos_fijos\".\"activos\".\"origen\" is null)"
+        },
+        "activos_propietario_de_terceros": {
+          "name": "activos_propietario_de_terceros",
+          "value": "(\"activos_fijos\".\"activos\".\"tipo_de_registro\" = 'de_terceros') = (\"activos_fijos\".\"activos\".\"propietario\" is not null)"
+        },
+        "activos_tenencia_de_terceros": {
+          "name": "activos_tenencia_de_terceros",
+          "value": "(\"activos_fijos\".\"activos\".\"tipo_de_registro\" = 'de_terceros') = (\"activos_fijos\".\"activos\".\"forma_de_tenencia\" is not null)"
+        },
+        "activos_codigo_valido": {
+          "name": "activos_codigo_valido",
+          "value": "\"activos_fijos\".\"activos\".\"codigo\" ~ '^[A-Za-z0-9./-]{1,30}$'"
+        },
+        "activos_descripcion_larga": {
+          "name": "activos_descripcion_larga",
+          "value": "char_length(btrim(\"activos_fijos\".\"activos\".\"descripcion\")) between 1 and 200"
+        },
+        "activos_motivo_de_ocio_largo": {
+          "name": "activos_motivo_de_ocio_largo",
+          "value": "\"activos_fijos\".\"activos\".\"motivo_de_ocio\" is null or char_length(btrim(\"activos_fijos\".\"activos\".\"motivo_de_ocio\")) between 1 and 300"
+        },
+        "activos_propietario_largo": {
+          "name": "activos_propietario_largo",
+          "value": "\"activos_fijos\".\"activos\".\"propietario\" is null or char_length(btrim(\"activos_fijos\".\"activos\".\"propietario\")) between 1 and 150"
+        },
+        "activos_responsable_largo": {
+          "name": "activos_responsable_largo",
+          "value": "\"activos_fijos\".\"activos\".\"responsable\" is null or char_length(btrim(\"activos_fijos\".\"activos\".\"responsable\")) between 1 and 150"
+        },
+        "activos_observaciones_largas": {
+          "name": "activos_observaciones_largas",
+          "value": "\"activos_fijos\".\"activos\".\"observaciones\" is null or char_length(btrim(\"activos_fijos\".\"activos\".\"observaciones\")) between 1 and 500"
+        },
+        "activos_marca_larga": {
+          "name": "activos_marca_larga",
+          "value": "\"activos_fijos\".\"activos\".\"marca\" is null or char_length(btrim(\"activos_fijos\".\"activos\".\"marca\")) between 1 and 80"
+        },
+        "activos_modelo_largo": {
+          "name": "activos_modelo_largo",
+          "value": "\"activos_fijos\".\"activos\".\"modelo\" is null or char_length(btrim(\"activos_fijos\".\"activos\".\"modelo\")) between 1 and 80"
+        },
+        "activos_serie_larga": {
+          "name": "activos_serie_larga",
+          "value": "\"activos_fijos\".\"activos\".\"numero_de_serie\" is null or char_length(btrim(\"activos_fijos\".\"activos\".\"numero_de_serie\")) between 1 and 80"
+        },
+        "activos_placa_larga": {
+          "name": "activos_placa_larga",
+          "value": "\"activos_fijos\".\"activos\".\"placa\" is null or char_length(btrim(\"activos_fijos\".\"activos\".\"placa\")) between 1 and 80"
+        },
+        "activos_ocioso_coherente": {
+          "name": "activos_ocioso_coherente",
+          "value": "\"activos_fijos\".\"activos\".\"ocioso\" = (\"activos_fijos\".\"activos\".\"ocioso_desde\" is not null and \"activos_fijos\".\"activos\".\"motivo_de_ocio\" is not null)"
+        },
+        "activos_ocioso_en_uso": {
+          "name": "activos_ocioso_en_uso",
+          "value": "not \"activos_fijos\".\"activos\".\"ocioso\" or \"activos_fijos\".\"activos\".\"estado\" = 'en_uso'"
+        },
+        "activos_inicio_de_uso": {
+          "name": "activos_inicio_de_uso",
+          "value": "(\"activos_fijos\".\"activos\".\"estado\" = 'en_construccion') = (\"activos_fijos\".\"activos\".\"fecha_de_inicio_de_uso\" is null)"
+        },
+        "activos_fecha_de_baja": {
+          "name": "activos_fecha_de_baja",
+          "value": "(\"activos_fijos\".\"activos\".\"estado\" = 'dado_de_baja') = (\"activos_fijos\".\"activos\".\"fecha_de_baja\" is not null)"
+        },
+        "activos_libros_con_uso": {
+          "name": "activos_libros_con_uso",
+          "value": "(\"activos_fijos\".\"activos\".\"tipo_de_registro\" = 'activo' and \"activos_fijos\".\"activos\".\"estado\" <> 'en_construccion') = (\"activos_fijos\".\"activos\".\"porcentaje_fiscal\" is not null)"
+        },
+        "activos_porcentaje_fiscal": {
+          "name": "activos_porcentaje_fiscal",
+          "value": "\"activos_fijos\".\"activos\".\"porcentaje_fiscal\" between 0 and 100"
+        },
+        "activos_vida_util": {
+          "name": "activos_vida_util",
+          "value": "\"activos_fijos\".\"activos\".\"vida_util_contable_meses\" between 1 and 1200"
+        },
+        "activos_montos_positivos": {
+          "name": "activos_montos_positivos",
+          "value": "\"activos_fijos\".\"activos\".\"valor_residual\" >= 0 and \"activos_fijos\".\"activos\".\"valor_como_ganado_comun\" >= 0"
+        },
+        "activos_valores_del_inmueble": {
+          "name": "activos_valores_del_inmueble",
+          "value": "\"activos_fijos\".\"activos\".\"valor_de_matricula\" > 0 and \"activos_fijos\".\"activos\".\"valor_catastral\" > 0"
+        },
+        "activos_inmueble_completo": {
+          "name": "activos_inmueble_completo",
+          "value": "not \"activos_fijos\".\"activos\".\"valores_del_inmueble_completo\" or \"activos_fijos\".\"activos\".\"valor_de_matricula\" is not null or \"activos_fijos\".\"activos\".\"valor_catastral\" is not null"
+        },
+        "activos_cantidad": {
+          "name": "activos_cantidad",
+          "value": "\"activos_fijos\".\"activos\".\"cantidad\" >= 1"
+        },
+        "activos_padre_distinto": {
+          "name": "activos_padre_distinto",
+          "value": "\"activos_fijos\".\"activos\".\"activo_padre_id\" <> \"activos_fijos\".\"activos\".\"id\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "activos_fijos.clases_por_concepto": {
+      "name": "clases_por_concepto",
+      "schema": "activos_fijos",
+      "columns": {
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "concepto_de_gasto_id": {
+          "name": "concepto_de_gasto_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clase_id": {
+          "name": "clase_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "clases_por_concepto_clase_idx": {
+          "name": "clases_por_concepto_clase_idx",
+          "columns": [
+            {
+              "expression": "clase_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "clases_por_concepto_empresa_id_empresas_id_fk": {
+          "name": "clases_por_concepto_empresa_id_empresas_id_fk",
+          "tableFrom": "clases_por_concepto",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "clases_por_concepto_concepto_fk": {
+          "name": "clases_por_concepto_concepto_fk",
+          "tableFrom": "clases_por_concepto",
+          "tableTo": "conceptos_de_gasto",
+          "schemaTo": "libro_de_compras",
+          "columnsFrom": [
+            "concepto_de_gasto_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "clases_por_concepto_clase_fk": {
+          "name": "clases_por_concepto_clase_fk",
+          "tableFrom": "clases_por_concepto",
+          "tableTo": "clases",
+          "schemaTo": "activos_fijos",
+          "columnsFrom": [
+            "clase_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "clases_por_concepto_pk": {
+          "name": "clases_por_concepto_pk",
+          "columns": [
+            "empresa_id",
+            "concepto_de_gasto_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "activos_fijos.clases": {
+      "name": "clases",
+      "schema": "activos_fijos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inciso_fiscal": {
+          "name": "inciso_fiscal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "porcentaje_fiscal": {
+          "name": "porcentaje_fiscal",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vida_util_contable_meses": {
+          "name": "vida_util_contable_meses",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_residual_porcentaje": {
+          "name": "valor_residual_porcentaje",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "clases_nombre_unico": {
+          "name": "clases_nombre_unico",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "core.nombre_normalizado(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "clases_empresa_activo_idx": {
+          "name": "clases_empresa_activo_idx",
+          "columns": [
+            {
+              "expression": "empresa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "activo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "clases_empresa_id_empresas_id_fk": {
+          "name": "clases_empresa_id_empresas_id_fk",
+          "tableFrom": "clases",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "clases_id_empresa_unico": {
+          "name": "clases_id_empresa_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "clases_nombre_largo": {
+          "name": "clases_nombre_largo",
+          "value": "char_length(btrim(\"activos_fijos\".\"clases\".\"nombre\")) between 1 and 80"
+        },
+        "clases_inciso_fiscal": {
+          "name": "clases_inciso_fiscal",
+          "value": "\"activos_fijos\".\"clases\".\"inciso_fiscal\" in ('edificios', 'plantaciones', 'instalaciones_y_mobiliario', 'maquinaria_y_vehiculos', 'computo', 'herramientas', 'reproductores', 'otros_muebles', 'intangibles', 'llave', 'terrenos')"
+        },
+        "clases_porcentaje_fiscal": {
+          "name": "clases_porcentaje_fiscal",
+          "value": "\"activos_fijos\".\"clases\".\"porcentaje_fiscal\" between 0 and 100"
+        },
+        "clases_terrenos_sin_porcentaje": {
+          "name": "clases_terrenos_sin_porcentaje",
+          "value": "(\"activos_fijos\".\"clases\".\"inciso_fiscal\" = 'terrenos') = (\"activos_fijos\".\"clases\".\"porcentaje_fiscal\" = 0)"
+        },
+        "clases_vida_util": {
+          "name": "clases_vida_util",
+          "value": "\"activos_fijos\".\"clases\".\"vida_util_contable_meses\" between 1 and 1200"
+        },
+        "clases_terrenos_sin_vida_util": {
+          "name": "clases_terrenos_sin_vida_util",
+          "value": "\"activos_fijos\".\"clases\".\"inciso_fiscal\" <> 'terrenos' or \"activos_fijos\".\"clases\".\"vida_util_contable_meses\" is null"
+        },
+        "clases_valor_residual": {
+          "name": "clases_valor_residual",
+          "value": "\"activos_fijos\".\"clases\".\"valor_residual_porcentaje\" between 0 and 99.99"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "activos_fijos.traslados": {
+      "name": "traslados",
+      "schema": "activos_fijos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "empresa_id": {
+          "name": "empresa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activo_id": {
+          "name": "activo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "es_alta": {
+          "name": "es_alta",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "grupo_id": {
+          "name": "grupo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numero": {
+          "name": "numero",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anio_de_numero": {
+          "name": "anio_de_numero",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "localidad_id": {
+          "name": "localidad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "departamento_id": {
+          "name": "departamento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "responsable": {
+          "name": "responsable",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "responsable_usuario_id": {
+          "name": "responsable_usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recibido_por": {
+          "name": "recibido_por",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "inventario_id": {
+          "name": "inventario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "a_bodega": {
+          "name": "a_bodega",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'vigente'"
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_de_anulacion": {
+          "name": "motivo_de_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actualizado_en": {
+          "name": "actualizado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        },
+        "actualizado_por": {
+          "name": "actualizado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "nullif(current_setting('app.usuario_id', true), '')::uuid"
+        }
+      },
+      "indexes": {
+        "traslados_alta_unica": {
+          "name": "traslados_alta_unica",
+          "columns": [
+            {
+              "expression": "activo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"activos_fijos\".\"traslados\".\"es_alta\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "traslados_activo_fecha_idx": {
+          "name": "traslados_activo_fecha_idx",
+          "columns": [
+            {
+              "expression": "activo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "traslados_grupo_idx": {
+          "name": "traslados_grupo_idx",
+          "columns": [
+            {
+              "expression": "grupo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"traslados\".\"grupo_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "traslados_localidad_idx": {
+          "name": "traslados_localidad_idx",
+          "columns": [
+            {
+              "expression": "localidad_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"traslados\".\"localidad_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "traslados_departamento_idx": {
+          "name": "traslados_departamento_idx",
+          "columns": [
+            {
+              "expression": "departamento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"traslados\".\"departamento_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "traslados_usuario_idx": {
+          "name": "traslados_usuario_idx",
+          "columns": [
+            {
+              "expression": "responsable_usuario_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"activos_fijos\".\"traslados\".\"responsable_usuario_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "traslados_empresa_id_empresas_id_fk": {
+          "name": "traslados_empresa_id_empresas_id_fk",
+          "tableFrom": "traslados",
+          "tableTo": "empresas",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "traslados_responsable_usuario_id_usuarios_id_fk": {
+          "name": "traslados_responsable_usuario_id_usuarios_id_fk",
+          "tableFrom": "traslados",
+          "tableTo": "usuarios",
+          "schemaTo": "core",
+          "columnsFrom": [
+            "responsable_usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "traslados_activo_fk": {
+          "name": "traslados_activo_fk",
+          "tableFrom": "traslados",
+          "tableTo": "activos",
+          "schemaTo": "activos_fijos",
+          "columnsFrom": [
+            "activo_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "traslados_localidad_fk": {
+          "name": "traslados_localidad_fk",
+          "tableFrom": "traslados",
+          "tableTo": "localidades",
+          "schemaTo": "empresas",
+          "columnsFrom": [
+            "localidad_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "traslados_departamento_fk": {
+          "name": "traslados_departamento_fk",
+          "tableFrom": "traslados",
+          "tableTo": "departamentos",
+          "schemaTo": "empresas",
+          "columnsFrom": [
+            "departamento_id",
+            "empresa_id"
+          ],
+          "columnsTo": [
+            "id",
+            "empresa_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "traslados_id_empresa_unico": {
+          "name": "traslados_id_empresa_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "empresa_id"
+          ]
+        },
+        "traslados_grupo_activo_unico": {
+          "name": "traslados_grupo_activo_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "grupo_id",
+            "activo_id"
+          ]
+        }
+      },
+      "policies": {
+        "aislamiento_por_empresa": {
+          "name": "aislamiento_por_empresa",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "arrancar_app"
+          ],
+          "using": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid",
+          "withCheck": "empresa_id = nullif(current_setting('app.empresa_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "traslados_alta_sin_boleta": {
+          "name": "traslados_alta_sin_boleta",
+          "value": "\"activos_fijos\".\"traslados\".\"es_alta\" = (\"activos_fijos\".\"traslados\".\"numero\" is null and \"activos_fijos\".\"traslados\".\"grupo_id\" is null)"
+        },
+        "traslados_numero_con_anio": {
+          "name": "traslados_numero_con_anio",
+          "value": "(\"activos_fijos\".\"traslados\".\"numero\" is null) = (\"activos_fijos\".\"traslados\".\"anio_de_numero\" is null)"
+        },
+        "traslados_datos_de_entrega": {
+          "name": "traslados_datos_de_entrega",
+          "value": "\"activos_fijos\".\"traslados\".\"es_alta\" or (\"activos_fijos\".\"traslados\".\"recibido_por\" is not null and \"activos_fijos\".\"traslados\".\"motivo\" is not null)"
+        },
+        "traslados_estado": {
+          "name": "traslados_estado",
+          "value": "\"activos_fijos\".\"traslados\".\"estado\" in ('vigente', 'anulado')"
+        },
+        "traslados_anulacion_completa": {
+          "name": "traslados_anulacion_completa",
+          "value": "(\"activos_fijos\".\"traslados\".\"estado\" = 'anulado') = (\"activos_fijos\".\"traslados\".\"anulado_en\" is not null and \"activos_fijos\".\"traslados\".\"anulado_por\" is not null and \"activos_fijos\".\"traslados\".\"motivo_de_anulacion\" is not null)"
+        },
+        "traslados_motivo_largo": {
+          "name": "traslados_motivo_largo",
+          "value": "\"activos_fijos\".\"traslados\".\"motivo\" is null or char_length(btrim(\"activos_fijos\".\"traslados\".\"motivo\")) between 1 and 300"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "activos_fijos": "activos_fijos"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

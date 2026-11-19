@@ -4,6 +4,7 @@ import { apiSaldosIniciales } from '../../servicios/saldos-iniciales.api';
 import type { SaldoInicialDeCuenta } from '../../servicios/tipos-de-saldos-iniciales';
 import { agruparPartidas } from './grupos-de-partidas';
 import { usarAnulacionDePartida } from './usar-anulacion-de-partida';
+import { usarEvidenciaDeApertura } from './usar-evidencia-de-apertura';
 import { usarBajasDeApertura } from './usar-bajas-de-apertura';
 import { usarFormularioDeCabecera } from './usar-formulario-de-cabecera';
 import { usarFormularioDePartida } from './usar-formulario-de-partida';
@@ -26,6 +27,7 @@ export function usarFichaDeSaldoInicial(cuentaBancariaId: string) {
     cabecera: usarFormularioDeCabecera(cuentaBancariaId, cargar),
     partida: usarFormularioDePartida(cuentaBancariaId, saldo, cargar),
     anulacion: usarAnulacionDePartida(cuentaBancariaId, cargar),
+    evidencia: usarEvidenciaDeApertura(cuentaBancariaId, saldo, cargar),
     ...usarBajasDeApertura(cuentaBancariaId, cargar),
   };
 }

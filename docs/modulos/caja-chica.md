@@ -1,6 +1,6 @@
 # Módulo `caja-chica` — se muestra como **Caja chica**
 
-Estado: **en programación** (CC-1, datos, hecho el 2026-11-18). El diseño aprobado es
+Estado: **en programación** (CC-1, datos, y CC-2, fondos del servidor, hechos el 2026-11-18). El diseño aprobado es
 `diseno-caja-chica-y-cuentas-por-liquidar.md` (con el dictamen `dictamen-caja-chica-2026-11-18.md` y las respuestas del
 usuario al final del diseño); lo que sigue de este documento resume lo ya programado.
 
@@ -40,8 +40,17 @@ alcance por fondo (`comprobantes` con `politicaPorAlcanceOpcional`: la bandeja l
 `caja-chica.comprobantes.{crear, anular, sobre-el-tope, con-retencion}`, `caja-chica.vales.{crear, liquidar, anular}`,
 `caja-chica.reposiciones.{crear, anular}`, `caja-chica.arqueos.{crear, anular}` y `caja-chica.reportes.{ver, exportar}`.
 
+## Fondos (CC-2, servidor)
+
+Rutas bajo `/api/caja-chica`: `GET/POST /fondos`, `GET/PATCH /fondos/:id`, `POST /fondos/:id/{custodio, aumentar, disminuir,
+anular-apertura}` y la ventana `accesos-a-fondos` (`fondos`, `usuarios`, `:usuarioId`). Abrir y aumentar ordenan a Bancos un
+cheque (no negociable, nunca al portador) o una nota de débito con `fondo_de_caja_chica`; disminuir, una nota de crédito con
+`devolucion_de_fondo_de_caja_chica`. Anular la apertura (solo sin comprobantes, arqueos, vales, reposiciones ni otros
+cambios) deja el fondo `cerrado` con `aperturaAnulada` en la ficha. El módulo atiende `bancos.movimiento_por_cambiar` (anular
+apertura o aumento; el resto se rechaza). Eventos: `fondo_abierto`, `monto_del_fondo_cambiado`, `cambio_de_monto_anulado` y
+`custodio_cambiado`.
+
 ## Pendiente (pasos siguientes del diseño §14)
 
-La configuración (§9.5), los casos de uso, la API y las pantallas (CC-2 en adelante) y los conceptos de sistema de
-Bancos (CCL-B1); la pregunta `libro-de-compras.pagado_al_proveedor_en_el_mes` (CCL-M, CCL-BZ) y la referencia de destino
+La configuración (§9.5), los comprobantes, reposiciones, arqueos, vales, cierre y las pantallas (CC-3 en adelante); la pregunta `libro-de-compras.pagado_al_proveedor_en_el_mes` (CCL-M, CCL-BZ) y la referencia de destino
 del libro (CCL-L1).

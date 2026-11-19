@@ -33,6 +33,13 @@ describe('pagado y comprometido', () => {
     expect(estaPosfechado({ fecha: HOY, montoCentavos: 1 }, HOY)).toBe(false);
     expect(estaPosfechado({ fecha: '2026-11-15', montoCentavos: 1 }, HOY)).toBe(true);
   });
+
+  it('un cheque ya cobrado (efecto anterior a hoy) no está comprometido aunque su fecha sea futura', () => {
+    const cobrado = [{ fecha: '2026-12-30', fechaDeEfecto: '2026-10-31', montoCentavos: 200000 }];
+
+    expect(estaPosfechado(cobrado[0]!, HOY)).toBe(false);
+    expect(pagadoYComprometido(cobrado, HOY)).toEqual({ pagadoCentavos: 200000, comprometidoCentavos: 0 });
+  });
 });
 
 describe('estado de pago', () => {

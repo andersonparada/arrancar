@@ -9,6 +9,15 @@ export class CodigoDelBanguatEnUso extends RecursoDuplicado {
   }
 }
 
+/** Otra vuelta de carga (o la actualización de la lista) está corriendo: se espera a que termine. */
+export class CargaDelBanguatEnCurso extends RecursoDuplicado {
+  override readonly codigo = 'carga_del_banguat_en_curso';
+
+  constructor() {
+    super('Ya hay una carga del Banguat en curso; intente de nuevo en un momento.');
+  }
+}
+
 /** La moneda ya tiene tipos cargados con otro código: cambiarlo mezclaría dos series. */
 export class CodigoDelBanguatConOtraSerie extends RecursoDuplicado {
   override readonly codigo = 'codigo_del_banguat_con_otra_serie';

@@ -1,5 +1,5 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
-import { numeroDelPago, type LineaDePago, type LineaDeReintegro } from '../../dominio/pagos.js';
+import { estaPosfechado, numeroDelPago, type LineaDePago, type LineaDeReintegro } from '../../dominio/pagos.js';
 import type {
   LineaDePagoDto,
   PagoDeLaContrasenaDto,
@@ -18,8 +18,8 @@ export const dtoDeLineaDePago = (linea: LineaDePago): LineaDePagoDto => ({
   retencionDescontada: deCentavos(linea.retencionDescontadaCentavos),
 });
 
-const estaComprometido = ({ estado, fecha }: Pick<LineaDePago, 'estado' | 'fecha'>, hoy: string) =>
-  estado === 'vigente' && fecha > hoy;
+const estaComprometido = (linea: Pick<LineaDePago, 'estado' | 'fecha' | 'fechaDeEfecto'>, hoy: string) =>
+  linea.estado === 'vigente' && estaPosfechado(linea, hoy);
 
 const numeroDeChequeDe = ({ numeroDeCheque }: LineaDePago): string | null =>
   typeof numeroDeCheque === 'number' ? String(numeroDeCheque) : null;

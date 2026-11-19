@@ -8,13 +8,13 @@ import TarjetaDeCheque from '../componentes/cheques/TarjetaDeCheque.vue';
 import VentanasDeImpresionDeCheque from '../componentes/cheques/VentanasDeImpresionDeCheque.vue';
 import { usarImpresionDeUnCheque } from '../composables/impresion-de-cheques/usar-impresion-de-un-cheque';
 import { usarBajasDeCheque } from '../composables/cheques/usar-bajas-de-cheque';
-import { TEXTO_DE_ANULACION, TEXTO_DE_BLANQUEO } from '../composables/cheques/textos-de-baja-de-cheque';
+import { TEXTO_DE_BLANQUEO } from '../composables/cheques/textos-de-baja-de-cheque';
 import { usarListaDeCheques } from '../composables/cheques/usar-lista-de-cheques';
 import type { Cheque } from '../servicios/cheques.api';
 
 const props = defineProps<{ chequeraId: string }>();
 const { cheques, cargando, cargar, estado } = usarListaDeCheques(props.chequeraId);
-const { anulacion, blanqueo } = usarBajasDeCheque<Cheque>(cargar);
+const { anulacion, blanqueo, anular, textoDeAnulacion, ayudaDeFecha } = usarBajasDeCheque<Cheque>(cargar);
 const impresion = usarImpresionDeUnCheque(cargar);
 
 const OPCIONES_DE_ESTADO = [
@@ -45,7 +45,7 @@ const volver = { texto: 'Volver a cuentas bancarias', ruta: { name: 'bancos.cuen
           @reimprimir="impresion.reimpresion.abrir(registro)"
           @historial="impresion.historial.abrir(registro)"
           @pasar="impresion.cambio.abrir(registro)"
-          @anular="anulacion.abrir(registro)"
+          @anular="anular(registro)"
           @blanquear="blanqueo.abrir(registro)"
         />
       </li>
@@ -58,7 +58,8 @@ const volver = { texto: 'Volver a cuentas bancarias', ruta: { name: 'bancos.cuen
       con-fecha
       :abierta="!!anulacion.registro"
       titulo="Anular cheque"
-      :texto="TEXTO_DE_ANULACION(anulacion.registro?.numero, anulacion.registro?.moduloDeOrigen)"
+      :texto="textoDeAnulacion()"
+      :ayuda-de-fecha="ayudaDeFecha()"
       :errores="anulacion.errores"
       :enviando="anulacion.enviando"
       @cerrar="anulacion.cerrar"

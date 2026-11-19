@@ -104,5 +104,15 @@ export const VENTANAS_BANCOS = {
     descripcion:
       'Todos los números de cada chequera: emitidos, anulados, inutilizados y disponibles, con el conteo físico del papel en blanco.',
   },
+  saldosPorCuenta: {
+    titulo: 'Saldos por cuenta',
+    descripcion:
+      'El saldo de cada cuenta a una fecha: en libros, cheques posfechados, disponible y lo que el banco aún no ha visto.',
+  },
+  estadoDeCuenta: {
+    titulo: 'Estado de cuenta',
+    descripcion:
+      'Los movimientos de una cuenta en un rango de fechas, con su saldo y el mes en que se concilió cada uno.',
+  },
   // generador: ventanas
 } as const;

@@ -1,6 +1,7 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
 import type { AvisoDeBancos } from '../composables/movimientos/avisos-de-bancos';
 import type { DatosDeBaja } from './datos-de-baja';
+import type { ParteDeApertura } from './tipos-de-saldos-iniciales';
 import type { Movimiento } from './movimientos.api';
 import type { DatosDeReclasificacion, ResultadoDeReclasificacion } from './notas.api';
 
@@ -28,6 +29,8 @@ export interface Cheque {
   impresoEn: string | null;
   /** El módulo que generó el cheque (`cuentas-por-pagar`…); `null` si nació en Bancos. */
   moduloDeOrigen: string | null;
+  /** La parte de la carga inicial que es (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
+  parteDeApertura: ParteDeApertura | null;
   /** Lo calcula el servidor: si se puede anular. */
   puedeAnular: boolean;
   /** Lo calcula el servidor: si se puede blanquear (emitido, con su movimiento limpio). */
@@ -78,6 +81,8 @@ export interface ChequeListado {
   impresoEn: string | null;
   /** El módulo que generó el cheque (`cuentas-por-pagar`…); `null` si nació en Bancos. */
   moduloDeOrigen: string | null;
+  /** La parte de la carga inicial que es; `null` si se emitió en Arrancar. */
+  parteDeApertura: ParteDeApertura | null;
   puedeAnular: boolean;
   puedeBlanquear: boolean;
   /** Lo calcula el servidor: si se puede imprimir por primera vez. */

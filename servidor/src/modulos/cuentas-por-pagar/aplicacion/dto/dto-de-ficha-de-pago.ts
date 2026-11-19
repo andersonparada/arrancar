@@ -1,6 +1,6 @@
 import { deCentavos } from '../../../core/compartido/dominio/centavos.js';
 import type { RetencionDelLibro } from '../../dominio/avisos-de-pagos.js';
-import { numeroDelPago, pagadoYComprometido } from '../../dominio/pagos.js';
+import { estaPosfechado, numeroDelPago, pagadoYComprometido } from '../../dominio/pagos.js';
 import type { LineaConRetencion } from '../casos-uso/pagos/avisos-del-pago.js';
 import type { FichaDelMovimiento } from '../puertos/puertos-de-pagos.js';
 import type { ExtrasDelPago, FilaDeListaDePagos } from '../puertos/puertos-de-lista-de-pagos.js';
@@ -106,7 +106,7 @@ export const dtoDeResumenDePago = (fila: FilaDeListaDePagos, hoy: string): PagoR
   })),
   forma: fila.forma,
   fecha: fila.fecha,
-  posfechado: fila.estado === 'vigente' && fila.fecha > hoy,
+  posfechado: fila.estado === 'vigente' && estaPosfechado(fila, hoy),
   monto: deCentavos(fila.montoCentavos),
   estado: fila.estado,
   fechaDeAnulacion: fila.fechaDeAnulacion,

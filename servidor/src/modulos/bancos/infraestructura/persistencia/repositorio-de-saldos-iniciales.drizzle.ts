@@ -16,11 +16,13 @@ const aCabecera = ({
   cuentaBancariaId,
   saldoSegunLibrosAnteriores,
   observaciones,
+  evidenciaArchivoId,
 }: Fila): CabeceraDeSaldoInicial => ({
   id,
   cuentaBancariaId,
   saldoSegunLibrosAnteriores,
   observaciones,
+  evidenciaArchivoId,
 });
 
 /** La tabla tiene seguridad por empresa (RLS): ninguna consulta necesita filtrar por empresa. */
@@ -60,6 +62,13 @@ export class RepositorioDeSaldosInicialesDrizzle implements RepositorioDeSaldosI
     await transaccionEnCurso()
       .update(saldosIniciales)
       .set({ saldoSegunLibrosAnteriores, observaciones })
+      .where(eq(saldosIniciales.id, id));
+  }
+
+  async ponerEvidencia(id: string, archivoId: string | null): Promise<void> {
+    await transaccionEnCurso()
+      .update(saldosIniciales)
+      .set({ evidenciaArchivoId: archivoId })
       .where(eq(saldosIniciales.id, id));
   }
 

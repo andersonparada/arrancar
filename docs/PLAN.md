@@ -310,6 +310,20 @@ copiarse fuera. Lo mínimo es copiar `mensuales/` cada mes (los diarios, si se p
 
 Cada cierto tiempo hay que **probar una restauración**
 (`pg_restore -d <base> archivo.dump`) y comprobar que la copia externa abre.
+
+### Llave de secretos del correo (`CLAVE_SECRETOS`)
+
+El envío de correo (aviso de pago al proveedor) guarda la contraseña del servidor SMTP cifrada en la base con
+AES-256-GCM; la llave vive solo en el entorno, fuera de la base y de los respaldos. Pasos en producción:
+
+1. Genérela una sola vez: `openssl rand -base64 32`, y póngala en `CLAVE_SECRETOS` de `infra/.env`
+   (`docker-compose.yml` la pasa al contenedor `app`, igual que `CLAVE_SECRETOS_ANTERIOR`).
+2. **Respáldela aparte** (gestor de contraseñas), nunca junto al respaldo de la base: quien tenga ambos lee la
+   contraseña SMTP. Si se pierde no se pierde otro dato: Soporte vuelve a escribir la contraseña SMTP.
+3. Sin ella la app arranca con el correo apagado; si ya hay un servidor guardado, lo dice como **error** en el registro
+   (`docker compose logs app`) y los correos esperan en la bandeja.
+4. Para rotarla: la vieja a `CLAVE_SECRETOS_ANTERIOR`, la nueva a `CLAVE_SECRETOS`, reiniciar y probar el servidor
+   desde Soporte (se vuelve a cifrar con la vigente); después se borra `CLAVE_SECRETOS_ANTERIOR`.
 La ubicación elegida por cliente queda pendiente de decidir con el usuario.
 
 **Antes de restaurar una base más vieja que los archivos**, apague la limpieza de archivos
@@ -3204,6 +3218,28 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ahora pasa los módulos activos (como crear). Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
   posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
   cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.
+- **2026-11-18 — BS-6 (Bancos, segunda parte, cliente: otras pantallas).** Lo de la carga inicial se ve en las pantallas de siempre (§9.2, sin tocar `ConciliarCuenta.vue` ni la ventana de saldos iniciales): insignia y dato «Origen: Carga inicial» (`parteDeApertura`) en Cheques, ficha de chequera, notas, reporte de movimientos y cheques caducos (origen `apertura`); la chequera de apertura se lista aparte («De la carga inicial», sin «Disponibles» ni «Inactivar», `ListaDeTarjetasDeChequeras`); la nota de la carga inicial no se corrige aquí (va en Saldos iniciales). **Anular** sigue la regla del servidor (`puedeAnular`) y, si es de la carga inicial, la `VentanaDeMotivo` explica el inverso con la fecha de corte y el texto del dictamen (arts. 408 y 410: la deuda sigue; depósito: la comisión es aparte), con ayuda de fecha propia; la fecha de corte se pide una vez a Saldos iniciales y, si el usuario no puede verlos, el texto nombra el corte sin fecha. La anulación en lote de caducos avisa cuántos cheques marcados son de la carga inicial. Lógica con pruebas: `de-apertura`, `insignia-de-cheque`, `grupos-de-chequeras`, `cantidadDeApertura`. **Pendiente para el contador:** cotejar el texto de la anulación en lote (`textoDeAnulacionEnLoteDeApertura`), que reutiliza las citas del dictamen.
+- **2026-11-18 — BS-6, correcciones de la revisión (cliente).** El cheque posfechado ya no se trata como partida de la
+  carga inicial al anular (§5.3): `esDeApertura` lo excluye (la insignia «Carga inicial» de la tarjeta sigue con
+  `parteDeApertura !== null`), la anulación en lote cuenta solo `origen === 'apertura'` y la fila de cheques caducos
+  usa el mismo origen que la columna. `usarCorteDeApertura` comprueba `bancos.saldos-iniciales.ver` antes de pedir el
+  corte. Se quita `insigniaConApertura` (código muerto). Sin cambios: lógica de notas de apertura (inofensiva).
+- **2026-11-18 · BS-7 (cliente de Bancos, conciliación).** `ConciliarCuenta.vue` muestra el saldo inicial del banco
+  rotulado en el cuadro («Saldo anterior del estado de cuenta» si el corte es fin de mes; «Saldo del banco al
+  dd/mm/aaaa (carga inicial)» si no), la insignia «De la carga inicial» en partidas y candidatos, el grupo «Cheques con
+  fecha posterior (posfechados)» con su aviso por cheque (marcables como cualquier candidato) y la partida «Cheques
+  cobrados antes de su fecha» (resta; sale en pantalla e impresión solo si tiene partidas). `ListaDeConciliaciones` usa
+  `periodoSiguiente` del servidor (se borra `periodo-propuesto.ts`); sin periodo no se ofrece «Nueva conciliación».
+  Lógica pura con pruebas en `textos-de-carga-inicial.ts`.
+- **2026-11-18 — BS-9 (Bancos, segunda parte, servidor: evidencia de la apertura).** `PUT`, `GET` y `DELETE /bancos/saldos-iniciales/:cuentaBancariaId/evidencia`: se sube y se quita con `.editar` y la carga abierta (cerrada: 422 `carga_inicial_cerrada`, y qpdf ni se llama), se abre con `.ver`; la subida va en tres tiempos como el estado de cuenta de H2b (qpdf fuera de la transacción, tope de subidas por minuto, huella del archivo recibido) y el archivo tiene como dueño `bancos.saldos-iniciales` (no se sirve por `/archivos/:id`). Reemplazar o quitar borra el archivo anterior y audita `quitar` con sus datos (tipo, tamaño, nombre y huella); eliminar el saldo inicial borra también el archivo. La ficha trae `evidencia` (sin ruta ni id) y el hallazgo `sin_evidencia` desaparece al subirla, porque ya salía de `evidencia_archivo_id`. Sin migración (la columna nació en la `0034`). Subir sin saldo inicial en la cuenta responde 404. Pendiente: el cliente (segundo commit de BS-9).
+- **2026-11-18 — BS-9 (Bancos, segunda parte, cliente: evidencia de la apertura).** La ficha de la cuenta (`FichaDeSaldoInicial`) muestra la tarjeta `EvidenciaDeLaApertura` cuando la cuenta ya tiene saldo: «Último estado de cuenta o última conciliación del sistema anterior, opcional», con nombre, tipo, páginas, tamaño, quién y cuándo la subió, huella corta y enlace «Abrir en otra pestaña»; subir, reemplazar y quitar (con confirmación) solo con la carga abierta y el permiso `bancos.saldos-iniciales.editar`. Reutiliza los tipos y topes del estado de cuenta de H2b (`problemaDelArchivo`); la lógica pura está en `evidencia-de-apertura.ts` con prueba y el envío en `usar-evidencia-de-apertura.ts`. `ClienteHttp` gana `subirParaReemplazar` (multipart con `PUT`). Con esto el hallazgo `sin_evidencia` se resuelve desde la pantalla. BS-9 queda completo.
+- **2026-11-18 · Bancos BS-R2 (cliente):** páginas «Saldos por cuenta» (`/bancos/saldos-por-cuenta`, `bancos.saldos-por-cuenta.ver`/`.exportar`) y
+  «Estado de cuenta» (`/bancos/estado-de-cuenta`, `bancos.movimientos.ver`/`.exportar`), en el menú Reportes, con imprimir y exportar.
+  Saldos: fecha de corte y cuenta, tarjeta por cuenta (libros, posfechados, disponible, en tránsito, saldo según el banco, última
+  conciliación y «atrasada», «Fondos insuficientes para los posfechados», detalle desplegable de partidas), totales Bancos y Sobregiros sin
+  compensar y la nota de fondos retenidos. Estado de cuenta: cuenta obligatoria (no pide nada hasta elegirla), encabezado con empresa,
+  banco, cuenta, periodo y la leyenda «Documento interno, no sustituye el estado de cuenta del banco», saldo anterior, movimientos con
+  «Conciliado en mm/aaaa» o «Sin conciliar», saldo final y totales por tipo. `FilaDelReporte` gana `conciliadoEn`. Pruebas de lógica pura.
 - **2026-11-18 (IC-1 a IC-7, Bancos, servidor: impresión de cheques y comprobante de egreso)**: según
   `diseno-impresion-de-cheques.md`. Migración `0038_impresion_de_cheques` (la siguiente libre tras la `0037` de CCL-B1):
   `formatos_de_cheque` (por cuenta, RLS `politicaPorCuenta`), `impresiones_de_cheques` (solo agrega; un `original` por cheque),
@@ -3256,3 +3292,153 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `puedeDeclararExtraviado` (emitido en Arrancar e impreso, aunque su mes esté conciliado) aparte de `puedePasarAOtroFormulario`
   (que sigue exigiendo el movimiento limpio); la ventana se abre solo con la opción de extraviado cuando no se puede pasar, y el
   botón de la tarjeta dice «Papel extraviado». Sin migraciones.
+- **2026-11-19 — AF-2 con AFI-1 y AF-P22 (Activos fijos y Empresas, servidor).** Tablas `activos_fijos.activos` (con ocioso y
+  su motivo, matrícula y catastro, `en_bodega`, `alta_conjunta_id` e índices de §5.3) y `traslados` (fila del alta, `a_bodega`,
+  boleta y anulación completas), migración `0002_af2_activos_y_traslados`; RLS solo por empresa (AF-P2 a), con prueba de aislamiento
+  entre dos empresas de la misma cuenta. Casos de uso: alta manual sin costos (un activo del balance nace `en_construccion`; un bien
+  de control o de terceros, `en_uso`; código propuesto con el correlativo `activos-fijos.activos` y el prefijo de la empresa),
+  editar (clase, padre, cantidad, origen y fecha solo en construcción; matrícula y catastro mientras no haya libros), marcar y quitar
+  ocioso (con motivo, `corregir` en la auditoría), eliminar (sin traslados ni componentes; `eliminar` en la auditoría), listar con
+  filtros, ficha con el historial de ubicación y ubicaciones activas. La fecha de adquisición se compara con la fecha de inicio de
+  la empresa por el mediador (`empresas.obtener_carga_inicial`). **AF-P22 b:** migración de Empresas `0013_nombres_de_ubicaciones`
+  con `empresas.nombres_de_localidades(uuid[])` y `empresas.nombres_de_departamentos(uuid[])` (`security definer`, `search_path` fijo,
+  solo la empresa de la transacción, `grant` solo a `arrancar_app`), **marcada para revisión de `seguridad`**; el nombre de la
+  localidad y el departamento sale siempre de ellas. Decisiones: `GET /activos-fijos/ubicaciones` exige `activos.ver` (los permisos
+  de traslados e inventarios llegan en pasos posteriores); sin `include` en `activos_existencias_idx` (drizzle no lo soporta aún);
+  cambiar el tipo de registro no se permite al editar; el candado compartido del cierre y la regla de mes abierto entran con AF-5.
+  Eliminar una clase ahora también revisa que no tenga activos.
+- **2026-11-19 — AF-2c (Activos fijos, cliente).** Pantallas de activos en la sección Operación: lista con tarjetas y etiquetas
+  («En construcción o en tránsito», «Ocioso», «En bodega», «De terceros», «Control», «Dado de baja») y filtros (texto con pausa al
+  escribir, estado, tipo, clase y marca ocioso o en bodega), ficha con los datos (`DatosDelRegistro`) y el historial de ubicación
+  (alta y traslados), y alta manual en página completa con `CamposDeActivo` (tipo de registro, clase, componente de, procedencia,
+  matrícula y catastro solo en edificios, valor como ganado común solo en reproductores, ubicación con localidades y
+  departamentos de `GET /activos-fijos/ubicaciones`, responsable, bodega y datos del bien). El nombre de la localidad se muestra
+  siempre (AF-P22 b). Lógica pura con pruebas en `edicion-de-activo.ts`, `etiquetas-de-activo.ts` y `filtros-de-activos.ts`.
+  Pendiente: editar, marcar ocioso y eliminar desde la ficha (el servidor ya los tiene) y las etiquetas «Depreciado contable» y
+  «Depreciado fiscal», que dependen de las cuotas (AF-5).
+- **2026-11-19 — Correcciones de la revisión de AF-2 (Activos fijos, servidor).** Editar un activo ya no exige clase activa si la
+  clase no cambia (inactivar una clase no bloquea corregir sus activos). El código propuesto usa siempre el mismo contador
+  (fecha fija), sin depender del reinicio anual ni de la fecha de adquisición; si no halla uno libre lanza
+  `CodigoNoDisponible` (regla de negocio, no 500). La fecha de adquisición futura se rechaza. `marcarOcioso` sobre uno ya ocioso
+  y `quitarOcioso` sobre uno que no lo es se rechazan. Quedan pendientes los bajos de cliente (casilla de bodega, mover
+  `fechaDeHoyEn` a core, permisos de los selectores) y del índice `include` y el check de `recibido_por`.
+- **2026-11-19 — INV-1 (Inventarios, servidor).** Esqueleto del módulo `inventarios` (`dependeDe: ['libro-de-compras']`),
+  esquema `inventarios` con `unidades` (magnitud y factor a libra, galón, metro o metro cuadrado), `categorias`, `articulos`
+  (tipo de inventario de la SAT según V-4, llaves compuestas con la empresa a categoría, unidad base y concepto de gasto del
+  Libro de compras, únicos por código, nombre y código de barras), `conversiones` y `lotes`; todas con RLS solo por empresa.
+  Migraciones `0000_inv1_catalogos`, `0001_inv1_auditoria_permanente` (`inventarios.metodos-de-costeo`, `.cierres` y
+  `.ajustes` en `core.recursos_de_auditoria_permanente`, con ISR art. 41 y Código Tributario arts. 47 y 112) y
+  `0002_inv1_busqueda_de_articulos` (índice `pg_trgm`). Semilla perezosa de 17 unidades al abrir el catálogo vacío. Casos de
+  uso: CRUD de los tres catálogos con inactivar y eliminar auditados (la unidad o categoría en uso no se elimina), conversiones
+  (`GET` y `PUT /inventarios/articulos/:id/conversiones`, lo que se quita queda en la auditoría), lotes (`GET` y `POST
+  …/lotes`) y código propuesto (`GET /inventarios/articulos/codigo-propuesto`, prefijo `inventarios.codigos.prefijo` y
+  correlativo). Las ocho variables de configuración de §10.4 (solo empresa e instalación). Excel de los tres catálogos
+  (el artículo con categoría, unidad base y concepto de gasto por nombre). Decisiones: INV-1 lleva el catálogo en
+  `0000` y la auditoría permanente en `0001` (el diseño las juntaba), como AF-1; eliminar un artículo se lleva sus
+  conversiones y lotes y INV-4 agrega la guardia de movimientos; la unidad base y `maneja_lotes` no se bloquean todavía
+  (no hay movimientos); no hay búsqueda por texto en la lista (solo el índice). Sin pantallas (INV-1c).
+- **2026-11-19 — INV-1c (Inventarios, cliente).** Catálogos «Unidades de medida», «Categorías» y «Artículos» del módulo
+  `inventarios`, generados con `npm run generar -- recurso inventarios/<entidad>` (definiciones en
+  `generador/definiciones/inventarios/`) y completados a mano: Inactivar o Reactivar y Eliminar con confirmación y aviso
+  (composable `usarAccionesDeCatalogo` y `TarjetaDeCatalogo` compartidos por los tres), Excel (importar y exportar con sus
+  permisos), el factor de la unidad solo para masa, volumen, longitud y superficie, y en el artículo: búsqueda en la lista,
+  código propuesto con el prefijo de la empresa, tipo de inventario que sigue a la categoría, lotes y vencimiento
+  coherentes, concepto de gasto del Libro de compras (por el endpoint de Inventarios), ficha con las **conversiones**
+  (ventana con la «para compras») y los **lotes** (ventana de alta). Lógica pura con pruebas (`edicion-de-*`,
+  `reglas-de-articulo`, `textos-de-catalogo`, `cantidades`, `opciones-de-referencias`). Pendiente: la ficha sin kardex hasta
+  INV-4c; las bodegas y su asignación son de INV-2c.
+- 2026-11-18 — **INV-1, correcciones de revisión**: el código propuesto del artículo usa una fecha fija para que el correlativo no se reinicie por año aunque la empresa reinicie los suyos, y si no hay código libre responde el error esperado `sin_codigo_libre` (antes un 500). Los conceptos que ofrece el artículo son solo activos y que no sean de activo fijo. Pendientes bajos: conversiones con unidad inactiva, formato de factores, Docena y coherencia de lotes al llegar el kardex (INV-4).
+- **2026-11-18, Multimoneda MM-3b (carga automática con tablas).** En `core/monedas`: bitácora por llamada
+  (`CargasDeTiposDrizzle.guardar` deja la fila de `core.consultas_al_banguat` y los tipos nuevos en una sola transacción, sin
+  duplicar ni reemplazar), candado de una sola carga (`CerrojoDeCargaPostgres`, `pg_try_advisory_lock` con la clave
+  7301913002), `vueltaQueToca` (función pura del dominio, en la hora de `core.regional.zona_horaria` de la instalación:
+  06:00 el dólar con reintentos a las 06:30, 07:00, 08:00, 09:30, 11:00, 13:00, 16:00 y 20:00 mientras falte, 09:30 las demás
+  y 21:00 la noche, que adelanta el dólar de mañana y pide una vez las que aún no tienen el de hoy), `ConsultarAlBanguat` (una
+  llamada: valida, compara con el valor anterior y deja la constancia; solo el dólar usa `FuenteConReintentos`),
+  `VueltasDeCarga`, `CargarTiposDeCambio` (`siTocaAhora`, `alArrancar`, `cargarAhora`), `ActualizarMonedasDelBanguat`
+  (la lista no se toca si viene vacía o con error) y `evaluarVariaciones` (más de 25 % en una moneda sin banda: no se guarda,
+  `variacion_excesiva`; más de 3 %: se guarda con aviso en el detalle). **Solo se cargan las monedas activas con código** (la
+  respuesta del usuario a D-1, que reemplaza a «todas con código» de A.6). El relleno revisa 45 días hasta ayer y solo
+  pide si hay huecos (el dólar contra días calendario; las demás, contra días hábiles de `calendarioLaboral`).
+  `POST /api/tipos-de-cambio/cargar` (`desde`/`hasta`, máximo 366 días, 409 `carga_del_banguat_en_curso`) y
+  `POST /api/monedas/banguat/actualizar`, de soporte. `principal.ts` programa un temporizador de 15 minutos y el arranque; las
+  variables `CARGAR_TIPOS_DE_CAMBIO` (apagada por omisión en todas partes hasta hacer C-1 a C-4; se enciende con `true`) y `URL_TIPO_DE_CAMBIO_BANGUAT`
+  (`vitest.config.ts` la apunta a un puerto cerrado: las pruebas nunca llegan al Banguat). Sin migraciones.
+  **Las comprobaciones reales C-1 a C-4 NO se pudieron hacer:** desde este entorno la conexión TCP a
+  `www.banguat.gob.gt:443` abre pero el saludo TLS no responde (se probó con `curl` en TLS 1.2 y 1.3 y en las dos IP, con
+  esperas de hasta 60 s), así que `CODIGOS_DEL_BANGUAT_EXCLUIDOS` sigue vacío, la hora de la noche sigue en 21:00 (C-4), los
+  días esperados de las demás monedas siguen siendo los hábiles (C-2) y no se confirmó la unidad (C-3). Hay que repetirlas
+  desde otra red. **Pendiente de MM-3b:** `GET …/consultas` (estado y aviso de 4 días hábiles de atraso), `GET …/muestra` con su
+  límite, y el relleno inmediato al asignar un código (hoy lo cubre la vuelta de las 09:30 del día siguiente).
+- **2026-11-18, Multimoneda MM-3b, corrección de la revisión.** La carga automática de tipos de cambio queda **apagada por
+  omisión en todas partes** (`CARGAR_TIPOS_DE_CAMBIO` vacío = no) hasta hacer las comprobaciones C-1 a C-4 desde una red que
+  alcance al Banguat; con ella encendida, el primer arranque llenaría la lista con el DEG, los bolívares y el colón contra la
+  decisión D-2. **Decisión para el usuario:** cuándo y desde qué red se hacen C-1 a C-4 antes de encender `true` en
+  producción. Además: la vuelta de noche no pide las demás monedas en día inhábil, y la bitácora de una moneda solo suma sus
+  propios rechazos. Siguen pendientes (antes de MM-4): `GET …/consultas`, `GET …/muestra`, devolver la consulta en
+  `POST …/banguat/actualizar`, el relleno al asignar un código, y que «Cargar ahora» no corra dentro de la solicitud HTTP.
+- **2026-11-18, Multimoneda MM-5 (módulo `multimoneda`).** Creado con `npm run generar -- modulo multimoneda` (esqueleto del
+  servidor y del cliente, registrado en los dos `indice.ts`, y `docs/modulos/multimoneda.md` completado). Sin tablas ni
+  migraciones: lee las monedas y los tipos del núcleo por adaptadores en `infraestructura/nucleo-de-monedas.ts`
+  (`core/monedas/contexto.ts` exporta `listarMonedas` para eso). Permisos `multimoneda.tipos-de-cambio.ver` y `.exportar`;
+  configuración `multimoneda.diferencial.metodo` (`acumulativo` o `reversion`, niveles instalación y empresa, pública).
+  Orden `multimoneda.monedas_disponibles` (`core/contratos/multimoneda.contratos.ts`) atendida por `MonedasDisponibles`
+  (activas distintas de GTQ, con código, nombre, símbolo y decimales): con el módulo inactivo el mediador responde
+  `ModuloNoDisponible`. Reporte «Tipos de cambio»: `GET /api/multimoneda/tipos-de-cambio?moneda=&desde=&hasta=` (mismo filtro y
+  tope de 366 días que la serie del núcleo; lleva `fuente: 'Banco de Guatemala'` y el origen de cada fila, sin motivo ni
+  usuario de soporte) y `…/exportar` a Excel (`soloExportar`, una columna «Fuente» por fila). Quedan para MM-6 el menú y las
+  pantallas del cliente, y para los pasos siguientes el diferencial, el cierre y las demás órdenes.
+- **2026-11-18 (correo, correcciones de la revisión de seguridad: tres hallazgos medios)**: (1) `infra/docker-compose.yml`
+  pasa `CLAVE_SECRETOS` y `CLAVE_SECRETOS_ANTERIOR` al contenedor `app` (las de desarrollo del correo no, la app las
+  rechaza); `infra/.env.ejemplo` y PLAN «Llave de secretos del correo» explican cómo generarla y respaldarla;
+  `DiagnosticarLlaveDeCorreo` hace que `principal.ts` registre como error (no solo aviso) que falta la llave si ya hay un
+  servidor guardado. (2) Migración `0032_cupos_por_destinatarios` (core): `core.reservar_cupo_de_correo` cuenta filas de
+  `destinatarios_de_correos` (para y copias) y `verificarCupos` suma las direcciones del correo nuevo, así 100/hora y
+  500/día por cuenta y 1,000/hora la instalación (P12) son en destinatarios; el tope por destinatario no cambia.
+  (3) El PDF del comprobante ya no copia `referencia`, `motivo` ni `observaciones` del pago (notas internas; el diseño no
+  las incluye en lo que ve el proveedor, P6); sí el documento bancario. `AVISO_DEL_PDF` de la ventana dice qué lleva y que
+  esas notas no. Decisión: la referencia también se omite porque el diseño no la autoriza.
+- 2026-11-18 · Corrección de la QA CP5-11 (errores medios). (1) El posfechado ya cobrado (conciliación autorizada anterior a su
+  fecha) rebaja desde el fin de ese mes también en la ficha del proveedor, la ficha del documento, la contraseña, Nuevo pago
+  y la lista de pagos: la regla vive en `fechaDeEfectoDelPagoSql` (SQL, `fecha-de-efecto-del-pago.sql.ts`, unida por join, no
+  subconsulta, por rendimiento) y en `estaPosfechado` (dominio, con `fechaDeEfecto`). (2) R2 impreso: `print:text-[8px]`,
+  celdas con `px-1` y texto que se parte, para caber en carta horizontal. Bajos: el Excel de R1 y R2 lleva el corte en el
+  nombre (`fechaDelNombre` en `rutasDeIntercambio`) y el doble clic en «Exportar» ya no baja dos archivos. Sin migraciones.
+- **2026-11-18 (CC-2, Caja chica, fondos, servidor)**: abrir (`POST /api/caja-chica/fondos`, `fondos.crear`) con cheque no
+  negociable (nunca al portador) o nota de débito, con el fondo como origen y el concepto `fondo_de_caja_chica`, y el
+  primer custodio (texto o usuario activo de la empresa, que recibe el acceso por el disparador); ficha y lista (`fondos.ver`,
+  solo los asignados, con monto, efectivo esperado, pendiente, vales, último arqueo); editar (`PATCH`, auditoría `corregir`
+  solo si cambia el tope); cambiar de custodio (cierra el tramo, abre otro con motivo, `corregir`; el anterior conserva su
+  acceso); aumentar (cheque o nota) y disminuir (nota de crédito `devolucion_de_fondo_de_caja_chica`, contra el efectivo
+  esperado y sin dejar el fondo en cero, `ajustar`); anular la apertura de un fondo sin uso (`fondos.cerrar`, orden
+  `anular_movimiento_de_origen`, deja el cambio anulado y **cierra el fondo con el motivo**, `anular`). Ventana de asignación
+  `/api/caja-chica/accesos-a-fondos` (`fondos.asignar`, operador «para asignar», `asignar`/`quitar` auditados). Manejador del
+  aviso `bancos.movimiento_por_cambiar`: anular la apertura o un aumento desde Bancos se rechaza si el fondo se usó (o tiene
+  más cambios) y, si no, anula el cambio (y cierra el fondo si era la apertura); la disminución y todo lo que no sea anular se
+  rechazan (`movimiento_de_caja_chica`); un movimiento que dice ser de Caja chica y que el usuario de Bancos no ve (fondo no
+  asignado, RLS) también se rechaza, para no dejar un cambio sin respaldo. Eventos nuevos `caja-chica.fondo_abierto`,
+  `monto_del_fondo_cambiado`, `cambio_de_monto_anulado` y `custodio_cambiado` (`core/contratos/caja-chica.contratos.ts`).
+  Sin migración. Decisiones: anular la apertura no agrega un estado de fondo (queda `cerrado` y la ficha trae
+  `aperturaAnulada`); el cambio de custodio no ofrece aún el arqueo de entrega (CC-5); un nombre de fondo anulado sigue
+  ocupando el nombre (índice único no parcial de CC-1).
+- **2026-11-18 (CC-2, correcciones de la revisión)**: aumentar y disminuir exigen `fecha >= fecha_de_apertura` (error
+  `fecha_anterior_a_la_apertura`, campo `fecha`). Cuando Bancos anula un aumento, `AnuladorDeCambios.revisar` calcula el
+  monto y el efectivo esperado sin ese aumento y rechaza si quedan <= 0 (`anulacion_deja_el_fondo_sin_monto`), de modo que
+  no se puede anular un aumento ya «consumido» por disminuciones posteriores. Sin migración.
+- **2026-11-18 (CL-2, Cuentas por liquidar, servidor):** anticipos sin migraciones nuevas (las tablas ya estaban en
+  CL-1). `EntregarAnticipo` (`anticipos.crear`): el beneficiario es un tercero activo de la cuenta (el cheque va a su
+  nombre, nunca al portador, no negociable por omisión; o nota de débito con la transferencia como referencia), con
+  «es empleado», usuario opcional (de la empresa) y localidad opcional; ordena a Bancos con el anticipo como origen y el
+  concepto `anticipo_por_liquidar`; fecha límite escrita o la entrega más `cuentas-por-liquidar.anticipos.dias_para_liquidar`
+  (15 por omisión; empresa e instalación, pública); aviso C8 («Las facturas deben venir a nombre y NIT de la empresa.») si no
+  es empleado; vencidos (CL-r): aviso, o con `cuentas-por-liquidar.anticipos.bloquear_con_vencidos` rechazo
+  `BeneficiarioConVencidos` salvo el permiso `anticipos.con-vencidos` (lo lee el controlador) y un motivo, que se guarda.
+  `AnularAnticipo` (`anticipos.anular`) y el manejador de `bancos.movimiento_por_cambiar`
+  (`AtenderMovimientoDeAnticipoPorCambiar`): solo abierto, sin gastos vigentes y con el cheque sin cobrar; fecha contable
+  de la anulación como CP5-a; auditoría `anular` con el `AnticipoDto`; cualquier otro cambio en Bancos de lo que registró
+  este módulo se rechaza con `MovimientoDeCuentasPorLiquidar`. Lista (`GET /anticipos`) con `corte` (por justificar y
+  antigüedad al corte, anulados después del corte incluidos), `estado`, `beneficiarioId` y `vencidos`, y ficha. Eventos
+  `anticipo_entregado` y `anticipo_anulado` (`core/contratos/cuentas-por-liquidar.contratos.ts`; los demás llegan con sus
+  pasos). Decisiones: los puertos y las órdenes a Bancos son propios del módulo (no se importa Cuentas por pagar); la
+  devolución y el reembolso aún no existen, así que el aviso de Bancos sobre ellos se rechaza igual (CL-4 los reabrirá);
+  `gastos_sin_documento.permitidos` se declara en CL-3, con su caso de uso.
