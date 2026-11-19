@@ -26,6 +26,7 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
   departamentos_codigo_unico: 'Ya existe un departamento con ese código.',
   departamentos_nombre_unico: 'Ya existe un departamento con ese nombre.',
   localidades_establecimiento_sat_unico: `Ya existe una localidad con ese código de establecimiento SAT. ${PEDIR_ACCESO_A_LOCALIDADES}`,
+  activos_codigo_unico: 'Ya existe un activo con ese código.',
   documentos_sat_unico: MENSAJE_DOCUMENTO_DE_LA_CUENTA,
   documentos_autorizacion_fel_unica: MENSAJE_DOCUMENTO_DE_LA_CUENTA,
   documentos_del_proveedor_unico: 'Ese documento ya está registrado.',
@@ -43,6 +44,7 @@ const MENSAJES_POR_RESTRICCION: Readonly<Record<string, string>> = {
 /** Restricciones únicas cuyo valor repetido lo escribe el usuario en un campo: el cliente lo marca ahí. */
 const CAMPOS_POR_RESTRICCION: Readonly<Record<string, string>> = {
   documentos_numero_por_proveedor_unico: 'numero',
+  activos_codigo_unico: 'codigo',
 };
 
 /** Restricciones de exclusión (rangos que no pueden traslaparse) y lo que se le dice al usuario. */

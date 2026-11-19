@@ -2999,3 +2999,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `libro-de-compras.cambiar_marca_de_inventario`; V-10 donación con su valor razonable en el evento; kardex por bodega con
   su propio saldo; traslados neutros para el costeo y devolución con PEPS sobre su capa. Abiertas: P-1, P-3, INV-P14 e
   INV-A16 (usuario) y VC-1 a VC-4 (contador).
+- **2026-11-19 — AF-2 con AFI-1 y AF-P22 (Activos fijos y Empresas, servidor).** Tablas `activos_fijos.activos` (con ocioso y
+  su motivo, matrícula y catastro, `en_bodega`, `alta_conjunta_id` e índices de §5.3) y `traslados` (fila del alta, `a_bodega`,
+  boleta y anulación completas), migración `0002_af2_activos_y_traslados`; RLS solo por empresa (AF-P2 a), con prueba de aislamiento
+  entre dos empresas de la misma cuenta. Casos de uso: alta manual sin costos (un activo del balance nace `en_construccion`; un bien
+  de control o de terceros, `en_uso`; código propuesto con el correlativo `activos-fijos.activos` y el prefijo de la empresa),
+  editar (clase, padre, cantidad, origen y fecha solo en construcción; matrícula y catastro mientras no haya libros), marcar y quitar
+  ocioso (con motivo, `corregir` en la auditoría), eliminar (sin traslados ni componentes; `eliminar` en la auditoría), listar con
+  filtros, ficha con el historial de ubicación y ubicaciones activas. La fecha de adquisición se compara con la fecha de inicio de
+  la empresa por el mediador (`empresas.obtener_carga_inicial`). **AF-P22 b:** migración de Empresas `0013_nombres_de_ubicaciones`
+  con `empresas.nombres_de_localidades(uuid[])` y `empresas.nombres_de_departamentos(uuid[])` (`security definer`, `search_path` fijo,
+  solo la empresa de la transacción, `grant` solo a `arrancar_app`), **marcada para revisión de `seguridad`**; el nombre de la
+  localidad y el departamento sale siempre de ellas. Decisiones: `GET /activos-fijos/ubicaciones` exige `activos.ver` (los permisos
+  de traslados e inventarios llegan en pasos posteriores); sin `include` en `activos_existencias_idx` (drizzle no lo soporta aún);
+  cambiar el tipo de registro no se permite al editar; el candado compartido del cierre y la regla de mes abierto entran con AF-5.
+  Eliminar una clase ahora también revisa que no tenga activos.
