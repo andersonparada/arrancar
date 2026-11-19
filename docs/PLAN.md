@@ -3617,6 +3617,29 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   encabezado de impresión, totales) se copiaron en el módulo porque los módulos del cliente no se importan entre sí
   (pendiente: subirlas a `core`).
 
+- **2026-11-19 (CL-5, Cuentas por liquidar, cliente):** las pantallas de §11 del diseño, sin migraciones. Menú «Cuentas por
+  liquidar», sección Operación (sin Excel): `ListaDeAnticipos` (tarjetas con por justificar, fecha límite y aviso de vencido;
+  filtros por estado, corte, beneficiario y vencidos), `VentanaDeAnticipo` (beneficiario con alta rápida de tercero, es
+  empleado, usuario de Arrancar opcional, clase, monto, fechas, cheque o transferencia con saldo de la cuenta y siguiente
+  cheque, motivo de entregar con vencidos solo con el permiso, confirmación con resumen), `FichaDeAnticipo` (entregado,
+  gastado y por justificar a la vista; gastos con quitar; «Agregar factura», «Desde la bandeja», «Gasto sin documento»,
+  liquidar, reabrir, anular, imprimir), `LiquidarAnticipo` (lo que falta se reparte entre lo devuelto y lo no liquidado con
+  el cuadre en vivo; destino, cuotas y motivo; reembolso si se gastó de más; confirmación), `BandejaDeCuentasPorLiquidar`
+  (marcar varios, total marcado, «Asignar a un anticipo», motivo único para los que llevan retención) e
+  `ImpresionDeLiquidacion` (hoja blanca con gastos con y sin documento, cuadro, tres firmas y la autorización del descuento
+  en cuotas). Cada acción se muestra con el permiso y lo que dicen `puedeAnular`, `puedeLiquidar`, `puedeReabrir` y
+  `puedeAsignarConRetencion`. Servidor (lo mínimo para que las ventanas se llenen sin pedir permisos de Bancos ni del
+  libro): `GET /cuentas-por-liquidar/medios-para-entregar` (`anticipos.crear`), `/medios-para-liquidar`
+  (`anticipos.liquidar`; cuentas y chequeras activas con saldo a la fecha por la orden `bancos.medios_de_pago`) y
+  `/conceptos-de-gasto` (`gastos.crear`; conceptos activos por nombre). Libro de compras: Ingreso de facturas lee también
+  `destino` de la consulta (se escoge solo y no lo cambia la propuesta por proveedor), dice «Para: Anticipo N · Beneficiario»
+  y, al registrar, vuelve a la ficha de origen mostrando los avisos del servidor. Decisiones: el tratamiento del gasto sin
+  documento (`renta_del_trabajo`) no se ofrece hasta resolver V-6 (sale `no_deducible`, el valor por omisión del servidor);
+  la autorización del descuento en cuotas de la hoja dice solo qué se autoriza, sin citar el artículo (texto legal por validar
+  con el contador); el mínimo de cuotas y el resto de reglas finas las responde el servidor, el cliente solo orienta; los
+  terceros se piden con `terceros.ver` y se crean con `terceros.crear` (sin ellos la ventana lo dice) porque los módulos del
+  cliente no se importan entre sí.
+
 - **2026-11-18** (correcciones de la QA del aviso de pago por correo, informe `docs/modulos/informe-qa-correo-2026-11-18.md`):
   (E1) como `configuracion.ver/gestionar` son `soloSuperacceso`, ningún usuario de la empresa podía pasar el envío a
   automático ni cambiar los textos: Cuentas por pagar tiene su pantalla «Avisos de pago» (`GET`/`PUT
