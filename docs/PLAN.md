@@ -3004,3 +3004,20 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Objeto de valor `TipoDeCambio` (`core/compartido/dominio/tipo-de-cambio.ts`, entero escalado × 10⁸, redondeo desde la
   mitad, tope de `numeric(14,2)`). Pruebas: `multimoneda-de-core`, `tipos-de-cambio-de-core` y `tipo-de-cambio`.
   **Pendiente:** la comprobación C-1 con el Banguat real puede agregar monedas a la semilla (migración de datos aparte).
+
+- **2026-11-18, Multimoneda MM-2 (contexto `core/monedas`).** Servicio `TiposDeCambio` (`aplicacion/tipos-de-cambio.ts`,
+  instancia única `tiposDeCambio` en `monedas/contexto.ts`, como `calendarioLaboral`): `vigente` (exacto, anterior de hasta
+  7 días con `motivoDelAnterior` `falta_publicacion` o `dia_sin_calculo`, futura solo si está publicada; el quetzal es 1;
+  lanza `TipoDeCambioNoDisponible` con `{ moneda, fecha, ultimaFechaPublicada }`), `consultar` (lo mismo sin lanzar, con
+  `utilizable`), `delCierre`, `serie` e `invalidar`; guarda en memoria lo leído y lee con la transacción en curso si la hay.
+  Regla pura en `dominio/tipo-vigente.ts` (`clasificarTipo`, 7 días); el dólar publica todos los días y las demás monedas
+  no se calculan en fin de semana ni asueto (`dia_sin_calculo`, sin confirmación). Casos de uso `ListarMonedas`,
+  `ListarMonedasDelBanguat`, `EditarMoneda` (reglas de A.4 y A.9: código ofrecido, libre, sin otra serie, quetzal sin código y
+  siempre activo, solo dos decimales; audita `inactivar`, `reactivar` y `corregir` al quitar o cambiar el código),
+  `ConsultarTipoVigente`, `ListarSerieDeTipos`, `ListarVersionesDeTipo` y `RegistrarTipoDeCambio` (versión manual nueva,
+  nunca edita). Rutas: `GET /api/monedas`, `GET /api/monedas/banguat`, `PATCH /api/monedas/:codigo`,
+  `GET /api/tipos-de-cambio` (máx. 366 días), `GET …/vigente`, `GET …/:moneda/:fecha/versiones` y `POST /api/tipos-de-cambio`.
+  Permisos `soloSuperacceso` `configuracion.monedas.editar` y `configuracion.tipos-de-cambio.crear` en el `modulo.ts` del
+  core. `CODIGOS_DEL_BANGUAT_EXCLUIDOS` queda vacío hasta la comprobación C-1. **Quedan para MM-3b:** `POST …/cargar`,
+  `GET …/consultas`, `POST /api/monedas/banguat/actualizar` y `GET …/muestra`, la carga automática (que debe llamar a
+  `tiposDeCambio.invalidar()` al agregar versiones) y el uso de `ClienteBanguat`.
