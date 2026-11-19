@@ -3589,6 +3589,29 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (`fechaLocalEn` con `PoliticaDeZonaHoraria`, en `dia-del-arqueo.ts`), no de los caracteres de `realizadoEn` ni de UTC: una
   hora con `Z` ya no se rechaza como futura ni se fecha un día después, y la anulación de un arqueo cuadrado de la noche dice
   el mismo día que `arqueo_registrado`. `DependenciasDeArqueos` agrega `zonaHoraria`.
+- **2026-11-19 (CC-6, Caja chica, vales provisionales, servidor)**: sin migraciones (la tabla `vales_provisionales` y la llave
+  `vale_provisional_id` ya venían de CC-1). Rutas (`/api/caja-chica`): `GET /fondos/:id/vales-provisionales` (lista) y `GET
+  /vales-provisionales/:id` (ficha con sus comprobantes, lo gastado y lo devuelto), con `fondos.ver`; `POST
+  /fondos/:id/vales-provisionales` (`vales.crear`), `POST /vales-provisionales/:id/liquidar` (`vales.liquidar`) y `POST
+  /vales-provisionales/:id/anular` (`vales.anular`). *Entregar*: fondo abierto y bloqueado; `entregadoA` (nombre) o
+  `entregadoAUsuarioId` (usuario activo de la empresa, que da el nombre); monto positivo que no pase del efectivo esperado
+  (`vale_mayor_que_el_efectivo`); fecha ni futura ni anterior a la apertura (`fecha_del_vale_invalida`); número del talonario
+  `caja-chica.vales`, compartido con los vales de gasto; sin auditoría ni evento (no hay partida). *Liquidar*: un solo paso
+  todo o nada con `documentos` de la bandeja y `valesDeGasto` nuevos (puede ir sin ninguno: se devuelve todo); el vale se libera
+  primero y cada comprobante entra al fondo atado al vale con las reglas de siempre (tope, retención con su auditoría
+  `autorizar`, bancarización y que el efectivo alcance; `AsignadorDeDocumentos` y `RegistradorDeValesDeGasto`, extraídos de
+  `AsignarDocumentos` y `RegistrarValeDeGasto`); `devuelto = max(0, monto - gastado)` con las notas de crédito restando; fecha de
+  liquidación entre la entrega y hoy. Publica `comprobante_asignado` por cada uno. *Anular*: vale abierto, sin comprobantes,
+  fondo abierto; audita `anular` (recurso `caja-chica.vales-provisionales`, `anterior` = `ValeProvisionalDto`, motivo).
+  Un comprobante con el que se liquidó un vale no vuelve a la bandeja (`comprobante_de_un_vale`). Aviso «vale viejo»: variable
+  nueva `caja-chica.vales_provisionales.dias_para_avisar` (5; 0 = sin aviso; empresa e instalación); lo agregan a `avisos` la
+  lista de vales, la ficha y la lista de fondos (`valeMasViejo` nuevo en `FondoResumenDto`) y la propuesta de arqueo.
+  `Comprobante` y `ComprobanteDto` ganan `valeProvisionalId`. Decisiones: (1) liquidar es un paso y no se agrega
+  `valeProvisionalId` a la ruta de vales de gasto (con comprobantes atados a un vale abierto el efectivo esperado contaría dos
+  veces); (2) quien liquida no necesita `comprobantes.crear` (como abrir un fondo no pide permisos de Bancos); los permisos de
+  excepción (`sobre-el-tope`, `con-retencion`) sí cuentan; (3) la anulación de un comprobante de un vale ya liquidado no cambia
+  el `devuelto` (el arqueo lo absorbe); (4) `ConfiguracionDeArqueos` lleva también `diasParaAvisarDeVales` para no sumar una
+  dependencia más a fondos y arqueos.
 - **2026-11-19 (CL-3, Cuentas por liquidar, servidor):** gastos de los anticipos, sin migraciones nuevas (la tabla `gastos` ya
   estaba en CL-1 y CL-1c). `RecibirDocumento` atiende `cuentas-por-liquidar.recibir_documento` (contrato nuevo): guarda el
   documento en la bandeja con `monto = total − retenciones` y `monto_retenido`; **no rechaza por retención** (queda en la
