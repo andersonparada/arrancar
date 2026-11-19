@@ -1653,7 +1653,7 @@ no puede pasar es encender `CARGAR_TIPOS_DE_CAMBIO` antes de MM-3c (P-B8).
 | **MM-1b** (servidor, datos del núcleo) **HECHO 2026-11-19** (migración `core/0033_cruces_del_banguat`) | Migración `00xx_cruces_del_banguat`: `convencion` en `monedas_del_banguat` con los datos de B.4 y su `revoke`; `convencion`, `dolar_usado_id`, checks e índice en `tipos_de_cambio`; resultados nuevos en `consultas_al_banguat`; guarda de datos existentes; PLN. Tablas Drizzle | La convención sobrevive a `ActualizarMonedasDelBanguat`; un código nuevo nace sin convención; una fila de cruce sin USD, sin compra o con `venta < compra` falla; una `manual` sin convención pasa; la app no puede cambiar `convencion`; PLN existe inactiva; la guarda detiene la migración con una fila `banguat` de otra moneda | Nada (V-14 ya resuelto) |
 | **MM-3a″** (servidor, dominio, sin base) **HECHO 2026-11-19** | `CODIGOS_DEL_BANGUAT_EXCLUIDOS`; URL; 28 → 24 en `main`; grabaciones reales; `validarPublicacion` sin `valor_ambiguo` por `compra ≠ venta` (solo diferencial > 3 %); `promedioPublicado`, `normalizarAQuetzales`, `inversionProbable`, `esDiaDePublicacionDeCruces`; se quita `cruceImplicito` | Los cinco ejemplos de B.3 dan exactamente esos valores; promedio con un decimal más (ARS); el CRC del 18/11 da 0.01710630 (promedio del cruce y luego conversión) y no 0.01710669 (B.5); diferencial de 3.01 % rechazado; `venta < compra` inválido; EUR invertido → inversión; CHF ±2 % y ARS +87 % no; jueves santo y 25/12 son días de publicación, el sábado no | MM-1b (tipos) o ninguno si se programa sin base |
 | **MM-3c** (servidor, carga; sobre la rama de MM-3b integrada) **HECHO 2026-11-19** | `ConsultarAlBanguat` normaliza con el USD `banguat` de la fecha y guarda `convencion` y `dolar_usado_id`; comprobaciones de B.6 en orden; `monedasACargar` solo con convención y el USD primero; días de B.9; reintentos de la noche; `vigente` con `dia_sin_calculo` solo en fin de semana; `muestra` con el valor en quetzales; `CodigoDelDolarNecesario`; 28 → 24 en las pruebas de la rama; columnas del reporte (MM-5) | Con reloj fijo: EUR del lunes con el USD del lunes; EUR sin USD → `sin_dolar_del_dia` y se rellena al llegar el USD; EUR de un asueto con el USD repetido; EUR invertido → `convencion_dudosa`; un sábado no es hueco y un asueto sí; `vigente` del EUR un sábado (`dia_sin_calculo`) y un 20 de octubre sin fila (`falta_publicacion`); quitar el código del USD con el EUR unido → 422; la referencia guardada se rehace con su fila | MM-1b, MM-3a″, rama de MM-3b integrada |
-| **MM-4** (cliente, Plataforma) | Como A.14, más B.10 | Unitarias de `edicion-de-moneda.ts` (solo `ofrecida`; texto de la convención); QA con el servidor falso devolviendo cruces | MM-3c |
+| **MM-4** (cliente, Plataforma) **HECHO 2026-11-19** (QA en el navegador pendiente) | Como A.14, más B.10 | Unitarias de `edicion-de-moneda.ts` (solo `ofrecida`; texto de la convención); QA con el servidor falso devolviendo cruces | MM-3c |
 | **MM-3d** (operación, sin código) | **Antes de encender:** C-5 (la consulta pública del Banguat, ¿muestra quetzales para las demás monedas?; si sí, ajustar B.5) y, si hay clientes en CRC, DOP o HNL (Q-1), C-6. Luego `curl` desde producción a la URL de B.9; encender `CARGAR_TIPOS_DE_CAMBIO`; revisar la bitácora la primera semana (horas de B.9) | C-5: comparar en 3 a 5 fechas la consulta pública con la fórmula de B.3 | MM-3c, MM-4, P-B8, C-5 (C-6 según Q-1) |
 
 ### B.13 Validación de `contador-guatemala` (dictamen de cruces)
@@ -1757,3 +1757,26 @@ PostgreSQL (`cruces-de-la-carga.prueba.ts`: euro del lunes con el dólar del lun
 asueto, sin convención, y la referencia guardada que se rehace con su fila) y de API (`monedas.api.prueba.ts`,
 `multimoneda.api.prueba.ts`). **Decisión:** solo el código del dólar está protegido por `CodigoDelDolarNecesario`;
 desactivar el dólar con otras monedas unidas no se bloquea (queda en pendientes). La carga sigue **apagada** hasta MM-3d.
+
+### MM-4: lo programado
+
+**Monedas.** El selector «Moneda del Banguat» habilita solo las `ofrecida` (el servidor decide; el cliente ya no mira
+`disponible` ni `excluida` para ofrecer) y cada opción dice su convención: «Euro (24) · USD por unidad». La tarjeta de la
+lista muestra lo mismo (la convención sale de `GET /api/monedas/banguat`, que ya la trae). «Ver muestra» enseña por día lo
+publicado («Compra 1.31640 · venta 1.31650 (USD por unidad)»), el valor en quetzales y la cuenta del servidor
+(«1.31645 USD por GBP × 7.64489 = Q 10.06411544» o «7.64489 ÷ 0.84265 CHF por USD = Q 9.07243814»); un día sin dólar guardado
+dice «Sin dólar de ese día» y el mensaje de la muestra lo cuenta. El cliente no calcula nada: solo formatea lo que manda el
+servidor. La nota de la política contable (B.5) se ve en la muestra de un cruce, en el detalle de cada versión de un cruce
+y bajo el calendario de Tipos de cambio de toda moneda distinta del USD.
+
+**Tipos de cambio.** El historial del día muestra, por versión del Banguat, lo publicado, la convención y el dólar usado.
+La bitácora traduce `sin_dolar_del_dia`, `convencion_dudosa` y `sin_convencion` (resultado, qué hacer y rechazos por línea)
+y `variacion_excesiva` dice la salida: «ingrese el tipo a mano con su motivo».
+
+**Lógica pura (con pruebas):** `convenciones-del-banguat.ts` (`textoDeLaConvencion`, `esCruce`, `textoDeLoPublicado`,
+`fraseDelCruce`, `detalleDeLaFila`, `NOTA_DE_LA_POLITICA_DE_CRUCES`), `edicion-de-moneda.ts`, `lista-de-monedas.ts` y
+`bitacora-del-banguat.ts`.
+
+**Excel.** Las cuatro columnas y la hoja «Notas» ya los escribe el servidor (MM-3c). El reporte «Tipos de cambio» no tiene
+página en el cliente todavía (es de MM-5, rama aparte), así que **la nota impresa del reporte queda para MM-5**: debe usar
+`NOTA_DE_LA_POLITICA_DE_CRUCES` de `convenciones-del-banguat.ts`.

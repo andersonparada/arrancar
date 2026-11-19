@@ -3663,4 +3663,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   diseño (P-B2 promedio con tope de 3 %, Q-1 sin clientes en CRC/DOP/HNL, Q-2 sin consulta a la SAT). La carga sigue
   apagada. **Pendiente:** MM-4 (la muestra y la bitácora del cliente usan la forma nueva; nota impresa del reporte) y MM-3d
   (C-5, `curl` desde producción y encender).
-
+- **2026-11-19, Multimoneda MM-4 (pantallas de Plataforma con la convención).** El selector de monedas solo habilita las
+  `ofrecida` y dice la convención («Euro (24) · USD por unidad»); la tarjeta de Monedas también. «Ver muestra» enseña lo
+  publicado, el valor en quetzales y la cuenta del servidor («1.31645 USD por GBP × 7.64489 = Q 10.06411544»), con
+  «Sin dólar de ese día» cuando falta. En Tipos de cambio, el historial del día muestra lo publicado, la convención y el
+  dólar usado; la bitácora traduce `sin_dolar_del_dia`, `convencion_dudosa` y `sin_convencion`; la nota de la política
+  contable (B.5) aparece en la muestra, en el detalle y bajo el calendario de las monedas distintas del USD. Lógica pura
+  nueva: `convenciones-del-banguat.ts`. **Pendiente:** QA en el navegador con el servidor falso devolviendo cruces; la nota
+  impresa y la página del reporte de tipos de cambio (MM-5); MM-3d.
