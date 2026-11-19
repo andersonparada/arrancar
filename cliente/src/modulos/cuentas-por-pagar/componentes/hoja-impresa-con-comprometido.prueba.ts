@@ -1,8 +1,8 @@
 /**
  * Lo que dejó la QA de CP4-12 (`docs/modulos/informe-qa-cp4-12-2026-11-18.md`): la API de la impresión de la contraseña y
- * del comprobante ya trae `pagado`, `comprometido` y `disponible`, pero las hojas no los muestran, y con un cheque
+ * del comprobante ya trae `pagado`, `comprometido` y `disponible`, pero las hojas no los mostraban, y con un cheque
  * posfechado la fila no cuadra a mano (total − retenciones − rebajado ≠ saldo). La adenda A.5 pide en la hoja las
- * columnas Pagado, Comprometido y Saldo. Las pruebas `it.fails` pasan mientras falte; al corregirlo, quitar `.fails`.
+ * columnas Pagado, Comprometido y Saldo. La hoja ya lo muestra.
  * Sin librería de montaje, se revisa que la plantilla rotule lo que la API trae.
  */
 
@@ -19,7 +19,7 @@ describe('la hoja impresa de la contraseña', () => {
     expect(tabla).toContain('Saldo {{ textoAlDia');
   });
 
-  it.fails('rotula también lo pagado y lo comprometido con cheques posfechados', () => {
+  it('rotula también lo pagado y lo comprometido con cheques posfechados', () => {
     expect(tabla).toContain('Pagado');
     expect(tabla).toContain('Comprometido');
   });
@@ -28,7 +28,7 @@ describe('la hoja impresa de la contraseña', () => {
 describe('la hoja del comprobante de pago', () => {
   const tabla = tablaDelComprobante;
 
-  it.fails('dice cuánto de lo que queda está comprometido con cheques posfechados', () => {
+  it('dice cuánto de lo que queda está comprometido con cheques posfechados', () => {
     expect(tabla).toMatch(/comprometido/i);
   });
 });

@@ -26,7 +26,16 @@ const impresion = (cambios: Partial<ImpresionDeContrasena> = {}): ImpresionDeCon
     { rotulo: 'COPIA — EMPRESA', firmaElProveedor: true },
   ],
   cargos: [],
-  totales: { total: '0.00', retenciones: '0.00', rebajado: '0.00', saldo: '0.00' },
+  totales: {
+    total: '0.00',
+    retenciones: '0.00',
+    rebajado: '0.00',
+    pagado: '0.00',
+    comprometido: '0.00',
+    saldo: '0.00',
+    disponible: '0.00',
+  },
+  chequesPosfechados: [],
   compensaciones: [],
   retencionesPorEmitir: [
     { documentoId: 'd1', monto: '50.00', texto: 'Retención por emitir: Q50.00; se entregará su constancia' },
