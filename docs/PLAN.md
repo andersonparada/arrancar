@@ -2774,6 +2774,17 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ya falló dice «Pendiente: se reintentará». La lógica pura (`estado-del-correo.ts`, `filtro-de-correos.ts`) tiene
   pruebas; `usarCancelacionDeCorreo` y `usarReintentoDeCorreo` y la ventana de cancelación quedan para reusarse en la
   ficha del pago (paso 13). Sin Excel (es una bitácora). Sin cambios en el servidor.
+- **2026-11-18 (aviso de pago por correo, paso 13: cliente, aviso en la ficha del pago).** La ficha del pago suma la sección
+  «Aviso por correo»: cómo va el último («Sin aviso», «Pendiente», «No se pudo enviar; se reintentará», «Enviado el … a …»,
+  «Falló; avise a soporte», «Cancelado»), la lista de envíos con «Cancelar» en los pendientes (pide el motivo, reusa la
+  ventana de core) y el botón «Enviar aviso» / «Reenviar aviso» (`cuentas-por-pagar.pagos.enviar-aviso`). La ventana
+  `VentanaDeAvisoDePago` ofrece solo los correos registrados del proveedor (los contactos con la marca vienen
+  marcados; uno que no sirve para enviar sale sin poder marcarse y con su motivo), la casilla «Copia a la empresa» con
+  la dirección, la vista previa del asunto y del mensaje, el nombre del PDF y el aviso de que lleva montos, NIT y
+  retenciones. La solicitud lleva ids, nunca direcciones. Si el pago se anula con el aviso ya enviado, la sección
+  recuerda avisar al proveedor. Lógica pura en `composables/pagos/aviso-de-pago.ts` con pruebas. En la pantalla de
+  configuración, un texto largo (más de 80 caracteres por omisión, como el mensaje del aviso) se edita en varias líneas
+  (ajuste menor de §13 del diseño). Pendiente menor: `avisos_de_pago.envio` se escribe a mano (`manual` o `automatico`).
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la

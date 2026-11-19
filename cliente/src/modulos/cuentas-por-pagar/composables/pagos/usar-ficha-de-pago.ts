@@ -2,9 +2,10 @@ import { usarCarga } from '@/modulos/core/composables/usar-carga';
 import { apiPagos, type FichaDePago } from '../../servicios/pagos.api';
 import { watch } from 'vue';
 import { usarAnulacionDePago, usarSaldarDiferencia } from './usar-acciones-del-pago';
+import { usarAvisoDePago } from './usar-aviso-de-pago';
 import { usarReaplicacionDePago } from './usar-reaplicacion-de-pago';
 
-/** La ficha de un pago y sus acciones (anular, reaplicar, saldar una diferencia); cada acción recarga la ficha. */
+/** La ficha de un pago y sus acciones (anular, reaplicar, saldar una diferencia) y su aviso por correo; cada acción recarga la ficha. */
 export function usarFichaDePago(id: () => string) {
   const {
     datos: ficha,
@@ -18,5 +19,6 @@ export function usarFichaDePago(id: () => string) {
     anular: usarAnulacionDePago(ficha, cargar),
     reaplicar: usarReaplicacionDePago(ficha, cargar),
     saldar: usarSaldarDiferencia(ficha, cargar),
+    aviso: usarAvisoDePago(id, ficha),
   };
 }
