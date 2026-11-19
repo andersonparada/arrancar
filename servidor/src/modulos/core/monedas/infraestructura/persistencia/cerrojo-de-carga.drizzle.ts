@@ -18,6 +18,7 @@ export class CerrojoDeCargaPostgres implements CerrojoDeCarga {
       `select exists (
          select 1 from pg_locks
          where locktype = 'advisory' and granted and objsubid = 1
+           and database = (select oid from pg_database where datname = current_database())
            and classid::bigint = $1 and objid::bigint = $2
        ) as tomado`,
       [Math.floor(CLAVE_DEL_CERROJO / DOS_A_LA_32), CLAVE_DEL_CERROJO % DOS_A_LA_32],

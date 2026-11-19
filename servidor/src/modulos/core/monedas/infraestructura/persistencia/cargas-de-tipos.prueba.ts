@@ -227,4 +227,18 @@ describe('el cerrojo de una sola carga', () => {
     expect(corrio).toBe(false);
     expect(await cerrojo.ejecutarSiLibre(async () => 'libre')).toBe('libre');
   });
+
+  it('estaTomado ignora los cerrojos de otras bases del mismo servidor', async () => {
+    const url = new URL(configuracion.DATABASE_URL_PROPIETARIO);
+    url.pathname = '/postgres';
+    const otra = new pg.Client({ connectionString: url.toString() });
+    await otra.connect();
+    await otra.query('select pg_advisory_lock($1)', [CLAVE]);
+    try {
+      expect(await cerrojo.estaTomado()).toBe(false);
+    } finally {
+      await otra.query('select pg_advisory_unlock($1)', [CLAVE]);
+      await otra.end();
+    }
+  });
 });

@@ -3959,7 +3959,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   euro en 24 en el diseño (decía 28 en tres lugares). E-2: `POST /api/tipos-de-cambio` rechaza una fecha posterior a hoy
   (`fecha_de_tipo_futura`, 400; la `it.fails` pasó a `it`). E-5: «Cargar ahora» y «Actualizar lista» responden **202** con
   `{ enCurso, iniciadaEn }` en cuanto toman el candado de la carga (409 si otra corre) y siguen en segundo plano
-  (`iniciarSiLibre`); `GET /api/tipos-de-cambio/consultas` agrega `enCurso` (lee `pg_locks`, vale con varias instancias) y la
+  (`iniciarSiLibre`); `GET /api/tipos-de-cambio/consultas` agrega `enCurso` (lee `pg_locks` de su propia base, vale con varias instancias) y la
   pantalla pregunta cada 2 segundos hasta que termine, muestra el avance en la ventana y toma el resultado de la bitácora. E-6:
   singular de «nuevo», «rechazado», «día con tipo» y «día hábil sin tipo»; «Noviembre de 2026» sin mayúscula de más. Sin
   migraciones. Siguen abiertos: E-3 (aviso contra el último tipo anterior), E-4 (`usarErrorDescartable`, del núcleo), E-7, E-8
