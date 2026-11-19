@@ -204,6 +204,13 @@
       "when": 1795056213447,
       "tag": "0028_rls_de_escritura_de_core",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795057656679,
+      "tag": "0029_multimoneda",
+      "breakpoints": true
     }
   ]
 }

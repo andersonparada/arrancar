@@ -2991,3 +2991,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ahora las rechaza la base. Suite completa del servidor sin fallos. **Quedan:** R-4 (RLS de lectura, con revisión de
   `seguridad`) y R-5 (CLAUDE.md y ARQUITECTURA.md); las tablas nuevas de `core` deben clasificarse en
   `RESTRICCIONES_DE_PRIVILEGIOS` (la prueba lo exige).
+
+- **2026-11-18, Multimoneda MM-1 (datos del núcleo).** Migración `core/0029_multimoneda` (generada, con la semilla y el
+  disparador a mano): `core.monedas` suma `activa` (`default false`), `codigo_banguat` (único, con llave a
+  `core.monedas_del_banguat`), `letras_singular` y `letras_plural` y los checks de dos decimales, letras completas y
+  quetzal sin código; semilla de la adenda A.4 (GTQ y USD activos con sus letras, el USD con el código 2; las demás
+  monedas del Banguat inactivas y sin código). Tablas nuevas `core.monedas_del_banguat` (con la semilla del 2),
+  `core.tipos_de_cambio` (versiones inmutables, únicos y checks de §6.1 y A.5) y `core.consultas_al_banguat` (una fila
+  por llamada). Helper `politicasDeSoloAgregarEnLaInstalacion()` (`insert` y `select` abiertos, sin `update` ni `delete`)
+  y las tres tablas clasificadas en `RESTRICCIONES_DE_PRIVILEGIOS` (las dos de solo agregar, además, sin `update` ni
+  `delete`). Disparador `core.monedas_codigo_banguat_estable` (`check_violation` con la restricción del mismo nombre).
+  Objeto de valor `TipoDeCambio` (`core/compartido/dominio/tipo-de-cambio.ts`, entero escalado × 10⁸, redondeo desde la
+  mitad, tope de `numeric(14,2)`). Pruebas: `multimoneda-de-core`, `tipos-de-cambio-de-core` y `tipo-de-cambio`.
+  **Pendiente:** la comprobación C-1 con el Banguat real puede agregar monedas a la semilla (migración de datos aparte).

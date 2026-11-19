@@ -126,6 +126,15 @@ export const politicasDeSoloAgregarPorEmpresa = () => [
 ];
 
 /**
+ * Políticas de una tabla de toda la instalación (sin empresa ni cuenta) que solo crece, como los tipos de cambio:
+ * cualquiera con la aplicación agrega y lee. Sin política de cambio ni de borrado, RLS los rechaza.
+ */
+export const politicasDeSoloAgregarEnLaInstalacion = () => [
+  pgPolicy('agregar_en_la_instalacion', { as: 'permissive', for: 'insert', to: rolAplicacion, withCheck: sql`true` }),
+  pgPolicy('leer_en_la_instalacion', { as: 'permissive', for: 'select', to: rolAplicacion, using: sql`true` }),
+];
+
+/**
  * Políticas de una tabla que solo crece, como la auditoría: dentro de la cuenta
  * se agrega y se lee. Sin política de cambio ni de borrado, RLS los rechaza.
  */

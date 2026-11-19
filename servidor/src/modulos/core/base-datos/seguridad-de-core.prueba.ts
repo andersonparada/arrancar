@@ -28,6 +28,8 @@ const CON_RLS = [
   'correos_salientes',
   'destinatarios_de_correos',
   'intentos_de_correos',
+  'tipos_de_cambio',
+  'consultas_al_banguat',
 ];
 
 const TODOS = ['delete', 'insert', 'select', 'update'];
