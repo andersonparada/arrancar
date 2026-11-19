@@ -3075,3 +3075,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   días esperados de las demás monedas siguen siendo los hábiles (C-2) y no se confirmó la unidad (C-3). Hay que repetirlas
   desde otra red. **Pendiente de MM-3b:** `GET …/consultas` (estado y aviso de 4 días hábiles de atraso), `GET …/muestra` con su
   límite, y el relleno inmediato al asignar un código (hoy lo cubre la vuelta de las 09:30 del día siguiente).
+- **2026-11-18, Multimoneda MM-5 (módulo `multimoneda`).** Creado con `npm run generar -- modulo multimoneda` (esqueleto del
+  servidor y del cliente, registrado en los dos `indice.ts`, y `docs/modulos/multimoneda.md` completado). Sin tablas ni
+  migraciones: lee las monedas y los tipos del núcleo por adaptadores en `infraestructura/nucleo-de-monedas.ts`
+  (`core/monedas/contexto.ts` exporta `listarMonedas` para eso). Permisos `multimoneda.tipos-de-cambio.ver` y `.exportar`;
+  configuración `multimoneda.diferencial.metodo` (`acumulativo` o `reversion`, niveles instalación y empresa, pública).
+  Orden `multimoneda.monedas_disponibles` (`core/contratos/multimoneda.contratos.ts`) atendida por `MonedasDisponibles`
+  (activas distintas de GTQ, con código, nombre, símbolo y decimales): con el módulo inactivo el mediador responde
+  `ModuloNoDisponible`. Reporte «Tipos de cambio»: `GET /api/multimoneda/tipos-de-cambio?moneda=&desde=&hasta=` (mismo filtro y
+  tope de 366 días que la serie del núcleo; lleva `fuente: 'Banco de Guatemala'` y el origen de cada fila, sin motivo ni
+  usuario de soporte) y `…/exportar` a Excel (`soloExportar`, una columna «Fuente» por fila). Quedan para MM-6 el menú y las
+  pantallas del cliente, y para los pasos siguientes el diferencial, el cierre y las demás órdenes.

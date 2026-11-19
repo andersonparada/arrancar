@@ -61,6 +61,9 @@ const listaDelBanguat = new ActualizarMonedasDelBanguat({
 /** Si la carga automática está encendida: `CARGAR_TIPOS_DE_CAMBIO`, o sí en producción y no en las demás. */
 export const cargaAutomaticaEncendida = entorno.CARGAR_TIPOS_DE_CAMBIO ?? esProduccion;
 
+/** El catálogo de monedas para los módulos que lo leen (Multimoneda): el mismo caso de uso de la API. */
+export const listarMonedas = new ListarMonedas({ catalogo });
+
 const alFallar = (mensaje: string, error: unknown) =>
   process.stderr.write(
     `${JSON.stringify({ nivel: 'error', msg: mensaje, detalle: error instanceof Error ? error.message : String(error) })}\n`,
@@ -88,7 +91,7 @@ export const cargaDeTiposDeCambio = new CargarTiposDeCambio({
 export function componerMonedas({ unidadDeTrabajo, auditoria }: DependenciasCompartidas): FastifyPluginAsync {
   const excluidos = CODIGOS_DEL_BANGUAT_EXCLUIDOS;
   const monedas = new MonedasControlador({
-    listar: new ListarMonedas({ catalogo }),
+    listar: listarMonedas,
     listarDelBanguat: new ListarMonedasDelBanguat({ catalogo, delBanguat, excluidos }),
     editar: new EditarMoneda({ unidadDeTrabajo, catalogo, delBanguat, auditoria, excluidos }),
     actualizarLista: listaDelBanguat,
