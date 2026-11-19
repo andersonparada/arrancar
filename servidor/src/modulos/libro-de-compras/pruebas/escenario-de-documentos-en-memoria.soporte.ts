@@ -70,6 +70,7 @@ const solicitudBase = (cambios: Partial<SolicitudSinResolver>): SolicitudSinReso
       descripcion: null,
       tipo: null,
       esActivoFijo: null,
+      esInventario: null,
       combustibleId: null,
       galones: null,
       total: '1120.00',
@@ -101,6 +102,7 @@ export function crearEscenario() {
     tipoPorOmision: 'bien',
     esProductoAgropecuario: false,
     esActivoFijo: false,
+    esInventario: false,
     activo: true,
   });
   const consultas = new ConsultasDeDocumentosEnMemoria();

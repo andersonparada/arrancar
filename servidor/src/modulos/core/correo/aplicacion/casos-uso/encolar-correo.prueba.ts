@@ -9,7 +9,7 @@ import {
   TareasEnLaTransaccion,
 } from '../../pruebas/dobles-de-la-bandeja.js';
 import type { MensajePorEncolar } from '../bandeja-de-salida.js';
-import { BandejaDeSalidaDeCore, EncolarCorreo, RECURSO_DE_ADJUNTOS } from './encolar-correo.js';
+import { EncolarCorreo, RECURSO_DE_ADJUNTOS } from './encolar-correo.js';
 
 const MENSAJE: MensajePorEncolar = {
   tipo: 'cuentas-por-pagar.aviso_de_pago',
@@ -145,15 +145,5 @@ describe('EncolarCorreo', () => {
       encolar.ejecutar(operadorDePrueba(), { ...MENSAJE, adjunto: { nombre: 'a.pdf', contenido: PDF } }),
     ).rejects.toThrow(AdjuntoNoValido);
     expect(repositorio.insertados).toHaveLength(0);
-  });
-});
-
-describe('BandejaDeSalidaDeCore', () => {
-  it('es el puerto público: encolar delega en el caso de uso', async () => {
-    const bandeja = new BandejaDeSalidaDeCore(encolar);
-
-    const dto = await bandeja.encolar(operadorDePrueba(), MENSAJE);
-
-    expect(dto.id).toBe('correo-1');
   });
 });

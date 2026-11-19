@@ -23,6 +23,7 @@ import { conceptosDeGasto } from '../../../libro-de-compras/infraestructura/pers
 import { documentos } from '../../../libro-de-compras/infraestructura/persistencia/documentos.tablas.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
 
 export interface Escenario {
   usuarioId: string;
@@ -104,7 +105,7 @@ async function crearEmpresas(): Promise<{ cuentaA: string; cuentaB: string; ids:
     .insert(cuentas)
     .values([{ nombre: 'Cuenta A' }, { nombre: 'Cuenta B' }])
     .returning();
-  const filas = await bd
+  const filas = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: a!.id, nombre: 'Empresa A1' },

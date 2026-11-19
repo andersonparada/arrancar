@@ -11,6 +11,8 @@ const emit = defineEmits<{ guardar: []; restablecer: [] }>();
 const valor = defineModel<unknown>({ required: true });
 
 const tipo = typeof props.variable.predeterminado;
+/** Un texto largo (por ejemplo, el mensaje del aviso de pago) se edita en varias líneas. */
+const esTextoLargo = tipo === 'string' && String(props.variable.predeterminado).length > 80;
 const heredado = `Heredado: ${props.variable.valores.instalacion ?? props.variable.predeterminado}`;
 </script>
 
@@ -29,6 +31,7 @@ const heredado = `Heredado: ${props.variable.valores.instalacion ?? props.variab
       class="flex-1"
       :etiqueta="`Por ${nivel}`"
       :tipo="tipo === 'number' ? 'number' : 'text'"
+      :multilinea="esTextoLargo"
       :placeholder="heredado"
       @update:model-value="valor = $event"
     />

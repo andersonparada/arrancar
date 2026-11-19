@@ -8,7 +8,7 @@ const esquemaLlaveDeSecretos = z.string().refine((valor) => /^[A-Za-z0-9+/]{43}=
   message: 'Debe ser una llave de 32 bytes en base64 (openssl rand -base64 32).',
 });
 
-const esquemaConfiguracion = z
+export const esquemaConfiguracion = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PUERTO: z.coerce.number().int().positive().default(3100),
@@ -44,6 +44,17 @@ const esquemaConfiguracion = z
       .enum(['true', 'false'])
       .default('false')
       .transform((valor) => valor === 'true'),
+    /**
+     * Solo desarrollo: nombre o dirección del servidor de correo de mentira (Mailpit). Con ella los correos salen por
+     * SMTP sin cifrado y sin credenciales a ese servidor, en vez de al que guarda Soporte (que igual debe estar activo).
+     */
+    CORREO_DESARROLLO_SERVIDOR: z.string().trim().min(1).max(253).optional(),
+    /** El puerto SMTP del servidor de desarrollo (Mailpit escucha en el 1025). */
+    CORREO_DESARROLLO_PUERTO: z.coerce.number().int().min(1).max(65535).default(1025),
+  })
+  .refine((c) => !(c.NODE_ENV === 'production' && c.CORREO_DESARROLLO_SERVIDOR), {
+    path: ['CORREO_DESARROLLO_SERVIDOR'],
+    message: 'No se permite en producción: mandaría el correo sin cifrar a un servidor de mentira.',
   })
   .refine((c) => !(c.NODE_ENV === 'production' && c.CORREO_PERMITIR_RED_INTERNA), {
     path: ['CORREO_PERMITIR_RED_INTERNA'],

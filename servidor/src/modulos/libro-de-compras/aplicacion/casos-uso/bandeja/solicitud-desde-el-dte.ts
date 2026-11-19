@@ -55,6 +55,7 @@ function lineaDelDte(dte: DteRecibido, conceptoId: string | null, montos: Montos
     descripcion: null,
     tipo: montos.idp ? 'bien' : null,
     esActivoFijo: null,
+    esInventario: null,
     combustibleId: null,
     galones: null,
     total: dte.instantanea().total,

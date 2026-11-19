@@ -49,13 +49,18 @@ export class DarDeAltaCuenta {
   constructor(private readonly dependencias: Dependencias) {}
 
   /**
+   * @param usuarioDeSoporte quien da de alta (queda como autor de lo creado); nulo en la siembra.
    * @throws ModuloDesconocido o FaltanDependenciasDelModulo si algún módulo no se puede contratar.
    * @throws FaltaLaContrasenaDelPropietario si el propietario es nuevo y no trae contraseña.
    */
-  async ejecutar(solicitud: SolicitudDeAlta): Promise<CuentaDadaDeAltaDto> {
+  async ejecutar(solicitud: SolicitudDeAlta, usuarioDeSoporte: string | null = null): Promise<CuentaDadaDeAltaDto> {
     this.exigirModulosContratables(solicitud.modulos);
     const propietario = await this.propietarioDe(solicitud.propietario);
-    return this.dependencias.transaccion.ejecutar((piezas) => this.registrar(piezas, solicitud, propietario));
+    const cuenta = Cuenta.registrar(solicitud.nombreCuenta);
+    const origen = { cuentaId: cuenta.id.valor, usuarioId: usuarioDeSoporte };
+    return this.dependencias.transaccion.ejecutar(origen, (piezas) =>
+      this.registrar(piezas, { solicitud, propietario, cuenta }),
+    );
   }
 
   private exigirModulosContratables(modulos: string[]): void {
@@ -75,10 +80,8 @@ export class DarDeAltaCuenta {
 
   private async registrar(
     piezas: PiezasDeAlta,
-    solicitud: SolicitudDeAlta,
-    propietario: Propietario,
+    { solicitud, propietario, cuenta }: { solicitud: SolicitudDeAlta; propietario: Propietario; cuenta: Cuenta },
   ): Promise<CuentaDadaDeAltaDto> {
-    const cuenta = Cuenta.registrar(solicitud.nombreCuenta);
     await piezas.cuentas.agregar(cuenta);
     const empresa = await piezas.empresa.registrar(cuenta.id.valor, solicitud.empresa);
     const rol = Rol.propietario(cuenta.id);

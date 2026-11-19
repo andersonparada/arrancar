@@ -25,7 +25,7 @@ conservando ambas entradas), corre `npm run bd:migrar -w servidor`, `npm run rev
 `docs/modulos/dictamen-*.md`). Lo fiscal pasa por el contador antes de preguntar al usuario. No se usa
 `npx vitest run -w servidor` (deja procesos colgados) ni `prettier --write` sobre `migraciones/meta`.
 
-**`main`:** `e291c08` (subido; con EM-2, Excel de plazos y la adenda del posfechado). Suite en paralelo (~4–5 min):
+**`main`:** `cf7f095` (subido). Suite en paralelo (~5–9 min):
 prefijo, las bases se crean solas). Última suite completa en verde (integración): servidor 5301, cliente 1540, generador 46.
 En `main` además de lo anterior: CP4-9 corregido (tres revisiones), CP4-E5, CP5-9a y CP5-9b (R6 a R11), plazo de crédito
 PC-1 a PC-3, correo pasos 1 y 3, Caja chica y Cuentas por liquidar (datos: CC-1, CL-1, CC-1c), Excel de Terceros y de
@@ -96,8 +96,30 @@ del Banguat para todas las monedas (MM-3a), correcciones de la QA intermedia.
   disponible, A.7 = igual que la ficha) y QA CP4-12 en el navegador (informe `informe-qa-cp4-12-2026-11-18.md`).
 - **Diseño de Activos fijos** (workflow `arrancar-diseno-activos-fijos`, run `wf_9f5b1891-dae`): contador y arquitecto;
   `diseno-activos-fijos.md` con preguntas para el usuario.
+- **AFI-0 (2026-11-18, docs):** la integración Activos fijos e Inventarios, AF-P22 = b (funciones de Empresas con los
+  nombres de localidades y departamentos, §6.13, **pendiente de `seguridad`** antes del paso AF-P22 y de AF-2c) y la
+  validación del contador de Inventarios (V-1 a V-11) ya están en `diseno-activos-fijos.md` y `diseno-inventarios.md`.
+  `diseno-activos-fijos.md` parte de la versión de `integracion` (con AF-P2 a y la validación del contador): al unir,
+  quedarse con esta. Abiertas para el usuario: P-1, P-3, INV-P14 e INV-A16 de Inventarios; para el contador: VC-1 a VC-4 y
+  VI-1 a VI-4.
 - **En cola (orden de migraciones del core):** correo 2-4-5-6 (en curso) → RLS del núcleo R-1 a R-3 → MM-1.
 - El coordinador está en **/loop** (pedido del usuario el 2026-11-18).
+- **En `main` (2026-11-18, noche):** BS-3, BS-4, BS-5, BS-R1, CP4-D6/D7, AF-0, CCL-L1/CCL-BZ (0038 del libro), correo pasos 2
+  a 7, posfechado, EM-2, Excel de plazos, AF-1 y AF-1c (módulo `activos-fijos` con clases).
+- **Diseños aprobados:** Activos fijos (completo), Inventarios, integración AF/INV (stock de bienes de uso en Activos fijos,
+  AF-P22 nombre de localidad sin filtro). **Diseños con preguntas pendientes para el usuario:** Cuentas por cobrar y Ventas
+  (24), Contabilidad (18), Bancos aprobaciones/tarjeta/CP-AP (20), Parcelas (19).
+- **En curso:** workflow `arrancar-cadenas-siguientes` (RLS R-1 a R-3 → MM-1/MM-2; CCL-B1 → impresión de cheques; correo 8 a
+  13; INV-0) y workflow `arrancar-af-inv-ajustes` (AFI-0 y ajustes de Inventarios en los diseños; INV-3 con la fórmula V-2;
+  QA CP4-12 textos). Después: AF-2 en adelante (con AFI), INV-1 en adelante, CC-2 en adelante, QA CP5-11.
+- **Workflow `arrancar-mas-frentes`** (run `wf_c1facbe4-e32`): BS-6, BS-7, BS-R2, BS-9, AF-2 con AFI-1, INV-1, comprobaciones
+  reales del Banguat + MM-3b + MM-5, y QA CP5-11; cada código con revisión de Opus.
+- **En `main` (2026-11-18, noche):** RLS del núcleo R-1 a R-3 (core 0027-0028), Multimoneda MM-1/MM-2 (core 0029), correo 8 a
+  13 (core 0030-0031), CCL-B1 (bancos 0036-0037), INV-0 (libro 0039), INV-3 (motor de costeo), AFI-0 en los diseños, QA CP4-12
+  corregida. Suite: servidor 6190, cliente 1732, generador 46, sin saltadas. **Ojo:** con la máquina cargada, la revisión de
+  qpdf puede fallar y saltar ~20 pruebas sin avisar: en cada integración comprobar que no haya `skipped`.
+- **Workflow `arrancar-caja-chica-y-correo-final`** (run `wf_8950d9e1-c04`): CC-2, CL-2, revisión de seguridad del correo y QA
+  del correo con Mailpit. Impresión de cheques programando sobre la versión vieja de CCL-B1: al unirla, traer `main`.
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)

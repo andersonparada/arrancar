@@ -32,8 +32,8 @@ export class RegistrarEmpresa {
   constructor(private readonly dependencias: Dependencias) {}
 
   /**
-   * Todo en una sola transacción: la empresa se agrega con la empresa del operador como activa (la tabla no tiene
-   * seguridad por filas) y, ya comprobada como nueva, se pasa a ella para su acceso, sus tipos de localidad y las secciones de los demás módulos.
+   * Todo en una sola transacción: la empresa se agrega con la empresa del operador como activa (la base solo
+   * deja insertar en la cuenta de la transacción, que es la del operador) y, ya comprobada como nueva, se pasa a ella para su acceso, sus tipos de localidad y las secciones de los demás módulos.
    * Si una sección es inválida, no se guarda nada.
    */
   async ejecutar(

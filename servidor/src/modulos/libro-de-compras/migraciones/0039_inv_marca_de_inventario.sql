@@ -1,0 +1,6 @@
+ALTER TABLE "libro_de_compras"."conceptos_de_gasto" ADD COLUMN "es_inventario" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."lineas_de_documento" ADD COLUMN "es_inventario" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."conceptos_de_gasto" ADD CONSTRAINT "conceptos_de_gasto_inventario_es_bien" CHECK (not "libro_de_compras"."conceptos_de_gasto"."es_inventario" or "libro_de_compras"."conceptos_de_gasto"."tipo_por_omision" = 'bien');--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."conceptos_de_gasto" ADD CONSTRAINT "conceptos_de_gasto_un_solo_destino_del_costo" CHECK (not ("libro_de_compras"."conceptos_de_gasto"."es_activo_fijo" and "libro_de_compras"."conceptos_de_gasto"."es_inventario"));--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."lineas_de_documento" ADD CONSTRAINT "lineas_de_documento_inventario_es_bien" CHECK (not "libro_de_compras"."lineas_de_documento"."es_inventario" or "libro_de_compras"."lineas_de_documento"."tipo" = 'bien');--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."lineas_de_documento" ADD CONSTRAINT "lineas_de_documento_un_solo_destino_del_costo" CHECK (not ("libro_de_compras"."lineas_de_documento"."es_activo_fijo" and "libro_de_compras"."lineas_de_documento"."es_inventario"));

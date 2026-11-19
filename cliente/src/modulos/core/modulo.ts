@@ -2,6 +2,7 @@ import {
   Building,
   CircleUserRound,
   LifeBuoy,
+  Mail,
   Palette,
   ScrollText,
   ShieldCheck,
@@ -42,6 +43,12 @@ export const moduloCore: DefinicionModuloCliente = {
       meta: { permiso: 'roles.ver', titulo: VENTANAS_CORE.roles.titulo },
     },
     {
+      path: '/correos',
+      name: 'correos',
+      component: () => import('./paginas/CorreosEnviados.vue'),
+      meta: { permiso: 'correos.ver', titulo: VENTANAS_CORE.correos.titulo },
+    },
+    {
       path: '/configuracion',
       name: 'configuracion',
       component: () => import('./paginas/ConfiguracionCuenta.vue'),
@@ -58,6 +65,12 @@ export const moduloCore: DefinicionModuloCliente = {
       name: 'plataforma-apariencia',
       component: () => import('./paginas/PlataformaApariencia.vue'),
       meta: { ...DE_SOPORTE, titulo: VENTANAS_CORE.apariencia.titulo },
+    },
+    {
+      path: '/plataforma/correo',
+      name: 'plataforma-correo',
+      component: () => import('./paginas/PlataformaCorreo.vue'),
+      meta: { ...DE_SOPORTE, titulo: VENTANAS_CORE.correo.titulo },
     },
     {
       path: '/plataforma/bitacora',
@@ -87,6 +100,13 @@ export const moduloCore: DefinicionModuloCliente = {
           permiso: 'roles.ver',
         },
         {
+          titulo: VENTANAS_CORE.correos.titulo,
+          ruta: '/correos',
+          icono: Mail,
+          seccion: 'administracion',
+          permiso: 'correos.ver',
+        },
+        {
           titulo: VENTANAS_CORE.configuracion.titulo,
           ruta: '/configuracion',
           icono: SlidersHorizontal,
@@ -106,6 +126,12 @@ export const moduloCore: DefinicionModuloCliente = {
           titulo: VENTANAS_CORE.apariencia.titulo,
           ruta: '/plataforma/apariencia',
           icono: Palette,
+          seccion: 'administracion',
+        },
+        {
+          titulo: VENTANAS_CORE.correo.titulo,
+          ruta: '/plataforma/correo',
+          icono: Mail,
           seccion: 'administracion',
         },
         { titulo: VENTANAS_CORE.bitacora.menu, ruta: '/plataforma/bitacora', icono: ScrollText, seccion: 'reportes' },

@@ -42,6 +42,7 @@ const linea = (cambios: Partial<LineaDeDocumento> = {}): LineaDeDocumento => ({
   descripcion: null,
   tipo: 'bien',
   esActivoFijo: false,
+  esInventario: false,
   combustible: null,
   total: '112.00',
   exento: '0.00',

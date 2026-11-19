@@ -7,7 +7,7 @@ import { usuarioRoles } from './permisos-de-usuario.tablas.js';
 import { actualizarRol, insertarRol } from './escritura-de-roles.js';
 import { rolPermisos, roles } from './roles.tablas.js';
 
-/** `core.roles` no tiene seguridad por filas, así que cada búsqueda filtra por cuenta. */
+/** `core.roles` tiene la lectura abierta (la sesión la usa sin empresa), así que cada búsqueda filtra por cuenta; escribir exige la cuenta de la transacción. */
 export class RepositorioRolesDrizzle implements RepositorioRoles {
   async buscarEnCuenta(id: RolId, cuentaId: CuentaId): Promise<Rol | null> {
     const tx = transaccionEnCurso();

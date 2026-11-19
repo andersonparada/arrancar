@@ -73,27 +73,36 @@ function buscarErrorDePostgres(error: unknown): DatabaseError | null {
   return null;
 }
 
+/**
+ * El código 42501 lo usan la RLS y los privilegios. Solo la RLS (fila fuera del alcance) es esperada; un privilegio
+ * negado (`permission denied for…`) es siempre un error de programación y debe salir como fallo inesperado.
+ */
+function esDePoliticaRls(mensaje: string): boolean {
+  return mensaje.includes('row-level security');
+}
+
 /** Cómo se traduce cada código de error de PostgreSQL, según la restricción que lo causó. */
-const INTERPRETES_POR_CODIGO: Readonly<Record<string, (restriccion: string) => ErrorEsperado>> = {
-  [VIOLACION_DE_UNICIDAD]: (restriccion) =>
+const INTERPRETES_POR_CODIGO: Readonly<Record<string, (error: DatabaseError) => ErrorEsperado | null>> = {
+  [VIOLACION_DE_UNICIDAD]: ({ constraint: restriccion = '' }) =>
     new ValorUnicoRepetido(
       MENSAJES_POR_RESTRICCION[restriccion] ?? 'El registro ya existe.',
       restriccion in CAMPOS_POR_RESTRICCION ? { campo: CAMPOS_POR_RESTRICCION[restriccion] } : undefined,
     ),
   [VIOLACION_DE_LLAVE_FORANEA]: () => new RecursoEnUso(),
-  [VIOLACION_DE_EXCLUSION]: (restriccion) =>
+  [VIOLACION_DE_EXCLUSION]: ({ constraint: restriccion = '' }) =>
     new RangoTraslapado(MENSAJES_DE_EXCLUSION[restriccion] ?? 'El registro se traslapa con otro.'),
-  [VIOLACION_DE_POLITICA_RLS]: () => new RecursoNoEncontrado('El registro'),
+  [VIOLACION_DE_POLITICA_RLS]: ({ message }) =>
+    esDePoliticaRls(message) ? new RecursoNoEncontrado('El registro') : null,
 };
 
 /**
  * Convierte en error esperado lo que la base de datos rechaza por sus
  * restricciones (valores únicos, llaves foráneas y rangos traslapados) o por las políticas RLS
- * (fila fuera del alcance: se responde como no encontrada, sin revelar nada); cualquier otro error sigue
+ * (fila fuera del alcance: se responde como no encontrada, sin revelar nada; un privilegio negado no); cualquier otro error sigue
  * siendo un fallo inesperado.
  */
 export function interpretarErrorDePostgres(error: unknown): ErrorEsperado | null {
   const errorDePostgres = buscarErrorDePostgres(error);
   if (!errorDePostgres) return null;
-  return INTERPRETES_POR_CODIGO[errorDePostgres.code ?? '']?.(errorDePostgres.constraint ?? '') ?? null;
+  return INTERPRETES_POR_CODIGO[errorDePostgres.code ?? '']?.(errorDePostgres) ?? null;
 }

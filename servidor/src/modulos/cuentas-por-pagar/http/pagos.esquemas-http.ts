@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { textoOpcional } from './texto-opcional.js';
 import { MAXIMO_DE_DOCUMENTOS_EN_PAGO } from '../dominio/registro-de-pago.js';
 
 const DINERO = /^\d{1,12}(\.\d{1,2})?$/;
@@ -14,8 +15,8 @@ const lineas = z.array(z.object({ cargoId: z.uuid({ error: 'Escoja el documento.
 const comun = {
   proveedorId: z.uuid({ error: 'Escoja el proveedor.' }),
   fecha: fecha.optional(),
-  referencia: z.string().nullable().optional(),
-  observaciones: z.string().nullable().optional(),
+  referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
+  observaciones: textoOpcional(500, 'Las observaciones admiten hasta 500 caracteres.'),
   aplicaciones: lineas.max(MAXIMO_DE_DOCUMENTOS_EN_PAGO + 1),
   diferencias: lineas.max(MAXIMO_DE_DOCUMENTOS_EN_PAGO + 1).optional(),
 };
@@ -42,7 +43,7 @@ export const esquemaPagoLigado = z.object({
   forma: z.literal('nota_ligada'),
   movimientoId: z.uuid({ error: 'Escoja la nota.' }),
   ...comun,
-  referencia: z.string().trim().min(1).max(100, 'La referencia admite hasta 100 caracteres.').nullable().optional(),
+  referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
 });
 
 /**
@@ -54,7 +55,7 @@ export const esquemaPagoDeApertura = z.object({
   proveedorId: comun.proveedorId,
   fecha: comun.fecha,
   motivo: z.string().trim().min(1, 'Escriba el motivo.').max(300, 'El motivo admite hasta 300 caracteres.'),
-  referencia: z.string().trim().min(1).max(100, 'La referencia admite hasta 100 caracteres.').nullable().optional(),
+  referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
   observaciones: comun.observaciones,
   aplicaciones: comun.aplicaciones,
 });

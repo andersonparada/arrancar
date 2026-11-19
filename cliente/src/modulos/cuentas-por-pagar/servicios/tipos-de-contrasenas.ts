@@ -173,7 +173,18 @@ export interface CargoImpreso {
   total: string;
   retenciones: string;
   rebajado: string;
+  /** Lo pagado con fecha de la impresión o anterior. */
+  pagado: string;
+  /** Lo pagado con cheques posfechados: parte del saldo. */
+  comprometido: string;
   saldo: string;
+}
+
+/** Un cheque posfechado de la contraseña: «Cheque N al dd/mm/aaaa». */
+export interface ChequePosfechadoImpreso {
+  pagoId: string;
+  monto: string;
+  texto: string;
 }
 
 export interface CompensacionImpresa {
@@ -205,9 +216,10 @@ export interface ImpresionDeContrasena {
   proveedor: { nombre: string; nit: string | null };
   hojas: HojaDeImpresion[];
   cargos: CargoImpreso[];
-  totales: TotalesDeContrasena;
+  totales: TotalesDeLaFicha;
   compensaciones: CompensacionImpresa[];
   retencionesPorEmitir: RetencionPorEmitirImpresa[];
+  chequesPosfechados: ChequePosfechadoImpreso[];
   hayRetenciones: boolean;
   leyendaDeRetenciones: string | null;
   leyenda: string | null;

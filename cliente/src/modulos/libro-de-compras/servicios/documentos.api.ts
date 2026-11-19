@@ -78,6 +78,7 @@ export interface LineaDeDocumento {
   descripcion: string | null;
   tipo: 'bien' | 'servicio';
   esActivoFijo: boolean;
+  esInventario: boolean;
   combustible: { vigenciaDeCombustibleId: string; galones: string; idpPorGalon: string } | null;
   total: string;
   exento: string;

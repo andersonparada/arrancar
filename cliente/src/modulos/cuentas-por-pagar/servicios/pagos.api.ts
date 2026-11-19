@@ -1,4 +1,5 @@
 import { clienteHttp, type ClienteHttp } from '@/modulos/core/servicios/cliente-http';
+import type { CorreoResumen } from '@/modulos/core/servicios/correos.api';
 import type {
   ComprobanteDePago,
   ConsultaDePagos,
@@ -8,6 +9,7 @@ import type {
   SolicitudDeDiferencia,
   SolicitudDeReaplicacion,
 } from './tipos-de-consulta-de-pagos';
+import type { AvisoDePago, SolicitudDeAviso } from './tipos-de-avisos-de-pago';
 import type {
   FormaDePagoNuevo,
   MediosDePago,
@@ -19,6 +21,7 @@ import type {
 } from './tipos-de-pagos';
 
 export type * from './tipos-de-pagos';
+export type * from './tipos-de-avisos-de-pago';
 
 const RUTA = '/cuentas-por-pagar';
 
@@ -76,6 +79,19 @@ export class ApiPagos {
 
   comprobante(id: string) {
     return this.http.obtener<ComprobanteDePago>(`${RUTA}/pagos/${id}/comprobante`);
+  }
+
+  /** El aviso de pago por correo: a quién se le puede mandar, la vista previa y lo que ya salió. */
+  aviso(id: string) {
+    return this.http.obtener<AvisoDePago>(`${RUTA}/pagos/${id}/aviso`);
+  }
+
+  enviarAviso(id: string, solicitud: SolicitudDeAviso) {
+    return this.http.crear<CorreoResumen>(`${RUTA}/pagos/${id}/aviso`, solicitud);
+  }
+
+  cancelarAviso(id: string, correoId: string, motivo: string) {
+    return this.http.crear<CorreoResumen>(`${RUTA}/pagos/${id}/aviso/${correoId}/cancelar`, { motivo });
   }
 
   anular(id: string, solicitud: SolicitudDeAnulacion) {

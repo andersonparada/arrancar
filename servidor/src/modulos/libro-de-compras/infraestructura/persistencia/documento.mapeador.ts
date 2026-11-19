@@ -31,6 +31,7 @@ function filaDeLinea(documento: DocumentoDeCompra, linea: LineaDeDocumento): Fil
     descripcion: linea.descripcion,
     tipo: linea.tipo,
     esActivoFijo: linea.esActivoFijo,
+    esInventario: linea.esInventario,
     ...columnasDeCombustible(linea.combustible),
     total: deCentavos(linea.total),
     exento: deCentavos(linea.exento),

@@ -53,9 +53,9 @@ describe('tarjeta de contraseña', () => {
   });
 
   it('muestra cómo va el pago salvo que no se haya pagado nada', () => {
-    expect(marcaDeContrasena(resumen({ estadoDePago: 'en_parte' }))).toBe('Pagada en parte');
-    expect(marcaDeContrasena(resumen({ estadoDePago: 'pagado' }))).toBe('Pagada');
-    expect(marcaDeContrasena(resumen({ estadoDePago: 'comprometido' }))).toBe('Comprometida');
+    expect(marcaDeContrasena(resumen({ estadoDePago: 'en_parte' }))).toBe('Pagado en parte');
+    expect(marcaDeContrasena(resumen({ estadoDePago: 'pagado' }))).toBe('Pagado');
+    expect(marcaDeContrasena(resumen({ estadoDePago: 'comprometido' }))).toBe('Comprometido');
     expect(marcaDeContrasena(resumen({ estadoDePago: 'en_parte', pagoVencido: true }))).toBe('Pago vencido');
   });
 

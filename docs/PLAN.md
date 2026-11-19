@@ -2711,6 +2711,80 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   configurar el servidor). Rangos 192.0.0.0/24 y 198.18.0.0/15 rechazados como destino. Prueba de rotación A, A+B, B.
   Pendientes de bajo riesgo: permisos por columnas y llaves compuestas en la 0026, señal de parada del lote, ficha del
   arriendo en `resolver_correo`, bitácora de pruebas fallidas, DNS al conectar, y plazo de los correos pendientes.
+- **2026-11-18 (aviso de pago por correo, paso 8: historial y Soporte).** `core/correo` suma el historial de la empresa:
+  `GET /api/correos` (filtros `desde`, `hasta`, `estado`, `tipo`, paginado), `GET /api/correos/:id`, `POST
+  /api/correos/:id/cancelar` (solo pendientes, motivo de 1 a 300, auditoría `anular` sin el cuerpo) y `POST
+  /api/correos/:id/reintentar` (solo fallidos con el contenido sin depurar; vuelve a `pendiente` con intentos en cero,
+  vuelve a comprobar los cupos, auditoría `reabrir` y despierta al trabajador). El resumen nunca lleva el cuerpo ni el
+  código técnico del error. Permisos nuevos de core, sin migración de permisos (nadie los tenía): `correos.ver`,
+  `correos.cancelar`, `correos.reintentar` y `correo.servidor.gestionar` (`soloSuperacceso`; las rutas de Soporte siguen
+  protegidas con `soloSuperacceso` porque sin empresa activa la sesión no trae permisos). `GET
+  /api/soporte/correo/bandeja` da los conteos por estado de toda la instalación, el pendiente más antiguo y los últimos
+  50 fallidos (empresa, tipo, código; nunca direcciones ni textos) con dos funciones `security definer` de solo lectura:
+  migración 0027 de core (`core.resumen_de_la_bandeja` y `core.correos_fallidos_recientes`). Los errores de estado
+  responden 409 (`correo_no_pendiente`, `correo_no_reintentable`, `correo_sin_contenido`). El puerto `HistorialDeCorreos`
+  ya trae `deOrigen` y `cancelarPendientesDe`, que usará Cuentas por pagar (paso 10).
+- **2026-11-18 (aviso de pago por correo, paso 9: PDF del comprobante).** Cuentas por pagar genera el comprobante como
+  PDF con pdfkit (`infraestructura/pdf/`, puerto `GeneradorDePdfDelComprobante`, `nombreDelPdfDelComprobante`) sobre el
+  mismo `ComprobanteDePagoDto` que imprime la pantalla: una hoja carta por rótulo («Original» y «Copia»), con más
+  páginas si hay muchos documentos. Separa lo que dice (`contenidoDelComprobante`, función pura probada: título, anulado,
+  datos, tablas por contraseña con la constancia de cada retención o «constancia por emitir», cheque posfechado, totales,
+  leyendas y firmas) de cómo se dibuja. Siempre lleva la leyenda «no es un documento tributario» (se agrega si la lista
+  del comprobante viniera sin ella). Textos del usuario saneados (controles, marcas de dirección, glifos que Noto Sans no
+  tiene), sin enlaces, scripts ni archivos incrustados, una generación a la vez (`Semaforo`). El saneado y el pincel se
+  repiten en el módulo (no se importa de Libro de compras). Sin migración.
+- **2026-11-18 (aviso de pago por correo, paso 10: aviso en Cuentas por pagar).** Permiso nuevo
+  `cuentas-por-pagar.pagos.enviar-aviso` (enviar, reenviar y cancelar un aviso pendiente; ver el estado va con
+  `pagos.ver`), sin migración de permisos (nadie lo tenía). Variables `cuentas-por-pagar.avisos_de_pago.*` (instalación y
+  empresa): `envio` (`manual` por omisión, pública), `asunto`, `mensaje`, `adjuntar_comprobante` y `copia_a_la_empresa`;
+  el asunto no admite `{monto}` ni `{documentos}` y un marcador que no existe se rechaza al guardar. Rutas: `GET
+  /cuentas-por-pagar/pagos/:id/aviso` (`pagos.ver`: destinatarios registrados con `utilizable`, `preseleccionado` y su
+  motivo, copia a la empresa, vista previa, avisos enviados y por qué no se puede enviar), `POST …/aviso` (201,
+  destinatarios por id de contacto o de proveedor, 1 a 10, nunca direcciones; límite de 20 por minuto por usuario) y
+  `POST …/aviso/:correoId/cancelar`. Casos de uso `PrepararAvisoDePago`, `EnviarAvisoDePago`, `CancelarAvisoDePago` sobre
+  un `ArmadorDelAviso` común; el PDF sale de `GeneradorPdfkitDelComprobante`. Preselección: los contactos con la marca y,
+  si no hay, el correo principal. Suscriptores (con `suscribirSinRomper`): `pago_registrado` manda el aviso solo si la
+  empresa lo pasó a `automatico` (a los preseleccionados, con la copia que diga la configuración; sin destinatario
+  utilizable no hace nada) y `pago_anulado` cancela los avisos pendientes con el motivo «Pago anulado» (auditado). Para
+  armar el operador de quien registró el pago sin petición, core/identidad suma `operadorDeUsuario`
+  (`ResolverOperadorDeUsuario`: usuario activo, su acceso a la empresa y sus recursos de alcance). Terceros atiende la
+  orden nueva `terceros.obtener_correos_de_proveedor` (correo principal y contactos con su marca). `BandejaDeSalida` suma
+  `cancelarPendientesDe`, `cancelar` y `deRegistro`. Errores: 409 `aviso_no_disponible` (anulado, cuenta de apertura,
+  sin correo), 400 `direccion_no_utilizable`, 404 si el destinatario no es del proveedor del pago o es de otra cuenta, 429
+  `cupo_de_correos_agotado` y `demasiados_avisos_de_pago`. Sin migración en este paso.
+- **2026-11-18 (correo, camino de desarrollo hacia Mailpit).** Variables de entorno `CORREO_DESARROLLO_SERVIDOR` y
+  `CORREO_DESARROLLO_PUERTO` (1025 por omisión), solo para desarrollo: con ellas `FabricaDeTransporteNodemailer` ignora el
+  servidor guardado y manda sin cifrado ni credenciales al Mailpit del `docker-compose.dev.yml` (bandeja en
+  `http://localhost:8025`). La app no arranca en producción con `CORREO_DESARROLLO_SERVIDOR` (validación del entorno, que
+  se vuelve a comprobar al crear la fábrica, y el rechazo de `seguridad: 'ninguna'` del transporte). Soporte igual debe
+  guardar y activar un servidor cualquiera (la tabla exige 465/587 y contraseña) y hace falta `CLAVE_SECRETOS`: así se
+  prueba de punta a punta, también el trabajador, sin tocar la función de la bandeja. Prueba contra un SMTP mínimo local.
+- **2026-11-18 (aviso de pago por correo, paso 11: cliente, Soporte → Correo).** Pantalla `/plataforma/correo` (solo
+  superacceso, menú Soporte): formulario del servidor SMTP (servidor, puerto y cifrado en una sola lista: 587 con STARTTLS
+  o 465 con TLS directo, sin opción sin cifrado; usuario; contraseña de solo escritura, vacía conserva la guardada;
+  remitente; interruptor de enviar correos), aviso rojo si falta `CLAVE_SECRETOS`, tarjeta de prueba (única pantalla
+  donde se escribe una dirección; usa lo guardado) y tarjeta de la bandeja global (conteos por estado, pendiente más
+  antiguo y fallidos recientes con empresa, tipo y código). Lógica pura en `composables/correo/servidor-de-correo.ts` con
+  pruebas; servicio `correo-de-soporte.api.ts`. Sin cambios en el servidor.
+- **2026-11-18 (aviso de pago por correo, paso 12: cliente, Correos enviados).** Pantalla `/correos` (Administración,
+  permiso `correos.ver`): lista de tarjetas con filtros (desde, hasta, estado, tipo), paginada de 50 en 50, y la ficha en
+  una ventana (a quién con el resultado de cada dirección, remitente, «Responder a», adjunto, el texto enviado o el
+  aviso de que ya se depuró, y el motivo si se canceló). Desde la ficha, «Cancelar envío» (solo pendientes, pide el motivo;
+  `correos.cancelar`) y «Reintentar» (solo fallidos con contenido, con confirmación; `correos.reintentar`). Un pendiente que
+  ya falló dice «Pendiente: se reintentará». La lógica pura (`estado-del-correo.ts`, `filtro-de-correos.ts`) tiene
+  pruebas; `usarCancelacionDeCorreo` y `usarReintentoDeCorreo` y la ventana de cancelación quedan para reusarse en la
+  ficha del pago (paso 13). Sin Excel (es una bitácora). Sin cambios en el servidor.
+- **2026-11-18 (aviso de pago por correo, paso 13: cliente, aviso en la ficha del pago).** La ficha del pago suma la sección
+  «Aviso por correo»: cómo va el último («Sin aviso», «Pendiente», «No se pudo enviar; se reintentará», «Enviado el … a …»,
+  «Falló; avise a soporte», «Cancelado»), la lista de envíos con «Cancelar» en los pendientes (pide el motivo, reusa la
+  ventana de core) y el botón «Enviar aviso» / «Reenviar aviso» (`cuentas-por-pagar.pagos.enviar-aviso`). La ventana
+  `VentanaDeAvisoDePago` ofrece solo los correos registrados del proveedor (los contactos con la marca vienen
+  marcados; uno que no sirve para enviar sale sin poder marcarse y con su motivo), la casilla «Copia a la empresa» con
+  la dirección, la vista previa del asunto y del mensaje, el nombre del PDF y el aviso de que lleva montos, NIT y
+  retenciones. La solicitud lleva ids, nunca direcciones. Si el pago se anula con el aviso ya enviado, la sección
+  recuerda avisar al proveedor. Lógica pura en `composables/pagos/aviso-de-pago.ts` con pruebas. En la pantalla de
+  configuración, un texto largo (más de 80 caracteres por omisión, como el mensaje del aviso) se edita en varias líneas
+  (ajuste menor de §13 del diseño). Pendiente menor: `avisos_de_pago.envio` se escribe a mano (`manual` o `automatico`).
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
@@ -2929,6 +3003,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-18 (Inventarios aprobado).** Todas las recomendaciones de `docs/modulos/diseno-inventarios.md` (detalle al
   final del diseño). El préstamo de herramientas pasa a Activos fijos (corrige PLAN §6). Orden: INV-3 (motor puro) ya;
   INV-0 después de que la 0038 de CCL entre al libro; luego INV-1, INV-2, INV-4…
+- **2026-11-18 — INV-3 (Inventarios, motor de costeo puro).** `servidor/src/modulos/inventarios/dominio/costeo/` (sin módulo
+  registrado, tablas ni migraciones): `escalas` (BigInt: cantidades en diezmilésimas, costos unitarios en millonésimas,
+  dinero en centavos; redondeo al más cercano con la mitad alejándose de cero), `orden` (fecha, entradas, valores, salidas,
+  secuencia), `promedio` y `peps` (`recalcularPromedio` y `recalcularPeps` recorren una secuencia desde el saldo o las
+  capas anteriores al primer movimiento afectado; `ExistenciaNegativa` en cualquier punto), `cantidades-por-clave`
+  (línea del tiempo por bodega y lote), `diferencias` (para `inventarios.costo_recalculado`), `reparto` (reparto con
+  último renglón y absorción de costos adicionales y rebajas, el resto a resultados) y `sobrante` (promedio vigente o
+  última entrada; el faltante es una salida más). Los ejemplos de §7.6 son pruebas (25 en total). Decisiones: un
+  movimiento de valor en PEPS lleva `capaId` y falla con `capa_no_disponible` si la capa ya no tiene existencia; en
+  promedio, la rebaja se limita con el valor que queda que pasa quien llama.
 - **2026-11-18 (Activos fijos aprobado).** Todas las respuestas al final de `docs/modulos/diseno-activos-fijos.md`. Cambio
   respecto al diseño: **sin alcance por localidad** (AF-P2 = a). El arquitecto incorpora el cambio y los ajustes del contador
   (A1 a A3, V-2 a V-12, auditoría permanente) antes de AF-1.
@@ -2957,6 +3041,150 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   'bien'`; el servicio capitalizado queda en servicios del SAT-2237. El análisis «Activos fijos comprados» muestra todos y suma la
   columna «Es un» (bien o servicio, también en el Excel). Cliente: ya no se fuerza «Bien» al marcar activo fijo y el texto es
   «Activo fijo (se capitaliza)».
+- **2026-11-18 (respuestas del usuario).** Integración de Activos fijos e Inventarios aprobada (detalle al final de
+  `diseno-integracion-activos-fijos-e-inventarios.md`): el stock de bienes de uso vive en Activos fijos. *AF-P22:* la lista
+  de activos muestra el nombre de la localidad aunque el usuario no tenga acceso a ella (consulta de Empresas solo con id y
+  nombre, revisada por seguridad). Validación del contador de Inventarios guardada en
+  `dictamen-inventarios-validacion-2026-11-18.md` (V-2: la fórmula de absorción con promedio del diseño es incorrecta).
+- **2026-11-19 — AF-1 (Activos fijos, servidor).** Esqueleto del módulo `activos-fijos` (`dependeDe: ['libro-de-compras']`), esquema
+  `activos_fijos` con `clases` (único por nombre normalizado, `check` de inciso, porcentaje 0 a 100, terrenos en 0 % y sin vida útil,
+  vida 1 a 1200 meses y residual 0 a 99.99) y `clases_por_concepto` (llaves compuestas con la empresa; la del concepto en cascada),
+  ambas con RLS solo por empresa. Migraciones `0000_af1_clases` y `0001_af1_auditoria_permanente` (inserta en
+  `core.recursos_de_auditoria_permanente` los seis recursos del diseño con la cita de los arts. 112 «A» y 47 del Código Tributario).
+  Configuración del módulo: los diez topes de ley `activos-fijos.isr.maximo.<inciso>` (solo instalación) y `primer_mes`, `umbral`,
+  `codigos.prefijo` (pública) y `meses_de_aviso`; el dominio rechaza el porcentaje sobre el tope (`clase_con_porcentaje_sobre_el_maximo`).
+  Casos de uso: crear, editar (inactivar y reactivar con auditoría), eliminar (`clase_en_uso` si tiene conceptos ligados; los activos
+  se suman en AF-2), listar con la **semilla** de 14 clases al abrir el catálogo vacío (el tope de la instalación recorta la sugerida),
+  y los conceptos de gasto que proponen la clase (`GET` y `PUT /activos-fijos/clases/:id/conceptos`; un concepto propone una sola
+  clase y lo que se quita o se mueve queda en la auditoría como `quitar`). Excel de clases con `core/intercambio`. Permisos de clases:
+  `ver`, `crear`, `editar`, `eliminar`, `importar` y `exportar`. Sin pantallas (AF-1c). Decisiones: la semilla es perezosa y no
+  puede estar en el alta de la empresa (los módulos no se importan entre sí); la ayuda de «Programas y licencias» (V-2) queda como
+  constante de dominio para el cliente; el esqueleto del cliente queda vacío para AF-1c.
+- **2026-11-19 — AF-1c (Activos fijos, cliente).** Catálogo «Clases de activos» (`/activos-fijos/clases`, menú Administración del módulo)
+  generado con `npm run generar -- recurso activos-fijos/clase` y completado a mano: lista por nombre con tarjeta propia, ventana de
+  alta y edición, Inactivar o Reactivar con confirmación, Eliminar con confirmación (el servidor responde `clase_en_uso` si tiene
+  conceptos o activos) y Excel (importar y exportar, con sus permisos). Al elegir «Terrenos» el porcentaje queda en 0 y se quita la vida
+  útil (campos de solo lectura, como exige el servidor); el valor residual nuevo empieza en 0; «Programas y licencias» muestra la ayuda
+  V-2. Lógica pura con pruebas en `reglas-de-clase.ts`. Pendiente: la ventana de conceptos de gasto que proponen la clase
+  (`GET` y `PUT /activos-fijos/clases/:id/conceptos`), que el plan no lista en AF-1c.
+
+- **2026-11-18** (correo 8 a 13, revisión):
+  - Anular un pago cancela también los avisos `enviando` y `fallido` (no solo `pendiente`), con auditoría y motivo «Pago
+    anulado»; un `fallido` cancelado ya no se puede reintentar (409). La migración core `0031_cancelacion_durante_el_envio`
+    cambia `core.resolver_correo`: si el correo se canceló mientras se enviaba, anota el intento y lo deja `cancelado` (no
+    vuelve a `pendiente`). Se quita `bloqueado_hasta` al cancelar (restricción de la tabla).
+  - Integración: las ramas `f43-1` y `f43-10` también crean una migración core 0027; quien se una después debe regenerar (Hecho: la bandeja para Soporte quedó en 0030 y la cancelación en 0031, tras la RLS 0027-0028 y Multimoneda 0029.)
+    la suya con el número siguiente y rehacer `_journal.json`, el snapshot y el `prevId` (nunca juntar dos entradas idx 27).
+  - `correo.servidor.gestionar` queda declarado sin que lo exija ninguna ruta (Soporte usa `soloSuperacceso`); anotado en el diseño.
+- **2026-11-18, RLS del núcleo R-1 (privilegios y disparadores de `core`).** `core/base-datos/privilegios-restringidos.ts`
+  (`RESTRICCIONES_DE_PRIVILEGIOS`) clasifica las 24 tablas de `core` y el migrador, en la misma consulta del `grant`
+  general (`otorgarPermisosAplicacion`), quita a `arrancar_app` lo que nunca usa: `delete` de empresas, cuentas y usuarios;
+  `update` de las tablas de solo agregar o borrar; `update` por columna en empresas, cuentas, usuarios, sesiones, roles y
+  configuraciones; bitácora de superacceso y auditoría solo crecen; geografía y el catálogo de auditoría permanente sin
+  escritura; monedas sin `delete`. Migración `0027_columnas_fijas_y_superacceso` (custom): `core.proteger_columnas()` en
+  `empresas` (id, cuenta, creación, creador) y `roles` (id, cuenta, creación), que vale también para el dueño, y
+  `core.proteger_superacceso()` en `usuarios` (la aplicación no crea ni promueve superacceso; la siembra de `supergod` usa
+  `DATABASE_URL_PROPIETARIO`). Un `42501` por privilegio negado ya no es «no encontrado» sino fallo inesperado (solo el de
+  RLS lo es). Las pruebas de auditoría que esperaban 0 filas ahora esperan `permission denied`. Prueba nueva
+  `seguridad-de-core.prueba.ts` (tabla clasificada, RLS esperada, privilegios por tabla y columna, también tras migrar dos
+  veces, y cada caso del diseño). R-2 y R-3 siguen.
+
+- **2026-11-18, RLS del núcleo R-2 (alta con cuenta y usuario; andamios como dueño).** El alta de cuenta fija
+  `app.cuenta_id` y `app.usuario_id` (sin empresa) al abrir su transacción: `TransaccionDeAlta.ejecutar(origen, trabajo)`
+  recibe la cuenta nueva (el caso de uso la crea con `Cuenta.registrar` antes de abrirla) y el usuario de soporte, que
+  sale de la sesión en el controlador (la siembra no tiene usuario). Arregla de paso que la empresa inicial y los roles del
+  alta quedaban con `creado_por` nulo. Los andamios de pruebas que sembraban empresas y accesos con `bd` pasan a
+  `core/base-datos/sembrado-de-prueba.soporte.ts` (`bdPropietario`, conexión del dueño): así no dependen de las
+  variables de la transacción cuando R-3 active la RLS de escritura. Prueba nueva en `plataforma.api.prueba.ts`.
+
+- **2026-11-18, RLS del núcleo R-3 (RLS de escritura por cuenta).** `base-datos/columnas.ts` suma
+  `politicasDeEscrituraPorCuenta({ sinBorrar })` y `politicasDeEscrituraPorCuentaDe(padre, llave)`: lectura abierta
+  (`leer_sin_filtro`) y `insert`/`update`/`delete` solo si `cuenta_id` (o el de su padre) es `app.cuenta_id`. Migración
+  `0028_rls_de_escritura_de_core` (generada) en `empresas` (sin política de `delete`), `empresa_usuarios` (por
+  `core.empresas`), `roles`, `rol_permisos` (por `core.roles`), `usuario_roles` y `usuario_permisos`. `cuentas`,
+  `cuenta_modulos`, `usuarios`, `sesiones`, `configuraciones`, `bitacora_superacceso`, `feriados`, `monedas` y geografía
+  siguen sin RLS (solo privilegios). Comentarios corregidos en `ejecutarEnEmpresaNueva`, `RegistrarEmpresa` y los
+  repositorios. Pruebas: `rls-de-escritura-de-core.prueba.ts` (A no escribe en B y sí en A) y, en
+  `unidad-de-trabajo-empresa-nueva`, la empresa creada en otra cuenta y la empresa vieja que intenta pasar por nueva
+  ahora las rechaza la base. Suite completa del servidor sin fallos. **Quedan:** R-4 (RLS de lectura, con revisión de
+  `seguridad`) y R-5 (CLAUDE.md y ARQUITECTURA.md); las tablas nuevas de `core` deben clasificarse en
+  `RESTRICCIONES_DE_PRIVILEGIOS` (la prueba lo exige).
+
+- **2026-11-18, Multimoneda MM-1 (datos del núcleo).** Migración `core/0029_multimoneda` (generada, con la semilla y el
+  disparador a mano): `core.monedas` suma `activa` (`default false`), `codigo_banguat` (único, con llave a
+  `core.monedas_del_banguat`), `letras_singular` y `letras_plural` y los checks de dos decimales, letras completas y
+  quetzal sin código; semilla de la adenda A.4 (GTQ y USD activos con sus letras, el USD con el código 2; las demás
+  monedas del Banguat inactivas y sin código). Tablas nuevas `core.monedas_del_banguat` (con la semilla del 2),
+  `core.tipos_de_cambio` (versiones inmutables, únicos y checks de §6.1 y A.5) y `core.consultas_al_banguat` (una fila
+  por llamada). Helper `politicasDeSoloAgregarEnLaInstalacion()` (`insert` y `select` abiertos, sin `update` ni `delete`)
+  y las tres tablas clasificadas en `RESTRICCIONES_DE_PRIVILEGIOS` (las dos de solo agregar, además, sin `update` ni
+  `delete`). Disparador `core.monedas_codigo_banguat_estable` (`check_violation` con la restricción del mismo nombre).
+  Objeto de valor `TipoDeCambio` (`core/compartido/dominio/tipo-de-cambio.ts`, entero escalado × 10⁸, redondeo desde la
+  mitad, tope de `numeric(14,2)`). Pruebas: `multimoneda-de-core`, `tipos-de-cambio-de-core` y `tipo-de-cambio`.
+  **Pendiente:** la comprobación C-1 con el Banguat real puede agregar monedas a la semilla (migración de datos aparte).
+
+- **2026-11-18, Multimoneda MM-2 (contexto `core/monedas`).** Servicio `TiposDeCambio` (`aplicacion/tipos-de-cambio.ts`,
+  instancia única `tiposDeCambio` en `monedas/contexto.ts`, como `calendarioLaboral`): `vigente` (exacto, anterior de hasta
+  7 días con `motivoDelAnterior` `falta_publicacion` o `dia_sin_calculo`, futura solo si está publicada; el quetzal es 1;
+  lanza `TipoDeCambioNoDisponible` con `{ moneda, fecha, ultimaFechaPublicada }`), `consultar` (lo mismo sin lanzar, con
+  `utilizable`), `delCierre`, `serie` e `invalidar`; guarda en memoria lo leído y lee con la transacción en curso si la hay.
+  Regla pura en `dominio/tipo-vigente.ts` (`clasificarTipo`, 7 días); el dólar publica todos los días y las demás monedas
+  no se calculan en fin de semana ni asueto (`dia_sin_calculo`, sin confirmación). Casos de uso `ListarMonedas`,
+  `ListarMonedasDelBanguat`, `EditarMoneda` (reglas de A.4 y A.9: código ofrecido, libre, sin otra serie, quetzal sin código y
+  siempre activo, solo dos decimales; audita `inactivar`, `reactivar` y `corregir` al quitar o cambiar el código),
+  `ConsultarTipoVigente`, `ListarSerieDeTipos`, `ListarVersionesDeTipo` y `RegistrarTipoDeCambio` (versión manual nueva,
+  nunca edita). Rutas: `GET /api/monedas`, `GET /api/monedas/banguat`, `PATCH /api/monedas/:codigo`,
+  `GET /api/tipos-de-cambio` (máx. 366 días), `GET …/vigente`, `GET …/:moneda/:fecha/versiones` y `POST /api/tipos-de-cambio`.
+  Permisos `soloSuperacceso` `configuracion.monedas.editar` y `configuracion.tipos-de-cambio.crear` en el `modulo.ts` del
+  core. `CODIGOS_DEL_BANGUAT_EXCLUIDOS` queda vacío hasta la comprobación C-1. **Quedan para MM-3b:** `POST …/cargar`,
+  `GET …/consultas`, `POST /api/monedas/banguat/actualizar` y `GET …/muestra`, la carga automática (que debe llamar a
+  `tiposDeCambio.invalidar()` al agregar versiones) y el uso de `ClienteBanguat`.
+- **2026-11-18, Multimoneda: correcciones de la revisión de MM-1 y MM-2.** La serie `GET /api/tipos-de-cambio` ya no
+  devuelve `motivo` ni `registradoPor` (solo `versiones` y `POST`, de soporte), con prueba de API. El servicio
+  `TiposDeCambio` guarda lo leído 60 s y no guarda una lectura que empezó antes de `invalidar` (generación). El código del
+  Banguat tiene tope de 32767 (400 en vez de 500). `arrancar_app` solo actualiza `activa`, `codigo_banguat` y las letras
+  de `core.monedas`. Pendiente para R-4: la auditoría de `EditarMoneda` queda en la cuenta de la empresa activa de
+  soporte, y la revisión del código por dos ediciones simultáneas sale como violación genérica de la base.
+
+- **2026-11-18, Inventarios INV-0 e INV-0c (Libro de compras).** Migración `0039_inv_marca_de_inventario`:
+  `es_inventario boolean not null default false` en `lineas_de_documento` y en `conceptos_de_gasto`, con los checks
+  `*_inventario_es_bien` (no es inventario o es bien) y `*_un_solo_destino_del_costo` (no es activo fijo e inventario a la vez).
+  La llave única de líneas ya la trajo la 0037 de AF-0. Dominio: el concepto rechaza los dos destinos y el inventario de
+  servicio (`ConceptoDeGastoInvalido`); el resolutor de líneas hereda la marca del concepto (la línea puede cambiarla) y lanza
+  `linea_con_dos_destinos_del_costo` o `inventario_no_es_bien`. Zod, DTO, Excel de conceptos (columna «Es inventario»), definición
+  del generador y bandeja de DTE (`esInventario: null`) al día. SAT-2237 y libro sin cambio: una línea de inventario es una compra
+  de bienes. Cliente: casilla «Inventario (entra a una bodega)» en la línea y en el concepto, excluyente con «Activo fijo»
+  (`elegirDestinoDelCosto`, `elegirDestinoDelCostoDelConcepto`); marcar inventario fija el tipo en «Bien». No hay Excel de líneas del
+  libro, así que no se agregó esa columna.
+- **2026-11-18 — Correcciones de la QA de CP4-12 (Cuentas por pagar).** Errores medios del informe `informe-qa-cp4-12-2026-11-18.md`: (1) un cheque posfechado anulado ya no cuenta como comprometido en R1, R2 ni en cheques posfechados al corte de hoy: `pagoCuentaAlCorte` (`saldos-al-corte.sql.ts`) usa `fecha_de_anulacion` y, mientras esa fecha (la del cheque) sea posterior al corte, el día real de la anulación (`anulado_en`), así un corte pasado conserva su cifra; (2) la hoja de la contraseña muestra Pagado, Comprometido y Saldo, la lista «Cheque N al dd/mm/aaaa» (en vez de «Pago N: cheque al…») y el disponible; el comprobante agrega Comprometido y Disponible por documento cuando hay posfechados; (3) `pagos` y el reparto en efectivo topan `referencia` (100) y `observaciones` (500) en el esquema Zod: 400 por campo y no 500. Bajo 4: los cinco nombres de estado de pago son los mismos, en masculino, en la lista, la ficha, la contraseña y R2. Siguen abiertos 5 (origen en cheques caducos, `it.fails`), 6, 7, 8 y 9.
+- **2026-11-18 (AFI-0, docs del arquitecto).** La integración aprobada quedó en los dos diseños. `diseno-activos-fijos.md`
+  (marcado AFI): `activos.en_bodega` y `alta_conjunta_id`, `traslados.a_bodega`, tablas `divisiones` y `boletas_firmadas`,
+  división en `costos` y `tramos`, `acumuladaAl`, capitalizar en N unidades con el sobrante en el último, «Disponible para
+  uso» por lote, traslado y baja con cantidad parcial (**AF-P10 cambia**: división automática), cantidad esperada y
+  encontrada en el inventario físico, tres reportes (existencias de bienes de uso, en bodega, responsiva), dos variables
+  de empresa y la orden `activos-fijos.obtener_umbral_de_capitalizacion`; pasos AFI-1 a AFI-9 encajados en AF-n.
+  **AF-P22 = b**: Empresas da `empresas.nombres_de_localidades` y `empresas.nombres_de_departamentos` (`security definer`,
+  solo id, código, nombre y activo de la empresa de la transacción; §6.13), **para revisión de `seguridad`** antes del
+  paso AF-P22 (antes de AF-2c). `diseno-inventarios.md`: validación del contador aplicada — V-2 factor exacto
+  `Π(1 − q/C)` y recálculo de los repartos; V-1 rige el 1 de enero del año siguiente a la autorización, con recálculo si
+  se registra tarde y meses abiertos; V-3 débito solo en `general`; V-4 correspondencia tipo → clase de la SAT y
+  «tránsito» = compras sin recibir; V-5 sobrante a la última entrada con costo real; V-6 `error_de_registro` referido a
+  la salida que corrige; V-8 (P-2 a) descartar quita la marca en el libro con la orden
+  `libro-de-compras.cambiar_marca_de_inventario`; V-10 donación con su valor razonable en el evento; kardex por bodega con
+  su propio saldo; traslados neutros para el costeo y devolución con PEPS sobre su capa. Abiertas: P-1, P-3, INV-P14 e
+  INV-A16 (usuario) y VC-1 a VC-4 (contador).
+- **2026-11-18 — INV-3 ajustado a la validación del contador.** El motor (`dominio/costeo/`) ahora: (1) absorbe costos
+  adicionales y rebajas por sí mismo: con promedio, factor exacto `Π (1 − q_s / C_s)` como fracción de enteros
+  (`factores.ts`) y `absorbido = round(parte × f)`, el resto a resultados; con PEPS, `restante / inicial` de la capa en
+  esa posición (`absorcion.ts`); un movimiento de valor con `reparto` se recalcula solo al recorrer de nuevo, y
+  `diferenciasDeReparto` da lo que va en `repartos` del evento `inventarios.costo_recalculado`; (2) traslados neutros
+  (tipos `traslado_de_entrada` y `traslado_de_salida`: no cambian `C`, `V` ni capas, costo informativo; orden 0 en el
+  destino y 2 en el origen); (3) devolución con PEPS sobre su propia capa y el resto de las siguientes al mismo costo
+  (`devolucion-peps.ts`), con el residuo de una capa vaciada a resultados (VC-1); con promedio, al costo de su
+  entrada; (4) sobrante: promedio con existencia, y si no la última entrada con costo real al costo ajustado
+  (`ultima-entrada.ts`). Pruebas con los dos contraejemplos del contador. Decisiones: el recálculo desde un punto recibe
+  los factores de las entradas anteriores en `estado.factores` (`entradasSeguidas`); una donación con costo mayor
+  que cero cuenta como costo real.
 - **2026-11-18 (CCL-B1, Bancos)**: migración `0036_caja_chica_y_cuentas_por_liquidar` (la `0035` ya la ocupaba
   `saldos_por_cuenta_permisos`): nueve conceptos de sistema de Caja chica y Cuentas por liquidar (clave puesta a
   «Fondo de caja chica» y «Reintegro de caja chica» sin clave; repetible). `ClaveDeConceptoDeSistema` y
@@ -2971,8 +3199,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   conserva al corregir la nota (`exigirConceptoElegible` con `yaAsignado` no lo rechaza, esté o no activo el módulo;
   «Sin clasificar» sigue sin poder elegirse) y `DesmarcarNota` ahora pasa los módulos activos. Migración
   `0037_conceptos_reservados_por_nombre_normalizado`: repara la `0036` comparando con `core.nombre_normalizado` (como el
-  índice único), alinea la clasificación de §3.2 a y reactiva al concepto que recibe la clave, e inserta lo que falte;
-  repetible. Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
+  índice único), alinea la clasificación de §3.2 a y reactiva al concepto que recibe la clave y también a los nueve que la `0036`
+  ya había marcado por `lower(nombre)`, e inserta lo que falte; repetible. Corregir una nota a otro concepto reservado
+  ahora pasa los módulos activos (como crear). Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
   posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
   cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.
 - **2026-11-18 (IC-1 a IC-7, Bancos, servidor: impresión de cheques y comprobante de egreso)**: según

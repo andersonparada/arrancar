@@ -34,6 +34,11 @@ export const VENTANAS_CORE = {
     descripcion: (empresa: string) =>
       `Ajustes de la cuenta y de ${empresa}. El valor de la empresa tiene prioridad sobre el de la cuenta, y este sobre el del servidor.`,
   },
+  correos: {
+    titulo: 'Correos enviados',
+    descripcion:
+      'Lo que esta empresa ha mandado por correo (por ejemplo, avisos de pago a proveedores): a quién, cómo salió y el texto enviado durante 30 días.',
+  },
   cuentas: {
     titulo: 'Cuentas suscriptoras',
     menu: 'Cuentas',
@@ -43,6 +48,11 @@ export const VENTANAS_CORE = {
     titulo: 'Apariencia',
     descripcion:
       'Nombre, logo y colores de esta instalación. Se aplican a todas las cuentas del servidor: menú, encabezados e inicio de sesión.',
+  },
+  correo: {
+    titulo: 'Correo',
+    descripcion:
+      'El servidor de correo de esta instalación, una prueba de envío y el estado de la bandeja de todas las empresas.',
   },
   bitacora: {
     titulo: 'Bitácora de soporte',

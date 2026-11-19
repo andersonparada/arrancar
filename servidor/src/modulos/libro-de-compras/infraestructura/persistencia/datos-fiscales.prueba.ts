@@ -18,6 +18,7 @@ import { definicionesModulos } from '../../../indice.js';
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
 import { datosFiscalesDeProveedor } from './datos-fiscales.tablas.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
 
 let usuarioId: string;
 let cuentaA: string;
@@ -81,7 +82,7 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'fiscales', nombres: 'Fiscales', hashContrasena: 'x' })
     .returning();
-  const filas = await bd
+  const filas = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: a!.id, nombre: 'Empresa A1' },

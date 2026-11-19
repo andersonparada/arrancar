@@ -21,6 +21,7 @@ import { GestorDeDocumentos } from '../aplicacion/gestor-de-documentos.js';
 import type { InspectorDePdf, PdfInspeccionado, TurnoDeRevision } from '../aplicacion/puertos/inspector-de-pdf.js';
 import { OptimizadorFalso } from '../pruebas/dobles-de-archivos.js';
 import { RepositorioArchivosDrizzle } from './persistencia/repositorio-archivos.drizzle.js';
+import { bdPropietario } from '../../base-datos/sembrado-de-prueba.soporte.js';
 
 const DUENO = 'bancos.conciliaciones';
 const pdf = Buffer.from('%PDF-1.7\ncontenido');
@@ -69,7 +70,10 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'documentos', nombres: 'Documentos', hashContrasena: 'x' })
     .returning();
-  const [empresa] = await bd.insert(empresas).values({ cuentaId: cuenta!.id, nombre: 'Empresa' }).returning();
+  const [empresa] = await bdPropietario
+    .insert(empresas)
+    .values({ cuentaId: cuenta!.id, nombre: 'Empresa' })
+    .returning();
   contexto = { empresaId: empresa!.id, cuentaId: cuenta!.id, usuarioId: usuario!.id, esSuperacceso: false };
 });
 

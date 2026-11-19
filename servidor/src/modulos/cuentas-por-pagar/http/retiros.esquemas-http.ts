@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { textoOpcional } from './texto-opcional.js';
 
 const DINERO = /^\d{1,12}(\.\d{1,2})?$/;
 const LIMITE_POR_OMISION = 50;
@@ -6,16 +7,14 @@ const LIMITE_MAXIMO = 200;
 
 const monto = z.string().trim().regex(DINERO, 'Escriba el monto con hasta dos decimales.');
 const fecha = z.iso.date({ error: 'Escriba la fecha como AAAA-MM-DD.' });
-const texto = (maximo: number, campo: string) =>
-  z.string().trim().min(1).max(maximo, `${campo} admite hasta ${maximo} caracteres.`).nullable().optional();
 
 /** Lo común a las dos formas; que haya custodio (texto o usuario) y las demás reglas son del dominio y responden por campo. */
 const comun = {
   fecha: fecha.optional(),
   monto,
-  custodio: texto(150, 'El custodio'),
+  custodio: textoOpcional(150, 'El custodio admite hasta 150 caracteres.'),
   custodioUsuarioId: z.uuid({ error: 'Escoja el usuario.' }).nullable().optional(),
-  observaciones: texto(500, 'Las observaciones'),
+  observaciones: textoOpcional(500, 'Las observaciones admiten hasta 500 caracteres.'),
 };
 
 /** Un retiro con cheque (a nombre del custodio u otro, no negociable por omisión) o con nota de débito (boleta o cajero). */
@@ -26,13 +25,14 @@ export const esquemaRetiro = z.discriminatedUnion('forma', [
     chequeId: z.uuid().optional(),
     noNegociable: z.boolean().optional(),
     paraAbonoEnCuenta: z.boolean().optional(),
+    /** El vacío no es nulo: el dominio lo rechaza como cheque al portador. */
     beneficiario: z.string().trim().max(150, 'El beneficiario admite hasta 150 caracteres.').nullable().optional(),
     ...comun,
   }),
   z.object({
     forma: z.literal('nota_de_debito'),
     cuentaBancariaId: z.uuid({ error: 'Escoja la cuenta bancaria.' }),
-    referencia: texto(100, 'La referencia'),
+    referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
     ...comun,
   }),
 ]);
@@ -59,9 +59,9 @@ export const esquemaLiquidarRetiro = z.object({
   fecha: fecha.optional(),
   devuelto: monto,
   cuentaBancariaId: z.uuid().optional(),
-  referencia: texto(100, 'La referencia'),
+  referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
   faltante: monto,
-  motivoDeFaltante: z.string().trim().max(300, 'El motivo admite hasta 300 caracteres.').nullable().optional(),
+  motivoDeFaltante: textoOpcional(300, 'El motivo admite hasta 300 caracteres.'),
 });
 
 /** Anular o reabrir: el motivo y, si mueve dinero en Bancos, la fecha del inverso (por omisión la decide Bancos). */

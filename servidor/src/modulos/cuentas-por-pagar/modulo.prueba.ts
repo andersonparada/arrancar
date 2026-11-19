@@ -37,6 +37,7 @@ describe('módulo de Cuentas por pagar', () => {
       'cuentas-por-pagar.pagos.emitir',
       'cuentas-por-pagar.reportes-de-saldos.ver',
       'cuentas-por-pagar.reportes-de-saldos.exportar',
+      'cuentas-por-pagar.pagos.enviar-aviso',
       'cuentas-por-pagar.pagos.reaplicar',
       'cuentas-por-pagar.pagos.anular',
       'cuentas-por-pagar.pagos.ligar-notas-de-debito',
