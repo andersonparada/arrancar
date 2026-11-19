@@ -77,7 +77,7 @@ describe('devoluciones a proveedor', () => {
     const articulo = await nuevoArticulo();
     const compra = await comprar(e, articulo, { cantidad: '100', costo: 200 });
     const otra = await comprar(e, articulo, { cantidad: '10', costo: 20, dias: 9 });
-    const { lineaIds } = await nota(e, compra.documentoId, 100);
+    const { lineaIds } = await nota(e, compra.documentoId, 200);
     const lineaId = lineaIds[0]!;
     await devolver(e, { lineaId, entradaId: compra.entradaId, cantidad: '70' });
 
@@ -89,6 +89,18 @@ describe('devoluciones a proveedor', () => {
     expect(demasiado.cuerpo.error.codigo).toBe('devolucion_mayor_que_la_entrada');
     expect(deOtraFactura.cuerpo.error.codigo).toBe('nota_no_corresponde_a_las_entradas');
     expect(sinExistencia.cuerpo.error.codigo).toBe('existencia_negativa');
+  });
+
+  it('no pasan del costo de la línea de la nota y no son anteriores a la entrada', async () => {
+    const articulo = await nuevoArticulo();
+    const compra = await comprar(e, articulo, { cantidad: '100', costo: 200 });
+    const { lineaIds } = await nota(e, compra.documentoId, 10);
+
+    const sobrepasa = await devolver(e, { lineaId: lineaIds[0]!, entradaId: compra.entradaId, cantidad: '10' });
+    const anterior = await devolver(e, { lineaId: lineaIds[0]!, entradaId: compra.entradaId, cantidad: '1', dias: 15 });
+
+    expect(sobrepasa.cuerpo.error.codigo).toBe('linea_sobrerrecibida');
+    expect(anterior.cuerpo.error.codigo).toBe('devolucion_antes_de_la_entrada');
   });
 
   it('con PEPS rebajan su propia capa: no cambian qué capa consume la siguiente salida', async () => {

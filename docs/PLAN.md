@@ -3662,6 +3662,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   anulado con el módulo inactivo (INV-8), y la pantalla «Por recibir» (INV-5c). Riesgo anotado: R-1 solo ve por número los
   documentos de las bodegas que el usuario que anula en el libro tiene asignadas; los demás salen como «un documento de una
   bodega que no ve» (los movimientos, que no llevan alcance, sí bloquean).
+- **2026-11-19 — Correcciones de la revisión de INV-5 (servidor).** La devolución a proveedor ahora cumple el §6.3: su costo
+  estimado (la parte devuelta de cada entrada, al costo de la entrada, redondeado) más lo ya aplicado no pasa del costo de la
+  línea de la nota (`LineaSobrerrecibida`; sustituye lo anotado arriba de que no se validaba), y su fecha no puede ser anterior
+  a la de las entradas (`devolucion_antes_de_la_entrada`). `EntradaDevolvible` trae `fecha` y `costoCentavos`. Con promedio el
+  costo real del motor puede diferir de la estimación por redondeos; la regla usa la estimación.
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

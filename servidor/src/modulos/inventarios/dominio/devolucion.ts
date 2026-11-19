@@ -1,6 +1,10 @@
 import { deDiezmilesimas } from './decimales.js';
-import { DevolucionMayorQueLaEntrada, NotaNoCorrespondeALasEntradas } from './errores-de-recepcion.js';
-import { exigirNotaAplicable, type LineaDeCompra } from './linea-de-compra.js';
+import {
+  DevolucionAntesDeLaEntrada,
+  DevolucionMayorQueLaEntrada,
+  NotaNoCorrespondeALasEntradas,
+} from './errores-de-recepcion.js';
+import { exigirCapacidadDeLinea, exigirNotaAplicable, type LineaDeCompra } from './linea-de-compra.js';
 import {
   exigirRenglones,
   SIN_DESTINO,
@@ -19,8 +23,12 @@ export interface EntradaDevolvible {
   documentoId: string;
   /** La factura del libro que originó la recepción. */
   documentoDeCompraId: string;
+  /** Fecha de la entrada (AAAA-MM-DD): la devolución no puede ser anterior. */
+  fecha: string;
   /** Diezmilésimas de la unidad base, mayor que cero. */
   cantidad: bigint;
+  /** Costo de la entrada en centavos: con él se estima lo que costará devolverla. */
+  costoCentavos: bigint;
   /** Σ de las devoluciones vigentes de esta entrada. */
   devuelta: bigint;
 }
@@ -58,6 +66,18 @@ function exigirCantidades(renglones: readonly RenglonDevuelto[]): void {
   }
 }
 
+/** El costo estimado de lo devuelto: la parte de la entrada que se devuelve, al costo de la entrada, redondeada. */
+function costoEstimado(renglones: readonly RenglonDevuelto[]): bigint {
+  let total = 0n;
+  for (const { entrada, renglon } of renglones)
+    total += (entrada.costoCentavos * renglon.cantidad + entrada.cantidad / 2n) / entrada.cantidad;
+  return total;
+}
+
+function exigirFecha(fecha: string, renglones: readonly RenglonDevuelto[]): void {
+  if (renglones.some(({ entrada }) => entrada.fecha > fecha)) throw new DevolucionAntesDeLaEntrada();
+}
+
 function exigirCoherencia(nota: LineaDeCompra, renglones: readonly RenglonDevuelto[]): void {
   exigirNotaAplicable(nota);
   if (renglones.some(({ entrada }) => entrada.documentoDeCompraId !== nota.documentoAfectadoId))
@@ -78,12 +98,16 @@ function recepcionUnica(renglones: readonly RenglonDevuelto[]): string | null {
  * @throws DocumentoInvalido si no hay renglones o alguna cantidad no es positiva.
  * @throws NotaNoCorrespondeALasEntradas si la nota no corrige la factura de las entradas o hay varias bodegas.
  * @throws DevolucionMayorQueLaEntrada si se pide más de lo que queda por devolver.
+ * @throws DevolucionAntesDeLaEntrada si la fecha es anterior a la de alguna entrada.
+ * @throws LineaSobrerrecibida si el costo estimado pasa de lo que falta de la línea de la nota.
  */
 export function planDeDevolucion(escrita: DevolucionEscrita): PlanDeDocumento {
   const { nota, renglones } = escrita;
   exigirRenglones(renglones.map(({ renglon }) => renglon));
   exigirCoherencia(nota, renglones);
   exigirCantidades(renglones);
+  exigirFecha(escrita.fecha, renglones);
+  exigirCapacidadDeLinea(nota, costoEstimado(renglones));
   return {
     ...SIN_DESTINO,
     clase: 'devolucion_a_proveedor',

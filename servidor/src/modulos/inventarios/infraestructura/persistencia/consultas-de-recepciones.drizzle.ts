@@ -28,7 +28,9 @@ const columnasDeEntrada = {
   loteId: movimientos.loteId,
   documentoId: movimientos.documentoId,
   documentoDeCompraId: movimientos.documentoDeCompraId,
+  fecha: movimientos.fecha,
   cantidad: movimientos.cantidad,
+  costoTotal: movimientos.costoTotal,
   devuelta: devueltaSql,
 };
 
@@ -48,8 +50,9 @@ export class ConsultasDeRecepcionesDrizzle implements ConsultasDeRecepciones {
           eq(documentos.clase, 'recepcion_de_compra'),
         ),
       );
-    return filas.map(({ cantidad, devuelta, bodegaId, documentoDeCompraId, ...fila }) => ({
+    return filas.map(({ cantidad, costoTotal, devuelta, bodegaId, documentoDeCompraId, ...fila }) => ({
       ...fila,
+      costoCentavos: aCentavosEnteros(costoTotal),
       bodegaId: bodegaId!,
       documentoDeCompraId: documentoDeCompraId!,
       cantidad: aDiezmilesimas(cantidad),

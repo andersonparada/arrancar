@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DevolucionAntesDeLaEntrada,
   DevolucionMayorQueLaEntrada,
+  LineaSobrerrecibida,
   LineaDescartada,
   LineaNoRecibible,
   NotaNoCorrespondeALasEntradas,
@@ -33,7 +35,9 @@ const entrada = (cambios: Partial<EntradaDevolvible> = {}): EntradaDevolvible =>
   loteId: null,
   documentoId: 'r1',
   documentoDeCompraId: 'f1',
+  fecha: '2026-09-10',
   cantidad: 100_0000n,
+  costoCentavos: 1_000n,
   devuelta: 0n,
   ...cambios,
 });
@@ -106,5 +110,19 @@ describe('plan de una devolución a proveedor', () => {
   it('exige renglones con cantidad mayor que cero', () => {
     expect(() => devolver([])).toThrow(DocumentoInvalido);
     expect(() => devolver([devuelto(entrada(), 0n)])).toThrow(DocumentoInvalido);
+  });
+
+  it('rechaza una fecha anterior a la de la entrada', () => {
+    const e = entrada({ fecha: '2026-09-22' });
+
+    expect(() => devolver([devuelto(e, 10_0000n)])).toThrow(DevolucionAntesDeLaEntrada);
+  });
+
+  it('rechaza un costo que pasa de lo que falta de la línea de la nota', () => {
+    const e = entrada({ costoCentavos: 10_000n });
+
+    expect(() => devolver([devuelto(e, 60_0000n)])).toThrow(LineaSobrerrecibida);
+    expect(() => devolver([devuelto(e, 50_0000n)])).not.toThrow();
+    expect(() => devolver([devuelto(e, 10_0000n)], nota({ aplicadoCentavos: 4_500n }))).toThrow(LineaSobrerrecibida);
   });
 });

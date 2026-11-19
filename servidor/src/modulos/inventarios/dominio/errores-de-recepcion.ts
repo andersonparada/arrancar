@@ -74,6 +74,15 @@ export class DevolucionMayorQueLaEntrada extends ReglaDeNegocioInfringida {
   }
 }
 
+/** La devolución lleva una fecha anterior a la de la entrada que devuelve. */
+export class DevolucionAntesDeLaEntrada extends ReglaDeNegocioInfringida {
+  readonly codigo = 'devolucion_antes_de_la_entrada';
+
+  constructor() {
+    super('La fecha de la devolución no puede ser anterior a la de las entradas que devuelve.');
+  }
+}
+
 /** La nota de crédito, las entradas o la bodega de una devolución o rebaja no son coherentes entre sí. */
 export class NotaNoCorrespondeALasEntradas extends ReglaDeNegocioInfringida {
   readonly codigo = 'nota_no_corresponde_a_las_entradas';

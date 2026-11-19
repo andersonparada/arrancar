@@ -73,7 +73,9 @@ export class LibroEnMemoria
         loteId: m.loteId,
         documentoId: m.documentoId,
         documentoDeCompraId: this.kardex.documentosGuardados.get(m.documentoId)!.documentoDeCompraId!,
+        fecha: m.fecha,
         cantidad: m.cantidad,
+        costoCentavos: m.costoTotal,
         devuelta: this.devueltaDe(m.id),
       }));
   }
