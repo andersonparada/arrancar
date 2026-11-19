@@ -1,7 +1,7 @@
 import { Landmark } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_ACTIVOS_FIJOS } from './textos';
-import { Inbox, Package, Shapes } from 'lucide-vue-next';
+import { CalendarCheck, Inbox, Package, Scale, Shapes } from 'lucide-vue-next';
 import { VENTANAS_ACTIVOS_FIJOS } from './textos';
 // generador: importaciones
 
@@ -40,6 +40,31 @@ export const moduloActivosFijos: DefinicionModuloCliente = {
       component: () => import('./paginas/PorCapitalizar.vue'),
       meta: { permiso: 'activos-fijos.bandeja.ver', titulo: VENTANAS_ACTIVOS_FIJOS.porCapitalizar.titulo },
     },
+    {
+      path: '/activos-fijos/depreciacion',
+      name: 'activos-fijos.depreciacion',
+      component: () => import('./paginas/CierreDeDepreciacion.vue'),
+      meta: { permiso: 'activos-fijos.depreciacion.ver', titulo: VENTANAS_ACTIVOS_FIJOS.depreciacion.titulo },
+    },
+    {
+      path: '/activos-fijos/saldos-iniciales',
+      name: 'activos-fijos.saldos-iniciales',
+      component: () => import('./paginas/ListaDeSaldosIniciales.vue'),
+      meta: { permiso: 'activos-fijos.saldos-iniciales.ver', titulo: VENTANAS_ACTIVOS_FIJOS.saldosIniciales.titulo },
+    },
+    {
+      path: '/activos-fijos/saldos-iniciales/nuevo',
+      name: 'activos-fijos.saldos-iniciales.nuevo',
+      component: () => import('./paginas/FormularioDeSaldoInicial.vue'),
+      meta: { permiso: 'activos-fijos.saldos-iniciales.crear', titulo: VENTANAS_ACTIVOS_FIJOS.saldosIniciales.nuevo },
+    },
+    {
+      path: '/activos-fijos/saldos-iniciales/:activoId/editar',
+      name: 'activos-fijos.saldos-iniciales.editar',
+      component: () => import('./paginas/FormularioDeSaldoInicial.vue'),
+      props: true,
+      meta: { permiso: 'activos-fijos.saldos-iniciales.editar', titulo: VENTANAS_ACTIVOS_FIJOS.saldosIniciales.editar },
+    },
     // generador: rutas
   ],
   menu: [
@@ -61,6 +86,20 @@ export const moduloActivosFijos: DefinicionModuloCliente = {
           icono: Inbox,
           seccion: 'operacion',
           permiso: 'activos-fijos.bandeja.ver',
+        },
+        {
+          titulo: VENTANAS_ACTIVOS_FIJOS.depreciacion.titulo,
+          ruta: '/activos-fijos/depreciacion',
+          icono: CalendarCheck,
+          seccion: 'operacion',
+          permiso: 'activos-fijos.depreciacion.ver',
+        },
+        {
+          titulo: VENTANAS_ACTIVOS_FIJOS.saldosIniciales.titulo,
+          ruta: '/activos-fijos/saldos-iniciales',
+          icono: Scale,
+          seccion: 'administracion',
+          permiso: 'activos-fijos.saldos-iniciales.ver',
         },
         {
           titulo: VENTANAS_ACTIVOS_FIJOS.clases.titulo,

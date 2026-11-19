@@ -24,7 +24,7 @@ function usarCatalogos() {
  * empresa (todos, vea o no el usuario la localidad en Empresas) y los activos principales de los que puede ser
  * componente.
  */
-export function usarReferenciasDeActivo(edicion: Ref<EdicionDeActivo>) {
+export function usarReferenciasDeActivo(edicion: Ref<Pick<EdicionDeActivo, 'claseId' | 'localidadId'>>) {
   const { clases, ubicaciones, activos } = usarCatalogos();
   const departamentos = computed(() => ubicaciones.value.departamentos);
   const deLaLocalidad = computed(() =>
