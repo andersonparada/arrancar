@@ -18,6 +18,7 @@ const CON_RLS = [
   'archivos',
   'auditoria',
   'reintentos_de_correos',
+  'registro_de_eventos',
   'correlativos',
   'empresas',
   'empresa_usuarios',

@@ -253,6 +253,13 @@
       "when": 1795090179158,
       "tag": "0035_rls_de_lectura_de_empresas",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1795097184348,
+      "tag": "0036_registro_de_eventos",
+      "breakpoints": true
     }
   ]
 }
