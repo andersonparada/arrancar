@@ -8,8 +8,11 @@ import { AtenderMovimientoDeAnticipoPorCambiar } from '../aplicacion/casos-uso/a
 import { ListarAnticipos, ObtenerAnticipo } from '../aplicacion/casos-uso/anticipos/consultas-de-anticipos.js';
 import type { DependenciasDeAnticipos } from '../aplicacion/casos-uso/anticipos/dependencias-de-anticipos.js';
 import { EntregarAnticipo } from '../aplicacion/casos-uso/anticipos/entregar-anticipo.js';
+import { LiquidarAnticipo } from '../aplicacion/casos-uso/anticipos/liquidar-anticipo.js';
+import { ReabrirAnticipo } from '../aplicacion/casos-uso/anticipos/reabrir-anticipo.js';
 import { AnticiposControlador } from '../http/anticipos.controlador.js';
 import { rutasDeAnticipos } from '../http/anticipos.rutas.js';
+import { MarcadorDeDocumentosEnMediador } from '../infraestructura/marcador-de-documentos-en-mediador.js';
 import { OrdenesABancosEnMediador } from '../infraestructura/ordenes-a-bancos-en-mediador.js';
 import { PoliticaDeAnticiposEnConfiguracion } from '../infraestructura/politica-de-anticipos-en-configuracion.js';
 import { ConsultasDeAnticiposDrizzle } from '../infraestructura/persistencia/consultas-de-anticipos.drizzle.js';
@@ -33,6 +36,8 @@ export function rutasDeAnticiposComponidas(): FastifyPluginAsync {
       listar: new ListarAnticipos(dependencias),
       obtener: new ObtenerAnticipo(dependencias),
       anular: new AnularAnticipo(dependencias),
+      liquidar: new LiquidarAnticipo(dependencias),
+      reabrir: new ReabrirAnticipo(dependencias),
     }),
   );
 }
@@ -48,6 +53,7 @@ function dependenciasDeAnticipos(): DependenciasDeAnticipos {
     politica: new PoliticaDeAnticiposEnConfiguracion(),
     bancos: new OrdenesABancosEnMediador(movimientos),
     movimientos,
+    documentos: new MarcadorDeDocumentosEnMediador(),
     correlativos,
     auditoria,
     publicadorEventos,

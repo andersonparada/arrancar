@@ -31,6 +31,16 @@ export interface NotaDeDebitoARegistrar {
   observaciones?: string;
 }
 
+/** Lo que Bancos necesita para registrar la nota de crédito de la devolución de lo no gastado. */
+export type NotaDeCreditoARegistrar = NotaDeDebitoARegistrar;
+
+/** El reparto por concepto del movimiento de un anticipo (solo clasifica el flujo; las partes suman el monto). */
+export interface DesgloseDelMovimiento {
+  origen: OrigenDeMovimientoContrato;
+  movimientoId: string;
+  conceptos: LineaDeConcepto[];
+}
+
 /** El movimiento que Bancos creó, con sus avisos (el de fondos de un posfechado). */
 export interface MovimientoCreado {
   movimientoId: string;
@@ -59,8 +69,12 @@ export interface AnulacionDelMovimiento {
 export interface OrdenesABancos {
   emitirCheque(operador: Operador, cheque: ChequeAEmitir): Promise<MovimientoCreado>;
   registrarNotaDeDebito(operador: Operador, nota: NotaDeDebitoARegistrar): Promise<MovimientoCreado>;
+  /** El depósito de lo que no se gastó (nota de crédito). */
+  registrarNotaDeCredito(operador: Operador, nota: NotaDeCreditoARegistrar): Promise<MovimientoCreado>;
   /** Anula el cheque o la nota del anticipo (Bancos decide si a la antigua o con inverso); lanza lo que rechace Bancos. */
   anularMovimiento(operador: Operador, anulacion: AnulacionDeMovimiento): Promise<AnulacionDelMovimiento>;
+  /** Vuelve a fijar el reparto por concepto del movimiento de la entrega o del reembolso. */
+  fijarDesglose(operador: Operador, desglose: DesgloseDelMovimiento): Promise<void>;
 }
 
 /** Lo que se lee de Bancos sin orden de un movimiento del anticipo (solo lectura de sus tablas). */

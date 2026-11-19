@@ -46,6 +46,41 @@ declare module '../eventos/bus-eventos.js' {
       montoCentavos: number;
       anulacionEnBancos: 'sin_inverso' | 'con_inverso';
     };
+    /**
+     * Se liquidó un anticipo: `gastadoCentavos` es lo justificado; lo demás se devolvió (nota de crédito), se reembolsó (cheque
+     * o nota de débito, si se gastó de más) o quedó sin liquidar con su destino (`cobrar` en `cuotas`, que ejecutará
+     * Planilla; `renta_del_trabajo`, solo de un empleado; o `perdida`).
+     */
+    'cuentas-por-liquidar.anticipo_liquidado': {
+      empresaId: string;
+      anticipoId: string;
+      numero: number;
+      fecha: string;
+      beneficiarioId: string;
+      esEmpleado: boolean;
+      montoCentavos: number;
+      gastadoCentavos: number;
+      devueltoCentavos: number;
+      movimientoDeDevolucionId: string | null;
+      reembolsadoCentavos: number;
+      movimientoDeReembolsoId: string | null;
+      noLiquidadoCentavos: number;
+      destinoDeNoLiquidado: 'cobrar' | 'renta_del_trabajo' | 'perdida' | null;
+      cuotas: number | null;
+    };
+    /** Se reabrió un anticipo liquidado; `fecha` es la contable (la del inverso del depósito o reembolso, si lo hubo). */
+    'cuentas-por-liquidar.anticipo_reabierto': {
+      empresaId: string;
+      anticipoId: string;
+      numero: number;
+      fecha: string;
+      fechaDeLiquidacion: string;
+      devueltoCentavos: number;
+      reembolsadoCentavos: number;
+      noLiquidadoCentavos: number;
+      destinoDeNoLiquidado: 'cobrar' | 'renta_del_trabajo' | 'perdida' | null;
+      anulacionEnBancos: 'sin_inverso' | 'con_inverso' | null;
+    };
     /** Se asignó un documento o se registró un gasto sin documento en un anticipo (`montoCentavos` es el neto). */
     'cuentas-por-liquidar.gasto_asignado': {
       empresaId: string;

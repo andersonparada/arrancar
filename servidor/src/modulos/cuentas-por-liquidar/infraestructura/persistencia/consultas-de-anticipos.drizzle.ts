@@ -9,6 +9,7 @@ import type {
   FiltroDeAnticipos,
   GastadoDelAnticipo,
   PaginaDeAnticipos,
+  RepartoDeLosGastos,
 } from '../../aplicacion/puertos/puertos-de-anticipos.js';
 import { anticipos } from './anticipos.tablas.js';
 import { gastos } from './gastos.tablas.js';
@@ -63,6 +64,28 @@ const columnasDeLaLista = (corte?: string) => ({
 const ordenDeLaLista = ({ corte, estado }: FiltroDeAnticipos) =>
   corte || estado === 'abierto' ? ([asc, anticipos.fechaLimite] as const) : ([desc, anticipos.fecha] as const);
 
+interface FilaDeGasto {
+  fecha: string;
+  resta: boolean;
+  monto: string;
+  conActivoFijo: boolean;
+  documentoDeCompraId: string | null;
+}
+
+/** El total gastado y lo de activo fijo (las notas de crédito restan), la última fecha y los documentos del libro. */
+function repartirLosGastos(filas: FilaDeGasto[]): RepartoDeLosGastos {
+  const con = (signo: (fila: FilaDeGasto) => number) => filas.reduce((suma, fila) => suma + signo(fila), 0);
+  const centavos = (fila: FilaDeGasto) => (fila.resta ? -1 : 1) * aCentavos(fila.monto);
+  return {
+    totalCentavos: con(centavos),
+    deActivoCentavos: con((fila) => (fila.conActivoFijo ? centavos(fila) : 0)),
+    ultimaFecha: filas.at(-1)?.fecha ?? null,
+    documentosDeCompraIds: filas.flatMap(({ documentoDeCompraId }) =>
+      documentoDeCompraId ? [documentoDeCompraId] : [],
+    ),
+  };
+}
+
 /** Lecturas de anticipos con seguridad por empresa (RLS). */
 export class ConsultasDeAnticiposDrizzle implements ConsultasDeAnticipos {
   async gastadoDe(anticipoId: string): Promise<GastadoDelAnticipo> {
@@ -74,6 +97,22 @@ export class ConsultasDeAnticiposDrizzle implements ConsultasDeAnticipos {
       .from(gastos)
       .where(and(eq(gastos.anticipoId, anticipoId), eq(gastos.estado, 'vigente')));
     return { cantidad: fila!.cantidad, totalCentavos: aCentavos(fila!.total) };
+  }
+
+  async repartoDeLosGastos(anticipoId: string): Promise<RepartoDeLosGastos> {
+    const vigentes = and(eq(gastos.anticipoId, anticipoId), eq(gastos.estado, 'vigente'));
+    const filas = await transaccionEnCurso()
+      .select({
+        fecha: gastos.fecha,
+        resta: gastos.resta,
+        monto: gastos.monto,
+        conActivoFijo: gastos.conActivoFijo,
+        documentoDeCompraId: gastos.documentoDeCompraId,
+      })
+      .from(gastos)
+      .where(vigentes)
+      .orderBy(asc(gastos.fecha));
+    return repartirLosGastos(filas);
   }
 
   async vencidosDe(beneficiarioId: string, hoy: string): Promise<AnticipoVencido[]> {

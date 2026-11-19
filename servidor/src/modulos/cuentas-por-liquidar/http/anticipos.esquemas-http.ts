@@ -3,6 +3,7 @@ import { z } from 'zod';
 const DINERO = /^\d{1,12}(\.\d{1,2})?$/;
 const LIMITE_POR_OMISION = 50;
 const LIMITE_MAXIMO = 200;
+const CUOTAS_MAXIMAS = 120;
 
 const monto = z.string().trim().regex(DINERO, 'Escriba el monto con hasta dos decimales.');
 const fecha = z.iso.date({ error: 'Escriba la fecha como AAAA-MM-DD.' });
@@ -67,7 +68,51 @@ const motivo = z.string().trim().min(1, 'Escriba el motivo.').max(300, 'El motiv
 /** Anular: el motivo y, si mueve dinero en Bancos, la fecha del inverso (por omisión la decide Bancos). */
 export const esquemaAnularAnticipo = z.object({ motivo, fecha: fecha.optional() });
 
+const dineroOpcional = monto.default('0');
+
+/** Con qué se reembolsa lo gastado de más: cheque a nombre del beneficiario o nota de débito. */
+const esquemaReembolso = z.discriminatedUnion('forma', [
+  z.object({
+    forma: z.literal('cheque'),
+    chequeraId: z.uuid({ error: 'Escoja la chequera.' }),
+    chequeId: z.uuid().optional(),
+    noNegociable: z.boolean().optional(),
+  }),
+  z.object({
+    forma: z.literal('nota_de_debito'),
+    cuentaBancariaId: z.uuid({ error: 'Escoja la cuenta bancaria.' }),
+    referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
+  }),
+]);
+
+/**
+ * Liquidar: lo devuelto (con su cuenta y boleta), lo no liquidado (destino, cuotas, motivo) y, si se gastó de más, cómo se
+ * reembolsa. Que cuadre con lo gastado lo revisa el dominio.
+ */
+export const esquemaLiquidarAnticipo = z.object({
+  fecha: fecha.optional(),
+  devuelto: dineroOpcional,
+  cuentaBancariaId: z.uuid({ error: 'Escoja la cuenta bancaria.' }).optional(),
+  referencia: textoOpcional(100, 'La referencia admite hasta 100 caracteres.'),
+  noLiquidado: dineroOpcional,
+  destinoDeNoLiquidado: z.enum(['cobrar', 'renta_del_trabajo', 'perdida']).nullable().optional(),
+  cuotas: z
+    .number()
+    .int()
+    .min(1, 'Escriba las cuotas.')
+    .max(CUOTAS_MAXIMAS, `Hasta ${CUOTAS_MAXIMAS} cuotas.`)
+    .nullable()
+    .optional(),
+  pagoVoluntario: z.boolean().optional(),
+  motivoDeNoLiquidado: textoOpcional(300, 'El motivo admite hasta 300 caracteres.'),
+  reembolso: esquemaReembolso.nullable().optional(),
+});
+
+/** Reabrir: el motivo y, si mueve dinero en Bancos, la fecha del inverso (por omisión la decide Bancos). */
+export const esquemaReabrirAnticipo = esquemaAnularAnticipo;
+
 export type AnticipoSolicitado = z.infer<typeof esquemaAnticipo>;
 export type ParamsDeAnticipo = z.infer<typeof esquemaParamsDeAnticipo>;
 export type ListaDeAnticiposSolicitada = z.output<typeof esquemaListaDeAnticipos>;
 export type AnularAnticipoSolicitado = z.infer<typeof esquemaAnularAnticipo>;
+export type LiquidarAnticipoSolicitado = z.infer<typeof esquemaLiquidarAnticipo>;

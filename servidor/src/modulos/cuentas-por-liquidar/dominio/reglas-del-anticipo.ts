@@ -12,6 +12,7 @@ import {
   MotivoConVencidosObligatorio,
   MotivoInvalido,
 } from './errores-de-anticipos.js';
+import { AnticipoNoLiquidado } from './errores-de-liquidacion.js';
 import { sumarDias } from './fechas.js';
 
 const MAXIMO_DEL_MOTIVO = 300;
@@ -88,6 +89,18 @@ export function motivoConVencidos(revision: RevisionDeVencidos): string | null {
   const motivo = revision.motivo?.trim() ?? '';
   if (motivo === '' || motivo.length > MAXIMO_DEL_MOTIVO) throw new MotivoConVencidosObligatorio();
   return motivo;
+}
+
+/** @throws AnticipoYaAnulado, AnticipoLiquidado: solo un anticipo abierto se liquida. */
+export function exigirAnticipoAbierto(anticipo: Anticipo): void {
+  if (anticipo.estado === 'anulado') throw new AnticipoYaAnulado(numeroDe(anticipo));
+  if (anticipo.estado === 'liquidado') throw new AnticipoLiquidado(numeroDe(anticipo));
+}
+
+/** @throws AnticipoYaAnulado, AnticipoNoLiquidado: solo un anticipo liquidado se reabre. */
+export function exigirAnticipoLiquidado(anticipo: Anticipo): void {
+  if (anticipo.estado === 'anulado') throw new AnticipoYaAnulado(numeroDe(anticipo));
+  if (anticipo.estado === 'abierto') throw new AnticipoNoLiquidado(numeroDe(anticipo));
 }
 
 /** Lo que se necesita saber, además del anticipo, para decidir si se anula. */
