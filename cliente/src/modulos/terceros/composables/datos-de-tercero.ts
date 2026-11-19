@@ -1,3 +1,4 @@
+import { conAvisosCoherentes } from './avisos-de-pago';
 import type {
   DatosAltaTercero,
   DatosContacto,
@@ -46,7 +47,15 @@ export function datosDeLaFicha(ficha: FichaTercero): DatosTercero {
 }
 
 export function contactoVacio(): DatosContacto {
-  return { nombre: '', cargo: null, telefono: null, whatsapp: null, correo: null, notas: null };
+  return {
+    nombre: '',
+    cargo: null,
+    telefono: null,
+    whatsapp: null,
+    correo: null,
+    notas: null,
+    recibeAvisosDePago: false,
+  };
 }
 
 export interface PapelesDelFormulario {
@@ -73,7 +82,7 @@ export function altaCompleta(
 ): DatosAltaTercero {
   const papelAlRegistrar =
     papel === 'cliente' ? { tipo: papel, ...papeles.cliente } : { tipo: papel, ...papeles.proveedor };
-  const conNombre = contactos.filter((contacto) => contacto.nombre.trim());
+  const conNombre = contactos.filter((contacto) => contacto.nombre.trim()).map(conAvisosCoherentes);
   const deProveedor = papel === 'proveedor' && secciones ? { secciones } : {};
   return { ...datos, papel: papelAlRegistrar, contactos: conNombre, ...deProveedor };
 }

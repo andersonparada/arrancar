@@ -26,6 +26,11 @@ const comoLlegarle = (contacto: Contacto) =>
         <div class="min-w-0">
           <p class="truncate font-medium">
             {{ contacto.nombre }}<span v-if="contacto.cargo" class="text-tierra-500"> · {{ contacto.cargo }}</span>
+            <span
+              v-if="contacto.recibeAvisosDePago"
+              class="ml-2 rounded-full bg-campo-100 px-2 py-0.5 text-xs font-normal text-campo-800 dark:bg-campo-900 dark:text-campo-100"
+              >Recibe avisos de pago</span
+            >
           </p>
           <p class="truncate text-sm text-tierra-500">{{ comoLlegarle(contacto) }}</p>
         </div>

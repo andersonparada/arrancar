@@ -64,6 +64,7 @@ export const esquemaContacto = z.object({
   whatsapp: textoOpcional(30),
   correo: correoOpcional,
   notas: textoOpcional(500),
+  recibeAvisosDePago: z.boolean().default(false),
 });
 
 export const esquemaPapelDeCliente = z.object({

@@ -2631,6 +2631,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   producción y nunca manda `auth`; el check de la tabla del paso 2 solo admite `tls_directo` y `starttls`. Los errores
   `EENVELOPE`/`EMESSAGE` son permanentes y los de TLS/certificado no gastan intento. El saneado quita caracteres de
   ancho cero y corta por puntos de código; la plantilla rechaza `{ marcador }` con espacios; la redacción de pino cubre
+- **2026-11-18 (aviso de pago por correo, paso 7: Terceros).** Migración `0009_avisos_de_pago_en_contactos`:
+  `terceros.contactos.recibe_avisos_de_pago boolean NOT NULL DEFAULT false` y el check `contactos_aviso_con_correo`.
+  El dominio (`Contacto`) quita la marca si no hay correo y rechaza (`correo_de_contacto_no_sirve_para_avisos`) la marca
+  cuando el correo no pasa `DireccionDeEnvio`; el DTO y la API (`recibeAvisosDePago`, falso por omisión) la llevan.
+  Cliente: interruptor «Recibe avisos de pago» en la ventana de contacto y en el alta, deshabilitado con el motivo
+  cuando falta el correo o no sirve (`avisos-de-pago.ts`), y etiqueta en la lista de contactos de la ficha. El Excel de
+  Terceros no maneja contactos y no cambia.
   dos niveles y más nombres de secretos.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de

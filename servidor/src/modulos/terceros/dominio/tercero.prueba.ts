@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { Telefono } from '../../core/compartido/dominio/objetos-valor/telefono.js';
+import { Correo } from '../../core/compartido/dominio/objetos-valor/correo.js';
 import { Contacto } from './contacto.js';
-import { FaltaElNombre, TerceroInactivo } from './errores.js';
+import { CorreoDeContactoNoSirveParaAvisos, FaltaElNombre, TerceroInactivo } from './errores.js';
 import { IdentidadDeTercero, type NombresDeTercero } from './identidad-de-tercero.js';
 import { Tercero, type DatosDeTercero } from './tercero.js';
 
@@ -121,12 +122,51 @@ describe('contactos', () => {
   it('pertenecen a un tercero y necesitan nombre', () => {
     const tercero = Tercero.registrar(cuentaId, datos());
     const de = { terceroId: tercero.id, cuentaId };
-    const sinDatos = { cargo: null, telefono: null, whatsapp: null, correo: null, notas: null };
+    const sinDatos = {
+      cargo: null,
+      telefono: null,
+      whatsapp: null,
+      correo: null,
+      notas: null,
+      recibeAvisosDePago: false,
+    };
 
     const contacto = Contacto.agregar(de, { nombre: ' Encargada ', ...sinDatos });
 
     expect(contacto.esDe(tercero.id)).toBe(true);
     expect(contacto.instantanea().nombre).toBe('Encargada');
     expect(() => Contacto.agregar(de, { nombre: '  ', ...sinDatos })).toThrow(FaltaElNombre);
+  });
+
+  describe('avisos de pago', () => {
+    const de = { terceroId: Tercero.registrar(cuentaId, datos()).id, cuentaId };
+    const base = { nombre: 'Rosa', cargo: null, telefono: null, whatsapp: null, notas: null };
+
+    it('conserva la marca cuando hay un correo que sirve', () => {
+      const contacto = Contacto.agregar(de, {
+        ...base,
+        correo: Correo.crear('rosa@finca.com'),
+        recibeAvisosDePago: true,
+      });
+      expect(contacto.instantanea().recibeAvisosDePago).toBe(true);
+    });
+
+    it('quita la marca si no hay correo, al agregar y al cambiar', () => {
+      const contacto = Contacto.agregar(de, { ...base, correo: null, recibeAvisosDePago: true });
+      expect(contacto.instantanea().recibeAvisosDePago).toBe(false);
+      contacto.cambiarDatos({ ...base, correo: Correo.crear('rosa@finca.com'), recibeAvisosDePago: true });
+      contacto.cambiarDatos({ ...base, correo: null, recibeAvisosDePago: true });
+      expect(contacto.instantanea().recibeAvisosDePago).toBe(false);
+    });
+
+    it('rechaza la marca si el correo no sirve para enviar, pero lo deja guardar sin marca', () => {
+      const raro = Correo.crear('ab\u00f3@finca.com');
+      expect(() => Contacto.agregar(de, { ...base, correo: raro, recibeAvisosDePago: true })).toThrow(
+        CorreoDeContactoNoSirveParaAvisos,
+      );
+      expect(Contacto.agregar(de, { ...base, correo: raro, recibeAvisosDePago: false }).instantanea().correo).toBe(
+        raro,
+      );
+    });
   });
 });

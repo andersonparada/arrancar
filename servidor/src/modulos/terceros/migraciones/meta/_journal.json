@@ -64,6 +64,13 @@
       "when": 1795027618230,
       "tag": "0008_permisos_de_excel",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795044816282,
+      "tag": "0009_avisos_de_pago_en_contactos",
+      "breakpoints": true
     }
   ]
 }

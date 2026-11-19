@@ -1,4 +1,5 @@
-import { index, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, index, text, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorCuenta } from '../../../core/base-datos/columnas.js';
 import { cuentas } from '../../../core/cuentas/infraestructura/persistencia/cuentas.tablas.js';
 import { esquemaTerceros, terceros } from './terceros.tablas.js';
@@ -20,8 +21,13 @@ export const contactos = esquemaTerceros.table(
     whatsapp: text(),
     correo: text(),
     notas: text(),
+    recibeAvisosDePago: boolean().notNull().default(false),
     ...marcasDeTiempo,
     ...autoria,
   },
-  (t) => [index('contactos_tercero_idx').on(t.terceroId), politicaPorCuenta()],
+  (t) => [
+    index('contactos_tercero_idx').on(t.terceroId),
+    check('contactos_aviso_con_correo', sql`not ${t.recibeAvisosDePago} or ${t.correo} is not null`),
+    politicaPorCuenta(),
+  ],
 );
