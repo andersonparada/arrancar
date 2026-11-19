@@ -3204,3 +3204,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   ahora pasa los módulos activos (como crear). Cliente: `liberarReservados` (`opciones-de-concepto.ts`) devuelve a los selectores de notas, cheques,
   posfechado, desmarcar y bandeja los conceptos reservados cuyo módulo no está activo. `docs/modulos/bancos.md` ya
   cita `concepto_reservado_por_su_modulo` y `ModulosDeOrigen`.
+- 2026-11-18 · Corrección de la QA CP5-11 (errores medios). (1) El posfechado ya cobrado (conciliación autorizada anterior a su
+  fecha) rebaja desde el fin de ese mes también en la ficha del proveedor, la ficha del documento, la contraseña, Nuevo pago
+  y la lista de pagos: la regla vive en `fechaDeEfectoDelPagoSql` (SQL, `fecha-de-efecto-del-pago.sql.ts`, unida por join, no
+  subconsulta, por rendimiento) y en `estaPosfechado` (dominio, con `fechaDeEfecto`). (2) R2 impreso: `print:text-[8px]`,
+  celdas con `px-1` y texto que se parte, para caber en carta horizontal. Bajos: el Excel de R1 y R2 lleva el corte en el
+  nombre (`fechaDelNombre` en `rutasDeIntercambio`) y el doble clic en «Exportar» ya no baja dos archivos. Sin migraciones.

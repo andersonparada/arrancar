@@ -142,3 +142,14 @@ describe('un posfechado cobrado antes de su fecha, con la conciliación autoriza
     expect(ficha.porPagar).toBe(saldoDe(reporte));
   });
 });
+
+describe('el Excel de un reporte a una fecha de corte', () => {
+  it('lleva el corte en el nombre del archivo y no la fecha de hoy', async () => {
+    const exportado = await e.propietario().get(`${RUTA}/saldos-por-proveedor/exportar?corte=2026-04-30`);
+
+    expect(exportado.estado).toBe(200);
+    expect(exportado.cabeceras['content-disposition']).toBe(
+      'attachment; filename="saldos-por-proveedor-2026-04-30.xlsx"',
+    );
+  });
+});

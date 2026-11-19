@@ -28,6 +28,8 @@ export interface OpcionesDeIntercambio {
   intercambio: Pick<IntercambioDeRecurso<unknown, unknown, unknown>, 'exportar' | 'plantilla' | 'importar'>;
   /** Si se pasa, la ruta de exportar valida `?querystring` con este esquema y se lo pasa a `intercambio.exportar`. */
   filtro?: z.ZodType;
+  /** Si se pasa, el nombre del archivo lleva la fecha que devuelva (p. ej. el corte del reporte) y no la de hoy. */
+  fechaDelNombre?: (consulta: Record<string, unknown>) => string | undefined;
 }
 
 /** El esquema Zod de la solicitud, como validador de filas importadas. */
@@ -61,7 +63,7 @@ export function rutasDeIntercambio(app: Aplicacion, opciones: OpcionesDeIntercam
 
 function rutaDeExportar(
   app: Aplicacion,
-  { ruta, archivo, intercambio, filtro }: OpcionesDeIntercambio,
+  { ruta, archivo, intercambio, filtro, fechaDelNombre }: OpcionesDeIntercambio,
   permiso: string,
 ) {
   app.get(
@@ -69,7 +71,8 @@ function rutaDeExportar(
     { schema: filtro ? { querystring: filtro } : {}, preHandler: proteger({ permiso }) },
     async (solicitud, respuesta) => {
       const operador = operadorDe(solicitud);
-      const fecha = fechaLocalEn(new Date(), ZONA_HORARIA_POR_OMISION);
+      const consulta = filtro ? (solicitud.query as Record<string, unknown>) : undefined;
+      const fecha = (consulta && fechaDelNombre?.(consulta)) ?? fechaLocalEn(new Date(), ZONA_HORARIA_POR_OMISION);
       const contenido = await intercambio.exportar(operador, filtro ? solicitud.query : undefined);
       return enviarExcel(respuesta, `${archivo}-${fecha}`, contenido);
     },

@@ -27,21 +27,30 @@ export async function lineasDePagoDonde(condicion: SQL): Promise<LineaDePago[]> 
     .leftJoin(conciliaciones, unionDeLaConciliacion)
     .where(condicion)
     .orderBy(asc(pagos.creadoEn), asc(aplicacionesDePagos.creadoEn));
-  return filas.map(({ linea, pago, numeroDeCheque, fechaDeEfecto }) => ({
-    pagoId: pago.id,
-    numero: pago.numero,
-    anioDeNumero: pago.anioDeNumero,
-    forma: pago.forma,
-    numeroDeCheque,
-    fecha: pago.fecha,
-    fechaDeEfecto,
-    estado: pago.estado,
-    contrasenaId: linea.contrasenaId,
-    cargoId: linea.cargoId,
-    montoCentavos: aCentavos(linea.monto),
-    retencionDescontadaCentavos: aCentavos(linea.retencionDescontada),
-  }));
+  return filas.map(aLineaDePago);
 }
+
+type FilaDeLineaDePago = {
+  linea: typeof aplicacionesDePagos.$inferSelect;
+  pago: typeof pagos.$inferSelect;
+  numeroDeCheque: number | null;
+  fechaDeEfecto: string;
+};
+
+const aLineaDePago = ({ linea, pago, numeroDeCheque, fechaDeEfecto }: FilaDeLineaDePago): LineaDePago => ({
+  pagoId: pago.id,
+  numero: pago.numero,
+  anioDeNumero: pago.anioDeNumero,
+  forma: pago.forma,
+  numeroDeCheque,
+  fecha: pago.fecha,
+  fechaDeEfecto,
+  estado: pago.estado,
+  contrasenaId: linea.contrasenaId,
+  cargoId: linea.cargoId,
+  montoCentavos: aCentavos(linea.monto),
+  retencionDescontadaCentavos: aCentavos(linea.retencionDescontada),
+});
 
 /** Lo que los pagos entregaron a un cargo. */
 export const lineasDePagoDelCargo = (cargoId: string) => lineasDePagoDonde(eq(aplicacionesDePagos.cargoId, cargoId));

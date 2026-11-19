@@ -9,6 +9,8 @@ import { movimientos } from '../../../bancos/infraestructura/persistencia/movimi
 import { aplicacionesDePagos } from './aplicaciones-de-pagos.tablas.js';
 import { pagos } from './pagos.tablas.js';
 
+type FilaDePosfechado = { numeroDeCheque: number | null; fecha: string; monto: string };
+
 const sonPosfechadosDe = (proveedorId: string, hoy: string) =>
   and(
     eq(aplicacionesDePagos.proveedorId, proveedorId),
@@ -40,9 +42,11 @@ export async function posfechadosDelProveedor(
     .groupBy(pagos.id, pagos.fecha, pagos.numero, cheques.numero)
     .orderBy(asc(pagos.fecha), asc(pagos.numero))
     .limit(limite);
-  return filas.map(({ numeroDeCheque, fecha, monto }) => ({
-    numeroDeCheque: numeroDeCheque === null ? null : String(numeroDeCheque),
-    fecha,
-    montoCentavos: aCentavos(monto),
-  }));
+  return filas.map(aPosfechado);
 }
+
+const aPosfechado = ({ numeroDeCheque, fecha, monto }: FilaDePosfechado): PosfechadoDelProveedor => ({
+  numeroDeCheque: numeroDeCheque === null ? null : String(numeroDeCheque),
+  fecha,
+  montoCentavos: aCentavos(monto),
+});
