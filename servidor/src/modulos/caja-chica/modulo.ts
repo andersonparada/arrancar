@@ -8,6 +8,7 @@ import { rutasDeAccesosAFondosComponidas } from './composicion/accesos-a-fondos.
 import { rutasDeComprobantesComponidas } from './composicion/comprobantes.js';
 import { rutasDeFondosComponidas } from './composicion/fondos.js';
 import { rutasDeReposicionesComponidas } from './composicion/reposiciones.js';
+import { rutasDeValesProvisionalesComponidas } from './composicion/vales-provisionales.js';
 // generador: importaciones
 
 /**
@@ -36,6 +37,7 @@ export const moduloCajaChica: DefinicionModulo = {
     rutasDeComprobantesComponidas(),
     rutasDeReposicionesComponidas(),
     rutasDeArqueosComponidas(),
+    rutasDeValesProvisionalesComponidas(),
     // generador: rutas
   ]),
 };

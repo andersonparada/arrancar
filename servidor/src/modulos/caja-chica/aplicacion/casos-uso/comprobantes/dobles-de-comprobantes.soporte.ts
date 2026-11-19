@@ -53,6 +53,7 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
       sobreElTope: false,
       motivoSobreElTope: null,
       sinBancarizar: false,
+      valeProvisionalId: null,
       destinoDelFaltante: null,
       numero: null,
       anioDeNumero: 0,
@@ -112,6 +113,7 @@ export class ComprobantesEnMemoria implements RepositorioDeComprobantes {
       anioDeNumero: nuevo.anioDeNumero,
       asignadoEn: HOY,
       asignadoPor: nuevo.asignadoPor,
+      valeProvisionalId: nuevo.valeProvisionalId ?? null,
     });
     return id;
   }
@@ -224,6 +226,7 @@ export async function armarEscenario(montoDelFondoCentavos = 100_000): Promise<E
             montoCentavos: montoDelFondoCentavos,
             pendienteCentavos: comprobantes.pendienteDe(id),
             valesCentavos: 0,
+            valeMasViejo: null,
             ultimoArqueo: null,
             aperturaAnulada: false,
           },

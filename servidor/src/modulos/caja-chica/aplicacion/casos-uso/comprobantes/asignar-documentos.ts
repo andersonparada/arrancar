@@ -1,21 +1,12 @@
-import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
-import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
-import { etiquetaDelComprobante, type Comprobante } from '../../../dominio/comprobantes.js';
-import { ComprobanteYaAsignado, DocumentoNoEstaEnLaBandeja } from '../../../dominio/errores-de-comprobantes.js';
 import type { ResultadoDeAsignarDto } from '../../dto/comprobantes.dto.js';
 import { LectorDelFondo } from '../fondos/lector-del-fondo.js';
-import { AsignadorDeComprobantes, type PermisosDeExcepcion } from './asignador-de-comprobantes.js';
+import type { PermisosDeExcepcion } from './asignador-de-comprobantes.js';
+import { AsignadorDeDocumentos, type DocumentoPorAsignar } from './asignador-de-documentos.js';
 import { comprobanteDto } from './armado-del-comprobante.js';
 import type { DependenciasDeComprobantes } from './dependencias-de-comprobantes.js';
 
-/** Un documento de la bandeja que se asigna, con lo que el usuario escribió para él. */
-export interface DocumentoPorAsignar {
-  comprobanteId: string;
-  fecha?: string | null;
-  motivoSobreElTope?: string | null;
-  motivoConRetencion?: string | null;
-}
+export type { DocumentoPorAsignar } from './asignador-de-documentos.js';
 
 export interface PeticionDeAsignarDocumentos {
   fondoId: string;
@@ -30,11 +21,11 @@ export interface PeticionDeAsignarDocumentos {
  * notas de crédito van después de las facturas de la misma tanda. Publica `comprobante_asignado` por cada uno.
  */
 export class AsignarDocumentos {
-  private readonly asignador: AsignadorDeComprobantes;
+  private readonly asignador: AsignadorDeDocumentos;
   private readonly lector: LectorDelFondo;
 
   constructor(private readonly dependencias: DependenciasDeComprobantes) {
-    this.asignador = new AsignadorDeComprobantes(dependencias);
+    this.asignador = new AsignadorDeDocumentos(dependencias);
     this.lector = new LectorDelFondo({ fondos: dependencias.fondos, consultas: dependencias.consultasDeFondos });
   }
 
@@ -51,36 +42,12 @@ export class AsignarDocumentos {
 
   private async asignar(operador: Operador, pedido: PeticionDeAsignarDocumentos) {
     const fondo = await this.lector.bloquear(pedido.fondoId);
-    const comprobantes: Comprobante[] = [];
-    const avisos: string[] = [];
-    const eventos: EventoDominio[] = [];
-    for (const { documento, comprobante } of await this.cargar(pedido.documentos)) {
-      const { fecha, motivoSobreElTope, motivoConRetencion } = documento;
-      const resultado = await this.asignador.asignar(operador, {
-        comprobante,
-        fondo,
-        fecha,
-        motivoSobreElTope,
-        motivoConRetencion,
-        permisos: pedido.permisos,
-      });
-      comprobantes.push(resultado.comprobante);
-      avisos.push(...resultado.avisos);
-      eventos.push(resultado.evento);
-    }
+    const cargados = await this.asignador.cargar(pedido.documentos);
+    const { comprobantes, avisos, eventos } = await this.asignador.asignar(operador, {
+      cargados,
+      fondo,
+      permisos: pedido.permisos,
+    });
     return { dto: { comprobantes: comprobantes.map(comprobanteDto), avisos }, eventos };
-  }
-
-  /** Los documentos bloqueados y en la bandeja; las notas de crédito al final, para que su factura entre primero. */
-  private async cargar(documentos: readonly DocumentoPorAsignar[]) {
-    const cargados = [];
-    for (const documento of documentos) {
-      const comprobante = await this.dependencias.comprobantes.bloquear(documento.comprobanteId);
-      if (!comprobante) throw new RecursoNoEncontrado('El documento');
-      if (comprobante.fondoId !== null) throw new ComprobanteYaAsignado(etiquetaDelComprobante(comprobante));
-      if (comprobante.clase !== 'documento' || comprobante.estado !== 'vigente') throw new DocumentoNoEstaEnLaBandeja();
-      cargados.push({ documento, comprobante });
-    }
-    return cargados.sort((a, b) => Number(a.comprobante.esNotaDeCredito) - Number(b.comprobante.esNotaDeCredito));
   }
 }

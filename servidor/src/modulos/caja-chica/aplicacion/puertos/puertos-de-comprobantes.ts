@@ -30,6 +30,8 @@ export interface ValeDeGastoNuevo {
   numero: number;
   anioDeNumero: number;
   asignadoPor: string;
+  /** El vale provisional que se liquida con este gasto. */
+  valeProvisionalId?: string | null;
 }
 
 /** Lo que se escribe al pasar un documento de la bandeja a un fondo. */
@@ -40,6 +42,8 @@ export interface AsignacionDeComprobante {
   motivoConRetencion: string | null;
   sinBancarizar: boolean;
   asignadoPor: string;
+  /** El vale provisional que se liquida con este documento. */
+  valeProvisionalId?: string | null;
 }
 
 export interface AnulacionDelComprobante {

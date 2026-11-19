@@ -31,6 +31,8 @@ export interface PedidoDeAsignacion {
   motivoSobreElTope?: string | null;
   motivoConRetencion?: string | null;
   permisos: PermisosDeExcepcion;
+  /** El vale provisional que se liquida con este documento. */
+  valeProvisionalId?: string | null;
 }
 
 export interface ResultadoDeAsignacion {
@@ -69,7 +71,13 @@ export class AsignadorDeComprobantes {
     const bancarizacion = await this.bancarizar(operador, { comprobante, fecha });
     await this.escribir(operador, {
       comprobante,
-      asignacion: { fondoId: fondo.id, fecha, ...motivos, sinBancarizar: bancarizacion.sinBancarizar },
+      asignacion: {
+        fondoId: fondo.id,
+        fecha,
+        ...motivos,
+        sinBancarizar: bancarizacion.sinBancarizar,
+        valeProvisionalId: pedido.valeProvisionalId ?? null,
+      },
     });
     const asignado = (await this.dependencias.comprobantes.buscar(comprobante.id))!;
     return {
