@@ -2,6 +2,7 @@ import {
   Building,
   CircleUserRound,
   LifeBuoy,
+  Mail,
   Palette,
   ScrollText,
   ShieldCheck,
@@ -60,6 +61,12 @@ export const moduloCore: DefinicionModuloCliente = {
       meta: { ...DE_SOPORTE, titulo: VENTANAS_CORE.apariencia.titulo },
     },
     {
+      path: '/plataforma/correo',
+      name: 'plataforma-correo',
+      component: () => import('./paginas/PlataformaCorreo.vue'),
+      meta: { ...DE_SOPORTE, titulo: VENTANAS_CORE.correo.titulo },
+    },
+    {
       path: '/plataforma/bitacora',
       name: 'plataforma-bitacora',
       component: () => import('./paginas/PlataformaBitacora.vue'),
@@ -106,6 +113,12 @@ export const moduloCore: DefinicionModuloCliente = {
           titulo: VENTANAS_CORE.apariencia.titulo,
           ruta: '/plataforma/apariencia',
           icono: Palette,
+          seccion: 'administracion',
+        },
+        {
+          titulo: VENTANAS_CORE.correo.titulo,
+          ruta: '/plataforma/correo',
+          icono: Mail,
           seccion: 'administracion',
         },
         { titulo: VENTANAS_CORE.bitacora.menu, ruta: '/plataforma/bitacora', icono: ScrollText, seccion: 'reportes' },

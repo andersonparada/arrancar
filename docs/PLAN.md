@@ -2759,6 +2759,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   se vuelve a comprobar al crear la fábrica, y el rechazo de `seguridad: 'ninguna'` del transporte). Soporte igual debe
   guardar y activar un servidor cualquiera (la tabla exige 465/587 y contraseña) y hace falta `CLAVE_SECRETOS`: así se
   prueba de punta a punta, también el trabajador, sin tocar la función de la bandeja. Prueba contra un SMTP mínimo local.
+- **2026-11-18 (aviso de pago por correo, paso 11: cliente, Soporte → Correo).** Pantalla `/plataforma/correo` (solo
+  superacceso, menú Soporte): formulario del servidor SMTP (servidor, puerto y cifrado en una sola lista: 587 con STARTTLS
+  o 465 con TLS directo, sin opción sin cifrado; usuario; contraseña de solo escritura, vacía conserva la guardada;
+  remitente; interruptor de enviar correos), aviso rojo si falta `CLAVE_SECRETOS`, tarjeta de prueba (única pantalla
+  donde se escribe una dirección; usa lo guardado) y tarjeta de la bandeja global (conteos por estado, pendiente más
+  antiguo y fallidos recientes con empresa, tipo y código). Lógica pura en `composables/correo/servidor-de-correo.ts` con
+  pruebas; servicio `correo-de-soporte.api.ts`. Sin cambios en el servidor.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la

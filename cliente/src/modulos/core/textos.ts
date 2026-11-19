@@ -44,6 +44,11 @@ export const VENTANAS_CORE = {
     descripcion:
       'Nombre, logo y colores de esta instalación. Se aplican a todas las cuentas del servidor: menú, encabezados e inicio de sesión.',
   },
+  correo: {
+    titulo: 'Correo',
+    descripcion:
+      'El servidor de correo de esta instalación, una prueba de envío y el estado de la bandeja de todas las empresas.',
+  },
   bitacora: {
     titulo: 'Bitácora de soporte',
     menu: 'Bitácora',
