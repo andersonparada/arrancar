@@ -1,6 +1,7 @@
 import type { CambiosDeMoneda, Moneda, OpcionDelBanguat } from '../../servicios/monedas.api';
 import type { OpcionBuscable } from '../../utilidades/busqueda-de-opciones';
 import { textoDeEdicion, textoONulo } from '../../utilidades/edicion';
+import { textoDeLaConvencion } from './convenciones-del-banguat';
 
 /** La moneda en la ventana de edición: lo original (para saber qué cambió) y lo que se va editando. */
 export interface FormularioDeMoneda {
@@ -47,7 +48,11 @@ export function motivoSinCambiarActiva(moneda: Moneda): string | null {
 /** El quetzal no tiene tipo de cambio: no lleva código del Banguat. */
 export const admiteCodigoDelBanguat = (moneda: Moneda): boolean => moneda.codigo !== MONEDA_BASE;
 
-const textoDeLaOpcion = (opcion: OpcionDelBanguat) => `${opcion.descripcion} (${opcion.codigo})`;
+/** «Euro (24) · USD por unidad»; sin la convención si aún no se comprobó. */
+const textoDeLaOpcion = (opcion: OpcionDelBanguat) => {
+  const convencion = textoDeLaConvencion(opcion.convencion);
+  return `${opcion.descripcion} (${opcion.codigo})${convencion ? ` · ${convencion}` : ''}`;
+};
 
 /** Por qué una opción no se puede elegir para esta moneda, o `null` si se puede. */
 function motivoDeBloqueo(opcion: OpcionDelBanguat, moneda: Moneda): string | null {
@@ -56,13 +61,13 @@ function motivoDeBloqueo(opcion: OpcionDelBanguat, moneda: Moneda): string | nul
   return opcion.asignadaA && opcion.asignadaA !== moneda.codigo ? `ya es de ${opcion.asignadaA}` : null;
 }
 
-/** Una opción se ofrece si el Banguat la da y no está excluida; la que ya tiene la moneda se ve siempre, marcada. */
+/** Solo se ofrecen las que el servidor marca `ofrecida`; la que ya tiene la moneda se ve siempre, marcada. */
 function seOfrece(opcion: OpcionDelBanguat, moneda: Moneda): boolean {
-  return opcion.codigo === moneda.codigoBanguat || (opcion.disponible && !opcion.excluida);
+  return opcion.codigo === moneda.codigoBanguat || opcion.ofrecida;
 }
 
 function opcionDeLaLista(opcion: OpcionDelBanguat, moneda: Moneda): OpcionBuscable<number | null> {
-  const marca = !opcion.disponible ? ' · ya no disponible' : opcion.excluida ? ' · no se ofrece' : '';
+  const marca = !opcion.disponible ? ' · ya no disponible' : opcion.ofrecida ? '' : ' · no se ofrece';
   const bloqueo = motivoDeBloqueo(opcion, moneda);
   return {
     valor: opcion.codigo,
@@ -87,7 +92,7 @@ export function opcionesDelBanguat(lista: OpcionDelBanguat[], moneda: Moneda): O
 export function ayudaDelCodigo(form: FormularioDeMoneda): string {
   if (form.moneda?.tieneSerieDelBanguat)
     return 'Ya tiene tipos cargados con este código: solo puede dejarlo igual o quitarlo.';
-  return 'Antes de guardar, «Ver muestra» trae los valores de los últimos 7 días: un euro ronda Q 8 a 9 por unidad.';
+  return 'Antes de guardar, «Ver muestra» trae lo publicado en los últimos 7 días y lo que da en quetzales: un euro ronda Q 8 a 9 por unidad.';
 }
 
 /** Qué pasará con la carga automática al guardar: lo que ve soporte antes de decidir. */

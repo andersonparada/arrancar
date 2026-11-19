@@ -30,28 +30,31 @@ const opcion = (codigo: number, descripcion: string, extra: Partial<OpcionDelBan
   descripcion,
   disponible: true,
   excluida: false,
+  convencion: 'unidades_por_usd',
+  ofrecida: true,
   asignadaA: null,
   vistaPorUltimaVez: '2026-11-18T06:00:00.000Z',
   ...extra,
 });
 
 const lista = [
-  opcion(9, 'Libras esterlinas'),
-  opcion(2, 'Dólares de EE.UU.', { asignadaA: 'USD' }),
-  opcion(24, 'Euros'),
-  opcion(60, 'DEG', { excluida: true }),
-  opcion(99, 'Retirada', { disponible: false }),
+  opcion(9, 'Libras esterlinas', { convencion: 'usd_por_unidad' }),
+  opcion(2, 'Dólares de EE.UU.', { convencion: 'quetzales_por_unidad', asignadaA: 'USD' }),
+  opcion(24, 'Euros', { convencion: 'usd_por_unidad' }),
+  opcion(60, 'DEG', { excluida: true, convencion: null, ofrecida: false }),
+  opcion(61, 'Bolívares', { convencion: null, ofrecida: false }),
+  opcion(99, 'Retirada', { disponible: false, ofrecida: false }),
 ];
 
 describe('opcionesDelBanguat', () => {
-  it('empieza con «Sin código», ordena por nombre y deja fuera las excluidas y las no disponibles', () => {
+  it('empieza con «Sin código», ordena por nombre y deja fuera lo que el servidor no marca como ofrecida (excluidas, sin convención, retiradas)', () => {
     const opciones = opcionesDelBanguat(lista, moneda());
 
     expect(opciones.map((o) => o.texto)).toEqual([
       'Sin código: no se carga',
-      'Dólares de EE.UU. (2), ya es de USD',
-      'Euros (24)',
-      'Libras esterlinas (9)',
+      'Dólares de EE.UU. (2) · Q por unidad, ya es de USD',
+      'Euros (24) · USD por unidad',
+      'Libras esterlinas (9) · USD por unidad',
     ]);
   });
 
@@ -74,9 +77,14 @@ describe('opcionesDelBanguat', () => {
     const retirada = opcionesDelBanguat(lista, moneda({ codigoBanguat: 99 }));
     const excluida = opcionesDelBanguat(lista, moneda({ codigoBanguat: 60 }));
 
-    expect(retirada.find((o) => o.valor === 99)).toMatchObject({ texto: 'Retirada (99) · ya no disponible' });
+    expect(retirada.find((o) => o.valor === 99)).toMatchObject({
+      texto: 'Retirada (99) · unidades por USD · ya no disponible',
+    });
     expect(retirada.find((o) => o.valor === 99)?.deshabilitada).toBe(false);
     expect(excluida.find((o) => o.valor === 60)?.texto).toBe('DEG (60) · no se ofrece');
+    expect(opcionesDelBanguat(lista, moneda({ codigoBanguat: 61 })).find((o) => o.valor === 61)?.texto).toBe(
+      'Bolívares (61) · no se ofrece',
+    );
   });
 });
 

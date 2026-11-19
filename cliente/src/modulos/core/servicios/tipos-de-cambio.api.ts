@@ -1,5 +1,5 @@
 import { clienteHttp, type ClienteHttp } from './cliente-http';
-import type { ResultadoDeConsulta } from './monedas.api';
+import type { ConvencionDelBanguat, ResultadoDeConsulta } from './monedas.api';
 
 /** Un tipo de cambio de la serie de un día (la versión vigente). Los decimales viajan como texto. */
 export interface TipoDeLaSerie {
@@ -9,6 +9,10 @@ export interface TipoDeLaSerie {
   referencia: string;
   compra: string | null;
   venta: string | null;
+  /** Con que se calculó una fila del Banguat; nula en las manuales. */
+  convencion: ConvencionDelBanguat | null;
+  /** La referencia del dólar del Banguat usado para pasar un cruce a quetzales; nula en el dólar y en las manuales. */
+  dolarUsado: string | null;
   origen: 'banguat' | 'manual';
   registradoEn: string;
 }

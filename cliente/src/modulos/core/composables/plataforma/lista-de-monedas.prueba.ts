@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ConsultaDeLaLista, Moneda, MuestraDelBanguat } from '../../servicios/monedas.api';
+import type { ConsultaDeLaLista, Moneda, MuestraDelBanguat, OpcionDelBanguat } from '../../servicios/monedas.api';
 import type { EstadoDeLaSerie } from '../../servicios/tipos-de-cambio.api';
 import {
   avisoDeAtraso,
@@ -58,6 +58,8 @@ describe('filtrarMonedas', () => {
 describe('textoDelCodigo', () => {
   it('«Euro (24)», o una raya sin código', () => {
     expect(textoDelCodigo(monedas[2]!)).toBe('Euro (24)');
+    const lista = [{ codigo: 24, convencion: 'usd_por_unidad' }] as OpcionDelBanguat[];
+    expect(textoDelCodigo(monedas[2]!, lista)).toBe('Euro (24) · USD por unidad');
     expect(textoDelCodigo(monedas[3]!)).toBe('—');
     expect(textoDelCodigo(moneda('JPY', 'Yen', { codigoBanguat: 7 }))).toBe('Código 7');
   });
@@ -97,6 +99,8 @@ describe('ultimaActualizacionDeLaLista', () => {
       descripcion: 'x',
       disponible: true,
       excluida: false,
+      convencion: null,
+      ofrecida: false,
       asignadaA: null,
       vistaPorUltimaVez: vista,
     });
@@ -143,7 +147,17 @@ const muestra = (extra: Partial<MuestraDelBanguat>): MuestraDelBanguat => ({
   desde: '2026-11-12',
   hasta: '2026-11-18',
   resultado: 'exito',
-  valores: [{ fecha: '2026-11-17', referencia: '8.80000000' }],
+  convencion: 'usd_por_unidad',
+  valores: [
+    {
+      fecha: '2026-11-17',
+      compra: '1.1',
+      venta: '1.2',
+      promedio: '1.15',
+      dolar: '7.64489',
+      referencia: '8.79162350',
+    },
+  ],
   rechazadas: [],
   mensaje: null,
   ...extra,
@@ -152,6 +166,17 @@ const muestra = (extra: Partial<MuestraDelBanguat>): MuestraDelBanguat => ({
 describe('mensajeDeMuestra', () => {
   it('con valores dice cuántos', () => {
     expect(mensajeDeMuestra(muestra({}))).toEqual({ tipo: 'exito', mensaje: '1 valor en los últimos 7 días.' });
+  });
+
+  it('si algún día no tiene dólar guardado, avisa que no se puede pasar a quetzales', () => {
+    const [valor] = muestra({}).valores;
+    const sinDolar = { ...valor!, dolar: null, referencia: null };
+
+    expect(mensajeDeMuestra(muestra({ valores: [valor!, sinDolar] }))).toEqual({
+      tipo: 'info',
+      mensaje:
+        '2 valores en los últimos 7 días; en 1 día aún no está guardado el dólar y no se puede pasar a quetzales.',
+    });
   });
 
   it('sin valores, con error y con compra distinta de venta, dice qué hacer', () => {

@@ -2,14 +2,14 @@
 import { computed } from 'vue';
 import { Pencil, TriangleAlert } from 'lucide-vue-next';
 import { avisoDeAtraso, textoDelCodigo } from '../../composables/plataforma/lista-de-monedas';
-import type { Moneda } from '../../servicios/monedas.api';
+import type { Moneda, OpcionDelBanguat } from '../../servicios/monedas.api';
 import type { EstadoDeLaSerie } from '../../servicios/tipos-de-cambio.api';
 import { formatearFecha } from '../../utilidades/formato';
 import BotonBase from '../BotonBase.vue';
 import InsigniaBase from '../InsigniaBase.vue';
 import TarjetaBase from '../TarjetaBase.vue';
 
-const props = defineProps<{ moneda: Moneda; serie?: EstadoDeLaSerie | undefined }>();
+const props = defineProps<{ moneda: Moneda; serie?: EstadoDeLaSerie | undefined; lista?: OpcionDelBanguat[] }>();
 const emit = defineEmits<{ editar: [] }>();
 const aviso = computed(() => avisoDeAtraso(props.serie));
 </script>
@@ -28,7 +28,7 @@ const aviso = computed(() => avisoDeAtraso(props.serie));
     <dl class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
       <div class="col-span-2 min-w-0">
         <dt class="text-xs text-tierra-500">Moneda del Banguat</dt>
-        <dd class="truncate">{{ textoDelCodigo(moneda) }}</dd>
+        <dd class="truncate">{{ textoDelCodigo(moneda, lista) }}</dd>
       </div>
       <div>
         <dt class="text-xs text-tierra-500">Decimales</dt>

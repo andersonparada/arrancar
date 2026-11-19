@@ -21,6 +21,9 @@ const RESULTADOS: Record<ResultadoDeConsulta, { texto: string; tono: Tono }> = {
   valor_fuera_de_rango: { texto: 'Valor fuera de rango', tono: 'rojo' },
   valor_ambiguo: { texto: 'Compra y venta distintas', tono: 'rojo' },
   variacion_excesiva: { texto: 'Cambió demasiado', tono: 'rojo' },
+  sin_dolar_del_dia: { texto: 'Falta el dólar del día', tono: 'trigo' },
+  convencion_dudosa: { texto: 'Convención dudosa', tono: 'rojo' },
+  sin_convencion: { texto: 'Código sin convención', tono: 'rojo' },
 };
 
 /** Cómo corregirlo: lo que soporte puede hacer con cada resultado que no es un éxito. */
@@ -30,7 +33,13 @@ const QUE_HACER: Partial<Record<ResultadoDeConsulta, string>> = {
   valor_fuera_de_rango: 'El dólar vino fuera de lo razonable y no se guardó. Si el valor es cierto, ingréselo a mano.',
   valor_ambiguo: 'El Banguat dio compra y venta distintas y no se guardó. Ingrese el valor a mano con su motivo.',
   variacion_excesiva:
-    'El valor cambió más de 25 % contra el de la semana anterior y no se guardó. Revise el código en Monedas; si es cierto, ingréselo a mano.',
+    'El valor cambió más de 25 % contra el de la semana anterior y no se guardó. Revise el código en Monedas; si la variación es real (una devaluación), ingrese el tipo a mano con su motivo.',
+  sin_dolar_del_dia:
+    'Todavía no está guardado el dólar de esa fecha, y sin él no se puede pasar a quetzales. Queda como hueco y se vuelve a pedir en la vuelta de la noche o al día siguiente; si urge, cargue primero el dólar.',
+  convencion_dudosa:
+    'El valor llegó con aspecto de estar al revés (por ejemplo, unidades por dólar en vez de dólares por unidad) y no se guardó. Revise el código en Monedas; si el valor es cierto, ingréselo a mano con su motivo.',
+  sin_convencion:
+    'Este código del Banguat aún no tiene su convención comprobada y no se carga. Quítelo en Monedas o pida que se compruebe antes de usarlo.',
 };
 
 const MOTIVOS_DE_RECHAZO: Record<string, string> = {
@@ -38,6 +47,9 @@ const MOTIVOS_DE_RECHAZO: Record<string, string> = {
   valor_ambiguo: 'compra y venta distintas, no se guardó',
   valor_fuera_de_rango: 'fuera de rango, no se guardó',
   dato_invalido: 'dato inválido, no se guardó',
+  sin_dolar_del_dia: 'sin el dólar de esa fecha, no se guardó (queda como hueco)',
+  convencion_dudosa: 'parece venir al revés, no se guardó',
+  sin_convencion: 'el código no tiene convención comprobada, no se guardó',
 };
 
 export const nombreDeLaVuelta = (vuelta: VueltaDeCarga): string => VUELTAS[vuelta];

@@ -45,7 +45,12 @@ const quitarFiltros = () => Object.assign(filtros, { conCodigo: false, activas: 
     </EstadoVacio>
     <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
       <li v-for="moneda in visibles" :key="moneda.codigo">
-        <TarjetaDeMoneda :moneda="moneda" :serie="serieDe(moneda, series)" @editar="pantalla.abrir(moneda)" />
+        <TarjetaDeMoneda
+          :moneda="moneda"
+          :serie="serieDe(moneda, series)"
+          :lista="pantalla.lista.value"
+          @editar="pantalla.abrir(moneda)"
+        />
       </li>
     </ul>
 

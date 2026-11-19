@@ -11,6 +11,7 @@ import CalendarioDeTipos from '../componentes/plataforma/CalendarioDeTipos.vue';
 import EstadoDeLasSeries from '../componentes/plataforma/EstadoDeLasSeries.vue';
 import VentanaDeCargaManual from '../componentes/plataforma/VentanaDeCargaManual.vue';
 import VentanaDeTipoManual from '../componentes/plataforma/VentanaDeTipoManual.vue';
+import { NOTA_DE_LA_POLITICA_DE_CRUCES } from '../composables/plataforma/convenciones-del-banguat';
 import { usarCargaManual } from '../composables/plataforma/usar-carga-manual';
 import { usarTipoManual } from '../composables/plataforma/usar-tipo-manual';
 import { usarTiposDeCambioDePlataforma } from '../composables/plataforma/usar-tipos-de-cambio-de-plataforma';
@@ -69,6 +70,9 @@ const monedasQueSeCargan = computed(() => estado.value.series.filter((s) => s.ac
         @mover="mes.mover"
         @elegir="tipo.abrirDelDia"
       />
+      <p v-if="moneda && moneda !== 'USD'" class="mt-2 text-xs text-tierra-600 dark:text-tierra-300">
+        {{ NOTA_DE_LA_POLITICA_DE_CRUCES }}
+      </p>
     </template>
 
     <section class="mt-8" aria-labelledby="titulo-bitacora">
