@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  codigoGeografico,
   correoOpcional,
   dpiOpcional,
   nitOpcional,
@@ -8,12 +9,6 @@ import {
 } from '../../core/compartido/http/esquemas-comunes.js';
 import { seccionesAportadas } from '../../core/compartido/http/secciones-aportadas.js';
 import { CLASES_DE_CLIENTE } from '../dominio/papeles.js';
-
-const codigoGeografico = z
-  .string()
-  .regex(/^\d{2}$/, 'Código inválido.')
-  .nullish()
-  .transform((codigo) => codigo || null);
 
 export const idOpcional = z
   .uuid()

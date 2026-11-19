@@ -851,8 +851,8 @@ nulas se crean igual en su tabla).
 
 | Paso | Qué | Quién | Depende de | Espera |
 |---|---|---|---|---|
-| **PA-0a** | Empresas: `inmuebles` (`0014_inmuebles`, §5.1, **sin** `uso_declarado`) con `politicaPorEmpresa` + alcance opcional por localidad; crear, editar, inactivar, reactivar, eliminar (409 `inmueble_en_uso` al traducir la llave); permisos `empresas.inmuebles.*`; auditoría y auditoría permanente (motivo con C-9); Excel sin valores. Pruebas de tablas (checks del registro, único registral, copropiedad), aislamiento por localidad y empresa, API y Excel | backend | — | — |
-| PA-0ac | Empresas → Inmuebles (recurso completo con el generador; sin valores ni escritura) | frontend | PA-0a | — |
+| **PA-0a** (hecho 2026-11-19) | Empresas: `inmuebles` (`0014_inmuebles`, §5.1, **sin** `uso_declarado`) con `politicaPorEmpresa` + alcance opcional por localidad; crear, editar, inactivar, reactivar, eliminar (409 `inmueble_en_uso` al traducir la llave); permisos `empresas.inmuebles.*`; auditoría y auditoría permanente (motivo con C-9); Excel sin valores. Pruebas de tablas (checks del registro, único registral, copropiedad), aislamiento por localidad y empresa, API y Excel | backend | — | — |
+| PA-0ac (hecho 2026-11-19, sin QA en el navegador) | Empresas → Inmuebles (recurso completo con el generador; sin valores ni escritura) | frontend | PA-0a | — |
 | **PA-0b** | `valores_de_inmueble` (`0015`, §5.2): dos series, categoría del IUSI, registrar y eliminar, avisos `empresas.valor_de_inmueble_registrado` y `…_por_eliminar` en `core/contratos/empresas.contratos.ts` (prueba con un escucha falso que rechaza), columnas de valores en el Excel de inmuebles | backend | PA-0a | PA-20, PA-21 |
 | PA-0bc | Ficha del inmueble → Valores (dos listas y ventana) | frontend | PA-0b, PA-0ac | — |
 | AF-P23d | Llevar AF-P23 a `diseno-activos-fijos.md` (§3.5.1, §5.3, §6.5, pasos AF-5 y AF-7, pregunta AF-P23 respondida por PA-1 c) | arquitecto | — | PA-20 |

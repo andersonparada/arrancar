@@ -25,5 +25,11 @@ export const VENTANAS_EMPRESAS = {
     nuevo: 'Nuevo departamento',
     editar: 'Editar departamento',
   },
+  inmuebles: {
+    titulo: 'Inmuebles',
+    descripcion: 'Los inmuebles de la empresa.',
+    nuevo: 'Nuevo inmueble',
+    editar: 'Editar inmueble',
+  },
   // generador: ventanas
 } as const;

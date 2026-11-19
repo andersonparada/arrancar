@@ -4189,3 +4189,21 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   beneficiario (`bancos.nombre_para_comparar`) o, si el proveedor tiene cargos de saldo inicial con deuda, todos. Lectura de
   `bancos.movimientos` desde la infraestructura de CP (`dependeDe: ['bancos']`). **Cliente:** aviso en la ficha del
   proveedor (condiciones de pago) y en «Nuevo pago», con el texto «…se podrán ligar pronto» hasta AP-3/AP-5. Sin migración.
+
+- **2026-11-19 — Parcelas PA-0a y PA-0ac: inmuebles registrales en Empresas (servidor y cliente).** Migración
+  `empresas/0014_inmuebles` (`empresas.inmuebles` sin valores ni escritura, con los checks del registro, del porcentaje de
+  copropiedad, de la ubicación y de la cifra de la escritura; único del nombre y de la finca inscrita; llaves compuestas a
+  localidades y municipios; `politicaPorEmpresa` más alcance opcional por localidad; y la entrada `empresas.inmuebles` en
+  el catálogo de auditoría permanente con el motivo de C-9). Generado con `generar recurso empresas/inmueble` y
+  completado a mano: dominio con las reglas del registro (`inmueble_registro_incompleto`), crear, editar, inactivar,
+  reactivar (rutas `POST …/:id/inactivar` y `/reactivar`) y eliminar con auditoría (el 409 `inmueble_en_uso` sale de
+  traducir la llave foránea en el repositorio), permisos `empresas.inmuebles.ver/.crear/.editar/.eliminar/.importar/.exportar`
+  y Excel sin valores. Cliente: lista, formulario con campos según la situación registral, ficha con inactivar,
+  reactivar y eliminar. Los archivos (escritura) siguen en PA-AR; la columna `escritura_archivo_id` se crea allí.
+  Pendiente de cliente real: confirmar con quien lleve fincas si el libro admite otros caracteres (hoy letras, dígitos,
+  espacio, punto, diagonal y guion) y si hace falta un aviso al repetir la matrícula fiscal en dos inmuebles.
+- **PA-0a, corrección de revisión (códigos geográficos de inmuebles).** `departamentoRegistral`, `departamentoCodigo` y
+  `municipioCodigo` usan ahora `codigoGeografico` (movido a `core/compartido/http/esquemas-comunes.ts`, compartido con
+  localidades y terceros): un código mal escrito («1») da 400 en su campo. `exigirReferencias` comprueba que el
+  departamento y el municipio (dentro de su departamento) existan y, si no, responde 400 `ubicacion_geografica_inexistente`
+  en vez del 409 de la llave foránea. Prueba de API incluida. Localidades y terceros siguen sin comprobar la existencia.

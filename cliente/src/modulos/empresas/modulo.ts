@@ -1,4 +1,4 @@
-import { Building2, MapPin, MapPinned, Network } from 'lucide-vue-next';
+import { Building2, Landmark, MapPin, MapPinned, Network } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
 import { NOMBRE_EMPRESAS, VENTANAS_EMPRESAS } from './textos';
 // generador: importaciones
@@ -57,6 +57,32 @@ export const moduloEmpresas: DefinicionModuloCliente = {
       component: () => import('./paginas/ListaDeDepartamentos.vue'),
       meta: { permiso: 'empresas.departamentos.ver', titulo: VENTANAS_EMPRESAS.departamentos.titulo },
     },
+    {
+      path: '/empresas/inmuebles',
+      name: 'empresas.inmuebles',
+      component: () => import('./paginas/ListaDeInmuebles.vue'),
+      meta: { permiso: 'empresas.inmuebles.ver', titulo: VENTANAS_EMPRESAS.inmuebles.titulo },
+    },
+    {
+      path: '/empresas/inmuebles/nuevo',
+      name: 'empresas.inmuebles.nuevo',
+      component: () => import('./paginas/FormularioDeInmueble.vue'),
+      meta: { permiso: 'empresas.inmuebles.crear', titulo: VENTANAS_EMPRESAS.inmuebles.nuevo },
+    },
+    {
+      path: '/empresas/inmuebles/:inmuebleId',
+      name: 'empresas.inmuebles.ficha',
+      component: () => import('./paginas/FichaDeInmueble.vue'),
+      props: true,
+      meta: { permiso: 'empresas.inmuebles.ver', titulo: VENTANAS_EMPRESAS.inmuebles.titulo },
+    },
+    {
+      path: '/empresas/inmuebles/:inmuebleId/editar',
+      name: 'empresas.inmuebles.editar',
+      component: () => import('./paginas/FormularioDeInmueble.vue'),
+      props: true,
+      meta: { permiso: 'empresas.inmuebles.editar', titulo: VENTANAS_EMPRESAS.inmuebles.editar },
+    },
     // generador: rutas
   ],
   menu: [
@@ -92,6 +118,13 @@ export const moduloEmpresas: DefinicionModuloCliente = {
           icono: Network,
           seccion: 'administracion',
           permiso: 'empresas.departamentos.ver',
+        },
+        {
+          titulo: VENTANAS_EMPRESAS.inmuebles.titulo,
+          ruta: '/empresas/inmuebles',
+          icono: Landmark,
+          seccion: 'administracion',
+          permiso: 'empresas.inmuebles.ver',
         },
         // generador: menu
       ],

@@ -1,16 +1,11 @@
 import { z } from 'zod';
 import {
+  codigoGeografico,
   enteroOpcional,
   idObligatorio,
   textoObligatorio,
   textoOpcional,
 } from '../../core/compartido/http/esquemas-comunes.js';
-
-const codigoGeografico = z
-  .string()
-  .regex(/^\d{2}$/, 'Código inválido.')
-  .nullish()
-  .transform((codigo) => codigo || null);
 
 /** Forma de lo que llega al registrar o cambiar una localidad; las reglas de negocio las revisa el dominio. */
 export const esquemaLocalidad = z.object({
