@@ -34,7 +34,8 @@ export interface ChequeAnulado {
  * y su mes sigue abierto, anula su movimiento a la antigua (sin inverso, fuera del saldo, como
  * siempre). Si su mes ya está conciliado (quedó en circulación y nunca se cobró), en cambio, crea
  * su nota de crédito inversa: el movimiento original sigue contando y el inverso lo compensa, así
- * no cambia ninguna conciliación ya autorizada. Un cheque en circulación de la carga inicial siempre
+ * no cambia ninguna conciliación ya autorizada. Lo mismo si el banco ya lo pagó antes de su fecha (marcado en una
+ * conciliación, con fecha posterior a ella). Un cheque en circulación de la carga inicial siempre
  * lleva inverso, con la fecha posterior al corte y el concepto «Partidas de apertura anuladas»; de eso se avisa al
  * confirmar (`bancos.partida_de_apertura_anulada`).
  */
@@ -87,7 +88,8 @@ export class AnularCheque {
     const { motivo, fecha, conInversoSiempre } = solicitud;
     const movimiento = await movimientoExistente(this.dependencias.repositorioMovimientos, movimientoId);
     const deLaApertura = movimiento.parteDeApertura === 'cheque_en_circulacion';
-    const conInverso = deLaApertura || conInversoSiempre === true || (await this.suMesEstaConciliado(movimiento));
+    const conInverso =
+      deLaApertura || conInversoSiempre === true || (await this.estaConciliado(movimiento, movimientoId));
     const fechaDelInverso = conInverso ? await this.fechaDelInverso(operador, { fecha, deLaApertura }) : undefined;
     await this.avisarAlOrigen(operador, { ...solicitud, movimientoId, fecha: fechaDelInverso });
     if (!fechaDelInverso) {
@@ -115,8 +117,11 @@ export class AnularCheque {
     });
   }
 
-  private async suMesEstaConciliado(movimiento: Movimiento): Promise<boolean> {
+  /** Su mes está conciliado o el banco ya lo pagó (marcado en una conciliación, aunque su fecha sea posterior). */
+  private async estaConciliado(movimiento: Movimiento, movimientoId: string): Promise<boolean> {
     const { fecha, cuentaBancariaId } = movimiento.instantanea();
+    const { conciliacionId } = await this.dependencias.consultasMovimientos.obtener(movimientoId);
+    if (conciliacionId) return true;
     const conciliadaHasta = await this.dependencias.consultasMovimientos.conciliadaHasta(cuentaBancariaId);
     return conciliadaHasta !== null && fecha <= conciliadaHasta;
   }

@@ -18,6 +18,7 @@ import { bancos } from './bancos.tablas.js';
 import {
   aMovimientoParaConciliar,
   candidatosConMarcaDe,
+  cobradosEnMesesAnterioresDe,
   idsDeCandidatosDe,
   movimientosDelMesDe,
   paresCompensadosPendientesDe,
@@ -130,7 +131,10 @@ async function documentoDe(fila: FilaEncabezado) {
     saldoInicialLibrosEnCentavos: partida.librosEnCentavos,
     saldoInicialBancoEnCentavos: partida.bancoEnCentavos,
     movimientosDelMes: await movimientosDelMesDe(fila.cuentaBancariaId, periodo, partida.despuesDe),
-    candidatos: todos.map(aMovimientoParaConciliar),
+    candidatos: [
+      ...todos.map(aMovimientoParaConciliar),
+      ...(await cobradosEnMesesAnterioresDe(fila.cuentaBancariaId, finDelMes)),
+    ],
     finDelMes,
   });
   const esPosfechado = (m: MovimientoConMarcaDto) => m.tipo === 'cheque' && m.fecha > finDelMes;

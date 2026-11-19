@@ -65,6 +65,25 @@ export async function conSaldoDelBancoDe(cuentaBancariaId: string): Promise<bool
   return !global;
 }
 
+/** El día anterior a la fecha de inicio de la empresa (la carga inicial no guarda el corte si el saldo del banco es cero). */
+async function corteDeLaCargaInicial(): Promise<string | null> {
+  const resultado = await transaccionEnCurso().execute<{ corte: string }>(
+    sql`select (fecha_de_inicio - 1)::text as corte from empresas.cargas_iniciales limit 1`,
+  );
+  return resultado.rows[0]?.corte ?? null;
+}
+
+/**
+ * El saldo del banco de la carga inicial, también cuando es cero y no se guardó como movimiento (solo hay cabecera):
+ * entonces su fecha es el corte de la carga y su monto, cero.
+ */
+async function saldoDelBancoOEnCeroDe(cuentaBancariaId: string): Promise<SaldoDelBancoDeLaApertura | null> {
+  const guardado = await saldoDelBancoDeLaAperturaDe(cuentaBancariaId);
+  if (guardado || !(await conSaldoDelBancoDe(cuentaBancariaId))) return guardado;
+  const corte = await corteDeLaCargaInicial();
+  return corte ? { fecha: corte, monto: '0.00' } : null;
+}
+
 /** La fecha del primer movimiento vigente de la cuenta; `null` si no tiene ninguno. */
 export async function fechaDelPrimerMovimientoDe(cuentaBancariaId: string): Promise<string | null> {
   const [fila] = await transaccionEnCurso()
@@ -85,7 +104,7 @@ export async function fechaDelPrimerMovimientoDe(cuentaBancariaId: string): Prom
 export async function puntoDePartidaDe(cuentaBancariaId: string, periodo: Periodo): Promise<PuntoDePartida> {
   const finDelMesAnterior = finDelMesDe(periodoAnterior(periodo));
   const foto = await fotoDelPeriodoAnterior(cuentaBancariaId, periodo);
-  const delBanco = foto ? null : await saldoDelBancoDeLaAperturaDe(cuentaBancariaId);
+  const delBanco = foto ? null : await saldoDelBancoOEnCeroDe(cuentaBancariaId);
   const despuesDe = delBanco && delBanco.fecha > finDelMesAnterior ? delBanco.fecha : finDelMesAnterior;
   return {
     librosEnCentavos: await saldoDeLibrosAlFinDe(cuentaBancariaId, despuesDe),

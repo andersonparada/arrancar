@@ -15,13 +15,21 @@ import {
   type Conciliacion,
   finDelMesDe,
   inicioDelMesDe,
-  periodoAnterior,
   type ConciliacionId,
   type Periodo,
 } from '../dominio/conciliacion.js';
 import { diferenciaConElEstadoDeCuenta } from '../dominio/estado-de-cuenta.js';
-import { candidatosEnMemoria, paresCompensadosEnMemoria } from './candidatos-en-memoria.js';
-import { puntoDePartidaEnMemoria, saldoDelBancoEnMemoria } from './punto-de-partida-en-memoria.js';
+import {
+  candidatosEnMemoria,
+  cobradosEnMesesAnterioresEnMemoria,
+  marcadosAntesDeEnMemoria,
+  paresCompensadosEnMemoria,
+} from './candidatos-en-memoria.js';
+import {
+  fotoDelMesAnteriorEnMemoria,
+  puntoDePartidaEnMemoria,
+  saldoDelBancoEnMemoria,
+} from './punto-de-partida-en-memoria.js';
 import {
   aEncabezado,
   aMovimientoParaConciliar,
@@ -47,6 +55,11 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
   readonly conCabeceraSinSaldo = new Set<string>();
   /** Para que el DTO muestre los datos del archivo del estado de cuenta. */
   documentos?: DocumentosEnMemoria;
+
+  private get enlazados(): MovimientosEnMemoria {
+    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
+    return this.movimientos;
+  }
 
   vincularMovimientos(movimientos: MovimientosEnMemoria): void {
     this.movimientos = movimientos;
@@ -112,13 +125,11 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
 
   async conSaldoDelBanco(cuentaBancariaId: string): Promise<boolean> {
     if (this.conCabeceraSinSaldo.has(cuentaBancariaId)) return true;
-    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
-    return (await saldoDelBancoEnMemoria(this.movimientos, cuentaBancariaId)) !== null;
+    return (await saldoDelBancoEnMemoria(this.enlazados, cuentaBancariaId)) !== null;
   }
 
   async fechaDelPrimerMovimiento(cuentaBancariaId: string): Promise<string | null> {
-    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
-    const todos = await this.movimientos.listar({ cuentaBancariaId });
+    const todos = await this.enlazados.listar({ cuentaBancariaId });
     const fechas = todos.filter((m) => !m.anuladoEn).map((m) => m.fecha);
     return fechas.sort()[0] ?? null;
   }
@@ -129,10 +140,9 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     finDelMes: string,
     conciliacionId: string,
   ): Promise<string[]> {
-    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
     const deOtras = [...this.marcas.entries()].filter(([id]) => id !== conciliacionId);
     const marcadosAlgunaVez = new Set(deOtras.flatMap(([, ids]) => [...ids]));
-    const todos = await this.movimientos.listar({ cuentaBancariaId });
+    const todos = await this.enlazados.listar({ cuentaBancariaId });
     return paresCompensadosEnMemoria(todos, { marcadosAlgunaVez, finDelMes });
   }
 
@@ -141,12 +151,16 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     const periodo = { anio, mes };
     const finDelMes = finDelMesDe(periodo);
     const todos = await this.candidatosConMarca(cuentaBancariaId, finDelMes, id.valor);
+    const marcadosAntes = marcadosAntesDeEnMemoria(this.marcas, this.registros, finDelMes);
     const partida = await this.puntoDePartida(cuentaBancariaId, periodo);
     const resultado = calcularConciliacion({
       saldoInicialLibrosEnCentavos: partida.librosEnCentavos,
       saldoInicialBancoEnCentavos: partida.bancoEnCentavos,
       movimientosDelMes: await this.movimientosDelMes(cuentaBancariaId, periodo, partida.despuesDe),
-      candidatos: todos.map(aMovimientoParaConciliar),
+      candidatos: [
+        ...todos.map(aMovimientoParaConciliar),
+        ...(await cobradosEnMesesAnterioresEnMemoria(this.enlazados, { cuentaBancariaId, finDelMes, marcadosAntes })),
+      ],
       finDelMes,
     });
     const esPosfechado = (m: MovimientoConMarcaDto) => m.tipo === 'cheque' && m.fecha > finDelMes;
@@ -189,18 +203,9 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     return [...this.registros.values()].filter((c) => c.instantanea().cuentaBancariaId === cuentaBancariaId);
   }
 
-  private fotoDelMesAnterior(cuentaBancariaId: string, periodo: Periodo): string | null {
-    const anterior = periodoAnterior(periodo);
-    const previa = this.deLaCuenta(cuentaBancariaId)
-      .map((c) => c.instantanea())
-      .find((p) => p.anio === anterior.anio && p.mes === anterior.mes);
-    return previa?.foto?.saldoCalculadoEstadoDeCuenta ?? null;
-  }
-
   private puntoDePartida(cuentaBancariaId: string, periodo: Periodo): Promise<PuntoDePartida> {
-    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
-    const fotoAnterior = this.fotoDelMesAnterior(cuentaBancariaId, periodo);
-    return puntoDePartidaEnMemoria({ movimientos: this.movimientos, cuentaBancariaId, periodo, fotoAnterior });
+    const fotoAnterior = fotoDelMesAnteriorEnMemoria(this.deLaCuenta(cuentaBancariaId), periodo);
+    return puntoDePartidaEnMemoria({ movimientos: this.enlazados, cuentaBancariaId, periodo, fotoAnterior });
   }
 
   private async movimientosDelMes(
@@ -208,23 +213,8 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     periodo: Periodo,
     despuesDe: string,
   ): Promise<MovimientoParaConciliar[]> {
-    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
-    const filas = await this.movimientos.vigentesEntre(cuentaBancariaId, inicioDelMesDe(periodo), finDelMesDe(periodo));
+    const filas = await this.enlazados.vigentesEntre(cuentaBancariaId, inicioDelMesDe(periodo), finDelMesDe(periodo));
     return filas.filter((m) => m.fecha > despuesDe).map((m) => aMovimientoParaConciliar({ ...m, marcado: false }));
-  }
-
-  /**
-   * Ids marcados en una conciliación de un mes ANTERIOR: no son candidatos aquí.
-   * Lo marcado en un mes posterior seguía pendiente en este, como en Postgres.
-   */
-  private marcadosAntesDe(finDelMes: string): Set<string> {
-    const anteriores = new Set<string>();
-    for (const [id, movimientoIds] of this.marcas) {
-      const conciliacion = this.registros.get(id);
-      if (!conciliacion || conciliacion.finDelMes() >= finDelMes) continue;
-      for (const movimientoId of movimientoIds) anteriores.add(movimientoId);
-    }
-    return anteriores;
   }
 
   private async candidatosConMarca(
@@ -232,9 +222,12 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     finDelMes: string,
     conciliacionId: string,
   ): Promise<MovimientoConMarcaDto[]> {
-    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
     const marcados = this.marcas.get(conciliacionId) ?? new Set<string>();
-    const todos = await this.movimientos.listar({ cuentaBancariaId });
-    return candidatosEnMemoria(todos, { marcados, marcadosAntes: this.marcadosAntesDe(finDelMes), finDelMes });
+    const todos = await this.enlazados.listar({ cuentaBancariaId });
+    return candidatosEnMemoria(todos, {
+      marcados,
+      marcadosAntes: marcadosAntesDeEnMemoria(this.marcas, this.registros, finDelMes),
+      finDelMes,
+    });
   }
 }

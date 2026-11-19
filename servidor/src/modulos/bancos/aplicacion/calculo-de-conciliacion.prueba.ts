@@ -152,6 +152,14 @@ describe('calcularConciliacion', () => {
       expect(resultado.banco.saldoFinal).toBe('900.00');
       expect(resultado.saldoQueDebeMostrarElEstadoDeCuenta).toBe('900.00');
     });
+
+    it('cobrados en un mes anterior siguen restando del saldo del estado de cuenta sin tocar el lado del banco', () => {
+      const resultado = calcularConciliacion(datos({ ...posfechado(false), cobradoEnMesAnterior: true }));
+
+      expect(resultado.partidas.cobradosAntesDeSuFecha).toHaveLength(1);
+      expect(resultado.banco.saldoFinal).toBe('1000.00');
+      expect(resultado.saldoQueDebeMostrarElEstadoDeCuenta).toBe('900.00');
+    });
   });
 
   it('las partidas de la carga inicial dicen de dónde vienen', () => {

@@ -17,6 +17,8 @@ export interface MovimientoParaConciliar {
   deApertura: boolean;
   /** La parte de la carga inicial de la que viene; `null` si no es de la carga. */
   parteDeApertura: string | null;
+  /** Un cheque de fecha posterior marcado en una conciliación anterior: el banco ya lo pagó y su fecha aún no llega. */
+  cobradoEnMesAnterior?: boolean;
 }
 
 /** Saldo inicial, ingresos, egresos y saldo final de un lado (libros o banco) del cuadro cuadrático. */
@@ -88,13 +90,14 @@ const esPosfechado = (m: MovimientoParaConciliar, finDelMes: string) => m.tipo =
 
 /**
  * Los candidatos sin marcar (lo que todavía no aparece en el estado de cuenta), agrupados. Un posfechado sin marcar
- * no es partida (todavía no está en libros); marcado, es un cheque cobrado antes de su fecha.
+ * no es partida (todavía no está en libros); marcado (en este mes o en uno anterior, mientras su fecha no llegue), es un
+ * cheque cobrado antes de su fecha.
  */
 function calcularPartidas(candidatos: readonly MovimientoParaConciliar[], finDelMes: string): PartidasDeConciliacion {
-  const anticipados = candidatos.filter((m) => esPosfechado(m, finDelMes));
+  const anticipados = candidatos.filter((m) => esPosfechado(m, finDelMes) && (m.marcado || m.cobradoEnMesAnterior));
   const pendientes = candidatos.filter((m) => !m.marcado && !esPosfechado(m, finDelMes));
   return {
-    cobradosAntesDeSuFecha: anticipados.filter((m) => m.marcado).map(aPartida),
+    cobradosAntesDeSuFecha: anticipados.map(aPartida),
     chequesEnCirculacion: pendientes.filter((m) => m.tipo === 'cheque').map(aPartida),
     otrosDebitosEnTransito: pendientes.filter((m) => m.tipo === 'debito').map(aPartida),
     creditosEnTransito: pendientes.filter((m) => m.tipo === 'credito').map(aPartida),

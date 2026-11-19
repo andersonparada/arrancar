@@ -30,6 +30,14 @@ const marcadoDespuesDe = (finDelMes: string) =>
       and make_date(${conciliaciones.anio}, ${conciliaciones.mes}, 1) > ${finDelMes}::date
   )`;
 
+/** Marcado en una conciliación de un mes anterior al de `finDelMes`. */
+const marcadoAntesDe = (finDelMes: string) =>
+  sql`exists (
+    select 1 from ${conciliaciones}
+    where ${conciliaciones.id} = ${movimientos.conciliacionId}
+      and make_date(${conciliaciones.anio}, ${conciliaciones.mes}, 1) < date_trunc('month', ${finDelMes}::date)
+  )`;
+
 /** El saldo del estado de cuenta de la carga inicial no se marca: es lo que el banco ya había visto al corte. */
 const noEsElSaldoDelBanco = (columna: AnyColumn) => or(isNull(columna), ne(columna, 'saldo_del_banco'));
 
@@ -75,6 +83,33 @@ export function aMovimientoParaConciliar(m: MovimientoConMarcaDto): MovimientoPa
   const { id, tipo, fecha, monto, numeroDeCheque, beneficiario, referencia, marcado } = m;
   const { saldoInicial: deApertura, parteDeApertura } = m;
   return { id, tipo, fecha, monto, numeroDeCheque, beneficiario, referencia, marcado, deApertura, parteDeApertura };
+}
+
+/**
+ * Los cheques de fecha posterior al fin de mes que el banco ya pagó en una conciliación de un mes anterior: no son
+ * candidatos (ya no se marcan), pero siguen restando del saldo del estado de cuenta hasta que llegue su fecha.
+ */
+export async function cobradosEnMesesAnterioresDe(
+  cuentaBancariaId: string,
+  finDelMes: string,
+): Promise<MovimientoParaConciliar[]> {
+  const filas = await transaccionEnCurso()
+    .select(columnasDeMovimiento)
+    .from(movimientos)
+    .leftJoin(chequeDelMovimiento, eq(chequeDelMovimiento.movimientoId, movimientos.id))
+    .where(
+      and(
+        eq(movimientos.cuentaBancariaId, cuentaBancariaId),
+        isNull(movimientos.anuladoEn),
+        eq(movimientos.tipo, 'cheque'),
+        gt(movimientos.fecha, finDelMes),
+        marcadoAntesDe(finDelMes),
+      ),
+    );
+  return filas.map((fila) => ({
+    ...aMovimientoParaConciliar(aMovimientoConMarca(fila, '')),
+    cobradoEnMesAnterior: true,
+  }));
 }
 
 export async function idsDeCandidatosDe(

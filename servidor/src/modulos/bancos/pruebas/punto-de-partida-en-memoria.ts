@@ -1,6 +1,6 @@
 import type { PuntoDePartida, SaldoDelBancoDeLaApertura } from '../aplicacion/puertos/consultas-conciliaciones.js';
 import { aCentavos, deCentavos, efectoEnCentavos } from '../dominio/centavos.js';
-import { finDelMesDe, periodoAnterior, type Periodo } from '../dominio/conciliacion.js';
+import { finDelMesDe, periodoAnterior, type Conciliacion, type Periodo } from '../dominio/conciliacion.js';
 import type { MovimientosEnMemoria } from './dobles-de-movimientos.js';
 
 /** El saldo del estado de cuenta de la carga inicial de la cuenta, o `null` si no tiene. */
@@ -34,4 +34,13 @@ export async function puntoDePartidaEnMemoria(datos: {
     despuesDe,
     saldoInicialDelBancoDeLaApertura: delBanco,
   };
+}
+
+/** El saldo calculado de la foto de la conciliación del mes anterior; `null` si no existe o no tiene foto. */
+export function fotoDelMesAnteriorEnMemoria(conciliaciones: readonly Conciliacion[], periodo: Periodo): string | null {
+  const anterior = periodoAnterior(periodo);
+  const previa = conciliaciones
+    .map((c) => c.instantanea())
+    .find((p) => p.anio === anterior.anio && p.mes === anterior.mes);
+  return previa?.foto?.saldoCalculadoEstadoDeCuenta ?? null;
 }
