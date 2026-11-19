@@ -15,6 +15,7 @@ let e: EscenarioDeCajaChica;
 let quienAbre: ClienteApi;
 let soloVe: ClienteApi;
 let deOtroModulo: ClienteApi;
+let quienLiquidaCierraOEntrega: ClienteApi[];
 
 beforeAll(async () => {
   e = await EscenarioDeCajaChica.preparar(entorno, 'cajachicacatalogos');
@@ -22,6 +23,11 @@ beforeAll(async () => {
     crearUsuarioConPermisos(entorno, e.cuenta, { nombres: `Catálogo ${apellidos}`, apellidos: 'Prueba', permisos });
   quienAbre = await comoUsuario('Abre', ['caja-chica.fondos.ver', 'caja-chica.fondos.crear']);
   soloVe = await comoUsuario('Ve', ['caja-chica.fondos.ver']);
+  quienLiquidaCierraOEntrega = [
+    await comoUsuario('Liquida', ['caja-chica.fondos.ver', 'caja-chica.vales.liquidar']),
+    await comoUsuario('Cierra', ['caja-chica.fondos.ver', 'caja-chica.fondos.cerrar']),
+    await comoUsuario('Entrega', ['caja-chica.fondos.ver', 'caja-chica.vales.crear']),
+  ];
   deOtroModulo = await comoUsuario('Bancos', ['bancos.cuentas-bancarias.ver']);
 });
 
@@ -47,6 +53,10 @@ describe('catálogos de Caja chica', () => {
     expect(nombres).toEqual([...nombres].sort((a, b) => a.localeCompare(b, 'es')));
     const deCuentas = cuentas.map((c: { nombre: string }) => c.nombre);
     expect(deCuentas).toEqual([...deCuentas].sort((a: string, b: string) => a.localeCompare(b, 'es')));
+  });
+
+  it('quien liquida, cierra o entrega vales también recibe los catálogos', async () => {
+    for (const cliente of quienLiquidaCierraOEntrega) expect((await cliente.get(RUTA)).estado).toBe(200);
   });
 
   it('con solo ver los fondos, o sin permisos de Caja chica, se niega', async () => {

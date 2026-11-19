@@ -3,6 +3,7 @@ import type {
   AnulacionDeAperturaSolicitada,
   AperturaSolicitada,
   AumentoSolicitado,
+  CierreSolicitado,
   CustodioSolicitado,
   DisminucionSolicitada,
   EdicionSolicitada,
@@ -43,6 +44,10 @@ export class ApiFondos {
 
   disminuir(id: string, datos: DisminucionSolicitada) {
     return this.http.crear<Fondo>(`${RUTA}/${id}/disminuir`, datos);
+  }
+
+  cerrar(id: string, datos: CierreSolicitado) {
+    return this.http.crear<Fondo>(`${RUTA}/${id}/cerrar`, datos);
   }
 
   anularApertura(id: string, datos: AnulacionDeAperturaSolicitada) {

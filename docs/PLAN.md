@@ -4020,6 +4020,25 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (`caja-chica.fondos.editar` y `puedeEditar` del servidor, nuevo en el DTO), ventana con nombre, localidad, tope y cuenta que se
   propone al reponer; el motivo del tope solo se pide si el tope cambia. La ficha muestra la «Cuenta para reponer» con el nombre
   que ahora da el servidor (`cuentaBancariaNombre` en el DTO del fondo).
+- **2026-11-19 (CC-9, Caja chica, cliente)**: reposición, arqueo, vales provisionales, cierre del fondo e impresiones sobre la
+  API de CC-4 a CC-7, sin cambios de servidor ni migraciones. **Reponer** (`ReposicionDeFondo.vue`, ruta `fondos/:id/reponer`,
+  `reposiciones.crear`): lista de lo pendiente con todo marcado por omisión y casilla por comprobante, resumen en vivo (total
+  firmado, notas de crédito, faltantes) con el desglose por concepto del servidor solo cuando se repone todo, forma de salida
+  (cheque o nota de débito, con `CamposDeEntrega` sin monto) y botón «Reponer Q…»; al terminar vuelve a la ficha con el enlace
+  «Imprimir la reposición». **Arquear** (`ArqueoDeFondo.vue`, `arqueos.crear`): conteo por denominación que da el servidor,
+  resultado en vivo con palabras (cuadra, falta, sobra) y la misma fórmula del servidor (contado + por cambiar − esperado);
+  con diferencia pide el motivo y, con faltante, su destino (pérdida o cobrar al custodio); «¿comprobantes completos?» no
+  tiene valor por omisión. **Vales provisionales**: «Entregar vale» (ventana), sección de vales en la ficha (abierta si hay
+  abiertos, con «Abierto hace N días» y el aviso del servidor) y **liquidar** en una página (`LiquidacionDeVale.vue`, `vales.liquidar`):
+  se marcan las facturas de la bandeja, se agregan gastos sin factura (validados en el cliente y enviados juntos), un solo
+  juego de motivos de excepción, cuadro «gastado / regresa al fondo» y confirmación con resumen. **Cerrar el fondo**
+  (`VentanaDeCierre.vue`, `fondos.cerrar`): dice qué pasa con lo pendiente, con el efectivo que se deposita y avisa si hay
+  vales abiertos; el motivo es obligatorio y la cuenta del depósito, solo si se espera efectivo. **Anular** reposición, arqueo y
+  vale con una sola ventana de motivo (la reposición pide fecha del inverso). **Impresiones** (carta, siempre en claro):
+  solicitud de reposición (antes de reponer), reposición, acta de arqueo y vale provisional, con firmas. Las acciones que el
+  DTO del fondo no trae como `puede*` (reponer, arquear, entregar, cerrar, anular movimientos) se muestran con el permiso y el
+  fondo abierto; el servidor decide y explica el rechazo. Pruebas nuevas de la lógica pura en `composables/` (reposiciones,
+  arqueos, vales, movimientos, dinero).
 - **2026-11-19 (correo, pendientes bajos de la revisión de seguridad)**: migración `0034_cupos_con_reintentos` (core).
   (1) Índices `destinatarios_de_correos (cuenta_id, creado_en)` y `(creado_en)` para los conteos por hora y día de
   `core.reservar_cupo_de_correo`. EXPLAIN con 600,000 destinatarios: el conteo de la instalación pasó de
@@ -4085,6 +4104,36 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   plantillas pasan a CT-1p (esperan la plantilla del contador) para que CT-1 no espere. Quedan para el usuario P-1 a P-7
   (ninguna bloquea CT-0a ni CT-1 a CT-2) y para el contador la plantilla de cuentas, los artículos de la LAT sobre los
   intereses, el texto oficial del art. 382 y el canal vigente de la habilitación. Solo documentación.
+- **2026-11-19 (CC-9, correcciones de la revisión, Caja chica)**: `GET /caja-chica/catalogos` también acepta `vales.crear`,
+  `vales.liquidar` y `fondos.cerrar` (quien liquida un vale sin factura, lo entrega o cierra el fondo elige conceptos, cuentas y
+  usuarios sin recibir 403; prueba nueva). «Imprimir solicitud de reposición» pasa a `AccionesDeMovimientos` (ficha, con
+  `fondos.ver`): el custodio la imprime y firma sin tener `reposiciones.crear`; se conserva también en la página de reponer.
+- **2026-11-19 (CC-10, Caja chica, reportes, servidor y cliente)**: CC-R1 a CC-R5 sin migraciones, solo lectura, bajo
+  `/api/caja-chica/reportes/{pendientes-de-reponer,reposiciones,sin-documento-fiscal,estado-de-fondos,arqueos}` con su
+  `…/exportar` (Excel) y los permisos `reportes.ver` y `reportes.exportar` ya declarados; la RLS por alcance de fondo limita
+  cada reporte a los fondos que el usuario ve y `fondoId` los acota a uno. **CC-R1** y **CC-R4** son «al corte» (`corte`, hoy
+  por omisión) y siguen §5.10: comprobante con `fecha <= corte`, vigente o anulado después del corte, y sin línea en una
+  reposición con `fecha <= corte` no anulada al corte (también las compensadas al cerrar). R4 calcula con la misma regla el
+  monto (cambios vigentes al corte), lo pendiente, los vales provisionales abiertos al corte, el custodio de ese día y el
+  último arqueo vigente al corte con su diferencia; el efectivo esperado es `monto - pendiente - vales`. **CC-R2**, **CC-R3**
+  y **CC-R5** son «del período» (`desde`/`hasta`, por omisión el mes de hoy; `periodo_invertido` si van al revés): R2 cuenta
+  las reposiciones vigentes por la fecha de la reposición y reparte sus líneas por concepto de gasto en deducible y no
+  deducible; R3 trae vales de gasto y documentos fuera del libro, vigentes, con su motivo; R5 cuenta los arqueos vigentes por
+  el día de la zona horaria de la empresa, con diferencia, resultado y destino del faltante. Deducible = documento dentro del
+  libro (`muestra_en_reportes_sat`); vale, faltante y sobrante nunca. Cliente: cinco pantallas en la sección Reportes
+  (`MarcoDeReporte` común, filtros al corte o de período con selector de fondo, imprimir y Excel). Pruebas: dominio, casos de
+  uso, API (alcance, otra empresa, Excel, permisos) y lógica pura del cliente. Decisiones: (1) el concepto de un documento sale
+  de las líneas del libro: si tiene uno solo es ese, si tiene varios «Varios conceptos» (el monto del comprobante no se
+  prorratea entre sus líneas), el vale usa el suyo y faltante y sobrante, «Faltante/Sobrante de arqueo»; (2) las reposiciones
+  y arqueos anulados no cuentan en R2 ni R5 (sin columna de anulados); (3) el «cheque o nota» de R2 sale de la referencia o el
+  número del movimiento de Bancos (nadie tiene todavía datos reales con que confirmar el formato); (4) los reportes de Caja
+  chica copian los constructores de columnas y los composables de reporte de Cuentas por liquidar (los módulos no se importan).
+- **2026-11-19 (CC-10, corrección de la revisión)**: CC-R4 contaba dos veces el efectivo de un vale provisional liquidado
+  después del corte: el vale seguía abierto al corte y además sus comprobantes (con fecha de la factura, anterior al corte)
+  entraban como pendientes. Ahora el pendiente al corte excluye los comprobantes de un vale que al corte seguía abierto
+  (`sinContarEnUnValeAbierto`, con la misma regla de vale abierto que usa el total de vales). Prueba de API nueva
+  `caja-chica-reportes-vale-liquidado` (falla sin la corrección). CC-R1 no cambia: el comprobante sí es pendiente de reponer
+  una vez liquidado el vale; al corte anterior a la liquidación R1 sigue listándolo (decisión: solo R4 evita el doble conteo).
 - **2026-11-19 (Bancos: aprobaciones, tarjeta y CP-AP, respuestas y validación del contador; docs):** el usuario aceptó
   todas las recomendaciones de §16 de `diseno-bancos-aprobaciones-tarjeta-y-cp-ap.md` (Q-A1 a Q-A9, Q-T2 a Q-T7, Q-N2,
   Q-N3, Q-AP1, Q-AP2 y Q-O1; §17). El contador validó el diseño
