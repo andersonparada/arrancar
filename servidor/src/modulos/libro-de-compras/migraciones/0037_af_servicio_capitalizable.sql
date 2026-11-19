@@ -1,0 +1,3 @@
+ALTER TABLE "libro_de_compras"."conceptos_de_gasto" DROP CONSTRAINT "conceptos_de_gasto_activo_fijo_es_bien";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."lineas_de_documento" DROP CONSTRAINT "lineas_de_documento_activo_fijo_es_bien";--> statement-breakpoint
+ALTER TABLE "libro_de_compras"."lineas_de_documento" ADD CONSTRAINT "lineas_de_documento_llave_unica" UNIQUE("id","documento_id","empresa_id");

@@ -1,5 +1,5 @@
 {
-  "id": "6676eaf0-57da-42bd-b6cd-8b1955ef54a2",
+  "id": "7e5a6c6a-0dff-47bc-881d-bd09f0e95b18",
   "prevId": "1c9cfaf9-6969-4990-8e77-7c63b9b77bf3",
   "version": "7",
   "dialect": "postgresql",
@@ -75,42 +75,42 @@
             },
             {
               "expression": "core.nombre_normalizado(\"nombre\")",
-              "isExpression": true,
               "asc": true,
+              "isExpression": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "combustibles_empresa_id_empresas_id_fk": {
           "name": "combustibles_empresa_id_empresas_id_fk",
           "tableFrom": "combustibles",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "combustibles_id_empresa_unico": {
           "name": "combustibles_id_empresa_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -224,42 +224,42 @@
             },
             {
               "expression": "core.nombre_normalizado(\"nombre\")",
-              "isExpression": true,
               "asc": true,
+              "isExpression": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "conceptos_de_gasto_empresa_id_empresas_id_fk": {
           "name": "conceptos_de_gasto_empresa_id_empresas_id_fk",
           "tableFrom": "conceptos_de_gasto",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "conceptos_de_gasto_id_empresa_unico": {
           "name": "conceptos_de_gasto_id_empresa_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -282,10 +282,6 @@
         "conceptos_de_gasto_tipo": {
           "name": "conceptos_de_gasto_tipo",
           "value": "\"libro_de_compras\".\"conceptos_de_gasto\".\"tipo_por_omision\" in ('bien', 'servicio')"
-        },
-        "conceptos_de_gasto_activo_fijo_es_bien": {
-          "name": "conceptos_de_gasto_activo_fijo_es_bien",
-          "value": "not \"libro_de_compras\".\"conceptos_de_gasto\".\"es_activo_fijo\" or \"libro_de_compras\".\"conceptos_de_gasto\".\"tipo_por_omision\" = 'bien'"
         }
       },
       "isRLSEnabled": false
@@ -381,27 +377,27 @@
         "datos_fiscales_de_empresa_empresa_id_empresas_id_fk": {
           "name": "datos_fiscales_de_empresa_empresa_id_empresas_id_fk",
           "tableFrom": "datos_fiscales_de_empresa",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "datos_fiscales_de_empresa_vigencia_unica": {
           "name": "datos_fiscales_de_empresa_vigencia_unica",
+          "nullsNotDistinct": true,
           "columns": [
             "empresa_id",
             "vigente_desde"
-          ],
-          "nullsNotDistinct": true
+          ]
         }
       },
       "policies": {
@@ -552,41 +548,41 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "datos_fiscales_de_proveedor_cuenta_id_cuentas_id_fk": {
           "name": "datos_fiscales_de_proveedor_cuenta_id_cuentas_id_fk",
           "tableFrom": "datos_fiscales_de_proveedor",
+          "tableTo": "cuentas",
+          "schemaTo": "core",
           "columnsFrom": [
             "cuenta_id"
           ],
-          "tableTo": "cuentas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "datos_fiscales_de_proveedor_proveedor_fk": {
           "name": "datos_fiscales_de_proveedor_proveedor_fk",
           "tableFrom": "datos_fiscales_de_proveedor",
+          "tableTo": "proveedores",
+          "schemaTo": "terceros",
           "columnsFrom": [
             "proveedor_id",
             "cuenta_id"
           ],
-          "tableTo": "proveedores",
-          "schemaTo": "terceros",
           "columnsTo": [
             "id",
             "cuenta_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -935,10 +931,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"documentos\".\"estado\" = 'vigente' and \"libro_de_compras\".\"documentos\".\"muestra_en_reportes_sat\"",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "documentos_autorizacion_fel_unica": {
           "name": "documentos_autorizacion_fel_unica",
@@ -957,10 +953,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"documentos\".\"estado\" = 'vigente' and \"libro_de_compras\".\"documentos\".\"autorizacion_fel\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "documentos_del_proveedor_unico": {
           "name": "documentos_del_proveedor_unico",
@@ -985,8 +981,8 @@
             },
             {
               "expression": "coalesce(\"serie\", '')",
-              "isExpression": true,
               "asc": true,
+              "isExpression": true,
               "nulls": "last"
             },
             {
@@ -997,10 +993,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"documentos\".\"estado\" = 'vigente'",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "documentos_libro_idx": {
           "name": "documentos_libro_idx",
@@ -1019,9 +1015,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "documentos_proveedor_reciente_idx": {
           "name": "documentos_proveedor_reciente_idx",
@@ -1040,15 +1036,15 @@
             },
             {
               "expression": "\"creado_en\" desc",
-              "isExpression": true,
               "asc": true,
+              "isExpression": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "documentos_emision_idx": {
           "name": "documentos_emision_idx",
@@ -1067,9 +1063,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "documentos_proveedor_idx": {
           "name": "documentos_proveedor_idx",
@@ -1082,9 +1078,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "documentos_afectado_idx": {
           "name": "documentos_afectado_idx",
@@ -1097,10 +1093,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"documentos\".\"documento_afectado_id\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "documentos_factura_anterior_idx": {
           "name": "documentos_factura_anterior_idx",
@@ -1113,95 +1109,95 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"documentos\".\"factura_anterior_id\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "documentos_empresa_id_empresas_id_fk": {
           "name": "documentos_empresa_id_empresas_id_fk",
           "tableFrom": "documentos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "documentos_cuenta_id_cuentas_id_fk": {
           "name": "documentos_cuenta_id_cuentas_id_fk",
           "tableFrom": "documentos",
+          "tableTo": "cuentas",
+          "schemaTo": "core",
           "columnsFrom": [
             "cuenta_id"
           ],
-          "tableTo": "cuentas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "documentos_factura_anterior_fk": {
           "name": "documentos_factura_anterior_fk",
           "tableFrom": "documentos",
+          "tableTo": "facturas_anteriores",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "factura_anterior_id",
             "empresa_id",
             "proveedor_id"
           ],
-          "tableTo": "facturas_anteriores",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id",
             "proveedor_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "documentos_proveedor_fk": {
           "name": "documentos_proveedor_fk",
           "tableFrom": "documentos",
+          "tableTo": "proveedores",
+          "schemaTo": "terceros",
           "columnsFrom": [
             "proveedor_id",
             "cuenta_id"
           ],
-          "tableTo": "proveedores",
-          "schemaTo": "terceros",
           "columnsTo": [
             "id",
             "cuenta_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "documentos_id_empresa_unico": {
           "name": "documentos_id_empresa_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "documentos_para_notas_unico": {
           "name": "documentos_para_notas_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id",
             "proveedor_id",
             "destino"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -1696,10 +1692,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"dte_recibidos\".\"documento_id\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "dte_recibidos_bandeja_idx": {
           "name": "dte_recibidos_bandeja_idx",
@@ -1724,9 +1720,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "dte_recibidos_numero_idx": {
           "name": "dte_recibidos_numero_idx",
@@ -1757,9 +1753,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "dte_recibidos_proveedor_idx": {
           "name": "dte_recibidos_proveedor_idx",
@@ -1772,10 +1768,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"dte_recibidos\".\"proveedor_id\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "dte_recibidos_concepto_idx": {
           "name": "dte_recibidos_concepto_idx",
@@ -1788,10 +1784,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"dte_recibidos\".\"concepto_id\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "dte_recibidos_afectado_idx": {
           "name": "dte_recibidos_afectado_idx",
@@ -1804,10 +1800,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"dte_recibidos\".\"documento_afectado_id\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "dte_recibidos_lote_idx": {
           "name": "dte_recibidos_lote_idx",
@@ -1820,9 +1816,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "dte_recibidos_primer_lote_idx": {
           "name": "dte_recibidos_primer_lote_idx",
@@ -1835,146 +1831,146 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "dte_recibidos_empresa_id_empresas_id_fk": {
           "name": "dte_recibidos_empresa_id_empresas_id_fk",
           "tableFrom": "dte_recibidos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "dte_recibidos_cuenta_id_cuentas_id_fk": {
           "name": "dte_recibidos_cuenta_id_cuentas_id_fk",
           "tableFrom": "dte_recibidos",
+          "tableTo": "cuentas",
+          "schemaTo": "core",
           "columnsFrom": [
             "cuenta_id"
           ],
-          "tableTo": "cuentas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "dte_recibidos_lote_fk": {
           "name": "dte_recibidos_lote_fk",
           "tableFrom": "dte_recibidos",
+          "tableTo": "lotes_de_dte",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "lote_id",
             "empresa_id"
           ],
-          "tableTo": "lotes_de_dte",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "dte_recibidos_primer_lote_fk": {
           "name": "dte_recibidos_primer_lote_fk",
           "tableFrom": "dte_recibidos",
+          "tableTo": "lotes_de_dte",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "primer_lote_id",
             "empresa_id"
           ],
-          "tableTo": "lotes_de_dte",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "dte_recibidos_documento_fk": {
           "name": "dte_recibidos_documento_fk",
           "tableFrom": "dte_recibidos",
+          "tableTo": "documentos",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "documento_id",
             "empresa_id"
           ],
-          "tableTo": "documentos",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "dte_recibidos_documento_afectado_fk": {
           "name": "dte_recibidos_documento_afectado_fk",
           "tableFrom": "dte_recibidos",
+          "tableTo": "documentos",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "documento_afectado_id",
             "empresa_id"
           ],
-          "tableTo": "documentos",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "dte_recibidos_concepto_fk": {
           "name": "dte_recibidos_concepto_fk",
           "tableFrom": "dte_recibidos",
+          "tableTo": "conceptos_de_gasto",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "concepto_id",
             "empresa_id"
           ],
-          "tableTo": "conceptos_de_gasto",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "dte_recibidos_proveedor_fk": {
           "name": "dte_recibidos_proveedor_fk",
           "tableFrom": "dte_recibidos",
+          "tableTo": "proveedores",
+          "schemaTo": "terceros",
           "columnsFrom": [
             "proveedor_id",
             "cuenta_id"
           ],
-          "tableTo": "proveedores",
-          "schemaTo": "terceros",
           "columnsTo": [
             "id",
             "cuenta_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "dte_recibidos_autorizacion_unica": {
           "name": "dte_recibidos_autorizacion_unica",
+          "nullsNotDistinct": false,
           "columns": [
             "empresa_id",
             "autorizacion_fel"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -2247,25 +2243,25 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "enteros_de_retenciones_empresa_id_empresas_id_fk": {
           "name": "enteros_de_retenciones_empresa_id_empresas_id_fk",
           "tableFrom": "enteros_de_retenciones",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2483,8 +2479,8 @@
             },
             {
               "expression": "coalesce(\"serie\", '')",
-              "isExpression": true,
               "asc": true,
+              "isExpression": true,
               "nulls": "last"
             },
             {
@@ -2495,9 +2491,9 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "facturas_anteriores_autorizacion_fel_unica": {
           "name": "facturas_anteriores_autorizacion_fel_unica",
@@ -2516,10 +2512,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"facturas_anteriores\".\"autorizacion_fel\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "facturas_anteriores_proveedor_idx": {
           "name": "facturas_anteriores_proveedor_idx",
@@ -2532,67 +2528,67 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "facturas_anteriores_empresa_id_empresas_id_fk": {
           "name": "facturas_anteriores_empresa_id_empresas_id_fk",
           "tableFrom": "facturas_anteriores",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "facturas_anteriores_cuenta_id_cuentas_id_fk": {
           "name": "facturas_anteriores_cuenta_id_cuentas_id_fk",
           "tableFrom": "facturas_anteriores",
+          "tableTo": "cuentas",
+          "schemaTo": "core",
           "columnsFrom": [
             "cuenta_id"
           ],
-          "tableTo": "cuentas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "facturas_anteriores_proveedor_fk": {
           "name": "facturas_anteriores_proveedor_fk",
           "tableFrom": "facturas_anteriores",
+          "tableTo": "proveedores",
+          "schemaTo": "terceros",
           "columnsFrom": [
             "proveedor_id",
             "cuenta_id"
           ],
-          "tableTo": "proveedores",
-          "schemaTo": "terceros",
           "columnsTo": [
             "id",
             "cuenta_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "facturas_anteriores_id_proveedor_unico": {
           "name": "facturas_anteriores_id_proveedor_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id",
             "proveedor_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -2771,9 +2767,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "emisiones_del_libro_archivo_idx": {
           "name": "emisiones_del_libro_archivo_idx",
@@ -2786,51 +2782,51 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"emisiones_del_libro\".\"archivo_id\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "emisiones_del_libro_empresa_id_empresas_id_fk": {
           "name": "emisiones_del_libro_empresa_id_empresas_id_fk",
           "tableFrom": "emisiones_del_libro",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "emisiones_del_libro_archivo_id_archivos_id_fk": {
           "name": "emisiones_del_libro_archivo_id_archivos_id_fk",
           "tableFrom": "emisiones_del_libro",
+          "tableTo": "archivos",
+          "schemaTo": "core",
           "columnsFrom": [
             "archivo_id"
           ],
-          "tableTo": "archivos",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "emisiones_del_libro_folio_unico": {
           "name": "emisiones_del_libro_folio_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "empresa_id",
             "folio_desde"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -2932,16 +2928,16 @@
         "foliacion_del_libro_empresa_id_empresas_id_fk": {
           "name": "foliacion_del_libro_empresa_id_empresas_id_fk",
           "tableFrom": "foliacion_del_libro",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3136,9 +3132,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "lineas_de_documento_vigencia_idx": {
           "name": "lineas_de_documento_vigencia_idx",
@@ -3151,85 +3147,94 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"lineas_de_documento\".\"vigencia_de_combustible_id\" is not null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "lineas_de_documento_empresa_id_empresas_id_fk": {
           "name": "lineas_de_documento_empresa_id_empresas_id_fk",
           "tableFrom": "lineas_de_documento",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "lineas_de_documento_documento_fk": {
           "name": "lineas_de_documento_documento_fk",
           "tableFrom": "lineas_de_documento",
+          "tableTo": "documentos",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "documento_id",
             "empresa_id"
           ],
-          "tableTo": "documentos",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "lineas_de_documento_concepto_fk": {
           "name": "lineas_de_documento_concepto_fk",
           "tableFrom": "lineas_de_documento",
+          "tableTo": "conceptos_de_gasto",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "concepto_id",
             "empresa_id"
           ],
-          "tableTo": "conceptos_de_gasto",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "lineas_de_documento_vigencia_fk": {
           "name": "lineas_de_documento_vigencia_fk",
           "tableFrom": "lineas_de_documento",
+          "tableTo": "vigencias_de_combustible",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "vigencia_de_combustible_id",
             "empresa_id"
           ],
-          "tableTo": "vigencias_de_combustible",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "lineas_de_documento_numero_unico": {
           "name": "lineas_de_documento_numero_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "documento_id",
             "numero"
-          ],
-          "nullsNotDistinct": false
+          ]
+        },
+        "lineas_de_documento_llave_unica": {
+          "name": "lineas_de_documento_llave_unica",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "documento_id",
+            "empresa_id"
+          ]
         }
       },
       "policies": {
@@ -3300,10 +3305,6 @@
         "lineas_de_documento_combustible_es_bien": {
           "name": "lineas_de_documento_combustible_es_bien",
           "value": "\"libro_de_compras\".\"lineas_de_documento\".\"vigencia_de_combustible_id\" is null or \"libro_de_compras\".\"lineas_de_documento\".\"tipo\" = 'bien'"
-        },
-        "lineas_de_documento_activo_fijo_es_bien": {
-          "name": "lineas_de_documento_activo_fijo_es_bien",
-          "value": "not \"libro_de_compras\".\"lineas_de_documento\".\"es_activo_fijo\" or \"libro_de_compras\".\"lineas_de_documento\".\"tipo\" = 'bien'"
         },
         "lineas_de_documento_idp_calculado": {
           "name": "lineas_de_documento_idp_calculado",
@@ -3484,36 +3485,36 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "lotes_de_dte_empresa_id_empresas_id_fk": {
           "name": "lotes_de_dte_empresa_id_empresas_id_fk",
           "tableFrom": "lotes_de_dte",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "lotes_de_dte_id_empresa_unico": {
           "name": "lotes_de_dte_id_empresa_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -3673,44 +3674,44 @@
         "declaraciones_de_periodos_empresa_id_empresas_id_fk": {
           "name": "declaraciones_de_periodos_empresa_id_empresas_id_fk",
           "tableFrom": "declaraciones_de_periodos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "declaraciones_de_periodos_periodo_fk": {
           "name": "declaraciones_de_periodos_periodo_fk",
           "tableFrom": "declaraciones_de_periodos",
+          "tableTo": "periodos",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "empresa_id",
             "periodo"
           ],
-          "tableTo": "periodos",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "empresa_id",
             "periodo"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "declaraciones_de_periodos_secuencia_unica": {
           "name": "declaraciones_de_periodos_secuencia_unica",
+          "nullsNotDistinct": false,
           "columns": [
             "empresa_id",
             "periodo",
             "secuencia"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -3842,16 +3843,16 @@
         "periodos_empresa_id_empresas_id_fk": {
           "name": "periodos_empresa_id_empresas_id_fk",
           "tableFrom": "periodos",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -4046,9 +4047,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "retenciones_sin_constancia_idx": {
           "name": "retenciones_sin_constancia_idx",
@@ -4067,10 +4068,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"retenciones\".\"constancia_numero\" is null and \"libro_de_compras\".\"retenciones\".\"monto\" > 0",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "retenciones_por_resolver_idx": {
           "name": "retenciones_por_resolver_idx",
@@ -4083,53 +4084,53 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"libro_de_compras\".\"retenciones\".\"resolucion\" = 'pendiente'",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "retenciones_empresa_id_empresas_id_fk": {
           "name": "retenciones_empresa_id_empresas_id_fk",
           "tableFrom": "retenciones",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "retenciones_documento_fk": {
           "name": "retenciones_documento_fk",
           "tableFrom": "retenciones",
+          "tableTo": "documentos",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "documento_id",
             "empresa_id"
           ],
-          "tableTo": "documentos",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "retenciones_documento_regla_unico": {
           "name": "retenciones_documento_regla_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "documento_id",
             "regla"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -4297,43 +4298,43 @@
         "vigencias_de_combustible_empresa_id_empresas_id_fk": {
           "name": "vigencias_de_combustible_empresa_id_empresas_id_fk",
           "tableFrom": "vigencias_de_combustible",
+          "tableTo": "empresas",
+          "schemaTo": "core",
           "columnsFrom": [
             "empresa_id"
           ],
-          "tableTo": "empresas",
-          "schemaTo": "core",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "vigencias_de_combustible_combustible_fk": {
           "name": "vigencias_de_combustible_combustible_fk",
           "tableFrom": "vigencias_de_combustible",
+          "tableTo": "combustibles",
+          "schemaTo": "libro_de_compras",
           "columnsFrom": [
             "combustible_id",
             "empresa_id"
           ],
-          "tableTo": "combustibles",
-          "schemaTo": "libro_de_compras",
           "columnsTo": [
             "id",
             "empresa_id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "vigencias_de_combustible_id_empresa_unico": {
           "name": "vigencias_de_combustible_id_empresa_unico",
+          "nullsNotDistinct": false,
           "columns": [
             "id",
             "empresa_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -4369,10 +4370,10 @@
   "schemas": {
     "libro_de_compras": "libro_de_compras"
   },
-  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

@@ -30,13 +30,8 @@ function textoObligatorio(texto: string, campo: string): string {
   return limpio;
 }
 
-/** Los textos obligatorios no pueden quedar vacíos y un activo fijo siempre es un bien. */
+/** Los textos obligatorios no pueden quedar vacíos; un servicio también puede capitalizarse como activo fijo. */
 function datosValidos(datos: DatosDeConceptoDeGasto): DatosDeConceptoDeGasto {
-  if (datos.esActivoFijo && datos.tipoPorOmision !== 'bien') {
-    throw new ConceptoDeGastoInvalido(
-      'Un activo fijo es un bien: cambie el tipo por omisión o desmarque "Es activo fijo".',
-    );
-  }
   return { ...datos, nombre: textoObligatorio(datos.nombre, 'Nombre') };
 }
 
