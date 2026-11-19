@@ -1,0 +1,98 @@
+import { CapaNoDisponible, ExistenciaNegativa } from './errores.js';
+import { proporcion } from './escalas.js';
+import { compararEnKardex, ordenarKardex } from './orden.js';
+import type { Capa, ConsumoDeCapa, MovimientoDeCosto, Recorrido, ResultadoDeMovimiento } from './tipos.js';
+
+/** Saldo del artículo: suma de lo que queda en las capas. */
+export function saldoDeCapas(capas: readonly Capa[]): { cantidad: bigint; valor: bigint } {
+  return capas.reduce(
+    (suma, c) => ({ cantidad: suma.cantidad + c.cantidadRestante, valor: suma.valor + c.valorRestante }),
+    { cantidad: 0n, valor: 0n },
+  );
+}
+
+function compararCapas(a: Capa, b: Capa): number {
+  return compararEnKardex(
+    { fecha: a.fecha, secuencia: a.secuencia, tipo: 'entrada' },
+    { fecha: b.fecha, secuencia: b.secuencia, tipo: 'entrada' },
+  );
+}
+
+function consumir(capa: Capa, cantidad: bigint): ConsumoDeCapa {
+  const agota = cantidad === capa.cantidadRestante;
+  const valor = agota ? capa.valorRestante : proporcion(capa.valorRestante, cantidad, capa.cantidadRestante);
+  return { capaId: capa.id, cantidad, valor };
+}
+
+/** Toma `cantidad` de las capas más antiguas con existencia (§7.4). */
+export function consumirCapas(
+  capas: readonly Capa[],
+  cantidad: bigint,
+  movimiento: Pick<MovimientoDeCosto, 'id' | 'fecha'>,
+): { capas: Capa[]; consumos: ConsumoDeCapa[] } {
+  let pendiente = cantidad;
+  const consumos: ConsumoDeCapa[] = [];
+  const nuevas = [...capas].sort(compararCapas).map((capa) => {
+    if (pendiente === 0n || capa.cantidadRestante === 0n) return capa;
+    const consumo = consumir(capa, pendiente < capa.cantidadRestante ? pendiente : capa.cantidadRestante);
+    pendiente -= consumo.cantidad;
+    consumos.push(consumo);
+    return {
+      ...capa,
+      cantidadRestante: capa.cantidadRestante - consumo.cantidad,
+      valorRestante: capa.valorRestante - consumo.valor,
+    };
+  });
+  if (pendiente > 0n) throw new ExistenciaNegativa(movimiento.fecha, pendiente, movimiento.id);
+  return { capas: nuevas, consumos };
+}
+
+function sumarValor(capas: readonly Capa[], m: MovimientoDeCosto): Capa[] {
+  const capa = capas.find((c) => c.id === m.capaId);
+  if (!capa || capa.cantidadRestante === 0n) throw new CapaNoDisponible(m.capaId);
+  return capas.map((c) => (c === capa ? { ...c, valorRestante: c.valorRestante + m.valor } : c));
+}
+
+function capaNueva(m: MovimientoDeCosto): Capa {
+  return {
+    id: m.id,
+    fecha: m.fecha,
+    secuencia: m.secuencia,
+    cantidadInicial: m.cantidad,
+    cantidadRestante: m.cantidad,
+    valorRestante: m.valor,
+  };
+}
+
+function aplicar(capas: readonly Capa[], m: MovimientoDeCosto) {
+  if (m.tipo === 'entrada') return { capas: [...capas, capaNueva(m)], costo: m.valor, consumos: [] };
+  if (m.tipo === 'valor') return { capas: sumarValor(capas, m), costo: m.valor, consumos: [] };
+  const salida = consumirCapas(capas, m.cantidad, m);
+  const costo = salida.consumos.reduce((suma, c) => suma + c.valor, 0n);
+  return { capas: salida.capas, costo, consumos: salida.consumos };
+}
+
+/**
+ * Recorre en el orden del kardex los movimientos que siguen a `inicial` (las capas tal como estaban antes
+ * del primero: así se «deshacen» los consumos al recalcular). Lanza `ExistenciaNegativa` si no alcanza.
+ */
+export function recalcularPeps(
+  movimientos: readonly MovimientoDeCosto[],
+  inicial: readonly Capa[] = [],
+): Recorrido<Capa[]> {
+  let capas: Capa[] = [...inicial];
+  const resultados: ResultadoDeMovimiento[] = [];
+  for (const m of ordenarKardex(movimientos)) {
+    const paso = aplicar(capas, m);
+    capas = paso.capas;
+    const saldo = saldoDeCapas(capas);
+    resultados.push({
+      id: m.id,
+      costo: paso.costo,
+      saldoCantidad: saldo.cantidad,
+      saldoValor: saldo.valor,
+      consumos: paso.consumos,
+    });
+  }
+  return { resultados, estado: capas };
+}

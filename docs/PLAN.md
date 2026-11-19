@@ -2861,3 +2861,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
 - **2026-11-18 (Inventarios aprobado).** Todas las recomendaciones de `docs/modulos/diseno-inventarios.md` (detalle al
   final del diseño). El préstamo de herramientas pasa a Activos fijos (corrige PLAN §6). Orden: INV-3 (motor puro) ya;
   INV-0 después de que la 0038 de CCL entre al libro; luego INV-1, INV-2, INV-4…
+- **2026-11-18 — INV-3 (Inventarios, motor de costeo puro).** `servidor/src/modulos/inventarios/dominio/costeo/` (sin módulo
+  registrado, tablas ni migraciones): `escalas` (BigInt: cantidades en diezmilésimas, costos unitarios en millonésimas,
+  dinero en centavos; redondeo al más cercano con la mitad alejándose de cero), `orden` (fecha, entradas, valores, salidas,
+  secuencia), `promedio` y `peps` (`recalcularPromedio` y `recalcularPeps` recorren una secuencia desde el saldo o las
+  capas anteriores al primer movimiento afectado; `ExistenciaNegativa` en cualquier punto), `cantidades-por-clave`
+  (línea del tiempo por bodega y lote), `diferencias` (para `inventarios.costo_recalculado`), `reparto` (reparto con
+  último renglón y absorción de costos adicionales y rebajas, el resto a resultados) y `sobrante` (promedio vigente o
+  última entrada; el faltante es una salida más). Los ejemplos de §7.6 son pruebas (25 en total). Decisiones: un
+  movimiento de valor en PEPS lleva `capaId` y falla con `capa_no_disponible` si la capa ya no tiene existencia; en
+  promedio, la rebaja se limita con el valor que queda que pasa quien llama.
