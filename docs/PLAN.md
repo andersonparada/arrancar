@@ -3266,3 +3266,33 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   lectura del alcance (habría que dejar a Libro de compras modificar comprobantes de fondos ajenos). Ya no es idempotente ante un
   comprobante que no existe (antes lo ignoraba); sí lo sigue siendo ante uno ya anulado. Prueba de API con un usuario del libro sin
   el fondo. Sin migraciones.
+- **2026-11-19 (CC-4, Caja chica, reposiciones, servidor)**: reponer un fondo y anular la reposición, sin migraciones (las tablas
+  `reposiciones` y `reposicion_comprobantes` ya venían de CC-1). Rutas (`/api/caja-chica`): `GET /fondos/:id/reposiciones` (lista
+  sin líneas), `GET /fondos/:id/solicitud-de-reposicion` (lo pendiente con su total y su reparto, para presentarla antes de
+  reponer), `GET /reposiciones/:id` (ficha con líneas y desglose, para imprimir), las tres con `fondos.ver`;
+  `POST /fondos/:id/reposiciones` (`reposiciones.crear`) y `POST /reposiciones/:id/anular` (`reposiciones.anular`).
+  *Reponer*: el fondo abierto y bloqueado, los comprobantes bloqueados por id (del fondo, vigentes, sin otra reposición:
+  `comprobante_no_es_del_fondo`, `comprobante_ya_anulado`, `comprobante_repuesto`), total firmado mayor que cero
+  (`reposicion_sin_monto`; las notas de crédito y los sobrantes restan), fecha no futura ni anterior a la apertura ni a un
+  comprobante (`fecha_de_la_reposicion_invalida`). Desglose por concepto de Bancos (regla pura `desglosarLaReposicion`):
+  `reintegro_de_caja_chica` (sin activo fijo, menos lo que resta), `reintegro_de_caja_chica_de_activo` y
+  `faltante_de_efectivo`; si lo que resta deja una parte en negativo se rebaja de activo y luego de las otras; las partes en
+  cero no se mandan. Orden `emitir_cheque_de_origen` (a nombre del custodio vigente u otro, nunca al portador, no negociable
+  por omisión) o `registrar_nota_de_origen` (débito), con la reposición como origen (su `id` se genera antes); número
+  `caja-chica.reposiciones`; `libro-de-compras.marcar_procesado(true)` por cada documento. Separación de funciones (CC-k):
+  variable nueva `caja-chica.control.separacion_de_funciones` (`avisar` por omisión | `bloquear`, empresa e instalación);
+  si quien repone es el custodio vigente, `avisar` lo deja marcado (`la_hizo_el_custodio`) y lo avisa en la respuesta, y
+  `bloquear` lo rechaza (`separacion_de_funciones`, 422). *Anular*: fondo abierto, reposición vigente y no la del cierre
+  (`reposicion_ya_anulada`, `reposicion_del_cierre`), `reposicion_cobrada` si el movimiento está conciliado (se revisa en
+  Caja chica, con su mensaje, antes de pedir nada a Bancos), que el efectivo alcance para lo que vuelve a pendientes
+  (`comprobantes_mayores_que_el_efectivo`); orden `anular_movimiento_de_origen` y fecha contable como CP5-a (la del cheque sin
+  inverso, la del inverso con él); líneas `vigente = false`, `marcar_procesado(false)` de los documentos, auditoría `anular` con la
+  reposición como estaba (con líneas y desglose) y motivo. *Aviso de Bancos* `movimiento_por_cambiar`: el módulo lo escucha
+  una sola vez, así que `composicion/avisos-de-bancos.ts` lo reparte: si el movimiento es de una reposición que el usuario ve,
+  la anula con la forma y la fecha del aviso sin volver a ordenar a Bancos (cualquier otro cambio, `movimiento_de_caja_chica`);
+  si no, lo atiende el manejador de los fondos de CC-2 (un usuario de Bancos sin el fondo asignado sigue recibiendo
+  `movimiento_de_caja_chica`). Eventos `caja-chica.reposicion_registrada` y `reposicion_anulada` (líneas con documento,
+  concepto del vale, activo fijo y deducible, y el desglose). Decisiones: (1) la solicitud no agrupa por concepto de gasto del
+  libro (un documento puede tener varias líneas de concepto): agrupa por los tres conceptos de Bancos y lista los pendientes;
+  (2) anular exige el fondo abierto (un fondo cerrado no recupera pendientes); (3) la reposición compensada del cierre (CC-7) no
+  se anula desde aquí; (4) los vales provisionales abiertos (CC-6) no excluyen comprobantes: se escogen a mano por id.

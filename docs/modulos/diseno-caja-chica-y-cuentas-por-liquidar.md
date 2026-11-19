@@ -1,6 +1,6 @@
 # Diseño de Caja chica y Cuentas por liquidar — arquitecto de datos, 2026-11-18
 
-Estado: **aprobado** (respuestas del usuario al final). CC-1, CL-1, CC-1c, CL-1c, CC-2 y CC-3 (servidor) programados; la revisión del commit 670b81a4 y
+Estado: **aprobado** (respuestas del usuario al final). CC-1, CL-1, CC-1c, CL-1c, CC-2, CC-3 y CC-4 (servidor) programados; la revisión del commit 670b81a4 y
 las decisiones del 2026-11-18 sobre CC-f están en §4.10 y §5.4 g (paso CC-1c / CL-1c antes de CC-3 y CL-3). Aterriza el punto 7 de
 `HOJA-DE-RUTA.md` («Caja chica y Cuentas por liquidar») con la investigación del contador
 (`dictamen-caja-chica-2026-11-18.md`, «correcto con ajustes») y el §9 de la adenda de efectivo de CP4
@@ -1021,7 +1021,7 @@ uno por módulo a la vez.
 | **CCL-BZ** (Libro y Cuentas por pagar, servidor) | Orden `evaluar_bancarizacion`, pregunta, umbral movido (`0037`), clave del bloqueo, Cuentas por pagar responde y llama la orden. Pruebas: las de CP4-E3 sin cambio de resultado; un pago en efectivo de Cuentas por pagar que ve lo de un destino de prueba | CCL-M; sin otro paso de Cuentas por pagar sobre la bancarización |
 | **CC-2** (fondos) | Abrir, custodio, aumentar, disminuir, editar, anular apertura, lista, ficha, accesos, manejador de Bancos, eventos | CC-1 y CCL-B1 |
 | **CC-3** (comprobantes) — **hecho 2026-11-19 (servidor; corregido: baja del libro con fondo no asignado se rechaza)** | Recibir (con retención, a la bandeja), bandeja, asignar (con la excepción de retención y su auditoría `autorizar`, §5.4 g), devolver, vales de gasto, tope, ecuación con el neto, avisos del libro, bancarización y su respuesta con `monto + monto_retenido` (función `security definer`, §5.4 h). Pruebas: factura con retención desde la ficha (queda en la bandeja), asignarla sin permiso (403, sigue en la bandeja), con permiso sin motivo (rechazo), con los dos (asignada, `asignado_por` y auditoría), devolverla y reasignar (pide otra vez), la suma del mes con una factura con retención (cuenta el total) | CC-2, CCL-L1 y CCL-BZ |
-| **CC-4** (reposiciones) | Reponer con desglose, anular (aquí y por aviso), `marcar_procesado`, datos de las impresiones | CC-3 |
+| **CC-4** (reposiciones) — **hecho 2026-11-19 (servidor)** | Reponer con desglose, anular (aquí y por aviso), `marcar_procesado`, datos de las impresiones | CC-3 |
 | **CC-5** (arqueos) | Propuesta, registrar con diferencia (faltante o sobrante), anular, avisos | CC-3 |
 | **CC-6** (vales provisionales) | Entregar, liquidar, anular, aviso de vale viejo | CC-3 |
 | **CC-7** (cierre) | Cerrar con reposición compensada y depósito | CC-4, CC-5 y CC-6 |
