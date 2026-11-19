@@ -229,7 +229,7 @@ describe('el cerrojo de una sola carga', () => {
   });
 
   it('estaTomado ignora los cerrojos de otras bases del mismo servidor', async () => {
-    const url = new URL(configuracion.DATABASE_URL_PROPIETARIO);
+    const url = new URL(configuracion.DATABASE_URL_PROPIETARIO!);
     url.pathname = '/postgres';
     const otra = new pg.Client({ connectionString: url.toString() });
     await otra.connect();
