@@ -3618,3 +3618,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   configuración usa su propia conexión, así que no comparte la transacción: si guardar falla, la auditoría se deshace).
   Por decisión de producto, y en coherencia con C9, el asunto y el mensaje rechazan `http:`, `www.`, `@` y dominios con
   terminación común (`.com`, `.gt`…); también rige para la configuración genérica de Soporte. Sin migraciones.
+- **2026-11-19 (AF-3c y AFI-2c, Activos fijos, cliente):** bandeja «Por capitalizar» (`/activos-fijos/por-capitalizar`,
+  permiso `activos-fijos.bandeja.ver`, sección Operación, sin Excel), pestaña Costos de la ficha del activo y ventana
+  «Capitalizar» con unidades. Líneas agrupadas por documento con casillero por línea y por documento, búsqueda por texto,
+  filtros de fechas y de propuesta de clase, barra fija con la cuenta y el total pendiente de lo elegido y el aviso de
+  software y suscripciones (V-2) arriba. Descartar pide motivo y explica R-3; devolver (`bandeja.descartar`) se ofrece sobre
+  las líneas descartadas **en la sesión**, porque el servidor no lista las descartadas. «Capitalizar»: cada línea elegida
+  tiene una o más partes (monto sin signo; la nota de crédito resta sola) con destino activo nuevo, activo existente o
+  compra conjunta; activo nuevo con unidades, cantidad por activo, costo por unidad con el sobrante del redondeo (solo
+  muestra: el servidor reparte), campos del inciso (matrícula y catastro en edificios, valor como ganado común en
+  reproductores, «no es edificación»), aviso de bien de control (I-5) y de programas y licencias, y la cuadrícula de código,
+  serie y placa con los códigos repetidos marcados al escribir y los que el servidor rechaza puestos en su renglón. El
+  resumen de abajo dice cuántos activos se crean y por cuánto antes de confirmar. La ficha gana las pestañas Datos y
+  Costos: costos con su procedencia, registrar costo manual (V-8: motivo si queda fuera del libro fiscal) y anular con
+  motivo y el efecto sobre el costo del activo y la línea. Catálogos de la ventana (clases, activos, ubicaciones) se traen
+  al abrirla. Lógica pura con 57 pruebas nuevas; sin cambios de servidor.

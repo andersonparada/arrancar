@@ -15,5 +15,10 @@ export const VENTANAS_ACTIVOS_FIJOS = {
     nuevo: 'Nuevo activo',
     ficha: 'Ficha del activo',
   },
+  porCapitalizar: {
+    titulo: 'Por capitalizar',
+    descripcion:
+      'Las compras marcadas como activo fijo en el libro de compras, listas para convertirse en costo de un activo.',
+  },
   // generador: ventanas
 } as const;

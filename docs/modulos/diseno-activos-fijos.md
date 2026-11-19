@@ -1311,8 +1311,8 @@ dos decimales.
 | AF-2c | Lista (etiquetas «En construcción o en tránsito», «Ocioso», «Depreciado contable», «Depreciado fiscal» y «En bodega»), ficha (datos, con el nombre de la localidad de §6.13) y alta manual | frontend | |
 | **AF-3** | `costos` (V-8 con motivo, `no_es_edificacion`, nunca negativos por activo) y `descartes`, bandeja, capitalizar, costos manuales, avisos del libro (R-1), mensaje del error de llave en el libro; prueba de concurrencia de la línea y del total del activo | backend | **Programado, en revisión** (2026-11-19; notas abajo; revisión: capitalizar toma FOR SHARE del documento y la prueba «capitalizar y anular a la vez» lo cubre) |
 | **AFI-2** (con AF-3) | Capitalizar en N unidades, cuadrícula de unidades (códigos, series, placas), destino alta conjunta; pruebas del reparto y del sobrante, de códigos repetidos, del tope de 200 y de la regla de la línea | backend | **Programado, en revisión** (2026-11-19) |
-| AF-3c | Bandeja «Por capitalizar» (aviso de software y suscripciones, V-2) y pestaña Costos | frontend | |
-| AFI-2c (con AF-3c) | Ventana «Capitalizar» con unidades, costo por unidad y cuadrícula | frontend | |
+| AF-3c | Bandeja «Por capitalizar» (aviso de software y suscripciones, V-2) y pestaña Costos | frontend | **Programado** (2026-11-19; notas abajo) |
+| AFI-2c (con AF-3c) | Ventana «Capitalizar» con unidades, costo por unidad y cuadrícula | frontend | **Programado** (2026-11-19) |
 | **AF-4** | Dominio de depreciación (§7, pruebas puras con los ejemplos: tope del inmueble con el mayor y el 70 %, reproductores, ocioso, exceso de nota de crédito por libro), `tramos`, poner en uso y quitar de uso | backend | **Programado, en revisión** (2026-11-19; migración `0004_af4_tramos`) |
 | **AFI-3** (con AF-4) | `PonerEnUsoVarios`, ubicación y «En bodega de activos» al ponerlo disponible, textos de «Disponible para uso» | backend | |
 | **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | |
@@ -1360,6 +1360,17 @@ dos decimales.
   correlativo. Las unidades de una asignación comparten `alta_conjunta_id` solo si son más de una.
 - El archivo del costo manual (`archivo_id`) tiene su columna, pero la ruta de subida queda pendiente (revisión de `seguridad`).
 - La lista de costos de un activo y su ficha usan `activos.ver`; la ficha trae `costo` (Σ de los vigentes).
+
+**Notas de lo programado en AF-3c y AFI-2c (cliente):**
+
+- «Devolver a la bandeja» solo se ofrece sobre las líneas descartadas en la sesión: el servidor no tiene un listado de
+  descartadas. Si hace falta verlas todas (por ejemplo, otro usuario las descartó), habría que agregar un filtro
+  `descartadas` a `GET /activos-fijos/bandeja` (pendiente de decisión).
+- La cuadrícula de unidades muestra código, serie y placa; la marca y el modelo son los de la asignación para todas
+  (el servidor los copia a cada unidad).
+- Un costo manual se ofrece con `costos.crear` en cualquier activo; si el activo no lo admite (de terceros, en uso antes
+  de AF-7), el servidor lo dice y el mensaje se muestra tal cual.
+- La pestaña Costos se trae junto con la ficha, no al abrir la pestaña.
 
 AF-6 puede adelantarse a AF-5 si se quiere cargar saldos antes de cerrar meses. El paso **AF-P22** va antes de AF-2c y
 necesita la revisión de `seguridad` de §6.13. **AFI-1** no es un paso aparte: son columnas de la migración de AF-2. AFI-0
