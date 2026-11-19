@@ -13,6 +13,11 @@ export function rutasMonedas(monedas: MonedasControlador): FastifyPluginAsyncZod
       preHandler: proteger({ permiso: 'configuracion.monedas.editar' }),
       handler: monedas.listarDelBanguat,
     });
+    app.post('/monedas/banguat/actualizar', {
+      schema: { tags },
+      preHandler: proteger({ permiso: 'configuracion.monedas.editar' }),
+      handler: monedas.actualizarLista,
+    });
     app.patch('/monedas/:codigo', {
       schema: { tags, params: esquemaParamsMoneda, body: esquemaMonedaEditada },
       preHandler: proteger({ permiso: 'configuracion.monedas.editar' }),

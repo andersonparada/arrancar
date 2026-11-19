@@ -116,7 +116,7 @@ u otras monedas, con el tipo de cambio del Banco de Guatemala».
 
 | Tema | Diseño |
 |---|---|
-| Servicio | `https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx`, SOAP 1.1 (`POST`, `text/xml`, `SOAPAction`). URL en la variable de entorno `URL_TIPO_DE_CAMBIO_BANGUAT` (esa por omisión; las pruebas apuntan a un servidor falso local). Variable `CARGAR_TIPOS_DE_CAMBIO` (`true` por omisión en producción, `false` en pruebas), como `DEPURAR_HUERFANOS` |
+| Servicio | `https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx`, SOAP 1.1 (`POST`, `text/xml`, `SOAPAction`). URL en la variable de entorno `URL_TIPO_DE_CAMBIO_BANGUAT` (esa por omisión; las pruebas apuntan a un servidor falso local). Variable `CARGAR_TIPOS_DE_CAMBIO` (`false` por omisión en todas partes hasta hacer las comprobaciones C-1 a C-4 desde una red que alcance al Banguat; luego se enciende con `true`), como `DEPURAR_HUERFANOS` |
 | Operaciones | `TipoCambioDia` para el día (USD: `CambioDolar/VarDolar{fecha, referencia}`). `TipoCambioRango` (o `TipoCambioRangoMoneda` por moneda) para rellenar huecos. **V-13:** comprobar en MM-3, con una llamada real, que en el rango el USD trae `compra = venta = referencia`; si no, el relleno del USD usa la operación que sí traiga la referencia |
 | Qué monedas | Las **activas** del catálogo con `codigo_banguat` (USD = 2). Las demás monedas del Banguat (calculadas entre 8:00 y 9:00 a partir del USD) se piden en la vuelta de las 09:30 |
 | Horario | Primera vuelta a las **06:00** de Guatemala (`core.regional.zona_horaria` de la instalación). Un temporizador cada 15 minutos decide si toca: si falta el tipo de **hoy** de alguna moneda activa, reintenta a las 06:30, 07:00, 08:00, 09:30, 11:00, 13:00, 16:00 y 20:00; al día siguiente sigue igual. Al **arrancar** la app, y una vez al día, revisa los **últimos 45 días** y rellena huecos con el rango |
@@ -1143,6 +1143,13 @@ pruebas):
 | C-3 | ¿Alguna moneda publicada por cada 100 unidades? | La constante de división de A.5 |
 | C-4 | Desde qué hora de la noche `TipoCambioDia` o `TipoCambioRango` ya dan el USD de mañana | La hora de la vuelta `noche` |
 | C-5 | Un DTE real en EUR y lo que la SAT precarga (contador, V-2) | MM-L2; no bloquea la fase A |
+
+**Resultado (2026-11-18, al programar MM-3b): C-1 a C-4 sin hacer.** Desde el entorno del agente la conexión TCP a
+`www.banguat.gob.gt:443` abre, pero el saludo TLS no recibe respuesta (probado con `curl`, TLS 1.2 y 1.3, las dos IP, hasta
+60 s), así que no hubo ninguna llamada válida. Nada contradice la adenda; solo no está confirmada. Quedan con lo supuesto:
+`CODIGOS_DEL_BANGUAT_EXCLUIDOS` vacío (C-1), días esperados de las demás monedas = hábiles (C-2), unidad por una moneda
+(C-3) y la vuelta de noche a las 21:00 (C-4, constante `HORA_DE_LA_NOCHE`). Hay que repetirlas desde otra red antes de
+activar la carga en producción.
 
 ### A.13 Decisiones pendientes del usuario (del dictamen, con la posición del arquitecto)
 

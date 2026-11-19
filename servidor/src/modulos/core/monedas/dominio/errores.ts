@@ -1,4 +1,9 @@
-import { ErrorEsperado, ReglaDeNegocioInfringida } from '../../compartido/dominio/errores.js';
+import { DatoInvalido, ErrorEsperado, ReglaDeNegocioInfringida } from '../../compartido/dominio/errores.js';
+
+/** El rango de una carga manual no sirve: al revés, de más de 366 días o más allá de mañana. */
+export class RangoDeCargaInvalido extends DatoInvalido {
+  readonly codigo = 'rango_de_carga_invalido';
+}
 
 /** El servicio del Banco de Guatemala no respondió a tiempo, respondió con error o no se pudo leer. Vale reintentar. */
 export class FuenteNoDisponible extends ErrorEsperado {

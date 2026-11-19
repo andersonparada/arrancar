@@ -23,6 +23,13 @@ export const esquemaConfiguracion = z
       .enum(['true', 'false'])
       .default('true')
       .transform((valor) => valor === 'true'),
+    /** Servicio de tipo de cambio del Banguat (HTTPS); vacía, la URL oficial. Las pruebas apuntan a un servidor local. */
+    URL_TIPO_DE_CAMBIO_BANGUAT: z.url().optional(),
+    /** Si el servidor carga solo los tipos de cambio del Banguat; vacía, apagada hasta hacer las comprobaciones C-1 a C-4. */
+    CARGAR_TIPOS_DE_CAMBIO: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform((valor) => (valor === undefined ? undefined : valor === 'true')),
     RUTA_CLIENTE: z.string().optional(),
     /** Archivo JSON con la configuración propia de este servidor (nivel instalación). */
     RUTA_CONFIG_INSTALACION: z.string().optional(),

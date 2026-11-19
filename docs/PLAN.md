@@ -3305,3 +3305,43 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `reglas-de-articulo`, `textos-de-catalogo`, `cantidades`, `opciones-de-referencias`). Pendiente: la ficha sin kardex hasta
   INV-4c; las bodegas y su asignación son de INV-2c.
 - 2026-11-18 — **INV-1, correcciones de revisión**: el código propuesto del artículo usa una fecha fija para que el correlativo no se reinicie por año aunque la empresa reinicie los suyos, y si no hay código libre responde el error esperado `sin_codigo_libre` (antes un 500). Los conceptos que ofrece el artículo son solo activos y que no sean de activo fijo. Pendientes bajos: conversiones con unidad inactiva, formato de factores, Docena y coherencia de lotes al llegar el kardex (INV-4).
+- **2026-11-18, Multimoneda MM-3b (carga automática con tablas).** En `core/monedas`: bitácora por llamada
+  (`CargasDeTiposDrizzle.guardar` deja la fila de `core.consultas_al_banguat` y los tipos nuevos en una sola transacción, sin
+  duplicar ni reemplazar), candado de una sola carga (`CerrojoDeCargaPostgres`, `pg_try_advisory_lock` con la clave
+  7301913002), `vueltaQueToca` (función pura del dominio, en la hora de `core.regional.zona_horaria` de la instalación:
+  06:00 el dólar con reintentos a las 06:30, 07:00, 08:00, 09:30, 11:00, 13:00, 16:00 y 20:00 mientras falte, 09:30 las demás
+  y 21:00 la noche, que adelanta el dólar de mañana y pide una vez las que aún no tienen el de hoy), `ConsultarAlBanguat` (una
+  llamada: valida, compara con el valor anterior y deja la constancia; solo el dólar usa `FuenteConReintentos`),
+  `VueltasDeCarga`, `CargarTiposDeCambio` (`siTocaAhora`, `alArrancar`, `cargarAhora`), `ActualizarMonedasDelBanguat`
+  (la lista no se toca si viene vacía o con error) y `evaluarVariaciones` (más de 25 % en una moneda sin banda: no se guarda,
+  `variacion_excesiva`; más de 3 %: se guarda con aviso en el detalle). **Solo se cargan las monedas activas con código** (la
+  respuesta del usuario a D-1, que reemplaza a «todas con código» de A.6). El relleno revisa 45 días hasta ayer y solo
+  pide si hay huecos (el dólar contra días calendario; las demás, contra días hábiles de `calendarioLaboral`).
+  `POST /api/tipos-de-cambio/cargar` (`desde`/`hasta`, máximo 366 días, 409 `carga_del_banguat_en_curso`) y
+  `POST /api/monedas/banguat/actualizar`, de soporte. `principal.ts` programa un temporizador de 15 minutos y el arranque; las
+  variables `CARGAR_TIPOS_DE_CAMBIO` (apagada por omisión en todas partes hasta hacer C-1 a C-4; se enciende con `true`) y `URL_TIPO_DE_CAMBIO_BANGUAT`
+  (`vitest.config.ts` la apunta a un puerto cerrado: las pruebas nunca llegan al Banguat). Sin migraciones.
+  **Las comprobaciones reales C-1 a C-4 NO se pudieron hacer:** desde este entorno la conexión TCP a
+  `www.banguat.gob.gt:443` abre pero el saludo TLS no responde (se probó con `curl` en TLS 1.2 y 1.3 y en las dos IP, con
+  esperas de hasta 60 s), así que `CODIGOS_DEL_BANGUAT_EXCLUIDOS` sigue vacío, la hora de la noche sigue en 21:00 (C-4), los
+  días esperados de las demás monedas siguen siendo los hábiles (C-2) y no se confirmó la unidad (C-3). Hay que repetirlas
+  desde otra red. **Pendiente de MM-3b:** `GET …/consultas` (estado y aviso de 4 días hábiles de atraso), `GET …/muestra` con su
+  límite, y el relleno inmediato al asignar un código (hoy lo cubre la vuelta de las 09:30 del día siguiente).
+- **2026-11-18, Multimoneda MM-3b, corrección de la revisión.** La carga automática de tipos de cambio queda **apagada por
+  omisión en todas partes** (`CARGAR_TIPOS_DE_CAMBIO` vacío = no) hasta hacer las comprobaciones C-1 a C-4 desde una red que
+  alcance al Banguat; con ella encendida, el primer arranque llenaría la lista con el DEG, los bolívares y el colón contra la
+  decisión D-2. **Decisión para el usuario:** cuándo y desde qué red se hacen C-1 a C-4 antes de encender `true` en
+  producción. Además: la vuelta de noche no pide las demás monedas en día inhábil, y la bitácora de una moneda solo suma sus
+  propios rechazos. Siguen pendientes (antes de MM-4): `GET …/consultas`, `GET …/muestra`, devolver la consulta en
+  `POST …/banguat/actualizar`, el relleno al asignar un código, y que «Cargar ahora» no corra dentro de la solicitud HTTP.
+- **2026-11-18, Multimoneda MM-5 (módulo `multimoneda`).** Creado con `npm run generar -- modulo multimoneda` (esqueleto del
+  servidor y del cliente, registrado en los dos `indice.ts`, y `docs/modulos/multimoneda.md` completado). Sin tablas ni
+  migraciones: lee las monedas y los tipos del núcleo por adaptadores en `infraestructura/nucleo-de-monedas.ts`
+  (`core/monedas/contexto.ts` exporta `listarMonedas` para eso). Permisos `multimoneda.tipos-de-cambio.ver` y `.exportar`;
+  configuración `multimoneda.diferencial.metodo` (`acumulativo` o `reversion`, niveles instalación y empresa, pública).
+  Orden `multimoneda.monedas_disponibles` (`core/contratos/multimoneda.contratos.ts`) atendida por `MonedasDisponibles`
+  (activas distintas de GTQ, con código, nombre, símbolo y decimales): con el módulo inactivo el mediador responde
+  `ModuloNoDisponible`. Reporte «Tipos de cambio»: `GET /api/multimoneda/tipos-de-cambio?moneda=&desde=&hasta=` (mismo filtro y
+  tope de 366 días que la serie del núcleo; lleva `fuente: 'Banco de Guatemala'` y el origen de cada fila, sin motivo ni
+  usuario de soporte) y `…/exportar` a Excel (`soloExportar`, una columna «Fuente» por fila). Quedan para MM-6 el menú y las
+  pantallas del cliente, y para los pasos siguientes el diferencial, el cierre y las demás órdenes.
