@@ -5,7 +5,6 @@ import { exigirQueExista } from '../../../core/compartido/infraestructura/exigir
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type {
   FiltroDeMovimientos,
-  LineaDeDesgloseDto,
   MovimientoDto,
   ResumenDeSinClasificar,
   SolicitudDeMovimiento,
@@ -13,31 +12,22 @@ import type {
 import type { ConsultasMovimientos, SaldoPrincipalDeLaCuenta } from '../../aplicacion/puertos/consultas-movimientos.js';
 import { CLAVE_DE_PAGO_A_PROVEEDORES } from '../../dominio/asignacion-de-concepto.js';
 import { finDelMesDe } from '../../dominio/conciliacion.js';
+import type { MesDeConciliacionDto } from '../../aplicacion/dto/saldos-por-cuenta.dto.js';
 import { cheques } from './cheques.tablas.js';
 import { esPendienteDeClasificar } from './condiciones-de-clasificacion.js';
 import { conceptos } from './conceptos.tablas.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
-import { desgloseDeMovimientos } from './desglose-de-movimientos.tablas.js';
+import { desgloseDelMovimiento } from './desglose-del-movimiento.sql.js';
 import { cuentaConConciliacionesDe, hayCabeceraDeSaldoInicial, mesConciliadoDe } from './hechos-de-movimiento.js';
 import { mapeadorDeMovimiento } from './movimiento.mapeador.js';
+import { mesesDeConciliacionesAutorizadas } from './meses-de-conciliaciones.drizzle.js';
 import { movimientos } from './movimientos.tablas.js';
 import { saldoVigente } from './saldo-vigente.js';
 import { transferencias } from './transferencias.tablas.js';
 
 const cuentaBancaria = alias(cuentasBancarias, 'cuenta_bancaria');
 const chequeDelMovimiento = alias(cheques, 'cheque_del_movimiento');
-const conceptoDelDesglose = alias(conceptos, 'concepto_del_desglose');
-
-/** El reparto por concepto del movimiento (vacío si no lo tiene), de la línea más grande a la más chica. */
-const desgloseDelMovimiento = sql<LineaDeDesgloseDto[]>`coalesce((
-  select json_agg(json_build_object('conceptoId', ${desgloseDeMovimientos.conceptoId}, 'concepto', ${conceptoDelDesglose.nombre}, 'monto', (${desgloseDeMovimientos.monto})::text)
-    order by ${desgloseDeMovimientos.monto} desc, ${conceptoDelDesglose.nombre})
-  from ${desgloseDeMovimientos}
-  inner join ${conceptos} ${sql.identifier('concepto_del_desglose')} on ${conceptoDelDesglose.id} = ${desgloseDeMovimientos.conceptoId}
-  where ${desgloseDeMovimientos.movimientoId} = ${movimientos.id}
-), '[]'::json)`;
-
 const columnas = {
   ...getTableColumns(movimientos),
   cuentaBancariaNombre: cuentaBancaria.nombre,
@@ -162,6 +152,10 @@ export class ConsultasMovimientosDrizzle implements ConsultasMovimientos {
       .from(movimientos)
       .where(vigentesDe(cuentaBancariaId, undefined, lte(movimientos.fecha, fecha)));
     return fila?.saldo ?? '0.00';
+  }
+
+  mesesConciliados(cuentaBancariaId?: string): Promise<Map<string, MesDeConciliacionDto>> {
+    return mesesDeConciliacionesAutorizadas(cuentaBancariaId);
   }
 
   async chequesPosfechados(cuentaBancariaId: string, despuesDe: string): Promise<string> {

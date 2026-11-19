@@ -23,6 +23,7 @@ import { rutasDeIntereses } from './composicion/intereses.js';
 import { rutasDeConceptos } from './composicion/conceptos.js';
 import { ordenesDeBancos } from './composicion/ordenes.js';
 import { rutasDeReportesPorConcepto } from './composicion/reportes-por-concepto.js';
+import { rutasDeSaldosPorCuenta } from './composicion/saldos-por-cuenta.js';
 // generador: importaciones
 
 /** Cuentas bancarias, notas, cheques y conciliaciones de cada empresa. Ver `docs/modulos/bancos.md`. */
@@ -44,6 +45,8 @@ export const moduloBancos: DefinicionModulo = {
     { clave: 'bancos.cuentas-bancarias.exportar', descripcion: 'Exportar cuentas bancarias a Excel' },
     { clave: 'bancos.movimientos.ver', descripcion: 'Ver el reporte de movimientos' },
     { clave: 'bancos.movimientos.exportar', descripcion: 'Exportar el reporte de movimientos a Excel' },
+    { clave: 'bancos.saldos-por-cuenta.ver', descripcion: 'Ver el reporte de saldos por cuenta' },
+    { clave: 'bancos.saldos-por-cuenta.exportar', descripcion: 'Exportar el reporte de saldos por cuenta a Excel' },
     { clave: 'bancos.notas.ver', descripcion: 'Ver notas de crédito y de débito' },
     { clave: 'bancos.notas.crear', descripcion: 'Registrar notas de crédito y débito' },
     { clave: 'bancos.notas.editar', descripcion: 'Corregir y reclasificar notas de crédito y débito' },
@@ -174,6 +177,7 @@ export const moduloBancos: DefinicionModulo = {
     rutasDeChequesCaducos(),
     rutasDeConceptos(),
     rutasDeReportesPorConcepto(),
+    rutasDeSaldosPorCuenta(),
     rutasDeIntereses(),
     ordenesDeBancos(),
     escuchasDeFechaDeInicioDeBancos(),
