@@ -51,9 +51,18 @@ export class HistorialEnMemoria implements HistorialDeCorreos {
   }
 
   async cancelarPendientesDe(origen: OrigenDeCorreo, cancelacion: Cancelacion): Promise<CorreoResumenDto[]> {
-    const pendientes = (await this.deOrigen(origen)).filter((c) => c.estado === 'pendiente');
+    const pendientes = (await this.deOrigen(origen)).filter((c) =>
+      ['pendiente', 'enviando', 'fallido'].includes(c.estado),
+    );
     const antes = pendientes.map((c) => ({ ...c }));
-    for (const correo of pendientes) await this.cancelar(correo.id, cancelacion);
+    for (const { id } of pendientes) {
+      const correo = this.correos.find((c) => c.id === id);
+      Object.assign(correo ?? {}, {
+        estado: 'cancelado',
+        motivoDeCancelacion: cancelacion.motivo,
+        canceladoEn: new Date(),
+      });
+    }
     return antes;
   }
 

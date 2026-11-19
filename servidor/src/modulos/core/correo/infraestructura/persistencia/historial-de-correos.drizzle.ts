@@ -7,12 +7,15 @@ import type {
   FiltroDeCorreos,
   HistorialDeCorreos,
 } from '../../aplicacion/puertos/historial-de-correos.js';
+import type { EstadoDeCorreo } from '../../dominio/estado-de-correo.js';
 import { agruparDestinatarios, aCorreoDto, aResumenDeCorreo } from './correo.mapeador.js';
 import { correosSalientes } from './correos-salientes.tablas.js';
 import { destinatariosDeCorreos } from './destinatarios-de-correos.tablas.js';
 
 type FilaDeCorreo = typeof correosSalientes.$inferSelect;
 
+/** Al anularse el origen se cancela también lo que se está enviando o falló: nada debe salir ni poder reintentarse. */
+const ESTADOS_QUE_SE_PUEDEN_ANULAR: readonly EstadoDeCorreo[] = ['pendiente', 'enviando', 'fallido'];
 const ZONA_HORARIA = 'America/Guatemala';
 const fechaLocal = sql`(${correosSalientes.creadoEn} at time zone ${ZONA_HORARIA})::date`;
 
@@ -70,7 +73,9 @@ export class HistorialDeCorreosDrizzle implements HistorialDeCorreos {
   }
 
   async cancelarPendientesDe(origen: OrigenDeCorreo, cancelacion: Cancelacion): Promise<CorreoResumenDto[]> {
-    const antes = (await this.deOrigen(origen)).filter((correo) => correo.estado === 'pendiente');
+    const antes = (await this.deOrigen(origen)).filter((correo) =>
+      ESTADOS_QUE_SE_PUEDEN_ANULAR.includes(correo.estado),
+    );
     if (antes.length === 0) return [];
     const cancelados = await this.cancelarDonde(
       inArray(
@@ -78,6 +83,7 @@ export class HistorialDeCorreosDrizzle implements HistorialDeCorreos {
         antes.map((correo) => correo.id),
       ),
       cancelacion,
+      ESTADOS_QUE_SE_PUEDEN_ANULAR,
     );
     const ids = new Set(cancelados.map((fila) => fila.id));
     return antes.filter((correo) => ids.has(correo.id));
@@ -92,11 +98,21 @@ export class HistorialDeCorreosDrizzle implements HistorialDeCorreos {
     return cambiados.length > 0;
   }
 
-  private cancelarDonde(donde: SQL, { usuarioId, motivo }: Cancelacion) {
+  private cancelarDonde(
+    donde: SQL,
+    { usuarioId, motivo }: Cancelacion,
+    estados: readonly EstadoDeCorreo[] = ['pendiente'],
+  ) {
     return transaccionEnCurso()
       .update(correosSalientes)
-      .set({ estado: 'cancelado', canceladoEn: new Date(), canceladoPor: usuarioId, motivoDeCancelacion: motivo })
-      .where(and(donde, eq(correosSalientes.estado, 'pendiente')))
+      .set({
+        estado: 'cancelado',
+        bloqueadoHasta: null,
+        canceladoEn: new Date(),
+        canceladoPor: usuarioId,
+        motivoDeCancelacion: motivo,
+      })
+      .where(and(donde, inArray(correosSalientes.estado, [...estados])))
       .returning({ id: correosSalientes.id });
   }
 

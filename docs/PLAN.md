@@ -3031,3 +3031,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   'bien'`; el servicio capitalizado queda en servicios del SAT-2237. El análisis «Activos fijos comprados» muestra todos y suma la
   columna «Es un» (bien o servicio, también en el Excel). Cliente: ya no se fuerza «Bien» al marcar activo fijo y el texto es
   «Activo fijo (se capitaliza)».
+
+- **2026-11-18** (correo 8 a 13, revisión):
+  - Anular un pago cancela también los avisos `enviando` y `fallido` (no solo `pendiente`), con auditoría y motivo «Pago
+    anulado»; un `fallido` cancelado ya no se puede reintentar (409). La migración core `0028_cancelacion_durante_el_envio`
+    cambia `core.resolver_correo`: si el correo se canceló mientras se enviaba, anota el intento y lo deja `cancelado` (no
+    vuelve a `pendiente`). Se quita `bloqueado_hasta` al cancelar (restricción de la tabla).
+  - Integración: las ramas `f43-1` y `f43-10` también crean una migración core 0027; quien se una después debe regenerar
+    la suya con el número siguiente y rehacer `_journal.json`, el snapshot y el `prevId` (nunca juntar dos entradas idx 27).
+  - `correo.servidor.gestionar` queda declarado sin que lo exija ninguna ruta (Soporte usa `soloSuperacceso`); anotado en el diseño.

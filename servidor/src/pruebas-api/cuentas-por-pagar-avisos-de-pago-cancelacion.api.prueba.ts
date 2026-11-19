@@ -88,6 +88,49 @@ describe('cancelar el aviso', () => {
     );
     expect(auditados).toEqual([{ registro_id: correos[1]!.id }]);
   });
+
+  it('al anular el pago también se cancela el aviso fallido y ya no se puede reintentar', async () => {
+    const { pagoId, contactos } = await a.pagoConProveedor({
+      contactos: [{ nombre: 'Ana', correo: 'ana@proveedor.com' }],
+    });
+    const enviado = await a.enviar(pagoId, {
+      destinatarios: [{ origen: 'contacto', origenId: contactos[0]! }],
+      copiaALaEmpresa: false,
+    });
+    await comoPropietario(`update core.correos_salientes set estado = 'fallido' where id = $1`, [enviado.cuerpo.id]);
+
+    expect((await anularPago(a.e.propietario(), pagoId)).estado).toBe(200);
+    const reintento = await a.e.propietario().post(`/api/correos/${enviado.cuerpo.id}/reintentar`, {});
+
+    const [correo] = await a.correosDe(pagoId);
+    expect([correo!.estado, correo!.motivo_de_cancelacion]).toEqual(['cancelado', 'Pago anulado']);
+    expect(reintento.estado).toBe(409);
+  });
+
+  it('si el aviso se estaba enviando al anular, queda cancelado y el resultado del envío no lo reabre', async () => {
+    const { pagoId, contactos } = await a.pagoConProveedor({
+      contactos: [{ nombre: 'Ana', correo: 'ana@proveedor.com' }],
+    });
+    const enviado = await a.enviar(pagoId, {
+      destinatarios: [{ origen: 'contacto', origenId: contactos[0]! }],
+      copiaALaEmpresa: false,
+    });
+    await comoPropietario(
+      `update core.correos_salientes set estado = 'enviando', intentos = 1,
+         bloqueado_hasta = now() + interval '10 minutes' where id = $1`,
+      [enviado.cuerpo.id],
+    );
+
+    expect((await anularPago(a.e.propietario(), pagoId)).estado).toBe(200);
+    const [resuelto] = await comoPropietario<{ estado: string }>(
+      `select core.resolver_correo($1::uuid, 'temporal', 'ETIMEDOUT', array[]::text[], 10) as estado`,
+      [enviado.cuerpo.id],
+    );
+
+    const [correo] = await a.correosDe(pagoId);
+    expect(correo!.estado).toBe('cancelado');
+    expect(resuelto?.estado).toBe('cancelado');
+  });
 });
 
 describe('envío automático', () => {

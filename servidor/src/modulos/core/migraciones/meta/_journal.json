@@ -197,6 +197,13 @@
       "when": 1795055180485,
       "tag": "0027_bandeja_de_correos_para_soporte",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1795059270214,
+      "tag": "0028_cancelacion_durante_el_envio",
+      "breakpoints": true
     }
   ]
 }
