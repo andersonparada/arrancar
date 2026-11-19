@@ -1,9 +1,11 @@
 import {
+  AnulacionDejaElFondoSinMonto,
   AperturaYaAnulada,
   BeneficiarioInvalido,
   CustodioObligatorio,
   DisminucionDejaElFondoEnCero,
   DisminucionMayorQueElEfectivo,
+  FechaAnteriorALaApertura,
   FechaDelFondoInvalida,
   FondoConMovimientos,
   FondoNoDisponible,
@@ -63,6 +65,19 @@ export function exigirTope(centavos: number | null): number | null {
 /** @throws FechaDelFondoInvalida si es posterior a hoy. */
 export function exigirFechaNoFutura(fecha: string, hoy: string): void {
   if (fecha > hoy) throw new FechaDelFondoInvalida();
+}
+
+/** @throws FechaAnteriorALaApertura si el cambio de monto es anterior a la apertura del fondo. */
+export function exigirFechaDesdeLaApertura(fecha: string, fondo: Pick<Fondo, 'fechaDeApertura'>): void {
+  if (fecha < fondo.fechaDeApertura) throw new FechaAnteriorALaApertura(fondo.fechaDeApertura);
+}
+
+/**
+ * Anular un aumento: el fondo y su efectivo esperado deben quedar con algo.
+ * @throws AnulacionDejaElFondoSinMonto
+ */
+export function exigirAnulacionDeAumentoPosible(quedan: { montoCentavos: number; esperadoCentavos: number }): void {
+  if (quedan.montoCentavos <= 0 || quedan.esperadoCentavos <= 0) throw new AnulacionDejaElFondoSinMonto();
 }
 
 /** @throws MontoDelFondoInvalido si no es mayor que cero. */

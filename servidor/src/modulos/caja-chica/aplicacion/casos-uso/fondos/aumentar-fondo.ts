@@ -5,6 +5,7 @@ import { MontoDelFondoCambiado } from '../../../dominio/eventos-de-fondos.js';
 import type { Fondo } from '../../../dominio/fondos.js';
 import {
   beneficiarioDelFondo,
+  exigirFechaDesdeLaApertura,
   exigirFechaNoFutura,
   exigirFondoAbierto,
   exigirMontoPositivo,
@@ -67,6 +68,7 @@ export class AumentarFondo {
     const hoy = await this.dependencias.reloj.hoy(operador);
     const fecha = pedido.fecha ?? hoy;
     exigirFechaNoFutura(fecha, hoy);
+    exigirFechaDesdeLaApertura(fecha, fondo);
     const montoCentavos = exigirMontoPositivo(aCentavos(pedido.monto));
     if (pedido.forma === 'nota_de_debito') {
       await this.dependencias.referencias.exigirCuentaBancaria(pedido.cuentaBancariaId);

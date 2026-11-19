@@ -143,3 +143,24 @@ export class MovimientoDeCajaChica extends ReglaDeNegocioInfringida {
     super(detalle);
   }
 }
+
+/** El aumento o la disminución no puede ser anterior a la apertura del fondo. */
+export class FechaAnteriorALaApertura extends DatoInvalido {
+  readonly codigo = 'fecha_anterior_a_la_apertura';
+
+  constructor(apertura: string) {
+    const [anio, mes, dia] = apertura.split('-');
+    super(`La fecha no puede ser anterior a la apertura del fondo (${dia}/${mes}/${anio}).`, { campo: 'fecha' });
+  }
+}
+
+/** Anular un aumento dejaría el fondo (o su efectivo esperado) en cero o en negativo. */
+export class AnulacionDejaElFondoSinMonto extends ReglaDeNegocioInfringida {
+  readonly codigo = 'anulacion_deja_el_fondo_sin_monto';
+
+  constructor() {
+    super(
+      'No se puede anular el aumento: el fondo se quedaría sin monto o sin efectivo suficiente por las disminuciones posteriores.',
+    );
+  }
+}

@@ -3221,3 +3221,7 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Sin migración. Decisiones: anular la apertura no agrega un estado de fondo (queda `cerrado` y la ficha trae
   `aperturaAnulada`); el cambio de custodio no ofrece aún el arqueo de entrega (CC-5); un nombre de fondo anulado sigue
   ocupando el nombre (índice único no parcial de CC-1).
+- **2026-11-18 (CC-2, correcciones de la revisión)**: aumentar y disminuir exigen `fecha >= fecha_de_apertura` (error
+  `fecha_anterior_a_la_apertura`, campo `fecha`). Cuando Bancos anula un aumento, `AnuladorDeCambios.revisar` calcula el
+  monto y el efectivo esperado sin ese aumento y rechaza si quedan <= 0 (`anulacion_deja_el_fondo_sin_monto`), de modo que
+  no se puede anular un aumento ya «consumido» por disminuciones posteriores. Sin migración.

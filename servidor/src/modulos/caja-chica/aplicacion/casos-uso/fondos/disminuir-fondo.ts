@@ -6,6 +6,7 @@ import { MODULO_DE_ORIGEN, RECURSO_DE_FONDOS, type Fondo } from '../../../domini
 import { efectivoEsperado } from '../../../dominio/monto-del-fondo.js';
 import {
   exigirDisminucionPosible,
+  exigirFechaDesdeLaApertura,
   exigirFechaNoFutura,
   exigirFondoAbierto,
   exigirMontoPositivo,
@@ -86,6 +87,7 @@ export class DisminuirFondo {
     const hoy = await reloj.hoy(operador);
     const fecha = pedido.fecha ?? hoy;
     exigirFechaNoFutura(fecha, hoy);
+    exigirFechaDesdeLaApertura(fecha, fondo);
     const montoCentavos = exigirMontoPositivo(aCentavos(pedido.monto));
     const cuentaBancariaId = pedido.cuentaBancariaId ?? fondo.cuentaBancariaId;
     if (!cuentaBancariaId) throw new CuentaDelDepositoObligatoria();

@@ -6,8 +6,10 @@ import {
   RelojFijo,
   UnidadDeTrabajoEnMemoria,
 } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
+import type { CambioDeMonto } from '../../../dominio/fondos.js';
 import type { DatosDeLectura } from '../../puertos/puertos-de-fondos.js';
 import { AbrirFondo } from './abrir-fondo.js';
+import { AnuladorDeCambios } from './anulador-de-cambios.js';
 import { AumentarFondo } from './aumentar-fondo.js';
 import type { DependenciasDeFondos } from './dependencias-de-fondos.js';
 import { BancosFalso, consultas, FondosEnMemoria } from './dobles-de-fondos.soporte.js';
@@ -162,6 +164,37 @@ describe('AumentarFondo y DisminuirFondo', () => {
       codigo: 'disminucion_deja_el_fondo_en_cero',
     });
     expect(bancos.notas).toHaveLength(0);
+  });
+
+  it('aumentar o disminuir con fecha anterior a la apertura se rechaza sin ordenar nada', async () => {
+    const fondoId = await fondoAbierto();
+    const antes = { fondoId, fecha: '2026-01-01' };
+
+    await expect(
+      new AumentarFondo(dependencias).ejecutar(operador, {
+        ...antes,
+        forma: 'nota_de_debito',
+        cuentaBancariaId: 'cuenta-2',
+        monto: '200.00',
+      }),
+    ).rejects.toMatchObject({ codigo: 'fecha_anterior_a_la_apertura' });
+    await expect(
+      new DisminuirFondo(dependencias).ejecutar(operador, { ...antes, monto: '100.00' }),
+    ).rejects.toMatchObject({ codigo: 'fecha_anterior_a_la_apertura' });
+    expect(bancos.notas).toHaveLength(0);
+  });
+
+  it('Bancos no puede anular un aumento si el fondo quedaría en cero o negativo por disminuciones posteriores', async () => {
+    const fondoId = await fondoAbierto();
+    const fondo = (await repo.buscar(fondoId))!;
+    const aumento = { id: 'aumento-1', tipo: 'aumento', montoCentavos: 50_000 } as CambioDeMonto;
+    const anulador = (monto: number) =>
+      new AnuladorDeCambios({ ...dependencias, consultas: consultas({ montoCentavos: monto }) });
+
+    await expect(anulador(10_000).revisar(fondo, aumento)).rejects.toMatchObject({
+      codigo: 'anulacion_deja_el_fondo_sin_monto',
+    });
+    await expect(anulador(150_000).revisar(fondo, aumento)).resolves.toBeUndefined();
   });
 
   function armarConCifras(cifras: Partial<DatosDeLectura>) {
