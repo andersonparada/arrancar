@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 import { tituloDeDocumento } from '../composables/detalles-de-documento';
 import { hayNotasAplicadas, textoDeRetenciones } from '../composables/pagos/comprobante-de-pago';
 import type { ContrasenaDelComprobante } from '../servicios/tipos-de-pagos';
 
 /** Los documentos pagados de una contraseña: lo pagado y el saldo que queda; la retención lleva su constancia. */
-defineProps<{ contrasena: ContrasenaDelComprobante }>();
+const props = defineProps<{ contrasena: ContrasenaDelComprobante }>();
+/** Con cheques posfechados en la contraseña, el papel dice cuánto de la deuda está comprometido y cuánto queda disponible. */
+const hayComprometido = computed(() => props.contrasena.documentos.some(({ comprometido }) => comprometido !== '0.00'));
 const celda = 'border border-black px-2 py-1';
 const celdaNumerica = `${celda} text-right tabular-nums`;
 </script>
@@ -26,6 +29,8 @@ const celdaNumerica = `${celda} text-right tabular-nums`;
           <th scope="col" :class="celdaNumerica">Notas aplicadas</th>
           <th scope="col" :class="celdaNumerica">Pagado</th>
           <th scope="col" :class="celdaNumerica">Saldo que queda</th>
+          <th v-if="hayComprometido" scope="col" :class="celdaNumerica">Comprometido (cheques posfechados)</th>
+          <th v-if="hayComprometido" scope="col" :class="celdaNumerica">Disponible</th>
         </tr>
       </thead>
       <tbody>
@@ -43,6 +48,8 @@ const celdaNumerica = `${celda} text-right tabular-nums`;
           </td>
           <td :class="`${celdaNumerica} font-semibold`">{{ formatearMonto(documento.pagado) }}</td>
           <td :class="celdaNumerica">{{ formatearMonto(documento.saldo) }}</td>
+          <td v-if="hayComprometido" :class="celdaNumerica">{{ formatearMonto(documento.comprometido) }}</td>
+          <td v-if="hayComprometido" :class="celdaNumerica">{{ formatearMonto(documento.disponible) }}</td>
         </tr>
       </tbody>
       <tfoot v-if="contrasena.documentos.length > 1">
@@ -51,7 +58,7 @@ const celdaNumerica = `${celda} text-right tabular-nums`;
             Pagado de la contraseña {{ contrasena.numero }}
           </th>
           <td :class="`${celdaNumerica} font-semibold`">{{ formatearMonto(contrasena.pagado) }}</td>
-          <td :class="celda" />
+          <td :class="celda" :colspan="hayComprometido ? 3 : 1" />
         </tr>
       </tfoot>
     </table>

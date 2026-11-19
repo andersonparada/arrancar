@@ -74,6 +74,17 @@ const linea = 'mt-6 border-t border-black pt-1 text-xs';
     </ul>
 
     <p class="text-lg font-bold">Saldo por pagar {{ formatearMonto(impresion.totales.saldo) }}</p>
+    <div v-if="impresion.chequesPosfechados.length > 0" class="space-y-1 text-sm">
+      <p class="font-semibold">
+        De lo cual, comprometido con cheques posfechados {{ formatearMonto(impresion.totales.comprometido) }}
+      </p>
+      <ul>
+        <li v-for="cheque in impresion.chequesPosfechados" :key="cheque.pagoId">
+          {{ cheque.texto }}: {{ formatearMonto(cheque.monto) }}
+        </li>
+      </ul>
+      <p class="font-semibold">Disponible para pagar {{ formatearMonto(impresion.totales.disponible) }}</p>
+    </div>
     <p v-if="impresion.leyendaDeRetenciones" class="text-sm">{{ impresion.leyendaDeRetenciones }}</p>
     <p v-if="impresion.leyenda" class="text-sm">{{ impresion.leyenda }}</p>
 

@@ -51,10 +51,10 @@ describe('pago registrado', () => {
 describe('nombres', () => {
   it('formas y estados de pago en español de usted', () => {
     expect(nombreDeLaForma('nota_ligada')).toBe('Nota de débito ya registrada');
-    expect(nombreDelEstadoDePago('en_parte')).toBe('Pagada en parte');
-    expect(nombreDelEstadoDePago('comprometido')).toBe('Comprometida');
-    expect(nombreDelEstadoDePago('comprometido_en_parte')).toBe('Comprometida en parte');
-    expect(nombreDelEstadoDePago('pendiente')).toBe('Sin pagar');
+    expect(nombreDelEstadoDePago('en_parte')).toBe('Pagado en parte');
+    expect(nombreDelEstadoDePago('comprometido')).toBe('Comprometido');
+    expect(nombreDelEstadoDePago('comprometido_en_parte')).toBe('Comprometido en parte');
+    expect(nombreDelEstadoDePago('pendiente')).toBe('Pendiente');
     expect(tonoDelEstadoDePago('comprometido_en_parte')).toBe('trigo');
     expect(tonoDelEstadoDePago('pagado')).toBe('campo');
   });

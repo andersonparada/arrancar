@@ -13,11 +13,11 @@ const NOMBRES_DE_FORMA: Record<FormaDePago, string> = {
 export const nombreDeLaForma = (forma: FormaDePago): string => NOMBRES_DE_FORMA[forma];
 
 const NOMBRES_DE_ESTADO: Record<EstadoDePago, string> = {
-  pendiente: 'Sin pagar',
-  en_parte: 'Pagada en parte',
-  comprometido_en_parte: 'Comprometida en parte',
-  comprometido: 'Comprometida',
-  pagado: 'Pagada',
+  pendiente: 'Pendiente',
+  en_parte: 'Pagado en parte',
+  comprometido_en_parte: 'Comprometido en parte',
+  comprometido: 'Comprometido',
+  pagado: 'Pagado',
 };
 
 export const nombreDelEstadoDePago = (estado: EstadoDePago): string => NOMBRES_DE_ESTADO[estado];

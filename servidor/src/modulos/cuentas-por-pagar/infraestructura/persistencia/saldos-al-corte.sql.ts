@@ -72,6 +72,15 @@ export const FIN_DE_MES_COBRADO = sql.raw(
 );
 
 /**
+ * El pago cuenta al corte (alias `p`): vigente, o anulado después del corte (§2.3). Un cheque posfechado anulado queda
+ * con la fecha contable del cheque (futura, nunca anterior a ella): mientras esa fecha sea posterior al corte, lo
+ * comprometido se cuenta hasta el día en que de verdad se anuló.
+ */
+export const pagoCuentaAlCorte = (corte: string): SQL =>
+  sql`(p.estado = 'vigente' or (p.fecha_de_anulacion > ${corte}::date
+       and (p.fecha <= ${corte}::date or ${diaEnGuatemala('p.anulado_en')} > ${corte}::date)))`;
+
+/**
  * Los pagos al corte, por cargo: lo que ya rebaja (fecha de efecto hasta el corte, §2.1) y lo comprometido (entregado
  * hasta el corte pero con efecto posterior). Un pago anulado después del corte sigue contando.
  */
@@ -86,7 +95,7 @@ function pagosAlCorte({ empresaId, corte }: ParametrosDeCorte): SQL {
       left join bancos.conciliaciones cn on cn.id = m.conciliacion_id and cn.estado = 'autorizada'
      cross join lateral (select least(p.fecha, coalesce(${FIN_DE_MES_COBRADO}, p.fecha)) as efecto) e
      where a.empresa_id = ${empresaId}::uuid
-       and (p.estado = 'vigente' or p.fecha_de_anulacion > ${corte}::date)
+       and ${pagoCuentaAlCorte(corte)}
        and (p.fecha <= ${corte}::date or ${diaEnGuatemala('p.creado_en')} <= ${corte}::date)
      group by a.cargo_id)`;
 }

@@ -140,7 +140,12 @@ export interface DocumentoDelComprobante {
   constancias: RetencionDeLaLinea[];
   pagado: string;
   cubre: string;
+  /** La deuda del documento: también lo comprometido con cheques posfechados. */
   saldo: string;
+  /** La parte del saldo cubierta con cheques posfechados. */
+  comprometido: string;
+  /** Lo que aún se puede pagar: `saldo` menos `comprometido`. */
+  disponible: string;
 }
 
 export interface ContrasenaDelComprobante {

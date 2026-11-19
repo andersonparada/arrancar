@@ -44,14 +44,14 @@ const dtoDeCargoImpreso = (cargo: CargoDeContrasenaDto): CargoImpresoDto => ({
   saldo: cargo.saldo,
 });
 
-/** Los pagos vigentes con fecha futura, con la marca «cheque al dd/mm/aaaa» (un cheque se cobra a la vista). */
+/** Los pagos vigentes con fecha futura, con la marca «Cheque N al dd/mm/aaaa» (un cheque se cobra a la vista). */
 const chequesPosfechadosDe = (contrasena: ContrasenaDto): ChequePosfechadoImpresoDto[] =>
   contrasena.pagos
     .filter(({ comprometido }) => comprometido)
-    .map(({ pagoId, numero, fecha, monto }) => ({
+    .map(({ pagoId, numero, numeroDeCheque, fecha, monto }) => ({
       pagoId,
       monto,
-      texto: `Pago ${numero}: cheque al ${fechaLegible(fecha)}`,
+      texto: `${numeroDeCheque === null ? `Pago ${numero}` : `Cheque ${numeroDeCheque}`} al ${fechaLegible(fecha)}`,
     }));
 
 const dtoDeCompensacion = (nota: NotaDeContrasenaDto): CompensacionImpresaDto => ({
