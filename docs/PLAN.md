@@ -2724,6 +2724,15 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   migración 0027 de core (`core.resumen_de_la_bandeja` y `core.correos_fallidos_recientes`). Los errores de estado
   responden 409 (`correo_no_pendiente`, `correo_no_reintentable`, `correo_sin_contenido`). El puerto `HistorialDeCorreos`
   ya trae `deOrigen` y `cancelarPendientesDe`, que usará Cuentas por pagar (paso 10).
+- **2026-11-18 (aviso de pago por correo, paso 9: PDF del comprobante).** Cuentas por pagar genera el comprobante como
+  PDF con pdfkit (`infraestructura/pdf/`, puerto `GeneradorDePdfDelComprobante`, `nombreDelPdfDelComprobante`) sobre el
+  mismo `ComprobanteDePagoDto` que imprime la pantalla: una hoja carta por rótulo («Original» y «Copia»), con más
+  páginas si hay muchos documentos. Separa lo que dice (`contenidoDelComprobante`, función pura probada: título, anulado,
+  datos, tablas por contraseña con la constancia de cada retención o «constancia por emitir», cheque posfechado, totales,
+  leyendas y firmas) de cómo se dibuja. Siempre lleva la leyenda «no es un documento tributario» (se agrega si la lista
+  del comprobante viniera sin ella). Textos del usuario saneados (controles, marcas de dirección, glifos que Noto Sans no
+  tiene), sin enlaces, scripts ni archivos incrustados, una generación a la vez (`Semaforo`). El saneado y el pincel se
+  repiten en el módulo (no se importa de Libro de compras). Sin migración.
 - **2026-11-18 — Caja chica y Cuentas por liquidar, diseño corregido tras la revisión de 670b81a4 (solo docs).**
   `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`: una sola regla de CC-f (A′) en §5.4 g, sin restos de
   «rechazar sin excepción» (§2.5, §5.4 a, §7.2, §9.3, §13, §15, V-3 y V-4): recibir nunca rechaza por retención; la
