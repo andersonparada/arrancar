@@ -4024,3 +4024,12 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (inmuebles sin valores) se puede programar ya**; PA-0b espera PA-20 y PA-21, PA-1 espera PA-23 y los archivos van en
   PA-AR tras la revisión de `seguridad`. Preguntas nuevas PA-20 a PA-23 (§17.1, sin responder); pendientes P-1 a P-4
   (§18.1), ninguno bloquea un paso.
+- **2026-11-19 — AP-0 programado (servidor y cliente).** Primer paso de `diseno-bancos-aprobaciones-tarjeta-y-cp-ap.md`: los
+  posfechados de apertura sin ligar (`parte_de_apertura = 'cheque_posfechado'`, sin `modulo_de_origen`, ni anulados, ni
+  revertidos, ni inversos) ya se avisan. **Bancos:** `ConsultasDeSaldosIniciales.posfechadosSinLigar()` y el hallazgo
+  `posfechados_sin_ligar` (aviso, sin motivo) en la respuesta de `empresas.revisar_cierre_de_carga`, solo si Cuentas por
+  pagar está activo (`ModulosDeOrigen.estaActivo`). **Cuentas por pagar:** `chequesDeAperturaSinLigar {cantidad, total}` en
+  el saldo del proveedor (ficha) y en `para-pagar` (ventana de pago); cuenta los que llevan el nombre del proveedor como
+  beneficiario (`bancos.nombre_para_comparar`) o, si el proveedor tiene cargos de saldo inicial con deuda, todos. Lectura de
+  `bancos.movimientos` desde la infraestructura de CP (`dependeDe: ['bancos']`). **Cliente:** aviso en la ficha del
+  proveedor (condiciones de pago) y en «Nuevo pago», con el texto «…se podrán ligar pronto» hasta AP-3/AP-5. Sin migración.

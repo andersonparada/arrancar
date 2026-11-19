@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { HandCoins } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
@@ -12,6 +13,7 @@ import MedioDePago from '../componentes/MedioDePago.vue';
 import PestanasDeFormaDePago from '../componentes/PestanasDeFormaDePago.vue';
 import ResultadoDelPago from '../componentes/ResultadoDelPago.vue';
 import SeleccionDeProveedorDelPago from '../componentes/SeleccionDeProveedorDelPago.vue';
+import { avisoDeChequesDeAperturaSinLigar } from '../composables/cheques-de-apertura-sin-ligar';
 import { usarNuevoPago } from '../composables/pagos/usar-nuevo-pago';
 import { VENTANAS_CUENTAS_POR_PAGAR } from '../textos';
 
@@ -25,6 +27,10 @@ const pago = usarNuevoPago({
   contrasenaId: texto(route.query.contrasenaId),
 });
 const { edicion, datos } = pago;
+const avisosDeApertura = computed(() => {
+  const aviso = avisoDeChequesDeAperturaSinLigar(datos.value?.chequesDeAperturaSinLigar);
+  return aviso ? [aviso] : [];
+});
 const volver = texto(route.query.contrasenaId)
   ? {
       texto: 'Contraseña',
@@ -55,6 +61,7 @@ const volver = texto(route.query.contrasenaId)
         @buscar="pago.alBuscarProveedor"
       />
 
+      <AvisosDelPago :avisos="avisosDeApertura" titulo="Cheques posfechados de apertura" />
       <p
         v-if="datos && pago.formas.value.length === 0"
         class="rounded-lg bg-trigo-100 p-3 text-sm text-tierra-800 dark:bg-tierra-800 dark:text-tierra-100"

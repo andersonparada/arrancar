@@ -1,4 +1,4 @@
-import type { OrigenDelDocumento, TipoDeDocumento } from './tipos';
+import type { ChequesDeAperturaSinLigar, OrigenDelDocumento, TipoDeDocumento } from './tipos';
 
 export type * from './tipos-de-consulta-de-pagos';
 
@@ -85,6 +85,8 @@ export interface ParaPagar {
   sumaDelMesAlProveedor: string;
   umbralDeBancarizacion: string;
   topeDiferencia: string;
+  /** Posfechados de apertura sin ligar que podrían ser de este proveedor (AP-0). */
+  chequesDeAperturaSinLigar: ChequesDeAperturaSinLigar;
 }
 
 export interface ChequeraParaPagar {

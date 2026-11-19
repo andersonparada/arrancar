@@ -41,6 +41,7 @@ export const datosDeEjemplo = (cargos: CargoParaPagar[], cambios: Partial<ParaPa
   sumaDelMesAlProveedor: '0.00',
   umbralDeBancarizacion: '30000.00',
   topeDiferencia: '0.05',
+  chequesDeAperturaSinLigar: { cantidad: 0, total: '0.00' },
   ...cambios,
 });
 

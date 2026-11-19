@@ -22,6 +22,7 @@ const proveedor = (cambios: Partial<SaldoDelProveedor> = {}): SaldoDelProveedor 
   vencidoComprometido: '0.00',
   posfechados: [],
   cargosConSaldo: 2,
+  chequesDeAperturaSinLigar: { cantidad: 0, total: '0.00' },
   saldosDeudores: '0.00',
   notasConSaldoLibre: [],
   ...cambios,
@@ -101,6 +102,24 @@ describe('lo que se debe a un proveedor', () => {
   it('la ficha del proveedor lo usa tras el plazo', () => {
     const detalles = detallesDeCondiciones({ diasDeCredito: null, contarDesdeLaRecepcion: false }, conCheque);
     expect(detalles.map(({ etiqueta }) => etiqueta)).toContain('Disponible para pagar');
+  });
+});
+
+describe('cheques de apertura sin ligar en la ficha del proveedor', () => {
+  const condiciones = { diasDeCredito: null, contarDesdeLaRecepcion: false };
+
+  it('con cheques sin ligar agrega el aviso a los datos', () => {
+    const saldo = proveedor({ chequesDeAperturaSinLigar: { cantidad: 2, total: '350.50' } });
+
+    const detalle = detallesDeCondiciones(condiciones, saldo).find((d) => d.etiqueta === 'Cheques de apertura');
+
+    expect(detalle?.valor).toContain('Hay 2 cheques posfechados de apertura sin ligar');
+  });
+
+  it('sin cheques sin ligar no agrega nada', () => {
+    const etiquetas = detallesDeCondiciones(condiciones, proveedor()).map(({ etiqueta }) => etiqueta);
+
+    expect(etiquetas).not.toContain('Cheques de apertura');
   });
 });
 
