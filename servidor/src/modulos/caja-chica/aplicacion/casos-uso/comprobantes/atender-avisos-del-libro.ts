@@ -1,7 +1,7 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { EventoDominio } from '../../../../core/compartido/dominio/evento-dominio.js';
 import { RECURSO_DE_COMPROBANTES, type Comprobante } from '../../../dominio/comprobantes.js';
-import { ComprobanteRepuesto } from '../../../dominio/errores-de-comprobantes.js';
+import { ComprobanteEnFondoNoAsignado, ComprobanteRepuesto } from '../../../dominio/errores-de-comprobantes.js';
 import { LectorDelFondo } from '../fondos/lector-del-fondo.js';
 import { AnuladorDeComprobantes } from './anulador-de-comprobantes.js';
 import { comprobanteDto } from './armado-del-comprobante.js';
@@ -18,22 +18,29 @@ export interface AvisoDeBajaDelLibro {
   motivo?: string;
 }
 
-/** Busca el comprobante del documento y, si está en un fondo, lo bloquea antes (fondo primero, §13.2 del diseño). */
+/**
+ * Busca el comprobante del documento y, si está en un fondo, lo bloquea antes (fondo primero, §13.2 del diseño).
+ * Todo documento con destino Caja chica crea su comprobante al recibirse: si no se ve, es que está en un fondo que el
+ * usuario no tiene asignado (RLS por alcance) y se rechaza, en vez de dejar al libro dar de baja el documento a medias.
+ * @throws ComprobanteEnFondoNoAsignado
+ */
 async function bloquearElDelDocumento(
   dependencias: DependenciasDeComprobantes,
   documentoId: string,
-): Promise<Comprobante | null> {
+): Promise<Comprobante> {
   const { comprobantes, fondos, consultasDeFondos } = dependencias;
   const visto = await comprobantes.buscarDelDocumento(documentoId);
-  if (!visto) return null;
+  if (!visto) throw new ComprobanteEnFondoNoAsignado();
   if (visto.fondoId !== null)
     await new LectorDelFondo({ fondos, consultas: consultasDeFondos }).bloquear(visto.fondoId);
-  return comprobantes.bloquear(visto.id);
+  const bloqueado = await comprobantes.bloquear(visto.id);
+  if (!bloqueado) throw new ComprobanteEnFondoNoAsignado();
+  return bloqueado;
 }
 
 /**
  * Responde al aviso `libro-de-compras.documento_por_anular` (§5.9), que llega dentro de la transacción del libro antes de
- * que anule nada. Idempotente: sin comprobante (o ya anulado) no hace nada. Si está repuesto lanza `ComprobanteRepuesto` y el
+ * que anule nada. Idempotente: uno ya anulado no hace nada; sin comprobante visible lanza `ComprobanteEnFondoNoAsignado`. Si está repuesto lanza `ComprobanteRepuesto` y el
  * libro no anula; si no, lo anula con el motivo del aviso (auditoría `anular`).
  */
 export class AnularPorAviso {
@@ -43,7 +50,7 @@ export class AnularPorAviso {
     this.anulador = new AnuladorDeComprobantes(dependencias);
   }
 
-  /** @throws ComprobanteRepuesto */
+  /** @throws ComprobanteRepuesto, ComprobanteEnFondoNoAsignado */
   async ejecutar(operador: Operador, aviso: AvisoDeBajaDelLibro): Promise<void> {
     if (aviso.destino !== DESTINO_PROPIO) return;
     const { unidadDeTrabajo, publicadorEventos } = this.dependencias;
@@ -53,7 +60,7 @@ export class AnularPorAviso {
 
   private async anular(operador: Operador, aviso: AvisoDeBajaDelLibro): Promise<EventoDominio[]> {
     const comprobante = await bloquearElDelDocumento(this.dependencias, aviso.documentoId);
-    if (!comprobante || comprobante.estado === 'anulado') return [];
+    if (comprobante.estado === 'anulado') return [];
     return this.anulador.anular(operador, { comprobante, motivo: aviso.motivo ?? 'Anulado desde el libro de compras' });
   }
 }
@@ -61,13 +68,13 @@ export class AnularPorAviso {
 /**
  * Responde al aviso `libro-de-compras.documento_por_eliminar` (§5.9), antes de que el libro borre su fila: la llave obliga
  * a borrar primero el comprobante, así que aquí se elimina (no se anula) con auditoría `eliminar` y el comprobante como
- * estaba. Repuesto lo rechaza (`ComprobanteRepuesto`). Idempotente. Si estaba en un fondo vigente publica
+ * estaba. Repuesto lo rechaza (`ComprobanteRepuesto`). Sin comprobante visible lanza `ComprobanteEnFondoNoAsignado`. Si estaba en un fondo vigente publica
  * `comprobante_quitado` (para Contabilidad equivale a anulado).
  */
 export class EliminarPorAviso {
   constructor(private readonly dependencias: DependenciasDeComprobantes) {}
 
-  /** @throws ComprobanteRepuesto */
+  /** @throws ComprobanteRepuesto, ComprobanteEnFondoNoAsignado */
   async ejecutar(operador: Operador, aviso: AvisoDeBajaDelLibro): Promise<void> {
     if (aviso.destino !== DESTINO_PROPIO) return;
     const { unidadDeTrabajo, publicadorEventos } = this.dependencias;
@@ -77,7 +84,6 @@ export class EliminarPorAviso {
 
   private async eliminar(operador: Operador, aviso: AvisoDeBajaDelLibro): Promise<EventoDominio[]> {
     const comprobante = await bloquearElDelDocumento(this.dependencias, aviso.documentoId);
-    if (!comprobante) return [];
     if (comprobante.reposicionNumero !== null) throw new ComprobanteRepuesto(comprobante.reposicionNumero);
     await this.dependencias.auditoria.registrar({
       recurso: RECURSO_DE_COMPROBANTES,

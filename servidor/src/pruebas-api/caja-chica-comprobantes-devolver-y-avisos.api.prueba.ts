@@ -23,6 +23,7 @@ const entorno = usarEntornoApi();
 let e: EscenarioDeComprobantes;
 let cajero: ClienteApi;
 let soloVe: ClienteApi;
+let delLibro: ClienteApi;
 
 const devolver = (id: string, cliente: ClienteApi = e.propietario()) =>
   cliente.post(`${RUTA_DE_CAJA_CHICA}/comprobantes/${id}/devolver-a-la-bandeja`, { motivo: 'Era de otro fondo' });
@@ -54,6 +55,15 @@ beforeAll(async () => {
     nombres: 'Solo',
     apellidos: 'Devolver',
     permisos: ['caja-chica.fondos.ver'],
+  });
+  delLibro = await crearUsuarioConPermisos(entorno, cuenta, {
+    nombres: 'Libro',
+    apellidos: 'Devolver',
+    permisos: [
+      'libro-de-compras.documentos.ver',
+      'libro-de-compras.documentos.anular',
+      'libro-de-compras.documentos.eliminar',
+    ],
   });
 });
 
@@ -234,5 +244,24 @@ describe('el libro anula o elimina un documento que está en Caja chica', () => 
     const [entrada] = await auditoriaDelComprobante(comprobanteId);
     expect(entrada).toMatchObject({ accion: 'eliminar' });
     expect(entrada!.anterior).toMatchObject({ monto: '1120.00', fondoId: fondo.id });
+  });
+
+  it('quien da la baja en el libro sin tener asignado el fondo recibe un error propio y nada cambia', async () => {
+    const fondo = await e.abrirFondo('Caja ajena al libro', { monto: '3000.00' });
+    const { documentoId, comprobanteId } = await documentoEnElFondo(fondo.id);
+
+    const anular = await delLibro.post(`${RUTA_DOCUMENTOS}/${documentoId}/anular`, {
+      causa: 'error_de_captura',
+      motivo: 'Mal capturado',
+    });
+    const eliminar = await delLibro.delete(`${RUTA_DOCUMENTOS}/${documentoId}`);
+
+    expect(anular.estado).toBe(422);
+    expect(anular.cuerpo.error.codigo).toBe('comprobante_en_fondo_no_asignado');
+    expect(eliminar.estado).toBe(422);
+    expect(eliminar.cuerpo.error.codigo).toBe('comprobante_en_fondo_no_asignado');
+    expect(await comprobanteEnBase(comprobanteId)).toMatchObject({ estado: 'vigente' });
+    expect((await e.propietario().get(`${RUTA_DOCUMENTOS}/${documentoId}`)).cuerpo.estado).toBe('vigente');
+    expect(await pendienteDe(fondo.id)).toBe('1120.00');
   });
 });

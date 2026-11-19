@@ -40,18 +40,28 @@ beforeEach(async () => {
 describe('los avisos del libro', () => {
   const aviso = (documentoId: string, destino = 'caja-chica') => ({ documentoId, destino, motivo: 'Mal capturado' });
 
-  it('anular: anula el comprobante con el motivo del aviso; uno de otro destino, uno ya anulado o uno que no está aquí no hacen nada', async () => {
+  it('anular: anula el comprobante con el motivo del aviso; uno de otro destino, ni uno ya anulado hacen nada; uno que no se ve se rechaza', async () => {
     const caso = new AnularPorAviso(m.dependencias);
     const { id, documentoId } = await enElFondo();
 
     await caso.ejecutar(operador, aviso(documentoId, 'cuentas-por-pagar'));
-    await caso.ejecutar(operador, aviso('no-esta-aqui'));
     expect(m.comprobantes.filas.get(id)!.estado).toBe('vigente');
     await caso.ejecutar(operador, aviso(documentoId));
     await caso.ejecutar(operador, aviso(documentoId));
 
     expect(m.comprobantes.filas.get(id)).toMatchObject({ estado: 'anulado', motivoDeAnulacion: 'Mal capturado' });
     expect(m.auditoria.entradas).toMatchObject([{ accion: 'anular', registroId: id }]);
+  });
+
+  it('un documento de Caja chica cuyo comprobante no se ve (fondo no asignado) rechaza la baja, no se ignora', async () => {
+    const esperado = { codigo: 'comprobante_en_fondo_no_asignado' };
+
+    await expect(new AnularPorAviso(m.dependencias).ejecutar(operador, aviso('oculto'))).rejects.toMatchObject(
+      esperado,
+    );
+    await expect(new EliminarPorAviso(m.dependencias).ejecutar(operador, aviso('oculto'))).rejects.toMatchObject(
+      esperado,
+    );
   });
 
   it('un comprobante repuesto impide anular y eliminar: ComprobanteRepuesto', async () => {
@@ -77,7 +87,6 @@ describe('los avisos del libro', () => {
 
     await caso.ejecutar(operador, aviso(documentoId));
     await caso.ejecutar(operador, aviso(enLaBandeja.documentoDeCompraId!));
-    await caso.ejecutar(operador, aviso(documentoId));
 
     expect(m.comprobantes.filas.has(id)).toBe(false);
     expect(m.comprobantes.filas.has(enLaBandeja.id)).toBe(false);

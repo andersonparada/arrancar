@@ -174,3 +174,14 @@ export class MontoDelComprobanteInvalido extends DatoInvalido {
     super('Escriba el monto: debe ser mayor que cero.', { campo: 'monto' });
   }
 }
+
+/** El libro dio de baja un documento cuyo comprobante no se ve: está en un fondo que el usuario no tiene asignado. */
+export class ComprobanteEnFondoNoAsignado extends ReglaDeNegocioInfringida {
+  override readonly codigo = 'comprobante_en_fondo_no_asignado';
+
+  constructor() {
+    super(
+      'El documento está en un fondo de Caja chica que usted no tiene asignado: pida que se lo asignen o que lo den de baja desde allí.',
+    );
+  }
+}

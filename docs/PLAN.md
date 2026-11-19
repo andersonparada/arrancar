@@ -3255,5 +3255,14 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `documento_por_eliminar` **elimina** el comprobante (en vez de anularlo, como dice §5.9) porque la llave al libro es
   `no action` y borraría imposible; la etiqueta de la pregunta es genérica («Caja chica: N comprobantes») para no mostrar fondos
   que el usuario no ve; la lista de un fondo trae todos los de su estado, sin paginar ni `corte` (el corte es de CC-10);
-  `DatoInvalido` del motivo sin retención responde 400. Pendiente: si el usuario del libro no ve el fondo del comprobante, el
-  aviso de anular no lo encuentra (RLS) y el libro anula el documento dejando el comprobante vigente.
+  `DatoInvalido` del motivo sin retención responde 400. Corregido
+  en la revisión (ver la entrada siguiente).
+- **2026-11-19 (CC-3, corrección de la revisión, avisos del libro)**: si quien anula o elimina en Libro de compras no tiene
+  asignado el fondo del comprobante, RLS lo oculta y el aviso lo tomaba por «no está aquí»: el libro anulaba el documento y el
+  comprobante seguía vigente (o el DELETE chocaba con la llave `no action` y salía un 500). Como todo documento con destino
+  `caja-chica` crea su comprobante al recibirse, no verlo se rechaza: error nuevo `ComprobanteEnFondoNoAsignado` (422,
+  `comprobante_en_fondo_no_asignado`, «El documento está en un fondo de Caja chica que usted no tiene asignado…»), en
+  `documento_por_anular` y en `documento_por_eliminar`; el libro no cambia nada. Decisión propia: se prefirió el error a abrir la
+  lectura del alcance (habría que dejar a Libro de compras modificar comprobantes de fondos ajenos). Ya no es idempotente ante un
+  comprobante que no existe (antes lo ignoraba); sí lo sigue siendo ante uno ya anulado. Prueba de API con un usuario del libro sin
+  el fondo. Sin migraciones.
