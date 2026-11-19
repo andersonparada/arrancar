@@ -1,6 +1,5 @@
 /**
- * Hallazgos de la QA de punta a punta de Activos fijos e Inventarios (2026-11-19) que quedan abiertos.
- * Cada `it.fails` fija un error conocido: cuando se corrija, la prueba fallará y habrá que quitarle el `.fails`.
+ * Hallazgos de la QA de punta a punta de Activos fijos e Inventarios (2026-11-19) ya corregidos.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { usarEntornoApi } from './soporte/entorno-api.js';
@@ -22,7 +21,7 @@ beforeAll(async () => {
 });
 
 describe('valor como ganado común', () => {
-  it.fails('solo lo lleva un reproductor: una camioneta con valor como ganado común se rechaza', async () => {
+  it('solo lo lleva un reproductor: una camioneta con valor como ganado común se rechaza', async () => {
     const respuesta = await cuenta.propietario.post(
       RUTA,
       datosDeActivo(vehiculosId, { valorComoGanadoComun: '5000.00' }),

@@ -80,6 +80,8 @@ function validarGanado(datos: DatosDeActivo, inciso: IncisoFiscal): void {
   const valor = datos.valorComoGanadoComun;
   if (valor !== null && Number(valor) < 0)
     throw new ActivoInvalido('El valor como ganado común no puede ser negativo.');
+  if (valor !== null && inciso !== 'reproductores')
+    throw new ActivoInvalido('El valor como ganado común es solo de los reproductores.');
   const exigido = inciso === 'reproductores' && datos.tipoDeRegistro === 'activo';
   if (exigido && valor === null) throw new ActivoInvalido('Un reproductor lleva su valor como ganado común.');
 }
