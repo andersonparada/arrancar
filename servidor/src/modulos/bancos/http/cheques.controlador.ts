@@ -3,6 +3,7 @@ import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.
 import type { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque.js';
 import type { BlanquearCheque } from '../aplicacion/casos-uso/cheques/blanquear-cheque.js';
 import type { CorregirCondicionesDelCheque } from '../aplicacion/casos-uso/cheques/corregir-condiciones-del-cheque.js';
+import type { PasarChequeAOtroFormulario } from '../aplicacion/casos-uso/cheques/pasar-cheque-a-otro-formulario.js';
 import type { EmitirCheque } from '../aplicacion/casos-uso/cheques/emitir-cheque.js';
 import type { ListarChequesDeLaEmpresa } from '../aplicacion/casos-uso/cheques/listar-cheques-de-la-empresa.js';
 import type { ReclasificarMovimientos } from '../aplicacion/casos-uso/movimientos/reclasificar-movimientos.js';
@@ -11,6 +12,7 @@ import type { SiguienteChequeDisponible } from '../aplicacion/casos-uso/cheques/
 import type { ReclasificacionSolicitada } from './notas.esquemas-http.js';
 import type { SugerenciaDeChequeSolicitada } from './sugerencias.esquemas-http.js';
 import type {
+  CambioDeFormularioSolicitado,
   CondicionesDeChequeSolicitadas,
   EmisionDeChequeSolicitada,
   FiltroDeChequesDeLaEmpresaSolicitado,
@@ -26,6 +28,7 @@ export interface CasosDeUsoDeCheques {
   emitir: EmitirCheque;
   anular: AnularCheque;
   corregirCondiciones: CorregirCondicionesDelCheque;
+  cambiarFormulario: PasarChequeAOtroFormulario;
   blanquear: BlanquearCheque;
   reclasificar: ReclasificarMovimientos;
   sugerirAlCapturar: SugerirConceptoAlCapturar;
@@ -58,6 +61,13 @@ export class ChequesControlador {
       chequeId: solicitud.params.chequeId,
       motivo: solicitud.body.motivo,
       fecha: solicitud.body.fecha,
+      causa: solicitud.body.causa,
+    });
+
+  cambiarFormulario = (solicitud: FastifyRequest<{ Params: ParamsCheque; Body: CambioDeFormularioSolicitado }>) =>
+    this.casosDeUso.cambiarFormulario.ejecutar(operadorDe(solicitud), {
+      ...solicitud.body,
+      chequeId: solicitud.params.chequeId,
     });
 
   blanquear = (solicitud: FastifyRequest<{ Params: ParamsCheque; Body: SolicitudDeBlanqueoDeCheque }>) =>

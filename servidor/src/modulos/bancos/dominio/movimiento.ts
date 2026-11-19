@@ -88,6 +88,14 @@ export class Movimiento extends Entidad<MovimientoId> {
   }
 
   /**
+   * El pago pasó a otro formulario: si la referencia era la que el sistema puso con el número anterior, toma la del
+   * nuevo; una referencia escrita por quien emitió no se toca.
+   */
+  actualizarReferenciaAutomatica(anterior: string, nueva: string): void {
+    if (this.propiedades.referencia === anterior) this.propiedades = { ...this.propiedades, referencia: nueva };
+  }
+
+  /**
    * Cambia la condición «para abono en cuenta» de un cheque vigente (corregirla antes de imprimirlo; quien llama revisa lo
    * demás). Blanquear la apaga.
    * @throws AbonoEnCuentaSoloEnCheque si no es un cheque; MovimientoAnulado o MovimientoYaRevertido si ya no está vigente.

@@ -3,6 +3,7 @@ import { RecursoNoEncontrado } from '../../../core/compartido/aplicacion/errores
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { ChequeDto, ChequeListadoDto, FiltroDeChequesDeLaEmpresa } from '../../aplicacion/dto/cheque.dto.js';
 import type { ConsultasCheques } from '../../aplicacion/puertos/consultas-cheques.js';
+import { avisoDeAnulacion } from '../../dominio/cheque.js';
 import { accionesDeCheque } from '../../aplicacion/acciones-posibles.js';
 import { hechosDelMovimientoDelCheque, mapeadorDeCheque } from './cheque.mapeador.js';
 import { cheques } from './cheques.tablas.js';
@@ -75,6 +76,7 @@ const aListado = ({ movimientoId, hechosDelMovimiento, ...fila }: FilaDelListado
     estado,
     anuladoEn: fila.anuladoEn ? fila.anuladoEn.toISOString() : null,
     impresoEn: fila.impresoEn ? fila.impresoEn.toISOString() : null,
+    aviso: avisoDeAnulacion(fila.causaDeAnulacion, fila.numero),
     parteDeApertura: hechos?.parteDeApertura ?? null,
     moduloDeOrigen: hechos ? hechosDelMovimiento.moduloDeOrigen : null,
     ...accionesDeCheque(estado, hechos, fila.impresoEn !== null),

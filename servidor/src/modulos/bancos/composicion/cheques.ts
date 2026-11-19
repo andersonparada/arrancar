@@ -4,6 +4,7 @@ import { dependenciasCompartidas } from '../../core/compartido/infraestructura/d
 import { AnularCheque } from '../aplicacion/casos-uso/cheques/anular-cheque.js';
 import { BlanquearCheque } from '../aplicacion/casos-uso/cheques/blanquear-cheque.js';
 import { CorregirCondicionesDelCheque } from '../aplicacion/casos-uso/cheques/corregir-condiciones-del-cheque.js';
+import { PasarChequeAOtroFormulario } from '../aplicacion/casos-uso/cheques/pasar-cheque-a-otro-formulario.js';
 import { EmitirCheque } from '../aplicacion/casos-uso/cheques/emitir-cheque.js';
 import { ListarChequesDeLaEmpresa } from '../aplicacion/casos-uso/cheques/listar-cheques-de-la-empresa.js';
 import { SiguienteChequeDisponible } from '../aplicacion/casos-uso/cheques/siguiente-cheque-disponible.js';
@@ -48,6 +49,22 @@ export function dependenciasDeCheques() {
   };
 }
 
+/** Reclasificar el concepto de cheques ya emitidos. */
+function reclasificarCheques(dependencias: ReturnType<typeof dependenciasDeCheques>) {
+  return new ReclasificarMovimientos(
+    {
+      unidadDeTrabajo: dependencias.unidadDeTrabajo,
+      repositorio: dependencias.repositorioMovimientos,
+      consultas: dependencias.consultasMovimientos,
+      auditoria: dependencias.auditoria,
+      conceptos: dependencias.conceptos,
+      modulosDeOrigen: dependencias.modulosDeOrigen,
+      revisor: dependencias.revisor,
+    },
+    'cheques',
+  );
+}
+
 /** Raíz de composición de los cheques: el único lugar donde se eligen las implementaciones concretas. */
 export function rutasDeCheques() {
   const dependencias = dependenciasDeCheques();
@@ -57,19 +74,9 @@ export function rutasDeCheques() {
     emitir: new EmitirCheque(dependencias),
     anular: new AnularCheque(dependencias),
     corregirCondiciones: new CorregirCondicionesDelCheque(dependencias),
+    cambiarFormulario: new PasarChequeAOtroFormulario(dependencias),
     blanquear: new BlanquearCheque(dependencias),
-    reclasificar: new ReclasificarMovimientos(
-      {
-        unidadDeTrabajo: dependencias.unidadDeTrabajo,
-        repositorio: dependencias.repositorioMovimientos,
-        consultas: dependencias.consultasMovimientos,
-        auditoria: dependencias.auditoria,
-        conceptos: dependencias.conceptos,
-        modulosDeOrigen: dependencias.modulosDeOrigen,
-        revisor: dependencias.revisor,
-      },
-      'cheques',
-    ),
+    reclasificar: reclasificarCheques(dependencias),
     sugerirAlCapturar: casosDeSugerencias(dependencias).sugerirAlCapturar,
   };
   return rutasCheques(new ChequesControlador(casos));

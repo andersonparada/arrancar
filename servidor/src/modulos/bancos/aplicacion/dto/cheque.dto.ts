@@ -18,6 +18,8 @@ export interface ChequeDto {
   motivoDeAnulacion: string | null;
   /** Por qué se anuló; `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** Un aviso fijo según por qué se anuló (extraviado: avisar al banco por escrito); `null` si no lleva. */
+  aviso: string | null;
   /** Cuándo se imprimió por primera vez; `null` si no se ha impreso. */
   impresoEn: string | null;
   /** La parte de la carga inicial que es su movimiento (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
@@ -74,6 +76,8 @@ export interface ChequeListadoDto {
   motivoDeAnulacion: string | null;
   /** Por qué se anuló; `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** Un aviso fijo según por qué se anuló (extraviado: avisar al banco por escrito); `null` si no lleva. */
+  aviso: string | null;
   /** Cuándo se imprimió por primera vez; `null` si no se ha impreso. */
   impresoEn: string | null;
   /** La parte de la carga inicial que es (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
@@ -90,4 +94,11 @@ export interface FiltroDeChequesDeLaEmpresa {
   estado?: Exclude<EstadoDelCheque, 'disponible'>;
   desde?: string;
   hasta?: string;
+}
+
+/** El resultado de pasar el pago a otro formulario: el cheque inutilizado, el que recibió el pago y los avisos. */
+export interface ChequePasadoDto {
+  inutilizado: ChequeDto;
+  destino: ChequeDto;
+  avisos: string[];
 }

@@ -1,7 +1,7 @@
 import { Identificador } from '../../../core/compartido/dominio/identificador.js';
 import { accionesDeCheque } from '../../aplicacion/acciones-posibles.js';
 import type { ChequeDto } from '../../aplicacion/dto/cheque.dto.js';
-import { Cheque } from '../../dominio/cheque.js';
+import { avisoDeAnulacion, Cheque } from '../../dominio/cheque.js';
 import type { cheques } from './cheques.tablas.js';
 import { hechosDeLaFila } from './hechos-de-movimiento.js';
 
@@ -44,6 +44,7 @@ export const mapeadorDeCheque = {
       ...dto,
       anuladoEn: anuladoEn ? anuladoEn.toISOString() : null,
       impresoEn: impresoEn ? impresoEn.toISOString() : null,
+      aviso: avisoDeAnulacion(dto.causaDeAnulacion, dto.numero),
       parteDeApertura: movimiento?.parteDeApertura ?? null,
       moduloDeOrigen: movimiento ? (hechosDelMovimiento?.moduloDeOrigen ?? null) : null,
       ...accionesDeCheque(dto.estado, movimiento, impresoEn !== null),

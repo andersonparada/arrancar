@@ -32,6 +32,7 @@ import { AnularCheque } from './anular-cheque.js';
 import { BlanquearCheque } from './blanquear-cheque.js';
 import { CorregirCondicionesDelCheque } from './corregir-condiciones-del-cheque.js';
 import { EmitirCheque } from './emitir-cheque.js';
+import { PasarChequeAOtroFormulario } from './pasar-cheque-a-otro-formulario.js';
 import { ListarChequesDeLaEmpresa } from './listar-cheques-de-la-empresa.js';
 import { SiguienteChequeDisponible } from './siguiente-cheque-disponible.js';
 import { CARGA_SIN_FECHA_DE_INICIO } from '../../../pruebas/dobles-de-carga-inicial.js';
@@ -188,6 +189,7 @@ export async function armarEntorno(opciones: Partial<OpcionesDelEntorno> = {}) {
     emitir: new EmitirCheque(deCheques),
     anular: new AnularCheque(deCheques),
     corregirCondiciones: new CorregirCondicionesDelCheque(deCheques),
+    pasar: new PasarChequeAOtroFormulario(deCheques),
     blanquear: new BlanquearCheque(deCheques),
     siguiente: new SiguienteChequeDisponible(deCheques),
     listar: new ListarChequesDeLaEmpresa(deCheques),
