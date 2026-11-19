@@ -4256,3 +4256,60 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   localidades y terceros): un código mal escrito («1») da 400 en su campo. `exigirReferencias` comprueba que el
   departamento y el municipio (dentro de su departamento) existan y, si no, responde 400 `ubicacion_geografica_inexistente`
   en vez del 409 de la llave foránea. Prueba de API incluida. Localidades y terceros siguen sin comprobar la existencia.
+- **2026-11-19 — AF-7 (Activos fijos, servidor): mejoras, costos posteriores, revisión de la estimación y cambio de
+  matrícula.** Migración `0007_af7_mejoras`: tabla `activos_fijos.mejoras` (§5.7: correlativo `activos-fijos.mejoras`,
+  `clase in ('mejora','costo_posterior')`, vida restante solo en mejora, `no_es_edificacion`, anulación completa; solo
+  `politicaPorEmpresa()`; ya estaba en la auditoría permanente) y la columna `mejora_id` (con llave compuesta a la empresa) en
+  `costos` y en `tramos`, con el check `(causa en mejora o costo_posterior) = (mejora_id no nulo)`. Dominio puro nuevo:
+  `estado-de-los-libros.ts` (primer mes abierto, `acumuladaAntesDe` con proyección de los meses abiertos que van antes del tramo
+  nuevo, meses que faltan, vida total) y `tramos-de-cambio.ts` (V-3: en una **mejora** el fiscal aplica el porcentaje sobre
+  «saldo no depreciado + mejora»; en un **costo posterior** y en el **cambio de matrícula**, sobre la base fiscal total
+  corregida **sin reiniciar la vida**; el contable sigue con los meses que quedaban o con la vida nueva; las notas de crédito dan
+  `exceso_de_nota_de_credito` por libro, V-6). Casos de uso: `RegistrarMejora` (costos de líneas del libro con su candado y la
+  regla de la línea, y costos manuales; `mejora_capitalizada`), `AnularMejora` (`costo_anulado` por costo, auditoría `anular`),
+  `RevisarEstimacion` y `CambiarValorFiscalDelInmueble` (auditoría `corregir` con la ficha y los tramos de antes; `base_fiscal_cambiada`).
+  Rutas: `POST /activos-fijos/mejoras`, `POST …/mejoras/:id/anular`, `GET …/activos/:id/mejoras`, `POST …/activos/:id/revisar-estimacion` y
+  `…/valor-fiscal-del-inmueble`; permisos nuevos `activos-fijos.mejoras.crear`, `.anular` y `activos-fijos.activos.revisar-estimacion`
+  (sin migración de permisos: son nuevos). Pruebas: 16 puras de los tramos y 24 de los casos de uso en memoria, y 11 de API
+  (dos archivos). Decisiones tomadas por la programación: (1) un tramo nuevo que cae en el mismo mes y libro que uno vigente lo
+  **sustituye** (el anterior queda `vigente = false`, nunca tuvo cuotas porque el mes está abierto) y anular la mejora **repone**
+  ese tramo; (2) una mejora solo se anula si ningún cierre usó sus tramos (reabrir el mes) y **si es el último cambio de
+  depreciación del activo** (`mejora_con_cambios_posteriores`), porque lo posterior parte de ella; (3) el tramo de la mejora
+  empieza en el mes que dice la regla de la empresa sobre su fecha, nunca antes del primer mes abierto, y la acumulada que usa
+  incluye lo que darían los meses abiertos anteriores con los tramos de hoy (se cerrarán así); la fecha no es futura ni anterior al
+  uso ni de un mes cerrado, ni anterior al último tramo (`cambio_anterior_al_ultimo_tramo`); (4) la revisión y el cambio de matrícula
+  empiezan en el primer mes abierto; sin cierres, el primer mes abierto es el del primer tramo del activo; (5) un terreno no recibe
+  mejoras (no se deprecia); (6) `QuitarDeUso` rechaza `activo_con_mejoras` y `tieneMovimientos` cuenta las mejoras; (7) la revisión
+  acepta `porcentajeFiscal` solo para constatar que no cambia: con un cierre previo da `porcentaje_fiscal_adoptado` (arts. 27 y 28) y
+  sin cierres pide quitar de uso y volver a poner; (8) el activo guarda la vida útil **total** y el residual de la estimación vigente
+  (se repone al anular). Lo que solo un cliente puede confirmar: si quieren corregir hacia atrás una estimación antes del primer
+  cierre (hoy sustituye el tramo inicial) y si anular una mejora fuera de orden debe permitirse (hoy no).
+- **2026-11-19 — AF-7, corrección de la revisión:** la vida útil contable que guarda el activo ya no se cuenta desde el
+  inicio de uso sino desde el `desdePeriodo` de su primer tramo contable (respeta `primer_mes = mes_siguiente` y, en los
+  saldos iniciales, sigue siendo la vida restante desde el saldo). `aplicarEstimacion` recibe los tramos vigentes, no
+  reescribe el activo si la vida y el residual no cambian (anular un costo posterior ya no lo toca) y rechaza con
+  `VidaUtilTotalExcedida` una vida guardada de más de 1,200 meses (antes era un 500 por el check de la tabla).
+- **2026-11-19 — AF-8 (Activos fijos, servidor): traslados con boleta y anular.** Sin migración (la tabla `traslados`, con
+  `grupo_id`, `numero`, `a_bodega` y la anulación completa, ya estaba en `0002`). Dominio: `Traslado` (renglón de una boleta; fecha no
+  futura, quien recibe y motivo obligatorios, anular con motivo) y `Activo.moverA`. Casos de uso: `TrasladarActivos` (varios activos con
+  una boleta numerada por el correlativo `activos-fijos.traslados`, uno por boleta; los componentes se mueven con su principal;
+  `aBodega` copiado a `en_bodega`; `marcarOcioso` solo con `aBodega`, con la fecha y el motivo del traslado y auditoría `corregir`),
+  `AnularTraslado` (anula **la boleta entera**: cada activo vuelve a la fila vigente anterior de su historial; auditoría `anular` con la
+  boleta como estaba) y `ObtenerBoleta`. Rutas: `POST /activos-fijos/traslados`, `POST …/traslados/:grupoId/anular`,
+  `GET …/traslados/:grupoId/boleta`; permisos nuevos `activos-fijos.traslados.crear` y `.anular` (la boleta se ve con `activos.ver`);
+  variable de empresa `activos-fijos.documentos.nombre_de_responsiva` (pública, «Responsiva de bienes»); eventos
+  `activo_trasladado` y `traslado_anulado`. Pruebas: 25 de dominio y casos de uso en memoria (más 2 de `Activo.moverA`) y 7 de API. Decisiones tomadas
+  por la programación: (1) anular es por **boleta** (`:grupoId`), no por activo, porque la boleta es un solo documento numerado y
+  «boleta anulada» es lo que impide subir la firmada; falla entera si algún activo ya tiene un traslado posterior
+  (`traslado_no_es_el_ultimo`); (2) un componente no se traslada solo (`componente_se_traslada_con_su_principal`); el principal lo
+  lleva y la boleta lo lista «componente de AF-xxxx»; (3) `cantidad` se acepta en el renglón pero solo si es la del activo entero
+  (`traslado_parcial_no_disponible`): la división automática llega con AFI-5 y AFI-6; (4) el responsable del traslado es texto (el
+  usuario responsable queda en nulo; pendiente un selector de usuarios si se quiere); (5) anular no quita la marca de ocioso que puso
+  el traslado (se quita desde la ficha); (6) se agregó el evento `traslado_anulado`, que el diseño no listaba, para que quien
+  escuche el centro de costo sepa que el activo volvió; (7) el traslado no entra en la auditoría permanente (el diseño solo
+  lista activos, costos, mejoras, saldos, bajas, cierres y divisiones). Pendiente de AFI-4: subir y bajar el escaneo firmado
+  (`00xx_af8_boletas_firmadas`), que espera la revisión de `seguridad` (archivos, qpdf, límite de subidas). Lo que solo un cliente
+  puede confirmar: si anular por activo (no por boleta entera) les hace falta.
+- **2026-11-19 — AF-8, corrección de la revisión (Activos fijos, servidor).** El historial de la ficha (`TrasladoDto`) no traía
+  `grupoId`, `numero`, `anioDeNumero` ni `motivoDeAnulacion`, así que tras crear la boleta no había cómo reimprimirla ni anularla.
+  Se agregaron al DTO, a la consulta y al tipo `Traslado` del cliente; la fila de alta los lleva en nulo. Prueba de API ampliada.

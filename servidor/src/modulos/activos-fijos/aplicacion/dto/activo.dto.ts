@@ -52,6 +52,10 @@ export interface ActivoDto {
 export interface TrasladoDto {
   id: string;
   esAlta: boolean;
+  grupoId: string | null;
+  numero: number | null;
+  anioDeNumero: number | null;
+  motivoDeAnulacion: string | null;
   fecha: string;
   localidadNombre: string | null;
   departamentoNombre: string | null;

@@ -124,6 +124,9 @@ export function armarUso() {
 
   const ponerEnUso = new PonerEnUso(dependencias);
   return {
+    dependencias,
+    activos,
+    clases,
     auditoria,
     cierres,
     primerMes,

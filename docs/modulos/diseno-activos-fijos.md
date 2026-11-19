@@ -1319,10 +1319,10 @@ dos decimales.
 | AF-5c | Cierre de depreciación y pestaña Depreciación | frontend | **Programado** (2026-11-19; la pestaña muestra los tramos: faltan las cuotas por año y mes, que piden una ruta nueva del servidor) |
 | **AF-6** | Saldos iniciales (con costo fiscal, A1; con «Cantidad» y «En bodega», AFI), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | **Programado, en revisión** (2026-11-19; migración `0006_af6_saldos_iniciales`; notas abajo) |
 | AF-6c | Saldos iniciales (Administración) | frontend | **Programado** (2026-11-19; incluye el saldo inicial en la ficha del activo) |
-| **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend | |
+| **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend **Programado, en revisión** (2026-11-19; migración `0007_af7_mejoras`; notas abajo) |
 | AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | |
-| **AF-8** | Traslados con boleta (grupo), anular | backend | |
-| **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | |
+| **AF-8** | Traslados con boleta (grupo), anular | backend | **Programado, en revisión** (2026-11-19; sin migración; notas abajo) |
+| **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | **Parcial** (2026-11-19): hecho `aBodega`, `marcarOcioso` y el título configurable; falta subir el escaneo firmado (espera a `seguridad`) |
 | AF-8c | Traslados y boleta imprimible | frontend | |
 | AFI-4c (con AF-8c) | Entregar y devolver; casilla «A la bodega»; selección múltiple; subir la boleta firmada | frontend | |
 | **AFI-5** (después de AF-7 y AF-8) | `00xx_afi_divisiones`: tabla, costos y tramos de división, `acumuladaAl` (y su uso en cierre, ficha y bajas), dividir, separar en unidades y anular; eventos; auditoría permanente; pruebas puras con el ejemplo de §7.6 y 50 divisiones de 1, y de integración (cierre después de dividir, baja después de dividir, anular) | backend | |
@@ -1360,6 +1360,33 @@ dos decimales.
   correlativo. Las unidades de una asignación comparten `alta_conjunta_id` solo si son más de una.
 - El archivo del costo manual (`archivo_id`) tiene su columna, pero la ruta de subida queda pendiente (revisión de `seguridad`).
 - La lista de costos de un activo y su ficha usan `activos.ver`; la ficha trae `costo` (Σ de los vigentes).
+
+**Notas de lo programado en AF-8 (servidor, sin migración):**
+
+- Anular es por **boleta** (`POST …/traslados/:grupoId/anular`): anula todos los renglones, devuelve cada activo a la fila vigente
+  anterior de su historial y solo se puede si es el último traslado de cada uno y el mes está abierto. La auditoría `anular` lleva la
+  boleta como estaba (`registro_id` = el `grupoId`). Un componente se traslada con su principal, no solo.
+- El renglón acepta `cantidad` solo si es la del activo entero (`traslado_parcial_no_disponible`): la división llega con AFI-5 y AFI-6.
+- `activos-fijos.documentos.nombre_de_responsiva` (empresa, pública) es el título de la boleta; `GET …/boleta` devuelve los datos que
+  la pantalla imprime (AF-8c). Eventos `activo_trasladado` y `traslado_anulado` (este no estaba en §9).
+- El historial de la ficha (`TrasladoDto`) trae `grupoId`, `numero`, `anioDeNumero` y `motivoDeAnulacion`: con el `grupoId` la pantalla
+  reimprime (`GET …/boleta`) o anula la boleta después de crearla.
+- Falta para AFI-4: subir y bajar el escaneo firmado (`boletas_firmadas`, §5.16). Falta para AF-8c: pantalla de traslados y boleta
+  imprimible. `GET /activos-fijos/ubicaciones` sigue con `activos.ver` (el diseño dice `traslados.crear` o `inventarios.crear`).
+
+**Notas de lo programado en AF-7 (servidor, migración `0007_af7_mejoras`):**
+
+- `mejoras` agrega las columnas de anulación (`estado`, `anulada_en`, `anulada_por`, `motivo_de_anulacion`, como `costos`) y los
+  costos y tramos llevan `mejora_id`. Una mejora agrupa costos de **líneas del libro** (con el candado y la regla de la línea) y
+  **manuales**; su fecha y su marca «no es edificación» pasan a sus costos. Una mejora suma (neto mayor que cero); un costo posterior
+  puede restar (nota de crédito) pero no quedar en cero, y el total del activo nunca queda negativo.
+- El tramo nuevo parte de la acumulada de cada libro al cierre del mes anterior **proyectando** los meses abiertos que van antes
+  (con los tramos de hoy); si cae en el mismo mes y libro que un tramo vigente lo sustituye (el anterior queda no vigente) y anular
+  la mejora lo repone. Solo se anula la mejora que es el último cambio de depreciación del activo y si ningún cierre usó sus tramos.
+- La revisión de la estimación y el cambio de matrícula empiezan en el primer mes abierto; el activo guarda la vida útil total y el
+  residual de la estimación vigente. Un terreno no recibe mejoras.
+- Falta para AF-7c: lista y formulario de mejora (con la sugerencia de componente), «Revisar estimación» y «Cambiar matrícula o
+  catastro» en la ficha, y mostrar `mejoraId` en la pestaña Costos.
 
 **Notas de lo programado en AF-6 (servidor, migración `0006_af6_saldos_iniciales`):**
 

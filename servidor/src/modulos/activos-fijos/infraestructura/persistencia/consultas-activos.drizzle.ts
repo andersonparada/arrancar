@@ -130,6 +130,10 @@ export class ConsultasActivosDrizzle implements ConsultasActivos {
     return filas.map((fila) => ({
       id: fila.id,
       esAlta: fila.esAlta,
+      grupoId: fila.grupoId,
+      numero: fila.numero,
+      anioDeNumero: fila.anioDeNumero,
+      motivoDeAnulacion: fila.motivoDeAnulacion,
       fecha: fila.fecha,
       localidadNombre: nombres.localidad(fila.localidadId),
       departamentoNombre: nombres.departamento(fila.departamentoId),

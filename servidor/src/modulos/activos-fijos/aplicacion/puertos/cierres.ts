@@ -7,6 +7,8 @@ export interface Cierres {
   ultimoMesCerrado(): Promise<string | null>;
   /** Si algún cierre vigente usó los tramos del activo (tiene cuotas vigentes). */
   usaronTramosDelActivo(activoId: string): Promise<boolean>;
+  /** Si algún cierre vigente usó los tramos que creó la mejora. */
+  usaronTramosDeLaMejora(mejoraId: string): Promise<boolean>;
   /**
    * El candado de la empresa para el cierre, hasta el final de la transacción: nadie cierra o reabre un mes mientras
    * otro cambia los tramos de un activo, ni dos cierres a la vez.

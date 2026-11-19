@@ -22,6 +22,7 @@ function aDto(costo: Costo): CostoDto {
     claseDeCosto: c.claseDeCosto,
     documentoDeCompraId: c.documentoDeCompraId,
     lineaDeDocumentoId: c.lineaDeDocumentoId,
+    mejoraId: c.mejoraId,
     documento: null,
     proveedorNombre: null,
     fecha: c.fecha,
@@ -72,6 +73,10 @@ export class CostosEnMemoria implements RepositorioCostos, ConsultasCostos {
 
   async vigentesDeActivo(activoId: string): Promise<Costo[]> {
     return this.vigentes().filter((costo) => costo.instantanea().activoId === activoId);
+  }
+
+  async vigentesDeMejora(mejoraId: string): Promise<Costo[]> {
+    return this.vigentes().filter((costo) => costo.instantanea().mejoraId === mejoraId);
   }
 
   async codigosDeActivosConCostosDelDocumento(documentoId: string): Promise<string[]> {

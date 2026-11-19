@@ -105,12 +105,14 @@ export class ActivoDeTercerosSinCostos extends ReglaDeNegocioInfringida {
   }
 }
 
-/** Un activo ya en uso recibe sus costos como mejora o costo posterior, que llegan con el paso AF-7. */
+/** Un activo ya en uso recibe sus costos como mejora o costo posterior (AF-7), no por la capitalización ni a mano. */
 export class CostoPosteriorNoDisponible extends ReglaDeNegocioInfringida {
   readonly codigo = 'costo_posterior_no_disponible';
 
   constructor() {
-    super('Un activo en uso recibe sus costos como mejora o costo posterior (todavía no disponible).');
+    super(
+      'Un activo en uso recibe sus costos como mejora o costo posterior: regístrelo desde Mejoras. Para quitarlos, anule la mejora.',
+    );
   }
 }
 

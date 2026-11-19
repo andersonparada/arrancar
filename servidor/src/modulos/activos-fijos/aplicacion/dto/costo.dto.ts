@@ -8,6 +8,8 @@ export interface CostoDto {
   claseDeCosto: ClaseDeCosto;
   documentoDeCompraId: string | null;
   lineaDeDocumentoId: string | null;
+  /** La mejora o el costo posterior al que pertenece; nulo si es de la capitalización. */
+  mejoraId: string | null;
   /** Serie y número del documento del libro; nulo si no viene de una línea. */
   documento: string | null;
   proveedorNombre: string | null;

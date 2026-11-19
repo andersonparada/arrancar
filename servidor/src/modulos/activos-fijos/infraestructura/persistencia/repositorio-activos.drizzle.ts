@@ -5,6 +5,7 @@ import type { Activo, ActivoId } from '../../dominio/activo.js';
 import { mapeadorDeActivo } from './activo.mapeador.js';
 import { activos } from './activos.tablas.js';
 import { costos } from './costos.tablas.js';
+import { mejoras } from './mejoras.tablas.js';
 import { cuotas } from './cuotas.tablas.js';
 import { enTandas } from './en-tandas.js';
 import { tramos } from './tramos.tablas.js';
@@ -38,6 +39,16 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
       .orderBy(asc(activos.id))
       .for('update');
     return filas.map((fila) => mapeadorDeActivo.aEntidad(fila));
+  }
+
+  async componentesDe(ids: readonly string[]): Promise<Activo[]> {
+    if (ids.length === 0) return [];
+    const filas = await transaccionEnCurso()
+      .select({ id: activos.id })
+      .from(activos)
+      .where(and(inArray(activos.activoPadreId, [...ids]), ne(activos.estado, 'dado_de_baja')));
+    const bloqueados = await this.buscarBloqueando(filas.map((fila) => fila.id));
+    return bloqueados.sort((a, b) => a.instantanea().codigo.localeCompare(b.instantanea().codigo));
   }
 
   async vigentesDeAltaConjunta(altaConjuntaId: string): Promise<Activo[]> {
@@ -131,7 +142,12 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
       .from(cuotas)
       .where(eq(cuotas.activoId, id.valor))
       .limit(1);
-    return traslado !== undefined || costo !== undefined || cuota !== undefined;
+    const [mejora] = await transaccion
+      .select({ id: mejoras.id })
+      .from(mejoras)
+      .where(eq(mejoras.activoId, id.valor))
+      .limit(1);
+    return traslado !== undefined || costo !== undefined || cuota !== undefined || mejora !== undefined;
   }
 }
 

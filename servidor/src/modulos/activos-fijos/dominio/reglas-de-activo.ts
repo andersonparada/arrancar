@@ -94,6 +94,26 @@ function validarCantidad(cantidad: number): void {
   if (!Number.isInteger(cantidad) || cantidad < 1) throw new ActivoInvalido('La cantidad es un entero desde 1.');
 }
 
+/** Los tres datos del inmueble que fijan su tope fiscal. */
+export type ValoresDelInmuebleDeActivo = Pick<
+  DatosDeActivo,
+  'valorDeMatricula' | 'valorCatastral' | 'valoresDelInmuebleCompleto'
+>;
+
+/**
+ * Revisa los valores nuevos del inmueble con las mismas reglas del alta y los devuelve limpios.
+ * @throws ActivoInvalido, ValorFiscalSoloEnEdificios.
+ */
+export function valoresDelInmuebleValidos(
+  actual: DatosDeActivo,
+  nuevos: ValoresDelInmuebleDeActivo,
+  inciso: IncisoFiscal,
+): ValoresDelInmuebleDeActivo {
+  validarInmueble({ ...actual, ...nuevos }, inciso);
+  const { valorDeMatricula, valorCatastral, valoresDelInmuebleCompleto } = nuevos;
+  return { valorDeMatricula, valorCatastral, valoresDelInmuebleCompleto };
+}
+
 /**
  * Revisa y deja limpios los datos de un activo.
  * @throws ActivoInvalido, ValorFiscalSoloEnEdificios.

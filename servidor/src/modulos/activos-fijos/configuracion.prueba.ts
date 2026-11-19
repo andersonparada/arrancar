@@ -19,6 +19,7 @@ const PREDETERMINADOS: Record<string, number | string> = {
   'activos-fijos.capitalizacion.umbral': 0,
   'activos-fijos.codigos.prefijo': 'AF-',
   'activos-fijos.construccion.meses_de_aviso': 12,
+  'activos-fijos.documentos.nombre_de_responsiva': 'Responsiva de bienes',
 };
 
 const definicion = (clave: string) => configuracionDeActivosFijos.find((c) => c.clave === clave)!;
@@ -46,10 +47,11 @@ describe('configuración de activos fijos (§10.4)', () => {
     for (const variable of configuracionDeActivosFijos) expect(variable.niveles).not.toContain('cuenta');
   });
 
-  it('solo el prefijo del código llega al formulario del cliente', () => {
+  it('el prefijo del código y el título de la responsiva llegan al cliente', () => {
     const publicas = configuracionDeActivosFijos.filter((c) => c.publica).map((c) => c.clave);
 
-    expect(publicas).toEqual(['activos-fijos.codigos.prefijo']);
+    expect(publicas).toEqual(['activos-fijos.codigos.prefijo', 'activos-fijos.documentos.nombre_de_responsiva']);
+    expect(definicion('activos-fijos.documentos.nombre_de_responsiva').niveles).toEqual(['empresa']);
   });
 
   it('el valor por omisión de cada una pasa su esquema', () => {
@@ -83,7 +85,7 @@ describe('configuración de activos fijos (§10.4)', () => {
     ]);
 
     expect(moduloActivosFijos.dependeDe).toEqual(['libro-de-compras']);
-    expect(registro.configuracionesDe(['activos-fijos'])).toHaveLength(14);
+    expect(registro.configuracionesDe(['activos-fijos'])).toHaveLength(15);
     expect(registro.definicionConfiguracion('activos-fijos.isr.maximo.edificios')?.predeterminado).toBe(5);
   });
 });

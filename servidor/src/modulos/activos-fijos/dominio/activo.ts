@@ -4,7 +4,14 @@ import { ActivoDeTercerosSinCostos, CostoPosteriorNoDisponible } from './errores
 import { ActivoNoEnConstruccion, ActivoSinLibros, FechaDeUsoInvalida } from './errores-de-depreciacion.js';
 import { ActivoDadoDeBaja, ActivoInvalido, ActivoNoEnUso, MotivoDeOcioRequerido } from './errores-de-activo.js';
 import type { IncisoFiscal } from './incisos-fiscales.js';
-import { datosDeActivoValidos, textoOpcional, type DatosDeActivo } from './reglas-de-activo.js';
+import { ActivoSinDepreciacionParaMejorar } from './errores-de-mejora.js';
+import {
+  datosDeActivoValidos,
+  textoOpcional,
+  valoresDelInmuebleValidos,
+  type DatosDeActivo,
+  type ValoresDelInmuebleDeActivo,
+} from './reglas-de-activo.js';
 import type { EstadoDeActivo } from './tipos-de-activo.js';
 
 export { ActivoInvalido };
@@ -188,6 +195,15 @@ export class Activo extends Entidad<ActivoId> {
   }
 
   /**
+   * Deja la ubicación vigente (traslado o anulación de uno): el responsable escrito reemplaza al usuario responsable.
+   * @throws ActivoDadoDeBaja si ya se dio de baja.
+   */
+  moverA(ubicacion: UbicacionDeActivo): void {
+    if (this.propiedades.estado === 'dado_de_baja') throw new ActivoDadoDeBaja();
+    this.propiedades = { ...this.propiedades, ...ubicacion, responsableUsuarioId: null };
+  }
+
+  /**
    * Pone el activo en uso (en la pantalla, «Disponible para uso»): guarda los parámetros con que se depreciará.
    * @throws ActivoNoEnConstruccion si no es un activo del balance en construcción.
    * @throws FechaDeUsoInvalida si la fecha es anterior a la de adquisición.
@@ -225,6 +241,29 @@ export class Activo extends Entidad<ActivoId> {
     if (estado === 'dado_de_baja') throw new ActivoDadoDeBaja();
     if (tipoDeRegistro === 'de_terceros') throw new ActivoDeTercerosSinCostos();
     if (tipoDeRegistro === 'activo' && estado === 'en_uso') throw new CostoPosteriorNoDisponible();
+  }
+
+  /**
+   * Solo un activo del balance en uso, con libros, recibe mejoras y costos posteriores (§6.6).
+   * @throws ActivoDadoDeBaja o ActivoSinDepreciacionParaMejorar si no.
+   */
+  exigirAdmiteMejoras(): void {
+    const { estado, tipoDeRegistro } = this.propiedades;
+    if (estado === 'dado_de_baja') throw new ActivoDadoDeBaja();
+    if (tipoDeRegistro !== 'activo' || estado !== 'en_uso') throw new ActivoSinDepreciacionParaMejorar();
+  }
+
+  /** Deja la vida útil contable total y el residual con que el activo se deprecia desde una mejora o una revisión. */
+  ajustarEstimacion(estimacion: Pick<DatosDeUso, 'vidaUtilContableMeses' | 'valorResidual'>): void {
+    this.propiedades = { ...this.propiedades, ...estimacion };
+  }
+
+  /**
+   * Cambia la matrícula, el catastro y si son del inmueble completo (nuevo avalúo, rectificación; §3.5.1).
+   * @throws ValorFiscalSoloEnEdificios o ActivoInvalido si no cumplen las reglas.
+   */
+  cambiarValoresDelInmueble(valores: ValoresDelInmuebleDeActivo, inciso: IncisoFiscal): void {
+    this.propiedades = { ...this.propiedades, ...valoresDelInmuebleValidos(this.propiedades, valores, inciso) };
   }
 
   /** Copia de solo lectura de sus propiedades, para guardarla. */

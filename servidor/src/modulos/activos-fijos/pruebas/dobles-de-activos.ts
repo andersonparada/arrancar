@@ -49,6 +49,13 @@ export class ActivosEnMemoria implements RepositorioActivos, ConsultasActivos {
     return ids.flatMap((id) => this.registros.get(id) ?? []);
   }
 
+  async componentesDe(ids: readonly string[]): Promise<Activo[]> {
+    return [...this.registros.values()].filter((activo) => {
+      const { activoPadreId, estado } = activo.instantanea();
+      return activoPadreId !== null && ids.includes(activoPadreId) && estado !== 'dado_de_baja';
+    });
+  }
+
   async vigentesDeAltaConjunta(altaConjuntaId: string): Promise<Activo[]> {
     return [...this.registros.values()].filter((activo) => {
       const { altaConjuntaId: alta, estado } = activo.instantanea();

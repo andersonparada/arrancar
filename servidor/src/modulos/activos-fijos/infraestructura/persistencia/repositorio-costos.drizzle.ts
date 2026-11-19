@@ -58,6 +58,15 @@ export class RepositorioCostosDrizzle implements RepositorioCostos {
     return filas.map((fila) => mapeadorDeCosto.aEntidad(fila));
   }
 
+  async vigentesDeMejora(mejoraId: string): Promise<Costo[]> {
+    const filas = await transaccionEnCurso()
+      .select()
+      .from(costos)
+      .where(and(eq(costos.mejoraId, mejoraId), vigente))
+      .orderBy(costos.fecha);
+    return filas.map((fila) => mapeadorDeCosto.aEntidad(fila));
+  }
+
   async codigosDeActivosConCostosDelDocumento(documentoId: string): Promise<string[]> {
     const filas = await transaccionEnCurso()
       .selectDistinct({ codigo: activos.codigo })
