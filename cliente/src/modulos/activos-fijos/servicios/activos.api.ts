@@ -39,6 +39,8 @@ export interface Activo {
   numeroDeSerie: string | null;
   placa: string | null;
   cantidad: number;
+  /** Σ de sus costos vigentes, con dos decimales. */
+  costo: string;
   enBodega: boolean;
   altaConjuntaId: string | null;
   localidadId: string | null;

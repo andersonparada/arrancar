@@ -71,6 +71,7 @@ export function detallesDeFicha(activo: Activo): DetalleDeRegistro[] {
   return [
     { etiqueta: 'Clase', valor: activo.claseNombre },
     { etiqueta: 'Estado', valor: ESTADOS[activo.estado] },
+    { etiqueta: 'Costo', valor: formatearMonto(activo.costo) },
     ...detallesDeOrigen(activo),
     ...detallesDeUbicacion(activo),
     ...detallesDelBien(activo),
