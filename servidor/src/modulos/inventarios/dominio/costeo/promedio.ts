@@ -69,7 +69,8 @@ class CalculadorDePromedio {
   }
 
   private sacar(m: MovimientoDeCosto): Paso {
-    if (m.cantidad > this.cantidad) throw new ExistenciaNegativa(m.fecha, m.cantidad - this.cantidad, m.id);
+    if (m.cantidad > this.cantidad)
+      throw new ExistenciaNegativa(m.fecha, m.cantidad - this.cantidad, { movimientoId: m.id });
     const costo = this.costoDeSalida(m);
     this.factores.alSalir(this.cantidad, m.cantidad);
     this.cantidad -= m.cantidad;

@@ -47,7 +47,7 @@ export function consumirParaDevolucion(capas: readonly Capa[], m: MovimientoDeCo
     pendiente -= paso.consumo.cantidad;
     residuos += paso.residuo;
   }
-  if (pendiente > 0n) throw new ExistenciaNegativa(m.fecha, pendiente, m.id);
+  if (pendiente > 0n) throw new ExistenciaNegativa(m.fecha, pendiente, { movimientoId: m.id });
   const costo = consumos.reduce((suma, c) => suma + c.valor, 0n);
   return { capas: capas.map((c) => cambios.get(c.id) ?? c), consumos, costo, aResultados: residuos };
 }
