@@ -234,10 +234,10 @@
       "breakpoints": true
     },
     {
-      "idx": 33,
+      "idx": 35,
       "version": "7",
       "when": 1795090179158,
-      "tag": "0034_rls_de_lectura_de_empresas",
+      "tag": "0035_rls_de_lectura_de_empresas",
       "breakpoints": true
     }
   ]

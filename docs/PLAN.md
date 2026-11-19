@@ -3125,11 +3125,10 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `RESTRICCIONES_DE_PRIVILEGIOS` (la prueba lo exige).
 
 - **2026-11-19, RLS del núcleo R-4 y R-5 (lectura por cuenta de `core.empresas`; documentos).** Migración
-  `core/0034_rls_de_lectura_de_empresas` (política generada `leer_en_la_cuenta` en lugar de `leer_sin_filtro`, y a mano las
+  `core/0035_rls_de_lectura_de_empresas` (política generada `leer_en_la_cuenta` en lugar de `leer_sin_filtro`, y a mano las
   seis funciones `security definer` `empresa_de_la_sesion`, `empresas_del_usuario`, `todas_las_empresas`,
   `pertenencia_del_usuario`, `resumen_de_cuentas` y `nombres_de_empresas`, con `execute` solo para `arrancar_app`; el
-  número 0034 deja la 0033 a Multimoneda: al unir, su entrada del diario va con idx 33 y la de esta con idx 34, y el
-  `prevId` del snapshot 0034 debe apuntar al de la 0033). Adaptadores: `EmpresasDeLaSesionDrizzle` (sesión, cambio de
+  número 0035 deja la 0033 a Multimoneda y la 0034 a los cupos del correo, por tener el `when` más alto: al unir, su entrada del diario va con idx 35 y el `prevId` del snapshot 0035 apunta al del 0034 de cupos; unir en orden de `when`, porque el migrador de drizzle salta sin error una migración con `when` menor que el de la última aplicada). Adaptadores: `EmpresasDeLaSesionDrizzle` (sesión, cambio de
   empresa, superacceso), `ConsultasCuentasDrizzle` (conteo), `BitacoraDrizzle` (nombre de empresa) y
   `RepositorioUsuariosDrizzle.pertenenciaEn` reemplaza a `cuentasDe`, que decide `soloEnEstaCuenta` sin revelar las otras
   cuentas; `ListarUsuarios` corre en la unidad de trabajo. Pruebas: `rls-de-lectura-de-empresas.prueba.ts` (A no ve B ni con
