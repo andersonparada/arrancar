@@ -35,7 +35,8 @@ export class PonerEnUso {
   }
 
   private async poner(operador: Operador, pedido: PedidoDePonerEnUso, reglas: ReglasDeLaEmpresa) {
-    const { repositorio, consultas, clases, costos, tramos, cierres } = this.dependencias;
+    const { repositorio, consultas, clases, costos, tramos, cierres, saldos } = this.dependencias;
+    await cierres.bloquear('compartido');
     const [activo] = await repositorio.buscarBloqueando([pedido.activoId]);
     if (!activo) throw new RecursoNoEncontrado('El activo');
     activo.exigirEnConstruccion();
@@ -47,6 +48,7 @@ export class PonerEnUso {
       activo: propiedades,
       clase: clase.instantanea(),
       costos: (await costos.vigentesDeActivo(pedido.activoId)).map((costo) => costo.instantanea()),
+      saldoInicial: await saldos.fiscalDeActivo(pedido.activoId),
       solicitud: pedido.solicitud,
       primerMes: reglas.primerMes,
       porcentajeMaximo: reglas.topes[incisoFiscal].porcentajeMaximo,

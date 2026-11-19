@@ -5,6 +5,7 @@ import type { Activo, ActivoId } from '../../dominio/activo.js';
 import { mapeadorDeActivo } from './activo.mapeador.js';
 import { activos } from './activos.tablas.js';
 import { costos } from './costos.tablas.js';
+import { cuotas } from './cuotas.tablas.js';
 import { enTandas } from './en-tandas.js';
 import { tramos } from './tramos.tablas.js';
 import { traslados } from './traslados.tablas.js';
@@ -55,6 +56,14 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
       .where(eq(activos.id, activo.id.valor));
   }
 
+  async actualizarAlta(activo: Activo): Promise<void> {
+    const { esAlta: _esAlta, empresaId: _empresaId, activoId: _activoId, ...cambios } = filaDeAlta(activo);
+    await transaccionEnCurso()
+      .update(traslados)
+      .set(cambios)
+      .where(and(eq(traslados.activoId, activo.id.valor), eq(traslados.esAlta, true)));
+  }
+
   async eliminar(activo: Activo): Promise<void> {
     const transaccion = transaccionEnCurso();
     await transaccion.delete(tramos).where(eq(tramos.activoId, activo.id.valor));
@@ -70,6 +79,15 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
       .where(sql`upper(${activos.codigo}) = upper(${codigo})`)
       .limit(1);
     return fila !== undefined;
+  }
+
+  async idPorCodigo(codigo: string): Promise<string | null> {
+    const [fila] = await transaccionEnCurso()
+      .select({ id: activos.id })
+      .from(activos)
+      .where(sql`upper(${activos.codigo}) = upper(${codigo.trim()})`)
+      .limit(1);
+    return fila?.id ?? null;
   }
 
   async codigosUsados(codigos: readonly string[]): Promise<Set<string>> {
@@ -108,7 +126,12 @@ export class RepositorioActivosDrizzle implements RepositorioActivos {
       .from(costos)
       .where(and(eq(costos.activoId, id.valor), eq(costos.estado, 'vigente'), isNotNull(costos.lineaDeDocumentoId)))
       .limit(1);
-    return traslado !== undefined || costo !== undefined;
+    const [cuota] = await transaccion
+      .select({ id: cuotas.id })
+      .from(cuotas)
+      .where(eq(cuotas.activoId, id.valor))
+      .limit(1);
+    return traslado !== undefined || costo !== undefined || cuota !== undefined;
   }
 }
 

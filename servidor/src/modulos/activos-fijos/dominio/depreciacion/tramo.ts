@@ -29,3 +29,8 @@ export interface TramoCalculado {
   /** Lo que una nota de crédito bajó por debajo del residual (contable) o de lo ya depreciado (fiscal), §7.4. */
   excesoDeNotaDeCreditoCentavos: number;
 }
+
+/** Un tramo ya guardado: lleva el id con que sus cuotas lo señalan. */
+export interface TramoGuardado extends TramoCalculado {
+  id: string;
+}

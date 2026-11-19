@@ -1,6 +1,7 @@
 import type { Cierres } from '../../puertos/cierres.js';
 import type { LectorDePrimerMes } from '../../puertos/lector-de-primer-mes.js';
 import type { LectorDeTopes } from '../../puertos/lector-de-topes.js';
+import type { RepositorioSaldosIniciales } from '../../puertos/repositorio-saldos-iniciales.js';
 import type { RepositorioCostos } from '../../puertos/repositorio-costos.js';
 import type { RepositorioTramos } from '../../puertos/repositorio-tramos.js';
 import type { DependenciasDeActivos } from './dependencias-de-activos.js';
@@ -12,6 +13,7 @@ export interface DependenciasDeUso extends Pick<
 > {
   costos: RepositorioCostos;
   tramos: RepositorioTramos;
+  saldos: Pick<RepositorioSaldosIniciales, 'fiscalDeActivo'>;
   cierres: Cierres;
   topes: LectorDeTopes;
   primerMes: LectorDePrimerMes;

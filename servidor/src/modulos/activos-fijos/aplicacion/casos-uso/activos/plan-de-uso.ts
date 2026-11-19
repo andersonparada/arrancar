@@ -2,7 +2,7 @@ import { aCentavos, deCentavos } from '../../../../core/compartido/dominio/centa
 import type { PropiedadesDeActivo, DatosDeUso } from '../../../dominio/activo.js';
 import type { PropiedadesDeClase } from '../../../dominio/clase.js';
 import type { PropiedadesDeCosto } from '../../../dominio/costo.js';
-import { baseFiscal } from '../../../dominio/depreciacion/base-fiscal.js';
+import { baseFiscalDeUso } from './base-fiscal-de-uso.js';
 import { tramosDeInicioDeUso } from '../../../dominio/depreciacion/inicio-de-uso.js';
 import { periodoDe, primerMesDelTramo, type PrimerMes } from '../../../dominio/depreciacion/meses.js';
 import {
@@ -14,11 +14,14 @@ import type { TramoCalculado } from '../../../dominio/depreciacion/tramo.js';
 import { ActivoSinCosto, FechaDeUsoInvalida, MesCerrado } from '../../../dominio/errores-de-depreciacion.js';
 import { esTerreno } from '../../../dominio/incisos-fiscales.js';
 import type { SolicitudDePonerEnUso } from '../../dto/activo.dto.js';
+import type { FiscalDelSaldo } from '../../puertos/repositorio-saldos-iniciales.js';
 
 export interface EntradaDelPlan {
   activo: Readonly<PropiedadesDeActivo>;
   clase: Readonly<PropiedadesDeClase>;
   costos: readonly PropiedadesDeCosto[];
+  /** Lo fiscal del saldo inicial, si el activo viene de uno (una obra cargada sin terminar). */
+  saldoInicial: FiscalDelSaldo | null;
   solicitud: SolicitudDePonerEnUso;
   primerMes: PrimerMes;
   /** El máximo de ley del inciso de la clase, en %. */
@@ -68,18 +71,13 @@ function planDeTerreno(fechaDeInicioDeUso: string): PlanDeUso {
 }
 
 function abrirTramos(entrada: EntradaDelPlan, parametros: ParametrosDeUso, costoCentavos: number) {
-  const { activo, clase, costos, solicitud } = entrada;
+  const { activo, clase, costos, solicitud, saldoInicial: saldo } = entrada;
   const ganado = activo.valorComoGanadoComun === null ? 0 : aCentavos(activo.valorComoGanadoComun);
   return tramosDeInicioDeUso({
     fechaDeInicioDeUso: solicitud.fechaDeInicioDeUso,
     primerMes: entrada.primerMes,
     costoCentavos,
-    baseFiscalCentavos: baseFiscal({
-      incisoFiscal: clase.incisoFiscal,
-      costos,
-      inmueble: activo,
-      valorComoGanadoComunCentavos: ganado,
-    }),
+    baseFiscalCentavos: baseFiscalDeUso({ incisoFiscal: clase.incisoFiscal, costos, inmueble: activo, ganado }, saldo),
     porcentajeFiscal: parametros.porcentajeFiscal,
     vidaUtilContableMeses: parametros.vidaUtilContableMeses ?? 0,
     valorResidualCentavos: parametros.valorResidualCentavos,

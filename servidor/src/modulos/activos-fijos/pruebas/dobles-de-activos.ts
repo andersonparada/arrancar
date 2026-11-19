@@ -66,12 +66,20 @@ export class ActivosEnMemoria implements RepositorioActivos, ConsultasActivos {
     this.registros.set(activo.id.valor, activo);
   }
 
+  async actualizarAlta(): Promise<void> {}
+
   async eliminar(activo: Activo): Promise<void> {
     this.registros.delete(activo.id.valor);
   }
 
   async existeCodigo(codigo: string): Promise<boolean> {
     return [...this.registros.values()].some((a) => a.instantanea().codigo.toUpperCase() === codigo.toUpperCase());
+  }
+
+  async idPorCodigo(codigo: string): Promise<string | null> {
+    const buscado = codigo.trim().toUpperCase();
+    const hallado = [...this.registros.values()].find((a) => a.instantanea().codigo.toUpperCase() === buscado);
+    return hallado?.id.valor ?? null;
   }
 
   async tieneComponentes(id: ActivoId): Promise<boolean> {

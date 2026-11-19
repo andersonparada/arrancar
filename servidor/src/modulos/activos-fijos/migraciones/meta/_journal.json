@@ -36,6 +36,20 @@
       "when": 1795068579518,
       "tag": "0004_af4_tramos",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795090334116,
+      "tag": "0005_af5_cierres_y_cuotas",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795093575700,
+      "tag": "0006_af6_saldos_iniciales",
+      "breakpoints": true
     }
   ]
 }

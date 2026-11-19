@@ -1,4 +1,4 @@
-import { boolean, date, numeric, smallint, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, date, numeric, smallint, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { autoria, idPrimario, marcasDeTiempo, politicaPorEmpresa } from '../../../core/base-datos/columnas.js';
 import { empresas } from '../../../core/cuentas/infraestructura/persistencia/empresas.tablas.js';
 import type { CausaDeTramo, LibroDeDepreciacion } from '../../dominio/depreciacion/tramo.js';
@@ -32,5 +32,11 @@ export const tramos = esquemaActivosFijos.table(
     ...marcasDeTiempo,
     ...autoria,
   },
-  (t) => [...llavesDeTramo(t), ...indicesDeTramo(t), ...reglasDeTramo(t), politicaPorEmpresa()],
+  (t) => [
+    unique('tramos_id_empresa_unico').on(t.id, t.empresaId),
+    ...llavesDeTramo(t),
+    ...indicesDeTramo(t),
+    ...reglasDeTramo(t),
+    politicaPorEmpresa(),
+  ],
 );

@@ -97,3 +97,31 @@ describe('anular un costo', () => {
     expect(() => costo.anular({ motivo: 'Error', usuarioId: 'u-1', ahora })).toThrow(CostoNoAnulable);
   });
 });
+
+describe('el costo de un saldo inicial', () => {
+  const nuevo = () => Costo.deSaldoInicial({ empresaId, activoId, fecha: '2025-12-31', montoCentavos: 12_000_000 });
+
+  it('nace vigente, fechado el día de corte, sin soporte y siempre al libro fiscal', () => {
+    expect(nuevo().instantanea()).toMatchObject({
+      origen: 'saldo_inicial',
+      claseDeCosto: 'adquisicion',
+      fecha: '2025-12-31',
+      montoCentavos: 12_000_000,
+      estado: 'vigente',
+      aplicaAlLibroFiscal: true,
+      documentoDeSoporte: null,
+      lineaDeDocumentoId: null,
+    });
+  });
+
+  it('se corrige el monto y la fecha, y solo el de un saldo inicial', () => {
+    const costo = nuevo();
+
+    costo.corregirSaldoInicial({ montoCentavos: 15_000_000, fecha: '2026-03-14' });
+
+    expect(costo.instantanea()).toMatchObject({ montoCentavos: 15_000_000, fecha: '2026-03-14' });
+    expect(() =>
+      Costo.manual(empresaId, activoId, datos()).corregirSaldoInicial({ montoCentavos: 1, fecha: '2026-03-14' }),
+    ).toThrow(CostoInvalido);
+  });
+});

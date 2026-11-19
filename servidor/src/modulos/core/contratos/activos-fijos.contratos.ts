@@ -41,6 +41,31 @@ declare module '../eventos/bus-eventos.js' {
       costoId: string;
       montoCentavos: number;
     };
+    /** Se cerró un mes de depreciación: las cuotas de cada activo y libro (el dinero en centavos). */
+    'activos-fijos.depreciacion_cerrada': {
+      empresaId: string;
+      periodo: string;
+      cuotas: {
+        activoId: string;
+        claseId: string;
+        incisoFiscal: string;
+        libro: 'contable' | 'fiscal';
+        montoCentavos: number;
+        localidadId: string | null;
+        departamentoId: string | null;
+        ocioso: boolean;
+      }[];
+      totalContableCentavos: number;
+      totalFiscalCentavos: number;
+      regimenIsr: string | null;
+    };
+    /** Se reabrió un mes: quien contabilizó sus cuotas debe revertirlas. */
+    'activos-fijos.depreciacion_reabierta': {
+      empresaId: string;
+      periodo: string;
+      totalContableCentavos: number;
+      totalFiscalCentavos: number;
+    };
   }
 }
 

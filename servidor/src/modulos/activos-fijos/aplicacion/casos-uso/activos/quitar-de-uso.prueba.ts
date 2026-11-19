@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { ActivoDeSaldoInicial } from '../../../dominio/errores-de-saldo-inicial.js';
 import { ActivoConLibrosUsados, ActivoSinLibros } from '../../../dominio/errores-de-depreciacion.js';
 import { armarUso, operador, uso, type EscenarioDeUso } from '../../../pruebas/escenario-de-uso.soporte.js';
 
@@ -54,5 +55,22 @@ describe('QuitarDeUso', () => {
     expect(e.tramosDe(usado)).toHaveLength(2);
     expect(usado.instantanea().estado).toBe('en_uso');
     expect(e.auditoria.entradas).toHaveLength(0);
+  });
+
+  it('un activo de saldo inicial se deshace si sus tramos son de inicio de uso, y no si son los del saldo', async () => {
+    const clase = await e.claseDe('maquinaria_y_vehiculos', '20.00');
+    const puesto = await e.activoConCosto(clase, '1000.00', { origen: 'saldo_inicial' });
+    const cargado = await e.activoConCosto(clase, '1000.00', { origen: 'saldo_inicial' });
+    await e.poner(puesto);
+    await e.poner(cargado);
+    e.tramos.porActivo.set(
+      cargado.id.valor,
+      e.tramosDe(cargado).map((tramo) => ({ ...tramo, causa: 'saldo_inicial' as const })),
+    );
+
+    await expect(e.quitarDeUso.ejecutar(operador, puesto.id.valor)).resolves.toMatchObject({
+      estado: 'en_construccion',
+    });
+    await expect(e.quitarDeUso.ejecutar(operador, cargado.id.valor)).rejects.toBeInstanceOf(ActivoDeSaldoInicial);
   });
 });

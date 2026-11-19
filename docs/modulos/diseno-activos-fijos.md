@@ -1309,15 +1309,15 @@ dos decimales.
 | **AF-2** | `activos` (con ocioso y motivo, matrícula y catastro; **AFI-1**: `en_bodega`, `alta_conjunta_id`, `activos_existencias_idx`) y `traslados` (fila del alta, con `a_bodega`), alta manual sin costos, editar, marcar ocioso, eliminar; RLS solo por empresa; prueba de aislamiento entre dos empresas de la misma cuenta | backend | |
 | **AF-P22** | Empresas: `00xx_nombres_de_ubicaciones` (custom) con `empresas.nombres_de_localidades` y `empresas.nombres_de_departamentos` (§6.13), sus pruebas de aislamiento y la ruta `GET /activos-fijos/ubicaciones`. **Antes, la revisión de `seguridad`** | backend | |
 | AF-2c | Lista (etiquetas «En construcción o en tránsito», «Ocioso», «Depreciado contable», «Depreciado fiscal» y «En bodega»), ficha (datos, con el nombre de la localidad de §6.13) y alta manual | frontend | |
-| **AF-3** | `costos` (V-8 con motivo, `no_es_edificacion`, nunca negativos por activo) y `descartes`, bandeja, capitalizar, costos manuales, avisos del libro (R-1), mensaje del error de llave en el libro; prueba de concurrencia de la línea y del total del activo | backend | **Programado, en revisión** (2026-11-19; notas abajo; revisión: capitalizar toma FOR SHARE del documento y la prueba «capitalizar y anular a la vez» lo cubre) |
+| **AF-3** | `costos` (V-8 con motivo, `no_es_edificacion`, nunca negativos por activo) y `descartes`, bandeja, capitalizar, costos manuales, avisos del libro (R-1), mensaje del error de llave en el libro; prueba de concurrencia de la línea y del total del activo | backend | **Programado, en revisión** (2026-11-19; no se cierra un mes posterior al en curso, `mes_por_llegar`; notas abajo; revisión: capitalizar toma FOR SHARE del documento y la prueba «capitalizar y anular a la vez» lo cubre) |
 | **AFI-2** (con AF-3) | Capitalizar en N unidades, cuadrícula de unidades (códigos, series, placas), destino alta conjunta; pruebas del reparto y del sobrante, de códigos repetidos, del tope de 200 y de la regla de la línea | backend | **Programado, en revisión** (2026-11-19) |
 | AF-3c | Bandeja «Por capitalizar» (aviso de software y suscripciones, V-2) y pestaña Costos | frontend | |
 | AFI-2c (con AF-3c) | Ventana «Capitalizar» con unidades, costo por unidad y cuadrícula | frontend | |
 | **AF-4** | Dominio de depreciación (§7, pruebas puras con los ejemplos: tope del inmueble con el mayor y el 70 %, reproductores, ocioso, exceso de nota de crédito por libro), `tramos`, poner en uso y quitar de uso | backend | **Programado, en revisión** (2026-11-19; migración `0004_af4_tramos`) |
 | **AFI-3** (con AF-4) | `PonerEnUsoVarios`, ubicación y «En bodega de activos» al ponerlo disponible, textos de «Disponible para uso» | backend | |
-| **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | |
+| **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | **Programado, en revisión** (2026-11-19; migración `0005_af5_cierres_y_cuotas`; faltan los hallazgos de inventario en curso (AF-10) y de bodega (AFI-7)) |
 | AF-5c | Cierre de depreciación y pestaña Depreciación | frontend | |
-| **AF-6** | Saldos iniciales (con costo fiscal, A1; con «Cantidad» y «En bodega», AFI), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | |
+| **AF-6** | Saldos iniciales (con costo fiscal, A1; con «Cantidad» y «En bodega», AFI), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | **Programado, en revisión** (2026-11-19; migración `0006_af6_saldos_iniciales`; notas abajo) |
 | AF-6c | Saldos iniciales (Administración) | frontend | |
 | **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend | |
 | AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | |
@@ -1360,6 +1360,21 @@ dos decimales.
   correlativo. Las unidades de una asignación comparten `alta_conjunta_id` solo si son más de una.
 - El archivo del costo manual (`archivo_id`) tiene su columna, pero la ruta de subida queda pendiente (revisión de `seguridad`).
 - La lista de costos de un activo y su ficha usan `activos.ver`; la ficha trae `costo` (Σ de los vigentes).
+
+**Notas de lo programado en AF-6 (servidor, migración `0006_af6_saldos_iniciales`):**
+
+- El costo `saldo_inicial` queda con `aplica_al_libro_fiscal = true` (los checks de `costos` exigen que lo demás vaya al libro
+  fiscal) y **no cuenta** en el costo fiscal del activo: este es `saldos_iniciales.costo_fiscal` + Σ costos fiscales posteriores. AF-4
+  (`PonerEnUso` de una obra de saldo inicial: base = costo fiscal del saldo menos lo que la carga dejó fuera de la base), AF-7
+  (mejoras y costos posteriores) y AF-9 (venta) deben leer de ahí.
+- El inicio de uso debe ser igual o posterior a la adquisición y ambos anteriores a la fecha de inicio de la empresa. Una obra sin
+  terminar (`enConstruccion`) y un terreno entran sin depreciación acumulada; la obra queda sin tramos y se pone en uso después.
+- Vida útil restante en 0: sin tramo contable (solo fiscal) y el aviso `vida_agotada_con_saldo` al cerrar la carga. Un activo de
+  saldo inicial no se elimina por las rutas generales ni se quita de uso mientras sus tramos sean los del saldo
+  (`activo_de_saldo_inicial`); si ya se puso en uso (tramos `inicio_de_uso`) sí se devuelve. **Corregir** un saldo se rechaza
+  (`saldo_con_movimientos_posteriores`) si el activo recibió costos de otro origen o tiene tramos de otra causa.
+- Excel: las filas se crean en orden; el padre se escribe por su código y debe ir antes que su componente o ya estar cargado.
+- Falta para AF-6c: mostrar el saldo inicial (costo fiscal y acumuladas) en la ficha del activo.
 
 AF-6 puede adelantarse a AF-5 si se quiere cargar saldos antes de cerrar meses. El paso **AF-P22** va antes de AF-2c y
 necesita la revisión de `seguridad` de §6.13. **AFI-1** no es un paso aparte: son columnas de la migración de AF-2. AFI-0

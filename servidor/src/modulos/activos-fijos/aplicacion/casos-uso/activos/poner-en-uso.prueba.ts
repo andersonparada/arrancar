@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { aCentavos } from '../../../../core/compartido/dominio/centavos.js';
+import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
+import { Costo } from '../../../dominio/costo.js';
 import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/errores.js';
 import { cuotasDelTramo } from '../../../dominio/depreciacion/cuotas-del-tramo.js';
 import {
@@ -114,6 +117,64 @@ describe('PonerEnUso: base fiscal', () => {
     const [contable, fiscal] = e.tramosDe(activo);
     expect(contable!.porDepreciarCentavos + contable!.valorResidualCentavos).toBe(1200000);
     expect(fiscal!.porDepreciarCentavos).toBe(1000000);
+  });
+});
+
+describe('PonerEnUso: obra de saldo inicial', () => {
+  const cargarObra = async (costoFiscal: string, baseFiscal: string) => {
+    const activo = await e.activoConCosto(await e.claseDe('maquinaria_y_vehiculos', '20.00'), null);
+    const { empresaId } = operador;
+    await e.costos.agregarVarios([
+      Costo.deSaldoInicial({
+        empresaId: Identificador.desde(empresaId),
+        activoId: activo.id.valor,
+        fecha: '2026-12-31',
+        montoCentavos: 50_000_000,
+      }),
+    ]);
+    await e.saldos.agregar({
+      empresaId,
+      activoId: activo.id.valor,
+      fechaDeCorte: '2026-12-31',
+      datos: {
+        costoCentavos: 50_000_000,
+        acumuladaContableCentavos: 0,
+        costoFiscalCentavos: aCentavos(costoFiscal),
+        baseFiscalCentavos: aCentavos(baseFiscal),
+        acumuladaFiscalCentavos: 0,
+        valorResidualCentavos: 0,
+        porcentajeFiscal: '20.00',
+        vidaUtilRestanteMeses: null,
+      },
+    });
+    return activo;
+  };
+
+  it('la base fiscal sale del costo fiscal cargado, no del costo contable', async () => {
+    const activo = await cargarObra('400000.00', '400000.00');
+
+    await e.poner(activo);
+
+    const [contable, fiscal] = e.tramosDe(activo);
+    expect(contable!.porDepreciarCentavos + contable!.valorResidualCentavos).toBe(50_000_000);
+    expect(fiscal).toMatchObject({ causa: 'inicio_de_uso', porDepreciarCentavos: 40_000_000 });
+  });
+
+  it('respeta la base fiscal guardada cuando es menor que el costo fiscal', async () => {
+    const activo = await cargarObra('400000.00', '350000.00');
+
+    await e.poner(activo);
+
+    expect(e.tramosDe(activo)[1]!.porDepreciarCentavos).toBe(35_000_000);
+  });
+
+  it('un costo posterior suma a la base fiscal del saldo', async () => {
+    const activo = await cargarObra('400000.00', '400000.00');
+    await e.agregarCosto(activo, '10000.00', { fecha: '2027-01-10' });
+
+    await e.poner(activo);
+
+    expect(e.tramosDe(activo)[1]!.porDepreciarCentavos).toBe(41_000_000);
   });
 });
 

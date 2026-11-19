@@ -34,6 +34,8 @@ export class CierresDePrueba implements Cierres {
   async usaronTramosDelActivo(activoId: string): Promise<boolean> {
     return this.activosUsados.has(activoId);
   }
+
+  async bloquear(): Promise<void> {}
 }
 
 export class PrimerMesFijo implements LectorDePrimerMes {
