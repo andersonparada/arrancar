@@ -4024,3 +4024,16 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (inmuebles sin valores) se puede programar ya**; PA-0b espera PA-20 y PA-21, PA-1 espera PA-23 y los archivos van en
   PA-AR tras la revisión de `seguridad`. Preguntas nuevas PA-20 a PA-23 (§17.1, sin responder); pendientes P-1 a P-4
   (§18.1), ninguno bloquea un paso.
+
+- **2026-11-19 — Parcelas PA-0a y PA-0ac: inmuebles registrales en Empresas (servidor y cliente).** Migración
+  `empresas/0014_inmuebles` (`empresas.inmuebles` sin valores ni escritura, con los checks del registro, del porcentaje de
+  copropiedad, de la ubicación y de la cifra de la escritura; único del nombre y de la finca inscrita; llaves compuestas a
+  localidades y municipios; `politicaPorEmpresa` más alcance opcional por localidad; y la entrada `empresas.inmuebles` en
+  el catálogo de auditoría permanente con el motivo de C-9). Generado con `generar recurso empresas/inmueble` y
+  completado a mano: dominio con las reglas del registro (`inmueble_registro_incompleto`), crear, editar, inactivar,
+  reactivar (rutas `POST …/:id/inactivar` y `/reactivar`) y eliminar con auditoría (el 409 `inmueble_en_uso` sale de
+  traducir la llave foránea en el repositorio), permisos `empresas.inmuebles.ver/.crear/.editar/.eliminar/.importar/.exportar`
+  y Excel sin valores. Cliente: lista, formulario con campos según la situación registral, ficha con inactivar,
+  reactivar y eliminar. Los archivos (escritura) siguen en PA-AR; la columna `escritura_archivo_id` se crea allí.
+  Pendiente de cliente real: confirmar con quien lleve fincas si el libro admite otros caracteres (hoy letras, dígitos,
+  espacio, punto, diagonal y guion) y si hace falta un aviso al repetir la matrícula fiscal en dos inmuebles.
