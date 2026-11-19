@@ -86,6 +86,13 @@ describe('trasladar', () => {
     const despues = await ficha(id);
     expect(despues).toMatchObject({ localidadId: ubicacion.localidadId, responsable: 'Marta López', enBodega: false });
     expect(despues.traslados.map((t: { esAlta: boolean }) => t.esAlta)).toEqual([false, true]);
+    expect(despues.traslados[0]).toMatchObject({
+      grupoId: respuesta.cuerpo.grupoId,
+      numero: respuesta.cuerpo.numero,
+      anioDeNumero: respuesta.cuerpo.anioDeNumero,
+      motivoDeAnulacion: null,
+    });
+    expect(despues.traslados[1]).toMatchObject({ esAlta: true, grupoId: null, numero: null });
     const imprimible = await e.cuenta.propietario.get(`${TRASLADOS}/${respuesta.cuerpo.grupoId}/boleta`);
     expect(imprimible.cuerpo).toEqual(respuesta.cuerpo);
   });

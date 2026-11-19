@@ -4078,3 +4078,6 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   lista activos, costos, mejoras, saldos, bajas, cierres y divisiones). Pendiente de AFI-4: subir y bajar el escaneo firmado
   (`00xx_af8_boletas_firmadas`), que espera la revisión de `seguridad` (archivos, qpdf, límite de subidas). Lo que solo un cliente
   puede confirmar: si anular por activo (no por boleta entera) les hace falta.
+- **2026-11-19 — AF-8, corrección de la revisión (Activos fijos, servidor).** El historial de la ficha (`TrasladoDto`) no traía
+  `grupoId`, `numero`, `anioDeNumero` ni `motivoDeAnulacion`, así que tras crear la boleta no había cómo reimprimirla ni anularla.
+  Se agregaron al DTO, a la consulta y al tipo `Traslado` del cliente; la fila de alta los lleva en nulo. Prueba de API ampliada.

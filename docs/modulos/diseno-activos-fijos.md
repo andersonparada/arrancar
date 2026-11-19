@@ -1369,6 +1369,8 @@ dos decimales.
 - El renglón acepta `cantidad` solo si es la del activo entero (`traslado_parcial_no_disponible`): la división llega con AFI-5 y AFI-6.
 - `activos-fijos.documentos.nombre_de_responsiva` (empresa, pública) es el título de la boleta; `GET …/boleta` devuelve los datos que
   la pantalla imprime (AF-8c). Eventos `activo_trasladado` y `traslado_anulado` (este no estaba en §9).
+- El historial de la ficha (`TrasladoDto`) trae `grupoId`, `numero`, `anioDeNumero` y `motivoDeAnulacion`: con el `grupoId` la pantalla
+  reimprime (`GET …/boleta`) o anula la boleta después de crearla.
 - Falta para AFI-4: subir y bajar el escaneo firmado (`boletas_firmadas`, §5.16). Falta para AF-8c: pantalla de traslados y boleta
   imprimible. `GET /activos-fijos/ubicaciones` sigue con `activos.ver` (el diseño dice `traslados.crear` o `inventarios.crear`).
 
