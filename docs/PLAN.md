@@ -3029,3 +3029,23 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `CodigoNoDisponible` (regla de negocio, no 500). La fecha de adquisición futura se rechaza. `marcarOcioso` sobre uno ya ocioso
   y `quitarOcioso` sobre uno que no lo es se rechazan. Quedan pendientes los bajos de cliente (casilla de bodega, mover
   `fechaDeHoyEn` a core, permisos de los selectores) y del índice `include` y el check de `recibido_por`.
+- **2026-11-19 — AF-3 con AFI-2 (Activos fijos, servidor).** Migración `0003_af3_costos_y_descartes`: `activos_fijos.costos` (de
+  línea del libro, manual con soporte o saldo inicial; monto con signo, `aplica_al_libro_fiscal` con motivo, `no_es_edificacion`,
+  anulación completa y llave compuesta a `libro_de_compras.lineas_de_documento`) y `descartes_de_lineas`, ambas con RLS solo por
+  empresa. **Bandeja «Por capitalizar»** (`GET /activos-fijos/bandeja`: líneas marcadas de documentos vigentes, o de notas de crédito
+  de facturas ya capitalizadas, con costo `total − iva + iva no acreditable`, pendiente, clase propuesta por el concepto,
+  «bajo el umbral», «anterior a la fecha de inicio» y activo sugerido en las notas), **capitalizar** (`POST …/capitalizar`, todo o
+  nada: candado `pg_advisory_xact_lock` por línea, regla de la línea, total del activo nunca negativo con el activo `for update`)
+  y **descartar y devolver** (auditoría `descartar` y `devolver`; aviso R-3). **AFI-2:** `unidades` (1 a 200 por operación) con el
+  monto repartido en centavos (`floor` y el sobrante en el último), `cantidadPorActivo`, cuadrícula de códigos, series, placas,
+  marca y modelo (códigos repetidos o usados: error por renglón antes de insertar; los propuestos salen de un solo bloque del
+  correlativo), `alta_conjunta_id` compartido y destino `altaConjuntaId` (el flete se reparte entre sus activos vigentes). Costos
+  manuales (`POST …/activos/:id/costos`, V-8), anular costo (`costos.anular`, auditoría `anular`), lista de costos del activo y
+  `costo` en la ficha; eliminar un activo ahora revisa costos vigentes de líneas y deja sus costos en la auditoría. **Avisos del
+  libro (R-1):** Activos fijos escucha `documento_por_anular` y `documento_por_eliminar` y los rechaza si hay costos vigentes
+  (`documento_con_costos_capitalizados`); la llave `costos_linea_fk` se traduce en el libro a un mensaje claro. Eventos
+  `activo_capitalizado` y `costo_anulado` (`core/contratos/activos-fijos.contratos.js`). Permisos nuevos: `bandeja.ver`,
+  `bandeja.descartar`, `costos.crear` y `costos.anular`. Pruebas de concurrencia (dos capitalizaciones de la misma línea y dos
+  notas de crédito sobre el mismo activo). Decisiones: el descarte se borra en cascada con su línea; un activo en uso con libros
+  espera a AF-7 (`costo_posterior_no_disponible`); la ruta de subida del archivo del costo manual queda pendiente (revisión de
+  `seguridad`); el índice `traslados_activo_fecha_idx` del esquema vuelve a ser descendente, como lo creó la migración 0002.
