@@ -16,7 +16,7 @@ function reglaDeBancarizacion(umbral: string): string {
     'pague por partes, deben hacerse por cheque, transferencia o tarjeta a nombre del proveedor. Si se paga en efectivo, ' +
     'según el régimen de la empresa y el documento se pierde el costo deducible del ISR, el crédito fiscal del IVA o ambos; ' +
     'si ya lo tomó, rectifique la declaración de ese mes (Código Tributario, art. 106). Arrancar solo suma los pagos ' +
-    'registrados en Cuentas por pagar. Si a la empresa le afecta, el sistema no deja pagar en efectivo: pague con cheque o ' +
+    'registrados en Arrancar. Si a la empresa le afecta, el sistema no deja pagar en efectivo: pague con cheque o ' +
     'transferencia, o, con permiso, escriba el motivo.'
   );
 }

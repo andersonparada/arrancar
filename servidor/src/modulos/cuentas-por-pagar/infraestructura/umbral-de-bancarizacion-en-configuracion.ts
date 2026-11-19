@@ -2,7 +2,7 @@ import type { ContextoEmpresa } from '../../core/compartido/aplicacion/contexto-
 import { configuracion } from '../../core/configuracion/contexto.js';
 import type { UmbralDeBancarizacion } from '../aplicacion/puertos/puertos-de-documentos.js';
 
-const UMBRAL = 'cuentas-por-pagar.bancarizacion.umbral';
+const UMBRAL = 'libro-de-compras.bancarizacion.umbral';
 
 /** El umbral de bancarización según la configuración de la instalación (quetzales), convertido a centavos. */
 export class UmbralDeBancarizacionEnConfiguracion implements UmbralDeBancarizacion {

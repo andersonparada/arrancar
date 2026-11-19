@@ -150,6 +150,15 @@ export const configuracionDelLibroDeCompras: DefinicionConfiguracion[] = [
     publica: true,
   }),
   definirConfiguracion({
+    clave: 'libro-de-compras.bancarizacion.umbral',
+    descripcion:
+      'Total (en quetzales) desde el cual un pago a un proveedor debe bancarizarse (Decreto 20-2006, art. 20): lo usan Cuentas por pagar, Caja chica y Cuentas por liquidar.',
+    esquema: z.number().positive().multipleOf(0.01),
+    predeterminado: 30000,
+    niveles: ['instalacion'],
+    publica: false,
+  }),
+  definirConfiguracion({
     clave: 'libro-de-compras.regimenes.fecha_de_derogacion',
     descripcion:
       'Primer día (aaaa-mm-dd) en que ya no se aceptan los regímenes ni los documentos derogados por el Decreto 31-2024 (pequeño contribuyente electrónico y agropecuario).',

@@ -9,7 +9,7 @@ import type { PagoRevisado } from './peticion-de-efectivo.js';
 
 type Dependencias = Pick<
   DependenciasDeEfectivo,
-  'topeDeDiferencia' | 'consultasDePagos' | 'consultasDeRetiros' | 'fiscal' | 'umbral'
+  'topeDeDiferencia' | 'consultasDePagos' | 'consultasDeRetiros' | 'fiscal' | 'bancarizacionDelLibro'
 >;
 
 /** Lo que vale para todos los pagos del reparto. */
