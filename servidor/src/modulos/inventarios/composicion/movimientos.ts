@@ -23,7 +23,7 @@ import { ExistenciasPorBodegaDrizzle } from '../infraestructura/persistencia/exi
 import { RepositorioDeDocumentosDrizzle } from '../infraestructura/persistencia/repositorio-de-documentos.drizzle.js';
 import { RepositorioDeMetodosDrizzle } from '../infraestructura/persistencia/repositorio-de-metodos.drizzle.js';
 
-function dependenciasDelKardex(): DependenciasDelKardex {
+export function dependenciasDelKardex(): DependenciasDelKardex {
   const compartidas = dependenciasCompartidas();
   return {
     unidadDeTrabajo: compartidas.unidadDeTrabajo,

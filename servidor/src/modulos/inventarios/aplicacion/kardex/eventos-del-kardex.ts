@@ -8,7 +8,7 @@ import {
 } from '../../dominio/eventos.js';
 import type { ArticuloParaMovimiento } from '../puertos/catalogos-del-kardex.js';
 import type { DocumentoGuardado } from '../puertos/repositorio-de-documentos.js';
-import type { DiferenciaDeSalida } from './recalculador-de-articulo.js';
+import type { DiferenciaDeRepartoGuardado, DiferenciaDeSalida } from './recalculador-de-articulo.js';
 
 export interface DatosParaEventos {
   empresaId: string;
@@ -19,7 +19,7 @@ export interface DatosParaEventos {
 
 const magnitud = (valor: bigint): bigint => (valor < 0n ? -valor : valor);
 
-function comunes({ empresaId, documento, movimientos, articulos }: DatosParaEventos) {
+export function comunes({ empresaId, documento, movimientos, articulos }: DatosParaEventos) {
   return {
     empresaId,
     documentoId: documento.id,
@@ -33,6 +33,7 @@ function comunes({ empresaId, documento, movimientos, articulos }: DatosParaEven
       tipoDeInventario: articulos.get(m.articuloId)?.tipoDeInventario ?? '',
       cantidad: deDiezmilesimas(magnitud(m.cantidad)),
       costoCentavos: Number(magnitud(m.costoTotal)),
+      lineaDeCompraId: m.lineaDeCompraId ?? null,
     })),
   };
 }
@@ -67,19 +68,26 @@ export function eventoDeAnulacion(empresaId: string, documento: DocumentoGuardad
   return new DocumentoDeInventarioAnulado({ empresaId, documentoId: id, clase, numero });
 }
 
-/** El evento de un recálculo, solo si alguna salida cambió de costo. */
+/** El evento de un recálculo, solo si alguna salida cambió de costo o algún reparto de absorbido. */
 export function eventoDeRecalculo(datos: {
   empresaId: string;
   causa: string;
   documentoId: string;
   diferencias: readonly DiferenciaDeSalida[];
+  repartos?: readonly DiferenciaDeRepartoGuardado[];
 }): CostoRecalculado | null {
-  const { empresaId, causa, documentoId, diferencias } = datos;
-  if (diferencias.length === 0) return null;
+  const { empresaId, causa, documentoId, diferencias, repartos = [] } = datos;
+  if (diferencias.length === 0 && repartos.length === 0) return null;
   const resumidas = diferencias.map(({ movimientoId, documentoId: deLaSalida, diferenciaCentavos }) => ({
     movimientoId,
     documentoId: deLaSalida,
     diferenciaCentavos,
   }));
-  return new CostoRecalculado({ empresaId, causa, documentoId, diferencias: resumidas, repartos: [] });
+  const deRepartos = repartos.map(({ documentoId: deLaRebaja, ...reparto }) => ({
+    documentoId: deLaRebaja,
+    movimientoDeEntradaId: reparto.movimientoDeEntradaId,
+    diferenciaAbsorbidoCentavos: reparto.diferenciaAbsorbidoCentavos,
+    diferenciaAResultadosCentavos: reparto.diferenciaAResultadosCentavos,
+  }));
+  return new CostoRecalculado({ empresaId, causa, documentoId, diferencias: resumidas, repartos: deRepartos });
 }

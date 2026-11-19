@@ -31,6 +31,7 @@ export class CatalogosDelKardexDrizzle implements CatalogosDelKardex {
         tipoDeInventario: articulos.tipoDeInventario,
         unidadBaseId: articulos.unidadBaseId,
         manejaLotes: articulos.manejaLotes,
+        manejaVencimiento: articulos.manejaVencimiento,
         conceptoDeGastoId: articulos.conceptoDeGastoId,
         activo: articulos.activo,
       })

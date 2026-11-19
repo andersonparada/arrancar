@@ -4,10 +4,12 @@ import '../../core/contratos/inventarios.contratos.js';
 
 export type DatosDeEntradaRegistrada = EventosDominio['inventarios.entrada_registrada'];
 export type DatosDeSalidaRegistrada = EventosDominio['inventarios.salida_registrada'];
+export type DatosDeDevolucionAProveedor = EventosDominio['inventarios.devolucion_a_proveedor'];
+export type DatosDeCostoAjustado = EventosDominio['inventarios.costo_ajustado'];
 export type DatosDeDocumentoAnulado = EventosDominio['inventarios.documento_anulado'];
 export type DatosDeCostoRecalculado = EventosDominio['inventarios.costo_recalculado'];
 
-/** Entró mercadería por una entrada manual. Se publica tras confirmar. */
+/** Entró mercadería por una recepción o una entrada manual. Se publica tras confirmar. */
 export class EntradaRegistrada extends EventoDominio<DatosDeEntradaRegistrada> {
   readonly nombre = 'inventarios.entrada_registrada';
 
@@ -21,6 +23,24 @@ export class SalidaRegistrada extends EventoDominio<DatosDeSalidaRegistrada> {
   readonly nombre = 'inventarios.salida_registrada';
 
   constructor(datos: DatosDeSalidaRegistrada) {
+    super(datos);
+  }
+}
+
+/** Se devolvió mercadería a un proveedor. Se publica tras confirmar. */
+export class DevolucionAProveedorRegistrada extends EventoDominio<DatosDeDevolucionAProveedor> {
+  readonly nombre = 'inventarios.devolucion_a_proveedor';
+
+  constructor(datos: DatosDeDevolucionAProveedor) {
+    super(datos);
+  }
+}
+
+/** Una nota de crédito rebajó el costo de entradas recibidas. Se publica tras confirmar. */
+export class CostoAjustado extends EventoDominio<DatosDeCostoAjustado> {
+  readonly nombre = 'inventarios.costo_ajustado';
+
+  constructor(datos: DatosDeCostoAjustado) {
     super(datos);
   }
 }

@@ -24,8 +24,12 @@ export interface DocumentoDto {
   clase: ClaseDeDocumento;
   numero: number;
   fecha: string;
-  bodegaId: string;
-  bodegaNombre: string;
+  /** Nula en la rebaja de costo: es de solo valor y no tiene bodega. */
+  bodegaId: string | null;
+  bodegaNombre: string | null;
+  /** La factura o nota del Libro de compras de la que nace (recepción, devolución, rebaja). */
+  documentoDeCompraId: string | null;
+  documentoRelacionadoId: string | null;
   causa: CausaDeEntrada | null;
   destino: DestinoDeSalida | null;
   conceptoDeGastoId: string | null;

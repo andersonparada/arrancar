@@ -1,5 +1,5 @@
 import { costoUnitarioDe } from './escalas.js';
-import type { MovimientoDelKardex } from './movimientos-del-kardex.js';
+import { esDeReparto, esDevolucion, type MovimientoDelKardex } from './movimientos-del-kardex.js';
 import type { Capa, ResultadoDeMovimiento } from './tipos.js';
 
 /** Lo que un recálculo cambia de un movimiento guardado. */
@@ -14,9 +14,13 @@ export interface CambioDeMovimiento {
 
 const magnitud = (cantidad: bigint): bigint => (cantidad < 0n ? -cantidad : cantidad);
 
-/** Lo que el método calcula: el costo de las salidas y el informativo de los traslados; lo demás se conserva. */
+/**
+ * Lo que el motor calcula: el costo de las salidas (también el de una devolución, al costo de su entrada), el
+ * informativo de los traslados y lo absorbido de un reparto; lo demás (las entradas) se conserva.
+ */
 function costoRecalculado(m: MovimientoDelKardex, r: ResultadoDeMovimiento): { total: bigint; unitario: bigint } {
-  const calculaElMetodo = (m.tipo === 'salida' && m.costoDelMetodo) || m.tipo === 'traslado';
+  if (esDeReparto(m)) return { total: r.costo, unitario: m.costoUnitario };
+  const calculaElMetodo = (m.tipo === 'salida' && (m.costoDelMetodo || esDevolucion(m))) || m.tipo === 'traslado';
   if (!calculaElMetodo) return { total: m.costoTotal, unitario: m.costoUnitario };
   const total = m.cantidad < 0n ? -r.costo : r.costo;
   return { total, unitario: costoUnitarioDe(r.costo, magnitud(m.cantidad)) };

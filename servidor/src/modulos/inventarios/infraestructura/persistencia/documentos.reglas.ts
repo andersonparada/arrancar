@@ -1,11 +1,17 @@
 import { sql } from 'drizzle-orm';
 import { check, type AnyPgColumn } from 'drizzle-orm/pg-core';
-import { CAUSAS_DE_ENTRADA, CLASES_DE_DOCUMENTO, DESTINOS_DE_SALIDA } from '../../dominio/documento.js';
+import {
+  CAUSAS_DE_ENTRADA,
+  CLASES_DE_DOCUMENTO,
+  CLASES_DEL_LIBRO,
+  DESTINOS_DE_SALIDA,
+} from '../../dominio/documento.js';
 
 type Columnas = Record<
   | 'clase'
   | 'numero'
   | 'bodegaId'
+  | 'documentoDeCompraId'
   | 'causa'
   | 'destino'
   | 'conceptoDeGastoId'
@@ -50,7 +56,11 @@ export function reglasDeDocumento(t: Columnas) {
 export function reglasDeTextoYAnulacion(t: Columnas) {
   return [
     check('documentos_soporte_de_entrada', sql`${t.clase} <> 'entrada_manual' or ${t.soporte} is not null`),
-    check('documentos_bodega_obligatoria', sql`${t.bodegaId} is not null`),
+    check('documentos_bodega_segun_clase', sql`(${t.clase} = 'rebaja_de_costo') = (${t.bodegaId} is null)`),
+    check(
+      'documentos_compra_segun_clase',
+      sql`(${t.clase} in (${enSql(CLASES_DEL_LIBRO)})) = (${t.documentoDeCompraId} is not null)`,
+    ),
     check('documentos_soporte_largo', sql`${largo(t.soporte, 150)}`),
     check('documentos_entregado_a_largo', sql`${largo(t.entregadoA, 150)}`),
     check('documentos_observaciones_largo', sql`${largo(t.observaciones, 500)}`),

@@ -36,6 +36,13 @@
       "when": 1795091958019,
       "tag": "0004_inv4_kardex",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795098551628,
+      "tag": "0005_inv5_recepciones",
+      "breakpoints": true
     }
   ]
 }

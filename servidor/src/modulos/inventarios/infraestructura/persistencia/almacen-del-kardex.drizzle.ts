@@ -12,7 +12,8 @@ import type {
 } from '../../aplicacion/puertos/almacen-del-kardex.js';
 import { enTandas } from './en-tandas.js';
 import { reemplazarCapasDelArticulo } from './capas-del-kardex.js';
-import { aMovimientoDelKardex } from './movimiento-del-kardex.mapeador.js';
+import { aMovimientoDelKardex, columnasConReparto } from './movimiento-del-kardex.mapeador.js';
+import { agregarRepartosDe, sincronizarRepartosDe } from './repartos-del-kardex.js';
 import { movimientos } from './movimientos.tablas.js';
 import { recalculos } from './recalculos.tablas.js';
 import { saldosDeArticulos } from './saldos-de-articulos.tablas.js';
@@ -27,11 +28,14 @@ const filaNueva = (m: NuevoMovimiento) => ({
   ordenDelDia: m.ordenDelDia,
   tipo: m.tipo,
   cantidad: deDiezmilesimas(m.cantidad),
-  cantidadEscrita: deDiezmilesimas(m.cantidadEscrita),
+  cantidadEscrita: m.cantidadEscrita === null ? null : deDiezmilesimas(m.cantidadEscrita),
   unidadEscritaId: m.unidadEscritaId,
   costoUnitario: deMillonesimas(m.costoUnitario),
   costoTotal: deCentavosEnteros(m.costoTotal),
   costoDelMetodo: m.costoDelMetodo,
+  lineaDeDocumentoDeCompraId: m.lineaDeCompraId ?? null,
+  documentoDeCompraId: m.documentoDeCompraId ?? null,
+  movimientoDeOrigenId: m.movimientoDeOrigenId ?? null,
   saldoCantidad: '0',
   saldoValor: '0',
 });
@@ -56,7 +60,7 @@ export class AlmacenDelKardexDrizzle implements AlmacenDelKardex {
 
   async movimientosVigentes(articuloId: string): Promise<MovimientoDelKardex[]> {
     const filas = await transaccionEnCurso()
-      .select()
+      .select(columnasConReparto())
       .from(movimientos)
       .where(and(eq(movimientos.articuloId, articuloId), eq(movimientos.vigente, true)))
       .orderBy(asc(movimientos.fecha), asc(movimientos.ordenDelDia), asc(movimientos.secuencia));
@@ -65,7 +69,7 @@ export class AlmacenDelKardexDrizzle implements AlmacenDelKardex {
 
   async movimientosDelDocumento(documentoId: string): Promise<MovimientoDelKardex[]> {
     const filas = await transaccionEnCurso()
-      .select()
+      .select(columnasConReparto())
       .from(movimientos)
       .where(eq(movimientos.documentoId, documentoId))
       .orderBy(asc(movimientos.secuencia));
@@ -76,9 +80,10 @@ export class AlmacenDelKardexDrizzle implements AlmacenDelKardex {
     const agregados: MovimientoDelKardex[] = [];
     for (const tanda of enTandas(nuevos)) {
       const filas = await transaccionEnCurso().insert(movimientos).values(tanda.map(filaNueva)).returning();
-      agregados.push(...filas.map(aMovimientoDelKardex));
+      agregados.push(...filas.map((fila) => aMovimientoDelKardex(fila)));
     }
-    return agregados;
+    await agregarRepartosDe(nuevos, agregados);
+    return agregados.map((m, indice) => ({ ...m, parteDeReparto: nuevos[indice]!.reparto?.parte ?? null }));
   }
 
   /** Una sola sentencia por tanda: solo se escriben las filas que cambiaron. */
@@ -97,6 +102,7 @@ export class AlmacenDelKardexDrizzle implements AlmacenDelKardex {
           as v(id, costo_total, costo_unitario, saldo_cantidad, saldo_valor, monto_a_resultados)
         where m.id = v.id`);
     }
+    await sincronizarRepartosDe(cambios.map((c) => c.id));
   }
 
   async desactivarMovimientosDelDocumento(documentoId: string): Promise<void> {
@@ -135,6 +141,8 @@ export class AlmacenDelKardexDrizzle implements AlmacenDelKardex {
         causa: recalculo.causa,
         salidasAfectadas: recalculo.salidasAfectadas,
         diferenciaDeCosto: deCentavosEnteros(recalculo.diferenciaDeCosto),
+        repartosAfectados: recalculo.repartosAfectados ?? 0,
+        diferenciaAResultados: deCentavosEnteros(recalculo.diferenciaAResultados ?? 0n),
       });
   }
 }

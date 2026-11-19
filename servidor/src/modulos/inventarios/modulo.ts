@@ -7,6 +7,7 @@ import { rutasDeArticulos } from './composicion/articulos.js';
 import { rutasDeBodegas } from './composicion/bodegas.js';
 import { rutasDeAccesosABodegas } from './composicion/accesos-a-bodegas.js';
 import { rutasDeMovimientos } from './composicion/movimientos.js';
+import { rutasDeRecepciones } from './composicion/recepciones.js';
 import { ALCANCE_DE_BODEGAS } from './infraestructura/persistencia/accesos-a-bodegas.tablas.js';
 // generador: importaciones
 
@@ -72,6 +73,20 @@ export const moduloInventarios: DefinicionModulo = {
     { clave: 'inventarios.entradas.anular', descripcion: 'Anular entradas manuales de mercadería' },
     { clave: 'inventarios.salidas.crear', descripcion: 'Registrar salidas de mercadería por consumo' },
     { clave: 'inventarios.salidas.anular', descripcion: 'Anular salidas de mercadería por consumo' },
+    { clave: 'inventarios.recepciones.ver', descripcion: 'Ver la bandeja «Por recibir» del libro de compras' },
+    {
+      clave: 'inventarios.recepciones.crear',
+      descripcion: 'Recibir líneas del libro de compras y registrar devoluciones a proveedor y rebajas de costo',
+    },
+    {
+      clave: 'inventarios.recepciones.anular',
+      descripcion: 'Anular recepciones, devoluciones a proveedor y rebajas de costo',
+    },
+    {
+      clave: 'inventarios.recepciones.descartar',
+      descripcion:
+        'Descartar líneas de la bandeja «Por recibir» y devolverlas a ella (también quita o pone la marca de inventario en el libro)',
+    },
     // generador: permisos
   ],
   recursosConAlcance: [
@@ -91,6 +106,7 @@ export const moduloInventarios: DefinicionModulo = {
     rutasDeBodegas(),
     rutasDeAccesosABodegas(),
     rutasDeMovimientos(),
+    rutasDeRecepciones(),
     // generador: rutas
   ]),
 };

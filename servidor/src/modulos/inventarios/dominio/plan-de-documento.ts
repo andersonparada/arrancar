@@ -1,5 +1,6 @@
 import type { CausaDeEntrada, ClaseDeDocumento, DestinoDeSalida } from './documento.js';
 import { DocumentoInvalido } from './errores-de-kardex.js';
+import type { BaseDeReparto } from './rebaja.js';
 
 /** Un renglón ya resuelto: la cantidad en la unidad base del artículo y como se escribió. */
 export interface RenglonDePlan {
@@ -7,17 +8,29 @@ export interface RenglonDePlan {
   loteId: string | null;
   /** Diezmilésimas de la unidad base, mayor que cero. */
   cantidad: bigint;
-  cantidadEscrita: bigint;
-  unidadEscritaId: string;
+  /** Nulos solo en los renglones de solo valor (la rebaja). */
+  cantidadEscrita: bigint | null;
+  unidadEscritaId: string | null;
   /** Centavos: el costo escrito de una entrada; cero en las salidas, que lo calcula el método. */
   costoTotal: bigint;
+  /** La línea de la factura o nota del libro de donde viene el renglón. */
+  lineaDeCompraId?: string | null;
+  /** La entrada que devuelve una devolución, o la que recibe la parte de una rebaja. */
+  movimientoDeOrigenId?: string | null;
+  /** Solo en una rebaja: lo que le toca a la entrada (con signo) y con qué base se repartió. */
+  reparto?: { base: BaseDeReparto; parte: bigint } | null;
 }
 
 /** Todo lo que un documento nuevo del kardex necesita, ya revisado por el dominio. */
 export interface PlanDeDocumento {
   clase: ClaseDeDocumento;
   fecha: string;
-  bodegaId: string;
+  /** Nula solo en los documentos de solo valor (la rebaja). */
+  bodegaId: string | null;
+  /** La factura o nota del libro de la que nace el documento. */
+  documentoDeCompraId?: string | null;
+  /** La recepción que devuelve o rebaja, cuando es una sola. */
+  documentoRelacionadoId?: string | null;
   causa: CausaDeEntrada | null;
   destino: DestinoDeSalida | null;
   conceptoDeGastoId: string | null;
@@ -39,6 +52,18 @@ export interface EscritoComun {
   observaciones: string | null;
   renglones: readonly RenglonDePlan[];
 }
+
+/** Lo que los documentos que vienen del libro (recepción, devolución, rebaja) no llevan: causa, destino ni centro de costo. */
+export const SIN_DESTINO = {
+  causa: null,
+  destino: null,
+  conceptoDeGastoId: null,
+  localidadId: null,
+  departamentoId: null,
+  activoFijoId: null,
+  entregadoA: null,
+  soporte: null,
+} as const;
 
 export const MAXIMO_DE_RENGLONES = 200;
 
