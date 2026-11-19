@@ -39,7 +39,7 @@ describe('anular un anticipo desde aquí', () => {
     expect(piezas.bancos.anulaciones[0]).toMatchObject({
       movimientoId: 'mov-1',
       origen: { modulo: 'cuentas-por-liquidar', documentoId: anticipoId },
-      motivo: 'Anulado desde Cuentas por liquidar: Se entregó por error',
+      motivo: 'Se entregó por error',
     });
     expect(anulado).toMatchObject({
       estado: 'anulado',

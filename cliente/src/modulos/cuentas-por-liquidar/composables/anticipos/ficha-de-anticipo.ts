@@ -120,6 +120,11 @@ export const reabrirConFecha = (anticipo: Pick<Anticipo, 'liquidacion'>): boolea
     anticipo.liquidacion && (anticipo.liquidacion.devuelto !== '0.00' || anticipo.liquidacion.reembolsado !== '0.00'),
   );
 
+/** Los avisos de la ficha sin repetir: el servidor manda el de los vencidos en `aviso` y también dentro de `avisos`. */
+export const avisosDeLaFicha = (anticipo: Pick<Anticipo, 'avisos' | 'aviso'>): string[] => [
+  ...new Set([...anticipo.avisos, ...(anticipo.aviso ? [anticipo.aviso] : [])]),
+];
+
 /** Ingreso de facturas con el anticipo como destino: al guardar vuelve a la ficha. */
 export function rutaDeIngresoDeFactura(anticipo: Pick<Anticipo, 'id' | 'numero' | 'beneficiario'>): RouteLocationRaw {
   return {

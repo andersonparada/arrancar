@@ -72,6 +72,18 @@ describe('anular desde Cuentas por liquidar', () => {
     expect(eventos).toMatchObject([{ anulacionEnBancos: 'sin_inverso', fecha: haceDias(5) }]);
   });
 
+  it('el cheque anulado en Bancos lleva el motivo con el rótulo «Anulado desde Cuentas por liquidar» una sola vez', async () => {
+    const anticipo = await e.entregar(e.conCheque(ana, '20.00'));
+
+    await anular(anticipo.id, { motivo: 'Se entregó por error' });
+
+    const [cheque] = await consultar<{ motivo_de_anulacion: string }>(
+      'select motivo_de_anulacion from bancos.cheques where id = $1',
+      [await chequeDelAnticipo(anticipo.id)],
+    );
+    expect(cheque!.motivo_de_anulacion).toBe('Anulado desde Cuentas por liquidar: Se entregó por error');
+  });
+
   it('con nota de débito se anula con inverso y su fecha contable es la del inverso', async () => {
     const anticipo = await e.entregar(e.conNota(ana, '100.00', { fecha: haceDias(5) }));
 

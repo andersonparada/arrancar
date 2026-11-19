@@ -4153,3 +4153,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   que hoy no existe; la pestaña muestra los tramos.
   **Corrección (revisión):** al corregir un saldo inicial, el departamento ya no se borra si el saldo llega antes que las
   ubicaciones (el vigilante de coherencia no actúa mientras la lista de departamentos está vacía); prueba nueva.
+- **2026-11-19 (CL-7, QA de Cuentas por liquidar):** recorrido en el navegador (escritorio y celular, claro y oscuro) de entregar, gastos con y sin
+  documento, bandeja con retención, liquidar (devolución, reembolso, no liquidado), reabrir, anular, vencidos con bloqueo, CL-R1,
+  CL-R2, permisos, impresión y Excel; las cuentas cuadran a mano (informe `docs/modulos/informe-qa-cuentas-por-liquidar-2026-11-19.md`).
+  Corregido: aviso de vencidos repetido en la ficha, fecha límite propuesta en formato ISO y rótulo «Anulado desde…» repetido en Bancos
+  (igual en Cuentas por pagar: pendiente). Prueba `it.fails`: CL-R1 suma con signo un anticipo gastado de más. **Pendiente de decisión
+  del usuario:** el beneficiario sale de Clientes y pide `terceros.ver` (un rol con solo `anticipos.crear` no puede escoger a nadie).

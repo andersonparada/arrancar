@@ -12,6 +12,7 @@ import SeccionDeGastos from '../componentes/SeccionDeGastos.vue';
 import VentanaDeGastoSinDocumento from '../componentes/VentanaDeGastoSinDocumento.vue';
 import VentanaDeMotivo from '../componentes/VentanaDeMotivo.vue';
 import {
+  avisosDeLaFicha,
   detallesDeLaAnulacion,
   detallesDeLaLiquidacion,
   detallesDelAnticipo,
@@ -45,7 +46,7 @@ const volver = {
       />
     </EncabezadoPagina>
 
-    <AvisosDeLaPantalla :avisos="[...ficha.avisos, ...(ficha.aviso ? [ficha.aviso] : [])]" titulo="Tenga en cuenta" />
+    <AvisosDeLaPantalla :avisos="avisosDeLaFicha(ficha)" titulo="Tenga en cuenta" />
     <CifrasDelAnticipo v-if="ficha.estado !== 'anulado'" :ficha="ficha" />
     <SeccionDeFicha v-if="ficha.anulacion" titulo="Anulación">
       <DatosDelRegistro :detalles="detallesDeLaAnulacion(ficha)" />
