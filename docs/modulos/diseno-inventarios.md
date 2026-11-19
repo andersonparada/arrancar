@@ -1274,6 +1274,7 @@ texto.
 | **INV-AF** | Órdenes con Activos fijos (§4.3); cambio del `check` de `activos_fijos.costos.origen`; texto «Obra o uso propio (activo en construcción)» | backend (después de AF-3) |
 | **AFI-9** (con INV-AF e INV-0c) | Orden `activos-fijos.obtener_umbral_de_capitalizacion` (la atiende Activos fijos) y el aviso del umbral en la recepción, la entrada manual y el saldo inicial; ayuda fija en el artículo de tipo `repuestos` | backend + frontend |
 | INV-QA | Punta a punta (factura en el libro → por recibir → salida → traslado con tránsito → conteo → ajuste → cierre; saldos iniciales → cierre de la carga) | pruebas-qa |
+| INV-QA-b | Hallazgos bajos de la QA del 2026-11-19: una conversión con unidad de la misma magnitud que la base (con factor a la referencia) se rechaza porque ya se convierte sola; el error de un código, nombre, símbolo o código de barras repetido nombra la columna que choca (también en la importación) | backend | **Hecho** (2026-11-19) |
 
 INV-0 se puede programar en cuanto el usuario apruebe INV-A9. INV-3 no depende de la base y puede ir en paralelo con
 INV-1 e INV-2. INV-7 puede adelantarse a INV-5 si se quiere cargar saldos primero. Lo que el contador pidió corregir

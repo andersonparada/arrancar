@@ -4024,3 +4024,11 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (inmuebles sin valores) se puede programar ya**; PA-0b espera PA-20 y PA-21, PA-1 espera PA-23 y los archivos van en
   PA-AR tras la revisión de `seguridad`. Preguntas nuevas PA-20 a PA-23 (§17.1, sin responder); pendientes P-1 a P-4
   (§18.1), ninguno bloquea un paso.
+- **2026-11-19 — QA de Activos fijos e Inventarios: hallazgos bajos corregidos.** `valorComoGanadoComun` solo en clases
+  de reproductores (la `it.fails` pasó a `it`); un terreno no puede ser bien de control; la ficha del activo ocioso
+  muestra fecha y motivo (ya estaba en `detallesDeFicha`, ahora con prueba); `FichaNoEncontrada` (core) da estado vacío
+  con título y «Volver» en las fichas de activo y artículo; las conversiones con unidad de la misma magnitud que la base
+  (con factor a la referencia) se rechazan; los únicos de artículos, bodegas, categorías, unidades, lotes y clases dicen
+  qué columna choca (`unicos-de-catalogos.ts`, `detalles.campo`, que la importación ya usa). Eliminar un activo con
+  costo manual vigente se deja como el diseño (§6.3) y ya tenía prueba. El cambio de unidad base lo cubre INV-4.
+  Pendiente de un cliente real: si el contador quiere bloquear también los costos manuales.

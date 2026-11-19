@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DatosDelRegistro from '@/modulos/core/componentes/DatosDelRegistro.vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
+import FichaNoEncontrada from '@/modulos/core/componentes/FichaNoEncontrada.vue';
 import EtiquetasDeActivo from '../componentes/activos/EtiquetasDeActivo.vue';
 import HistorialDeUbicacion from '../componentes/activos/HistorialDeUbicacion.vue';
 import { usarFichaDeActivo } from '../composables/activos/usar-ficha-de-activo';
@@ -28,4 +29,5 @@ const volver = { texto: `Volver a ${ventana.titulo}`, ruta: { name: 'activos-fij
     <HistorialDeUbicacion :traslados="registro.traslados" />
   </div>
   <p v-else-if="cargando" class="text-sm text-tierra-500">Cargando…</p>
+  <FichaNoEncontrada v-else titulo="Activo" :volver="volver" />
 </template>

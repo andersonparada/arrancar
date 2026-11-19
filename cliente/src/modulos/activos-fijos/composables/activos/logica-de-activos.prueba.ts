@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { Clase } from '../../servicios/clases.api';
 import {
   alCambiarElTipo,
@@ -8,6 +9,7 @@ import {
   esDeTerceros,
   incisoDe,
 } from './edicion-de-activo';
+import { detallesDeFicha } from './detalles-de-activo';
 import { etiquetasDeActivo } from './etiquetas-de-activo';
 import { consultaDeActivos, filtrosVacios } from './filtros-de-activos';
 
@@ -118,5 +120,35 @@ describe('filtros de la lista', () => {
 
     expect(consultaDeActivos(filtros)).toEqual({ texto: 'john', estado: 'en_uso', enBodega: true });
     expect(consultaDeActivos({ ...filtrosVacios(), marca: 'ocioso' })).toEqual({ ocioso: true });
+  });
+});
+
+describe('ficha del activo ocioso', () => {
+  beforeEach(() => setActivePinia(createPinia()));
+
+  const ficha = (cambios: object) =>
+    detallesDeFicha({
+      estado: 'en_uso',
+      tipoDeRegistro: 'activo',
+      ocioso: false,
+      ociosoDesde: null,
+      motivoDeOcio: null,
+      cantidad: 1,
+      enBodega: false,
+      ...cambios,
+    } as Parameters<typeof detallesDeFicha>[0]);
+
+  it('muestra desde cuándo y por qué está ocioso', () => {
+    const etiquetas = ficha({ ocioso: true, ociosoDesde: '2026-11-10', motivoDeOcio: 'Sin operador' }).map(
+      (detalle) => detalle.etiqueta,
+    );
+
+    expect(etiquetas).toEqual(expect.arrayContaining(['Ocioso desde', 'Motivo']));
+  });
+
+  it('un activo que no está ocioso no los muestra', () => {
+    const etiquetas = ficha({}).map((detalle) => detalle.etiqueta);
+
+    expect(etiquetas).not.toContain('Ocioso desde');
   });
 });

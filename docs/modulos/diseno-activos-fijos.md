@@ -221,6 +221,10 @@ como **bien de control** (se controla físicamente, con etiqueta e inventario, p
 umbral es una ayuda, no una regla: se puede capitalizar igual con un clic más (sin permiso extra). No es legal: lo fija la
 empresa con su contador (dictamen §3, 17.4).
 
+**Un terreno nunca es bien de control** (QA 2026-11-19): no se va a gasto ni se controla como herramienta; el dominio
+rechaza un bien de control en una clase del inciso `terrenos`. El **valor como ganado común** solo se acepta en clases
+de reproductores (§5.3), también por API.
+
 **El umbral se mide por línea** (AFI, I-12 a; NIC 16.9): 50 sillas de Q300 (Q15,000) con umbral de Q5,000 son un
 **grupo** con libros; 4 sillas (Q1,200) son un **bien de control** de cantidad 4. La bandeja muestra además el **costo por
 unidad** (costo de la línea ÷ unidades ÷ cantidad por activo) como ayuda. Las N unidades de una asignación heredan el
@@ -1340,6 +1344,7 @@ dos decimales.
 | AF-12c | Conteo desde el teléfono con escáner (dependencia nueva; cantidad encontrada en los grupos) | frontend | |
 | **AFI-9** (con INV-AF e INV-0c) | Orden `activos-fijos.obtener_umbral_de_capitalizacion` (§6.12); el resto del paso es de Inventarios (`diseno-inventarios.md` §16) | backend | |
 | AF-QA | Punta a punta en el navegador (compra → bandeja → uso → cierres → traslado → venta; saldos iniciales → cierre de la carga) | pruebas-qa | |
+| AF-QA-b | Hallazgos bajos de la QA del 2026-11-19: valor como ganado común solo en reproductores, terreno no es bien de control, ficha del ocioso con fecha y motivo, ficha inexistente con estado vacío y «Volver»; eliminar un activo con costo manual vigente se queda como está (§6.3: solo bloquean los costos de líneas del libro; lo confirma el contador con un cliente real) | backend y frontend | **Hecho** (2026-11-19) |
 | AFI-QA (con AF-QA) | Factura de 3 tractores y 50 sillas → bandeja en unidades y grupo → disponibles en bodega → entregar 1 tractor y 20 sillas → cierre → devolver a bodega → baja de 3 sillas → reportes de existencias y responsiva | pruebas-qa | |
 | AF-14 | (Después de v1, AF-P18) Pólizas de seguro: `polizas` y `activos_de_polizas`, vencimientos | backend y frontend | |
 | AF-15 | (Después de v1, P-A) «Sustituir documento»: pasar los costos de un documento del libro a otro que lo reemplaza, con auditoría | backend y frontend | |
