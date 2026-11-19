@@ -33,6 +33,14 @@ defineEmits<{ otro: [] }>();
       >
         Imprimir el comprobante
       </RouterLink>
+      <RouterLink
+        v-if="pago.forma === 'cheque' && pago.movimiento"
+        v-permiso="'bancos.cheques.imprimir'"
+        :to="{ name: 'bancos.cheques', query: { cuentaBancariaId: pago.movimiento.cuentaBancariaId } }"
+        class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-tierra-800 ring-1 ring-tierra-200 hover:bg-tierra-100 dark:bg-tierra-800 dark:text-tierra-100 dark:ring-tierra-700 dark:hover:bg-tierra-700"
+      >
+        Imprimir el cheque
+      </RouterLink>
       <span v-permiso="'cuentas-por-pagar.contrasenas.ver'" class="contents">
         <RouterLink
           v-for="contrasena in pago.contrasenas"

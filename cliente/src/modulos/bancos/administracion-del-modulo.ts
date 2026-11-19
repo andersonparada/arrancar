@@ -1,4 +1,4 @@
-import { Scale, Tags } from 'lucide-vue-next';
+import { Printer, Scale, Tags } from 'lucide-vue-next';
 import type { RouteRecordRaw } from 'vue-router';
 import type { EntradaMenu } from '@/modulos/core/tipos';
 import { VENTANAS_BANCOS } from './textos';
@@ -10,6 +10,18 @@ const metaDeSaldosIniciales = {
 };
 
 export const RUTAS_DE_ADMINISTRACION: RouteRecordRaw[] = [
+  {
+    path: '/bancos/formatos-de-cheque',
+    name: 'bancos.formatos-de-cheque',
+    component: () => import('./paginas/ListaDeFormatosDeCheque.vue'),
+    meta: { permiso: 'bancos.formatos-de-cheque.ver', titulo: VENTANAS_BANCOS.formatosDeCheque.titulo },
+  },
+  {
+    path: '/bancos/formatos-de-cheque/prueba',
+    name: 'bancos.formatos-de-cheque.prueba',
+    component: () => import('./paginas/PruebaDeAlineacion.vue'),
+    meta: { permiso: 'bancos.formatos-de-cheque.ver', titulo: VENTANAS_BANCOS.formatosDeCheque.prueba },
+  },
   {
     path: '/bancos/conceptos',
     name: 'bancos.conceptos',
@@ -32,6 +44,13 @@ export const RUTAS_DE_ADMINISTRACION: RouteRecordRaw[] = [
 ];
 
 export const ENTRADAS_DE_ADMINISTRACION: EntradaMenu[] = [
+  {
+    titulo: VENTANAS_BANCOS.formatosDeCheque.titulo,
+    ruta: '/bancos/formatos-de-cheque',
+    icono: Printer,
+    seccion: 'administracion',
+    permiso: 'bancos.formatos-de-cheque.ver',
+  },
   {
     titulo: VENTANAS_BANCOS.conceptos.titulo,
     ruta: '/bancos/conceptos',

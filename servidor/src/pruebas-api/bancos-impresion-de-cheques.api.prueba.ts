@@ -92,6 +92,10 @@ describe('la vista previa', () => {
 describe('la primera impresión', () => {
   it('marca el cheque, guarda la impresión original con el formato y bloquea el blanqueo', async () => {
     const { chequeId, movimientoId } = await e.emitir(2);
+    const antes = (await e.propietario.get('/api/bancos/cheques')).cuerpo.find(
+      (c: { id: string }) => c.id === chequeId,
+    );
+    expect(antes).toMatchObject({ chequeraId: e.chequeraId, puedeImprimir: true, puedeReimprimir: false });
 
     const impresa = await imprimir([chequeId]);
 
@@ -110,7 +114,13 @@ describe('la primera impresión', () => {
     const cheque = (await e.propietario.get(`/api/bancos/chequeras/${e.chequeraId}/cheques`)).cuerpo.find(
       (c: { id: string }) => c.id === chequeId,
     );
-    expect(cheque).toMatchObject({ puedeBlanquear: false });
+    expect(cheque).toMatchObject({
+      puedeBlanquear: false,
+      puedeImprimir: false,
+      puedeReimprimir: true,
+      puedePasarAOtroFormulario: true,
+      puedeDeclararExtraviado: true,
+    });
     expect(cheque.impresoEn).not.toBeNull();
     const blanqueo = await e.propietario.post(`/api/bancos/cheques/${chequeId}/blanquear`, { motivo: 'Error' });
     expect(blanqueo.estado).toBe(422);

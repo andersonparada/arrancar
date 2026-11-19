@@ -25,6 +25,7 @@ export interface EdicionDePago {
   medio: string;
   movimientoId: string;
   noNegociable: boolean;
+  paraAbonoEnCuenta: boolean;
   referencia: string;
   motivo: string;
   observaciones: string;
@@ -40,6 +41,7 @@ export const edicionDePagoVacia = (hoy: string): EdicionDePago => ({
   medio: '',
   movimientoId: '',
   noNegociable: true,
+  paraAbonoEnCuenta: false,
   referencia: '',
   motivo: '',
   observaciones: '',
@@ -148,7 +150,13 @@ export function solicitudDePago(edicion: EdicionDePago, datos: ParaPagar): Solic
   const base = cuerpoComun(edicion, datos);
   switch (edicion.forma) {
     case 'cheque':
-      return { ...base, forma: 'cheque', chequeraId: edicion.medio, noNegociable: edicion.noNegociable };
+      return {
+        ...base,
+        forma: 'cheque',
+        chequeraId: edicion.medio,
+        noNegociable: edicion.noNegociable,
+        paraAbonoEnCuenta: edicion.paraAbonoEnCuenta,
+      };
     case 'nota_de_debito':
       return { ...base, forma: 'nota_de_debito', cuentaBancariaId: edicion.medio };
     case 'nota_ligada':

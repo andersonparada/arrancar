@@ -1,4 +1,14 @@
-import { FileSpreadsheet, Hourglass, Scale, ListOrdered, Percent, Sigma, Waves, ScrollText } from 'lucide-vue-next';
+import {
+  FileSpreadsheet,
+  Hourglass,
+  ListChecks,
+  ListOrdered,
+  Percent,
+  Scale,
+  ScrollText,
+  Sigma,
+  Waves,
+} from 'lucide-vue-next';
 import type { RouteRecordRaw } from 'vue-router';
 import type { EntradaMenu } from '@/modulos/core/tipos';
 import { VENTANAS_BANCOS } from './textos';
@@ -18,6 +28,13 @@ export const ENTRADAS_DE_REPORTES: EntradaMenu[] = [
     icono: ListOrdered,
     seccion: 'reportes',
     permiso: 'bancos.movimientos.ver',
+  },
+  {
+    titulo: VENTANAS_BANCOS.correlativosDeCheques.titulo,
+    ruta: '/bancos/correlativos-de-cheques',
+    icono: ListChecks,
+    seccion: 'reportes',
+    permiso: 'bancos.correlativos-de-cheques.ver',
   },
   {
     titulo: VENTANAS_BANCOS.chequesCaducos.titulo,
@@ -65,6 +82,15 @@ export const ENTRADAS_DE_REPORTES: EntradaMenu[] = [
 
 /** Las rutas de los reportes que se abren en su propia página. */
 export const RUTAS_DE_REPORTES: RouteRecordRaw[] = [
+  {
+    path: '/bancos/correlativos-de-cheques',
+    name: 'bancos.correlativos-de-cheques',
+    component: () => import('./paginas/ReporteDeCorrelativosDeCheques.vue'),
+    meta: {
+      permiso: 'bancos.correlativos-de-cheques.ver',
+      titulo: VENTANAS_BANCOS.correlativosDeCheques.titulo,
+    },
+  },
   {
     path: '/bancos/flujo-de-efectivo',
     name: 'bancos.flujo-de-efectivo',

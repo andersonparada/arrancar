@@ -61,6 +61,8 @@ export interface ChequeParaImprimirDto {
   /** `null` si solo se imprime el comprobante. */
   cheque: ChequeArmado | null;
   comprobante: ComprobanteDeEgresoDto;
+  /** Dónde va el comprobante dentro de la hoja del cheque (voucher); `null` = en hoja carta aparte. */
+  zonaDelComprobante: { yMm: number; altoMm: number } | null;
   /** Avisos que no bloquean: formulario con leyendas ya impresas, formato sin probar. */
   avisos: string[];
 }

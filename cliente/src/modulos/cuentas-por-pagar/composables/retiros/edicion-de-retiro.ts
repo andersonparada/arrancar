@@ -18,6 +18,7 @@ export interface EdicionDeRetiro {
   medio: string;
   beneficiario: string;
   noNegociable: boolean;
+  paraAbonoEnCuenta: boolean;
   referencia: string;
   observaciones: string;
 }
@@ -31,6 +32,7 @@ export const edicionDeRetiroVacia = (hoy: string): EdicionDeRetiro => ({
   medio: '',
   beneficiario: '',
   noNegociable: true,
+  paraAbonoEnCuenta: false,
   referencia: '',
   observaciones: '',
 });
@@ -122,6 +124,7 @@ export function solicitudDeRetiro(edicion: EdicionDeRetiro): SolicitudDeRetiro {
       forma: 'cheque',
       chequeraId: edicion.medio,
       noNegociable: edicion.noNegociable,
+      paraAbonoEnCuenta: edicion.paraAbonoEnCuenta,
       beneficiario: textoONulo(edicion.beneficiario),
     };
   }
@@ -133,12 +136,22 @@ export function solicitudDeRetiro(edicion: EdicionDeRetiro): SolicitudDeRetiro {
   };
 }
 
+/** Las condiciones del cheque dichas en la confirmación: « no negociable», « para abono en cuenta», las dos o ninguna. */
+export function condicionesDelCheque({
+  noNegociable,
+  paraAbonoEnCuenta,
+}: Pick<EdicionDeRetiro, 'noNegociable' | 'paraAbonoEnCuenta'>): string {
+  const condiciones = [noNegociable && 'no negociable', paraAbonoEnCuenta && 'para abono en cuenta'];
+  const dichas = condiciones.filter(Boolean).join(' y ');
+  return dichas ? ` ${dichas}` : '';
+}
+
 /** Qué va a pasar al registrar el retiro, para confirmarlo. */
 export function resumenDelRetiro(edicion: EdicionDeRetiro, nombreDelCustodio: string, medio: string): string {
   const monto = formatearMonto(textoDeCentavos(centavosDe(edicion.monto) ?? 0));
   const documento =
     edicion.forma === 'cheque'
-      ? `Bancos emitirá un cheque${edicion.noNegociable ? ' no negociable' : ''} de ${medio}`
+      ? `Bancos emitirá un cheque${condicionesDelCheque(edicion)} de ${medio}`
       : `Bancos registrará una nota de débito en ${medio}`;
   return (
     `Se retirarán ${monto} del banco para pagar a proveedores en efectivo, a cargo de ${nombreDelCustodio}. ` +

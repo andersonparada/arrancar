@@ -91,6 +91,19 @@ export const VENTANAS_BANCOS = {
     descripcion:
       'El saldo de cada cuenta bancaria a la fecha de corte: el del estado de cuenta y las partidas que el banco aún no ve (cheques en circulación, depósitos en tránsito).',
   },
+  formatosDeCheque: {
+    titulo: 'Formatos de cheque',
+    descripcion:
+      'Cómo se imprime el cheque en cada formulario: dónde cae cada campo, en milímetros, y la prueba de alineación.',
+    nuevo: 'Nuevo formato',
+    editar: 'Editar formato',
+    prueba: 'Prueba de alineación',
+  },
+  correlativosDeCheques: {
+    titulo: 'Correlativos de cheques',
+    descripcion:
+      'Todos los números de cada chequera: emitidos, anulados, inutilizados y disponibles, con el conteo físico del papel en blanco.',
+  },
   saldosPorCuenta: {
     titulo: 'Saldos por cuenta',
     descripcion:

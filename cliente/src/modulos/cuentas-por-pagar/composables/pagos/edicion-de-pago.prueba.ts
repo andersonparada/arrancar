@@ -116,7 +116,13 @@ describe('cuerpo de la solicitud', () => {
       aplicaciones: [{ cargoId: 'a', monto: '100.00' }],
       chequeraId: 'ch1',
       noNegociable: true,
+      paraAbonoEnCuenta: false,
     });
+  });
+
+  it('un cheque para abono en cuenta lo manda marcado', () => {
+    const edicion = edicionDeEjemplo({ montos: { a: '100.00' }, paraAbonoEnCuenta: true });
+    expect(solicitudDePago(edicion, datos)).toMatchObject({ forma: 'cheque', paraAbonoEnCuenta: true });
   });
 
   it('una nota de débito lleva la cuenta; una ligada, el movimiento', () => {

@@ -89,6 +89,12 @@ export const moduloBancos: DefinicionModuloCliente = {
       meta: { permiso: 'bancos.cheques.ver', titulo: VENTANAS_BANCOS.cheques.titulo },
     },
     {
+      path: '/bancos/cheques/imprimir',
+      name: 'bancos.cheques.imprimir',
+      component: () => import('./paginas/ImpresionDeCheques.vue'),
+      meta: { permiso: 'bancos.cheques.ver', titulo: 'Imprimir cheques' },
+    },
+    {
       path: '/bancos/conciliaciones',
       name: 'bancos.conciliaciones',
       component: () => import('./paginas/ListaDeConciliaciones.vue'),

@@ -10,7 +10,7 @@ import TarjetaDeChequera from './TarjetaDeChequera.vue';
  * chequera no se emite ni se inactiva, así que su tarjeta solo lleva «Ver cheques».
  */
 const props = defineProps<{ chequeras: Chequera[] }>();
-const emit = defineEmits<{ 'cambiar-estado': [chequera: Chequera] }>();
+const emit = defineEmits<{ 'cambiar-estado': [chequera: Chequera]; formato: [chequera: Chequera] }>();
 const grupos = computed(() => gruposDeChequeras(props.chequeras));
 </script>
 
@@ -18,7 +18,11 @@ const grupos = computed(() => gruposDeChequeras(props.chequeras));
   <div class="space-y-4">
     <ul v-if="grupos.normales.length" class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in grupos.normales" :key="registro.id">
-        <TarjetaDeChequera :registro="registro" @cambiar-estado="emit('cambiar-estado', registro)" />
+        <TarjetaDeChequera
+          :registro="registro"
+          @cambiar-estado="emit('cambiar-estado', registro)"
+          @formato="emit('formato', registro)"
+        />
       </li>
     </ul>
     <section v-if="grupos.deApertura.length" aria-labelledby="chequeras-de-apertura" class="space-y-2">
@@ -28,7 +32,11 @@ const grupos = computed(() => gruposDeChequeras(props.chequeras));
       <p class="text-xs text-tierra-500">{{ AYUDA_DE_CHEQUERA_DE_APERTURA }}</p>
       <ul class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <li v-for="registro in grupos.deApertura" :key="registro.id">
-          <TarjetaDeChequera :registro="registro" @cambiar-estado="emit('cambiar-estado', registro)" />
+          <TarjetaDeChequera
+            :registro="registro"
+            @cambiar-estado="emit('cambiar-estado', registro)"
+            @formato="emit('formato', registro)"
+          />
         </li>
       </ul>
     </section>

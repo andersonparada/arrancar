@@ -122,28 +122,76 @@ describe('accionesDeTransferencia', () => {
 });
 
 describe('accionesDeCheque', () => {
-  it('disponible: se anula, no se blanquea (no tiene movimiento)', () => {
-    expect(accionesDeCheque('disponible', null)).toEqual({ puedeAnular: true, puedeBlanquear: false });
-  });
+  const sinImpresion = {
+    puedeImprimir: false,
+    puedeReimprimir: false,
+    puedePasarAOtroFormulario: false,
+    puedeDeclararExtraviado: false,
+  };
 
-  it('emitido con movimiento limpio: se anula y se blanquea', () => {
-    expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque' }))).toEqual({
+  it('disponible: se anula, no se blanquea (no tiene movimiento)', () => {
+    expect(accionesDeCheque('disponible', null)).toEqual({
       puedeAnular: true,
-      puedeBlanquear: true,
+      puedeBlanquear: false,
+      ...sinImpresion,
     });
   });
 
-  it('emitido con movimiento en un mes conciliado o marcado: se anula, no se blanquea', () => {
-    const esperado = { puedeAnular: true, puedeBlanquear: false };
+  it('emitido con movimiento limpio: se anula, se blanquea y se imprime', () => {
+    expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque' }))).toEqual({
+      puedeAnular: true,
+      puedeBlanquear: true,
+      puedeImprimir: true,
+      puedeReimprimir: false,
+      puedePasarAOtroFormulario: false,
+      puedeDeclararExtraviado: false,
+    });
+  });
+
+  it('emitido con movimiento en un mes conciliado o marcado: se anula e imprime, no se blanquea', () => {
+    const esperado = { puedeAnular: true, puedeBlanquear: false, ...sinImpresion, puedeImprimir: true };
 
     expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque', mesConciliado: true }))).toEqual(esperado);
     expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque', marcadoEnConciliacion: true }))).toEqual(esperado);
   });
 
-  it('anulado: no se anula ni se blanquea', () => {
+  it('anulado: no se anula, ni se blanquea, ni se imprime', () => {
     expect(accionesDeCheque('anulado', limpia({ tipo: 'cheque', anulado: true }))).toEqual({
       puedeAnular: false,
       puedeBlanquear: false,
+      ...sinImpresion,
+    });
+  });
+
+  it('impreso: se reimprime y, con el movimiento limpio, pasa a otro formulario; no se imprime ni se blanquea', () => {
+    expect(accionesDeCheque('emitido', limpia({ tipo: 'cheque' }), true)).toEqual({
+      puedeAnular: true,
+      puedeBlanquear: false,
+      puedeImprimir: false,
+      puedeReimprimir: true,
+      puedePasarAOtroFormulario: true,
+      puedeDeclararExtraviado: true,
+    });
+  });
+
+  it('impreso con su mes conciliado: se reimprime y se declara extraviado, pero no pasa a otro formulario', () => {
+    const conciliado = limpia({ tipo: 'cheque', mesConciliado: true });
+
+    expect(accionesDeCheque('emitido', conciliado, true)).toMatchObject({
+      puedeReimprimir: true,
+      puedePasarAOtroFormulario: false,
+      puedeDeclararExtraviado: true,
+    });
+  });
+
+  it('de la carga inicial no se imprime ni se reimprime', () => {
+    const deApertura = limpia({ tipo: 'cheque', parteDeApertura: 'cheque_en_circulacion' });
+
+    expect(accionesDeCheque('emitido', deApertura)).toMatchObject({ puedeImprimir: false, puedeReimprimir: false });
+    expect(accionesDeCheque('emitido', deApertura, true)).toMatchObject({
+      puedeReimprimir: false,
+      puedePasarAOtroFormulario: false,
+      puedeDeclararExtraviado: false,
     });
   });
 });

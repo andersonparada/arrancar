@@ -114,25 +114,45 @@ export function accionesDeTransferencia(
 export interface AccionesDeCheque {
   puedeAnular: boolean;
   puedeBlanquear: boolean;
+  /** Emitido en Arrancar y todavía sin imprimir (la chequera además debe tener formato: lo dice el servidor al imprimir). */
+  puedeImprimir: boolean;
+  /** Emitido en Arrancar y ya impreso. */
+  puedeReimprimir: boolean;
+  /** Impreso, con su movimiento limpio: se puede pasar su pago a otro formulario. */
+  puedePasarAOtroFormulario: boolean;
+  /** Emitido en Arrancar e impreso: se puede anular como extraviado, aunque su mes ya esté conciliado (con su inverso). */
+  puedeDeclararExtraviado: boolean;
 }
 
 /**
  * Un cheque se anula si no está anulado; se blanquea si está emitido y su movimiento está limpio y no es de la carga
- * inicial (no se emitió en Arrancar) y no se imprimió. Los cheques nunca se eliminan: su número ya se consumió.
+ * inicial (no se emitió en Arrancar) y no se imprimió. Se imprime si está emitido en Arrancar y sin imprimir; se
+ * reimprime si ya está impreso; solo un impreso con movimiento limpio pasa a otro formulario, y todo impreso de Arrancar se puede declarar extraviado. Los cheques nunca se
+ * eliminan: su número ya se consumió.
  */
 export function accionesDeCheque(
   estado: EstadoDelCheque,
   movimiento: HechosDeUnMovimiento | null,
   impreso = false,
 ): AccionesDeCheque {
+  const puedeAnular = estado !== 'anulado';
+  if (estado !== 'emitido' || movimiento === null) {
+    return { puedeAnular, puedeBlanquear: false, ...accionesDeImpresion(false, impreso, false) };
+  }
+  const deArrancar = movimiento.parteDeApertura === null;
   return {
-    puedeAnular: estado !== 'anulado',
-    puedeBlanquear:
-      estado === 'emitido' &&
-      !impreso &&
-      movimiento !== null &&
-      estaLimpio(movimiento) &&
-      !movimiento.esDeOtroModulo &&
-      movimiento.parteDeApertura === null,
+    puedeAnular,
+    puedeBlanquear: !impreso && deArrancar && estaLimpio(movimiento) && !movimiento.esDeOtroModulo,
+    ...accionesDeImpresion(deArrancar, impreso, estaLimpio(movimiento)),
+  };
+}
+
+/** Imprimir, reimprimir, pasar a otro formulario y declarar extraviado: solo de un cheque emitido en Arrancar. */
+function accionesDeImpresion(deArrancar: boolean, impreso: boolean, limpio: boolean) {
+  return {
+    puedeImprimir: deArrancar && !impreso,
+    puedeReimprimir: deArrancar && impreso,
+    puedePasarAOtroFormulario: deArrancar && impreso && limpio,
+    puedeDeclararExtraviado: deArrancar && impreso,
   };
 }

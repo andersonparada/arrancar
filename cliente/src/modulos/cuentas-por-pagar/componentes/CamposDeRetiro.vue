@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
-import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
+import CondicionesDelCheque from '@/modulos/core/componentes/CondicionesDelCheque.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import type { OpcionBuscable } from '@/modulos/core/utilidades/busqueda-de-opciones';
@@ -112,10 +112,9 @@ const custodioDelCheque = computed(() =>
         ayuda="Si lo deja en blanco, va a nombre del custodio. Escriba el de la empresa si el banco lo pide. No se emite al portador."
         :error="errores.beneficiario"
       />
-      <CampoInterruptor
-        v-model="edicion.noNegociable"
-        etiqueta="No negociable"
-        descripcion="Solo lo cobra quien figura en el cheque, directamente en ventanilla."
+      <CondicionesDelCheque
+        v-model:no-negociable="edicion.noNegociable"
+        v-model:para-abono-en-cuenta="edicion.paraAbonoEnCuenta"
       />
     </template>
     <CampoTexto

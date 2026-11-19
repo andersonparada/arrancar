@@ -1,13 +1,21 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import type { RouteLocationRaw } from 'vue-router';
 import { duracionDeAviso } from './duracion-de-aviso';
 
 export type TipoAviso = 'exito' | 'error' | 'info';
+
+/** Un enlace que acompaña al aviso (p. ej. «Imprimir el cheque» después de emitirlo). */
+export interface EnlaceDeAviso {
+  texto: string;
+  ruta: RouteLocationRaw;
+}
 
 export interface Aviso {
   id: number;
   tipo: TipoAviso;
   mensaje: string;
+  enlace?: EnlaceDeAviso;
 }
 
 interface OpcionesDeConfirmacion {
@@ -29,11 +37,12 @@ function usarMensajesEmergentes() {
   const cerrar = (id: number) => (avisos.value = avisos.value.filter((aviso) => aviso.id !== id));
 
   /** Un éxito retira los errores que siguen a la vista: la acción ya salió bien y el error viejo confunde. */
-  function mostrar(tipo: TipoAviso, mensaje: string): void {
+  function mostrar(tipo: TipoAviso, mensaje: string, enlace?: EnlaceDeAviso): void {
     if (tipo === 'exito') avisos.value = avisos.value.filter((aviso) => aviso.tipo !== 'error');
     const id = siguienteId++;
-    avisos.value.push({ id, tipo, mensaje });
-    setTimeout(() => cerrar(id), duracionDeAviso(mensaje));
+    avisos.value.push({ id, tipo, mensaje, enlace });
+    // Con enlace se da más tiempo: hay que decidir si se sigue.
+    setTimeout(() => cerrar(id), duracionDeAviso(mensaje, enlace !== undefined));
   }
 
   return { avisos, mostrar, cerrar };
@@ -62,7 +71,7 @@ export const usarAvisos = defineStore('avisos', () => {
   const { avisos, mostrar, cerrar } = usarMensajesEmergentes();
   return {
     avisos,
-    exito: (mensaje: string) => mostrar('exito', mensaje),
+    exito: (mensaje: string, enlace?: EnlaceDeAviso) => mostrar('exito', mensaje, enlace),
     error: (mensaje: string) => mostrar('error', mensaje),
     info: (mensaje: string) => mostrar('info', mensaje),
     cerrar,

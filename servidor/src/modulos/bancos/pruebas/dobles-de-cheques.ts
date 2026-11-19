@@ -150,6 +150,7 @@ export class ChequesEnMemoria implements RepositorioCheques, ConsultasCheques {
     const movimiento = await datosDelMovimiento(this.movimientos, movimientoId);
     return {
       id: id.valor,
+      chequeraId,
       numero,
       serie,
       cuentaBancariaId,

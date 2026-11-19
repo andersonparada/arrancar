@@ -1,5 +1,6 @@
 import type { DetalleDeRegistro } from '@/modulos/core/tipos';
 import type { Chequera } from '../../servicios/chequeras.api';
+import { textoDelFormatoDeChequera } from './formato-de-chequera';
 
 /** El rango legible de una chequera: su serie (si tiene) y el intervalo de números. */
 export const rangoDeChequera = (registro: Pick<Chequera, 'serie' | 'desde' | 'hasta'>): string =>
@@ -16,5 +17,6 @@ export function detallesDeChequera(registro: Chequera): DetalleDeRegistro[] {
     ...(registro.deApertura ? [] : [disponibles]),
     { etiqueta: 'Emitidos', valor: String(registro.emitidos) },
     { etiqueta: 'Anulados', valor: String(registro.anulados) },
+    { etiqueta: 'Se imprime con', valor: textoDelFormatoDeChequera(registro) },
   ];
 }

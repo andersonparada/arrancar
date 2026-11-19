@@ -5,8 +5,10 @@ import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import EstadoVacio from '@/modulos/core/componentes/EstadoVacio.vue';
 import VentanaDeMotivo from '../componentes/VentanaDeMotivo.vue';
 import FiltrosDeCheques from '../componentes/cheques/FiltrosDeCheques.vue';
+import BarraDeLoteDeImpresion from '../componentes/cheques/BarraDeLoteDeImpresion.vue';
 import TarjetaDeChequeListado from '../componentes/cheques/TarjetaDeChequeListado.vue';
 import VentanaDeCheque from '../componentes/cheques/VentanaDeCheque.vue';
+import VentanasDeImpresionDeCheque from '../componentes/cheques/VentanasDeImpresionDeCheque.vue';
 import { usarBajasDeCheque } from '../composables/cheques/usar-bajas-de-cheque';
 import { usarListaDeChequesDeLaEmpresa } from '../composables/cheques/usar-lista-de-cheques-de-la-empresa';
 import type { ChequeListado } from '../servicios/cheques.api';
@@ -14,7 +16,8 @@ import { VENTANAS_BANCOS } from '../textos';
 import { TEXTO_DE_BLANQUEO } from '../composables/cheques/textos-de-baja-de-cheque';
 
 const ventana = VENTANAS_BANCOS.cheques;
-const { cheques, cargando, filtros, opcionesDeCuenta, referencias, emision, cargar } = usarListaDeChequesDeLaEmpresa();
+const { cheques, cargando, filtros, opcionesDeCuenta, referencias, emision, cargar, lote, impresion } =
+  usarListaDeChequesDeLaEmpresa();
 const { anulacion, blanqueo, anular, textoDeAnulacion, ayudaDeFecha } = usarBajasDeCheque<ChequeListado>(cargar);
 </script>
 
@@ -30,10 +33,29 @@ const { anulacion, blanqueo, anular, textoDeAnulacion, ayudaDeFecha } = usarBaja
     <EstadoVacio v-else-if="!cheques.length" :icono="Inbox" titulo="No hay cheques con ese filtro" />
     <ul v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
       <li v-for="registro in cheques" :key="registro.id">
-        <TarjetaDeChequeListado :registro="registro" @anular="anular(registro)" @blanquear="blanqueo.abrir(registro)" />
+        <TarjetaDeChequeListado
+          :registro="registro"
+          :marcado="lote.estaMarcado(registro)"
+          :bloqueo="lote.bloqueoDe(registro)"
+          @alternar="lote.alternar(registro)"
+          @imprimir="impresion.imprimir(registro)"
+          @reimprimir="impresion.reimpresion.abrir(registro)"
+          @historial="impresion.historial.abrir(registro)"
+          @pasar="impresion.cambio.abrir(registro)"
+          @anular="anular(registro)"
+          @blanquear="blanqueo.abrir(registro)"
+        />
       </li>
     </ul>
+    <BarraDeLoteDeImpresion
+      :cantidad="lote.seleccion.length"
+      :resumen="lote.resumen"
+      @imprimir="lote.imprimir"
+      @marcar-todos="lote.marcarTodos"
+      @limpiar="lote.limpiar"
+    />
 
+    <VentanasDeImpresionDeCheque :impresion="impresion" />
     <VentanaDeCheque
       v-model="emision.edicion.value"
       :referencias="referencias"

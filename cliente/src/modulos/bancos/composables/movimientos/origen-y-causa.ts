@@ -38,7 +38,12 @@ export function destinoDeOrigenDelPago(movimiento: {
   return { name: 'cuentas-por-pagar.pagos.ficha', params: { id: movimiento.documentoDeOrigenId } };
 }
 
-const TEXTO_DE_CAUSA: Record<CausaDeAnulacion, string> = { manual: 'Manual', caducidad: 'Por caducidad' };
+const TEXTO_DE_CAUSA: Record<CausaDeAnulacion, string> = {
+  manual: 'Manual',
+  caducidad: 'Por caducidad',
+  inutilizado: 'Inutilizado: su pago pasó a otro formulario',
+  extraviado: 'Extraviado',
+};
 
 /** La causa de anulación de un cheque anulado; `null` si no está anulado. */
 export const textoDeCausaDeAnulacion = (causa: CausaDeAnulacion | null): string | null =>

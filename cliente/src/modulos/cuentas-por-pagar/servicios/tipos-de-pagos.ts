@@ -137,7 +137,14 @@ interface SolicitudBase {
 }
 
 export type SolicitudDePago =
-  | (SolicitudBase & { forma: 'cheque'; chequeraId: string; chequeId?: string; noNegociable: boolean })
+  | (SolicitudBase & {
+      forma: 'cheque';
+      chequeraId: string;
+      chequeId?: string;
+      noNegociable: boolean;
+      /** «PARA ABONO EN CUENTA» (art. 521): apagado por omisión. */
+      paraAbonoEnCuenta: boolean;
+    })
   | (SolicitudBase & { forma: 'nota_de_debito'; cuentaBancariaId: string })
   | (SolicitudBase & { forma: 'nota_ligada'; movimientoId: string })
   | (Omit<SolicitudBase, 'diferencias'> & { forma: 'cuenta_de_apertura'; motivo: string });

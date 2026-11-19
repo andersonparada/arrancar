@@ -15,6 +15,9 @@ const chequera = (id: string, deApertura: boolean): Chequera => ({
   disponibles: 0,
   emitidos: 0,
   anulados: 0,
+  formatoDeChequeId: null,
+  formatoNombre: null,
+  plantillaDeCheque: null,
 });
 
 describe('gruposDeChequeras', () => {

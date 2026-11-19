@@ -9,7 +9,7 @@ import type { Chequera } from '../../servicios/chequeras.api';
 
 /** La chequera en la ficha de la cuenta: su rango y conteos, "Ver cheques" e inactivar o reactivar (la de la carga inicial no se inactiva). */
 const props = defineProps<{ registro: Chequera }>();
-const emit = defineEmits<{ 'cambiar-estado': [] }>();
+const emit = defineEmits<{ 'cambiar-estado': []; formato: [] }>();
 
 const textoDeEstado = computed(() => (props.registro.activa ? 'Inactivar' : 'Reactivar'));
 </script>
@@ -30,6 +30,15 @@ const textoDeEstado = computed(() => (props.registro.activa ? 'Inactivar' : 'Rea
       >
         Ver cheques
       </RouterLink>
+      <BotonBase
+        v-if="!registro.deApertura"
+        v-permiso="'bancos.chequeras.editar'"
+        variante="fantasma"
+        pequeno
+        @click="emit('formato')"
+      >
+        Formato de impresión
+      </BotonBase>
       <BotonBase
         v-if="!registro.deApertura"
         v-permiso="'bancos.chequeras.editar'"

@@ -39,6 +39,7 @@ const condicionesDeLaEmpresa = ({ cuentaBancariaId, estado, desde, hasta }: Filt
 
 const columnasDeLaEmpresa = {
   id: cheques.id,
+  chequeraId: cheques.chequeraId,
   numero: cheques.numero,
   serie: chequeras.serie,
   cuentaBancariaId: chequeras.cuentaBancariaId,
