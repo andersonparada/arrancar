@@ -33,11 +33,15 @@ const descripcion = (p: Partida): string =>
       <p class="text-sm font-semibold">{{ grupo.signo }} {{ grupo.titulo }}</p>
       <p v-if="!partidasDe(grupo.clave).length" class="text-sm text-tierra-500">Ninguno.</p>
       <ul v-else class="divide-y divide-tierra-100 text-sm dark:divide-tierra-800">
-        <li v-for="p in partidasDe(grupo.clave)" :key="p.movimientoId" class="flex items-center gap-3 py-1.5">
-          <span class="w-24 shrink-0 text-tierra-500">{{ formatearFecha(p.fecha) }}</span>
-          <span class="min-w-0 flex-1 truncate">{{ descripcion(p) }}</span>
-          <InsigniaBase v-if="p.deApertura" class="shrink-0">{{ ROTULO_DE_CARGA_INICIAL }}</InsigniaBase>
-          <span class="font-medium">{{ formatearMonto(p.monto) }}</span>
+        <li v-for="p in partidasDe(grupo.clave)" :key="p.movimientoId" class="flex items-start gap-3 py-1.5">
+          <span class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-start sm:gap-3">
+            <span class="shrink-0 text-xs text-tierra-500 sm:w-24 sm:text-sm">{{ formatearFecha(p.fecha) }}</span>
+            <span class="min-w-0 flex-1 space-y-1">
+              <span class="block break-words">{{ descripcion(p) }}</span>
+              <InsigniaBase v-if="p.deApertura">{{ ROTULO_DE_CARGA_INICIAL }}</InsigniaBase>
+            </span>
+          </span>
+          <span class="shrink-0 whitespace-nowrap font-medium">{{ formatearMonto(p.monto) }}</span>
         </li>
       </ul>
     </TarjetaBase>
