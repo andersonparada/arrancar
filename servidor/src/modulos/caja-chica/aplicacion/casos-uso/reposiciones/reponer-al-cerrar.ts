@@ -25,7 +25,8 @@ export type DependenciasDeLaCompensada = Pick<
  * Liquida lo pendiente de un fondo que se cierra (§5.8): una reposición `compensada_al_cerrar`, sin cheque ni nota (el
  * dinero ya salió de la caja), con todos los comprobantes vigentes sin reponer. Numera con el mismo correlativo que las
  * reposiciones y marca como procesados los documentos del libro. Corre dentro de la transacción del cierre. Si no hay
- * pendiente, o suma cero o menos (las notas de crédito y los sobrantes compensan lo gastado), no crea nada.
+ * pendiente, o suma cero o menos (las notas de crédito y los sobrantes compensan lo gastado), no crea nada: esos comprobantes
+ * quedan en el fondo cerrado, que ya no admite bajas del libro y no los cuenta como pendientes.
  */
 export class ReponedorAlCerrar {
   constructor(private readonly dependencias: DependenciasDeLaCompensada) {}

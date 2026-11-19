@@ -21,6 +21,7 @@ import {
   documentoProcesado,
   reposicionEnBase,
 } from './soporte/caja-chica-reposiciones.js';
+import { arquear, ducientos } from './soporte/caja-chica-arqueos.js';
 import { comoPropietario } from './soporte/consultas-de-propietario.js';
 import { usarEntornoApi } from './soporte/entorno-api.js';
 import { saldoDe } from './soporte/escenarios-de-bancos.js';
@@ -207,5 +208,42 @@ describe('un fondo cerrado', () => {
     expect((await fondoEnBase(fondo.id)).estado).toBe('cerrado');
     expect((await cambiosEnBase(fondo.id)).at(-1)).toMatchObject({ tipo: 'cierre', estado: 'vigente' });
     expect(RUTA_DE_CAJA_CHICA).toBeDefined();
+  });
+
+  it('Bancos no anula el cheque de un aumento de un fondo cerrado (el depósito ya lo cuenta)', async () => {
+    const fondo = await e.abrirFondo('Caja cerrada con aumento', { monto: '1000.00' });
+    const aumento = await e.propietario().post(`${RUTA_DE_FONDOS}/${fondo.id}/aumentar`, {
+      forma: 'cheque',
+      chequeraId: e.caja.chequeraId,
+      monto: '500.00',
+    });
+    expect(aumento.estado, JSON.stringify(aumento.cuerpo)).toBe(200);
+    await cerrar(fondo.id);
+    const [, delAumento] = await cambiosEnBase(fondo.id);
+    const { cheque_id } = await movimientoDeBancos(delAumento!.movimiento_id!);
+
+    const anula = await e.propietario().post(`/api/bancos/cheques/${cheque_id}/anular`, { motivo: 'Desde Bancos' });
+
+    expect(anula.cuerpo.error.codigo).toBe('fondo_no_disponible');
+    expect((await cambiosEnBase(fondo.id)).map((c) => c.estado)).toEqual(['vigente', 'vigente', 'vigente']);
+  });
+
+  it('lo pendiente que suma cero o menos queda en el fondo cerrado y el libro no lo anula ni lo elimina', async () => {
+    const fondo = await e.abrirFondo('Caja cerrada con pendiente compensado', { monto: '5000.00' });
+    const { documentoId } = await documentoEnElFondo(fondo.id);
+    const conteo = [...ducientos(25), { denominacionCentavos: 2_000, cantidad: 4 }];
+    const arqueo = await arquear(fondo.id, e.propietario(), { conteo, motivoDeDiferencia: 'Sobró dinero' });
+    expect(arqueo.estado, JSON.stringify(arqueo.cuerpo)).toBe(201);
+    expect((await cerrar(fondo.id)).estado).toBe(200);
+
+    const anula = await e
+      .propietario()
+      .post(`/api/libro-de-compras/documentos/${documentoId}/anular`, { causa: 'error_de_captura', motivo: 'Tarde' });
+    const elimina = await e.propietario().delete(`/api/libro-de-compras/documentos/${documentoId}`);
+
+    expect(anula.cuerpo.error.codigo).toBe('fondo_no_disponible');
+    expect(elimina.cuerpo.error.codigo).toBe('fondo_no_disponible');
+    const ficha = (await e.propietario().get(`${RUTA_DE_FONDOS}/${fondo.id}`)).cuerpo;
+    expect(ficha.pendienteDeReponer).toBe('0.00');
   });
 });

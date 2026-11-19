@@ -3,6 +3,7 @@ import type { EventoDominio } from '../../../../core/compartido/dominio/evento-d
 import type { AvisosEntreModulos } from '../../../../core/contratos/mediador.contratos.js';
 import { MovimientoDeCajaChica } from '../../../dominio/errores-de-fondos.js';
 import { MODULO_DE_ORIGEN, type CambioDeMonto } from '../../../dominio/fondos.js';
+import { exigirFondoAbierto } from '../../../dominio/reglas-del-fondo.js';
 import { AnuladorDeCambios } from './anulador-de-cambios.js';
 import type { DependenciasDeFondos } from './dependencias-de-fondos.js';
 import { LectorDelFondo } from './lector-del-fondo.js';
@@ -19,7 +20,7 @@ const SIN_ACCESO_AL_FONDO =
  * salvo que el movimiento diga ser de Caja chica y el usuario no vea ese fondo (RLS): entonces se rechaza para no dejar
  * el fondo con un cambio sin respaldo. Si Bancos anula la apertura o un aumento, se rechaza con el fondo usado y, si no,
  * se anula el cambio (y el fondo, si era la apertura) con la forma y la fecha del aviso, sin volver a ordenar a Bancos.
- * La disminución, el depósito del cierre y cualquier otro cambio se rechazan. Los eventos se publican al confirmar la
+ * Un fondo cerrado rechaza todo (`fondo_no_disponible`). La disminución, el depósito del cierre y cualquier otro cambio se rechazan. Los eventos se publican al confirmar la
  * transacción de Bancos.
  */
 export class AtenderMovimientoDeFondoPorCambiar {
@@ -31,7 +32,7 @@ export class AtenderMovimientoDeFondoPorCambiar {
     this.anulador = new AnuladorDeCambios(dependencias);
   }
 
-  /** @throws MovimientoDeCajaChica, FondoConMovimientos */
+  /** @throws MovimientoDeCajaChica, FondoConMovimientos, FondoNoDisponible (fondo cerrado) */
   async ejecutar(operador: Operador, aviso: AvisoDeMovimientoPorCambiar): Promise<void> {
     const { unidadDeTrabajo, publicadorEventos } = this.dependencias;
     const eventos = await unidadDeTrabajo.ejecutar(operador, () => this.atender(operador, aviso));
@@ -59,6 +60,7 @@ export class AtenderMovimientoDeFondoPorCambiar {
   ): Promise<EventoDominio[]> {
     const { fondoId, cambio, aviso } = por;
     const fondo = await this.lector.bloquear(fondoId);
+    exigirFondoAbierto(fondo);
     await this.anulador.revisar(fondo, cambio);
     const datos = {
       motivo: aviso.motivo ?? 'Anulado desde Bancos',

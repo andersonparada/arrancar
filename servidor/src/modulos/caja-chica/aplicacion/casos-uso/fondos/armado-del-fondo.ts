@@ -26,7 +26,7 @@ export function resumenDelFondo(fondo: Fondo, lectura: DatosDeLectura): FondoRes
     aperturaAnulada: datos.aperturaAnulada,
     monto: deCentavos(datos.montoCentavos),
     efectivoEsperado: deCentavos(efectivoEsperado(datos)),
-    pendienteDeReponer: deCentavos(datos.pendienteCentavos),
+    pendienteDeReponer: deCentavos(fondo.estado === 'cerrado' ? 0 : datos.pendienteCentavos),
     valesAbiertos: deCentavos(datos.valesCentavos),
     valeMasViejo: datos.valeMasViejo,
     ultimoArqueo: datos.ultimoArqueo,

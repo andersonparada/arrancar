@@ -3630,6 +3630,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   o sobrantes) no se crea reposición compensada (el check exige monto > 0), esos comprobantes quedan sin reponer y su efectivo
   entra al depósito; (3) un fondo cerrado rechaza todo con `fondo_no_disponible` (incluido anular la compensada o la apertura);
   el depósito del cierre se corrige solo desde Caja chica: Bancos rechaza `movimiento_de_caja_chica`.
+- **2026-11-19 (CC-7, correcciones de la revisión, servidor):** (1) `AtenderMovimientoDeFondoPorCambiar` exige el fondo
+  abierto: Bancos ya no anula el cheque o la nota de un aumento de un fondo cerrado (`fondo_no_disponible`, el depósito del
+  cierre ya contó ese monto). (2) Lo pendiente que suma cero o menos al cerrar (caso mixto: factura y sobrante) sigue sin
+  reposición compensada (el check `monto > 0` no cambia, sin migración); para que no se pierda el control, `AnularPorAviso` y
+  `EliminarPorAviso` rechazan con `fondo_no_disponible` un comprobante vigente y sin reponer de un fondo cerrado, y la ficha de
+  un fondo cerrado muestra `pendienteDeReponer` en 0. Queda para el contador y el arquitecto de datos decidir si esos
+  comprobantes deben liquidarse (compensada con monto ≤ 0) y cómo los trata CC-R1.
 - **2026-11-19 (CL-3, Cuentas por liquidar, servidor):** gastos de los anticipos, sin migraciones nuevas (la tabla `gastos` ya
   estaba en CL-1 y CL-1c). `RecibirDocumento` atiende `cuentas-por-liquidar.recibir_documento` (contrato nuevo): guarda el
   documento en la bandeja con `monto = total − retenciones` y `monto_retenido`; **no rechaza por retención** (queda en la
