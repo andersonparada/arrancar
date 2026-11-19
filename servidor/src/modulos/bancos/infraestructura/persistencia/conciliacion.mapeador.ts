@@ -12,6 +12,7 @@ function fotoDesdeLaFila(fila: Fila): FotoDelCalculo | null {
     totalChequesEnCirculacion: fila.fotoTotalChequesEnCirculacion ?? '0.00',
     totalOtrosDebitosEnTransito: fila.fotoTotalOtrosDebitosEnTransito ?? '0.00',
     totalCreditosEnTransito: fila.fotoTotalCreditosEnTransito ?? '0.00',
+    totalCobradosAntesDeSuFecha: fila.fotoTotalCobradosAntesDeSuFecha ?? '0.00',
   };
 }
 
@@ -21,6 +22,7 @@ const SIN_FOTO = {
   fotoTotalChequesEnCirculacion: null,
   fotoTotalOtrosDebitosEnTransito: null,
   fotoTotalCreditosEnTransito: null,
+  fotoTotalCobradosAntesDeSuFecha: null,
 };
 
 function columnasDeLaFoto(foto: FotoDelCalculo | null) {
@@ -31,6 +33,7 @@ function columnasDeLaFoto(foto: FotoDelCalculo | null) {
     fotoTotalChequesEnCirculacion: foto.totalChequesEnCirculacion,
     fotoTotalOtrosDebitosEnTransito: foto.totalOtrosDebitosEnTransito,
     fotoTotalCreditosEnTransito: foto.totalCreditosEnTransito,
+    fotoTotalCobradosAntesDeSuFecha: foto.totalCobradosAntesDeSuFecha,
   };
 }
 
@@ -55,7 +58,7 @@ function propiedadesDeLaEntidad(fila: Fila) {
   };
 }
 
-/** Traduce entre la fila de la tabla y la entidad; la foto viaja en cinco columnas planas. */
+/** Traduce entre la fila de la tabla y la entidad; la foto viaja en seis columnas planas. */
 export const mapeadorDeConciliacion = {
   aEntidad(fila: Fila): Conciliacion {
     return Conciliacion.reconstruir({ ...propiedadesDeLaEntidad(fila), foto: fotoDesdeLaFila(fila) });

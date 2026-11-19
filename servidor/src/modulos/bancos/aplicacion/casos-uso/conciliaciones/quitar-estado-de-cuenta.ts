@@ -2,6 +2,7 @@ import type { Operador } from '../../../../core/compartido/aplicacion/operador.j
 import type { ConciliacionDto } from '../../dto/conciliacion.dto.js';
 import { ConciliacionSinEstadoDeCuenta } from '../../errores-de-estado-de-cuenta.js';
 import {
+  documentoDeLaConciliacion,
   conciliacionBloqueada,
   RECURSO_DE_ESTADOS_DE_CUENTA,
   type DependenciasDeConciliaciones,
@@ -30,7 +31,7 @@ export class QuitarEstadoDeCuenta {
         accion: 'quitar',
         anterior: { estadoDeCuenta: anterior },
       });
-      return consultas.obtener(conciliacionId);
+      return documentoDeLaConciliacion(operador, this.dependencias, conciliacionId);
     });
   }
 }

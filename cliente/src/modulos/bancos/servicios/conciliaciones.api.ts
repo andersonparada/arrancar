@@ -93,8 +93,12 @@ export interface DatosDeInicioDeConciliacion {
 export class ApiConciliaciones {
   constructor(private readonly http: ClienteHttp) {}
 
-  listarDeLaCuenta(cuentaBancariaId: string) {
-    return this.http.obtener<ConciliacionResumen[]>(`/bancos/cuentas-bancarias/${cuentaBancariaId}/conciliaciones`);
+  /** La API también da `periodoSiguiente`; la pantalla lo usará en BS-7 (hoy la lista solo toma las conciliaciones). */
+  async listarDeLaCuenta(cuentaBancariaId: string) {
+    const lista = await this.http.obtener<{ conciliaciones: ConciliacionResumen[] }>(
+      `/bancos/cuentas-bancarias/${cuentaBancariaId}/conciliaciones`,
+    );
+    return lista.conciliaciones;
   }
 
   obtener(conciliacionId: string) {

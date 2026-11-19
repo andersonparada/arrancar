@@ -1,6 +1,10 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { ConciliacionDto } from '../../dto/conciliacion.dto.js';
-import { conciliacionBloqueada, type DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
+import {
+  documentoDeLaConciliacion,
+  conciliacionBloqueada,
+  type DependenciasDeConciliaciones,
+} from './dependencias-de-conciliaciones.js';
 
 /**
  * Quien concilia la da por terminada: pasa de en proceso a elaborada; ya no se le cambian las marcas.
@@ -17,16 +21,20 @@ export class TerminarConciliacion {
    * @throws FaltaElEstadoDeCuenta si la empresa exige el archivo y no se adjuntó (400).
    */
   ejecutar(operador: Operador, conciliacionId: string): Promise<ConciliacionDto> {
-    const { unidadDeTrabajo, repositorio, consultas, politicaDeEstadoDeCuenta } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, politicaDeEstadoDeCuenta } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const conciliacion = await conciliacionBloqueada(repositorio, conciliacionId);
-      const { saldoQueDebeMostrarElEstadoDeCuenta } = await consultas.obtener(conciliacionId);
+      const { saldoQueDebeMostrarElEstadoDeCuenta } = await documentoDeLaConciliacion(
+        operador,
+        this.dependencias,
+        conciliacionId,
+      );
       conciliacion.elaborar(operador.usuarioId, {
         saldoCalculado: saldoQueDebeMostrarElEstadoDeCuenta,
         exigeEstadoDeCuenta: await politicaDeEstadoDeCuenta.exigeEstadoDeCuenta(operador),
       });
       await repositorio.guardar(conciliacion);
-      return consultas.obtener(conciliacionId);
+      return documentoDeLaConciliacion(operador, this.dependencias, conciliacionId);
     });
   }
 }

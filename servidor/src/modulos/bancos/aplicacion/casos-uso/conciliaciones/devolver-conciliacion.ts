@@ -1,6 +1,10 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import type { ConciliacionDto } from '../../dto/conciliacion.dto.js';
-import { conciliacionBloqueada, type DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
+import {
+  documentoDeLaConciliacion,
+  conciliacionBloqueada,
+  type DependenciasDeConciliaciones,
+} from './dependencias-de-conciliaciones.js';
 
 interface SolicitudDeDevolucion {
   conciliacionId: string;
@@ -13,10 +17,10 @@ export class DevolverConciliacion {
 
   /** @throws ConciliacionNoEstaElaborada si no está elaborada. */
   ejecutar(operador: Operador, { conciliacionId, motivo }: SolicitudDeDevolucion): Promise<ConciliacionDto> {
-    const { unidadDeTrabajo, repositorio, consultas, auditoria } = this.dependencias;
+    const { unidadDeTrabajo, repositorio, auditoria } = this.dependencias;
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const conciliacion = await conciliacionBloqueada(repositorio, conciliacionId);
-      const anterior = await consultas.obtener(conciliacionId);
+      const anterior = await documentoDeLaConciliacion(operador, this.dependencias, conciliacionId);
       conciliacion.devolver();
       await repositorio.guardar(conciliacion);
       await auditoria.registrar({
@@ -26,7 +30,7 @@ export class DevolverConciliacion {
         anterior,
         motivo,
       });
-      return consultas.obtener(conciliacionId);
+      return documentoDeLaConciliacion(operador, this.dependencias, conciliacionId);
     });
   }
 }

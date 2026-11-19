@@ -27,6 +27,8 @@ export interface FotoDelCalculo {
   totalChequesEnCirculacion: string;
   totalOtrosDebitosEnTransito: string;
   totalCreditosEnTransito: string;
+  /** Cheques de fecha posterior marcados (§2.6); cero en las autorizadas antes de existir esta partida. */
+  totalCobradosAntesDeSuFecha: string;
 }
 
 /** Quien autoriza: el superacceso no queda sujeto a la separación de funciones. */

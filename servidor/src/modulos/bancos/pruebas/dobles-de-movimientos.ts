@@ -87,6 +87,8 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
   fechaConciliadaHasta: string | null = null;
   /** Movimiento → conciliación donde las pruebas lo dan por marcado; lo que falte, sin marcar. */
   readonly marcadosEnConciliacion = new Map<string, string>();
+  /** Las conciliaciones de `marcadosEnConciliacion` que las pruebas dan por autorizadas. */
+  readonly conciliacionesAutorizadas = new Set<string>();
   /** Movimientos que las pruebas dan por con reparto por concepto (CP4); lo que falte, sin reparto. */
   readonly conDesglose = new Set<string>();
   /** Cuentas que las pruebas dan por con alguna conciliación (aunque no esté autorizada). */
@@ -159,9 +161,10 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
     );
   }
 
-  async conciliadaHasta(_cuentaBancariaId: string): Promise<string | null> {
-    return this.fechaConciliadaHasta;
-  }
+  conciliadaHasta = async (_cuentaBancariaId: string) => this.fechaConciliadaHasta;
+
+  marcadoEnConciliacionAutorizada = async (id: string) =>
+    this.conciliacionesAutorizadas.has(this.marcadosEnConciliacion.get(id) ?? '');
 
   /** Los dobles no concilian: ninguna marca pertenece a un mes autorizado. */
   mesesConciliados = async (): ReturnType<ConsultasMovimientos['mesesConciliados']> => new Map();
