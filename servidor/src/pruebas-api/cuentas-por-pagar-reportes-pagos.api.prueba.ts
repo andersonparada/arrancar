@@ -241,6 +241,6 @@ describe('permisos y Excel de R6 y R7', () => {
 
     expect(filas.some((fila) => fila.startsWith('Cheques|'))).toBe(true);
     expect(filas.some((fila) => fila.startsWith('Total|'))).toBe(true);
-    expect(filas.some((fila) => fila.includes('Código de Comercio art. 501'))).toBe(true);
+    expect(filas.some((fila) => fila.includes('Código de Comercio, art. 501'))).toBe(true);
   });
 });

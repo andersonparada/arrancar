@@ -18,8 +18,10 @@ interface ChequePorEmitir {
 export const CODIGO_DE_POSFECHADO_SIN_FONDOS = 'cheque_posfechado_sin_fondos';
 
 const MENSAJE =
-  'El cheque se paga a la vista (Código de Comercio art. 501): si el proveedor lo cobra hoy, la cuenta no tiene fondos. ' +
-  'Emitir un cheque sin fondos puede ser delito (Código Penal art. 268).';
+  'El cheque se paga a la vista aunque tenga fecha posterior: si el beneficiario lo presenta hoy, el banco lo paga hoy ' +
+  '(Código de Comercio, art. 501), y la cuenta no tiene fondos para cubrirlo. ' +
+  'Dar en pago un cheque sin fondos, o retirar los fondos antes de que venza el plazo para cobrarlo, puede ser estafa ' +
+  '(Código Penal, art. 268).';
 
 /**
  * Aviso que no bloquea al emitir un cheque con fecha posterior a hoy (CP4, C-CP4-1): saldo de hoy menos los cheques

@@ -1,5 +1,6 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { ChequeNoEmitido, MesConciliado, MovimientoAnulado } from '../../../dominio/errores.js';
+import { NoSeBlanqueaUnChequeDeApertura } from '../../../dominio/errores-de-apertura.js';
 import type { Movimiento } from '../../../dominio/movimiento.js';
 import { movimientoExistente } from '../movimientos/dependencias-de-movimientos.js';
 import type { ChequeDto } from '../../dto/cheque.dto.js';
@@ -23,6 +24,7 @@ export class BlanquearCheque {
 
   /**
    * @throws ChequeNoEmitido si el cheque no está emitido.
+   * @throws NoSeBlanqueaUnChequeDeApertura si es de la carga inicial (no se emitió en Arrancar).
    * @throws ModuloDeOrigenInactivo, MovimientoDeOtroModulo o lo que rechace el módulo de origen si es de otro módulo (CP4).
    * @throws MovimientoMarcadoEnConciliacion si su movimiento está marcado en una conciliación; MovimientoAnulado si está anulado.
    * @throws MesConciliado si su fecha cae en un mes ya conciliado de la cuenta.
@@ -35,6 +37,7 @@ export class BlanquearCheque {
       const anterior = await consultas.obtener(chequeId);
       const movimientoId = cheque.instantanea().movimientoId as string;
       const movimiento = await movimientoExistente(repositorioMovimientos, movimientoId);
+      if (movimiento.parteDeApertura !== null) throw new NoSeBlanqueaUnChequeDeApertura();
       const delMovimiento = await this.dependencias.consultasMovimientos.obtener(movimientoId);
       await this.dependencias.revisor.revisar(operador, { movimiento: delMovimiento, cambio: 'blanquear', motivo });
       await this.exigirMovimientoLimpio(movimiento);

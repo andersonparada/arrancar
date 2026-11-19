@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calcularSaldoCorrido, diaAnteriorA } from './calculo-de-reporte-de-movimientos.js';
+import { calcularSaldoCorrido, conMesConciliado, diaAnteriorA } from './calculo-de-reporte-de-movimientos.js';
 import type { MovimientoDto } from './dto/movimiento.dto.js';
 
 function movimiento(datos: Partial<MovimientoDto> & Pick<MovimientoDto, 'tipo' | 'monto'>): MovimientoDto {
@@ -8,6 +8,7 @@ function movimiento(datos: Partial<MovimientoDto> & Pick<MovimientoDto, 'tipo' |
     cuentaBancariaId: crypto.randomUUID(),
     fecha: '2026-01-15',
     saldoInicial: false,
+    parteDeApertura: null,
     referencia: null,
     beneficiario: null,
     observaciones: null,
@@ -71,5 +72,30 @@ describe('calcularSaldoCorrido', () => {
 
   it('sin movimientos, deja el saldo anterior', () => {
     expect(calcularSaldoCorrido(500, [])).toEqual([]);
+  });
+});
+
+describe('conMesConciliado', () => {
+  const meses = new Map([['conciliacion-enero', { anio: 2026, mes: 1 }]]);
+
+  it('trae el mes de la conciliación autorizada donde quedó marcada la fila', () => {
+    const [marcada] = conMesConciliado(
+      [{ ...movimiento({ tipo: 'credito', monto: '10.00', conciliacionId: 'conciliacion-enero' }), saldo: null }],
+      meses,
+    );
+
+    expect(marcada?.conciliadoEn).toEqual({ anio: 2026, mes: 1 });
+  });
+
+  it('sin marca, o con la marca de una conciliación que no está autorizada, queda en null', () => {
+    const filas = conMesConciliado(
+      [
+        { ...movimiento({ tipo: 'credito', monto: '10.00' }), saldo: null },
+        { ...movimiento({ tipo: 'debito', monto: '5.00', conciliacionId: 'en-proceso' }), saldo: null },
+      ],
+      meses,
+    );
+
+    expect(filas.map((f) => f.conciliadoEn)).toEqual([null, null]);
   });
 });

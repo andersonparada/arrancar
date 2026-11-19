@@ -1,6 +1,8 @@
 import { Entidad } from '../../core/compartido/dominio/entidad.js';
 import type { Identificador } from '../../core/compartido/dominio/identificador.js';
 import { aCentavos } from './centavos.js';
+import { exigirPartidaQueSeAnula } from './anulacion-de-apertura.js';
+import { datosDelInverso, type CambiosDelInverso } from './datos-del-inverso.js';
 
 import {
   NoSeReclasificaElSaldoInicial,
@@ -184,6 +186,18 @@ export class Movimiento extends Entidad<MovimientoId> {
   }
 
   /**
+   * Anula una partida de la carga inicial (cheque en circulación, depósito o débito en tránsito, error del banco): crea
+   * su inverso con el concepto `anulacion_de_apertura`; en el depósito, el pagador queda como beneficiario del inverso.
+   * @throws NoSeAnulaElSaldoDelBanco, ElPosfechadoSeAnulaComoCheque o PartidaDeAperturaNoEncontrada si no es de las que se
+   *   anulan; los de `revertir` (ya revertida, fecha anterior, motivo).
+   */
+  revertirPartidaDeApertura(fecha: string, motivo: string, inverso: { conceptoId: string; pagador: string | null }) {
+    exigirPartidaQueSeAnula(this.propiedades.parteDeApertura);
+    const beneficiario = inverso.pagador ?? this.propiedades.beneficiario;
+    return this.revertirSinRevisar(fecha, motivo, { conceptoId: inverso.conceptoId, beneficiario });
+  }
+
+  /**
    * Anula el movimiento de un cheque a la antigua (sin inverso, fuera del saldo): solo cuando su
    * mes todavía está abierto.
    * @throws MovimientoAnulado si ya está anulado; MotivoDeAnulacionInvalido si falta el motivo.
@@ -275,33 +289,16 @@ export class Movimiento extends Entidad<MovimientoId> {
     return { ...this.propiedades };
   }
 
-  private revertirSinRevisar(fecha: string, motivo: string): Movimiento {
+  private revertirSinRevisar(fecha: string, motivo: string, cambios?: CambiosDelInverso): Movimiento {
     this.exigirVigente();
     if (this.esInverso) throw new NoSeRevierteUnInverso();
     if (fecha < this.propiedades.fecha) throw new FechaDeReversionAnterior();
     const motivoDeReversion = motivoValido(motivo);
-    const inverso = Movimiento.crear(
-      this.propiedades.empresaId,
-      {
-        cuentaBancariaId: this.propiedades.cuentaBancariaId,
-        tipo: this.propiedades.tipo === 'credito' ? 'debito' : 'credito',
-        fecha,
-        monto: this.propiedades.monto,
-        saldoInicial: false,
-        referencia: this.referenciaDeLaReversion(),
-        beneficiario: this.propiedades.beneficiario,
-        observaciones: this.propiedades.observaciones,
-        conceptoId: this.propiedades.conceptoId,
-      },
-      { revierteAId: this.id.valor, transferenciaId: this.propiedades.transferenciaId },
-    );
+    const { empresaId, transferenciaId } = this.propiedades;
+    const vinculos = { revierteAId: this.id.valor, transferenciaId };
+    const inverso = Movimiento.crear(empresaId, datosDelInverso(this.propiedades, fecha, cambios), vinculos);
     this.propiedades = { ...this.propiedades, revertidoEn: new Date(), motivoDeReversion };
     return inverso;
-  }
-
-  private referenciaDeLaReversion(): string {
-    const referencia = this.propiedades.referencia?.trim();
-    return referencia ? `Reversión de ${referencia}` : `Reversión de movimiento del ${this.propiedades.fecha}`;
   }
 
   private exigirVigente(): void {

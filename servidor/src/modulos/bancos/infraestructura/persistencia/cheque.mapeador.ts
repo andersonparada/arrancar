@@ -42,6 +42,7 @@ export const mapeadorDeCheque = {
     return {
       ...dto,
       anuladoEn: anuladoEn ? anuladoEn.toISOString() : null,
+      parteDeApertura: movimiento?.parteDeApertura ?? null,
       moduloDeOrigen: movimiento ? (hechosDelMovimiento?.moduloDeOrigen ?? null) : null,
       ...accionesDeCheque(dto.estado, movimiento),
     };

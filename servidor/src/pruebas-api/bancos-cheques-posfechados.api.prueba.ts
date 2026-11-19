@@ -76,8 +76,8 @@ describe('aviso de fondos de un cheque posfechado (desde Bancos)', () => {
 
     expect(primero.avisos).toEqual([]);
     expect(codigos(segundo.avisos)).toEqual([CODIGO]);
-    expect(segundo.avisos[0].mensaje).toContain('Código de Comercio art. 501');
-    expect(segundo.avisos[0].mensaje).toContain('Código Penal art. 268');
+    expect(segundo.avisos[0].mensaje).toContain('Código de Comercio, art. 501');
+    expect(segundo.avisos[0].mensaje).toContain('Código Penal, art. 268');
   });
 
   it('un posfechado anulado deja de contar', async () => {

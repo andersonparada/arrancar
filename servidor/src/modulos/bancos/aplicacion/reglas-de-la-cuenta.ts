@@ -7,7 +7,14 @@ import {
   SaldoInicialRepetido,
   SaldoInsuficiente,
 } from '../dominio/errores.js';
-import type { ConsultasMovimientos } from './puertos/consultas-movimientos.js';
+import {
+  InversoDentroDeLaApertura,
+  MovimientoAntesDeLaApertura,
+  MovimientoAntesDeLaFechaDeInicio,
+} from '../dominio/errores-de-apertura.js';
+import { fechaDeCorte } from '../dominio/apertura.js';
+import type { CargaInicial } from './puertos/carga-inicial.js';
+import type { ConsultasMovimientos, SaldoPrincipalDeLaCuenta } from './puertos/consultas-movimientos.js';
 import type { PoliticaDeSobregiro } from './puertos/politica-de-sobregiro.js';
 
 /** Lo que un registro, una corrección o una anulación hace en su cuenta. */
@@ -26,6 +33,8 @@ export interface CambioEnLaCuenta {
 interface Dependencias {
   consultas: ConsultasMovimientos;
   politicaDeSobregiro: PoliticaDeSobregiro;
+  /** La fecha de inicio de la empresa: sin saldo inicial en la cuenta, nada nuevo se registra antes de ella. */
+  cargaInicial: CargaInicial;
 }
 
 /**
@@ -36,24 +45,66 @@ export class ReglasDeLaCuenta {
   constructor(private readonly dependencias: Dependencias) {}
 
   async revisar(operador: Operador, cambio: CambioEnLaCuenta): Promise<void> {
-    if (cambio.queda) await this.revisarSaldoInicial(cambio, cambio.queda);
+    if (cambio.queda) await this.revisarSaldoInicial(operador, cambio, cambio.queda);
     await this.revisarMesConciliado(cambio);
     await this.revisarSobregiro(operador, cambio);
   }
 
+  /**
+   * El inverso de una partida de apertura que se anula es un hecho del período: su fecha es posterior al corte (el día
+   * anterior a la fecha de inicio de la empresa).
+   * @throws InversoDentroDeLaApertura
+   */
+  async revisarElInversoDeApertura(operador: Operador, fecha: string): Promise<void> {
+    const { fechaDeInicio } = await this.dependencias.cargaInicial.obtener(operador);
+    if (fechaDeInicio === null) return;
+    const corte = fechaDeCorte(fechaDeInicio);
+    if (fecha <= corte) throw new InversoDentroDeLaApertura(corte);
+  }
+
   private async revisarSaldoInicial(
-    { cuentaBancariaId, movimientoId }: CambioEnLaCuenta,
+    operador: Operador,
+    { cuentaBancariaId, movimientoId, fechas }: CambioEnLaCuenta,
     { fecha, saldoInicial }: { fecha: string; saldoInicial: boolean },
   ): Promise<void> {
     const { consultas } = this.dependencias;
-    const fechaDelInicial = await consultas.fechaDelSaldoInicial(cuentaBancariaId, movimientoId);
-    if (!saldoInicial) {
-      if (fechaDelInicial && fecha < fechaDelInicial) throw new MovimientoAntesDelSaldoInicial();
-      return;
-    }
-    if (fechaDelInicial) throw new SaldoInicialRepetido();
-    const masAntigua = await consultas.fechaMasAntigua(cuentaBancariaId, movimientoId);
+    const principal = await consultas.saldoPrincipalDe(cuentaBancariaId, movimientoId);
+    if (saldoInicial) return this.revisarElSaldoInicialNuevo({ cuentaBancariaId, movimientoId, fecha, principal });
+    if (principal) return this.revisarContraElSaldoPrincipal(fecha, principal);
+    await this.revisarLaFechaDeInicio(operador, fecha, movimientoId ? fechas[0] : undefined);
+  }
+
+  /** El saldo inicial es único y el primero por fecha. */
+  private async revisarElSaldoInicialNuevo(datos: {
+    cuentaBancariaId: string;
+    movimientoId?: string;
+    fecha: string;
+    principal: SaldoPrincipalDeLaCuenta | null;
+  }): Promise<void> {
+    const { cuentaBancariaId, movimientoId, fecha, principal } = datos;
+    if (
+      principal ||
+      (!movimientoId && (await this.dependencias.consultas.tieneCabeceraDeSaldoInicial(cuentaBancariaId)))
+    )
+      throw new SaldoInicialRepetido();
+    const masAntigua = await this.dependencias.consultas.fechaMasAntigua(cuentaBancariaId, movimientoId);
     if (masAntigua && fecha > masAntigua) throw new SaldoInicialNoEsElPrimero();
+  }
+
+  /** Con saldo del banco: nada del corte para atrás (§5.2); con el global de antes: nada antes de su fecha. */
+  private revisarContraElSaldoPrincipal(fecha: string, { parte, fecha: delSaldo }: SaldoPrincipalDeLaCuenta): void {
+    if (parte === 'saldo_del_banco' && fecha <= delSaldo) throw new MovimientoAntesDeLaApertura(delSaldo);
+    if (parte === 'saldo_global' && fecha < delSaldo) throw new MovimientoAntesDelSaldoInicial();
+  }
+
+  /**
+   * Sin saldo inicial en la cuenta, un movimiento no puede quedar antes de la fecha de inicio de la empresa (P-6);
+   * al corregir uno que ya estaba antes, la fecha se mueve libremente.
+   */
+  private async revisarLaFechaDeInicio(operador: Operador, fecha: string, anterior?: string): Promise<void> {
+    const { fechaDeInicio } = await this.dependencias.cargaInicial.obtener(operador);
+    if (fechaDeInicio === null || (anterior !== undefined && anterior < fechaDeInicio)) return;
+    if (fecha < fechaDeInicio) throw new MovimientoAntesDeLaFechaDeInicio(fechaDeInicio);
   }
 
   /** Nada se toca con fecha en un mes ya conciliado (o antes) de la cuenta. */

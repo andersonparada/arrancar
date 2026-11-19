@@ -19,6 +19,7 @@ export interface FilaExportadaDeChequeCaduco {
 
 const TEXTO_DEL_ORIGEN: Record<ChequeEnCirculacionDto['origen'], string> = {
   cuentas_por_pagar: 'Cuentas por pagar',
+  apertura: 'Carga inicial',
   suelto: 'Suelto',
 };
 

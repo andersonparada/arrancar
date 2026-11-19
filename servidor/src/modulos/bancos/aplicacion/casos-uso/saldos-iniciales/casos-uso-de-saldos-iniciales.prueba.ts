@@ -3,76 +3,13 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import { UnidadDeTrabajoEnMemoria, operadorDePrueba } from '../../../../core/compartido/pruebas/dobles-compartidos.js';
 import { FechaDeInicioConSaldosDeBancos } from '../../../dominio/errores-de-apertura.js';
 import { FichaDeSaldoInicial } from '../../ficha-de-saldo-inicial.js';
-import type {
-  ConsultasDeSaldosIniciales,
-  CuentaConSuCabecera,
-  PartidaDeLaBase,
-  SaldoPrincipal,
-} from '../../puertos/consultas-de-saldos-iniciales.js';
 import { ListarSaldosIniciales } from './listar-saldos-iniciales.js';
+import { ConsultasEnMemoria, cuenta, parte } from './soporte-de-pruebas-de-saldos-iniciales.js';
 import { ObtenerSaldoInicial } from './obtener-saldo-inicial.js';
 import { RevisarCierreDeCargaEnBancos } from './revisar-cierre-de-carga-en-bancos.js';
 import { ValidarFechaDeInicioEnBancos } from './validar-fecha-de-inicio-en-bancos.js';
 
 const operador = operadorDePrueba();
-
-class ConsultasEnMemoria implements ConsultasDeSaldosIniciales {
-  cuentasDeLaEmpresa: CuentaConSuCabecera[] = [];
-  partidasDeLaEmpresa: PartidaDeLaBase[] = [];
-
-  async cuentas() {
-    return this.cuentasDeLaEmpresa;
-  }
-  async partidas(cuentaBancariaId?: string) {
-    return this.partidasDeLaEmpresa.filter((p) => !cuentaBancariaId || p.cuentaBancariaId === cuentaBancariaId);
-  }
-  async contarMovimientosNormalesHasta() {
-    return 0;
-  }
-  async saldosPrincipales(): Promise<SaldoPrincipal[]> {
-    return this.partidasDeLaEmpresa
-      .filter((p) => p.parte === 'saldo_del_banco' || p.parte === 'saldo_global')
-      .map((p) => ({
-        cuentaBancariaId: p.cuentaBancariaId,
-        parte: p.parte as SaldoPrincipal['parte'],
-        fecha: p.fecha,
-      }));
-  }
-}
-
-const cuenta = (id: string, cambios: Partial<CuentaConSuCabecera> = {}): CuentaConSuCabecera => ({
-  cuentaBancariaId: id,
-  cuentaNombre: `Cuenta ${id}`,
-  bancoNombre: 'Banco',
-  activa: true,
-  cabeceraId: `cabecera-${id}`,
-  saldoSegunLibrosAnteriores: null,
-  observaciones: null,
-  tieneEvidencia: false,
-  tieneConciliaciones: false,
-  ...cambios,
-});
-
-let secuencia = 0;
-const parte = (cuentaBancariaId: string, p: Partial<PartidaDeLaBase> & Pick<PartidaDeLaBase, 'parte' | 'monto'>) =>
-  ({
-    movimientoId: `mov-${++secuencia}`,
-    cuentaBancariaId,
-    tipo: 'credito',
-    fecha: '2025-12-31',
-    serie: null,
-    numeroDeCheque: null,
-    beneficiario: null,
-    referencia: null,
-    observaciones: null,
-    conceptoId: 'concepto-saldo-inicial',
-    conceptoNombre: 'Saldo inicial',
-    conciliacionId: null,
-    conciliadaEn: null,
-    anulada: false,
-    revertida: false,
-    ...p,
-  }) as PartidaDeLaBase;
 
 let consultas: ConsultasEnMemoria;
 let estado: { fechaDeInicio: string | null; cerrada: boolean };
@@ -191,12 +128,47 @@ describe('ObtenerSaldoInicial', () => {
       avisos: ['antiguo'],
       puedeCorregir: true,
       puedeEliminar: true,
-      puedeAnular: false,
+      puedeAnular: true,
     });
     expect(deLa(8)).toMatchObject({ conceptoNombre: 'Pagos', avisos: [] });
     const marcada = ficha.partidas.find((p) => p.parte === 'deposito_en_transito')!;
-    expect(marcada).toMatchObject({ conciliadaEn: { anio: 2026, mes: 1 }, puedeCorregir: false, puedeEliminar: false });
-    expect(ficha.partidas.find((p) => p.parte === 'saldo_del_banco')).toMatchObject({ puedeCorregir: false });
+    expect(marcada).toMatchObject({
+      conciliadaEn: { anio: 2026, mes: 1 },
+      puedeCorregir: false,
+      puedeEliminar: false,
+      puedeAnular: false,
+    });
+    expect(deLa(8)).toMatchObject({ puedeAnular: false });
+    expect(ficha.partidas.find((p) => p.parte === 'saldo_del_banco')).toMatchObject({
+      puedeCorregir: false,
+      puedeAnular: false,
+    });
+  });
+
+  it('puedeAnular: las cuatro partidas vigentes y sin marcar, también con la carga cerrada; no el posfechado ni la ya revertida', async () => {
+    estado.cerrada = true;
+    consultas.cuentasDeLaEmpresa = [cuenta('a')];
+    consultas.partidasDeLaEmpresa = [
+      parte('a', { parte: 'saldo_del_banco', monto: '100.00' }),
+      parte('a', { parte: 'deposito_en_transito', monto: '1.00' }),
+      parte('a', { parte: 'debito_en_transito', monto: '2.00', tipo: 'debito' }),
+      parte('a', { parte: 'error_del_banco', monto: '3.00' }),
+      parte('a', { parte: 'cheque_en_circulacion', monto: '4.00', tipo: 'cheque', numeroDeCheque: 1 }),
+      parte('a', { parte: 'cheque_posfechado', monto: '5.00', tipo: 'cheque', numeroDeCheque: 2, fecha: '2026-02-01' }),
+      parte('a', { parte: 'deposito_en_transito', monto: '6.00', revertida: true }),
+    ];
+
+    const ficha = await armar().obtener.ejecutar(operador, 'a');
+
+    expect(ficha.partidas.map((p) => [p.parte, p.puedeAnular])).toEqual([
+      ['saldo_del_banco', false],
+      ['deposito_en_transito', true],
+      ['debito_en_transito', true],
+      ['error_del_banco', true],
+      ['cheque_en_circulacion', true],
+      ['cheque_posfechado', false],
+      ['deposito_en_transito', false],
+    ]);
   });
 
   it('el aviso de antigüedad usa la variable de meses', async () => {
@@ -256,6 +228,17 @@ describe('ValidarFechaDeInicioEnBancos', () => {
 
     expect(error).toBeInstanceOf(FechaDeInicioConSaldosDeBancos);
     expect((error as Error).message).toContain('2 cuentas bancarias tienen saldo inicial al 31/12/2025');
+  });
+
+  it('una cuenta con su cabecera y el saldo en cero (sin movimiento) también rechaza', async () => {
+    consultas.cuentasDeLaEmpresa = [cuenta('cero')];
+
+    const error = await validar()
+      .ejecutar(operador, aviso('2026-03-01'))
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(FechaDeInicioConSaldosDeBancos);
+    expect((error as Error).message).toContain('1 cuentas bancarias tienen saldo inicial:');
   });
 
   it('un saldo global rechaza si quedaría posterior a la fecha nueva; con la misma fecha o una posterior, pasa', async () => {

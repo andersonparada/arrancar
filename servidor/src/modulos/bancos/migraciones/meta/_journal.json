@@ -246,6 +246,13 @@
       "when": 1794887142268,
       "tag": "0034_saldos_iniciales_con_partidas",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1795045430386,
+      "tag": "0035_saldos_por_cuenta_permisos",
+      "breakpoints": true
     }
   ]
 }

@@ -30,6 +30,7 @@ import { ObtenerMovimiento } from './obtener-movimiento.js';
 import { ReclasificarVarios } from './reclasificar-varios.js';
 import { ReclasificarMovimientos } from './reclasificar-movimientos.js';
 import { ReporteDeMovimientos } from './reporte-de-movimientos.js';
+import { CARGA_SIN_FECHA_DE_INICIO } from '../../../pruebas/dobles-de-carga-inicial.js';
 
 export const operador = operadorDePrueba();
 export const CUENTA = '00000000-0000-4000-8000-000000000001';
@@ -67,7 +68,11 @@ function dependenciasDe(registros: MovimientosEnMemoria, auditoria: AuditoriaEnM
     correlativos: new CorrelativosEnMemoria(),
     reloj: new RelojFijo(),
     conceptos,
-    reglas: new ReglasDeLaCuenta({ consultas: registros, politicaDeSobregiro }),
+    reglas: new ReglasDeLaCuenta({
+      consultas: registros,
+      politicaDeSobregiro,
+      cargaInicial: CARGA_SIN_FECHA_DE_INICIO,
+    }),
     politicaDeMismaFecha: new PoliticaDeMismaFechaFija(opciones.mismaFecha),
   };
 }

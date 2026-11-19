@@ -33,7 +33,7 @@ export interface PartidaDeAperturaDto {
   avisos: Array<'antiguo' | 'deposito_viejo'>;
   puedeCorregir: boolean;
   puedeEliminar: boolean;
-  /** Anular partidas de apertura llega con BS-3: hasta entonces siempre es falso. */
+  /** Se anula con un inverso: cheque en circulación, depósito o débito en tránsito y error del banco vigentes, sin marcar en una conciliación (§5.3). */
   puedeAnular: boolean;
 }
 
@@ -110,6 +110,12 @@ export interface SolicitudDePartida {
 export interface SaldoInicialGuardadoDto {
   saldoInicial: SaldoInicialDto;
   avisos: AvisoDeApertura[];
+}
+
+/** La partida ya anulada (con su marca de revertida) y el inverso que la compensa. */
+export interface PartidaAnuladaDto {
+  partida: PartidaDeAperturaDto;
+  inversoId: string;
 }
 
 export interface PartidaGuardadaDto {

@@ -62,6 +62,36 @@ export type FormaDeAnulacion = 'sin_inverso' | 'con_inverso';
 /** Qué se va a hacer con un movimiento que tiene origen en otro módulo o está marcado para Cuentas por pagar. */
 export type CambioDeMovimiento = 'anular' | 'eliminar' | 'blanquear' | 'corregir' | 'reclasificar' | 'desmarcar';
 
+/** Qué partida de la carga inicial se anuló; el posfechado no es partida de apertura. */
+export type ParteDeAperturaAnulada =
+  'cheque_en_circulacion' | 'deposito_en_transito' | 'debito_en_transito' | 'error_del_banco';
+
+/**
+ * Una partida de la carga inicial quedó anulada con su inverso (la fecha del inverso es posterior al corte). Sirve a
+ * Contabilidad (la partida), a la bandeja de Cuentas por pagar y para avisar. El dinero va en centavos enteros;
+ * `pagador` solo viene en el depósito en tránsito (quién debe ese dinero) y `numeroDeCheque` solo en el cheque.
+ */
+export interface DatosDePartidaDeAperturaAnulada {
+  empresaId: string;
+  cuentaBancariaId: string;
+  movimientoId: string;
+  inversoId: string;
+  parte: ParteDeAperturaAnulada;
+  fecha: string;
+  montoCentavos: number;
+  beneficiario: string | null;
+  numeroDeCheque: number | null;
+  pagador: string | null;
+  motivo: string;
+}
+
+/** Eventos de después de confirmar, para Contabilidad y quien quiera escucharlos. */
+declare module '../eventos/bus-eventos.js' {
+  interface EventosDominio {
+    'bancos.partida_de_apertura_anulada': DatosDePartidaDeAperturaAnulada;
+  }
+}
+
 declare module './mediador.contratos.js' {
   interface OrdenesEntreModulos {
     /** Cuentas activas, chequeras activas con su siguiente cheque disponible y saldo de cada cuenta, para la ventana de pago. */

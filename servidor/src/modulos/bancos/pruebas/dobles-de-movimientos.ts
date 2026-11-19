@@ -3,7 +3,7 @@ import type { Operador } from '../../core/compartido/aplicacion/operador.js';
 import { RecursoNoEncontrado } from '../../core/compartido/aplicacion/errores.js';
 import { resumirSinClasificar } from '../aplicacion/calculo-de-reporte-de-movimientos.js';
 import type { FiltroDeMovimientos, MovimientoDto, ResumenDeSinClasificar } from '../aplicacion/dto/movimiento.dto.js';
-import type { ConsultasMovimientos } from '../aplicacion/puertos/consultas-movimientos.js';
+import type { ConsultasMovimientos, SaldoPrincipalDeLaCuenta } from '../aplicacion/puertos/consultas-movimientos.js';
 import type { PoliticaDeMismaFechaEnAnulacion } from '../aplicacion/puertos/politica-de-misma-fecha-en-anulacion.js';
 import type { PoliticaDeSobregiro } from '../aplicacion/puertos/politica-de-sobregiro.js';
 import type { RepositorioMovimientos } from '../aplicacion/puertos/repositorio-movimientos.js';
@@ -24,10 +24,11 @@ function hechosDe(
   conciliacionId: string | null,
   cuenta: HechosDeLaCuenta,
 ): HechosDeUnMovimiento {
-  const { tipo, saldoInicial, transferenciaId } = movimiento.instantanea();
+  const { tipo, saldoInicial, transferenciaId, parteDeApertura } = movimiento.instantanea();
   return {
     tipo,
     saldoInicial,
+    parteDeApertura,
     esDeTransferencia: transferenciaId !== null,
     marcadoEnConciliacion: conciliacionId !== null,
     anulado: movimiento.estaAnulado,
@@ -142,9 +143,12 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
     return deCentavos(efectos.reduce((suma, efecto) => suma + efecto, 0));
   }
 
-  async fechaDelSaldoInicial(cuentaBancariaId: string, excluir?: string): Promise<string | null> {
+  tieneCabeceraDeSaldoInicial = async (): Promise<boolean> => false;
+
+  async saldoPrincipalDe(cuentaBancariaId: string, excluir?: string): Promise<SaldoPrincipalDeLaCuenta | null> {
     const inicial = this.vigentes(cuentaBancariaId, excluir).find((dto) => dto.saldoInicial);
-    return inicial?.fecha ?? null;
+    const parte = inicial?.parteDeApertura === 'saldo_del_banco' ? 'saldo_del_banco' : 'saldo_global';
+    return inicial ? { parte, fecha: inicial.fecha } : null;
   }
 
   async fechaMasAntigua(cuentaBancariaId: string, excluir?: string): Promise<string | null> {
@@ -158,6 +162,9 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
   async conciliadaHasta(_cuentaBancariaId: string): Promise<string | null> {
     return this.fechaConciliadaHasta;
   }
+
+  /** Los dobles no concilian: ninguna marca pertenece a un mes autorizado. */
+  mesesConciliados = async (): ReturnType<ConsultasMovimientos['mesesConciliados']> => new Map();
 
   async saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string> {
     const efectos = this.vigentes(cuentaBancariaId)

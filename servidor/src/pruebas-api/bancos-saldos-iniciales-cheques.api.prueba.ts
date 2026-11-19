@@ -243,3 +243,23 @@ describe('permisos', () => {
     expect((await soloEliminar.delete(`${RUTA_DE_APERTURA}/${cuentaId}`, { motivo: 'x' })).estado).toBe(204);
   });
 });
+
+describe('un saldo inicial por cuenta aunque el saldo del banco sea cero', () => {
+  it('la ruta heredada rechaza un saldo global si la cuenta ya tiene cabecera con saldo cero y partidas (422)', async () => {
+    const cuentaId = await cuentaConSaldo('0.00');
+    const agregada = await agregarPartida(usuario(), cuentaId, partida('cheque_en_circulacion'));
+    expect(agregada.estado).toBe(201);
+
+    const global = await usuario().post('/api/bancos/saldos-iniciales', {
+      cuentaBancariaId: cuentaId,
+      tipo: 'credito',
+      fecha: '2025-12-01',
+      monto: '500.00',
+      referencia: null,
+      observaciones: null,
+    });
+
+    expect(global.estado).toBe(422);
+    expect(global.cuerpo.error.codigo).toBe('saldo_inicial_repetido');
+  });
+});

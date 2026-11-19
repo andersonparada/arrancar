@@ -32,7 +32,7 @@ function intercambioDelReporte(reporte: ReporteDeChequesCaducos) {
 
 /** Raíz de composición del reporte de cheques caducos: el único lugar donde se eligen las implementaciones concretas. */
 export function rutasDeChequesCaducos() {
-  const { unidadDeTrabajo, reloj } = dependenciasCompartidas();
+  const { unidadDeTrabajo, reloj, publicadorEventos } = dependenciasCompartidas();
   const consultas = new ConsultasDeChequesEnCirculacionDrizzle();
   const politicaDeVencimiento = new PoliticaDeVencimientoDeChequesEnConfiguracion();
   const reporte = new ReporteDeChequesCaducos({ unidadDeTrabajo, reloj, consultas, politicaDeVencimiento });
@@ -42,6 +42,7 @@ export function rutasDeChequesCaducos() {
     consultas,
     politicaDeVencimiento,
     anularCheque: new AnularCheque(dependenciasDeCheques()),
+    publicadorEventos,
   });
   return rutasChequesCaducos(new ChequesCaducosControlador({ reporte, anularEnLote }), intercambioDelReporte(reporte));
 }

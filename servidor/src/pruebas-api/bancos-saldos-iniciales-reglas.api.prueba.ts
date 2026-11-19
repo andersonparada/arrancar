@@ -50,19 +50,26 @@ describe('antes de empezar', () => {
   });
 
   it('una cuenta con movimientos anteriores o iguales al corte no lleva saldo inicial (422)', async () => {
-    const cuentaId = await nuevaCuenta();
-    const nota = await usuario().post('/api/bancos/notas', {
+    // El movimiento viejo se registró antes de definir la fecha de inicio (después ya no se puede, P-6).
+    const antes = await darDeAltaCuenta(entorno, {
+      nombre: 'Movimiento anterior',
+      usuario: 'propietariomovimientoanterior',
+      modulos: ['bancos'],
+    });
+    const cuentaId = await crearCuentaSinSaldo(antes.propietario);
+    const nota = await antes.propietario.post('/api/bancos/notas', {
       cuentaBancariaId: cuentaId,
       tipo: 'credito',
       fecha: '2025-12-15',
       monto: '50.00',
       referencia: 'Boleta vieja',
       observaciones: null,
-      conceptoId: await conceptoGeneral(usuario()),
+      conceptoId: await conceptoGeneral(antes.propietario),
     });
     expect(nota.estado).toBe(201);
+    await antes.propietario.put(`/api/empresas/${antes.empresaId}/carga-inicial`, { fechaDeInicio: '2026-01-01' });
 
-    const respuesta = await guardarSaldo(usuario(), cuentaId, '100.00');
+    const respuesta = await guardarSaldo(antes.propietario, cuentaId, '100.00');
 
     expect(respuesta.estado).toBe(422);
     expect(respuesta.cuerpo.error.codigo).toBe('cuenta_con_movimientos_anteriores');

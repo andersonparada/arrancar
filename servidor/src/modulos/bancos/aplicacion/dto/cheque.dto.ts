@@ -1,6 +1,7 @@
 import type { AvisoDeBancos, LineaDeConcepto } from '../../../core/contratos/bancos.contratos.js';
 import type { CausaDeAnulacion, EstadoDelCheque } from '../../dominio/cheque.js';
 import type { OrigenDeMovimiento } from '../../dominio/origen-de-movimiento.js';
+import type { ParteDeApertura } from '../../dominio/partes-de-apertura.js';
 import type { MovimientoDto } from './movimiento.dto.js';
 
 /** Cheque tal como lo ve el usuario en pantalla. */
@@ -15,6 +16,8 @@ export interface ChequeDto {
   motivoDeAnulacion: string | null;
   /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** La parte de la carga inicial que es su movimiento (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
+  parteDeApertura: ParteDeApertura | null;
   /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */
   moduloDeOrigen: string | null;
   /** Lo calcula el servidor (ver `accionesDeCheque`): si se puede anular. */
@@ -64,6 +67,8 @@ export interface ChequeListadoDto {
   motivoDeAnulacion: string | null;
   /** Por qué se anuló (a mano o por caducidad); `null` si no está anulado. */
   causaDeAnulacion: CausaDeAnulacion | null;
+  /** La parte de la carga inicial que es (cheque en circulación o posfechado); `null` si se emitió en Arrancar. */
+  parteDeApertura: ParteDeApertura | null;
   /** El módulo que generó el cheque (p. ej. `cuentas-por-pagar`); `null` si nació en Bancos o nunca se emitió. */
   moduloDeOrigen: string | null;
   puedeAnular: boolean;

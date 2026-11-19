@@ -14,6 +14,7 @@ import { ReporteDeChequesCaducos } from './reporte-de-cheques-caducos.js';
 const operador = operadorDePrueba();
 
 const cheque = (cambios: Partial<ChequeEnCirculacionCrudo>): ChequeEnCirculacionCrudo => ({
+  parteDeApertura: null,
   chequeId: 'c-1',
   movimientoId: 'm-1',
   cuentaBancariaId: 'cb-1',

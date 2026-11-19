@@ -30,6 +30,7 @@ import { EliminarTransferencia } from './eliminar-transferencia.js';
 import { ListarTransferencias } from './listar-transferencias.js';
 import { ObtenerTransferencia } from './obtener-transferencia.js';
 import { RegistrarTransferencia } from './registrar-transferencia.js';
+import { CARGA_SIN_FECHA_DE_INICIO } from '../../../pruebas/dobles-de-carga-inicial.js';
 
 export const operador = operadorDePrueba();
 export const ORIGEN = '00000000-0000-4000-8000-000000000001';
@@ -91,7 +92,11 @@ function armarBase(movimientos: MovimientosEnMemoria, permiteSobregiro: boolean)
     reloj: new RelojFijo(),
     conceptos: conceptosDeMovimientosDe(conceptosSembrados()),
     unidadDeTrabajo: new UnidadDeTrabajoEnMemoria(),
-    reglas: new ReglasDeLaCuenta({ consultas: movimientos, politicaDeSobregiro }),
+    reglas: new ReglasDeLaCuenta({
+      consultas: movimientos,
+      politicaDeSobregiro,
+      cargaInicial: CARGA_SIN_FECHA_DE_INICIO,
+    }),
   };
 }
 

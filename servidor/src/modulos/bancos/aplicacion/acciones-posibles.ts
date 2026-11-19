@@ -1,9 +1,12 @@
 import type { EstadoDelCheque } from '../dominio/cheque.js';
+import type { ParteDeApertura } from '../dominio/partes-de-apertura.js';
 
 /** Lo que se sabe de un movimiento para decidir qué se puede hacer con él. */
 export interface HechosDeUnMovimiento {
   tipo: 'credito' | 'debito' | 'cheque';
   saldoInicial: boolean;
+  /** La parte de la carga inicial que es; nulo si es un movimiento normal. */
+  parteDeApertura: ParteDeApertura | null;
   esDeTransferencia: boolean;
   marcadoEnConciliacion: boolean;
   anulado: boolean;
@@ -114,12 +117,17 @@ export interface AccionesDeCheque {
 }
 
 /**
- * Un cheque se anula si no está anulado; se blanquea si está emitido y su movimiento está limpio.
- * Los cheques nunca se eliminan: su número ya se consumió.
+ * Un cheque se anula si no está anulado; se blanquea si está emitido y su movimiento está limpio y no es de la carga
+ * inicial (no se emitió en Arrancar). Los cheques nunca se eliminan: su número ya se consumió.
  */
 export function accionesDeCheque(estado: EstadoDelCheque, movimiento: HechosDeUnMovimiento | null): AccionesDeCheque {
   return {
     puedeAnular: estado !== 'anulado',
-    puedeBlanquear: estado === 'emitido' && movimiento !== null && estaLimpio(movimiento) && !movimiento.esDeOtroModulo,
+    puedeBlanquear:
+      estado === 'emitido' &&
+      movimiento !== null &&
+      estaLimpio(movimiento) &&
+      !movimiento.esDeOtroModulo &&
+      movimiento.parteDeApertura === null,
   };
 }
