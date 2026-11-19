@@ -39,3 +39,12 @@ export class RepartoInvalido extends DatoInvalido {
     super('La base del reparto debe sumar más de cero.');
   }
 }
+
+/** Una entrada con reparto no aparece en el recorrido y no se conoce su factor de absorción de partida. */
+export class FactorInicialFaltante extends ReglaDeNegocioInfringida {
+  readonly codigo = 'factor_inicial_faltante';
+
+  constructor(entradaId: string) {
+    super('El recálculo debe empezar en la entrada más antigua que recibe un reparto.', { entradaId });
+  }
+}

@@ -867,7 +867,9 @@ movimiento vigente inmediatamente anterior a `P` (sus `saldo_*`; o cero), se rec
 se recalculan el costo de las salidas `costo_del_metodo` (y el informativo de los `traslado`), **lo absorbido de los
 costos adicionales y rebajas** (abajo) y los saldos de todos, y se actualizan **solo** las filas que cambian. Con PEPS,
 antes se deshacen los consumos de las salidas desde `P` (devolviendo cantidad y valor a sus capas) y se vuelven a
-consumir. Si en algún punto la cantidad queda negativa, todo se deshace con `existencia_negativa` (con el artículo y la
+consumir. Los saldos no guardan el factor de absorción (§7.5): el recálculo **parte de la entrada más antigua que recibe un reparto
+en el tramo** (`P` se adelanta hasta ella), de modo que su factor nace en 1; si el motor encuentra un reparto cuya entrada
+no está en el recorrido ni trae factor inicial, falla con `factor_inicial_faltante` en vez de suponer 1. Si en algún punto la cantidad queda negativa, todo se deshace con `existencia_negativa` (con el artículo y la
 fecha). Se revisan dos líneas del tiempo: la cantidad del artículo en la empresa (la del costo) y la de la bodega y el
 lote del movimiento nuevo o anulado (una suma acumulada solo de cantidades, sin costo, **con** las mitades de traslado):
 una salida con fecha anterior a la entrada de **su** bodega se rechaza aunque otra bodega tuviera existencia. Todo `P`
