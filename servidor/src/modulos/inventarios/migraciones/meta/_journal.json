@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1795061539083,
+      "tag": "0000_inv1_catalogos",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795061546442,
+      "tag": "0001_inv1_auditoria_permanente",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795061548800,
+      "tag": "0002_inv1_busqueda_de_articulos",
+      "breakpoints": true
+    }
+  ]
+}

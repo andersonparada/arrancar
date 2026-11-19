@@ -8,6 +8,7 @@ import { moduloCuentasPorPagar } from './cuentas-por-pagar/modulo';
 import { moduloCajaChica } from './caja-chica/modulo';
 import { moduloCuentasPorLiquidar } from './cuentas-por-liquidar/modulo';
 import { moduloActivosFijos } from './activos-fijos/modulo';
+import { moduloInventarios } from './inventarios/modulo';
 // generador: importaciones
 
 /** Módulos del frontend, en el orden del menú; el core va al final (Cuenta y Soporte). */
@@ -20,6 +21,7 @@ export const modulosCliente: readonly DefinicionModuloCliente[] = [
   moduloCajaChica,
   moduloCuentasPorLiquidar,
   moduloActivosFijos,
+  moduloInventarios,
   // generador: modulos
   moduloCore,
 ];
