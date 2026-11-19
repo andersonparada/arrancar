@@ -12,7 +12,19 @@ import {
 
 const SIN_UBICACIONES: UbicacionesDeActivos = { localidades: [], departamentos: [] };
 
-/** Trae clases, activos y ubicaciones una sola vez, la primera vez que se pide (`cargar`). */
+/** Trae todo; si ya se tenían las clases y las ubicaciones (`conocidas`), solo vuelve a pedir los activos. */
+function traerCatalogos(conocidas: [Clase[], UbicacionesDeActivos] | null) {
+  return Promise.all([
+    conocidas ? conocidas[0] : apiClases.listar(),
+    apiActivos.listar(),
+    conocidas ? conocidas[1] : apiActivos.ubicaciones(),
+  ]);
+}
+
+/**
+ * Trae clases y ubicaciones la primera vez que se pide (`cargar`) y los activos cada vez, porque cambian al
+ * capitalizar (nacen activos y compras conjuntas).
+ */
 function usarCargaDeCatalogos() {
   const avisos = usarAvisos();
   const clases = ref<Clase[]>([]);
@@ -22,11 +34,12 @@ function usarCargaDeCatalogos() {
   let hecha = false;
 
   async function cargar(): Promise<void> {
-    if (hecha || cargando.value) return;
+    if (cargando.value) return;
     cargando.value = true;
     try {
-      const todo = await Promise.all([apiClases.listar(), apiActivos.listar(), apiActivos.ubicaciones()]);
-      [clases.value, activos.value, ubicaciones.value] = todo;
+      [clases.value, activos.value, ubicaciones.value] = await traerCatalogos(
+        hecha ? [clases.value, ubicaciones.value] : null,
+      );
       hecha = true;
     } catch (error) {
       avisos.error(error instanceof Error ? error.message : 'No se pudieron cargar las clases y los activos.');

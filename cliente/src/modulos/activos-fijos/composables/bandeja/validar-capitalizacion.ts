@@ -3,6 +3,7 @@ import type { LineaDeBandeja } from '../../servicios/bandeja.api';
 import type { Clase } from '../../servicios/clases.api';
 import type { EdicionDeAsignacion } from './edicion-de-capitalizacion';
 import { centavosDeTexto, textoDeCentavos } from './montos-de-bandeja';
+import { textoONulo } from '@/modulos/core/utilidades/edicion';
 import { formatearMonto } from '@/modulos/core/utilidades/formato';
 
 /** Lo que hace falta saber para revisar una capitalización antes de mandarla. */
@@ -52,16 +53,36 @@ function errorDeUnidades(parte: EdicionDeAsignacion, restantes: number): string 
   return null;
 }
 
-/** La cantidad por activo y, en reproductores, el valor como ganado común. */
-function erroresDeCantidadYValores(parte: EdicionDeAsignacion, clases: readonly Clase[]) {
+const DOS_DECIMALES = 'Escriba un valor con hasta dos decimales, por ejemplo 1500.50.';
+
+/** Un valor opcional que, si se escribe, lleva a lo más dos decimales (lo que pide el servidor). */
+const decimalInvalido = (valor: string | number): boolean => !!textoONulo(valor) && centavosDeTexto(valor) === null;
+
+/** Valor como ganado común (reproductores) y matrícula y catastro (edificios): a lo más dos decimales. */
+function erroresDeValoresFiscales(parte: EdicionDeAsignacion, inciso: Clase['incisoFiscal'] | undefined) {
   const errores: Record<string, string> = {};
   const nuevo = parte.nuevo;
-  const cantidad = Number(nuevo.cantidadPorActivo);
+  const poner = (campo: string, mensaje: string) => (errores[llaveDeError(parte.clave, campo)] = mensaje);
+  if (inciso === 'reproductores') {
+    if (!textoONulo(nuevo.valorComoGanadoComun)) poner('valorComoGanadoComun', 'Escriba el valor como ganado común.');
+    else if (decimalInvalido(nuevo.valorComoGanadoComun)) poner('valorComoGanadoComun', DOS_DECIMALES);
+  }
+  if (inciso === 'edificios') {
+    if (decimalInvalido(nuevo.valorDeMatricula)) poner('valorDeMatricula', DOS_DECIMALES);
+    if (decimalInvalido(nuevo.valorCatastral)) poner('valorCatastral', DOS_DECIMALES);
+  }
+  return errores;
+}
+
+/** La cantidad por activo y los valores propios del inciso fiscal. */
+function erroresDeCantidadYValores(parte: EdicionDeAsignacion, clases: readonly Clase[]) {
+  const cantidad = Number(parte.nuevo.cantidadPorActivo);
+  const errores = erroresDeValoresFiscales(
+    parte,
+    clases.find((clase) => clase.id === parte.nuevo.claseId)?.incisoFiscal,
+  );
   if (!Number.isInteger(cantidad) || cantidad < 1)
     errores[llaveDeError(parte.clave, 'cantidadPorActivo')] = 'Escriba cuántas piezas lleva cada activo (1 o más).';
-  const inciso = clases.find((clase) => clase.id === nuevo.claseId)?.incisoFiscal;
-  if (inciso === 'reproductores' && !nuevo.valorComoGanadoComun.trim())
-    errores[llaveDeError(parte.clave, 'valorComoGanadoComun')] = 'Escriba el valor como ganado común.';
   return errores;
 }
 

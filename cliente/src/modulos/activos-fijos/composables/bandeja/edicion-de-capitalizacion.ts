@@ -35,9 +35,9 @@ export interface EdicionDeActivoNuevo {
   marca: string;
   modelo: string;
   observaciones: string;
-  valorComoGanadoComun: string;
-  valorDeMatricula: string;
-  valorCatastral: string;
+  valorComoGanadoComun: string | number;
+  valorDeMatricula: string | number;
+  valorCatastral: string | number;
   valoresDelInmuebleCompleto: boolean;
   unidades: string | number;
   cantidadPorActivo: string | number;

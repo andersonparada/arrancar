@@ -64,4 +64,10 @@ describe('capitalizar: solicitud', () => {
       activoNuevo: null,
     });
   });
+
+  it('un costo a un edificio que ya existe puede marcarse como no edificación', () => {
+    const parte = { ...asignacionInicial(lineas[0]!, 1), destino: 'existente' as const, activoId: 'a1' };
+    parte.noEsEdificacion = true;
+    expect(solicitudDeCapitalizacion([parte], contexto)[0]?.noEsEdificacion).toBe(true);
+  });
 });

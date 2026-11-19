@@ -63,8 +63,7 @@ export const edicionDeCostoNueva = (hoy: string): EdicionDeCosto => ({
 export function erroresDeCosto(edicion: EdicionDeCosto): Record<string, string> {
   const errores: Record<string, string> = {};
   const centavos = centavosDeTexto(edicion.monto);
-  if (centavos === null || centavos === 0)
-    errores.monto = 'Escriba un monto distinto de cero, con hasta dos decimales.';
+  if (centavos === null || centavos <= 0) errores.monto = 'Escriba un monto mayor que cero, con hasta dos decimales.';
   if (!edicion.documentoDeSoporte.trim())
     errores.documentoDeSoporte = 'Escriba el documento que respalda el costo (por ejemplo: DUCA 26-0000123).';
   if (!edicion.aplicaAlLibroFiscal && !edicion.motivoFueraDelLibroFiscal.trim())

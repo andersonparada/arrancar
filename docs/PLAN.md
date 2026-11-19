@@ -3633,3 +3633,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Costos: costos con su procedencia, registrar costo manual (V-8: motivo si queda fuera del libro fiscal) y anular con
   motivo y el efecto sobre el costo del activo y la línea. Catálogos de la ventana (clases, activos, ubicaciones) se traen
   al abrirla. Lógica pura con 57 pruebas nuevas; sin cambios de servidor.
+- **2026-11-19 (correcciones de la revisión de AF-3c y AFI-2c, cliente):** valor como ganado común validado como número
+  o texto (antes lanzaba TypeError); activos recargados al abrir «Capitalizar»; casilla «No es edificación» también
+  para el activo que ya existe de clase Edificios; errores de validación del servidor traducidos a su campo y
+  decimales validados en el cliente; costo manual exige monto mayor que cero; el texto del descarte aclara que
+  devolver solo vale en la sesión. **Pendiente de decisión del usuario:** listar las descartadas en el servidor
+  (filtro `descartadas` de la bandeja) para poder devolverlas tras recargar.

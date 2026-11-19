@@ -8,6 +8,7 @@ import type { EdicionDeAsignacion } from './edicion-de-capitalizacion';
 import { solicitudDeCapitalizacion, type ContextoDeSolicitud } from './solicitud-de-capitalizacion';
 import { mensajeDeCapitalizado, resumenDeCapitalizacion } from './textos-de-bandeja';
 import { usarCatalogosDeCapitalizacion } from './usar-catalogos-de-capitalizacion';
+import { erroresDeAsignaciones } from './errores-del-servidor';
 import { erroresDeCapitalizacion, erroresDeRenglones, type RenglonRechazado } from './validar-capitalizacion';
 
 type Catalogos = ReturnType<typeof usarCatalogosDeCapitalizacion>;
@@ -43,6 +44,7 @@ function usarPartesDeCapitalizacion() {
   return { lineas, partes, empezar, repartir, quitar };
 }
 
+type Avisos = ReturnType<typeof usarAvisos>;
 type ErroresRef = Ref<Record<string, string>>;
 
 /** Manda la capitalización; si el servidor rechaza códigos de la cuadrícula, los marca en su renglón. */
@@ -54,6 +56,14 @@ async function mandarCapitalizacion(partes: EdicionDeAsignacion[], contexto: Con
     if (rechazados) errores.value = erroresDeRenglones(rechazados, partes);
     throw error;
   }
+}
+
+/** Pone los errores de validación del servidor en el campo de su parte y avisa, porque `usarFormulario` no lo hace. */
+function repartirErroresDelServidor(errores: ErroresRef, partes: EdicionDeAsignacion[], avisos: Avisos): void {
+  const traducidos = erroresDeAsignaciones(errores.value, partes);
+  if (Object.keys(traducidos).some((llave) => !(llave in errores.value)))
+    avisos.error('Revise los campos marcados antes de capitalizar.');
+  errores.value = traducidos;
 }
 
 /** Revisa antes de mandar, manda y reparte los errores del servidor entre los campos y los renglones. */
@@ -70,8 +80,11 @@ function usarEnvio(lineas: Ref<LineaDeBandeja[]>, partes: Ref<EdicionDeAsignacio
       return false;
     }
     let resultado: Capitalizacion | null = null;
-    if (!(await enviar(async () => (resultado = await mandarCapitalizacion(partes.value, contexto, errores)))))
+    const mandar = async () => (resultado = await mandarCapitalizacion(partes.value, contexto, errores));
+    if (!(await enviar(mandar))) {
+      repartirErroresDelServidor(errores, partes.value, avisos);
       return false;
+    }
     if (resultado) avisos.exito(mensajeDeCapitalizado(resultado));
     return true;
   }

@@ -58,7 +58,8 @@ describe('costo manual', () => {
       'documentoDeSoporte',
       'monto',
     ]);
-    expect(erroresDeCosto({ ...llena(), monto: '0' }).monto).toMatch(/distinto de cero/);
+    expect(erroresDeCosto({ ...llena(), monto: '0' }).monto).toMatch(/mayor que cero/);
+    expect(erroresDeCosto({ ...llena(), monto: '-5' }).monto).toMatch(/mayor que cero/);
     expect(erroresDeCosto({ ...llena(), monto: '10.123' }).monto).toBeDefined();
     expect(erroresDeCosto({ ...llena(), aplicaAlLibroFiscal: false }).motivoFueraDelLibroFiscal).toMatch(/por qué/);
   });

@@ -24,7 +24,7 @@ export function textoDeDescarte(linea: LineaDeBandeja): string {
   return (
     `Se descarta la ${nombreDeLinea(linea)} (${formatearMonto(linea.pendiente)} pendientes): se toma como gasto y ` +
     'sale de la bandeja. Su pago ya se clasificó como Inversión y su IVA en la casilla de activos fijos; el libro de ' +
-    'compras no se corrige. Si se equivoca, podrá devolverla a la bandeja.'
+    'compras no se corrige. Si se equivoca, podrá devolverla a la bandeja solo mientras no recargue la página.'
   );
 }
 

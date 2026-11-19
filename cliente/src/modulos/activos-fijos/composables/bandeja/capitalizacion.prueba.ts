@@ -17,6 +17,7 @@ import {
   filtrosDeBandejaVacios,
   totalPendiente,
 } from './lineas-de-bandeja';
+import { erroresDeAsignaciones } from './errores-del-servidor';
 import { erroresDeCapitalizacion, llaveDeError, unidadesAcrear } from './validar-capitalizacion';
 
 beforeEach(() => setActivePinia(createPinia()));
@@ -176,5 +177,43 @@ describe('capitalizar: revisión', () => {
       clases: [clase('k1', 'reproductores')],
     });
     expect(errores[llaveDeError(1, 'valorComoGanadoComun')]).toBeDefined();
+  });
+
+  it('un valor como ganado común escrito en el campo numérico (llega como número) es válido', () => {
+    const lineas = [linea()];
+    const parte = asignacionInicial(lineas[0]!, 1);
+    parte.nuevo.valorComoGanadoComun = 1500;
+    const errores = erroresDeCapitalizacion([parte], { lineas, clases: [clase('k1', 'reproductores')] });
+    expect(errores[llaveDeError(1, 'valorComoGanadoComun')]).toBeUndefined();
+  });
+});
+
+describe('capitalizar: decimales y errores del servidor', () => {
+  it('matrícula, catastro y ganado común admiten a lo más dos decimales', () => {
+    const lineas = [linea()];
+    const parte = asignacionInicial(lineas[0]!, 1);
+    parte.nuevo.valorDeMatricula = '10.123';
+    parte.nuevo.valorCatastral = 20.5;
+    const errores = erroresDeCapitalizacion([parte], { lineas, clases: [clase('k1', 'edificios')] });
+    expect(errores[llaveDeError(1, 'valorDeMatricula')]).toMatch(/dos decimales/);
+    expect(errores[llaveDeError(1, 'valorCatastral')]).toBeUndefined();
+    parte.nuevo.valorComoGanadoComun = '1.234';
+    const deGanado = erroresDeCapitalizacion([parte], { lineas, clases: [clase('k1', 'reproductores')] });
+    expect(deGanado[llaveDeError(1, 'valorComoGanadoComun')]).toMatch(/dos decimales/);
+  });
+
+  it('los errores del servidor por asignación pasan a la llave de su parte', () => {
+    const lineas = [linea()];
+    const primera = asignacionInicial(lineas[0]!, 7);
+    const segunda = asignacionInicial(lineas[0]!, 9);
+    const traducidos = erroresDeAsignaciones(
+      {
+        'asignaciones.1.activoNuevo.valorCatastral': 'Máximo dos decimales',
+        'asignaciones.0.monto': 'Monto malo',
+        otro: 'x',
+      },
+      [primera, segunda],
+    );
+    expect(traducidos).toEqual({ '9.valorCatastral': 'Máximo dos decimales', '7.monto': 'Monto malo', otro: 'x' });
   });
 });

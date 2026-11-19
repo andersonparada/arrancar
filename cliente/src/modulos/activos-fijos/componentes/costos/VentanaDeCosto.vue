@@ -35,7 +35,6 @@ const edicion = defineModel<EdicionDeCosto>({ required: true });
           tipo="number"
           paso="0.01"
           requerido
-          ayuda="Negativo si el costo resta."
           :error="errores.monto"
         />
       </div>

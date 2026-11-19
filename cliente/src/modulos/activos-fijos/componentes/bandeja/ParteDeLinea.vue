@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { Trash2 } from 'lucide-vue-next';
 import BotonBase from '@/modulos/core/componentes/BotonBase.vue';
+import CampoInterruptor from '@/modulos/core/componentes/CampoInterruptor.vue';
 import CampoSelector from '@/modulos/core/componentes/CampoSelector.vue';
 import CampoTexto from '@/modulos/core/componentes/CampoTexto.vue';
 import { opcionesDeLista } from '@/modulos/core/utilidades/edicion';
@@ -88,6 +89,13 @@ const departamentos = computed(() => props.catalogos.departamentosDe(parte.value
       v-model="parte.claseDeCosto"
       etiqueta="Clase de costo"
       :opciones="opcionesDeLista(OPCIONES_DE_CLASE_DE_COSTO, false)"
+    />
+
+    <CampoInterruptor
+      v-if="parte.destino === 'existente' && inciso === 'edificios'"
+      v-model="parte.noEsEdificacion"
+      etiqueta="No es edificación ni requiere licencia"
+      descripcion="Marque este costo si no es de construir el edificio (cercas, instalaciones, equipos fijos): no entra al tope del inmueble."
     />
 
     <template v-if="parte.destino === 'nuevo'">

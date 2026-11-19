@@ -1371,6 +1371,11 @@ dos decimales.
 - Un costo manual se ofrece con `costos.crear` en cualquier activo; si el activo no lo admite (de terceros, en uso antes
   de AF-7), el servidor lo dice y el mensaje se muestra tal cual.
 - La pestaña Costos se trae junto con la ficha, no al abrir la pestaña.
+- Correcciones de la revisión (2026-11-19): el valor como ganado común acepta el número que entrega el campo; los
+  activos se vuelven a traer cada vez que se abre «Capitalizar» (si no, los recién nacidos no aparecían para costos
+  posteriores); un costo a un edificio que ya existe puede marcarse «No es edificación»; los errores Zod del servidor
+  (`asignaciones.<i>.…`) se ponen en el campo de su parte y matrícula, catastro y ganado común se validan con dos
+  decimales; el costo manual exige monto mayor que cero; el aviso de descarte dice que devolver solo vale sin recargar.
 
 AF-6 puede adelantarse a AF-5 si se quiere cargar saldos antes de cerrar meses. El paso **AF-P22** va antes de AF-2c y
 necesita la revisión de `seguridad` de §6.13. **AFI-1** no es un paso aparte: son columnas de la migración de AF-2. AFI-0
