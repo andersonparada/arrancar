@@ -14,11 +14,18 @@ import {
 
 type Departamentos = Parameters<typeof departamentoValido>[0];
 
-/** Al cambiar la localidad se deja el departamento solo si sigue siendo válido. */
-function usarDepartamentoCoherente(edicion: Ref<EdicionDeSaldoInicial>, departamentos: Ref<Departamentos>): void {
+/**
+ * Al cambiar la localidad se deja el departamento solo si sigue siendo válido. Mientras las ubicaciones no han
+ * llegado (lista vacía) no actúa: no puede saber si es válido y borraría el de un saldo que se está corrigiendo.
+ */
+export function usarDepartamentoCoherente(
+  edicion: Ref<EdicionDeSaldoInicial>,
+  departamentos: Ref<Departamentos>,
+): void {
   watch(
     () => edicion.value.localidadId,
     () => {
+      if (departamentos.value.length === 0) return;
       const { localidadId, departamentoId } = edicion.value;
       edicion.value.departamentoId = departamentoValido(departamentos.value, { localidadId, departamentoId });
     },

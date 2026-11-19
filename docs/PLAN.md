@@ -4100,3 +4100,5 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   las acciones de escritura); la ficha de un activo de saldo inicial muestra su saldo. Pruebas puras nuevas.
   **Pendiente:** las cuotas por año y mes de la ficha necesitan una ruta del servidor (`GET /activos-fijos/activos/:id/cuotas`)
   que hoy no existe; la pestaña muestra los tramos.
+  **Corrección (revisión):** al corregir un saldo inicial, el departamento ya no se borra si el saldo llega antes que las
+  ubicaciones (el vigilante de coherencia no actúa mientras la lista de departamentos está vacía); prueba nueva.

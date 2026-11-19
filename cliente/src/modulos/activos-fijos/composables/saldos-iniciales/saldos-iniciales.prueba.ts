@@ -1,7 +1,9 @@
 import { createPinia, setActivePinia } from 'pinia';
+import { nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { SaldoInicial } from '../../servicios/saldos-iniciales.api';
 import { detallesDeSaldoEnFicha, motivoDeCargaBloqueada } from './detalles-de-saldo';
+import { usarDepartamentoCoherente } from './usar-formulario-de-saldo';
 import {
   datosDeSaldo,
   edicionDeSaldo,
@@ -139,5 +141,25 @@ describe('saldo cargado', () => {
     expect(motivoDeCargaBloqueada({ fechaDeInicio: '2026-01-01', cargaCerrada: false }, false)).toBeNull();
     expect(motivoDeCargaBloqueada({ fechaDeInicio: '2026-01-01', cargaCerrada: true }, true)).toContain('cerrada');
     expect(motivoDeCargaBloqueada({ fechaDeInicio: null, cargaCerrada: false }, false)).toContain('fecha de inicio');
+  });
+});
+
+describe('departamento coherente al corregir un saldo', () => {
+  it('no borra el departamento si el saldo llega antes que las ubicaciones', async () => {
+    const edicion = ref({ ...edicionDeSaldoNueva() });
+    const departamentos = ref<{ id: string; localidadId: string | null }[]>([]);
+    usarDepartamentoCoherente(edicion, departamentos);
+    edicion.value = { ...edicion.value, localidadId: 'l1', departamentoId: 'd1' };
+    await nextTick();
+    expect(edicion.value.departamentoId).toBe('d1');
+  });
+
+  it('con las ubicaciones cargadas, quita el departamento de otra localidad', async () => {
+    const edicion = ref({ ...edicionDeSaldoNueva(), localidadId: 'l1', departamentoId: 'd1' });
+    const departamentos = ref([{ id: 'd1', localidadId: 'l1' }]);
+    usarDepartamentoCoherente(edicion, departamentos);
+    edicion.value.localidadId = 'l2';
+    await nextTick();
+    expect(edicion.value.departamentoId).toBeNull();
   });
 });
