@@ -65,8 +65,32 @@ export interface Traslado {
   estado: 'vigente' | 'anulado';
 }
 
+export type CausaDeTramo =
+  | 'inicio_de_uso'
+  | 'saldo_inicial'
+  | 'mejora'
+  | 'costo_posterior'
+  | 'revision_de_estimacion'
+  | 'cambio_de_matricula'
+  | 'division';
+
+/** Un tramo de depreciación vigente: el contable lleva `meses`; el fiscal, `porcentaje` y su base. Montos con dos decimales. */
+export interface TramoDeActivo {
+  libro: 'contable' | 'fiscal';
+  desdePeriodo: string;
+  causa: CausaDeTramo;
+  porDepreciar: string;
+  valorResidual: string;
+  meses: number | null;
+  porcentaje: string | null;
+  baseDelPorcentaje: string | null;
+  cuotaMensual: string;
+  excesoDeNotaDeCredito: string;
+}
+
 export interface ActivoFicha extends Activo {
   traslados: Traslado[];
+  tramos: TramoDeActivo[];
 }
 
 /** Lo que se manda para dar de alta un activo a mano; sin código, el servidor propone el siguiente. */
