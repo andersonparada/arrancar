@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { formatearFecha } from '@/modulos/core/utilidades/formato';
+import { usarSesion } from '@/modulos/core/almacenes/sesion';
 import { apiSaldosIniciales } from '../../servicios/saldos-iniciales.api';
 
 /**
@@ -9,10 +10,11 @@ import { apiSaldosIniciales } from '../../servicios/saldos-iniciales.api';
  */
 export function usarCorteDeApertura() {
   const corte = ref<string | null>(null);
+  const sesion = usarSesion();
   let pedido = false;
 
   async function cargar(): Promise<void> {
-    if (pedido) return;
+    if (pedido || !sesion.puede('bancos.saldos-iniciales.ver')) return;
     pedido = true;
     try {
       const { fechaDeCorte } = await apiSaldosIniciales.listar();

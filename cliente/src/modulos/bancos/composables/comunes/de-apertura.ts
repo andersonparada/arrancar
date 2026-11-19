@@ -11,19 +11,16 @@ const CORTE_SIN_FECHA = 'corte de la carga inicial';
 export const AYUDA_DE_FECHA_DE_APERTURA =
   'Fecha del movimiento inverso: debe ser posterior al corte de la carga inicial y no puede caer en un mes conciliado.';
 
-/** Si el registro es una partida de la carga inicial (el servidor manda su parte; nulo si no lo es). */
+/**
+ * Si anular el registro sigue la regla de la carga inicial (movimiento inverso después del corte). El cheque
+ * posfechado no cuenta: con la carga cerrada se anula como cualquier cheque (diseño §5.3).
+ */
 export const esDeApertura = (registro: { parteDeApertura: ParteDeApertura | null }): boolean =>
-  registro.parteDeApertura !== null;
+  registro.parteDeApertura !== null && registro.parteDeApertura !== 'cheque_posfechado';
 
 /** El dato «Origen: Carga inicial» de la tarjeta; `null` si el registro no es de la carga inicial. */
 export const detalleDeApertura = (registro: { parteDeApertura: ParteDeApertura | null }): DetalleDeRegistro | null =>
-  esDeApertura(registro) ? { etiqueta: 'Origen', valor: INSIGNIA_DE_APERTURA } : null;
-
-/** La insignia que pide el estado del registro; si no tiene estado propio, la de la carga inicial. */
-export const insigniaConApertura = (
-  registro: { parteDeApertura: ParteDeApertura | null },
-  propia: string | undefined,
-): string | undefined => propia ?? (esDeApertura(registro) ? INSIGNIA_DE_APERTURA : undefined);
+  registro.parteDeApertura !== null ? { etiqueta: 'Origen', valor: INSIGNIA_DE_APERTURA } : null;
 
 /**
  * Lo que explica la ventana al anular una partida de la carga inicial: se crea siempre el movimiento inverso, con
@@ -32,6 +29,6 @@ export const insigniaConApertura = (
 export function textoDeAnulacionDeApertura(parte: ParteDeApertura | null, corte: string | null): string {
   const fecha = corte ?? CORTE_SIN_FECHA;
   if (parte === 'deposito_en_transito') return textoDeAnulacionDeDeposito(fecha);
-  if (parte === 'cheque_en_circulacion' || parte === 'cheque_posfechado') return textoDeAnulacionDeCheque(fecha);
+  if (parte === 'cheque_en_circulacion') return textoDeAnulacionDeCheque(fecha);
   return textoDeAnulacionDeOtra(fecha);
 }

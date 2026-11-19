@@ -50,7 +50,7 @@ const tono = computed(() => TONO[nivelDeAntiguedad(props.cheque.diasDeAntiguedad
       </InsigniaBase>
     </td>
     <td class="px-4 py-2.5 whitespace-nowrap">
-      <InsigniaBase v-if="cheque.parteDeApertura" tono="campo">{{ INSIGNIA_DE_APERTURA }}</InsigniaBase>
+      <InsigniaBase v-if="cheque.origen === 'apertura'" tono="campo">{{ INSIGNIA_DE_APERTURA }}</InsigniaBase>
       <template v-else>{{ TEXTO_DEL_ORIGEN[cheque.origen] }}</template>
     </td>
   </tr>

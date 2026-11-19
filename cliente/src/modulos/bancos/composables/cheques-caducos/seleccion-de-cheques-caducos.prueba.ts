@@ -36,8 +36,9 @@ describe('selección de cheques caducos', () => {
     const conApertura = [
       { ...cheques[0]!, parteDeApertura: 'cheque_en_circulacion' as const, origen: 'apertura' as const },
       cheques[1]!,
+      { ...cheques[2]!, parteDeApertura: 'cheque_posfechado' as const, origen: 'suelto' as const },
     ];
-    expect(cantidadDeApertura(conApertura, ['a', 'b'])).toBe(1);
+    expect(cantidadDeApertura(conApertura, ['a', 'b', 'c'])).toBe(1);
     expect(cantidadDeApertura(conApertura, ['b'])).toBe(0);
     expect(cantidadDeApertura(conApertura, [])).toBe(0);
   });
