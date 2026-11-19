@@ -34,6 +34,7 @@ const fila: FilaDeDocumentoAlCorte = {
   ajustado: '0.00',
   saldo: '1000.00',
   comprometido: '0.00',
+  disponible: '1000.00',
   estadoDePago: 'pendiente',
   autorizado: true,
   contrasena: null,

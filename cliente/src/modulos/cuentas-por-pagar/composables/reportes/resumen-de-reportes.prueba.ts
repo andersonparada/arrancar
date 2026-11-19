@@ -25,7 +25,7 @@ const saldos = {
   acreedores: [],
   deudores: [],
   totales: {
-    acreedores: { ...CIFRAS, saldoNeto: '1500.00', comprometido: '200.00' },
+    acreedores: { ...CIFRAS, saldoNeto: '1500.00', comprometido: '200.00', disponible: '1800.00' },
     deudores: { ...CIFRAS, saldoNeto: '300.00' },
     saldoNeto: '1200.00',
     cargosPorTramo: CIFRAS,
@@ -45,6 +45,11 @@ describe('resumen de los reportes', () => {
     expect(totales.map((t) => t.valor)).toContain(formatearMonto('300.00'));
   });
 
+  it('R1 trae «Disponible para pagar» (cargos menos comprometido) en el resumen', () => {
+    const disponible = totalesDeSaldos(saldos).find((t) => t.etiqueta === 'Disponible para pagar');
+    expect(disponible?.valor).toBe(formatearMonto('1800.00'));
+  });
+
   it('R1 sin acreedores ni deudores está vacío', () => {
     expect(reporteDeSaldosVacio(saldos)).toBe(true);
     expect(reporteDeSaldosVacio({ ...saldos, deudores: [{} as never] })).toBe(false);
@@ -53,10 +58,21 @@ describe('resumen de los reportes', () => {
   it('R2 totaliza todo lo filtrado y cuenta en singular o plural', () => {
     const documentos = {
       total: 1,
-      totales: { total: '1000.00', retenciones: '0.00', pagado: '100.00', saldo: '900.00', comprometido: '0.00' },
+      totales: {
+        total: '1000.00',
+        retenciones: '0.00',
+        pagado: '100.00',
+        saldo: '900.00',
+        comprometido: '0.00',
+        disponible: '900.00',
+      },
     } as ReporteDeDocumentosAUnaFecha;
     expect(totalesDeDocumentos(documentos)[0]).toMatchObject({ etiqueta: 'Saldo', valor: formatearMonto('900.00') });
     expect(totalesDeDocumentos(documentos)[1]?.etiqueta).toBe('Documento');
+    expect(totalesDeDocumentos(documentos).at(-1)).toMatchObject({
+      etiqueta: 'Disponible para pagar',
+      valor: formatearMonto('900.00'),
+    });
     expect(totalesDeDocumentos({ ...documentos, total: 2 })[1]?.etiqueta).toBe('Documentos');
   });
 

@@ -23,7 +23,10 @@ function tramosDto(tramos: Record<TramoDeAntiguedad, number>, convertir: (centav
   };
 }
 
-/** Las cifras para la API. En los deudores el neto va en positivo y no hay «disponible para pagar». */
+/**
+ * Las cifras para la API. En los deudores el neto va en positivo. Lo disponible para pagar es, como en la ficha del
+ * proveedor y también en los deudores, la deuda de los cargos menos lo comprometido: lo que está a favor no resta aquí.
+ */
 export function cifrasDto(cifras: CifrasDeSaldo, esDeudor: boolean): CifrasDeSaldoDto {
   return {
     ...tramosDto(cifras.tramos, deCentavos),
@@ -31,7 +34,7 @@ export function cifrasDto(cifras: CifrasDeSaldo, esDeudor: boolean): CifrasDeSal
     saldosAFavor: deCentavos(cifras.saldosAFavor),
     saldoNeto: deCentavos(esDeudor ? -cifras.neto : cifras.neto),
     comprometido: deCentavos(cifras.comprometido),
-    disponible: esDeudor ? null : deCentavos(cifras.neto - cifras.comprometido),
+    disponible: deCentavos(cifras.totalCargos - cifras.comprometido),
     sinAutorizar: deCentavos(cifras.sinAutorizar),
   };
 }
@@ -108,6 +111,7 @@ function montosDelDocumentoDto(fila: FilaDeDocumentoAlCorte) {
     ajustado: deCentavos(fila.ajustadoCentavos),
     saldo: deCentavos(fila.saldoCentavos),
     comprometido: deCentavos(fila.comprometidoCentavos),
+    disponible: deCentavos(fila.saldoCentavos - fila.comprometidoCentavos),
     retencionesPorPracticar: dinero(fila.retencionesPorPracticarCentavos),
   };
 }
@@ -124,5 +128,6 @@ export function totalesDeDocumentosDto(totales: TotalesDeDocumentosAlCorte): Tot
     pagado: deCentavos(totales.pagadoCentavos),
     saldo: deCentavos(totales.saldoCentavos),
     comprometido: deCentavos(totales.comprometidoCentavos),
+    disponible: deCentavos(totales.saldoCentavos - totales.comprometidoCentavos),
   };
 }

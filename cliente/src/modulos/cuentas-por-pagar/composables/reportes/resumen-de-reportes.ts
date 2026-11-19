@@ -16,6 +16,7 @@ export function totalesDeSaldos({ totales }: ReporteDeSaldosPorProveedor): Total
     { etiqueta: 'Saldo deudor (nos deben)', valor: formatearMonto(totales.deudores.saldoNeto) },
     { etiqueta: 'Total de cargos', valor: formatearMonto(totales.totalCargos) },
     { etiqueta: 'Comprometido (posfechados)', valor: formatearMonto(totales.acreedores.comprometido) },
+    { etiqueta: 'Disponible para pagar', valor: formatearMonto(totales.acreedores.disponible ?? '0') },
   ];
 }
 
@@ -28,6 +29,7 @@ export function totalesDeDocumentos({ totales, total }: ReporteDeDocumentosAUnaF
     { etiqueta: 'Retenciones', valor: formatearMonto(totales.retenciones) },
     { etiqueta: 'Pagado', valor: formatearMonto(totales.pagado) },
     { etiqueta: 'Comprometido', valor: formatearMonto(totales.comprometido) },
+    { etiqueta: 'Disponible para pagar', valor: formatearMonto(totales.disponible) },
   ];
 }
 
