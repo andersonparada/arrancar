@@ -40,7 +40,6 @@ libro fiscal: con su efecto en el ISR en el régimen sobre las utilidades, y sol
   de forma transitiva). No depende de Bancos ni de Cuentas por pagar; no se importa con ningún módulo (§15).
 - **Quién ve qué (AF-P2 a)**: todos los activos de la empresa los ve quien entra a la empresa y tiene el permiso. Solo
   `politicaPorEmpresa()` y permisos por acción: **sin alcance por localidad**, sin tabla de accesos y sin ventana de
-  asignación. La localidad y el departamento son datos de ubicación y centro de costo, no un filtro de seguridad.
   asignación. La localidad y el departamento son datos de ubicación y centro de costo, no un filtro de seguridad. Sus
   **nombres** salen de una función de Empresas que no aplica el alcance de localidades (AF-P22 b, §6.13).
 - **Bienes de uso en bodega (AFI)**: comprar 3 tractores o 50 sillas y guardarlos es tener **activos fijos en la bodega
@@ -99,7 +98,6 @@ libro fiscal: con su efecto en el ISR en el régimen sobre las utilidades, y sol
    `empresas.localidades.ver-todas`) y único `localidades_id_empresa_unico`; `departamentos` con localidad opcional,
    `politicaPorAlcanceOpcional(ALCANCE_DE_LOCALIDADES, 'localidad_id')` y único `departamentos_id_empresa_unico`.
    Activos fijos **no usa** ese alcance (AF-P2 a), pero sus pantallas leen nombres de localidades y departamentos, que sí
-   lo llevan: ver R-5 y AF-P22.
    lo llevan: ver R-5 y AF-P22 (respondida **b**: función de Empresas que da solo id, código y nombre, §6.13).
    `cargas_iniciales` (fecha de inicio, cerrada); `empresas.obtener_carga_inicial` bloquea la fila `for share`.
 7. **EM-2** (en `main`): `mediador.preguntarATodos` y la pregunta `empresas.revisar_cierre_de_carga` (`RevisionDeCierreDeModulo`
@@ -204,11 +202,6 @@ en_construccion ───────────► en_uso ──────�
 del costo de la línea (`floor(monto / N)` centavos y el **sobrante en el último**), nunca un promedio ni PEPS. Los costos
 posteriores comunes (flete, instalación de los 3 tractores) se reparten igual entre los activos vigentes de la **alta
 conjunta**, con el sobrante en el último (§6.2).
-
-**Software (V-2).** El programa que viene con el equipo (el sistema operativo de la computadora, el programa de una
-máquina) es **costo del equipo** y se deprecia con él (cómputo, 33.33 %). Solo la **licencia comprada aparte** va a la
-clase «Programas y licencias» (intangible, 20 %). Las **suscripciones** y los servicios en la nube (SaaS) son gasto: en la
-bandeja se descartan, y la clase «Programas y licencias» lo recuerda en su ayuda y en el aviso al capitalizar.
 
 **Software (V-2).** El programa que viene con el equipo (el sistema operativo de la computadora, el programa de una
 máquina) es **costo del equipo** y se deprecia con él (cómputo, 33.33 %). Solo la **licencia comprada aparte** va a la
@@ -390,8 +383,6 @@ ahora se paga por Inversión, que es lo correcto según NIIF 7.5).
 
 | Cambio | Detalle |
 |---|---|
-| `core/contratos/activos-fijos.contratos.ts` | Eventos del bus (§9). Sin órdenes nuevas para otros módulos en v1 |
-| Auditoría permanente | La migración `0001` de Activos fijos inserta en `core.recursos_de_auditoria_permanente` los recursos `activos-fijos.activos`, `activos-fijos.costos`, `activos-fijos.mejoras`, `activos-fijos.saldos-iniciales`, `activos-fijos.bajas` y `activos-fijos.cierres`, con motivo «Documentos de costo mientras se deprecia el bien, más la prescripción (Código Tributario arts. 112 "A" y 47; ISR art. 26)». Un edificio se deprecia 20 años: los 60 meses de conservación no alcanzan |
 | `core/contratos/activos-fijos.contratos.ts` | Eventos del bus (§9) y las órdenes que **atiende** Activos fijos: `activos-fijos.obtener_umbral_de_capitalizacion` (AFI, la pide Inventarios para su aviso) y, con INV-AF, `activos-fijos.obtener_activo` y `activos-fijos.recibir_costo_de_inventario` (`diseno-inventarios.md` §4.3) |
 | Auditoría permanente | La migración `0001` de Activos fijos inserta en `core.recursos_de_auditoria_permanente` los recursos `activos-fijos.activos`, `activos-fijos.costos`, `activos-fijos.mejoras`, `activos-fijos.saldos-iniciales`, `activos-fijos.bajas` y `activos-fijos.cierres`, con motivo «Documentos de costo mientras se deprecia el bien, más la prescripción (Código Tributario arts. 112 "A" y 47; ISR art. 26)». Un edificio se deprecia 20 años: los 60 meses de conservación no alcanzan. La migración de divisiones (AFI-5) agrega `activos-fijos.divisiones`: una división cambia la base de depreciación mientras el bien exista |
 
@@ -487,8 +478,6 @@ edita en la ficha de la clase («Conceptos de gasto que la proponen»).
 | `foto_archivo_id` | uuid | sí | FK `core.archivos` (sin `on delete`), `recurso_dueno = 'activos-fijos.activos'`; único parcial |
 | `observaciones` | text | sí | 1–500 |
 
-Únicos e índices: `activos_id_empresa_unico (id, empresa_id)` (destino de las llaves compuestas), `activos_lista_idx
-(empresa_id, estado, clase_id)`, `activos_padre_idx (activo_padre_id) where activo_padre_id is not null`,
 Únicos e índices: `activos_id_empresa_unico (id, empresa_id)` (destino de las llaves compuestas), `activos_existencias_idx
 (empresa_id, clase_id, estado) include (cantidad, en_bodega)` (AFI: sirve a la lista y al reporte de existencias;
 reemplaza a `activos_lista_idx (empresa_id, estado, clase_id)`), `activos_padre_idx (activo_padre_id) where activo_padre_id is not null`,
@@ -512,9 +501,6 @@ por pagar, U4). Las listas los traen con una consulta agrupada.
 | `documento_de_compra_id`, `linea_de_documento_id` | uuid | sí | FK compuesta `(linea_de_documento_id, documento_de_compra_id, empresa_id) → libro_de_compras.lineas_de_documento (id, documento_id, empresa_id)` (único nuevo de §4.1); `(origen = 'linea_de_compra') = (linea_de_documento_id is not null and documento_de_compra_id is not null)`; índices parciales `(linea_de_documento_id)` y `(documento_de_compra_id)` (este, para el aviso de anulación) |
 | `mejora_id` | uuid | sí | FK compuesta a `mejoras`; índice parcial |
 | `fecha` | date | no | La emisión del documento, o la del soporte |
-| `monto` | numeric(14,2) | no | `<> 0`; `(monto < 0) = (clase_de_costo = 'nota_de_credito')` |
-| `aplica_al_libro_fiscal` | boolean | no | `default true`; `false` solo con `origen = 'manual'` (cualquier clase de costo, V-8) |
-| `motivo_fuera_del_libro_fiscal` | text | sí | 1–300; `aplica_al_libro_fiscal = (motivo_fuera_del_libro_fiscal is null)` |
 | `monto` | numeric(14,2) | no | `<> 0`; `(monto < 0) = (clase_de_costo in ('nota_de_credito','division_cedida'))` |
 | `aplica_al_libro_fiscal` | boolean | no | `default true`; `false` solo con `origen in ('manual','division')` (cualquier clase de costo, V-8; en una división, la parte del costo que no aplicaba, AFI) |
 | `motivo_fuera_del_libro_fiscal` | text | sí | 1–300; `aplica_al_libro_fiscal = (motivo_fuera_del_libro_fiscal is null)`. En una división lo escribe el sistema («Parte no fiscal separada de AF-0200») |
@@ -575,7 +561,6 @@ de mejora **sugiere darla de alta como componente** si es separable y tiene vida
 | `activo_id` | uuid | no | FK compuesta a `activos` |
 | `libro` | text | no | `in ('contable','fiscal')` |
 | `desde_periodo` | date | no | Primer día del mes; primer mes que usa este tramo |
-| `causa` | text | no | `in ('inicio_de_uso','saldo_inicial','mejora','costo_posterior','revision_de_estimacion','cambio_de_matricula')`; `cambio_de_matricula` solo en el libro fiscal |
 | `causa` | text | no | `in ('inicio_de_uso','saldo_inicial','mejora','costo_posterior','revision_de_estimacion','cambio_de_matricula','division')`; `cambio_de_matricula` solo en el libro fiscal; `division` (AFI-5) en los dos |
 | `division_id` | uuid | sí | **(AFI)** FK compuesta a `divisiones`; `(causa = 'division') = (division_id is not null)`; índice parcial |
 | `mejora_id` | uuid | sí | FK compuesta a `mejoras`; `(causa in ('mejora','costo_posterior')) = (mejora_id is not null)` |
@@ -796,8 +781,6 @@ cuadrícula o ya usados: error por renglón) y el correlativo se pide de una vez
 
 - Alta manual (`activos.crear`): con o sin costos manuales; `fecha_de_adquisicion >= fecha de inicio` de la empresa (si
   es anterior, el error dice «cárguelo como saldo inicial»). La primera fila de `traslados` (alta) se crea aquí.
-- Editar (`activos.editar`) cambia solo datos descriptivos (descripción, marca, modelo, serie, placa, observaciones, foto,
-  cantidad). Clase, tipo de registro y padre se cambian solo `en_construccion`; la matrícula y el catastro, libres mientras
 - Editar (`activos.editar`) cambia solo datos descriptivos (descripción, marca, modelo, serie, placa, observaciones,
   foto). La **cantidad** solo `en_construccion` y sin divisiones (AFI; después se cambia con una división). Clase, tipo de
   registro y padre se cambian solo `en_construccion`; la matrícula y el catastro, libres mientras
@@ -886,7 +869,6 @@ en uso; para devolver la cantidad al origen se anula después la división (§6.
 - **Revisar** (antes de confirmar, como EM-2): hallazgos `aviso` —líneas en la bandeja con fecha del mes o anterior;
   activos en construcción con más de 12 meses; inventario en curso; activos en uso sin localidad; edificios sin
   matrícula ni catastro (§3.5.1); tramos del mes con `exceso_de_nota_de_credito` (los dos montos, V-6); activos ociosos
-  con su cuota fiscal del mes (V-4)— y `bloquea`
   con su cuota fiscal del mes (V-4); **«N bienes llevan más de X meses en bodega»** (AFI, X =
   `activos-fijos.bodega.meses_de_aviso`; revisar deterioro, sección 27)— y `bloquea`
   —costos vigentes de documentos **anulados** (§15, R-1); el mes anterior sin cerrar; carga inicial abierta con activos
@@ -1087,8 +1069,6 @@ jul-2027: nuevo, costo 6,000.00, acumulada 600.00, tramo contable `(6,000 − 60
   Cada fila crea un activo `origen = 'saldo_inicial'` `en_uso` (o `en_construccion` si la obra no se terminó) con:
   código, descripción, clase, fechas reales de adquisición y de inicio de uso (anteriores a la fecha de inicio), costo,
   depreciación acumulada contable y fiscal al corte, costo fiscal (A1) y base fiscal, porcentaje fiscal, vida útil
-  restante, residual, matrícula y catastro (edificios), localidad, departamento y responsable. Crea el costo `saldo_inicial`, la fila de `saldos_iniciales`, el traslado del
-  alta y los dos tramos `saldo_inicial` desde el mes de la fecha de inicio.
   restante, residual, matrícula y catastro (edificios), localidad, departamento y responsable, y (AFI) **cantidad** y
   **en bodega**. Crea el costo `saldo_inicial`, la fila de `saldos_iniciales`, el traslado del
   alta (con `a_bodega`) y los dos tramos `saldo_inicial` desde el mes de la fecha de inicio.
@@ -1120,7 +1100,6 @@ fiscal (dictamen §5.3).
 
 | Evento | Cuándo | Datos propios |
 |---|---|---|
-| `activos-fijos.activo_capitalizado` | Se guardan costos (alta o suma a un activo, también en construcción) | `costos: [{ costoId, origen, claseDeCosto, documentoDeCompraId, lineaDeDocumentoId, montoCentavos, aplicaAlLibroFiscal, noEsEdificacion }]` |
 | `activos-fijos.activo_capitalizado` | Se guardan costos (alta o suma a un activo, también en construcción) | `costos: [{ costoId, origen, claseDeCosto, documentoDeCompraId, lineaDeDocumentoId, montoCentavos, aplicaAlLibroFiscal, noEsEdificacion }]`, `altaConjuntaId` (AFI) |
 | `activos-fijos.activo_dividido` (AFI) | Dividir (a mano o automática) | `divisionId`, `activoOrigenId`, `activoNuevoId`, `cantidadSeparada`, `costoCentavos`, `costoFiscalCentavos`, `acumuladaContableCentavos`, `acumuladaFiscalCentavos`, `causa`. Contabilidad: sin partida (misma clase y cuenta) |
 | `activos-fijos.division_anulada` (AFI) | Anular una división | `divisionId` |
@@ -1130,7 +1109,6 @@ fiscal (dictamen §5.3).
 | `activos-fijos.depreciacion_reabierta` | Reabrir | `periodo` (Contabilidad revierte lo del mes) |
 | `activos-fijos.mejora_capitalizada` | Mejora o costo posterior | `mejoraId`, `clase`, `montoCentavos`, nueva vida, `excesoContableCentavos`, `excesoFiscalCentavos` (V-6) |
 | `activos-fijos.base_fiscal_cambiada` | Cambio de matrícula o catastro | Valores anteriores y nuevos, base fiscal nueva |
-| `activos-fijos.activo_trasladado` | Traslado | Origen y destino (localidad, departamento, responsable) |
 | `activos-fijos.activo_trasladado` | Traslado | Origen y destino (localidad, departamento, responsable) y `aBodega` (AFI) |
 | `activos-fijos.activo_dado_de_baja` | Baja (no venta) | Causa, costo, costo fiscal, acumuladas contable y fiscal, valor en libros, `bajaId` |
 | `activos-fijos.activo_vendido` | Venta | Lo anterior más precio, IVA, FEL y resultados contable y fiscal (A1) |
@@ -1161,7 +1139,6 @@ siguen sin importarse y sin llaves entre sus esquemas.
 
 Sin `recursosConAlcance` (AF-P2 a): ni propio ni el de `empresas.localidades`; sin tabla `accesos_a_*`, sin políticas de
 alcance y sin ventana de asignación. Quien tiene el permiso ve y opera todos los activos de la empresa. Las fichas y los
-reportes imprimen con `.ver` (imprimir no lleva permiso propio, como en los demás módulos).
 reportes imprimen con `.ver` (imprimir no lleva permiso propio, como en los demás módulos). Los permisos nuevos de AFI
 son nuevos: sin migración de permisos (el acceso total los recibe solo).
 
@@ -1185,7 +1162,6 @@ son nuevos: sin migración de permisos (el acceso total los recibe solo).
 | Marcar ocioso al devolver a la bodega (AFI) | `activos-fijos.activos` | `corregir` | Como al marcarlo desde la ficha |
 
 Permanentes (§4.2, cita Código Tributario arts. 112 «A» y 47): `activos-fijos.activos`, `.costos`, `.mejoras`,
-`.saldos-iniciales`, `.bajas` y `.cierres`.
 `.saldos-iniciales`, `.bajas`, `.cierres` y `.divisiones` (AFI-5).
 
 ### 10.3 Errores nuevos (código propio, familias del core)
@@ -1228,7 +1204,6 @@ existe).
 | `GET /activos-fijos/activos` (filtros: estado, clase, localidad, departamento, responsable, tipo de registro, texto, depreciado contable, depreciado fiscal, ocioso), `GET …/:id` (ficha con costos, libros, cuotas por año, traslados, mejoras, baja) | `activos.ver` |
 | `POST /activos-fijos/activos`, `PUT …/:id`, `DELETE …/:id` | `activos.crear` / `.editar` / `.eliminar` |
 | `POST …/:id/costos` (manual), `POST /activos-fijos/costos/:id/anular` | `costos.crear` / `.anular` |
-| `POST …/:id/poner-en-uso`, `POST …/:id/quitar-de-uso` | `activos.poner-en-uso` |
 | `POST …/:id/poner-en-uso`, `POST /activos-fijos/activos/poner-en-uso` (varios, AFI), `POST …/:id/quitar-de-uso` | `activos.poner-en-uso` |
 | `POST …/:id/dividir`, `POST …/:id/separar-en-unidades`, `POST /activos-fijos/divisiones/:id/anular` (AFI) | `divisiones.crear` / `.anular` |
 | `GET /activos-fijos/ubicaciones` (localidades y departamentos activos con §6.13, AF-P22 b) | `traslados.crear` o `inventarios.crear` |
@@ -1251,8 +1226,6 @@ fotos y actas con el `limitarSubidas` de archivos.
 
 | Sección del menú | Pantalla | Forma |
 |---|---|---|
-| Operación | **Activos fijos** (lista con tarjetas: código, descripción, clase, ubicación, responsable, costo, valor en libros, estado y etiquetas «En construcción o en tránsito», «Ocioso», «Depreciado contable», «Depreciado fiscal», «De terceros», «Control») | Lista con filtros → **ficha** (`DatosDelRegistro`) con pestañas: Datos, Costos, Depreciación (por libro, por año y mes), Historial (traslados, mejoras, estimaciones) y Baja. Acciones de la ficha según permiso: poner en uso, trasladar, mejora (con la sugerencia de componente, V-3), revisar estimación, cambiar matrícula o catastro (edificios), marcar ocioso (con motivo), dar de baja, vender, imprimir etiqueta y responsiva |
-| Operación | **Por capitalizar** (bandeja) | Lista agrupada por documento; seleccionar líneas → ventana «Capitalizar» (activo nuevo o existente, reparto por monto con el pendiente a la vista); descartar con motivo |
 | Operación | **Activos fijos** (lista con tarjetas: código, descripción, clase, ubicación, responsable, costo, valor en libros, estado y etiquetas «En construcción o en tránsito», «Ocioso», «Depreciado contable», «Depreciado fiscal», «De terceros», «Control») | Lista con filtros → **ficha** (`DatosDelRegistro`) con pestañas: Datos, Costos, Depreciación (por libro, por año y mes), Historial (traslados, mejoras, estimaciones) y Baja. Acciones de la ficha según permiso: poner en uso, trasladar, mejora (con la sugerencia de componente, V-3), revisar estimación, cambiar matrícula o catastro (edificios), marcar ocioso (con motivo), dar de baja, vender, imprimir etiqueta y responsiva. AFI: etiqueta «En bodega», filtro «En bodega», selección múltiple para «Disponible para uso» y «Entregar»; en la ficha, «Dividir», «Separar en unidades», «Devolver a bodega», y en Historial las divisiones y «Comprado junto con: AF-0101, AF-0102». La localidad se muestra siempre por su nombre (AF-P22 b) |
 | Operación | **Por capitalizar** (bandeja) | Lista agrupada por documento; seleccionar líneas → ventana «Capitalizar» (activo nuevo o existente, reparto por monto con el pendiente a la vista; AFI: campos **Unidades** y **Cantidad por activo**, costo por unidad como ayuda, cuadrícula de códigos, series y placas, destino «Alta conjunta»); descartar con motivo |
 | Operación | **Nuevo activo** (alta manual) | Formulario en página con `CamposDeActivo` y costos manuales |
@@ -1289,7 +1262,6 @@ cámara común abre la ficha (pide iniciar sesión) y el inventario lee el id.
 | **Etiquetas** | Imprimir (no se exporta) | Activos elegidos, localidad |
 | Documentos | Boleta de traslado y responsiva, acta de baja, acta de venta, acta de inventario físico | Desde su pantalla |
 
-Los reportes muestran todos los activos de la empresa (AF-P2 a); la localidad y el departamento son solo filtros.
 Los reportes muestran todos los activos de la empresa (AF-P2 a); la localidad y el departamento son solo filtros, y sus
 nombres salen de §6.13 (AF-P22 b). Las acumuladas de todos los reportes salen de `acumuladaAl` (con divisiones, §7.6).
 
@@ -1298,9 +1270,6 @@ nombres salen de §6.13 (AF-P22 b). Las acumuladas de todos los reportes salen d
 | Pantalla | Sección | Importar | Exportar |
 |---|---|---|---|
 | Clases de activos | Administración | Sí: nombre, inciso, porcentaje, vida útil, residual, activo | Sí |
-| Saldos iniciales de activos fijos | Administración | Sí: una fila por activo con lo de §8; referencias por nombre (clase, localidad, departamento) y por código (padre); todo o nada, ensayo, 5,000 filas; `sinAsignarAlCrear` no aplica (no hay alcance) | Sí |
-| Activos fijos, bandeja, traslados, cierre, inventario | Operación | No | No (se consulta en los reportes) |
-| Reportes | Reportes | No | Sí |
 | Saldos iniciales de activos fijos | Administración | Sí: una fila por activo con lo de §8 (con «Cantidad» y «En bodega», AFI); referencias por nombre (clase, localidad, departamento) y por código (padre); todo o nada, ensayo, 5,000 filas; `sinAsignarAlCrear` no aplica (no hay alcance). La localidad por nombre se busca con §6.13, así quien importa no necesita verlas todas en Empresas | Sí |
 | Activos fijos, bandeja, traslados, divisiones, cierre, inventario | Operación | No | No (se consulta en los reportes) |
 | Reportes (con Existencias de bienes de uso, En bodega o sin asignar y Responsiva, AFI) | Reportes | No | Sí (la responsiva también se imprime) |
@@ -1316,7 +1285,6 @@ dos decimales.
 | R-2 | Documento mixto (gasto y activo) en CP4 | Todo lo pagado va a Inversión (ya era así) | Sin cambio en v1; anotado como pendiente de Cuentas por pagar (prorratear por líneas) |
 | R-3 | Línea marcada pero descartada en la bandeja (o bajo el umbral) | Su pago ya fue a Inversión y la casilla del SAT-2237 dijo «activos fijos» | El descarte avisa: «El pago de esta factura se clasificó como Inversión y su IVA en la casilla de activos fijos; si era gasto, la marca del libro estaba mal». El libro no se edita; se corrige anulando y volviendo a registrar si importa (V-11) |
 | R-4 | Servicio capitalizado (E1) | Va a servicios en el SAT-2237 y a Inversión en el flujo | Es lo que pide el dictamen; V-1 |
-| R-5 | Sin alcance propio (AF-P2 a), pero `empresas.localidades` y `empresas.departamentos` sí lo tienen | Un usuario de Activos fijos sin `empresas.localidades.ver-todas` ni la localidad asignada ve el activo pero **no el nombre** de su localidad (la unión con `empresas.localidades` sale vacía por la RLS de Empresas) y el selector de destino del traslado o del inventario solo le ofrece las suyas. La llave compuesta sí valida (las revisiones de llaves no pasan por RLS) | Pregunta AF-P22. Mientras tanto, la ficha y la lista muestran «Localidad sin acceso» en vez de vacío. Prueba de aislamiento entre **empresas** (dos empresas de la misma cuenta) en todas las tablas |
 | R-5 | Sin alcance propio (AF-P2 a), pero `empresas.localidades` y `empresas.departamentos` sí lo tienen | Un usuario de Activos fijos sin `empresas.localidades.ver-todas` ni la localidad asignada ve el activo pero **no el nombre** de su localidad (la unión con `empresas.localidades` sale vacía por la RLS de Empresas) y el selector de destino del traslado o del inventario solo le ofrece las suyas. La llave compuesta sí valida (las revisiones de llaves no pasan por RLS) | **AF-P22 = b**: los nombres salen de las funciones de Empresas de §6.13 (solo id, código, nombre y activo; revisadas por `seguridad`); ya no hace falta «Localidad sin acceso». Prueba de aislamiento entre **empresas** (dos empresas de la misma cuenta) en todas las tablas y en las dos funciones |
 | R-6 | Departamento de otra localidad | La llave no lo puede impedir (el departamento puede ser de toda la empresa) | Dominio (`departamento_de_otra_localidad`) |
 | R-7 | Multimoneda | Una factura en USD llega al libro con sus líneas ya en GTQ | Los costos se toman en GTQ; nunca se revalúan (no monetarios). Sin columnas de moneda |
@@ -1338,14 +1306,6 @@ dos decimales.
 | **AF-0** | Libro de compras: E1 (checks, dominio, Zod, cliente), `categoriaSql`, único de líneas; pruebas del libro, del SAT-2237 y del análisis | backend (+ ajuste chico de frontend) | **Programado, en integración** |
 | **AF-1** | Esqueleto del módulo, `0001_af1_clases`, auditoría permanente (seis recursos, cita CT arts. 112 «A» y 47), configuración, semilla perezosa (con la ayuda de «Programas y licencias», V-2), `clases_por_concepto`, Excel de clases; pruebas de tablas y de API | backend | **Programado, en integración** |
 | AF-1c | Clases de activos (catálogo con Excel) | frontend | |
-| **AF-2** | `activos` (con ocioso y motivo, matrícula y catastro) y `traslados` (fila del alta), alta manual sin costos, editar, marcar ocioso, eliminar; RLS solo por empresa; prueba de aislamiento entre dos empresas de la misma cuenta y «Localidad sin acceso» (R-5) | backend | |
-| AF-2c | Lista (etiquetas «En construcción o en tránsito», «Ocioso», «Depreciado contable» y «Depreciado fiscal»), ficha (datos) y alta manual | frontend | |
-| **AF-3** | `costos` (V-8 con motivo, `no_es_edificacion`, nunca negativos por activo) y `descartes`, bandeja, capitalizar, costos manuales, avisos del libro (R-1), mensaje del error de llave en el libro; prueba de concurrencia de la línea y del total del activo | backend | |
-| AF-3c | Bandeja «Por capitalizar» (aviso de software y suscripciones, V-2) y pestaña Costos | frontend | |
-| **AF-4** | Dominio de depreciación (§7, pruebas puras con los ejemplos: tope del inmueble con el mayor y el 70 %, reproductores, ocioso, exceso de nota de crédito por libro), `tramos`, poner en uso y quitar de uso | backend | |
-| **AF-5** | `cierres` y `cuotas`: revisar (hallazgos de §6.9), cerrar, reabrir; eventos del bus; pruebas de orden e idempotencia | backend | |
-| AF-5c | Cierre de depreciación y pestaña Depreciación | frontend | |
-| **AF-6** | Saldos iniciales (con costo fiscal, A1), pregunta de EM-2, aviso de fecha de inicio, Excel | backend | |
 | **AF-2** | `activos` (con ocioso y motivo, matrícula y catastro; **AFI-1**: `en_bodega`, `alta_conjunta_id`, `activos_existencias_idx`) y `traslados` (fila del alta, con `a_bodega`), alta manual sin costos, editar, marcar ocioso, eliminar; RLS solo por empresa; prueba de aislamiento entre dos empresas de la misma cuenta | backend | |
 | **AF-P22** | Empresas: `00xx_nombres_de_ubicaciones` (custom) con `empresas.nombres_de_localidades` y `empresas.nombres_de_departamentos` (§6.13), sus pruebas de aislamiento y la ruta `GET /activos-fijos/ubicaciones`. **Antes, la revisión de `seguridad`** | backend | |
 | AF-2c | Lista (etiquetas «En construcción o en tránsito», «Ocioso», «Depreciado contable», «Depreciado fiscal» y «En bodega»), ficha (datos, con el nombre de la localidad de §6.13) y alta manual | frontend | |
@@ -1362,25 +1322,6 @@ dos decimales.
 | **AF-7** | Mejoras (con `no_es_edificacion`), costos posteriores (base corregida sin reiniciar la vida, V-3), revisión de la estimación y cambio de matrícula o catastro (tramo `cambio_de_matricula`, A3) | backend | |
 | AF-7c | Acciones en la ficha (con la sugerencia de componente, V-3) | frontend | |
 | **AF-8** | Traslados con boleta (grupo), anular | backend | |
-| AF-8c | Traslados y boleta imprimible | frontend | |
-| **AF-9** | Bajas y ventas con archivos, tipo de acta, costo fiscal y resultados (A1), avisos de donación y reproductor (V-10, V-12) | backend | |
-| AF-9c | Baja y venta (ventanas, actas imprimibles) | frontend | |
-| **AF-10** | Reportes de §13 (consultas y exportar; ISO con el activo neto contable del cierre del año anterior, A2; línea de ociosos, V-4) | backend | |
-| AF-10c | Pantallas de reportes | frontend | |
-| AF-11c | Etiquetas con QR (dependencia nueva, revisada por `seguridad`) | frontend | |
-| **AF-12** | Inventario físico | backend | |
-| AF-12c | Conteo desde el teléfono con escáner (dependencia nueva) | frontend | |
-| AF-QA | Punta a punta en el navegador (compra → bandeja → uso → cierres → traslado → venta; saldos iniciales → cierre de la carga) | pruebas-qa | |
-| AF-14 | (Después de v1, AF-P18) Pólizas de seguro: `polizas` y `activos_de_polizas`, vencimientos | backend y frontend | |
-| AF-15 | (Después de v1, P-A) «Sustituir documento»: pasar los costos de un documento del libro a otro que lo reemplaza, con auditoría | backend y frontend | |
-
-AF-6 puede adelantarse a AF-5 si se quiere cargar saldos antes de cerrar meses. AF-P22 debe responderse antes de AF-2c
-(cómo se muestra la localidad sin acceso).
-
-## 17. Preguntas para el usuario
-
-_AF-P1 a AF-P21 respondidas el 2026-11-18 (al final): todas según la recomendación **salvo AF-P2, que fue la a**. Queda
-abierta AF-P22, que nace de AF-P2 a._
 | **AFI-4** (con AF-8) | Traslados a la bodega y devolución con «Marcar como ocioso»; responsiva configurable en la boleta; `00xx_af8_boletas_firmadas` y subir el escaneo firmado (I-8 b) | backend | |
 | AF-8c | Traslados y boleta imprimible | frontend | |
 | AFI-4c (con AF-8c) | Entregar y devolver; casilla «A la bodega»; selección múltiple; subir la boleta firmada | frontend | |
@@ -1437,7 +1378,6 @@ anuncia otra «AF-P22» (el inmueble en vez de la matrícula en el activo); cuan
 | AF-P19 | ¿El responsable? | a) Texto con usuario opcional (como el custodio de caja chica); b) un tercero de Clientes | **a** |
 | AF-P20 | ¿Fotos y actas? | a) Una foto por activo y el acta y la denuncia en las bajas; b) varias fotos y adjuntos por activo | **a** en v1 |
 | AF-P21 | ¿Cerrar el primer mes exige la carga inicial cerrada? | a) Sí, si hay activos de saldo inicial; b) no, solo avisa | **a**: con la carga abierta los saldos todavía pueden cambiar y el mes saldría mal |
-| **AF-P22** (abierta) | Quien usa Activos fijos sin ver todas las localidades en Empresas no ve el nombre de la localidad de algunos activos (R-5). ¿Qué se hace? | a) Mostrar «Localidad sin acceso» y ofrecer en traslados e inventario solo sus localidades; b) que Activos fijos lea los nombres de localidades y departamentos sin el filtro de Empresas (una vista o función `security definer` de Empresas que dé solo id y nombre); c) pedir `empresas.localidades.ver-todas` a quien use Activos fijos | **b**: es coherente con «todos lo ven» (AF-P2 a) y solo expone nombres, no datos de la localidad; el traslado a cualquier localidad también queda posible. a es lo más simple pero deja fichas incompletas; c mezcla dos permisos y da de más en Empresas. b toca Empresas (una función, su prueba) y la revisa `seguridad` |
 | **AF-P22** (respondida: **b**) | Quien usa Activos fijos sin ver todas las localidades en Empresas no ve el nombre de la localidad de algunos activos (R-5). ¿Qué se hace? | a) Mostrar «Localidad sin acceso» y ofrecer en traslados e inventario solo sus localidades; b) que Activos fijos lea los nombres de localidades y departamentos sin el filtro de Empresas (una vista o función `security definer` de Empresas que dé solo id y nombre); c) pedir `empresas.localidades.ver-todas` a quien use Activos fijos | **b**: es coherente con «todos lo ven» (AF-P2 a) y solo expone nombres, no datos de la localidad; el traslado a cualquier localidad también queda posible. a es lo más simple pero deja fichas incompletas; c mezcla dos permisos y da de más en Empresas. b toca Empresas (una función, su prueba) y la revisa `seguridad`. **Diseño del contrato en §6.13** |
 
 ## 18. Validación del contador (2026-11-18)
@@ -1463,10 +1403,6 @@ anuncia otra «AF-P22» (el inmueble en vez de la matrícula en el activo); cuan
 | V-13 | Tercera edición de la NIIF para las Pymes | Sin cambio en v1 | — |
 | Auditoría | Recursos permanentes | `activos`, `costos`, `mejoras`, `saldos-iniciales`, `bajas`, `cierres`, con la cita Código Tributario arts. 112 «A» y 47 | §4.2, §10.2 |
 | P-A | «Sustituir documento» | Después de v1 (AF-15) | §16, R-1 |
-
-Pendiente con `seguridad`: las dos dependencias nuevas del cliente (QR y lectura de QR), el permiso de cámara, las fotos y actas
-(`core.archivos`, PDF con qpdf, `recurso_dueno`), que el QR solo lleve el id (sin datos del activo) y, si se elige AF-P22
-b, la función de Empresas que da los nombres de localidades y departamentos.
 
 Pendiente con `contador-guatemala` (puntos de la integración, `diseno-integracion-activos-fijos-e-inventarios.md` §13;
 validar antes de AFI-5):
@@ -1500,7 +1436,6 @@ Pendiente con `seguridad` (antes de programar cada parte):
 - Orden `activos-fijos.dar_de_baja` para Ganadería y Cultivos (R-8).
 - Revaluación y deterioro (§3.10), pólizas (AF-14), arrendamiento financiero.
 - «Sustituir documento» (P-A, AF-15).
-- AF-P22: nombres de localidades para quien no las ve todas en Empresas (R-5).
 - La pregunta del inmueble de `diseno-parcelas.md` §4.2 (será AF-P23).
 - Con Contabilidad: cuentas por clase, cuenta puente de compras de activos, partidas de los eventos de §9.
 
