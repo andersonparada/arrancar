@@ -3618,3 +3618,9 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   configuración usa su propia conexión, así que no comparte la transacción: si guardar falla, la auditoría se deshace).
   Por decisión de producto, y en coherencia con C9, el asunto y el mensaje rechazan `http:`, `www.`, `@` y dominios con
   terminación común (`.com`, `.gt`…); también rige para la configuración genérica de Soporte. Sin migraciones.
+- **2026-11-19** (BS-8, QA de la carga inicial de Bancos): recorrido de punta a punta en el navegador (escritorio claro y
+  celular oscuro, impresión y Excel) con tres cuentas (con partidas, sin saldo, sobregirada), cierre y reapertura de la
+  carga, primera conciliación de enero, anulación en febrero y permisos. Todo cuadra a mano. Errores abiertos: BS8-1
+  (número de cheque negativo o enorme da 500; prueba `it.fails` en `bancos-qa-bs8-bordes.api.prueba.ts`) y BS8-2
+  (conciliación con la carga se desborda en celular); el resto, de gravedad baja. Informe:
+  `docs/modulos/informe-qa-bancos-carga-inicial-2026-11-19.md`. Sin cambios en el código de la app ni migraciones.
