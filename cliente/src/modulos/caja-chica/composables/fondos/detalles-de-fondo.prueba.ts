@@ -45,6 +45,12 @@ describe('detalles del fondo', () => {
     expect(detalles.find((d) => d.etiqueta === 'Último arqueo')?.valor).toBe('Nunca');
   });
 
+  it('la tarjeta muestra los vales abiertos solo cuando hay', () => {
+    expect(detallesDeLaTarjeta(fondo).some((d) => d.etiqueta === 'Vales abiertos')).toBe(false);
+    const conVales = detallesDeLaTarjeta({ ...fondo, valesAbiertos: '500.00' });
+    expect(conVales.find((d) => d.etiqueta === 'Vales abiertos')?.valor).toContain('500.00');
+  });
+
   it('la ecuación lista las cuatro partes que calculó el servidor', () => {
     expect(partesDeLaEcuacion(fondo).map((p) => p.etiqueta)).toEqual([
       'Efectivo esperado en caja',

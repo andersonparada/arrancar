@@ -8,6 +8,7 @@ import type {
   EstadoDeLosComprobantes,
   ListaDeComprobantes,
 } from '../../servicios/tipos-de-comprobantes';
+import { usarMovimientosDelFondo } from '../movimientos/usar-movimientos-del-fondo';
 import { detallesDeLaFicha, partesDeLaEcuacion } from './detalles-de-fondo';
 
 const SIN_COMPROBANTES: ListaDeComprobantes = { elementos: [], totales: { pendiente: '0.00', repuesto: '0.00' } };
@@ -37,8 +38,10 @@ export function usarFichaDelFondo(id: string) {
   const estado = ref<EstadoDeLosComprobantes>('pendiente');
   const { fondo, comprobantes, conRetencion } = cargasDeLaFicha(id, () => estado.value);
   watch(estado, comprobantes.cargar);
+  const movimientos = usarMovimientosDelFondo(id);
 
   return {
+    movimientos,
     estado,
     fondo: fondo.datos,
     cargando: computed(() => fondo.cargando.value && !fondo.datos.value),
@@ -47,6 +50,6 @@ export function usarFichaDelFondo(id: string) {
     conRetencion: conRetencion.datos,
     ecuacion: computed(() => (fondo.datos.value ? partesDeLaEcuacion(fondo.datos.value) : [])),
     detalles: computed(() => (fondo.datos.value ? detallesDeLaFicha(fondo.datos.value) : [])),
-    recargar: () => Promise.all([fondo.cargar(), comprobantes.cargar(), conRetencion.cargar()]),
+    recargar: () => Promise.all([fondo.cargar(), comprobantes.cargar(), conRetencion.cargar(), movimientos.recargar()]),
   };
 }

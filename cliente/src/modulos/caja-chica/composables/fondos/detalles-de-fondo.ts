@@ -4,12 +4,15 @@ import type { Fondo, FondoResumen } from '../../servicios/tipos-de-fondos';
 
 /** Lo que dice la tarjeta de un fondo en la lista: el dinero que tiene y el que falta reponer. */
 export function detallesDeLaTarjeta(fondo: FondoResumen): DetalleDeRegistro[] {
+  const vales =
+    Number(fondo.valesAbiertos) > 0 ? [{ etiqueta: 'Vales abiertos', valor: formatearMonto(fondo.valesAbiertos) }] : [];
   return [
     { etiqueta: 'Custodio', valor: fondo.custodio ?? 'Sin custodio' },
     { etiqueta: 'Localidad', valor: fondo.localidadNombre ?? 'Sin localidad' },
     { etiqueta: 'Monto del fondo', valor: formatearMonto(fondo.monto) },
     { etiqueta: 'Efectivo esperado', valor: formatearMonto(fondo.efectivoEsperado) },
     { etiqueta: 'Pendiente de reponer', valor: formatearMonto(fondo.pendienteDeReponer) },
+    ...vales,
     { etiqueta: 'Último arqueo', valor: fondo.ultimoArqueo ? formatearFecha(fondo.ultimoArqueo) : 'Nunca' },
   ];
 }
