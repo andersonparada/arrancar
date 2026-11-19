@@ -1,5 +1,6 @@
 import type { Columna } from '../../core/intercambio/aplicacion/columnas.js';
 import type { FilaDelReporte } from '../aplicacion/calculo-de-reporte-de-movimientos.js';
+import { mesEnTexto } from './saldos-por-cuenta.columnas.js';
 
 /** Una fila ya lista para su celda en Excel: el débito y el crédito separados, y el tipo y el anulado en texto. */
 export interface FilaExportadaDelReporte {
@@ -14,6 +15,7 @@ export interface FilaExportadaDelReporte {
   debito: string | null;
   credito: string | null;
   saldo: string | null;
+  conciliadoEn: string | null;
   anulado: boolean;
 }
 
@@ -45,6 +47,7 @@ export const aFilaExportadaDelReporte = (fila: FilaDelReporte): FilaExportadaDel
   debito: fila.tipo === 'credito' ? null : fila.monto,
   credito: fila.tipo === 'credito' ? fila.monto : null,
   saldo: fila.saldo,
+  conciliadoEn: mesEnTexto(fila.conciliadoEn),
   anulado: fila.anuladoEn !== null,
 });
 
@@ -61,5 +64,6 @@ export const columnasDelReporteDeMovimientos: Columna[] = [
   { clave: 'debito', titulo: 'Débito', requerido: false, tipo: 'decimal' },
   { clave: 'credito', titulo: 'Crédito', requerido: false, tipo: 'decimal' },
   { clave: 'saldo', titulo: 'Saldo', requerido: false, tipo: 'decimal' },
+  { clave: 'conciliadoEn', titulo: 'Conciliado en', requerido: false, tipo: 'texto' },
   { clave: 'anulado', titulo: 'Anulado', requerido: false, tipo: 'siNo' },
 ];

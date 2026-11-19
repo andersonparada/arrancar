@@ -1730,3 +1730,27 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
   `saldo_inicial`, y lo contaban como apertura): el inverso sale en «Otros movimientos sin actividad» y el control cuadra.
 - **DTO**: `MovimientoDto`, `ChequeDto`, `ChequeListadoDto` y `ChequeEnCirculacionDto` traen `parteDeApertura`; `OrigenDeCheque` suma `'apertura'` (el cheque en
   circulación de la carga inicial; el posfechado sigue «suelto» con su `parteDeApertura`); `PartidaDeAperturaDto.puedeAnular` ya es real.
+
+### Bancos, segunda parte: reportes (BS-R1, servidor hecho el 2026-11-18)
+
+- **Saldos por cuenta** (`GET /api/bancos/saldos-por-cuenta?fecha=&cuentaBancariaId=`, `bancos.saldos-por-cuenta.ver`; Excel en `/exportar`, `.exportar`; sin fecha es hoy en la hora
+  de la empresa): caso de uso `ReporteDeSaldosPorCuenta` (`aplicacion/casos-uso/saldos-por-cuenta/`), reglas puras en `aplicacion/calculo-de-saldos-por-cuenta.ts` (centavos
+  enteros) y lectura agregada en `ConsultasDeSaldosPorCuentaDrizzle` (una consulta por tema: cuentas, libros y posfechados, última conciliación, sumas y detalle de las partidas).
+  Por cuenta: `saldoEnLibros` (vigentes con fecha hasta el corte), `chequesPosfechados` (cheques vigentes sin revertir con fecha posterior), `disponible` = libros menos
+  posfechados (sin sobregiro autorizado: N-1 opción (a)), `fondosInsuficientes` (hay posfechados y el disponible es negativo), las cuatro partidas en tránsito
+  (`chequesEnCirculacion`, `depositosEnTransito`, `debitosEnTransito`, `erroresDelBanco` con su neto en libros), `saldoSegunBanco` = libros menos el efecto de todo lo en tránsito
+  (con la apertura: banco 10,000 = libros 9,330 + cheque 1,200 + débito 50 - depósito 500 - error 80), `ultimaConciliacion`, `atrasada` y `partidas` (el detalle). Totales **sin compensar**:
+  `bancos` (libros de cero o positivos) y `sobregiros` (negativos en valor absoluto; su disponible es el sobregiro más los posfechados), más la `nota` de fondos retenidos y sobregiro
+  autorizado. Una cuenta inactiva sin saldo, partidas ni posfechados no aparece.
+- **«En tránsito a la fecha»** (`condiciones-en-transito.ts`): vigente (sin anular a la antigua), con fecha hasta el corte, que no sea el `saldo_del_banco` de la apertura (es lo que el banco ya
+  vio), sin marca de una conciliación **autorizada** de un mes que empieza hasta el corte (una marca de una conciliación en proceso no cuenta; un mes autorizado después del corte
+  tampoco: el reporte de diciembre no cambia porque en enero se concilió) y sin los pares original + inverso que ninguno vio (se compensan, como al conciliar). El saldo global
+  heredado cuenta como depósito o débito en tránsito hasta que se marque; el posfechado cobrado antes de su fecha ya no aparece (§2.6).
+- **Atrasada**: hay movimientos del día a día (no los de la carga inicial) en meses completos anteriores al de la fecha y la última conciliación autorizada (de un mes que empieza hasta la fecha) no
+  llega al fin del mes inmediato anterior. Una cuenta que solo tiene apertura no está atrasada.
+- **`conciliadoEn` en el reporte de Movimientos** (`GET /bancos/movimientos/reporte`, base del Estado de cuenta): cada fila trae `{ anio, mes }` de la conciliación **autorizada** donde quedó
+  marcada, o `null`; el servidor trae los meses de las conciliaciones (pocas filas, `mesesConciliados`) y los une en memoria. El Excel agrega la columna «Conciliado en» (`mm/aaaa`).
+- **Permisos y migración `0035_saldos_por_cuenta_permisos`**: `bancos.saldos-por-cuenta.ver` y `.exportar`, por rol y por usuario, a quien tenía `bancos.movimientos.ver` y `.exportar`. Repetible.
+- **Rendimiento** (`bancos-saldos-por-cuenta-rendimiento.api.prueba.ts`, 100,000 movimientos con 500 pares compensados): el endpoint responde en unos 400 ms y la consulta de partidas en
+  unos 130 ms según `explain analyze`. Los pares compensados van en un conjunto aparte (`id not in (…)`, partiendo de los pocos inversos); con una subconsulta por fila PostgreSQL estimaba un costo
+  enorme y activaba el JIT (más de 1 s). Los índices existentes bastan; no hay índice nuevo.

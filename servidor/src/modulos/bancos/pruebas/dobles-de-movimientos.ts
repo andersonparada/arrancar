@@ -163,6 +163,9 @@ export class MovimientosEnMemoria implements RepositorioMovimientos, ConsultasMo
     return this.fechaConciliadaHasta;
   }
 
+  /** Los dobles no concilian: ninguna marca pertenece a un mes autorizado. */
+  mesesConciliados = async (): ReturnType<ConsultasMovimientos['mesesConciliados']> => new Map();
+
   async saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string> {
     const efectos = this.vigentes(cuentaBancariaId)
       .filter((dto) => dto.fecha <= fecha)

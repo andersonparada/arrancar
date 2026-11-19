@@ -1,3 +1,4 @@
+import type { MesDeConciliacionDto } from '../dto/saldos-por-cuenta.dto.js';
 import type {
   FiltroDeMovimientos,
   MovimientoDto,
@@ -35,6 +36,8 @@ export interface ConsultasMovimientos {
   conciliadaHasta(cuentaBancariaId: string): Promise<string | null>;
   /** Créditos menos débitos vigentes con fecha hasta (incluida) `fecha`, como texto con dos decimales. */
   saldoAlFinDe(cuentaBancariaId: string, fecha: string): Promise<string>;
+  /** El mes de cada conciliación AUTORIZADA (por su id), de la cuenta si se da o de todas: lo que muestra «Conciliado en». */
+  mesesConciliados(cuentaBancariaId?: string): Promise<Map<string, MesDeConciliacionDto>>;
   /** Los originales vigentes con el concepto de sistema «Sin clasificar», en la cuenta y fechas del filtro. */
   resumenDeSinClasificar(filtro: FiltroDeMovimientos): Promise<ResumenDeSinClasificar>;
   /** La suma de los cheques vigentes (sin anular ni revertir) de la cuenta con fecha posterior a `despuesDe`, con dos decimales. */

@@ -1,8 +1,19 @@
 import { aCentavos, deCentavos, efectoEnCentavos } from '../dominio/centavos.js';
 import type { MovimientoDto, ResumenDeSinClasificar } from './dto/movimiento.dto.js';
+import type { MesDeConciliacionDto } from './dto/saldos-por-cuenta.dto.js';
 
-/** Una fila del reporte de movimientos, con su saldo corrido (`null` si el reporte no eligió una cuenta). */
-export type FilaDelReporte = MovimientoDto & { saldo: string | null };
+/** Un movimiento con su saldo corrido (`null` si el reporte no eligió una cuenta). */
+export type FilaConSaldo = MovimientoDto & { saldo: string | null };
+
+/** Una fila del reporte de movimientos: además, el mes de la conciliación autorizada donde quedó marcada (si lo está). */
+export type FilaDelReporte = FilaConSaldo & { conciliadoEn: MesDeConciliacionDto | null };
+
+/** Agrega a cada fila el mes de su conciliación autorizada; una marca de una conciliación en proceso no cuenta. */
+export const conMesConciliado = (
+  filas: readonly FilaConSaldo[],
+  meses: ReadonlyMap<string, MesDeConciliacionDto>,
+): FilaDelReporte[] =>
+  filas.map((fila) => ({ ...fila, conciliadoEn: (fila.conciliacionId && meses.get(fila.conciliacionId)) || null }));
 
 /** El día anterior a `fecha` (`AAAA-MM-DD`), para calcular el saldo anterior al filtro `desde`. */
 export function diaAnteriorA(fecha: string): string {
@@ -19,7 +30,7 @@ export function diaAnteriorA(fecha: string): string {
 export function calcularSaldoCorrido(
   saldoAnteriorEnCentavos: number,
   movimientos: readonly MovimientoDto[],
-): FilaDelReporte[] {
+): FilaConSaldo[] {
   let saldoEnCentavos = saldoAnteriorEnCentavos;
   return movimientos.map((movimiento) => {
     if (!movimiento.anuladoEn) saldoEnCentavos += efectoEnCentavos(movimiento.tipo, movimiento.monto);

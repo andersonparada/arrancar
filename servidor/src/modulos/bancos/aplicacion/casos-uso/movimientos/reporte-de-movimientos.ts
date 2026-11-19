@@ -1,6 +1,12 @@
 import type { Operador } from '../../../../core/compartido/aplicacion/operador.js';
 import { aCentavos } from '../../../dominio/centavos.js';
-import { calcularSaldoCorrido, diaAnteriorA, type FilaDelReporte } from '../../calculo-de-reporte-de-movimientos.js';
+import {
+  calcularSaldoCorrido,
+  conMesConciliado,
+  diaAnteriorA,
+  type FilaConSaldo,
+  type FilaDelReporte,
+} from '../../calculo-de-reporte-de-movimientos.js';
 import type { MovimientoDto, ResumenDeSinClasificar } from '../../dto/movimiento.dto.js';
 import type { DependenciasDeMovimientos } from './dependencias-de-movimientos.js';
 
@@ -32,13 +38,19 @@ export class ReporteDeMovimientos {
     return unidadDeTrabajo.ejecutar(operador, async () => {
       const filas = await consultas.listarAscendente(filtro);
       const sinClasificar = await consultas.resumenDeSinClasificar(filtro);
+      const meses = await consultas.mesesConciliados(filtro.cuentaBancariaId);
       const { cuentaBancariaId, conceptoId } = filtro;
       if (!cuentaBancariaId || conceptoId)
-        return { saldoAnterior: null, filas: sinSaldo(filas), saldoFinal: null, sinClasificar };
+        return {
+          saldoAnterior: null,
+          filas: conMesConciliado(sinSaldo(filas), meses),
+          saldoFinal: null,
+          sinClasificar,
+        };
       const saldoAnterior = await this.saldoAnteriorA(cuentaBancariaId, filtro.desde);
       const filasConSaldo = calcularSaldoCorrido(aCentavos(saldoAnterior), filas);
       const saldoFinal = filasConSaldo.at(-1)?.saldo ?? saldoAnterior;
-      return { saldoAnterior, filas: filasConSaldo, saldoFinal, sinClasificar };
+      return { saldoAnterior, filas: conMesConciliado(filasConSaldo, meses), saldoFinal, sinClasificar };
     });
   }
 
@@ -48,4 +60,4 @@ export class ReporteDeMovimientos {
   }
 }
 
-const sinSaldo = (filas: MovimientoDto[]): FilaDelReporte[] => filas.map((fila) => ({ ...fila, saldo: null }));
+const sinSaldo = (filas: MovimientoDto[]): FilaConSaldo[] => filas.map((fila) => ({ ...fila, saldo: null }));
