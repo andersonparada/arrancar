@@ -4024,3 +4024,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   (inmuebles sin valores) se puede programar ya**; PA-0b espera PA-20 y PA-21, PA-1 espera PA-23 y los archivos van en
   PA-AR tras la revisión de `seguridad`. Preguntas nuevas PA-20 a PA-23 (§17.1, sin responder); pendientes P-1 a P-4
   (§18.1), ninguno bloquea un paso.
+- **2026-11-19 (CT-0a, Contabilidad)**:
+  - Core: `EventoDominio` gana `id` (uuid) y `version` (1 por omisión); tabla `core.registro_de_eventos` (migración
+    `0036_registro_de_eventos`, de solo agregar con RLS por empresa, sin depuración, clasificada en
+    `RESTRICCIONES_DE_PRIVILEGIOS` con `sin: ['update','delete']`); `PublicadorDeEventos` (guarda en el registro dentro
+    de la transacción, avisa `core.eventos_registrados` por el mediador y difiere el bus; fuera de una unidad de
+    trabajo lanza `PublicacionFueraDeLaTransaccion`), disponible en `DependenciasCompartidas.publicadorDeEventos` junto
+    a `publicadorEventos` (la transición de §4.1 sigue en CT-0a2 y CT-0a3). Contratos `core/contratos/core.contratos.ts`
+    y `core/contratos/contabilidad.contratos.ts` (roles de §3.9 y las cuatro preguntas). Nadie publica todavía por el
+    publicador nuevo. Lo que solo un cliente puede confirmar: el volumen real del registro y el tamaño típico de
+    `datos` (hoy se supone un evento por operación).
