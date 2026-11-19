@@ -22,26 +22,34 @@ Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop*
 - **Clientes:** el usuario **no tiene clientes todavía** (2026-11-19). No se frena nada esperando datos reales; lo que solo un
   cliente puede confirmar se revisa con el primero que lo use.
 
-**`main`:** `2f27499b` (subido). Suite completa en verde: servidor 7853, cliente 2125+, generador 46.
+**`main`:** `c5eae433` (subido, 2026-11-19 a media mañana). Suite completa en verde: servidor 8224, cliente 2282, generador 46.
 
 **En `main` desde el 2026-11-18:**
 - **Bancos:**
-  - BS-2 a BS-7, BS-9, BS-R1 y BS-R2.
-  - Impresión de cheques: servidor IC-1 a IC-7 y cliente IC-8 a IC-10. Falta IC-11, QA con papel real.
-  - QA BS-8 hecha; sus correcciones van en la tanda 7.
-- **Cuentas por pagar:** CP4 y CP5 completos, con sus QA corregidas.
-- **Correo:** completo; pendientes de seguridad en core 0034.
-- **Núcleo:** RLS de escritura R-1 a R-3 y de lectura de empresas R-4 (core 0035), con R-5 en CLAUDE.md y en ARQUITECTURA.md.
+  - BS-2 a BS-9, BS-R1 y BS-R2, con la QA BS-8 corregida.
+  - Impresión de cheques IC-1 a IC-10. Falta IC-11, QA con papel real.
+  - AP-0: posfechados sin ligar.
+- **Cuentas por pagar:** CP4 y CP5 completos.
+- **Correo:** completo.
+- **Núcleo:**
+  - RLS de escritura y de lectura de empresas (R-1 a R-5).
+  - Registro de eventos CT-0a (core 0036), primer paso de Contabilidad.
   - **Ojo:** las pruebas que siembran `core.empresas` o `core.empresa_usuarios` usan `bdPropietario`.
 - **Multimoneda:**
-  - MM-1 a MM-5 y la Adenda B: MM-1b (core 0033), MM-3a″, MM-3c y MM-4b.
-  - La carga automática sigue **apagada por omisión**. Antes de encenderla falta MM-3d: C-5 y `curl` desde producción.
+  - MM-1 a MM-5 y la Adenda B, con las correcciones de su QA: la carga corre fuera de la solicitud y el ingreso manual no acepta fechas
+    futuras.
+  - La carga automática sigue **apagada**. Antes de encenderla falta MM-3d: C-5 y `curl` desde producción.
+- **Terceros:** VC-0a, clientes para ventas (0010); es el primer paso de Cuentas por cobrar y Ventas.
+- **Empresas:** PA-0a, inmuebles (0014); es el primer paso de Parcelas.
 - **Activos fijos:**
-  - AF-1 a AF-6: cierres en 0005 y saldos iniciales en 0006.
-  - Cliente: AF-1c, AF-2c, AF-3c y AFI-2c.
-- **Inventarios:** INV-0 a INV-4 (kardex en 0004).
-- **Caja chica:** CC-1 a CC-8.
-- **Cuentas por liquidar:** CL-1 a CL-6.
+  - Servidor AF-1 a AF-8: mejoras en 0007; traslados con boleta, sin migración.
+  - Cliente AF-1c, AF-2c, AF-3c, AFI-2c, AF-5c y AF-6c.
+  - Correcciones de su QA.
+- **Inventarios:** INV-0 a INV-5 (recepciones en 0005, y la orden `cambiar_marca_de_inventario` del libro).
+- **Caja chica:** CC-1 a CC-10, con servidor, pantallas y reportes. Falta CC-11 (QA).
+- **Cuentas por liquidar:** CL-1 a CL-6, con la QA CL-7 hecha. Le quedan **dos medios sin corregir**:
+  - un rol sin `terceros.ver` no puede elegir beneficiario y no se le explica por qué;
+  - CL-R1 suma con signo un anticipo gastado de más.
 - **Diseños validados con las respuestas del usuario:** Cuentas por cobrar y Ventas, Contabilidad, Bancos aprobaciones y tarjeta, y
   Parcelas.
 
@@ -52,13 +60,19 @@ Actualizado: **2026-11-19** (madrugada). El coordinador (Opus) está en **/loop*
 - **Recomendaciones aceptadas en todos los puntos:** Cuentas por cobrar y Ventas (VC-P1 a VC-P24), Contabilidad (CT-P1 a
   CT-P18), Bancos aprobaciones y tarjeta (§16) y Parcelas (PA-1 a PA-19).
 
-**En curso:**
-- **Workflow `arrancar-tanda-7`** (run `wf_cde8ffed-67d`, desde `base-tanda7`):
-  - Primeros pasos de los diseños nuevos: VC-0a (Terceros), CT-0a (core 0036), AP-0 y PA-0a (Empresas).
-  - Caja chica CC-9 → CC-10.
-  - Activos fijos AF-7 → AF-8.
-  - Correcciones de las QA de BS-8, Multimoneda y Activos fijos con Inventarios.
-- **Workflow `arrancar-tanda-8`** (run `wf_40adf1e3-216`, desde `base-tanda8`): INV-5, cliente AF-5c y AF-6c, y QA CL-7.
+**En curso:** nada. El usuario cerró el día el 2026-11-19 por la mañana; se retoma con la lista de abajo.
+
+**Siguientes pasos al retomar** (todo diseñado y aprobado):
+- **Cuentas por liquidar:** corregir los dos medios de la QA CL-7.
+- **Caja chica:** CC-11 (QA).
+- **Activos fijos:** AF-7c y AF-8c, AFI-3 a AFI-5, AF-9 y siguientes.
+- **Inventarios:** INV-5c (pantalla «Por recibir»), INV-6 (traslados) y siguientes; costos adicionales.
+- **Cuentas por cobrar y Ventas:** VC-0b, VC-0c1 y VC-0d en paralelo; luego LV-1 → LV-2 → LV-3 → LV-5 y CXC-1 en adelante.
+- **Contabilidad:** CT-0e, CT-0f y la cadena CT-1 → CT-2 → CT-3. CT-1p espera la plantilla de cuentas del contador.
+- **Bancos aprobaciones y tarjeta:** AP-1 a AP-3 y AB-1 a AB-6.
+- **Parcelas:** PA-0b y siguientes. AF-P23 necesita una migración nueva de Activos fijos.
+- **Multimoneda:** MM-3d (operación).
+- **Bancos:** IC-11 (QA de impresión con papel real).
 
 **Pendientes anotados:**
 - **CC-4:** un comprobante con una reposición anulada ya no se puede devolver a la bandeja ni eliminar en el libro; da error
