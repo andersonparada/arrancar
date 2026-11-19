@@ -1,3 +1,4 @@
+import type { EvidenciaDto } from '../../dto/saldo-inicial.dto.js';
 import type {
   ConsultasDeSaldosIniciales,
   CuentaConSuCabecera,
@@ -18,6 +19,14 @@ export class ConsultasEnMemoria implements ConsultasDeSaldosIniciales {
   }
   async contarMovimientosNormalesHasta() {
     return 0;
+  }
+  evidencias = new Map<string, { archivoId: string; datos: EvidenciaDto }>();
+
+  async archivoDeLaEvidencia(cuentaBancariaId: string) {
+    return this.evidencias.get(cuentaBancariaId)?.archivoId ?? null;
+  }
+  async evidenciaDe(cuentaBancariaId: string) {
+    return this.evidencias.get(cuentaBancariaId)?.datos ?? null;
   }
   async saldosPrincipales(): Promise<SaldoPrincipal[]> {
     return this.partidasDeLaEmpresa

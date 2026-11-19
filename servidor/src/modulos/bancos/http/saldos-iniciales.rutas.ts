@@ -1,6 +1,7 @@
 import type { preHandlerAsyncHookHandler } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { AccesoDenegado } from '../../core/compartido/aplicacion/errores.js';
+import { limitarSubidas } from '../../core/archivos/http/limite-de-subidas.js';
 import { contextoDe } from '../../core/compartido/http/contexto-de-la-solicitud.js';
 import { proteger } from '../../core/compartido/http/guardias.js';
 import { operadorDe } from '../../core/compartido/http/operador-de-la-solicitud.js';
@@ -88,6 +89,26 @@ function rutasDeLasPartidas(app: Aplicacion, controlador: SaldosInicialesControl
   });
 }
 
+/** La evidencia (PDF o foto): se sube y se quita con `.editar` (y la carga abierta), se abre con `.ver`. */
+function rutasDeLaEvidencia(app: Aplicacion, controlador: SaldosInicialesControlador) {
+  const editar = proteger({ permiso: 'bancos.saldos-iniciales.editar' });
+  app.get(`${RUTA}/:cuentaBancariaId/evidencia`, {
+    schema: conCuenta,
+    preHandler: proteger({ permiso: 'bancos.saldos-iniciales.ver' }),
+    handler: controlador.abrirEvidencia,
+  });
+  app.put(`${RUTA}/:cuentaBancariaId/evidencia`, {
+    schema: { ...conCuenta, consumes: ['multipart/form-data'] },
+    preHandler: [editar, limitarSubidas(app)],
+    handler: controlador.subirEvidencia,
+  });
+  app.delete(`${RUTA}/:cuentaBancariaId/evidencia`, {
+    schema: conCuenta,
+    preHandler: editar,
+    handler: controlador.quitarEvidencia,
+  });
+}
+
 function rutaDeAnularPartida(app: Aplicacion, controlador: SaldosInicialesControlador) {
   app.post(`${RUTA}/:cuentaBancariaId/partidas/:movimientoId/anular`, {
     schema: { ...conPartida, body: esquemaAnulacionDePartida },
@@ -112,6 +133,7 @@ export function rutasSaldosIniciales(
     rutasDeLaCabecera(app, controlador);
     rutasDeLasPartidas(app, controlador);
     rutaDeAnularPartida(app, controlador);
+    rutasDeLaEvidencia(app, controlador);
     rutasDeIntercambio(app, { ruta: RUTA, archivo: 'saldos-iniciales', permisos, intercambio: intercambios.saldos });
     rutasDeIntercambio(app, {
       ruta: `${RUTA}/partidas`,

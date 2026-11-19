@@ -14,6 +14,7 @@ import { conciliaciones } from './conciliaciones.tablas.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
 import { cuentaConConciliacionesDe } from './hechos-de-movimiento.js';
 import { movimientos } from './movimientos.tablas.js';
+import { archivoDeLaEvidenciaDe, evidenciaDeLaCuenta } from './evidencia-de-apertura.consulta.drizzle.js';
 import { saldosIniciales } from './saldos-iniciales.tablas.js';
 
 /** Lo que se lee de cada partida de apertura, con su cheque, su concepto y la conciliación donde está marcada. */
@@ -110,5 +111,13 @@ export class ConsultasDeSaldosInicialesDrizzle implements ConsultasDeSaldosInici
         and(inArray(movimientos.parteDeApertura, ['saldo_del_banco', 'saldo_global']), isNull(movimientos.anuladoEn)),
       );
     return filas.map((fila) => ({ ...fila, parte: fila.parte as SaldoPrincipal['parte'] }));
+  }
+
+  archivoDeLaEvidencia(cuentaBancariaId: string) {
+    return archivoDeLaEvidenciaDe(cuentaBancariaId);
+  }
+
+  evidenciaDe(cuentaBancariaId: string) {
+    return evidenciaDeLaCuenta(cuentaBancariaId);
   }
 }

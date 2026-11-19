@@ -97,6 +97,7 @@ export class FichaDeSaldoInicial {
     return {
       ...resumenDeLaCuenta(cuenta, partidas, contexto),
       observaciones: cuenta.observaciones,
+      evidencia: cuenta.tieneEvidencia ? await consultas.evidenciaDe(cuentaBancariaId) : null,
       partidas: partidas.map((partida) => partidaDeApertura(partida, contexto)),
     };
   }

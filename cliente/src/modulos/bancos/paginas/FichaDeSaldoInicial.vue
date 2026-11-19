@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import EncabezadoPagina from '@/modulos/core/componentes/EncabezadoPagina.vue';
 import { formatearFecha } from '@/modulos/core/utilidades/formato';
+import EvidenciaDeLaApertura from '../componentes/saldos-iniciales/EvidenciaDeLaApertura.vue';
 import GrupoDePartidas from '../componentes/saldos-iniciales/GrupoDePartidas.vue';
 import PanelDeLaCuenta from '../componentes/saldos-iniciales/PanelDeLaCuenta.vue';
 import VentanaDeAnulacionDePartida from '../componentes/saldos-iniciales/VentanaDeAnulacionDePartida.vue';
@@ -63,6 +64,7 @@ const descripcion = computed(() => (corte.value ? `Saldo inicial al ${corteLegib
         @anular="anulacion.abrir"
       />
     </template>
+    <EvidenciaDeLaApertura v-if="saldo.forma !== 'sin_saldo'" :saldo="saldo" :control="ficha.evidencia" />
 
     <VentanaDeSaldoInicial
       v-model="cabecera.edicion.value"
