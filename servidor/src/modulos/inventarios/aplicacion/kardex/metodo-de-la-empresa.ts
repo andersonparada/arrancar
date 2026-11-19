@@ -25,11 +25,17 @@ export class MetodoDeLaEmpresa {
   /**
    * El método que rige en `fecha` para un movimiento que se va a guardar. Si nadie lo eligió, crea la primera fila con
    * `inventarios.costeo.metodo_inicial`; con el primer movimiento lo marca como fijado: desde ahí no se edita.
+   * Mientras la fila del día no esté fijada toma el candado de la política y vuelve a leer: así no choca con quien elige
+   * el método ni con otro primer documento. Con la fila ya fijada no bloquea a nadie.
    */
   async usarParaMover(operador: Operador, fecha: string): Promise<MetodoDeCosteo> {
     const { metodos, metodoInicial } = this.dependencias;
-    const historia = await metodos.listar();
-    const fila = metodoDelDia(historia, fecha) ?? (await this.crearPrimera(await metodoInicial.paraEmpresa(operador)));
+    let fila = metodoDelDia(await metodos.listar(), fecha);
+    if (fila?.fijadoEn) return fila.metodo;
+    await metodos.bloquearPolitica();
+    fila =
+      metodoDelDia(await metodos.listar(), fecha) ??
+      (await this.crearPrimera(await metodoInicial.paraEmpresa(operador)));
     if (!fila.fijadoEn) await metodos.fijar(fila.id, new Date());
     return fila.metodo;
   }

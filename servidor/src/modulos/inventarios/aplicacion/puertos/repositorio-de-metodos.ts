@@ -19,6 +19,11 @@ export interface RepositorioDeMetodos {
   agregar(metodo: MetodoGuardado): Promise<void>;
   /** Marca que un movimiento ya lo usó: desde ahí no se edita ni se elimina. */
   fijar(id: string, ahora: Date): Promise<void>;
-  /** Cambia el método de una fila que todavía no se fijó. */
-  cambiar(id: string, metodo: MetodoDeCosteo): Promise<void>;
+  /** Cambia el método de una fila que todavía no se fijó. Devuelve `false` si ya estaba fijada (no se tocó). */
+  cambiar(id: string, metodo: MetodoDeCosteo): Promise<boolean>;
+  /**
+   * Toma el candado de la política de costeo de la empresa hasta el fin de la transacción: quien elige el método y
+   * quien registra el primer movimiento se turnan, así lo que uno lee sin fijar no lo cambia el otro a medias.
+   */
+  bloquearPolitica(): Promise<void>;
 }

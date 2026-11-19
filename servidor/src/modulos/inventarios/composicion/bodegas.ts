@@ -12,6 +12,7 @@ import { ListarBodegas } from '../aplicacion/casos-uso/bodegas/listar-bodegas.js
 import { ObtenerBodega } from '../aplicacion/casos-uso/bodegas/obtener-bodega.js';
 import { BodegasControlador } from '../http/bodegas.controlador.js';
 import { rutasBodegas } from '../http/bodegas.rutas.js';
+import { ConsultasDeUsoDelKardexDrizzle } from '../infraestructura/persistencia/consultas-de-uso-del-kardex.drizzle.js';
 import { ConsultasBodegasDrizzle } from '../infraestructura/persistencia/consultas-bodegas.drizzle.js';
 import { ConsultasDeAccesosABodegasDrizzle } from '../infraestructura/persistencia/consultas-de-accesos-a-bodegas.drizzle.js';
 import { LocalidadesParaBodegasDrizzle } from '../infraestructura/persistencia/localidades-para-bodegas.drizzle.js';
@@ -23,6 +24,7 @@ const dependenciasDeBodegas = () => ({
   repositorio: new RepositorioBodegasDrizzle(),
   consultas: new ConsultasBodegasDrizzle(),
   accesos: new ConsultasDeAccesosABodegasDrizzle(),
+  uso: new ConsultasDeUsoDelKardexDrizzle(),
 });
 
 type Dependencias = ReturnType<typeof dependenciasDeBodegas>;

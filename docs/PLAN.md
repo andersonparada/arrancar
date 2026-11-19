@@ -3495,6 +3495,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   a la vez sobre un mismo artículo, quien tiene el candado puede no conseguir la conexión que necesita para leer la
   configuración (la prueba de concurrencia usa 8). Se corrigió también `bodegas.prueba.ts` (INV-2), que insertaba empresas con
   el rol de la aplicación y la RLS del núcleo R-3 ya no lo permite.
+- **2026-11-19 — INV-4, correcciones de revisión.** Faltaban tres guardias que INV-1 e INV-2 dejaron para INV-4. (1) Un
+  artículo con movimientos no cambia su unidad base ni `maneja_lotes` (`unidad_base_fija`); la revisión toma el candado del
+  artículo del kardex, para que un movimiento en camino no se cuele. (2) Un artículo con existencias (suma de
+  `saldos_de_articulos` mayor que cero) no se inactiva (`articulo_con_existencias`) y una bodega con existencias tampoco
+  (`bodega_con_existencias`, error nuevo; el diseño solo nombraba el del artículo). Conteos y traslados en tránsito de la
+  bodega llegan con INV-6 e INV-9. (3) Carrera del método de costeo: `ElegirMetodoDeCosteo` toma el candado
+  `inventarios.metodo:<empresa>` y `MetodoDeLaEmpresa.usarParaMover` lo toma solo mientras la fila del día no esté fijada
+  (con la fila fijada no bloquea a nadie), vuelve a leer y recién entonces crea o fija; además `cambiar` solo actualiza filas
+  sin `fijado_en` y, si no tocó ninguna, responde `metodo_fijado`. Con esto dos primeros documentos de artículos distintos ya
+  no chocan con `metodos_de_costeo_desde_unico`. Pruebas: casos de uso y API (`inventarios-guardias-de-catalogos`,
+  `inventarios-guardias-de-metodo`). **Pendiente:** la guardia de bodega no toma candado, así que un movimiento simultáneo
+  a la inactivación podría colarse (el registrador lo rechaza si ve la bodega inactiva ya confirmada).
 - **2026-11-18, Multimoneda MM-4 (Plataforma: monedas y tipos de cambio).** **Servidor (lo que MM-3b dejó):**
   `GET /api/tipos-de-cambio/consultas?limite=&moneda=` (soporte): `{ hoy, series, consultas }` con el estado de cada moneda
   con código (última fecha con tipo, días de atraso y `atrasada`: el dólar con más de 1 día de calendario, las demás con más de

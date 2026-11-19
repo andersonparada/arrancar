@@ -30,12 +30,13 @@ export class ElegirMetodoDeCosteo {
   async ejecutar(operador: Operador, metodo: MetodoDeCosteo): Promise<PoliticaDeCosteoDto> {
     const { unidadDeTrabajo, metodos, auditoria } = this.dependencias;
     await unidadDeTrabajo.ejecutar(operador, async () => {
+      await metodos.bloquearPolitica();
       const historia = await metodos.listar();
       if (historia.some((fila) => fila.fijadoEn !== null)) throw new MetodoFijado();
       const actual = historia[0];
       if (!actual) return metodos.agregar(nuevaFila(metodo));
       if (actual.metodo === metodo) return;
-      await metodos.cambiar(actual.id, metodo);
+      if (!(await metodos.cambiar(actual.id, metodo))) throw new MetodoFijado();
       await auditoria.registrar({
         recurso: 'inventarios.metodos-de-costeo',
         registroId: actual.id,

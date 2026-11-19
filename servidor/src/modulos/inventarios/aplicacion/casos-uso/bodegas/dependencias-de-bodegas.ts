@@ -3,6 +3,7 @@ import { RecursoNoEncontrado } from '../../../../core/compartido/aplicacion/erro
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Bodega } from '../../../dominio/bodega.js';
+import type { ConsultasDeUsoDelKardex } from '../../puertos/consultas-de-uso-del-kardex.js';
 import type { ConsultasDeAccesosABodegas } from '../../puertos/consultas-de-accesos-a-bodegas.js';
 import type { ConsultasBodegas } from '../../puertos/consultas-bodegas.js';
 import type { RepositorioBodegas } from '../../puertos/repositorio-bodegas.js';
@@ -14,6 +15,7 @@ export interface DependenciasDeBodegas {
   consultas: ConsultasBodegas;
   auditoria: Auditoria;
   accesos: ConsultasDeAccesosABodegas;
+  uso: ConsultasDeUsoDelKardex;
 }
 
 /** @throws RecursoNoEncontrado si no existe o el operador no la ve. */

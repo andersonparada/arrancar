@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { deLaTransaccion } from '../../../core/base-datos/columnas.js';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
 import type { MetodoDeCosteo } from '../../dominio/costeo/tipos.js';
@@ -30,7 +30,18 @@ export class RepositorioDeMetodosDrizzle implements RepositorioDeMetodos {
     await transaccionEnCurso().update(metodosDeCosteo).set({ fijadoEn: ahora }).where(eq(metodosDeCosteo.id, id));
   }
 
-  async cambiar(id: string, metodo: MetodoDeCosteo): Promise<void> {
-    await transaccionEnCurso().update(metodosDeCosteo).set({ metodo }).where(eq(metodosDeCosteo.id, id));
+  async cambiar(id: string, metodo: MetodoDeCosteo): Promise<boolean> {
+    const filas = await transaccionEnCurso()
+      .update(metodosDeCosteo)
+      .set({ metodo })
+      .where(and(eq(metodosDeCosteo.id, id), isNull(metodosDeCosteo.fijadoEn)))
+      .returning({ id: metodosDeCosteo.id });
+    return filas.length > 0;
+  }
+
+  async bloquearPolitica(): Promise<void> {
+    await transaccionEnCurso().execute(
+      sql`select pg_advisory_xact_lock(hashtextextended('inventarios.metodo:' || current_setting('app.empresa_id', true), 0))`,
+    );
   }
 }

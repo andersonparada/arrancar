@@ -36,3 +36,30 @@ export class SinCodigoLibre extends ReglaDeNegocioInfringida {
     super('No se pudo proponer un código libre para el artículo. Escríbalo a mano.');
   }
 }
+
+/** El artículo tiene movimientos: su unidad base y si maneja lotes ya no cambian (las cantidades están en esa unidad). */
+export class UnidadBaseFija extends ReglaDeNegocioInfringida {
+  readonly codigo = 'unidad_base_fija';
+
+  constructor() {
+    super('El artículo ya tiene movimientos: no se puede cambiar su unidad base ni si maneja lotes.');
+  }
+}
+
+/** El artículo tiene existencias: se saca todo antes de inactivarlo, porque inactivo no admite movimientos. */
+export class ArticuloConExistencias extends ReglaDeNegocioInfringida {
+  readonly codigo = 'articulo_con_existencias';
+
+  constructor() {
+    super('El artículo tiene existencias. Sáquelas antes de inactivarlo.');
+  }
+}
+
+/** La bodega tiene existencias: se sacan o trasladan antes de inactivarla, porque inactiva no admite movimientos. */
+export class BodegaConExistencias extends ReglaDeNegocioInfringida {
+  readonly codigo = 'bodega_con_existencias';
+
+  constructor() {
+    super('La bodega tiene existencias. Sáquelas o trasládelas antes de inactivarla.');
+  }
+}

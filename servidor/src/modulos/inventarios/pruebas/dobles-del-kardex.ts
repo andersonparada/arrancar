@@ -151,9 +151,14 @@ export class KardexEnMemoria
     this.metodos.find((m) => m.id === id)!.fijadoEn = ahora;
   }
 
-  async cambiar(id: string, metodo: MetodoDeCosteo): Promise<void> {
-    this.metodos.find((m) => m.id === id)!.metodo = metodo;
+  async cambiar(id: string, metodo: MetodoDeCosteo): Promise<boolean> {
+    const fila = this.metodos.find((m) => m.id === id)!;
+    if (fila.fijadoEn) return false;
+    fila.metodo = metodo;
+    return true;
   }
+
+  async bloquearPolitica(): Promise<void> {}
 
   // CatalogosDelKardex
   async articulos(ids: readonly string[]): Promise<ArticuloParaMovimiento[]> {
