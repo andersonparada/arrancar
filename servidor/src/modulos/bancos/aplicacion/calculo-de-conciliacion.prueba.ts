@@ -11,6 +11,8 @@ function movimiento(
     beneficiario: null,
     referencia: null,
     marcado: false,
+    deApertura: false,
+    parteDeApertura: null,
     ...datos,
   };
 }
@@ -26,6 +28,7 @@ describe('calcularConciliacion', () => {
       saldoInicialBancoEnCentavos: 0,
       movimientosDelMes: [saldoInicial, deposito, cheque],
       candidatos: [saldoInicial, deposito, cheque],
+      finDelMes: '2026-01-31',
     });
 
     expect(resultado.libros).toEqual({
@@ -40,6 +43,7 @@ describe('calcularConciliacion', () => {
       chequesEnCirculacion: [],
       otrosDebitosEnTransito: [],
       creditosEnTransito: [],
+      cobradosAntesDeSuFecha: [],
     });
   });
 
@@ -57,6 +61,7 @@ describe('calcularConciliacion', () => {
       saldoInicialBancoEnCentavos: 0,
       movimientosDelMes: [saldoInicial, chequeSinCobrar],
       candidatos: [saldoInicial, chequeSinCobrar],
+      finDelMes: '2026-01-31',
     });
 
     expect(resultado.libros.saldoFinal).toBe('700.00');
@@ -79,6 +84,7 @@ describe('calcularConciliacion', () => {
       saldoInicialBancoEnCentavos: 0,
       movimientosDelMes: [saldoInicial, depositoEnTransito],
       candidatos: [saldoInicial, depositoEnTransito],
+      finDelMes: '2026-01-31',
     });
 
     expect(resultado.libros.saldoFinal).toBe('1400.00');
@@ -96,6 +102,7 @@ describe('calcularConciliacion', () => {
       saldoInicialBancoEnCentavos: 0,
       movimientosDelMes: [saldoInicial, comisionEnTransito],
       candidatos: [saldoInicial, comisionEnTransito],
+      finDelMes: '2026-01-31',
     });
 
     expect(resultado.libros.saldoFinal).toBe('975.00');
@@ -111,9 +118,61 @@ describe('calcularConciliacion', () => {
       saldoInicialBancoEnCentavos: 100_000,
       movimientosDelMes: [notaDelMes],
       candidatos: [notaDelMes],
+      finDelMes: '2026-01-31',
     });
 
     expect(resultado.libros).toMatchObject({ saldoInicial: '1000.00', saldoFinal: '1050.00' });
     expect(resultado.banco).toMatchObject({ saldoInicial: '1000.00', saldoFinal: '1050.00' });
+  });
+
+  describe('cheques de fecha posterior al fin de mes', () => {
+    const datos = (posfechado: MovimientoParaConciliar) => ({
+      saldoInicialLibrosEnCentavos: 100_000,
+      saldoInicialBancoEnCentavos: 100_000,
+      movimientosDelMes: [],
+      candidatos: [posfechado],
+      finDelMes: '2026-01-31',
+    });
+    const posfechado = (marcado: boolean) =>
+      movimiento({ tipo: 'cheque', monto: '100.00', fecha: '2026-02-10', numeroDeCheque: 9, marcado });
+
+    it('sin marcar no son partida: todavía no están en libros', () => {
+      const resultado = calcularConciliacion(datos(posfechado(false)));
+
+      expect(resultado.partidas.chequesEnCirculacion).toEqual([]);
+      expect(resultado.partidas.cobradosAntesDeSuFecha).toEqual([]);
+      expect(resultado.saldoQueDebeMostrarElEstadoDeCuenta).toBe('1000.00');
+    });
+
+    it('marcados bajan el lado del banco y forman la partida que resta del saldo del estado de cuenta', () => {
+      const resultado = calcularConciliacion(datos(posfechado(true)));
+
+      expect(resultado.partidas.cobradosAntesDeSuFecha).toHaveLength(1);
+      expect(resultado.partidas.cobradosAntesDeSuFecha[0]).toMatchObject({ monto: '100.00', numeroDeCheque: 9 });
+      expect(resultado.banco.saldoFinal).toBe('900.00');
+      expect(resultado.saldoQueDebeMostrarElEstadoDeCuenta).toBe('900.00');
+    });
+  });
+
+  it('las partidas de la carga inicial dicen de dónde vienen', () => {
+    const cheque = movimiento({
+      tipo: 'cheque',
+      monto: '50.00',
+      deApertura: true,
+      parteDeApertura: 'cheque_en_circulacion',
+    });
+
+    const resultado = calcularConciliacion({
+      saldoInicialLibrosEnCentavos: 0,
+      saldoInicialBancoEnCentavos: 5_000,
+      movimientosDelMes: [],
+      candidatos: [cheque],
+      finDelMes: '2026-01-31',
+    });
+
+    expect(resultado.partidas.chequesEnCirculacion[0]).toMatchObject({
+      deApertura: true,
+      parteDeApertura: 'cheque_en_circulacion',
+    });
   });
 });

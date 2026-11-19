@@ -20,6 +20,7 @@ const foto = (saldoCalculadoEstadoDeCuenta: string): FotoDelCalculo => ({
   totalChequesEnCirculacion: '0.00',
   totalOtrosDebitosEnTransito: '0.00',
   totalCreditosEnTransito: '0.00',
+  totalCobradosAntesDeSuFecha: '0.00',
 });
 
 const SIN_EXIGIR = { saldoCalculado: '10.00', exigeEstadoDeCuenta: false };

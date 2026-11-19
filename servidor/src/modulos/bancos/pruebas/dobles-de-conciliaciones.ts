@@ -6,21 +6,29 @@ import type {
   EstadoDeCuentaDto,
   MovimientoConMarcaDto,
 } from '../aplicacion/dto/conciliacion.dto.js';
-import type { ConsultasConciliaciones } from '../aplicacion/puertos/consultas-conciliaciones.js';
+import type { ConsultasConciliaciones, PuntoDePartida } from '../aplicacion/puertos/consultas-conciliaciones.js';
 import type {
   RepositorioConciliaciones,
   ResumenDeLaUltimaConciliacion,
 } from '../aplicacion/puertos/repositorio-conciliaciones.js';
-import { aCentavos } from '../dominio/centavos.js';
 import {
   type Conciliacion,
   finDelMesDe,
   inicioDelMesDe,
   periodoAnterior,
   type ConciliacionId,
+  type Periodo,
 } from '../dominio/conciliacion.js';
 import { diferenciaConElEstadoDeCuenta } from '../dominio/estado-de-cuenta.js';
-import { aMovimientoParaConciliar, aResumen, copia, ordenDescendente } from './ayudas-de-conciliaciones.js';
+import { candidatosEnMemoria, paresCompensadosEnMemoria } from './candidatos-en-memoria.js';
+import { puntoDePartidaEnMemoria, saldoDelBancoEnMemoria } from './punto-de-partida-en-memoria.js';
+import {
+  aEncabezado,
+  aMovimientoParaConciliar,
+  aResumen,
+  copia,
+  ordenDescendente,
+} from './ayudas-de-conciliaciones.js';
 import type { DocumentosEnMemoria } from './dobles-de-estado-de-cuenta.js';
 import type { MovimientosEnMemoria } from './dobles-de-movimientos.js';
 
@@ -35,6 +43,8 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
   /** conciliacionId → ids de movimientos marcados. */
   private readonly marcas = new Map<string, Set<string>>();
   private movimientos?: MovimientosEnMemoria;
+  /** Cuentas cargadas con el saldo del banco en cero: solo tienen cabecera, sin movimiento. */
+  readonly conCabeceraSinSaldo = new Set<string>();
   /** Para que el DTO muestre los datos del archivo del estado de cuenta. */
   documentos?: DocumentosEnMemoria;
 
@@ -100,6 +110,19 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     return this.deLaCuenta(cuentaBancariaId).length > 0;
   }
 
+  async conSaldoDelBanco(cuentaBancariaId: string): Promise<boolean> {
+    if (this.conCabeceraSinSaldo.has(cuentaBancariaId)) return true;
+    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
+    return (await saldoDelBancoEnMemoria(this.movimientos, cuentaBancariaId)) !== null;
+  }
+
+  async fechaDelPrimerMovimiento(cuentaBancariaId: string): Promise<string | null> {
+    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
+    const todos = await this.movimientos.listar({ cuentaBancariaId });
+    const fechas = todos.filter((m) => !m.anuladoEn).map((m) => m.fecha);
+    return fechas.sort()[0] ?? null;
+  }
+
   /** Como en Postgres: pares original + inverso donde ninguno se marcó en otra conciliación, con fecha hasta `finDelMes`. */
   async paresCompensadosPendientes(
     cuentaBancariaId: string,
@@ -110,58 +133,43 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     const deOtras = [...this.marcas.entries()].filter(([id]) => id !== conciliacionId);
     const marcadosAlgunaVez = new Set(deOtras.flatMap(([, ids]) => [...ids]));
     const todos = await this.movimientos.listar({ cuentaBancariaId });
-    const pendientes = todos.filter((m) => !marcadosAlgunaVez.has(m.id) && m.fecha <= finDelMes);
-    const idsPendientes = new Set(pendientes.map((m) => m.id));
-    const resultado = new Set<string>();
-    for (const m of pendientes) {
-      if (m.revierteAId && idsPendientes.has(m.revierteAId)) {
-        resultado.add(m.id);
-        resultado.add(m.revierteAId);
-      }
-    }
-    return [...resultado];
+    return paresCompensadosEnMemoria(todos, { marcadosAlgunaVez, finDelMes });
   }
 
   private async calcularDocumento(conciliacion: Conciliacion) {
     const { id, cuentaBancariaId, anio, mes } = conciliacion.instantanea();
     const periodo = { anio, mes };
     const finDelMes = finDelMesDe(periodo);
-    const candidatos = await this.candidatosConMarca(cuentaBancariaId, finDelMes, id.valor);
-    const { librosEnCentavos, bancoEnCentavos } = await this.saldosIniciales(cuentaBancariaId, periodo);
-    const movimientosDelMes = await this.movimientosDelMes(cuentaBancariaId, periodo);
+    const todos = await this.candidatosConMarca(cuentaBancariaId, finDelMes, id.valor);
+    const partida = await this.puntoDePartida(cuentaBancariaId, periodo);
     const resultado = calcularConciliacion({
-      saldoInicialLibrosEnCentavos: librosEnCentavos,
-      saldoInicialBancoEnCentavos: bancoEnCentavos,
-      movimientosDelMes,
-      candidatos: candidatos.map(aMovimientoParaConciliar),
+      saldoInicialLibrosEnCentavos: partida.librosEnCentavos,
+      saldoInicialBancoEnCentavos: partida.bancoEnCentavos,
+      movimientosDelMes: await this.movimientosDelMes(cuentaBancariaId, periodo, partida.despuesDe),
+      candidatos: todos.map(aMovimientoParaConciliar),
+      finDelMes,
     });
-    return { candidatos, resultado };
-  }
-
-  private aEncabezado(conciliacion: Conciliacion) {
-    const { id, cuentaBancariaId, anio, mes, estado, saldoEstadoDeCuenta, previaAlSaldoTranscrito } =
-      conciliacion.instantanea();
-    const sinNombres = { cuentaBancariaNombre: null, bancoNombre: null, numeroDeCuenta: null, empresaNombre: null };
-    const sinPersonas = { elaboradaPorNombre: null, elaboradaEn: null, autorizadaPorNombre: null, autorizadaEn: null };
+    const esPosfechado = (m: MovimientoConMarcaDto) => m.tipo === 'cheque' && m.fecha > finDelMes;
     return {
-      ...{ id: id.valor, cuentaBancariaId, anio, mes, estado, saldoEstadoDeCuenta, previaAlSaldoTranscrito },
-      ...sinNombres,
-      ...sinPersonas,
+      candidatos: todos.filter((m) => !esPosfechado(m)),
+      posfechadosCandidatos: todos.filter(esPosfechado),
+      saldoInicialDelBancoDeLaApertura: partida.saldoInicialDelBancoDeLaApertura,
+      resultado,
     };
   }
 
   private async armarDto(conciliacion: Conciliacion): Promise<ConciliacionDto> {
     const { estado, foto, saldoEstadoDeCuenta } = conciliacion.instantanea();
     const estadoDeCuenta = this.datosDelArchivo(conciliacion);
-    const { candidatos, resultado } = await this.calcularDocumento(conciliacion);
+    const { resultado, ...candidatos } = await this.calcularDocumento(conciliacion);
     const saldoQueDebeMostrarElEstadoDeCuenta =
       estado === 'autorizada' && foto
         ? foto.saldoCalculadoEstadoDeCuenta
         : resultado.saldoQueDebeMostrarElEstadoDeCuenta;
     return {
-      ...this.aEncabezado(conciliacion),
+      ...aEncabezado(conciliacion),
       estadoDeCuenta,
-      candidatos,
+      ...candidatos,
       cuadratica: { libros: resultado.libros, banco: resultado.banco },
       partidas: resultado.partidas,
       saldoQueDebeMostrarElEstadoDeCuenta,
@@ -181,25 +189,28 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
     return [...this.registros.values()].filter((c) => c.instantanea().cuentaBancariaId === cuentaBancariaId);
   }
 
-  private async saldosIniciales(cuentaBancariaId: string, periodo: { anio: number; mes: number }) {
-    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
-    const finDelMesAnterior = finDelMesDe(periodoAnterior(periodo));
-    const librosEnCentavos = aCentavos(await this.movimientos.saldoAlFinDe(cuentaBancariaId, finDelMesAnterior));
+  private fotoDelMesAnterior(cuentaBancariaId: string, periodo: Periodo): string | null {
     const anterior = periodoAnterior(periodo);
     const previa = this.deLaCuenta(cuentaBancariaId)
       .map((c) => c.instantanea())
       .find((p) => p.anio === anterior.anio && p.mes === anterior.mes);
-    const bancoEnCentavos = previa?.foto ? aCentavos(previa.foto.saldoCalculadoEstadoDeCuenta) : 0;
-    return { librosEnCentavos, bancoEnCentavos };
+    return previa?.foto?.saldoCalculadoEstadoDeCuenta ?? null;
+  }
+
+  private puntoDePartida(cuentaBancariaId: string, periodo: Periodo): Promise<PuntoDePartida> {
+    if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
+    const fotoAnterior = this.fotoDelMesAnterior(cuentaBancariaId, periodo);
+    return puntoDePartidaEnMemoria({ movimientos: this.movimientos, cuentaBancariaId, periodo, fotoAnterior });
   }
 
   private async movimientosDelMes(
     cuentaBancariaId: string,
-    periodo: { anio: number; mes: number },
+    periodo: Periodo,
+    despuesDe: string,
   ): Promise<MovimientoParaConciliar[]> {
     if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
     const filas = await this.movimientos.vigentesEntre(cuentaBancariaId, inicioDelMesDe(periodo), finDelMesDe(periodo));
-    return filas.map((m) => aMovimientoParaConciliar({ ...m, marcado: false }));
+    return filas.filter((m) => m.fecha > despuesDe).map((m) => aMovimientoParaConciliar({ ...m, marcado: false }));
   }
 
   /**
@@ -223,11 +234,7 @@ export class ConciliacionesEnMemoria implements RepositorioConciliaciones, Consu
   ): Promise<MovimientoConMarcaDto[]> {
     if (!this.movimientos) throw new Error('Vincule los movimientos primero: vincularMovimientos(movimientos).');
     const marcados = this.marcas.get(conciliacionId) ?? new Set<string>();
-    const marcadosAntes = this.marcadosAntesDe(finDelMes);
     const todos = await this.movimientos.listar({ cuentaBancariaId });
-    return todos
-      .filter((m) => !m.anuladoEn && m.fecha <= finDelMes && !marcadosAntes.has(m.id))
-      .map((m) => ({ ...m, marcado: marcados.has(m.id) }))
-      .sort((a, b) => a.fecha.localeCompare(b.fecha));
+    return candidatosEnMemoria(todos, { marcados, marcadosAntes: this.marcadosAntesDe(finDelMes), finDelMes });
   }
 }

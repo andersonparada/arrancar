@@ -91,11 +91,11 @@ describe('eliminar', () => {
       expect.objectContaining({ recurso: 'bancos.conciliaciones', registroId: febrero.id, accion: 'eliminar' }),
     );
     const lista = await entorno.casos.listar.ejecutar(operador, CUENTA);
-    expect(lista.map((c) => c.id)).toEqual([enero]);
+    expect(lista.conciliaciones.map((c) => c.id)).toEqual([enero]);
 
     // Reabre enero (autorizada): se puede volver a eliminar porque ahora es la última.
     await entorno.casos.eliminar.ejecutar(operador, { conciliacionId: enero, motivo: 'reabrir' });
-    expect(await entorno.casos.listar.ejecutar(operador, CUENTA)).toHaveLength(0);
+    expect(await entorno.casos.listar.ejecutar(operador, CUENTA)).toMatchObject({ conciliaciones: [] });
   });
 
   it('avisa si no existe', async () => {

@@ -92,7 +92,7 @@ describe('subir y abrir el estado de cuenta', () => {
     const abierto = await propietario.get(`${rutaDe(id)}/estado-de-cuenta`);
     expect(abierto.cabeceras['content-disposition']).toBe('inline; filename="estado-de-cuenta-2026-01.webp"');
     const lista = await propietario.get(`/api/bancos/cuentas-bancarias/${cuentaBancariaId}/conciliaciones`);
-    expect(lista.cuerpo[0].tieneEstadoDeCuenta).toBe(true);
+    expect(lista.cuerpo.conciliaciones[0].tieneEstadoDeCuenta).toBe(true);
   });
 
   it('sin archivo el GET responde 404; un archivo que no es PDF ni foto, 400', async () => {

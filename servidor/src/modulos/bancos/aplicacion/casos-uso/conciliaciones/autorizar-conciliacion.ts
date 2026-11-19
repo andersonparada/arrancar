@@ -14,6 +14,7 @@ function fotoDe(dto: ConciliacionDto): FotoDelCalculo {
     totalChequesEnCirculacion: sumaDePartidas(dto.partidas.chequesEnCirculacion),
     totalOtrosDebitosEnTransito: sumaDePartidas(dto.partidas.otrosDebitosEnTransito),
     totalCreditosEnTransito: sumaDePartidas(dto.partidas.creditosEnTransito),
+    totalCobradosAntesDeSuFecha: sumaDePartidas(dto.partidas.cobradosAntesDeSuFecha),
   };
 }
 

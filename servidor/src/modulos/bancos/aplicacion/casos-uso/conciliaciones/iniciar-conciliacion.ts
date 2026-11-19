@@ -7,13 +7,15 @@ import {
   ConciliacionFueraDeOrden,
   MesNoHaTerminado,
 } from '../../../dominio/errores.js';
+import { PrimeraConciliacionDeOtroMes } from '../../../dominio/errores-de-apertura.js';
+import { periodoObligadoDeLaPrimera } from '../../periodo-de-la-primera-conciliacion.js';
 import type { ConciliacionDto, SolicitudDeInicioDeConciliacion } from '../../dto/conciliacion.dto.js';
 import type { DependenciasDeConciliaciones } from './dependencias-de-conciliaciones.js';
 
 /**
  * Inicia una conciliación sin ningún saldo que escribir: la primera de la
- * cuenta puede ser de cualquier mes ya terminado; las siguientes, del mes
- * siguiente a la última, y solo si esa ya está autorizada. Los pares original +
+ * cuenta puede ser de cualquier mes ya terminado (si se cargó con el saldo del banco, la del mes de la fecha de
+ * inicio); las siguientes, del mes siguiente a la última, y solo si esa ya está autorizada. Los pares original +
  * inverso que nunca pasaron por el banco arrancan ya marcados.
  */
 export class IniciarConciliacion {
@@ -24,6 +26,7 @@ export class IniciarConciliacion {
    * @throws MesNoHaTerminado si el mes elegido todavía no terminó.
    * @throws HayUnaConciliacionAbierta si la última de la cuenta no está autorizada.
    * @throws ConciliacionFueraDeOrden si el periodo no es el mes siguiente a la última.
+   * @throws PrimeraConciliacionDeOtroMes si es la primera de una cuenta con saldo del banco y no es del mes de inicio.
    * @throws PeriodoInvalido si el año o el mes no son válidos.
    */
   ejecutar(operador: Operador, solicitud: SolicitudDeInicioDeConciliacion): Promise<ConciliacionDto> {
@@ -34,7 +37,7 @@ export class IniciarConciliacion {
         throw new CuentaBancariaInactiva();
       }
       await this.exigirMesTerminado(operador, solicitud);
-      await this.revisarOrden(solicitud);
+      await this.revisarOrden(operador, solicitud);
       const conciliacion = Conciliacion.crear(empresaId, solicitud);
       await repositorio.agregar(conciliacion);
       await this.marcarCompensados(conciliacion);
@@ -62,14 +65,22 @@ export class IniciarConciliacion {
     if (finDelMesDe(periodo) >= hoy) throw new MesNoHaTerminado();
   }
 
-  private async revisarOrden(solicitud: SolicitudDeInicioDeConciliacion): Promise<void> {
+  private async revisarOrden(operador: Operador, solicitud: SolicitudDeInicioDeConciliacion): Promise<void> {
     const { repositorio } = this.dependencias;
     const ultima = await repositorio.ultimaDeLaCuenta(solicitud.cuentaBancariaId);
-    if (!ultima) return;
+    if (!ultima) return this.revisarLaPrimera(operador, solicitud);
     if (ultima.estado !== 'autorizada') throw new HayUnaConciliacionAbierta();
     const esperado = periodoSiguiente({ anio: ultima.anio, mes: ultima.mes });
     if (solicitud.anio !== esperado.anio || solicitud.mes !== esperado.mes) {
       throw new ConciliacionFueraDeOrden(esperado);
+    }
+  }
+
+  /** La primera de una cuenta con saldo del banco es la del mes de la fecha de inicio (§2.4). */
+  private async revisarLaPrimera(operador: Operador, solicitud: SolicitudDeInicioDeConciliacion): Promise<void> {
+    const obligado = await periodoObligadoDeLaPrimera(operador, this.dependencias, solicitud.cuentaBancariaId);
+    if (obligado && (obligado.anio !== solicitud.anio || obligado.mes !== solicitud.mes)) {
+      throw new PrimeraConciliacionDeOtroMes(`${String(obligado.mes).padStart(2, '0')}/${obligado.anio}`);
     }
   }
 }

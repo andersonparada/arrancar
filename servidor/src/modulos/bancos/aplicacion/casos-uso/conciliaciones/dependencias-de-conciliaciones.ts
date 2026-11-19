@@ -5,6 +5,7 @@ import type { Reloj } from '../../../../core/compartido/aplicacion/reloj.js';
 import type { UnidadDeTrabajo } from '../../../../core/compartido/aplicacion/unidad-de-trabajo.js';
 import { Identificador } from '../../../../core/compartido/dominio/identificador.js';
 import type { Conciliacion } from '../../../dominio/conciliacion.js';
+import type { CargaInicial } from '../../puertos/carga-inicial.js';
 import type { ConsultasConciliaciones } from '../../puertos/consultas-conciliaciones.js';
 import type { PoliticaDeEstadoDeCuenta } from '../../puertos/politica-de-estado-de-cuenta.js';
 import type { ConsultasMovimientos } from '../../puertos/consultas-movimientos.js';
@@ -20,6 +21,8 @@ export interface DependenciasDeConciliaciones {
   reloj: Reloj;
   documentos: DocumentosProtegidos;
   politicaDeEstadoDeCuenta: PoliticaDeEstadoDeCuenta;
+  /** La fecha de inicio de la empresa: fija el mes de la primera conciliación de una cuenta con saldo del banco. */
+  cargaInicial: CargaInicial;
 }
 
 /** Recurso dueño de los estados de cuenta: solo se sirven desde la ruta de las conciliaciones, con su permiso. */

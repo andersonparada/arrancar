@@ -1730,3 +1730,21 @@ su fecha, con el concepto de egreso que se elija) y `saldo_global` (solo lo que 
   `saldo_inicial`, y lo contaban como apertura): el inverso sale en «Otros movimientos sin actividad» y el control cuadra.
 - **DTO**: `MovimientoDto`, `ChequeDto`, `ChequeListadoDto` y `ChequeEnCirculacionDto` traen `parteDeApertura`; `OrigenDeCheque` suma `'apertura'` (el cheque en
   circulación de la carga inicial; el posfechado sigue «suelto» con su `parteDeApertura`); `PartidaDeAperturaDto.puedeAnular` ya es real.
+
+### Bancos, segunda parte: conciliación con la carga inicial (BS-4, servidor hecho el 2026-11-18)
+
+- **Primera conciliación con saldo del banco (§2.4)**: `puntoDePartidaDe` (`conciliacion-punto-de-partida.drizzle.ts`) reemplaza a `saldosInicialesDe`. Sin la
+  foto del mes anterior y con el movimiento `saldo_del_banco`, el banco parte de ese saldo (con su signo) y los libros, del saldo al corte; los movimientos del
+  mes de libros son los posteriores al corte (a mitad de mes, desde el día siguiente; si el corte es anterior al fin del mes anterior, como siempre). Con el saldo
+  del banco en cero no hay movimiento: parte de cero y del fin del mes anterior (el mismo resultado, solo cambia cómo se reparte «inicial» e «ingresos»).
+  `IniciarConciliacion` exige, en la primera de una cuenta con saldo del banco (`conSaldoDelBanco`: su movimiento, o la cabecera sin saldo global), el mes de la
+  fecha de inicio (`PrimeraConciliacionDeOtroMes`, con `MM/AAAA`); la fecha de inicio llega por `CargaInicial` (mediador), ahora en `DependenciasDeConciliaciones`.
+- **Candidatos**: `candidatosDe`, `idsDeCandidatosDe` y los pares compensados excluyen `parte_de_apertura = 'saldo_del_banco'`. Se suman los **cheques de fecha
+  posterior** al fin de mes (§2.6, todas las conciliaciones). El documento los separa: `candidatos` (hasta fin de mes) y `posfechadosCandidatos` (marcados o no;
+  así «marcar todos» no los toma). Sin marcar no son partida; marcados forman `partidas.cobradosAntesDeSuFecha`, que **resta** del saldo que debe mostrar el
+  estado de cuenta, y la foto guarda su total (`foto_total_cobrados_antes_de_su_fecha`; nulo en las de antes, se lee como `0.00`).
+- **DTO**: `Partida` gana `deApertura` (es `saldo_inicial`: todas las partes menos el posfechado) y `parteDeApertura`; `ConciliacionDto` gana
+  `saldoInicialDelBancoDeLaApertura` (`{ fecha, monto }`, solo en la primera de una cuenta con saldo del banco con movimiento; nulo si el saldo es cero) y
+  `posfechadosCandidatos`. `calcularConciliacion` recibe `finDelMes`.
+- **Periodo propuesto (§6.5)**: `GET /bancos/cuentas-bancarias/:id/conciliaciones` ahora responde `{ conciliaciones, periodoSiguiente }` (antes, solo la lista). El
+  cliente actual solo desenvuelve `conciliaciones` (`ApiConciliaciones.listarDeLaCuenta`); BS-7 usará `periodoSiguiente`.

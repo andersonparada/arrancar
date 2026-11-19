@@ -6,6 +6,7 @@ import { empresas } from '../../../core/cuentas/infraestructura/persistencia/emp
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { calcularConciliacion } from '../../aplicacion/calculo-de-conciliacion.js';
 import type {
+  MovimientoConMarcaDto,
   ConciliacionDto,
   ConciliacionResumenDto,
   EstadoDeConciliacionDto,
@@ -20,9 +21,13 @@ import {
   idsDeCandidatosDe,
   movimientosDelMesDe,
   paresCompensadosPendientesDe,
-  saldosInicialesDe,
   tieneAlgunaConciliacionDe,
 } from './conciliacion-candidatos.drizzle.js';
+import {
+  conSaldoDelBancoDe,
+  fechaDelPrimerMovimientoDe,
+  puntoDePartidaDe,
+} from './conciliacion-punto-de-partida.drizzle.js';
 import { conciliaciones } from './conciliaciones.tablas.js';
 import { estadoDeCuentaDeLaConciliacion } from './estado-de-cuenta.consulta.drizzle.js';
 import { cuentasBancarias } from './cuentas-bancarias.tablas.js';
@@ -115,6 +120,30 @@ async function filaDeLaConciliacion(conciliacionId: string) {
   return fila;
 }
 
+/** Arma el cálculo del documento: candidatos (los posfechados aparte), punto de partida y partidas. */
+async function documentoDe(fila: FilaEncabezado) {
+  const periodo = { anio: fila.anio, mes: fila.mes };
+  const finDelMes = finDelMesDe(periodo);
+  const todos = await candidatosConMarcaDe(fila.cuentaBancariaId, finDelMes, fila.id);
+  const partida = await puntoDePartidaDe(fila.cuentaBancariaId, periodo);
+  const resultado = calcularConciliacion({
+    saldoInicialLibrosEnCentavos: partida.librosEnCentavos,
+    saldoInicialBancoEnCentavos: partida.bancoEnCentavos,
+    movimientosDelMes: await movimientosDelMesDe(fila.cuentaBancariaId, periodo, partida.despuesDe),
+    candidatos: todos.map(aMovimientoParaConciliar),
+    finDelMes,
+  });
+  const esPosfechado = (m: MovimientoConMarcaDto) => m.tipo === 'cheque' && m.fecha > finDelMes;
+  return {
+    resultado,
+    saldoInicialDelBancoDeLaApertura: partida.saldoInicialDelBancoDeLaApertura,
+    candidatos: {
+      candidatos: todos.filter((m) => !esPosfechado(m)),
+      posfechadosCandidatos: todos.filter(esPosfechado),
+    },
+  };
+}
+
 /** Lecturas de las conciliaciones: arma el documento completo con el cálculo puro de `calculo-de-conciliacion.js`. */
 export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
   async listar(cuentaBancariaId: string): Promise<ConciliacionResumenDto[]> {
@@ -136,24 +165,15 @@ export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
 
   async obtener(conciliacionId: string): Promise<ConciliacionDto> {
     const fila = await filaDeLaConciliacion(conciliacionId);
-    const periodo = { anio: fila.anio, mes: fila.mes };
-    const finDelMes = finDelMesDe(periodo);
-    const candidatos = await candidatosConMarcaDe(fila.cuentaBancariaId, finDelMes, conciliacionId);
-    const { librosEnCentavos, bancoEnCentavos } = await saldosInicialesDe(fila.cuentaBancariaId, periodo);
-    const movimientosDelMes = await movimientosDelMesDe(fila.cuentaBancariaId, periodo);
-    const resultado = calcularConciliacion({
-      saldoInicialLibrosEnCentavos: librosEnCentavos,
-      saldoInicialBancoEnCentavos: bancoEnCentavos,
-      movimientosDelMes,
-      candidatos: candidatos.map(aMovimientoParaConciliar),
-    });
+    const documento = await documentoDe(fila);
     return {
       ...aEncabezado(fila),
       estadoDeCuenta: await estadoDeCuentaDeLaConciliacion(conciliacionId),
-      candidatos,
-      cuadratica: { libros: resultado.libros, banco: resultado.banco },
-      partidas: resultado.partidas,
-      ...saldosDelDocumento(fila, resultado.saldoQueDebeMostrarElEstadoDeCuenta),
+      ...documento.candidatos,
+      saldoInicialDelBancoDeLaApertura: documento.saldoInicialDelBancoDeLaApertura,
+      cuadratica: { libros: documento.resultado.libros, banco: documento.resultado.banco },
+      partidas: documento.resultado.partidas,
+      ...saldosDelDocumento(fila, documento.resultado.saldoQueDebeMostrarElEstadoDeCuenta),
     };
   }
 
@@ -171,5 +191,13 @@ export class ConsultasConciliacionesDrizzle implements ConsultasConciliaciones {
 
   paresCompensadosPendientes(cuentaBancariaId: string, finDelMes: string, conciliacionId: string): Promise<string[]> {
     return paresCompensadosPendientesDe(cuentaBancariaId, finDelMes, conciliacionId);
+  }
+
+  conSaldoDelBanco(cuentaBancariaId: string): Promise<boolean> {
+    return conSaldoDelBancoDe(cuentaBancariaId);
+  }
+
+  fechaDelPrimerMovimiento(cuentaBancariaId: string): Promise<string | null> {
+    return fechaDelPrimerMovimientoDe(cuentaBancariaId);
   }
 }
