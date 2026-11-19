@@ -1,5 +1,6 @@
 import { HandCoins, Hourglass, Scale } from 'lucide-vue-next';
 import type { DefinicionModuloCliente } from '@/modulos/core/tipos';
+import { entradasDeAnticipos, rutasDeAnticipos } from './anticipos-del-modulo';
 import { NOMBRE_CUENTAS_POR_LIQUIDAR, VENTANAS_CUENTAS_POR_LIQUIDAR } from './textos';
 // generador: importaciones
 
@@ -9,6 +10,7 @@ const PERMISO_DE_REPORTES = 'cuentas-por-liquidar.reportes.ver';
 export const moduloCuentasPorLiquidar: DefinicionModuloCliente = {
   clave: 'cuentas-por-liquidar',
   rutas: [
+    ...rutasDeAnticipos,
     {
       path: '/cuentas-por-liquidar/reportes/anticipos-por-liquidar',
       name: 'cuentas-por-liquidar.reportes.anticipos-por-liquidar',
@@ -29,6 +31,7 @@ export const moduloCuentasPorLiquidar: DefinicionModuloCliente = {
       titulo: NOMBRE_CUENTAS_POR_LIQUIDAR,
       icono: HandCoins,
       entradas: [
+        ...entradasDeAnticipos,
         {
           titulo: VENTANAS_CUENTAS_POR_LIQUIDAR.anticiposPorLiquidar.titulo,
           ruta: '/cuentas-por-liquidar/reportes/anticipos-por-liquidar',
