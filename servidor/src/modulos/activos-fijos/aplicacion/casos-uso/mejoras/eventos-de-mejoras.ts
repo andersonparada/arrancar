@@ -2,7 +2,8 @@ import { deCentavos } from '../../../../core/compartido/dominio/centavos.js';
 import type { Activo } from '../../../dominio/activo.js';
 import { vidaTotalContable } from '../../../dominio/depreciacion/estado-de-los-libros.js';
 import { periodoDe } from '../../../dominio/depreciacion/meses.js';
-import type { TramoCalculado } from '../../../dominio/depreciacion/tramo.js';
+import type { TramoCalculado, TramoGuardado } from '../../../dominio/depreciacion/tramo.js';
+import { VidaUtilTotalExcedida } from '../../../dominio/errores-de-mejora.js';
 import { BaseFiscalCambiada, MejoraCapitalizada } from '../../../dominio/eventos.js';
 import type { IncisoFiscal } from '../../../dominio/incisos-fiscales.js';
 import type { Mejora } from '../../../dominio/mejora.js';
@@ -69,18 +70,27 @@ export function eventoDeBaseFiscal(datos: DatosDelEventoDeMatricula): BaseFiscal
   });
 }
 
+const VIDA_UTIL_TOTAL_MAXIMA = 1200;
+
 /**
- * Deja en el activo la vida útil total y el residual del tramo contable nuevo (o del que vuelve a regir): así la ficha
- * siempre dice con qué estimación se deprecia.
+ * Deja en el activo la vida útil y el residual del último tramo contable vigente (el nuevo o el que vuelve a regir): así
+ * la ficha siempre dice con qué estimación se deprecia. La vida se cuenta desde el primer tramo contable. Si nada
+ * cambia, no reescribe el activo y devuelve `false`.
+ * @throws VidaUtilTotalExcedida si la vida guardada pasaría de 1,200 meses.
  */
-export function aplicarEstimacion(
-  activo: Activo,
-  contable: Pick<TramoCalculado, 'desdePeriodo' | 'meses' | 'valorResidualCentavos'>,
-): void {
-  const inicio = activo.instantanea().fechaDeInicioDeUso;
-  if (!inicio) return;
-  activo.ajustarEstimacion({
-    vidaUtilContableMeses: vidaTotalContable(inicio, contable),
-    valorResidual: deCentavos(contable.valorResidualCentavos),
-  });
+export function aplicarEstimacion(activo: Activo, tramosVigentes: readonly TramoGuardado[]): boolean {
+  const contables = tramosVigentes.filter((tramo) => tramo.libro === 'contable').sort(porDesde);
+  const vigente = contables.at(-1);
+  if (!vigente || !activo.instantanea().fechaDeInicioDeUso) return false;
+  const vida = vidaTotalContable(contables[0]!.desdePeriodo, vigente);
+  if (vida > VIDA_UTIL_TOTAL_MAXIMA) throw new VidaUtilTotalExcedida(vida);
+  const residual = deCentavos(vigente.valorResidualCentavos);
+  const { vidaUtilContableMeses, valorResidual } = activo.instantanea();
+  if (vidaUtilContableMeses === vida && valorResidual === residual) return false;
+  activo.ajustarEstimacion({ vidaUtilContableMeses: vida, valorResidual: residual });
+  return true;
+}
+
+function porDesde(a: TramoGuardado, b: TramoGuardado): number {
+  return a.desdePeriodo.localeCompare(b.desdePeriodo);
 }

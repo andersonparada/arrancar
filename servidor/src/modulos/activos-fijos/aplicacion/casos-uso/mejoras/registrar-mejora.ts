@@ -85,8 +85,8 @@ export class RegistrarMejora {
     const cambio = { empresaId: empresaId.valor, activoId: activo.id.valor, mejoraId: mejora.id.valor };
     await tramos.reemplazar({ ...cambio, tramos: plan.tramos });
     if (plan.contable && solicitud.vidaUtilRestanteContableMeses !== null) {
-      aplicarEstimacion(activo, plan.contable);
-      await repositorio.guardar(activo);
+      const vigentes = await tramos.vigentesConIdDeActivo(activo.id.valor);
+      if (aplicarEstimacion(activo, vigentes)) await repositorio.guardar(activo);
     }
   }
 

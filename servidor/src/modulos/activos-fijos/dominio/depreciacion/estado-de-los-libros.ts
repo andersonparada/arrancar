@@ -1,5 +1,5 @@
 import { cuotaDelTramoEnElMes, tramoQueRige } from './cuota-del-mes.js';
-import { mesesEntre, periodoDe, sumarMeses } from './meses.js';
+import { mesesEntre, sumarMeses } from './meses.js';
 import type { LibroDeDepreciacion, TramoGuardado } from './tramo.js';
 
 /**
@@ -51,14 +51,15 @@ export function acumuladaAntesDe(estado: EstadoDeLosLibros, libro: LibroDeDeprec
 }
 
 /**
- * La vida útil contable total del activo según un tramo contable: los meses que pasaron desde su inicio de uso hasta
- * el tramo más los que el tramo da. Es lo que el activo guarda como su vida útil.
+ * La vida útil contable que el activo guarda según un tramo contable: los meses que pasaron desde que empezó a
+ * depreciarse (el `desdePeriodo` de su primer tramo contable, que ya respeta el primer mes y los saldos iniciales) hasta
+ * el tramo más los que el tramo da. En un saldo inicial es, igual que al crearlo, la vida restante desde su saldo.
  */
 export function vidaTotalContable(
-  fechaDeInicioDeUso: string,
+  primerDesdePeriodo: string,
   tramo: Pick<TramoGuardado, 'desdePeriodo' | 'meses'>,
 ): number {
-  return Math.max(mesesEntre(periodoDe(fechaDeInicioDeUso), tramo.desdePeriodo), 0) + (tramo.meses ?? 0);
+  return Math.max(mesesEntre(primerDesdePeriodo, tramo.desdePeriodo), 0) + (tramo.meses ?? 0);
 }
 
 /**

@@ -79,8 +79,8 @@ export class RevisarEstimacion {
     const { empresaId } = activo.instantanea();
     const cambio = { empresaId: empresaId.valor, activoId: activo.id.valor, mejoraId: null, tramos: plan.tramos };
     await this.dependencias.tramos.reemplazar(cambio);
-    aplicarEstimacion(activo, plan.contable!);
-    await this.dependencias.repositorio.guardar(activo);
+    const vigentes = await this.dependencias.tramos.vigentesConIdDeActivo(activo.id.valor);
+    if (aplicarEstimacion(activo, vigentes)) await this.dependencias.repositorio.guardar(activo);
   }
 
   /** El residual nuevo en centavos (o `null` si no cambia), sin pasar del costo del activo. */

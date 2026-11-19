@@ -90,9 +90,14 @@ describe('el estado de los libros', () => {
     ).toBeNull();
   });
 
-  it('la vida total suma lo que pasó desde el inicio de uso y lo que le queda', () => {
-    expect(vidaTotalContable('2027-03-10', { desdePeriodo: '2027-06-01', meses: 57 })).toBe(60);
-    expect(vidaTotalContable('2027-03-10', { desdePeriodo: '2027-06-01', meses: 120 })).toBe(123);
+  it('la vida total suma lo que pasó desde el primer tramo y lo que le queda', () => {
+    expect(vidaTotalContable('2027-03-01', { desdePeriodo: '2027-06-01', meses: 57 })).toBe(60);
+    expect(vidaTotalContable('2027-03-01', { desdePeriodo: '2027-06-01', meses: 120 })).toBe(123);
+  });
+
+  it('con el primer mes siguiente o un saldo inicial, cuenta desde el primer tramo y no desde el inicio de uso', () => {
+    expect(vidaTotalContable('2027-04-01', { desdePeriodo: '2027-06-01', meses: 58 })).toBe(60);
+    expect(vidaTotalContable('2027-06-01', { desdePeriodo: '2027-06-01', meses: 60 })).toBe(60);
   });
 });
 

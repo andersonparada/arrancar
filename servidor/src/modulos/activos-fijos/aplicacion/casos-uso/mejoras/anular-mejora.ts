@@ -97,9 +97,6 @@ export class AnularMejora {
   private async reponerEstimacion(activo: Activo): Promise<void> {
     const { tramos, repositorio } = this.dependencias;
     const vigentes = await tramos.vigentesConIdDeActivo(activo.id.valor);
-    const contable = vigentes.filter((tramo) => tramo.libro === 'contable').at(-1);
-    if (!contable) return;
-    aplicarEstimacion(activo, contable);
-    await repositorio.guardar(activo);
+    if (aplicarEstimacion(activo, vigentes)) await repositorio.guardar(activo);
   }
 }

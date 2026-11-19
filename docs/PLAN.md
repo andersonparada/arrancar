@@ -4052,3 +4052,8 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   sin cierres pide quitar de uso y volver a poner; (8) el activo guarda la vida útil **total** y el residual de la estimación vigente
   (se repone al anular). Lo que solo un cliente puede confirmar: si quieren corregir hacia atrás una estimación antes del primer
   cierre (hoy sustituye el tramo inicial) y si anular una mejora fuera de orden debe permitirse (hoy no).
+- **2026-11-19 — AF-7, corrección de la revisión:** la vida útil contable que guarda el activo ya no se cuenta desde el
+  inicio de uso sino desde el `desdePeriodo` de su primer tramo contable (respeta `primer_mes = mes_siguiente` y, en los
+  saldos iniciales, sigue siendo la vida restante desde el saldo). `aplicarEstimacion` recibe los tramos vigentes, no
+  reescribe el activo si la vida y el residual no cambian (anular un costo posterior ya no lo toca) y rechaza con
+  `VidaUtilTotalExcedida` una vida guardada de más de 1,200 meses (antes era un 500 por el check de la tabla).

@@ -86,6 +86,15 @@ export class RevisionInvalida extends DatoInvalido {
   readonly codigo = 'revision_invalida';
 }
 
+/** La vida útil contable que quedaría guardada pasa del tope de 1,200 meses. */
+export class VidaUtilTotalExcedida extends DatoInvalido {
+  readonly codigo = 'vida_util_total_excedida';
+
+  constructor(meses: number) {
+    super(`Con esa vida útil, el activo sumaría ${meses} meses desde que empezó a depreciarse; el máximo es 1,200.`);
+  }
+}
+
 /** Quitar de uso o eliminar un activo con mejoras o costos posteriores: primero se anulan. */
 export class ActivoConMejoras extends ReglaDeNegocioInfringida {
   readonly codigo = 'activo_con_mejoras';
