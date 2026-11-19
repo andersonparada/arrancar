@@ -2,6 +2,8 @@ import type { DefinicionModulo } from '../core/modulos-sistema/definicion-modulo
 import { rutasDelModulo } from '../core/modulos-sistema/rutas-del-modulo.js';
 import { ALCANCE_DE_FONDOS } from './infraestructura/persistencia/accesos-a-fondos.tablas.js';
 import { PERMISOS_DE_CAJA_CHICA } from './permisos.js';
+import { rutasDeAccesosAFondosComponidas } from './composicion/accesos-a-fondos.js';
+import { rutasDeFondosComponidas } from './composicion/fondos.js';
 // generador: importaciones
 
 /**
@@ -24,6 +26,8 @@ export const moduloCajaChica: DefinicionModulo = {
     },
   ],
   rutas: rutasDelModulo([
+    rutasDeFondosComponidas(),
+    rutasDeAccesosAFondosComponidas(),
     // generador: rutas
   ]),
 };

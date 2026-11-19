@@ -3375,3 +3375,24 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   subconsulta, por rendimiento) y en `estaPosfechado` (dominio, con `fechaDeEfecto`). (2) R2 impreso: `print:text-[8px]`,
   celdas con `px-1` y texto que se parte, para caber en carta horizontal. Bajos: el Excel de R1 y R2 lleva el corte en el
   nombre (`fechaDelNombre` en `rutasDeIntercambio`) y el doble clic en «Exportar» ya no baja dos archivos. Sin migraciones.
+- **2026-11-18 (CC-2, Caja chica, fondos, servidor)**: abrir (`POST /api/caja-chica/fondos`, `fondos.crear`) con cheque no
+  negociable (nunca al portador) o nota de débito, con el fondo como origen y el concepto `fondo_de_caja_chica`, y el
+  primer custodio (texto o usuario activo de la empresa, que recibe el acceso por el disparador); ficha y lista (`fondos.ver`,
+  solo los asignados, con monto, efectivo esperado, pendiente, vales, último arqueo); editar (`PATCH`, auditoría `corregir`
+  solo si cambia el tope); cambiar de custodio (cierra el tramo, abre otro con motivo, `corregir`; el anterior conserva su
+  acceso); aumentar (cheque o nota) y disminuir (nota de crédito `devolucion_de_fondo_de_caja_chica`, contra el efectivo
+  esperado y sin dejar el fondo en cero, `ajustar`); anular la apertura de un fondo sin uso (`fondos.cerrar`, orden
+  `anular_movimiento_de_origen`, deja el cambio anulado y **cierra el fondo con el motivo**, `anular`). Ventana de asignación
+  `/api/caja-chica/accesos-a-fondos` (`fondos.asignar`, operador «para asignar», `asignar`/`quitar` auditados). Manejador del
+  aviso `bancos.movimiento_por_cambiar`: anular la apertura o un aumento desde Bancos se rechaza si el fondo se usó (o tiene
+  más cambios) y, si no, anula el cambio (y cierra el fondo si era la apertura); la disminución y todo lo que no sea anular se
+  rechazan (`movimiento_de_caja_chica`); un movimiento que dice ser de Caja chica y que el usuario de Bancos no ve (fondo no
+  asignado, RLS) también se rechaza, para no dejar un cambio sin respaldo. Eventos nuevos `caja-chica.fondo_abierto`,
+  `monto_del_fondo_cambiado`, `cambio_de_monto_anulado` y `custodio_cambiado` (`core/contratos/caja-chica.contratos.ts`).
+  Sin migración. Decisiones: anular la apertura no agrega un estado de fondo (queda `cerrado` y la ficha trae
+  `aperturaAnulada`); el cambio de custodio no ofrece aún el arqueo de entrega (CC-5); un nombre de fondo anulado sigue
+  ocupando el nombre (índice único no parcial de CC-1).
+- **2026-11-18 (CC-2, correcciones de la revisión)**: aumentar y disminuir exigen `fecha >= fecha_de_apertura` (error
+  `fecha_anterior_a_la_apertura`, campo `fecha`). Cuando Bancos anula un aumento, `AnuladorDeCambios.revisar` calcula el
+  monto y el efectivo esperado sin ese aumento y rechaza si quedan <= 0 (`anulacion_deja_el_fondo_sin_monto`), de modo que
+  no se puede anular un aumento ya «consumido» por disminuciones posteriores. Sin migración.
