@@ -104,6 +104,7 @@ export const consultas = (cifras: Partial<DatosDeLectura> = {}): ConsultasDeFond
           custodio: 'Juan',
           custodioUsuarioId: null,
           localidadNombre: null,
+          cuentaBancariaNombre: null,
           montoCentavos: 100_000,
           pendienteCentavos: 0,
           valesCentavos: 0,

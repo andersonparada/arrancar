@@ -3842,3 +3842,28 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   venta distintas»: en el dólar es compra distinta de venta y en las monedas cruzadas, un diferencial de más de 3 % (B.5,
   B.6 n.º 3). La bitácora (insignia «Compra y venta dudosas», qué hacer y motivo por línea según el código) y la muestra de
   `lista-de-monedas.ts` (según la moneda) lo dicen bien; pruebas ajustadas y nuevas.
+- **2026-11-19 (CC-8, Caja chica, cliente)**: pantallas de `caja-chica` sobre la API de CC-2 a CC-4, sin cambios de servidor ni
+  migraciones. **Lista de fondos** (`ListaDeFondos.vue`, filtro abiertos/cerrados/todos, tarjeta con monto, efectivo esperado,
+  pendiente, último arqueo y el primer aviso del servidor), **ficha** (`FichaDeFondo.vue`: ecuación tal como la calculó el
+  servidor, sin recalcular; facturas con retención de la bandeja con «Asignar con retención»; comprobantes con filtro por estado,
+  «Agregar factura», «Desde la bandeja», «Vale de gasto», devolver a la bandeja y anular el vale; datos e historial plegado de
+  custodios y cambios de monto), **bandeja** (`BandejaDeCajaChica.vue`: filtros por proveedor, fechas y retención, marcar hasta 100,
+  barra fija con el fondo y «Asignar»; una factura con retención solo se marca con `comprobantes.con-retencion` y, si no, se
+  explica por qué), **ventana de asignar** (resumen de lo que va a pasar; un solo motivo de retención para todas las facturas con
+  retención, obligatorio; motivo del tope opcional para quien tiene `sobre-el-tope`, que el servidor ignora en lo que no pasa del
+  tope), **abrir fondo**, **aumentar**, **disminuir**, **cambiar custodio**, **anular apertura** y **accesos a fondos**. Las acciones
+  solo aparecen con el permiso y si `puede*` del servidor lo dice. **Ingreso de facturas** (libro): lee también `destino` de la
+  consulta, deja ese destino fijo (la referencia solo la entiende su módulo) y, al registrar, vuelve al destino mostrando los avisos
+  que dio (p. ej. «Quedó en la bandeja de Caja chica»). Lo demás de CC-8/CC-9 (reposición, arqueo, vales provisionales, cierre,
+  impresiones) queda para sus pasos. Los catálogos se leen del endpoint propio de Caja chica (ver la entrada siguiente).
+- **2026-11-19 (CC-8, correcciones de la revisión)**: (1) **Catálogos propios** — `GET /caja-chica/catalogos` (servidor:
+  `aplicacion/casos-uso/catalogos`, `infraestructura/persistencia/consultas-de-catalogos.drizzle.ts`, `http/catalogos.rutas.ts`)
+  devuelve cuentas y chequeras activas, localidades, usuarios de la empresa y conceptos de gasto, por nombre, sin pedir permisos
+  de Bancos, Empresas, Libro de compras ni Usuarios (§9.1: abrir un fondo no pide permisos de Bancos). Exige `fondos.ver` y alguno
+  de `fondos.crear`, `fondos.editar`, `fondos.cambiar-monto`, `comprobantes.crear` o `reposiciones.crear`; no se declaró un permiso
+  nuevo. **No devuelve el saldo** de las cuentas (es de Bancos): las cuentas se ofrecen solo por nombre. Una sola petición llena
+  todas las ventanas; si falla se avisa y se reintenta al abrir. Los textos de lista vacía ya no remiten a un acceso de Bancos que
+  este usuario no tiene: piden que creen la chequera, cuenta o concepto. (2) **Editar el fondo** — acción «Editar» en la ficha
+  (`caja-chica.fondos.editar` y `puedeEditar` del servidor, nuevo en el DTO), ventana con nombre, localidad, tope y cuenta que se
+  propone al reponer; el motivo del tope solo se pide si el tope cambia. La ficha muestra la «Cuenta para reponer» con el nombre
+  que ahora da el servidor (`cuentaBancariaNombre` en el DTO del fondo).

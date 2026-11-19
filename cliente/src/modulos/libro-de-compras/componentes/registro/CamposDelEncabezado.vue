@@ -38,6 +38,8 @@ const props = defineProps<{
   periodoPropuesto: string | null;
   fechaPropuesta: string | null;
   errores: Record<string, string>;
+  /** El documento viene de un destino (un fondo): ese destino no se cambia. */
+  destinoFijado?: boolean;
 }>();
 const edicion = defineModel<EdicionDeDocumento>({ required: true });
 
@@ -104,7 +106,7 @@ const esNota = computed(() => llevaFacturaAfectada(edicion.value.tipoDte));
         v-model="edicion.destino"
         etiqueta="Destino"
         requerido
-        :deshabilitado="esNota && !!edicion.documentoAfectadoId"
+        :deshabilitado="destinoFijado || (esNota && !!edicion.documentoAfectadoId)"
         :opciones="opcionesDeDestino"
         :error="errores.destino"
       />

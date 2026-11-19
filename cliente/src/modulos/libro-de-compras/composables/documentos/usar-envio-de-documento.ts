@@ -10,7 +10,7 @@ import {
 } from '../../servicios/registro-de-documentos.api';
 import { dejarAvisosDelRegistro } from './avisos-del-registro';
 import { cuerpoDeDocumento, type EdicionDeDocumento } from './edicion-de-documento';
-import { referenciaDeLaRuta } from './referencia-de-destino';
+import { referenciaDeLaRuta, salidaDelRegistro } from './referencia-de-destino';
 import { errorDelTipo, problemaDeError, type ProblemaDelFormulario } from './errores-del-registro';
 
 type Avisos = ReturnType<typeof usarAvisos>;
@@ -68,15 +68,29 @@ function crearRegistrador(edicion: EdicionDeDocumento, avisos: Avisos, estado: E
   return intentar;
 }
 
-/** Tras registrar: deja los avisos del servidor para la ficha y va a ella. */
-function irAlDocumento(router: Router, avisos: Avisos, { documento, avisos: delServidor }: RespuestaDeDocumento): void {
+/**
+ * Tras registrar: si se llegó desde un destino (un fondo), vuelve a él y le dice lo que el destino respondió; si no,
+ * deja los avisos del servidor para la ficha del documento y va a ella.
+ */
+function irAlDocumento(
+  { router, avisos }: { router: Router; avisos: Avisos },
+  respuesta: RespuestaDeDocumento,
+  volver: string | null,
+): void {
+  const { documento, avisos: delServidor } = respuesta;
   avisos.exito('Documento registrado.');
-  if (!documento.id) {
+  const salida = salidaDelRegistro(volver, documento.id);
+  if (salida.tipo === 'destino') {
+    delServidor.forEach((aviso) => avisos.info(aviso));
+    void router.push(salida.ruta);
+    return;
+  }
+  if (salida.tipo === 'lista') {
     void router.push({ name: 'libro-de-compras.documentos' });
     return;
   }
-  dejarAvisosDelRegistro(documento.id, delServidor);
-  void router.push({ name: 'libro-de-compras.documentos.ficha', params: { documentoId: documento.id } });
+  dejarAvisosDelRegistro(salida.documentoId, delServidor);
+  void router.push({ name: 'libro-de-compras.documentos.ficha', params: { documentoId: salida.documentoId } });
 }
 
 /** El cuerpo de registrar; con `referencia` (se llegó desde un destino) la lleva, y sin ella queda como siempre. */
@@ -100,7 +114,7 @@ export function usarEnvioDeDocumento(edicion: EdicionDeDocumento, retenciones: R
   const estado = crearEstadoDelEnvio();
   const registrado = ref(false);
   const intentar = crearRegistrador(edicion, avisos, estado);
-  const { referencia } = referenciaDeLaRuta(useRoute().query);
+  const { referencia, volver } = referenciaDeLaRuta(useRoute().query);
 
   // Corregir cualquier campo da por atendido el problema anterior.
   watch(edicion, estado.limpiar, { deep: true });
@@ -113,7 +127,7 @@ export function usarEnvioDeDocumento(edicion: EdicionDeDocumento, retenciones: R
     await enviar(async () => (respuesta.value = await intentar(cuerpo)));
     if (!respuesta.value) return;
     registrado.value = true;
-    irAlDocumento(router, avisos, respuesta.value);
+    irAlDocumento({ router, avisos }, respuesta.value, volver);
   }
 
   const erroresDelEnvio = computed(() => ({ ...errores.value, ...estado.delTipo.value }));

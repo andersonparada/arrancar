@@ -1,5 +1,6 @@
 import { and, asc, count, eq, inArray, type SQL } from 'drizzle-orm';
 import { transaccionEnCurso } from '../../../core/compartido/infraestructura/unidad-de-trabajo-postgres.js';
+import { cuentasBancarias } from '../../../bancos/infraestructura/persistencia/cuentas-bancarias.tablas.js';
 import { localidades } from '../../../empresas/infraestructura/persistencia/localidades.tablas.js';
 import type { ConsultasDeFondos, DatosDeLectura, FiltroDeFondos } from '../../aplicacion/puertos/puertos-de-fondos.js';
 import type { Fondo, UsoDelFondo } from '../../dominio/fondos.js';
@@ -25,6 +26,7 @@ interface Fuentes {
   arqueados: Map<string, string>;
   custodios: Awaited<ReturnType<typeof custodiosVigentesDe>>;
   nombres: Map<string, string>;
+  cuentas: Map<string, string>;
 }
 
 const total = (totales: Map<string, number>, id: string): number => totales.get(id) ?? 0;
@@ -36,6 +38,7 @@ function datosDe(id: string, fuentes: Fuentes): DatosDeLectura {
     custodio: custodio?.custodio ?? null,
     custodioUsuarioId: custodio?.usuarioId ?? null,
     localidadNombre: fuentes.nombres.get(id) ?? null,
+    cuentaBancariaNombre: fuentes.cuentas.get(id) ?? null,
     montoCentavos: total(fuentes.montos, id),
     pendienteCentavos: total(fuentes.pendientes, id),
     valesCentavos: total(fuentes.vales, id),
@@ -77,6 +80,7 @@ export class ConsultasDeFondosDrizzle implements ConsultasDeFondos {
       arqueados: await ultimosArqueosDe(ids),
       custodios: await custodiosVigentesDe(ids),
       nombres: await this.nombresDeLocalidad(ids),
+      cuentas: await this.nombresDeCuenta(ids),
     };
     return new Map(ids.map((id) => [id, datosDe(id, fuentes)]));
   }
@@ -90,6 +94,15 @@ export class ConsultasDeFondosDrizzle implements ConsultasDeFondos {
       .select({ fondoId: fondos.id, nombre: localidades.nombre })
       .from(fondos)
       .innerJoin(localidades, eq(localidades.id, fondos.localidadId))
+      .where(inArray(fondos.id, [...ids]));
+    return new Map(filas.map(({ fondoId, nombre }) => [fondoId, nombre]));
+  }
+
+  private async nombresDeCuenta(ids: readonly string[]): Promise<Map<string, string>> {
+    const filas = await transaccionEnCurso()
+      .select({ fondoId: fondos.id, nombre: cuentasBancarias.nombre })
+      .from(fondos)
+      .innerJoin(cuentasBancarias, eq(cuentasBancarias.id, fondos.cuentaBancariaId))
       .where(inArray(fondos.id, [...ids]));
     return new Map(filas.map(({ fondoId, nombre }) => [fondoId, nombre]));
   }

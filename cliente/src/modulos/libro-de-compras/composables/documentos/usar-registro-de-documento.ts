@@ -1,5 +1,5 @@
 import { computed, reactive, ref, watch, type Ref } from 'vue';
-import { onBeforeRouteLeave } from 'vue-router';
+import { onBeforeRouteLeave, useRoute } from 'vue-router';
 import { usarAvisos } from '@/modulos/core/almacenes/avisos';
 import type { RetencionDeDocumento } from '../../servicios/documentos.api';
 import type { RespuestaDeDocumento } from '../../servicios/registro-de-documentos.api';
@@ -7,6 +7,7 @@ import { ajustesIncompletos } from './ajustes-de-retenciones';
 import { edicionVacia, pendientesDelRegistro, type EdicionDeDocumento } from './edicion-de-documento';
 import { erroresDeLineas, erroresDelEncabezado } from './errores-del-registro';
 import { usarCatalogosDelRegistro } from './usar-catalogos-del-registro';
+import { referenciaDeLaRuta } from './referencia-de-destino';
 import { usarEnvioDeDocumento } from './usar-envio-de-documento';
 import { usarPrecargaDesdeDte } from './usar-precarga-desde-dte';
 import { usarProveedorDelDocumento } from './usar-proveedor-del-documento';
@@ -28,6 +29,25 @@ function preguntarAntesDeSalir(edicion: EdicionDeDocumento, registrado: Ref<bool
   });
   /** Lo que llega ya escrito (de un DTE de la SAT) no cuenta como cambio del usuario. */
   return () => (inicial = JSON.stringify(edicion));
+}
+
+/**
+ * Con una referencia (se llegó desde un fondo) el documento va a ese destino y no a otro: la referencia solo la entiende
+ * su módulo. Fija el destino en cuanto está entre los activos y lo mantiene aunque el proveedor proponga otro.
+ */
+function usarDestinoFijado(edicion: EdicionDeDocumento, destinos: Ref<readonly string[]>): Ref<boolean> {
+  const { referencia, destino } = referenciaDeLaRuta(useRoute().query);
+  const fijado = ref(false);
+  watch(
+    [() => edicion.destino, destinos],
+    () => {
+      if (!referencia || !destino || !destinos.value.includes(destino)) return;
+      fijado.value = true;
+      if (edicion.destino !== destino) edicion.destino = destino;
+    },
+    { immediate: true },
+  );
+  return fijado;
 }
 
 /** Lo que el servidor propuso para la recepción y el período mientras el usuario no escribe los suyos. */
@@ -67,9 +87,10 @@ interface DatosDeLasCondiciones {
 /** Cuándo se puede registrar: nada pendiente, hay destino y no se está enviando ni trayendo datos del DTE. */
 function usarCondiciones({ edicion, retenciones, catalogos, ocupado }: DatosDeLasCondiciones) {
   const sinDestinos = computed(() => catalogos.destinosCargados.value && catalogos.destinos.value.length === 0);
+  const destinoFijado = usarDestinoFijado(edicion, catalogos.destinos);
   const pendientes = usarPendientes(edicion, retenciones, sinDestinos);
   const puedeRegistrar = computed(() => pendientes.value.length === 0 && !sinDestinos.value && !ocupado.value);
-  return { sinDestinos, pendientes, puedeRegistrar };
+  return { sinDestinos, destinoFijado, pendientes, puedeRegistrar };
 }
 
 /** Los errores por campo, de la vista previa y del envío, repartidos entre el encabezado y las líneas. */

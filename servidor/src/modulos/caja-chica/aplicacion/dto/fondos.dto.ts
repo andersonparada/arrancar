@@ -46,11 +46,15 @@ export interface FondoResumenDto {
 export interface FondoDto extends FondoResumenDto {
   topePorComprobante: string | null;
   cuentaBancariaId: string | null;
+  /** El nombre de esa cuenta, para mostrarlo sin pedirle a Bancos. */
+  cuentaBancariaNombre: string | null;
   fechaDeCierre: string | null;
   motivoDeCierre: string | null;
   observaciones: string | null;
   custodios: CustodioDto[];
   cambiosDeMonto: CambioDeMontoDto[];
+  /** Se pueden editar el nombre, la localidad, el tope y la cuenta (solo un fondo abierto). */
+  puedeEditar: boolean;
   puedeAumentar: boolean;
   puedeDisminuir: boolean;
   puedeCambiarCustodio: boolean;
