@@ -3413,3 +3413,23 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   pasos). Decisiones: los puertos y las órdenes a Bancos son propios del módulo (no se importa Cuentas por pagar); la
   devolución y el reembolso aún no existen, así que el aviso de Bancos sobre ellos se rechaza igual (CL-4 los reabrirá);
   `gastos_sin_documento.permitidos` se declara en CL-3, con su caso de uso.
+- **2026-11-19 (Libro de ventas y Cuentas por cobrar, respuestas y validación del contador):** el usuario aceptó todas las
+  recomendaciones VC-P1 a VC-P24 de `docs/modulos/diseno-cuentas-por-cobrar-y-ventas.md` §17; faltan sus datos de VC-P3
+  (archivo real de «DTE emitidos»), VC-P4 (certificador FEL), VC-P22 (liquidación y constancia del tabaco) y VC-P24, que el
+  contador reformuló porque el contribuyente agropecuario está derogado: «¿alguna empresa está o pasará al primario o
+  pecuario (ICT)?». Dictamen del contador guardado en `dictamen-cuentas-por-cobrar-y-ventas-validacion-2026-11-19.md`
+  («correcto con ajustes») e incorporado al diseño: la `FESP` recibida va fuera del débito y de las retenciones
+  acreditables (y la bandeja de recibidos de compras la bloquea, migración `0040`); solo las retenciones con constancia
+  entran en la declaración y el remanente de retenciones se guarda aparte del de crédito (VC-0c2, sin migración); los
+  regímenes derogados se rechazan desde `libro-de-compras.regimenes.fecha_de_derogacion` (`regimen_derogado`) y el primario
+  y pecuario lleva el ICT (`libro-de-ventas.ict.*`, cálculo en LV-7 si VC-P24 lo pide); la nota de crédito ajusta en
+  proporción las retenciones esperadas y avisa pasados dos meses; la nota de débito no propone retención; el ISR mensual
+  clasifica por la retención **vigente** (con la marca de mes pagado, `pagos_de_isr_mensual`); la retención de tarjeta es
+  por liquidación (`documento_id` nulo con el origen reservado `liquidacion_de_tarjeta` desde la `0003`) y la comisión de
+  la adquirente no es «exenta siempre»; la recuperación de un castigo solo es renta gravada si el castigo era de régimen
+  sobre utilidades. Preguntas nuevas: VC-P25 (foliación del pequeño contribuyente y del primario y pecuario, choca con
+  VC-P23 a, que rige mientras tanto), VC-P26 (valor por omisión de los anticipos en empresas de servicios, choca con el de
+  VC-P13 a), VC-P27 (POS), VC-P28 (FESP recibidas) y VC-P29 (capturas del SAT-2237 y del SAT-1311); para el contador,
+  V-13 y V-14. La tabla de pasos (§16) quedó lista para programar: CCL-B1 ya está en `main`, así que VC-0b no espera nada;
+  el primer paso es **VC-0a** (Terceros, `0010_clientes_para_ventas`), en paralelo con VC-0b, VC-0c1 y VC-0d. Solo LV-4,
+  LV-5b, LV-7, LV-8 y CXC-5t esperan datos del usuario. `docs/HOJA-DE-RUTA.md`: Cuentas por cobrar y Ventas, planificado.

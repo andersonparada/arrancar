@@ -197,8 +197,12 @@ Quedan preguntas abiertas en la sección «Preguntas para el usuario» de cada p
 
 - **Contabilidad**: nomenclatura por empresa, partidas de provisión, reversión y
   apertura, períodos cerrados y en qué casos se permite eliminar.
-- **Cuentas por cobrar / Ventas**: incluye las **retenciones que les hacen** a las
-  empresas (p. ej. en la venta de tabaco) y sus constancias.
+- ~~**Cuentas por cobrar / Ventas**~~: **planificado** (2026-11-19) en
+  `docs/modulos/diseno-cuentas-por-cobrar-y-ventas.md` (módulos `libro-de-ventas` y
+  `cuentas-por-cobrar`, con las retenciones que les hacen y sus constancias); el usuario
+  aceptó las recomendaciones y el contador lo validó. Pasos listos en su §16; faltan
+  datos del usuario para la bandeja de la SAT, el certificador FEL, el tabaco y el
+  régimen primario o pecuario.
 
 ## Otros pendientes anotados
 
