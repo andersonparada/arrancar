@@ -2999,3 +2999,18 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `libro-de-compras.cambiar_marca_de_inventario`; V-10 donación con su valor razonable en el evento; kardex por bodega con
   su propio saldo; traslados neutros para el costeo y devolución con PEPS sobre su capa. Abiertas: P-1, P-3, INV-P14 e
   INV-A16 (usuario) y VC-1 a VC-4 (contador).
+- **2026-11-19 — INV-1 (Inventarios, servidor).** Esqueleto del módulo `inventarios` (`dependeDe: ['libro-de-compras']`),
+  esquema `inventarios` con `unidades` (magnitud y factor a libra, galón, metro o metro cuadrado), `categorias`, `articulos`
+  (tipo de inventario de la SAT según V-4, llaves compuestas con la empresa a categoría, unidad base y concepto de gasto del
+  Libro de compras, únicos por código, nombre y código de barras), `conversiones` y `lotes`; todas con RLS solo por empresa.
+  Migraciones `0000_inv1_catalogos`, `0001_inv1_auditoria_permanente` (`inventarios.metodos-de-costeo`, `.cierres` y
+  `.ajustes` en `core.recursos_de_auditoria_permanente`, con ISR art. 41 y Código Tributario arts. 47 y 112) y
+  `0002_inv1_busqueda_de_articulos` (índice `pg_trgm`). Semilla perezosa de 17 unidades al abrir el catálogo vacío. Casos de
+  uso: CRUD de los tres catálogos con inactivar y eliminar auditados (la unidad o categoría en uso no se elimina), conversiones
+  (`GET` y `PUT /inventarios/articulos/:id/conversiones`, lo que se quita queda en la auditoría), lotes (`GET` y `POST
+  …/lotes`) y código propuesto (`GET /inventarios/articulos/codigo-propuesto`, prefijo `inventarios.codigos.prefijo` y
+  correlativo). Las ocho variables de configuración de §10.4 (solo empresa e instalación). Excel de los tres catálogos
+  (el artículo con categoría, unidad base y concepto de gasto por nombre). Decisiones: INV-1 lleva el catálogo en
+  `0000` y la auditoría permanente en `0001` (el diseño las juntaba), como AF-1; eliminar un artículo se lleva sus
+  conversiones y lotes y INV-4 agrega la guardia de movimientos; la unidad base y `maneja_lotes` no se bloquean todavía
+  (no hay movimientos); no hay búsqueda por texto en la lista (solo el índice). Sin pantallas (INV-1c).
