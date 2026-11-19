@@ -1144,6 +1144,13 @@ pruebas):
 | C-4 | Desde qué hora de la noche `TipoCambioDia` o `TipoCambioRango` ya dan el USD de mañana | La hora de la vuelta `noche` |
 | C-5 | Un DTE real en EUR y lo que la SAT precarga (contador, V-2) | MM-L2; no bloquea la fase A |
 
+**Resultado (2026-11-18, al programar MM-3b): C-1 a C-4 sin hacer.** Desde el entorno del agente la conexión TCP a
+`www.banguat.gob.gt:443` abre, pero el saludo TLS no recibe respuesta (probado con `curl`, TLS 1.2 y 1.3, las dos IP, hasta
+60 s), así que no hubo ninguna llamada válida. Nada contradice la adenda; solo no está confirmada. Quedan con lo supuesto:
+`CODIGOS_DEL_BANGUAT_EXCLUIDOS` vacío (C-1), días esperados de las demás monedas = hábiles (C-2), unidad por una moneda
+(C-3) y la vuelta de noche a las 21:00 (C-4, constante `HORA_DE_LA_NOCHE`). Hay que repetirlas desde otra red antes de
+activar la carga en producción.
+
 ### A.13 Decisiones pendientes del usuario (del dictamen, con la posición del arquitecto)
 
 | # | Pregunta | Contador | Arquitecto | Qué se asumió aquí |

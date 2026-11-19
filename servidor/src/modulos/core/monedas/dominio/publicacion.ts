@@ -29,7 +29,7 @@ export interface PublicacionDeTipoDeCambio {
 }
 
 /** Por qué se descartó un valor recibido; es lo que se anota en la bitácora de consultas. */
-export type MotivoDeRechazo = 'valor_fuera_de_rango' | 'dato_invalido' | 'valor_ambiguo';
+export type MotivoDeRechazo = 'valor_fuera_de_rango' | 'dato_invalido' | 'valor_ambiguo' | 'variacion_excesiva';
 
 /** Un valor recibido que no se guarda. */
 export interface PublicacionRechazada {

@@ -29,6 +29,13 @@ export const esquemaTipoManual = z.object({
   motivo: textoObligatorio(300),
 });
 
+/** «Cargar ahora»: sin fechas es hoy; el rango se revisa en el caso de uso. */
+export const esquemaCargaManual = z.object({
+  desde: fechaObligatoria().optional(),
+  hasta: fechaObligatoria().optional(),
+});
+
+export type CargaManual = z.infer<typeof esquemaCargaManual>;
 export type ConsultaSerie = z.infer<typeof esquemaConsultaSerie>;
 export type ConsultaVigente = z.infer<typeof esquemaConsultaVigente>;
 export type ParamsVersiones = z.infer<typeof esquemaParamsVersiones>;

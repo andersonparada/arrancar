@@ -26,6 +26,8 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       URL_PUBLICA: 'http://localhost:5180',
+      // Las pruebas nunca llegan al Banguat real: el puerto 9 rechaza la conexión al instante.
+      URL_TIPO_DE_CAMBIO_BANGUAT: 'http://127.0.0.1:9/TipoCambio.asmx',
       // Llave fija solo de pruebas para cifrar la contraseña del servidor de correo.
       CLAVE_SECRETOS: 'kK6Yh4OfNHcE6AmUHPRSLMxubql1WgrHt+/SUhX832c=',
       ...(rutaQpdf ? { RUTA_QPDF: rutaQpdf } : {}),

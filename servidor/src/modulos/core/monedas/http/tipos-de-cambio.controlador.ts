@@ -1,16 +1,24 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { operadorDe } from '../../compartido/http/operador-de-la-solicitud.js';
+import type { CargarTiposDeCambio } from '../aplicacion/casos-uso/cargar-tipos-de-cambio.js';
 import type { ConsultarTipoVigente } from '../aplicacion/casos-uso/consultar-tipo-vigente.js';
 import type { ListarSerieDeTipos } from '../aplicacion/casos-uso/listar-serie-de-tipos.js';
 import type { ListarVersionesDeTipo } from '../aplicacion/casos-uso/listar-versiones-de-tipo.js';
 import type { RegistrarTipoDeCambio } from '../aplicacion/casos-uso/registrar-tipo-de-cambio.js';
-import type { ConsultaSerie, ConsultaVigente, ParamsVersiones, TipoManual } from './tipos-de-cambio.esquemas-http.js';
+import type {
+  CargaManual,
+  ConsultaSerie,
+  ConsultaVigente,
+  ParamsVersiones,
+  TipoManual,
+} from './tipos-de-cambio.esquemas-http.js';
 
 export interface CasosDeUsoDeTiposDeCambio {
   serie: ListarSerieDeTipos;
   vigente: ConsultarTipoVigente;
   versiones: ListarVersionesDeTipo;
   registrar: RegistrarTipoDeCambio;
+  cargar: CargarTiposDeCambio;
 }
 
 export class TiposDeCambioControlador {
@@ -24,6 +32,9 @@ export class TiposDeCambioControlador {
 
   versiones = ({ params }: FastifyRequest<{ Params: ParamsVersiones }>) =>
     this.casosDeUso.versiones.ejecutar(params.moneda, params.fecha);
+
+  cargar = (solicitud: FastifyRequest<{ Body: CargaManual }>) =>
+    this.casosDeUso.cargar.cargarAhora({ ...solicitud.body, usuarioId: operadorDe(solicitud).usuarioId });
 
   registrar = async (solicitud: FastifyRequest<{ Body: TipoManual }>, respuesta: FastifyReply) => {
     const creado = await this.casosDeUso.registrar.ejecutar(operadorDe(solicitud), solicitud.body);

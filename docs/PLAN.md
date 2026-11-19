@@ -3053,3 +3053,25 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   Banguat tiene tope de 32767 (400 en vez de 500). `arrancar_app` solo actualiza `activa`, `codigo_banguat` y las letras
   de `core.monedas`. Pendiente para R-4: la auditoría de `EditarMoneda` queda en la cuenta de la empresa activa de
   soporte, y la revisión del código por dos ediciones simultáneas sale como violación genérica de la base.
+- **2026-11-18, Multimoneda MM-3b (carga automática con tablas).** En `core/monedas`: bitácora por llamada
+  (`CargasDeTiposDrizzle.guardar` deja la fila de `core.consultas_al_banguat` y los tipos nuevos en una sola transacción, sin
+  duplicar ni reemplazar), candado de una sola carga (`CerrojoDeCargaPostgres`, `pg_try_advisory_lock` con la clave
+  7301913002), `vueltaQueToca` (función pura del dominio, en la hora de `core.regional.zona_horaria` de la instalación:
+  06:00 el dólar con reintentos a las 06:30, 07:00, 08:00, 09:30, 11:00, 13:00, 16:00 y 20:00 mientras falte, 09:30 las demás
+  y 21:00 la noche, que adelanta el dólar de mañana y pide una vez las que aún no tienen el de hoy), `ConsultarAlBanguat` (una
+  llamada: valida, compara con el valor anterior y deja la constancia; solo el dólar usa `FuenteConReintentos`),
+  `VueltasDeCarga`, `CargarTiposDeCambio` (`siTocaAhora`, `alArrancar`, `cargarAhora`), `ActualizarMonedasDelBanguat`
+  (la lista no se toca si viene vacía o con error) y `evaluarVariaciones` (más de 25 % en una moneda sin banda: no se guarda,
+  `variacion_excesiva`; más de 3 %: se guarda con aviso en el detalle). **Solo se cargan las monedas activas con código** (la
+  respuesta del usuario a D-1, que reemplaza a «todas con código» de A.6). El relleno revisa 45 días hasta ayer y solo
+  pide si hay huecos (el dólar contra días calendario; las demás, contra días hábiles de `calendarioLaboral`).
+  `POST /api/tipos-de-cambio/cargar` (`desde`/`hasta`, máximo 366 días, 409 `carga_del_banguat_en_curso`) y
+  `POST /api/monedas/banguat/actualizar`, de soporte. `principal.ts` programa un temporizador de 15 minutos y el arranque; las
+  variables `CARGAR_TIPOS_DE_CAMBIO` (por omisión sí en producción y no en las demás) y `URL_TIPO_DE_CAMBIO_BANGUAT`
+  (`vitest.config.ts` la apunta a un puerto cerrado: las pruebas nunca llegan al Banguat). Sin migraciones.
+  **Las comprobaciones reales C-1 a C-4 NO se pudieron hacer:** desde este entorno la conexión TCP a
+  `www.banguat.gob.gt:443` abre pero el saludo TLS no responde (se probó con `curl` en TLS 1.2 y 1.3 y en las dos IP, con
+  esperas de hasta 60 s), así que `CODIGOS_DEL_BANGUAT_EXCLUIDOS` sigue vacío, la hora de la noche sigue en 21:00 (C-4), los
+  días esperados de las demás monedas siguen siendo los hábiles (C-2) y no se confirmó la unidad (C-3). Hay que repetirlas
+  desde otra red. **Pendiente de MM-3b:** `GET …/consultas` (estado y aviso de 4 días hábiles de atraso), `GET …/muestra` con su
+  límite, y el relleno inmediato al asignar un código (hoy lo cubre la vuelta de las 09:30 del día siguiente).
