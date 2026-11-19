@@ -3,6 +3,7 @@ import { UnidadDeTrabajoEnMemoria, operadorDePrueba } from '../../../compartido/
 import { CatalogoDeMonedasEnMemoria } from '../../pruebas/catalogo-de-monedas-en-memoria.js';
 import { TiposDeCambioEnMemoria } from '../../pruebas/tipos-de-cambio-en-memoria.js';
 import { TiposDeCambio } from '../tipos-de-cambio.js';
+import { FechaDeTipoFutura } from '../../dominio/errores.js';
 import { RegistrarTipoDeCambio } from './registrar-tipo-de-cambio.js';
 
 const operador = operadorDePrueba({ esSuperacceso: true });
@@ -15,6 +16,7 @@ function armar() {
     guardados,
     catalogo: new CatalogoDeMonedasEnMemoria(),
     tiposDeCambio,
+    reloj: { hoy: async () => '2026-11-18' },
   });
   return { guardados, tiposDeCambio, registrar };
 }
@@ -22,6 +24,17 @@ function armar() {
 const solicitud = { moneda: 'USD', fecha: '2026-11-17', referencia: '7.65', motivo: 'El Banguat no respondió' };
 
 describe('RegistrarTipoDeCambio', () => {
+  it('rechaza una fecha posterior a hoy y acepta hoy', async () => {
+    const { registrar, guardados } = armar();
+
+    await expect(registrar.ejecutar(operador, { ...solicitud, fecha: '2026-11-19' })).rejects.toThrow(
+      FechaDeTipoFutura,
+    );
+    await registrar.ejecutar(operador, { ...solicitud, fecha: '2026-11-18' });
+
+    expect(guardados.filas).toHaveLength(1);
+  });
+
   it('agrega una versión manual con el usuario y el motivo', async () => {
     const { registrar, guardados } = armar();
 

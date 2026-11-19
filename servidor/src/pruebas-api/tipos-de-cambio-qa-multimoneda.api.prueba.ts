@@ -24,13 +24,14 @@ afterAll(async () => {
 describe('POST /api/tipos-de-cambio: ingreso manual (hallazgos de la QA)', () => {
   const base = { moneda: 'USD', motivo: 'QA' };
 
-  it.fails('rechaza una fecha futura lejana (la carga del Banguat no acepta más allá de mañana)', async () => {
+  it('rechaza una fecha futura', async () => {
     const respuesta = await entorno.soporte.post('/api/tipos-de-cambio', {
       ...base,
       fecha: '2099-01-01',
       referencia: '7.7',
     });
-    expect(respuesta.estado).toBe(422);
+    expect(respuesta.estado).toBe(400);
+    expect(respuesta.cuerpo.error.codigo).toBe('fecha_de_tipo_futura');
   });
 
   it.fails('rechaza una compra mayor que la venta', async () => {
