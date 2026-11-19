@@ -1,7 +1,20 @@
+import type { DocumentoParaDestino } from './libro-de-compras.contratos.js';
+
 /**
- * Eventos de `caja-chica` (ver `mediador.contratos.ts`; diseño en `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`
+ * Órdenes y eventos de `caja-chica` (ver `mediador.contratos.ts`; diseño en `docs/modulos/diseno-caja-chica-y-cuentas-por-liquidar.md`
  * §9.4). Se publican después de confirmar. El dinero va en centavos enteros. Nadie los escucha todavía (Contabilidad).
  */
+declare module './mediador.contratos.js' {
+  interface OrdenesEntreModulos {
+    /**
+     * Recibe el documento registrado en el libro, dentro de su misma transacción. El comprobante queda en la bandeja de
+     * Caja chica; si trae `referenciaDeDestino` (el fondo) y no lleva retención, se intenta asignar. Responde los avisos
+     * que no bloquean (por qué quedó en la bandeja, la bancarización…), que el libro suma a los suyos.
+     */
+    'caja-chica.recibir_documento': { datos: DocumentoParaDestino; respuesta: { avisos: string[] } };
+  }
+}
+
 declare module '../eventos/bus-eventos.js' {
   interface EventosDominio {
     /** Se abrió un fondo: el cheque o la nota de débito ya está en Bancos (efectivo que pasa al custodio). */
@@ -51,6 +64,36 @@ declare module '../eventos/bus-eventos.js' {
       custodio: string;
       custodioUsuarioId: string | null;
       motivo: string;
+    };
+    /**
+     * Un comprobante entró a un fondo: un documento del libro asignado o un vale de gasto (sin factura, no deducible).
+     * `montoCentavos` es lo que salió del fondo (con retención, el neto) y `resta` dice si baja lo pendiente de reponer
+     * (nota de crédito). `conceptoDeGastoId` solo viene en el vale; en un documento el concepto está en sus líneas del libro.
+     */
+    'caja-chica.comprobante_asignado': {
+      empresaId: string;
+      fondoId: string;
+      comprobanteId: string;
+      clase: 'documento' | 'vale_de_gasto';
+      documentoDeCompraId: string | null;
+      fecha: string;
+      montoCentavos: number;
+      montoRetenidoCentavos: number;
+      resta: boolean;
+      conceptoDeGastoId: string | null;
+      deducible: boolean;
+      conActivoFijo: boolean;
+    };
+    /** Un comprobante salió del fondo: volvió a la bandeja o se anuló. Deshace el efecto de `comprobante_asignado`. */
+    'caja-chica.comprobante_quitado': {
+      empresaId: string;
+      fondoId: string;
+      comprobanteId: string;
+      clase: 'documento' | 'vale_de_gasto';
+      fecha: string;
+      montoCentavos: number;
+      resta: boolean;
+      motivo: 'devuelto_a_la_bandeja' | 'anulado';
     };
   }
 }
