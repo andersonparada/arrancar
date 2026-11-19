@@ -30,6 +30,8 @@ export interface OpcionesDeIntercambio {
   filtro?: z.ZodType;
   /** Si la ruta lleva parámetros (`/bancos/chequeras/:chequeraId/...`), su esquema: se unen al filtro que recibe `exportar`. */
   params?: z.ZodType;
+  /** Si se pasa, el nombre del archivo lleva la fecha que devuelva (p. ej. el corte del reporte) y no la de hoy. */
+  fechaDelNombre?: (consulta: Record<string, unknown>) => string | undefined;
 }
 
 /** El esquema Zod de la solicitud, como validador de filas importadas. */
@@ -71,7 +73,7 @@ function filtroDeLaSolicitud(
 }
 
 function rutaDeExportar(app: Aplicacion, opciones: OpcionesDeIntercambio, permiso: string) {
-  const { ruta, archivo, intercambio, filtro, params } = opciones;
+  const { ruta, archivo, intercambio, filtro, params, fechaDelNombre } = opciones;
   app.get(
     `${ruta}/exportar`,
     {
@@ -80,7 +82,8 @@ function rutaDeExportar(app: Aplicacion, opciones: OpcionesDeIntercambio, permis
     },
     async (solicitud, respuesta) => {
       const operador = operadorDe(solicitud);
-      const fecha = fechaLocalEn(new Date(), ZONA_HORARIA_POR_OMISION);
+      const consulta = filtro ? (solicitud.query as Record<string, unknown>) : undefined;
+      const fecha = (consulta && fechaDelNombre?.(consulta)) ?? fechaLocalEn(new Date(), ZONA_HORARIA_POR_OMISION);
       const contenido = await intercambio.exportar(operador, filtroDeLaSolicitud(opciones, solicitud));
       return enviarExcel(respuesta, `${archivo}-${fecha}`, contenido);
     },

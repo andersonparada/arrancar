@@ -30,6 +30,8 @@ export interface FilaDeListaDePagos {
   contrasenas: Array<{ id: string; numero: number; anioDeNumero: number }>;
   forma: FormaDePago;
   fecha: string;
+  /** Desde cuándo rebaja la deuda: la fecha, o el fin del mes de su conciliación autorizada si fue antes. */
+  fechaDeEfecto?: string;
   montoCentavos: number;
   estado: EstadoDeUnPago;
   fechaDeAnulacion: string | null;

@@ -14,6 +14,10 @@ const PREFIJO = '/cuentas-por-pagar/reportes';
 const PERMISOS = 'cuentas-por-pagar.reportes-de-saldos';
 const tags = ['Cuentas por pagar'];
 
+/** El archivo de un reporte a una fecha de corte lleva ese corte en el nombre. */
+const corteDelNombre = (consulta: Record<string, unknown>) =>
+  typeof consulta.corte === 'string' ? consulta.corte : undefined;
+
 function rutasDeSaldosPorProveedor(app: Aplicacion, controlador: ReportesDeSaldosControlador, excel: Intercambio) {
   const ruta = `${PREFIJO}/saldos-por-proveedor`;
   app.get(ruta, {
@@ -27,6 +31,7 @@ function rutasDeSaldosPorProveedor(app: Aplicacion, controlador: ReportesDeSaldo
     permisos: { exportar: `${PERMISOS}.exportar` },
     intercambio: excel,
     filtro: esquemaFiltroDeSaldosPorProveedor,
+    fechaDelNombre: corteDelNombre,
   });
 }
 
@@ -43,6 +48,7 @@ function rutasDeDocumentos(app: Aplicacion, controlador: ReportesDeSaldosControl
     permisos: { exportar: `${PERMISOS}.exportar` },
     intercambio: excel,
     filtro: esquemaFiltroDeDocumentosAUnaFecha,
+    fechaDelNombre: corteDelNombre,
   });
 }
 
