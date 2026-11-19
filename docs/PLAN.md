@@ -3227,3 +3227,26 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   nuevo y una escrita a mano no se toca; (6) `core/intercambio` gana `params` en `rutasDeIntercambio` para exportar un
   reporte cuya ruta lleva parámetros; (7) el comprobante sin detalle de origen dice «Pago de Cuentas por pagar»; (8) los
   «anulados» del resumen de correlativos no incluyen a los inutilizados (van aparte, así la suma da el total del rango).
+- **2026-11-18 (IC-8 a IC-10, Bancos, cliente: impresión de cheques)**: según `diseno-impresion-de-cheques.md` §9 y §12.
+  **Formatos (IC-8)**: Administración → «Formatos de cheque» (lista, ventana ancha con esquema a escala de los campos,
+  modo de fecha texto o casillas, «Ya viene impreso en el formulario» en las dos leyendas, plantillas de fábrica como
+  punto de partida), página de prueba de alineación (`/bancos/formatos-de-cheque/prueba?formato=<id>|plantilla=<clave>`,
+  regla en milímetros y cruz en el origen, «La prueba quedó alineada» solo tras imprimir) y «Formato de impresión» en cada
+  chequera (formato de la cuenta o plantilla de fábrica). **Imprimir (IC-9)**: página `/bancos/cheques/imprimir?ids=…`
+  con `@page` del tamaño del papel del formato y campos en milímetros (`HojaDeCheque`), la vista previa no cambia nada y
+  «Imprimir» registra y abre el diálogo; lote por selección en la lista (una chequera, hasta 50, orden de número, barra fija
+  con resumen y aviso de huecos), «Reimprimir» (motivo y «Incluir el cheque»), historia de impresiones, «Pasar a otro
+  formulario» (dos confirmaciones) o «Anular como extraviado», casillas «No negociable» y «Para abono en cuenta» en Bancos
+  y en pagos y retiros de Cuentas por pagar (componente común `CondicionesDelCheque`), y enlace «Imprimir el cheque» tras
+  emitir. **Reporte (IC-10)**: Reportes → «Correlativos de cheques» (resumen, detalle por número, filtro por estado,
+  imprimir con el cuadro de «Conteo físico del papel en blanco» y Excel). Decisiones: (1) en el servidor, aditivas, el
+  listado y la chequera de un cheque traen `puedeImprimir`, `puedeReimprimir` y `puedePasarAOtroFormulario` (el cliente no
+  adivina reglas), el listado trae `chequeraId` y la vista de impresión trae `zonaDelComprobante`; (2) los ajustes de un formato
+  que se guardan son solo la diferencia con la plantilla (si cambia el modo de la fecha, la fecha va completa); (3) cuando el
+  formato no reserva zona para el comprobante, la pantalla ofrece dos botones (cheques / comprobantes en carta) porque un
+  mismo trabajo de impresión no mezcla tamaños de papel; (4) imprimir de nuevo un cheque ya impreso desde la vista previa
+  no se permite: obliga a «Reimprimir» (motivo y auditoría); la reimpresión ya registrada pasa a la pantalla de impresión en
+  memoria; (5) «¿Dónde está el formulario?» se pide con dos opciones y no con una casilla de custodia premarcada; (6) la capa
+  de avisos gana un enlace opcional (`EnlaceDeAviso`); (7) en Cuentas por pagar el enlace «Imprimir el cheque» lleva a la lista
+  de cheques de la cuenta (la respuesta del pago no trae el id del cheque). Pendiente: IC-11 (QA en Chrome, Edge y Firefox, con
+  papel real).
