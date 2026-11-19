@@ -87,5 +87,8 @@ export function crearProcesadorDeBandeja(registro: RegistroDeErrores): ProcesarB
   return procesador;
 }
 
-/** Lo que `principal.ts` consulta al arrancar sin `CLAVE_SECRETOS`, para avisar si ya hay un servidor guardado. */
-export const diagnosticarLlaveDeCorreo = new DiagnosticarLlaveDeCorreo(new ServidorDeCorreoDrizzle(bd));
+/** Lo que `principal.ts` consulta al arrancar sin `CLAVE_SECRETOS`, para avisar si ya hay un servidor guardado, y con ella para comprobar que descifra su contraseña. */
+export const diagnosticarLlaveDeCorreo = new DiagnosticarLlaveDeCorreo(
+  new ServidorDeCorreoDrizzle(bd),
+  cifradorDeSecretos,
+);

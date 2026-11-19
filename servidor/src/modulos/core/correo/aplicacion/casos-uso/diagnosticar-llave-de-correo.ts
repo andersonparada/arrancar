@@ -1,3 +1,5 @@
+import { CONTEXTO_DE_LA_CONTRASENA } from '../contexto-de-la-contrasena.js';
+import type { CifradorDeSecretos } from '../puertos/cifrador-de-secretos.js';
 import type { ServidorDeCorreoRepositorio } from '../puertos/servidor-de-correo-repositorio.js';
 
 /** Qué debe decir el arranque sobre el envío de correo. */
@@ -14,9 +16,32 @@ const CON_SERVIDOR =
   'leer su contraseña. Los correos esperan en la bandeja. Defina CLAVE_SECRETOS en el .env de producción (la misma de ' +
   'siempre, si ya se usó una) y reinicie la aplicación.';
 
-/** Se usa al arrancar sin `CLAVE_SECRETOS`: con un servidor ya guardado es un error de instalación, no un simple aviso. */
+const NO_DESCIFRA =
+  'El envío de correo FALLARÁ: CLAVE_SECRETOS (y CLAVE_SECRETOS_ANTERIOR, si se rota) no descifra la contraseña del ' +
+  'servidor de correo guardado. Los correos esperan en la bandeja. Ponga la llave con que se guardó, o vuelva a ' +
+  'guardar la contraseña del servidor desde Soporte.';
+
+/**
+ * Se usa al arrancar. Sin `CLAVE_SECRETOS` y con un servidor ya guardado es un error de instalación, no un simple
+ * aviso; con ella, se comprueba que descifre la contraseña guardada (sin mostrarla ni su causa).
+ */
 export class DiagnosticarLlaveDeCorreo {
-  constructor(private readonly servidores: ServidorDeCorreoRepositorio) {}
+  constructor(
+    private readonly servidores: ServidorDeCorreoRepositorio,
+    private readonly cifrador: CifradorDeSecretos,
+  ) {}
+
+  /** @returns un error claro si la llave está pero no abre la contraseña guardada; `null` si todo está en orden. */
+  async verificarContrasena(): Promise<DiagnosticoDeLlave | null> {
+    const secreto = (await this.servidores.obtener())?.contrasena;
+    if (!secreto) return null;
+    try {
+      this.cifrador.descifrar(secreto, CONTEXTO_DE_LA_CONTRASENA);
+      return null;
+    } catch {
+      return { nivel: 'error', mensaje: NO_DESCIFRA };
+    }
+  }
 
   async ejecutar(): Promise<DiagnosticoDeLlave> {
     const servidor = await this.servidores.obtener();
