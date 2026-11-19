@@ -1,6 +1,7 @@
 import pg, { DatabaseError } from 'pg';
 import { configuracion } from '../../../configuracion.js';
 import { bd } from '../../core/base-datos/conexion.js';
+import { bdPropietario } from '../../core/base-datos/sembrado-de-prueba.soporte.js';
 import { migrarModulos } from '../../core/base-datos/migrador.js';
 import type { ContextoEmpresa } from '../../core/compartido/aplicacion/contexto-empresa.js';
 import { enTransaccionSegura } from '../../core/compartido/pruebas/en-transaccion-segura.js';
@@ -78,7 +79,7 @@ async function crearClase(contexto: ContextoEmpresa): Promise<string> {
 async function crearCuentaConDosEmpresas(usuario: string) {
   const [cuenta] = await bd.insert(cuentas).values({ nombre: 'Cuenta A' }).returning();
   const [dueno] = await bd.insert(usuarios).values({ usuario, nombres: 'Activos', hashContrasena: 'x' }).returning();
-  const filas = await bd
+  const filas = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: cuenta!.id, nombre: 'Empresa A1' },
