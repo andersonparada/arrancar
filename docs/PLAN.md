@@ -3014,3 +3014,13 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   `0000` y la auditoría permanente en `0001` (el diseño las juntaba), como AF-1; eliminar un artículo se lleva sus
   conversiones y lotes y INV-4 agrega la guardia de movimientos; la unidad base y `maneja_lotes` no se bloquean todavía
   (no hay movimientos); no hay búsqueda por texto en la lista (solo el índice). Sin pantallas (INV-1c).
+- **2026-11-19 — INV-1c (Inventarios, cliente).** Catálogos «Unidades de medida», «Categorías» y «Artículos» del módulo
+  `inventarios`, generados con `npm run generar -- recurso inventarios/<entidad>` (definiciones en
+  `generador/definiciones/inventarios/`) y completados a mano: Inactivar o Reactivar y Eliminar con confirmación y aviso
+  (composable `usarAccionesDeCatalogo` y `TarjetaDeCatalogo` compartidos por los tres), Excel (importar y exportar con sus
+  permisos), el factor de la unidad solo para masa, volumen, longitud y superficie, y en el artículo: búsqueda en la lista,
+  código propuesto con el prefijo de la empresa, tipo de inventario que sigue a la categoría, lotes y vencimiento
+  coherentes, concepto de gasto del Libro de compras (por el endpoint de Inventarios), ficha con las **conversiones**
+  (ventana con la «para compras») y los **lotes** (ventana de alta). Lógica pura con pruebas (`edicion-de-*`,
+  `reglas-de-articulo`, `textos-de-catalogo`, `cantidades`, `opciones-de-referencias`). Pendiente: la ficha sin kardex hasta
+  INV-4c; las bodegas y su asignación son de INV-2c.

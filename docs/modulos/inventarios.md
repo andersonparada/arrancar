@@ -64,9 +64,15 @@ Las ocho variables de `diseno-inventarios.md` §10.4 (`inventarios.costeo.metodo
 `.ajustes.*`, `.conteos.bloquear_bodega`, `.vencimientos.dias_de_aviso` y `.codigos.prefijo`, la única pública), solo en
 los niveles empresa e instalación. Las usan los pasos INV-4 en adelante; INV-1 solo lee el prefijo.
 
-## Pantallas
+## Pantallas (INV-1c)
 
-Unidades, Categorías y Artículos (INV-1c).
+- **Unidades de medida** (`/inventarios/unidades`): lista con tarjetas, ventana de alta y edición (el factor solo aparece en
+  masa, volumen, longitud y superficie), Inactivar o Reactivar y Eliminar con confirmación, y Excel.
+- **Categorías** (`/inventarios/categorias`): igual, con el tipo de inventario por omisión.
+- **Artículos** (`/inventarios/articulos`): lista con búsqueda por código, nombre o código de barras y Excel; formulario en
+  página (el código se propone solo, el tipo sigue a la categoría elegida, el vencimiento enciende los lotes); ficha con
+  sus datos, **conversiones** («1 caja = 24 libras», ventana para cambiarlas con la de compras) y **lotes** (los que
+  maneja lotes; ventana para registrar uno), Editar, Inactivar o Reactivar y Eliminar. Sin kardex (llega con INV-4c).
 
 ## Eventos
 
