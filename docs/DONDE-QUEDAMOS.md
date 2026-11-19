@@ -106,6 +106,11 @@ del Banguat para todas las monedas (MM-3a), correcciones de la QA intermedia.
 - **En curso:** workflow `arrancar-cadenas-siguientes` (RLS R-1 a R-3 → MM-1/MM-2; CCL-B1 → impresión de cheques; correo 8 a
   13; INV-0) y workflow `arrancar-af-inv-ajustes` (AFI-0 y ajustes de Inventarios en los diseños; INV-3 con la fórmula V-2;
   QA CP4-12 textos). Después: AF-2 en adelante (con AFI), INV-1 en adelante, CC-2 en adelante, QA CP5-11.
+- **Workflow `arrancar-mas-frentes`** (run `wf_c1facbe4-e32`): BS-6, BS-7, BS-R2, BS-9, AF-2 con AFI-1, INV-1, comprobaciones
+  reales del Banguat + MM-3b + MM-5, y QA CP5-11; cada código con revisión de Opus.
+- **Integración en curso:** RLS + MM-1/MM-2, INV-0, QA CP4-12 textos, AFI-0 (docs); falla una prueba de AF-1 por la RLS nueva
+  (agente ajustándola) y 20 pruebas saltadas por revisar. Después entran correo 8 a 13 (0030 y 0031 del core) y CCL-B1
+  (corrigiendo dos medios). Impresión de cheques programando sobre CCL-B1.
 Si la sesión se corta, busque la rama `worktree-agent-*` más reciente con commits fuera de `main` para cada paso.
 
 ### Cuentas por pagar (≈ 85 %)
