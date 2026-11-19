@@ -15,6 +15,7 @@ import { empresas } from '../../../core/cuentas/infraestructura/persistencia/emp
 import { usuarios } from '../../../core/identidad/infraestructura/persistencia/usuarios.tablas.js';
 import { definicionesModulos } from '../../../indice.js';
 import { declaracionesDePeriodos, periodos } from './periodos.tablas.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
 
 let usuarioId: string;
 let cuentaA: string;
@@ -71,7 +72,7 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'periodos', nombres: 'Períodos', hashContrasena: 'x' })
     .returning();
-  const filas = await bd
+  const filas = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: cuenta!.id, nombre: 'Empresa 1' },

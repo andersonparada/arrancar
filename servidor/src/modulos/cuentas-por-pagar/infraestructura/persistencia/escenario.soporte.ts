@@ -16,6 +16,7 @@ import { documentos as documentosDeCompras } from '../../../libro-de-compras/inf
 import { proveedores } from '../../../terceros/infraestructura/persistencia/proveedores.tablas.js';
 import { terceros } from '../../../terceros/infraestructura/persistencia/terceros.tablas.js';
 import type { documentos } from './documentos.tablas.js';
+import { bdPropietario } from '../../../core/base-datos/sembrado-de-prueba.soporte.js';
 
 export interface Escenario {
   usuarioId: string;
@@ -72,7 +73,7 @@ export async function prepararEscenario(nombreDeUsuario: string): Promise<Escena
     .insert(usuarios)
     .values({ usuario: nombreDeUsuario, nombres: nombreDeUsuario, hashContrasena: 'x' })
     .returning();
-  const filas = await bd
+  const filas = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: a!.id, nombre: 'Empresa A1' },

@@ -7,8 +7,9 @@ import type { Empresa, EmpresaId } from '../../dominio/empresa.js';
 import { mapeadorDeEmpresa } from './empresa.mapeador.js';
 
 /**
- * `core.empresas` no tiene seguridad por filas (es la tabla que define los
- * inquilinos), así que cada búsqueda filtra por cuenta de forma explícita.
+ * `core.empresas` tiene la lectura abierta (es la tabla que define los inquilinos y la sesión la lee sin
+ * empresa), así que cada búsqueda filtra por cuenta de forma explícita; insertar y cambiar solo valen en
+ * la cuenta de la transacción (RLS de escritura).
  */
 export class RepositorioEmpresasDrizzle implements RepositorioEmpresas {
   async buscarEnCuenta(id: EmpresaId, cuentaId: CuentaId): Promise<Empresa | null> {

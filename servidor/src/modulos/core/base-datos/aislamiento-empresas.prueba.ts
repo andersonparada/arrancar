@@ -16,6 +16,7 @@ import { usuarios } from '../identidad/infraestructura/persistencia/usuarios.tab
 import { bd, grupoConexiones } from './conexion.js';
 import { enTransaccionSegura } from '../compartido/pruebas/en-transaccion-segura.js';
 import { migrarModulos } from './migrador.js';
+import { bdPropietario } from './sembrado-de-prueba.soporte.js';
 
 let usuarioId: string;
 let cuentaId: string;
@@ -40,7 +41,7 @@ beforeAll(async () => {
     .insert(usuarios)
     .values({ usuario: 'prueba', nombres: 'Prueba', hashContrasena: 'x' })
     .returning();
-  const [a, b] = await bd
+  const [a, b] = await bdPropietario
     .insert(empresas)
     .values([
       { cuentaId: cuenta!.id, nombre: 'Empresa A' },

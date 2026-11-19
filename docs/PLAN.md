@@ -3040,3 +3040,72 @@ null and monto > 0`, generada con `bd:generar`). `ConsultarConstanciasPendientes
   - Integración: las ramas `f43-1` y `f43-10` también crean una migración core 0027; quien se una después debe regenerar
     la suya con el número siguiente y rehacer `_journal.json`, el snapshot y el `prevId` (nunca juntar dos entradas idx 27).
   - `correo.servidor.gestionar` queda declarado sin que lo exija ninguna ruta (Soporte usa `soloSuperacceso`); anotado en el diseño.
+- **2026-11-18, RLS del núcleo R-1 (privilegios y disparadores de `core`).** `core/base-datos/privilegios-restringidos.ts`
+  (`RESTRICCIONES_DE_PRIVILEGIOS`) clasifica las 24 tablas de `core` y el migrador, en la misma consulta del `grant`
+  general (`otorgarPermisosAplicacion`), quita a `arrancar_app` lo que nunca usa: `delete` de empresas, cuentas y usuarios;
+  `update` de las tablas de solo agregar o borrar; `update` por columna en empresas, cuentas, usuarios, sesiones, roles y
+  configuraciones; bitácora de superacceso y auditoría solo crecen; geografía y el catálogo de auditoría permanente sin
+  escritura; monedas sin `delete`. Migración `0027_columnas_fijas_y_superacceso` (custom): `core.proteger_columnas()` en
+  `empresas` (id, cuenta, creación, creador) y `roles` (id, cuenta, creación), que vale también para el dueño, y
+  `core.proteger_superacceso()` en `usuarios` (la aplicación no crea ni promueve superacceso; la siembra de `supergod` usa
+  `DATABASE_URL_PROPIETARIO`). Un `42501` por privilegio negado ya no es «no encontrado» sino fallo inesperado (solo el de
+  RLS lo es). Las pruebas de auditoría que esperaban 0 filas ahora esperan `permission denied`. Prueba nueva
+  `seguridad-de-core.prueba.ts` (tabla clasificada, RLS esperada, privilegios por tabla y columna, también tras migrar dos
+  veces, y cada caso del diseño). R-2 y R-3 siguen.
+
+- **2026-11-18, RLS del núcleo R-2 (alta con cuenta y usuario; andamios como dueño).** El alta de cuenta fija
+  `app.cuenta_id` y `app.usuario_id` (sin empresa) al abrir su transacción: `TransaccionDeAlta.ejecutar(origen, trabajo)`
+  recibe la cuenta nueva (el caso de uso la crea con `Cuenta.registrar` antes de abrirla) y el usuario de soporte, que
+  sale de la sesión en el controlador (la siembra no tiene usuario). Arregla de paso que la empresa inicial y los roles del
+  alta quedaban con `creado_por` nulo. Los andamios de pruebas que sembraban empresas y accesos con `bd` pasan a
+  `core/base-datos/sembrado-de-prueba.soporte.ts` (`bdPropietario`, conexión del dueño): así no dependen de las
+  variables de la transacción cuando R-3 active la RLS de escritura. Prueba nueva en `plataforma.api.prueba.ts`.
+
+- **2026-11-18, RLS del núcleo R-3 (RLS de escritura por cuenta).** `base-datos/columnas.ts` suma
+  `politicasDeEscrituraPorCuenta({ sinBorrar })` y `politicasDeEscrituraPorCuentaDe(padre, llave)`: lectura abierta
+  (`leer_sin_filtro`) y `insert`/`update`/`delete` solo si `cuenta_id` (o el de su padre) es `app.cuenta_id`. Migración
+  `0028_rls_de_escritura_de_core` (generada) en `empresas` (sin política de `delete`), `empresa_usuarios` (por
+  `core.empresas`), `roles`, `rol_permisos` (por `core.roles`), `usuario_roles` y `usuario_permisos`. `cuentas`,
+  `cuenta_modulos`, `usuarios`, `sesiones`, `configuraciones`, `bitacora_superacceso`, `feriados`, `monedas` y geografía
+  siguen sin RLS (solo privilegios). Comentarios corregidos en `ejecutarEnEmpresaNueva`, `RegistrarEmpresa` y los
+  repositorios. Pruebas: `rls-de-escritura-de-core.prueba.ts` (A no escribe en B y sí en A) y, en
+  `unidad-de-trabajo-empresa-nueva`, la empresa creada en otra cuenta y la empresa vieja que intenta pasar por nueva
+  ahora las rechaza la base. Suite completa del servidor sin fallos. **Quedan:** R-4 (RLS de lectura, con revisión de
+  `seguridad`) y R-5 (CLAUDE.md y ARQUITECTURA.md); las tablas nuevas de `core` deben clasificarse en
+  `RESTRICCIONES_DE_PRIVILEGIOS` (la prueba lo exige).
+
+- **2026-11-18, Multimoneda MM-1 (datos del núcleo).** Migración `core/0029_multimoneda` (generada, con la semilla y el
+  disparador a mano): `core.monedas` suma `activa` (`default false`), `codigo_banguat` (único, con llave a
+  `core.monedas_del_banguat`), `letras_singular` y `letras_plural` y los checks de dos decimales, letras completas y
+  quetzal sin código; semilla de la adenda A.4 (GTQ y USD activos con sus letras, el USD con el código 2; las demás
+  monedas del Banguat inactivas y sin código). Tablas nuevas `core.monedas_del_banguat` (con la semilla del 2),
+  `core.tipos_de_cambio` (versiones inmutables, únicos y checks de §6.1 y A.5) y `core.consultas_al_banguat` (una fila
+  por llamada). Helper `politicasDeSoloAgregarEnLaInstalacion()` (`insert` y `select` abiertos, sin `update` ni `delete`)
+  y las tres tablas clasificadas en `RESTRICCIONES_DE_PRIVILEGIOS` (las dos de solo agregar, además, sin `update` ni
+  `delete`). Disparador `core.monedas_codigo_banguat_estable` (`check_violation` con la restricción del mismo nombre).
+  Objeto de valor `TipoDeCambio` (`core/compartido/dominio/tipo-de-cambio.ts`, entero escalado × 10⁸, redondeo desde la
+  mitad, tope de `numeric(14,2)`). Pruebas: `multimoneda-de-core`, `tipos-de-cambio-de-core` y `tipo-de-cambio`.
+  **Pendiente:** la comprobación C-1 con el Banguat real puede agregar monedas a la semilla (migración de datos aparte).
+
+- **2026-11-18, Multimoneda MM-2 (contexto `core/monedas`).** Servicio `TiposDeCambio` (`aplicacion/tipos-de-cambio.ts`,
+  instancia única `tiposDeCambio` en `monedas/contexto.ts`, como `calendarioLaboral`): `vigente` (exacto, anterior de hasta
+  7 días con `motivoDelAnterior` `falta_publicacion` o `dia_sin_calculo`, futura solo si está publicada; el quetzal es 1;
+  lanza `TipoDeCambioNoDisponible` con `{ moneda, fecha, ultimaFechaPublicada }`), `consultar` (lo mismo sin lanzar, con
+  `utilizable`), `delCierre`, `serie` e `invalidar`; guarda en memoria lo leído y lee con la transacción en curso si la hay.
+  Regla pura en `dominio/tipo-vigente.ts` (`clasificarTipo`, 7 días); el dólar publica todos los días y las demás monedas
+  no se calculan en fin de semana ni asueto (`dia_sin_calculo`, sin confirmación). Casos de uso `ListarMonedas`,
+  `ListarMonedasDelBanguat`, `EditarMoneda` (reglas de A.4 y A.9: código ofrecido, libre, sin otra serie, quetzal sin código y
+  siempre activo, solo dos decimales; audita `inactivar`, `reactivar` y `corregir` al quitar o cambiar el código),
+  `ConsultarTipoVigente`, `ListarSerieDeTipos`, `ListarVersionesDeTipo` y `RegistrarTipoDeCambio` (versión manual nueva,
+  nunca edita). Rutas: `GET /api/monedas`, `GET /api/monedas/banguat`, `PATCH /api/monedas/:codigo`,
+  `GET /api/tipos-de-cambio` (máx. 366 días), `GET …/vigente`, `GET …/:moneda/:fecha/versiones` y `POST /api/tipos-de-cambio`.
+  Permisos `soloSuperacceso` `configuracion.monedas.editar` y `configuracion.tipos-de-cambio.crear` en el `modulo.ts` del
+  core. `CODIGOS_DEL_BANGUAT_EXCLUIDOS` queda vacío hasta la comprobación C-1. **Quedan para MM-3b:** `POST …/cargar`,
+  `GET …/consultas`, `POST /api/monedas/banguat/actualizar` y `GET …/muestra`, la carga automática (que debe llamar a
+  `tiposDeCambio.invalidar()` al agregar versiones) y el uso de `ClienteBanguat`.
+- **2026-11-18, Multimoneda: correcciones de la revisión de MM-1 y MM-2.** La serie `GET /api/tipos-de-cambio` ya no
+  devuelve `motivo` ni `registradoPor` (solo `versiones` y `POST`, de soporte), con prueba de API. El servicio
+  `TiposDeCambio` guarda lo leído 60 s y no guarda una lectura que empezó antes de `invalidar` (generación). El código del
+  Banguat tiene tope de 32767 (400 en vez de 500). `arrancar_app` solo actualiza `activa`, `codigo_banguat` y las letras
+  de `core.monedas`. Pendiente para R-4: la auditoría de `EditarMoneda` queda en la cuenta de la empresa activa de
+  soporte, y la revisión del código por dos ediciones simultáneas sale como violación genérica de la base.
